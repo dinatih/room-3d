@@ -379,11 +379,9 @@ class DuoSessionManager {
     } else if (slot?.duoAnimId) {
       const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
       return def ? [def] : [];
-    } else {
-      const count = slot?.duoCount ?? 3;
-      const shuffled = [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, count);
     }
+    const count = slot?.duoCount ?? 3;
+    return [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5).slice(0, count);
   }
 
   /**
@@ -398,76 +396,38 @@ class DuoSessionManager {
   ): { targetA: string; targetB: string; posA: [number,number,number]; posB: [number,number,number]; rotA: number; rotB: number; actualSlotId: string } | null {
     const obj = getSmartObject(objectId);
     if (!obj) return null;
+
     const slot = obj.slots.find(s => s.slotId === slotId) || obj.slots[0];
     const actualSlotId = slot?.slotId || slotId || 'duo';
     const playlist = this.resolveSlotPlaylist(objectId, actualSlotId);
     if (playlist.length === 0) return null;
-
-    let resolvedLeader = leaderId;
-    if (!resolvedLeader) {
-      const anchorPos = slot?.offset ?? obj.position ?? [0, 0, 0];
-      const candidates = Object.keys(cameraState.positions).filter(id => id !== 'shiba' && id !== 'robin');
-      candidates.sort((a, b) => {
-        const pa = cameraState.positions[a];
-        const pb = cameraState.positions[b];
-        const da = pa ? Math.hypot(pa.x - anchorPos[0], pa.z - anchorPos[2]) : Infinity;
-        const db = pb ? Math.hypot(pb.x - anchorPos[0], pb.z - anchorPos[2]) : Infinity;
-        return da - db;
-      });
-      resolvedLeader = candidates[0] || 'native';
-    }
-
-    const res = this.startDuoOnSmartObject(objectId, actualSlotId, playlist, resolvedLeader, partnerId);
-    if (!res) return null;
-    return { ...res, actualSlotId };
-  }
-
-  /**
-   * Lance une animation Duo sur un SmartObject donné (ex: 'chair-office', 'sit-cuddle').
-   */
-  public startDuoOnSmartObject(
-    objectId: string,
-    slotId: string,
-    defOrPlaylist: DuoAnimationDef | DuoAnimationDef[],
-    leaderId: string,
-    partnerId?: string
-  ): { targetA: string; targetB: string; posA: [number,number,number]; posB: [number,number,number]; rotA: number; rotB: number } | null {
-    const obj = getSmartObject(objectId);
-    if (!obj) return null;
-
-    const playlist = Array.isArray(defOrPlaylist) ? defOrPlaylist : [defOrPlaylist];
-    if (playlist.length === 0) return null;
     const def = playlist[0];
 
-    const slot = obj.slots.find(s => s.slotId === slotId) || obj.slots[0];
     const anchorPos: [number, number, number] = slot?.offset ?? obj.position ?? [0, 0, 0];
     const anchorRotY: number = slot?.rotY ?? obj.rotationY ?? 0;
+    const [bx, by, bz] = anchorPos;
 
-    const targetA = leaderId;
-    let targetB = partnerId;
-    if (!targetB) {
-      const candidates = Array.from(AUTONOMOUS_NPC_IDS).filter(id => id !== targetA);
-      candidates.sort((a, b) => {
-        const pa = cameraState.positions[a];
-        const pb = cameraState.positions[b];
-        const da = pa ? Math.hypot(pa.x - anchorPos[0], pa.z - anchorPos[2]) : Infinity;
-        const db = pb ? Math.hypot(pb.x - anchorPos[0], pb.z - anchorPos[2]) : Infinity;
-        return da - db;
-      });
-      targetB = candidates[0] || (targetA === 'native' ? 'rosanna' : 'native');
-    }
+    // Résolution Leader (A) et Partenaire (B)
+    const getCandidates = (excludeId?: string) => {
+      return Object.keys(cameraState.positions)
+        .filter(id => id !== 'shiba' && id !== 'robin' && id !== excludeId)
+        .sort((a, b) => {
+          const pa = cameraState.positions[a];
+          const pb = cameraState.positions[b];
+          const da = pa ? Math.hypot(pa.x - bx, pa.z - bz) : Infinity;
+          const db = pb ? Math.hypot(pb.x - bx, pb.z - bz) : Infinity;
+          return da - db;
+        });
+    };
 
+    const targetA = leaderId || getCandidates()[0] || 'native';
+    const targetB = partnerId || getCandidates(targetA)[0] || (targetA === 'native' ? 'rosanna' : 'native');
     if (!targetA || !targetB || targetA === targetB) return null;
 
     // Définir l'emplacement actif
-    this.currentLocation = {
-      objectId,
-      slotId,
-      anchorPos,
-      anchorRotY,
-    };
+    this.currentLocation = { objectId, slotId: actualSlotId, anchorPos, anchorRotY };
 
-    // Configurer la session (1 seule répétition propre par animation dans la playlist)
+    // Configurer la session
     this.playlist = playlist;
     this.currentAnimIndex = 0;
     this.currentRepeatIndex = 0;
@@ -477,15 +437,14 @@ class DuoSessionManager {
     this.isSessionComplete = false;
 
     // Réservations d'occupation
-    OccupancyManager.claimSlot(objectId, `${slotId}:roleA`, targetA);
-    OccupancyManager.claimSlot(objectId, slotId, targetA);
+    OccupancyManager.claimSlot(objectId, `${actualSlotId}:roleA`, targetA);
+    OccupancyManager.claimSlot(objectId, actualSlotId, targetA);
     this.participantA = { characterId: targetA, role: 'roleA', isReady: false };
 
-    OccupancyManager.claimSlot(objectId, `${slotId}:roleB`, targetB);
+    OccupancyManager.claimSlot(objectId, `${actualSlotId}:roleB`, targetB);
     this.participantB = { characterId: targetB, role: 'roleB', isReady: false };
 
     // Calculer les coordonnées monde de posA et posB pour l'animation Duo
-    const [bx, by, bz] = anchorPos;
     const cos = Math.cos(anchorRotY);
     const sin = Math.sin(anchorRotY);
     const transformLocalToWorld = (localOffset: [number, number, number]): [number, number, number] => {
@@ -501,14 +460,13 @@ class DuoSessionManager {
 
     appLog(objectId, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur A) et ${targetB} (Partenaire B) !`);
 
-    // Le Leader (Rôle A) gère sa propre navigation directement (son appelant a les coords dans le retour).
-    // On dispatche seulement l'event vers le Partenaire (Rôle B).
+    // Notifier le partenaire (Rôle B)
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
       detail: {
         targetId: targetB,
         fromId: 'SmartObject',
         objectId,
-        slotId: `${slotId}:roleB`,
+        slotId: `${actualSlotId}:roleB`,
         forceRole: 'roleB',
         targetPos: posB,
         targetRotY: rotB,
@@ -516,7 +474,7 @@ class DuoSessionManager {
     }));
 
     this.emitChange();
-    return { targetA, targetB, posA, posB, rotA, rotB };
+    return { targetA, targetB, posA, posB, rotA, rotB, actualSlotId };
   }
 
   /**
