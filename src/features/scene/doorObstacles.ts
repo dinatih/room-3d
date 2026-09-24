@@ -9,6 +9,7 @@
  * Fournit également l'état dynamique des battants pour l'évitement PNJ (agentAvoidance).
  */
 
+import { cameraState } from './cameraState';
 import { getActiveFurnitureObstacles } from './ai/furnitureObstacles';
 import { ROOM_W } from '@config';
 
@@ -209,21 +210,30 @@ function testBoxCollision(door: DoorConfig, box: BoxObstacle): number | null {
   return earliestContact;
 }
 
-/**
- * Calcule l'angle maximal autorisé pour une porte donnée compte tenu de tous les obstacles actifs.
- */
-export function computeDoorAllowedAngle(door: DoorConfig): number {
-  let minAllowed = door.maxAngle;
+export interface DoorDynamicsResult {
+  allowed: number;
+  push: number;
+}
 
-  // 1. Meubles statiques massifs
+/**
+ * Calcule dynamiquement les contraintes angulaires d'une porte (angle max autorisé et poussée PNJ)
+ * en évitant strictement l'effet d'aspiration lorsqu'une porte est déjà ouverte.
+ */
+export function computeDoorDynamics(
+  door: DoorConfig,
+  currentAngle: number = 0
+): DoorDynamicsResult {
+  // 1. Meubles statiques massifs (butée stricte infranchissable)
+  let furnitureMaxAngle = door.maxAngle;
+
   for (const box of STATIC_BOX_OBSTACLES) {
     const contact = testBoxCollision(door, box);
-    if (contact !== null && contact < minAllowed) {
-      minAllowed = contact;
+    if (contact !== null && contact < furnitureMaxAngle) {
+      furnitureMaxAngle = contact;
     }
   }
 
-  // 2. Meubles dynamiques (exclure le congélateur qui est déjà modélisé exactement dans STATIC_BOX_OBSTACLES)
+  // 2. Meubles dynamiques (exclure le congélateur qui est déjà modélisé dans STATIC_BOX_OBSTACLES)
   const furniture = getActiveFurnitureObstacles();
   for (const f of furniture) {
     if (f.id === 'freezer') continue;
@@ -234,12 +244,72 @@ export function computeDoorAllowedAngle(door: DoorConfig): number {
       yMin: 0,
       yMax: 150,
     });
-    if (contact !== null && contact < minAllowed) {
-      minAllowed = contact;
+    if (contact !== null && contact < furnitureMaxAngle) {
+      furnitureMaxAngle = contact;
     }
   }
 
-  return Math.max(0, minAllowed);
+  let minAllowed = furnitureMaxAngle;
+  let maxPush = 0;
+
+  // 3. Personnages PNJ actifs (cameraState.positions)
+  const npcs = cameraState.positions;
+  for (const id in npcs) {
+    const p = npcs[id];
+    if (!p) continue;
+
+    const vx = p.x - door.pivot.x;
+    const vz = p.z - door.pivot.z;
+    const v0 = vx * door.closedDir.x + vz * door.closedDir.z;
+    const vPerp = vx * door.openNormal.x + vz * door.openNormal.z;
+    const dist = Math.hypot(v0, vPerp);
+    const rEff = 28 + door.thickness / 2 + door.margin; // 28 cm rayon PNJ
+
+    if (dist > door.length + rEff || dist < 5) continue;
+
+    const alpha = Math.atan2(vPerp, v0);
+    const sinBeta = Math.min(1, rEff / dist);
+    const beta = Math.asin(sinBeta);
+
+    const contactFront = alpha - beta;
+    const contactBack = alpha + beta;
+
+    // A. Blocage de l'ouverture :
+    // La porte ne peut être bloquée en ouverture QUE si elle est actuellement en deçà du PNJ.
+    // Si la porte est déjà au-delà (currentAngle >= contactFront - 0.05), le PNJ N'ASPIRE PAS la porte en arrière !
+    if (contactFront >= 0 && contactFront <= furnitureMaxAngle) {
+      if (currentAngle < contactFront - 0.05) {
+        if (contactFront < minAllowed) {
+          minAllowed = contactFront;
+        }
+      }
+    }
+
+    // B. Poussée de la porte :
+    // Si le PNJ avance sur le battant depuis le côté fermé (v0 > 0 et alpha proche ou supérieur au battant)
+    if (alpha > 0 && v0 > 0 && v0 <= door.length + rEff) {
+      const angleDiff = alpha - currentAngle;
+      // Le PNJ est au contact du battant et pousse vers l'ouverture
+      if (angleDiff > -beta && angleDiff < beta + 0.3) {
+        const pushAngle = Math.min(furnitureMaxAngle, Math.max(0, contactBack));
+        if (pushAngle > maxPush) {
+          maxPush = pushAngle;
+        }
+      }
+    }
+  }
+
+  return {
+    allowed: Math.max(0, minAllowed),
+    push: maxPush,
+  };
+}
+
+/**
+ * Calcule l'angle maximal autorisé pour une porte donnée compte tenu de tous les obstacles actifs.
+ */
+export function computeDoorAllowedAngle(door: DoorConfig, currentAngle: number = 0): number {
+  return computeDoorDynamics(door, currentAngle).allowed;
 }
 
 /**

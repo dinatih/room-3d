@@ -9,7 +9,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
-import { computeDoorAllowedAngle, DOOR_CONFIGS, doorCollisionState } from '../doorObstacles';
+import { computeDoorDynamics, DOOR_CONFIGS, doorCollisionState } from '../doorObstacles';
 
 const W_TOTAL   = 160;
 const SILL_H    = 20;
@@ -142,14 +142,20 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
   useFrame((_, delta) => {
     const s = stateRef.current;
-    const allowedRight = computeDoorAllowedAngle(DOOR_CONFIGS.glassRight);
-    const allowedLeft = computeDoorAllowedAngle(DOOR_CONFIGS.glassLeft);
+    const curRight = Math.abs(rightRotRef.current);
+    const curLeft = Math.abs(leftRotRef.current);
+    const dynRight = computeDoorDynamics(DOOR_CONFIGS.glassRight, curRight);
+    const dynLeft = computeDoorDynamics(DOOR_CONFIGS.glassLeft, curLeft);
 
-    const actualLeftOpen = s.isOpenRight && s.isOpenLeft;
+    const actualLeftOpen = (s.isOpenRight && s.isOpenLeft) || dynLeft.push > 0.05;
     const isRightOpenEnough = rightRotRef.current > 0.25;
-    const leftTarget = (actualLeftOpen && isRightOpenEnough) ? -allowedLeft : 0;
+    const leftTarget = (actualLeftOpen && isRightOpenEnough)
+      ? -(s.isOpenLeft ? Math.max(dynLeft.allowed, dynLeft.push) : dynLeft.push)
+      : 0;
     const isLeftOpen = Math.abs(leftRotRef.current) > 0.05;
-    const rightTarget = s.isOpenRight ? allowedRight : (isLeftOpen ? allowedRight : 0);
+    const rightTarget = (s.isOpenRight || dynRight.push > 0.05)
+      ? (s.isOpenRight ? Math.max(dynRight.allowed, dynRight.push) : dynRight.push)
+      : (isLeftOpen ? dynRight.allowed : 0);
     const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
 
     doorCollisionState.glassRight.angle = rightRotRef.current;

@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 import { WALL_THICKNESS, PARTITION_THICKNESS } from '../wallData';
-import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, type DoorConfig } from '../doorObstacles';
+import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState, type DoorConfig } from '../doorObstacles';
 
 const W  = 83;     // Largeur panneau (ouvrant de 83 cm)
 const H  = 204;    // Hauteur standard
@@ -170,21 +170,26 @@ function DoorImpl({
 
   useFrame(() => {
     let target = 0;
-    if (isOpen) {
-      if (doorConfig) {
-        const allowed = computeDoorAllowedAngle(doorConfig);
-        target = Math.sign(openAngle) * allowed;
-      } else {
-        target = openAngle;
+    const currentSigned = doorRef.current.rotation.y;
+    const currentAbs = Math.abs(currentSigned);
+
+    if (doorConfig) {
+      const { allowed, push } = computeDoorDynamics(doorConfig, currentAbs);
+      if (isOpen) {
+        target = Math.sign(openAngle) * Math.max(allowed, push);
+      } else if (push > 0.05) {
+        target = Math.sign(openAngle) * push;
       }
+    } else {
+      target = isOpen ? openAngle : 0;
     }
-    const current = doorRef.current.rotation.y;
+
     if (doorStateKey && doorCollisionState[doorStateKey]) {
-      doorCollisionState[doorStateKey].angle = current;
+      doorCollisionState[doorStateKey].angle = currentSigned;
       doorCollisionState[doorStateKey].isOpen = isOpen;
     }
-    if (current === target) return;
-    const delta = target - current;
+    if (currentSigned === target) return;
+    const delta = target - currentSigned;
     if (Math.abs(delta) > 0.001) {
       doorRef.current.rotation.y += delta * 0.12;
       invalidate();
