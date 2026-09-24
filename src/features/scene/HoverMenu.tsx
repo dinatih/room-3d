@@ -16,6 +16,7 @@ import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
+import { isCharacterVisibleInMode } from './walkerConfig';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
@@ -906,14 +907,25 @@ export function HoverOverlay() {
                         }));
                       }
                     } else {
-                      // Trouver le personnage le plus proche (en excluant les animaux comme le shiba)
+                      // Trouver le personnage le plus proche (en excluant les animaux et les PNJs masqués)
                       let closestCharId: string | null = null;
                       let minDistance = Infinity;
 
-                      const candidateIds = Object.keys(cameraState.positions);
+                      const store = useSceneStore.getState();
+                      const laraCount = store.layers.laraCount ?? 4;
+                      const extraChars = store.layers.extraCharacters ?? false;
+                      const activeWalkerId = store.activeWalkerId;
+                      const activeExtraIds = store.activeExtraIds;
+
+                      const candidateIds = Object.keys(cameraState.positions).filter(
+                        (charId) =>
+                          charId !== 'shiba' &&
+                          charId !== 'robin' &&
+                          (isCharacterVisibleInMode(charId, laraCount, activeWalkerId, extraChars, activeExtraIds) ||
+                            charId === activeWalkerId)
+                      );
 
                       for (const charId of candidateIds) {
-                        if (charId === 'shiba' || charId === 'robin') continue;
                         const pos = cameraState.positions[charId];
                         if (!pos) continue;
                         const dist = Math.hypot(pos.x - targetPos[0], pos.z - targetPos[2]);

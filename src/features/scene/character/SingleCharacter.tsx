@@ -309,6 +309,13 @@ export function SingleCharacter({
     }
   }, [isActive, isPreview, initialPos]);
 
+  // Nettoyage de la position enregistrée dans cameraState lors du démontage
+  useEffect(() => {
+    return () => {
+      delete cameraState.positions[id];
+    };
+  }, [id]);
+
   // Setup échelle, offsets hanches, physiques et matériaux
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -581,7 +588,11 @@ export function SingleCharacter({
       if (!userAnimOverrideRef.current) {
         currentAnimClip.current = null;
       }
-      cameraState.positions[id] = { x: targetX, y: targetY, z: targetZ, yaw: 0 };
+      if (isVisibleInCountMode && !cameraState.walkerHidden && showAllLaraStyles) {
+        cameraState.positions[id] = { x: targetX, y: targetY, z: targetZ, yaw: 0 };
+      } else {
+        delete cameraState.positions[id];
+      }
     } else {
       if (isActive) {
         const isUserManuallyMoving = 

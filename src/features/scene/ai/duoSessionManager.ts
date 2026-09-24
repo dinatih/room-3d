@@ -2,9 +2,10 @@ import { DUO_ANIMATIONS, DuoAnimationDef } from './duoAnimations';
 import { OccupancyManager } from './occupancyManager';
 import { appLog } from '@features/ui/AppConsole';
 import { cameraState } from '../cameraState';
-import { AUTONOMOUS_NPC_IDS } from '../walkerConfig';
+import { AUTONOMOUS_NPC_IDS, isCharacterVisibleInMode } from '../walkerConfig';
 import { getSmartObject } from './smartObjectRegistry';
 import { INITIAL_SMART_OBJECT_BY_CHAR } from './scenarios';
+import { useSceneStore } from '../store/useSceneStore';
 
 export type DuoRole = 'roleA' | 'roleB';
 
@@ -512,16 +513,29 @@ class DuoSessionManager {
     }
 
     // Résolution Leader (A) et Partenaire (B)
+    const isVisibleChar = (id: string) => {
+      if (id === 'shiba' || id === 'robin') return false;
+      const store = useSceneStore.getState();
+      const laraCount = store.layers.laraCount ?? 4;
+      const extraChars = store.layers.extraCharacters ?? false;
+      const activeWalkerId = store.activeWalkerId;
+      const activeExtraIds = store.activeExtraIds;
+      return (
+        isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraChars, activeExtraIds) ||
+        id === activeWalkerId
+      );
+    };
+
     const getCandidates = (excludeId?: string) => {
       // 1. Chercher d'abord un PNJ qui a cet objet comme destination initiale assignée
       const preferred = Object.entries(INITIAL_SMART_OBJECT_BY_CHAR)
-        .filter(([id, obj]) => obj === objectId && id !== excludeId && !this.getSessionFor(id))
+        .filter(([id, obj]) => obj === objectId && id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id))
         .map(([id]) => id);
       if (preferred.length > 0) {
         return preferred;
       }
       return Object.keys(cameraState.positions)
-        .filter(id => id !== "shiba" && id !== "robin" && id !== excludeId && !this.getSessionFor(id))
+        .filter(id => id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id))
         .sort((a, b) => {
           const pa = cameraState.positions[a];
           const pb = cameraState.positions[b];
@@ -531,8 +545,10 @@ class DuoSessionManager {
         });
     };
 
-    const targetA = leaderId || getCandidates()[0] || 'native';
-    const targetB = partnerId || getCandidates(targetA)[0] || (targetA === 'native' ? 'rosanna' : 'native');
+    const candidates = getCandidates();
+    const targetA = leaderId || candidates[0] || (isVisibleChar('native') ? 'native' : 'xbot');
+    const partnerCandidates = getCandidates(targetA);
+    const targetB = partnerId || partnerCandidates[0] || (targetA === 'native' ? 'rosanna' : 'native');
     if (!targetA || !targetB || targetA === targetB) return null;
 
     // Définir l'emplacement actif

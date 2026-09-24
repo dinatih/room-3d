@@ -102,19 +102,19 @@ export function ZoneAiDebugOverlay() {
 
     // Trouver le PNJ cible
     let targetChar: string | null = null;
-    if (selectedCharId !== 'closest') {
+    const availableIds = new Set(availableNpcs.map((c) => c.id));
+
+    if (selectedCharId !== 'closest' && availableIds.has(selectedCharId)) {
       targetChar = selectedCharId;
     } else {
       let minDistance = Infinity;
-      const candidateIds = Object.keys(cameraState.positions);
-      for (const charId of candidateIds) {
-        if (charId === 'shiba' || charId === 'robin') continue;
-        const pos = cameraState.positions[charId];
+      for (const char of availableNpcs) {
+        const pos = cameraState.positions[char.id];
         if (!pos) continue;
         const dist = Math.hypot(pos.x - targetPos[0], pos.z - targetPos[2]);
         if (dist < minDistance) {
           minDistance = dist;
-          targetChar = charId;
+          targetChar = char.id;
         }
       }
       if (!targetChar && availableNpcs.length > 0) {
@@ -221,7 +221,7 @@ export function ZoneAiDebugOverlay() {
         fontSize: 12,
         overflow: 'hidden',
         pointerEvents: 'auto',
-        userSelect: 'none',
+        userSelect: 'text',
       }}
     >
       {/* ── En-tête ── */}
@@ -234,6 +234,7 @@ export function ZoneAiDebugOverlay() {
           backgroundColor: 'rgba(0, 229, 255, 0.12)',
           borderBottom: '1px solid rgba(0, 229, 255, 0.25)',
           cursor: 'pointer',
+          userSelect: 'none',
         }}
         onClick={toggleOpen}
       >
