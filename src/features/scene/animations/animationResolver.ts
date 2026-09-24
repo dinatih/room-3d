@@ -13,16 +13,41 @@ function buildIndexes() {
   keyToDefMap.clear();
   tagToDefsMap.clear();
 
+  const registerKey = (k: string | undefined, def: AnimationDefinition) => {
+    if (!k) return;
+    const clean = k.trim().toLowerCase();
+    if (!clean) return;
+    if (!keyToDefMap.has(clean)) {
+      keyToDefMap.set(clean, def);
+    }
+    const withUnderscores = clean.replace(/-/g, '_');
+    if (!keyToDefMap.has(withUnderscores)) {
+      keyToDefMap.set(withUnderscores, def);
+    }
+    const withHyphens = clean.replace(/_/g, '-');
+    if (!keyToDefMap.has(withHyphens)) {
+      keyToDefMap.set(withHyphens, def);
+    }
+  };
+
   for (const def of ANIMATION_DEFINITIONS) {
     // Clé ID
-    keyToDefMap.set(def.id.toLowerCase(), def);
+    registerKey(def.id, def);
     // Clé Path
-    keyToDefMap.set(def.path.toLowerCase(), def);
-    
+    registerKey(def.path, def);
+
+    // Résolution par nom de fichier et stem (ex: anim_falling.glb -> anim_falling)
+    const filename = def.path.split('/').pop();
+    if (filename) {
+      registerKey(filename, def);
+      const stem = filename.replace(/\.(glb|gltf)$/i, '');
+      registerKey(stem, def);
+    }
+
     // Clés Alias
     if (def.aliases) {
       for (const alias of def.aliases) {
-        keyToDefMap.set(alias.toLowerCase(), def);
+        registerKey(alias, def);
       }
     }
 
