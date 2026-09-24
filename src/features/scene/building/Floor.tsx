@@ -10,7 +10,7 @@ import { CategoryLayerGroup } from '../sceneLayer';
 import {
   ROOM_W, ROOM_D, WALL_H, NICHE_X, NICHE_Z_START, DOOR_START, DOOR_END,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, DiagWall,
-  LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE, LAYER_NEIGHBORS
+  LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE
 } from '@config';
 import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, BATH_Z_END } from '../wallData';
 import {
@@ -595,7 +595,6 @@ export function RedPVCCorridor() {
 export function Floor() {
   const bermudaGrass = useSceneStore(state => state.layers.bermudaGrass);
   const groundType = useSceneStore(state => state.layers.groundType);
-  const neighbors = useSceneStore(state => state.layers.neighbors);
 
   const slabShape = useMemo(() => new THREE.Shape([
     new THREE.Vector2(-20, 30),
@@ -680,6 +679,8 @@ export function Floor() {
         <group name="slab-group" userData={{ itemName: 'Dalle Béton' }}>
           <MergedStaticGroup name="merged-slab">
             <SlabUnit x={0} z={0} />
+            <SlabUnit x={ 346} z={-199.76} />
+            <SlabUnit x={-346} z={ 199.76} />
           </MergedStaticGroup>
         </group>
 
@@ -705,15 +706,6 @@ export function Floor() {
           </MergedStaticGroup>
         </group>
       </CategoryLayerGroup>
-
-      {neighbors && (
-        <CategoryLayerGroup layer={LAYER_NEIGHBORS}>
-          <group name="neighbor-slab-group" userData={{ itemName: 'Dalles Voisins' }}>
-            <SlabUnit x={ 346} z={-199.76} />
-            <SlabUnit x={-346} z={ 199.76} />
-          </group>
-        </CategoryLayerGroup>
-      )}
 
       <BermudaGround active={bermudaGrass} groundType={groundType} />
     </>

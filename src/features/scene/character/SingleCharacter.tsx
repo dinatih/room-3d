@@ -23,7 +23,7 @@ import {
   applyRenderProperties,
   normalizeNonLaraCharacterMaterials,
 } from '../characterParts';
-import { ACTION_FULL_TOUR, buildAutonomousScenario, isNeighborCharacter } from '../ai/scenarios';
+import { ACTION_FULL_TOUR, buildAutonomousScenario } from '../ai/scenarios';
 import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController } from '../ai/useAgentController';
 import { duoSessionManager } from '../ai/duoSessionManager';
@@ -257,10 +257,9 @@ export function SingleCharacter({
   const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomous ? autonomousScenario : EMPTY_SCENARIO);
   const loopScenario = isAutonomous;
 
-  const neighborsVisible = useSceneStore(state => state.layers.neighbors);
-  const isNeighbor = useMemo(() => isNeighborCharacter(id), [id]);
-  const hasSkyDrop = false;
-  const spawnDelay = 0;
+  const isExcepted = id === 'xbot' || isExtraCharacter(id);
+  const hasSkyDrop = !isExcepted && isAutonomous;
+  const spawnDelay = hasSkyDrop ? ((characterIndex ?? 0) * 1.0) : 0;
 
   const {
     update: updateAgent,
@@ -278,7 +277,7 @@ export function SingleCharacter({
         if (x !== 0 || z !== 0) {
           return {
             x,
-            y: y >= 1000 ? (npcPosition[1] || 0) : y,
+            y,
             z,
             rotY: groupRef.current.rotation.y
           };
@@ -506,7 +505,7 @@ export function SingleCharacter({
     for (const item of parts.nativeHairMeshes) {
       const meshName = (item.mesh.name || '').toLowerCase();
       const isBraid = meshName.includes('braid') || meshName.includes('pony');
-
+      
       const visible = showNativeHair ? !(variant === 'angelina' && isBraid) : false;
       item.mesh.visible = visible;
       const mat = item.mesh.material;
@@ -598,7 +597,7 @@ export function SingleCharacter({
       }
     } else {
       if (isActive) {
-        const isUserManuallyMoving =
+        const isUserManuallyMoving = 
           (cameraState.isXR ||
            cameraState.mode === 'fpv' ||
            cameraState.mode === 'orbit') && cameraState.isUserControlling();
@@ -626,7 +625,7 @@ export function SingleCharacter({
           cameraState.isAIControlled = false;
           currentAnimClip.current = null;
           cameraState.positions[id] = { x: cameraState.walkerX, y: 0, z: cameraState.walkerZ, yaw: cameraState.walkYaw, anim: currentAnimClip.current || 'idle' };
-
+          
           setAgentPosition(cameraState.walkerX, 0, cameraState.walkerZ);
           setAgentRotation(cameraState.walkYaw);
         }
@@ -638,10 +637,9 @@ export function SingleCharacter({
           currentAnimClip.current = agentState.animation;
         }
         const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds);
-        const isNeighborAllowed = neighborsVisible || !isNeighbor || isActive;
-        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && isNeighborAllowed && agentState.isSpawned;
+        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
 
-        if (agentState.isSpawned && isVisibleInCountMode && isNeighborAllowed) {
+        if (agentState.isSpawned && isVisibleInCountMode) {
           cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY, anim: agentState.animation };
         } else {
           delete cameraState.positions[id];
@@ -872,7 +870,7 @@ export function SingleCharacter({
       mixer.update(delta);
 
       // Parachute d'atterrissage réactif
-      const falling = currentAnimClip.current === 'falling';
+      const falling = currentAnimClip.current === 'falling' || currentAnimClip.current === 'animations/locomotion/anim_falling.glb';
       if (isFalling !== falling) {
         setIsFalling(falling);
       }
@@ -974,7 +972,7 @@ export function SingleCharacter({
     <group
       ref={groupRef}
       visible={false}
-      position={[initialPos?.x ?? 0, initialPos?.y ?? 0, initialPos?.z ?? 0]}
+      position={[initialPos?.x ?? 0, hasSkyDrop ? 2500 : (initialPos?.y ?? 0), initialPos?.z ?? 0]}
       rotation={[0, initialPos?.rotY ?? 0, 0]}
       name={charLabel}
       userData={{
