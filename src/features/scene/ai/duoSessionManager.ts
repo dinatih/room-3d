@@ -9,7 +9,7 @@ export type DuoRole = 'roleA' | 'roleB';
 
 export interface DuoLocation {
   objectId: string;                    // ex: 'chair-office', 'duo-zone', 'combat-point', 'hugs-point'
-  slotId?: string;                     // ex: 'sit-cuddle', 'roleA', 'combat-session', 'hugs-trio'
+  slotId?: string;                     // ex: 'sit-cuddle', 'roleA', 'combat-session', 'hugs-trio', 'duo-random'
   anchorPos: [number, number, number]; // Position monde de référence
   anchorRotY: number;                  // Orientation monde (radians)
 }
@@ -48,10 +48,11 @@ export interface ActiveDuoSession {
 type SessionListener = () => void;
 
 class DuoSessionManager {
-  public readonly basePos: [number, number, number] = [-200, 0, -300];
+  public readonly basePos: [number, number, number] = [-100, 0, -200];
   private readonly defaultLocation: DuoLocation = {
     objectId: 'duo-zone',
-    anchorPos: [-200, 0, -300],
+    slotId: 'duo-random',
+    anchorPos: [-100, 0, -200],
     anchorRotY: 0,
   };
 
@@ -107,56 +108,6 @@ class DuoSessionManager {
   }
 
   /**
-   * Tente de rejoindre la Duo Zone pour un PNJ autonome.
-   */
-  public joinDuoZone(characterId: string): DuoRole | null {
-    let session = this.sessions.get('duo-zone');
-    if (!session || session.isSessionComplete) {
-      const count = 2 + Math.floor(Math.random() * 3); // 2, 3 ou 4
-      const shuffled = [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5);
-      const playlist = shuffled.slice(0, count);
-      const firstAnim = playlist[0];
-      session = {
-        sessionId: 'duo-zone',
-        location: { ...this.defaultLocation },
-        participantA: null,
-        participantB: null,
-        playlist,
-        currentAnimIndex: 0,
-        currentRepeatIndex: 0,
-        repeatsPerAnim: this.repeatsPerAnim,
-        sessionTimer: firstAnim?.duration ?? 5.0,
-        isSessionPlaying: false,
-        isSessionComplete: false,
-      };
-      this.sessions.set('duo-zone', session);
-    }
-
-    if (session.participantA?.characterId === characterId) return 'roleA';
-    if (session.participantB?.characterId === characterId) return 'roleB';
-
-    if (!session.participantA) {
-      if (!OccupancyManager.claimSlot('duo-zone', 'roleA', characterId)) {
-        return null;
-      }
-      session.participantA = { characterId, role: 'roleA', isReady: false };
-      this.emitChange();
-      return 'roleA';
-    }
-
-    if (!session.participantB) {
-      if (!OccupancyManager.claimSlot('duo-zone', 'roleB', characterId)) {
-        return null;
-      }
-      session.participantB = { characterId, role: 'roleB', isReady: false };
-      this.emitChange();
-      return 'roleB';
-    }
-
-    return null;
-  }
-
-  /**
    * Marque un participant comme physiquement arrivé sur son spot et prêt.
    */
   public markReady(characterId: string): void {
@@ -178,8 +129,7 @@ class DuoSessionManager {
       const firstAnim = session.playlist[0];
       session.sessionTimer = firstAnim?.duration ?? 5.0;
       if (firstAnim) {
-        const objLabel = session.location.objectId === 'duo-zone' ? 'duo-zone' : session.location.objectId;
-        appLog(objLabel, `🎭 Duo démarré entre ${session.participantA.characterId} & ${session.participantB.characterId} : "${firstAnim.label}" (x${session.repeatsPerAnim}, ${session.playlist.length} anims, ${session.sessionTimer.toFixed(1)}s/clip)`);
+        appLog(session.location.objectId, `🎭 Duo démarré entre ${session.participantA.characterId} & ${session.participantB.characterId} : "${firstAnim.label}" (x${session.repeatsPerAnim}, ${session.playlist.length} anims, ${session.sessionTimer.toFixed(1)}s/clip)`);
       }
       this.emitChange();
     }
@@ -347,28 +297,20 @@ class DuoSessionManager {
     const objId = loc.objectId;
     const slotId = loc.slotId;
 
-    if (session.participantA?.characterId === characterId) {
-      if (objId === 'duo-zone') {
-        OccupancyManager.releaseSlot('duo-zone', 'roleA', characterId);
-      } else {
-        if (slotId) {
-          OccupancyManager.releaseSlot(objId, `${slotId}:roleA`, characterId);
-          OccupancyManager.releaseSlot(objId, slotId, characterId);
-        }
-        OccupancyManager.releaseSlot(objId, 'roleA', characterId);
+    const releaseRole = (role: 'roleA' | 'roleB') => {
+      if (slotId) {
+        OccupancyManager.releaseSlot(objId, `${slotId}:${role}`, characterId);
+        OccupancyManager.releaseSlot(objId, slotId, characterId);
       }
+      OccupancyManager.releaseSlot(objId, role, characterId);
+    };
+
+    if (session.participantA?.characterId === characterId) {
+      releaseRole('roleA');
       session.participantA = null;
     }
     if (session.participantB?.characterId === characterId) {
-      if (objId === 'duo-zone') {
-        OccupancyManager.releaseSlot('duo-zone', 'roleB', characterId);
-      } else {
-        if (slotId) {
-          OccupancyManager.releaseSlot(objId, `${slotId}:roleB`, characterId);
-          OccupancyManager.releaseSlot(objId, slotId, characterId);
-        }
-        OccupancyManager.releaseSlot(objId, 'roleB', characterId);
-      }
+      releaseRole('roleB');
       session.participantB = null;
     }
 
@@ -408,9 +350,7 @@ class DuoSessionManager {
     }
 
     if (closestId) {
-      const locLabel = session.location.objectId === 'duo-zone'
-        ? '✨ Scène Duo'
-        : (getSmartObject(session.location.objectId)?.name || session.location.objectId);
+      const locLabel = getSmartObject(session.location.objectId)?.name || session.location.objectId;
       appLog(session.location.objectId, `📢 ${callerId} invite ${closestId} (${minDistance.toFixed(0)} cm) à rejoindre ${locLabel} !`);
       document.dispatchEvent(new CustomEvent('npc-invite-duo', {
         detail: {
@@ -446,8 +386,7 @@ class DuoSessionManager {
       const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
       return def ? [def] : [];
     }
-    // Si l'objet n'est pas la duo-zone et que le slot n'est pas explicitement duo, interdire tout duo aléatoire
-    if (objectId !== 'duo-zone' && !slot?.isDuo) {
+    if (!slot?.isDuo) {
       return [];
     }
     const count = slot?.duoCount ?? 3;
@@ -664,10 +603,10 @@ class DuoSessionManager {
 
     // Inviter les personnages
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: { targetId: targetA, fromId: 'SidePanel', forceRole: 'roleA', alreadyThere: isAlreadyThereA }
+      detail: { targetId: targetA, fromId: 'SidePanel', forceRole: 'roleA', objectId: 'duo-zone', slotId: 'duo-random', alreadyThere: isAlreadyThereA }
     }));
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: { targetId: targetB, fromId: 'SidePanel', forceRole: 'roleB', alreadyThere: isAlreadyThereB }
+      detail: { targetId: targetB, fromId: 'SidePanel', forceRole: 'roleB', objectId: 'duo-zone', slotId: 'duo-random', alreadyThere: isAlreadyThereB }
     }));
 
     this.emitChange();
@@ -736,10 +675,10 @@ class DuoSessionManager {
 
     // Émettre l'invitation prioritaire aux 2 PNJs ciblés
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: { targetId: targetA, fromId: 'Inventory', forceRole: 'roleA' }
+      detail: { targetId: targetA, fromId: 'Inventory', forceRole: 'roleA', objectId: 'duo-zone', slotId: 'duo-random' }
     }));
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: { targetId: targetB, fromId: 'Inventory', forceRole: 'roleB' }
+      detail: { targetId: targetB, fromId: 'Inventory', forceRole: 'roleB', objectId: 'duo-zone', slotId: 'duo-random' }
     }));
 
     this.emitChange();

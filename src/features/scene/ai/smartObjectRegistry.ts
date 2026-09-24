@@ -723,7 +723,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'duo-random',
         name: 'Session Duo Aléatoire',
         isDuo: true,
+        offset: [-100, 0, -200],
         rotY: 0,
+        duoPool: [
+          'pop_dance', 'energetic_dance', 'slow_dance',
+          'cuddle_kiss', 'eye_to_eye', 'farewell_kiss',
+          'date_bearhug', 'propose', 'kiss_man_woman',
+          'kiss', 'hokey_pokey'
+        ],
         duoCount: 3,
       }
     ]
@@ -944,7 +951,6 @@ export function getSmartObjectsByCategory(category: SmartObjectCategory): Resolv
 
 export function isDuoSlot(objectId?: string, slotId?: string): boolean {
   if (!objectId) return false;
-  if (objectId === 'duo-zone') return true;
   const obj = SMART_OBJECTS[objectId];
   if (!obj) return false;
   if (!slotId) return obj.slots.some(s => s.isDuo);

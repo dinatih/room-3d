@@ -135,15 +135,17 @@ export function useAgentController(
   useEffect(() => {
     const onInvite = (e: any) => {
       if (e.detail?.targetId === _characterId) {
-        const targetObjId = e.detail?.objectId || 'duo-zone';
-        const role = (e.detail?.forceRole as DuoRole) || (targetObjId === 'duo-zone' ? duoSessionManager.joinDuoZone(_characterId) : 'roleA');
+        const targetObjId = e.detail?.objectId;
+        const role = (e.detail?.forceRole as DuoRole) || 'roleB';
         if (role) {
           duoRoleRef.current = role;
           const targetSlotId = e.detail?.slotId || role;
           if (claimedSlotRef.current && (claimedSlotRef.current.objectId !== targetObjId || claimedSlotRef.current.slotId !== targetSlotId)) {
             releaseClaimedSlot();
           }
-          claimedSlotRef.current = { objectId: targetObjId, slotId: targetSlotId };
+          if (targetObjId) {
+            claimedSlotRef.current = { objectId: targetObjId, slotId: targetSlotId };
+          }
 
           // Coordonnées précalculées transmises par startDuoOnSmartObject (posA / posB monde)
           const eventTargetPos = e.detail?.targetPos as [number, number, number] | undefined;
@@ -166,7 +168,7 @@ export function useAgentController(
             ];
             dynamicNavIndexRef.current = 0;
             statusRef.current = 'IDLE';
-            const locName = targetObjId === 'duo-zone' ? 'la ✨ Scène Duo' : (SMART_OBJECTS[targetObjId]?.name || targetObjId);
+            const locName = targetObjId ? (SMART_OBJECTS[targetObjId]?.name || targetObjId) : 'le point duo';
             appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} (${role === 'roleA' ? 'Meneur' : 'Partenaire'}) et rejoint ${locName} !`);
           }
         }
@@ -439,51 +441,31 @@ export function useAgentController(
       if (!hasNavStep && currentInstruction.smartObjectId) {
         const objId = currentInstruction.smartObjectId;
         let reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
-        const targetSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId);
-
-        const isDuoCooldown = Date.now() - lastDuoEndTimeRef.current < 25000;
-        const isSeated = targetSlot?.animationsRandom === 'seated-front' || reqSlotId === 'sit-cuddle';
-        const triggerCuddle = isSeated && !isDuoCooldown && !duoSessionManager.isPlaying(_characterId) && Math.random() < 0.5;
-
-        const isDuo = objId === 'duo-zone' || isDuoSlot(objId, reqSlotId) || triggerCuddle;
+        const isDuo = isDuoSlot(objId, reqSlotId);
         if (isDuo) {
           let role = duoRoleRef.current;
           if (!role) {
-            if (objId === 'duo-zone') {
-              role = duoSessionManager.joinDuoZone(_characterId);
-            } else {
-              const actualSlot = triggerCuddle ? 'sit-cuddle' : reqSlotId;
-              const duoRes = duoSessionManager.startDuoSession(objId, actualSlot, _characterId);
-              if (duoRes) {
-                role = 'roleA';
-                duoRoleRef.current = 'roleA';
-                // Configurer l'instruction pour naviguer vers posA (coords monde précalculées)
-                currentInstruction.targetPos = duoRes.posA;
-                currentInstruction.slotId = `${duoRes.actualSlotId}:roleA`;
-                currentInstruction.rotY = duoRes.rotA;
-                claimedSlotRef.current = { objectId: objId, slotId: `${duoRes.actualSlotId}:roleA` };
-                // Invalider le cache de coords pour forcer le recalcul avec targetPos
-                cachedCoordsInstructionRef.current = null;
-                cachedCoordsRef.current = null;
-              }
+            const duoRes = duoSessionManager.startDuoSession(objId, reqSlotId, _characterId);
+            if (duoRes) {
+              role = 'roleA';
+              duoRoleRef.current = 'roleA';
+              // Configurer l'instruction pour naviguer vers posA (coords monde précalculées)
+              currentInstruction.targetPos = duoRes.posA;
+              currentInstruction.slotId = `${duoRes.actualSlotId}:roleA`;
+              currentInstruction.rotY = duoRes.rotA;
+              claimedSlotRef.current = { objectId: objId, slotId: `${duoRes.actualSlotId}:roleA` };
+              // Invalider le cache de coords pour forcer le recalcul avec targetPos
+              cachedCoordsInstructionRef.current = null;
+              cachedCoordsRef.current = null;
             }
             if (role) duoRoleRef.current = role;
           }
           if (role) {
             duoRoleRef.current = role;
-            if (objId !== 'duo-zone' && !claimedSlotRef.current) {
+            if (!claimedSlotRef.current) {
               // Fallback si le claimedSlot n'a pas été défini ci-dessus (ex: roleA via onInvite)
               currentInstruction.slotId = reqSlotId || role;
               claimedSlotRef.current = { objectId: objId, slotId: currentInstruction.slotId };
-            }
-            // Pour duo-zone : garder l'animation et la durée du slot si définies
-            if (objId === 'duo-zone') {
-              const slot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId || s.slotId === role);
-              if (slot && slot.animation) {
-                currentInstruction.animation = slot.animation;
-                currentInstruction.duration = slot.duration;
-                currentInstruction.rotY = slot.rotY;
-              }
             }
           } else if (loop && scenario) {
             while (stepIndexRef.current < scenario.length && scenario[stepIndexRef.current].smartObjectId === objId) {
@@ -637,8 +619,7 @@ export function useAgentController(
       const dz = target.tz - stateRef.current.z;
       const dist = Math.hypot(dx, dz);
 
-      const isDuoZone = currentInstruction.smartObjectId === 'duo-zone';
-      const isDuoAction = isDuoZone || isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId) || !!duoRoleRef.current;
+      const isDuoAction = isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId) || !!duoRoleRef.current;
       const ARRIVAL_THRESHOLD = isDuoAction ? 30.0 : ((currentInstruction.type === 'USE_OBJECT' || (!hasNavStep && currentInstruction.smartObjectId)) ? 8.0 : 18.0);
 
       if (dist < ARRIVAL_THRESHOLD) {
@@ -733,8 +714,7 @@ export function useAgentController(
       }
     } else if (statusRef.current === 'INTERACTING') {
       // ── 5. Interactions (INTERACTING) ──
-      const isDuoAction = currentInstruction.smartObjectId === 'duo-zone'
-        || isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId)
+      const isDuoAction = isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId)
         || !!duoRoleRef.current;
       if (isDuoAction) {
         const isEnded = handleDuoInteraction({
