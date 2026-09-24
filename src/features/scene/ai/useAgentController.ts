@@ -636,8 +636,11 @@ export function useAgentController(
             duoWaitTimerRef.current = 0;
             const animState = duoSessionManager.getCurrentAnimState();
             timerRef.current = animState?.duration ?? 5.0;
-            const isSmartChair = currentInstruction.smartObjectId === 'chair-office';
-            stateRef.current.animation = isSmartChair
+            const curLoc = duoSessionManager.getCurrentLocation();
+            const isCuddle = curLoc.slotId === 'sit-cuddle'
+              || currentInstruction.slotId?.includes('sit-cuddle')
+              || currentInstruction.smartObjectId === 'chair-office';
+            stateRef.current.animation = isCuddle
               ? (duoRoleRef.current === 'roleA'
                   ? 'miley-armature-sit-cuddle-hug-m'
                   : 'miley-armature-sit-cuddle-hug-f')

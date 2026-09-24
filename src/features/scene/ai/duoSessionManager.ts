@@ -384,6 +384,10 @@ class DuoSessionManager {
       const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
       return def ? [def] : [];
     }
+    // Si l'objet n'est pas la duo-zone et que le slot n'est pas explicitement duo, interdire tout duo aléatoire
+    if (objectId !== 'duo-zone' && !slot?.isDuo) {
+      return [];
+    }
     const count = slot?.duoCount ?? 3;
     return [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5).slice(0, count);
   }
@@ -401,11 +405,14 @@ class DuoSessionManager {
     const obj = getSmartObject(objectId);
     if (!obj) return null;
 
-    const slot = obj.slots.find(s => s.slotId === slotId) || obj.slots[0];
-    const actualSlotId = slot?.slotId || slotId || 'duo';
-    const playlist = this.resolveSlotPlaylist(objectId, actualSlotId);
+    const playlist = this.resolveSlotPlaylist(objectId, slotId);
     if (playlist.length === 0) return null;
     const def = playlist[0];
+
+    const slot = obj.slots.find(s => s.slotId === slotId)
+      || obj.slots.find(s => s.animationsRandom === 'seated-front')
+      || obj.slots[0];
+    const actualSlotId = slotId || slot?.slotId || 'duo';
 
     const anchorPos: [number, number, number] = slot?.offset ?? obj.position ?? [0, 0, 0];
     const anchorRotY: number = slot?.rotY ?? obj.rotationY ?? 0;
@@ -443,6 +450,9 @@ class DuoSessionManager {
     // Réservations d'occupation
     OccupancyManager.claimSlot(objectId, `${actualSlotId}:roleA`, targetA);
     OccupancyManager.claimSlot(objectId, actualSlotId, targetA);
+    if (slot && slot.slotId !== actualSlotId) {
+      OccupancyManager.claimSlot(objectId, slot.slotId, targetA);
+    }
     this.participantA = { characterId: targetA, role: 'roleA', isReady: false };
 
     OccupancyManager.claimSlot(objectId, `${actualSlotId}:roleB`, targetB);
