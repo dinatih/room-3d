@@ -77,7 +77,7 @@ export function useAgentController(
     y: deployment.y,
     z: initialPos.z,
     rotY: initialPos.rotY,
-    animation: isCurrentlyFalling ? 'anim_falling' : (firstCoords?.anim ? resolveAnimationId(firstCoords.anim) : 'idle'),
+    animation: isCurrentlyFalling ? 'anim-falling' : (firstCoords?.anim ? resolveAnimationId(firstCoords.anim) : 'idle'),
     isSpawned: !isStillWaiting
   });
 
@@ -255,7 +255,7 @@ export function useAgentController(
       stateRef.current.rotY = real.rotY;
       stateRef.current.isSpawned = deployment.status !== 'WAITING';
       stateRef.current.animation = deployment.status === 'FALLING'
-        ? 'anim_falling'
+        ? 'anim-falling'
         : (deployment.status === 'WAITING' ? 'idle' : (stepCoords?.anim ? resolveAnimationId(stepCoords.anim) : 'idle'));
       startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
     }
@@ -360,7 +360,7 @@ export function useAgentController(
         stateRef.current.y = targetY + (2500 - targetY) * (p_inv * p_inv * p_inv);
         deployment.y = stateRef.current.y;
       }
-      stateRef.current.animation = 'anim_falling';
+      stateRef.current.animation = 'anim-falling';
       return stateRef.current;
     }
 
@@ -373,7 +373,7 @@ export function useAgentController(
         deployment.hasCompleted = true;
         appLog(_characterId, `🎯 Déploiement terminé (Atterrissage réussi)`);
       }
-      stateRef.current.animation = 'anim_pistol_kneel_to_stand';
+      stateRef.current.animation = 'anim-pistol-kneel-to-stand';
       return stateRef.current;
     }
 

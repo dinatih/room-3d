@@ -2781,7 +2781,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'anim-falling',
     path: 'animations/locomotion/anim_falling.glb',
     label: `Falling (136f / 4.5s, 165KB)`,
-    aliases: ['anim_falling', 'falling'],
+    aliases: ['falling'],
     tags: ['locomotion', 'walk', 'falling'],
     duration: 4.5,
   },
