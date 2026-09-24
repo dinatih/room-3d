@@ -370,6 +370,12 @@ class DuoSessionManager {
   public resolveSlotPlaylist(objectId: string, slotId?: string): DuoAnimationDef[] {
     const obj = getSmartObject(objectId);
     const slot = obj?.slots.find(s => s.slotId === slotId) || obj?.slots[0];
+
+    // Si le slot ou l'objet n'est pas un slot duo, aucun duo ne doit être joué !
+    if (!slot?.isDuo && objectId !== 'duo-zone') {
+      return [];
+    }
+
     if (slot?.duoPool && slot.duoPool.length > 0) {
       const count = Math.min(slot.duoCount ?? 3, slot.duoPool.length);
       const shuffled = [...slot.duoPool].sort(() => Math.random() - 0.5);

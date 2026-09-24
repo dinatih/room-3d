@@ -420,31 +420,7 @@ export function useAgentController(
         const objId = currentInstruction.smartObjectId;
         let reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
 
-        const targetSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId);
-        const isSeatedFrontSlot = targetSlot?.animationsRandom === 'seated-front'
-          || (Array.isArray(targetSlot?.animationsRandom) && targetSlot.animationsRandom.includes('seated-front'))
-          || reqSlotId === 'sit-cuddle';
-
-        const isDuoCooldown = Date.now() - lastDuoEndTimeRef.current < 25000;
-
-        // Si le slot utilise 'seated-front' (chaise, lits, canapés, etc.) et que le cooldown est passé :
-        // donner une chance (30%) de déclencher spontanément le câlin à deux ('sit-cuddle') avec un partenaire.
-        // La décision ne se prend qu'une seule fois (guard sur duoRoleRef + pas de session en cours).
-        let shouldTriggerDuo = isDuoSlot(objId, reqSlotId);
-        if (
-          !shouldTriggerDuo
-          && isSeatedFrontSlot
-          && !isDuoCooldown
-          && !duoRoleRef.current          // pas déjà engagé dans un duo
-          && !duoSessionManager.isPlaying() // pas de session en cours sur le manager
-          && Math.random() < 0.30
-        ) {
-          if (!OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
-            shouldTriggerDuo = true;
-          }
-        }
-
-        const isDuo = objId === 'duo-zone' || shouldTriggerDuo;
+        const isDuo = objId === 'duo-zone' || isDuoSlot(objId, reqSlotId);
         if (isDuo) {
           let role = duoRoleRef.current;
           if (!role) {
@@ -621,7 +597,7 @@ export function useAgentController(
         statusRef.current = 'INTERACTING';
         const duration = currentInstruction.duration || 5.0;
         timerRef.current = duration;
-        stateRef.current.animation = currentInstruction.animation || 'animations/locomotion/anim_right_turn.glb';
+        stateRef.current.animation = currentInstruction.animation || 'anim-right-turn';
         const logKey = `rotate360-${stepIndexRef.current}-${dynamicNavIndexRef.current}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
@@ -656,14 +632,14 @@ export function useAgentController(
             duoWaitTimerRef.current = 0;
             const animState = duoSessionManager.getCurrentAnimState();
             timerRef.current = animState?.duration ?? 5.0;
-            const isSmartObject = currentInstruction.smartObjectId !== 'duo-zone';
-            stateRef.current.animation = isSmartObject
+            const isSmartChair = currentInstruction.smartObjectId === 'chair-office';
+            stateRef.current.animation = isSmartChair
               ? (duoRoleRef.current === 'roleA'
-                  ? 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb'
-                  : 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb')
+                  ? 'miley-armature-sit-cuddle-hug-m'
+                  : 'miley-armature-sit-cuddle-hug-f')
               : (duoRoleRef.current === 'roleA'
-                  ? 'animations/poses_idles/anim_female_standing_pose.glb'
-                  : 'animations/poses_idles/anim_female_standing_pose_1.glb');
+                  ? 'anim-female-standing-pose'
+                  : 'anim-female-standing-pose-1');
           }
 
           if (!currentInstruction.animation && target.anim) currentInstruction.animation = target.anim;
@@ -762,7 +738,7 @@ export function useAgentController(
         const totalDuration = currentInstruction.duration || 5.0;
         const turnSpeed = (2 * Math.PI) / totalDuration;
         stateRef.current.rotY = (stateRef.current.rotY + turnSpeed * dt) % (2 * Math.PI);
-        stateRef.current.animation = currentInstruction.animation || 'animations/locomotion/anim_right_turn.glb';
+        stateRef.current.animation = currentInstruction.animation || 'anim-right-turn';
 
         timerRef.current -= dt;
         if (timerRef.current <= 0) {

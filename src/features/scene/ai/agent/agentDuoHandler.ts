@@ -46,12 +46,12 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
     const loc = duoSessionManager.getCurrentLocation();
     if (loc.objectId === 'chair-office') {
       state.animation = duoRole === 'roleA'
-        ? 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb'
-        : 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb';
+        ? 'miley-armature-sit-cuddle-hug-m'
+        : 'miley-armature-sit-cuddle-hug-f';
     } else {
       state.animation = duoRole === 'roleA'
-        ? 'animations/poses_idles/anim_female_standing_pose.glb'
-        : 'animations/poses_idles/anim_female_standing_pose_1.glb';
+        ? 'anim-female-standing-pose'
+        : 'anim-female-standing-pose-1';
     }
 
     // Rôle A → ancre sur anchorPos ; Rôle B → ancre sur posB (offsetB transformé)
