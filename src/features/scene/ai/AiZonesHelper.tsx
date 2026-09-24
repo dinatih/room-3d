@@ -97,6 +97,7 @@ function makeLabelSprite(
   });
 
   const sprite = new THREE.Sprite(mat);
+  sprite.raycast = () => {};
   const worldH = fontSizeWorld * totalLines * 1.5;
   const worldW = worldH * (canvasW / canvasH);
   sprite.scale.set(worldW, worldH, 1);

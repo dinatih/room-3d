@@ -33,6 +33,7 @@ function makeSprite(text: string, color: string, worldSize: number, depthTest = 
     transparent: true, depthTest,
   });
   const sp = new THREE.Sprite(mat);
+  sp.raycast = () => {};
   sp.scale.set(worldSize * (w / h), worldSize, 1);
   return sp;
 }

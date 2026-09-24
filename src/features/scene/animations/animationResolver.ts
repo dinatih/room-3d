@@ -17,6 +17,10 @@ function buildIndexes() {
   for (const def of ANIMATION_DEFINITIONS) {
     // Clé ID
     keyToDefMap.set(def.id.toLowerCase(), def);
+    if (!def.id.startsWith('anim-') && !def.id.startsWith('anim_')) {
+      keyToDefMap.set(`anim-${def.id.toLowerCase()}`, def);
+      keyToDefMap.set(`anim_${def.id.toLowerCase()}`, def);
+    }
     // Clé Path
     keyToDefMap.set(def.path.toLowerCase(), def);
     keyToDefMap.set(def.path.replace(/^\//, '').toLowerCase(), def);

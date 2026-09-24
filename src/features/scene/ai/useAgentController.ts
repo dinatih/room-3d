@@ -658,8 +658,8 @@ export function useAgentController(
               stateRef.current.animation = duoRoleRef.current === 'roleA' ? animState.clipA : animState.clipB;
             } else {
               stateRef.current.animation = duoRoleRef.current === 'roleA'
-                ? 'anim-female-standing-pose'
-                : 'anim-female-standing-pose-1';
+                ? 'female-standing-pose'
+                : 'female-standing-pose-1';
             }
           }
 

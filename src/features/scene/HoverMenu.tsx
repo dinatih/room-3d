@@ -304,6 +304,7 @@ export function HoverRaycaster() {
       dir.normalize();
 
       occlusionRaycaster.set(camera.position, dir);
+      occlusionRaycaster.camera = camera;
       occlusionRaycaster.near = 0.5;
       occlusionRaycaster.far = Math.max(0.6, dist - 1.0);
       occlusionRaycaster.layers.enableAll();
