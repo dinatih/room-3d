@@ -6,11 +6,26 @@
  */
 
 export interface AnimationDefinition {
-  id: string;                  // ID canonique unique (ex: 'texting-standing')
+  /**
+   * Identifiant canonique unique de l'animation.
+   * STRICTEMENT en kebab-case only (ex: 'standing-disarm-over-shoulder', 'standing-using-touchscreen-tablet').
+   * Aucun snake_case n'est autorisé.
+   */
+  id: string;
   path: string;                // Chemin réel GLB relatif à public/
   label?: string;              // Nom lisible pour l'UI
-  aliases?: string[];          // Noms contextuels (ex: ['texting', 'inspect-mid-height', 'hold-phone'])
-  tags: string[];              // Tags sémantiques (ex: ['standing', 'phone', 'mid-height', 'idle'])
+  /**
+   * Noms contextuels ou alias alternatifs.
+   * STRICTEMENT en kebab-case only (ex: ['texting', 'inspect-mid-height', 'hold-phone']).
+   * Aucun snake_case n'est autorisé.
+   */
+  aliases?: string[];
+  /**
+   * Tags sémantiques pour le filtrage et les catégories.
+   * STRICTEMENT en kebab-case only (ex: ['standing', 'phone', 'mid-height', 'idle']).
+   * Aucun snake_case n'est autorisé.
+   */
+  tags: string[];
   defaultRotYOffset?: number;  // Décalage natif de rotation (radians) si l'animation n'est pas alignée sur 0
   duration: number;            // Durée en secondes (obligatoire)
 }
