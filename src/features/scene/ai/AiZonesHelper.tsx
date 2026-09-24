@@ -213,22 +213,15 @@ export function AiZonesHelper() {
               let detailSprite: THREE.Sprite | null = null;
               if (isHovered) {
                 const animMeta = resolveSlotAnimationInfo(slot);
+                const duration = slot.duration ?? animMeta.duration;
+                const durationStr = duration !== undefined ? ` (${duration.toFixed(1)}s)` : '';
                 const lines: string[] = [
                   `✨ Meuble : ${obj.name} [${obj.id}]`,
                   `🎯 Slot : ${slot.name} [${slot.slotId}]`,
                   `Statut : ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}`,
-                  `ID Canonique : ${animMeta.canonicalId}`,
+                  `ID Canonique : ${animMeta.canonicalId}${durationStr}`,
                 ];
 
-                if (animMeta.aliasUsed) {
-                  lines.push(`Alias : ${animMeta.aliasUsed}`);
-                }
-                if (animMeta.pack) {
-                  lines.push(`Pack : [${animMeta.pack}]`);
-                }
-                if (animMeta.tags.length > 0) {
-                  lines.push(`Tags : ${animMeta.tags.slice(0, 4).join(', ')}`);
-                }
                 lines.push(`Clip GLB : ${animMeta.clipName}`);
 
                 if (slot.relative !== undefined) {
@@ -243,13 +236,10 @@ export function AiZonesHelper() {
 
                 if (animMeta.variants && animMeta.variants.length > 0) {
                   const varStr = animMeta.variants
-                    .slice(0, 3)
-                    .map(v => v.aliasUsed ? `${v.canonicalId} (${v.aliasUsed})` : v.canonicalId)
+                    .slice(0, 4)
+                    .map(v => `${v.canonicalId}${v.duration !== undefined ? ` (${v.duration.toFixed(1)}s)` : ''}`)
                     .join(', ');
                   lines.push(`Variantes : ${varStr}`);
-                }
-                if (slot.duration !== undefined) {
-                  lines.push(`Durée : ${slot.duration}s`);
                 }
                 if (slot.repeatCount !== undefined) {
                   lines.push(`Répétitions : ${slot.repeatCount}${slot.repeatVariation ? ' (variation)' : ''}`);

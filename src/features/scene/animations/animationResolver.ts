@@ -159,19 +159,40 @@ export interface SlotAnimationMeta {
   pack?: string;             // Nom du pack si sélection groupée/aléatoire
   clipName: string;          // Nom du fichier / clip
   duration?: number;
+  label?: string;
   variants?: Array<{
     canonicalId: string;
     aliasUsed?: string;
     clipName: string;
+    duration?: number;
+    label?: string;
   }>;
 }
+
+const PACK_TAG_MAP: Record<string, string[]> = {
+  'laying-pack': ['laying'],
+  'all-dances': ['dance'],
+  'seated-front-pack': ['seated-front'],
+  'sitted-front-pack': ['seated-front'],
+  'seated-side-pack': ['seated-side'],
+  'side-sitted-pack': ['seated-side'],
+  'sitting-front': ['seated-front'],
+  'sitting-side': ['seated-side'],
+  'laying-front-pack': ['laying-front'],
+  'lay-front-pack': ['laying-front'],
+  'laying-side-pack': ['laying-side'],
+  'lay-side-pack': ['laying-side'],
+  'lay-front': ['laying-front'],
+  'lay-side': ['laying-side'],
+};
 
 /**
  * Analyse un slot de Smart Object pour extraire :
  * - l'ID canonique de l'animation
+ * - la durée canonique
  * - l'alias utilisé
  * - les tags et packs sémantiques
- * - les variantes associées
+ * - les variantes associées avec leurs durées
  */
 export function resolveSlotAnimationInfo(slot: {
   animation?: string;
@@ -180,6 +201,7 @@ export function resolveSlotAnimationInfo(slot: {
   isDuo?: boolean;
   duoAnimId?: string;
   slotId?: string;
+  duration?: number;
 }): SlotAnimationMeta {
   // Cas 1 : Animation Duo
   if (slot.isDuo) {
@@ -191,7 +213,8 @@ export function resolveSlotAnimationInfo(slot: {
       allAliases: def?.aliases ?? (slot.duoAnimId ? [slot.duoAnimId] : undefined),
       tags: def?.tags ?? ['duo'],
       clipName: def?.path ? def.path.split('/').pop()?.replace('.glb', '') ?? duoId : duoId,
-      duration: def?.duration,
+      duration: slot.duration ?? def?.duration,
+      label: def?.label || def?.id || duoId,
     };
   }
 
@@ -215,6 +238,8 @@ export function resolveSlotAnimationInfo(slot: {
         canonicalId: vDef?.id ?? v.split('/').pop()?.replace('.glb', '') ?? v,
         aliasUsed: vDef?.aliases?.[0] ?? (!v.includes('/') ? v : undefined),
         clipName: v.split('/').pop()?.replace('.glb', '') ?? v,
+        duration: vDef?.duration,
+        label: vDef?.label || vDef?.id,
       };
     });
 
@@ -231,7 +256,8 @@ export function resolveSlotAnimationInfo(slot: {
       tags: def?.tags ?? [],
       pack: packStr,
       clipName: def?.path ? def.path.split('/').pop()?.replace('.glb', '') ?? clip : clip,
-      duration: def?.duration,
+      duration: slot.duration ?? def?.duration,
+      label: def?.label || def?.id,
       variants,
     };
   }
@@ -242,34 +268,39 @@ export function resolveSlotAnimationInfo(slot: {
       ? slot.animationsRandom.join(', ')
       : slot.animationsRandom;
 
-    const matchingDefs = typeof slot.animationsRandom === 'string'
-      ? getAnimationsByTags(slot.animationsRandom)
-      : [];
+    let searchTags: string[] = [];
+    if (typeof slot.animationsRandom === 'string') {
+      searchTags = PACK_TAG_MAP[slot.animationsRandom] ?? [slot.animationsRandom];
+    } else if (Array.isArray(slot.animationsRandom)) {
+      searchTags = slot.animationsRandom;
+    }
+
+    const matchingDefs = getAnimationsByTags(searchTags, 'any');
 
     const first = matchingDefs[0];
-    const canonicalId = first
-      ? `${first.id}${matchingDefs.length > 1 ? ` (+${matchingDefs.length - 1} anims)` : ''}`
-      : packStr;
-
-    const aliasUsed = first?.aliases?.[0] ?? packStr;
+    const canonicalId = first?.id ?? packStr;
+    const duration = slot.duration ?? first?.duration;
 
     const variants = (matchingDefs.length > 0
-      ? matchingDefs.slice(0, 6)
+      ? matchingDefs.slice(0, 16)
       : (slot.availableAnims ?? []).map((a) => getAnimationDef(a)).filter(Boolean) as AnimationDefinition[]
     ).map((d) => ({
       canonicalId: d.id,
       aliasUsed: d.aliases?.[0],
       clipName: d.path.split('/').pop()?.replace('.glb', '') ?? d.id,
+      duration: d.duration,
+      label: d.label || d.id,
     }));
 
     return {
       canonicalId,
-      aliasUsed,
+      aliasUsed: first?.aliases?.[0],
       allAliases: first?.aliases,
-      tags: first?.tags ?? (typeof slot.animationsRandom === 'string' ? [slot.animationsRandom] : []),
+      tags: first?.tags ?? searchTags,
       pack: packStr,
       clipName: first?.path ? first.path.split('/').pop()?.replace('.glb', '') ?? packStr : packStr,
-      duration: first?.duration,
+      duration,
+      label: first?.label || first?.id,
       variants: variants.length > 0 ? variants : undefined,
     };
   }

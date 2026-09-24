@@ -15,8 +15,16 @@ export function ZoneAiDebugOverlay() {
   const activeWalkerId = useSceneStore((s) => s.activeWalkerId);
   const activeExtraIds = useSceneStore((s) => s.activeExtraIds);
 
-  const { selectedSlot, setSelectedSlot, isOpen, toggleOpen, selectedCharId, setSelectedCharId } =
-    useZoneAiDebugStore();
+  const {
+    selectedSlot,
+    setSelectedSlot,
+    selectedActionId,
+    setSelectedActionId,
+    isOpen,
+    toggleOpen,
+    selectedCharId,
+    setSelectedCharId,
+  } = useZoneAiDebugStore();
 
   const [tick, setTick] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,7 +97,7 @@ export function ZoneAiDebugOverlay() {
     currentObj && currentSlot ? OccupancyManager.isSlotOccupied(currentObj.id, currentSlot.slotId) : false;
 
   // Exécution de l'ordre d'action vers le PNJ choisi
-  const handleExecuteAction = (targetObjId?: string, targetSlotId?: string) => {
+  const handleExecuteAction = (targetObjId?: string, targetSlotId?: string, targetAnimId?: string) => {
     const objId = targetObjId ?? selectedSlot?.objectId;
     const sId = targetSlotId ?? selectedSlot?.slotId;
     if (!objId || !sId) return;
@@ -97,6 +105,13 @@ export function ZoneAiDebugOverlay() {
     const obj = getSmartObject(objId) || SMART_OBJECTS[objId];
     const slot = obj?.slots.find((s) => s.slotId === sId);
     if (!obj || !slot) return;
+
+    const slotAnimMeta = resolveSlotAnimationInfo(slot);
+    const chosenAnim =
+      targetAnimId ??
+      (objId === selectedSlot?.objectId && sId === selectedSlot?.slotId
+        ? selectedActionId ?? slotAnimMeta.canonicalId
+        : slotAnimMeta.canonicalId);
 
     const targetPos = slot.offset ?? [0, 0, 0];
 
@@ -169,14 +184,15 @@ export function ZoneAiDebugOverlay() {
             targetId: targetChar,
             objectId: objId,
             slotId: sId,
+            animation: chosenAnim,
           },
         })
       );
       appLog(
         targetChar,
-        `🤖 [ZoneAI Debug] Ordre envoyé : ${charName} rejoint ${obj.name} [${slot.name}]`
+        `🤖 [ZoneAI Debug] Ordre envoyé : ${charName} rejoint ${obj.name} [${slot.name}] (${chosenAnim})`
       );
-      setFeedbackMsg(`🏃 ${charName} se dirige vers ${obj.name} (${slot.name})`);
+      setFeedbackMsg(`🏃 ${charName} se dirige vers ${obj.name} (${chosenAnim})`);
     }
 
     setTick((t) => t + 1);
@@ -398,9 +414,13 @@ export function ZoneAiDebugOverlay() {
                 )}
               </div>
 
-              {/* Animations associées avec ID canonique, alias, pack et tags */}
+              {/* Smartaction sélectionnée avec ID canonique et durée */}
               {(() => {
                 const animMeta = resolveSlotAnimationInfo(currentSlot);
+                const activeVariant = animMeta.variants?.find((v) => v.canonicalId === selectedActionId);
+                const currentCanonicalId = activeVariant?.canonicalId ?? selectedActionId ?? animMeta.canonicalId;
+                const currentDuration = currentSlot.duration ?? activeVariant?.duration ?? animMeta.duration;
+
                 return (
                   <div
                     style={{
@@ -410,80 +430,93 @@ export function ZoneAiDebugOverlay() {
                       fontSize: 10,
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 4,
+                      gap: 5,
                       border: '1px solid rgba(255, 255, 255, 0.08)',
                     }}
                   >
                     <div>
                       <span style={{ color: '#94a3b8' }}>ID Canonique : </span>
                       <span style={{ color: '#38bdf8', fontFamily: 'monospace', fontWeight: 700 }}>
-                        {animMeta.canonicalId}
+                        {currentCanonicalId}
                       </span>
+                      {currentDuration !== undefined && (
+                        <span style={{ color: '#a7f3d0', fontWeight: 700, marginLeft: 6 }}>
+                          ({currentDuration.toFixed(1)}s)
+                        </span>
+                      )}
                     </div>
-
-                    {animMeta.aliasUsed && (
-                      <div>
-                        <span style={{ color: '#94a3b8' }}>Alias utilisé : </span>
-                        <span style={{ color: '#fef08a', fontFamily: 'monospace', fontWeight: 600 }}>
-                          {animMeta.aliasUsed}
-                        </span>
-                      </div>
-                    )}
-
-                    {animMeta.pack && (
-                      <div>
-                        <span style={{ color: '#94a3b8' }}>Pack : </span>
-                        <span style={{ color: '#a7f3d0', fontWeight: 600 }}>
-                          [{animMeta.pack}]
-                        </span>
-                      </div>
-                    )}
-
-                    {animMeta.tags.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center' }}>
-                        <span style={{ color: '#94a3b8' }}>Tags : </span>
-                        {animMeta.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            style={{
-                              backgroundColor: 'rgba(56, 189, 248, 0.15)',
-                              color: '#7dd3fc',
-                              padding: '1px 5px',
-                              borderRadius: 3,
-                              fontSize: 9,
-                            }}
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
 
                     <div>
                       <span style={{ color: '#94a3b8' }}>Clip GLB : </span>
                       <span style={{ color: '#cbd5e1', fontFamily: 'monospace', fontSize: 9 }}>
-                        {animMeta.clipName}
+                        {activeVariant?.clipName ?? animMeta.clipName}
                       </span>
                     </div>
 
-                    {animMeta.variants && animMeta.variants.length > 0 && (
-                      <div style={{ marginTop: 2 }}>
-                        <span style={{ color: '#94a3b8' }}>Variantes ({animMeta.variants.length}) : </span>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2, paddingLeft: 4 }}>
-                          {animMeta.variants.map((v, idx) => (
-                            <div key={idx} style={{ color: '#cbd5e1', fontSize: 9 }}>
-                              • <span style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{v.canonicalId}</span>
-                              {v.aliasUsed && <span style={{ color: '#fef08a' }}> (alias: {v.aliasUsed})</span>}
-                            </div>
-                          ))}
+                    {animMeta.variants && animMeta.variants.length > 1 && (
+                      <div style={{ marginTop: 4 }}>
+                        <span style={{ color: '#94a3b8', fontSize: 10 }}>
+                          Smartactions disponibles ({animMeta.variants.length}) :
+                        </span>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 3,
+                            marginTop: 4,
+                            maxHeight: 120,
+                            overflowY: 'auto',
+                            paddingRight: 4,
+                          }}
+                        >
+                          {animMeta.variants.map((v) => {
+                            const isSelectedAnim = v.canonicalId === currentCanonicalId;
+                            return (
+                              <div
+                                key={v.canonicalId}
+                                onClick={() => setSelectedActionId(v.canonicalId)}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  padding: '3px 6px',
+                                  borderRadius: 4,
+                                  backgroundColor: isSelectedAnim
+                                    ? 'rgba(0, 229, 255, 0.25)'
+                                    : 'rgba(255, 255, 255, 0.05)',
+                                  border: isSelectedAnim
+                                    ? '1px solid #00e5ff'
+                                    : '1px solid rgba(255, 255, 255, 0.05)',
+                                  cursor: 'pointer',
+                                  fontSize: 9,
+                                }}
+                                title={`Sélectionner ${v.canonicalId} (${v.duration ? `${v.duration.toFixed(1)}s` : ''})`}
+                              >
+                                <span
+                                  style={{
+                                    color: isSelectedAnim ? '#38bdf8' : '#e2e8f0',
+                                    fontFamily: 'monospace',
+                                    fontWeight: isSelectedAnim ? 700 : 400,
+                                  }}
+                                >
+                                  {isSelectedAnim ? '▶ ' : '• '}
+                                  {v.canonicalId}
+                                </span>
+                                {v.duration !== undefined && (
+                                  <span
+                                    style={{
+                                      color: isSelectedAnim ? '#a7f3d0' : '#94a3b8',
+                                      fontSize: 9,
+                                      fontWeight: isSelectedAnim ? 700 : 400,
+                                    }}
+                                  >
+                                    {v.duration.toFixed(1)}s
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
-                      </div>
-                    )}
-
-                    {currentSlot.duration && (
-                      <div>
-                        <span style={{ color: '#94a3b8' }}>Durée : </span>
-                        <span style={{ color: '#cbd5e1' }}>{currentSlot.duration}s</span>
                       </div>
                     )}
                   </div>
@@ -596,7 +629,7 @@ export function ZoneAiDebugOverlay() {
                       <div
                         key={s.slotId}
                         onClick={() => setSelectedSlot({ objectId: obj.id, slotId: s.slotId })}
-                        title={`Slot: ${s.name}\nStatut: ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}\nID Canonique: ${sMeta.canonicalId}${sMeta.aliasUsed ? `\nAlias: ${sMeta.aliasUsed}` : ''}${sMeta.pack ? `\nPack: ${sMeta.pack}` : ''}${sMeta.tags.length ? `\nTags: ${sMeta.tags.join(', ')}` : ''}`}
+                        title={`Slot: ${s.name}\nStatut: ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}\nID Canonique: ${sMeta.canonicalId}${sMeta.duration !== undefined ? ` (${sMeta.duration.toFixed(1)}s)` : ''}`}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -641,13 +674,18 @@ export function ZoneAiDebugOverlay() {
                             style={{
                               fontSize: 9,
                               fontFamily: 'monospace',
-                              color: '#94a3b8',
+                              color: '#38bdf8',
                               backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                              padding: '1px 4px',
+                              padding: '1px 5px',
                               borderRadius: 3,
+                              maxWidth: 150,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
                             }}
+                            title={`ID Canonique: ${sMeta.canonicalId}${sMeta.duration !== undefined ? ` (${sMeta.duration.toFixed(1)}s)` : ''}`}
                           >
-                            🎬 {sMeta.aliasUsed ?? sMeta.canonicalId}
+                            🎬 {sMeta.canonicalId}{sMeta.duration !== undefined ? ` (${sMeta.duration.toFixed(1)}s)` : ''}
                           </span>
                           <button
                             onClick={(e) => {

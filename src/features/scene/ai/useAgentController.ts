@@ -177,7 +177,7 @@ export function useAgentController(
 
     const onForceSmartObject = (e: any) => {
       if (e.detail?.targetId === _characterId && e.detail?.objectId) {
-        const { objectId, slotId } = e.detail;
+        const { objectId, slotId, animation } = e.detail;
         const targetSlot = slotId || SMART_OBJECTS[objectId]?.slots[0]?.slotId;
         if (targetSlot && OccupancyManager.isSlotOccupied(objectId, targetSlot, _characterId)) {
           const occupant = OccupancyManager.getOccupant(objectId, targetSlot);
@@ -192,6 +192,16 @@ export function useAgentController(
 
         const seq = buildSmartObjectInstructionSequence(objectId, slotId, _characterId);
         if (seq && seq.length > 0) {
+          if (animation) {
+            const useStep = seq.find((s) => s.type === 'USE_OBJECT');
+            if (useStep) {
+              useStep.animation = animation;
+              const def = getAnimationDef(animation);
+              if (def?.duration) {
+                useStep.duration = def.duration;
+              }
+            }
+          }
           if (targetSlot) {
             OccupancyManager.claimSlot(objectId, targetSlot, _characterId);
             claimedSlotRef.current = { objectId, slotId: targetSlot };
@@ -202,7 +212,7 @@ export function useAgentController(
           statusRef.current = 'IDLE';
           cachedCoordsInstructionRef.current = null;
           cachedCoordsRef.current = null;
-          appLog(_characterId, `⚡ Ordre direct reçu : ${objectId}${slotId ? ` (${slotId})` : ''}`);
+          appLog(_characterId, `⚡ Ordre direct reçu : ${objectId}${slotId ? ` (${slotId})` : ''}${animation ? ` [${animation}]` : ''}`);
         }
       }
     };
