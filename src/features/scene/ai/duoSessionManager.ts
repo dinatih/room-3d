@@ -368,21 +368,19 @@ class DuoSessionManager {
    * Résout la playlist d'animations pour un slot ou un SmartObject donné.
    */
   public resolveSlotPlaylist(objectId: string, slotId?: string): DuoAnimationDef[] {
+    if (slotId === 'sit-cuddle') {
+      const def = DUO_ANIMATIONS.find(d => d.id === 'sit-cuddle');
+      return def ? [def] : [];
+    }
     const obj = getSmartObject(objectId);
     const slot = obj?.slots.find(s => s.slotId === slotId) || obj?.slots[0];
-
-    // Si le slot ou l'objet n'est pas un slot duo, aucun duo ne doit être joué !
-    if (!slot?.isDuo && objectId !== 'duo-zone') {
-      return [];
-    }
-
     if (slot?.duoPool && slot.duoPool.length > 0) {
       const count = Math.min(slot.duoCount ?? 3, slot.duoPool.length);
-      const shuffled = [...slot.duoPool].sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, count)
+      return [...slot.duoPool].sort(() => Math.random() - 0.5).slice(0, count)
         .map(id => DUO_ANIMATIONS.find(d => d.id === id))
         .filter((d): d is DuoAnimationDef => Boolean(d));
-    } else if (slot?.duoAnimId) {
+    }
+    if (slot?.duoAnimId) {
       const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
       return def ? [def] : [];
     }

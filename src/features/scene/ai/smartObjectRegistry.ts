@@ -192,7 +192,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Tirer la chasse',
         offset: [50, 0, 550],
         rotY: Math.PI,
-        animation: 'animations/interactions/anim_button_pushing.glb',
+        animation: 'anim-button-pushing',
         duration: 2.0,
         triggerEventKey: 'wc-flush'
       }
@@ -239,7 +239,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre une douche (Centre)',
         offset: [30, 15, 645],
         rotY: 0,
-        animation: 'animations/poses_idles/miley_armature_posing_f.glb',
+        animation: 'miley-armature-posing-f',
         duration: 25.0,
       },
       {
@@ -247,14 +247,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre une douche (Droite)',
         offset: [8, 15, 635],
         rotY: Math.PI / 2,
-        animation: 'animations/poses_idles/miley_armature_posing_f.glb',
+        animation: 'miley-armature-posing-f',
       },
       {
         slotId: 'take-shower-3',
         name: 'Prendre une douche (Gauche)',
         offset: [42, 15, 660],
         rotY: -Math.PI / 2,
-        animation: 'animations/poses_idles/miley_armature_posing_f.glb',
+        animation: 'miley-armature-posing-f',
       }
     ]
   },
@@ -396,14 +396,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'cook',
         name: 'Cuisiner Four',
         rotY: -Math.PI / 2,
-        animation: 'animations/locomotion/anim_entering_code.glb',
+        animation: 'anim-entering-code',
       },
       {
         slotId: 'cook',
         name: 'Cuisiner Plaques',
         offset: [80, 0, 370],
         rotY: 0,
-        animation: 'animations/interactions/anim_bartending.glb',
+        animation: 'anim-bartending',
         // interactions/anim_cards.glb, interactions/anim_drinking_fountain.glb,
       }
     ]
@@ -419,7 +419,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un ingrédient',
         offset: [250, 0, 320],
         rotY: Math.PI / 2,
-        animation: 'animations/locomotion/anim_entering_code.glb',
+        animation: 'anim-entering-code',
       }
     ]
   },
@@ -437,7 +437,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet en hauteur',
         offset: [240, 0, 38],
         rotY: Math.PI / 2,
-        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
+        animation: 'anim-texting-while-standing',
       }
     ]
   },
@@ -452,7 +452,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Ranger des affaires',
         offset: [220, 0, 435],
         rotY: -Math.PI / 2,
-        animation: 'animations/locomotion/anim_entering_code.glb',
+        animation: 'anim-entering-code',
       }
     ]
   },
@@ -467,7 +467,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'admirer dans le miroir',
         offset: [160, 0, 340],
         rotY: 0,
-        animation: 'animations/poses_idles/miley_armature_change_pose.glb',
+        animation: 'miley-armature-change-pose',
       }
     ]
   },
@@ -524,7 +524,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Consulter son téléphone',
         offset: [-350, 0, 1000],
         rotY: Math.PI / 2,
-        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
+        animation: 'anim-texting-while-standing',
       }
     ]
   },
@@ -949,20 +949,20 @@ export function isDuoSlot(objectId?: string, slotId?: string): boolean {
 }
 
 const MILEY_DANCE_ANIMS = [
-  'animations/combat/miley_armature_10_dance_like_sidestep.glb',
-  'animations/dances/miley_armature_aerobic_dance.glb',
-  'animations/sports_fitness/miley_armature_air_dance.glb',
-  'animations/dances/miley_armature_couple_pop_dance_f.glb',
-  'animations/dances/miley_armature_couple_pop_dance_m.glb',
-  'animations/dances/miley_armature_dance_graceful.glb',
-  'animations/dances/miley_armature_dancetomusic_f.glb',
-  'animations/dances/miley_armature_energetic_dance_f.glb',
-  'animations/dances/miley_armature_energetic_dance_m.glb',
-  'animations/dances/miley_armature_sensual_dance_01.glb',
-  'animations/dances/miley_armature_sensual_dance_02.glb',
-  'animations/dances/miley_armature_sensual_dance_03.glb',
-  'animations/dances/miley_armature_slow_dance_f.glb',
-  'animations/dances/miley_armature_slow_dance_m.glb'
+  'miley-armature-10-dance-like-sidestep',
+  'miley-armature-aerobic-dance',
+  'miley-armature-air-dance',
+  'miley-armature-couple-pop-dance-f',
+  'miley-armature-couple-pop-dance-m',
+  'miley-armature-dance-graceful',
+  'miley-armature-dancetomusic-f',
+  'miley-armature-energetic-dance-f',
+  'miley-armature-energetic-dance-m',
+  'miley-armature-sensual-dance-01',
+  'miley-armature-sensual-dance-02',
+  'miley-armature-sensual-dance-03',
+  'miley-armature-slow-dance-f',
+  'miley-armature-slow-dance-m'
 ];
 
 /**
@@ -1007,7 +1007,7 @@ export function buildSmartObjectInstructionSequence(
   if (objectId === 'shower') {
     return [
       { type: 'MOVE_TO', targetWaypointId: 'bathroom-shower-entry', rotY: 0 },
-      { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'animations/interactions/anim_open_door_outwards.glb', duration: 0.8, rotY: 0 },
+      { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'anim-open-door-outwards', duration: 0.8, rotY: 0 },
       { type: 'MOVE_TO', smartObjectId: 'shower', slotId: slot.slotId },
       { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.5 },
       baseInstruction,
