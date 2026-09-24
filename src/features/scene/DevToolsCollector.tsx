@@ -181,26 +181,31 @@ export function DevToolsCollector() {
 
     // Auto-refresh stats every 2s
     const id = setInterval(() => devState.refreshScene?.(), 2000);
+    gl.info.autoReset = false;
     return () => {
       devState.refreshScene = null;
       devState.logDiagnostics = null;
       clearInterval(id);
+      gl.info.autoReset = true;
     };
-  }, [scene]);
+  }, [scene, gl]);
 
   useFrame(() => {
     if (isAppIdle()) {
+      gl.info.reset();
       devState.drawCalls = 0;
       devState.triangles = 0;
       return;
     }
 
     // Renderer stats — mis à jour dans devState à chaque frame (pas de React)
+    // autoReset étant false, info.render accumule toutes les passes (réflecteurs miroirs + caméra principale + ombres)
     const info = gl.info;
     devState.drawCalls  = info.render.calls;
     devState.triangles  = info.render.triangles;
     devState.geometries = info.memory.geometries;
     devState.textures   = info.memory.textures;
+    info.reset();
 
     // FPS — temps entre deux frames rendus
     const now = performance.now();
