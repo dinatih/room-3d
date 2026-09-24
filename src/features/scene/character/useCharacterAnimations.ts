@@ -123,9 +123,9 @@ export function useCharacterAnimations({
       return;
     }
 
-    const isTPose = animId === 'tpose' || animId === 't-pose';
+    const isTPose = animId === 't-pose';
     if (isTPose) {
-      currentAnimClip.current = 'tpose';
+      currentAnimClip.current = 't-pose';
       if (isUserOverride) userAnimOverrideRef.current = true;
       invalidate();
       return;

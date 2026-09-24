@@ -615,7 +615,7 @@ export function InventoryPreview({
   const debugUrlsBottom = isWalkerItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
   const currentTargetId = resolveAnimationId(actionStates.walkerAnim || 'idle');
   const currentAnimOpt = isHumanWalker ? WALKER_ANIM_OPTIONS.find(a => a.value === currentTargetId || a.value === actionStates.walkerAnim) : null;
-  const currentAnimLabel = actionStates.walkerAnim === 'tpose'
+  const currentAnimLabel = actionStates.walkerAnim === 't-pose'
     ? 'T-Pose'
     : (currentAnimOpt ? currentAnimOpt.label : (actionStates.walkerAnim || 'Idle'));
 
@@ -935,7 +935,7 @@ export function InventoryPreview({
                     </button>
                     {isHumanWalker && (
                       <>
-                        <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }} title="T-Pose (Rest)">📐</button>
+                        <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 't-pose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 't-pose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }} title="T-Pose (Rest)">📐</button>
                         <button
                           type="button"
                           onClick={() => {
@@ -996,7 +996,7 @@ export function InventoryPreview({
                       <button
                         type="button"
                         onClick={() => {
-                          const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle' && a.value !== 'tpose' && a.value !== 't-pose');
+                          const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle' && a.value !== 't-pose');
                           if (pool.length > 0) {
                             const randomAnim = pool[Math.floor(Math.random() * pool.length)];
                             setActionStates(s => ({ ...s, walkerAnim: randomAnim.value, isPaused: false }));
@@ -1036,7 +1036,7 @@ export function InventoryPreview({
                         </>
                       ) : (
                         <>
-                          <option value="tpose">T-Pose (Rest)</option>
+                          <option value="t-pose">T-Pose (Rest)</option>
                           <option value="idle">Idle</option>
                           <option value="walk">Walking</option>
                           <option value="run">Running</option>

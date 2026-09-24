@@ -690,7 +690,7 @@ export function SingleCharacter({
 
     let target = resolveAnimationId(rawTarget);
 
-    const isTPose = target === 'tpose' || target === 't-pose';
+    const isTPose = target === 't-pose';
 
     let isTemporaryLoadingFallback = false;
     if (!isTPose && !actions[target]) {
@@ -706,12 +706,12 @@ export function SingleCharacter({
     }
 
     if (isTPose) {
-      if (activeActionName.current !== 'tpose' && activeActionName.current !== 't-pose') {
+      if (activeActionName.current !== 't-pose') {
         if (activeActionName.current && actions[activeActionName.current]) {
           actions[activeActionName.current].stop();
         }
         mixer.stopAllAction();
-        activeActionName.current = 'tpose';
+        activeActionName.current = 't-pose';
       }
       scene.traverse((c: any) => {
         if (c.isSkinnedMesh && c.skeleton) {
@@ -726,7 +726,7 @@ export function SingleCharacter({
     } else {
       const to = actions[target];
       if (to && activeActionName.current !== target) {
-        const from = (activeActionName.current && activeActionName.current !== 'tpose' && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
+        const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
         if (from) from.fadeOut(0.2);
 
         to.setLoop(THREE.LoopRepeat, Infinity);

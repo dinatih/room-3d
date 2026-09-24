@@ -31,7 +31,7 @@ try {
 } catch {}
 
 export function getAnimCategory(val: string): string {
-  if (val === 'idle' || val === 'tpose' || val === 't-pose') return 'poses_idles';
+  if (val === 'idle' || val === 't-pose') return 'poses_idles';
   const def = getAnimationDef(val);
   const path = def ? def.path : val;
   if (path.startsWith('animations/')) {
@@ -502,7 +502,7 @@ export function CharacterAnimSelector({
               const m = anim.label.match(/\/ ([\d.]+)s,/);
               if (m) duration = parseFloat(m[1]);
             }
-            if (duration === undefined && (anim.value === 'tpose' || anim.value === 't-pose')) {
+            if (duration === undefined && anim.value === 't-pose') {
               duration = 0.1;
             }
             const isPose = duration !== undefined && duration <= 0.15;
