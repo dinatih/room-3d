@@ -9,42 +9,42 @@ import { getAllDuoAnimationIds } from './duoAnimations';
  */
 export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   // ── LITS ───────────────────────────────────────────────────────────────────
-  'bed-double': {
-    id: 'bed-double',
-    name: 'Lit Utåker Double',
-    category: 'bed',
-    itemId: 'bed-double',
-    slots: [
-      {
-        slotId: 'seat-left',
-        name: 'S\'asseoir (Gauche)',
-        relative: true,
-        offset: [0, 0, -50],
-        animationsRandom: 'seated-front',
-      },
-      {
-        slotId: 'seat-right',
-        name: 'S\'asseoir (Droite)',
-        relative: true,
-        offset: [0, 0, 50],
-        animationsRandom: 'seated-front',
-      },
-      {
-        slotId: 'lie-down-left',
-        name: 'Dormir couché (Gauche)',
-        relative: true,
-        offset: [-35, 45, 0],
-        animationsRandom: 'laying-pack',
-      },
-      {
-        slotId: 'lie-down-right',
-        name: 'Dormir couché (Droite)',
-        relative: true,
-        offset: [35, 45, 0],
-        animationsRandom: 'laying-pack',
-      }
-    ]
-  },
+  // 'bed-double': {
+  //   id: 'bed-double',
+  //   name: 'Lit Utåker Double',
+  //   category: 'bed',
+  //   itemId: 'bed-double',
+  //   slots: [
+  //     {
+  //       slotId: 'seat-left',
+  //       name: 'S\'asseoir (Gauche)',
+  //       relative: true,
+  //       offset: [0, 0, -50],
+  //       animationsRandom: 'seated-front',
+  //     },
+  //     {
+  //       slotId: 'seat-right',
+  //       name: 'S\'asseoir (Droite)',
+  //       relative: true,
+  //       offset: [0, 0, 50],
+  //       animationsRandom: 'seated-front',
+  //     },
+  //     {
+  //       slotId: 'lie-down-left',
+  //       name: 'Dormir couché (Gauche)',
+  //       relative: true,
+  //       offset: [-35, 45, 0],
+  //       animationsRandom: 'laying-pack',
+  //     },
+  //     {
+  //       slotId: 'lie-down-right',
+  //       name: 'Dormir couché (Droite)',
+  //       relative: true,
+  //       offset: [35, 45, 0],
+  //       animationsRandom: 'laying-pack',
+  //     }
+  //   ]
+  // },
   'bed-west': {
     id: 'bed-west',
     name: 'Lit Utåker Ouest (Principal)',
