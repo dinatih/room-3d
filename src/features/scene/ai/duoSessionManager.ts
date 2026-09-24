@@ -205,7 +205,7 @@ class DuoSessionManager {
     const posA = transformLocalToWorld(localA);
     const posB = transformLocalToWorld(localB);
 
-    const rotA = (ry + (def.rotA !== undefined ? def.rotA : 0)) % (Math.PI * 2);
+    const rotA = ry % (Math.PI * 2);
     const rotB = (ry + (def.rotB !== undefined ? def.rotB : 0)) % (Math.PI * 2);
 
     return {
@@ -455,7 +455,7 @@ class DuoSessionManager {
     const localB: [number, number, number] = def.offsetB ?? [0, 0, 0];
     const posA = transformLocalToWorld(localA);
     const posB = transformLocalToWorld(localB);
-    const rotA = (anchorRotY + (def.rotA ?? 0)) % (Math.PI * 2);
+    const rotA = anchorRotY % (Math.PI * 2);
     const rotB = (anchorRotY + (def.rotB ?? 0)) % (Math.PI * 2);
 
     appLog(objectId, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur A) et ${targetB} (Partenaire B) !`);

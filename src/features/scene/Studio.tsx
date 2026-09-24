@@ -21,6 +21,7 @@ import { CategoryLayerGroup, SceneLayerController } from '@features/scene/sceneL
 import { Equipment, Furniture, Furnishings, Decor, Animals } from './Placements';
 import { Walker } from './Walker';
 import { AiZonesHelper } from './ai/AiZonesHelper';
+import { ZoneAiDebugOverlay } from './ai/ZoneAiDebugOverlay';
 import { CollisionDebugHelper } from './ai/CollisionDebugHelper';
 import { XRayLayer }        from '@features/scene/XRayLayer';
 import { WireframeLayer }   from '@features/scene/WireframeLayer';
@@ -708,6 +709,7 @@ export function Studio() {
           )}
           <VirtualDPad />
           <HoverOverlay />
+          <ZoneAiDebugOverlay />
           {layers.wallEdges && <EdgeHoverOverlay />}
           <AppConsole hidden={showInventory} />
         </>

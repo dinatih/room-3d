@@ -104,16 +104,29 @@ function makeLabelSprite(
   return sprite;
 }
 
+import { OccupancyManager } from './occupancyManager';
+import { useZoneAiDebugStore } from './zoneAiDebugStore';
+
 export function AiZonesHelper() {
   const visible = useSceneStore(s => s.layers.aiZones);
   const cameraMode = useSceneStore(s => s.cameraMode);
   const [toggleVersion, setToggleVersion] = useState(0);
   const [hoveredSlotKey, setHoveredSlotKey] = useState<string | null>(null);
+  const selectedSlot = useZoneAiDebugStore(s => s.selectedSlot);
+  const setSelectedSlot = useZoneAiDebugStore(s => s.setSelectedSlot);
 
   useEffect(() => {
     const handler = () => setToggleVersion(v => v + 1);
     document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
+    document.addEventListener('agent-force-smartobject', handler);
+    document.addEventListener('npc-invite-duo', handler);
+    const interval = setInterval(handler, 1200);
+    return () => {
+      document.removeEventListener('furniture-toggle', handler);
+      document.removeEventListener('agent-force-smartobject', handler);
+      document.removeEventListener('npc-invite-duo', handler);
+      clearInterval(interval);
+    };
   }, []);
 
   // Liste résolue des SmartObjects (monde / dynamique)
@@ -132,23 +145,30 @@ export function AiZonesHelper() {
     return map;
   }, []);
 
-
   const smartObjectSprites = useMemo(() => {
     const map: Record<string, THREE.Sprite> = {};
     Object.values(SMART_OBJECTS).forEach(obj => {
       const color = CATEGORY_COLORS[obj.category] || '#00ff88';
-      const lines = obj.slots.map(s => `• ${s.name}`);
-      map[obj.id] = makeLabelSprite(`✨ ${obj.name}`, lines, color, 5.0);
+      const lines = obj.slots.map(s => {
+        const isOccupied = OccupancyManager.isSlotOccupied(obj.id, s.slotId);
+        const occupant = OccupancyManager.getOccupant(obj.id, s.slotId);
+        const status = isOccupied ? `[Occupé: ${occupant ?? 'PNJ'}]` : '[Libre]';
+        const animName = s.animation
+          ? s.animation.split('/').pop()?.replace('.glb', '')
+          : s.animationsRandom
+          ? `pack:${s.animationsRandom}`
+          : 'anim';
+        return `• ${s.name} ${status} 🎬 ${animName}`;
+      });
+      map[obj.id] = makeLabelSprite(`✨ ${obj.name}`, lines, color, 4.8);
     });
     return map;
-  }, []);
+  }, [toggleVersion]);
 
   // Géométrie mémoïsée du triangle d'orientation 2D (arêtes droites nettes, base plate)
   const arrowGeo = useMemo(() => {
     const shape = new THREE.Shape();
     // Triangle isocèle 2D : pointe en bas (Y = -5.5) pour pointer vers Z+ dans le repère 3D lors du rotX = -PI/2
-    // Quand rotY = 0, le personnage regarde vers Z+ (Sud).
-    // Quand rotY = Math.PI, le personnage regarde vers Z- (Nord).
     shape.moveTo(0, -5.5);
     shape.lineTo(3.2, 3.0);
     shape.lineTo(-3.2, 3.0);
@@ -184,7 +204,6 @@ export function AiZonesHelper() {
 
       {/* ── Smart Objects et leurs Slots d'affordance ── */}
       {resolvedSmartObjects.map(obj => {
-        const color = CATEGORY_COLORS[obj.category] || '#00ff88';
         const slotsCount = obj.slots.length;
         
         // Centre moyen pour le label unifié
@@ -203,6 +222,9 @@ export function AiZonesHelper() {
             {obj.slots.map(slot => {
               const slotKey = `${obj.id}:::${slot.slotId}`;
               const isHovered = hoveredSlotKey === slotKey;
+              const isSelected = selectedSlot?.objectId === obj.id && selectedSlot?.slotId === slot.slotId;
+              const isOccupied = OccupancyManager.isSlotOccupied(obj.id, slot.slotId);
+              const occupant = OccupancyManager.getOccupant(obj.id, slot.slotId);
 
               // Si un slot est survolé et que ce n'est pas celui-ci, le cacher
               if (hoveredSlotKey && !isHovered) {
@@ -210,6 +232,7 @@ export function AiZonesHelper() {
               }
 
               const pos = slot.offset ?? obj.position;
+              const slotColor = isOccupied ? '#ef4444' : isSelected ? '#38bdf8' : '#00e5ff';
 
               // Construction du sprite de détails complets pour le slot survolé
               let detailSprite: THREE.Sprite | null = null;
@@ -217,6 +240,7 @@ export function AiZonesHelper() {
                 const lines: string[] = [
                   `Objet : ${obj.name} [${obj.id}]`,
                   `Slot ID : ${slot.slotId}`,
+                  `Statut : ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}`,
                   `Position : [${pos.map(n => Math.round(n * 10) / 10).join(', ')}]`,
                 ];
 
@@ -251,10 +275,12 @@ export function AiZonesHelper() {
                   lines.push(`Trigger : ${slot.triggerEventKey}${slot.triggerTargetState !== undefined ? ` = ${slot.triggerTargetState}` : ''}`);
                 }
 
+                lines.push('👉 Cliquer pour ordonner à un PNJ');
+
                 detailSprite = makeLabelSprite(
-                  `🎯 ${slot.name}`,
+                  `🎯 ${slot.name} (${isOccupied ? '❌ Occupé' : '✅ Dispo'})`,
                   lines,
-                  '#00ffcc',
+                  isOccupied ? '#f87171' : '#00ffcc',
                   isTopView ? 5.5 : 4.5
                 );
               }
@@ -269,30 +295,36 @@ export function AiZonesHelper() {
                       actions: [`smart-object:::${obj.id}:::${slot.slotId}`],
                     },
                   }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedSlot({ objectId: obj.id, slotId: slot.slotId });
+                  }}
                   onPointerOver={(e) => {
                     e.stopPropagation();
                     setHoveredSlotKey(slotKey);
+                    document.body.style.cursor = 'pointer';
                   }}
                   onPointerOut={(e) => {
                     e.stopPropagation();
                     setHoveredSlotKey(current => (current === slotKey ? null : current));
+                    document.body.style.cursor = '';
                   }}
                 >
-                  {/* Cible au sol (légèrement agrandie et mise en valeur si survolée) */}
+                  {/* Cible au sol (légèrement agrandie et mise en valeur si survolée ou sélectionnée) */}
                   <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                    <circleGeometry args={[isHovered ? 13 : 10, 32]} />
+                    <circleGeometry args={[isHovered || isSelected ? 13 : 10, 32]} />
                     <meshBasicMaterial
-                      color={isHovered ? '#ffffff' : color}
-                      opacity={isHovered ? 0.85 : 0.4}
+                      color={isHovered ? '#ffffff' : slotColor}
+                      opacity={isHovered || isSelected ? 0.85 : 0.4}
                       transparent
                       depthTest={false}
                       depthWrite={false}
                     />
                   </mesh>
                   <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                    <ringGeometry args={[isHovered ? 11 : 8, isHovered ? 13 : 10, 32]} />
+                    <ringGeometry args={[isHovered || isSelected ? 11 : 8, isHovered || isSelected ? 13 : 10, 32]} />
                     <meshBasicMaterial
-                      color={isHovered ? '#00ffcc' : color}
+                      color={isHovered ? '#00ffcc' : isSelected ? '#ffffff' : slotColor}
                       depthTest={false}
                       depthWrite={false}
                     />
@@ -302,10 +334,10 @@ export function AiZonesHelper() {
                     geometry={arrowGeo}
                     rotation={[-Math.PI / 2, 0, slot.rotY ?? obj.rotationY ?? 0]}
                     position={[0, 0.2, 0]}
-                    scale={isHovered ? [1.3, 1.3, 1.3] : [1, 1, 1]}
+                    scale={isHovered || isSelected ? [1.3, 1.3, 1.3] : [1, 1, 1]}
                   >
                     <meshBasicMaterial
-                      color={isHovered ? '#00ffcc' : '#ffffff'}
+                      color={isHovered ? '#00ffcc' : isSelected ? '#38bdf8' : '#ffffff'}
                       depthTest={false}
                       depthWrite={false}
                       side={THREE.DoubleSide}

@@ -4,7 +4,6 @@ export interface DuoAnimationDef {
   icon: string;
   animA: string;
   animB: string;
-  rotA?: number;
   rotB?: number;
   offsetB?: [number, number, number];
   duration?: number;
@@ -41,10 +40,10 @@ export const DUO_ANIMATIONS: DuoAnimationDef[] = [
   { id: 'date_bearhug', label: 'Date Bearhug', icon: '🐻', animA: 'animations/interactions/miley_armature_date_bearhug_m.glb', animB: 'animations/interactions/miley_armature_date_bearhug_f.glb', offsetB: [0, 0, 610], duration: 7.8 },
   { id: 'propose', label: 'Propose', icon: '💍', animA: 'animations/poses_idles/miley_armature_propose_f.glb', animB: 'animations/poses_idles/miley_armature_propose_m.glb', offsetB: [-65, 0, 0], duration: 17.5 },
   { id: 'sit-cuddle', label: 'Sit Cuddle', icon: '🛋️', animA: 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb', animB: 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb', offsetB: [0, 0, 20], duration: 12.0 },
-  { id: 'double_leg_takedown', label: 'Double Leg Takedown', icon: '🤼', animA: 'animations/combat/anim_best_double_leg_takedown_attacker.glb', animB: 'animations/combat/anim_best_double_leg_takedown_victim.glb', rotA: 0, rotB: Math.PI, offsetB: [0, 0, 250], duration: 7.3 },
-  { id: 'double_leg_takedown_pair', label: 'Double Leg Takedown (Court)', icon: '🤼', animA: 'animations/combat/anim_double_leg_takedown_attacker.glb', animB: 'animations/combat/anim_double_leg_takedown_victim.glb', rotA: 0, rotB: Math.PI, offsetB: [0, 0, 250], duration: 3.5 },
-  { id: 'release_hostage', label: 'Libération d\'otage (Villain / Hostage)', icon: '🚨', animA: 'animations/interactions/anim_release_hostage_villain.glb', animB: 'animations/interactions/anim_release_hostage_hostage.glb', rotA: 0, rotB: 0, offsetB: [0, 0, 40], duration: 3.1 },
-  { id: 'fist_fight', label: 'Combat de poings (Fist Fight B / A)', icon: '🥊', animA: 'animations/combat/anim_fist_fight_b.glb', animB: 'animations/combat/anim_fist_fight_a.glb', rotA: 0, rotB: Math.PI, offsetB: [0, 0, 120], duration: 4.7 },
+  { id: 'double_leg_takedown', label: 'Double Leg Takedown', icon: '🤼', animA: 'animations/combat/anim_best_double_leg_takedown_attacker.glb', animB: 'animations/combat/anim_best_double_leg_takedown_victim.glb', rotB: Math.PI, offsetB: [0, 0, 250], duration: 7.3 },
+  { id: 'double_leg_takedown_pair', label: 'Double Leg Takedown (Court)', icon: '🤼', animA: 'animations/combat/anim_double_leg_takedown_attacker.glb', animB: 'animations/combat/anim_double_leg_takedown_victim.glb', rotB: Math.PI, offsetB: [0, 0, 250], duration: 3.5 },
+  { id: 'release_hostage', label: 'Libération d\'otage (Villain / Hostage)', icon: '🚨', animA: 'animations/interactions/anim_release_hostage_villain.glb', animB: 'animations/interactions/anim_release_hostage_hostage.glb', rotB: 0, offsetB: [0, 0, 40], duration: 3.1 },
+  { id: 'fist_fight', label: 'Combat de poings (Fist Fight B / A)', icon: '🥊', animA: 'animations/combat/anim_fist_fight_b.glb', animB: 'animations/combat/anim_fist_fight_a.glb', rotB: Math.PI, offsetB: [0, 0, 120], duration: 4.7 },
   { id: 'taken_hostage', label: 'Prise d\'otage', icon: '🚨', animA: 'animations/interactions/anim_taken_hostage_victim.glb', animB: 'animations/interactions/anim_taken_hostage_villain.glb', duration: 2.2, offsetB: [0, 0, -80] },
   { id: 'shoulder_throw', label: 'Projection épaule', icon: '🥋', animA: 'animations/interactions/anim_shoulder_throw_victim.glb', animB: 'animations/interactions/anim_shoulder_throw_aggressor.glb', duration: 6.7 },
   { id: 'kiss_man_woman', label: 'Baiser Homme / Femme', icon: '💋', animA: 'animations/emotes_gestures/anim_kiss_from_woman.glb', animB: 'animations/emotes_gestures/anim_kiss_from_man.glb', rotB: Math.PI, offsetB: [0, 0, 50], duration: 7.1 },

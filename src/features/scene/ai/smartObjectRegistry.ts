@@ -715,13 +715,12 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'duo-zone',
     name: '✨ Scène Duo',
     category: 'outdoor',
-    position: [-200, 0, -300],
+    position: [-100, 0, -200],
     slots: [
       {
         slotId: 'duo-random',
         name: 'Session Duo Aléatoire',
         isDuo: true,
-        offset: [-200, 0, -300],
         rotY: 0,
         duoCount: 3,
       }

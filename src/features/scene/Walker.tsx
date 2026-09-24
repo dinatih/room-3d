@@ -86,7 +86,7 @@ function InternalWalker(props: WalkerProps) {
           if (isDuoRoleA) {
             charAnim = def.animA;
             charPos = [0, 0, 0];
-            charRot = def.rotA !== undefined ? def.rotA : 0;
+            charRot = 0;
           } else if (isDuoRoleB) {
             charAnim = def.animB;
             charPos = def.offsetB ? [def.offsetB[0], def.offsetB[1], def.offsetB[2]] : [0, 0, 0];
