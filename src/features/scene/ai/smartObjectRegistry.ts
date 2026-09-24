@@ -109,7 +109,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Dormir couché',
         offset: [270, 45, 190],
         animationsRandom: 'laying-front',
-        rotY: Math.PI,
+        rotY: -Math.PI,
       }
     ]
   },

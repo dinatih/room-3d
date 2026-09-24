@@ -190,7 +190,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['sit-talk-2'],
     tags: ['sitting', 'seated-front', 'social', 'talk'],
     duration: 44.1,
-    defaultOffset: [0, -45, -60],
+    defaultOffset: [0, -38, 10],
   },
   {
     id: 'sitting-laughing',
