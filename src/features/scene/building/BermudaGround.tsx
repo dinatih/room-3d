@@ -72,24 +72,22 @@ export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.5 }: B
 
   return (
     <>
-      {/* Rectangle vert uni : terrain extérieur rattaché à Revêtement sol (LAYER_FLOOR_COVERINGS), masqué si le calque Herbe est actif */}
-      {!isGrassActive && (
-        <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
-          <mesh
-            material={groundExteriorMat}
-            rotation={[-Math.PI / 2, 0, 0]}
-            position={[150, yPos, 0]}
-            receiveShadow
-            userData={{
-              brickType: 'ground',
-              itemName: 'Terrain Extérieur',
-              hoverAction: { label: 'Sol : Vert uni', actionId: 'ground-type-cycle' },
-            }}
-          >
-            <planeGeometry args={[1100, 2000]} />
-          </mesh>
-        </CategoryLayerGroup>
-      )}
+      {/* Rectangle vert uni : terrain extérieur rattaché à Revêtement sol (LAYER_FLOOR_COVERINGS) */}
+      <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
+        <mesh
+          material={groundExteriorMat}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[150, yPos, 0]}
+          receiveShadow
+          userData={{
+            brickType: 'ground',
+            itemName: 'Terrain Extérieur',
+            hoverAction: { label: 'Sol : Vert uni', actionId: 'ground-type-cycle' },
+          }}
+        >
+          <planeGeometry args={[1100, 2000]} />
+        </mesh>
+      </CategoryLayerGroup>
 
       {/* Herbe texturée PBR : rattachée au calque Herbe (LAYER_GRASS) */}
       {showTexturedGrass && (
@@ -139,8 +137,8 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       transparent: true,
       opacity: 0.8,
       polygonOffset: true,
-      polygonOffsetFactor: 2,
-      polygonOffsetUnits: 2,
+      polygonOffsetFactor: 0,
+      polygonOffsetUnits: 0,
     });
   }, [textures, config.tileSize]);
 
