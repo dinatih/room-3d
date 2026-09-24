@@ -149,3 +149,133 @@ export function getRandomAnimationByQuery(
 
   return null;
 }
+
+export interface SlotAnimationMeta {
+  canonicalId: string;       // ID canonique unique (ex: 'sitting-idle', 'wash-hands')
+  aliasUsed?: string;        // Alias utilisé pour ce slot (ex: 'sit-idle', 'seated-front')
+  allAliases?: string[];     // Tous les alias définis
+  tags: string[];            // Tags sémantiques (ex: ['sitting', 'seated-front'])
+  pack?: string;             // Nom du pack si sélection groupée/aléatoire
+  clipName: string;          // Nom du fichier / clip
+  duration?: number;
+  variants?: Array<{
+    canonicalId: string;
+    aliasUsed?: string;
+    clipName: string;
+  }>;
+}
+
+/**
+ * Analyse un slot de Smart Object pour extraire :
+ * - l'ID canonique de l'animation
+ * - l'alias utilisé
+ * - les tags et packs sémantiques
+ * - les variantes associées
+ */
+export function resolveSlotAnimationInfo(slot: {
+  animation?: string;
+  animationsRandom?: string | string[];
+  availableAnims?: string[];
+  isDuo?: boolean;
+  duoAnimId?: string;
+  slotId?: string;
+}): SlotAnimationMeta {
+  // Cas 1 : Animation Duo
+  if (slot.isDuo) {
+    const duoId = slot.duoAnimId ?? slot.slotId ?? 'duo';
+    const def = getAnimationDef(duoId);
+    return {
+      canonicalId: def?.id ?? duoId,
+      aliasUsed: slot.duoAnimId ?? slot.slotId,
+      allAliases: def?.aliases ?? (slot.duoAnimId ? [slot.duoAnimId] : undefined),
+      tags: def?.tags ?? ['duo'],
+      clipName: def?.path ? def.path.split('/').pop()?.replace('.glb', '') ?? duoId : duoId,
+      duration: def?.duration,
+    };
+  }
+
+  // Cas 2 : Animation directe spécifiée
+  if (slot.animation) {
+    const raw = slot.animation;
+    const def = getAnimationDef(raw);
+    const clip = raw.split('/').pop()?.replace('.glb', '') ?? raw;
+
+    let aliasUsed: string | undefined;
+    if (def?.aliases?.length) {
+      const match = def.aliases.find((a) => a.toLowerCase() === raw.toLowerCase());
+      aliasUsed = match ?? def.aliases[0];
+    } else if (!raw.includes('/') && !raw.endsWith('.glb')) {
+      aliasUsed = raw;
+    }
+
+    const variants = slot.availableAnims?.map((v) => {
+      const vDef = getAnimationDef(v);
+      return {
+        canonicalId: vDef?.id ?? v.split('/').pop()?.replace('.glb', '') ?? v,
+        aliasUsed: vDef?.aliases?.[0] ?? (!v.includes('/') ? v : undefined),
+        clipName: v.split('/').pop()?.replace('.glb', '') ?? v,
+      };
+    });
+
+    const packStr = slot.animationsRandom
+      ? Array.isArray(slot.animationsRandom)
+        ? slot.animationsRandom.join(', ')
+        : slot.animationsRandom
+      : undefined;
+
+    return {
+      canonicalId: def?.id ?? clip.replace(/^anim_/, ''),
+      aliasUsed,
+      allAliases: def?.aliases,
+      tags: def?.tags ?? [],
+      pack: packStr,
+      clipName: def?.path ? def.path.split('/').pop()?.replace('.glb', '') ?? clip : clip,
+      duration: def?.duration,
+      variants,
+    };
+  }
+
+  // Cas 3 : Pack d'animations aléatoires (animationsRandom)
+  if (slot.animationsRandom) {
+    const packStr = Array.isArray(slot.animationsRandom)
+      ? slot.animationsRandom.join(', ')
+      : slot.animationsRandom;
+
+    const matchingDefs = typeof slot.animationsRandom === 'string'
+      ? getAnimationsByTags(slot.animationsRandom)
+      : [];
+
+    const first = matchingDefs[0];
+    const canonicalId = first
+      ? `${first.id}${matchingDefs.length > 1 ? ` (+${matchingDefs.length - 1} anims)` : ''}`
+      : packStr;
+
+    const aliasUsed = first?.aliases?.[0] ?? packStr;
+
+    const variants = (matchingDefs.length > 0
+      ? matchingDefs.slice(0, 6)
+      : (slot.availableAnims ?? []).map((a) => getAnimationDef(a)).filter(Boolean) as AnimationDefinition[]
+    ).map((d) => ({
+      canonicalId: d.id,
+      aliasUsed: d.aliases?.[0],
+      clipName: d.path.split('/').pop()?.replace('.glb', '') ?? d.id,
+    }));
+
+    return {
+      canonicalId,
+      aliasUsed,
+      allAliases: first?.aliases,
+      tags: first?.tags ?? (typeof slot.animationsRandom === 'string' ? [slot.animationsRandom] : []),
+      pack: packStr,
+      clipName: first?.path ? first.path.split('/').pop()?.replace('.glb', '') ?? packStr : packStr,
+      duration: first?.duration,
+      variants: variants.length > 0 ? variants : undefined,
+    };
+  }
+
+  return {
+    canonicalId: 'default',
+    tags: [],
+    clipName: 'défaut',
+  };
+}

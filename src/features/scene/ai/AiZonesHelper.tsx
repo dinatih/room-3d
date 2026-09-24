@@ -107,6 +107,7 @@ function makeLabelSprite(
 import { useThree } from '@react-three/fiber';
 import { OccupancyManager } from './occupancyManager';
 import { useZoneAiDebugStore } from './zoneAiDebugStore';
+import { resolveSlotAnimationInfo } from '../animations/animationResolver';
 
 export function AiZonesHelper() {
   const visible = useSceneStore(s => s.layers.aiZones);
@@ -211,12 +212,24 @@ export function AiZonesHelper() {
               // Construction du sprite de détails complets pour le slot survolé
               let detailSprite: THREE.Sprite | null = null;
               if (isHovered) {
+                const animMeta = resolveSlotAnimationInfo(slot);
                 const lines: string[] = [
                   `✨ Meuble : ${obj.name} [${obj.id}]`,
                   `🎯 Slot : ${slot.name} [${slot.slotId}]`,
                   `Statut : ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}`,
-                  `Position : [${pos.map(n => Math.round(n * 10) / 10).join(', ')}]`,
+                  `ID Canonique : ${animMeta.canonicalId}`,
                 ];
+
+                if (animMeta.aliasUsed) {
+                  lines.push(`Alias : ${animMeta.aliasUsed}`);
+                }
+                if (animMeta.pack) {
+                  lines.push(`Pack : [${animMeta.pack}]`);
+                }
+                if (animMeta.tags.length > 0) {
+                  lines.push(`Tags : ${animMeta.tags.slice(0, 4).join(', ')}`);
+                }
+                lines.push(`Clip GLB : ${animMeta.clipName}`);
 
                 if (slot.relative !== undefined) {
                   lines.push(`Relative : ${slot.relative ? 'true' : 'false'}`);
@@ -228,18 +241,12 @@ export function AiZonesHelper() {
                 const degRot = Math.round((((slot.rotY ?? obj.rotationY ?? 0) * 180) / Math.PI) % 360);
                 lines.push(`RotY : ${(slot.rotY ?? obj.rotationY ?? 0).toFixed(2)} rad (${degRot}°)`);
 
-                if (slot.animation) {
-                  lines.push(`Animation : ${slot.animation.split('/').pop()?.replace('.glb', '')}`);
-                }
-                const animRandom = slot.animationsRandom;
-                if (animRandom) {
-                  const anims = Array.isArray(animRandom)
-                    ? animRandom.join(', ')
-                    : animRandom;
-                  lines.push(`Pack/Anims : ${anims}`);
-                }
-                if (slot.availableAnims?.length) {
-                  lines.push(`Variantes : ${slot.availableAnims.map(a => a.split('/').pop()?.replace('.glb', '')).join(', ')}`);
+                if (animMeta.variants && animMeta.variants.length > 0) {
+                  const varStr = animMeta.variants
+                    .slice(0, 3)
+                    .map(v => v.aliasUsed ? `${v.canonicalId} (${v.aliasUsed})` : v.canonicalId)
+                    .join(', ');
+                  lines.push(`Variantes : ${varStr}`);
                 }
                 if (slot.duration !== undefined) {
                   lines.push(`Durée : ${slot.duration}s`);

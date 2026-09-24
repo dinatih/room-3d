@@ -7,6 +7,7 @@ import { cameraState } from '../cameraState';
 import { CHARACTERS, isCharacterVisibleInMode } from '../walkerConfig';
 import { useZoneAiDebugStore } from './zoneAiDebugStore';
 import { appLog } from '@features/ui/AppConsole';
+import { resolveSlotAnimationInfo } from '../animations/animationResolver';
 
 export function ZoneAiDebugOverlay() {
   const visible = useSceneStore((s) => s.layers.aiZones);
@@ -389,45 +390,97 @@ export function ZoneAiDebugOverlay() {
                 )}
               </div>
 
-              {/* Animations associées */}
-              <div
-                style={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  padding: '6px 8px',
-                  borderRadius: 6,
-                  fontSize: 10,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                }}
-              >
-                <div>
-                  <span style={{ color: '#94a3b8' }}>Animation : </span>
-                  <span style={{ color: '#fef08a', fontFamily: 'monospace' }}>
-                    {currentSlot.animation
-                      ? currentSlot.animation.split('/').pop()?.replace('.glb', '')
-                      : currentSlot.animationsRandom
-                      ? `Pack [${currentSlot.animationsRandom}]`
-                      : 'défaut'}
-                  </span>
-                </div>
-                {currentSlot.availableAnims && currentSlot.availableAnims.length > 0 && (
-                  <div>
-                    <span style={{ color: '#94a3b8' }}>Variantes : </span>
-                    <span style={{ color: '#cbd5e1' }}>
-                      {currentSlot.availableAnims
-                        .map((a) => a.split('/').pop()?.replace('.glb', ''))
-                        .join(', ')}
-                    </span>
+              {/* Animations associées avec ID canonique, alias, pack et tags */}
+              {(() => {
+                const animMeta = resolveSlotAnimationInfo(currentSlot);
+                return (
+                  <div
+                    style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                      padding: '8px 10px',
+                      borderRadius: 6,
+                      fontSize: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                    }}
+                  >
+                    <div>
+                      <span style={{ color: '#94a3b8' }}>ID Canonique : </span>
+                      <span style={{ color: '#38bdf8', fontFamily: 'monospace', fontWeight: 700 }}>
+                        {animMeta.canonicalId}
+                      </span>
+                    </div>
+
+                    {animMeta.aliasUsed && (
+                      <div>
+                        <span style={{ color: '#94a3b8' }}>Alias utilisé : </span>
+                        <span style={{ color: '#fef08a', fontFamily: 'monospace', fontWeight: 600 }}>
+                          {animMeta.aliasUsed}
+                        </span>
+                      </div>
+                    )}
+
+                    {animMeta.pack && (
+                      <div>
+                        <span style={{ color: '#94a3b8' }}>Pack : </span>
+                        <span style={{ color: '#a7f3d0', fontWeight: 600 }}>
+                          [{animMeta.pack}]
+                        </span>
+                      </div>
+                    )}
+
+                    {animMeta.tags.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center' }}>
+                        <span style={{ color: '#94a3b8' }}>Tags : </span>
+                        {animMeta.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            style={{
+                              backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                              color: '#7dd3fc',
+                              padding: '1px 5px',
+                              borderRadius: 3,
+                              fontSize: 9,
+                            }}
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div>
+                      <span style={{ color: '#94a3b8' }}>Clip GLB : </span>
+                      <span style={{ color: '#cbd5e1', fontFamily: 'monospace', fontSize: 9 }}>
+                        {animMeta.clipName}
+                      </span>
+                    </div>
+
+                    {animMeta.variants && animMeta.variants.length > 0 && (
+                      <div style={{ marginTop: 2 }}>
+                        <span style={{ color: '#94a3b8' }}>Variantes ({animMeta.variants.length}) : </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2, paddingLeft: 4 }}>
+                          {animMeta.variants.map((v, idx) => (
+                            <div key={idx} style={{ color: '#cbd5e1', fontSize: 9 }}>
+                              • <span style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{v.canonicalId}</span>
+                              {v.aliasUsed && <span style={{ color: '#fef08a' }}> (alias: {v.aliasUsed})</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {currentSlot.duration && (
+                      <div>
+                        <span style={{ color: '#94a3b8' }}>Durée : </span>
+                        <span style={{ color: '#cbd5e1' }}>{currentSlot.duration}s</span>
+                      </div>
+                    )}
                   </div>
-                )}
-                {currentSlot.duration && (
-                  <div>
-                    <span style={{ color: '#94a3b8' }}>Durée : </span>
-                    <span style={{ color: '#cbd5e1' }}>{currentSlot.duration}s</span>
-                  </div>
-                )}
-              </div>
+                );
+              })()}
 
               {/* Bouton d'action direct */}
               <button
@@ -529,17 +582,13 @@ export function ZoneAiDebugOverlay() {
                     const isSelected =
                       selectedSlot?.objectId === obj.id && selectedSlot?.slotId === s.slotId;
 
-                    const animLabel = s.animation
-                      ? s.animation.split('/').pop()?.replace('.glb', '')
-                      : s.animationsRandom
-                      ? `pack:${s.animationsRandom}`
-                      : 'anim';
+                    const sMeta = resolveSlotAnimationInfo(s);
 
                     return (
                       <div
                         key={s.slotId}
                         onClick={() => setSelectedSlot({ objectId: obj.id, slotId: s.slotId })}
-                        title={`Slot: ${s.name}\nStatut: ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}\nAnimation: ${s.animation ?? s.animationsRandom}`}
+                        title={`Slot: ${s.name}\nStatut: ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}\nID Canonique: ${sMeta.canonicalId}${sMeta.aliasUsed ? `\nAlias: ${sMeta.aliasUsed}` : ''}${sMeta.pack ? `\nPack: ${sMeta.pack}` : ''}${sMeta.tags.length ? `\nTags: ${sMeta.tags.join(', ')}` : ''}`}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -589,9 +638,8 @@ export function ZoneAiDebugOverlay() {
                               padding: '1px 4px',
                               borderRadius: 3,
                             }}
-                            title={`Animation : ${s.animation ?? s.animationsRandom}`}
                           >
-                            🎬 {animLabel}
+                            🎬 {sMeta.aliasUsed ?? sMeta.canonicalId}
                           </span>
                           <button
                             onClick={(e) => {
