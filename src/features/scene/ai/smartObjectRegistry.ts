@@ -391,13 +391,13 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     position: [80, 0, 370],
     slots: [
       {
-        slotId: 'cook',
+        slotId: 'cook-oven',
         name: 'Cuisiner Four',
         rotY: -Math.PI / 2,
         animation: 'anim-entering-code',
       },
       {
-        slotId: 'cook',
+        slotId: 'cook-stove',
         name: 'Cuisiner Plaques',
         rotY: 0,
         animation: 'anim-bartending',

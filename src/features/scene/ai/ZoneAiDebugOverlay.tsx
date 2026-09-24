@@ -584,7 +584,7 @@ export function ZoneAiDebugOverlay() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 2 }}>
-                  {obj.slots.map((s) => {
+                  {obj.slots.map((s, idx) => {
                     const isOccupied = OccupancyManager.isSlotOccupied(obj.id, s.slotId);
                     const occupant = OccupancyManager.getOccupant(obj.id, s.slotId);
                     const isSelected =
@@ -594,7 +594,7 @@ export function ZoneAiDebugOverlay() {
 
                     return (
                       <div
-                        key={s.slotId}
+                        key={`${obj.id}-${s.slotId}-${idx}`}
                         onClick={() => setSelectedSlot({ objectId: obj.id, slotId: s.slotId })}
                         title={`Slot: ${s.name}\nStatut: ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}\nID Canonique: ${sMeta.canonicalId}${sMeta.aliasUsed ? `\nAlias: ${sMeta.aliasUsed}` : ''}${sMeta.pack ? `\nPack: ${sMeta.pack}` : ''}${sMeta.tags.length ? `\nTags: ${sMeta.tags.join(', ')}` : ''}`}
                         style={{

@@ -194,7 +194,7 @@ export function AiZonesHelper() {
           <group key={`smart-${obj.id}`}>
 
             {/* Cibles au sol + flèches d'orientation pour chaque slot */}
-            {obj.slots.map(slot => {
+            {obj.slots.map((slot, sIdx) => {
               const slotKey = `${obj.id}:::${slot.slotId}`;
               const isHovered = hoveredSlotKey === slotKey;
               const isSelected = selectedSlot?.objectId === obj.id && selectedSlot?.slotId === slot.slotId;
@@ -280,7 +280,7 @@ export function AiZonesHelper() {
 
               return (
                 <group
-                  key={`slot-${obj.id}-${slot.slotId}`}
+                  key={`slot-${obj.id}-${slot.slotId}-${sIdx}`}
                   position={[pos[0], baseHeight, pos[2]]}
                   userData={{
                     hoverAction: {

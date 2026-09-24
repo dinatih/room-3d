@@ -6,7 +6,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 
 import { useProgress, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
 import {
-  AgXToneMapping, PCFSoftShadowMap, Color,
+  AgXToneMapping, PCFShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
   PerspectiveCamera,
@@ -476,7 +476,7 @@ export function Studio() {
           far:  10000,
           position: [ROOM_W / 2, 1000, -150],
         }}
-        shadows={{ type: PCFSoftShadowMap }}
+        shadows={{ type: PCFShadowMap }}
         gl={{
           antialias:    true,
           alpha:        false,
