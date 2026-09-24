@@ -990,7 +990,7 @@ export function buildSmartObjectInstructionSequence(
   if (objectId === 'shower') {
     return [
       { type: 'MOVE_TO', targetWaypointId: 'bathroom-shower-entry', rotY: 0 },
-      { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'anim-open-door-outwards', duration: 0.8, rotY: 0 },
+      { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: true, duration: 0.8, rotY: 0 },
       { type: 'MOVE_TO', smartObjectId: 'shower', slotId: slot.slotId },
       { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.5 },
       baseInstruction,

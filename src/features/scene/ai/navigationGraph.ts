@@ -64,6 +64,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'garden',
     traverseInstructions: [
       { type: 'MOVE_TO', targetWaypointId: 'living-glass-door' },
+      { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, duration: 0.4 },
       { type: 'MOVE_TO', targetWaypointId: 'garden-patio' }
     ]
   },
@@ -72,6 +73,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'living',
     traverseInstructions: [
       { type: 'MOVE_TO', targetWaypointId: 'garden-patio' },
+      { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, duration: 0.4 },
       { type: 'MOVE_TO', targetWaypointId: 'living-glass-door' }
     ]
   },
@@ -82,6 +84,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'corridor',
     traverseInstructions: [
       { type: 'MOVE_TO', targetWaypointId: 'living-corridor-door' },
+      { type: 'INTERACT', triggerEventKey: 'livingDoor', triggerTargetState: true, duration: 0.4 },
       { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' }
     ]
   },
@@ -90,6 +93,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'living',
     traverseInstructions: [
       { type: 'MOVE_TO', targetWaypointId: 'living-corridor-door' },
+      { type: 'INTERACT', triggerEventKey: 'livingDoor', triggerTargetState: true, duration: 0.4 },
       { type: 'MOVE_TO', targetPos: [230, 0, 320] } // Avance dans le salon
     ]
   },
@@ -100,6 +104,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'bathroom',
     traverseInstructions: [
       { type: 'MOVE_TO', targetWaypointId: 'corridor-bathroom-door' },
+      { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, duration: 0.4 },
       { type: 'MOVE_TO', targetWaypointId: 'bathroom-entry' }
     ]
   },
@@ -108,6 +113,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'corridor',
     traverseInstructions: [
       { type: 'MOVE_TO', targetWaypointId: 'bathroom-entry' },
+      { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, duration: 0.4 },
       { type: 'MOVE_TO', targetWaypointId: 'corridor-bathroom-door' }
     ]
   },
@@ -117,8 +123,9 @@ export const ROOM_PORTALS: RoomPortal[] = [
     from: 'corridor',
     to: 'outdoor_corridor',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' }
+      { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.4 },
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
+      { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.4 }
     ]
   },
   {
@@ -126,7 +133,9 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'corridor',
     traverseInstructions: [
       { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
-      { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' }
+      { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.4 },
+      { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
+      { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.4 }
     ]
   },
 
