@@ -62,3 +62,10 @@ export const DUO_ANIMATIONS: DuoAnimationDef[] = RAW_DUO_ANIMATIONS.map((def) =>
   ...def,
   duration: def.duration ?? getAnimationDef(def.animA)?.duration ?? 5.0,
 }));
+
+/**
+ * Retourne dynamiquement tous les IDs d'animations Duo enregistrées.
+ */
+export function getAllDuoAnimationIds(): string[] {
+  return DUO_ANIMATIONS.map((def) => def.id);
+}

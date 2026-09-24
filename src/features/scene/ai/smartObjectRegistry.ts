@@ -1,6 +1,7 @@
 import { SmartObjectDef, SmartObjectCategory, AgentInstruction, ResolvedSmartObject } from './aiTypes';
 import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
+import { getAllDuoAnimationIds } from './duoAnimations';
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -725,12 +726,9 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         isDuo: true,
         offset: [-100, 0, -200],
         rotY: 0,
-        duoPool: [
-          'pop_dance', 'energetic_dance', 'slow_dance',
-          'cuddle_kiss', 'eye_to_eye', 'farewell_kiss',
-          'date_bearhug', 'propose', 'kiss_man_woman',
-          'kiss', 'hokey_pokey'
-        ],
+        get duoPool() {
+          return getAllDuoAnimationIds();
+        },
         duoCount: 3,
       }
     ]
