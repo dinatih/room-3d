@@ -932,6 +932,10 @@ export function getAllSmartObjects(): ResolvedSmartObject[] {
     .filter((obj): obj is ResolvedSmartObject => Boolean(obj));
 }
 
+export function getAllSmartObjectIds(): string[] {
+  return Object.keys(SMART_OBJECTS);
+}
+
 export function getSmartObjectsByCategory(category: SmartObjectCategory): ResolvedSmartObject[] {
   return getAllSmartObjects().filter(obj => obj.category === category);
 }
