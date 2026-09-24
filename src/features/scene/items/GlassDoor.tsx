@@ -150,11 +150,11 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
     const actualLeftOpen = (s.isOpenRight && s.isOpenLeft) || dynLeft.push > 0.05;
     const isRightOpenEnough = rightRotRef.current > 0.25;
     const leftTarget = (actualLeftOpen && isRightOpenEnough)
-      ? -(s.isOpenLeft ? Math.max(dynLeft.allowed, dynLeft.push) : dynLeft.push)
+      ? -(s.isOpenLeft ? dynLeft.allowed : dynLeft.push)
       : 0;
     const isLeftOpen = Math.abs(leftRotRef.current) > 0.05;
     const rightTarget = (s.isOpenRight || dynRight.push > 0.05)
-      ? (s.isOpenRight ? Math.max(dynRight.allowed, dynRight.push) : dynRight.push)
+      ? (s.isOpenRight ? dynRight.allowed : dynRight.push)
       : (isLeftOpen ? dynRight.allowed : 0);
     const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
 

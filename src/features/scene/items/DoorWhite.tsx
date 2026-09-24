@@ -176,7 +176,7 @@ function DoorImpl({
     if (doorConfig) {
       const { allowed, push } = computeDoorDynamics(doorConfig, currentAbs);
       if (isOpen) {
-        target = Math.sign(openAngle) * Math.max(allowed, push);
+        target = Math.sign(openAngle) * allowed;
       } else if (push > 0.05) {
         target = Math.sign(openAngle) * push;
       }

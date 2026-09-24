@@ -271,16 +271,28 @@ export function computeDoorDynamics(
     const sinBeta = Math.min(1, rEff / dist);
     const beta = Math.asin(sinBeta);
 
-    const contactFront = alpha - beta;
+    const contactFront = Math.max(0, alpha - beta);
     const contactBack = alpha + beta;
 
-    // A. Blocage de l'ouverture :
-    // La porte ne peut être bloquée en ouverture QUE si elle est actuellement en deçà du PNJ.
-    // Si la porte est déjà au-delà (currentAngle >= contactFront - 0.05), le PNJ N'ASPIRE PAS la porte en arrière !
-    if (contactFront >= 0 && contactFront <= furnitureMaxAngle) {
-      if (currentAngle < contactFront - 0.05) {
+    // A. Blocage et refoulement dynamique de la porte :
+    if (contactFront <= furnitureMaxAngle && contactBack >= 0) {
+      // Zone de passage du chambranle (alpha < 0.80 rad / ~46°) vs zone ouverte / meuble (alpha >= 0.80 rad, ex: congélateur CHiQ)
+      const isDoorwayPassage = alpha < 0.80;
+
+      if (!isDoorwayPassage) {
+        // Dans la zone ouverte (devant le congélateur / Kallax SE) :
+        // Le corps du PNJ repousse le battant (effet repoussoir) pour éviter que la porte ne le traverse !
         if (contactFront < minAllowed) {
           minAllowed = contactFront;
+        }
+      } else {
+        // Dans le passage du chambranle :
+        // Ne bloque l'ouverture que si la porte s'ouvre vers le PNJ (currentAngle < contactFront - 0.05).
+        // Si la porte est déjà ouverte au-delà, le PNJ qui traverse n'aspire JAMAIS le battant vers lui.
+        if (currentAngle < contactFront - 0.05) {
+          if (contactFront < minAllowed) {
+            minAllowed = contactFront;
+          }
         }
       }
     }
@@ -291,7 +303,7 @@ export function computeDoorDynamics(
       const angleDiff = alpha - currentAngle;
       // Le PNJ est au contact du battant et pousse vers l'ouverture
       if (angleDiff > -beta && angleDiff < beta + 0.3) {
-        const pushAngle = Math.min(furnitureMaxAngle, Math.max(0, contactBack));
+        const pushAngle = Math.min(minAllowed, Math.max(0, contactBack));
         if (pushAngle > maxPush) {
           maxPush = pushAngle;
         }
