@@ -28,7 +28,7 @@ import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController } from '../ai/useAgentController';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
-import { resolveAnimationId } from '../animations/animationResolver';
+import { resolveAnimationId, getAnimationDef } from '../animations/animationResolver';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 import { CharacterThoughtBubble } from '../CharacterThoughtBubble';
 
@@ -178,6 +178,7 @@ export function SingleCharacter({
 
   const groupRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
+  const baseScenePosRef = useRef<THREE.Vector3>(new THREE.Vector3());
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const hasLoggedIdleRef = useRef<boolean>(false);
   const lastLoggedAnimRef = useRef<string>('');
@@ -363,6 +364,7 @@ export function SingleCharacter({
     }
 
     hairChainRef.current = isLara ? buildHairChain(parts.bones.nativeHairBones) : [];
+    baseScenePosRef.current.copy(scene.position);
   }, [scene, parts, isLara, targetHeight, variant, id, laraRealisticTextures]);
 
   // Textures réalistes (peau et tissus mats) pour les Lara
@@ -689,6 +691,21 @@ export function SingleCharacter({
     }
 
     let target = resolveAnimationId(rawTarget);
+
+    const targetDef = getAnimationDef(target);
+    const defaultOffset = targetDef?.defaultOffset;
+    if (defaultOffset) {
+      scene.position.x = baseScenePosRef.current.x + defaultOffset[0];
+      scene.position.y = baseScenePosRef.current.y + defaultOffset[1];
+      scene.position.z = baseScenePosRef.current.z + defaultOffset[2];
+    } else {
+      scene.position.copy(baseScenePosRef.current);
+    }
+    if (isPreview && targetDef?.defaultRotYOffset !== undefined) {
+      scene.rotation.y = targetDef.defaultRotYOffset;
+    } else if (isPreview) {
+      scene.rotation.y = 0;
+    }
 
     const isTPose = target === 't-pose';
 
