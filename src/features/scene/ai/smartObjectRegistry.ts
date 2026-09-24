@@ -685,8 +685,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         repeatVariation: true,
       },
       {
-        slotId: 'hip-hop-breakdance',
-        name: 'Hip-hop Breakdance',
+        slotId: 'pnz',
+        name: 'PNZ',
         offset: [400, 0, 300],
         animationsRandom: ['reggaeton', 'musical-theater', 'zumba', 'oriental', 'rnb'],
         repeatCount: 6,
@@ -948,23 +948,6 @@ export function isDuoSlot(objectId?: string, slotId?: string): boolean {
   return Boolean(slot?.isDuo);
 }
 
-const MILEY_DANCE_ANIMS = [
-  'miley-armature-10-dance-like-sidestep',
-  'miley-armature-aerobic-dance',
-  'miley-armature-air-dance',
-  'miley-armature-couple-pop-dance-f',
-  'miley-armature-couple-pop-dance-m',
-  'miley-armature-dance-graceful',
-  'miley-armature-dancetomusic-f',
-  'miley-armature-energetic-dance-f',
-  'miley-armature-energetic-dance-m',
-  'miley-armature-sensual-dance-01',
-  'miley-armature-sensual-dance-02',
-  'miley-armature-sensual-dance-03',
-  'miley-armature-slow-dance-f',
-  'miley-armature-slow-dance-m'
-];
-
 /**
  * Convertit une interaction de Smart Object en instruction d'agent prête pour le contrôleur.
  */
@@ -986,15 +969,11 @@ export function buildSmartObjectInstructionSequence(
     ? obj.slots.find(s => s.slotId === chosenSlotId) ?? obj.slots[0]
     : obj.slots[Math.floor(Math.random() * obj.slots.length)];
 
-  const chosenAnim = objectId === 'rain-dance'
-    ? MILEY_DANCE_ANIMS[Math.floor(Math.random() * MILEY_DANCE_ANIMS.length)]
-    : slot.animation;
-
   const baseInstruction: AgentInstruction = {
     type: 'USE_OBJECT',
     smartObjectId: obj.id,
     slotId: slot.slotId,
-    animation: chosenAnim,
+    animation: slot.animation,
     duration: slot.duration,
     repeatCount: slot.repeatCount,
     repeatVariation: slot.repeatVariation,
