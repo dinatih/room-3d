@@ -137,8 +137,8 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       transparent: true,
       opacity: 0.8,
       polygonOffset: true,
-      polygonOffsetFactor: 0,
-      polygonOffsetUnits: 0,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
     });
   }, [textures, config.tileSize]);
 

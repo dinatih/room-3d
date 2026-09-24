@@ -35,17 +35,11 @@ export function boxFaceMats(
 export const slabConcreteTop = new THREE.MeshStandardMaterial({
   color: COLORS.floor,
   roughness: 0.6,
-  polygonOffset: true,
-  polygonOffsetFactor: -2,
-  polygonOffsetUnits: -2,
 });
 export const slabConcreteSide = new THREE.MeshStandardMaterial({
   color: COLORS.floor,
   roughness: 0.6,
   side: THREE.FrontSide,
-  polygonOffset: true,
-  polygonOffsetFactor: -2,
-  polygonOffsetUnits: -2,
 });
 export const groundExteriorMat = new THREE.MeshStandardMaterial({
   color: COLORS.ground,
