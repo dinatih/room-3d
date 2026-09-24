@@ -46,16 +46,16 @@ const RAW_DUO_ANIMATIONS: RawDuoAnimationDef[] = [
   { id: 'date_bearhug', label: 'Date Bearhug', icon: '🐻', animA: 'miley-armature-date-bearhug-m', animB: 'miley-armature-date-bearhug-f', offsetB: [0, 0, 610] },
   { id: 'propose', label: 'Propose', icon: '💍', animA: 'miley-armature-propose-f', animB: 'miley-armature-propose-m', offsetB: [-65, 0, 0] },
   { id: 'sit-cuddle', label: 'Sit Cuddle', icon: '🛋️', animA: 'miley-armature-sit-cuddle-hug-m', animB: 'miley-armature-sit-cuddle-hug-f', offsetB: [0, 0, 20] },
-  { id: 'double_leg_takedown', label: 'Double Leg Takedown', icon: '🤼', animA: 'anim-best-double-leg-takedown-attacker', animB: 'anim-best-double-leg-takedown-victim', rotB: Math.PI, offsetB: [0, 0, 250] },
-  { id: 'double_leg_takedown_pair', label: 'Double Leg Takedown (Court)', icon: '🤼', animA: 'anim-double-leg-takedown-attacker', animB: 'anim-double-leg-takedown-victim', rotB: Math.PI, offsetB: [0, 0, 250] },
-  { id: 'release_hostage', label: 'Libération d\'otage (Villain / Hostage)', icon: '🚨', animA: 'anim-release-hostage-villain', animB: 'anim-release-hostage-hostage', rotB: 0, offsetB: [0, 0, 40] },
-  { id: 'fist_fight', label: 'Combat de poings (Fist Fight B / A)', icon: '🥊', animA: 'anim-fist-fight-b', animB: 'anim-fist-fight-a', rotB: Math.PI, offsetB: [0, 0, 120] },
-  { id: 'taken_hostage', label: 'Prise d\'otage', icon: '🚨', animA: 'anim-taken-hostage-victim', animB: 'anim-taken-hostage-villain', offsetB: [0, 0, -80] },
-  { id: 'shoulder_throw', label: 'Projection épaule', icon: '🥋', animA: 'anim-shoulder-throw-victim', animB: 'anim-shoulder-throw-aggressor' },
-  { id: 'kiss_man_woman', label: 'Baiser Homme / Femme', icon: '💋', animA: 'anim-kiss-from-woman', animB: 'anim-kiss-from-man', rotB: Math.PI, offsetB: [0, 0, 50] },
-  { id: 'kiss', label: 'Baiser', icon: '💏', animA: 'anim-kiss', animB: 'anim-kiss-1', rotB: Math.PI, offsetB: [0, 0, 50] },
-  { id: 'brutal_assassination', label: 'Assassinat brutal', icon: '🗡️', animA: 'anim-brutal-assassination', animB: 'anim-brutal-assassination-1', rotB: 0, offsetB: [0, 0, -190] },
-  { id: 'hokey_pokey', label: 'Hokey Pokey', icon: '👯', animA: 'anim-hokey-pokey', animB: 'anim-hokey-pokey', offsetB: [-100, 0, 0] }
+  { id: 'double_leg_takedown', label: 'Double Leg Takedown', icon: '🤼', animA: 'best-double-leg-takedown-attacker', animB: 'best-double-leg-takedown-victim', rotB: Math.PI, offsetB: [0, 0, 250] },
+  { id: 'double_leg_takedown_pair', label: 'Double Leg Takedown (Court)', icon: '🤼', animA: 'double-leg-takedown-attacker', animB: 'double-leg-takedown-victim', rotB: Math.PI, offsetB: [0, 0, 250] },
+  { id: 'release_hostage', label: 'Libération d\'otage (Villain / Hostage)', icon: '🚨', animA: 'release-hostage-villain', animB: 'release-hostage-hostage', rotB: 0, offsetB: [0, 0, 40] },
+  { id: 'fist_fight', label: 'Combat de poings (Fist Fight B / A)', icon: '🥊', animA: 'fist-fight-b', animB: 'fist-fight-a', rotB: Math.PI, offsetB: [0, 0, 120] },
+  { id: 'taken_hostage', label: 'Prise d\'otage', icon: '🚨', animA: 'taken-hostage-victim', animB: 'taken-hostage-villain', offsetB: [0, 0, -80] },
+  { id: 'shoulder_throw', label: 'Projection épaule', icon: '🥋', animA: 'shoulder-throw-victim', animB: 'shoulder-throw-aggressor' },
+  { id: 'kiss_man_woman', label: 'Baiser Homme / Femme', icon: '💋', animA: 'kiss-from-woman', animB: 'kiss-from-man', rotB: Math.PI, offsetB: [0, 0, 50] },
+  { id: 'kiss', label: 'Baiser', icon: '💏', animA: 'kiss', animB: 'kiss-1', rotB: Math.PI, offsetB: [0, 0, 50] },
+  { id: 'brutal_assassination', label: 'Assassinat brutal', icon: '🗡️', animA: 'brutal-assassination', animB: 'brutal-assassination-1', rotB: 0, offsetB: [0, 0, -190] },
+  { id: 'hokey_pokey', label: 'Hokey Pokey', icon: '👯', animA: 'hokey-pokey', animB: 'hokey-pokey', offsetB: [-100, 0, 0] }
 ];
 
 export const DUO_ANIMATIONS: DuoAnimationDef[] = RAW_DUO_ANIMATIONS.map((def) => ({

@@ -87,22 +87,22 @@ export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
 
   // ── 2. Inspection Salle de bain ──
   { type: 'MOVE_TO', targetWaypointId: 'bathroom-center' },
-  { type: 'ROTATE_360', duration: 5.0, animation: 'anim-left-turn' },
+  { type: 'ROTATE_360', duration: 5.0, animation: 'left-turn' },
 
   // ── 3. Inspection Salon / Séjour ──
   { type: 'MOVE_TO', targetWaypointId: 'living-center' },
-  { type: 'ROTATE_360', duration: 6.0, animation: 'anim-left-turn' },
+  { type: 'ROTATE_360', duration: 6.0, animation: 'left-turn' },
 
   // ── 4. Inspection Couloir ──
   { type: 'MOVE_TO', targetWaypointId: 'corridor-center' },
-  { type: 'ROTATE_360', duration: 4.0, animation: 'anim-left-turn' },
+  { type: 'ROTATE_360', duration: 4.0, animation: 'left-turn' },
 
   // ── 5. Sortie et direction entrée couloir Bâtiment B (attente 1min30 avant prochaine ronde) ──
   { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.5 },
   { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
   { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },
   { type: 'MOVE_TO', smartObjectId: 'building-b-corridor-end', slotId: 'visit' },
-  { type: 'WAIT', duration: 90.0, animation: 'texting-standing' }
+  { type: 'WAIT', duration: 90.0, animation: 'texting-while-standing' }
 ];
 
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)

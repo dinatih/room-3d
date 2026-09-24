@@ -47,7 +47,7 @@ export function useAgentController(
   onComplete?: () => void,
   spawnDelay: number = 0,
   hasSkyDrop: boolean = false,
-  landingAnim: string = 'anim-pistol-kneel-to-stand'
+  landingAnim: string = 'pistol-kneel-to-stand'
 ) {
   const firstCoords = (scenario && scenario.length > 0) ? resolveInstructionCoords(scenario[0], null) : null;
   const initialPos = (firstCoords && (firstCoords.tx !== 0 || firstCoords.tz !== 0))
@@ -78,7 +78,7 @@ export function useAgentController(
     y: deployment.y,
     z: initialPos.z,
     rotY: initialPos.rotY,
-    animation: isCurrentlyFalling ? 'anim-falling' : (firstCoords?.anim ? resolveAnimationId(firstCoords.anim) : 'idle'),
+    animation: isCurrentlyFalling ? 'falling' : (firstCoords?.anim ? resolveAnimationId(firstCoords.anim) : 'idle'),
     isSpawned: !isStillWaiting
   });
 
@@ -269,7 +269,7 @@ export function useAgentController(
       stateRef.current.rotY = real.rotY;
       stateRef.current.isSpawned = deployment.status !== 'WAITING';
       stateRef.current.animation = deployment.status === 'FALLING'
-        ? 'anim-falling'
+        ? 'falling'
         : (deployment.status === 'WAITING' ? 'idle' : (stepCoords?.anim ? resolveAnimationId(stepCoords.anim) : 'idle'));
       startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
     }
@@ -384,7 +384,7 @@ export function useAgentController(
         stateRef.current.y = targetY + (2500 - targetY) * (p_inv * p_inv * p_inv);
         deployment.y = stateRef.current.y;
       }
-      stateRef.current.animation = 'anim-falling';
+      stateRef.current.animation = 'falling';
       return stateRef.current;
     }
 
@@ -611,7 +611,7 @@ export function useAgentController(
         statusRef.current = 'INTERACTING';
         const duration = currentInstruction.duration || 5.0;
         timerRef.current = duration;
-        stateRef.current.animation = currentInstruction.animation || 'anim-right-turn';
+        stateRef.current.animation = currentInstruction.animation || 'right-turn';
         const logKey = `rotate360-${stepIndexRef.current}-${dynamicNavIndexRef.current}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
@@ -659,8 +659,8 @@ export function useAgentController(
                     ? 'miley-armature-sit-cuddle-hug-m'
                     : 'miley-armature-sit-cuddle-hug-f')
                 : (duoRoleRef.current === 'roleA'
-                    ? 'anim-female-standing-pose'
-                    : 'anim-female-standing-pose-1');
+                    ? 'female-standing-pose'
+                    : 'female-standing-pose-1');
             }
           }
 
@@ -759,7 +759,7 @@ export function useAgentController(
         const totalDuration = currentInstruction.duration || 5.0;
         const turnSpeed = (2 * Math.PI) / totalDuration;
         stateRef.current.rotY = (stateRef.current.rotY + turnSpeed * dt) % (2 * Math.PI);
-        stateRef.current.animation = currentInstruction.animation || 'anim-right-turn';
+        stateRef.current.animation = currentInstruction.animation || 'right-turn';
 
         timerRef.current -= dt;
         if (timerRef.current <= 0) {

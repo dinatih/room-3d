@@ -193,7 +193,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Tirer la chasse',
         offset: [50, 0, 550],
         rotY: Math.PI,
-        animation: 'anim-button-pushing',
+        animation: 'button-pushing',
         duration: 2.0,
         triggerEventKey: 'wc-flush'
       }
@@ -394,13 +394,13 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'cook-oven',
         name: 'Cuisiner Four',
         rotY: -Math.PI / 2,
-        animation: 'anim-entering-code',
+        animation: 'entering-code',
       },
       {
         slotId: 'cook-stove',
         name: 'Cuisiner Plaques',
         rotY: 0,
-        animation: 'anim-bartending',
+        animation: 'bartending',
         // interactions/anim_cards.glb, interactions/anim_drinking_fountain.glb,
       }
     ]
@@ -415,7 +415,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'open-pick',
         name: 'Prendre un ingrédient',
         rotY: Math.PI / 2,
-        animation: 'anim-entering-code',
+        animation: 'entering-code',
       }
     ]
   },
@@ -432,7 +432,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'inspect',
         name: 'Prendre un objet en hauteur',
         rotY: Math.PI / 2,
-        animation: 'texting-standing',
+        animation: 'texting-while-standing',
       }
     ]
   },
@@ -446,7 +446,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'open-tidy',
         name: 'Ranger des affaires',
         rotY: -Math.PI / 2,
-        animation: 'anim-entering-code',
+        animation: 'entering-code',
       }
     ]
   },
@@ -461,7 +461,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'admirer dans le miroir',
         offset: [160, 0, 340],
         rotY: 0,
-        animation: 'miley-change-pose',
+        animation: 'miley-armature-change-pose',
       }
     ]
   },
@@ -518,7 +518,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Consulter son téléphone',
         offset: [-350, 0, 1000],
         rotY: Math.PI / 2,
-        animation: 'texting-standing',
+        animation: 'texting-while-standing',
       }
     ]
   },

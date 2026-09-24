@@ -53,8 +53,8 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
         : 'miley-armature-sit-cuddle-hug-f';
     } else {
       state.animation = duoRole === 'roleA'
-        ? 'anim-female-standing-pose'
-        : 'anim-female-standing-pose-1';
+        ? 'female-standing-pose'
+        : 'female-standing-pose-1';
     }
 
     // Rôle A → ancre sur anchorPos ; Rôle B → ancre sur posB (offsetB transformé)

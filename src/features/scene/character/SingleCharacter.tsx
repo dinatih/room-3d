@@ -690,7 +690,7 @@ export function SingleCharacter({
 
     let target = resolveAnimationId(rawTarget);
 
-    const isTPose = target === 'tpose';
+    const isTPose = target === 'tpose' || target === 't-pose';
 
     let isTemporaryLoadingFallback = false;
     if (!isTPose && !actions[target]) {
@@ -706,7 +706,7 @@ export function SingleCharacter({
     }
 
     if (isTPose) {
-      if (activeActionName.current !== 'tpose') {
+      if (activeActionName.current !== 'tpose' && activeActionName.current !== 't-pose') {
         if (activeActionName.current && actions[activeActionName.current]) {
           actions[activeActionName.current].stop();
         }
@@ -726,7 +726,7 @@ export function SingleCharacter({
     } else {
       const to = actions[target];
       if (to && activeActionName.current !== target) {
-        const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
+        const from = (activeActionName.current && activeActionName.current !== 'tpose' && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
         if (from) from.fadeOut(0.2);
 
         to.setLoop(THREE.LoopRepeat, Infinity);
@@ -853,7 +853,7 @@ export function SingleCharacter({
       mixer.update(delta);
 
       // Parachute d'atterrissage réactif
-      const falling = currentAnimClip.current === 'anim-falling' || currentAnimClip.current === 'animations/locomotion/anim_falling.glb';
+      const falling = currentAnimClip.current === 'falling' || currentAnimClip.current === 'anim-falling' || currentAnimClip.current === 'animations/locomotion/anim_falling.glb';
       if (isFalling !== falling) {
         setIsFalling(falling);
       }
