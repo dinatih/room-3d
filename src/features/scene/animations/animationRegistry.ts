@@ -972,7 +972,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'miley-armature-cuddle-kiss-m',
     path: 'animations/emotes_gestures/miley_armature_cuddle_kiss_m.glb',
     label: `[MILEY] Cuddle Kiss M (1142f / 19.0s, 1508KB)`,
-    tags: ['emotes', 'gesture'],
+    tags: ['emotes', 'gesture', 'sitting', 'seated-front'],
     duration: 19,
   },
   {
