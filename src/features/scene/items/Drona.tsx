@@ -28,7 +28,10 @@ const GLB_DRONA_LOW  = 'items/dröna/DRÖNA_low.glb';
 const dronaMat = new THREE.MeshStandardMaterial({ 
   color: 0xcc0000, 
   roughness: 0.8, 
-  side: THREE.DoubleSide
+  side: THREE.DoubleSide,
+  polygonOffset: true,
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1,
 });
 
 function createProceduralDronaGeo(): THREE.BufferGeometry {
@@ -99,7 +102,7 @@ export function Drona({ onSize }: SceneItemProps) {
   }, [geo, onSize]);
 
   if (mode === 'hidden') return null;
-  return <mesh key={mode} geometry={geo} material={dronaMat} castShadow receiveShadow />;
+  return <mesh key={mode} geometry={geo} material={dronaMat} castShadow receiveShadow renderOrder={1} />;
 }
 
 /** Boîte Drona unique — à placer dans un <group position rotation>. */
@@ -107,7 +110,7 @@ export function DroneCell() {
   const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
   const geo = useDronaGeo();
   if (mode === 'hidden') return null;
-  return <mesh key={mode} geometry={geo} material={dronaMat} castShadow receiveShadow userData={{ skipMerge: true }} />;
+  return <mesh key={mode} geometry={geo} material={dronaMat} castShadow receiveShadow userData={{ skipMerge: true }} renderOrder={1} />;
 }
 
 /** N boîtes Drona via InstancedMesh. Chaque Matrix4 encode position + rotation. */
@@ -120,7 +123,7 @@ export function DronaInstances({ matrices }: { matrices: THREE.Matrix4[] }) {
     mesh.instanceMatrix.needsUpdate = true;
   };
   if (mode === 'hidden') return null;
-  return <instancedMesh key={mode} args={[geo, dronaMat, N]} castShadow receiveShadow onUpdate={apply} />;
+  return <instancedMesh key={mode} args={[geo, dronaMat, N]} castShadow receiveShadow onUpdate={apply} renderOrder={1} />;
 }
 
 useGLTF.preload(GLB_DRONA_HIGH);
