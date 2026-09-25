@@ -117,7 +117,11 @@ export function useCharacterPhysics() {
       return;
     }
 
-    scene.updateMatrixWorld(true);
+    if (hipsBoneRef.current) {
+      hipsBoneRef.current.updateWorldMatrix(true, true);
+    } else {
+      scene.updateMatrixWorld(true);
+    }
 
     let simDt = delta;
     if (simDt > 0.05) simDt = 0.05;

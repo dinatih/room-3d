@@ -48,6 +48,14 @@ const _tmpLgbtaColorA = new THREE.Color();
 const _tmpLgbtaColorB = new THREE.Color();
 const _charFrustum = new THREE.Frustum();
 const _charProjScreenMatrix = new THREE.Matrix4();
+let _lastFrustumTime = -1;
+function updateCharFrustum(cam: THREE.Camera, time: number) {
+  if (time !== _lastFrustumTime) {
+    _lastFrustumTime = time;
+    _charProjScreenMatrix.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+    _charFrustum.setFromProjectionMatrix(_charProjScreenMatrix);
+  }
+}
 const _charBoundingSphere = new THREE.Sphere();
 const _tmpHeadWorldPos = new THREE.Vector3();
 const _tmpHipsWorldPos = new THREE.Vector3();
@@ -878,9 +886,7 @@ export function SingleCharacter({
 
       const isVisibleInFrustum = (() => {
         if (!state.camera) return true;
-        const cam = state.camera;
-        _charProjScreenMatrix.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
-        _charFrustum.setFromProjectionMatrix(_charProjScreenMatrix);
+        updateCharFrustum(state.camera, state.clock.elapsedTime);
         _charBoundingSphere.center.copy(groupRef.current.position);
         _charBoundingSphere.center.y += 90; // Centre approximatif du buste/tête
         _charBoundingSphere.radius = 120;
@@ -935,9 +941,7 @@ export function SingleCharacter({
       // Optimisation Frustum Culling : on n'exécute la physique que si le personnage est visible par la caméra
       const isVisibleInFrustum = (() => {
         if (!state.camera) return true;
-        const cam = state.camera;
-        _charProjScreenMatrix.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
-        _charFrustum.setFromProjectionMatrix(_charProjScreenMatrix);
+        updateCharFrustum(state.camera, state.clock.elapsedTime);
         _charBoundingSphere.center.copy(groupRef.current.position);
         _charBoundingSphere.center.y += 90; // Centre approximatif du buste/tête
         _charBoundingSphere.radius = 120;
