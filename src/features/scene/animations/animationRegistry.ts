@@ -1546,7 +1546,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'miley-armature-sit-cuddle-hug-m',
     path: 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb',
     label: `[MILEY] Sit Cuddle Hug M (722f / 12.0s, 965KB)`,
-    tags: ['poses-idles', 'sitting'],
+    tags: ['poses-idles', 'sitting', 'seated-front'],
     duration: 12,
   },
   {

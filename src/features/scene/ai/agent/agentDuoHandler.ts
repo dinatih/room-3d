@@ -44,8 +44,9 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
     }
 
     const loc = duoSessionManager.getCurrentLocation(characterId);
+    const isSittingDuo = Boolean(loc.slotId?.includes('sit') || loc.objectId?.includes('chair') || loc.objectId?.includes('sofa'));
     state.animation = duoRole === 'roleA'
-      ? 'female-standing-pose'
+      ? (isSittingDuo ? 'sitting-idle' : 'female-standing-pose')
       : 'female-standing-pose-1';
 
     // Rôle A → ancre sur anchorPos ; Rôle B → ancre sur posB (offsetB transformé)

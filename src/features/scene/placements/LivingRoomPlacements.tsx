@@ -389,7 +389,6 @@ function Smorkull_() {
           actions: [
             'smorkull-position',
             'smart-object:::chair-office:::sit',
-            'smart-object:::chair-office:::sit-cuddle',
           ]
         }
       }}>

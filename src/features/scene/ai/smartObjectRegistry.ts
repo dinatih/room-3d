@@ -144,16 +144,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [0, 0, 0],
         rotY: 0,
         animationsRandom: 'seated-front',
-      },
-      {
-        slotId: 'sit-cuddle',
-        name: 'Câlin à deux (Sit Cuddle)',
-        isDuo: true,
-        duoAnimId: 'sit-cuddle',
-        relative: true,
-        offset: [0, 0, 0],
-        rotY: 0,
-        duration: 12.0, // TODO:
       }
     ]
   },
@@ -853,27 +843,27 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       }
     ]
   },
-  'dance-chair-office': {
-    id: 'dance-chair-office',
-    name: 'Danse (Devant Chaise Bureau)',
-    category: 'dance',
-    position: [135, 0, 280],
-    slots: [
-      {
-        slotId: 'dance',
-        name: 'Danse devant Chaise Bureau',
-        rotY: Math.PI / 2,
-        animationsRandom: 'dance-tight',
-        repeatCount: 4,
-        repeatVariation: true,
-      }
-    ]
-  },
+  // 'dance-chair-office': {
+  //   id: 'dance-chair-office',
+  //   name: 'Danse (Devant Chaise Bureau)',
+  //   category: 'dance',
+  //   position: [135, 0, 280],
+  //   slots: [
+  //     {
+  //       slotId: 'dance',
+  //       name: 'Danse devant Chaise Bureau',
+  //       rotY: Math.PI / 2,
+  //       animationsRandom: 'dance-tight',
+  //       repeatCount: 4,
+  //       repeatVariation: true,
+  //     }
+  //   ]
+  // },
   'dance-mirror-south': {
     id: 'dance-mirror-south',
     name: 'Danse (Devant Miroir Sud)',
     category: 'dance',
-    position: [160, 0, 310],
+    position: [160, 0, 290],
     slots: [
       {
         slotId: 'dance',

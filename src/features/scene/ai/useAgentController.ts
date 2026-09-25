@@ -4,6 +4,7 @@ import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from '.
 import { resolveSlotAnimation } from './animationPacks';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
+import { getDuoAnimationForClip } from './duoAnimations';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
@@ -668,10 +669,34 @@ export function useAgentController(
           if (!currentInstruction.duration && target.duration) currentInstruction.duration = target.duration;
 
           if (!isDuoAction) {
-            const explicitDuration = currentInstruction.duration || target.duration;
-            const estimated = getEstimatedClipDuration(currentInstruction.animation || target.anim);
-            timerRef.current = explicitDuration || (estimated <= 1.0 ? 10.0 : estimated);
-            stateRef.current.animation = resolveAnimationId(currentInstruction.animation || target.anim || 'idle');
+            const rawAnim = currentInstruction.animation || target.anim || '';
+            const duoDef = currentInstruction.smartObjectId ? getDuoAnimationForClip(rawAnim) : undefined;
+            const isDuoCooldown = Date.now() - lastDuoEndTimeRef.current < 15000;
+
+            if (duoDef && !isDuoCooldown && !duoSessionManager.isPlaying(_characterId) && !duoRoleRef.current) {
+              const duoRes = duoSessionManager.startDuoSession(
+                currentInstruction.smartObjectId!,
+                currentInstruction.slotId,
+                _characterId,
+                undefined,
+                duoDef.id
+              );
+              if (duoRes) {
+                duoRoleRef.current = 'roleA';
+                duoSessionManager.markReady(_characterId);
+                duoWaitTimerRef.current = 0;
+                claimedSlotRef.current = { objectId: currentInstruction.smartObjectId!, slotId: `${duoRes.actualSlotId}:roleA` };
+                const isSittingDuo = Boolean(currentInstruction.slotId?.includes('sit') || currentInstruction.smartObjectId?.includes('chair') || currentInstruction.smartObjectId?.includes('sofa'));
+                stateRef.current.animation = isSittingDuo ? 'sitting-idle' : 'female-standing-pose';
+              }
+            }
+
+            if (!duoRoleRef.current) {
+              const explicitDuration = currentInstruction.duration || target.duration;
+              const estimated = getEstimatedClipDuration(currentInstruction.animation || target.anim);
+              timerRef.current = explicitDuration || (estimated <= 1.0 ? 10.0 : estimated);
+              stateRef.current.animation = resolveAnimationId(currentInstruction.animation || target.anim || 'idle');
+            }
           }
 
           stateRef.current.y = target.ty ?? 0;
@@ -789,6 +814,27 @@ export function useAgentController(
               if (res.animation) {
                 currentInstruction.animation = res.animation;
                 stateRef.current.animation = res.animation;
+
+                const duoDef = getDuoAnimationForClip(res.animation);
+                const isDuoCooldown = Date.now() - lastDuoEndTimeRef.current < 15000;
+                if (duoDef && !isDuoCooldown && !duoSessionManager.isPlaying(_characterId) && !duoRoleRef.current) {
+                  const duoRes = duoSessionManager.startDuoSession(
+                    currentInstruction.smartObjectId,
+                    currentInstruction.slotId,
+                    _characterId,
+                    undefined,
+                    duoDef.id
+                  );
+                  if (duoRes) {
+                    duoRoleRef.current = 'roleA';
+                    duoSessionManager.markReady(_characterId);
+                    duoWaitTimerRef.current = 0;
+                    claimedSlotRef.current = { objectId: currentInstruction.smartObjectId, slotId: `${duoRes.actualSlotId}:roleA` };
+                    const isSittingDuo = Boolean(currentInstruction.slotId?.includes('sit') || currentInstruction.smartObjectId?.includes('chair') || currentInstruction.smartObjectId?.includes('sofa'));
+                    stateRef.current.animation = isSittingDuo ? 'sitting-idle' : 'female-standing-pose';
+                    return stateRef.current;
+                  }
+                }
               }
               if (res.rotY !== undefined) {
                 currentInstruction.rotY = res.rotY;

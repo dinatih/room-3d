@@ -48,23 +48,6 @@ class SmartObjectOccupancyManager {
       }
     }
 
-    // 2. Chaise de bureau : exclusion mutuelle entre le mode solo 'sit' et le mode duo 'sit-cuddle'
-    if (objectId === 'chair-office') {
-      if (slotId === 'sit') {
-        for (const [k, r] of this.occupiedSlots.entries()) {
-          if (k.startsWith('chair-office:sit-cuddle') && (!forCharacterId || r.characterId !== forCharacterId)) {
-            return true;
-          }
-        }
-      } else if (slotId.startsWith('sit-cuddle')) {
-        const sitKey = this.slotKey('chair-office', 'sit');
-        const sitRes = this.occupiedSlots.get(sitKey);
-        if (sitRes && (!forCharacterId || sitRes.characterId !== forCharacterId)) {
-          return true;
-        }
-      }
-    }
-
     return false;
   }
 

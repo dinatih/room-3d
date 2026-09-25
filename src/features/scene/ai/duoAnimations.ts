@@ -88,3 +88,17 @@ export function getDuoAnimationDef(id?: string): DuoAnimationDef | undefined {
   const clean = id.trim().toLowerCase();
   return DUO_ANIMATIONS.find((d) => d.id.toLowerCase() === clean);
 }
+
+/**
+ * Retrouve une définition d'animation Duo à partir d'un identifiant de clip (animA) ou de son chemin.
+ */
+export function getDuoAnimationForClip(clipOrPath?: string): DuoAnimationDef | undefined {
+  if (!clipOrPath) return undefined;
+  const clean = clipOrPath.trim().toLowerCase();
+  return DUO_ANIMATIONS.find((d) => {
+    if (d.animA.toLowerCase() === clean || d.id.toLowerCase() === clean) return true;
+    const def = ANIMATION_DEFINITIONS.find((a) => a.id.toLowerCase() === d.animA.toLowerCase());
+    if (def && (def.path.toLowerCase() === clean || def.id.toLowerCase() === clean)) return true;
+    return false;
+  });
+}
