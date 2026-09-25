@@ -710,6 +710,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'duo-random',
         name: 'Session Duo Aléatoire',
         isDuo: true,
+        offset: [-100, 0, -200],
         rotY: 0,
         get duoPool() {
           return getAllDuoAnimationIds();
@@ -728,6 +729,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'hugs-trio',
         name: 'Enchaîner 3 Câlins & Baisers',
         isDuo: true,
+        offset: [160, 0, 200],
         rotY: 0,
         duoPool: ['slow_dance', 'eye_to_eye', 'farewell_kiss', 'kiss_man_woman', 'kiss'],
         duoCount: 3,

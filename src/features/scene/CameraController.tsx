@@ -41,8 +41,8 @@ import {
   useCameraFrameUpdate,
 } from './camera';
 
-const FPV_DEFAULT_FOV = 85;
-const FPV_DEFAULT_PITCH = -0.22; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
+const FPV_DEFAULT_FOV = 100;
+const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
 
 const _tmpEyeTargetVec = new THREE.Vector3();
 const _tmpEyeLookVec = new THREE.Vector3();
@@ -440,7 +440,51 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     changeMode('orbit');
   }, [changeMode]);
 
-  // Restauration de la caméra perspective en sortant du mode top
+  const [orthoConfig, setOrthoConfig] = useState<{
+    pos: [number, number, number];
+    target: [number, number, number];
+    up: [number, number, number];
+    viewH: number;
+  }>({
+    pos: [CX, 700, 1500],
+    target: [CX, 700, CZ],
+    up: [0, 1, 0],
+    viewH: 800,
+  });
+
+  const enterOrtho = useCallback((config: {
+    pos: [number, number, number];
+    target: [number, number, number];
+    up: [number, number, number];
+    viewH: number;
+  }) => {
+    if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
+    if (modeRef.current === 'top') exitTop();
+    if (modeRef.current !== 'ortho') {
+      savedPerspPos.current.copy(camera.position);
+      if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
+    }
+    setOrthoConfig(config);
+    changeMode('ortho');
+
+    const activeCam = ctrlRef.current?.object || camera;
+    activeCam.position.set(...config.pos);
+    activeCam.up.set(...config.up);
+    if ('zoom' in activeCam) {
+      (activeCam as THREE.OrthographicCamera).zoom = 1;
+    }
+    if (ctrlRef.current) {
+      ctrlRef.current.target.set(...config.target);
+      ctrlRef.current.update();
+    }
+    invalidate();
+  }, [camera, changeMode, exitTop, exitWalkMode, invalidate]);
+
+  const exitOrtho = useCallback(() => {
+    changeMode('orbit');
+  }, [changeMode]);
+
+  // Restauration de la caméra perspective en sortant du mode top ou ortho
   useEffect(() => {
     if (mode === 'orbit' && ctrlRef.current) {
       camera.position.copy(savedPerspPos.current);
@@ -517,6 +561,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     exitWalkMode,
     enterTop,
     exitTop,
+    enterOrtho,
+    exitOrtho,
     invalidate,
   });
 
@@ -545,6 +591,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const viewH = 800;
   const viewW = viewH * aspect;
 
+  // Frustum caméra orthographique (grille Lara)
+  const orthoViewH = orthoConfig.viewH;
+  const orthoViewW = orthoViewH * aspect;
+
   return (
     <>
       {mode === 'top' && (
@@ -558,6 +608,20 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           bottom={-viewH / 2}
           near={1}
           far={5000}
+        />
+      )}
+
+      {mode === 'ortho' && (
+        <OrthographicCamera
+          makeDefault
+          position={orthoConfig.pos}
+          up={orthoConfig.up}
+          left={-orthoViewW / 2}
+          right={orthoViewW / 2}
+          top={orthoViewH / 2}
+          bottom={-orthoViewH / 2}
+          near={1}
+          far={10000}
         />
       )}
 

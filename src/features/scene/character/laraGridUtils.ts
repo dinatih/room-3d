@@ -99,10 +99,136 @@ export function getActiveSceneCharactersCount(state?: {
 }
 
 /**
- * Émet l'événement camera-view pour orienter et cadrer la caméra sur le centre de la grille de personnages.
+ * Émet l'événement camera-view pour orienter et cadrer la caméra sur le centre de la grille de personnages (vue perspective).
  */
 export function frameLaraGridCamera(total?: number): void {
   const count = total ?? getActiveSceneCharactersCount();
   const view = getLaraGridCameraView(count);
   document.dispatchEvent(new CustomEvent('camera-view', { detail: view }));
+}
+
+export type LaraGridOrthoViewKey = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom';
+
+export interface LaraGridOrthoView {
+  key: LaraGridOrthoViewKey;
+  label: string;
+  shortLabel: string;
+  icon: string;
+  shortcut: string;
+  numpadShortcut: string;
+  pos: [number, number, number];
+  target: [number, number, number];
+  up: [number, number, number];
+  viewH: number;
+}
+
+/**
+ * Calcule l'ensemble des 6 vues orthographiques canoniques pour la grille Lara :
+ * Face, Derrière (Dos), Côté Gauche, Côté Droit, Dessus, Dessous.
+ */
+export function getLaraGridOrthoViews(total?: number): Record<LaraGridOrthoViewKey, LaraGridOrthoView> {
+  const count = total ?? getActiveSceneCharactersCount();
+  const { cols, colSpacing, rowSpacing, baseY, baseZ, characterHeight, centerX } = LARA_GRID_CONFIG;
+  const safeTotal = Math.max(1, count);
+  const totalRows = Math.ceil(safeTotal / cols);
+
+  const gridHeight = (totalRows - 1) * rowSpacing + characterHeight;
+  const activeCols = totalRows === 1 ? Math.min(cols, safeTotal) : cols;
+  const gridWidth = (activeCols - 1) * colSpacing + 120; // Marge latérale corporelle
+
+  const centerY = Math.round(baseY + gridHeight / 2);
+  const target: [number, number, number] = [centerX, centerY, baseZ];
+
+  const aspect = typeof window !== 'undefined' && window.innerHeight > 0
+    ? window.innerWidth / window.innerHeight
+    : 16 / 9;
+
+  const padding = 1.3;
+  const viewH = Math.round(Math.max(gridHeight * padding, (gridWidth * padding) / aspect, 450));
+  const dist = 1500;
+
+  return {
+    front: {
+      key: 'front',
+      label: 'Face',
+      shortLabel: 'Face',
+      icon: '👤',
+      shortcut: 'Alt+1',
+      numpadShortcut: 'Num 1',
+      pos: [centerX, centerY, baseZ + dist],
+      target,
+      up: [0, 1, 0],
+      viewH,
+    },
+    back: {
+      key: 'back',
+      label: 'Derrière',
+      shortLabel: 'Derrière',
+      icon: '🔙',
+      shortcut: 'Alt+2',
+      numpadShortcut: 'Ctrl+1',
+      pos: [centerX, centerY, baseZ - dist],
+      target,
+      up: [0, 1, 0],
+      viewH,
+    },
+    left: {
+      key: 'left',
+      label: 'Côté Gauche',
+      shortLabel: 'Côté G',
+      icon: '◀️',
+      shortcut: 'Alt+3',
+      numpadShortcut: 'Ctrl+3',
+      pos: [centerX - dist, centerY, baseZ],
+      target,
+      up: [0, 1, 0],
+      viewH,
+    },
+    right: {
+      key: 'right',
+      label: 'Côté Droit',
+      shortLabel: 'Côté D',
+      icon: '▶️',
+      shortcut: 'Alt+4',
+      numpadShortcut: 'Num 3',
+      pos: [centerX + dist, centerY, baseZ],
+      target,
+      up: [0, 1, 0],
+      viewH,
+    },
+    top: {
+      key: 'top',
+      label: 'Dessus',
+      shortLabel: 'Dessus',
+      icon: '⬇️',
+      shortcut: 'Alt+7',
+      numpadShortcut: 'Num 7',
+      pos: [centerX, centerY + dist, baseZ],
+      target,
+      up: [0, 0, -1],
+      viewH,
+    },
+    bottom: {
+      key: 'bottom',
+      label: 'Dessous',
+      shortLabel: 'Dessous',
+      icon: '⬆️',
+      shortcut: 'Alt+9',
+      numpadShortcut: 'Ctrl+7',
+      pos: [centerX, centerY - dist, baseZ],
+      target,
+      up: [0, 0, 1],
+      viewH,
+    },
+  };
+}
+
+/**
+ * Émet l'événement camera-ortho-view pour basculer en projection orthographique et cadrer la grille sous l'angle choisi.
+ */
+export function frameLaraGridOrtho(viewKey: LaraGridOrthoViewKey, total?: number): void {
+  const views = getLaraGridOrthoViews(total);
+  const v = views[viewKey];
+  if (!v) return;
+  document.dispatchEvent(new CustomEvent('camera-ortho-view', { detail: v }));
 }

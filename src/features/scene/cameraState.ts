@@ -5,7 +5,7 @@
 
 import { CHARACTERS } from './walkerConfig';
 
-type CameraMode = 'orbit' | 'walk' | 'fpv' | 'top' | 'plane';
+type CameraMode = 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho';
 
 export const cameraState = {
   mode: 'orbit' as CameraMode,

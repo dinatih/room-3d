@@ -32,6 +32,11 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
     return true; // action terminée
   }
 
+  // Dès qu'un personnage exécute l'interaction duo, confirmer qu'il est prêt
+  if (!duoSessionManager.isPlaying(characterId)) {
+    duoSessionManager.markReady(characterId);
+  }
+
   const isWaiting = duoSessionManager.isWaitingPartner(characterId);
   if (isWaiting) {
     const nextTimer = duoWaitTimer + dt;

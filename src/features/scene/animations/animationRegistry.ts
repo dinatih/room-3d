@@ -974,6 +974,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `[MILEY] Cuddle Kiss M (1142f / 19.0s, 1508KB)`,
     tags: ['emotes', 'gesture', 'sitting', 'seated-front'],
     duration: 19,
+    defaultRotYOffset: Math.PI / 2,
   },
   {
     id: 'miley-armature-d1-attack-arms-block',
@@ -4475,7 +4476,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'robot-hip-hop-dance',
     path: 'animations/dances/anim_robot_hip_hop_dance.glb',
     label: `Robot Hip Hop Dance (464f / 15.5s, 435KB)`,
-    tags: ['dance', 'hiphop', 'dance-tight'],
+    tags: ['dance', 'hiphop', 'dance-sideways'],
     duration: 15.5,
   },
   {

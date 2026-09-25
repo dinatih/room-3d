@@ -60,13 +60,13 @@ interface SceneStore {
   activeExtraIds: string[];
   currentHdri: string;
   measurementActive: boolean;
-  cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane';
+  cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho';
   isCvModalOpen: boolean;
   isPhotoModeOpen: boolean;
   setCvModalOpen: (open: boolean) => void;
   setPhotoModeOpen: (open: boolean) => void;
   setMeasurementActive: (active: boolean) => void;
-  setCameraMode: (mode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane') => void;
+  setCameraMode: (mode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho') => void;
   setLaraCount: (count: LaraCountMode) => void;
   setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;

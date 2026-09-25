@@ -1,4 +1,4 @@
-export type CameraMode = 'orbit' | 'walk' | 'fpv' | 'top';
+export type CameraMode = 'orbit' | 'walk' | 'fpv' | 'top' | 'ortho';
 
 export interface WalkPosition {
   x: number;

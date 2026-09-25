@@ -2,7 +2,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { CHARACTERS, isCharacterVisibleInMode, npcLabel } from '@features/scene/walkerConfig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 import { ExtraCharactersSelector } from './ExtraCharactersSelector';
-import { frameLaraGridCamera } from '@features/scene/character/laraGridUtils';
+import { frameLaraGridCamera, frameLaraGridOrtho } from '@features/scene/character/laraGridUtils';
 import type { LayerState } from '../types';
 
 export interface CharacterSectionProps {
@@ -514,17 +514,78 @@ export function CharacterSection({
         </span>
       </button>
       {layers.laraGrid && (
-        <div className="p-2 border-bottom bg-light">
-          <button
-            type="button"
-            className="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-1"
-            style={{ fontSize: isMobile ? '12px' : '10px' }}
-            onClick={() => frameLaraGridCamera()}
-            title="Recadrer la caméra sur le centre de la grille de personnages"
-          >
-            <span>🎯</span>
-            <span>Recadrer la caméra sur la grille</span>
-          </button>
+        <div className="p-2 border-bottom bg-light d-flex flex-column gap-1.5">
+          <div className="text-muted fw-bold" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            📐 Vues Ortho (Face, Côtés, Dessus, etc.)
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
+              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              onClick={() => frameLaraGridOrtho('front')}
+              title="Vue orthographique de face (Alt+1 / Num 1)"
+            >
+              <span>👤 Face</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
+              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              onClick={() => frameLaraGridOrtho('left')}
+              title="Vue orthographique côté gauche (Alt+3 / Ctrl+Num 3)"
+            >
+              <span>◀️ Côté G</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
+              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              onClick={() => frameLaraGridOrtho('right')}
+              title="Vue orthographique côté droit (Alt+4 / Num 3)"
+            >
+              <span>▶️ Côté D</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
+              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              onClick={() => frameLaraGridOrtho('top')}
+              title="Vue orthographique du dessus (Alt+7 / Num 7)"
+            >
+              <span>⬇️ Dessus</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
+              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              onClick={() => frameLaraGridOrtho('bottom')}
+              title="Vue orthographique du dessous (Alt+9 / Ctrl+Num 7)"
+            >
+              <span>⬆️ Dessous</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
+              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              onClick={() => frameLaraGridOrtho('back')}
+              title="Vue orthographique de derrière / dos (Alt+2 / Ctrl+Num 1)"
+            >
+              <span>🔙 Dos</span>
+            </button>
+          </div>
+          <div className="d-flex gap-1 mt-1">
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-1"
+              style={{ fontSize: isMobile ? '12px' : '10px' }}
+              onClick={() => frameLaraGridCamera()}
+              title="Recadrer la caméra sur le centre de la grille (Vue 3D Persp)"
+            >
+              <span>🎯</span>
+              <span>Recadrer 3D</span>
+            </button>
+          </div>
         </div>
       )}
 

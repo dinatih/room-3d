@@ -8,6 +8,7 @@ import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS, isCharacterVisibleInMode } from '../walkerConfig';
+import { frameLaraGridOrtho, frameLaraGridCamera } from '../character/laraGridUtils';
 
 interface UseCameraShortcutsParams {
   camera: THREE.Camera;
@@ -23,6 +24,13 @@ interface UseCameraShortcutsParams {
   exitWalkMode: () => void;
   enterTop: (follow?: boolean) => void;
   exitTop: () => void;
+  enterOrtho?: (config: {
+    pos: [number, number, number];
+    target: [number, number, number];
+    up: [number, number, number];
+    viewH: number;
+  }) => void;
+  exitOrtho?: () => void;
   invalidate: () => void;
 }
 
@@ -40,6 +48,8 @@ export function useCameraShortcuts({
   exitWalkMode,
   enterTop,
   exitTop,
+  enterOrtho,
+  exitOrtho,
   invalidate,
 }: UseCameraShortcutsParams) {
   useEffect(() => {
@@ -56,7 +66,69 @@ export function useCameraShortcuts({
       if (e.key === 'Escape') {
         if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
         else if (modeRef.current === 'top') exitTop();
+        else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
         return;
+      }
+
+      // Raccourcis grille Lara (vues orthographiques)
+      const laraGridActive = useSceneStore.getState().layers.laraGrid;
+      if (laraGridActive) {
+        const isNum1 = e.code === 'Numpad1' && !e.ctrlKey;
+        const isNum2 = (e.code === 'Numpad1' && e.ctrlKey) || (e.code === 'Numpad2');
+        const isNum3 = e.code === 'Numpad3' && e.ctrlKey;
+        const isNum4 = (e.code === 'Numpad3' && !e.ctrlKey) || (e.code === 'Numpad4');
+        const isNum7 = e.code === 'Numpad7' && !e.ctrlKey;
+        const isNum9 = (e.code === 'Numpad7' && e.ctrlKey) || (e.code === 'Numpad9') || (e.code === 'Numpad8');
+        const isNum5 = e.code === 'Numpad5';
+
+        const isAlt1 = e.altKey && (e.key === '1' || e.code === 'Digit1');
+        const isAlt2 = e.altKey && (e.key === '2' || e.code === 'Digit2');
+        const isAlt3 = e.altKey && (e.key === '3' || e.code === 'Digit3');
+        const isAlt4 = e.altKey && (e.key === '4' || e.code === 'Digit4');
+        const isAlt7 = e.altKey && (e.key === '7' || e.code === 'Digit7');
+        const isAlt9 = e.altKey && (e.key === '9' || e.code === 'Digit9');
+        const isAlt5 = e.altKey && (e.key === '5' || e.code === 'Digit5');
+
+        if (isNum1 || isAlt1) {
+          e.preventDefault();
+          frameLaraGridOrtho('front');
+          return;
+        }
+        if (isNum2 || isAlt2) {
+          e.preventDefault();
+          frameLaraGridOrtho('back');
+          return;
+        }
+        if (isNum3 || isAlt3) {
+          e.preventDefault();
+          frameLaraGridOrtho('left');
+          return;
+        }
+        if (isNum4 || isAlt4) {
+          e.preventDefault();
+          frameLaraGridOrtho('right');
+          return;
+        }
+        if (isNum7 || isAlt7) {
+          e.preventDefault();
+          frameLaraGridOrtho('top');
+          return;
+        }
+        if (isNum9 || isAlt9) {
+          e.preventDefault();
+          frameLaraGridOrtho('bottom');
+          return;
+        }
+        if (isNum5 || isAlt5) {
+          e.preventDefault();
+          if (modeRef.current === 'ortho' && exitOrtho) {
+            exitOrtho();
+            frameLaraGridCamera();
+          } else {
+            frameLaraGridOrtho('front');
+          }
+          return;
+        }
       }
 
       if (e.key === 'o' || e.key === 'O') {
@@ -219,6 +291,7 @@ export function useCameraShortcuts({
       };
       if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
       if (modeRef.current === 'top') exitTop();
+      if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
       camera.position.set(...pos);
       savedPerspPos.current.set(...pos);
       savedPerspTarget.current.set(...target);
@@ -229,17 +302,28 @@ export function useCameraShortcuts({
       invalidate();
     };
 
+    // Grille Lara preset → bascule vue orthographique
+    const onOrthoView = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail) return;
+      if (enterOrtho) {
+        enterOrtho(detail);
+      }
+    };
+
     window.addEventListener('keydown', onDown);
     window.addEventListener('keyup', onUp);
     document.addEventListener('minimap-pov', onPov);
     document.addEventListener('camera-pov', onPov);
     document.addEventListener('camera-view', onView);
+    document.addEventListener('camera-ortho-view', onOrthoView);
     return () => {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
       document.removeEventListener('minimap-pov', onPov);
       document.removeEventListener('camera-pov', onPov);
       document.removeEventListener('camera-view', onView);
+      document.removeEventListener('camera-ortho-view', onOrthoView);
     };
-  }, [camera, ctrlRef, enterTop, enterWalk, exitTop, exitWalkMode, invalidate, keys, modeRef, planeModeRef, savedPerspPos, savedPerspTarget, topFollowRef, walkPos]);
+  }, [camera, ctrlRef, enterOrtho, enterTop, enterWalk, exitOrtho, exitTop, exitWalkMode, invalidate, keys, modeRef, planeModeRef, savedPerspPos, savedPerspTarget, topFollowRef, walkPos]);
 }

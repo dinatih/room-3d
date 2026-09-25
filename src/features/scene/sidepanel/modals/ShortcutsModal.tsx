@@ -51,8 +51,19 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Arêtes des murs (toggle)"   keys={['W']} />
               <R label="Grille inventaire 📦 (toggle)" keys={['U']} />
               <R label="Mesures réelles 📐 (toggle)" keys={['N']} />
-              <R label="Quitter walk / top-down"    keys={['Échap']} />
+              <R label="Quitter walk / top-down / ortho" keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />
+            </div>
+
+            <div>
+              <Section title="Grille PNJ / Lara (Vues Ortho)" />
+              <R label="Vue Ortho Face"             keys={['Alt+1', 'Num 1']} />
+              <R label="Vue Ortho Derrière (Dos)"   keys={['Alt+2', 'Ctrl+1']} />
+              <R label="Vue Ortho Côté Gauche"      keys={['Alt+3', 'Ctrl+3']} />
+              <R label="Vue Ortho Côté Droit"       keys={['Alt+4', 'Num 3']} />
+              <R label="Vue Ortho Dessus"           keys={['Alt+7', 'Num 7']} />
+              <R label="Vue Ortho Dessous"          keys={['Alt+9', 'Ctrl+7']} />
+              <R label="Bascule Ortho / Persp 3D"   keys={['Alt+5', 'Num 5']} />
             </div>
 
             <div>

@@ -51,6 +51,7 @@ import { AppConsole }                 from '@features/ui/AppConsole';
 import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 import { GridLayout }            from '@features/scene/GridLayout';
 import { frameLaraGridCamera }   from './character/laraGridUtils';
+import { LaraGridToolbar }       from './LaraGridToolbar';
 
 // The inventory pulls in a second R3F canvas, its GLTF loaders and a large
 // catalogue. Do not parse it until the user explicitly opens the inventory.
@@ -682,6 +683,7 @@ export function Studio() {
             }}
             onToggleHideUI={() => setHideUI(h => !h)}
           />
+          <LaraGridToolbar />
           {planeMode && (
             <div style={{
               position: 'absolute', bottom: 72, left: '50%',
