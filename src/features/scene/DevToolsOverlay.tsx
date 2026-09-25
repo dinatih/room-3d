@@ -81,6 +81,7 @@ export function DevToolsGroups({ Group }: {
 
   useEffect(() => {
     devState.onUpdate = () => setTick(t => t + 1);
+    devState.refreshScene?.();
     return () => {
       devState.onUpdate = null;
       devState.fpsCanvas = null;

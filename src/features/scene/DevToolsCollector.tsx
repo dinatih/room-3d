@@ -179,8 +179,12 @@ export function DevToolsCollector() {
 
     devState.logDiagnostics = () => runDiagnostics();
 
-    // Auto-refresh stats every 2s
-    const id = setInterval(() => devState.refreshScene?.(), 2000);
+    // Auto-refresh stats every 4s only if DevTools panel is open
+    const id = setInterval(() => {
+      if (devState.onUpdate) {
+        devState.refreshScene?.();
+      }
+    }, 4000);
     gl.info.autoReset = false;
     return () => {
       devState.refreshScene = null;
@@ -238,10 +242,10 @@ export function DevToolsCollector() {
       }
     }
 
-    // Throttle React updates to 4fps (250ms)
-    if (now - (devState as any).lastReactUpdate > 250 || !(devState as any).lastReactUpdate) {
+    // Throttle React updates to 4fps (250ms) only when DevTools panel is open
+    if (devState.onUpdate && (now - (devState as any).lastReactUpdate > 250 || !(devState as any).lastReactUpdate)) {
       (devState as any).lastReactUpdate = now;
-      devState.onUpdate?.();
+      devState.onUpdate();
     }
   });
 
