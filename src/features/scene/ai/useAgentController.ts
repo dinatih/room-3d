@@ -1,7 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
-import { resolveSlotAnimation } from './animationPacks';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { getDuoAnimationForClip } from './duoAnimations';
@@ -9,7 +8,7 @@ import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 import { getEstimatedClipDuration } from '../animOptions';
-import { resolveAnimationId, getAnimationDef } from '../animations/animationResolver';
+import { resolveAnimationId, getAnimationDef, resolveSlotAnimation } from '../animations/animationResolver';
 
 import { AgentState, AgentStatus } from './agent/agentTypes';
 import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation } from './agent/agentWalkAnimations';

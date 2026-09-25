@@ -160,7 +160,6 @@ export interface SlotAnimationMeta {
   aliasUsed?: string;        // Alias utilisé pour ce slot (ex: 'sit-idle', 'seated-front')
   allAliases?: string[];     // Tous les alias définis
   tags: string[];            // Tags sémantiques (ex: ['sitting', 'seated-front'])
-  pack?: string;             // Nom du pack si sélection groupée/aléatoire
   clipName: string;          // Nom du fichier / clip
   duration?: number;
   label?: string;
@@ -175,23 +174,6 @@ export interface SlotAnimationMeta {
     defaultRotYOffset?: number;
   }>;
 }
-
-const PACK_TAG_MAP: Record<string, string[]> = {
-  'laying-pack': ['laying'],
-  'all-dances': ['dance'],
-  'seated-front-pack': ['seated-front'],
-  'sitted-front-pack': ['seated-front'],
-  'seated-side-pack': ['seated-side'],
-  'side-sitted-pack': ['seated-side'],
-  'sitting-front': ['seated-front'],
-  'sitting-side': ['seated-side'],
-  'laying-front-pack': ['laying-front'],
-  'lay-front-pack': ['laying-front'],
-  'laying-side-pack': ['laying-side'],
-  'lay-side-pack': ['laying-side'],
-  'lay-front': ['laying-front'],
-  'lay-side': ['laying-side'],
-};
 
 /**
  * Analyse un slot de Smart Object pour extraire :
@@ -287,18 +269,11 @@ export function resolveSlotAnimationInfo(slot: {
       };
     });
 
-    const packStr = slot.animationsRandom
-      ? Array.isArray(slot.animationsRandom)
-        ? slot.animationsRandom.join(', ')
-        : slot.animationsRandom
-      : undefined;
-
     return {
       canonicalId: def?.id ?? clip.replace(/^anim_/, ''),
       aliasUsed,
       allAliases: def?.aliases,
       tags: def?.tags ?? [],
-      pack: packStr,
       clipName: def?.path ? def.path.split('/').pop()?.replace('.glb', '') ?? clip : clip,
       duration: slot.duration ?? def?.duration,
       label: def?.label || def?.id,
@@ -308,23 +283,26 @@ export function resolveSlotAnimationInfo(slot: {
     };
   }
 
-  // Cas 3 : Pack d'animations aléatoires (animationsRandom)
+  // Cas 3 : Sélection aléatoire par tag(s) ou alias (animationsRandom)
   if (slot.animationsRandom) {
-    const packStr = Array.isArray(slot.animationsRandom)
-      ? slot.animationsRandom.join(', ')
-      : slot.animationsRandom;
-
     let searchTags: string[] = [];
     if (typeof slot.animationsRandom === 'string') {
-      searchTags = PACK_TAG_MAP[slot.animationsRandom] ?? [slot.animationsRandom];
+      if (slot.animationsRandom.startsWith('tag:')) {
+        searchTags = slot.animationsRandom.substring(4).split(',').map((s) => s.trim()).filter(Boolean);
+      } else {
+        searchTags = [slot.animationsRandom];
+      }
     } else if (Array.isArray(slot.animationsRandom)) {
       searchTags = slot.animationsRandom;
     }
 
     const matchingDefs = getAnimationsByTags(searchTags, 'any');
 
+    const fallbackLabel = Array.isArray(slot.animationsRandom)
+      ? slot.animationsRandom.join(', ')
+      : slot.animationsRandom;
     const first = matchingDefs[0];
-    const canonicalId = first?.id ?? packStr;
+    const canonicalId = first?.id ?? fallbackLabel;
     const duration = slot.duration ?? first?.duration;
 
     const variants = (matchingDefs.length > 0
@@ -345,8 +323,7 @@ export function resolveSlotAnimationInfo(slot: {
       aliasUsed: first?.aliases?.[0],
       allAliases: first?.aliases,
       tags: first?.tags ?? searchTags,
-      pack: packStr,
-      clipName: first?.path ? first.path.split('/').pop()?.replace('.glb', '') ?? packStr : packStr,
+      clipName: first?.path ? first.path.split('/').pop()?.replace('.glb', '') ?? canonicalId : canonicalId,
       duration,
       label: first?.label || first?.id,
       defaultRotYOffset: first?.defaultRotYOffset,
@@ -359,5 +336,72 @@ export function resolveSlotAnimationInfo(slot: {
     canonicalId: 'default',
     tags: [],
     clipName: 'défaut',
+  };
+}
+
+/**
+ * Résout une animation aléatoire ou définie et son orientation finale (avec rotY offset si nécessaire)
+ * pour un slot d'interaction donné.
+ */
+export function resolveSlotAnimation(slot: {
+  animation?: string;
+  rotY?: number;
+  animationsRandom?: string | string[];
+  animations_random?: string | string[];
+  availableAnims?: string[];
+}): { animation: string; rotY: number; offset?: [number, number, number] } {
+  const baseRotY = slot.rotY ?? 0;
+  const animRandom = slot.animationsRandom ?? slot.animations_random;
+
+  // 1. Requête par tags ou alias via animationsRandom (ex: 'seated-front', 'dance', 'tag:sitting', etc.)
+  if (typeof animRandom === 'string') {
+    const queryResult = getRandomAnimationByQuery(animRandom);
+    if (queryResult) {
+      return {
+        animation: queryResult.animation,
+        rotY: baseRotY + (queryResult.rotYOffset ?? 0),
+        offset: queryResult.defaultOffset,
+      };
+    }
+  }
+
+  // 2. Tableau direct de tags/alias dans animationsRandom ou availableAnims
+  const animList = Array.isArray(animRandom)
+    ? animRandom
+    : (slot.availableAnims && slot.availableAnims.length > 0 ? slot.availableAnims : null);
+
+  if (animList && animList.length > 0) {
+    const chosen = animList[Math.floor(Math.random() * animList.length)];
+    const queryResult = getRandomAnimationByQuery(chosen);
+    if (queryResult) {
+      return {
+        animation: queryResult.animation,
+        rotY: baseRotY + (queryResult.rotYOffset ?? 0),
+        offset: queryResult.defaultOffset,
+      };
+    }
+    const def = getAnimationDef(chosen);
+    return {
+      animation: resolveAnimationPath(chosen),
+      rotY: baseRotY + (def?.defaultRotYOffset ?? 0),
+      offset: def?.defaultOffset,
+    };
+  }
+
+  // 3. Animation unique spécifiée par alias, id ou chemin direct
+  if (slot.animation) {
+    const def = getAnimationDef(slot.animation);
+    return {
+      animation: def ? def.path : resolveAnimationPath(slot.animation),
+      rotY: baseRotY + (def?.defaultRotYOffset ?? 0),
+      offset: def?.defaultOffset,
+    };
+  }
+
+  const fallbackDef = getAnimationDef('sitting-idle');
+  return {
+    animation: resolveAnimationPath('sitting-idle'),
+    rotY: baseRotY,
+    offset: fallbackDef?.defaultOffset,
   };
 }

@@ -1,7 +1,7 @@
 import { AgentInstruction } from '../aiTypes';
 import { WAYPOINTS } from '../ZoneNodes';
 import { getSmartObject } from '../smartObjectRegistry';
-import { resolveSlotAnimation } from '../animationPacks';
+import { resolveSlotAnimation } from '../../animations/animationResolver';
 import { ResolvedInstructionCoords } from './agentTypes';
 
 export function resolveInstructionCoords(

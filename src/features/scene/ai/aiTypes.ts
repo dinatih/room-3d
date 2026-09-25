@@ -22,7 +22,7 @@ export interface InteractionSlot {
   repeatCount?: number;       // Nombre de fois où l'animation est jouée si duration est omis (défaut: 1)
   repeatVariation?: boolean;  // Si repeatCount > 1 avec animationsRandom : true = animation différente tirée à chaque répétition, false = même anim répétée X fois (défaut: false)
   availableAnims?: string[];  // Variantes possibles pour l'aléatoire
-  animationsRandom?: string | string[]; // Pack nommé (ex: 'sitted_front_pack', 'side_sitted_pack') ou liste d'anims
+  animationsRandom?: string | string[]; // Tag (ex: 'seated-front', 'dance'), tableau de tags/alias, ou alias unique
   triggerEventKey?: string;   // Event à déclencher (ex: 'wc-flush', 'eastGlassDoor')
   triggerTargetState?: boolean;
   // ── Support Duo Animation ──
