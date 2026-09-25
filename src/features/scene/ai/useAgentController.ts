@@ -621,7 +621,7 @@ export function useAgentController(
         statusRef.current = 'INTERACTING';
         const duration = currentInstruction.duration || 5.0;
         timerRef.current = duration;
-        stateRef.current.animation = currentInstruction.animation || 'right-turn';
+        stateRef.current.animation = resolveAnimationId(currentInstruction.animation || 'idle');
         const logKey = `rotate360-${stepIndexRef.current}-${dynamicNavIndexRef.current}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
@@ -782,7 +782,7 @@ export function useAgentController(
         const totalDuration = currentInstruction.duration || 5.0;
         const turnSpeed = (2 * Math.PI) / totalDuration;
         stateRef.current.rotY = (stateRef.current.rotY + turnSpeed * dt) % (2 * Math.PI);
-        stateRef.current.animation = currentInstruction.animation || 'right-turn';
+        stateRef.current.animation = resolveAnimationId(currentInstruction.animation || 'idle');
 
         timerRef.current -= dt;
         if (timerRef.current <= 0) {

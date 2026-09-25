@@ -87,15 +87,15 @@ export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
 
   // ── 2. Inspection Salle de bain ──
   { type: 'MOVE_TO', targetWaypointId: 'bathroom-center' },
-  { type: 'ROTATE_360', duration: 5.0, animation: 'left-turn' },
+  { type: 'ROTATE_360', duration: 5.0 },
 
   // ── 3. Inspection Salon / Séjour ──
   { type: 'MOVE_TO', targetWaypointId: 'living-center' },
-  { type: 'ROTATE_360', duration: 6.0, animation: 'left-turn' },
+  { type: 'ROTATE_360', duration: 6.0 },
 
   // ── 4. Inspection Couloir ──
   { type: 'MOVE_TO', targetWaypointId: 'corridor-center' },
-  { type: 'ROTATE_360', duration: 4.0, animation: 'left-turn' },
+  { type: 'ROTATE_360', duration: 4.0 },
 
   // ── 5. Sortie et direction entrée couloir Bâtiment B (attente 1min30 avant prochaine ronde) ──
   { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
