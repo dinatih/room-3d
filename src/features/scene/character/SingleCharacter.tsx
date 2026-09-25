@@ -757,9 +757,9 @@ export function SingleCharacter({
     } else {
       scene.position.copy(baseScenePosRef.current);
     }
-    if (isPreview && targetDef?.defaultRotYOffset !== undefined) {
+    if (targetDef?.defaultRotYOffset !== undefined) {
       scene.rotation.y = targetDef.defaultRotYOffset;
-    } else if (isPreview) {
+    } else {
       scene.rotation.y = 0;
     }
 

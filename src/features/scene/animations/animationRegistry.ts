@@ -967,6 +967,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `[MILEY] Cuddle Kiss F (1142f / 19.0s, 1294KB)`,
     tags: ['emotes', 'gesture'],
     duration: 19,
+    defaultRotYOffset: Math.PI / 2,
   },
   {
     id: 'miley-armature-cuddle-kiss-m',

@@ -359,7 +359,7 @@ export function resolveSlotAnimation(slot: {
     if (queryResult) {
       return {
         animation: queryResult.animation,
-        rotY: baseRotY + (queryResult.rotYOffset ?? 0),
+        rotY: baseRotY,
         offset: queryResult.defaultOffset,
       };
     }
@@ -376,14 +376,14 @@ export function resolveSlotAnimation(slot: {
     if (queryResult) {
       return {
         animation: queryResult.animation,
-        rotY: baseRotY + (queryResult.rotYOffset ?? 0),
+        rotY: baseRotY,
         offset: queryResult.defaultOffset,
       };
     }
     const def = getAnimationDef(chosen);
     return {
       animation: resolveAnimationPath(chosen),
-      rotY: baseRotY + (def?.defaultRotYOffset ?? 0),
+      rotY: baseRotY,
       offset: def?.defaultOffset,
     };
   }
@@ -393,7 +393,7 @@ export function resolveSlotAnimation(slot: {
     const def = getAnimationDef(slot.animation);
     return {
       animation: def ? def.path : resolveAnimationPath(slot.animation),
-      rotY: baseRotY + (def?.defaultRotYOffset ?? 0),
+      rotY: baseRotY,
       offset: def?.defaultOffset,
     };
   }
