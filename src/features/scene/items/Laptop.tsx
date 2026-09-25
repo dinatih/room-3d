@@ -146,26 +146,66 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     const usbcOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_USBC_CARD_1');
     if (usbcOcc) usbcOcc.visible = false;
 
-    // Priorités et polygonOffset pour éliminer le z-fighting :
-    // 1. Écran (GFW00_3H_NB_ID_BEZEL_1_1) face au fond du bezel
-    // 2. Logo au dos (GFW00_3H_NB_ID_COVER_LOGO_1) face au capot arrière (GFW_NB_ID_COVER_A)
-    const setPriority = (rootObj: THREE.Object3D | null | undefined, renderOrder: number) => {
-      if (!rootObj) return;
-      rootObj.traverse(child => {
-        const mesh = child as THREE.Mesh;
-        if (!mesh.isMesh || !mesh.material) return;
-        const origMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-        const mat = (origMat as THREE.MeshStandardMaterial).clone();
-        mat.polygonOffset = true;
-        mat.polygonOffsetFactor = -2;
-        mat.polygonOffsetUnits = -2;
-        mesh.material = mat;
-        mesh.renderOrder = renderOrder;
-      });
+    // Filtrage des géométries opposées et gestion des priorités (renderOrder + polygonOffset) :
+    // - L'écran (BEZEL_1_1) ne doit avoir AUCUNE face orientée vers l'arrière (-Z) pour ne pas percer le capot
+    // - Le logo (COVER_LOGO_1) ne doit avoir AUCUNE face orientée vers l'avant (+Z) pour ne pas percer l'écran
+    const filterMeshFaces = (mesh: THREE.Mesh | undefined, keepPredicate: (avgZ: number) => boolean) => {
+      if (!mesh || !mesh.geometry) return;
+      const geo = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone();
+      const posAttr = geo.getAttribute('position');
+      const normAttr = geo.getAttribute('normal');
+      const uvAttr = geo.getAttribute('uv');
+      if (!posAttr) return;
+
+      const newPos: number[] = [];
+      const newNorm: number[] = [];
+      const newUv: number[] = [];
+
+      for (let i = 0; i < posAttr.count; i += 3) {
+        const avgZ = normAttr ? (normAttr.getZ(i) + normAttr.getZ(i + 1) + normAttr.getZ(i + 2)) / 3 : 0;
+        if (!keepPredicate(avgZ)) continue;
+
+        for (let k = 0; k < 3; k++) {
+          newPos.push(posAttr.getX(i + k), posAttr.getY(i + k), posAttr.getZ(i + k));
+          if (normAttr) newNorm.push(normAttr.getX(i + k), normAttr.getY(i + k), normAttr.getZ(i + k));
+          if (uvAttr) newUv.push(uvAttr.getX(i + k), uvAttr.getY(i + k));
+        }
+      }
+
+      const filteredGeo = new THREE.BufferGeometry();
+      filteredGeo.setAttribute('position', new THREE.Float32BufferAttribute(newPos, 3));
+      if (newNorm.length) filteredGeo.setAttribute('normal', new THREE.Float32BufferAttribute(newNorm, 3));
+      if (newUv.length) filteredGeo.setAttribute('uv', new THREE.Float32BufferAttribute(newUv, 2));
+      mesh.geometry = filteredGeo;
     };
 
-    setPriority(c.getObjectByName('GFW00_3H_NB_ID_BEZEL_1_1'), 1);
-    setPriority(c.getObjectByName('GFW00_3H_NB_ID_COVER_LOGO_1'), 1);
+    // 1. Écran : ne garder que les faces avant (normal.z > -0.5), priorité sur le fond du bezel
+    const screenMesh = c.getObjectByName('GFW00_3H_NB_ID_BEZEL_1_1') as THREE.Mesh | undefined;
+    if (screenMesh && screenMesh.material) {
+      filterMeshFaces(screenMesh, avgZ => avgZ > -0.5);
+      const origMat = Array.isArray(screenMesh.material) ? screenMesh.material[0] : screenMesh.material;
+      const screenMat = (origMat as THREE.MeshStandardMaterial).clone();
+      screenMat.side = THREE.FrontSide;
+      screenMat.polygonOffset = true;
+      screenMat.polygonOffsetFactor = -1;
+      screenMat.polygonOffsetUnits = -1;
+      screenMesh.material = screenMat;
+      screenMesh.renderOrder = 1;
+    }
+
+    // 2. Logo au dos : ne garder que les faces arrière (normal.z < 0.5), priorité sur le capot
+    const logoMesh = c.getObjectByName('GFW00_3H_NB_ID_COVER_LOGO_1') as THREE.Mesh | undefined;
+    if (logoMesh && logoMesh.material) {
+      filterMeshFaces(logoMesh, avgZ => avgZ < 0.5);
+      const origMat = Array.isArray(logoMesh.material) ? logoMesh.material[0] : logoMesh.material;
+      const logoMat = (origMat as THREE.MeshStandardMaterial).clone();
+      logoMat.side = THREE.FrontSide;
+      logoMat.polygonOffset = true;
+      logoMat.polygonOffsetFactor = -1;
+      logoMat.polygonOffsetUnits = -1;
+      logoMesh.material = logoMat;
+      logoMesh.renderOrder = 1;
+    }
 
     mergeGlbByMaterial(c);
     return c;
