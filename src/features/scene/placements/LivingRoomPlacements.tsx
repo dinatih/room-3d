@@ -333,23 +333,23 @@ function DeskDecor() {
   return (
     <>
       <PositionTransition x={p1.x} z={p1.z} ry={p1.ry}>
-        <group position={[0, d1H, 0]} rotation={[0, Math.PI, 0]}>
-          <group position={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Organiseur STACKSTOD Bureau 1' }}>
+        <group position={[0, d1H, 0]} rotation={[0, Math.PI, 0]} userData={{ skipMerge: true }}>
+          <group position={[0, 0, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Organiseur STACKSTOD Bureau 1' }}>
             <Stackstod60620144 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
           </group>
         </group>
       </PositionTransition>
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
-        <group position={[0, d2H, -8]} rotation={[0, Math.PI, 0]}>
-          <group userData={{ animUnit: true }}>
+        <group position={[0, d2H, -8]} rotation={[0, Math.PI, 0]} userData={{ skipMerge: true }}>
+          <group userData={{ animUnit: true, skipMerge: true }}>
             <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
           </group>
-          <group userData={{ animUnit: true }}>
+          <group userData={{ animUnit: true, skipMerge: true }}>
             <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
               <Phone item={{} as any} actionState={{}} onSize={() => {}} />
             </group>
           </group>
-          <group userData={{ animUnit: true }}>
+          <group userData={{ animUnit: true, skipMerge: true }}>
             <group position={[-22, 0, -7]}>
               <Kejserlig90511501 item={{} as any} actionState={{}} onSize={() => {}} />
             </group>
@@ -582,7 +582,9 @@ export function LivingRoomFurnishings() {
       <LampOla_ />
 
       {/* Objets et accessoires de travail posés sur les bureaux (Stackstod, Laptop, Phone, Mug) */}
-      <DeskDecor />
+      <group userData={{ skipMerge: true }}>
+        <DeskDecor />
+      </group>
 
       {/* Enceinte JBL Charge 3 sur Kallax NE */}
       <group position={[ROOM_W - KALLAX_DEPTH / 2 - 15, 118, w2 - 11]} userData={{ animUnit: true, itemName: 'Enceinte JBL Charge 3' }}>
