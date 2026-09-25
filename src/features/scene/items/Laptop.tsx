@@ -147,12 +147,9 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     if (usbcOcc) usbcOcc.visible = false;
 
     // Filtrage des géométries opposées et gestion des priorités (renderOrder + polygonOffset) :
-    // - L'écran (BEZEL_1_1) ne conserve QUE sa face avant (normal.z > 0.8), décalée de +0.2 mm (+Z)
-    //   pour éliminer les 9 sous-faces internes en conflit avec la cavité du bezel rouge.
-    //   Le backface culling (FrontSide) l'élimine totalement vu de dos (zéro fuite sur le capot).
-    // - Le logo (COVER_LOGO_1) ne conserve QUE sa face arrière (normal.z < -0.8), décalée de -0.1 mm (-Z)
-    //   pour éliminer les 39 sous-faces internes. Culling total vu de face.
-    const filterMeshFaces = (mesh: THREE.Mesh | undefined, keepPredicate: (avgZ: number) => boolean, offsetZ = 0) => {
+    // - L'écran (BEZEL_1_1) ne doit avoir AUCUNE face orientée vers l'arrière (-Z) pour ne pas percer le capot
+    // - Le logo (COVER_LOGO_1) ne doit avoir AUCUNE face orientée vers l'avant (+Z) pour ne pas percer l'écran
+    const filterMeshFaces = (mesh: THREE.Mesh | undefined, keepPredicate: (avgZ: number) => boolean) => {
       if (!mesh || !mesh.geometry) return;
       const geo = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone();
       const posAttr = geo.getAttribute('position');
@@ -169,7 +166,7 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
         if (!keepPredicate(avgZ)) continue;
 
         for (let k = 0; k < 3; k++) {
-          newPos.push(posAttr.getX(i + k), posAttr.getY(i + k), posAttr.getZ(i + k) + offsetZ);
+          newPos.push(posAttr.getX(i + k), posAttr.getY(i + k), posAttr.getZ(i + k));
           if (normAttr) newNorm.push(normAttr.getX(i + k), normAttr.getY(i + k), normAttr.getZ(i + k));
           if (uvAttr) newUv.push(uvAttr.getX(i + k), uvAttr.getY(i + k));
         }
@@ -182,36 +179,35 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
       mesh.geometry = filteredGeo;
     };
 
-    // 1. Écran : face avant seule (normal.z > 0.8), avancée de +0.0002 (+0.2 mm)
+    // 1. Écran : ne garder que les faces avant (normal.z > -0.5), priorité sur le fond du bezel
     const screenMesh = c.getObjectByName('GFW00_3H_NB_ID_BEZEL_1_1') as THREE.Mesh | undefined;
     if (screenMesh && screenMesh.material) {
-      filterMeshFaces(screenMesh, avgZ => avgZ > 0.8, 0.0002);
+      filterMeshFaces(screenMesh, avgZ => avgZ > -0.5);
       const origMat = Array.isArray(screenMesh.material) ? screenMesh.material[0] : screenMesh.material;
       const screenMat = (origMat as THREE.MeshStandardMaterial).clone();
       screenMat.side = THREE.FrontSide;
       screenMat.polygonOffset = true;
-      screenMat.polygonOffsetFactor = -2;
-      screenMat.polygonOffsetUnits = -2;
+      screenMat.polygonOffsetFactor = -1;
+      screenMat.polygonOffsetUnits = -1;
       screenMesh.material = screenMat;
-      screenMesh.renderOrder = 2;
+      screenMesh.renderOrder = 1;
     }
 
-    // 2. Logo au dos : face arrière seule (normal.z < -0.8), reculée de -0.0001 (-0.1 mm)
+    // 2. Logo au dos : ne garder que les faces arrière (normal.z < 0.5), priorité sur le capot
     const logoMesh = c.getObjectByName('GFW00_3H_NB_ID_COVER_LOGO_1') as THREE.Mesh | undefined;
     if (logoMesh && logoMesh.material) {
-      filterMeshFaces(logoMesh, avgZ => avgZ < -0.8, -0.0001);
+      filterMeshFaces(logoMesh, avgZ => avgZ < 0.5);
       const origMat = Array.isArray(logoMesh.material) ? logoMesh.material[0] : logoMesh.material;
       const logoMat = (origMat as THREE.MeshStandardMaterial).clone();
       logoMat.side = THREE.FrontSide;
       logoMat.polygonOffset = true;
-      logoMat.polygonOffsetFactor = -2;
-      logoMat.polygonOffsetUnits = -2;
+      logoMat.polygonOffsetFactor = -1;
+      logoMat.polygonOffsetUnits = -1;
       logoMesh.material = logoMat;
-      logoMesh.renderOrder = 2;
+      logoMesh.renderOrder = 1;
     }
 
     mergeGlbByMaterial(c);
-    c.userData.skipMerge = true;
     return c;
   }, [scene]);
 
@@ -219,15 +215,11 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     onSize(new THREE.Vector3(BASE_W, BASE_H + SCREEN_D, BASE_D));
   }, []);
 
-  return <primitive object={clone} scale={100} position={GLB_POS} userData={{ skipMerge: true }} />;
+  return <primitive object={clone} scale={100} position={GLB_POS} />;
 }
 
 // ── Export ────────────────────────────────────────────────────────────────────
 
 export function Laptop({ onSize }: SceneItemProps) {
-  return (
-    <group userData={{ skipMerge: true }}>
-      <LaptopGlb onSize={onSize} />
-    </group>
-  );
+  return <LaptopGlb onSize={onSize} />;
 }

@@ -17,7 +17,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
     const dst = mergedRef.current;
 
     dst.clear();
-    const groups = new Map<string, { geos: THREE.BufferGeometry[]; mat: THREE.Material; userData: any; renderOrder: number }>();
+    const groups = new Map<string, { geos: THREE.BufferGeometry[]; mat: THREE.Material; userData: any }>();
 
     src.updateMatrixWorld(true);
     const invWorldMat = src.matrixWorld.clone().invert();
@@ -64,9 +64,8 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
         clone = clone.index ? clone.toNonIndexed() : clone;
         clone.applyMatrix4(relMat);
 
-        const order = mesh.renderOrder || 0;
-        const key = `${mat.uuid}|${udKey}|ro${order}`;
-        if (!groups.has(key)) groups.set(key, { geos: [], mat, userData: { brickType: mesh.userData?.brickType }, renderOrder: order });
+        const key = `${mat.uuid}|${udKey}`;
+        if (!groups.has(key)) groups.set(key, { geos: [], mat, userData: { brickType: mesh.userData?.brickType } });
         groups.get(key)!.geos.push(clone);
       } else {
         for (const group of geom.groups) {
@@ -82,15 +81,14 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
           clone = clone.index ? clone.toNonIndexed() : clone;
           clone.applyMatrix4(relMat);
 
-          const order = mesh.renderOrder || 0;
-          const key = `${mat.uuid}|${udKey}|ro${order}`;
-          if (!groups.has(key)) groups.set(key, { geos: [], mat, userData: { brickType: mesh.userData?.brickType }, renderOrder: order });
+          const key = `${mat.uuid}|${udKey}`;
+          if (!groups.has(key)) groups.set(key, { geos: [], mat, userData: { brickType: mesh.userData?.brickType } });
           groups.get(key)!.geos.push(clone);
         }
       }
     });
 
-    for (const { geos, mat, userData, renderOrder } of groups.values()) {
+    for (const { geos, mat, userData } of groups.values()) {
       const allAttrs = new Set<string>();
       geos.forEach(g => Object.keys(g.attributes).forEach(k => allAttrs.add(k)));
       for (const a of allAttrs) {
@@ -106,7 +104,6 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
 
       const m = new THREE.Mesh(merged, mat);
       m.name = name;
-      m.renderOrder = renderOrder;
       m.castShadow = true;
       m.receiveShadow = true;
       m.userData = { ...userData, isMergedStatic: true };
