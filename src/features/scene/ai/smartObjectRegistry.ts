@@ -729,10 +729,25 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'hugs-trio',
         name: 'Enchaîner 3 Câlins & Baisers',
         isDuo: true,
-        offset: [160, 0, 200],
         rotY: 0,
-        duoPool: ['slow_dance', 'eye_to_eye', 'farewell_kiss', 'kiss_man_woman', 'kiss'],
+        duoPool: ['slow_dance', 'eye_to_eye', 'kiss_man_woman', 'kiss'],
         duoCount: 3,
+      }
+    ]
+  },
+  'inyeong-cha-hugs-point': {
+    id: 'inyeong-cha-hugs-point',
+    name: '💖 Point Câlins Inyeong-Cha',
+    category: 'decor',
+    position: [0, 0, -400],
+    slots: [
+      {
+        slotId: 'hugs-6',
+        name: 'Enchaîner 3 Câlins & Baisers',
+        isDuo: true,
+        duoPool: ['slow_dance', 'eye_to_eye', 'farewell_kiss', 'kiss_man_woman', 'kiss', 'propose', 'date_bearhug', 'p2',
+          'pop_dance', 'energetic_dance'],
+        duoCount: 6,
       }
     ]
   },

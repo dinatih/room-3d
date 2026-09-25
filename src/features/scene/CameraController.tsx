@@ -467,17 +467,21 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     setOrthoConfig(config);
     changeMode('ortho');
 
-    const activeCam = ctrlRef.current?.object || camera;
-    activeCam.position.set(...config.pos);
-    activeCam.up.set(...config.up);
-    if ('zoom' in activeCam) {
-      (activeCam as THREE.OrthographicCamera).zoom = 1;
-    }
-    if (ctrlRef.current) {
-      ctrlRef.current.target.set(...config.target);
-      ctrlRef.current.update();
-    }
-    invalidate();
+    requestAnimationFrame(() => {
+      const activeCam = ctrlRef.current?.object || camera;
+      activeCam.position.set(...config.pos);
+      activeCam.up.set(...config.up);
+      if ('zoom' in activeCam) {
+        (activeCam as THREE.OrthographicCamera).zoom = 1;
+      }
+      activeCam.lookAt(...config.target);
+      activeCam.updateProjectionMatrix();
+      if (ctrlRef.current) {
+        ctrlRef.current.target.set(...config.target);
+        ctrlRef.current.update();
+      }
+      invalidate();
+    });
   }, [camera, changeMode, exitTop, exitWalkMode, invalidate]);
 
   const exitOrtho = useCallback(() => {
@@ -492,6 +496,23 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       ctrlRef.current.update();
     }
   }, [mode, camera]);
+
+  // Synchronisation de la caméra orthographique et du target OrbitControls dès l'activation
+  useEffect(() => {
+    if (mode === 'ortho' && ctrlRef.current) {
+      const activeCam = ctrlRef.current.object || camera;
+      activeCam.position.set(...orthoConfig.pos);
+      activeCam.up.set(...orthoConfig.up);
+      if ('zoom' in activeCam) {
+        (activeCam as THREE.OrthographicCamera).zoom = 1;
+      }
+      activeCam.lookAt(...orthoConfig.target);
+      activeCam.updateProjectionMatrix();
+      ctrlRef.current.target.set(...orthoConfig.target);
+      ctrlRef.current.update();
+      invalidate();
+    }
+  }, [mode, orthoConfig, camera, invalidate]);
 
   // Synchronisation du mode avec le store (une seule fois au changement d'état)
   useEffect(() => {
@@ -622,12 +643,24 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           bottom={-orthoViewH / 2}
           near={1}
           far={10000}
+          onUpdate={(self) => {
+            self.position.set(...orthoConfig.pos);
+            self.up.set(...orthoConfig.up);
+            self.lookAt(...orthoConfig.target);
+            self.updateProjectionMatrix();
+          }}
         />
       )}
 
       <OrbitControls
         ref={ctrlRef}
-        target={PERSP_TARGET}
+        target={
+          mode === 'ortho'
+            ? orthoConfig.target
+            : mode === 'top'
+              ? (topFollowRef.current ? [cameraState.walkerX, 0, cameraState.walkerZ] : [CX, 0, CZ])
+              : PERSP_TARGET
+        }
         enableDamping={mode !== 'walk'}
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
