@@ -578,7 +578,7 @@ export function Studio() {
           {/*
            * LAYER_WALL_STRUCTURE (24) — murs, cloisons, linteaux, piliers
            * LAYER_DOORS (26) — portes (séjour, SDB, entrée, baie vitrée)
-           * LAYER_STRUCTURE (0) — dalle béton, plafonds (géré dans Floor)
+           * LAYER_STRUCTURE (28) — dalle béton, plafonds (géré dans Floor)
            * LAYER_FLOOR_COVERINGS (25) — parquet, carrelage, pvc, plinthes (géré dans Floor)
            */}
           <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE}>

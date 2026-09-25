@@ -19,7 +19,7 @@
  *   par défaut (0) et assigne la catégorie, sans toucher au bit GLB déjà posé
  *   par un GlbLayerGroup enfant (dont useLayoutEffect s'exécute avant).
  */
-import { useRef, useLayoutEffect, useEffect } from 'react';
+import { useRef, useLayoutEffect, useEffect, createContext } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import {
@@ -29,6 +29,11 @@ import {
   LAYER_WALL_STRUCTURE, LAYER_FLOOR_COVERINGS, LAYER_AI_ZONES,
   LAYER_DOORS, LAYER_GRASS,
 } from '@config';
+
+// ── Context ───────────────────────────────────────────────────────────────────
+
+/** Contexte permettant aux hooks enfants (comme useGLTFClone) de connaître le layer de leur catégorie parente */
+export const CategoryLayerContext = createContext<number | null>(null);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -55,19 +60,17 @@ interface SceneLayers {
 // ── CategoryLayerGroup ────────────────────────────────────────────────────────
 
 /**
- * Retire tous les descendants du layer 0 (défaut) et les place sur `layer`.
- * useLayoutEffect sans deps → ré-exécuté après chaque render pour couvrir
- * les GLBs chargés asynchronement.
- *
- * S'exécute APRÈS le useLayoutEffect des GlbLayerGroup enfants (React garantit
- * enfants avant parents), ce qui préserve le bit LAYER_GLB déjà posé.
+ * Retire tous les descendants du layer 0 (défaut Three.js) et les place sur `layer`.
+ * Écoute également l'événement Three.js 'childadded' pour intercepter automatiquement
+ * les modèles GLB chargés asynchronement par Suspense après le premier render.
  */
 export function CategoryLayerGroup({
   layer, children,
 }: { layer: number; children: React.ReactNode }) {
   const ref = useRef<THREE.Group>(null!);
-  useLayoutEffect(() => {
-    ref.current.traverse(obj => {
+
+  const assignLayers = (root: THREE.Object3D) => {
+    root.traverse(obj => {
       // Ne pas écraser les masques isolés spécifiquement sur LAYER_WALKER_DETAIL (tête walker en FPV)
       if ((obj.layers.mask & (1 << LAYER_WALKER_DETAIL)) !== 0) return;
 
@@ -78,8 +81,28 @@ export function CategoryLayerGroup({
       obj.layers.disable(0);
       obj.layers.enable(layer);
     });
+  };
+
+  useLayoutEffect(() => {
+    const grp = ref.current;
+    if (!grp) return;
+    assignLayers(grp);
+
+    const onChildAdded = (e: any) => {
+      if (e?.child) assignLayers(e.child);
+    };
+
+    grp.addEventListener('childadded', onChildAdded);
+    return () => {
+      grp.removeEventListener('childadded', onChildAdded);
+    };
   });
-  return <group ref={ref}>{children}</group>;
+
+  return (
+    <CategoryLayerContext.Provider value={layer}>
+      <group ref={ref}>{children}</group>
+    </CategoryLayerContext.Provider>
+  );
 }
 
 // ── SceneLayerController ──────────────────────────────────────────────────────
@@ -93,6 +116,9 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
   const { camera, invalidate } = useThree();
 
   useEffect(() => {
+    // Le calque 0 (défaut Three.js) reste toujours activé pour les éléments système/caméras
+    camera.layers.enable(0);
+
     // LAYER_GLB (4) est géré par React visible sur les groupes GLB, pas camera.layers
     // (camera.layers = OR : objet visible si partage n'importe quel bit → impossible
     //  de masquer un objet sur 2 layers en désactivant un seul bit)
@@ -123,3 +149,4 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
 
   return null;
 }
+

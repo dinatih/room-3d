@@ -98,8 +98,8 @@ export const DiagWall = {
   }
 };
 
-// Layers Three.js
-export const LAYER_STRUCTURE        = 0; // Dalle béton, plafond, structure globale
+// Layers Three.js (0 réservé par défaut Three.js pour caméras/helpers non catégorisés)
+export const LAYER_DEFAULT          = 0;  // Layer universel par défaut Three.js
 export const LAYER_EQUIPMENT        = 11; // WC, douche, évier, chauffe-eau…
 export const LAYER_FURNITURE        = 12; // Lit, tables, chaises, étagères…
 export const LAYER_NETWORKS         = 13; // Tuyauterie, électricité (optionnel)
@@ -117,3 +117,4 @@ export const LAYER_WALL_STRUCTURE   = 24; // Structure murale (murs, cloisons, l
 export const LAYER_FLOOR_COVERINGS  = 25; // Revêtements de sol (parquet, carrelage, PVC) et plinthes
 export const LAYER_DOORS            = 26; // Portes (séjour, SDB, entrée, baie vitrée)
 export const LAYER_GRASS            = 27; // Herbe et sol extérieur (BermudaGround)
+export const LAYER_STRUCTURE        = 28; // Dalle béton, plafond (calque dédié, isolé du layer 0)
