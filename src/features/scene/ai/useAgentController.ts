@@ -135,6 +135,12 @@ export function useAgentController(
   useEffect(() => {
     const onInvite = (e: any) => {
       if (e.detail?.targetId === _characterId) {
+        const store = useSceneStore.getState();
+        const isFromUI = e.detail?.fromId === 'HoverMenu' || e.detail?.fromId === 'ZoneAiDebug' || e.detail?.fromId === 'SidePanel' || e.detail?.fromId === 'Inventory';
+        if (_characterId === store.activeWalkerId && !isFromUI) {
+          return;
+        }
+
         const targetObjId = e.detail?.objectId;
         const role = (e.detail?.forceRole as DuoRole) || 'roleB';
         if (role) {

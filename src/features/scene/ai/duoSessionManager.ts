@@ -328,9 +328,11 @@ class DuoSessionManager {
     const [bx, , bz] = session.location.anchorPos;
     let closestId: string | null = null;
     let minDistance = Infinity;
+    const store = useSceneStore.getState();
 
     for (const npcId of AUTONOMOUS_NPC_IDS) {
       if (npcId === callerId) continue;
+      if (npcId === store.activeWalkerId) continue;
       if (session.participantA?.characterId === npcId || session.participantB?.characterId === npcId) continue;
       if (this.getSessionFor(npcId) !== null) continue;
 
@@ -452,23 +454,24 @@ class DuoSessionManager {
     }
 
     // Résolution Leader (A) et Partenaire (B)
-    const isVisibleChar = (id: string) => {
+    const isVisibleChar = (id: string, allowPlayer = true) => {
       if (id === 'shiba' || id === 'robin') return false;
-      const store = useSceneStore.getState();
+      const storeState = useSceneStore.getState();
+      if (!allowPlayer && id === storeState.activeWalkerId) return false;
       return (
-        isCharacterVisibleInMode(id, store.layers.laraCount ?? 4, store.activeWalkerId, store.layers.extraCharacters ?? false, store.activeExtraIds) ||
-        id === store.activeWalkerId
+        isCharacterVisibleInMode(id, storeState.layers.laraCount ?? 4, storeState.activeWalkerId, storeState.layers.extraCharacters ?? false, storeState.activeExtraIds) ||
+        id === storeState.activeWalkerId
       );
     };
 
-    const getCandidates = (excludeId?: string) => {
+    const getCandidates = (excludeId?: string, allowPlayer = true) => {
       const preferred = Object.entries(INITIAL_SMART_OBJECT_BY_CHAR)
-        .filter(([id, objDest]) => objDest === objectId && id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id))
+        .filter(([id, objDest]) => objDest === objectId && id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer))
         .map(([id]) => id);
       if (preferred.length > 0) return preferred;
 
       return Object.keys(cameraState.positions)
-        .filter(id => id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id))
+        .filter(id => id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer))
         .sort((a, b) => {
           const pa = cameraState.positions[a];
           const pb = cameraState.positions[b];
@@ -476,11 +479,12 @@ class DuoSessionManager {
         });
     };
 
-    const candidates = getCandidates();
-    const targetA = leaderId || candidates[0] || (isVisibleChar('native') ? 'native' : 'xbot');
-    const partnerCandidates = getCandidates(targetA);
-    const targetB = partnerId || partnerCandidates[0] || (targetA === 'native' ? 'rosanna' : 'native');
+    const candidates = getCandidates(undefined, true);
+    const targetA = leaderId || candidates[0] || (isVisibleChar('native', true) ? 'native' : 'xbot');
+    const partnerCandidates = getCandidates(targetA, false);
+    const targetB = partnerId || partnerCandidates[0];
     if (!targetA || !targetB || targetA === targetB) return null;
+
 
     const location: DuoLocation = { objectId, slotId: actualSlotId, anchorPos, anchorRotY };
 
