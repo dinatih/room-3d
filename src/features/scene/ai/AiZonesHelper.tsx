@@ -112,6 +112,11 @@ import { resolveSlotAnimationInfo } from '../animations/animationResolver';
 
 export function AiZonesHelper() {
   const visible = useSceneStore(s => s.layers.aiZones);
+  if (!visible) return null;
+  return <AiZonesHelperContent />;
+}
+
+function AiZonesHelperContent() {
   const cameraMode = useSceneStore(s => s.cameraMode);
   const { raycaster } = useThree();
   const [toggleVersion, setToggleVersion] = useState(0);
@@ -163,8 +168,6 @@ export function AiZonesHelper() {
     shape.closePath();
     return new THREE.ShapeGeometry(shape);
   }, []);
-
-  if (!visible) return null;
 
   const isTopView = cameraMode === 'top';
   const baseHeight = isTopView ? 280 : 1.2;

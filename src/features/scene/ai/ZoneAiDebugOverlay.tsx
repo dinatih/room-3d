@@ -11,6 +11,11 @@ import { resolveSlotAnimationInfo, getAnimationDef } from '../animations/animati
 
 export function ZoneAiDebugOverlay() {
   const visible = useSceneStore((s) => s.layers.aiZones);
+  if (!visible) return null;
+  return <ZoneAiDebugOverlayContent />;
+}
+
+function ZoneAiDebugOverlayContent() {
   const layers = useSceneStore((s) => s.layers);
   const activeWalkerId = useSceneStore((s) => s.activeWalkerId);
   const activeExtraIds = useSceneStore((s) => s.activeExtraIds);
@@ -86,8 +91,6 @@ export function ZoneAiDebugOverlay() {
     });
     return { total, available, occupied };
   }, [allObjects, tick]);
-
-  if (!visible) return null;
 
   // Récupérer l'objet et slot actuellement sélectionnés
   const currentObj = selectedSlot ? getSmartObject(selectedSlot.objectId) || SMART_OBJECTS[selectedSlot.objectId] : null;

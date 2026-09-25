@@ -552,8 +552,8 @@ export function Studio() {
         {layers.xray        && <XRayLayer />}
         {layers.wireframe   && <WireframeLayer />}
         <Suspense fallback={null}>
-          <AiZonesHelper />
-          <CollisionDebugHelper />
+          {layers.aiZones && <AiZonesHelper />}
+          {(layers.debugNpcCollisions || layers.debugFurnitureCollisions) && <CollisionDebugHelper />}
         </Suspense>
         {layers.wallEdges   && <WallEdgesLayer />}
         {layers.measuredDimensions && <RealMeasurementsLayer />}
@@ -711,7 +711,7 @@ export function Studio() {
           )}
           <VirtualDPad />
           <HoverOverlay />
-          <ZoneAiDebugOverlay />
+          {layers.aiZones && <ZoneAiDebugOverlay />}
           {layers.wallEdges && <EdgeHoverOverlay />}
           <AppConsole hidden={showInventory} />
         </>
