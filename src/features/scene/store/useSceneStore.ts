@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
-import { type LaraCountMode, pickRandomExtraCharacterIds, isExtraCharacter, EXTRA_CHARACTERS } from '@features/scene/walkerConfig';
+import { type LaraCountMode, isExtraCharacter, EXTRA_CHARACTERS } from '@features/scene/walkerConfig';
 
 function parseUrlNpcCount(): LaraCountMode {
   if (typeof window === 'undefined') return 4;
@@ -71,7 +71,6 @@ interface SceneStore {
   setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
-  randomizeExtraCharacters: (count?: number) => void;
   setActiveExtraIds: (ids: string[]) => void;
   toggleExtraCharacter: (id: string) => void;
   selectAllExtraCharacters: () => void;
@@ -290,7 +289,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   layers: initialLayers,
   extraStates: initialExtraStates,
   activeWalkerId: initialLayers.laraCount === 1 ? 'xbot' : 'native',
-  activeExtraIds: pickRandomExtraCharacterIds(5),
+  activeExtraIds: EXTRA_CHARACTERS.map(c => c.id),
   currentHdri: getRandomHdriId(),
   measurementActive: false,
   cameraMode: 'orbit',
@@ -370,16 +369,17 @@ export const useSceneStore = create<SceneStore>((set) => ({
 
   toggleLayer: (key) => {
     set((state) => {
-      const isActivating = !state.layers[key];
-      const nextLayers = { ...state.layers, [key]: isActivating };
+      let isActivating = !state.layers[key];
       let nextActiveExtraIds = state.activeExtraIds;
 
-      if (key === 'extraCharacters' && isActivating) {
-        // Conserve la sélection utilisateur ou tire 5 personnages aléatoires si aucun n'est sélectionné
-        if (!state.activeExtraIds || state.activeExtraIds.length === 0) {
-          nextActiveExtraIds = pickRandomExtraCharacterIds(5, state.activeWalkerId);
+      if (key === 'extraCharacters') {
+        const currentlyVisible = !!state.layers.extraCharacters && state.activeExtraIds.length > 0;
+        isActivating = !currentlyVisible;
+        if (isActivating) {
+          nextActiveExtraIds = EXTRA_CHARACTERS.map(c => c.id);
         }
       }
+      const nextLayers = { ...state.layers, [key]: isActivating };
       if (key === 'mirrors') {
         // Force l'invalidation pour que SceneLayerController mette à jour le mask camera
         cameraState.invalidate?.();
@@ -393,14 +393,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
       cameraState.invalidate?.();
       return { layers: nextLayers, activeExtraIds: nextActiveExtraIds };
     });
-  },
-
-  randomizeExtraCharacters: (count = 5) => {
-    set((state) => ({
-      activeExtraIds: pickRandomExtraCharacterIds(count, state.activeWalkerId),
-      layers: { ...state.layers, extraCharacters: true }
-    }));
-    cameraState.invalidate?.();
   },
 
   setActiveExtraIds: (ids: string[]) => {

@@ -25,7 +25,6 @@ export function ExtraCharactersSelector({
   const toggleExtraGroup = useSceneStore(state => state.toggleExtraGroup);
   const selectAllExtraCharacters = useSceneStore(state => state.selectAllExtraCharacters);
   const clearExtraCharacters = useSceneStore(state => state.clearExtraCharacters);
-  const randomizeExtraCharacters = useSceneStore(state => state.randomizeExtraCharacters);
   const setActiveExtraIds = useSceneStore(state => state.setActiveExtraIds);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -110,15 +109,6 @@ export function ExtraCharactersSelector({
             </button>
             <button
               type="button"
-              className="btn btn-outline-warning btn-sm py-0 px-2 text-nowrap text-dark"
-              style={{ fontSize: '10px' }}
-              onClick={() => randomizeExtraCharacters(5)}
-              title="Sélectionner 5 personnages extra au hasard"
-            >
-              🎲 5 au hasard
-            </button>
-            <button
-              type="button"
               className="btn btn-outline-secondary btn-sm py-0 px-2 text-nowrap"
               style={{ fontSize: '10px' }}
               onClick={() => clearExtraCharacters()}
@@ -157,7 +147,7 @@ export function ExtraCharactersSelector({
             }
           >
             <span>{allRedmansSelected ? '✓' : '+'}</span>
-            <span>🔴 4 Redmans</span>
+            <span>🔴 Redmans</span>
             <span
               className={`badge rounded-pill ${allRedmansSelected ? 'bg-white text-danger' : 'bg-danger text-white'}`}
               style={{ fontSize: '8px', padding: '1px 5px' }}
@@ -182,7 +172,7 @@ export function ExtraCharactersSelector({
             }
           >
             <span>{allAnatomicalSelected ? '✓' : '+'}</span>
-            <span>🦴 9 Anatomiques</span>
+            <span className="text-truncate">🦴 Anat.</span>
             <span
               className={`badge rounded-pill ${allAnatomicalSelected ? 'bg-white text-primary' : 'bg-primary text-white'}`}
               style={{ fontSize: '8px', padding: '1px 5px' }}
