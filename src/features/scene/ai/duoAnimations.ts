@@ -73,6 +73,28 @@ export const DUO_ANIMATIONS: DuoAnimationDef[] = RAW_DUO_ANIMATIONS.map((def) =>
   duration: def.duration ?? animDurationMap.get(def.animA.toLowerCase()) ?? 5.0,
 }));
 
+// Index de recherche rapide O(1)
+const duoDefById = new Map<string, DuoAnimationDef>();
+const duoDefByClipOrPath = new Map<string, DuoAnimationDef>();
+
+for (const def of DUO_ANIMATIONS) {
+  const idLower = def.id.toLowerCase();
+  duoDefById.set(idLower, def);
+  duoDefByClipOrPath.set(idLower, def);
+  duoDefByClipOrPath.set(def.animA.toLowerCase(), def);
+
+  const animDef = ANIMATION_DEFINITIONS.find((a) => a.id.toLowerCase() === def.animA.toLowerCase());
+  if (animDef) {
+    duoDefByClipOrPath.set(animDef.path.toLowerCase(), def);
+    duoDefByClipOrPath.set(animDef.id.toLowerCase(), def);
+    if (animDef.aliases) {
+      for (const al of animDef.aliases) {
+        duoDefByClipOrPath.set(al.toLowerCase(), def);
+      }
+    }
+  }
+}
+
 /**
  * Retourne dynamiquement tous les IDs d'animations Duo enregistrées.
  */
@@ -85,8 +107,7 @@ export function getAllDuoAnimationIds(): string[] {
  */
 export function getDuoAnimationDef(id?: string): DuoAnimationDef | undefined {
   if (!id) return undefined;
-  const clean = id.trim().toLowerCase();
-  return DUO_ANIMATIONS.find((d) => d.id.toLowerCase() === clean);
+  return duoDefById.get(id.trim().toLowerCase());
 }
 
 /**
@@ -94,11 +115,6 @@ export function getDuoAnimationDef(id?: string): DuoAnimationDef | undefined {
  */
 export function getDuoAnimationForClip(clipOrPath?: string): DuoAnimationDef | undefined {
   if (!clipOrPath) return undefined;
-  const clean = clipOrPath.trim().toLowerCase();
-  return DUO_ANIMATIONS.find((d) => {
-    if (d.animA.toLowerCase() === clean || d.id.toLowerCase() === clean) return true;
-    const def = ANIMATION_DEFINITIONS.find((a) => a.id.toLowerCase() === d.animA.toLowerCase());
-    if (def && (def.path.toLowerCase() === clean || def.id.toLowerCase() === clean)) return true;
-    return false;
-  });
+  return duoDefByClipOrPath.get(clipOrPath.trim().toLowerCase());
 }
+
