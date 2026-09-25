@@ -49,6 +49,49 @@ export interface ActiveDuoSession {
 
 type SessionListener = () => void;
 
+/** Calcule les positions/rotations monde pour les deux participants d'une animation duo */
+function computeWorldTransform(
+  anchorPos: [number, number, number],
+  anchorRotY: number,
+  offsetB: [number, number, number] = [0, 0, 0],
+  rotB = 0
+) {
+  const [bx, by, bz] = anchorPos;
+  const cos = Math.cos(anchorRotY);
+  const sin = Math.sin(anchorRotY);
+  const [lx, ly, lz] = offsetB;
+  return {
+    posA: [bx, by, bz] as [number, number, number],
+    posB: [bx + lx * cos + lz * sin, by + ly, bz - lx * sin + lz * cos] as [number, number, number],
+    rotA: anchorRotY % (Math.PI * 2),
+    rotB: (anchorRotY + rotB) % (Math.PI * 2),
+  };
+}
+
+/** Fabrique une nouvelle instance d'ActiveDuoSession initialisée */
+function createDuoSession(
+  sessionId: string,
+  location: DuoLocation,
+  playlist: DuoAnimationDef[],
+  repeatsPerAnim: number,
+  participantA: DuoSessionParticipant | null = null,
+  participantB: DuoSessionParticipant | null = null
+): ActiveDuoSession {
+  return {
+    sessionId,
+    location,
+    participantA,
+    participantB,
+    playlist,
+    currentAnimIndex: 0,
+    currentRepeatIndex: 0,
+    repeatsPerAnim,
+    sessionTimer: playlist[0]?.duration ?? 5.0,
+    isSessionPlaying: false,
+    isSessionComplete: false,
+  };
+}
+
 class DuoSessionManager {
   public readonly basePos: [number, number, number] = [-100, 0, -200];
   private readonly defaultLocation: DuoLocation = {
@@ -58,10 +101,7 @@ class DuoSessionManager {
     anchorRotY: 0,
   };
 
-  /**
-   * Sessions duo actives indexées par sessionId (ex: objectId).
-   * Permet à plusieurs sessions de tourner en parallèle (Duo Zone, Combat, Câlins, etc.).
-   */
+  /** Sessions duo actives indexées par sessionId (ex: objectId). */
   private sessions = new Map<string, ActiveDuoSession>();
 
   public repeatsPerAnim = 3;
@@ -69,18 +109,14 @@ class DuoSessionManager {
 
   public subscribe(listener: SessionListener): () => void {
     this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
+    return () => this.listeners.delete(listener);
   }
 
   private emitChange() {
     this.listeners.forEach(fn => fn());
   }
 
-  /**
-   * Récupère la session à laquelle participe un personnage donné.
-   */
+  /** Récupère la session à laquelle participe un personnage donné. */
   public getSessionFor(characterId: string): ActiveDuoSession | null {
     for (const session of this.sessions.values()) {
       if (session.participantA?.characterId === characterId || session.participantB?.characterId === characterId) {
@@ -90,54 +126,34 @@ class DuoSessionManager {
     return null;
   }
 
-  /**
-   * Récupère la session liée à un objet donné.
-   */
+  /** Récupère la session liée à un objet donné. */
   public getSessionByObjectId(objectId: string): ActiveDuoSession | null {
     return this.sessions.get(objectId) ?? null;
   }
 
-  /**
-   * Récupère la session liée à un objet et/ou slot donné.
-   */
+  /** Récupère la session liée à un objet et/ou slot donné. */
   public getSessionForSlot(objectId: string, slotId?: string): ActiveDuoSession | null {
     const direct = this.sessions.get(objectId);
-    if (direct && (!slotId || direct.location.slotId === slotId)) {
-      return direct;
-    }
-    for (const session of this.sessions.values()) {
-      if (session.location.objectId === objectId && (!slotId || session.location.slotId === slotId)) {
-        return session;
-      }
-    }
-    return null;
+    if (direct && (!slotId || direct.location.slotId === slotId)) return direct;
+    return Array.from(this.sessions.values()).find(
+      s => s.location.objectId === objectId && (!slotId || s.location.slotId === slotId)
+    ) ?? null;
   }
 
-  /**
-   * Première session active (fallback de compatibilité sans id).
-   */
+  /** Première session active (fallback de compatibilité sans id). */
   private getFirstActiveSession(): ActiveDuoSession | null {
-    for (const session of this.sessions.values()) {
-      if (session.isSessionPlaying || session.participantA || session.participantB) {
-        return session;
-      }
-    }
-    return null;
+    return Array.from(this.sessions.values()).find(
+      s => s.isSessionPlaying || s.participantA || s.participantB
+    ) ?? null;
   }
 
-  /**
-   * Marque un participant comme physiquement arrivé sur son spot et prêt.
-   */
+  /** Marque un participant comme physiquement arrivé sur son spot et prêt. */
   public markReady(characterId: string): void {
     const session = this.getSessionFor(characterId);
     if (!session) return;
 
-    if (session.participantA?.characterId === characterId) {
-      session.participantA.isReady = true;
-    }
-    if (session.participantB?.characterId === characterId) {
-      session.participantB.isReady = true;
-    }
+    if (session.participantA?.characterId === characterId) session.participantA.isReady = true;
+    if (session.participantB?.characterId === characterId) session.participantB.isReady = true;
 
     // Si les deux sont prêts, démarrer la session avec le timer centralisé
     if (session.participantA?.isReady && session.participantB?.isReady && !session.isSessionPlaying) {
@@ -154,89 +170,55 @@ class DuoSessionManager {
   }
 
   public getParticipantA(characterId?: string): DuoSessionParticipant | null {
-    const session = characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession();
-    return session?.participantA ?? null;
+    return (characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession())?.participantA ?? null;
   }
 
   public getParticipantB(characterId?: string): DuoSessionParticipant | null {
-    const session = characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession();
-    return session?.participantB ?? null;
+    return (characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession())?.participantB ?? null;
   }
 
   public getElapsedTimeInRepeat(characterId?: string): number {
     const session = characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession();
     if (!session) return 0;
-    const currentAnim = session.playlist[session.currentAnimIndex];
-    const duration = currentAnim?.duration ?? 5.0;
+    const duration = session.playlist[session.currentAnimIndex]?.duration ?? 5.0;
     return Math.max(0, duration - session.sessionTimer);
   }
 
   public isWaitingPartner(characterId: string): boolean {
     const session = this.getSessionFor(characterId);
     if (!session || session.isSessionPlaying || session.isSessionComplete) return false;
-    if (session.participantA?.characterId === characterId && !session.participantB?.isReady) return true;
-    if (session.participantB?.characterId === characterId && !session.participantA?.isReady) return true;
-    return false;
+    return (session.participantA?.characterId === characterId && !session.participantB?.isReady)
+        || (session.participantB?.characterId === characterId && !session.participantA?.isReady);
   }
 
   public isPlaying(characterId?: string): boolean {
-    if (characterId) {
-      const session = this.getSessionFor(characterId);
-      return Boolean(session?.isSessionPlaying);
-    }
-    for (const session of this.sessions.values()) {
-      if (session.isSessionPlaying) return true;
-    }
-    return false;
+    if (characterId) return Boolean(this.getSessionFor(characterId)?.isSessionPlaying);
+    return Array.from(this.sessions.values()).some(s => s.isSessionPlaying);
   }
 
   public isCompletedFor(characterId: string): boolean {
     const session = this.getSessionFor(characterId);
-    if (!session) return true;
-    if (session.isSessionComplete) return true;
-    if (!session.participantA && !session.participantB) return true;
-    const isParticipant = session.participantA?.characterId === characterId
-                       || session.participantB?.characterId === characterId;
-    if (!isParticipant) return true;
-    return false;
+    if (!session || session.isSessionComplete) return true;
+    return session.participantA?.characterId !== characterId && session.participantB?.characterId !== characterId;
   }
 
   public getCurrentLocation(characterId?: string): DuoLocation {
-    const session = characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession();
-    return session?.location ?? this.defaultLocation;
+    return (characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession())?.location ?? this.defaultLocation;
   }
 
-  /**
-   * Récupère les données d'animation et de placement calculées pour l'animation courante d'une session.
-   */
+  /** Récupère les données d'animation et de placement calculées pour l'animation courante d'une session. */
   public getCurrentAnimState(characterId?: string): DuoCurrentAnimState | null {
     const session = characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession();
     if (!session || !session.isSessionPlaying || session.currentAnimIndex >= session.playlist.length) return null;
     const def = session.playlist[session.currentAnimIndex];
     if (!def) return null;
 
-    const [bx, by, bz] = session.location.anchorPos;
-    const ry = session.location.anchorRotY;
-    const cos = Math.cos(ry);
-    const sin = Math.sin(ry);
-
-    const transformLocalToWorld = (localOffset: [number, number, number]): [number, number, number] => {
-      const [lx, ly, lz] = localOffset;
-      return [
-        bx + lx * cos + lz * sin,
-        by + ly,
-        bz - lx * sin + lz * cos,
-      ];
-    };
-
-    const localA: [number, number, number] = [0, 0, 0];
-    const localB: [number, number, number] = def.offsetB ?? [0, 0, 0];
-
-    const posA = transformLocalToWorld(localA);
-    const posB = transformLocalToWorld(localB);
-
-    const rotA = ry % (Math.PI * 2);
-    const rotB = (ry + (def.rotB !== undefined ? def.rotB : 0)) % (Math.PI * 2);
+    const { posA, posB, rotA, rotB } = computeWorldTransform(
+      session.location.anchorPos,
+      session.location.anchorRotY,
+      def.offsetB,
+      def.rotB
+    );
 
     return {
       def,
@@ -250,36 +232,23 @@ class DuoSessionManager {
     };
   }
 
-  /**
-   * Retourne la position monde de posB pour le slot courant, utilisée pendant la phase d'attente
-   * (avant que la session ne démarre, getCurrentAnimState() retourne null).
-   */
+  /** Retourne la position monde de posB lors de la phase d'attente. */
   public getWaitPosB(characterId?: string): [number, number, number] {
     const session = characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession();
-    const def = session?.playlist[0];
-    const anchorPos = session?.location.anchorPos ?? this.defaultLocation.anchorPos;
-    const anchorRotY = session?.location.anchorRotY ?? this.defaultLocation.anchorRotY;
-    const [bx, by, bz] = anchorPos;
-    const cos = Math.cos(anchorRotY);
-    const sin = Math.sin(anchorRotY);
-    const localB: [number, number, number] = def?.offsetB ?? [0, 0, 0];
-    const [lx, ly, lz] = localB;
-    return [bx + lx * cos + lz * sin, by + ly, bz - lx * sin + lz * cos];
+    const loc = session?.location ?? this.defaultLocation;
+    return computeWorldTransform(loc.anchorPos, loc.anchorRotY, session?.playlist[0]?.offsetB).posB;
   }
 
-  /**
-   * Retourne la rotation monde attendue pour posB lors de la phase d'attente.
-   */
+  /** Retourne la rotation monde attendue pour posB lors de la phase d'attente. */
   public getWaitRotB(characterId?: string): number {
     const session = characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession();
-    const def = session?.playlist[0];
-    const anchorRotY = session?.location.anchorRotY ?? this.defaultLocation.anchorRotY;
-    return (anchorRotY + (def?.rotB ?? 0)) % (Math.PI * 2);
+    const loc = session?.location ?? this.defaultLocation;
+    return computeWorldTransform(loc.anchorPos, loc.anchorRotY, undefined, session?.playlist[0]?.rotB).rotB;
   }
 
   /**
    * Horloge centrale de la session Duo.
-   * Seul le rôle A (meneur) décrémente le timer de sa session pour garantir une synchronisation parfaite sans doublon.
+   * Seul le rôle A (meneur) décrémente le timer de sa session pour garantir une synchronisation sans doublon.
    */
   public tickSession(characterId: string, dt: number): void {
     const session = this.getSessionFor(characterId);
@@ -294,7 +263,6 @@ class DuoSessionManager {
         const currentAnim = session.playlist[session.currentAnimIndex];
         session.sessionTimer = currentAnim?.duration ?? 5.0;
         appLog(objLabel, `🔄 Répétition Duo (${session.currentRepeatIndex + 1}/${session.repeatsPerAnim}) : "${currentAnim?.label}"`);
-        this.emitChange();
       } else {
         session.currentRepeatIndex = 0;
         session.currentAnimIndex++;
@@ -302,30 +270,23 @@ class DuoSessionManager {
           const nextAnim = session.playlist[session.currentAnimIndex];
           session.sessionTimer = nextAnim?.duration ?? 5.0;
           appLog(objLabel, `🎬 Nouvelle animation Duo (${session.currentAnimIndex + 1}/${session.playlist.length}) : "${nextAnim?.label}" (x${session.repeatsPerAnim})`);
-          this.emitChange();
         } else {
-          // Fin de la session complète
           session.isSessionPlaying = false;
           session.isSessionComplete = true;
           appLog(objLabel, `✨ Session Duo terminée ! Les 2 PNJs reprennent leur vie autonome.`);
-          this.emitChange();
         }
       }
+      this.emitChange();
     }
   }
 
-  /**
-   * Un PNJ quitte sa zone duo (suite à fin normale ou timeout).
-   */
+  /** Un PNJ quitte sa zone duo (suite à fin normale ou timeout). */
   public leaveDuoZone(characterId: string): void {
     const session = this.getSessionFor(characterId);
     if (!session) return;
 
-    const loc = session.location;
-    const objId = loc.objectId;
-    const slotId = loc.slotId;
-
-    const releaseRole = (role: 'roleA' | 'roleB') => {
+    const { objectId: objId, slotId } = session.location;
+    const releaseRole = (role: DuoRole) => {
       if (slotId) {
         OccupancyManager.releaseSlot(objId, `${slotId}:${role}`, characterId);
         OccupancyManager.releaseSlot(objId, slotId, characterId);
@@ -348,9 +309,7 @@ class DuoSessionManager {
     this.emitChange();
   }
 
-  /**
-   * Trouve le PNJ autonome le plus proche du spot actif et lui envoie une invitation.
-   */
+  /** Trouve le PNJ autonome le plus proche du spot actif et lui envoie une invitation. */
   public inviteNearestNpc(callerId: string): string | null {
     const session = this.getSessionFor(callerId);
     if (!session || (session.participantA && session.participantB)) return null;
@@ -362,14 +321,11 @@ class DuoSessionManager {
     for (const npcId of AUTONOMOUS_NPC_IDS) {
       if (npcId === callerId) continue;
       if (session.participantA?.characterId === npcId || session.participantB?.characterId === npcId) continue;
-      // Ne pas inviter un PNJ qui participe déjà à une autre session duo active
       if (this.getSessionFor(npcId) !== null) continue;
 
       const pos = cameraState.positions[npcId];
       if (pos) {
-        const dx = pos.x - bx;
-        const dz = pos.z - bz;
-        const dist = Math.hypot(dx, dz);
+        const dist = Math.hypot(pos.x - bx, pos.z - bz);
         if (dist < minDistance) {
           minDistance = dist;
           closestId = npcId;
@@ -406,43 +362,32 @@ class DuoSessionManager {
     return null;
   }
 
-  /**
-   * Résout la playlist d'animations pour un slot ou un SmartObject donné.
-   */
+  /** Résout la playlist d'animations pour un slot ou un SmartObject donné. */
   public resolveSlotPlaylist(objectId: string, slotId?: string, forcedAnimId?: string): DuoAnimationDef[] {
+    const findAnim = (id: string) => DUO_ANIMATIONS.find(d => d.id === id);
     if (forcedAnimId) {
-      const forcedDef = DUO_ANIMATIONS.find(d => d.id === forcedAnimId);
-      if (forcedDef) {
-        return [forcedDef];
-      }
+      const d = findAnim(forcedAnimId);
+      if (d) return [d];
     }
     if (slotId === 'sit-cuddle') {
-      const def = DUO_ANIMATIONS.find(d => d.id === 'sit-cuddle');
-      return def ? [def] : [];
+      const d = findAnim('sit-cuddle');
+      return d ? [d] : [];
     }
-    const obj = getSmartObject(objectId);
-    const slot = obj?.slots.find(s => s.slotId === slotId) || obj?.slots[0];
-    if (slot?.duoPool && slot.duoPool.length > 0) {
-      const count = Math.min(slot.duoCount ?? 3, slot.duoPool.length);
-      return [...slot.duoPool].sort(() => Math.random() - 0.5).slice(0, count)
-        .map(id => DUO_ANIMATIONS.find(d => d.id === id))
-        .filter((d): d is DuoAnimationDef => Boolean(d));
+    const slot = getSmartObject(objectId)?.slots.find(s => s.slotId === slotId) || getSmartObject(objectId)?.slots[0];
+    if (slot?.duoPool?.length) {
+      return [...slot.duoPool].sort(() => Math.random() - 0.5).slice(0, slot.duoCount ?? 3)
+        .map(findAnim).filter((d): d is DuoAnimationDef => Boolean(d));
     }
     if (slot?.duoAnimId) {
-      const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
-      return def ? [def] : [];
+      const d = findAnim(slot.duoAnimId);
+      return d ? [d] : [];
     }
-    if (!slot?.isDuo) {
-      return [];
-    }
-    const count = slot?.duoCount ?? 3;
-    return [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5).slice(0, count);
+    return slot?.isDuo ? [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5).slice(0, slot.duoCount ?? 3) : [];
   }
 
   /**
    * Démarre une session Duo directement à partir d'un SmartObject et de son slot,
    * en résolvant automatiquement sa playlist et les participants.
-   * Gère de multiples sessions en parallèle sans écraser les autres duos.
    */
   public startDuoSession(
     objectId: string,
@@ -450,7 +395,7 @@ class DuoSessionManager {
     leaderId?: string,
     partnerId?: string,
     forcedAnimId?: string
-  ): { targetA: string; targetB: string; posA: [number,number,number]; posB: [number,number,number]; rotA: number; rotB: number; actualSlotId: string } | null {
+  ): { targetA: string; targetB: string; posA: [number, number, number]; posB: [number, number, number]; rotA: number; rotB: number; actualSlotId: string } | null {
     const obj = getSmartObject(objectId);
     if (!obj) return null;
 
@@ -465,73 +410,29 @@ class DuoSessionManager {
 
     const anchorPos: [number, number, number] = slot?.offset ?? [0, 0, 0];
     const anchorRotY: number = slot?.rotY ?? obj.rotationY ?? 0;
-    const [bx, by, bz] = anchorPos;
+    const [bx, , bz] = anchorPos;
 
     // Si une session existe déjà pour cet objet
     const existing = this.sessions.get(objectId);
     if (existing && !existing.isSessionComplete) {
-      const cos = Math.cos(anchorRotY);
-      const sin = Math.sin(anchorRotY);
       const curDef = existing.playlist[existing.currentAnimIndex] || def;
-      const localB = curDef.offsetB ?? [0, 0, 0];
-      const posA: [number, number, number] = [bx, by, bz];
-      const posB: [number, number, number] = [
-        bx + localB[0] * cos + localB[2] * sin,
-        by + localB[1],
-        bz - localB[0] * sin + localB[2] * cos,
-      ];
-      const rotA = anchorRotY % (Math.PI * 2);
-      const rotB = (anchorRotY + (curDef.rotB ?? 0)) % (Math.PI * 2);
+      const { posA, posB, rotA, rotB } = computeWorldTransform(anchorPos, anchorRotY, curDef.offsetB, curDef.rotB);
 
-      // Cas 1 : Le personnage arrivant est déjà le meneur (Rôle A)
-      if (existing.participantA?.characterId === leaderId) {
-        return {
-          targetA: leaderId ?? existing.participantA?.characterId ?? "",
-          targetB: existing.participantB?.characterId ?? "",
-          posA,
-          posB,
-          rotA,
-          rotB,
-          actualSlotId,
-        };
+      if (leaderId && existing.participantA?.characterId === leaderId) {
+        return { targetA: leaderId, targetB: existing.participantB?.characterId ?? '', posA, posB, rotA, rotB, actualSlotId };
       }
-
-      // Cas 2 : Le personnage arrivant est déjà le partenaire assigné (Rôle B)
-      if (existing.participantB?.characterId === leaderId) {
-        return {
-          targetA: existing.participantA?.characterId ?? "",
-          targetB: leaderId ?? existing.participantB?.characterId ?? "",
-          posA,
-          posB,
-          rotA,
-          rotB,
-          actualSlotId,
-        };
+      if (leaderId && existing.participantB?.characterId === leaderId) {
+        return { targetA: existing.participantA?.characterId ?? '', targetB: leaderId, posA, posB, rotA, rotB, actualSlotId };
       }
-
-      // Cas 3 : La session attend encore son partenaire (Rôle B pas encore sur place)
-      // Le personnage arrivant prend immédiatement la place de partenaire Rôle B !
       if (!existing.participantB?.isReady && leaderId) {
         if (existing.participantB && existing.participantB.characterId !== leaderId) {
           OccupancyManager.releaseSlot(objectId, `${actualSlotId}:roleB`, existing.participantB.characterId);
         }
-        existing.participantB = { characterId: leaderId, role: "roleB", isReady: false };
+        existing.participantB = { characterId: leaderId, role: 'roleB', isReady: false };
         OccupancyManager.claimSlot(objectId, `${actualSlotId}:roleB`, leaderId);
-
         appLog(objectId, `🤝 ${leaderId} rejoint la session Duo sur ${obj.name} en Rôle B avec ${existing.participantA?.characterId} !`);
-
-        return {
-          targetA: existing.participantA?.characterId ?? "",
-          targetB: leaderId,
-          posA,
-          posB,
-          rotA,
-          rotB,
-          actualSlotId,
-        };
+        return { targetA: existing.participantA?.characterId ?? '', targetB: leaderId, posA, posB, rotA, rotB, actualSlotId };
       }
-
-      // Objet déjà occupé par une autre session duo en cours
       return null;
     }
 
@@ -539,32 +440,24 @@ class DuoSessionManager {
     const isVisibleChar = (id: string) => {
       if (id === 'shiba' || id === 'robin') return false;
       const store = useSceneStore.getState();
-      const laraCount = store.layers.laraCount ?? 4;
-      const extraChars = store.layers.extraCharacters ?? false;
-      const activeWalkerId = store.activeWalkerId;
-      const activeExtraIds = store.activeExtraIds;
       return (
-        isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraChars, activeExtraIds) ||
-        id === activeWalkerId
+        isCharacterVisibleInMode(id, store.layers.laraCount ?? 4, store.activeWalkerId, store.layers.extraCharacters ?? false, store.activeExtraIds) ||
+        id === store.activeWalkerId
       );
     };
 
     const getCandidates = (excludeId?: string) => {
-      // 1. Chercher d'abord un PNJ qui a cet objet comme destination initiale assignée
       const preferred = Object.entries(INITIAL_SMART_OBJECT_BY_CHAR)
-        .filter(([id, obj]) => obj === objectId && id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id))
+        .filter(([id, objDest]) => objDest === objectId && id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id))
         .map(([id]) => id);
-      if (preferred.length > 0) {
-        return preferred;
-      }
+      if (preferred.length > 0) return preferred;
+
       return Object.keys(cameraState.positions)
         .filter(id => id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id))
         .sort((a, b) => {
           const pa = cameraState.positions[a];
           const pb = cameraState.positions[b];
-          const da = pa ? Math.hypot(pa.x - bx, pa.z - bz) : Infinity;
-          const db = pb ? Math.hypot(pb.x - bx, pb.z - bz) : Infinity;
-          return da - db;
+          return (pa ? Math.hypot(pa.x - bx, pa.z - bz) : Infinity) - (pb ? Math.hypot(pb.x - bx, pb.z - bz) : Infinity);
         });
     };
 
@@ -574,7 +467,6 @@ class DuoSessionManager {
     const targetB = partnerId || partnerCandidates[0] || (targetA === 'native' ? 'rosanna' : 'native');
     if (!targetA || !targetB || targetA === targetB) return null;
 
-    // Définir l'emplacement actif
     const location: DuoLocation = { objectId, slotId: actualSlotId, anchorPos, anchorRotY };
 
     // Réservations d'occupation
@@ -588,39 +480,20 @@ class DuoSessionManager {
     OccupancyManager.claimSlot(objectId, `${actualSlotId}:roleB`, targetB);
     const participantB = { characterId: targetB, role: 'roleB' as DuoRole, isReady: false };
 
-    // Créer et enregistrer la session autonome
-    const newSession: ActiveDuoSession = {
-      sessionId: objectId,
+    const newSession = createDuoSession(
+      objectId,
       location,
-      participantA,
-      participantB,
       playlist,
-      currentAnimIndex: 0,
-      currentRepeatIndex: 0,
-      repeatsPerAnim: slot?.duoCount ? 1 : this.repeatsPerAnim,
-      sessionTimer: def.duration ?? 5.0,
-      isSessionPlaying: false,
-      isSessionComplete: false,
-    };
+      slot?.duoCount ? 1 : this.repeatsPerAnim,
+      participantA,
+      participantB
+    );
     this.sessions.set(objectId, newSession);
 
-    // Calculer les coordonnées monde de posA et posB pour l'animation Duo
-    const cos = Math.cos(anchorRotY);
-    const sin = Math.sin(anchorRotY);
-    const transformLocalToWorld = (localOffset: [number, number, number]): [number, number, number] => {
-      const [lx, ly, lz] = localOffset;
-      return [bx + lx * cos + lz * sin, by + ly, bz - lx * sin + lz * cos];
-    };
-    const localA: [number, number, number] = [0, 0, 0];
-    const localB: [number, number, number] = def.offsetB ?? [0, 0, 0];
-    const posA = transformLocalToWorld(localA);
-    const posB = transformLocalToWorld(localB);
-    const rotA = anchorRotY % (Math.PI * 2);
-    const rotB = (anchorRotY + (def.rotB ?? 0)) % (Math.PI * 2);
+    const { posA, posB, rotA, rotB } = computeWorldTransform(anchorPos, anchorRotY, def.offsetB, def.rotB);
 
     appLog(objectId, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur A) et ${targetB} (Partenaire B) !`);
 
-    // Notifier le partenaire (Rôle B)
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
       detail: {
         targetId: targetB,
@@ -638,130 +511,42 @@ class DuoSessionManager {
   }
 
   /**
-   * Force le déclenchement d'une animation de couple spécifique (ex: depuis le SidePanel)
-   * en appelant les 2 PNJs autonomes les plus proches de la Duo Zone pour la jouer 3 fois.
+   * Force le déclenchement d'une animation duo spécifique (ex: depuis le SidePanel ou l'Inventaire).
+   * Si aucun meneur/partenaire n'est spécifié, sélectionne les PNJs disponibles les plus proches de la Duo Zone.
    */
-  public forceDuoAnimation(def: DuoAnimationDef): { targetA: string; targetB: string } | null {
+  public forceDuoAnimation(
+    def: DuoAnimationDef,
+    leaderId?: string,
+    partnerId?: string,
+    fromId = 'SidePanel'
+  ): { targetA: string; targetB: string } | null {
     const [bx, , bz] = this.basePos;
     let session = this.sessions.get('duo-zone');
     if (!session) {
-      session = {
-        sessionId: 'duo-zone',
-        location: { ...this.defaultLocation },
-        participantA: null,
-        participantB: null,
-        playlist: [def],
-        currentAnimIndex: 0,
-        currentRepeatIndex: 0,
-        repeatsPerAnim: this.repeatsPerAnim,
-        sessionTimer: def.duration ?? 5.0,
-        isSessionPlaying: false,
-        isSessionComplete: false,
-      };
+      session = createDuoSession('duo-zone', { ...this.defaultLocation }, [def], this.repeatsPerAnim);
       this.sessions.set('duo-zone', session);
     }
 
-    // 1. Vérifier si des participants sont déjà présents sur la Duo Zone
-    let targetA: string | null = session.participantA?.characterId || null;
-    let targetB: string | null = session.participantB?.characterId || null;
+    // Déterminer targetA et targetB
+    let targetA: string | null = leaderId || session.participantA?.characterId || null;
+    let targetB: string | null = partnerId || session.participantB?.characterId || null;
 
-    // Si un ou deux manquent, chercher les PNJs autonomes les plus proches
     if (!targetA || !targetB) {
-      const sortedNpcs: { id: string; dist: number }[] = [];
-      for (const npcId of AUTONOMOUS_NPC_IDS) {
-        if (npcId === targetA || npcId === targetB) continue;
-        const pos = cameraState.positions[npcId];
-        const dist = pos ? Math.hypot(pos.x - bx, pos.z - bz) : Infinity;
-        sortedNpcs.push({ id: npcId, dist });
-      }
-      sortedNpcs.sort((a, b) => a.dist - b.dist);
+      const candidates = Array.from(AUTONOMOUS_NPC_IDS)
+        .filter(id => id !== targetA && id !== targetB && !this.getSessionFor(id))
+        .sort((a, b) => {
+          const pa = cameraState.positions[a];
+          const pb = cameraState.positions[b];
+          return (pa ? Math.hypot(pa.x - bx, pa.z - bz) : Infinity) - (pb ? Math.hypot(pb.x - bx, pb.z - bz) : Infinity);
+        });
 
-      const availableIds = sortedNpcs.map(n => n.id);
-      if (!targetA) targetA = availableIds[0] || 'native';
-      if (!targetB) targetB = (availableIds[0] === targetA ? availableIds[1] : availableIds[0]) || 'rosanna';
+      if (!targetA) targetA = candidates.shift() || 'native';
+      if (!targetB) targetB = candidates.find(id => id !== targetA) || (targetA === 'native' ? 'rosanna' : 'native');
     }
 
-    if (!targetA || !targetB || targetA === targetB) {
-      return null;
-    }
+    if (!targetA || !targetB || targetA === targetB) return null;
 
-    // Configurer la session avec l'animation sélectionnée
-    session.playlist = [def];
-    session.currentAnimIndex = 0;
-    session.currentRepeatIndex = 0;
-    session.sessionTimer = def.duration ?? 5.0;
-    session.isSessionComplete = false;
-
-    // Vérifier la présence physique des participants (à moins de 80 cm du centre de duo-zone)
-    const posA = cameraState.positions[targetA];
-    const posB = cameraState.positions[targetB];
-    const isAlreadyThereA = posA ? Math.hypot(posA.x - bx, posA.z - bz) < 80 : false;
-    const isAlreadyThereB = posB ? Math.hypot(posB.x - bx, posB.z - bz) < 80 : false;
-
-    // Assigner les rôles
-    OccupancyManager.claimSlot('duo-zone', 'roleA', targetA);
-    session.participantA = { characterId: targetA, role: 'roleA', isReady: isAlreadyThereA };
-
-    OccupancyManager.claimSlot('duo-zone', 'roleB', targetB);
-    session.participantB = { characterId: targetB, role: 'roleB', isReady: isAlreadyThereB };
-
-    // Si les 2 sont déjà sur place, lancer directement la session
-    if (isAlreadyThereA && isAlreadyThereB) {
-      session.isSessionPlaying = true;
-      appLog('duo-zone', `🎭 Duo instantané (2 déjà sur place) : "${def.label}" avec ${targetA} & ${targetB}`);
-    } else {
-      session.isSessionPlaying = false;
-      appLog('duo-zone', `🎮 Appel Duo : "${def.label}" assignée à ${targetA} (Meneur) et ${targetB} (Partenaire)`);
-    }
-
-    // Inviter les personnages
-    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: { targetId: targetA, fromId: 'SidePanel', forceRole: 'roleA', objectId: 'duo-zone', slotId: 'duo-random', alreadyThere: isAlreadyThereA }
-    }));
-    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: { targetId: targetB, fromId: 'SidePanel', forceRole: 'roleB', objectId: 'duo-zone', slotId: 'duo-random', alreadyThere: isAlreadyThereB }
-    }));
-
-    this.emitChange();
-    return { targetA, targetB };
-  }
-
-  /**
-   * Force le déclenchement d'une animation de couple avec un meneur (Rôle A) spécifique (ex: depuis l'Inventaire du personnage).
-   * Choisit aléatoirement un autre PNJ autonome comme partenaire (Rôle B).
-   */
-  public forceDuoAnimationWithLeader(leaderId: string, def: DuoAnimationDef, partnerId?: string): { targetA: string; targetB: string } | null {
-    const targetA = leaderId;
-
-    let targetB = partnerId;
-    if (!targetB) {
-      const candidates = Array.from(AUTONOMOUS_NPC_IDS).filter(id => id !== targetA && !this.getSessionFor(id));
-      targetB = candidates[Math.floor(Math.random() * candidates.length)] || (targetA === 'native' ? 'rosanna' : 'native');
-    }
-
-    if (!targetA || !targetB || targetA === targetB) {
-      return null;
-    }
-
-    let session = this.sessions.get('duo-zone');
-    if (!session) {
-      session = {
-        sessionId: 'duo-zone',
-        location: { ...this.defaultLocation },
-        participantA: null,
-        participantB: null,
-        playlist: [def],
-        currentAnimIndex: 0,
-        currentRepeatIndex: 0,
-        repeatsPerAnim: this.repeatsPerAnim,
-        sessionTimer: def.duration ?? 5.0,
-        isSessionPlaying: false,
-        isSessionComplete: false,
-      };
-      this.sessions.set('duo-zone', session);
-    }
-
-    // Libérer les anciens occupants éventuels
+    // Libérer les anciens occupants si changement de PNJ
     if (session.participantA && session.participantA.characterId !== targetA) {
       OccupancyManager.releaseSlot('duo-zone', 'roleA', session.participantA.characterId);
     }
@@ -769,33 +554,46 @@ class DuoSessionManager {
       OccupancyManager.releaseSlot('duo-zone', 'roleB', session.participantB.characterId);
     }
 
-    // Configurer la session avec cette animation unique jouée 3 fois
+    // Configurer la session
     session.playlist = [def];
     session.currentAnimIndex = 0;
     session.currentRepeatIndex = 0;
     session.sessionTimer = def.duration ?? 5.0;
-    session.isSessionPlaying = false;
     session.isSessionComplete = false;
 
-    // Assigner les 2 rôles
+    // Présence physique (< 80 cm du spot de la duo-zone)
+    const isNearby = (id: string) => {
+      const pos = cameraState.positions[id];
+      return pos ? Math.hypot(pos.x - bx, pos.z - bz) < 80 : false;
+    };
+    const isAlreadyThereA = isNearby(targetA);
+    const isAlreadyThereB = isNearby(targetB);
+
     OccupancyManager.claimSlot('duo-zone', 'roleA', targetA);
-    session.participantA = { characterId: targetA, role: 'roleA', isReady: false };
-
+    session.participantA = { characterId: targetA, role: 'roleA', isReady: isAlreadyThereA };
     OccupancyManager.claimSlot('duo-zone', 'roleB', targetB);
-    session.participantB = { characterId: targetB, role: 'roleB', isReady: false };
+    session.participantB = { characterId: targetB, role: 'roleB', isReady: isAlreadyThereB };
 
-    appLog('duo-zone', `🎮 Inventaire Personnage : "${def.label}" (x${this.repeatsPerAnim}) assignée à ${targetA} (Meneur) et ${targetB} (Partenaire aléatoire) !`);
+    session.isSessionPlaying = isAlreadyThereA && isAlreadyThereB;
+    appLog('duo-zone', session.isSessionPlaying
+      ? `🎭 Duo instantané (2 déjà sur place) : "${def.label}" avec ${targetA} & ${targetB}`
+      : `🎮 Appel Duo (${fromId}) : "${def.label}" assignée à ${targetA} (Meneur) et ${targetB} (Partenaire)`);
 
-    // Émettre l'invitation prioritaire aux 2 PNJs ciblés
-    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: { targetId: targetA, fromId: 'Inventory', forceRole: 'roleA', objectId: 'duo-zone', slotId: 'duo-random' }
-    }));
-    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: { targetId: targetB, fromId: 'Inventory', forceRole: 'roleB', objectId: 'duo-zone', slotId: 'duo-random' }
-    }));
+    for (const [targetId, role, alreadyThere] of [[targetA, 'roleA', isAlreadyThereA], [targetB, 'roleB', isAlreadyThereB]] as const) {
+      document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+        detail: { targetId, fromId, forceRole: role, objectId: 'duo-zone', slotId: 'duo-random', alreadyThere }
+      }));
+    }
 
     this.emitChange();
     return { targetA, targetB };
+  }
+
+  /**
+   * Alias de rétrocompatibilité pour forcer un duo avec un meneur spécifique.
+   */
+  public forceDuoAnimationWithLeader(leaderId: string, def: DuoAnimationDef, partnerId?: string): { targetA: string; targetB: string } | null {
+    return this.forceDuoAnimation(def, leaderId, partnerId, 'Inventory');
   }
 }
 
