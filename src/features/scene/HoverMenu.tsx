@@ -260,22 +260,36 @@ export function HoverRaycaster() {
     const pointer   = new THREE.Vector2();
     let hideTimer: ReturnType<typeof setTimeout> | null = null;
     let interactiveCache: THREE.Object3D[] = [];
+    let occluderCache: THREE.Object3D[] = [];
     let lastCacheTime = 0;
     const downPos = { x: 0, y: 0 };
     let isDragGesture = false;
 
-    function getInteractiveRoots(): THREE.Object3D[] {
+    function refreshCaches() {
       const now = performance.now();
-      if (now - lastCacheTime > 3000 || interactiveCache.length === 0) {
-        interactiveCache = [];
-        scene.traverse(obj => {
-          if (obj.userData?.hoverAction) {
-            interactiveCache.push(obj);
-          }
-        });
-        lastCacheTime = now;
-      }
-      return interactiveCache;
+      if (now - lastCacheTime < 3000 && interactiveCache.length > 0) return;
+      interactiveCache = [];
+      occluderCache = [];
+      scene.traverse(obj => {
+        if (obj.userData?.hoverAction) {
+          interactiveCache.push(obj);
+        }
+        // Collecter uniquement les structures opaques (murs, cloisons, portes) comme occulteurs potentiels
+        if (
+          obj.visible &&
+          (
+            obj.userData?.brickType === 'wall' ||
+            obj.userData?.isDoor ||
+            obj.name === 'merged-walls' ||
+            obj.name?.includes('door') ||
+            obj.name?.includes('Door') ||
+            obj.name === 'walls-group'
+          )
+        ) {
+          occluderCache.push(obj);
+        }
+      });
+      lastCacheTime = now;
     }
 
     function scheduleHide() {
@@ -311,7 +325,9 @@ export function HoverRaycaster() {
       occlusionRaycaster.layers.disable(LAYER_NEIGHBORS);
       occlusionRaycaster.layers.disable(LAYER_LIDAR);
 
-      const occHits = occlusionRaycaster.intersectObjects(scene.children, true);
+      refreshCaches();
+      // Test d'occlusion ciblé sur la vingtaine de maillages de murs/portes au lieu des 10 000+ objets de scene.children
+      const occHits = occlusionRaycaster.intersectObjects(occluderCache, true);
 
       // Trouver la racine de l'objet cible pour éviter l'auto-occlusion
       let targetRoot: THREE.Object3D = targetObj;
@@ -351,15 +367,6 @@ export function HoverRaycaster() {
           if (isTransparent) continue;
         }
 
-        // Ignorer les murs coupés / escamotés selon la vue
-        let side = null;
-        cur = occ.object;
-        while (cur) {
-          if (cur.userData?.side) { side = cur.userData.side; break; }
-          cur = cur.parent;
-        }
-        if (side === 'west' || side === 'east' || side === 'north' || side === 'both') continue;
-
         // Un obstacle opaque se trouve entre la caméra et l'objet
         return true;
       }
@@ -370,8 +377,8 @@ export function HoverRaycaster() {
     function raycastAt(clientX: number, clientY: number): { label: string; actionIds: string[] } | null {
       if (cameraState.isDragging) return null;
 
-      const candidates = getInteractiveRoots();
-      if (candidates.length === 0) return null;
+      refreshCaches();
+      if (interactiveCache.length === 0) return null;
 
       const rect = canvas.getBoundingClientRect();
       pointer.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
@@ -381,7 +388,7 @@ export function HoverRaycaster() {
       raycaster.layers.enableAll();
       raycaster.layers.disable(LAYER_NEIGHBORS);
       raycaster.layers.disable(LAYER_LIDAR);
-      const hits = raycaster.intersectObjects(candidates, true);
+      const hits = raycaster.intersectObjects(interactiveCache, true);
       let bestAction: { label: string; actionIds: string[] } | null = null;
 
       for (const hit of hits) {
@@ -394,20 +401,8 @@ export function HoverRaycaster() {
               (m as typeof mat).transparent && ((m as typeof mat).opacity ?? 1) < 0.3)
           : mat?.transparent && (mat?.opacity ?? 1) < 0.3;
         if (isTransparent) continue;
-        if (hit.object.userData.brickType === 'ceiling') continue;
-        if (hit.object.userData.brickType === 'ground')  continue;
-
-        // Traverse up the parent chain to find if any ancestor has side defined
-        let side = null;
-        let cur: THREE.Object3D | null = hit.object;
-        while (cur) {
-          if (cur.userData?.side) {
-            side = cur.userData.side;
-            break;
-          }
-          cur = cur.parent;
-        }
-        if (side === 'west' || side === 'east' || side === 'north' || side === 'both') continue;
+        if (hit.object.userData?.brickType === 'ceiling') continue;
+        if (hit.object.userData?.brickType === 'ground')  continue;
 
         const action = resolveAction(hit.object);
         if (action && action.actionIds.some(id => getActionDef(id))) {
@@ -422,17 +417,19 @@ export function HoverRaycaster() {
           }
           if (!bestAction) {
             bestAction = action;
+            break;
           }
         }
-        continue;
       }
       return bestAction;
     }
 
-    // ── Souris : hover → dot (Uniquement après 3s d'arrêt complet de la souris) ──
+    // ── Souris : hover → dot réactif (250ms) et suivi fluide ──
     let showTimer: ReturnType<typeof setTimeout> | null = null;
+    let currentHoverKey: string | null = null;
     let lastClientX = 0;
     let lastClientY = 0;
+    let lastMoveCheck = 0;
 
     const onPointerDown = (e: PointerEvent) => {
       downPos.x = e.clientX;
@@ -442,6 +439,7 @@ export function HoverRaycaster() {
       // Si double-clic ou clic multiple rapide, fermer immédiatement tout menu
       if (e.detail >= 2) {
         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+        currentHoverKey = null;
         if (hoverState.locked) {
           hoverState.locked = false;
         }
@@ -449,6 +447,49 @@ export function HoverRaycaster() {
         hoverState.onUpdate?.();
       }
     };
+
+    function checkHover() {
+      if (cameraState.isDragging || isDragGesture) return;
+
+      const found = raycastAt(lastClientX, lastClientY);
+      const newKey = found ? found.actionIds.join(',') : null;
+
+      if (found && newKey) {
+        cancelHide();
+        if (currentHoverKey === newKey) {
+          hoverState.x = lastClientX;
+          hoverState.y = lastClientY;
+          if (!hoverState.visible) {
+            hoverState.visible   = true;
+            hoverState.label     = found.label;
+            hoverState.actionIds = found.actionIds;
+            canvas.style.cursor  = 'pointer';
+          }
+          hoverState.onUpdate?.();
+        } else {
+          currentHoverKey = newKey;
+          if (showTimer) clearTimeout(showTimer);
+          showTimer = setTimeout(() => {
+            showTimer = null;
+            if (cameraState.isDragging || isDragGesture) return;
+            const recheck = raycastAt(lastClientX, lastClientY);
+            if (recheck && recheck.actionIds.join(',') === newKey) {
+              hoverState.visible   = true;
+              hoverState.x         = lastClientX;
+              hoverState.y         = lastClientY;
+              hoverState.label     = recheck.label;
+              hoverState.actionIds = recheck.actionIds;
+              canvas.style.cursor  = 'pointer';
+              hoverState.onUpdate?.();
+            }
+          }, 250);
+        }
+      } else {
+        currentHoverKey = null;
+        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+        scheduleHide();
+      }
+    }
 
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
@@ -460,49 +501,42 @@ export function HoverRaycaster() {
 
       if (isDragGesture || cameraState.isDragging || e.buttons > 0) {
         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+        currentHoverKey = null;
         scheduleHide();
         return;
-      }
-
-      // Si la souris bouge, masquer l'indicateur actif immédiatement (0 raycast pendant le déplacement)
-      if (hoverState.visible && !hoverState.locked) {
-        hoverState.visible = false;
-        hoverState.onUpdate?.();
-        canvas.style.cursor = '';
       }
 
       lastClientX = e.clientX;
       lastClientY = e.clientY;
 
-      if (showTimer) clearTimeout(showTimer);
+      // Si le point est déjà visible sur un objet, mise à jour fluide de ses coordonnées DOM directes
+      if (hoverState.visible && !hoverState.locked) {
+        hoverState.x = e.clientX;
+        hoverState.y = e.clientY;
+        hoverState.onUpdate?.();
+      }
 
-      // Uniquement après 3 secondes d'immobilité totale : exécuter un UNIQUE raycast
-      showTimer = setTimeout(() => {
-        showTimer = null;
-        if (cameraState.isDragging || isDragGesture) return;
+      // Throttle les raycasts pendant le déplacement de la souris (max 1 fois toutes les 80ms)
+      const now = performance.now();
+      if (now - lastMoveCheck < 80) {
+        if (showTimer) clearTimeout(showTimer);
+        showTimer = setTimeout(checkHover, 250);
+        return;
+      }
+      lastMoveCheck = now;
 
-        const found = raycastAt(lastClientX, lastClientY);
-        if (found) {
-          hoverState.visible   = true;
-          hoverState.x         = lastClientX;
-          hoverState.y         = lastClientY;
-          hoverState.label     = found.label;
-          hoverState.actionIds = found.actionIds;
-          canvas.style.cursor  = 'pointer';
-          hoverState.onUpdate?.();
-        } else {
-          canvas.style.cursor = '';
-        }
-      }, 3000);
+      checkHover();
     };
 
     const onLeave = () => { 
       if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+      currentHoverKey = null;
       scheduleHide(); 
     };
 
     const onDblClick = () => {
       if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+      currentHoverKey = null;
       hoverState.locked = false;
       hoverState.visible = false;
       hoverState.onUpdate?.();

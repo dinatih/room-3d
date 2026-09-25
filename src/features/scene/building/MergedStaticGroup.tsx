@@ -110,7 +110,9 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
       m.castShadow = true;
       m.receiveShadow = true;
       m.userData = { ...userData, isMergedStatic: true };
-      m.raycast = () => {}; // OPTIMISATION : Désactive le raycasting sur ce gros mesh statique pour ne pas plomber les perfs au survol
+      if (name !== 'merged-walls') {
+        m.raycast = () => {}; // OPTIMISATION : Désactive le raycasting sur les gros meshes statiques pour ne pas plomber les perfs au survol (sauf les murs pour l'occlusion)
+      }
 
       // Héritage automatique du layer mask depuis le premier mesh source correspondant
       src.traverse(node => {
