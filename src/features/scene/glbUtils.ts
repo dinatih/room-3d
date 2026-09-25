@@ -40,7 +40,7 @@ export function mergeGlbByMaterial(root: THREE.Object3D): void {
   // On optimise d'abord les matériaux (transparence -> alphaTest)
   optimizeMaterials(root);
 
-  const groups = new Map<string, { geos: THREE.BufferGeometry[]; mat: THREE.Material }>();
+  const groups = new Map<string, { geos: THREE.BufferGeometry[]; mat: THREE.Material; renderOrder: number }>();
 
   root.updateMatrix();
   const rootRS = new THREE.Matrix4().copy(root.matrix).setPosition(0, 0, 0);
@@ -49,7 +49,9 @@ export function mergeGlbByMaterial(root: THREE.Object3D): void {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh || !mesh.visible || Array.isArray(mesh.material)) return;
     const mat = mesh.material as THREE.Material;
-    if (!groups.has(mat.uuid)) groups.set(mat.uuid, { geos: [], mat });
+    const order = mesh.renderOrder || 0;
+    const key = `${mat.uuid}_ro${order}`;
+    if (!groups.has(key)) groups.set(key, { geos: [], mat, renderOrder: order });
 
     const m = new THREE.Matrix4();
     let cur: THREE.Object3D | null = node;
@@ -58,7 +60,7 @@ export function mergeGlbByMaterial(root: THREE.Object3D): void {
 
     const geo = mesh.geometry.clone();
     geo.applyMatrix4(m);
-    groups.get(mat.uuid)!.geos.push(geo);
+    groups.get(key)!.geos.push(geo);
   });
 
   root.clear();
@@ -66,13 +68,14 @@ export function mergeGlbByMaterial(root: THREE.Object3D): void {
   root.position.set(0, 0, 0);
   root.rotation.set(0, 0, 0);
 
-  for (const { geos, mat } of groups.values()) {
+  for (const { geos, mat, renderOrder } of groups.values()) {
     ['uv1', 'uv2', 'color', 'tangent'].forEach(a => {
       if (!geos.every(g => g.hasAttribute(a))) geos.forEach(g => g.deleteAttribute(a));
     });
     const merged = mergeGeometries(geos, false);
     if (!merged) continue;
     const m = new THREE.Mesh(merged, mat);
+    m.renderOrder = renderOrder;
     m.castShadow = true;
     m.receiveShadow = true;
     root.add(m);

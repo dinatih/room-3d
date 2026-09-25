@@ -146,27 +146,26 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     const usbcOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_USBC_CARD_1');
     if (usbcOcc) usbcOcc.visible = false;
 
-    // Fix z-fighting on the screen (LCD/Glass)
-    c.traverse(child => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mat = (child as THREE.Mesh).material;
-        if (mat && Array.isArray(mat)) return;
-        const m = mat as THREE.MeshStandardMaterial;
-        const name = ((m.name || '') + ' ' + (child.name || '')).toLowerCase();
-        
-        if (name.includes('lcd') || name.includes('screen') || name.includes('display')) {
-          // Instead of polygonOffset, we ensure it renders correctly
-          m.polygonOffset = false;
-          m.depthWrite = true;
-          m.side = THREE.FrontSide;
-        } else if (name.includes('glass')) {
-          m.polygonOffset = false;
-          m.depthWrite = false; // Glass should not write to depth buffer to avoid z-fighting with LCD behind it
-          m.transparent = true;
-          m.opacity = 0.3;
-        }
-      }
-    });
+    // Priorités et polygonOffset pour éliminer le z-fighting :
+    // 1. Écran (GFW00_3H_NB_ID_BEZEL_1_1) face au fond du bezel
+    // 2. Logo au dos (GFW00_3H_NB_ID_COVER_LOGO_1) face au capot arrière (GFW_NB_ID_COVER_A)
+    const setPriority = (rootObj: THREE.Object3D | null | undefined, renderOrder: number) => {
+      if (!rootObj) return;
+      rootObj.traverse(child => {
+        const mesh = child as THREE.Mesh;
+        if (!mesh.isMesh || !mesh.material) return;
+        const origMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+        const mat = (origMat as THREE.MeshStandardMaterial).clone();
+        mat.polygonOffset = true;
+        mat.polygonOffsetFactor = -2;
+        mat.polygonOffsetUnits = -2;
+        mesh.material = mat;
+        mesh.renderOrder = renderOrder;
+      });
+    };
+
+    setPriority(c.getObjectByName('GFW00_3H_NB_ID_BEZEL_1_1'), 1);
+    setPriority(c.getObjectByName('GFW00_3H_NB_ID_COVER_LOGO_1'), 1);
 
     mergeGlbByMaterial(c);
     return c;
