@@ -1,9 +1,8 @@
 /**
  * CharacterAnimSelector.tsx — Composant réutilisable de listing, recherche, filtrage
- * et sélection des animations de personnages.
- * Utilisable aussi bien dans le panneau latéral (SidePanel) que dans les previews 3D de personnages.
+ * et sélection des animations de personnages (SidePanel & Previews 3D).
  */
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { getAnimationDef } from './animations/animationResolver';
 import { resetAppIdle } from './idleState';
@@ -20,36 +19,48 @@ export const ANIM_CATEGORIES = [
   { key: 'yoga', label: 'Yoga & Mocap', icon: '🧘‍♀️' },
 ] as const;
 
-let globalLastAnimSearch = '';
-let globalLastSelectedCategories: string[] = [];
-try {
-  globalLastAnimSearch = sessionStorage.getItem('anim_search_filter') || '';
-  const savedCats = sessionStorage.getItem('anim_selected_categories');
-  if (savedCats) {
-    globalLastSelectedCategories = JSON.parse(savedCats);
-  }
-} catch {}
-
 export function getAnimCategory(val: string): string {
   if (val === 'idle' || val === 't-pose') return 'poses_idles';
-  const def = getAnimationDef(val);
-  const path = def ? def.path : val;
-  if (path.startsWith('animations/')) {
-    const parts = path.split('/');
-    if (parts.length > 1) {
-      return parts[1];
-    }
-  }
-  return 'other';
+  const path = getAnimationDef(val)?.path || val;
+  return path.startsWith('animations/') ? path.split('/')[1] || 'other' : 'other';
 }
 
+/** Métadonnées pré-calculées une seule fois pour éviter les regex et lookups sur chaque render */
+const ENHANCED_ANIM_OPTIONS = WALKER_ANIM_OPTIONS.map(anim => {
+  const def = getAnimationDef(anim.value);
+  const animCat = getAnimCategory(anim.value);
+  const catObj = ANIM_CATEGORIES.find(c => c.key === animCat);
+
+  let duration = def?.duration;
+  if (duration === undefined && anim.label) {
+    const m = anim.label.match(/\/ ([\d.]+)s,/);
+    if (m) duration = parseFloat(m[1]);
+  }
+  if (duration === undefined && anim.value === 't-pose') duration = 0.1;
+
+  return {
+    value: anim.value,
+    label: anim.label,
+    defId: def?.id,
+    defPath: def?.path,
+    category: animCat,
+    catIcon: catObj?.icon,
+    catLabel: catObj?.label,
+    isPose: duration !== undefined && duration <= 0.15,
+    filename: (def?.path || anim.value).split('/').pop() || anim.value,
+    searchIndex: `${anim.label} ${anim.value}`.toLowerCase(),
+  };
+});
+
+const CATEGORY_COUNTS = ENHANCED_ANIM_OPTIONS.reduce<Record<string, number>>((acc, a) => {
+  acc[a.category] = (acc[a.category] || 0) + 1;
+  return acc;
+}, {});
+
 export interface CharacterAnimSelectorProps {
-  /**
-   * Identifiant canonique de l'animation active en kebab-case strict (ex: 'standing-disarm-over-shoulder').
-   * Les clés et valeurs d'animations dans le projet sont exclusivement en kebab-case (jamais de snake_case).
-   */
+  /** Identifiant de l'animation active en kebab-case strict */
   activeAnimValue?: string;
-  /** Callback de sélection d'animation (reçoit l'identifiant en kebab-case strict) */
+  /** Callback de sélection d'animation */
   onSelectAnim: (animValue: string) => void;
   maxHeight?: string | number;
   listMaxHeight?: string | number;
@@ -60,8 +71,14 @@ export interface CharacterAnimSelectorProps {
   autoFocus?: boolean;
 }
 
-/** Nombre d'animations récentes affichées dans la section "Récentes" */
 const MAX_RECENT = 2;
+
+const getSession = (key: string, fallback: string) => {
+  try { return sessionStorage.getItem(key) ?? fallback; } catch { return fallback; }
+};
+const setSession = (key: string, val: string) => {
+  try { sessionStorage.setItem(key, val); } catch {}
+};
 
 export function CharacterAnimSelector({
   activeAnimValue = 'idle',
@@ -77,200 +94,135 @@ export function CharacterAnimSelector({
   const isMobileHook = useIsMobile();
   const isMobile = isMobileProp !== undefined ? isMobileProp : isMobileHook;
 
-  const [animSearch, setAnimSearchState] = useState(() => globalLastAnimSearch);
-  const [selectedCategories, setSelectedCategoriesState] = useState<string[]>(() => globalLastSelectedCategories);
+  const [animSearch, setAnimSearch] = useState(() => getSession('anim_search_filter', ''));
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
+    try {
+      const s = sessionStorage.getItem('anim_selected_categories');
+      return s ? JSON.parse(s) : [];
+    } catch { return []; }
+  });
 
-  const setAnimSearch = useCallback((val: string | ((prev: string) => string)) => {
-    setAnimSearchState(prev => {
-      const next = typeof val === 'function' ? val(prev) : val;
-      globalLastAnimSearch = next;
-      try {
-        sessionStorage.setItem('anim_search_filter', next);
-      } catch {}
-      return next;
-    });
-  }, []);
-
-  const setSelectedCategories = useCallback((val: string[] | ((prev: string[]) => string[])) => {
-    setSelectedCategoriesState(prev => {
-      const next = typeof val === 'function' ? val(prev) : val;
-      globalLastSelectedCategories = next;
-      try {
-        sessionStorage.setItem('anim_selected_categories', JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  }, []);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const [copiedAnim, setCopiedAnim] = useState<string | null>(null);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const animsContainerRef = useRef<HTMLDivElement>(null);
 
   const [recentAnims, setRecentAnims] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('recent_animations');
       if (!saved) return [];
-      const parsed = JSON.parse(saved).slice(0, MAX_RECENT);
-      return parsed.filter((v: string) => WALKER_ANIM_OPTIONS.some(a => a.value === v));
-    } catch {
-      return [];
-    }
+      return (JSON.parse(saved) as string[]).slice(0, MAX_RECENT).filter(v => WALKER_ANIM_OPTIONS.some(a => a.value === v));
+    } catch { return []; }
   });
 
-  useEffect(() => {
-    if (autoFocus && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [autoFocus]);
+  const updateSearch = (val: string) => {
+    setAnimSearch(val);
+    setSession('anim_search_filter', val);
+  };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
-        setCategoryDropdownOpen(false);
-      }
-    };
-    if (categoryDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [categoryDropdownOpen]);
+  const updateCategories = (cats: string[]) => {
+    setSelectedCategories(cats);
+    setSession('anim_selected_categories', JSON.stringify(cats));
+  };
 
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    WALKER_ANIM_OPTIONS.forEach(a => {
-      const cat = getAnimCategory(a.value);
-      counts[cat] = (counts[cat] || 0) + 1;
-    });
-    return counts;
-  }, []);
-
-  const handleSelect = useCallback((val: string) => {
+  const handleSelect = (val: string) => {
     resetAppIdle();
     onSelectAnim(val);
     if (val && val !== 'idle') {
       setRecentAnims(prev => {
         const next = [val, ...prev.filter(v => v !== val)].slice(0, MAX_RECENT);
-        try {
-          localStorage.setItem('recent_animations', JSON.stringify(next));
-        } catch {}
+        try { localStorage.setItem('recent_animations', JSON.stringify(next)); } catch {}
         return next;
       });
     }
-  }, [onSelectAnim]);
+  };
 
-  const handleCopyAnim = (anim: { value: string; label: string }, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    const def = getAnimationDef(anim.value);
-    const path = def ? def.path : anim.value;
-    const parts = path.split('/');
-    const filename = parts.length > 1 ? parts.slice(1).join('/') : path;
-    navigator.clipboard.writeText(filename);
-    setCopiedAnim(anim.value);
+  const handleCopy = (val: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const path = getAnimationDef(val)?.path || val;
+    navigator.clipboard.writeText(path.split('/').pop() || path);
+    setCopiedAnim(val);
     setTimeout(() => setCopiedAnim(null), 2000);
   };
 
+  // Fermeture du dropdown lors d'un clic extérieur
+  useEffect(() => {
+    if (!categoryDropdownOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
+        setCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [categoryDropdownOpen]);
+
+  // Focus automatique
+  useEffect(() => {
+    if (autoFocus) searchInputRef.current?.focus();
+  }, [autoFocus]);
+
+  // Échap pour fermer
+  useEffect(() => {
+    if (!onClose) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  // Défilement automatique vers l'élément sélectionné
+  useEffect(() => {
+    if (activeAnimValue && animsContainerRef.current) {
+      animsContainerRef.current.querySelector('.active-anim-item')?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [activeAnimValue]);
+
   const filteredAnims = useMemo(() => {
     const q = animSearch.trim().toLowerCase();
-    return WALKER_ANIM_OPTIONS.filter(a => {
-      if (selectedCategories.length > 0) {
-        const cat = getAnimCategory(a.value);
-        if (!selectedCategories.includes(cat)) {
-          return false;
-        }
-      }
-      if (q) {
-        return a.label.toLowerCase().includes(q) || a.value.toLowerCase().includes(q);
-      }
-      return true;
+    return ENHANCED_ANIM_OPTIONS.filter(a => {
+      if (selectedCategories.length > 0 && !selectedCategories.includes(a.category)) return false;
+      return !q || a.searchIndex.includes(q);
     });
   }, [animSearch, selectedCategories]);
 
-  const animsContainerRef = useRef<HTMLDivElement>(null);
-
-  const selectNextAnim = (direction: 'next' | 'prev') => {
+  const selectNextAnim = (dir: 1 | -1) => {
     resetAppIdle();
     if (!filteredAnims.length) return;
-    const currentIndex = filteredAnims.findIndex(a => a.value === activeAnimValue);
-    let nextIndex = 0;
-    if (currentIndex === -1) {
-      nextIndex = direction === 'next' ? 0 : filteredAnims.length - 1;
-    } else {
-      if (direction === 'next') {
-        nextIndex = (currentIndex + 1) % filteredAnims.length;
-      } else {
-        nextIndex = (currentIndex - 1 + filteredAnims.length) % filteredAnims.length;
-      }
-    }
-    const targetAnim = filteredAnims[nextIndex];
-    if (targetAnim) {
-      handleSelect(targetAnim.value);
-    }
+    const idx = filteredAnims.findIndex(a => a.value === activeAnimValue);
+    const nextIdx = idx === -1 ? 0 : (idx + dir + filteredAnims.length) % filteredAnims.length;
+    handleSelect(filteredAnims[nextIdx].value);
   };
 
   const playRandomAnim = () => {
     resetAppIdle();
     const pool = filteredAnims.filter(a => a.value !== 'idle');
-    if (!pool.length) return;
-    const randomAnim = pool[Math.floor(Math.random() * pool.length)];
-    if (randomAnim) {
-      handleSelect(randomAnim.value);
-    }
+    if (pool.length) handleSelect(pool[Math.floor(Math.random() * pool.length)].value);
   };
 
-  const handleKeyDownAnims = (e: React.KeyboardEvent | KeyboardEvent) => {
-    resetAppIdle();
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       e.stopPropagation();
-      selectNextAnim(e.key === 'ArrowDown' ? 'next' : 'prev');
+      selectNextAnim(e.key === 'ArrowDown' ? 1 : -1);
     }
   };
 
-  useEffect(() => {
-    if (!onClose) return;
-    const handleGlobalKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleGlobalKey);
-    return () => window.removeEventListener('keydown', handleGlobalKey);
-  }, [onClose]);
-
-  useEffect(() => {
-    if (activeAnimValue && animsContainerRef.current) {
-      const container = animsContainerRef.current;
-      const frameId = requestAnimationFrame(() => {
-        const activeEl = container.querySelector('.active-anim-item') as HTMLElement | null;
-        if (activeEl) {
-          const containerRect = container.getBoundingClientRect();
-          const activeRect = activeEl.getBoundingClientRect();
-
-          if (activeRect.top < containerRect.top) {
-            container.scrollTop -= (containerRect.top - activeRect.top + 6);
-          } else if (activeRect.bottom > containerRect.bottom) {
-            container.scrollTop += (activeRect.bottom - containerRect.bottom + 6);
-          }
-        }
-      });
-      return () => cancelAnimationFrame(frameId);
-    }
-  }, [activeAnimValue, filteredAnims]);
-
-  const activeAnimOpt = WALKER_ANIM_OPTIONS.find(a => a.value === activeAnimValue);
+  const activeAnimOpt = ENHANCED_ANIM_OPTIONS.find(a => a.value === activeAnimValue);
 
   return (
     <div
       className="d-flex flex-column h-100 bg-transparent overflow-hidden text-dark"
       style={{ maxHeight, height: '100%', outline: 'none' }}
       tabIndex={0}
-      onKeyDown={handleKeyDownAnims}
+      onKeyDown={handleKeyDown}
     >
-      {/* En-tête avec titre ou bouton fermer si fourni */}
+      {/* En-tête */}
       {(title || onClose) && (
         <div className="d-flex align-items-center justify-content-between px-2 py-1.5 border-bottom bg-light">
           {title && <span className="fw-bold small text-truncate">🎬 {title}</span>}
@@ -286,9 +238,9 @@ export function CharacterAnimSelector({
         </div>
       )}
 
-      {/* Barre de contrôles et filtres */}
+      {/* Contrôles et filtres */}
       <div className="p-2 border-bottom shadow-sm sticky-top" style={{ zIndex: 5, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)' }}>
-        {/* Barre de recherche textuelle */}
+        {/* Recherche + Bouton Aléatoire */}
         <div className="input-group input-group-sm mb-1.5">
           <span className="input-group-text bg-light text-muted border-end-0">🔍</span>
           <input
@@ -297,17 +249,12 @@ export function CharacterAnimSelector({
             className="form-control border-start-0 ps-0"
             placeholder="Filtrer texte ou ↕ flèches..."
             value={animSearch}
-            onChange={e => setAnimSearch(e.target.value)}
-            onKeyDown={handleKeyDownAnims}
+            onChange={e => updateSearch(e.target.value)}
+            onKeyDown={handleKeyDown}
             style={{ fontSize: isMobile ? '13px' : '11px' }}
           />
           {animSearch && (
-            <button
-              className="btn btn-outline-secondary border-start-0"
-              type="button"
-              onClick={() => setAnimSearch('')}
-              style={{ fontSize: '10px' }}
-            >
+            <button className="btn btn-outline-secondary border-start-0" type="button" onClick={() => updateSearch('')} style={{ fontSize: '10px' }}>
               ✕
             </button>
           )}
@@ -322,18 +269,16 @@ export function CharacterAnimSelector({
           </button>
         </div>
 
-        {/* Filtre catégorie à choix multiples */}
+        {/* Filtre de catégories */}
         <div ref={categoryDropdownRef} className="position-relative mb-1.5">
           <div className="d-flex gap-1">
             <button
               type="button"
               className={`btn btn-sm w-100 text-start d-flex justify-content-between align-items-center py-1 px-2 ${
-                selectedCategories.length > 0
-                  ? 'btn-danger bg-danger text-white border-danger shadow-sm'
-                  : 'btn-outline-secondary bg-white text-dark border'
+                selectedCategories.length > 0 ? 'btn-danger bg-danger text-white border-danger shadow-sm' : 'btn-outline-secondary bg-white text-dark border'
               }`}
               style={{ fontSize: isMobile ? '12px' : '11px', borderRadius: '4px' }}
-              onClick={() => setCategoryDropdownOpen(prev => !prev)}
+              onClick={() => setCategoryDropdownOpen(v => !v)}
             >
               <span className="text-truncate">
                 📁 <strong>Catégories :</strong> {selectedCategories.length === 0
@@ -349,7 +294,7 @@ export function CharacterAnimSelector({
                 type="button"
                 className="btn btn-sm btn-outline-danger px-2 shrink-0"
                 style={{ fontSize: '10px' }}
-                onClick={() => setSelectedCategories([])}
+                onClick={() => updateCategories([])}
                 title="Réinitialiser toutes les catégories"
               >
                 ✕
@@ -360,20 +305,14 @@ export function CharacterAnimSelector({
           {categoryDropdownOpen && (
             <div
               className="position-absolute start-0 end-0 mt-1 p-2 bg-white border rounded shadow-lg"
-              style={{
-                zIndex: 1050,
-                backdropFilter: 'blur(12px)',
-                background: 'rgba(255, 255, 255, 0.98)',
-                maxHeight: '230px',
-                overflowY: 'auto'
-              }}
+              style={{ zIndex: 1050, backdropFilter: 'blur(12px)', maxHeight: '230px', overflowY: 'auto' }}
             >
               <div className="d-flex justify-content-between align-items-center mb-1.5 pb-1 border-bottom">
                 <button
                   type="button"
                   className="btn btn-link btn-sm p-0 text-decoration-none fw-semibold"
                   style={{ fontSize: '10.5px' }}
-                  onClick={() => setSelectedCategories(ANIM_CATEGORIES.map(c => c.key))}
+                  onClick={() => updateCategories(ANIM_CATEGORIES.map(c => c.key))}
                 >
                   ✓ Tout cocher
                 </button>
@@ -381,16 +320,15 @@ export function CharacterAnimSelector({
                   type="button"
                   className="btn btn-link btn-sm p-0 text-decoration-none text-danger fw-semibold"
                   style={{ fontSize: '10.5px' }}
-                  onClick={() => setSelectedCategories([])}
+                  onClick={() => updateCategories([])}
                 >
-                  ✕ Tout décocher (Toutes)
+                  ✕ Tout décocher
                 </button>
               </div>
 
               <div className="d-flex flex-column gap-1">
                 {ANIM_CATEGORIES.map(cat => {
                   const isChecked = selectedCategories.includes(cat.key);
-                  const count = categoryCounts[cat.key] || 0;
                   return (
                     <label
                       key={cat.key}
@@ -404,18 +342,14 @@ export function CharacterAnimSelector({
                           type="checkbox"
                           className="form-check-input mt-0 me-1.5"
                           checked={isChecked}
-                          onChange={() => {
-                            setSelectedCategories(prev =>
-                              prev.includes(cat.key)
-                                ? prev.filter(k => k !== cat.key)
-                                : [...prev, cat.key]
-                            );
-                          }}
+                          onChange={() => updateCategories(
+                            isChecked ? selectedCategories.filter(k => k !== cat.key) : [...selectedCategories, cat.key]
+                          )}
                         />
                         <span>{cat.icon} {cat.label}</span>
                       </span>
                       <span className={`badge ${isChecked ? 'bg-danger text-white' : 'bg-secondary-subtle text-secondary-emphasis'}`} style={{ fontSize: '9px' }}>
-                        {count}
+                        {CATEGORY_COUNTS[cat.key] || 0}
                       </span>
                     </label>
                   );
@@ -426,16 +360,16 @@ export function CharacterAnimSelector({
         </div>
 
         {/* Animations récentes */}
-        {showRecent && recentAnims.slice(0, MAX_RECENT).length > 0 && !animSearch && selectedCategories.length === 0 && (
+        {showRecent && recentAnims.length > 0 && !animSearch && selectedCategories.length === 0 && (
           <div className="mb-2 p-1.5 bg-light rounded border">
             <div className="text-muted fw-bold mb-1 px-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              🕒 Récentes ({recentAnims.slice(0, MAX_RECENT).length})
+              🕒 Récentes ({recentAnims.length})
             </div>
             <div className="d-flex flex-wrap gap-1">
-              {recentAnims.slice(0, MAX_RECENT).map(val => {
-                const opt = WALKER_ANIM_OPTIONS.find(a => a.value === val);
+              {recentAnims.map(val => {
+                const opt = ENHANCED_ANIM_OPTIONS.find(a => a.value === val);
                 const isAct = activeAnimValue === val;
-                const label = opt ? opt.label : val.split('/').pop() || val;
+                const label = opt?.label || val;
                 return (
                   <button
                     key={val}
@@ -462,14 +396,14 @@ export function CharacterAnimSelector({
               <button
                 className="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold shrink-0"
                 style={{ fontSize: '9px' }}
-                onClick={(e) => handleCopyAnim(activeAnimOpt, e)}
+                onClick={(e) => handleCopy(activeAnimOpt.value, e)}
                 title="Copier le nom du fichier GLB"
               >
                 {copiedAnim === activeAnimOpt.value ? '✓ Copié !' : '📋 Copier nom'}
               </button>
             </div>
             <div className="font-monospace text-muted text-truncate" style={{ fontSize: '9px' }}>
-              📁 {(getAnimationDef(activeAnimOpt.value)?.path || activeAnimOpt.value).split('/').pop()}
+              📁 {activeAnimOpt.filename}
             </div>
           </div>
         )}
@@ -488,20 +422,7 @@ export function CharacterAnimSelector({
           </div>
         ) : (
           filteredAnims.map(anim => {
-            const def = getAnimationDef(anim.value);
-            const isActive = activeAnimValue === anim.value || (def && (def.id === activeAnimValue || def.path === activeAnimValue));
-            let duration = def?.duration;
-            if (duration === undefined && anim.label) {
-              const m = anim.label.match(/\/ ([\d.]+)s,/);
-              if (m) duration = parseFloat(m[1]);
-            }
-            if (duration === undefined && anim.value === 't-pose') {
-              duration = 0.1;
-            }
-            const isPose = duration !== undefined && duration <= 0.15;
-            const filename = anim.value.split('/').pop() || anim.value;
-            const animCat = getAnimCategory(anim.value);
-            const catObj = ANIM_CATEGORIES.find(c => c.key === animCat);
+            const isActive = activeAnimValue === anim.value || anim.defId === activeAnimValue || anim.defPath === activeAnimValue;
 
             return (
               <div
@@ -509,26 +430,22 @@ export function CharacterAnimSelector({
                 className={`d-flex align-items-center justify-content-between border-bottom px-2 py-2 ${
                   isActive ? 'active-anim-item bg-danger text-white fw-bold shadow-sm' : 'bg-transparent hover-bg-light text-dark'
                 }`}
-                style={{
-                  fontSize: isMobile ? '13px' : '11px',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
+                style={{ fontSize: isMobile ? '13px' : '11px', cursor: 'pointer', transition: 'all 0.15s ease' }}
                 onClick={() => handleSelect(anim.value)}
               >
                 <div className="d-flex align-items-center gap-1 overflow-hidden me-2" style={{ flex: 1 }}>
                   <span style={{ fontSize: '10px' }}>{isActive ? '▶' : ''}</span>
                   <span className="text-truncate" title={anim.label}>{anim.label}</span>
-                  {catObj && (
+                  {anim.catIcon && (
                     <span
                       className={`badge ${isActive ? 'bg-white bg-opacity-25 text-white' : 'bg-secondary-subtle text-secondary-emphasis'} ms-1 fw-normal`}
                       style={{ fontSize: '8px', letterSpacing: '0.02em', flexShrink: 0 }}
-                      title={`Sous-dossier: ${catObj.label}`}
+                      title={`Catégorie: ${anim.catLabel}`}
                     >
-                      {catObj.icon}
+                      {anim.catIcon}
                     </span>
                   )}
-                  {isPose && (
+                  {anim.isPose && (
                     <span
                       className={`badge ${isActive ? 'bg-light text-danger' : 'bg-warning text-dark'} ms-1 fw-normal`}
                       style={{ fontSize: '8px', letterSpacing: '0.02em', flexShrink: 0 }}
@@ -542,8 +459,8 @@ export function CharacterAnimSelector({
                   type="button"
                   className={`btn btn-sm ${isActive ? 'btn-light text-danger border-0' : 'btn-outline-secondary border-0'} p-1 shrink-0`}
                   style={{ fontSize: '10px', lineHeight: 1 }}
-                  onClick={(e) => handleCopyAnim(anim, e)}
-                  title={`Copier "${filename}"`}
+                  onClick={(e) => handleCopy(anim.value, e)}
+                  title={`Copier "${anim.filename}"`}
                 >
                   {copiedAnim === anim.value ? '✓' : '📋'}
                 </button>

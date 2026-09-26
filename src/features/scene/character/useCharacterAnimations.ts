@@ -131,8 +131,24 @@ export function useCharacterAnimations({
       return;
     }
 
-    // Éviter de recharger si l'action existe déjà
-    if (actionsRef.current[animId] || actionsRef.current[path] || (pathOrKey && actionsRef.current[pathOrKey])) {
+    // Si l'action existe déjà en mémoire, la réactiver immédiatement sans recharger le GLB
+    const existingAction = actionsRef.current[animId] || actionsRef.current[path] || (pathOrKey ? actionsRef.current[pathOrKey] : undefined);
+    if (existingAction) {
+      if (!loop) {
+        existingAction.setLoop(THREE.LoopOnce, 1);
+        existingAction.clampWhenFinished = true;
+      } else {
+        existingAction.setLoop(THREE.LoopRepeat, Infinity);
+        existingAction.clampWhenFinished = false;
+      }
+
+      if (isUserOverride) {
+        currentAnimClip.current = animId;
+        userAnimOverrideRef.current = true;
+        // Si l'action était déjà en cours ou terminée, la relancer depuis le début
+        existingAction.reset().play();
+      }
+      invalidate();
       return;
     }
 
