@@ -1,15 +1,8 @@
 /**
- * BuildAnimation4.tsx — Effet Matrix.
- *
- * Même logique que BuildAnimation3 v3 (mobilier aléatoire → murs → sol
- * remonte → plafond en dernier), avec en plus :
- *  • Wireframe vert (#00ff41) pendant la chute, matérialisation à 80 %.
+ * BuildAnimationMatrix.tsx — Effet d'animation de construction Matrix.
+ * Mobilier aléatoire → piliers → murs → sol & herbe (remontent) → plafond en dernier :
+ *  • Wireframe Matrix vert (#00ff41) pendant la chute, matérialisation à 80 %.
  *  • Pluie Matrix : InstancedMesh de colonnes de caractères en shader GPU.
- *
- * Algorithme de collecte (v3) — identique à BuildAnimation3 :
- *   Visite depth-first, cible les groupes avec mesh direct à depth >= 2
- *   ou marqués animUnit. Travaille en coordonnées LOCALES corrigées par
- *   le facteur worldToLocalY pour que 1 unité monde = mouvement correct.
  */
 import { useRef, useLayoutEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -27,7 +20,7 @@ const MATERIALIZE_T    = 0.80;
 const FLASH_DURATION   = 180;
 
 const MAT_GREEN = new THREE.MeshBasicMaterial({
-  color:     0xff0041,
+  color:     0x00ff41,
   wireframe: true,
 });
 const MAT_FLASH = new THREE.MeshBasicMaterial({
@@ -36,8 +29,6 @@ const MAT_FLASH = new THREE.MeshBasicMaterial({
   transparent: true,
   opacity:     1,
 });
-
-// ── Easing ────────────────────────────────────────────────────────────────────
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
@@ -59,7 +50,7 @@ type AnimObj = {
   flashEnd:     number;
 };
 
-// ── Matériaux ─────────────────────────────────────────────────────────────────
+// ── Matériaux & Scène ─────────────────────────────────────────────────────────
 
 function collectMeshes(o: THREE.Object3D, out: MeshSave[]): void {
   if ((o as THREE.Mesh).isMesh) {
@@ -67,18 +58,19 @@ function collectMeshes(o: THREE.Object3D, out: MeshSave[]): void {
   }
   o.children.forEach((c) => collectMeshes(c, out));
 }
+
 function applyMatrix(saves: MeshSave[]): void {
   saves.forEach((s) => { s.mesh.material = MAT_GREEN; });
 }
+
 function applyFlash(saves: MeshSave[]): void {
   MAT_FLASH.opacity = 1;
   saves.forEach((s) => { s.mesh.material = MAT_FLASH; });
 }
+
 function restoreOriginal(saves: MeshSave[]): void {
   saves.forEach((s) => { s.mesh.material = s.orig; });
 }
-
-// ── Utilitaires scène ─────────────────────────────────────────────────────────
 
 function isUtility(o: THREE.Object3D): boolean {
   return !!((o as any).isLight || (o as any).isCamera || (o as any).isHelper);
@@ -89,7 +81,6 @@ function hasMesh(o: THREE.Object3D): boolean {
   return o.children.some(hasMesh);
 }
 
-/** Surface large et plate — on ne lui applique pas le wireframe vert. */
 function isLargeFlat(o: THREE.Object3D): boolean {
   const bb = new THREE.Box3().setFromObject(o);
   const s  = new THREE.Vector3();
@@ -97,64 +88,45 @@ function isLargeFlat(o: THREE.Object3D): boolean {
   return s.x > 150 && s.z > 60 && s.y < 40;
 }
 
-/** Retourne le facteur de conversion monde→local sur l'axe Y pour un objet. */
 function getWorldToLocalYFactor(o: THREE.Object3D): number {
   const ws = new THREE.Vector3(1, 1, 1);
   if (o.parent) o.parent.getWorldScale(ws);
   return ws.y === 0 ? 1 : 1 / ws.y;
 }
 
-// ── Collecte principale ───────────────────────────────────────────────────────
-
-// ── Helpers merge temporaire ─────────────────────────────────────────────────
+// ── Unmerge & Collecte ────────────────────────────────────────────────────────
 
 function unmergeScene(scene: THREE.Scene): () => void {
-  const toHide:    THREE.Mesh[] = [];
+  const toHide: THREE.Mesh[] = [];
   const toRestore: THREE.Mesh[] = [];
 
-  // 1. Cacher les merged statiques
-  scene.traverse(o => {
+  scene.traverse((o) => {
     const m = o as THREE.Mesh;
     if (!m.isMesh) return;
     if (m.userData.isMergedStatic) {
       m.visible = false;
       toHide.push(m);
-    }
-  });
-
-  // 2. Montrer les originaux (uniquement ceux qui ont été effectivement fusionnés)
-  scene.traverse(o => {
-    if (o.userData?.isMergedSource) {
-      o.traverse(m => {
-        if ((m as THREE.Mesh).isMesh && !m.userData.isMergedStatic) {
-          if (m.type !== 'Mesh') return;
-          if ((m as any).isInstancedMesh) return;
-          if (!m.userData.wasMerged) return;
-
-          m.visible = true;
-          toRestore.push(m as THREE.Mesh);
-        }
-      });
+    } else if (m.userData.wasMerged) {
+      m.visible = true;
+      toRestore.push(m);
     }
   });
 
   return () => {
-    toHide.forEach(m    => { m.visible = true;  });
-    toRestore.forEach(m => { m.visible = false; });
+    toHide.forEach((m) => { m.visible = true; });
+    toRestore.forEach((m) => { m.visible = false; });
   };
 }
-
-// ── Collecte principale ───────────────────────────────────────────────────────
 
 function collectScene(scene: THREE.Scene) {
   const floor: THREE.Object3D[] = [];
   const skirting: THREE.Object3D[] = [];
   const pillars: THREE.Object3D[] = [];
-  const wallsBySide = new Map<string, THREE.Object3D[]>();
+  const walls: THREE.Object3D[] = [];
   const mannequins: THREE.Object3D[] = [];
   const rest: THREE.Object3D[] = [];
   const ceiling: THREE.Object3D[] = [];
-  
+
   const picked = new Set<THREE.Object3D>();
 
   function classify(o: THREE.Object3D): void {
@@ -163,7 +135,7 @@ function collectScene(scene: THREE.Scene) {
 
     let brickType = o.userData?.brickType as string | undefined;
     if (!brickType) {
-      o.traverse(c => {
+      o.traverse((c) => {
         if (!brickType && c.userData?.brickType) brickType = c.userData.brickType as string;
       });
     }
@@ -171,28 +143,14 @@ function collectScene(scene: THREE.Scene) {
       brickType = o.parent.userData.brickType as string;
     }
 
-    let isPillar = false;
-    if (o.userData?.type === 'pillar') isPillar = true;
-    else o.traverse(c => { if (c.userData?.type === 'pillar') isPillar = true; });
-
-    let isMannequin = o.userData?.isMannequin;
-    if (!isMannequin) {
-      o.traverse(c => { if (c.userData?.isMannequin) isMannequin = true; });
-    }
-    if (!isMannequin && typeof o.userData?.itemName === 'string' && o.userData.itemName.toLowerCase().includes('mannequin')) {
-      isMannequin = true;
-    }
+    const isPillar = o.userData?.type === 'pillar';
+    const isMannequin = o.userData?.isMannequin || (typeof o.userData?.itemName === 'string' && o.userData.itemName.toLowerCase().includes('mannequin'));
 
     if (isMannequin) mannequins.push(o);
     else if (brickType === 'ceiling') ceiling.push(o);
-    else if (brickType === 'floor') floor.push(o);
+    else if (brickType === 'floor' || brickType === 'ground') floor.push(o);
     else if (brickType === 'wall' && isPillar) pillars.push(o);
-    else if (brickType === 'wall') {
-      const side = o.userData?.side || 'misc';
-      if (!wallsBySide.has(side)) wallsBySide.set(side, []);
-      wallsBySide.get(side)!.push(o);
-    }
-    else if (brickType === 'ground') { /* ignore */ }
+    else if (brickType === 'wall') walls.push(o);
     else if (brickType === 'skirting') skirting.push(o);
     else rest.push(o);
   }
@@ -207,31 +165,30 @@ function collectScene(scene: THREE.Scene) {
     }
 
     if (o.userData?.isMergedSource || o.userData?.isMergedStatic || o.name?.startsWith('merged-')) {
-      o.children.forEach(c => visit(c, depth + 1));
+      o.children.forEach((c) => visit(c, depth + 1));
       return;
     }
 
-    const hasDirectMesh = o.children.some(c => (c as THREE.Mesh).isMesh);
-    const hasAnimUnitChild = o.children.some(c => c.userData?.animUnit);
+    const hasDirectMesh = o.children.some((c) => (c as THREE.Mesh).isMesh);
+    const hasAnimUnitChild = o.children.some((c) => c.userData?.animUnit);
     if (depth >= 2 && hasDirectMesh && !hasAnimUnitChild && !picked.has(o)) {
       classify(o);
       return;
     }
 
-    let pureWrapper = true;
-    if (!hasAnimUnitChild && ((o as THREE.Mesh).isMesh || o.children.some(c => (c as THREE.Mesh).isMesh))) {
-      pureWrapper = false;
-    }
+    const isMesh = (o as THREE.Mesh).isMesh;
+    const hasMeshChild = o.children.some((c) => (c as THREE.Mesh).isMesh);
+    const pureWrapper = !(!hasAnimUnitChild && (isMesh || hasMeshChild));
 
     if (pureWrapper || depth < 2) {
-      o.children.forEach(c => visit(c, depth + 1));
+      o.children.forEach((c) => visit(c, depth + 1));
     } else if (!picked.has(o) && hasMesh(o)) {
       classify(o);
     }
   }
 
-  scene.children.forEach(child => visit(child, 0));
-  return { floor, skirting, pillars, wallsBySide, mannequins, rest, ceiling };
+  scene.children.forEach((child) => visit(child, 0));
+  return { floor, skirting, pillars, walls, mannequins, rest, ceiling };
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -457,6 +414,8 @@ function createRain(scene: THREE.Scene) {
   return { update, dispose };
 }
 
+// ── Composant d'animation ─────────────────────────────────────────────────────
+
 export function BuildAnimationMatrix({
   onFinish,
   onDuration,
@@ -476,16 +435,16 @@ export function BuildAnimationMatrix({
     remerge: () => void;
     rain: ReturnType<typeof createRain>;
     origFog: THREE.Fog | THREE.FogExp2 | null;
-    groundMeshes: THREE.Object3D[];
     finished: boolean;
   } | null>(null);
 
   useLayoutEffect(() => {
+    (window as any).isAnimProRunning = true;
     const s3 = scene as unknown as THREE.Scene;
     const remerge = unmergeScene(s3);
     s3.updateMatrixWorld(true);
 
-    const { floor, skirting, pillars, wallsBySide, mannequins, rest, ceiling } = collectScene(s3);
+    const { floor, skirting, pillars, walls, mannequins, rest, ceiling } = collectScene(s3);
 
     const floorSet = new Set(floor);
     let cursor = 0;
@@ -495,7 +454,7 @@ export function BuildAnimationMatrix({
     const addGrouped = (items: THREE.Object3D[], stagger = false) => {
       if (items.length === 0) return;
       const duration = FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN);
-      items.forEach(obj => {
+      items.forEach((obj) => {
         scheduled.push({ obj, startTime: cursor, duration });
         if (stagger) cursor += STAGGER_MS;
       });
@@ -510,13 +469,12 @@ export function BuildAnimationMatrix({
     addGrouped(furniture, true);
 
     // 3. Pillars (un par un)
-    pillars.forEach(p => addGrouped([p]));
+    pillars.forEach((p) => addGrouped([p]));
 
-    // 4. Murs par face
-    const wallGroups = shuffle(Array.from(wallsBySide.values()));
-    wallGroups.forEach(group => addGrouped(group));
+    // 4. Murs (stagger)
+    addGrouped(shuffle(walls), true);
 
-    // 5. Floor (vient d'en bas, stagger)
+    // 5. Floor + Ground (sol intérieur & terrain extérieur remontent d'en bas, stagger)
     addGrouped(floor, true);
     
     // 6. Ceiling (vient d'en haut, stagger)
@@ -550,20 +508,13 @@ export function BuildAnimationMatrix({
 
     onDuration?.(totalEnd);
 
-    // Positionner immédiatement tout en haut (ou en bas pour le sol)
+    // Positionner immédiatement tout en haut (ou en bas pour le sol et l'herbe)
     objects.forEach((a) => {
       const localDelta = DROP_HEIGHT * a.worldToLocalY;
       a.obj.position.y = a.fromBelow
         ? a.origLocalY - localDelta
         : a.origLocalY + localDelta;
     });
-
-    // Masquer le sol extérieur
-    const groundMeshes: THREE.Object3D[] = [];
-    s3.traverse((o) => {
-      if (o.userData?.brickType === 'ground') groundMeshes.push(o);
-    });
-    groundMeshes.forEach((o) => { o.visible = false; });
 
     const origFog = s3.fog;
     s3.fog = null;
@@ -579,12 +530,12 @@ export function BuildAnimationMatrix({
       remerge,
       rain,
       origFog,
-      groundMeshes,
       finished: false,
     };
     invalidate();
 
     return () => {
+      (window as any).isAnimProRunning = false;
       if (stateRef.current) {
         stateRef.current.objects.forEach((a) => {
           a.obj.position.y = a.origLocalY;
@@ -593,7 +544,6 @@ export function BuildAnimationMatrix({
         stateRef.current.rain.dispose();
         stateRef.current.remerge();
         s3.fog = stateRef.current.origFog;
-        stateRef.current.groundMeshes.forEach((o) => { o.visible = true; });
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -659,6 +609,7 @@ export function BuildAnimationMatrix({
 
     if (elapsed >= st.totalEnd) {
       st.finished = true;
+      (window as any).isAnimProRunning = false;
       st.objects.forEach((a) => {
         a.obj.position.y = a.origLocalY;
         restoreOriginal(a.meshSaves);
@@ -668,7 +619,6 @@ export function BuildAnimationMatrix({
 
       const s3 = scene as unknown as THREE.Scene;
       s3.fog = st.origFog;
-      st.groundMeshes.forEach((o) => { o.visible = true; });
 
       invalidate();
       const durSec = ((performance.now() - (st.startTime ?? now)) / 1000).toFixed(1);
