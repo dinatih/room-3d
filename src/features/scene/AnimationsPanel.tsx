@@ -10,7 +10,6 @@ import { useIsMobile } from '@shared/hooks/useIsMobile';
 import type { PlaneModelKey } from './PaperPlane';
 
 export interface AnimationsPanelProps {
-  buildAnim:        boolean; onStartBuildAnim:  () => void;
   buildAnimMatrix:  boolean; onStartBuildAnimMatrix: () => void;
   onStop:           () => void;
   durations:        Record<string, number>; // ms par animation
@@ -28,7 +27,6 @@ const ANIMS: Array<{
   label:  string;
   color:  string;
 }> = [
-  { key: 'buildAnim',       start: 'onStartBuildAnim',       label: 'Tombée du ciel', color: '#ff9800' },
   { key: 'buildAnimMatrix', start: 'onStartBuildAnimMatrix', label: 'Matrix',         color: '#00c853' },
 ];
 

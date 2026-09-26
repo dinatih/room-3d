@@ -2,9 +2,7 @@ import { CharacterAnimSelector } from '@features/scene/CharacterAnimSelector';
 
 export interface AnimationsSectionProps {
   isMobile: boolean;
-  buildAnim?: boolean;
   buildAnimMatrix?: boolean;
-  onStartBuildAnim?: () => void;
   onStartBuildAnimMatrix?: () => void;
   onStopBuildAnim?: () => void;
   animDurations?: Record<string, number>;
@@ -14,16 +12,14 @@ export interface AnimationsSectionProps {
 
 export function AnimationsSection({
   isMobile,
-  buildAnim = false,
   buildAnimMatrix = false,
-  onStartBuildAnim,
   onStartBuildAnimMatrix,
   onStopBuildAnim,
   animDurations = {},
   activeAnimValue,
   onSelectAnim,
 }: AnimationsSectionProps) {
-  const isBuildAnimRunning = buildAnim || buildAnimMatrix;
+  const isBuildAnimRunning = buildAnimMatrix;
 
   return (
     <div className="d-flex flex-column bg-transparent">
@@ -34,15 +30,6 @@ export function AnimationsSection({
         </div>
         <div className="d-flex flex-column gap-1.5">
           <div className="d-flex gap-1">
-            <button
-              disabled={isBuildAnimRunning && !buildAnim}
-              onClick={onStartBuildAnim}
-              className={`btn btn-sm flex-grow-1 text-start rounded-2 py-1 px-2 fw-bold d-flex justify-content-between align-items-center ${buildAnim ? 'btn-danger text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ fontSize: isMobile ? '12px' : '10px', background: buildAnim ? undefined : 'rgba(255, 255, 255, 0.7)' }}
-            >
-              <span>▶ Tombée du ciel</span>
-              <span className="small opacity-75">{animDurations['buildAnim'] ? `~${Math.round(animDurations['buildAnim'] / 1000)}s` : '~30s'}</span>
-            </button>
             <button
               disabled={isBuildAnimRunning && !buildAnimMatrix}
               onClick={onStartBuildAnimMatrix}

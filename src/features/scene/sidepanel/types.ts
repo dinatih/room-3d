@@ -173,8 +173,6 @@ export interface SidePanelProps {
   onCycleLidar:            () => void;
   lidarOpacity:            number;
   onToggleLidarOpacity:    () => void;
-  buildAnim?:              boolean;
-  onStartBuildAnim?:       () => void;
   buildAnimMatrix?:        boolean;
   onStartBuildAnimMatrix?: () => void;
   onStopBuildAnim?:        () => void;

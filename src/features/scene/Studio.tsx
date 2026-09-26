@@ -38,7 +38,7 @@ import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { SunLight, SunSphere } from '@features/scene/SunLight';
 import { SkySphere } from './SkySphere';
-import { BuildAnimation, BuildAnimationMatrix } from '@features/scene/BuildAnimations';
+import { BuildAnimationMatrix } from '@features/scene/BuildAnimations';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
@@ -395,31 +395,24 @@ export function Studio() {
   }, [onToggleLayer]);
 
 
-  const [buildAnim,        setBuildAnim]        = useState(false);
-  const [buildAnimStarted, setBuildAnimStarted] = useState(false);
   const [buildAnimMatrix,  setBuildAnimMatrix]  = useState(false);
   const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
   const [animDurations,    setAnimDurations]    = useState<Record<string, number>>({});
 
   const handleAssetsLoaded = useCallback(() => {
-    setBuildAnim(true);
+    setSceneWarmReady(true);
   }, []);
 
   const stopAll = () => {
-    setBuildAnim(false); setBuildAnimStarted(false); setBuildAnimMatrix(false);
+    setBuildAnimMatrix(false);
   };
 
-  const start = (set: React.Dispatch<React.SetStateAction<boolean>>) => () => {
-    stopAll();
+  const startMatrix = () => {
+    setBuildAnimMatrix(false);
     setTimeout(() => {
-      set(true);
-      setBuildAnimStarted(true);
+      setBuildAnimMatrix(true);
     }, 50);
   };
-
-  const handleDuration = useCallback((ms: number) => {
-    setAnimDurations(d => d.buildAnim === ms ? d : ({ ...d, buildAnim: ms }));
-  }, []);
 
   const setDuration = (key: string) => (ms: number) =>
     setAnimDurations(d => ({ ...d, [key]: ms }));
@@ -443,16 +436,10 @@ export function Studio() {
   }, []);
 
   const handleLaunch = useCallback(() => {
-    setBuildAnimStarted(true);
     revealScene();
   }, [revealScene]);
 
-  const handleFinish = useCallback(() => {
-    setBuildAnim(false);
-    setBuildAnimStarted(false);
-  }, []);
-
-  const isAnimActive = buildAnim || buildAnimMatrix;
+  const isAnimActive = buildAnimMatrix;
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
@@ -571,7 +558,6 @@ export function Studio() {
         {/* Contenu 3D — masqué en mode Plan */}
         <Suspense fallback={null}>
         {/* Animations — exécutées une fois les éléments Suspense 3D résolus */}
-        {buildAnim       && <BuildAnimation       started={buildAnimStarted} onReady={handleReady} onFinish={handleFinish} onDuration={handleDuration} />}
         {buildAnimMatrix && <BuildAnimationMatrix onReady={handleReady} onFinish={() => setBuildAnimMatrix(false)} onDuration={setDuration('buildAnimMatrix')} />}
         <CameraController planeMode={planeMode} />
         <group visible={!layers.plan}>
@@ -664,10 +650,8 @@ export function Studio() {
             onOpenInventory={() => setShowInventory(true)}
             lidarMode={lidarMode} onCycleLidar={onCycleLidar}
             lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
-            buildAnim={buildAnim}
-            onStartBuildAnim={start(setBuildAnim)}
             buildAnimMatrix={buildAnimMatrix}
-            onStartBuildAnimMatrix={start(setBuildAnimMatrix)}
+            onStartBuildAnimMatrix={startMatrix}
             onStopBuildAnim={stopAll}
             animDurations={animDurations}
             planeModel={planeModel}

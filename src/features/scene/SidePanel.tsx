@@ -58,8 +58,6 @@ export function SidePanel({
   onCycleLidar, 
   lidarOpacity, 
   onToggleLidarOpacity,
-  buildAnim = false,
-  onStartBuildAnim,
   buildAnimMatrix = false,
   onStartBuildAnimMatrix,
   onStopBuildAnim,
@@ -427,9 +425,7 @@ export function SidePanel({
   const animationsSectionContent = (
     <AnimationsSection
       isMobile={isMobile}
-      buildAnim={buildAnim}
       buildAnimMatrix={buildAnimMatrix}
-      onStartBuildAnim={onStartBuildAnim}
       onStartBuildAnimMatrix={onStartBuildAnimMatrix}
       onStopBuildAnim={onStopBuildAnim}
       animDurations={animDurations}
