@@ -202,7 +202,7 @@ function LoadingProgress({
     if (!active && progress >= 100 && !doneRef.current) {
       doneRef.current = true;
       onAssetsLoaded();
-      if (itemEl) itemEl.textContent = sceneReady ? '✅ Scène 3D prête !' : '⚡ Optimisation GPU & compilation des shaders…';
+      if (itemEl) itemEl.textContent = sceneReady ? 'Scène 3D prête !' : '⚡ Optimisation GPU & compilation des shaders…';
 
       if (countdownContainer) countdownContainer.style.display = 'flex';
       let remainingSeconds = 5;
@@ -239,7 +239,7 @@ function LoadingProgress({
       }, 1000);
     } else if (doneRef.current) {
       if (sceneReady && itemEl && itemEl.textContent?.includes('⚡')) {
-        itemEl.textContent = '✅ Scène 3D prête !';
+        itemEl.textContent = 'Scène 3D prête !';
       }
       if (isLaunchingRef.current && sceneReady) {
         isLaunchingRef.current = false;

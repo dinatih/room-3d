@@ -391,6 +391,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Cuisiner Plaques',
         rotY: 0,
         animation: 'bartending',
+        offset: [80, 0, 380],
         // interactions/anim_cards.glb, interactions/anim_drinking_fountain.glb,
       }
     ]
@@ -723,14 +724,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'hugs-point',
     name: '💖 Point Câlins',
     category: 'decor',
-    position: [160, 0, 200],
+    position: [180, 0, 200],
     slots: [
       {
         slotId: 'hugs-trio',
         name: 'Enchaîner 3 Câlins & Baisers',
         isDuo: true,
         rotY: 0,
-        duoPool: ['slow_dance', 'eye_to_eye', 'kiss_man_woman', 'kiss'],
+        duoPool: ['pop_dance', 'eye_to_eye', 'kiss_man_woman', 'kiss'],
         duoCount: 3,
       }
     ]
@@ -778,7 +779,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'dance-bed-west-north',
     name: 'Danse (Lit Ouest Nord)',
     category: 'dance',
-    position: [140, 0, 80],
+    position: [150, 0, 80],
     slots: [
       {
         slotId: 'dance',
@@ -792,7 +793,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'dance-bed-west-mid',
     name: 'Danse (Lit Ouest Milieu)',
     category: 'dance',
-    position: [140, 0, 150],
+    position: [150, 0, 150],
     slots: [
       {
         slotId: 'dance',
@@ -802,20 +803,20 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       }
     ]
   },
-  'dance-bed-west-south': {
-    id: 'dance-bed-west-south',
-    name: 'Danse (Lit Ouest Sud)',
-    category: 'dance',
-    position: [140, 0, 220],
-    slots: [
-      {
-        slotId: 'dance',
-        name: 'Danse devant Lit Ouest (Sud)',
-        rotY: Math.PI / 2,
-        animationsRandom: 'dance-tight',
-      }
-    ]
-  },
+  // 'dance-bed-west-south': {
+  //   id: 'dance-bed-west-south',
+  //   name: 'Danse (Lit Ouest Sud)',
+  //   category: 'dance',
+  //   position: [140, 0, 220],
+  //   slots: [
+  //     {
+  //       slotId: 'dance',
+  //       name: 'Danse devant Lit Ouest (Sud)',
+  //       rotY: Math.PI / 2,
+  //       animationsRandom: 'dance-tight',
+  //     }
+  //   ]
+  // },
   'dance-bed-east-north': {
     id: 'dance-bed-east-north',
     name: 'Danse (Lit Est Nord)',
@@ -830,36 +831,36 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       }
     ]
   },
-  'dance-bed-east-mid': {
-    id: 'dance-bed-east-mid',
-    name: 'Danse (Lit Est Milieu)',
-    category: 'dance',
-    position: [195, 0, 190],
-    slots: [
-      {
-        slotId: 'dance',
-        name: 'Danse devant Lit Est (Milieu)',
-        rotY: -Math.PI / 2,
-        animationsRandom: 'dance-tight',
-      }
-    ]
-  },
-  'dance-bed-east-south': {
-    id: 'dance-bed-east-south',
-    name: 'Danse (Lit Est Sud)',
-    category: 'dance',
-    position: [195, 0, 260],
-    slots: [
-      {
-        slotId: 'dance',
-        name: 'Danse devant Lit Est (Sud)',
-        rotY: -Math.PI / 2,
-        animationsRandom: 'dance-tight',
-        repeatCount: 4,
-        repeatVariation: false,
-      }
-    ]
-  },
+  // 'dance-bed-east-mid': {
+  //   id: 'dance-bed-east-mid',
+  //   name: 'Danse (Lit Est Milieu)',
+  //   category: 'dance',
+  //   position: [195, 0, 190],
+  //   slots: [
+  //     {
+  //       slotId: 'dance',
+  //       name: 'Danse devant Lit Est (Milieu)',
+  //       rotY: -Math.PI / 2,
+  //       animationsRandom: 'dance-tight',
+  //     }
+  //   ]
+  // },
+  // 'dance-bed-east-south': {
+  //   id: 'dance-bed-east-south',
+  //   name: 'Danse (Lit Est Sud)',
+  //   category: 'dance',
+  //   position: [195, 0, 260],
+  //   slots: [
+  //     {
+  //       slotId: 'dance',
+  //       name: 'Danse devant Lit Est (Sud)',
+  //       rotY: -Math.PI / 2,
+  //       animationsRandom: 'dance-tight',
+  //       repeatCount: 4,
+  //       repeatVariation: false,
+  //     }
+  //   ]
+  // },
   // 'dance-chair-office': {
   //   id: 'dance-chair-office',
   //   name: 'Danse (Devant Chaise Bureau)',

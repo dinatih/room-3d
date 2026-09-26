@@ -19,8 +19,8 @@ const FALL_MS_MAX      = 950;
 const MATERIALIZE_T    = 0.80;
 const FLASH_DURATION   = 180;
 
-const MAT_GREEN = new THREE.MeshBasicMaterial({
-  color:     0x00ff41,
+const MAT_RED = new THREE.MeshBasicMaterial({
+  color:     0xff0041,
   wireframe: true,
 });
 const MAT_FLASH = new THREE.MeshBasicMaterial({
@@ -60,7 +60,7 @@ function collectMeshes(o: THREE.Object3D, out: MeshSave[]): void {
 }
 
 function applyMatrix(saves: MeshSave[]): void {
-  saves.forEach((s) => { s.mesh.material = MAT_GREEN; });
+  saves.forEach((s) => { s.mesh.material = MAT_RED; });
 }
 
 function applyFlash(saves: MeshSave[]): void {
@@ -476,7 +476,7 @@ export function BuildAnimationMatrix({
 
     // 5. Floor + Ground (sol intérieur & terrain extérieur remontent d'en bas, stagger)
     addGrouped(floor, true);
-    
+
     // 6. Ceiling (vient d'en haut, stagger)
     addGrouped(ceiling, true);
 
