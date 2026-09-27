@@ -30,7 +30,7 @@ export function LaraGridToolbar() {
   const isMobile = useIsMobile();
   const laraGridActive = useSceneStore(state => state.layers.laraGrid);
   const cameraMode = useSceneStore(state => state.cameraMode);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [activeView, setActiveView] = useState<ActiveView>('front');
 
   // Synchronisation avec les événements caméra

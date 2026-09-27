@@ -481,11 +481,14 @@ export function AnimFrameController({
                 maxWidth: 'min(450px, 45vw)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
+                userSelect: 'text',
+                WebkitUserSelect: 'text',
+                cursor: 'text',
               }}
               title={`Animation active : ${displayName}`}
             >
-              <span style={{ fontSize: 11 }}>🎬</span>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</span>
+              <span style={{ fontSize: 11, userSelect: 'none' }}>🎬</span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', userSelect: 'text', WebkitUserSelect: 'text' }}>{displayName}</span>
             </span>
             {onCycleAnim && (
               <button
@@ -577,13 +580,16 @@ export function AnimFrameController({
             flexDirection: 'column',
             gap: 5,
             fontSize: 10,
+            userSelect: 'text',
+            WebkitUserSelect: 'text',
+            cursor: 'text',
           }}
         >
           {/* Ligne A : Identifiant, Catégorie, Fichier GLB, Offsets et Durée */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 12px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 12px', userSelect: 'text' }}>
             {/* ID Canonique */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>ID :</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }}>
+              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>ID :</span>
               <code
                 style={{
                   color: '#38bdf8',
@@ -592,6 +598,9 @@ export function AnimFrameController({
                   borderRadius: 3,
                   fontSize: 10,
                   border: '1px solid rgba(56, 189, 248, 0.25)',
+                  userSelect: 'text',
+                  WebkitUserSelect: 'text',
+                  cursor: 'text',
                 }}
               >
                 {def?.id || (isTPose ? 't-pose' : displayName)}
@@ -600,8 +609,8 @@ export function AnimFrameController({
 
             {/* Catégorie sémantique */}
             {catObj && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Catégorie :</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }}>
+                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>Catégorie :</span>
                 <span
                   style={{
                     color: '#f8fafc',
@@ -610,17 +619,21 @@ export function AnimFrameController({
                     borderRadius: 3,
                     fontSize: 10,
                     border: '1px solid rgba(255, 255, 255, 0.15)',
+                    userSelect: 'text',
+                    WebkitUserSelect: 'text',
+                    cursor: 'text',
                   }}
                 >
-                  {catObj.icon} {catObj.label}
+                  <span style={{ userSelect: 'none' }}>{catObj.icon} </span>
+                  {catObj.label}
                 </span>
               </div>
             )}
 
             {/* Fichier GLB */}
             {def?.path && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} title={def.path}>
-                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Fichier :</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }} title={def.path}>
+                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>Fichier :</span>
                 <code
                   style={{
                     color: '#cbd5e1',
@@ -633,6 +646,9 @@ export function AnimFrameController({
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     display: 'inline-block',
+                    userSelect: 'text',
+                    WebkitUserSelect: 'text',
+                    cursor: 'text',
                   }}
                 >
                   📁 {def.path.split('/').pop()}
@@ -643,10 +659,10 @@ export function AnimFrameController({
             {/* Décalage Position si présent */}
             {def?.defaultOffset && (
               <div
-                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }}
                 title="Décalage natif de position [X, Y, Z] en centimètres"
               >
-                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Offset Pos :</span>
+                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>Offset Pos :</span>
                 <span
                   style={{
                     color: '#fbbf24',
@@ -656,9 +672,12 @@ export function AnimFrameController({
                     padding: '1px 5px',
                     borderRadius: 3,
                     border: '1px solid rgba(251, 191, 36, 0.25)',
+                    userSelect: 'text',
+                    WebkitUserSelect: 'text',
+                    cursor: 'text',
                   }}
                 >
-                  📐 [{def.defaultOffset.map(v => `${v}cm`).join(', ')}]
+                  [{def.defaultOffset.map(v => `${v}cm`).join(', ')}]
                 </span>
               </div>
             )}
@@ -666,10 +685,10 @@ export function AnimFrameController({
             {/* Décalage Rotation Y si présent */}
             {def?.defaultRotYOffset !== undefined && (
               <div
-                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }}
                 title="Décalage natif de rotation autour de l'axe vertical Y"
               >
-                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Offset Rot Y :</span>
+                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>Offset Rot Y :</span>
                 <span
                   style={{
                     color: '#fbbf24',
@@ -679,26 +698,29 @@ export function AnimFrameController({
                     padding: '1px 5px',
                     borderRadius: 3,
                     border: '1px solid rgba(251, 191, 36, 0.25)',
+                    userSelect: 'text',
+                    WebkitUserSelect: 'text',
+                    cursor: 'text',
                   }}
                 >
-                  🔄 {(def.defaultRotYOffset * (180 / Math.PI)).toFixed(1)}°
+                  {(def.defaultRotYOffset * (180 / Math.PI)).toFixed(1)}°
                 </span>
               </div>
             )}
 
             {/* Durée définie */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Durée :</span>
-              <span style={{ color: '#a7f3d0', fontFamily: 'monospace', fontSize: 10 }}>
-                ⏱️ {(def?.duration ?? duration).toFixed(2)}s ({totalFrames} frames @ {fps}fps)
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }}>
+              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>Durée :</span>
+              <span style={{ color: '#a7f3d0', fontFamily: 'monospace', fontSize: 10, userSelect: 'text', WebkitUserSelect: 'text', cursor: 'text' }}>
+                {(def?.duration ?? duration).toFixed(2)}s ({totalFrames} frames @ {fps}fps)
               </span>
             </div>
           </div>
 
           {/* Ligne B : Tous les Alias de la définition */}
           {def?.aliases && def.aliases.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4, marginTop: 1 }}>
-              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', marginRight: 2 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4, marginTop: 1, userSelect: 'text' }}>
+              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', marginRight: 2, userSelect: 'none' }}>
                 🏷️ Aliases ({def.aliases.length}) :
               </span>
               {def.aliases.map(alias => (
@@ -712,6 +734,9 @@ export function AnimFrameController({
                     fontSize: 9,
                     color: '#e2e8f0',
                     fontFamily: 'monospace',
+                    userSelect: 'text',
+                    WebkitUserSelect: 'text',
+                    cursor: 'text',
                   }}
                 >
                   {alias}
@@ -722,8 +747,8 @@ export function AnimFrameController({
 
           {/* Ligne C : Tous les Tags sémantiques de la définition */}
           {def?.tags && def.tags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4, marginTop: 1 }}>
-              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', marginRight: 2 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4, marginTop: 1, userSelect: 'text' }}>
+              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', marginRight: 2, userSelect: 'none' }}>
                 🔖 Tags ({def.tags.length}) :
               </span>
               {def.tags.map(tag => (
@@ -736,6 +761,9 @@ export function AnimFrameController({
                     padding: '1px 5px',
                     fontSize: 9,
                     color: '#7dd3fc',
+                    userSelect: 'text',
+                    WebkitUserSelect: 'text',
+                    cursor: 'text',
                   }}
                 >
                   #{tag}
