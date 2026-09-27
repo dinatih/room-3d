@@ -57,6 +57,7 @@ import { useAnimPreviewStore }   from '@features/inventory/useAnimPreviewStore';
 import { WALKER_ANIM_OPTIONS }   from '@features/scene/animOptions';
 import { resolveAnimationId }    from './animations/animationResolver';
 import { useIsMobile }           from '@shared/hooks/useIsMobile';
+import { duoSessionManager }     from './ai/duoSessionManager';
 
 // The inventory pulls in a second R3F canvas, its GLTF loaders and a large
 // catalogue. Do not parse it until the user explicitly opens the inventory.
@@ -324,8 +325,10 @@ export function Studio() {
 
   useEffect(() => {
     if (laraGridActive) {
+      setLaraGridAnim('idle');
+      useAnimPreviewStore.getState().reset();
+      duoSessionManager.leaveAllSessions();
       frameLaraGridCamera();
-      useAnimPreviewStore.getState().play();
     }
   }, [laraGridActive, laraCount, extraCharacters, activeExtraIds]);
 
@@ -624,7 +627,7 @@ export function Studio() {
           <Floor />
           {/* LAYER_WALKER (18) — Personnages 3D */}
           <CategoryLayerGroup layer={LAYER_WALKER}>
-            <Walker />
+            <Walker walkerAnim={laraGridActive ? laraGridAnim : undefined} />
           </CategoryLayerGroup>
           <GlobalSkeletonHelpers show={layers.skeleton} />
           {/*

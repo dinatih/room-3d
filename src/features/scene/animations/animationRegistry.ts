@@ -1141,6 +1141,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `[MILEY] Eye To Eye Hug Kiss F (1124f / 18.7s, 1696KB)`,
     tags: ['emotes', 'gesture'],
     duration: 18.7,
+    defaultRotYOffset: Math.PI / 2,
   },
   {
     id: 'miley-armature-eye-to-eye-hug-kiss-m',
@@ -1148,6 +1149,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `[MILEY] Eye To Eye Hug Kiss M (1124f / 18.7s, 1828KB)`,
     tags: ['emotes', 'gesture'],
     duration: 18.7,
+    defaultRotYOffset: Math.PI / 2,
   },
   {
     id: 'miley-armature-f2-attack-straight-punch02',

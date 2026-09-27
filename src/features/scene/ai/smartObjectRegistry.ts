@@ -89,19 +89,19 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'seat-north',
         name: 'S\'asseoir (Nord)',
-        offset: [245, 0, 120],
+        offset: [255, 0, 120],
         animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
-        offset: [245, 0, 190],
+        offset: [255, 0, 190],
         animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-south',
         name: 'S\'asseoir (Sud)',
-        offset: [245, 0, 260],
+        offset: [255, 0, 260],
         animationsRandom: 'seated-front',
       },
       {
@@ -143,7 +143,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, 0],
         rotY: 0,
-        animationsRandom: 'seated-front',
+        animationsRandom: 'typing',
       }
     ]
   },

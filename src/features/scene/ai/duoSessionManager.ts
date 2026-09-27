@@ -320,6 +320,17 @@ class DuoSessionManager {
     this.emitChange();
   }
 
+  /** Termine et nettoie toutes les sessions duo en cours (utilisé lors du passage en Grille Lara). */
+  public leaveAllSessions(): void {
+    const chars = Array.from(this.charToSession.keys());
+    for (const c of chars) {
+      this.leaveDuoZone(c);
+    }
+    this.sessions.clear();
+    this.charToSession.clear();
+    this.emitChange();
+  }
+
   /** Trouve le PNJ autonome le plus proche du spot actif et lui envoie une invitation. */
   public inviteNearestNpc(callerId: string): string | null {
     const session = this.getSessionFor(callerId);

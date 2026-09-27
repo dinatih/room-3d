@@ -472,9 +472,35 @@ export function SingleCharacter({
     return () => clearTimeout(timeout);
   }, [id]);
 
-  // Synchronisation walkerAnim en mode preview
+  // Réinitialisation complète lors du basculement en mode Grille Lara
   useEffect(() => {
-    if (!isPreview) return;
+    if (laraGrid) {
+      currentAnimClip.current = null;
+      userAnimOverrideRef.current = false;
+      duoSessionManager.leaveDuoZone(id);
+      if (groupRef.current) groupRef.current.rotation.set(0, 0, 0);
+      scene.position.copy(baseScenePosRef.current);
+      scene.rotation.set(0, 0, 0);
+      scene.traverse((c: any) => {
+        if (c.isSkinnedMesh && c.skeleton) c.skeleton.pose();
+        if (c.isBone) {
+          if (c.userData.restPos) c.position.copy(c.userData.restPos);
+          if (c.userData.restQuat) c.quaternion.copy(c.userData.restQuat);
+        }
+      });
+      scene.updateMatrixWorld(true);
+      if (mixerRef.current) mixerRef.current.stopAllAction();
+      activeActionName.current = '';
+      setEquipment({ holster: false, pistols: false, backpack: false });
+    } else {
+      setEquipment({ holster: true, pistols: true, backpack: true });
+    }
+    invalidate();
+  }, [laraGrid, scene, id, invalidate]);
+
+  // Synchronisation walkerAnim en mode preview ou grille Lara
+  useEffect(() => {
+    if (!isPreview && !laraGrid) return;
     if (!walkerAnim || walkerAnim === 'idle') {
       currentAnimClip.current = null;
       userAnimOverrideRef.current = false;
@@ -482,7 +508,7 @@ export function SingleCharacter({
       return;
     }
     loadAndPlayClip(walkerAnim);
-  }, [walkerAnim, isPreview, loadAndPlayClip, invalidate]);
+  }, [walkerAnim, isPreview, laraGrid, loadAndPlayClip, invalidate]);
 
   // Écouteurs de commandes utilisateur & UI (couleur, coupe, équipements, positions)
   useEffect(() => {
@@ -745,12 +771,12 @@ export function SingleCharacter({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
-    const isMoving = !isPreview && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
-    const rawTarget = isPreview
+    const isMoving = !isPreview && !laraGrid && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
+    const rawTarget = (isPreview || laraGrid)
       ? (walkerAnim || 'idle')
       : (currentAnimClip.current || (isMoving ? 'walk' : 'idle'));
 
-    if (isActive && !isGuidedTour && !hasDynamicTask && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
+    if (isActive && !laraGrid && !isGuidedTour && !hasDynamicTask && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
       currentAnimClip.current = null;
     }
 
@@ -758,14 +784,14 @@ export function SingleCharacter({
 
     const targetDef = getAnimationDef(target);
     const defaultOffset = targetDef?.defaultOffset;
-    if (defaultOffset) {
+    if (!laraGrid && defaultOffset) {
       scene.position.x = baseScenePosRef.current.x + defaultOffset[0];
       scene.position.y = baseScenePosRef.current.y + defaultOffset[1];
       scene.position.z = baseScenePosRef.current.z + defaultOffset[2];
     } else {
       scene.position.copy(baseScenePosRef.current);
     }
-    if (targetDef?.defaultRotYOffset !== undefined) {
+    if (!laraGrid && targetDef?.defaultRotYOffset !== undefined) {
       scene.rotation.y = targetDef.defaultRotYOffset;
     } else {
       scene.rotation.y = 0;
@@ -808,13 +834,34 @@ export function SingleCharacter({
       const to = actions[target];
       if (to && activeActionName.current !== target) {
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
-        if (from) from.fadeOut(0.2);
+        if (from) {
+          if (laraGrid) from.stop();
+          else from.fadeOut(0.2);
+        }
 
         to.setLoop(THREE.LoopRepeat, Infinity);
         to.clampWhenFinished = false;
 
-        to.reset().fadeIn(0.2).play();
-        to.setEffectiveWeight(1);
+        if (laraGrid) {
+          scene.traverse((c: any) => {
+            if (c.isSkinnedMesh && c.skeleton) c.skeleton.pose();
+            if (c.isBone) {
+              if (c.userData.restPos) c.position.copy(c.userData.restPos);
+              if (c.userData.restQuat) c.quaternion.copy(c.userData.restQuat);
+            }
+          });
+          scene.updateMatrixWorld(true);
+          to.reset().play();
+          to.setEffectiveWeight(1);
+          const store = useAnimPreviewStore.getState();
+          const clip = to.getClip();
+          if (clip && clip.duration > 0) {
+            to.time = store.currentTime % clip.duration;
+          }
+        } else {
+          to.reset().fadeIn(0.2).play();
+          to.setEffectiveWeight(1);
+        }
         activeActionName.current = target;
 
         const isControlledByStore = isPreview || laraGrid;
@@ -826,7 +873,6 @@ export function SingleCharacter({
 
         if (isActive && !isPreview && !laraGrid && !isTemporaryLoadingFallback && lastLoggedAnimRef.current !== target) {
           lastLoggedAnimRef.current = target;
-          // Si c'est une animation de marche (déjà mentionnée dans "Marche vers [anim]"), on évite le doublon de log
           const isWalkAnim = target === 'walk' || target.includes('/locomotion/') || target.includes('walk') || target.includes('run');
           if (!isWalkAnim) {
             const cleanName = target.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || target;
@@ -836,6 +882,14 @@ export function SingleCharacter({
         }
       }
     }
+
+    const isVisibleInFrustum = !state.camera || (() => {
+      updateCharFrustum(state.camera, state.clock.elapsedTime);
+      _charBoundingSphere.center.copy(groupRef.current.position);
+      _charBoundingSphere.center.y += 90;
+      _charBoundingSphere.radius = 120;
+      return _charFrustum.intersectsSphere(_charBoundingSphere);
+    })();
 
     const isControlledByStore = isPreview || laraGrid;
 
@@ -853,17 +907,14 @@ export function SingleCharacter({
           const actB = actions[activeActionName.current];
           const clipB = actB.getClip();
           if (clipB && clipB.duration > 0) {
+            actB.setEffectiveWeight(1);
+            actB.time = store.currentTime % clipB.duration;
             if (store.isPlaying && !store.isScrubbing) {
-              actB.time = store.currentTime % clipB.duration;
               actB.paused = false;
               mixer.update(animDelta);
             } else {
-              actB.setEffectiveWeight(1);
-              (actB as any)._fadeDuration = 0;
-              (actB as any)._weight = 1;
-              actB.time = store.currentTime % clipB.duration;
               actB.paused = true;
-              mixer.update(0);
+              mixer.setTime(store.currentTime % clipB.duration);
             }
           }
         }
@@ -886,16 +937,14 @@ export function SingleCharacter({
             if (!store.isLooping) {
               act.setLoop(THREE.LoopOnce, 0);
               act.clampWhenFinished = true;
-              if (act.time >= clip.duration - 0.005) {
-                act.time = 0;
-              }
             } else {
               act.setLoop(THREE.LoopRepeat, Infinity);
               act.clampWhenFinished = false;
             }
 
+            mixer.update(animDelta);
+
             if (isMaster) {
-              mixer.update(animDelta);
               if (!store.isLooping && act.time >= clip.duration) {
                 act.time = clip.duration;
                 act.paused = true;
@@ -905,30 +954,23 @@ export function SingleCharacter({
                 store.setCurrentTime(act.time % clip.duration);
               }
             } else {
-              // Dans LaraGrid, les clones synchronisent leur temps sur le master
-              act.time = store.currentTime;
-              act.paused = false;
-              mixer.update(0);
+              // Dans LaraGrid, synchronisation périodique avec le master
+              const targetTime = store.currentTime % clip.duration;
+              if (Math.abs(act.time - targetTime) > 0.05) {
+                act.time = targetTime;
+                mixer.setTime(targetTime);
+              }
             }
           } else {
             act.setEffectiveWeight(1);
             (act as any)._fadeDuration = 0;
             (act as any)._weight = 1;
-            act.time = store.currentTime;
+            act.time = store.currentTime % clip.duration;
             act.paused = true;
-            mixer.update(0);
+            mixer.setTime(store.currentTime % clip.duration);
           }
         }
       }
-
-      const isVisibleInFrustum = (() => {
-        if (!state.camera) return true;
-        updateCharFrustum(state.camera, state.clock.elapsedTime);
-        _charBoundingSphere.center.copy(groupRef.current.position);
-        _charBoundingSphere.center.y += 90; // Centre approximatif du buste/tête
-        _charBoundingSphere.radius = 120;
-        return _charFrustum.intersectsSphere(_charBoundingSphere);
-      })();
 
       if (isVisibleInFrustum) {
         updatePhysics(store.isPlaying && !isTPose ? delta * store.speed : 0, {
@@ -977,17 +1019,6 @@ export function SingleCharacter({
       if (isFalling !== falling) {
         setIsFalling(falling);
       }
-
-      // Simulation Verlet (cheveux, perruques, poitrine)
-      // Optimisation Frustum Culling : on n'exécute la physique que si le personnage est visible par la caméra
-      const isVisibleInFrustum = (() => {
-        if (!state.camera) return true;
-        updateCharFrustum(state.camera, state.clock.elapsedTime);
-        _charBoundingSphere.center.copy(groupRef.current.position);
-        _charBoundingSphere.center.y += 90; // Centre approximatif du buste/tête
-        _charBoundingSphere.radius = 120;
-        return _charFrustum.intersectsSphere(_charBoundingSphere);
-      })();
 
       if (isVisibleInFrustum) {
         updatePhysics(delta, {

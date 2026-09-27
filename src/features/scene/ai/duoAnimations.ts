@@ -21,7 +21,7 @@ const RAW_DUO_ANIMATIONS: RawDuoAnimationDef[] = [
   { id: 'pop_dance', label: 'Pop Dance', icon: '🕺', animA: 'miley-armature-couple-pop-dance-m', animB: 'miley-armature-couple-pop-dance-f', offsetB: [-30, 0, 0] },
   { id: 'energetic_dance', label: 'Energetic Dance', icon: '🕺', animA: 'miley-armature-energetic-dance-m', animB: 'miley-armature-energetic-dance-f', offsetB: [-100, 0, 0] },
   { id: 'slow_dance', label: 'Slow Dance', icon: '💃', animA: 'miley-armature-slow-dance-m', animB: 'miley-armature-slow-dance-f', offsetB: [0, 0, 40] },
-  { id: 'eye_to_eye', label: 'Eye to Eye Kiss', icon: '🤗', animA: 'miley-armature-eye-to-eye-hug-kiss-f', animB: 'miley-armature-eye-to-eye-hug-kiss-m', offsetB: [-30, 0, 0] },
+  { id: 'eye_to_eye', label: 'Eye to Eye Kiss', icon: '🤗', animA: 'miley-armature-eye-to-eye-hug-kiss-f', animB: 'miley-armature-eye-to-eye-hug-kiss-m', offsetB: [0, 0, 30] },
   { id: 'kiss_man_woman', label: 'Baiser Homme / Femme', icon: '💋', animA: 'kiss-from-woman', animB: 'kiss-from-man', rotB: Math.PI, offsetB: [0, 0, 50] },
   { id: 'kiss', label: 'Baiser', icon: '💏', animA: 'kiss', animB: 'kiss-1', rotB: Math.PI, offsetB: [0, 0, 50] },
   { id: 'farewell_kiss', label: 'Farewell Kiss', icon: '👋', animA: 'miley-armature-farewell-kiss-m', animB: 'miley-armature-farewell-kiss-f', offsetB: [-70, 0, 0] },
@@ -117,4 +117,3 @@ export function getDuoAnimationForClip(clipOrPath?: string): DuoAnimationDef | u
   if (!clipOrPath) return undefined;
   return duoDefByClipOrPath.get(clipOrPath.trim().toLowerCase());
 }
-
