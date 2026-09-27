@@ -38,9 +38,23 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
   clipName: 'Idle',
   isTPose: false,
 
-  play: () => set({ isPlaying: true }),
+  play: () => {
+    const { currentTime, duration, isLooping } = get();
+    if (!isLooping && duration > 0 && currentTime >= duration - 0.02) {
+      set({ currentTime: 0, isPlaying: true });
+    } else {
+      set({ isPlaying: true });
+    }
+  },
   pause: () => set({ isPlaying: false }),
-  togglePlay: () => set(s => ({ isPlaying: !s.isPlaying })),
+  togglePlay: () => {
+    const { isPlaying, currentTime, duration, isLooping } = get();
+    if (!isPlaying && !isLooping && duration > 0 && currentTime >= duration - 0.02) {
+      set({ currentTime: 0, isPlaying: true });
+    } else {
+      set({ isPlaying: !isPlaying });
+    }
+  },
 
   setSpeed: (speed: number) => set({ speed }),
   setLooping: (isLooping: boolean) => set({ isLooping }),

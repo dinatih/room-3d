@@ -1396,6 +1396,7 @@ export function InventoryPreview({
           {showing3D && isWalkerItem && (
             <AnimFrameController
               animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
+              animKey={actionStates.walkerAnim}
               onCycleAnim={cycleAnim}
               bottom={animControllerBottom}
             />

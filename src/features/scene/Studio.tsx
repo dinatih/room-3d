@@ -52,6 +52,11 @@ import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 import { GridLayout }            from '@features/scene/GridLayout';
 import { frameLaraGridCamera }   from './character/laraGridUtils';
 import { LaraGridToolbar }       from './LaraGridToolbar';
+import { AnimFrameController }   from '@features/inventory/AnimFrameController';
+import { useAnimPreviewStore }   from '@features/inventory/useAnimPreviewStore';
+import { WALKER_ANIM_OPTIONS }   from '@features/scene/animOptions';
+import { resolveAnimationId }    from './animations/animationResolver';
+import { useIsMobile }           from '@shared/hooks/useIsMobile';
 
 // The inventory pulls in a second R3F canvas, its GLTF loaders and a large
 // catalogue. Do not parse it until the user explicitly opens the inventory.
@@ -320,8 +325,48 @@ export function Studio() {
   useEffect(() => {
     if (laraGridActive) {
       frameLaraGridCamera();
+      useAnimPreviewStore.getState().play();
     }
   }, [laraGridActive, laraCount, extraCharacters, activeExtraIds]);
+
+  const isMobile = useIsMobile();
+  const [laraGridAnim, setLaraGridAnim] = useState<string>('idle');
+
+  // Synchronisation avec les changements d'animation de Lara
+  useEffect(() => {
+    const handleToggle = (e: any) => {
+      if (e.detail?.key === 'walker-anim-lara' && e.detail?.value) {
+        setLaraGridAnim(e.detail.value);
+      }
+    };
+    document.addEventListener('furniture-toggle', handleToggle);
+    return () => document.removeEventListener('furniture-toggle', handleToggle);
+  }, []);
+
+  const cycleLaraAnim = useCallback((direction: 'next' | 'prev') => {
+    const pool = WALKER_ANIM_OPTIONS;
+    if (!pool.length) return;
+    const currentVal = laraGridAnim || 'idle';
+    const targetId = resolveAnimationId(currentVal);
+    const currIdx = pool.findIndex(a => a.value === targetId || a.value === currentVal);
+    let nextIdx = 0;
+    if (currIdx === -1) {
+      nextIdx = direction === 'next' ? 0 : pool.length - 1;
+    } else {
+      nextIdx = direction === 'next'
+        ? (currIdx + 1) % pool.length
+        : (currIdx - 1 + pool.length) % pool.length;
+    }
+    const nextVal = pool[nextIdx].value;
+    setLaraGridAnim(nextVal);
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: nextVal } }));
+    useAnimPreviewStore.getState().play();
+  }, [laraGridAnim]);
+
+  const currentLaraAnimOpt = WALKER_ANIM_OPTIONS.find(a => a.value === laraGridAnim || a.value === resolveAnimationId(laraGridAnim));
+  const currentLaraAnimLabel = laraGridAnim === 't-pose'
+    ? 'T-Pose'
+    : (currentLaraAnimOpt ? currentLaraAnimOpt.label : laraGridAnim);
 
   // G → toggle mode grille lara (ignoré quand un input/textarea est focus)
   useEffect(() => {
@@ -668,6 +713,22 @@ export function Studio() {
             onToggleHideUI={() => setHideUI(h => !h)}
           />
           <LaraGridToolbar />
+          {laraGridActive && (
+            <AnimFrameController
+              animName={currentLaraAnimLabel}
+              animKey={laraGridAnim}
+              onCycleAnim={cycleLaraAnim}
+              bottom={16}
+              style={{
+                position: 'fixed',
+                left: isMobile ? 12 : 288,
+                right: isMobile ? 12 : 24,
+                maxWidth: isMobile ? 'calc(100vw - 24px)' : 920,
+                margin: '0 auto',
+                zIndex: 96,
+              }}
+            />
+          )}
           {planeMode && (
             <div style={{
               position: 'absolute', bottom: 72, left: '50%',

@@ -1,17 +1,30 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
+import { getAnimationDef } from '@features/scene/animations/animationResolver';
+import { ANIMATION_DEFINITIONS, type AnimationDefinition } from '@features/scene/animations/animationRegistry';
+import { ANIM_CATEGORIES, getAnimCategory } from '@features/scene/CharacterAnimSelector';
 
 const SPEED_OPTIONS = [0.25, 0.5, 1, 1.5, 2];
 
-export function AnimFrameController({
-  animName,
-  onCycleAnim,
-  bottom = 8,
-}: {
+export interface AnimFrameControllerProps {
   animName?: string;
+  animKey?: string;
+  animDef?: AnimationDefinition;
   onCycleAnim?: (direction: 'next' | 'prev') => void;
   bottom?: number | string;
-}) {
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export function AnimFrameController({
+  animName,
+  animKey,
+  animDef,
+  onCycleAnim,
+  bottom = 8,
+  className = '',
+  style = {},
+}: AnimFrameControllerProps) {
   const {
     isPlaying,
     currentTime,
@@ -31,6 +44,7 @@ export function AnimFrameController({
 
   const [inputFrame, setInputFrame] = useState<string>('');
   const [isEditingFrame, setIsEditingFrame] = useState<boolean>(false);
+  const [showMeta, setShowMeta] = useState<boolean>(true);
   const sliderRef = useRef<HTMLInputElement>(null);
 
   const totalFrames = duration > 0 ? Math.max(1, Math.round(duration * fps)) : 0;
@@ -43,7 +57,7 @@ export function AnimFrameController({
     }
   }, [currentFrame, isEditingFrame]);
 
-  // Raccourcis clavier : Espace (Play/Pause), Flèches Gauche/Droite (-1/+1 frame), Début (Frame 0)
+  // Raccourcis clavier : Espace (Play/Pause), Flèches Gauche/Droite (-1/+1 frame), Début (Frame 0), Flèches Haut/Bas (Cycle Anim)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const targetEl = e.target as HTMLElement | null;
@@ -83,11 +97,25 @@ export function AnimFrameController({
         seekToFrame(0);
         return;
       }
+
+      if (e.key === 'ArrowUp' && onCycleAnim) {
+        e.preventDefault();
+        e.stopPropagation();
+        onCycleAnim('prev');
+        return;
+      }
+
+      if (e.key === 'ArrowDown' && onCycleAnim) {
+        e.preventDefault();
+        e.stopPropagation();
+        onCycleAnim('next');
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay, stepFrame, seekToFrame]);
+  }, [togglePlay, stepFrame, seekToFrame, onCycleAnim]);
 
   const handleFrameCommit = () => {
     setIsEditingFrame(false);
@@ -99,11 +127,38 @@ export function AnimFrameController({
     }
   };
 
-  const displayName = animName || clipName;
+  // Résolution de la définition complète de l'animation
+  const targetKey = animKey || animName || clipName;
+  const def = useMemo(() => {
+    if (animDef) return animDef;
+    if (!targetKey) return undefined;
+    const direct = getAnimationDef(targetKey);
+    if (direct) return direct;
+    const clean = targetKey.trim().toLowerCase();
+    return ANIMATION_DEFINITIONS.find(
+      d =>
+        d.id.toLowerCase() === clean ||
+        d.label?.toLowerCase() === clean ||
+        d.path.toLowerCase().includes(clean) ||
+        d.aliases?.some(a => a.toLowerCase() === clean)
+    );
+  }, [animDef, animKey, animName, clipName, targetKey]);
+
+  const catKey = def?.path ? getAnimCategory(def.path) : undefined;
+  const catObj = catKey ? ANIM_CATEGORIES.find(c => c.key === catKey) : undefined;
+
+  const displayName = useMemo(() => {
+    if (animName && !animName.includes('/') && !animName.endsWith('.glb')) {
+      return animName;
+    }
+    return def?.label || animName || clipName || def?.id || 'Animation';
+  }, [animName, def, clipName]);
+
+  const hasMeta = Boolean(def || isTPose);
 
   return (
     <div
-      className="anim-mixamo-controller"
+      className={`anim-mixamo-controller ${className}`}
       onClick={e => e.stopPropagation()}
       onMouseDown={e => e.stopPropagation()}
       style={{
@@ -111,10 +166,10 @@ export function AnimFrameController({
         bottom,
         left: 10,
         right: 10,
-        zIndex: 4,
-        background: 'rgba(15, 23, 42, 0.9)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
+        zIndex: 90,
+        background: 'rgba(15, 23, 42, 0.92)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         border: '1px solid rgba(255, 255, 255, 0.15)',
         borderRadius: 8,
         padding: '6px 12px',
@@ -125,6 +180,7 @@ export function AnimFrameController({
         userSelect: 'none',
         color: '#f1f5f9',
         fontSize: 11,
+        ...style,
       }}
     >
       {/* ── Ligne 1 : Timeline Slider (Scrubber comme dans Mixamo) ── */}
@@ -189,7 +245,7 @@ export function AnimFrameController({
         </span>
       </div>
 
-      {/* ── Ligne 2 : Transport Mixamo, Badges Frames/Temps, Vitesse ── */}
+      {/* ── Ligne 2 : Transport, Compteurs Frames/Temps, Animation & Vitesse ── */}
       <div
         style={{
           display: 'flex',
@@ -304,7 +360,7 @@ export function AnimFrameController({
               color: isLooping ? '#38bdf8' : '#94a3b8',
               cursor: 'pointer',
             }}
-            title={isLooping ? 'Boucle activée' : 'Boucle désactivée'}
+            title={isLooping ? 'Boucle activée (cliquer pour désactiver)' : 'Boucle désactivée (cliquer pour activer)'}
           >
             🔁
           </button>
@@ -386,10 +442,10 @@ export function AnimFrameController({
           )}
         </div>
 
-        {/* Sélecteur de Vitesse de lecture (Mixamo 0.25x / 0.5x / 1x / 2x) & Animation en cours */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {/* Badge animation en cours */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        {/* Sélecteur de Vitesse, Nom de l'animation en entier & Bouton Meta */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
+          {/* Badge animation en cours (nom complet affiché) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
             {onCycleAnim && (
               <button
                 type="button"
@@ -402,28 +458,34 @@ export function AnimFrameController({
                   borderRadius: 3,
                   color: '#cbd5e1',
                   cursor: 'pointer',
+                  flexShrink: 0,
                 }}
-                title="Animation précédente"
+                title="Animation précédente (Flèche Haut)"
               >
                 ▲
               </button>
             )}
             <span
-              className="text-truncate d-inline-block"
               style={{
-                maxWidth: 110,
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: 600,
                 color: '#38bdf8',
                 background: 'rgba(2, 132, 199, 0.15)',
-                padding: '2px 6px',
-                borderRadius: 3,
+                padding: '2px 8px',
+                borderRadius: 4,
                 border: '1px solid rgba(56, 189, 248, 0.3)',
-                verticalAlign: 'middle',
+                whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                maxWidth: 'min(450px, 45vw)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
               }}
               title={`Animation active : ${displayName}`}
             >
-              🎬 {displayName}
+              <span style={{ fontSize: 11 }}>🎬</span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</span>
             </span>
             {onCycleAnim && (
               <button
@@ -437,15 +499,17 @@ export function AnimFrameController({
                   borderRadius: 3,
                   color: '#cbd5e1',
                   cursor: 'pointer',
+                  flexShrink: 0,
                 }}
-                title="Animation suivante"
+                title="Animation suivante (Flèche Bas)"
               >
                 ▼
               </button>
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          {/* Vitesse */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
             <span style={{ color: '#94a3b8', fontSize: 9 }}>⚡</span>
             <select
               value={speed}
@@ -470,8 +534,217 @@ export function AnimFrameController({
               ))}
             </select>
           </div>
+
+          {/* Bouton Toggle Métadonnées */}
+          {hasMeta && (
+            <button
+              type="button"
+              onClick={() => setShowMeta(v => !v)}
+              style={{
+                padding: '2px 6px',
+                fontSize: 10,
+                background: showMeta ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                border: `1px solid ${showMeta ? '#38bdf8' : 'rgba(255, 255, 255, 0.15)'}`,
+                borderRadius: 4,
+                color: showMeta ? '#38bdf8' : '#94a3b8',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 3,
+                flexShrink: 0,
+              }}
+              title={showMeta ? 'Masquer le volet métadonnées' : 'Afficher le volet complet des métadonnées (ID, tags, aliases, offsets)'}
+            >
+              <span>ℹ️</span>
+              <span style={{ fontSize: 9, fontWeight: 600 }}>Meta</span>
+              <span style={{ fontSize: 8 }}>{showMeta ? '▼' : '▲'}</span>
+            </button>
+          )}
         </div>
       </div>
+
+      {/* ── Ligne 3 : Volet détaillé de toutes les Métadonnées AnimationDefinition ── */}
+      {showMeta && hasMeta && (
+        <div
+          className="anim-meta-panel"
+          style={{
+            marginTop: 2,
+            padding: '6px 10px',
+            background: 'rgba(0, 0, 0, 0.45)',
+            borderRadius: 6,
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 5,
+            fontSize: 10,
+          }}
+        >
+          {/* Ligne A : Identifiant, Catégorie, Fichier GLB, Offsets et Durée */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 12px' }}>
+            {/* ID Canonique */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>ID :</span>
+              <code
+                style={{
+                  color: '#38bdf8',
+                  background: 'rgba(56, 189, 248, 0.15)',
+                  padding: '1px 5px',
+                  borderRadius: 3,
+                  fontSize: 10,
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                }}
+              >
+                {def?.id || (isTPose ? 't-pose' : displayName)}
+              </code>
+            </div>
+
+            {/* Catégorie sémantique */}
+            {catObj && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Catégorie :</span>
+                <span
+                  style={{
+                    color: '#f8fafc',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    padding: '1px 6px',
+                    borderRadius: 3,
+                    fontSize: 10,
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                  }}
+                >
+                  {catObj.icon} {catObj.label}
+                </span>
+              </div>
+            )}
+
+            {/* Fichier GLB */}
+            {def?.path && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} title={def.path}>
+                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Fichier :</span>
+                <code
+                  style={{
+                    color: '#cbd5e1',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    padding: '1px 5px',
+                    borderRadius: 3,
+                    fontSize: 10,
+                    maxWidth: 220,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    display: 'inline-block',
+                  }}
+                >
+                  📁 {def.path.split('/').pop()}
+                </code>
+              </div>
+            )}
+
+            {/* Décalage Position si présent */}
+            {def?.defaultOffset && (
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                title="Décalage natif de position [X, Y, Z] en centimètres"
+              >
+                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Offset Pos :</span>
+                <span
+                  style={{
+                    color: '#fbbf24',
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                    background: 'rgba(251, 191, 36, 0.12)',
+                    padding: '1px 5px',
+                    borderRadius: 3,
+                    border: '1px solid rgba(251, 191, 36, 0.25)',
+                  }}
+                >
+                  📐 [{def.defaultOffset.map(v => `${v}cm`).join(', ')}]
+                </span>
+              </div>
+            )}
+
+            {/* Décalage Rotation Y si présent */}
+            {def?.defaultRotYOffset !== undefined && (
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                title="Décalage natif de rotation autour de l'axe vertical Y"
+              >
+                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Offset Rot Y :</span>
+                <span
+                  style={{
+                    color: '#fbbf24',
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                    background: 'rgba(251, 191, 36, 0.12)',
+                    padding: '1px 5px',
+                    borderRadius: 3,
+                    border: '1px solid rgba(251, 191, 36, 0.25)',
+                  }}
+                >
+                  🔄 {(def.defaultRotYOffset * (180 / Math.PI)).toFixed(1)}°
+                </span>
+              </div>
+            )}
+
+            {/* Durée définie */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Durée :</span>
+              <span style={{ color: '#a7f3d0', fontFamily: 'monospace', fontSize: 10 }}>
+                ⏱️ {(def?.duration ?? duration).toFixed(2)}s ({totalFrames} frames @ {fps}fps)
+              </span>
+            </div>
+          </div>
+
+          {/* Ligne B : Tous les Alias de la définition */}
+          {def?.aliases && def.aliases.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4, marginTop: 1 }}>
+              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', marginRight: 2 }}>
+                🏷️ Aliases ({def.aliases.length}) :
+              </span>
+              {def.aliases.map(alias => (
+                <span
+                  key={alias}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: 3,
+                    padding: '1px 5px',
+                    fontSize: 9,
+                    color: '#e2e8f0',
+                    fontFamily: 'monospace',
+                  }}
+                >
+                  {alias}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Ligne C : Tous les Tags sémantiques de la définition */}
+          {def?.tags && def.tags.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4, marginTop: 1 }}>
+              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', marginRight: 2 }}>
+                🔖 Tags ({def.tags.length}) :
+              </span>
+              {def.tags.map(tag => (
+                <span
+                  key={tag}
+                  style={{
+                    background: 'rgba(14, 165, 233, 0.15)',
+                    border: '1px solid rgba(14, 165, 233, 0.3)',
+                    borderRadius: 3,
+                    padding: '1px 5px',
+                    fontSize: 9,
+                    color: '#7dd3fc',
+                  }}
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -817,13 +817,14 @@ export function SingleCharacter({
         to.setEffectiveWeight(1);
         activeActionName.current = target;
 
-        if (isPreview && !useAnimPreviewStore.getState().isPlaying) {
+        const isControlledByStore = isPreview || laraGrid;
+        if (isControlledByStore && !useAnimPreviewStore.getState().isPlaying) {
           to.setEffectiveWeight(1);
           (to as any)._fadeDuration = 0;
           (to as any)._weight = 1;
         }
 
-        if (isActive && !isPreview && !isTemporaryLoadingFallback && lastLoggedAnimRef.current !== target) {
+        if (isActive && !isPreview && !laraGrid && !isTemporaryLoadingFallback && lastLoggedAnimRef.current !== target) {
           lastLoggedAnimRef.current = target;
           // Si c'est une animation de marche (déjà mentionnée dans "Marche vers [anim]"), on évite le doublon de log
           const isWalkAnim = target === 'walk' || target.includes('/locomotion/') || target.includes('walk') || target.includes('run');
@@ -836,12 +837,16 @@ export function SingleCharacter({
       }
     }
 
-    if (isPreview) {
+    const isControlledByStore = isPreview || laraGrid;
+
+    if (isControlledByStore) {
       const store = useAnimPreviewStore.getState();
       const animDelta = delta * (store.speed || 1);
 
       if (isTPose) {
-        store.setClipInfo('T-Pose', 0, true);
+        if (isActive || characterIndex === 0) {
+          store.setClipInfo('T-Pose', 0, true);
+        }
       } else if (isDuoRoleB) {
         // En mode Duo, le Rôle B suit STRICTEMENT l'horloge partagée pilotée par le Rôle A
         if (activeActionName.current && actions[activeActionName.current]) {
@@ -857,6 +862,7 @@ export function SingleCharacter({
               (actB as any)._fadeDuration = 0;
               (actB as any)._weight = 1;
               actB.time = store.currentTime % clipB.duration;
+              actB.paused = true;
               mixer.update(0);
             }
           }
@@ -865,20 +871,51 @@ export function SingleCharacter({
         const act = actions[activeActionName.current];
         const clip = act.getClip();
         if (clip && clip.duration > 0) {
-          const cleanName = duoAnimDef
-            ? duoAnimDef.label
-            : (activeActionName.current.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || activeActionName.current);
-          store.setClipInfo(cleanName, clip.duration, false);
+          const isMaster = isPreview ? true : (isActive || characterIndex === 0);
+          if (isMaster) {
+            const cleanName = duoAnimDef
+              ? duoAnimDef.label
+              : (activeActionName.current.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || activeActionName.current);
+            store.setClipInfo(cleanName, clip.duration, false);
+          }
 
           if (store.isPlaying && !store.isScrubbing) {
-            act.paused = false;
-            mixer.update(animDelta);
-            store.setCurrentTime(act.time % clip.duration);
+            if (act.paused) {
+              act.paused = false;
+            }
+            if (!store.isLooping) {
+              act.setLoop(THREE.LoopOnce, 0);
+              act.clampWhenFinished = true;
+              if (act.time >= clip.duration - 0.005) {
+                act.time = 0;
+              }
+            } else {
+              act.setLoop(THREE.LoopRepeat, Infinity);
+              act.clampWhenFinished = false;
+            }
+
+            if (isMaster) {
+              mixer.update(animDelta);
+              if (!store.isLooping && act.time >= clip.duration) {
+                act.time = clip.duration;
+                act.paused = true;
+                store.setCurrentTime(clip.duration);
+                store.pause();
+              } else {
+                store.setCurrentTime(act.time % clip.duration);
+              }
+            } else {
+              // Dans LaraGrid, les clones synchronisent leur temps sur le master
+              act.time = store.currentTime;
+              act.paused = false;
+              mixer.update(0);
+            }
           } else {
             act.setEffectiveWeight(1);
             (act as any)._fadeDuration = 0;
             (act as any)._weight = 1;
             act.time = store.currentTime;
+            act.paused = true;
             mixer.update(0);
           }
         }
@@ -903,6 +940,10 @@ export function SingleCharacter({
         }, scene);
       }
     } else if (!isPaused && !isTPose) {
+      if (activeActionName.current && actions[activeActionName.current]) {
+        const act = actions[activeActionName.current];
+        if (act.paused) act.paused = false;
+      }
       if (duoSessionManager.isPlaying(id)) {
         const partA = duoSessionManager.getParticipantA(id);
         const partB = duoSessionManager.getParticipantB(id);
