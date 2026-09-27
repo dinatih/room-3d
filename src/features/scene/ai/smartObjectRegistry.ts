@@ -158,7 +158,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Travailler debout',
         relative: true,
         offset: [0, 0, -36],
-        animation: 'texting',
+        animationsRandom: 'standing-using-touchscreen-tablet',
       }
     ]
   },

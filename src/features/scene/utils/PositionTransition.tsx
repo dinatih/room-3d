@@ -50,5 +50,9 @@ export function PositionTransition({ x, z, ry, children }: {
     }
   });
 
-  return <group ref={groupRef}>{children}</group>;
+  return (
+    <group ref={groupRef} position={[x, 0, z]} rotation={[0, ry, 0]} userData={{ skipMerge: true }}>
+      {children}
+    </group>
+  );
 }
