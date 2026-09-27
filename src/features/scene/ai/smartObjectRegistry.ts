@@ -775,34 +775,34 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
 
   // ── POINTS DE DANSE (SALON & SDB) ──────────────────────────────────────────
-  'dance-bed-west-north': {
-    id: 'dance-bed-west-north',
-    name: 'Danse (Lit Ouest Nord)',
-    category: 'dance',
-    position: [150, 0, 80],
-    slots: [
-      {
-        slotId: 'dance',
-        name: 'Danse devant Lit Ouest (Nord)',
-        rotY: Math.PI / 2,
-        animationsRandom: 'dance-tight',
-      }
-    ]
-  },
-  'dance-bed-west-mid': {
-    id: 'dance-bed-west-mid',
-    name: 'Danse (Lit Ouest Milieu)',
-    category: 'dance',
-    position: [150, 0, 150],
-    slots: [
-      {
-        slotId: 'dance',
-        name: 'Danse devant Lit Ouest (Milieu)',
-        rotY: Math.PI / 2,
-        animationsRandom: 'dance-tight',
-      }
-    ]
-  },
+  // 'dance-bed-west-north': {
+  //   id: 'dance-bed-west-north',
+  //   name: 'Danse (Lit Ouest Nord)',
+  //   category: 'dance',
+  //   position: [150, 0, 80],
+  //   slots: [
+  //     {
+  //       slotId: 'dance',
+  //       name: 'Danse devant Lit Ouest (Nord)',
+  //       rotY: Math.PI / 2,
+  //       animationsRandom: 'dance-tight',
+  //     }
+  //   ]
+  // },
+  // 'dance-bed-west-mid': {
+  //   id: 'dance-bed-west-mid',
+  //   name: 'Danse (Lit Ouest Milieu)',
+  //   category: 'dance',
+  //   position: [150, 0, 150],
+  //   slots: [
+  //     {
+  //       slotId: 'dance',
+  //       name: 'Danse devant Lit Ouest (Milieu)',
+  //       rotY: Math.PI / 2,
+  //       animationsRandom: 'dance-tight',
+  //     }
+  //   ]
+  // },
   // 'dance-bed-west-south': {
   //   id: 'dance-bed-west-south',
   //   name: 'Danse (Lit Ouest Sud)',
@@ -821,7 +821,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'dance-bed-east-north',
     name: 'Danse (Lit Est Nord)',
     category: 'dance',
-    position: [195, 0, 120],
+    position: [175, 0, 120],
     slots: [
       {
         slotId: 'dance',

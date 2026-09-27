@@ -4715,7 +4715,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'silly-dancing',
     path: 'animations/dances/anim_silly_dancing.glb',
     label: `Silly Dancing (164f / 5.5s, 121KB)`,
-    tags: ['dance', 'dance-tight'],
+    tags: ['dance'],
     duration: 5.5,
   },
   {
