@@ -491,9 +491,6 @@ export function SingleCharacter({
       scene.updateMatrixWorld(true);
       if (mixerRef.current) mixerRef.current.stopAllAction();
       activeActionName.current = '';
-      setEquipment({ holster: false, pistols: false, backpack: false });
-    } else {
-      setEquipment({ holster: true, pistols: true, backpack: true });
     }
     invalidate();
   }, [laraGrid, scene, id, invalidate]);
