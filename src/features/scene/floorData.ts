@@ -66,8 +66,8 @@ export const SEG_PARTITIONS: Seg[] = [
 
   // ── Mur Sud de séparation Séjour (corner-sw -> corner-se) ─────────────────
   // Face Nord (séjour)
-  [pEast('corner-sw'), pNorth('corner-sw'), pWest('kitchen-sw'), pNorth('kitchen-sw')],
-  [pEast('kitchen-se'), pNorth('kitchen-se'), pEast('door-living-w'), pNorth('door-living-w')],
+  [pEast('corner-sw'), pNorth('corner-sw'), pWest('kitchen-nw'), pNorth('kitchen-nw')],
+  [pEast('kitchen-ne'), pNorth('kitchen-ne'), pEast('door-living-w'), pNorth('door-living-w')],
   [pWest('door-living-e'), pNorth('door-living-e'), pWest('corner-se'), pNorth('corner-se')],
   // Face Sud couloir droit
   [pWest('door-living-e'), pSouth('door-living-e'), pWest('corner-se'), pSouth('corner-se')],
@@ -75,35 +75,35 @@ export const SEG_PARTITIONS: Seg[] = [
   [pEast('door-living-w'), pNorth('door-living-w'), pEast('door-living-w'), pSouth('door-living-w')],
   [pWest('door-living-e'), pNorth('door-living-e'), pWest('door-living-e'), pSouth('door-living-e')],
 
-  // ── Gaine technique à gauche de la cuisine (corner-sw -> kitchen-nw) ──────
+  // ── Gaine technique à gauche de la cuisine (corner-sw -> kitchen-sw) ──────
   // Face Nord
-  [pEast('corner-sw'), pSouth('corner-sw'), pWest('kitchen-sw'), pSouth('kitchen-sw')],
+  [pEast('corner-sw'), pSouth('corner-sw'), pWest('kitchen-nw'), pSouth('kitchen-nw')],
   // Face Est (cloison ouest cuisine extérieure)
-  [pWest('kitchen-sw'), pSouth('kitchen-sw'), pWest('kitchen-nw'), pNorth('kitchen-nw')],
+  [pWest('kitchen-nw'), pSouth('kitchen-nw'), pWest('kitchen-sw'), pNorth('kitchen-sw')],
   // Face Sud (cloison nord SDB extérieure)
-  [pEast('corner-sw'), pNorth('kitchen-nw'), pWest('kitchen-nw'), pNorth('kitchen-nw')],
+  [pEast('corner-sw'), pNorth('kitchen-sw'), pWest('kitchen-sw'), pNorth('kitchen-sw')],
   // Face Ouest (interface avec mur porteur)
-  [pEast('corner-sw'), pSouth('corner-sw'), pEast('corner-sw'), pNorth('kitchen-nw')],
+  [pEast('corner-sw'), pSouth('corner-sw'), pEast('corner-sw'), pNorth('kitchen-sw')],
 
-  // ── Cloisons Cuisine (kitchen-sw / se / nw / ne) ──────────────────────────
+  // ── Cloisons Cuisine (kitchen-nw / ne / sw / se) ──────────────────────────
   // Cloison Ouest (face intérieure cuisine)
-  [pEast('kitchen-sw'), pNorth('kitchen-sw'), pEast('kitchen-nw'), pNorth('kitchen-nw')],
+  [pEast('kitchen-nw'), pNorth('kitchen-nw'), pEast('kitchen-sw'), pNorth('kitchen-sw')],
   // Nez de cloison Ouest séjour
-  [pWest('kitchen-sw'), pNorth('kitchen-sw'), pEast('kitchen-sw'), pNorth('kitchen-sw')],
+  [pWest('kitchen-nw'), pNorth('kitchen-nw'), pEast('kitchen-nw'), pNorth('kitchen-nw')],
   // Cloison Est (face intérieure cuisine)
-  [pWest('kitchen-se'), pNorth('kitchen-se'), pWest('kitchen-ne'), pNorth('kitchen-ne')],
+  [pWest('kitchen-ne'), pNorth('kitchen-ne'), pWest('kitchen-se'), pNorth('kitchen-se')],
   // Nez de cloison Est séjour
-  [pWest('kitchen-se'), pNorth('kitchen-se'), pEast('kitchen-se'), pNorth('kitchen-se')],
+  [pWest('kitchen-ne'), pNorth('kitchen-ne'), pEast('kitchen-ne'), pNorth('kitchen-ne')],
   // Fond de cuisine (face intérieure cuisine)
-  [pEast('kitchen-nw'), pNorth('kitchen-nw'), pWest('kitchen-ne'), pNorth('kitchen-ne')],
+  [pEast('kitchen-sw'), pNorth('kitchen-sw'), pWest('kitchen-se'), pNorth('kitchen-se')],
 
-  // ── Placard Couloir (kitchen-se / ne -> door-living-w / bath-ne) ──────────
+  // ── Placard Couloir (kitchen-ne / se -> door-living-w / bath-ne) ──────────
   // Face Nord (séparateur séjour)
-  [pEast('kitchen-se'), pSouth('kitchen-se'), pEast('door-living-w'), pSouth('door-living-w')],
+  [pEast('kitchen-ne'), pSouth('kitchen-ne'), pEast('door-living-w'), pSouth('door-living-w')],
   // Face Ouest (cloison est cuisine extérieure)
-  [pEast('kitchen-se'), pSouth('kitchen-se'), pEast('kitchen-ne'), pNorth('kitchen-ne')],
+  [pEast('kitchen-ne'), pSouth('kitchen-ne'), pEast('kitchen-se'), pNorth('kitchen-se')],
   // Face Sud / Fond du placard
-  [pEast('kitchen-ne'), pNorth('kitchen-ne'), pEast('door-living-w'), pNorth('bath-ne')],
+  [pEast('kitchen-se'), pNorth('kitchen-se'), pEast('door-living-w'), pNorth('bath-ne')],
   // Raccord jambage porte placard vers cloison couloir
   [pWest('bath-ne'), pNorth('bath-ne'), pEast('door-living-w'), pNorth('bath-ne')],
   [pEast('door-living-w'), pNorth('bath-ne'), pEast('door-living-w'), pSouth('bath-ne')],

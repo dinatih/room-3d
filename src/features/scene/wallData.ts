@@ -74,10 +74,10 @@ export const PILLAR_DEFS = [
   { id: 'corner-se',      x: ROOM_W + WT / 2,       z: ROOM_D + PT / 2,     w: WT, d: PT },
 
   // ── Cuisine ───────────────────────────────────────────────────────────────
-  { id: 'kitchen-sw',     x: KITCHEN_X0 - PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
-  { id: 'kitchen-se',     x: KITCHEN_X1 + PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
-  { id: 'kitchen-nw',     x: KITCHEN_X0 - PT / 2,   z: KITCHEN_Z + PT / 2, w: PT, d: PT },
-  { id: 'kitchen-ne',     x: KITCHEN_X1 + PT / 2,   z: KITCHEN_Z + PT / 2, w: PT, d: PT },
+  { id: 'kitchen-nw',     x: KITCHEN_X0 - PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
+  { id: 'kitchen-ne',     x: KITCHEN_X1 + PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
+  { id: 'kitchen-sw',     x: KITCHEN_X0 - PT / 2,   z: KITCHEN_Z + PT / 2, w: PT, d: PT },
+  { id: 'kitchen-se',     x: KITCHEN_X1 + PT / 2,   z: KITCHEN_Z + PT / 2, w: PT, d: PT },
 
   // ── Huisseries et Jambages de portes ──────────────────────────────────────
   { id: 'door-living-w',  x: DOOR_START - PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
@@ -228,17 +228,17 @@ export const WALL_DEFS: WallDef[] = [
   ...wallZ(pX('corner-ne'), pSouth('corner-se'),  pNorth('diag-ne'),   'east'), // Couloir droit
 
   // ── Mur Sud Séjour (Z=400) ──────────────────────────────────────────────────
-  ...wallX(pZ('corner-sw'), pEast('corner-sw'),   pWest('kitchen-sw'),   'default', PT),
-  ...wallX(pZ('corner-sw'), pEast('kitchen-se'),  pWest('door-living-w'), 'default', PT),
+  ...wallX(pZ('corner-sw'), pEast('corner-sw'),   pWest('kitchen-nw'),   'default', PT),
+  ...wallX(pZ('corner-sw'), pEast('kitchen-ne'),  pWest('door-living-w'), 'default', PT),
   ...wallX(pZ('corner-sw'), pEast('door-living-e'), pWest('corner-se'),  'default', PT),
   { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: ROOM_D, segKind: 'door', t: PT },
 
   // ── Cuisine ─────────────────────────────────────────────────────────────────
-  ...wallZ(pX('kitchen-sw'), pSouth('kitchen-sw'), pNorth('kitchen-nw'), 'default', PT),
-  ...wallZ(pX('kitchen-se'), pSouth('kitchen-se'), pNorth('kitchen-ne'), 'default', PT),
-  ...wallX(pZ('bath-nw'),    pEast('bath-nw'),     pWest('kitchen-nw'),  'default', PT),
-  ...wallX(pZ('bath-nw'),    pEast('kitchen-nw'),  pWest('kitchen-ne'),  'default', PT),
-  ...wallX(pZ('bath-nw'),    pEast('kitchen-ne'),  pWest('bath-ne'),     'default', PT),
+  ...wallZ(pX('kitchen-nw'), pSouth('kitchen-nw'), pNorth('kitchen-sw'), 'default', PT),
+  ...wallZ(pX('kitchen-ne'), pSouth('kitchen-ne'), pNorth('kitchen-se'), 'default', PT),
+  ...wallX(pZ('bath-nw'),    pEast('bath-nw'),     pWest('kitchen-sw'),  'default', PT),
+  ...wallX(pZ('bath-nw'),    pEast('kitchen-sw'),  pWest('kitchen-se'),  'default', PT),
+  ...wallX(pZ('bath-nw'),    pEast('kitchen-se'),  pWest('bath-ne'),     'default', PT),
 
   // ── Cloison Couloir / SDB ───────────────────────────────────────────────────
   ...wallZ(pX('bath-ne'), pSouth('bath-ne'), pNorth('door-bath-n'), 'default', PT),

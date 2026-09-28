@@ -5,7 +5,7 @@ import {
   MEASURED_DIST_CORRIDOR_CLOSET_Z,
   MEASURED_DIST_BATH_N_TO_SHOWER_NE,
   MEASURED_DIST_BATH_W_TO_DOOR_BATH_N,
-  MEASURED_DIST_KITCHEN_SW_TO_SE,
+  MEASURED_DIST_KITCHEN_NW_TO_NE,
   MEASURED_DIST_CORNER_NE_TO_SE,
   MEASURED_DIST_SHOWER_NW_TO_NE,
   MEASURED_DIST_DOOR_BATH_E_TO_CORR_E,
@@ -232,15 +232,15 @@ export function RealMeasurementsLayer() {
         axis: 'x',
       },
 
-      // 4. Largeur ouverture cuisine (axe X, face interne est kitchen-sw à face interne ouest kitchen-se)
+      // 4. Largeur ouverture cuisine (axe X, face interne est kitchen-nw à face interne ouest kitchen-ne)
       {
-        id: 'kitchen-sw-to-se',
+        id: 'kitchen-nw-to-ne',
         name: 'Ouverture Cuisine',
-        valueCm: MEASURED_DIST_KITCHEN_SW_TO_SE,
-        start: [pEast('kitchen-sw'), yBase, pNorth('kitchen-sw') + 5],
-        end: [pWest('kitchen-se'), yBase, pNorth('kitchen-sw') + 5],
+        valueCm: MEASURED_DIST_KITCHEN_NW_TO_NE,
+        start: [pEast('kitchen-nw'), yBase, pNorth('kitchen-nw') + 5],
+        end: [pWest('kitchen-ne'), yBase, pNorth('kitchen-nw') + 5],
         color: '#ff4081',
-        description: 'Largeur de passage entre la face interne de kitchen-sw et la face interne de kitchen-se',
+        description: 'Largeur de passage entre la face interne de kitchen-nw et la face interne de kitchen-ne',
         axis: 'x',
       },
 

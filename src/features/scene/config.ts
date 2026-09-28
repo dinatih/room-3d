@@ -11,14 +11,14 @@ export const MEASURED_DIST_CORRIDOR_CLOSET_Z        = 52;
 export const MEASURED_DIST_DOOR_LIVING_W_TO_BATH_NE = MEASURED_DIST_CORRIDOR_CLOSET_Z;
 
 
-/** Distance Z entre le mur nord de la SDB (Z de bath-nw/kitchen-nw) et shower-ne : 141 cm */
+/** Distance Z entre le mur nord de la SDB (Z de bath-nw/kitchen-sw) et shower-ne : 141 cm */
 export const MEASURED_DIST_BATH_N_TO_SHOWER_NE      = 141;
 
 /** Distance X entre le mur ouest SDB et la porte sdb nord (door-bath-n) / largeur intérieure SDB : 202 cm */
 export const MEASURED_DIST_BATH_W_TO_DOOR_BATH_N    = 202;
 
-/** Largeur de l'ouverture cuisine entre kitchen-sw et kitchen-se : 102 cm */
-export const MEASURED_DIST_KITCHEN_SW_TO_SE         = 102;
+/** Largeur de l'ouverture cuisine entre kitchen-nw et kitchen-ne : 102 cm */
+export const MEASURED_DIST_KITCHEN_NW_TO_NE         = 102;
 
 /** Profondeur du séjour le long du mur Est entre corner-ne et corner-se : 405 cm */
 export const MEASURED_DIST_CORNER_NE_TO_SE          = 405;

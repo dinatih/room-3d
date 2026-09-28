@@ -174,7 +174,7 @@ export const SPATIAL_ZONES_CONFIG: SpatialZoneDef[] = [
     id: 'corridor',
     name: 'Couloir Entrée',
     environment: 'indoor',
-    // Délimité par : placard couloir (kitchen-ne, kitchen-se), corner-se, door-living-*, door-bath-*, diag-ne, door-entry-w
+    // Délimité par : placard couloir (kitchen-se, kitchen-ne), corner-se, door-living-*, door-bath-*, diag-ne, door-entry-w
     bounds: {
       min: [130, 0, 400],
       max: [330, 250, 685]
