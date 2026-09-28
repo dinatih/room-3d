@@ -3,7 +3,7 @@
  */
 
 import { ANIMATION_DEFINITIONS, AnimationDefinition } from './animationRegistry';
-import { getDuoAnimationDef, DuoAnimationDef } from '../ai/duoAnimations';
+import { getDuoAnimationDef, DuoAnimationDef } from './duoAnimations';
 
 // Index de recherche rapide par clé (id canonique, alias ou path direct)
 const keyToDefMap = new Map<string, AnimationDefinition>();
@@ -156,11 +156,11 @@ export function getRandomAnimationByQuery(
 }
 
 export interface SlotAnimationMeta {
-  canonicalId: string;       // ID canonique unique (ex: 'sitting-idle', 'wash-hands')
-  aliasUsed?: string;        // Alias utilisé pour ce slot (ex: 'sit-idle', 'seated-front')
-  allAliases?: string[];     // Tous les alias définis
-  tags: string[];            // Tags sémantiques (ex: ['sitting', 'seated-front'])
-  clipName: string;          // Nom du fichier / clip
+  canonicalId: string;
+  aliasUsed?: string;
+  allAliases?: string[];
+  tags: string[];
+  clipName: string;
   duration?: number;
   label?: string;
   defaultRotYOffset?: number;
@@ -175,13 +175,55 @@ export interface SlotAnimationMeta {
   }>;
 }
 
+function clipNameOf(path: string): string {
+  return path.split('/').pop()?.replace('.glb', '') ?? path;
+}
+
+function buildAnimVariants(defs: AnimationDefinition[]) {
+  return defs.map((d) => ({
+    canonicalId: d.id,
+    aliasUsed: d.aliases?.[0],
+    clipName: clipNameOf(d.path),
+    duration: d.duration,
+    label: d.label || d.id,
+    defaultRotYOffset: d.defaultRotYOffset,
+    defaultOffset: d.defaultOffset,
+  }));
+}
+
+function resolveAlias(raw: string, def?: AnimationDefinition): string | undefined {
+  if (def?.aliases?.length) {
+    const match = def.aliases.find((a) => a.toLowerCase() === raw.toLowerCase());
+    return match ?? def.aliases[0];
+  }
+  if (!raw.includes('/') && !raw.endsWith('.glb')) return raw;
+  return undefined;
+}
+
+function buildMeta(def: AnimationDefinition | undefined, raw: string, aliasUsed?: string, tagsFallback?: string[]): SlotAnimationMeta {
+  const clip = clipNameOf(raw);
+  return {
+    canonicalId: def?.id ?? clip.replace(/^anim_/, ''),
+    aliasUsed,
+    allAliases: def?.aliases,
+    tags: def?.tags ?? tagsFallback ?? [],
+    clipName: def?.path ? clipNameOf(def.path) : clip,
+    duration: def?.duration,
+    label: def?.label || def?.id,
+    defaultRotYOffset: def?.defaultRotYOffset,
+    defaultOffset: def?.defaultOffset,
+  };
+}
+
+function parseSlotTags(input: string | string[]): string[] {
+  if (Array.isArray(input)) return input;
+  if (input.startsWith('tag:')) return input.substring(4).split(',').map((s) => s.trim()).filter(Boolean);
+  return [input];
+}
+
 /**
- * Analyse un slot de Smart Object pour extraire :
- * - l'ID canonique de l'animation
- * - la durée canonique
- * - l'alias utilisé
- * - les tags et packs sémantiques
- * - les variantes associées avec leurs durées
+ * Analyse un slot de Smart Object pour extraire les métadonnées d'animation
+ * (ID canonique, durée, alias, tags, variantes).
  */
 export function resolveSlotAnimationInfo(slot: {
   animation?: string;
@@ -193,28 +235,23 @@ export function resolveSlotAnimationInfo(slot: {
   slotId?: string;
   duration?: number;
 }): SlotAnimationMeta {
-  // Cas 1 : Animation Duo
+  // ── Duo ──────────────────────────────────────────────────────────────────
   if (slot.isDuo) {
-    if (slot.duoPool && slot.duoPool.length > 0) {
+    if (slot.duoPool?.length) {
       const duoDefs = slot.duoPool
         .map((id) => getDuoAnimationDef(id))
         .filter((d): d is DuoAnimationDef => d !== undefined);
-
       const first = duoDefs[0];
-      const variants = duoDefs.map((d) => ({
-        canonicalId: d.id,
-        duration: d.duration,
-        label: d.label,
-        clipName: `${d.animA} / ${d.animB}`,
-      }));
-
+      const id = first?.id ?? slot.duoPool[0];
       return {
-        canonicalId: first?.id ?? slot.duoPool[0],
-        duration: slot.duration ?? first?.duration,
-        label: first?.label ?? first?.id ?? slot.duoPool[0],
-        clipName: first ? `${first.animA} / ${first.animB}` : 'duo',
+        canonicalId: id,
         tags: ['duo'],
-        variants: variants.length > 0 ? variants : undefined,
+        clipName: first ? `${first.animA} / ${first.animB}` : 'duo',
+        duration: slot.duration ?? first?.duration,
+        label: first?.label ?? first?.id ?? id,
+        variants: duoDefs.length > 0
+          ? duoDefs.map((d) => ({ canonicalId: d.id, clipName: `${d.animA} / ${d.animB}`, duration: d.duration, label: d.label }))
+          : undefined,
       };
     }
 
@@ -223,120 +260,50 @@ export function resolveSlotAnimationInfo(slot: {
     if (duoDef) {
       return {
         canonicalId: duoDef.id,
+        tags: ['duo'],
+        clipName: `${duoDef.animA} / ${duoDef.animB}`,
         duration: slot.duration ?? duoDef.duration,
         label: duoDef.label,
-        clipName: `${duoDef.animA} / ${duoDef.animB}`,
-        tags: ['duo'],
       };
     }
-
     const def = getAnimationDef(duoId);
-    return {
-      canonicalId: def?.id ?? (duoId !== slot.slotId ? duoId : 'duo-action'),
-      tags: def?.tags ?? ['duo'],
-      clipName: def?.path ? def.path.split('/').pop()?.replace('.glb', '') ?? duoId : duoId,
-      duration: slot.duration ?? def?.duration,
-      label: def?.label || def?.id || duoId,
-      defaultRotYOffset: def?.defaultRotYOffset,
-      defaultOffset: def?.defaultOffset,
-    };
+    const fallbackId = duoId !== slot.slotId ? duoId : 'duo-action';
+    return { ...buildMeta(def, duoId), canonicalId: def?.id ?? fallbackId, tags: def?.tags ?? ['duo'] };
   }
 
-  // Cas 2 : Animation directe spécifiée
+  // ── Animation directe ────────────────────────────────────────────────────
   if (slot.animation) {
-    const raw = slot.animation;
-    const def = getAnimationDef(raw);
-    const clip = raw.split('/').pop()?.replace('.glb', '') ?? raw;
-
-    let aliasUsed: string | undefined;
-    if (def?.aliases?.length) {
-      const match = def.aliases.find((a) => a.toLowerCase() === raw.toLowerCase());
-      aliasUsed = match ?? def.aliases[0];
-    } else if (!raw.includes('/') && !raw.endsWith('.glb')) {
-      aliasUsed = raw;
-    }
-
+    const def = getAnimationDef(slot.animation);
     const variants = slot.availableAnims?.map((v) => {
       const vDef = getAnimationDef(v);
-      return {
-        canonicalId: vDef?.id ?? v.split('/').pop()?.replace('.glb', '') ?? v,
-        aliasUsed: vDef?.aliases?.[0] ?? (!v.includes('/') ? v : undefined),
-        clipName: v.split('/').pop()?.replace('.glb', '') ?? v,
-        duration: vDef?.duration,
-        label: vDef?.label || vDef?.id,
-        defaultRotYOffset: vDef?.defaultRotYOffset,
-        defaultOffset: vDef?.defaultOffset,
-      };
+      return { canonicalId: vDef?.id ?? clipNameOf(v), clipName: clipNameOf(v), duration: vDef?.duration, label: vDef?.label || vDef?.id, aliasUsed: vDef?.aliases?.[0], defaultRotYOffset: vDef?.defaultRotYOffset };
     });
-
     return {
-      canonicalId: def?.id ?? clip.replace(/^anim_/, ''),
-      aliasUsed,
-      allAliases: def?.aliases,
-      tags: def?.tags ?? [],
-      clipName: def?.path ? def.path.split('/').pop()?.replace('.glb', '') ?? clip : clip,
-      duration: slot.duration ?? def?.duration,
-      label: def?.label || def?.id,
-      defaultRotYOffset: def?.defaultRotYOffset,
-      defaultOffset: def?.defaultOffset,
-      variants,
+      ...buildMeta(def, slot.animation, resolveAlias(slot.animation, def)),
+      variants: variants?.length ? variants : undefined,
     };
   }
 
-  // Cas 3 : Sélection aléatoire par tag(s) ou alias (animationsRandom)
+  // ── animationsRandom (tag pool) ──────────────────────────────────────────
   if (slot.animationsRandom) {
-    let searchTags: string[] = [];
-    if (typeof slot.animationsRandom === 'string') {
-      if (slot.animationsRandom.startsWith('tag:')) {
-        searchTags = slot.animationsRandom.substring(4).split(',').map((s) => s.trim()).filter(Boolean);
-      } else {
-        searchTags = [slot.animationsRandom];
-      }
-    } else if (Array.isArray(slot.animationsRandom)) {
-      searchTags = slot.animationsRandom;
-    }
-
+    const searchTags = parseSlotTags(slot.animationsRandom);
     const matchingDefs = getAnimationsByTags(searchTags, 'any');
-
-    const fallbackLabel = Array.isArray(slot.animationsRandom)
-      ? slot.animationsRandom.join(', ')
-      : slot.animationsRandom;
     const first = matchingDefs[0];
-    const canonicalId = first?.id ?? fallbackLabel;
-    const duration = slot.duration ?? first?.duration;
+    const fallbackLabel = Array.isArray(slot.animationsRandom) ? slot.animationsRandom.join(', ') : slot.animationsRandom;
 
-    const variants = (matchingDefs.length > 0
+    const pool = matchingDefs.length > 0
       ? matchingDefs.slice(0, 16)
-      : (slot.availableAnims ?? []).map((a) => getAnimationDef(a)).filter(Boolean) as AnimationDefinition[]
-    ).map((d) => ({
-      canonicalId: d.id,
-      aliasUsed: d.aliases?.[0],
-      clipName: d.path.split('/').pop()?.replace('.glb', '') ?? d.id,
-      duration: d.duration,
-      label: d.label || d.id,
-      defaultRotYOffset: d.defaultRotYOffset,
-      defaultOffset: d.defaultOffset,
-    }));
+      : (slot.availableAnims ?? []).map((a) => getAnimationDef(a)).filter((d): d is AnimationDefinition => d !== undefined);
 
     return {
-      canonicalId,
-      aliasUsed: first?.aliases?.[0],
-      allAliases: first?.aliases,
-      tags: first?.tags ?? searchTags,
-      clipName: first?.path ? first.path.split('/').pop()?.replace('.glb', '') ?? canonicalId : canonicalId,
-      duration,
-      label: first?.label || first?.id,
-      defaultRotYOffset: first?.defaultRotYOffset,
-      defaultOffset: first?.defaultOffset,
-      variants: variants.length > 0 ? variants : undefined,
+      ...buildMeta(first, fallbackLabel, first?.aliases?.[0], searchTags),
+      canonicalId: first?.id ?? fallbackLabel,
+      duration: slot.duration ?? first?.duration,
+      variants: pool.length > 0 ? buildAnimVariants(pool) : undefined,
     };
   }
 
-  return {
-    canonicalId: 'default',
-    tags: [],
-    clipName: 'défaut',
-  };
+  return { canonicalId: 'default', tags: [], clipName: 'défaut' };
 }
 
 /**

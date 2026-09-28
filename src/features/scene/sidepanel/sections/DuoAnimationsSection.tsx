@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DUO_ANIMATIONS } from '@features/scene/ai/duoAnimations';
+import { DUO_ANIMATIONS } from '@features/scene/animations/duoAnimations';
 import { duoSessionManager } from '@features/scene/ai/duoSessionManager';
 import { resetAppIdle } from '@features/scene/idleState';
 

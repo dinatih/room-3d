@@ -1,4 +1,4 @@
-import { DUO_ANIMATIONS, DuoAnimationDef } from './duoAnimations';
+import { DUO_ANIMATIONS, DuoAnimationDef } from '../animations/duoAnimations';
 import { OccupancyManager } from './occupancyManager';
 import { appLog } from '@features/ui/AppConsole';
 import { cameraState } from '../cameraState';

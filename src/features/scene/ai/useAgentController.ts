@@ -3,7 +3,7 @@ import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
-import { getDuoAnimationForClip } from './duoAnimations';
+import { getDuoAnimationForClip } from '../animations/duoAnimations';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';

@@ -21,7 +21,7 @@ export { WALKER_ANIM_OPTIONS };
 
 
 
-import { type DuoAnimationDef } from './ai/duoAnimations';
+import { type DuoAnimationDef } from './animations/duoAnimations';
 
 export interface WalkerProps {
   isPreview?: boolean;

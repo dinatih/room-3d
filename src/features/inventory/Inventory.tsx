@@ -7,7 +7,7 @@ import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type Storage
 import { InventoryPreview } from './InventoryPreview';
 import { SpatialZonePreview } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
-import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/ai/duoAnimations';
+import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/walkerConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';

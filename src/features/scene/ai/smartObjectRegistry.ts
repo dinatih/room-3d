@@ -1,7 +1,7 @@
 import { SmartObjectDef, SmartObjectCategory, AgentInstruction, ResolvedSmartObject } from './aiTypes';
 import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
-import { getAllDuoAnimationIds } from './duoAnimations';
+import { getAllDuoAnimationIds } from '../animations/duoAnimations';
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -389,9 +389,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'cook-stove',
         name: 'Cuisiner Plaques',
-        rotY: 0,
         animation: 'bartending',
-        offset: [80, 0, 380],
+        offset: [80, 0, 390],
         // interactions/anim_cards.glb, interactions/anim_drinking_fountain.glb,
       }
     ]

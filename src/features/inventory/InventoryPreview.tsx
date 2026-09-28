@@ -10,7 +10,7 @@ import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpe
 import { CharacterAnimSelector } from '@features/scene/CharacterAnimSelector';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 import { resolveAnimationId } from '@features/scene/animations/animationResolver';
-import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/ai/duoAnimations';
+import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/walkerConfig';
 import { GroundPoint } from '@features/scene/character/GroundPoint';
 import { SkySphere } from '@features/scene/SkySphere';

@@ -17,7 +17,7 @@ import { HDRI_LIST } from './hdriConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 import { resetAppIdle } from './idleState';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
-import { DUO_ANIMATIONS } from './ai/duoAnimations';
+import { DUO_ANIMATIONS } from './animations/duoAnimations';
 import { duoSessionManager } from './ai/duoSessionManager';
 
 import {

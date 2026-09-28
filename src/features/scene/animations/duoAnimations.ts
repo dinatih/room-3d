@@ -1,4 +1,4 @@
-import { ANIMATION_DEFINITIONS } from '../animations/animationRegistry';
+import { ANIMATION_DEFINITIONS } from './animationRegistry';
 
 export interface DuoAnimationDef {
   id: string;
