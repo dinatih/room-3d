@@ -81,6 +81,14 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     tags: ['signature', 'valby', 'intro', 'emotes', 'pose'],
     duration: 13.0,
   },
+  {
+    id: 'nurse-intro',
+    path: 'animations/emotes_gestures/anim_nurse_intro.glb',
+    label: 'Elf Nurse Signature Intro',
+    aliases: ['nurse-signature', 'nurse-special', 'elf-nurse-intro'],
+    tags: ['signature', 'nurse', 'elf', 'intro', 'emotes', 'halloween'],
+    duration: 32.4,
+  },
 
   // ── POSES DE BASE & REPOS ──────────────────────────────────────────────────
   {

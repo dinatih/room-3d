@@ -337,7 +337,9 @@ sortedCharacters.forEach(char => {
                     ? 'Skeleton'
                     : (char.id === 'valby'
                       ? 'The First Descendant'
-                      : (!char.isLara ? 'Mixamo' : 'Lara Croft Style')))))))),
+                      : (char.id === 'nurse'
+                        ? 'Elf Nurse'
+                        : (!char.isLara ? 'Mixamo' : 'Lara Croft Style'))))))))),
       category: 'walkers',
       qty: 1,
       dims: {
@@ -361,9 +363,11 @@ sortedCharacters.forEach(char => {
                     ? 'Personnage animé : Squelette stylisé Curious Skeleton en T-pose anatomique calibrée.'
                     : (char.id === 'valby'
                       ? 'Personnage animé : Valby en combinaison nano body suit avec casque et physique de buste dynamique.'
-                      : (!char.isLara
-                        ? `Personnage animé standard Mixamo : ${char.name}.`
-                        : `Personnage : ${char.name}.`)))))))
+                      : (char.id === 'nurse'
+                        ? 'Personnage animé : Infirmière Elfe d’Halloween en tenue médicale stylisée.'
+                        : (!char.isLara
+                          ? `Personnage animé standard Mixamo : ${char.name}.`
+                          : `Personnage : ${char.name}.`))))))))
     });
   }
 });

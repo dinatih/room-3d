@@ -408,7 +408,7 @@ export function SingleCharacter({
     }
 
     // Auto-élévation au niveau du sol (Y = 0) pour les modèles ayant leurs pieds modélisés sous Y=0
-    const hasFeetAtGround = id === 'hayley' || id === 'gloria' || id === 'zoe' || id === 'sophia' || id === 'valby';
+    const hasFeetAtGround = id === 'hayley' || id === 'gloria' || id === 'zoe' || id === 'sophia' || id === 'valby' || id === 'nurse';
     if (!isLara && !hasFeetAtGround) {
       const localBox = glbLocalBBox(scene);
       if (localBox.min.y < -1.0) {
