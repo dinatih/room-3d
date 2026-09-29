@@ -1,10 +1,10 @@
 /**
  * BuildAnimationMatrix.tsx — Effet d'animation de construction Matrix.
  * Mobilier aléatoire → piliers → murs → sol & herbe (remontent) → plafond en dernier :
- *  • Wireframe Matrix vert (#00ff41) pendant la chute, matérialisation à 80 %.
+ *  • Wireframe Matrix rouge (#ff0041) pendant la chute, matérialisation à 80 %.
  *  • Pluie Matrix : InstancedMesh de colonnes de caractères en shader GPU.
  */
-import { useRef, useLayoutEffect } from 'react';
+import { useRef, useCallback, useLayoutEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ROOM_W, ROOM_D, WALL_H } from './wallData';
@@ -23,12 +23,14 @@ const MAT_RED = new THREE.MeshBasicMaterial({
   color:     0xff0041,
   wireframe: true,
 });
-const MAT_FLASH = new THREE.MeshBasicMaterial({
-  color:       0xff88aa,
-  wireframe:   false,
-  transparent: true,
-  opacity:     1,
-});
+function createFlashMat(): THREE.MeshBasicMaterial {
+  return new THREE.MeshBasicMaterial({
+    color:       0xff88aa,
+    wireframe:   false,
+    transparent: true,
+    opacity:     1,
+  });
+}
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
@@ -36,7 +38,11 @@ function easeOutCubic(t: number): number {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type MeshSave = { mesh: THREE.Mesh; orig: THREE.Material | THREE.Material[] };
+type MeshSave = {
+  mesh: THREE.Mesh;
+  orig: THREE.Material | THREE.Material[];
+  flash: THREE.MeshBasicMaterial;
+};
 
 type AnimObj = {
   obj:          THREE.Object3D;
@@ -54,7 +60,7 @@ type AnimObj = {
 
 function collectMeshes(o: THREE.Object3D, out: MeshSave[]): void {
   if ((o as THREE.Mesh).isMesh) {
-    out.push({ mesh: o as THREE.Mesh, orig: (o as THREE.Mesh).material });
+    out.push({ mesh: o as THREE.Mesh, orig: (o as THREE.Mesh).material, flash: createFlashMat() });
   }
   o.children.forEach((c) => collectMeshes(c, out));
 }
@@ -64,12 +70,18 @@ function applyMatrix(saves: MeshSave[]): void {
 }
 
 function applyFlash(saves: MeshSave[]): void {
-  MAT_FLASH.opacity = 1;
-  saves.forEach((s) => { s.mesh.material = MAT_FLASH; });
+  saves.forEach((s) => {
+    s.flash.opacity = 1;
+    s.mesh.material = s.flash;
+  });
+}
+
+function setFlashOpacity(saves: MeshSave[], opacity: number): void {
+  saves.forEach((s) => { s.flash.opacity = opacity; });
 }
 
 function restoreOriginal(saves: MeshSave[]): void {
-  saves.forEach((s) => { s.mesh.material = s.orig; });
+  saves.forEach((s) => { s.mesh.material = s.orig; s.flash.dispose(); });
 }
 
 function isUtility(o: THREE.Object3D): boolean {
@@ -426,11 +438,17 @@ export function BuildAnimationMatrix({
   onReady?: () => void;
 }) {
   const { scene, invalidate } = useThree();
+  const onFinishRef = useRef(onFinish);
+  onFinishRef.current = onFinish;
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+  const onDurationRef = useRef(onDuration);
+  onDurationRef.current = onDuration;
+
   const stateRef = useRef<{
     objects: AnimObj[];
     totalEnd: number;
     startTime: number | null;
-    prevTime: number | null;
     warmupFrames: number;
     remerge: () => void;
     rain: ReturnType<typeof createRain>;
@@ -438,9 +456,23 @@ export function BuildAnimationMatrix({
     finished: boolean;
   } | null>(null);
 
+  const finalizeAnimation = useCallback(() => {
+    const st = stateRef.current;
+    if (!st) return;
+    (window as any).isAnimProRunning = false;
+    st.objects.forEach((a) => {
+      a.obj.position.y = a.origLocalY;
+      restoreOriginal(a.meshSaves);
+    });
+    st.rain.dispose();
+    st.remerge();
+    const s3 = scene as THREE.Scene;
+    s3.fog = st.origFog;
+  }, [scene]);
+
   useLayoutEffect(() => {
     (window as any).isAnimProRunning = true;
-    const s3 = scene as unknown as THREE.Scene;
+    const s3 = scene as THREE.Scene;
     const remerge = unmergeScene(s3);
     s3.updateMatrixWorld(true);
 
@@ -506,7 +538,7 @@ export function BuildAnimationMatrix({
         ? objects[objects.length - 1].startTime + objects[objects.length - 1].duration + 300
         : 1000;
 
-    onDuration?.(totalEnd);
+    onDurationRef.current?.(totalEnd);
 
     // Positionner immédiatement tout en haut (ou en bas pour le sol et l'herbe)
     objects.forEach((a) => {
@@ -525,7 +557,6 @@ export function BuildAnimationMatrix({
       objects,
       totalEnd,
       startTime: null,
-      prevTime: null,
       warmupFrames: 1,
       remerge,
       rain,
@@ -534,20 +565,8 @@ export function BuildAnimationMatrix({
     };
     invalidate();
 
-    return () => {
-      (window as any).isAnimProRunning = false;
-      if (stateRef.current) {
-        stateRef.current.objects.forEach((a) => {
-          a.obj.position.y = a.origLocalY;
-          restoreOriginal(a.meshSaves);
-        });
-        stateRef.current.rain.dispose();
-        stateRef.current.remerge();
-        s3.fog = stateRef.current.origFog;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, invalidate]);
+    return () => { finalizeAnimation(); };
+  }, [scene, invalidate, finalizeAnimation]);
 
   useFrame((_, delta) => {
     const st = stateRef.current;
@@ -559,7 +578,7 @@ export function BuildAnimationMatrix({
       invalidate();
       if (st.warmupFrames === 0) {
         st.startTime = performance.now();
-        onReady?.();
+        onReadyRef.current?.();
       }
       return;
     }
@@ -568,11 +587,8 @@ export function BuildAnimationMatrix({
     if (st.startTime === null) {
       st.startTime = now;
     }
-    if (st.prevTime === null) st.prevTime = now;
 
     const elapsed = now - st.startTime;
-    const dt = delta;
-    st.prevTime = now;
 
     st.objects.forEach((a) => {
       const raw = (elapsed - a.startTime) / a.duration;
@@ -591,7 +607,7 @@ export function BuildAnimationMatrix({
       }
       if (a.materialized && now < a.flashEnd) {
         const ft = 1 - (a.flashEnd - now) / FLASH_DURATION;
-        MAT_FLASH.opacity = 1 - ft;
+        setFlashOpacity(a.meshSaves, 1 - ft);
       }
       if (a.materialized && now >= a.flashEnd) {
         restoreOriginal(a.meshSaves);
@@ -603,27 +619,17 @@ export function BuildAnimationMatrix({
       elapsed < st.totalEnd * 0.85
         ? 1
         : Math.max(0, (st.totalEnd - elapsed) / (st.totalEnd * 0.15));
-    st.rain.update(dt, fadeOut);
+    st.rain.update(delta, fadeOut);
 
     invalidate();
 
     if (elapsed >= st.totalEnd) {
       st.finished = true;
-      (window as any).isAnimProRunning = false;
-      st.objects.forEach((a) => {
-        a.obj.position.y = a.origLocalY;
-        restoreOriginal(a.meshSaves);
-      });
-      st.rain.dispose();
-      st.remerge();
-
-      const s3 = scene as unknown as THREE.Scene;
-      s3.fog = st.origFog;
-
+      finalizeAnimation();
       invalidate();
       const durSec = ((performance.now() - (st.startTime ?? now)) / 1000).toFixed(1);
       appLog('anim', `✨ Animation "Matrix" terminée en ${durSec}s (${st.objects.length} éléments assemblés)`);
-      onFinish();
+      onFinishRef.current();
     }
   });
 
