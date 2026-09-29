@@ -721,6 +721,11 @@ export function Studio() {
               animName={currentLaraAnimLabel}
               animKey={laraGridAnim}
               onCycleAnim={cycleLaraAnim}
+              onSelectAnim={(nextVal) => {
+                setLaraGridAnim(nextVal);
+                document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: nextVal } }));
+                useAnimPreviewStore.getState().play();
+              }}
               bottom={16}
               style={{
                 position: 'fixed',

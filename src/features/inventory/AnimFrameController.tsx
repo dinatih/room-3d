@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { getAnimationDef } from '@features/scene/animations/animationResolver';
 import { ANIMATION_DEFINITIONS, type AnimationDefinition } from '@features/scene/animations/animationRegistry';
-import { ANIM_CATEGORIES, getAnimCategory } from '@features/scene/CharacterAnimSelector';
+import { CharacterAnimSelector, ANIM_CATEGORIES, getAnimCategory } from '@features/scene/CharacterAnimSelector';
 
 const SPEED_OPTIONS = [0.25, 0.5, 1, 1.5, 2];
 
@@ -11,6 +11,7 @@ export interface AnimFrameControllerProps {
   animKey?: string;
   animDef?: AnimationDefinition;
   onCycleAnim?: (direction: 'next' | 'prev') => void;
+  onSelectAnim?: (animValue: string) => void;
   bottom?: number | string;
   className?: string;
   style?: React.CSSProperties;
@@ -21,6 +22,7 @@ export function AnimFrameController({
   animKey,
   animDef,
   onCycleAnim,
+  onSelectAnim,
   bottom = 8,
   className = '',
   style = {},
@@ -45,7 +47,10 @@ export function AnimFrameController({
   const [inputFrame, setInputFrame] = useState<string>('');
   const [isEditingFrame, setIsEditingFrame] = useState<boolean>(false);
   const [showMeta, setShowMeta] = useState<boolean>(true);
+  const [showAnimSelector, setShowAnimSelector] = useState<boolean>(false);
   const sliderRef = useRef<HTMLInputElement>(null);
+  const selectorRef = useRef<HTMLDivElement>(null);
+  const badgeRef = useRef<HTMLButtonElement>(null);
 
   const totalFrames = duration > 0 ? Math.max(1, Math.round(duration * fps)) : 0;
   const currentFrame = duration > 0 ? Math.min(totalFrames, Math.round(currentTime * fps)) : 0;
@@ -155,6 +160,35 @@ export function AnimFrameController({
   }, [animName, def, clipName]);
 
   const hasMeta = Boolean(def || isTPose);
+  const activeAnimValue = animKey || def?.id || 'idle';
+
+  const handleSelectAnim = (val: string) => {
+    if (onSelectAnim) {
+      onSelectAnim(val);
+    } else {
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: val } }));
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: val } }));
+      useAnimPreviewStore.getState().play();
+    }
+    setShowAnimSelector(false);
+  };
+
+  // Fermer le sélecteur d'animation lors d'un clic extérieur
+  useEffect(() => {
+    if (!showAnimSelector) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        selectorRef.current &&
+        !selectorRef.current.contains(e.target as Node) &&
+        badgeRef.current &&
+        !badgeRef.current.contains(e.target as Node)
+      ) {
+        setShowAnimSelector(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [showAnimSelector]);
 
   return (
     <div
@@ -183,6 +217,43 @@ export function AnimFrameController({
         ...style,
       }}
     >
+      {/* Popover Sélecteur d'animation CharacterAnimSelector */}
+      {showAnimSelector && (
+        <div
+          ref={selectorRef}
+          className="anim-selector-popover"
+          style={{
+            position: 'absolute',
+            bottom: 'calc(100% + 8px)',
+            right: 8,
+            width: 'min(460px, calc(100% - 16px))',
+            height: 'min(420px, 55vh)',
+            maxHeight: 'min(420px, 55vh)',
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: 8,
+            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2)',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 1000,
+          }}
+          onClick={e => e.stopPropagation()}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <CharacterAnimSelector
+            activeAnimValue={activeAnimValue}
+            onSelectAnim={handleSelectAnim}
+            onClose={() => setShowAnimSelector(false)}
+            title="Animations Personnage"
+            maxHeight="100%"
+            listMaxHeight="calc(min(420px, 55vh) - 125px)"
+            autoFocus={true}
+          />
+        </div>
+      )}
+
       {/* ── Ligne 1 : Timeline Slider (Scrubber comme dans Mixamo) ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
         <span
@@ -465,15 +536,18 @@ export function AnimFrameController({
                 ▲
               </button>
             )}
-            <span
+            <button
+              ref={badgeRef}
+              type="button"
+              onClick={() => setShowAnimSelector(v => !v)}
               style={{
                 fontSize: 11,
                 fontWeight: 600,
                 color: '#38bdf8',
-                background: 'rgba(2, 132, 199, 0.15)',
+                background: showAnimSelector ? 'rgba(2, 132, 199, 0.35)' : 'rgba(2, 132, 199, 0.15)',
                 padding: '2px 8px',
                 borderRadius: 4,
-                border: '1px solid rgba(56, 189, 248, 0.3)',
+                border: `1px solid ${showAnimSelector ? '#38bdf8' : 'rgba(56, 189, 248, 0.3)'}`,
                 whiteSpace: 'nowrap',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -481,15 +555,16 @@ export function AnimFrameController({
                 maxWidth: 'min(450px, 45vw)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                userSelect: 'text',
-                WebkitUserSelect: 'text',
-                cursor: 'text',
+                cursor: 'pointer',
+                outline: 'none',
+                transition: 'background 0.15s, border-color 0.15s',
               }}
-              title={`Animation active : ${displayName}`}
+              title={showAnimSelector ? "Fermer le sélecteur d'animations" : `Animation active : ${displayName} (Cliquer pour ouvrir le sélecteur)`}
             >
               <span style={{ fontSize: 11, userSelect: 'none' }}>🎬</span>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', userSelect: 'text', WebkitUserSelect: 'text' }}>{displayName}</span>
-            </span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', userSelect: 'none' }}>{displayName}</span>
+              <span style={{ fontSize: 8, opacity: 0.8, userSelect: 'none', flexShrink: 0 }}>{showAnimSelector ? '▲' : '▼'}</span>
+            </button>
             {onCycleAnim && (
               <button
                 type="button"

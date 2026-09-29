@@ -1398,6 +1398,10 @@ export function InventoryPreview({
               animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
               animKey={actionStates.walkerAnim}
               onCycleAnim={cycleAnim}
+              onSelectAnim={(val) => {
+                setActionStates(s => ({ ...s, walkerAnim: val, duoAnimDef: undefined }));
+                useAnimPreviewStore.getState().play();
+              }}
               bottom={animControllerBottom}
             />
           )}
