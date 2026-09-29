@@ -194,7 +194,7 @@ export function SingleCharacter({
   const lastLoggedAnimRef = useRef<string>('');
   const [isFalling, setIsFalling] = useState<boolean>(false);
 
-  const [equipment, setEquipment] = useState<{ holster: boolean; pistols: boolean; backpack: boolean }>({
+  const [equipment, _setEquipment] = useState<{ holster: boolean; pistols: boolean; backpack: boolean }>({
     holster: true,
     pistols: true,
     backpack: true,
@@ -521,22 +521,6 @@ export function SingleCharacter({
     };
 
     const onToggle = (e: any) => {
-      if (e.detail?.key === 'lara-custom-holster' && isActive) {
-        setEquipment(prev => ({ ...prev, holster: !prev.holster }));
-        invalidate();
-        return;
-      }
-      if (e.detail?.key === 'lara-custom-pistols' && isActive) {
-        setEquipment(prev => ({ ...prev, pistols: !prev.pistols }));
-        invalidate();
-        return;
-      }
-      if (e.detail?.key === 'lara-custom-backpack' && isActive) {
-        setEquipment(prev => ({ ...prev, backpack: !prev.backpack }));
-        invalidate();
-        return;
-      }
-
       if (e.detail?.key === `walker-pos-${id}`) {
         if (Array.isArray(e.detail.value) && e.detail.value.length === 3) {
           setAgentPosition(e.detail.value[0], e.detail.value[1], e.detail.value[2]);

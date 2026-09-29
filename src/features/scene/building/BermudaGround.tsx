@@ -82,7 +82,6 @@ export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.5 }: B
           userData={{
             brickType: 'ground',
             itemName: 'Terrain Extérieur',
-            hoverAction: { label: 'Sol : Vert uni', actionId: 'ground-type-cycle' },
           }}
         >
           <planeGeometry args={[1100, 2000]} />
@@ -151,7 +150,6 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       userData={{
         brickType: 'ground',
         itemName: `Terrain Extérieur (${config.label})`,
-        hoverAction: { label: `Sol : ${config.label}`, actionId: 'ground-type-cycle' },
       }}
     >
       <planeGeometry args={[1100, 2000]} />

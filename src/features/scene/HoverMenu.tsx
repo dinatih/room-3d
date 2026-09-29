@@ -35,101 +35,60 @@ const mappedWigOptions = WIGS_ITEMS.map((wig, i) => ({
   label: wig.name
 }));
 
-const ACTIONS: Record<string, ActionDef> = {
-  'mannequin-kallax-nw-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-kallax-nw-random' },
-  'mannequin-kallax-nw-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-kallax-nw-wig', type: 'select', options: mappedWigOptions },
-  'mannequin-kallax-nw-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-kallax-nw-color', type: 'select', options: [
-    { value: 'naturel', label: 'Naturel 🟫' },
-    { value: 'noir', label: 'Noir ⚫' },
-    { value: 'brun', label: 'Brun 🟫' },
-    { value: 'chatain', label: 'Châtain 🟤' },
-    { value: 'blond', label: 'Blond 🌟' },
-    { value: 'roux', label: 'Roux 🦊' },
-    { value: 'blanc', label: 'Blanc ❄️' },
-    { value: 'bleu', label: 'Bleu 💙' },
-    { value: 'vert', label: 'Vert 💚' },
-    { value: 'rouge', label: 'Rouge ❤️' },
-    { value: 'rose', label: 'Rose 🌸' },
-    { value: 'violet', label: 'Violet 💜' },
-    { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
-  ] },
-  'mannequin-kallax-nw-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-kallax-nw-wind' },
+const HAIR_COLORS = [
+  { value: 'naturel', label: 'Naturel 🟫' },
+  { value: 'noir', label: 'Noir ⚫' },
+  { value: 'brun', label: 'Brun 🟫' },
+  { value: 'chatain', label: 'Châtain 🟤' },
+  { value: 'blond', label: 'Blond 🌟' },
+  { value: 'roux', label: 'Roux 🦊' },
+  { value: 'blanc', label: 'Blanc ❄️' },
+  { value: 'bleu', label: 'Bleu 💙' },
+  { value: 'vert', label: 'Vert 💚' },
+  { value: 'rouge', label: 'Rouge ❤️' },
+  { value: 'rose', label: 'Rose 🌸' },
+  { value: 'violet', label: 'Violet 💜' },
+  { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
+];
 
-  'mannequin-kallax-ne-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-kallax-ne-random' },
-  'mannequin-kallax-ne-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-kallax-ne-wig', type: 'select', options: mappedWigOptions },
-  'mannequin-kallax-ne-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-kallax-ne-color', type: 'select', options: [
-    { value: 'naturel', label: 'Naturel 🟫' },
-    { value: 'noir', label: 'Noir ⚫' },
-    { value: 'brun', label: 'Brun 🟫' },
-    { value: 'chatain', label: 'Châtain 🟤' },
-    { value: 'blond', label: 'Blond 🌟' },
-    { value: 'roux', label: 'Roux 🦊' },
-    { value: 'rouge', label: 'Rouge ❤️' },
-    { value: 'blanc', label: 'Blanc ❄️' },
-    { value: 'bleu', label: 'Bleu 💙' },
-    { value: 'vert', label: 'Vert 💚' },
-    { value: 'rose', label: 'Rose 🌸' },
-    { value: 'violet', label: 'Violet 💜' },
-    { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
-  ] },
-  'mannequin-kallax-ne-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-kallax-ne-wind' },
+function makeMannequinActions(loc: string): Record<string, ActionDef> {
+  return {
+    [`mannequin-${loc}-random`]: { btnLabel: '🎲 Aléatoire complet', toggleKey: `mannequin-${loc}-random` },
+    [`mannequin-${loc}-wig`]:   { btnLabel: 'Perruque 💇', toggleKey: `mannequin-${loc}-wig`, type: 'select', options: mappedWigOptions },
+    [`mannequin-${loc}-color`]: { btnLabel: 'Couleur cheveux 🎨', toggleKey: `mannequin-${loc}-color`, type: 'select', options: HAIR_COLORS },
+    [`mannequin-${loc}-wind`]:  { btnLabel: 'Vent 💨', toggleKey: `mannequin-${loc}-wind` },
+  };
+}
 
-  'mannequin-meubleT-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-meubleT-random' },
-  'mannequin-meubleT-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-meubleT-wig', type: 'select', options: mappedWigOptions },
-  'mannequin-meubleT-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-meubleT-color', type: 'select', options: [
-    { value: 'naturel', label: 'Naturel 🟫' },
-    { value: 'noir', label: 'Noir ⚫' },
-    { value: 'brun', label: 'Brun 🟫' },
-    { value: 'chatain', label: 'Châtain 🟤' },
-    { value: 'blond', label: 'Blond 🌟' },
-    { value: 'roux', label: 'Roux 🦊' },
-    { value: 'rouge', label: 'Rouge ❤️' },
-    { value: 'blanc', label: 'Blanc ❄️' },
-    { value: 'bleu', label: 'Bleu 💙' },
-    { value: 'vert', label: 'Vert 💚' },
-    { value: 'rose', label: 'Rose 🌸' },
-    { value: 'violet', label: 'Violet 💜' },
-    { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
-  ] },
-  'mannequin-meubleT-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-meubleT-wind' },
+function makePositionAction(key: string): ActionDef {
+  return {
+    btnLabel: () => {
+      const p = positionState[key];
+      return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position';
+    },
+    toggleKey: key,
+  };
+}
 
-  'mannequin-lack-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-lack-random' },
-  'mannequin-lack-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-lack-wig', type: 'select', options: mappedWigOptions },
-  'mannequin-lack-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-lack-color', type: 'select', options: [
-    { value: 'naturel', label: 'Naturel 🟫' },
-    { value: 'noir', label: 'Noir ⚫' },
-    { value: 'brun', label: 'Brun 🟫' },
-    { value: 'chatain', label: 'Châtain 🟤' },
-    { value: 'blond', label: 'Blond 🌟' },
-    { value: 'roux', label: 'Roux 🦊' },
-    { value: 'rouge', label: 'Rouge ❤️' },
-    { value: 'blanc', label: 'Blanc ❄️' },
-    { value: 'bleu', label: 'Bleu 💙' },
-    { value: 'vert', label: 'Vert 💚' },
-    { value: 'rose', label: 'Rose 🌸' },
-    { value: 'violet', label: 'Violet 💜' },
-    { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
-  ] },
-  'mannequin-lack-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-lack-wind' },
+const MANNEQUIN_ACTIONS = {
+  ...makeMannequinActions('kallax-nw'),
+  ...makeMannequinActions('kallax-ne'),
+  ...makeMannequinActions('meubleT'),
+  ...makeMannequinActions('lack'),
+  ...makeMannequinActions('lamp'),
+};
 
-  'mannequin-lamp-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-lamp-random' },
-  'mannequin-lamp-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-lamp-wig', type: 'select', options: mappedWigOptions },
-  'mannequin-lamp-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-lamp-color', type: 'select', options: [
-    { value: 'naturel', label: 'Naturel 🟫' },
-    { value: 'noir', label: 'Noir ⚫' },
-    { value: 'brun', label: 'Brun 🟫' },
-    { value: 'chatain', label: 'Châtain 🟤' },
-    { value: 'blond', label: 'Blond 🌟' },
-    { value: 'roux', label: 'Roux 🦊' },
-    { value: 'rouge', label: 'Rouge ❤️' },
-    { value: 'blanc', label: 'Blanc ❄️' },
-    { value: 'bleu', label: 'Bleu 💙' },
-    { value: 'vert', label: 'Vert 💚' },
-    { value: 'rose', label: 'Rose 🌸' },
-    { value: 'violet', label: 'Violet 💜' },
-    { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
-  ] },
-  'mannequin-lamp-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-lamp-wind' },
+const POSITION_ACTIONS = {
+  ...makePositionAction('desk1-position'),
+  ...makePositionAction('desk2-position'),
+  ...makePositionAction('smorkull-position'),
+  ...makePositionAction('airperformer-position'),
+  ...makePositionAction('raskog-large-position'),
+};
+
+const ACTIONS = {
+  ...MANNEQUIN_ACTIONS,
+  ...POSITION_ACTIONS,
 
   eastGlassDoor: {
     btnLabel: 'Ouvrir / Fermer Droit',
@@ -168,10 +127,7 @@ const ACTIONS: Record<string, ActionDef> = {
     return p ? `Position (${labels[p.idx] ?? p.idx + 1}) →` : 'Changer position →';
   }, toggleKey: 'bed-position' },
   'desk1-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk1-toggle'  },
-  'desk1-position':{ btnLabel: () => { const p = positionState['desk1-position'];   return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'desk1-position'},
   'desk2-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk2-toggle'  },
-  'desk2-position':{ btnLabel: () => { const p = positionState['desk2-position'];   return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'desk2-position'},
-  'smorkull-position': { btnLabel: () => { const p = positionState['smorkull-position']; return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'smorkull-position' },
   'shiba-replay':      { btnLabel: 'Rejouer',           toggleKey: 'shiba-replay'      },
   'robin-bird-replay': { btnLabel: 'Rejouer',           toggleKey: 'robin-bird-replay' },
   'nestMini':          { btnLabel: 'Ok Google',         toggleKey: 'nestMini'          },
@@ -180,18 +136,9 @@ const ACTIONS: Record<string, ActionDef> = {
   airPerformerPower:       { btnLabel: 'Allumer / Éteindre', toggleKey: 'airPerformerPower' },
   airPerformerMode:        { btnLabel: 'Changer Mode',       toggleKey: 'airPerformerMode'  },
   airPerformerSpeed:       { btnLabel: 'Vitesse +/-',        toggleKey: 'airPerformerSpeed' },
-  'airperformer-position': { btnLabel: () => { const p = positionState['airperformer-position']; return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'airperformer-position' },
-  'raskog-large-position': { btnLabel: () => { const p = positionState['raskog-large-position'];    return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'raskog-large-position'    },
-  'select-walker': {
-    btnLabel: '🎯 Définir comme personnage actif',
-    toggleKey: 'select-walker'
-  },
   'walker-meshes':         { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
   'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
   'sofa-arm-right':        { btnLabel: 'Accoudoir Droit',   toggleKey: 'sofaArmRight'      },
-  'lara-custom-holster':   { btnLabel: 'Holsters & Boucle', toggleKey: 'lara-custom-holster' },
-  'lara-custom-pistols':   { btnLabel: 'Pistolets Mains',  toggleKey: 'lara-custom-pistols' },
-  'lara-custom-backpack':  { btnLabel: 'Sac à dos',         toggleKey: 'lara-custom-backpack' },
   'lara-haircut':          { btnLabel: 'Coupe de cheveux 💇‍♀️', toggleKey: 'lara-haircut', type: 'select', options: [
     { value: 'original', label: 'Coupe d\'origine 👱‍♀️' },
     ...WIGS_ITEMS.map(wig => ({
@@ -211,7 +158,8 @@ const ACTIONS: Record<string, ActionDef> = {
 
 // Helper to resolve action definition (supports dynamic actions like select-walker-*)
 function getActionDef(actionId: string): ActionDef | undefined {
-  if (ACTIONS[actionId]) return ACTIONS[actionId];
+  const actions = ACTIONS as unknown as Record<string, ActionDef>;
+  if (actions[actionId]) return actions[actionId];
   if (actionId.startsWith('select-walker-')) {
     return {
       btnLabel: '🎯 Définir comme personnage actif',
