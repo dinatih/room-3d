@@ -570,9 +570,8 @@ export function GlobalSkeletonHelpers({
   // Si le squelette n'est pas affiché, ne rien rendre
   if (!show) return null;
 
-  const displayBone = hoveredBoneInfo?.bone || activeSelectedBone.current;
-  const displayPos = hoveredBoneInfo?.pos || (activeSelectedBone.current ? activeSelectedBone.current.getWorldPosition(new THREE.Vector3()) : null);
-  const isSelected = Boolean(activeSelectedBone.current && displayBone === activeSelectedBone.current);
+  // Afficher une petite infobulle discrète uniquement au survol temporaire d'un os (jamais de bulle permanente sur l'os sélectionné)
+  const showHoverTooltip = Boolean(hoveredBoneInfo && hoveredBoneInfo.bone !== activeSelectedBone.current);
 
   return (
     <>
@@ -598,51 +597,36 @@ export function GlobalSkeletonHelpers({
         <meshBasicMaterial color="#00ffff" depthTest={false} transparent opacity={0.8} />
       </mesh>
 
-      {/* Étiquette flottante HTML au-dessus de l'os actif ou survolé */}
-      {displayBone && displayPos && (
+      {/* Étiquette discrète uniquement lors du survol de la souris */}
+      {showHoverTooltip && hoveredBoneInfo && (
         <Html
-          position={[displayPos.x, displayPos.y, displayPos.z]}
+          position={[hoveredBoneInfo.pos.x, hoveredBoneInfo.pos.y, hoveredBoneInfo.pos.z]}
           style={{
             pointerEvents: 'none',
-            transform: 'translate3d(-50%, -130%, 0)',
+            transform: 'translate3d(-50%, -120%, 0)',
             transition: 'transform 0.05s ease-out',
             zIndex: 10000,
           }}
         >
           <div
             style={{
-              background: isSelected ? 'rgba(230, 57, 70, 0.95)' : 'rgba(15, 23, 42, 0.92)',
-              color: '#ffffff',
-              border: `1.5px solid ${isSelected ? '#fffa65' : '#38bdf8'}`,
-              borderRadius: 6,
-              padding: '3px 9px',
-              fontSize: 11,
-              fontWeight: 700,
+              background: 'rgba(15, 23, 42, 0.85)',
+              color: '#38bdf8',
+              border: '1px solid rgba(56, 189, 248, 0.6)',
+              borderRadius: 4,
+              padding: '2px 6px',
+              fontSize: 10,
+              fontWeight: 600,
               fontFamily: 'monospace',
               whiteSpace: 'nowrap',
-              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.6)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
+              gap: 4,
             }}
           >
             <span>🦴</span>
-            <span>{displayBone.name}</span>
-            {isSelected && (
-              <span
-                style={{
-                  fontSize: 9,
-                  background: '#fffa65',
-                  color: '#991b1b',
-                  padding: '1px 5px',
-                  borderRadius: 3,
-                  fontWeight: 900,
-                  letterSpacing: 0.5,
-                }}
-              >
-                INFLUENCE ACTIVE
-              </span>
-            )}
+            <span>{hoveredBoneInfo.bone.name}</span>
           </div>
         </Html>
       )}
