@@ -267,11 +267,11 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
 | Navigation | Walk mode WASD, vue 2D dessus, perspective, POV, WebXR VR |
 | Structure | Murs, niche, couloir diagonal, cuisine, SDB, WC |
 | Meubles | ~50 items/ components (procéduraux + GLB IKEA) |
-| Interactivité | Hover menu, toggles portes/tiroirs/lit, murs rouges, X-Ray |
+| Interactivité | Hover menu, toggles portes/tiroirs/lit, murs rouges |
 | Inventaire | ~120 items, preview 3D interactive (registry), filtres, recherche |
 | Minimap | Canvas 2D temps réel, plein écran, suivi personnage |
 | Floorplan | Plan 2D coté |
-| Couches visuelles | Structure / GLB / Mobilier + toggles X-Ray, murs rouges, grille |
+| Couches visuelles | Structure / GLB / Mobilier + toggles murs rouges, grille |
 | Voisins | Appartements est/ouest semi-transparents |
 | Dev Tools | FPS graph, draw calls, stats mémoire, tailles GLB |
 | Personnage | Walking man animé (Lara 2026) + SkeletonHelper toggle |

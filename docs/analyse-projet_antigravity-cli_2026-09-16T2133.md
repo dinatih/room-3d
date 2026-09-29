@@ -237,7 +237,7 @@ Le store unique gère 3 catégories d'état :
 Portes ouvertes/fermées, lampes allumées/éteintes, TV, frigo, congélateur, volets, modes de rangement Drona...
 
 #### 6.2 `layers` — Visibilité des couches de la scène
-Structure, équipement, mobilier, voisins, LiDAR, miroirs, grille, mode plan, wireframe, X-ray, personnages, zones IA, ombres, herbe, physique des cheveux/seins, etc.
+Structure, équipement, mobilier, voisins, LiDAR, miroirs, grille, mode plan, wireframe, personnages, zones IA, ombres, herbe, physique des cheveux/seins, etc.
 
 Le nombre de NPC est configurable via URL (`?npc=15`, `?npc=solo`, etc.) et persiste dans l'URL via `replaceState`.
 
@@ -344,7 +344,6 @@ Le dossier `ai/` implémente un système complet d'agents autonomes :
 | **VR** | Réalité virtuelle WebXR |
 | **Immersif** | Gyroscope mobile |
 | **Avion** | Pilotage d'un avion en papier dans la scène |
-| **X-Ray** | Mode rayons X |
 | **Wireframe** | Mode fil de fer |
 | **LiDAR** | Nuage de points laser (4 modes, opacité réglable) |
 | **Photo** | Ray tracing haute qualité (`three-gpu-pathtracer`) |

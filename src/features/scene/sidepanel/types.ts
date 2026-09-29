@@ -89,7 +89,6 @@ export interface LayerState {
   furnishings: boolean;
   decor: boolean;
   neighbors:  boolean;
-  xray:       boolean;
   wireframe:  boolean;
   mirrors:       boolean;
   mirrorsHD:  boolean;

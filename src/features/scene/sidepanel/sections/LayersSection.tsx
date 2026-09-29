@@ -193,7 +193,6 @@ export function LayersSection({
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('yellow', 'Mesures réelles 📐 (N)', 'measuredDimensions')}
       {layerBtn('red',    'Aff. arêtes murs (W)', 'wallEdges')}
-      {layerBtn('cyan',   'X-Ray 🩻',      'xray')}
       {layerBtn('cyan',   'Wireframe coloré 🕸', 'wireframe')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('yellow', 'Lumières HD ✨', 'lightsHD')}
