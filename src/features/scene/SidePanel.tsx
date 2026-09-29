@@ -15,10 +15,6 @@ import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useSceneStore } from './store/useSceneStore';
 import { HDRI_LIST } from './hdriConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
-import { resetAppIdle } from './idleState';
-import { WALKER_ANIM_OPTIONS } from './animOptions';
-import { DUO_ANIMATIONS } from './animations/duoAnimations';
-import { duoSessionManager } from './ai/duoSessionManager';
 
 import {
   TABS, ALL_HAIR_COLORS,
@@ -33,8 +29,6 @@ import { ViewsSection } from './sidepanel/sections/ViewsSection';
 import { LayersSection } from './sidepanel/sections/LayersSection';
 import { InteractiveSection } from './sidepanel/sections/InteractiveSection';
 import { CharacterSection } from './sidepanel/sections/CharacterSection';
-import { AnimationsSection } from './sidepanel/sections/AnimationsSection';
-import { DuoAnimationsSection } from './sidepanel/sections/DuoAnimationsSection';
 import { ProfileSection } from './sidepanel/sections/ProfileSection';
 
 export type {
@@ -140,41 +134,15 @@ export function SidePanel({
     }
   };
 
-  const [activeAnimValue, setActiveAnimValue] = useState<string>('idle');
-
   useEffect(() => {
     const onToggle = (e: any) => {
       if (e.detail?.key === 'lara-haircut') {
         if (e.detail.value) setGlobalHaircut(e.detail.value);
       }
-      if (e.detail?.key === 'walker-anim-lara' || e.detail?.key === 'walker-anim-xbot') {
-        const val = e.detail.value ?? 'idle';
-        setActiveAnimValue(val);
-      }
     };
     document.addEventListener('furniture-toggle', onToggle);
     return () => document.removeEventListener('furniture-toggle', onToggle);
   }, []);
-
-  const handleSelectGlobalAnim = (val: string) => {
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: val } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: val } }));
-  };
-
-  const handleResetAnim = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    resetAppIdle();
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'idle' } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'idle' } }));
-  };
-
-  const handleRandomDuoAnim = () => {
-    resetAppIdle();
-    const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
-    if (randomAnim) {
-      duoSessionManager.forceDuoAnimation(randomAnim);
-    }
-  };
 
   useEffect(() => {
     const handleToggleHaircut = () => {
@@ -277,54 +245,6 @@ export function SidePanel({
     </div>
   );
 
-  const animHeaderButtons = (
-    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
-      <button
-        type="button"
-        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
-        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
-        title="Lancer une animation aléatoire (Perso)"
-        onClick={(e) => {
-          e.stopPropagation();
-          resetAppIdle();
-          const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle');
-          if (pool.length > 0) {
-            const randomAnim = pool[Math.floor(Math.random() * pool.length)];
-            handleSelectGlobalAnim(randomAnim.value);
-          }
-        }}
-      >
-        🎲
-      </button>
-      <button
-        type="button"
-        className="btn btn-sm btn-secondary text-white p-0 px-1 border-0 shadow-sm fw-bold"
-        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
-        title="Désactiver l'anim (Remettre les PNJ en mode IA autonome)"
-        onClick={handleResetAnim}
-      >
-        ⏹️
-      </button>
-    </div>
-  );
-
-  const duoAnimHeaderButtons = (
-    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
-      <button
-        type="button"
-        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
-        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
-        title="Lancer une animation de couple aléatoire 🎲"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleRandomDuoAnim();
-        }}
-      >
-        🎲
-      </button>
-    </div>
-  );
-
   const profileHeaderButtons = (
     <div className="d-flex align-items-center gap-1.5 pe-1" onClick={e => e.stopPropagation()}>
       <a
@@ -403,6 +323,10 @@ export function SidePanel({
       onToggleAutopilot={onToggleAutopilot}
       showLandingStrips={showLandingStrips}
       onToggleLandingStrips={onToggleLandingStrips}
+      buildAnimMatrix={buildAnimMatrix}
+      onStartBuildAnimMatrix={onStartBuildAnimMatrix}
+      onStopBuildAnim={onStopBuildAnim}
+      animDurations={animDurations}
     />
   );
 
@@ -422,22 +346,6 @@ export function SidePanel({
     />
   );
 
-  const animationsSectionContent = (
-    <AnimationsSection
-      isMobile={isMobile}
-      buildAnimMatrix={buildAnimMatrix}
-      onStartBuildAnimMatrix={onStartBuildAnimMatrix}
-      onStopBuildAnim={onStopBuildAnim}
-      animDurations={animDurations}
-      activeAnimValue={activeAnimValue}
-      onSelectAnim={handleSelectGlobalAnim}
-    />
-  );
-
-  const duoAnimationsSectionContent = (
-    <DuoAnimationsSection isMobile={isMobile} />
-  );
-
   // ── Rendu mobile : tab bar bottom + sheet ───────────────────────────────────
   if (isMobile) {
     const sheetOpen = activeTab !== null;
@@ -447,8 +355,6 @@ export function SidePanel({
       layers: '📑 Calques',
       personnage: '👤 PNJ',
       perf: '📊 Perf',
-      anims: '💃 Animations Perso',
-      animsCouple: '👯‍♀️ Animations Couple',
       interactif: '🎮 Interactif',
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
@@ -457,8 +363,6 @@ export function SidePanel({
       layers: layersSectionContent,
       interactif: interactiveSectionContent,
       personnage: characterSectionContent,
-      anims: animationsSectionContent,
-      animsCouple: duoAnimationsSectionContent,
       perf: <DevToolsGroups Group={Group} />,
     };
 
@@ -490,8 +394,6 @@ export function SidePanel({
                 {activeTab === 'profile' && profileHeaderButtons}
                 {activeTab === 'layers' && layersHeaderButtons}
                 {activeTab === 'personnage' && personnageHeaderButtons}
-                {activeTab === 'anims' && animHeaderButtons}
-                {activeTab === 'animsCouple' && duoAnimHeaderButtons}
                 <button
                   type="button"
                   className="btn-close"
@@ -564,40 +466,6 @@ export function SidePanel({
                       background: '#ffc107',
                     }}
                     title="Coupe et couleur aléatoires 🎲"
-                  >
-                    🎲
-                  </button>
-                </div>
-              );
-            }
-            if (t.key === 'animsCouple') {
-              return (
-                <div key={t.key} className="d-flex align-items-center position-relative" style={{ flex: '0 0 auto' }}>
-                  <button
-                    onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
-                    className={`btn border-0 d-flex flex-column align-items-center justify-content-center py-1 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
-                    style={{ fontSize: '10px', minWidth: '60px' }}
-                  >
-                    <span style={{ fontSize: '20px', lineHeight: 1 }}>{t.emoji}</span>
-                    <span className="fw-semibold">{t.label}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRandomDuoAnim();
-                    }}
-                    className="btn btn-sm btn-warning p-0 d-flex align-items-center justify-content-center border-0 rounded-circle position-absolute shadow-sm"
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      top: '4px',
-                      right: '4px',
-                      fontSize: '11px',
-                      zIndex: 10,
-                      background: '#ffc107',
-                    }}
-                    title="Animation de couple aléatoire 🎲"
                   >
                     🎲
                   </button>
@@ -680,8 +548,6 @@ export function SidePanel({
         <Group emoji="📑" title="Calques" extra={layersHeaderButtons}>{layersSectionContent}</Group>
         <Group emoji="🎮" title="Interactif">{interactiveSectionContent}</Group>
         <Group emoji="👤" title="PNJ" extra={personnageHeaderButtons}>{characterSectionContent}</Group>
-        <Group emoji="💃" title="Animations Perso" extra={animHeaderButtons}>{animationsSectionContent}</Group>
-        <Group emoji="👯‍♀️" title="Animations Couple" extra={duoAnimHeaderButtons}>{duoAnimationsSectionContent}</Group>
       </div>
 
       {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}

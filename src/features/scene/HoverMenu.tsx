@@ -13,7 +13,6 @@ import { positionState } from '@features/scene/positionState';
 import { cameraState } from '@features/scene/cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
-import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
 import { isCharacterVisibleInMode } from './walkerConfig';
@@ -190,8 +189,6 @@ const ACTIONS: Record<string, ActionDef> = {
   'walker-meshes':         { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
   'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
   'sofa-arm-right':        { btnLabel: 'Accoudoir Droit',   toggleKey: 'sofaArmRight'      },
-  'walker-anim-lara':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-lara', type: 'select', options: WALKER_ANIM_OPTIONS },
-  'walker-anim-xbot':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-xbot', type: 'select', options: WALKER_ANIM_OPTIONS },
   'lara-custom-holster':   { btnLabel: 'Holsters & Boucle', toggleKey: 'lara-custom-holster' },
   'lara-custom-pistols':   { btnLabel: 'Pistolets Mains',  toggleKey: 'lara-custom-pistols' },
   'lara-custom-backpack':  { btnLabel: 'Sac à dos',         toggleKey: 'lara-custom-backpack' },
@@ -719,9 +716,7 @@ export function HoverOverlay() {
   const showDot   = state.visible && !state.locked;
   const showModal = state.locked;
 
-  const [selectFilter, setSelectFilter] = useState('');
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
-  const [copiedHover, setCopiedHover] = useState<boolean>(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -792,59 +787,10 @@ export function HoverOverlay() {
           {lockedActions.map((action, i) => {
             if (action.type === 'select') {
               const opts = action.options ?? [];
-              const filteredOpts = selectFilter.trim()
-                ? opts.filter(o => o.label.toLowerCase().includes(selectFilter.trim().toLowerCase()) || o.value.toLowerCase().includes(selectFilter.trim().toLowerCase()))
-                : opts;
               const val = selectedValues[action.toggleKey] ?? '';
-              const filename = val ? (val.split('/').pop() || val) : '';
 
               return (
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {opts.length > 10 && action.toggleKey.startsWith('walker-anim') && (
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <input
-                        type="text"
-                        placeholder="🔍 Filtrer anims..."
-                        value={selectFilter}
-                        onChange={e => setSelectFilter(e.target.value)}
-                        style={{
-                          background: 'rgba(255,255,255,0.15)',
-                          color: '#fff',
-                          border: '1px solid rgba(255,255,255,0.25)',
-                          borderRadius: 4,
-                          padding: '3px 6px',
-                          fontSize: 11,
-                          outline: 'none',
-                          flex: 1,
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const pool = opts.filter(o => o.value !== 'idle');
-                          if (pool.length > 0) {
-                            const randomOpt = pool[Math.floor(Math.random() * pool.length)];
-                            setSelectedValues(prev => ({ ...prev, [action.toggleKey]: randomOpt.value }));
-                            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: action.toggleKey, value: randomOpt.value } }));
-                            hoverState.onUpdate?.();
-                          }
-                        }}
-                        style={{
-                          background: '#ffc107',
-                          color: '#000',
-                          border: 'none',
-                          borderRadius: 4,
-                          padding: '2px 8px',
-                          fontSize: 11,
-                          fontWeight: 'bold',
-                          cursor: 'pointer',
-                        }}
-                        title="Animation aléatoire"
-                      >
-                        🎲
-                      </button>
-                    </div>
-                  )}
                   <select
                     style={BTN_STYLE}
                     onKeyDown={(e) => e.stopPropagation()}
@@ -856,48 +802,13 @@ export function HoverOverlay() {
                       hoverState.onUpdate?.();
                     }}
                   >
-                    <option value="" disabled>{action.btnLabel ? (typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel) : "Choisir une animation..."} ({filteredOpts.length})</option>
-                    {filteredOpts.map(opt => (
+                    <option value="" disabled>{action.btnLabel ? (typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel) : "Choisir une option..."} ({opts.length})</option>
+                    {opts.map(opt => (
                       <option key={opt.value} value={opt.value}>
                         {opt.value === val ? `▶ ${opt.label}` : opt.label}
                       </option>
                     ))}
                   </select>
-
-                  {action.toggleKey.startsWith('walker-anim') && val && val !== 'idle' && (
-                    <div
-                      className="d-flex align-items-center justify-content-between gap-2 overflow-hidden rounded-2"
-                      style={{
-                        minWidth: 0,
-                        background: 'rgba(255,215,0,0.12)',
-                        border: '1px solid rgba(255,215,0,0.3)',
-                        padding: '4px 8px',
-                        fontSize: 10,
-                        color: '#ffd700',
-                      }}
-                    >
-                      <div className="text-truncate flex-grow-1" title={filename}>
-                        {filename}
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-sm py-0 px-2 fw-bold text-white flex-shrink-0 border-0"
-                        onClick={() => {
-                          navigator.clipboard.writeText(filename);
-                          setCopiedHover(true);
-                          setTimeout(() => setCopiedHover(false), 2000);
-                        }}
-                        style={{
-                          background: 'rgba(255,215,0,0.25)',
-                          borderRadius: 4,
-                          fontSize: 9,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {copiedHover ? '✓ Copié !' : '📋 Copier'}
-                      </button>
-                    </div>
-                  )}
                 </div>
               );
             }

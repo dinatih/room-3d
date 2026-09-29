@@ -208,7 +208,6 @@ export function SingleCharacter({
     actionsRef,
     activeActionName,
     currentAnimClip,
-    userAnimOverrideRef,
     loadAndPlayClip
   } = useCharacterAnimations({
     id,
@@ -476,7 +475,6 @@ export function SingleCharacter({
   useEffect(() => {
     if (laraGrid) {
       currentAnimClip.current = null;
-      userAnimOverrideRef.current = false;
       duoSessionManager.leaveDuoZone(id);
       if (groupRef.current) groupRef.current.rotation.set(0, 0, 0);
       scene.position.copy(baseScenePosRef.current);
@@ -500,7 +498,6 @@ export function SingleCharacter({
     if (!isPreview && !laraGrid) return;
     if (!walkerAnim || walkerAnim === 'idle') {
       currentAnimClip.current = null;
-      userAnimOverrideRef.current = false;
       invalidate();
       return;
     }
@@ -524,10 +521,6 @@ export function SingleCharacter({
     };
 
     const onToggle = (e: any) => {
-      const isForMe = (isLara && e.detail?.key === 'walker-anim-lara') ||
-                      (!isLara && e.detail?.key === 'walker-anim-xbot') ||
-                      (e.detail?.key === `walker-anim-${id}`);
-
       if (e.detail?.key === 'lara-custom-holster' && isActive) {
         setEquipment(prev => ({ ...prev, holster: !prev.holster }));
         invalidate();
@@ -560,16 +553,6 @@ export function SingleCharacter({
         return;
       }
 
-      if (isForMe && e.detail?.value) {
-        const path = e.detail.value;
-        if (path === 'idle' || path === 'stop') {
-          currentAnimClip.current = null;
-          userAnimOverrideRef.current = false;
-          invalidate();
-        } else {
-          loadAndPlayClip(path, e.detail?.loop !== false, true);
-        }
-      }
       handleToggleHairColor(e);
       handleToggleHaircut(e);
     };
@@ -578,7 +561,7 @@ export function SingleCharacter({
     return () => {
       document.removeEventListener('furniture-toggle', onToggle);
     };
-  }, [isActive, isLara, id, loadAndPlayClip, invalidate]);
+  }, [isActive, id, invalidate]);
 
   // Dynamic Haircut Swap system
   useEffect(() => {
@@ -674,9 +657,7 @@ export function SingleCharacter({
       groupRef.current.rotation.y = 0;
       const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds);
       groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode;
-      if (!userAnimOverrideRef.current) {
-        currentAnimClip.current = null;
-      }
+      currentAnimClip.current = walkerAnim || null;
       if (isVisibleInCountMode && !cameraState.walkerHidden && showAllLaraStyles) {
         cameraState.positions[id] = { x: targetX, y: targetY, z: targetZ, yaw: 0 };
       } else {
@@ -720,9 +701,7 @@ export function SingleCharacter({
         const agentState = updateAgent(delta);
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
         groupRef.current.rotation.y = agentState.rotY;
-        if (!userAnimOverrideRef.current) {
-          currentAnimClip.current = agentState.animation;
-        }
+        currentAnimClip.current = agentState.animation;
         const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds);
         groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
 

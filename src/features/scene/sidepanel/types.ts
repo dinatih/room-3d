@@ -186,7 +186,7 @@ export interface SidePanelProps {
   onToggleHideUI?:         () => void;
 }
 
-export type TabKey = 'profile' | 'views' | 'layers' | 'personnage' | 'perf' | 'anims' | 'animsCouple' | 'interactif' | null;
+export type TabKey = 'profile' | 'views' | 'layers' | 'personnage' | 'perf' | 'interactif' | null;
 
 export const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
   { key: 'profile',    emoji: '💼', label: 'Profil' },
@@ -195,8 +195,6 @@ export const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: str
   { key: 'layers',     emoji: '📑', label: 'Calques' },
   { key: 'interactif', emoji: '🎮', label: 'Interact' },
   { key: 'personnage', emoji: '👤', label: 'Perso' },
-  { key: 'anims',      emoji: '💃', label: 'Anim Perso' },
-  { key: 'animsCouple',emoji: '👯‍♀️', label: 'Couple' },
 ];
 
 export const ALL_HAIR_COLORS: string[] = [
