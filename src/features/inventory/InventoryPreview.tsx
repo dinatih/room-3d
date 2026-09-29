@@ -7,6 +7,8 @@ import * as THREE from 'three';
 import { type InventoryItem, type StorageSpace, WIGS_ITEMS } from './inventoryData';
 import { SCENE_REGISTRY, ACTION_LABELS } from './previewRegistry';
 import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpers';
+import { SkeletonHierarchyPanel } from '@features/scene/utils/SkeletonHierarchyPanel';
+import type { SkeletonGroup } from '@features/scene/utils/skeletonTypes';
 import { CharacterAnimSelector } from '@features/scene/CharacterAnimSelector';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 import { resolveAnimationId } from '@features/scene/animations/animationResolver';
@@ -568,6 +570,8 @@ export function InventoryPreview({
 
   const [showPnjPanel, setShowPnjPanel] = useState<boolean>(false);
   const [selectedBoneName, setSelectedBoneName] = useState<string | null>(null);
+  const [skeletonGroups, setSkeletonGroups] = useState<SkeletonGroup[]>([]);
+  const [showBoneTree, setShowBoneTree] = useState<boolean>(false);
   const [globalHaircut, setGlobalHaircut] = useState<string>('original');
   const [globalHairColor, setGlobalHairColor] = useState<string>('rose');
   const lastWigRef = useRef<string>('hair_101');
@@ -609,6 +613,8 @@ export function InventoryPreview({
     setShowAnimSelector(false);
     setShowPnjPanel(false);
     setSelectedBoneName(null);
+    setSkeletonGroups([]);
+    setShowBoneTree(false);
     setPreviewView('free');
     useAnimPreviewStore.getState().reset();
   }, [item?.id]);
@@ -730,6 +736,7 @@ export function InventoryPreview({
                 show={actionStates.showBones}
                 selectedBoneName={selectedBoneName}
                 onSelectBoneName={setSelectedBoneName}
+                onSkeletonGroupsChange={setSkeletonGroups}
               />
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
@@ -899,7 +906,10 @@ export function InventoryPreview({
                   onClick={() => {
                     setActionStates(s => {
                       const next = !s.showBones;
-                      if (!next) setSelectedBoneName(null);
+                      if (!next) {
+                        setSelectedBoneName(null);
+                        setShowBoneTree(false);
+                      }
                       return { ...s, showBones: next };
                     });
                   }}
@@ -907,6 +917,34 @@ export function InventoryPreview({
                 >
                   {actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}
                 </button>
+
+                {actionStates.showBones && (
+                  <button
+                    type="button"
+                    onClick={() => setShowBoneTree(v => !v)}
+                    style={{
+                      padding: '3px 8px',
+                      fontSize: 11,
+                      background: showBoneTree ? '#0284c7' : 'rgba(0,0,0,0.5)',
+                      border: `1px solid ${showBoneTree ? '#38bdf8' : '#444'}`,
+                      borderRadius: 4,
+                      color: '#fff',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      fontWeight: showBoneTree ? 'bold' : 'normal',
+                    }}
+                    title={showBoneTree ? "Masquer l'arbre des os" : "Afficher l'arborescence complète des os (perruque et perso)"}
+                  >
+                    <span>🌳</span>
+                    <span>
+                      {showBoneTree ? 'Masquer Os' : 'Arbre des Os'}
+                      {skeletonGroups.length > 0 ? ` (${skeletonGroups.reduce((acc, s) => acc + s.totalBones, 0)})` : ''}
+                    </span>
+                  </button>
+                )}
+
                 {isHumanWalker && (
                   <button
                     type="button"
@@ -929,17 +967,51 @@ export function InventoryPreview({
               </div>
 
               {actionStates.showBones && selectedBoneName && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, background: 'rgba(230, 57, 70, 0.95)', color: '#fff', padding: '3px 8px', borderRadius: 4, fontSize: 10, fontWeight: 'bold', maxWidth: 240, boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
-                  <span className="text-truncate">🎨 Influence : <span style={{ fontFamily: 'monospace', textDecoration: 'underline' }}>{selectedBoneName}</span></span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedBoneName(null)}
-                    style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 12, padding: '0 2px', lineHeight: 1 }}
-                    title="Désactiver l'influence de l'os"
-                  >
-                    ✕
-                  </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, background: 'rgba(15, 23, 42, 0.92)', border: '1.5px solid #e63946', padding: '6px 8px', borderRadius: 6, maxWidth: 280, boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
+                    <span className="text-truncate">
+                      🎨 Influence : <span style={{ fontFamily: 'monospace', color: '#fffa65', textDecoration: 'underline' }}>{selectedBoneName}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBoneName(null)}
+                      style={{ background: 'none', border: 'none', color: '#ff7979', cursor: 'pointer', fontSize: 13, padding: '0 2px', lineHeight: 1 }}
+                      title="Désactiver l'influence de l'os"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {/* Légende Heatmap des couleurs d'influence */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8.5, color: '#94a3b8' }}>
+                      <span>0.0 (Bleu)</span>
+                      <span>0.5 (Vert/Jaune)</span>
+                      <span>1.0 (Rouge)</span>
+                    </div>
+                    <div
+                      style={{
+                        height: 6,
+                        borderRadius: 3,
+                        background: 'linear-gradient(to right, rgb(15,25,76) 0%, rgb(0,217,242) 25%, rgb(0,247,0) 50%, rgb(242,247,0) 75%, rgb(255,0,0) 100%)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                      }}
+                      title="Bleu = 0% | Jaune = ~75% | Rouge = 100% (le maillage suit l'os à 100%)"
+                    />
+                    <div style={{ fontSize: 8, color: '#cbd5e1', textAlign: 'center', opacity: 0.9 }}>
+                      Rouge: 100% suit l'os | Bleu: statique (0%)
+                    </div>
+                  </div>
                 </div>
+              )}
+
+              {/* Panneau Arbre Hiérarchique des os */}
+              {actionStates.showBones && showBoneTree && (
+                <SkeletonHierarchyPanel
+                  skeletons={skeletonGroups}
+                  selectedBoneName={selectedBoneName}
+                  onSelectBoneName={setSelectedBoneName}
+                  onClose={() => setShowBoneTree(false)}
+                />
               )}
 
               {(item as any).category === 'walkers' && (
