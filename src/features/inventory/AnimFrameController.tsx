@@ -33,14 +33,12 @@ export function AnimFrameController({
     duration,
     fps,
     speed,
-    isLooping,
     isTPose,
     clipName,
     animSearch,
     selectedCategories,
     togglePlay,
     setSpeed,
-    setLooping,
     setScrubbing,
     seekToFrame,
     stepFrame,
@@ -56,7 +54,6 @@ export function AnimFrameController({
 
   const totalFrames = duration > 0 ? Math.max(1, Math.round(duration * fps)) : 0;
   const currentFrame = duration > 0 ? Math.min(totalFrames, Math.round(currentTime * fps)) : 0;
-  const progressPct = totalFrames > 0 ? (currentFrame / totalFrames) * 100 : 0;
 
   useEffect(() => {
     if (!isEditingFrame) {
@@ -128,6 +125,17 @@ export function AnimFrameController({
     handleSelectAnim(nextVal);
     onCycleAnim?.(direction);
   }, [filteredAnims, activeAnimValue, handleSelectAnim, onCycleAnim]);
+
+  // Sélection aléatoire d'une animation parmi la liste filtrée
+  const handleRandomAnim = useCallback(() => {
+    if (!filteredAnims.length) return;
+    const currentVal = activeAnimValue;
+    const targetId = resolveAnimationId(currentVal);
+    let pool = filteredAnims.filter(a => a.value !== targetId && a.value !== currentVal);
+    if (!pool.length) pool = filteredAnims;
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    handleSelectAnim(pool[randomIndex].value);
+  }, [filteredAnims, activeAnimValue, handleSelectAnim]);
 
   // Raccourcis clavier : Espace (Play/Pause), Flèches Gauche/Droite (-1/+1 frame), Début (Frame 0), Flèches Haut/Bas (Cycle Anim filtré)
   useEffect(() => {
@@ -218,7 +226,7 @@ export function AnimFrameController({
 
   return (
     <div
-      className={`anim-mixamo-controller ${className}`}
+      className={`card border-secondary text-light shadow-lg p-2 user-select-none ${className}`}
       onClick={e => e.stopPropagation()}
       onMouseDown={e => e.stopPropagation()}
       style={{
@@ -227,19 +235,10 @@ export function AnimFrameController({
         left: 10,
         right: 10,
         zIndex: 90,
-        background: 'rgba(15, 23, 42, 0.92)',
+        backgroundColor: 'rgba(15, 23, 42, 0.94)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: 8,
-        padding: '6px 12px',
-        boxShadow: '0 6px 24px rgba(0,0,0,0.55)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
-        userSelect: 'none',
-        color: '#f1f5f9',
-        fontSize: 11,
+        fontSize: '0.8rem',
         ...style,
       }}
     >
@@ -247,22 +246,13 @@ export function AnimFrameController({
       {showAnimSelector && (
         <div
           ref={selectorRef}
-          className="anim-selector-popover"
+          className="position-absolute shadow-lg rounded bg-white overflow-hidden d-flex flex-column"
           style={{
-            position: 'absolute',
             bottom: 'calc(100% + 8px)',
             right: 8,
             width: 'min(460px, calc(100% - 16px))',
             height: 'min(420px, 55vh)',
             maxHeight: 'min(420px, 55vh)',
-            background: 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            borderRadius: 8,
-            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2)',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
             zIndex: 1000,
           }}
           onClick={e => e.stopPropagation()}
@@ -280,221 +270,93 @@ export function AnimFrameController({
         </div>
       )}
 
-      {/* ── Ligne 1 : Timeline Slider (Scrubber comme dans Mixamo) ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-        <span
-          style={{
-            fontSize: 9,
-            fontWeight: 700,
-            color: '#94a3b8',
-            minWidth: 28,
-            textAlign: 'center',
-            fontFamily: 'monospace',
-          }}
-        >
+      {/* ── Ligne 1 : Timeline Slider ── */}
+      <div className="d-flex align-items-center gap-2 w-100">
+        <span className="text-secondary font-monospace" style={{ fontSize: '0.7rem', minWidth: 26, textAlign: 'center' }}>
           0
         </span>
-
-        <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
-          <input
-            ref={sliderRef}
-            type="range"
-            min={0}
-            max={totalFrames}
-            step={1}
-            value={currentFrame}
-            disabled={isTPose || totalFrames === 0}
-            onPointerDown={() => setScrubbing(true)}
-            onPointerUp={() => setScrubbing(false)}
-            onChange={e => {
-              seekToFrame(parseInt(e.target.value, 10));
-            }}
-            style={{
-              width: '100%',
-              height: 6,
-              appearance: 'none',
-              WebkitAppearance: 'none',
-              background: `linear-gradient(to right, #0284c7 ${progressPct}%, #334155 ${progressPct}%)`,
-              borderRadius: 3,
-              outline: 'none',
-              cursor: isTPose ? 'not-allowed' : 'pointer',
-              opacity: isTPose ? 0.4 : 1,
-            }}
-            title={
-              isTPose
-                ? 'T-Pose (Pose statique sans frame)'
-                : `Frame ${currentFrame} / ${totalFrames} (${currentTime.toFixed(2)}s)`
-            }
-          />
-        </div>
-
-        <span
+        <input
+          ref={sliderRef}
+          type="range"
+          className="form-range flex-grow-1"
+          min={0}
+          max={totalFrames}
+          step={1}
+          value={currentFrame}
+          disabled={isTPose || totalFrames === 0}
+          onPointerDown={() => setScrubbing(true)}
+          onPointerUp={() => setScrubbing(false)}
+          onChange={e => seekToFrame(parseInt(e.target.value, 10))}
           style={{
-            fontSize: 9,
-            fontWeight: 700,
-            color: '#94a3b8',
-            minWidth: 28,
-            textAlign: 'center',
-            fontFamily: 'monospace',
+            cursor: isTPose ? 'not-allowed' : 'pointer',
+            opacity: isTPose ? 0.4 : 1,
           }}
-        >
+          title={
+            isTPose
+              ? 'T-Pose (Pose statique sans frame)'
+              : `Frame ${currentFrame} / ${totalFrames} (${currentTime.toFixed(2)}s)`
+          }
+        />
+        <span className="text-secondary font-monospace" style={{ fontSize: '0.7rem', minWidth: 26, textAlign: 'center' }}>
           {totalFrames}
         </span>
       </div>
 
       {/* ── Ligne 2 : Transport, Compteurs Frames/Temps, Animation & Vitesse ── */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 6,
-        }}
-      >
+      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         {/* Groupe boutons de lecture */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          {/* Revenir au début (Frame 0) */}
+        <div className="btn-group btn-group-sm" role="group">
           <button
             type="button"
+            className="btn btn-outline-secondary text-light py-0 px-2"
             onClick={() => seekToFrame(0)}
             disabled={isTPose}
-            style={{
-              padding: '3px 6px',
-              fontSize: 10,
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: 4,
-              color: '#fff',
-              cursor: isTPose ? 'not-allowed' : 'pointer',
-              opacity: isTPose ? 0.4 : 1,
-            }}
-            title="Revenir au début (Frame 0 / Raccourci: 0 ou Home)"
+            title="Revenir au début (Frame 0 — Début / 0)"
           >
-            ⏮
+            <i className="bi bi-skip-backward-fill" />
           </button>
-
-          {/* Reculer d'une frame (-1f) */}
           <button
             type="button"
+            className="btn btn-outline-secondary text-light py-0 px-2"
             onClick={() => stepFrame(-1)}
             disabled={isTPose}
-            style={{
-              padding: '3px 7px',
-              fontSize: 11,
-              fontWeight: 'bold',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: 4,
-              color: '#fff',
-              cursor: isTPose ? 'not-allowed' : 'pointer',
-              opacity: isTPose ? 0.4 : 1,
-            }}
-            title="Frame précédente (-1 frame / Raccourci: Flèche Gauche, Maj+Gauche: -5f)"
+            title="Frame précédente (-1f — Flèche Gauche, Maj: -5f)"
           >
-            ◀
+            <i className="bi bi-caret-left-fill" />
           </button>
-
-          {/* Play / Pause Toggle principal */}
           <button
             type="button"
+            className={`btn py-0 px-2 fw-bold d-inline-flex align-items-center gap-1 ${isPlaying ? 'btn-primary' : 'btn-warning'}`}
             onClick={togglePlay}
             disabled={isTPose}
-            style={{
-              padding: '3px 10px',
-              fontSize: 11,
-              fontWeight: 'bold',
-              background: isPlaying
-                ? 'linear-gradient(135deg, #0284c7, #0369a1)'
-                : 'linear-gradient(135deg, #f59e0b, #d97706)',
-              border: 'none',
-              borderRadius: 4,
-              color: '#fff',
-              cursor: isTPose ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              boxShadow: isPlaying ? '0 0 10px rgba(2, 132, 199, 0.5)' : 'none',
-              opacity: isTPose ? 0.4 : 1,
-            }}
-            title={isPlaying ? 'Pause (Raccourci: Espace)' : 'Play (Raccourci: Espace)'}
+            title={isPlaying ? 'Pause (Espace)' : 'Play (Espace)'}
           >
-            <span>{isPlaying ? '⏸' : '▶'}</span>
-            <span style={{ fontSize: 10 }}>{isPlaying ? 'Pause' : 'Play'}</span>
+            <i className={isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill'} />
+            <span style={{ fontSize: '0.75rem' }}>{isPlaying ? 'Pause' : 'Play'}</span>
           </button>
-
-          {/* Avancer d'une frame (+1f) */}
           <button
             type="button"
+            className="btn btn-outline-secondary text-light py-0 px-2"
             onClick={() => stepFrame(1)}
             disabled={isTPose}
-            style={{
-              padding: '3px 7px',
-              fontSize: 11,
-              fontWeight: 'bold',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: 4,
-              color: '#fff',
-              cursor: isTPose ? 'not-allowed' : 'pointer',
-              opacity: isTPose ? 0.4 : 1,
-            }}
-            title="Frame suivante (+1 frame / Raccourci: Flèche Droite, Maj+Droite: +5f)"
+            title="Frame suivante (+1f — Flèche Droite, Maj: +5f)"
           >
-            ▶
-          </button>
-
-          {/* Boucle (Loop) */}
-          <button
-            type="button"
-            onClick={() => setLooping(!isLooping)}
-            style={{
-              padding: '3px 6px',
-              fontSize: 10,
-              background: isLooping ? 'rgba(2, 132, 199, 0.3)' : 'rgba(255, 255, 255, 0.08)',
-              border: `1px solid ${isLooping ? '#0284c7' : 'rgba(255, 255, 255, 0.15)'}`,
-              borderRadius: 4,
-              color: isLooping ? '#38bdf8' : '#94a3b8',
-              cursor: 'pointer',
-            }}
-            title={isLooping ? 'Boucle activée (cliquer pour désactiver)' : 'Boucle désactivée (cliquer pour activer)'}
-          >
-            🔁
+            <i className="bi bi-caret-right-fill" />
           </button>
         </div>
 
         {/* Compteur précis de Frame & Temps */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div className="d-flex align-items-center gap-2">
           {isTPose ? (
-            <span
-              style={{
-                background: 'rgba(42, 157, 58, 0.25)',
-                border: '1px solid #2a9d3a',
-                borderRadius: 4,
-                padding: '2px 6px',
-                color: '#86efac',
-                fontSize: 10,
-                fontWeight: 600,
-              }}
-            >
+            <span className="badge bg-success bg-opacity-25 text-success border border-success">
               📐 T-Pose (Rest)
             </span>
           ) : (
             <>
-              {/* Badge Frame modifiable au clic / saisie directe */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  background: 'rgba(0, 0, 0, 0.45)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: 4,
-                  padding: '1px 6px',
-                  fontFamily: 'monospace',
-                }}
-                title="Cliquer pour entrer directement un numéro de frame précis"
-              >
-                <span style={{ color: '#94a3b8', fontSize: 10, marginRight: 4 }}>Frame:</span>
+              <div className="input-group input-group-sm font-monospace" style={{ width: 'auto' }} title="Cliquer pour entrer une frame précise">
+                <span className="input-group-text bg-black bg-opacity-50 text-secondary border-secondary py-0 px-2" style={{ fontSize: '0.75rem' }}>
+                  Frame:
+                </span>
                 <input
                   type="number"
                   min={0}
@@ -503,149 +365,86 @@ export function AnimFrameController({
                   onFocus={() => setIsEditingFrame(true)}
                   onChange={e => setInputFrame(e.target.value)}
                   onBlur={handleFrameCommit}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') handleFrameCommit();
-                  }}
-                  style={{
-                    width: 38,
-                    background: isEditingFrame ? '#1e293b' : 'transparent',
-                    border: isEditingFrame ? '1px solid #38bdf8' : 'none',
-                    borderRadius: 2,
-                    color: '#38bdf8',
-                    fontWeight: 700,
-                    fontSize: 11,
-                    textAlign: 'center',
-                    outline: 'none',
-                    padding: 0,
-                  }}
+                  onKeyDown={e => e.key === 'Enter' && handleFrameCommit()}
+                  className="form-control form-control-sm bg-black bg-opacity-50 text-info border-secondary text-center fw-bold py-0 px-1"
+                  style={{ width: '48px', fontSize: '0.8rem' }}
                 />
-                <span style={{ color: '#64748b', fontSize: 10 }}>/ {totalFrames}</span>
+                <span className="input-group-text bg-black bg-opacity-50 text-secondary border-secondary py-0 px-2" style={{ fontSize: '0.75rem' }}>
+                  / {totalFrames}
+                </span>
               </div>
-
-              {/* Badge Temps (secondes) */}
-              <span
-                style={{
-                  color: '#cbd5e1',
-                  fontFamily: 'monospace',
-                  fontSize: 10,
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  padding: '2px 5px',
-                  borderRadius: 3,
-                }}
-              >
+              <span className="badge bg-black bg-opacity-50 text-light border border-secondary font-monospace py-1 px-2" style={{ fontSize: '0.75rem' }}>
                 {currentTime.toFixed(2)}s / {duration.toFixed(2)}s
               </span>
             </>
           )}
         </div>
 
-        {/* Sélecteur de Vitesse, Nom de l'animation en entier & Bouton Meta */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
-          {/* Badge animation en cours (nom complet affiché) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
-            {/* Bouton animation précédente */}
+        {/* Droite : Sélecteur d'animation, Bouton Dé aléatoire, Vitesse & Meta */}
+        <div className="d-flex align-items-center gap-2">
+          {/* Groupe Navigation Anim + Dé */}
+          <div className="btn-group btn-group-sm" role="group">
             <button
               type="button"
+              className="btn btn-outline-secondary text-light py-0 px-2"
               onClick={() => cycleFilteredAnim('prev')}
               disabled={filteredAnims.length <= 1}
-              style={{
-                padding: '2px 4px',
-                fontSize: 8,
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                borderRadius: 3,
-                color: filteredAnims.length <= 1 ? '#64748b' : '#cbd5e1',
-                cursor: filteredAnims.length <= 1 ? 'default' : 'pointer',
-                flexShrink: 0,
-              }}
-              title={
-                filteredAnims.length <= 1
-                  ? 'Aucune autre animation dans le filtre actuel'
-                  : `Animation précédente (${filteredAnims.length} dans le filtre / Flèche Haut)`
-              }
+              title={`Animation précédente (${filteredAnims.length} dans le filtre / Flèche Haut)`}
             >
-              ▲
+              <i className="bi bi-chevron-up" />
             </button>
+
             <button
               ref={badgeRef}
               type="button"
+              className={`btn py-0 px-2 d-inline-flex align-items-center gap-1 text-truncate ${showAnimSelector ? 'btn-primary' : 'btn-outline-info text-info'}`}
+              style={{ maxWidth: 'min(360px, 35vw)' }}
               onClick={() => setShowAnimSelector(v => !v)}
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: '#38bdf8',
-                background: showAnimSelector ? 'rgba(2, 132, 199, 0.35)' : 'rgba(2, 132, 199, 0.15)',
-                padding: '2px 8px',
-                borderRadius: 4,
-                border: `1px solid ${showAnimSelector ? '#38bdf8' : 'rgba(56, 189, 248, 0.3)'}`,
-                whiteSpace: 'nowrap',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                maxWidth: 'min(450px, 45vw)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                cursor: 'pointer',
-                outline: 'none',
-                transition: 'background 0.15s, border-color 0.15s',
-              }}
               title={
                 showAnimSelector
                   ? "Fermer le sélecteur d'animations"
-                  : `Animation active : ${displayName} (${filteredAnims.length} filtrée(s) — Cliquer pour ouvrir le sélecteur)`
+                  : `Animation : ${displayName} (${filteredAnims.length} filtrée(s) — Cliquer pour ouvrir)`
               }
             >
-              <span style={{ fontSize: 11, userSelect: 'none' }}>🎬</span>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', userSelect: 'none' }}>{displayName}</span>
-              <span style={{ fontSize: 8, opacity: 0.8, userSelect: 'none', flexShrink: 0 }}>{showAnimSelector ? '▲' : '▼'}</span>
+              <span>🎬</span>
+              <span className="text-truncate">{displayName}</span>
+              <span className="opacity-75" style={{ fontSize: '0.65rem' }}>{showAnimSelector ? '▲' : '▼'}</span>
             </button>
-            {/* Bouton animation suivante */}
+
             <button
               type="button"
+              className="btn btn-outline-secondary text-light py-0 px-2"
               onClick={() => cycleFilteredAnim('next')}
               disabled={filteredAnims.length <= 1}
-              style={{
-                padding: '2px 4px',
-                fontSize: 8,
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                borderRadius: 3,
-                color: filteredAnims.length <= 1 ? '#64748b' : '#cbd5e1',
-                cursor: filteredAnims.length <= 1 ? 'default' : 'pointer',
-                flexShrink: 0,
-              }}
-              title={
-                filteredAnims.length <= 1
-                  ? 'Aucune autre animation dans le filtre actuel'
-                  : `Animation suivante (${filteredAnims.length} dans le filtre / Flèche Bas)`
-              }
+              title={`Animation suivante (${filteredAnims.length} dans le filtre / Flèche Bas)`}
             >
-              ▼
+              <i className="bi bi-chevron-down" />
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-outline-warning text-warning py-0 px-2"
+              onClick={handleRandomAnim}
+              disabled={!filteredAnims.length}
+              title={`Animation aléatoire (parmi les ${filteredAnims.length} résultat(s) filtré(s))` }
+            >
+              🎲
             </button>
           </div>
 
-          {/* Vitesse */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
-            <span style={{ color: '#94a3b8', fontSize: 9 }}>⚡</span>
+          {/* Vitesse compacte */}
+          <div className="d-flex align-items-center gap-1">
+            <span className="text-secondary" style={{ fontSize: '0.75rem' }}>⚡</span>
             <select
+              className="form-select form-select-sm bg-dark text-light border-secondary py-0 ps-2 pe-4"
+              style={{ width: 'auto', fontSize: '0.75rem' }}
               value={speed}
               onChange={e => setSpeed(parseFloat(e.target.value))}
-              style={{
-                padding: '2px 4px',
-                fontSize: 10,
-                fontWeight: speed !== 1 ? 'bold' : 'normal',
-                background: speed !== 1 ? 'rgba(2, 132, 199, 0.3)' : 'rgba(255, 255, 255, 0.08)',
-                border: `1px solid ${speed !== 1 ? '#0284c7' : 'rgba(255, 255, 255, 0.15)'}`,
-                borderRadius: 4,
-                color: speed !== 1 ? '#38bdf8' : '#cbd5e1',
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-              title="Vitesse de lecture de l'animation"
+              title="Vitesse de lecture"
             >
               {SPEED_OPTIONS.map(s => (
-                <option key={s} value={s} style={{ background: '#0f172a', color: '#fff' }}>
-                  {s}x {s < 1 ? '(Ralenti)' : ''}
+                <option key={s} value={s} className="bg-dark text-light">
+                  {s}x
                 </option>
               ))}
             </select>
@@ -655,230 +454,82 @@ export function AnimFrameController({
           {hasMeta && (
             <button
               type="button"
+              className={`btn btn-sm py-0 px-2 d-inline-flex align-items-center gap-1 ${showMeta ? 'btn-info text-dark' : 'btn-outline-secondary text-secondary'}`}
+              style={{ fontSize: '0.75rem' }}
               onClick={() => setShowMeta(v => !v)}
-              style={{
-                padding: '2px 6px',
-                fontSize: 10,
-                background: showMeta ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                border: `1px solid ${showMeta ? '#38bdf8' : 'rgba(255, 255, 255, 0.15)'}`,
-                borderRadius: 4,
-                color: showMeta ? '#38bdf8' : '#94a3b8',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 3,
-                flexShrink: 0,
-              }}
-              title={showMeta ? 'Masquer le volet métadonnées' : 'Afficher le volet complet des métadonnées (ID, tags, aliases, offsets)'}
+              title={showMeta ? 'Masquer le volet métadonnées' : 'Afficher le volet métadonnées'}
             >
-              <span>ℹ️</span>
-              <span style={{ fontSize: 9, fontWeight: 600 }}>Meta</span>
-              <span style={{ fontSize: 8 }}>{showMeta ? '▼' : '▲'}</span>
+              <i className="bi bi-info-circle" />
+              <span className="fw-semibold">Meta</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Ligne 3 : Volet détaillé de toutes les Métadonnées AnimationDefinition ── */}
+      {/* ── Ligne 3 : Métadonnées compactes ── */}
       {showMeta && hasMeta && (
-        <div
-          className="anim-meta-panel"
-          style={{
-            marginTop: 2,
-            padding: '6px 10px',
-            background: 'rgba(0, 0, 0, 0.45)',
-            borderRadius: 6,
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 5,
-            fontSize: 10,
-            userSelect: 'text',
-            WebkitUserSelect: 'text',
-            cursor: 'text',
-          }}
-        >
-          {/* Ligne A : Identifiant, Catégorie, Fichier GLB, Offsets et Durée */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 12px', userSelect: 'text' }}>
-            {/* ID Canonique */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }}>
-              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>ID :</span>
-              <code
-                style={{
-                  color: '#38bdf8',
-                  background: 'rgba(56, 189, 248, 0.15)',
-                  padding: '1px 5px',
-                  borderRadius: 3,
-                  fontSize: 10,
-                  border: '1px solid rgba(56, 189, 248, 0.25)',
-                  userSelect: 'text',
-                  WebkitUserSelect: 'text',
-                  cursor: 'text',
-                }}
-              >
+        <div className="card bg-black bg-opacity-50 border-secondary p-2 mt-1 text-light user-select-text" style={{ fontSize: '0.75rem' }}>
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            <div>
+              <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>ID:</strong>
+              <code className="text-info bg-info bg-opacity-10 px-1 rounded border border-info border-opacity-25">
                 {def?.id || (isTPose ? 't-pose' : displayName)}
               </code>
             </div>
-
-            {/* Catégorie sémantique */}
             {catObj && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }}>
-                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>Catégorie :</span>
-                <span
-                  style={{
-                    color: '#f8fafc',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    padding: '1px 6px',
-                    borderRadius: 3,
-                    fontSize: 10,
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    userSelect: 'text',
-                    WebkitUserSelect: 'text',
-                    cursor: 'text',
-                  }}
-                >
-                  <span style={{ userSelect: 'none' }}>{catObj.icon} </span>
-                  {catObj.label}
+              <div>
+                <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>Catégorie:</strong>
+                <span className="badge bg-secondary bg-opacity-25 text-light border border-secondary">
+                  {catObj.icon} {catObj.label}
                 </span>
               </div>
             )}
-
-            {/* Fichier GLB */}
             {def?.path && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }} title={def.path}>
-                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>Fichier :</span>
-                <code
-                  style={{
-                    color: '#cbd5e1',
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    padding: '1px 5px',
-                    borderRadius: 3,
-                    fontSize: 10,
-                    maxWidth: 220,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    display: 'inline-block',
-                    userSelect: 'text',
-                    WebkitUserSelect: 'text',
-                    cursor: 'text',
-                  }}
-                >
+              <div>
+                <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>Fichier:</strong>
+                <code className="text-light bg-secondary bg-opacity-25 px-1 rounded text-truncate d-inline-block align-middle" style={{ maxWidth: 220 }} title={def.path}>
                   📁 {def.path.split('/').pop()}
                 </code>
               </div>
             )}
-
-            {/* Décalage Position si présent */}
             {def?.defaultOffset && (
-              <div
-                style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }}
-                title="Décalage natif de position [X, Y, Z] en centimètres"
-              >
-                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>Offset Pos :</span>
-                <span
-                  style={{
-                    color: '#fbbf24',
-                    fontFamily: 'monospace',
-                    fontSize: 10,
-                    background: 'rgba(251, 191, 36, 0.12)',
-                    padding: '1px 5px',
-                    borderRadius: 3,
-                    border: '1px solid rgba(251, 191, 36, 0.25)',
-                    userSelect: 'text',
-                    WebkitUserSelect: 'text',
-                    cursor: 'text',
-                  }}
-                >
+              <div>
+                <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>Offset Pos:</strong>
+                <span className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-monospace">
                   [{def.defaultOffset.map(v => `${v}cm`).join(', ')}]
                 </span>
               </div>
             )}
-
-            {/* Décalage Rotation Y si présent */}
             {def?.defaultRotYOffset !== undefined && (
-              <div
-                style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }}
-                title="Décalage natif de rotation autour de l'axe vertical Y"
-              >
-                <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>Offset Rot Y :</span>
-                <span
-                  style={{
-                    color: '#fbbf24',
-                    fontFamily: 'monospace',
-                    fontSize: 10,
-                    background: 'rgba(251, 191, 36, 0.12)',
-                    padding: '1px 5px',
-                    borderRadius: 3,
-                    border: '1px solid rgba(251, 191, 36, 0.25)',
-                    userSelect: 'text',
-                    WebkitUserSelect: 'text',
-                    cursor: 'text',
-                  }}
-                >
+              <div>
+                <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>Offset Rot Y:</strong>
+                <span className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-monospace">
                   {(def.defaultRotYOffset * (180 / Math.PI)).toFixed(1)}°
                 </span>
               </div>
             )}
-
-            {/* Durée définie */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, userSelect: 'text' }}>
-              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', userSelect: 'none' }}>Durée :</span>
-              <span style={{ color: '#a7f3d0', fontFamily: 'monospace', fontSize: 10, userSelect: 'text', WebkitUserSelect: 'text', cursor: 'text' }}>
-                {(def?.duration ?? duration).toFixed(2)}s ({totalFrames} frames @ {fps}fps)
+            <div>
+              <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>Durée:</strong>
+              <span className="text-success font-monospace">
+                {(def?.duration ?? duration).toFixed(2)}s ({totalFrames}f @ {fps}fps)
               </span>
             </div>
           </div>
-
-          {/* Ligne B : Tous les Alias de la définition */}
           {def?.aliases && def.aliases.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4, marginTop: 1, userSelect: 'text' }}>
-              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', marginRight: 2, userSelect: 'none' }}>
-                🏷️ Aliases ({def.aliases.length}) :
-              </span>
+            <div className="d-flex flex-wrap align-items-center gap-1 mt-1">
+              <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>🏷️ Aliases ({def.aliases.length}):</strong>
               {def.aliases.map(alias => (
-                <span
-                  key={alias}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: 3,
-                    padding: '1px 5px',
-                    fontSize: 9,
-                    color: '#e2e8f0',
-                    fontFamily: 'monospace',
-                    userSelect: 'text',
-                    WebkitUserSelect: 'text',
-                    cursor: 'text',
-                  }}
-                >
+                <span key={alias} className="badge bg-dark border border-secondary text-light font-monospace">
                   {alias}
                 </span>
               ))}
             </div>
           )}
-
-          {/* Ligne C : Tous les Tags sémantiques de la définition */}
           {def?.tags && def.tags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4, marginTop: 1, userSelect: 'text' }}>
-              <span style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', marginRight: 2, userSelect: 'none' }}>
-                🔖 Tags ({def.tags.length}) :
-              </span>
+            <div className="d-flex flex-wrap align-items-center gap-1 mt-1">
+              <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>🔖 Tags ({def.tags.length}):</strong>
               {def.tags.map(tag => (
-                <span
-                  key={tag}
-                  style={{
-                    background: 'rgba(14, 165, 233, 0.15)',
-                    border: '1px solid rgba(14, 165, 233, 0.3)',
-                    borderRadius: 3,
-                    padding: '1px 5px',
-                    fontSize: 9,
-                    color: '#7dd3fc',
-                    userSelect: 'text',
-                    WebkitUserSelect: 'text',
-                    cursor: 'text',
-                  }}
-                >
+                <span key={tag} className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
                   #{tag}
                 </span>
               ))}
