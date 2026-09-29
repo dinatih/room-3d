@@ -3,7 +3,7 @@ import type { LaraCountMode } from '../walkerConfig';
 import {
   ROOM_W, ROOM_D, WALL_H,
   DOOR_START, NICHE_X, KITCHEN_Z,
-} from '@config';
+} from '../wallData';
 
 // ── Presets caméra ────────────────────────────────────────────────────────────
 

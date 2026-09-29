@@ -6,7 +6,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 
-import { ROOM_W, ROOM_D, WALL_H } from '@config';
+import { ROOM_W, ROOM_D, WALL_H } from './wallData';
 
 const GRID_X_MIN = -400;
 const GRID_X_MAX =  700;

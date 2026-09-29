@@ -12,7 +12,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { cameraState } from './cameraState';
 
-import { ROOM_W, ROOM_D } from '@config';
+import { ROOM_W, ROOM_D } from './wallData';
 
 const WALK_HEAD_OFFSET = 10;
 const WALK_SPEED       = 2;

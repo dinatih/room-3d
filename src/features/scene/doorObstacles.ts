@@ -11,7 +11,7 @@
 
 import { cameraState } from './cameraState';
 import { getActiveFurnitureObstacles } from './ai/furnitureObstacles';
-import { ROOM_W } from '@config';
+import { ROOM_W } from './wallData';
 
 export interface CircleObstacle {
   x: number;

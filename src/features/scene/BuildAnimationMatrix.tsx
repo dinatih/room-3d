@@ -7,7 +7,7 @@
 import { useRef, useLayoutEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, WALL_H } from '@config';
+import { ROOM_W, ROOM_D, WALL_H } from './wallData';
 import { appLog } from '@features/ui/AppConsole';
 
 // ── Constantes ────────────────────────────────────────────────────────────────

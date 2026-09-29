@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
-import { WALL_H } from '@config';
+import { WALL_H } from '../wallData';
 
 interface GardenFrontWallScanProps {
   position?: [number, number, number];

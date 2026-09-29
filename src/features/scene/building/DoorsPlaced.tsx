@@ -11,7 +11,7 @@ import { useSceneStore }        from '../store/useSceneStore';
 import { pEast, pWest, CORR_WALL_X, PARTITION_THICKNESS } from '../wallData';
 import {
   ROOM_D, DOOR_START, DOOR_END, DiagWall
-} from '@config';
+} from '../wallData';
 
 const DOOR_W_ENTRY = 90;
 const DOOR_HEIGHT  = 204;

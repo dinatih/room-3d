@@ -15,7 +15,7 @@ import { useRef, useEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-import { ROOM_W } from '@config';
+import { ROOM_W } from './wallData';
 import { cameraState } from './cameraState';
 import { PlaneMesh, type PlaneModelKey } from './PaperPlane';
 

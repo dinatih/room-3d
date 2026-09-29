@@ -8,7 +8,7 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   NICHE_X, NICHE_Z_START,
   DiagWall,
-} from '@config';
+} from './wallData';
 
 import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_CLOSETS, SEG_WINDOWS, DOOR_SWINGS } from './floorData';
 import {

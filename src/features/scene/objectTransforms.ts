@@ -10,7 +10,7 @@ import {
   NICHE_X,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   ROOM_D,
-} from '@config';
+} from './wallData';
 import { PARTITION_THICKNESS, BATH_Z_END } from './wallData';
 import { positionState } from './positionState';
 import { DYNAMIC_FURNITURE_ANCHORS, FurnitureTransform } from './furniturePositions';

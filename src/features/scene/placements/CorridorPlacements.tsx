@@ -17,7 +17,7 @@ import {
   KITCHEN_X1,
   KITCHEN_Z,
   DOOR_START,
-} from '@config';
+} from '../wallData';
 import { PARTITION_THICKNESS, pZ } from '../wallData';
 
 const stub = (id: string): Item =>

@@ -14,7 +14,7 @@ import {
   NICHE_X,
   KITCHEN_X0,
   KITCHEN_Z,
-} from '@config';
+} from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });

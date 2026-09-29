@@ -14,7 +14,7 @@ import {
   ROOM_W,
   WALL_H,
   NICHE_Z_START,
-} from '@config';
+} from './wallData';
 import { pEast, pWest, pNorth, pSouth, pZ, CORR_WALL_X } from './wallData';
 
 interface MeasurementItem {

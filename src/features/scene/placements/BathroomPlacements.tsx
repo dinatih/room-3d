@@ -23,7 +23,7 @@ import {
   NICHE_X,
   KITCHEN_Z,
   DOOR_START,
-} from '@config';
+} from '../wallData';
 import { PARTITION_THICKNESS, BATH_Z_END } from '../wallData';
 
 const stub = (id: string): Item =>

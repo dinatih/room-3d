@@ -12,7 +12,7 @@ import { useRef, useLayoutEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { ROOM_D, KITCHEN_X1, KITCHEN_Z, DOOR_START, WALL_H } from '@config';
+import { ROOM_D, KITCHEN_X1, KITCHEN_Z, DOOR_START, WALL_H } from '../wallData';
 import { PARTITION_THICKNESS } from '../wallData';
 
 const CLOSET_W = DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS);  // ≈ 62.8 cm

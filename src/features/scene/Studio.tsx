@@ -65,8 +65,8 @@ const Inventory = lazy(() => import('@features/inventory/Inventory').then(module
 const RaytracingPhotoModal = lazy(() => import('./photo/RaytracingPhotoModal').then(module => ({ default: module.RaytracingPhotoModal })));
 
 
+import { ROOM_W } from './wallData';
 import {
-  ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_NEIGHBORS, LAYER_LIDAR,
   LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_ENVIRONMENT,
   LAYER_WALL_STRUCTURE, LAYER_DOORS, LAYER_ANIMALS,

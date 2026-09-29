@@ -8,12 +8,10 @@ import { useSceneStore } from '../store/useSceneStore';
 import {
   WALL_DEFS, PILLAR_DEFS, WALL_THICKNESS, GARDEN_PANEL_DEFS,
   PILLAR_KITE_NE, PILLAR_KITE_SW,
+  WALL_H, DiagWall,
 } from '../wallData';
 import { WoodenFencePanel } from '../items/WoodenFencePanel';
 import { GardenFrontWallScan } from './GardenFrontWallScan';
-import {
-  WALL_H, DiagWall
-} from '@config';
 import {
   wallMat, northMats, southMats, MAT_MAP, caplessX, caplessZ, makeExtrudeGeo
 } from './buildingCommon';

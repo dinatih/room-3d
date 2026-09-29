@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, WALL_H } from '@config';
+import { ROOM_W, ROOM_D, WALL_H } from '../wallData';
 import { cameraState } from '../cameraState';
 
 export const CX = ROOM_W / 2; // 150 cm — centre X de la pièce

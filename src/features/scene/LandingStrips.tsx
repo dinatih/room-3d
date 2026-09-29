@@ -3,7 +3,7 @@
  * 1 unité = 1 cm.
  */
 
-import { ROOM_W, ROOM_D } from '@config';
+import { ROOM_W, ROOM_D } from './wallData';
 
 const CX = ROOM_W / 2; // 150
 const CZ = ROOM_D / 2; // ~200

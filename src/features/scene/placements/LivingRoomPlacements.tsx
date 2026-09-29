@@ -47,7 +47,7 @@ import {
   ROOM_D,
   WALL_H,
   NICHE_Z_START,
-} from '@config';
+} from '../wallData';
 
 import {
   DESK1_POSITIONS,

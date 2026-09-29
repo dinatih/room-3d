@@ -5,7 +5,7 @@
  * et le système de SmartObjects (smartObjectRegistry / agentInstructionCoords).
  */
 
-import { ROOM_W } from '@config';
+import { ROOM_W } from './wallData';
 
 export interface FurnitureTransform {
   x: number;
