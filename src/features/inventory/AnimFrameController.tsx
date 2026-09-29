@@ -226,7 +226,7 @@ export function AnimFrameController({
 
   return (
     <div
-      className={`card border-secondary text-light shadow-lg p-2 user-select-none ${className}`}
+      className={`card glass-card rounded-3 shadow-sm p-2 text-dark user-select-none ${className}`}
       onClick={e => e.stopPropagation()}
       onMouseDown={e => e.stopPropagation()}
       style={{
@@ -235,10 +235,6 @@ export function AnimFrameController({
         left: 10,
         right: 10,
         zIndex: 90,
-        backgroundColor: 'rgba(15, 23, 42, 0.94)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        fontSize: '0.8rem',
         ...style,
       }}
     >
@@ -246,13 +242,9 @@ export function AnimFrameController({
       {showAnimSelector && (
         <div
           ref={selectorRef}
-          className="position-absolute shadow-lg rounded bg-white overflow-hidden d-flex flex-column"
+          className="position-absolute bottom-100 end-0 mb-2 glass-card rounded-3 shadow-lg overflow-hidden d-flex flex-column w-100"
           style={{
-            bottom: 'calc(100% + 8px)',
-            right: 8,
-            width: 'min(460px, calc(100% - 16px))',
-            height: 'min(420px, 55vh)',
-            maxHeight: 'min(420px, 55vh)',
+            maxWidth: '440px',
             zIndex: 1000,
           }}
           onClick={e => e.stopPropagation()}
@@ -263,18 +255,14 @@ export function AnimFrameController({
             onSelectAnim={handleSelectAnim}
             onClose={() => setShowAnimSelector(false)}
             title="Animations Personnage"
-            maxHeight="100%"
-            listMaxHeight="calc(min(420px, 55vh) - 125px)"
             autoFocus={true}
           />
         </div>
       )}
 
       {/* ── Ligne 1 : Timeline Slider ── */}
-      <div className="d-flex align-items-center gap-2 w-100">
-        <span className="text-secondary font-monospace" style={{ fontSize: '0.7rem', minWidth: 26, textAlign: 'center' }}>
-          0
-        </span>
+      <div className="d-flex align-items-center gap-2 w-100 mb-1">
+        <span className="text-muted font-monospace small">0</span>
         <input
           ref={sliderRef}
           type="range"
@@ -287,37 +275,32 @@ export function AnimFrameController({
           onPointerDown={() => setScrubbing(true)}
           onPointerUp={() => setScrubbing(false)}
           onChange={e => seekToFrame(parseInt(e.target.value, 10))}
-          style={{
-            cursor: isTPose ? 'not-allowed' : 'pointer',
-            opacity: isTPose ? 0.4 : 1,
-          }}
+          style={{ cursor: isTPose ? 'not-allowed' : 'pointer' }}
           title={
             isTPose
               ? 'T-Pose (Pose statique sans frame)'
               : `Frame ${currentFrame} / ${totalFrames} (${currentTime.toFixed(2)}s)`
           }
         />
-        <span className="text-secondary font-monospace" style={{ fontSize: '0.7rem', minWidth: 26, textAlign: 'center' }}>
-          {totalFrames}
-        </span>
+        <span className="text-muted font-monospace small">{totalFrames}</span>
       </div>
 
-      {/* ── Ligne 2 : Transport, Compteurs Frames/Temps, Animation & Vitesse ── */}
+      {/* ── Ligne 2 : Transport, Compteurs, Sélecteur & Actions ── */}
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         {/* Groupe boutons de lecture */}
         <div className="btn-group btn-group-sm" role="group">
           <button
             type="button"
-            className="btn btn-outline-secondary text-light py-0 px-2"
+            className="btn btn-outline-secondary bg-white text-dark py-1 px-2"
             onClick={() => seekToFrame(0)}
             disabled={isTPose}
-            title="Revenir au début (Frame 0 — Début / 0)"
+            title="Début (Frame 0 — Début / 0)"
           >
             <i className="bi bi-skip-backward-fill" />
           </button>
           <button
             type="button"
-            className="btn btn-outline-secondary text-light py-0 px-2"
+            className="btn btn-outline-secondary bg-white text-dark py-1 px-2"
             onClick={() => stepFrame(-1)}
             disabled={isTPose}
             title="Frame précédente (-1f — Flèche Gauche, Maj: -5f)"
@@ -326,17 +309,19 @@ export function AnimFrameController({
           </button>
           <button
             type="button"
-            className={`btn py-0 px-2 fw-bold d-inline-flex align-items-center gap-1 ${isPlaying ? 'btn-primary' : 'btn-warning'}`}
+            className={`btn btn-sm py-1 px-2 fw-bold d-inline-flex align-items-center gap-1 ${
+              isPlaying ? 'btn-danger text-white shadow-sm' : 'btn-warning text-dark shadow-sm'
+            }`}
             onClick={togglePlay}
             disabled={isTPose}
             title={isPlaying ? 'Pause (Espace)' : 'Play (Espace)'}
           >
             <i className={isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill'} />
-            <span style={{ fontSize: '0.75rem' }}>{isPlaying ? 'Pause' : 'Play'}</span>
+            <span>{isPlaying ? 'Pause' : 'Play'}</span>
           </button>
           <button
             type="button"
-            className="btn btn-outline-secondary text-light py-0 px-2"
+            className="btn btn-outline-secondary bg-white text-dark py-1 px-2"
             onClick={() => stepFrame(1)}
             disabled={isTPose}
             title="Frame suivante (+1f — Flèche Droite, Maj: +5f)"
@@ -348,13 +333,13 @@ export function AnimFrameController({
         {/* Compteur précis de Frame & Temps */}
         <div className="d-flex align-items-center gap-2">
           {isTPose ? (
-            <span className="badge bg-success bg-opacity-25 text-success border border-success">
+            <span className="badge bg-success-subtle text-success border border-success-subtle">
               📐 T-Pose (Rest)
             </span>
           ) : (
             <>
               <div className="input-group input-group-sm font-monospace" style={{ width: 'auto' }} title="Cliquer pour entrer une frame précise">
-                <span className="input-group-text bg-black bg-opacity-50 text-secondary border-secondary py-0 px-2" style={{ fontSize: '0.75rem' }}>
+                <span className="input-group-text bg-white text-muted border-end-0 py-1 px-2">
                   Frame:
                 </span>
                 <input
@@ -366,14 +351,14 @@ export function AnimFrameController({
                   onChange={e => setInputFrame(e.target.value)}
                   onBlur={handleFrameCommit}
                   onKeyDown={e => e.key === 'Enter' && handleFrameCommit()}
-                  className="form-control form-control-sm bg-black bg-opacity-50 text-info border-secondary text-center fw-bold py-0 px-1"
-                  style={{ width: '48px', fontSize: '0.8rem' }}
+                  className="form-control form-control-sm bg-white text-dark border-start-0 border-end-0 text-center fw-bold py-1 px-1"
+                  style={{ width: '56px' }}
                 />
-                <span className="input-group-text bg-black bg-opacity-50 text-secondary border-secondary py-0 px-2" style={{ fontSize: '0.75rem' }}>
+                <span className="input-group-text bg-white text-muted border-start-0 py-1 px-2">
                   / {totalFrames}
                 </span>
               </div>
-              <span className="badge bg-black bg-opacity-50 text-light border border-secondary font-monospace py-1 px-2" style={{ fontSize: '0.75rem' }}>
+              <span className="badge bg-white text-dark border shadow-sm font-monospace py-1 px-2">
                 {currentTime.toFixed(2)}s / {duration.toFixed(2)}s
               </span>
             </>
@@ -386,7 +371,7 @@ export function AnimFrameController({
           <div className="btn-group btn-group-sm" role="group">
             <button
               type="button"
-              className="btn btn-outline-secondary text-light py-0 px-2"
+              className="btn btn-outline-secondary bg-white text-dark py-1 px-2"
               onClick={() => cycleFilteredAnim('prev')}
               disabled={filteredAnims.length <= 1}
               title={`Animation précédente (${filteredAnims.length} dans le filtre / Flèche Haut)`}
@@ -397,8 +382,12 @@ export function AnimFrameController({
             <button
               ref={badgeRef}
               type="button"
-              className={`btn py-0 px-2 d-inline-flex align-items-center gap-1 text-truncate ${showAnimSelector ? 'btn-primary' : 'btn-outline-info text-info'}`}
-              style={{ maxWidth: 'min(360px, 35vw)' }}
+              className={`btn py-1 px-2 d-inline-flex align-items-center gap-1 text-truncate ${
+                showAnimSelector
+                  ? 'btn-danger text-white shadow-sm'
+                  : 'btn-outline-secondary bg-white text-dark'
+              }`}
+              style={{ maxWidth: '320px' }}
               onClick={() => setShowAnimSelector(v => !v)}
               title={
                 showAnimSelector
@@ -408,12 +397,12 @@ export function AnimFrameController({
             >
               <span>🎬</span>
               <span className="text-truncate">{displayName}</span>
-              <span className="opacity-75" style={{ fontSize: '0.65rem' }}>{showAnimSelector ? '▲' : '▼'}</span>
+              <span className="opacity-75 small">{showAnimSelector ? '▲' : '▼'}</span>
             </button>
 
             <button
               type="button"
-              className="btn btn-outline-secondary text-light py-0 px-2"
+              className="btn btn-outline-secondary bg-white text-dark py-1 px-2"
               onClick={() => cycleFilteredAnim('next')}
               disabled={filteredAnims.length <= 1}
               title={`Animation suivante (${filteredAnims.length} dans le filtre / Flèche Bas)`}
@@ -423,27 +412,27 @@ export function AnimFrameController({
 
             <button
               type="button"
-              className="btn btn-outline-warning text-warning py-0 px-2"
+              className="btn btn-warning text-dark fw-bold py-1 px-2"
               onClick={handleRandomAnim}
               disabled={!filteredAnims.length}
-              title={`Animation aléatoire (parmi les ${filteredAnims.length} résultat(s) filtré(s))` }
+              title={`Animation aléatoire parmi les ${filteredAnims.length} filtrée(s)`}
             >
               🎲
             </button>
           </div>
 
-          {/* Vitesse compacte */}
+          {/* Vitesse */}
           <div className="d-flex align-items-center gap-1">
-            <span className="text-secondary" style={{ fontSize: '0.75rem' }}>⚡</span>
+            <span className="text-muted small">⚡</span>
             <select
-              className="form-select form-select-sm bg-dark text-light border-secondary py-0 ps-2 pe-4"
-              style={{ width: 'auto', fontSize: '0.75rem' }}
+              className="form-select form-select-sm bg-white text-dark py-1"
+              style={{ width: 'auto' }}
               value={speed}
               onChange={e => setSpeed(parseFloat(e.target.value))}
               title="Vitesse de lecture"
             >
               {SPEED_OPTIONS.map(s => (
-                <option key={s} value={s} className="bg-dark text-light">
+                <option key={s} value={s}>
                   {s}x
                 </option>
               ))}
@@ -454,8 +443,11 @@ export function AnimFrameController({
           {hasMeta && (
             <button
               type="button"
-              className={`btn btn-sm py-0 px-2 d-inline-flex align-items-center gap-1 ${showMeta ? 'btn-info text-dark' : 'btn-outline-secondary text-secondary'}`}
-              style={{ fontSize: '0.75rem' }}
+              className={`btn btn-sm py-1 px-2 d-inline-flex align-items-center gap-1 ${
+                showMeta
+                  ? 'btn-secondary text-white shadow-sm'
+                  : 'btn-outline-secondary bg-white text-dark'
+              }`}
               onClick={() => setShowMeta(v => !v)}
               title={showMeta ? 'Masquer le volet métadonnées' : 'Afficher le volet métadonnées'}
             >
@@ -466,60 +458,60 @@ export function AnimFrameController({
         </div>
       </div>
 
-      {/* ── Ligne 3 : Métadonnées compactes ── */}
+      {/* ── Ligne 3 : Métadonnées ── */}
       {showMeta && hasMeta && (
-        <div className="card bg-black bg-opacity-50 border-secondary p-2 mt-1 text-light user-select-text" style={{ fontSize: '0.75rem' }}>
+        <div className="card bg-white bg-opacity-75 border-0 shadow-sm p-2 mt-2 text-dark user-select-text small">
           <div className="d-flex flex-wrap align-items-center gap-2">
             <div>
-              <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>ID:</strong>
-              <code className="text-info bg-info bg-opacity-10 px-1 rounded border border-info border-opacity-25">
+              <strong className="text-muted text-uppercase user-select-none me-1" style={{ fontSize: '0.7rem' }}>ID:</strong>
+              <code className="text-dark bg-light px-1.5 py-0.5 rounded border">
                 {def?.id || (isTPose ? 't-pose' : displayName)}
               </code>
             </div>
             {catObj && (
               <div>
-                <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>Catégorie:</strong>
-                <span className="badge bg-secondary bg-opacity-25 text-light border border-secondary">
+                <strong className="text-muted text-uppercase user-select-none me-1" style={{ fontSize: '0.7rem' }}>Catégorie:</strong>
+                <span className="badge bg-light text-dark border">
                   {catObj.icon} {catObj.label}
                 </span>
               </div>
             )}
             {def?.path && (
               <div>
-                <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>Fichier:</strong>
-                <code className="text-light bg-secondary bg-opacity-25 px-1 rounded text-truncate d-inline-block align-middle" style={{ maxWidth: 220 }} title={def.path}>
+                <strong className="text-muted text-uppercase user-select-none me-1" style={{ fontSize: '0.7rem' }}>Fichier:</strong>
+                <code className="text-muted bg-light px-1.5 py-0.5 rounded border text-truncate d-inline-block align-middle" style={{ maxWidth: '240px' }} title={def.path}>
                   📁 {def.path.split('/').pop()}
                 </code>
               </div>
             )}
             {def?.defaultOffset && (
               <div>
-                <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>Offset Pos:</strong>
-                <span className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-monospace">
+                <strong className="text-muted text-uppercase user-select-none me-1" style={{ fontSize: '0.7rem' }}>Offset Pos:</strong>
+                <span className="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace">
                   [{def.defaultOffset.map(v => `${v}cm`).join(', ')}]
                 </span>
               </div>
             )}
             {def?.defaultRotYOffset !== undefined && (
               <div>
-                <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>Offset Rot Y:</strong>
-                <span className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-monospace">
+                <strong className="text-muted text-uppercase user-select-none me-1" style={{ fontSize: '0.7rem' }}>Offset Rot Y:</strong>
+                <span className="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace">
                   {(def.defaultRotYOffset * (180 / Math.PI)).toFixed(1)}°
                 </span>
               </div>
             )}
             <div>
-              <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>Durée:</strong>
-              <span className="text-success font-monospace">
+              <strong className="text-muted text-uppercase user-select-none me-1" style={{ fontSize: '0.7rem' }}>Durée:</strong>
+              <span className="text-success fw-bold font-monospace">
                 {(def?.duration ?? duration).toFixed(2)}s ({totalFrames}f @ {fps}fps)
               </span>
             </div>
           </div>
           {def?.aliases && def.aliases.length > 0 && (
             <div className="d-flex flex-wrap align-items-center gap-1 mt-1">
-              <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>🏷️ Aliases ({def.aliases.length}):</strong>
+              <strong className="text-muted text-uppercase user-select-none me-1" style={{ fontSize: '0.7rem' }}>🏷️ Aliases ({def.aliases.length}):</strong>
               {def.aliases.map(alias => (
-                <span key={alias} className="badge bg-dark border border-secondary text-light font-monospace">
+                <span key={alias} className="badge bg-light text-secondary border font-monospace">
                   {alias}
                 </span>
               ))}
@@ -527,9 +519,9 @@ export function AnimFrameController({
           )}
           {def?.tags && def.tags.length > 0 && (
             <div className="d-flex flex-wrap align-items-center gap-1 mt-1">
-              <strong className="text-secondary text-uppercase user-select-none me-1" style={{ fontSize: '0.65rem' }}>🔖 Tags ({def.tags.length}):</strong>
+              <strong className="text-muted text-uppercase user-select-none me-1" style={{ fontSize: '0.7rem' }}>🔖 Tags ({def.tags.length}):</strong>
               {def.tags.map(tag => (
-                <span key={tag} className="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                <span key={tag} className="badge bg-primary-subtle text-primary border border-primary-subtle">
                   #{tag}
                 </span>
               ))}
