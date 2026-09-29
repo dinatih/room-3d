@@ -12,14 +12,12 @@ export const HDRI_LIST: HdriItem[] = [
 
 
   // --- Campagne, Champs, Prairies & Sports extérieurs ---
-  { id: 'soccer_field_winter', name: 'Terrain de football en hiver ⚽❄️', url: '/environment/hdri/HdrOutdoorSoccerFieldWinterDayClear001_8k.hdr', type: 'hdr' },
 
   // --- Montagne & Hiver Enneigé ---
 
   // --- Mer, Plage, Lacs & Horizons Marins ---
 
   // --- Ciel, Altitude, Dômes & HDRI-Skies ---
-  { id: 'kiara_dawn', name: 'Aube dorée Kiara 🌅', url: '/environment/hdri/kiara_1_dawn_1k.hdr', type: 'hdr' },
   { id: 'sky_cloudy_029', name: 'Ciel nuageux panoramique ⛅', url: '/environment/hdri/HDR_029_Sky_Cloudy.hdr', type: 'hdr' },
 
   // --- Ville, Rues, Architecture & Nuit ---
@@ -35,19 +33,13 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'autumn_field_4k', name: 'autumn field 4k', url: '/environment/hdri/autumn_field_4k.hdr', type: 'hdr' },
   { id: 'ballawley_park_4k', name: 'ballawley park 4k', url: '/environment/hdri/ballawley_park_4k.hdr', type: 'hdr' },
   { id: 'bethnal_green_entrance_4k', name: 'bethnal green entrance 4k', url: '/environment/hdri/bethnal_green_entrance_4k.hdr', type: 'hdr' },
-  { id: 'blender_institute_4k', name: 'blender institute 4k', url: '/environment/hdri/blender_institute_4k.hdr', type: 'hdr' },
   { id: 'blouberg_sunrise_1_4k', name: 'blouberg sunrise 1 4k', url: '/environment/hdri/blouberg_sunrise_1_4k.hdr', type: 'hdr' },
   { id: 'blouberg_sunrise_2_4k', name: 'blouberg sunrise 2 4k', url: '/environment/hdri/blouberg_sunrise_2_4k.hdr', type: 'hdr' },
-  { id: 'blue_lagoon_4k', name: 'blue lagoon 4k', url: '/environment/hdri/blue_lagoon_4k.hdr', type: 'hdr' },
-  { id: 'blue_lagoon_night_4k', name: 'blue lagoon night 4k', url: '/environment/hdri/blue_lagoon_night_4k.hdr', type: 'hdr' },
   { id: 'cambridge_4k', name: 'cambridge 4k', url: '/environment/hdri/cambridge_4k.hdr', type: 'hdr' },
   { id: 'cave_wall_4k', name: 'cave wall 4k', url: '/environment/hdri/cave_wall_4k.hdr', type: 'hdr' },
   { id: 'cayley_interior_4k', name: 'cayley interior 4k', url: '/environment/hdri/cayley_interior_4k.hdr', type: 'hdr' },
-  { id: 'chinese_garden_4k', name: 'chinese garden 4k', url: '/environment/hdri/chinese_garden_4k.hdr', type: 'hdr' },
   { id: 'christmas_photo_studio_03_4k', name: 'christmas photo studio 03 4k', url: '/environment/hdri/christmas_photo_studio_03_4k.hdr', type: 'hdr' },
   { id: 'circus_maximus_1_4k', name: 'circus maximus 1 4k', url: '/environment/hdri/circus_maximus_1_4k.hdr', type: 'hdr' },
-  { id: 'colosseum_4k', name: 'colosseum 4k', url: '/environment/hdri/colosseum_4k.hdr', type: 'hdr' },
-  { id: 'dam_wall_4k', name: 'dam wall 4k', url: '/environment/hdri/dam_wall_4k.hdr', type: 'hdr' },
   { id: 'docklands_02_4k', name: 'docklands 02 4k', url: '/environment/hdri/docklands_02_4k.hdr', type: 'hdr' },
   { id: 'dresden_moat_4k', name: 'dresden moat 4k', url: '/environment/hdri/dresden_moat_4k.hdr', type: 'hdr' },
   { id: 'dusseldorf_bridge_4k', name: 'dusseldorf bridge 4k', url: '/environment/hdri/dusseldorf_bridge_4k.hdr', type: 'hdr' },
@@ -57,8 +49,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'ferndale_studio_02_4k', name: 'ferndale studio 02 4k', url: '/environment/hdri/ferndale_studio_02_4k.hdr', type: 'hdr' },
   { id: 'ferndale_studio_10_4k', name: 'ferndale studio 10 4k', url: '/environment/hdri/ferndale_studio_10_4k.hdr', type: 'hdr' },
   { id: 'ferndale_studio_12_4k', name: 'ferndale studio 12 4k', url: '/environment/hdri/ferndale_studio_12_4k.hdr', type: 'hdr' },
-  { id: 'flower_road_4k', name: 'flower road 4k', url: '/environment/hdri/flower_road_4k.hdr', type: 'hdr' },
-  { id: 'georgentor_4k', name: 'georgentor 4k', url: '/environment/hdri/georgentor_4k.hdr', type: 'hdr' },
   { id: 'green_sanctuary_4k', name: 'green sanctuary 4k', url: '/environment/hdri/green_sanctuary_4k.hdr', type: 'hdr' },
 
   { id: 'gym_entrance_4k', name: 'gym entrance 4k', url: '/environment/hdri/gym_entrance_4k.hdr', type: 'hdr' },
@@ -71,7 +61,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'lebombo_4k', name: 'lebombo 4k', url: '/environment/hdri/lebombo_4k.hdr', type: 'hdr' },
   { id: 'lilienstein_4k', name: 'lilienstein 4k', url: '/environment/hdri/lilienstein_4k.hdr', type: 'hdr' },
   { id: 'little_paris_eiffel_tower_4k', name: 'little paris eiffel tower 4k', url: '/environment/hdri/little_paris_eiffel_tower_4k.hdr', type: 'hdr' },
-  { id: 'meadow_2_4k', name: 'meadow 2 4k', url: '/environment/hdri/meadow_2_4k.hdr', type: 'hdr' },
   { id: 'misty_pines_4k', name: 'misty pines 4k', url: '/environment/hdri/misty_pines_4k.hdr', type: 'hdr' },
   { id: 'modern_buildings_2_4k', name: 'modern buildings 2 4k', url: '/environment/hdri/modern_buildings_2_4k.hdr', type: 'hdr' },
   { id: 'modern_buildings_4k', name: 'modern buildings 4k', url: '/environment/hdri/modern_buildings_4k.hdr', type: 'hdr' },
@@ -92,7 +81,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'qwantani_sunset_4k', name: 'qwantani sunset 4k', url: '/environment/hdri/qwantani_sunset_4k.hdr', type: 'hdr' },
   { id: 'radkow_lake_4k', name: 'radkow lake 4k', url: '/environment/hdri/radkow_lake_4k.hdr', type: 'hdr' },
 
-  { id: 'rainforest_trail_4k', name: 'rainforest trail 4k', url: '/environment/hdri/rainforest_trail_4k.hdr', type: 'hdr' },
   { id: 'rathaus_4k', name: 'rathaus 4k', url: '/environment/hdri/rathaus_4k.hdr', type: 'hdr' },
   { id: 'red_hill_curve_4k', name: 'red hill curve 4k', url: '/environment/hdri/red_hill_curve_4k.hdr', type: 'hdr' },
   { id: 'red_hill_straight_4k', name: 'red hill straight 4k', url: '/environment/hdri/red_hill_straight_4k.hdr', type: 'hdr' },
@@ -107,10 +95,8 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'san_giuseppe_bridge_4k', name: 'san giuseppe bridge 4k', url: '/environment/hdri/san_giuseppe_bridge_4k.hdr', type: 'hdr' },
   { id: 'satara_night_4k', name: 'satara night 4k', url: '/environment/hdri/satara_night_4k.hdr', type: 'hdr' },
   { id: 'schadowplatz_4k', name: 'schadowplatz 4k', url: '/environment/hdri/schadowplatz_4k.hdr', type: 'hdr' },
-  { id: 'secluded_beach_4k', name: 'secluded beach 4k', url: '/environment/hdri/secluded_beach_4k.hdr', type: 'hdr' },
   { id: 'shanghai_bund_4k', name: 'shanghai bund 4k', url: '/environment/hdri/shanghai_bund_4k.hdr', type: 'hdr' },
   { id: 'simons_town_rocks_4k', name: 'simons town rocks 4k', url: '/environment/hdri/simons_town_rocks_4k.hdr', type: 'hdr' },
-  { id: 'skukuza_golf_4k', name: 'skukuza golf 4k', url: '/environment/hdri/skukuza_golf_4k.hdr', type: 'hdr' },
   { id: 'snowy_field_4k', name: 'snowy field 4k', url: '/environment/hdri/snowy_field_4k.hdr', type: 'hdr' },
   { id: 'snowy_forest_4k', name: 'snowy forest 4k', url: '/environment/hdri/snowy_forest_4k.hdr', type: 'hdr' },
   { id: 'solitude_night_4k', name: 'solitude night 4k', url: '/environment/hdri/solitude_night_4k.hdr', type: 'hdr' },
@@ -125,26 +111,20 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'symmetrical_garden_4k', name: 'symmetrical garden 4k', url: '/environment/hdri/symmetrical_garden_4k.hdr', type: 'hdr' },
   { id: 'tcom_colorfulalley_colorful_alley_8k_hdri_sphere_paris', name: 'TCom ColorfulAlley colorful alley 8K hdri sphere PARIS', url: '/environment/hdri/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere-PARIS.hdr', type: 'hdr' },
   { id: 'tcom_norwayforest_8k_hdri_sphere', name: 'TCom NorwayForest 8K hdri sphere', url: '/environment/hdri/TCom_NorwayForest_8K_hdri_sphere.hdr', type: 'hdr' },
-  { id: 'teatro_massimo_4k', name: 'teatro massimo 4k', url: '/environment/hdri/teatro_massimo_4k.hdr', type: 'hdr' },
   { id: 'the_sky_is_on_fire_4k', name: 'the sky is on fire 4k', url: '/environment/hdri/the_sky_is_on_fire_4k.hdr', type: 'hdr' },
-  { id: 'tiber_1_4k', name: 'tiber 1 4k', url: '/environment/hdri/tiber_1_4k.hdr', type: 'hdr' },
   { id: 'tiber_2_4k', name: 'tiber 2 4k', url: '/environment/hdri/tiber_2_4k.hdr', type: 'hdr' },
   { id: 'tiber_island_4k', name: 'tiber island 4k', url: '/environment/hdri/tiber_island_4k.hdr', type: 'hdr' },
   { id: 'tropical_beachstairs_8k', name: 'Tropical BeachStairs 8k', url: '/environment/hdri/Tropical_BeachStairs_8k.hdr', type: 'hdr' },
-  { id: 'tv_studio_4k', name: 'tv studio 4k', url: '/environment/hdri/tv_studio_4k.hdr', type: 'hdr' },
   { id: 'umhlanga_sunrise_4k', name: 'umhlanga sunrise 4k', url: '/environment/hdri/umhlanga_sunrise_4k.hdr', type: 'hdr' },
   { id: 'valley_of_desolation_4k', name: 'valley of desolation 4k', url: '/environment/hdri/valley_of_desolation_4k.hdr', type: 'hdr' },
   { id: 'viale_giuseppe_garibaldi_4k', name: 'viale giuseppe garibaldi 4k', url: '/environment/hdri/viale_giuseppe_garibaldi_4k.hdr', type: 'hdr' },
   { id: 'vignaioli_night_4k', name: 'vignaioli night 4k', url: '/environment/hdri/vignaioli_night_4k.hdr', type: 'hdr' },
-  { id: 'whipple_creek_gazebo_4k', name: 'whipple creek gazebo 4k', url: '/environment/hdri/whipple_creek_gazebo_4k.hdr', type: 'hdr' },
   { id: 'white_cliff_top_4k', name: 'white cliff top 4k', url: '/environment/hdri/white_cliff_top_4k.hdr', type: 'hdr' },
   { id: 'winter_evening_4k', name: 'winter evening 4k', url: '/environment/hdri/winter_evening_4k.hdr', type: 'hdr' },
-  { id: 'winter_river_4k', name: 'winter river 4k', url: '/environment/hdri/winter_river_4k.hdr', type: 'hdr' },
   { id: 'wobbly_bridge_4k', name: 'wobbly bridge 4k', url: '/environment/hdri/wobbly_bridge_4k.hdr', type: 'hdr' },
   { id: 'wooden_lounge_4k', name: 'wooden lounge 4k', url: '/environment/hdri/wooden_lounge_4k.hdr', type: 'hdr' },
   { id: 'wooden_studio_07_4k', name: 'wooden studio 07 4k', url: '/environment/hdri/wooden_studio_07_4k.hdr', type: 'hdr' },
   { id: 'wooden_studio_11_4k', name: 'wooden studio 11 4k', url: '/environment/hdri/wooden_studio_11_4k.hdr', type: 'hdr' },
-  { id: 'zavelstein_4k', name: 'zavelstein 4k', url: '/environment/hdri/zavelstein_4k.hdr', type: 'hdr' },
 ];
 
 export function getRandomHdriId(): string {
