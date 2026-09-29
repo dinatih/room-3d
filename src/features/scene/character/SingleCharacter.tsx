@@ -391,8 +391,10 @@ export function SingleCharacter({
       : (id === 'hayley' || id === 'gloria' || id === 'zoe' || id === 'sophia' || id === 'valby'
         ? 168.0
         : (findCharacter(id)?.height || 181.0));
+
     const scaleFactor = (targetHeight / baseHeight) * 100.0;
     scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
     scene.updateMatrixWorld(true);
 
     initPhysicsBones(parts);
