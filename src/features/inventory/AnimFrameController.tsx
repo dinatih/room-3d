@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
-import { getAnimationDef } from '@features/scene/animations/animationResolver';
+import { getAnimationDef, resolveAnimationId } from '@features/scene/animations/animationResolver';
 import { ANIMATION_DEFINITIONS, type AnimationDefinition } from '@features/scene/animations/animationRegistry';
-import { CharacterAnimSelector, ANIM_CATEGORIES, getAnimCategory } from '@features/scene/CharacterAnimSelector';
+import { CharacterAnimSelector, ANIM_CATEGORIES, getAnimCategory, getFilteredAnimOptions } from '@features/scene/CharacterAnimSelector';
 
 const SPEED_OPTIONS = [0.25, 0.5, 1, 1.5, 2];
 
@@ -36,6 +36,8 @@ export function AnimFrameController({
     isLooping,
     isTPose,
     clipName,
+    animSearch,
+    selectedCategories,
     togglePlay,
     setSpeed,
     setLooping,
@@ -62,7 +64,72 @@ export function AnimFrameController({
     }
   }, [currentFrame, isEditingFrame]);
 
-  // Raccourcis clavier : Espace (Play/Pause), Flèches Gauche/Droite (-1/+1 frame), Début (Frame 0), Flèches Haut/Bas (Cycle Anim)
+  // Résolution de la définition complète de l'animation
+  const targetKey = animKey || animName || clipName;
+  const def = useMemo(() => {
+    if (animDef) return animDef;
+    if (!targetKey) return undefined;
+    const direct = getAnimationDef(targetKey);
+    if (direct) return direct;
+    const clean = targetKey.trim().toLowerCase();
+    return ANIMATION_DEFINITIONS.find(
+      d =>
+        d.id.toLowerCase() === clean ||
+        d.label?.toLowerCase() === clean ||
+        d.path.toLowerCase().includes(clean) ||
+        d.aliases?.some(a => a.toLowerCase() === clean)
+    );
+  }, [animDef, animKey, animName, clipName, targetKey]);
+
+  const catKey = def?.path ? getAnimCategory(def.path) : undefined;
+  const catObj = catKey ? ANIM_CATEGORIES.find(c => c.key === catKey) : undefined;
+
+  const displayName = useMemo(() => {
+    if (animName && !animName.includes('/') && !animName.endsWith('.glb')) {
+      return animName;
+    }
+    return def?.label || animName || clipName || def?.id || 'Animation';
+  }, [animName, def, clipName]);
+
+  const hasMeta = Boolean(def || isTPose);
+  const activeAnimValue = animKey || def?.id || 'idle';
+
+  const handleSelectAnim = useCallback((val: string) => {
+    if (onSelectAnim) {
+      onSelectAnim(val);
+    } else {
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: val } }));
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: val } }));
+      useAnimPreviewStore.getState().play();
+    }
+    setShowAnimSelector(false);
+  }, [onSelectAnim]);
+
+  // Animations filtrées selon la recherche et catégories de CharacterAnimSelector
+  const filteredAnims = useMemo(() => {
+    return getFilteredAnimOptions(animSearch, selectedCategories);
+  }, [animSearch, selectedCategories]);
+
+  // Navigation précédente / suivante limitée strictement aux résultats filtrés
+  const cycleFilteredAnim = useCallback((direction: 'next' | 'prev') => {
+    if (!filteredAnims.length) return;
+    const currentVal = activeAnimValue;
+    const targetId = resolveAnimationId(currentVal);
+    const currIdx = filteredAnims.findIndex(a => a.value === targetId || a.value === currentVal);
+    let nextIdx = 0;
+    if (currIdx === -1) {
+      nextIdx = direction === 'next' ? 0 : filteredAnims.length - 1;
+    } else {
+      nextIdx = direction === 'next'
+        ? (currIdx + 1) % filteredAnims.length
+        : (currIdx - 1 + filteredAnims.length) % filteredAnims.length;
+    }
+    const nextVal = filteredAnims[nextIdx].value;
+    handleSelectAnim(nextVal);
+    onCycleAnim?.(direction);
+  }, [filteredAnims, activeAnimValue, handleSelectAnim, onCycleAnim]);
+
+  // Raccourcis clavier : Espace (Play/Pause), Flèches Gauche/Droite (-1/+1 frame), Début (Frame 0), Flèches Haut/Bas (Cycle Anim filtré)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const targetEl = e.target as HTMLElement | null;
@@ -103,24 +170,24 @@ export function AnimFrameController({
         return;
       }
 
-      if (e.key === 'ArrowUp' && onCycleAnim) {
+      if (e.key === 'ArrowUp') {
         e.preventDefault();
         e.stopPropagation();
-        onCycleAnim('prev');
+        cycleFilteredAnim('prev');
         return;
       }
 
-      if (e.key === 'ArrowDown' && onCycleAnim) {
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
         e.stopPropagation();
-        onCycleAnim('next');
+        cycleFilteredAnim('next');
         return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay, stepFrame, seekToFrame, onCycleAnim]);
+  }, [togglePlay, stepFrame, seekToFrame, cycleFilteredAnim]);
 
   const handleFrameCommit = () => {
     setIsEditingFrame(false);
@@ -130,47 +197,6 @@ export function AnimFrameController({
     } else {
       setInputFrame(currentFrame.toString());
     }
-  };
-
-  // Résolution de la définition complète de l'animation
-  const targetKey = animKey || animName || clipName;
-  const def = useMemo(() => {
-    if (animDef) return animDef;
-    if (!targetKey) return undefined;
-    const direct = getAnimationDef(targetKey);
-    if (direct) return direct;
-    const clean = targetKey.trim().toLowerCase();
-    return ANIMATION_DEFINITIONS.find(
-      d =>
-        d.id.toLowerCase() === clean ||
-        d.label?.toLowerCase() === clean ||
-        d.path.toLowerCase().includes(clean) ||
-        d.aliases?.some(a => a.toLowerCase() === clean)
-    );
-  }, [animDef, animKey, animName, clipName, targetKey]);
-
-  const catKey = def?.path ? getAnimCategory(def.path) : undefined;
-  const catObj = catKey ? ANIM_CATEGORIES.find(c => c.key === catKey) : undefined;
-
-  const displayName = useMemo(() => {
-    if (animName && !animName.includes('/') && !animName.endsWith('.glb')) {
-      return animName;
-    }
-    return def?.label || animName || clipName || def?.id || 'Animation';
-  }, [animName, def, clipName]);
-
-  const hasMeta = Boolean(def || isTPose);
-  const activeAnimValue = animKey || def?.id || 'idle';
-
-  const handleSelectAnim = (val: string) => {
-    if (onSelectAnim) {
-      onSelectAnim(val);
-    } else {
-      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: val } }));
-      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: val } }));
-      useAnimPreviewStore.getState().play();
-    }
-    setShowAnimSelector(false);
   };
 
   // Fermer le sélecteur d'animation lors d'un clic extérieur
@@ -517,25 +543,29 @@ export function AnimFrameController({
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
           {/* Badge animation en cours (nom complet affiché) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
-            {onCycleAnim && (
-              <button
-                type="button"
-                onClick={() => onCycleAnim('prev')}
-                style={{
-                  padding: '2px 4px',
-                  fontSize: 8,
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: 3,
-                  color: '#cbd5e1',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                }}
-                title="Animation précédente (Flèche Haut)"
-              >
-                ▲
-              </button>
-            )}
+            {/* Bouton animation précédente */}
+            <button
+              type="button"
+              onClick={() => cycleFilteredAnim('prev')}
+              disabled={filteredAnims.length <= 1}
+              style={{
+                padding: '2px 4px',
+                fontSize: 8,
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: 3,
+                color: filteredAnims.length <= 1 ? '#64748b' : '#cbd5e1',
+                cursor: filteredAnims.length <= 1 ? 'default' : 'pointer',
+                flexShrink: 0,
+              }}
+              title={
+                filteredAnims.length <= 1
+                  ? 'Aucune autre animation dans le filtre actuel'
+                  : `Animation précédente (${filteredAnims.length} dans le filtre / Flèche Haut)`
+              }
+            >
+              ▲
+            </button>
             <button
               ref={badgeRef}
               type="button"
@@ -559,31 +589,39 @@ export function AnimFrameController({
                 outline: 'none',
                 transition: 'background 0.15s, border-color 0.15s',
               }}
-              title={showAnimSelector ? "Fermer le sélecteur d'animations" : `Animation active : ${displayName} (Cliquer pour ouvrir le sélecteur)`}
+              title={
+                showAnimSelector
+                  ? "Fermer le sélecteur d'animations"
+                  : `Animation active : ${displayName} (${filteredAnims.length} filtrée(s) — Cliquer pour ouvrir le sélecteur)`
+              }
             >
               <span style={{ fontSize: 11, userSelect: 'none' }}>🎬</span>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', userSelect: 'none' }}>{displayName}</span>
               <span style={{ fontSize: 8, opacity: 0.8, userSelect: 'none', flexShrink: 0 }}>{showAnimSelector ? '▲' : '▼'}</span>
             </button>
-            {onCycleAnim && (
-              <button
-                type="button"
-                onClick={() => onCycleAnim('next')}
-                style={{
-                  padding: '2px 4px',
-                  fontSize: 8,
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: 3,
-                  color: '#cbd5e1',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                }}
-                title="Animation suivante (Flèche Bas)"
-              >
-                ▼
-              </button>
-            )}
+            {/* Bouton animation suivante */}
+            <button
+              type="button"
+              onClick={() => cycleFilteredAnim('next')}
+              disabled={filteredAnims.length <= 1}
+              style={{
+                padding: '2px 4px',
+                fontSize: 8,
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: 3,
+                color: filteredAnims.length <= 1 ? '#64748b' : '#cbd5e1',
+                cursor: filteredAnims.length <= 1 ? 'default' : 'pointer',
+                flexShrink: 0,
+              }}
+              title={
+                filteredAnims.length <= 1
+                  ? 'Aucune autre animation dans le filtre actuel'
+                  : `Animation suivante (${filteredAnims.length} dans le filtre / Flèche Bas)`
+              }
+            >
+              ▼
+            </button>
           </div>
 
           {/* Vitesse */}

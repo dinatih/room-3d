@@ -1,5 +1,18 @@
 import { create } from 'zustand';
 
+const getSession = (key: string, fallback: string) => {
+  try { return sessionStorage.getItem(key) ?? fallback; } catch { return fallback; }
+};
+const getSessionJson = <T,>(key: string, fallback: T): T => {
+  try {
+    const s = sessionStorage.getItem(key);
+    return s ? JSON.parse(s) : fallback;
+  } catch { return fallback; }
+};
+const setSession = (key: string, val: string) => {
+  try { sessionStorage.setItem(key, val); } catch {}
+};
+
 export interface AnimPreviewState {
   isPlaying: boolean;
   currentTime: number;
@@ -10,6 +23,8 @@ export interface AnimPreviewState {
   isScrubbing: boolean;
   clipName: string;
   isTPose: boolean;
+  animSearch: string;
+  selectedCategories: string[];
 
   // Actions
   play: () => void;
@@ -23,6 +38,8 @@ export interface AnimPreviewState {
   seekToFrame: (frame: number) => void;
   stepFrame: (deltaFrames: number) => void;
   setClipInfo: (name: string, duration: number, isTPose?: boolean, fps?: number) => void;
+  setAnimSearch: (search: string) => void;
+  setSelectedCategories: (categories: string[]) => void;
   tick: (deltaSeconds: number) => number;
   reset: () => void;
 }
@@ -37,6 +54,8 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
   isScrubbing: false,
   clipName: 'Idle',
   isTPose: false,
+  animSearch: getSession('anim_search_filter', ''),
+  selectedCategories: getSessionJson('anim_selected_categories', []),
 
   play: () => {
     const { currentTime, duration, isLooping } = get();
@@ -113,6 +132,16 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
       isTPose,
       currentTime: isTPose ? 0 : (nameChanged && !current.isScrubbing && current.isPlaying ? 0 : Math.min(current.currentTime, duration)),
     });
+  },
+
+  setAnimSearch: (animSearch: string) => {
+    setSession('anim_search_filter', animSearch);
+    set({ animSearch });
+  },
+
+  setSelectedCategories: (selectedCategories: string[]) => {
+    setSession('anim_selected_categories', JSON.stringify(selectedCategories));
+    set({ selectedCategories });
   },
 
   tick: (deltaSeconds: number) => {

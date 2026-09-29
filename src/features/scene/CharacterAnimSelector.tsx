@@ -7,6 +7,7 @@ import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { getAnimationDef } from './animations/animationResolver';
 import { resetAppIdle } from './idleState';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
+import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
 export const ANIM_CATEGORIES = [
   { key: 'combat', label: 'Combat', icon: '⚔️' },
@@ -26,7 +27,7 @@ export function getAnimCategory(val: string): string {
 }
 
 /** Métadonnées pré-calculées une seule fois pour éviter les regex et lookups sur chaque render */
-const ENHANCED_ANIM_OPTIONS = WALKER_ANIM_OPTIONS.map(anim => {
+export const ENHANCED_ANIM_OPTIONS = WALKER_ANIM_OPTIONS.map(anim => {
   const def = getAnimationDef(anim.value);
   const animCat = getAnimCategory(anim.value);
   const catObj = ANIM_CATEGORIES.find(c => c.key === animCat);
@@ -52,6 +53,14 @@ const ENHANCED_ANIM_OPTIONS = WALKER_ANIM_OPTIONS.map(anim => {
   };
 });
 
+export function getFilteredAnimOptions(search: string, categories: string[]) {
+  const q = search.trim().toLowerCase();
+  return ENHANCED_ANIM_OPTIONS.filter(a => {
+    if (categories.length > 0 && !categories.includes(a.category)) return false;
+    return !q || a.searchIndex.includes(q);
+  });
+}
+
 const CATEGORY_COUNTS = ENHANCED_ANIM_OPTIONS.reduce<Record<string, number>>((acc, a) => {
   acc[a.category] = (acc[a.category] || 0) + 1;
   return acc;
@@ -73,13 +82,6 @@ export interface CharacterAnimSelectorProps {
 
 const MAX_RECENT = 2;
 
-const getSession = (key: string, fallback: string) => {
-  try { return sessionStorage.getItem(key) ?? fallback; } catch { return fallback; }
-};
-const setSession = (key: string, val: string) => {
-  try { sessionStorage.setItem(key, val); } catch {}
-};
-
 export function CharacterAnimSelector({
   activeAnimValue = 'idle',
   onSelectAnim,
@@ -94,13 +96,7 @@ export function CharacterAnimSelector({
   const isMobileHook = useIsMobile();
   const isMobile = isMobileProp !== undefined ? isMobileProp : isMobileHook;
 
-  const [animSearch, setAnimSearch] = useState(() => getSession('anim_search_filter', ''));
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
-    try {
-      const s = sessionStorage.getItem('anim_selected_categories');
-      return s ? JSON.parse(s) : [];
-    } catch { return []; }
-  });
+  const { animSearch, selectedCategories, setAnimSearch, setSelectedCategories } = useAnimPreviewStore();
 
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [copiedAnim, setCopiedAnim] = useState<string | null>(null);
@@ -118,12 +114,10 @@ export function CharacterAnimSelector({
 
   const updateSearch = (val: string) => {
     setAnimSearch(val);
-    setSession('anim_search_filter', val);
   };
 
   const updateCategories = (cats: string[]) => {
     setSelectedCategories(cats);
-    setSession('anim_selected_categories', JSON.stringify(cats));
   };
 
   const handleSelect = (val: string) => {
@@ -184,11 +178,7 @@ export function CharacterAnimSelector({
   }, [activeAnimValue]);
 
   const filteredAnims = useMemo(() => {
-    const q = animSearch.trim().toLowerCase();
-    return ENHANCED_ANIM_OPTIONS.filter(a => {
-      if (selectedCategories.length > 0 && !selectedCategories.includes(a.category)) return false;
-      return !q || a.searchIndex.includes(q);
-    });
+    return getFilteredAnimOptions(animSearch, selectedCategories);
   }, [animSearch, selectedCategories]);
 
   const selectNextAnim = (dir: 1 | -1) => {

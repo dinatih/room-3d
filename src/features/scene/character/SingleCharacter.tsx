@@ -864,8 +864,6 @@ export function SingleCharacter({
         const isControlledByStore = isPreview || laraGrid;
         if (isControlledByStore && !useAnimPreviewStore.getState().isPlaying) {
           to.setEffectiveWeight(1);
-          (to as any)._fadeDuration = 0;
-          (to as any)._weight = 1;
         }
 
         if (isActive && !isPreview && !laraGrid && !isTemporaryLoadingFallback && lastLoggedAnimRef.current !== target) {
@@ -905,13 +903,21 @@ export function SingleCharacter({
           const clipB = actB.getClip();
           if (clipB && clipB.duration > 0) {
             actB.setEffectiveWeight(1);
-            actB.time = store.currentTime % clipB.duration;
+            const targetTimeB = store.currentTime % clipB.duration;
             if (store.isPlaying && !store.isScrubbing) {
-              actB.paused = false;
+              if (actB.paused) {
+                actB.paused = false;
+                actB.time = targetTimeB;
+              }
+              if (Math.abs(actB.time - targetTimeB) > 0.05) {
+                actB.time = targetTimeB;
+              }
               mixer.update(animDelta);
             } else {
+              actB.paused = false;
+              mixer.setTime(targetTimeB);
+              actB.time = targetTimeB;
               actB.paused = true;
-              mixer.setTime(store.currentTime % clipB.duration);
             }
           }
         }
@@ -927,10 +933,19 @@ export function SingleCharacter({
             store.setClipInfo(cleanName, clip.duration, false);
           }
 
+          const targetTime = store.currentTime % clip.duration;
+
           if (store.isPlaying && !store.isScrubbing) {
             if (act.paused) {
               act.paused = false;
+              act.time = targetTime;
             }
+
+            // Détection d'un saut de temps externe (ex: seekToFrame(0), retour au début pendant la lecture)
+            if (Math.abs(act.time - targetTime) > 0.05) {
+              act.time = targetTime;
+            }
+
             if (!store.isLooping) {
               act.setLoop(THREE.LoopOnce, 0);
               act.clampWhenFinished = true;
@@ -951,20 +966,17 @@ export function SingleCharacter({
                 store.setCurrentTime(act.time % clip.duration);
               }
             } else {
-              // Dans LaraGrid, synchronisation périodique avec le master
-              const targetTime = store.currentTime % clip.duration;
+              // Dans LaraGrid, synchronisation avec le master
               if (Math.abs(act.time - targetTime) > 0.05) {
                 act.time = targetTime;
-                mixer.setTime(targetTime);
               }
             }
           } else {
             act.setEffectiveWeight(1);
-            (act as any)._fadeDuration = 0;
-            (act as any)._weight = 1;
-            act.time = store.currentTime % clip.duration;
+            act.paused = false;
+            mixer.setTime(targetTime);
+            act.time = targetTime;
             act.paused = true;
-            mixer.setTime(store.currentTime % clip.duration);
           }
         }
       }
