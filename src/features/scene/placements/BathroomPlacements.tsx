@@ -20,9 +20,8 @@ import { DroneCell } from '../items/Drona';
 
 import {
   WALL_H,
-  DOOR_START,
 } from '../wallData';
-import { PARTITION_THICKNESS, BATH_Z_END, BATH_WEST_WALL, BATH_NORTH_WALL } from '../wallData';
+import { PARTITION_THICKNESS, BATH_Z_END, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
@@ -42,7 +41,7 @@ export function BathroomEquipment() {
   ]);
 
   const HW_R = 28, HW_H = 65;
-  const SDB_CX = (BATH_WEST_WALL + DOOR_START) / 2;
+  const SDB_CX = (BATH_WEST_WALL + BATH_EAST_WALL) / 2 + 4;
   const SDB_CZ = (BATH_NORTH_WALL + BATH_Z_END) / 2;
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
 
@@ -54,7 +53,7 @@ export function BathroomEquipment() {
       </group>
 
       {/* Meuble Vasque SDB */}
-      <group position={[DOOR_START - 84, 14, BATH_NORTH_WALL + 24.5]} userData={{ animUnit: true, itemName: 'Meuble Vasque SDB' }}>
+      <group position={[BATH_EAST_WALL - 76, 14, BATH_NORTH_WALL + 24.5]} userData={{ animUnit: true, itemName: 'Meuble Vasque SDB' }}>
         <Havback49514017 item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -85,7 +84,7 @@ export function BathroomEquipment() {
       </group>
 
       {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque */}
-      <group position={[DOOR_START - 84, 176, BATH_NORTH_WALL - 2]} userData={{ animUnit: true, itemName: 'Bandeau LED Våthult' }}>
+      <group position={[BATH_EAST_WALL - 76, 176, BATH_NORTH_WALL - 2]} userData={{ animUnit: true, itemName: 'Bandeau LED Våthult' }}>
         <Vathult40467548 item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -112,7 +111,7 @@ export function BathroomFurniture() {
       <group position={[BATH_WEST_WALL + 20, 0, cbZ]} userData={{ animUnit: true, itemName: 'Meuble SDB Ouest' }}>
         <BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      <group position={[DOOR_START - 31, 0, cbZ]} userData={{ animUnit: true, itemName: 'Meuble SDB Est' }}>
+      <group position={[BATH_EAST_WALL - 23, 0, cbZ]} userData={{ animUnit: true, itemName: 'Meuble SDB Est' }}>
         <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} />
       </group>
 
@@ -129,12 +128,12 @@ export function BathroomFurnishings() {
   return (
     <MergedStaticGroup name="merged-bathroom-furnishings">
       {/* Tapis Gazon SDB */}
-      <group position={[(BATH_WEST_WALL + DOOR_START) / 2 - 5, 0, BATH_Z_END - 53]} userData={{ animUnit: true, itemName: 'Tapis Gazon SDB' }}>
+      <group position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2 - 1, 0, BATH_Z_END - 53]} userData={{ animUnit: true, itemName: 'Tapis Gazon SDB' }}>
         <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Boîtes Drona sur meubles hauts SDB */}
-      <group position={[DOOR_START - 31, 60 + DF / 2 + 0.2, cbZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona SDB Est' }}>
+      <group position={[BATH_EAST_WALL - 23, 60 + DF / 2 + 0.2, cbZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona SDB Est' }}>
         <DroneCell />
       </group>
       <group position={[BATH_WEST_WALL + 20, 60 + DF / 2 + 0.2, cbZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona SDB Ouest' }}>
@@ -147,12 +146,12 @@ export function BathroomFurnishings() {
       </group>
 
       {/* TACKAN lavabo */}
-      <group position={[DOOR_START - 69, 83, BATH_NORTH_WALL + 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Lavabo' }}>
+      <group position={[BATH_EAST_WALL - 61, 83, BATH_NORTH_WALL + 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Lavabo' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* TISKEN sur miroir vasque */}
-      <group position={[DOOR_START - 106, 129, BATH_NORTH_WALL + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Crochet Tisken' }}>
+      <group position={[BATH_EAST_WALL - 98, 129, BATH_NORTH_WALL + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Crochet Tisken' }}>
         <Tisken40381253 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
