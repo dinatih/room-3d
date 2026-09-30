@@ -26,22 +26,15 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'fly_studio_05', name: 'Studio Fly à contraste élevé 5 💡🎥', url: '/environment/hdri/fly-studio-05_4K.hdr', type: 'hdr' },
 
   // --- Auto-generated city/environment HDRIs ---
-  { id: 'cave_wall_4k', name: 'cave wall 4k', url: '/environment/hdri/cave_wall_4k.hdr', type: 'hdr' },
-  { id: 'ferndale_studio_02_4k', name: 'ferndale studio 02 4k', url: '/environment/hdri/ferndale_studio_02_4k.hdr', type: 'hdr' },
   { id: 'ferndale_studio_10_4k', name: 'ferndale studio 10 4k', url: '/environment/hdri/ferndale_studio_10_4k.hdr', type: 'hdr' },
 
-  { id: 'lilienstein_4k', name: 'lilienstein 4k', url: '/environment/hdri/lilienstein_4k.hdr', type: 'hdr' },
   { id: 'misty_pines_4k', name: 'misty pines 4k', url: '/environment/hdri/misty_pines_4k.hdr', type: 'hdr' },
-  { id: 'modern_buildings_2_4k', name: 'modern buildings 2 4k', url: '/environment/hdri/modern_buildings_2_4k.hdr', type: 'hdr' },
   { id: 'modern_buildings_night_4k', name: 'modern buildings night 4k', url: '/environment/hdri/modern_buildings_night_4k.hdr', type: 'hdr' },
 
   { id: 'pool_4k', name: 'pool 4k', url: '/environment/hdri/pool_4k.hdr', type: 'hdr' },
 
-  { id: 'red_hill_curve_4k', name: 'red hill curve 4k', url: '/environment/hdri/red_hill_curve_4k.hdr', type: 'hdr' },
   { id: 'rogland_clear_night_4k', name: 'rogland clear night 4k', url: '/environment/hdri/rogland_clear_night_4k.hdr', type: 'hdr' },
   { id: 'rogland_moonlit_night_4k', name: 'rogland moonlit night 4k', url: '/environment/hdri/rogland_moonlit_night_4k.hdr', type: 'hdr' },
-  { id: 'roof_garden_4k', name: 'roof garden 4k', url: '/environment/hdri/roof_garden_4k.hdr', type: 'hdr' },
-  { id: 'sandflat_sunset', name: 'Sandflat Sunset', url: '/environment/hdri/Sandflat_Sunset.hdr', type: 'hdr' },
   { id: 'sandsloot_4k', name: 'sandsloot 4k', url: '/environment/hdri/sandsloot_4k.hdr', type: 'hdr' },
   { id: 'satara_night_4k', name: 'satara night 4k', url: '/environment/hdri/satara_night_4k.hdr', type: 'hdr' },
   { id: 'shanghai_bund_4k', name: 'shanghai bund 4k', url: '/environment/hdri/shanghai_bund_4k.hdr', type: 'hdr' },
@@ -50,7 +43,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'tcom_colorfulalley_colorful_alley_8k_hdri_sphere_paris', name: 'TCom ColorfulAlley colorful alley 8K hdri sphere PARIS', url: '/environment/hdri/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere-PARIS.hdr', type: 'hdr' },
   { id: 'tcom_norwayforest_8k_hdri_sphere', name: 'TCom NorwayForest 8K hdri sphere', url: '/environment/hdri/TCom_NorwayForest_8K_hdri_sphere.hdr', type: 'hdr' },
   { id: 'tropical_beachstairs_8k', name: 'Tropical BeachStairs 8k', url: '/environment/hdri/Tropical_BeachStairs_8k.hdr', type: 'hdr' },
-  { id: 'winter_evening_4k', name: 'winter evening 4k', url: '/environment/hdri/winter_evening_4k.hdr', type: 'hdr' },
 ];
 
 export function getRandomHdriId(): string {
