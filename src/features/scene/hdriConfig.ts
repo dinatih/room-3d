@@ -18,7 +18,6 @@ export const HDRI_LIST: HdriItem[] = [
   // --- Mer, Plage, Lacs & Horizons Marins ---
 
   // --- Ciel, Altitude, Dômes & HDRI-Skies ---
-  { id: 'sky_cloudy_029', name: 'Ciel nuageux panoramique ⛅', url: '/environment/hdri/HDR_029_Sky_Cloudy.hdr', type: 'hdr' },
 
   // --- Ville, Rues, Architecture & Nuit ---
   { id: 'dikhololo_night', name: 'Dikhololo - Nuit étoilée & Camp 🌌', url: '/environment/hdri/dikhololo_night_1k.hdr', type: 'hdr' },
@@ -29,7 +28,6 @@ export const HDRI_LIST: HdriItem[] = [
   // --- Auto-generated city/environment HDRIs ---
   { id: 'adams_place_bridge_4k', name: 'adams place bridge 4k', url: '/environment/hdri/adams_place_bridge_4k.hdr', type: 'hdr' },
   { id: 'aristea_wreck_4k', name: 'aristea wreck 4k', url: '/environment/hdri/aristea_wreck_4k.hdr', type: 'hdr' },
-  { id: 'autumn_field_4k', name: 'autumn field 4k', url: '/environment/hdri/autumn_field_4k.hdr', type: 'hdr' },
   { id: 'ballawley_park_4k', name: 'ballawley park 4k', url: '/environment/hdri/ballawley_park_4k.hdr', type: 'hdr' },
   { id: 'bethnal_green_entrance_4k', name: 'bethnal green entrance 4k', url: '/environment/hdri/bethnal_green_entrance_4k.hdr', type: 'hdr' },
   { id: 'blouberg_sunrise_1_4k', name: 'blouberg sunrise 1 4k', url: '/environment/hdri/blouberg_sunrise_1_4k.hdr', type: 'hdr' },
@@ -56,7 +54,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'horn_koppe_snow_4k', name: 'horn koppe snow 4k', url: '/environment/hdri/horn-koppe_snow_4k.hdr', type: 'hdr' },
   { id: 'lakeside_4k', name: 'lakeside 4k', url: '/environment/hdri/lakeside_4k.hdr', type: 'hdr' },
   { id: 'laufenurg_church_4k', name: 'laufenurg church 4k', url: '/environment/hdri/laufenurg_church_4k.hdr', type: 'hdr' },
-  { id: 'lebombo_4k', name: 'lebombo 4k', url: '/environment/hdri/lebombo_4k.hdr', type: 'hdr' },
   { id: 'lilienstein_4k', name: 'lilienstein 4k', url: '/environment/hdri/lilienstein_4k.hdr', type: 'hdr' },
   { id: 'little_paris_eiffel_tower_4k', name: 'little paris eiffel tower 4k', url: '/environment/hdri/little_paris_eiffel_tower_4k.hdr', type: 'hdr' },
   { id: 'misty_pines_4k', name: 'misty pines 4k', url: '/environment/hdri/misty_pines_4k.hdr', type: 'hdr' },
@@ -70,14 +67,12 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'pergola_walkway_4k', name: 'pergola walkway 4k', url: '/environment/hdri/pergola_walkway_4k.hdr', type: 'hdr' },
 
   { id: 'pool_4k', name: 'pool 4k', url: '/environment/hdri/pool_4k.hdr', type: 'hdr' },
-  { id: 'preller_drive_4k', name: 'preller drive 4k', url: '/environment/hdri/preller_drive_4k.hdr', type: 'hdr' },
   { id: 'qwantani_dusk_2_4k', name: 'qwantani dusk 2 4k', url: '/environment/hdri/qwantani_dusk_2_4k.hdr', type: 'hdr' },
   { id: 'qwantani_night_4k', name: 'qwantani night 4k', url: '/environment/hdri/qwantani_night_4k.hdr', type: 'hdr' },
   { id: 'qwantani_noon_4k', name: 'qwantani noon 4k', url: '/environment/hdri/qwantani_noon_4k.hdr', type: 'hdr' },
   { id: 'qwantani_sunset_4k', name: 'qwantani sunset 4k', url: '/environment/hdri/qwantani_sunset_4k.hdr', type: 'hdr' },
   { id: 'radkow_lake_4k', name: 'radkow lake 4k', url: '/environment/hdri/radkow_lake_4k.hdr', type: 'hdr' },
 
-  { id: 'rathaus_4k', name: 'rathaus 4k', url: '/environment/hdri/rathaus_4k.hdr', type: 'hdr' },
   { id: 'red_hill_curve_4k', name: 'red hill curve 4k', url: '/environment/hdri/red_hill_curve_4k.hdr', type: 'hdr' },
   { id: 'red_hill_straight_4k', name: 'red hill straight 4k', url: '/environment/hdri/red_hill_straight_4k.hdr', type: 'hdr' },
   { id: 'red_wall_4k', name: 'red wall 4k', url: '/environment/hdri/red_wall_4k.hdr', type: 'hdr' },
@@ -92,7 +87,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'satara_night_4k', name: 'satara night 4k', url: '/environment/hdri/satara_night_4k.hdr', type: 'hdr' },
   { id: 'shanghai_bund_4k', name: 'shanghai bund 4k', url: '/environment/hdri/shanghai_bund_4k.hdr', type: 'hdr' },
   { id: 'simons_town_rocks_4k', name: 'simons town rocks 4k', url: '/environment/hdri/simons_town_rocks_4k.hdr', type: 'hdr' },
-  { id: 'snowy_field_4k', name: 'snowy field 4k', url: '/environment/hdri/snowy_field_4k.hdr', type: 'hdr' },
   { id: 'solitude_night_4k', name: 'solitude night 4k', url: '/environment/hdri/solitude_night_4k.hdr', type: 'hdr' },
   { id: 'spaichingen_hill_4k', name: 'spaichingen hill 4k', url: '/environment/hdri/spaichingen_hill_4k.hdr', type: 'hdr' },
   { id: 'spiaggia_di_mondello_4k', name: 'spiaggia di mondello 4k', url: '/environment/hdri/spiaggia_di_mondello_4k.hdr', type: 'hdr' },
