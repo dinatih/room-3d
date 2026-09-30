@@ -20,7 +20,7 @@ export const HDRI_LIST: HdriItem[] = [
   // --- Ciel, Altitude, Dômes & HDRI-Skies ---
 
   // --- Ville, Rues, Architecture & Nuit ---
-  { id: 'dikhololo_night', name: 'Dikhololo - Nuit étoilée & Camp 🌌', url: '/environment/hdri/dikhololo_night_1k.hdr', type: 'hdr' },
+  { id: 'dikhololo_night', name: 'Dikhololo - Nuit étoilée & Camp 🌌', url: '/environment/hdri/dikhololo_night_4k.hdr', type: 'hdr' },
 
   // --- Studios photo & Intérieurs Design ---
   { id: 'fly_studio_05', name: 'Studio Fly à contraste élevé 5 💡🎥', url: '/environment/hdri/fly-studio-05_4K.hdr', type: 'hdr' },
