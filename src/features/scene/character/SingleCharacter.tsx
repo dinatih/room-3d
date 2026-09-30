@@ -399,6 +399,12 @@ export function SingleCharacter({
 
     initPhysicsBones(parts);
 
+    scene.traverse((c: any) => {
+      if (c.isBone && c.userData.restScale) {
+        c.scale.copy(c.userData.restScale);
+      }
+    });
+
     if (parts.bones.hips) {
       const parent = scene.parent || scene;
       const hipsWorld = new THREE.Vector3();
@@ -482,10 +488,10 @@ export function SingleCharacter({
       scene.position.copy(baseScenePosRef.current);
       scene.rotation.set(0, 0, 0);
       scene.traverse((c: any) => {
-        if (c.isSkinnedMesh && c.skeleton) c.skeleton.pose();
         if (c.isBone) {
           if (c.userData.restPos) c.position.copy(c.userData.restPos);
           if (c.userData.restQuat) c.quaternion.copy(c.userData.restQuat);
+          if (c.userData.restScale) c.scale.copy(c.userData.restScale);
         }
       });
       scene.updateMatrixWorld(true);
@@ -783,12 +789,10 @@ export function SingleCharacter({
         activeActionName.current = 't-pose';
       }
       scene.traverse((c: any) => {
-        if (c.isSkinnedMesh && c.skeleton) {
-          c.skeleton.pose();
-        }
         if (c.isBone) {
           if (c.userData.restPos) c.position.copy(c.userData.restPos);
           if (c.userData.restQuat) c.quaternion.copy(c.userData.restQuat);
+          if (c.userData.restScale) c.scale.copy(c.userData.restScale);
         }
       });
       scene.updateMatrixWorld(true);
@@ -806,10 +810,10 @@ export function SingleCharacter({
 
         if (laraGrid) {
           scene.traverse((c: any) => {
-            if (c.isSkinnedMesh && c.skeleton) c.skeleton.pose();
             if (c.isBone) {
               if (c.userData.restPos) c.position.copy(c.userData.restPos);
               if (c.userData.restQuat) c.quaternion.copy(c.userData.restQuat);
+              if (c.userData.restScale) c.scale.copy(c.userData.restScale);
             }
           });
           scene.updateMatrixWorld(true);
