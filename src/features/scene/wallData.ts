@@ -41,14 +41,20 @@ export const MEASURED_DIST_NICHE_BEAM_TO_EAST_WALL  = 316;
 /** Hauteur sous plafond mesurée entre parquet et plafond : 250 cm */
 export const MEASURED_HEIGHT_FLOOR_TO_CEILING       = 250;
 
+/** Distance entre le mur Ouest de la niche de la pièce principale et le mur Ouest de la cuisine : 41,5 cm */
+export const MEASURED_DIST_ROOM_WEST_NICHE_WALL_TO_KITCHEN_WEST_WALL = 41.5;
+
 // =============================================
 // DIMENSIONS DU MODÈLE 3D
 // =============================================
+
 export const ROOM_W = MEASURED_DIST_NICHE_BEAM_TO_EAST_WALL; // 3,16m — largeur réelle du séjour
-export const ROOM_D = 400; // 4m
+export const ROOM_D = 400 // MEASURED_DIST_CORNER_NE_TO_SE; // 400; // 4m TODO : true value is MEASURED_DIST_CORNER_NE_TO_SE
 export const WALL_H = MEASURED_HEIGHT_FLOOR_TO_CEILING; // 2.5m
 
-
+// ── Épaisseurs et repères axiaux ──────────────────────────────────────────────
+export const WALL_THICKNESS      = 10;   // Épaisseur murs porteurs / extérieurs (cm)
+export const PARTITION_THICKNESS = 7.2;  // Épaisseur cloisons intérieures placo (cm)
 
 // Porte : 80cm d'ouverture, alignée après mur couloir (X=200)
 export const DOOR_START = 200; // cm 200
@@ -56,7 +62,7 @@ export const DOOR_END = 286; // cm 286
 export const DOOR_H = 204;      // hauteur standard française (panneaux de porte)
 
 // Renfoncement cuisine : 1m large, 60cm profond, à droite de la porte
-const KITCHEN_X0 = 30; // interne — utiliser KITCHEN_WEST_WALL à la place côté import
+const KITCHEN_X0 = 30; // interne — utiliser KITCHEN_WEST_WALL à la place côté import // TODO: true value is MEASURED_DIST_ROOM_WEST_NICHE_WALL_TO_KITCHEN_WEST_WALL
 export const KITCHEN_X1 = 130; // fin (1m = 100cm)
 export const KITCHEN_DEPTH = 60; // 60cm
 const KITCHEN_Z = ROOM_D + KITCHEN_DEPTH; // interne — utiliser KITCHEN_SOUTH_WALL à la place côté import
@@ -71,7 +77,7 @@ export const NICHE_Z_START = ROOM_D - 120; // Z=280
 export const DIAG_ANGLE_DEG = 120;
 const _diagAngle = DIAG_ANGLE_DEG * (Math.PI / 180);
 const _AX = ROOM_W;
-const _AZ = 542;
+const _AZ = ROOM_D + PARTITION_THICKNESS + 134.8; // TODO : true value for 134.8 is MEASURED_DIST_CORRIDOR_NORTH_EAST_ANGLE_TO_CORRIDOR_EAST_WALL_DIAGONAL_WALL_ANGLE
 const _CX = NICHE_X;
 const _CZ = _AZ - (_AX - _CX) / Math.tan(_diagAngle);
 const _DX = _CX - _AX;
@@ -103,10 +109,6 @@ export const DiagWall = {
     };
   }
 };
-
-// ── Épaisseurs et repères axiaux ──────────────────────────────────────────────
-export const WALL_THICKNESS      = 10;   // Épaisseur murs porteurs / extérieurs (cm)
-export const PARTITION_THICKNESS = 7.2;  // Épaisseur cloisons intérieures placo (cm)
 
 const WT = WALL_THICKNESS;
 const PT = PARTITION_THICKNESS;
@@ -224,7 +226,7 @@ export const ROOM_EAST_WALL      = pWest('corner-ne');         // X = 316    (fa
 export const ROOM_WEST_WALL      = pEast('corner-nw');         // X = 0      (face intérieure mur ouest)
 
 // Cuisine (Kitchen) — alvéole au sud du séjour, ouvert au nord
-export const KITCHEN_SOUTH_WALL  = pNorth('kitchen-nw');       // Z ≈ 460.0  (face cuisine de la partition cuisine/sdb)
+export const KITCHEN_SOUTH_WALL  = pNorth('kitchen-sw');       // Z ≈ 460.0  (face cuisine de la partition cuisine/sdb)
 export const KITCHEN_EAST_WALL   = pWest('kitchen-ne');        // X ≈ 126.4
 export const KITCHEN_WEST_WALL   = pEast('kitchen-nw');        // X ≈ 33.6
 // KITCHEN_NORTH_WALL : pas de mur (ouvert sur le séjour)
