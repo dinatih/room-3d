@@ -22,13 +22,13 @@ import {
   WALL_H,
   DOOR_START,
 } from '../wallData';
-import { PARTITION_THICKNESS, BATH_Z_END, BATH_WEST_WALL, BATH_NORTH_WALL, KITCHEN_SOUTH_WALL } from '../wallData';
+import { PARTITION_THICKNESS, BATH_Z_END, BATH_WEST_WALL, BATH_NORTH_WALL } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
 const DF = 33;
-const cbZ = KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 19.5; // 486.7
+const cbZ = BATH_NORTH_WALL + 19.5;
 
 export function BathroomEquipment() {
   const as = useFurnitureToggles([
@@ -43,23 +43,23 @@ export function BathroomEquipment() {
 
   const HW_R = 28, HW_H = 65;
   const SDB_CX = (BATH_WEST_WALL + DOOR_START) / 2;
-  const SDB_CZ = (KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + BATH_Z_END) / 2;
+  const SDB_CZ = (BATH_NORTH_WALL + BATH_Z_END) / 2;
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
 
   return (
     <MergedStaticGroup name="merged-bathroom-equipment">
       {/* Chauffe-eau */}
-      <group position={[BATH_WEST_WALL + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_SOUTH_WALL + 20 + HW_R]} rotation-y={Math.PI / 2} userData={{ side: 'west', itemName: 'Chauffe-eau' }}>
+      <group position={[BATH_WEST_WALL + HW_R, WALL_H - 10 - HW_H / 2, BATH_NORTH_WALL + 20 + HW_R - PARTITION_THICKNESS]} rotation-y={Math.PI / 2} userData={{ side: 'west', itemName: 'Chauffe-eau' }}>
         <WaterHeater item={stub('water-heater')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Meuble Vasque SDB */}
-      <group position={[DOOR_START - 84, 14, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 24.5]} userData={{ animUnit: true, itemName: 'Meuble Vasque SDB' }}>
+      <group position={[DOOR_START - 84, 14, BATH_NORTH_WALL + 24.5]} userData={{ animUnit: true, itemName: 'Meuble Vasque SDB' }}>
         <Havback49514017 item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* WC President */}
-      <group position={[BATH_WEST_WALL + 60, 0, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 36.5]} userData={{ skipMerge: true, animUnit: true, itemName: 'WC President', hoverAction: { label: 'WC President', actions: ['wc-lid-toggle', 'wc-seat-toggle', 'wc-flush'] } }}>
+      <group position={[BATH_WEST_WALL + 60, 0, BATH_NORTH_WALL + 36.5]} userData={{ skipMerge: true, animUnit: true, itemName: 'WC President', hoverAction: { label: 'WC President', actions: ['wc-lid-toggle', 'wc-seat-toggle', 'wc-flush'] } }}>
         <Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
 
@@ -85,12 +85,12 @@ export function BathroomEquipment() {
       </group>
 
       {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque */}
-      <group position={[DOOR_START - 84, 176, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS - 2]} userData={{ animUnit: true, itemName: 'Bandeau LED Våthult' }}>
+      <group position={[DOOR_START - 84, 176, BATH_NORTH_WALL - 2]} userData={{ animUnit: true, itemName: 'Bandeau LED Våthult' }}>
         <Vathult40467548 item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Cabine de Douche */}
-      <group position={[BATH_WEST_WALL + 35, 0, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35]} userData={{ animUnit: true, itemName: 'Cabine de Douche' }}>
+      <group position={[BATH_WEST_WALL + 35, 0, BATH_NORTH_WALL + 140 + PARTITION_THICKNESS / 2 + 35]} userData={{ animUnit: true, itemName: 'Cabine de Douche' }}>
         <Shower item={stub('shower')} actionState={as} onSize={NOOP_SIZE} />
       </group>
 
@@ -147,12 +147,12 @@ export function BathroomFurnishings() {
       </group>
 
       {/* TACKAN lavabo */}
-      <group position={[DOOR_START - 69, 83, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Lavabo' }}>
+      <group position={[DOOR_START - 69, 83, BATH_NORTH_WALL + 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Lavabo' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* TISKEN sur miroir vasque */}
-      <group position={[DOOR_START - 106, 129, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Crochet Tisken' }}>
+      <group position={[DOOR_START - 106, 129, BATH_NORTH_WALL + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Crochet Tisken' }}>
         <Tisken40381253 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
