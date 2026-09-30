@@ -10,7 +10,7 @@ import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from '../items
 import { MergedStaticGroup } from './MergedStaticGroup';
 import { PARTITION_THICKNESS } from '../wallData';
 import {
-  ROOM_D, WALL_H, KITCHEN_X1, DOOR_START, KITCHEN_Z,
+  ROOM_D, WALL_H, KITCHEN_X1, DOOR_START, KITCHEN_SOUTH_WALL,
 } from '../wallData';
 import {
   LAYER_STRUCTURE, LAYER_WALL_STRUCTURE, LAYER_FLOOR_COVERINGS, LAYER_DOORS, LAYER_GRASS,
@@ -239,7 +239,7 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
 export function MirrorBath({ showReflection }: { showReflection: boolean }) {
   const VANITY_W    = 60, VANITY_D = 47, VANITY_Y0 = 30, VANITY_H = 50;
   const VANITY_CX   = DOOR_START - 84;
-  const VANITY_CZ   = KITCHEN_Z + PARTITION_THICKNESS + 1 + VANITY_D / 2;
+  const VANITY_CZ   = KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 1 + VANITY_D / 2;
   const counterTopY = VANITY_Y0 + VANITY_H + 4;
   const mirrorW     = VANITY_W + 3;
   const mirrorH     = 90;

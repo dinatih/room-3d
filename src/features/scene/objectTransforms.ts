@@ -8,7 +8,7 @@
 import {
   DOOR_START,
   BATH_WEST_WALL,
-  KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_Z,
+  KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_SOUTH_WALL,
   ROOM_D,
 } from './wallData';
 import { PARTITION_THICKNESS, BATH_Z_END } from './wallData';
@@ -49,37 +49,37 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
       };
 
     case 'corridor-closet':
-      // Placements.tsx: <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + PARTITION_THICKNESS + KITCHEN_Z) / 2]} ...>
+      // Placements.tsx: <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + PARTITION_THICKNESS + KITCHEN_SOUTH_WALL) / 2]} ...>
       return {
         position: [
           (KITCHEN_X1 + DOOR_START) / 2,
           0,
-          (ROOM_D + PARTITION_THICKNESS + KITCHEN_Z) / 2,
+          (ROOM_D + PARTITION_THICKNESS + KITCHEN_SOUTH_WALL) / 2,
         ],
         rotationY: 0,
       };
 
     case 'toilet':
-      // Placements.tsx: <group position={[BATH_WEST_WALL + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5]} ...>
+      // Placements.tsx: <group position={[BATH_WEST_WALL + 60, 0, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 36.5]} ...>
       return {
-        position: [BATH_WEST_WALL + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5],
+        position: [BATH_WEST_WALL + 60, 0, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 36.5],
         rotationY: 0,
       };
 
     case 'vasque-sdb':
-      // Placements.tsx: <group position={[DOOR_START - 84, 14, KITCHEN_Z + PARTITION_THICKNESS + 24.5]} ...>
+      // Placements.tsx: <group position={[DOOR_START - 84, 14, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 24.5]} ...>
       return {
-        position: [DOOR_START - 84, 0, KITCHEN_Z + PARTITION_THICKNESS + 24.5],
+        position: [DOOR_START - 84, 0, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 24.5],
         rotationY: 0,
       };
 
     case 'shower':
-      // Placements.tsx: <group position={[BATH_WEST_WALL + 35, 0, KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35]} ...>
+      // Placements.tsx: <group position={[BATH_WEST_WALL + 35, 0, KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35]} ...>
       return {
         position: [
           BATH_WEST_WALL + 35,
           0,
-          KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35,
+          KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35,
         ],
         rotationY: 0,
       };

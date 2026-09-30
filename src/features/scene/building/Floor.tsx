@@ -9,7 +9,7 @@ import { MergedStaticGroup } from './MergedStaticGroup';
 import { CategoryLayerGroup } from '../sceneLayer';
 import {
   ROOM_W, ROOM_D, WALL_H, BATH_WEST_WALL, NICHE_Z_START, DOOR_START, DOOR_END,
-  KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_Z, DiagWall,
+  KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_SOUTH_WALL, DiagWall,
 } from '../wallData';
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
 import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, BATH_Z_END } from '../wallData';
@@ -33,8 +33,8 @@ const INT_X_EAST = ROOM_W;
 const INT_Z_NORTH = 0;
 const INT_Z_NICHE_S = NICHE_Z_START + W_HALF;
 const INT_Z_ROOM_S = ROOM_D;
-const INT_Z_KITCHEN_B = KITCHEN_Z;
-const INT_Z_BATH_N = KITCHEN_Z + PARTITION_THICKNESS;
+const INT_Z_KITCHEN_B = KITCHEN_SOUTH_WALL;
+const INT_Z_BATH_N = KITCHEN_SOUTH_WALL + PARTITION_THICKNESS;
 
 const ceilBottomBack = new THREE.MeshStandardMaterial({
   color: COLORS.wall, roughness: 0.35, envMapIntensity: 0.15,
@@ -238,9 +238,9 @@ export function Parquet() {
 
 export function Tile() {
   const CLOSET_W_REAL = DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS);
-  const CLOSET_D_REAL = KITCHEN_Z - (ROOM_D + PARTITION_THICKNESS);
+  const CLOSET_D_REAL = KITCHEN_SOUTH_WALL - (ROOM_D + PARTITION_THICKNESS);
   const CLOSET_X_REAL = ((KITCHEN_X1 + PARTITION_THICKNESS) + DOOR_START) / 2;
-  const CLOSET_Z_REAL = ((ROOM_D + PARTITION_THICKNESS) + KITCHEN_Z) / 2;
+  const CLOSET_Z_REAL = ((ROOM_D + PARTITION_THICKNESS) + KITCHEN_SOUTH_WALL) / 2;
 
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
     const baseTex = makeTileTex();
@@ -374,7 +374,7 @@ export function Baseboards() {
 
       {(() => {
         const CORR_WALL_EAST = CORR_WALL_X + PARTITION_THICKNESS / 2;
-        const CLOSET_S = KITCHEN_Z;
+        const CLOSET_S = KITCHEN_SOUTH_WALL;
         const CORR_DOOR_S = 517;
         const CORR_DOOR_E = 603;
         const segs: [number, number][] = [
@@ -392,7 +392,7 @@ export function Baseboards() {
 
       {(() => {
         const CL_N = ROOM_D + PARTITION_THICKNESS;
-        const CL_S = KITCHEN_Z;
+        const CL_S = KITCHEN_SOUTH_WALL;
         const CL_W = KITCHEN_X1 + PARTITION_THICKNESS;
         const CL_E = CORR_WALL_X - PARTITION_THICKNESS / 2;
         const xCenter = (CL_W + CL_E + SD) / 2;
@@ -499,7 +499,7 @@ export function BathSkirting() {
   const CORR_DOOR_S = 517;
   const CORR_DOOR_E = 603;
 
-  const showerWallZCenter1 = KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2;
+  const showerWallZCenter1 = KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2;
   const showerWallZCenter2 = showerWallZCenter1 + 70;
   const showerWallZ1 = showerWallZCenter1 + PARTITION_THICKNESS / 2;
   const showerWallZ2 = showerWallZCenter2 - PARTITION_THICKNESS / 2;

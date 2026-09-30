@@ -1,9 +1,9 @@
 /**
  * CuisineGroup.tsx — plan de travail, évier, plaques, frigo, meuble bas, meuble haut + 3 Drona.
  *
- * Coordonnées locales : Y=0 = sol, centré XZ autour de KITCHEN_X0.
+ * Coordonnées locales : Y=0 = sol, centré XZ autour de KITCHEN_WEST_WALL.
  * Placement monde : wrapper group dans Furniture.tsx
- *   → position=[KITCHEN_X0, 0, ROOM_D] = [30, 0, 400], sans rotation
+ *   → position=[KITCHEN_WEST_WALL, 0, ROOM_D] = [30, 0, 400], sans rotation
  * Utilisé aussi dans l'inventaire via registry.ts.
  */
 import { useRef, useLayoutEffect } from 'react';
@@ -26,8 +26,8 @@ import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
-// Wrapper world pos: (KITCHEN_X0=30, 0, ROOM_D=400)
-// KIT_W = KITCHEN_X1 - KITCHEN_X0 = 100, KIT_D = KITCHEN_DEPTH = 60
+// Wrapper world pos: (KITCHEN_WEST_WALL=30, 0, ROOM_D=400)
+// KIT_W = KITCHEN_X1 - KITCHEN_WEST_WALL = 100, KIT_D = KITCHEN_DEPTH = 60
 
 const KIT_W       = 100;
 const KIT_D       = 60;
@@ -103,7 +103,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
     onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
   }, []);
 
-  // Local positions (wrapper at (KITCHEN_X0=30, 0, ROOM_D=400)):
+  // Local positions (wrapper at (KITCHEN_WEST_WALL=30, 0, ROOM_D=400)):
   //   Counter      : (KIT_W/2, COUNTER_H, KIT_D/2)           = (50, 90, 30)
   //   Sink         : (CABINET_W/2, COUNTER_H+SLAB, KIT_D/2)  = (20, 93, 30)
   //   Stove        : (CABINET_W+FRIDGE_W/2, …, KIT_D/2)      = (70, 93, 30)

@@ -13,7 +13,7 @@ import {
   ROOM_D,
   BATH_WEST_WALL,
   KITCHEN_WEST_WALL,
-  KITCHEN_Z,
+  KITCHEN_SOUTH_WALL,
 } from '../wallData';
 
 const stub = (id: string): Item =>
@@ -83,7 +83,7 @@ export function KitchenFurnishings() {
       </group>
 
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
-      <group position={[KITCHEN_WEST_WALL + 5, 93, KITCHEN_Z - 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Cuisine' }}>
+      <group position={[KITCHEN_WEST_WALL + 5, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Cuisine' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>

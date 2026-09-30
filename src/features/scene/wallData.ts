@@ -59,7 +59,7 @@ export const DOOR_H = 204;      // hauteur standard française (panneaux de port
 const KITCHEN_X0 = 30; // interne — utiliser KITCHEN_WEST_WALL à la place côté import
 export const KITCHEN_X1 = 130; // fin (1m = 100cm)
 export const KITCHEN_DEPTH = 60; // 60cm
-export const KITCHEN_Z = ROOM_D + KITCHEN_DEPTH; // Z=460
+const KITCHEN_Z = ROOM_D + KITCHEN_DEPTH; // interne — utiliser KITCHEN_SOUTH_WALL à la place côté import
 
 // Enfoncement angle D-A : point X de la niche ouest (piliers / diagonale).
 const NICHE_X = -10; // interne — utiliser BATH_WEST_WALL à la place côté import

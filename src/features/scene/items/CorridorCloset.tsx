@@ -6,17 +6,17 @@
  *
  * Dimensions calculées depuis les constantes réelles :
  *   W = DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS)  ≈ 62.8 cm
- *   D = KITCHEN_Z  - (ROOM_D    + PARTITION_THICKNESS)   ≈ 52.8 cm
+ *   D = KITCHEN_SOUTH_WALL  - (ROOM_D    + PARTITION_THICKNESS)   ≈ 52.8 cm
  */
 import { useRef, useLayoutEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { ROOM_D, KITCHEN_X1, KITCHEN_Z, DOOR_START, WALL_H } from '../wallData';
+import { ROOM_D, KITCHEN_X1, KITCHEN_SOUTH_WALL, DOOR_START, WALL_H } from '../wallData';
 import { PARTITION_THICKNESS } from '../wallData';
 
 const CLOSET_W = DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS);  // ≈ 62.8 cm
-const CLOSET_D = KITCHEN_Z  - (ROOM_D    + PARTITION_THICKNESS);   // ≈ 52.8 cm
+const CLOSET_D = KITCHEN_SOUTH_WALL  - (ROOM_D    + PARTITION_THICKNESS);   // ≈ 52.8 cm
 
 // Pivot porte : coin NE du caisson — charnière sur la face est, au ras du mur nord
 // La face EXTÉRIEURE de la porte (côté couloir) doit être alignée sur le pivot en X,
