@@ -8,7 +8,7 @@ import { GlassDoor }            from '../items/GlassDoor';
 import { NOOP_ITEM, NOOP_SIZE } from '../sceneItem';
 import { useFurnitureToggles }  from '../utils/useFurnitureToggles';
 import { useSceneStore }        from '../store/useSceneStore';
-import { pEast, pWest, CORR_WALL_X, PARTITION_THICKNESS } from '../wallData';
+import { pEast, pWest, pZ, CORR_WALL_X, PARTITION_THICKNESS } from '../wallData';
 import {
   ROOM_D, DOOR_START, DOOR_END, DiagWall
 } from '../wallData';
@@ -57,7 +57,7 @@ export function DoorsPlaced() {
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
-        position={[CORR_WALL_X, DOOR_HEIGHT / 2, 560]}
+        position={[CORR_WALL_X, DOOR_HEIGHT / 2, (pZ('door-bath-n') + pZ('door-bath-s')) / 2]}
         rotation-y={Math.PI / 2}
         userData={{ animUnit: true, itemName: 'Porte SDB', hoverAction: { label: 'Porte SDB', actionId: 'bathroomDoor' } }}>
         <DoorBath item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />

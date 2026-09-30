@@ -49,7 +49,7 @@ export const MEASURED_DIST_ROOM_WEST_NICHE_WALL_TO_KITCHEN_WEST_WALL = 41.5;
 // =============================================
 
 export const ROOM_W = MEASURED_DIST_NICHE_BEAM_TO_EAST_WALL; // 3,16m — largeur réelle du séjour
-export const ROOM_D = MEASURED_DIST_CORNER_NE_TO_SE + 100; // 400; // 4m TODO : true value is MEASURED_DIST_CORNER_NE_TO_SE
+export const ROOM_D = MEASURED_DIST_CORNER_NE_TO_SE; // 400; // 4m TODO : true value is MEASURED_DIST_CORNER_NE_TO_SE
 export const WALL_H = MEASURED_HEIGHT_FLOOR_TO_CEILING; // 2.5m
 
 // ── Épaisseurs et repères axiaux ──────────────────────────────────────────────
@@ -146,6 +146,8 @@ export type WallDef = {
   | { axis: 'x'; x1: number; x2: number; zc: number }
 );
 
+const MEASURED_CORRIDOR_NORTH_WALL = ROOM_D + PT;
+
 // ── PILLAR_DEFS : Poteaux structurels et huisseries ───────────────────────────
 export const PILLAR_DEFS = [
   // ── Façade Nord (Mur C) : Béton 20cm + Placo 10cm ─────────────────────────
@@ -172,8 +174,8 @@ export const PILLAR_DEFS = [
   // ── Huisseries et Jambages de portes ──────────────────────────────────────
   { id: 'door-living-w',  x: DOOR_START - PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
   { id: 'door-living-e',  x: DOOR_END + PT / 2,     z: ROOM_D + PT / 2,     w: PT, d: PT },
-  { id: 'door-bath-n',    x: CORR_WALL_X,           z: 513.4,               w: PT, d: PT },
-  { id: 'door-bath-s',    x: CORR_WALL_X,           z: 606.6,               w: PT, d: PT },
+  { id: 'door-bath-n',    x: CORR_WALL_X,           z: MEASURED_CORRIDOR_NORTH_WALL + 109 + 3 - PT / 2,               w: PT, d: PT },
+  { id: 'door-bath-s',    x: CORR_WALL_X,           z: MEASURED_CORRIDOR_NORTH_WALL + 109 + 89 + PT / 2,               w: PT, d: PT },
 
   // ── Salle de Bain & Douche ────────────────────────────────────────────────
   { id: 'bath-nw',        x: NICHE_X - WT / 2,      z: KITCHEN_Z + PT / 2, w: WT, d: PT },
