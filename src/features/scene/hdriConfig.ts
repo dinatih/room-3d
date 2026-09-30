@@ -78,6 +78,7 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'red_wall_4k', name: 'red wall 4k', url: '/environment/hdri/red_wall_4k.hdr', type: 'hdr' },
   { id: 'river_alcove_4k', name: 'river alcove 4k', url: '/environment/hdri/river_alcove_4k.hdr', type: 'hdr' },
   { id: 'rogland_clear_night_4k', name: 'rogland clear night 4k', url: '/environment/hdri/rogland_clear_night_4k.hdr', type: 'hdr' },
+  { id: 'rogland_moonlit_night_4k', name: 'rogland moonlit night 4k', url: '/environment/hdri/rogland_moonlit_night_4k.hdr', type: 'hdr' },
   { id: 'roof_garden_4k', name: 'roof garden 4k', url: '/environment/hdri/roof_garden_4k.hdr', type: 'hdr' },
   { id: 'rooftop_night_4k', name: 'rooftop night 4k', url: '/environment/hdri/rooftop_night_4k.hdr', type: 'hdr' },
   { id: 'rosendal_plains_1_4k', name: 'rosendal plains 1 4k', url: '/environment/hdri/rosendal_plains_1_4k.hdr', type: 'hdr' },
