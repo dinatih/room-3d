@@ -11,7 +11,7 @@ import { Tackan } from '../items/Tackan';
 
 import {
   ROOM_D,
-  NICHE_X,
+  BATH_WEST_WALL,
   KITCHEN_X0,
   KITCHEN_Z,
 } from '../wallData';
@@ -44,12 +44,12 @@ export function KitchenFurniture() {
   return (
     <MergedStaticGroup name="merged-kitchen-furniture">
       {/* Kallax Cuisine en séparation (structure sans Drona) */}
-      <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax Cuisine' }}>
+      <group position={[BATH_WEST_WALL + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax Cuisine' }}>
         <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} noDrona />
       </group>
 
       {/* Poubelle TATAY — angle KallaxCuisine × Mackapar */}
-      <group position={[NICHE_X + KALLAX_DEPTH + 18, 0, MACK_Z + w2 / 2 - 6]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Poubelle Tatay' }}>
+      <group position={[BATH_WEST_WALL + KALLAX_DEPTH + 18, 0, MACK_Z + w2 / 2 - 6]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Poubelle Tatay' }}>
         <TrashBin item={stub('trash-bin')} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
@@ -66,12 +66,12 @@ export function KitchenFurnishings() {
       </group>
 
       {/* Boîtes Drona intégrées au Kallax Cuisine */}
-      <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={[BATH_WEST_WALL + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
         <KallaxCuisineDrona />
       </group>
 
       {/* Télémètre Laserliner posé dans la Drona du Kallax Cuisine */}
-      <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={[BATH_WEST_WALL + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
         <group position={[17.5, 6.25, -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Télémètre Laserliner' }}>
           <LaserDistanceMaster item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>

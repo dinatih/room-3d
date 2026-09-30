@@ -7,7 +7,7 @@
 
 import {
   DOOR_START,
-  NICHE_X,
+  BATH_WEST_WALL,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   ROOM_D,
 } from './wallData';
@@ -60,9 +60,9 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
       };
 
     case 'toilet':
-      // Placements.tsx: <group position={[NICHE_X + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5]} ...>
+      // Placements.tsx: <group position={[BATH_WEST_WALL + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5]} ...>
       return {
-        position: [NICHE_X + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5],
+        position: [BATH_WEST_WALL + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5],
         rotationY: 0,
       };
 
@@ -74,10 +74,10 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
       };
 
     case 'shower':
-      // Placements.tsx: <group position={[NICHE_X + 35, 0, KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35]} ...>
+      // Placements.tsx: <group position={[BATH_WEST_WALL + 35, 0, KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35]} ...>
       return {
         position: [
-          NICHE_X + 35,
+          BATH_WEST_WALL + 35,
           0,
           KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35,
         ],

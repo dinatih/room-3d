@@ -8,7 +8,7 @@ import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
 import { CategoryLayerGroup } from '../sceneLayer';
 import {
-  ROOM_W, ROOM_D, WALL_H, NICHE_X, NICHE_Z_START, DOOR_START, DOOR_END,
+  ROOM_W, ROOM_D, WALL_H, BATH_WEST_WALL, NICHE_Z_START, DOOR_START, DOOR_END,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, DiagWall,
 } from '../wallData';
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
@@ -24,7 +24,7 @@ const CEIL_THICK = 20;
 const W_HALF = WALL_THICKNESS / 2;
 
 const INT_X_WEST = 0;
-const INT_X_NICHE = NICHE_X;
+const INT_X_NICHE = BATH_WEST_WALL;
 const INT_X_KITCHEN_L = KITCHEN_X0;
 const INT_X_KITCHEN_R = KITCHEN_X1;
 const INT_X_DOOR_S = DOOR_START;

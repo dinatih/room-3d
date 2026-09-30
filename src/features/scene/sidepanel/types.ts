@@ -2,7 +2,7 @@ import type { PlaneModelKey } from '../PaperPlane';
 import type { LaraCountMode } from '../walkerConfig';
 import {
   ROOM_W, ROOM_D, WALL_H,
-  DOOR_START, NICHE_X, KITCHEN_Z,
+  DOOR_START, BATH_WEST_WALL, KITCHEN_Z,
 } from '../wallData';
 
 // ── Presets caméra ────────────────────────────────────────────────────────────
@@ -28,7 +28,7 @@ export const VIEWS: Record<string, { pos: [number, number, number]; target: [num
 export const POV_ROOMS: Record<string, { x: number; z: number }> = {
   living:   { x: ROOM_W / 2,                      z: ROOM_D / 2 },
   entry:    { x: (DOOR_START + ROOM_W) / 2,        z: ROOM_D + 75 },
-  bathroom: { x: (NICHE_X + DOOR_START) / 2,  z: (KITCHEN_Z + 600) / 2 },
+  bathroom: { x: (BATH_WEST_WALL + DOOR_START) / 2,  z: (KITCHEN_Z + 600) / 2 },
   garden:   { x: 150,                              z: -120 },
 };
 

@@ -6,7 +6,7 @@
 import {
   ROOM_W, ROOM_D, DOOR_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
-  NICHE_X, NICHE_Z_START,
+  BATH_WEST_WALL, NICHE_Z_START,
   DiagWall,
 } from './wallData';
 
@@ -28,7 +28,7 @@ import {
 } from './wallData';
 
 const PAD = 20;
-export const PLAN_X_MIN = NICHE_X - PAD;
+export const PLAN_X_MIN = BATH_WEST_WALL - PAD;
 export const PLAN_X_MAX = ROOM_W + PAD;
 export const PLAN_Z_MIN = -350;
 export const PLAN_Z_MAX = 770;
@@ -52,7 +52,7 @@ export function drawFloorPlan(
   ctx.fillStyle = 'rgba(212, 164, 55, 0.12)';
   // Séjour
   ctx.fillRect(tx(0), tz(0), ROOM_W * S, ROOM_D * S);
-  ctx.fillRect(tx(NICHE_X), tz(NICHE_Z_START), -NICHE_X * S, (ROOM_D - NICHE_Z_START) * S);
+  ctx.fillRect(tx(BATH_WEST_WALL), tz(NICHE_Z_START), -BATH_WEST_WALL * S, (ROOM_D - NICHE_Z_START) * S);
   // Cuisine
   ctx.fillRect(tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S);
   // Placard couloir (intérieur net)
@@ -72,23 +72,23 @@ export function drawFloorPlan(
   // SDB (intérieur net à Z=467.2)
   const corrInnerW = CORR_WALL_X - PARTITION_THICKNESS / 2; // 192.0 cm
   ctx.fillRect(
-    tx(NICHE_X),
+    tx(BATH_WEST_WALL),
     tz(KITCHEN_Z + PARTITION_THICKNESS),
-    (corrInnerW - NICHE_X) * S,
+    (corrInnerW - BATH_WEST_WALL) * S,
     (BATH_Z_END - (KITCHEN_Z + PARTITION_THICKNESS)) * S,
   );
   ctx.beginPath();
-  ctx.moveTo(tx(NICHE_X), tz(BATH_Z_END));
+  ctx.moveTo(tx(BATH_WEST_WALL), tz(BATH_Z_END));
   ctx.lineTo(tx(corrInnerW), tz(BATH_Z_END));
-  ctx.lineTo(tx(NICHE_X), tz(DiagWall.C.z));
+  ctx.lineTo(tx(BATH_WEST_WALL), tz(DiagWall.C.z));
   ctx.closePath(); ctx.fill();
 
   // ── Gaine technique (coffrage fermé à gauche de la cuisine) ─────────────────
   ctx.fillStyle = 'rgba(120, 130, 140, 0.15)';
   ctx.fillRect(
-    tx(NICHE_X),
+    tx(BATH_WEST_WALL),
     tz(ROOM_D + PARTITION_THICKNESS),
-    (KITCHEN_X0 - PARTITION_THICKNESS - NICHE_X) * S,
+    (KITCHEN_X0 - PARTITION_THICKNESS - BATH_WEST_WALL) * S,
     (KITCHEN_Z - (ROOM_D + PARTITION_THICKNESS)) * S,
   );
 
