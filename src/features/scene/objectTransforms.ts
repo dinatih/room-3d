@@ -8,7 +8,7 @@
 import {
   DOOR_START,
   BATH_WEST_WALL,
-  KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
+  KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_Z,
   ROOM_D,
 } from './wallData';
 import { PARTITION_THICKNESS, BATH_Z_END } from './wallData';
@@ -85,9 +85,9 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
       };
 
     case 'cuisine-group':
-      // Placements.tsx: <group position={[KITCHEN_X0, 0, ROOM_D]} ...>
+      // Placements.tsx: <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} ...>
       return {
-        position: [KITCHEN_X0, 0, ROOM_D],
+        position: [KITCHEN_WEST_WALL, 0, ROOM_D],
         rotationY: 0,
       };
 

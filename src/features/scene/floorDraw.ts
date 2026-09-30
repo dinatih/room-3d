@@ -5,7 +5,7 @@
  */
 import {
   ROOM_W, ROOM_D, DOOR_START,
-  KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
+  KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_Z,
   BATH_WEST_WALL, NICHE_Z_START,
   DiagWall,
 } from './wallData';
@@ -54,7 +54,7 @@ export function drawFloorPlan(
   ctx.fillRect(tx(0), tz(0), ROOM_W * S, ROOM_D * S);
   ctx.fillRect(tx(BATH_WEST_WALL), tz(NICHE_Z_START), -BATH_WEST_WALL * S, (ROOM_D - NICHE_Z_START) * S);
   // Cuisine
-  ctx.fillRect(tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S);
+  ctx.fillRect(tx(KITCHEN_WEST_WALL), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_WEST_WALL) * S, (KITCHEN_Z - ROOM_D) * S);
   // Placard couloir (intérieur net)
   ctx.fillRect(
     tx(KITCHEN_X1 + PARTITION_THICKNESS),
@@ -88,7 +88,7 @@ export function drawFloorPlan(
   ctx.fillRect(
     tx(BATH_WEST_WALL),
     tz(ROOM_D + PARTITION_THICKNESS),
-    (KITCHEN_X0 - PARTITION_THICKNESS - BATH_WEST_WALL) * S,
+    (KITCHEN_WEST_WALL - PARTITION_THICKNESS - BATH_WEST_WALL) * S,
     (KITCHEN_Z - (ROOM_D + PARTITION_THICKNESS)) * S,
   );
 

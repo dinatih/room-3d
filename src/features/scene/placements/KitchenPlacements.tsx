@@ -12,7 +12,7 @@ import { Tackan } from '../items/Tackan';
 import {
   ROOM_D,
   BATH_WEST_WALL,
-  KITCHEN_X0,
+  KITCHEN_WEST_WALL,
   KITCHEN_Z,
 } from '../wallData';
 
@@ -27,7 +27,7 @@ export function KitchenEquipment() {
   return (
     <MergedStaticGroup name="merged-kitchen-equipment">
       {/* Meubles Cuisine (évier, structure) */}
-      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ skipMerge: true, animUnit: true, itemName: 'Meubles Cuisine' }}>
+      <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ skipMerge: true, animUnit: true, itemName: 'Meubles Cuisine' }}>
         <CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
     </MergedStaticGroup>
@@ -61,7 +61,7 @@ export function KitchenFurnishings() {
   return (
     <MergedStaticGroup name="merged-kitchen-furnishings">
       {/* Boîtes Drona intégrées à la cuisine */}
-      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true, itemName: 'Boîtes Drona Cuisine' }}>
+      <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ animUnit: true, itemName: 'Boîtes Drona Cuisine' }}>
         <CuisineDrona />
       </group>
 
@@ -78,12 +78,12 @@ export function KitchenFurnishings() {
       </group>
 
       {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}
-      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true, itemName: 'Égouttoir Lillhavet' }}>
+      <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ animUnit: true, itemName: 'Égouttoir Lillhavet' }}>
         <CuisineLillhavet />
       </group>
 
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
-      <group position={[KITCHEN_X0 + 5, 93, KITCHEN_Z - 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Cuisine' }}>
+      <group position={[KITCHEN_WEST_WALL + 5, 93, KITCHEN_Z - 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Cuisine' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>

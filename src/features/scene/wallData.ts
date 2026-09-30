@@ -56,7 +56,7 @@ export const DOOR_END = 286; // cm 286
 export const DOOR_H = 204;      // hauteur standard française (panneaux de porte)
 
 // Renfoncement cuisine : 1m large, 60cm profond, à droite de la porte
-export const KITCHEN_X0 = 30; // début (depuis mur A)
+const KITCHEN_X0 = 30; // interne — utiliser KITCHEN_WEST_WALL à la place côté import
 export const KITCHEN_X1 = 130; // fin (1m = 100cm)
 export const KITCHEN_DEPTH = 60; // 60cm
 export const KITCHEN_Z = ROOM_D + KITCHEN_DEPTH; // Z=460
