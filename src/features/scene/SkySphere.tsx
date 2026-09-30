@@ -18,7 +18,6 @@ const EXTERIOR_FADE_END = SKY_RADIUS * 1.22;
 
 const textureCache = new Map<string, THREE.Texture>();
 const hdrLoader = new HDRLoader();
-const textureLoader = new THREE.TextureLoader();
 
 export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
   const currentHdri = useSceneStore(state => state.currentHdri);
@@ -41,9 +40,6 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
     let isMounted = true;
     const onLoad = (loadedTexture: THREE.Texture) => {
       loadedTexture.mapping = THREE.EquirectangularReflectionMapping;
-      if (hdri.type === 'jpg') {
-        loadedTexture.colorSpace = THREE.SRGBColorSpace;
-      }
       textureCache.set(hdri.id, loadedTexture);
       if (isMounted) {
         setTexture(loadedTexture);
@@ -52,11 +48,7 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
       }
     };
 
-    if (hdri.type === 'hdr') {
-      hdrLoader.load(hdri.url, onLoad);
-    } else {
-      textureLoader.load(hdri.url, onLoad);
-    }
+    hdrLoader.load(hdri.url, onLoad);
 
     return () => {
       isMounted = false;

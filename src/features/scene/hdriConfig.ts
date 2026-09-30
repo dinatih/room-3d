@@ -2,12 +2,10 @@ export interface HdriItem {
   id: string;
   name: string;
   url: string;
-  type: 'hdr' | 'jpg';
+  type: 'hdr';
 }
 
 export const HDRI_LIST: HdriItem[] = [
-  { id: 'default', name: 'Ciel nuageux (Défaut) ⛅', url: '/environment/HDR_029_Sky_Cloudy_Bg.jpg', type: 'jpg' },
-
   // --- Nature, Forêts, Sentiers & Jardins ---
 
 
