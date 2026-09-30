@@ -15,14 +15,14 @@ import { Vathult40467548 } from '../items/Vathult40467548';
 import { GrassRug } from '../items/GrassRug';
 import { Tackan } from '../items/Tackan';
 import { Tisken40381253 } from '../items/Tisken40381253';
-import { Fniss40295439 } from '../items/Fniss40295439';
+import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
 import { DroneCell } from '../items/Drona';
 
 import {
   WALL_H,
   DOOR_START,
 } from '../wallData';
-import { PARTITION_THICKNESS, BATH_Z_END, BATH_WEST_WALL, KITCHEN_SOUTH_WALL } from '../wallData';
+import { PARTITION_THICKNESS, BATH_Z_END, BATH_WEST_WALL, BATH_NORTH_WALL, KITCHEN_SOUTH_WALL } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
@@ -117,7 +117,7 @@ export function BathroomFurniture() {
       </group>
 
       {/* Poubelle Fniss SDB */}
-      <group position={[110, 1, 500]} userData={{ animUnit: true, itemName: 'Poubelle Fniss SDB' }}>
+      <group position={[110, 1, BATH_NORTH_WALL + FNISS_D / 2 + 1]} userData={{ animUnit: true, itemName: 'Poubelle Fniss SDB' }}>
         <Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
