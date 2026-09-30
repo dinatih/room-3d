@@ -215,6 +215,32 @@ export const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
 // Repère Z du fond de la SDB / poutre placard déduit du pilier de référence
 export const BATH_Z_END = pZ('shower-ne');
 
+// ── Faces internes des murs (repères de placement) ─────────────────────────
+
+// Séjour (Living Room)
+export const ROOM_NORTH_WALL     = pSouth('corner-nw');        // Z = 0      (face intérieure façade vitrée)
+export const ROOM_SOUTH_WALL     = pNorth('corner-sw');        // Z ≈ 396.6  (face séjour de la partition sud)
+export const ROOM_EAST_WALL      = pWest('corner-ne');         // X = 316    (face intérieure mur est)
+export const ROOM_WEST_WALL      = pEast('corner-nw');         // X = 0      (face intérieure mur ouest)
+
+// Cuisine (Kitchen) — alvéole au sud du séjour, ouvert au nord
+export const KITCHEN_SOUTH_WALL  = pNorth('kitchen-nw');       // Z ≈ 460.0  (face cuisine de la partition cuisine/sdb)
+export const KITCHEN_EAST_WALL   = pWest('kitchen-ne');        // X ≈ 126.4
+export const KITCHEN_WEST_WALL   = pEast('kitchen-nw');        // X ≈ 33.6
+// KITCHEN_NORTH_WALL : pas de mur (ouvert sur le séjour)
+
+// Salle de bain (Bathroom)
+export const BATH_NORTH_WALL     = pSouth('bath-nw');          // Z ≈ 463.6  (face sdb de la partition cuisine/sdb)
+export const BATH_SOUTH_WALL     = pNorth('shower-nw');        // Z ≈ 610.8
+export const BATH_EAST_WALL      = pWest('bath-ne');           // X ≈ 192.0  (face sdb de la cloison couloir)
+export const BATH_WEST_WALL      = pEast('corner-sw');         // X ≈ -10    (face intérieure mur ouest béton)
+
+// Couloir (Corridor)
+export const CORRIDOR_NORTH_WALL = pSouth('door-living-w');    // Z ≈ 403.8  (face couloir de la partition séjour)
+export const CORRIDOR_EAST_WALL  = pWest('corner-se');         // X = 316    (face intérieure mur est)
+export const CORRIDOR_WEST_WALL  = pEast('bath-ne');           // X ≈ 199.2  (face couloir de la cloison sdb)
+// CORRIDOR_SOUTH_WALL : mur diagonal, exclu volontairement
+
 // ── Mur diagonal : repères et segments 2D ─────────────────────────────────────
 const { door: dDoor, len: dLen, p: dP } = DiagWall;
 const pExt = (d: number) => dP(d, WT);
