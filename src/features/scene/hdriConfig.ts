@@ -2,10 +2,12 @@ export interface HdriItem {
   id: string;
   name: string;
   url: string;
-  type: 'hdr';
+  type: 'hdr' | 'jpg';
 }
 
 export const HDRI_LIST: HdriItem[] = [
+  { id: 'default', name: 'AdobeStock Ciel 🌤️', url: '/environment/AdobeStock_585513182.jpg', type: 'jpg' },
+
   // --- Nature, Forêts, Sentiers & Jardins ---
 
 
