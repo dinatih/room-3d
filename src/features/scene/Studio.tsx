@@ -373,9 +373,18 @@ export function Studio() {
   // G → toggle mode grille lara (ignoré quand un input/textarea est focus)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
       const t = e.target as HTMLElement | null;
       if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
+
+      // Alt+P → toggle Piliers seuls
+      if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        onToggleLayer('pillarsOnly');
+        cameraState.invalidate?.();
+        return;
+      }
+
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       if (e.key === 'g' || e.key === 'G') {
         onToggleLayer('laraGrid');
