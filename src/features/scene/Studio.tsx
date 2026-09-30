@@ -376,11 +376,13 @@ export function Studio() {
       const t = e.target as HTMLElement | null;
       if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
 
-      // Alt+P → toggle Piliers seuls
-      if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'p' || e.key === 'P')) {
-        e.preventDefault();
-        onToggleLayer('pillarsOnly');
-        cameraState.invalidate?.();
+      // Alt+<key> → layer toggles
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'p') { e.preventDefault(); onToggleLayer('pillarsOnly'); cameraState.invalidate?.(); return; }
+        if (k === 'm') { e.preventDefault(); onToggleLayer('measuredDimensions'); cameraState.invalidate?.(); return; }
+        if (k === 'a') { e.preventDefault(); onToggleLayer('wallEdges'); cameraState.invalidate?.(); return; }
+        if (k === 'i') { e.preventDefault(); onToggleLayer('inventoryGrid'); cameraState.invalidate?.(); return; }
         return;
       }
 
@@ -412,15 +414,6 @@ export function Studio() {
         cameraState.invalidate?.();
       } else if (e.key === 'k' || e.key === 'K') {
         onToggleLayer('skeleton');
-        cameraState.invalidate?.();
-      } else if (e.key === 'w' || e.key === 'W') {
-        onToggleLayer('wallEdges');
-        cameraState.invalidate?.();
-      } else if (e.key === 'u' || e.key === 'U') {
-        onToggleLayer('inventoryGrid');
-        cameraState.invalidate?.();
-      } else if (e.key === 'n' || e.key === 'N') {
-        onToggleLayer('measuredDimensions');
         cameraState.invalidate?.();
       } else if (e.key === '5' || e.code === 'Digit5' || e.code === 'Numpad5') {
         const store = useSceneStore.getState();

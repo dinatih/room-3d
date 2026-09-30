@@ -48,10 +48,10 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Enlever le bas (toggle)"    keys={['C']} />
               <R label="Déshabiller les Lara (toggle)" keys={['X']} />
               <R label="Squelettes / Bones (toggle)" keys={['K']} />
-              <R label="Arêtes des murs (toggle)"   keys={['W']} />
+              <R label="Arêtes des murs (toggle)"   keys={['Alt+A']} />
               <R label="Piliers seuls (toggle)"     keys={['Alt+P']} />
-              <R label="Grille inventaire 📦 (toggle)" keys={['U']} />
-              <R label="Mesures réelles 📐 (toggle)" keys={['N']} />
+              <R label="Grille inventaire 📦 (toggle)" keys={['Alt+I']} />
+              <R label="Mesures réelles 📐 (toggle)" keys={['Alt+M']} />
               <R label="Quitter walk / top-down / ortho" keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />
             </div>
