@@ -172,7 +172,7 @@ export function LayersSection({
           </div>
         </div>
       )}
-      {layerBtn('gray',      'Piliers seuls',                  'pillarsOnly')}
+      {layerBtn('gray',      'Piliers seuls (Alt+P)',           'pillarsOnly')}
       {layerBtn('peach',     'Équipements',                    'equipment')}
       {layerBtn('purple',    'Mobilier (Furniture)',           'furniture')}
       {layerBtn('purple',    'Habillage (Furnishings)',        'furnishings')}
@@ -188,11 +188,11 @@ export function LayersSection({
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
 
-      {layerBtn('orange', 'Grille inventaire 📦 (U)', 'inventoryGrid')}
+      {layerBtn('orange', 'Grille inventaire 📦 (Alt+I)', 'inventoryGrid')}
       {layerBtn('teal',   'Grille 🌐',     'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
-      {layerBtn('yellow', 'Mesures réelles 📐 (N)', 'measuredDimensions')}
-      {layerBtn('red',    'Aff. arêtes murs (W)', 'wallEdges')}
+      {layerBtn('yellow', 'Mesures réelles 📐 (Alt+M)', 'measuredDimensions')}
+      {layerBtn('red',    'Aff. arêtes murs (Alt+A)', 'wallEdges')}
       {layerBtn('cyan',   'Wireframe coloré 🕸', 'wireframe')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('yellow', 'Lumières HD ✨', 'lightsHD')}
