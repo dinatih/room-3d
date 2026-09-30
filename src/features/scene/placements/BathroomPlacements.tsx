@@ -4,7 +4,7 @@ import { MergedStaticGroup } from '../Building';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 
-import { WaterHeater } from '../items/WaterHeater';
+import { WaterHeater, WH_W, WH_H } from '../items/WaterHeater';
 import { Toilet } from '../items/Toilet';
 import { Shower } from '../items/Shower';
 import { Havback49514017 } from '../items/Havback49514017';
@@ -40,15 +40,14 @@ export function BathroomEquipment() {
     'wc-flush',
   ]);
 
-  const HW_R = 28, HW_H = 65;
-  const SDB_CX = (BATH_WEST_WALL + BATH_EAST_WALL) / 2 + 4;
+  const SDB_CX = (BATH_WEST_WALL + BATH_EAST_WALL) / 2;
   const SDB_CZ = (BATH_NORTH_WALL + BATH_SOUTH_WALL) / 2;
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
 
   return (
     <MergedStaticGroup name="merged-bathroom-equipment">
       {/* Chauffe-eau */}
-      <group position={[BATH_WEST_WALL + HW_R, WALL_H - 10 - HW_H / 2, BATH_NORTH_WALL + 20 + HW_R - PARTITION_THICKNESS]} rotation-y={Math.PI / 2} userData={{ side: 'west', itemName: 'Chauffe-eau' }}>
+      <group position={[BATH_WEST_WALL + WH_W / 2, WALL_H - 10 - WH_H / 2, BATH_NORTH_WALL + 11 + WH_W / 2]} rotation-y={Math.PI / 2} userData={{ side: 'west', itemName: 'Chauffe-eau' }}>
         <WaterHeater item={stub('water-heater')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 

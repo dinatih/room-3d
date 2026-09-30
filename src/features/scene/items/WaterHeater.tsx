@@ -23,21 +23,22 @@ const GLB_CX = 6.890;   // centre X
 const GLB_CY = 16.460;  // centre Y
 const GLB_CZ = -6.966;  // centre Z
 
-const HW_R = 28;  // rayon = 28cm (⌀56)
-const HW_H = 65;  // hauteur = 65cm
+export const WH_W = 56;  // ⌀56 cm
+export const WH_D = 56;  // ⌀56 cm
+export const WH_H = 65;  // hauteur 65 cm
 
 export function WaterHeater({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
-    const sx = HW_R * 2 / GLB_SX;
-    const sy = HW_H     / GLB_SY;
-    const sz = HW_R * 2 / GLB_SZ;
+    const sx = WH_W / GLB_SX;
+    const sy = WH_H / GLB_SY;
+    const sz = WH_D / GLB_SZ;
     scene.scale.set(sx, sy, sz);
     mergeGlbByMaterial(scene);
     scene.position.set(-GLB_CX * sx, -GLB_CY * sy, -GLB_CZ * sz);
-    onSize(new THREE.Vector3(HW_R * 2, HW_H, HW_R * 2));
+    onSize(new THREE.Vector3(WH_W, WH_H, WH_D));
   }, [scene]);
 
   return <primitive object={scene} />;
