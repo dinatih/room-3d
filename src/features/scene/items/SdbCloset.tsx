@@ -12,7 +12,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { DiagWall } from '../wallData';
-import { BATH_Z_END } from '../wallData';
+import { BATH_SOUTH_WALL } from '../wallData';
 import { Grejig40329868 } from './Grejig40329868';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 
@@ -68,12 +68,12 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
     // Pour -W/2 (côté gauche) :
     const xL = WORLD_X_CENTER - W / 2;
     const zL = DiagWall.A.z + (xL - DiagWall.A.x) * DiagWall.slope;
-    const depthL = zL - BATH_Z_END;
+    const depthL = zL - BATH_SOUTH_WALL;
 
     // Pour +W/2 (côté droit) :
     const xR = WORLD_X_CENTER + W / 2;
     const zR = DiagWall.A.z + (xR - DiagWall.A.x) * DiagWall.slope;
-    const depthR = zR - BATH_Z_END;
+    const depthR = zR - BATH_SOUTH_WALL;
 
     // Y du Shape devient -Z dans la 3D (après rotateX(-PI/2))
     // Donc une profondeur vers le sud (+Z) correspond à un Y négatif dans le Shape.

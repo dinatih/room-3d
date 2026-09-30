@@ -49,7 +49,7 @@ export const MEASURED_DIST_ROOM_WEST_NICHE_WALL_TO_KITCHEN_WEST_WALL = 41.5;
 // =============================================
 
 export const ROOM_W = MEASURED_DIST_NICHE_BEAM_TO_EAST_WALL; // 3,16m — largeur réelle du séjour
-export const ROOM_D = 400 // MEASURED_DIST_CORNER_NE_TO_SE; // 400; // 4m TODO : true value is MEASURED_DIST_CORNER_NE_TO_SE
+export const ROOM_D = MEASURED_DIST_CORNER_NE_TO_SE + 100; // 400; // 4m TODO : true value is MEASURED_DIST_CORNER_NE_TO_SE
 export const WALL_H = MEASURED_HEIGHT_FLOOR_TO_CEILING; // 2.5m
 
 // ── Épaisseurs et repères axiaux ──────────────────────────────────────────────
@@ -119,7 +119,7 @@ const GLASS_END   = 260;  // Fin baie vitrée mur C (Nord)
 export const CORR_WALL_X = 192 + PT / 2; // Axe X de la cloison couloir gauche (195.6 cm)
 
 // Repères calculés de la douche
-const SHOWER_Z_N = KITCHEN_Z + PT + 140 + PT / 2; // Z=610.8 (aligné avec BATH_Z_END)
+const SHOWER_Z_N = KITCHEN_Z + PT + 140 + PT / 2; // Z=610.8 (aligné avec BATH_SOUTH_WALL)
 const SHOWER_Z_S = SHOWER_Z_N + 70;              // Z=680.8
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -213,9 +213,6 @@ export const pWest  = (id: PillarId) => pX(id) - pW(id) / 2;
 export const pEast  = (id: PillarId) => pX(id) + pW(id) / 2;
 export const pNorth = (id: PillarId) => pZ(id) - pD(id) / 2;
 export const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
-
-// Repère Z du fond de la SDB / poutre placard déduit du pilier de référence
-export const BATH_Z_END = pZ('shower-ne');
 
 // ── Faces internes des murs (repères de placement) ─────────────────────────
 

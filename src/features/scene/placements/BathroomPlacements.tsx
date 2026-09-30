@@ -21,7 +21,7 @@ import { DroneCell } from '../items/Drona';
 import {
   WALL_H,
 } from '../wallData';
-import { PARTITION_THICKNESS, BATH_Z_END, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL } from '../wallData';
+import { PARTITION_THICKNESS, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
@@ -42,7 +42,7 @@ export function BathroomEquipment() {
 
   const HW_R = 28, HW_H = 65;
   const SDB_CX = (BATH_WEST_WALL + BATH_EAST_WALL) / 2 + 4;
-  const SDB_CZ = (BATH_NORTH_WALL + BATH_Z_END) / 2;
+  const SDB_CZ = (BATH_NORTH_WALL + BATH_SOUTH_WALL) / 2;
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
 
   return (
@@ -94,7 +94,7 @@ export function BathroomEquipment() {
       </group>
 
       {/* Placard SDB */}
-      <group position={[130.3, 0, BATH_Z_END]} userData={{ animUnit: true, itemName: 'Placard SDB' }}>
+      <group position={[130.3, 0, BATH_SOUTH_WALL]} userData={{ animUnit: true, itemName: 'Placard SDB' }}>
         <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
@@ -128,7 +128,7 @@ export function BathroomFurnishings() {
   return (
     <MergedStaticGroup name="merged-bathroom-furnishings">
       {/* Tapis Gazon SDB */}
-      <group position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2 - 1, 0, BATH_Z_END - 53]} userData={{ animUnit: true, itemName: 'Tapis Gazon SDB' }}>
+      <group position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2 - 1, 0, BATH_SOUTH_WALL - 53]} userData={{ animUnit: true, itemName: 'Tapis Gazon SDB' }}>
         <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -141,7 +141,7 @@ export function BathroomFurnishings() {
       </group>
 
       {/* TACKAN douche */}
-      <group position={[BATH_WEST_WALL + 40, 80, BATH_Z_END + 69]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Douche' }}>
+      <group position={[BATH_WEST_WALL + 40, 80, BATH_SOUTH_WALL + 69]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Douche' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 

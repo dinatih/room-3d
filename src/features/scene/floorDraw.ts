@@ -21,7 +21,7 @@ import {
   GARDEN_JC_Z,
   PILLAR_KITE_NE,
   PILLAR_KITE_SW,
-  BATH_Z_END,
+  BATH_SOUTH_WALL,
   pNorth,
   pEast,
   pWest,
@@ -67,7 +67,7 @@ export function drawFloorPlan(
   ctx.beginPath();
   ctx.moveTo(tx(DOOR_START), tz(DiagWall.A.z));
   ctx.lineTo(tx(ROOM_W),     tz(DiagWall.A.z));
-  ctx.lineTo(tx(DOOR_START), tz(BATH_Z_END));
+  ctx.lineTo(tx(DOOR_START), tz(BATH_SOUTH_WALL));
   ctx.closePath(); ctx.fill();
   // SDB (intérieur net à Z=467.2)
   const corrInnerW = CORR_WALL_X - PARTITION_THICKNESS / 2; // 192.0 cm
@@ -75,11 +75,11 @@ export function drawFloorPlan(
     tx(BATH_WEST_WALL),
     tz(KITCHEN_SOUTH_WALL + PARTITION_THICKNESS),
     (corrInnerW - BATH_WEST_WALL) * S,
-    (BATH_Z_END - (KITCHEN_SOUTH_WALL + PARTITION_THICKNESS)) * S,
+    (BATH_SOUTH_WALL - (KITCHEN_SOUTH_WALL + PARTITION_THICKNESS)) * S,
   );
   ctx.beginPath();
-  ctx.moveTo(tx(BATH_WEST_WALL), tz(BATH_Z_END));
-  ctx.lineTo(tx(corrInnerW), tz(BATH_Z_END));
+  ctx.moveTo(tx(BATH_WEST_WALL), tz(BATH_SOUTH_WALL));
+  ctx.lineTo(tx(corrInnerW), tz(BATH_SOUTH_WALL));
   ctx.lineTo(tx(BATH_WEST_WALL), tz(DiagWall.C.z));
   ctx.closePath(); ctx.fill();
 

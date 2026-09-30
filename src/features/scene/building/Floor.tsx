@@ -12,7 +12,7 @@ import {
   KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_SOUTH_WALL, DiagWall,
 } from '../wallData';
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
-import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, BATH_Z_END } from '../wallData';
+import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, BATH_SOUTH_WALL } from '../wallData';
 import {
   COLORS, skirtingMat, noCapMat, slabConcreteTop, slabConcreteSide,
   boxFaceMats, qrGeo
@@ -489,7 +489,7 @@ export function BathSkirting() {
   }, []);
 
   const BATH_E_FACE  = CORR_WALL_X - PARTITION_THICKNESS / 2;
-  const BATH_S_FACE  = BATH_Z_END;
+  const BATH_S_FACE  = BATH_SOUTH_WALL;
   const SHOWER_E_X   = 65 + PARTITION_THICKNESS / 2;
 
   const Bz = DiagWall.A.z + (INT_X_NICHE  - DiagWall.A.x) * DiagWall.slope;
