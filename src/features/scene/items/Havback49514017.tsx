@@ -10,6 +10,10 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * Price: 
  * URL: https://www.ikea.com/fr/fr/p/havbaeck-orrsjoen-meuble-avec-tiroirs-vasque-mitigeur-blanc-s49514017/
  */
+export const HAVBACK_W = 62;
+export const HAVBACK_D = 49;
+export const HAVBACK_H = 69;
+
 export function Havback49514017({ onSize, ...props }: SceneItemProps) {
   const { scene } = useGLTFClone('/items/havback49514017/Havback49514017.glb');
 

@@ -5,9 +5,9 @@ import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 
 import { WaterHeater, WH_W, WH_D, WH_H } from '../items/WaterHeater';
-import { Toilet } from '../items/Toilet';
+import { Toilet, TOILET_D } from '../items/Toilet';
 import { Shower } from '../items/Shower';
-import { Havback49514017 } from '../items/Havback49514017';
+import { Havback49514017, HAVBACK_D } from '../items/Havback49514017';
 import { BathroomCabinetWest, BathroomCabinetEast } from '../items/BathroomCabinet';
 import { SdbCloset } from '../items/SdbCloset';
 import { TradfriBulb } from '../items/TradfriBulb';
@@ -49,12 +49,12 @@ export function BathroomEquipment() {
       </group>
 
       {/* Meuble Vasque SDB */}
-      <group position={[BATH_EAST_WALL - 76, 14, BATH_NORTH_WALL + 24.5]} userData={{ animUnit: true, itemName: 'Meuble Vasque SDB' }}>
+      <group position={[BATH_EAST_WALL - 76, 14, BATH_NORTH_WALL + HAVBACK_D / 2]} userData={{ animUnit: true, itemName: 'Meuble Vasque SDB' }}>
         <Havback49514017 item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* WC President */}
-      <group position={[BATH_WEST_WALL + 60, 0, BATH_NORTH_WALL + 36.5]} userData={{ skipMerge: true, animUnit: true, itemName: 'WC President', hoverAction: { label: 'WC President', actions: ['wc-lid-toggle', 'wc-seat-toggle', 'wc-flush'] } }}>
+      <group position={[BATH_WEST_WALL + 60, 0, BATH_NORTH_WALL + TOILET_D / 2 + 1.5]} userData={{ skipMerge: true, animUnit: true, itemName: 'WC President', hoverAction: { label: 'WC President', actions: ['wc-lid-toggle', 'wc-seat-toggle', 'wc-flush'] } }}>
         <Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
 

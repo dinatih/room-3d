@@ -14,6 +14,10 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/president-toilet/president-toilet.glb';
 
+export const TOILET_W = 40;
+export const TOILET_D = 70;
+export const TOILET_H = 80;
+
 export function Toilet({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
   const { invalidate } = useThree();
