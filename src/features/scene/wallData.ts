@@ -55,7 +55,6 @@ export const WALL_H = MEASURED_HEIGHT_FLOOR_TO_CEILING; // 2.5m
 // ── Épaisseurs et repères axiaux ──────────────────────────────────────────────
 export const WALL_THICKNESS      = 10;   // Épaisseur murs porteurs / extérieurs (cm)
 export const PARTITION_THICKNESS = 7.2;  // Épaisseur cloisons intérieures placo (cm)
-export const CORRIDOR_NORTH_WALL = ROOM_D + PARTITION_THICKNESS; // face couloir de la partition sud
 
 // Porte : 80cm d'ouverture, alignée après mur couloir (X=200)
 export const DOOR_START = 200; // cm 200
@@ -78,7 +77,7 @@ export const NICHE_Z_START = ROOM_D - 120; // Z=280
 export const DIAG_ANGLE_DEG = 120;
 const _diagAngle = DIAG_ANGLE_DEG * (Math.PI / 180);
 const _AX = ROOM_W;
-const _AZ = CORRIDOR_NORTH_WALL + 134.8; // TODO : true value for 134.8 is MEASURED_DIST_CORRIDOR_NORTH_EAST_ANGLE_TO_CORRIDOR_EAST_WALL_DIAGONAL_WALL_ANGLE
+const _AZ = ROOM_D + PARTITION_THICKNESS + 134.8; // TODO : true value for 134.8 is MEASURED_DIST_CORRIDOR_NORTH_EAST_ANGLE_TO_CORRIDOR_EAST_WALL_DIAGONAL_WALL_ANGLE
 const _CX = NICHE_X;
 const _CZ = _AZ - (_AX - _CX) / Math.tan(_diagAngle);
 const _DX = _CX - _AX;
@@ -147,6 +146,8 @@ export type WallDef = {
   | { axis: 'x'; x1: number; x2: number; zc: number }
 );
 
+const MEASURED_CORRIDOR_NORTH_WALL = ROOM_D + PT;
+
 // ── PILLAR_DEFS : Poteaux structurels et huisseries ───────────────────────────
 export const PILLAR_DEFS = [
   // ── Façade Nord (Mur C) : Béton 20cm + Placo 10cm ─────────────────────────
@@ -161,20 +162,20 @@ export const PILLAR_DEFS = [
 
   // ── Séjour & Niche Ouest ──────────────────────────────────────────────────
   { id: 'niche-beam',     x: -5,                    z: NICHE_Z_START },
-  { id: 'corner-sw',      x: NICHE_X - WT / 2,      z: CORRIDOR_NORTH_WALL - PT / 2,     w: WT, d: PT },
-  { id: 'corner-se',      x: ROOM_W + WT / 2,       z: CORRIDOR_NORTH_WALL - PT / 2,     w: WT, d: PT },
+  { id: 'corner-sw',      x: NICHE_X - WT / 2,      z: ROOM_D + PT / 2,     w: WT, d: PT },
+  { id: 'corner-se',      x: ROOM_W + WT / 2,       z: ROOM_D + PT / 2,     w: WT, d: PT },
 
   // ── Cuisine ───────────────────────────────────────────────────────────────
-  { id: 'kitchen-nw',     x: KITCHEN_X0 - PT / 2,   z: CORRIDOR_NORTH_WALL - PT / 2,     w: PT, d: PT },
-  { id: 'kitchen-ne',     x: KITCHEN_X1 + PT / 2,   z: CORRIDOR_NORTH_WALL - PT / 2,     w: PT, d: PT },
+  { id: 'kitchen-nw',     x: KITCHEN_X0 - PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
+  { id: 'kitchen-ne',     x: KITCHEN_X1 + PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
   { id: 'kitchen-sw',     x: KITCHEN_X0 - PT / 2,   z: KITCHEN_Z + PT / 2, w: PT, d: PT },
   { id: 'kitchen-se',     x: KITCHEN_X1 + PT / 2,   z: KITCHEN_Z + PT / 2, w: PT, d: PT },
 
   // ── Huisseries et Jambages de portes ──────────────────────────────────────
-  { id: 'door-living-w',  x: DOOR_START - PT / 2,   z: CORRIDOR_NORTH_WALL - PT / 2,     w: PT, d: PT },
-  { id: 'door-living-e',  x: DOOR_END + PT / 2,     z: CORRIDOR_NORTH_WALL - PT / 2,     w: PT, d: PT },
-  { id: 'door-bath-n',    x: CORR_WALL_X,           z: CORRIDOR_NORTH_WALL + 109 + 3 - PT / 2,               w: PT, d: PT },
-  { id: 'door-bath-s',    x: CORR_WALL_X,           z: CORRIDOR_NORTH_WALL + 109 + 89 + PT / 2,               w: PT, d: PT },
+  { id: 'door-living-w',  x: DOOR_START - PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
+  { id: 'door-living-e',  x: DOOR_END + PT / 2,     z: ROOM_D + PT / 2,     w: PT, d: PT },
+  { id: 'door-bath-n',    x: CORR_WALL_X,           z: MEASURED_CORRIDOR_NORTH_WALL + 109 + 3 - PT / 2,               w: PT, d: PT },
+  { id: 'door-bath-s',    x: CORR_WALL_X,           z: MEASURED_CORRIDOR_NORTH_WALL + 109 + 89 + PT / 2,               w: PT, d: PT },
 
   // ── Salle de Bain & Douche ────────────────────────────────────────────────
   { id: 'bath-nw',        x: NICHE_X - WT / 2,      z: KITCHEN_Z + PT / 2, w: WT, d: PT },
@@ -236,7 +237,7 @@ export const BATH_EAST_WALL      = pWest('bath-ne');           // X ≈ 192.0  (
 export const BATH_WEST_WALL      = pEast('corner-sw');         // X ≈ -10    (face intérieure mur ouest béton)
 
 // Couloir (Corridor)
-// CORRIDOR_NORTH_WALL : déjà défini ci-dessus (ROOM_D + PT) — ≈ 403.8
+export const CORRIDOR_NORTH_WALL = pSouth('door-living-w');    // Z ≈ 403.8  (face couloir de la partition séjour)
 export const CORRIDOR_EAST_WALL  = pWest('corner-se');         // X = 316    (face intérieure mur est)
 export const CORRIDOR_WEST_WALL  = pEast('bath-ne');           // X ≈ 199.2  (face couloir de la cloison sdb)
 // CORRIDOR_SOUTH_WALL : mur diagonal, exclu volontairement
