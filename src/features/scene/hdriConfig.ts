@@ -35,6 +35,8 @@ export const HDRI_LIST: HdriItem[] = [
 
   { id: 'rogland_clear_night_4k', name: 'rogland clear night 4k', url: '/environment/hdri/rogland_clear_night_4k.hdr', type: 'hdr' },
   { id: 'rogland_moonlit_night_4k', name: 'rogland moonlit night 4k', url: '/environment/hdri/rogland_moonlit_night_4k.hdr', type: 'hdr' },
+  { id: 'kloofendal_48d_partly_cloudy_puresky_4k', name: 'kloofendal 48d partly cloudy puresky 4k', url: '/environment/hdri/kloofendal_48d_partly_cloudy_puresky_4k.hdr', type: 'hdr' },
+  { id: 'industrial_sunset_02_puresky_4k', name: 'industrial sunset 02 puresky 4k', url: '/environment/hdri/industrial_sunset_02_puresky_4k.hdr', type: 'hdr' },
   { id: 'sandsloot_4k', name: 'sandsloot 4k', url: '/environment/hdri/sandsloot_4k.hdr', type: 'hdr' },
   { id: 'satara_night_4k', name: 'satara night 4k', url: '/environment/hdri/satara_night_4k.hdr', type: 'hdr' },
   { id: 'shanghai_bund_4k', name: 'shanghai bund 4k', url: '/environment/hdri/shanghai_bund_4k.hdr', type: 'hdr' },
