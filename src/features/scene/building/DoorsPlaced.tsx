@@ -3,14 +3,12 @@
  */
 import { useMemo } from 'react';
 import { DoorLiving, DoorBath } from '../items/DoorWhite';
-import { DoorEntry }            from '../items/DoorEntry';
+import { DoorEntry, ENTRY_W }            from '../items/DoorEntry';
 import { GlassDoor }            from '../items/GlassDoor';
 import { NOOP_ITEM, NOOP_SIZE } from '../sceneItem';
 import { useFurnitureToggles }  from '../utils/useFurnitureToggles';
 import { useSceneStore }        from '../store/useSceneStore';
 import { pEast, pWest, pZ, pX, DOOR_START, DOOR_END, DiagWall } from '../wallData';
-
-const DOOR_W_ENTRY = 90;
 
 export function DoorsPlaced() {
   const layers = useSceneStore(state => state.layers);
@@ -24,7 +22,7 @@ export function DoorsPlaced() {
   ]);
 
   const entry = useMemo(() => {
-    const center = DiagWall.p(DiagWall.door.start + DOOR_W_ENTRY / 2, 5);
+    const center = DiagWall.p(DiagWall.door.start + ENTRY_W / 2, 5);
     return {
       wx:       center.x,
       wy:       0,

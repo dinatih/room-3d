@@ -8,7 +8,8 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 
-const W  = 90;    // ENTRY_DOOR_W
+export const ENTRY_W = 90;
+const W  = ENTRY_W;
 const H  = 204;   // DOOR_H
 const T  = 4;     // épaisseur panneau
 const R  = 1.3;
