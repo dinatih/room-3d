@@ -30,10 +30,14 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
 
   useEffect(() => {
     const hdri = getHdriById(currentHdri);
+    const envIntensity = hdri.environmentIntensity ?? (hdri.type === 'jpg' ? 3.2 : 1.0);
+    scene.environmentIntensity = envIntensity;
+
     const cached = textureCache.get(hdri.id);
     if (cached) {
       setTexture(cached);
       scene.environment = cached;
+      scene.environmentIntensity = envIntensity;
       invalidate();
       return;
     }
@@ -48,6 +52,7 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
       if (isMounted) {
         setTexture(loadedTexture);
         scene.environment = loadedTexture;
+        scene.environmentIntensity = envIntensity;
         invalidate();
       }
     };

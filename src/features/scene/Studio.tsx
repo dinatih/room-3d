@@ -42,7 +42,7 @@ import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/sc
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
-import { HDRI_LIST }                  from '@features/scene/hdriConfig';
+import { HDRI_LIST, getHdriById }  from '@features/scene/hdriConfig';
 import { useAppIdle }                  from './idleState';
 import { MeasurementTool }            from './MeasurementTool';
 import { RealMeasurementsLayer }      from './RealMeasurementsLayer';
@@ -255,6 +255,13 @@ function LoadingProgress({
   }, [progress, active, item, sceneReady, onAssetsLoaded, onLaunch]);
 
   return null;
+}
+
+function SceneAmbientLight() {
+  const currentHdri = useSceneStore(state => state.currentHdri);
+  const activeHdri = getHdriById(currentHdri);
+  const intensity = activeHdri.ambientIntensity ?? (activeHdri.type === 'jpg' ? 0.95 : 0.6);
+  return <ambientLight color={0x8899bb} intensity={intensity} />;
 }
 
 export function Studio() {
@@ -535,7 +542,7 @@ export function Studio() {
       >
         <ActiveCameraCapture onCapture={(cam) => { activeCameraRef.current = cam; }} />
         <SkySphere />
-        <ambientLight color={0x8899bb} intensity={0.6} />
+        <SceneAmbientLight />
         {layers.realSun ? (
           <>
             <SunLight />

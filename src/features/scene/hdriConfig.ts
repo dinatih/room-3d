@@ -3,10 +3,22 @@ export interface HdriItem {
   name: string;
   url: string;
   type: 'hdr' | 'jpg';
+  /** Intensité de l'environnement IBL (Three.js scene.environmentIntensity).
+   * Les JPGs (LDR 8-bit) nécessitent un multiplicateur plus élevé (~2.5 à 3.2) pour égaler la luminosité diffuse des HDRIs. */
+  environmentIntensity?: number;
+  /** Intensité de la lumière ambiante associée à cette ambiance (défaut : 0.6). */
+  ambientIntensity?: number;
 }
 
 export const HDRI_LIST: HdriItem[] = [
-  { id: 'default', name: 'Ciel Paris 🌤️', url: '/environment/AdobeStock_585513182.jpg', type: 'jpg' },
+  {
+    id: 'default',
+    name: 'Ciel Paris 🌤️',
+    url: '/environment/AdobeStock_585513182.jpg',
+    type: 'jpg',
+    environmentIntensity: 3.2,
+    ambientIntensity: 0.95,
+  },
 
   // --- Nature, Forêts, Sentiers & Jardins ---
 
