@@ -22,6 +22,7 @@ import {
   PILLAR_KITE_NE,
   PILLAR_KITE_SW,
   BATH_SOUTH_WALL,
+  CORRIDOR_NORTH_WALL,
   pNorth,
   pEast,
   pWest,
@@ -58,9 +59,9 @@ export function drawFloorPlan(
   // Placard couloir (intérieur net)
   ctx.fillRect(
     tx(KITCHEN_X1 + PARTITION_THICKNESS),
-    tz(ROOM_D + PARTITION_THICKNESS),
+    tz(CORRIDOR_NORTH_WALL),
     (DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS)) * S,
-    (KITCHEN_SOUTH_WALL - (ROOM_D + PARTITION_THICKNESS)) * S,
+    (KITCHEN_SOUTH_WALL - (CORRIDOR_NORTH_WALL)) * S,
   );
   // Couloir droit
   ctx.fillRect(tx(DOOR_START), tz(ROOM_D), (ROOM_W - DOOR_START) * S, (DiagWall.A.z - ROOM_D) * S);
@@ -87,9 +88,9 @@ export function drawFloorPlan(
   ctx.fillStyle = 'rgba(120, 130, 140, 0.15)';
   ctx.fillRect(
     tx(BATH_WEST_WALL),
-    tz(ROOM_D + PARTITION_THICKNESS),
+    tz(CORRIDOR_NORTH_WALL),
     (KITCHEN_WEST_WALL - PARTITION_THICKNESS - BATH_WEST_WALL) * S,
-    (KITCHEN_SOUTH_WALL - (ROOM_D + PARTITION_THICKNESS)) * S,
+    (KITCHEN_SOUTH_WALL - (CORRIDOR_NORTH_WALL)) * S,
   );
 
   // ── Jardin ──────────────────────────────────────────────────────────────────

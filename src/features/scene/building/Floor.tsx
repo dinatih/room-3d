@@ -12,7 +12,7 @@ import {
   KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_SOUTH_WALL, DiagWall,
 } from '../wallData';
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
-import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, BATH_SOUTH_WALL } from '../wallData';
+import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, BATH_SOUTH_WALL, CORRIDOR_NORTH_WALL } from '../wallData';
 import {
   COLORS, skirtingMat, noCapMat, slabConcreteTop, slabConcreteSide,
   boxFaceMats, qrGeo
@@ -194,7 +194,7 @@ export function Parquet() {
   const { geo, mat } = useMemo(() => {
     const parquetDiagZ = DiagWall.A.z + (INT_X_DOOR_S - DiagWall.A.x) * DiagWall.slope;
     const WALL_SE_W = DOOR_END;
-    const WALL_SOUTH_FACE = ROOM_D + PARTITION_THICKNESS;
+    const WALL_SOUTH_FACE = CORRIDOR_NORTH_WALL;
 
     const shape = new THREE.Shape([
       new THREE.Vector2(INT_X_WEST,      -INT_Z_NORTH),
@@ -238,9 +238,9 @@ export function Parquet() {
 
 export function Tile() {
   const CLOSET_W_REAL = DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS);
-  const CLOSET_D_REAL = KITCHEN_SOUTH_WALL - (ROOM_D + PARTITION_THICKNESS);
+  const CLOSET_D_REAL = KITCHEN_SOUTH_WALL - (CORRIDOR_NORTH_WALL);
   const CLOSET_X_REAL = ((KITCHEN_X1 + PARTITION_THICKNESS) + DOOR_START) / 2;
-  const CLOSET_Z_REAL = ((ROOM_D + PARTITION_THICKNESS) + KITCHEN_SOUTH_WALL) / 2;
+  const CLOSET_Z_REAL = ((CORRIDOR_NORTH_WALL) + KITCHEN_SOUTH_WALL) / 2;
 
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
     const baseTex = makeTileTex();
@@ -343,11 +343,11 @@ export function Baseboards() {
       <QR cx={INT_X_EAST - SD} cz={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
          len={INT_Z_ROOM_S - INT_Z_NORTH} dir="-X" mat={skirtingMat} />
 
-      <P w={SD} h={SH} d={DiagWall.A.z - (ROOM_D + PARTITION_THICKNESS)}
-         x={INT_X_EAST - SD / 2} y={y} z={((ROOM_D + PARTITION_THICKNESS) + DiagWall.A.z) / 2}
+      <P w={SD} h={SH} d={DiagWall.A.z - (CORRIDOR_NORTH_WALL)}
+         x={INT_X_EAST - SD / 2} y={y} z={((CORRIDOR_NORTH_WALL) + DiagWall.A.z) / 2}
          mat={skirtingMat} />
-      <QR cx={INT_X_EAST - SD} cz={((ROOM_D + PARTITION_THICKNESS) + DiagWall.A.z) / 2}
-         len={DiagWall.A.z - (ROOM_D + PARTITION_THICKNESS)} dir="-X" mat={skirtingMat} />
+      <QR cx={INT_X_EAST - SD} cz={((CORRIDOR_NORTH_WALL) + DiagWall.A.z) / 2}
+         len={DiagWall.A.z - (CORRIDOR_NORTH_WALL)} dir="-X" mat={skirtingMat} />
 
       <P w={28.5} h={SH} d={SD}
          x={301.75} y={y} z={INT_Z_ROOM_S - SD / 2}
@@ -356,9 +356,9 @@ export function Baseboards() {
          len={28.5} dir="-Z" mat={skirtingMat} />
 
       <P w={28.5} h={SH} d={SD}
-         x={301.75} y={y} z={(ROOM_D + PARTITION_THICKNESS) + SD / 2}
+         x={301.75} y={y} z={(CORRIDOR_NORTH_WALL) + SD / 2}
          mat={skirtingMat} />
-      <QR cx={301.75} cz={(ROOM_D + PARTITION_THICKNESS) + SD}
+      <QR cx={301.75} cz={(CORRIDOR_NORTH_WALL) + SD}
          len={28.5} dir="+Z" mat={skirtingMat} />
 
       {[diagSegA, diagSegB, diagSegC].map((s, i) => (
@@ -391,7 +391,7 @@ export function Baseboards() {
       })()}
 
       {(() => {
-        const CL_N = ROOM_D + PARTITION_THICKNESS;
+        const CL_N = CORRIDOR_NORTH_WALL;
         const CL_S = KITCHEN_SOUTH_WALL;
         const CL_W = KITCHEN_X1 + PARTITION_THICKNESS;
         const CL_E = CORR_WALL_X - PARTITION_THICKNESS / 2;

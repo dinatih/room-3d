@@ -11,7 +11,7 @@ import {
   KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_SOUTH_WALL,
   ROOM_D,
 } from './wallData';
-import { PARTITION_THICKNESS, BATH_SOUTH_WALL } from './wallData';
+import { PARTITION_THICKNESS, BATH_SOUTH_WALL, CORRIDOR_NORTH_WALL } from './wallData';
 import { positionState } from './positionState';
 import { DYNAMIC_FURNITURE_ANCHORS, FurnitureTransform } from './furniturePositions';
 
@@ -49,12 +49,12 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
       };
 
     case 'corridor-closet':
-      // Placements.tsx: <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + PARTITION_THICKNESS + KITCHEN_SOUTH_WALL) / 2]} ...>
+      // Placements.tsx: <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (CORRIDOR_NORTH_WALL + KITCHEN_SOUTH_WALL) / 2]} ...>
       return {
         position: [
           (KITCHEN_X1 + DOOR_START) / 2,
           0,
-          (ROOM_D + PARTITION_THICKNESS + KITCHEN_SOUTH_WALL) / 2,
+          (CORRIDOR_NORTH_WALL + KITCHEN_SOUTH_WALL) / 2,
         ],
         rotationY: 0,
       };

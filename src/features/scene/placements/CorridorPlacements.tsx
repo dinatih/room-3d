@@ -18,7 +18,7 @@ import {
   KITCHEN_SOUTH_WALL,
   DOOR_START,
 } from '../wallData';
-import { PARTITION_THICKNESS, pZ } from '../wallData';
+import { CORRIDOR_NORTH_WALL, pZ } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
@@ -89,7 +89,7 @@ export function CorridorEquipment() {
       <LinkyGaine />
 
       {/* Placard Couloir */}
-      <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + PARTITION_THICKNESS + KITCHEN_SOUTH_WALL) / 2]} userData={{ animUnit: true, itemName: 'Placard Couloir' }}>
+      <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (CORRIDOR_NORTH_WALL + KITCHEN_SOUTH_WALL) / 2]} userData={{ animUnit: true, itemName: 'Placard Couloir' }}>
         <CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
