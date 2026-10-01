@@ -261,7 +261,34 @@ function SceneAmbientLight() {
   const currentHdri = useSceneStore(state => state.currentHdri);
   const activeHdri = getHdriById(currentHdri);
   const intensity = activeHdri.ambientIntensity ?? (activeHdri.type === 'jpg' ? 0.95 : 0.6);
-  return <ambientLight color={0x8899bb} intensity={intensity} />;
+  const color = activeHdri.ambientColor ?? (activeHdri.type === 'jpg' ? 0xffba90 : 0x8899bb);
+  return <ambientLight color={color} intensity={intensity} />;
+}
+
+function SceneDirectionalLight() {
+  const currentHdri = useSceneStore(state => state.currentHdri);
+  const activeHdri = getHdriById(currentHdri);
+  const color = activeHdri.directionalColor ?? 0xfff5e0;
+  const intensity = activeHdri.directionalIntensity ?? 1.8;
+  const position = activeHdri.directionalPosition ?? [500, 700, 400];
+
+  return (
+    <directionalLight
+      color={color}
+      position={position}
+      intensity={intensity}
+      castShadow
+      shadow-mapSize={[1024, 1024]}
+      shadow-camera-near={1}
+      shadow-camera-far={3000}
+      shadow-camera-left={-1200}
+      shadow-camera-right={1200}
+      shadow-camera-top={1200}
+      shadow-camera-bottom={-1200}
+      shadow-bias={-0.0002}
+      shadow-normalBias={0.04}
+    />
+  );
 }
 
 export function Studio() {
@@ -551,21 +578,7 @@ export function Studio() {
             </CategoryLayerGroup>
           </>
         ) : (
-          <directionalLight
-            color={0xfff5e0}
-            position={[500, 700, 400]}
-            intensity={1.8}
-            castShadow
-            shadow-mapSize={[1024, 1024]}
-            shadow-camera-near={1}
-            shadow-camera-far={3000}
-            shadow-camera-left={-1200}
-            shadow-camera-right={1200}
-            shadow-camera-top={1200}
-            shadow-camera-bottom={-1200}
-            shadow-bias={-0.0002}
-            shadow-normalBias={0.04}
-          />
+          <SceneDirectionalLight />
         )}
 
         {/* Contrôleur unifié : synchronise camera.layers avec les toggles UI */}

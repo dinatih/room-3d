@@ -8,6 +8,14 @@ export interface HdriItem {
   environmentIntensity?: number;
   /** Intensité de la lumière ambiante associée à cette ambiance (défaut : 0.6). */
   ambientIntensity?: number;
+  /** Couleur de la lumière ambiante (défaut : 0x8899bb). */
+  ambientColor?: number | string;
+  /** Couleur de la lumière directionnelle principale (défaut : 0xfff5e0). */
+  directionalColor?: number | string;
+  /** Intensité de la lumière directionnelle principale (défaut : 1.8). */
+  directionalIntensity?: number;
+  /** Position de la lumière directionnelle principale (défaut : [500, 700, 400]). */
+  directionalPosition?: [number, number, number];
 }
 
 export const HDRI_LIST: HdriItem[] = [
@@ -18,6 +26,8 @@ export const HDRI_LIST: HdriItem[] = [
     type: 'jpg',
     environmentIntensity: 3.2,
     ambientIntensity: 0.95,
+    ambientColor: 0xffba90,       // Ambiance douce tiède pêche/ambre de coucher de soleil
+    directionalColor: 0xff8536,   // Teinte chaude jaune-rouge coucher de soleil
   },
 
   // --- Nature, Forêts, Sentiers & Jardins ---
