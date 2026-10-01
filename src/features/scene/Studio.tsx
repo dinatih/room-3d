@@ -423,6 +423,7 @@ export function Studio() {
         if (k === 'd') { e.preventDefault(); onToggleLayer('decor'); cameraState.invalidate?.(); return; }
         if (k === 'h') { e.preventDefault(); onToggleLayer('furnishings'); cameraState.invalidate?.(); return; }
         if (k === 'e') { e.preventDefault(); onToggleLayer('equipment'); cameraState.invalidate?.(); return; }
+        if (k === 'g') { e.preventDefault(); onToggleLayer('mirrorsHD'); cameraState.invalidate?.(); return; }
         if (k === 'z') { e.preventDefault(); onToggleLayer('laraTopOff'); cameraState.invalidate?.(); return; }
         if (k === 'c') { e.preventDefault(); onToggleLayer('laraBottomOff'); cameraState.invalidate?.(); return; }
         if (k === 'x') { e.preventDefault(); onToggleLayer('laraNude'); cameraState.invalidate?.(); return; }

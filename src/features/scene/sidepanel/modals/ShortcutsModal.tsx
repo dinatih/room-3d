@@ -54,6 +54,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Décoration (toggle)"        keys={['Alt+D']} />
               <R label="Habillage (toggle)"         keys={['Alt+H']} />
               <R label="Équipements (toggle)"       keys={['Alt+E']} />
+              <R label="Miroirs HD (toggle)"        keys={['Alt+G']} />
               <R label="Arêtes des murs (toggle)"   keys={['Alt+A']} />
               <R label="Piliers seuls (toggle)"     keys={['Alt+P']} />
               <R label="Grille inventaire 📦 (toggle)" keys={['Alt+I']} />

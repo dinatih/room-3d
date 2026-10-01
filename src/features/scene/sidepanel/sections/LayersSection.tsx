@@ -179,7 +179,7 @@ export function LayersSection({
       {layerBtn('purple',    'Décoration (Decor) (Alt+D)',      'decor')}
       {layerBtn('blue',      'Animaux 🐕🐦',                   'animals')}
       {layerBtn('purple',    'Miroirs',                        'mirrors')}
-      {layers.mirrors && layerBtn('purple', 'Miroirs HD',       'mirrorsHD')}
+      {layers.mirrors && layerBtn('purple', 'Miroirs HD (Alt+G)',       'mirrorsHD')}
       {layerBtn('cyan',      'Zones IA 🤖 (A)',                'aiZones')}
       {layerBtn('blue',   'Collisions inter-PNJ 👥', 'npcCollisions')}
       {layers.npcCollisions && layerBtn('cyan', '↳ Debug PNJ (Rayon 70cm) ⭕', 'debugNpcCollisions')}
