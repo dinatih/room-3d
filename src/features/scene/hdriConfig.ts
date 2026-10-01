@@ -22,10 +22,10 @@ export const HDRI_LIST: HdriItem[] = [
   {
     id: 'default',
     name: 'Ciel Paris 🌤️',
-    url: '/environment/AdobeStock_585513182.jpg',
-    type: 'jpg',
-    environmentIntensity: 3.2,
-    ambientIntensity: 0.95,
+    url: '/environment/hdri/ciel_paris_4k.hdr',
+    type: 'hdr',
+    environmentIntensity: 1.3,
+    ambientIntensity: 0.9,
     ambientColor: 0xffba90,       // Ambiance douce tiède pêche/ambre de coucher de soleil
     directionalColor: 0xff8536,   // Teinte chaude jaune-rouge coucher de soleil
   },

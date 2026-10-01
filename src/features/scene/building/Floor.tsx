@@ -8,11 +8,11 @@ import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
 import { CategoryLayerGroup } from '../sceneLayer';
 import {
-  ROOM_W, ROOM_D, WALL_H, BATH_WEST_WALL, NICHE_Z_START, DOOR_START, DOOR_END,
-  KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_SOUTH_WALL, DiagWall,
+  ROOM_W, ROOM_D, WALL_H, BATH_WEST_WALL, DOOR_START, DOOR_END,
+  KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_SOUTH_WALL, pSouth, DiagWall,
 } from '../wallData';
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
-import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, BATH_SOUTH_WALL, CORRIDOR_NORTH_WALL } from '../wallData';
+import { PARTITION_THICKNESS, CORR_WALL_X, BATH_SOUTH_WALL, CORRIDOR_NORTH_WALL } from '../wallData';
 import {
   COLORS, skirtingMat, noCapMat, slabConcreteTop, slabConcreteSide,
   boxFaceMats, qrGeo
@@ -21,7 +21,6 @@ import { P } from './Walls';
 
 const BLDG_Z_MIN = -30;
 const CEIL_THICK = 20;
-const W_HALF = WALL_THICKNESS / 2;
 
 const INT_X_WEST = 0;
 const INT_X_NICHE = BATH_WEST_WALL;
@@ -31,7 +30,7 @@ const INT_X_DOOR_S = DOOR_START;
 const INT_X_EAST = ROOM_W;
 
 const INT_Z_NORTH = 0;
-const INT_Z_NICHE_S = NICHE_Z_START + W_HALF;
+const INT_Z_NICHE_S = pSouth('niche-beam');
 const INT_Z_ROOM_S = ROOM_D;
 const INT_Z_KITCHEN_B = KITCHEN_SOUTH_WALL;
 const INT_Z_BATH_N = KITCHEN_SOUTH_WALL + PARTITION_THICKNESS;
