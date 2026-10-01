@@ -18,10 +18,7 @@ import { Tisken40381253 } from '../items/Tisken40381253';
 import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
 import { DroneCell } from '../items/Drona';
 
-import {
-  WALL_H,
-} from '../wallData';
-import { PARTITION_THICKNESS, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL } from '../wallData';
+import { WALL_H, PARTITION_THICKNESS, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
@@ -127,7 +124,7 @@ export function BathroomFurnishings() {
   return (
     <MergedStaticGroup name="merged-bathroom-furnishings">
       {/* Tapis Gazon SDB */}
-      <group position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2 - 1, 0, BATH_SOUTH_WALL - 53]} userData={{ animUnit: true, itemName: 'Tapis Gazon SDB' }}>
+      <group position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2, 0, BATH_SOUTH_WALL - 53]} userData={{ animUnit: true, itemName: 'Tapis Gazon SDB' }}>
         <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 

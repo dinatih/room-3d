@@ -1,5 +1,5 @@
 /**
- * DoorsPlaced.tsx — Portes placées en coordonnées monde (séjour, SDB, entrée, baie vitrée).
+ * DoorsPlacement.tsx — Portes placées en coordonnées monde (séjour, SDB, entrée, baie vitrée).
  */
 import { useMemo } from 'react';
 import { DoorLiving, DoorBath } from '../items/DoorWhite';
@@ -8,9 +8,9 @@ import { GlassDoor }            from '../items/GlassDoor';
 import { NOOP_ITEM, NOOP_SIZE } from '../sceneItem';
 import { useFurnitureToggles }  from '../utils/useFurnitureToggles';
 import { useSceneStore }        from '../store/useSceneStore';
-import { pEast, pWest, pZ, pX, DOOR_START, DOOR_END, DiagWall } from '../wallData';
+import { pEast, pWest, pZ, pX, DiagWall } from '../wallData';
 
-export function DoorsPlaced() {
+export function DoorsPlacement() {
   const layers = useSceneStore(state => state.layers);
   const as = useFurnitureToggles([
     'east-glass-door-toggle',
@@ -46,7 +46,7 @@ export function DoorsPlaced() {
         <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
-        position={[(DOOR_START + DOOR_END) / 2, 0, pZ('door-living-w')]}
+        position={[(pX('door-living-w') + pX('door-living-e')) / 2, 0, pZ('door-living-w')]}
         userData={{ animUnit: true, itemName: 'Porte séjour', hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>

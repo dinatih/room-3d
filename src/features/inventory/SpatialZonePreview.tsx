@@ -6,7 +6,7 @@ import { SpatialZone } from '@features/scene/ai/SpatialZone';
 import { drawFps } from '@features/scene/DevToolsOverlay';
 
 // Rendu complet et officiel du Studio
-import { Walls, Floor, MirrorFrames, MirrorReflectors, DoorsPlaced } from '@features/scene/Building';
+import { Walls, Floor, MirrorFrames, MirrorReflectors, DoorsPlacement } from '@features/scene/Building';
 import { Equipment, Furniture, Furnishings, Decor } from '@features/scene/Placements';
 import { SkySphere } from '@features/scene/SkySphere';
 
@@ -75,7 +75,7 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
       <group ref={studioGroupRef}>
         <Walls />
         <Floor />
-        <DoorsPlaced />
+        <DoorsPlacement />
         <Equipment />
         <Furniture />
         <Furnishings />

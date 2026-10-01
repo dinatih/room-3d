@@ -5,7 +5,7 @@
  * - Walls (murs, piliers, linteaux, découpes diagonales)
  * - Floor (parquet, carrelage, plinthes, dalle béton, plafonds)
  * - Mirrors (miroirs Nissedal, réflecteurs Three.js)
- * - DoorsPlaced (portes en coordonnées monde)
+ * - DoorsPlacement (portes en coordonnées monde)
  * - MergedStaticGroup (optimisation géométrique des draw calls)
  */
 export * from './building';

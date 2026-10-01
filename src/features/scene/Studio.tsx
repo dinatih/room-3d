@@ -15,7 +15,7 @@ import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
 import { Minimap }          from '@features/scene/Minimap';
-import { Walls, Floor, DoorsPlaced, MirrorFrames, MirrorReflectors } from './Building';
+import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController } from '@features/scene/sceneLayer';
 import { Equipment, Furniture, Furnishings, Decor, Animals } from './Placements';
@@ -621,7 +621,7 @@ export function Studio() {
           </CategoryLayerGroup>
 
           <CategoryLayerGroup layer={LAYER_DOORS}>
-            {!layers.pillarsOnly && <DoorsPlaced />}
+            {!layers.pillarsOnly && <DoorsPlacement />}
           </CategoryLayerGroup>
 
           <Floor />
