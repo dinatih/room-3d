@@ -138,9 +138,9 @@ export function LayersSection({
           ) : null;
         })()}
       </div>
-      {layerBtn('green',     'Structure murale 🧱',            'wallStructure')}
+      {layerBtn('green',     'Structure murale 🧱 (Alt+W)',            'wallStructure')}
       {layerBtn('orange',    'Revêtements sol (+ plinthes) 🪵', 'floorCoverings')}
-      {layerBtn('secondary', 'Dalle et plafond 🏛️',            'structure')}
+      {layerBtn('secondary', 'Dalle et plafond 🏛️ (Alt+Q)',            'structure')}
       {layerBtn('peach',     'Portes 🚪',                      'doors')}
       {layerBtn('teal',      'Ciel & Atmosphère 🌤️',           'environment')}
       {layerBtn('green',     'Herbe & Terrain ext. 🌱',        'bermudaGrass')}
@@ -173,10 +173,10 @@ export function LayersSection({
         </div>
       )}
       {layerBtn('gray',      'Piliers seuls (Alt+P)',           'pillarsOnly')}
-      {layerBtn('peach',     'Équipements',                    'equipment')}
-      {layerBtn('purple',    'Mobilier (Furniture)',           'furniture')}
-      {layerBtn('purple',    'Habillage (Furnishings)',        'furnishings')}
-      {layerBtn('purple',    'Décoration (Decor)',             'decor')}
+      {layerBtn('peach',     'Équipements (Alt+E)',             'equipment')}
+      {layerBtn('purple',    'Mobilier (Furniture) (Alt+F)',    'furniture')}
+      {layerBtn('purple',    'Habillage (Furnishings) (Alt+H)', 'furnishings')}
+      {layerBtn('purple',    'Décoration (Decor) (Alt+D)',      'decor')}
       {layerBtn('blue',      'Animaux 🐕🐦',                   'animals')}
       {layerBtn('purple',    'Miroirs',                        'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',       'mirrorsHD')}

@@ -421,9 +421,9 @@ export function CharacterSection({
       {layerBtn('pink',   'Peau & tissus réalistes (Mat) 🧴', 'laraRealisticTextures')}
       {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
       {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
-      {layerBtn('pink',   'Déshabiller Lara 👙 (X)', 'laraNude')}
-      {layerBtn('pink',   'Enlever le haut 👚', 'laraTopOff')}
-      {layerBtn('pink',   'Enlever le bas 🩳', 'laraBottomOff')}
+      {layerBtn('pink',   'Déshabiller Lara 👙 (Alt+X)', 'laraNude')}
+      {layerBtn('pink',   'Enlever le haut 👚 (Alt+Z)', 'laraTopOff')}
+      {layerBtn('pink',   'Enlever le bas 🩳 (Alt+C)', 'laraBottomOff')}
       {layerBtn('light',  'Bottes Lara 👢', 'laraShoes')}
       {layerBtn('pink',   'Physique buste 💃', 'breastPhysics')}
       {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}

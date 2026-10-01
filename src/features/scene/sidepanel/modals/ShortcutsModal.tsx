@@ -44,10 +44,16 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue top-down suivi perso (toggle)" keys={['Y']} />
               <R label="Avion en papier (toggle)"   keys={['F']} />
               <R label="Grille Lara (toggle)"       keys={['G']} />
-              <R label="Enlever le haut (toggle)"   keys={['Z']} />
-              <R label="Enlever le bas (toggle)"    keys={['C']} />
-              <R label="Déshabiller les Lara (toggle)" keys={['X']} />
+              <R label="Enlever le haut (toggle)"   keys={['Alt+Z']} />
+              <R label="Enlever le bas (toggle)"    keys={['Alt+C']} />
+              <R label="Déshabiller les Lara (toggle)" keys={['Alt+X']} />
               <R label="Squelettes / Bones (toggle)" keys={['K']} />
+              <R label="Structure murale (toggle)"  keys={['Alt+W']} />
+              <R label="Dalle et plafond (toggle)"  keys={['Alt+Q']} />
+              <R label="Mobilier (toggle)"          keys={['Alt+F']} />
+              <R label="Décoration (toggle)"        keys={['Alt+D']} />
+              <R label="Habillage (toggle)"         keys={['Alt+H']} />
+              <R label="Équipements (toggle)"       keys={['Alt+E']} />
               <R label="Arêtes des murs (toggle)"   keys={['Alt+A']} />
               <R label="Piliers seuls (toggle)"     keys={['Alt+P']} />
               <R label="Grille inventaire 📦 (toggle)" keys={['Alt+I']} />

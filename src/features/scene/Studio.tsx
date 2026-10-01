@@ -417,6 +417,15 @@ export function Studio() {
         if (k === 'm') { e.preventDefault(); onToggleLayer('measuredDimensions'); cameraState.invalidate?.(); return; }
         if (k === 'a') { e.preventDefault(); onToggleLayer('wallEdges'); cameraState.invalidate?.(); return; }
         if (k === 'i') { e.preventDefault(); onToggleLayer('inventoryGrid'); cameraState.invalidate?.(); return; }
+        if (k === 'w') { e.preventDefault(); onToggleLayer('wallStructure'); cameraState.invalidate?.(); return; }
+        if (k === 'q') { e.preventDefault(); onToggleLayer('structure'); cameraState.invalidate?.(); return; }
+        if (k === 'f') { e.preventDefault(); onToggleLayer('furniture'); cameraState.invalidate?.(); return; }
+        if (k === 'd') { e.preventDefault(); onToggleLayer('decor'); cameraState.invalidate?.(); return; }
+        if (k === 'h') { e.preventDefault(); onToggleLayer('furnishings'); cameraState.invalidate?.(); return; }
+        if (k === 'e') { e.preventDefault(); onToggleLayer('equipment'); cameraState.invalidate?.(); return; }
+        if (k === 'z') { e.preventDefault(); onToggleLayer('laraTopOff'); cameraState.invalidate?.(); return; }
+        if (k === 'c') { e.preventDefault(); onToggleLayer('laraBottomOff'); cameraState.invalidate?.(); return; }
+        if (k === 'x') { e.preventDefault(); onToggleLayer('laraNude'); cameraState.invalidate?.(); return; }
         return;
       }
 
@@ -425,21 +434,12 @@ export function Studio() {
       if (e.key === 'g' || e.key === 'G') {
         onToggleLayer('laraGrid');
         cameraState.invalidate?.();
-      } else if (e.key === 'z' || e.key === 'Z') {
-        onToggleLayer('laraTopOff');
-        cameraState.invalidate?.();
-      } else if (e.key === 'c' || e.key === 'C') {
-        onToggleLayer('laraBottomOff');
-        cameraState.invalidate?.();
       } else if (e.key === 'p' || e.key === 'P') {
         setInventoryInitialCat('walkers');
         setShowInventory(true);
       } else if (e.key === 'i' || e.key === 'I') {
         setInventoryInitialCat('all');
         setShowInventory(prev => !prev);
-      } else if (e.key === 'x' || e.key === 'X') {
-        onToggleLayer('laraNude');
-        cameraState.invalidate?.();
       } else if (e.key === 'a' || e.key === 'A') {
         onToggleLayer('aiZones');
         cameraState.invalidate?.();
