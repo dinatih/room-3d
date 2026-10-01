@@ -168,7 +168,7 @@ export function useCameraShortcuts({
         return;
       }
 
-      if (e.key === 'm' || e.key === 'M') {
+      if (!e.altKey && (e.key === 'm' || e.key === 'M')) {
         const curX = cameraState.walkerX ?? walkPos.current.x;
         const curZ = cameraState.walkerZ ?? walkPos.current.z;
         if (modeRef.current === 'walk') {
