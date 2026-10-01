@@ -107,7 +107,7 @@ function useHandleGeo(mancheDir: number = 1) {
 
       // Rose (circular plate)
       addGeo(new THREE.CylinderGeometry(3, 3, 1, 12), 0, 0, zBase, Math.PI / 2, 0, 0);
-      
+
       // Tige
       addGeo(new THREE.CylinderGeometry(R, R, 5, 8), 0, 0, zMid, Math.PI / 2, 0, 0);
 
@@ -200,7 +200,7 @@ function DoorImpl({
   });
 
   return (
-    <group position={[0, 2.8, 0]}>
+    <group position={[0, 0, 0]}>
       <mesh geometry={frameGeo} material={frameMaterial} castShadow receiveShadow />
 
       <group ref={doorRef} position={[pivotX, 0, 0]}>
@@ -208,7 +208,7 @@ function DoorImpl({
         <mesh position={[panelX, H / 2, 0]} material={doorPanelMaterial} castShadow receiveShadow>
           <boxGeometry args={[W, H, T]} />
         </mesh>
-        
+
         {/* Poignées */}
         <mesh position={[handleX, 100, 0]} geometry={handleGeo} material={doorHandleMaterial} />
       </group>
