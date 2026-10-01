@@ -200,7 +200,7 @@ function DoorImpl({
   });
 
   return (
-    <group position={[0, -H / 2, 0]}>
+    <group position={[0, 2.8, 0]}>
       <mesh geometry={frameGeo} material={frameMaterial} castShadow receiveShadow />
 
       <group ref={doorRef} position={[pivotX, 0, 0]}>

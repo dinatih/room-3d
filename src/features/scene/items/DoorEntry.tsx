@@ -105,7 +105,7 @@ export function DoorEntry({ actionState, onSize }: SceneItemProps) {
   });
 
   return (
-    <group position={[0, -H / 2, 0]}>
+    <group position={[0, 0, 0]}>
       <mesh geometry={frames.red} material={redFrameMaterial} castShadow />
       <mesh geometry={frames.wht} material={whiteFrameMaterial} castShadow />
 
