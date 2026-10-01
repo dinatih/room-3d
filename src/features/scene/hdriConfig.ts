@@ -23,13 +23,11 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'dikhololo_night', name: 'Dikhololo - Nuit étoilée & Camp 🌌', url: '/environment/hdri/dikhololo_night_4k.hdr', type: 'hdr' },
 
   // --- Studios photo & Intérieurs Design ---
-  { id: 'fly_studio_05', name: 'Studio Fly à contraste élevé 5 💡🎥', url: '/environment/hdri/fly-studio-05_4K.hdr', type: 'hdr' },
 
   // --- Auto-generated city/environment HDRIs ---
   { id: 'ferndale_studio_10_4k', name: 'ferndale studio 10 4k', url: '/environment/hdri/ferndale_studio_10_4k.hdr', type: 'hdr' },
 
   { id: 'misty_pines_4k', name: 'misty pines 4k', url: '/environment/hdri/misty_pines_4k.hdr', type: 'hdr' },
-  { id: 'modern_buildings_night_4k', name: 'modern buildings night 4k', url: '/environment/hdri/modern_buildings_night_4k.hdr', type: 'hdr' },
 
   { id: 'pool_4k', name: 'pool 4k', url: '/environment/hdri/pool_4k.hdr', type: 'hdr' },
 
@@ -39,7 +37,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'industrial_sunset_02_puresky_4k', name: 'industrial sunset 02 puresky 4k', url: '/environment/hdri/industrial_sunset_02_puresky_4k.hdr', type: 'hdr' },
   { id: 'sandsloot_4k', name: 'sandsloot 4k', url: '/environment/hdri/sandsloot_4k.hdr', type: 'hdr' },
   { id: 'satara_night_4k', name: 'satara night 4k', url: '/environment/hdri/satara_night_4k.hdr', type: 'hdr' },
-  { id: 'shanghai_bund_4k', name: 'shanghai bund 4k', url: '/environment/hdri/shanghai_bund_4k.hdr', type: 'hdr' },
   { id: 'spiaggia_di_mondello_4k', name: 'spiaggia di mondello 4k', url: '/environment/hdri/spiaggia_di_mondello_4k.hdr', type: 'hdr' },
 
   { id: 'tcom_colorfulalley_colorful_alley_8k_hdri_sphere_paris', name: 'TCom ColorfulAlley colorful alley 8K hdri sphere PARIS', url: '/environment/hdri/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere-PARIS.hdr', type: 'hdr' },
