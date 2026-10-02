@@ -183,7 +183,6 @@ const initialLayers: LayerState = {
   debugNpcCollisions: false,
   furnitureCollisions: true,
   debugFurnitureCollisions: false,
-  thoughtBubble: true,
   fpvHeadBobbing: false,
   fpvRealisticEyes: true,
   fpvStabilization: true,

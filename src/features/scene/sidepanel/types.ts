@@ -153,7 +153,6 @@ export interface LayerState {
   wigHeadCollisionRadius?: number;
   characterShadows: boolean;
   characterWireframe?: boolean;
-  thoughtBubble?: boolean;
   fpvHeadBobbing?: boolean;
   fpvRealisticEyes?: boolean;
   fpvStabilization?: boolean;

@@ -457,9 +457,6 @@ export function Studio() {
         if (next) {
           store.setHdri(next.id);
         }
-      } else if (e.key === '6' || e.code === 'Digit6' || e.code === 'Numpad6') {
-        onToggleLayer('thoughtBubble');
-        cameraState.invalidate?.();
       } else if (e.key === '7' || e.code === 'Digit7' || e.code === 'Numpad7') {
         onToggleLayer('laraPistols');
         cameraState.invalidate?.();

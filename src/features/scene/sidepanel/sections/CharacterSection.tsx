@@ -421,7 +421,6 @@ export function CharacterSection({
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}
       {layerBtn('cyan', 'Squelettes / Bones 🦴 (K)', 'skeleton')}
       {layerBtn('cyan', 'Fil de fer (Wireframe) 🕸️', 'characterWireframe')}
-      {layerBtn('teal', 'Bulle de pensée 💭 (Logs)', 'thoughtBubble')}
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
           <div className="d-flex justify-content-between align-items-center mb-1">

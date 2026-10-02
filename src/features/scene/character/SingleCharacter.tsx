@@ -33,7 +33,6 @@ import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform } from '../animations/animationResolver';
 import { getCrossfadeDuration } from '../animations/animationTransitions';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
-import { CharacterThoughtBubble } from '../CharacterThoughtBubble';
 
 import type { SingleCharacterProps } from './characterTypes';
 import { updateCharacterLayers } from './characterLayers';
@@ -122,7 +121,6 @@ export function SingleCharacter({
   const laraRealisticTextures = useSceneStore(state => state.layers.laraRealisticTextures ?? false);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
-  const showThoughtBubble = useSceneStore(state => state.layers.thoughtBubble ?? true);
   const cameraMode = useSceneStore(state => state.cameraMode);
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
   const aiFullTour = useSceneStore(state => state.extraStates.aiFullTour);
@@ -1147,14 +1145,6 @@ export function SingleCharacter({
         isActive ? <GroundPoint color="#0058a3" /> : <GroundPoint color="#ff2222" />
       ) : (
         isDuoRoleB && <GroundPoint color="#ff2222" />
-      )}
-      {!isPreview && isActive && showThoughtBubble && (
-        <CharacterThoughtBubble
-          characterId={id}
-          characterName={charLabel}
-          isActive={isActive}
-          isFirstPerson={cameraMode === 'fpv' || cameraState.mode === 'fpv' || cameraState.isXR}
-        />
       )}
     </group>
   );
