@@ -8,15 +8,17 @@ import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
 import { CategoryLayerGroup } from '../sceneLayer';
 import {
-  ROOM_W, ROOM_D, WALL_H, BATH_WEST_WALL, DOOR_START, DOOR_END,
+  WALL_H,
+  ROOM_WEST_WALL, ROOM_NORTH_WALL, ROOM_EAST_WALL, ROOM_SOUTH_WALL,
+  DOOR_START, DOOR_END,
   DOOR_BATH_START, DOOR_BATH_END,
-  KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL, pSouth, DiagWall,
-  BATH_EAST_WALL,
-  CORRIDOR_WEST_WALL,
-  pX,
+  KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL,
+  BATH_WEST_WALL, BATH_NORTH_WALL, BATH_EAST_WALL, BATH_SOUTH_WALL,
+  CORRIDOR_WEST_WALL, CORRIDOR_NORTH_WALL,
+  PARTITION_THICKNESS, DiagWall,
+  pSouth, pNorth, pEast, pWest,
 } from '../wallData';
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
-import { PARTITION_THICKNESS, BATH_SOUTH_WALL, CORRIDOR_NORTH_WALL } from '../wallData';
 import {
   COLORS, skirtingMat, noCapMat, slabConcreteTop, slabConcreteSide,
   boxFaceMats, qrGeo
@@ -26,18 +28,7 @@ import { P } from './Walls';
 const BLDG_Z_MIN = -30;
 const CEIL_THICK = 20;
 
-const INT_X_WEST = 0;
-const INT_X_NICHE = BATH_WEST_WALL;
-const INT_X_KITCHEN_L = KITCHEN_WEST_WALL;
-const INT_X_KITCHEN_R = KITCHEN_EAST_WALL;
 const INT_X_DOOR_S = DOOR_START;
-const INT_X_EAST = ROOM_W;
-
-const INT_Z_NORTH = 0;
-const INT_Z_NICHE_S = pSouth('niche-beam');
-const INT_Z_ROOM_S = ROOM_D;
-const INT_Z_KITCHEN_B = KITCHEN_SOUTH_WALL;
-const INT_Z_BATH_N = KITCHEN_SOUTH_WALL + PARTITION_THICKNESS;
 
 const ceilBottomBack = new THREE.MeshStandardMaterial({
   color: COLORS.wall, roughness: 0.35, envMapIntensity: 0.15,
@@ -200,23 +191,23 @@ export function Parquet() {
     const WALL_SOUTH_FACE = CORRIDOR_NORTH_WALL;
 
     const shape = new THREE.Shape([
-      new THREE.Vector2(INT_X_WEST,      -INT_Z_NORTH),
-      new THREE.Vector2(INT_X_WEST,      -INT_Z_NICHE_S),
-      new THREE.Vector2(INT_X_NICHE,     -INT_Z_NICHE_S),
-      new THREE.Vector2(INT_X_NICHE,     -INT_Z_ROOM_S),
-      new THREE.Vector2(INT_X_WEST,      -INT_Z_ROOM_S),
-      new THREE.Vector2(INT_X_KITCHEN_L, -INT_Z_ROOM_S),
-      new THREE.Vector2(INT_X_KITCHEN_L, -INT_Z_KITCHEN_B),
-      new THREE.Vector2(INT_X_KITCHEN_R, -INT_Z_KITCHEN_B),
-      new THREE.Vector2(INT_X_KITCHEN_R, -INT_Z_ROOM_S),
-      new THREE.Vector2(INT_X_DOOR_S,    -INT_Z_ROOM_S),
+      new THREE.Vector2(ROOM_WEST_WALL,      -ROOM_NORTH_WALL),
+      new THREE.Vector2(ROOM_WEST_WALL,      -pSouth('niche-beam')),
+      new THREE.Vector2(BATH_WEST_WALL,     -pSouth('niche-beam')),
+      new THREE.Vector2(BATH_WEST_WALL,     -ROOM_SOUTH_WALL),
+      new THREE.Vector2(ROOM_WEST_WALL,      -ROOM_SOUTH_WALL),
+      new THREE.Vector2(KITCHEN_WEST_WALL, -ROOM_SOUTH_WALL),
+      new THREE.Vector2(KITCHEN_WEST_WALL, -KITCHEN_SOUTH_WALL),
+      new THREE.Vector2(KITCHEN_EAST_WALL, -KITCHEN_SOUTH_WALL),
+      new THREE.Vector2(KITCHEN_EAST_WALL, -ROOM_SOUTH_WALL),
+      new THREE.Vector2(INT_X_DOOR_S,    -ROOM_SOUTH_WALL),
       new THREE.Vector2(INT_X_DOOR_S,    -parquetDiagZ),
-      new THREE.Vector2(INT_X_EAST,      -DiagWall.A.z),
-      new THREE.Vector2(INT_X_EAST,      -WALL_SOUTH_FACE),
+      new THREE.Vector2(ROOM_EAST_WALL,      -DiagWall.A.z),
+      new THREE.Vector2(ROOM_EAST_WALL,      -WALL_SOUTH_FACE),
       new THREE.Vector2(WALL_SE_W,       -WALL_SOUTH_FACE),
-      new THREE.Vector2(WALL_SE_W,       -INT_Z_ROOM_S),
-      new THREE.Vector2(INT_X_EAST,      -INT_Z_ROOM_S),
-      new THREE.Vector2(INT_X_EAST,      -INT_Z_NORTH),
+      new THREE.Vector2(WALL_SE_W,       -ROOM_SOUTH_WALL),
+      new THREE.Vector2(ROOM_EAST_WALL,      -ROOM_SOUTH_WALL),
+      new THREE.Vector2(ROOM_EAST_WALL,      -ROOM_NORTH_WALL),
     ]);
     const g = new THREE.ShapeGeometry(shape);
     const tex = makeParquetTex();
@@ -248,10 +239,10 @@ export function Tile() {
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
     const baseTex = makeTileTex();
 
-    const Ax = INT_X_NICHE,  Az = INT_Z_BATH_N;
-    const Bx = INT_X_NICHE,  Bz = DiagWall.A.z + (INT_X_NICHE - DiagWall.A.x) * DiagWall.slope;
+    const Ax = BATH_WEST_WALL,  Az = BATH_NORTH_WALL;
+    const Bx = BATH_WEST_WALL,  Bz = DiagWall.A.z + (BATH_WEST_WALL - DiagWall.A.x) * DiagWall.slope;
     const Cx = INT_X_DOOR_S, Cz = DiagWall.A.z + (INT_X_DOOR_S - DiagWall.A.x) * DiagWall.slope;
-    const Dx = INT_X_DOOR_S, Dz = INT_Z_BATH_N;
+    const Dx = INT_X_DOOR_S, Dz = BATH_NORTH_WALL;
 
     const positions = new Float32Array([
       Ax, 0, Az,  Bx, 0, Bz,  Cx, 0, Cz,
@@ -367,44 +358,39 @@ export function Baseboards() {
   const CW_ENTRY = 5.5;
 
   const parquetDiagZ = DiagWall.A.z + (INT_X_DOOR_S - DiagWall.A.x) * DiagWall.slope;
-  const diagParquetLen = Math.hypot(INT_X_EAST - INT_X_DOOR_S, DiagWall.A.z - parquetDiagZ);
+  const diagParquetLen = Math.hypot(ROOM_EAST_WALL - INT_X_DOOR_S, DiagWall.A.z - parquetDiagZ);
 
   const corridorZEnd = DiagWall.A.z + (CORRIDOR_WEST_WALL - DiagWall.A.x) * DiagWall.slope;
   const diagCorridorTotalLen = Math.hypot(DiagWall.A.x - CORRIDOR_WEST_WALL, DiagWall.A.z - corridorZEnd);
 
   // Placard couloir
-  const CL_N = CORRIDOR_NORTH_WALL;
-  const CL_S = INT_Z_KITCHEN_B;
-  const CL_W = INT_X_KITCHEN_R + PARTITION_THICKNESS;
-  const CL_E = CORRIDOR_WEST_WALL;
-
   return (
     <group name="skirting-baseboards" userData={{ brickType: 'skirting' }}>
       {/* ── Séjour — Périphérie ────────────────────────────────────────────────── */}
-      <BaseboardX x1={INT_X_WEST} x2={INT_X_EAST} z={INT_Z_NORTH} dir="+Z" />
-      <BaseboardZ z1={INT_Z_NORTH} z2={INT_Z_ROOM_S} x={INT_X_EAST} dir="-X" />
-      <BaseboardX x1={DOOR_END + DOOR_CLEARANCE} x2={INT_X_EAST} z={INT_Z_ROOM_S} dir="-Z" />
-      <BaseboardX x1={INT_X_KITCHEN_R} x2={DOOR_START - DOOR_CLEARANCE} z={INT_Z_ROOM_S} dir="-Z" />
-      <BaseboardX x1={INT_X_NICHE} x2={INT_X_KITCHEN_L} z={INT_Z_ROOM_S} dir="-Z" />
-      <BaseboardZ z1={INT_Z_NICHE_S} z2={INT_Z_ROOM_S} x={INT_X_NICHE} dir="+X" />
-      <BaseboardX x1={INT_X_NICHE} x2={INT_X_WEST} z={INT_Z_NICHE_S} dir="+Z" />
-      <BaseboardZ z1={INT_Z_NORTH} z2={INT_Z_NICHE_S} x={INT_X_WEST} dir="+X" />
+      <BaseboardX x1={ROOM_WEST_WALL} x2={ROOM_EAST_WALL} z={ROOM_NORTH_WALL} dir="+Z" />
+      <BaseboardZ z1={ROOM_NORTH_WALL} z2={ROOM_SOUTH_WALL} x={ROOM_EAST_WALL} dir="-X" />
+      <BaseboardX x1={DOOR_END + DOOR_CLEARANCE} x2={ROOM_EAST_WALL} z={ROOM_SOUTH_WALL} dir="-Z" />
+      <BaseboardX x1={KITCHEN_EAST_WALL} x2={DOOR_START - DOOR_CLEARANCE} z={ROOM_SOUTH_WALL} dir="-Z" />
+      <BaseboardX x1={BATH_WEST_WALL} x2={KITCHEN_WEST_WALL} z={ROOM_SOUTH_WALL} dir="-Z" />
+      <BaseboardZ z1={pSouth('niche-beam')} z2={ROOM_SOUTH_WALL} x={BATH_WEST_WALL} dir="+X" />
+      <BaseboardX x1={BATH_WEST_WALL} x2={ROOM_WEST_WALL} z={pSouth('niche-beam')} dir="+Z" />
+      <BaseboardZ z1={ROOM_NORTH_WALL} z2={pSouth('niche-beam')} x={ROOM_WEST_WALL} dir="+X" />
 
       {/* ── Cuisine ────────────────────────────────────────────────────────────── */}
-      <BaseboardZ z1={INT_Z_ROOM_S} z2={INT_Z_KITCHEN_B} x={INT_X_KITCHEN_R} dir="-X" />
-      <BaseboardX x1={INT_X_KITCHEN_L} x2={INT_X_KITCHEN_R} z={INT_Z_KITCHEN_B} dir="-Z" />
-      <BaseboardZ z1={INT_Z_ROOM_S} z2={INT_Z_KITCHEN_B} x={INT_X_KITCHEN_L} dir="+X" />
+      <BaseboardZ z1={ROOM_SOUTH_WALL} z2={KITCHEN_SOUTH_WALL} x={KITCHEN_EAST_WALL} dir="-X" />
+      <BaseboardX x1={KITCHEN_WEST_WALL} x2={KITCHEN_EAST_WALL} z={KITCHEN_SOUTH_WALL} dir="-Z" />
+      <BaseboardZ z1={ROOM_SOUTH_WALL} z2={KITCHEN_SOUTH_WALL} x={KITCHEN_WEST_WALL} dir="+X" />
 
       {/* ── Couloir ────────────────────────────────────────────────────────────── */}
-      <BaseboardZ z1={CORRIDOR_NORTH_WALL} z2={DiagWall.A.z} x={INT_X_EAST} dir="-X" />
-      <BaseboardX x1={DOOR_END + DOOR_CLEARANCE} x2={INT_X_EAST} z={CORRIDOR_NORTH_WALL} dir="+Z" />
-      <BaseboardZ z1={CL_S} z2={DOOR_BATH_START - DOOR_CLEARANCE} x={CORRIDOR_WEST_WALL} dir="+X" />
+      <BaseboardZ z1={CORRIDOR_NORTH_WALL} z2={DiagWall.A.z} x={ROOM_EAST_WALL} dir="-X" />
+      <BaseboardX x1={DOOR_END + DOOR_CLEARANCE} x2={ROOM_EAST_WALL} z={CORRIDOR_NORTH_WALL} dir="+Z" />
+      <BaseboardZ z1={KITCHEN_SOUTH_WALL} z2={DOOR_BATH_START - DOOR_CLEARANCE} x={CORRIDOR_WEST_WALL} dir="+X" />
       <BaseboardZ z1={DOOR_BATH_END + DOOR_CLEARANCE} z2={parquetDiagZ} x={CORRIDOR_WEST_WALL} dir="+X" />
 
       {/* ── Placard couloir ────────────────────────────────────────────────────── */}
-      <BaseboardX x1={CL_W} x2={CL_E + SKIRTING_D} z={CL_N} dir="+Z" />
-      <BaseboardX x1={CL_W} x2={CL_E} z={CL_S} dir="-Z" />
-      <BaseboardZ z1={CL_N} z2={CL_S} x={CL_W} dir="+X" />
+      <BaseboardX x1={KITCHEN_EAST_WALL + PARTITION_THICKNESS} x2={CORRIDOR_WEST_WALL} z={CORRIDOR_NORTH_WALL} dir="+Z" />
+      <BaseboardX x1={KITCHEN_EAST_WALL + PARTITION_THICKNESS} x2={CORRIDOR_WEST_WALL} z={KITCHEN_SOUTH_WALL} dir="-Z" />
+      <BaseboardZ z1={CORRIDOR_NORTH_WALL} z2={KITCHEN_SOUTH_WALL} x={KITCHEN_EAST_WALL + PARTITION_THICKNESS} dir="+X" />
 
       {/* ── Mur diagonal ───────────────────────────────────────────────────────── */}
       <DiagBaseboard startD={0} endD={Math.max(0, DiagWall.door.start - CW_ENTRY)} />
@@ -418,6 +404,7 @@ export function BathSkirting() {
   const SH_T = 10;
   const SD_T = 1;
   const y = SH_T / 2;
+  const DOOR_CLEARANCE = 1.5;
 
   const tileMat = useMemo(() => {
     const tex = makeTileTex();
@@ -429,60 +416,45 @@ export function BathSkirting() {
     });
   }, []);
 
-  const BATH_E_FACE  = BATH_EAST_WALL;
-  const BATH_S_FACE  = BATH_SOUTH_WALL;
-  const SHOWER_E_X   = pX('shower-ne');
+  const Bz = DiagWall.A.z + (BATH_WEST_WALL - DiagWall.A.x) * DiagWall.slope;
+  const Cz = DiagWall.A.z + (BATH_EAST_WALL - DiagWall.A.x) * DiagWall.slope;
 
-  const Bz = DiagWall.A.z + (INT_X_NICHE  - DiagWall.A.x) * DiagWall.slope;
-  const corridorXEnd = BATH_E_FACE;
-  const Cz = DiagWall.A.z + (corridorXEnd - DiagWall.A.x) * DiagWall.slope;
-
-  const CORR_DOOR_S = DOOR_BATH_START;
-  const CORR_DOOR_E = DOOR_BATH_END;
-
-  const showerWallZCenter1 = KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2;
-  const showerWallZCenter2 = showerWallZCenter1 + 70;
-  const showerWallZ1 = showerWallZCenter1 + PARTITION_THICKNESS / 2;
-  const showerWallZ2 = showerWallZCenter2 - PARTITION_THICKNESS / 2;
-
-  const dC = Math.sqrt((corridorXEnd - DiagWall.A.x) ** 2 + (Cz - DiagWall.A.z) ** 2);
-  const dB = Math.sqrt((INT_X_NICHE  - DiagWall.A.x) ** 2 + (Bz - DiagWall.A.z) ** 2);
+  const dC = Math.hypot(DiagWall.A.x - BATH_EAST_WALL, DiagWall.A.z - Cz);
+  const dB = Math.hypot(DiagWall.A.x - BATH_WEST_WALL, DiagWall.A.z - Bz);
   const dm = (dC + dB) / 2;
   const { x: diagX, z: diagZ } = DiagWall.p(dm, SD_T / 2);
   const diagLen = dB - dC;
 
+  const SkirtX = ({ x1, x2, z, dir }: { x1: number; x2: number; z: number; dir: '+Z' | '-Z' }) => {
+    const minX = Math.min(x1, x2), maxX = Math.max(x1, x2), len = maxX - minX;
+    if (len <= 0) return null;
+    return <P w={len} h={SH_T} d={SD_T} x={(minX + maxX) / 2} y={y} z={dir === '+Z' ? z + SD_T / 2 : z - SD_T / 2} mat={tileMat} />;
+  };
+
+  const SkirtZ = ({ z1, z2, x, dir }: { z1: number; z2: number; x: number; dir: '+X' | '-X' }) => {
+    const minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2), len = maxZ - minZ;
+    if (len <= 0) return null;
+    return <P w={SD_T} h={SH_T} d={len} x={dir === '+X' ? x + SD_T / 2 : x - SD_T / 2} y={y} z={(minZ + maxZ) / 2} mat={tileMat} />;
+  };
+
   return (
     <group name="skirting-bath" userData={{ brickType: 'skirting' }}>
-      <P w={INT_X_DOOR_S - INT_X_NICHE} h={SH_T} d={SD_T}
-         x={(INT_X_NICHE + INT_X_DOOR_S) / 2} y={y} z={INT_Z_BATH_N + SD_T / 2}
-         mat={tileMat} />
+      {/* Mur Nord SDB */}
+      <SkirtX x1={BATH_WEST_WALL} x2={BATH_EAST_WALL} z={BATH_NORTH_WALL} dir="+Z" />
 
-      <P w={SD_T} h={SH_T} d={Bz - INT_Z_BATH_N}
-         x={INT_X_NICHE + SD_T / 2} y={y} z={(INT_Z_BATH_N + Bz) / 2}
-         mat={tileMat} />
+      {/* Mur Ouest SDB */}
+      <SkirtZ z1={BATH_NORTH_WALL} z2={Bz} x={BATH_WEST_WALL} dir="+X" />
 
-      <P w={SD_T} h={SH_T} d={(CORR_DOOR_S - 1.5) - INT_Z_BATH_N}
-         x={BATH_E_FACE - SD_T / 2} y={y} z={(INT_Z_BATH_N + (CORR_DOOR_S - 1.5)) / 2}
-         mat={tileMat} />
-      <P w={SD_T} h={SH_T} d={BATH_S_FACE - (CORR_DOOR_E + 1.5)}
-         x={BATH_E_FACE - SD_T / 2} y={y} z={((CORR_DOOR_E + 1.5) + BATH_S_FACE) / 2}
-         mat={tileMat} />
+      {/* Cloison Est SDB (autour de la porte) */}
+      <SkirtZ z1={BATH_NORTH_WALL} z2={DOOR_BATH_START - DOOR_CLEARANCE} x={BATH_EAST_WALL} dir="-X" />
+      <SkirtZ z1={DOOR_BATH_END + DOOR_CLEARANCE} z2={BATH_SOUTH_WALL} x={BATH_EAST_WALL} dir="-X" />
 
-      <P w={PARTITION_THICKNESS} h={SH_T} d={SD_T}
-         x={65} y={y} z={showerWallZCenter1 - PARTITION_THICKNESS / 2 - SD_T / 2}
-         mat={tileMat} />
+      {/* Douche (retour Nord et paroi Est) */}
+      <SkirtX x1={pWest('shower-ne')} x2={pEast('shower-ne')} z={pNorth('shower-ne')} dir="-Z" />
+      <SkirtZ z1={pNorth('shower-ne')} z2={pNorth('shower-se')} x={pEast('shower-ne')} dir="+X" />
 
-      <P w={SD_T} h={SH_T} d={PARTITION_THICKNESS}
-         x={65 + PARTITION_THICKNESS / 2 + SD_T / 2} y={y} z={showerWallZCenter1}
-         mat={tileMat} />
-
-      <P w={SD_T} h={SH_T} d={showerWallZ2 - showerWallZ1}
-         x={SHOWER_E_X + SD_T / 2} y={y} z={(showerWallZ1 + showerWallZ2) / 2}
-         mat={tileMat} />
-
-      <mesh position={[diagX, y, diagZ]} rotation-y={DiagWall.rotY}
-            ref={(m) => { if (m) m.material = tileMat as any; }}
-            castShadow receiveShadow>
+      {/* Mur diagonal */}
+      <mesh position={[diagX, y, diagZ]} rotation-y={DiagWall.rotY} material={tileMat} castShadow receiveShadow>
         <boxGeometry args={[SD_T, SH_T, diagLen]} />
       </mesh>
     </group>

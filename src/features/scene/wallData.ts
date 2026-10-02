@@ -174,7 +174,7 @@ export const PILLAR_DEFS = [
   { id: 'kitchen-se',     x: _KITCHEN_EAST_WALL_X,   z: _BATH_KITCHEN_WALL_Z, w: PT, d: PT },
 
   // ── Huisseries et Jambages de portes ──────────────────────────────────────
-  { id: 'door-living-w',  x: DOOR_START - PT / 2,   z: _ROOM_CORRIDOR_WALL_Z,     w: PT, d: PT },
+  { id: 'door-living-w',  x: _BATH_CORRIDOR_WALL_X,   z: _ROOM_CORRIDOR_WALL_Z,     w: PT, d: PT },
   { id: 'door-living-e',  x: DOOR_END + PT / 2,     z: _ROOM_CORRIDOR_WALL_Z,     w: PT, d: PT },
   { id: 'door-bath-n',    x: _BATH_CORRIDOR_WALL_X, z: _CORRIDOR_NORTH_WALL + 109 + 3 - PT / 2, w: PT, d: PT },
   { id: 'door-bath-s',    x: _BATH_CORRIDOR_WALL_X, z: _CORRIDOR_NORTH_WALL + 109 + 89 + PT / 2, w: PT, d: PT },
