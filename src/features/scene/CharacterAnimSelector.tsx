@@ -85,8 +85,8 @@ const MAX_RECENT = 2;
 export function CharacterAnimSelector({
   activeAnimValue = 'idle',
   onSelectAnim,
-  maxHeight = '55vh',
-  listMaxHeight = '40vh',
+  maxHeight = 'min(45vh, 320px)',
+  listMaxHeight = 'min(24vh, 150px)',
   isMobile: isMobileProp,
   onClose,
   title,
@@ -205,8 +205,8 @@ export function CharacterAnimSelector({
 
   return (
     <div
-      className="d-flex flex-column h-100 bg-transparent overflow-hidden text-dark"
-      style={{ maxHeight, height: '100%', outline: 'none' }}
+      className="d-flex flex-column bg-transparent overflow-hidden text-dark"
+      style={{ maxHeight, outline: 'none' }}
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >

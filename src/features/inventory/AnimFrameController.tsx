@@ -320,6 +320,8 @@ export function AnimFrameController({
             onSelectAnim={handleSelectAnim}
             onClose={() => setShowAnimSelector(false)}
             title="Animations Personnage"
+            maxHeight="min(45vh, 320px)"
+            listMaxHeight="min(24vh, 150px)"
             autoFocus={true}
           />
         </div>
