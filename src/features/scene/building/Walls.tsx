@@ -13,7 +13,7 @@ import {
 import { WoodenFencePanel } from '../items/WoodenFencePanel';
 import { GardenFrontWallScan } from './GardenFrontWallScan';
 import {
-  wallMat, northMats, southMats, MAT_MAP, caplessX, caplessZ, makeExtrudeGeo
+  wallMat, southMats, MAT_MAP, caplessX, caplessZ, makeExtrudeGeo
 } from './buildingCommon';
 import { MergedStaticGroup } from './MergedStaticGroup';
 
@@ -161,7 +161,6 @@ export function PillarLabels() {
 
 export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
   const wallEdges = useSceneStore(state => state.layers.wallEdges);
-  const gardenWallScan = useSceneStore(state => state.layers.gardenWallScan);
   const showLabels = pillarsOnly || wallEdges;
 
   const diagGeos = useMemo(() => ({
@@ -229,38 +228,11 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 </group>
               ))}
 
-              {/* Mur en face du jardin (parallèle au Mur diag) */}
-              {(() => {
-                const wallLen = 1200;
-                const cx = 150;
-                const cz = -786.33;
-                const rotY = DiagWall.rotY + Math.PI / 2;
-                return gardenWallScan ? (
-                  <GardenFrontWallScan
-                    position={[cx, 0, cz]}
-                    rotationY={rotY}
-                    userData={{
-                      hoverAction: { label: 'Mur diagonal jardin', actionId: 'garden-wall-toggle' },
-                    }}
-                  />
-                ) : (
-                  <mesh
-                    ref={(m) => { if (m) m.material = northMats as any; }}
-                    position={[cx, WALL_H / 2, cz]}
-                    rotation-y={rotY}
-                    castShadow
-                    receiveShadow
-                    userData={{
-                      animUnit: true,
-                      brickType: 'wall',
-                      side: 'gardenFront',
-                      hoverAction: { label: 'Mur diagonal jardin', actionId: 'garden-wall-toggle' },
-                    }}
-                  >
-                    <boxGeometry args={[wallLen, WALL_H, 40]} />
-                  </mesh>
-                );
-              })()}
+              {/* Mur en face du jardin (Scan 3D Seoul) */}
+              <GardenFrontWallScan
+                position={[150, 0, -786.33]}
+                rotationY={DiagWall.rotY + Math.PI / 2}
+              />
             </group>
           </MergedStaticGroup>
         )}

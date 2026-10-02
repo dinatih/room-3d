@@ -32,7 +32,6 @@ export function InteractiveSection({
 }: InteractiveSectionProps) {
   const furniture = useSceneStore(state => state.furniture);
   const toggleFurniture = useSceneStore(state => state.toggleFurniture);
-  const gardenWallScan = useSceneStore(state => state.layers.gardenWallScan);
 
   const triggerBtn = (label: string, actionKey: string, badgeLabel = 'Action') => {
     return (
@@ -131,9 +130,6 @@ export function InteractiveSection({
       {triggerBtn('WC Couvercle', 'wc-lid-toggle')}
       {triggerBtn('WC Siège', 'wc-seat-toggle')}
       {triggerBtn('WC Chasse d\'eau', 'wc-flush')}
-      
-      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">JARDIN & EXTÉRIEUR</div>
-      {triggerBtn('Mur diagonal jardin', 'garden-wall-scan', gardenWallScan ? 'SCAN 3D' : 'CLASSIQUE')}
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">EXPÉRIENCES & AVION ✈</div>
       <button

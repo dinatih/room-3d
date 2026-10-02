@@ -147,10 +147,6 @@ const ACTIONS = {
       label: wig.name
     }))
   ] },
-  'garden-wall-toggle': {
-    btnLabel: () => useSceneStore.getState().layers.gardenWallScan ? 'Basculer en mur classique' : 'Basculer en Scan 3D (Seoul)',
-    toggleKey: 'garden-wall-scan',
-  },
   utdrag: {
     btnLabel: () => useSceneStore.getState().extraStates.utdrag ? 'Rentrer la hotte' : 'Déplier la hotte',
     toggleKey: 'utdrag',

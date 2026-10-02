@@ -110,7 +110,6 @@ export interface LayerState {
   realSun:      boolean;
   bermudaGrass: boolean;
   groundType?:  GroundType;
-  gardenWallScan: boolean;
   walker:       boolean;
   animals:      boolean;
   accessories:  boolean;

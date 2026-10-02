@@ -6,12 +6,14 @@ import { WALL_H } from '../wallData';
 interface GardenFrontWallScanProps {
   position?: [number, number, number];
   rotationY?: number;
+  opacity?: number;
   userData?: Record<string, any>;
 }
 
 export function GardenFrontWallScan({
   position = [150, 0, -786.33],
   rotationY = 0,
+  opacity = 0.5,
   userData,
 }: GardenFrontWallScanProps) {
   const { scene } = useGLTF('/environment/before_i_die__wall_scan_in_seoul_korea.glb');
@@ -41,8 +43,7 @@ export function GardenFrontWallScan({
         mesh.castShadow = true;
         mesh.receiveShadow = true;
 
-        // Suppression de la face arrière (-Z) pour voir à travers depuis l'extérieur,
-        // à l'identique du mur procédural (northMats).
+        // Suppression de la face arrière (-Z) pour voir à travers depuis l'extérieur.
         if (mesh.geometry) {
           const geo = mesh.geometry.clone();
           const norm = geo.attributes.normal;
@@ -69,7 +70,7 @@ export function GardenFrontWallScan({
           mesh.geometry = geo;
         }
 
-        // Conversion en MeshStandardMaterial pour réagir à l'éclairage et aux ombres
+        // Conversion en MeshStandardMaterial semi-transparent pour laisser voir la ville
         if (mesh.material) {
           const originalMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
           const map = (originalMat as any).map;
@@ -80,16 +81,26 @@ export function GardenFrontWallScan({
               roughness: 0.85,
               metalness: 0.05,
               side: THREE.FrontSide,
+              transparent: true,
+              opacity,
+              depthWrite: false,
             });
-          } else if ('side' in (originalMat as any)) {
-            (originalMat as any).side = THREE.FrontSide;
+          } else {
+            mesh.material = new THREE.MeshStandardMaterial({
+              roughness: 0.85,
+              metalness: 0.05,
+              side: THREE.FrontSide,
+              transparent: true,
+              opacity,
+              depthWrite: false,
+            });
           }
         }
       }
     });
 
     return clone;
-  }, [scene]);
+  }, [scene, opacity]);
 
   return (
     <group
