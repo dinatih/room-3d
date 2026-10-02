@@ -26,6 +26,8 @@ export const categoryLayerRegistry = new Map<number, THREE.Group>();
 interface AnimTarget {
   object: THREE.Object3D;
   origScale: THREE.Vector3;
+  origPos: THREE.Vector3;
+  localCenter: THREE.Vector3;
   worldCenter: THREE.Vector3;
   size: THREE.Vector3;
   radius: number;
@@ -40,6 +42,7 @@ interface ActiveTransition {
 }
 
 const ANIMATABLE_LAYERS: Record<string, number> = {
+  structure:     LAYER_STRUCTURE,
   furniture:     LAYER_FURNITURE,
   equipment:     LAYER_EQUIPMENT,
   furnishings:   LAYER_FURNISHINGS,
@@ -94,11 +97,24 @@ function collectAnimTargets(root: THREE.Object3D): AnimTarget[] {
       if (!unit.userData._smokeOrigScale) {
         unit.userData._smokeOrigScale = unit.scale.clone();
       }
+      if (!unit.userData._smokeOrigPos) {
+        unit.userData._smokeOrigPos = unit.position.clone();
+      }
+
+      let localCenter: THREE.Vector3;
+      if (unit.parent) {
+        unit.parent.updateWorldMatrix(true, false);
+        localCenter = unit.parent.worldToLocal(center.clone());
+      } else {
+        localCenter = center.clone();
+      }
 
       const radius = Math.max(14, Math.min(Math.max(size.x, size.z) * 0.45, 60));
       targets.push({
         object: unit,
         origScale: unit.userData._smokeOrigScale,
+        origPos: unit.userData._smokeOrigPos,
+        localCenter,
         worldCenter: center,
         size,
         radius,
@@ -107,6 +123,44 @@ function collectAnimTargets(root: THREE.Object3D): AnimTarget[] {
   });
 
   return targets;
+}
+
+// Calcule les points d'émission de fumée (points multiples si grande surface comme dalle/plafond)
+function getSmokeBurstPoints(targets: AnimTarget[]): { pos: THREE.Vector3; radius: number }[] {
+  const points: { pos: THREE.Vector3; radius: number }[] = [];
+
+  targets.forEach(tgt => {
+    const { worldCenter, size, radius } = tgt;
+    const isLarge = size.x > 180 || size.z > 180;
+
+    if (!isLarge) {
+      points.push({ pos: worldCenter, radius });
+      return;
+    }
+
+    // Répartition multi-poof sur la zone couverte par la dalle ou le plafond
+    const xCoords = [60, 150, 240];
+    const zCoords = [60, 180, 300];
+    xCoords.forEach(x => {
+      zCoords.forEach(z => {
+        points.push({
+          pos: new THREE.Vector3(x, worldCenter.y, z),
+          radius: 45,
+        });
+      });
+    });
+  });
+
+  return points;
+}
+
+function applyScaleToTarget(tgt: AnimTarget, s: number) {
+  tgt.object.scale.copy(tgt.origScale).multiplyScalar(s);
+  // Scaling centré sur le centre géométrique de l'objet
+  tgt.object.position.copy(tgt.localCenter).addScaledVector(
+    tgt.origPos.clone().sub(tgt.localCenter),
+    s
+  );
 }
 
 export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
@@ -162,7 +216,6 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
 
     // Gestion des calques non animés
     const nonAnimToggles: [number, boolean][] = [
-      [LAYER_STRUCTURE,       layers.structure],
       [LAYER_FLOOR_COVERINGS, layers.floorCoverings ?? true],
       [LAYER_AI_ZONES,        layers.aiZones ?? false],
       [LAYER_ENVIRONMENT,     layers.environment ?? true],
@@ -202,6 +255,7 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
             t.targets.forEach(tgt => {
               tgt.object.visible = true;
               tgt.object.scale.copy(tgt.origScale);
+              tgt.object.position.copy(tgt.origPos);
             });
             return false;
           }
@@ -216,17 +270,16 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
         }
 
         const now = performance.now();
+        const burstPoints = getSmokeBurstPoints(targets);
 
         if (!currentVal) {
           // ── DISPARITION (OFF) ──
           // 1. Garder le layer visible dans la caméra pendant l'animation
           camera.layers.enable(layerId);
 
-          // 2. Déclencher le nuage de fumée "Poof!" sur chaque meuble
+          // 2. Déclencher le nuage de fumée "Poof!"
           if (smokeRef.current) {
-            smokeRef.current.triggerMultiBurst(
-              targets.map(t => ({ pos: t.worldCenter, radius: t.radius }))
-            );
+            smokeRef.current.triggerMultiBurst(burstPoints);
           }
 
           // 3. Enregistrer la transition
@@ -245,14 +298,12 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
           // 2. Initialiser tous les objets à échelle quasi-nulle (masqués)
           targets.forEach(t => {
             t.object.visible = true;
-            t.object.scale.set(0.001, 0.001, 0.001);
+            applyScaleToTarget(t, 0.001);
           });
 
           // 3. Déclencher le nuage de fumée "Poof!"
           if (smokeRef.current) {
-            smokeRef.current.triggerMultiBurst(
-              targets.map(t => ({ pos: t.worldCenter, radius: t.radius }))
-            );
+            smokeRef.current.triggerMultiBurst(burstPoints);
           }
 
           // 4. Enregistrer la transition
@@ -289,13 +340,13 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
         // >= 0.55s : fin de transition et désactivation du layer Three.js
         if (elapsed < 0.05) {
           const s = 1.0 + (elapsed / 0.05) * 0.08;
-          t.targets.forEach(tgt => tgt.object.scale.copy(tgt.origScale).multiplyScalar(s));
+          t.targets.forEach(tgt => applyScaleToTarget(tgt, s));
           hasRunning = true;
           return true;
         } else if (elapsed < 0.18) {
           const p = (elapsed - 0.05) / 0.13;
           const s = Math.max(0.001, 1.08 * (1 - p));
-          t.targets.forEach(tgt => tgt.object.scale.copy(tgt.origScale).multiplyScalar(s));
+          t.targets.forEach(tgt => applyScaleToTarget(tgt, s));
           hasRunning = true;
           return true;
         } else if (elapsed < 0.55) {
@@ -309,6 +360,7 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
           t.targets.forEach(tgt => {
             tgt.object.visible = true;
             tgt.object.scale.copy(tgt.origScale);
+            tgt.object.position.copy(tgt.origPos);
           });
           camera.layers.disable(t.layerId);
           return false;
@@ -319,7 +371,7 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
         // 0.08 -> 0.28s : pop cartoon dynamique (easeOutBack) de 0 à 1.08
         // 0.28 -> 0.35s : stabilisation à 1.00
         if (elapsed < 0.08) {
-          t.targets.forEach(tgt => tgt.object.scale.set(0.001, 0.001, 0.001));
+          t.targets.forEach(tgt => applyScaleToTarget(tgt, 0.001));
           hasRunning = true;
           return true;
         } else if (elapsed < 0.28) {
@@ -329,22 +381,28 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
           const c3 = c1 + 1;
           const easeBack = 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
           const s = Math.max(0.001, easeBack);
-          t.targets.forEach(tgt => tgt.object.scale.copy(tgt.origScale).multiplyScalar(s));
+          t.targets.forEach(tgt => applyScaleToTarget(tgt, s));
           hasRunning = true;
           return true;
         } else if (elapsed < 0.35) {
           const p = (elapsed - 0.28) / 0.07;
           const s = THREE.MathUtils.lerp(1.08, 1.0, p);
-          t.targets.forEach(tgt => tgt.object.scale.copy(tgt.origScale).multiplyScalar(s));
+          t.targets.forEach(tgt => applyScaleToTarget(tgt, s));
           hasRunning = true;
           return true;
         } else if (elapsed < 0.55) {
-          t.targets.forEach(tgt => tgt.object.scale.copy(tgt.origScale));
+          t.targets.forEach(tgt => {
+            tgt.object.scale.copy(tgt.origScale);
+            tgt.object.position.copy(tgt.origPos);
+          });
           hasRunning = true;
           return true;
         } else {
           // Fin de transition d'apparition
-          t.targets.forEach(tgt => tgt.object.scale.copy(tgt.origScale));
+          t.targets.forEach(tgt => {
+            tgt.object.scale.copy(tgt.origScale);
+            tgt.object.position.copy(tgt.origPos);
+          });
           return false;
         }
       }
