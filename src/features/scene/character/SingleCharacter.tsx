@@ -512,15 +512,6 @@ export function SingleCharacter({
     loadAndPlayClip(walkerAnim);
   }, [walkerAnim, isPreview, laraGrid, loadAndPlayClip, invalidate]);
 
-  // Préchargement des animations de déploiement SkyDrop
-  useEffect(() => {
-    if (hasSkyDrop && !isPreview) {
-      loadAndPlayClip('falling');
-      loadAndPlayClip('falling-idle');
-      loadAndPlayClip('pistol-kneel-to-stand');
-    }
-  }, [hasSkyDrop, isPreview, loadAndPlayClip]);
-
   // Écouteurs de commandes utilisateur & UI (couleur, coupe, équipements, positions)
   useEffect(() => {
     const handleToggleHairColor = (e: any) => {
@@ -814,16 +805,8 @@ export function SingleCharacter({
           else from.fadeOut(0.2);
         }
 
-        const isOnceAnim = target === 'pistol-kneel-to-stand' ||
-                           target === 'anim-pistol-kneel-to-stand' ||
-                           target.includes('landing');
-        if (isOnceAnim) {
-          to.setLoop(THREE.LoopOnce, 1);
-          to.clampWhenFinished = true;
-        } else {
-          to.setLoop(THREE.LoopRepeat, Infinity);
-          to.clampWhenFinished = false;
-        }
+        to.setLoop(THREE.LoopRepeat, Infinity);
+        to.clampWhenFinished = false;
 
         if (laraGrid) {
           scene.traverse((c: any) => {

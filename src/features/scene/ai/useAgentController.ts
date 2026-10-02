@@ -49,6 +49,11 @@ export function useAgentController(
   hasSkyDrop: boolean = false,
   landingAnim: string = 'pistol-kneel-to-stand'
 ) {
+  const landingAnimId = resolveAnimationId(landingAnim);
+  const landingDuration = getAnimationDef(landingAnimId)?.duration ?? 1.4;
+  // Déduire le fondu croisé (0.2s) pour que l'enchaînement vers l'étape suivante s'opère pile à la fin du clip sans rejeu
+  const landingPhaseDuration = Math.max(0.1, landingDuration - 0.2);
+
   const firstCoords = (scenario && scenario.length > 0) ? resolveInstructionCoords(scenario[0], null) : null;
   const initialPos = (firstCoords && (firstCoords.tx !== 0 || firstCoords.tz !== 0))
     ? { x: firstCoords.tx, y: firstCoords.ty ?? 0, z: firstCoords.tz, rotY: firstCoords.rotY ?? 0 }
@@ -391,13 +396,11 @@ export function useAgentController(
       if (timerRef.current <= 0) {
         stateRef.current.y = startPosRef.current?.y ?? 0;
         statusRef.current = 'LANDING';
-        const animId = resolveAnimationId(landingAnim);
-        const landingDuration = getAnimationDef(animId)?.duration ?? 1.4;
-        timerRef.current = landingDuration;
+        timerRef.current = landingPhaseDuration;
         deployment.status = 'LANDING';
-        deployment.timer = landingDuration;
+        deployment.timer = landingPhaseDuration;
         deployment.y = stateRef.current.y;
-        stateRef.current.animation = animId;
+        stateRef.current.animation = landingAnimId;
         return stateRef.current;
       } else {
         const p_inv = timerRef.current / 6.0;
@@ -418,7 +421,7 @@ export function useAgentController(
         deployment.hasCompleted = true;
         appLog(_characterId, `🎯 Déploiement terminé (Atterrissage réussi)`);
       } else {
-        stateRef.current.animation = resolveAnimationId(landingAnim);
+        stateRef.current.animation = landingAnimId;
         return stateRef.current;
       }
     }
