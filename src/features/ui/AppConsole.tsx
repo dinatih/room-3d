@@ -65,23 +65,9 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const [visible, setVisible] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const logAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const savedHeightRef = useRef(110);
-
-  // Écoute des redimensionnements pour mémoriser la hauteur
-  useEffect(() => {
-    if (!containerRef.current || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        if (visible && entry.contentRect.height > 40) {
-          savedHeightRef.current = entry.contentRect.height;
-        }
-      }
-    });
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, [visible]);
 
   // Écoute des CustomEvents 'app-log'
   useEffect(() => {
@@ -107,10 +93,10 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Auto-scroll si non en pause
+  // Auto-scroll du panneau de logs si non en pause
   useEffect(() => {
-    if (visible && !isPaused && bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'auto' });
+    if (visible && !isPaused && logAreaRef.current) {
+      logAreaRef.current.scrollTop = logAreaRef.current.scrollHeight;
     }
   }, [logs, visible, isPaused, filterBubbleOnly]);
 
@@ -145,7 +131,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   return (
     <div
       ref={containerRef}
-      className={`position-fixed top-0 end-0 font-monospace d-flex flex-column shadow-lg ${
+      className={`position-fixed top-0 end-0 font-monospace d-flex flex-column shadow-lg overflow-hidden ${
         visible ? 'border-start border-bottom border-success border-opacity-25' : ''
       }`}
       style={{
@@ -236,8 +222,9 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
       {/* Zone des logs */}
       {visible && (
         <div
+          ref={logAreaRef}
           className="flex-grow-1 overflow-y-auto px-2 py-1 d-flex flex-column gap-1 user-select-text"
-          style={{ background: 'rgba(0, 0, 0, 0.82)' }}
+          style={{ background: 'rgba(0, 0, 0, 0.82)', minHeight: 0 }}
         >
           {displayedLogs.length === 0 && (
             <div className="text-secondary fst-italic py-1">
@@ -259,7 +246,6 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
               </div>
             );
           })}
-          <div ref={bottomRef} />
         </div>
       )}
 
