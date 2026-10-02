@@ -62,6 +62,8 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'tropical_beachstairs_8k', name: 'Tropical BeachStairs 8k', url: '/environment/hdri/Tropical_BeachStairs_8k.hdr', type: 'hdr' },
 ];
 
+export const DEFAULT_HDRI_ID = 'default';
+
 export function getRandomHdriId(): string {
   const index = Math.floor(Math.random() * HDRI_LIST.length);
   return HDRI_LIST[index].id;

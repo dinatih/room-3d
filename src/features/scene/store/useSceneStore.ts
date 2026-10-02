@@ -35,7 +35,7 @@ export function updateUrlNpcCount(count: LaraCountMode) {
   } catch {}
 }
 
-import { getRandomHdriId } from '@features/scene/hdriConfig';
+import { DEFAULT_HDRI_ID } from '@features/scene/hdriConfig';
 
 export const GRASS_TYPES: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves'];
 
@@ -289,7 +289,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   extraStates: initialExtraStates,
   activeWalkerId: initialLayers.laraCount === 1 ? 'xbot' : 'native',
   activeExtraIds: EXTRA_CHARACTERS.map(c => c.id),
-  currentHdri: getRandomHdriId(),
+  currentHdri: DEFAULT_HDRI_ID,
   measurementActive: false,
   cameraMode: 'orbit',
   isCvModalOpen: false,
