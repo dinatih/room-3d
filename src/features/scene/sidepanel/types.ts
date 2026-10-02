@@ -160,6 +160,7 @@ export interface LayerState {
   fpvStabilization?: boolean;
   fpvStabilizationFactor?: number;
   inventoryGrid?: boolean;
+  smokeTransition?: boolean;
 }
 
 export type LidarMode = 0 | 1 | 2 | 3;

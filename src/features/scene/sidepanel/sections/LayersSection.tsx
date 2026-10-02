@@ -129,6 +129,7 @@ export function LayersSection({
           ) : null;
         })()}
       </div>
+      {layerBtn('purple',    'Effet fumée (Poof!) 💨',                 'smokeTransition')}
       {layerBtn('green',     'Structure murale 🧱 (Alt+W)',            'wallStructure')}
       {layerBtn('orange',    'Revêtements sol (+ plinthes) 🪵', 'floorCoverings')}
       {layerBtn('secondary', 'Dalle et plafond 🏛️ (Alt+Q)',            'structure')}

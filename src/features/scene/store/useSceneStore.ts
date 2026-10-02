@@ -190,6 +190,7 @@ const initialLayers: LayerState = {
   fpvStabilization: true,
   fpvStabilizationFactor: 0.7,
   inventoryGrid: false,
+  smokeTransition: true,
 };
 
 const initialExtraStates: Record<string, boolean> = {
