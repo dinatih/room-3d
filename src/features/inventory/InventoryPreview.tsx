@@ -516,25 +516,6 @@ function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: str
 
 type PreviewTarget = InventoryItem | StorageSpace | null;
 
-function OverlayPanel({
-  position,
-  children,
-}: {
-  position: 'left' | 'right';
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`inventory-preview-overlay-panel ${position}`}
-      onClick={e => e.stopPropagation()}
-      onMouseDown={e => e.stopPropagation()}
-      onPointerDown={e => e.stopPropagation()}
-      onWheel={e => e.stopPropagation()}
-    >
-      {children}
-    </div>
-  );
-}
 
 export function InventoryPreview({
   item,
@@ -861,31 +842,67 @@ export function InventoryPreview({
               </button>
             </div>
           )}
-          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'flex', gap: 6, alignItems: 'center' }}>
+          <div className="position-absolute top-0 end-0 m-2 z-3 d-flex gap-2 align-items-center">
+            {showing3D && 'category' in item && ((item as any).category === 'walkers' || (item as any).category === 'wigs') && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActionStates(s => {
+                      const next = !s.showBones;
+                      if (!next) {
+                        setSelectedBoneName(null);
+                        setShowBoneTree(false);
+                      }
+                      return { ...s, showBones: next };
+                    });
+                  }}
+                  className={`btn btn-sm ${actionStates.showBones ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
+                  style={{ fontSize: 11 }}
+                  title="Afficher/masquer le squelette 3D"
+                >
+                  {actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}
+                </button>
+
+                {actionStates.showBones && (
+                  <button
+                    type="button"
+                    onClick={() => setShowBoneTree(v => !v)}
+                    className={`btn btn-sm ${showBoneTree ? 'btn-info text-white fw-bold' : 'btn-dark bg-opacity-50 border-secondary text-white'} py-1 px-2 small d-flex align-items-center gap-1`}
+                    style={{ fontSize: 11 }}
+                    title={showBoneTree ? "Masquer l'arbre des os" : "Afficher l'arborescence complète des os"}
+                  >
+                    <span>🌳</span>
+                    <span>
+                      {showBoneTree ? 'Masquer Os' : 'Arbre des Os'}
+                      {skeletonGroups.length > 0 ? ` (${skeletonGroups.reduce((acc, s) => acc + s.totalBones, 0)})` : ''}
+                    </span>
+                  </button>
+                )}
+              </>
+            )}
+
             {isHumanWalker && (
               <button
                 type="button"
                 onClick={() => setShowPnjPanel(v => !v)}
-                style={{
-                  padding: '3px 8px',
-                  fontSize: 11,
-                  background: showPnjPanel ? '#c82333' : 'rgba(0,0,0,0.55)',
-                  border: `1px solid ${showPnjPanel ? '#dc3545' : '#444'}`,
-                  borderRadius: 4,
-                  color: '#fff',
-                  cursor: 'pointer',
-                  fontWeight: showPnjPanel ? 'bold' : 'normal',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}
+                className={`btn btn-sm ${showPnjPanel ? 'btn-danger fw-bold' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small d-flex align-items-center gap-1`}
+                style={{ fontSize: 11 }}
                 title={showPnjPanel ? "Masquer la section PNJ" : "Afficher la section PNJ (Physique buste, tenues, perruques...)"}
               >
                 <span>💃</span>
                 <span>{showPnjPanel ? 'Masquer Section PNJ' : 'Section PNJ'}</span>
               </button>
             )}
-            <button onClick={() => setShowDims(v => !v)} style={{ padding: '3px 8px', fontSize: 11, background: 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📏 {showDims ? 'Masquer Dims' : 'Afficher Dims'}</button>
+
+            <button
+              type="button"
+              onClick={() => setShowDims(v => !v)}
+              className="btn btn-sm btn-dark bg-opacity-50 border-secondary text-white py-1 px-2 small"
+              style={{ fontSize: 11 }}
+            >
+              📏 {showDims ? 'Masquer Dims' : 'Afficher Dims'}
+            </button>
           </div>
           {showing3D && previewView !== 'free' && (
             <div
@@ -926,74 +943,16 @@ export function InventoryPreview({
               <span style={{ color: '#aaa', fontSize: 9 }}>↕ Molette: Zoom | Glisser: Pan</span>
             </div>
           )}
-          {showing3D && 'category' in item && ((item as any).category === 'walkers' || (item as any).category === 'wigs') && (
-            <OverlayPanel position="left">
-              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                <button
-                  onClick={() => {
-                    setActionStates(s => {
-                      const next = !s.showBones;
-                      if (!next) {
-                        setSelectedBoneName(null);
-                        setShowBoneTree(false);
-                      }
-                      return { ...s, showBones: next };
-                    });
-                  }}
-                  style={{ padding: '3px 8px', fontSize: 11, background: actionStates.showBones ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}
-                >
-                  {actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}
-                </button>
-
-                {actionStates.showBones && (
-                  <button
-                    type="button"
-                    onClick={() => setShowBoneTree(v => !v)}
-                    style={{
-                      padding: '3px 8px',
-                      fontSize: 11,
-                      background: showBoneTree ? '#0284c7' : 'rgba(0,0,0,0.5)',
-                      border: `1px solid ${showBoneTree ? '#38bdf8' : '#444'}`,
-                      borderRadius: 4,
-                      color: '#fff',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      fontWeight: showBoneTree ? 'bold' : 'normal',
-                    }}
-                    title={showBoneTree ? "Masquer l'arbre des os" : "Afficher l'arborescence complète des os (perruque et perso)"}
-                  >
-                    <span>🌳</span>
-                    <span>
-                      {showBoneTree ? 'Masquer Os' : 'Arbre des Os'}
-                      {skeletonGroups.length > 0 ? ` (${skeletonGroups.reduce((acc, s) => acc + s.totalBones, 0)})` : ''}
-                    </span>
-                  </button>
-                )}
-
-                {isHumanWalker && (
-                  <button
-                    type="button"
-                    onClick={() => setShowPnjPanel(v => !v)}
-                    style={{
-                      padding: '3px 8px',
-                      fontSize: 11,
-                      background: showPnjPanel ? '#c82333' : 'rgba(0,0,0,0.55)',
-                      border: `1px solid ${showPnjPanel ? '#dc3545' : '#444'}`,
-                      borderRadius: 4,
-                      color: '#fff',
-                      cursor: 'pointer',
-                      fontWeight: showPnjPanel ? 'bold' : 'normal',
-                    }}
-                    title={showPnjPanel ? "Masquer la section PNJ" : "Afficher la section PNJ (Physique buste, tenues, perruques...)"}
-                  >
-                    💃 {showPnjPanel ? 'Fermer PNJ' : 'Panneau PNJ'}
-                  </button>
-                )}
-              </div>
-
-              {actionStates.showBones && selectedBoneName && (
+          {/* Menu Arbre des os & Influence heatmap */}
+          {showing3D && actionStates.showBones && (showBoneTree || selectedBoneName) && (
+            <div
+              className="position-absolute top-0 start-0 m-2 mt-5 z-3 d-flex flex-column gap-2"
+              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+              onWheel={e => e.stopPropagation()}
+            >
+              {selectedBoneName && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, background: 'rgba(15, 23, 42, 0.92)', border: '1.5px solid #e63946', padding: '6px 8px', borderRadius: 6, maxWidth: 280, boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
                     <span className="text-truncate">
@@ -1031,8 +990,7 @@ export function InventoryPreview({
                 </div>
               )}
 
-              {/* Panneau Arbre Hiérarchique des os */}
-              {actionStates.showBones && showBoneTree && (
+              {showBoneTree && (
                 <SkeletonHierarchyPanel
                   skeletons={skeletonGroups}
                   selectedBoneName={selectedBoneName}
@@ -1040,37 +998,7 @@ export function InventoryPreview({
                   onClose={() => setShowBoneTree(false)}
                 />
               )}
-
-              {(item as any).category === 'walkers' && (
-                <>
-                  {!['ushiro', 'shiba-inu', 'robin-bird', 'xbot'].includes(item.id) && !isExtraCharacter(item.id) && (
-                    <>
-                      <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
-                        <option value="original">Coupe d'origine</option>
-                        {WIGS_ITEMS.map(wig => (
-                          <option key={wig.id} value={wig.id}>{wig.name}</option>
-                        ))}
-                      </select>
-
-                      <select value={actionStates.previewHairColor || 'rose'} onChange={e => setActionStates(s => ({ ...s, previewHairColor: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
-                        <option value="rose">Rose</option>
-                        <option value="naturel">Naturel</option>
-                        <option value="noir">Noir</option>
-                        <option value="brun">Brun</option>
-                        <option value="chatain">Châtain</option>
-                        <option value="blond">Blond</option>
-                        <option value="roux">Roux</option>
-                        <option value="rouge">Rouge</option>
-                        <option value="bleu">Bleu</option>
-                        <option value="vert">Vert</option>
-                        <option value="violet">Violet</option>
-                        <option value="arc-en-ciel">Arc-en-ciel</option>
-                      </select>
-                    </>
-                  )}
-                </>
-              )}
-            </OverlayPanel>
+            </div>
           )}
 
           {/* Panneau latéral Section PNJ (Persistant en DOM pour préserver le scroll) */}
@@ -1153,12 +1081,22 @@ export function InventoryPreview({
           </div>
 
           {showing3D && actionKeys.length > 0 && (
-            <OverlayPanel position="right">
+            <div className="position-absolute end-0 top-0 mt-5 me-2 z-3 d-flex flex-column gap-1">
               {actionKeys.map(key => {
                 const labels = ACTION_LABELS[key] ?? ['Ouvrir', 'Fermer'], on = !!actionStates[key];
-                return <button key={key} onClick={() => setActionStates(s => ({ ...s, [key]: !on }))} style={{ padding: '3px 8px', fontSize: 11, background: on ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{on ? labels[1] : labels[0]}</button>;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setActionStates(s => ({ ...s, [key]: !on }))}
+                    className={`btn btn-sm ${on ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
+                    style={{ fontSize: 11 }}
+                  >
+                    {on ? labels[1] : labels[0]}
+                  </button>
+                );
               })}
-            </OverlayPanel>
+            </div>
           )}
 
           {/* Debug URLs Overlay */}

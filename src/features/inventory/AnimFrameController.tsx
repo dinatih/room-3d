@@ -543,13 +543,13 @@ export function AnimFrameController({
                 <div className="btn-group btn-group-sm" role="group">
                   <select
                     className="form-select form-select-sm bg-white text-dark w-auto small border-primary"
-                    style={{ maxWidth: '140px' }}
+                    style={{ maxWidth: '165px' }}
                     value={duoPartnerId || availablePartners[0]?.id || ''}
                     onChange={(e) => onSelectDuoPartner?.(e.target.value)}
                     title="Changer le partenaire (Rôle B)"
                   >
                     {availablePartners.map(c => (
-                      <option key={c.id} value={c.id}>B: {c.name}</option>
+                      <option key={c.id} value={c.id}>B: {c.emoji} {c.name}</option>
                     ))}
                   </select>
                   <button
