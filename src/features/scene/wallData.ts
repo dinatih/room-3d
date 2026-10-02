@@ -312,12 +312,7 @@ function wallZ(xc: number, z1: number, z2: number, mat: WallMat = 'default', t =
   return splitSpan(z1, z2).map(([a, b]) => ({ axis: 'z', xc, z1: a, z2: b, mat, t }));
 }
 
-function wallX(
-  zc: number,
-  x1: number,
-  x2: number,
-  mat: WallMat = 'default',
-  t = WT,
+function wallX(zc: number, x1: number, x2: number, mat: WallMat = 'default', t = WT,
   extra?: { h?: number; yBase?: number; segKind?: SegKind | 'none' },
 ): WallDef[] {
   return splitSpan(x1, x2).map(([a, b]) => ({
@@ -352,7 +347,7 @@ export const WALL_DEFS: WallDef[] = [
   ...wallX(pZ('corner-sw'), pEast('corner-sw'),   pWest('kitchen-nw'),   'default', PT),
   ...wallX(pZ('corner-sw'), pEast('kitchen-ne'),  pWest('door-living-w'), 'default', PT),
   ...wallX(pZ('corner-sw'), pEast('door-living-e'), pWest('corner-se'),  'default', PT),
-  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: ROOM_D, segKind: 'door', t: PT },
+  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: pEast('corner-ne'), segKind: 'door', t: PT },
 
   // ── Cuisine ─────────────────────────────────────────────────────────────────
   ...wallZ(pX('kitchen-nw'), pSouth('kitchen-nw'), pNorth('kitchen-sw'), 'default', PT),
