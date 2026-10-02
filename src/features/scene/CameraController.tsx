@@ -655,7 +655,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           top={viewH / 2}
           bottom={-viewH / 2}
           near={1}
-          far={5000}
+          far={10000}
         />
       )}
 
