@@ -5,9 +5,9 @@ export interface ProfileSectionProps {
   onOpenCv: (type: CvType) => void;
 }
 
-export function ProfileSection({ isMobile, onOpenCv }: ProfileSectionProps) {
+export function ProfileSection({ isMobile: _isMobile, onOpenCv }: ProfileSectionProps) {
   return (
-    <div className="d-flex flex-column bg-transparent p-2 gap-2" style={{ fontSize: isMobile ? '13px' : '11px' }}>
+    <div className="d-flex flex-column bg-transparent p-2 gap-2 small">
       {/* Intro rapide */}
       <div className="d-flex align-items-center gap-2 p-2 rounded bg-white bg-opacity-50 border border-light-subtle">
         <img
@@ -16,51 +16,49 @@ export function ProfileSection({ isMobile, onOpenCv }: ProfileSectionProps) {
           className="rounded-circle shadow-sm"
           style={{ width: '38px', height: '38px', objectFit: 'cover', border: '2px solid #d32f2f' }}
         />
-        <div className="d-flex flex-column" style={{ lineHeight: 1.25 }}>
-          <strong className="text-dark" style={{ fontSize: '12px' }}>David Herelle</strong>
-          <span className="text-danger fw-semibold" style={{ fontSize: '10px' }}>Architecte SI · DevOps · 3D</span>
-          <span className="text-muted" style={{ fontSize: '9px' }}>Paris 13e · Disponible</span>
+        <div className="d-flex flex-column lh-sm">
+          <strong className="text-dark small">David Herelle</strong>
+          <span className="text-danger fw-semibold small">Architecte SI · DevOps · 3D</span>
+          <span className="text-muted small">Paris 13e · Disponible</span>
         </div>
       </div>
 
       {/* Boutons d'accès aux CVs */}
       <div className="d-flex flex-column gap-1">
-        <div className="text-muted fw-bold text-uppercase px-1" style={{ fontSize: '9px', letterSpacing: '0.05em' }}>
+        <div className="text-muted fw-bold text-uppercase px-1 small" style={{ letterSpacing: '0.05em' }}>
           📄 Consulter mes CVs (Modal 2D)
         </div>
         <button
           type="button"
-          className="btn btn-outline-danger btn-sm text-start w-100 d-flex align-items-center justify-content-between py-1.5 px-2 shadow-sm"
-          style={{ fontSize: isMobile ? '13px' : '11px' }}
+          className="btn btn-outline-danger btn-sm text-start w-100 d-flex align-items-center justify-content-between py-1.5 px-2 shadow-sm small"
           onClick={() => onOpenCv('devops')}
         >
           <span className="d-flex align-items-center gap-2">
-            <i className="bi bi-cpu text-danger" style={{ fontSize: '13px' }}></i>
+            <i className="bi bi-cpu text-danger"></i>
             <span className="fw-semibold">CV Ingénieur DevOps</span>
           </span>
-          <span className="badge bg-danger bg-opacity-25 text-danger border border-danger-subtle" style={{ fontSize: '9px' }}>
+          <span className="badge bg-danger bg-opacity-25 text-danger border border-danger-subtle">
             Ouvrir
           </span>
         </button>
 
         <button
           type="button"
-          className="btn btn-outline-primary btn-sm text-start w-100 d-flex align-items-center justify-content-between py-1.5 px-2 shadow-sm"
-          style={{ fontSize: isMobile ? '13px' : '11px' }}
+          className="btn btn-outline-primary btn-sm text-start w-100 d-flex align-items-center justify-content-between py-1.5 px-2 shadow-sm small"
           onClick={() => onOpenCv('admin')}
         >
           <span className="d-flex align-items-center gap-2">
-            <i className="bi bi-hdd-network text-primary" style={{ fontSize: '13px' }}></i>
+            <i className="bi bi-hdd-network text-primary"></i>
             <span className="fw-semibold">CV Administrateur Systèmes</span>
           </span>
-          <span className="badge bg-primary bg-opacity-25 text-primary border border-primary-subtle" style={{ fontSize: '9px' }}>
+          <span className="badge bg-primary bg-opacity-25 text-primary border border-primary-subtle">
             Ouvrir
           </span>
         </button>
       </div>
 
       {/* Points forts */}
-      <div className="p-2 rounded bg-white bg-opacity-40 border border-light-subtle text-muted" style={{ fontSize: '10px', lineHeight: 1.4 }}>
+      <div className="p-2 rounded bg-white bg-opacity-40 border border-light-subtle text-muted small lh-sm d-flex flex-column gap-1">
         <div>🎯 <strong>8+ ans d'expérience</strong> en startups (JobTeaser, Saisirprudhommes, Tracktor, Mooncard)</div>
         <div>⚡ <strong>Opérationnel Jour 1</strong> : sans temps d'onboarding, autonome et pragmatique</div>
         <div>💡 <strong>Stack</strong> : Ruby on Rails, TypeScript, React 18, R3F / Three.js, PostgreSQL, Heroku, Linux</div>
@@ -73,20 +71,19 @@ export function ProfileSection({ isMobile, onOpenCv }: ProfileSectionProps) {
           href="https://github.com/dinatih"
           target="_blank"
           rel="noreferrer"
-          className="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center gap-1.5 py-1.5 shadow-sm"
-          style={{ fontSize: '11px' }}
+          className="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center gap-2 py-1 shadow-sm small"
         >
-          <i className="bi bi-github" style={{ fontSize: '13px' }}></i>
+          <i className="bi bi-github"></i>
           <span className="fw-semibold">GitHub</span>
         </a>
         <a
           href="https://www.linkedin.com/in/dinatih/"
           target="_blank"
           rel="noreferrer"
-          className="btn btn-sm btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-1.5 py-1.5 shadow-sm"
-          style={{ fontSize: '11px', background: '#0a66c2', borderColor: '#0a66c2' }}
+          className="btn btn-sm btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2 py-1 shadow-sm small"
+          style={{ background: '#0a66c2', borderColor: '#0a66c2' }}
         >
-          <i className="bi bi-linkedin" style={{ fontSize: '13px' }}></i>
+          <i className="bi bi-linkedin"></i>
           <span className="fw-semibold">LinkedIn</span>
         </a>
       </div>

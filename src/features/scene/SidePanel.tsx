@@ -177,18 +177,16 @@ export function SidePanel({
   const activeHdriName = activeHdriItem?.name ?? currentHdri;
 
   const layersHeaderButtons = (
-    <div className="d-flex align-items-center gap-1.5 overflow-hidden" style={{ minWidth: 0 }} onClick={e => e.stopPropagation()}>
+    <div className="d-flex align-items-center gap-1 overflow-hidden" style={{ minWidth: 0 }} onClick={e => e.stopPropagation()}>
       <span
-        className="text-dark fw-medium text-end text-truncate flex-grow-1"
-        style={{ fontSize: '10px' }}
+        className="text-dark fw-medium text-end text-truncate flex-grow-1 small"
         title={activeHdriName}
       >
         {activeHdriName}
       </span>
       <button
         type="button"
-        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold flex-shrink-0"
-        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
+        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold flex-shrink-0 small rounded"
         title="Changer aléatoirement d'ambiance HDRI 🎲 (Touche 5)"
         onClick={(e) => {
           e.stopPropagation();
@@ -210,12 +208,8 @@ export function SidePanel({
             <button
               key={cnt}
               type="button"
-              className={`btn btn-sm py-0 px-1 fw-bold ${isActive ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+              className={`btn btn-sm py-0 px-1 fw-bold small ${isActive ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
               style={{
-                fontSize: '10px',
-                lineHeight: '16px',
-                paddingTop: '1px',
-                paddingBottom: '1px',
                 background: isActive ? undefined : 'rgba(255, 255, 255, 0.65)',
                 border: '1px solid rgba(0, 0, 0, 0.15)',
               }}
@@ -232,8 +226,7 @@ export function SidePanel({
       </div>
       <button
         type="button"
-        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
-        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
+        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold small rounded"
         title="Coupe et couleur de cheveux aléatoires 🎲"
         onClick={(e) => {
           e.stopPropagation();
@@ -246,13 +239,13 @@ export function SidePanel({
   );
 
   const profileHeaderButtons = (
-    <div className="d-flex align-items-center gap-1.5 pe-1" onClick={e => e.stopPropagation()}>
+    <div className="d-flex align-items-center gap-1 pe-1" onClick={e => e.stopPropagation()}>
       <a
         href="https://github.com/dinatih"
         target="_blank"
         rel="noreferrer"
-        className="btn btn-sm btn-dark text-white p-0 border-0 shadow-sm d-flex align-items-center justify-content-center"
-        style={{ fontSize: '12px', lineHeight: 1, borderRadius: '4px', height: '22px', width: '24px' }}
+        className="btn btn-sm btn-dark text-white p-0 border-0 shadow-sm d-flex align-items-center justify-content-center rounded"
+        style={{ height: '22px', width: '24px' }}
         title="Voir mon profil GitHub"
       >
         <i className="bi bi-github"></i>
@@ -261,16 +254,16 @@ export function SidePanel({
         href="https://www.linkedin.com/in/dinatih/"
         target="_blank"
         rel="noreferrer"
-        className="btn btn-sm btn-primary text-white p-0 border-0 shadow-sm d-flex align-items-center justify-content-center"
-        style={{ fontSize: '12px', lineHeight: 1, borderRadius: '4px', height: '22px', width: '24px', background: '#0a66c2', borderColor: '#0a66c2' }}
+        className="btn btn-sm btn-primary text-white p-0 border-0 shadow-sm d-flex align-items-center justify-content-center rounded"
+        style={{ height: '22px', width: '24px', background: '#0a66c2', borderColor: '#0a66c2' }}
         title="Voir mon profil LinkedIn"
       >
         <i className="bi bi-linkedin"></i>
       </a>
       <button
         type="button"
-        className="btn btn-sm btn-danger text-white px-2 border-0 shadow-sm fw-bold d-flex align-items-center gap-1 justify-content-center"
-        style={{ fontSize: '11px', lineHeight: 1, borderRadius: '4px', height: '22px', whiteSpace: 'nowrap' }}
+        className="btn btn-sm btn-danger text-white px-2 border-0 shadow-sm fw-bold d-flex align-items-center gap-1 justify-content-center small rounded"
+        style={{ height: '22px', whiteSpace: 'nowrap' }}
         title="Afficher mes CVs (Ingénieur DevOps / Admin Systèmes)"
         onClick={(e) => {
           e.stopPropagation();
@@ -517,16 +510,16 @@ export function SidePanel({
       >
         <div className="card shadow-sm glass-card overflow-hidden">
           <button
-            className="btn btn-danger w-100 rounded-0 py-2 px-3 fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0"
+            className="btn btn-sm btn-danger w-100 rounded-0 py-2 px-3 fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0 small"
             onClick={onOpenInventory}
             title="Ouvrir l'inventaire (Touche I)"
-            style={{ fontSize: '11px', letterSpacing: '0.06em' }}
+            style={{ letterSpacing: '0.06em' }}
           >
-            <span className="d-flex align-items-center gap-1.5">
+            <span className="d-flex align-items-center gap-2">
               <span>📦 Inventaire</span>
-              <kbd className="bg-white bg-opacity-25 text-white border-0 px-1 rounded font-monospace" style={{ fontSize: '9px' }}>I</kbd>
+              <kbd className="bg-white bg-opacity-25 text-white border-0 px-1 rounded font-monospace small">I</kbd>
             </span>
-            <span style={{ fontSize: '9px' }}>▶</span>
+            <span className="small">▶</span>
           </button>
         </div>
 

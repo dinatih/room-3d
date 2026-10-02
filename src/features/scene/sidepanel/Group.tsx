@@ -14,16 +14,14 @@ export function Group({ emoji, title, defaultOpen = false, extra, children }: Gr
     <div className="card shadow-sm glass-card overflow-hidden">
       <div className="card-header p-0 border-0 bg-transparent d-flex align-items-center justify-content-between">
         <button
-          className={`btn ${extra ? 'flex-shrink-0' : 'flex-grow-1'} text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none`}
+          className={`btn btn-sm ${extra ? 'flex-shrink-0' : 'flex-grow-1'} text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none text-uppercase small`}
           onClick={() => setOpen(!open)}
-          style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em' }}
         >
           <span>{emoji} {title}</span>
           <span 
-            className={extra ? 'ms-2' : ''}
+            className={`text-muted ${extra ? 'ms-2' : ''}`}
             style={{ 
-              fontSize: '8px', 
-              color: 'var(--muted)',
+              fontSize: '0.65rem',
               transform: open ? 'rotate(90deg)' : 'none', 
               transition: 'transform 0.18s' 
             }}

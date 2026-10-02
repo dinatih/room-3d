@@ -71,9 +71,9 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
     const sizeStr = `${(max[0] - min[0]).toFixed(0)} × ${(max[2] - min[2]).toFixed(0)} × ${(max[1] - min[1]).toFixed(0)} cm`;
 
     return (
-      <div className="inventory-detail-wrap">
+      <div className="d-flex flex-column w-100">
         {/* Rendu 3D isolé de la pièce / espace sans obstruction */}
-        <div className="inventory-detail-hero">
+        <div className="w-100 position-relative">
           <SpatialZonePreview
             zone={zone}
             height="100%"
@@ -81,79 +81,74 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           />
         </div>
 
-        <div className="inventory-detail-body">
-          <h2 className="inventory-detail-title">{zone.name}</h2>
-          <p className="inventory-detail-brand">
+        <div className="p-3">
+          <h3 className="fw-bold mb-1 text-dark fs-5">{zone.name}</h3>
+          <p className="text-muted small mb-2">
             {zone.environment === 'indoor' ? 'Intérieur studio' : 'Espace extérieur'} — Zone Spatiale 3D
           </p>
 
-          <div className="inventory-detail-badges">
-            <span className="inventory-badge-tag inventory-badge-virt" style={{ fontSize: 11, padding: '3px 9px', background: '#0284c7', color: '#fff' }}>
+          <div className="d-flex flex-wrap gap-1 mb-3">
+            <span className="badge bg-primary text-white">
               {zone.environment === 'indoor' ? '🏠 Pièce Intérieure' : '🌳 Extérieur'}
             </span>
-            <span className="inventory-badge-tag" style={{ fontSize: 11, padding: '3px 9px', background: '#e0f2fe', color: '#0369a1' }}>
+            <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle">
               ✨ {smartObjects.length} Smart Object{smartObjects.length > 1 ? 's' : ''}
             </span>
-            <span className="inventory-badge-tag" style={{ fontSize: 11, padding: '3px 9px', background: '#f1f5f9', color: '#475569' }}>
+            <span className="badge bg-light text-dark border">
               📍 {waypoints.length} Waypoint{waypoints.length > 1 ? 's' : ''}
             </span>
           </div>
 
-          <div className="inventory-spec-grid">
-            <div className="inventory-spec-card">
-              <div className="inventory-spec-label">Volume Bounding Box (L×P×H)</div>
-              <div className="inventory-spec-value">{sizeStr}</div>
-            </div>
-            <div className="inventory-spec-card">
-              <div className="inventory-spec-label">SmartObjects interactifs</div>
-              <div className="inventory-spec-value" style={{ color: 'var(--red)', fontWeight: 'bold' }}>
-                {smartObjects.length} meuble{smartObjects.length > 1 ? 's' : ''}
+          <div className="row g-2 mb-3">
+            <div className="col-6">
+              <div className="card bg-white bg-opacity-75 border p-2 h-100">
+                <div className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem' }}>Volume Bounding Box (L×P×H)</div>
+                <div className="fw-semibold small">{sizeStr}</div>
               </div>
             </div>
-            <div className="inventory-spec-card" style={{ borderLeft: '3px solid #0284c7', background: '#f0f9ff' }}>
-              <div className="inventory-spec-label" style={{ color: '#0284c7' }}>Triangles & Draw Calls</div>
-              <div className="inventory-spec-value" style={{ fontSize: 13, fontWeight: 600 }}>
-                {glbStats ? (
-                  <>
-                    <span>{glbStats.triangles.toLocaleString()} tris</span>
-                    <span style={{ color: '#9ca3af', margin: '0 5px' }}>·</span>
-                    <span style={{ color: glbStats.drawCalls > 80 ? '#dc2626' : '#16a34a' }}>
-                      {glbStats.drawCalls} draw call{glbStats.drawCalls > 1 ? 's' : ''}
-                    </span>
-                  </>
-                ) : (
-                  <span style={{ color: '#9ca3af', fontSize: 12 }}>Calcul en cours…</span>
-                )}
+            <div className="col-6">
+              <div className="card bg-white bg-opacity-75 border p-2 h-100">
+                <div className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem' }}>SmartObjects interactifs</div>
+                <div className="fw-bold text-danger small">
+                  {smartObjects.length} meuble{smartObjects.length > 1 ? 's' : ''}
+                </div>
+              </div>
+            </div>
+            <div className="col-12">
+              <div className="card bg-info-subtle border border-info-subtle p-2">
+                <div className="text-uppercase text-info-emphasis fw-bold small" style={{ fontSize: '0.7rem' }}>Triangles & Draw Calls</div>
+                <div className="fw-semibold small">
+                  {glbStats ? (
+                    <>
+                      <span>{glbStats.triangles.toLocaleString()} tris</span>
+                      <span className="text-muted mx-1">·</span>
+                      <span className={glbStats.drawCalls > 80 ? 'text-danger fw-bold' : 'text-success fw-bold'}>
+                        {glbStats.drawCalls} draw call{glbStats.drawCalls > 1 ? 's' : ''}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-muted small">Calcul en cours…</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          <hr className="inventory-detail-divider" />
-          <div className="inventory-detail-section-label">SmartObjects & Affordances dans cette pièce</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+          <hr className="my-3 opacity-25" />
+          <div className="text-uppercase text-muted fw-bold small mb-2" style={{ fontSize: '0.7rem' }}>SmartObjects & Affordances dans cette pièce</div>
+          <div className="d-flex flex-column gap-1 mb-3">
             {smartObjects.length === 0 ? (
-              <div style={{ color: 'var(--muted)', fontSize: 12 }}>Aucun SmartObject indexé dans ce volume.</div>
+              <div className="text-muted small">Aucun SmartObject indexé dans ce volume.</div>
             ) : (
               smartObjects.map(obj => (
-                <div
-                  key={obj.id}
-                  style={{
-                    background: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 6,
-                    padding: '8px 12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 4
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 600, fontSize: 13 }}>✨ {obj.name}</span>
-                    <span style={{ fontSize: 10, background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase' }}>
+                <div key={obj.id} className="card bg-light border p-2 d-flex flex-column gap-1">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="fw-semibold small">✨ {obj.name}</span>
+                    <span className="badge bg-white text-secondary border text-uppercase" style={{ fontSize: '0.65rem' }}>
                       {obj.category}
                     </span>
                   </div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>
+                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
                     Slots : {obj.slots.map(s => s.name).join(', ')}
                   </div>
                 </div>
@@ -161,21 +156,11 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
             )}
           </div>
 
-          <hr className="inventory-detail-divider" />
-          <div className="inventory-detail-section-label">Points de Passage (Waypoints)</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+          <hr className="my-3 opacity-25" />
+          <div className="text-uppercase text-muted fw-bold small mb-2" style={{ fontSize: '0.7rem' }}>Points de Passage (Waypoints)</div>
+          <div className="d-flex flex-wrap gap-1">
             {waypoints.map(wp => (
-              <span
-                key={wp.id}
-                style={{
-                  background: '#f1f5f9',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: 4,
-                  padding: '3px 8px',
-                  fontSize: 11,
-                  color: '#334155'
-                }}
-              >
+              <span key={wp.id} className="badge bg-light text-dark border font-monospace">
                 📍 {wp.name || wp.id} ({wp.x.toFixed(0)}, {wp.z.toFixed(0)})
               </span>
             ))}
@@ -193,9 +178,9 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
   const glbPath = !isStorage ? (item as InventoryItem).glbPath : undefined;
 
   return (
-    <div className="inventory-detail-wrap">
+    <div className="d-flex flex-column w-100">
       {/* 3D Preview Canvas / Photo Gallery as Hero (Ratio Carré) */}
-      <div className="inventory-detail-hero">
+      <div className="w-100 position-relative">
         <InventoryPreview
           item={item as any}
           height="100%"
@@ -206,88 +191,98 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
         />
       </div>
 
-      <div className="inventory-detail-body">
-        <h2 className="inventory-detail-title">{(item as any).name}</h2>
-        <p className="inventory-detail-brand">
+      <div className="p-3">
+        <h3 className="fw-bold mb-1 text-dark fs-5">{(item as any).name}</h3>
+        <p className="text-muted small mb-2">
           {!isStorage && (item as InventoryItem).brand ? `${(item as InventoryItem).brand} — ` : ''}
           {isStorage ? 'Espace de rangement' : catLabel}
         </p>
 
-        <div className="inventory-detail-badges">
+        <div className="d-flex flex-wrap gap-1 mb-3">
           {isStorage ? (
-            <span className="inventory-badge-tag inventory-badge-virt" style={{ fontSize: 11, padding: '3px 9px' }}>
+            <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
               🗄️ Rangement
             </span>
           ) : (item as InventoryItem).category === 'walkers' ? (
-            <span className="inventory-badge-tag inventory-badge-virt" style={{ fontSize: 11, padding: '3px 9px' }}>
+            <span className="badge bg-primary-subtle text-primary border border-primary-subtle">
               🔵 Virtuel
             </span>
           ) : (
-            <span className="inventory-badge-tag" style={{ fontSize: 11, padding: '3px 9px', background: '#e8f5e9', color: '#2e7d32' }}>
+            <span className="badge bg-success-subtle text-success border border-success-subtle">
               🟢 Physique
             </span>
           )}
 
           {!isStorage && (item as InventoryItem).actions && (item as InventoryItem).actions!.length > 0 && (
-            <span className="inventory-badge-tag" style={{ fontSize: 11, padding: '3px 9px', background: '#fff3cd', color: '#856404' }}>
+            <span className="badge bg-warning-subtle text-dark border border-warning-subtle">
               ⚡ Actionnable
             </span>
           )}
 
           {!isStorage && (
-            <span className="inventory-badge-tag inventory-badge-red" style={{ fontSize: 11, padding: '3px 9px' }}>
+            <span className="badge bg-danger-subtle text-danger border border-danger-subtle">
               {catLabel}
             </span>
           )}
 
           {glbPath && (
-            <span className="inventory-badge-tag" style={{ fontSize: 11, padding: '3px 9px', background: '#f3e8ff', color: '#6b21a8' }}>
+            <span className="badge bg-primary text-white">
               🎲 Modèle GLB 3D
             </span>
           )}
         </div>
 
-        <div className="inventory-spec-grid">
-          <div className="inventory-spec-card">
-            <div className="inventory-spec-label">
-              {!isStorage && (item as InventoryItem).category === 'consumable' ? 'Stock restant' : 'Quantité'}
-            </div>
-            <div className="inventory-spec-value inventory-spec-value-accent" style={{ color: 'var(--red)', fontWeight: 'bold' }}>
-              {!isStorage && (item as InventoryItem).category === 'consumable' 
-                ? `${(item as InventoryItem).stock ?? 0} pièces` 
-                : isStorage 
-                  ? '1 espace' 
-                  : `×${(item as InventoryItem).qty}`}
+        <div className="row g-2 mb-3">
+          <div className="col-6">
+            <div className="card bg-white bg-opacity-75 border p-2 h-100">
+              <div className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem' }}>
+                {!isStorage && (item as InventoryItem).category === 'consumable' ? 'Stock restant' : 'Quantité'}
+              </div>
+              <div className="fw-bold text-danger small">
+                {!isStorage && (item as InventoryItem).category === 'consumable' 
+                  ? `${(item as InventoryItem).stock ?? 0} pièces` 
+                  : isStorage 
+                    ? '1 espace' 
+                    : `×${(item as InventoryItem).qty}`}
+              </div>
             </div>
           </div>
-          <div className="inventory-spec-card">
-            <div className="inventory-spec-label">Dimensions (L×P×H)</div>
-            <div className="inventory-spec-value">
-              {dimsStr}
+          <div className="col-6">
+            <div className="card bg-white bg-opacity-75 border p-2 h-100">
+              <div className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem' }}>Dimensions (L×P×H)</div>
+              <div className="fw-semibold small">
+                {dimsStr}
+              </div>
             </div>
           </div>
 
           {!isStorage && (item as InventoryItem).price && (
-            <div className="inventory-spec-card">
-              <div className="inventory-spec-label">Prix</div>
-              <div className="inventory-spec-value" style={{ fontWeight: 'bold' }}>
-                {(item as InventoryItem).price} €
+            <div className="col-6">
+              <div className="card bg-white bg-opacity-75 border p-2 h-100">
+                <div className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem' }}>Prix</div>
+                <div className="fw-bold small">
+                  {(item as InventoryItem).price} €
+                </div>
               </div>
             </div>
           )}
 
           {!isStorage && (item as InventoryItem).category === 'consumable' && (
             <>
-              <div className="inventory-spec-card">
-                <div className="inventory-spec-label">Fréquence de rachat</div>
-                <div className="inventory-spec-value" style={{ textTransform: 'capitalize' }}>
-                  {(item as InventoryItem).frequency ?? '—'}
+              <div className="col-6">
+                <div className="card bg-white bg-opacity-75 border p-2 h-100">
+                  <div className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem' }}>Fréquence de rachat</div>
+                  <div className="fw-semibold small text-capitalize">
+                    {(item as InventoryItem).frequency ?? '—'}
+                  </div>
                 </div>
               </div>
-              <div className="inventory-spec-card">
-                <div className="inventory-spec-label">Lieu de stockage</div>
-                <div className="inventory-spec-value">
-                  {(item as InventoryItem).location ?? '—'}
+              <div className="col-6">
+                <div className="card bg-white bg-opacity-75 border p-2 h-100">
+                  <div className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem' }}>Lieu de stockage</div>
+                  <div className="fw-semibold small">
+                    {(item as InventoryItem).location ?? '—'}
+                  </div>
                 </div>
               </div>
             </>
@@ -296,72 +291,77 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           {/* Informations GLB & Performance 3D si présent */}
           {glbPath && (
             <>
-              <div className="inventory-spec-card" style={{ borderLeft: '3px solid #7c3aed', background: '#faf5ff' }}>
-                <div className="inventory-spec-label" style={{ color: '#7c3aed' }}>Fichier GLB</div>
-                <div className="inventory-spec-value" style={{ fontSize: 12, wordBreak: 'break-all' }}>
-                  {glbPath.split('/').pop()}
-                  {glbStats?.fileSize !== undefined ? (
-                    <span style={{ display: 'block', fontSize: 11, color: '#6b7280', marginTop: 2 }}>
-                      Taille : {glbStats.fileSize > 1024 * 1024 
-                        ? `${(glbStats.fileSize / (1024 * 1024)).toFixed(2)} Mo`
-                        : `${(glbStats.fileSize / 1024).toFixed(1)} Ko`}
-                    </span>
-                  ) : null}
+              <div className="col-6">
+                <div className="card bg-primary-subtle border border-primary-subtle p-2 h-100">
+                  <div className="text-uppercase text-primary fw-bold small" style={{ fontSize: '0.7rem' }}>Fichier GLB</div>
+                  <div className="fw-semibold small text-truncate" title={glbPath}>
+                    {glbPath.split('/').pop()}
+                    {glbStats?.fileSize !== undefined ? (
+                      <span className="d-block text-muted small mt-1">
+                        Taille : {glbStats.fileSize > 1024 * 1024 
+                          ? `${(glbStats.fileSize / (1024 * 1024)).toFixed(2)} Mo`
+                          : `${(glbStats.fileSize / 1024).toFixed(1)} Ko`}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               </div>
 
-              <div className="inventory-spec-card" style={{ borderLeft: '3px solid #7c3aed', background: '#faf5ff' }}>
-                <div className="inventory-spec-label" style={{ color: '#7c3aed' }}>Triangles & Draw Calls</div>
-                <div className="inventory-spec-value" style={{ fontSize: 13, fontWeight: 600 }}>
-                  {glbStats ? (
-                    <>
-                      <span>{glbStats.triangles.toLocaleString()} tris</span>
-                      <span style={{ color: '#9ca3af', margin: '0 5px' }}>·</span>
-                      <span style={{ color: glbStats.drawCalls > 10 ? '#dc2626' : '#16a34a' }}>
-                        {glbStats.drawCalls} draw call{glbStats.drawCalls > 1 ? 's' : ''}
-                      </span>
-                    </>
-                  ) : (
-                    <span style={{ color: '#9ca3af', fontSize: 12 }}>Calcul en cours…</span>
-                  )}
+              <div className="col-6">
+                <div className="card bg-primary-subtle border border-primary-subtle p-2 h-100">
+                  <div className="text-uppercase text-primary fw-bold small" style={{ fontSize: '0.7rem' }}>Triangles & Draw Calls</div>
+                  <div className="fw-semibold small">
+                    {glbStats ? (
+                      <>
+                        <span>{glbStats.triangles.toLocaleString()} tris</span>
+                        <span className="text-muted mx-1">·</span>
+                        <span className={glbStats.drawCalls > 10 ? 'text-danger fw-bold' : 'text-success fw-bold'}>
+                          {glbStats.drawCalls} draw call{glbStats.drawCalls > 1 ? 's' : ''}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-muted small">Calcul en cours…</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </>
           )}
 
           {!isStorage && (item as InventoryItem).url && (
-            <div className="inventory-spec-card" style={{ gridColumn: '1 / -1' }}>
-              <div className="inventory-spec-label">Lien Produit</div>
-              <div className="inventory-spec-value">
-                <a 
-                  href={(item as InventoryItem).url} 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  onClick={e => e.stopPropagation()}
-                  style={{ color: 'var(--red)', textDecoration: 'none' }}
-                >
-                  🔗 Ouvrir la fiche produit
-                </a>
+            <div className="col-12">
+              <div className="card bg-white bg-opacity-75 border p-2">
+                <div className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem' }}>Lien Produit</div>
+                <div className="small">
+                  <a 
+                    href={(item as InventoryItem).url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    onClick={e => e.stopPropagation()}
+                    className="text-danger fw-semibold text-decoration-none"
+                  >
+                    🔗 Ouvrir la fiche produit
+                  </a>
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        <hr className="inventory-detail-divider" />
-        <div className="inventory-detail-section-label">Notes</div>
-        <div className="inventory-detail-notes">
+        <hr className="my-3 opacity-25" />
+        <div className="text-uppercase text-muted fw-bold small mb-1" style={{ fontSize: '0.7rem' }}>Notes</div>
+        <div className="card bg-white bg-opacity-50 border p-2 text-dark small mb-3">
           {(item as any).notes || "Aucune note descriptive disponible pour cet élément."}
         </div>
 
         {!isStorage && !isZone && (item as InventoryItem).category === 'walkers' && item.id !== 'ushiro' && item.id !== 'robin-bird' && (
           <>
-            <hr className="inventory-detail-divider" />
+            <hr className="my-3 opacity-25" />
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="inventory-detail-section-label mb-0">👯‍♀️ Animations Duo (Preview 3D : {(item as any).name})</div>
+              <div className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem' }}>👯‍♀️ Animations Duo (Preview 3D : {(item as any).name})</div>
               <button
                 type="button"
-                className="btn btn-sm btn-warning text-dark px-2 py-0 fw-bold shadow-sm"
-                style={{ fontSize: '11px', borderRadius: '4px' }}
+                className="btn btn-sm btn-warning text-dark py-0 px-2 fw-bold shadow-sm"
                 title="Lancer une animation de couple aléatoire dans la preview 3D 🎲"
                 onClick={() => {
                   const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
@@ -395,7 +395,6 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                   }
                 }}
                 value={selectedDuoAnim?.id || ""}
-                style={{ fontSize: '12px' }}
               >
                 <option value="">Sélectionner une animation de couple...</option>
                 {DUO_ANIMATIONS.map(a => (
@@ -422,12 +421,11 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                     className={`btn btn-sm text-start d-flex align-items-center justify-content-between px-2 py-1 border ${
                       isSelected ? 'btn-primary text-white shadow-sm' : 'btn-outline-secondary bg-white text-dark'
                     }`}
-                    style={{ fontSize: '11px', borderRadius: '6px' }}
                   >
-                    <span className="text-truncate me-2">
+                    <span className="text-truncate me-2 small">
                       <span className="me-1">{a.icon}</span> {a.label}
                     </span>
-                    <span className={`badge border ${isSelected ? 'bg-light text-dark' : 'bg-light text-secondary'}`} style={{ fontSize: '9px' }}>
+                    <span className={`badge border ${isSelected ? 'bg-light text-dark' : 'bg-light text-secondary'}`} style={{ fontSize: '0.65rem' }}>
                       Preview 3D
                     </span>
                   </button>
@@ -437,9 +435,9 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           </>
         )}
 
-        <div className="inventory-detail-actions mt-3">
-          <button className="inventory-btn-edit" onClick={() => alert(`Modifier : ${(item as any).name}`)}>✏️ Modifier</button>
-          <button className="inventory-btn-delete" onClick={() => { if(confirm(`Supprimer ${(item as any).name} ?`)) alert('Supprimé (démo)'); }}>🗑 Supprimer</button>
+        <div className="d-flex gap-2 mt-3">
+          <button type="button" className="btn btn-sm btn-danger px-3 fw-semibold shadow-sm" onClick={() => alert(`Modifier : ${(item as any).name}`)}>✏️ Modifier</button>
+          <button type="button" className="btn btn-sm btn-outline-secondary bg-white text-dark px-3" onClick={() => { if(confirm(`Supprimer ${(item as any).name} ?`)) alert('Supprimé (démo)'); }}>🗑 Supprimer</button>
         </div>
       </div>
     </div>
@@ -644,19 +642,19 @@ function normalizeSearchStr(str: string): string {
         onClick={e => e.stopPropagation()}
       >
         {/* TOPBAR */}
-        <div className="inventory-topbar">
-          <div className="inventory-topbar-brand">
-            <div className="inventory-brand-dot"></div>
-            Inventaire
+        <div className="d-flex align-items-center justify-content-between p-2 px-3 border-bottom bg-white bg-opacity-75 sticky-top gap-2" style={{ zIndex: 10 }}>
+          <div className="d-flex align-items-center gap-2 fw-bold text-dark text-nowrap">
+            <span className="rounded-circle bg-danger d-inline-block" style={{ width: 8, height: 8 }} />
+            <span>Inventaire</span>
           </div>
-          <div className="inventory-topbar-search">
-            <svg className="inventory-search-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
+          <div className="input-group input-group-sm flex-grow-1" style={{ maxWidth: 360 }}>
+            <span className="input-group-text bg-white text-muted border-end-0">
+              <i className="bi bi-search" />
+            </span>
             <input
               ref={searchInputRef}
               type="text"
+              className="form-control border-start-0 border-end-0 bg-white"
               placeholder="Rechercher un item…"
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -664,7 +662,7 @@ function normalizeSearchStr(str: string): string {
             {search && (
               <button
                 type="button"
-                className="inventory-search-clear"
+                className="input-group-text bg-white text-muted border-start-0 cursor-pointer"
                 onClick={() => {
                   setSearch('');
                   searchInputRef.current?.focus();
@@ -672,39 +670,37 @@ function normalizeSearchStr(str: string): string {
                 aria-label="Effacer la recherche"
                 title="Effacer la recherche"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <i className="bi bi-x-lg" style={{ fontSize: '0.75rem' }} />
               </button>
             )}
           </div>
-          <div className="inventory-topbar-actions">
-            <span className="inventory-topbar-count">
+          <div className="d-flex align-items-center gap-2 ms-auto">
+            <span className="text-muted small text-nowrap">
               {navList.length} item{navList.length > 1 ? 's' : ''}
             </span>
-            <button className="inventory-btn-close" onClick={onClose} aria-label="Fermer">
-              ×
-            </button>
+            <button type="button" className="btn-close" onClick={onClose} aria-label="Fermer" />
           </div>
         </div>
 
         {/* LAYOUT SPLIT */}
-        <div className="inventory-layout" style={{ userSelect: isResizing ? 'none' : undefined }}>
+        <div className="d-flex flex-grow-1 overflow-hidden" style={{ userSelect: isResizing ? 'none' : undefined }}>
           {/* LIST PANE */}
           <div
-            className="inventory-pane-list"
+            className="d-flex flex-column border-end bg-white bg-opacity-50 overflow-hidden flex-shrink-0"
             style={{ width: isMobile ? '100%' : `${listWidth}px` }}
           >
-            <div className="inventory-list-header">
-              <span className="inventory-list-header-title">Tous les items</span>
-              <div className="inventory-filter-tabs">
+            <div className="p-2 border-bottom d-flex flex-column gap-1 bg-light bg-opacity-50">
+              <span className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>
+                Tous les items
+              </span>
+              <div className="d-flex gap-1 overflow-x-auto text-nowrap pb-1" style={{ scrollbarWidth: 'none' }}>
                 {CATEGORIES.map(cat => {
                   const isActive = cat.id === activeCat;
                   return (
                     <button
                       key={cat.id}
-                      className={`inventory-ftab${isActive ? ' active' : ''}`}
+                      type="button"
+                      className={`btn btn-sm py-0.5 px-2 rounded-pill small ${isActive ? 'btn-danger text-white shadow-sm' : 'btn-outline-secondary bg-white text-dark'}`}
                       onClick={() => setActiveCat(cat.id)}
                     >
                       {cat.label}
@@ -714,9 +710,9 @@ function normalizeSearchStr(str: string): string {
               </div>
             </div>
 
-            <div ref={tableContainerRef} className="inventory-list-content">
+            <div ref={tableContainerRef} className="overflow-auto flex-grow-1">
               {navList.length === 0 ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
+                <div className="p-4 text-center text-muted small">
                   Aucun item trouvé.
                 </div>
               ) : (
@@ -735,7 +731,7 @@ function normalizeSearchStr(str: string): string {
                       <div
                         key={zone.id}
                         data-item-id={zone.id}
-                        className={`inventory-item-row${isSelected ? ' active' : ''}`}
+                        className={`p-2 border-bottom d-flex align-items-center gap-2 cursor-pointer ${isSelected ? 'bg-danger bg-opacity-10 border-start border-danger border-3' : 'bg-transparent'}`}
                         onClick={() => {
                           setSelected(target);
                           setFocusedIndex(navList.indexOf(target));
@@ -746,28 +742,29 @@ function normalizeSearchStr(str: string): string {
                         style={{
                           outline: isFocused ? '1px solid var(--red)' : undefined,
                           outlineOffset: '-1px',
+                          cursor: 'pointer',
                         }}
                       >
                         <div className="inventory-item-thumb">
-                          <span className="thumb-icon">{zone.environment === 'indoor' ? '🏠' : '🌳'}</span>
+                          <span className="fs-5">{zone.environment === 'indoor' ? '🏠' : '🌳'}</span>
                         </div>
-                        <div className="inventory-item-meta">
-                          <div className="inventory-item-name">{zone.name}</div>
-                          <div className="inventory-item-sub">
+                        <div className="flex-grow-1 overflow-hidden" style={{ minWidth: 0 }}>
+                          <div className="fw-semibold text-truncate small">{zone.name}</div>
+                          <div className="text-muted small d-flex align-items-center gap-1">
                             <span>{zone.environment === 'indoor' ? 'Intérieur' : 'Extérieur'}</span>
-                            <span style={{ color: 'var(--border)' }}>·</span>
+                            <span>·</span>
                             <span>{smartObjectsCount} SmartObject{smartObjectsCount > 1 ? 's' : ''}</span>
                           </div>
-                          <div className="inventory-item-badges">
-                            <span className="inventory-badge-tag inventory-badge-virt" style={{ background: '#0284c7', color: '#fff' }}>
+                          <div className="d-flex gap-1 mt-1 flex-wrap">
+                            <span className="badge bg-primary-subtle text-primary border border-primary-subtle">
                               Espace 3D
                             </span>
-                            <span className="inventory-badge-tag" style={{ background: '#e0f2fe', color: '#0369a1' }}>
+                            <span className="badge bg-light text-dark border">
                               ✨ {smartObjectsCount} Objets
                             </span>
                           </div>
                         </div>
-                        <div className="inventory-item-qty" style={{ fontSize: 11, color: '#64748b' }}>
+                        <div className="text-muted small flex-shrink-0">
                           Zone
                         </div>
                       </div>
@@ -785,7 +782,7 @@ function normalizeSearchStr(str: string): string {
                     <div
                       key={id}
                       data-item-id={id}
-                      className={`inventory-item-row${isSelected ? ' active' : ''}`}
+                      className={`p-2 border-bottom d-flex align-items-center gap-2 cursor-pointer ${isSelected ? 'bg-danger bg-opacity-10 border-start border-danger border-3' : 'bg-transparent'}`}
                       onClick={() => {
                         setSelected(target);
                         setFocusedIndex(navList.indexOf(target));
@@ -796,40 +793,41 @@ function normalizeSearchStr(str: string): string {
                       style={{
                         outline: isFocused ? '1px solid var(--red)' : undefined,
                         outlineOffset: '-1px',
+                        cursor: 'pointer',
                       }}
                     >
                       <div className="inventory-item-thumb">
                         {thumbPhoto ? (
                           <img src={thumbPhoto} alt={target.name} />
                         ) : (
-                          <span className="thumb-icon">{emoji}</span>
+                          <span className="fs-5">{emoji}</span>
                         )}
                       </div>
-                      <div className="inventory-item-meta">
-                        <div className="inventory-item-name">{target.name}</div>
-                        <div className="inventory-item-sub">
+                      <div className="flex-grow-1 overflow-hidden" style={{ minWidth: 0 }}>
+                        <div className="fw-semibold text-truncate small">{target.name}</div>
+                        <div className="text-muted small d-flex align-items-center gap-1">
                           {!isStorage && (target as InventoryItem).brand && (
                             <>
-                              <span>{(target as InventoryItem).brand}</span>
-                              <span style={{ color: 'var(--border)' }}>·</span>
+                              <span className="text-truncate">{(target as InventoryItem).brand}</span>
+                              <span>·</span>
                             </>
                           )}
-                          <span>{target.dims.w}×{target.dims.d}×{target.dims.h} cm</span>
+                          <span className="text-nowrap">{target.dims.w}×{target.dims.d}×{target.dims.h} cm</span>
                         </div>
-                        <div className="inventory-item-badges">
+                        <div className="d-flex gap-1 mt-1 flex-wrap">
                           {isStorage ? (
-                            <span className="inventory-badge-tag inventory-badge-virt">Rangement</span>
+                            <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Rangement</span>
                           ) : (target as InventoryItem).category === 'walkers' ? (
-                            <span className="inventory-badge-tag inventory-badge-virt">Virtuel</span>
+                            <span className="badge bg-primary-subtle text-primary border border-primary-subtle">Virtuel</span>
                           ) : (
-                            <span className="inventory-badge-tag inventory-badge-red">{catLabel}</span>
+                            <span className="badge bg-danger-subtle text-danger border border-danger-subtle">{catLabel}</span>
                           )}
                           {!isStorage && (target as InventoryItem).actions && (target as InventoryItem).actions!.length > 0 && (
-                            <span className="inventory-badge-tag" style={{ background: '#fff3cd', color: '#856404' }}>⚡ Action</span>
+                            <span className="badge bg-warning-subtle text-dark border border-warning-subtle">⚡ Action</span>
                           )}
                         </div>
                       </div>
-                      <div className="inventory-item-qty">
+                      <div className="text-muted small flex-shrink-0 text-end">
                         {!isStorage && (target as InventoryItem).category === 'consumable' ? (
                           `×${(target as InventoryItem).stock ?? 0}`
                         ) : isStorage ? (
@@ -849,29 +847,24 @@ function normalizeSearchStr(str: string): string {
           {!isMobile && (
             <div
               onMouseDown={handleResizeStart}
+              className={`bg-secondary ${isResizing ? 'bg-opacity-75' : 'bg-opacity-25'}`}
               style={{
-                width: 6,
+                width: 5,
                 cursor: 'col-resize',
-                background: isResizing ? 'var(--red)' : 'rgba(0, 0, 0, 0.08)',
-                transition: isResizing ? 'none' : 'background 0.15s ease',
                 zIndex: 10,
                 position: 'relative',
                 flexShrink: 0,
               }}
-              className="inventory-splitter-handle"
               title="Glisser pour redimensionner la liste / preview 3D"
             />
           )}
 
           {/* DETAIL PANE (desktop) */}
-          <div className="inventory-pane-detail">
+          <div className="flex-grow-1 overflow-auto bg-light bg-opacity-25">
             {!selected ? (
-              <div className="inventory-detail-empty">
-                <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24">
-                  <rect x="3" y="3" width="18" height="18" rx="3" />
-                  <path d="M3 9h18M9 21V9" />
-                </svg>
-                <p>Sélectionnez un item<br />pour afficher son détail</p>
+              <div className="d-flex flex-column align-items-center justify-content-center h-100 text-muted text-center gap-2 p-4">
+                <i className="bi bi-box-seam fs-1 opacity-25" />
+                <p className="small mb-0">Sélectionnez un item<br />pour afficher son détail</p>
               </div>
             ) : (
               <ItemDetailContent item={selected} />

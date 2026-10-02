@@ -47,7 +47,6 @@ export function CharacterSection({
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
         onClick={() => onToggleLayer(key)}
         style={{ 
-          fontSize: isMobile ? '14px' : '11px',
           minHeight: isMobile ? '48px' : undefined,
           background: 'transparent',
           opacity: on ? 1 : 0.55,
@@ -55,7 +54,7 @@ export function CharacterSection({
         }}
       >
         <span>{label}</span>
-        <span className={`badge ${on ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+        <span className={`badge ${on ? 'bg-success' : 'bg-secondary'}`}>
           {on ? 'ON' : 'OFF'}
         </span>
       </button>
@@ -67,10 +66,9 @@ export function CharacterSection({
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
           <div>
-            <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👤 Choix Personnage</div>
+            <div className="text-muted fw-semibold mb-1 text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>👤 Choix Personnage</div>
             <select
-              className="form-select form-select-sm bg-transparent text-dark border-secondary"
-              style={{ fontSize: isMobile ? '14px' : '11px' }}
+              className="form-select form-select-sm bg-transparent text-dark border-secondary small"
               value={activeWalkerId}
               onChange={(e) => {
                 useSceneStore.getState().setActiveWalkerId(e.target.value);
@@ -90,7 +88,6 @@ export function CharacterSection({
               type="button"
               className="btn btn-warning w-100 text-dark fw-bold mb-3 py-2 px-3 d-flex align-items-center justify-content-center gap-2 shadow-none"
               style={{
-                fontSize: isMobile ? '13px' : '11px',
                 background: 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)',
                 border: 'none',
                 borderRadius: '6px'
@@ -104,7 +101,7 @@ export function CharacterSection({
 
             <div className="mb-2">
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <div className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                   🎨 Couleur des cheveux
                 </div>
                 <button
@@ -112,14 +109,13 @@ export function CharacterSection({
                   className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
                   onClick={handleRandomHairColor}
                   title="Couleur aléatoire 🎲"
-                  style={{ fontSize: '11px', lineHeight: 1 }}
+                  style={{ lineHeight: 1 }}
                 >
                   🎲
                 </button>
               </div>
               <select
-                className="form-select form-select-sm bg-transparent text-dark border-secondary"
-                style={{ fontSize: isMobile ? '14px' : '11px' }}
+                className="form-select form-select-sm bg-transparent text-dark border-secondary small"
                 onKeyDown={(e) => e.stopPropagation()}
                 value={globalHairColor}
                 onChange={(e) => {
@@ -146,7 +142,7 @@ export function CharacterSection({
 
             <div className="mb-1">
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <div className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                   💇‍♀️ Coupe de cheveux
                 </div>
                 <button
@@ -154,14 +150,13 @@ export function CharacterSection({
                   className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
                   onClick={handleRandomHaircut}
                   title="Coupe aléatoire 🎲"
-                  style={{ fontSize: '11px', lineHeight: 1 }}
+                  style={{ lineHeight: 1 }}
                 >
                   🎲
                 </button>
               </div>
               <select
-                className="form-select form-select-sm bg-transparent text-dark border-secondary"
-                style={{ fontSize: isMobile ? '14px' : '11px' }}
+                className="form-select form-select-sm bg-transparent text-dark border-secondary small"
                 onKeyDown={(e) => e.stopPropagation()}
                 value={globalHaircut}
                 onChange={(e) => {
@@ -181,16 +176,16 @@ export function CharacterSection({
             {/* ── Réglages Physique Perruques (directement sous la coupe) ── */}
             {layers.hairPhysics && (
               <div className="mt-2 pt-2 border-top border-secondary-subtle d-flex flex-column gap-2">
-                <div className="text-muted fw-bold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div className="text-muted fw-bold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                   💇‍♀️ Paramètres Physique Perruques
                 </div>
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                       🧶 Rigidité & Maintien (Stiffness)
                     </span>
-                    <span className="badge bg-primary text-white" style={{ fontSize: '9px' }}>
+                    <span className="badge bg-primary text-white">
                       {(layers.wigStiffness ?? 1.0).toFixed(2)}x
                     </span>
                   </div>
@@ -212,10 +207,10 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                       🧯 Amortissement & Anti-vibration (Damping)
                     </span>
-                    <span className="badge bg-success text-white" style={{ fontSize: '9px' }}>
+                    <span className="badge bg-success text-white">
                       {(layers.wigDamping ?? 0.80).toFixed(2)}
                     </span>
                   </div>
@@ -237,10 +232,10 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                       ⚖️ Poids aux pointes / Anti-fouet (Tip Weight)
                     </span>
-                    <span className="badge bg-warning text-dark" style={{ fontSize: '9px' }}>
+                    <span className="badge bg-warning text-dark">
                       {(layers.wigTipWeight ?? 1.2).toFixed(1)}x
                     </span>
                   </div>
@@ -262,10 +257,10 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                       📐 Angle max déviation repos (Max Angle)
                     </span>
-                    <span className="badge bg-danger text-white" style={{ fontSize: '9px' }}>
+                    <span className="badge bg-danger text-white">
                       {layers.wigMaxAngle ?? 15}°
                     </span>
                   </div>
@@ -287,10 +282,10 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                       🌍 Gravité globale (Gravity)
                     </span>
-                    <span className="badge bg-danger text-white" style={{ fontSize: '9px' }}>
+                    <span className="badge bg-danger text-white">
                       {(layers.wigGravity ?? 1.0).toFixed(2)}x
                     </span>
                   </div>
@@ -312,10 +307,10 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                       🏃 Inertie dynamique (Inertia)
                     </span>
-                    <span className="badge bg-secondary text-white" style={{ fontSize: '9px' }}>
+                    <span className="badge bg-secondary text-white">
                       {(layers.wigInertia ?? 1.0).toFixed(1)}x
                     </span>
                   </div>
@@ -337,10 +332,10 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                       💨 Vent / Brise ambiante (Wind)
                     </span>
-                    <span className="badge bg-info text-dark" style={{ fontSize: '9px' }}>
+                    <span className="badge bg-info text-dark">
                       {(layers.wigWind ?? 0.0).toFixed(1)}x
                     </span>
                   </div>
@@ -362,10 +357,10 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                       🛡️ Rayon Collision Tête (Head Collider)
                     </span>
-                    <span className="badge bg-dark text-white" style={{ fontSize: '9px' }}>
+                    <span className="badge bg-dark text-white">
                       {(layers.wigHeadCollisionRadius ?? 13.0).toFixed(1)} cm
                     </span>
                   </div>
@@ -392,7 +387,7 @@ export function CharacterSection({
 
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
-          <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div className="text-muted fw-semibold mb-1 text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
             🤖 Visite guidée de l'appartement
           </div>
           <button
@@ -402,20 +397,19 @@ export function CharacterSection({
               useSceneStore.getState().triggerAction('aiFullTour');
             }}
             style={{ 
-              fontSize: isMobile ? '14px' : '11px', 
               background: 'transparent',
               minHeight: isMobile ? '48px' : undefined 
             }}
           >
             <span>🚶‍♀️ Visite Complète (Sud ➔ Nord)</span>
-            <span className={`badge ${extraStates?.aiFullTour ? 'bg-primary' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+            <span className={`badge ${extraStates?.aiFullTour ? 'bg-primary' : 'bg-secondary'}`}>
               {extraStates?.aiFullTour ? 'EN COURS' : 'DÉMARRER'}
             </span>
           </button>
         </div>
       )}
 
-      <div className="text-muted fw-semibold mb-1 text-dark mt-3" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚙️ Options d'affichage</div>
+      <div className="text-muted fw-semibold mb-1 text-dark mt-3 small text-uppercase" style={{ letterSpacing: '0.5px' }}>⚙️ Options d'affichage</div>
       {layerBtn('light',  'Personnage 3D (Walker)', 'walker')}
       {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('pink',   'Peau & tissus réalistes (Mat) 🧴', 'laraRealisticTextures')}
@@ -434,10 +428,10 @@ export function CharacterSection({
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
           <div className="d-flex justify-content-between align-items-center mb-1">
-            <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
               👥 Nombre de Personnages
             </span>
-            <span className="badge bg-primary" style={{ fontSize: '9px' }}>
+            <span className="badge bg-primary">
               {(layers.laraCount ?? (isMobile ? 2 : 15)) === 1
                 ? '1 (Xbot seul)'
                 : (layers.laraCount ?? (isMobile ? 2 : 15)) === 2
@@ -453,7 +447,7 @@ export function CharacterSection({
             <button
               type="button"
               className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 1 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 1 ? undefined : 'transparent' }}
+              style={{ background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 1 ? undefined : 'transparent' }}
               onClick={() => useSceneStore.getState().setLaraCount(1)}
               title="1 PNJ (Xbot uniquement - léger)"
             >
@@ -462,7 +456,7 @@ export function CharacterSection({
             <button
               type="button"
               className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? undefined : 'transparent' }}
+              style={{ background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? undefined : 'transparent' }}
               onClick={() => useSceneStore.getState().setLaraCount(2)}
             >
               2
@@ -470,7 +464,7 @@ export function CharacterSection({
             <button
               type="button"
               className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 4 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 4 ? undefined : 'transparent' }}
+              style={{ background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 4 ? undefined : 'transparent' }}
               onClick={() => useSceneStore.getState().setLaraCount(4)}
             >
               4
@@ -478,7 +472,7 @@ export function CharacterSection({
             <button
               type="button"
               className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 10 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 10 ? undefined : 'transparent' }}
+              style={{ background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 10 ? undefined : 'transparent' }}
               onClick={() => useSceneStore.getState().setLaraCount(10)}
             >
               10
@@ -486,7 +480,7 @@ export function CharacterSection({
             <button
               type="button"
               className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 15 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 15 ? undefined : 'transparent' }}
+              style={{ background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 15 ? undefined : 'transparent' }}
               onClick={() => useSceneStore.getState().setLaraCount(15)}
             >
               15
@@ -500,7 +494,6 @@ export function CharacterSection({
           onToggleLayer('laraGrid');
         }}
         style={{ 
-          fontSize: isMobile ? '13px' : '11px', 
           backgroundColor: layers.laraGrid ? 'rgba(13, 110, 253, 0.08)' : undefined,
           fontWeight: layers.laraGrid ? 600 : 400
         }}
@@ -509,20 +502,20 @@ export function CharacterSection({
           <span className="me-2">🧬</span>
           Grille de comparaison (Lara)
         </span>
-        <span className={`badge ${layers.laraGrid ? 'bg-primary' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+        <span className={`badge ${layers.laraGrid ? 'bg-primary' : 'bg-secondary'}`}>
           {layers.laraGrid ? 'ON' : 'OFF'}
         </span>
       </button>
       {layers.laraGrid && (
         <div className="p-2 border-bottom bg-light d-flex flex-column gap-1.5">
-          <div className="text-muted fw-bold" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div className="text-muted fw-bold small text-uppercase" style={{ letterSpacing: '0.5px' }}>
             📐 Vues Ortho (Face, Côtés, Dessus, etc.)
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
             <button
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('front')}
               title="Vue orthographique de face (Alt+1 / Num 1)"
             >
@@ -531,7 +524,7 @@ export function CharacterSection({
             <button
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('left')}
               title="Vue orthographique côté gauche (Alt+3 / Ctrl+Num 3)"
             >
@@ -540,7 +533,7 @@ export function CharacterSection({
             <button
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('right')}
               title="Vue orthographique côté droit (Alt+4 / Num 3)"
             >
@@ -549,7 +542,7 @@ export function CharacterSection({
             <button
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('top')}
               title="Vue orthographique du dessus (Alt+7 / Num 7)"
             >
@@ -558,7 +551,7 @@ export function CharacterSection({
             <button
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('bottom')}
               title="Vue orthographique du dessous (Alt+9 / Ctrl+Num 7)"
             >
@@ -567,7 +560,7 @@ export function CharacterSection({
             <button
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ fontSize: '9px', lineHeight: 1.1 }}
+              style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('back')}
               title="Vue orthographique de derrière / dos (Alt+2 / Ctrl+Num 1)"
             >
@@ -578,7 +571,7 @@ export function CharacterSection({
             <button
               type="button"
               className="btn btn-outline-primary btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-1"
-              style={{ fontSize: isMobile ? '12px' : '10px' }}
+              
               onClick={() => frameLaraGridCamera()}
               title="Recadrer la caméra sur le centre de la grille (Vue 3D Persp)"
             >
@@ -592,16 +585,16 @@ export function CharacterSection({
       {/* ── Réglages Physique Buste ── */}
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
-          <div className="text-muted fw-bold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div className="text-muted fw-bold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
             💃 Paramètres Physique Buste
           </div>
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 💥 Intensité Physique Buste
               </span>
-              <span className="badge bg-danger" style={{ fontSize: '9px' }}>
+              <span className="badge bg-danger">
                 {(layers.breastIntensity ?? 1.0).toFixed(1)}x
               </span>
             </div>
@@ -623,10 +616,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 ⚖️ Masse / Poids Buste (breastMass)
               </span>
-              <span className="badge bg-danger text-white" style={{ fontSize: '9px' }}>
+              <span className="badge bg-danger text-white">
                 {(layers.breastMass ?? 1.0).toFixed(1)}x
               </span>
             </div>
@@ -648,10 +641,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 🧶 Fermeté / Maintien Buste (breastFirmness)
               </span>
-              <span className="badge bg-purple text-white" style={{ fontSize: '9px', backgroundColor: '#6f42c1' }}>
+              <span className="badge bg-purple text-white" style={{ backgroundColor: '#6f42c1' }}>
                 {(layers.breastFirmness ?? 1.0).toFixed(1)}x
               </span>
             </div>
@@ -673,10 +666,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 👙 Élasticité Verticale (braElasticity)
               </span>
-              <span className="badge bg-primary" style={{ fontSize: '9px' }}>
+              <span className="badge bg-primary">
                 {(layers.braElasticity ?? 1.0).toFixed(1)}x
               </span>
             </div>
@@ -698,10 +691,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 ↔️ Élasticité Horizontale XZ (braElasticityXZ)
               </span>
-              <span className="badge bg-success text-dark" style={{ fontSize: '9px' }}>
+              <span className="badge bg-success text-dark">
                 {(layers.braElasticityXZ ?? 1.0).toFixed(1)}x
               </span>
             </div>
@@ -723,10 +716,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 ⏱️ Retard / Déphasage Inertie (breastLagDelay)
               </span>
-              <span className="badge bg-secondary text-white" style={{ fontSize: '9px' }}>
+              <span className="badge bg-secondary text-white">
                 {(layers.breastLagDelay ?? 1.0).toFixed(1)}x
               </span>
             </div>
@@ -748,10 +741,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 📐 Angle Max Vertical (maxBreastAngle)
               </span>
-              <span className="badge bg-info text-dark" style={{ fontSize: '9px' }}>
+              <span className="badge bg-info text-dark">
                 {layers.maxBreastAngle ?? 25}°
               </span>
             </div>
@@ -773,10 +766,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 ↔️ Angle Max Horizontal (maxBreastAngleXZ)
               </span>
-              <span className="badge bg-warning text-dark" style={{ fontSize: '9px' }}>
+              <span className="badge bg-warning text-dark">
                 {layers.maxBreastAngleXZ ?? 35}°
               </span>
             </div>
@@ -798,10 +791,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 ↕️ Rebond / Translation (breastTranslation)
               </span>
-              <span className={`badge ${(layers.breastTranslation ?? 0.15) > 0 ? 'bg-primary' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+              <span className={`badge ${(layers.breastTranslation ?? 0.15) > 0 ? 'bg-primary' : 'bg-secondary'}`}>
                 {(layers.breastTranslation ?? 0.15) === 0 ? 'Désactivé' : `${(layers.breastTranslation ?? 0.15).toFixed(2)}x`}
               </span>
             </div>
@@ -823,10 +816,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 📏 Course Max Rebond (breastMaxTravel)
               </span>
-              <span className="badge bg-dark text-white" style={{ fontSize: '9px' }}>
+              <span className="badge bg-dark text-white">
                 {(layers.breastMaxTravel ?? 0.5).toFixed(2)} cm
               </span>
             </div>
@@ -848,10 +841,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 🍈 Aplatissement / Squash & Stretch (breastSquash)
               </span>
-              <span className={`badge ${(layers.breastSquash ?? 0.25) > 0 ? 'bg-info text-dark' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+              <span className={`badge ${(layers.breastSquash ?? 0.25) > 0 ? 'bg-info text-dark' : 'bg-secondary'}`}>
                 {(layers.breastSquash ?? 0.25) === 0 ? 'Désactivé' : `${(layers.breastSquash ?? 0.25).toFixed(2)}x`}
               </span>
             </div>
@@ -873,10 +866,10 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
                 🌍 Gravité Buste (breastGravity)
               </span>
-              <span className={`badge ${(layers.breastGravity ?? 1.0) > 0 ? 'bg-danger text-white' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+              <span className={`badge ${(layers.breastGravity ?? 1.0) > 0 ? 'bg-danger text-white' : 'bg-secondary'}`}>
                 {(layers.breastGravity ?? 1.0) === 0 ? 'Désactivé' : `${(layers.breastGravity ?? 1.0).toFixed(2)}x`}
               </span>
             </div>
@@ -903,8 +896,7 @@ export function CharacterSection({
               style={{
                 background: layers.fpvHeadBobbing ? 'rgba(255, 107, 157, 0.15)' : 'rgba(0, 0, 0, 0.04)',
                 border: '1px solid rgba(0, 0, 0, 0.1)',
-                fontSize: '11px',
-              }}
+                }}
               onClick={() => {
                 useSceneStore.setState(st => ({
                   layers: { ...st.layers, fpvHeadBobbing: !st.layers.fpvHeadBobbing }
@@ -912,7 +904,7 @@ export function CharacterSection({
               }}
             >
               <span>🎥 Head Bobbing (Vue FPS)</span>
-              <span className={`badge ${layers.fpvHeadBobbing ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+              <span className={`badge ${layers.fpvHeadBobbing ? 'bg-danger' : 'bg-secondary'}`}>
                 {layers.fpvHeadBobbing ? 'ACTIF' : 'DÉSACTIVÉ'}
               </span>
             </button>
@@ -923,8 +915,7 @@ export function CharacterSection({
               style={{
                 background: layers.fpvRealisticEyes ? 'rgba(0, 204, 255, 0.15)' : 'rgba(0, 0, 0, 0.04)',
                 border: '1px solid rgba(0, 0, 0, 0.1)',
-                fontSize: '11px',
-              }}
+                }}
               title="Positionne la caméra au centre exact des yeux de Lara / PNJ et suit précisément les rotations et inclinaisons de la tête"
               onClick={() => {
                 useSceneStore.setState(st => ({
@@ -933,7 +924,7 @@ export function CharacterSection({
               }}
             >
               <span>👁️ FPV Réaliste (Caméra Yeux)</span>
-              <span className={`badge ${layers.fpvRealisticEyes ? 'bg-info text-dark' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+              <span className={`badge ${layers.fpvRealisticEyes ? 'bg-info text-dark' : 'bg-secondary'}`}>
                 {layers.fpvRealisticEyes ? 'ACTIF' : 'DÉSACTIVÉ'}
               </span>
             </button>
@@ -946,8 +937,7 @@ export function CharacterSection({
                   style={{
                     background: (layers.fpvStabilization ?? true) ? 'rgba(0, 204, 255, 0.12)' : 'transparent',
                     border: 'none',
-                    fontSize: '10.5px',
-                  }}
+                    }}
                   title="Amortit et stabilise les mouvements brusques ou violents de la tête"
                   onClick={() => {
                     useSceneStore.setState(st => ({
@@ -956,14 +946,14 @@ export function CharacterSection({
                   }}
                 >
                   <span>⚖️ Stabilisation Caméra</span>
-                  <span className={`badge ${(layers.fpvStabilization ?? true) ? 'bg-info text-dark' : 'bg-secondary'}`} style={{ fontSize: '8.5px' }}>
+                  <span className={`badge ${(layers.fpvStabilization ?? true) ? 'bg-info text-dark' : 'bg-secondary'}`}>
                     {(layers.fpvStabilization ?? true) ? 'ACTIVE' : 'OFF'}
                   </span>
                 </button>
 
                 {(layers.fpvStabilization ?? true) && (
                   <div className="mt-1.5 px-1">
-                    <div className="d-flex justify-content-between text-muted" style={{ fontSize: '9.5px' }}>
+                    <div className="d-flex justify-content-between text-muted small">
                       <span>Amorti des secousses</span>
                       <span className="fw-bold text-dark">{Math.round((layers.fpvStabilizationFactor ?? 0.7) * 100)}%</span>
                     </div>

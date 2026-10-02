@@ -42,11 +42,10 @@ export function LayersSection({
   const b0 = (_color: string, label: string, onClick: () => void) => {
     return (
       <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark bg-transparent"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark bg-transparent small"
         onClick={onClick}
         style={{ 
-          fontSize: isMobile ? '14px' : '11px',
-          minHeight: isMobile ? '48px' : undefined,
+          minHeight: isMobile ? '44px' : undefined,
         }}
       >
         {label}
@@ -62,17 +61,16 @@ export function LayersSection({
     const on = layers[key];
     return (
       <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
         onClick={() => onToggleLayer(key)}
         style={{ 
-          fontSize: isMobile ? '14px' : '11px',
-          minHeight: isMobile ? '48px' : undefined,
+          minHeight: isMobile ? '44px' : undefined,
           background: 'transparent',
           opacity: on ? 1 : 0.55,
         }}
       >
         <span>{label}</span>
-        <span className={`badge ${on ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+        <span className={`badge ${on ? 'bg-danger' : 'bg-secondary'}`}>
           {on ? 'ON' : 'OFF'}
         </span>
       </button>
@@ -83,7 +81,7 @@ export function LayersSection({
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
       <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
         <div className="d-flex justify-content-between align-items-center mb-1 gap-2">
-          <div className="text-muted fw-semibold text-dark text-nowrap" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div className="text-muted fw-semibold text-dark text-nowrap small text-uppercase" style={{ letterSpacing: '0.5px' }}>
             🌆 Ambiance HDRI / Ciel
           </div>
           <div className="d-flex align-items-center gap-1 text-end overflow-hidden" style={{ minWidth: 0 }}>
@@ -92,8 +90,7 @@ export function LayersSection({
               const displayName = activeHdri?.name || '';
               return displayName ? (
                 <span
-                  className="text-dark fw-medium text-truncate flex-grow-1"
-                  style={{ fontSize: '9px' }}
+                  className="text-dark fw-medium text-truncate flex-grow-1 small"
                   title={displayName}
                 >
                   {displayName}
@@ -105,7 +102,6 @@ export function LayersSection({
               className="btn btn-sm btn-outline-secondary p-0 px-1 border-0 flex-shrink-0"
               onClick={handleRandomHdri}
               title="HDRI aléatoire 🎲 (Touche 5)"
-              style={{ fontSize: '11px', lineHeight: 1 }}
             >
               🎲
             </button>
@@ -113,7 +109,6 @@ export function LayersSection({
         </div>
         <select
           className="form-select form-select-sm bg-transparent text-dark border-secondary"
-          style={{ fontSize: isMobile ? '14px' : '11px' }}
           onKeyDown={(e) => e.stopPropagation()}
           value={currentHdri}
           onChange={(e) => setHdri(e.target.value)}
@@ -129,8 +124,8 @@ export function LayersSection({
           const fileName = activeHdri ? activeHdri.url.split('/').pop() : '';
           return fileName ? (
             <div
-              className="text-muted mt-1"
-              style={{ fontSize: '10px', userSelect: 'all', wordBreak: 'break-all', whiteSpace: 'normal' }}
+              className="text-muted mt-1 small font-monospace"
+              style={{ userSelect: 'all', wordBreak: 'break-all', whiteSpace: 'normal', fontSize: '0.75rem' }}
               title={fileName}
             >
               {fileName}
@@ -146,11 +141,11 @@ export function LayersSection({
       {layerBtn('green',     'Herbe & Terrain ext. 🌱',        'bermudaGrass')}
       {layers.bermudaGrass && (
         <div className="px-3 py-1 border-bottom bg-transparent d-flex align-items-center justify-content-between gap-2">
-          <span className="text-muted" style={{ fontSize: '10px' }}>Type :</span>
+          <span className="text-muted small">Type :</span>
           <div className="d-flex align-items-center gap-1">
             <select
               className="form-select form-select-sm bg-transparent text-dark border-secondary"
-              style={{ fontSize: isMobile ? '13px' : '11px', maxWidth: '175px' }}
+              style={{ maxWidth: '175px' }}
               value={currentGroundType}
               onChange={(e) => setGroundType(e.target.value as GroundType)}
             >
@@ -165,7 +160,6 @@ export function LayersSection({
               className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
               onClick={() => setGroundType(getRandomGrassType())}
               title="Herbe aléatoire 🎲"
-              style={{ fontSize: '11px', lineHeight: 1 }}
             >
               🎲
             </button>
@@ -203,17 +197,17 @@ export function LayersSection({
       {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
 
       {sunInfo && (
-        <div className="p-2 border-bottom text-muted" style={{ fontSize: '9px', background: 'transparent' }}>
+        <div className="p-2 border-bottom text-muted small bg-transparent">
           ☀️ {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
         </div>
       )}
       <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
         onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
-        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent', opacity: layers.plan ? 1 : 0.55 }}
+        style={{ background: 'transparent', opacity: layers.plan ? 1 : 0.55 }}
       >
         <span>Plan 2D</span>
-        <span className={`badge ${layers.plan ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+        <span className={`badge ${layers.plan ? 'bg-danger' : 'bg-secondary'}`}>
           {layers.plan ? 'ON' : 'OFF'}
         </span>
       </button>

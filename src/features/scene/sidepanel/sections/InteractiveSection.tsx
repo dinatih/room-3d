@@ -37,18 +37,16 @@ export function InteractiveSection({
   const triggerBtn = (label: string, actionKey: string, badgeLabel = 'Action') => {
     return (
       <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
         onClick={() => {
           document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: actionKey } }));
         }}
         style={{ 
-          fontSize: isMobile ? '14px' : '11px',
-          minHeight: isMobile ? '48px' : undefined,
-          background: 'transparent',
+          minHeight: isMobile ? '44px' : undefined,
         }}
       >
         <span>{label}</span>
-        <span className="badge bg-secondary" style={{ fontSize: '9px' }}>
+        <span className="badge bg-secondary">
           {badgeLabel}
         </span>
       </button>
@@ -66,17 +64,15 @@ export function InteractiveSection({
     const isOn = typeof val === 'boolean' ? val : !!val;
     return (
       <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
         onClick={() => toggleFurniture(key)}
         style={{ 
-          fontSize: isMobile ? '14px' : '11px',
-          minHeight: isMobile ? '48px' : undefined,
-          background: 'transparent',
+          minHeight: isMobile ? '44px' : undefined,
           opacity: isOn ? 1 : 0.55,
         }}
       >
         <span>{label}</span>
-        <span className={`badge ${isOn ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+        <span className={`badge ${isOn ? 'bg-danger' : 'bg-secondary'}`}>
           {displayValue ? displayValue(val) : (isOn ? txtOn : txtOff)}
         </span>
       </button>
@@ -85,7 +81,7 @@ export function InteractiveSection({
 
   return (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
-      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>PORTES & FENÊTRES</div>
+      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">PORTES & FENÊTRES</div>
       {furnitureBtn('Porte Entrée', 'entryDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Porte Séjour', 'livingDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Porte SDB', 'bathroomDoor', 'OUVERT', 'FERMÉ')}
@@ -94,7 +90,7 @@ export function InteractiveSection({
       {furnitureBtn('Baie Vitrée Ouest', 'glassDoorV2LeftOpen', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Volets', 'glassDoorV2ShutterPos', 'ON', 'OFF', v => typeof v === 'number' ? (v === 0 ? 'OUVERT' : v === 100 ? 'FERMÉ' : `${v}%`) : `${v}%`)}
       
-      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>PLACARDS</div>
+      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">PLACARDS</div>
       {furnitureBtn('Placard Couloir', 'corrDoors', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Placard SDB Gauche', 'sdbClosetL', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Placard SDB Droite', 'sdbClosetR', 'OUVERT', 'FERMÉ')}
@@ -102,22 +98,20 @@ export function InteractiveSection({
       {furnitureBtn('Armoire SDB Est', 'cbnEast', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Meuble sous évier', 'cabinet', 'OUVERT', 'FERMÉ')}
       
-      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>MOBILIER & ÉLECTRO</div>
+      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">MOBILIER & ÉLECTRO</div>
       {furnitureBtn('Lit Double', 'bedDouble', 'DOUBLE', 'SÉPARÉ')}
       {furniture.bedDouble && (
         <button
-          className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+          className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
           onClick={() => {
             document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-position' } }));
           }}
           style={{
-            fontSize: isMobile ? '14px' : '11px',
-            minHeight: isMobile ? '48px' : undefined,
-            background: 'transparent',
+            minHeight: isMobile ? '44px' : undefined,
           }}
         >
           <span>Lit Double (Position)</span>
-          <span className="badge bg-primary" style={{ fontSize: '9px' }}>
+          <span className="badge bg-primary">
             {(() => {
               const p = positionState['bed-position'];
               const labels = ['Centré', 'Mur Ouest', 'Mur Est'];
@@ -145,85 +139,77 @@ export function InteractiveSection({
       {triggerBtn('WC Siège', 'wc-seat-toggle')}
       {triggerBtn('WC Chasse d\'eau', 'wc-flush')}
       
-      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>JARDIN & EXTÉRIEUR</div>
+      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">JARDIN & EXTÉRIEUR</div>
       {triggerBtn('Mur diagonal jardin', 'garden-wall-scan', gardenWallScan ? 'SCAN 3D' : 'CLASSIQUE')}
       
-      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>EXPÉRIENCES & AVION ✈</div>
+      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">EXPÉRIENCES & AVION ✈</div>
       <button
-        className="btn btn-outline-danger w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 fw-bold"
+        className="btn btn-sm btn-outline-danger w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 fw-bold small"
         onClick={() => dispatchKey('f')}
-        style={{ fontSize: isMobile ? '13px' : '11px' }}
       >
         ✈ Lancer / Quitter Avion [F]
       </button>
       <div className="p-2 border-bottom bg-transparent">
-        <div className="text-muted fw-semibold mb-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div className="text-muted fw-semibold mb-1 small text-uppercase" style={{ letterSpacing: '0.5px' }}>
           Modèle d'avion
         </div>
         <div className="d-flex gap-1">
           <button 
-            className={`btn btn-sm flex-grow-1 p-1 ${planeModel === 'paper' ? 'btn-danger' : 'btn-outline-secondary'}`}
+            className={`btn btn-sm flex-grow-1 p-1 small ${planeModel === 'paper' ? 'btn-danger' : 'btn-outline-secondary'}`}
             onClick={() => onSetPlaneModel?.('paper')}
-            style={{ fontSize: '9px' }}
           >
             Papier
           </button>
           <button 
-            className={`btn btn-sm flex-grow-1 p-1 ${planeModel === 'rocket' ? 'btn-danger' : 'btn-outline-secondary'}`}
+            className={`btn btn-sm flex-grow-1 p-1 small ${planeModel === 'rocket' ? 'btn-danger' : 'btn-outline-secondary'}`}
             onClick={() => onSetPlaneModel?.('rocket')}
-            style={{ fontSize: '9px' }}
           >
             Fusée
           </button>
           <button 
-            className={`btn btn-sm flex-grow-1 p-1 ${planeModel === 'comet' ? 'btn-danger' : 'btn-outline-secondary'}`}
+            className={`btn btn-sm flex-grow-1 p-1 small ${planeModel === 'comet' ? 'btn-danger' : 'btn-outline-secondary'}`}
             onClick={() => onSetPlaneModel?.('comet')}
-            style={{ fontSize: '9px' }}
           >
             Comète
           </button>
         </div>
       </div>
       <button
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
         onClick={onToggleAutopilot}
         style={{ 
-          fontSize: isMobile ? '13px' : '11px', 
-          background: 'transparent',
           opacity: autopilotVisible ? 1 : 0.55,
         }}
       >
         <span>Pilote auto ∞</span>
-        <span className={`badge ${autopilotVisible ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+        <span className={`badge ${autopilotVisible ? 'bg-danger' : 'bg-secondary'}`}>
           {autopilotVisible ? 'ON' : 'OFF'}
         </span>
       </button>
       <button
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
         onClick={onToggleLandingStrips}
         style={{ 
-          fontSize: isMobile ? '13px' : '11px', 
-          background: 'transparent',
           opacity: showLandingStrips ? 1 : 0.55,
         }}
       >
         <span>Pistes 🛬</span>
-        <span className={`badge ${showLandingStrips ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+        <span className={`badge ${showLandingStrips ? 'bg-danger' : 'bg-secondary'}`}>
           {showLandingStrips ? 'ON' : 'OFF'}
         </span>
       </button>
 
-      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>LUMIÈRES</div>
+      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">LUMIÈRES</div>
       {furnitureBtn('Lampe SDB', 'lampBath')}
       {furnitureBtn('Lampe Couloir', 'lampCorridor')}
       {furnitureBtn('Lampe Ola', 'lampOn')}
 
-      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>DÉMO & ASSEMBLAGE 3D</div>
+      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">DÉMO & ASSEMBLAGE 3D</div>
       <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
         <button
           onClick={onStartBuildAnimMatrix}
-          className={`btn btn-sm w-100 text-start rounded-2 py-1 px-2 fw-bold d-flex justify-content-between align-items-center ${buildAnimMatrix ? 'btn-success text-white' : 'btn-outline-secondary text-dark'}`}
-          style={{ fontSize: isMobile ? '12px' : '10px', background: buildAnimMatrix ? undefined : 'rgba(255, 255, 255, 0.7)' }}
+          className={`btn btn-sm w-100 text-start rounded-2 py-1 px-2 fw-bold d-flex justify-content-between align-items-center small ${buildAnimMatrix ? 'btn-success text-white' : 'btn-outline-secondary text-dark'}`}
+          style={{ background: buildAnimMatrix ? undefined : 'rgba(255, 255, 255, 0.7)' }}
         >
           <span>▶ Matrix</span>
           <span className="small opacity-75">{animDurations['buildAnimMatrix'] ? `~${Math.round(animDurations['buildAnimMatrix'] / 1000)}s` : ''}</span>
@@ -231,8 +217,8 @@ export function InteractiveSection({
         {buildAnimMatrix && (
           <button
             onClick={onStopBuildAnim}
-            className="btn btn-danger btn-sm w-100 fw-bold py-1 border-0 shadow-sm"
-            style={{ fontSize: '10px', letterSpacing: '0.04em' }}
+            className="btn btn-danger btn-sm w-100 fw-bold py-1 border-0 shadow-sm small"
+            style={{ letterSpacing: '0.04em' }}
           >
             ■ Arrêter l'animation en cours
           </button>
