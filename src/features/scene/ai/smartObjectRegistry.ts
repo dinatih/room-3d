@@ -390,7 +390,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'cook-stove',
         name: 'Cuisiner Plaques',
         animation: 'bartending',
-        offset: [80, 0, 390],
+        offset: [80, 0, 400],
         // interactions/anim_cards.glb, interactions/anim_drinking_fountain.glb,
       }
     ]

@@ -9,10 +9,13 @@ import { MergedStaticGroup } from './MergedStaticGroup';
 import { CategoryLayerGroup } from '../sceneLayer';
 import {
   ROOM_W, ROOM_D, WALL_H, BATH_WEST_WALL, DOOR_START, DOOR_END,
-  KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_SOUTH_WALL, pSouth, DiagWall,
+  KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL, pSouth, DiagWall,
+  BATH_EAST_WALL,
+  CORRIDOR_WEST_WALL,
+  pX,
 } from '../wallData';
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
-import { PARTITION_THICKNESS, CORR_WALL_X, BATH_SOUTH_WALL, CORRIDOR_NORTH_WALL } from '../wallData';
+import { PARTITION_THICKNESS, BATH_SOUTH_WALL, CORRIDOR_NORTH_WALL } from '../wallData';
 import {
   COLORS, skirtingMat, noCapMat, slabConcreteTop, slabConcreteSide,
   boxFaceMats, qrGeo
@@ -25,7 +28,7 @@ const CEIL_THICK = 20;
 const INT_X_WEST = 0;
 const INT_X_NICHE = BATH_WEST_WALL;
 const INT_X_KITCHEN_L = KITCHEN_WEST_WALL;
-const INT_X_KITCHEN_R = KITCHEN_X1;
+const INT_X_KITCHEN_R = KITCHEN_EAST_WALL;
 const INT_X_DOOR_S = DOOR_START;
 const INT_X_EAST = ROOM_W;
 
@@ -236,9 +239,9 @@ export function Parquet() {
 }
 
 export function Tile() {
-  const CLOSET_W_REAL = DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS);
+  const CLOSET_W_REAL = DOOR_START - (KITCHEN_EAST_WALL + PARTITION_THICKNESS);
   const CLOSET_D_REAL = KITCHEN_SOUTH_WALL - (CORRIDOR_NORTH_WALL);
-  const CLOSET_X_REAL = ((KITCHEN_X1 + PARTITION_THICKNESS) + DOOR_START) / 2;
+  const CLOSET_X_REAL = ((KITCHEN_EAST_WALL + PARTITION_THICKNESS) + DOOR_START) / 2;
   const CLOSET_Z_REAL = ((CORRIDOR_NORTH_WALL) + KITCHEN_SOUTH_WALL) / 2;
 
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
@@ -318,7 +321,7 @@ export function Baseboards() {
   const diagSegA = { ...DiagWall.p((0 + Math.max(0, DiagWall.door.start - CW_ENTRY)) / 2, -SD / 2), len: Math.max(0, DiagWall.door.start - CW_ENTRY) };
   const diagSegB = { ...DiagWall.p((DiagWall.door.end + CW_ENTRY + diagParquetLen) / 2, -SD / 2), len: diagParquetLen - (DiagWall.door.end + CW_ENTRY) };
 
-  const CORR_WALL_EAST = CORR_WALL_X + PARTITION_THICKNESS / 2;
+  const CORR_WALL_EAST = CORRIDOR_WEST_WALL;
   const corridorXEnd = CORR_WALL_EAST;
   const corridorZEnd = DiagWall.A.z + (corridorXEnd - DiagWall.A.x) * DiagWall.slope;
   const diagCorridorTotalLen = Math.sqrt((DiagWall.A.x - corridorXEnd) ** 2 + (DiagWall.A.z - corridorZEnd) ** 2);
@@ -372,7 +375,7 @@ export function Baseboards() {
       ))}
 
       {(() => {
-        const CORR_WALL_EAST = CORR_WALL_X + PARTITION_THICKNESS / 2;
+        const CORR_WALL_EAST = CORRIDOR_WEST_WALL;
         const CLOSET_S = KITCHEN_SOUTH_WALL;
         const CORR_DOOR_S = 517;
         const CORR_DOOR_E = 603;
@@ -392,8 +395,8 @@ export function Baseboards() {
       {(() => {
         const CL_N = CORRIDOR_NORTH_WALL;
         const CL_S = KITCHEN_SOUTH_WALL;
-        const CL_W = KITCHEN_X1 + PARTITION_THICKNESS;
-        const CL_E = CORR_WALL_X - PARTITION_THICKNESS / 2;
+        const CL_W = KITCHEN_EAST_WALL + PARTITION_THICKNESS;
+        const CL_E = CORRIDOR_WEST_WALL;
         const xCenter = (CL_W + CL_E + SD) / 2;
         const zCenter = (CL_N + CL_S) / 2;
         const W_LEN = CL_E + SD - CL_W;
@@ -487,9 +490,9 @@ export function BathSkirting() {
     });
   }, []);
 
-  const BATH_E_FACE  = CORR_WALL_X - PARTITION_THICKNESS / 2;
+  const BATH_E_FACE  = BATH_EAST_WALL;
   const BATH_S_FACE  = BATH_SOUTH_WALL;
-  const SHOWER_E_X   = 65 + PARTITION_THICKNESS / 2;
+  const SHOWER_E_X   = pX('shower-ne');
 
   const Bz = DiagWall.A.z + (INT_X_NICHE  - DiagWall.A.x) * DiagWall.slope;
   const corridorXEnd = BATH_E_FACE;

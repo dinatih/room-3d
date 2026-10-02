@@ -27,7 +27,7 @@ import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 // Wrapper world pos: (KITCHEN_WEST_WALL=30, 0, ROOM_D=400)
-// KIT_W = KITCHEN_X1 - KITCHEN_WEST_WALL = 100, KIT_D = KITCHEN_DEPTH = 60
+// KIT_W = KITCHEN_EAST_WALL - KITCHEN_WEST_WALL = 100, KIT_D = KITCHEN_DEPTH = 60
 
 const KIT_W       = 100;
 const KIT_D       = 60;

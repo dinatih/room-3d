@@ -46,7 +46,7 @@ import {
   ROOM_W,
   ROOM_D,
   WALL_H,
-  NICHE_Z_START,
+  pSouth,
 } from '../wallData';
 
 import {
@@ -69,12 +69,12 @@ const KALLAX_SE_TOP = 2 * w2; // 151
 
 const lackY = 187.5;
 const lackCX = 13;
-const lackCZ = NICHE_Z_START - 55;
+const lackCZ = pSouth('niche-beam') - 55;
 const lackTopY = lackY + 5;
 const mannRot = Math.atan2(150 - lackCX, 200 - lackCZ);
 
 const MUL_D = 13;
-const mulCZ = NICHE_Z_START - 150;
+const mulCZ = pSouth('niche-beam') - 150;
 
 const MEUBLE_T_X = ROOM_W - 13.75;
 const MEUBLE_T_Z = KALLAX_SE_Z;

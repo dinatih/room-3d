@@ -10,7 +10,7 @@ import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from '../items
 import { MergedStaticGroup } from './MergedStaticGroup';
 import { PARTITION_THICKNESS } from '../wallData';
 import {
-  ROOM_D, WALL_H, KITCHEN_X1, DOOR_START, KITCHEN_SOUTH_WALL,
+  ROOM_D, WALL_H, KITCHEN_EAST_WALL, DOOR_START, KITCHEN_SOUTH_WALL,
 } from '../wallData';
 import {
   LAYER_STRUCTURE, LAYER_WALL_STRUCTURE, LAYER_FLOOR_COVERINGS, LAYER_DOORS, LAYER_GRASS,
@@ -159,7 +159,7 @@ function MergedReflector({ planes, position, rotationY }: {
 export function MirrorsD({ showReflection, reflectorOnly = false }: { showReflection: boolean; reflectorOnly?: boolean }) {
   const W_M = 65, H_M = 65;
   const FT = 1.8;
-  const cx  = (KITCHEN_X1 + DOOR_START) / 2;
+  const cx  = (KITCHEN_EAST_WALL + DOOR_START) / 2;
   const fz  = ROOM_D - 3.5;
   const mirZ = ROOM_D - 5.5;
 
@@ -277,4 +277,3 @@ export function MirrorReflectors() {
     </>
   );
 }
-

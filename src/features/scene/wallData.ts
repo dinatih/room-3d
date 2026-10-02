@@ -14,36 +14,28 @@ import * as THREE from 'three';
 // =============================================
 /** Largeur / profondeur Z du placard couloir entre le retour porte séjour (door-living-w) et le mur SDB (bath-ne) : 52 cm */
 export const MEASURED_DIST_CORRIDOR_CLOSET_Z        = 52;
-export const MEASURED_DIST_DOOR_LIVING_W_TO_BATH_NE = MEASURED_DIST_CORRIDOR_CLOSET_Z;
-
-
 /** Distance Z entre le mur nord de la SDB (Z de bath-nw/kitchen-sw) et shower-ne : 141 cm */
 export const MEASURED_DIST_BATH_N_TO_SHOWER_NE      = 141;
-
 /** Distance X entre le mur ouest SDB et la porte sdb nord (door-bath-n) / largeur intérieure SDB : 202 cm */
 export const MEASURED_DIST_BATH_W_TO_DOOR_BATH_N    = 202;
-
 /** Largeur de l'ouverture cuisine entre kitchen-nw et kitchen-ne : 102 cm */
 export const MEASURED_DIST_KITCHEN_NW_TO_NE         = 102;
-
 /** Profondeur du séjour le long du mur Est entre corner-ne et corner-se : 405 cm */
 export const MEASURED_DIST_CORNER_NE_TO_SE          = 405;
-
 /** Largeur de la douche entre shower-nw et shower-ne : 71 cm */
-export const MEASURED_DIST_SHOWER_NW_TO_NE          = 71;
+export const MEASURED_DIST_SHOWER_NW_TO_NE = 71;
 
+export const MEASURED_DIST_SHOWER_NW_TO_SW = 73; // env 3cm + 70cm du bac
 /** Largeur du couloir entre la porte SDB (door-bath-e) et le mur Est couloir (corner-se.x / diag-ne.x) : 116 cm */
 export const MEASURED_DIST_DOOR_BATH_E_TO_CORR_E    = 116;
-
 /** Largeur de la pièce entre niche-beam (poutre/niche) et le mur Est (corner-ne.x / corner-se.x) : 316 cm */
 export const MEASURED_DIST_NICHE_BEAM_TO_EAST_WALL  = 316;
-
 /** Hauteur sous plafond mesurée entre parquet et plafond : 250 cm */
 export const MEASURED_HEIGHT_FLOOR_TO_CEILING       = 250;
-
 /** Distance entre le mur Ouest de la niche de la pièce principale et le mur Ouest de la cuisine : 41,5 cm */
 export const MEASURED_DIST_ROOM_WEST_NICHE_WALL_TO_KITCHEN_WEST_WALL = 41.5;
 
+export const MEASURED_KITCHEN_DEPTH = 60; // 60cm
 // =============================================
 // DIMENSIONS DU MODÈLE 3D
 // =============================================
@@ -56,29 +48,77 @@ export const WALL_H = MEASURED_HEIGHT_FLOOR_TO_CEILING; // 2.5m
 export const WALL_THICKNESS      = 10;   // Épaisseur murs porteurs / extérieurs (cm)
 export const PARTITION_THICKNESS = 7.2;  // Épaisseur cloisons intérieures placo (cm)
 
+
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+export type WallMat = 'west' | 'east' | 'north' | 'default';
+export type SegKind = 'wall' | 'door' | 'window';
+
+export type PillarDef = {
+  id: string;
+  x: number;
+  z: number;
+  w?: number;
+  d?: number;
+  rot?: number;
+};
+
+export type WallDef = {
+  segKind?: SegKind | 'none'; // Défaut 'wall'
+  mat?:     WallMat;          // Défaut 'default'
+  h?:       number;           // Défaut WALL_H
+  yBase?:   number;           // Défaut 0
+  t?:       number;           // Épaisseur (défaut WT)
+} & (
+  | { axis: 'z'; xc: number; z1: number; z2: number }
+  | { axis: 'x'; x1: number; x2: number; zc: number }
+  );
+
+const WT = WALL_THICKNESS;
+const PT = PARTITION_THICKNESS;
+
+const _ROOM_NORTH_WALL = 0;
+const _ROOM_WEST_WALL = 0;
+const _ROOM_EAST_WALL = _ROOM_WEST_WALL + ROOM_W;
+const _ROOM_EAST_WALL_X = _ROOM_EAST_WALL + WT / 2;
+const _ROOM_SOUTH_WALL = _ROOM_NORTH_WALL + ROOM_D;
+
+const _BATH_WEST_WALL = -10;
+const _BATH_WEST_WALL_X = _BATH_WEST_WALL - WT / 2;
+const _KITCHEN_SOUTH_WALL = _ROOM_SOUTH_WALL + MEASURED_KITCHEN_DEPTH;
+const _BATH_NORTH_WALL = _KITCHEN_SOUTH_WALL + PT;
+
+const _CORRIDOR_NORTH_WALL = _ROOM_SOUTH_WALL + PT;
+const _KITCHEN_WEST_WALL = _BATH_WEST_WALL + MEASURED_DIST_ROOM_WEST_NICHE_WALL_TO_KITCHEN_WEST_WALL; // TODO : MEASURED_DIST_ROOM_WEST_NICHE_WALL_TO_KITCHEN_WEST_WALL 41,5
+const _KITCHEN_WEST_WALL_X = _KITCHEN_WEST_WALL - PT / 2;
+const _KITCHEN_EAST_WALL = _KITCHEN_WEST_WALL + MEASURED_DIST_KITCHEN_NW_TO_NE;
+const _KITCHEN_EAST_WALL_X = _KITCHEN_EAST_WALL + PT / 2;
+const _BATH_KITCHEN_WALL_Z = _KITCHEN_SOUTH_WALL + PT / 2;
+const _ROOM_CORRIDOR_WALL_Z = _ROOM_SOUTH_WALL + PT / 2;
+const _BATH_CORRIDOR_WALL_X = _BATH_WEST_WALL + MEASURED_DIST_BATH_W_TO_DOOR_BATH_N + PT / 2;
+
+// Repères calculés de la douche
+const _BATH_SOUTH_WALL = _BATH_NORTH_WALL + MEASURED_DIST_BATH_N_TO_SHOWER_NE;
+const _BATH_SOUTH_WALL_Z = _BATH_SOUTH_WALL + PT / 2;
+const _SHOWER_SOUTH_WALL_Z = _BATH_SOUTH_WALL_Z + MEASURED_DIST_SHOWER_NW_TO_SW + PT / 2;
+const _SHOWER_EAST_WALL_X = _BATH_WEST_WALL + MEASURED_DIST_SHOWER_NW_TO_NE + PT / 2;
+
 // Porte : 80cm d'ouverture, alignée après mur couloir (X=200)
 export const DOOR_START = 200; // cm 200
 export const DOOR_END = 286; // cm 286
 export const DOOR_H = 204;      // hauteur standard française (panneaux de porte)
 
-// Renfoncement cuisine : 1m large, 60cm profond, à droite de la porte
-const KITCHEN_X0 = 30; // interne — utiliser KITCHEN_WEST_WALL à la place côté import // TODO: true value is MEASURED_DIST_ROOM_WEST_NICHE_WALL_TO_KITCHEN_WEST_WALL
-export const KITCHEN_X1 = 130; // fin (1m = 100cm)
-export const KITCHEN_DEPTH = 60; // 60cm
-const KITCHEN_Z = ROOM_D + KITCHEN_DEPTH; // interne — utiliser KITCHEN_SOUTH_WALL à la place côté import
-
-// Enfoncement angle D-A : point X de la niche ouest (piliers / diagonale).
-const NICHE_X = -10; // interne — utiliser BATH_WEST_WALL à la place côté import
-export const NICHE_Z_START = ROOM_D - 120; // Z=280
+const GLASS_START = 95;   // Début baie vitrée mur C (Nord)
+const GLASS_END   = 260;  // Fin baie vitrée mur C (Nord)
 
 // Mur diagonal bâtiment — paramètre physique unique : angle intérieur au coin Est (NE)
 // (angle entre mur Est et le mur diagonal, mesuré à l'intérieur de la pièce)
 // Mesure sur place : 118–120°  |  modèle actuel : 122.5°
 export const DIAG_ANGLE_DEG = 120;
 const _diagAngle = DIAG_ANGLE_DEG * (Math.PI / 180);
-const _AX = ROOM_W;
-const _AZ = ROOM_D + PARTITION_THICKNESS + 134.8; // TODO : true value for 134.8 is MEASURED_DIST_CORRIDOR_NORTH_EAST_ANGLE_TO_CORRIDOR_EAST_WALL_DIAGONAL_WALL_ANGLE
-const _CX = NICHE_X;
+const _AX = _ROOM_EAST_WALL;
+const _AZ = _CORRIDOR_NORTH_WALL + 134.8; // TODO : true value for 134.8 is MEASURED_DIST_CORRIDOR_NORTH_EAST_ANGLE_TO_CORRIDOR_EAST_WALL_DIAGONAL_WALL_ANGLE
+const _CX = _BATH_WEST_WALL;
 const _CZ = _AZ - (_AX - _CX) / Math.tan(_diagAngle);
 const _DX = _CX - _AX;
 const _DZ = _CZ - _AZ;
@@ -110,44 +150,6 @@ export const DiagWall = {
   }
 };
 
-const WT = WALL_THICKNESS;
-const PT = PARTITION_THICKNESS;
-
-const GLASS_START = 95;   // Début baie vitrée mur C (Nord)
-const GLASS_END   = 260;  // Fin baie vitrée mur C (Nord)
-
-export const CORR_WALL_X = 192 + PT / 2; // Axe X de la cloison couloir gauche (195.6 cm)
-
-// Repères calculés de la douche
-const SHOWER_Z_N = KITCHEN_Z + PT + 140 + PT / 2; // Z=610.8 (aligné avec BATH_SOUTH_WALL)
-const SHOWER_Z_S = SHOWER_Z_N + 70;              // Z=680.8
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-export type WallMat = 'west' | 'east' | 'north' | 'default';
-export type SegKind = 'wall' | 'door' | 'window';
-
-export type PillarDef = {
-  id: string;
-  x: number;
-  z: number;
-  w?: number;
-  d?: number;
-  rot?: number;
-};
-
-export type WallDef = {
-  segKind?: SegKind | 'none'; // Défaut 'wall'
-  mat?:     WallMat;          // Défaut 'default'
-  h?:       number;           // Défaut WALL_H
-  yBase?:   number;           // Défaut 0
-  t?:       number;           // Épaisseur (défaut WT)
-} & (
-  | { axis: 'z'; xc: number; z1: number; z2: number }
-  | { axis: 'x'; x1: number; x2: number; zc: number }
-);
-
-const MEASURED_CORRIDOR_NORTH_WALL = ROOM_D + PT;
-
 // ── PILLAR_DEFS : Poteaux structurels et huisseries ───────────────────────────
 export const PILLAR_DEFS = [
   // ── Façade Nord (Mur C) : Béton 20cm + Placo 10cm ─────────────────────────
@@ -157,38 +159,38 @@ export const PILLAR_DEFS = [
   { id: 'glass-west-ext', x: GLASS_START - WT / 2,  z: -20,                 d: 20 },
   { id: 'glass-east',     x: GLASS_END + WT / 2,    z: -5 },
   { id: 'glass-east-ext', x: GLASS_END + WT / 2,    z: -20,                 d: 20 },
-  { id: 'corner-ne',      x: ROOM_W + WT / 2,       z: -5 },
-  { id: 'corner-ne-ext',  x: ROOM_W + WT / 2,       z: -20,                 d: 20 },
+  { id: 'corner-ne',      x: _ROOM_EAST_WALL_X,       z: -5 },
+  { id: 'corner-ne-ext',  x: _ROOM_EAST_WALL_X,       z: -20,                 d: 20 },
 
   // ── Séjour & Niche Ouest ──────────────────────────────────────────────────
-  { id: 'niche-beam',     x: -5,                    z: NICHE_Z_START },
-  { id: 'corner-sw',      x: NICHE_X - WT / 2,      z: ROOM_D + PT / 2,     w: WT, d: PT },
-  { id: 'corner-se',      x: ROOM_W + WT / 2,       z: ROOM_D + PT / 2,     w: WT, d: PT },
+  { id: 'niche-beam',     x: -5,                    z: ROOM_D - 120 - PT / 2, w: WT, d: WT },
+  { id: 'corner-sw',      x: _BATH_WEST_WALL_X,      z: _ROOM_CORRIDOR_WALL_Z,     w: WT, d: PT },
+  { id: 'corner-se',      x: _ROOM_EAST_WALL_X,       z: _ROOM_CORRIDOR_WALL_Z,     w: WT, d: PT },
 
   // ── Cuisine ───────────────────────────────────────────────────────────────
-  { id: 'kitchen-nw',     x: KITCHEN_X0 - PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
-  { id: 'kitchen-ne',     x: KITCHEN_X1 + PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
-  { id: 'kitchen-sw',     x: KITCHEN_X0 - PT / 2,   z: KITCHEN_Z + PT / 2, w: PT, d: PT },
-  { id: 'kitchen-se',     x: KITCHEN_X1 + PT / 2,   z: KITCHEN_Z + PT / 2, w: PT, d: PT },
+  { id: 'kitchen-nw',     x: _KITCHEN_WEST_WALL_X,   z: _ROOM_CORRIDOR_WALL_Z,     w: PT, d: PT },
+  { id: 'kitchen-ne',     x: _KITCHEN_EAST_WALL_X,   z: _ROOM_CORRIDOR_WALL_Z,     w: PT, d: PT },
+  { id: 'kitchen-sw',     x: _KITCHEN_WEST_WALL_X,   z: _BATH_KITCHEN_WALL_Z, w: PT, d: PT },
+  { id: 'kitchen-se',     x: _KITCHEN_EAST_WALL_X,   z: _BATH_KITCHEN_WALL_Z, w: PT, d: PT },
 
   // ── Huisseries et Jambages de portes ──────────────────────────────────────
-  { id: 'door-living-w',  x: DOOR_START - PT / 2,   z: ROOM_D + PT / 2,     w: PT, d: PT },
-  { id: 'door-living-e',  x: DOOR_END + PT / 2,     z: ROOM_D + PT / 2,     w: PT, d: PT },
-  { id: 'door-bath-n',    x: CORR_WALL_X,           z: MEASURED_CORRIDOR_NORTH_WALL + 109 + 3 - PT / 2,               w: PT, d: PT },
-  { id: 'door-bath-s',    x: CORR_WALL_X,           z: MEASURED_CORRIDOR_NORTH_WALL + 109 + 89 + PT / 2,               w: PT, d: PT },
+  { id: 'door-living-w',  x: DOOR_START - PT / 2,   z: _ROOM_CORRIDOR_WALL_Z,     w: PT, d: PT },
+  { id: 'door-living-e',  x: DOOR_END + PT / 2,     z: _ROOM_CORRIDOR_WALL_Z,     w: PT, d: PT },
+  { id: 'door-bath-n',    x: _BATH_CORRIDOR_WALL_X, z: _CORRIDOR_NORTH_WALL + 109 + 3 - PT / 2, w: PT, d: PT },
+  { id: 'door-bath-s',    x: _BATH_CORRIDOR_WALL_X, z: _CORRIDOR_NORTH_WALL + 109 + 89 + PT / 2, w: PT, d: PT },
 
   // ── Salle de Bain & Douche ────────────────────────────────────────────────
-  { id: 'bath-nw',        x: NICHE_X - WT / 2,      z: KITCHEN_Z + PT / 2, w: WT, d: PT },
-  { id: 'bath-ne',        x: CORR_WALL_X,           z: KITCHEN_Z + PT / 2, w: PT, d: PT },
-  { id: 'bath-se',        x: CORR_WALL_X,           z: SHOWER_Z_N,          w: PT, d: PT },
-  { id: 'shower-nw',      x: NICHE_X - WT / 2,      z: SHOWER_Z_N,          w: WT, d: PT },
-  { id: 'shower-ne',      x: 65,                    z: SHOWER_Z_N,          w: PT, d: PT },
-  { id: 'shower-sw',      x: NICHE_X - WT / 2,      z: SHOWER_Z_S,          w: WT, d: PT },
-  { id: 'shower-se',      x: 65,                    z: SHOWER_Z_S,          w: PT, d: PT },
+  { id: 'bath-nw',        x: _BATH_WEST_WALL_X,      z: _BATH_KITCHEN_WALL_Z, w: WT, d: PT },
+  { id: 'bath-ne',        x: _BATH_CORRIDOR_WALL_X,  z: _BATH_KITCHEN_WALL_Z, w: PT, d: PT },
+  { id: 'bath-se',        x: _BATH_CORRIDOR_WALL_X,  z: _BATH_SOUTH_WALL_Z,          w: PT, d: PT },
+  { id: 'shower-nw',      x: _BATH_WEST_WALL_X,      z: _BATH_SOUTH_WALL_Z,          w: WT, d: PT },
+  { id: 'shower-ne',      x: _SHOWER_EAST_WALL_X,    z: _BATH_SOUTH_WALL_Z,          w: PT, d: PT },
+  { id: 'shower-sw',      x: _BATH_WEST_WALL_X,      z: _SHOWER_SOUTH_WALL_Z,          w: WT, d: PT },
+  { id: 'shower-se',      x: _SHOWER_EAST_WALL_X,    z: _SHOWER_SOUTH_WALL_Z,          w: PT, d: PT },
 
   // ── Extrémités et Porte Mur Diagonal ──────────────────────────────────────
-  { id: 'diag-ne',        x: ROOM_W + WT / 2,       z: DiagWall.A.z - WT / 2 },
-  { id: 'diag-sw',        x: NICHE_X - WT / 2,      z: DiagWall.C.z - 5 },
+  { id: 'diag-ne',        x: _ROOM_EAST_WALL_X,       z: DiagWall.A.z - WT / 2 },
+  { id: 'diag-sw',        x: _BATH_WEST_WALL_X,      z: DiagWall.C.z - 5 },
   { id: 'diag-ne-end',    ...DiagWall.p(WT / 2, DiagWall.depth / 2),                  d: DiagWall.depth, rot: DiagWall.rotY },
   { id: 'diag-sw-end',    ...DiagWall.p(DiagWall.len - WT / 2, DiagWall.depth / 2),   d: DiagWall.depth, rot: DiagWall.rotY },
   { id: 'door-entry-w',   ...DiagWall.p(DiagWall.door.end + WT / 2, DiagWall.depth / 2), rot: DiagWall.rotY },

@@ -5,27 +5,22 @@
  */
 import {
   ROOM_W, ROOM_D, DOOR_START,
-  KITCHEN_WEST_WALL, KITCHEN_X1, KITCHEN_SOUTH_WALL,
-  BATH_WEST_WALL, NICHE_Z_START,
+  KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL,
+  BATH_EAST_WALL, BATH_NORTH_WALL, BATH_WEST_WALL, BATH_SOUTH_WALL,
+  CORRIDOR_NORTH_WALL,
+  pSouth,
   DiagWall,
 } from './wallData';
 
 import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_CLOSETS, SEG_WINDOWS, DOOR_SWINGS } from './floorData';
 import {
   GARDEN_PANEL_DEFS,
-  PARTITION_THICKNESS,
-  CORR_WALL_X,
+  PARTITION_THICKNESS, WALL_THICKNESS,
   PILLAR_DEFS,
   PillarDef,
-  WALL_THICKNESS,
   GARDEN_JC_Z,
-  PILLAR_KITE_NE,
-  PILLAR_KITE_SW,
-  BATH_SOUTH_WALL,
-  CORRIDOR_NORTH_WALL,
-  pNorth,
-  pEast,
-  pWest,
+  PILLAR_KITE_NE, PILLAR_KITE_SW,
+  pNorth, pEast, pWest,
 } from './wallData';
 
 const PAD = 20;
@@ -53,14 +48,14 @@ export function drawFloorPlan(
   ctx.fillStyle = 'rgba(212, 164, 55, 0.12)';
   // Séjour
   ctx.fillRect(tx(0), tz(0), ROOM_W * S, ROOM_D * S);
-  ctx.fillRect(tx(BATH_WEST_WALL), tz(NICHE_Z_START), -BATH_WEST_WALL * S, (ROOM_D - NICHE_Z_START) * S);
+  ctx.fillRect(tx(BATH_WEST_WALL), tz(pSouth('niche-beam')), -BATH_WEST_WALL * S, (ROOM_D - pSouth('niche-beam')) * S);
   // Cuisine
-  ctx.fillRect(tx(KITCHEN_WEST_WALL), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_WEST_WALL) * S, (KITCHEN_SOUTH_WALL - ROOM_D) * S);
+  ctx.fillRect(tx(KITCHEN_WEST_WALL), tz(ROOM_D), (KITCHEN_EAST_WALL - KITCHEN_WEST_WALL) * S, (KITCHEN_SOUTH_WALL - ROOM_D) * S);
   // Placard couloir (intérieur net)
   ctx.fillRect(
-    tx(KITCHEN_X1 + PARTITION_THICKNESS),
+    tx(KITCHEN_EAST_WALL + PARTITION_THICKNESS),
     tz(CORRIDOR_NORTH_WALL),
-    (DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS)) * S,
+    (DOOR_START - (KITCHEN_EAST_WALL + PARTITION_THICKNESS)) * S,
     (KITCHEN_SOUTH_WALL - (CORRIDOR_NORTH_WALL)) * S,
   );
   // Couloir droit
@@ -71,16 +66,15 @@ export function drawFloorPlan(
   ctx.lineTo(tx(DOOR_START), tz(BATH_SOUTH_WALL));
   ctx.closePath(); ctx.fill();
   // SDB (intérieur net à Z=467.2)
-  const corrInnerW = CORR_WALL_X - PARTITION_THICKNESS / 2; // 192.0 cm
   ctx.fillRect(
     tx(BATH_WEST_WALL),
-    tz(KITCHEN_SOUTH_WALL + PARTITION_THICKNESS),
-    (corrInnerW - BATH_WEST_WALL) * S,
-    (BATH_SOUTH_WALL - (KITCHEN_SOUTH_WALL + PARTITION_THICKNESS)) * S,
+    tz(BATH_NORTH_WALL),
+    (BATH_EAST_WALL - BATH_WEST_WALL) * S,
+    (BATH_SOUTH_WALL - BATH_NORTH_WALL) * S,
   );
   ctx.beginPath();
   ctx.moveTo(tx(BATH_WEST_WALL), tz(BATH_SOUTH_WALL));
-  ctx.lineTo(tx(corrInnerW), tz(BATH_SOUTH_WALL));
+  ctx.lineTo(tx(BATH_EAST_WALL), tz(BATH_SOUTH_WALL));
   ctx.lineTo(tx(BATH_WEST_WALL), tz(DiagWall.C.z));
   ctx.closePath(); ctx.fill();
 
@@ -90,7 +84,7 @@ export function drawFloorPlan(
     tx(BATH_WEST_WALL),
     tz(CORRIDOR_NORTH_WALL),
     (KITCHEN_WEST_WALL - PARTITION_THICKNESS - BATH_WEST_WALL) * S,
-    (KITCHEN_SOUTH_WALL - (CORRIDOR_NORTH_WALL)) * S,
+    (KITCHEN_SOUTH_WALL - CORRIDOR_NORTH_WALL) * S,
   );
 
   // ── Jardin ──────────────────────────────────────────────────────────────────

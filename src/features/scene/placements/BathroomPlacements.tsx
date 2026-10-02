@@ -37,8 +37,6 @@ export function BathroomEquipment() {
     'wc-flush',
   ]);
 
-  const SDB_CX = (BATH_WEST_WALL + BATH_EAST_WALL) / 2;
-  const SDB_CZ = (BATH_NORTH_WALL + BATH_SOUTH_WALL) / 2;
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
 
   return (
@@ -60,7 +58,7 @@ export function BathroomEquipment() {
 
       {/* Ampoule SDB (TRÅDFRI) */}
       <group
-        position={[SDB_CX, WALL_H - 10, SDB_CZ]}
+        position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2, WALL_H - 10, (BATH_NORTH_WALL + BATH_SOUTH_WALL) / 2]}
         rotation={[Math.PI, 0, 0]}
         userData={{ skipMerge: true, animUnit: true, itemName: 'Ampoule SDB (TRÅDFRI)', hoverAction: { label: 'Ampoule SDB (TRÅDFRI)', actions: ['lampBath'] } }}
       >
