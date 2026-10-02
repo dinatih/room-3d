@@ -13,7 +13,7 @@ import {
   DOOR_START, DOOR_END,
   DOOR_BATH_START, DOOR_BATH_END,
   KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL,
-  BATH_WEST_WALL, BATH_NORTH_WALL, BATH_EAST_WALL, BATH_SOUTH_WALL,
+  BATH_WEST_WALL, BATH_NORTH_WALL, BATH_EAST_WALL,
   CORRIDOR_WEST_WALL, CORRIDOR_NORTH_WALL,
   PARTITION_THICKNESS, DiagWall,
   pSouth, pNorth, pEast, pWest,
@@ -385,7 +385,7 @@ export function Baseboards() {
       <BaseboardZ z1={CORRIDOR_NORTH_WALL} z2={DiagWall.A.z} x={ROOM_EAST_WALL} dir="-X" />
       <BaseboardX x1={DOOR_END + DOOR_CLEARANCE} x2={ROOM_EAST_WALL} z={CORRIDOR_NORTH_WALL} dir="+Z" />
       <BaseboardZ z1={KITCHEN_SOUTH_WALL} z2={DOOR_BATH_START - DOOR_CLEARANCE} x={CORRIDOR_WEST_WALL} dir="+X" />
-      <BaseboardZ z1={DOOR_BATH_END + DOOR_CLEARANCE} z2={parquetDiagZ} x={CORRIDOR_WEST_WALL} dir="+X" />
+      <BaseboardZ z1={DOOR_BATH_END + DOOR_CLEARANCE} z2={corridorZEnd} x={CORRIDOR_WEST_WALL} dir="+X" />
 
       {/* ── Placard couloir ────────────────────────────────────────────────────── */}
       <BaseboardX x1={KITCHEN_EAST_WALL + PARTITION_THICKNESS} x2={CORRIDOR_WEST_WALL} z={CORRIDOR_NORTH_WALL} dir="+Z" />
@@ -447,7 +447,7 @@ export function BathSkirting() {
 
       {/* Cloison Est SDB (autour de la porte) */}
       <SkirtZ z1={BATH_NORTH_WALL} z2={DOOR_BATH_START - DOOR_CLEARANCE} x={BATH_EAST_WALL} dir="-X" />
-      <SkirtZ z1={DOOR_BATH_END + DOOR_CLEARANCE} z2={BATH_SOUTH_WALL} x={BATH_EAST_WALL} dir="-X" />
+      <SkirtZ z1={DOOR_BATH_END + DOOR_CLEARANCE} z2={Cz} x={BATH_EAST_WALL} dir="-X" />
 
       {/* Douche (retour Nord et paroi Est) */}
       <SkirtX x1={pWest('shower-ne')} x2={pEast('shower-ne')} z={pNorth('shower-ne')} dir="-Z" />
