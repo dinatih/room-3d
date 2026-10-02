@@ -993,7 +993,10 @@ export function SingleCharacter({
       mixer.update(delta);
 
       // Parachute d'atterrissage réactif
-      const falling = currentAnimClip.current === 'falling' || currentAnimClip.current === 'animations/locomotion/anim_falling.glb';
+      const falling = currentAnimClip.current === 'falling' ||
+                      currentAnimClip.current === 'falling-idle' ||
+                      currentAnimClip.current === 'animations/locomotion/anim_falling.glb' ||
+                      currentAnimClip.current === 'animations/poses_idles/anim_falling_idle.glb';
       if (isFalling !== falling) {
         setIsFalling(falling);
       }
