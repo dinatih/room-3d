@@ -76,9 +76,9 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
       // Placements.tsx: <group position={[BATH_WEST_WALL + 35, 0, BATH_NORTH_WALL + 140 + PARTITION_THICKNESS / 2 + 35]} ...>
       return {
         position: [
-          BATH_WEST_WALL + 35,
+          BATH_WEST_WALL + 35.5,
           0,
-          BATH_NORTH_WALL + 140 + PARTITION_THICKNESS / 2 + 35,
+          BATH_NORTH_WALL + 140 + PARTITION_THICKNESS / 2 + 37,
         ],
         rotationY: 0,
       };

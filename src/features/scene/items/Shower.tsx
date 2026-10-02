@@ -27,13 +27,12 @@ const GLB_TRAY   = 'items/shower/shower.glb';
 const GLB_BAR    = 'items/vallamosse barre avec douchette haut réglable chromé/VALLAMOSSE Barre avec douchette haut réglable chromé.glb';
 const GLB_FAUCET = 'items/vallamosse mitigeur thermostatique pour douche chromé 150 mm/VALLAMOSSE Mitigeur thermostatique pour douche chromé 150 mm.glb';
 
-// Bac GLB recentré (script Python) : bbox ±0.34m → scale=100 → 68×68cm centré à l'origine.
-// Groupe au centre niche (world 25,0,635). TRAY_HALF = demi-étendue = 34cm.
-const TRAY_CM   = 68;
-const TRAY_HALF = TRAY_CM / 2;  // 34
+// Bac GLB recentré (script Python) : bbox ±0.34m → scale normalisé à 71×71cm centré à l'origine.
+const TRAY_CM   = 71;
+const TRAY_HALF = TRAY_CM / 2;  // 35.5
 
 // Porte procédurale
-const DOOR_W = 68;   // largeur cm
+const DOOR_W = 71;   // largeur cm
 const DOOR_H = 200;  // hauteur cm
 const DOOR_T = 0.8;  // épaisseur vitre cm
 const FRAME  = 2.0;  // section profil aluminium cm
@@ -165,7 +164,7 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
   const isDoorOpen = Boolean(actionState?.['shower-door-toggle'] ?? actionState?.['showerDoor']);
 
   useLayoutEffect(() => {
-    setupScene(tray, 100);
+    setupScene(tray, 100 * (TRAY_CM / 68));
 
     // Bar : Z→Y, puis flip sens avant/arrière
     applyGeomRotX(bar, Math.PI / 2);
@@ -184,17 +183,17 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
       {/* Receveur — setupScene centre et pose au sol (détaché parent pendant calcul). */}
       <primitive object={tray} />
 
-      {/* Barre douchette — mur fond à local Z=+35 (world Z=670) */}
-      <group position={[0, 0, TRAY_HALF - 6]}>
+      {/* Barre douchette — platines murales au ras du mur Sud */}
+      <group position={[0, 0, TRAY_HALF - 8.6]}>
         <primitive object={bar} />
       </group>
 
-      {/* Mitigeur thermostatique — mur fond, hauteur 90cm */}
-      <group position={[0, 90, TRAY_HALF + 1]} rotation-x={-Math.PI / 2} rotation-y={Math.PI}>
+      {/* Mitigeur thermostatique — rosaces coniques au ras du mur Sud */}
+      <group position={[0, 90, TRAY_HALF - 0.5]} rotation-x={-Math.PI / 2} rotation-y={Math.PI}>
         <primitive object={faucet} />
       </group>
 
-      {/* Porte — centrée en X, 2cm devant la face sud du bac (local Z=−TRAY_HALF) */}
+      {/* Porte — centrée en X, 2cm devant la face nord du bac (local Z=−TRAY_HALF) */}
       <group position={[0, 20, -(TRAY_HALF + 2)]}>
         <ShowerDoor isOpen={isDoorOpen} />
       </group>

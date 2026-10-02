@@ -83,7 +83,7 @@ export function BathroomEquipment() {
       </group>
 
       {/* Cabine de Douche */}
-      <group position={[BATH_WEST_WALL + 35, 0, BATH_NORTH_WALL + 140 + PARTITION_THICKNESS / 2 + 35]} userData={{ animUnit: true, itemName: 'Cabine de Douche' }}>
+      <group position={[BATH_WEST_WALL + 35.5, 0, BATH_NORTH_WALL + 140 + PARTITION_THICKNESS / 2 + 37]} userData={{ animUnit: true, itemName: 'Cabine de Douche' }}>
         <Shower item={stub('shower')} actionState={as} onSize={NOOP_SIZE} />
       </group>
 
