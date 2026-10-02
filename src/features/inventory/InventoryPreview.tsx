@@ -1134,10 +1134,6 @@ export function InventoryPreview({
                 useAnimPreviewStore.getState().play();
               }}
               onSelectDuoAnim={(def) => {
-                if (!def) {
-                  setActionStates(s => ({ ...s, duoAnimDef: undefined }));
-                  return;
-                }
                 const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
                 const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
                 setActionStates(s => ({
