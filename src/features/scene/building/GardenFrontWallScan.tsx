@@ -74,27 +74,17 @@ export function GardenFrontWallScan({
         if (mesh.material) {
           const originalMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
           const map = (originalMat as any).map;
-          if (map) {
-            map.colorSpace = THREE.SRGBColorSpace;
-            mesh.material = new THREE.MeshStandardMaterial({
-              map,
-              roughness: 0.85,
-              metalness: 0.05,
-              side: THREE.FrontSide,
-              transparent: true,
-              opacity,
-              depthWrite: false,
-            });
-          } else {
-            mesh.material = new THREE.MeshStandardMaterial({
-              roughness: 0.85,
-              metalness: 0.05,
-              side: THREE.FrontSide,
-              transparent: true,
-              opacity,
-              depthWrite: false,
-            });
-          }
+          if (map) map.colorSpace = THREE.SRGBColorSpace;
+
+          mesh.material = new THREE.MeshStandardMaterial({
+            map,
+            roughness: 0.85,
+            metalness: 0.05,
+            side: THREE.FrontSide,
+            transparent: true,
+            opacity,
+            depthWrite: false,
+          });
         }
       }
     });
