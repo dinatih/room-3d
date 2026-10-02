@@ -1,10 +1,6 @@
 /**
- * AppConsole.tsx — Console de debug style CS:GO fixée en bas de l'écran.
- * Affiche les logs de l'application avec horodatage et couleurs par tag.
- *
- * Usage :
- *   import { appLog } from '@features/ui/AppConsole';
- *   appLog('delphina', 'Marche vers la cuisine');
+ * AppConsole.tsx — Console de debug fixée en haut de l'écran (pleine largeur hors SidePanel).
+ * Affiche les logs applicatifs avec horodatage, couleurs par tag et filtre Bulle Think.
  */
 import { useState, useEffect, useRef } from 'react';
 import { CHARACTERS, findCharacter } from '@features/scene/walkerConfig';
@@ -12,15 +8,11 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
-// Les couleurs NPC viennent de CharacterConfig.color (source unique de vérité).
-// Seuls les tags système restent définis ici.
 const TAG_COLORS: Record<string, string> = {
-  // Tags système (non-NPC)
-  system:   '#ffffff',
-  perf:     '#ffaa00',
-  error:    '#ff0000',
-  robin:    '#ff8833',
-  // Tags NPC : peuplés dynamiquement depuis CHARACTERS
+  system: '#ffffff',
+  perf:   '#ffaa00',
+  error:  '#ff0000',
+  robin:  '#ff8833',
   ...Object.fromEntries(CHARACTERS.map(c => [c.id, c.color])),
 };
 
@@ -28,7 +20,7 @@ function getTagColor(tag: string): string {
   return TAG_COLORS[tag.toLowerCase()] ?? '#aaaaaa';
 }
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// ── Types & Singleton ──────────────────────────────────────────────────────
 export interface AppLogEntry {
   id: number;
   tag: string;
@@ -36,37 +28,21 @@ export interface AppLogEntry {
   timestamp: number;
 }
 
-// ── Singleton : émettre un log depuis n'importe où ─────────────────────────
 let _logCounter = 0;
 export const APP_LOG_HISTORY: AppLogEntry[] = [];
+const MAX_LOGS = 200;
 
 export const appLog = (tag: string, message: string): void => {
-  const entry: AppLogEntry = {
-    id: ++_logCounter,
-    tag,
-    message,
-    timestamp: Date.now(),
-  };
+  const entry: AppLogEntry = { id: ++_logCounter, tag, message, timestamp: Date.now() };
   APP_LOG_HISTORY.push(entry);
-  if (APP_LOG_HISTORY.length > 200) {
-    APP_LOG_HISTORY.shift();
-  }
-  document.dispatchEvent(
-    new CustomEvent('app-log', {
-      detail: entry,
-    })
-  );
+  if (APP_LOG_HISTORY.length > MAX_LOGS) APP_LOG_HISTORY.shift();
+  document.dispatchEvent(new CustomEvent('app-log', { detail: entry }));
 };
 
-// ── Helpers ────────────────────────────────────────────────────────────────
 function formatTime(ts: number): string {
   const d = new Date(ts);
-  const mm = d.getMinutes().toString().padStart(2, '0');
-  const ss = d.getSeconds().toString().padStart(2, '0');
-  return `${mm}:${ss}`;
+  return `${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
 }
-
-const MAX_LOGS = 200;
 
 // ── Composant ──────────────────────────────────────────────────────────────
 export function AppConsole({ hidden = false }: { hidden?: boolean }) {
@@ -80,29 +56,15 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const savedDimensionsRef = useRef<{ height?: number }>({ height: 110 });
+  const savedHeightRef = useRef(110);
 
-  // Injecter la Google Font JetBrains Mono une seule fois
-  useEffect(() => {
-    const id = 'app-console-font';
-    if (document.getElementById(id)) return;
-    const link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
-    link.href =
-      'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap';
-    document.head.appendChild(link);
-  }, []);
-
-  // Écouter les redimensionnements pour sauvegarder la taille manuelle
+  // Écoute des redimensionnements pour mémoriser la hauteur
   useEffect(() => {
     if (!containerRef.current || typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
         if (visible && entry.contentRect.height > 40) {
-          savedDimensionsRef.current = {
-            height: entry.contentRect.height,
-          };
+          savedHeightRef.current = entry.contentRect.height;
         }
       }
     });
@@ -110,38 +72,31 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     return () => observer.disconnect();
   }, [visible]);
 
-  // Écouter les CustomEvents 'app-log'
+  // Écoute des CustomEvents 'app-log'
   useEffect(() => {
     const handler = (e: Event) => {
-      const ev = e as CustomEvent<{ id?: number; tag: string; message: string; timestamp: number }>;
-      const { id, tag, message, timestamp } = ev.detail;
-      const logId = id ?? ++_logCounter;
+      const { id, tag, message, timestamp } = (e as CustomEvent<AppLogEntry>).detail;
       setLogs(prev => {
-        const entry: AppLogEntry = { id: logId, tag, message, timestamp };
-        const next = [...prev, entry];
-        return next.length > MAX_LOGS ? next.slice(next.length - MAX_LOGS) : next;
+        const next = [...prev, { id: id ?? ++_logCounter, tag, message, timestamp }];
+        return next.length > MAX_LOGS ? next.slice(-MAX_LOGS) : next;
       });
     };
     document.addEventListener('app-log', handler);
     return () => document.removeEventListener('app-log', handler);
   }, []);
 
-  // Raccourci clavier 'B' pour ouvrir / fermer la console
+  // Raccourci clavier 'B'
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
-        return;
-      }
-      if (e.key === 'b' || e.key === 'B') {
-        setVisible(v => !v);
-      }
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      if (e.key === 'b' || e.key === 'B') setVisible(v => !v);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Auto-scroll vers le bas à chaque nouveau log si non en pause
+  // Auto-scroll si non en pause
   useEffect(() => {
     if (visible && !isPaused && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'auto' });
@@ -152,117 +107,17 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     ? logs.filter(entry => entry.tag.toLowerCase() === activeWalkerId.toLowerCase())
     : logs;
 
-  // ── Styles inline ──────────────────────────────────────────────────────
-  const containerStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    right: 0,
-    left: visible ? (isMobile ? 0 : 280) : 'auto',
-    width: 'auto',
-    height: visible ? (savedDimensionsRef.current.height ? `${savedDimensionsRef.current.height}px` : '110px') : 'auto',
-    minWidth: visible ? (isMobile ? '100vw' : '320px') : 'auto',
-    maxWidth: 'none',
-    zIndex: 9999,
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: '11px',
-    pointerEvents: 'auto',
-    display: hidden ? 'none' : 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    minHeight: visible ? '60px' : 'auto',
-    maxHeight: visible ? '85vh' : 'auto',
-    boxShadow: visible ? '0 4px 20px rgba(0, 0, 0, 0.7)' : '0 2px 8px rgba(0, 0, 0, 0.5)',
-    borderBottomLeftRadius: visible ? (isMobile ? '0' : '4px') : '4px',
-    borderLeft: visible && !isMobile ? '1px solid rgba(0, 255, 136, 0.3)' : 'none',
-  };
-
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: visible ? 'space-between' : 'center',
-    padding: visible ? '4px 10px' : '3px 8px',
-    background: 'rgba(0, 0, 0, 0.92)',
-    borderTop: 'none',
-    borderRight: 'none',
-    borderLeft: visible && !isMobile ? 'none' : '1px solid rgba(0, 255, 136, 0.4)',
-    borderBottom: '1px solid rgba(0, 255, 136, 0.3)',
-    borderBottomLeftRadius: visible ? '0' : '4px',
-    color: '#00ff88',
-    cursor: visible ? 'default' : 'pointer',
-    userSelect: 'none',
-    flexShrink: 0,
-    transition: 'background 0.2s',
-  };
-
-  const titleStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    fontSize: '10px',
-    fontWeight: 500,
-  };
-
-  const closeBtnStyle: React.CSSProperties = {
-    background: 'none',
-    border: '1px solid rgba(0, 255, 136, 0.4)',
-    color: '#00ff88',
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: '10px',
-    lineHeight: 1,
-    padding: '1px 6px',
-    cursor: 'pointer',
-    borderRadius: '2px',
-    letterSpacing: '0.05em',
-    transition: 'background 0.15s, border-color 0.15s',
-  };
-
-  const logAreaStyle: React.CSSProperties = {
-    flex: 1,
-    minHeight: '40px',
-    overflowY: 'auto',
-    background: 'rgba(0, 0, 0, 0.85)',
-    padding: '6px 10px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-  };
-
-  const lineStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'baseline',
-    gap: '4px',
-    lineHeight: '1.5',
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-all',
-  };
-
-  const tsStyle: React.CSSProperties = {
-    color: 'rgba(170, 170, 170, 0.7)',
-    flexShrink: 0,
-    fontSize: '10px',
-  };
-
-  const msgStyle: React.CSSProperties = {
-    color: 'rgba(220, 220, 220, 0.9)',
-    flex: 1,
-  };
-
-  // Gestion du drag de redimensionnement vertical (hauteur)
+  // Redimensionnement vertical par drag
   const handleResizePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const startY = e.clientY;
-    const startH = containerRef.current ? containerRef.current.offsetHeight : (savedDimensionsRef.current.height ?? 110);
+    const startH = containerRef.current ? containerRef.current.offsetHeight : savedHeightRef.current;
 
     const onPointerMove = (ev: PointerEvent) => {
-      const deltaY = ev.clientY - startY;
-      const newH = Math.max(60, Math.min(window.innerHeight * 0.85, startH + deltaY));
-      savedDimensionsRef.current = { height: newH };
-      if (containerRef.current) {
-        containerRef.current.style.height = `${newH}px`;
-      }
+      const newH = Math.max(60, Math.min(window.innerHeight * 0.85, startH + (ev.clientY - startY)));
+      savedHeightRef.current = newH;
+      if (containerRef.current) containerRef.current.style.height = `${newH}px`;
     };
 
     const onPointerUp = () => {
@@ -274,59 +129,62 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     window.addEventListener('pointerup', onPointerUp);
   };
 
-  // ── Rendu ──────────────────────────────────────────────────────────────
+  if (hidden) return null;
+
   return (
     <div
       ref={containerRef}
-      style={containerStyle}
+      className={`position-fixed top-0 end-0 font-monospace d-flex flex-column shadow-lg ${
+        visible ? 'border-start border-bottom border-success border-opacity-25' : ''
+      }`}
+      style={{
+        left: visible ? (isMobile ? 0 : 280) : 'auto',
+        height: visible ? `${savedHeightRef.current}px` : 'auto',
+        minHeight: visible ? '60px' : 'auto',
+        maxHeight: visible ? '85vh' : 'auto',
+        zIndex: 9999,
+        borderBottomLeftRadius: visible ? (isMobile ? '0' : '4px') : '4px',
+        backgroundColor: 'rgba(0, 0, 0, 0.90)',
+        fontSize: '11px',
+      }}
     >
       {/* Header */}
       <div
-        style={headerStyle}
+        className="d-flex align-items-center justify-content-between px-2 py-1 user-select-none border-bottom border-success border-opacity-25"
+        style={{ cursor: visible ? 'default' : 'pointer', background: 'rgba(0, 0, 0, 0.95)' }}
         onClick={() => { if (!visible) setVisible(true); }}
         title={!visible ? 'Ouvrir la console App Logs (B)' : undefined}
-        onMouseEnter={e => {
-          if (!visible) {
-            (e.currentTarget as HTMLDivElement).style.background = 'rgba(0, 255, 136, 0.15)';
-          }
-        }}
-        onMouseLeave={e => {
-          if (!visible) {
-            (e.currentTarget as HTMLDivElement).style.background = 'rgba(0, 0, 0, 0.92)';
-          }
-        }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="d-flex align-items-center gap-1">
           {visible && (
             <button
-              style={closeBtnStyle}
+              type="button"
+              className="btn btn-sm btn-outline-success py-0 px-1 border-opacity-50 lh-1 small"
               onClick={(e) => {
                 e.stopPropagation();
                 setVisible(false);
               }}
               title="Masquer la console (B)"
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,255,136,0.15)';
-                (e.currentTarget as HTMLButtonElement).style.borderColor = '#00ff88';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = 'none';
-                (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,255,136,0.4)';
-              }}
             >
               ✕
             </button>
           )}
-          <span style={titleStyle}>
+          <span className="text-success fw-bold text-uppercase d-flex align-items-center gap-1 small">
             <span>🤖</span>
             <span>APP LOGS</span>
           </span>
         </div>
+
         {visible && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="d-flex align-items-center gap-2">
             {/* Bouton Filtre Bulle Think */}
             <button
               type="button"
+              className={`btn btn-sm py-0 px-2 small d-flex align-items-center gap-1 ${
+                filterBubbleOnly
+                  ? 'btn-info text-dark fw-bold border-0 shadow-sm'
+                  : 'btn-outline-success border-opacity-50'
+              }`}
               onClick={(e) => {
                 e.stopPropagation();
                 setFilterBubbleOnly(f => !f);
@@ -336,23 +194,6 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
                   ? `Filtre Bulle Think actif (${activeChar?.name ?? activeWalkerId}) — Cliquer pour afficher tous les logs`
                   : `Afficher uniquement les logs de la bulle de pensée (${activeChar?.name ?? activeWalkerId})`
               }
-              style={{
-                background: filterBubbleOnly ? 'rgba(0, 210, 255, 0.22)' : 'rgba(255, 255, 255, 0.05)',
-                border: `1px solid ${filterBubbleOnly ? '#00d2ff' : 'rgba(0, 255, 136, 0.4)'}`,
-                color: filterBubbleOnly ? '#00d2ff' : '#00ff88',
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '9px',
-                fontWeight: filterBubbleOnly ? 600 : 400,
-                lineHeight: 1,
-                padding: '2px 8px',
-                cursor: 'pointer',
-                borderRadius: '2px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                boxShadow: filterBubbleOnly ? '0 0 8px rgba(0, 210, 255, 0.4)' : 'none',
-                transition: 'all 0.15s ease',
-              }}
             >
               <span>💭</span>
               <span>
@@ -365,20 +206,14 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
             {/* Bouton Pause / Reprendre */}
             <button
               type="button"
+              className={`btn btn-sm py-0 px-2 small ${
+                isPaused
+                  ? 'btn-warning text-dark fw-bold border-0 shadow-sm'
+                  : 'btn-outline-success border-opacity-50'
+              }`}
               onClick={(e) => {
                 e.stopPropagation();
                 setIsPaused(p => !p);
-              }}
-              style={{
-                background: isPaused ? 'rgba(255, 170, 0, 0.2)' : 'rgba(0, 255, 136, 0.1)',
-                border: `1px solid ${isPaused ? '#ffaa00' : '#00ff88'}`,
-                color: isPaused ? '#ffaa00' : '#00ff88',
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '9px',
-                lineHeight: 1,
-                padding: '2px 6px',
-                cursor: 'pointer',
-                borderRadius: '2px',
               }}
             >
               {isPaused ? '▶ REPRENDRE' : '⏸ PAUSE'}
@@ -387,11 +222,14 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         )}
       </div>
 
-      {/* Log area */}
+      {/* Zone des logs */}
       {visible && (
-        <div style={logAreaStyle}>
+        <div
+          className="flex-grow-1 overflow-y-auto px-2 py-1 d-flex flex-column gap-1 user-select-text"
+          style={{ background: 'rgba(0, 0, 0, 0.82)' }}
+        >
           {displayedLogs.length === 0 && (
-            <div style={{ ...lineStyle, color: 'rgba(100, 100, 100, 0.7)', fontStyle: 'italic' }}>
+            <div className="text-secondary fst-italic py-1">
               {filterBubbleOnly
                 ? `💭 Aucune pensée enregistrée pour ${activeChar?.name ?? activeWalkerId}…`
                 : 'En attente de logs…'}
@@ -400,20 +238,13 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           {displayedLogs.map((entry, idx) => {
             const color = getTagColor(entry.tag);
             return (
-              <div key={`${entry.id}_${idx}`} style={lineStyle}>
-                <span style={tsStyle}>[{formatTime(entry.timestamp)}]</span>
-                <span
-                  style={{
-                    color,
-                    flexShrink: 0,
-                    fontWeight: 500,
-                    textShadow: `0 0 6px ${color}55`,
-                  }}
-                >
+              <div key={`${entry.id}_${idx}`} className="d-flex align-items-baseline gap-1 text-break lh-sm">
+                <span className="text-secondary small flex-shrink-0">[{formatTime(entry.timestamp)}]</span>
+                <span className="fw-medium flex-shrink-0" style={{ color }}>
                   {(() => { const ch = findCharacter(entry.tag); return ch ? `${ch.emoji} ${entry.tag}` : entry.tag; })()}
                 </span>
-                <span style={{ color: 'rgba(0,255,136,0.4)', flexShrink: 0 }}>›</span>
-                <span style={msgStyle}>{entry.message}</span>
+                <span className="text-success opacity-50 flex-shrink-0">›</span>
+                <span className="text-light flex-grow-1">{entry.message}</span>
               </div>
             );
           })}
@@ -421,39 +252,15 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         </div>
       )}
 
-      {/* Barre de redimensionnement vertical (bas de fenêtre) */}
+      {/* Barre de redimensionnement vertical */}
       {visible && (
         <div
           onPointerDown={handleResizePointerDown}
           title="Redimensionner la hauteur de la console (Glisser verticalement)"
-          style={{
-            height: '8px',
-            width: '100%',
-            cursor: 'ns-resize',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0, 255, 136, 0.05)',
-            borderTop: '1px solid rgba(0, 255, 136, 0.2)',
-            userSelect: 'none',
-            touchAction: 'none',
-            transition: 'background 0.2s',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLDivElement).style.background = 'rgba(0, 255, 136, 0.25)';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLDivElement).style.background = 'rgba(0, 255, 136, 0.05)';
-          }}
+          className="w-100 py-1 bg-success bg-opacity-10 border-top border-success border-opacity-25 d-flex align-items-center justify-content-center user-select-none"
+          style={{ cursor: 'ns-resize', touchAction: 'none' }}
         >
-          <div
-            style={{
-              width: '40px',
-              height: '2px',
-              background: 'rgba(0, 255, 136, 0.6)',
-              borderRadius: '1px',
-            }}
-          />
+          <div className="rounded bg-success bg-opacity-50" style={{ width: '36px', height: '2px' }} />
         </div>
       )}
     </div>
