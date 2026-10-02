@@ -517,7 +517,7 @@ export function SingleCharacter({
     if (hasSkyDrop && !isPreview) {
       loadAndPlayClip('falling');
       loadAndPlayClip('falling-idle');
-      loadAndPlayClip('kneeling-inspecting');
+      loadAndPlayClip('pistol-kneel-to-stand');
     }
   }, [hasSkyDrop, isPreview, loadAndPlayClip]);
 

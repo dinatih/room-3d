@@ -47,7 +47,7 @@ export function useAgentController(
   onComplete?: () => void,
   spawnDelay: number = 0,
   hasSkyDrop: boolean = false,
-  landingAnim: string = 'kneeling-inspecting'
+  landingAnim: string = 'pistol-kneel-to-stand'
 ) {
   const firstCoords = (scenario && scenario.length > 0) ? resolveInstructionCoords(scenario[0], null) : null;
   const initialPos = (firstCoords && (firstCoords.tx !== 0 || firstCoords.tz !== 0))
@@ -391,7 +391,7 @@ export function useAgentController(
       if (timerRef.current <= 0) {
         stateRef.current.y = startPosRef.current?.y ?? 0;
         statusRef.current = 'LANDING';
-        const landingDuration = getAnimationDef(landingAnim)?.duration ?? 5.0;
+        const landingDuration = getAnimationDef(landingAnim)?.duration ?? 1.4;
         timerRef.current = landingDuration;
         deployment.status = 'LANDING';
         deployment.timer = landingDuration;
