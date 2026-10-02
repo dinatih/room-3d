@@ -203,8 +203,6 @@ export function CharacterAnimSelector({
     }
   };
 
-  const activeAnimOpt = ENHANCED_ANIM_OPTIONS.find(a => a.value === activeAnimValue);
-
   return (
     <div
       className="d-flex flex-column h-100 bg-transparent overflow-hidden text-dark"
@@ -372,28 +370,6 @@ export function CharacterAnimSelector({
                   </button>
                 );
               })}
-            </div>
-          </div>
-        )}
-
-        {/* Animation en cours d'exécution */}
-        {activeAnimOpt && activeAnimValue !== 'idle' && (
-          <div className="p-2 mb-1 rounded border border-danger-subtle bg-danger-subtle bg-opacity-25 d-flex flex-column gap-1">
-            <div className="d-flex justify-content-between align-items-center">
-              <span className="fw-bold text-danger text-truncate me-1" style={{ fontSize: '11px' }}>
-                ▶ En cours : {activeAnimOpt.label}
-              </span>
-              <button
-                className="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold shrink-0"
-                style={{ fontSize: '9px' }}
-                onClick={(e) => handleCopy(activeAnimOpt.value, e)}
-                title="Copier le nom du fichier GLB"
-              >
-                {copiedAnim === activeAnimOpt.value ? '✓ Copié !' : '📋 Copier nom'}
-              </button>
-            </div>
-            <div className="font-monospace text-muted text-truncate" style={{ fontSize: '9px' }}>
-              📁 {activeAnimOpt.filename}
             </div>
           </div>
         )}
