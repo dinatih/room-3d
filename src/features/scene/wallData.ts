@@ -218,6 +218,10 @@ export const pEast  = (id: PillarId) => pX(id) + pW(id) / 2;
 export const pNorth = (id: PillarId) => pZ(id) - pD(id) / 2;
 export const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
 
+// ── Huisseries et repères de portes ──────────────────────────────────────────
+export const DOOR_BATH_START = pNorth('door-bath-n');
+export const DOOR_BATH_END   = DOOR_BATH_START + (DOOR_END - DOOR_START);
+
 // ── Faces internes des murs (repères de placement) ─────────────────────────
 
 // Séjour (Living Room)

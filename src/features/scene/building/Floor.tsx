@@ -9,6 +9,7 @@ import { MergedStaticGroup } from './MergedStaticGroup';
 import { CategoryLayerGroup } from '../sceneLayer';
 import {
   ROOM_W, ROOM_D, WALL_H, BATH_WEST_WALL, DOOR_START, DOOR_END,
+  DOOR_BATH_START, DOOR_BATH_END,
   KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL, pSouth, DiagWall,
   BATH_EAST_WALL,
   CORRIDOR_WEST_WALL,
@@ -309,168 +310,106 @@ export function Tile() {
   );
 }
 
+const SKIRTING_H = 6;
+const SKIRTING_D = 1;
+const SKIRTING_Y = SKIRTING_H / 2;
+
+function BaseboardX({ x1, x2, z, dir }: { x1: number; x2: number; z: number; dir: '+Z' | '-Z' }) {
+  const minX = Math.min(x1, x2);
+  const maxX = Math.max(x1, x2);
+  const len = maxX - minX;
+  if (len <= 0) return null;
+  const cx = (minX + maxX) / 2;
+  const czBox = dir === '+Z' ? z + SKIRTING_D / 2 : z - SKIRTING_D / 2;
+  const czQr  = dir === '+Z' ? z + SKIRTING_D     : z - SKIRTING_D;
+  return (
+    <>
+      <P w={len} h={SKIRTING_H} d={SKIRTING_D} x={cx} y={SKIRTING_Y} z={czBox} mat={skirtingMat} />
+      <QR cx={cx} cz={czQr} len={len} dir={dir} mat={skirtingMat} />
+    </>
+  );
+}
+
+function BaseboardZ({ z1, z2, x, dir }: { z1: number; z2: number; x: number; dir: '+X' | '-X' }) {
+  const minZ = Math.min(z1, z2);
+  const maxZ = Math.max(z1, z2);
+  const len = maxZ - minZ;
+  if (len <= 0) return null;
+  const cz = (minZ + maxZ) / 2;
+  const cxBox = dir === '+X' ? x + SKIRTING_D / 2 : x - SKIRTING_D / 2;
+  const cxQr  = dir === '+X' ? x + SKIRTING_D     : x - SKIRTING_D;
+  return (
+    <>
+      <P w={SKIRTING_D} h={SKIRTING_H} d={len} x={cxBox} y={SKIRTING_Y} z={cz} mat={skirtingMat} />
+      <QR cx={cxQr} cz={cz} len={len} dir={dir} mat={skirtingMat} />
+    </>
+  );
+}
+
+function DiagBaseboard({ startD, endD }: { startD: number; endD: number }) {
+  const len = endD - startD;
+  if (len <= 0) return null;
+  const mid = (startD + endD) / 2;
+  const pBox = DiagWall.p(mid, -SKIRTING_D / 2);
+  const pQr  = DiagWall.p(mid, -SKIRTING_D);
+  return (
+    <>
+      <mesh position={[pBox.x, SKIRTING_Y, pBox.z]} rotation-y={DiagWall.rotY} castShadow receiveShadow material={skirtingMat}>
+        <boxGeometry args={[SKIRTING_D, SKIRTING_H, len]} />
+      </mesh>
+      <mesh position={[pQr.x, SKIRTING_Y, pQr.z]} rotation-y={DiagWall.rotY} castShadow receiveShadow material={skirtingMat} scale={[1, 1, len]} geometry={qrGeo} />
+    </>
+  );
+}
+
 export function Baseboards() {
-  const SH = 6;
-  const SD = 1;
-  const y  = SH / 2;
-
-  const parquetDiagZ = DiagWall.A.z + (DOOR_START - DiagWall.A.x) * DiagWall.slope;
-  const diagParquetLen = Math.sqrt((ROOM_W - DOOR_START) ** 2 + (DiagWall.A.z - parquetDiagZ) ** 2);
-
+  const DOOR_CLEARANCE = 1.5;
   const CW_ENTRY = 5.5;
-  const diagSegA = { ...DiagWall.p((0 + Math.max(0, DiagWall.door.start - CW_ENTRY)) / 2, -SD / 2), len: Math.max(0, DiagWall.door.start - CW_ENTRY) };
-  const diagSegB = { ...DiagWall.p((DiagWall.door.end + CW_ENTRY + diagParquetLen) / 2, -SD / 2), len: diagParquetLen - (DiagWall.door.end + CW_ENTRY) };
 
-  const CORR_WALL_EAST = CORRIDOR_WEST_WALL;
-  const corridorXEnd = CORR_WALL_EAST;
-  const corridorZEnd = DiagWall.A.z + (corridorXEnd - DiagWall.A.x) * DiagWall.slope;
-  const diagCorridorTotalLen = Math.sqrt((DiagWall.A.x - corridorXEnd) ** 2 + (DiagWall.A.z - corridorZEnd) ** 2);
-  const diagSegC = { ...DiagWall.p((diagParquetLen + diagCorridorTotalLen) / 2, -SD / 2), len: Math.max(0, diagCorridorTotalLen - diagParquetLen) };
+  const parquetDiagZ = DiagWall.A.z + (INT_X_DOOR_S - DiagWall.A.x) * DiagWall.slope;
+  const diagParquetLen = Math.hypot(INT_X_EAST - INT_X_DOOR_S, DiagWall.A.z - parquetDiagZ);
 
-  const diagQRA = { ...DiagWall.p((0 + Math.max(0, DiagWall.door.start - CW_ENTRY)) / 2, -SD), len: Math.max(0, DiagWall.door.start - CW_ENTRY) };
-  const diagQRB = { ...DiagWall.p((DiagWall.door.end + CW_ENTRY + diagParquetLen) / 2, -SD), len: diagParquetLen - (DiagWall.door.end + CW_ENTRY) };
-  const diagQRC = { ...DiagWall.p((diagParquetLen + diagCorridorTotalLen) / 2, -SD), len: Math.max(0, diagCorridorTotalLen - diagParquetLen) };
+  const corridorZEnd = DiagWall.A.z + (CORRIDOR_WEST_WALL - DiagWall.A.x) * DiagWall.slope;
+  const diagCorridorTotalLen = Math.hypot(DiagWall.A.x - CORRIDOR_WEST_WALL, DiagWall.A.z - corridorZEnd);
+
+  // Placard couloir
+  const CL_N = CORRIDOR_NORTH_WALL;
+  const CL_S = INT_Z_KITCHEN_B;
+  const CL_W = INT_X_KITCHEN_R + PARTITION_THICKNESS;
+  const CL_E = CORRIDOR_WEST_WALL;
 
   return (
     <group name="skirting-baseboards" userData={{ brickType: 'skirting' }}>
-      <P w={INT_X_EAST - INT_X_WEST} h={SH} d={SD}
-         x={(INT_X_WEST + INT_X_EAST) / 2} y={y} z={INT_Z_NORTH + SD / 2}
-         mat={skirtingMat} />
-      <QR cx={(INT_X_WEST + INT_X_EAST) / 2} cz={INT_Z_NORTH + SD}
-         len={INT_X_EAST - INT_X_WEST} dir="+Z" mat={skirtingMat} />
+      {/* ── Séjour — Périphérie ────────────────────────────────────────────────── */}
+      <BaseboardX x1={INT_X_WEST} x2={INT_X_EAST} z={INT_Z_NORTH} dir="+Z" />
+      <BaseboardZ z1={INT_Z_NORTH} z2={INT_Z_ROOM_S} x={INT_X_EAST} dir="-X" />
+      <BaseboardX x1={DOOR_END + DOOR_CLEARANCE} x2={INT_X_EAST} z={INT_Z_ROOM_S} dir="-Z" />
+      <BaseboardX x1={INT_X_KITCHEN_R} x2={DOOR_START - DOOR_CLEARANCE} z={INT_Z_ROOM_S} dir="-Z" />
+      <BaseboardX x1={INT_X_NICHE} x2={INT_X_KITCHEN_L} z={INT_Z_ROOM_S} dir="-Z" />
+      <BaseboardZ z1={INT_Z_NICHE_S} z2={INT_Z_ROOM_S} x={INT_X_NICHE} dir="+X" />
+      <BaseboardX x1={INT_X_NICHE} x2={INT_X_WEST} z={INT_Z_NICHE_S} dir="+Z" />
+      <BaseboardZ z1={INT_Z_NORTH} z2={INT_Z_NICHE_S} x={INT_X_WEST} dir="+X" />
 
-      <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NORTH}
-         x={INT_X_EAST - SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_EAST - SD} cz={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
-         len={INT_Z_ROOM_S - INT_Z_NORTH} dir="-X" mat={skirtingMat} />
+      {/* ── Cuisine ────────────────────────────────────────────────────────────── */}
+      <BaseboardZ z1={INT_Z_ROOM_S} z2={INT_Z_KITCHEN_B} x={INT_X_KITCHEN_R} dir="-X" />
+      <BaseboardX x1={INT_X_KITCHEN_L} x2={INT_X_KITCHEN_R} z={INT_Z_KITCHEN_B} dir="-Z" />
+      <BaseboardZ z1={INT_Z_ROOM_S} z2={INT_Z_KITCHEN_B} x={INT_X_KITCHEN_L} dir="+X" />
 
-      <P w={SD} h={SH} d={DiagWall.A.z - (CORRIDOR_NORTH_WALL)}
-         x={INT_X_EAST - SD / 2} y={y} z={((CORRIDOR_NORTH_WALL) + DiagWall.A.z) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_EAST - SD} cz={((CORRIDOR_NORTH_WALL) + DiagWall.A.z) / 2}
-         len={DiagWall.A.z - (CORRIDOR_NORTH_WALL)} dir="-X" mat={skirtingMat} />
+      {/* ── Couloir ────────────────────────────────────────────────────────────── */}
+      <BaseboardZ z1={CORRIDOR_NORTH_WALL} z2={DiagWall.A.z} x={INT_X_EAST} dir="-X" />
+      <BaseboardX x1={DOOR_END + DOOR_CLEARANCE} x2={INT_X_EAST} z={CORRIDOR_NORTH_WALL} dir="+Z" />
+      <BaseboardZ z1={CL_S} z2={DOOR_BATH_START - DOOR_CLEARANCE} x={CORRIDOR_WEST_WALL} dir="+X" />
+      <BaseboardZ z1={DOOR_BATH_END + DOOR_CLEARANCE} z2={parquetDiagZ} x={CORRIDOR_WEST_WALL} dir="+X" />
 
-      <P w={28.5} h={SH} d={SD}
-         x={301.75} y={y} z={INT_Z_ROOM_S - SD / 2}
-         mat={skirtingMat} />
-      <QR cx={301.75} cz={INT_Z_ROOM_S - SD}
-         len={28.5} dir="-Z" mat={skirtingMat} />
+      {/* ── Placard couloir ────────────────────────────────────────────────────── */}
+      <BaseboardX x1={CL_W} x2={CL_E + SKIRTING_D} z={CL_N} dir="+Z" />
+      <BaseboardX x1={CL_W} x2={CL_E} z={CL_S} dir="-Z" />
+      <BaseboardZ z1={CL_N} z2={CL_S} x={CL_W} dir="+X" />
 
-      <P w={28.5} h={SH} d={SD}
-         x={301.75} y={y} z={(CORRIDOR_NORTH_WALL) + SD / 2}
-         mat={skirtingMat} />
-      <QR cx={301.75} cz={(CORRIDOR_NORTH_WALL) + SD}
-         len={28.5} dir="+Z" mat={skirtingMat} />
-
-      {[diagSegA, diagSegB, diagSegC].map((s, i) => (
-        <mesh key={`ds${i}`} position={[s.x, y, s.z]} rotation-y={DiagWall.rotY} castShadow receiveShadow
-              material={skirtingMat}>
-           <boxGeometry args={[SD, SH, s.len]} />
-        </mesh>
-      ))}
-      {[diagQRA, diagQRB, diagQRC].map((s, i) => (
-        <mesh key={`dqr${i}`} position={[s.x, y, s.z]} rotation-y={DiagWall.rotY} castShadow receiveShadow
-              material={skirtingMat} scale={[1, 1, s.len]} geometry={qrGeo} />
-      ))}
-
-      {(() => {
-        const CORR_WALL_EAST = CORRIDOR_WEST_WALL;
-        const CLOSET_S = KITCHEN_SOUTH_WALL;
-        const CORR_DOOR_S = 517;
-        const CORR_DOOR_E = 603;
-        const segs: [number, number][] = [
-          [CLOSET_S,          CORR_DOOR_S - 1.5],
-          [CORR_DOOR_E + 1.5, parquetDiagZ],
-        ];
-        return segs.flatMap(([z1, z2], i) => [
-          <P key={`p${i}`} w={SD} h={SH} d={z2 - z1}
-             x={CORR_WALL_EAST + SD / 2} y={y} z={(z1 + z2) / 2}
-             mat={skirtingMat} />,
-          <QR key={`qr${i}`} cx={CORR_WALL_EAST + SD} cz={(z1 + z2) / 2}
-              len={z2 - z1} dir="+X" mat={skirtingMat} />,
-        ]);
-      })()}
-
-      {(() => {
-        const CL_N = CORRIDOR_NORTH_WALL;
-        const CL_S = KITCHEN_SOUTH_WALL;
-        const CL_W = KITCHEN_EAST_WALL + PARTITION_THICKNESS;
-        const CL_E = CORRIDOR_WEST_WALL;
-        const xCenter = (CL_W + CL_E + SD) / 2;
-        const zCenter = (CL_N + CL_S) / 2;
-        const W_LEN = CL_E + SD - CL_W;
-        const D_LEN = CL_S - CL_N;
-        return (
-          <>
-            <P w={W_LEN} h={SH} d={SD}
-               x={xCenter} y={y} z={CL_N + SD / 2}
-               mat={skirtingMat} />
-            <QR cx={xCenter} cz={CL_N + SD}
-                len={W_LEN} dir="+Z" mat={skirtingMat} />
-
-            <P w={W_LEN - SD} h={SH} d={SD}
-               x={xCenter - SD / 2} y={y} z={CL_S - SD / 2}
-               mat={skirtingMat} />
-            <QR cx={xCenter - SD / 2} cz={CL_S - SD}
-                len={W_LEN - SD} dir="-Z" mat={skirtingMat} />
-
-            <P w={SD} h={SH} d={D_LEN}
-               x={CL_W + SD / 2} y={y} z={zCenter}
-               mat={skirtingMat} />
-            <QR cx={CL_W + SD} cz={zCenter}
-                len={D_LEN} dir="+X" mat={skirtingMat} />
-          </>
-        );
-      })()}
-
-      <P w={73.5} h={SH} d={SD}
-         x={161.75} y={y} z={INT_Z_ROOM_S - SD / 2}
-         mat={skirtingMat} />
-      <QR cx={161.75} cz={INT_Z_ROOM_S - SD}
-         len={73.5} dir="-Z" mat={skirtingMat} />
-
-      <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
-         x={INT_X_KITCHEN_R - SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_KITCHEN_R - SD} cz={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
-         len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="-X" mat={skirtingMat} />
-
-      <P w={INT_X_KITCHEN_R - INT_X_KITCHEN_L} h={SH} d={SD}
-         x={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} y={y} z={INT_Z_KITCHEN_B - SD / 2}
-         mat={skirtingMat} />
-      <QR cx={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} cz={INT_Z_KITCHEN_B - SD}
-         len={INT_X_KITCHEN_R - INT_X_KITCHEN_L} dir="-Z" mat={skirtingMat} />
-
-      <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
-         x={INT_X_KITCHEN_L + SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_KITCHEN_L + SD} cz={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
-         len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="+X" mat={skirtingMat} />
-
-      <P w={INT_X_KITCHEN_L - INT_X_NICHE} h={SH} d={SD}
-         x={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
-         mat={skirtingMat} />
-      <QR cx={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} cz={INT_Z_ROOM_S - SD}
-         len={INT_X_KITCHEN_L - INT_X_NICHE} dir="-Z" mat={skirtingMat} />
-
-      <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NICHE_S}
-         x={INT_X_NICHE + SD / 2} y={y} z={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_NICHE + SD} cz={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
-         len={INT_Z_ROOM_S - INT_Z_NICHE_S} dir="+X" mat={skirtingMat} />
-
-      <P w={INT_X_WEST - INT_X_NICHE} h={SH} d={SD}
-         x={(INT_X_NICHE + INT_X_WEST) / 2} y={y} z={INT_Z_NICHE_S + SD / 2}
-         mat={skirtingMat} />
-      <QR cx={(INT_X_NICHE + INT_X_WEST) / 2} cz={INT_Z_NICHE_S + SD}
-         len={INT_X_WEST - INT_X_NICHE} dir="+Z" mat={skirtingMat} />
-
-      <P w={SD} h={SH} d={INT_Z_NICHE_S - INT_Z_NORTH}
-         x={INT_X_WEST + SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_WEST + SD} cz={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
-         len={INT_Z_NICHE_S - INT_Z_NORTH} dir="+X" mat={skirtingMat} />
+      {/* ── Mur diagonal ───────────────────────────────────────────────────────── */}
+      <DiagBaseboard startD={0} endD={Math.max(0, DiagWall.door.start - CW_ENTRY)} />
+      <DiagBaseboard startD={DiagWall.door.end + CW_ENTRY} endD={diagParquetLen} />
+      <DiagBaseboard startD={diagParquetLen} endD={diagCorridorTotalLen} />
     </group>
   );
 }
@@ -498,8 +437,8 @@ export function BathSkirting() {
   const corridorXEnd = BATH_E_FACE;
   const Cz = DiagWall.A.z + (corridorXEnd - DiagWall.A.x) * DiagWall.slope;
 
-  const CORR_DOOR_S = 517;
-  const CORR_DOOR_E = 603;
+  const CORR_DOOR_S = DOOR_BATH_START;
+  const CORR_DOOR_E = DOOR_BATH_END;
 
   const showerWallZCenter1 = KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2;
   const showerWallZCenter2 = showerWallZCenter1 + 70;
