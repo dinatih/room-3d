@@ -262,15 +262,23 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         </div>
       )}
 
-      {/* Barre de redimensionnement vertical */}
+      {/* Poignée de redimensionnement manuelle (bas-gauche) */}
       {visible && (
         <div
           onPointerDown={handleResizePointerDown}
-          title="Redimensionner la hauteur de la console (Glisser verticalement)"
-          className="w-100 py-1 bg-white bg-opacity-5 border-top border-white border-opacity-10 d-flex align-items-center justify-content-center user-select-none"
-          style={{ cursor: 'ns-resize', touchAction: 'none' }}
+          title="Redimensionner la console (Glisser)"
+          className="position-absolute bottom-0 start-0 d-flex align-items-end justify-content-start p-1 text-success opacity-75 user-select-none"
+          style={{
+            width: 22,
+            height: 22,
+            cursor: 'ns-resize',
+            zIndex: 10,
+            touchAction: 'none',
+          }}
         >
-          <div className="rounded bg-white bg-opacity-25" style={{ width: '36px', height: '2px' }} />
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M1 15h14v-2H1v2zm0-4h10V9H1v2zm0-4h6V5H1v2z" />
+          </svg>
         </div>
       )}
     </div>
