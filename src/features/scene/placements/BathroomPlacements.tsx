@@ -83,7 +83,15 @@ export function BathroomEquipment() {
       </group>
 
       {/* Cabine de Douche */}
-      <group position={[BATH_WEST_WALL + SHOWER_W / 2, 0, SHOWER_SOUTH_WALL - SHOWER_D / 2]} userData={{ animUnit: true, itemName: 'Cabine de Douche' }}>
+      <group
+        position={[BATH_WEST_WALL + SHOWER_W / 2, 0, SHOWER_SOUTH_WALL - SHOWER_D / 2]}
+        userData={{
+          skipMerge: true,
+          animUnit: true,
+          itemName: 'Cabine de Douche',
+          hoverAction: { label: 'Porte de douche', actionId: 'showerDoor' }
+        }}
+      >
         <Shower item={stub('shower')} actionState={as} onSize={NOOP_SIZE} />
       </group>
 

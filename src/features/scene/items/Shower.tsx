@@ -1,18 +1,10 @@
 /**
  * Shower.tsx — Receveur de douche + équipements VALLAMOSSE IKEA.
  *
- * Toutes les orientations/échelles sont gérées par des wrappers JSX — aucune
- * mutation de géométrie (applyGeomRotX) ni de node-transform (bakeRotXToChildren).
- *
- * GLB tray  : mètres, modifié par script Python (bake matrices, scale 68cm, centré).
- *             Bbox finale : ±0.34m XZ, Y 0→0.163m → scale=100 → 68×68cm, Y=0 sol.
- *             setupScene(scale=100) → glbLocalBBox, immunisé contre parent matrixWorld.
- *             Groupe au centre de la niche (world 25,0,635).
- *
- * GLB bar   : mètres, longueur le long de Z. setupScene + wrappers rotation.
- *
- * Porte     : procédurale (vitre + cadre aluminium), pas de GLB.
- *             DOOR_W × DOOR_H cm, centrée en X sur le bac.
+ * Ensemble 71×71 cm centré en X/Z dans son repère local :
+ * - Bac : shower.glb mis à l'échelle (71×71 cm), centré et posé au sol
+ * - Robinetterie VALLAMOSSE : mitigeur thermostatique + barre réglable chromés
+ * - Porte procédurale : verre + cadre aluminium + poignée avec pivot d'ouverture
  */
 import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
@@ -100,10 +92,15 @@ function ShowerDoor({ isOpen }: { isOpen: boolean }) {
   const pivotRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
 
+  const isOpenRef = useRef(isOpen);
+  useLayoutEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
   useFrame((_, delta) => {
     if (!pivotRef.current) return;
     // Rotation cible : ouverture vers l'extérieur de la douche (angle positif vers la SDB)
-    const targetAngle = isOpen ? Math.PI * 0.47 : 0;
+    const targetAngle = isOpenRef.current ? Math.PI * 0.47 : 0;
     const current = pivotRef.current.rotation.y;
     if (current === targetAngle) return;
     if (Math.abs(targetAngle - current) < 0.001) {
@@ -198,8 +195,8 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
         <primitive object={faucet} />
       </group>
 
-      {/* Porte — centrée en X, 2cm devant la face nord du bac (local Z=−TRAY_HALF) */}
-      <group position={[0, 20, -TRAY_HALF]}>
+      {/* Porte — centrée en X, au niveau du nez nord du bac (local Z=−TRAY_HALF) */}
+      <group position={[0, 20, -TRAY_HALF]} userData={{ hoverAction: { label: 'Porte de douche', actionId: 'showerDoor' } }}>
         <ShowerDoor isOpen={isDoorOpen} />
       </group>
     </group>

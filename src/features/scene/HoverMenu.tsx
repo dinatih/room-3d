@@ -105,6 +105,7 @@ const ACTIONS = {
   entryDoor:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'entryDoor'     },
   livingDoor:     { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'livingDoor'    },
   bathroomDoor:   { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'bathroomDoor'  },
+  showerDoor:     { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'showerDoor'    },
   corrDoors:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'corrDoors'     },
   sdbClosetL:     { btnLabel: 'Ouvrir / Fermer Gauche', toggleKey: 'sdbClosetL' },
   sdbClosetR:     { btnLabel: 'Ouvrir / Fermer Droite', toggleKey: 'sdbClosetR' },

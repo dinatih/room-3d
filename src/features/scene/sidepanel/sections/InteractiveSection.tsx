@@ -89,6 +89,7 @@ export function InteractiveSection({
       {furnitureBtn('Porte Entrée', 'entryDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Porte Séjour', 'livingDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Porte SDB', 'bathroomDoor', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Porte Douche', 'showerDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Baie Vitrée Est', 'eastGlassDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Baie Vitrée Ouest', 'glassDoorV2LeftOpen', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Volets', 'glassDoorV2ShutterPos', 'ON', 'OFF', v => typeof v === 'number' ? (v === 0 ? 'OUVERT' : v === 100 ? 'FERMÉ' : `${v}%`) : `${v}%`)}
