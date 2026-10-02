@@ -9,9 +9,10 @@ import {
   DOOR_START,
   BATH_WEST_WALL, BATH_NORTH_WALL,
   KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL,
-  ROOM_D, PARTITION_THICKNESS, CORRIDOR_NORTH_WALL
+  ROOM_D, PARTITION_THICKNESS, CORRIDOR_NORTH_WALL, SHOWER_SOUTH_WALL
 } from './wallData';
 import { SDB_CLOSET_X, SDB_CLOSET_Z } from './items/SdbCloset';
+import { SHOWER_W, SHOWER_D } from './items/Shower';
 import { positionState } from './positionState';
 import { DYNAMIC_FURNITURE_ANCHORS, FurnitureTransform } from './furniturePositions';
 
@@ -73,12 +74,11 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
       };
 
     case 'shower':
-      // Placements.tsx: <group position={[BATH_WEST_WALL + 35, 0, BATH_NORTH_WALL + 140 + PARTITION_THICKNESS / 2 + 35]} ...>
       return {
         position: [
-          BATH_WEST_WALL + 35.5,
+          BATH_WEST_WALL + SHOWER_W / 2,
           0,
-          BATH_NORTH_WALL + 140 + PARTITION_THICKNESS / 2 + 37,
+          SHOWER_SOUTH_WALL - SHOWER_D / 2,
         ],
         rotationY: 0,
       };

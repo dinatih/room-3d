@@ -27,13 +27,18 @@ const GLB_TRAY   = 'items/shower/shower.glb';
 const GLB_BAR    = 'items/vallamosse barre avec douchette haut réglable chromé/VALLAMOSSE Barre avec douchette haut réglable chromé.glb';
 const GLB_FAUCET = 'items/vallamosse mitigeur thermostatique pour douche chromé 150 mm/VALLAMOSSE Mitigeur thermostatique pour douche chromé 150 mm.glb';
 
+// Dimensions de l'ensemble de douche
+export const SHOWER_W = 71;
+export const SHOWER_D = 71;
+export const SHOWER_H = 200;
+
 // Bac GLB recentré (script Python) : bbox ±0.34m → scale normalisé à 71×71cm centré à l'origine.
-const TRAY_CM   = 71;
-const TRAY_HALF = TRAY_CM / 2;  // 35.5
+const TRAY_CM   = SHOWER_W;
+const TRAY_HALF = SHOWER_D / 2;  // 35.5
 
 // Porte procédurale
-const DOOR_W = 71;   // largeur cm
-const DOOR_H = 200;  // hauteur cm
+const DOOR_W = SHOWER_W;   // largeur cm
+const DOOR_H = SHOWER_H;   // hauteur cm
 const DOOR_T = 0.8;  // épaisseur vitre cm
 const FRAME  = 2.0;  // section profil aluminium cm
 
@@ -189,12 +194,12 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
       </group>
 
       {/* Mitigeur thermostatique — rosaces coniques au ras du mur Sud */}
-      <group position={[0, 90, TRAY_HALF - 0.5]} rotation-x={-Math.PI / 2} rotation-y={Math.PI}>
+      <group position={[0, 90, TRAY_HALF]} rotation-x={-Math.PI / 2} rotation-y={Math.PI}>
         <primitive object={faucet} />
       </group>
 
       {/* Porte — centrée en X, 2cm devant la face nord du bac (local Z=−TRAY_HALF) */}
-      <group position={[0, 20, -(TRAY_HALF + 2)]}>
+      <group position={[0, 20, -TRAY_HALF]}>
         <ShowerDoor isOpen={isDoorOpen} />
       </group>
     </group>

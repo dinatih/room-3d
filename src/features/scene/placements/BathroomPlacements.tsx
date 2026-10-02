@@ -6,7 +6,7 @@ import type { Item } from '@shared/types';
 
 import { WaterHeater, WH_W, WH_D, WH_H } from '../items/WaterHeater';
 import { Toilet, TOILET_D } from '../items/Toilet';
-import { Shower } from '../items/Shower';
+import { Shower, SHOWER_W, SHOWER_D } from '../items/Shower';
 import { Havback49514017, HAVBACK_D } from '../items/Havback49514017';
 import { BathroomCabinetWest, BathroomCabinetEast } from '../items/BathroomCabinet';
 import { SdbCloset, SDB_CLOSET_X, SDB_CLOSET_Z } from '../items/SdbCloset';
@@ -18,7 +18,7 @@ import { Tisken40381253 } from '../items/Tisken40381253';
 import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
 import { DroneCell } from '../items/Drona';
 
-import { WALL_H, PARTITION_THICKNESS, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL } from '../wallData';
+import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
@@ -83,7 +83,7 @@ export function BathroomEquipment() {
       </group>
 
       {/* Cabine de Douche */}
-      <group position={[BATH_WEST_WALL + 35.5, 0, BATH_NORTH_WALL + 140 + PARTITION_THICKNESS / 2 + 37]} userData={{ animUnit: true, itemName: 'Cabine de Douche' }}>
+      <group position={[BATH_WEST_WALL + SHOWER_W / 2, 0, SHOWER_SOUTH_WALL - SHOWER_D / 2]} userData={{ animUnit: true, itemName: 'Cabine de Douche' }}>
         <Shower item={stub('shower')} actionState={as} onSize={NOOP_SIZE} />
       </group>
 

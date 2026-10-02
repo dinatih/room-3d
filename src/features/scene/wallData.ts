@@ -241,6 +241,7 @@ export const BATH_NORTH_WALL     = pSouth('bath-nw');          // Z ≈ 463.6  (
 export const BATH_SOUTH_WALL     = pNorth('shower-nw');        // Z ≈ 610.8
 export const BATH_EAST_WALL      = pWest('bath-ne');           // X ≈ 192.0  (face sdb de la cloison couloir)
 export const BATH_WEST_WALL      = pEast('corner-sw');         // X ≈ -10    (face intérieure mur ouest béton)
+export const SHOWER_SOUTH_WALL   = pNorth('shower-sw');        // Z ≈ 683.8  (face douche de la cloison sud douche)
 
 // Couloir (Corridor)
 export const CORRIDOR_NORTH_WALL = pSouth('door-living-w');    // Z ≈ 403.8  (face couloir de la partition séjour)
