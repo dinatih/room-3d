@@ -380,7 +380,7 @@ export function SidePanel({
           <div
             className="position-fixed start-0 end-0 border-top shadow-lg z-index-95 d-flex flex-column rounded-top-4"
             style={{
-              bottom: 64,
+              bottom: '3.75rem',
               maxHeight: 'calc(100vh - 120px)',
               zIndex: 95,
               background: 'rgba(255, 255, 255, 0.75)',
@@ -417,7 +417,7 @@ export function SidePanel({
         <div 
           className="position-fixed bottom-0 start-0 end-0 border-top shadow-lg d-flex align-items-center"
           style={{ 
-            height: '64px', 
+            height: '3.75rem', 
             zIndex: 100, 
             paddingBottom: 'env(safe-area-inset-bottom)', 
             background: 'rgba(255, 255, 255, 0.75)', 
@@ -430,9 +430,9 @@ export function SidePanel({
           <button
             onClick={onOpenInventory}
             className="btn border-0 d-flex flex-column align-items-center justify-content-center py-1 text-secondary"
-            style={{ fontSize: '10px', minWidth: '60px', flex: '0 0 auto' }}
+            style={{ fontSize: '0.65rem', minWidth: '3.75rem', flex: '0 0 auto' }}
           >
-            <span style={{ fontSize: '20px', lineHeight: 1 }}>📦</span>
+            <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>📦</span>
             <span className="fw-semibold">Inventaire</span>
           </button>
           
@@ -444,9 +444,9 @@ export function SidePanel({
                   <button
                     onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
                     className={`btn border-0 d-flex flex-column align-items-center justify-content-center py-1 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
-                    style={{ fontSize: '10px', minWidth: '60px' }}
+                    style={{ fontSize: '0.65rem', minWidth: '3.75rem' }}
                   >
-                    <span style={{ fontSize: '20px', lineHeight: 1 }}>{t.emoji}</span>
+                    <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{t.emoji}</span>
                     <span className="fw-semibold">{t.label}</span>
                   </button>
                   <button
@@ -457,11 +457,11 @@ export function SidePanel({
                     }}
                     className="btn btn-sm btn-warning p-0 d-flex align-items-center justify-content-center border-0 rounded-circle position-absolute shadow-sm"
                     style={{
-                      width: '20px',
-                      height: '20px',
-                      top: '4px',
-                      right: '4px',
-                      fontSize: '11px',
+                      width: '1.25rem',
+                      height: '1.25rem',
+                      top: '0.25rem',
+                      right: '0.25rem',
+                      fontSize: '0.7rem',
                       zIndex: 10,
                       background: '#ffc107',
                     }}
@@ -477,9 +477,9 @@ export function SidePanel({
                 key={t.key}
                 onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
                 className={`btn border-0 d-flex flex-column align-items-center justify-content-center py-1 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
-                style={{ fontSize: '10px', minWidth: '60px', flex: '0 0 auto' }}
+                style={{ fontSize: '0.65rem', minWidth: '3.75rem', flex: '0 0 auto' }}
               >
-                <span style={{ fontSize: '20px', lineHeight: 1 }}>{t.emoji}</span>
+                <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{t.emoji}</span>
                 <span className="fw-semibold">{t.label}</span>
               </button>
             );
@@ -489,10 +489,10 @@ export function SidePanel({
             <button
               onClick={onToggleHideUI}
               className="btn border-0 d-flex flex-column align-items-center justify-content-center py-1 text-secondary"
-              style={{ fontSize: '10px', minWidth: '60px', flex: '0 0 auto' }}
+              style={{ fontSize: '0.65rem', minWidth: '3.75rem', flex: '0 0 auto' }}
               title="Masquer l'interface"
             >
-              <span style={{ fontSize: '20px', lineHeight: 1 }}>👁️‍🗨️</span>
+              <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>👁️‍🗨️</span>
               <span className="fw-semibold">Cacher UI</span>
             </button>
           )}

@@ -405,7 +405,7 @@ export function Minimap() {
         <div
           className="position-fixed glass-card shadow-sm p-1 rounded-3 overflow-hidden"
           style={{
-            bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom) + 12px)' : 20,
+            bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 0.75rem)' : 20,
             left: isMobile ? 12 : undefined,
             right: isMobile ? undefined : 20,
             width: smallW + 8,

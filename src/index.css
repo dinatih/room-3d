@@ -1,5 +1,5 @@
-html {
-  font-size: 14px;
+html, :root {
+  font-size: 14px !important;
 }
 
 *, *::before, *::after {
