@@ -44,11 +44,22 @@ function formatTime(ts: number): string {
   return `${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
 }
 
+function getContrastTextColor(hex: string): string {
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substring(0, 2), 16) || 0;
+  const g = parseInt(c.substring(2, 4), 16) || 0;
+  const b = parseInt(c.substring(4, 6), 16) || 0;
+  return (r * 299 + g * 587 + b * 114) / 1000 >= 128 ? '#000000' : '#ffffff';
+}
+
 // ── Composant ──────────────────────────────────────────────────────────────
 export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const isMobile = useIsMobile();
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
   const activeChar = findCharacter(activeWalkerId);
+  const charColor = activeChar?.color ?? '#00ff88';
+  const charContrastText = getContrastTextColor(charColor);
+  const charDisplayName = `${activeChar?.emoji ? `${activeChar.emoji} ` : ''}${activeChar?.name ?? activeWalkerId}`;
 
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [visible, setVisible] = useState(false);
@@ -177,30 +188,30 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
 
         {visible && (
           <div className="d-flex align-items-center gap-2">
-            {/* Bouton Filtre Bulle Think */}
+            {/* Bouton Filtre Personnage Actif */}
             <button
               type="button"
-              className={`btn btn-sm py-0 px-2 small d-flex align-items-center gap-1 ${
-                filterBubbleOnly
-                  ? 'btn-info text-dark fw-bold border-0 shadow-sm'
-                  : 'btn-outline-success border-opacity-50'
+              className={`btn btn-sm py-0 px-2 small d-flex align-items-center gap-1 border ${
+                filterBubbleOnly ? 'fw-bold shadow-sm' : ''
               }`}
+              style={{
+                backgroundColor: filterBubbleOnly ? charColor : 'rgba(255, 255, 255, 0.05)',
+                borderColor: filterBubbleOnly ? charColor : `${charColor}88`,
+                color: filterBubbleOnly ? charContrastText : charColor,
+                boxShadow: filterBubbleOnly ? `0 0 8px ${charColor}66` : 'none',
+                transition: 'all 0.15s ease',
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 setFilterBubbleOnly(f => !f);
               }}
               title={
                 filterBubbleOnly
-                  ? `Filtre Bulle Think actif (${activeChar?.name ?? activeWalkerId}) — Cliquer pour afficher tous les logs`
-                  : `Afficher uniquement les logs de la bulle de pensée (${activeChar?.name ?? activeWalkerId})`
+                  ? `Filtre actif : ${activeChar?.name ?? activeWalkerId} — Cliquer pour afficher tous les logs`
+                  : `Afficher uniquement les logs de ${activeChar?.name ?? activeWalkerId}`
               }
             >
-              <span>💭</span>
-              <span>
-                {filterBubbleOnly
-                  ? `BULLE THINK : ${activeChar?.emoji ?? ''} ${activeChar?.name ?? activeWalkerId}`.trim()
-                  : 'BULLE THINK'}
-              </span>
+              <span>{charDisplayName}</span>
             </button>
 
             {/* Bouton Pause / Reprendre */}
@@ -231,7 +242,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           {displayedLogs.length === 0 && (
             <div className="text-secondary fst-italic py-1">
               {filterBubbleOnly
-                ? `💭 Aucune pensée enregistrée pour ${activeChar?.name ?? activeWalkerId}…`
+                ? `Aucun log pour ${charDisplayName}…`
                 : 'En attente de logs…'}
             </div>
           )}
