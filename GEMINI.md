@@ -48,6 +48,11 @@ document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, valu
 - Pour écouter ces états de manière factorisée, utiliser le hook `useFurnitureToggles` dans `Placements.tsx`.
 - Pour les animations R3F (`useFrame`), synchroniser l'état réactif dans des refs locales (ex. `const isPowerOnRef = useRef(false)`) afin d'éviter les closures obsolètes dans la boucle d'animation.-->
 
+## Directives UI & Styling
+
+- **Bootstrap au maximum** : Toujours privilégier les classes utilitaires et composants Bootstrap (`btn-sm`, `form-control-sm`, `form-select-sm`, `small`, `gap-*`, `p-*`, `m-*`, `w-auto`, etc.).
+- **Styles in-line restreints** : N'utiliser les styles in-line (`style={{ ... }}`) que si c'est réellement indispensable (ex. positionnement absolu dynamique, dimensions calculées dynamiquement). Ne jamais utiliser de styles in-line arbitraires (notamment `fontSize`, espacements ou dimensions fixes au hasard) lorsqu'une classe Bootstrap équivalente existe.
+
 ## Signatures des Commits Git
 
 Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le co-auteur correspondant en pied de message de commit :
