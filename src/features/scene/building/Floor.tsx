@@ -239,23 +239,28 @@ export function Tile() {
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
     const baseTex = makeTileTex();
 
-    const Ax = BATH_WEST_WALL,  Az = BATH_NORTH_WALL;
-    const Bx = BATH_WEST_WALL,  Bz = DiagWall.A.z + (BATH_WEST_WALL - DiagWall.A.x) * DiagWall.slope;
-    const Cx = INT_X_DOOR_S, Cz = DiagWall.A.z + (INT_X_DOOR_S - DiagWall.A.x) * DiagWall.slope;
-    const Dx = INT_X_DOOR_S, Dz = BATH_NORTH_WALL;
+    const Bz = DiagWall.A.z + (BATH_WEST_WALL - DiagWall.A.x) * DiagWall.slope;
+    const Cz = DiagWall.A.z + (BATH_EAST_WALL - DiagWall.A.x) * DiagWall.slope;
 
-    const positions = new Float32Array([
-      Ax, 0, Az,  Bx, 0, Bz,  Cx, 0, Cz,
-      Ax, 0, Az,  Cx, 0, Cz,  Dx, 0, Dz,
+    const shape = new THREE.Shape([
+      new THREE.Vector2(BATH_WEST_WALL, -BATH_NORTH_WALL),
+      new THREE.Vector2(BATH_WEST_WALL, -Bz),
+      new THREE.Vector2(BATH_EAST_WALL, -Cz),
+      new THREE.Vector2(BATH_EAST_WALL, -DOOR_BATH_END),
+      new THREE.Vector2(DOOR_START,     -DOOR_BATH_END),
+      new THREE.Vector2(DOOR_START,     -DOOR_BATH_START),
+      new THREE.Vector2(BATH_EAST_WALL, -DOOR_BATH_START),
+      new THREE.Vector2(BATH_EAST_WALL, -BATH_NORTH_WALL),
     ]);
-    const uvs = new Float32Array([
-      Ax / 20, Az / 20,  Bx / 20, Bz / 20,  Cx / 20, Cz / 20,
-      Ax / 20, Az / 20,  Cx / 20, Cz / 20,  Dx / 20, Dz / 20,
-    ]);
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    g.setAttribute('uv',       new THREE.BufferAttribute(uvs, 2));
-    g.computeVertexNormals();
+
+    const g = new THREE.ShapeGeometry(shape);
+    const pos = g.attributes.position;
+    const uvs = new Float32Array(pos.count * 2);
+    for (let i = 0; i < pos.count; i++) {
+      uvs[i * 2]     = pos.getX(i) / 20;
+      uvs[i * 2 + 1] = -pos.getY(i) / 20;
+    }
+    g.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
 
     const tBath = baseTex.clone();
     tBath.wrapS = tBath.wrapT = THREE.RepeatWrapping;
@@ -287,7 +292,7 @@ export function Tile() {
 
   return (
     <>
-      <mesh geometry={bathGeo} material={bathMat} receiveShadow userData={{ brickType: 'floor' }} />
+      <mesh geometry={bathGeo} material={bathMat} rotation={[-Math.PI / 2, 0, 0]} receiveShadow userData={{ brickType: 'floor' }} />
       <mesh
         ref={(m) => { if (m) m.material = closetMat; }}
         rotation={[-Math.PI / 2, 0, 0]}
