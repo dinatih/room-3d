@@ -145,9 +145,8 @@ export function AnimFrameController({
       document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: val } }));
       useAnimPreviewStore.getState().play();
     }
-    onSelectDuoAnim?.(undefined);
     setShowAnimSelector(false);
-  }, [onSelectAnim, onSelectDuoAnim]);
+  }, [onSelectAnim]);
 
   const handleRandomDuoAnim = useCallback(() => {
     const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
