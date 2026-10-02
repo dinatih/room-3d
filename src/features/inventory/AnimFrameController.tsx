@@ -611,7 +611,7 @@ export function AnimFrameController({
 
       {/* ── Ligne 3 : Métadonnées (Solo ou Duo) ── */}
       {showMeta && hasMeta && (
-        <div className="card bg-white bg-opacity-75 border-0 shadow-sm p-2 mt-2 text-dark user-select-text small">
+        <div className="card bg-white bg-opacity-75 border-0 shadow-sm p-2 mt-2 text-dark user-select-text small" style={{ cursor: 'text' }}>
           {duoAnimDef ? (
             <div className="d-flex flex-column gap-2">
               {/* Entête Duo */}
@@ -688,14 +688,14 @@ export function AnimFrameController({
           ) : (
             <div className="d-flex flex-wrap align-items-center gap-2">
               <div>
-                <strong className="text-muted text-uppercase user-select-none me-1 small">ID:</strong>
+                <strong className="text-muted text-uppercase me-1 small">ID:</strong>
                 <code className="text-dark bg-light px-1.5 py-0.5 rounded border">
                   {def?.id || (isTPose ? 't-pose' : displayName)}
                 </code>
               </div>
               {catObj && (
                 <div>
-                  <strong className="text-muted text-uppercase user-select-none me-1 small">Catégorie:</strong>
+                  <strong className="text-muted text-uppercase me-1 small">Catégorie:</strong>
                   <span className="badge bg-light text-dark border">
                     {catObj.icon} {catObj.label}
                   </span>
@@ -703,7 +703,7 @@ export function AnimFrameController({
               )}
               {def?.path && (
                 <div>
-                  <strong className="text-muted text-uppercase user-select-none me-1 small">Fichier:</strong>
+                  <strong className="text-muted text-uppercase me-1 small">Fichier:</strong>
                   <code className="text-muted bg-light px-1.5 py-0.5 rounded border text-truncate d-inline-block align-middle" style={{ maxWidth: '240px' }} title={def.path}>
                     📁 {def.path.split('/').pop()}
                   </code>
@@ -711,7 +711,7 @@ export function AnimFrameController({
               )}
               {def?.defaultOffset && (
                 <div>
-                  <strong className="text-muted text-uppercase user-select-none me-1 small">Offset Pos:</strong>
+                  <strong className="text-muted text-uppercase me-1 small">Offset Pos:</strong>
                   <span className="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace">
                     [{def.defaultOffset.map(v => `${v}cm`).join(', ')}]
                   </span>
@@ -719,21 +719,21 @@ export function AnimFrameController({
               )}
               {def?.defaultRotYOffset !== undefined && (
                 <div>
-                  <strong className="text-muted text-uppercase user-select-none me-1 small">Offset Rot Y:</strong>
+                  <strong className="text-muted text-uppercase me-1 small">Offset Rot Y:</strong>
                   <span className="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace">
                     {(def.defaultRotYOffset * (180 / Math.PI)).toFixed(1)}°
                   </span>
                 </div>
               )}
               <div>
-                <strong className="text-muted text-uppercase user-select-none me-1 small">Durée:</strong>
+                <strong className="text-muted text-uppercase me-1 small">Durée:</strong>
                 <span className="text-success fw-bold font-monospace">
                   {(def?.duration ?? duration).toFixed(2)}s ({totalFrames}f @ {fps}fps)
                 </span>
               </div>
               {def?.aliases && def.aliases.length > 0 && (
                 <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
-                  <strong className="text-muted text-uppercase user-select-none me-1 small">🏷️ Aliases ({def.aliases.length}):</strong>
+                  <strong className="text-muted text-uppercase me-1 small">🏷️ Aliases ({def.aliases.length}):</strong>
                   {def.aliases.map(alias => (
                     <span key={alias} className="badge bg-light text-secondary border font-monospace">
                       {alias}
@@ -743,7 +743,7 @@ export function AnimFrameController({
               )}
               {def?.tags && def.tags.length > 0 && (
                 <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
-                  <strong className="text-muted text-uppercase user-select-none me-1 small">🔖 Tags ({def.tags.length}):</strong>
+                  <strong className="text-muted text-uppercase me-1 small">🔖 Tags ({def.tags.length}):</strong>
                   {def.tags.map(tag => (
                     <span key={tag} className="badge bg-primary-subtle text-primary border border-primary-subtle">
                       #{tag}
