@@ -66,6 +66,13 @@ Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le c
 - **Commit automatique** : L'agent DOIT toujours commiter ses modifications de code via `git commit` à chaque fois qu'une réponse est envoyée, sans attendre d'instruction explicite.
 - **Exécution de scripts / Règle Anti-Spam `node -e`** : Ne JAMAIS lancer de commandes inline répétitives de type `node -e "..."` qui demandent à l'utilisateur de valider chaque commande une par une. Toujours écrire le script dans un fichier temporaire réutilisable (`scripts/temp_inspect.cjs` ou similaire), puis exécuter ce fichier avec `node scripts/temp_inspect.cjs`. De cette façon, l'utilisateur ne valide l'autorisation d'exécution qu'une seule fois pour toute la conversation. Supprimer le fichier temporaire une fois l'analyse terminée.
 
+## Simplicité du code, Anti Over-Engineering & Échec Explicite (Fail Fast)
+
+- **Interdiction de l'over-engineering** : Ne jamais ajouter de surcode, de couches d'abstraction superflues ou de logique alambiquée là où une solution simple, directe et idiomatique existe (Three.js, React). Aller au plus court et au plus robuste.
+- **Proscription des constantes magiques et filtres arbitraires** : Ne JAMAIS introduire de valeurs en dur arbitraires (ex. seuils de distance arbitraires, plafonds artificiels de boucles ou de particules comme `slice(0, 14)` ou `< 55`) inventées pour masquer un symptôme sans traiter la cause racine.
+- **Pas d'erreurs silencieuses (Fail Fast)** : Éviter les garde-fous artificiels qui étouffent ou dissimulent les données invalides ou les comportements anormaux. Si des données sont invalides, l'erreur doit se manifester ou remonter explicitement afin d'être identifiée et corrigée à la source, plutôt que d'être masquée silencieusement par un filtre cosmétique.
+
+
 ## Économie de quota et limitation d'investigation
 
 > [!CAUTION]
