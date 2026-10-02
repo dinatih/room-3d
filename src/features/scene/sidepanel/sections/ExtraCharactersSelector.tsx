@@ -73,22 +73,21 @@ export function ExtraCharactersSelector({
       {/* Bouton Toggle Global */}
       <button 
         type="button"
-        className="btn btn-light w-100 text-start rounded border py-2 px-3 text-dark d-flex align-items-center justify-content-between shadow-none"
+        className="btn btn-sm btn-light w-100 text-start rounded border py-2 px-3 text-dark d-flex align-items-center justify-content-between shadow-none small"
         onClick={() => onToggleLayer('extraCharacters')}
         title="Activer/Désactiver l'affichage des personnages extra (Raccourci: E)"
         style={{ 
-          fontSize: isMobile ? '13px' : '11px',
+          minHeight: isMobile ? '44px' : undefined,
           background: extraCharactersEnabled ? 'rgba(13, 110, 253, 0.08)' : 'rgba(0, 0, 0, 0.03)',
           borderColor: extraCharactersEnabled ? 'rgba(13, 110, 253, 0.3)' : 'rgba(0, 0, 0, 0.1)',
-          fontWeight: extraCharactersEnabled ? 600 : 400
         }}
       >
         <div className="d-flex align-items-center gap-2">
           <span>🎭</span>
           <span>Afficher les Personnages Extra</span>
-          <kbd className="bg-secondary text-white px-1 rounded" style={{ fontSize: '9px' }}>E</kbd>
+          <kbd className="bg-secondary text-white px-1 rounded small">E</kbd>
         </div>
-        <span className={`badge ${extraCharactersEnabled ? 'bg-primary' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+        <span className={`badge ${extraCharactersEnabled ? 'bg-primary' : 'bg-secondary'}`}>
           {extraCharactersEnabled ? 'ON' : 'OFF'}
         </span>
       </button>

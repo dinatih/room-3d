@@ -44,17 +44,16 @@ export function CharacterSection({
     const on = layers[key];
     return (
       <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
         onClick={() => onToggleLayer(key)}
         style={{ 
-          minHeight: isMobile ? '48px' : undefined,
+          minHeight: isMobile ? '44px' : undefined,
           background: 'transparent',
           opacity: on ? 1 : 0.55,
-          fontWeight: on ? 600 : 400
         }}
       >
         <span>{label}</span>
-        <span className={`badge ${on ? 'bg-success' : 'bg-secondary'}`}>
+        <span className={`badge ${on ? 'bg-danger' : 'bg-secondary'}`}>
           {on ? 'ON' : 'OFF'}
         </span>
       </button>
@@ -86,7 +85,7 @@ export function CharacterSection({
             {/* Bouton global Coupe & Couleur Aléatoire */}
             <button
               type="button"
-              className="btn btn-warning w-100 text-dark fw-bold mb-3 py-2 px-3 d-flex align-items-center justify-content-center gap-2 shadow-none"
+              className="btn btn-sm btn-warning w-100 text-dark fw-bold mb-3 py-1.5 px-3 d-flex align-items-center justify-content-center gap-2 shadow-none small"
               style={{
                 background: 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)',
                 border: 'none',
@@ -392,13 +391,13 @@ export function CharacterSection({
           </div>
           <button
             type="button"
-            className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between shadow-none"
+            className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between shadow-none small"
             onClick={() => {
               useSceneStore.getState().triggerAction('aiFullTour');
             }}
             style={{ 
               background: 'transparent',
-              minHeight: isMobile ? '48px' : undefined 
+              minHeight: isMobile ? '44px' : undefined 
             }}
           >
             <span>🚶‍♀️ Visite Complète (Sud ➔ Nord)</span>
@@ -489,13 +488,13 @@ export function CharacterSection({
         </div>
       )}
       <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
         onClick={() => {
           onToggleLayer('laraGrid');
         }}
         style={{ 
+          minHeight: isMobile ? '44px' : undefined,
           backgroundColor: layers.laraGrid ? 'rgba(13, 110, 253, 0.08)' : undefined,
-          fontWeight: layers.laraGrid ? 600 : 400
         }}
       >
         <span>
