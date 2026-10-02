@@ -2806,7 +2806,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `Falling Idle (22f / 0.7s, 79KB)`,
     tags: ['poses-idles'],
     duration: 0.7,
-    defaultRotYOffset: 1,
+    defaultRotYOffset: 0.6,
   },
   {
     id: 'female-dance-pose',

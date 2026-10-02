@@ -21,6 +21,14 @@
  */
 import { useRef, useLayoutEffect, createContext } from 'react';
 import * as THREE from 'three';
+import { useThree } from '@react-three/fiber';
+import {
+  LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR,
+  LAYER_NEIGHBORS, LAYER_LIDAR, LAYER_MIRRORS, LAYER_WALKER,
+  LAYER_WALKER_DETAIL, LAYER_ANIMALS, LAYER_ENVIRONMENT,
+  LAYER_WALL_STRUCTURE, LAYER_FLOOR_COVERINGS, LAYER_AI_ZONES,
+  LAYER_DOORS, LAYER_GRASS,
+} from '@config';
 import {
   categoryLayerRegistry,
   LayerSmokeTransition,
@@ -112,6 +120,39 @@ export function CategoryLayerGroup({
  * avec les toggles UI de LayerState et orchestre les transitions de fumée Cartoon "Poof!".
  */
 export function SceneLayerController({ layers }: { layers: SceneLayers }) {
+  const { camera, invalidate } = useThree();
+
+  useLayoutEffect(() => {
+    // Le calque 0 (défaut Three.js) reste toujours activé pour les éléments système/caméras
+    camera.layers.enable(0);
+
+    const toggles: [number, boolean][] = [
+      [LAYER_STRUCTURE,       layers.structure],
+      [LAYER_WALL_STRUCTURE,  layers.wallStructure ?? true],
+      [LAYER_FLOOR_COVERINGS, layers.floorCoverings ?? true],
+      [LAYER_DOORS,           layers.doors ?? true],
+      [LAYER_AI_ZONES,        layers.aiZones ?? false],
+      [LAYER_ENVIRONMENT,     layers.environment ?? true],
+      [LAYER_GRASS,           layers.bermudaGrass ?? true],
+      [LAYER_EQUIPMENT,       layers.equipment],
+      [LAYER_FURNITURE,       layers.furniture],
+      [LAYER_FURNISHINGS,     layers.furnishings],
+      [LAYER_DECOR,           layers.decor],
+      [LAYER_NEIGHBORS,       layers.neighbors],
+      [LAYER_LIDAR,           layers.lidar],
+      [LAYER_MIRRORS,         layers.mirrors],
+      [LAYER_WALKER,          layers.walker],
+      [LAYER_ANIMALS,         layers.animals ?? true],
+    ];
+    toggles.forEach(([l, visible]) => {
+      if (visible) camera.layers.enable(l);
+      else         camera.layers.disable(l);
+    });
+    camera.layers.disable(LAYER_WALKER_DETAIL);
+    invalidate();
+  }, [layers, camera, invalidate]);
+
   return <LayerSmokeTransition layers={layers as any} />;
 }
+
 
