@@ -31,6 +31,7 @@ import { useAgentController } from '../ai/useAgentController';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationDef } from '../animations/animationResolver';
+import { getDynamicCrossfadeDuration } from '../animations/animationTransitions';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 import { CharacterThoughtBubble } from '../CharacterThoughtBubble';
 
@@ -752,18 +753,16 @@ export function SingleCharacter({
 
     const targetDef = getAnimationDef(target);
     const defaultOffset = targetDef?.defaultOffset;
-    if (!laraGrid && defaultOffset) {
-      scene.position.x = baseScenePosRef.current.x + defaultOffset[0];
-      scene.position.y = baseScenePosRef.current.y + defaultOffset[1];
-      scene.position.z = baseScenePosRef.current.z + defaultOffset[2];
-    } else {
-      scene.position.copy(baseScenePosRef.current);
-    }
-    if (!laraGrid && targetDef?.defaultRotYOffset !== undefined) {
-      scene.rotation.y = targetDef.defaultRotYOffset;
-    } else {
-      scene.rotation.y = 0;
-    }
+    const targetSceneX = (!laraGrid && defaultOffset) ? baseScenePosRef.current.x + defaultOffset[0] : baseScenePosRef.current.x;
+    const targetSceneY = (!laraGrid && defaultOffset) ? baseScenePosRef.current.y + defaultOffset[1] : baseScenePosRef.current.y;
+    const targetSceneZ = (!laraGrid && defaultOffset) ? baseScenePosRef.current.z + defaultOffset[2] : baseScenePosRef.current.z;
+    const targetRotYOffset = (!laraGrid && targetDef?.defaultRotYOffset !== undefined) ? targetDef.defaultRotYOffset : 0;
+
+    const offsetLerpFactor = Math.min(1.0, delta * 8.0);
+    scene.position.x = THREE.MathUtils.lerp(scene.position.x, targetSceneX, offsetLerpFactor);
+    scene.position.y = THREE.MathUtils.lerp(scene.position.y, targetSceneY, offsetLerpFactor);
+    scene.position.z = THREE.MathUtils.lerp(scene.position.z, targetSceneZ, offsetLerpFactor);
+    scene.rotation.y = THREE.MathUtils.lerp(scene.rotation.y, targetRotYOffset, offsetLerpFactor);
 
     const isTPose = target === 't-pose';
 
@@ -800,15 +799,27 @@ export function SingleCharacter({
       const to = actions[target];
       if (to && activeActionName.current !== target) {
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
-        if (from) {
-          if (laraGrid) from.stop();
-          else from.fadeOut(0.2);
+        const blendDuration = getDynamicCrossfadeDuration(activeActionName.current, target);
+
+        const isOnceAnim = target === 'pistol-kneel-to-stand' ||
+                           target === 'anim-pistol-kneel-to-stand' ||
+                           target === 'sit-to-stand' ||
+                           target === 'anim-sit-to-stand' ||
+                           target === 'crouch-to-stand' ||
+                           target === 'stand-up' ||
+                           target === 'stand-up-1' ||
+                           target === 'getting-up' ||
+                           target.includes('landing');
+        if (isOnceAnim) {
+          to.setLoop(THREE.LoopOnce, 1);
+          to.clampWhenFinished = true;
+        } else {
+          to.setLoop(THREE.LoopRepeat, Infinity);
+          to.clampWhenFinished = false;
         }
 
-        to.setLoop(THREE.LoopRepeat, Infinity);
-        to.clampWhenFinished = false;
-
         if (laraGrid) {
+          if (from) from.stop();
           scene.traverse((c: any) => {
             if (c.isBone) {
               if (c.userData.restPos) c.position.copy(c.userData.restPos);
@@ -825,8 +836,16 @@ export function SingleCharacter({
             to.time = store.currentTime % clip.duration;
           }
         } else {
-          to.reset().fadeIn(0.2).play();
-          to.setEffectiveWeight(1);
+          if (from) {
+            to.reset();
+            to.setEffectiveTimeScale(1);
+            to.setEffectiveWeight(1);
+            to.crossFadeFrom(from, blendDuration, true);
+            to.play();
+          } else {
+            to.reset().fadeIn(blendDuration).play();
+            to.setEffectiveWeight(1);
+          }
         }
         activeActionName.current = target;
 

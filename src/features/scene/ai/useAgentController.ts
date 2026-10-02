@@ -15,6 +15,7 @@ import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation } from './agent/agentWal
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
 import { computeSteeringVector, computeRotYStep } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
+import { getDedicatedTransitionClip, getAnimationPosture } from '../animations/animationTransitions';
 
 export type { AgentState };
 export { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation };
@@ -426,6 +427,17 @@ export function useAgentController(
       }
     }
 
+    // ── 1.5 Gestion des transitions in-between (ex: sit-to-stand, crouch-to-stand, stand-up) ──
+    if (statusRef.current === 'TRANSITIONING') {
+      timerRef.current -= dt;
+      if (timerRef.current <= 0) {
+        statusRef.current = 'IDLE';
+        stateRef.current.y = 0;
+        advanceToNextStep(hasNavStepInUpdate);
+      }
+      return stateRef.current;
+    }
+
     const scenarioLength = scenario ? scenario.length : 0;
 
     // ── 2. Fin de scénario / Bouclage ──
@@ -578,6 +590,18 @@ export function useAgentController(
               cachedCoordsRef.current = null;
               return update(dt);
             }
+          }
+        }
+
+        const currentPosture = getAnimationPosture(stateRef.current.animation);
+        if (currentPosture === 'sitting' || currentPosture === 'laying' || currentPosture === 'crouching') {
+          const dedicatedTransition = getDedicatedTransitionClip(stateRef.current.animation, currentWalkAnimRef.current);
+          if (dedicatedTransition) {
+            statusRef.current = 'TRANSITIONING';
+            timerRef.current = dedicatedTransition.duration;
+            stateRef.current.animation = resolveAnimationId(dedicatedTransition.transitionAnim);
+            stateRef.current.y = 0;
+            return stateRef.current;
           }
         }
 
@@ -872,6 +896,22 @@ export function useAgentController(
 
         repeatIndexRef.current = 0;
         targetRepeatsRef.current = 1;
+
+        // Vérifier si un clip de transition in-between est nécessaire (ex: se lever du meuble)
+        const nextInstr = hasNavStep
+          ? dynamicNavQueueRef.current[dynamicNavIndexRef.current + 1]
+          : (scenario ? scenario[stepIndexRef.current + 1] : null);
+        const nextTargetAnim = nextInstr ? (nextInstr.animation || currentWalkAnimRef.current) : 'idle';
+        const dedicatedTransition = getDedicatedTransitionClip(stateRef.current.animation, nextTargetAnim);
+
+        if (dedicatedTransition) {
+          statusRef.current = 'TRANSITIONING';
+          timerRef.current = dedicatedTransition.duration;
+          stateRef.current.animation = resolveAnimationId(dedicatedTransition.transitionAnim);
+          stateRef.current.y = 0;
+          return stateRef.current;
+        }
+
         statusRef.current = 'IDLE';
         stateRef.current.y = 0;
         advanceToNextStep(hasNavStep);

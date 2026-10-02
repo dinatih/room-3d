@@ -7,7 +7,7 @@ export interface AgentState {
   isSpawned: boolean;
 }
 
-export type AgentStatus = 'WAITING' | 'FALLING' | 'LANDING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED';
+export type AgentStatus = 'WAITING' | 'FALLING' | 'LANDING' | 'TRANSITIONING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED';
 
 export interface ResolvedInstructionCoords {
   tx: number;
