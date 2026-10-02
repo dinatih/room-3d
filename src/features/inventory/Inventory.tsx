@@ -686,7 +686,7 @@ function normalizeSearchStr(str: string): string {
         <div className="d-flex flex-grow-1 overflow-hidden" style={{ userSelect: isResizing ? 'none' : undefined }}>
           {/* LIST PANE */}
           <div
-            className="d-flex flex-column border-end bg-white bg-opacity-50 overflow-hidden flex-shrink-0"
+            className="inventory-pane-list d-flex flex-column border-end bg-white bg-opacity-50 overflow-hidden flex-shrink-0"
             style={{ width: isMobile ? '100%' : `${listWidth}px` }}
           >
             <div className="p-2 border-bottom d-flex flex-column gap-1 bg-light bg-opacity-50">
@@ -860,7 +860,7 @@ function normalizeSearchStr(str: string): string {
           )}
 
           {/* DETAIL PANE (desktop) */}
-          <div className="flex-grow-1 overflow-auto bg-light bg-opacity-25">
+          <div className="inventory-pane-detail flex-grow-1 overflow-auto bg-light bg-opacity-25">
             {!selected ? (
               <div className="d-flex flex-column align-items-center justify-content-center h-100 text-muted text-center gap-2 p-4">
                 <i className="bi bi-box-seam fs-1 opacity-25" />
