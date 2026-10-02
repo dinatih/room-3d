@@ -512,6 +512,15 @@ export function SingleCharacter({
     loadAndPlayClip(walkerAnim);
   }, [walkerAnim, isPreview, laraGrid, loadAndPlayClip, invalidate]);
 
+  // Préchargement des animations de déploiement SkyDrop
+  useEffect(() => {
+    if (hasSkyDrop && !isPreview) {
+      loadAndPlayClip('falling');
+      loadAndPlayClip('falling-idle');
+      loadAndPlayClip('kneeling-inspecting');
+    }
+  }, [hasSkyDrop, isPreview, loadAndPlayClip]);
+
   // Écouteurs de commandes utilisateur & UI (couleur, coupe, équipements, positions)
   useEffect(() => {
     const handleToggleHairColor = (e: any) => {

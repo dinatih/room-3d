@@ -396,14 +396,16 @@ export function useAgentController(
         deployment.status = 'LANDING';
         deployment.timer = landingDuration;
         deployment.y = stateRef.current.y;
+        stateRef.current.animation = resolveAnimationId(landingAnim);
+        return stateRef.current;
       } else {
         const p_inv = timerRef.current / 6.0;
         const targetY = startPosRef.current?.y ?? 0;
         stateRef.current.y = targetY + (2500 - targetY) * (p_inv * p_inv * p_inv);
         deployment.y = stateRef.current.y;
+        stateRef.current.animation = timerRef.current <= 3.0 ? 'falling-idle' : 'falling';
+        return stateRef.current;
       }
-      stateRef.current.animation = timerRef.current <= 3.0 ? 'falling-idle' : 'falling';
-      return stateRef.current;
     }
 
     if (statusRef.current === 'LANDING') {
