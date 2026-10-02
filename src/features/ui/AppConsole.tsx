@@ -132,7 +132,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     <div
       ref={containerRef}
       className={`position-fixed top-0 end-0 font-monospace d-flex flex-column shadow-lg overflow-hidden ${
-        visible ? 'border-start border-bottom border-success border-opacity-25' : ''
+        visible ? 'border-start border-bottom border-white border-opacity-10' : ''
       }`}
       style={{
         left: visible ? (isMobile ? 0 : 280) : 'auto',
@@ -141,14 +141,15 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         maxHeight: visible ? '85vh' : 'auto',
         zIndex: 9999,
         borderBottomLeftRadius: visible ? (isMobile ? '0' : '4px') : '4px',
-        backgroundColor: 'rgba(0, 0, 0, 0.90)',
+        backgroundColor: 'rgba(13, 17, 23, 0.96)',
+        boxShadow: visible ? '0 8px 24px rgba(0, 0, 0, 0.65)' : undefined,
         fontSize: '11px',
       }}
     >
       {/* Header */}
       <div
-        className="d-flex align-items-center justify-content-between px-2 py-1 user-select-none border-bottom border-success border-opacity-25"
-        style={{ cursor: visible ? 'default' : 'pointer', background: 'rgba(0, 0, 0, 0.95)' }}
+        className="d-flex align-items-center justify-content-between px-2 py-1 user-select-none border-bottom border-white border-opacity-10"
+        style={{ cursor: visible ? 'default' : 'pointer', background: 'rgba(22, 27, 34, 0.98)' }}
         onClick={() => { if (!visible) setVisible(true); }}
         title={!visible ? 'Ouvrir la console App Logs (B)' : undefined}
       >
@@ -156,7 +157,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           {visible && (
             <button
               type="button"
-              className="btn btn-sm btn-outline-success py-0 px-1 border-opacity-50 lh-1 small"
+              className="btn btn-sm btn-outline-secondary py-0 px-1 border-opacity-50 lh-1 small text-white-50"
               onClick={(e) => {
                 e.stopPropagation();
                 setVisible(false);
@@ -206,7 +207,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
               className={`btn btn-sm py-0 px-2 small ${
                 isPaused
                   ? 'btn-warning text-dark fw-bold border-0 shadow-sm'
-                  : 'btn-outline-success border-opacity-50'
+                  : 'btn-outline-secondary text-white-50 border-white border-opacity-25'
               }`}
               onClick={(e) => {
                 e.stopPropagation();
@@ -224,7 +225,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         <div
           ref={logAreaRef}
           className="flex-grow-1 overflow-y-auto px-2 py-1 d-flex flex-column gap-1 user-select-text"
-          style={{ background: 'rgba(0, 0, 0, 0.82)', minHeight: 0 }}
+          style={{ background: 'rgba(13, 17, 23, 0.96)', minHeight: 0 }}
         >
           {displayedLogs.length === 0 && (
             <div className="text-secondary fst-italic py-1">
@@ -235,14 +236,26 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           )}
           {displayedLogs.map((entry, idx) => {
             const color = getTagColor(entry.tag);
+            const isLast = idx === displayedLogs.length - 1;
             return (
-              <div key={`${entry.id}_${idx}`} className="d-flex align-items-baseline gap-1 text-break lh-sm">
-                <span className="text-secondary small flex-shrink-0">[{formatTime(entry.timestamp)}]</span>
-                <span className="fw-medium flex-shrink-0" style={{ color }}>
-                  {(() => { const ch = findCharacter(entry.tag); return ch ? `${ch.emoji} ${entry.tag}` : entry.tag; })()}
+              <div
+                key={`${entry.id}_${idx}`}
+                className={`d-flex align-items-baseline gap-2 px-1 py-0 rounded-1 text-break lh-sm flex-shrink-0 ${
+                  isLast ? 'text-white fw-semibold bg-white bg-opacity-10' : 'text-light fw-medium'
+                }`}
+              >
+                <span
+                  className="font-monospace flex-shrink-0 user-select-none"
+                  style={{ color }}
+                >
+                  {formatTime(entry.timestamp)}
                 </span>
-                <span className="text-success opacity-50 flex-shrink-0">›</span>
-                <span className="text-light flex-grow-1">{entry.message}</span>
+                {!filterBubbleOnly && (
+                  <span className="fw-semibold flex-shrink-0" style={{ color }}>
+                    {(() => { const ch = findCharacter(entry.tag); return ch ? `${ch.emoji} ${entry.tag}` : entry.tag; })()}
+                  </span>
+                )}
+                <span className="flex-grow-1">{entry.message}</span>
               </div>
             );
           })}
@@ -254,10 +267,10 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         <div
           onPointerDown={handleResizePointerDown}
           title="Redimensionner la hauteur de la console (Glisser verticalement)"
-          className="w-100 py-1 bg-success bg-opacity-10 border-top border-success border-opacity-25 d-flex align-items-center justify-content-center user-select-none"
+          className="w-100 py-1 bg-white bg-opacity-5 border-top border-white border-opacity-10 d-flex align-items-center justify-content-center user-select-none"
           style={{ cursor: 'ns-resize', touchAction: 'none' }}
         >
-          <div className="rounded bg-success bg-opacity-50" style={{ width: '36px', height: '2px' }} />
+          <div className="rounded bg-white bg-opacity-25" style={{ width: '36px', height: '2px' }} />
         </div>
       )}
     </div>
