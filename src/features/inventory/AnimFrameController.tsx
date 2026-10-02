@@ -395,6 +395,23 @@ export function AnimFrameController({
           </button>
         </div>
 
+        {/* Vitesse de lecture */}
+        <div className="d-flex align-items-center gap-1">
+          <span className="text-muted small">⚡</span>
+          <select
+            className="form-select form-select-sm bg-white text-dark w-auto"
+            value={speed}
+            onChange={e => setSpeed(parseFloat(e.target.value))}
+            title="Vitesse de lecture"
+          >
+            {SPEED_OPTIONS.map(s => (
+              <option key={s} value={s}>
+                {s}x
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Compteur précis de Frame & Temps */}
         <div className="d-flex align-items-center gap-2">
           {isTPose ? (
@@ -571,23 +588,6 @@ export function AnimFrameController({
               )}
             </div>
           )}
-
-          {/* Vitesse */}
-          <div className="d-flex align-items-center gap-1">
-            <span className="text-muted small">⚡</span>
-            <select
-              className="form-select form-select-sm bg-white text-dark w-auto"
-              value={speed}
-              onChange={e => setSpeed(parseFloat(e.target.value))}
-              title="Vitesse de lecture"
-            >
-              {SPEED_OPTIONS.map(s => (
-                <option key={s} value={s}>
-                  {s}x
-                </option>
-              ))}
-            </select>
-          </div>
 
           {/* Bouton Toggle Métadonnées */}
           {hasMeta && (
