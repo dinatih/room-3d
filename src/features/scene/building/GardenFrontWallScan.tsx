@@ -20,72 +20,31 @@ export function GardenFrontWallScan({
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone(true);
-    clone.position.set(0, 0, 0);
-    clone.scale.set(1, 1, 1);
-    clone.rotation.set(0, 0, 0);
-    clone.updateMatrixWorld(true);
-
     const box = new THREE.Box3().setFromObject(clone);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-
-    // Échelle pour atteindre WALL_H (250 cm)
-    // Le scan fait ~2.0 m de haut -> scale ~125
     const scaleFactor = WALL_H / (size.y || 2.0);
 
-    // Ajustement de centrage en X et Z, base à Y = 0
     clone.position.set(-center.x * scaleFactor, -box.min.y * scaleFactor, -center.z * scaleFactor);
-    clone.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    clone.scale.setScalar(scaleFactor);
 
     clone.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
+      const mesh = child as THREE.Mesh;
+      if (mesh.isMesh && mesh.material) {
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+        const map = (mesh.material as any).map;
+        if (map) map.colorSpace = THREE.SRGBColorSpace;
 
-        // Suppression de la face arrière (-Z) pour voir à travers depuis l'extérieur.
-        if (mesh.geometry) {
-          const geo = mesh.geometry.clone();
-          const norm = geo.attributes.normal;
-          if (geo.index && norm) {
-            const idx = geo.index;
-            const newIndices: number[] = [];
-            for (let i = 0; i < idx.count; i += 3) {
-              const i0 = idx.getX(i);
-              const i1 = idx.getX(i + 1);
-              const i2 = idx.getX(i + 2);
-              const n0 = new THREE.Vector3(
-                norm.getX(i0),
-                norm.getY(i0),
-                norm.getZ(i0)
-              ).transformDirection(child.matrixWorld);
-
-              // Les triangles dont la normale pointe vers -Z (face arrière) sont ignorés
-              if (n0.z >= -0.5) {
-                newIndices.push(i0, i1, i2);
-              }
-            }
-            geo.setIndex(newIndices);
-          }
-          mesh.geometry = geo;
-        }
-
-        // Conversion en MeshStandardMaterial semi-transparent pour laisser voir la ville
-        if (mesh.material) {
-          const originalMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-          const map = (originalMat as any).map;
-          if (map) map.colorSpace = THREE.SRGBColorSpace;
-
-          mesh.material = new THREE.MeshStandardMaterial({
-            map,
-            roughness: 0.85,
-            metalness: 0.05,
-            side: THREE.FrontSide,
-            transparent: true,
-            opacity,
-            depthWrite: false,
-          });
-        }
+        mesh.material = new THREE.MeshStandardMaterial({
+          map,
+          roughness: 0.85,
+          metalness: 0.05,
+          side: THREE.FrontSide,
+          transparent: true,
+          opacity,
+          depthWrite: false,
+        });
       }
     });
 
