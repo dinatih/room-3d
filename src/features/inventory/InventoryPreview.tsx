@@ -9,10 +9,9 @@ import { SCENE_REGISTRY, ACTION_LABELS } from './previewRegistry';
 import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpers';
 import { SkeletonHierarchyPanel } from '@features/scene/utils/SkeletonHierarchyPanel';
 import type { SkeletonGroup } from '@features/scene/utils/skeletonTypes';
-import { CharacterAnimSelector } from '@features/scene/CharacterAnimSelector';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 import { resolveAnimationId } from '@features/scene/animations/animationResolver';
-import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
+import type { DuoAnimationDef } from '@features/scene/animations/duoAnimations';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/walkerConfig';
 import { GroundPoint } from '@features/scene/character/GroundPoint';
 import { SkySphere } from '@features/scene/SkySphere';
@@ -561,9 +560,7 @@ export function InventoryPreview({
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [photoIdx, setPhotoIdx] = useState(0);
-  const [showAnimSelector, setShowAnimSelector] = useState(false);
   const [previewView, setPreviewView] = useState<'free' | 'front' | 'side' | 'top'>('free');
-  const isAnimPlaying = useAnimPreviewStore(s => s.isPlaying);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const layers = useSceneStore(state => state.layers);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
@@ -610,7 +607,6 @@ export function InventoryPreview({
     setTarget([0, 0, 0]);
     setBoundsRadius(50);
     setPhotoIdx(0);
-    setShowAnimSelector(false);
     setShowPnjPanel(false);
     setSelectedBoneName(null);
     setSkeletonGroups([]);
@@ -635,7 +631,38 @@ export function InventoryPreview({
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
-  const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id);
+  const isHumanWalker = Boolean(isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id));
+
+  const animalAnimOptions = useMemo(() => {
+    if (!item?.id) return undefined;
+    if (['ushiro', 'shiba-inu'].includes(item.id)) {
+      return [
+        { value: 'idle', label: 'Idle' },
+        { value: 'jump', label: 'Jump' },
+        { value: 'run', label: 'Run' },
+        { value: 'sitdown', label: 'SitDown' },
+        { value: 'walk', label: 'Walk' },
+      ];
+    }
+    if (item.id === 'robin-bird') {
+      return [
+        { value: 'Robin_Bird_Idle', label: 'Idle' },
+        { value: 'Robin_Bird_Idle2', label: 'Idle 2' },
+        { value: 'Robin_Bird_Walk', label: 'Walk' },
+        { value: 'Robin_Bird_WalkBack', label: 'Walk Back' },
+        { value: 'Robin_Bird_Fly', label: 'Fly' },
+        { value: 'Robin_Bird_Eat', label: 'Eat' },
+        { value: 'Robin_Bird_Eat2', label: 'Eat 2' },
+        { value: 'Robin_Bird_Eat3', label: 'Eat 3' },
+        { value: 'Robin_Bird_Call', label: 'Call' },
+        { value: 'Robin_Bird_Call2', label: 'Call 2' },
+        { value: 'Robin_Bird_Hit', label: 'Hit' },
+        { value: 'Robin_Bird_Die', label: 'Die' },
+      ];
+    }
+    return undefined;
+  }, [item?.id]);
+
   const animControllerBottom = hideFooter ? 6 : 42;
   const datumBannerBottom = isWalkerItem ? (animControllerBottom + 58) : 8;
   const debugUrlsBottom = isWalkerItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
@@ -681,7 +708,7 @@ export function InventoryPreview({
         setActionStates(s => ({ ...s, showBones: !s.showBones }));
         return;
       }
-      if (isHumanWalker && !showAnimSelector) {
+      if (isHumanWalker) {
         if (targetEl?.tagName === 'SELECT') {
           return;
         }
@@ -698,7 +725,7 @@ export function InventoryPreview({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isHumanWalker, showAnimSelector, cycleAnim]);
+  }, [isHumanWalker, cycleAnim]);
 
   return (
     <div className="inventory-preview-container" style={{ width }}>
@@ -1016,250 +1043,6 @@ export function InventoryPreview({
 
               {(item as any).category === 'walkers' && (
                 <>
-                  <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                    <button
-                      type="button"
-                      onClick={() => useAnimPreviewStore.getState().togglePlay()}
-                      style={{ padding: '3px 8px', fontSize: 11, background: !isAnimPlaying ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}
-                      title={!isAnimPlaying ? "Play" : "Pause"}
-                    >
-                      {!isAnimPlaying ? '▶️' : '⏸️'}
-                    </button>
-                    {isHumanWalker && (
-                      <>
-                        <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 't-pose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 't-pose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }} title="T-Pose (Rest)">📐</button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setActionStates(s => ({ ...s, walkerAnim: 'idle', isPaused: false }));
-                            useAnimPreviewStore.getState().play();
-                          }}
-                          style={{ padding: '3px 8px', fontSize: 11, background: '#6c757d', color: '#fff', border: '1px solid #545b62', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
-                          title="Remettre en Idle / Arrêter l'animation"
-                        >
-                          ⏹️
-                        </button>
-                      </>
-                    )}
-                  </div>
-
-                  {isHumanWalker ? (
-                    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                      <button
-                        type="button"
-                        tabIndex={0}
-                        onClick={() => {
-                          setShowAnimSelector(v => !v);
-                          if (!showAnimSelector) {
-                            setActionStates(s => ({ ...s, duoAnimDef: undefined }));
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            cycleAnim('next');
-                          } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            cycleAnim('prev');
-                          }
-                        }}
-                        style={{
-                          padding: '4px 8px',
-                          fontSize: 10,
-                          fontWeight: 'bold',
-                          background: showAnimSelector ? '#c82333' : 'rgba(0,0,0,0.7)',
-                          border: `1px solid ${showAnimSelector ? '#dc3545' : '#555'}`,
-                          borderRadius: 4,
-                          color: '#fff',
-                          cursor: 'pointer',
-                          maxWidth: 140,
-                        }}
-                        className="d-flex align-items-center justify-content-between gap-1 overflow-hidden"
-                        title={typeof currentAnimLabel === 'string' ? currentAnimLabel : undefined}
-                      >
-                        <span className="text-truncate flex-grow-1">
-                          🎬 {currentAnimLabel}
-                        </span>
-                        <span style={{ fontSize: 8, opacity: 0.8 }} className="flex-shrink-0">{showAnimSelector ? '▲' : '▼'}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle' && a.value !== 't-pose');
-                          if (pool.length > 0) {
-                            const randomAnim = pool[Math.floor(Math.random() * pool.length)];
-                            setActionStates(s => ({ ...s, walkerAnim: randomAnim.value, isPaused: false }));
-                            useAnimPreviewStore.getState().play();
-                          }
-                        }}
-                        style={{ padding: '3px 6px', fontSize: 10, background: '#ffc107', color: '#000', border: '1px solid #d39e00', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
-                        title="Lancer une animation solo aléatoire 🎲"
-                      >
-                        🎲
-                      </button>
-                    </div>
-                  ) : (
-                    <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
-                      {['ushiro', 'shiba-inu'].includes(item.id) ? (
-                        <>
-                          <option value="idle">Idle</option>
-                          <option value="jump">Jump</option>
-                          <option value="run">Run</option>
-                          <option value="sitdown">SitDown</option>
-                          <option value="walk">Walk</option>
-                        </>
-                      ) : item.id === 'robin-bird' ? (
-                        <>
-                          <option value="Robin_Bird_Idle">Idle</option>
-                          <option value="Robin_Bird_Idle2">Idle 2</option>
-                          <option value="Robin_Bird_Walk">Walk</option>
-                          <option value="Robin_Bird_WalkBack">Walk Back</option>
-                          <option value="Robin_Bird_Fly">Fly</option>
-                          <option value="Robin_Bird_Eat">Eat</option>
-                          <option value="Robin_Bird_Eat2">Eat 2</option>
-                          <option value="Robin_Bird_Eat3">Eat 3</option>
-                          <option value="Robin_Bird_Call">Call</option>
-                          <option value="Robin_Bird_Call2">Call 2</option>
-                          <option value="Robin_Bird_Hit">Hit</option>
-                          <option value="Robin_Bird_Die">Die</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="t-pose">T-Pose (Rest)</option>
-                          <option value="idle">Idle</option>
-                          <option value="walk">Walking</option>
-                          <option value="run">Running</option>
-                        </>
-                      )}
-                    </select>
-                  )}
-
-                  {/* Sélecteur et Contrôles Animations de Duo directement dans la preview 3D */}
-                  {isHumanWalker && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4 }}>
-                      <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                        <select
-                          value={actionStates.duoAnimDef?.id || ""}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            if (!val) {
-                              setActionStates(s => ({ ...s, duoAnimDef: undefined, walkerAnim: 'idle' }));
-                            } else {
-                              const def = DUO_ANIMATIONS.find(a => a.id === val);
-                              const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-                              const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
-                              setActionStates(s => ({
-                                ...s,
-                                duoAnimDef: def,
-                                duoPartnerId: defaultPartner,
-                                isPaused: false,
-                                walkerAnim: undefined
-                              }));
-                              useAnimPreviewStore.getState().play();
-                            }
-                          }}
-                          style={{
-                            padding: '3px 6px',
-                            fontSize: 10,
-                            fontWeight: actionStates.duoAnimDef ? 'bold' : 'normal',
-                            background: actionStates.duoAnimDef ? '#0284c7' : 'rgba(0,0,0,0.7)',
-                            border: `1px solid ${actionStates.duoAnimDef ? '#38bdf8' : '#555'}`,
-                            borderRadius: 4,
-                            color: '#fff',
-                            outline: 'none',
-                            maxWidth: 130
-                          }}
-                          title="Sélectionner une animation de couple (Duo)"
-                        >
-                          <option value="">👯‍♀️ Mode Duo...</option>
-                          {DUO_ANIMATIONS.map(a => (
-                            <option key={a.id} value={a.id}>{a.icon} {a.label}</option>
-                          ))}
-                        </select>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
-                            const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-                            const randChar = otherChars[Math.floor(Math.random() * otherChars.length)];
-                            if (randomAnim && randChar) {
-                              setActionStates(s => ({
-                                ...s,
-                                duoAnimDef: randomAnim,
-                                duoPartnerId: randChar.id,
-                                isPaused: false,
-                                walkerAnim: undefined
-                              }));
-                              useAnimPreviewStore.getState().play();
-                            }
-                          }}
-                          style={{ padding: '3px 6px', fontSize: 10, background: '#ffc107', color: '#000', border: '1px solid #d39e00', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
-                          title="Animation Duo + Partenaire aléatoires 🎲"
-                        >
-                          🎲
-                        </button>
-                      </div>
-
-                      {actionStates.duoAnimDef && (
-                        <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                          <select
-                            value={actionStates.duoPartnerId || (item.id === 'native' ? 'rosanna' : 'native')}
-                            onChange={(e) => {
-                              const partnerId = e.target.value;
-                              setActionStates(s => ({ ...s, duoPartnerId: partnerId }));
-                            }}
-                            style={{
-                              padding: '2px 4px',
-                              fontSize: 10,
-                              background: 'rgba(0,0,0,0.75)',
-                              border: '1px solid #0284c7',
-                              borderRadius: 4,
-                              color: '#fff',
-                              outline: 'none',
-                              maxWidth: 110
-                            }}
-                            title="Changer le partenaire (Rôle B)"
-                          >
-                            {CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id))).map(c => (
-                              <option key={c.id} value={c.id}>B: {c.name}</option>
-                            ))}
-                          </select>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-                              const randChar = otherChars[Math.floor(Math.random() * otherChars.length)];
-                              if (randChar) {
-                                setActionStates(s => ({ ...s, duoPartnerId: randChar.id }));
-                              }
-                            }}
-                            style={{ padding: '2px 5px', fontSize: 10, background: 'rgba(0,0,0,0.6)', border: '1px solid #777', color: '#ffc107', borderRadius: 4, cursor: 'pointer' }}
-                            title="Changer de partenaire au hasard 🎲"
-                          >
-                            👤🎲
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActionStates(s => ({ ...s, duoAnimDef: undefined, walkerAnim: 'idle' }));
-                              useAnimPreviewStore.getState().play();
-                            }}
-                            style={{ padding: '2px 5px', fontSize: 10, background: '#6c757d', border: '1px solid #545b62', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
-                            title="Quitter le mode duo"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {!['ushiro', 'shiba-inu', 'robin-bird', 'xbot'].includes(item.id) && !isExtraCharacter(item.id) && (
                     <>
                       <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
@@ -1288,36 +1071,6 @@ export function InventoryPreview({
                 </>
               )}
             </OverlayPanel>
-          )}
-
-          {actionStates.duoAnimDef && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: datumBannerBottom,
-                left: 8,
-                right: 8,
-                zIndex: 4,
-                background: 'rgba(2, 132, 199, 0.88)',
-                backdropFilter: 'blur(4px)',
-                color: '#fff',
-                padding: '4px 10px',
-                borderRadius: 6,
-                fontSize: 11,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                pointerEvents: 'none'
-              }}
-            >
-              <span className="text-truncate">
-                👯‍♀️ <strong>{actionStates.duoAnimDef.icon} {actionStates.duoAnimDef.label}</strong>
-              </span>
-              <span style={{ fontSize: 10, opacity: 0.9, whiteSpace: 'nowrap', marginLeft: 8 }}>
-                A: {(item as any).name} | B: {CHARACTERS.find(c => c.id === (actionStates.duoPartnerId || (item.id === 'native' ? 'rosanna' : 'native')))?.name || actionStates.duoPartnerId}
-              </span>
-            </div>
           )}
 
           {/* Panneau latéral Section PNJ (Persistant en DOM pour préserver le scroll) */}
@@ -1399,43 +1152,6 @@ export function InventoryPreview({
               </div>
           </div>
 
-          {/* Modal / Tiroir de sélection d'animations pour personnages humains */}
-          {showAnimSelector && isHumanWalker && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 8,
-                left: 8,
-                right: 8,
-                bottom: hideFooter ? 8 : 42,
-                zIndex: 10,
-                background: 'rgba(255, 255, 255, 0.96)',
-                backdropFilter: 'blur(14px)',
-                WebkitBackdropFilter: 'blur(14px)',
-                borderRadius: 8,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-              onClick={e => e.stopPropagation()}
-            >
-              <CharacterAnimSelector
-                activeAnimValue={actionStates.walkerAnim || 'idle'}
-                onSelectAnim={(val) => {
-                  setActionStates(s => ({ ...s, walkerAnim: val }));
-                  useAnimPreviewStore.getState().play();
-                  setShowAnimSelector(false);
-                }}
-                onClose={() => setShowAnimSelector(false)}
-                title={`Animations (${item.name})`}
-                maxHeight="100%"
-                listMaxHeight="none"
-                autoFocus={true}
-              />
-            </div>
-          )}
-
           {showing3D && actionKeys.length > 0 && (
             <OverlayPanel position="right">
               {actionKeys.map(key => {
@@ -1469,10 +1185,30 @@ export function InventoryPreview({
             <AnimFrameController
               animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
               animKey={actionStates.walkerAnim}
+              isHumanWalker={isHumanWalker}
+              characterId={item.id}
+              duoAnimDef={actionStates.duoAnimDef}
+              duoPartnerId={actionStates.duoPartnerId}
+              animalAnimOptions={animalAnimOptions}
               onCycleAnim={cycleAnim}
               onSelectAnim={(val) => {
                 setActionStates(s => ({ ...s, walkerAnim: val, duoAnimDef: undefined }));
                 useAnimPreviewStore.getState().play();
+              }}
+              onSelectDuoAnim={(def) => {
+                const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
+                const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
+                setActionStates(s => ({
+                  ...s,
+                  duoAnimDef: def,
+                  duoPartnerId: defaultPartner,
+                  isPaused: false,
+                  walkerAnim: undefined,
+                }));
+                useAnimPreviewStore.getState().play();
+              }}
+              onSelectDuoPartner={(partnerId) => {
+                setActionStates(s => ({ ...s, duoPartnerId: partnerId }));
               }}
               bottom={animControllerBottom}
             />

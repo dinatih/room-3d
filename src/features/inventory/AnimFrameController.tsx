@@ -3,6 +3,9 @@ import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { getAnimationDef, resolveAnimationId } from '@features/scene/animations/animationResolver';
 import { ANIMATION_DEFINITIONS, type AnimationDefinition } from '@features/scene/animations/animationRegistry';
 import { CharacterAnimSelector, ANIM_CATEGORIES, getAnimCategory, getFilteredAnimOptions } from '@features/scene/CharacterAnimSelector';
+import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
+import { CHARACTERS, isExtraCharacter } from '@features/scene/walkerConfig';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
 
 const SPEED_OPTIONS = [0.25, 0.5, 1, 1.5, 2];
 
@@ -15,6 +18,15 @@ export interface AnimFrameControllerProps {
   bottom?: number | string;
   className?: string;
   style?: React.CSSProperties;
+
+  // Support Animations Duo
+  isHumanWalker?: boolean;
+  characterId?: string;
+  duoAnimDef?: DuoAnimationDef;
+  duoPartnerId?: string;
+  onSelectDuoAnim?: (def: DuoAnimationDef | undefined) => void;
+  onSelectDuoPartner?: (partnerId: string) => void;
+  animalAnimOptions?: { value: string; label: string }[];
 }
 
 export function AnimFrameController({
@@ -26,6 +38,13 @@ export function AnimFrameController({
   bottom = 8,
   className = '',
   style = {},
+  isHumanWalker = false,
+  characterId,
+  duoAnimDef,
+  duoPartnerId,
+  onSelectDuoAnim,
+  onSelectDuoPartner,
+  animalAnimOptions,
 }: AnimFrameControllerProps) {
   const {
     isPlaying,
@@ -81,14 +100,41 @@ export function AnimFrameController({
   const catKey = def?.path ? getAnimCategory(def.path) : undefined;
   const catObj = catKey ? ANIM_CATEGORIES.find(c => c.key === catKey) : undefined;
 
+  const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
+  const availablePartners = useMemo(() => {
+    return CHARACTERS.filter(c => c.id !== characterId && (extraCharacters || !isExtraCharacter(c.id)));
+  }, [characterId, extraCharacters]);
+
+  const defA = useMemo(() => {
+    if (!duoAnimDef) return undefined;
+    return getAnimationDef(duoAnimDef.animA);
+  }, [duoAnimDef]);
+
+  const defB = useMemo(() => {
+    if (!duoAnimDef) return undefined;
+    return getAnimationDef(duoAnimDef.animB);
+  }, [duoAnimDef]);
+
+  const charAName = useMemo(() => {
+    return CHARACTERS.find(c => c.id === characterId)?.name || characterId || 'Personnage A';
+  }, [characterId]);
+
+  const charBName = useMemo(() => {
+    const pId = duoPartnerId || availablePartners[0]?.id;
+    return CHARACTERS.find(c => c.id === pId)?.name || pId || 'Personnage B';
+  }, [duoPartnerId, availablePartners]);
+
   const displayName = useMemo(() => {
+    if (duoAnimDef) {
+      return `${duoAnimDef.icon} ${duoAnimDef.label}`;
+    }
     if (animName && !animName.includes('/') && !animName.endsWith('.glb')) {
       return animName;
     }
     return def?.label || animName || clipName || def?.id || 'Animation';
-  }, [animName, def, clipName]);
+  }, [duoAnimDef, animName, def, clipName]);
 
-  const hasMeta = Boolean(def || isTPose);
+  const hasMeta = Boolean(def || isTPose || duoAnimDef);
   const activeAnimValue = animKey || def?.id || 'idle';
 
   const handleSelectAnim = useCallback((val: string) => {
@@ -99,8 +145,28 @@ export function AnimFrameController({
       document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: val } }));
       useAnimPreviewStore.getState().play();
     }
+    onSelectDuoAnim?.(undefined);
     setShowAnimSelector(false);
-  }, [onSelectAnim]);
+  }, [onSelectAnim, onSelectDuoAnim]);
+
+  const handleRandomDuoAnim = useCallback(() => {
+    const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
+    if (randomAnim) {
+      onSelectDuoAnim?.(randomAnim);
+      useAnimPreviewStore.getState().play();
+    }
+  }, [onSelectDuoAnim]);
+
+  const handleRandomPartner = useCallback(() => {
+    if (!availablePartners.length) return;
+    const currentPartner = duoPartnerId || availablePartners[0]?.id;
+    const pool = availablePartners.filter(p => p.id !== currentPartner);
+    const list = pool.length > 0 ? pool : availablePartners;
+    const rand = list[Math.floor(Math.random() * list.length)];
+    if (rand) {
+      onSelectDuoPartner?.(rand.id);
+    }
+  }, [availablePartners, duoPartnerId, onSelectDuoPartner]);
 
   // Animations filtrées selon la recherche et catégories de CharacterAnimSelector
   const filteredAnims = useMemo(() => {
@@ -365,61 +431,147 @@ export function AnimFrameController({
           )}
         </div>
 
-        {/* Droite : Sélecteur d'animation, Bouton Dé aléatoire, Vitesse & Meta */}
-        <div className="d-flex align-items-center gap-2">
-          {/* Groupe Navigation Anim + Dé */}
-          <div className="btn-group btn-group-sm" role="group">
-            <button
-              type="button"
-              className="btn btn-outline-secondary bg-white text-dark"
-              onClick={() => cycleFilteredAnim('prev')}
-              disabled={filteredAnims.length <= 1}
-              title={`Animation précédente (${filteredAnims.length} dans le filtre / Flèche Haut)`}
+        {/* Droite : Sélecteurs d'animation (Solo & Duo), Vitesse & Meta */}
+        <div className="d-flex align-items-center flex-wrap gap-2">
+          {/* Groupe Solo Anim (ou select pour quadrupèdes/oiseaux) */}
+          {animalAnimOptions && animalAnimOptions.length > 0 ? (
+            <select
+              className="form-select form-select-sm bg-white text-dark w-auto small"
+              value={activeAnimValue}
+              onChange={e => handleSelectAnim(e.target.value)}
             >
-              <i className="bi bi-chevron-up" />
-            </button>
+              {animalAnimOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          ) : (
+            <div className="btn-group btn-group-sm" role="group">
+              <button
+                type="button"
+                className="btn btn-outline-secondary bg-white text-dark"
+                onClick={() => cycleFilteredAnim('prev')}
+                disabled={filteredAnims.length <= 1 || !!duoAnimDef}
+                title={`Animation précédente (${filteredAnims.length} dans le filtre / Flèche Haut)`}
+              >
+                <i className="bi bi-chevron-up" />
+              </button>
 
-            <button
-              ref={badgeRef}
-              type="button"
-              className={`btn d-inline-flex align-items-center gap-1 text-truncate ${
-                showAnimSelector
-                  ? 'btn-danger text-white shadow-sm'
-                  : 'btn-outline-secondary bg-white text-dark'
-              }`}
-              style={{ maxWidth: '240px' }}
-              onClick={() => setShowAnimSelector(v => !v)}
-              title={
-                showAnimSelector
-                  ? "Fermer le sélecteur d'animations"
-                  : `Animation : ${displayName} (${filteredAnims.length} filtrée(s) — Cliquer pour ouvrir)`
-              }
-            >
-              <span>🎬</span>
-              <span className="text-truncate">{displayName}</span>
-              <span className="opacity-75 small">{showAnimSelector ? '▲' : '▼'}</span>
-            </button>
+              <button
+                ref={badgeRef}
+                type="button"
+                className={`btn d-inline-flex align-items-center gap-1 text-truncate ${
+                  duoAnimDef
+                    ? 'btn-primary text-white shadow-sm'
+                    : showAnimSelector
+                    ? 'btn-danger text-white shadow-sm'
+                    : 'btn-outline-secondary bg-white text-dark'
+                }`}
+                style={{ maxWidth: '240px' }}
+                onClick={() => setShowAnimSelector(v => !v)}
+                title={
+                  duoAnimDef
+                    ? `Duo : ${duoAnimDef.label} (Cliquer pour changer d'animation solo)`
+                    : showAnimSelector
+                    ? "Fermer le sélecteur d'animations"
+                    : `Animation : ${displayName} (${filteredAnims.length} filtrée(s) — Cliquer pour ouvrir)`
+                }
+              >
+                <span>{duoAnimDef ? '👯‍♀️' : '🎬'}</span>
+                <span className="text-truncate">{displayName}</span>
+                <span className="opacity-75 small">{showAnimSelector ? '▲' : '▼'}</span>
+              </button>
 
-            <button
-              type="button"
-              className="btn btn-outline-secondary bg-white text-dark"
-              onClick={() => cycleFilteredAnim('next')}
-              disabled={filteredAnims.length <= 1}
-              title={`Animation suivante (${filteredAnims.length} dans le filtre / Flèche Bas)`}
-            >
-              <i className="bi bi-chevron-down" />
-            </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary bg-white text-dark"
+                onClick={() => cycleFilteredAnim('next')}
+                disabled={filteredAnims.length <= 1 || !!duoAnimDef}
+                title={`Animation suivante (${filteredAnims.length} dans le filtre / Flèche Bas)`}
+              >
+                <i className="bi bi-chevron-down" />
+              </button>
 
-            <button
-              type="button"
-              className="btn btn-warning text-dark fw-bold"
-              onClick={handleRandomAnim}
-              disabled={!filteredAnims.length}
-              title={`Animation aléatoire parmi les ${filteredAnims.length} filtrée(s)`}
-            >
-              🎲
-            </button>
-          </div>
+              <button
+                type="button"
+                className="btn btn-warning text-dark fw-bold"
+                onClick={handleRandomAnim}
+                disabled={!filteredAnims.length}
+                title="Animation solo aléatoire 🎲"
+              >
+                🎲
+              </button>
+            </div>
+          )}
+
+          {/* Contrôles Animations Duo (humains uniquement) */}
+          {isHumanWalker && (
+            <div className="d-flex align-items-center flex-wrap gap-1.5">
+              {/* Sélecteur Duo + Dé */}
+              <div className="btn-group btn-group-sm" role="group">
+                <select
+                  className={`form-select form-select-sm bg-white text-dark w-auto small ${duoAnimDef ? 'border-primary text-primary fw-bold' : ''}`}
+                  style={{ maxWidth: '170px' }}
+                  value={duoAnimDef?.id || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (!val) {
+                      onSelectDuoAnim?.(undefined);
+                    } else {
+                      const found = DUO_ANIMATIONS.find(a => a.id === val);
+                      onSelectDuoAnim?.(found);
+                    }
+                  }}
+                  title="Sélectionner une animation de couple (Duo)"
+                >
+                  <option value="">👯 Mode Duo...</option>
+                  {DUO_ANIMATIONS.map(a => (
+                    <option key={a.id} value={a.id}>{a.icon} {a.label}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn btn-warning text-dark fw-bold"
+                  onClick={handleRandomDuoAnim}
+                  title="Animation Duo aléatoire 🎲"
+                >
+                  🎲
+                </button>
+              </div>
+
+              {/* Contrôles Partenaire B si Duo actif */}
+              {duoAnimDef && (
+                <div className="btn-group btn-group-sm" role="group">
+                  <select
+                    className="form-select form-select-sm bg-white text-dark w-auto small border-primary"
+                    style={{ maxWidth: '140px' }}
+                    value={duoPartnerId || availablePartners[0]?.id || ''}
+                    onChange={(e) => onSelectDuoPartner?.(e.target.value)}
+                    title="Changer le partenaire (Rôle B)"
+                  >
+                    {availablePartners.map(c => (
+                      <option key={c.id} value={c.id}>B: {c.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary bg-white text-dark"
+                    onClick={handleRandomPartner}
+                    title="Changer de partenaire au hasard 👤🎲"
+                  >
+                    👤🎲
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary text-white"
+                    onClick={() => onSelectDuoAnim?.(undefined)}
+                    title="Quitter le mode duo"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Vitesse */}
           <div className="d-flex align-items-center gap-1">
@@ -457,73 +609,148 @@ export function AnimFrameController({
         </div>
       </div>
 
-      {/* ── Ligne 3 : Métadonnées ── */}
+      {/* ── Ligne 3 : Métadonnées (Solo ou Duo) ── */}
       {showMeta && hasMeta && (
         <div className="card bg-white bg-opacity-75 border-0 shadow-sm p-2 mt-2 text-dark user-select-text small">
-          <div className="d-flex flex-wrap align-items-center gap-2">
-            <div>
-              <strong className="text-muted text-uppercase user-select-none me-1 small">ID:</strong>
-              <code className="text-dark bg-light px-1.5 py-0.5 rounded border">
-                {def?.id || (isTPose ? 't-pose' : displayName)}
-              </code>
-            </div>
-            {catObj && (
-              <div>
-                <strong className="text-muted text-uppercase user-select-none me-1 small">Catégorie:</strong>
-                <span className="badge bg-light text-dark border">
-                  {catObj.icon} {catObj.label}
-                </span>
+          {duoAnimDef ? (
+            <div className="d-flex flex-column gap-2">
+              {/* Entête Duo */}
+              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom pb-2">
+                <div className="d-flex align-items-center gap-2">
+                  <span className="fs-5">{duoAnimDef.icon}</span>
+                  <div>
+                    <strong className="text-primary fs-6">{duoAnimDef.label}</strong>
+                    <code className="ms-2 text-dark bg-light px-1.5 py-0.5 rounded border small">{duoAnimDef.id}</code>
+                  </div>
+                </div>
+                <div className="d-flex flex-wrap align-items-center gap-2 font-monospace small">
+                  <span className="badge bg-success-subtle text-success border border-success-subtle">
+                    ⏱️ {(duoAnimDef.duration ?? duration).toFixed(2)}s ({totalFrames}f @ {fps}fps)
+                  </span>
+                  {duoAnimDef.offsetB && (
+                    <span className="badge bg-warning-subtle text-dark border border-warning-subtle">
+                      📍 Offset B: [{duoAnimDef.offsetB.map(v => `${v}cm`).join(', ')}]
+                    </span>
+                  )}
+                  {duoAnimDef.rotB !== undefined && (
+                    <span className="badge bg-warning-subtle text-dark border border-warning-subtle">
+                      🔄 Rot B: {(duoAnimDef.rotB * 180 / Math.PI).toFixed(0)}°
+                    </span>
+                  )}
+                </div>
               </div>
-            )}
-            {def?.path && (
+
+              {/* Cartes détaillées des deux animations : Rôle A et Rôle B */}
+              <div className="row g-2">
+                {/* Rôle A */}
+                <div className="col-12 col-md-6">
+                  <div className="card bg-light border p-2 h-100">
+                    <div className="d-flex align-items-center justify-content-between mb-1">
+                      <span className="badge bg-primary text-white">Rôle A : {charAName}</span>
+                      <span className="text-muted font-monospace small">
+                        {defA?.duration ? `${defA.duration.toFixed(2)}s` : ''}
+                      </span>
+                    </div>
+                    <div className="fw-semibold text-truncate small">{defA?.label || duoAnimDef.animA}</div>
+                    <div className="text-muted small mt-1 d-flex flex-column gap-0.5 font-monospace">
+                      <div><strong className="text-secondary">ID:</strong> <code>{duoAnimDef.animA}</code></div>
+                      {defA?.path && (
+                        <div className="text-truncate" title={defA.path}>
+                          <strong className="text-secondary">Fichier:</strong> 📁 {defA.path.split('/').pop()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rôle B */}
+                <div className="col-12 col-md-6">
+                  <div className="card bg-light border p-2 h-100">
+                    <div className="d-flex align-items-center justify-content-between mb-1">
+                      <span className="badge bg-info text-dark">Rôle B : {charBName}</span>
+                      <span className="text-muted font-monospace small">
+                        {defB?.duration ? `${defB.duration.toFixed(2)}s` : ''}
+                      </span>
+                    </div>
+                    <div className="fw-semibold text-truncate small">{defB?.label || duoAnimDef.animB}</div>
+                    <div className="text-muted small mt-1 d-flex flex-column gap-0.5 font-monospace">
+                      <div><strong className="text-secondary">ID:</strong> <code>{duoAnimDef.animB}</code></div>
+                      {defB?.path && (
+                        <div className="text-truncate" title={defB.path}>
+                          <strong className="text-secondary">Fichier:</strong> 📁 {defB.path.split('/').pop()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="d-flex flex-wrap align-items-center gap-2">
               <div>
-                <strong className="text-muted text-uppercase user-select-none me-1 small">Fichier:</strong>
-                <code className="text-muted bg-light px-1.5 py-0.5 rounded border text-truncate d-inline-block align-middle" style={{ maxWidth: '240px' }} title={def.path}>
-                  📁 {def.path.split('/').pop()}
+                <strong className="text-muted text-uppercase user-select-none me-1 small">ID:</strong>
+                <code className="text-dark bg-light px-1.5 py-0.5 rounded border">
+                  {def?.id || (isTPose ? 't-pose' : displayName)}
                 </code>
               </div>
-            )}
-            {def?.defaultOffset && (
+              {catObj && (
+                <div>
+                  <strong className="text-muted text-uppercase user-select-none me-1 small">Catégorie:</strong>
+                  <span className="badge bg-light text-dark border">
+                    {catObj.icon} {catObj.label}
+                  </span>
+                </div>
+              )}
+              {def?.path && (
+                <div>
+                  <strong className="text-muted text-uppercase user-select-none me-1 small">Fichier:</strong>
+                  <code className="text-muted bg-light px-1.5 py-0.5 rounded border text-truncate d-inline-block align-middle" style={{ maxWidth: '240px' }} title={def.path}>
+                    📁 {def.path.split('/').pop()}
+                  </code>
+                </div>
+              )}
+              {def?.defaultOffset && (
+                <div>
+                  <strong className="text-muted text-uppercase user-select-none me-1 small">Offset Pos:</strong>
+                  <span className="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace">
+                    [{def.defaultOffset.map(v => `${v}cm`).join(', ')}]
+                  </span>
+                </div>
+              )}
+              {def?.defaultRotYOffset !== undefined && (
+                <div>
+                  <strong className="text-muted text-uppercase user-select-none me-1 small">Offset Rot Y:</strong>
+                  <span className="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace">
+                    {(def.defaultRotYOffset * (180 / Math.PI)).toFixed(1)}°
+                  </span>
+                </div>
+              )}
               <div>
-                <strong className="text-muted text-uppercase user-select-none me-1 small">Offset Pos:</strong>
-                <span className="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace">
-                  [{def.defaultOffset.map(v => `${v}cm`).join(', ')}]
+                <strong className="text-muted text-uppercase user-select-none me-1 small">Durée:</strong>
+                <span className="text-success fw-bold font-monospace">
+                  {(def?.duration ?? duration).toFixed(2)}s ({totalFrames}f @ {fps}fps)
                 </span>
               </div>
-            )}
-            {def?.defaultRotYOffset !== undefined && (
-              <div>
-                <strong className="text-muted text-uppercase user-select-none me-1 small">Offset Rot Y:</strong>
-                <span className="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace">
-                  {(def.defaultRotYOffset * (180 / Math.PI)).toFixed(1)}°
-                </span>
-              </div>
-            )}
-            <div>
-              <strong className="text-muted text-uppercase user-select-none me-1 small">Durée:</strong>
-              <span className="text-success fw-bold font-monospace">
-                {(def?.duration ?? duration).toFixed(2)}s ({totalFrames}f @ {fps}fps)
-              </span>
-            </div>
-          </div>
-          {def?.aliases && def.aliases.length > 0 && (
-            <div className="d-flex flex-wrap align-items-center gap-1 mt-1">
-              <strong className="text-muted text-uppercase user-select-none me-1 small">🏷️ Aliases ({def.aliases.length}):</strong>
-              {def.aliases.map(alias => (
-                <span key={alias} className="badge bg-light text-secondary border font-monospace">
-                  {alias}
-                </span>
-              ))}
-            </div>
-          )}
-          {def?.tags && def.tags.length > 0 && (
-            <div className="d-flex flex-wrap align-items-center gap-1 mt-1">
-              <strong className="text-muted text-uppercase user-select-none me-1 small">🔖 Tags ({def.tags.length}):</strong>
-              {def.tags.map(tag => (
-                <span key={tag} className="badge bg-primary-subtle text-primary border border-primary-subtle">
-                  #{tag}
-                </span>
-              ))}
+              {def?.aliases && def.aliases.length > 0 && (
+                <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
+                  <strong className="text-muted text-uppercase user-select-none me-1 small">🏷️ Aliases ({def.aliases.length}):</strong>
+                  {def.aliases.map(alias => (
+                    <span key={alias} className="badge bg-light text-secondary border font-monospace">
+                      {alias}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {def?.tags && def.tags.length > 0 && (
+                <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
+                  <strong className="text-muted text-uppercase user-select-none me-1 small">🔖 Tags ({def.tags.length}):</strong>
+                  {def.tags.map(tag => (
+                    <span key={tag} className="badge bg-primary-subtle text-primary border border-primary-subtle">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
