@@ -30,7 +30,7 @@ import { Laptop } from '../items/Laptop';
 import { Phone } from '../items/Phone';
 import { Kejserlig90511501 } from '../items/Kejserlig90511501';
 import { Backpack } from '../items/Backpack';
-import { DroneCell } from '../items/Drona';
+import { DroneCell, DF } from '../items/Drona';
 import { Dimpa10056770 } from '../items/Dimpa10056770';
 import { Lack90282180 } from '../items/Lack90282180';
 import { LampOla } from '../items/LampOla';
@@ -533,7 +533,6 @@ export function LivingRoomFurniture() {
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function LivingRoomFurnishings() {
-  const DF = 33;
   const TV_Y = WALL_H - 10 - TV_H / 2;
   const as = useFurnitureToggles(['tv-toggle']);
 

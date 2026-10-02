@@ -15,7 +15,7 @@ import { Utdrag10389142 } from './Utdrag10389142';
 import { Metod50205532 }  from './Metod50205532';
 import { KitchenCabinet } from './KitchenCabinet';
 import { Fridge }         from './Fridge';
-import { DroneCell } from './Drona';
+import { DroneCell, DF } from './Drona';
 import { Lillhavet80461276 } from './Lillhavet80461276';
 import { Snitta00287295 } from './Snitta00287295';
 import { Fornuft40428482 } from './Fornuft40428482';
@@ -40,7 +40,6 @@ const FRIDGE_W    = 60;
 // World: x=[46.75, 80, 113.25], y=211.7, z=440.5, rotY=π
 // Local (wrapper at (30,0,400)): x=[16.75, 50, 83.25], y=211.7, z=40.5, rotY=π
 
-const DF       = 33;
 const rot90    = new THREE.Matrix4(); // Identité
 
 const KIT_W_FULL = 100;

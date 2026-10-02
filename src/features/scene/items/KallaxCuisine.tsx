@@ -12,7 +12,7 @@ import { Kallax2x1 }     from './Kallax2x1';
 import { Kallax2x2 }     from './Kallax2x2';
 import { Kallax2x2Spec } from './Kallax2x2Spec';
 import { NinjaSP101 } from './NinjaSP101';
-import { DroneCell } from './Drona';
+import { DroneCell, DF } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -21,7 +21,6 @@ const TF = 3.5, TI = 1.5, NH = 34;
 const th   = (rows: number) => rows * NH  + 2 * TF + (rows - 1) * TI;
 const h1   = th(1);              // 41
 const h2   = th(2);              // 76.5
-const DF   = 33;                 // Drona box size
 const PIZZA_Y = h2 + h2 / 2 + TI / 2;  // 115.5 — position four pizza
 
 function k(id: string) { return { id } as any; }

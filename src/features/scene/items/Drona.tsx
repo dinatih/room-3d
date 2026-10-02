@@ -10,6 +10,7 @@
  *   - 'hidden'     : boîtes complètement masquées (0 tris)
  *
  * Exports :
+ *   DF             — dimension standard d'une boîte DRONA (33 cm)
  *   Drona          — composant SceneItemProps (instance unique, inventaire)
  *   useDronaGeo    — hook retournant la géométrie active selon le mode sélectionné
  *   DroneCell      — boîte unique pour groupes positionnés
@@ -21,6 +22,9 @@ import * as THREE from 'three';
 
 import type { SceneItemProps } from '@shared/types';
 import { useSceneStore } from '../store/useSceneStore';
+
+/** Dimension standard d'une boîte DRONA (largeur / hauteur) en cm */
+export const DF = 33;
 
 const GLB_DRONA_HIGH = 'items/dröna/DRÖNA_high.glb';
 const GLB_DRONA_LOW  = 'items/dröna/DRÖNA_low.glb';
@@ -34,9 +38,9 @@ const dronaMat = new THREE.MeshStandardMaterial({
 function createProceduralDronaGeo(): THREE.BufferGeometry {
   // Dimensions DRONA : 33 x 38 x 33 cm (Largeur x Profondeur x Hauteur)
   // L'orientation standard : X=33, Y=33, Z=38
-  const geo = new THREE.BoxGeometry(33, 33, 38);
+  const geo = new THREE.BoxGeometry(DF, DF, 38);
   // Décalage pour avoir l'origine au centre au niveau du sol (Y=0)
-  geo.translate(0, 33 / 2, 0);
+  geo.translate(0, DF / 2, 0);
   return geo;
 }
 

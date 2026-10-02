@@ -4,7 +4,7 @@ import { Mackapar50530988 } from './Mackapar50530988';
 import { SpruttigInstances } from './Spruttig20317079';
 import { TShirt } from './TShirt';
 // import { Salopette }   from './Salopette';
-import { DroneCell } from './Drona';
+import { DroneCell, DF } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -25,8 +25,6 @@ const MACKAPAR_HANGER_TRANSFORMS = [
     rotation: [0, -HANGER_ROTS[i], 0] as [number, number, number],
   })),
 ];
-
-const DF     = 33;  // taille boîte Drona
 
 // ── Drona (2 boîtes sur le dessus) ───────────────────────────────────────────
 const dronaMatrices = (() => {

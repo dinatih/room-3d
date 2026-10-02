@@ -16,14 +16,13 @@ import { GrassRug } from '../items/GrassRug';
 import { Tackan } from '../items/Tackan';
 import { Tisken40381253 } from '../items/Tisken40381253';
 import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
-import { DroneCell } from '../items/Drona';
+import { DroneCell, DF } from '../items/Drona';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
-const DF = 33;
 const cbZ = BATH_NORTH_WALL + 19.5;
 
 export function BathroomEquipment() {
