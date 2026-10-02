@@ -28,11 +28,12 @@ export const SHOWER_H = 200;
 const TRAY_CM   = SHOWER_W;
 const TRAY_HALF = SHOWER_D / 2;  // 35.5
 
-// Porte procédurale
-const DOOR_W = SHOWER_W;   // largeur cm
-const DOOR_H = SHOWER_H;   // hauteur cm
-const DOOR_T = 0.8;  // épaisseur vitre cm
-const FRAME  = 2.0;  // section profil aluminium cm
+// Porte procédurale : paroi fixe 20 cm à l'Ouest + battant pivotant de 51 cm
+const FIXED_W = 20;               // Largeur paroi fixe côté Ouest (cm)
+const DOOR_W  = SHOWER_W - FIXED_W; // Largeur battant mobile (51 cm)
+const DOOR_H  = SHOWER_H;          // Hauteur cm
+const DOOR_T  = 0.8;               // Épaisseur vitre cm
+const FRAME   = 2.0;               // Section profil aluminium cm
 
 /** Applique une rotation X aux sommets de toutes les géométries (baking). */
 function applyGeomRotX(scene: THREE.Group, angle: number) {
@@ -85,9 +86,8 @@ const frameMat = new THREE.MeshStandardMaterial({
   roughness: 0.15,
 });
 
-/** Porte de douche procédurale : vitre + cadre alu + poignée avec pivot d'ouverture. */
+/** Porte de douche procédurale : paroi fixe 20 cm + battant 51 cm avec pivot d'ouverture. */
 function ShowerDoor({ isOpen }: { isOpen: boolean }) {
-  const hw = DOOR_W / 2;
   const hf = FRAME / 2;
   const pivotRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
@@ -117,39 +117,70 @@ function ShowerDoor({ isOpen }: { isOpen: boolean }) {
     invalidate();
   });
 
+  // Repère local centré en X dans [−SHOWER_W/2, +SHOWER_W/2] :
+  // Mur Ouest à x = −SHOWER_W/2 (−35.5)
+  // Paroi fixe de 20 cm couvrant [−35.5, −15.5]
+  const westX = -SHOWER_W / 2;
+  const fixedCenterX = westX + FIXED_W / 2;
+  // Pivot placé à 20 cm du mur Ouest, soit local x = −15.5
+  const pivotX = westX + FIXED_W;
+  const hw = DOOR_W / 2; // Demi-largeur du battant (25.5)
 
   return (
-    // Le pivot de la charnière est placé à gauche de la porte (x = -hw)
-    <group position={[-hw, 0, 0]}>
-      <group ref={pivotRef}>
-        {/* Décale les éléments de +hw pour que la charnière soit sur le bord gauche */}
-        <group position={[hw, 0, 0]}>
-          {/* Vitre */}
-          <mesh material={glassMat} position={[0, DOOR_H / 2, 0]} castShadow>
-            <boxGeometry args={[DOOR_W - FRAME * 2, DOOR_H - FRAME * 2, DOOR_T]} />
-          </mesh>
+    <group>
+      {/* 1. Paroi fixe de 20 cm côté Ouest */}
+      <mesh material={glassMat} position={[fixedCenterX, DOOR_H / 2, 0]} castShadow>
+        <boxGeometry args={[FIXED_W - FRAME * 2, DOOR_H - FRAME * 2, DOOR_T]} />
+      </mesh>
+      {/* Profil bas fixe */}
+      <mesh material={frameMat} position={[fixedCenterX, hf, 0]} castShadow receiveShadow>
+        <boxGeometry args={[FIXED_W, FRAME, FRAME]} />
+      </mesh>
+      {/* Profil haut fixe */}
+      <mesh material={frameMat} position={[fixedCenterX, DOOR_H - hf, 0]} castShadow>
+        <boxGeometry args={[FIXED_W, FRAME, FRAME]} />
+      </mesh>
+      {/* Profil montant gauche (contre mur Ouest) */}
+      <mesh material={frameMat} position={[westX + hf, DOOR_H / 2, 0]} castShadow>
+        <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
+      </mesh>
+      {/* Profil montant droit (jonction fixe / pivot) */}
+      <mesh material={frameMat} position={[pivotX - hf, DOOR_H / 2, 0]} castShadow>
+        <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
+      </mesh>
 
-          {/* Profil bas */}
-          <mesh material={frameMat} position={[0, hf, 0]} castShadow receiveShadow>
-            <boxGeometry args={[DOOR_W, FRAME, FRAME]} />
-          </mesh>
-          {/* Profil haut */}
-          <mesh material={frameMat} position={[0, DOOR_H - hf, 0]} castShadow>
-            <boxGeometry args={[DOOR_W, FRAME, FRAME]} />
-          </mesh>
-          {/* Profil gauche */}
-          <mesh material={frameMat} position={[-hw + hf, DOOR_H / 2, 0]} castShadow>
-            <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
-          </mesh>
-          {/* Profil droit */}
-          <mesh material={frameMat} position={[hw - hf, DOOR_H / 2, 0]} castShadow>
-            <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
-          </mesh>
+      {/* 2. Battant mobile (51 cm) articulé sur le pivot à 20 cm du mur Ouest */}
+      <group position={[pivotX, 0, 0]}>
+        <group ref={pivotRef}>
+          {/* Décalage de +hw pour que le battant s'étende du pivot vers l'Est */}
+          <group position={[hw, 0, 0]}>
+            {/* Vitre mobile */}
+            <mesh material={glassMat} position={[0, DOOR_H / 2, 0]} castShadow>
+              <boxGeometry args={[DOOR_W - FRAME * 2, DOOR_H - FRAME * 2, DOOR_T]} />
+            </mesh>
 
-          {/* Poignée — barre verticale côté droit, face extérieure */}
-          <mesh material={frameMat} position={[hw - FRAME - 3, DOOR_H / 2, DOOR_T + 1.5]} castShadow>
-            <boxGeometry args={[1.5, 22, 1.5]} />
-          </mesh>
+            {/* Profil bas */}
+            <mesh material={frameMat} position={[0, hf, 0]} castShadow receiveShadow>
+              <boxGeometry args={[DOOR_W, FRAME, FRAME]} />
+            </mesh>
+            {/* Profil haut */}
+            <mesh material={frameMat} position={[0, DOOR_H - hf, 0]} castShadow>
+              <boxGeometry args={[DOOR_W, FRAME, FRAME]} />
+            </mesh>
+            {/* Profil gauche (charnière) */}
+            <mesh material={frameMat} position={[-hw + hf, DOOR_H / 2, 0]} castShadow>
+              <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
+            </mesh>
+            {/* Profil droit (côté fermeture Est) */}
+            <mesh material={frameMat} position={[hw - hf, DOOR_H / 2, 0]} castShadow>
+              <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
+            </mesh>
+
+            {/* Poignée — barre verticale côté droit, face extérieure */}
+            <mesh material={frameMat} position={[hw - FRAME - 3, DOOR_H / 2, DOOR_T + 1.5]} castShadow>
+              <boxGeometry args={[1.5, 22, 1.5]} />
+            </mesh>
+          </group>
         </group>
       </group>
     </group>

@@ -89,7 +89,6 @@ export function BathroomEquipment() {
           skipMerge: true,
           animUnit: true,
           itemName: 'Cabine de Douche',
-          hoverAction: { label: 'Porte de douche', actionId: 'showerDoor' }
         }}
       >
         <Shower item={stub('shower')} actionState={as} onSize={NOOP_SIZE} />
