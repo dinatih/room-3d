@@ -415,39 +415,35 @@ export function SidePanel({
 
         {/* Tab bar */}
         <div 
-          className="position-fixed bottom-0 start-0 end-0 border-top shadow-lg d-flex align-items-center"
+          className="position-fixed bottom-0 start-0 end-0 border-top shadow-lg d-flex align-items-center bg-white bg-opacity-75 overflow-x-auto text-nowrap py-1"
           style={{ 
-            height: '3.75rem', 
             zIndex: 100, 
             paddingBottom: 'env(safe-area-inset-bottom)', 
-            background: 'rgba(255, 255, 255, 0.75)', 
             backdropFilter: 'blur(8px)',
-            overflowX: 'auto',
             scrollbarWidth: 'none',
-            whiteSpace: 'nowrap'
           }}
         >
           <button
+            type="button"
             onClick={onOpenInventory}
-            className="btn border-0 d-flex flex-column align-items-center justify-content-center py-1 text-secondary"
-            style={{ fontSize: '0.65rem', minWidth: '3.75rem', flex: '0 0 auto' }}
+            className="btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 text-secondary py-1 px-2"
           >
-            <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>📦</span>
-            <span className="fw-semibold">Inventaire</span>
+            <span className="fs-5 lh-1">📦</span>
+            <span className="fw-semibold small">Inventaire</span>
           </button>
           
           {TABS.map(t => {
             const active = activeTab === t.key;
             if (t.key === 'personnage') {
               return (
-                <div key={t.key} className="d-flex align-items-center position-relative" style={{ flex: '0 0 auto' }}>
+                <div key={t.key} className="d-flex align-items-center position-relative flex-shrink-0">
                   <button
+                    type="button"
                     onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
-                    className={`btn border-0 d-flex flex-column align-items-center justify-content-center py-1 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
-                    style={{ fontSize: '0.65rem', minWidth: '3.75rem' }}
+                    className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center py-1 px-2 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
                   >
-                    <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{t.emoji}</span>
-                    <span className="fw-semibold">{t.label}</span>
+                    <span className="fs-5 lh-1">{t.emoji}</span>
+                    <span className="fw-semibold small">{t.label}</span>
                   </button>
                   <button
                     type="button"
@@ -461,13 +457,11 @@ export function SidePanel({
                       height: '1.25rem',
                       top: '0.25rem',
                       right: '0.25rem',
-                      fontSize: '0.7rem',
                       zIndex: 10,
-                      background: '#ffc107',
                     }}
                     title="Coupe et couleur aléatoires 🎲"
                   >
-                    🎲
+                    <span className="small">🎲</span>
                   </button>
                 </div>
               );
@@ -475,25 +469,25 @@ export function SidePanel({
             return (
               <button
                 key={t.key}
+                type="button"
                 onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
-                className={`btn border-0 d-flex flex-column align-items-center justify-content-center py-1 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
-                style={{ fontSize: '0.65rem', minWidth: '3.75rem', flex: '0 0 auto' }}
+                className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 py-1 px-2 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
               >
-                <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{t.emoji}</span>
-                <span className="fw-semibold">{t.label}</span>
+                <span className="fs-5 lh-1">{t.emoji}</span>
+                <span className="fw-semibold small">{t.label}</span>
               </button>
             );
           })}
 
           {onToggleHideUI && (
             <button
+              type="button"
               onClick={onToggleHideUI}
-              className="btn border-0 d-flex flex-column align-items-center justify-content-center py-1 text-secondary"
-              style={{ fontSize: '0.65rem', minWidth: '3.75rem', flex: '0 0 auto' }}
+              className="btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 text-secondary py-1 px-2"
               title="Masquer l'interface"
             >
-              <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>👁️‍🗨️</span>
-              <span className="fw-semibold">Cacher UI</span>
+              <span className="fs-5 lh-1">👁️‍🗨️</span>
+              <span className="fw-semibold small">Cacher UI</span>
             </button>
           )}
         </div>
