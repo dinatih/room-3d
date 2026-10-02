@@ -62,7 +62,7 @@ export function ExtraCharactersSelector({
     <div className="p-2 border-top bg-transparent d-flex flex-column gap-2 mt-2">
       {/* En-tête avec switch principal */}
       <div className="d-flex justify-content-between align-items-center">
-        <div className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ fontSize: '9px' }}>
           🎭 Personnages Hors-Série (Extra)
         </div>
         <span className={`badge ${extraCharactersEnabled && activeCount > 0 ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
@@ -77,7 +77,6 @@ export function ExtraCharactersSelector({
         onClick={() => onToggleLayer('extraCharacters')}
         title="Activer/Désactiver l'affichage des personnages extra (Raccourci: E)"
         style={{ 
-          minHeight: isMobile ? '44px' : undefined,
           background: extraCharactersEnabled ? 'rgba(13, 110, 253, 0.08)' : 'rgba(0, 0, 0, 0.03)',
           borderColor: extraCharactersEnabled ? 'rgba(13, 110, 253, 0.3)' : 'rgba(0, 0, 0, 0.1)',
         }}

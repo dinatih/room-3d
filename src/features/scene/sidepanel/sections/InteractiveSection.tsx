@@ -18,7 +18,7 @@ export interface InteractiveSectionProps {
 }
 
 export function InteractiveSection({
-  isMobile,
+  isMobile: _isMobile,
   planeModel = 'paper',
   onSetPlaneModel,
   autopilotVisible = false,
@@ -40,9 +40,6 @@ export function InteractiveSection({
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
         onClick={() => {
           document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: actionKey } }));
-        }}
-        style={{ 
-          minHeight: isMobile ? '44px' : undefined,
         }}
       >
         <span>{label}</span>
@@ -67,7 +64,6 @@ export function InteractiveSection({
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
         onClick={() => toggleFurniture(key)}
         style={{ 
-          minHeight: isMobile ? '44px' : undefined,
           opacity: isOn ? 1 : 0.55,
         }}
       >
@@ -105,9 +101,6 @@ export function InteractiveSection({
           className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
           onClick={() => {
             document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-position' } }));
-          }}
-          style={{
-            minHeight: isMobile ? '44px' : undefined,
           }}
         >
           <span>Lit Double (Position)</span>
@@ -150,7 +143,7 @@ export function InteractiveSection({
         ✈ Lancer / Quitter Avion [F]
       </button>
       <div className="p-2 border-bottom bg-transparent">
-        <div className="text-muted fw-semibold mb-1 small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+        <div className="text-muted fw-semibold mb-1 small text-uppercase">
           Modèle d'avion
         </div>
         <div className="d-flex gap-1">
@@ -218,7 +211,6 @@ export function InteractiveSection({
           <button
             onClick={onStopBuildAnim}
             className="btn btn-danger btn-sm w-100 fw-bold py-1 border-0 shadow-sm small"
-            style={{ letterSpacing: '0.04em' }}
           >
             ■ Arrêter l'animation en cours
           </button>

@@ -332,7 +332,7 @@ export function AnimFrameController({
         <input
           ref={sliderRef}
           type="range"
-          className="form-range flex-grow-1"
+          className="form-range form-range-sm flex-grow-1"
           min={0}
           max={totalFrames}
           step={1}

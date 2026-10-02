@@ -176,3 +176,22 @@ button, input, select, textarea {
   background: transparent;
 }
 
+/* ── COMPACT FORM RANGE (.form-range-sm) ── */
+.form-range-sm {
+  height: 1rem;
+}
+.form-range-sm::-webkit-slider-runnable-track {
+  height: 0.25rem;
+}
+.form-range-sm::-moz-range-track {
+  height: 0.25rem;
+}
+.form-range-sm::-webkit-slider-thumb {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: -0.25rem;
+}
+.form-range-sm::-moz-range-thumb {
+  width: 0.75rem;
+  height: 0.75rem;
+}

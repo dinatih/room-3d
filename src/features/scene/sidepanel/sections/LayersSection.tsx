@@ -26,7 +26,7 @@ const GROUND_OPTIONS: { id: GroundType; label: string }[] = [
 export function LayersSection({
   layers,
   onToggleLayer,
-  isMobile,
+  isMobile: _isMobile,
   lidarMode,
   onCycleLidar,
   lidarOpacity,
@@ -44,9 +44,6 @@ export function LayersSection({
       <button 
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark bg-transparent small"
         onClick={onClick}
-        style={{ 
-          minHeight: isMobile ? '44px' : undefined,
-        }}
       >
         {label}
       </button>
@@ -64,7 +61,6 @@ export function LayersSection({
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
         onClick={() => onToggleLayer(key)}
         style={{ 
-          minHeight: isMobile ? '44px' : undefined,
           background: 'transparent',
           opacity: on ? 1 : 0.55,
         }}
@@ -81,7 +77,7 @@ export function LayersSection({
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
       <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
         <div className="d-flex justify-content-between align-items-center mb-1 gap-2">
-          <div className="text-muted fw-semibold text-dark text-nowrap small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+          <div className="text-muted fw-semibold text-dark text-nowrap small text-uppercase">
             🌆 Ambiance HDRI / Ciel
           </div>
           <div className="d-flex align-items-center gap-1 text-end overflow-hidden" style={{ minWidth: 0 }}>

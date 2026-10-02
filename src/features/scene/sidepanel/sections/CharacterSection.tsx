@@ -47,7 +47,6 @@ export function CharacterSection({
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
         onClick={() => onToggleLayer(key)}
         style={{ 
-          minHeight: isMobile ? '44px' : undefined,
           background: 'transparent',
           opacity: on ? 1 : 0.55,
         }}
@@ -65,7 +64,7 @@ export function CharacterSection({
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
           <div>
-            <div className="text-muted fw-semibold mb-1 text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>👤 Choix Personnage</div>
+            <div className="text-muted fw-semibold mb-1 text-dark small text-uppercase">👤 Choix Personnage</div>
             <select
               className="form-select form-select-sm bg-transparent text-dark border-secondary small"
               value={activeWalkerId}
@@ -100,7 +99,7 @@ export function CharacterSection({
 
             <div className="mb-2">
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                <div className="text-muted fw-semibold text-dark small text-uppercase">
                   🎨 Couleur des cheveux
                 </div>
                 <button
@@ -141,7 +140,7 @@ export function CharacterSection({
 
             <div className="mb-1">
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                <div className="text-muted fw-semibold text-dark small text-uppercase">
                   💇‍♀️ Coupe de cheveux
                 </div>
                 <button
@@ -175,13 +174,13 @@ export function CharacterSection({
             {/* ── Réglages Physique Perruques (directement sous la coupe) ── */}
             {layers.hairPhysics && (
               <div className="mt-2 pt-2 border-top border-secondary-subtle d-flex flex-column gap-2">
-                <div className="text-muted fw-bold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                <div className="text-muted fw-bold text-dark small text-uppercase">
                   💇‍♀️ Paramètres Physique Perruques
                 </div>
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase">
                       🧶 Rigidité & Maintien (Stiffness)
                     </span>
                     <span className="badge bg-primary text-white">
@@ -190,7 +189,7 @@ export function CharacterSection({
                   </div>
                   <input
                     type="range"
-                    className="form-range"
+                    className="form-range form-range-sm"
                     min="0.1"
                     max="3.0"
                     step="0.1"
@@ -206,7 +205,7 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase">
                       🧯 Amortissement & Anti-vibration (Damping)
                     </span>
                     <span className="badge bg-success text-white">
@@ -215,7 +214,7 @@ export function CharacterSection({
                   </div>
                   <input
                     type="range"
-                    className="form-range"
+                    className="form-range form-range-sm"
                     min="0.50"
                     max="0.98"
                     step="0.02"
@@ -231,7 +230,7 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase">
                       ⚖️ Poids aux pointes / Anti-fouet (Tip Weight)
                     </span>
                     <span className="badge bg-warning text-dark">
@@ -240,7 +239,7 @@ export function CharacterSection({
                   </div>
                   <input
                     type="range"
-                    className="form-range"
+                    className="form-range form-range-sm"
                     min="0.0"
                     max="3.0"
                     step="0.1"
@@ -256,7 +255,7 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase">
                       📐 Angle max déviation repos (Max Angle)
                     </span>
                     <span className="badge bg-danger text-white">
@@ -265,7 +264,7 @@ export function CharacterSection({
                   </div>
                   <input
                     type="range"
-                    className="form-range"
+                    className="form-range form-range-sm"
                     min="5"
                     max="45"
                     step="1"
@@ -281,7 +280,7 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase">
                       🌍 Gravité globale (Gravity)
                     </span>
                     <span className="badge bg-danger text-white">
@@ -290,7 +289,7 @@ export function CharacterSection({
                   </div>
                   <input
                     type="range"
-                    className="form-range"
+                    className="form-range form-range-sm"
                     min="0.0"
                     max="3.0"
                     step="0.1"
@@ -306,7 +305,7 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase">
                       🏃 Inertie dynamique (Inertia)
                     </span>
                     <span className="badge bg-secondary text-white">
@@ -315,7 +314,7 @@ export function CharacterSection({
                   </div>
                   <input
                     type="range"
-                    className="form-range"
+                    className="form-range form-range-sm"
                     min="0.0"
                     max="3.0"
                     step="0.1"
@@ -331,7 +330,7 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase">
                       💨 Vent / Brise ambiante (Wind)
                     </span>
                     <span className="badge bg-info text-dark">
@@ -340,7 +339,7 @@ export function CharacterSection({
                   </div>
                   <input
                     type="range"
-                    className="form-range"
+                    className="form-range form-range-sm"
                     min="0.0"
                     max="2.0"
                     step="0.1"
@@ -356,7 +355,7 @@ export function CharacterSection({
 
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+                    <span className="text-muted fw-semibold text-dark small text-uppercase">
                       🛡️ Rayon Collision Tête (Head Collider)
                     </span>
                     <span className="badge bg-dark text-white">
@@ -365,7 +364,7 @@ export function CharacterSection({
                   </div>
                   <input
                     type="range"
-                    className="form-range"
+                    className="form-range form-range-sm"
                     min="8.0"
                     max="20.0"
                     step="0.5"
@@ -386,7 +385,7 @@ export function CharacterSection({
 
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
-          <div className="text-muted fw-semibold mb-1 text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+          <div className="text-muted fw-semibold mb-1 text-dark small text-uppercase">
             🤖 Visite guidée de l'appartement
           </div>
           <button
@@ -397,7 +396,6 @@ export function CharacterSection({
             }}
             style={{ 
               background: 'transparent',
-              minHeight: isMobile ? '44px' : undefined 
             }}
           >
             <span>🚶‍♀️ Visite Complète (Sud ➔ Nord)</span>
@@ -408,7 +406,7 @@ export function CharacterSection({
         </div>
       )}
 
-      <div className="text-muted fw-semibold mb-1 text-dark mt-3 small text-uppercase" style={{ letterSpacing: '0.5px' }}>⚙️ Options d'affichage</div>
+      <div className="text-muted fw-semibold mb-1 text-dark mt-3 small text-uppercase">⚙️ Options d'affichage</div>
       {layerBtn('light',  'Personnage 3D (Walker)', 'walker')}
       {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('pink',   'Peau & tissus réalistes (Mat) 🧴', 'laraRealisticTextures')}
@@ -427,7 +425,7 @@ export function CharacterSection({
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
           <div className="d-flex justify-content-between align-items-center mb-1">
-            <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
               👥 Nombre de Personnages
             </span>
             <span className="badge bg-primary">
@@ -493,7 +491,6 @@ export function CharacterSection({
           onToggleLayer('laraGrid');
         }}
         style={{ 
-          minHeight: isMobile ? '44px' : undefined,
           backgroundColor: layers.laraGrid ? 'rgba(13, 110, 253, 0.08)' : undefined,
         }}
       >
@@ -507,7 +504,7 @@ export function CharacterSection({
       </button>
       {layers.laraGrid && (
         <div className="p-2 border-bottom bg-light d-flex flex-column gap-1.5">
-          <div className="text-muted fw-bold small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+          <div className="text-muted fw-bold small text-uppercase">
             📐 Vues Ortho (Face, Côtés, Dessus, etc.)
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
@@ -584,13 +581,13 @@ export function CharacterSection({
       {/* ── Réglages Physique Buste ── */}
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
-          <div className="text-muted fw-bold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+          <div className="text-muted fw-bold text-dark small text-uppercase">
             💃 Paramètres Physique Buste
           </div>
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 💥 Intensité Physique Buste
               </span>
               <span className="badge bg-danger">
@@ -599,7 +596,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="0.0"
               max="10.0"
               step="0.2"
@@ -615,7 +612,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 ⚖️ Masse / Poids Buste (breastMass)
               </span>
               <span className="badge bg-danger text-white">
@@ -624,7 +621,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="0.1"
               max="4.0"
               step="0.1"
@@ -640,7 +637,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 🧶 Fermeté / Maintien Buste (breastFirmness)
               </span>
               <span className="badge bg-purple text-white" style={{ backgroundColor: '#6f42c1' }}>
@@ -649,7 +646,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="0.1"
               max="3.0"
               step="0.1"
@@ -665,7 +662,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 👙 Élasticité Verticale (braElasticity)
               </span>
               <span className="badge bg-primary">
@@ -674,7 +671,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="0.2"
               max="4.0"
               step="0.1"
@@ -690,7 +687,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 ↔️ Élasticité Horizontale XZ (braElasticityXZ)
               </span>
               <span className="badge bg-success text-dark">
@@ -699,7 +696,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="0.2"
               max="5.0"
               step="0.1"
@@ -715,7 +712,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 ⏱️ Retard / Déphasage Inertie (breastLagDelay)
               </span>
               <span className="badge bg-secondary text-white">
@@ -724,7 +721,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="0.0"
               max="3.0"
               step="0.1"
@@ -740,7 +737,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 📐 Angle Max Vertical (maxBreastAngle)
               </span>
               <span className="badge bg-info text-dark">
@@ -749,7 +746,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="5"
               max="60"
               step="1"
@@ -765,7 +762,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 ↔️ Angle Max Horizontal (maxBreastAngleXZ)
               </span>
               <span className="badge bg-warning text-dark">
@@ -774,7 +771,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="5"
               max="120"
               step="1"
@@ -790,7 +787,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 ↕️ Rebond / Translation (breastTranslation)
               </span>
               <span className={`badge ${(layers.breastTranslation ?? 0.15) > 0 ? 'bg-primary' : 'bg-secondary'}`}>
@@ -799,7 +796,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="0.0"
               max="4.0"
               step="0.05"
@@ -815,7 +812,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 📏 Course Max Rebond (breastMaxTravel)
               </span>
               <span className="badge bg-dark text-white">
@@ -824,7 +821,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="0.1"
               max="10.0"
               step="0.1"
@@ -840,7 +837,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 🍈 Aplatissement / Squash & Stretch (breastSquash)
               </span>
               <span className={`badge ${(layers.breastSquash ?? 0.25) > 0 ? 'bg-info text-dark' : 'bg-secondary'}`}>
@@ -849,7 +846,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="0.0"
               max="4.0"
               step="0.05"
@@ -865,7 +862,7 @@ export function CharacterSection({
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="text-muted fw-semibold text-dark small text-uppercase" style={{ letterSpacing: '0.5px' }}>
+              <span className="text-muted fw-semibold text-dark small text-uppercase">
                 🌍 Gravité Buste (breastGravity)
               </span>
               <span className={`badge ${(layers.breastGravity ?? 1.0) > 0 ? 'bg-danger text-white' : 'bg-secondary'}`}>
@@ -874,7 +871,7 @@ export function CharacterSection({
             </div>
             <input
               type="range"
-              className="form-range"
+              className="form-range form-range-sm"
               min="0.0"
               max="3.0"
               step="0.05"
@@ -958,8 +955,7 @@ export function CharacterSection({
                     </div>
                     <input
                       type="range"
-                      className="form-range mt-0.5"
-                      style={{ height: '4px' }}
+                      className="form-range form-range-sm mt-0.5"
                       min="0.0"
                       max="0.95"
                       step="0.05"

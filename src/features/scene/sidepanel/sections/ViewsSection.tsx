@@ -9,7 +9,7 @@ export interface ViewsSectionProps {
 }
 
 export function ViewsSection({
-  isMobile,
+  isMobile: _isMobile,
   onOpenViews,
   onOpenShortcuts,
   onToggleHideUI,
@@ -26,9 +26,6 @@ export function ViewsSection({
       <button 
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark bg-transparent small"
         onClick={onClick}
-        style={{ 
-          minHeight: isMobile ? '44px' : undefined,
-        }}
       >
         {label}
       </button>
@@ -41,7 +38,6 @@ export function ViewsSection({
         className="btn btn-sm btn-warning text-dark w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 fw-bold d-flex align-items-center justify-content-between shadow-sm small"
         onClick={() => useSceneStore.getState().setPhotoModeOpen(true)}
         style={{
-          minHeight: isMobile ? '44px' : undefined,
           background: 'linear-gradient(90deg, #ffc107 0%, #ffca2c 100%)',
         }}
         title="Prendre une photo au Raytracing Ultra-Réaliste (Touche F10)"

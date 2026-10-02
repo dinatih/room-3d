@@ -811,7 +811,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
               </label>
               <input
                 type="range"
-                className="form-range"
+                className="form-range form-range-sm"
                 min="2"
                 max="12"
                 step="1"
@@ -827,7 +827,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
               </label>
               <input
                 type="range"
-                className="form-range"
+                className="form-range form-range-sm"
                 min="0.4"
                 max="2.2"
                 step="0.05"
@@ -867,7 +867,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
                   </label>
                   <input
                     type="range"
-                    className="form-range"
+                    className="form-range form-range-sm"
                     min="50"
                     max="1500"
                     step="5"
