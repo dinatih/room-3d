@@ -31,7 +31,7 @@ import { useAgentController } from '../ai/useAgentController';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationDef } from '../animations/animationResolver';
-import { getDynamicCrossfadeDuration } from '../animations/animationTransitions';
+import { getCrossfadeDuration } from '../animations/animationTransitions';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 import { CharacterThoughtBubble } from '../CharacterThoughtBubble';
 
@@ -799,7 +799,7 @@ export function SingleCharacter({
       const to = actions[target];
       if (to && activeActionName.current !== target) {
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
-        const blendDuration = getDynamicCrossfadeDuration(activeActionName.current, target);
+        const blendDuration = getCrossfadeDuration(activeActionName.current, target);
 
         const isOnceAnim = target === 'pistol-kneel-to-stand' ||
                            target === 'anim-pistol-kneel-to-stand' ||

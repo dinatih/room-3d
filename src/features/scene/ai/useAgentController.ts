@@ -15,7 +15,7 @@ import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation } from './agent/agentWal
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
 import { computeSteeringVector, computeRotYStep } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
-import { getDedicatedTransitionClip, getAnimationPosture } from '../animations/animationTransitions';
+import { getExitTransition } from '../animations/animationTransitions';
 
 export type { AgentState };
 export { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation };
@@ -592,19 +592,6 @@ export function useAgentController(
             }
           }
         }
-
-        const currentPosture = getAnimationPosture(stateRef.current.animation);
-        if (currentPosture === 'sitting' || currentPosture === 'laying' || currentPosture === 'crouching') {
-          const dedicatedTransition = getDedicatedTransitionClip(stateRef.current.animation, currentWalkAnimRef.current);
-          if (dedicatedTransition) {
-            statusRef.current = 'TRANSITIONING';
-            timerRef.current = dedicatedTransition.duration;
-            stateRef.current.animation = resolveAnimationId(dedicatedTransition.transitionAnim);
-            stateRef.current.y = 0;
-            return stateRef.current;
-          }
-        }
-
         statusRef.current = 'MOVING';
         stateRef.current.animation = currentWalkAnimRef.current;
         stateRef.current.y = 0;
@@ -897,17 +884,11 @@ export function useAgentController(
         repeatIndexRef.current = 0;
         targetRepeatsRef.current = 1;
 
-        // Vérifier si un clip de transition in-between est nécessaire (ex: se lever du meuble)
-        const nextInstr = hasNavStep
-          ? dynamicNavQueueRef.current[dynamicNavIndexRef.current + 1]
-          : (scenario ? scenario[stepIndexRef.current + 1] : null);
-        const nextTargetAnim = nextInstr ? (nextInstr.animation || currentWalkAnimRef.current) : 'idle';
-        const dedicatedTransition = getDedicatedTransitionClip(stateRef.current.animation, nextTargetAnim);
-
-        if (dedicatedTransition) {
+        const exit = getExitTransition(stateRef.current.animation);
+        if (exit) {
           statusRef.current = 'TRANSITIONING';
-          timerRef.current = dedicatedTransition.duration;
-          stateRef.current.animation = resolveAnimationId(dedicatedTransition.transitionAnim);
+          timerRef.current = exit.duration;
+          stateRef.current.animation = exit.anim;
           stateRef.current.y = 0;
           return stateRef.current;
         }
