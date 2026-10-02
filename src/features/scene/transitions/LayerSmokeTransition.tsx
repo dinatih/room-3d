@@ -242,6 +242,8 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
           // Si l'effet de fumée est désactivé : bascule instantanée
           if (currentVal) camera.layers.enable(layerId);
           else            camera.layers.disable(layerId);
+          const grp = categoryLayerRegistry.get(layerId);
+          if (grp) grp.visible = currentVal;
           return;
         }
 
@@ -253,7 +255,7 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
           if (t.layerId === layerId) {
             // Nettoyage immédiat
             t.targets.forEach(tgt => {
-              tgt.object.visible = true;
+              tgt.object.visible = currentVal;
               tgt.object.scale.copy(tgt.origScale);
               tgt.object.position.copy(tgt.origPos);
             });
@@ -266,6 +268,7 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
           // Aucun objet 3D détecté, toggle direct
           if (currentVal) camera.layers.enable(layerId);
           else            camera.layers.disable(layerId);
+          if (group) group.visible = currentVal;
           return;
         }
 
@@ -276,6 +279,7 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
           // ── DISPARITION (OFF) ──
           // 1. Garder le layer visible dans la caméra pendant l'animation
           camera.layers.enable(layerId);
+          if (group) group.visible = true;
 
           // 2. Déclencher le nuage de fumée "Poof!"
           if (smokeRef.current) {
@@ -294,6 +298,7 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
           // ── APPARITION (ON) ──
           // 1. Activer le calque dans la caméra
           camera.layers.enable(layerId);
+          if (group) group.visible = true;
 
           // 2. Initialiser tous les objets à échelle quasi-nulle (masqués)
           targets.forEach(t => {
@@ -356,12 +361,14 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
           hasRunning = true;
           return true;
         } else {
-          // Fin de la transition de disparition
+          // Fin de la transition de disparition : on laisse invisible !
           t.targets.forEach(tgt => {
-            tgt.object.visible = true;
+            tgt.object.visible = false;
             tgt.object.scale.copy(tgt.origScale);
             tgt.object.position.copy(tgt.origPos);
           });
+          const grp = categoryLayerRegistry.get(t.layerId);
+          if (grp) grp.visible = false;
           camera.layers.disable(t.layerId);
           return false;
         }

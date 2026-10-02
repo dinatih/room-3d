@@ -1,11 +1,13 @@
 /**
  * MergedStaticGroup.tsx — Fusion statique de maillages à géométrie identique pour optimisation des draw calls R3F/Three.js.
  */
-import React, { useRef, useLayoutEffect } from 'react';
+import React, { useRef, useLayoutEffect, useContext } from 'react';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { CategoryLayerContext } from '../sceneLayer';
 
 export function MergedStaticGroup({ children, name = 'merged-static', userData }: { children: React.ReactNode; name?: string; userData?: Record<string, any> }) {
+  const categoryLayer = useContext(CategoryLayerContext);
   const sourceRef = useRef<THREE.Group>(null!);
   const mergedRef = useRef<THREE.Group>(null!);
 
@@ -114,16 +116,21 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
         m.raycast = () => {}; // OPTIMISATION : Désactive le raycasting sur les gros meshes statiques pour ne pas plomber les perfs au survol (sauf les murs pour l'occlusion)
       }
 
-      // Héritage automatique du layer mask depuis le premier mesh source correspondant
-      src.traverse(node => {
-        if (m.layers.mask !== 1) return;
-        const mesh = node as THREE.Mesh;
-        if (!mesh.isMesh || mesh.userData.isMergedStatic) return;
-        const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        if (ms.some(sm => sm?.uuid === mat.uuid)) {
-          m.layers.mask = mesh.layers.mask;
-        }
-      });
+      if (categoryLayer !== null && categoryLayer !== undefined) {
+        m.layers.disable(0);
+        m.layers.enable(categoryLayer);
+      } else {
+        // Héritage automatique du layer mask depuis le premier mesh source correspondant
+        src.traverse(node => {
+          if (m.layers.mask !== 1) return;
+          const mesh = node as THREE.Mesh;
+          if (!mesh.isMesh || mesh.userData.isMergedStatic) return;
+          const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          if (ms.some(sm => sm?.uuid === mat.uuid)) {
+            m.layers.mask = mesh.layers.mask;
+          }
+        });
+      }
 
       dst.add(m);
     }
@@ -137,7 +144,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
       });
       dst.clear();
     };
-  }, []);
+  }, [categoryLayer]);
 
   return (
     <group userData={userData}>
