@@ -391,12 +391,13 @@ export function useAgentController(
       if (timerRef.current <= 0) {
         stateRef.current.y = startPosRef.current?.y ?? 0;
         statusRef.current = 'LANDING';
-        const landingDuration = getAnimationDef(landingAnim)?.duration ?? 1.4;
+        const animId = resolveAnimationId(landingAnim);
+        const landingDuration = getAnimationDef(animId)?.duration ?? 1.4;
         timerRef.current = landingDuration;
         deployment.status = 'LANDING';
         deployment.timer = landingDuration;
         deployment.y = stateRef.current.y;
-        stateRef.current.animation = resolveAnimationId(landingAnim);
+        stateRef.current.animation = animId;
         return stateRef.current;
       } else {
         const p_inv = timerRef.current / 6.0;
@@ -416,9 +417,10 @@ export function useAgentController(
         deployment.status = 'IDLE';
         deployment.hasCompleted = true;
         appLog(_characterId, `🎯 Déploiement terminé (Atterrissage réussi)`);
+      } else {
+        stateRef.current.animation = resolveAnimationId(landingAnim);
+        return stateRef.current;
       }
-      stateRef.current.animation = resolveAnimationId(landingAnim);
-      return stateRef.current;
     }
 
     const scenarioLength = scenario ? scenario.length : 0;

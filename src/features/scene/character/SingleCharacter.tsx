@@ -814,8 +814,16 @@ export function SingleCharacter({
           else from.fadeOut(0.2);
         }
 
-        to.setLoop(THREE.LoopRepeat, Infinity);
-        to.clampWhenFinished = false;
+        const isOnceAnim = target === 'pistol-kneel-to-stand' ||
+                           target === 'anim-pistol-kneel-to-stand' ||
+                           target.includes('landing');
+        if (isOnceAnim) {
+          to.setLoop(THREE.LoopOnce, 1);
+          to.clampWhenFinished = true;
+        } else {
+          to.setLoop(THREE.LoopRepeat, Infinity);
+          to.clampWhenFinished = false;
+        }
 
         if (laraGrid) {
           scene.traverse((c: any) => {
