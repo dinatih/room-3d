@@ -26,6 +26,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { cameraState } from './cameraState';
 import { useSceneStore } from './store/useSceneStore';
 import { CHARACTERS } from './walkerConfig';
+import { appLog } from '@features/ui/AppConsole';
 import {
   type CameraMode,
   CX,
@@ -36,6 +37,7 @@ import {
   activeWalkH,
   DEFAULT_ORBIT_DISTANCE,
   DEFAULT_ORBIT_PITCH,
+  parseUrlCameraMode,
   useCameraPointerEvents,
   useCameraShortcuts,
   useCameraFrameUpdate,
@@ -59,8 +61,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     };
   }, [invalidate]);
 
-  const [mode, setMode] = useState<CameraMode>('orbit');
-  const modeRef = useRef<CameraMode>('orbit');
+  const initialMode = parseUrlCameraMode();
+  const [mode, setMode] = useState<CameraMode>(() => initialMode);
+  const modeRef = useRef<CameraMode>(initialMode);
 
   const planeModeRef = useRef(planeMode);
   useEffect(() => {
@@ -77,7 +80,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const initialWalker = CHARACTERS.find(c => c.id === useSceneStore.getState().activeWalkerId) || CHARACTERS[0];
   const walkPos = useRef({ x: initialWalker.pos[0], y: initialWalker.height * EYE_RATIO, z: initialWalker.pos[2] });
   const walkYaw = useRef(initialWalker.rot);
-  const walkPitch = useRef(0);
+  const walkPitch = useRef(initialMode === 'fpv' ? FPV_DEFAULT_PITCH : 0);
   const orbitYaw = useRef(initialWalker.rot);
   const orbitYawOffset = useRef(0); // Différentiel d'angle relatif au personnage
   const orbitPitch = useRef(DEFAULT_ORBIT_PITCH);
@@ -535,6 +538,29 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
   }, [mode, camera, updateWalkLook]);
 
+  // Lancement automatique du mode initial depuis les paramètres d'URL (ex: ?fpv ou ?mode=fpv)
+  const initialModeLaunchedRef = useRef(false);
+  useEffect(() => {
+    if (initialModeLaunchedRef.current) return;
+    initialModeLaunchedRef.current = true;
+
+    const startMode = parseUrlCameraMode();
+    if (startMode === 'fpv') {
+      const curX = cameraState.walkerX ?? walkPos.current.x;
+      const curZ = cameraState.walkerZ ?? walkPos.current.z;
+      enterWalk(curX, curZ, 'fpv');
+      appLog('system', '🎥 Mode FPV (1ère personne) initialisé via URL');
+    } else if (startMode === 'walk') {
+      const curX = cameraState.walkerX ?? walkPos.current.x;
+      const curZ = cameraState.walkerZ ?? walkPos.current.z;
+      enterWalk(curX, curZ, 'walk');
+      appLog('system', '🎥 Mode Follow (3ème personne) initialisé via URL');
+    } else if (startMode === 'top') {
+      enterTop(false);
+      appLog('system', '🎥 Mode 2D Top initialisé via URL');
+    }
+  }, [enterTop, enterWalk]);
+
   // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif
   useFrame(() => {
     if (prevIsXR.current !== cameraState.isXR) {
@@ -665,7 +691,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
         enabled={!planeMode}
-        enableRotate={!planeMode && mode !== 'top'}
+        enableRotate={!planeMode && mode !== 'top' && mode !== 'walk' && mode !== 'fpv'}
+        enablePan={!planeMode && mode !== 'walk' && mode !== 'fpv'}
+        enableZoom={!planeMode && mode !== 'walk' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'walk'}
         mouseButtons={
           mode === 'top'

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
+import { parseUrlCameraMode } from '@features/scene/camera/cameraUrlParams';
 import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
 import { type LaraCountMode, isExtraCharacter, EXTRA_CHARACTERS } from '@features/scene/walkerConfig';
 
@@ -291,7 +292,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   activeExtraIds: EXTRA_CHARACTERS.map(c => c.id),
   currentHdri: DEFAULT_HDRI_ID,
   measurementActive: false,
-  cameraMode: 'orbit',
+  cameraMode: parseUrlCameraMode(),
   isCvModalOpen: false,
   isPhotoModeOpen: false,
   setCvModalOpen: (open: boolean) => {

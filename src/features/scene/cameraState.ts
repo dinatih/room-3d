@@ -4,11 +4,12 @@
  */
 
 import { CHARACTERS } from './walkerConfig';
+import { parseUrlCameraMode } from './camera/cameraUrlParams';
 
 type CameraMode = 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho';
 
 export const cameraState = {
-  mode: 'orbit' as CameraMode,
+  mode: parseUrlCameraMode() as CameraMode,
   /** Position caméra (pour l'icône walk sur la minimap) */
   camX: 150 as number,
   camZ: 200 as number,
@@ -25,7 +26,7 @@ export const cameraState = {
     if (this.lastUserControlTime === 0) return false;
     return (performance.now() - this.lastUserControlTime) < 12000;
   },
-  walkYaw:   0     as number,
+  walkYaw:   (CHARACTERS[0]?.rot ?? 1.9) as number,
   walkPitch: 0     as number,
   /** Position et orientation du walker unique (synchro dynamique depuis CHARACTERS) */
   walkerX: (CHARACTERS[0]?.pos[0] ?? 140) as number, 
