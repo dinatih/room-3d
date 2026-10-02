@@ -8,6 +8,8 @@
  */
 import { useState, useEffect, useRef } from 'react';
 import { CHARACTERS, findCharacter } from '@features/scene/walkerConfig';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
+import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
 // Les couleurs NPC viennent de CharacterConfig.color (source unique de vérité).
@@ -68,12 +70,17 @@ const MAX_LOGS = 200;
 
 // ── Composant ──────────────────────────────────────────────────────────────
 export function AppConsole({ hidden = false }: { hidden?: boolean }) {
+  const isMobile = useIsMobile();
+  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+  const activeChar = findCharacter(activeWalkerId);
+
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [visible, setVisible] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const savedDimensionsRef = useRef<{ width?: number; height?: number }>({ width: 500, height: 100 });
+  const savedDimensionsRef = useRef<{ height?: number }>({ height: 110 });
 
   // Injecter la Google Font JetBrains Mono une seule fois
   useEffect(() => {
@@ -94,7 +101,6 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
       for (const entry of entries) {
         if (visible && entry.contentRect.height > 40) {
           savedDimensionsRef.current = {
-            width: entry.contentRect.width,
             height: entry.contentRect.height,
           };
         }
@@ -140,29 +146,34 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     if (visible && !isPaused && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'auto' });
     }
-  }, [logs, visible, isPaused]);
+  }, [logs, visible, isPaused, filterBubbleOnly]);
+
+  const displayedLogs = filterBubbleOnly
+    ? logs.filter(entry => entry.tag.toLowerCase() === activeWalkerId.toLowerCase())
+    : logs;
 
   // ── Styles inline ──────────────────────────────────────────────────────
   const containerStyle: React.CSSProperties = {
     position: 'fixed',
     top: 0,
     right: 0,
-    width: visible ? (savedDimensionsRef.current.width ? `${savedDimensionsRef.current.width}px` : '500px') : 'auto',
-    height: visible ? (savedDimensionsRef.current.height ? `${savedDimensionsRef.current.height}px` : '100px') : 'auto',
-    maxWidth: visible ? '90vw' : 'auto',
-    minWidth: visible ? '280px' : 'auto',
+    left: visible ? (isMobile ? 0 : 280) : 'auto',
+    width: 'auto',
+    height: visible ? (savedDimensionsRef.current.height ? `${savedDimensionsRef.current.height}px` : '110px') : 'auto',
+    minWidth: visible ? (isMobile ? '100vw' : '320px') : 'auto',
+    maxWidth: 'none',
     zIndex: 9999,
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: '11px',
     pointerEvents: 'auto',
     display: hidden ? 'none' : 'flex',
     flexDirection: 'column',
-    resize: visible ? 'both' : 'none',
     overflow: 'hidden',
     minHeight: visible ? '60px' : 'auto',
     maxHeight: visible ? '85vh' : 'auto',
     boxShadow: visible ? '0 4px 20px rgba(0, 0, 0, 0.7)' : '0 2px 8px rgba(0, 0, 0, 0.5)',
-    borderBottomLeftRadius: visible ? '0' : '4px',
+    borderBottomLeftRadius: visible ? (isMobile ? '0' : '4px') : '4px',
+    borderLeft: visible && !isMobile ? '1px solid rgba(0, 255, 136, 0.3)' : 'none',
   };
 
   const headerStyle: React.CSSProperties = {
@@ -173,7 +184,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     background: 'rgba(0, 0, 0, 0.92)',
     borderTop: 'none',
     borderRight: 'none',
-    borderLeft: '1px solid rgba(0, 255, 136, 0.4)',
+    borderLeft: visible && !isMobile ? 'none' : '1px solid rgba(0, 255, 136, 0.4)',
     borderBottom: '1px solid rgba(0, 255, 136, 0.3)',
     borderBottomLeftRadius: visible ? '0' : '4px',
     color: '#00ff88',
@@ -238,25 +249,18 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     flex: 1,
   };
 
-  // Gestion du drag de redimensionnement depuis le coin inférieur gauche
+  // Gestion du drag de redimensionnement vertical (hauteur)
   const handleResizePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const startX = e.clientX;
     const startY = e.clientY;
-    const startW = containerRef.current ? containerRef.current.offsetWidth : (savedDimensionsRef.current.width ?? 620);
     const startH = containerRef.current ? containerRef.current.offsetHeight : (savedDimensionsRef.current.height ?? 110);
 
     const onPointerMove = (ev: PointerEvent) => {
-      // Déplacement vers la gauche augmente la largeur (car container fixé à droite: top: 0, right: 0)
-      const deltaX = startX - ev.clientX;
       const deltaY = ev.clientY - startY;
-      const newW = Math.max(280, Math.min(window.innerWidth * 0.95, startW + deltaX));
       const newH = Math.max(60, Math.min(window.innerHeight * 0.85, startH + deltaY));
-      
-      savedDimensionsRef.current = { width: newW, height: newH };
+      savedDimensionsRef.current = { height: newH };
       if (containerRef.current) {
-        containerRef.current.style.width = `${newW}px`;
         containerRef.current.style.height = `${newH}px`;
       }
     };
@@ -319,34 +323,81 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           </span>
         </div>
         {visible && (
-          <button
-            onClick={() => setIsPaused(p => !p)}
-            style={{
-              background: isPaused ? 'rgba(255, 170, 0, 0.2)' : 'rgba(0, 255, 136, 0.1)',
-              border: `1px solid ${isPaused ? '#ffaa00' : '#00ff88'}`,
-              color: isPaused ? '#ffaa00' : '#00ff88',
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '9px',
-              lineHeight: 1,
-              padding: '2px 6px',
-              cursor: 'pointer',
-              borderRadius: '2px',
-            }}
-          >
-            {isPaused ? '▶ REPRENDRE' : '⏸ PAUSE'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Bouton Filtre Bulle Think */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setFilterBubbleOnly(f => !f);
+              }}
+              title={
+                filterBubbleOnly
+                  ? `Filtre Bulle Think actif (${activeChar?.name ?? activeWalkerId}) — Cliquer pour afficher tous les logs`
+                  : `Afficher uniquement les logs de la bulle de pensée (${activeChar?.name ?? activeWalkerId})`
+              }
+              style={{
+                background: filterBubbleOnly ? 'rgba(0, 210, 255, 0.22)' : 'rgba(255, 255, 255, 0.05)',
+                border: `1px solid ${filterBubbleOnly ? '#00d2ff' : 'rgba(0, 255, 136, 0.4)'}`,
+                color: filterBubbleOnly ? '#00d2ff' : '#00ff88',
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '9px',
+                fontWeight: filterBubbleOnly ? 600 : 400,
+                lineHeight: 1,
+                padding: '2px 8px',
+                cursor: 'pointer',
+                borderRadius: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                boxShadow: filterBubbleOnly ? '0 0 8px rgba(0, 210, 255, 0.4)' : 'none',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span>💭</span>
+              <span>
+                {filterBubbleOnly
+                  ? `BULLE THINK : ${activeChar?.emoji ?? ''} ${activeChar?.name ?? activeWalkerId}`.trim()
+                  : 'BULLE THINK'}
+              </span>
+            </button>
+
+            {/* Bouton Pause / Reprendre */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsPaused(p => !p);
+              }}
+              style={{
+                background: isPaused ? 'rgba(255, 170, 0, 0.2)' : 'rgba(0, 255, 136, 0.1)',
+                border: `1px solid ${isPaused ? '#ffaa00' : '#00ff88'}`,
+                color: isPaused ? '#ffaa00' : '#00ff88',
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '9px',
+                lineHeight: 1,
+                padding: '2px 6px',
+                cursor: 'pointer',
+                borderRadius: '2px',
+              }}
+            >
+              {isPaused ? '▶ REPRENDRE' : '⏸ PAUSE'}
+            </button>
+          </div>
         )}
       </div>
 
       {/* Log area */}
       {visible && (
         <div style={logAreaStyle}>
-          {logs.length === 0 && (
+          {displayedLogs.length === 0 && (
             <div style={{ ...lineStyle, color: 'rgba(100, 100, 100, 0.7)', fontStyle: 'italic' }}>
-              En attente de logs…
+              {filterBubbleOnly
+                ? `💭 Aucune pensée enregistrée pour ${activeChar?.name ?? activeWalkerId}…`
+                : 'En attente de logs…'}
             </div>
           )}
-          {logs.map((entry, idx) => {
+          {displayedLogs.map((entry, idx) => {
             const color = getTagColor(entry.tag);
             return (
               <div key={`${entry.id}_${idx}`} style={lineStyle}>
@@ -370,32 +421,39 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         </div>
       )}
 
-      {/* Poignée de redimensionnement manuelle (bas-gauche) */}
+      {/* Barre de redimensionnement vertical (bas de fenêtre) */}
       {visible && (
         <div
           onPointerDown={handleResizePointerDown}
-          title="Redimensionner la console (Glisser)"
+          title="Redimensionner la hauteur de la console (Glisser verticalement)"
           style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            width: 22,
-            height: 22,
-            cursor: 'nesw-resize',
+            height: '8px',
+            width: '100%',
+            cursor: 'ns-resize',
             display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'flex-start',
-            padding: '2px',
-            color: '#00ff88',
-            opacity: 0.75,
-            zIndex: 10,
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0, 255, 136, 0.05)',
+            borderTop: '1px solid rgba(0, 255, 136, 0.2)',
             userSelect: 'none',
             touchAction: 'none',
+            transition: 'background 0.2s',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLDivElement).style.background = 'rgba(0, 255, 136, 0.25)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLDivElement).style.background = 'rgba(0, 255, 136, 0.05)';
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M1 15h14v-2H1v2zm0-4h10V9H1v2zm0-4h6V5H1v2z" />
-          </svg>
+          <div
+            style={{
+              width: '40px',
+              height: '2px',
+              background: 'rgba(0, 255, 136, 0.6)',
+              borderRadius: '1px',
+            }}
+          />
         </div>
       )}
     </div>
