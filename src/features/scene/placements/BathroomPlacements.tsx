@@ -9,7 +9,7 @@ import { Toilet, TOILET_D } from '../items/Toilet';
 import { Shower } from '../items/Shower';
 import { Havback49514017, HAVBACK_D } from '../items/Havback49514017';
 import { BathroomCabinetWest, BathroomCabinetEast } from '../items/BathroomCabinet';
-import { SdbCloset } from '../items/SdbCloset';
+import { SdbCloset, SDB_CLOSET_X, SDB_CLOSET_Z } from '../items/SdbCloset';
 import { TradfriBulb } from '../items/TradfriBulb';
 import { Vathult40467548 } from '../items/Vathult40467548';
 import { GrassRug } from '../items/GrassRug';
@@ -88,7 +88,7 @@ export function BathroomEquipment() {
       </group>
 
       {/* Placard SDB */}
-      <group position={[130.3, 0, BATH_SOUTH_WALL]} userData={{ animUnit: true, itemName: 'Placard SDB' }}>
+      <group position={[SDB_CLOSET_X, 0, SDB_CLOSET_Z]} userData={{ animUnit: true, itemName: 'Placard SDB' }}>
         <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>

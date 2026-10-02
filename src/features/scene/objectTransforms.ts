@@ -9,8 +9,9 @@ import {
   DOOR_START,
   BATH_WEST_WALL, BATH_NORTH_WALL,
   KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL,
-  ROOM_D, PARTITION_THICKNESS, BATH_SOUTH_WALL, CORRIDOR_NORTH_WALL
+  ROOM_D, PARTITION_THICKNESS, CORRIDOR_NORTH_WALL
 } from './wallData';
+import { SDB_CLOSET_X, SDB_CLOSET_Z } from './items/SdbCloset';
 import { positionState } from './positionState';
 import { DYNAMIC_FURNITURE_ANCHORS, FurnitureTransform } from './furniturePositions';
 
@@ -41,9 +42,8 @@ const ITEM_TO_ANCHOR_KEY: Record<string, string> = {
 function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
   switch (itemId) {
     case 'sdb-closet':
-      // Placements.tsx: <group position={[130.3, 0, BATH_SOUTH_WALL]} ...><SdbCloset .../>
       return {
-        position: [130.3, 0, BATH_SOUTH_WALL],
+        position: [SDB_CLOSET_X, 0, SDB_CLOSET_Z],
         rotationY: 0,
       };
 

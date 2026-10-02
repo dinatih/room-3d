@@ -11,17 +11,21 @@ import { useRef, useLayoutEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { DiagWall } from '../wallData';
-import { BATH_SOUTH_WALL } from '../wallData';
+import { DiagWall, pEast, pWest, pNorth, WALL_H } from '../wallData';
 import { Grejig40329868 } from './Grejig40329868';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 
-const W       = 123.4; // BATH_E_FACE (192) - SHOWER_E_X (68.6)
-const H       = 250;   // WALL_H
-const PANEL_W = W / 2; // 61.7
+export const SDB_CLOSET_W = pWest('bath-se') - pEast('shower-ne');
+export const SDB_CLOSET_D = 7;
+export const SDB_CLOSET_X = (pEast('shower-ne') + pWest('bath-se')) / 2;
+export const SDB_CLOSET_Z = pNorth('shower-ne') + SDB_CLOSET_D / 2;
+
+const W       = SDB_CLOSET_W;
+const H       = WALL_H;
+const PANEL_W = W / 2;
 const PANEL_T = 2.3;
 const SEP_T   = 1;
-const RAIL_D  = 7;
+const RAIL_D  = SDB_CLOSET_D;
 const SHELF_Y = 170;
 const SHELF_T = 2;
 
@@ -31,12 +35,12 @@ const shelfMat  = new THREE.MeshStandardMaterial({ color: 0xf0f0e8, roughness: 0
 const handleMat = new THREE.MeshStandardMaterial({ color: 0xb0b0b0, roughness: 0.25, metalness: 0.8 });
 
 // Positions X locales des panneaux
-const X_CLOSED_L = -PANEL_W / 2;  // -30.85
-const X_CLOSED_R = +PANEL_W / 2;  // +30.85
+const X_CLOSED_L = -PANEL_W / 2;
+const X_CLOSED_R = +PANEL_W / 2;
 
 // Les deux panneaux se croisent : panneau L côté SDB, panneau R côté mur
-const ZL = -(SEP_T / 2 + PANEL_T / 2);  // -1.65
-const ZR = +(SEP_T / 2 + PANEL_T / 2);  // +1.65
+const ZL = -(SEP_T / 2 + PANEL_T / 2);
+const ZR = +(SEP_T / 2 + PANEL_T / 2);
 
 export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   const groupLRef = useRef<THREE.Group>(null!);
@@ -62,26 +66,25 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   const shelfGeo = useMemo(() => {
-    // Coordonnées du centre du placard dans le monde (fixé dans Placements.tsx)
-    const WORLD_X_CENTER = 130.3;
-    
-    // Pour -W/2 (côté gauche) :
-    const xL = WORLD_X_CENTER - W / 2;
-    const zL = DiagWall.A.z + (xL - DiagWall.A.x) * DiagWall.slope;
-    const depthL = zL - BATH_SOUTH_WALL;
+    const xL = pEast('shower-ne');
+    const xR = pWest('bath-se');
 
-    // Pour +W/2 (côté droit) :
-    const xR = WORLD_X_CENTER + W / 2;
+    const zL = DiagWall.A.z + (xL - DiagWall.A.x) * DiagWall.slope;
+    const depthL = zL - SDB_CLOSET_Z;
+
     const zR = DiagWall.A.z + (xR - DiagWall.A.x) * DiagWall.slope;
-    const depthR = zR - BATH_SOUTH_WALL;
+    const depthR = zR - SDB_CLOSET_Z;
 
     // Y du Shape devient -Z dans la 3D (après rotateX(-PI/2))
     // Donc une profondeur vers le sud (+Z) correspond à un Y négatif dans le Shape.
+    // L'étagère commence au niveau du dos des rails (local Z = RAIL_D / 2)
+    // et va jusqu'au mur diagonal DiagWall (depthL / depthR).
+    const frontZ = RAIL_D / 2;
     const shape = new THREE.Shape();
-    shape.moveTo(-W / 2, 0);          // Avant gauche
-    shape.lineTo(+W / 2, 0);          // Avant droit
-    shape.lineTo(+W / 2, -depthR);    // Arrière droit
-    shape.lineTo(-W / 2, -depthL);    // Arrière gauche
+    shape.moveTo(-W / 2, -frontZ);       // Avant gauche
+    shape.lineTo(+W / 2, -frontZ);       // Avant droit
+    shape.lineTo(+W / 2, -depthR);       // Arrière droit
+    shape.lineTo(-W / 2, -depthL);       // Arrière gauche
     shape.closePath();
     const geo = new THREE.ExtrudeGeometry(shape, { depth: SHELF_T, bevelEnabled: false });
     geo.rotateX(-Math.PI / 2);
@@ -124,11 +127,11 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
     <group>
       {/* Rail haut */}
       <mesh position={[0, H - 1.5, 0]} castShadow material={railMat}>
-        <boxGeometry args={[W + 4, 3, RAIL_D]} />
+        <boxGeometry args={[W, 3, RAIL_D]} />
       </mesh>
       {/* Rail bas */}
       <mesh position={[0, 0.75, 0]} material={railMat}>
-        <boxGeometry args={[W + 4, 1.5, RAIL_D]} />
+        <boxGeometry args={[W, 1.5, RAIL_D]} />
       </mesh>
 
       {/* Panneau gauche (en -X, ce qui correspond à la Droite depuis la SDB) */}
