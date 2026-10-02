@@ -229,10 +229,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
               ))}
 
               {/* Mur en face du jardin (Scan 3D Seoul) */}
-              <GardenFrontWallScan
-                position={[150, 0, -786.33]}
-                rotationY={DiagWall.rotY + Math.PI / 2}
-              />
+              <GardenFrontWallScan />
             </group>
           </MergedStaticGroup>
         )}
