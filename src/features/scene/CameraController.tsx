@@ -137,11 +137,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     cameraState.mode = m;
     setMode(m);
 
-    // Auto-enable HD mirrors en FPV, disable en walk (3ème pers.) pour les performances
+    // Auto-enable HD mirrors en FPV, disable hors FPV (orbit, walk, top, ortho) pour les performances
     const isMirrorsHD = useSceneStore.getState().layers.mirrorsHD;
     if (m === 'fpv' && !isMirrorsHD) {
       useSceneStore.getState().toggleLayer('mirrorsHD');
-    } else if (m === 'walk' && isMirrorsHD) {
+    } else if (m !== 'fpv' && isMirrorsHD) {
       useSceneStore.getState().toggleLayer('mirrorsHD');
     }
 
@@ -403,6 +403,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) {
       cam.fov = savedFov.current;
+      cam.near = 5;
       cam.updateProjectionMatrix();
     }
     hasInitialStabilizedPos.current = false;
@@ -525,11 +526,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
   }, [mode]);
 
-  // Initialisation walk look lors de l'entrée en mode walk / FPV
+  // Initialisation walk look et ajustement du near plane selon le mode
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) {
-      cam.near = 0.1;
+      cam.near = (mode === 'walk' || mode === 'fpv') ? 0.1 : 5;
       cam.updateProjectionMatrix();
     }
 
