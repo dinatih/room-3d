@@ -57,30 +57,36 @@ function collectAnimTargets(root: THREE.Object3D): AnimTarget[] {
   const targets: AnimTarget[] = [];
   const units: THREE.Object3D[] = [];
 
-  // Chercher en priorité les conteneurs animUnit
-  root.traverse(obj => {
-    if (obj.userData?.animUnit) {
-      let p = obj.parent;
-      let hasAncestor = false;
-      while (p && p !== root) {
-        if (p.userData?.animUnit) {
-          hasAncestor = true;
-          break;
-        }
-        p = p.parent;
-      }
-      if (!hasAncestor) {
-        units.push(obj);
-      }
+  // Parcourir en ignorant strictement isMergedSource (les maillages masqués par MergedStaticGroup)
+  function scan(obj: THREE.Object3D) {
+    if (obj.userData?.isMergedSource || obj.userData?.wasMerged) {
+      return;
     }
-  });
 
-  // Si aucun animUnit explicite, collecter les enfants avec meshes
+    if (obj.userData?.isMergedStatic) {
+      units.push(obj);
+      return;
+    }
+
+    if (obj !== root && obj.userData?.animUnit) {
+      units.push(obj);
+      return;
+    }
+
+    for (const child of obj.children) {
+      scan(child);
+    }
+  }
+
+  scan(root);
+
+  // Si aucun animUnit ou mesh fusionné explicite, collecter les enfants avec meshes visibles
   if (units.length === 0) {
     root.children.forEach(child => {
+      if (child.userData?.isMergedSource) return;
       let hasMesh = false;
       child.traverse(o => {
-        if ((o as THREE.Mesh).isMesh) hasMesh = true;
+        if ((o as THREE.Mesh).isMesh && !o.userData?.isMergedSource && !o.userData?.wasMerged) hasMesh = true;
       });
       if (hasMesh) units.push(child);
     });
@@ -125,7 +131,7 @@ function collectAnimTargets(root: THREE.Object3D): AnimTarget[] {
   return targets;
 }
 
-// Calcule les points d'émission de fumée (points multiples si grande surface comme dalle/plafond)
+// Calcule les points d'émission de fumée (filtrés pour éviter la saturation du pool de particules)
 function getSmokeBurstPoints(targets: AnimTarget[]): { pos: THREE.Vector3; radius: number }[] {
   const points: { pos: THREE.Vector3; radius: number }[] = [];
 
@@ -134,24 +140,29 @@ function getSmokeBurstPoints(targets: AnimTarget[]): { pos: THREE.Vector3; radiu
     const isLarge = size.x > 180 || size.z > 180;
 
     if (!isLarge) {
-      points.push({ pos: worldCenter, radius });
+      const tooClose = points.some(p => p.pos.distanceTo(worldCenter) < 55);
+      if (!tooClose) {
+        points.push({ pos: worldCenter, radius });
+      }
       return;
     }
 
-    // Répartition multi-poof sur la zone couverte par la dalle ou le plafond
+    // Répartition multi-poof sur la zone couverte par la dalle, le plafond ou les murs
     const xCoords = [60, 150, 240];
     const zCoords = [60, 180, 300];
     xCoords.forEach(x => {
       zCoords.forEach(z => {
-        points.push({
-          pos: new THREE.Vector3(x, worldCenter.y, z),
-          radius: 45,
-        });
+        const pt = new THREE.Vector3(x, worldCenter.y, z);
+        const tooClose = points.some(p => p.pos.distanceTo(pt) < 55);
+        if (!tooClose) {
+          points.push({ pos: pt, radius: 45 });
+        }
       });
     });
   });
 
-  return points;
+  // Limite de sécurité à 14 bouffées max pour garantir 60 FPS constants
+  return points.slice(0, 14);
 }
 
 function applyScaleToTarget(tgt: AnimTarget, s: number) {
