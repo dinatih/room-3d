@@ -620,7 +620,7 @@ export function AnimFrameController({
                   <span className="fs-5">{duoAnimDef.icon}</span>
                   <div>
                     <strong className="text-primary fs-6">{duoAnimDef.label}</strong>
-                    <code className="ms-2 text-dark bg-light px-1.5 py-0.5 rounded border small">{duoAnimDef.id}</code>
+                    <code className="ms-2 text-dark bg-light px-1.5 py-0.5 rounded border small user-select-all" title="Double-cliquer pour tout sélectionner">{duoAnimDef.id}</code>
                   </div>
                 </div>
                 <div className="d-flex flex-wrap align-items-center gap-2 font-monospace small">
@@ -653,10 +653,10 @@ export function AnimFrameController({
                     </div>
                     <div className="fw-semibold text-truncate small">{defA?.label || duoAnimDef.animA}</div>
                     <div className="text-muted small mt-1 d-flex flex-column gap-0.5 font-monospace">
-                      <div><strong className="text-secondary">ID:</strong> <code>{duoAnimDef.animA}</code></div>
+                      <div><strong className="text-secondary">ID:</strong> <code className="user-select-all" title="Double-cliquer pour tout sélectionner">{duoAnimDef.animA}</code></div>
                       {defA?.path && (
                         <div className="text-truncate" title={defA.path}>
-                          <strong className="text-secondary">Fichier:</strong> 📁 {defA.path.split('/').pop()}
+                          <strong className="text-secondary">Fichier:</strong> <span className="user-select-all">📁 {defA.path.split('/').pop()}</span>
                         </div>
                       )}
                     </div>
@@ -674,10 +674,10 @@ export function AnimFrameController({
                     </div>
                     <div className="fw-semibold text-truncate small">{defB?.label || duoAnimDef.animB}</div>
                     <div className="text-muted small mt-1 d-flex flex-column gap-0.5 font-monospace">
-                      <div><strong className="text-secondary">ID:</strong> <code>{duoAnimDef.animB}</code></div>
+                      <div><strong className="text-secondary">ID:</strong> <code className="user-select-all" title="Double-cliquer pour tout sélectionner">{duoAnimDef.animB}</code></div>
                       {defB?.path && (
                         <div className="text-truncate" title={defB.path}>
-                          <strong className="text-secondary">Fichier:</strong> 📁 {defB.path.split('/').pop()}
+                          <strong className="text-secondary">Fichier:</strong> <span className="user-select-all">📁 {defB.path.split('/').pop()}</span>
                         </div>
                       )}
                     </div>
@@ -689,7 +689,7 @@ export function AnimFrameController({
             <div className="d-flex flex-wrap align-items-center gap-2">
               <div>
                 <strong className="text-muted text-uppercase me-1 small">ID:</strong>
-                <code className="text-dark bg-light px-1.5 py-0.5 rounded border">
+                <code className="text-dark bg-light px-1.5 py-0.5 rounded border user-select-all" title="Double-cliquer pour tout sélectionner">
                   {def?.id || (isTPose ? 't-pose' : displayName)}
                 </code>
               </div>
@@ -704,7 +704,7 @@ export function AnimFrameController({
               {def?.path && (
                 <div>
                   <strong className="text-muted text-uppercase me-1 small">Fichier:</strong>
-                  <code className="text-muted bg-light px-1.5 py-0.5 rounded border text-truncate d-inline-block align-middle" style={{ maxWidth: '240px' }} title={def.path}>
+                  <code className="text-muted bg-light px-1.5 py-0.5 rounded border text-truncate d-inline-block align-middle user-select-all" style={{ maxWidth: '240px' }} title={def.path}>
                     📁 {def.path.split('/').pop()}
                   </code>
                 </div>
@@ -735,7 +735,7 @@ export function AnimFrameController({
                 <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
                   <strong className="text-muted text-uppercase me-1 small">🏷️ Aliases ({def.aliases.length}):</strong>
                   {def.aliases.map(alias => (
-                    <span key={alias} className="badge bg-light text-secondary border font-monospace">
+                    <span key={alias} className="badge bg-light text-secondary border font-monospace user-select-all">
                       {alias}
                     </span>
                   ))}
@@ -745,7 +745,7 @@ export function AnimFrameController({
                 <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
                   <strong className="text-muted text-uppercase me-1 small">🔖 Tags ({def.tags.length}):</strong>
                   {def.tags.map(tag => (
-                    <span key={tag} className="badge bg-primary-subtle text-primary border border-primary-subtle">
+                    <span key={tag} className="badge bg-primary-subtle text-primary border border-primary-subtle user-select-all">
                       #{tag}
                     </span>
                   ))}

@@ -47,7 +47,7 @@ export function useAgentController(
   onComplete?: () => void,
   spawnDelay: number = 0,
   hasSkyDrop: boolean = false,
-  landingAnim: string = 'pistol-kneel-to-stand'
+  landingAnim: string = 'kneeling-inspecting'
 ) {
   const firstCoords = (scenario && scenario.length > 0) ? resolveInstructionCoords(scenario[0], null) : null;
   const initialPos = (firstCoords && (firstCoords.tx !== 0 || firstCoords.tz !== 0))
@@ -78,7 +78,9 @@ export function useAgentController(
     y: deployment.y,
     z: initialPos.z,
     rotY: initialPos.rotY,
-    animation: isCurrentlyFalling ? 'falling' : (firstCoords?.anim ? resolveAnimationId(firstCoords.anim) : 'idle'),
+    animation: isCurrentlyFalling
+      ? (deployment.timer <= 3.0 ? 'falling-idle' : 'falling')
+      : (firstCoords?.anim ? resolveAnimationId(firstCoords.anim) : 'idle'),
     isSpawned: !isStillWaiting
   });
 
@@ -285,7 +287,7 @@ export function useAgentController(
       stateRef.current.rotY = real.rotY;
       stateRef.current.isSpawned = deployment.status !== 'WAITING';
       stateRef.current.animation = deployment.status === 'FALLING'
-        ? 'falling'
+        ? (deployment.timer <= 3.0 ? 'falling-idle' : 'falling')
         : (deployment.status === 'WAITING' ? 'idle' : (stepCoords?.anim ? resolveAnimationId(stepCoords.anim) : 'idle'));
       startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
     }
@@ -389,7 +391,7 @@ export function useAgentController(
       if (timerRef.current <= 0) {
         stateRef.current.y = startPosRef.current?.y ?? 0;
         statusRef.current = 'LANDING';
-        const landingDuration = getAnimationDef(landingAnim)?.duration ?? 1.4;
+        const landingDuration = getAnimationDef(landingAnim)?.duration ?? 5.0;
         timerRef.current = landingDuration;
         deployment.status = 'LANDING';
         deployment.timer = landingDuration;
@@ -400,7 +402,7 @@ export function useAgentController(
         stateRef.current.y = targetY + (2500 - targetY) * (p_inv * p_inv * p_inv);
         deployment.y = stateRef.current.y;
       }
-      stateRef.current.animation = 'falling';
+      stateRef.current.animation = timerRef.current <= 3.0 ? 'falling-idle' : 'falling';
       return stateRef.current;
     }
 
