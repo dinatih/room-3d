@@ -753,10 +753,10 @@ export function SingleCharacter({
 
     const targetDef = getAnimationDef(target);
     const defaultOffset = targetDef?.defaultOffset;
-    const targetSceneX = (!laraGrid && defaultOffset) ? baseScenePosRef.current.x + defaultOffset[0] : baseScenePosRef.current.x;
-    const targetSceneY = (!laraGrid && defaultOffset) ? baseScenePosRef.current.y + defaultOffset[1] : baseScenePosRef.current.y;
-    const targetSceneZ = (!laraGrid && defaultOffset) ? baseScenePosRef.current.z + defaultOffset[2] : baseScenePosRef.current.z;
-    const targetRotYOffset = (!laraGrid && targetDef?.defaultRotYOffset !== undefined) ? targetDef.defaultRotYOffset : 0;
+    const targetSceneX = defaultOffset ? baseScenePosRef.current.x + defaultOffset[0] : baseScenePosRef.current.x;
+    const targetSceneY = defaultOffset ? baseScenePosRef.current.y + defaultOffset[1] : baseScenePosRef.current.y;
+    const targetSceneZ = defaultOffset ? baseScenePosRef.current.z + defaultOffset[2] : baseScenePosRef.current.z;
+    const targetRotYOffset = targetDef?.defaultRotYOffset !== undefined ? targetDef.defaultRotYOffset : 0;
 
     const offsetLerpFactor = Math.min(1.0, delta * 8.0);
     scene.position.x = THREE.MathUtils.lerp(scene.position.x, targetSceneX, offsetLerpFactor);
@@ -818,7 +818,7 @@ export function SingleCharacter({
           to.clampWhenFinished = false;
         }
 
-        if (laraGrid) {
+        if (laraGrid || isPreview) {
           if (from) from.stop();
           scene.traverse((c: any) => {
             if (c.isBone) {
