@@ -1,19 +1,49 @@
 /**
  * animationTransitions.ts
  * Système intelligent de transition entre animations :
- * - Détection des postures (debout, assis, couché, accroupi, locomotion)
- * - Choix des clips de transition dédiés (in-between comme sit-to-stand, crouch-to-stand, getting-up)
+ * - Détection des postures basée prioritairement sur les tags officiels du registre d'animations (animationRegistry)
+ * - Choix des clips de transition dédiés (in-between comme sit-to-stand, crouch-to-stand, getting-up) avec identifiants canoniques
  * - Calcul adaptatif de la durée de crossfade (blendDuration)
  */
+
+import { getAnimationDef } from './animationResolver';
 
 export type CharacterPosture = 'standing' | 'sitting' | 'laying' | 'crouching' | 'locomotion';
 
 /**
- * Détermine la posture générale d'une animation à partir de son identifiant ou chemin.
+ * Détermine la posture générale d'une animation en s'appuyant d'abord sur ses tags officiels dans le registre,
+ * avec un repli textuel si l'animation n'est pas indexée.
  */
 export function getAnimationPosture(animIdOrPath: string | null | undefined): CharacterPosture {
   if (!animIdOrPath) return 'standing';
-  const name = animIdOrPath.toLowerCase();
+
+  const def = getAnimationDef(animIdOrPath);
+  if (def && Array.isArray(def.tags)) {
+    const tags = def.tags.map(t => t.toLowerCase());
+
+    // 1. Tags prioritaires
+    if (tags.some(t => t === 'sitting' || t.includes('sitting') || t.includes('seated'))) {
+      if (def.id.includes('sit-to-stand') || def.id.includes('stand-to-sit')) return 'standing';
+      return 'sitting';
+    }
+
+    if (tags.some(t => t === 'laying' || t.includes('laying') || t.includes('sleep') || t.includes('bed'))) {
+      if (def.id.includes('stand-up') || def.id.includes('getting-up')) return 'standing';
+      return 'laying';
+    }
+
+    if (tags.some(t => t === 'crouch' || t.includes('crouch') || t.includes('kneel'))) {
+      if (def.id.includes('crouch-to-stand') || def.id.includes('kneel-to-stand')) return 'standing';
+      return 'crouching';
+    }
+
+    if (tags.some(t => t === 'locomotion' || t === 'walk' || t === 'run' || t.includes('walk') || t.includes('run'))) {
+      return 'locomotion';
+    }
+  }
+
+  // 2. Repli par analyse sémantique du nom/identifiant si absent du registre ou tags trop génériques
+  const name = (def?.id || animIdOrPath).toLowerCase();
 
   if (
     name.includes('sit') ||
@@ -22,7 +52,7 @@ export function getAnimationPosture(animIdOrPath: string | null | undefined): Ch
     name.includes('bench')
   ) {
     if (name.includes('situps')) return 'laying';
-    if (name.includes('sit-to-stand') || name.includes('sit_to_stand')) return 'standing';
+    if (name.includes('sit-to-stand') || name.includes('sit_to_stand') || name.includes('stand-to-sit')) return 'standing';
     return 'sitting';
   }
 
@@ -70,7 +100,7 @@ export function getAnimationPosture(animIdOrPath: string | null | undefined): Ch
 
 /**
  * Tente de trouver un clip d'animation de transition dédié ("in-between") entre deux animations.
- * Retourne l'animation de transition et sa durée estimée si trouvée.
+ * Retourne l'animation de transition (ID canonique) et sa durée estimée si trouvée.
  */
 export function getDedicatedTransitionClip(
   fromAnim: string | null | undefined,
@@ -90,10 +120,9 @@ export function getDedicatedTransitionClip(
 
   // Cas 2 : De debout vers assis
   if ((fromPosture === 'standing' || fromPosture === 'locomotion') && toPosture === 'sitting') {
-    // Si stand_to_sit est disponible
     return {
-      transitionAnim: 'animations/poses_idles/miley_armature_stand_to_sit.glb',
-      duration: 2.0,
+      transitionAnim: 'stand-to-sit',
+      duration: 2.5,
     };
   }
 

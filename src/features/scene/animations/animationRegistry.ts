@@ -1581,6 +1581,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'miley-armature-stand-to-sit',
+    aliases: ['stand-to-sit'],
     path: 'animations/poses_idles/miley_armature_stand_to_sit.glb',
     label: `[MILEY] Stand To Sit (304f / 5.1s, 508KB)`,
     tags: ['poses-idles', 'sitting'],
