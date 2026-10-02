@@ -7,14 +7,14 @@
 
 import { getAnimationDef } from './animationResolver';
 
-const EXIT_TRANSITIONS: Record<string, { anim: string; duration: number }> = {
-  sitting: { anim: 'sit-to-stand', duration: 2.1 },
-  laying: { anim: 'stand-up', duration: 2.4 },
-  crouch: { anim: 'crouch-to-stand', duration: 1.8 },
+const EXIT_TRANSITIONS: Record<string, string> = {
+  sitting: 'sit-to-stand',
+  laying: 'stand-up',
+  crouch: 'crouch-to-stand',
 };
 
 /**
- * Retourne l'animation de sortie (in-between) correspondant aux tags de l'animation active.
+ * Retourne l'animation de sortie (in-between) et sa durée dynamique lue depuis le registre.
  */
 export function getExitTransition(animKey: string | null | undefined): { anim: string; duration: number } | null {
   if (!animKey) return null;
@@ -27,8 +27,11 @@ export function getExitTransition(animKey: string | null | undefined): { anim: s
   }
 
   for (const tag of def.tags) {
-    if (EXIT_TRANSITIONS[tag]) {
-      return EXIT_TRANSITIONS[tag];
+    const exitAnimId = EXIT_TRANSITIONS[tag];
+    if (exitAnimId) {
+      const exitDef = getAnimationDef(exitAnimId);
+      const duration = exitDef?.duration ?? 2.0;
+      return { anim: exitAnimId, duration };
     }
   }
 
