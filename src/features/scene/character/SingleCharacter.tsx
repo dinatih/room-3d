@@ -30,7 +30,7 @@ import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController } from '../ai/useAgentController';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
-import { resolveAnimationId, getAnimationDef } from '../animations/animationResolver';
+import { resolveAnimationId, getAnimationOriginTransform } from '../animations/animationResolver';
 import { getCrossfadeDuration } from '../animations/animationTransitions';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 import { CharacterThoughtBubble } from '../CharacterThoughtBubble';
@@ -188,6 +188,7 @@ export function SingleCharacter({
   }, [isActive]);
 
   const groupRef = useRef<THREE.Group>(null!);
+  const animOriginRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
   const baseScenePosRef = useRef<THREE.Vector3>(new THREE.Vector3());
   const prevFirstPersonRef = useRef<boolean | null>(null);
@@ -486,6 +487,10 @@ export function SingleCharacter({
       currentAnimClip.current = null;
       duoSessionManager.leaveDuoZone(id);
       if (groupRef.current) groupRef.current.rotation.set(0, 0, 0);
+      if (animOriginRef.current) {
+        animOriginRef.current.position.set(0, 0, 0);
+        animOriginRef.current.rotation.set(0, 0, 0);
+      }
       scene.position.copy(baseScenePosRef.current);
       scene.rotation.set(0, 0, 0);
       scene.traverse((c: any) => {
@@ -751,18 +756,21 @@ export function SingleCharacter({
 
     let target = resolveAnimationId(rawTarget);
 
-    const targetDef = getAnimationDef(target);
-    const defaultOffset = targetDef?.defaultOffset;
-    const targetSceneX = defaultOffset ? baseScenePosRef.current.x + defaultOffset[0] : baseScenePosRef.current.x;
-    const targetSceneY = defaultOffset ? baseScenePosRef.current.y + defaultOffset[1] : baseScenePosRef.current.y;
-    const targetSceneZ = defaultOffset ? baseScenePosRef.current.z + defaultOffset[2] : baseScenePosRef.current.z;
-    const targetRotYOffset = targetDef?.defaultRotYOffset !== undefined ? targetDef.defaultRotYOffset : 0;
-
-    const offsetLerpFactor = Math.min(1.0, delta * 8.0);
-    scene.position.x = THREE.MathUtils.lerp(scene.position.x, targetSceneX, offsetLerpFactor);
-    scene.position.y = THREE.MathUtils.lerp(scene.position.y, targetSceneY, offsetLerpFactor);
-    scene.position.z = THREE.MathUtils.lerp(scene.position.z, targetSceneZ, offsetLerpFactor);
-    scene.rotation.y = THREE.MathUtils.lerp(scene.rotation.y, targetRotYOffset, offsetLerpFactor);
+    const { offset: targetOffset, rotY: targetRotY } = getAnimationOriginTransform(target);
+    if (animOriginRef.current) {
+      if (isPreview || laraGrid) {
+        // En mode Preview 3D ou LaraGrid, calage spatial instantané exact
+        animOriginRef.current.position.set(targetOffset[0], targetOffset[1], targetOffset[2]);
+        animOriginRef.current.rotation.y = targetRotY;
+      } else {
+        // En scène principale interactive, interpolation fluide
+        const offsetLerpFactor = Math.min(1.0, delta * 8.0);
+        animOriginRef.current.position.x = THREE.MathUtils.lerp(animOriginRef.current.position.x, targetOffset[0], offsetLerpFactor);
+        animOriginRef.current.position.y = THREE.MathUtils.lerp(animOriginRef.current.position.y, targetOffset[1], offsetLerpFactor);
+        animOriginRef.current.position.z = THREE.MathUtils.lerp(animOriginRef.current.position.z, targetOffset[2], offsetLerpFactor);
+        animOriginRef.current.rotation.y = THREE.MathUtils.lerp(animOriginRef.current.rotation.y, targetRotY, offsetLerpFactor);
+      }
+    }
 
     const isTPose = target === 't-pose';
 
@@ -818,40 +826,31 @@ export function SingleCharacter({
           to.clampWhenFinished = false;
         }
 
-        if (laraGrid || isPreview) {
+        if (laraGrid) {
           if (from) from.stop();
-          scene.traverse((c: any) => {
-            if (c.isBone) {
-              if (c.userData.restPos) c.position.copy(c.userData.restPos);
-              if (c.userData.restQuat) c.quaternion.copy(c.userData.restQuat);
-              if (c.userData.restScale) c.scale.copy(c.userData.restScale);
-            }
-          });
-          scene.updateMatrixWorld(true);
           to.reset().play();
           to.setEffectiveWeight(1);
-          const store = useAnimPreviewStore.getState();
-          const clip = to.getClip();
-          if (clip && clip.duration > 0) {
-            to.time = store.currentTime % clip.duration;
-          }
         } else {
           if (from) {
             to.reset();
             to.setEffectiveTimeScale(1);
             to.setEffectiveWeight(1);
-            to.crossFadeFrom(from, blendDuration, true);
+            const crossDuration = isPreview ? Math.min(blendDuration, 0.15) : blendDuration;
+            to.crossFadeFrom(from, crossDuration, true);
             to.play();
           } else {
-            to.reset().fadeIn(blendDuration).play();
+            to.reset().fadeIn(isPreview ? 0.1 : blendDuration).play();
             to.setEffectiveWeight(1);
           }
         }
         activeActionName.current = target;
 
         const isControlledByStore = isPreview || laraGrid;
-        if (isControlledByStore && !useAnimPreviewStore.getState().isPlaying) {
-          to.setEffectiveWeight(1);
+        if (isControlledByStore) {
+          const store = useAnimPreviewStore.getState();
+          if (store.isPlaying && !store.isScrubbing) {
+            store.setCurrentTime(0);
+          }
         }
 
         if (isActive && !isPreview && !laraGrid && !isTemporaryLoadingFallback && lastLoggedAnimRef.current !== target) {
@@ -913,7 +912,8 @@ export function SingleCharacter({
         const act = actions[activeActionName.current];
         const clip = act.getClip();
         if (clip && clip.duration > 0) {
-          const isMaster = isPreview ? true : (isActive || characterIndex === 0);
+          const hasActivePreview = typeof document !== 'undefined' && Boolean(document.querySelector('.inventory-preview-container'));
+          const isMaster = isPreview ? true : (!hasActivePreview && (isActive || characterIndex === 0));
           if (isMaster) {
             const cleanName = duoAnimDef
               ? duoAnimDef.label
@@ -1124,7 +1124,9 @@ export function SingleCharacter({
         }
       }}
     >
-      <primitive ref={modelRef} object={scene} />
+      <group ref={animOriginRef}>
+        <primitive ref={modelRef} object={scene} />
+      </group>
 
       {headBone && (variant === 'vivida' || id === 'vivida') && (
         <CharacterBaseballCap attachTo={headBone} />

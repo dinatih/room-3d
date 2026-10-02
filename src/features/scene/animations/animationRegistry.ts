@@ -344,7 +344,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['deep-sleep', 'sleeping-pose'],
     tags: ['laying', 'laying-front', 'bed', 'sleep'],
     duration: 1.7,
-    defaultRotYOffset: 0,
   },
   {
     id: 'male-laying-pose-1',
@@ -2807,6 +2806,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `Falling Idle (22f / 0.7s, 79KB)`,
     tags: ['poses-idles'],
     duration: 0.7,
+    defaultRotYOffset: 1,
   },
   {
     id: 'female-dance-pose',

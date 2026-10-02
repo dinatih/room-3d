@@ -372,3 +372,22 @@ export function resolveSlotAnimation(slot: {
     offset: fallbackDef?.defaultOffset,
   };
 }
+
+export interface AnimationOriginTransform {
+  offset: [number, number, number];
+  rotY: number;
+}
+
+/**
+ * Retourne le décalage spatial (offset [x, y, z]) et l'orientation (rotY en radians)
+ * natifs d'une animation tels que déclarés dans le registre d'animations.
+ */
+export function getAnimationOriginTransform(keyOrId?: string): AnimationOriginTransform {
+  if (!keyOrId) return { offset: [0, 0, 0], rotY: 0 };
+  const def = getAnimationDef(keyOrId);
+  return {
+    offset: def?.defaultOffset ? [def.defaultOffset[0], def.defaultOffset[1], def.defaultOffset[2]] : [0, 0, 0],
+    rotY: def?.defaultRotYOffset !== undefined ? def.defaultRotYOffset : 0,
+  };
+}
+
