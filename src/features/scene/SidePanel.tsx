@@ -532,9 +532,6 @@ export function SidePanel({
           {profileSectionContent}
         </Group>
 
-        {/* ── Dev Tools / Perf ── */}
-        <DevToolsGroups Group={Group} />
-
         <Group emoji="📷" title="Vues">{viewsSectionContent}</Group>
         <Group emoji="📑" title="Calques" extra={layersHeaderButtons}>{layersSectionContent}</Group>
         <Group emoji="🎮" title="Interactif">{interactiveSectionContent}</Group>

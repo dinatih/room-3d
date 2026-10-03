@@ -6,15 +6,16 @@ export interface GroupProps {
   defaultOpen?: boolean;
   extra?: React.ReactNode;
   children: React.ReactNode;
+  headerPadding?: string;
 }
 
-export function Group({ emoji, title, defaultOpen = false, extra, children }: GroupProps) {
+export function Group({ emoji, title, defaultOpen = false, extra, children, headerPadding = 'py-2 px-3' }: GroupProps) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="card shadow-sm glass-card overflow-hidden">
       <div className="card-header p-0 border-0 bg-transparent d-flex align-items-center justify-content-between">
         <button
-          className={`btn btn-sm ${extra ? 'flex-shrink-0' : 'flex-grow-1'} text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none text-uppercase small`}
+          className={`btn btn-sm ${extra ? 'flex-shrink-0' : 'flex-grow-1'} text-start ${headerPadding} fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none text-uppercase small`}
           onClick={() => setOpen(!open)}
         >
           <span>{emoji} {title}</span>

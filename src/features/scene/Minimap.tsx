@@ -17,8 +17,12 @@ import { CHARACTERS, isCharacterVisibleInMode } from './walkerConfig';
 import { useSceneStore } from './store/useSceneStore';
 import { isAppIdle } from './idleState';
 
-const SMALL_W_DESKTOP = 140;
-const SMALL_W_MOBILE  = 115;
+export const SMALL_W_DESKTOP = 140;
+export const SMALL_W_MOBILE  = 115;
+
+export interface MinimapProps {
+  embedded?: boolean;
+}
 
 // ── Icône avion (plan 2D) ─────────────────────────────────────────────────────
 function drawPlaneIcon(
@@ -218,7 +222,7 @@ function drawMinimap(
 
 // ── Composant HTML principal ──────────────────────────────────────────────────
 
-export function Minimap() {
+export function Minimap({ embedded = false }: MinimapProps = {}) {
   const isMobile = useIsMobile();
   const floatingCanvasRef = useRef<HTMLCanvasElement>(null);
   const expandedCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -321,6 +325,21 @@ export function Minimap() {
   }, [expanded]);
 
   if (isCollapsed) {
+    if (embedded) {
+      return (
+        <div className="w-100">
+          <button
+            onClick={() => setIsCollapsed(false)}
+            className="btn btn-dark shadow-sm glass-card border-secondary text-white d-flex align-items-center justify-content-between rounded-3 px-2 py-1.5 w-100"
+            style={{ cursor: 'pointer', opacity: 0.95 }}
+            title="Afficher la minimap (Touche 8)"
+          >
+            <span style={{ fontSize: '11px', fontWeight: 600 }}>🗺️ Plan 2D [8]</span>
+            <span style={{ fontSize: '11px' }}>➕</span>
+          </button>
+        </div>
+      );
+    }
     return (
       <div
         className="position-fixed"
@@ -401,11 +420,14 @@ export function Minimap() {
         </div>
       )}
 
-      {/* FLOATING MINIMAP: Bottom-Left on mobile (away from D-Pad), Bottom-Right on desktop */}
+      {/* MINIMAP CARD: Embedded dans le RightSidePanel sur desktop, ou flottant (Bottom-Left sur mobile / Bottom-Right) */}
       {!expanded && (
         <div
-          className="position-fixed glass-card shadow-sm p-1 rounded-3 overflow-hidden"
-          style={{
+          className={`${embedded ? 'position-relative' : 'position-fixed'} glass-card shadow-sm p-1 rounded-3 overflow-hidden`}
+          style={embedded ? {
+            width: smallW + 8,
+            pointerEvents: 'auto',
+          } : {
             bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 0.75rem)' : 20,
             left: isMobile ? 12 : undefined,
             right: isMobile ? undefined : 20,

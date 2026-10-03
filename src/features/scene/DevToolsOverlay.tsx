@@ -4,7 +4,7 @@
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { devState } from './devState';
-import { APP_IDLE_TIMEOUT_SECONDS, useAppIdle } from './idleState';
+import { useAppIdle } from './idleState';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -14,12 +14,12 @@ function heatColor(v: number, warn: number, danger: number) {
 
 // ── FPS canvas ────────────────────────────────────────────────────────────────
 
-const FPS_W = 164, FPS_H = 46;
+const FPS_W = 140, FPS_H = 46;
 
 export function drawFps(canvas: HTMLCanvasElement, samples: number[]) {
   const gfx = canvas.getContext('2d');
   if (!gfx) return;
-  const W = FPS_W, H = FPS_H;
+  const W = canvas.width || FPS_W, H = canvas.height || FPS_H;
   gfx.clearRect(0, 0, W, H);
   gfx.fillStyle = '#0f172a';
   gfx.fillRect(0, 0, W, H);
@@ -46,12 +46,12 @@ export function drawFps(canvas: HTMLCanvasElement, samples: number[]) {
 
 const sectionHeaderStyle: React.CSSProperties = {
   color: '#0284c7', fontSize: 10, fontWeight: 700,
-  letterSpacing: '.5px', padding: '0 10px 2px',
+  letterSpacing: '.5px', padding: '0 8px 2px',
 };
 
 function StatRow({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 11 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 8px', fontSize: 11 }}>
       <span style={{ color: '#374151', fontWeight: 500 }}>{label}</span>
       <span style={{ color: color ?? '#111827', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
@@ -61,11 +61,12 @@ function StatRow({ label, value, color }: { label: string; value: string | numbe
 // ── Export principal ──────────────────────────────────────────────────────────
 
 /**
- * Groupes DevTools à insérer dans SidePanel.
- * Accepte le composant Group de SidePanel pour partager les styles.
+ * Groupes DevTools à insérer dans SidePanel ou RightSidePanel.
+ * Accepte le composant Group pour partager les styles.
  */
-export function DevToolsGroups({ Group }: {
-  Group: React.ComponentType<{ emoji: string; title: string; defaultOpen?: boolean; children: React.ReactNode }>;
+export function DevToolsGroups({ Group, compact = false }: {
+  Group: React.ComponentType<{ emoji: string; title: string; defaultOpen?: boolean; headerPadding?: string; children: React.ReactNode }>;
+  compact?: boolean;
 }) {
   const [, setTick] = useState(0);
   const fpsCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -104,22 +105,22 @@ export function DevToolsGroups({ Group }: {
 
   return (
     <>
-      <Group emoji="📊" title="Perf" defaultOpen>
+      <Group emoji="📊" title="Perf" defaultOpen headerPadding={compact ? 'py-1.5 px-2' : undefined}>
         <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
           <canvas
             ref={fpsCanvasCallback}
             width={FPS_W} height={FPS_H}
-            style={{ display: 'block', margin: '0 8px 4px', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
+            style={{ display: 'block', margin: '0 auto 4px', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.15)', width: `${FPS_W}px`, height: `${FPS_H}px` }}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px 6px', fontSize: 11 }}>
-            <span style={{ color: isIdle ? '#d97706' : fpsColor, fontWeight: 700 }}>{isIdle ? '0 FPS (veille)' : `${curFps} FPS`}</span>
-            <span style={{ color: '#4b5563', fontWeight: 500 }}>min:{fpsMin} max:{fpsMax}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 8px 6px', fontSize: 11 }}>
+            <span style={{ color: isIdle ? '#d97706' : fpsColor, fontWeight: 700 }}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
+            <span style={{ color: '#4b5563', fontWeight: 500, fontSize: 10 }}>min:{fpsMin} max:{fpsMax}</span>
           </div>
 
           {/* RENDU — stats GPU principales */}
           <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 4 }}>
             <div style={sectionHeaderStyle}>
-              RENDU <span style={{ color: isIdle ? '#d97706' : '#6b7280', fontWeight: isIdle ? 600 : 400 }}>{isIdle ? `· veille (${APP_IDLE_TIMEOUT_SECONDS}s inactif)` : '· live'}</span>
+              RENDU <span style={{ color: isIdle ? '#d97706' : '#6b7280', fontWeight: isIdle ? 600 : 400 }}>{isIdle ? `· veille` : '· live'}</span>
             </div>
             <StatRow label="Draw calls" value={isIdle ? '0' : devState.drawCalls.toLocaleString()} color={isIdle ? '#6b7280' : heatColor(devState.drawCalls, 200, 500)} />
             <StatRow label="Triangles"  value={isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'} color={isIdle ? '#6b7280' : heatColor(devState.triangles, 1_000_000, 2_000_000)} />
@@ -131,10 +132,10 @@ export function DevToolsGroups({ Group }: {
             style={{
               display: 'block', width: '100%', textAlign: 'left',
               background: 'transparent', border: 'none',
-              color: '#1d4ed8', fontSize: 10, fontWeight: 600, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
+              color: '#1d4ed8', fontSize: 10, fontWeight: 600, padding: '4px 8px', cursor: 'pointer', marginTop: 4,
             }}
           >
-            {showDetails ? '▼ Moins d\'infos' : '▶ Plus d\'infos'}
+            {showDetails ? '▼ Moins' : '▶ Plus d\'infos'}
           </button>
 
           {showDetails && (

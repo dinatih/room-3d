@@ -15,6 +15,7 @@ import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
 import { parseUrlHideUI, updateUrlHideUI } from '@features/scene/camera/cameraUrlParams';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
+import { RightSidePanel }   from '@features/scene/RightSidePanel';
 import { Minimap }          from '@features/scene/Minimap';
 import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
@@ -847,7 +848,8 @@ export function Studio() {
               }
             </div>
           )}
-          <Minimap />
+          <RightSidePanel />
+          {isMobile && <Minimap />}
           {showInventory && (
             <Suspense fallback={null}>
               <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
