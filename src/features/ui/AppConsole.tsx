@@ -153,7 +153,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         onClick={() => { if (!visible) setVisible(true); }}
         title={!visible ? 'Ouvrir la console App Logs (B)' : undefined}
       >
-        <div className="d-flex align-items-center gap-1">
+        <div className="d-flex align-items-center gap-2">
           {visible && (
             <button
               type="button"
@@ -171,6 +171,18 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
             <span>🤖</span>
             <span>APP LOGS</span>
           </span>
+          {!visible && (
+            <span
+              className="fw-bold small px-1 rounded d-flex align-items-center gap-1"
+              style={{
+                color: charColor,
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                border: `1px solid ${charColor}66`,
+              }}
+            >
+              {charDisplayName}
+            </span>
+          )}
         </div>
 
         {visible && (
