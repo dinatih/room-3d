@@ -140,7 +140,7 @@ export function VirtualDPad() {
       onContextMenu={e => e.preventDefault()}
       style={{
         position: 'fixed',
-        bottom: 'calc(64px + env(safe-area-inset-bottom) + 12px)',
+        bottom: 'calc(3.75rem + env(safe-area-inset-bottom) + 54px)',
         right: 16,
         width: BASE_SIZE,
         height: BASE_SIZE,
