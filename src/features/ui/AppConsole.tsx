@@ -1,5 +1,5 @@
 /**
- * AppConsole.tsx — Console de debug fixée en haut de l'écran (pleine largeur hors SidePanel).
+ * AppConsole.tsx — Console de debug fixée en bas à droite de l'écran.
  * Affiche les logs applicatifs avec horodatage, couleurs par tag et filtre Bulle Think.
  */
 import { useState, useEffect, useRef } from 'react';
@@ -70,7 +70,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
   const logAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const savedHeightRef = useRef(110);
+  const savedHeightRef = useRef(180);
 
   // Écoute des CustomEvents 'app-log'
   useEffect(() => {
@@ -123,7 +123,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
       })
     : logs;
 
-  // Redimensionnement vertical par drag
+  // Redimensionnement vertical par drag (vers le haut car fixé en bas)
   const handleResizePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -131,7 +131,8 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     const startH = containerRef.current ? containerRef.current.offsetHeight : savedHeightRef.current;
 
     const onPointerMove = (ev: PointerEvent) => {
-      const newH = Math.max(60, Math.min(window.innerHeight * 0.85, startH + (ev.clientY - startY)));
+      const maxAllowed = isMobile ? window.innerHeight * 0.5 : window.innerHeight * 0.75;
+      const newH = Math.max(60, Math.min(maxAllowed, startH - (ev.clientY - startY)));
       savedHeightRef.current = newH;
       if (containerRef.current) containerRef.current.style.height = `${newH}px`;
     };
@@ -150,18 +151,20 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   return (
     <div
       ref={containerRef}
-      className={`position-fixed top-0 end-0 font-monospace d-flex flex-column shadow-lg overflow-hidden ${
-        visible ? 'border-start border-bottom border-white border-opacity-10' : ''
-      }`}
+      className="position-fixed font-monospace d-flex flex-column shadow-lg overflow-hidden rounded-3 border border-white border-opacity-15"
       style={{
-        left: visible ? (isMobile ? 0 : 280) : 'auto',
+        bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' : 16,
+        right: isMobile ? 8 : 16,
+        left: 'auto',
+        width: visible ? (isMobile ? 'calc(100vw - 16px)' : 'min(520px, calc(100vw - 32px))') : 'auto',
+        maxWidth: isMobile ? 'calc(100vw - 16px)' : 'min(520px, calc(100vw - 32px))',
         height: visible ? `${savedHeightRef.current}px` : 'auto',
         minHeight: visible ? '60px' : 'auto',
-        maxHeight: visible ? '85vh' : 'auto',
+        maxHeight: isMobile ? '50vh' : '75vh',
         zIndex: 9999,
-        borderBottomLeftRadius: visible ? (isMobile ? '0' : '4px') : '4px',
         backgroundColor: 'rgba(13, 17, 23, 0.96)',
-        boxShadow: visible ? '0 8px 24px rgba(0, 0, 0, 0.65)' : undefined,
+        backdropFilter: 'blur(8px)',
+        boxShadow: visible ? '0 8px 32px rgba(0, 0, 0, 0.75)' : '0 2px 8px rgba(0, 0, 0, 0.35)',
         fontSize: '11px',
       }}
     >
@@ -176,14 +179,14 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           {visible && (
             <button
               type="button"
-              className="btn btn-sm btn-outline-secondary py-0 px-1 border-opacity-50 lh-1 small text-white-50"
+              className="btn btn-sm btn-outline-secondary py-0 px-1 border-opacity-50 lh-1 small text-white-50 ms-3"
               onClick={(e) => {
                 e.stopPropagation();
                 setVisible(false);
               }}
               title="Masquer la console (B)"
             >
-              ✕
+              ▼
             </button>
           )}
           <span className="text-success fw-bold text-uppercase d-flex align-items-center gap-1 small flex-shrink-0">
@@ -210,6 +213,12 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
               </option>
             ))}
           </select>
+
+          {!visible && (
+            <span className="text-white-50 small ps-1" style={{ fontSize: '10px' }}>
+              ▲ [B]
+            </span>
+          )}
         </div>
 
         {visible && (
@@ -311,12 +320,12 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         </div>
       )}
 
-      {/* Poignée de redimensionnement manuelle (bas-gauche) */}
+      {/* Poignée de redimensionnement manuelle (haut-gauche) */}
       {visible && (
         <div
           onPointerDown={handleResizePointerDown}
-          title="Redimensionner la console (Glisser)"
-          className="position-absolute bottom-0 start-0 d-flex align-items-end justify-content-start p-1 text-success opacity-75 user-select-none"
+          title="Redimensionner la console (Glisser vers le haut/bas)"
+          className="position-absolute top-0 start-0 d-flex align-items-start justify-content-start p-1 text-success opacity-75 user-select-none"
           style={{
             width: 22,
             height: 22,
@@ -326,7 +335,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           }}
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M1 15h14v-2H1v2zm0-4h10V9H1v2zm0-4h6V5H1v2z" />
+            <path d="M1 1h14v2H1V1zm0 4h10v2H1V5zm0 4h6v2H1V9z" />
           </svg>
         </div>
       )}
