@@ -807,12 +807,13 @@ export function HoverOverlay() {
                       const extraChars = store.layers.extraCharacters ?? false;
                       const activeWalkerId = store.activeWalkerId;
                       const activeExtraIds = store.activeExtraIds;
+                      const activeMainIds = store.activeMainIds;
 
                       const candidateIds = Object.keys(cameraState.positions).filter(
                         (charId) =>
                           charId !== 'shiba' &&
                           charId !== 'robin' &&
-                          (isCharacterVisibleInMode(charId, laraCount, activeWalkerId, extraChars, activeExtraIds) ||
+                          (isCharacterVisibleInMode(charId, laraCount, activeWalkerId, extraChars, activeExtraIds, activeMainIds) ||
                             charId === activeWalkerId)
                       );
 

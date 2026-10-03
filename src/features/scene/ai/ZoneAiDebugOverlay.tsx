@@ -19,6 +19,7 @@ function ZoneAiDebugOverlayContent() {
   const layers = useSceneStore((s) => s.layers);
   const activeWalkerId = useSceneStore((s) => s.activeWalkerId);
   const activeExtraIds = useSceneStore((s) => s.activeExtraIds);
+  const activeMainIds = useSceneStore((s) => s.activeMainIds);
 
   const {
     selectedSlot,
@@ -61,10 +62,10 @@ function ZoneAiDebugOverlayContent() {
       (c) =>
         c.id !== 'shiba' &&
         c.id !== 'robin' &&
-        (isCharacterVisibleInMode(c.id, laraCount, activeWalkerId, extraChars, activeExtraIds) ||
+        (isCharacterVisibleInMode(c.id, laraCount, activeWalkerId, extraChars, activeExtraIds, activeMainIds) ||
           c.id === activeWalkerId)
     );
-  }, [layers.laraCount, layers.extraCharacters, activeWalkerId, activeExtraIds]);
+  }, [layers.laraCount, layers.extraCharacters, activeWalkerId, activeExtraIds, activeMainIds]);
 
   // Tous les SmartObjects avec leurs slots résolus
   const allObjects = useMemo(() => {

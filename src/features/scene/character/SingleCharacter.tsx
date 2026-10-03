@@ -111,6 +111,7 @@ export function SingleCharacter({
   const laraCount = useSceneStore(state => state.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15));
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
+  const activeMainIds = useSceneStore(state => state.activeMainIds);
   const showWallhack = useSceneStore(state => state.layers.wallhack);
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
@@ -651,7 +652,7 @@ export function SingleCharacter({
       const { x: targetX, y: targetY, z: targetZ } = getLaraGridPosition(characterIndex, totalCharacters);
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
-      const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds);
+      const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds, activeMainIds);
       groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode;
       currentAnimClip.current = walkerAnim || null;
       if (isVisibleInCountMode && !cameraState.walkerHidden && showAllLaraStyles) {
@@ -698,7 +699,7 @@ export function SingleCharacter({
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
         groupRef.current.rotation.y = agentState.rotY;
         currentAnimClip.current = agentState.animation;
-        const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds);
+        const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds, activeMainIds);
         groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
 
         if (agentState.isSpawned && isVisibleInCountMode) {

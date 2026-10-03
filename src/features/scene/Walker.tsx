@@ -44,6 +44,7 @@ function InternalWalker(props: WalkerProps) {
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
+  const activeMainIds = useSceneStore(state => state.activeMainIds);
 
   const characters = useMemo(() => {
     return CHARACTERS.map(char => ({
@@ -67,9 +68,9 @@ function InternalWalker(props: WalkerProps) {
       return characters.filter(char => char.id === props.previewCharacterId);
     }
     return characters.filter(char =>
-      showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters, activeExtraIds)
+      showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters, activeExtraIds, activeMainIds)
     );
-  }, [activeWalkerId, characters, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds]);
+  }, [activeWalkerId, characters, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds, activeMainIds]);
 
   return (
     <>

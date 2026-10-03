@@ -171,6 +171,41 @@ export function isExtraCharacter(c: CharacterConfig | string): boolean {
 /** Liste des personnages extras (ni Lara ni Xbot) */
 export const EXTRA_CHARACTERS = CHARACTERS.filter(isExtraCharacter);
 
+/** Liste des personnages principaux / non-extras (Laras et Xbot, 15 au total) */
+export const NON_EXTRA_CHARACTERS = CHARACTERS.filter(c => !isExtraCharacter(c));
+
+/** Calcule les identifiants actifs par défaut pour les non-extras selon le mode numérique */
+export function getDefaultNonExtraIds(
+  mode: LaraCountMode = 15,
+  activeWalkerId?: string
+): string[] {
+  if (mode === 1) return ['xbot'];
+  if (mode === 2) {
+    const list = ['xbot'];
+    if (activeWalkerId && !isExtraCharacter(activeWalkerId) && activeWalkerId !== 'xbot') {
+      list.push(activeWalkerId);
+    } else {
+      list.push('native');
+    }
+    return list;
+  }
+  if (mode === 4) {
+    const set = new Set(FOUR_PLAYERS_LARA_IDS);
+    if (activeWalkerId && !isExtraCharacter(activeWalkerId)) {
+      set.add(activeWalkerId);
+    }
+    return Array.from(set);
+  }
+  if (mode === 10) {
+    const list = NON_EXTRA_CHARACTERS.filter(c => !PERF_EXCLUDED_LARA_IDS.has(c.id)).map(c => c.id);
+    if (activeWalkerId && !isExtraCharacter(activeWalkerId) && !list.includes(activeWalkerId)) {
+      list.push(activeWalkerId);
+    }
+    return list;
+  }
+  return NON_EXTRA_CHARACTERS.map(c => c.id);
+}
+
 /** Groupe des 4 personnages Redmans */
 export const REDMAN_EXTRA_IDS = ['alex', 'david', 'james', 'lewis'] as const;
 
@@ -189,7 +224,8 @@ export function isCharacterVisibleInMode(
   mode: LaraCountMode = 15,
   activeWalkerId?: string,
   extraCharacters: boolean = false,
-  activeExtraIds?: string[] | Set<string>
+  activeExtraIds?: string[] | Set<string>,
+  activeMainIds?: string[] | Set<string>
 ): boolean {
   if (isExtraCharacter(id)) {
     if (activeWalkerId === id) return true;
@@ -199,6 +235,15 @@ export function isCharacterVisibleInMode(
     }
     return true;
   }
+
+  // Personnages réguliers (Laras et Xbot)
+  if (activeWalkerId === id) return true;
+
+  if (activeMainIds) {
+    return activeMainIds instanceof Set ? activeMainIds.has(id) : activeMainIds.includes(id);
+  }
+
+  // Fallback si activeMainIds n'est pas fourni (comportement par défaut)
   if (mode === 1) {
     // Mode 1 (Xbot seul) : Strictement Xbot uniquement (aucun modèle Lara n'est instancié/chargé)
     return id === 'xbot';

@@ -2,6 +2,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { CHARACTERS, isCharacterVisibleInMode, npcLabel } from '@features/scene/walkerConfig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 import { ExtraCharactersSelector } from './ExtraCharactersSelector';
+import { NonExtraCharactersSelector } from './NonExtraCharactersSelector';
 import { frameLaraGridCamera, frameLaraGridOrtho } from '@features/scene/character/laraGridUtils';
 import type { LayerState } from '../types';
 
@@ -34,6 +35,7 @@ export function CharacterSection({
 }: CharacterSectionProps) {
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
+  const activeMainIds = useSceneStore(state => state.activeMainIds);
   const extraStates = useSceneStore(state => state.extraStates);
 
   const layerBtn = (
@@ -72,7 +74,7 @@ export function CharacterSection({
                 useSceneStore.getState().setActiveWalkerId(e.target.value);
               }}
             >
-              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId, layers.extraCharacters ?? false, activeExtraIds) || c.id === activeWalkerId).map(c => (
+              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId, layers.extraCharacters ?? false, activeExtraIds, activeMainIds) || c.id === activeWalkerId).map(c => (
                 <option key={c.id} value={c.id} className="bg-light text-dark">
                   {npcLabel(c)}
                 </option>
@@ -428,7 +430,9 @@ export function CharacterSection({
               👥 Nombre de Personnages
             </span>
             <span className="badge bg-primary">
-              {(layers.laraCount ?? (isMobile ? 2 : 15)) === 1
+              {activeMainIds.length !== (layers.laraCount ?? (isMobile ? 2 : 15))
+                ? `${activeMainIds.length} (Personnalisé)`
+                : (layers.laraCount ?? (isMobile ? 2 : 15)) === 1
                 ? '1 (Xbot seul)'
                 : (layers.laraCount ?? (isMobile ? 2 : 15)) === 2
                 ? '2 (Xbot + Lara)'
@@ -973,6 +977,11 @@ export function CharacterSection({
           </div>
         </div>
       )}
+
+      {/* ── Sélecteur Personnages Principaux (Laras & Xbot) ── */}
+      <NonExtraCharactersSelector
+        isMobile={isMobile}
+      />
 
       {/* ── Sélecteur Multiple Personnages Extra ── */}
       <ExtraCharactersSelector

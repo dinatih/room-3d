@@ -421,6 +421,7 @@ export function Studio() {
   const laraCount = useSceneStore(state => state.layers.laraCount);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
+  const activeMainIds = useSceneStore(state => state.activeMainIds);
 
   useEffect(() => {
     if (laraGridActive) {
@@ -429,7 +430,7 @@ export function Studio() {
       duoSessionManager.leaveAllSessions();
       frameLaraGridCamera();
     }
-  }, [laraGridActive, laraCount, extraCharacters, activeExtraIds]);
+  }, [laraGridActive, laraCount, extraCharacters, activeExtraIds, activeMainIds]);
 
   const isMobile = useIsMobile();
   const [laraGridAnim, setLaraGridAnim] = useState<string>('idle');

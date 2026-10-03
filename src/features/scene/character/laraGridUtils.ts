@@ -89,12 +89,14 @@ export function getActiveSceneCharactersCount(state?: {
   layers: { laraCount?: LaraCountMode; extraCharacters?: boolean };
   activeWalkerId: string;
   activeExtraIds?: string[];
+  activeMainIds?: string[];
 }): number {
   const store = state ?? useSceneStore.getState();
   const laraCount = store.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
   const extraCharacters = store.layers.extraCharacters ?? false;
+  const activeMainIds = (store as any).activeMainIds;
   return CHARACTERS.filter(char =>
-    isCharacterVisibleInMode(char.id, laraCount, store.activeWalkerId, extraCharacters, store.activeExtraIds)
+    isCharacterVisibleInMode(char.id, laraCount, store.activeWalkerId, extraCharacters, store.activeExtraIds, activeMainIds)
   ).length;
 }
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, ChangeEvent } from 'react';
+import { useState, useMemo } from 'react';
 import { useSceneStore } from '../../store/useSceneStore';
 import {
   EXTRA_CHARACTERS,
@@ -25,10 +25,8 @@ export function ExtraCharactersSelector({
   const toggleExtraGroup = useSceneStore(state => state.toggleExtraGroup);
   const selectAllExtraCharacters = useSceneStore(state => state.selectAllExtraCharacters);
   const clearExtraCharacters = useSceneStore(state => state.clearExtraCharacters);
-  const setActiveExtraIds = useSceneStore(state => state.setActiveExtraIds);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [useNativeSelect, setUseNativeSelect] = useState(false);
 
   const filteredCharacters = useMemo(() => {
     if (!searchQuery.trim()) return EXTRA_CHARACTERS;
@@ -52,11 +50,6 @@ export function ExtraCharactersSelector({
     [activeExtraIds]
   );
   const allAnatomicalSelected = anatomicalCount === ANATOMICAL_EXTRA_IDS.length;
-
-  const handleNativeSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const selected = Array.from(e.target.selectedOptions, option => option.value);
-    setActiveExtraIds(selected);
-  };
 
   return (
     <div className="p-2 border-top bg-transparent d-flex flex-column gap-2 mt-2">
@@ -115,16 +108,6 @@ export function ExtraCharactersSelector({
               ❌ Aucun
             </button>
           </div>
-
-          <button
-            type="button"
-            className="btn btn-outline-secondary btn-sm py-0 px-2"
-            style={{ fontSize: '10px' }}
-            onClick={() => setUseNativeSelect(prev => !prev)}
-            title={useNativeSelect ? "Basculer vers la liste interactive avec cases à cocher" : "Basculer vers le select multiple HTML natif"}
-          >
-            {useNativeSelect ? '📋 Vue Liste' : '🔽 Select HTML'}
-          </button>
         </div>
 
         {/* Sélections rapides par groupe : Redmans & Anatomiques */}
@@ -180,60 +163,36 @@ export function ExtraCharactersSelector({
           </button>
         </div>
 
-        {/* Barre de recherche (en vue liste) */}
-        {!useNativeSelect && (
-          <div className="input-group input-group-sm">
-            <span className="input-group-text bg-transparent border-secondary-subtle px-2" style={{ fontSize: '11px' }}>
-              🔍
-            </span>
-            <input
-              type="text"
-              className="form-control form-control-sm bg-transparent border-secondary-subtle text-dark"
-              placeholder="Filtrer (ex: Zoe, Alex, Sophia...)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ fontSize: isMobile ? '12px' : '11px' }}
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className="btn btn-outline-secondary btn-sm px-2"
-                onClick={() => setSearchQuery('')}
-                style={{ fontSize: '10px' }}
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Vue 1 : <select multiple> natif standard */}
-        {useNativeSelect ? (
-          <div>
-            <div className="text-muted mb-1" style={{ fontSize: '9px' }}>
-              ℹ️ Maintenez <kbd>Ctrl</kbd> (ou <kbd>Cmd</kbd>) pour sélectionner plusieurs personnages :
-            </div>
-            <select
-              multiple
-              className="form-select form-select-sm bg-white text-dark border-secondary-subtle"
-              size={Math.min(8, EXTRA_CHARACTERS.length)}
-              value={activeExtraIds}
-              onChange={handleNativeSelectChange}
-              style={{ fontSize: isMobile ? '13px' : '11px' }}
+        {/* Barre de recherche */}
+        <div className="input-group input-group-sm">
+          <span className="input-group-text bg-transparent border-secondary-subtle px-2" style={{ fontSize: '11px' }}>
+            🔍
+          </span>
+          <input
+            type="text"
+            className="form-control form-control-sm bg-transparent border-secondary-subtle text-dark"
+            placeholder="Filtrer (ex: Zoe, Alex, Sophia...)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ fontSize: isMobile ? '12px' : '11px' }}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm px-2"
+              onClick={() => setSearchQuery('')}
+              style={{ fontSize: '10px' }}
             >
-              {EXTRA_CHARACTERS.map(char => (
-                <option key={char.id} value={char.id} className="py-1">
-                  {char.emoji} {char.name} {char.id === activeWalkerId ? '(Joueur actif)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          /* Vue 2 : Liste interactive multi-sélection avec checkboxes et tags */
-          <div 
-            className="d-flex flex-column gap-1 overflow-auto pe-1 border rounded bg-white"
-            style={{ maxHeight: '180px' }}
-          >
+              ✕
+            </button>
+          )}
+        </div>
+
+        {/* Liste interactive multi-sélection avec checkboxes et tags */}
+        <div 
+          className="d-flex flex-column gap-1 overflow-auto pe-1 border rounded bg-white"
+          style={{ maxHeight: '180px' }}
+        >
             {filteredCharacters.length === 0 ? (
               <div className="p-3 text-center text-muted" style={{ fontSize: '11px' }}>
                 Aucun personnage ne correspond à "{searchQuery}"
@@ -293,7 +252,6 @@ export function ExtraCharactersSelector({
               })
             )}
           </div>
-        )}
 
         {/* Chips / pilules des personnages actifs avec suppression rapide */}
         {activeExtraIds.length > 0 && (

@@ -7,6 +7,8 @@ import {
   type LaraCountMode,
   isExtraCharacter,
   EXTRA_CHARACTERS,
+  NON_EXTRA_CHARACTERS,
+  getDefaultNonExtraIds,
   parseUrlActiveCharacter,
   updateUrlActiveCharacter,
 } from '@features/scene/walkerConfig';
@@ -89,6 +91,7 @@ interface SceneStore {
   extraStates: Record<string, boolean>;
   activeWalkerId: string;
   activeExtraIds: string[];
+  activeMainIds: string[];
   currentHdri: string;
   measurementActive: boolean;
   cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho';
@@ -107,6 +110,10 @@ interface SceneStore {
   selectAllExtraCharacters: () => void;
   clearExtraCharacters: () => void;
   toggleExtraGroup: (groupIds: readonly string[] | string[]) => void;
+  setActiveMainIds: (ids: string[]) => void;
+  toggleMainCharacter: (id: string) => void;
+  selectAllMainCharacters: () => void;
+  clearMainCharacters: () => void;
   setGroundType: (type: GroundType) => void;
   triggerAction: (key: string, targetState?: boolean) => void;
   setActiveWalkerId: (id: string) => void;
@@ -328,6 +335,13 @@ if (initialActiveChar && isExtraCharacter(initialActiveChar.id)) {
   }
 }
 
+let initialActiveMainIds = getDefaultNonExtraIds(initialLayers.laraCount, initialActiveWalkerId);
+if (initialActiveChar && !isExtraCharacter(initialActiveChar.id)) {
+  if (!initialActiveMainIds.includes(initialActiveChar.id)) {
+    initialActiveMainIds = [initialActiveChar.id, ...initialActiveMainIds];
+  }
+}
+
 const layerOverrides = parseUrlLayerOverrides();
 Object.assign(initialLayers, layerOverrides);
 if (initialLayers.mirrorsHD) {
@@ -340,6 +354,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   extraStates: initialExtraStates,
   activeWalkerId: initialActiveWalkerId,
   activeExtraIds: initialActiveExtraIds,
+  activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
@@ -363,6 +378,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
     updateUrlNpcCount(count);
     set((state) => ({
       activeWalkerId: count === 1 ? 'xbot' : state.activeWalkerId,
+      activeMainIds: getDefaultNonExtraIds(count, count === 1 ? 'xbot' : state.activeWalkerId),
       layers: { ...state.layers, laraCount: count, showAllLaraStyles: true }
     }));
     cameraState.invalidate?.();
@@ -499,6 +515,39 @@ export const useSceneStore = create<SceneStore>((set) => ({
     });
   },
 
+  setActiveMainIds: (ids: string[]) => {
+    set(() => ({
+      activeMainIds: ids,
+    }));
+    cameraState.invalidate?.();
+  },
+
+  toggleMainCharacter: (id: string) => {
+    set((state) => {
+      const exists = state.activeMainIds.includes(id);
+      const nextActiveMainIds = exists
+        ? state.activeMainIds.filter(x => x !== id)
+        : [...state.activeMainIds, id];
+      cameraState.invalidate?.();
+      return { activeMainIds: nextActiveMainIds };
+    });
+  },
+
+  selectAllMainCharacters: () => {
+    set((state) => ({
+      activeMainIds: NON_EXTRA_CHARACTERS.map(c => c.id),
+      layers: { ...state.layers, laraCount: 15 }
+    }));
+    cameraState.invalidate?.();
+  },
+
+  clearMainCharacters: () => {
+    set(() => ({
+      activeMainIds: []
+    }));
+    cameraState.invalidate?.();
+  },
+
   setGroundType: (type) => {
     set((state) => {
       cameraState.invalidate?.();
@@ -593,8 +642,12 @@ export const useSceneStore = create<SceneStore>((set) => ({
       if (isExtraCharacter(id) && !state.activeExtraIds.includes(id)) {
         nextActiveExtraIds = [id, ...state.activeExtraIds.filter(x => x !== id)];
       }
+      let nextActiveMainIds = state.activeMainIds;
+      if (!isExtraCharacter(id) && !state.activeMainIds.includes(id)) {
+        nextActiveMainIds = [id, ...state.activeMainIds];
+      }
       cameraState.invalidate?.();
-      return { activeWalkerId: id, activeExtraIds: nextActiveExtraIds };
+      return { activeWalkerId: id, activeExtraIds: nextActiveExtraIds, activeMainIds: nextActiveMainIds };
     });
   },
 }));

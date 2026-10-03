@@ -470,7 +470,7 @@ class DuoSessionManager {
       const storeState = useSceneStore.getState();
       if (!allowPlayer && id === storeState.activeWalkerId) return false;
       return (
-        isCharacterVisibleInMode(id, storeState.layers.laraCount ?? 4, storeState.activeWalkerId, storeState.layers.extraCharacters ?? false, storeState.activeExtraIds) ||
+        isCharacterVisibleInMode(id, storeState.layers.laraCount ?? 4, storeState.activeWalkerId, storeState.layers.extraCharacters ?? false, storeState.activeExtraIds, storeState.activeMainIds) ||
         id === storeState.activeWalkerId
       );
     };
