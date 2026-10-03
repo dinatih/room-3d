@@ -8,12 +8,6 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
-const CHARACTER_ID_SET = new Set(CHARACTERS.map(c => c.id.toLowerCase()));
-
-export function isSystemLog(tag: string): boolean {
-  return !CHARACTER_ID_SET.has(tag.toLowerCase());
-}
-
 const TAG_COLORS: Record<string, string> = {
   system: '#ffffff',
   perf:   '#ffaa00',
@@ -23,10 +17,7 @@ const TAG_COLORS: Record<string, string> = {
 };
 
 function getTagColor(tag: string): string {
-  const lower = tag.toLowerCase();
-  if (TAG_COLORS[lower]) return TAG_COLORS[lower];
-  if (isSystemLog(lower)) return '#58a6ff';
-  return '#aaaaaa';
+  return TAG_COLORS[tag.toLowerCase()] ?? '#aaaaaa';
 }
 
 // ── Types & Singleton ──────────────────────────────────────────────────────
@@ -74,7 +65,6 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const [visible, setVisible] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
-  const [includeSystemLogs, setIncludeSystemLogs] = useState(true);
   const logAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const savedHeightRef = useRef(110);
@@ -108,14 +98,12 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     if (visible && !isPaused && logAreaRef.current) {
       logAreaRef.current.scrollTop = logAreaRef.current.scrollHeight;
     }
-  }, [logs, visible, isPaused, filterBubbleOnly, includeSystemLogs]);
+  }, [logs, visible, isPaused, filterBubbleOnly]);
 
   const displayedLogs = filterBubbleOnly
     ? logs.filter(entry => {
         const tag = entry.tag.toLowerCase();
-        if (tag === activeWalkerId.toLowerCase()) return true;
-        if (includeSystemLogs && isSystemLog(tag)) return true;
-        return false;
+        return tag === activeWalkerId.toLowerCase() || tag === 'system';
       })
     : logs;
 
@@ -242,36 +230,6 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
               </span>
             </button>
 
-            {/* Toggle Logs Système dans la liste filtrée */}
-            <button
-              type="button"
-              className={`btn btn-sm py-0 px-2 small d-flex align-items-center gap-1 border ${
-                includeSystemLogs
-                  ? 'btn-info text-dark fw-bold shadow-sm'
-                  : 'btn-outline-secondary text-white-50 border-white border-opacity-25'
-              }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIncludeSystemLogs(s => !s);
-              }}
-              title={
-                includeSystemLogs
-                  ? 'Logs système affichés dans la liste filtrée — Cliquer pour masquer'
-                  : 'Afficher aussi les logs système dans la liste filtrée PNJ'
-              }
-              style={{
-                opacity: filterBubbleOnly ? 1 : 0.65,
-              }}
-            >
-              <span>⚙️ Système</span>
-              <span
-                className={`badge ${includeSystemLogs ? 'bg-dark text-info' : 'bg-secondary text-white'} py-0 px-1`}
-                style={{ fontSize: '9px' }}
-              >
-                {includeSystemLogs ? 'ON' : 'OFF'}
-              </span>
-            </button>
-
             {/* Bouton Pause / Reprendre */}
             <button
               type="button"
@@ -301,7 +259,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           {displayedLogs.length === 0 && (
             <div className="text-secondary fst-italic py-1">
               {filterBubbleOnly
-                ? `Aucun log pour ${charDisplayName}${includeSystemLogs ? ' ou système' : ''}…`
+                ? `Aucun log pour ${charDisplayName}…`
                 : 'En attente de logs…'}
             </div>
           )}
@@ -324,13 +282,9 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
                 {(!filterBubbleOnly || entry.tag.toLowerCase() !== activeWalkerId.toLowerCase()) && (
                   <span className="fw-semibold flex-shrink-0" style={{ color }}>
                     {(() => {
-                      const lower = entry.tag.toLowerCase();
-                      if (lower === 'system') return '⚙️ system';
-                      if (lower === 'perf') return '⚡ perf';
-                      if (lower === 'anim') return '✨ anim';
-                      if (lower === 'robin') return '🐦 robin';
+                      if (entry.tag.toLowerCase() === 'system') return '⚙️ system';
                       const ch = findCharacter(entry.tag);
-                      return ch ? `${ch.emoji} ${entry.tag}` : `⚙️ ${entry.tag}`;
+                      return ch ? `${ch.emoji} ${entry.tag}` : entry.tag;
                     })()}
                   </span>
                 )}
