@@ -29,80 +29,34 @@ export function VRMode() {
     rigRef.current = rig;
     scene.add(rig);
 
-    // ── VRButton ──────────────────────────────────────────────────────────────
-    // ── Shared Container ───────────────────────────────────────────────────────
-    let container = document.getElementById('vr-immersive-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'vr-immersive-container';
-      Object.assign(container.style, {
-        position: 'fixed',
-        bottom: 'calc(64px + env(safe-area-inset-bottom) + 12px)',
-        left: '12px',
-        zIndex: '110',
-        display: 'flex',
-        gap: '8px',
-        pointerEvents: 'none',
-      });
-      document.body.appendChild(container);
-    }
-
-    // ── VRButton ──────────────────────────────────────────────────────────────
+    // ── VRButton (invisible, déclenché via toggle-vr ou clic direct) ────────
     const btn = VRButton.createButton(gl);
-    
-    // Custom styling to match Immersive glassmorphic button
-    Object.assign(btn.style, {
-      position: 'static',
-      width: 'auto',
-      height: 'auto',
-      background: 'rgba(255, 255, 255, 0.74)',
-      color: '#212529',
-      border: '1px solid rgba(255, 255, 255, 0.25)',
-      borderRadius: '8px',
-      padding: '10px 16px',
-      fontSize: '13px',
-      cursor: 'pointer',
-      fontFamily: 'sans-serif',
-      backdropFilter: 'blur(14px)',
-      webkitBackdropFilter: 'blur(14px)',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-      pointerEvents: 'auto',
-      opacity: '1',
-      bottom: 'auto',
-      left: 'auto',
-      right: 'auto',
-      top: 'auto',
-      display: 'none', // hidden initially until support is confirmed
-    });
+    btn.id = 'vr-native-btn';
+    btn.style.display = 'none';
+    document.body.appendChild(btn);
 
-    container.appendChild(btn);
+    const onToggleVR = () => {
+      btn.click();
+    };
+    document.addEventListener('toggle-vr', onToggleVR);
 
-    // MutationObserver to customize label and hide when VR is not supported
+    // MutationObserver pour détecter le support WebXR
     const obs = new MutationObserver(() => {
       const txt = btn.textContent || '';
       if (txt.includes('NOT SUPPORTED') || txt.includes('NOT ALLOWED')) {
-        btn.style.display = 'none';
-      } else if (txt === 'ENTER VR') {
-        obs.disconnect();
-        btn.textContent = 'VR';
-        btn.style.display = '';
-        obs.observe(btn, { childList: true, characterData: true, subtree: true });
-      } else if (txt === 'EXIT VR') {
-        obs.disconnect();
-        btn.textContent = '✕ VR';
-        btn.style.display = '';
-        obs.observe(btn, { childList: true, characterData: true, subtree: true });
+        document.dispatchEvent(new CustomEvent('vr-support-change', { detail: { supported: false } }));
+      } else if (txt === 'ENTER VR' || txt === 'VR') {
+        document.dispatchEvent(new CustomEvent('vr-support-change', { detail: { supported: true } }));
       }
     });
     obs.observe(btn, { childList: true, characterData: true, subtree: true });
 
-    // Initial check (force observer update check)
+    // Initial check
     const initialText = btn.textContent || '';
-    if (initialText.includes('NOT SUPPORTED')) {
-      btn.style.display = 'none';
-    } else if (initialText === 'ENTER VR') {
-      btn.textContent = 'VR';
-      btn.style.display = '';
+    if (initialText.includes('NOT SUPPORTED') || initialText.includes('NOT ALLOWED')) {
+      document.dispatchEvent(new CustomEvent('vr-support-change', { detail: { supported: false } }));
+    } else if (initialText === 'ENTER VR' || initialText === 'VR') {
+      document.dispatchEvent(new CustomEvent('vr-support-change', { detail: { supported: true } }));
     }
 
     // ── Controller (tap Cardboard = avancer) ──────────────────────────────────
@@ -114,6 +68,7 @@ export function VRMode() {
     // ── Session start ─────────────────────────────────────────────────────────
     const onSessionStart = () => {
       cameraState.isXR = true;
+      document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: true } }));
       camera.position.set(0, 0, 0);
       const activeId = (window as any).activeWalkerId || 'lara';
       const pos = cameraState.positions[activeId];
@@ -135,6 +90,7 @@ export function VRMode() {
     // ── Session end ───────────────────────────────────────────────────────────
     const onSessionEnd = () => {
       cameraState.isXR = false;
+      document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: false } }));
       walkingRef.current = false;
       cameraState.isMoving = false;
       scene.add(camera);  // reparente au root de la scène
@@ -162,6 +118,8 @@ export function VRMode() {
 
     return () => {
       obs.disconnect();
+      document.removeEventListener('toggle-vr', onToggleVR);
+      document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: false } }));
       btn.remove();
       const container = document.getElementById('vr-immersive-container');
       if (container && container.childNodes.length === 0) {

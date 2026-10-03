@@ -71,9 +71,28 @@ export function SidePanel({
   const [selectedCvType, setSelectedCvType] = useState<CvType>('devops');
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
+  const [isVRActive, setIsVRActive] = useState(false);
+  const [isImmersiveActive, setIsImmersiveActive] = useState(false);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
   const setCvModalOpen = useSceneStore(state => state.setCvModalOpen);
+
+  useEffect(() => {
+    const onVR = (e: Event) => {
+      const detail = (e as CustomEvent<{ active: boolean }>).detail;
+      if (detail && typeof detail.active === 'boolean') setIsVRActive(detail.active);
+    };
+    const onImmersive = (e: Event) => {
+      const detail = (e as CustomEvent<{ active: boolean }>).detail;
+      if (detail && typeof detail.active === 'boolean') setIsImmersiveActive(detail.active);
+    };
+    document.addEventListener('vr-state-change', onVR);
+    document.addEventListener('immersive-state-change', onImmersive);
+    return () => {
+      document.removeEventListener('vr-state-change', onVR);
+      document.removeEventListener('immersive-state-change', onImmersive);
+    };
+  }, []);
 
   const handleOpenCv = (type: CvType = 'devops') => {
     setSelectedCvType(type);
@@ -416,6 +435,34 @@ export function SidePanel({
             scrollbarWidth: 'none',
           }}
         >
+          {/* 🥽 VR WebXR */}
+          <button
+            type="button"
+            onClick={() => {
+              const nativeBtn = document.getElementById('vr-native-btn');
+              if (nativeBtn) nativeBtn.click();
+              else document.dispatchEvent(new CustomEvent('toggle-vr'));
+            }}
+            className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isVRActive ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
+            title="Mode Réalité Virtuelle (WebXR)"
+          >
+            <span className="fs-5 lh-1">🥽</span>
+            <span className="fw-semibold small">{isVRActive ? '✕ VR' : 'VR'}</span>
+          </button>
+
+          {/* 👁️ Mode Immersif Gyroscopique */}
+          <button
+            type="button"
+            onClick={() => {
+              document.dispatchEvent(new CustomEvent('toggle-immersive'));
+            }}
+            className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isImmersiveActive ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
+            title="Mode Immersif Gyroscope (Plein écran)"
+          >
+            <span className="fs-5 lh-1">👁️</span>
+            <span className="fw-semibold small">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
+          </button>
+
           <button
             type="button"
             onClick={onOpenInventory}
