@@ -249,8 +249,10 @@ export function useCharacterAnimations({
     pendingLoadsRef.current.clear();
     failedLoadsRef.current.clear();
 
-    // Pré-chargement automatique de la pose idle par défaut
+    // Pré-chargement automatique de la pose idle et des animations de chute
     loadAndPlayClip('idle');
+    loadAndPlayClip('falling');
+    loadAndPlayClip('falling-idle');
 
     return () => {
       mixer.stopAllAction();

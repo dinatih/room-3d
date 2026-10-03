@@ -56,6 +56,8 @@ export const cameraState = {
   mirrorsHD: false as boolean,
   /** Masque le mesh du Walker actif (utilisé en vue première personne pendant la visite guidée) */
   walkerHidden: false as boolean,
+  /** Vrai des que la scene 3D est lancee (apres prechargement et warm-up GPU) */
+  isSceneLaunched: false as boolean,
   /** Position et yaw de l'avion en papier (lus par la Minimap quand mode='plane') */
   planeX: 0 as number,
   planeZ: 0 as number,

@@ -204,7 +204,7 @@ export function useCameraFrameUpdate({
       walkYaw.current = cameraState.walkerYaw;
     }
 
-    if (modeRef.current === 'walk') {
+    if (modeRef.current === 'walk' || modeRef.current === 'fpv') {
       invalidate();
     }
 

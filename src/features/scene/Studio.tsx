@@ -119,6 +119,38 @@ function ShadowWarmup() {
   return null;
 }
 
+/** Pré-compilation GPU et exécution de frames de warm-up pendant la page de préchargement. */
+function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }) {
+  const { gl, scene, camera, invalidate } = useThree();
+  const readyRef = useRef(false);
+
+  useEffect(() => {
+    if (!active || readyRef.current) return;
+
+    try {
+      gl.compile(scene, camera);
+    } catch {
+      // Ignorer si compilation async
+    }
+
+    let frames = 0;
+    const interval = setInterval(() => {
+      frames++;
+      gl.shadowMap.needsUpdate = true;
+      invalidate();
+      if (frames >= 7) {
+        clearInterval(interval);
+        readyRef.current = true;
+        onReady();
+      }
+    }, 350); // ~2.4 secondes de compilation GPU et warm-up effectif absorbé par la page de chargement
+
+    return () => clearInterval(interval);
+  }, [active, gl, scene, camera, invalidate, onReady]);
+
+  return null;
+}
+
 /** Active/désactive les ombres en réponse au toggle UI. */
 function ShadowController({ enabled }: { enabled: boolean }) {
   const { gl, scene, invalidate } = useThree();
@@ -477,11 +509,12 @@ export function Studio() {
 
 
   const [buildAnimMatrix,  setBuildAnimMatrix]  = useState(false);
+  const [assetsLoaded,     setAssetsLoaded]     = useState(false);
   const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
   const [animDurations,    setAnimDurations]    = useState<Record<string, number>>({});
 
   const handleAssetsLoaded = useCallback(() => {
-    setSceneWarmReady(true);
+    setAssetsLoaded(true);
   }, []);
 
   const stopAll = () => {
@@ -517,6 +550,7 @@ export function Studio() {
   }, []);
 
   const handleLaunch = useCallback(() => {
+    cameraState.isSceneLaunched = true;
     revealScene();
   }, [revealScene]);
 
@@ -626,6 +660,7 @@ export function Studio() {
         {/* Animations — exécutées une fois les éléments Suspense 3D résolus */}
         {buildAnimMatrix && <BuildAnimationMatrix onReady={handleReady} onFinish={() => setBuildAnimMatrix(false)} onDuration={setDuration('buildAnimMatrix')} />}
         <CameraController planeMode={planeMode} />
+        <GpuWarmup active={assetsLoaded} onReady={handleReady} />
         <group visible={!layers.plan}>
 
           {/*

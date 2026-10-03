@@ -11,6 +11,7 @@ import { getEstimatedClipDuration } from '../animOptions';
 import { resolveAnimationId, getAnimationDef, resolveSlotAnimation } from '../animations/animationResolver';
 
 import { AgentState, AgentStatus } from './agent/agentTypes';
+import { cameraState } from '../cameraState';
 import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation } from './agent/agentWalkAnimations';
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
 import { computeSteeringVector, computeRotYStep } from './agent/agentAvoidance';
@@ -372,6 +373,13 @@ export function useAgentController(
     }
 
     // ── 1. Gestion SkyDrop (Spawn / Chute / Atterrissage) ──
+    if (statusRef.current === 'WAITING' || statusRef.current === 'FALLING') {
+      if (!cameraState.isSceneLaunched) {
+        stateRef.current.animation = statusRef.current === 'FALLING' ? 'falling' : 'idle';
+        return stateRef.current;
+      }
+    }
+
     if (statusRef.current === 'WAITING') {
       delayTimerRef.current -= dt;
       deployment.delayTimer = delayTimerRef.current;
