@@ -307,11 +307,26 @@ class DuoSessionManager {
       releaseRole('roleA');
       this.charToSession.delete(characterId);
       session.participantA = null;
-    }
-    if (session.participantB?.characterId === characterId) {
+      // Si le meneur A quitte, libérer également le partenaire B pour éviter une session orpheline
+      if (session.participantB) {
+        const partnerBId = session.participantB.characterId;
+        releaseRole('roleB');
+        this.charToSession.delete(partnerBId);
+        session.participantB = null;
+      }
+      this.sessions.delete(session.sessionId);
+    } else if (session.participantB?.characterId === characterId) {
       releaseRole('roleB');
       this.charToSession.delete(characterId);
       session.participantB = null;
+      // Si le partenaire s'en va alors que la session jouait, libérer également le meneur et clore la session
+      if (session.isSessionPlaying && session.participantA) {
+        const leaderAId = session.participantA.characterId;
+        releaseRole('roleA');
+        this.charToSession.delete(leaderAId);
+        session.participantA = null;
+        this.sessions.delete(session.sessionId);
+      }
     }
 
     if (!session.participantA && !session.participantB) {
@@ -334,7 +349,8 @@ class DuoSessionManager {
   /** Trouve le PNJ autonome le plus proche du spot actif et lui envoie une invitation. */
   public inviteNearestNpc(callerId: string): string | null {
     const session = this.getSessionFor(callerId);
-    if (!session || (session.participantA && session.participantB)) return null;
+    // Seul le meneur participantA peut inviter, et seulement si aucun partenaire n'est déjà assigné
+    if (!session || session.participantA?.characterId !== callerId || session.participantB) return null;
 
     const [bx, , bz] = session.location.anchorPos;
     let closestId: string | null = null;
@@ -344,7 +360,7 @@ class DuoSessionManager {
     for (const npcId of AUTONOMOUS_NPC_IDS) {
       if (npcId === callerId) continue;
       if (npcId === store.activeWalkerId) continue;
-      if (session.participantA?.characterId === npcId || session.participantB?.characterId === npcId) continue;
+      if (session.participantA?.characterId === npcId) continue;
       if (this.getSessionFor(npcId) !== null) continue;
 
       const pos = cameraState.positions[npcId];
@@ -362,10 +378,6 @@ class DuoSessionManager {
       const posB = this.getWaitPosB(callerId);
       const rotB = this.getWaitRotB(callerId);
 
-      if (session.participantB && session.participantB.characterId !== closestId) {
-        this.charToSession.delete(session.participantB.characterId);
-        OccupancyManager.releaseSlot(session.location.objectId, `${session.location.slotId}:roleB`, session.participantB.characterId);
-      }
       session.participantB = { characterId: closestId, role: 'roleB', isReady: false };
       this.charToSession.set(closestId, session);
       OccupancyManager.claimSlot(session.location.objectId, `${session.location.slotId}:roleB`, closestId);

@@ -66,7 +66,7 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
       ? duoSessionManager.getWaitRotB(characterId)
       : loc.anchorRotY;
 
-    if (!duoInvited) {
+    if (!duoInvited && duoRole === 'roleA') {
       setDuoInvited(true);
       duoSessionManager.inviteNearestNpc(characterId);
     }

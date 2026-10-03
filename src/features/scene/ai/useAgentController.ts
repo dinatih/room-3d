@@ -154,6 +154,7 @@ export function useAgentController(
         const role = (e.detail?.forceRole as DuoRole) || 'roleB';
         if (role) {
           duoRoleRef.current = role;
+          duoInvitedRef.current = true;
           const targetSlotId = e.detail?.slotId || role;
           if (claimedSlotRef.current && (claimedSlotRef.current.objectId !== targetObjId || claimedSlotRef.current.slotId !== targetSlotId)) {
             releaseClaimedSlot();
