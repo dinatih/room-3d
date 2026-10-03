@@ -3,10 +3,12 @@
  * Mis à jour chaque frame par CameraController, lu par MinimapOverlay via RAF.
  */
 
-import { CHARACTERS } from './walkerConfig';
+import { CHARACTERS, parseUrlActiveCharacter } from './walkerConfig';
 import { parseUrlCameraMode } from './camera/cameraUrlParams';
 
 type CameraMode = 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho';
+
+const initialChar = parseUrlActiveCharacter() || CHARACTERS[0];
 
 export const cameraState = {
   mode: parseUrlCameraMode() as CameraMode,
@@ -26,12 +28,12 @@ export const cameraState = {
     if (this.lastUserControlTime === 0) return false;
     return (performance.now() - this.lastUserControlTime) < 12000;
   },
-  walkYaw:   (CHARACTERS[0]?.rot ?? 1.9) as number,
+  walkYaw:   (initialChar?.rot ?? 1.9) as number,
   walkPitch: 0     as number,
   /** Position et orientation du walker unique (synchro dynamique depuis CHARACTERS) */
-  walkerX: (CHARACTERS[0]?.pos[0] ?? 140) as number, 
-  walkerZ: (CHARACTERS[0]?.pos[2] ?? 30) as number, 
-  walkerYaw: (CHARACTERS[0]?.rot ?? 1.9) as number,
+  walkerX: (initialChar?.pos[0] ?? 140) as number, 
+  walkerZ: (initialChar?.pos[2] ?? 30) as number, 
+  walkerYaw: (initialChar?.rot ?? 1.9) as number,
   /** Positions enregistrées de tous les walkers */
   positions: {} as Record<string, {x: number, y: number, z: number, yaw: number, anim?: string}>,
   /** Position monde réelle de la tête du walker actif (calculée dynamiquement par SingleCharacter d'après le squelette 3D) */
@@ -45,7 +47,7 @@ export const cameraState = {
   /** Vecteur unitaire haut (up) de la tête du walker actif */
   activeHeadUp: null as { x: number; y: number; z: number } | null,
   /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras walk */
-  walkerHeight: 173.4 as number,
+  walkerHeight: (initialChar?.height ?? 173.4) as number,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */
   onUpdate:   null as (() => void) | null,
   /** Enregistré par CameraController ; appeler pour forcer un frame R3F. */

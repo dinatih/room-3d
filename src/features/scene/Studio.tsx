@@ -13,6 +13,7 @@ import {
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
+import { parseUrlHideUI, updateUrlHideUI } from '@features/scene/camera/cameraUrlParams';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
 import { Minimap }          from '@features/scene/Minimap';
 import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
@@ -351,7 +352,20 @@ export function Studio() {
 
   const [showInventory, setShowInventory] = useState(false);
   const [inventoryInitialCat, setInventoryInitialCat] = useState<string>('all');
-  const [hideUI, setHideUI] = useState(false);
+  const [hideUI, setHideUI] = useState(() => parseUrlHideUI());
+
+  const toggleHideUI = useCallback(() => {
+    setHideUI(h => {
+      const next = !h;
+      updateUrlHideUI(next);
+      return next;
+    });
+  }, []);
+
+  const showUI = useCallback(() => {
+    setHideUI(false);
+    updateUrlHideUI(false);
+  }, []);
 
   useEffect(() => {
     (window as any).isAnimProRunning = false;
@@ -516,7 +530,7 @@ export function Studio() {
         onToggleLayer('accessories');
         cameraState.invalidate?.();
       } else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
-        setHideUI(h => !h);
+        toggleHideUI();
       } else if (e.key === 'F10' || e.code === 'F10') {
         e.preventDefault();
         useSceneStore.getState().setPhotoModeOpen(true);
@@ -786,7 +800,7 @@ export function Studio() {
                 return !v;
               });
             }}
-            onToggleHideUI={() => setHideUI(h => !h)}
+            onToggleHideUI={toggleHideUI}
           />
           <LaraGridToolbar />
           {laraGridActive && (
@@ -853,7 +867,7 @@ export function Studio() {
       )}
       {hideUI && (
         <button
-          onClick={() => setHideUI(false)}
+          onClick={showUI}
           className="btn btn-dark btn-sm position-fixed opacity-50 hover-opacity-100 shadow-sm"
           style={{ top: 12, right: 12, zIndex: 9999, fontSize: '10px' }}
           title="Réafficher l'interface (Touche 0)"

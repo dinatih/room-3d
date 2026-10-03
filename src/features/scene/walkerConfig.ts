@@ -63,6 +63,84 @@ export function findCharacter(id: string): CharacterConfig | undefined {
   return CHARACTERS.find(c => c.id === id);
 }
 
+/**
+ * Recherche souple d'un personnage par son ID ou son Nom (insensible à la casse, tolérant aux espaces/tirets)
+ */
+export function findCharacterByIdOrName(query: string): CharacterConfig | undefined {
+  if (!query) return undefined;
+  const q = query.trim().toLowerCase();
+  if (!q) return undefined;
+
+  // 1. Match direct sur ID exact (insensible à la casse)
+  const byId = CHARACTERS.find(c => c.id.toLowerCase() === q);
+  if (byId) return byId;
+
+  // 2. Match direct sur Nom exact (insensible à la casse)
+  const byName = CHARACTERS.find(c => c.name.toLowerCase() === q);
+  if (byName) return byName;
+
+  // 3. Normalisation (suppression des tirets, underscores, espaces, parenthèses)
+  const simplify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const simpleQ = simplify(q);
+  if (simpleQ) {
+    const bySimpleId = CHARACTERS.find(c => simplify(c.id) === simpleQ);
+    if (bySimpleId) return bySimpleId;
+
+    const bySimpleName = CHARACTERS.find(c => simplify(c.name) === simpleQ);
+    if (bySimpleName) return bySimpleName;
+
+    // Début du nom (ex: "gloria" correspond à "Gloria (Red Hair)", "hayley" à "Hayley (Inyeong)")
+    const byPrefix = CHARACTERS.find(c => simplify(c.name).startsWith(simpleQ) || simplify(c.id).startsWith(simpleQ));
+    if (byPrefix) return byPrefix;
+
+    // Inclusion dans le nom (ex: "skeleton" correspond à "Skeleton")
+    const byIncludes = CHARACTERS.find(c => simplify(c.name).includes(simpleQ) || simplify(c.id).includes(simpleQ));
+    if (byIncludes) return byIncludes;
+  }
+
+  return undefined;
+}
+
+/**
+ * Analyse l'URL pour détecter si un PNJ actif spécifique est demandé par son id ou son nom.
+ * Supporte : ?pnj=..., ?npc=..., ?char=..., ?character=..., ?perso=..., ?walker=..., ?player=...
+ */
+export function parseUrlActiveCharacter(): CharacterConfig | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    let search = window.location.search;
+    if (!search && window.location.hash.includes('?')) {
+      search = window.location.hash.substring(window.location.hash.indexOf('?'));
+    }
+    const params = new URLSearchParams(search);
+    const raw = params.get('pnj') ??
+                params.get('npc') ??
+                params.get('char') ??
+                params.get('character') ??
+                params.get('perso') ??
+                params.get('walker') ??
+                params.get('player') ??
+                params.get('joueur');
+
+    if (raw) {
+      return findCharacterByIdOrName(raw);
+    }
+  } catch {}
+  return undefined;
+}
+
+/**
+ * Met à jour le paramètre d'URL pour le PNJ actif
+ */
+export function updateUrlActiveCharacter(charIdOrName: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set('pnj', charIdOrName);
+    window.history.replaceState(null, '', url.toString());
+  } catch {}
+}
+
 export const ACCESSORIES_MESH_NAMES = new Set([
   'backpack', 'oxygen',
   'binoculars', 'buckle', 'camera', 'goggles', 'grapple',

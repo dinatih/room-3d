@@ -2,26 +2,55 @@ import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import { parseUrlCameraMode } from '@features/scene/camera/cameraUrlParams';
 import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
-import { type LaraCountMode, isExtraCharacter, EXTRA_CHARACTERS } from '@features/scene/walkerConfig';
+import {
+  type LaraCountMode,
+  isExtraCharacter,
+  EXTRA_CHARACTERS,
+  parseUrlActiveCharacter,
+  updateUrlActiveCharacter,
+} from '@features/scene/walkerConfig';
 
 function parseUrlNpcCount(): LaraCountMode {
   if (typeof window === 'undefined') return 4;
   try {
     const params = new URLSearchParams(window.location.search);
-    const raw = params.get('npc') ?? params.get('npcs') ?? params.get('pnj') ?? params.get('laraCount') ?? params.get('characters');
+    const raw = params.get('npcs') ?? params.get('laraCount') ?? params.get('characters') ?? params.get('count') ?? params.get('npcCount');
     if (raw !== null) {
       const lower = raw.trim().toLowerCase();
       if (lower === '15' || lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return 15;
       if (lower === '10' || lower === 'eco') return 10;
       if (lower === '4' || lower === 'quad') return 4;
       if (lower === '2' || lower === 'duo' || lower === 'min') return 2;
-      if (lower === '1' || lower === 'solo' || lower === 'xbot') return 1;
+      if (lower === '1' || lower === 'solo') return 1;
       const num = parseInt(lower, 10);
-      if (num >= 15) return 15;
-      if (num >= 10) return 10;
-      if (num >= 4) return 4;
-      if (num >= 2) return 2;
-      if (num >= 1) return 1;
+      if (!isNaN(num)) {
+        if (num >= 15) return 15;
+        if (num >= 10) return 10;
+        if (num >= 4) return 4;
+        if (num >= 2) return 2;
+        if (num >= 1) return 1;
+      }
+    }
+
+    // Support si ?npc=... ou ?pnj=... est spécifié avec une valeur numérique ou un mot-clé de nombre
+    for (const key of ['npc', 'pnj']) {
+      const val = params.get(key);
+      if (val !== null) {
+        const lower = val.trim().toLowerCase();
+        if (lower === '15' || lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return 15;
+        if (lower === '10' || lower === 'eco') return 10;
+        if (lower === '4' || lower === 'quad') return 4;
+        if (lower === '2' || lower === 'duo' || lower === 'min') return 2;
+        if (lower === '1' || lower === 'solo') return 1;
+        const num = parseInt(lower, 10);
+        if (!isNaN(num)) {
+          if (num >= 15) return 15;
+          if (num >= 10) return 10;
+          if (num >= 4) return 4;
+          if (num >= 2) return 2;
+          if (num >= 1) return 1;
+        }
+      }
     }
   } catch {}
   return 4;
@@ -281,12 +310,29 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
   return { type: 'transient', name: key };
 }
 
+const initialActiveChar = parseUrlActiveCharacter();
+const initialActiveWalkerId = initialActiveChar ? initialActiveChar.id : (initialLayers.laraCount === 1 ? 'xbot' : 'native');
+
+if (initialActiveChar && isExtraCharacter(initialActiveChar.id)) {
+  initialLayers.extraCharacters = true;
+  if (initialActiveChar.id in initialExtraStates) {
+    initialExtraStates[initialActiveChar.id] = true;
+  }
+}
+
+let initialActiveExtraIds = EXTRA_CHARACTERS.map(c => c.id);
+if (initialActiveChar && isExtraCharacter(initialActiveChar.id)) {
+  if (!initialActiveExtraIds.includes(initialActiveChar.id)) {
+    initialActiveExtraIds = [initialActiveChar.id, ...initialActiveExtraIds];
+  }
+}
+
 export const useSceneStore = create<SceneStore>((set) => ({
   furniture: initialFurniture,
   layers: initialLayers,
   extraStates: initialExtraStates,
-  activeWalkerId: initialLayers.laraCount === 1 ? 'xbot' : 'native',
-  activeExtraIds: EXTRA_CHARACTERS.map(c => c.id),
+  activeWalkerId: initialActiveWalkerId,
+  activeExtraIds: initialActiveExtraIds,
   currentHdri: DEFAULT_HDRI_ID,
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
@@ -532,6 +578,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   setActiveWalkerId: (id) => {
+    updateUrlActiveCharacter(id);
     set((state) => {
       let nextActiveExtraIds = state.activeExtraIds;
       if (isExtraCharacter(id) && !state.activeExtraIds.includes(id)) {

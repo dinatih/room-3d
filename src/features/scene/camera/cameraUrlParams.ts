@@ -2,13 +2,16 @@ import type { CameraMode } from './types';
 
 /**
  * Analyse l'URL pour détecter si un mode caméra initial est demandé.
+ * Le mode FPV (1ère personne) est désormais le mode par défaut.
  * Supporte :
- *  - Flag FPV : ?fpv, ?fpv=1, ?fpv=true, ?fpv=yes, ?fpv=on
- *  - Paramètre de mode : ?mode=fpv, ?camera=fpv, ?view=fpv, ?cam=fpv, ?vue=fpv
- *  - Modes alternatifs : walk / follow / 3p, top / 2d / plan, orbit / 3d
+ *  - Mode par défaut : 'fpv'
+ *  - Flag Orbit : ?orbit, ?orbit=1, ?orbit=true, ?orbit=yes, ?orbit=on
+ *  - Flag FPV explicite : ?fpv, ?fpv=1, ?fpv=true, ?fpv=yes, ?fpv=on (ou ?fpv=0 pour désactiver -> orbit)
+ *  - Paramètre de mode : ?mode=..., ?camera=..., ?view=..., ?cam=..., ?vue=...
+ *  - Modes alternatifs : fpv, orbit / 3d / free, walk / follow / 3p, top / 2d / plan, ortho
  */
 export function parseUrlCameraMode(): CameraMode {
-  if (typeof window === 'undefined') return 'orbit';
+  if (typeof window === 'undefined') return 'fpv';
   try {
     let search = window.location.search;
     if (!search && window.location.hash.includes('?')) {
@@ -16,9 +19,20 @@ export function parseUrlCameraMode(): CameraMode {
     }
     const params = new URLSearchParams(search);
 
-    // Support explicite du drapeau ?fpv ou ?fpv=true / ?fpv=1
+    // Support explicite du drapeau ?orbit ou ?orbit=true / ?orbit=1
+    if (params.has('orbit')) {
+      const val = params.get('orbit')?.trim().toLowerCase();
+      if (val === null || val === '' || val === '1' || val === 'true' || val === 'yes' || val === 'on') {
+        return 'orbit';
+      }
+    }
+
+    // Support explicite du drapeau ?fpv ou ?fpv=false / ?fpv=0
     if (params.has('fpv')) {
       const val = params.get('fpv')?.trim().toLowerCase();
+      if (val === '0' || val === 'false' || val === 'no' || val === 'off') {
+        return 'orbit';
+      }
       if (val === null || val === '' || val === '1' || val === 'true' || val === 'yes' || val === 'on') {
         return 'fpv';
       }
@@ -32,6 +46,9 @@ export function parseUrlCameraMode(): CameraMode {
 
     if (raw) {
       const m = raw.trim().toLowerCase();
+      if (m === 'orbit' || m === 'free' || m === '3d') {
+        return 'orbit';
+      }
       if (m === 'fpv' || m === 'firstperson' || m === '1p' || m === 'fps') {
         return 'fpv';
       }
@@ -41,10 +58,112 @@ export function parseUrlCameraMode(): CameraMode {
       if (m === 'top' || m === 'topdown' || m === '2d' || m === 'plan') {
         return 'top';
       }
-      if (m === 'orbit' || m === 'free' || m === '3d') {
-        return 'orbit';
+      if (m === 'ortho') {
+        return 'ortho';
       }
     }
   } catch {}
-  return 'orbit';
+  return 'fpv'; // FPV par défaut à la place d'orbit
+}
+
+/**
+ * Met à jour l'URL avec le mode caméra actif sans recharger la page
+ */
+export function updateUrlCameraMode(mode: CameraMode) {
+  if (typeof window === 'undefined') return;
+  try {
+    const url = new URL(window.location.href);
+    if (mode === 'fpv') {
+      url.searchParams.delete('orbit');
+      url.searchParams.set('mode', 'fpv');
+    } else {
+      url.searchParams.set('mode', mode);
+      if (mode === 'orbit') {
+        url.searchParams.delete('fpv');
+      }
+    }
+    window.history.replaceState(null, '', url.toString());
+  } catch {}
+}
+
+/**
+ * Analyse l'URL pour déterminer si l'interface (UI) doit être masquée au chargement.
+ * Supporte :
+ *  - ?ui=0, ?ui=false, ?ui=hide, ?ui=hidden, ?ui=off, ?ui=cacher -> true (masquée)
+ *  - ?ui=1, ?ui=true, ?ui=show, ?ui=visible, ?ui=on, ?ui=afficher -> false (affichée)
+ *  - Drapeaux sans valeur : ?hideui, ?noui, ?cacherui, ?cacher-ui -> true (masquée)
+ *  - Drapeaux sans valeur : ?showui, ?afficherui -> false (affichée)
+ */
+export function parseUrlHideUI(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    let search = window.location.search;
+    if (!search && window.location.hash.includes('?')) {
+      search = window.location.hash.substring(window.location.hash.indexOf('?'));
+    }
+    const params = new URLSearchParams(search);
+
+    // Drapeaux explicites pour masquer l'interface
+    const hideFlags = ['hideui', 'noui', 'cacherui', 'cacher-ui', 'hide-ui', 'no-ui'];
+    for (const flag of hideFlags) {
+      if (params.has(flag)) {
+        const val = params.get(flag)?.trim().toLowerCase();
+        if (val === null || val === '' || val === '1' || val === 'true' || val === 'yes' || val === 'on') {
+          return true;
+        }
+        if (val === '0' || val === 'false' || val === 'no' || val === 'off') {
+          return false;
+        }
+      }
+    }
+
+    // Paramètre ?ui=...
+    if (params.has('ui')) {
+      const val = params.get('ui')?.trim().toLowerCase();
+      if (val === '0' || val === 'false' || val === 'hide' || val === 'hidden' || val === 'off' || val === 'none' || val === 'cacher') {
+        return true;
+      }
+      if (val === '1' || val === 'true' || val === 'show' || val === 'visible' || val === 'on' || val === 'afficher') {
+        return false;
+      }
+    }
+
+    // Paramètre ?showui=... ou ?show-ui=...
+    if (params.has('showui') || params.has('show-ui')) {
+      const val = (params.get('showui') ?? params.get('show-ui'))?.trim().toLowerCase();
+      if (val === '0' || val === 'false' || val === 'no' || val === 'off') {
+        return true;
+      }
+      if (val === null || val === '' || val === '1' || val === 'true' || val === 'yes' || val === 'on') {
+        return false;
+      }
+    }
+  } catch {}
+  return false;
+}
+
+/**
+ * Met à jour le paramètre d'URL pour l'état d'affichage de l'interface
+ */
+export function updateUrlHideUI(hidden: boolean) {
+  if (typeof window === 'undefined') return;
+  try {
+    const url = new URL(window.location.href);
+    if (hidden) {
+      url.searchParams.set('ui', '0');
+      url.searchParams.delete('hideui');
+      url.searchParams.delete('showui');
+      url.searchParams.delete('show-ui');
+      url.searchParams.delete('noui');
+    } else {
+      if (url.searchParams.has('ui') || url.searchParams.has('hideui') || url.searchParams.has('noui') || url.searchParams.has('showui')) {
+        url.searchParams.set('ui', '1');
+        url.searchParams.delete('hideui');
+        url.searchParams.delete('noui');
+        url.searchParams.delete('showui');
+        url.searchParams.delete('show-ui');
+      }
+    }
+    window.history.replaceState(null, '', url.toString());
+  } catch {}
 }

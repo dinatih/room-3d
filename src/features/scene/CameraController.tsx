@@ -38,6 +38,7 @@ import {
   DEFAULT_ORBIT_DISTANCE,
   DEFAULT_ORBIT_PITCH,
   parseUrlCameraMode,
+  updateUrlCameraMode,
   useCameraPointerEvents,
   useCameraShortcuts,
   useCameraFrameUpdate,
@@ -518,9 +519,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
   }, [mode, orthoConfig, camera, invalidate]);
 
-  // Synchronisation du mode avec le store (une seule fois au changement d'état)
+  // Synchronisation du mode avec le store et l'URL (une seule fois au changement d'état)
   useEffect(() => {
     useSceneStore.setState({ cameraMode: mode });
+    updateUrlCameraMode(mode);
     if (mode !== 'top') {
       useSceneStore.getState().setMeasurementActive(false);
     }
