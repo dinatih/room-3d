@@ -146,11 +146,11 @@ export function VirtualDPad() {
         height: BASE_SIZE,
         borderRadius: '50%',
         background: active
-          ? 'radial-gradient(circle, rgba(30, 45, 75, 0.75) 0%, rgba(15, 20, 35, 0.85) 100%)'
-          : 'radial-gradient(circle, rgba(20, 24, 38, 0.55) 0%, rgba(10, 12, 22, 0.7) 100%)',
-        border: `2px solid ${active ? 'rgba(96, 165, 250, 0.6)' : 'rgba(255, 255, 255, 0.25)'}`,
+          ? 'radial-gradient(circle, rgba(80, 20, 30, 0.8) 0%, rgba(35, 10, 15, 0.9) 100%)'
+          : 'radial-gradient(circle, rgba(35, 15, 20, 0.6) 0%, rgba(18, 8, 12, 0.75) 100%)',
+        border: `2px solid ${active ? 'rgba(248, 113, 113, 0.75)' : 'rgba(255, 255, 255, 0.25)'}`,
         boxShadow: active
-          ? '0 0 16px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.4)'
+          ? '0 0 16px rgba(239, 68, 68, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4)'
           : '0 4px 12px rgba(0, 0, 0, 0.3)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
@@ -168,25 +168,25 @@ export function VirtualDPad() {
       {/* Flèches indicatrices discrètes sur le pourtour */}
       <span style={{
         position: 'absolute', top: 3, fontSize: '9px', lineHeight: 1,
-        color: activeDirs.ArrowUp ? '#60a5fa' : 'rgba(255, 255, 255, 0.3)',
+        color: activeDirs.ArrowUp ? '#f87171' : 'rgba(255, 255, 255, 0.3)',
         fontWeight: activeDirs.ArrowUp ? 700 : 400,
         transition: 'color 0.1s',
       }}>▲</span>
       <span style={{
         position: 'absolute', bottom: 3, fontSize: '9px', lineHeight: 1,
-        color: activeDirs.ArrowDown ? '#60a5fa' : 'rgba(255, 255, 255, 0.3)',
+        color: activeDirs.ArrowDown ? '#f87171' : 'rgba(255, 255, 255, 0.3)',
         fontWeight: activeDirs.ArrowDown ? 700 : 400,
         transition: 'color 0.1s',
       }}>▼</span>
       <span style={{
         position: 'absolute', left: 4, fontSize: '9px', lineHeight: 1,
-        color: activeDirs.ArrowLeft ? '#60a5fa' : 'rgba(255, 255, 255, 0.3)',
+        color: activeDirs.ArrowLeft ? '#f87171' : 'rgba(255, 255, 255, 0.3)',
         fontWeight: activeDirs.ArrowLeft ? 700 : 400,
         transition: 'color 0.1s',
       }}>◀</span>
       <span style={{
         position: 'absolute', right: 4, fontSize: '9px', lineHeight: 1,
-        color: activeDirs.ArrowRight ? '#60a5fa' : 'rgba(255, 255, 255, 0.3)',
+        color: activeDirs.ArrowRight ? '#f87171' : 'rgba(255, 255, 255, 0.3)',
         fontWeight: activeDirs.ArrowRight ? 700 : 400,
         transition: 'color 0.1s',
       }}>▶</span>
@@ -198,10 +198,12 @@ export function VirtualDPad() {
           height: KNOB_SIZE,
           borderRadius: '50%',
           background: active
-            ? 'radial-gradient(circle, #93c5fd 0%, #2563eb 100%)'
-            : 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(203, 213, 225, 0.85) 100%)',
-          border: '2px solid rgba(255, 255, 255, 0.7)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.8)',
+            ? 'radial-gradient(circle, #fca5a5 0%, #dc2626 100%)'
+            : 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(254, 226, 226, 0.85) 100%)',
+          border: `2px solid ${active ? 'rgba(254, 202, 202, 0.9)' : 'rgba(255, 255, 255, 0.7)'}`,
+          boxShadow: active
+            ? '0 0 12px rgba(239, 68, 68, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.8)'
+            : '0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.8)',
           transform: `translate3d(${knobPos.x}px, ${knobPos.y}px, 0)`,
           transition: active ? 'none' : 'transform 0.15s ease-out, background 0.15s',
           display: 'flex',
@@ -215,8 +217,8 @@ export function VirtualDPad() {
             width: 10,
             height: 10,
             borderRadius: '50%',
-            background: active ? '#ffffff' : 'rgba(100, 116, 139, 0.5)',
-            boxShadow: active ? '0 0 6px rgba(255, 255, 255, 0.8)' : 'none',
+            background: active ? '#ffffff' : 'rgba(220, 38, 38, 0.45)',
+            boxShadow: active ? '0 0 6px rgba(255, 255, 255, 0.9)' : 'none',
           }}
         />
       </div>
