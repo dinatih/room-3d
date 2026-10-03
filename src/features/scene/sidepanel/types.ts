@@ -90,6 +90,9 @@ export interface LayerState {
   decor: boolean;
   neighbors:  boolean;
   wireframe:  boolean;
+  wireframeWallStructure?: boolean;
+  wireframeStructure?: boolean;
+  wireframeDoors?: boolean;
   mirrors:       boolean;
   mirrorsHD:  boolean;
   plan:         boolean;

@@ -23,6 +23,7 @@ import { useRef, useLayoutEffect, createContext } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { LAYER_WALKER_DETAIL } from '@config';
+import { cameraState } from './cameraState';
 import {
   categoryLayerRegistry,
   LayerSmokeTransition,
@@ -63,10 +64,11 @@ interface SceneLayers {
  * Enregistre également le groupe Three.js dans le registre pour les transitions d'animation.
  * Écoute également l'événement Three.js 'childadded' pour intercepter automatiquement
  * les modèles GLB chargés asynchronement par Suspense après le premier render.
+ * Supporte le mode filaire localisé via la prop `wireframe`.
  */
 export function CategoryLayerGroup({
-  layer, children, visible = true,
-}: { layer: number; children: React.ReactNode; visible?: boolean }) {
+  layer, children, visible = true, wireframe = false,
+}: { layer: number; children: React.ReactNode; visible?: boolean; wireframe?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
   const assignLayers = (root: THREE.Object3D) => {
@@ -83,6 +85,20 @@ export function CategoryLayerGroup({
     });
   };
 
+  const applyWireframe = (root: THREE.Object3D, wf: boolean) => {
+    root.traverse(obj => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.material) return;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      mats.forEach(mat => {
+        if ('wireframe' in mat) {
+          (mat as any).wireframe = wf;
+          mat.needsUpdate = true;
+        }
+      });
+    });
+  };
+
   useLayoutEffect(() => {
     const grp = ref.current;
     if (!grp) return;
@@ -91,9 +107,17 @@ export function CategoryLayerGroup({
       grp.visible = visible;
     }
     assignLayers(grp);
+    if (wireframe) {
+      applyWireframe(grp, true);
+    }
 
     const onChildAdded = (e: any) => {
-      if (e?.child) assignLayers(e.child);
+      if (e?.child) {
+        assignLayers(e.child);
+        if (wireframe) {
+          applyWireframe(e.child, true);
+        }
+      }
     };
 
     grp.addEventListener('childadded', onChildAdded);
@@ -102,6 +126,19 @@ export function CategoryLayerGroup({
       categoryLayerRegistry.delete(layer);
     };
   }, [layer, visible]);
+
+  useLayoutEffect(() => {
+    const grp = ref.current;
+    if (!grp) return;
+    applyWireframe(grp, !!wireframe);
+    cameraState.invalidate?.();
+    return () => {
+      if (wireframe && grp) {
+        applyWireframe(grp, false);
+        cameraState.invalidate?.();
+      }
+    };
+  }, [wireframe]);
 
   return (
     <CategoryLayerContext.Provider value={layer}>

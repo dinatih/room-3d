@@ -707,11 +707,11 @@ export function Studio() {
            * LAYER_STRUCTURE (28) — dalle béton, plafonds (géré dans Floor)
            * LAYER_FLOOR_COVERINGS (25) — parquet, carrelage, pvc, plinthes (géré dans Floor)
            */}
-          <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE} visible={layers.wallStructure}>
+          <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE} visible={layers.wallStructure} wireframe={layers.wireframe || layers.wireframeWallStructure}>
             <Walls pillarsOnly={layers.pillarsOnly} />
           </CategoryLayerGroup>
 
-          <CategoryLayerGroup layer={LAYER_DOORS} visible={layers.doors}>
+          <CategoryLayerGroup layer={LAYER_DOORS} visible={layers.doors} wireframe={layers.wireframe || layers.wireframeDoors}>
             {!layers.pillarsOnly && <DoorsPlacement />}
           </CategoryLayerGroup>
 

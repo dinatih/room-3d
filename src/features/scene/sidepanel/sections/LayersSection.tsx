@@ -53,23 +53,51 @@ export function LayersSection({
   const layerBtn = (
     _color: string,
     label: string,
-    key: keyof LayerState
+    key: keyof LayerState,
+    wireframeKey?: keyof LayerState,
   ) => {
     const on = layers[key];
+    const wfOn = wireframeKey ? !!layers[wireframeKey] : false;
     return (
-      <button 
-        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
-        onClick={() => onToggleLayer(key)}
+      <div 
+        className="w-100 border-0 border-bottom py-1 px-3 d-flex align-items-center justify-content-between gap-2"
         style={{ 
           background: 'transparent',
           opacity: on ? 1 : 0.55,
         }}
       >
-        <span>{label}</span>
-        <span className={`badge ${on ? 'bg-danger' : 'bg-secondary'}`}>
-          {on ? 'ON' : 'OFF'}
-        </span>
-      </button>
+        <button
+          type="button"
+          className="btn btn-sm btn-link p-0 text-start text-dark text-decoration-none flex-grow-1 text-truncate small"
+          onClick={() => onToggleLayer(key)}
+        >
+          {label}
+        </button>
+        <div className="d-flex align-items-center gap-1 flex-shrink-0">
+          <button
+            type="button"
+            className={`btn btn-sm py-0 px-2 rounded-pill small ${on ? 'btn-danger' : 'btn-secondary'}`}
+            style={{ fontSize: '0.75rem', lineHeight: '1.4' }}
+            onClick={() => onToggleLayer(key)}
+          >
+            {on ? 'ON' : 'OFF'}
+          </button>
+          {wireframeKey && (
+            <button
+              type="button"
+              className={`btn btn-sm py-0 px-1 rounded border-0 ${wfOn ? 'btn-info text-white shadow-sm' : 'btn-outline-secondary text-muted'}`}
+              style={{ fontSize: '0.85rem', lineHeight: '1.4', background: wfOn ? undefined : 'transparent' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleLayer(wireframeKey);
+              }}
+              title={`Activer/désactiver wireframe filaire 🕸 sur ${label}`}
+            >
+              🕸
+            </button>
+          )}
+        </div>
+      </div>
     );
   };
 
@@ -130,10 +158,10 @@ export function LayersSection({
         })()}
       </div>
       {layerBtn('purple',    'Effet fumée (Poof!) 💨',                 'smokeTransition')}
-      {layerBtn('green',     'Structure murale 🧱 (Alt+W)',            'wallStructure')}
+      {layerBtn('green',     'Structure murale 🧱 (Alt+W)',            'wallStructure', 'wireframeWallStructure')}
       {layerBtn('orange',    'Revêtements sol (+ plinthes) 🪵', 'floorCoverings')}
-      {layerBtn('secondary', 'Dalle et plafond 🏛️ (Alt+Q)',            'structure')}
-      {layerBtn('peach',     'Portes 🚪',                      'doors')}
+      {layerBtn('secondary', 'Dalle et plafond 🏛️ (Alt+Q)',            'structure', 'wireframeStructure')}
+      {layerBtn('peach',     'Portes 🚪',                      'doors', 'wireframeDoors')}
       {layerBtn('teal',      'Ciel & Atmosphère 🌤️',           'environment')}
       {layerBtn('green',     'Herbe & Terrain ext. 🌱',        'bermudaGrass')}
       {layers.bermudaGrass && (

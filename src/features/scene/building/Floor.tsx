@@ -524,6 +524,8 @@ export function Floor() {
   const groundType = useSceneStore(state => state.layers.groundType);
   const structure = useSceneStore(state => state.layers.structure);
   const floorCoverings = useSceneStore(state => state.layers.floorCoverings);
+  const wireframeStructure = useSceneStore(state => state.layers.wireframeStructure);
+  const globalWireframe = useSceneStore(state => state.layers.wireframe);
 
   const slabShape = useMemo(() => new THREE.Shape([
     new THREE.Vector2(-20, 30),
@@ -604,7 +606,7 @@ export function Floor() {
         </group>
       </CategoryLayerGroup>
 
-      <CategoryLayerGroup layer={LAYER_STRUCTURE} visible={structure}>
+      <CategoryLayerGroup layer={LAYER_STRUCTURE} visible={structure} wireframe={globalWireframe || wireframeStructure}>
         <group name="slab-group" userData={{ itemName: 'Dalle Béton' }}>
           <MergedStaticGroup name="merged-slab">
             <SlabUnit x={0} z={0} />

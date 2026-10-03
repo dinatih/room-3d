@@ -81,6 +81,24 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     defaultValue: false,
   },
   {
+    layerKey: 'wireframeWallStructure',
+    canonicalParam: 'wireframeWallStructure',
+    urlParams: ['wireframe-wallstructure', 'wireframe-murs', 'wireframe-mur', 'wireframemurs', 'wf-murs', 'wf-walls'],
+    defaultValue: false,
+  },
+  {
+    layerKey: 'wireframeStructure',
+    canonicalParam: 'wireframeStructure',
+    urlParams: ['wireframe-structure', 'wireframe-dalle', 'wireframe-plafond', 'wireframestructure', 'wf-structure'],
+    defaultValue: false,
+  },
+  {
+    layerKey: 'wireframeDoors',
+    canonicalParam: 'wireframeDoors',
+    urlParams: ['wireframe-doors', 'wireframe-portes', 'wireframe-porte', 'wireframeportes', 'wf-doors', 'wf-portes'],
+    defaultValue: false,
+  },
+  {
     layerKey: 'animals',
     canonicalParam: 'animals',
     urlParams: ['animals', 'animal', 'animaux', 'animeaux', 'pets'],
