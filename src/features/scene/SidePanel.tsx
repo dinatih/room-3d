@@ -513,7 +513,11 @@ export function SidePanel({
             className="btn btn-sm btn-danger w-100 rounded-0 py-2 px-3 fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0 small"
             onClick={onOpenInventory}
             title="Ouvrir l'inventaire (Touche I)"
-            style={{ letterSpacing: '0.06em' }}
+            style={{ 
+              letterSpacing: '0.06em',
+              background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(185, 28, 28, 0.95) 100%)',
+              textShadow: '0 1px 1px rgba(0, 0, 0, 0.35)'
+            }}
           >
             <span className="d-flex align-items-center gap-2">
               <span>📦 Inventaire</span>

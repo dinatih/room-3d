@@ -35,30 +35,46 @@ button, input, select, textarea {
 
 /* ── GLASSMORPHISM UTILITIES ── */
 .glass-card {
-  background: rgba(255, 255, 255, 0.74) !important;
+  background: rgba(255, 255, 255, 0.58) !important;
   backdrop-filter: blur(14px) !important;
   -webkit-backdrop-filter: blur(14px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.85) !important;
+  border-radius: 12px !important;
 }
 
-/* Make standard buttons inside glass cards transparent with frosted hover */
+/* Titres et en-têtes avec effet gravé 3D dans le verre */
+.glass-card .card-header button {
+  color: #1f2937 !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.95);
+  font-weight: 700 !important;
+}
+
+/* Corps interne des cartes glass */
+.glass-card .card-body {
+  border-top: 1px solid rgba(255, 255, 255, 0.45) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* Boutons et éléments de liste à l'intérieur des cartes glass */
 .glass-card .btn-light,
-.glass-card button:not(.btn-danger):not(.btn-outline-danger):not(.btn-outline-secondary):not(.btn-close):not(.btn-sm) {
+.glass-card button:not(.btn-danger):not(.btn-outline-danger):not(.btn-outline-secondary):not(.btn-close):not(.btn-sm):not(.btn-primary):not(.btn-warning):not(.btn-info) {
   background: transparent !important;
-  color: var(--text) !important;
+  color: #1f2937 !important;
   border: none !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35) !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: background 0.15s ease, opacity 0.15s ease;
 }
 .glass-card .btn-light:hover,
-.glass-card button:not(.btn-danger):not(.btn-outline-danger):not(.btn-outline-secondary):not(.btn-close):not(.btn-sm):hover {
-  background: rgba(255, 255, 255, 0.45) !important;
+.glass-card button:not(.btn-danger):not(.btn-outline-danger):not(.btn-outline-secondary):not(.btn-close):not(.btn-sm):not(.btn-primary):not(.btn-warning):not(.btn-info):hover {
+  background: rgba(255, 255, 255, 0.35) !important;
 }
 
-/* Support badges layout inside glass cards */
+/* Badges dans les glass cards */
 .glass-card .badge {
   font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* ── BOOTSTRAP HALF-STEP UTILITIES ── */
