@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import { parseUrlCameraMode } from '@features/scene/camera/cameraUrlParams';
+import { parseUrlLayerOverrides, updateUrlLayer } from './layerUrlParams';
 import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
 import {
   type LaraCountMode,
@@ -327,6 +328,12 @@ if (initialActiveChar && isExtraCharacter(initialActiveChar.id)) {
   }
 }
 
+const layerOverrides = parseUrlLayerOverrides();
+Object.assign(initialLayers, layerOverrides);
+if (initialLayers.mirrorsHD) {
+  cameraState.mirrorsHD = true;
+}
+
 export const useSceneStore = create<SceneStore>((set) => ({
   furniture: initialFurniture,
   layers: initialLayers,
@@ -423,6 +430,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         }
       }
       const nextLayers = { ...state.layers, [key]: isActivating };
+      updateUrlLayer(key, isActivating);
       if (key === 'mirrors') {
         // Force l'invalidation pour que SceneLayerController mette à jour le mask camera
         cameraState.invalidate?.();
@@ -557,6 +565,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       const lKey = resolved.name as keyof LayerState;
       set((state) => {
         const nextVal = targetState !== undefined ? targetState : !state.layers[lKey];
+        updateUrlLayer(lKey, nextVal);
         const nextLayers = { ...state.layers, [lKey]: nextVal };
         cameraState.invalidate?.();
         return { layers: nextLayers };
