@@ -3,7 +3,7 @@
  * Affiche les logs applicatifs avec horodatage, couleurs par tag et filtre Bulle Think.
  */
 import { useState, useEffect, useRef } from 'react';
-import { CHARACTERS, findCharacter } from '@features/scene/walkerConfig';
+import { CHARACTERS, findCharacter, npcLabel } from '@features/scene/walkerConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
@@ -65,6 +65,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const [visible, setVisible] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
+  const [includeSystemLogs, setIncludeSystemLogs] = useState(false);
   const logAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const savedHeightRef = useRef(110);
@@ -86,7 +87,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
       if (e.key === 'b' || e.key === 'B') setVisible(v => !v);
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -98,10 +99,15 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     if (visible && !isPaused && logAreaRef.current) {
       logAreaRef.current.scrollTop = logAreaRef.current.scrollHeight;
     }
-  }, [logs, visible, isPaused, filterBubbleOnly]);
+  }, [logs, visible, isPaused, filterBubbleOnly, includeSystemLogs]);
 
   const displayedLogs = filterBubbleOnly
-    ? logs.filter(entry => entry.tag.toLowerCase() === activeWalkerId.toLowerCase())
+    ? logs.filter(entry => {
+        const tag = entry.tag.toLowerCase();
+        if (tag === activeWalkerId.toLowerCase()) return true;
+        if (includeSystemLogs && tag === 'system') return true;
+        return false;
+      })
     : logs;
 
   // Redimensionnement vertical par drag
@@ -153,7 +159,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         onClick={() => { if (!visible) setVisible(true); }}
         title={!visible ? 'Ouvrir la console App Logs (B)' : undefined}
       >
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 flex-wrap">
           {visible && (
             <button
               type="button"
@@ -167,26 +173,46 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
               ✕
             </button>
           )}
-          <span className="text-success fw-bold text-uppercase d-flex align-items-center gap-1 small">
+          <span className="text-success fw-bold text-uppercase d-flex align-items-center gap-1 small flex-shrink-0">
             <span>🤖</span>
             <span>APP LOGS</span>
           </span>
-          {!visible && (
-            <span
-              className="fw-bold small px-1 rounded d-flex align-items-center gap-1"
-              style={{
-                color: charColor,
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                border: `1px solid ${charColor}66`,
-              }}
-            >
-              {charDisplayName}
-            </span>
-          )}
+
+          {/* Badge PNJ actif (visible en mode ouvert ET en mode replié) */}
+          <span
+            className="fw-bold small px-1 rounded d-flex align-items-center gap-1 flex-shrink-0"
+            style={{
+              color: charColor,
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              border: `1px solid ${charColor}66`,
+            }}
+          >
+            {charDisplayName}
+          </span>
+
+          {/* Sélecteur PNJ actif juste à côté (visible aussi en mode replié) */}
+          <select
+            className="form-select form-select-sm py-0 px-1 bg-dark text-white border-secondary small w-auto flex-shrink-0"
+            style={{ fontSize: '11px', height: '22px' }}
+            value={activeWalkerId}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              e.stopPropagation();
+              useSceneStore.getState().setActiveWalkerId(e.target.value);
+            }}
+            title="Changer le PNJ actif"
+          >
+            {CHARACTERS.map(c => (
+              <option key={c.id} value={c.id} className="bg-dark text-light">
+                {npcLabel(c)}
+              </option>
+            ))}
+          </select>
         </div>
 
         {visible && (
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center gap-2 flex-wrap">
             {/* Bouton Filtre Personnage Actif */}
             <button
               type="button"
@@ -211,6 +237,42 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
               }
             >
               <span>{charDisplayName}</span>
+              <span
+                className={`badge ${filterBubbleOnly ? 'bg-dark' : 'bg-secondary'} py-0 px-1`}
+                style={{ fontSize: '9px', color: filterBubbleOnly ? charColor : '#ffffff' }}
+              >
+                {filterBubbleOnly ? 'FILTRÉ' : 'TOUS'}
+              </span>
+            </button>
+
+            {/* Toggle Logs Système dans la liste filtrée */}
+            <button
+              type="button"
+              className={`btn btn-sm py-0 px-2 small d-flex align-items-center gap-1 border ${
+                includeSystemLogs
+                  ? 'btn-info text-dark fw-bold shadow-sm'
+                  : 'btn-outline-secondary text-white-50 border-white border-opacity-25'
+              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIncludeSystemLogs(s => !s);
+              }}
+              title={
+                includeSystemLogs
+                  ? 'Logs système affichés dans la liste filtrée — Cliquer pour masquer'
+                  : 'Afficher aussi les logs système dans la liste filtrée PNJ'
+              }
+              style={{
+                opacity: filterBubbleOnly ? 1 : 0.65,
+              }}
+            >
+              <span>⚙️ Système</span>
+              <span
+                className={`badge ${includeSystemLogs ? 'bg-dark text-info' : 'bg-secondary text-white'} py-0 px-1`}
+                style={{ fontSize: '9px' }}
+              >
+                {includeSystemLogs ? 'ON' : 'OFF'}
+              </span>
             </button>
 
             {/* Bouton Pause / Reprendre */}
@@ -242,7 +304,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           {displayedLogs.length === 0 && (
             <div className="text-secondary fst-italic py-1">
               {filterBubbleOnly
-                ? `Aucun log pour ${charDisplayName}…`
+                ? `Aucun log pour ${charDisplayName}${includeSystemLogs ? ' ou système' : ''}…`
                 : 'En attente de logs…'}
             </div>
           )}
@@ -262,9 +324,13 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
                 >
                   {formatTime(entry.timestamp)}
                 </span>
-                {!filterBubbleOnly && (
+                {(!filterBubbleOnly || entry.tag.toLowerCase() !== activeWalkerId.toLowerCase()) && (
                   <span className="fw-semibold flex-shrink-0" style={{ color }}>
-                    {(() => { const ch = findCharacter(entry.tag); return ch ? `${ch.emoji} ${entry.tag}` : entry.tag; })()}
+                    {(() => {
+                      if (entry.tag.toLowerCase() === 'system') return '⚙️ system';
+                      const ch = findCharacter(entry.tag);
+                      return ch ? `${ch.emoji} ${entry.tag}` : entry.tag;
+                    })()}
                   </span>
                 )}
                 <span className="flex-grow-1">{entry.message}</span>
