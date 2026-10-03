@@ -13,3 +13,4 @@ sources_backup/
 *.blend1
 report-plato/
 .mimocode/
+scripts/temp_*

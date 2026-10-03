@@ -17,7 +17,7 @@ export function GardenFrontWallScan() {
         roughness: 0.85,
         side: THREE.FrontSide,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.1,
         depthWrite: false,
       });
     }
