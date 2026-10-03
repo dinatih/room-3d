@@ -10,14 +10,12 @@ import {
 
 interface ExtraCharactersSelectorProps {
   isMobile: boolean;
-  onToggleLayer: (key: any) => void;
-  extraCharactersEnabled: boolean;
+  onToggleLayer?: (key: any) => void;
+  extraCharactersEnabled?: boolean;
 }
 
 export function ExtraCharactersSelector({
   isMobile,
-  onToggleLayer,
-  extraCharactersEnabled,
 }: ExtraCharactersSelectorProps) {
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
@@ -53,36 +51,15 @@ export function ExtraCharactersSelector({
 
   return (
     <div className="p-2 border-top bg-transparent d-flex flex-column gap-2 mt-2">
-      {/* En-tête avec switch principal */}
+      {/* En-tête */}
       <div className="d-flex justify-content-between align-items-center">
         <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ fontSize: '9px' }}>
           🎭 Personnages Hors-Série (Extra)
         </div>
-        <span className={`badge ${extraCharactersEnabled && activeCount > 0 ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
-          {extraCharactersEnabled ? `${activeCount} / ${totalCount} actifs` : 'DÉSACTIVÉ'}
+        <span className={`badge ${activeCount > 0 ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {activeCount > 0 ? `${activeCount} / ${totalCount} actifs` : 'AUCUN'}
         </span>
       </div>
-
-      {/* Bouton Toggle Global */}
-      <button 
-        type="button"
-        className="btn btn-sm btn-light w-100 text-start rounded border py-2 px-3 text-dark d-flex align-items-center justify-content-between shadow-none small"
-        onClick={() => onToggleLayer('extraCharacters')}
-        title="Activer/Désactiver l'affichage des personnages extra (Raccourci: E)"
-        style={{ 
-          background: extraCharactersEnabled ? 'rgba(13, 110, 253, 0.08)' : 'rgba(0, 0, 0, 0.03)',
-          borderColor: extraCharactersEnabled ? 'rgba(13, 110, 253, 0.3)' : 'rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <div className="d-flex align-items-center gap-2">
-          <span>🎭</span>
-          <span>Afficher les Personnages Extra</span>
-          <kbd className="bg-secondary text-white px-1 rounded small">E</kbd>
-        </div>
-        <span className={`badge ${extraCharactersEnabled ? 'bg-primary' : 'bg-secondary'}`}>
-          {extraCharactersEnabled ? 'ON' : 'OFF'}
-        </span>
-      </button>
 
       {/* Panneau de sélection multiple */}
       <div className="p-2 rounded bg-light-subtle border border-secondary-subtle d-flex flex-column gap-2">

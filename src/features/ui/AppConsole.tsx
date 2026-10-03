@@ -178,22 +178,10 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
             <span>APP LOGS</span>
           </span>
 
-          {/* Badge PNJ actif (visible en mode ouvert ET en mode replié) */}
-          <span
-            className="fw-bold small px-1 rounded d-flex align-items-center gap-1 flex-shrink-0"
-            style={{
-              color: charColor,
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              border: `1px solid ${charColor}66`,
-            }}
-          >
-            {charDisplayName}
-          </span>
-
-          {/* Sélecteur PNJ actif juste à côté (visible aussi en mode replié) */}
+          {/* Sélecteur PNJ actif (visible en mode ouvert ET en mode replié) */}
           <select
             className="form-select form-select-sm py-0 px-1 bg-dark text-white border-secondary small w-auto flex-shrink-0"
-            style={{ fontSize: '11px', height: '22px' }}
+            style={{ fontSize: '11px', height: '22px', borderColor: `${charColor}88` }}
             value={activeWalkerId}
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}

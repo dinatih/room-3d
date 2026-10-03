@@ -986,8 +986,6 @@ export function CharacterSection({
       {/* ── Sélecteur Multiple Personnages Extra ── */}
       <ExtraCharactersSelector
         isMobile={isMobile}
-        onToggleLayer={onToggleLayer}
-        extraCharactersEnabled={layers.extraCharacters ?? false}
       />
     </div>
   );

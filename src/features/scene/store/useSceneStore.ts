@@ -319,17 +319,12 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
 const initialActiveChar = parseUrlActiveCharacter();
 const initialActiveWalkerId = initialActiveChar ? initialActiveChar.id : (initialLayers.laraCount === 1 ? 'xbot' : 'native');
 
+let initialActiveExtraIds: string[] = [];
 if (initialActiveChar && isExtraCharacter(initialActiveChar.id)) {
+  initialActiveExtraIds = [initialActiveChar.id];
   initialLayers.extraCharacters = true;
   if (initialActiveChar.id in initialExtraStates) {
     initialExtraStates[initialActiveChar.id] = true;
-  }
-}
-
-let initialActiveExtraIds = EXTRA_CHARACTERS.map(c => c.id);
-if (initialActiveChar && isExtraCharacter(initialActiveChar.id)) {
-  if (!initialActiveExtraIds.includes(initialActiveChar.id)) {
-    initialActiveExtraIds = [initialActiveChar.id, ...initialActiveExtraIds];
   }
 }
 
@@ -492,8 +487,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
       const nextActiveExtraIds = exists
         ? state.activeExtraIds.filter(x => x !== id)
         : [...state.activeExtraIds, id];
-      const nextLayers = (!exists && !state.layers.extraCharacters)
-        ? { ...state.layers, extraCharacters: true }
+      const hasExtras = nextActiveExtraIds.length > 0;
+      const nextLayers = state.layers.extraCharacters !== hasExtras
+        ? { ...state.layers, extraCharacters: hasExtras }
         : state.layers;
       cameraState.invalidate?.();
       return { activeExtraIds: nextActiveExtraIds, layers: nextLayers };
@@ -509,8 +505,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   clearExtraCharacters: () => {
-    set(() => ({
-      activeExtraIds: []
+    set((state) => ({
+      activeExtraIds: [],
+      layers: { ...state.layers, extraCharacters: false }
     }));
     cameraState.invalidate?.();
   },
@@ -521,8 +518,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
       const nextActiveExtraIds = allSelected
         ? state.activeExtraIds.filter(id => !groupIds.includes(id))
         : Array.from(new Set([...state.activeExtraIds, ...groupIds]));
-      const nextLayers = (!allSelected && !state.layers.extraCharacters)
-        ? { ...state.layers, extraCharacters: true }
+      const hasExtras = nextActiveExtraIds.length > 0;
+      const nextLayers = state.layers.extraCharacters !== hasExtras
+        ? { ...state.layers, extraCharacters: hasExtras }
         : state.layers;
       cameraState.invalidate?.();
       return { activeExtraIds: nextActiveExtraIds, layers: nextLayers };
@@ -655,15 +653,21 @@ export const useSceneStore = create<SceneStore>((set) => ({
     updateUrlActiveCharacter(id);
     set((state) => {
       let nextActiveExtraIds = state.activeExtraIds;
-      if (isExtraCharacter(id) && !state.activeExtraIds.includes(id)) {
-        nextActiveExtraIds = [id, ...state.activeExtraIds.filter(x => x !== id)];
+      let nextLayers = state.layers;
+      if (isExtraCharacter(id)) {
+        if (!state.activeExtraIds.includes(id)) {
+          nextActiveExtraIds = [id, ...state.activeExtraIds.filter(x => x !== id)];
+        }
+        if (!state.layers.extraCharacters) {
+          nextLayers = { ...state.layers, extraCharacters: true };
+        }
       }
       let nextActiveMainIds = state.activeMainIds;
       if (!isExtraCharacter(id) && !state.activeMainIds.includes(id)) {
         nextActiveMainIds = [id, ...state.activeMainIds];
       }
       cameraState.invalidate?.();
-      return { activeWalkerId: id, activeExtraIds: nextActiveExtraIds, activeMainIds: nextActiveMainIds };
+      return { activeWalkerId: id, activeExtraIds: nextActiveExtraIds, activeMainIds: nextActiveMainIds, layers: nextLayers };
     });
   },
 }));
