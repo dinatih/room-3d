@@ -8,6 +8,12 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
+const CHARACTER_ID_SET = new Set(CHARACTERS.map(c => c.id.toLowerCase()));
+
+export function isSystemLog(tag: string): boolean {
+  return !CHARACTER_ID_SET.has(tag.toLowerCase());
+}
+
 const TAG_COLORS: Record<string, string> = {
   system: '#ffffff',
   perf:   '#ffaa00',
@@ -17,7 +23,10 @@ const TAG_COLORS: Record<string, string> = {
 };
 
 function getTagColor(tag: string): string {
-  return TAG_COLORS[tag.toLowerCase()] ?? '#aaaaaa';
+  const lower = tag.toLowerCase();
+  if (TAG_COLORS[lower]) return TAG_COLORS[lower];
+  if (isSystemLog(lower)) return '#58a6ff';
+  return '#aaaaaa';
 }
 
 // ── Types & Singleton ──────────────────────────────────────────────────────
@@ -65,7 +74,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const [visible, setVisible] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
-  const [includeSystemLogs, setIncludeSystemLogs] = useState(false);
+  const [includeSystemLogs, setIncludeSystemLogs] = useState(true);
   const logAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const savedHeightRef = useRef(110);
@@ -105,7 +114,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     ? logs.filter(entry => {
         const tag = entry.tag.toLowerCase();
         if (tag === activeWalkerId.toLowerCase()) return true;
-        if (includeSystemLogs && tag === 'system') return true;
+        if (includeSystemLogs && isSystemLog(tag)) return true;
         return false;
       })
     : logs;
@@ -315,9 +324,13 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
                 {(!filterBubbleOnly || entry.tag.toLowerCase() !== activeWalkerId.toLowerCase()) && (
                   <span className="fw-semibold flex-shrink-0" style={{ color }}>
                     {(() => {
-                      if (entry.tag.toLowerCase() === 'system') return '⚙️ system';
+                      const lower = entry.tag.toLowerCase();
+                      if (lower === 'system') return '⚙️ system';
+                      if (lower === 'perf') return '⚡ perf';
+                      if (lower === 'anim') return '✨ anim';
+                      if (lower === 'robin') return '🐦 robin';
                       const ch = findCharacter(entry.tag);
-                      return ch ? `${ch.emoji} ${entry.tag}` : entry.tag;
+                      return ch ? `${ch.emoji} ${entry.tag}` : `⚙️ ${entry.tag}`;
                     })()}
                   </span>
                 )}
