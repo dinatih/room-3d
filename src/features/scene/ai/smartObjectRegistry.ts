@@ -688,7 +688,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'rain-dance',
     name: 'Jardin Nord (Pluie)',
     category: 'dance',
-    position: [0, 0, -400],
+    position: [0, 0, -430],
     slots: [
       {
         slotId: 'dance-in-rain',
