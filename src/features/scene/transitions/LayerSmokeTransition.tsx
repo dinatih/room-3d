@@ -43,11 +43,18 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
     const smokeEnabled = layers.smokeTransition ?? true;
     const prev = prevRef.current;
 
-    // Premier chargement : pas d'animation
+    // Premier chargement : pas d'animation, synchronisation directe
     if (isMountRef.current) {
       isMountRef.current = false;
-      Object.keys(ANIMATABLE_LAYERS).forEach(k => {
-        prev[k] = !!(layers as any)[k];
+      Object.entries(ANIMATABLE_LAYERS).forEach(([k, layerId]) => {
+        const val = !!(layers as any)[k];
+        prev[k] = val;
+        const group = categoryLayerRegistry.get(layerId);
+        if (group) {
+          group.visible = val;
+        }
+        if (val) camera.layers.enable(layerId);
+        else camera.layers.disable(layerId);
       });
       return;
     }

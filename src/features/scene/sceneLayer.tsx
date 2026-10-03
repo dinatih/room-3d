@@ -65,8 +65,8 @@ interface SceneLayers {
  * les modèles GLB chargés asynchronement par Suspense après le premier render.
  */
 export function CategoryLayerGroup({
-  layer, children,
-}: { layer: number; children: React.ReactNode }) {
+  layer, children, visible = true,
+}: { layer: number; children: React.ReactNode; visible?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
   const assignLayers = (root: THREE.Object3D) => {
@@ -87,6 +87,9 @@ export function CategoryLayerGroup({
     const grp = ref.current;
     if (!grp) return;
     categoryLayerRegistry.set(layer, grp);
+    if (visible !== undefined) {
+      grp.visible = visible;
+    }
     assignLayers(grp);
 
     const onChildAdded = (e: any) => {
@@ -98,11 +101,11 @@ export function CategoryLayerGroup({
       grp.removeEventListener('childadded', onChildAdded);
       categoryLayerRegistry.delete(layer);
     };
-  }, [layer]);
+  }, [layer, visible]);
 
   return (
     <CategoryLayerContext.Provider value={layer}>
-      <group ref={ref}>{children}</group>
+      <group ref={ref} visible={visible}>{children}</group>
     </CategoryLayerContext.Provider>
   );
 }
@@ -119,7 +122,8 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
   useLayoutEffect(() => {
     camera.layers.enableAll();
     camera.layers.disable(LAYER_WALKER_DETAIL);
-  }, [camera]);
+    if (layers.mirrors === false) camera.layers.disable(17);
+  }, [camera, layers.mirrors]);
 
   return <LayerSmokeTransition layers={layers as any} />;
 }

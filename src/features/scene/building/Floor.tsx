@@ -522,6 +522,8 @@ export function RedPVCCorridor() {
 export function Floor() {
   const bermudaGrass = useSceneStore(state => state.layers.bermudaGrass);
   const groundType = useSceneStore(state => state.layers.groundType);
+  const structure = useSceneStore(state => state.layers.structure);
+  const floorCoverings = useSceneStore(state => state.layers.floorCoverings);
 
   const slabShape = useMemo(() => new THREE.Shape([
     new THREE.Vector2(-20, 30),
@@ -581,7 +583,7 @@ export function Floor() {
 
   return (
     <>
-      <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
+      <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS} visible={floorCoverings}>
         <group name="parquet-group" userData={{ itemName: 'Sol Parquet' }}>
           <Parquet />
         </group>
@@ -602,7 +604,7 @@ export function Floor() {
         </group>
       </CategoryLayerGroup>
 
-      <CategoryLayerGroup layer={LAYER_STRUCTURE}>
+      <CategoryLayerGroup layer={LAYER_STRUCTURE} visible={structure}>
         <group name="slab-group" userData={{ itemName: 'Dalle Béton' }}>
           <MergedStaticGroup name="merged-slab">
             <SlabUnit x={0} z={0} />

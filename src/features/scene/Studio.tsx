@@ -703,17 +703,17 @@ export function Studio() {
            * LAYER_STRUCTURE (28) — dalle béton, plafonds (géré dans Floor)
            * LAYER_FLOOR_COVERINGS (25) — parquet, carrelage, pvc, plinthes (géré dans Floor)
            */}
-          <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE}>
+          <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE} visible={layers.wallStructure}>
             <Walls pillarsOnly={layers.pillarsOnly} />
           </CategoryLayerGroup>
 
-          <CategoryLayerGroup layer={LAYER_DOORS}>
+          <CategoryLayerGroup layer={LAYER_DOORS} visible={layers.doors}>
             {!layers.pillarsOnly && <DoorsPlacement />}
           </CategoryLayerGroup>
 
           <Floor />
           {/* LAYER_WALKER (18) — Personnages 3D */}
-          <CategoryLayerGroup layer={LAYER_WALKER}>
+          <CategoryLayerGroup layer={LAYER_WALKER} visible={layers.walker}>
             <Walker walkerAnim={laraGridActive ? laraGridAnim : undefined} />
           </CategoryLayerGroup>
           <GlobalSkeletonHelpers show={layers.skeleton} />
@@ -721,21 +721,21 @@ export function Studio() {
            * LAYER_EQUIPMENT (1) — équipements sanitaires et cuisine.
            * GLB toggle via React visible (indépendant de camera.layers).
            */}
-          <CategoryLayerGroup layer={LAYER_EQUIPMENT}>
+          <CategoryLayerGroup layer={LAYER_EQUIPMENT} visible={layers.equipment}>
             <Equipment />
           </CategoryLayerGroup>
 
           {/*
            * LAYER_FURNITURE (12) — Structure & gros volumes.
            */}
-          <CategoryLayerGroup layer={LAYER_FURNITURE}>
+          <CategoryLayerGroup layer={LAYER_FURNITURE} visible={layers.furniture}>
             <Furniture />
           </CategoryLayerGroup>
 
           {/*
            * LAYER_FURNISHINGS (21) — Habillage & confort fonctionnel.
            */}
-          <CategoryLayerGroup layer={LAYER_FURNISHINGS}>
+          <CategoryLayerGroup layer={LAYER_FURNISHINGS} visible={layers.furnishings}>
             <Furnishings />
             {/* Cadres GLB Nissedal — habillage mural */}
             <MirrorFrames />
@@ -744,23 +744,23 @@ export function Studio() {
           {/*
            * LAYER_DECOR (22) — Détails & habillage de surface.
            */}
-          <CategoryLayerGroup layer={LAYER_DECOR}>
+          <CategoryLayerGroup layer={LAYER_DECOR} visible={layers.decor}>
             <Decor />
           </CategoryLayerGroup>
 
           {/* LAYER_ANIMALS (20) — Animaux autonomes (Robin Bird, Shiba Inu) */}
-          <CategoryLayerGroup layer={LAYER_ANIMALS}>
+          <CategoryLayerGroup layer={LAYER_ANIMALS} visible={layers.animals}>
             <Animals />
           </CategoryLayerGroup>
 
           {/* LAYER_MIRRORS (17) — plans de réflexion Reflector uniquement (coûteux) */}
-          <CategoryLayerGroup layer={LAYER_MIRRORS}>
+          <CategoryLayerGroup layer={LAYER_MIRRORS} visible={layers.mirrors}>
             <MirrorReflectors />
           </CategoryLayerGroup>
 
           {/* LAYER_NEIGHBORS (14) — appartements voisins */}
           {layers.neighbors && (
-            <CategoryLayerGroup layer={LAYER_NEIGHBORS}>
+            <CategoryLayerGroup layer={LAYER_NEIGHBORS} visible={layers.neighbors}>
               <Neighbors />
             </CategoryLayerGroup>
           )}

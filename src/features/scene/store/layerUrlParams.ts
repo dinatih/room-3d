@@ -88,9 +88,6 @@ function parseBooleanParam(val: string | null): boolean | undefined {
   return undefined;
 }
 
-/**
- * Analyse l'URL pour détecter les surcharges de visibilité des calques demandés.
- */
 export function parseUrlLayerOverrides(): Partial<Record<keyof LayerState, boolean>> {
   if (typeof window === 'undefined') return {};
   try {
@@ -101,11 +98,18 @@ export function parseUrlLayerOverrides(): Partial<Record<keyof LayerState, boole
     const params = new URLSearchParams(search);
     const overrides: Partial<Record<keyof LayerState, boolean>> = {};
 
+    // Normalisation en minuscules de toutes les clés d'URL présentes
+    const lowerParams = new Map<string, string>();
+    for (const [key, val] of params.entries()) {
+      lowerParams.set(key.toLowerCase(), val);
+    }
+
     for (const mapping of MONITORED_LAYERS) {
-      // 1. Drapeaux négatifs "no-..."
+      // 1. Drapeaux négatifs (ex: no-portes, no-doors, etc.)
       let foundNegative = false;
       for (const p of mapping.urlParams) {
-        if (params.has(`no-${p}`) || params.has(`no_${p}`)) {
+        const lowerP = p.toLowerCase();
+        if (lowerParams.has(`no-${lowerP}`) || lowerParams.has(`no_${lowerP}`)) {
           overrides[mapping.layerKey] = false;
           foundNegative = true;
           break;
@@ -113,10 +117,22 @@ export function parseUrlLayerOverrides(): Partial<Record<keyof LayerState, boole
       }
       if (foundNegative) continue;
 
-      // 2. Paramètres directs
+      // 2. Paramètre canonique en minuscules
+      const canonLower = mapping.canonicalParam.toLowerCase();
+      if (lowerParams.has(canonLower)) {
+        const val = lowerParams.get(canonLower) ?? null;
+        const parsed = parseBooleanParam(val);
+        if (parsed !== undefined) {
+          overrides[mapping.layerKey] = parsed;
+          continue;
+        }
+      }
+
+      // 3. Alias en minuscules
       for (const p of mapping.urlParams) {
-        if (params.has(p)) {
-          const val = params.get(p);
+        const lowerP = p.toLowerCase();
+        if (lowerParams.has(lowerP)) {
+          const val = lowerParams.get(lowerP) ?? null;
           const parsed = parseBooleanParam(val);
           if (parsed !== undefined) {
             overrides[mapping.layerKey] = parsed;
@@ -143,14 +159,25 @@ export function updateUrlLayer(key: keyof LayerState, value: boolean) {
 
     const url = new URL(window.location.href);
 
-    // Supprimer les alias précédents pour éviter la redondance
-    for (const p of mapping.urlParams) {
-      url.searchParams.delete(p);
-      url.searchParams.delete(`no-${p}`);
-      url.searchParams.delete(`no_${p}`);
+    // Supprimer les alias précédents en ignorant la casse
+    const allKeysToDelete: string[] = [];
+    const lowerTargets = new Set([
+      mapping.canonicalParam.toLowerCase(),
+      ...mapping.urlParams.map(p => p.toLowerCase()),
+      ...mapping.urlParams.map(p => `no-${p.toLowerCase()}`),
+      ...mapping.urlParams.map(p => `no_${p.toLowerCase()}`),
+    ]);
+
+    for (const k of url.searchParams.keys()) {
+      if (lowerTargets.has(k.toLowerCase())) {
+        allKeysToDelete.push(k);
+      }
+    }
+    for (const k of allKeysToDelete) {
+      url.searchParams.delete(k);
     }
 
-    // Si la valeur est différente de la valeur par défaut ou si elle était déjà dans l'URL, on l'écrit
+    // Écrire le paramètre canonique
     url.searchParams.set(mapping.canonicalParam, value ? '1' : '0');
     window.history.replaceState(null, '', url.toString());
   } catch {}
