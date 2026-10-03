@@ -176,12 +176,12 @@ export function CharacterSection({
             {/* ── Réglages Physique Perruques (directement sous la coupe) ── */}
             {layers.hairPhysics && (
               <div className="mt-2 pt-2 border-top border-secondary-subtle d-flex flex-column gap-2">
-                <div className="text-muted fw-bold text-dark small text-uppercase">
+                <div className="text-muted fw-bold text-dark small text-uppercase" style={{ fontSize: '9px' }}>
                   💇‍♀️ Paramètres Physique Perruques
                 </div>
 
                 <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1">
+                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
                     <span className="text-muted fw-semibold text-dark small text-uppercase">
                       🧶 Rigidité & Maintien (Stiffness)
                     </span>
@@ -206,7 +206,7 @@ export function CharacterSection({
                 </div>
 
                 <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1">
+                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
                     <span className="text-muted fw-semibold text-dark small text-uppercase">
                       🧯 Amortissement & Anti-vibration (Damping)
                     </span>
@@ -231,7 +231,7 @@ export function CharacterSection({
                 </div>
 
                 <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1">
+                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
                     <span className="text-muted fw-semibold text-dark small text-uppercase">
                       ⚖️ Poids aux pointes / Anti-fouet (Tip Weight)
                     </span>
@@ -256,7 +256,7 @@ export function CharacterSection({
                 </div>
 
                 <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1">
+                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
                     <span className="text-muted fw-semibold text-dark small text-uppercase">
                       📐 Angle max déviation repos (Max Angle)
                     </span>
@@ -281,7 +281,7 @@ export function CharacterSection({
                 </div>
 
                 <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1">
+                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
                     <span className="text-muted fw-semibold text-dark small text-uppercase">
                       🌍 Gravité globale (Gravity)
                     </span>
@@ -306,7 +306,7 @@ export function CharacterSection({
                 </div>
 
                 <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1">
+                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
                     <span className="text-muted fw-semibold text-dark small text-uppercase">
                       🏃 Inertie dynamique (Inertia)
                     </span>
@@ -331,7 +331,7 @@ export function CharacterSection({
                 </div>
 
                 <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1">
+                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
                     <span className="text-muted fw-semibold text-dark small text-uppercase">
                       💨 Vent / Brise ambiante (Wind)
                     </span>
@@ -356,7 +356,7 @@ export function CharacterSection({
                 </div>
 
                 <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1">
+                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
                     <span className="text-muted fw-semibold text-dark small text-uppercase">
                       🛡️ Rayon Collision Tête (Head Collider)
                     </span>
@@ -584,12 +584,12 @@ export function CharacterSection({
       {/* ── Réglages Physique Buste ── */}
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
-          <div className="text-muted fw-bold text-dark small text-uppercase">
+          <div className="text-muted fw-bold text-dark small text-uppercase" style={{ fontSize: '9px' }}>
             💃 Paramètres Physique Buste
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 💥 Intensité Physique Buste
               </span>
@@ -614,7 +614,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 ⚖️ Masse / Poids Buste (breastMass)
               </span>
@@ -639,7 +639,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 🧶 Fermeté / Maintien Buste (breastFirmness)
               </span>
@@ -664,7 +664,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 👙 Élasticité Verticale (braElasticity)
               </span>
@@ -689,7 +689,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 ↔️ Élasticité Horizontale XZ (braElasticityXZ)
               </span>
@@ -714,7 +714,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 ⏱️ Retard / Déphasage Inertie (breastLagDelay)
               </span>
@@ -739,7 +739,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 📐 Angle Max Vertical (maxBreastAngle)
               </span>
@@ -764,7 +764,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 ↔️ Angle Max Horizontal (maxBreastAngleXZ)
               </span>
@@ -789,7 +789,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 ↕️ Rebond / Translation (breastTranslation)
               </span>
@@ -814,7 +814,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 📏 Course Max Rebond (breastMaxTravel)
               </span>
@@ -839,7 +839,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 🍈 Aplatissement / Squash & Stretch (breastSquash)
               </span>
@@ -864,7 +864,7 @@ export function CharacterSection({
           </div>
 
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-1">
+            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
               <span className="text-muted fw-semibold text-dark small text-uppercase">
                 🌍 Gravité Buste (breastGravity)
               </span>
@@ -952,7 +952,7 @@ export function CharacterSection({
 
                 {(layers.fpvStabilization ?? true) && (
                   <div className="mt-1.5 px-1">
-                    <div className="d-flex justify-content-between text-muted small">
+                    <div className="d-flex justify-content-between text-muted small form-range-header">
                       <span>Amorti des secousses</span>
                       <span className="fw-bold text-dark">{Math.round((layers.fpvStabilizationFactor ?? 0.7) * 100)}%</span>
                     </div>

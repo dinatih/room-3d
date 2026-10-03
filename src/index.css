@@ -218,6 +218,15 @@ button, input, select, textarea {
   height: 0.75rem;
 }
 
+.form-range-header {
+  font-size: 9px;
+}
+.form-range-header > span,
+.form-range-header > div,
+.form-range-header > .badge {
+  font-size: 9px !important;
+}
+
 /* ── SELECTABLE TEXT UTILITY (.user-select-text & .user-select-all) ── */
 .user-select-text {
   -webkit-user-select: text !important;
