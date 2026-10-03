@@ -33,7 +33,7 @@ export function ViewsSection({
   };
 
   return (
-    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
+    <div className="d-flex flex-column bg-transparent">
       <button
         className="btn btn-sm btn-warning text-dark w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 fw-bold d-flex align-items-center justify-content-between shadow-sm small"
         onClick={() => useSceneStore.getState().setPhotoModeOpen(true)}

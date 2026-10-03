@@ -102,7 +102,7 @@ export function LayersSection({
   };
 
   return (
-    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
+    <div className="d-flex flex-column bg-transparent">
       <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
         <div className="d-flex justify-content-between align-items-center mb-1 gap-2">
           <div className="text-muted fw-semibold text-dark text-nowrap small text-uppercase">

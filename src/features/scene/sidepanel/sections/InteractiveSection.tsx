@@ -75,7 +75,7 @@ export function InteractiveSection({
   };
 
   return (
-    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
+    <div className="d-flex flex-column bg-transparent">
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">PORTES & FENÊTRES</div>
       {furnitureBtn('Porte Entrée', 'entryDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Porte Séjour', 'livingDoor', 'OUVERT', 'FERMÉ')}

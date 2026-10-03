@@ -62,7 +62,7 @@ export function CharacterSection({
   };
 
   return (
-    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '60vh' }}>
+    <div className="d-flex flex-column bg-transparent">
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
           <div>
