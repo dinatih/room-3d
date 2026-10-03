@@ -43,6 +43,7 @@ import {
   useCameraShortcuts,
   useCameraFrameUpdate,
 } from './camera';
+import { parseUrlLayerOverrides } from './store/layerUrlParams';
 
 const FPV_DEFAULT_FOV = 100;
 const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
@@ -138,11 +139,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     cameraState.mode = m;
     setMode(m);
 
-    // Auto-enable HD mirrors en FPV, disable hors FPV (orbit, walk, top, ortho) pour les performances
+    // Auto-enable HD mirrors en FPV, disable hors FPV (orbit, walk, top, ortho) pour les performances,
+    // sauf si l'option miroir-hd a été explicitement définie (notamment à OFF) via l'URL
+    const urlLayerOverrides = parseUrlLayerOverrides();
+    const isMirrorsHDExplicitlyOff = urlLayerOverrides.mirrorsHD === false;
     const isMirrorsHD = useSceneStore.getState().layers.mirrorsHD;
-    if (m === 'fpv' && !isMirrorsHD) {
+    if (m === 'fpv' && !isMirrorsHD && !isMirrorsHDExplicitlyOff) {
       useSceneStore.getState().toggleLayer('mirrorsHD');
-    } else if (m !== 'fpv' && isMirrorsHD) {
+    } else if (m !== 'fpv' && isMirrorsHD && urlLayerOverrides.mirrorsHD !== true) {
       useSceneStore.getState().toggleLayer('mirrorsHD');
     }
 
