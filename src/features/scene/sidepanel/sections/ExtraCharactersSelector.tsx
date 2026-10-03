@@ -167,8 +167,7 @@ export function ExtraCharactersSelector({
 
         {/* Liste interactive multi-sélection avec checkboxes et tags */}
         <div 
-          className="d-flex flex-column gap-1 overflow-auto pe-1 border rounded bg-white"
-          style={{ maxHeight: '180px' }}
+          className="d-flex flex-column gap-1 pe-1 border rounded bg-white"
         >
             {filteredCharacters.length === 0 ? (
               <div className="p-3 text-center text-muted" style={{ fontSize: '11px' }}>
@@ -244,7 +243,7 @@ export function ExtraCharactersSelector({
                 Vider
               </button>
             </div>
-            <div className="d-flex flex-wrap gap-1" style={{ maxHeight: '60px', overflowY: 'auto' }}>
+            <div className="d-flex flex-wrap gap-1">
               {activeExtraIds.map(id => {
                 const char = findCharacter(id);
                 return (

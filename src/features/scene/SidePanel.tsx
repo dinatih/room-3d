@@ -552,7 +552,7 @@ export function SidePanel({
   return (
     <>
       <div 
-        className="position-fixed overflow-auto d-flex flex-column gap-2 side-panel-desktop"
+        className="position-fixed overflow-y-auto overflow-x-hidden d-flex flex-column gap-2 side-panel-desktop"
         style={{
           top: 16,
           left: 16,
@@ -560,13 +560,13 @@ export function SidePanel({
           maxHeight: 'calc(100vh - 32px)',
           zIndex: 100,
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(0, 0, 0, 0.25) transparent',
+          scrollbarColor: 'rgba(0, 0, 0, 0.35) rgba(0, 0, 0, 0.05)',
         }}
         onWheel={e => e.stopPropagation()}
       >
-        <div className="card shadow-sm glass-card overflow-hidden">
+        <div className="card shadow-sm glass-card overflow-hidden flex-shrink-0">
           <button
-            className="btn btn-sm btn-danger w-100 rounded-0 py-2 px-3 fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0 small"
+            className="btn btn-sm btn-danger w-100 rounded-0 py-2 px-3 fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0 small flex-shrink-0"
             onClick={onOpenInventory}
             title="Ouvrir l'inventaire (Touche I)"
             style={{ 

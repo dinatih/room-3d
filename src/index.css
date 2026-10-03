@@ -174,21 +174,28 @@ button, input, select, textarea {
 .inventory-pane-detail::-webkit-scrollbar,
 .side-panel-desktop::-webkit-scrollbar,
 .glass-card .overflow-auto::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 .inventory-pane-list::-webkit-scrollbar-thumb, 
 .inventory-pane-detail::-webkit-scrollbar-thumb,
 .side-panel-desktop::-webkit-scrollbar-thumb,
 .glass-card .overflow-auto::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.35);
   border-radius: 4px;
+}
+.inventory-pane-list::-webkit-scrollbar-thumb:hover, 
+.inventory-pane-detail::-webkit-scrollbar-thumb:hover,
+.side-panel-desktop::-webkit-scrollbar-thumb:hover,
+.glass-card .overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.55);
 }
 .inventory-pane-list::-webkit-scrollbar-track,
 .inventory-pane-detail::-webkit-scrollbar-track,
 .side-panel-desktop::-webkit-scrollbar-track,
 .glass-card .overflow-auto::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
 }
 
 /* ── COMPACT FORM RANGE (.form-range-sm) ── */
