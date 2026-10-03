@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import { parseUrlCameraMode } from '@features/scene/camera/cameraUrlParams';
-import { parseUrlLayerOverrides, updateUrlLayer } from './layerUrlParams';
+import { parseUrlLayerOverrides, updateUrlLayer, parseUrlGroundType, updateUrlGroundType } from './layerUrlParams';
 import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
 import {
   type LaraCountMode,
@@ -73,14 +73,9 @@ import { DEFAULT_HDRI_ID } from '@features/scene/hdriConfig';
 export const GRASS_TYPES: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves'];
 
 export function getRandomGrassType(): GroundType {
-  if (typeof window !== 'undefined') {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const urlGrass = params.get('grass') ?? params.get('ground') ?? params.get('herbe');
-      if (urlGrass && GRASS_TYPES.includes(urlGrass as GroundType)) {
-        return urlGrass as GroundType;
-      }
-    } catch {}
+  const urlGround = parseUrlGroundType();
+  if (urlGround.groundType && urlGround.groundType !== 'none') {
+    return urlGround.groundType;
   }
   return GRASS_TYPES[Math.floor(Math.random() * GRASS_TYPES.length)];
 }
@@ -344,6 +339,22 @@ if (initialActiveChar && !isExtraCharacter(initialActiveChar.id)) {
 
 const layerOverrides = parseUrlLayerOverrides();
 Object.assign(initialLayers, layerOverrides);
+
+const urlGround = parseUrlGroundType();
+if (urlGround.groundType) {
+  initialLayers.groundType = urlGround.groundType;
+  if (urlGround.active !== undefined) {
+    initialLayers.bermudaGrass = urlGround.active;
+  } else {
+    initialLayers.bermudaGrass = urlGround.groundType !== 'none';
+  }
+}
+
+if (layerOverrides.extraCharacters) {
+  initialLayers.extraCharacters = true;
+  initialActiveExtraIds = EXTRA_CHARACTERS.map(c => c.id);
+}
+
 if (initialLayers.mirrorsHD) {
   cameraState.mirrorsHD = true;
 }
@@ -549,6 +560,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   setGroundType: (type) => {
+    updateUrlGroundType(type);
     set((state) => {
       cameraState.invalidate?.();
       return {
@@ -568,6 +580,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         const cur = state.layers.groundType ?? 'bermuda';
         const nextIdx = (order.indexOf(cur) + 1) % order.length;
         const next = order[nextIdx];
+        updateUrlGroundType(next);
         cameraState.invalidate?.();
         return {
           layers: {

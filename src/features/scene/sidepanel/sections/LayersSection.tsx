@@ -184,7 +184,7 @@ export function LayersSection({
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('yellow', 'Mesures réelles 📐 (Alt+M)', 'measuredDimensions')}
       {layerBtn('red',    'Aff. arêtes murs (Alt+A)', 'wallEdges')}
-      {layerBtn('cyan',   'Wireframe coloré 🕸', 'wireframe')}
+      {layerBtn('cyan',   'Wireframe coloré 🕸 (W)', 'wireframe')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('yellow', 'Lumières HD ✨', 'lightsHD')}
       {layerBtn('cyan',   'LiDAR scan 📡', 'lidar')}

@@ -44,6 +44,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue top-down suivi perso (toggle)" keys={['Y']} />
               <R label="Avion en papier (toggle)"   keys={['F']} />
               <R label="Grille Lara (toggle)"       keys={['G']} />
+              <R label="Wireframe coloré 🕸 (toggle)" keys={['W']} />
               <R label="Enlever le haut (toggle)"   keys={['Alt+Z']} />
               <R label="Enlever le bas (toggle)"    keys={['Alt+C']} />
               <R label="Déshabiller les Lara (toggle)" keys={['Alt+X']} />

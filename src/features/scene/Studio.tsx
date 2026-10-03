@@ -502,6 +502,9 @@ export function Studio() {
       if (e.key === 'g' || e.key === 'G') {
         onToggleLayer('laraGrid');
         cameraState.invalidate?.();
+      } else if (e.key === 'w' || e.key === 'W') {
+        onToggleLayer('wireframe');
+        cameraState.invalidate?.();
       } else if (e.key === 'p' || e.key === 'P') {
         setInventoryInitialCat('walkers');
         setShowInventory(true);
