@@ -267,22 +267,24 @@ class DuoSessionManager {
     if (session.sessionTimer <= 0) {
       session.cachedAnimState = null;
       const objLabel = session.location.objectId;
+      const pBId = session.participantB?.characterId;
+      const duoNames = pBId ? `${session.participantA.characterId} & ${pBId}` : session.participantA.characterId;
       if (session.currentRepeatIndex + 1 < session.repeatsPerAnim) {
         session.currentRepeatIndex++;
         const currentAnim = session.playlist[session.currentAnimIndex];
         session.sessionTimer = currentAnim?.duration ?? 5.0;
-        appLog(objLabel, `🔄 Répétition Duo (${session.currentRepeatIndex + 1}/${session.repeatsPerAnim}) : "${currentAnim?.label}"`);
+        appLog(objLabel, `🔄 [${duoNames}] Répétition Duo (${session.currentRepeatIndex + 1}/${session.repeatsPerAnim}) : "${currentAnim?.label}"`);
       } else {
         session.currentRepeatIndex = 0;
         session.currentAnimIndex++;
         if (session.currentAnimIndex < session.playlist.length) {
           const nextAnim = session.playlist[session.currentAnimIndex];
           session.sessionTimer = nextAnim?.duration ?? 5.0;
-          appLog(objLabel, `🎬 Nouvelle animation Duo (${session.currentAnimIndex + 1}/${session.playlist.length}) : "${nextAnim?.label}" (x${session.repeatsPerAnim})`);
+          appLog(objLabel, `🎬 [${duoNames}] Nouvelle animation Duo (${session.currentAnimIndex + 1}/${session.playlist.length}) : "${nextAnim?.label}" (x${session.repeatsPerAnim})`);
         } else {
           session.isSessionPlaying = false;
           session.isSessionComplete = true;
-          appLog(objLabel, `✨ Session Duo terminée ! Les 2 PNJs reprennent leur vie autonome.`);
+          appLog(objLabel, `✨ [${duoNames}] Session Duo terminée ! Les 2 PNJs reprennent leur vie autonome.`);
         }
       }
       this.emitChange();

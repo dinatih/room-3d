@@ -17,7 +17,10 @@ const TAG_COLORS: Record<string, string> = {
 };
 
 function getTagColor(tag: string): string {
-  return TAG_COLORS[tag.toLowerCase()] ?? '#aaaaaa';
+  const lower = tag.toLowerCase();
+  if (TAG_COLORS[lower]) return TAG_COLORS[lower];
+  if (lower.includes('point') || lower.includes('zone') || lower.includes('duo') || lower.includes('combat')) return '#58a6ff';
+  return '#aaaaaa';
 }
 
 // ── Types & Singleton ──────────────────────────────────────────────────────
@@ -103,7 +106,20 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const displayedLogs = filterBubbleOnly
     ? logs.filter(entry => {
         const tag = entry.tag.toLowerCase();
-        return tag === activeWalkerId.toLowerCase() || tag === 'system';
+        const activeId = activeWalkerId.toLowerCase();
+
+        // 1. Tag direct du PNJ actif
+        if (tag === activeId) return true;
+
+        // 2. Logs système généraux (moteur 3D suspendu, caméras, etc.)
+        if (tag === 'system') return true;
+
+        // 3. Log lié au PNJ actif (ex: hugs-point, duo, invitation mentionnant le PNJ)
+        const msg = entry.message.toLowerCase();
+        if (msg.includes(activeId)) return true;
+        if (activeChar && msg.includes(activeChar.name.toLowerCase())) return true;
+
+        return false;
       })
     : logs;
 
