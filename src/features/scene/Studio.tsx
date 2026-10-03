@@ -54,7 +54,9 @@ import { LaraGridToolbar }       from './LaraGridToolbar';
 import { AnimFrameController }   from '@features/inventory/AnimFrameController';
 import { useAnimPreviewStore }   from '@features/inventory/useAnimPreviewStore';
 import { WALKER_ANIM_OPTIONS }   from '@features/scene/animOptions';
-import { resolveAnimationId }    from './animations/animationResolver';
+import { resolveAnimationId, resolveAnimationPath }    from './animations/animationResolver';
+import { NPC_WALK_ANIMATIONS }   from './ai/agent/agentWalkAnimations';
+import { cacheDynamicGLTF }      from './character/useCharacterAnimations';
 import { useIsMobile }           from '@shared/hooks/useIsMobile';
 import { duoSessionManager }     from './ai/duoSessionManager';
 
@@ -119,7 +121,14 @@ function ShadowWarmup() {
   return null;
 }
 
-/** Pré-compilation GPU et exécution de frames de warm-up pendant la page de préchargement. */
+const WARMUP_ANIM_PATHS = [
+  'animations/combat/anim_pistol_kneel_to_stand.glb',
+  'animations/locomotion/anim_falling.glb',
+  'animations/poses_idles/anim_falling_idle.glb',
+  ...NPC_WALK_ANIMATIONS.map(animKey => resolveAnimationPath(animKey)).filter(Boolean),
+];
+
+/** Pré-compilation GPU, pré-téléchargement des animations essentielles et exécution de frames de warm-up pendant la page de préchargement. */
 function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }) {
   const { gl, scene, camera, invalidate } = useThree();
   const readyRef = useRef(false);
@@ -127,12 +136,19 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
   useEffect(() => {
     if (!active || readyRef.current) return;
 
+    // 1. Précharger en mémoire l'animation d'atterrissage, de chute et toutes les animations de marche aléatoires
+    const animPreloads = Promise.allSettled(
+      WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path))
+    );
+
+    // 2. Pré-compiler les shaders de la scène
     try {
       gl.compile(scene, camera);
     } catch {
-      // Ignorer si compilation async
+      // Ignorer si compilation async non supportée
     }
 
+    // 3. Exécuter des frames de warm-up avec rafraîchissement du shadow map
     let frames = 0;
     const interval = setInterval(() => {
       frames++;
@@ -140,10 +156,14 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       invalidate();
       if (frames >= 7) {
         clearInterval(interval);
-        readyRef.current = true;
-        onReady();
+        animPreloads.finally(() => {
+          if (!readyRef.current) {
+            readyRef.current = true;
+            onReady();
+          }
+        });
       }
-    }, 350); // ~2.4 secondes de compilation GPU et warm-up effectif absorbé par la page de chargement
+    }, 350); // ~2.4 secondes de warm-up effectif absorbé par la page de chargement
 
     return () => clearInterval(interval);
   }, [active, gl, scene, camera, invalidate, onReady]);
