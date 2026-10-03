@@ -155,9 +155,8 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
       style={{
         bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' : 16,
         right: isMobile ? 8 : 16,
-        left: 'auto',
-        width: visible ? (isMobile ? 'calc(100vw - 16px)' : 'min(520px, calc(100vw - 32px))') : 'auto',
-        maxWidth: isMobile ? 'calc(100vw - 16px)' : 'min(520px, calc(100vw - 32px))',
+        left: visible ? (isMobile ? 8 : 288) : 'auto',
+        width: visible ? undefined : 'auto',
         height: visible ? `${savedHeightRef.current}px` : 'auto',
         minHeight: visible ? '60px' : 'auto',
         maxHeight: isMobile ? '50vh' : '75vh',
@@ -179,7 +178,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           {visible && (
             <button
               type="button"
-              className="btn btn-sm btn-outline-secondary py-0 px-1 border-opacity-50 lh-1 small text-white-50 ms-3"
+              className="btn btn-sm btn-outline-secondary py-0 px-1 border-opacity-50 lh-1 small text-white-50"
               onClick={(e) => {
                 e.stopPropagation();
                 setVisible(false);
@@ -320,23 +319,27 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         </div>
       )}
 
-      {/* Poignée de redimensionnement manuelle (haut-gauche) */}
+      {/* Barre de redimensionnement manuelle (bord supérieur complet) */}
       {visible && (
         <div
           onPointerDown={handleResizePointerDown}
-          title="Redimensionner la console (Glisser vers le haut/bas)"
-          className="position-absolute top-0 start-0 d-flex align-items-start justify-content-start p-1 text-success opacity-75 user-select-none"
+          title="Redimensionner la hauteur de la console (Glisser vers le haut/bas)"
+          className="position-absolute top-0 start-0 end-0 d-flex align-items-center justify-content-center user-select-none"
           style={{
-            width: 22,
-            height: 22,
+            height: 8,
             cursor: 'ns-resize',
             zIndex: 10,
             touchAction: 'none',
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M1 1h14v2H1V1zm0 4h10v2H1V5zm0 4h6v2H1V9z" />
-          </svg>
+          <div
+            style={{
+              width: 36,
+              height: 3,
+              borderRadius: 2,
+              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+            }}
+          />
         </div>
       )}
     </div>
