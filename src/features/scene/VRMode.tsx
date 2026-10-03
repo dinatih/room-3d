@@ -1,17 +1,15 @@
 /**
- * VRMode.tsx — port de js/ui/events.js (section VR WebXR).
+ * VRMode.tsx — Gestion de session WebXR pure.
  *
- * - Active renderer.xr, injecte VRButton dans le DOM
+ * - Active gl.xr.enabled
  * - Crée un vrRig Group ; la caméra y est parentée pendant la session
- * - Tap/bouton Cardboard → avancer dans la direction du regard
- * - Session end → restaure la caméra et désactive isXR
+ * - Démarre la session WebXR uniquement sur demande explicite (toggle-vr)
+ * - Aucune injection DOM parasite ni message 'VR NOT SUPPORTED'
  */
 import { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
-import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import * as THREE from 'three';
 import { cameraState } from './cameraState';
-
 import { ROOM_W, ROOM_D } from './wallData';
 
 const WALK_SPEED = 2;
@@ -29,80 +27,65 @@ export function VRMode() {
     rigRef.current = rig;
     scene.add(rig);
 
-    // ── VRButton (invisible, déclenché via toggle-vr ou clic direct) ────────
-    const btn = VRButton.createButton(gl);
-    btn.id = 'vr-native-btn';
-    btn.style.display = 'none';
-    document.body.appendChild(btn);
-
-    const onToggleVR = () => {
-      btn.click();
-    };
-    document.addEventListener('toggle-vr', onToggleVR);
-
-    // MutationObserver pour détecter le support WebXR
-    const obs = new MutationObserver(() => {
-      const txt = btn.textContent || '';
-      if (txt.includes('NOT SUPPORTED') || txt.includes('NOT ALLOWED')) {
-        document.dispatchEvent(new CustomEvent('vr-support-change', { detail: { supported: false } }));
-      } else if (txt === 'ENTER VR' || txt === 'VR') {
-        document.dispatchEvent(new CustomEvent('vr-support-change', { detail: { supported: true } }));
-      }
-    });
-    obs.observe(btn, { childList: true, characterData: true, subtree: true });
-
-    // Initial check
-    const initialText = btn.textContent || '';
-    if (initialText.includes('NOT SUPPORTED') || initialText.includes('NOT ALLOWED')) {
-      document.dispatchEvent(new CustomEvent('vr-support-change', { detail: { supported: false } }));
-    } else if (initialText === 'ENTER VR' || initialText === 'VR') {
-      document.dispatchEvent(new CustomEvent('vr-support-change', { detail: { supported: true } }));
-    }
-
-    // ── Controller (tap Cardboard = avancer) ──────────────────────────────────
+    // ── Contrôleur WebXR (tap Cardboard = avancer) ───────────────────────────
     const ctrl = gl.xr.getController(0);
-    ctrl.addEventListener('selectstart', () => { walkingRef.current = true;  });
+    ctrl.addEventListener('selectstart', () => { walkingRef.current = true; });
     ctrl.addEventListener('selectend',   () => { walkingRef.current = false; });
     rig.add(ctrl);
 
-    // ── Session start ─────────────────────────────────────────────────────────
-    const onSessionStart = () => {
-      cameraState.isXR = true;
-      document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: true } }));
-      camera.position.set(0, 0, 0);
-      const activeId = (window as any).activeWalkerId || 'lara';
-      const pos = cameraState.positions[activeId];
-      const startX = pos ? pos.x : (Number.isFinite(cameraState.walkerX) ? cameraState.walkerX : ROOM_W / 2);
-      const startZ = pos ? pos.z : (Number.isFinite(cameraState.walkerZ) ? cameraState.walkerZ : ROOM_D / 2);
-      rig.position.set(startX, 170, startZ);
-      rig.add(camera);
+    let currentSession: any = null;
 
-      const hint = document.createElement('div');
-      hint.textContent = 'Appuyer pour avancer';
-      hint.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);'
-        + 'background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;'
-        + 'border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.5s';
-      document.body.appendChild(hint);
-      setTimeout(() => { hint.style.opacity = '0'; }, 4500);
-      setTimeout(() => { hint.remove(); }, 5000);
-    };
-
-    // ── Session end ───────────────────────────────────────────────────────────
     const onSessionEnd = () => {
+      currentSession = null;
       cameraState.isXR = false;
       document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: false } }));
       walkingRef.current = false;
       cameraState.isMoving = false;
-      scene.add(camera);  // reparente au root de la scène
+      scene.add(camera);
     };
 
-    gl.xr.addEventListener('sessionstart', onSessionStart);
-    gl.xr.addEventListener('sessionend',   onSessionEnd);
+    const onToggleVR = async () => {
+      const navXr = (navigator as any).xr;
+      if (!navXr) return;
+      if (currentSession) {
+        currentSession.end();
+        return;
+      }
+      try {
+        const sessionInit = { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking', 'layers'] };
+        const session = await navXr.requestSession('immersive-vr', sessionInit);
+        session.addEventListener('end', onSessionEnd);
+        await gl.xr.setSession(session);
+        currentSession = session;
+
+        cameraState.isXR = true;
+        document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: true } }));
+        camera.position.set(0, 0, 0);
+        const activeId = (window as any).activeWalkerId || 'lara';
+        const pos = cameraState.positions[activeId];
+        const startX = pos ? pos.x : (Number.isFinite(cameraState.walkerX) ? cameraState.walkerX : ROOM_W / 2);
+        const startZ = pos ? pos.z : (Number.isFinite(cameraState.walkerZ) ? cameraState.walkerZ : ROOM_D / 2);
+        rig.position.set(startX, 170, startZ);
+        rig.add(camera);
+
+        const hint = document.createElement('div');
+        hint.textContent = 'Appuyer pour avancer';
+        hint.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);'
+          + 'background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;'
+          + 'border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.5s';
+        document.body.appendChild(hint);
+        setTimeout(() => { hint.style.opacity = '0'; }, 4500);
+        setTimeout(() => { hint.remove(); }, 5000);
+      } catch {
+        // VR non supporté ou refusé — rien à afficher
+      }
+    };
+
+    document.addEventListener('toggle-vr', onToggleVR);
 
     // ── Touch fallback pour avancer (uniquement quand WebXR est actif) ──
     const onWalkStart = (e: Event) => {
       if (!gl.xr.isPresenting) return;
-      // Éviter d'intercepter les clics sur les boutons DOM ou UI
       if (e.target && (e.target as HTMLElement).tagName === 'BUTTON') return;
       walkingRef.current = true;
     };
@@ -117,18 +100,11 @@ export function VRMode() {
     window.addEventListener('mouseup',    onWalkEnd);
 
     return () => {
-      obs.disconnect();
       document.removeEventListener('toggle-vr', onToggleVR);
       document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: false } }));
-      btn.remove();
-      const container = document.getElementById('vr-immersive-container');
-      if (container && container.childNodes.length === 0) {
-        container.remove();
-      }
+      if (currentSession) currentSession.end().catch(() => {});
       gl.xr.enabled = false;
-      gl.xr.removeEventListener('sessionstart', onSessionStart);
-      gl.xr.removeEventListener('sessionend',   onSessionEnd);
-      
+
       window.removeEventListener('touchstart', onWalkStart);
       window.removeEventListener('touchend',   onWalkEnd);
       window.removeEventListener('mousedown',  onWalkStart);
@@ -147,7 +123,6 @@ export function VRMode() {
 
     if (walkingRef.current) {
       const dir = new THREE.Vector3();
-      // Obtenir la caméra WebXR active pour le calcul précis de la direction de vue
       const xrCam = gl.xr.getCamera() || camera;
       xrCam.getWorldDirection(dir);
       dir.y = 0;

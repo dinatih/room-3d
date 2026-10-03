@@ -72,10 +72,19 @@ export function SidePanel({
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
   const [isVRActive, setIsVRActive] = useState(false);
+  const [isVRSupported, setIsVRSupported] = useState(false);
   const [isImmersiveActive, setIsImmersiveActive] = useState(false);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
   const setCvModalOpen = useSceneStore(state => state.setCvModalOpen);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && 'xr' in navigator && (navigator as any).xr) {
+      (navigator as any).xr.isSessionSupported('immersive-vr')
+        .then((supported: boolean) => setIsVRSupported(supported))
+        .catch(() => setIsVRSupported(false));
+    }
+  }, []);
 
   useEffect(() => {
     const onVR = (e: Event) => {
@@ -435,20 +444,20 @@ export function SidePanel({
             scrollbarWidth: 'none',
           }}
         >
-          {/* 🥽 VR WebXR */}
-          <button
-            type="button"
-            onClick={() => {
-              const nativeBtn = document.getElementById('vr-native-btn');
-              if (nativeBtn) nativeBtn.click();
-              else document.dispatchEvent(new CustomEvent('toggle-vr'));
-            }}
-            className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isVRActive ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
-            title="Mode Réalité Virtuelle (WebXR)"
-          >
-            <span className="fs-5 lh-1">🥽</span>
-            <span className="fw-semibold small">{isVRActive ? '✕ VR' : 'VR'}</span>
-          </button>
+          {/* 🥽 VR WebXR (uniquement si WebXR est réellement supporté par l'appareil) */}
+          {isVRSupported && (
+            <button
+              type="button"
+              onClick={() => {
+                document.dispatchEvent(new CustomEvent('toggle-vr'));
+              }}
+              className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isVRActive ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
+              title="Mode Réalité Virtuelle (WebXR)"
+            >
+              <span className="fs-5 lh-1">🥽</span>
+              <span className="fw-semibold small">{isVRActive ? '✕ VR' : 'VR'}</span>
+            </button>
+          )}
 
           {/* 👁️ Mode Immersif Gyroscopique */}
           <button
