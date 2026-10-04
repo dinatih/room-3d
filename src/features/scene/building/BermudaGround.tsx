@@ -65,30 +65,32 @@ interface BermudaGroundProps {
   yPos?: number;
 }
 
-export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.4 }: BermudaGroundProps) {
+export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.6 }: BermudaGroundProps) {
   const storeBermudaGrass = useSceneStore(state => state.layers.bermudaGrass ?? true);
   const isGrassActive = active ?? storeBermudaGrass;
   const showTexturedGrass = isGrassActive && groundType !== 'none' && (groundType in GROUND_CONFIGS);
 
   return (
     <>
-      {/* Rectangle vert uni : sous-couche continue rattachée à LAYER_FLOOR_COVERINGS masquant la dalle */}
-      <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
-        <mesh
-          material={groundExteriorMat}
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[150, yPos - 0.05, 0]}
-          receiveShadow
-          userData={{
-            brickType: 'ground',
-            itemName: 'Terrain Extérieur',
-          }}
-        >
-          <planeGeometry args={[1100, 2000]} />
-        </mesh>
-      </CategoryLayerGroup>
+      {/* Rectangle vert uni : affiché uniquement en mode 'none' ou si l'herbe PBR est désactivée */}
+      {!showTexturedGrass && (
+        <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
+          <mesh
+            material={groundExteriorMat}
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[150, yPos, 0]}
+            receiveShadow
+            userData={{
+              brickType: 'ground',
+              itemName: 'Terrain Extérieur',
+            }}
+          >
+            <planeGeometry args={[1100, 2000]} />
+          </mesh>
+        </CategoryLayerGroup>
+      )}
 
-      {/* Herbe texturée PBR transparente calée : rattachée au calque Herbe (LAYER_GRASS) */}
+      {/* Herbe texturée PBR transparente : calée sur l'origine monde, laisse voir Paris en dessous sans recouvrir la dalle */}
       {showTexturedGrass && (
         <CategoryLayerGroup layer={LAYER_GRASS}>
           <TexturedGroundMesh
@@ -115,7 +117,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
     const repeatX = planeW / config.tileSize;
     const repeatY = planeH / config.tileSize;
 
-    // Alignement parfait des tuiles sur l'origine du monde (X=0, Z=0)
+    // Alignement continu des tuiles sur l'origine du monde (X=0, Z=0)
     const minWorldX = 150 - planeW / 2; // -400
     const minWorldZ = 0 - planeH / 2;   // -1000
     let offsetX = (minWorldX / config.tileSize) % 1;
@@ -147,9 +149,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       metalness: 0.02,
       transparent: true,
       opacity: 0.8,
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
+      depthWrite: false, // Permet à la dalle béton opaque d'avoir toujours la priorité absolue sans artefact
     });
   }, [textures, config.tileSize]);
 
@@ -159,6 +159,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       rotation={[-Math.PI / 2, 0, 0]}
       position={[150, yPos, 0]}
       receiveShadow
+      renderOrder={-1}
       userData={{
         brickType: 'ground',
         itemName: `Terrain Extérieur (${config.label})`,
