@@ -44,8 +44,8 @@ export const slabConcreteSide = new THREE.MeshStandardMaterial({
 export const groundExteriorMat = new THREE.MeshStandardMaterial({
   color: COLORS.ground,
   roughness: 0.9,
-  transparent: true,
-  opacity: 0.8,
+  transparent: false,
+  opacity: 1.0,
   polygonOffset: true,
   polygonOffsetFactor: 2,
   polygonOffsetUnits: 2,

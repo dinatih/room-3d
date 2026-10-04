@@ -72,25 +72,23 @@ export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.4 }: B
 
   return (
     <>
-      {/* Rectangle vert uni : terrain extérieur de secours quand l'herbe PBR est désactivée ou en mode 'none' */}
-      {!showTexturedGrass && (
-        <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
-          <mesh
-            material={groundExteriorMat}
-            rotation={[-Math.PI / 2, 0, 0]}
-            position={[150, yPos, 0]}
-            receiveShadow
-            userData={{
-              brickType: 'ground',
-              itemName: 'Terrain Extérieur',
-            }}
-          >
-            <planeGeometry args={[1100, 2000]} />
-          </mesh>
-        </CategoryLayerGroup>
-      )}
+      {/* Rectangle vert uni : sous-couche continue rattachée à LAYER_FLOOR_COVERINGS masquant la dalle */}
+      <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
+        <mesh
+          material={groundExteriorMat}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[150, yPos - 0.05, 0]}
+          receiveShadow
+          userData={{
+            brickType: 'ground',
+            itemName: 'Terrain Extérieur',
+          }}
+        >
+          <planeGeometry args={[1100, 2000]} />
+        </mesh>
+      </CategoryLayerGroup>
 
-      {/* Herbe texturée PBR : rattachée au calque Herbe (LAYER_GRASS) */}
+      {/* Herbe texturée PBR transparente calée : rattachée au calque Herbe (LAYER_GRASS) */}
       {showTexturedGrass && (
         <CategoryLayerGroup layer={LAYER_GRASS}>
           <TexturedGroundMesh
@@ -145,12 +143,13 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       normalMap: textures.normalMap,
       normalScale: new THREE.Vector2(1.0, 1.0),
       roughnessMap: textures.roughnessMap,
-      roughness: 0.85,
+      roughness: 0.9,
       metalness: 0.02,
-      // Opaque : empêche la dalle béton ou le fond en dessous de transparaître par transparence
-      transparent: false,
-      opacity: 1.0,
-      depthWrite: true,
+      transparent: true,
+      opacity: 0.8,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
     });
   }, [textures, config.tileSize]);
 
