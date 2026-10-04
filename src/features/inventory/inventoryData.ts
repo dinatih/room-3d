@@ -404,6 +404,7 @@ export interface WigItem {
 }
 
 export const WIGS_ITEMS: WigItem[] = [
+  { id: 'hair_lara_native', name: "Coupe Native (Lara Croft)", glbPath: 'characters/wigs/lara_native_hair.glb', photos: ['characters/wigs/previews/lara_native_hair.png'] },
   { id: 'hair_100', name: "Coupe #1 (Bob)", glbPath: 'characters/wigs/wig_100.glb', photos: ['characters/wigs/previews/wig_100.png'] },
   { id: 'hair_101', name: "Coupe #2 (Queue H.)", glbPath: 'characters/wigs/wig_101.glb', photos: ['characters/wigs/previews/wig_101.png'] },
   { id: 'hair_102', name: "Coupe #3 (Pixie)", glbPath: 'characters/wigs/wig_102.glb', photos: ['characters/wigs/previews/wig_102.png'] },
