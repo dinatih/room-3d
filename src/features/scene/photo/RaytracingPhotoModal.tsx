@@ -7,7 +7,8 @@
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
-import { WebGLPathTracer, PhysicalCamera } from 'three-gpu-pathtracer';
+import { WebGLPathTracer, PhysicalCamera, DenoiseMaterial } from 'three-gpu-pathtracer';
+import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import {
   LAYER_STRUCTURE,
   LAYER_EQUIPMENT,
@@ -26,7 +27,7 @@ export interface RaytracingPhotoModalProps {
   onClose: () => void;
 }
 
-type ResolutionPreset = 'fit' | '1080p' | '2k' | 'square' | 'portrait';
+type ResolutionPreset = '720p' | 'fit' | '1080p' | '2k' | 'square' | 'portrait';
 
 interface ResolutionOption {
   id: ResolutionPreset;
@@ -36,11 +37,12 @@ interface ResolutionOption {
 }
 
 const RESOLUTION_OPTIONS: ResolutionOption[] = [
+  { id: '720p', label: 'HD 720p (1280×720) - Rapide ⚡', width: 1280, height: 720 },
   { id: 'fit', label: 'Taille Écran', width: 0, height: 0 },
   { id: '1080p', label: 'Full HD (1920×1080)', width: 1920, height: 1080 },
   { id: '2k', label: '2K QHD (2560×1440)', width: 2560, height: 1440 },
-  { id: 'square', label: 'Carré 1:1 (1440×1440)', width: 1440, height: 1440 },
-  { id: 'portrait', label: 'Portrait 9:16 (1080×1920)', width: 1080, height: 1920 },
+  { id: 'square', label: 'Carré 1:1 (1080×1080)', width: 1080, height: 1080 },
+  { id: 'portrait', label: 'Portrait 9:16 (720×1280)', width: 720, height: 1280 },
 ];
 
 export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhotoModalProps) {
@@ -54,10 +56,13 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
   const animFrameIdRef = useRef<number | null>(null);
   const originalMaterialsMapRef = useRef<Map<THREE.Mesh, THREE.Material | THREE.Material[]>>(new Map());
   const hiddenHelpersRef = useRef<THREE.Object3D[]>([]);
-  const tempLightsRef = useRef<THREE.Light[]>([]);
+  const denoiseQuadRef = useRef<FullScreenQuad | null>(null);
+  const denoiseMatRef = useRef<DenoiseMaterial | null>(null);
+  const savedBackgroundRef = useRef<THREE.Color | THREE.Texture | null | undefined>(undefined);
 
   // Paramètres de rendu
-  const [resolution, setResolution] = useState<ResolutionPreset>('fit');
+  const [resolution, setResolution] = useState<ResolutionPreset>('720p');
+  const [enableDenoise, setEnableDenoise] = useState<boolean>(true);
   const [targetSamples, setTargetSamples] = useState<number>(40);
   const [bounces, setBounces] = useState<number>(6);
   const [exposure, setExposure] = useState<number>(1.0);
@@ -283,21 +288,12 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
       }
     });
 
-    // Lumières de débouchage douces pour compenser l'ignorance d'AmbientLight dans le path-tracer
-    const fillLights: THREE.Light[] = [];
-    const fill1 = new THREE.DirectionalLight(0xb0c8e8, 0.7);
-    fill1.position.set(-500, 600, -300);
-    fill1.name = 'raytracing-fill-1';
-    scene.add(fill1);
-    fillLights.push(fill1);
+    // Assurer que le ciel HDRI (SkySphere / Ciel Paris) illumine et s'affiche en fond s'il est présent
+    if (scene.environment && !scene.background) {
+      savedBackgroundRef.current = scene.background;
+      scene.background = scene.environment;
+    }
 
-    const fill2 = new THREE.DirectionalLight(0xffeedd, 0.5);
-    fill2.position.set(150, 400, 200);
-    fill2.name = 'raytracing-fill-2';
-    scene.add(fill2);
-    fillLights.push(fill2);
-
-    tempLightsRef.current = fillLights;
     hiddenHelpersRef.current = hidden;
     originalMaterialsMapRef.current = matMap;
   }, [scene]);
@@ -314,11 +310,10 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     });
     originalMaterialsMapRef.current.clear();
 
-    tempLightsRef.current.forEach((light) => {
-      scene.remove(light);
-      light.dispose();
-    });
-    tempLightsRef.current = [];
+    if (savedBackgroundRef.current !== undefined) {
+      scene.background = savedBackgroundRef.current;
+      savedBackgroundRef.current = undefined;
+    }
 
     // Nettoyer les structures BVH (boundsTree) construites par three-mesh-bvh sur les géométries
     scene.traverse((obj) => {
@@ -346,18 +341,9 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
       return { width: Math.round(maxWidth), height: Math.round(maxHeight) };
     }
 
-    const aspect = preset.width / preset.height;
-    let w = maxWidth;
-    let h = w / aspect;
-
-    if (h > maxHeight) {
-      h = maxHeight;
-      w = h * aspect;
-    }
-
     return {
-      width: Math.round(w),
-      height: Math.round(h),
+      width: preset.width,
+      height: preset.height,
       realWidth: preset.width,
       realHeight: preset.height,
     };
@@ -425,7 +411,17 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     pathTracer.renderDelay = 0;
     pathTracer.dynamicLowRes = true;
     pathTracer.lowResScale = 0.25;
+    pathTracer.tiles.set(2, 2);
     pathTracer.textureSize.set(1024, 1024);
+
+    // Débruiteur Intelligent (DenoiseMaterial)
+    const denoiseMat = new DenoiseMaterial();
+    denoiseMat.uniforms.sigma.value = 4.0;
+    denoiseMat.uniforms.threshold.value = 0.04;
+    denoiseMat.uniforms.kSigma.value = 1.0;
+    const denoiseQuad = new FullScreenQuad(denoiseMat);
+    denoiseMatRef.current = denoiseMat;
+    denoiseQuadRef.current = denoiseQuad;
 
     let isDisposed = false;
 
@@ -466,6 +462,13 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
             return;
           }
 
+          // Passe de débruitage à chaque échantillon si activé
+          if (enableDenoise && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current && pathTracerRef.current.samples > 0) {
+            denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
+            rendererRef.current.setRenderTarget(null);
+            denoiseQuadRef.current.render(rendererRef.current);
+          }
+
           const now = performance.now();
           // Throttling du setState React : màj toutes les 120ms au lieu de re-render React 60x par seconde
           if (now - lastSampleUpdate >= 120) {
@@ -486,6 +489,12 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
             setCurrentSamples(targetSamples);
             setFps(0);
             lastSampleUpdate = now;
+            // Passe finale de débruitage propre sur l'image terminée
+            if (enableDenoise && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current && pathTracerRef.current.samples > 0) {
+              denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
+              rendererRef.current.setRenderTarget(null);
+              denoiseQuadRef.current.render(rendererRef.current);
+            }
           }
         }
       }
@@ -502,9 +511,13 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
       }
       restoreScene();
       try {
+        denoiseQuad.dispose();
+        denoiseMat.dispose();
         pathTracer.dispose();
         renderer.dispose();
       } catch {}
+      denoiseQuadRef.current = null;
+      denoiseMatRef.current = null;
       pathTracerRef.current = null;
       rendererRef.current = null;
     };
@@ -512,6 +525,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     scene,
     camera,
     resolution,
+    enableDenoise,
     prepareScene,
     restoreScene,
     getRenderDimensions,
@@ -621,6 +635,21 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     pathTracerRef.current?.reset();
     setCurrentSamples(0);
     setElapsedSeconds(0);
+  };
+
+  // Basculer le débruiteur et rafraîchir immédiatement le canvas
+  const handleToggleDenoise = (active: boolean) => {
+    setEnableDenoise(active);
+    if (!pathTracerRef.current || !rendererRef.current || pathTracerRef.current.samples === 0) return;
+    const pt = pathTracerRef.current;
+    const rend = rendererRef.current;
+    if (active && denoiseMatRef.current && denoiseQuadRef.current) {
+      denoiseMatRef.current.uniforms.map.value = pt.target.texture;
+      rend.setRenderTarget(null);
+      denoiseQuadRef.current.render(rend);
+    } else {
+      (pt as any)._quad?.render(rend);
+    }
   };
 
   const progressPercent = Math.min(100, Math.round((currentSamples / targetSamples) * 100));
@@ -834,6 +863,23 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
                 value={exposure}
                 onChange={(e) => setExposure(parseFloat(e.target.value))}
               />
+            </div>
+
+            {/* Débruiteur Intelligent */}
+            <div className="d-flex align-items-center justify-content-between pt-2 mt-2 border-top border-white border-opacity-10">
+              <label className="form-check-label d-flex align-items-center gap-1.5 mb-0" style={{ fontSize: '11px' }}>
+                <span>✨</span>
+                <span>Débruiteur Intelligent</span>
+              </label>
+              <div className="form-check form-switch mb-0">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  role="switch"
+                  checked={enableDenoise}
+                  onChange={(e) => handleToggleDenoise(e.target.checked)}
+                />
+              </div>
             </div>
           </div>
 

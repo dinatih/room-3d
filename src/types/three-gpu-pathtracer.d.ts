@@ -81,4 +81,16 @@ declare module 'three-gpu-pathtracer' {
     bottomColor: Color;
     update(): void;
   }
+
+  export class DenoiseMaterial extends Material {
+    constructor(parameters?: any);
+    uniforms: {
+      sigma: { value: number };
+      threshold: { value: number };
+      kSigma: { value: number };
+      map: { value: Texture | null };
+      opacity: { value: number };
+      [key: string]: any;
+    };
+  }
 }
