@@ -131,28 +131,24 @@ export function SingleCharacter({
 
   useLayoutEffect(() => {
     if (!scene) return;
-    const hoverData = isPreview || isActive ? undefined : {
-      label: charLabel,
-      actions: [`select-walker-${id}`]
-    };
     scene.name = charLabel;
     scene.userData = {
       ...scene.userData,
       name: charLabel,
       itemName: charLabel,
-      hoverAction: hoverData,
     };
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         child.userData = {
           ...child.userData,
           itemName: charLabel,
-          hoverAction: hoverData,
         };
         child.frustumCulled = false;
+        // Désactiver le raycast triangle par triangle sur les maillages haute résolution
+        child.raycast = () => {};
       }
     });
-  }, [scene, charLabel, isPreview, isActive, id]);
+  }, [scene, charLabel]);
 
   // Libération propre des ressources GPU (textures, matériaux, géométries), cache GLTF et retargeting au démontage
   useEffect(() => {
@@ -1117,12 +1113,25 @@ export function SingleCharacter({
         itemName: charLabel,
         animUnit: true,
         noAnim: true,
-        hoverAction: isPreview || isActive ? undefined : {
-          label: charLabel,
-          actions: [`select-walker-${id}`]
-        }
       }}
     >
+      {/* Proxy de sélection léger pour le HoverMenu sans raycasting complexe sur maillages skinned */}
+      {!isActive && !isPreview && (
+        <mesh
+          position={[0, (targetHeight || 175) / 2, 0]}
+          userData={{
+            isHoverProxy: true,
+            hoverAction: {
+              label: charLabel,
+              actions: [`select-walker-${id}`],
+            },
+          }}
+        >
+          <cylinderGeometry args={[25, 25, targetHeight || 175, 8]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+      )}
+
       <group ref={animOriginRef}>
         <primitive ref={modelRef} object={scene} />
       </group>

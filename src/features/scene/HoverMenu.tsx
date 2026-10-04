@@ -342,7 +342,7 @@ export function HoverRaycaster() {
           ? (mat as THREE.Material[]).every(m =>
               (m as typeof mat).transparent && ((m as typeof mat).opacity ?? 1) < 0.3)
           : mat?.transparent && (mat?.opacity ?? 1) < 0.3;
-        if (isTransparent) continue;
+        if (!hit.object.userData?.isHoverProxy && isTransparent) continue;
         if (hit.object.userData?.brickType === 'ceiling') continue;
         if (hit.object.userData?.brickType === 'ground')  continue;
 
