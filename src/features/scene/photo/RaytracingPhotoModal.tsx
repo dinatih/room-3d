@@ -205,17 +205,19 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
       if ((obj as THREE.Mesh).isMesh) {
         const mesh = obj as THREE.Mesh;
 
-        // Détecter un miroir réflecteur (Reflector Three.js ou surface de miroir)
+        // Détecter un miroir réflecteur (Reflector Three.js uniquement, jamais les cadres)
+        const isFrame =
+          name.includes('frame') ||
+          name.includes('cadre') ||
+          (obj.parent && ((obj.parent.name || '').toLowerCase().includes('frame') || (obj.parent.name || '').toLowerCase().includes('cadre')));
+
         const isReflector =
-          (obj as any).type === 'Reflector' ||
-          typeof (obj as any).getRenderTarget === 'function' ||
-          (obj as any).isReflector ||
-          (mesh.material as any)?.name === 'ReflectorShader' ||
-          ((mesh.material as any)?.uniforms && 'textureMatrix' in (mesh.material as any).uniforms) ||
-          name.includes('reflector') ||
-          name.includes('mirror') ||
-          name.includes('miroir') ||
-          (obj.parent && ((obj.parent.name || '').toLowerCase().includes('reflector') || (obj.parent.name || '').toLowerCase().includes('mirror')));
+          !isFrame &&
+          ((obj as any).type === 'Reflector' ||
+            typeof (obj as any).getRenderTarget === 'function' ||
+            (obj as any).isReflector ||
+            (mesh.material as any)?.name === 'ReflectorShader' ||
+            ((mesh.material as any)?.uniforms && 'textureMatrix' in (mesh.material as any).uniforms));
 
         if (isReflector) {
           matMap.set(mesh, mesh.material);
@@ -379,12 +381,6 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    prepareScene();
-    setIsBuildingScene(true);
-    setErrorMessage(null);
-    setCurrentSamples(0);
-    setElapsedSeconds(0);
-
     const { width, height } = getRenderDimensions();
     canvas.width = width;
     canvas.height = height;
@@ -396,6 +392,8 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
       powerPreference: 'high-performance',
       preserveDrawingBuffer: true,
     });
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.AgXToneMapping;
     renderer.toneMappingExposure = exposure;
     renderer.setSize(width, height, false);
@@ -425,7 +423,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     physCamera.layers.enable(LAYER_ENVIRONMENT);
     physCameraRef.current = physCamera;
 
-    // 1. Capture instantanée du rendu 3D Standard temps réel avant initialisation du path-tracer
+    // 1. Capture instantanée du rendu 3D Standard temps réel (avec ombres et matériaux d'origine) avant altération pour le path-tracer
     try {
       renderer.render(scene, physCamera);
       const snapshot = canvas.toDataURL('image/png');
@@ -433,6 +431,13 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     } catch (err) {
       console.warn('[Raytracing] Impossible de capturer le snapshot 3D standard:', err);
     }
+
+    // 2. Préparation de la scène pour le path-tracer (conversion miroir PBR, conversion matériaux, assainissement)
+    prepareScene();
+    setIsBuildingScene(true);
+    setErrorMessage(null);
+    setCurrentSamples(0);
+    setElapsedSeconds(0);
 
     // Path Tracer
     const pathTracer = new WebGLPathTracer(renderer);
@@ -712,12 +717,6 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     pathTracerRef.current?.reset();
     setCurrentSamples(0);
     setElapsedSeconds(0);
-    if (rendererRef.current && physCameraRef.current && canvasRef.current) {
-      try {
-        rendererRef.current.render(scene, physCameraRef.current);
-        setRasterSnapshot(canvasRef.current.toDataURL('image/png'));
-      } catch {}
-    }
   };
 
   // Basculer le débruiteur et rafraîchir immédiatement le canvas
@@ -965,6 +964,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
                   pointerEvents: 'none',
                   animation: 'pulse 0.6s ease-out',
                   boxShadow: '0 0 10px rgba(255, 193, 7, 0.8)',
+                  zIndex: 10,
                 }}
               />
             )}
@@ -977,6 +977,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
                   background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
                   fontSize: '12px',
                   pointerEvents: 'none',
+                  zIndex: 10,
                 }}
               >
                 <div className="d-flex align-items-center gap-2">
