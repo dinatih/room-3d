@@ -7,20 +7,23 @@ import { CHARACTERS, findCharacter, npcLabel } from '@features/scene/walkerConfi
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
-// ── Palette de couleurs par tag ────────────────────────────────────────────
+// ── Palette de couleurs par tag (optimisée pour fond blanc) ─────────────────
 const TAG_COLORS: Record<string, string> = {
-  system: '#ffffff',
-  perf:   '#ffaa00',
-  error:  '#ff0000',
-  robin:  '#ff8833',
+  system: '#991b1b',
+  perf:   '#b45309',
+  error:  '#dc2626',
+  robin:  '#c2410c',
   ...Object.fromEntries(CHARACTERS.map(c => [c.id, c.color])),
 };
 
 function getTagColor(tag: string): string {
   const lower = tag.toLowerCase();
+  if (lower === 'system') return '#991b1b';
+  if (lower === 'error') return '#dc2626';
+  if (lower === 'perf') return '#b45309';
   if (TAG_COLORS[lower]) return TAG_COLORS[lower];
-  if (lower.includes('point') || lower.includes('zone') || lower.includes('duo') || lower.includes('combat')) return '#58a6ff';
-  return '#aaaaaa';
+  if (lower.includes('point') || lower.includes('zone') || lower.includes('duo') || lower.includes('combat')) return '#1d4ed8';
+  return '#475569';
 }
 
 // ── Types & Singleton ──────────────────────────────────────────────────────
@@ -47,22 +50,11 @@ function formatTime(ts: number): string {
   return `${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
 }
 
-function getContrastTextColor(hex: string): string {
-  const c = hex.replace('#', '');
-  const r = parseInt(c.substring(0, 2), 16) || 0;
-  const g = parseInt(c.substring(2, 4), 16) || 0;
-  const b = parseInt(c.substring(4, 6), 16) || 0;
-  return (r * 299 + g * 587 + b * 114) / 1000 >= 128 ? '#000000' : '#ffffff';
-}
-
 // ── Composant ──────────────────────────────────────────────────────────────
 export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const isMobile = useIsMobile();
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
   const activeChar = findCharacter(activeWalkerId);
-  const charColor = activeChar?.color ?? '#00ff88';
-  const charContrastText = getContrastTextColor(charColor);
-  const charDisplayName = `${activeChar?.emoji ? `${activeChar.emoji} ` : ''}${activeChar?.name ?? activeWalkerId}`;
 
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [visible, setVisible] = useState(false);
@@ -151,7 +143,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   return (
     <div
       ref={containerRef}
-      className="position-fixed font-monospace d-flex flex-column shadow-lg overflow-hidden rounded-3 border border-white border-opacity-15"
+      className="position-fixed font-monospace d-flex flex-column shadow-lg overflow-hidden rounded-3 border border-danger border-opacity-25"
       style={{
         bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' : 16,
         right: isMobile ? 8 : 16,
@@ -160,17 +152,17 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         height: visible ? `${savedHeightRef.current}px` : 'auto',
         minHeight: visible ? '60px' : 'auto',
         maxHeight: isMobile ? '50vh' : '75vh',
-        zIndex: 9999,
-        backgroundColor: 'rgba(13, 17, 23, 0.96)',
-        backdropFilter: 'blur(8px)',
-        boxShadow: visible ? '0 8px 32px rgba(0, 0, 0, 0.75)' : '0 2px 8px rgba(0, 0, 0, 0.35)',
+        zIndex: 100, // Inférieur à #loading (9999) pour ne pas s'afficher pendant le préchargement
+        backgroundColor: 'rgba(255, 255, 255, 0.97)',
+        backdropFilter: 'blur(10px)',
+        boxShadow: visible ? '0 8px 30px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(185, 28, 28, 0.12)' : '0 2px 8px rgba(0, 0, 0, 0.12)',
         fontSize: '11px',
       }}
     >
       {/* Header */}
       <div
-        className="d-flex align-items-center justify-content-between px-2 py-1 user-select-none border-bottom border-white border-opacity-10"
-        style={{ cursor: visible ? 'default' : 'pointer', background: 'rgba(22, 27, 34, 0.98)' }}
+        className="d-flex align-items-center justify-content-between px-2 py-1 user-select-none border-bottom border-danger border-opacity-20"
+        style={{ cursor: visible ? 'default' : 'pointer', background: 'rgba(254, 242, 242, 0.95)' }}
         onClick={() => { if (!visible) setVisible(true); }}
         title={!visible ? 'Ouvrir la console App Logs (B)' : undefined}
       >
@@ -178,7 +170,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
           {visible && (
             <button
               type="button"
-              className="btn btn-sm btn-outline-secondary py-0 px-1 border-opacity-50 lh-1 small text-white-50"
+              className="btn btn-sm btn-outline-danger py-0 px-1 border-0 lh-1 small"
               onClick={(e) => {
                 e.stopPropagation();
                 setVisible(false);
@@ -188,33 +180,56 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
               ▼
             </button>
           )}
-          <span className="text-success fw-bold text-uppercase d-flex align-items-center gap-1 small flex-shrink-0">
+          <span className="text-danger fw-bold text-uppercase d-flex align-items-center gap-1 small flex-shrink-0">
             <span>🤖</span>
             <span>APP LOGS</span>
           </span>
 
-          {/* Sélecteur PNJ actif (visible en mode ouvert ET en mode replié) */}
-          <select
-            className="form-select form-select-sm py-0 px-1 bg-dark text-white border-secondary small w-auto flex-shrink-0"
-            style={{ fontSize: '11px', height: '22px', borderColor: `${charColor}88` }}
-            value={activeWalkerId}
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            onChange={(e) => {
-              e.stopPropagation();
-              useSceneStore.getState().setActiveWalkerId(e.target.value);
-            }}
-            title="Changer le PNJ actif"
-          >
-            {CHARACTERS.map(c => (
-              <option key={c.id} value={c.id} className="bg-dark text-light">
-                {npcLabel(c)}
-              </option>
-            ))}
-          </select>
+          {/* Sélecteur PNJ actif avec bouton Filtré collé à droite */}
+          <div className="input-group input-group-sm w-auto flex-nowrap align-items-center">
+            <select
+              className="form-select form-select-sm py-0 px-1 bg-white text-dark border-danger border-opacity-50 small w-auto flex-shrink-0 rounded-end-0"
+              style={{ fontSize: '11px', height: '22px' }}
+              value={activeWalkerId}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onChange={(e) => {
+                e.stopPropagation();
+                useSceneStore.getState().setActiveWalkerId(e.target.value);
+              }}
+              title="Changer le PNJ sélectionné"
+            >
+              {CHARACTERS.map(c => (
+                <option key={c.id} value={c.id}>
+                  {npcLabel(c)}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              className={`btn btn-sm py-0 px-2 small rounded-start-0 border-start-0 ${
+                filterBubbleOnly
+                  ? 'btn-danger text-white fw-bold shadow-sm'
+                  : 'btn-outline-danger bg-white text-danger border-danger border-opacity-50'
+              }`}
+              style={{ fontSize: '11px', height: '22px' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setFilterBubbleOnly(f => !f);
+              }}
+              title={
+                filterBubbleOnly
+                  ? `Filtre actif : logs limités à ${activeChar?.name ?? activeWalkerId} (cliquer pour afficher tous les logs)`
+                  : `Filtrer les logs pour ${activeChar?.name ?? activeWalkerId}`
+              }
+            >
+              {filterBubbleOnly ? '✓ Filtré' : 'Filtrer'}
+            </button>
+          </div>
 
           {!visible && (
-            <span className="text-white-50 small ps-1" style={{ fontSize: '10px' }}>
+            <span className="text-danger fw-semibold small ps-1" style={{ fontSize: '10px' }}>
               ▲ [B]
             </span>
           )}
@@ -222,46 +237,15 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
 
         {visible && (
           <div className="d-flex align-items-center gap-2 flex-wrap">
-            {/* Bouton Filtre Personnage Actif */}
-            <button
-              type="button"
-              className={`btn btn-sm py-0 px-2 small d-flex align-items-center gap-1 border ${
-                filterBubbleOnly ? 'fw-bold shadow-sm' : ''
-              }`}
-              style={{
-                backgroundColor: filterBubbleOnly ? charColor : 'rgba(255, 255, 255, 0.05)',
-                borderColor: filterBubbleOnly ? charColor : `${charColor}88`,
-                color: filterBubbleOnly ? charContrastText : charColor,
-                boxShadow: filterBubbleOnly ? `0 0 8px ${charColor}66` : 'none',
-                transition: 'all 0.15s ease',
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setFilterBubbleOnly(f => !f);
-              }}
-              title={
-                filterBubbleOnly
-                  ? `Filtre actif : ${activeChar?.name ?? activeWalkerId} — Cliquer pour afficher tous les logs`
-                  : `Afficher uniquement les logs de ${activeChar?.name ?? activeWalkerId}`
-              }
-            >
-              <span>{charDisplayName}</span>
-              <span
-                className={`badge ${filterBubbleOnly ? 'bg-dark' : 'bg-secondary'} py-0 px-1`}
-                style={{ fontSize: '9px', color: filterBubbleOnly ? charColor : '#ffffff' }}
-              >
-                {filterBubbleOnly ? 'FILTRÉ' : 'TOUS'}
-              </span>
-            </button>
-
             {/* Bouton Pause / Reprendre */}
             <button
               type="button"
               className={`btn btn-sm py-0 px-2 small ${
                 isPaused
-                  ? 'btn-warning text-dark fw-bold border-0 shadow-sm'
-                  : 'btn-outline-secondary text-white-50 border-white border-opacity-25'
+                  ? 'btn-danger text-white fw-bold shadow-sm'
+                  : 'btn-outline-secondary text-dark border-secondary border-opacity-25'
               }`}
+              style={{ fontSize: '11px', height: '22px' }}
               onClick={(e) => {
                 e.stopPropagation();
                 setIsPaused(p => !p);
@@ -277,13 +261,13 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
       {visible && (
         <div
           ref={logAreaRef}
-          className="flex-grow-1 overflow-y-auto px-2 py-1 d-flex flex-column gap-1 user-select-text"
-          style={{ background: 'rgba(13, 17, 23, 0.96)', minHeight: 0 }}
+          className="flex-grow-1 overflow-y-auto px-2 py-1 d-flex flex-column gap-1 user-select-text bg-white"
+          style={{ minHeight: 0 }}
         >
           {displayedLogs.length === 0 && (
-            <div className="text-secondary fst-italic py-1">
+            <div className="text-muted fst-italic py-1">
               {filterBubbleOnly
-                ? `Aucun log pour ${charDisplayName}…`
+                ? `Aucun log pour ${activeChar?.name ?? activeWalkerId}…`
                 : 'En attente de logs…'}
             </div>
           )}
@@ -293,26 +277,34 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
             return (
               <div
                 key={`${entry.id}_${idx}`}
-                className={`d-flex align-items-baseline gap-2 px-1 py-0 rounded-1 text-break lh-sm flex-shrink-0 ${
-                  isLast ? 'text-white fw-semibold bg-white bg-opacity-10' : 'text-light fw-medium'
+                className={`d-flex align-items-baseline gap-2 px-1 py-0.5 rounded-1 text-break lh-sm flex-shrink-0 ${
+                  isLast ? 'bg-danger bg-opacity-10 border-start border-danger border-2 ps-1' : ''
                 }`}
               >
                 <span
-                  className="font-monospace flex-shrink-0 user-select-none"
-                  style={{ color }}
+                  className="font-monospace flex-shrink-0 user-select-none text-danger fw-semibold"
+                  style={{ fontSize: '10px' }}
                 >
                   {formatTime(entry.timestamp)}
                 </span>
                 {(!filterBubbleOnly || entry.tag.toLowerCase() !== activeWalkerId.toLowerCase()) && (
-                  <span className="fw-semibold flex-shrink-0" style={{ color }}>
+                  <span
+                    className="badge py-0 px-1 font-monospace flex-shrink-0"
+                    style={{
+                      backgroundColor: `${color}18`,
+                      color: color,
+                      border: `1px solid ${color}40`,
+                      fontSize: '10px',
+                    }}
+                  >
                     {(() => {
-                      if (entry.tag.toLowerCase() === 'system') return '⚙️ system';
+                      if (entry.tag.toLowerCase() === 'system') return '⚙️ sys';
                       const ch = findCharacter(entry.tag);
                       return ch ? `${ch.emoji} ${entry.tag}` : entry.tag;
                     })()}
                   </span>
                 )}
-                <span className="flex-grow-1">{entry.message}</span>
+                <span className="flex-grow-1 text-dark fw-normal">{entry.message}</span>
               </div>
             );
           })}
@@ -337,7 +329,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
               width: 36,
               height: 3,
               borderRadius: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              backgroundColor: 'rgba(220, 38, 38, 0.35)',
             }}
           />
         </div>
