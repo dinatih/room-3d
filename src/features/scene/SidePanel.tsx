@@ -23,7 +23,6 @@ import {
 } from './sidepanel/types';
 import { Group } from './sidepanel/Group';
 import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
-import { ViewsModal } from './sidepanel/modals/ViewsModal';
 import { CvModal, type CvType } from './sidepanel/modals/CvModal';
 import { ViewsSection } from './sidepanel/sections/ViewsSection';
 import { LayersSection } from './sidepanel/sections/LayersSection';
@@ -65,7 +64,6 @@ export function SidePanel({
   onToggleHideUI,
 }: SidePanelProps) {
   const isMobile = useIsMobile();
-  const [showViews, setShowViews] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showCvModal, setShowCvModal] = useState(false);
   const [selectedCvType, setSelectedCvType] = useState<CvType>('devops');
@@ -315,7 +313,6 @@ export function SidePanel({
   const viewsSectionContent = (
     <ViewsSection
       isMobile={isMobile}
-      onOpenViews={() => setShowViews(true)}
       onOpenShortcuts={() => setShowShortcuts(true)}
       onToggleHideUI={onToggleHideUI}
     />
@@ -541,7 +538,6 @@ export function SidePanel({
           )}
         </div>
 
-        {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
         {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
         {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={handleCloseCv} />}
       </>
@@ -594,7 +590,6 @@ export function SidePanel({
         <Group emoji="👤" title="PNJ" extra={personnageHeaderButtons}>{characterSectionContent}</Group>
       </div>
 
-      {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={handleCloseCv} />}
     </>

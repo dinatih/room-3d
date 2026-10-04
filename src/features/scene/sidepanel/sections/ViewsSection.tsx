@@ -1,16 +1,33 @@
 import { useSceneStore } from '../../store/useSceneStore';
-import { dispatchKey } from '../types';
+import { dispatchKey, dispatchView, dispatchPov } from '../types';
 
 export interface ViewsSectionProps {
   isMobile: boolean;
-  onOpenViews: () => void;
   onOpenShortcuts: () => void;
   onToggleHideUI?: () => void;
 }
 
+const CAMERA_PRESETS = [
+  { label: 'Perspective', key: 'perspective' },
+  { label: 'Dessus 3D', key: 'top3d' },
+  { label: 'Face (D)', key: 'front' },
+  { label: 'Arrière (C)', key: 'back' },
+  { label: 'Gauche (A)', key: 'left' },
+  { label: 'Droite (B)', key: 'right' },
+  { label: 'Iso Sud-Est', key: 'iso-se' },
+  { label: 'Iso Nord-Ouest', key: 'iso-nw' },
+  { label: 'Dessus/Dessous', key: 'bottom', fullWidth: true },
+];
+
+const POV_PRESETS = [
+  { label: 'Séjour', key: 'living' },
+  { label: 'Entrée', key: 'entry' },
+  { label: "Salle d'eau", key: 'bathroom' },
+  { label: 'Jardin', key: 'garden' },
+];
+
 export function ViewsSection({
   isMobile: _isMobile,
-  onOpenViews,
   onOpenShortcuts,
   onToggleHideUI,
 }: ViewsSectionProps) {
@@ -98,7 +115,46 @@ export function ViewsSection({
       )}
       {b0('cyan',   'Avion ✈ (Raccourci F)',           () => dispatchKey('f'))}
       {onToggleHideUI && b0('dark',   'Masquer l\'interface 2D (Raccourci 0)', onToggleHideUI)}
-      {b0('yellow', 'Autres vues…',                     onOpenViews)}
+      {/* ── Angles de Caméra ── */}
+      <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
+        <div className="text-muted fw-bold small text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>
+          📷 Angles Caméra
+        </div>
+        <div className="row g-1">
+          {CAMERA_PRESETS.map(preset => (
+            <div key={preset.key} className={preset.fullWidth ? 'col-12' : 'col-6'}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary w-100 py-1 px-2 text-truncate small"
+                onClick={() => dispatchView(preset.key)}
+              >
+                {preset.label}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Points de Vue (POV 1.8m) ── */}
+      <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
+        <div className="text-muted fw-bold small text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>
+          🚶 Points de Vue (POV 1.8m)
+        </div>
+        <div className="row g-1">
+          {POV_PRESETS.map(preset => (
+            <div key={preset.key} className="col-6">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger w-100 py-1 px-2 text-truncate small"
+                onClick={() => dispatchPov(preset.key)}
+              >
+                {preset.label}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {b0('teal',   'Raccourcis clavier ⌨',             onOpenShortcuts)}
     </div>
   );
