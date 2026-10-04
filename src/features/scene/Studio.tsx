@@ -13,6 +13,7 @@ import {
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
+import { SKY_START_POS }     from '@features/scene/camera';
 import { parseUrlHideUI, updateUrlHideUI } from '@features/scene/camera/cameraUrlParams';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
 import { RightSidePanel }   from '@features/scene/RightSidePanel';
@@ -68,7 +69,6 @@ const Inventory = lazy(() => import('@features/inventory/Inventory').then(module
 const RaytracingPhotoModal = lazy(() => import('./photo/RaytracingPhotoModal').then(module => ({ default: module.RaytracingPhotoModal })));
 
 
-import { ROOM_W } from './wallData';
 import {
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_NEIGHBORS, LAYER_LIDAR,
   LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_ENVIRONMENT,
@@ -578,10 +578,43 @@ export function Studio() {
 
   const revealScene = useCallback(() => {
     const cover = document.getElementById('loading');
-    if (cover && !cover.classList.contains('hidden')) {
-      cover.classList.add('hidden');
-      setTimeout(() => cover.remove(), 450);
+    const card = document.getElementById('loading-card');
+    const backdrop = document.getElementById('loading-backdrop');
+
+    // 1. Sortie animée de la carte (léger déplacement vers le bas et flou progressif)
+    if (card) {
+      card.classList.add('exiting');
     }
+
+    // 2. Déclenchement du vol caméra et fondu du fond 2D après 120ms
+    const timer = setTimeout(() => {
+      if (backdrop) {
+        backdrop.classList.add('exiting');
+      }
+      document.dispatchEvent(new CustomEvent('start-camera-intro'));
+    }, 120);
+
+    let cleanedUp = false;
+    const cleanup = () => {
+      if (cleanedUp) return;
+      cleanedUp = true;
+      clearTimeout(timer);
+      cameraState.isSceneLaunched = true;
+      if (cover) {
+        cover.classList.add('hidden');
+        setTimeout(() => cover.remove(), 400);
+      }
+    };
+
+    const onIntroFinish = () => {
+      window.removeEventListener('camera-intro-finished', onIntroFinish);
+      cleanup();
+    };
+
+    window.addEventListener('camera-intro-finished', onIntroFinish);
+
+    // Sécurité fallback : forcer la suppression après 2.2s si aucun événement n'est reçu
+    setTimeout(cleanup, 2200);
   }, []);
 
   const handleReady = useCallback(() => {
@@ -589,7 +622,6 @@ export function Studio() {
   }, []);
 
   const handleLaunch = useCallback(() => {
-    cameraState.isSceneLaunched = true;
     revealScene();
   }, [revealScene]);
 
@@ -607,16 +639,13 @@ export function Studio() {
          * - fov: 50° (champ de vision vertical naturel)
          * - near: 5 cm (évite le clipping avec les objets proches)
          * - far: 10 000 cm / 100 m (couvre la pièce, l'extérieur et le ciel)
-         * - position: [ROOM_W / 2, 1000, -150] = [150, 1000, -150]
-         *     X = ROOM_W / 2 = 150 cm (centré sur la largeur de la pièce)
-         *     Y = 1000 cm = 10 m (hauteur de vue en plongée pour embrasser toute la scène)
-         *     Z = -150 cm (reculé vers le nord, face au jardin et à la baie vitrée)
+         * - position initiale calée sur le panorama Ciel de Paris pour assurer la fusion parfaite avec le fond 2D
          */
         camera={{
           fov:  50,
           near: 5,
           far:  10000,
-          position: [ROOM_W / 2, 1000, -150],
+          position: [SKY_START_POS.x, SKY_START_POS.y, SKY_START_POS.z],
         }}
         shadows={{ type: PCFShadowMap }}
         gl={{

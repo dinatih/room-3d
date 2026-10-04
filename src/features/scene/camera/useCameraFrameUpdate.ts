@@ -55,6 +55,7 @@ export function useCameraFrameUpdate({
   useFrame((_, delta) => {
     if (cameraState.isXR) return;
     if (planeModeRef.current) return;
+    if (cameraState.isIntroRunning || !cameraState.isSceneLaunched) return;
 
     // Normalize to 60 fps baseline so speed is frame-rate independent
     const dt = Math.min(delta, 0.1) * 60;

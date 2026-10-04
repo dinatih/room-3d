@@ -42,6 +42,9 @@ import {
   useCameraPointerEvents,
   useCameraShortcuts,
   useCameraFrameUpdate,
+  CameraIntroController,
+  SKY_START_POS,
+  SKY_START_TARGET,
 } from './camera';
 import { parseUrlLayerOverrides } from './store/layerUrlParams';
 
@@ -545,6 +548,20 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
   }, [mode, camera, updateWalkLook]);
 
+  // Contrôleur de transition d'introduction
+  const introCtrlRef = useRef<CameraIntroController | null>(null);
+
+  // Positionnement initial dans le ciel avant le lancement effectif
+  useEffect(() => {
+    if (!cameraState.isSceneLaunched) {
+      camera.position.copy(SKY_START_POS);
+      if (ctrlRef.current) {
+        ctrlRef.current.target.copy(SKY_START_TARGET);
+        ctrlRef.current.update();
+      }
+    }
+  }, [camera]);
+
   // Lancement automatique du mode initial depuis les paramètres d'URL (ex: ?fpv ou ?mode=fpv)
   const initialModeLaunchedRef = useRef(false);
   useEffect(() => {
@@ -552,24 +569,71 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     initialModeLaunchedRef.current = true;
 
     const startMode = parseUrlCameraMode();
-    if (startMode === 'fpv') {
-      const curX = cameraState.walkerX ?? walkPos.current.x;
-      const curZ = cameraState.walkerZ ?? walkPos.current.z;
-      enterWalk(curX, curZ, 'fpv');
-      appLog('system', '🎥 Mode FPV (1ère personne) initialisé via URL');
-    } else if (startMode === 'walk') {
-      const curX = cameraState.walkerX ?? walkPos.current.x;
-      const curZ = cameraState.walkerZ ?? walkPos.current.z;
-      enterWalk(curX, curZ, 'walk');
-      appLog('system', '🎥 Mode Follow (3ème personne) initialisé via URL');
-    } else if (startMode === 'top') {
-      enterTop(false);
-      appLog('system', '🎥 Mode 2D Top initialisé via URL');
+    if (cameraState.isSceneLaunched) {
+      if (startMode === 'fpv') {
+        const curX = cameraState.walkerX ?? walkPos.current.x;
+        const curZ = cameraState.walkerZ ?? walkPos.current.z;
+        enterWalk(curX, curZ, 'fpv');
+        appLog('system', '🎥 Mode FPV (1ère personne) initialisé via URL');
+      } else if (startMode === 'walk') {
+        const curX = cameraState.walkerX ?? walkPos.current.x;
+        const curZ = cameraState.walkerZ ?? walkPos.current.z;
+        enterWalk(curX, curZ, 'walk');
+        appLog('system', '🎥 Mode Follow (3ème personne) initialisé via URL');
+      } else if (startMode === 'top') {
+        enterTop(false);
+        appLog('system', '🎥 Mode 2D Top initialisé via URL');
+      }
+    } else {
+      if (startMode !== 'orbit') {
+        changeMode(startMode);
+      }
     }
-  }, [enterTop, enterWalk]);
+  }, [enterTop, enterWalk, changeMode]);
 
-  // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif
-  useFrame(() => {
+  // Écoute de l'événement de lancement pour démarrer l'animation d'intro
+  useEffect(() => {
+    const onStartIntro = () => {
+      if (!ctrlRef.current) return;
+      if (!introCtrlRef.current) {
+        introCtrlRef.current = new CameraIntroController(camera, ctrlRef.current);
+      }
+      const targetMode = modeRef.current;
+      introCtrlRef.current.start(targetMode, () => {
+        const curX = cameraState.walkerX ?? walkPos.current.x;
+        const curZ = cameraState.walkerZ ?? walkPos.current.z;
+        if (targetMode === 'fpv') {
+          enterWalk(curX, curZ, 'fpv');
+          appLog('system', '🎥 Mode FPV (1ère personne) initialisé');
+        } else if (targetMode === 'walk') {
+          enterWalk(curX, curZ, 'walk');
+          appLog('system', '🎥 Mode Follow (3ème personne) initialisé');
+        } else if (targetMode === 'top') {
+          enterTop(false);
+          appLog('system', '🎥 Mode 2D Top initialisé');
+        } else if (targetMode === 'orbit') {
+          camera.position.set(...PERSP_POS);
+          ctrlRef.current.target.set(...PERSP_TARGET);
+          ctrlRef.current.update();
+        }
+        invalidate();
+      });
+    };
+
+    document.addEventListener('start-camera-intro', onStartIntro);
+    return () => {
+      document.removeEventListener('start-camera-intro', onStartIntro);
+      introCtrlRef.current?.destroy();
+    };
+  }, [camera, enterTop, enterWalk, invalidate]);
+
+  // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif et update intro
+  useFrame((_, delta) => {
+    if (cameraState.isIntroRunning && introCtrlRef.current) {
+      introCtrlRef.current.update(delta);
+      invalidate();
+      return;
+    }
     if (prevIsXR.current !== cameraState.isXR) {
       prevIsXR.current = cameraState.isXR;
       const cam = camera as THREE.PerspectiveCamera;
@@ -697,10 +761,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enableDamping={mode !== 'walk'}
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
-        enabled={!planeMode}
-        enableRotate={!planeMode && mode !== 'top' && mode !== 'walk' && mode !== 'fpv'}
-        enablePan={!planeMode && mode !== 'walk' && mode !== 'fpv'}
-        enableZoom={!planeMode && mode !== 'walk' && mode !== 'fpv'}
+        enabled={!planeMode && !cameraState.isIntroRunning && cameraState.isSceneLaunched}
+        enableRotate={!planeMode && !cameraState.isIntroRunning && cameraState.isSceneLaunched && mode !== 'top' && mode !== 'walk' && mode !== 'fpv'}
+        enablePan={!planeMode && !cameraState.isIntroRunning && cameraState.isSceneLaunched && mode !== 'walk' && mode !== 'fpv'}
+        enableZoom={!planeMode && !cameraState.isIntroRunning && cameraState.isSceneLaunched && mode !== 'walk' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'walk'}
         mouseButtons={
           mode === 'top'

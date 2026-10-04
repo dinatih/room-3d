@@ -4,3 +4,4 @@ export * from './cameraUrlParams';
 export * from './useCameraPointerEvents';
 export * from './useCameraShortcuts';
 export * from './useCameraFrameUpdate';
+export * from './cameraIntroTransition';

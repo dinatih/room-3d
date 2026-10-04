@@ -60,6 +60,10 @@ export const cameraState = {
   walkerHidden: false as boolean,
   /** Vrai des que la scene 3D est lancee (apres prechargement et warm-up GPU) */
   isSceneLaunched: false as boolean,
+  /** Vrai pendant la transition d'introduction de la caméra */
+  isIntroRunning: false as boolean,
+  /** Callback pour forcer l'interruption immédiate du vol d'introduction */
+  skipIntro: null as (() => void) | null,
   /** Position et yaw de l'avion en papier (lus par la Minimap quand mode='plane') */
   planeX: 0 as number,
   planeZ: 0 as number,
