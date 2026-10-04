@@ -72,7 +72,7 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
 
   return (
     <CategoryLayerGroup layer={LAYER_ENVIRONMENT}>
-      <group position={SKY_CENTER} rotation={[0, -Math.PI / 2, 0]} name="SkySphere" userData={{ isSky: true }}>
+      <group position={SKY_CENTER} name="SkySphere" userData={{ isSky: true }}>
         <SpaceBackdrop />
         {texture && <CombinedSkyDome texture={texture} />}
       </group>
