@@ -266,12 +266,35 @@ function LoadingProgress({
   onLaunch: () => void;
 }) {
   const { progress, active, item } = useProgress();
-  const doneRef = useRef(false);
-  const isLaunchingRef = useRef(false);
+  const assetsDoneRef = useRef(false);
+  const countdownStartedRef = useRef(false);
+  const hasLaunchedRef = useRef(false);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // 1. Suivi du téléchargement des assets
   useEffect(() => {
     const bar = document.getElementById('loading-bar');
+    const itemEl = document.getElementById('loading-item');
+
+    if (bar) bar.style.width = `${progress}%`;
+    if (itemEl && item && !assetsDoneRef.current) itemEl.textContent = item;
+
+    if (!active && progress >= 100 && !assetsDoneRef.current) {
+      assetsDoneRef.current = true;
+      onAssetsLoaded();
+      if (itemEl) {
+        itemEl.textContent = sceneReady
+          ? '✅ Scène 3D prête !'
+          : '⚡ Optimisation GPU & compilation des shaders…';
+      }
+    }
+  }, [progress, active, item, sceneReady, onAssetsLoaded]);
+
+  // 2. Déclenchement du décompte de 5s UNIQUEMENT à la toute fin (une fois l'optimisation GPU terminée)
+  useEffect(() => {
+    if (!assetsDoneRef.current || !sceneReady || countdownStartedRef.current) return;
+    countdownStartedRef.current = true;
+
     const itemEl = document.getElementById('loading-item');
     const countdownContainer = document.getElementById('loading-countdown-container');
     const timerEl = document.getElementById('loading-countdown-timer');
@@ -279,58 +302,53 @@ function LoadingProgress({
     const btnPause = document.getElementById('btn-pause-launch');
     const btnStart = document.getElementById('btn-start-now');
 
-    if (bar) bar.style.width = `${progress}%`;
-    if (itemEl && item && !doneRef.current) itemEl.textContent = item;
+    if (itemEl) itemEl.textContent = '✅ Scène 3D prête !';
+    if (countdownContainer) countdownContainer.style.display = 'flex';
+    if (timerEl) timerEl.textContent = '5';
 
-    if (!active && progress >= 100 && !doneRef.current) {
-      doneRef.current = true;
-      onAssetsLoaded();
-      if (itemEl) itemEl.textContent = sceneReady ? 'Scène 3D prête !' : '⚡ Optimisation GPU & compilation des shaders…';
+    let remainingSeconds = 5;
 
-      if (countdownContainer) countdownContainer.style.display = 'flex';
-      let remainingSeconds = 5;
+    const launchApp = () => {
+      if (hasLaunchedRef.current) return;
+      hasLaunchedRef.current = true;
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
+      if (btnStart) btnStart.setAttribute('disabled', 'true');
+      if (btnPause) btnPause.style.display = 'none';
+      if (textEl) textEl.textContent = '🚀 Lancement de la scène 3D…';
+      onLaunch();
+    };
 
-      const launchApp = () => {
-        if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-        if (btnStart) btnStart.setAttribute('disabled', 'true');
-        if (btnPause) btnPause.style.display = 'none';
-        if (sceneReady) {
-          if (textEl) textEl.textContent = '🚀 Lancement de la scène 3D…';
-          onLaunch();
-        } else {
-          isLaunchingRef.current = true;
-          if (textEl) textEl.textContent = '⚡ Optimisation GPU en cours… Lancement imminent !';
+    if (btnStart) btnStart.onclick = launchApp;
+
+    if (btnPause) {
+      btnPause.onclick = () => {
+        if (countdownTimerRef.current) {
+          clearInterval(countdownTimerRef.current);
+          countdownTimerRef.current = null;
         }
+        if (textEl) textEl.textContent = '⏸ Lancement automatique suspendu. Prenez le temps de lire !';
+        btnPause.style.display = 'none';
       };
-
-      if (btnStart) btnStart.onclick = launchApp;
-
-      if (btnPause) {
-        btnPause.onclick = () => {
-          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-          if (textEl) textEl.textContent = '⏸ Lancement automatique suspendu. Prenez le temps de lire !';
-          btnPause.style.display = 'none';
-        };
-      }
-
-      countdownTimerRef.current = setInterval(() => {
-        remainingSeconds--;
-        if (timerEl) timerEl.textContent = remainingSeconds.toString();
-        if (remainingSeconds <= 0) {
-          launchApp();
-        }
-      }, 1000);
-    } else if (doneRef.current) {
-      if (sceneReady && itemEl && itemEl.textContent?.includes('⚡')) {
-        itemEl.textContent = 'Scène 3D prête !';
-      }
-      if (isLaunchingRef.current && sceneReady) {
-        isLaunchingRef.current = false;
-        if (textEl) textEl.textContent = '🚀 Lancement de la scène 3D…';
-        onLaunch();
-      }
     }
-  }, [progress, active, item, sceneReady, onAssetsLoaded, onLaunch]);
+
+    countdownTimerRef.current = setInterval(() => {
+      remainingSeconds--;
+      if (timerEl) timerEl.textContent = remainingSeconds.toString();
+      if (remainingSeconds <= 0) {
+        launchApp();
+      }
+    }, 1000);
+
+    return () => {
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
+    };
+  }, [sceneReady, onLaunch]);
 
   return null;
 }
