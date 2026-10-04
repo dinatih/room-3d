@@ -55,7 +55,7 @@ export function useCameraShortcuts({
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
       // Plane mode owns input — bail out so arrow/WASD don't move walker or camera.
-      if (planeModeRef.current) return;
+      if (planeModeRef.current || cameraState.isIntroRunning) return;
 
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {

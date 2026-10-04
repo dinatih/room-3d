@@ -221,6 +221,30 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
     }
   }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isAnimActive, setFrameloop, invalidate, gl]);
 
+  // Frameloop continu 60fps garanti pendant l'intro transition
+  useEffect(() => {
+    const handleIntroStart = () => {
+      setFrameloop('always');
+      invalidate();
+    };
+    const handleIntroEnd = () => {
+      const isXRActive = cameraState.isXR || gl.xr?.isPresenting;
+      const loop = (showInventory || isCvModalOpen || isPhotoModeOpen || (isIdle && !isXRActive))
+        ? 'never'
+        : (isAnimActive ? 'always' : 'demand');
+      setFrameloop(loop);
+      invalidate();
+    };
+    window.addEventListener('start-camera-intro', handleIntroStart);
+    document.addEventListener('start-camera-intro', handleIntroStart);
+    window.addEventListener('camera-intro-finished', handleIntroEnd);
+    return () => {
+      window.removeEventListener('start-camera-intro', handleIntroStart);
+      document.removeEventListener('start-camera-intro', handleIntroStart);
+      window.removeEventListener('camera-intro-finished', handleIntroEnd);
+    };
+  }, [setFrameloop, invalidate, gl, showInventory, isCvModalOpen, isPhotoModeOpen, isIdle, isAnimActive]);
+
   return null;
 }
 
@@ -591,6 +615,7 @@ export function Studio() {
       if (backdrop) {
         backdrop.classList.add('exiting');
       }
+      window.dispatchEvent(new CustomEvent('start-camera-intro'));
       document.dispatchEvent(new CustomEvent('start-camera-intro'));
     }, 120);
 

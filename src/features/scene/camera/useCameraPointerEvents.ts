@@ -45,7 +45,7 @@ export function useCameraPointerEvents({
     };
 
     const onDown = (e: MouseEvent) => {
-      if (cameraState.isIntroRunning || !cameraState.isSceneLaunched) return;
+      if (cameraState.isIntroRunning) return;
       if ((modeRef.current === 'walk' || modeRef.current === 'fpv') && e.button === 0) {
         dragging.current = true;
         cameraState.isDragging = true;
@@ -72,7 +72,7 @@ export function useCameraPointerEvents({
 
     // ── Mobile Touch controls (Walk orientation & 2-finger Pinch-to-Zoom) ────────
     const onTouchStart = (e: TouchEvent) => {
-      if (cameraState.isIntroRunning || !cameraState.isSceneLaunched) return;
+      if (cameraState.isIntroRunning) return;
       if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
       if (e.touches.length === 1) {
         dragging.current = true;
@@ -144,7 +144,7 @@ export function useCameraPointerEvents({
 
     // Scroll wheel : en 3ème personne ajuste la distance d'orbite ; en FPV ajuste le FOV
     const onWheel = (e: WheelEvent) => {
-      if (cameraState.isIntroRunning || !cameraState.isSceneLaunched) return;
+      if (cameraState.isIntroRunning) return;
       if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
       e.preventDefault();
       if (modeRef.current === 'walk') {

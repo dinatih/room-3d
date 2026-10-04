@@ -86,7 +86,8 @@ export class CameraIntroController {
   private camera: THREE.Camera;
   private ctrl: OrbitControlsImpl;
   private isRunning = false;
-  private elapsed = 0;
+  private startTime = 0;
+  private rafId: number | null = null;
   private startPose: IntroPose = {
     pos: SKY_START_POS.clone(),
     target: SKY_START_TARGET.clone(),
@@ -108,8 +109,11 @@ export class CameraIntroController {
 
     this.isRunning = true;
     cameraState.isIntroRunning = true;
-    this.elapsed = 0;
+    this.startTime = performance.now();
     this.onCompleteCallback = onComplete;
+
+    // Désactiver immédiatement OrbitControls pour la durée de l'intro
+    this.ctrl.enabled = false;
 
     // Point de départ : position et cible actuelles de la caméra (ou le ciel par défaut)
     this.startPose.pos.copy(this.camera.position);
@@ -123,7 +127,6 @@ export class CameraIntroController {
 
     // Écouteurs de skip au clic ou à l'appui d'une touche
     const handleSkip = (e: Event) => {
-      // Ignorer si clic sur un lien externe ou un bouton spécifique
       const target = e.target as HTMLElement | null;
       if (target && target.tagName === 'A') return;
       this.finish(true);
@@ -136,32 +139,46 @@ export class CameraIntroController {
       window.removeEventListener('pointerdown', handleSkip);
       window.removeEventListener('keydown', handleSkip);
     };
+
+    // Boucle d'animation autonome basée sur performance.now (garantie de se terminer en exactement 1.35s)
+    const tick = () => {
+      if (!this.isRunning) return;
+
+      const elapsedSec = (performance.now() - this.startTime) / 1000;
+      const progress = Math.min(1, elapsedSec / INTRO_DURATION_SEC);
+      const ease = easeInOutCubic(progress);
+
+      this.camera.position.lerpVectors(this.startPose.pos, this.targetPose.pos, ease);
+      this.ctrl.target.lerpVectors(this.startPose.target, this.targetPose.target, ease);
+      this.ctrl.update();
+      cameraState.invalidate?.();
+
+      if (progress >= 1) {
+        this.finish(false);
+      } else {
+        this.rafId = requestAnimationFrame(tick);
+      }
+    };
+
+    this.rafId = requestAnimationFrame(tick);
   }
 
-  public update(delta: number): boolean {
-    if (!this.isRunning) return false;
-
-    this.elapsed += delta;
-    const progress = Math.min(1, this.elapsed / INTRO_DURATION_SEC);
-    const ease = easeInOutCubic(progress);
-
-    this.camera.position.lerpVectors(this.startPose.pos, this.targetPose.pos, ease);
-    this.ctrl.target.lerpVectors(this.startPose.target, this.targetPose.target, ease);
-    this.ctrl.update();
-
-    if (progress >= 1) {
-      this.finish(false);
-      return false;
-    }
-
-    return true;
+  public update(_delta: number): boolean {
+    // La mise à jour est gérée en continu par la boucle requestAnimationFrame
+    return this.isRunning;
   }
 
   public finish(skipped = false) {
     if (!this.isRunning) return;
 
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+
     this.isRunning = false;
     cameraState.isIntroRunning = false;
+    cameraState.isSceneLaunched = true;
     cameraState.skipIntro = null;
 
     if (this.cleanupListeners) {
@@ -173,6 +190,7 @@ export class CameraIntroController {
     this.camera.position.copy(this.targetPose.pos);
     this.ctrl.target.copy(this.targetPose.target);
     this.ctrl.update();
+    cameraState.invalidate?.();
 
     window.dispatchEvent(new CustomEvent('camera-intro-finished', { detail: { skipped } }));
 

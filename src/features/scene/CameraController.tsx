@@ -550,6 +550,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // Contrôleur de transition d'introduction
   const introCtrlRef = useRef<CameraIntroController | null>(null);
+  const [isIntroRunningState, setIsIntroRunningState] = useState(false);
 
   // Positionnement initial dans le ciel avant le lancement effectif
   useEffect(() => {
@@ -598,8 +599,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (!introCtrlRef.current) {
         introCtrlRef.current = new CameraIntroController(camera, ctrlRef.current);
       }
+      setIsIntroRunningState(true);
       const targetMode = modeRef.current;
       introCtrlRef.current.start(targetMode, () => {
+        setIsIntroRunningState(false);
+        cameraState.isSceneLaunched = true;
         const curX = cameraState.walkerX ?? walkPos.current.x;
         const curZ = cameraState.walkerZ ?? walkPos.current.z;
         if (targetMode === 'fpv') {
@@ -614,6 +618,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         } else if (targetMode === 'orbit') {
           camera.position.set(...PERSP_POS);
           ctrlRef.current.target.set(...PERSP_TARGET);
+          ctrlRef.current.enabled = !planeModeRef.current;
+          ctrlRef.current.enableRotate = !planeModeRef.current;
+          ctrlRef.current.enablePan = !planeModeRef.current;
+          ctrlRef.current.enableZoom = !planeModeRef.current;
           ctrlRef.current.update();
         }
         invalidate();
@@ -627,13 +635,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     };
   }, [camera, enterTop, enterWalk, invalidate]);
 
-  // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif et update intro
-  useFrame((_, delta) => {
-    if (cameraState.isIntroRunning && introCtrlRef.current) {
-      introCtrlRef.current.update(delta);
-      invalidate();
-      return;
-    }
+  // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif
+  useFrame(() => {
+    if (cameraState.isIntroRunning) return;
     if (prevIsXR.current !== cameraState.isXR) {
       prevIsXR.current = cameraState.isXR;
       const cam = camera as THREE.PerspectiveCamera;
@@ -761,10 +765,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enableDamping={mode !== 'walk'}
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
-        enabled={!planeMode && !cameraState.isIntroRunning && cameraState.isSceneLaunched}
-        enableRotate={!planeMode && !cameraState.isIntroRunning && cameraState.isSceneLaunched && mode !== 'top' && mode !== 'walk' && mode !== 'fpv'}
-        enablePan={!planeMode && !cameraState.isIntroRunning && cameraState.isSceneLaunched && mode !== 'walk' && mode !== 'fpv'}
-        enableZoom={!planeMode && !cameraState.isIntroRunning && cameraState.isSceneLaunched && mode !== 'walk' && mode !== 'fpv'}
+        enabled={!planeMode && !isIntroRunningState && mode !== 'top' && mode !== 'walk' && mode !== 'fpv'}
+        enableRotate={!planeMode && !isIntroRunningState && mode !== 'top' && mode !== 'walk' && mode !== 'fpv'}
+        enablePan={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
+        enableZoom={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'walk'}
         mouseButtons={
           mode === 'top'
