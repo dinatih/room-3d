@@ -65,28 +65,30 @@ interface BermudaGroundProps {
   yPos?: number;
 }
 
-export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.5 }: BermudaGroundProps) {
+export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.4 }: BermudaGroundProps) {
   const storeBermudaGrass = useSceneStore(state => state.layers.bermudaGrass ?? true);
   const isGrassActive = active ?? storeBermudaGrass;
   const showTexturedGrass = isGrassActive && groundType !== 'none' && (groundType in GROUND_CONFIGS);
 
   return (
     <>
-      {/* Rectangle vert uni : terrain extérieur rattaché à Revêtement sol (LAYER_FLOOR_COVERINGS) */}
-      <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
-        <mesh
-          material={groundExteriorMat}
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[150, yPos, 0]}
-          receiveShadow
-          userData={{
-            brickType: 'ground',
-            itemName: 'Terrain Extérieur',
-          }}
-        >
-          <planeGeometry args={[1100, 2000]} />
-        </mesh>
-      </CategoryLayerGroup>
+      {/* Rectangle vert uni : terrain extérieur de secours quand l'herbe PBR est désactivée ou en mode 'none' */}
+      {!showTexturedGrass && (
+        <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
+          <mesh
+            material={groundExteriorMat}
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[150, yPos, 0]}
+            receiveShadow
+            userData={{
+              brickType: 'ground',
+              itemName: 'Terrain Extérieur',
+            }}
+          >
+            <planeGeometry args={[1100, 2000]} />
+          </mesh>
+        </CategoryLayerGroup>
+      )}
 
       {/* Herbe texturée PBR : rattachée au calque Herbe (LAYER_GRASS) */}
       {showTexturedGrass && (
@@ -110,14 +112,26 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
   });
 
   const material = useMemo(() => {
-    const repeatX = 1100 / config.tileSize;
-    const repeatY = 2000 / config.tileSize;
+    const planeW = 1100;
+    const planeH = 2000;
+    const repeatX = planeW / config.tileSize;
+    const repeatY = planeH / config.tileSize;
+
+    // Alignement parfait des tuiles sur l'origine du monde (X=0, Z=0)
+    const minWorldX = 150 - planeW / 2; // -400
+    const minWorldZ = 0 - planeH / 2;   // -1000
+    let offsetX = (minWorldX / config.tileSize) % 1;
+    let offsetY = (minWorldZ / config.tileSize) % 1;
+    if (offsetX < 0) offsetX += 1;
+    if (offsetY < 0) offsetY += 1;
 
     [textures.map, textures.normalMap, textures.roughnessMap].forEach((tex) => {
       if (tex) {
         tex.wrapS = THREE.RepeatWrapping;
         tex.wrapT = THREE.RepeatWrapping;
         tex.repeat.set(repeatX, repeatY);
+        tex.offset.set(offsetX, offsetY);
+        tex.anisotropy = 8;
         tex.needsUpdate = true;
       }
     });
@@ -131,13 +145,12 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       normalMap: textures.normalMap,
       normalScale: new THREE.Vector2(1.0, 1.0),
       roughnessMap: textures.roughnessMap,
-      roughness: 0.9,
+      roughness: 0.85,
       metalness: 0.02,
-      transparent: true,
-      opacity: 0.8,
-      polygonOffset: true,
-      polygonOffsetFactor: 1,
-      polygonOffsetUnits: 1,
+      // Opaque : empêche la dalle béton ou le fond en dessous de transparaître par transparence
+      transparent: false,
+      opacity: 1.0,
+      depthWrite: true,
     });
   }, [textures, config.tileSize]);
 

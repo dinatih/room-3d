@@ -282,10 +282,8 @@ function LoadingProgress({
     if (!active && progress >= 100 && !assetsDoneRef.current) {
       assetsDoneRef.current = true;
       onAssetsLoaded();
-      if (itemEl) {
-        itemEl.textContent = sceneReady
-          ? '✅ Scène 3D prête !'
-          : '⚡ Optimisation GPU & compilation des shaders…';
+      if (itemEl && !sceneReady) {
+        itemEl.textContent = '⚡ Optimisation GPU & compilation des shaders…';
       }
     }
   }, [progress, active, item, sceneReady, onAssetsLoaded]);
@@ -302,7 +300,8 @@ function LoadingProgress({
     const btnPause = document.getElementById('btn-pause-launch');
     const btnStart = document.getElementById('btn-start-now');
 
-    if (itemEl) itemEl.textContent = '✅ Scène 3D prête !';
+    // Masquer le libellé de chargement individuel pour laisser toute la place au compte à rebours de lancement
+    if (itemEl) itemEl.style.display = 'none';
     if (countdownContainer) countdownContainer.style.display = 'flex';
     if (timerEl) timerEl.textContent = '5';
 
