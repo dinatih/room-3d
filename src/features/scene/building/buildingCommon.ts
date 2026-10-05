@@ -17,6 +17,11 @@ export const COLORS = {
 
 // Matériaux module-level partagés
 export const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
+export const wallMatHorizontal = new THREE.MeshStandardMaterial({
+  color: 0xe8e4dc,
+  roughness: 0.9,
+  side: THREE.DoubleSide,
+});
 export const noCapMat = new THREE.MeshBasicMaterial({ visible: false, transparent: true, opacity: 0 });
 export const skirtingMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.4 });
 
@@ -50,10 +55,10 @@ export const groundExteriorMat = new THREE.MeshStandardMaterial({
 });
 
 // Matériaux murs par orientation
-export const westMats  = boxFaceMats({ '+x': wallMat, '+y': wallMat, '-y': wallMat, '+z': wallMat, '-z': wallMat });
-export const eastMats  = boxFaceMats({ '-x': wallMat, '+y': wallMat, '-y': wallMat, '+z': wallMat, '-z': wallMat });
-export const northMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMat, '-y': wallMat, '+z': wallMat });
-export const southMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMat, '-y': wallMat, '-z': wallMat });
+export const westMats  = boxFaceMats({ '+x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '+z': wallMat, '-z': wallMat });
+export const eastMats  = boxFaceMats({ '-x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '+z': wallMat, '-z': wallMat });
+export const northMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '+z': wallMat });
+export const southMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '-z': wallMat });
 
 export const MAT_MAP: Record<string, THREE.Material | THREE.Material[]> = {
   west:    westMats,
