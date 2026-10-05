@@ -58,7 +58,7 @@ const _tmpEyeLookVec = new THREE.Vector3();
 const _tmpEyeUpVec = new THREE.Vector3();
 
 export function CameraController({ planeMode = false }: { planeMode?: boolean } = {}) {
-  const { camera, size, invalidate, gl } = useThree();
+  const { camera, size, invalidate, gl, set } = useThree();
 
   // Enregistrement d'invalidate pour usage externe (Studio.tsx, etc.)
   useEffect(() => {
@@ -71,6 +71,12 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const initialMode = parseUrlCameraMode();
   const [mode, setMode] = useState<CameraMode>(() => initialMode);
   const modeRef = useRef<CameraMode>(initialMode);
+
+  // Type d'orbite libre : perspective standard 3D ou isométrique orthographique 3D
+  const [orbitType, setOrbitType] = useState<'persp' | 'ortho'>('persp');
+  const orbitTypeRef = useRef<'persp' | 'ortho'>('persp');
+  const defaultPerspCamRef = useRef<THREE.PerspectiveCamera>(camera as THREE.PerspectiveCamera);
+  const orthoCamRef = useRef<THREE.OrthographicCamera>(null!);
 
   const planeModeRef = useRef(planeMode);
   useEffect(() => {
@@ -422,22 +428,92 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     invalidate();
   }, [camera, changeMode, invalidate]);
 
+  const toggleOrbitType = useCallback((targetType?: 'persp' | 'ortho') => {
+    const nextType = targetType ?? (orbitTypeRef.current === 'persp' ? 'ortho' : 'persp');
+    orbitTypeRef.current = nextType;
+    setOrbitType(nextType);
+
+    const ctrl = ctrlRef.current;
+    if (!ctrl) return;
+
+    if (nextType === 'persp') {
+      const perspCam = defaultPerspCamRef.current;
+      if (perspCam) {
+        perspCam.position.copy(ctrl.object.position);
+        perspCam.up.set(0, 1, 0);
+        perspCam.lookAt(ctrl.target);
+        perspCam.updateProjectionMatrix();
+        set({ camera: perspCam });
+        ctrl.object = perspCam;
+        ctrl.update();
+      }
+      appLog('system', '🎥 Mode Orbit 3D (Perspective)');
+    } else {
+      const orthoCam = orthoCamRef.current;
+      if (orthoCam) {
+        const dist = Math.max(10, ctrl.object.position.distanceTo(ctrl.target));
+        const targetZoom = Math.max(0.1, Math.min(10, 800 / (2 * dist * Math.tan(THREE.MathUtils.degToRad(25)))));
+        orthoCam.position.copy(ctrl.object.position);
+        orthoCam.up.set(0, 1, 0);
+        orthoCam.zoom = targetZoom;
+        orthoCam.lookAt(ctrl.target);
+        orthoCam.updateProjectionMatrix();
+        set({ camera: orthoCam });
+        ctrl.object = orthoCam;
+        ctrl.update();
+      }
+      appLog('system', '🎥 Mode Orbit 3D (Isométrique Ortho)');
+    }
+    invalidate();
+  }, [invalidate, set]);
+
   const enterTop = useCallback((follow = false) => {
     if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
     if (modeRef.current !== 'top') {
-      savedPerspPos.current.copy(camera.position);
+      savedPerspPos.current.copy(ctrlRef.current?.object.position || camera.position);
       if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
     }
     topFollowRef.current = follow;
+    const targetX = follow ? cameraState.walkerX : CX;
+    const targetZ = follow ? cameraState.walkerZ : CZ;
+    const orthoCam = orthoCamRef.current;
+    if (orthoCam) {
+      orthoCam.position.set(targetX, 2000, targetZ);
+      orthoCam.up.set(0, 0, -1);
+      orthoCam.zoom = 1;
+      orthoCam.lookAt(targetX, 0, targetZ);
+      orthoCam.updateProjectionMatrix();
+      set({ camera: orthoCam });
+      if (ctrlRef.current) {
+        ctrlRef.current.object = orthoCam;
+        ctrlRef.current.target.set(targetX, 0, targetZ);
+        ctrlRef.current.update();
+      }
+    }
     changeMode('top');
     invalidate();
-  }, [camera, changeMode, exitWalkMode, invalidate]);
+  }, [camera, changeMode, exitWalkMode, invalidate, set]);
 
   const exitTop = useCallback(() => {
     topFollowRef.current = false;
-    camera.up.set(0, 1, 0);
+    orbitTypeRef.current = 'persp';
+    setOrbitType('persp');
+    const perspCam = defaultPerspCamRef.current;
+    if (perspCam) {
+      perspCam.position.copy(savedPerspPos.current);
+      perspCam.up.set(0, 1, 0);
+      perspCam.updateProjectionMatrix();
+      set({ camera: perspCam });
+      if (ctrlRef.current) {
+        ctrlRef.current.object = perspCam;
+        ctrlRef.current.target.copy(savedPerspTarget.current);
+        ctrlRef.current.update();
+      }
+    }
     changeMode('orbit');
-  }, [camera, changeMode]);
+    appLog('system', '🎥 Mode Orbit 3D (Perspective)');
+    invalidate();
+  }, [changeMode, invalidate, set]);
 
   const [orthoConfig, setOrthoConfig] = useState<{
     pos: [number, number, number];
@@ -671,6 +747,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     exitWalkMode,
     enterTop,
     exitTop,
+    toggleOrbitType,
     enterOrtho,
     exitOrtho,
     invalidate,
@@ -707,11 +784,12 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   return (
     <>
-      {mode === 'top' && (
+      {(mode === 'top' || (mode === 'orbit' && orbitType === 'ortho')) && (
         <OrthographicCamera
+          ref={orthoCamRef}
           makeDefault
           position={topFollowRef.current ? [cameraState.walkerX, 2000, cameraState.walkerZ] : TOP_POS}
-          up={[0, 0, -1]}
+          up={mode === 'top' ? [0, 0, -1] : [0, 1, 0]}
           left={-viewW / 2}
           right={viewW / 2}
           top={viewH / 2}
@@ -748,7 +826,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
             ? orthoConfig.target
             : mode === 'top'
               ? (topFollowRef.current ? undefined : TOP_TARGET)
-              : PERSP_TARGET
+              : (orbitType === 'ortho' ? undefined : PERSP_TARGET)
         }
         enableDamping={mode !== 'walk'}
         dampingFactor={0.08}

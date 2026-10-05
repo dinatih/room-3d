@@ -3,7 +3,6 @@ import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { CameraMode, WalkPosition } from './types';
-import { PERSP_POS, PERSP_TARGET } from './cameraConstants';
 import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
 import { appLog } from '@features/ui/AppConsole';
@@ -24,6 +23,7 @@ interface UseCameraShortcutsParams {
   exitWalkMode: () => void;
   enterTop: (follow?: boolean) => void;
   exitTop: () => void;
+  toggleOrbitType?: (target?: 'persp' | 'ortho') => void;
   enterOrtho?: (config: {
     pos: [number, number, number];
     target: [number, number, number];
@@ -48,6 +48,7 @@ export function useCameraShortcuts({
   exitWalkMode,
   enterTop,
   exitTop,
+  toggleOrbitType,
   enterOrtho,
   exitOrtho,
   invalidate,
@@ -138,18 +139,29 @@ export function useCameraShortcuts({
           return;
         }
 
-        if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
-        else if (modeRef.current === 'top') exitTop();
-
-        // Reset to default perspective
-        camera.position.set(...PERSP_POS);
-        savedPerspPos.current.set(...PERSP_POS);
-        savedPerspTarget.current.set(...PERSP_TARGET);
-        if (ctrlRef.current) {
-          ctrlRef.current.target.set(...PERSP_TARGET);
-          ctrlRef.current.update();
+        if (modeRef.current === 'walk' || modeRef.current === 'fpv') {
+          exitWalkMode();
+          toggleOrbitType?.('persp');
+          return;
         }
-        return;
+
+        if (modeRef.current === 'top') {
+          exitTop();
+          toggleOrbitType?.('persp');
+          return;
+        }
+
+        if (modeRef.current === 'ortho') {
+          if (exitOrtho) exitOrtho();
+          toggleOrbitType?.('persp');
+          return;
+        }
+
+        // Si on est déjà en mode orbit libre, basculer entre 'persp' (3D standard) et 'ortho' (isométrique 3D)
+        if (modeRef.current === 'orbit') {
+          toggleOrbitType?.();
+          return;
+        }
       }
 
       if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
@@ -292,6 +304,7 @@ export function useCameraShortcuts({
       if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
       if (modeRef.current === 'top') exitTop();
       if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+      toggleOrbitType?.('persp');
       camera.position.set(...pos);
       savedPerspPos.current.set(...pos);
       savedPerspTarget.current.set(...target);
