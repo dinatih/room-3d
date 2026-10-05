@@ -9,8 +9,8 @@ import {
 const CX   = ROOM_W / 2;
 const CY   = WALL_H / 2;
 const CZ   = ROOM_D / 2;
-const DIST = 600;
-const ISO  = 450;
+const DIST = 1500;
+const ISO  = 1500;
 
 export interface CameraViewPreset {
   pos: [number, number, number];

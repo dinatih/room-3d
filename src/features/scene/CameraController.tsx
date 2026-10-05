@@ -492,10 +492,12 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         dir.normalize();
         if (dir.lengthSq() < 0.001) dir.set(0, 0, 1);
 
-        orthoCam.position.copy(target).addScaledVector(dir, Math.max(dist, 500));
+        orthoCam.position.copy(target).addScaledVector(dir, Math.max(dist, 2500));
         orthoCam.zoom = options?.zoom ?? Math.max(0.05, Math.min(30, 800 / (2 * dist * tanHalfFov)));
       }
 
+      orthoCam.near = -20000;
+      orthoCam.far = 50000;
       orthoCam.up.set(0, 1, 0);
       orthoCam.lookAt(target);
       orthoCam.updateProjectionMatrix();
@@ -929,8 +931,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         right={viewW / 2}
         top={viewH / 2}
         bottom={-viewH / 2}
-        near={1}
-        far={10000}
+        near={-20000}
+        far={50000}
       />
 
       {mode === 'ortho' && (
@@ -942,8 +944,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           right={orthoViewW / 2}
           top={orthoViewH / 2}
           bottom={-orthoViewH / 2}
-          near={1}
-          far={10000}
+          near={-20000}
+          far={50000}
           onUpdate={(self) => {
             self.position.set(...orthoConfig.pos);
             self.up.set(...orthoConfig.up);
