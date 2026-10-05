@@ -19,7 +19,7 @@
  *   par défaut (0) et assigne la catégorie, sans toucher au bit GLB déjà posé
  *   par un GlbLayerGroup enfant (dont useLayoutEffect s'exécute avant).
  */
-import { useRef, useLayoutEffect, createContext } from 'react';
+import { useRef, useLayoutEffect, createContext, useContext } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { LAYER_WALKER_DETAIL } from '@config';
@@ -33,6 +33,8 @@ import {
 
 /** Contexte permettant aux hooks enfants (comme useGLTFClone) de connaître le layer de leur catégorie parente */
 export const CategoryLayerContext = createContext<number | null>(null);
+/** Keeps secondary canvases out of the main scene's layer transition registry. */
+export const LayerRegistryContext = createContext(true);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -70,6 +72,8 @@ export function CategoryLayerGroup({
   layer, children, visible = true, wireframe = false, register = true,
 }: { layer: number; children: React.ReactNode; visible?: boolean; wireframe?: boolean; register?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
+  const allowRegistry = useContext(LayerRegistryContext);
+  const shouldRegister = register && allowRegistry;
 
   const assignLayers = (root: THREE.Object3D) => {
     root.traverse(obj => {
@@ -102,7 +106,7 @@ export function CategoryLayerGroup({
   useLayoutEffect(() => {
     const grp = ref.current;
     if (!grp) return;
-    if (register) categoryLayerRegistry.set(layer, grp);
+    if (shouldRegister) categoryLayerRegistry.set(layer, grp);
     if (visible !== undefined) {
       grp.visible = visible;
     }
@@ -123,9 +127,9 @@ export function CategoryLayerGroup({
     grp.addEventListener('childadded', onChildAdded);
     return () => {
       grp.removeEventListener('childadded', onChildAdded);
-      if (register && categoryLayerRegistry.get(layer) === grp) categoryLayerRegistry.delete(layer);
+      if (shouldRegister && categoryLayerRegistry.get(layer) === grp) categoryLayerRegistry.delete(layer);
     };
-  }, [layer, visible, register]);
+  }, [layer, visible, shouldRegister]);
 
   useLayoutEffect(() => {
     const grp = ref.current;
@@ -164,4 +168,3 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
 
   return <LayerSmokeTransition layers={layers as any} />;
 }
-

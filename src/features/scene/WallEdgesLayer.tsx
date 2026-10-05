@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -32,9 +32,14 @@ export const edgeHoverState = {
 
 // ── WallEdgesLayer (R3F, inside Canvas) ───────────────────────────────────────
 
-export function WallEdgesLayer() {
+export function WallEdgesLayer({ isolated = false, clippingPlanes }: { isolated?: boolean; clippingPlanes?: THREE.Plane[] }) {
   const { scene, camera } = useThree();
   const layers = useSceneStore(state => state.layers);
+  const localEdgeData = useRef({ line: null as THREE.LineSegments | null, positions: null as Float32Array | null });
+  const output = isolated ? localEdgeData.current : edgeData;
+  const material = useMemo(() => isolated
+    ? new THREE.LineBasicMaterial({ color: 0xff2200, clippingPlanes })
+    : lineMat, [isolated, clippingPlanes]);
 
   useEffect(() => {
     let timeout: any;
@@ -82,11 +87,11 @@ export function WallEdgesLayer() {
       const edges = new THREE.EdgesGeometry(deduped, 1);
       deduped.dispose();
 
-      const line = new THREE.LineSegments(edges, lineMat);
+      const line = new THREE.LineSegments(edges, material);
       scene.add(line);
 
-      edgeData.line      = line;
-      edgeData.positions = edges.attributes.position.array as Float32Array;
+      output.line      = line;
+      output.positions = edges.attributes.position.array as Float32Array;
     };
 
     // Premier essai rapide, puis retours si nécessaire
@@ -94,14 +99,15 @@ export function WallEdgesLayer() {
 
     return () => {
       clearTimeout(timeout);
-      if (edgeData.line) {
-        scene.remove(edgeData.line);
-        edgeData.line.geometry.dispose();
+      if (output.line) {
+        scene.remove(output.line);
+        output.line.geometry.dispose();
       }
-      edgeData.line      = null;
-      edgeData.positions = null;
+      output.line      = null;
+      output.positions = null;
+      if (isolated) material.dispose();
     };
-  }, [scene, camera, layers]);
+  }, [scene, camera, layers, isolated, material, output]);
 
   return null;
 }

@@ -5,11 +5,12 @@ import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
 import { drawFps } from '@features/scene/DevToolsOverlay';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
-import { CategoryLayerGroup } from '@features/scene/sceneLayer';
+import { CategoryLayerGroup, LayerRegistryContext } from '@features/scene/sceneLayer';
 import { CharacterGroup } from '@features/scene/character';
 import { Animals } from '@features/scene/Placements';
 import { Neighbors } from '@features/scene/Neighbors';
 import { LidarScan } from '@features/scene/LidarScan';
+import { WallEdgesLayer } from '@features/scene/WallEdgesLayer';
 import {
   LAYER_WALKER_DETAIL, LAYER_WALKER, LAYER_WALL_STRUCTURE, LAYER_DOORS, LAYER_EQUIPMENT,
   LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_ANIMALS,
@@ -102,6 +103,7 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
       <SkySphere />
 
       {/* ── Scène réelle complète de l'appartement — soumise au découpage de la pièce ── */}
+      <LayerRegistryContext.Provider value={false}>
       <group ref={studioGroupRef} visible={!layers.plan}>
         <PreviewCategoryLayerGroup
           layer={LAYER_WALL_STRUCTURE}
@@ -135,6 +137,8 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
           </PreviewCategoryLayerGroup>
         )}
       </group>
+      {layers.wallEdges && <WallEdgesLayer isolated clippingPlanes={clippingPlanes} />}
+      </LayerRegistryContext.Provider>
 
       {/* ── Marqueurs Waypoints de la pièce ── */}
       {waypoints.map(wp => (
