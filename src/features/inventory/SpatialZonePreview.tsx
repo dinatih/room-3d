@@ -1,6 +1,7 @@
 import { memo, useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
 import { drawFps } from '@features/scene/DevToolsOverlay';
@@ -21,6 +22,7 @@ import {
 import { Walls, Floor, MirrorFrames, MirrorReflectors, DoorsPlacement } from '@features/scene/Building';
 import { Equipment, Furniture, Furnishings, Decor } from '@features/scene/Placements';
 import { SkySphere } from '@features/scene/SkySphere';
+import { ViewControlBar } from '@features/scene/ViewControlBar';
 
 const CATEGORY_COLORS: Record<string, string> = {
   bed: '#ff4081',
@@ -240,6 +242,72 @@ function SpatialZoneStatsCollector({ onStats }: { onStats?: (s: { triangles: num
   return null;
 }
 
+// ── Camera view controller for preview ────────────────────────────────────
+
+function PreviewCameraController({
+  centerX, centerY, centerZ, camDistance,
+}: {
+  centerX: number; centerY: number; centerZ: number; camDistance: number;
+}) {
+  const { camera } = useThree();
+  const ctrlRef = useRef<OrbitControlsImpl>(null!);
+
+  const DIST = camDistance;
+
+  useEffect(() => {
+    const onView = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail) return;
+      const { pos, target } = detail as {
+        pos: [number, number, number];
+        target: [number, number, number];
+        projection?: string;
+        zoom?: number;
+      };
+
+      // Scale the direction vector from room presets to zone-relative camera distance
+      const dx = pos[0] - target[0];
+      const dy = pos[1] - target[1];
+      const dz = pos[2] - target[2];
+      const roomDist = Math.hypot(dx, dy, dz) || 1;
+      const scale = DIST / roomDist * (detail.zoom ? 1 / detail.zoom : 1);
+
+      const newPos: [number, number, number] = [
+        centerX + dx * scale,
+        centerY + dy * scale,
+        centerZ + dz * scale,
+      ];
+      const newTarget: [number, number, number] = [centerX, centerY, centerZ];
+
+      camera.position.set(...newPos);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(...newTarget);
+      camera.updateProjectionMatrix();
+
+      if (ctrlRef.current) {
+        ctrlRef.current.target.set(...newTarget);
+        ctrlRef.current.update();
+      }
+    };
+
+    document.addEventListener('camera-view', onView);
+    return () => document.removeEventListener('camera-view', onView);
+  }, [camera, centerX, centerY, centerZ, DIST]);
+
+  return (
+    <OrbitControls
+      ref={ctrlRef}
+      makeDefault
+      target={[centerX, centerY, centerZ]}
+      enableDamping
+      dampingFactor={0.05}
+      maxPolarAngle={Math.PI}
+      minDistance={40}
+      maxDistance={camDistance * 3.5}
+    />
+  );
+}
+
 export function SpatialZonePreview({
   zone,
   height = '100%',
@@ -259,7 +327,6 @@ export function SpatialZonePreview({
   const maxDim = Math.max(max[0] - min[0], max[2] - min[2]);
   const camDistance = Math.max(220, maxDim * 1.35);
 
-  const [isTopView, setIsTopView] = useState(false);
   const [showFpsGraph, setShowFpsGraph] = useState(true);
   const [fpsSamples, setFpsSamples] = useState<number[]>([]);
   const [currentFps, setCurrentFps] = useState<number>(60);
@@ -268,20 +335,9 @@ export function SpatialZonePreview({
   const lastFpsDrawRef = useRef<number>(0);
   const lastReactUpdateRef = useRef<number>(0);
 
-  // Raccourci clavier 'T' pour basculer en Vue du dessus (Top View)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const targetEl = e.target as HTMLElement;
-      if (targetEl && (targetEl.tagName === 'INPUT' || targetEl.tagName === 'TEXTAREA' || targetEl.isContentEditable)) {
-        return;
-      }
-      if (e.key === 't' || e.key === 'T') {
-        setIsTopView(prev => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  const camPosition: [number, number, number] = [
+    centerX + camDistance * 0.75, centerY + camDistance * 0.7, centerZ + camDistance * 0.75,
+  ];
 
   const handleFps = (fps: number) => {
     const s = samplesRef.current;
@@ -303,10 +359,6 @@ export function SpatialZonePreview({
     }
   };
 
-  const camPosition: [number, number, number] = isTopView
-    ? [centerX, camDistance * 1.8, centerZ + 0.01]
-    : [centerX + camDistance * 0.75, centerY + camDistance * 0.7, centerZ + camDistance * 0.75];
-
   const valid = fpsSamples.filter(v => v > 0);
   const fpsMin = valid.length ? Math.min(...valid) : 0;
   const fpsMax = valid.length ? Math.max(...valid) : 0;
@@ -323,7 +375,7 @@ export function SpatialZonePreview({
     <div style={{ width: '100%', height, aspectRatio: '1 / 1', maxHeight: '65vh', position: 'relative', background: '#0b1120', borderRadius: 8, overflow: 'hidden' }}>
       <Canvas
         camera={{ position: camPosition, fov: 42, near: 1, far: 8000 }}
-        key={`${zone.id}-${isTopView ? 'top' : 'persp'}`}
+        key={zone.id}
         style={{ width: '100%', height: '100%' }}
         onCreated={({ gl, camera }) => {
           gl.localClippingEnabled = true;
@@ -345,14 +397,11 @@ export function SpatialZonePreview({
         <SpatialZoneFpsCollector onFps={handleFps} />
         <SpatialZoneStatsCollector onStats={handleStats} />
 
-        <OrbitControls
-          makeDefault
-          target={[centerX, centerY, centerZ]}
-          enableDamping
-          dampingFactor={0.05}
-          maxPolarAngle={Math.PI}
-          minDistance={40}
-          maxDistance={camDistance * 3.5}
+        <PreviewCameraController
+          centerX={centerX}
+          centerY={centerY}
+          centerZ={centerZ}
+          camDistance={camDistance}
         />
       </Canvas>
 
@@ -399,29 +448,16 @@ export function SpatialZonePreview({
         >
           📊 {showFpsGraph ? 'Masquer FPS' : 'Afficher FPS'}
         </button>
-        <button
-          onClick={() => setIsTopView(prev => !prev)}
-          style={{
-            background: isTopView ? '#0284c7' : 'rgba(15, 23, 42, 0.85)',
-            color: '#ffffff',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            padding: '3px 8px',
-            borderRadius: 4,
-            fontSize: 11,
-            fontWeight: 600,
-            cursor: 'pointer',
-            backdropFilter: 'blur(4px)'
-          }}
-        >
-          {isTopView ? '📐 Vue 3D Persp (T)' : '🗺️ Vue Top (T)'}
-        </button>
       </div>
+
+      {/* View Control Bar */}
+      <ViewControlBar position="bottom-center" />
 
       {/* Frame Rate Graph Overlay & Triangles/Draw Calls */}
       {showFpsGraph && (
         <div style={{
           position: 'absolute',
-          bottom: 28,
+          bottom: 56,
           left: 10,
           background: 'rgba(15, 23, 42, 0.88)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -476,7 +512,7 @@ export function SpatialZonePreview({
         fontSize: 10,
         pointerEvents: 'none'
       }}>
-        Touche <b>T</b> : Vue Dessus • Clic gauche : rotation • Molette : zoom • Clic droit : translation
+        Clic gauche : rotation • Molette : zoom • Clic droit : translation
       </div>
     </div>
   );
