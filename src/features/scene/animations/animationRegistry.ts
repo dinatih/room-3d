@@ -3446,9 +3446,9 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 1.9,
   },
   {
-    id: 'idle',
+    id: 'mixamo-idle',
     path: 'animations/poses_idles/anim_idle.glb',
-    label: `idle (251f / 8.4s, 272KB)`,
+    label: `Mixamo idle (251f / 8.4s, 272KB)`,
     tags: ['poses-idles'],
     duration: 8.4,
   },
