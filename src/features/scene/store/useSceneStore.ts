@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import { parseUrlCameraMode } from '@features/scene/camera/cameraUrlParams';
-import { parseUrlLayerOverrides, updateUrlLayer, parseUrlGroundType, updateUrlGroundType } from './layerUrlParams';
+import { parseUrlLayerOverrides, updateUrlLayer, parseUrlGroundType, updateUrlGroundType, LAYER_DEFAULTS } from './layerUrlParams';
 import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
 import {
   type LaraCountMode,
@@ -146,54 +146,12 @@ const initialFurniture: FurnitureState = {
 };
 
 const initialLayers: LayerState = {
-  structure: false,
-  wallStructure: true,
-  floorCoverings: true,
-  environment: true,
-  bnfMarker: true,
-  equipment: true,
-  furniture: true,
-  furnishings: true,
-  decor: true,
-  doors: true,
-  neighbors: false,
-  wireframe: false,
-  wireframeWallStructure: false,
-  wireframeStructure: false,
-  wireframeDoors: false,
-  mirrors: true,
-  mirrorsHD: false,
-  plan: false,
-  grid: false,
-  gridDepth: false,
-  laraGrid: false,
-  // NPC count initialized from URL param (ex: ?npc=15 or ?npc=10 or ?npc=2) or fallback to 2
+  // Booléens depuis LAYER_DEFAULTS (source unique de vérité)
+  ...(LAYER_DEFAULTS as unknown as LayerState),
+  // Valeurs non-booléennes (pas dans LAYER_DEFAULTS)
   laraCount: parseUrlNpcCount(),
-  showAllLaraStyles: true,
-  extraCharacters: false,
-  wallhack: false,
-  skeleton: false,
-  ceiling: false,
-  wallEdges: false,
-  measuredDimensions: false,
-  lidar: false,
-  lights: false,
-  lightsHD: false,
-  shadows: true,
-  pillarsOnly: false,
-  realSun: false,
-  bermudaGrass: true,
   groundType: getRandomGrassType(),
-  walker: true,
-  animals: true,
-  accessories: true,
-  laraPistols: true,
-  laraNude: false,
-  laraTopOff: false,
-  laraBottomOff: false,
-  laraShoes: true,
-  laraRealisticTextures: false,
-  breastPhysics: true,
+  // Physique poitrine
   breastIntensity: 1.0,
   breastMass: 1,
   breastFirmness: 0.5,
@@ -206,8 +164,7 @@ const initialLayers: LayerState = {
   breastMaxTravel: 0.5,
   breastSquash: 0.25,
   breastGravity: 1.0,
-  hairPhysics: true,
-  wigPhysics: true,
+  // Physique perruque
   wigStiffness: 1.0,
   wigDamping: 0.80,
   wigGravity: 1.0,
@@ -216,19 +173,8 @@ const initialLayers: LayerState = {
   wigTipWeight: 1.2,
   wigMaxAngle: 15,
   wigHeadCollisionRadius: 13.0,
-  characterShadows: true,
-  characterWireframe: false,
-  aiZones: false,
-  npcCollisions: true,
-  debugNpcCollisions: false,
-  furnitureCollisions: true,
-  debugFurnitureCollisions: false,
-  fpvHeadBobbing: false,
-  fpvRealisticEyes: true,
-  fpvStabilization: true,
+  // FPV
   fpvStabilizationFactor: 0.7,
-  inventoryGrid: false,
-  smokeTransition: true,
 };
 
 const initialExtraStates: Record<string, boolean> = {

@@ -1,10 +1,85 @@
 import type { LayerState, GroundType } from '../sidepanel/types';
 
+/**
+ * Source unique de vérité pour les valeurs par défaut de tous les calques booléens.
+ * Utilisé par MONITORED_LAYERS (URL params) ET par useSceneStore (état initial).
+ */
+export const LAYER_DEFAULTS: Record<string, boolean> = {
+  // Structure & architecture
+  structure: false,
+  wallStructure: true,
+  floorCoverings: true,
+  environment: true,
+  bnfMarker: true,
+  doors: true,
+  ceiling: false,
+  // Contenu
+  equipment: true,
+  furniture: true,
+  furnishings: true,
+  decor: true,
+  mirrors: true,
+  mirrorsHD: false,
+  neighbors: false,
+  animals: true,
+  // Visualisation / debug
+  wireframe: false,
+  wireframeWallStructure: false,
+  wireframeStructure: false,
+  wireframeDoors: false,
+  plan: false,
+  grid: false,
+  gridDepth: false,
+  laraGrid: false,
+  wallEdges: false,
+  measuredDimensions: false,
+  lidar: false,
+  skeleton: false,
+  // Éclairage & ombres
+  lights: false,
+  lightsHD: false,
+  shadows: true,
+  realSun: false,
+  // Personnages
+  walker: true,
+  extraCharacters: false,
+  showAllLaraStyles: true,
+  accessories: true,
+  laraPistols: true,
+  laraNude: false,
+  laraTopOff: false,
+  laraBottomOff: false,
+  laraShoes: true,
+  laraRealisticTextures: false,
+  pillarsOnly: false,
+  wallhack: false,
+  // Physique
+  breastPhysics: true,
+  hairPhysics: true,
+  wigPhysics: true,
+  characterShadows: true,
+  characterWireframe: false,
+  // FPV
+  fpvHeadBobbing: false,
+  fpvRealisticEyes: true,
+  fpvStabilization: true,
+  // IA & collisions
+  aiZones: false,
+  npcCollisions: true,
+  debugNpcCollisions: false,
+  furnitureCollisions: true,
+  debugFurnitureCollisions: false,
+  // Terrain
+  bermudaGrass: true,
+  // Divers
+  inventoryGrid: false,
+  smokeTransition: true,
+};
+
 export interface LayerUrlMapping {
   layerKey: keyof LayerState;
   canonicalParam: string;
   urlParams: string[];
-  defaultValue: boolean;
 }
 
 export const MONITORED_LAYERS: LayerUrlMapping[] = [
@@ -12,121 +87,101 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: 'wallStructure',
     canonicalParam: 'wallStructure',
     urlParams: ['wallstructure', 'structuremural', 'structure-mural', 'structure-murale', 'structuremurale', 'murs', 'mur'],
-    defaultValue: true,
   },
   {
     layerKey: 'structure',
     canonicalParam: 'structure',
     urlParams: ['structure', 'dalle', 'plafond', 'dalle-plafond', 'dalleplafond'],
-    defaultValue: false,
   },
   {
     layerKey: 'doors',
     canonicalParam: 'doors',
     urlParams: ['doors', 'door', 'portes', 'porte'],
-    defaultValue: true,
   },
   {
     layerKey: 'equipment',
     canonicalParam: 'equipment',
     urlParams: ['equipment', 'equipement', 'equipements'],
-    defaultValue: true,
   },
   {
     layerKey: 'furniture',
     canonicalParam: 'furniture',
     urlParams: ['furniture', 'mobilier', 'meubles', 'meuble'],
-    defaultValue: true,
   },
   {
     layerKey: 'furnishings',
     canonicalParam: 'furnishings',
     urlParams: ['furnishings', 'furnishing', 'habillage', 'habillages'],
-    defaultValue: true,
   },
   {
     layerKey: 'decor',
     canonicalParam: 'decor',
     urlParams: ['decor', 'decoration', 'decorations', 'deco'],
-    defaultValue: true,
   },
   {
     layerKey: 'mirrors',
     canonicalParam: 'mirrors',
     urlParams: ['mirrors', 'mirror', 'miroir', 'miroirs'],
-    defaultValue: true,
   },
   {
     layerKey: 'mirrorsHD',
     canonicalParam: 'mirrorsHD',
     urlParams: ['mirrorshd', 'mirrorhd', 'mirror-hd', 'miroirhd', 'miroir-hd', 'miroirs-hd', 'miroirshd'],
-    defaultValue: false,
   },
   {
     layerKey: 'neighbors',
     canonicalParam: 'neighbors',
     urlParams: ['neighbors', 'neighbor', 'voisins', 'voisin'],
-    defaultValue: false,
   },
   {
     layerKey: 'lidar',
     canonicalParam: 'lidar',
     urlParams: ['lidar', 'lidarscan', 'lidar-scan'],
-    defaultValue: false,
   },
   {
     layerKey: 'wireframe',
     canonicalParam: 'wireframe',
     urlParams: ['wireframe', 'filaire', 'grille-filaire', 'fildefer', 'fil-de-fer'],
-    defaultValue: false,
   },
   {
     layerKey: 'wireframeWallStructure',
     canonicalParam: 'wireframeWallStructure',
     urlParams: ['wireframe-wallstructure', 'wireframe-murs', 'wireframe-mur', 'wireframemurs', 'wf-murs', 'wf-walls'],
-    defaultValue: false,
   },
   {
     layerKey: 'wireframeStructure',
     canonicalParam: 'wireframeStructure',
     urlParams: ['wireframe-structure', 'wireframe-dalle', 'wireframe-plafond', 'wireframestructure', 'wf-structure'],
-    defaultValue: false,
   },
   {
     layerKey: 'wireframeDoors',
     canonicalParam: 'wireframeDoors',
     urlParams: ['wireframe-doors', 'wireframe-portes', 'wireframe-porte', 'wireframeportes', 'wf-doors', 'wf-portes'],
-    defaultValue: false,
   },
   {
     layerKey: 'animals',
     canonicalParam: 'animals',
     urlParams: ['animals', 'animal', 'animaux', 'animeaux', 'pets'],
-    defaultValue: true,
   },
   {
     layerKey: 'pillarsOnly',
     canonicalParam: 'pillarsOnly',
     urlParams: ['pillarsonly', 'pillar-only', 'pillars', 'piliers', 'piliersseuls', 'piliers-seuls'],
-    defaultValue: false,
   },
   {
     layerKey: 'shadows',
     canonicalParam: 'shadows',
     urlParams: ['shadows', 'shadow', 'ombres', 'ombre'],
-    defaultValue: true,
   },
   {
     layerKey: 'extraCharacters',
     canonicalParam: 'extraCharacters',
     urlParams: ['extracharacters', 'extra', 'extras', 'personnagesextras', 'personnages-extras', 'extra-characters'],
-    defaultValue: false,
   },
   {
     layerKey: 'bermudaGrass',
     canonicalParam: 'bermudaGrass',
     urlParams: ['bermudagrass', 'herbe', 'grass', 'terrain-ext', 'terrain'],
-    defaultValue: true,
   },
 ];
 
@@ -290,8 +345,9 @@ export function updateUrlLayer(key: keyof LayerState, value: boolean) {
       url.searchParams.delete(k);
     }
 
-    // Ne pas écrire dans l'URL si la valeur correspond au défaut
-    if (value !== mapping.defaultValue) {
+    // Ne pas écrire dans l'URL si la valeur correspond au défaut (depuis LAYER_DEFAULTS)
+    const isDefault = value === (LAYER_DEFAULTS[key as string] ?? true);
+    if (!isDefault) {
       url.searchParams.set(mapping.canonicalParam, value ? '1' : '0');
     } else if (allKeysToDelete.length === 0) {
       return; // Aucun changement, skip replaceState
