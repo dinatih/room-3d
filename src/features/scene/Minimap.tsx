@@ -6,6 +6,7 @@
  * Styled using Bootstrap 5.3 and the red theme accent.
  */
 import { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { cameraState } from '@features/scene/cameraState';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import {
@@ -391,8 +392,8 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
 
   return (
     <>
-      {/* ── EXPANDED MODAL VIEW (Grande Minimap Zoomable) ───────────────────────── */}
-      {expanded && (
+      {/* ── EXPANDED MODAL VIEW (Grande Minimap Zoomable - rendu via Portal sur document.body) ── */}
+      {expanded && typeof document !== 'undefined' && createPortal(
         <div
           className="position-fixed d-flex align-items-center justify-content-center"
           style={{
@@ -425,6 +426,8 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
               display: 'flex',
               flexDirection: 'column',
+              position: 'relative',
+              zIndex: 100000,
             }}
           >
             {/* Header avec contrôles de zoom et fermeture */}
@@ -500,6 +503,8 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
                 background: 'rgba(0, 0, 0, 0.04)',
                 cursor: zoom > 1 ? (isPanningRef.current ? 'grabbing' : 'grab') : 'default',
                 touchAction: 'none',
+                maxWidth: '100%',
+                maxHeight: 'calc(94vh - 100px)',
               }}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
@@ -525,55 +530,54 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               💡 Molette pour zoomer · Glisser pour déplacer · Double-clic pour réinitialiser · Échap pour fermer
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── MINIMAP CARD HARMONISÉE (Panel Header comme Perf, clic pour agrandir) ── */}
-      {!expanded && (
-        <div
-          className={`${embedded ? 'w-100' : 'position-fixed'} ${!embedded ? 'shadow-sm' : ''}`}
-          style={embedded ? undefined : {
-            bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 0.75rem)' : 20,
-            left: isMobile ? 12 : undefined,
-            right: isMobile ? undefined : 20,
-            width: smallW + 8,
-            zIndex: 90,
-            pointerEvents: 'auto',
-          }}
+      <div
+        className={`${embedded ? 'w-100' : 'position-fixed'} ${!embedded ? 'shadow-sm' : ''}`}
+        style={embedded ? undefined : {
+          bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 0.75rem)' : 20,
+          left: isMobile ? 12 : undefined,
+          right: isMobile ? undefined : 20,
+          width: smallW + 8,
+          zIndex: 90,
+          pointerEvents: 'auto',
+        }}
+      >
+        <Group 
+          emoji="🗺️" 
+          title="Plan 2D" 
+          defaultOpen 
+          headerPadding="py-1.5 px-2"
+          onToggle={(open) => setIsOpen(open)}
         >
-          <Group 
-            emoji="🗺️" 
-            title="Plan 2D" 
-            defaultOpen 
-            headerPadding="py-1.5 px-2"
-            onToggle={(open) => setIsOpen(open)}
+          <div
+            className="d-flex justify-content-center p-1 bg-transparent"
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+              setExpanded(true);
+              setZoom(1);
+              setPan({ x: 0, y: 0 });
+            }}
+            title="Cliquer pour ouvrir le plan en grand"
           >
-            <div
-              className="d-flex justify-content-center p-1 bg-transparent"
-              style={{ cursor: 'pointer' }}
-              onClick={() => {
-                setExpanded(true);
-                setZoom(1);
-                setPan({ x: 0, y: 0 });
+            <canvas
+              ref={floatingCanvasRef}
+              className="rounded-2"
+              style={{
+                display: 'block',
+                width: `${smallW}px`,
+                height: `${smallH}px`,
+                background: 'transparent',
+                opacity: 0.95,
+                transition: 'transform 0.15s ease',
               }}
-              title="Cliquer pour ouvrir le plan en grand"
-            >
-              <canvas
-                ref={floatingCanvasRef}
-                className="rounded-2"
-                style={{
-                  display: 'block',
-                  width: `${smallW}px`,
-                  height: `${smallH}px`,
-                  background: 'transparent',
-                  opacity: 0.95,
-                  transition: 'transform 0.15s ease',
-                }}
-              />
-            </div>
-          </Group>
-        </div>
-      )}
+            />
+          </div>
+        </Group>
+      </div>
     </>
   );
 }
