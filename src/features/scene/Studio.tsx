@@ -125,11 +125,11 @@ function ShadowWarmup() {
 
 const WARMUP_ANIM_PATHS = [
   resolveAnimationPath('idle'),
-  'animations/combat/anim_pistol_kneel_to_stand.glb',
-  'animations/locomotion/anim_falling.glb',
-  'animations/poses_idles/anim_falling_idle.glb',
-  ...NPC_WALK_ANIMATIONS.map(animKey => resolveAnimationPath(animKey)).filter(Boolean),
-];
+  resolveAnimationPath('pistol-kneel-to-stand'),
+  resolveAnimationPath('falling'),
+  resolveAnimationPath('falling-idle'),
+  ...NPC_WALK_ANIMATIONS.map(animKey => resolveAnimationPath(animKey)),
+].filter(Boolean);
 
 /** Pré-compilation GPU, pré-téléchargement des animations essentielles et exécution de frames de warm-up pendant la page de préchargement. */
 function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }) {
