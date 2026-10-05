@@ -669,9 +669,8 @@ export function InventoryPreview({
     return undefined;
   }, [item?.id]);
 
-  const animControllerBottom = hideFooter ? 6 : 42;
-  const datumBannerBottom = isCharacterItem ? (animControllerBottom + 58) : 8;
-  const debugUrlsBottom = isCharacterItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
+  const datumBannerBottom = 8;
+  const debugUrlsBottom = hideFooter ? 4 : 40;
   const currentTargetId = resolveAnimationId(actionStates.characterAnim || 'idle');
   const currentAnimOpt = isHumanCharacter ? WALKER_ANIM_OPTIONS.find(a => a.value === currentTargetId || a.value === actionStates.characterAnim) : null;
   const currentAnimLabel = actionStates.characterAnim === 't-pose'
@@ -773,100 +772,6 @@ export function InventoryPreview({
               />
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
-          {showing3D && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 8,
-                left: hasPhotos ? 82 : 8,
-                zIndex: 3,
-                display: 'flex',
-                background: 'rgba(0,0,0,0.7)',
-                borderRadius: 4,
-                padding: 2,
-                gap: 2,
-                border: '1px solid #555'
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setPreviewView('free')}
-                style={{
-                  padding: '2px 6px',
-                  fontSize: 10,
-                  fontWeight: previewView === 'free' ? 'bold' : 'normal',
-                  background: previewView === 'free' ? '#0058a3' : 'transparent',
-                  border: 'none',
-                  borderRadius: 3,
-                  color: '#fff',
-                  cursor: 'pointer'
-                }}
-                title="Vue 3D Perspective libre (rotation 360°)"
-              >
-                🌐 3D
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setPreviewView('front');
-                  setAutoRotate(false);
-                }}
-                style={{
-                  padding: '2px 6px',
-                  fontSize: 10,
-                  fontWeight: previewView === 'front' ? 'bold' : 'normal',
-                  background: previewView === 'front' ? '#0058a3' : 'transparent',
-                  border: 'none',
-                  borderRadius: 3,
-                  color: '#fff',
-                  cursor: 'pointer'
-                }}
-                title="Vue Orthographique de Face (alignée sur le sol)"
-              >
-                👤 Face
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setPreviewView('side');
-                  setAutoRotate(false);
-                }}
-                style={{
-                  padding: '2px 6px',
-                  fontSize: 10,
-                  fontWeight: previewView === 'side' ? 'bold' : 'normal',
-                  background: previewView === 'side' ? '#0058a3' : 'transparent',
-                  border: 'none',
-                  borderRadius: 3,
-                  color: '#fff',
-                  cursor: 'pointer'
-                }}
-                title="Vue Orthographique de Profil (alignée sur le sol)"
-              >
-                🚶 Profil
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setPreviewView('top');
-                  setAutoRotate(false);
-                }}
-                style={{
-                  padding: '2px 6px',
-                  fontSize: 10,
-                  fontWeight: previewView === 'top' ? 'bold' : 'normal',
-                  background: previewView === 'top' ? '#0058a3' : 'transparent',
-                  border: 'none',
-                  borderRadius: 3,
-                  color: '#fff',
-                  cursor: 'pointer'
-                }}
-                title="Vue Orthographique de Dessus (alignement T-Pose des bras)"
-              >
-                🔝 Dessus
-              </button>
-            </div>
-          )}
           <div className="position-absolute top-0 end-0 m-2 z-3 d-flex gap-2 align-items-center">
             {showing3D && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'wigs') && (
               <>
@@ -1143,40 +1048,6 @@ export function InventoryPreview({
             {glbPath ? `GLB: ${glbPath}` : 'No GLB'} {photos && photos.length > 0 ? `| IMG: ${photos[0]} ${photos.length > 1 ? `(+${photos.length-1})` : ''}` : ''}
           </div>
 
-          {/* Contrôleur de Frame & Timeline Mixamo en bas de la vue 3D */}
-          {showing3D && isCharacterItem && (
-            <AnimFrameController
-              animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
-              animKey={actionStates.characterAnim}
-              isHumanCharacter={isHumanCharacter}
-              characterId={item.id}
-              duoAnimDef={actionStates.duoAnimDef}
-              duoPartnerId={actionStates.duoPartnerId}
-              animalAnimOptions={animalAnimOptions}
-              onCycleAnim={cycleAnim}
-              onSelectAnim={(val) => {
-                setActionStates(s => ({ ...s, characterAnim: val, duoAnimDef: undefined }));
-                useAnimPreviewStore.getState().play();
-              }}
-              onSelectDuoAnim={(def) => {
-                const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-                const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
-                setActionStates(s => ({
-                  ...s,
-                  duoAnimDef: def,
-                  duoPartnerId: defaultPartner,
-                  isPaused: false,
-                  characterAnim: undefined,
-                }));
-                useAnimPreviewStore.getState().play();
-              }}
-              onSelectDuoPartner={(partnerId) => {
-                setActionStates(s => ({ ...s, duoPartnerId: partnerId }));
-              }}
-              bottom={animControllerBottom}
-            />
-          )}
-
           {!hideFooter && (
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 10px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center' }}>
               <div style={{ flex: 1 }}>
@@ -1192,6 +1063,37 @@ export function InventoryPreview({
         </>
       )}
     </div>
+    {item && showing3D && isCharacterItem && (
+      <AnimFrameController
+        animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
+        animKey={actionStates.characterAnim}
+        isHumanCharacter={isHumanCharacter}
+        characterId={item.id}
+        duoAnimDef={actionStates.duoAnimDef}
+        duoPartnerId={actionStates.duoPartnerId}
+        animalAnimOptions={animalAnimOptions}
+        onCycleAnim={cycleAnim}
+        onSelectAnim={(val) => {
+          setActionStates(s => ({ ...s, characterAnim: val, duoAnimDef: undefined }));
+          useAnimPreviewStore.getState().play();
+        }}
+        onSelectDuoAnim={(def) => {
+          const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
+          const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
+          setActionStates(s => ({
+            ...s,
+            duoAnimDef: def,
+            duoPartnerId: defaultPartner,
+            isPaused: false,
+            characterAnim: undefined,
+          }));
+          useAnimPreviewStore.getState().play();
+        }}
+        onSelectDuoPartner={(partnerId) => {
+          setActionStates(s => ({ ...s, duoPartnerId: partnerId }));
+        }}
+      />
+    )}
     {item && <ViewControlBar inline />}
     {item && hasPhotos && (
       <div style={{ display: 'flex', overflowX: 'auto', gap: 6, padding: '8px', scrollbarWidth: 'thin', width: '100%', background: '#eaeaea' }}>

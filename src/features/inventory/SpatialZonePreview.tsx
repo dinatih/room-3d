@@ -1,6 +1,6 @@
-import { memo, useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense, useCallback } from 'react';
+import { memo, useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, AdaptiveDpr, PerformanceMonitor, OrthographicCamera } from '@react-three/drei';
+import { OrbitControls, Html, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
@@ -248,67 +248,73 @@ function PreviewCameraController({
 }: {
   centerX: number; centerY: number; centerZ: number; camDistance: number; zoneSize: number;
 }) {
-  const { camera, size, set } = useThree();
+  const { camera, set } = useThree();
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
-  const perspCamRef = useRef<THREE.PerspectiveCamera>(camera as THREE.PerspectiveCamera);
-  const orthoCamRef = useRef<THREE.OrthographicCamera>(null!);
-  const projectionRef = useRef<'persp' | 'ortho'>('persp');
+  const orthoCamRef = useRef<THREE.OrthographicCamera | null>(null);
+  const perspCamRef = useRef<THREE.PerspectiveCamera | null>(null);
 
   const DIST = camDistance;
-  const aspect = size.width / size.height;
-  // Frustum ortho calibré sur la taille de la zone
-  const orthoHalf = zoneSize * 0.75;
-  const viewH = orthoHalf * 2;
-  const viewW = viewH * aspect;
+  const orthoHalf = Math.max(80, zoneSize * 0.75);
 
-  const switchProjection = useCallback((targetProj: 'persp' | 'ortho', options?: { pos?: [number, number, number]; zoom?: number }) => {
-    const isOrtho = targetProj === 'ortho';
-    const targetCam = isOrtho ? orthoCamRef.current : perspCamRef.current;
-    if (!targetCam) return;
-
-    if (options?.pos) {
-      targetCam.position.set(...options.pos);
-    } else {
-      targetCam.position.copy(camera.position);
-    }
-    targetCam.up.set(0, 1, 0);
-
-    if (isOrtho) {
-      const orthoCam = targetCam as THREE.OrthographicCamera;
-      orthoCam.zoom = options?.zoom ?? 1.5;
-      orthoCam.near = -20000;
-      orthoCam.far = 50000;
-      orthoCam.updateProjectionMatrix();
-    } else {
-      (targetCam as THREE.PerspectiveCamera).updateProjectionMatrix();
-    }
-
-    targetCam.lookAt(centerX, centerY, centerZ);
-    set({ camera: targetCam });
-    if (ctrlRef.current) {
-      ctrlRef.current.object = targetCam;
-      ctrlRef.current.target.set(centerX, centerY, centerZ);
-      ctrlRef.current.update();
-    }
-    projectionRef.current = targetProj;
-  }, [camera, centerX, centerY, centerZ, set]);
-
-  // Sync projection toggle from the global store (PERSP/ORTHO button)
-  const cameraProjection = useSceneStore(s => s.cameraProjection);
+  // Build cameras once
   useEffect(() => {
-    if (projectionRef.current === cameraProjection) return;
-    switchProjection(cameraProjection);
-  }, [cameraProjection, switchProjection]);
+    perspCamRef.current = camera as THREE.PerspectiveCamera;
+    const oc = new THREE.OrthographicCamera(-orthoHalf, orthoHalf, orthoHalf, -orthoHalf, -20000, 50000);
+    oc.position.set(centerX + DIST, centerY + DIST, centerZ + DIST);
+    oc.up.set(0, 1, 0);
+    oc.lookAt(centerX, centerY, centerZ);
+    orthoCamRef.current = oc;
+  }, []);
 
+  // Sync projection toggle from the global store
+  const cameraProjection = useSceneStore(s => s.cameraProjection);
+  const prevProjRef = useRef(cameraProjection);
+  useEffect(() => {
+    if (prevProjRef.current === cameraProjection) return;
+    prevProjRef.current = cameraProjection;
+
+    const orthoCam = orthoCamRef.current;
+    const perspCam = perspCamRef.current;
+    if (!orthoCam || !perspCam) return;
+
+    if (cameraProjection === 'ortho') {
+      orthoCam.position.copy(camera.position);
+      orthoCam.up.copy(camera.up);
+      const aspect = perspCam.aspect ?? 1;
+      orthoCam.left = -orthoHalf * aspect;
+      orthoCam.right = orthoHalf * aspect;
+      orthoCam.top = orthoHalf;
+      orthoCam.bottom = -orthoHalf;
+      orthoCam.zoom = 1;
+      orthoCam.updateProjectionMatrix();
+      orthoCam.lookAt(centerX, centerY, centerZ);
+      set({ camera: orthoCam });
+      if (ctrlRef.current) {
+        ctrlRef.current.object = orthoCam;
+        ctrlRef.current.target.set(centerX, centerY, centerZ);
+        ctrlRef.current.update();
+      }
+    } else {
+      perspCam.position.copy(camera.position);
+      perspCam.up.copy(camera.up);
+      perspCam.lookAt(centerX, centerY, centerZ);
+      set({ camera: perspCam });
+      if (ctrlRef.current) {
+        ctrlRef.current.object = perspCam;
+        ctrlRef.current.target.set(centerX, centerY, centerZ);
+        ctrlRef.current.update();
+      }
+    }
+  }, [cameraProjection]);
+
+  // Apply camera-view presets
   useEffect(() => {
     const onView = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (!detail) return;
-      const { pos, target, projection, zoom } = detail as {
+      const { pos, target } = detail as {
         pos: [number, number, number];
         target: [number, number, number];
-        projection?: 'persp' | 'ortho';
-        zoom?: number;
       };
 
       const dx = pos[0] - target[0];
@@ -323,38 +329,33 @@ function PreviewCameraController({
         centerZ + dz * scale,
       ];
 
-      // Switch projection if the preset requires it
-      const targetProj = projection ?? 'persp';
-      switchProjection(targetProj, { pos: newPos, zoom: zoom ? 1 / zoom : undefined });
+      const activeCam = ctrlRef.current?.object || camera;
+      activeCam.position.set(...newPos);
+      activeCam.up.set(0, 1, 0);
+      activeCam.lookAt(centerX, centerY, centerZ);
+      activeCam.updateProjectionMatrix();
+
+      if (ctrlRef.current) {
+        ctrlRef.current.target.set(centerX, centerY, centerZ);
+        ctrlRef.current.update();
+      }
     };
 
     document.addEventListener('camera-view', onView);
     return () => document.removeEventListener('camera-view', onView);
-  }, [camera, centerX, centerY, centerZ, DIST, switchProjection]);
+  }, [camera, centerX, centerY, centerZ, DIST]);
 
   return (
-    <>
-      <OrthographicCamera
-        ref={orthoCamRef}
-        left={-viewW / 2}
-        right={viewW / 2}
-        top={viewH / 2}
-        bottom={-viewH / 2}
-        near={-20000}
-        far={50000}
-        position={[centerX + DIST, centerY + DIST, centerZ + DIST]}
-      />
-      <OrbitControls
-        ref={ctrlRef}
-        makeDefault
-        target={[centerX, centerY, centerZ]}
-        enableDamping
-        dampingFactor={0.05}
-        maxPolarAngle={Math.PI}
-        minDistance={40}
-        maxDistance={camDistance * 3.5}
-      />
-    </>
+    <OrbitControls
+      ref={ctrlRef}
+      makeDefault
+      target={[centerX, centerY, centerZ]}
+      enableDamping
+      dampingFactor={0.05}
+      maxPolarAngle={Math.PI}
+      minDistance={40}
+      maxDistance={camDistance * 3.5}
+    />
   );
 }
 
