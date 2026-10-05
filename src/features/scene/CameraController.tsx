@@ -165,15 +165,22 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     cameraState.mode = m;
     setMode(m);
 
-    // Auto-enable HD mirrors en FPV, disable hors FPV (orbit, walk, top, ortho) pour les performances,
-    // sauf si l'option miroir-hd a été explicitement définie (notamment à OFF) via l'URL
+    // Auto-enable HD mirrors en FPV, disable hors FPV (orbit, walk, top, ortho) pour les performances.
+    // On bypass toggleLayer pour ne pas polluer l'URL avec mirrorsHD=1 (comportement automatique, pas un choix utilisateur).
+    // On respecte uniquement un mirrorsHD=0 explicite dans l'URL pour forcer la désactivation.
     const urlLayerOverrides = parseUrlLayerOverrides();
     const isMirrorsHDExplicitlyOff = urlLayerOverrides.mirrorsHD === false;
     const isMirrorsHD = useSceneStore.getState().layers.mirrorsHD;
     if (m === 'fpv' && !isMirrorsHD && !isMirrorsHDExplicitlyOff) {
-      useSceneStore.getState().toggleLayer('mirrorsHD');
+      useSceneStore.setState(state => ({
+        layers: { ...state.layers, mirrorsHD: true },
+      }));
+      cameraState.mirrorsHD = true;
     } else if (m !== 'fpv' && isMirrorsHD && urlLayerOverrides.mirrorsHD !== true) {
-      useSceneStore.getState().toggleLayer('mirrorsHD');
+      useSceneStore.setState(state => ({
+        layers: { ...state.layers, mirrorsHD: false },
+      }));
+      cameraState.mirrorsHD = false;
     }
 
     // Vues Top (ortho) : Désactiver le calque Miroir dans les 2 Vues Top (pièce et suivi perso)

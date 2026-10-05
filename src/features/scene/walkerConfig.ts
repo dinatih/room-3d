@@ -103,7 +103,7 @@ export function findCharacterByIdOrName(query: string): CharacterConfig | undefi
 
 /**
  * Analyse l'URL pour détecter si un PNJ actif spécifique est demandé par son id ou son nom.
- * Supporte : ?pnj=..., ?npc=..., ?char=..., ?character=..., ?perso=..., ?walker=..., ?player=...
+ * Supporte : ?npc=..., ?pnj=..., ?char=..., ?character=..., ?perso=..., ?walker=..., ?player=...
  */
 export function parseUrlActiveCharacter(): CharacterConfig | undefined {
   if (typeof window === 'undefined') return undefined;
@@ -113,8 +113,8 @@ export function parseUrlActiveCharacter(): CharacterConfig | undefined {
       search = window.location.hash.substring(window.location.hash.indexOf('?'));
     }
     const params = new URLSearchParams(search);
-    const raw = params.get('pnj') ??
-                params.get('npc') ??
+    const raw = params.get('npc') ??
+                params.get('pnj') ??
                 params.get('char') ??
                 params.get('character') ??
                 params.get('perso') ??
@@ -130,13 +130,26 @@ export function parseUrlActiveCharacter(): CharacterConfig | undefined {
 }
 
 /**
- * Met à jour le paramètre d'URL pour le PNJ actif
+ * Met à jour le paramètre d'URL pour le PNJ actif (canonique: ?npc=, alias français: ?pnj=)
  */
 export function updateUrlActiveCharacter(charIdOrName: string) {
   if (typeof window === 'undefined') return;
   try {
     const url = new URL(window.location.href);
-    url.searchParams.set('pnj', charIdOrName);
+    const charParams = ['npc', 'pnj', 'char', 'character', 'perso', 'walker', 'player', 'joueur'];
+    const hadParam = charParams.some(p => url.searchParams.has(p));
+
+    for (const p of charParams) {
+      url.searchParams.delete(p);
+    }
+
+    const defaultCharId = CHARACTERS[0]?.id;
+    if (charIdOrName !== defaultCharId) {
+      url.searchParams.set('npc', charIdOrName);
+    } else if (!hadParam) {
+      return; // Valeur par défaut, rien à nettoyer
+    }
+
     window.history.replaceState(null, '', url.toString());
   } catch {}
 }

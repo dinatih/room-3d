@@ -73,15 +73,19 @@ export function updateUrlCameraMode(mode: CameraMode) {
   if (typeof window === 'undefined') return;
   try {
     const url = new URL(window.location.href);
-    if (mode === 'fpv') {
-      url.searchParams.delete('orbit');
-      url.searchParams.set('mode', 'fpv');
-    } else {
-      url.searchParams.set('mode', mode);
-      if (mode === 'orbit') {
-        url.searchParams.delete('fpv');
-      }
+    const cameraParams = ['mode', 'camera', 'view', 'cam', 'vue', 'orbit', 'fpv'];
+    const hadParam = cameraParams.some(p => url.searchParams.has(p));
+
+    for (const p of cameraParams) {
+      url.searchParams.delete(p);
     }
+
+    if (mode !== 'fpv') {
+      url.searchParams.set('mode', mode);
+    } else if (!hadParam) {
+      return; // Valeur par défaut, rien à nettoyer
+    }
+
     window.history.replaceState(null, '', url.toString());
   } catch {}
 }
@@ -149,21 +153,19 @@ export function updateUrlHideUI(hidden: boolean) {
   if (typeof window === 'undefined') return;
   try {
     const url = new URL(window.location.href);
+    const uiParams = ['ui', 'hideui', 'showui', 'show-ui', 'noui', 'cacherui', 'cacher-ui', 'hide-ui', 'no-ui'];
+    const hadParam = uiParams.some(p => url.searchParams.has(p));
+
+    for (const p of uiParams) {
+      url.searchParams.delete(p);
+    }
+
     if (hidden) {
       url.searchParams.set('ui', '0');
-      url.searchParams.delete('hideui');
-      url.searchParams.delete('showui');
-      url.searchParams.delete('show-ui');
-      url.searchParams.delete('noui');
-    } else {
-      if (url.searchParams.has('ui') || url.searchParams.has('hideui') || url.searchParams.has('noui') || url.searchParams.has('showui')) {
-        url.searchParams.set('ui', '1');
-        url.searchParams.delete('hideui');
-        url.searchParams.delete('noui');
-        url.searchParams.delete('showui');
-        url.searchParams.delete('show-ui');
-      }
+    } else if (!hadParam) {
+      return; // Valeur par défaut, rien à nettoyer
     }
+
     window.history.replaceState(null, '', url.toString());
   } catch {}
 }

@@ -18,7 +18,7 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: 'structure',
     canonicalParam: 'structure',
     urlParams: ['structure', 'dalle', 'plafond', 'dalle-plafond', 'dalleplafond'],
-    defaultValue: true,
+    defaultValue: false,
   },
   {
     layerKey: 'doors',
@@ -290,8 +290,13 @@ export function updateUrlLayer(key: keyof LayerState, value: boolean) {
       url.searchParams.delete(k);
     }
 
-    // Écrire le paramètre canonique
-    url.searchParams.set(mapping.canonicalParam, value ? '1' : '0');
+    // Ne pas écrire dans l'URL si la valeur correspond au défaut
+    if (value !== mapping.defaultValue) {
+      url.searchParams.set(mapping.canonicalParam, value ? '1' : '0');
+    } else if (allKeysToDelete.length === 0) {
+      return; // Aucun changement, skip replaceState
+    }
+
     window.history.replaceState(null, '', url.toString());
   } catch {}
 }

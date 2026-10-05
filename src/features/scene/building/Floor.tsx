@@ -495,25 +495,11 @@ export function RedPVCCorridor() {
     });
   }, []);
 
-  const yellowCeilMats = useMemo(() => {
-    const yellowCeilMat = new THREE.MeshStandardMaterial({
-      color: '#e5c93d',
-      roughness: 0.8,
-    });
-    // BoxFace order: ['+x', '-x', '+y', '-y', '+z', '-z']
-    // Face +Y masquée (noCapMat) pour éviter tout z-fighting sous le revêtement PVC
-    return boxFaceMats({ '+y': noCapMat }, yellowCeilMat);
-  }, []);
-
   return (
     <group position={[center.x, 0, center.z]} rotation-y={DiagWall.rotY + Math.PI / 2}>
       <mesh position={[0, -0.1, 0]} renderOrder={1} receiveShadow userData={{ brickType: 'floor' }} rotation-x={-Math.PI / 2}>
         <planeGeometry args={[TOTAL_LENGTH, WIDTH]} />
         <primitive object={mat} attach="material" />
-      </mesh>
-
-      <mesh position={[0, -8.5, 0]} material={yellowCeilMats} castShadow receiveShadow userData={{ brickType: 'floor' }}>
-        <boxGeometry args={[TOTAL_LENGTH, 10, WIDTH]} />
       </mesh>
     </group>
   );

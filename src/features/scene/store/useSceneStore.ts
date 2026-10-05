@@ -16,8 +16,12 @@ import {
 function parseUrlNpcCount(): LaraCountMode {
   if (typeof window === 'undefined') return 4;
   try {
-    const params = new URLSearchParams(window.location.search);
-    const raw = params.get('npcs') ?? params.get('laraCount') ?? params.get('characters') ?? params.get('count') ?? params.get('npcCount');
+    let search = window.location.search;
+    if (!search && window.location.hash.includes('?')) {
+      search = window.location.hash.substring(window.location.hash.indexOf('?'));
+    }
+    const params = new URLSearchParams(search);
+    const raw = params.get('npc_nb') ?? params.get('npcs') ?? params.get('laraCount') ?? params.get('characters') ?? params.get('count') ?? params.get('npcCount');
     if (raw !== null) {
       const lower = raw.trim().toLowerCase();
       if (lower === '15' || lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return 15;
@@ -34,27 +38,6 @@ function parseUrlNpcCount(): LaraCountMode {
         if (num >= 1) return 1;
       }
     }
-
-    // Support si ?npc=... ou ?pnj=... est spécifié avec une valeur numérique ou un mot-clé de nombre
-    for (const key of ['npc', 'pnj']) {
-      const val = params.get(key);
-      if (val !== null) {
-        const lower = val.trim().toLowerCase();
-        if (lower === '15' || lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return 15;
-        if (lower === '10' || lower === 'eco') return 10;
-        if (lower === '4' || lower === 'quad') return 4;
-        if (lower === '2' || lower === 'duo' || lower === 'min') return 2;
-        if (lower === '1' || lower === 'solo') return 1;
-        const num = parseInt(lower, 10);
-        if (!isNaN(num)) {
-          if (num >= 15) return 15;
-          if (num >= 10) return 10;
-          if (num >= 4) return 4;
-          if (num >= 2) return 2;
-          if (num >= 1) return 1;
-        }
-      }
-    }
   } catch {}
   return 4;
 }
@@ -63,7 +46,19 @@ export function updateUrlNpcCount(count: LaraCountMode) {
   if (typeof window === 'undefined') return;
   try {
     const url = new URL(window.location.href);
-    url.searchParams.set('npc', count.toString());
+    const countParams = ['npc_nb', 'npcs', 'laraCount', 'characters', 'count', 'npcCount'];
+    const hadParam = countParams.some(p => url.searchParams.has(p)) || url.searchParams.has('npc');
+
+    for (const p of [...countParams, 'npc']) {
+      url.searchParams.delete(p);
+    }
+
+    if (count !== 4) {
+      url.searchParams.set('npc_nb', count.toString());
+    } else if (!hadParam) {
+      return; // Valeur par défaut, rien à nettoyer
+    }
+
     window.history.replaceState(null, '', url.toString());
   } catch {}
 }
@@ -151,7 +146,7 @@ const initialFurniture: FurnitureState = {
 };
 
 const initialLayers: LayerState = {
-  structure: true,
+  structure: false,
   wallStructure: true,
   floorCoverings: true,
   environment: true,
