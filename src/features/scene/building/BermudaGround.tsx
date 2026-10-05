@@ -65,7 +65,7 @@ interface BermudaGroundProps {
   yPos?: number;
 }
 
-export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.6 }: BermudaGroundProps) {
+export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.5 }: BermudaGroundProps) {
   const storeBermudaGrass = useSceneStore(state => state.layers.bermudaGrass ?? true);
   const isGrassActive = active ?? storeBermudaGrass;
   const showTexturedGrass = isGrassActive && groundType !== 'none' && (groundType in GROUND_CONFIGS);
@@ -90,7 +90,7 @@ export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.6 }: B
         </CategoryLayerGroup>
       )}
 
-      {/* Herbe texturée PBR transparente : calée sur l'origine monde, laisse voir Paris en dessous sans recouvrir la dalle */}
+      {/* Herbe texturée PBR : rattachée au calque Herbe (LAYER_GRASS) */}
       {showTexturedGrass && (
         <CategoryLayerGroup layer={LAYER_GRASS}>
           <TexturedGroundMesh
@@ -112,26 +112,14 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
   });
 
   const material = useMemo(() => {
-    const planeW = 1100;
-    const planeH = 2000;
-    const repeatX = planeW / config.tileSize;
-    const repeatY = planeH / config.tileSize;
-
-    // Alignement continu des tuiles sur l'origine du monde (X=0, Z=0)
-    const minWorldX = 150 - planeW / 2; // -400
-    const minWorldZ = 0 - planeH / 2;   // -1000
-    let offsetX = (minWorldX / config.tileSize) % 1;
-    let offsetY = (minWorldZ / config.tileSize) % 1;
-    if (offsetX < 0) offsetX += 1;
-    if (offsetY < 0) offsetY += 1;
+    const repeatX = 1100 / config.tileSize;
+    const repeatY = 2000 / config.tileSize;
 
     [textures.map, textures.normalMap, textures.roughnessMap].forEach((tex) => {
       if (tex) {
         tex.wrapS = THREE.RepeatWrapping;
         tex.wrapT = THREE.RepeatWrapping;
         tex.repeat.set(repeatX, repeatY);
-        tex.offset.set(offsetX, offsetY);
-        tex.anisotropy = 8;
         tex.needsUpdate = true;
       }
     });
@@ -149,7 +137,6 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       metalness: 0.02,
       transparent: true,
       opacity: 0.8,
-      depthWrite: false, // Permet à la dalle béton opaque d'avoir toujours la priorité absolue sans artefact
     });
   }, [textures, config.tileSize]);
 
@@ -159,7 +146,6 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       rotation={[-Math.PI / 2, 0, 0]}
       position={[150, yPos, 0]}
       receiveShadow
-      renderOrder={-1}
       userData={{
         brickType: 'ground',
         itemName: `Terrain Extérieur (${config.label})`,

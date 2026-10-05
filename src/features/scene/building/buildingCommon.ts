@@ -44,9 +44,6 @@ export const slabConcreteSide = new THREE.MeshStandardMaterial({
 export const groundExteriorMat = new THREE.MeshStandardMaterial({
   color: COLORS.ground,
   roughness: 0.9,
-  transparent: true,
-  opacity: 0.8,
-  depthWrite: false,
 });
 
 // Matériaux murs par orientation
