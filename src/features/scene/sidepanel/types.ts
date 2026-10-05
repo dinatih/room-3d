@@ -13,16 +13,23 @@ const CZ   = ROOM_D / 2;
 const DIST = 600;
 const ISO  = 450;
 
-export const VIEWS: Record<string, { pos: [number, number, number]; target: [number, number, number] }> = {
-  perspective: { pos: [CX + 100, 200, CZ + 300],         target: [CX, WALL_H / 3, CZ] },
-  top3d:       { pos: [CX, DIST + 200, CZ],               target: [CX, 0, CZ]          },
-  front:       { pos: [CX, CY, CZ + DIST],                target: [CX, CY, CZ]         },
-  back:        { pos: [CX, CY, CZ - DIST],                target: [CX, CY, CZ]         },
-  left:        { pos: [CX - DIST, CY, CZ],                target: [CX, CY, CZ]         },
-  right:       { pos: [CX + DIST, CY, CZ],                target: [CX, CY, CZ]         },
-  bottom:      { pos: [CX, -DIST, CZ],                    target: [CX, 0, CZ]          },
-  'iso-se':    { pos: [CX + ISO, ISO, CZ + ISO],          target: [CX, 0, CZ]          },
-  'iso-nw':    { pos: [CX - ISO, ISO, CZ - ISO],          target: [CX, 0, CZ]          },
+export interface CameraViewPreset {
+  pos: [number, number, number];
+  target: [number, number, number];
+  projection?: 'persp' | 'ortho';
+  zoom?: number;
+}
+
+export const VIEWS: Record<string, CameraViewPreset> = {
+  perspective: { pos: [CX + 100, 200, CZ + 300],         target: [CX, WALL_H / 3, CZ], projection: 'persp' },
+  top3d:       { pos: [CX, DIST + 200, CZ],               target: [CX, 0, CZ],          projection: 'persp' },
+  front:       { pos: [CX, CY, CZ + DIST],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
+  back:        { pos: [CX, CY, CZ - DIST],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
+  left:        { pos: [CX - DIST, CY, CZ],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
+  right:       { pos: [CX + DIST, CY, CZ],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
+  bottom:      { pos: [CX, -DIST, CZ],                    target: [CX, 0, CZ],          projection: 'persp' },
+  'iso-se':    { pos: [CX + ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
+  'iso-nw':    { pos: [CX - ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
 };
 
 export const POV_ROOMS: Record<string, { x: number; z: number }> = {

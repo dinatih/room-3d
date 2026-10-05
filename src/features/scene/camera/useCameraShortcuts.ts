@@ -23,7 +23,10 @@ interface UseCameraShortcutsParams {
   exitWalkMode: () => void;
   enterTop: (follow?: boolean) => void;
   exitTop: () => void;
-  toggleOrbitType?: (target?: 'persp' | 'ortho') => void;
+  toggleOrbitType?: (
+    target?: 'persp' | 'ortho',
+    options?: { pos?: [number, number, number]; target?: [number, number, number]; zoom?: number }
+  ) => void;
   enterOrtho?: (config: {
     pos: [number, number, number];
     target: [number, number, number];
@@ -297,21 +300,19 @@ export function useCameraShortcuts({
 
     // Panel camera preset → move orbit camera
     const onView = (e: Event) => {
-      const { pos, target } = (e as CustomEvent).detail as {
+      const { pos, target, projection, zoom } = (e as CustomEvent).detail as {
         pos: [number, number, number];
         target: [number, number, number];
+        projection?: 'persp' | 'ortho';
+        zoom?: number;
       };
       if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
       if (modeRef.current === 'top') exitTop();
       if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
-      toggleOrbitType?.('persp');
-      camera.position.set(...pos);
+      const targetProj = projection ?? 'persp';
+      toggleOrbitType?.(targetProj, { pos, target, zoom });
       savedPerspPos.current.set(...pos);
       savedPerspTarget.current.set(...target);
-      if (ctrlRef.current) {
-        ctrlRef.current.target.set(...target);
-        ctrlRef.current.update();
-      }
       invalidate();
     };
 

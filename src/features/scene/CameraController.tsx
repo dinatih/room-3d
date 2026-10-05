@@ -428,7 +428,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     invalidate();
   }, [camera, changeMode, invalidate]);
 
-  const toggleOrbitType = useCallback((targetType?: 'persp' | 'ortho') => {
+  const toggleOrbitType = useCallback((
+    targetType?: 'persp' | 'ortho',
+    options?: {
+      pos?: [number, number, number];
+      target?: [number, number, number];
+      zoom?: number;
+    }
+  ) => {
     const nextType = targetType ?? (orbitTypeRef.current === 'persp' ? 'ortho' : 'persp');
     orbitTypeRef.current = nextType;
     setOrbitType(nextType);
@@ -439,7 +446,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (nextType === 'persp') {
       const perspCam = defaultPerspCamRef.current;
       if (perspCam) {
-        perspCam.position.copy(ctrl.object.position);
+        if (options?.pos) {
+          perspCam.position.set(...options.pos);
+        } else {
+          perspCam.position.copy(ctrl.object.position);
+        }
+        if (options?.target) {
+          ctrl.target.set(...options.target);
+        }
         perspCam.up.set(0, 1, 0);
         perspCam.lookAt(ctrl.target);
         perspCam.updateProjectionMatrix();
@@ -451,11 +465,21 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     } else {
       const orthoCam = orthoCamRef.current;
       if (orthoCam) {
-        const dist = Math.max(10, ctrl.object.position.distanceTo(ctrl.target));
-        const targetZoom = Math.max(0.1, Math.min(10, 800 / (2 * dist * Math.tan(THREE.MathUtils.degToRad(25)))));
-        orthoCam.position.copy(ctrl.object.position);
+        if (options?.pos) {
+          orthoCam.position.set(...options.pos);
+        } else {
+          orthoCam.position.copy(ctrl.object.position);
+        }
+        if (options?.target) {
+          ctrl.target.set(...options.target);
+        }
         orthoCam.up.set(0, 1, 0);
-        orthoCam.zoom = targetZoom;
+        if (options?.zoom !== undefined) {
+          orthoCam.zoom = options.zoom;
+        } else {
+          const dist = Math.max(10, orthoCam.position.distanceTo(ctrl.target));
+          orthoCam.zoom = Math.max(0.1, Math.min(10, 800 / (2 * dist * Math.tan(THREE.MathUtils.degToRad(25)))));
+        }
         orthoCam.lookAt(ctrl.target);
         orthoCam.updateProjectionMatrix();
         set({ camera: orthoCam });
@@ -826,7 +850,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
             ? orthoConfig.target
             : mode === 'top'
               ? (topFollowRef.current ? undefined : TOP_TARGET)
-              : (orbitType === 'ortho' ? undefined : PERSP_TARGET)
+              : undefined
         }
         enableDamping={mode !== 'walk'}
         dampingFactor={0.08}
