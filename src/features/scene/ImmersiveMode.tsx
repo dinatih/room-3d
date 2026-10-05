@@ -17,7 +17,7 @@ import { ROOM_W, ROOM_D } from './wallData';
 const WALK_HEAD_OFFSET = 10;
 const WALK_SPEED       = 2;
 
-function activeWalkH(): number {
+function activeFollowH(): number {
   const h = cameraState.walkerHeight;
   return h + WALK_HEAD_OFFSET;
 }
@@ -29,8 +29,8 @@ export function ImmersiveMode() {
   const { camera, gl, invalidate } = useThree();
 
   const active  = useRef(false);
-  const walking = useRef(false);
-  const pos     = useRef(new THREE.Vector3(ROOM_W / 2, activeWalkH(), ROOM_D / 2));
+  const moving = useRef(false);
+  const pos     = useRef(new THREE.Vector3(ROOM_W / 2, activeFollowH(), ROOM_D / 2));
   const orient  = useRef<{ alpha: number; beta: number; gamma: number } | null>(null);
   const alphaOffset = useRef<number | null>(null);
 
@@ -64,11 +64,11 @@ export function ImmersiveMode() {
     const onTouchStart = (e: TouchEvent) => {
       if (!active.current) return;
       if (e.touches.length === 2) {
-        walking.current = false;
+        moving.current = false;
         touchStartX = e.touches[0].clientX;
         initialAlphaOffset = alphaOffset.current || 0;
       } else if (e.touches.length === 1) {
-        walking.current = true;
+        moving.current = true;
         invalidate();
       }
     };
@@ -86,7 +86,7 @@ export function ImmersiveMode() {
     const onTouchEnd = (e: TouchEvent) => {
       if (!active.current) return;
       if (e.touches.length === 0 || e.touches.length < 2) {
-        walking.current = false;
+        moving.current = false;
         invalidate();
       }
     };
@@ -94,14 +94,14 @@ export function ImmersiveMode() {
     const onPointerDown = (e: PointerEvent) => {
       if (!active.current) return;
       if (e.button === 0) {
-        walking.current = true;
+        moving.current = true;
         invalidate();
       }
     };
 
     const onPointerUp = () => {
       if (!active.current) return;
-      walking.current = false;
+      moving.current = false;
       invalidate();
     };
 
@@ -116,7 +116,7 @@ export function ImmersiveMode() {
       cameraState.isXR = true;
       const startX = Number.isFinite(cameraState.walkerX) ? cameraState.walkerX : ROOM_W / 2;
       const startZ = Number.isFinite(cameraState.walkerZ) ? cameraState.walkerZ : ROOM_D / 2;
-      pos.current.set(startX, activeWalkH(), startZ);
+      pos.current.set(startX, activeFollowH(), startZ);
       orient.current   = null;
       alphaOffset.current = null;
       document.dispatchEvent(new CustomEvent('immersive-state-change', { detail: { active: true } }));
@@ -141,7 +141,7 @@ export function ImmersiveMode() {
     // ── Exit ───────────────────────────────────────────────────────────────────
     function exit() {
       active.current   = false;
-      walking.current  = false;
+      moving.current  = false;
       cameraState.isXR = false;
       orient.current   = null;
       alphaOffset.current = null;
@@ -208,22 +208,22 @@ export function ImmersiveMode() {
     }
 
     // ── Avancer (touch hold) ───────────────────────────────────────────────────
-    if (walking.current) {
+    if (moving.current) {
       const dir = new THREE.Vector3();
       camera.getWorldDirection(dir);
       dir.y = 0;
       dir.normalize();
       pos.current.addScaledVector(dir, WALK_SPEED * dt);
 
-      cameraState.isWalking = true;
+      cameraState.isFollowing = true;
       cameraState.isMoving = true;
       cameraState.lastUserControlTime = performance.now();
       cameraState.walkerX = pos.current.x;
       cameraState.walkerZ = pos.current.z;
-      cameraState.walkYaw = Math.atan2(dir.x, dir.z);
+      cameraState.followYaw = Math.atan2(dir.x, dir.z);
       invalidate();
     } else {
-      cameraState.isWalking = true;
+      cameraState.isFollowing = true;
       cameraState.isMoving = false;
       if (cameraState.isAIControlled) {
         pos.current.x = cameraState.walkerX;

@@ -315,7 +315,7 @@ function drawMinimap(
   lastWalkerMotion.time = now;
 
   // Calcul du facteur de portance / déploiement (0 = repos le long du dos, 1 = pleine vitesse en vol horizontal)
-  const isMoving = cameraState.isWalking || cameraState.isMoving || linSpeed > 18 || angSpeed > 1.0;
+  const isMoving = cameraState.isFollowing || cameraState.isMoving || linSpeed > 18 || angSpeed > 1.0;
   const targetLift = isMoving ? Math.min(1, Math.max(0.35, linSpeed / 130 + angSpeed * 0.22)) : 0;
 
   // Déploiement rapide lors de la marche/course, retombée souple et progressive à l'arrêt

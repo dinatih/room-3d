@@ -2,7 +2,7 @@ import type { MutableRefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import type { CameraMode, WalkPosition } from './types';
+import type { CameraMode, FollowPosition } from './types';
 import {
   WALK_SPEED,
   _tmpOffset,
@@ -22,15 +22,15 @@ interface UseCameraFrameUpdateParams {
   planeModeRef: MutableRefObject<boolean>;
   topFollowRef: MutableRefObject<boolean>;
   activeWalkerId: string;
-  walkPos: MutableRefObject<WalkPosition>;
-  walkYaw: MutableRefObject<number>;
-  walkPitch: MutableRefObject<number>;
+  followPos: MutableRefObject<FollowPosition>;
+  followYaw: MutableRefObject<number>;
+  followPitch: MutableRefObject<number>;
   orbitYaw: MutableRefObject<number>;
   orbitPitch: MutableRefObject<number>;
   orbitDistance: MutableRefObject<number>;
   keys: MutableRefObject<Set<string>>;
   minimapThrottle: MutableRefObject<number>;
-  updateWalkLook: () => void;
+  updateFollowLook: () => void;
   invalidate: () => void;
 }
 
@@ -41,15 +41,15 @@ export function useCameraFrameUpdate({
   planeModeRef,
   topFollowRef,
   activeWalkerId,
-  walkPos,
-  walkYaw,
-  walkPitch,
+  followPos,
+  followYaw,
+  followPitch,
   orbitYaw,
   orbitPitch,
   orbitDistance,
   keys,
   minimapThrottle,
-  updateWalkLook,
+  updateFollowLook,
   invalidate,
 }: UseCameraFrameUpdateParams) {
   useFrame((_, delta) => {
@@ -62,25 +62,25 @@ export function useCameraFrameUpdate({
 
     cameraState.camX = camera.position.x;
     cameraState.camZ = camera.position.z;
-    cameraState.isWalking = modeRef.current === 'walk' || modeRef.current === 'fpv';
+    cameraState.isFollowing = modeRef.current === 'follow' || modeRef.current === 'fpv';
     cameraState.isMoving = keys.current.has('ArrowUp') || keys.current.has('ArrowDown');
 
-    if (cameraState.isWalking) {
+    if (cameraState.isFollowing) {
       if (!cameraState.isAIControlled) {
-        cameraState.walkYaw = walkYaw.current;
-        cameraState.walkPitch = modeRef.current === 'walk' ? orbitPitch.current : walkPitch.current;
-        cameraState.walkerX = walkPos.current.x;
-        cameraState.walkerZ = walkPos.current.z;
+        cameraState.followYaw = followYaw.current;
+        cameraState.followPitch = modeRef.current === 'follow' ? orbitPitch.current : followPitch.current;
+        cameraState.walkerX = followPos.current.x;
+        cameraState.walkerZ = followPos.current.z;
       }
     } else {
       if (!cameraState.isAIControlled) {
-        cameraState.walkerX = walkPos.current.x;
-        cameraState.walkerZ = walkPos.current.z;
+        cameraState.walkerX = followPos.current.x;
+        cameraState.walkerZ = followPos.current.z;
       }
     }
 
     // Sync walker yaw for minimap before onUpdate call
-    cameraState.walkerYaw = cameraState.walkYaw;
+    cameraState.walkerYaw = cameraState.followYaw;
 
     // Save active walker position
     cameraState.positions[activeWalkerId] = {
@@ -109,9 +109,9 @@ export function useCameraFrameUpdate({
         cameraState.lastUserControlTime = performance.now();
       }
 
-      if (k.has('ArrowLeft')) cameraState.walkYaw += 0.03 * dt;
-      if (k.has('ArrowRight')) cameraState.walkYaw -= 0.03 * dt;
-      const wYaw = cameraState.walkYaw;
+      if (k.has('ArrowLeft')) cameraState.followYaw += 0.03 * dt;
+      if (k.has('ArrowRight')) cameraState.followYaw -= 0.03 * dt;
+      const wYaw = cameraState.followYaw;
       const ws = WALK_SPEED * dt;
 
       let wdx = 0;
@@ -127,8 +127,8 @@ export function useCameraFrameUpdate({
       if (wdx !== 0 || wdz !== 0) {
         cameraState.walkerX += wdx;
         cameraState.walkerZ += wdz;
-        walkPos.current.x = cameraState.walkerX;
-        walkPos.current.z = cameraState.walkerZ;
+        followPos.current.x = cameraState.walkerX;
+        followPos.current.z = cameraState.walkerZ;
       }
 
       if (ctrl) {
@@ -196,15 +196,15 @@ export function useCameraFrameUpdate({
       invalidate();
     }
 
-    if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
+    if (modeRef.current !== 'follow' && modeRef.current !== 'fpv') return;
 
     if (cameraState.isAIControlled) {
-      walkPos.current.x = cameraState.walkerX;
-      walkPos.current.z = cameraState.walkerZ;
-      walkYaw.current = cameraState.walkerYaw;
+      followPos.current.x = cameraState.walkerX;
+      followPos.current.z = cameraState.walkerZ;
+      followYaw.current = cameraState.walkerYaw;
     }
 
-    if (modeRef.current === 'walk' || modeRef.current === 'fpv') {
+    if (modeRef.current === 'follow' || modeRef.current === 'fpv') {
       invalidate();
     }
 
@@ -220,7 +220,7 @@ export function useCameraFrameUpdate({
 
       const sp = WALK_SPEED * dt;
 
-      if (modeRef.current === 'walk') {
+      if (modeRef.current === 'follow') {
         // 3rd Person : Les touches fléchées orbitent la caméra autour du personnage
         if (k.has('ArrowLeft')) orbitYaw.current -= 0.03 * dt;
         if (k.has('ArrowRight')) orbitYaw.current += 0.03 * dt;
@@ -233,22 +233,22 @@ export function useCameraFrameUpdate({
         if (k.has('ArrowUp') && !k.has('CtrlArrowUp')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
         if (k.has('ArrowDown') && !k.has('CtrlArrowDown')) orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
 
-        if (k.has('AltArrowUp')) walkPos.current.y += sp;
-        if (k.has('AltArrowDown')) walkPos.current.y -= sp;
+        if (k.has('AltArrowUp')) followPos.current.y += sp;
+        if (k.has('AltArrowDown')) followPos.current.y -= sp;
       } else {
         // Mode FPV (1ère personne)
-        const yaw = walkYaw.current;
+        const yaw = followYaw.current;
         const fwdX = Math.sin(yaw) * sp;
         const fwdZ = Math.cos(yaw) * sp;
 
-        if (k.has('ArrowLeft')) walkYaw.current += 0.03 * dt;
-        if (k.has('ArrowRight')) walkYaw.current -= 0.03 * dt;
+        if (k.has('ArrowLeft')) followYaw.current += 0.03 * dt;
+        if (k.has('ArrowRight')) followYaw.current -= 0.03 * dt;
 
-        if (k.has('CtrlArrowUp')) walkPitch.current = Math.min(1.4, walkPitch.current + 0.02 * dt);
-        if (k.has('CtrlArrowDown')) walkPitch.current = Math.max(-1.4, walkPitch.current - 0.02 * dt);
+        if (k.has('CtrlArrowUp')) followPitch.current = Math.min(1.4, followPitch.current + 0.02 * dt);
+        if (k.has('CtrlArrowDown')) followPitch.current = Math.max(-1.4, followPitch.current - 0.02 * dt);
 
-        if (k.has('AltArrowUp')) walkPos.current.y += sp;
-        if (k.has('AltArrowDown')) walkPos.current.y -= sp;
+        if (k.has('AltArrowUp')) followPos.current.y += sp;
+        if (k.has('AltArrowDown')) followPos.current.y -= sp;
 
         let dx = 0;
         let dz = 0;
@@ -261,12 +261,12 @@ export function useCameraFrameUpdate({
           dz -= fwdZ;
         }
         if (dx !== 0 || dz !== 0) {
-          walkPos.current.x += dx;
-          walkPos.current.z += dz;
+          followPos.current.x += dx;
+          followPos.current.z += dz;
         }
       }
     }
 
-    updateWalkLook();
+    updateFollowLook();
   });
 }

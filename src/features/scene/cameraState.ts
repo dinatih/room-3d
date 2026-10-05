@@ -6,18 +6,18 @@
 import { CHARACTERS, parseUrlActiveCharacter } from './walkerConfig';
 import { parseUrlCameraMode } from './camera/cameraUrlParams';
 
-type CameraMode = 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho';
+type CameraMode = 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'ortho';
 
 const initialChar = parseUrlActiveCharacter() || CHARACTERS[0];
 
 export const cameraState = {
   mode: parseUrlCameraMode() as CameraMode,
-  /** Position caméra (pour l'icône walk sur la minimap) */
+  /** Position caméra (pour l'icône follow sur la minimap) */
   camX: 150 as number,
   camZ: 200 as number,
   camRY: 0 as number,
-  /** Walk mode : état partagé avec Walker.tsx */
-  isWalking: false as boolean,
+  /** Follow mode : état partagé avec Walker.tsx */
+  isFollowing: false as boolean,
   isMoving:  false as boolean,
   isDragging: false as boolean,
   isAIControlled: false as boolean,
@@ -28,8 +28,8 @@ export const cameraState = {
     if (this.lastUserControlTime === 0) return false;
     return (performance.now() - this.lastUserControlTime) < 12000;
   },
-  walkYaw:   (initialChar?.rot ?? 1.9) as number,
-  walkPitch: 0     as number,
+  followYaw:   (initialChar?.rot ?? 1.9) as number,
+  followPitch: 0     as number,
   /** Position et orientation du walker unique (synchro dynamique depuis CHARACTERS) */
   walkerX: (initialChar?.pos[0] ?? 140) as number, 
   walkerZ: (initialChar?.pos[2] ?? 30) as number, 
@@ -48,7 +48,7 @@ export const cameraState = {
   activeHeadForward: null as { x: number; y: number; z: number } | null,
   /** Vecteur unitaire haut (up) de la tête du walker actif */
   activeHeadUp: null as { x: number; y: number; z: number } | null,
-  /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras walk */
+  /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras follow */
   walkerHeight: (initialChar?.height ?? 173.4) as number,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */
   onUpdate:   null as (() => void) | null,

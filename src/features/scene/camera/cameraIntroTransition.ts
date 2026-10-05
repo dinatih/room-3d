@@ -3,12 +3,12 @@
  *
  * Gère l'animation de transition cinématique fluide (plongée / dive de 1.35s)
  * entre le fond 2D Ciel de Paris (page de préchargement) et la première frame
- * de la scène 3D (selon le mode : orbit, fpv, top, walk).
+ * de la scène 3D (selon le mode : orbit, fpv, top, follow).
  */
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { cameraState } from '../cameraState';
-import { CX, CZ, PERSP_POS, PERSP_TARGET, activeWalkH } from './cameraConstants';
+import { CX, CZ, PERSP_POS, PERSP_TARGET, activeFollowH } from './cameraConstants';
 import type { CameraMode } from './types';
 
 export interface IntroPose {
@@ -47,7 +47,7 @@ export function getIntroTargetPose(mode: CameraMode): IntroPose {
     }
     const wX = cameraState.walkerX ?? CX;
     const wZ = cameraState.walkerZ ?? CZ;
-    const wH = activeWalkH();
+    const wH = activeFollowH();
     const yaw = cameraState.walkerYaw ?? 0;
     return {
       pos: new THREE.Vector3(wX, wH, wZ),
@@ -55,10 +55,10 @@ export function getIntroTargetPose(mode: CameraMode): IntroPose {
     };
   }
 
-  if (mode === 'walk') {
+  if (mode === 'follow') {
     const wX = cameraState.walkerX ?? CX;
     const wZ = cameraState.walkerZ ?? CZ;
-    const wH = activeWalkH();
+    const wH = activeFollowH();
     const yaw = cameraState.walkerYaw ?? 0;
     const dist = 360;
     const pitch = 0.35;

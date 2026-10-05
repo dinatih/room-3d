@@ -87,7 +87,7 @@ interface SceneStore {
   bnfElevation: number;
   bnfRadius: number;
   measurementActive: boolean;
-  cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho';
+  cameraMode: 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'ortho';
   cameraProjection: 'persp' | 'ortho';
   activeCameraView: string | null;
   setActiveCameraView: (view: string | null) => void;
@@ -97,7 +97,7 @@ interface SceneStore {
   setPhotoModeOpen: (open: boolean) => void;
   setMeasurementActive: (active: boolean) => void;
   setBnfCoords: (coords: { azimuth?: number; elevation?: number; radius?: number }) => void;
-  setCameraMode: (mode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho') => void;
+  setCameraMode: (mode: 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'ortho') => void;
   setCameraProjection: (proj: 'persp' | 'ortho') => void;
   toggleCameraProjection: () => void;
   setLaraCount: (count: LaraCountMode) => void;

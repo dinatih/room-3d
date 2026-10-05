@@ -17,7 +17,7 @@ const WALK_SPEED = 2;
 export function VRMode() {
   const { gl, camera, scene } = useThree();
   const rigRef     = useRef<THREE.Group | null>(null);
-  const walkingRef = useRef(false);
+  const movingRef = useRef(false);
 
   useEffect(() => {
     gl.xr.enabled = true;
@@ -29,8 +29,8 @@ export function VRMode() {
 
     // ── Contrôleur WebXR (tap Cardboard = avancer) ───────────────────────────
     const ctrl = gl.xr.getController(0);
-    ctrl.addEventListener('selectstart', () => { walkingRef.current = true; });
-    ctrl.addEventListener('selectend',   () => { walkingRef.current = false; });
+    ctrl.addEventListener('selectstart', () => { movingRef.current = true; });
+    ctrl.addEventListener('selectend',   () => { movingRef.current = false; });
     rig.add(ctrl);
 
     let currentSession: any = null;
@@ -39,7 +39,7 @@ export function VRMode() {
       currentSession = null;
       cameraState.isXR = false;
       document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: false } }));
-      walkingRef.current = false;
+      movingRef.current = false;
       cameraState.isMoving = false;
       scene.add(camera);
     };
@@ -87,11 +87,11 @@ export function VRMode() {
     const onWalkStart = (e: Event) => {
       if (!gl.xr.isPresenting) return;
       if (e.target && (e.target as HTMLElement).tagName === 'BUTTON') return;
-      walkingRef.current = true;
+      movingRef.current = true;
     };
     const onWalkEnd = () => {
       if (!gl.xr.isPresenting) return;
-      walkingRef.current = false;
+      movingRef.current = false;
     };
 
     window.addEventListener('touchstart', onWalkStart, { passive: true });
@@ -121,7 +121,7 @@ export function VRMode() {
     if (!gl.xr.isPresenting || !rigRef.current) return;
     const dt = Math.min(delta, 0.1) * 60;
 
-    if (walkingRef.current) {
+    if (movingRef.current) {
       const dir = new THREE.Vector3();
       const xrCam = gl.xr.getCamera() || camera;
       xrCam.getWorldDirection(dir);
@@ -130,16 +130,16 @@ export function VRMode() {
         dir.normalize();
         rigRef.current.position.addScaledVector(dir, WALK_SPEED * dt);
 
-        cameraState.isWalking = true;
+        cameraState.isFollowing = true;
         cameraState.isMoving = true;
         cameraState.lastUserControlTime = performance.now();
         cameraState.walkerX = rigRef.current.position.x;
         cameraState.walkerZ = rigRef.current.position.z;
-        cameraState.walkYaw = Math.atan2(dir.x, dir.z);
+        cameraState.followYaw = Math.atan2(dir.x, dir.z);
       }
     } else {
       if (cameraState.isXR) {
-        cameraState.isWalking = true;
+        cameraState.isFollowing = true;
         cameraState.isMoving = false;
         if (cameraState.isAIControlled) {
           rigRef.current.position.x = cameraState.walkerX;

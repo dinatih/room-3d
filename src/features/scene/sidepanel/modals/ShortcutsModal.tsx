@@ -31,7 +31,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Personnages Extra 🎭 (toggle)" keys={['E']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
               <R label="Vue perspective (reset)"    keys={['O']} />
-              <R label="Walk mode (cycle 3P / FPV)" keys={['M']} />
+              <R label="Follow (cycle 3P / FPV)" keys={['M']} />
               <R label="Vue 3ème personne directe"  keys={['3']} />
               <R label="Ambiance HDRI aléatoire 🎲" keys={['5']} />
               <R label="Bulle de pensées 💭 (toggle)" keys={['6']} />
@@ -60,7 +60,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Piliers seuls (toggle)"     keys={['Alt+P']} />
               <R label="Grille inventaire 📦 (toggle)" keys={['Alt+I']} />
               <R label="Mesures réelles 📐 (toggle)" keys={['Alt+M']} />
-              <R label="Quitter walk / top-down / ortho" keys={['Échap']} />
+              <R label="Quitter follow / top-down / ortho" keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />
             </div>
 
@@ -96,7 +96,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
             </div>
 
             <div>
-              <Section title="Walk mode" />
+              <Section title="Follow mode" />
               <R label="Avancer / reculer"          keys={['↑', '↓']} />
               <R label="Pivoter gauche / droite"    keys={['←', '→']} />
               <R label="Incliner la caméra"         keys={['Ctrl + ↑↓']} />

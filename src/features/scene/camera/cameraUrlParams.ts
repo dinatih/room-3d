@@ -8,7 +8,7 @@ import type { CameraMode } from './types';
  *  - Flag Orbit : ?orbit, ?orbit=1, ?orbit=true, ?orbit=yes, ?orbit=on
  *  - Flag FPV explicite : ?fpv, ?fpv=1, ?fpv=true, ?fpv=yes, ?fpv=on (ou ?fpv=0 pour désactiver -> orbit)
  *  - Paramètre de mode : ?mode=..., ?camera=..., ?view=..., ?cam=..., ?vue=...
- *  - Modes alternatifs : fpv, orbit / 3d / free, walk / follow / 3p, top / 2d / plan, ortho
+ *  - Modes alternatifs : fpv, orbit / 3d / free, follow / 3p / thirdperson, top / 2d / plan, ortho
  */
 export function parseUrlCameraMode(): CameraMode {
   if (typeof window === 'undefined') return 'fpv';
@@ -52,8 +52,8 @@ export function parseUrlCameraMode(): CameraMode {
       if (m === 'fpv' || m === 'firstperson' || m === '1p' || m === 'fps') {
         return 'fpv';
       }
-      if (m === 'walk' || m === 'follow' || m === '3p' || m === 'thirdperson') {
-        return 'walk';
+      if (m === 'follow' || m === '3p' || m === 'thirdperson') {
+        return 'follow';
       }
       if (m === 'top' || m === 'topdown' || m === '2d' || m === 'plan') {
         return 'top';

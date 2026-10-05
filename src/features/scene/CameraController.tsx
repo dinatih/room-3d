@@ -3,19 +3,19 @@
  *
  * Modes :
  *   orbit  — OrbitControls standard (défaut)
- *   walk   — troisième personne intelligente avec lissage et suivi de cible
+ *   follow — troisième personne intelligente avec lissage et suivi de cible
  *   fpv    — première personne vue subjective (niveau des yeux)
  *   top    — vue orthographique du dessus (centrée pièce ou suivi walker)
  *
  * Raccourcis clavier :
  *   O          — vue perspective (reset) / orbit libre
- *   M          — basculer walk / fpv
+ *   M          — basculer follow / fpv
  *   1 / 3      — vue FPV (1) / vue 3ème personne (3)
  *   T / Y      — vue 2D top pièce (T) / vue 2D top suivi perso (Y)
  *   L          — cycler les personnages actifs
  *   E          — basculer les personnages extra (5 aléatoires)
- *   Échap      — quitter walk mode / top-down
- *   Flèches    — déplacement walk / pan et rotation orbit
+ *   Échap      — quitter follow mode / top-down
+ *   Flèches    — déplacement follow / pan et rotation orbit
  */
 import { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -36,7 +36,7 @@ import {
   PERSP_TARGET,
   TOP_POS,
   TOP_TARGET,
-  activeWalkH,
+  activeFollowH,
   DEFAULT_ORBIT_DISTANCE,
   DEFAULT_ORBIT_PITCH,
   parseUrlCameraMode,
@@ -95,11 +95,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // OrbitControls ref
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
 
-  // Walk state
+  // Follow state
   const initialWalker = CHARACTERS.find(c => c.id === useSceneStore.getState().activeWalkerId) || CHARACTERS[0];
-  const walkPos = useRef({ x: initialWalker.pos[0], y: initialWalker.height * EYE_RATIO, z: initialWalker.pos[2] });
-  const walkYaw = useRef(initialWalker.rot);
-  const walkPitch = useRef(initialMode === 'fpv' ? FPV_DEFAULT_PITCH : 0);
+  const followPos = useRef({ x: initialWalker.pos[0], y: initialWalker.height * EYE_RATIO, z: initialWalker.pos[2] });
+  const followYaw = useRef(initialWalker.rot);
+  const followPitch = useRef(initialMode === 'fpv' ? FPV_DEFAULT_PITCH : 0);
   const orbitYaw = useRef(initialWalker.rot);
   const orbitYawOffset = useRef(0); // Différentiel d'angle relatif au personnage
   const orbitPitch = useRef(DEFAULT_ORBIT_PITCH);
@@ -143,11 +143,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         cameraState.walkerYaw = savedPos ? savedPos.yaw : config.rot;
         cameraState.walkerHeight = config.height;
 
-        walkPos.current.x = cameraState.walkerX;
-        walkPos.current.z = cameraState.walkerZ;
-        walkYaw.current = cameraState.walkerYaw;
+        followPos.current.x = cameraState.walkerX;
+        followPos.current.z = cameraState.walkerZ;
+        followYaw.current = cameraState.walkerYaw;
         orbitYaw.current = cameraState.walkerYaw;
-        walkPos.current.y = activeWalkH();
+        followPos.current.y = activeFollowH();
 
         lastWalkerPos.current.x = cameraState.walkerX;
         lastWalkerPos.current.z = cameraState.walkerZ;
@@ -165,7 +165,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     cameraState.mode = m;
     setMode(m);
 
-    // Auto-enable HD mirrors en FPV, disable hors FPV (orbit, walk, top, ortho) pour les performances.
+    // Auto-enable HD mirrors en FPV, disable hors FPV (orbit, follow, top, ortho) pour les performances.
     // On bypass toggleLayer pour ne pas polluer l'URL avec mirrorsHD=1 (comportement automatique, pas un choix utilisateur).
     // On respecte uniquement un mirrorsHD=0 explicite dans l'URL pour forcer la désactivation.
     const urlLayerOverrides = parseUrlLayerOverrides();
@@ -198,7 +198,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
   }, []);
 
-  const updateWalkLook = useCallback(() => {
+  const updateFollowLook = useCallback(() => {
     const ctrl = ctrlRef.current;
     if (!ctrl) return;
 
@@ -244,9 +244,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         const lookDist = 200;
         const targetEyeVec = _tmpEyeTargetVec.set(eyeX, eyeY, eyeZ);
         const targetLookVec = _tmpEyeLookVec;
-        if (Math.abs(walkPitch.current) > 0.001) {
-          const cosP = Math.cos(walkPitch.current);
-          const sinP = Math.sin(walkPitch.current);
+        if (Math.abs(followPitch.current) > 0.001) {
+          const cosP = Math.cos(followPitch.current);
+          const sinP = Math.sin(followPitch.current);
           targetLookVec.set(
             eyeX + fwd.x * cosP * lookDist,
             eyeY + (fwd.y * cosP + sinP) * lookDist,
@@ -286,21 +286,21 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         camera.up.copy(smoothedUp.current);
         ctrl.update();
       } else {
-        const cosP = Math.cos(walkPitch.current);
+        const cosP = Math.cos(followPitch.current);
         const bobY = isBobbingEnabled ? bobOffset.current.y : 0;
         const bobSide = isBobbingEnabled ? bobOffset.current.side : 0;
-        const sideX = Math.cos(walkYaw.current) * bobSide;
-        const sideZ = -Math.sin(walkYaw.current) * bobSide;
+        const sideX = Math.cos(followYaw.current) * bobSide;
+        const sideZ = -Math.sin(followYaw.current) * bobSide;
 
-        const targetX = walkPos.current.x + sideX;
-        const targetY = walkPos.current.y + bobY;
-        const targetZ = walkPos.current.z + sideZ;
+        const targetX = followPos.current.x + sideX;
+        const targetY = followPos.current.y + bobY;
+        const targetZ = followPos.current.z + sideZ;
 
         const lookDist = 200;
         ctrl.target.set(
-          targetX + Math.sin(walkYaw.current) * cosP * lookDist,
-          targetY + Math.sin(walkPitch.current) * lookDist,
-          targetZ + Math.cos(walkYaw.current) * cosP * lookDist
+          targetX + Math.sin(followYaw.current) * cosP * lookDist,
+          targetY + Math.sin(followPitch.current) * lookDist,
+          targetZ + Math.cos(followYaw.current) * cosP * lookDist
         );
         camera.position.set(targetX, targetY, targetZ);
         camera.up.set(0, 1, 0);
@@ -312,9 +312,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       const head = cameraState.activeHeadPos;
       const hips = cameraState.activeHipsPos;
 
-      let targetX = walkPos.current.x;
-      let targetY = walkPos.current.y * 0.75 + bobY;
-      let targetZ = walkPos.current.z;
+      let targetX = followPos.current.x;
+      let targetY = followPos.current.y * 0.75 + bobY;
+      let targetZ = followPos.current.z;
 
       if (head) {
         if (hips) {
@@ -332,12 +332,12 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
 
       if (cameraState.isDragging || keys.current.has('ArrowLeft') || keys.current.has('ArrowRight')) {
-        let diff = orbitYaw.current - walkYaw.current;
+        let diff = orbitYaw.current - followYaw.current;
         while (diff > Math.PI) diff -= 2 * Math.PI;
         while (diff < -Math.PI) diff += 2 * Math.PI;
         orbitYawOffset.current = diff;
       } else {
-        const desiredYaw = walkYaw.current + orbitYawOffset.current;
+        const desiredYaw = followYaw.current + orbitYawOffset.current;
         let diffYaw = desiredYaw - orbitYaw.current;
         while (diffYaw > Math.PI) diffYaw -= 2 * Math.PI;
         while (diffYaw < -Math.PI) diffYaw += 2 * Math.PI;
@@ -376,13 +376,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
   }, [camera]);
 
-  const enterWalk = useCallback((x: number, z: number, walkMode: 'walk' | 'fpv' = 'walk') => {
-    walkPos.current = { x, y: activeWalkH(), z };
-    if (cameraState.walkYaw !== undefined) {
-      walkYaw.current = cameraState.walkYaw;
+  const enterFollow = useCallback((x: number, z: number, followMode: 'follow' | 'fpv' = 'follow') => {
+    followPos.current = { x, y: activeFollowH(), z };
+    if (cameraState.followYaw !== undefined) {
+      followYaw.current = cameraState.followYaw;
     }
-    if (walkMode === 'walk') {
-      orbitYaw.current = walkYaw.current;
+    if (followMode === 'follow') {
+      orbitYaw.current = followYaw.current;
       orbitYawOffset.current = 0;
       orbitPitch.current = DEFAULT_ORBIT_PITCH;
       orbitDistance.current = DEFAULT_ORBIT_DISTANCE;
@@ -390,7 +390,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       const head = cameraState.activeHeadPos;
       const hips = cameraState.activeHipsPos;
       const targetX = head && hips ? head.x * 0.65 + hips.x * 0.35 : (head ? head.x : x);
-      const targetY = head && hips ? head.y * 0.65 + hips.y * 0.35 : (head ? Math.max(15, head.y - 15) : walkPos.current.y * 0.75);
+      const targetY = head && hips ? head.y * 0.65 + hips.y * 0.35 : (head ? Math.max(15, head.y - 15) : followPos.current.y * 0.75);
       const targetZ = head && hips ? head.z * 0.65 + hips.z * 0.35 : (head ? head.z : z);
       const dist = orbitDistance.current;
       const cosP = Math.cos(orbitPitch.current);
@@ -414,7 +414,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         ctrlRef.current.update();
       }
     } else {
-      walkPitch.current = FPV_DEFAULT_PITCH;
+      followPitch.current = FPV_DEFAULT_PITCH;
     }
 
     const ctrl = ctrlRef.current;
@@ -426,7 +426,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) {
-      if (walkMode === 'fpv') {
+      if (followMode === 'fpv') {
         if (modeRef.current !== 'fpv') {
           savedFov.current = cam.fov;
         }
@@ -441,11 +441,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
 
     hasInitialStabilizedPos.current = false;
-    changeMode(walkMode);
+    changeMode(followMode);
     invalidate();
   }, [camera, changeMode, invalidate]);
 
-  const exitWalkMode = useCallback(() => {
+  const exitFollow = useCallback(() => {
     dragging.current = false;
     cameraState.isDragging = false;
     keys.current.clear();
@@ -614,20 +614,20 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       applyTopCamera(targetX, targetZ, cameraProjection);
       appLog('system', cameraProjection === 'ortho' ? '🎥 Mode Top (Ortho 2D)' : '🎥 Mode Top (Perspective 3D)');
       invalidate();
-    } else if (modeRef.current === 'walk') {
+    } else if (modeRef.current === 'follow') {
       const ctrl = ctrlRef.current;
       const activeCam = (cameraProjection === 'ortho' && orthoCamRef.current) ? orthoCamRef.current : defaultPerspCamRef.current;
       if (ctrl && activeCam) {
         set({ camera: activeCam });
         ctrl.object = activeCam;
       }
-      updateWalkLook();
+      updateFollowLook();
       invalidate();
     }
-  }, [applyTopCamera, cameraProjection, invalidate, set, switchOrbitProjection, updateWalkLook]);
+  }, [applyTopCamera, cameraProjection, invalidate, set, switchOrbitProjection, updateFollowLook]);
 
   const enterTop = useCallback((follow = false) => {
-    if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
+    if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
     if (modeRef.current !== 'top') {
       savedPerspPos.current.copy(ctrlRef.current?.object.position || camera.position);
       if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
@@ -639,7 +639,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     useSceneStore.getState().setActiveCameraView('top');
     changeMode('top');
     invalidate();
-  }, [applyTopCamera, camera.position, changeMode, exitWalkMode, invalidate]);
+  }, [applyTopCamera, camera.position, changeMode, exitFollow, invalidate]);
 
   const exitTop = useCallback(() => {
     topFollowRef.current = false;
@@ -685,7 +685,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     up: [number, number, number];
     viewH: number;
   }) => {
-    if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
+    if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
     if (modeRef.current === 'top') exitTop();
     if (modeRef.current !== 'ortho') {
       savedPerspPos.current.copy(camera.position);
@@ -709,7 +709,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
       invalidate();
     });
-  }, [camera, changeMode, exitTop, exitWalkMode, invalidate]);
+  }, [camera, changeMode, exitTop, exitFollow, invalidate]);
 
   const exitOrtho = useCallback(() => {
     changeMode('orbit');
@@ -741,18 +741,18 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
   }, [mode]);
 
-  // Initialisation walk look et ajustement du near plane selon le mode
+  // Initialisation follow look et ajustement du near plane selon le mode
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) {
-      cam.near = (mode === 'walk' || mode === 'fpv') ? 0.1 : 5;
+      cam.near = (mode === 'follow' || mode === 'fpv') ? 0.1 : 5;
       cam.updateProjectionMatrix();
     }
 
-    if (mode === 'walk' || mode === 'fpv') {
-      requestAnimationFrame(() => updateWalkLook());
+    if (mode === 'follow' || mode === 'fpv') {
+      requestAnimationFrame(() => updateFollowLook());
     }
-  }, [mode, camera, updateWalkLook]);
+  }, [mode, camera, updateFollowLook]);
 
   // Contrôleur de transition d'introduction
   const introCtrlRef = useRef<CameraIntroController | null>(null);
@@ -778,14 +778,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const startMode = parseUrlCameraMode();
     if (cameraState.isSceneLaunched) {
       if (startMode === 'fpv') {
-        const curX = cameraState.walkerX ?? walkPos.current.x;
-        const curZ = cameraState.walkerZ ?? walkPos.current.z;
-        enterWalk(curX, curZ, 'fpv');
+        const curX = cameraState.walkerX ?? followPos.current.x;
+        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        enterFollow(curX, curZ, 'fpv');
         appLog('system', '🎥 Mode FPV (1ère personne) initialisé via URL');
-      } else if (startMode === 'walk') {
-        const curX = cameraState.walkerX ?? walkPos.current.x;
-        const curZ = cameraState.walkerZ ?? walkPos.current.z;
-        enterWalk(curX, curZ, 'walk');
+      } else if (startMode === 'follow') {
+        const curX = cameraState.walkerX ?? followPos.current.x;
+        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        enterFollow(curX, curZ, 'follow');
         appLog('system', '🎥 Mode Follow (3ème personne) initialisé via URL');
       } else if (startMode === 'top') {
         enterTop(false);
@@ -796,7 +796,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         changeMode(startMode);
       }
     }
-  }, [enterTop, enterWalk, changeMode]);
+  }, [enterTop, enterFollow, changeMode]);
 
   // Écoute de l'événement de lancement pour démarrer l'animation d'intro
   useEffect(() => {
@@ -810,13 +810,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       introCtrlRef.current.start(targetMode, () => {
         setIsIntroRunningState(false);
         cameraState.isSceneLaunched = true;
-        const curX = cameraState.walkerX ?? walkPos.current.x;
-        const curZ = cameraState.walkerZ ?? walkPos.current.z;
+        const curX = cameraState.walkerX ?? followPos.current.x;
+        const curZ = cameraState.walkerZ ?? followPos.current.z;
         if (targetMode === 'fpv') {
-          enterWalk(curX, curZ, 'fpv');
+          enterFollow(curX, curZ, 'fpv');
           appLog('system', '🎥 Mode FPV (1ère personne) initialisé');
-        } else if (targetMode === 'walk') {
-          enterWalk(curX, curZ, 'walk');
+        } else if (targetMode === 'follow') {
+          enterFollow(curX, curZ, 'follow');
           appLog('system', '🎥 Mode Follow (3ème personne) initialisé');
         } else if (targetMode === 'top') {
           enterTop(false);
@@ -839,7 +839,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       document.removeEventListener('start-camera-intro', onStartIntro);
       introCtrlRef.current?.destroy();
     };
-  }, [camera, enterTop, enterWalk, invalidate]);
+  }, [camera, enterTop, enterFollow, invalidate]);
 
   // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif et suivi du target orbit
   useFrame(() => {
@@ -872,10 +872,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     orbitYaw,
     orbitPitch,
     orbitDistance,
-    walkYaw,
-    walkPitch,
+    followYaw,
+    followPitch,
     dragging,
-    updateWalkLook,
+    updateFollowLook,
     invalidate,
   });
 
@@ -886,13 +886,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     modeRef,
     planeModeRef,
     topFollowRef,
-    walkPos,
+    followPos,
     keys,
     savedPerspPos,
     savedPerspTarget,
     changeMode,
-    enterWalk,
-    exitWalkMode,
+    enterFollow,
+    exitFollow,
     enterTop,
     exitTop,
     toggleOrbitType,
@@ -909,15 +909,15 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     planeModeRef,
     topFollowRef,
     activeWalkerId,
-    walkPos,
-    walkYaw,
-    walkPitch,
+    followPos,
+    followYaw,
+    followPitch,
     orbitYaw,
     orbitPitch,
     orbitDistance,
     keys,
     minimapThrottle,
-    updateWalkLook,
+    updateFollowLook,
     invalidate,
   });
 
@@ -974,14 +974,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
               ? (topFollowRef.current ? undefined : TOP_TARGET)
               : undefined
         }
-        enableDamping={mode !== 'walk'}
+        enableDamping={mode !== 'follow'}
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
-        enabled={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
-        enableRotate={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
-        enablePan={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
-        enableZoom={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
-        screenSpacePanning={mode !== 'walk'}
+        enabled={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
+        enableRotate={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
+        enablePan={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
+        enableZoom={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
+        screenSpacePanning={mode !== 'follow'}
         mouseButtons={DEFAULT_MOUSE_BUTTONS}
       />
     </>

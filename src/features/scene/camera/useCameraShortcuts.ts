@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import type { CameraMode, WalkPosition } from './types';
+import type { CameraMode, FollowPosition } from './types';
 import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
 import { appLog } from '@features/ui/AppConsole';
@@ -16,13 +16,13 @@ interface UseCameraShortcutsParams {
   modeRef: MutableRefObject<CameraMode>;
   planeModeRef: MutableRefObject<boolean>;
   topFollowRef: MutableRefObject<boolean>;
-  walkPos: MutableRefObject<WalkPosition>;
+  followPos: MutableRefObject<FollowPosition>;
   keys: MutableRefObject<Set<string>>;
   savedPerspPos: MutableRefObject<THREE.Vector3>;
   savedPerspTarget: MutableRefObject<THREE.Vector3>;
   changeMode: (mode: CameraMode) => void;
-  enterWalk: (x: number, z: number, mode?: 'walk' | 'fpv') => void;
-  exitWalkMode: () => void;
+  enterFollow: (x: number, z: number, mode?: 'follow' | 'fpv') => void;
+  exitFollow: () => void;
   enterTop: (follow?: boolean) => void;
   exitTop: () => void;
   toggleOrbitType?: (
@@ -45,13 +45,13 @@ export function useCameraShortcuts({
   modeRef,
   planeModeRef,
   topFollowRef,
-  walkPos,
+  followPos,
   keys,
   savedPerspPos,
   savedPerspTarget,
   changeMode,
-  enterWalk,
-  exitWalkMode,
+  enterFollow,
+  exitFollow,
   enterTop,
   exitTop,
   toggleOrbitType,
@@ -71,7 +71,7 @@ export function useCameraShortcuts({
 
       // Global shortcuts
       if (e.key === 'Escape') {
-        if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
+        if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
         else if (modeRef.current === 'top') exitTop();
         else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
         return;
@@ -145,8 +145,8 @@ export function useCameraShortcuts({
           return;
         }
 
-        if (modeRef.current === 'walk' || modeRef.current === 'fpv') {
-          exitWalkMode();
+        if (modeRef.current === 'follow' || modeRef.current === 'fpv') {
+          exitFollow();
           toggleOrbitType?.('persp');
           return;
         }
@@ -171,30 +171,30 @@ export function useCameraShortcuts({
       }
 
       if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
-        const curX = cameraState.walkerX ?? walkPos.current.x;
-        const curZ = cameraState.walkerZ ?? walkPos.current.z;
-        enterWalk(curX, curZ, 'fpv');
+        const curX = cameraState.walkerX ?? followPos.current.x;
+        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        enterFollow(curX, curZ, 'fpv');
         appLog('system', '🎥 Mode FPV (1ère personne)');
         return;
       }
 
       if (e.key === '3' || e.code === 'Digit3' || e.code === 'Numpad3') {
-        const curX = cameraState.walkerX ?? walkPos.current.x;
-        const curZ = cameraState.walkerZ ?? walkPos.current.z;
-        enterWalk(curX, curZ, 'walk');
+        const curX = cameraState.walkerX ?? followPos.current.x;
+        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        enterFollow(curX, curZ, 'follow');
         appLog('system', '🎥 Mode Follow (3ème personne)');
         return;
       }
 
       if (!e.altKey && (e.key === 'm' || e.key === 'M')) {
-        const curX = cameraState.walkerX ?? walkPos.current.x;
-        const curZ = cameraState.walkerZ ?? walkPos.current.z;
-        if (modeRef.current === 'walk') {
-          enterWalk(curX, curZ, 'fpv');
+        const curX = cameraState.walkerX ?? followPos.current.x;
+        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        if (modeRef.current === 'follow') {
+          enterFollow(curX, curZ, 'fpv');
           appLog('system', '🎥 Mode FPV (1ère personne)');
         } else {
           // Si en FPV, Orbit ou Top : passer en 3ème personne intelligente
-          enterWalk(curX, curZ, 'walk');
+          enterFollow(curX, curZ, 'follow');
           appLog('system', '🎥 Mode Suivi Intelligent (3ème personne)');
         }
         return;
@@ -262,8 +262,8 @@ export function useCameraShortcuts({
         return;
       }
 
-      // Walk-only keys
-      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
+      // Follow-only keys
+      if (modeRef.current !== 'follow' && modeRef.current !== 'fpv') return;
       if (isArrow) {
         if (e.ctrlKey) {
           keys.current.add('Ctrl' + k);
@@ -290,10 +290,10 @@ export function useCameraShortcuts({
       if (k === 'Alt')     for (const key of [...keys.current]) { if (key.startsWith('Alt')) keys.current.delete(key); }
     };
 
-    // Minimap / panel click → enter walk in that room
+    // Minimap / panel click → enter follow in that room
     const onPov = (e: Event) => {
       const { x, z } = (e as CustomEvent).detail as { x: number; z: number };
-      enterWalk(x, z);
+      enterFollow(x, z);
     };
 
     // Panel camera preset → move orbit camera
@@ -304,7 +304,7 @@ export function useCameraShortcuts({
         projection?: 'persp' | 'ortho';
         zoom?: number;
       };
-      if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
+      if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
       if (modeRef.current === 'top') {
         topFollowRef.current = false;
         if (ctrlRef.current) {
@@ -356,5 +356,5 @@ export function useCameraShortcuts({
       document.removeEventListener('camera-ortho-view', onOrthoView);
       document.removeEventListener('camera-enter-top', onEnterTop);
     };
-  }, [camera, changeMode, ctrlRef, enterOrtho, enterTop, enterWalk, exitOrtho, exitTop, exitWalkMode, invalidate, keys, modeRef, planeModeRef, savedPerspPos, savedPerspTarget, toggleOrbitType, topFollowRef, walkPos]);
+  }, [camera, changeMode, ctrlRef, enterOrtho, enterTop, enterFollow, exitOrtho, exitTop, exitFollow, invalidate, keys, modeRef, planeModeRef, savedPerspPos, savedPerspTarget, toggleOrbitType, topFollowRef, followPos]);
 }

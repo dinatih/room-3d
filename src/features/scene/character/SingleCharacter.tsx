@@ -371,7 +371,7 @@ export function SingleCharacter({
     if (isActive && !isPreview && initialPos) {
       cameraState.walkerX = initialPos.x;
       cameraState.walkerZ = initialPos.z;
-      cameraState.walkYaw = initialPos.rotY;
+      cameraState.followYaw = initialPos.rotY;
     }
   }, [isActive, isPreview, initialPos]);
 
@@ -680,7 +680,7 @@ export function SingleCharacter({
 
           cameraState.walkerX = agentState.x;
           cameraState.walkerZ = agentState.z;
-          cameraState.walkYaw = agentState.rotY;
+          cameraState.followYaw = agentState.rotY;
           cameraState.isAIControlled = true;
           if (agentState.isSpawned) {
             cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY, anim: agentState.animation };
@@ -689,14 +689,14 @@ export function SingleCharacter({
           }
         } else {
           groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
-          groupRef.current.rotation.y = cameraState.walkYaw;
+          groupRef.current.rotation.y = cameraState.followYaw;
           groupRef.current.visible = !cameraState.walkerHidden;
           cameraState.isAIControlled = false;
           currentAnimClip.current = null;
-          cameraState.positions[id] = { x: cameraState.walkerX, y: 0, z: cameraState.walkerZ, yaw: cameraState.walkYaw, anim: currentAnimClip.current || 'idle' };
+          cameraState.positions[id] = { x: cameraState.walkerX, y: 0, z: cameraState.walkerZ, yaw: cameraState.followYaw, anim: currentAnimClip.current || 'idle' };
           
           setAgentPosition(cameraState.walkerX, 0, cameraState.walkerZ);
-          setAgentRotation(cameraState.walkYaw);
+          setAgentRotation(cameraState.followYaw);
         }
       } else if (isNPC) {
         const agentState = updateAgent(delta);

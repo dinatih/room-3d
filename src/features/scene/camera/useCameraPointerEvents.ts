@@ -12,10 +12,10 @@ interface UseCameraPointerEventsParams {
   orbitYaw: MutableRefObject<number>;
   orbitPitch: MutableRefObject<number>;
   orbitDistance: MutableRefObject<number>;
-  walkYaw: MutableRefObject<number>;
-  walkPitch: MutableRefObject<number>;
+  followYaw: MutableRefObject<number>;
+  followPitch: MutableRefObject<number>;
   dragging: MutableRefObject<boolean>;
-  updateWalkLook: () => void;
+  updateFollowLook: () => void;
   invalidate: () => void;
 }
 
@@ -26,10 +26,10 @@ export function useCameraPointerEvents({
   orbitYaw,
   orbitPitch,
   orbitDistance,
-  walkYaw,
-  walkPitch,
+  followYaw,
+  followPitch,
   dragging,
-  updateWalkLook,
+  updateFollowLook,
   invalidate,
 }: UseCameraPointerEventsParams) {
   useEffect(() => {
@@ -46,7 +46,7 @@ export function useCameraPointerEvents({
 
     const onDown = (e: MouseEvent) => {
       if (cameraState.isIntroRunning) return;
-      if ((modeRef.current === 'walk' || modeRef.current === 'fpv') && e.button === 0) {
+      if ((modeRef.current === 'follow' || modeRef.current === 'fpv') && e.button === 0) {
         dragging.current = true;
         cameraState.isDragging = true;
       }
@@ -58,22 +58,22 @@ export function useCameraPointerEvents({
     };
 
     const onMove = (e: MouseEvent) => {
-      if (!dragging.current || (modeRef.current !== 'walk' && modeRef.current !== 'fpv')) return;
-      if (modeRef.current === 'walk') {
+      if (!dragging.current || (modeRef.current !== 'follow' && modeRef.current !== 'fpv')) return;
+      if (modeRef.current === 'follow') {
         orbitYaw.current += e.movementX * MOUSE_SENS;
         orbitPitch.current = Math.max(-0.6, Math.min(1.45, orbitPitch.current - e.movementY * MOUSE_SENS));
       } else {
-        walkYaw.current -= e.movementX * MOUSE_SENS;
-        walkPitch.current = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
+        followYaw.current -= e.movementX * MOUSE_SENS;
+        followPitch.current = Math.max(-1.4, Math.min(1.4, followPitch.current - e.movementY * MOUSE_SENS));
       }
-      updateWalkLook();
+      updateFollowLook();
       invalidate();
     };
 
     // ── Mobile Touch controls (Walk orientation & 2-finger Pinch-to-Zoom) ────────
     const onTouchStart = (e: TouchEvent) => {
       if (cameraState.isIntroRunning) return;
-      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
+      if (modeRef.current !== 'follow' && modeRef.current !== 'fpv') return;
       if (e.touches.length === 1) {
         dragging.current = true;
         cameraState.isDragging = true;
@@ -88,15 +88,15 @@ export function useCameraPointerEvents({
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
+      if (modeRef.current !== 'follow' && modeRef.current !== 'fpv') return;
 
       if (e.touches.length === 2) {
         const dist = getTouchDist(e);
         if (touchLastDist > 0) {
           const delta = dist - touchLastDist;
-          if (modeRef.current === 'walk') {
+          if (modeRef.current === 'follow') {
             orbitDistance.current = Math.max(30, Math.min(1200, orbitDistance.current - delta * 0.8));
-            updateWalkLook();
+            updateFollowLook();
           } else {
             const cam = camera as THREE.PerspectiveCamera;
             if (cam.isPerspectiveCamera && !cameraState.isXR) {
@@ -117,14 +117,14 @@ export function useCameraPointerEvents({
       touchLastY = e.touches[0].clientY;
 
       const TOUCH_SENS = MOUSE_SENS * 1.5;
-      if (modeRef.current === 'walk') {
+      if (modeRef.current === 'follow') {
         orbitYaw.current += dx * TOUCH_SENS;
         orbitPitch.current = Math.max(-0.6, Math.min(1.45, orbitPitch.current - dy * TOUCH_SENS));
       } else {
-        walkYaw.current -= dx * TOUCH_SENS;
-        walkPitch.current = Math.max(-1.4, Math.min(1.4, walkPitch.current - dy * TOUCH_SENS));
+        followYaw.current -= dx * TOUCH_SENS;
+        followPitch.current = Math.max(-1.4, Math.min(1.4, followPitch.current - dy * TOUCH_SENS));
       }
-      updateWalkLook();
+      updateFollowLook();
       invalidate();
     };
 
@@ -145,12 +145,12 @@ export function useCameraPointerEvents({
     // Scroll wheel : en 3ème personne ajuste la distance d'orbite ; en FPV ajuste le FOV
     const onWheel = (e: WheelEvent) => {
       if (cameraState.isIntroRunning) return;
-      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
+      if (modeRef.current !== 'follow' && modeRef.current !== 'fpv') return;
       e.preventDefault();
-      if (modeRef.current === 'walk') {
+      if (modeRef.current === 'follow') {
         const step = e.deltaY > 0 ? 15 : -15;
         orbitDistance.current = Math.max(30, orbitDistance.current + step);
-        updateWalkLook();
+        updateFollowLook();
       } else {
         const cam = camera as THREE.PerspectiveCamera;
         if (!cam.isPerspectiveCamera || cameraState.isXR) return;
@@ -181,5 +181,5 @@ export function useCameraPointerEvents({
 
       domElement.removeEventListener('wheel', onWheel);
     };
-  }, [domElement, camera, modeRef, orbitYaw, orbitPitch, orbitDistance, walkYaw, walkPitch, dragging, updateWalkLook, invalidate]);
+  }, [domElement, camera, modeRef, orbitYaw, orbitPitch, orbitDistance, followYaw, followPitch, dragging, updateFollowLook, invalidate]);
 }
