@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ACCESSORIES_MESH_NAMES } from './walkerConfig';
+import { ACCESSORIES_MESH_NAMES } from './characterConfig';
 import { resolveTargetBoneName, getDepth } from './retargeting/index';
 
 export interface CharacterMeshPart {

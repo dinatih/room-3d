@@ -8,7 +8,7 @@ import { InventoryPreview } from './InventoryPreview';
 import { SpatialZonePreview } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
 import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
-import { CHARACTERS, isExtraCharacter } from '@features/scene/walkerConfig';
+import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
@@ -505,8 +505,8 @@ export function Inventory({
     if (initialCategory) {
       setActiveCat(initialCategory);
       if (initialCategory === 'walkers') {
-        const firstWalker = INVENTORY.find(i => i.category === 'walkers' && i.id !== 'ushiro' && i.id !== 'robin-bird' && (extraCharacters || !isExtraCharacter(i.id)));
-        if (firstWalker) setSelected(firstWalker);
+        const firstCharacter = INVENTORY.find(i => i.category === 'walkers' && i.id !== 'ushiro' && i.id !== 'robin-bird' && (extraCharacters || !isExtraCharacter(i.id)));
+        if (firstCharacter) setSelected(firstCharacter);
       }
     }
   }, [initialCategory, visible, extraCharacters]);

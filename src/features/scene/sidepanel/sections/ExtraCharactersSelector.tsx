@@ -6,7 +6,7 @@ import {
   ANATOMICAL_EXTRA_IDS,
   findCharacter,
   npcLabel,
-} from '@features/scene/walkerConfig';
+} from '@features/scene/characterConfig';
 
 interface ExtraCharactersSelectorProps {
   isMobile: boolean;
@@ -18,7 +18,7 @@ export function ExtraCharactersSelector({
   isMobile,
 }: ExtraCharactersSelectorProps) {
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
-  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const toggleExtraCharacter = useSceneStore(state => state.toggleExtraCharacter);
   const toggleExtraGroup = useSceneStore(state => state.toggleExtraGroup);
   const selectAllExtraCharacters = useSceneStore(state => state.selectAllExtraCharacters);
@@ -176,7 +176,7 @@ export function ExtraCharactersSelector({
             ) : (
               filteredCharacters.map(char => {
                 const isSelected = activeExtraIds.includes(char.id);
-                const isPlayer = char.id === activeWalkerId;
+                const isPlayer = char.id === activeCharacterId;
 
                 return (
                   <label

@@ -25,7 +25,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 import { cameraState } from './cameraState';
 import { useSceneStore } from './store/useSceneStore';
-import { CHARACTERS } from './walkerConfig';
+import { CHARACTERS } from './characterConfig';
 import { appLog } from '@features/ui/AppConsole';
 import {
   type CameraMode,
@@ -89,18 +89,18 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     planeModeRef.current = planeMode;
   }, [planeMode]);
 
-  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
-  const prevWalkerId = useRef<string | null>(null);
+  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const prevCharacterId = useRef<string | null>(null);
 
   // OrbitControls ref
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
 
   // Follow state
-  const initialWalker = CHARACTERS.find(c => c.id === useSceneStore.getState().activeWalkerId) || CHARACTERS[0];
-  const followPos = useRef({ x: initialWalker.pos[0], y: initialWalker.height * EYE_RATIO, z: initialWalker.pos[2] });
-  const followYaw = useRef(initialWalker.rot);
+  const initialCharacter = CHARACTERS.find(c => c.id === useSceneStore.getState().activeCharacterId) || CHARACTERS[0];
+  const followPos = useRef({ x: initialCharacter.pos[0], y: initialCharacter.height * EYE_RATIO, z: initialCharacter.pos[2] });
+  const followYaw = useRef(initialCharacter.rot);
   const followPitch = useRef(initialMode === 'fpv' ? FPV_DEFAULT_PITCH : 0);
-  const orbitYaw = useRef(initialWalker.rot);
+  const orbitYaw = useRef(initialCharacter.rot);
   const orbitYawOffset = useRef(0); // Différentiel d'angle relatif au personnage
   const orbitPitch = useRef(DEFAULT_ORBIT_PITCH);
   const orbitDistance = useRef(DEFAULT_ORBIT_DISTANCE);
@@ -108,7 +108,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const dragging = useRef(false);
   const bobOffset = useRef({ y: 0, side: 0 });
   const bobPhase = useRef(0);
-  const lastWalkerPos = useRef({ x: initialWalker.pos[0], z: initialWalker.pos[2] });
+  const lastCharacterPos = useRef({ x: initialCharacter.pos[0], z: initialCharacter.pos[2] });
   const smoothedEyePos = useRef(new THREE.Vector3());
   const smoothedLookTarget = useRef(new THREE.Vector3());
   const smoothedUp = useRef(new THREE.Vector3(0, 1, 0));
@@ -134,10 +134,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // Synchronisation du changement de personnage actif
   useEffect(() => {
-    if (activeWalkerId !== prevWalkerId.current) {
-      const config = CHARACTERS.find(c => c.id === activeWalkerId);
+    if (activeCharacterId !== prevCharacterId.current) {
+      const config = CHARACTERS.find(c => c.id === activeCharacterId);
       if (config) {
-        const savedPos = cameraState.positions[activeWalkerId];
+        const savedPos = cameraState.positions[activeCharacterId];
         cameraState.walkerX = savedPos ? savedPos.x : config.pos[0];
         cameraState.walkerZ = savedPos ? savedPos.z : config.pos[2];
         cameraState.walkerYaw = savedPos ? savedPos.yaw : config.rot;
@@ -149,15 +149,15 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         orbitYaw.current = cameraState.walkerYaw;
         followPos.current.y = activeFollowH();
 
-        lastWalkerPos.current.x = cameraState.walkerX;
-        lastWalkerPos.current.z = cameraState.walkerZ;
+        lastCharacterPos.current.x = cameraState.walkerX;
+        lastCharacterPos.current.z = cameraState.walkerZ;
         hasInitialStabilizedPos.current = false;
 
         invalidate();
       }
     }
-    prevWalkerId.current = activeWalkerId;
-  }, [activeWalkerId, invalidate]);
+    prevCharacterId.current = activeCharacterId;
+  }, [activeCharacterId, invalidate]);
 
   const changeMode = useCallback((m: CameraMode) => {
     const prev = modeRef.current;
@@ -206,11 +206,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const isBobbingEnabled = useSceneStore.getState().layers.fpvHeadBobbing ?? false;
 
     // Calcul du déplacement réel pour cadencer le bobbing
-    const dx = cameraState.walkerX - lastWalkerPos.current.x;
-    const dz = cameraState.walkerZ - lastWalkerPos.current.z;
+    const dx = cameraState.walkerX - lastCharacterPos.current.x;
+    const dz = cameraState.walkerZ - lastCharacterPos.current.z;
     const movedDist = Math.hypot(dx, dz);
-    lastWalkerPos.current.x = cameraState.walkerX;
-    lastWalkerPos.current.z = cameraState.walkerZ;
+    lastCharacterPos.current.x = cameraState.walkerX;
+    lastCharacterPos.current.z = cameraState.walkerZ;
 
     if (isBobbingEnabled && movedDist > 0.05) {
       // Cadence proportionnelle à la foulée (~70 cm par cycle complet)
@@ -908,7 +908,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     modeRef,
     planeModeRef,
     topFollowRef,
-    activeWalkerId,
+    activeCharacterId,
     followPos,
     followYaw,
     followPitch,

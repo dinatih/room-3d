@@ -31,7 +31,7 @@ export function CharacterBaseballCap({ attachTo, color = 0xcc0000 }: CharacterBa
     // Dimensions brutes du GLB (identique à BaseballCap.tsx du studio)
     const rawSize = glbLocalBBox(scene).getSize(new THREE.Vector3());
     // Dans le studio, BaseballCap fait 20 cm (1 unité = 1 cm).
-    // Lara étant scalée x100 dans SingleCharacter (1 unité = 1 mètre = 100 cm),
+    // Lara étant scalée x100 dans Character (1 unité = 1 mètre = 100 cm),
     // 20 cm dans l'espace de l'armature correspondent exactement à 0.20 unité.
     scene.scale.setScalar(0.20 / rawSize.x);
 

@@ -12,7 +12,7 @@ import type { SkeletonGroup } from '@features/scene/utils/skeletonTypes';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 import { resolveAnimationId } from '@features/scene/animations/animationResolver';
 import type { DuoAnimationDef } from '@features/scene/animations/duoAnimations';
-import { CHARACTERS, isExtraCharacter } from '@features/scene/walkerConfig';
+import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { GroundPoint } from '@features/scene/character/GroundPoint';
 import { SkySphere } from '@features/scene/SkySphere';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
@@ -481,8 +481,8 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
 }
 
 function RegistryScene({ item, actionState, showDims, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
-  const Component = SCENE_REGISTRY[item.id], isWalker = item.category === 'walkers';
-  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isWalker} showDims={showDims} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />;
+  const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'walkers';
+  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />;
 }
 
 function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: string[], initialIndex?: number, onIndexChange?: (i: number) => void }) {
@@ -611,8 +611,8 @@ export function InventoryPreview({
 
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
-  const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
-  const isHumanWalker = Boolean(isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id));
+  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
+  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id));
 
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
@@ -645,10 +645,10 @@ export function InventoryPreview({
   }, [item?.id]);
 
   const animControllerBottom = hideFooter ? 6 : 42;
-  const datumBannerBottom = isWalkerItem ? (animControllerBottom + 58) : 8;
-  const debugUrlsBottom = isWalkerItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
+  const datumBannerBottom = isCharacterItem ? (animControllerBottom + 58) : 8;
+  const debugUrlsBottom = isCharacterItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
   const currentTargetId = resolveAnimationId(actionStates.walkerAnim || 'idle');
-  const currentAnimOpt = isHumanWalker ? WALKER_ANIM_OPTIONS.find(a => a.value === currentTargetId || a.value === actionStates.walkerAnim) : null;
+  const currentAnimOpt = isHumanCharacter ? WALKER_ANIM_OPTIONS.find(a => a.value === currentTargetId || a.value === actionStates.walkerAnim) : null;
   const currentAnimLabel = actionStates.walkerAnim === 't-pose'
     ? 'T-Pose'
     : (currentAnimOpt ? currentAnimOpt.label : (actionStates.walkerAnim || 'Idle'));
@@ -689,7 +689,7 @@ export function InventoryPreview({
         setActionStates(s => ({ ...s, showBones: !s.showBones }));
         return;
       }
-      if (isHumanWalker) {
+      if (isHumanCharacter) {
         if (targetEl?.tagName === 'SELECT') {
           return;
         }
@@ -706,7 +706,7 @@ export function InventoryPreview({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isHumanWalker, cycleAnim]);
+  }, [isHumanCharacter, cycleAnim]);
 
   return (
     <div className="inventory-preview-container" style={{ width }}>
@@ -882,7 +882,7 @@ export function InventoryPreview({
               </>
             )}
 
-            {isHumanWalker && (
+            {isHumanCharacter && (
               <button
                 type="button"
                 onClick={() => setShowPnjPanel(v => !v)}
@@ -1004,7 +1004,7 @@ export function InventoryPreview({
           {/* Panneau latéral Section PNJ (Persistant en DOM pour préserver le scroll) */}
           <div
               style={{
-                display: isHumanWalker && showPnjPanel ? 'flex' : 'none',
+                display: isHumanCharacter && showPnjPanel ? 'flex' : 'none',
                 position: 'absolute',
                 top: 40,
                 right: 8,
@@ -1119,11 +1119,11 @@ export function InventoryPreview({
           </div>
 
           {/* Contrôleur de Frame & Timeline Mixamo en bas de la vue 3D */}
-          {showing3D && isWalkerItem && (
+          {showing3D && isCharacterItem && (
             <AnimFrameController
               animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
               animKey={actionStates.walkerAnim}
-              isHumanWalker={isHumanWalker}
+              isHumanCharacter={isHumanCharacter}
               characterId={item.id}
               duoAnimDef={actionStates.duoAnimDef}
               duoPartnerId={actionStates.duoPartnerId}

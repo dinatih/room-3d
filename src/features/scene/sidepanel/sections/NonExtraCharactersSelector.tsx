@@ -4,7 +4,7 @@ import {
   NON_EXTRA_CHARACTERS,
   type LaraCountMode,
   findCharacter,
-} from '@features/scene/walkerConfig';
+} from '@features/scene/characterConfig';
 
 interface NonExtraCharactersSelectorProps {
   isMobile: boolean;
@@ -14,7 +14,7 @@ export function NonExtraCharactersSelector({
   isMobile,
 }: NonExtraCharactersSelectorProps) {
   const activeMainIds = useSceneStore(state => state.activeMainIds);
-  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const toggleMainCharacter = useSceneStore(state => state.toggleMainCharacter);
   const selectAllMainCharacters = useSceneStore(state => state.selectAllMainCharacters);
   const clearMainCharacters = useSceneStore(state => state.clearMainCharacters);
@@ -129,7 +129,7 @@ export function NonExtraCharactersSelector({
           ) : (
             filteredCharacters.map(char => {
               const isSelected = activeMainIds.includes(char.id);
-              const isPlayer = char.id === activeWalkerId;
+              const isPlayer = char.id === activeCharacterId;
 
               return (
                 <label

@@ -17,7 +17,7 @@ async function run() {
       'draco3d.decoder': await draco3d.createDecoderModule(),
     });
 
-  const walkerConfig = fs.readFileSync('src/features/scene/walkerConfig.ts', 'utf8');
+  const walkerConfig = fs.readFileSync('src/features/scene/characterConfig.ts', 'utf8');
   const regex = /id:\s*'([^']+)',.*?path:\s*'([^']+)'/g;
   let match;
   const models = [];

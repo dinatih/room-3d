@@ -4,7 +4,7 @@ import { getAnimationDef, resolveAnimationId } from '@features/scene/animations/
 import { ANIMATION_DEFINITIONS, type AnimationDefinition } from '@features/scene/animations/animationRegistry';
 import { CharacterAnimSelector, ANIM_CATEGORIES, getAnimCategory, getFilteredAnimOptions } from '@features/scene/CharacterAnimSelector';
 import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
-import { CHARACTERS, isExtraCharacter } from '@features/scene/walkerConfig';
+import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 
 const SPEED_OPTIONS = [0.25, 0.5, 1, 1.5, 2];
@@ -20,7 +20,7 @@ export interface AnimFrameControllerProps {
   style?: React.CSSProperties;
 
   // Support Animations Duo
-  isHumanWalker?: boolean;
+  isHumanCharacter?: boolean;
   characterId?: string;
   duoAnimDef?: DuoAnimationDef;
   duoPartnerId?: string;
@@ -38,7 +38,7 @@ export function AnimFrameController({
   bottom = 8,
   className = '',
   style = {},
-  isHumanWalker = false,
+  isHumanCharacter = false,
   characterId,
   duoAnimDef,
   duoPartnerId,
@@ -520,7 +520,7 @@ export function AnimFrameController({
           )}
 
           {/* Contrôles Animations Duo (humains uniquement) */}
-          {isHumanWalker && (
+          {isHumanCharacter && (
             <div className="d-flex align-items-center flex-wrap gap-1.5">
               {/* Sélecteur Duo + Dé */}
               <div className="btn-group btn-group-sm" role="group">

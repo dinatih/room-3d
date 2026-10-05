@@ -1,5 +1,5 @@
 import { useSceneStore } from '../../store/useSceneStore';
-import { CHARACTERS, isCharacterVisibleInMode, npcLabel } from '@features/scene/walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode, npcLabel } from '@features/scene/characterConfig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 import { ExtraCharactersSelector } from './ExtraCharactersSelector';
 import { NonExtraCharactersSelector } from './NonExtraCharactersSelector';
@@ -33,7 +33,7 @@ export function CharacterSection({
   handleRandomHairColor,
   handleRandomHaircut,
 }: CharacterSectionProps) {
-  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeMainIds = useSceneStore(state => state.activeMainIds);
   const extraStates = useSceneStore(state => state.extraStates);
@@ -69,12 +69,12 @@ export function CharacterSection({
             <div className="text-muted fw-semibold mb-1 text-dark small text-uppercase">👤 Choix Personnage</div>
             <select
               className="form-select form-select-sm bg-transparent text-dark border-secondary small"
-              value={activeWalkerId}
+              value={activeCharacterId}
               onChange={(e) => {
-                useSceneStore.getState().setActiveWalkerId(e.target.value);
+                useSceneStore.getState().setActiveCharacterId(e.target.value);
               }}
             >
-              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId, layers.extraCharacters ?? false, activeExtraIds, activeMainIds) || c.id === activeWalkerId).map(c => (
+              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeCharacterId, layers.extraCharacters ?? false, activeExtraIds, activeMainIds) || c.id === activeCharacterId).map(c => (
                 <option key={c.id} value={c.id} className="bg-light text-dark">
                   {npcLabel(c)}
                 </option>

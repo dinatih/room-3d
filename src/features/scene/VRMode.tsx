@@ -61,7 +61,7 @@ export function VRMode() {
         cameraState.isXR = true;
         document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: true } }));
         camera.position.set(0, 0, 0);
-        const activeId = (window as any).activeWalkerId || 'lara';
+        const activeId = (window as any).activeCharacterId || 'lara';
         const pos = cameraState.positions[activeId];
         const startX = pos ? pos.x : (Number.isFinite(cameraState.walkerX) ? cameraState.walkerX : ROOM_W / 2);
         const startZ = pos ? pos.z : (Number.isFinite(cameraState.walkerZ) ? cameraState.walkerZ : ROOM_D / 2);

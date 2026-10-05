@@ -21,7 +21,7 @@ interface UseCameraFrameUpdateParams {
   modeRef: MutableRefObject<CameraMode>;
   planeModeRef: MutableRefObject<boolean>;
   topFollowRef: MutableRefObject<boolean>;
-  activeWalkerId: string;
+  activeCharacterId: string;
   followPos: MutableRefObject<FollowPosition>;
   followYaw: MutableRefObject<number>;
   followPitch: MutableRefObject<number>;
@@ -40,7 +40,7 @@ export function useCameraFrameUpdate({
   modeRef,
   planeModeRef,
   topFollowRef,
-  activeWalkerId,
+  activeCharacterId,
   followPos,
   followYaw,
   followPitch,
@@ -83,7 +83,7 @@ export function useCameraFrameUpdate({
     cameraState.walkerYaw = cameraState.followYaw;
 
     // Save active walker position
-    cameraState.positions[activeWalkerId] = {
+    cameraState.positions[activeCharacterId] = {
       x: cameraState.walkerX,
       y: 0,
       z: cameraState.walkerZ,

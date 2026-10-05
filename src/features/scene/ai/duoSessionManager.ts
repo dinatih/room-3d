@@ -2,7 +2,7 @@ import { DUO_ANIMATIONS, DuoAnimationDef } from '../animations/duoAnimations';
 import { OccupancyManager } from './occupancyManager';
 import { appLog } from '@features/ui/AppConsole';
 import { cameraState } from '../cameraState';
-import { AUTONOMOUS_NPC_IDS, isCharacterVisibleInMode } from '../walkerConfig';
+import { AUTONOMOUS_NPC_IDS, isCharacterVisibleInMode } from '../characterConfig';
 import { getSmartObject } from './smartObjectRegistry';
 import { INITIAL_SMART_OBJECT_BY_CHAR } from './scenarios';
 import { useSceneStore } from '../store/useSceneStore';
@@ -360,7 +360,7 @@ class DuoSessionManager {
 
     for (const npcId of AUTONOMOUS_NPC_IDS) {
       if (npcId === callerId) continue;
-      if (npcId === store.activeWalkerId) continue;
+      if (npcId === store.activeCharacterId) continue;
       if (session.participantA?.characterId === npcId) continue;
       if (this.getSessionFor(npcId) !== null) continue;
 
@@ -481,10 +481,10 @@ class DuoSessionManager {
     const isVisibleChar = (id: string, allowPlayer = true) => {
       if (id === 'shiba' || id === 'robin') return false;
       const storeState = useSceneStore.getState();
-      if (!allowPlayer && id === storeState.activeWalkerId) return false;
+      if (!allowPlayer && id === storeState.activeCharacterId) return false;
       return (
-        isCharacterVisibleInMode(id, storeState.layers.laraCount ?? 4, storeState.activeWalkerId, storeState.layers.extraCharacters ?? false, storeState.activeExtraIds, storeState.activeMainIds) ||
-        id === storeState.activeWalkerId
+        isCharacterVisibleInMode(id, storeState.layers.laraCount ?? 4, storeState.activeCharacterId, storeState.layers.extraCharacters ?? false, storeState.activeExtraIds, storeState.activeMainIds) ||
+        id === storeState.activeCharacterId
       );
     };
 

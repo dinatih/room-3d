@@ -1,9 +1,9 @@
 import type * as THREE from 'three';
 import type { LaraVariant } from '../LaraVariants';
-import type { CharacterConfig } from '../walkerConfig';
+import type { CharacterConfig } from '../characterConfig';
 import type { DuoAnimationDef } from '../animations/duoAnimations';
 
-export interface WalkerProps {
+export interface CharacterGroupProps {
   isPreview?: boolean;
   previewCharacterId?: string;
   previewHaircut?: string;
@@ -19,7 +19,7 @@ export interface WalkerProps {
   isDuoRoleB?: boolean;
 }
 
-export interface SingleCharacterProps extends WalkerProps {
+export interface CharacterProps extends CharacterGroupProps {
   id: string;
   name: string;
   modelPath: string;

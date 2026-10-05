@@ -1,4 +1,4 @@
-import { CHARACTERS, isCharacterVisibleInMode, type LaraCountMode } from '../walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode, type LaraCountMode } from '../characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 
 export const LARA_GRID_CONFIG = {
@@ -87,7 +87,7 @@ export function getLaraGridCameraView(total: number): {
  */
 export function getActiveSceneCharactersCount(state?: {
   layers: { laraCount?: LaraCountMode; extraCharacters?: boolean };
-  activeWalkerId: string;
+  activeCharacterId: string;
   activeExtraIds?: string[];
   activeMainIds?: string[];
 }): number {
@@ -96,7 +96,7 @@ export function getActiveSceneCharactersCount(state?: {
   const extraCharacters = store.layers.extraCharacters ?? false;
   const activeMainIds = (store as any).activeMainIds;
   return CHARACTERS.filter(char =>
-    isCharacterVisibleInMode(char.id, laraCount, store.activeWalkerId, extraCharacters, store.activeExtraIds, activeMainIds)
+    isCharacterVisibleInMode(char.id, laraCount, store.activeCharacterId, extraCharacters, store.activeExtraIds, activeMainIds)
   ).length;
 }
 

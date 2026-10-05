@@ -1,5 +1,5 @@
 import type { PlaneModelKey } from '../PaperPlane';
-import type { LaraCountMode } from '../walkerConfig';
+import type { LaraCountMode } from '../characterConfig';
 import {
   ROOM_W, ROOM_D, WALL_H,
 } from '../wallData';

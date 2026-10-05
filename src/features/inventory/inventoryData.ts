@@ -293,7 +293,7 @@ export const INVENTORY: InventoryItem[] = [
 
 ];
 
-import { CHARACTERS } from '@features/scene/walkerConfig';
+import { CHARACTERS } from '@features/scene/characterConfig';
 
 const sortedCharacters = [...CHARACTERS].sort((a, b) => {
   const priority = ['xbot', 'native'];

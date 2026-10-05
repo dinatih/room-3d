@@ -15,7 +15,7 @@ import {
   PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_Z_MAX,
 } from './floorDraw';
 import { LANDING_STRIPS } from './LandingStrips';
-import { CHARACTERS, isCharacterVisibleInMode } from './walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode } from './characterConfig';
 import { useSceneStore } from './store/useSceneStore';
 import { isAppIdle } from './idleState';
 import { Group } from './sidepanel/Group';
@@ -68,7 +68,7 @@ const ponytailNodes: HairNode[] = [
   { x: 0, z: 0, vx: 0, vz: 0 },
 ];
 let ponytailInitialized = false;
-let lastWalkerMotion = { x: 0, z: 0, yaw: 0, time: 0 };
+let lastCharacterMotion = { x: 0, z: 0, yaw: 0, time: 0 };
 let ponytailLift = 0; // 0 = au repos (tresse verticale le long du dos), 1 = déployée à pleine vitesse
 
 function getCachedFloorPlan(w: number, h: number): HTMLCanvasElement {
@@ -141,7 +141,7 @@ function drawMinimap(
   const R    = Math.max(3.2 * sc, HEAD_RADIUS_WORLD * S);
 
   // ── Other characters (NPCs) icons (y compris à l'extérieur) ─────────────────
-  const activeWalkerId = useSceneStore.getState().activeWalkerId;
+  const activeCharacterId = useSceneStore.getState().activeCharacterId;
   const showAllLaraStyles = useSceneStore.getState().layers.showAllLaraStyles;
   const laraCount = useSceneStore.getState().layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
   const extraCharacters = useSceneStore.getState().layers.extraCharacters ?? false;
@@ -149,9 +149,9 @@ function drawMinimap(
   const activeMainIds = useSceneStore.getState().activeMainIds;
   
   CHARACTERS.forEach(char => {
-    if (char.id !== activeWalkerId) {
+    if (char.id !== activeCharacterId) {
       if (!showAllLaraStyles) return;
-      if (!isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters, activeExtraIds, activeMainIds)) return;
+      if (!isCharacterVisibleInMode(char.id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)) return;
       const currentPos = cameraState.headPositions[char.id];
       if (!currentPos) return;
       const rawX = tx(currentPos.x);
@@ -271,7 +271,7 @@ function drawMinimap(
   }
 
   // ── Walker icon (position XZ réelle de la tête ; sans tête publiée : non dessiné) ──
-  const walkerHead = cameraState.headPositions[activeWalkerId];
+  const walkerHead = cameraState.headPositions[activeCharacterId];
   if (!walkerHead) return;
   const w = { x: walkerHead.x, z: walkerHead.z, yaw: cameraState.walkerYaw };
 
@@ -308,22 +308,22 @@ function drawMinimap(
   const attachZ = w.z - facingZ * (HEAD_RADIUS_WORLD * 0.75);
 
   const now = performance.now();
-  const dt = lastWalkerMotion.time ? Math.min(0.1, Math.max(0.005, (now - lastWalkerMotion.time) / 1000)) : 0.016;
+  const dt = lastCharacterMotion.time ? Math.min(0.1, Math.max(0.005, (now - lastCharacterMotion.time) / 1000)) : 0.016;
 
   // Détection dynamique de la vitesse de translation (position réelle de la tête) et de rotation
-  const dX = w.x - lastWalkerMotion.x;
-  const dZ = w.z - lastWalkerMotion.z;
-  const linSpeed = lastWalkerMotion.time ? (Math.hypot(dX, dZ) / dt) : 0;
+  const dX = w.x - lastCharacterMotion.x;
+  const dZ = w.z - lastCharacterMotion.z;
+  const linSpeed = lastCharacterMotion.time ? (Math.hypot(dX, dZ) / dt) : 0;
   
-  let dYaw = w.yaw - lastWalkerMotion.yaw;
+  let dYaw = w.yaw - lastCharacterMotion.yaw;
   while (dYaw > Math.PI) dYaw -= Math.PI * 2;
   while (dYaw < -Math.PI) dYaw += Math.PI * 2;
-  const angSpeed = lastWalkerMotion.time ? (Math.abs(dYaw) / dt) : 0;
+  const angSpeed = lastCharacterMotion.time ? (Math.abs(dYaw) / dt) : 0;
 
-  lastWalkerMotion.x = w.x;
-  lastWalkerMotion.z = w.z;
-  lastWalkerMotion.yaw = w.yaw;
-  lastWalkerMotion.time = now;
+  lastCharacterMotion.x = w.x;
+  lastCharacterMotion.z = w.z;
+  lastCharacterMotion.yaw = w.yaw;
+  lastCharacterMotion.time = now;
 
   // Calcul du facteur de portance / déploiement (0 = repos le long du dos, 1 = pleine vitesse en vol horizontal)
   const isMoving = cameraState.isFollowing || cameraState.isMoving || linSpeed > 18 || angSpeed > 1.0;

@@ -6,7 +6,7 @@
  * avec les autres panneaux (SidePanel, Minimap, DevTools).
  */
 import { useState, useEffect, useRef } from 'react';
-import { CHARACTERS, findCharacter, npcLabel } from '@features/scene/walkerConfig';
+import { CHARACTERS, findCharacter, npcLabel } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { Group } from '@features/scene/sidepanel/Group';
@@ -57,8 +57,8 @@ function formatTime(ts: number): string {
 // ── Composant ──────────────────────────────────────────────────────────────
 export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolean; hideUI?: boolean }) {
   const isMobile = useIsMobile();
-  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
-  const activeChar = findCharacter(activeWalkerId);
+  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const activeChar = findCharacter(activeCharacterId);
 
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [open, setOpen] = useState(false);
@@ -110,7 +110,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
   const displayedLogs = filterBubbleOnly
     ? logs.filter(entry => {
-        const activeId = activeWalkerId.toLowerCase();
+        const activeId = activeCharacterId.toLowerCase();
         if (entry.tag.toLowerCase() === 'system') return true;
         const tagParts = entry.tag.toLowerCase().split('+').map(s => s.trim());
         return tagParts.some(t => t === activeId);
@@ -164,12 +164,12 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         <select
           className="form-select form-select-sm py-0 px-2 bg-transparent small flex-shrink-0 app-console-select"
           style={{ fontSize: '11px', color: '#212529', borderColor: pnjColor, ['--pnj-color' as string]: pnjColor }}
-          value={activeWalkerId}
+          value={activeCharacterId}
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
           onChange={(e) => {
             e.stopPropagation();
-            useSceneStore.getState().setActiveWalkerId(e.target.value);
+            useSceneStore.getState().setActiveCharacterId(e.target.value);
           }}
           title="Changer le PNJ sélectionné"
         >
@@ -194,8 +194,8 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
             }}
             title={
               filterBubbleOnly
-                ? `Filtre actif : logs limités à ${activeChar?.name ?? activeWalkerId}`
-                : `Filtrer les logs pour ${activeChar?.name ?? activeWalkerId}`
+                ? `Filtre actif : logs limités à ${activeChar?.name ?? activeCharacterId}`
+                : `Filtrer les logs pour ${activeChar?.name ?? activeCharacterId}`
             }
           >
             {filterBubbleOnly ? '✓ Filtré' : 'Filtrer'}
@@ -281,14 +281,14 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           {displayedLogs.length === 0 && (
             <div className="text-muted fst-italic py-1">
               {filterBubbleOnly
-                ? `Aucun log pour ${activeChar?.name ?? activeWalkerId}…`
+                ? `Aucun log pour ${activeChar?.name ?? activeCharacterId}…`
                 : 'En attente de logs…'}
             </div>
           )}
           {displayedLogs.map((entry, idx) => {
             const isLast = idx === displayedLogs.length - 1;
             const tagParts = entry.tag.split('+').map(s => s.trim());
-            const isSoloActiveTag = filterBubbleOnly && tagParts.length === 1 && tagParts[0].toLowerCase() === activeWalkerId.toLowerCase();
+            const isSoloActiveTag = filterBubbleOnly && tagParts.length === 1 && tagParts[0].toLowerCase() === activeCharacterId.toLowerCase();
             return (
               <div
                 key={`${entry.id}_${idx}`}

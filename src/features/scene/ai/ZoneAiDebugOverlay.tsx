@@ -4,7 +4,7 @@ import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager } from './duoSessionManager';
 import { cameraState } from '../cameraState';
-import { CHARACTERS, isCharacterVisibleInMode } from '../walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import { useZoneAiDebugStore } from './zoneAiDebugStore';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveSlotAnimationInfo, getAnimationDef } from '../animations/animationResolver';
@@ -17,7 +17,7 @@ export function ZoneAiDebugOverlay() {
 
 function ZoneAiDebugOverlayContent() {
   const layers = useSceneStore((s) => s.layers);
-  const activeWalkerId = useSceneStore((s) => s.activeWalkerId);
+  const activeCharacterId = useSceneStore((s) => s.activeCharacterId);
   const activeExtraIds = useSceneStore((s) => s.activeExtraIds);
   const activeMainIds = useSceneStore((s) => s.activeMainIds);
 
@@ -62,10 +62,10 @@ function ZoneAiDebugOverlayContent() {
       (c) =>
         c.id !== 'shiba' &&
         c.id !== 'robin' &&
-        (isCharacterVisibleInMode(c.id, laraCount, activeWalkerId, extraChars, activeExtraIds, activeMainIds) ||
-          c.id === activeWalkerId)
+        (isCharacterVisibleInMode(c.id, laraCount, activeCharacterId, extraChars, activeExtraIds, activeMainIds) ||
+          c.id === activeCharacterId)
     );
-  }, [layers.laraCount, layers.extraCharacters, activeWalkerId, activeExtraIds, activeMainIds]);
+  }, [layers.laraCount, layers.extraCharacters, activeCharacterId, activeExtraIds, activeMainIds]);
 
   // Tous les SmartObjects avec leurs slots résolus
   const allObjects = useMemo(() => {

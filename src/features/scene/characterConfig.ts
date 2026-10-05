@@ -190,13 +190,13 @@ export const NON_EXTRA_CHARACTERS = CHARACTERS.filter(c => !isExtraCharacter(c))
 /** Calcule les identifiants actifs par défaut pour les non-extras selon le mode numérique */
 export function getDefaultNonExtraIds(
   mode: LaraCountMode = 15,
-  activeWalkerId?: string
+  activeCharacterId?: string
 ): string[] {
   if (mode === 1) return ['xbot'];
   if (mode === 2) {
     const list = ['xbot'];
-    if (activeWalkerId && !isExtraCharacter(activeWalkerId) && activeWalkerId !== 'xbot') {
-      list.push(activeWalkerId);
+    if (activeCharacterId && !isExtraCharacter(activeCharacterId) && activeCharacterId !== 'xbot') {
+      list.push(activeCharacterId);
     } else {
       list.push('native');
     }
@@ -204,15 +204,15 @@ export function getDefaultNonExtraIds(
   }
   if (mode === 4) {
     const set = new Set(FOUR_PLAYERS_LARA_IDS);
-    if (activeWalkerId && !isExtraCharacter(activeWalkerId)) {
-      set.add(activeWalkerId);
+    if (activeCharacterId && !isExtraCharacter(activeCharacterId)) {
+      set.add(activeCharacterId);
     }
     return Array.from(set);
   }
   if (mode === 10) {
     const list = NON_EXTRA_CHARACTERS.filter(c => !PERF_EXCLUDED_LARA_IDS.has(c.id)).map(c => c.id);
-    if (activeWalkerId && !isExtraCharacter(activeWalkerId) && !list.includes(activeWalkerId)) {
-      list.push(activeWalkerId);
+    if (activeCharacterId && !isExtraCharacter(activeCharacterId) && !list.includes(activeCharacterId)) {
+      list.push(activeCharacterId);
     }
     return list;
   }
@@ -235,13 +235,13 @@ export const ANATOMICAL_EXTRA_IDS = [
 export function isCharacterVisibleInMode(
   id: string,
   mode: LaraCountMode = 15,
-  activeWalkerId?: string,
+  activeCharacterId?: string,
   extraCharacters: boolean = false,
   activeExtraIds?: string[] | Set<string>,
   activeMainIds?: string[] | Set<string>
 ): boolean {
   if (isExtraCharacter(id)) {
-    if (activeWalkerId === id) return true;
+    if (activeCharacterId === id) return true;
     if (!extraCharacters) return false;
     if (activeExtraIds) {
       return activeExtraIds instanceof Set ? activeExtraIds.has(id) : activeExtraIds.includes(id);
@@ -250,7 +250,7 @@ export function isCharacterVisibleInMode(
   }
 
   // Personnages réguliers (Laras et Xbot)
-  if (activeWalkerId === id) return true;
+  if (activeCharacterId === id) return true;
 
   if (activeMainIds) {
     return activeMainIds instanceof Set ? activeMainIds.has(id) : activeMainIds.includes(id);
@@ -263,17 +263,17 @@ export function isCharacterVisibleInMode(
   }
   if (mode === 2) {
     if (id === 'xbot') return true;
-    if (activeWalkerId && activeWalkerId !== 'xbot') {
-      return id === activeWalkerId;
+    if (activeCharacterId && activeCharacterId !== 'xbot') {
+      return id === activeCharacterId;
     }
     return id === 'native';
   }
   if (mode === 4) {
-    if (activeWalkerId && id === activeWalkerId) return true;
+    if (activeCharacterId && id === activeCharacterId) return true;
     return FOUR_PLAYERS_LARA_IDS.has(id);
   }
   if (mode === 10) {
-    if (activeWalkerId && id === activeWalkerId) return true;
+    if (activeCharacterId && id === activeCharacterId) return true;
     return !PERF_EXCLUDED_LARA_IDS.has(id);
   }
   // mode === 15: all characters

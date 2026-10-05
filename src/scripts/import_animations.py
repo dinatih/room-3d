@@ -13,7 +13,7 @@ def main():
     project_root = Path(__file__).resolve().parent.parent.parent
     blender_script = project_root / 'sources_backup' / 'fbx_to_glb.py'
     dest_dir = project_root / 'public' / 'media' / 'sandbox' / 'anims'
-    walker_file = project_root / 'src' / 'features' / 'scene' / 'Walker.tsx'
+    walker_file = project_root / 'src' / 'features' / 'scene' / 'animOptions.ts'
     
     if not blender_script.exists():
         print(f"Error: {blender_script} not found.")
@@ -61,7 +61,7 @@ def main():
         print("No new animations to add.")
         sys.exit(0)
         
-    # Update Walker.tsx
+    # Update animOptions.ts
     print(f"Updating {walker_file.name}...")
     with open(walker_file, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -74,7 +74,7 @@ def main():
     
     match = re.search(r'(export const WALKER_ANIM_OPTIONS\s*=\s*\[)(.*?)(\]\.filter)', content, flags=re.DOTALL)
     if not match:
-        print("Error: Could not find WALKER_ANIM_OPTIONS array in Walker.tsx")
+        print("Error: Could not find WALKER_ANIM_OPTIONS array in animOptions.ts")
         sys.exit(1)
         
     prefix = match.group(1)

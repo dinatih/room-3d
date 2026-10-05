@@ -1,7 +1,7 @@
 /**
  * MannequinHead.tsx — Tête de mannequin (GLB characters/accessories/wig_mannequin.glb).
  * Coordonnées locales : centré XZ, Y=0 = base épaules. Scale par hauteur (45 cm).
- * Ajoute une perruque aléatoire depuis hair_pack_part_2.glb (même logique que Walker.tsx).
+ * Ajoute une perruque aléatoire depuis hair_pack_part_2.glb (même logique que Character.tsx).
  *
  * Architecture :
  *  <group ref={ref}>        ← espace cm (1 unit = 1 cm), pas de scale

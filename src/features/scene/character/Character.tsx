@@ -1,5 +1,5 @@
 /**
- * SingleCharacter.tsx — Personnages (Walkers & NPCs).
+ * Character.tsx — Personnages (Walkers & NPCs).
  * Version modulaire intégrant animations, physique Verlet, styles/accessoires et agent IA.
  */
 import { useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
@@ -12,7 +12,7 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
-import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../walkerConfig';
+import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../characterConfig';
 import { disposeCharacterResources } from './characterDisposal';
 import { clearCharacterRetargetCache } from './useCharacterAnimations';
 import { buildHairChain } from '../retargeting/index';
@@ -34,7 +34,7 @@ import { resolveAnimationId, getAnimationOriginTransform } from '../animations/a
 import { getCrossfadeDuration } from '../animations/animationTransitions';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 
-import type { SingleCharacterProps } from './characterTypes';
+import type { CharacterProps } from './characterTypes';
 import { updateCharacterLayers } from './characterLayers';
 import { GroundPoint } from './GroundPoint';
 import { HeartParachute } from './HeartParachute';
@@ -78,7 +78,7 @@ const LGBTA_HAIR_COLORS = [
   'blanc', 'blond', 'roux', 'brun', 'noir'
 ];
 
-export function SingleCharacter({
+export function Character({
   id,
   name,
   modelPath,
@@ -100,7 +100,7 @@ export function SingleCharacter({
   previewRotationY,
   duoAnimDef,
   isDuoRoleB = false,
-}: SingleCharacterProps) {
+}: CharacterProps) {
   const [localHaircut, setLocalHaircut] = useState<string>('original');
   const haircut = isPreview && previewHaircut ? previewHaircut : localHaircut;
 
@@ -124,7 +124,7 @@ export function SingleCharacter({
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
   const cameraMode = useSceneStore(state => state.cameraMode);
-  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const aiFullTour = useSceneStore(state => state.extraStates.aiFullTour);
 
   const { scene } = useGLTFClone(modelPath);
@@ -312,7 +312,7 @@ export function SingleCharacter({
   }, [activeActionKey]);
 
   const isAutonomous = !isPreview && AUTONOMOUS_NPC_IDS.has(id);
-  const isGuidedTour = !isPreview && Boolean(activeActionKey && id === activeWalkerId);
+  const isGuidedTour = !isPreview && Boolean(activeActionKey && id === activeCharacterId);
 
   const autonomousScenario = useMemo(() => {
     if (!isAutonomous) return null;
@@ -655,7 +655,7 @@ export function SingleCharacter({
       const { x: targetX, y: targetY, z: targetZ } = getLaraGridPosition(characterIndex, totalCharacters);
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
-      const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds, activeMainIds);
+      const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds);
       groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode;
       currentAnimClip.current = walkerAnim || null;
       if (isVisibleInCountMode && !cameraState.walkerHidden && showAllLaraStyles) {
@@ -703,7 +703,7 @@ export function SingleCharacter({
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
         groupRef.current.rotation.y = agentState.rotY;
         currentAnimClip.current = agentState.animation;
-        const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds, activeMainIds);
+        const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds);
         groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
 
         if (agentState.isSpawned && isVisibleInCountMode) {

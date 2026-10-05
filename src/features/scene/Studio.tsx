@@ -22,7 +22,7 @@ import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController } from '@features/scene/sceneLayer';
 import { Equipment, Furniture, Furnishings, Decor, Animals } from './Placements';
-import { Walker } from './Walker';
+import { CharacterGroup } from './character';
 import { AiZonesHelper } from './ai/AiZonesHelper';
 import { ZoneAiDebugOverlay } from './ai/ZoneAiDebugOverlay';
 import { CollisionDebugHelper } from './ai/CollisionDebugHelper';
@@ -709,7 +709,7 @@ export function Studio() {
           scene.background = new Color(0x02030a);
           gl.shadowMap.enabled = true;
           camera.layers.enableAll();
-          // LAYER_WALKER_DETAIL réservé aux miroirs (cf. Walker FPS hide)
+          // LAYER_WALKER_DETAIL réservé aux miroirs (cf. Character FPS hide)
           camera.layers.disable(LAYER_WALKER_DETAIL);
           setupEnvironment(scene, gl);
         }}
@@ -795,7 +795,7 @@ export function Studio() {
           <Floor />
           {/* LAYER_WALKER (18) — Personnages 3D */}
           <CategoryLayerGroup layer={LAYER_WALKER} visible={layers.walker}>
-            <Walker walkerAnim={laraGridActive ? laraGridAnim : undefined} />
+            <CharacterGroup walkerAnim={laraGridActive ? laraGridAnim : undefined} />
           </CategoryLayerGroup>
           <GlobalSkeletonHelpers show={layers.skeleton} />
           {/*

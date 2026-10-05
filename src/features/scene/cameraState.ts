@@ -3,7 +3,7 @@
  * Mis à jour chaque frame par CameraController, lu par MinimapOverlay via RAF.
  */
 
-import { CHARACTERS, parseUrlActiveCharacter } from './walkerConfig';
+import { CHARACTERS, parseUrlActiveCharacter } from './characterConfig';
 import { parseUrlCameraMode } from './camera/cameraUrlParams';
 
 type CameraMode = 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'ortho';
@@ -16,7 +16,7 @@ export const cameraState = {
   camX: 150 as number,
   camZ: 200 as number,
   camRY: 0 as number,
-  /** Follow mode : état partagé avec Walker.tsx */
+  /** Follow mode : état partagé avec CharacterGroup.tsx */
   isFollowing: false as boolean,
   isMoving:  false as boolean,
   isDragging: false as boolean,
@@ -38,7 +38,7 @@ export const cameraState = {
   positions: {} as Record<string, {x: number, y: number, z: number, yaw: number, anim?: string}>,
   /** Projection XZ de l'os de tête (monde) de chaque personnage visible — lue par la minimap (positions[] reste sur la racine, pour l'IA) */
   headPositions: {} as Record<string, { x: number; z: number }>,
-  /** Position monde réelle de la tête du walker actif (calculée dynamiquement par SingleCharacter d'après le squelette 3D) */
+  /** Position monde réelle de la tête du walker actif (calculée dynamiquement par Character d'après le squelette 3D) */
   activeHeadPos: null as { x: number; y: number; z: number } | null,
   /** Position monde réelle des hanches / centre de masse du walker actif */
   activeHipsPos: null as { x: number; y: number; z: number } | null,
@@ -48,7 +48,7 @@ export const cameraState = {
   activeHeadForward: null as { x: number; y: number; z: number } | null,
   /** Vecteur unitaire haut (up) de la tête du walker actif */
   activeHeadUp: null as { x: number; y: number; z: number } | null,
-  /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras follow */
+  /** Hauteur (cm) du character — écrit par Character.tsx, lue par les caméras follow */
   walkerHeight: (initialChar?.height ?? 173.4) as number,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */
   onUpdate:   null as (() => void) | null,

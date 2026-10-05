@@ -95,8 +95,8 @@ import { Linky }                                      from '@features/scene/item
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { ElectricRacket }                             from '@features/scene/items/ElectricRacket';
 import { Drona }                                      from '@features/scene/items/Drona';
-import { Walker }                                      from '@features/scene/Walker';
-import { CHARACTERS }                                 from '@features/scene/walkerConfig';
+import { CharacterGroup }                               from '@features/scene/character';
+import { CHARACTERS }                                 from '@features/scene/characterConfig';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
 import { BirdFeeder }                                 from '@features/scene/items/BirdFeeder';
@@ -264,7 +264,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
 CHARACTERS.forEach(char => {
   SCENE_REGISTRY[char.id] = function DynamicPreview({ actionState }: { actionState?: any }) {
     return (
-      <Walker
+      <CharacterGroup
         isPreview={true}
         previewCharacterId={char.id}
         isPaused={actionState?.isPaused}

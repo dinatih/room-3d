@@ -1,45 +1,19 @@
 
 
 /**
- * Walker.tsx — Personnages (Walkers & NPCs).
- * Gère le chargement, les animations, le retargeting et le positionnement dynamique.
- * Updated: 2026-07-27 T-Pose position fix
+ * CharacterGroup.tsx — Orchestrateur multi-personnages (Characters & NPCs).
+ * Filtre, distribue les props et gère le montage de chaque Character.
  */
 import { Suspense, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
-import { SingleCharacter } from './character';
-import { cacheDynamicGLTF } from './character/useCharacterAnimations';
-import { CHARACTERS, isCharacterVisibleInMode, type CharacterConfig, ACCESSORIES_MESH_NAMES } from './walkerConfig';
-export { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES };
+import { Character } from './Character';
+import { cacheDynamicGLTF } from './useCharacterAnimations';
+import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
+import type { CharacterGroupProps } from './characterTypes';
 
-
-import { WALKER_ANIM_OPTIONS } from './animOptions';
-export { WALKER_ANIM_OPTIONS };
-
-
-
-
-
-import { type DuoAnimationDef } from './animations/duoAnimations';
-
-export interface WalkerProps {
-  isPreview?: boolean;
-  previewCharacterId?: string;
-  previewHaircut?: string;
-  previewHairColor?: string;
-  characterIndex?: number;
-  totalCharacters?: number;
-  walkerAnim?: string;
-  isPaused?: boolean;
-  previewPosition?: [number, number, number];
-  previewRotationY?: number;
-  duoAnimDef?: DuoAnimationDef;
-  duoPartnerId?: string;
-}
-
-function InternalWalker(props: WalkerProps) {
-  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+function InternalCharacterGroup(props: CharacterGroupProps) {
+  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const laraCount = useSceneStore(state => state.layers.laraCount ?? 4);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
@@ -68,9 +42,9 @@ function InternalWalker(props: WalkerProps) {
       return characters.filter(char => char.id === props.previewCharacterId);
     }
     return characters.filter(char =>
-      showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters, activeExtraIds, activeMainIds)
+      showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)
     );
-  }, [activeWalkerId, characters, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds, activeMainIds]);
+  }, [activeCharacterId, characters, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds, activeMainIds]);
 
   return (
     <>
@@ -97,11 +71,11 @@ function InternalWalker(props: WalkerProps) {
 
         const isActive = props.isPreview
           ? char.id === props.previewCharacterId
-          : char.id === activeWalkerId;
+          : char.id === activeCharacterId;
 
         return (
           <Suspense key={char.id + (isDuoRoleB ? '-partner' : '')} fallback={null}>
-            <SingleCharacter
+            <Character
               {...props}
               id={char.id}
               name={char.name}
@@ -130,10 +104,10 @@ function InternalWalker(props: WalkerProps) {
   );
 }
 
-export function Walker(props: WalkerProps) {
+export function CharacterGroup(props: CharacterGroupProps) {
   return (
     <Suspense fallback={null}>
-      <InternalWalker {...props} />
+      <InternalCharacterGroup {...props} />
     </Suspense>
   );
 }

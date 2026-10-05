@@ -15,7 +15,7 @@ import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
-import { isCharacterVisibleInMode } from './walkerConfig';
+import { isCharacterVisibleInMode } from './characterConfig';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
@@ -763,9 +763,9 @@ export function HoverOverlay() {
                 key={i}
                 onClick={() => {
                   if (action.toggleKey.startsWith('select-walker-')) {
-                    const targetWalkerId = action.toggleKey.replace('select-walker-', '');
-                    useSceneStore.getState().setActiveWalkerId(targetWalkerId);
-                    appLog(targetWalkerId, `🎯 Personnage actif défini : ${state.lockedLabel}`);
+                    const targetCharacterId = action.toggleKey.replace('select-walker-', '');
+                    useSceneStore.getState().setActiveCharacterId(targetCharacterId);
+                    appLog(targetCharacterId, `🎯 Personnage actif défini : ${state.lockedLabel}`);
                   } else if (action.toggleKey.startsWith('smart-object:::')) {
                     const [, objectId, slotId] = action.toggleKey.split(':::');
                     const obj = getSmartObject(objectId);
@@ -773,7 +773,7 @@ export function HoverOverlay() {
                     const targetPos = slot?.offset ?? [0, 0, 0];
 
                     if (slot?.isDuo) {
-                      const activeId = useSceneStore.getState().activeWalkerId;
+                      const activeId = useSceneStore.getState().activeCharacterId;
                       const leaderId = (activeId && activeId !== 'shiba' && activeId !== 'robin')
                         ? activeId
                         : undefined;
@@ -806,7 +806,7 @@ export function HoverOverlay() {
                       const store = useSceneStore.getState();
                       const laraCount = store.layers.laraCount ?? 4;
                       const extraChars = store.layers.extraCharacters ?? false;
-                      const activeWalkerId = store.activeWalkerId;
+                      const activeCharacterId = store.activeCharacterId;
                       const activeExtraIds = store.activeExtraIds;
                       const activeMainIds = store.activeMainIds;
 
@@ -814,8 +814,8 @@ export function HoverOverlay() {
                         (charId) =>
                           charId !== 'shiba' &&
                           charId !== 'robin' &&
-                          (isCharacterVisibleInMode(charId, laraCount, activeWalkerId, extraChars, activeExtraIds, activeMainIds) ||
-                            charId === activeWalkerId)
+                          (isCharacterVisibleInMode(charId, laraCount, activeCharacterId, extraChars, activeExtraIds, activeMainIds) ||
+                            charId === activeCharacterId)
                       );
 
                       for (const charId of candidateIds) {

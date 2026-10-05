@@ -11,7 +11,7 @@ import {
   getDefaultNonExtraIds,
   parseUrlActiveCharacter,
   updateUrlActiveCharacter,
-} from '@features/scene/walkerConfig';
+} from '@features/scene/characterConfig';
 
 function parseUrlNpcCount(): LaraCountMode {
   if (typeof window === 'undefined') return 4;
@@ -79,7 +79,7 @@ interface SceneStore {
   furniture: FurnitureState;
   layers: LayerState;
   extraStates: Record<string, boolean>;
-  activeWalkerId: string;
+  activeCharacterId: string;
   activeExtraIds: string[];
   activeMainIds: string[];
   currentHdri: string;
@@ -115,7 +115,7 @@ interface SceneStore {
   clearMainCharacters: () => void;
   setGroundType: (type: GroundType) => void;
   triggerAction: (key: string, targetState?: boolean) => void;
-  setActiveWalkerId: (id: string) => void;
+  setActiveCharacterId: (id: string) => void;
 }
 
 const initialFurniture: FurnitureState = {
@@ -268,7 +268,7 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
 }
 
 const initialActiveChar = parseUrlActiveCharacter();
-const initialActiveWalkerId = initialActiveChar ? initialActiveChar.id : (initialLayers.laraCount === 1 ? 'xbot' : 'native');
+const initialActiveCharacterId = initialActiveChar ? initialActiveChar.id : (initialLayers.laraCount === 1 ? 'xbot' : 'native');
 
 let initialActiveExtraIds: string[] = [];
 if (initialActiveChar && isExtraCharacter(initialActiveChar.id)) {
@@ -279,7 +279,7 @@ if (initialActiveChar && isExtraCharacter(initialActiveChar.id)) {
   }
 }
 
-let initialActiveMainIds = getDefaultNonExtraIds(initialLayers.laraCount, initialActiveWalkerId);
+let initialActiveMainIds = getDefaultNonExtraIds(initialLayers.laraCount, initialActiveCharacterId);
 if (initialActiveChar && !isExtraCharacter(initialActiveChar.id)) {
   if (!initialActiveMainIds.includes(initialActiveChar.id)) {
     initialActiveMainIds = [initialActiveChar.id, ...initialActiveMainIds];
@@ -312,7 +312,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   furniture: initialFurniture,
   layers: initialLayers,
   extraStates: initialExtraStates,
-  activeWalkerId: initialActiveWalkerId,
+  activeCharacterId: initialActiveCharacterId,
   activeExtraIds: initialActiveExtraIds,
   activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
@@ -359,8 +359,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
   setLaraCount: (count) => {
     updateUrlNpcCount(count);
     set((state) => ({
-      activeWalkerId: count === 1 ? 'xbot' : state.activeWalkerId,
-      activeMainIds: getDefaultNonExtraIds(count, count === 1 ? 'xbot' : state.activeWalkerId),
+      activeCharacterId: count === 1 ? 'xbot' : state.activeCharacterId,
+      activeMainIds: getDefaultNonExtraIds(count, count === 1 ? 'xbot' : state.activeCharacterId),
       layers: { ...state.layers, laraCount: count, showAllLaraStyles: true }
     }));
     cameraState.invalidate?.();
@@ -622,7 +622,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
     }
   },
 
-  setActiveWalkerId: (id) => {
+  setActiveCharacterId: (id) => {
     updateUrlActiveCharacter(id);
     set((state) => {
       let nextActiveExtraIds = state.activeExtraIds;
@@ -640,7 +640,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         nextActiveMainIds = [id, ...state.activeMainIds];
       }
       cameraState.invalidate?.();
-      return { activeWalkerId: id, activeExtraIds: nextActiveExtraIds, activeMainIds: nextActiveMainIds, layers: nextLayers };
+      return { activeCharacterId: id, activeExtraIds: nextActiveExtraIds, activeMainIds: nextActiveMainIds, layers: nextLayers };
     });
   },
 }));
