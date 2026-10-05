@@ -262,7 +262,7 @@ CHARACTERS.forEach(char => {
         isPreview={true}
         previewCharacterId={char.id}
         isPaused={actionState?.isPaused}
-        walkerAnim={actionState?.walkerAnim}
+        characterAnim={actionState?.characterAnim}
         duoAnimDef={actionState?.duoAnimDef}
         duoPartnerId={actionState?.duoPartnerId}
         previewHaircut={actionState?.previewHaircut}
@@ -273,12 +273,12 @@ CHARACTERS.forEach(char => {
 });
 
 SCENE_REGISTRY['ushiro'] = function ShibaPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
-  return <ShibaInu isPreview={true} previewAnim={actionState?.walkerAnim} onSize={onSize} />;
+  return <ShibaInu isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
 } as any;
 SCENE_REGISTRY['shiba-inu'] = SCENE_REGISTRY['ushiro'];
 
 SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
-  return <RobinBird isPreview={true} previewAnim={actionState?.walkerAnim} onSize={onSize} />;
+  return <RobinBird isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
 } as any;
 
 WIGS_ITEMS.forEach(wig => {

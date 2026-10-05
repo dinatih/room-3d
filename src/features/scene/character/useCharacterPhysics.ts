@@ -43,7 +43,7 @@ export interface CharacterPhysicsContext {
   haircut: string;
   isMoving: boolean;
   targetAnim: string;
-  walkerAnim?: string;
+  characterAnim?: string;
   clockElapsedTime: number;
 }
 
@@ -158,7 +158,7 @@ export function useCharacterPhysics() {
         }
 
         const isWig = (ctx.haircut !== 'original');
-        const isHeadMoving = ctx.isMoving || (ctx.targetAnim !== 'idle') || (ctx.walkerAnim && ctx.walkerAnim.toLowerCase().includes('walk')) || (ctx.walkerAnim && ctx.walkerAnim.toLowerCase().includes('run'));
+        const isHeadMoving = ctx.isMoving || (ctx.targetAnim !== 'idle') || (ctx.characterAnim && ctx.characterAnim.toLowerCase().includes('walk')) || (ctx.characterAnim && ctx.characterAnim.toLowerCase().includes('run'));
 
         const userWigStiffness = isWig ? (layers.wigStiffness ?? 1.0) : 1.0;
         const userWigDamping = isWig ? (layers.wigDamping ?? 0.80) : 0.80;
@@ -373,7 +373,7 @@ export function useCharacterPhysics() {
 
     const isBakedBustAnimation = Boolean(
       (ctx.targetAnim && ctx.targetAnim.toLowerCase().includes('signature')) ||
-      (ctx.walkerAnim && ctx.walkerAnim.toLowerCase().includes('signature'))
+      (ctx.characterAnim && ctx.characterAnim.toLowerCase().includes('signature'))
     );
 
     if (enableBreastPhysics && !isBakedBustAnimation && breastIntensity > 0 && breastChainRef.current.length > 0) {

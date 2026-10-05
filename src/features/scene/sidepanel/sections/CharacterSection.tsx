@@ -63,7 +63,7 @@ export function CharacterSection({
 
   return (
     <div className="d-flex flex-column bg-transparent">
-      {layers.walker && (
+      {layers.character && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
           <div>
             <div className="text-muted fw-semibold mb-1 text-dark small text-uppercase">👤 Choix Personnage</div>
@@ -385,7 +385,7 @@ export function CharacterSection({
         </div>
       )}
 
-      {layers.walker && (
+      {layers.character && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
           <div className="text-muted fw-semibold mb-1 text-dark small text-uppercase">
             🤖 Visite guidée de l'appartement
@@ -409,7 +409,7 @@ export function CharacterSection({
       )}
 
       <div className="text-muted fw-semibold mb-1 text-dark mt-3 small text-uppercase">⚙️ Options d'affichage</div>
-      {layerBtn('light',  'Personnage 3D', 'walker')}
+      {layerBtn('light',  'Personnage 3D', 'character')}
       {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('pink',   'Peau & tissus réalistes (Mat) 🧴', 'laraRealisticTextures')}
       {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
@@ -423,7 +423,7 @@ export function CharacterSection({
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}
       {layerBtn('cyan', 'Squelettes / Bones 🦴 (K)', 'skeleton')}
       {layerBtn('cyan', 'Fil de fer (Wireframe) 🕸️', 'characterWireframe')}
-      {layers.walker && (
+      {layers.character && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
           <div className="d-flex justify-content-between align-items-center mb-1">
             <span className="text-muted fw-semibold text-dark small text-uppercase">
@@ -582,7 +582,7 @@ export function CharacterSection({
       )}
 
       {/* ── Réglages Physique Buste ── */}
-      {layers.walker && (
+      {layers.character && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
           <div className="text-muted fw-bold text-dark small text-uppercase" style={{ fontSize: '9px' }}>
             💃 Paramètres Physique Buste

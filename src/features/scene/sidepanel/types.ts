@@ -113,7 +113,7 @@ export interface LayerState {
   realSun:      boolean;
   bermudaGrass: boolean;
   groundType?:  GroundType;
-  walker:       boolean;
+  character:    boolean;
   animals:      boolean;
   accessories:  boolean;
   laraPistols:  boolean;

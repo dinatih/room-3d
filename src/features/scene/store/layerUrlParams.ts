@@ -41,7 +41,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   shadows: true,
   realSun: false,
   // Personnages
-  walker: true,
+  character: true,
   extraCharacters: false,
   showAllLaraStyles: true,
   accessories: true,

@@ -59,7 +59,7 @@ export const cameraState = {
   /** HD mirrors : reflector camera hérite du mask complet de la caméra principale */
   mirrorsHD: false as boolean,
   /** Masque le mesh du Character actif (utilisé en vue première personne pendant la visite guidée) */
-  walkerHidden: false as boolean,
+  characterHidden: false as boolean,
   /** Vrai des que la scene 3D est lancee (apres prechargement et warm-up GPU) */
   isSceneLaunched: false as boolean,
   /** Vrai pendant la transition d'introduction de la caméra */

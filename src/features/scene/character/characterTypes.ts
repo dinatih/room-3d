@@ -10,7 +10,7 @@ export interface CharacterGroupProps {
   previewHairColor?: string;
   characterIndex?: number;
   totalCharacters?: number;
-  walkerAnim?: string;
+  characterAnim?: string;
   isPaused?: boolean;
   previewPosition?: [number, number, number];
   previewRotationY?: number;

@@ -481,7 +481,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
 }
 
 function RegistryScene({ item, actionState, showDims, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
-  const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'walkers';
+  const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters';
   return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />;
 }
 
@@ -536,7 +536,7 @@ export function InventoryPreview({
 }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = !!photos && photos.length > 0;
-  const actionKeys: string[] = item && 'category' in item && (item as InventoryItem).category === 'walkers' ? [] : ((item as any)?.actions || []);
+  const actionKeys: string[] = item && 'category' in item && (item as InventoryItem).category === 'characters' ? [] : ((item as any)?.actions || []);
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(true);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
@@ -602,7 +602,7 @@ export function InventoryPreview({
         ...s,
         duoAnimDef: initialDuoAnim,
         duoPartnerId: initialDuoPartner || s.duoPartnerId || (item?.id === 'native' ? 'rosanna' : 'native'),
-        walkerAnim: undefined,
+        characterAnim: undefined,
         isPaused: false
       }));
       useAnimPreviewStore.getState().play();
@@ -611,7 +611,7 @@ export function InventoryPreview({
 
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
-  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
+  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters');
   const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id));
 
   const animalAnimOptions = useMemo(() => {
@@ -647,16 +647,16 @@ export function InventoryPreview({
   const animControllerBottom = hideFooter ? 6 : 42;
   const datumBannerBottom = isCharacterItem ? (animControllerBottom + 58) : 8;
   const debugUrlsBottom = isCharacterItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
-  const currentTargetId = resolveAnimationId(actionStates.walkerAnim || 'idle');
-  const currentAnimOpt = isHumanCharacter ? WALKER_ANIM_OPTIONS.find(a => a.value === currentTargetId || a.value === actionStates.walkerAnim) : null;
-  const currentAnimLabel = actionStates.walkerAnim === 't-pose'
+  const currentTargetId = resolveAnimationId(actionStates.characterAnim || 'idle');
+  const currentAnimOpt = isHumanCharacter ? WALKER_ANIM_OPTIONS.find(a => a.value === currentTargetId || a.value === actionStates.characterAnim) : null;
+  const currentAnimLabel = actionStates.characterAnim === 't-pose'
     ? 'T-Pose'
-    : (currentAnimOpt ? currentAnimOpt.label : (actionStates.walkerAnim || 'Idle'));
+    : (currentAnimOpt ? currentAnimOpt.label : (actionStates.characterAnim || 'Idle'));
 
   const cycleAnim = useCallback((direction: 'next' | 'prev') => {
     const pool = WALKER_ANIM_OPTIONS;
     if (!pool.length) return;
-    const currentVal = actionStates.walkerAnim || 'idle';
+    const currentVal = actionStates.characterAnim || 'idle';
     const targetId = resolveAnimationId(currentVal);
     const currIdx = pool.findIndex(a => a.value === targetId || a.value === currentVal);
     let nextIdx = 0;
@@ -669,12 +669,12 @@ export function InventoryPreview({
     }
     setActionStates(s => ({
       ...s,
-      walkerAnim: pool[nextIdx].value,
+      characterAnim: pool[nextIdx].value,
       isPaused: false,
       duoAnimDef: undefined
     }));
     useAnimPreviewStore.getState().play();
-  }, [actionStates.walkerAnim]);
+  }, [actionStates.characterAnim]);
 
   // Raccourcis clavier dans la preview 3D :
   // 'K' pour afficher / masquer le squelette
@@ -843,7 +843,7 @@ export function InventoryPreview({
             </div>
           )}
           <div className="position-absolute top-0 end-0 m-2 z-3 d-flex gap-2 align-items-center">
-            {showing3D && 'category' in item && ((item as any).category === 'walkers' || (item as any).category === 'wigs') && (
+            {showing3D && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'wigs') && (
               <>
                 <button
                   type="button"
@@ -1008,7 +1008,7 @@ export function InventoryPreview({
                 position: 'absolute',
                 top: 40,
                 right: 8,
-                bottom: datumBannerBottom + (actionStates.walkerAnim && actionStates.walkerAnim !== 'idle' ? 68 : 12),
+                bottom: datumBannerBottom + (actionStates.characterAnim && actionStates.characterAnim !== 'idle' ? 68 : 12),
                 width: 330,
                 maxWidth: 'calc(100% - 16px)',
                 zIndex: 9,
@@ -1122,7 +1122,7 @@ export function InventoryPreview({
           {showing3D && isCharacterItem && (
             <AnimFrameController
               animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
-              animKey={actionStates.walkerAnim}
+              animKey={actionStates.characterAnim}
               isHumanCharacter={isHumanCharacter}
               characterId={item.id}
               duoAnimDef={actionStates.duoAnimDef}
@@ -1130,7 +1130,7 @@ export function InventoryPreview({
               animalAnimOptions={animalAnimOptions}
               onCycleAnim={cycleAnim}
               onSelectAnim={(val) => {
-                setActionStates(s => ({ ...s, walkerAnim: val, duoAnimDef: undefined }));
+                setActionStates(s => ({ ...s, characterAnim: val, duoAnimDef: undefined }));
                 useAnimPreviewStore.getState().play();
               }}
               onSelectDuoAnim={(def) => {
@@ -1141,7 +1141,7 @@ export function InventoryPreview({
                   duoAnimDef: def,
                   duoPartnerId: defaultPartner,
                   isPaused: false,
-                  walkerAnim: undefined,
+                  characterAnim: undefined,
                 }));
                 useAnimPreviewStore.getState().play();
               }}

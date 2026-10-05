@@ -26,7 +26,7 @@ function getCategoryEmoji(cat: string): string {
     case 'clothing': return '👕';
     case 'decor': return '🪴';
     case 'consumable': return '🛒';
-    case 'walkers': return '🚶';
+    case 'characters': return '🚶';
     case 'doors': return '🚪';
     case 'glbs': return '🎲';
     default: return '📦';
@@ -203,7 +203,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
             <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
               🗄️ Rangement
             </span>
-          ) : (item as InventoryItem).category === 'walkers' ? (
+          ) : (item as InventoryItem).category === 'characters' ? (
             <span className="badge bg-primary-subtle text-primary border border-primary-subtle">
               🔵 Virtuel
             </span>
@@ -354,7 +354,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           {(item as any).notes || "Aucune note descriptive disponible pour cet élément."}
         </div>
 
-        {!isStorage && !isZone && (item as InventoryItem).category === 'walkers' && item.id !== 'ushiro' && item.id !== 'robin-bird' && (
+        {!isStorage && !isZone && (item as InventoryItem).category === 'characters' && item.id !== 'ushiro' && item.id !== 'robin-bird' && (
           <>
             <hr className="my-3 opacity-25" />
             <div className="d-flex justify-content-between align-items-center mb-2">
@@ -504,8 +504,8 @@ export function Inventory({
   useEffect(() => {
     if (initialCategory) {
       setActiveCat(initialCategory);
-      if (initialCategory === 'walkers') {
-        const firstCharacter = INVENTORY.find(i => i.category === 'walkers' && i.id !== 'ushiro' && i.id !== 'robin-bird' && (extraCharacters || !isExtraCharacter(i.id)));
+      if (initialCategory === 'characters') {
+        const firstCharacter = INVENTORY.find(i => i.category === 'characters' && i.id !== 'ushiro' && i.id !== 'robin-bird' && (extraCharacters || !isExtraCharacter(i.id)));
         if (firstCharacter) setSelected(firstCharacter);
       }
     }
@@ -817,7 +817,7 @@ function normalizeSearchStr(str: string): string {
                         <div className="d-flex gap-1 mt-1 flex-wrap">
                           {isStorage ? (
                             <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Rangement</span>
-                          ) : (target as InventoryItem).category === 'walkers' ? (
+                          ) : (target as InventoryItem).category === 'characters' ? (
                             <span className="badge bg-primary-subtle text-primary border border-primary-subtle">Virtuel</span>
                           ) : (
                             <span className="badge bg-danger-subtle text-danger border border-danger-subtle">{catLabel}</span>

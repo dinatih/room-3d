@@ -481,7 +481,7 @@ export function Studio() {
   // Synchronisation avec les changements d'animation de Lara
   useEffect(() => {
     const handleToggle = (e: any) => {
-      if (e.detail?.key === 'walker-anim-lara' && e.detail?.value) {
+      if (e.detail?.key === 'character-anim-lara' && e.detail?.value) {
         setLaraGridAnim(e.detail.value);
       }
     };
@@ -505,7 +505,7 @@ export function Studio() {
     }
     const nextVal = pool[nextIdx].value;
     setLaraGridAnim(nextVal);
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: nextVal } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-lara', value: nextVal } }));
     useAnimPreviewStore.getState().play();
   }, [laraGridAnim]);
 
@@ -794,8 +794,8 @@ export function Studio() {
 
           <Floor />
           {/* LAYER_WALKER (18) — Personnages 3D */}
-          <CategoryLayerGroup layer={LAYER_WALKER} visible={layers.walker}>
-            <CharacterGroup walkerAnim={laraGridActive ? laraGridAnim : undefined} />
+          <CategoryLayerGroup layer={LAYER_WALKER} visible={layers.character}>
+            <CharacterGroup characterAnim={laraGridActive ? laraGridAnim : undefined} />
           </CategoryLayerGroup>
           <GlobalSkeletonHelpers show={layers.skeleton} />
           {/*
@@ -891,7 +891,7 @@ export function Studio() {
             onCycleAnim={cycleLaraAnim}
             onSelectAnim={(nextVal) => {
               setLaraGridAnim(nextVal);
-              document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: nextVal } }));
+              document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-lara', value: nextVal } }));
               useAnimPreviewStore.getState().play();
             }}
             bottom={16}

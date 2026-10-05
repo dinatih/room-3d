@@ -141,8 +141,8 @@ export function AnimFrameController({
     if (onSelectAnim) {
       onSelectAnim(val);
     } else {
-      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: val } }));
-      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: val } }));
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-lara', value: val } }));
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-xbot', value: val } }));
       useAnimPreviewStore.getState().play();
     }
     setShowAnimSelector(false);

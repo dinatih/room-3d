@@ -263,12 +263,12 @@ export function useCharacterAnimations({
     };
   }, [scene, loadAndPlayClip]);
 
-  // Écouteur global pour walker-anim-finished
+  // Écouteur global pour character-anim-finished
   useEffect(() => {
     const mixer = mixerRef.current;
     if (!mixer) return;
     const onFinished = (e: any) => {
-      document.dispatchEvent(new CustomEvent('walker-anim-finished', { detail: { id, path: e.action.getClip().name } }));
+      document.dispatchEvent(new CustomEvent('character-anim-finished', { detail: { id, path: e.action.getClip().name } }));
     };
     mixer.addEventListener('finished', onFinished);
     return () => mixer.removeEventListener('finished', onFinished);

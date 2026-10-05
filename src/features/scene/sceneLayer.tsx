@@ -52,7 +52,7 @@ interface SceneLayers {
   neighbors:       boolean;
   lidar:           boolean;
   mirrors:         boolean;
-  walker:          boolean;
+  character:       boolean;
   animals?:        boolean;
   smokeTransition?: boolean;
 }

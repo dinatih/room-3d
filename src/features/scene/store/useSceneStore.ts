@@ -182,7 +182,7 @@ const initialExtraStates: Record<string, boolean> = {
   utdrag: false,
   'bin-toggle': false,
   wcLid: false,
-  'walker-meshes': false,
+  'character-meshes': false,
   aiGoToilet: false,
   aiSitDesk1: false,
   aiSitOfficeChair: false,
@@ -436,8 +436,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
       if (key === 'mirrorsHD') {
         cameraState.mirrorsHD = nextLayers.mirrorsHD;
       }
-      if (key === 'walker') {
-        cameraState.walkerHidden = !nextLayers.walker;
+      if (key === 'character') {
+        cameraState.characterHidden = !nextLayers.character;
       }
       cameraState.invalidate?.();
       return { layers: nextLayers, activeExtraIds: nextActiveExtraIds };

@@ -139,7 +139,7 @@ const ACTIONS: Record<string, ActionDef> = {
   airPerformerPower:       { btnLabel: 'Allumer / Éteindre', toggleKey: 'airPerformerPower' },
   airPerformerMode:        { btnLabel: 'Changer Mode',       toggleKey: 'airPerformerMode'  },
   airPerformerSpeed:       { btnLabel: 'Vitesse +/-',        toggleKey: 'airPerformerSpeed' },
-  'walker-meshes':         { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
+  'character-meshes':         { btnLabel: 'Meshes',             toggleKey: 'character-meshes'     },
   'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
   'sofa-arm-right':        { btnLabel: 'Accoudoir Droit',   toggleKey: 'sofaArmRight'      },
   'lara-haircut':          { btnLabel: 'Coupe de cheveux 💇‍♀️', toggleKey: 'lara-haircut', type: 'select', options: [

@@ -525,7 +525,6 @@ export function GlobalSkeletonHelpers({
             allNamesCombined.includes('hips') ||
             allNamesCombined.includes('spine') ||
             allNamesCombined.includes('pelvis') ||
-            allNamesCombined.includes('walker') ||
             allNamesCombined.includes('character') ||
             allNamesCombined.includes('body') ||
             allNamesCombined.includes('head')

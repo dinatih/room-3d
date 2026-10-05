@@ -224,8 +224,8 @@ export function useCameraShortcuts({
       if (e.key === 't' || e.key === 'T') {
         const laraGridActive = useSceneStore.getState().layers.laraGrid;
         if (laraGridActive) {
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 't-pose' } }));
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 't-pose' } }));
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-lara', value: 't-pose' } }));
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-xbot', value: 't-pose' } }));
         } else {
           dispatchView('top');
           appLog('system', '🎥 Mode Vue du Dessus (Top)');

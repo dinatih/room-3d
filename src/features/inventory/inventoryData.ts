@@ -337,7 +337,7 @@ sortedCharacters.forEach(char => {
                       : (char.id === 'nurse'
                         ? 'Elf Nurse'
                         : (!char.isLara ? 'Mixamo' : 'Lara Croft Style'))))))))),
-      category: 'walkers',
+      category: 'characters',
       qty: 1,
       dims: {
         w: !char.isLara ? 50 : 45,
@@ -373,7 +373,7 @@ INVENTORY.push({
   id: 'ushiro',
   name: 'Chien Ushiro (Shiba Inu)',
   brand: 'Animal',
-  category: 'walkers',
+  category: 'characters',
   qty: 1,
   dims: { w: 40, d: 80, h: 40 },
   glbPath: 'characters/ushiro/shiba_inu_dog_ushiro.glb',
@@ -385,7 +385,7 @@ INVENTORY.push({
   id: 'robin-bird',
   name: 'Oiseau Robin',
   brand: 'Animal',
-  category: 'walkers',
+  category: 'characters',
   qty: 1,
   dims: { w: 10, d: 10, h: 10 },
   glbPath: 'characters/robin/robin.glb',
@@ -530,7 +530,7 @@ export const CATEGORIES: Category[] = [
   { id: 'clothing',     label: 'Vêtements' },
   { id: 'decor',        label: 'Déco' },
   { id: 'consumable',   label: '🛒 Consomables' },
-  { id: 'walkers',      label: '👥 Personnages' },
+  { id: 'characters',      label: '👥 Personnages' },
   { id: 'wigs',         label: '💇 Perruques' },
   { id: 'glbs',         label: '🎲 GLBs' },
 ];

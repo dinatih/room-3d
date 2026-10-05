@@ -52,7 +52,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
         const isDuoRoleA = char.isDuoRoleA;
         const isDuoRoleB = char.isDuoRoleB;
 
-        let charAnim = props.walkerAnim;
+        let charAnim = props.characterAnim;
         let charPos: [number, number, number] | undefined = props.previewPosition;
         let charRot: number | undefined = props.previewRotationY;
 
@@ -89,7 +89,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
               duoAnimDef={props.duoAnimDef}
               npcPosition={char.pos}
               npcRotationY={char.rot}
-              walkerAnim={charAnim}
+              characterAnim={charAnim}
               previewPosition={charPos}
               previewRotationY={charRot}
               previewHaircut={props.previewHaircut}

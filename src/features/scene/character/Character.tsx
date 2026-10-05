@@ -88,7 +88,7 @@ export function Character({
   isPreview = false,
   characterIndex = 0,
   totalCharacters = 1,
-  walkerAnim = 'idle',
+  characterAnim = 'idle',
   isPaused = false,
   previewHaircut,
   previewHairColor,
@@ -509,16 +509,16 @@ export function Character({
     invalidate();
   }, [laraGrid, scene, id, invalidate]);
 
-  // Synchronisation walkerAnim en mode preview ou grille Lara
+  // Synchronisation characterAnim en mode preview ou grille Lara
   useEffect(() => {
     if (!isPreview && !laraGrid) return;
-    if (!walkerAnim || walkerAnim === 'idle') {
+    if (!characterAnim || characterAnim === 'idle') {
       currentAnimClip.current = null;
       invalidate();
       return;
     }
-    loadAndPlayClip(walkerAnim);
-  }, [walkerAnim, isPreview, laraGrid, loadAndPlayClip, invalidate]);
+    loadAndPlayClip(characterAnim);
+  }, [characterAnim, isPreview, laraGrid, loadAndPlayClip, invalidate]);
 
   // Écouteurs de commandes utilisateur & UI (couleur, coupe, équipements, positions)
   useEffect(() => {
@@ -656,9 +656,9 @@ export function Character({
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
       const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds);
-      groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode;
-      currentAnimClip.current = walkerAnim || null;
-      if (isVisibleInCountMode && !cameraState.walkerHidden && showAllLaraStyles) {
+      groupRef.current.visible = !cameraState.characterHidden && showAllLaraStyles && isVisibleInCountMode;
+      currentAnimClip.current = characterAnim || null;
+      if (isVisibleInCountMode && !cameraState.characterHidden && showAllLaraStyles) {
         cameraState.positions[id] = { x: targetX, y: targetY, z: targetZ, yaw: 0 };
       } else {
         delete cameraState.positions[id];
@@ -676,7 +676,7 @@ export function Character({
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
           currentAnimClip.current = agentState.animation;
-          groupRef.current.visible = !cameraState.walkerHidden && agentState.isSpawned;
+          groupRef.current.visible = !cameraState.characterHidden && agentState.isSpawned;
 
           cameraState.walkerX = agentState.x;
           cameraState.walkerZ = agentState.z;
@@ -690,7 +690,7 @@ export function Character({
         } else {
           groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
           groupRef.current.rotation.y = cameraState.followYaw;
-          groupRef.current.visible = !cameraState.walkerHidden;
+          groupRef.current.visible = !cameraState.characterHidden;
           cameraState.isAIControlled = false;
           currentAnimClip.current = null;
           cameraState.positions[id] = { x: cameraState.walkerX, y: 0, z: cameraState.walkerZ, yaw: cameraState.followYaw, anim: currentAnimClip.current || 'idle' };
@@ -704,7 +704,7 @@ export function Character({
         groupRef.current.rotation.y = agentState.rotY;
         currentAnimClip.current = agentState.animation;
         const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds);
-        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
+        groupRef.current.visible = !cameraState.characterHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
 
         if (agentState.isSpawned && isVisibleInCountMode) {
           cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY, anim: agentState.animation };
@@ -751,7 +751,7 @@ export function Character({
 
     const isMoving = !isPreview && !laraGrid && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
     const rawTarget = (isPreview || laraGrid)
-      ? (walkerAnim || 'idle')
+      ? (characterAnim || 'idle')
       : (currentAnimClip.current || (isMoving ? 'walk' : 'idle'));
 
     if (isActive && !laraGrid && !isGuidedTour && !hasDynamicTask && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
@@ -978,7 +978,7 @@ export function Character({
           haircut,
           isMoving,
           targetAnim: target,
-          walkerAnim,
+          characterAnim,
           clockElapsedTime: store.currentTime
         }, scene);
       }
@@ -1029,7 +1029,7 @@ export function Character({
           haircut,
           isMoving,
           targetAnim: target,
-          walkerAnim,
+          characterAnim,
           clockElapsedTime: state.clock.elapsedTime
         }, scene);
       }
