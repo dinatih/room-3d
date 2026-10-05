@@ -112,7 +112,7 @@ export function DevToolsGroups({ Group, compact = false }: {
             width={FPS_W} height={FPS_H}
             style={{ display: 'block', margin: '0 auto 4px', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.15)', width: `${FPS_W}px`, maxWidth: '100%', height: `${FPS_H}px` }}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 8px 6px', fontSize: 11 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 8px 6px', fontSize: 11, whiteSpace: 'nowrap' }}>
             <span style={{ color: isIdle ? '#d97706' : fpsColor, fontWeight: 700 }}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
             <span style={{ color: '#4b5563', fontWeight: 500, fontSize: 10 }}>min:{fpsMin} max:{fpsMax}</span>
           </div>
