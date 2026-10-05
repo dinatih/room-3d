@@ -270,7 +270,7 @@ function drawMinimap(
     );
   }
 
-  // ── Walker icon (position XZ réelle de la tête ; sans tête publiée : non dessiné) ──
+  // ── Character icon (position XZ réelle de la tête ; sans tête publiée : non dessiné) ──
   const walkerHead = cameraState.headPositions[activeCharacterId];
   if (!walkerHead) return;
   const w = { x: walkerHead.x, z: walkerHead.z, yaw: cameraState.walkerYaw };
@@ -416,7 +416,7 @@ function drawMinimap(
   ctx.beginPath(); ctx.moveTo(p0x, p0z); ctx.lineTo(p2x, p2z); ctx.stroke();
   ctx.restore();
 
-  // 3. Tête du Walker
+  // 3. Tête du Character
   ctx.save();
   ctx.translate(tx(w.x), tz(w.z));
   ctx.rotate(-w.yaw);

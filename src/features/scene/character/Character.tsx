@@ -1,5 +1,5 @@
 /**
- * Character.tsx — Personnages (Walkers & NPCs).
+ * Character.tsx — Personnages (Characters).
  * Version modulaire intégrant animations, physique Verlet, styles/accessoires et agent IA.
  */
 import { useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
