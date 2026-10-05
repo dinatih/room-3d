@@ -61,6 +61,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const activeChar = findCharacter(activeWalkerId);
 
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
+  const [open, setOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
   const logAreaRef = useRef<HTMLDivElement>(null);
@@ -196,7 +197,8 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       style={{
         bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' : 16,
         right: isMobile ? 8 : 16,
-        left: isMobile ? 8 : 288,
+        left: open ? (isMobile ? 8 : 288) : 'auto',
+        width: open ? undefined : 'auto',
         height: `${height}px`,
         maxHeight: isMobile ? '50vh' : '75vh',
         zIndex: 100,
@@ -211,6 +213,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         extra={consoleControls}
         headerPadding="py-1 px-2"
         className="flex-grow-1"
+        onToggle={setOpen}
       >
         {/* Barre de redimensionnement */}
         <div
