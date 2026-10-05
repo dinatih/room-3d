@@ -110,7 +110,7 @@ export function DevToolsGroups({ Group, compact = false }: {
           <canvas
             ref={fpsCanvasCallback}
             width={FPS_W} height={FPS_H}
-            style={{ display: 'block', margin: '0 auto 4px', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.15)', width: `${FPS_W}px`, height: `${FPS_H}px` }}
+            style={{ display: 'block', margin: '0 auto 4px', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.15)', width: `${FPS_W}px`, maxWidth: '100%', height: `${FPS_H}px` }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 8px 6px', fontSize: 11 }}>
             <span style={{ color: isIdle ? '#d97706' : fpsColor, fontWeight: 700 }}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
