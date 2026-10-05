@@ -93,6 +93,7 @@ interface SceneStore {
   bnfRadius: number;
   measurementActive: boolean;
   cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho';
+  cameraProjection: 'persp' | 'ortho';
   isCvModalOpen: boolean;
   isPhotoModeOpen: boolean;
   setCvModalOpen: (open: boolean) => void;
@@ -100,6 +101,8 @@ interface SceneStore {
   setMeasurementActive: (active: boolean) => void;
   setBnfCoords: (coords: { azimuth?: number; elevation?: number; radius?: number }) => void;
   setCameraMode: (mode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho') => void;
+  setCameraProjection: (proj: 'persp' | 'ortho') => void;
+  toggleCameraProjection: () => void;
   setLaraCount: (count: LaraCountMode) => void;
   setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
@@ -375,6 +378,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   bnfRadius: 45,
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
+  cameraProjection: 'persp',
   isCvModalOpen: false,
   isPhotoModeOpen: false,
   setBnfCoords: (coords) => {
@@ -398,6 +402,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   setCameraMode: (mode) => {
     set({ cameraMode: mode });
+  },
+  setCameraProjection: (proj) => {
+    set({ cameraProjection: proj });
+    cameraState.invalidate?.();
+  },
+  toggleCameraProjection: () => {
+    set((state) => ({ cameraProjection: state.cameraProjection === 'ortho' ? 'persp' : 'ortho' }));
+    cameraState.invalidate?.();
   },
   setLaraCount: (count) => {
     updateUrlNpcCount(count);

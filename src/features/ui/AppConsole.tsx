@@ -182,7 +182,6 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           )}
           <span className="text-dark fw-bold text-uppercase d-flex align-items-center gap-1 small flex-shrink-0">
             <span>🤖</span>
-            <span>APP LOGS</span>
           </span>
 
           {/* Sélecteur PNJ actif + bouton Filtré collé à droite (uniquement si déplié) */}

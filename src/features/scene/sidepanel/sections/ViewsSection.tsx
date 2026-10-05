@@ -34,6 +34,8 @@ export function ViewsSection({
   const measurementActive = useSceneStore(state => state.measurementActive);
   const setMeasurementActive = useSceneStore(state => state.setMeasurementActive);
   const cameraMode = useSceneStore(state => state.cameraMode);
+  const cameraProjection = useSceneStore(state => state.cameraProjection);
+  const toggleCameraProjection = useSceneStore(state => state.toggleCameraProjection);
   const fpvRealisticEyes = useSceneStore(state => state.layers.fpvRealisticEyes ?? true);
   const fpvStabilization = useSceneStore(state => state.layers.fpvStabilization ?? true);
   const fpvStabilizationFactor = useSceneStore(state => state.layers.fpvStabilizationFactor ?? 0.7);
@@ -65,6 +67,18 @@ export function ViewsSection({
         <kbd className="bg-dark text-white border-0 px-1 rounded font-monospace small">F10</kbd>
       </button>
       {b0('gray',   'Perspective / Orbit (Raccourci O)', () => dispatchKey('o'))}
+      <button
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between bg-transparent small"
+        onClick={toggleCameraProjection}
+        title="Basculer entre la projection Perspective (conique 3D) et Orthographique (parallèle / isométrique)"
+      >
+        <span className="d-flex align-items-center gap-2">
+          <span>{cameraProjection === 'ortho' ? '📐 Projection Orthographique' : '👁️ Projection Perspective'}</span>
+        </span>
+        <span className={`badge ${cameraProjection === 'ortho' ? 'bg-primary' : 'bg-secondary'}`}>
+          {cameraProjection === 'ortho' ? 'ORTHO' : 'PERSP'}
+        </span>
+      </button>
       {b0('gray',   'Walk générique (Raccourci M)',    () => dispatchKey('m'))}
       {b0('gray',   'Vue 3ème personne (Raccourci 3)', () => dispatchKey('3'))}
       {b0('gray',   'Vue FPV 1ère pers. (Raccourci 1)',() => dispatchKey('1'))}

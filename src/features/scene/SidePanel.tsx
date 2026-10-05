@@ -225,6 +225,33 @@ export function SidePanel({
     </div>
   );
 
+  const cameraProjection = useSceneStore(state => state.cameraProjection);
+  const toggleCameraProjection = useSceneStore(state => state.toggleCameraProjection);
+
+  const viewsHeaderButtons = (
+    <div className="d-flex align-items-center gap-1 pe-1" onClick={e => e.stopPropagation()}>
+      <button
+        type="button"
+        className={`btn btn-sm py-0 px-2 fw-bold small border-0 rounded shadow-sm ${
+          cameraProjection === 'ortho' ? 'btn-info text-dark' : 'btn-outline-secondary text-dark'
+        }`}
+        style={{
+          height: '22px',
+          fontSize: '11px',
+          background: cameraProjection === 'ortho' ? undefined : 'rgba(255, 255, 255, 0.65)',
+          border: '1px solid rgba(0, 0, 0, 0.15)',
+        }}
+        title={`Basculer la projection (${cameraProjection === 'ortho' ? 'Orthographique (Iso)' : 'Perspective 3D'})`}
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleCameraProjection();
+        }}
+      >
+        {cameraProjection === 'ortho' ? '📐 ORTHO' : '👁️ PERSP'}
+      </button>
+    </div>
+  );
+
   const personnageHeaderButtons = (
     <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
       <div className="btn-group btn-group-sm" role="group">
@@ -411,6 +438,7 @@ export function SidePanel({
               <span className="fw-bold">{sheetTitle[activeTab]}</span>
               <div className="d-flex align-items-center gap-2">
                 {activeTab === 'profile' && profileHeaderButtons}
+                {activeTab === 'views' && viewsHeaderButtons}
                 {activeTab === 'layers' && layersHeaderButtons}
                 {activeTab === 'personnage' && personnageHeaderButtons}
                 <button
@@ -587,7 +615,7 @@ export function SidePanel({
           {profileSectionContent}
         </Group>
 
-        <Group emoji="📷" title="Vues">{viewsSectionContent}</Group>
+        <Group emoji="📷" title="Vues" extra={viewsHeaderButtons}>{viewsSectionContent}</Group>
         <Group emoji="📑" title="Calques" extra={layersHeaderButtons}>{layersSectionContent}</Group>
         <Group emoji="🎮" title="Interactif">{interactiveSectionContent}</Group>
         <Group emoji="👤" title="PNJ" extra={personnageHeaderButtons}>{characterSectionContent}</Group>
