@@ -11,7 +11,7 @@ import { cameraState } from '@features/scene/cameraState';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import {
   drawFloorPlan,
-  PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_Z_MAX, PLAN_ASPECT,
+  PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_Z_MAX,
 } from './floorDraw';
 import { LANDING_STRIPS } from './LandingStrips';
 import { CHARACTERS, isCharacterVisibleInMode } from './walkerConfig';
@@ -87,9 +87,9 @@ function drawMinimap(
   const tx = (x: number) => offX + (x - PLAN_X_MIN) * S;
   const tz = (z: number) => offZ + (z - PLAN_Z_MIN) * S;
 
-  // Fond
+  // Fond du canvas (espace extérieur entourant le plan de l'appartement)
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.fillStyle = 'rgba(238, 242, 246, 0.85)';
   ctx.fillRect(0, 0, W, H);
 
   // ── Pistes d'atterrissage (seulement si activées) ─────────────────────────
@@ -127,17 +127,13 @@ function drawMinimap(
   const BW   = Math.max(6 * sc, 38 * S); // Largeur d'épaules (~38 cm)
   const BH   = Math.max(3 * sc, 18 * S); // Épaisseur torse (~18 cm)
 
-  // ── Other characters (NPCs) icons ───────────────────────────────────────────
+  // ── Other characters (NPCs) icons (y compris à l'extérieur) ─────────────────
   const activeWalkerId = useSceneStore.getState().activeWalkerId;
   const showAllLaraStyles = useSceneStore.getState().layers.showAllLaraStyles;
   const laraCount = useSceneStore.getState().layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
   const extraCharacters = useSceneStore.getState().layers.extraCharacters ?? false;
   const activeExtraIds = useSceneStore.getState().activeExtraIds;
   const activeMainIds = useSceneStore.getState().activeMainIds;
-  ctx.save();
-  ctx.fillStyle   = 'rgba(37, 99, 235, 0.65)'; // Bleu franc et net
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-  ctx.lineWidth   = Math.max(0.8, 0.6 * sc);
   
   CHARACTERS.forEach(char => {
     if (char.id !== activeWalkerId) {
@@ -145,18 +141,25 @@ function drawMinimap(
       if (!isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters, activeExtraIds, activeMainIds)) return;
       const currentPos = cameraState.positions[char.id];
       if (!currentPos) return;
-      const x = currentPos.x;
-      const z = currentPos.z;
+      const rawX = tx(currentPos.x);
+      const rawZ = tz(currentPos.z);
+      // Bornage doux pour garder le point visible sur le bord s'il est au loin hors champ
+      const px = Math.max(rNpc + 2, Math.min(W - rNpc - 2, rawX));
+      const pz = Math.max(rNpc + 2, Math.min(H - rNpc - 2, rawZ));
+      const isOffscreen = rawX < rNpc || rawX > W - rNpc || rawZ < rNpc || rawZ > H - rNpc;
+
       ctx.save();
-      ctx.translate(tx(x), tz(z));
+      ctx.translate(px, pz);
       ctx.beginPath(); 
       ctx.arc(0, 0, rNpc, 0, Math.PI * 2); 
+      ctx.fillStyle   = 'rgba(37, 99, 235, 0.75)'; // Bleu franc et net
       ctx.fill(); 
+      ctx.strokeStyle = isOffscreen ? 'rgba(234, 88, 12, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth   = Math.max(0.8, 0.6 * sc);
       ctx.stroke();
       ctx.restore();
     }
   });
-  ctx.restore();
 
   // ── Shiba Inu (Ushiro) ──────────────────────────────────────────────────────
   const shibaPos = cameraState.positions['shiba'];
@@ -285,12 +288,12 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
 
     const resize = () => {
       const chromeH = 90;
-      const availW = Math.min(window.innerWidth * 0.92, 720);
-      const availH = Math.max(140, window.innerHeight * 0.86 - chromeH);
+      const availW = Math.min(window.innerWidth * 0.94, 860);
+      const availH = Math.max(200, Math.min(window.innerHeight * 0.86 - chromeH, 720));
 
-      const fitW = Math.min(availW, availH / PLAN_ASPECT);
-      const expW = Math.max(80, Math.round(fitW));
-      const expH = Math.round(expW * PLAN_ASPECT);
+      // Occupe toute la largeur disponible pour que les zones extérieures gauche/droite soient dans le canvas
+      const expW = Math.max(120, Math.round(availW));
+      const expH = Math.max(120, Math.round(availH));
       currentExpW = expW;
 
       const dpr = Math.max(window.devicePixelRatio || 1, 2);
@@ -332,7 +335,7 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
 
       const factor = e.deltaY < 0 ? 1.15 : 0.87;
       setZoom(prev => {
-        const next = Math.min(5, Math.max(1, +(prev * factor).toFixed(2)));
+        const next = Math.min(5, Math.max(0.5, +(prev * factor).toFixed(2)));
         if (next === 1) setPan({ x: 0, y: 0 });
         return next;
       });
@@ -437,7 +440,7 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
                   <span>🗺️</span>
                   <span>Plan 2D de la pièce</span>
                 </span>
-                {zoom > 1 && (
+                {zoom !== 1 && (
                   <span className="badge bg-primary bg-opacity-75 text-white fw-semibold small">
                     {Math.round(zoom * 100)}%
                   </span>
@@ -451,12 +454,12 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
                     className="btn btn-sm btn-outline-secondary py-0 px-2 fw-bold text-dark"
                     style={{ height: '24px', lineHeight: '22px' }}
                     onClick={() => setZoom(z => {
-                      const next = Math.max(1, +(z - 0.25).toFixed(2));
+                      const next = Math.max(0.5, +(z - 0.25).toFixed(2));
                       if (next === 1) setPan({ x: 0, y: 0 });
                       return next;
                     })}
-                    disabled={zoom <= 1}
-                    title="Dézoomer"
+                    disabled={zoom <= 0.5}
+                    title="Dézoomer pour élargir la vue"
                   >
                     −
                   </button>
@@ -466,18 +469,18 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
                     style={{ height: '24px', lineHeight: '22px' }}
                     onClick={() => setZoom(z => Math.min(5, +(z + 0.25).toFixed(2)))}
                     disabled={zoom >= 5}
-                    title="Zoomer"
+                    title="Zoomer sur le plan"
                   >
                     +
                   </button>
                 </div>
-                {zoom > 1 && (
+                {(zoom !== 1 || pan.x !== 0 || pan.y !== 0) && (
                   <button
                     type="button"
                     className="btn btn-sm btn-outline-danger py-0 px-1.5 small fw-semibold"
                     style={{ height: '24px', lineHeight: '22px' }}
                     onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
-                    title="Réinitialiser le zoom"
+                    title="Réinitialiser la vue et le zoom à 100%"
                   >
                     ↺ 100%
                   </button>
