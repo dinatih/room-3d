@@ -17,7 +17,7 @@
  *   Échap      — quitter walk mode / top-down
  *   Flèches    — déplacement walk / pan et rotation orbit
  */
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
@@ -111,11 +111,20 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // Sauvegarde d'état perspective pour retour depuis top-down
   const savedPerspPos = useRef(new THREE.Vector3(...PERSP_POS));
   const savedPerspTarget = useRef(new THREE.Vector3(...PERSP_TARGET));
+  const currentTarget = useRef(new THREE.Vector3(...PERSP_TARGET));
   const savedFov = useRef(50);
   const prevIsXR = useRef(cameraState.isXR);
   const minimapThrottle = useRef(0);
   const topFollowRef = useRef(false);
   const savedMirrorsRef = useRef(false);
+
+  // Maintient le target d'OrbitControls synchronisé avec currentTarget lors du changement de caméra
+  useLayoutEffect(() => {
+    if (ctrlRef.current && modeRef.current === 'orbit') {
+      ctrlRef.current.target.copy(currentTarget.current);
+      ctrlRef.current.update();
+    }
+  }, [camera]);
 
   // Synchronisation du changement de personnage actif
   useEffect(() => {
@@ -465,33 +474,38 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     if (targetProj === 'ortho') {
       if (options?.target) {
-        ctrl.target.set(...options.target);
+        currentTarget.current.set(...options.target);
+      } else if (ctrl.target.lengthSq() > 1) {
+        currentTarget.current.copy(ctrl.target);
       }
+      const target = currentTarget.current;
+      ctrl.target.copy(target);
 
       if (options?.pos) {
         orthoCam.position.set(...options.pos);
-        const dist = Math.max(10, orthoCam.position.distanceTo(ctrl.target));
+        const dist = Math.max(10, orthoCam.position.distanceTo(target));
         orthoCam.zoom = options.zoom ?? Math.max(0.05, Math.min(30, 800 / (2 * dist * tanHalfFov)));
       } else {
         const fromCam = ctrl.object || camera;
-        const dir = new THREE.Vector3().subVectors(fromCam.position, ctrl.target);
+        const dir = new THREE.Vector3().subVectors(fromCam.position, target);
         const dist = Math.max(10, dir.length());
         dir.normalize();
         if (dir.lengthSq() < 0.001) dir.set(0, 0, 1);
 
-        orthoCam.position.copy(ctrl.target).addScaledVector(dir, Math.max(dist, 500));
+        orthoCam.position.copy(target).addScaledVector(dir, Math.max(dist, 500));
         orthoCam.zoom = options?.zoom ?? Math.max(0.05, Math.min(30, 800 / (2 * dist * tanHalfFov)));
       }
 
       orthoCam.up.set(0, 1, 0);
-      orthoCam.lookAt(ctrl.target);
+      orthoCam.lookAt(target);
       orthoCam.updateProjectionMatrix();
 
       set({ camera: orthoCam });
       ctrl.object = orthoCam;
+      ctrl.target.copy(target);
 
       // Réinitialiser les sphériques et deltas d'OrbitControls pour adopter la nouvelle orientation
-      const offsetOrtho = new THREE.Vector3().subVectors(orthoCam.position, ctrl.target);
+      const offsetOrtho = new THREE.Vector3().subVectors(orthoCam.position, target);
       if ((ctrl as any).spherical) {
         (ctrl as any).spherical.setFromVector3(offsetOrtho);
       }
@@ -512,31 +526,36 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     } else {
       // Bascule vers Perspective en conservant l'angle exact et la distance équivalente au zoom ortho
       if (options?.target) {
-        ctrl.target.set(...options.target);
+        currentTarget.current.set(...options.target);
+      } else if (ctrl.target.lengthSq() > 1) {
+        currentTarget.current.copy(ctrl.target);
       }
+      const target = currentTarget.current;
+      ctrl.target.copy(target);
 
       if (options?.pos) {
         perspCam.position.set(...options.pos);
       } else {
         const fromCam = ctrl.object || camera;
-        const dir = new THREE.Vector3().subVectors(fromCam.position, ctrl.target);
+        const dir = new THREE.Vector3().subVectors(fromCam.position, target);
         dir.normalize();
         if (dir.lengthSq() < 0.001) dir.set(0, 0, 1);
 
         const curOrthoZoom = (fromCam as THREE.OrthographicCamera).zoom || orthoCam.zoom || 1;
         const equivalentDist = Math.max(20, Math.min(8000, 800 / (2 * curOrthoZoom * tanHalfFov)));
-        perspCam.position.copy(ctrl.target).addScaledVector(dir, equivalentDist);
+        perspCam.position.copy(target).addScaledVector(dir, equivalentDist);
       }
 
       perspCam.up.set(0, 1, 0);
-      perspCam.lookAt(ctrl.target);
+      perspCam.lookAt(target);
       perspCam.updateProjectionMatrix();
 
       set({ camera: perspCam });
       ctrl.object = perspCam;
+      ctrl.target.copy(target);
 
       // Réinitialiser les sphériques et deltas d'OrbitControls pour adopter la nouvelle orientation
-      const offsetPersp = new THREE.Vector3().subVectors(perspCam.position, ctrl.target);
+      const offsetPersp = new THREE.Vector3().subVectors(perspCam.position, target);
       if ((ctrl as any).spherical) {
         (ctrl as any).spherical.setFromVector3(offsetPersp);
       }
@@ -811,9 +830,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     };
   }, [camera, enterTop, enterWalk, invalidate]);
 
-  // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif
+  // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif et suivi du target orbit
   useFrame(() => {
     if (cameraState.isIntroRunning) return;
+    if (modeRef.current === 'orbit' && ctrlRef.current) {
+      if (ctrlRef.current.target.lengthSq() > 1) {
+        currentTarget.current.copy(ctrlRef.current.target);
+      }
+    }
     if (prevIsXR.current !== cameraState.isXR) {
       prevIsXR.current = cameraState.isXR;
       const cam = camera as THREE.PerspectiveCamera;
