@@ -616,6 +616,7 @@ export function Studio() {
   const isPhotoModeOpen = useSceneStore(state => state.isPhotoModeOpen);
   const activeSceneRef = useRef<Scene | null>(null);
   const activeCameraRef = useRef<PerspectiveCamera | null>(null);
+  const activeGlRef = useRef<WebGLRenderer | null>(null);
 
   const revealScene = useCallback(() => {
     const cover = document.getElementById('loading');
@@ -695,12 +696,15 @@ export function Studio() {
           alpha:        false,
           toneMapping:  AgXToneMapping,
           toneMappingExposure: 1,
+          preserveDrawingBuffer: true,
         }}
         onCreated={({ scene, gl, camera }) => {
           (window as any).threeScene = scene;
           (window as any).threeCamera = camera;
+          (window as any).threeGl = gl;
           activeSceneRef.current = scene;
           activeCameraRef.current = camera as PerspectiveCamera;
+          activeGlRef.current = gl;
           scene.background = new Color(0x02030a);
           gl.shadowMap.enabled = true;
           camera.layers.enableAll();
@@ -933,9 +937,10 @@ export function Studio() {
           <AppConsole hidden={showInventory} />
         </>
       )}
-      {isPhotoModeOpen && activeSceneRef.current && activeCameraRef.current && (
+      {isPhotoModeOpen && activeSceneRef.current && activeCameraRef.current && activeGlRef.current && (
         <Suspense fallback={null}>
           <RaytracingPhotoModal
+            gl={activeGlRef.current}
             scene={activeSceneRef.current}
             camera={activeCameraRef.current}
             onClose={() => useSceneStore.getState().setPhotoModeOpen(false)}

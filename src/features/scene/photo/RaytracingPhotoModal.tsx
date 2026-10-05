@@ -22,6 +22,7 @@ import {
 } from '@config';
 
 export interface RaytracingPhotoModalProps {
+  gl: THREE.WebGLRenderer;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   onClose: () => void;
@@ -47,7 +48,7 @@ const RESOLUTION_OPTIONS: ResolutionOption[] = [
 
 export type ComparisonMode = 'split' | 'raytracing' | 'raster';
 
-export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhotoModalProps) {
+export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingPhotoModalProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -139,8 +140,27 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     const hidden: THREE.Object3D[] = [];
     const matMap = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
 
+    // Mettre à jour toutes les matrices mondiales (notamment les os des SkinnedMeshes)
+    scene.updateMatrixWorld(true);
+
+    // S'assurer que les modèles de personnages sont visibles
+    scene.traverse((obj) => {
+      if (obj.userData?.itemName && (obj.userData.itemName.startsWith('Personnage') || obj.userData.itemName.startsWith('PNJ'))) {
+        obj.visible = true;
+      }
+    });
+
     scene.traverse((obj) => {
       const name = (obj.name || '').toLowerCase();
+
+      // Ne JAMAIS masquer les personnages (LAYER_WALKER) ou les animaux (LAYER_ANIMALS)
+      const isCharacterOrAnimal =
+        (obj.layers.mask & (1 << LAYER_WALKER)) !== 0 ||
+        (obj.layers.mask & (1 << LAYER_ANIMALS)) !== 0;
+
+      if (isCharacterOrAnimal) {
+        return;
+      }
 
       // Masquer les dômes de ciel 3D et backdrops (le path-tracer utilise nativement scene.environment)
       if (
@@ -425,8 +445,13 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
 
     // 1. Capture instantanée du rendu 3D Standard temps réel (avec ombres et matériaux d'origine) avant altération pour le path-tracer
     try {
-      renderer.render(scene, physCamera);
-      const snapshot = canvas.toDataURL('image/png');
+      let snapshot: string;
+      if (gl?.domElement) {
+        snapshot = gl.domElement.toDataURL('image/png');
+      } else {
+        renderer.render(scene, physCamera);
+        snapshot = canvas.toDataURL('image/png');
+      }
       setRasterSnapshot(snapshot);
     } catch (err) {
       console.warn('[Raytracing] Impossible de capturer le snapshot 3D standard:', err);
