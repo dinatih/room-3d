@@ -285,7 +285,7 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
     let currentExpW = 200;
 
     const resize = () => {
-      const chromeH = 100;
+      const chromeH = 70;
       // Ratio carré pour la minimap agrandie
       const maxSide = Math.min(window.innerWidth * 0.88, window.innerHeight * 0.84 - chromeH, 620);
       const squareSide = Math.max(220, Math.round(maxSide));
@@ -430,43 +430,43 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               zIndex: 100000,
             }}
           >
-            {/* Header avec espacements soignés */}
-            <div className="card-header border-0 bg-transparent px-3 pt-3 pb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
-              <div className="d-flex align-items-center gap-2">
-                <span className="fw-bold text-dark text-uppercase d-flex align-items-center gap-1.5" style={{ fontSize: '11px', letterSpacing: '0.06em' }}>
+            {/* Header style accordéon (comme Perf / Group) */}
+            <div className="card-header border-0 border-bottom border-light-subtle bg-transparent px-2 py-1.5 d-flex justify-content-between align-items-center gap-2 flex-shrink-0">
+              <div className="d-flex align-items-center gap-1.5">
+                <span className="fw-bold text-dark text-uppercase small d-flex align-items-center gap-1">
                   <span>🗺️</span>
-                  <span>Plan 2D de la pièce</span>
+                  <span>Plan 2D</span>
                 </span>
                 {zoom !== 1 && (
-                  <span className="badge bg-primary bg-opacity-75 text-white fw-semibold small">
+                  <span className="badge bg-primary bg-opacity-75 text-white fw-semibold" style={{ fontSize: '0.65rem', padding: '0.2em 0.4em' }}>
                     {Math.round(zoom * 100)}%
                   </span>
                 )}
               </div>
 
-              <div className="d-flex align-items-center gap-1.5">
+              <div className="d-flex align-items-center gap-1">
                 <div className="btn-group btn-group-sm" role="group">
                   <button
                     type="button"
-                    className="btn btn-sm btn-outline-secondary py-0 px-2 fw-bold text-dark"
-                    style={{ height: '24px', lineHeight: '22px' }}
+                    className="btn btn-sm btn-outline-secondary py-0 px-1.5 fw-bold text-dark"
+                    style={{ height: '22px', lineHeight: '20px', fontSize: '11px' }}
                     onClick={() => setZoom(z => {
                       const next = Math.max(0.5, +(z - 0.25).toFixed(2));
                       if (next === 1) setPan({ x: 0, y: 0 });
                       return next;
                     })}
                     disabled={zoom <= 0.5}
-                    title="Dézoomer pour élargir la vue"
+                    title="Dézoomer"
                   >
                     −
                   </button>
                   <button
                     type="button"
-                    className="btn btn-sm btn-outline-secondary py-0 px-2 fw-bold text-dark"
-                    style={{ height: '24px', lineHeight: '22px' }}
+                    className="btn btn-sm btn-outline-secondary py-0 px-1.5 fw-bold text-dark"
+                    style={{ height: '22px', lineHeight: '20px', fontSize: '11px' }}
                     onClick={() => setZoom(z => Math.min(5, +(z + 0.25).toFixed(2)))}
                     disabled={zoom >= 5}
-                    title="Zoomer sur le plan"
+                    title="Zoomer"
                   >
                     +
                   </button>
@@ -474,17 +474,18 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
                 {(zoom !== 1 || pan.x !== 0 || pan.y !== 0) && (
                   <button
                     type="button"
-                    className="btn btn-sm btn-outline-danger py-0 px-1.5 small fw-semibold"
-                    style={{ height: '24px', lineHeight: '22px' }}
+                    className="btn btn-sm btn-outline-danger py-0 px-1.5 fw-semibold"
+                    style={{ height: '22px', lineHeight: '20px', fontSize: '10px' }}
                     onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
-                    title="Réinitialiser la vue et le zoom à 100%"
+                    title="Réinitialiser zoom 100%"
                   >
                     ↺ 100%
                   </button>
                 )}
                 <button 
                   type="button" 
-                  className="btn-close ms-2" 
+                  className="btn-close ms-1" 
+                  style={{ fontSize: '0.65rem' }}
                   aria-label="Close" 
                   onClick={() => {
                     setExpanded(false);
@@ -495,15 +496,15 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               </div>
             </div>
 
-            {/* Conteneur de zoom et pan avec marges équilibrées et fond transparent */}
+            {/* Conteneur de zoom et pan compact et transparent */}
             <div 
               ref={zoomContainerRef}
-              className="position-relative d-flex align-items-center justify-content-center overflow-hidden rounded-3 user-select-none mx-3 my-1"
+              className="position-relative d-flex align-items-center justify-content-center overflow-hidden user-select-none p-1"
               style={{
                 cursor: zoom > 1 ? (isPanningRef.current ? 'grabbing' : 'grab') : 'default',
                 touchAction: 'none',
-                maxWidth: 'calc(100% - 2rem)',
-                maxHeight: 'calc(94vh - 120px)',
+                maxWidth: 'calc(100% - 0.5rem)',
+                maxHeight: 'calc(94vh - 70px)',
               }}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
@@ -513,7 +514,7 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
             >
               <canvas 
                 ref={expandedCanvasRef} 
-                className="rounded-3" 
+                className="rounded-2" 
                 style={{
                   display: 'block',
                   background: 'transparent',
@@ -524,8 +525,8 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               />
             </div>
 
-            {/* Footer avec espacement harmonieux */}
-            <div className="card-footer border-0 bg-transparent text-center px-3 pt-2 pb-3 text-muted user-select-none text-wrap" style={{ fontSize: '10px', maxWidth: '100%' }}>
+            {/* Footer compact avec bordure discrète */}
+            <div className="card-footer border-0 border-top border-light-subtle bg-transparent text-center px-2 py-1 text-muted user-select-none text-wrap flex-shrink-0" style={{ fontSize: '10px', maxWidth: '100%' }}>
               💡 Molette pour zoomer · Glisser pour déplacer · Double-clic pour réinitialiser · Échap pour fermer
             </div>
           </div>
