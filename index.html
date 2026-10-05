@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="preload" as="image" href="/environment/ciel_paris_bg.webp" />
+    <link rel="preload" as="image" href="/environment/ciel_paris_bg_aligned.webp" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
@@ -15,18 +15,28 @@
       body { background: #111827; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
       #loading {
         position: fixed; inset: 0;
-        background: #111827 url('/environment/ciel_paris_bg.webp') center center / cover no-repeat;
         display: flex; flex-direction: column;
         align-items: center; justify-content: center;
-        z-index: 9999; transition: opacity 0.4s ease;
+        z-index: 9999;
         padding: 20px;
+        transition: opacity 0.4s ease;
       }
-      #loading::before {
+      #loading-backdrop {
+        position: absolute; inset: 0;
+        background: #111827 url('/environment/ciel_paris_bg_aligned.webp') center center / cover no-repeat;
+        transition: opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1), transform 1.35s cubic-bezier(0.2, 0, 0.2, 1);
+        pointer-events: none;
+      }
+      #loading-backdrop::before {
         content: '';
         position: absolute;
         inset: 0;
         background: radial-gradient(circle at center, rgba(15, 23, 42, 0.25) 0%, rgba(15, 23, 42, 0.6) 100%);
         pointer-events: none;
+      }
+      #loading-backdrop.exiting {
+        opacity: 0;
+        transform: scale(1.05);
       }
       #loading.hidden { opacity: 0; pointer-events: none; }
 
@@ -44,6 +54,13 @@
         width: 100%;
         color: #1f2937;
         text-align: center;
+        transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s ease-out;
+      }
+      #loading-card.exiting {
+        opacity: 0;
+        transform: translateY(22px) scale(0.96);
+        filter: blur(8px);
+        pointer-events: none;
       }
 
       #loading-header {
@@ -157,11 +174,12 @@
         text-shadow: 0 1px 1px rgba(255, 255, 255, 0.95);
       }
     </style>
-    <script type="module" crossorigin src="/assets/inventory-B7Zo3EhA.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/inventory-AtUN_Jsh.css">
+    <script type="module" crossorigin src="/assets/inventory-Doc5ixnb.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/inventory-DERrGADs.css">
   </head>
   <body>
     <div id="loading">
+      <div id="loading-backdrop"></div>
       <div id="loading-card">
         <div id="loading-header">
           <div id="loading-photos">
