@@ -7,16 +7,22 @@ export interface GroupProps {
   extra?: React.ReactNode;
   children: React.ReactNode;
   headerPadding?: string;
+  onToggle?: (open: boolean) => void;
 }
 
-export function Group({ emoji, title, defaultOpen = false, extra, children, headerPadding = 'py-2 px-3' }: GroupProps) {
+export function Group({ emoji, title, defaultOpen = false, extra, children, headerPadding = 'py-2 px-3', onToggle }: GroupProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const handleToggle = () => {
+    const next = !open;
+    setOpen(next);
+    onToggle?.(next);
+  };
   return (
     <div className="card shadow-sm glass-card overflow-hidden flex-shrink-0">
       <div className="card-header p-0 border-0 bg-transparent d-flex align-items-center justify-content-between flex-shrink-0">
         <button
           className={`btn btn-sm ${extra ? 'flex-shrink-0' : 'flex-grow-1'} text-start ${headerPadding} fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none text-uppercase small flex-shrink-0`}
-          onClick={() => setOpen(!open)}
+          onClick={handleToggle}
         >
           <span>{emoji} {title}</span>
           <span 

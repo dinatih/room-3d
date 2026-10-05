@@ -16,6 +16,7 @@ import { LANDING_STRIPS } from './LandingStrips';
 import { CHARACTERS, isCharacterVisibleInMode } from './walkerConfig';
 import { useSceneStore } from './store/useSceneStore';
 import { isAppIdle } from './idleState';
+import { Group } from './sidepanel/Group';
 
 export const SMALL_W_DESKTOP = 140;
 export const SMALL_W_MOBILE  = 115;
@@ -117,8 +118,13 @@ function drawMinimap(
   const cachedPlan = getCachedFloorPlan(W, H);
   ctx.drawImage(cachedPlan, 0, 0);
 
-  const R  = 5 * sc;
-  const BW = 8 * sc, BH = 4 * sc;
+  // ── Dimensions proportionnelles au monde réel (1 unité = 1 cm) ────────────
+  // Rayon d'une tête humaine vue du dessus : ~11 cm (diamètre ~22 cm)
+  const HEAD_RADIUS_WORLD = 11;
+  const rNpc = Math.max(2.5 * sc, HEAD_RADIUS_WORLD * S);
+  const R    = Math.max(3.2 * sc, HEAD_RADIUS_WORLD * S);
+  const BW   = Math.max(6 * sc, 38 * S); // Largeur d'épaules (~38 cm)
+  const BH   = Math.max(3 * sc, 18 * S); // Épaisseur torse (~18 cm)
 
   // ── Other characters (NPCs) icons ───────────────────────────────────────────
   const activeWalkerId = useSceneStore.getState().activeWalkerId;
@@ -128,9 +134,9 @@ function drawMinimap(
   const activeExtraIds = useSceneStore.getState().activeExtraIds;
   const activeMainIds = useSceneStore.getState().activeMainIds;
   ctx.save();
-  ctx.fillStyle   = 'rgba(0, 102, 255, 0.4)';
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-  ctx.lineWidth   = 0.6 * sc;
+  ctx.fillStyle   = 'rgba(37, 99, 235, 0.65)'; // Bleu franc et net
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.lineWidth   = Math.max(0.8, 0.6 * sc);
   
   CHARACTERS.forEach(char => {
     if (char.id !== activeWalkerId) {
@@ -143,7 +149,7 @@ function drawMinimap(
       ctx.save();
       ctx.translate(tx(x), tz(z));
       ctx.beginPath(); 
-      ctx.arc(0, 0, R * 0.7, 0, Math.PI * 2); 
+      ctx.arc(0, 0, rNpc, 0, Math.PI * 2); 
       ctx.fill(); 
       ctx.stroke();
       ctx.restore();
@@ -154,20 +160,21 @@ function drawMinimap(
   // ── Shiba Inu (Ushiro) ──────────────────────────────────────────────────────
   const shibaPos = cameraState.positions['shiba'];
   if (shibaPos) {
+    const rShiba = Math.max(2.2 * sc, 8 * S);
     ctx.save();
     ctx.translate(tx(shibaPos.x), tz(shibaPos.z));
     ctx.rotate(-shibaPos.yaw);
-    ctx.fillStyle = 'rgba(255, 153, 0, 0.8)'; // Orange
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.lineWidth = 1 * sc;
+    ctx.fillStyle = 'rgba(255, 153, 0, 0.85)'; // Orange
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.lineWidth = Math.max(0.8, 1 * sc);
     ctx.beginPath(); 
-    ctx.arc(0, 0, R * 0.8, 0, Math.PI * 2); 
+    ctx.arc(0, 0, rShiba, 0, Math.PI * 2); 
     ctx.fill(); 
     ctx.stroke();
     // Petit museau pour indiquer la direction
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(0, R * 0.8, R * 0.3, 0, Math.PI * 2);
+    ctx.arc(0, rShiba, rShiba * 0.35, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -182,19 +189,19 @@ function drawMinimap(
   // FOV arc — follows WALKER facing
   const V    = 50 * Math.PI / 180;
   const hFov = 2 * Math.atan(Math.tan(V / 2) * (window.innerWidth / window.innerHeight));
-  const fovR = 120 * S;
+  const fovR = Math.max(70 * S, 60 * sc);
   ctx.beginPath(); ctx.moveTo(0, 0);
   ctx.arc(0, 0, fovR, Math.PI / 2 - hFov / 2, Math.PI / 2 + hFov / 2);
   ctx.closePath();
-  ctx.fillStyle   = 'rgba(255,221,0,0.15)'; ctx.fill();
-  ctx.strokeStyle = 'rgba(255,221,0,0.40)'; ctx.lineWidth = 0.5 * sc; ctx.stroke();
+  ctx.fillStyle   = 'rgba(255,221,0,0.18)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,221,0,0.45)'; ctx.lineWidth = 0.5 * sc; ctx.stroke();
 
   // Body icon
   ctx.fillStyle   = '#d32f2f'; // Red Theme Accent instead of '#0066ff'
-  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-  ctx.lineWidth   = 0.8 * sc;
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth   = Math.max(0.8, 0.8 * sc);
   
-  // Body circle
+  // Body circle (head)
   ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   // Shoulder bar (indicates direction)
   ctx.beginPath(); ctx.rect(-BW / 2, R, BW, BH); ctx.fill(); ctx.stroke();
@@ -226,15 +233,22 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
   const isMobile = useIsMobile();
   const floatingCanvasRef = useRef<HTMLCanvasElement>(null);
   const expandedCanvasRef = useRef<HTMLCanvasElement>(null);
+  const zoomContainerRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+
+  // Contrôles de zoom et déplacement (Pan) pour la grande minimap
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const isPanningRef = useRef(false);
+  const startPanRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
   const smallW = isMobile ? SMALL_W_MOBILE : SMALL_W_DESKTOP;
   const smallH = Math.round(smallW * 1.35);
 
-  // Boucle de rendu pour la minimap compacte (flottante)
+  // Boucle de rendu pour la minimap compacte (flottante ou embedded)
   useEffect(() => {
-    if (isCollapsed || expanded) return;
+    if (!isOpen || expanded) return;
     const canvas = floatingCanvasRef.current;
     if (!canvas) return;
 
@@ -258,7 +272,7 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
     return () => {
       cancelAnimationFrame(rafId);
     };
-  }, [smallW, smallH, isCollapsed, expanded]);
+  }, [smallW, smallH, isOpen, expanded]);
 
   // Boucle de rendu pour la minimap agrandie (modal)
   useEffect(() => {
@@ -269,12 +283,10 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
     let currentExpW = 200;
 
     const resize = () => {
-      // Marge de sécurité verticale : header (30px), padding card (~40px), marges écran (~40px)
-      const chromeH = 75;
-      const availW = Math.min(window.innerWidth * 0.92, 700);
-      const availH = Math.max(140, window.innerHeight * 0.88 - chromeH);
+      const chromeH = 90;
+      const availW = Math.min(window.innerWidth * 0.92, 720);
+      const availH = Math.max(140, window.innerHeight * 0.86 - chromeH);
 
-      // Calcul proportionnel strict pour que la minimap s'affiche TOUJOURS EN ENTIER sans être coupée
       const fitW = Math.min(availW, availH / PLAN_ASPECT);
       const expW = Math.max(80, Math.round(fitW));
       const expH = Math.round(expW * PLAN_ASPECT);
@@ -307,6 +319,28 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
     };
   }, [expanded]);
 
+  // Zoom molette non-passif : empêche formellement le zoom global de la page du navigateur
+  useEffect(() => {
+    if (!expanded) return;
+    const el = zoomContainerRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const factor = e.deltaY < 0 ? 1.15 : 0.87;
+      setZoom(prev => {
+        const next = Math.min(5, Math.max(1, +(prev * factor).toFixed(2)));
+        if (next === 1) setPan({ x: 0, y: 0 });
+        return next;
+      });
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [expanded]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -315,58 +349,49 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
       }
       if (e.key === 'Escape' && expanded) {
         setExpanded(false);
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
       }
       if (e.key === '9' || e.code === 'Digit9' || e.code === 'Numpad9') {
-        setIsCollapsed(c => !c);
+        setIsOpen(c => !c);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [expanded]);
 
-  if (isCollapsed) {
-    if (embedded) {
-      return (
-        <div className="w-100">
-          <button
-            onClick={() => setIsCollapsed(false)}
-            className="btn btn-dark shadow-sm glass-card border-secondary text-white d-flex align-items-center justify-content-between rounded-3 px-2 py-1.5 w-100"
-            style={{ cursor: 'pointer', opacity: 0.95 }}
-            title="Afficher la minimap (Touche 8)"
-          >
-            <span style={{ fontSize: '11px', fontWeight: 600 }}>🗺️ Plan 2D [8]</span>
-            <span style={{ fontSize: '11px' }}>➕</span>
-          </button>
-        </div>
-      );
-    }
-    return (
-      <div
-        className="position-fixed"
-        style={{
-          bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom) + 12px)' : 20,
-          left: isMobile ? 12 : undefined,
-          right: isMobile ? undefined : 20,
-          zIndex: 90,
-          pointerEvents: 'auto',
-        }}
-      >
-        <button
-          onClick={() => setIsCollapsed(false)}
-          className="btn btn-dark shadow-sm glass-card border-secondary text-white d-flex align-items-center gap-1.5 rounded-3 px-2 py-1.5"
-          style={{ cursor: 'pointer', opacity: 0.95 }}
-          title="Afficher la minimap (Touche 8)"
-        >
-          <span style={{ fontSize: '11px', fontWeight: 600 }}>🗺️ Plan 2D [8]</span>
-          <span style={{ fontSize: '11px' }}>➕</span>
-        </button>
-      </div>
-    );
-  }
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (zoom <= 1) return;
+    isPanningRef.current = true;
+    startPanRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      panX: pan.x,
+      panY: pan.y,
+    };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isPanningRef.current) return;
+    const dx = e.clientX - startPanRef.current.x;
+    const dy = e.clientY - startPanRef.current.y;
+    setPan({
+      x: startPanRef.current.panX + dx,
+      y: startPanRef.current.panY + dy,
+    });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    isPanningRef.current = false;
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {}
+  };
 
   return (
     <>
-      {/* EXPANDED MODAL VIEW */}
+      {/* ── EXPANDED MODAL VIEW (Grande Minimap Zoomable) ───────────────────────── */}
       {expanded && (
         <div
           className="position-fixed d-flex align-items-center justify-content-center"
@@ -377,13 +402,17 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
             bottom: 0,
             width: '100vw',
             height: '100vh',
-            background: 'rgba(0, 0, 0, 0.65)',
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
+            background: 'rgba(0, 0, 0, 0.68)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             zIndex: 99999,
             pointerEvents: 'auto',
           }}
-          onClick={() => setExpanded(false)}
+          onClick={() => {
+            setExpanded(false);
+            setZoom(1);
+            setPan({ x: 0, y: 0 });
+          }}
         >
           <div 
             className="card glass-card shadow-lg p-2.5 rounded-3 border-0"
@@ -392,42 +421,118 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               maxWidth: '96vw',
               maxHeight: '94vh',
               pointerEvents: 'auto',
-              background: 'rgba(255, 255, 255, 0.92)',
+              background: 'rgba(255, 255, 255, 0.94)',
               boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
               display: 'flex',
               flexDirection: 'column',
             }}
           >
-            <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2">
-              <span className="fw-bold text-dark text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.06em' }}>
-                📍 Plan 2D de la pièce
-              </span>
-              <button 
-                type="button" 
-                className="btn-close" 
-                aria-label="Close" 
-                onClick={() => setExpanded(false)}
-              />
+            {/* Header avec contrôles de zoom et fermeture */}
+            <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+              <div className="d-flex align-items-center gap-2">
+                <span className="fw-bold text-dark text-uppercase d-flex align-items-center gap-1.5" style={{ fontSize: '11px', letterSpacing: '0.06em' }}>
+                  <span>🗺️</span>
+                  <span>Plan 2D de la pièce</span>
+                </span>
+                {zoom > 1 && (
+                  <span className="badge bg-primary bg-opacity-75 text-white fw-semibold small">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                )}
+              </div>
+
+              <div className="d-flex align-items-center gap-1.5">
+                <div className="btn-group btn-group-sm" role="group">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary py-0 px-2 fw-bold text-dark"
+                    style={{ height: '24px', lineHeight: '22px' }}
+                    onClick={() => setZoom(z => {
+                      const next = Math.max(1, +(z - 0.25).toFixed(2));
+                      if (next === 1) setPan({ x: 0, y: 0 });
+                      return next;
+                    })}
+                    disabled={zoom <= 1}
+                    title="Dézoomer"
+                  >
+                    −
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary py-0 px-2 fw-bold text-dark"
+                    style={{ height: '24px', lineHeight: '22px' }}
+                    onClick={() => setZoom(z => Math.min(5, +(z + 0.25).toFixed(2)))}
+                    disabled={zoom >= 5}
+                    title="Zoomer"
+                  >
+                    +
+                  </button>
+                </div>
+                {zoom > 1 && (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-danger py-0 px-1.5 small fw-semibold"
+                    style={{ height: '24px', lineHeight: '22px' }}
+                    onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+                    title="Réinitialiser le zoom"
+                  >
+                    ↺ 100%
+                  </button>
+                )}
+                <button 
+                  type="button" 
+                  className="btn-close ms-2" 
+                  aria-label="Close" 
+                  onClick={() => {
+                    setExpanded(false);
+                    setZoom(1);
+                    setPan({ x: 0, y: 0 });
+                  }}
+                />
+              </div>
             </div>
-            <div className="position-relative d-flex justify-content-center overflow-hidden rounded-2">
+
+            {/* Conteneur de zoom et pan */}
+            <div 
+              ref={zoomContainerRef}
+              className="position-relative d-flex align-items-center justify-content-center overflow-hidden rounded-2 user-select-none border"
+              style={{
+                background: 'rgba(0, 0, 0, 0.04)',
+                cursor: zoom > 1 ? (isPanningRef.current ? 'grabbing' : 'grab') : 'default',
+                touchAction: 'none',
+              }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onDoubleClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+              title={zoom > 1 ? "Glisser pour déplacer le plan · Double-clic pour réinitialiser" : "Molette pour zoomer sur le plan"}
+            >
               <canvas 
                 ref={expandedCanvasRef} 
                 className="rounded-2 shadow-sm" 
-                style={{ display: 'block', background: 'transparent' }} 
+                style={{
+                  display: 'block',
+                  background: 'transparent',
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                  transformOrigin: 'center center',
+                  transition: isPanningRef.current ? 'none' : 'transform 0.1s ease-out',
+                }} 
               />
+            </div>
+
+            {/* Aide et raccourcis */}
+            <div className="text-center mt-2 text-muted user-select-none" style={{ fontSize: '10px' }}>
+              💡 Molette pour zoomer · Glisser pour déplacer · Double-clic pour réinitialiser · Échap pour fermer
             </div>
           </div>
         </div>
       )}
 
-      {/* MINIMAP CARD: Embedded dans le RightSidePanel sur desktop, ou flottant (Bottom-Left sur mobile / Bottom-Right) */}
+      {/* ── MINIMAP CARD HARMONISÉE (Panel Header comme Perf, clic pour agrandir) ── */}
       {!expanded && (
         <div
-          className={`${embedded ? 'position-relative' : 'position-fixed'} glass-card shadow-sm p-1 rounded-3 overflow-hidden`}
-          style={embedded ? {
-            width: smallW + 8,
-            pointerEvents: 'auto',
-          } : {
+          className={`${embedded ? 'w-100' : 'position-fixed'} ${!embedded ? 'shadow-sm' : ''}`}
+          style={embedded ? undefined : {
             bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 0.75rem)' : 20,
             left: isMobile ? 12 : undefined,
             right: isMobile ? undefined : 20,
@@ -436,57 +541,37 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
             pointerEvents: 'auto',
           }}
         >
-          <canvas
-            ref={floatingCanvasRef}
-            className="rounded-2"
-            style={{
-              display: 'block',
-              width: `${smallW}px`,
-              height: `${smallH}px`,
-              background: 'transparent',
-              opacity: 0.95,
-              cursor: 'pointer',
-            }}
-            onClick={() => setExpanded(true)}
-          />
-          <button
-            onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
-            title="Agrandir le plan"
-            className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center border-secondary shadow-sm"
-            style={{
-              top: 6,
-              left: 6,
-              width: isMobile ? 24 : 28,
-              height: isMobile ? 24 : 28,
-              padding: 0,
-              fontSize: isMobile ? '11px' : '13px',
-              opacity: 0.95,
-              borderRadius: '6px',
-              zIndex: 10,
-              cursor: 'pointer',
-            }}
+          <Group 
+            emoji="🗺️" 
+            title="Plan 2D" 
+            defaultOpen 
+            headerPadding="py-1.5 px-2"
+            onToggle={(open) => setIsOpen(open)}
           >
-            ⛶
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); setIsCollapsed(true); }}
-            title="Réduire"
-            className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center border-secondary shadow-sm"
-            style={{
-              top: 6,
-              right: 6,
-              width: isMobile ? 24 : 28,
-              height: isMobile ? 24 : 28,
-              padding: 0,
-              fontSize: isMobile ? '11px' : '13px',
-              opacity: 0.95,
-              borderRadius: '6px',
-              zIndex: 10,
-              cursor: 'pointer',
-            }}
-          >
-            ➖
-          </button>
+            <div
+              className="d-flex justify-content-center p-1 bg-transparent"
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                setExpanded(true);
+                setZoom(1);
+                setPan({ x: 0, y: 0 });
+              }}
+              title="Cliquer pour ouvrir le plan en grand"
+            >
+              <canvas
+                ref={floatingCanvasRef}
+                className="rounded-2"
+                style={{
+                  display: 'block',
+                  width: `${smallW}px`,
+                  height: `${smallH}px`,
+                  background: 'transparent',
+                  opacity: 0.95,
+                  transition: 'transform 0.15s ease',
+                }}
+              />
+            </div>
+          </Group>
         </div>
       )}
     </>
