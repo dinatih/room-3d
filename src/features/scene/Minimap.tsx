@@ -404,9 +404,7 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
             bottom: 0,
             width: '100vw',
             height: '100vh',
-            background: 'rgba(0, 0, 0, 0.68)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            background: 'transparent',
             zIndex: 99999,
             pointerEvents: 'auto',
           }}
@@ -417,16 +415,17 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
           }}
         >
           <div 
-            className="card glass-card shadow-lg rounded-4 border-0 overflow-hidden"
+            className="card glass-card shadow-lg rounded-4 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
             style={{
               maxWidth: '96vw',
               maxHeight: '94vh',
               pointerEvents: 'auto',
-              background: 'rgba(255, 255, 255, 0.85)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+              background: 'rgba(255, 255, 255, 0.32)',
+              backdropFilter: 'blur(5px)',
+              WebkitBackdropFilter: 'blur(5px)',
+              border: '1px solid rgba(255, 255, 255, 0.55)',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
               display: 'flex',
               flexDirection: 'column',
               position: 'relative',
