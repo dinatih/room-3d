@@ -87,10 +87,8 @@ function drawMinimap(
   const tx = (x: number) => offX + (x - PLAN_X_MIN) * S;
   const tz = (z: number) => offZ + (z - PLAN_Z_MIN) * S;
 
-  // Fond du canvas (espace extérieur entourant le plan de l'appartement)
+  // Fond du canvas (totalement transparent pour préserver le glassmorphism)
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = 'rgba(238, 242, 246, 0.85)';
-  ctx.fillRect(0, 0, W, H);
 
   // ── Pistes d'atterrissage (seulement si activées) ─────────────────────────
   if (cameraState.landingStripsVisible) {
@@ -419,13 +417,15 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
           }}
         >
           <div 
-            className="card glass-card shadow-lg p-2.5 rounded-3 border-0"
+            className="card glass-card shadow-lg rounded-4 border-0 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
             style={{
               maxWidth: '96vw',
               maxHeight: '94vh',
               pointerEvents: 'auto',
-              background: 'rgba(255, 255, 255, 0.94)',
+              background: 'rgba(255, 255, 255, 0.85)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
               boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
               display: 'flex',
               flexDirection: 'column',
@@ -433,8 +433,8 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               zIndex: 100000,
             }}
           >
-            {/* Header avec contrôles de zoom et fermeture */}
-            <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            {/* Header avec espacements soignés */}
+            <div className="card-header border-0 bg-transparent px-3 pt-3 pb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
               <div className="d-flex align-items-center gap-2">
                 <span className="fw-bold text-dark text-uppercase d-flex align-items-center gap-1.5" style={{ fontSize: '11px', letterSpacing: '0.06em' }}>
                   <span>🗺️</span>
@@ -498,16 +498,15 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               </div>
             </div>
 
-            {/* Conteneur de zoom et pan */}
+            {/* Conteneur de zoom et pan avec marges équilibrées et fond transparent */}
             <div 
               ref={zoomContainerRef}
-              className="position-relative d-flex align-items-center justify-content-center overflow-hidden rounded-2 user-select-none border"
+              className="position-relative d-flex align-items-center justify-content-center overflow-hidden rounded-3 user-select-none mx-3 my-1"
               style={{
-                background: 'rgba(0, 0, 0, 0.04)',
                 cursor: zoom > 1 ? (isPanningRef.current ? 'grabbing' : 'grab') : 'default',
                 touchAction: 'none',
-                maxWidth: '100%',
-                maxHeight: 'calc(94vh - 100px)',
+                maxWidth: 'calc(100% - 2rem)',
+                maxHeight: 'calc(94vh - 120px)',
               }}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
@@ -517,7 +516,7 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
             >
               <canvas 
                 ref={expandedCanvasRef} 
-                className="rounded-2 shadow-sm" 
+                className="rounded-3" 
                 style={{
                   display: 'block',
                   background: 'transparent',
@@ -528,8 +527,8 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               />
             </div>
 
-            {/* Aide et raccourcis */}
-            <div className="text-center mt-2 text-muted user-select-none" style={{ fontSize: '10px' }}>
+            {/* Footer avec espacement harmonieux */}
+            <div className="card-footer border-0 bg-transparent text-center px-3 pt-2 pb-3 text-muted user-select-none" style={{ fontSize: '10px' }}>
               💡 Molette pour zoomer · Glisser pour déplacer · Double-clic pour réinitialiser · Échap pour fermer
             </div>
           </div>
