@@ -66,7 +66,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
   const logAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState(180);
+  const [savedHeight, setSavedHeight] = useState(180);
 
   // Écoute des CustomEvents 'app-log'
   useEffect(() => {
@@ -106,12 +106,12 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
     e.preventDefault();
     e.stopPropagation();
     const startY = e.clientY;
-    const startH = containerRef.current?.offsetHeight ?? height;
+    const startH = containerRef.current?.offsetHeight ?? savedHeight;
 
     const onPointerMove = (ev: PointerEvent) => {
       const maxAllowed = isMobile ? window.innerHeight * 0.5 : window.innerHeight * 0.75;
       const newH = Math.max(60, Math.min(maxAllowed, startH - (ev.clientY - startY)));
-      setHeight(newH);
+      setSavedHeight(newH);
     };
 
     const onPointerUp = () => {
@@ -125,7 +125,6 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
   if (hidden) return null;
 
-  // Contrôles passés en "extra" au Group — filtre et pause visibles quand déplié
   const consoleControls = (
     <div className="d-flex align-items-center gap-1">
       <select
@@ -197,13 +196,13 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   return (
     <div
       ref={containerRef}
-      className={`position-fixed ui-panel-bottom d-flex flex-column overflow-hidden ${hideUI ? 'ui-hidden' : ''}`}
+      className={`app-console position-fixed ui-panel-bottom d-flex flex-column overflow-hidden ${hideUI ? 'ui-hidden' : ''}`}
       style={{
         bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' : 16,
         right: isMobile ? 8 : 16,
         left: open ? (isMobile ? 8 : 288) : 'auto',
         width: open ? undefined : 'auto',
-        height: `${height}px`,
+        height: open ? `${savedHeight}px` : 'auto',
         maxHeight: isMobile ? '50vh' : '75vh',
         zIndex: 100,
         fontSize: '11px',

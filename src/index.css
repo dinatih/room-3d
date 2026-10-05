@@ -276,6 +276,16 @@ button, input, select, textarea {
   transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* AppConsole : chaîne flex scrollable dans un conteneur à hauteur fixe */
+.app-console .card {
+  min-height: 0 !important;
+}
+.app-console .card-body {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
 .ui-fade-overlay {
   transition: opacity 0.3s ease;
   will-change: opacity;
