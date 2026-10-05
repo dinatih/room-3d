@@ -60,17 +60,19 @@ function makeMannequinActions(loc: string): Record<string, ActionDef> {
   };
 }
 
-function makePositionAction(key: string): ActionDef {
+function makePositionAction(key: string): Record<string, ActionDef> {
   return {
-    btnLabel: () => {
-      const p = positionState[key];
-      return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position';
+    [key]: {
+      btnLabel: () => {
+        const p = positionState[key];
+        return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position';
+      },
+      toggleKey: key,
     },
-    toggleKey: key,
   };
 }
 
-const MANNEQUIN_ACTIONS = {
+const MANNEQUIN_ACTIONS: Record<string, ActionDef> = {
   ...makeMannequinActions('kallax-nw'),
   ...makeMannequinActions('kallax-ne'),
   ...makeMannequinActions('meubleT'),
@@ -78,7 +80,7 @@ const MANNEQUIN_ACTIONS = {
   ...makeMannequinActions('lamp'),
 };
 
-const POSITION_ACTIONS = {
+const POSITION_ACTIONS: Record<string, ActionDef> = {
   ...makePositionAction('desk1-position'),
   ...makePositionAction('desk2-position'),
   ...makePositionAction('smorkull-position'),
@@ -86,7 +88,7 @@ const POSITION_ACTIONS = {
   ...makePositionAction('raskog-large-position'),
 };
 
-const ACTIONS = {
+const ACTIONS: Record<string, ActionDef> = {
   ...MANNEQUIN_ACTIONS,
   ...POSITION_ACTIONS,
 
@@ -155,8 +157,7 @@ const ACTIONS = {
 
 // Helper to resolve action definition (supports dynamic actions like select-walker-*)
 function getActionDef(actionId: string): ActionDef | undefined {
-  const actions = ACTIONS as unknown as Record<string, ActionDef>;
-  if (actions[actionId]) return actions[actionId];
+  if (ACTIONS[actionId]) return ACTIONS[actionId];
   if (actionId.startsWith('select-walker-')) {
     return {
       btnLabel: '🎯 Définir comme personnage actif',
