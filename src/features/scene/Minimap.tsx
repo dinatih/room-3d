@@ -67,6 +67,8 @@ const ponytailNodes: HairNode[] = [
   { x: 0, z: 0, vx: 0, vz: 0 },
 ];
 let ponytailInitialized = false;
+let lastWalkerMotion = { x: 0, z: 0, yaw: 0, time: 0 };
+let ponytailLift = 0; // 0 = au repos (tresse verticale le long du dos), 1 = déployée à pleine vitesse
 
 function getCachedFloorPlan(w: number, h: number): HTMLCanvasElement {
   const key = `${w}x${h}`;
@@ -177,11 +179,17 @@ function drawMinimap(
   const shibaPos = cameraState.positions['shiba'];
   if (shibaPos) {
     const rShiba = Math.max(2.2 * sc, 8 * S);
+    const rawX = tx(shibaPos.x);
+    const rawZ = tz(shibaPos.z);
+    const px = Math.max(rShiba + 2, Math.min(W - rShiba - 2, rawX));
+    const pz = Math.max(rShiba + 2, Math.min(H - rShiba - 2, rawZ));
+    const isOffscreen = rawX < rShiba || rawX > W - rShiba || rawZ < rShiba || rawZ > H - rShiba;
+
     ctx.save();
-    ctx.translate(tx(shibaPos.x), tz(shibaPos.z));
+    ctx.translate(px, pz);
     ctx.rotate(-shibaPos.yaw);
     ctx.fillStyle = 'rgba(255, 153, 0, 0.85)'; // Orange
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.strokeStyle = isOffscreen ? 'rgba(234, 88, 12, 0.9)' : 'rgba(255, 255, 255, 0.7)';
     ctx.lineWidth = Math.max(0.8, 1 * sc);
     ctx.beginPath(); 
     ctx.arc(0, 0, rShiba, 0, Math.PI * 2); 
@@ -199,13 +207,19 @@ function drawMinimap(
   const robinPos = cameraState.positions['robin'];
   if (robinPos) {
     const rBird = Math.max(1.8 * sc, 5.5 * S);
+    const rawX = tx(robinPos.x);
+    const rawZ = tz(robinPos.z);
+    const px = Math.max(rBird + 2, Math.min(W - rBird - 2, rawX));
+    const pz = Math.max(rBird + 2, Math.min(H - rBird - 2, rawZ));
+    const isOffscreen = rawX < rBird || rawX > W - rBird || rawZ < rBird || rawZ > H - rBird;
+
     ctx.save();
-    ctx.translate(tx(robinPos.x), tz(robinPos.z));
+    ctx.translate(px, pz);
     ctx.rotate(-robinPos.yaw);
 
     // Corps / ailes (brun chaud)
     ctx.fillStyle = '#b45309';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.strokeStyle = isOffscreen ? 'rgba(234, 88, 12, 0.9)' : 'rgba(255, 255, 255, 0.8)';
     ctx.lineWidth = Math.max(0.6, 0.7 * sc);
     ctx.beginPath();
     ctx.ellipse(0, 0, rBird * 1.25, rBird * 0.85, 0, 0, Math.PI * 2);
@@ -258,13 +272,44 @@ function drawMinimap(
   ctx.strokeStyle = 'rgba(255,221,0,0.45)'; ctx.lineWidth = 0.5 * sc; ctx.stroke();
   ctx.restore();
 
-  // 2. Simulation physique & rendu de la queue de cheval de Lara (Inertie & Mouvement)
+  // 2. Simulation physique & rendu de la queue de cheval de Lara (Inertie, Allongement & Mouvement)
   const facingX = Math.sin(w.yaw);
   const facingZ = Math.cos(w.yaw);
   const attachX = w.x - facingX * (HEAD_RADIUS_WORLD * 0.75);
   const attachZ = w.z - facingZ * (HEAD_RADIUS_WORLD * 0.75);
 
-  const segLengths = [9, 11, 13]; // Longueur des 3 segments (~33 cm)
+  const now = performance.now();
+  const dt = lastWalkerMotion.time ? Math.min(0.1, Math.max(0.005, (now - lastWalkerMotion.time) / 1000)) : 0.016;
+
+  // Détection dynamique de la vitesse de translation et de rotation
+  const dX = w.x - lastWalkerMotion.x;
+  const dZ = w.z - lastWalkerMotion.z;
+  const linSpeed = lastWalkerMotion.time ? (Math.hypot(dX, dZ) / dt) : 0;
+  
+  let dYaw = w.yaw - lastWalkerMotion.yaw;
+  while (dYaw > Math.PI) dYaw -= Math.PI * 2;
+  while (dYaw < -Math.PI) dYaw += Math.PI * 2;
+  const angSpeed = lastWalkerMotion.time ? (Math.abs(dYaw) / dt) : 0;
+
+  lastWalkerMotion.x = w.x;
+  lastWalkerMotion.z = w.z;
+  lastWalkerMotion.yaw = w.yaw;
+  lastWalkerMotion.time = now;
+
+  // Calcul du facteur de portance / déploiement (0 = repos le long du dos, 1 = pleine vitesse en vol horizontal)
+  const isMoving = cameraState.isWalking || cameraState.isMoving || linSpeed > 18 || angSpeed > 1.0;
+  const targetLift = isMoving ? Math.min(1, Math.max(0.35, linSpeed / 130 + angSpeed * 0.22)) : 0;
+
+  // Déploiement rapide lors de la marche/course, retombée souple et progressive à l'arrêt
+  ponytailLift += (targetLift - ponytailLift) * (targetLift > ponytailLift ? Math.min(1, 10 * dt) : Math.min(1, 5 * dt));
+
+  // Segments courts au repos (~3 cm au total = simple nœud/début de tresse le long du dos),
+  // et s'allongeant progressivement avec la vitesse jusqu'à pleine longueur (~33 cm)
+  const segLengths = [
+    2.0 + 7.5 * ponytailLift,  // ~2 cm -> ~9.5 cm
+    1.2 + 9.8 * ponytailLift,  // ~1.2 cm -> ~11 cm
+    0.6 + 11.9 * ponytailLift, // ~0.6 cm -> ~12.5 cm
+  ];
 
   if (!ponytailInitialized) {
     let curX = attachX;
@@ -309,9 +354,10 @@ function drawMinimap(
   const p2x = tx(ponytailNodes[1].x), p2z = tz(ponytailNodes[1].z);
   const p3x = tx(ponytailNodes[2].x), p3z = tz(ponytailNodes[2].z);
 
-  const w1 = Math.max(2.2 * sc, 7.5 * S);
-  const w2 = Math.max(1.6 * sc, 5.5 * S);
-  const w3 = Math.max(1.0 * sc, 3.5 * S);
+  const wScale = 0.65 + 0.35 * ponytailLift;
+  const w1 = Math.max(2.0 * sc, 7.0 * S) * wScale;
+  const w2 = Math.max(1.5 * sc, 5.0 * S) * wScale;
+  const w3 = Math.max(0.9 * sc, 3.0 * S) * wScale;
 
   ctx.save();
   ctx.lineCap = 'round';
