@@ -124,6 +124,7 @@ function ShadowWarmup() {
 }
 
 const WARMUP_ANIM_PATHS = [
+  resolveAnimationPath('idle'),
   'animations/combat/anim_pistol_kneel_to_stand.glb',
   'animations/locomotion/anim_falling.glb',
   'animations/poses_idles/anim_falling_idle.glb',
