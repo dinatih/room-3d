@@ -19,7 +19,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 
 const GLB        = 'items/metod10205534/Metod10205534.glb';
-const DOOR_GLB   = 'items/ringhult60327137/Ringhult60327137.glb';
+const DOOR_GLB   = 'items/ringhult60327137/Ringhult60327137-40x60.glb';
 const HANDLE_GLB = 'items/kallror50357002/Kallror50357002.glb';
 
 function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hoverLabel, hoverActionId }:
