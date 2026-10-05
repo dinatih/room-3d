@@ -30,6 +30,7 @@ export function ViewsSection({
   const setMeasurementActive = useSceneStore(state => state.setMeasurementActive);
   const cameraMode = useSceneStore(state => state.cameraMode);
   const cameraProjection = useSceneStore(state => state.cameraProjection);
+  const activeCameraView = useSceneStore(state => state.activeCameraView);
   const toggleCameraProjection = useSceneStore(state => state.toggleCameraProjection);
   const fpvRealisticEyes = useSceneStore(state => state.layers.fpvRealisticEyes ?? true);
   const fpvStabilization = useSceneStore(state => state.layers.fpvStabilization ?? true);
@@ -130,17 +131,22 @@ export function ViewsSection({
           📷 Angles Caméra
         </div>
         <div className="row g-1">
-          {CAMERA_PRESETS.map(preset => (
-            <div key={preset.key} className={preset.fullWidth ? 'col-12' : 'col-6'}>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary w-100 py-1 px-2 text-truncate small"
-                onClick={() => dispatchView(preset.key)}
-              >
-                {preset.label}
-              </button>
-            </div>
-          ))}
+          {CAMERA_PRESETS.map(preset => {
+            const isActive = (cameraMode === 'orbit' && activeCameraView === preset.key) || (preset.key === 'top3d' && cameraMode === 'top');
+            return (
+              <div key={preset.key} className={preset.fullWidth ? 'col-12' : 'col-6'}>
+                <button
+                  type="button"
+                  className={`btn btn-sm w-100 py-1 px-2 text-truncate small ${
+                    isActive ? 'btn-info fw-bold text-dark' : 'btn-outline-secondary'
+                  }`}
+                  onClick={() => dispatchView(preset.key)}
+                >
+                  {preset.label}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 

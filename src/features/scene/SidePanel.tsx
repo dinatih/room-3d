@@ -228,6 +228,13 @@ export function SidePanel({
   const cameraProjection = useSceneStore(state => state.cameraProjection);
   const toggleCameraProjection = useSceneStore(state => state.toggleCameraProjection);
   const cameraMode = useSceneStore(state => state.cameraMode);
+  const activeCameraView = useSceneStore(state => state.activeCameraView);
+
+  const isIsoNW = cameraMode === 'orbit' && activeCameraView === 'iso-nw';
+  const isIsoNE = cameraMode === 'orbit' && activeCameraView === 'iso-ne';
+  const isLeft  = cameraMode === 'orbit' && activeCameraView === 'left';
+  const isRight = cameraMode === 'orbit' && activeCameraView === 'right';
+  const isTop   = cameraMode === 'top';
 
   const viewsHeaderButtons = (
     <div className="d-flex align-items-center gap-1 pe-1" onClick={e => e.stopPropagation()}>
@@ -253,8 +260,8 @@ export function SidePanel({
       <div className="btn-group btn-group-sm" role="group">
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary py-0 px-1 text-dark small"
-          style={{ height: '22px', background: 'rgba(255, 255, 255, 0.65)' }}
+          className={`btn btn-sm py-0 px-1 text-dark small ${isIsoNW ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
+          style={{ height: '22px', background: isIsoNW ? undefined : 'rgba(255, 255, 255, 0.65)' }}
           title="Iso Nord-Ouest"
           onClick={(e) => {
             e.stopPropagation();
@@ -265,8 +272,8 @@ export function SidePanel({
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary py-0 px-1 text-dark small"
-          style={{ height: '22px', background: 'rgba(255, 255, 255, 0.65)' }}
+          className={`btn btn-sm py-0 px-1 text-dark small ${isIsoNE ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
+          style={{ height: '22px', background: isIsoNE ? undefined : 'rgba(255, 255, 255, 0.65)' }}
           title="Iso Nord-Est"
           onClick={(e) => {
             e.stopPropagation();
@@ -277,8 +284,8 @@ export function SidePanel({
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary py-0 px-1 text-dark small"
-          style={{ height: '22px', background: 'rgba(255, 255, 255, 0.65)' }}
+          className={`btn btn-sm py-0 px-1 text-dark small ${isLeft ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
+          style={{ height: '22px', background: isLeft ? undefined : 'rgba(255, 255, 255, 0.65)' }}
           title="Vue Gauche"
           onClick={(e) => {
             e.stopPropagation();
@@ -289,8 +296,8 @@ export function SidePanel({
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary py-0 px-1 text-dark small"
-          style={{ height: '22px', background: 'rgba(255, 255, 255, 0.65)' }}
+          className={`btn btn-sm py-0 px-1 text-dark small ${isRight ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
+          style={{ height: '22px', background: isRight ? undefined : 'rgba(255, 255, 255, 0.65)' }}
           title="Vue Droite"
           onClick={(e) => {
             e.stopPropagation();
@@ -301,8 +308,8 @@ export function SidePanel({
         </button>
         <button
           type="button"
-          className={`btn btn-sm py-0 px-1 text-dark small ${cameraMode === 'top' ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
-          style={{ height: '22px', background: cameraMode === 'top' ? undefined : 'rgba(255, 255, 255, 0.65)' }}
+          className={`btn btn-sm py-0 px-1 text-dark small ${isTop ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
+          style={{ height: '22px', background: isTop ? undefined : 'rgba(255, 255, 255, 0.65)' }}
           title="Vue 2D du Dessus (Touche T)"
           onClick={(e) => {
             e.stopPropagation();

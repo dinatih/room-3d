@@ -53,6 +53,18 @@ import { parseUrlLayerOverrides } from './store/layerUrlParams';
 const FPV_DEFAULT_FOV = 100;
 const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
 
+const DEFAULT_MOUSE_BUTTONS = {
+  LEFT: THREE.MOUSE.ROTATE,
+  MIDDLE: THREE.MOUSE.DOLLY,
+  RIGHT: THREE.MOUSE.PAN,
+};
+
+const TOP_MOUSE_BUTTONS = {
+  LEFT: THREE.MOUSE.PAN,
+  MIDDLE: THREE.MOUSE.DOLLY,
+  RIGHT: THREE.MOUSE.ROTATE,
+};
+
 const _tmpEyeTargetVec = new THREE.Vector3();
 const _tmpEyeLookVec = new THREE.Vector3();
 const _tmpEyeUpVec = new THREE.Vector3();
@@ -522,6 +534,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if ((ctrl as any).sphericalDelta) (ctrl as any).sphericalDelta.set(0, 0, 0);
     if ((ctrl as any).panOffset) (ctrl as any).panOffset.set(0, 0, 0);
     (ctrl as any).scale = 1;
+    ctrl.mouseButtons = DEFAULT_MOUSE_BUTTONS;
+    ctrl.enableRotate = true;
+    ctrl.enablePan = true;
+    ctrl.enableZoom = true;
     ctrl.update();
 
     orbitTypeRef.current = targetProj;
@@ -531,6 +547,21 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     appLog('system', isOrtho ? '🎥 Mode Orbit 3D (Isométrique Ortho)' : '🎥 Mode Orbit 3D (Perspective)');
     invalidate();
   }, [camera, invalidate, set]);
+
+  // Réinitialiser la vue preset active dès que l'utilisateur commence à manipuler la caméra manuellement
+  useEffect(() => {
+    const ctrl = ctrlRef.current;
+    if (!ctrl) return;
+    const onStart = () => {
+      if (modeRef.current === 'orbit' && useSceneStore.getState().activeCameraView) {
+        useSceneStore.getState().setActiveCameraView(null);
+      }
+    };
+    ctrl.addEventListener('start', onStart);
+    return () => {
+      ctrl.removeEventListener('start', onStart);
+    };
+  }, []);
 
   const toggleOrbitType = useCallback((
     targetType?: 'persp' | 'ortho',
@@ -604,6 +635,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const targetX = follow ? cameraState.walkerX : CX;
     const targetZ = follow ? cameraState.walkerZ : CZ;
     applyTopCamera(targetX, targetZ, useSceneStore.getState().cameraProjection);
+    useSceneStore.getState().setActiveCameraView('top');
     changeMode('top');
     invalidate();
   }, [applyTopCamera, camera.position, changeMode, exitWalkMode, invalidate]);
@@ -621,9 +653,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (ctrlRef.current) {
         ctrlRef.current.object = activeCam;
         ctrlRef.current.target.copy(savedPerspTarget.current);
+        ctrlRef.current.mouseButtons = DEFAULT_MOUSE_BUTTONS;
+        ctrlRef.current.enableRotate = true;
+        ctrlRef.current.enablePan = true;
+        ctrlRef.current.enableZoom = true;
         ctrlRef.current.update();
       }
     }
+    useSceneStore.getState().setActiveCameraView(null);
     changeMode('orbit');
     appLog('system', proj === 'ortho' ? '🎥 Mode Orbit 3D (Isométrique Ortho)' : '🎥 Mode Orbit 3D (Perspective)');
     invalidate();
@@ -943,15 +980,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enablePan={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
         enableZoom={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'walk'}
-        mouseButtons={
-          mode === 'top'
-            ? {
-                LEFT: THREE.MOUSE.PAN,
-                MIDDLE: THREE.MOUSE.DOLLY,
-                RIGHT: THREE.MOUSE.ROTATE,
-              }
-            : undefined
-        }
+        mouseButtons={mode === 'top' ? TOP_MOUSE_BUTTONS : DEFAULT_MOUSE_BUTTONS}
       />
     </>
   );

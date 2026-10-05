@@ -307,7 +307,19 @@ export function useCameraShortcuts({
         zoom?: number;
       };
       if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
-      if (modeRef.current === 'top') exitTop();
+      if (modeRef.current === 'top') {
+        topFollowRef.current = false;
+        if (ctrlRef.current) {
+          ctrlRef.current.mouseButtons = {
+            LEFT: THREE.MOUSE.ROTATE,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.PAN,
+          };
+          ctrlRef.current.enableRotate = true;
+          ctrlRef.current.enablePan = true;
+          ctrlRef.current.enableZoom = true;
+        }
+      }
       if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
       const targetProj = projection ?? 'persp';
       toggleOrbitType?.(targetProj, { pos, target, zoom });

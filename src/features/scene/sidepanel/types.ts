@@ -33,10 +33,13 @@ export const VIEWS: Record<string, CameraViewPreset> = {
   'iso-sw':    { pos: [CX - ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
 };
 
+import { useSceneStore } from '../store/useSceneStore';
+
 export function dispatchView(key: string) {
   const v = VIEWS[key];
   if (!v) return;
-  document.dispatchEvent(new CustomEvent('camera-view', { detail: v }));
+  useSceneStore.getState().setActiveCameraView(key);
+  document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...v, key } }));
 }
 
 export function dispatchKey(key: string) {
