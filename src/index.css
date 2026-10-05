@@ -241,37 +241,37 @@ button, input, select, textarea {
 
 /* ── UI TOGGLE SLIDE ANIMATIONS (Afficher / Cacher UI) ── */
 .ui-panel-left {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
-  will-change: transform, opacity;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 .ui-panel-left.ui-hidden {
   transform: translateX(calc(-100% - 32px)) !important;
-  opacity: 0 !important;
   pointer-events: none !important;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ui-panel-right {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
-  will-change: transform, opacity;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 .ui-panel-right.ui-hidden {
   transform: translateX(calc(100% + 32px)) !important;
-  opacity: 0 !important;
   pointer-events: none !important;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ui-panel-bottom {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
-  will-change: transform, opacity;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 .ui-panel-bottom.ui-hidden {
   transform: translateY(calc(100% + 32px)) !important;
-  opacity: 0 !important;
   pointer-events: none !important;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ui-fade-overlay {
-  transition: opacity 0.25s ease;
+  transition: opacity 0.3s ease;
   will-change: opacity;
 }
 .ui-fade-overlay.ui-hidden {
