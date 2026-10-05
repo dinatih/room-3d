@@ -194,8 +194,6 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
         />
       </div>
 
-      <ViewControlBar inline />
-
       <div className="p-3">
         <h3 className="fw-bold mb-1 text-dark fs-5">{(item as any).name}</h3>
         <p className="text-muted small mb-2">

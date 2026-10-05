@@ -19,6 +19,7 @@ import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { AnimFrameController } from './AnimFrameController';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { CharacterSection } from '@features/scene/sidepanel/sections/CharacterSection';
+import { ViewControlBar } from '@features/scene/ViewControlBar';
 
 function disposePreviewScene(root: THREE.Object3D) {
   root.traverse((node: any) => {
@@ -199,7 +200,7 @@ function OrthoCameraControls({
   target = [0, 0, 0],
   boundsRadius = 50,
 }: {
-  mode: 'front' | 'side' | 'top';
+  mode: 'front' | 'back' | 'side' | 'right' | 'top' | 'bottom';
   target?: [number, number, number];
   boundsRadius?: number;
 }) {
@@ -209,26 +210,28 @@ function OrthoCameraControls({
   const camRef = useRef<THREE.OrthographicCamera>(null);
 
   const viewH = useMemo(() => {
-    return Math.max(80, (boundsRadius || 50) * 2.2); // Vue d'ensemble
+    return Math.max(80, (boundsRadius || 50) * 2.2);
   }, [boundsRadius]);
 
   const viewW = viewH * aspect;
 
   const camTarget: [number, number, number] = useMemo(() => {
-    if (mode === 'top') {
+    if (mode === 'top' || mode === 'bottom') {
       return [0, 0, 0];
     }
     return [0, target[1] || 85, 0];
   }, [mode, target]);
 
   const camPos: [number, number, number] = useMemo(() => {
-    if (mode === 'front') {
-      return [0, camTarget[1], 1000];
+    switch (mode) {
+      case 'front':  return [0, camTarget[1], 1000];
+      case 'back':   return [0, camTarget[1], -1000];
+      case 'side':   return [1000, camTarget[1], 0];
+      case 'right':  return [-1000, camTarget[1], 0];
+      case 'top':    return [0, 1000, 0];
+      case 'bottom': return [0, -1000, 0];
+      default:       return [0, camTarget[1], 1000];
     }
-    if (mode === 'side') {
-      return [1000, camTarget[1], 0];
-    }
-    return [0, 1000, 0];
   }, [mode, camTarget]);
 
   useLayoutEffect(() => {
@@ -241,6 +244,8 @@ function OrthoCameraControls({
       camRef.current.bottom = -viewH / 2;
       if (mode === 'top') {
         camRef.current.up.set(0, 0, -1);
+      } else if (mode === 'bottom') {
+        camRef.current.up.set(0, 0, 1);
       } else {
         camRef.current.up.set(0, 1, 0);
       }
@@ -286,7 +291,7 @@ function OrthoCameraControls({
   );
 }
 
-function GroundDatumLines({ mode }: { mode: 'front' | 'side' | 'top' }) {
+function GroundDatumLines({ mode }: { mode: 'front' | 'back' | 'side' | 'right' | 'top' | 'bottom' }) {
   const span = 150;
 
   if (mode === 'top') {
@@ -303,7 +308,7 @@ function GroundDatumLines({ mode }: { mode: 'front' | 'side' | 'top' }) {
     );
   }
 
-  const isSide = mode === 'side';
+  const isSide = mode === 'side' || mode === 'right';
 
   const linePoints = (y: number): [[number, number, number], [number, number, number]] => {
     if (isSide) {
@@ -541,8 +546,7 @@ export function InventoryPreview({
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [photoIdx, setPhotoIdx] = useState(0);
-  const [previewView, setPreviewView] = useState<'free' | 'front' | 'side' | 'top'>('free');
-  const [viewNonce, setViewNonce] = useState(0);
+  const [previewView, setPreviewView] = useState<'free' | 'front' | 'back' | 'side' | 'right' | 'top' | 'bottom'>('free');
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const layers = useSceneStore(state => state.layers);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
@@ -603,19 +607,15 @@ export function InventoryPreview({
       const detail = (e as CustomEvent).detail;
       if (!detail) return;
       const key = detail.key as string;
-      if (key === 'front' || key === 'back') {
-        setPreviewView('front');
-        setAutoRotate(false);
-      } else if (key === 'left' || key === 'right') {
-        setPreviewView('side');
-        setAutoRotate(false);
-      } else if (key === 'top' || key === 'bottom') {
-        setPreviewView('top');
+      if (key === 'front' || key === 'back' || key === 'left' || key === 'right' ||
+          key === 'top' || key === 'bottom') {
+        // Map left→side, right→right, rest stays the same
+        const mapped = key === 'left' ? 'side' : key;
+        setPreviewView(mapped as typeof previewView);
         setAutoRotate(false);
       } else {
         setPreviewView('free');
       }
-      setViewNonce(n => n + 1);
     };
     document.addEventListener('camera-view', onView);
     return () => document.removeEventListener('camera-view', onView);
@@ -759,7 +759,7 @@ export function InventoryPreview({
                 </>
               ) : (
                 <>
-                  <OrthoCameraControls key={viewNonce} mode={previewView} target={target} boundsRadius={boundsRadius} />
+                  <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
                   <GroundDatumLines mode={previewView} />
                 </>
               )}
@@ -951,7 +951,7 @@ export function InventoryPreview({
                 whiteSpace: 'nowrap'
               }}
             >
-              <span>📐 Vue Ortho : <strong>{previewView === 'front' ? 'Face' : previewView === 'side' ? 'Profil' : 'Dessus'}</strong></span>
+              <span>📐 Vue Ortho : <strong>{previewView === 'front' ? 'Face' : previewView === 'back' ? 'Arrière' : previewView === 'side' ? 'Profil Gauche' : previewView === 'right' ? 'Profil Droit' : previewView === 'top' ? 'Dessus' : 'Dessous'}</strong></span>
               {previewView === 'top' ? (
                 <>
                   <span style={{ color: '#00ff66', fontWeight: 'bold' }}>— Axe X (Bras)</span>
@@ -1192,6 +1192,7 @@ export function InventoryPreview({
         </>
       )}
     </div>
+    {item && <ViewControlBar inline />}
     {item && hasPhotos && (
       <div style={{ display: 'flex', overflowX: 'auto', gap: 6, padding: '8px', scrollbarWidth: 'thin', width: '100%', background: '#eaeaea' }}>
         {has3D && (
