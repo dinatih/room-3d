@@ -286,6 +286,18 @@ button, input, select, textarea {
   min-height: 0 !important;
   overflow: hidden !important;
 }
+.app-console .app-console-select {
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236c757d' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.35rem center !important;
+  background-size: 10px 8px !important;
+  padding-right: 1.4rem !important;
+}
+.app-console .app-console-select:focus {
+  box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--pnj-color, #6c757d) 25%, transparent) !important;
+}
 
 .ui-fade-overlay {
   transition: opacity 0.3s ease;

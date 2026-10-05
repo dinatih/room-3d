@@ -64,6 +64,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const [open, setOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
+  const [_cycleStep, setCycleStep] = useState(0); // 0=fermé, 1=ouvert, 2=ouvert+filtré
   const logAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [savedHeight, setSavedHeight] = useState(180);
@@ -88,12 +89,19 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
     }
   }, [logs, isPaused, filterBubbleOnly]);
 
-  // Raccourci clavier 'B' pour ouvrir/fermer
+  // Raccourci clavier 'B' : cycle ouvert → filtré → fermé
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
-      if (e.key === 'b' || e.key === 'B') setOpen(v => !v);
+      if (e.key === 'b' || e.key === 'B') {
+        setCycleStep(prev => {
+          const next = (prev + 1) % 3;
+          setOpen(next === 1 || next === 2);
+          setFilterBubbleOnly(next === 2);
+          return next;
+        });
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -136,11 +144,13 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
   if (hidden) return null;
 
+  const pnjColor = activeChar?.color ?? '#6c757d';
+
   const consoleControls = (
     <div className="d-flex align-items-center gap-1">
       <select
-        className="form-select form-select-sm py-0 px-2 bg-transparent text-dark border-secondary border-opacity-50 small flex-shrink-0"
-        style={{ fontSize: '11px', height: '22px', width: 'auto' }}
+        className="form-select form-select-sm py-0 px-2 bg-transparent small flex-shrink-0 app-console-select"
+        style={{ fontSize: '11px', height: '22px', width: 'auto', color: '#212529', borderColor: pnjColor, ['--pnj-color' as string]: pnjColor }}
         value={activeWalkerId}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
@@ -165,12 +175,15 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
             fontSize: '11px',
             height: '22px',
             ...(filterBubbleOnly
-              ? { backgroundColor: '#212529', color: '#fff', fontWeight: 700, boxShadow: '0 1px 2px rgba(0,0,0,.15)', border: 'none' }
+              ? { backgroundColor: pnjColor, color: '#fff', fontWeight: 700, boxShadow: '0 1px 2px rgba(0,0,0,.15)', border: 'none' }
               : { backgroundColor: 'transparent', color: '#6c757d', border: '1px solid rgba(108,117,125,.5)' }),
           }}
           onClick={(e) => {
             e.stopPropagation();
-            setFilterBubbleOnly(f => !f);
+            setFilterBubbleOnly(f => {
+              setCycleStep(f ? 1 : 2);
+              return !f;
+            });
           }}
           title={
             filterBubbleOnly
@@ -227,7 +240,15 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         extra={consoleControls}
         headerPadding="py-1 px-2"
         className="flex-grow-1"
-        onToggle={setOpen}
+        onToggle={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen) {
+            setCycleStep(0);
+            setFilterBubbleOnly(false);
+          } else {
+            setCycleStep(filterBubbleOnly ? 2 : 1);
+          }
+        }}
       >
         {/* Barre de redimensionnement */}
         <div
