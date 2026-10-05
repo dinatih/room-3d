@@ -285,20 +285,17 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
     let currentExpW = 200;
 
     const resize = () => {
-      const chromeH = 90;
-      const availW = Math.min(window.innerWidth * 0.94, 860);
-      const availH = Math.max(200, Math.min(window.innerHeight * 0.86 - chromeH, 720));
-
-      // Occupe toute la largeur disponible pour que les zones extérieures gauche/droite soient dans le canvas
-      const expW = Math.max(120, Math.round(availW));
-      const expH = Math.max(120, Math.round(availH));
-      currentExpW = expW;
+      const chromeH = 100;
+      // Ratio carré pour la minimap agrandie
+      const maxSide = Math.min(window.innerWidth * 0.88, window.innerHeight * 0.84 - chromeH, 620);
+      const squareSide = Math.max(220, Math.round(maxSide));
+      currentExpW = squareSide;
 
       const dpr = Math.max(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(expW * dpr);
-      canvas.height = Math.round(expH * dpr);
-      canvas.style.width = `${expW}px`;
-      canvas.style.height = `${expH}px`;
+      canvas.width = Math.round(squareSide * dpr);
+      canvas.height = Math.round(squareSide * dpr);
+      canvas.style.width = `${squareSide}px`;
+      canvas.style.height = `${squareSide}px`;
     };
 
     resize();
@@ -418,6 +415,7 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
             className="card glass-card shadow-lg rounded-4 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
             style={{
+              width: 'fit-content',
               maxWidth: '96vw',
               maxHeight: '94vh',
               pointerEvents: 'auto',
@@ -527,7 +525,7 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
             </div>
 
             {/* Footer avec espacement harmonieux */}
-            <div className="card-footer border-0 bg-transparent text-center px-3 pt-2 pb-3 text-muted user-select-none" style={{ fontSize: '10px' }}>
+            <div className="card-footer border-0 bg-transparent text-center px-3 pt-2 pb-3 text-muted user-select-none text-wrap" style={{ fontSize: '10px', maxWidth: '100%' }}>
               💡 Molette pour zoomer · Glisser pour déplacer · Double-clic pour réinitialiser · Échap pour fermer
             </div>
           </div>
