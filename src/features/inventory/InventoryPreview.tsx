@@ -542,6 +542,7 @@ export function InventoryPreview({
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [previewView, setPreviewView] = useState<'free' | 'front' | 'side' | 'top'>('free');
+  const [viewNonce, setViewNonce] = useState(0);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const layers = useSceneStore(state => state.layers);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
@@ -614,6 +615,7 @@ export function InventoryPreview({
       } else {
         setPreviewView('free');
       }
+      setViewNonce(n => n + 1);
     };
     document.addEventListener('camera-view', onView);
     return () => document.removeEventListener('camera-view', onView);
@@ -757,7 +759,7 @@ export function InventoryPreview({
                 </>
               ) : (
                 <>
-                  <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
+                  <OrthoCameraControls key={viewNonce} mode={previewView} target={target} boundsRadius={boundsRadius} />
                   <GroundDatumLines mode={previewView} />
                 </>
               )}
