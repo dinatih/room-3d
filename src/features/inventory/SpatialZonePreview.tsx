@@ -148,7 +148,7 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
             <ringGeometry args={[6, 8, 24]} />
             <meshBasicMaterial color="#ffffff" depthTest={false} />
           </mesh>
-          <Html position={[0, 10, 0]} center distanceFactor={180}>
+          <Html position={[0, 10, 0]} center transform={false} sprite>
             <div style={{
               background: 'rgba(15, 23, 42, 0.85)',
               color: '#ffffff',
@@ -178,7 +178,7 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
               <ringGeometry args={[7, 9, 24]} />
               <meshBasicMaterial color={color} depthTest={false} />
             </mesh>
-            <Html position={[0, 14, 0]} center distanceFactor={180}>
+            <Html position={[0, 14, 0]} center transform={false} sprite>
               <div style={{
                 background: 'rgba(15, 23, 42, 0.9)',
                 color: color,
