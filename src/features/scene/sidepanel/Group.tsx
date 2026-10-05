@@ -8,9 +8,10 @@ export interface GroupProps {
   children: React.ReactNode;
   headerPadding?: string;
   onToggle?: (open: boolean) => void;
+  className?: string;
 }
 
-export function Group({ emoji, title, defaultOpen = false, extra, children, headerPadding = 'py-2 px-3', onToggle }: GroupProps) {
+export function Group({ emoji, title, defaultOpen = false, extra, children, headerPadding = 'py-2 px-3', onToggle, className }: GroupProps) {
   const [open, setOpen] = useState(defaultOpen);
   const handleToggle = () => {
     const next = !open;
@@ -18,7 +19,7 @@ export function Group({ emoji, title, defaultOpen = false, extra, children, head
     onToggle?.(next);
   };
   return (
-    <div className="card shadow-sm glass-card overflow-hidden flex-shrink-0">
+    <div className={`card shadow-sm glass-card overflow-hidden flex-shrink-0${className ? ` ${className}` : ''}`}>
       <div className="card-header p-0 border-0 bg-transparent d-flex align-items-center justify-content-between flex-shrink-0">
         <button
           className={`btn btn-sm ${extra ? 'flex-shrink-0' : 'flex-grow-1'} text-start ${headerPadding} fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none text-uppercase small flex-shrink-0`}
