@@ -18,7 +18,7 @@ const WALK_HEAD_OFFSET = 10;
 const WALK_SPEED       = 2;
 
 function activeFollowH(): number {
-  const h = cameraState.walkerHeight;
+  const h = cameraState.characterHeight;
   return h + WALK_HEAD_OFFSET;
 }
 
@@ -114,8 +114,8 @@ export function ImmersiveMode() {
     async function enter() {
       active.current   = true;
       cameraState.isXR = true;
-      const startX = Number.isFinite(cameraState.walkerX) ? cameraState.walkerX : ROOM_W / 2;
-      const startZ = Number.isFinite(cameraState.walkerZ) ? cameraState.walkerZ : ROOM_D / 2;
+      const startX = Number.isFinite(cameraState.characterX) ? cameraState.characterX : ROOM_W / 2;
+      const startZ = Number.isFinite(cameraState.characterZ) ? cameraState.characterZ : ROOM_D / 2;
       pos.current.set(startX, activeFollowH(), startZ);
       orient.current   = null;
       alphaOffset.current = null;
@@ -218,19 +218,19 @@ export function ImmersiveMode() {
       cameraState.isFollowing = true;
       cameraState.isMoving = true;
       cameraState.lastUserControlTime = performance.now();
-      cameraState.walkerX = pos.current.x;
-      cameraState.walkerZ = pos.current.z;
+      cameraState.characterX = pos.current.x;
+      cameraState.characterZ = pos.current.z;
       cameraState.followYaw = Math.atan2(dir.x, dir.z);
       invalidate();
     } else {
       cameraState.isFollowing = true;
       cameraState.isMoving = false;
       if (cameraState.isAIControlled) {
-        pos.current.x = cameraState.walkerX;
-        pos.current.z = cameraState.walkerZ;
+        pos.current.x = cameraState.characterX;
+        pos.current.z = cameraState.characterZ;
       } else {
-        cameraState.walkerX = pos.current.x;
-        cameraState.walkerZ = pos.current.z;
+        cameraState.characterX = pos.current.x;
+        cameraState.characterZ = pos.current.z;
       }
     }
 

@@ -2,7 +2,7 @@
  * sceneLayer.tsx — Système de layers Three.js pour la scène.
  *
  * Layers (définis dans @config) :
- *   0 LAYER_STRUCTURE  — murs, sol, plafond, walker (reflétés dans les miroirs)
+ *   0 LAYER_STRUCTURE  — murs, sol, plafond, character (reflétés dans les miroirs)
  *   1 LAYER_EQUIPMENT  — WC, douche, évier, chauffe-eau…
  *   2 LAYER_FURNITURE  — lit, tables, chaises, étagères, miroirs…
  *   3 LAYER_NETWORKS   — tuyauterie, électricité (optionnel)

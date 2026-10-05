@@ -69,25 +69,25 @@ export function useCameraFrameUpdate({
       if (!cameraState.isAIControlled) {
         cameraState.followYaw = followYaw.current;
         cameraState.followPitch = modeRef.current === 'follow' ? orbitPitch.current : followPitch.current;
-        cameraState.walkerX = followPos.current.x;
-        cameraState.walkerZ = followPos.current.z;
+        cameraState.characterX = followPos.current.x;
+        cameraState.characterZ = followPos.current.z;
       }
     } else {
       if (!cameraState.isAIControlled) {
-        cameraState.walkerX = followPos.current.x;
-        cameraState.walkerZ = followPos.current.z;
+        cameraState.characterX = followPos.current.x;
+        cameraState.characterZ = followPos.current.z;
       }
     }
 
-    // Sync walker yaw for minimap before onUpdate call
-    cameraState.walkerYaw = cameraState.followYaw;
+    // Sync character yaw for minimap before onUpdate call
+    cameraState.characterYaw = cameraState.followYaw;
 
-    // Save active walker position
+    // Save active character position
     cameraState.positions[activeCharacterId] = {
-      x: cameraState.walkerX,
+      x: cameraState.characterX,
       y: 0,
-      z: cameraState.walkerZ,
-      yaw: cameraState.walkerYaw,
+      z: cameraState.characterZ,
+      yaw: cameraState.characterYaw,
     };
 
     // Throttle minimap redraw à ~15fps (67ms) — drawFloorPlan est coûteux
@@ -103,7 +103,7 @@ export function useCameraFrameUpdate({
       const ctrl = ctrlRef.current;
       invalidate();
 
-      // Plain arrows — move active walker
+      // Plain arrows — move active character
       const isPlainMove = k.has('ArrowLeft') || k.has('ArrowRight') || k.has('ArrowUp') || k.has('ArrowDown');
       if (isPlainMove) {
         cameraState.lastUserControlTime = performance.now();
@@ -125,10 +125,10 @@ export function useCameraFrameUpdate({
         wdz -= Math.cos(wYaw) * ws;
       }
       if (wdx !== 0 || wdz !== 0) {
-        cameraState.walkerX += wdx;
-        cameraState.walkerZ += wdz;
-        followPos.current.x = cameraState.walkerX;
-        followPos.current.z = cameraState.walkerZ;
+        cameraState.characterX += wdx;
+        cameraState.characterZ += wdz;
+        followPos.current.x = cameraState.characterX;
+        followPos.current.z = cameraState.characterZ;
       }
 
       if (ctrl) {
@@ -184,8 +184,8 @@ export function useCameraFrameUpdate({
     }
 
     if (modeRef.current === 'top' && topFollowRef.current) {
-      const targetX = cameraState.walkerX;
-      const targetZ = cameraState.walkerZ;
+      const targetX = cameraState.characterX;
+      const targetZ = cameraState.characterZ;
       const activeCam = ctrlRef.current?.object || camera;
       activeCam.position.x = targetX;
       activeCam.position.z = targetZ;
@@ -199,9 +199,9 @@ export function useCameraFrameUpdate({
     if (modeRef.current !== 'follow' && modeRef.current !== 'fpv') return;
 
     if (cameraState.isAIControlled) {
-      followPos.current.x = cameraState.walkerX;
-      followPos.current.z = cameraState.walkerZ;
-      followYaw.current = cameraState.walkerYaw;
+      followPos.current.x = cameraState.characterX;
+      followPos.current.z = cameraState.characterZ;
+      followYaw.current = cameraState.characterYaw;
     }
 
     if (modeRef.current === 'follow' || modeRef.current === 'fpv') {

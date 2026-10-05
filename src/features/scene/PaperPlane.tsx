@@ -3,7 +3,7 @@
  *
  * Modèles :  paper (procédural) | rocket (GLB) | comet (GLB animé)
  *
- * Vues (touche C) :  prelaunch → follow → cockpit → walker
+ * Vues (touche C) :  prelaunch → follow → cockpit → character
  *
  * Atterrissage automatique :
  *   Quand l'avion s'aligne avec une piste (±22°, dist < 60 cm latéral),
@@ -31,7 +31,7 @@ import { LANDING_STRIPS } from './LandingStrips';
 // ── Types exportés ────────────────────────────────────────────────────────────
 
 export type PlaneModelKey = 'paper' | 'rocket' | 'comet';
-export type PlaneViewMode = 'prelaunch' | 'follow' | 'cockpit' | 'walker' | 'landing' | 'landed';
+export type PlaneViewMode = 'prelaunch' | 'follow' | 'cockpit' | 'character' | 'landing' | 'landed';
 
 // ── Constantes physique ───────────────────────────────────────────────────────
 
@@ -265,7 +265,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
       if (e.key === 'c' || e.key === 'C') {
         if (!launchedRef.current) { launch(); return; }
         if (landingRef.current || landedRef.current) return; // pas de cycle pendant atterro
-        const modes: PlaneViewMode[] = ['follow', 'cockpit', 'walker'];
+        const modes: PlaneViewMode[] = ['follow', 'cockpit', 'character'];
         const cur = viewModeRef.current as PlaneViewMode;
         const idx = modes.indexOf(cur as any);
         changeVM(modes[(idx < 0 ? 0 : (idx + 1)) % modes.length]);
@@ -447,10 +447,10 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
       _vb.current.set(0, 0, -300).applyQuaternion(s.quat).add(s.pos);
       camera.lookAt(_vb.current);
 
-    } else if (vm === 'walker') {
-      const wx = cameraState.walkerX;
-      const wz = cameraState.walkerZ;
-      const wh = cameraState.walkerHeight * 0.93;
+    } else if (vm === 'character') {
+      const wx = cameraState.characterX;
+      const wz = cameraState.characterZ;
+      const wh = cameraState.characterHeight * 0.93;
       camera.position.set(wx, wh, wz);
       camera.lookAt(s.pos);
     }

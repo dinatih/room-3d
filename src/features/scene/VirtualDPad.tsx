@@ -1,5 +1,5 @@
 /**
- * VirtualDPad.tsx — Joystick tactile virtuel (mobile only) pour diriger le walker.
+ * VirtualDPad.tsx — Joystick tactile virtuel (mobile only) pour diriger le personnage.
  *
  * Émet des KeyboardEvent ArrowUp/Down/Left/Right que CameraController
  * et le reste de la scène écoutent déjà via window.addEventListener('keydown').

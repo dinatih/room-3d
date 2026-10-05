@@ -5,7 +5,7 @@
  *   orbit  — OrbitControls standard (défaut)
  *   follow — troisième personne intelligente avec lissage et suivi de cible
  *   fpv    — première personne vue subjective (niveau des yeux)
- *   top    — vue orthographique du dessus (centrée pièce ou suivi walker)
+ *   top    — vue orthographique du dessus (centrée pièce ou suivi character)
  *
  * Raccourcis clavier :
  *   O          — vue perspective (reset) / orbit libre
@@ -138,19 +138,19 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       const config = CHARACTERS.find(c => c.id === activeCharacterId);
       if (config) {
         const savedPos = cameraState.positions[activeCharacterId];
-        cameraState.walkerX = savedPos ? savedPos.x : config.pos[0];
-        cameraState.walkerZ = savedPos ? savedPos.z : config.pos[2];
-        cameraState.walkerYaw = savedPos ? savedPos.yaw : config.rot;
-        cameraState.walkerHeight = config.height;
+        cameraState.characterX = savedPos ? savedPos.x : config.pos[0];
+        cameraState.characterZ = savedPos ? savedPos.z : config.pos[2];
+        cameraState.characterYaw = savedPos ? savedPos.yaw : config.rot;
+        cameraState.characterHeight = config.height;
 
-        followPos.current.x = cameraState.walkerX;
-        followPos.current.z = cameraState.walkerZ;
-        followYaw.current = cameraState.walkerYaw;
-        orbitYaw.current = cameraState.walkerYaw;
+        followPos.current.x = cameraState.characterX;
+        followPos.current.z = cameraState.characterZ;
+        followYaw.current = cameraState.characterYaw;
+        orbitYaw.current = cameraState.characterYaw;
         followPos.current.y = activeFollowH();
 
-        lastCharacterPos.current.x = cameraState.walkerX;
-        lastCharacterPos.current.z = cameraState.walkerZ;
+        lastCharacterPos.current.x = cameraState.characterX;
+        lastCharacterPos.current.z = cameraState.characterZ;
         hasInitialStabilizedPos.current = false;
 
         invalidate();
@@ -206,11 +206,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const isBobbingEnabled = useSceneStore.getState().layers.fpvHeadBobbing ?? false;
 
     // Calcul du déplacement réel pour cadencer le bobbing
-    const dx = cameraState.walkerX - lastCharacterPos.current.x;
-    const dz = cameraState.walkerZ - lastCharacterPos.current.z;
+    const dx = cameraState.characterX - lastCharacterPos.current.x;
+    const dz = cameraState.characterZ - lastCharacterPos.current.z;
     const movedDist = Math.hypot(dx, dz);
-    lastCharacterPos.current.x = cameraState.walkerX;
-    lastCharacterPos.current.z = cameraState.walkerZ;
+    lastCharacterPos.current.x = cameraState.characterX;
+    lastCharacterPos.current.z = cameraState.characterZ;
 
     if (isBobbingEnabled && movedDist > 0.05) {
       // Cadence proportionnelle à la foulée (~70 cm par cycle complet)
@@ -609,8 +609,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (modeRef.current === 'orbit') {
       switchOrbitProjection(cameraProjection);
     } else if (modeRef.current === 'top') {
-      const targetX = topFollowRef.current ? cameraState.walkerX : CX;
-      const targetZ = topFollowRef.current ? cameraState.walkerZ : CZ;
+      const targetX = topFollowRef.current ? cameraState.characterX : CX;
+      const targetZ = topFollowRef.current ? cameraState.characterZ : CZ;
       applyTopCamera(targetX, targetZ, cameraProjection);
       appLog('system', cameraProjection === 'ortho' ? '🎥 Mode Top (Ortho 2D)' : '🎥 Mode Top (Perspective 3D)');
       invalidate();
@@ -633,8 +633,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
     }
     topFollowRef.current = follow;
-    const targetX = follow ? cameraState.walkerX : CX;
-    const targetZ = follow ? cameraState.walkerZ : CZ;
+    const targetX = follow ? cameraState.characterX : CX;
+    const targetZ = follow ? cameraState.characterZ : CZ;
     applyTopCamera(targetX, targetZ, useSceneStore.getState().cameraProjection);
     useSceneStore.getState().setActiveCameraView('top');
     changeMode('top');
@@ -778,13 +778,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const startMode = parseUrlCameraMode();
     if (cameraState.isSceneLaunched) {
       if (startMode === 'fpv') {
-        const curX = cameraState.walkerX ?? followPos.current.x;
-        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        const curX = cameraState.characterX ?? followPos.current.x;
+        const curZ = cameraState.characterZ ?? followPos.current.z;
         enterFollow(curX, curZ, 'fpv');
         appLog('system', '🎥 Mode FPV (1ère personne) initialisé via URL');
       } else if (startMode === 'follow') {
-        const curX = cameraState.walkerX ?? followPos.current.x;
-        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        const curX = cameraState.characterX ?? followPos.current.x;
+        const curZ = cameraState.characterZ ?? followPos.current.z;
         enterFollow(curX, curZ, 'follow');
         appLog('system', '🎥 Mode Follow (3ème personne) initialisé via URL');
       } else if (startMode === 'top') {
@@ -810,8 +810,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       introCtrlRef.current.start(targetMode, () => {
         setIsIntroRunningState(false);
         cameraState.isSceneLaunched = true;
-        const curX = cameraState.walkerX ?? followPos.current.x;
-        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        const curX = cameraState.characterX ?? followPos.current.x;
+        const curZ = cameraState.characterZ ?? followPos.current.z;
         if (targetMode === 'fpv') {
           enterFollow(curX, curZ, 'fpv');
           appLog('system', '🎥 Mode FPV (1ère personne) initialisé');
@@ -935,7 +935,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       <OrthographicCamera
         ref={orthoCamRef}
         makeDefault={cameraProjection === 'ortho' && mode !== 'ortho'}
-        position={mode === 'top' ? (topFollowRef.current ? [cameraState.walkerX, 2000, cameraState.walkerZ] : TOP_POS) : undefined}
+        position={mode === 'top' ? (topFollowRef.current ? [cameraState.characterX, 2000, cameraState.characterZ] : TOP_POS) : undefined}
         up={mode === 'top' ? [0, 0, -1] : [0, 1, 0]}
         left={-viewW / 2}
         right={viewW / 2}

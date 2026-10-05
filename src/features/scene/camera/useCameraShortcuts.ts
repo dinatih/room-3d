@@ -61,7 +61,7 @@ export function useCameraShortcuts({
 }: UseCameraShortcutsParams) {
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
-      // Plane mode owns input — bail out so arrow/WASD don't move walker or camera.
+      // Plane mode owns input — bail out so arrow/WASD don't move character or camera.
       if (planeModeRef.current || cameraState.isIntroRunning) return;
 
       const target = e.target as HTMLElement;
@@ -171,24 +171,24 @@ export function useCameraShortcuts({
       }
 
       if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
-        const curX = cameraState.walkerX ?? followPos.current.x;
-        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        const curX = cameraState.characterX ?? followPos.current.x;
+        const curZ = cameraState.characterZ ?? followPos.current.z;
         enterFollow(curX, curZ, 'fpv');
         appLog('system', '🎥 Mode FPV (1ère personne)');
         return;
       }
 
       if (e.key === '3' || e.code === 'Digit3' || e.code === 'Numpad3') {
-        const curX = cameraState.walkerX ?? followPos.current.x;
-        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        const curX = cameraState.characterX ?? followPos.current.x;
+        const curZ = cameraState.characterZ ?? followPos.current.z;
         enterFollow(curX, curZ, 'follow');
         appLog('system', '🎥 Mode Follow (3ème personne)');
         return;
       }
 
       if (!e.altKey && (e.key === 'm' || e.key === 'M')) {
-        const curX = cameraState.walkerX ?? followPos.current.x;
-        const curZ = cameraState.walkerZ ?? followPos.current.z;
+        const curX = cameraState.characterX ?? followPos.current.x;
+        const curZ = cameraState.characterZ ?? followPos.current.z;
         if (modeRef.current === 'follow') {
           enterFollow(curX, curZ, 'fpv');
           appLog('system', '🎥 Mode FPV (1ère personne)');
@@ -247,7 +247,7 @@ export function useCameraShortcuts({
       // Orbit and Top mode arrow keys (Google Earth style)
       if ((modeRef.current === 'orbit' || modeRef.current === 'top') && isArrow) {
         if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
-          keys.current.add(k);                      // plain  → move walker
+          keys.current.add(k);                      // plain  → move character
         } else if (e.shiftKey && e.ctrlKey) {
           keys.current.add('ShiftCtrl' + k);         // Shift+Ctrl → pan
         } else if (e.shiftKey) {

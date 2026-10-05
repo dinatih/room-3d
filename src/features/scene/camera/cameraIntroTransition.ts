@@ -25,8 +25,8 @@ export const INTRO_DURATION_SEC = 1.35;
 /** Calcule la pose cible exacte de la caméra en fonction du mode actif */
 export function getIntroTargetPose(mode: CameraMode): IntroPose {
   if (mode === 'top') {
-    const targetX = cameraState.walkerX ?? CX;
-    const targetZ = cameraState.walkerZ ?? CZ;
+    const targetX = cameraState.characterX ?? CX;
+    const targetZ = cameraState.characterZ ?? CZ;
     return {
       pos: new THREE.Vector3(targetX, 2000, targetZ),
       target: new THREE.Vector3(targetX, 0, targetZ),
@@ -45,10 +45,10 @@ export function getIntroTargetPose(mode: CameraMode): IntroPose {
         target: new THREE.Vector3(eyeX + fwd.x * 200, eyeY + fwd.y * 200, eyeZ + fwd.z * 200),
       };
     }
-    const wX = cameraState.walkerX ?? CX;
-    const wZ = cameraState.walkerZ ?? CZ;
+    const wX = cameraState.characterX ?? CX;
+    const wZ = cameraState.characterZ ?? CZ;
     const wH = activeFollowH();
-    const yaw = cameraState.walkerYaw ?? 0;
+    const yaw = cameraState.characterYaw ?? 0;
     return {
       pos: new THREE.Vector3(wX, wH, wZ),
       target: new THREE.Vector3(wX + Math.sin(yaw) * 200, wH, wZ + Math.cos(yaw) * 200),
@@ -56,10 +56,10 @@ export function getIntroTargetPose(mode: CameraMode): IntroPose {
   }
 
   if (mode === 'follow') {
-    const wX = cameraState.walkerX ?? CX;
-    const wZ = cameraState.walkerZ ?? CZ;
+    const wX = cameraState.characterX ?? CX;
+    const wZ = cameraState.characterZ ?? CZ;
     const wH = activeFollowH();
-    const yaw = cameraState.walkerYaw ?? 0;
+    const yaw = cameraState.characterYaw ?? 0;
     const dist = 360;
     const pitch = 0.35;
     const camX = wX - Math.sin(yaw) * Math.cos(pitch) * dist;

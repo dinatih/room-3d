@@ -549,7 +549,7 @@ export function Studio() {
         onToggleLayer('wireframe');
         cameraState.invalidate?.();
       } else if (e.key === 'p' || e.key === 'P') {
-        setInventoryInitialCat('walkers');
+        setInventoryInitialCat('characters');
         setShowInventory(true);
       } else if (e.key === 'i' || e.key === 'I') {
         setInventoryInitialCat('all');

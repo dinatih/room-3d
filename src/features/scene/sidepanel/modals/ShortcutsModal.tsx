@@ -88,7 +88,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
 
             <div>
               <Section title="Orbit — style Google Earth" />
-              <R label="Déplacer le walker"         keys={['↑', '↓', '←', '→']} />
+              <R label="Déplacer le personnage"         keys={['↑', '↓', '←', '→']} />
               <R label="Orbiter autour"             keys={['Shift + ↑↓←→']} />
               <R label="Rotation caméra"            keys={['Ctrl + ↑↓←→']} />
               <R label="Pan"                        keys={['Alt + ↑↓←→']} />

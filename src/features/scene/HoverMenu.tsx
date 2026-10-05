@@ -155,10 +155,10 @@ const ACTIONS: Record<string, ActionDef> = {
   },
 };
 
-// Helper to resolve action definition (supports dynamic actions like select-walker-*)
+// Helper to resolve action definition (supports dynamic actions like select-character-*)
 function getActionDef(actionId: string): ActionDef | undefined {
   if (ACTIONS[actionId]) return ACTIONS[actionId];
-  if (actionId.startsWith('select-walker-')) {
+  if (actionId.startsWith('select-character-')) {
     return {
       btnLabel: '🎯 Définir comme personnage actif',
       toggleKey: actionId,
@@ -762,8 +762,8 @@ export function HoverOverlay() {
               <button
                 key={i}
                 onClick={() => {
-                  if (action.toggleKey.startsWith('select-walker-')) {
-                    const targetCharacterId = action.toggleKey.replace('select-walker-', '');
+                  if (action.toggleKey.startsWith('select-character-')) {
+                    const targetCharacterId = action.toggleKey.replace('select-character-', '');
                     useSceneStore.getState().setActiveCharacterId(targetCharacterId);
                     appLog(targetCharacterId, `🎯 Personnage actif défini : ${state.lockedLabel}`);
                   } else if (action.toggleKey.startsWith('smart-object:::')) {

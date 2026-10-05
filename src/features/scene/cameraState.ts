@@ -30,26 +30,26 @@ export const cameraState = {
   },
   followYaw:   (initialChar?.rot ?? 1.9) as number,
   followPitch: 0     as number,
-  /** Position et orientation du walker unique (synchro dynamique depuis CHARACTERS) */
-  walkerX: (initialChar?.pos[0] ?? 140) as number, 
-  walkerZ: (initialChar?.pos[2] ?? 30) as number, 
-  walkerYaw: (initialChar?.rot ?? 1.9) as number,
-  /** Positions enregistrées de tous les walkers */
+  /** Position et orientation du character unique (synchro dynamique depuis CHARACTERS) */
+  characterX: (initialChar?.pos[0] ?? 140) as number, 
+  characterZ: (initialChar?.pos[2] ?? 30) as number, 
+  characterYaw: (initialChar?.rot ?? 1.9) as number,
+  /** Positions enregistrées de tous les characters */
   positions: {} as Record<string, {x: number, y: number, z: number, yaw: number, anim?: string}>,
   /** Projection XZ de l'os de tête (monde) de chaque personnage visible — lue par la minimap (positions[] reste sur la racine, pour l'IA) */
   headPositions: {} as Record<string, { x: number; z: number }>,
-  /** Position monde réelle de la tête du walker actif (calculée dynamiquement par Character d'après le squelette 3D) */
+  /** Position monde réelle de la tête du character actif (calculée dynamiquement par Character d'après le squelette 3D) */
   activeHeadPos: null as { x: number; y: number; z: number } | null,
-  /** Position monde réelle des hanches / centre de masse du walker actif */
+  /** Position monde réelle des hanches / centre de masse du character actif */
   activeHipsPos: null as { x: number; y: number; z: number } | null,
-  /** Position monde réelle du centre des deux yeux du walker actif (pour FPV réaliste) */
+  /** Position monde réelle du centre des deux yeux du character actif (pour FPV réaliste) */
   activeEyesPos: null as { x: number; y: number; z: number } | null,
-  /** Vecteur unitaire avant (gaze/forward) de la tête du walker actif */
+  /** Vecteur unitaire avant (gaze/forward) de la tête du character actif */
   activeHeadForward: null as { x: number; y: number; z: number } | null,
-  /** Vecteur unitaire haut (up) de la tête du walker actif */
+  /** Vecteur unitaire haut (up) de la tête du character actif */
   activeHeadUp: null as { x: number; y: number; z: number } | null,
   /** Hauteur (cm) du character — écrit par Character.tsx, lue par les caméras follow */
-  walkerHeight: (initialChar?.height ?? 173.4) as number,
+  characterHeight: (initialChar?.height ?? 173.4) as number,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */
   onUpdate:   null as (() => void) | null,
   /** Enregistré par CameraController ; appeler pour forcer un frame R3F. */
@@ -71,7 +71,7 @@ export const cameraState = {
   planeZ: 0 as number,
   planeYaw: 0 as number,
   /** Vue courante dans le mode avion */
-  planeViewMode: 'prelaunch' as 'prelaunch' | 'follow' | 'cockpit' | 'walker' | 'landing' | 'landed',
+  planeViewMode: 'prelaunch' as 'prelaunch' | 'follow' | 'cockpit' | 'character' | 'landing' | 'landed',
   /** Vrai après le décollage (prelaunch terminé) */
   planeLaunched: false as boolean,
   /** Pistes d'atterrissage visibles (minimap + 3D) */

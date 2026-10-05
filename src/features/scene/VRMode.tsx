@@ -63,8 +63,8 @@ export function VRMode() {
         camera.position.set(0, 0, 0);
         const activeId = (window as any).activeCharacterId || 'lara';
         const pos = cameraState.positions[activeId];
-        const startX = pos ? pos.x : (Number.isFinite(cameraState.walkerX) ? cameraState.walkerX : ROOM_W / 2);
-        const startZ = pos ? pos.z : (Number.isFinite(cameraState.walkerZ) ? cameraState.walkerZ : ROOM_D / 2);
+        const startX = pos ? pos.x : (Number.isFinite(cameraState.characterX) ? cameraState.characterX : ROOM_W / 2);
+        const startZ = pos ? pos.z : (Number.isFinite(cameraState.characterZ) ? cameraState.characterZ : ROOM_D / 2);
         rig.position.set(startX, 170, startZ);
         rig.add(camera);
 
@@ -133,8 +133,8 @@ export function VRMode() {
         cameraState.isFollowing = true;
         cameraState.isMoving = true;
         cameraState.lastUserControlTime = performance.now();
-        cameraState.walkerX = rigRef.current.position.x;
-        cameraState.walkerZ = rigRef.current.position.z;
+        cameraState.characterX = rigRef.current.position.x;
+        cameraState.characterZ = rigRef.current.position.z;
         cameraState.followYaw = Math.atan2(dir.x, dir.z);
       }
     } else {
@@ -142,11 +142,11 @@ export function VRMode() {
         cameraState.isFollowing = true;
         cameraState.isMoving = false;
         if (cameraState.isAIControlled) {
-          rigRef.current.position.x = cameraState.walkerX;
-          rigRef.current.position.z = cameraState.walkerZ;
+          rigRef.current.position.x = cameraState.characterX;
+          rigRef.current.position.z = cameraState.characterZ;
         } else {
-          cameraState.walkerX = rigRef.current.position.x;
-          cameraState.walkerZ = rigRef.current.position.z;
+          cameraState.characterX = rigRef.current.position.x;
+          cameraState.characterZ = rigRef.current.position.z;
         }
       }
     }

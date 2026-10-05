@@ -271,19 +271,19 @@ function drawMinimap(
   }
 
   // ── Character icon (position XZ réelle de la tête ; sans tête publiée : non dessiné) ──
-  const walkerHead = cameraState.headPositions[activeCharacterId];
-  if (!walkerHead) return;
-  const w = { x: walkerHead.x, z: walkerHead.z, yaw: cameraState.walkerYaw };
+  const characterHead = cameraState.headPositions[activeCharacterId];
+  if (!characterHead) return;
+  const w = { x: characterHead.x, z: characterHead.z, yaw: cameraState.characterYaw };
 
-  // Bornage sur le bord : même logique que les PNJ, appliquée par décalage à tout le bloc walker
-  const walkerRawX = tx(w.x);
-  const walkerRawZ = tz(w.z);
-  const walkerEdge = R * 2.3; // marge pour que la flèche d'orientation reste visible
-  const walkerClampX = Math.max(walkerEdge, Math.min(W - walkerEdge, walkerRawX));
-  const walkerClampZ = Math.max(walkerEdge, Math.min(H - walkerEdge, walkerRawZ));
-  const walkerOffscreen = walkerClampX !== walkerRawX || walkerClampZ !== walkerRawZ;
+  // Bornage sur le bord : même logique que les PNJ, appliquée par décalage à tout le bloc character
+  const characterRawX = tx(w.x);
+  const characterRawZ = tz(w.z);
+  const characterEdge = R * 2.3; // marge pour que la flèche d'orientation reste visible
+  const characterClampX = Math.max(characterEdge, Math.min(W - characterEdge, characterRawX));
+  const characterClampZ = Math.max(characterEdge, Math.min(H - characterEdge, characterRawZ));
+  const characterOffscreen = characterClampX !== characterRawX || characterClampZ !== characterRawZ;
   ctx.save();
-  ctx.translate(walkerClampX - walkerRawX, walkerClampZ - walkerRawZ);
+  ctx.translate(characterClampX - characterRawX, characterClampZ - characterRawZ);
   
   // 1. Arc FOV orienté vers l'avant (+Y local)
   ctx.save();
@@ -423,14 +423,14 @@ function drawMinimap(
 
   // Body icon (tête)
   ctx.fillStyle   = '#d32f2f'; // Red Theme Accent
-  ctx.strokeStyle = walkerOffscreen ? 'rgba(234, 88, 12, 0.95)' : 'rgba(255,255,255,0.9)';
+  ctx.strokeStyle = characterOffscreen ? 'rgba(234, 88, 12, 0.95)' : 'rgba(255,255,255,0.9)';
   ctx.lineWidth   = Math.max(0.8, 0.8 * sc);
   
   // Cercle de la tête
   ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
   // Hors plan : le cône est rogné par le bord, on matérialise donc le sens par une flèche (+Y local = avant)
-  if (walkerOffscreen) {
+  if (characterOffscreen) {
     ctx.beginPath();
     ctx.moveTo(-R * 0.65, R * 1.15);
     ctx.lineTo(R * 0.65, R * 1.15);

@@ -366,11 +366,11 @@ export function Character({
     hasSkyDrop
   );
 
-  // Synchronisation initiale des coordonnées caméra/walker actif dès le montage
+  // Synchronisation initiale des coordonnées caméra/character actif dès le montage
   useLayoutEffect(() => {
     if (isActive && !isPreview && initialPos) {
-      cameraState.walkerX = initialPos.x;
-      cameraState.walkerZ = initialPos.z;
+      cameraState.characterX = initialPos.x;
+      cameraState.characterZ = initialPos.z;
       cameraState.followYaw = initialPos.rotY;
     }
   }, [isActive, isPreview, initialPos]);
@@ -475,10 +475,10 @@ export function Character({
     invalidate();
   }, [parts, scene, characterShadows, showWallhack, characterWireframe, invalidate]);
 
-  // Événement signalant que le walker est prêt
+  // Événement signalant que le character est prêt
   useEffect(() => {
     const timeout = setTimeout(() => {
-      document.dispatchEvent(new CustomEvent('walker-ready', { detail: { id } }));
+      document.dispatchEvent(new CustomEvent('character-ready', { detail: { id } }));
     }, 0);
     return () => clearTimeout(timeout);
   }, [id]);
@@ -537,7 +537,7 @@ export function Character({
     };
 
     const onToggle = (e: any) => {
-      if (e.detail?.key === `walker-pos-${id}`) {
+      if (e.detail?.key === `character-pos-${id}`) {
         if (Array.isArray(e.detail.value) && e.detail.value.length === 3) {
           setAgentPosition(e.detail.value[0], e.detail.value[1], e.detail.value[2]);
           invalidate();
@@ -545,7 +545,7 @@ export function Character({
         return;
       }
 
-      if (e.detail?.key === `walker-rot-${id}`) {
+      if (e.detail?.key === `character-rot-${id}`) {
         if (typeof e.detail.value === 'number') {
           setAgentRotation(e.detail.value);
           invalidate();
@@ -678,8 +678,8 @@ export function Character({
           currentAnimClip.current = agentState.animation;
           groupRef.current.visible = !cameraState.characterHidden && agentState.isSpawned;
 
-          cameraState.walkerX = agentState.x;
-          cameraState.walkerZ = agentState.z;
+          cameraState.characterX = agentState.x;
+          cameraState.characterZ = agentState.z;
           cameraState.followYaw = agentState.rotY;
           cameraState.isAIControlled = true;
           if (agentState.isSpawned) {
@@ -688,14 +688,14 @@ export function Character({
             delete cameraState.positions[id];
           }
         } else {
-          groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
+          groupRef.current.position.set(cameraState.characterX, 0, cameraState.characterZ);
           groupRef.current.rotation.y = cameraState.followYaw;
           groupRef.current.visible = !cameraState.characterHidden;
           cameraState.isAIControlled = false;
           currentAnimClip.current = null;
-          cameraState.positions[id] = { x: cameraState.walkerX, y: 0, z: cameraState.walkerZ, yaw: cameraState.followYaw, anim: currentAnimClip.current || 'idle' };
+          cameraState.positions[id] = { x: cameraState.characterX, y: 0, z: cameraState.characterZ, yaw: cameraState.followYaw, anim: currentAnimClip.current || 'idle' };
           
-          setAgentPosition(cameraState.walkerX, 0, cameraState.walkerZ);
+          setAgentPosition(cameraState.characterX, 0, cameraState.characterZ);
           setAgentRotation(cameraState.followYaw);
         }
       } else if (isNPC) {
@@ -1146,7 +1146,7 @@ export function Character({
             isHoverProxy: true,
             hoverAction: {
               label: charLabel,
-              actions: [`select-walker-${id}`],
+              actions: [`select-character-${id}`],
             },
           }}
         >

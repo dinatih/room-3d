@@ -118,11 +118,10 @@ function isAllowedInventoryItem(item: InventoryItem): boolean {
 
   // Exclure personnages
   if (
-    cat === 'walkers' ||
+    cat === 'characters' ||
     path.includes('characters/') ||
     id.includes('lara') ||
     id.includes('xbot') ||
-    id.includes('walker') ||
     name.includes('lara') ||
     id.includes('mannequin')
   ) {
