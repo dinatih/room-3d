@@ -54,6 +54,7 @@ import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 import { GridLayout }            from '@features/scene/GridLayout';
 import { frameLaraGridCamera }   from './character/laraGridUtils';
 import { LaraGridToolbar }       from './LaraGridToolbar';
+import { ViewControlBar }        from './ViewControlBar';
 import { AnimFrameController }   from '@features/inventory/AnimFrameController';
 import { useAnimPreviewStore }   from '@features/inventory/useAnimPreviewStore';
 import { WALKER_ANIM_OPTIONS }   from '@features/scene/animOptions';
@@ -926,6 +927,7 @@ export function Studio() {
         )}
         {isMobile && <Minimap />}
         <VirtualDPad />
+        <ViewControlBar hidden={planeMode} />
         <HoverOverlay />
         {layers.aiZones && <ZoneAiDebugOverlay />}
         {layers.wallEdges && <EdgeHoverOverlay />}
