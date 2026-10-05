@@ -2,7 +2,6 @@ import type { PlaneModelKey } from '../PaperPlane';
 import type { LaraCountMode } from '../walkerConfig';
 import {
   ROOM_W, ROOM_D, WALL_H,
-  DOOR_START, BATH_WEST_WALL, KITCHEN_SOUTH_WALL,
 } from '../wallData';
 
 // ── Presets caméra ────────────────────────────────────────────────────────────
@@ -30,25 +29,14 @@ export const VIEWS: Record<string, CameraViewPreset> = {
   bottom:      { pos: [CX, -DIST, CZ],                    target: [CX, 0, CZ],          projection: 'persp' },
   'iso-se':    { pos: [CX + ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
   'iso-nw':    { pos: [CX - ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-};
-
-export const POV_ROOMS: Record<string, { x: number; z: number }> = {
-  living:   { x: ROOM_W / 2,                      z: ROOM_D / 2 },
-  entry:    { x: (DOOR_START + ROOM_W) / 2,        z: ROOM_D + 75 },
-  bathroom: { x: (BATH_WEST_WALL + DOOR_START) / 2,  z: (KITCHEN_SOUTH_WALL + 600) / 2 },
-  garden:   { x: 150,                              z: -120 },
+  'iso-ne':    { pos: [CX + ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
+  'iso-sw':    { pos: [CX - ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
 };
 
 export function dispatchView(key: string) {
   const v = VIEWS[key];
   if (!v) return;
   document.dispatchEvent(new CustomEvent('camera-view', { detail: v }));
-}
-
-export function dispatchPov(key: string) {
-  const p = POV_ROOMS[key];
-  if (!p) return;
-  document.dispatchEvent(new CustomEvent('camera-pov', { detail: p }));
 }
 
 export function dispatchKey(key: string) {

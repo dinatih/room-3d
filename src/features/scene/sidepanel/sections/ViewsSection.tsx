@@ -1,5 +1,5 @@
 import { useSceneStore } from '../../store/useSceneStore';
-import { dispatchKey, dispatchView, dispatchPov } from '../types';
+import { dispatchKey, dispatchView } from '../types';
 
 export interface ViewsSectionProps {
   isMobile: boolean;
@@ -10,20 +10,15 @@ export interface ViewsSectionProps {
 const CAMERA_PRESETS = [
   { label: 'Perspective', key: 'perspective' },
   { label: 'Dessus 3D', key: 'top3d' },
-  { label: 'Face (D)', key: 'front' },
-  { label: 'Arrière (C)', key: 'back' },
-  { label: 'Gauche (A)', key: 'left' },
-  { label: 'Droite (B)', key: 'right' },
+  { label: 'Face', key: 'front' },
+  { label: 'Arrière', key: 'back' },
+  { label: 'Gauche', key: 'left' },
+  { label: 'Droite', key: 'right' },
   { label: 'Iso Sud-Est', key: 'iso-se' },
   { label: 'Iso Nord-Ouest', key: 'iso-nw' },
-  { label: 'Dessus/Dessous', key: 'bottom', fullWidth: true },
-];
-
-const POV_PRESETS = [
-  { label: 'Séjour', key: 'living' },
-  { label: 'Entrée', key: 'entry' },
-  { label: "Salle d'eau", key: 'bathroom' },
-  { label: 'Jardin', key: 'garden' },
+  { label: 'Iso Nord-Est', key: 'iso-ne' },
+  { label: 'Iso Sud-Ouest', key: 'iso-sw' },
+  { label: 'Dessous', key: 'bottom', fullWidth: true },
 ];
 
 export function ViewsSection({
@@ -141,26 +136,6 @@ export function ViewsSection({
                 type="button"
                 className="btn btn-sm btn-outline-secondary w-100 py-1 px-2 text-truncate small"
                 onClick={() => dispatchView(preset.key)}
-              >
-                {preset.label}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Points de Vue (POV 1.8m) ── */}
-      <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
-        <div className="text-muted fw-bold small text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>
-          🚶 Points de Vue (POV 1.8m)
-        </div>
-        <div className="row g-1">
-          {POV_PRESETS.map(preset => (
-            <div key={preset.key} className="col-6">
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-danger w-100 py-1 px-2 text-truncate small"
-                onClick={() => dispatchPov(preset.key)}
               >
                 {preset.label}
               </button>
