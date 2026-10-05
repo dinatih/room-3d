@@ -88,6 +88,9 @@ interface SceneStore {
   activeExtraIds: string[];
   activeMainIds: string[];
   currentHdri: string;
+  bnfAzimuth: number;
+  bnfElevation: number;
+  bnfRadius: number;
   measurementActive: boolean;
   cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho';
   isCvModalOpen: boolean;
@@ -95,6 +98,7 @@ interface SceneStore {
   setCvModalOpen: (open: boolean) => void;
   setPhotoModeOpen: (open: boolean) => void;
   setMeasurementActive: (active: boolean) => void;
+  setBnfCoords: (coords: { azimuth?: number; elevation?: number; radius?: number }) => void;
   setCameraMode: (mode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane' | 'ortho') => void;
   setLaraCount: (count: LaraCountMode) => void;
   setHdri: (id: string) => void;
@@ -146,6 +150,7 @@ const initialLayers: LayerState = {
   wallStructure: true,
   floorCoverings: true,
   environment: true,
+  bnfMarker: true,
   equipment: true,
   furniture: true,
   furnishings: true,
@@ -365,10 +370,21 @@ export const useSceneStore = create<SceneStore>((set) => ({
   activeExtraIds: initialActiveExtraIds,
   activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
+  bnfAzimuth: 141.5,
+  bnfElevation: -6.5,
+  bnfRadius: 75,
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
   isCvModalOpen: false,
   isPhotoModeOpen: false,
+  setBnfCoords: (coords) => {
+    set((state) => ({
+      bnfAzimuth: coords.azimuth !== undefined ? coords.azimuth : state.bnfAzimuth,
+      bnfElevation: coords.elevation !== undefined ? coords.elevation : state.bnfElevation,
+      bnfRadius: coords.radius !== undefined ? coords.radius : state.bnfRadius,
+    }));
+    cameraState.invalidate?.();
+  },
   setCvModalOpen: (open: boolean) => {
     set({ isCvModalOpen: open });
   },

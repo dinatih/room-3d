@@ -37,6 +37,10 @@ export function LayersSection({
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
   const setGroundType = useSceneStore(state => state.setGroundType);
+  const bnfAzimuth = useSceneStore(state => state.bnfAzimuth ?? 141.5);
+  const bnfElevation = useSceneStore(state => state.bnfElevation ?? -6.5);
+  const bnfRadius = useSceneStore(state => state.bnfRadius ?? 75);
+  const setBnfCoords = useSceneStore(state => state.setBnfCoords);
   const currentGroundType = layers.groundType ?? (layers.bermudaGrass ? 'bermuda' : 'none');
 
   const b0 = (_color: string, label: string, onClick: () => void) => {
@@ -163,6 +167,56 @@ export function LayersSection({
       {layerBtn('secondary', 'Dalle et plafond 🏛️ (Alt+Q)',            'structure', 'wireframeStructure')}
       {layerBtn('peach',     'Portes 🚪',                      'doors', 'wireframeDoors')}
       {layerBtn('teal',      'Ciel & Atmosphère 🌤️',           'environment')}
+      {currentHdri === 'default' && layerBtn('danger', 'Repère BNF (Domicile) 📍', 'bnfMarker')}
+      {currentHdri === 'default' && (layers.bnfMarker ?? true) && (
+        <div className="px-3 py-2 border-bottom bg-transparent d-flex flex-column gap-2 small">
+          <div className="d-flex justify-content-between align-items-center">
+            <span className="text-muted small">Azimut ({bnfAzimuth.toFixed(1)}°)</span>
+            <input
+              type="range"
+              className="form-range w-50"
+              min="0"
+              max="360"
+              step="0.5"
+              value={bnfAzimuth}
+              onChange={(e) => setBnfCoords({ azimuth: parseFloat(e.target.value) })}
+            />
+          </div>
+          <div className="d-flex justify-content-between align-items-center">
+            <span className="text-muted small">Élévation ({bnfElevation.toFixed(1)}°)</span>
+            <input
+              type="range"
+              className="form-range w-50"
+              min="-25"
+              max="25"
+              step="0.5"
+              value={bnfElevation}
+              onChange={(e) => setBnfCoords({ elevation: parseFloat(e.target.value) })}
+            />
+          </div>
+          <div className="d-flex justify-content-between align-items-center">
+            <span className="text-muted small">Rayon ({bnfRadius} px)</span>
+            <input
+              type="range"
+              className="form-range w-50"
+              min="20"
+              max="200"
+              step="5"
+              value={bnfRadius}
+              onChange={(e) => setBnfCoords({ radius: parseFloat(e.target.value) })}
+            />
+          </div>
+          <div className="d-flex justify-content-end">
+            <button
+              type="button"
+              className="btn btn-sm btn-link text-muted p-0 text-decoration-none small"
+              onClick={() => setBnfCoords({ azimuth: 141.5, elevation: -6.5, radius: 75 })}
+            >
+              ↺ Réinitialiser
+            </button>
+          </div>
+        </div>
+      )}
       {layerBtn('green',     'Herbe & Terrain ext. 🌱',        'bermudaGrass')}
       {layers.bermudaGrass && (
         <div className="px-3 py-1 border-bottom bg-transparent d-flex align-items-center justify-content-between gap-2">

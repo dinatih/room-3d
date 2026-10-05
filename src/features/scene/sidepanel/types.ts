@@ -84,6 +84,7 @@ export interface LayerState {
   wallStructure: boolean;
   floorCoverings: boolean;
   environment: boolean;
+  bnfMarker?: boolean;
   equipment: boolean;
   furniture: boolean;
   furnishings: boolean;

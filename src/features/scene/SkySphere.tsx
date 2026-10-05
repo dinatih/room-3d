@@ -6,6 +6,7 @@ import { useSceneStore } from './store/useSceneStore';
 import { getHdriById } from './hdriConfig';
 import { CategoryLayerGroup } from './sceneLayer';
 import { LAYER_ENVIRONMENT } from '@config';
+import { BnfSkyMarker } from './BnfSkyMarker';
 
 const SKY_CENTER: [number, number, number] = [150, 0, 150];
 const SKY_RADIUS = 3600;
@@ -75,6 +76,7 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
       <group position={SKY_CENTER} name="SkySphere" userData={{ isSky: true }}>
         <SpaceBackdrop />
         {texture && <CombinedSkyDome texture={texture} />}
+        <BnfSkyMarker skyRadius={SKY_RADIUS} />
       </group>
     </CategoryLayerGroup>
   );
