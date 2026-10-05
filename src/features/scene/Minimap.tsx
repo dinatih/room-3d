@@ -54,6 +54,20 @@ function drawPlaneIcon(
 
 const floorPlanCache = new Map<string, HTMLCanvasElement>();
 
+// ── Simulation physique de la queue de cheval de Lara (Inertie 2D) ───────────
+interface HairNode {
+  x: number;
+  z: number;
+  vx: number;
+  vz: number;
+}
+const ponytailNodes: HairNode[] = [
+  { x: 0, z: 0, vx: 0, vz: 0 },
+  { x: 0, z: 0, vx: 0, vz: 0 },
+  { x: 0, z: 0, vx: 0, vz: 0 },
+];
+let ponytailInitialized = false;
+
 function getCachedFloorPlan(w: number, h: number): HTMLCanvasElement {
   const key = `${w}x${h}`;
   let cached = floorPlanCache.get(key);
@@ -181,9 +195,54 @@ function drawMinimap(
     ctx.restore();
   }
 
+  // ── Oiseau Robin (Rouge-gorge) ──────────────────────────────────────────────
+  const robinPos = cameraState.positions['robin'];
+  if (robinPos) {
+    const rBird = Math.max(1.8 * sc, 5.5 * S);
+    ctx.save();
+    ctx.translate(tx(robinPos.x), tz(robinPos.z));
+    ctx.rotate(-robinPos.yaw);
+
+    // Corps / ailes (brun chaud)
+    ctx.fillStyle = '#b45309';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = Math.max(0.6, 0.7 * sc);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rBird * 1.25, rBird * 0.85, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Poitrail rouge-gorge caractéristique (orange/rouge vif)
+    ctx.fillStyle = '#ea580c';
+    ctx.beginPath();
+    ctx.arc(0, rBird * 0.3, rBird * 0.65, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bec vers l'avant (+Y)
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.moveTo(-rBird * 0.28, rBird * 0.7);
+    ctx.lineTo(0, rBird * 1.4);
+    ctx.lineTo(rBird * 0.28, rBird * 0.7);
+    ctx.closePath();
+    ctx.fill();
+
+    // Plumes de queue vers l'arrière (-Y)
+    ctx.fillStyle = '#78350f';
+    ctx.beginPath();
+    ctx.moveTo(-rBird * 0.35, -rBird * 0.6);
+    ctx.lineTo(0, -rBird * 1.45);
+    ctx.lineTo(rBird * 0.35, -rBird * 0.6);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
   // ── Walker icon ────────────────────────────────────────────────────────────
   const w = { x: cameraState.walkerX, z: cameraState.walkerZ, yaw: cameraState.walkerYaw };
   
+  // 1. Arc FOV orienté vers l'avant (+Y local)
   ctx.save();
   ctx.translate(tx(w.x), tz(w.z));
   ctx.rotate(-w.yaw);
@@ -197,6 +256,105 @@ function drawMinimap(
   ctx.closePath();
   ctx.fillStyle   = 'rgba(255,221,0,0.18)'; ctx.fill();
   ctx.strokeStyle = 'rgba(255,221,0,0.45)'; ctx.lineWidth = 0.5 * sc; ctx.stroke();
+  ctx.restore();
+
+  // 2. Simulation physique & rendu de la queue de cheval de Lara (Inertie & Mouvement)
+  const facingX = Math.sin(w.yaw);
+  const facingZ = Math.cos(w.yaw);
+  const attachX = w.x - facingX * (HEAD_RADIUS_WORLD * 0.75);
+  const attachZ = w.z - facingZ * (HEAD_RADIUS_WORLD * 0.75);
+
+  const segLengths = [9, 11, 13]; // Longueur des 3 segments (~33 cm)
+
+  if (!ponytailInitialized) {
+    let curX = attachX;
+    let curZ = attachZ;
+    for (let i = 0; i < ponytailNodes.length; i++) {
+      curX -= facingX * segLengths[i];
+      curZ -= facingZ * segLengths[i];
+      ponytailNodes[i].x = curX;
+      ponytailNodes[i].z = curZ;
+      ponytailNodes[i].vx = 0;
+      ponytailNodes[i].vz = 0;
+    }
+    ponytailInitialized = true;
+  } else {
+    for (let i = 0; i < ponytailNodes.length; i++) {
+      const prevX = (i === 0) ? attachX : ponytailNodes[i - 1].x;
+      const prevZ = (i === 0) ? attachZ : ponytailNodes[i - 1].z;
+      const restX = prevX - facingX * segLengths[i];
+      const restZ = prevZ - facingZ * segLengths[i];
+
+      const node = ponytailNodes[i];
+      const spring = 0.35; // Raideur élastique
+      const damping = 0.76; // Amortissement fluide
+
+      node.vx = (node.vx + (restX - node.x) * spring) * damping;
+      node.vz = (node.vz + (restZ - node.z) * spring) * damping;
+
+      node.x += node.vx;
+      node.z += node.vz;
+
+      const dx = node.x - prevX;
+      const dz = node.z - prevZ;
+      const dist = Math.hypot(dx, dz) || 0.001;
+      node.x = prevX + (dx / dist) * segLengths[i];
+      node.z = prevZ + (dz / dist) * segLengths[i];
+    }
+  }
+
+  // Tracé fluide de la queue de cheval
+  const p0x = tx(attachX), p0z = tz(attachZ);
+  const p1x = tx(ponytailNodes[0].x), p1z = tz(ponytailNodes[0].z);
+  const p2x = tx(ponytailNodes[1].x), p2z = tz(ponytailNodes[1].z);
+  const p3x = tx(ponytailNodes[2].x), p3z = tz(ponytailNodes[2].z);
+
+  const w1 = Math.max(2.2 * sc, 7.5 * S);
+  const w2 = Math.max(1.6 * sc, 5.5 * S);
+  const w3 = Math.max(1.0 * sc, 3.5 * S);
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Ombre extérieure foncée
+  ctx.strokeStyle = '#180e07';
+  ctx.lineWidth = w1 + 1.2 * sc;
+  ctx.beginPath(); ctx.moveTo(p0x, p0z); ctx.lineTo(p1x, p1z); ctx.stroke();
+  ctx.lineWidth = w2 + 1.2 * sc;
+  ctx.beginPath(); ctx.moveTo(p1x, p1z); ctx.lineTo(p2x, p2z); ctx.stroke();
+  ctx.lineWidth = w3 + 1.2 * sc;
+  ctx.beginPath(); ctx.moveTo(p2x, p2z); ctx.lineTo(p3x, p3z); ctx.stroke();
+
+  // Mèche brune principale (teinte Lara Croft)
+  ctx.strokeStyle = '#4a2810';
+  ctx.lineWidth = w1;
+  ctx.beginPath(); ctx.moveTo(p0x, p0z); ctx.lineTo(p1x, p1z); ctx.stroke();
+  ctx.lineWidth = w2;
+  ctx.beginPath(); ctx.moveTo(p1x, p1z); ctx.lineTo(p2x, p2z); ctx.stroke();
+  ctx.lineWidth = w3;
+  ctx.beginPath(); ctx.moveTo(p2x, p2z); ctx.lineTo(p3x, p3z); ctx.stroke();
+
+  // Reflet soyeux
+  ctx.strokeStyle = 'rgba(146, 88, 48, 0.75)';
+  ctx.lineWidth = Math.max(0.6, w2 * 0.4);
+  ctx.beginPath(); ctx.moveTo(p0x, p0z); ctx.lineTo(p2x, p2z); ctx.stroke();
+
+  // Élastique rouge signature à la base
+  const rTie = Math.max(1.2 * sc, 4.0 * S);
+  ctx.fillStyle = '#dc2626';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.lineWidth = Math.max(0.6, 0.7 * sc);
+  ctx.beginPath();
+  ctx.arc(p0x, p0z, rTie, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // 3. Tête et épaules du Walker
+  ctx.save();
+  ctx.translate(tx(w.x), tz(w.z));
+  ctx.rotate(-w.yaw);
 
   // Body icon
   ctx.fillStyle   = '#d32f2f'; // Red Theme Accent instead of '#0066ff'
@@ -412,7 +570,7 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
           }}
         >
           <div 
-            className="card glass-card shadow-lg rounded-4 overflow-hidden"
+            className="card glass-card shadow-lg overflow-hidden"
             onClick={(e) => e.stopPropagation()}
             style={{
               width: 'fit-content',
@@ -510,7 +668,6 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onDoubleClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
-              title={zoom > 1 ? "Glisser pour déplacer le plan · Double-clic pour réinitialiser" : "Molette pour zoomer sur le plan"}
             >
               <canvas 
                 ref={expandedCanvasRef} 
@@ -561,7 +718,6 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
               setZoom(1);
               setPan({ x: 0, y: 0 });
             }}
-            title="Cliquer pour ouvrir le plan en grand"
           >
             <canvas
               ref={floatingCanvasRef}

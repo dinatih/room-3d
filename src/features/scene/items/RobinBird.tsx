@@ -8,6 +8,7 @@ import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import { appLog } from '@features/ui/AppConsole';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
+import { cameraState } from '@features/scene/cameraState';
 
 const GLB_PATH = '/characters/robin/robin.glb';
 
@@ -118,6 +119,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     invalidate();
 
     return () => {
+      delete cameraState.positions['robin'];
       mixerRef.current?.stopAllAction();
       mixerRef.current?.uncacheRoot(scene);
     };
@@ -254,6 +256,13 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
           }
         }
       }
+
+      cameraState.positions['robin'] = {
+        x: modelRef.current.position.x,
+        y: modelRef.current.position.y,
+        z: modelRef.current.position.z,
+        yaw: modelRef.current.rotation.y,
+      };
     }
   });
 
