@@ -13,9 +13,9 @@ export function BnfSkyMarker({
 }: BnfSkyMarkerProps) {
   const currentHdri = useSceneStore(state => state.currentHdri);
   const showBnfMarker = useSceneStore(state => state.layers.bnfMarker ?? true);
-  const bnfAzimuth = useSceneStore(state => state.bnfAzimuth ?? 156.5);
-  const bnfElevation = useSceneStore(state => state.bnfElevation ?? -3.0);
-  const bnfRadius = useSceneStore(state => state.bnfRadius ?? 50);
+  const bnfAzimuth = useSceneStore(state => state.bnfAzimuth ?? 154.3);
+  const bnfElevation = useSceneStore(state => state.bnfElevation ?? -2.2);
+  const bnfRadius = useSceneStore(state => state.bnfRadius ?? 45);
 
   const pulseRingRef = useRef<THREE.Mesh>(null);
   const labelRef = useRef<THREE.Group>(null);
