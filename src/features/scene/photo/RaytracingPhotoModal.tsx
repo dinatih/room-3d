@@ -49,7 +49,6 @@ const RESOLUTION_OPTIONS: ResolutionOption[] = [
 export type ComparisonMode = 'split' | 'raytracing' | 'raster';
 
 export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingPhotoModalProps) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasWrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -396,28 +395,48 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     };
   }, [resolution]);
 
-  // Initialisation et exécution du Path Tracer
+  // Initialisation et exécution du Path Tracer avec le renderer unique de la scène
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = gl.domElement;
     if (!canvas) return;
 
-    const { width, height } = getRenderDimensions();
-    canvas.width = width;
-    canvas.height = height;
+    // Sauvegarde des propriétés d'origine du canvas et du renderer
+    const originalParent = canvas.parentElement;
+    const originalStyle = {
+      width: canvas.style.width,
+      height: canvas.style.height,
+      position: canvas.style.position,
+      top: canvas.style.top,
+      left: canvas.style.left,
+      display: canvas.style.display,
+      maxWidth: canvas.style.maxWidth,
+      maxHeight: canvas.style.maxHeight,
+      objectFit: canvas.style.objectFit,
+      cursor: canvas.style.cursor,
+      pointerEvents: canvas.style.pointerEvents,
+    };
+    const originalSize = new THREE.Vector2();
+    gl.getSize(originalSize);
+    const originalPixelRatio = gl.getPixelRatio();
+    const originalExposure = gl.toneMappingExposure;
 
-    // Renderer WebGL indépendant
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: false,
-      powerPreference: 'high-performance',
-      preserveDrawingBuffer: true,
-    });
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.AgXToneMapping;
-    renderer.toneMappingExposure = exposure;
-    renderer.setSize(width, height, false);
-    rendererRef.current = renderer;
+    // Déplacer temporairement le canvas unique dans le wrapper du mode photo
+    if (canvasWrapperRef.current && originalParent) {
+      canvasWrapperRef.current.insertBefore(canvas, canvasWrapperRef.current.firstChild);
+      canvas.style.display = 'block';
+      canvas.style.position = 'relative';
+      canvas.style.maxWidth = '100%';
+      canvas.style.maxHeight = 'calc(100vh - 180px)';
+      canvas.style.objectFit = 'contain';
+      canvas.style.cursor = dofEnabled ? 'crosshair' : 'default';
+    }
+
+    const { width, height } = getRenderDimensions();
+    gl.setPixelRatio(1);
+    gl.setSize(width, height, false);
+    gl.toneMapping = THREE.AgXToneMapping;
+    gl.toneMappingExposure = exposure;
+    rendererRef.current = gl;
 
     // Caméra physique avec support du Bokeh
     const physCamera = new PhysicalCamera(camera.fov, width / height, camera.near, camera.far);
@@ -444,14 +463,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     physCameraRef.current = physCamera;
 
     // 1. Capture instantanée du rendu 3D Standard temps réel (avec ombres et matériaux d'origine) avant altération pour le path-tracer
+    scene.updateMatrixWorld(true);
     try {
-      let snapshot: string;
-      if (gl?.domElement) {
-        snapshot = gl.domElement.toDataURL('image/png');
-      } else {
-        renderer.render(scene, physCamera);
-        snapshot = canvas.toDataURL('image/png');
-      }
+      gl.render(scene, physCamera);
+      const snapshot = canvas.toDataURL('image/png');
       setRasterSnapshot(snapshot);
     } catch (err) {
       console.warn('[Raytracing] Impossible de capturer le snapshot 3D standard:', err);
@@ -465,7 +480,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     setElapsedSeconds(0);
 
     // Path Tracer
-    const pathTracer = new WebGLPathTracer(renderer);
+    const pathTracer = new WebGLPathTracer(gl);
     pathTracer.bounces = bounces;
     pathTracer.transmissiveBounces = bounces;
     pathTracer.filterGlossyFactor = 0.5;
@@ -578,14 +593,34 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         denoiseQuad.dispose();
         denoiseMat.dispose();
         pathTracer.dispose();
-        renderer.dispose();
+        // Ne PAS disposer gl (appartient à Studio / R3F)
       } catch {}
       denoiseQuadRef.current = null;
       denoiseMatRef.current = null;
       pathTracerRef.current = null;
       rendererRef.current = null;
+
+      // Restauration du canvas dans le conteneur R3F d'origine
+      if (originalParent) {
+        originalParent.appendChild(canvas);
+        canvas.style.width = originalStyle.width;
+        canvas.style.height = originalStyle.height;
+        canvas.style.position = originalStyle.position;
+        canvas.style.top = originalStyle.top;
+        canvas.style.left = originalStyle.left;
+        canvas.style.display = originalStyle.display;
+        canvas.style.maxWidth = originalStyle.maxWidth;
+        canvas.style.maxHeight = originalStyle.maxHeight;
+        canvas.style.objectFit = originalStyle.objectFit;
+        canvas.style.cursor = originalStyle.cursor;
+        canvas.style.pointerEvents = originalStyle.pointerEvents;
+      }
+      gl.setPixelRatio(originalPixelRatio);
+      gl.setSize(originalSize.x, originalSize.y);
+      gl.toneMappingExposure = originalExposure;
     };
   }, [
+    gl,
     scene,
     camera,
     resolution,
@@ -628,8 +663,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   }, [bounces]);
 
   // Autofocus au clic sur le canvas
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
+  const handleCanvasClick = (e: React.MouseEvent<HTMLElement>) => {
+    const canvas = gl.domElement;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -657,7 +692,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
   // Génération du blob selon le mode de comparaison actif
   const getExportBlob = (callback: (blob: Blob | null) => void) => {
-    const canvas = canvasRef.current;
+    const canvas = gl.domElement;
     if (!canvas) return;
 
     if (comparisonMode === 'raster' && rasterSnapshot) {
@@ -852,7 +887,9 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           <div
             ref={canvasWrapperRef}
             className="position-relative shadow-lg border border-secondary border-opacity-25 rounded overflow-hidden"
-            style={{ userSelect: 'none' }}
+            style={{ userSelect: 'none', cursor: dofEnabled ? 'crosshair' : 'default' }}
+            onClick={handleCanvasClick}
+            title={dofEnabled ? "Cliquez sur n'importe quel point pour ajuster l'autofocus 🎯" : undefined}
             onMouseMove={(e) => {
               if (isDraggingSplit && canvasWrapperRef.current) {
                 const rect = canvasWrapperRef.current.getBoundingClientRect();
@@ -868,19 +905,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
               }
             }}
           >
-            {/* Le canvas Raytracing est TOUJOURS présent pour l'accumulation et le rendu */}
-            <canvas
-              ref={canvasRef}
-              onClick={handleCanvasClick}
-              style={{
-                display: 'block',
-                cursor: dofEnabled ? 'crosshair' : 'default',
-                maxWidth: '100%',
-                maxHeight: 'calc(100vh - 180px)',
-                objectFit: 'contain',
-              }}
-              title={dofEnabled ? "Cliquez sur n'importe quel point pour ajuster l'autofocus 🎯" : undefined}
-            />
+            {/* Le canvas unique gl.domElement est inséré dynamiquement ici */}
 
             {/* Calque Rendu 3D Standard avec découpe pour comparaison */}
             {rasterSnapshot && comparisonMode !== 'raytracing' && (
