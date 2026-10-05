@@ -1,5 +1,5 @@
 /**
- * Kallax2x2.tsx — Étagère KALLAX 2×2 IKEA (GLB media/glb/KALLAX etag 77x77 blanc.glb).
+ * Kallax2x2.tsx — KALLAX Étagère, blanc, 77x77 cm (202.758.14).
  * Dimensions réelles : 77×77×39 cm (L×H×P).
  * Le GLB officiel IKEA est en mètres → scale ×100 pour la scène (1 unité = 1 cm).
  * Convention : Y=0 = sommet, Y=-H = bas (identique à Kallax1x1 et Kallax procédural).
@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'items/kallax etag 77x77 blanc/KALLAX etag 77x77 blanc.glb';
+const GLB = 'items/kallax20275814/Kallax20275814.glb';
 
 export function Kallax2x2({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
