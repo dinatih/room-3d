@@ -34,6 +34,8 @@ import {
   EYE_RATIO,
   PERSP_POS,
   PERSP_TARGET,
+  TOP_POS,
+  TOP_TARGET,
   activeWalkH,
   DEFAULT_ORBIT_DISTANCE,
   DEFAULT_ORBIT_PITCH,
@@ -428,29 +430,33 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
     topFollowRef.current = follow;
 
-    if (follow) {
-      const targetX = cameraState.walkerX;
-      const targetZ = cameraState.walkerZ;
-      camera.position.set(targetX, 2000, targetZ);
+    const targetX = follow ? cameraState.walkerX : CX;
+    const targetZ = follow ? cameraState.walkerZ : CZ;
+
+    changeMode('top');
+
+    requestAnimationFrame(() => {
+      const activeCam = ctrlRef.current?.object || camera;
+      activeCam.position.set(targetX, 2000, targetZ);
+      activeCam.up.set(0, 0, -1);
+      if ('zoom' in activeCam) {
+        (activeCam as THREE.OrthographicCamera).zoom = 1;
+      }
+      activeCam.lookAt(targetX, 0, targetZ);
+      activeCam.updateProjectionMatrix();
       if (ctrlRef.current) {
         ctrlRef.current.target.set(targetX, 0, targetZ);
         ctrlRef.current.update();
       }
-    } else {
-      camera.position.set(CX, 2000, CZ);
-      if (ctrlRef.current) {
-        ctrlRef.current.target.set(CX, 0, CZ);
-        ctrlRef.current.update();
-      }
-    }
-    changeMode('top');
-    invalidate();
+      invalidate();
+    });
   }, [camera, changeMode, exitWalkMode, invalidate]);
 
   const exitTop = useCallback(() => {
     topFollowRef.current = false;
+    camera.up.set(0, 1, 0);
     changeMode('orbit');
-  }, [changeMode]);
+  }, [camera, changeMode]);
 
   const [orthoConfig, setOrthoConfig] = useState<{
     pos: [number, number, number];
@@ -504,10 +510,30 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   useEffect(() => {
     if (mode === 'orbit' && ctrlRef.current) {
       camera.position.copy(savedPerspPos.current);
+      camera.up.set(0, 1, 0);
       ctrlRef.current.target.copy(savedPerspTarget.current);
       ctrlRef.current.update();
     }
   }, [mode, camera]);
+
+  // Synchronisation de la caméra orthographique et du target OrbitControls dès l'activation du mode top
+  useEffect(() => {
+    if (mode === 'top' && ctrlRef.current) {
+      const targetX = topFollowRef.current ? cameraState.walkerX : CX;
+      const targetZ = topFollowRef.current ? cameraState.walkerZ : CZ;
+      const activeCam = ctrlRef.current.object || camera;
+      activeCam.position.set(targetX, 2000, targetZ);
+      activeCam.up.set(0, 0, -1);
+      if ('zoom' in activeCam) {
+        (activeCam as THREE.OrthographicCamera).zoom = 1;
+      }
+      activeCam.lookAt(targetX, 0, targetZ);
+      activeCam.updateProjectionMatrix();
+      ctrlRef.current.target.set(targetX, 0, targetZ);
+      ctrlRef.current.update();
+      invalidate();
+    }
+  }, [mode, camera, invalidate]);
 
   // Synchronisation de la caméra orthographique et du target OrbitControls dès l'activation
   useEffect(() => {
@@ -722,7 +748,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       {mode === 'top' && (
         <OrthographicCamera
           makeDefault
-          position={topFollowRef.current ? [cameraState.walkerX, 2000, cameraState.walkerZ] : [CX, 2000, CZ]}
+          position={topFollowRef.current ? [cameraState.walkerX, 2000, cameraState.walkerZ] : TOP_POS}
           up={[0, 0, -1]}
           left={-viewW / 2}
           right={viewW / 2}
@@ -730,6 +756,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           bottom={-viewH / 2}
           near={1}
           far={10000}
+          onUpdate={(self) => {
+            const targetX = topFollowRef.current ? cameraState.walkerX : CX;
+            const targetZ = topFollowRef.current ? cameraState.walkerZ : CZ;
+            self.position.set(targetX, 2000, targetZ);
+            self.up.set(0, 0, -1);
+            self.lookAt(targetX, 0, targetZ);
+            self.updateProjectionMatrix();
+          }}
         />
       )}
 
@@ -759,14 +793,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           mode === 'ortho'
             ? orthoConfig.target
             : mode === 'top'
-              ? (topFollowRef.current ? [cameraState.walkerX, 0, cameraState.walkerZ] : [CX, 0, CZ])
+              ? (topFollowRef.current ? undefined : TOP_TARGET)
               : PERSP_TARGET
         }
         enableDamping={mode !== 'walk'}
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
-        enabled={!planeMode && !isIntroRunningState && mode !== 'top' && mode !== 'walk' && mode !== 'fpv'}
-        enableRotate={!planeMode && !isIntroRunningState && mode !== 'top' && mode !== 'walk' && mode !== 'fpv'}
+        enabled={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
+        enableRotate={!planeMode && !isIntroRunningState && mode !== 'top' && mode !== 'ortho' && mode !== 'walk' && mode !== 'fpv'}
         enablePan={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
         enableZoom={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'walk'}

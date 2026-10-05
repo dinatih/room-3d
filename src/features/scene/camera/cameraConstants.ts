@@ -32,6 +32,10 @@ export const PERSP_POS: [number, number, number] = [ROOM_W / 2, 1000, -150];
  */
 export const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D / 2];
 
+/** Position et cible de la caméra en mode 2D Top (centré sur la pièce à 20m d'altitude) */
+export const TOP_POS: [number, number, number] = [CX, 2000, CZ];
+export const TOP_TARGET: [number, number, number] = [CX, 0, CZ];
+
 // Vecteurs temporaires réutilisables pour useFrame (évite les allocations GC constantes)
 export const _tmpOffset = new THREE.Vector3();
 export const _tmpSph = new THREE.Spherical();
