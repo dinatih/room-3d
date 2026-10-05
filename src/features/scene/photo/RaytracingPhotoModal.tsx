@@ -73,7 +73,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const [resolution, setResolution] = useState<ResolutionPreset>('720p');
   const [enableDenoise, setEnableDenoise] = useState<boolean>(true);
   const [targetSamples, setTargetSamples] = useState<number>(40);
-  const [bounces, setBounces] = useState<number>(6);
+  const [bounces, setBounces] = useState<number>(2);
   const [exposure, setExposure] = useState<number>(1.0);
 
   // Profondeur de champ (Depth of Field / Bokeh)
@@ -1094,7 +1094,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
               <input
                 type="range"
                 className="form-range form-range-sm"
-                min="2"
+                min="1"
                 max="12"
                 step="1"
                 value={bounces}
