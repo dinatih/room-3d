@@ -62,6 +62,7 @@ export function SidePanel({
   showLandingStrips = false,
   onToggleLandingStrips,
   onToggleHideUI,
+  hideUI = false,
 }: SidePanelProps) {
   const isMobile = useIsMobile();
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -433,12 +434,13 @@ export function SidePanel({
 
         {/* Tab bar */}
         <div 
-          className="position-fixed bottom-0 start-0 end-0 border-top shadow-lg d-flex align-items-center bg-white bg-opacity-75 overflow-x-auto text-nowrap py-1"
+          className={`position-fixed bottom-0 start-0 end-0 border-top shadow-lg d-flex align-items-center bg-white bg-opacity-75 overflow-x-auto text-nowrap py-1 ui-panel-bottom ${hideUI ? 'ui-hidden' : ''}`}
           style={{ 
             zIndex: 100, 
             paddingBottom: 'env(safe-area-inset-bottom)', 
             backdropFilter: 'blur(8px)',
             scrollbarWidth: 'none',
+            pointerEvents: hideUI ? 'none' : 'auto',
           }}
         >
           {/* 🥽 VR WebXR (uniquement si WebXR est réellement supporté par l'appareil) */}
@@ -548,7 +550,7 @@ export function SidePanel({
   return (
     <>
       <div 
-        className="position-fixed overflow-y-auto overflow-x-hidden d-flex flex-column gap-2 side-panel-desktop"
+        className={`position-fixed overflow-y-auto overflow-x-hidden d-flex flex-column gap-2 side-panel-desktop ui-panel-left ${hideUI ? 'ui-hidden' : ''}`}
         style={{
           top: 16,
           left: 16,
@@ -557,6 +559,7 @@ export function SidePanel({
           zIndex: 100,
           scrollbarWidth: 'thin',
           scrollbarColor: 'rgba(0, 0, 0, 0.35) rgba(0, 0, 0, 0.05)',
+          pointerEvents: hideUI ? 'none' : 'auto',
         }}
         onWheel={e => e.stopPropagation()}
       >

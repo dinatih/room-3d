@@ -859,85 +859,84 @@ export function Studio() {
       </Canvas>
 
       {/* HTML overlays */}
-      {!hideUI && (
-        <>
-          <SidePanel
-            layers={layers} onToggleLayer={onToggleLayer}
-            onOpenInventory={() => setShowInventory(true)}
-            lidarMode={lidarMode} onCycleLidar={onCycleLidar}
-            lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
-            buildAnimMatrix={buildAnimMatrix}
-            onStartBuildAnimMatrix={startMatrix}
-            onStopBuildAnim={stopAll}
-            animDurations={animDurations}
-            planeModel={planeModel}
-            onSetPlaneModel={setPlaneModel}
-            autopilotVisible={autopilotVisible}
-            onToggleAutopilot={() => setAutopilotVisible(v => !v)}
-            showLandingStrips={showLandingStrips}
-            onToggleLandingStrips={() => {
-              setShowLandingStrips(v => {
-                cameraState.landingStripsVisible = !v;
-                return !v;
-              });
+      <SidePanel
+        layers={layers} onToggleLayer={onToggleLayer}
+        onOpenInventory={() => setShowInventory(true)}
+        lidarMode={lidarMode} onCycleLidar={onCycleLidar}
+        lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
+        buildAnimMatrix={buildAnimMatrix}
+        onStartBuildAnimMatrix={startMatrix}
+        onStopBuildAnim={stopAll}
+        animDurations={animDurations}
+        planeModel={planeModel}
+        onSetPlaneModel={setPlaneModel}
+        autopilotVisible={autopilotVisible}
+        onToggleAutopilot={() => setAutopilotVisible(v => !v)}
+        showLandingStrips={showLandingStrips}
+        onToggleLandingStrips={() => {
+          setShowLandingStrips(v => {
+            cameraState.landingStripsVisible = !v;
+            return !v;
+          });
+        }}
+        onToggleHideUI={toggleHideUI}
+        hideUI={hideUI}
+      />
+      <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
+        <LaraGridToolbar />
+        {laraGridActive && (
+          <AnimFrameController
+            animName={currentLaraAnimLabel}
+            animKey={laraGridAnim}
+            onCycleAnim={cycleLaraAnim}
+            onSelectAnim={(nextVal) => {
+              setLaraGridAnim(nextVal);
+              document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: nextVal } }));
+              useAnimPreviewStore.getState().play();
             }}
-            onToggleHideUI={toggleHideUI}
+            bottom={16}
+            style={{
+              position: 'fixed',
+              left: isMobile ? 12 : 288,
+              right: isMobile ? 12 : 24,
+              maxWidth: isMobile ? 'calc(100vw - 24px)' : 920,
+              margin: '0 auto',
+              zIndex: 96,
+            }}
           />
-          <LaraGridToolbar />
-          {laraGridActive && (
-            <AnimFrameController
-              animName={currentLaraAnimLabel}
-              animKey={laraGridAnim}
-              onCycleAnim={cycleLaraAnim}
-              onSelectAnim={(nextVal) => {
-                setLaraGridAnim(nextVal);
-                document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: nextVal } }));
-                useAnimPreviewStore.getState().play();
-              }}
-              bottom={16}
-              style={{
-                position: 'fixed',
-                left: isMobile ? 12 : 288,
-                right: isMobile ? 12 : 24,
-                maxWidth: isMobile ? 'calc(100vw - 24px)' : 920,
-                margin: '0 auto',
-                zIndex: 96,
-              }}
-            />
-          )}
-          {planeMode && (
-            <div style={{
-              position: 'absolute', bottom: 72, left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'rgba(0,0,0,0.6)', borderRadius: 8,
-              padding: '6px 16px', color: '#ddd', fontSize: 12,
-              pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
-              backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
-            }}>
-              {!planeLaunched
-                ? '✈ Espace / C → décoller   |   F / Échap → quitter'
-                : planeViewMode === 'landing'
-                  ? '⬇ Atterrissage automatique…'
-                  : planeViewMode === 'landed'
-                    ? '🛬 Atterri — orbite   |   F / Échap = quitter'
-                    : `Vue: ${planeViewMode}   |   C = changer vue   |   F / Échap = quitter`
-              }
-            </div>
-          )}
-          <RightSidePanel />
-          {isMobile && <Minimap />}
-          {showInventory && (
-            <Suspense fallback={null}>
-              <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
-            </Suspense>
-          )}
-          <VirtualDPad />
-          <HoverOverlay />
-          {layers.aiZones && <ZoneAiDebugOverlay />}
-          {layers.wallEdges && <EdgeHoverOverlay />}
-          <AppConsole hidden={showInventory} />
-        </>
-      )}
+        )}
+        {planeMode && (
+          <div style={{
+            position: 'absolute', bottom: 72, left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0,0,0,0.6)', borderRadius: 8,
+            padding: '6px 16px', color: '#ddd', fontSize: 12,
+            pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
+            backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            {!planeLaunched
+              ? '✈ Espace / C → décoller   |   F / Échap → quitter'
+              : planeViewMode === 'landing'
+                ? '⬇ Atterrissage automatique…'
+                : planeViewMode === 'landed'
+                  ? '🛬 Atterri — orbite   |   F / Échap = quitter'
+                  : `Vue: ${planeViewMode}   |   C = changer vue   |   F / Échap = quitter`
+            }
+          </div>
+        )}
+        {isMobile && <Minimap />}
+        {showInventory && (
+          <Suspense fallback={null}>
+            <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
+          </Suspense>
+        )}
+        <VirtualDPad />
+        <HoverOverlay />
+        {layers.aiZones && <ZoneAiDebugOverlay />}
+        {layers.wallEdges && <EdgeHoverOverlay />}
+      </div>
+      <RightSidePanel hideUI={hideUI} />
+      <AppConsole hidden={showInventory} hideUI={hideUI} />
       {isPhotoModeOpen && activeSceneRef.current && activeCameraRef.current && activeGlRef.current && (
         <Suspense fallback={null}>
           <RaytracingPhotoModal
@@ -948,16 +947,14 @@ export function Studio() {
           />
         </Suspense>
       )}
-      {hideUI && (
-        <button
-          onClick={showUI}
-          className="btn btn-dark btn-sm position-fixed opacity-50 hover-opacity-100 shadow-sm"
-          style={{ top: 12, right: 12, zIndex: 9999, fontSize: '10px' }}
-          title="Réafficher l'interface (Touche 0)"
-        >
-          👁️ Afficher UI [0]
-        </button>
-      )}
+      <button
+        onClick={showUI}
+        className={`btn btn-dark btn-sm position-fixed opacity-50 hover-opacity-100 shadow-sm ui-fade-overlay ${!hideUI ? 'ui-hidden' : ''}`}
+        style={{ top: 12, right: 12, zIndex: 9999, fontSize: '10px' }}
+        title="Réafficher l'interface (Touche 0)"
+      >
+        👁️ Afficher UI [0]
+      </button>
     </div>
   );
 }

@@ -12,7 +12,7 @@ import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { Group } from '@features/scene/sidepanel/Group';
 import { Minimap, SMALL_W_DESKTOP } from '@features/scene/Minimap';
 
-export function RightSidePanel() {
+export function RightSidePanel({ hideUI = false }: { hideUI?: boolean }) {
   const isMobile = useIsMobile();
   if (isMobile) return null;
 
@@ -20,13 +20,13 @@ export function RightSidePanel() {
 
   return (
     <div
-      className="position-fixed d-flex flex-column gap-2"
+      className={`position-fixed d-flex flex-column gap-2 ui-panel-right ${hideUI ? 'ui-hidden' : ''}`}
       style={{
         top: 16,
         right: 16,
         width: panelWidth,
         zIndex: 90,
-        pointerEvents: 'auto',
+        pointerEvents: hideUI ? 'none' : 'auto',
         maxHeight: 'calc(100vh - 32px)',
         overflowY: 'auto',
         scrollbarWidth: 'none',

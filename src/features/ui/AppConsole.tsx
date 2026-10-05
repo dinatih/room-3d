@@ -51,7 +51,7 @@ function formatTime(ts: number): string {
 }
 
 // ── Composant ──────────────────────────────────────────────────────────────
-export function AppConsole({ hidden = false }: { hidden?: boolean }) {
+export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolean; hideUI?: boolean }) {
   const isMobile = useIsMobile();
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
   const activeChar = findCharacter(activeWalkerId);
@@ -143,7 +143,9 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   return (
     <div
       ref={containerRef}
-      className="card glass-card position-fixed font-monospace d-flex flex-column shadow-lg overflow-hidden rounded-3 border-0"
+      className={`card glass-card position-fixed font-monospace d-flex flex-column shadow-lg overflow-hidden rounded-3 border-0 ui-panel-bottom ${
+        hideUI ? 'ui-hidden' : ''
+      }`}
       style={{
         bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' : 16,
         right: isMobile ? 8 : 16,
@@ -154,6 +156,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
         maxHeight: isMobile ? '50vh' : '75vh',
         zIndex: 100, // Inférieur à #loading (9999) pour ne pas s'afficher pendant le préchargement
         fontSize: '11px',
+        pointerEvents: hideUI ? 'none' : undefined,
       }}
     >
       {/* Header */}
