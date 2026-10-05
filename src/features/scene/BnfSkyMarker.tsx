@@ -60,7 +60,7 @@ export function BnfSkyMarker({
           color="#ff1a40"
           side={THREE.DoubleSide}
           toneMapped={false}
-          depthTest={false}
+          depthTest={true}
           depthWrite={false}
           transparent
           opacity={0.92}
@@ -74,7 +74,7 @@ export function BnfSkyMarker({
           color="#ff4d6d"
           side={THREE.DoubleSide}
           toneMapped={false}
-          depthTest={false}
+          depthTest={true}
           depthWrite={false}
           transparent
           opacity={0.45}
@@ -88,7 +88,7 @@ export function BnfSkyMarker({
           color="#ff1a40"
           side={THREE.DoubleSide}
           toneMapped={false}
-          depthTest={false}
+          depthTest={true}
           depthWrite={false}
           transparent
           opacity={0.85}
@@ -98,19 +98,19 @@ export function BnfSkyMarker({
       {/* Réticules cardinaux (petites encoches repères) */}
       <mesh position={[0, bnfRadius * 0.95, 0]} renderOrder={-497}>
         <planeGeometry args={[bnfRadius * 0.08, bnfRadius * 0.25]} />
-        <meshBasicMaterial color="#ff1a40" side={THREE.DoubleSide} toneMapped={false} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial color="#ff1a40" side={THREE.DoubleSide} toneMapped={false} depthTest={true} depthWrite={false} />
       </mesh>
       <mesh position={[0, -bnfRadius * 0.95, 0]} renderOrder={-497}>
         <planeGeometry args={[bnfRadius * 0.08, bnfRadius * 0.25]} />
-        <meshBasicMaterial color="#ff1a40" side={THREE.DoubleSide} toneMapped={false} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial color="#ff1a40" side={THREE.DoubleSide} toneMapped={false} depthTest={true} depthWrite={false} />
       </mesh>
       <mesh position={[bnfRadius * 0.95, 0, 0]} renderOrder={-497}>
         <planeGeometry args={[bnfRadius * 0.25, bnfRadius * 0.08]} />
-        <meshBasicMaterial color="#ff1a40" side={THREE.DoubleSide} toneMapped={false} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial color="#ff1a40" side={THREE.DoubleSide} toneMapped={false} depthTest={true} depthWrite={false} />
       </mesh>
       <mesh position={[-bnfRadius * 0.95, 0, 0]} renderOrder={-497}>
         <planeGeometry args={[bnfRadius * 0.25, bnfRadius * 0.08]} />
-        <meshBasicMaterial color="#ff1a40" side={THREE.DoubleSide} toneMapped={false} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial color="#ff1a40" side={THREE.DoubleSide} toneMapped={false} depthTest={true} depthWrite={false} />
       </mesh>
 
       {/* Libellé textuel au-dessus de l'anneau */}
@@ -124,7 +124,7 @@ export function BnfSkyMarker({
           anchorY="bottom"
           outlineWidth={2}
           outlineColor="#b3001e"
-          material-depthTest={false}
+          material-depthTest={true}
           renderOrder={-490}
         >
           📍 BNF · Domicile
