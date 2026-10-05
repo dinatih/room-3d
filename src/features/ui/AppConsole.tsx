@@ -148,52 +148,48 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
   const consoleControls = (
     <div className="d-flex align-items-center gap-1">
-      <select
-        className="form-select form-select-sm py-0 px-2 bg-transparent small flex-shrink-0 app-console-select"
-        style={{ fontSize: '11px', height: '22px', width: 'auto', color: '#212529', borderColor: pnjColor, ['--pnj-color' as string]: pnjColor }}
-        value={activeWalkerId}
-        onClick={(e) => e.stopPropagation()}
-        onPointerDown={(e) => e.stopPropagation()}
-        onChange={(e) => {
-          e.stopPropagation();
-          useSceneStore.getState().setActiveWalkerId(e.target.value);
-        }}
-        title="Changer le PNJ sélectionné"
-      >
-        {CHARACTERS.map(c => (
-          <option key={c.id} value={c.id} className="bg-light text-dark">
-            {npcLabel(c)}
-          </option>
-        ))}
-      </select>
-
-      {open && (
-        <button
-          type="button"
-          className="btn py-0 px-2 small flex-shrink-0"
-          style={{
-            fontSize: '11px',
-            height: '22px',
-            ...(filterBubbleOnly
-              ? { backgroundColor: pnjColor, color: '#fff', fontWeight: 700, boxShadow: '0 1px 2px rgba(0,0,0,.15)', border: 'none' }
-              : { backgroundColor: 'transparent', color: '#6c757d', border: '1px solid rgba(108,117,125,.5)' }),
-          }}
-          onClick={(e) => {
+      <div className="input-group input-group-sm flex-nowrap" style={{ height: '22px', width: 'auto' }}>
+        <select
+          className="form-select form-select-sm py-0 px-2 bg-transparent small flex-shrink-0 app-console-select"
+          style={{ fontSize: '11px', color: '#212529', borderColor: pnjColor, ['--pnj-color' as string]: pnjColor }}
+          value={activeWalkerId}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onChange={(e) => {
             e.stopPropagation();
-            setFilterBubbleOnly(f => {
-              setCycleStep(f ? 1 : 2);
-              return !f;
-            });
+            useSceneStore.getState().setActiveWalkerId(e.target.value);
           }}
-          title={
-            filterBubbleOnly
-              ? `Filtre actif : logs limités à ${activeChar?.name ?? activeWalkerId}`
-              : `Filtrer les logs pour ${activeChar?.name ?? activeWalkerId}`
-          }
+          title="Changer le PNJ sélectionné"
         >
-          {filterBubbleOnly ? '✓ Filtré' : 'Filtrer'}
-        </button>
-      )}
+          {CHARACTERS.map(c => (
+            <option key={c.id} value={c.id} className="bg-light text-dark">
+              {npcLabel(c)}
+            </option>
+          ))}
+        </select>
+
+        {open && (
+          <button
+            type="button"
+            className="btn btn-sm py-0 px-2 small"
+            style={{ fontSize: '11px', borderColor: pnjColor, color: pnjColor, borderWidth: '1.5px' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setFilterBubbleOnly(f => {
+                setCycleStep(f ? 1 : 2);
+                return !f;
+              });
+            }}
+            title={
+              filterBubbleOnly
+                ? `Filtre actif : logs limités à ${activeChar?.name ?? activeWalkerId}`
+                : `Filtrer les logs pour ${activeChar?.name ?? activeWalkerId}`
+            }
+          >
+            {filterBubbleOnly ? '✓ Filtré' : 'Filtrer'}
+          </button>
+        )}
+      </div>
 
       {open && (
         <button
