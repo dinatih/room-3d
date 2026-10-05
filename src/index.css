@@ -278,6 +278,7 @@ button, input, select, textarea {
 
 /* AppConsole : chaîne flex scrollable dans un conteneur à hauteur fixe */
 .app-console .card {
+  flex-shrink: 1 !important;
   min-height: 0 !important;
 }
 .app-console .card-body {

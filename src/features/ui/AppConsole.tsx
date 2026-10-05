@@ -88,6 +88,17 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
     }
   }, [logs, isPaused, filterBubbleOnly]);
 
+  // Raccourci clavier 'B' pour ouvrir/fermer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
+      if (e.key === 'b' || e.key === 'B') setOpen(v => !v);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const displayedLogs = filterBubbleOnly
     ? logs.filter(entry => {
         const tag = entry.tag.toLowerCase();
@@ -212,7 +223,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       <Group
         emoji="🤖"
         title="App Logs"
-        defaultOpen={false}
+        open={open}
         extra={consoleControls}
         headerPadding="py-1 px-2"
         className="flex-grow-1"

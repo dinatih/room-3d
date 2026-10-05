@@ -4,6 +4,8 @@ export interface GroupProps {
   emoji: string;
   title: string;
   defaultOpen?: boolean;
+  /** Controlled open state — when provided, Group uses this instead of internal state */
+  open?: boolean;
   extra?: React.ReactNode;
   children: React.ReactNode;
   headerPadding?: string;
@@ -11,11 +13,12 @@ export interface GroupProps {
   className?: string;
 }
 
-export function Group({ emoji, title, defaultOpen = false, extra, children, headerPadding = 'py-2 px-3', onToggle, className }: GroupProps) {
-  const [open, setOpen] = useState(defaultOpen);
+export function Group({ emoji, title, defaultOpen = false, open: controlledOpen, extra, children, headerPadding = 'py-2 px-3', onToggle, className }: GroupProps) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isOpen = controlledOpen ?? internalOpen;
   const handleToggle = () => {
-    const next = !open;
-    setOpen(next);
+    const next = !isOpen;
+    setInternalOpen(next);
     onToggle?.(next);
   };
   return (
@@ -30,7 +33,7 @@ export function Group({ emoji, title, defaultOpen = false, extra, children, head
             className={`text-muted ${extra ? 'ms-2' : ''}`}
             style={{ 
               fontSize: '0.65rem',
-              transform: open ? 'rotate(90deg)' : 'none', 
+              transform: isOpen ? 'rotate(90deg)' : 'none', 
               transition: 'transform 0.18s' 
             }}
           >
@@ -45,7 +48,7 @@ export function Group({ emoji, title, defaultOpen = false, extra, children, head
       </div>
       <div
         className="card-body p-0 bg-transparent flex-column border-top border-light-subtle"
-        style={{ display: open ? 'flex' : 'none' }}
+        style={{ display: isOpen ? 'flex' : 'none' }}
       >
         {children}
       </div>
