@@ -65,7 +65,18 @@ export function VRMode() {
         const pos = cameraState.positions[activeId];
         const startX = pos ? pos.x : (Number.isFinite(cameraState.characterX) ? cameraState.characterX : ROOM_W / 2);
         const startZ = pos ? pos.z : (Number.isFinite(cameraState.characterZ) ? cameraState.characterZ : ROOM_D / 2);
-        rig.position.set(startX, 170, startZ);
+        const eyes = cameraState.activeEyesPos;
+        const headForward = cameraState.activeHeadForward;
+        if (eyes) {
+          // Start at the same eye point as FPV, just ahead of the face to avoid clipping.
+          rig.position.set(
+            eyes.x + (headForward?.x ?? 0) * 2,
+            eyes.y + (headForward?.y ?? 0) * 2,
+            eyes.z + (headForward?.z ?? 0) * 2,
+          );
+        } else {
+          rig.position.set(startX, 170, startZ);
+        }
         rig.add(camera);
 
         const hint = document.createElement('div');

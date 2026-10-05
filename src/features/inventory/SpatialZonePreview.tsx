@@ -1,9 +1,20 @@
-import { useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
+import { memo, useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html } from '@react-three/drei';
+import { OrbitControls, Html, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
 import { drawFps } from '@features/scene/DevToolsOverlay';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
+import { CategoryLayerGroup } from '@features/scene/sceneLayer';
+import { CharacterGroup } from '@features/scene/character';
+import { Animals } from '@features/scene/Placements';
+import { Neighbors } from '@features/scene/Neighbors';
+import { LidarScan } from '@features/scene/LidarScan';
+import {
+  LAYER_WALKER_DETAIL, LAYER_WALKER, LAYER_WALL_STRUCTURE, LAYER_DOORS, LAYER_EQUIPMENT,
+  LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_ANIMALS,
+  LAYER_MIRRORS, LAYER_NEIGHBORS, LAYER_LIDAR,
+} from '@config';
 
 // Rendu complet et officiel du Studio
 import { Walls, Floor, MirrorFrames, MirrorReflectors, DoorsPlacement } from '@features/scene/Building';
@@ -21,10 +32,22 @@ const CATEGORY_COLORS: Record<string, string> = {
   decor: '#b388ff',
 };
 
+function PreviewCategoryLayerGroup({
+  layer, children, visible = true, wireframe = false,
+}: {
+  layer: number;
+  children: React.ReactNode;
+  visible?: boolean;
+  wireframe?: boolean;
+}) {
+  return <CategoryLayerGroup layer={layer} visible={visible} wireframe={wireframe} register={false}>{children}</CategoryLayerGroup>;
+}
+
 /**
  * Rendu officiel du Studio croppé en local pour que la SkySphere et le fond céleste restent intacts
  */
 function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
+  const layers = useSceneStore(state => state.layers);
   const min = zone.bounds.min;
   const max = zone.bounds.max;
   const studioGroupRef = useRef<THREE.Group>(null);
@@ -44,23 +67,30 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
 
   // Applique les clipping planes localement sur tous les matériaux des meshes de la pièce
   useLayoutEffect(() => {
-    if (!studioGroupRef.current) return;
-    studioGroupRef.current.traverse((child: THREE.Object3D) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        if (Array.isArray(mesh.material)) {
-          mesh.material.forEach(m => {
-            m.clippingPlanes = clippingPlanes;
-            m.clipShadows = true;
-            m.needsUpdate = true;
-          });
-        } else if (mesh.material) {
-          mesh.material.clippingPlanes = clippingPlanes;
-          mesh.material.clipShadows = true;
-          mesh.material.needsUpdate = true;
+    const group = studioGroupRef.current;
+    if (!group) return;
+    const applyClipping = (root: THREE.Object3D) => {
+      root.traverse((child: THREE.Object3D) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh;
+          if (Array.isArray(mesh.material)) {
+            mesh.material.forEach(m => {
+              m.clippingPlanes = clippingPlanes;
+              m.clipShadows = true;
+              m.needsUpdate = true;
+            });
+          } else if (mesh.material) {
+            mesh.material.clippingPlanes = clippingPlanes;
+            mesh.material.clipShadows = true;
+            mesh.material.needsUpdate = true;
+          }
         }
-      }
-    });
+      });
+    };
+    const onChildAdded = (event: any) => { if (event.child) applyClipping(event.child); };
+    applyClipping(group);
+    group.addEventListener('childadded', onChildAdded);
+    return () => group.removeEventListener('childadded', onChildAdded);
   }, [clippingPlanes]);
 
   const smartObjects = useMemo(() => zone.getSmartObjects(), [zone]);
@@ -72,16 +102,38 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
       <SkySphere />
 
       {/* ── Scène réelle complète de l'appartement — soumise au découpage de la pièce ── */}
-      <group ref={studioGroupRef}>
-        <Walls />
+      <group ref={studioGroupRef} visible={!layers.plan}>
+        <PreviewCategoryLayerGroup
+          layer={LAYER_WALL_STRUCTURE}
+          visible={layers.wallStructure}
+          wireframe={layers.wireframe || layers.wireframeWallStructure}
+        >
+          <Walls pillarsOnly={layers.pillarsOnly} />
+        </PreviewCategoryLayerGroup>
+        <PreviewCategoryLayerGroup layer={LAYER_DOORS} visible={layers.doors} wireframe={layers.wireframe || layers.wireframeDoors}>
+          {!layers.pillarsOnly && <DoorsPlacement />}
+        </PreviewCategoryLayerGroup>
         <Floor />
-        <DoorsPlacement />
-        <Equipment />
-        <Furniture />
-        <Furnishings />
-        <Decor />
-        <MirrorFrames />
-        <MirrorReflectors />
+        <PreviewCategoryLayerGroup layer={LAYER_WALKER} visible={layers.character}>
+          <CharacterGroup />
+        </PreviewCategoryLayerGroup>
+        <PreviewCategoryLayerGroup layer={LAYER_EQUIPMENT} visible={layers.equipment}><Equipment /></PreviewCategoryLayerGroup>
+        <PreviewCategoryLayerGroup layer={LAYER_FURNITURE} visible={layers.furniture}><Furniture /></PreviewCategoryLayerGroup>
+        <PreviewCategoryLayerGroup layer={LAYER_FURNISHINGS} visible={layers.furnishings}>
+          <Furnishings />
+          <MirrorFrames />
+        </PreviewCategoryLayerGroup>
+        <PreviewCategoryLayerGroup layer={LAYER_DECOR} visible={layers.decor}><Decor /></PreviewCategoryLayerGroup>
+        <PreviewCategoryLayerGroup layer={LAYER_ANIMALS} visible={layers.animals}><Animals /></PreviewCategoryLayerGroup>
+        <PreviewCategoryLayerGroup layer={LAYER_MIRRORS} visible={layers.mirrors}><MirrorReflectors /></PreviewCategoryLayerGroup>
+        {layers.neighbors && (
+          <PreviewCategoryLayerGroup layer={LAYER_NEIGHBORS} visible={layers.neighbors}><Neighbors /></PreviewCategoryLayerGroup>
+        )}
+        {layers.lidar && (
+          <PreviewCategoryLayerGroup layer={LAYER_LIDAR} visible={layers.lidar}>
+            <LidarScan mode={0} opacity={0.55} />
+          </PreviewCategoryLayerGroup>
+        )}
       </group>
 
       {/* ── Marqueurs Waypoints de la pièce ── */}
@@ -144,6 +196,10 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
   );
 }
 
+// FPS and render-stat updates belong to the HUD. Keep them from reconciling
+// the full apartment's furniture tree several times per second.
+const MemoizedStudioCroppedScene = memo(StudioCroppedScene);
+
 function SpatialZoneFpsCollector({ onFps }: { onFps: (fps: number) => void }) {
   const lastTime = useRef(performance.now());
   useFrame(() => {
@@ -205,7 +261,8 @@ export function SpatialZonePreview({
   const [currentFps, setCurrentFps] = useState<number>(60);
   const fpsCanvasRef = useRef<HTMLCanvasElement>(null);
   const samplesRef = useRef<number[]>([]);
-  const lastUpdateRef = useRef<number>(0);
+  const lastFpsDrawRef = useRef<number>(0);
+  const lastReactUpdateRef = useRef<number>(0);
 
   // Raccourci clavier 'T' pour basculer en Vue du dessus (Top View)
   useEffect(() => {
@@ -226,12 +283,17 @@ export function SpatialZonePreview({
     const s = samplesRef.current;
     s.push(fps);
     if (s.length > 80) s.shift();
-    if (fpsCanvasRef.current) {
+    const now = performance.now();
+
+    // Match DevToolsCollector: collect every frame, redraw the graph at 10 Hz.
+    if (fpsCanvasRef.current && now - lastFpsDrawRef.current > 100) {
+      lastFpsDrawRef.current = now;
       drawFps(fpsCanvasRef.current, s);
     }
-    const now = performance.now();
-    if (now - lastUpdateRef.current > 300) {
-      lastUpdateRef.current = now;
+
+    // Match DevToolsCollector's 4 Hz React update cadence for the FPS labels.
+    if (now - lastReactUpdateRef.current > 250) {
+      lastReactUpdateRef.current = now;
       setCurrentFps(fps);
       setFpsSamples([...s]);
     }
@@ -262,14 +324,18 @@ export function SpatialZonePreview({
         onCreated={({ gl, camera }) => {
           gl.localClippingEnabled = true;
           camera.layers.enableAll();
+          camera.layers.disable(LAYER_WALKER_DETAIL);
         }}
       >
+        {/* Match the main canvas: lower pixel density when frame times rise. */}
+        <AdaptiveDpr pixelated />
+        <PerformanceMonitor />
         <ambientLight intensity={1.5} />
         <directionalLight position={[200, 400, 200]} intensity={2.0} />
         <directionalLight position={[-200, 300, -200]} intensity={1.0} />
 
         <Suspense fallback={null}>
-          <StudioCroppedScene zone={zone} />
+          <MemoizedStudioCroppedScene zone={zone} />
         </Suspense>
 
         <SpatialZoneFpsCollector onFps={handleFps} />
@@ -370,7 +436,7 @@ export function SpatialZonePreview({
           </div>
           <canvas
             ref={fpsCanvasRef}
-            width={164}
+            width={140}
             height={46}
             style={{ display: 'block', borderRadius: 4 }}
           />
@@ -411,5 +477,3 @@ export function SpatialZonePreview({
     </div>
   );
 }
-
-

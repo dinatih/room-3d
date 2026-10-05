@@ -67,8 +67,8 @@ interface SceneLayers {
  * Supporte le mode filaire localisé via la prop `wireframe`.
  */
 export function CategoryLayerGroup({
-  layer, children, visible = true, wireframe = false,
-}: { layer: number; children: React.ReactNode; visible?: boolean; wireframe?: boolean }) {
+  layer, children, visible = true, wireframe = false, register = true,
+}: { layer: number; children: React.ReactNode; visible?: boolean; wireframe?: boolean; register?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
   const assignLayers = (root: THREE.Object3D) => {
@@ -102,7 +102,7 @@ export function CategoryLayerGroup({
   useLayoutEffect(() => {
     const grp = ref.current;
     if (!grp) return;
-    categoryLayerRegistry.set(layer, grp);
+    if (register) categoryLayerRegistry.set(layer, grp);
     if (visible !== undefined) {
       grp.visible = visible;
     }
@@ -123,9 +123,9 @@ export function CategoryLayerGroup({
     grp.addEventListener('childadded', onChildAdded);
     return () => {
       grp.removeEventListener('childadded', onChildAdded);
-      categoryLayerRegistry.delete(layer);
+      if (register && categoryLayerRegistry.get(layer) === grp) categoryLayerRegistry.delete(layer);
     };
-  }, [layer, visible]);
+  }, [layer, visible, register]);
 
   useLayoutEffect(() => {
     const grp = ref.current;
@@ -164,5 +164,4 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
 
   return <LayerSmokeTransition layers={layers as any} />;
 }
-
 
