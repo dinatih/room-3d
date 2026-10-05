@@ -248,8 +248,8 @@ export function useCameraShortcuts({
         return;
       }
 
-      // Orbit-mode arrow keys (Google Earth style)
-      if (modeRef.current === 'orbit' && isArrow) {
+      // Orbit and Top mode arrow keys (Google Earth style)
+      if ((modeRef.current === 'orbit' || modeRef.current === 'top') && isArrow) {
         if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
           keys.current.add(k);                      // plain  → move walker
         } else if (e.shiftKey && e.ctrlKey) {

@@ -668,7 +668,8 @@ export function SingleCharacter({
         const isUserManuallyMoving = 
           (cameraState.isXR ||
            cameraState.mode === 'fpv' ||
-           cameraState.mode === 'orbit') && cameraState.isUserControlling();
+           cameraState.mode === 'orbit' ||
+           cameraState.mode === 'top') && cameraState.isUserControlling();
 
         if (hasDynamicTask || isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
           const agentState = updateAgent(delta);

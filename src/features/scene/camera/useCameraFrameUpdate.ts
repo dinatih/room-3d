@@ -99,8 +99,8 @@ export function useCameraFrameUpdate({
       cameraState.onUpdate?.();
     }
 
-    // ── Orbit mode keyboard navigation (Google Earth style) ─────────────────────
-    if (modeRef.current === 'orbit' && keys.current.size > 0) {
+    // ── Orbit and Top mode keyboard navigation (Google Earth style) ─────────────
+    if ((modeRef.current === 'orbit' || modeRef.current === 'top') && keys.current.size > 0) {
       const k = keys.current;
       const ctrl = ctrlRef.current;
       invalidate();
@@ -188,8 +188,9 @@ export function useCameraFrameUpdate({
     if (modeRef.current === 'top' && topFollowRef.current) {
       const targetX = cameraState.walkerX;
       const targetZ = cameraState.walkerZ;
-      camera.position.x = targetX;
-      camera.position.z = targetZ;
+      const activeCam = ctrlRef.current?.object || camera;
+      activeCam.position.x = targetX;
+      activeCam.position.z = targetZ;
       if (ctrlRef.current) {
         ctrlRef.current.target.set(targetX, 0, targetZ);
         ctrlRef.current.update();

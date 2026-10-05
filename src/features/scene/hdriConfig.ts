@@ -22,7 +22,7 @@ export const HDRI_LIST: HdriItem[] = [
   {
     id: 'default',
     name: 'Ciel Paris 🌤️',
-    url: '/environment/hdri/ciel_paris_4k.hdr',
+    url: '/environment/hdri/ciel_paris_8k.hdr',
     type: 'hdr',
   },
 
