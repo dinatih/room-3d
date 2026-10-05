@@ -27,7 +27,7 @@ export const VIEWS: Record<string, CameraViewPreset> = {
   back:        { pos: [CX, CY, CZ - DIST],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
   left:        { pos: [CX - DIST, CY, CZ],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
   right:       { pos: [CX + DIST, CY, CZ],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
-  bottom:      { pos: [CX, -DIST, CZ],                    target: [CX, 0, CZ],          projection: 'persp' },
+  bottom:      { pos: [CX, -DIST, CZ],                    target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
   'iso-se':    { pos: [CX + ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
   'iso-nw':    { pos: [CX - ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
   'iso-ne':    { pos: [CX + ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
