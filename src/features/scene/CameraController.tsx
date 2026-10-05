@@ -59,12 +59,6 @@ const DEFAULT_MOUSE_BUTTONS = {
   RIGHT: THREE.MOUSE.PAN,
 };
 
-const TOP_MOUSE_BUTTONS = {
-  LEFT: THREE.MOUSE.PAN,
-  MIDDLE: THREE.MOUSE.DOLLY,
-  RIGHT: THREE.MOUSE.ROTATE,
-};
-
 const _tmpEyeTargetVec = new THREE.Vector3();
 const _tmpEyeLookVec = new THREE.Vector3();
 const _tmpEyeUpVec = new THREE.Vector3();
@@ -977,11 +971,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
         enabled={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
-        enableRotate={!planeMode && !isIntroRunningState && mode !== 'top' && mode !== 'ortho' && mode !== 'walk' && mode !== 'fpv'}
+        enableRotate={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
         enablePan={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
         enableZoom={!planeMode && !isIntroRunningState && mode !== 'walk' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'walk'}
-        mouseButtons={mode === 'top' ? TOP_MOUSE_BUTTONS : DEFAULT_MOUSE_BUTTONS}
+        mouseButtons={DEFAULT_MOUSE_BUTTONS}
       />
     </>
   );

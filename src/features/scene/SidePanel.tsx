@@ -234,7 +234,7 @@ export function SidePanel({
   const isIsoNE = cameraMode === 'orbit' && activeCameraView === 'iso-ne';
   const isLeft  = cameraMode === 'orbit' && activeCameraView === 'left';
   const isRight = cameraMode === 'orbit' && activeCameraView === 'right';
-  const isTop   = cameraMode === 'top';
+  const isTop   = cameraMode === 'orbit' && activeCameraView === 'top';
 
   const viewsHeaderButtons = (
     <div className="d-flex align-items-center gap-1 pe-1" onClick={e => e.stopPropagation()}>

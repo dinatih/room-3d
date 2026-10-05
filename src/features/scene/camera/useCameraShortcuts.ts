@@ -8,6 +8,7 @@ import { cameraState } from '../cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS, isCharacterVisibleInMode } from '../walkerConfig';
 import { frameLaraGridOrtho, frameLaraGridCamera } from '../character/laraGridUtils';
+import { dispatchView } from '../sidepanel/types';
 
 interface UseCameraShortcutsParams {
   camera: THREE.Camera;
@@ -226,13 +227,8 @@ export function useCameraShortcuts({
           document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 't-pose' } }));
           document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 't-pose' } }));
         } else {
-          if (modeRef.current === 'top' && !topFollowRef.current) {
-            exitTop();
-            appLog('system', '🎥 Mode Vue Libre (Orbit)');
-          } else {
-            enterTop(false);
-            appLog('system', '🎥 Mode 2D Top (Pièce)');
-          }
+          dispatchView('top');
+          appLog('system', '🎥 Mode Vue du Dessus (Top)');
         }
         return;
       }

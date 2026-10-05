@@ -22,6 +22,7 @@ export interface CameraViewPreset {
 export const VIEWS: Record<string, CameraViewPreset> = {
   perspective: { pos: [CX + 100, 200, CZ + 300],         target: [CX, WALL_H / 3, CZ], projection: 'persp' },
   top3d:       { pos: [CX, DIST + 200, CZ],               target: [CX, 0, CZ],          projection: 'persp' },
+  top:         { pos: [CX, DIST, CZ + 0.1],               target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
   front:       { pos: [CX, CY, CZ + DIST],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
   back:        { pos: [CX, CY, CZ - DIST],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
   left:        { pos: [CX - DIST, CY, CZ],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
@@ -37,10 +38,6 @@ import { useSceneStore } from '../store/useSceneStore';
 
 export function dispatchView(key: string) {
   useSceneStore.getState().setActiveCameraView(key);
-  if (key === 'top') {
-    document.dispatchEvent(new CustomEvent('camera-enter-top'));
-    return;
-  }
   const v = VIEWS[key];
   if (!v) return;
   document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...v, key } }));

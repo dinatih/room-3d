@@ -63,9 +63,7 @@ export function useCameraFrameUpdate({
     cameraState.camX = camera.position.x;
     cameraState.camZ = camera.position.z;
     cameraState.isWalking = modeRef.current === 'walk' || modeRef.current === 'fpv';
-    cameraState.isMoving =
-      (modeRef.current === 'fpv' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown'))) ||
-      (modeRef.current === 'orbit' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')));
+    cameraState.isMoving = keys.current.has('ArrowUp') || keys.current.has('ArrowDown');
 
     if (cameraState.isWalking) {
       if (!cameraState.isAIControlled) {

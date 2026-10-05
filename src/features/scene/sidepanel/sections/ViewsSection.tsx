@@ -9,6 +9,7 @@ export interface ViewsSectionProps {
 
 const CAMERA_PRESETS = [
   { label: 'Perspective', key: 'perspective' },
+  { label: 'Dessus', key: 'top' },
   { label: 'Dessus 3D', key: 'top3d' },
   { label: 'Face', key: 'front' },
   { label: 'Arrière', key: 'back' },
@@ -112,7 +113,7 @@ export function ViewsSection({
       )}
       {b0('gray',   '2D Dessus (Raccourci T)',         () => dispatchKey('t'))}
       {b0('gray',   '2D Suivi Perso (Raccourci Y)',    () => dispatchKey('y'))}
-      {cameraMode === 'top' && (
+      {(cameraMode === 'top' || (cameraMode === 'orbit' && activeCameraView === 'top')) && (
         <button
           className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between bg-transparent small"
           onClick={() => setMeasurementActive(!measurementActive)}
@@ -132,7 +133,7 @@ export function ViewsSection({
         </div>
         <div className="row g-1">
           {CAMERA_PRESETS.map(preset => {
-            const isActive = (cameraMode === 'orbit' && activeCameraView === preset.key) || (preset.key === 'top3d' && cameraMode === 'top');
+            const isActive = cameraMode === 'orbit' && activeCameraView === preset.key;
             return (
               <div key={preset.key} className={preset.fullWidth ? 'col-12' : 'col-6'}>
                 <button
