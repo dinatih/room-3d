@@ -109,14 +109,10 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
   const displayedLogs = filterBubbleOnly
     ? logs.filter(entry => {
-        const tag = entry.tag.toLowerCase();
         const activeId = activeWalkerId.toLowerCase();
-        if (tag === activeId) return true;
-        if (tag === 'system') return true;
-        const msg = entry.message.toLowerCase();
-        if (msg.includes(activeId)) return true;
-        if (activeChar && msg.includes(activeChar.name.toLowerCase())) return true;
-        return false;
+        if (entry.tag.toLowerCase() === 'system') return true;
+        const tagParts = entry.tag.toLowerCase().split('+').map(s => s.trim());
+        return tagParts.some(t => t === activeId);
       })
     : logs;
 
@@ -273,8 +269,9 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
             </div>
           )}
           {displayedLogs.map((entry, idx) => {
-            const color = getTagColor(entry.tag);
             const isLast = idx === displayedLogs.length - 1;
+            const tagParts = entry.tag.split('+').map(s => s.trim());
+            const isSoloActiveTag = filterBubbleOnly && tagParts.length === 1 && tagParts[0].toLowerCase() === activeWalkerId.toLowerCase();
             return (
               <div
                 key={`${entry.id}_${idx}`}
@@ -288,21 +285,30 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
                 >
                   {formatTime(entry.timestamp)}
                 </span>
-                {(!filterBubbleOnly || entry.tag.toLowerCase() !== activeWalkerId.toLowerCase()) && (
-                  <span
-                    className="badge py-0 px-1 font-monospace flex-shrink-0"
-                    style={{
-                      backgroundColor: `${color}18`,
-                      color: color,
-                      border: `1px solid ${color}40`,
-                      fontSize: '10px',
-                    }}
-                  >
-                    {(() => {
-                      if (entry.tag.toLowerCase() === 'system') return '⚙️ sys';
-                      const ch = findCharacter(entry.tag);
-                      return ch ? `${ch.emoji} ${entry.tag}` : entry.tag;
-                    })()}
+                {!isSoloActiveTag && (
+                  <span className="d-inline-flex align-items-center gap-0.5 flex-shrink-0">
+                    {entry.tag.toLowerCase() === 'system' ? (
+                      <span
+                        className="badge py-0 px-1 font-monospace"
+                        style={{ backgroundColor: `${getTagColor('system')}18`, color: getTagColor('system'), border: `1px solid ${getTagColor('system')}40`, fontSize: '10px' }}
+                      >
+                        ⚙️ sys
+                      </span>
+                    ) : tagParts.map((part, i) => {
+                      const ch = findCharacter(part);
+                      const partColor = ch?.color ?? getTagColor(part);
+                      return (
+                        <span key={i}>
+                          {i > 0 && <span className="text-muted mx-0.5" style={{ fontSize: '8px' }}>+</span>}
+                          <span
+                            className="badge py-0 px-1 font-monospace"
+                            style={{ backgroundColor: `${partColor}18`, color: partColor, border: `1px solid ${partColor}40`, fontSize: '10px' }}
+                          >
+                            {ch ? `${ch.emoji} ${ch.name}` : part}
+                          </span>
+                        </span>
+                      );
+                    })}
                   </span>
                 )}
                 <span className="flex-grow-1 text-dark fw-normal">{entry.message}</span>

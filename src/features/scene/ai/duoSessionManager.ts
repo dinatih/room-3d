@@ -168,7 +168,7 @@ class DuoSessionManager {
       const firstAnim = session.playlist[0];
       session.sessionTimer = firstAnim?.duration ?? 5.0;
       if (firstAnim) {
-        appLog(session.location.objectId, `🎭 Duo démarré entre ${session.participantA.characterId} & ${session.participantB.characterId} : "${firstAnim.label}" (x${session.repeatsPerAnim}, ${session.playlist.length} anims, ${session.sessionTimer.toFixed(1)}s/clip)`);
+        appLog(`${session.participantA.characterId}+${session.participantB.characterId}`, `🎭 Duo démarré entre ${session.participantA.characterId} & ${session.participantB.characterId} : "${firstAnim.label}" (x${session.repeatsPerAnim}, ${session.playlist.length} anims, ${session.sessionTimer.toFixed(1)}s/clip)`);
       }
       this.emitChange();
     }
@@ -266,25 +266,25 @@ class DuoSessionManager {
     session.sessionTimer -= dt;
     if (session.sessionTimer <= 0) {
       session.cachedAnimState = null;
-      const objLabel = session.location.objectId;
       const pBId = session.participantB?.characterId;
+      const duoTag = pBId ? `${session.participantA.characterId}+${pBId}` : session.participantA.characterId;
       const duoNames = pBId ? `${session.participantA.characterId} & ${pBId}` : session.participantA.characterId;
       if (session.currentRepeatIndex + 1 < session.repeatsPerAnim) {
         session.currentRepeatIndex++;
         const currentAnim = session.playlist[session.currentAnimIndex];
         session.sessionTimer = currentAnim?.duration ?? 5.0;
-        appLog(objLabel, `🔄 [${duoNames}] Répétition Duo (${session.currentRepeatIndex + 1}/${session.repeatsPerAnim}) : "${currentAnim?.label}"`);
+        appLog(duoTag, `🔄 [${duoNames}] Répétition Duo (${session.currentRepeatIndex + 1}/${session.repeatsPerAnim}) : "${currentAnim?.label}"`);
       } else {
         session.currentRepeatIndex = 0;
         session.currentAnimIndex++;
         if (session.currentAnimIndex < session.playlist.length) {
           const nextAnim = session.playlist[session.currentAnimIndex];
           session.sessionTimer = nextAnim?.duration ?? 5.0;
-          appLog(objLabel, `🎬 [${duoNames}] Nouvelle animation Duo (${session.currentAnimIndex + 1}/${session.playlist.length}) : "${nextAnim?.label}" (x${session.repeatsPerAnim})`);
+          appLog(duoTag, `🎬 [${duoNames}] Nouvelle animation Duo (${session.currentAnimIndex + 1}/${session.playlist.length}) : "${nextAnim?.label}" (x${session.repeatsPerAnim})`);
         } else {
           session.isSessionPlaying = false;
           session.isSessionComplete = true;
-          appLog(objLabel, `✨ [${duoNames}] Session Duo terminée ! Les 2 PNJs reprennent leur vie autonome.`);
+          appLog(duoTag, `✨ [${duoNames}] Session Duo terminée ! Les 2 PNJs reprennent leur vie autonome.`);
         }
       }
       this.emitChange();
@@ -385,7 +385,7 @@ class DuoSessionManager {
       OccupancyManager.claimSlot(session.location.objectId, `${session.location.slotId}:roleB`, closestId);
 
 
-      appLog(session.location.objectId, `📢 ${callerId} invite ${closestId} (${minDistance.toFixed(0)} cm) à rejoindre ${locLabel} !`);
+      appLog(`${callerId}+${closestId}`, `📢 ${callerId} invite ${closestId} (${minDistance.toFixed(0)} cm) à rejoindre ${locLabel} !`);
       document.dispatchEvent(new CustomEvent('npc-invite-duo', {
         detail: {
           targetId: closestId,
@@ -472,7 +472,7 @@ class DuoSessionManager {
         }
         existing.participantB = { characterId: leaderId, role: 'roleB', isReady: false };
         this.charToSession.set(leaderId, existing);
-        appLog(objectId, `🤝 ${leaderId} rejoint la session Duo sur ${obj.name} en Rôle B avec ${existing.participantA?.characterId} !`);
+        appLog(`${existing.participantA?.characterId}+${leaderId}`, `🤝 ${leaderId} rejoint la session Duo sur ${obj.name} en Rôle B avec ${existing.participantA?.characterId} !`);
         return { targetA: existing.participantA?.characterId ?? '', targetB: leaderId, posA, posB, rotA, rotB, actualSlotId };
       }
       return null;
@@ -538,7 +538,7 @@ class DuoSessionManager {
 
     const { posA, posB, rotA, rotB } = computeWorldTransform(anchorPos, anchorRotY, def.offsetB, def.rotB);
 
-    appLog(objectId, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur A) et ${targetB} (Partenaire B) !`);
+    appLog(`${targetA}+${targetB}`, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur A) et ${targetB} (Partenaire B) !`);
 
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
       detail: {
@@ -630,7 +630,7 @@ class DuoSessionManager {
 
 
     session.isSessionPlaying = isAlreadyThereA && isAlreadyThereB;
-    appLog('duo-zone', session.isSessionPlaying
+    appLog(`${targetA}+${targetB}`, session.isSessionPlaying
       ? `🎭 Duo instantané (2 déjà sur place) : "${def.label}" avec ${targetA} & ${targetB}`
       : `🎮 Appel Duo (${fromId}) : "${def.label}" assignée à ${targetA} (Meneur) et ${targetB} (Partenaire)`);
 
