@@ -286,8 +286,8 @@ function drawMinimap(
   ctx.beginPath(); ctx.moveTo(0, 0);
   ctx.arc(0, 0, fovR, Math.PI / 2 - hFov / 2, Math.PI / 2 + hFov / 2);
   ctx.closePath();
-  ctx.fillStyle   = 'rgba(255,221,0,0.18)'; ctx.fill();
-  ctx.strokeStyle = 'rgba(255,221,0,0.45)'; ctx.lineWidth = Math.max(0.5, 0.4 * sc); ctx.stroke();
+  ctx.fillStyle   = 'rgba(211,47,47,0.18)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(211,47,47,0.45)'; ctx.lineWidth = Math.max(0.5, 0.4 * sc); ctx.stroke();
   ctx.restore();
 
   // 2. Simulation physique & rendu de la queue de cheval de Lara (Inertie, Allongement & Mouvement)
@@ -299,9 +299,9 @@ function drawMinimap(
   const now = performance.now();
   const dt = lastWalkerMotion.time ? Math.min(0.1, Math.max(0.005, (now - lastWalkerMotion.time) / 1000)) : 0.016;
 
-  // Détection dynamique de la vitesse de translation (racine, insensible au balancement de la tête) et de rotation
-  const dX = cameraState.walkerX - lastWalkerMotion.x;
-  const dZ = cameraState.walkerZ - lastWalkerMotion.z;
+  // Détection dynamique de la vitesse de translation (position réelle de la tête) et de rotation
+  const dX = w.x - lastWalkerMotion.x;
+  const dZ = w.z - lastWalkerMotion.z;
   const linSpeed = lastWalkerMotion.time ? (Math.hypot(dX, dZ) / dt) : 0;
   
   let dYaw = w.yaw - lastWalkerMotion.yaw;
@@ -309,8 +309,8 @@ function drawMinimap(
   while (dYaw < -Math.PI) dYaw += Math.PI * 2;
   const angSpeed = lastWalkerMotion.time ? (Math.abs(dYaw) / dt) : 0;
 
-  lastWalkerMotion.x = cameraState.walkerX;
-  lastWalkerMotion.z = cameraState.walkerZ;
+  lastWalkerMotion.x = w.x;
+  lastWalkerMotion.z = w.z;
   lastWalkerMotion.yaw = w.yaw;
   lastWalkerMotion.time = now;
 
