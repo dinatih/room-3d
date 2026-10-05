@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { WebGLPathTracer, PhysicalCamera, DenoiseMaterial } from 'three-gpu-pathtracer';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
+import { getLoadedSkyTexture } from '../SkySphere';
 import {
   LAYER_STRUCTURE,
   LAYER_EQUIPMENT,
@@ -61,6 +62,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const hiddenHelpersRef = useRef<THREE.Object3D[]>([]);
   const denoiseQuadRef = useRef<FullScreenQuad | null>(null);
   const denoiseMatRef = useRef<DenoiseMaterial | null>(null);
+  const enableDenoiseRef = useRef<boolean>(true);
   const savedBackgroundRef = useRef<THREE.Color | THREE.Texture | null | undefined>(undefined);
 
   // Mode de comparaison 3D Standard vs Raytracing
@@ -152,6 +154,19 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     scene.traverse((obj) => {
       const name = (obj.name || '').toLowerCase();
 
+      // Masquer les colliders et proxies de survol invisibles (ex: cylindres de sélection des personnages)
+      if (
+        obj.userData?.isHoverProxy ||
+        name.includes('hoverproxy') ||
+        name.includes('hitbox')
+      ) {
+        if (obj.visible) {
+          obj.visible = false;
+          hidden.push(obj);
+        }
+        return;
+      }
+
       // Ne JAMAIS masquer les personnages (LAYER_WALKER) ou les animaux (LAYER_ANIMALS)
       const isCharacterOrAnimal =
         (obj.layers.mask & (1 << LAYER_WALKER)) !== 0 ||
@@ -212,11 +227,18 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         return;
       }
 
-      // Assainir les sources de lumière (three-gpu-pathtracer lit light.color.r directement)
+      // Assainir les sources de lumière (three-gpu-pathtracer lit light.color.r directement) et actualiser matrices
       if ((obj as any).isLight) {
         const light = obj as THREE.Light;
         if (!light.color || typeof (light.color as any).r !== 'number') {
           light.color = new THREE.Color(0xffffff);
+        }
+        if ((obj as any).isDirectionalLight) {
+          const dir = obj as THREE.DirectionalLight;
+          dir.updateMatrixWorld(true);
+          if (dir.target) {
+            dir.target.updateMatrixWorld(true);
+          }
         }
       }
 
@@ -334,10 +356,15 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       }
     });
 
-    // Assurer que le ciel HDRI (SkySphere / Ciel Paris) illumine et s'affiche en fond s'il est présent
-    if (scene.environment && !scene.background) {
-      savedBackgroundRef.current = scene.background;
-      scene.background = scene.environment;
+    // Sauvegarder le background d'origine et connecter le ciel HDRI pour illuminer et habiller le fond
+    savedBackgroundRef.current = scene.background;
+    const skyTex = getLoadedSkyTexture() || (scene.environment && (scene.environment as any).isDataTexture ? scene.environment : null);
+    if (skyTex) {
+      scene.background = skyTex;
+      scene.environment = skyTex;
+      if ('backgroundIntensity' in scene && 'environmentIntensity' in scene) {
+        scene.backgroundIntensity = scene.environmentIntensity;
+      }
     }
 
     hiddenHelpersRef.current = hidden;
@@ -490,17 +517,32 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     pathTracer.renderDelay = 0;
     pathTracer.dynamicLowRes = true;
     pathTracer.lowResScale = 0.25;
-    pathTracer.tiles.set(2, 2);
+    if (width > 1920) {
+      pathTracer.tiles.set(2, 2);
+    } else {
+      pathTracer.tiles.set(1, 1);
+    }
     pathTracer.textureSize.set(1024, 1024);
 
     // Débruiteur Intelligent (DenoiseMaterial)
     const denoiseMat = new DenoiseMaterial();
     denoiseMat.uniforms.sigma.value = 4.0;
-    denoiseMat.uniforms.threshold.value = 0.04;
+    denoiseMat.uniforms.threshold.value = 0.05;
     denoiseMat.uniforms.kSigma.value = 1.0;
     const denoiseQuad = new FullScreenQuad(denoiseMat);
     denoiseMatRef.current = denoiseMat;
     denoiseQuadRef.current = denoiseQuad;
+
+    // Intégration native du débruiteur dans le pipeline de three-gpu-pathtracer
+    (pathTracer as any).renderToCanvasCallback = (target: any, renderer: THREE.WebGLRenderer, quad: FullScreenQuad) => {
+      if (enableDenoiseRef.current && denoiseMatRef.current && denoiseQuadRef.current) {
+        denoiseMatRef.current.uniforms.map.value = target.texture;
+        renderer.setRenderTarget(null);
+        denoiseQuadRef.current.render(renderer);
+      } else {
+        quad.render(renderer);
+      }
+    };
 
     let isDisposed = false;
 
@@ -541,13 +583,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
             return;
           }
 
-          // Passe de débruitage à chaque échantillon si activé
-          if (enableDenoise && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current && pathTracerRef.current.samples > 0) {
-            denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
-            rendererRef.current.setRenderTarget(null);
-            denoiseQuadRef.current.render(rendererRef.current);
-          }
-
           const now = performance.now();
           // Throttling du setState React : màj toutes les 120ms au lieu de re-render React 60x par seconde
           if (now - lastSampleUpdate >= 120) {
@@ -568,12 +603,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
             setCurrentSamples(targetSamples);
             setFps(0);
             lastSampleUpdate = now;
-            // Passe finale de débruitage propre sur l'image terminée
-            if (enableDenoise && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current && pathTracerRef.current.samples > 0) {
-              denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
-              rendererRef.current.setRenderTarget(null);
-              denoiseQuadRef.current.render(rendererRef.current);
-            }
           }
         }
       }
@@ -624,11 +653,28 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     scene,
     camera,
     resolution,
-    enableDenoise,
     prepareScene,
     restoreScene,
     getRenderDimensions,
   ]);
+
+  // Bascule instantanée du débruiteur sans réinitialiser le calcul de raytracing
+  useEffect(() => {
+    enableDenoiseRef.current = enableDenoise;
+    if (pathTracerRef.current && rendererRef.current && pathTracerRef.current.samples > 0) {
+      const pt = pathTracerRef.current;
+      const r = rendererRef.current;
+      if (enableDenoise && denoiseMatRef.current && denoiseQuadRef.current) {
+        denoiseMatRef.current.uniforms.map.value = pt.target.texture;
+        r.setRenderTarget(null);
+        denoiseQuadRef.current.render(r);
+      } else {
+        r.setRenderTarget(null);
+        (pt as any)._quad.material.map = pt.target.texture;
+        (pt as any)._quad.render(r);
+      }
+    }
+  }, [enableDenoise]);
 
   // Synchronisation des paramètres caméra physique (DoF, focus distance, f-stop)
   useEffect(() => {

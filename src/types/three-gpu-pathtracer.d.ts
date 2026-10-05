@@ -48,6 +48,7 @@ declare module 'three-gpu-pathtracer' {
     enablePathTracing: boolean;
     pausePathTracing: boolean;
     multipleImportanceSampling: boolean;
+    renderToCanvasCallback?: ((target: any, renderer: any, quad: any) => void) | null;
 
     setScene(scene: Scene, camera: Camera, options?: { onProgress?: (progress: number) => void }): void;
     setSceneAsync(scene: Scene, camera: Camera, options?: { onProgress?: (progress: number) => void }): Promise<any>;

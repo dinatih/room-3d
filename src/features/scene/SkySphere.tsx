@@ -21,6 +21,12 @@ const textureCache = new Map<string, THREE.Texture>();
 const hdrLoader = new HDRLoader();
 const textureLoader = new THREE.TextureLoader();
 
+export function getLoadedSkyTexture(id?: string): THREE.Texture | null {
+  if (id) return textureCache.get(id) ?? null;
+  const currentId = useSceneStore.getState().currentHdri;
+  return textureCache.get(currentId) ?? textureCache.get('default') ?? null;
+}
+
 export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
   const currentHdri = useSceneStore(state => state.currentHdri);
   const [texture, setTexture] = useState<THREE.Texture | null>(() => {

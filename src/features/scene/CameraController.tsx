@@ -429,27 +429,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
     }
     topFollowRef.current = follow;
-
-    const targetX = follow ? cameraState.walkerX : CX;
-    const targetZ = follow ? cameraState.walkerZ : CZ;
-
     changeMode('top');
-
-    requestAnimationFrame(() => {
-      const activeCam = ctrlRef.current?.object || camera;
-      activeCam.position.set(targetX, 2000, targetZ);
-      activeCam.up.set(0, 0, -1);
-      if ('zoom' in activeCam) {
-        (activeCam as THREE.OrthographicCamera).zoom = 1;
-      }
-      activeCam.lookAt(targetX, 0, targetZ);
-      activeCam.updateProjectionMatrix();
-      if (ctrlRef.current) {
-        ctrlRef.current.target.set(targetX, 0, targetZ);
-        ctrlRef.current.update();
-      }
-      invalidate();
-    });
+    invalidate();
   }, [camera, changeMode, exitWalkMode, invalidate]);
 
   const exitTop = useCallback(() => {
@@ -515,25 +496,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       ctrlRef.current.update();
     }
   }, [mode, camera]);
-
-  // Synchronisation de la caméra orthographique et du target OrbitControls dès l'activation du mode top
-  useEffect(() => {
-    if (mode === 'top' && ctrlRef.current) {
-      const targetX = topFollowRef.current ? cameraState.walkerX : CX;
-      const targetZ = topFollowRef.current ? cameraState.walkerZ : CZ;
-      const activeCam = ctrlRef.current.object || camera;
-      activeCam.position.set(targetX, 2000, targetZ);
-      activeCam.up.set(0, 0, -1);
-      if ('zoom' in activeCam) {
-        (activeCam as THREE.OrthographicCamera).zoom = 1;
-      }
-      activeCam.lookAt(targetX, 0, targetZ);
-      activeCam.updateProjectionMatrix();
-      ctrlRef.current.target.set(targetX, 0, targetZ);
-      ctrlRef.current.update();
-      invalidate();
-    }
-  }, [mode, camera, invalidate]);
 
   // Synchronisation de la caméra orthographique et du target OrbitControls dès l'activation
   useEffect(() => {
@@ -756,14 +718,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           bottom={-viewH / 2}
           near={1}
           far={10000}
-          onUpdate={(self) => {
-            const targetX = topFollowRef.current ? cameraState.walkerX : CX;
-            const targetZ = topFollowRef.current ? cameraState.walkerZ : CZ;
-            self.position.set(targetX, 2000, targetZ);
-            self.up.set(0, 0, -1);
-            self.lookAt(targetX, 0, targetZ);
-            self.updateProjectionMatrix();
-          }}
         />
       )}
 
