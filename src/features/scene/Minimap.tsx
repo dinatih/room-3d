@@ -9,6 +9,7 @@ import { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cameraState } from '@features/scene/cameraState';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
+import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import {
   drawFloorPlan,
   PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_Z_MAX,
@@ -761,10 +762,15 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
           pointerEvents: 'auto',
         }}
       >
-        <Group 
-          emoji="🗺️" 
-          title="Plan 2D" 
-          defaultOpen 
+        {!embedded && isMobile && (
+          <div style={{ marginBottom: 6 }}>
+            <DevToolsGroups Group={Group} compact />
+          </div>
+        )}
+        <Group
+          emoji="🗺️"
+          title="Plan 2D"
+          defaultOpen
           headerPadding="py-1.5 px-2"
           onToggle={(open) => setIsOpen(open)}
         >

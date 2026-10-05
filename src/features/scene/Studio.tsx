@@ -925,16 +925,16 @@ export function Studio() {
           </div>
         )}
         {isMobile && <Minimap />}
-        {showInventory && (
-          <Suspense fallback={null}>
-            <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
-          </Suspense>
-        )}
         <VirtualDPad />
         <HoverOverlay />
         {layers.aiZones && <ZoneAiDebugOverlay />}
         {layers.wallEdges && <EdgeHoverOverlay />}
       </div>
+      {showInventory && (
+        <Suspense fallback={null}>
+          <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
+        </Suspense>
+      )}
       <RightSidePanel hideUI={hideUI} />
       <AppConsole hidden={showInventory} hideUI={hideUI} />
       {isPhotoModeOpen && activeSceneRef.current && activeCameraRef.current && activeGlRef.current && (

@@ -9,7 +9,6 @@
  * Styled using Bootstrap 5.3 and glassmorphism.
  */
 import { useState, useEffect, useRef } from 'react';
-import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { solarPosition } from '@features/scene/SunLight';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useSceneStore } from './store/useSceneStore';
@@ -479,7 +478,7 @@ export function SidePanel({
       layers: layersSectionContent,
       interactif: interactiveSectionContent,
       personnage: characterSectionContent,
-      perf: <DevToolsGroups Group={Group} />,
+      perf: null,
     };
 
     return (
@@ -578,7 +577,7 @@ export function SidePanel({
             <span className="fw-semibold small">Inventaire</span>
           </button>
           
-          {TABS.map(t => {
+          {TABS.filter(t => t.key !== 'perf').map(t => {
             const active = activeTab === t.key;
             if (t.key === 'personnage') {
               return (
