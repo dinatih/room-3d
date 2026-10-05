@@ -36,9 +36,13 @@ export const VIEWS: Record<string, CameraViewPreset> = {
 import { useSceneStore } from '../store/useSceneStore';
 
 export function dispatchView(key: string) {
+  useSceneStore.getState().setActiveCameraView(key);
+  if (key === 'top') {
+    document.dispatchEvent(new CustomEvent('camera-enter-top'));
+    return;
+  }
   const v = VIEWS[key];
   if (!v) return;
-  useSceneStore.getState().setActiveCameraView(key);
   document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...v, key } }));
 }
 

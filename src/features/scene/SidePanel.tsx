@@ -17,7 +17,7 @@ import { HDRI_LIST } from './hdriConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 
 import {
-  TABS, ALL_HAIR_COLORS, dispatchView, dispatchKey,
+  TABS, ALL_HAIR_COLORS, dispatchView,
   type FurnitureState, type LayerState, type GroundType, type SidePanelProps,
   type LidarMode, type TabKey,
 } from './sidepanel/types';
@@ -310,10 +310,10 @@ export function SidePanel({
           type="button"
           className={`btn btn-sm py-0 px-1 text-dark small ${isTop ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
           style={{ height: '22px', background: isTop ? undefined : 'rgba(255, 255, 255, 0.65)' }}
-          title="Vue 2D du Dessus (Touche T)"
+          title="Vue du Dessus (Top)"
           onClick={(e) => {
             e.stopPropagation();
-            dispatchKey('t');
+            dispatchView('top');
           }}
         >
           🔝

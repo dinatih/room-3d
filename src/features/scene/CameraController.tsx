@@ -889,6 +889,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     keys,
     savedPerspPos,
     savedPerspTarget,
+    changeMode,
     enterWalk,
     exitWalkMode,
     enterTop,

@@ -19,6 +19,7 @@ interface UseCameraShortcutsParams {
   keys: MutableRefObject<Set<string>>;
   savedPerspPos: MutableRefObject<THREE.Vector3>;
   savedPerspTarget: MutableRefObject<THREE.Vector3>;
+  changeMode: (mode: CameraMode) => void;
   enterWalk: (x: number, z: number, mode?: 'walk' | 'fpv') => void;
   exitWalkMode: () => void;
   enterTop: (follow?: boolean) => void;
@@ -47,6 +48,7 @@ export function useCameraShortcuts({
   keys,
   savedPerspPos,
   savedPerspTarget,
+  changeMode,
   enterWalk,
   exitWalkMode,
   enterTop,
@@ -321,6 +323,7 @@ export function useCameraShortcuts({
         }
       }
       if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+      changeMode('orbit');
       const targetProj = projection ?? 'persp';
       toggleOrbitType?.(targetProj, { pos, target, zoom });
       savedPerspPos.current.set(...pos);
@@ -337,12 +340,17 @@ export function useCameraShortcuts({
       }
     };
 
+    const onEnterTop = () => {
+      enterTop(false);
+    };
+
     window.addEventListener('keydown', onDown);
     window.addEventListener('keyup', onUp);
     document.addEventListener('minimap-pov', onPov);
     document.addEventListener('camera-pov', onPov);
     document.addEventListener('camera-view', onView);
     document.addEventListener('camera-ortho-view', onOrthoView);
+    document.addEventListener('camera-enter-top', onEnterTop);
     return () => {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
@@ -350,6 +358,7 @@ export function useCameraShortcuts({
       document.removeEventListener('camera-pov', onPov);
       document.removeEventListener('camera-view', onView);
       document.removeEventListener('camera-ortho-view', onOrthoView);
+      document.removeEventListener('camera-enter-top', onEnterTop);
     };
-  }, [camera, ctrlRef, enterOrtho, enterTop, enterWalk, exitOrtho, exitTop, exitWalkMode, invalidate, keys, modeRef, planeModeRef, savedPerspPos, savedPerspTarget, topFollowRef, walkPos]);
+  }, [camera, changeMode, ctrlRef, enterOrtho, enterTop, enterWalk, exitOrtho, exitTop, exitWalkMode, invalidate, keys, modeRef, planeModeRef, savedPerspPos, savedPerspTarget, toggleOrbitType, topFollowRef, walkPos]);
 }
