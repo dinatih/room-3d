@@ -15,8 +15,8 @@ import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import { Anneland70481722 } from './Anneland70481722';
 import { Vestmarka90470195 } from './Vestmarka90470195';
 
-const BAS_GLB  = 'items/utåker lit empilable 80x200 pin (bas)/UTÅKER lit empilable 80x200 pin (bas).glb';
-const HAUT_GLB = 'items/utåker lit empilable 80x200 pin (haut)/UTÅKER lit empilable 80x200 pin (haut).glb';
+const BAS_GLB  = 'items/utaker00360484/Utaker00360484-1.glb';
+const HAUT_GLB = 'items/utaker00360484/Utaker00360484-2.glb';
 
 const redFabricMat = new THREE.MeshPhysicalMaterial({
   color: 0x991111,

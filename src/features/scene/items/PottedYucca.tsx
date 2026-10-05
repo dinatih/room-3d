@@ -13,7 +13,7 @@ import type { SceneItemProps } from '@shared/types';
 const TARGET_H = 140; // Hauteur en cm (échelle 1 unité = 1 cm)
 
 export function PottedYucca({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('items/plant-yucca/yucca_elephantipes.glb');
+  const { scene } = useGLTFClone('items/yucca10329308/Yucca10329308.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function PottedYucca({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('items/plant-yucca/yucca_elephantipes.glb');
+useGLTF.preload('items/yucca10329308/Yucca10329308.glb');
