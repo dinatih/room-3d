@@ -147,46 +147,50 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         ))}
       </select>
 
-      <button
-        type="button"
-        className="btn py-0 px-2 small flex-shrink-0"
-        style={{
-          fontSize: '11px',
-          height: '22px',
-          ...(filterBubbleOnly
-            ? { backgroundColor: '#212529', color: '#fff', fontWeight: 700, boxShadow: '0 1px 2px rgba(0,0,0,.15)', border: 'none' }
-            : { backgroundColor: 'transparent', color: '#6c757d', border: '1px solid rgba(108,117,125,.5)' }),
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setFilterBubbleOnly(f => !f);
-        }}
-        title={
-          filterBubbleOnly
-            ? `Filtre actif : logs limités à ${activeChar?.name ?? activeWalkerId}`
-            : `Filtrer les logs pour ${activeChar?.name ?? activeWalkerId}`
-        }
-      >
-        {filterBubbleOnly ? '✓ Filtré' : 'Filtrer'}
-      </button>
+      {open && (
+        <button
+          type="button"
+          className="btn py-0 px-2 small flex-shrink-0"
+          style={{
+            fontSize: '11px',
+            height: '22px',
+            ...(filterBubbleOnly
+              ? { backgroundColor: '#212529', color: '#fff', fontWeight: 700, boxShadow: '0 1px 2px rgba(0,0,0,.15)', border: 'none' }
+              : { backgroundColor: 'transparent', color: '#6c757d', border: '1px solid rgba(108,117,125,.5)' }),
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setFilterBubbleOnly(f => !f);
+          }}
+          title={
+            filterBubbleOnly
+              ? `Filtre actif : logs limités à ${activeChar?.name ?? activeWalkerId}`
+              : `Filtrer les logs pour ${activeChar?.name ?? activeWalkerId}`
+          }
+        >
+          {filterBubbleOnly ? '✓ Filtré' : 'Filtrer'}
+        </button>
+      )}
 
-      <button
-        type="button"
-        className="btn py-0 px-2 small flex-shrink-0"
-        style={{
-          fontSize: '11px',
-          height: '22px',
-          ...(isPaused
-            ? { backgroundColor: '#ffc107', color: '#212529', fontWeight: 700, boxShadow: '0 1px 2px rgba(0,0,0,.15)', border: 'none' }
-            : { backgroundColor: 'transparent', color: '#6c757d', border: '1px solid rgba(108,117,125,.5)' }),
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsPaused(p => !p);
-        }}
-      >
-        {isPaused ? '▶ REP.' : '⏸ PAUSE'}
-      </button>
+      {open && (
+        <button
+          type="button"
+          className="btn py-0 px-2 small flex-shrink-0"
+          style={{
+            fontSize: '11px',
+            height: '22px',
+            ...(isPaused
+              ? { backgroundColor: '#ffc107', color: '#212529', fontWeight: 700, boxShadow: '0 1px 2px rgba(0,0,0,.15)', border: 'none' }
+              : { backgroundColor: 'transparent', color: '#6c757d', border: '1px solid rgba(108,117,125,.5)' }),
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsPaused(p => !p);
+          }}
+        >
+          {isPaused ? '▶ REP.' : '⏸ PAUSE'}
+        </button>
+      )}
     </div>
   );
 
