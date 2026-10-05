@@ -596,6 +596,29 @@ export function InventoryPreview({
     useAnimPreviewStore.getState().reset();
   }, [item?.id]);
 
+  // Map ViewControlBar camera-view events to preview ortho views
+  useEffect(() => {
+    const onView = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail) return;
+      const key = detail.key as string;
+      if (key === 'front' || key === 'back') {
+        setPreviewView('front');
+        setAutoRotate(false);
+      } else if (key === 'left' || key === 'right') {
+        setPreviewView('side');
+        setAutoRotate(false);
+      } else if (key === 'top' || key === 'bottom') {
+        setPreviewView('top');
+        setAutoRotate(false);
+      } else {
+        setPreviewView('free');
+      }
+    };
+    document.addEventListener('camera-view', onView);
+    return () => document.removeEventListener('camera-view', onView);
+  }, []);
+
   useEffect(() => {
     if (initialDuoAnim) {
       setActionStates(s => ({

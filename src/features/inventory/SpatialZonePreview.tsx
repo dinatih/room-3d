@@ -1,6 +1,6 @@
 import { memo, useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
+import { OrbitControls, Html, AdaptiveDpr, PerformanceMonitor, OrthographicCamera } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
@@ -22,7 +22,6 @@ import {
 import { Walls, Floor, MirrorFrames, MirrorReflectors, DoorsPlacement } from '@features/scene/Building';
 import { Equipment, Furniture, Furnishings, Decor } from '@features/scene/Placements';
 import { SkySphere } from '@features/scene/SkySphere';
-import { ViewControlBar } from '@features/scene/ViewControlBar';
 
 const CATEGORY_COLORS: Record<string, string> = {
   bed: '#ff4081',
@@ -249,10 +248,54 @@ function PreviewCameraController({
 }: {
   centerX: number; centerY: number; centerZ: number; camDistance: number;
 }) {
-  const { camera } = useThree();
+  const { camera, size, set } = useThree();
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
+  const perspCamRef = useRef<THREE.PerspectiveCamera>(camera as THREE.PerspectiveCamera);
+  const orthoCamRef = useRef<THREE.OrthographicCamera>(null!);
+  const projectionRef = useRef<'persp' | 'ortho'>('persp');
 
   const DIST = camDistance;
+  const aspect = size.width / size.height;
+  const viewH = DIST * 1.2;
+  const viewW = viewH * aspect;
+
+  // Sync projection toggle from the global store
+  const cameraProjection = useSceneStore(s => s.cameraProjection);
+  useEffect(() => {
+    if (projectionRef.current === cameraProjection) return;
+    projectionRef.current = cameraProjection;
+
+    const orthoCam = orthoCamRef.current;
+    if (!orthoCam) return;
+
+    if (cameraProjection === 'ortho') {
+      orthoCam.position.copy(camera.position);
+      orthoCam.up.copy(camera.up);
+      orthoCam.zoom = 1;
+      orthoCam.near = -20000;
+      orthoCam.far = 50000;
+      orthoCam.updateProjectionMatrix();
+      orthoCam.lookAt(centerX, centerY, centerZ);
+      set({ camera: orthoCam });
+      if (ctrlRef.current) {
+        ctrlRef.current.object = orthoCam;
+        ctrlRef.current.target.set(centerX, centerY, centerZ);
+        ctrlRef.current.update();
+      }
+    } else {
+      const perspCam = perspCamRef.current;
+      perspCam.position.copy(camera.position);
+      perspCam.up.copy(camera.up);
+      perspCam.updateProjectionMatrix();
+      perspCam.lookAt(centerX, centerY, centerZ);
+      set({ camera: perspCam });
+      if (ctrlRef.current) {
+        ctrlRef.current.object = perspCam;
+        ctrlRef.current.target.set(centerX, centerY, centerZ);
+        ctrlRef.current.update();
+      }
+    }
+  }, [cameraProjection, camera, centerX, centerY, centerZ, set]);
 
   useEffect(() => {
     const onView = (e: Event) => {
@@ -279,10 +322,11 @@ function PreviewCameraController({
       ];
       const newTarget: [number, number, number] = [centerX, centerY, centerZ];
 
-      camera.position.set(...newPos);
-      camera.up.set(0, 1, 0);
-      camera.lookAt(...newTarget);
-      camera.updateProjectionMatrix();
+      const activeCam = ctrlRef.current?.object || camera;
+      activeCam.position.set(...newPos);
+      activeCam.up.set(0, 1, 0);
+      activeCam.lookAt(...newTarget);
+      activeCam.updateProjectionMatrix();
 
       if (ctrlRef.current) {
         ctrlRef.current.target.set(...newTarget);
@@ -295,16 +339,28 @@ function PreviewCameraController({
   }, [camera, centerX, centerY, centerZ, DIST]);
 
   return (
-    <OrbitControls
-      ref={ctrlRef}
-      makeDefault
-      target={[centerX, centerY, centerZ]}
-      enableDamping
-      dampingFactor={0.05}
-      maxPolarAngle={Math.PI}
-      minDistance={40}
-      maxDistance={camDistance * 3.5}
-    />
+    <>
+      <OrthographicCamera
+        ref={orthoCamRef}
+        left={-viewW / 2}
+        right={viewW / 2}
+        top={viewH / 2}
+        bottom={-viewH / 2}
+        near={-20000}
+        far={50000}
+        position={[centerX + DIST, centerY + DIST, centerZ + DIST]}
+      />
+      <OrbitControls
+        ref={ctrlRef}
+        makeDefault
+        target={[centerX, centerY, centerZ]}
+        enableDamping
+        dampingFactor={0.05}
+        maxPolarAngle={Math.PI}
+        minDistance={40}
+        maxDistance={camDistance * 3.5}
+      />
+    </>
   );
 }
 
@@ -450,14 +506,11 @@ export function SpatialZonePreview({
         </button>
       </div>
 
-      {/* View Control Bar */}
-      <ViewControlBar position="bottom-center" />
-
       {/* Frame Rate Graph Overlay & Triangles/Draw Calls */}
       {showFpsGraph && (
         <div style={{
           position: 'absolute',
-          bottom: 56,
+          bottom: 28,
           left: 10,
           background: 'rgba(15, 23, 42, 0.88)',
           border: '1px solid rgba(255, 255, 255, 0.2)',

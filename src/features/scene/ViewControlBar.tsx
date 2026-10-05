@@ -25,13 +25,15 @@ const ISO_VIEWS = [
 // ── Composant ──────────────────────────────────────────────────────────────
 
 export interface ViewControlBarProps {
-  /** Position du dock flottant. Défaut : 'bottom-center' */
+  /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-center' */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'bottom-center';
+  /** Rendu dans le flux du document (pas position:fixed) */
+  inline?: boolean;
   /** Masquer le composant (ex: mode immersif) */
   hidden?: boolean;
 }
 
-export function ViewControlBar({ position = 'bottom-center', hidden = false }: ViewControlBarProps) {
+export function ViewControlBar({ position = 'bottom-center', inline = false, hidden = false }: ViewControlBarProps) {
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const activeCameraView = useSceneStore(s => s.activeCameraView);
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
@@ -40,7 +42,7 @@ export function ViewControlBar({ position = 'bottom-center', hidden = false }: V
 
   const isOrtho = cameraProjection === 'ortho';
 
-  const posStyle: React.CSSProperties = {
+  const posStyle: React.CSSProperties | undefined = inline ? undefined : {
     'top-left':     { top: 12, left: 12 },
     'top-right':    { top: 12, right: 12 },
     'bottom-left':  { bottom: 12, left: 12 },
@@ -74,61 +76,63 @@ export function ViewControlBar({ position = 'bottom-center', hidden = false }: V
     </button>
   );
 
+  const bar = (
+    <div
+      className="d-flex align-items-center gap-1 px-2 py-1 rounded-3 shadow"
+      style={{
+        background: 'rgba(30, 30, 46, 0.88)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.12)',
+      }}
+    >
+      {/* Toggle Persp / Ortho */}
+      <button
+        className="btn btn-sm border-0 d-flex align-items-center gap-1 fw-bold"
+        style={{
+          background: isOrtho ? 'rgba(99,102,241,0.85)' : 'rgba(251,191,36,0.85)',
+          color: isOrtho ? '#fff' : '#1a1a2e',
+          fontSize: '11px',
+          borderRadius: '8px',
+          padding: '4px 10px',
+        }}
+        onClick={toggleCameraProjection}
+        title={isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'}
+      >
+        <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} style={{ fontSize: '13px' }} />
+        <span>{isOrtho ? 'ORTHO' : 'PERSP'}</span>
+      </button>
+
+      <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
+
+      {ORTHO_VIEWS.map(v => viewButton(v, 'rgba(56,189,248,0.85)'))}
+
+      <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
+
+      {EXTRA_VIEWS.map(v => viewButton(v, 'rgba(52,211,153,0.85)'))}
+
+      <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
+
+      {ISO_VIEWS.map(v => viewButton(v, 'rgba(168,85,247,0.85)'))}
+    </div>
+  );
+
+  if (inline) {
+    return (
+      <div
+        className="d-flex justify-content-center py-2"
+        style={{ background: 'rgba(30, 30, 46, 0.95)' }}
+      >
+        {bar}
+      </div>
+    );
+  }
+
   return (
     <div
-      style={{
-        position: 'fixed',
-        zIndex: 1000,
-        ...posStyle,
-      }}
+      style={{ position: 'fixed', zIndex: 1000, ...posStyle }}
       className="d-flex flex-column align-items-center gap-1"
     >
-      {/* ── Barre principale ── */}
-      <div
-        className="d-flex align-items-center gap-1 px-2 py-1 rounded-3 shadow"
-        style={{
-          background: 'rgba(30, 30, 46, 0.88)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.12)',
-        }}
-      >
-        {/* Toggle Persp / Ortho */}
-        <button
-          className="btn btn-sm border-0 d-flex align-items-center gap-1 fw-bold"
-          style={{
-            background: isOrtho ? 'rgba(99,102,241,0.85)' : 'rgba(251,191,36,0.85)',
-            color: isOrtho ? '#fff' : '#1a1a2e',
-            fontSize: '11px',
-            borderRadius: '8px',
-            padding: '4px 10px',
-          }}
-          onClick={toggleCameraProjection}
-          title={isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'}
-        >
-          <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} style={{ fontSize: '13px' }} />
-          <span>{isOrtho ? 'ORTHO' : 'PERSP'}</span>
-        </button>
-
-        {/* Séparateur */}
-        <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
-
-        {/* Vues orthographiques (face / arrière / gauche / droite) */}
-        {ORTHO_VIEWS.map(v => viewButton(v, 'rgba(56,189,248,0.85)'))}
-
-        {/* Séparateur */}
-        <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
-
-        {/* Dessus / Dessous */}
-        {EXTRA_VIEWS.map(v => viewButton(v, 'rgba(52,211,153,0.85)'))}
-
-        {/* Séparateur */}
-        <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
-
-        {/* Vues isométriques (4 coins) */}
-        {ISO_VIEWS.map(v => viewButton(v, 'rgba(168,85,247,0.85)'))}
-      </div>
-
-      {/* Label de la vue active */}
+      {bar}
       {activeCameraView && (
         <span
           style={{

@@ -11,6 +11,7 @@ import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations
 import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
+import { ViewControlBar } from '@features/scene/ViewControlBar';
 
 type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
 
@@ -80,6 +81,8 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
             onStats={s => setGlbStats({ triangles: s.triangles, drawCalls: s.drawCalls })}
           />
         </div>
+
+        <ViewControlBar inline />
 
         <div className="p-3">
           <h3 className="fw-bold mb-1 text-dark fs-5">{zone.name}</h3>
@@ -190,6 +193,8 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           onGlbStats={handleGlbStats}
         />
       </div>
+
+      <ViewControlBar inline />
 
       <div className="p-3">
         <h3 className="fw-bold mb-1 text-dark fs-5">{(item as any).name}</h3>
