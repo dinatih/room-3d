@@ -138,8 +138,6 @@ function drawMinimap(
   const HEAD_RADIUS_WORLD = 11;
   const rNpc = Math.max(2.5 * sc, HEAD_RADIUS_WORLD * S);
   const R    = Math.max(3.2 * sc, HEAD_RADIUS_WORLD * S);
-  const BW   = Math.max(6 * sc, 38 * S); // Largeur d'épaules (~38 cm)
-  const BH   = Math.max(3 * sc, 18 * S); // Épaisseur torse (~18 cm)
 
   // ── Other characters (NPCs) icons (y compris à l'extérieur) ─────────────────
   const activeWalkerId = useSceneStore.getState().activeWalkerId;
@@ -264,12 +262,12 @@ function drawMinimap(
   // FOV arc — follows WALKER facing
   const V    = 50 * Math.PI / 180;
   const hFov = 2 * Math.atan(Math.tan(V / 2) * (window.innerWidth / window.innerHeight));
-  const fovR = Math.max(70 * S, 60 * sc);
+  const fovR = 100 * S;
   ctx.beginPath(); ctx.moveTo(0, 0);
   ctx.arc(0, 0, fovR, Math.PI / 2 - hFov / 2, Math.PI / 2 + hFov / 2);
   ctx.closePath();
   ctx.fillStyle   = 'rgba(255,221,0,0.18)'; ctx.fill();
-  ctx.strokeStyle = 'rgba(255,221,0,0.45)'; ctx.lineWidth = 0.5 * sc; ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,221,0,0.45)'; ctx.lineWidth = Math.max(0.5, 0.4 * sc); ctx.stroke();
   ctx.restore();
 
   // 2. Simulation physique & rendu de la queue de cheval de Lara (Inertie, Allongement & Mouvement)
@@ -348,16 +346,16 @@ function drawMinimap(
     }
   }
 
-  // Tracé fluide de la queue de cheval
+  // Tracé fluide de la queue de cheval (largeur affinée de moitié)
   const p0x = tx(attachX), p0z = tz(attachZ);
   const p1x = tx(ponytailNodes[0].x), p1z = tz(ponytailNodes[0].z);
   const p2x = tx(ponytailNodes[1].x), p2z = tz(ponytailNodes[1].z);
   const p3x = tx(ponytailNodes[2].x), p3z = tz(ponytailNodes[2].z);
 
   const wScale = 0.65 + 0.35 * ponytailLift;
-  const w1 = Math.max(2.0 * sc, 7.0 * S) * wScale;
-  const w2 = Math.max(1.5 * sc, 5.0 * S) * wScale;
-  const w3 = Math.max(0.9 * sc, 3.0 * S) * wScale;
+  const w1 = Math.max(1.0 * sc, 3.5 * S) * wScale;
+  const w2 = Math.max(0.75 * sc, 2.5 * S) * wScale;
+  const w3 = Math.max(0.45 * sc, 1.5 * S) * wScale;
 
   ctx.save();
   ctx.lineCap = 'round';
@@ -365,11 +363,11 @@ function drawMinimap(
 
   // Ombre extérieure foncée
   ctx.strokeStyle = '#180e07';
-  ctx.lineWidth = w1 + 1.2 * sc;
+  ctx.lineWidth = w1 + 0.6 * sc;
   ctx.beginPath(); ctx.moveTo(p0x, p0z); ctx.lineTo(p1x, p1z); ctx.stroke();
-  ctx.lineWidth = w2 + 1.2 * sc;
+  ctx.lineWidth = w2 + 0.6 * sc;
   ctx.beginPath(); ctx.moveTo(p1x, p1z); ctx.lineTo(p2x, p2z); ctx.stroke();
-  ctx.lineWidth = w3 + 1.2 * sc;
+  ctx.lineWidth = w3 + 0.6 * sc;
   ctx.beginPath(); ctx.moveTo(p2x, p2z); ctx.lineTo(p3x, p3z); ctx.stroke();
 
   // Mèche brune principale (teinte Lara Croft)
@@ -383,34 +381,22 @@ function drawMinimap(
 
   // Reflet soyeux
   ctx.strokeStyle = 'rgba(146, 88, 48, 0.75)';
-  ctx.lineWidth = Math.max(0.6, w2 * 0.4);
+  ctx.lineWidth = Math.max(0.4, w2 * 0.35);
   ctx.beginPath(); ctx.moveTo(p0x, p0z); ctx.lineTo(p2x, p2z); ctx.stroke();
-
-  // Élastique rouge signature à la base
-  const rTie = Math.max(1.2 * sc, 4.0 * S);
-  ctx.fillStyle = '#dc2626';
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-  ctx.lineWidth = Math.max(0.6, 0.7 * sc);
-  ctx.beginPath();
-  ctx.arc(p0x, p0z, rTie, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
   ctx.restore();
 
-  // 3. Tête et épaules du Walker
+  // 3. Tête du Walker
   ctx.save();
   ctx.translate(tx(w.x), tz(w.z));
   ctx.rotate(-w.yaw);
 
-  // Body icon
-  ctx.fillStyle   = '#d32f2f'; // Red Theme Accent instead of '#0066ff'
+  // Body icon (tête)
+  ctx.fillStyle   = '#d32f2f'; // Red Theme Accent
   ctx.strokeStyle = 'rgba(255,255,255,0.9)';
   ctx.lineWidth   = Math.max(0.8, 0.8 * sc);
   
-  // Body circle (head)
+  // Cercle de la tête
   ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  // Shoulder bar (indicates direction)
-  ctx.beginPath(); ctx.rect(-BW / 2, R, BW, BH); ctx.fill(); ctx.stroke();
   
   ctx.restore();
 
