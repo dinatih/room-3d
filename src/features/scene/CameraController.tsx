@@ -489,6 +489,19 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
       set({ camera: orthoCam });
       ctrl.object = orthoCam;
+
+      // Réinitialiser les sphériques et deltas d'OrbitControls pour adopter la nouvelle orientation
+      const offsetOrtho = new THREE.Vector3().subVectors(orthoCam.position, ctrl.target);
+      if ((ctrl as any).spherical) {
+        (ctrl as any).spherical.setFromVector3(offsetOrtho);
+      }
+      if ((ctrl as any).sphericalDelta) {
+        (ctrl as any).sphericalDelta.set(0, 0, 0);
+      }
+      if ((ctrl as any).panOffset) {
+        (ctrl as any).panOffset.set(0, 0, 0);
+      }
+      (ctrl as any).scale = 1;
       ctrl.update();
 
       orbitTypeRef.current = 'ortho';
@@ -521,6 +534,19 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
       set({ camera: perspCam });
       ctrl.object = perspCam;
+
+      // Réinitialiser les sphériques et deltas d'OrbitControls pour adopter la nouvelle orientation
+      const offsetPersp = new THREE.Vector3().subVectors(perspCam.position, ctrl.target);
+      if ((ctrl as any).spherical) {
+        (ctrl as any).spherical.setFromVector3(offsetPersp);
+      }
+      if ((ctrl as any).sphericalDelta) {
+        (ctrl as any).sphericalDelta.set(0, 0, 0);
+      }
+      if ((ctrl as any).panOffset) {
+        (ctrl as any).panOffset.set(0, 0, 0);
+      }
+      (ctrl as any).scale = 1;
       ctrl.update();
 
       orbitTypeRef.current = 'persp';

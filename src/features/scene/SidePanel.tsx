@@ -17,7 +17,7 @@ import { HDRI_LIST } from './hdriConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 
 import {
-  TABS, ALL_HAIR_COLORS, dispatchView,
+  TABS, ALL_HAIR_COLORS, dispatchView, dispatchKey,
   type FurnitureState, type LayerState, type GroundType, type SidePanelProps,
   type LidarMode, type TabKey,
 } from './sidepanel/types';
@@ -227,6 +227,7 @@ export function SidePanel({
 
   const cameraProjection = useSceneStore(state => state.cameraProjection);
   const toggleCameraProjection = useSceneStore(state => state.toggleCameraProjection);
+  const cameraMode = useSceneStore(state => state.cameraMode);
 
   const viewsHeaderButtons = (
     <div className="d-flex align-items-center gap-1 pe-1" onClick={e => e.stopPropagation()}>
@@ -300,12 +301,12 @@ export function SidePanel({
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary py-0 px-1 text-dark small"
-          style={{ height: '22px', background: 'rgba(255, 255, 255, 0.65)' }}
-          title="Vue du Dessus"
+          className={`btn btn-sm py-0 px-1 text-dark small ${cameraMode === 'top' ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
+          style={{ height: '22px', background: cameraMode === 'top' ? undefined : 'rgba(255, 255, 255, 0.65)' }}
+          title="Vue 2D du Dessus (Touche T)"
           onClick={(e) => {
             e.stopPropagation();
-            dispatchView('top3d');
+            dispatchKey('t');
           }}
         >
           🔝
