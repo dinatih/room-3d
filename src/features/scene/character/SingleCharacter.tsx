@@ -58,6 +58,7 @@ function updateCharFrustum(cam: THREE.Camera, time: number) {
 }
 const _charBoundingSphere = new THREE.Sphere();
 const _tmpHeadWorldPos = new THREE.Vector3();
+const _tmpHeadRefPos = new THREE.Vector3();
 const _tmpHipsWorldPos = new THREE.Vector3();
 const _tmpLeftEyeWorldPos = new THREE.Vector3();
 const _tmpRightEyeWorldPos = new THREE.Vector3();
@@ -165,6 +166,11 @@ export function SingleCharacter({
   // Extraction structurée des maillages et des os
   const parts = useMemo(() => extractCharacterParts(scene), [scene]);
   const headBone = parts.bones.head;
+  // Os de référence pour la position réelle de la tête (minimap) : Lara expose head_neck_upper, les modèles Mixamo leur os Head
+  const headRefBone = useMemo(
+    () => (scene ? ((scene.getObjectByName('head_neck_upper') as THREE.Bone | null) ?? headBone) : null),
+    [scene, headBone],
+  );
   const hipsBone = parts.bones.hips;
   const leftEyeBone = useMemo(() => (scene ? (scene.getObjectByName('head_eyeball_left') as THREE.Bone | null) : null), [scene]);
   const rightEyeBone = useMemo(() => (scene ? (scene.getObjectByName('head_eyeball_right') as THREE.Bone | null) : null), [scene]);
@@ -373,6 +379,7 @@ export function SingleCharacter({
   useEffect(() => {
     return () => {
       delete cameraState.positions[id];
+      delete cameraState.headPositions[id];
     };
   }, [id]);
 
@@ -717,6 +724,7 @@ export function SingleCharacter({
     }
 
     if (!groupRef.current.visible) {
+      delete cameraState.headPositions[id];
       return;
     }
 
@@ -1023,6 +1031,20 @@ export function SingleCharacter({
           walkerAnim,
           clockElapsedTime: state.clock.elapsedTime
         }, scene);
+      }
+    }
+
+    // Position XZ réelle de la tête (minimap) — actif ET PNJ. Sans os de tête : non publié → non dessiné
+    if (!isPreview) {
+      if (headRefBone) {
+        // Actif : matrice à jour ; PNJ : matrixWorld du dernier rendu (1 frame de retard, sans coût de remontée de hiérarchie)
+        if (isActive) headRefBone.updateWorldMatrix(true, false);
+        _tmpHeadRefPos.setFromMatrixPosition(headRefBone.matrixWorld);
+        const hp = cameraState.headPositions[id] ?? (cameraState.headPositions[id] = { x: 0, z: 0 });
+        hp.x = _tmpHeadRefPos.x;
+        hp.z = _tmpHeadRefPos.z;
+      } else {
+        delete cameraState.headPositions[id];
       }
     }
 

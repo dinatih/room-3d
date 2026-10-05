@@ -151,7 +151,7 @@ function drawMinimap(
     if (char.id !== activeWalkerId) {
       if (!showAllLaraStyles) return;
       if (!isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters, activeExtraIds, activeMainIds)) return;
-      const currentPos = cameraState.positions[char.id];
+      const currentPos = cameraState.headPositions[char.id];
       if (!currentPos) return;
       const rawX = tx(currentPos.x);
       const rawZ = tz(currentPos.z);
@@ -251,8 +251,28 @@ function drawMinimap(
     ctx.restore();
   }
 
-  // ── Walker icon ────────────────────────────────────────────────────────────
-  const w = { x: cameraState.walkerX, z: cameraState.walkerZ, yaw: cameraState.walkerYaw };
+  // ── Avion joueur ────────────────────────────────────────────────────────────
+  if (cameraState.mode === 'plane') {
+    drawPlaneIcon(
+      ctx, cameraState.planeX, cameraState.planeZ, cameraState.planeYaw,
+      sc, 'rgba(120,200,255,0.9)', 'rgba(255,255,255,0.9)',
+      tx, tz,
+    );
+  }
+
+  // ── Avion autopilote ────────────────────────────────────────────────────────
+  if (cameraState.autopilotActive) {
+    drawPlaneIcon(
+      ctx, cameraState.autopilotX, cameraState.autopilotZ, cameraState.autopilotYaw,
+      sc, 'rgba(100,255,150,0.9)', 'rgba(255,255,255,0.9)',
+      tx, tz,
+    );
+  }
+
+  // ── Walker icon (position XZ réelle de la tête ; sans tête publiée : non dessiné) ──
+  const walkerHead = cameraState.headPositions[activeWalkerId];
+  if (!walkerHead) return;
+  const w = { x: walkerHead.x, z: walkerHead.z, yaw: cameraState.walkerYaw };
   
   // 1. Arc FOV orienté vers l'avant (+Y local)
   ctx.save();
@@ -279,9 +299,9 @@ function drawMinimap(
   const now = performance.now();
   const dt = lastWalkerMotion.time ? Math.min(0.1, Math.max(0.005, (now - lastWalkerMotion.time) / 1000)) : 0.016;
 
-  // Détection dynamique de la vitesse de translation et de rotation
-  const dX = w.x - lastWalkerMotion.x;
-  const dZ = w.z - lastWalkerMotion.z;
+  // Détection dynamique de la vitesse de translation (racine, insensible au balancement de la tête) et de rotation
+  const dX = cameraState.walkerX - lastWalkerMotion.x;
+  const dZ = cameraState.walkerZ - lastWalkerMotion.z;
   const linSpeed = lastWalkerMotion.time ? (Math.hypot(dX, dZ) / dt) : 0;
   
   let dYaw = w.yaw - lastWalkerMotion.yaw;
@@ -289,8 +309,8 @@ function drawMinimap(
   while (dYaw < -Math.PI) dYaw += Math.PI * 2;
   const angSpeed = lastWalkerMotion.time ? (Math.abs(dYaw) / dt) : 0;
 
-  lastWalkerMotion.x = w.x;
-  lastWalkerMotion.z = w.z;
+  lastWalkerMotion.x = cameraState.walkerX;
+  lastWalkerMotion.z = cameraState.walkerZ;
   lastWalkerMotion.yaw = w.yaw;
   lastWalkerMotion.time = now;
 
@@ -399,24 +419,6 @@ function drawMinimap(
   ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   
   ctx.restore();
-
-  // ── Avion joueur ────────────────────────────────────────────────────────────
-  if (cameraState.mode === 'plane') {
-    drawPlaneIcon(
-      ctx, cameraState.planeX, cameraState.planeZ, cameraState.planeYaw,
-      sc, 'rgba(120,200,255,0.9)', 'rgba(255,255,255,0.9)',
-      tx, tz,
-    );
-  }
-
-  // ── Avion autopilote ────────────────────────────────────────────────────────
-  if (cameraState.autopilotActive) {
-    drawPlaneIcon(
-      ctx, cameraState.autopilotX, cameraState.autopilotZ, cameraState.autopilotYaw,
-      sc, 'rgba(100,255,150,0.9)', 'rgba(255,255,255,0.9)',
-      tx, tz,
-    );
-  }
 }
 
 // ── Composant HTML principal ──────────────────────────────────────────────────
