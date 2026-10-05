@@ -67,7 +67,8 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const [_cycleStep, setCycleStep] = useState(0); // 0=fermé, 1=ouvert, 2=ouvert+filtré
   const logAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [savedHeight, setSavedHeight] = useState(180);
+  const [savedHeight, setSavedHeight] = useState(140);
+  const [isMaximized, setIsMaximized] = useState(false);
 
   // Écoute des CustomEvents 'app-log'
   useEffect(() => {
@@ -144,6 +145,21 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
   const consoleControls = (
     <div className="d-flex align-items-center gap-1">
+      <button
+        type="button"
+        className="btn btn-sm border-0 py-0 px-1 lh-1 text-muted"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsMaximized(m => {
+            if (!m) setOpen(true); // ouvrir la card si repliée
+            return !m;
+          });
+        }}
+        title={isMaximized ? 'Réduire la console' : 'Agrandir la console'}
+        style={{ fontSize: '11px' }}
+      >
+        {isMaximized ? '▼' : '▲'}
+      </button>
       <div className="input-group input-group-sm flex-nowrap" style={{ height: '22px', width: 'auto' }}>
         <select
           className="form-select form-select-sm py-0 px-2 bg-transparent small flex-shrink-0 app-console-select"
@@ -218,7 +234,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         right: isMobile ? 8 : 16,
         left: open ? (isMobile ? 8 : 288) : 'auto',
         width: open ? undefined : 'auto',
-        height: open ? `${savedHeight}px` : 'auto',
+        height: open ? (isMaximized ? '100vh' : `${savedHeight}px`) : 'auto',
         maxHeight: isMobile ? '50vh' : '75vh',
         zIndex: 100,
         fontSize: '11px',
@@ -237,6 +253,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           if (!isOpen) {
             setCycleStep(0);
             setFilterBubbleOnly(false);
+            setIsMaximized(false);
           } else {
             setCycleStep(filterBubbleOnly ? 2 : 1);
           }
