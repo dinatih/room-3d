@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useState, useEffect } from 'react';
 import * as THREE from 'three';
 
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
@@ -88,102 +87,6 @@ const MIRROR_CX = 160;
 const SIT_H = 70;
 const STAND_H = 103;
 
-function AnimatedTopper({
-  isDouble,
-  westPos,
-  eastPos,
-  hoverLabel,
-  hoverActions,
-}: {
-  isDouble: boolean;
-  westPos: { x: number; z: number };
-  eastPos: { x: number; z: number };
-  hoverLabel: string;
-  hoverActions: string[];
-}) {
-  const groupRef = useRef<THREE.Group>(null!);
-  const { invalidate } = useThree();
-
-  const targetX = isDouble ? eastPos.x : westPos.x;
-  const targetY = isDouble ? 29 : 35;
-  const targetZ = isDouble ? eastPos.z : westPos.z;
-
-  const current = useRef({ x: targetX, y: targetY, z: targetZ });
-  const initialized = useRef(false);
-
-  const prevIsDouble = useRef(isDouble);
-  const transferProgress = useRef(0);
-  const isTransferring = useRef(false);
-
-  useEffect(() => {
-    if (initialized.current && prevIsDouble.current !== isDouble) {
-      isTransferring.current = true;
-      transferProgress.current = 1;
-    }
-    prevIsDouble.current = isDouble;
-  }, [isDouble]);
-
-  useFrame(() => {
-    const g = groupRef.current;
-    if (!g) return;
-
-    if (!initialized.current) {
-      initialized.current = true;
-      current.current = { x: targetX, y: targetY, z: targetZ };
-      g.position.set(targetX, targetY, targetZ);
-      return;
-    }
-
-    const c = current.current;
-    const dx = targetX - c.x;
-    const dz = targetZ - c.z;
-    const dy = targetY - c.y;
-
-    const SPEED = 0.09;
-    const SNAP_POS = 0.4;
-
-    if (Math.abs(dx) > SNAP_POS || Math.abs(dz) > SNAP_POS || Math.abs(dy) > SNAP_POS) {
-      c.x += dx * SPEED;
-      c.z += dz * SPEED;
-      c.y += dy * SPEED;
-
-      let arc = 0;
-      if (isTransferring.current) {
-        const distHoriz = Math.hypot(dx, dz);
-        arc = Math.min(distHoriz * 0.35, 25);
-        if (distHoriz <= SNAP_POS) {
-          isTransferring.current = false;
-        }
-      }
-
-      g.position.set(c.x, c.y + arc, c.z);
-      invalidate();
-    } else {
-      c.x = targetX;
-      c.y = targetY;
-      c.z = targetZ;
-      isTransferring.current = false;
-      g.position.set(targetX, targetY, targetZ);
-    }
-  });
-
-  return (
-    <group
-      ref={groupRef}
-      position={[targetX, targetY, targetZ]}
-      rotation-y={0}
-      userData={{
-        skipMerge: true,
-        animUnit: true,
-        itemName: 'Surmatelas NÄSFJÄLLET',
-        hoverAction: { label: hoverLabel, actions: hoverActions },
-      }}
-    >
-      <Nasfjallet10558045 item={stub('nasfjallet-topper')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-    </group>
-  );
-}
-
 function Beds() {
   const toggles = useFurnitureToggles(['bed-double']);
   const isDouble = !!toggles['bed-double'];
@@ -228,6 +131,10 @@ function Beds() {
     ? `Lit Utåker Double (${currentDoublePos.label})`
     : 'Lit Utåker (Lits séparés)';
 
+  const topperPos = isDouble
+    ? { x: eastPos.x, y: 29, z: eastPos.z }
+    : { x: westPos.x, y: 35, z: westPos.z };
+
   return (
     <>
       <PositionTransition x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
@@ -242,13 +149,18 @@ function Beds() {
         </group>
       </PositionTransition>
 
-      <AnimatedTopper
-        isDouble={isDouble}
-        westPos={westPos}
-        eastPos={eastPos}
-        hoverLabel={hoverLabel}
-        hoverActions={hoverActions}
-      />
+      <PositionTransition x={topperPos.x} y={topperPos.y} z={topperPos.z} arc>
+        <group
+          userData={{
+            skipMerge: true,
+            animUnit: true,
+            itemName: 'Surmatelas NÄSFJÄLLET',
+            hoverAction: { label: hoverLabel, actions: hoverActions },
+          }}
+        >
+          <Nasfjallet10558045 item={stub('nasfjallet-topper')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      </PositionTransition>
     </>
   );
 }
