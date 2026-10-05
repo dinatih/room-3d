@@ -76,9 +76,8 @@ export function ViewsSection({
           {cameraProjection === 'ortho' ? 'ORTHO' : 'PERSP'}
         </span>
       </button>
-      {b0('gray',   'Follow 3P (Raccourci M)',    () => dispatchKey('m'))}
-      {b0('gray',   'Vue 3ème personne (Raccourci 3)', () => dispatchKey('3'))}
-      {b0('gray',   'Vue FPV 1ère pers. (Raccourci 1)',() => dispatchKey('1'))}
+      {b0('gray',   'Vue 3ème personne (3 / M)', () => dispatchKey('3'))}
+      {b0('gray',   'Vue FPV (1 / M)',           () => dispatchKey('1'))}
       {cameraMode === 'fpv' && (
         <button
           className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between bg-transparent small"
