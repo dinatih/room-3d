@@ -13,8 +13,6 @@ const _tmpDogDir = new THREE.Vector3();
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
-const CROSSFADE_DURATION = 0.25;
-
 function findDogClip(animations: THREE.AnimationClip[], keyword: string): THREE.AnimationClip {
   const kw = keyword.toLowerCase();
   return (

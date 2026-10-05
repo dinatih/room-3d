@@ -1,6 +1,3 @@
-import { Kallax20275814 } from '@features/scene/items/Kallax20275814';
-import { Kallax90301555 } from '@features/scene/items/Kallax90301555';
-import { Kallax20301554 } from '@features/scene/items/Kallax20301554';
 import { Raskog30586783 } from '@features/scene/items/Raskog30586783';
 import { Boholmen99157501 } from '@features/scene/items/Boholmen99157501';
 import { Utdrag10389142 } from '@features/scene/items/Utdrag10389142';
@@ -111,9 +108,6 @@ import { DoubleVenusPendant } from '@features/scene/items/DoubleVenusPendant';
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'smorkull-chair':         Smorkull,
   'bird-feeder':            BirdFeeder,
-  'kallax20275814': Kallax20275814,
-  'kallax90301555': Kallax90301555,
-  'kallax20301554': Kallax20301554,
   'raskog30586783': Raskog30586783,
   'boholmen99157501': Boholmen99157501,
   'utdrag10389142': Utdrag10389142,
