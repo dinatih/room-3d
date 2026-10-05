@@ -40,7 +40,7 @@ export interface AppLogEntry {
 
 let _logCounter = 0;
 export const APP_LOG_HISTORY: AppLogEntry[] = [];
-const MAX_LOGS = 200;
+const MAX_LOGS = 10_000;
 
 export const appLog = (tag: string, message: string): void => {
   const entry: AppLogEntry = { id: ++_logCounter, tag, message, timestamp: Date.now() };
