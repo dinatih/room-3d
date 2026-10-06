@@ -16,15 +16,15 @@ export function activeFollowH(): number {
   return cameraState.characterHeight * EYE_RATIO;
 }
 
-/** Position perspective par défaut, orientée Nord-Est comme la vue ISO NE. */
+/** Position perspective par défaut, orientée Nord-Ouest comme la vue ISO NW. */
 const PERSPECTIVE_ISO_OFFSET = 500;
 export const PERSP_POS: [number, number, number] = [
-  ROOM_W / 2 + PERSPECTIVE_ISO_OFFSET,
+  ROOM_W / 2 - PERSPECTIVE_ISO_OFFSET,
   PERSPECTIVE_ISO_OFFSET,
   ROOM_D / 2 - PERSPECTIVE_ISO_OFFSET,
 ];
 
-/** Cible centrale de l'orbite perspective Nord-Est. */
+/** Cible centrale de l'orbite perspective Nord-Ouest. */
 export const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, 0, ROOM_D / 2];
 
 /** Position et cible de la caméra en mode 2D Top (centré sur la pièce à 20m d'altitude) */
