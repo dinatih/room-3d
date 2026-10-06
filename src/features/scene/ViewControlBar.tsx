@@ -117,7 +117,7 @@ export function ViewControlBar({
         aria-pressed={isOrtho}
       >
         <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} aria-hidden="true" />
-        <span className="ms-1">{isOrtho ? 'ORTHO' : 'PERSP'}</span>
+        <span className="ms-1">{isOrtho ? 'Ortho' : 'Persp'}</span>
       </button>
 
       {showCharacterModes && (
@@ -128,21 +128,21 @@ export function ViewControlBar({
             onClick={() => dispatchCameraMode('orbit')}
             title="Revenir à la caméra Orbit (O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={cameraMode === 'orbit'}
-          ><i className="bi bi-globe2 me-sm-1" aria-hidden="true" /><span>ORBIT</span></button>
+          ><i className="bi bi-globe2 me-sm-1" aria-hidden="true" /><span>Orbit</span></button>
           <button
             type="button"
             className={`btn ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('toggle-npc-grid')}
             title="Afficher ou quitter la grille des PNJ (G ; O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={npcGridActive}
-          ><i className="bi bi-grid-3x3-gap-fill me-sm-1" aria-hidden="true" /><span>NPC GRID</span></button>
+          ><i className="bi bi-grid-3x3-gap-fill me-sm-1" aria-hidden="true" /><span>NPC Grid</span></button>
           <button
             type="button"
             className={`btn ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('toggle-follow')}
             title="Activer ou quitter le suivi à la troisième personne (M : Follow ↔ FPV ; O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={cameraMode === 'follow'}
-          ><i className="bi bi-person-walking me-sm-1" aria-hidden="true" /><span>FOLLOW</span></button>
+          ><i className="bi bi-person-walking me-sm-1" aria-hidden="true" /><span>Follow</span></button>
           <button
             type="button"
             className={`btn ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
