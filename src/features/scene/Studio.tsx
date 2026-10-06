@@ -404,6 +404,7 @@ export function Studio() {
   const onToggleLayer = useSceneStore(state => state.toggleLayer);
 
   const [showInventory, setShowInventory] = useState(false);
+  const [showVirtualDPad, setShowVirtualDPad] = useState(false);
   const [inventoryInitialCat, setInventoryInitialCat] = useState<string>('all');
   const [hideUI, setHideUI] = useState(() => parseUrlHideUI());
 
@@ -907,6 +908,8 @@ export function Studio() {
             return !v;
           });
         }}
+        virtualDPadVisible={showVirtualDPad}
+        onToggleVirtualDPad={() => setShowVirtualDPad(value => !value)}
         hideUI={hideUI}
       />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
@@ -929,10 +932,11 @@ export function Studio() {
             }
           </div>
         )}
-        <VirtualDPad />
+        <VirtualDPad visible={showVirtualDPad && !hideUI} />
         <ViewControlBar
           hidden={planeMode}
           showCharacterModes
+          mobileBottomGap={showVirtualDPad ? 148 : 8}
           hideUI={hideUI}
           onToggleHideUI={toggleHideUI}
           onEnterFlight={() => {

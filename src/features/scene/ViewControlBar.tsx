@@ -27,6 +27,7 @@ const ISO_VIEWS = [
 export interface ViewControlBarProps {
   /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-center' */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'bottom-center';
+  mobileBottomGap?: number;
   /** Rendu dans le flux du document (pas position:fixed) */
   inline?: boolean;
   /** Masquer le composant (ex: mode immersif) */
@@ -41,6 +42,7 @@ export interface ViewControlBarProps {
 
 export function ViewControlBar({
   position = 'bottom-center',
+  mobileBottomGap = 8,
   inline = false,
   hidden = false,
   showCharacterModes = false,
@@ -71,7 +73,7 @@ export function ViewControlBar({
     'bottom-center': { bottom: 12, left: '50%', transform: 'translateX(-50%)' },
   }[position];
   const mobileDockOffset = isMobile && position.startsWith('bottom-')
-    ? { bottom: 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' }
+    ? { bottom: `calc(3.75rem + env(safe-area-inset-bottom) + ${mobileBottomGap}px)` }
     : undefined;
 
   const viewButtons = (
@@ -96,7 +98,7 @@ export function ViewControlBar({
   );
 
   const bar = (
-    <div className={`view-control-bar glass-card d-flex flex-wrap justify-content-center align-items-center gap-1 ${children ? 'p-1 small' : 'p-2'} rounded-3 border shadow-lg ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
+    <div className={`view-control-bar glass-card d-flex flex-nowrap justify-content-center align-items-center gap-1 ${children ? 'p-1 small' : 'p-2'} rounded-3 border shadow-lg ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       {showCharacterModes && (
         <button
           type="button"

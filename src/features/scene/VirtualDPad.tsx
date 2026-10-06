@@ -16,7 +16,7 @@ function fire(type: 'keydown' | 'keyup', key: ArrowKey) {
   window.dispatchEvent(new KeyboardEvent(type, { key, code: key, bubbles: true }));
 }
 
-export function VirtualDPad() {
+export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   const isMobile = useIsMobile();
   const activeKeys = useRef(new Set<ArrowKey>());
   const [pressedKeys, setPressedKeys] = useState<Set<ArrowKey>>(new Set());
@@ -32,7 +32,7 @@ export function VirtualDPad() {
     activeKeys.current.clear();
   }, []);
 
-  if (!isMobile) return null;
+  if (!isMobile || !visible) return null;
 
   return (
     <div className="virtual-dpad" role="group" aria-label="Commandes de déplacement">

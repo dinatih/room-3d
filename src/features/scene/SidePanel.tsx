@@ -61,6 +61,8 @@ export function SidePanel({
   onToggleAutopilot,
   showLandingStrips = false,
   onToggleLandingStrips,
+  virtualDPadVisible = false,
+  onToggleVirtualDPad,
   hideUI = false,
 }: SidePanelProps) {
   const isMobile = useIsMobile();
@@ -466,6 +468,17 @@ export function SidePanel({
           >
             <span className="fs-5 lh-1">👁️</span>
             <span className="fw-semibold small">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onToggleVirtualDPad}
+            aria-pressed={virtualDPadVisible}
+            className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${virtualDPadVisible ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
+            title="Afficher ou masquer les commandes directionnelles"
+          >
+            <span className="fs-5 lh-1"><i className="bi bi-dpad-fill" aria-hidden="true" /></span>
+            <span className="fw-semibold small">Dépl.</span>
           </button>
 
           <button
