@@ -1,4 +1,4 @@
-import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
+import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS, CONTROL_HEADER_PADDING } from './toolbarStyles';
 /**
  * SidePanel.tsx
  *
@@ -562,7 +562,7 @@ export function SidePanel({
       >
         <div className="card shadow-sm glass-card overflow-hidden flex-shrink-0">
           <button
-            className="btn btn-sm btn-danger w-100 rounded-0 py-2 px-3 fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0 small flex-shrink-0"
+            className={`btn btn-sm btn-danger w-100 rounded-0 ${CONTROL_HEADER_PADDING} fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0 small flex-shrink-0`}
             onClick={onOpenInventory}
             title="Ouvrir l'inventaire (Touche I)"
             style={{ 

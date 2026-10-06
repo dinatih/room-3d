@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CONTROL_HEADER_PADDING } from '../toolbarStyles';
 
 export interface GroupProps {
   emoji: React.ReactNode;
@@ -13,7 +14,7 @@ export interface GroupProps {
   className?: string;
 }
 
-export function Group({ emoji, title, defaultOpen = false, open: controlledOpen, extra, children, headerPadding = 'py-2 px-3', onToggle, className }: GroupProps) {
+export function Group({ emoji, title, defaultOpen = false, open: controlledOpen, extra, children, headerPadding = CONTROL_HEADER_PADDING, onToggle, className }: GroupProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isOpen = controlledOpen ?? internalOpen;
   const handleToggle = () => {

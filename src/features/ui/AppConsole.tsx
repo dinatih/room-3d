@@ -275,7 +275,6 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         title="Console"
         open={open}
         extra={consoleControls}
-        headerPadding="py-1 px-2"
         className="flex-grow-1"
         onToggle={(isOpen) => {
           setOpen(isOpen);

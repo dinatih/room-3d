@@ -30,7 +30,6 @@
   width: max-content;
   max-width: 100%;
   // Le fond, le flou et la bordure communs viennent de .glass-card.
-  gap: 0.375rem !important;
 }
 
 .view-control-bar__group {
@@ -139,8 +138,5 @@ $control-colors: (
     display: none;
   }
 
-  .view-control-bar .btn {
-    min-height: 2.25rem;
-  }
 
 }
