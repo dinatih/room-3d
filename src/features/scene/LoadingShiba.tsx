@@ -2,82 +2,217 @@ import { Suspense, useLayoutEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { AnimationMixer, Box3, Group, LoopRepeat, OrthographicCamera, Vector3 } from 'three';
+import {
+  AnimationAction, AnimationMixer, Box3, Group, LoopOnce, LoopRepeat,
+  Mesh, MeshLambertMaterial, MeshStandardMaterial, OrthographicCamera, SkinnedMesh, Vector3,
+} from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 const SHIBA_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
-const DOG_HEIGHT = 40; // Même échelle que le chien de l'appartement, en cm.
-const RUN_SPEED = 120; // cm/s, comme sa course dans l'appartement.
+const DOG_HEIGHT = 40; // cm, comme le chien de l'appartement.
+const RUN_SPEED = 120; // cm/s.
+const ANIMATION_FADE = 0.2;
 
-function RunningShiba() {
+type Movement = 'run' | 'jump' | 'circle' | 'sit';
+
+function RunningShiba({ countdownStarted }: { countdownStarted: boolean }) {
   const gltf = useGLTF(SHIBA_PATH);
-  const model = useMemo(() => clone(gltf.scene), [gltf.scene]);
+  const model = useMemo(() => {
+    const instance = clone(gltf.scene);
+    instance.traverse(object => {
+      const mesh = object as Mesh;
+      if (!mesh.isMesh) return;
+      // SkeletonUtils partage les matériaux : isoler le rendu du mini-canevas.
+      // Le pelage ne doit pas reprendre la brillance métallique du GLB.
+      const matte = (material: MeshStandardMaterial) => new MeshLambertMaterial({
+        map: material.map,
+        color: material.color,
+        side: material.side,
+        alphaTest: material.alphaTest,
+        transparent: material.transparent,
+        opacity: material.opacity,
+      });
+      mesh.material = Array.isArray(mesh.material)
+        ? mesh.material.map(material => matte(material as MeshStandardMaterial))
+        : matte(mesh.material as MeshStandardMaterial);
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+      mesh.frustumCulled = false;
+    });
+    return instance;
+  }, [gltf.scene]);
+  const clips = useMemo(() => {
+    const find = (name: string) => {
+      const clip = gltf.animations.find(animation => animation.name.toLowerCase().includes(name));
+      if (!clip || clip.duration <= 0) throw new Error(`Animation du shiba invalide : ${name}`);
+      return clip;
+    };
+    return { run: find('run'), jump: find('jump'), sit: find('sitdown') };
+  }, [gltf.animations]);
   const runner = useRef<Group>(null);
+  const activeAction = useRef<AnimationAction | null>(null);
+  const movement = useRef<Movement>('run');
   const direction = useRef(1);
+  const elapsed = useRef(0);
+  const nextTrick = useRef(0);
+  const circle = useRef({ x: 0, z: 0, angle: 0, remaining: 0 });
   const { camera, size } = useThree();
-  const bounds = useMemo(() => new Box3(), []);
-  const poseBounds = useMemo(() => new Box3(), []);
-  const modelSize = useMemo(() => new Vector3(), []);
-  const center = useMemo(() => new Vector3(), []);
+  const envelope = useMemo(() => ({ radius: 0, minY: 0, height: 0, sitTime: 0 }), []);
   const mixer = useMemo(() => new AnimationMixer(model), [model]);
 
   useLayoutEffect(() => {
-    const clip = gltf.animations.find(animation => /run/i.test(animation.name));
-    if (!clip) throw new Error('Le modèle du shiba ne contient pas d’animation de course.');
     model.scale.setScalar(1);
+    model.position.set(0, 0, 0);
+    model.rotation.set(0, 0, 0);
     model.updateMatrixWorld(true);
-    bounds.setFromObject(model).getSize(modelSize);
-    if (modelSize.y <= 0) throw new Error('La hauteur du modèle du shiba est invalide.');
-    model.scale.setScalar(DOG_HEIGHT / modelSize.y);
-    model.rotation.y = Math.PI / 2;
-    const action = mixer.clipAction(clip).setLoop(LoopRepeat, Infinity).reset().play();
-    // Enveloppe de la course échantillonnée à 30 images/s pour un cadrage fixe.
-    bounds.makeEmpty();
-    const samples = Math.ceil(clip.duration * 30);
-    for (let frame = 0; frame <= samples; frame++) {
-      mixer.setTime(frame * clip.duration / samples);
-      model.updateMatrixWorld(true);
-      bounds.union(poseBounds.setFromObject(model, true));
+    const box = new Box3().setFromObject(model, true);
+    const rawSize = box.getSize(new Vector3());
+    if (rawSize.y <= 0) throw new Error('La hauteur du modèle du shiba est invalide.');
+    model.scale.setScalar(DOG_HEIGHT / rawSize.y);
+    // Cadrage fixe couvrant les trois animations, y compris toute la hauteur du saut.
+    const bounds = new Box3();
+    const pelvis = model.getObjectByName('Dogger_pelvis_j');
+    if (!pelvis) throw new Error('Le squelette du shiba ne contient pas de bassin.');
+    const pelvisPosition = new Vector3();
+    let seatedPelvis = Infinity;
+    for (const clip of Object.values(clips)) {
+      mixer.stopAllAction();
+      mixer.clipAction(clip).reset().play();
+      const samples = Math.ceil(clip.duration * 30);
+      for (let frame = 0; frame <= samples; frame++) {
+        mixer.setTime(frame * clip.duration / samples);
+        model.updateMatrixWorld(true);
+        model.traverse(object => {
+          const mesh = object as SkinnedMesh;
+          if (mesh.isSkinnedMesh) mesh.skeleton.update();
+        });
+        box.setFromObject(model, true);
+        bounds.union(box);
+        // SitDown contient aussi le relevé : garder le bassin au plus près du sol.
+        pelvis.getWorldPosition(pelvisPosition);
+        if (clip === clips.sit && pelvisPosition.y < seatedPelvis) {
+          seatedPelvis = pelvisPosition.y;
+          envelope.sitTime = frame * clip.duration / samples;
+        }
+      }
     }
-    bounds.getSize(modelSize);
-    bounds.getCenter(center);
-    action.reset();
+    const center = bounds.getCenter(new Vector3());
+    model.position.set(-center.x, 0, -center.z);
+    envelope.radius = Math.hypot((bounds.max.x - bounds.min.x) / 2, (bounds.max.z - bounds.min.z) / 2);
+    envelope.minY = bounds.min.y;
+    envelope.height = bounds.max.y - bounds.min.y;
+    mixer.stopAllAction();
     mixer.setTime(0);
+    activeAction.current = null;
     return () => {
       mixer.stopAllAction();
       mixer.uncacheRoot(model);
+      model.traverse(object => {
+        const mesh = object as Mesh;
+        if (!mesh.isMesh) return;
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        materials.forEach(material => material.dispose());
+      });
     };
-  }, [gltf.animations, model, mixer, bounds, poseBounds, modelSize, center]);
+  }, [model, mixer, clips, envelope]);
+
+  useLayoutEffect(() => {
+    movement.current = countdownStarted ? 'sit' : 'run';
+    elapsed.current = 0;
+    nextTrick.current = clips.run.duration * (2 + Math.random() * 3);
+    const action = mixer.clipAction(countdownStarted ? clips.sit : clips.run);
+    action.reset().setLoop(countdownStarted ? LoopOnce : LoopRepeat, countdownStarted ? 1 : Infinity);
+    action.clampWhenFinished = countdownStarted;
+    action.fadeIn(ANIMATION_FADE).play();
+    activeAction.current?.fadeOut(ANIMATION_FADE);
+    activeAction.current = action;
+  }, [countdownStarted, clips, mixer]);
 
   useFrame((_, delta) => {
-    if (!runner.current) return;
+    const group = runner.current;
+    if (!group) return;
     mixer.update(delta);
-    model.rotation.y = direction.current * Math.PI / 2;
-    model.position.set(-center.x * direction.current, -center.y, -center.z * direction.current);
-
     const ortho = camera as OrthographicCamera;
-    // Une marge d'une demi-hauteur du chien autour de sa silhouette.
-    ortho.zoom = Math.min(size.height / (modelSize.y + DOG_HEIGHT / 2), size.width / (modelSize.x + DOG_HEIGHT / 2));
+    ortho.zoom = Math.min(size.height / (envelope.height + DOG_HEIGHT / 2), size.width / (envelope.radius * 2 + DOG_HEIGHT / 2));
     ortho.updateProjectionMatrix();
-    const limit = Math.max(0, (size.width / ortho.zoom - modelSize.x) / 2 - DOG_HEIGHT / 4);
-    const nextX = runner.current.position.x + direction.current * RUN_SPEED * delta;
-    runner.current.position.x = Math.max(-limit, Math.min(limit, nextX));
-    if (nextX >= limit) direction.current = -1;
-    else if (nextX <= -limit) direction.current = 1;
+    group.position.y = -envelope.minY - envelope.height / 2;
+    const limit = Math.max(0, size.width / ortho.zoom / 2 - envelope.radius - DOG_HEIGHT / 4);
+    const play = (mode: 'run' | 'jump') => {
+      const action = mixer.clipAction(clips[mode]);
+      action.reset().setLoop(mode === 'jump' ? LoopOnce : LoopRepeat, mode === 'jump' ? 1 : Infinity);
+      action.clampWhenFinished = mode === 'jump';
+      action.fadeIn(ANIMATION_FADE).play();
+      activeAction.current?.fadeOut(ANIMATION_FADE);
+      activeAction.current = action;
+      movement.current = mode;
+      elapsed.current = 0;
+      nextTrick.current = clips.run.duration * (2 + Math.random() * 3);
+    };
+    if (movement.current === 'sit') {
+      const action = activeAction.current;
+      if (action && action.time >= envelope.sitTime) {
+        action.time = envelope.sitTime;
+        action.paused = true;
+        mixer.update(0);
+      }
+      // Face légèrement de trois quarts pendant le décompte, puis pose finale maintenue.
+      const target = Math.PI / 6;
+      const turn = Math.atan2(Math.sin(target - group.rotation.y), Math.cos(target - group.rotation.y));
+      group.rotation.y += turn * (1 - Math.exp(-delta / ANIMATION_FADE));
+      return;
+    }
+    elapsed.current += delta;
+    if (movement.current === 'jump') {
+      if (elapsed.current >= clips.jump.duration) play('run');
+      return;
+    }
+    if (movement.current === 'circle') {
+      const orbit = circle.current;
+      const radius = Math.min(DOG_HEIGHT / 2, limit);
+      const angleDelta = radius > 0 ? RUN_SPEED / radius * delta : 0;
+      orbit.angle += angleDelta;
+      orbit.remaining -= angleDelta;
+      group.position.x = orbit.x + radius * Math.cos(orbit.angle);
+      group.position.z = orbit.z + radius * Math.sin(orbit.angle);
+      group.rotation.y = -orbit.angle;
+      if (orbit.remaining <= 0 || radius === 0) {
+        group.position.z = 0;
+        play('run');
+      }
+    } else {
+      group.rotation.y = direction.current * Math.PI / 2;
+      group.position.x += direction.current * RUN_SPEED * delta;
+      if (group.position.x >= limit) direction.current = -1;
+      else if (group.position.x <= -limit) direction.current = 1;
+      if (elapsed.current >= nextTrick.current) {
+        if (Math.random() < 0.5) play('jump');
+        else {
+          const radius = Math.min(DOG_HEIGHT / 2, limit);
+          const angle = -group.rotation.y;
+          circle.current = {
+            x: Math.max(-limit + radius, Math.min(limit - radius, group.position.x - radius * Math.cos(angle))),
+            z: -radius * Math.sin(angle), angle,
+            remaining: Math.PI * 2 * (1 + Math.floor(Math.random() * 2)),
+          };
+          movement.current = 'circle';
+        }
+      }
+    }
+    group.position.x = Math.max(-limit, Math.min(limit, group.position.x));
   });
 
   return <group ref={runner} dispose={null}><primitive object={model} /></group>;
 }
 
-export function LoadingShiba() {
+export function LoadingShiba({ countdownStarted = false }: { countdownStarted?: boolean }) {
   const container = document.getElementById('loading-shiba');
   if (!container) return null;
   return createPortal(
     <Canvas orthographic camera={{ position: [0, 0, 300], near: 0.1, far: 1000 }}
       dpr={1} gl={{ alpha: true, antialias: true }}>
-      <ambientLight intensity={1.5} />
-      <directionalLight position={[100, 150, 200]} intensity={2} />
-      <Suspense fallback={null}><RunningShiba /></Suspense>
+      <hemisphereLight args={['#ffffff', '#d8d5cf', 2]} />
+      <directionalLight position={[100, 150, 200]} intensity={1} />
+      <Suspense fallback={null}><RunningShiba countdownStarted={countdownStarted} /></Suspense>
     </Canvas>,
     container,
   );

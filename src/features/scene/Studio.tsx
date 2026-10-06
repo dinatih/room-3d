@@ -262,10 +262,12 @@ function ActiveCameraCapture({ onCapture }: { onCapture: (cam: PerspectiveCamera
 function LoadingProgress({
   sceneReady,
   onAssetsLoaded,
+  onCountdownStart,
   onLaunch,
 }: {
   sceneReady: boolean;
   onAssetsLoaded: () => void;
+  onCountdownStart: () => void;
   onLaunch: () => void;
 }) {
   const { progress, active, item } = useProgress();
@@ -295,6 +297,7 @@ function LoadingProgress({
   useEffect(() => {
     if (!assetsDoneRef.current || !sceneReady || countdownStartedRef.current) return;
     countdownStartedRef.current = true;
+    onCountdownStart();
 
     const itemEl = document.getElementById('loading-item');
     const countdownContainer = document.getElementById('loading-countdown-container');
@@ -350,7 +353,7 @@ function LoadingProgress({
         countdownTimerRef.current = null;
       }
     };
-  }, [sceneReady, onLaunch]);
+  }, [sceneReady, onLaunch, onCountdownStart]);
 
   return null;
 }
@@ -601,6 +604,8 @@ export function Studio() {
   const [buildAnimMatrix,  setBuildAnimMatrix]  = useState(false);
   const [assetsLoaded,     setAssetsLoaded]     = useState(false);
   const [showLoadingShiba, setShowLoadingShiba] = useState(true);
+  const [loadingCountdownStarted, setLoadingCountdownStarted] = useState(false);
+  const handleCountdownStart = useCallback(() => setLoadingCountdownStarted(true), []);
   const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
   const [animDurations,    setAnimDurations]    = useState<Record<string, number>>({});
 
@@ -684,8 +689,8 @@ export function Studio() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <LoadingProgress sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onLaunch={handleLaunch} />
-      {showLoadingShiba && <LoadingShiba />}
+      <LoadingProgress sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onCountdownStart={handleCountdownStart} onLaunch={handleLaunch} />
+      {showLoadingShiba && <LoadingShiba countdownStarted={loadingCountdownStarted} />}
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
