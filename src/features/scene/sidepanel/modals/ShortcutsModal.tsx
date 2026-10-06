@@ -31,7 +31,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Inventaire Personnages (direct)" keys={['Alt+P']} />
               <R label="Personnages Extra 🎭 (toggle)" keys={['E']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
-              <R label="Vue perspective (reset)"    keys={['O']} />
+              <R label="Cycle Orbit / Follow / FPV" keys={['O']} />
               <R label="Follow (cycle 3P / FPV)" keys={['M']} />
               <R label="Vue 3ème personne directe"  keys={['3']} />
               <R label="Ambiance HDRI aléatoire 🎲" keys={['5']} />

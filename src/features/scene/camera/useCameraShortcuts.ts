@@ -144,35 +144,23 @@ export function useCameraShortcuts({
         }
       }
 
-      if (e.key === 'o' || e.key === 'O') {
-        const laraGridActive = useSceneStore.getState().layers.laraGrid;
-        if (laraGridActive) {
-          document.dispatchEvent(new CustomEvent('toggle-lara-haircut'));
-          return;
-        }
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'o' || e.key === 'O')) {
+        if (e.repeat) return;
+        e.preventDefault();
+        const curX = cameraState.characterX ?? followPos.current.x;
+        const curZ = cameraState.characterZ ?? followPos.current.z;
 
-        if (modeRef.current === 'follow' || modeRef.current === 'fpv') {
-          exitFollow();
-          useSceneStore.getState().setCameraProjection('persp');
-          return;
-        }
-
-        if (modeRef.current === 'top') {
-          exitTop();
-          useSceneStore.getState().setCameraProjection('persp');
-          return;
-        }
-
-        if (modeRef.current === 'ortho') {
-          if (exitOrtho) exitOrtho();
-          useSceneStore.getState().setCameraProjection('persp');
-          return;
-        }
-
-        // Si on est déjà en mode orbit libre, basculer entre 'persp' (3D standard) et 'ortho' (isométrique 3D)
         if (modeRef.current === 'orbit') {
-          useSceneStore.getState().toggleCameraProjection();
-          return;
+          useSceneStore.getState().setActiveCameraView(null);
+          enterFollow(curX, curZ, 'follow');
+        } else if (modeRef.current === 'follow') {
+          enterFollow(curX, curZ, 'fpv');
+        } else if (modeRef.current === 'fpv') {
+          exitFollow();
+        } else if (modeRef.current === 'top') {
+          exitTop();
+        } else if (modeRef.current === 'ortho' && exitOrtho) {
+          exitOrtho();
         }
       }
 

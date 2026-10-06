@@ -111,20 +111,6 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
       {showCharacterModes && <>
         <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
         <button
-          className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${cameraMode === 'follow' ? 'fw-bold' : ''}`}
-          style={{
-            background: cameraMode === 'follow' ? 'rgba(52,211,153,0.9)' : 'rgba(255,255,255,0.08)',
-            color: cameraMode === 'follow' ? '#1a1a2e' : 'rgba(255,255,255,0.8)',
-            fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
-          }}
-          onClick={() => dispatchCameraMode('toggle-follow')}
-          title="Activer ou quitter le suivi à la troisième personne"
-          aria-pressed={cameraMode === 'follow'}
-        >
-          <i className="bi bi-person-walking" />
-          <span>FOLLOW</span>
-        </button>
-        <button
           className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${cameraMode === 'orbit' ? 'fw-bold' : ''}`}
           style={{
             background: cameraMode === 'orbit' ? 'rgba(251,191,36,0.9)' : 'rgba(255,255,255,0.08)',
@@ -137,6 +123,20 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
         >
           <i className="bi bi-globe2" />
           <span>ORBIT</span>
+        </button>
+        <button
+          className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${cameraMode === 'follow' ? 'fw-bold' : ''}`}
+          style={{
+            background: cameraMode === 'follow' ? 'rgba(52,211,153,0.9)' : 'rgba(255,255,255,0.08)',
+            color: cameraMode === 'follow' ? '#1a1a2e' : 'rgba(255,255,255,0.8)',
+            fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
+          }}
+          onClick={() => dispatchCameraMode('toggle-follow')}
+          title="Activer ou quitter le suivi à la troisième personne"
+          aria-pressed={cameraMode === 'follow'}
+        >
+          <i className="bi bi-person-walking" />
+          <span>FOLLOW</span>
         </button>
         <button
           className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${cameraMode === 'fpv' ? 'fw-bold' : ''}`}
