@@ -441,7 +441,7 @@ export function SidePanel({
 
         {/* Tab bar */}
         <div 
-          className={`position-fixed bottom-0 start-0 end-0 view-control-bar glass-card w-100 d-flex flex-nowrap justify-content-start align-items-center gap-1 overflow-x-auto text-nowrap p-1 rounded-3 border shadow-lg ui-panel-bottom ${hideUI ? 'ui-hidden' : ''}`}
+          className={`position-fixed bottom-0 start-0 end-0 view-control-bar glass-card w-100 d-flex flex-nowrap justify-content-start align-items-center gap-1 overflow-x-auto p-2 rounded-3 border shadow-lg ui-panel-bottom ${hideUI ? 'ui-hidden' : ''}`}
           style={{ 
             zIndex: 100, 
             paddingBottom: 'env(safe-area-inset-bottom)', 
@@ -456,7 +456,7 @@ export function SidePanel({
               onClick={() => {
                 document.dispatchEvent(new CustomEvent('toggle-vr'));
               }}
-              className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isVRActive ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
+              className={`btn btn-sm d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isVRActive ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'} py-1 px-2`}
               title="Mode Réalité Virtuelle (WebXR)"
             >
               <span className="fs-5 lh-1"><i className="bi bi-headset" aria-hidden="true" /></span>
@@ -470,7 +470,7 @@ export function SidePanel({
             onClick={() => {
               document.dispatchEvent(new CustomEvent('toggle-immersive'));
             }}
-            className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isImmersiveActive ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
+            className={`btn btn-sm d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isImmersiveActive ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'} py-1 px-2`}
             title="Mode Immersif Gyroscope (Plein écran)"
           >
             <span className="fs-5 lh-1"><i className="bi bi-eye-fill" aria-hidden="true" /></span>
@@ -481,7 +481,7 @@ export function SidePanel({
             type="button"
             onClick={onToggleVirtualDPad}
             aria-pressed={virtualDPadVisible}
-            className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${virtualDPadVisible ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
+            className={`btn btn-sm d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${virtualDPadVisible ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'} py-1 px-2`}
             title="Afficher ou masquer les commandes directionnelles"
           >
             <span className="fs-5 lh-1"><i className="bi bi-arrows-move" aria-hidden="true" /></span>
@@ -491,7 +491,7 @@ export function SidePanel({
           <button
             type="button"
             onClick={onOpenInventory}
-            className="btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 text-secondary py-1 px-2"
+            className="btn btn-sm btn-outline-secondary d-flex flex-column align-items-center justify-content-center flex-shrink-0 py-1 px-2"
           >
             <span className="fs-5 lh-1"><i className="bi bi-box-seam-fill" aria-hidden="true" /></span>
             <span className="fw-semibold small">Inventaire</span>
@@ -536,7 +536,7 @@ export function SidePanel({
                 key={t.key}
                 type="button"
                 onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
-                className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 py-1 px-2 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
+                className={`btn btn-sm d-flex flex-column align-items-center justify-content-center flex-shrink-0 py-1 px-2 ${active ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
               >
                 <span className="fs-5 lh-1"><i className={`bi ${tabIcons[t.key]}`} aria-hidden="true" /></span>
                 <span className="fw-semibold small">{t.label}</span>
