@@ -911,7 +911,6 @@ export function Studio() {
             return !v;
           });
         }}
-        onToggleHideUI={toggleHideUI}
         hideUI={hideUI}
       />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>

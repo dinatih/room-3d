@@ -192,16 +192,14 @@ export interface SidePanelProps {
   onToggleAutopilot?:      () => void;
   showLandingStrips?:      boolean;
   onToggleLandingStrips?:  () => void;
-  onToggleHideUI?:         () => void;
   hideUI?:                 boolean;
 }
 
-export type TabKey = 'profile' | 'views' | 'layers' | 'personnage' | 'perf' | 'interactif' | null;
+export type TabKey = 'profile' | 'layers' | 'personnage' | 'perf' | 'interactif' | null;
 
 export const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
   { key: 'profile',    emoji: '💼', label: 'Profil' },
   { key: 'perf',       emoji: '📊', label: 'Perf' },
-  { key: 'views',      emoji: '📷', label: 'Vues' },
   { key: 'layers',     emoji: '📑', label: 'Calques' },
   { key: 'interactif', emoji: '🎮', label: 'Interact' },
   { key: 'personnage', emoji: '👤', label: 'Perso' },

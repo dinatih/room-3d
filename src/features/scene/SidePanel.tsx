@@ -1,7 +1,7 @@
 /**
  * SidePanel.tsx
  *
- * Desktop : panneau accordéon à gauche (sections Vues / Calques / Interactif / Personnage / Animations / DevTools).
+ * Desktop : panneau accordéon à gauche (sections Calques / Interactif / Personnage / Profil).
  * Mobile  : tab bar fixe en bas qui ouvre un bottom-sheet plein-largeur.
  *
  * Composant HTML pur rendu HORS du Canvas R3F. Dispatche des events custom
@@ -16,14 +16,13 @@ import { HDRI_LIST } from './hdriConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 
 import {
-  TABS, ALL_HAIR_COLORS, dispatchView,
+  TABS, ALL_HAIR_COLORS,
   type FurnitureState, type LayerState, type GroundType, type SidePanelProps,
   type LidarMode, type TabKey,
 } from './sidepanel/types';
 import { Group } from './sidepanel/Group';
 import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
 import { CvModal, type CvType } from './sidepanel/modals/CvModal';
-import { ViewsSection } from './sidepanel/sections/ViewsSection';
 import { LayersSection } from './sidepanel/sections/LayersSection';
 import { InteractiveSection } from './sidepanel/sections/InteractiveSection';
 import { CharacterSection } from './sidepanel/sections/CharacterSection';
@@ -60,7 +59,6 @@ export function SidePanel({
   onToggleAutopilot,
   showLandingStrips = false,
   onToggleLandingStrips,
-  onToggleHideUI,
   hideUI = false,
 }: SidePanelProps) {
   const isMobile = useIsMobile();
@@ -230,103 +228,6 @@ export function SidePanel({
     </div>
   );
 
-  const cameraProjection = useSceneStore(state => state.cameraProjection);
-  const toggleCameraProjection = useSceneStore(state => state.toggleCameraProjection);
-  const cameraMode = useSceneStore(state => state.cameraMode);
-  const activeCameraView = useSceneStore(state => state.activeCameraView);
-
-  const isIsoNW = cameraMode === 'orbit' && activeCameraView === 'iso-nw';
-  const isIsoNE = cameraMode === 'orbit' && activeCameraView === 'iso-ne';
-  const isLeft  = cameraMode === 'orbit' && activeCameraView === 'left';
-  const isRight = cameraMode === 'orbit' && activeCameraView === 'right';
-  const isTop   = cameraMode === 'orbit' && activeCameraView === 'top';
-
-  const viewsHeaderButtons = (
-    <div className="d-flex align-items-center gap-1 pe-1" onClick={e => e.stopPropagation()}>
-      <button
-        type="button"
-        className={`btn btn-sm p-0 px-1 border-0 rounded shadow-sm small ${
-          cameraProjection === 'ortho' ? 'btn-info text-dark' : 'btn-outline-secondary text-dark'
-        }`}
-        style={{
-          height: '22px',
-          background: cameraProjection === 'ortho' ? undefined : 'rgba(255, 255, 255, 0.65)',
-          border: '1px solid rgba(0, 0, 0, 0.15)',
-        }}
-        title={`Projection : ${cameraProjection === 'ortho' ? 'Orthographique (Iso) - Cliquer pour Perspective' : 'Perspective 3D - Cliquer pour Ortho'}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleCameraProjection();
-        }}
-      >
-        {cameraProjection === 'ortho' ? '📐' : '👁️'}
-      </button>
-
-      <div className="btn-group btn-group-sm" role="group">
-        <button
-          type="button"
-          className={`btn btn-sm py-0 px-1 text-dark small ${isIsoNW ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
-          style={{ height: '22px', background: isIsoNW ? undefined : 'rgba(255, 255, 255, 0.65)' }}
-          title="Iso Nord-Ouest"
-          onClick={(e) => {
-            e.stopPropagation();
-            dispatchView('iso-nw');
-          }}
-        >
-          ↖️
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm py-0 px-1 text-dark small ${isIsoNE ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
-          style={{ height: '22px', background: isIsoNE ? undefined : 'rgba(255, 255, 255, 0.65)' }}
-          title="Iso Nord-Est"
-          onClick={(e) => {
-            e.stopPropagation();
-            dispatchView('iso-ne');
-          }}
-        >
-          ↗️
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm py-0 px-1 text-dark small ${isLeft ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
-          style={{ height: '22px', background: isLeft ? undefined : 'rgba(255, 255, 255, 0.65)' }}
-          title="Vue Gauche"
-          onClick={(e) => {
-            e.stopPropagation();
-            dispatchView('left');
-          }}
-        >
-          ⬅️
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm py-0 px-1 text-dark small ${isRight ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
-          style={{ height: '22px', background: isRight ? undefined : 'rgba(255, 255, 255, 0.65)' }}
-          title="Vue Droite"
-          onClick={(e) => {
-            e.stopPropagation();
-            dispatchView('right');
-          }}
-        >
-          ➡️
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm py-0 px-1 text-dark small ${isTop ? 'btn-info fw-bold' : 'btn-outline-secondary'}`}
-          style={{ height: '22px', background: isTop ? undefined : 'rgba(255, 255, 255, 0.65)' }}
-          title="Vue du Dessus (Top)"
-          onClick={(e) => {
-            e.stopPropagation();
-            dispatchView('top');
-          }}
-        >
-          🔝
-        </button>
-      </div>
-    </div>
-  );
-
   const personnageHeaderButtons = (
     <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
       <div className="btn-group btn-group-sm" role="group">
@@ -413,14 +314,6 @@ export function SidePanel({
     />
   );
 
-  const viewsSectionContent = (
-    <ViewsSection
-      isMobile={isMobile}
-      onOpenShortcuts={() => setShowShortcuts(true)}
-      onToggleHideUI={onToggleHideUI}
-    />
-  );
-
   const layersSectionContent = (
     <LayersSection
       layers={layers}
@@ -472,7 +365,6 @@ export function SidePanel({
     const sheetOpen = activeTab !== null;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
       profile: '💼 Profil & CV',
-      views: '📷 Vues',
       layers: '📑 Calques',
       personnage: '👤 PNJ',
       perf: '📊 Perf',
@@ -480,7 +372,6 @@ export function SidePanel({
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
       profile: profileSectionContent,
-      views: viewsSectionContent,
       layers: layersSectionContent,
       interactif: interactiveSectionContent,
       personnage: characterSectionContent,
@@ -513,7 +404,6 @@ export function SidePanel({
               <span className="fw-bold">{sheetTitle[activeTab]}</span>
               <div className="d-flex align-items-center gap-2">
                 {activeTab === 'profile' && profileHeaderButtons}
-                {activeTab === 'views' && viewsHeaderButtons}
                 {activeTab === 'layers' && layersHeaderButtons}
                 {activeTab === 'personnage' && personnageHeaderButtons}
                 <button
@@ -630,17 +520,6 @@ export function SidePanel({
             );
           })}
 
-          {onToggleHideUI && (
-            <button
-              type="button"
-              onClick={onToggleHideUI}
-              className="btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 text-secondary py-1 px-2"
-              title="Masquer l'interface"
-            >
-              <span className="fs-5 lh-1">👁️‍🗨️</span>
-              <span className="fw-semibold small">Cacher UI</span>
-            </button>
-          )}
         </div>
 
         {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
@@ -690,7 +569,6 @@ export function SidePanel({
           {profileSectionContent}
         </Group>
 
-        <Group emoji="📷" title="Vues" extra={viewsHeaderButtons}>{viewsSectionContent}</Group>
         <Group emoji="📑" title="Calques" extra={layersHeaderButtons}>{layersSectionContent}</Group>
         <Group emoji="🎮" title="Interactif">{interactiveSectionContent}</Group>
         <Group emoji="👤" title="PNJ" extra={personnageHeaderButtons}>{characterSectionContent}</Group>
