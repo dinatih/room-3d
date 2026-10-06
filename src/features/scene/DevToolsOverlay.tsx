@@ -117,14 +117,17 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
     <>
       <PerfGroup emoji="📊" title="Perf" defaultOpen headerPadding={compact ? 'py-1.5 px-2' : undefined}>
         <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
-          <canvas
-            ref={fpsCanvasCallback}
-            width={FPS_W} height={FPS_H}
-            style={{ display: 'block', margin: '0 auto 4px', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.15)', width: `${FPS_W}px`, maxWidth: '100%', height: `${FPS_H}px` }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 8px 6px', fontSize: 11, whiteSpace: 'nowrap' }}>
-            <span style={{ color: isIdle ? '#d97706' : fpsColor, fontWeight: 700 }}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
-            <span style={{ color: '#4b5563', fontWeight: 500, fontSize: 10 }}>min:{fpsMin} max:{fpsMax}</span>
+          <div className="d-flex align-items-center justify-content-between gap-2 px-2 pb-1">
+            <canvas
+              ref={fpsCanvasCallback}
+              width={FPS_W} height={FPS_H}
+              className="d-block flex-shrink-0 rounded shadow-sm"
+            />
+            <div className="d-flex flex-column text-nowrap small">
+              <span className="fw-bold" style={{ color: isIdle ? '#d97706' : fpsColor }}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
+              <span className="fw-medium text-secondary">min:{fpsMin}</span>
+              <span className="fw-medium text-secondary">max:{fpsMax}</span>
+            </div>
           </div>
 
           {/* RENDU — stats GPU principales */}
