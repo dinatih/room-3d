@@ -158,12 +158,16 @@ export function ViewControlBar({
           <button type="button" className="btn btn-outline-secondary view-control-bar__outline--orange" onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
             <i className="bi bi-airplane-fill" aria-hidden="true" />
           </button>
-          <button type="button" className="btn btn-outline-secondary view-control-bar__outline--cyan" onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
-            <i className="bi bi-camera-fill" aria-hidden="true" />
-          </button>
-          <button type="button" className="btn btn-outline-secondary" onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
-            <i className="bi bi-keyboard-fill" aria-hidden="true" />
-          </button>
+          {!isMobile && (
+            <>
+              <button type="button" className="btn btn-outline-secondary view-control-bar__outline--cyan" onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
+                <i className="bi bi-camera-fill" aria-hidden="true" />
+              </button>
+              <button type="button" className="btn btn-outline-secondary" onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
+                <i className="bi bi-keyboard-fill" aria-hidden="true" />
+              </button>
+            </>
+          )}
         </div>
       )}
 
