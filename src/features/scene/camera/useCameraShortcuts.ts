@@ -153,25 +153,25 @@ export function useCameraShortcuts({
 
         if (modeRef.current === 'follow' || modeRef.current === 'fpv') {
           exitFollow();
-          toggleOrbitType?.('persp');
+          useSceneStore.getState().setCameraProjection('persp');
           return;
         }
 
         if (modeRef.current === 'top') {
           exitTop();
-          toggleOrbitType?.('persp');
+          useSceneStore.getState().setCameraProjection('persp');
           return;
         }
 
         if (modeRef.current === 'ortho') {
           if (exitOrtho) exitOrtho();
-          toggleOrbitType?.('persp');
+          useSceneStore.getState().setCameraProjection('persp');
           return;
         }
 
         // Si on est déjà en mode orbit libre, basculer entre 'persp' (3D standard) et 'ortho' (isométrique 3D)
         if (modeRef.current === 'orbit') {
-          toggleOrbitType?.();
+          useSceneStore.getState().toggleCameraProjection();
           return;
         }
       }
