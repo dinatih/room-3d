@@ -125,8 +125,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
             />
             <div className="perf-stats d-flex flex-column text-start text-nowrap small lh-sm">
               <span className={`fw-bold ${isIdle ? 'text-warning' : fpsClass}`}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
-              <span className="fw-medium text-secondary">min:{fpsMin}</span>
-              <span className="fw-medium text-secondary">max:{fpsMax}</span>
+              <span className="fw-medium text-secondary">min:{fpsMin} max:{fpsMax}</span>
               <span title="Draw calls" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.drawCalls >= 500 ? 'text-danger' : devState.drawCalls >= 200 ? 'text-warning' : 'text-primary'}`}>
                 DC: {isIdle ? '0' : devState.drawCalls.toLocaleString()}
               </span>
