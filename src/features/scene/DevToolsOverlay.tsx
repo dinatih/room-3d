@@ -103,7 +103,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
   const valid    = samples.filter(v => v > 0);
   const fpsMin   = valid.length ? Math.min(...valid) : 0;
   const fpsMax   = valid.length ? Math.max(...valid) : 0;
-  const fpsColor = curFps >= 50 ? '#16a34a' : curFps >= 30 ? '#d97706' : '#dc2626';
+  const fpsClass = curFps >= 50 ? 'text-success' : curFps >= 30 ? 'text-warning' : 'text-danger';
 
   const handleRefreshScene = useCallback(() => {
     devState.refreshScene?.();
@@ -117,26 +117,23 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
     <>
       <PerfGroup emoji="📊" title="Perf" defaultOpen headerPadding={compact ? 'py-1.5 px-2' : undefined}>
         <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
-          <div className="d-flex align-items-center justify-content-between gap-2 px-2 pb-1">
+          <div className="d-flex align-items-start justify-content-start gap-2 px-2 pb-1">
             <canvas
               ref={fpsCanvasCallback}
               width={FPS_W} height={FPS_H}
               className="d-block flex-shrink-0 rounded shadow-sm"
             />
-            <div className="d-flex flex-column text-nowrap small">
-              <span className="fw-bold" style={{ color: isIdle ? '#d97706' : fpsColor }}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
+            <div className="d-flex flex-column text-start text-nowrap small lh-sm">
+              <span className={`fw-bold ${isIdle ? 'text-warning' : fpsClass}`}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
               <span className="fw-medium text-secondary">min:{fpsMin}</span>
               <span className="fw-medium text-secondary">max:{fpsMax}</span>
+              <span title="Draw calls" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.drawCalls >= 500 ? 'text-danger' : devState.drawCalls >= 200 ? 'text-warning' : 'text-primary'}`}>
+                DC: {isIdle ? '0' : devState.drawCalls.toLocaleString()}
+              </span>
+              <span title="Triangles rendus" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.triangles >= 2_000_000 ? 'text-danger' : devState.triangles >= 1_000_000 ? 'text-warning' : 'text-primary'}`}>
+                Tris: {isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'}
+              </span>
             </div>
-          </div>
-
-          {/* RENDU — stats GPU principales */}
-          <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 4 }}>
-            <div style={sectionHeaderStyle}>
-              RENDU <span style={{ color: isIdle ? '#d97706' : '#6b7280', fontWeight: isIdle ? 600 : 400 }}>{isIdle ? `· veille` : '· live'}</span>
-            </div>
-            <StatRow label="Draw calls" value={isIdle ? '0' : devState.drawCalls.toLocaleString()} color={isIdle ? '#6b7280' : heatColor(devState.drawCalls, 200, 500)} />
-            <StatRow label="Triangles"  value={isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'} color={isIdle ? '#6b7280' : heatColor(devState.triangles, 1_000_000, 2_000_000)} />
           </div>
 
           {/* Bouton pour afficher les infos supplémentaires */}
