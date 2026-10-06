@@ -153,8 +153,8 @@ export function ViewControlBar({
           <button type="button" className="btn btn-outline-secondary view-control-bar__outline--orange" onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
             <i className="bi bi-airplane-fill" aria-hidden="true" />
           </button>
-          <button type="button" className="btn btn-outline-secondary view-control-bar__outline--cyan" onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)">
-            <i className="bi bi-camera-fill me-1" aria-hidden="true" /><span>Raytracing</span>
+          <button type="button" className="btn btn-outline-secondary view-control-bar__outline--cyan" onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
+            <i className="bi bi-camera-fill" aria-hidden="true" />
           </button>
           <button type="button" className="btn btn-outline-secondary" onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
             <i className="bi bi-keyboard-fill" aria-hidden="true" />
@@ -170,7 +170,7 @@ export function ViewControlBar({
 
   if (inline) {
     return (
-      <div className={`view-control-bar-inline d-flex flex-column align-items-center gap-0 ${children ? 'px-1 py-0' : 'px-2 py-2'}`}>
+      <div className={`view-control-bar-inline d-flex flex-column align-items-center ${children ? 'gap-2 px-1 py-0' : 'gap-0 px-2 py-2'}`}>
         {bar}
         {children && <div className="w-100">{children}</div>}
       </div>
@@ -178,7 +178,7 @@ export function ViewControlBar({
   }
 
   return (
-    <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle }}>
+    <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked gap-2' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle }}>
       {bar}
       {children && <div className="view-control-bar-dock__content w-100">{children}</div>}
       {activeCameraView && (
