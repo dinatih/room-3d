@@ -443,8 +443,9 @@ export function SidePanel({
           style={{ 
             zIndex: 100,
             bottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            left: 0,
+            right: 0,
+            marginInline: 'auto',
             pointerEvents: hideUI ? 'none' : 'auto',
           }}
         >

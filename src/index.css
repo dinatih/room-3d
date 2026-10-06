@@ -312,7 +312,6 @@ button, input, select, textarea {
 
 .ui-fade-overlay {
   transition: opacity 0.3s ease;
-  will-change: opacity;
 }
 .ui-fade-overlay.ui-hidden {
   opacity: 0 !important;
