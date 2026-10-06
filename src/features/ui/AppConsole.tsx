@@ -118,7 +118,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       })
     : logs;
 
-  // Redimensionnement vertical par drag (vers le haut car fixé en bas)
+  // Redimensionnement vertical par drag depuis le bas du panneau.
   const handleResizePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -127,7 +127,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
     const onPointerMove = (ev: PointerEvent) => {
       const maxAllowed = isMobile ? window.innerHeight * 0.5 : window.innerHeight * 0.75;
-      const newH = Math.max(60, Math.min(maxAllowed, startH - (ev.clientY - startY)));
+      const newH = Math.max(60, Math.min(maxAllowed, startH + (ev.clientY - startY)));
       setSavedHeight(newH);
     };
 
@@ -176,7 +176,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         title={isMaximized ? 'Réduire la console' : 'Agrandir la console'}
         style={{ fontSize: '11px' }}
       >
-        {isMaximized ? '▼' : '▲'}
+        {isMaximized ? '▲' : '▼'}
       </button>
       <div className="input-group input-group-sm flex-nowrap" style={{ height: '22px', width: 'auto' }}>
         <button
@@ -260,14 +260,13 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   return (
     <div
       ref={containerRef}
-      className={`app-console position-fixed ui-panel-bottom d-flex flex-column overflow-hidden ${hideUI ? 'ui-hidden' : ''}`}
+      className={`app-console position-fixed ui-panel-top d-flex flex-column overflow-hidden ${hideUI ? 'ui-hidden' : ''}`}
       style={{
-        bottom: isMobile ? 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' : 16,
+        top: isMobile ? 'calc(env(safe-area-inset-top) + 8px)' : 16,
         right: isMobile ? 8 : 16,
-        left: open ? (isMobile ? 8 : 288) : 'auto',
-        width: open ? undefined : 'auto',
-        height: open ? (isMaximized ? '100vh' : `${savedHeight}px`) : 'auto',
-        maxHeight: isMobile ? '50vh' : '75vh',
+        width: open ? (isMobile ? 'calc(100vw - 16px)' : 'min(420px, calc(100vw - 32px))') : 'auto',
+        height: open ? (isMaximized ? (isMobile ? 'calc(100dvh - env(safe-area-inset-top) - 16px)' : 'calc(100vh - 32px)') : `${savedHeight}px`) : 'auto',
+        maxHeight: isMaximized ? (isMobile ? 'calc(100dvh - env(safe-area-inset-top) - 16px)' : 'calc(100vh - 32px)') : (isMobile ? '50vh' : '75vh'),
         zIndex: 100,
         fontSize: '11px',
         pointerEvents: hideUI ? 'none' : undefined,

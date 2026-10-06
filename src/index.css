@@ -275,6 +275,17 @@ button, input, select, textarea {
   pointer-events: none !important;
   transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.ui-panel-top {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+  will-change: transform, opacity;
+  opacity: 1;
+}
+.ui-panel-top.ui-hidden {
+  transform: translateY(calc(-100% - 32px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
 /* AppConsole : chaîne flex scrollable dans un conteneur à hauteur fixe */
 .app-console .card {
@@ -307,4 +318,3 @@ button, input, select, textarea {
   opacity: 0 !important;
   pointer-events: none !important;
 }
-
