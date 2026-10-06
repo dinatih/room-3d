@@ -524,6 +524,13 @@ export function Studio() {
       // Alt+<key> → layer toggles
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
         const k = e.key.toLowerCase();
+        if (k === 'k') {
+          e.preventDefault();
+          if (e.repeat) return;
+          const store = useSceneStore.getState();
+          store.setLaraCount(store.layers.laraCount === 15 ? 4 : 15);
+          return;
+        }
         if (k === 'p') { e.preventDefault(); onToggleLayer('pillarsOnly'); cameraState.invalidate?.(); return; }
         if (k === 'm') { e.preventDefault(); onToggleLayer('measuredDimensions'); cameraState.invalidate?.(); return; }
         if (k === 'a') { e.preventDefault(); onToggleLayer('wallEdges'); cameraState.invalidate?.(); return; }
