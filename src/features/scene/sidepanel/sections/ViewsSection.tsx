@@ -63,7 +63,7 @@ export function ViewsSection({
         </span>
         <kbd className="bg-dark text-white border-0 px-1 rounded font-monospace small">F10</kbd>
       </button>
-      {b0('gray',   'Perspective / Orbit (Raccourci O)', () => dispatchKey('o'))}
+      {b0('gray',   'Cycle caméra (Orbit → NPC Grid → Follow → FPV, raccourci O)', () => dispatchKey('o'))}
       <button
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between bg-transparent small"
         onClick={toggleCameraProjection}

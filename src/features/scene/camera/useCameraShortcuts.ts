@@ -179,14 +179,17 @@ export function useCameraShortcuts({
         const curZ = cameraState.characterZ ?? followPos.current.z;
 
         if (useSceneStore.getState().layers.laraGrid) {
-          toggleNpcGrid();
+          const store = useSceneStore.getState();
+          store.toggleLayer('laraGrid');
+          store.setActiveCameraView(null);
+          enterFollow(curX, curZ, 'follow');
         } else if (modeRef.current === 'orbit') {
           useSceneStore.getState().setActiveCameraView(null);
-          enterFollow(curX, curZ, 'follow');
+          toggleNpcGrid();
         } else if (modeRef.current === 'follow') {
           enterFollow(curX, curZ, 'fpv');
         } else if (modeRef.current === 'fpv') {
-          toggleNpcGrid();
+          goToDefaultOrbit();
         } else if (modeRef.current === 'top') {
           goToDefaultOrbit();
         } else if (modeRef.current === 'ortho' && exitOrtho) {
