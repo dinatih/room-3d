@@ -122,7 +122,6 @@ export function updateUrlCameraMode(mode: CameraMode) {
     const cameraParams = ['mode', 'camera', 'view', 'cam', 'vue', 'orbit', 'fpv'];
     const hadParam = cameraParams.some(p => url.searchParams.has(p));
     const hadCameraView = url.searchParams.has('cameraView');
-    const hadLegacyPose = ['cameraPos', 'cameraTarget', 'cameraZoom'].some(p => url.searchParams.has(p));
 
     for (const p of cameraParams) {
       url.searchParams.delete(p);
@@ -131,11 +130,9 @@ export function updateUrlCameraMode(mode: CameraMode) {
     if (mode !== 'orbit') {
       url.searchParams.delete('cameraView');
     }
-    for (const p of ['cameraPos', 'cameraTarget', 'cameraZoom']) url.searchParams.delete(p);
-
     if (mode !== 'fpv') {
       url.searchParams.set('mode', mode);
-    } else if (!hadParam && !hadCameraView && !hadLegacyPose) {
+    } else if (!hadParam && !hadCameraView) {
       return; // Valeur par défaut, rien à nettoyer
     }
 
