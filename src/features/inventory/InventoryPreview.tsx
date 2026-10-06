@@ -289,7 +289,6 @@ function OrthoCameraControls({
     <>
       <OrthographicCamera
         ref={camRef}
-        key={`${mode}-${viewH}-${aspect.toFixed(2)}`}
         makeDefault
         manual
         position={camPos}
@@ -846,7 +845,7 @@ export function InventoryPreview({
                   )}
                 </>
               )}
-              <Grid infiniteGrid fadeDistance={800} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />
+              <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}
