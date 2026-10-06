@@ -1,4 +1,5 @@
 import './ViewControlBar.scss';
+import type { ReactNode } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView } from './sidepanel/types';
 import { getLaraGridCameraView } from './character/laraGridUtils';
@@ -34,6 +35,7 @@ export interface ViewControlBarProps {
   hideUI?: boolean;
   onToggleHideUI?: () => void;
   onEnterFlight?: () => void;
+  children?: ReactNode;
 }
 
 export function ViewControlBar({
@@ -44,6 +46,7 @@ export function ViewControlBar({
   hideUI = false,
   onToggleHideUI,
   onEnterFlight,
+  children,
 }: ViewControlBarProps) {
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);
@@ -166,7 +169,12 @@ export function ViewControlBar({
   );
 
   if (inline) {
-    return <div className="view-control-bar-inline d-flex justify-content-center py-2">{bar}</div>;
+    return (
+      <div className={`view-control-bar-inline d-flex flex-column align-items-center gap-1 px-2 ${children ? 'py-1' : 'py-2'}`}>
+        {bar}
+        {children && <div className="view-control-bar-inline__content w-100 pt-2">{children}</div>}
+      </div>
+    );
   }
 
   return (

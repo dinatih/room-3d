@@ -1146,45 +1146,48 @@ export function InventoryPreview({
         </>
       )}
     </div>
-    {item && showing3D && isCharacterItem && (
-      <AnimFrameController
-        animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
-        animKey={actionStates.characterAnim}
-        isHumanCharacter={isHumanCharacter}
-        characterId={item.id}
-        duoAnimDef={actionStates.duoAnimDef}
-        duoPartnerId={actionStates.duoPartnerId}
-        animalAnimOptions={animalAnimOptions}
-        onCycleAnim={cycleAnim}
-        onSelectAnim={(val) => {
-          setActionStates(s => ({ ...s, characterAnim: val, duoAnimDef: undefined }));
-          useAnimPreviewStore.getState().play();
-        }}
-        onSelectDuoAnim={(def) => {
-          const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-          const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
-          setActionStates(s => ({
-            ...s,
-            duoAnimDef: def,
-            duoPartnerId: defaultPartner,
-            isPaused: false,
-            characterAnim: undefined,
-          }));
-          useAnimPreviewStore.getState().play();
-        }}
-        onSelectDuoPartner={(partnerId) => {
-          setActionStates(s => ({ ...s, duoPartnerId: partnerId }));
-        }}
-        style={{
-          position: 'relative',
-          inset: 'auto',
-          width: 'calc(100% - 16px)',
-          margin: '8px',
-          zIndex: 2,
-        }}
-      />
+    {item && (
+      <ViewControlBar inline>
+        {showing3D && isCharacterItem && (
+          <AnimFrameController
+            animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
+            animKey={actionStates.characterAnim}
+            isHumanCharacter={isHumanCharacter}
+            characterId={item.id}
+            duoAnimDef={actionStates.duoAnimDef}
+            duoPartnerId={actionStates.duoPartnerId}
+            animalAnimOptions={animalAnimOptions}
+            onCycleAnim={cycleAnim}
+            onSelectAnim={(val) => {
+              setActionStates(s => ({ ...s, characterAnim: val, duoAnimDef: undefined }));
+              useAnimPreviewStore.getState().play();
+            }}
+            onSelectDuoAnim={(def) => {
+              const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
+              const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
+              setActionStates(s => ({
+                ...s,
+                duoAnimDef: def,
+                duoPartnerId: defaultPartner,
+                isPaused: false,
+                characterAnim: undefined,
+              }));
+              useAnimPreviewStore.getState().play();
+            }}
+            onSelectDuoPartner={(partnerId) => {
+              setActionStates(s => ({ ...s, duoPartnerId: partnerId }));
+            }}
+            style={{
+              position: 'relative',
+              inset: 'auto',
+              width: '100%',
+              margin: 0,
+              zIndex: 2,
+            }}
+          />
+        )}
+      </ViewControlBar>
     )}
-    {item && <ViewControlBar inline />}
     {item && hasPhotos && (
       <div style={{ display: 'flex', overflowX: 'auto', gap: 6, padding: '8px', scrollbarWidth: 'thin', width: '100%', background: '#eaeaea' }}>
         {has3D && (
