@@ -135,7 +135,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
             fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
           }}
           onClick={() => dispatchCameraMode('toggle-follow')}
-          title="Activer ou quitter le suivi à la troisième personne (O : Orbit → Follow → FPV → NPC Grid)"
+          title="Activer ou quitter le suivi à la troisième personne (M : Follow ↔ FPV ; O : Orbit → Follow → FPV → NPC Grid)"
           aria-pressed={cameraMode === 'follow'}
         >
           <i className="bi bi-person-walking" />
@@ -149,7 +149,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
             fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
           }}
           onClick={() => dispatchCameraMode('fpv')}
-          title="Passer en vue subjective FPV (O : Orbit → Follow → FPV → NPC Grid)"
+          title="Passer en vue subjective FPV (M : Follow ↔ FPV ; O : Orbit → Follow → FPV → NPC Grid)"
           aria-pressed={cameraMode === 'fpv'}
         >
           <i className="bi bi-eye-fill" />
@@ -163,7 +163,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
             fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
           }}
           onClick={() => dispatchCameraMode('toggle-npc-grid')}
-          title="Afficher ou quitter la grille des PNJ (O : Orbit → Follow → FPV → NPC Grid)"
+          title="Afficher ou quitter la grille des PNJ (G ; O : Orbit → Follow → FPV → NPC Grid)"
           aria-pressed={npcGridActive}
         >
           <i className="bi bi-grid-3x3-gap-fill" />

@@ -23,6 +23,7 @@ interface UseCameraShortcutsParams {
   savedPerspTarget: MutableRefObject<THREE.Vector3>;
   changeMode: (mode: CameraMode) => void;
   enterFollow: (x: number, z: number, mode?: 'follow' | 'fpv') => void;
+  setFollowCameraView: (pos: [number, number, number], target: [number, number, number]) => void;
   exitFollow: () => void;
   enterTop: (follow?: boolean) => void;
   exitTop: () => void;
@@ -52,6 +53,7 @@ export function useCameraShortcuts({
   savedPerspTarget,
   changeMode,
   enterFollow,
+  setFollowCameraView,
   exitFollow,
   enterTop,
   exitTop,
@@ -112,7 +114,7 @@ export function useCameraShortcuts({
           const target = useSceneStore.getState().layers.laraGrid
             ? getLaraGridCameraView().target
             : undefined;
-          dispatchView(view, target);
+          dispatchView(view, target, modeRef.current === 'follow');
           return;
         }
       }
@@ -320,13 +322,15 @@ export function useCameraShortcuts({
 
     // Panel camera preset → move orbit camera
     const onView = (e: Event) => {
-      const { pos, target, projection, zoom } = (e as CustomEvent).detail as {
+      const { pos, target, projection, zoom, preserveFollow } = (e as CustomEvent).detail as {
         pos: [number, number, number];
         target: [number, number, number];
         projection?: 'persp' | 'ortho';
         zoom?: number;
+        preserveFollow?: boolean;
       };
-      if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
+      const keepFollow = preserveFollow && modeRef.current === 'follow';
+      if (!keepFollow && (modeRef.current === 'follow' || modeRef.current === 'fpv')) exitFollow();
       if (modeRef.current === 'top') {
         topFollowRef.current = false;
         if (ctrlRef.current) {
@@ -341,11 +345,21 @@ export function useCameraShortcuts({
         }
       }
       if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
-      changeMode('orbit');
       const targetProj = projection ?? 'persp';
-      toggleOrbitType?.(targetProj, { pos, target, zoom });
-      savedPerspPos.current.set(...pos);
-      savedPerspTarget.current.set(...target);
+      if (keepFollow) {
+        setFollowCameraView(pos, target);
+        toggleOrbitType?.(targetProj);
+        if (ctrlRef.current) {
+          ctrlRef.current.enableRotate = false;
+          ctrlRef.current.enablePan = false;
+          ctrlRef.current.enableZoom = false;
+        }
+      } else {
+        changeMode('orbit');
+        toggleOrbitType?.(targetProj, { pos, target, zoom });
+        savedPerspPos.current.set(...pos);
+        savedPerspTarget.current.set(...target);
+      }
       invalidate();
     };
 
@@ -397,5 +411,5 @@ export function useCameraShortcuts({
       document.removeEventListener('camera-ortho-view', onOrthoView);
       document.removeEventListener('camera-enter-top', onEnterTop);
     };
-  }, [camera, changeMode, ctrlRef, enterOrtho, enterTop, enterFollow, exitOrtho, exitTop, exitFollow, invalidate, keys, modeRef, planeModeRef, savedPerspPos, savedPerspTarget, toggleOrbitType, topFollowRef, followPos]);
+  }, [camera, changeMode, ctrlRef, enterOrtho, enterTop, enterFollow, setFollowCameraView, exitOrtho, exitTop, exitFollow, invalidate, keys, modeRef, planeModeRef, savedPerspPos, savedPerspTarget, toggleOrbitType, topFollowRef, followPos]);
 }

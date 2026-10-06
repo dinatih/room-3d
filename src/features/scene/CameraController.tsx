@@ -468,6 +468,17 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     invalidate();
   }, [camera, changeMode, invalidate]);
 
+  const setFollowCameraView = useCallback((pos: [number, number, number], target: [number, number, number]) => {
+    const dx = pos[0] - target[0];
+    const dy = pos[1] - target[1];
+    const dz = pos[2] - target[2];
+    const distance = Math.hypot(dx, dy, dz);
+    const yaw = Math.atan2(-dx, -dz);
+    orbitYaw.current = yaw;
+    orbitYawOffset.current = yaw - followYaw.current;
+    orbitPitch.current = Math.asin(dy / distance);
+  }, []);
+
   const switchOrbitProjection = useCallback((
     targetProj: 'persp' | 'ortho',
     options?: {
@@ -906,6 +917,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     savedPerspTarget,
     changeMode,
     enterFollow,
+    setFollowCameraView,
     exitFollow,
     enterTop,
     exitTop,

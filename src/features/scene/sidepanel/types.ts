@@ -36,18 +36,18 @@ export const VIEWS: Record<string, CameraViewPreset> = {
 
 import { useSceneStore } from '../store/useSceneStore';
 
-export function dispatchView(key: string, targetOverride?: [number, number, number]) {
+export function dispatchView(key: string, targetOverride?: [number, number, number], preserveFollow = false) {
   useSceneStore.getState().setActiveCameraView(key);
   const v = VIEWS[key];
   if (!v) return;
   if (!targetOverride) {
-    document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...v, key } }));
+    document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...v, key, preserveFollow } }));
     return;
   }
   const offset = targetOverride.map((value, index) => value - v.target[index]);
   const pos = v.pos.map((value, index) => value + offset[index]) as [number, number, number];
   document.dispatchEvent(new CustomEvent('camera-view', {
-    detail: { ...v, pos, target: targetOverride, key },
+    detail: { ...v, pos, target: targetOverride, key, preserveFollow },
   }));
 }
 
