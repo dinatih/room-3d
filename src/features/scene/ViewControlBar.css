@@ -1,0 +1,58 @@
+.view-control-bar-dock {
+  width: max-content;
+  max-width: calc(100vw - 1rem);
+}
+
+.view-control-bar {
+  width: max-content;
+  max-width: 100%;
+  background-color: rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  gap: 0.375rem !important;
+}
+
+.view-control-bar__group {
+  flex: 0 0 auto;
+}
+
+.view-control-bar .btn {
+  white-space: nowrap;
+}
+
+.view-control-bar .btn-outline-secondary {
+  --bs-btn-color: #495057;
+  --bs-btn-border-color: #adb5bd;
+  --bs-btn-hover-bg: #e9ecef;
+  --bs-btn-hover-color: #212529;
+}
+
+.view-control-bar--inline {
+  width: max-content;
+}
+
+.view-control-bar-inline {
+  width: 100%;
+}
+
+.view-control-bar-dock > .badge {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+@media (max-width: 767.98px) {
+  .view-control-bar {
+    width: max-content;
+    row-gap: 0.375rem !important;
+  }
+
+  .view-control-bar .btn {
+    min-height: 2.25rem;
+  }
+
+  .view-control-bar .btn-group > .btn {
+    padding-inline: 0.45rem;
+  }
+}
