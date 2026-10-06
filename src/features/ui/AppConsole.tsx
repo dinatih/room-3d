@@ -6,7 +6,7 @@
  * avec les autres panneaux (SidePanel, Minimap, DevTools).
  */
 import { useState, useEffect, useRef } from 'react';
-import { CHARACTERS, findCharacter, npcLabel } from '@features/scene/characterConfig';
+import { CHARACTERS, findCharacter, isCharacterVisibleInMode, npcLabel } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { Group } from '@features/scene/sidepanel/Group';
@@ -58,6 +58,7 @@ function formatTime(ts: number): string {
 export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolean; hideUI?: boolean }) {
   const isMobile = useIsMobile();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const sceneState = useSceneStore();
   const activeChar = findCharacter(activeCharacterId);
 
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
@@ -142,6 +143,23 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   if (hidden) return null;
 
   const pnjColor = activeChar?.color ?? '#6c757d';
+  const chooseRandomCharacter = () => {
+    const visibleCharacters = CHARACTERS.filter(character =>
+      isCharacterVisibleInMode(
+        character.id,
+        sceneState.layers.laraCount ?? 4,
+        sceneState.activeCharacterId,
+        sceneState.layers.extraCharacters ?? false,
+        sceneState.activeExtraIds,
+        sceneState.activeMainIds,
+      ),
+    );
+    const candidates = visibleCharacters.filter(character => character.id !== sceneState.activeCharacterId);
+    const pool = candidates.length ? candidates : visibleCharacters;
+    if (pool.length) {
+      useSceneStore.getState().setActiveCharacterId(pool[Math.floor(Math.random() * pool.length)].id);
+    }
+  };
 
   const consoleControls = (
     <div className="d-flex align-items-center gap-1">
@@ -161,6 +179,20 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         {isMaximized ? '▼' : '▲'}
       </button>
       <div className="input-group input-group-sm flex-nowrap" style={{ height: '22px', width: 'auto' }}>
+        <button
+          type="button"
+          className="btn btn-sm p-0 px-1 border-0 flex-shrink-0"
+          style={{ height: '22px', backgroundColor: '#ffc107', color: '#212529', lineHeight: 1 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            chooseRandomCharacter();
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          title="Choisir un PNJ aléatoire parmi les personnages visibles 🎲"
+          aria-label="Choisir un PNJ aléatoire"
+        >
+          🎲
+        </button>
         <select
           className="form-select form-select-sm py-0 px-2 bg-transparent small flex-shrink-0 app-console-select"
           style={{ fontSize: '11px', color: '#212529', borderColor: pnjColor, ['--pnj-color' as string]: pnjColor }}
@@ -243,7 +275,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
     >
       <Group
         emoji="🤖"
-        title="App Logs"
+        title="C."
         open={open}
         extra={consoleControls}
         headerPadding="py-1 px-2"
