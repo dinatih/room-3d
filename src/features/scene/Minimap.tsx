@@ -72,8 +72,8 @@ let ponytailInitialized = false;
 let lastCharacterMotion = { x: 0, z: 0, yaw: 0, time: 0 };
 let ponytailLift = 0; // 0 = au repos (tresse verticale le long du dos), 1 = déployée à pleine vitesse
 
-function getCachedFloorPlan(w: number, h: number): HTMLCanvasElement {
-  const key = `${w}x${h}`;
+function getCachedFloorPlan(w: number, h: number, showEquipment: boolean): HTMLCanvasElement {
+  const key = `${w}x${h}:${showEquipment}`;
   let cached = floorPlanCache.get(key);
   if (!cached || cached.width !== w || cached.height !== h) {
     cached = document.createElement('canvas');
@@ -81,7 +81,7 @@ function getCachedFloorPlan(w: number, h: number): HTMLCanvasElement {
     cached.height = h;
     const ctx = cached.getContext('2d');
     if (ctx) {
-      drawFloorPlan(ctx, w, h);
+      drawFloorPlan(ctx, w, h, { showEquipment });
     }
     floorPlanCache.set(key, cached);
   }
@@ -91,6 +91,7 @@ function getCachedFloorPlan(w: number, h: number): HTMLCanvasElement {
 function drawMinimap(
   canvas: HTMLCanvasElement,
   smallW: number,
+  showEquipment: boolean,
 ) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -132,7 +133,7 @@ function drawMinimap(
   }
 
   // Plan partagé (mis en cache sur un canvas offscreen pour épargner le CPU à chaque frame)
-  const cachedPlan = getCachedFloorPlan(W, H);
+  const cachedPlan = getCachedFloorPlan(W, H, showEquipment);
   ctx.drawImage(cachedPlan, 0, 0);
 
   // ── Dimensions proportionnelles au monde réel (1 unité = 1 cm) ────────────
@@ -456,6 +457,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
   const zoomContainerRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
+  const [showEquipment, setShowEquipment] = useState(true);
 
   // Contrôles de zoom et déplacement (Pan) pour la grande minimap
   const [zoom, setZoom] = useState(1);
@@ -489,7 +491,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
       if (isAppIdle()) return;
       if (now - lastDraw < 50) return; // Limite à 20 FPS (au lieu de 60/120 FPS continus)
       lastDraw = now;
-      drawMinimap(canvas, currentSmallW);
+      drawMinimap(canvas, currentSmallW, showEquipment);
     };
     rafId = requestAnimationFrame(loop);
 
@@ -497,7 +499,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
       cancelAnimationFrame(rafId);
       observer.disconnect();
     };
-  }, [smallW, isOpen, expanded]);
+  }, [smallW, isOpen, expanded, showEquipment]);
 
   // Boucle de rendu pour la minimap agrandie (modal)
   useEffect(() => {
@@ -531,7 +533,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
       if (isAppIdle()) return;
       if (now - lastDraw < 40) return; // Limite à 25 FPS quand agrandie
       lastDraw = now;
-      drawMinimap(canvas, currentExpW);
+      drawMinimap(canvas, currentExpW, showEquipment);
     };
     rafId = requestAnimationFrame(loop);
 
@@ -539,7 +541,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(rafId);
     };
-  }, [expanded]);
+  }, [expanded, showEquipment]);
 
   // Zoom molette non-passif : empêche formellement le zoom global de la page du navigateur
   useEffect(() => {
@@ -611,6 +613,23 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
     } catch {}
   };
 
+  const equipmentButton = (compact = false) => (
+    <button
+      type="button"
+      className={`btn btn-sm py-0 px-1 d-flex align-items-center gap-1 ${showEquipment ? 'btn-primary' : 'btn-outline-secondary text-dark'}`}
+      aria-label="Équipements"
+      aria-pressed={showEquipment}
+      title={`${showEquipment ? 'Cacher' : 'Afficher'} les équipements sur la minimap`}
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowEquipment(visible => !visible);
+      }}
+    >
+      <i className="bi bi-box-seam" aria-hidden="true" />
+      <span className={compact ? 'visually-hidden' : 'small'}>Équipements</span>
+    </button>
+  );
+
   const minimapContent = (
     <div
       className="d-flex justify-content-center p-1 bg-transparent"
@@ -674,7 +693,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
             }}
           >
             {/* Header style accordéon (comme Perf / Group) */}
-            <div className="card-header border-0 border-bottom border-light-subtle bg-transparent px-2 py-1.5 d-flex justify-content-between align-items-center gap-2 flex-shrink-0">
+            <div className="card-header border-0 border-bottom border-light-subtle bg-transparent px-2 py-1.5 d-flex flex-wrap justify-content-between align-items-center gap-2 flex-shrink-0">
               <div className="d-flex align-items-center gap-1.5">
                 <span className="fw-bold text-dark text-uppercase small d-flex align-items-center gap-1">
                   <span>🗺️</span>
@@ -688,6 +707,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
               </div>
 
               <div className="d-flex align-items-center gap-1">
+                {equipmentButton()}
                 <div className="btn-group btn-group-sm" role="group">
                   <button
                     type="button"
@@ -799,12 +819,16 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
             title="Plan 2D"
             defaultOpen
             headerPadding="py-1.5 px-2"
+            extra={equipmentButton(!embedded)}
             onToggle={(open) => setIsOpen(open)}
           >
             {minimapContent}
           </Group>
         ) : (
-          minimapContent
+          <>
+            <div className="d-flex justify-content-end px-1 pt-1">{equipmentButton()}</div>
+            {minimapContent}
+          </>
         )}
       </div>
     </>
