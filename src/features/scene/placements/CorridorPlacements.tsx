@@ -102,8 +102,8 @@ export function CorridorFurnishings() {
   return (
     <MergedStaticGroup name="merged-corridor-furnishings">
       {/* Trottinette Xiaomi */}
-      <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ skipMerge: true, animUnit: true, itemName: 'Trottinette Xiaomi' }}>
-        <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} steeringAngle={Math.PI / 6} />
+      <group position={[298, 0, 470]} rotation-y={Math.PI - Math.PI / 6} userData={{ skipMerge: true, animUnit: true, itemName: 'Trottinette Xiaomi' }}>
+        <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} steeringAngle={-Math.PI / 6} />
       </group>
     </MergedStaticGroup>
   );

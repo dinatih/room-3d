@@ -107,7 +107,11 @@ import { MaillotInyeong } from '@features/scene/items/MaillotInyeong';
 import { DoubleVenusPendant } from '@features/scene/items/DoubleVenusPendant';
 
 function ScooterPreview(props: SceneItemProps) {
-  return <Scooter {...props} steeringAngle={props.actionState['scooter-steering-toggle'] ? Math.PI / 6 : 0} />;
+  return (
+    <group rotation-y={-Math.PI / 6}>
+      <Scooter {...props} steeringAngle={props.actionState['scooter-steering-toggle'] ? -Math.PI / 6 : 0} />
+    </group>
+  );
 }
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
@@ -228,7 +232,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
  * [label quand inactif, label quand actif]
  */
 export const ACTION_LABELS: Record<string, [string, string]> = {
-  'scooter-steering-toggle': ['Guidon 30° à droite', 'Redresser le guidon'],
+  'scooter-steering-toggle': ['Guidon 30° à gauche', 'Redresser le guidon'],
   'freezer-toggle':        ['Ouvrir', 'Fermer'],
   'fridge-toggle':         ['Ouvrir', 'Fermer'],
   'cabinet-toggle':        ['Ouvrir', 'Fermer'],
