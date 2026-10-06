@@ -24,6 +24,10 @@ html, :root {
   --thumb: 48px;
 }
 
+.perf-stats > span:not(:first-child) {
+  font-size: 10px;
+}
+
 body {
   background: #0e0e18;
 }

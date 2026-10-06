@@ -123,7 +123,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
               width={FPS_W} height={FPS_H}
               className="d-block flex-shrink-0 rounded shadow-sm"
             />
-            <div className="d-flex flex-column text-start text-nowrap small lh-sm">
+            <div className="perf-stats d-flex flex-column text-start text-nowrap small lh-sm">
               <span className={`fw-bold ${isIdle ? 'text-warning' : fpsClass}`}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
               <span className="fw-medium text-secondary">min:{fpsMin}</span>
               <span className="fw-medium text-secondary">max:{fpsMax}</span>
