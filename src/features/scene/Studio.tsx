@@ -957,7 +957,17 @@ export function Studio() {
         )}
         {isMobile && <Minimap />}
         <VirtualDPad />
-        <ViewControlBar hidden={planeMode} showCharacterModes />
+        <ViewControlBar
+          hidden={planeMode}
+          showCharacterModes
+          hideUI={hideUI}
+          onToggleHideUI={toggleHideUI}
+          onEnterFlight={() => {
+            setPlaneViewMode('prelaunch');
+            setPlaneLaunched(false);
+            setPlaneMode(true);
+          }}
+        />
         <HoverOverlay />
         {layers.aiZones && <ZoneAiDebugOverlay />}
         {layers.wallEdges && <EdgeHoverOverlay />}

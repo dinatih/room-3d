@@ -77,6 +77,12 @@ export function SidePanel({
   const setCvModalOpen = useSceneStore(state => state.setCvModalOpen);
 
   useEffect(() => {
+    const openShortcuts = () => setShowShortcuts(true);
+    window.addEventListener('open-shortcuts-modal', openShortcuts);
+    return () => window.removeEventListener('open-shortcuts-modal', openShortcuts);
+  }, []);
+
+  useEffect(() => {
     if (typeof navigator !== 'undefined' && 'xr' in navigator && (navigator as any).xr) {
       (navigator as any).xr.isSessionSupported('immersive-vr')
         .then((supported: boolean) => setIsVRSupported(supported))

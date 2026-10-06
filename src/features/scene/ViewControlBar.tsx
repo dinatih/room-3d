@@ -34,9 +34,16 @@ export interface ViewControlBarProps {
   hidden?: boolean;
   /** Afficher les commandes Follow et FPV de la scène principale */
   showCharacterModes?: boolean;
+  /** Actions propres à la scène principale */
+  hideUI?: boolean;
+  onToggleHideUI?: () => void;
+  onEnterFlight?: () => void;
 }
 
-export function ViewControlBar({ position = 'bottom-center', inline = false, hidden = false, showCharacterModes = false }: ViewControlBarProps) {
+export function ViewControlBar({
+  position = 'bottom-center', inline = false, hidden = false, showCharacterModes = false,
+  hideUI = false, onToggleHideUI, onEnterFlight,
+}: ViewControlBarProps) {
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);
   const npcGridActive = useSceneStore(s => s.layers.laraGrid);
@@ -94,6 +101,19 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
         border: '1px solid rgba(255,255,255,0.12)',
       }}
     >
+      {showCharacterModes && <>
+        <button
+          type="button"
+          className="btn btn-sm border-0 d-flex align-items-center justify-content-center text-white"
+          style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '8px', padding: '4px 8px' }}
+          onClick={onToggleHideUI}
+          title={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
+          aria-label={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
+        >
+          <i className={`bi ${hideUI ? 'bi-eye' : 'bi-eye-slash'}`} />
+        </button>
+      </>}
+
       {/* Toggle Persp / Ortho */}
       <button
         className="btn btn-sm border-0 d-flex align-items-center gap-1 fw-bold"
@@ -168,6 +188,40 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
         >
           <i className="bi bi-eye-fill" />
           <span>FPV</span>
+        </button>
+      </>}
+
+      {showCharacterModes && <>
+        <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
+        <button
+          type="button"
+          className="btn btn-sm border-0 d-flex align-items-center justify-content-center text-white"
+          style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '8px', padding: '4px 8px' }}
+          onClick={onEnterFlight}
+          title="Activer le mode avion (F)"
+          aria-label="Activer le mode avion (F)"
+        >
+          <i className="bi bi-airplane-fill" />
+        </button>
+        <button
+          type="button"
+          className="btn btn-sm border-0 d-flex align-items-center gap-1 text-white"
+          style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '8px', padding: '4px 8px', fontSize: '11px' }}
+          onClick={() => useSceneStore.getState().setPhotoModeOpen(true)}
+          title="Ouvrir le mode photo Raytracing (F10)"
+        >
+          <i className="bi bi-camera-fill" />
+          <span>Raytracing</span>
+        </button>
+        <button
+          type="button"
+          className="btn btn-sm border-0 d-flex align-items-center justify-content-center text-white"
+          style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '8px', padding: '4px 8px' }}
+          onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))}
+          title="Afficher tous les raccourcis clavier"
+          aria-label="Afficher tous les raccourcis clavier"
+        >
+          <i className="bi bi-keyboard-fill" />
         </button>
       </>}
 
