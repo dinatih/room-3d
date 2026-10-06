@@ -4,6 +4,7 @@ import json
 import sys
 import math
 import re
+import struct
 import numpy as np
 from pathlib import Path
 from mathutils import Vector, Quaternion, kdtree
@@ -36,7 +37,7 @@ if '--build' not in sys.argv:
 # Connected islands of this FBX, identified from their geometry. The otherwise
 # unreferenced vertices 8..151 belong to the front wheel and are preserved too.
 front_ids = {0, 1, 2, 3, 7, 152, 154, 161, 164, 165, 169, 170, 171,
-             178, 180, 181, 182, 183, 184, 187} | set(range(8, 152))
+             177, 178, 180, 181, 182, 183, 184, 187} | set(range(8, 152))
 assert len(parts) == 191, 'Source topology changed; inspect before separating.'
 original_faces = sum(len(o.data.polygons) for o in parts)
 original_points = [o.matrix_world @ v.co for o in parts for v in o.data.vertices]
@@ -78,8 +79,8 @@ bpy.context.collection.objects.link(pivot)
 pivot.parent = root
 pivot.location = pivot_position
 pivot.rotation_mode = 'QUATERNION'
-# Local Y remains the steering axis in both Blender and glTF.
-pivot.rotation_quaternion = Vector((0, 1, 0)).rotation_difference(axis)
+# Blender local Z becomes glTF local Y under the exporter's axis conversion.
+pivot.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(axis)
 pivot.empty_display_type = 'ARROWS'
 pivot.empty_display_size = 0.15
 bpy.context.view_layer.update()
@@ -120,7 +121,7 @@ original_tree.balance()
 assert max(original_tree.find(p)[2] for points in zero_positions.values() for p in points) < 1e-6, 'Separation moved source vertices.'
 rest = pivot.rotation_quaternion.copy()
 for angle in [-math.pi / 6, math.pi / 6, 0]:
-    pivot.rotation_quaternion = rest @ Quaternion((0, 1, 0), angle)
+    pivot.rotation_quaternion = rest @ Quaternion((0, 0, 1), angle)
     bpy.context.view_layer.update()
     assert all((body.matrix_world @ v.co - p).length < 1e-6 for v, p in zip(body.data.vertices, zero_positions[body.name]))
     if angle:
@@ -135,6 +136,15 @@ bpy.context.view_layer.objects.active = pivot
 bpy.ops.wm.save_as_mainfile(filepath='/tmp/e-scooter-steering.blend')
 output = ROOT / 'public/items/xiaomi-scooter4/xiaomi-scooter4.glb'
 bpy.ops.export_scene.gltf(filepath=str(output), export_format='GLB', use_selection=True, export_yup=True, export_extras=True)
+# Verify the actual exported axis, not only the Blender animation. This catches
+# rotations around a transverse axis introduced by glTF coordinate conversion.
+glb = output.read_bytes()
+json_length = struct.unpack_from('<I', glb, 12)[0]
+gltf = json.loads(glb[20:20 + json_length])
+exported_pivot = next(n for n in gltf['nodes'] if n['name'] == 'SteeringPivot')
+x, y, z, w = exported_pivot['rotation']
+exported_axis = Quaternion((w, x, y, z)) @ Vector((0, 1, 0))
+assert (exported_axis - Vector((axis.x, axis.z, -axis.y))).length < 1e-6, 'GLB steering axis differs from column axis.'
 print('ARTICULATED', json.dumps({'pivot': list(pivot_position), 'axis': list(axis), 'faces': original_faces, 'vertices': len(original_points)}))
 
 # Render a comparison sheet from the exported GLB, also testing its hierarchy.
@@ -168,6 +178,6 @@ for location, power in [((2, -2, 3), 500), ((-2, 1, 2), 350)]:
     light.data.size = 3
     light.rotation_euler = (-light.location).to_track_quat('-Z', 'Y').to_euler()
 for degrees in [0, -30, 30]:
-    pivot.rotation_quaternion = rest @ Quaternion((0, 1, 0), math.radians(degrees))
+    pivot.rotation_quaternion = rest @ Quaternion((0, 0, 1), math.radians(degrees))
     scene.render.filepath = f'/tmp/scooter-steering-{degrees}.png'
     bpy.ops.render.render(write_still=True)
