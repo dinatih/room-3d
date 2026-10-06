@@ -89,6 +89,7 @@ import { VacuumCleaner }                              from '@features/scene/item
 import { Tent }                                       from '@features/scene/items/Tent';
 import { Vihals }                                     from '@features/scene/items/Vihals';
 import { Linky }                                      from '@features/scene/items/Linky';
+import { Scooter }                                    from '@features/scene/items/Scooter';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { ElectricRacket }                             from '@features/scene/items/ElectricRacket';
 import { Drona }                                      from '@features/scene/items/Drona';
@@ -105,7 +106,12 @@ import { TShirt } from '@features/scene/items/TShirt';
 import { MaillotInyeong } from '@features/scene/items/MaillotInyeong';
 import { DoubleVenusPendant } from '@features/scene/items/DoubleVenusPendant';
 
+function ScooterPreview(props: SceneItemProps) {
+  return <Scooter {...props} steeringAngle={props.actionState['scooter-steering-toggle'] ? Math.PI / 6 : 0} />;
+}
+
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'scooter':                ScooterPreview,
   'smorkull-chair':         Smorkull,
   'bird-feeder':            BirdFeeder,
   'raskog30586783': Raskog30586783,
@@ -222,6 +228,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
  * [label quand inactif, label quand actif]
  */
 export const ACTION_LABELS: Record<string, [string, string]> = {
+  'scooter-steering-toggle': ['Guidon 30° à droite', 'Redresser le guidon'],
   'freezer-toggle':        ['Ouvrir', 'Fermer'],
   'fridge-toggle':         ['Ouvrir', 'Fermer'],
   'cabinet-toggle':        ['Ouvrir', 'Fermer'],

@@ -47,6 +47,7 @@ export function Scooter({ onSize, steeringAngle = 0 }: ScooterProps) {
     steering.pivot.quaternion.copy(steering.rest).multiply(
       new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), steeringAngle),
     );
+    onSize(glbLocalBBox(scene).getSize(new THREE.Vector3()));
   }, [steering, steeringAngle, onSize]);
 
   return <primitive object={scene} />;
