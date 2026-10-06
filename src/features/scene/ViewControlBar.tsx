@@ -1,4 +1,5 @@
 import './ViewControlBar.scss';
+import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import type { ReactNode } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView } from './sidepanel/types';
@@ -81,12 +82,12 @@ export function ViewControlBar({
     views: typeof ORTHO_VIEWS | typeof EXTRA_VIEWS | typeof ISO_VIEWS,
     color: 'cyan' | 'green' | 'purple',
   ) => (
-    <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label={views.map(view => view.label).join(', ')}>
+    <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label={views.map(view => view.label).join(', ')}>
       {views.map(view => (
         <button
           key={view.key}
           type="button"
-          className={`btn ${isActive(view.key) ? `view-control-bar__btn--${color}` : 'btn-outline-secondary'}`}
+          className={`${TOOLBAR_BUTTON_CLASS} ${isActive(view.key) ? `view-control-bar__btn--${color}` : 'btn-outline-secondary'}`}
           onClick={() => dispatchView(view.key, npcGridActive ? getLaraGridCameraView().target : undefined)}
           title={`${view.label} (${view.shortcut})`}
           aria-label={`${view.label} (${view.shortcut})`}
@@ -99,11 +100,11 @@ export function ViewControlBar({
   );
 
   const bar = (
-    <div className={`view-control-bar glass-card d-flex flex-nowrap ${isMobile ? 'justify-content-start' : 'justify-content-center'} align-items-center gap-1 ${children ? 'p-1' : 'p-2'} rounded-3 border shadow-lg ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
+    <div className={`${TOOLBAR_CLASS} ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       {showCharacterModes && (
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary"
+          className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
           onClick={onToggleHideUI}
           title={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
           aria-label={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
@@ -114,59 +115,59 @@ export function ViewControlBar({
 
       <button
         type="button"
-        className={`btn btn-sm ${isOrtho ? 'view-control-bar__btn--blue' : 'view-control-bar__btn--yellow'}`}
+        className={`${TOOLBAR_BUTTON_CLASS} ${isOrtho ? 'view-control-bar__btn--blue' : 'view-control-bar__btn--yellow'}`}
         onClick={toggleCameraProjection}
         title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (P)`}
         aria-pressed={isOrtho}
       >
         <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} aria-hidden="true" />
-        <span className="ms-1">{isOrtho ? 'Ortho' : 'Persp'}</span>
+        <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Persp'}</span>
       </button>
 
       {showCharacterModes && (
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Modes caméra">
+        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Modes caméra">
           <button
             type="button"
-            className={`btn ${cameraMode === 'orbit' ? 'view-control-bar__btn--yellow' : 'btn-outline-secondary'}`}
+            className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'orbit' ? 'view-control-bar__btn--yellow' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('orbit')}
             title="Revenir à la caméra Orbit (O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={cameraMode === 'orbit'}
-          ><i className="bi bi-globe2 me-sm-1" aria-hidden="true" /><span>Orbit</span></button>
+          ><i className="bi bi-globe2" aria-hidden="true" /><span className="fw-semibold">Orbit</span></button>
           <button
             type="button"
-            className={`btn ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
+            className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('toggle-npc-grid')}
             title="Afficher ou quitter la grille des PNJ (G ; O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={npcGridActive}
-          ><i className="bi bi-grid-3x3-gap-fill me-sm-1" aria-hidden="true" /><span>NPC Grid</span></button>
+          ><i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" /><span className="fw-semibold">NPC Grid</span></button>
           <button
             type="button"
-            className={`btn ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
+            className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('toggle-follow')}
             title="Activer ou quitter le suivi à la troisième personne (M : Follow ↔ FPV ; O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={cameraMode === 'follow'}
-          ><i className="bi bi-person-walking me-sm-1" aria-hidden="true" /><span>Follow</span></button>
+          ><i className="bi bi-person-walking" aria-hidden="true" /><span className="fw-semibold">Follow</span></button>
           <button
             type="button"
-            className={`btn ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
+            className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('fpv')}
             title="Passer en vue subjective FPV (M : Follow ↔ FPV ; O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={cameraMode === 'fpv'}
-          ><i className="bi bi-eye-fill me-sm-1" aria-hidden="true" /><span>FPV</span></button>
+          ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
         </div>
       )}
 
       {showCharacterModes && (
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Actions de la scène">
-          <button type="button" className="btn btn-outline-secondary view-control-bar__outline--orange" onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
+        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
+          <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`} onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
             <i className="bi bi-airplane-fill" aria-hidden="true" />
           </button>
           {!isMobile && (
             <>
-              <button type="button" className="btn btn-outline-secondary view-control-bar__outline--cyan" onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
+              <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan`} onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
                 <i className="bi bi-camera-fill" aria-hidden="true" />
               </button>
-              <button type="button" className="btn btn-outline-secondary" onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
+              <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`} onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
                 <i className="bi bi-keyboard-fill" aria-hidden="true" />
               </button>
             </>

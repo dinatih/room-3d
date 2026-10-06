@@ -1,3 +1,4 @@
+import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 /**
  * SidePanel.tsx
  *
@@ -449,7 +450,7 @@ export function SidePanel({
             pointerEvents: hideUI ? 'none' : 'auto',
           }}
         >
-          <div className="view-control-bar glass-card d-flex flex-nowrap justify-content-start align-items-center gap-1 overflow-x-auto p-2 rounded-3 border shadow-lg" role="toolbar" aria-label="Menu principal">
+          <div className={TOOLBAR_CLASS} role="toolbar" aria-label="Menu principal">
           {/* 🥽 VR WebXR (uniquement si WebXR est réellement supporté par l'appareil) */}
           {isVRSupported && (
             <button
@@ -457,7 +458,7 @@ export function SidePanel({
               onClick={() => {
                 document.dispatchEvent(new CustomEvent('toggle-vr'));
               }}
-              className={`btn btn-sm d-flex flex-row align-items-center justify-content-center gap-1 flex-shrink-0 ${isVRActive ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'} py-1 px-2`}
+              className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
               title="Mode Réalité Virtuelle (WebXR)"
             >
               <i className="bi bi-headset" aria-hidden="true" />
@@ -471,7 +472,7 @@ export function SidePanel({
             onClick={() => {
               document.dispatchEvent(new CustomEvent('toggle-immersive'));
             }}
-            className={`btn btn-sm d-flex flex-row align-items-center justify-content-center gap-1 flex-shrink-0 ${isImmersiveActive ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'} py-1 px-2`}
+            className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
             title="Mode Immersif Gyroscope (Plein écran)"
           >
             <i className="bi bi-eye-fill" aria-hidden="true" />
@@ -481,7 +482,7 @@ export function SidePanel({
           <button
             type="button"
             onClick={onOpenInventory}
-            className="btn btn-sm btn-outline-secondary d-flex flex-row align-items-center justify-content-center gap-1 flex-shrink-0 py-1 px-2"
+            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
           >
             <i className="bi bi-box-seam-fill" aria-hidden="true" />
             <span className="fw-semibold">Inventaire</span>
@@ -526,7 +527,7 @@ export function SidePanel({
                 key={t.key}
                 type="button"
                 onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
-                className={`btn btn-sm d-flex flex-row align-items-center justify-content-center gap-1 flex-shrink-0 py-1 px-2 ${active ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
+                className={`${TOOLBAR_BUTTON_CLASS} ${active ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
               >
                 <i className={`bi ${tabIcons[t.key]}`} aria-hidden="true" />
                 <span className="fw-semibold">{t.label}</span>
