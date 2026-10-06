@@ -55,7 +55,9 @@ function RunningShiba({ countdownStarted }: { countdownStarted: boolean }) {
   const direction = useRef(1);
   const elapsed = useRef(0);
   const nextTrick = useRef(0);
-  const circle = useRef({ x: 0, z: 0, angle: 0, remaining: 0 });
+  const runSpeed = useRef(RUN_SPEED);
+  const startPositionChosen = useRef(false);
+  const circle = useRef({ x: 0, z: 0, angle: 0, remaining: 0, radius: 0, direction: 1 });
   const horizontalLimit = useRef(0);
   const { camera, size } = useThree();
   const envelope = useMemo(() => ({ radius: 0, minY: 0, height: 0, sitTime: 0 }), []);
@@ -120,10 +122,19 @@ function RunningShiba({ countdownStarted }: { countdownStarted: boolean }) {
   useLayoutEffect(() => {
     movement.current = countdownStarted ? 'sit' : 'run';
     elapsed.current = 0;
-    nextTrick.current = clips.run.duration * (2 + Math.random() * 3);
+    // Tirage indépendant du téléchargement, avec des attentes parfois longues.
+    nextTrick.current = clips.run.duration * -Math.log(1 - Math.random()) * 2;
+    if (!countdownStarted) {
+      direction.current = Math.random() < 0.5 ? -1 : 1;
+      runSpeed.current = RUN_SPEED * (0.6 + Math.random() * 0.65);
+    }
     const action = mixer.clipAction(countdownStarted ? clips.sit : clips.run);
     action.reset().setLoop(countdownStarted ? LoopOnce : LoopRepeat, countdownStarted ? 1 : Infinity);
     action.clampWhenFinished = countdownStarted;
+    if (!countdownStarted) {
+      action.time = Math.random() * clips.run.duration;
+      action.setEffectiveTimeScale(runSpeed.current / RUN_SPEED);
+    }
     action.fadeIn(ANIMATION_FADE).play();
     activeAction.current?.fadeOut(ANIMATION_FADE);
     activeAction.current = action;
@@ -134,7 +145,13 @@ function RunningShiba({ countdownStarted }: { countdownStarted: boolean }) {
     ortho.zoom = Math.min(size.height / (envelope.height + DOG_HEIGHT / 2), size.width / (envelope.radius * 2 + DOG_HEIGHT / 2));
     ortho.updateProjectionMatrix();
     horizontalLimit.current = Math.max(0, size.width / ortho.zoom / 2 - envelope.radius - DOG_HEIGHT / 4);
-    if (runner.current) runner.current.position.y = -envelope.minY - envelope.height / 2;
+    if (runner.current) {
+      runner.current.position.y = -envelope.minY - envelope.height / 2;
+      if (!startPositionChosen.current) {
+        runner.current.position.x = (Math.random() * 2 - 1) * horizontalLimit.current;
+        startPositionChosen.current = true;
+      }
+    }
   }, [camera, size.width, size.height, envelope]);
 
   useFrame((_, delta) => {
@@ -155,7 +172,11 @@ function RunningShiba({ countdownStarted }: { countdownStarted: boolean }) {
       }
       movement.current = mode;
       elapsed.current = 0;
-      nextTrick.current = clips.run.duration * (2 + Math.random() * 3);
+      nextTrick.current = clips.run.duration * (1 - Math.log(1 - Math.random()) * 2);
+      if (mode === 'run') {
+        runSpeed.current = RUN_SPEED * (0.6 + Math.random() * 0.65);
+        action.setEffectiveTimeScale(runSpeed.current / RUN_SPEED);
+      }
     };
     if (movement.current === 'sit') {
       const action = activeAction.current;
@@ -177,33 +198,40 @@ function RunningShiba({ countdownStarted }: { countdownStarted: boolean }) {
     }
     if (movement.current === 'circle') {
       const orbit = circle.current;
-      const radius = Math.min(DOG_HEIGHT / 2, limit);
-      const angleDelta = radius > 0 ? RUN_SPEED / radius * delta : 0;
-      orbit.angle += angleDelta;
+      const radius = Math.min(orbit.radius, limit);
+      const angleDelta = radius > 0 ? runSpeed.current / radius * delta : 0;
+      orbit.angle += orbit.direction * angleDelta;
       orbit.remaining -= angleDelta;
       group.position.x = orbit.x + radius * Math.cos(orbit.angle);
       group.position.z = orbit.z + radius * Math.sin(orbit.angle);
-      group.rotation.y = -orbit.angle;
+      group.rotation.y = -orbit.angle + (orbit.direction < 0 ? Math.PI : 0);
       if (orbit.remaining <= 0 || radius === 0) {
         group.position.z = 0;
+        direction.current = Math.random() < 0.5 ? -1 : 1;
         play('run');
       }
     } else {
       group.rotation.y = direction.current * Math.PI / 2;
-      group.position.x += direction.current * RUN_SPEED * delta;
+      group.position.x += direction.current * runSpeed.current * delta;
       if (group.position.x >= limit) direction.current = -1;
       else if (group.position.x <= -limit) direction.current = 1;
       if (elapsed.current >= nextTrick.current) {
-        if (Math.random() < 0.5) play('jump');
-        else {
-          const radius = Math.min(DOG_HEIGHT / 2, limit);
-          const angle = -group.rotation.y;
+        const trick = Math.floor(Math.random() * 3);
+        if (trick === 0) play('jump');
+        else if (trick === 1) {
+          const radius = Math.min(DOG_HEIGHT / 2 * (0.5 + Math.random()), limit);
+          const spinDirection = Math.random() < 0.5 ? -1 : 1;
+          const angle = -group.rotation.y + (spinDirection < 0 ? Math.PI : 0);
           circle.current = {
             x: Math.max(-limit + radius, Math.min(limit - radius, group.position.x - radius * Math.cos(angle))),
             z: -radius * Math.sin(angle), angle,
-            remaining: Math.PI * 2 * (1 + Math.floor(Math.random() * 2)),
+            remaining: Math.PI * 2 * (0.5 + Math.random() * 1.5),
+            radius, direction: spinDirection,
           };
           movement.current = 'circle';
+        } else {
+          direction.current *= -1;
+          play('run');
         }
       }
     }
