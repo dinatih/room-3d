@@ -461,7 +461,7 @@ export function SidePanel({
               title="Mode Réalité Virtuelle (WebXR)"
             >
               <i className="bi bi-headset" aria-hidden="true" />
-              <span className="fw-semibold small">{isVRActive ? '✕ VR' : 'VR'}</span>
+              <span className="fw-semibold">{isVRActive ? '✕ VR' : 'VR'}</span>
             </button>
           )}
 
@@ -475,7 +475,7 @@ export function SidePanel({
             title="Mode Immersif Gyroscope (Plein écran)"
           >
             <i className="bi bi-eye-fill" aria-hidden="true" />
-            <span className="fw-semibold small">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
+            <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
           </button>
 
           <button
@@ -484,7 +484,7 @@ export function SidePanel({
             className="btn btn-sm btn-outline-secondary d-flex flex-row align-items-center justify-content-center gap-1 flex-shrink-0 py-1 px-2"
           >
             <i className="bi bi-box-seam-fill" aria-hidden="true" />
-            <span className="fw-semibold small">Inventaire</span>
+            <span className="fw-semibold">Inventaire</span>
           </button>
           
           {TABS.filter(t => t.key !== 'personnage').map(t => {
@@ -498,7 +498,7 @@ export function SidePanel({
                     className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center py-1 px-2 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
                   >
                     <span className="fs-5 lh-1"><i className={`bi ${tabIcons[t.key]}`} aria-hidden="true" /></span>
-                    <span className="fw-semibold small">{t.label}</span>
+                    <span className="fw-semibold">{t.label}</span>
                   </button>
                   <button
                     type="button"
@@ -529,7 +529,7 @@ export function SidePanel({
                 className={`btn btn-sm d-flex flex-row align-items-center justify-content-center gap-1 flex-shrink-0 py-1 px-2 ${active ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
               >
                 <i className={`bi ${tabIcons[t.key]}`} aria-hidden="true" />
-                <span className="fw-semibold small">{t.label}</span>
+                <span className="fw-semibold">{t.label}</span>
               </button>
             );
           })}
