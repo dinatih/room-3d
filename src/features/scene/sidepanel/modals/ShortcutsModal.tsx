@@ -66,14 +66,16 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
             </div>
 
             <div>
-              <Section title="Grille PNJ / Lara (Vues Ortho)" />
-              <R label="Vue Ortho Face"             keys={['Alt+1', 'Num 1']} />
-              <R label="Vue Ortho Derrière (Dos)"   keys={['Alt+2', 'Ctrl+1']} />
-              <R label="Vue Ortho Côté Gauche"      keys={['Alt+3', 'Ctrl+3']} />
-              <R label="Vue Ortho Côté Droit"       keys={['Alt+4', 'Num 3']} />
-              <R label="Vue Ortho Dessus"           keys={['Alt+7', 'Num 7']} />
-              <R label="Vue Ortho Dessous"          keys={['Alt+9', 'Ctrl+7']} />
-              <R label="Bascule Ortho / Persp 3D"   keys={['Alt+5', 'Num 5']} />
+              <Section title="Vues de la barre de contrôle" />
+              <R label="Face / Dos / Gauche / Droite" keys={['Alt+1', 'Alt+2', 'Alt+3', 'Alt+4']} />
+              <R label="Dessus / Dessous"         keys={['Alt+5', 'Alt+6']} />
+              <R label="ISO Sud-Est / Sud-Ouest"  keys={['Alt+7', 'Alt+8']} />
+              <R label="ISO Nord-Est / Nord-Ouest" keys={['Alt+9', 'Alt+0']} />
+              <Section title="Grille PNJ / Lara (pavé numérique)" />
+              <R label="Vue Ortho Face / Dos"      keys={['Num 1', 'Ctrl+Num 1']} />
+              <R label="Vue Ortho Gauche / Droite" keys={['Ctrl+Num 3', 'Num 3']} />
+              <R label="Vue Ortho Dessus / Dessous" keys={['Num 7', 'Ctrl+Num 7']} />
+              <R label="Bascule Ortho / Persp 3D"  keys={['Num 5']} />
             </div>
 
             <div>

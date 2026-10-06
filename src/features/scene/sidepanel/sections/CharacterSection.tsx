@@ -516,7 +516,7 @@ export function CharacterSection({
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('front')}
-              title="Vue orthographique de face (Alt+1 / Num 1)"
+              title="Vue orthographique de face (Num 1)"
             >
               <span>👤 Face</span>
             </button>
@@ -525,7 +525,7 @@ export function CharacterSection({
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('left')}
-              title="Vue orthographique côté gauche (Alt+3 / Ctrl+Num 3)"
+              title="Vue orthographique côté gauche (Ctrl+Num 3)"
             >
               <span>◀️ Côté G</span>
             </button>
@@ -534,7 +534,7 @@ export function CharacterSection({
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('right')}
-              title="Vue orthographique côté droit (Alt+4 / Num 3)"
+              title="Vue orthographique côté droit (Num 3)"
             >
               <span>▶️ Côté D</span>
             </button>
@@ -543,7 +543,7 @@ export function CharacterSection({
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('top')}
-              title="Vue orthographique du dessus (Alt+7 / Num 7)"
+              title="Vue orthographique du dessus (Num 7)"
             >
               <span>⬇️ Dessus</span>
             </button>
@@ -552,7 +552,7 @@ export function CharacterSection({
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('bottom')}
-              title="Vue orthographique du dessous (Alt+9 / Ctrl+Num 7)"
+              title="Vue orthographique du dessous (Ctrl+Num 7)"
             >
               <span>⬆️ Dessous</span>
             </button>
@@ -561,7 +561,7 @@ export function CharacterSection({
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
               onClick={() => frameLaraGridOrtho('back')}
-              title="Vue orthographique de derrière / dos (Alt+2 / Ctrl+Num 1)"
+              title="Vue orthographique de derrière / dos (Ctrl+Num 1)"
             >
               <span>🔙 Dos</span>
             </button>

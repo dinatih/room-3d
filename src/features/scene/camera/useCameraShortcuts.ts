@@ -7,7 +7,7 @@ import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
-import { frameLaraGridOrtho, frameLaraGridCamera } from '../character/laraGridUtils';
+import { frameLaraGridOrtho, frameLaraGridCamera, getLaraGridCameraView } from '../character/laraGridUtils';
 import { dispatchView } from '../sidepanel/types';
 import { PERSP_POS, PERSP_TARGET } from './cameraConstants';
 
@@ -100,6 +100,23 @@ export function useCameraShortcuts({
         return;
       }
 
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        const viewByCode: Record<string, string> = {
+          Digit1: 'front', Digit2: 'back', Digit3: 'left', Digit4: 'right',
+          Digit5: 'top', Digit6: 'bottom', Digit7: 'iso-se', Digit8: 'iso-sw',
+          Digit9: 'iso-ne', Digit0: 'iso-nw',
+        };
+        const view = viewByCode[e.code];
+        if (view) {
+          e.preventDefault();
+          const target = useSceneStore.getState().layers.laraGrid
+            ? getLaraGridCameraView().target
+            : undefined;
+          dispatchView(view, target);
+          return;
+        }
+      }
+
       // Raccourcis grille Lara (vues orthographiques)
       const laraGridActive = useSceneStore.getState().layers.laraGrid;
       if (laraGridActive) {
@@ -111,45 +128,37 @@ export function useCameraShortcuts({
         const isNum9 = (e.code === 'Numpad7' && e.ctrlKey) || (e.code === 'Numpad9') || (e.code === 'Numpad8');
         const isNum5 = e.code === 'Numpad5';
 
-        const isAlt1 = e.altKey && (e.key === '1' || e.code === 'Digit1');
-        const isAlt2 = e.altKey && (e.key === '2' || e.code === 'Digit2');
-        const isAlt3 = e.altKey && (e.key === '3' || e.code === 'Digit3');
-        const isAlt4 = e.altKey && (e.key === '4' || e.code === 'Digit4');
-        const isAlt7 = e.altKey && (e.key === '7' || e.code === 'Digit7');
-        const isAlt9 = e.altKey && (e.key === '9' || e.code === 'Digit9');
-        const isAlt5 = e.altKey && (e.key === '5' || e.code === 'Digit5');
-
-        if (isNum1 || isAlt1) {
+        if (isNum1) {
           e.preventDefault();
           frameLaraGridOrtho('front');
           return;
         }
-        if (isNum2 || isAlt2) {
+        if (isNum2) {
           e.preventDefault();
           frameLaraGridOrtho('back');
           return;
         }
-        if (isNum3 || isAlt3) {
+        if (isNum3) {
           e.preventDefault();
           frameLaraGridOrtho('left');
           return;
         }
-        if (isNum4 || isAlt4) {
+        if (isNum4) {
           e.preventDefault();
           frameLaraGridOrtho('right');
           return;
         }
-        if (isNum7 || isAlt7) {
+        if (isNum7) {
           e.preventDefault();
           frameLaraGridOrtho('top');
           return;
         }
-        if (isNum9 || isAlt9) {
+        if (isNum9) {
           e.preventDefault();
           frameLaraGridOrtho('bottom');
           return;
         }
-        if (isNum5 || isAlt5) {
+        if (isNum5) {
           e.preventDefault();
           if (modeRef.current === 'ortho' && exitOrtho) {
             exitOrtho();
