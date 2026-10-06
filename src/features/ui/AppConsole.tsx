@@ -5,7 +5,7 @@
  * Utilise le composant Group (glass-card accordion) pour l'harmonie visuelle
  * avec les autres panneaux (SidePanel, Minimap, DevTools).
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { CHARACTERS, findCharacter, isCharacterVisibleInMode, npcLabel } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -67,8 +67,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
   const [_cycleStep, setCycleStep] = useState(0); // 0=fermé, 1=ouvert, 2=ouvert+filtré
   const logAreaRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [savedHeight, setSavedHeight] = useState(140);
+  const [bottomDockHeight, setBottomDockHeight] = useState(0);
   const [isMaximized, setIsMaximized] = useState(false);
 
   // Écoute des CustomEvents 'app-log'
@@ -118,30 +117,27 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       })
     : logs;
 
-  // Redimensionnement vertical par drag depuis le bas du panneau.
-  const handleResizePointerDown = (e: React.PointerEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const startY = e.clientY;
-    const startH = containerRef.current?.offsetHeight ?? savedHeight;
-
-    const onPointerMove = (ev: PointerEvent) => {
-      const maxAllowed = isMobile ? window.innerHeight * 0.5 : window.innerHeight * 0.75;
-      const newH = Math.max(60, Math.min(maxAllowed, startH + (ev.clientY - startY)));
-      setSavedHeight(newH);
+  // Réserver l'espace occupé par les commandes et le menu du bas.
+  useLayoutEffect(() => {
+    if (hidden) return;
+    const docks = Array.from(document.querySelectorAll<HTMLElement>('.view-control-bar-dock'));
+    const updateBottomDockHeight = () => {
+      const dockTop = Math.min(window.innerHeight, ...docks.map(dock => dock.getBoundingClientRect().top));
+      setBottomDockHeight(window.innerHeight - dockTop);
     };
-
-    const onPointerUp = () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
+    const observer = new ResizeObserver(updateBottomDockHeight);
+    docks.forEach(dock => observer.observe(dock));
+    window.addEventListener('resize', updateBottomDockHeight);
+    updateBottomDockHeight();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateBottomDockHeight);
     };
-
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-  };
+  }, [hidden, isMobile]);
 
   if (hidden) return null;
 
+  const availableHeight = `calc(100dvh - ${bottomDockHeight}px - ${isMobile ? 'env(safe-area-inset-top) - 16px' : '32px'})`;
   const pnjColor = activeChar?.color ?? '#6c757d';
   const chooseRandomCharacter = () => {
     const visibleCharacters = CHARACTERS.filter(character =>
@@ -259,14 +255,13 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
   return (
     <div
-      ref={containerRef}
       className={`app-console position-fixed ui-panel-top d-flex flex-column overflow-hidden ${hideUI ? 'ui-hidden' : ''}`}
       style={{
         top: isMobile ? 'calc(env(safe-area-inset-top) + 8px)' : 16,
         right: isMobile ? 8 : 16,
         left: open ? (isMobile ? 8 : 288) : 'auto',
-        height: open ? (isMaximized ? (isMobile ? 'calc(100dvh - env(safe-area-inset-top) - 16px)' : 'calc(100vh - 32px)') : `${savedHeight}px`) : 'auto',
-        maxHeight: isMaximized ? (isMobile ? 'calc(100dvh - env(safe-area-inset-top) - 16px)' : 'calc(100vh - 32px)') : (isMobile ? '50vh' : '75vh'),
+        height: open ? (isMaximized ? availableHeight : '140px') : 'auto',
+        maxHeight: availableHeight,
         zIndex: 100,
         fontSize: '11px',
         pointerEvents: hideUI ? 'none' : undefined,
@@ -290,19 +285,6 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           }
         }}
       >
-        {/* Barre de redimensionnement */}
-        <div
-          onPointerDown={handleResizePointerDown}
-          title="Redimensionner la hauteur de la console"
-          className="d-flex align-items-center justify-content-center user-select-none flex-shrink-0"
-          style={{ height: 8, cursor: 'ns-resize', touchAction: 'none' }}
-        >
-          <div
-            className="rounded-pill bg-secondary bg-opacity-50"
-            style={{ width: 36, height: 3 }}
-          />
-        </div>
-
         {/* Liste des logs */}
         <div
           ref={logAreaRef}
