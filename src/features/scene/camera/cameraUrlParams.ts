@@ -2,18 +2,10 @@ import type { CameraMode } from './types';
 
 export type CameraProjection = 'persp' | 'ortho';
 
-export interface OrbitCameraUrlState {
-  position: [number, number, number];
-  target: [number, number, number];
-  zoom?: number;
-}
-
 const ORBIT_VIEW_KEYS = new Set([
   'perspective', 'top3d', 'top', 'front', 'back', 'left', 'right', 'bottom',
   'iso-se', 'iso-nw', 'iso-ne', 'iso-sw',
 ]);
-const ORBIT_POSE_PARAMS = ['cameraPos', 'cameraTarget', 'cameraZoom'] as const;
-
 function getUrlParams(): URLSearchParams {
   let search = window.location.search;
   if (!search && window.location.hash.includes('?')) {
@@ -22,22 +14,11 @@ function getUrlParams(): URLSearchParams {
   return new URLSearchParams(search);
 }
 
-function parseVectorParam(value: string | null): [number, number, number] | null {
-  if (!value) return null;
-  const values = value.split(',').map(Number);
-  if (values.length !== 3 || values.some(value => !Number.isFinite(value))) return null;
-  return values as [number, number, number];
-}
-
 function writeUrl(update: (params: URLSearchParams) => void) {
   if (typeof window === 'undefined') return;
   const url = new URL(window.location.href);
   update(url.searchParams);
   window.history.replaceState(null, '', url.toString());
-}
-
-function formatVector(value: [number, number, number]): string {
-  return value.map(component => String(Number(component.toFixed(3)))).join(',');
 }
 
 export function parseUrlCameraProjection(): CameraProjection {
@@ -51,19 +32,6 @@ export function parseUrlActiveCameraView(): string | null {
   return view && ORBIT_VIEW_KEYS.has(view) ? view : null;
 }
 
-export function parseUrlOrbitCameraState(): OrbitCameraUrlState | null {
-  if (typeof window === 'undefined') return null;
-  const params = getUrlParams();
-  const position = parseVectorParam(params.get('cameraPos'));
-  const target = parseVectorParam(params.get('cameraTarget'));
-  if (!position || !target) return null;
-
-  const rawZoom = params.get('cameraZoom');
-  const zoom = rawZoom === null ? undefined : Number(rawZoom);
-  if (zoom !== undefined && (!Number.isFinite(zoom) || zoom <= 0)) return null;
-  return { position, target, zoom };
-}
-
 export function updateUrlCameraProjection(projection: CameraProjection) {
   writeUrl(params => {
     if (projection === 'ortho') params.set('projection', projection);
@@ -75,22 +43,6 @@ export function updateUrlActiveCameraView(view: string | null) {
   writeUrl(params => {
     if (view && ORBIT_VIEW_KEYS.has(view)) params.set('cameraView', view);
     else params.delete('cameraView');
-  });
-}
-
-export function updateUrlOrbitCameraState(state: OrbitCameraUrlState | null) {
-  writeUrl(params => {
-    if (!state) {
-      ORBIT_POSE_PARAMS.forEach(param => params.delete(param));
-      return;
-    }
-    params.set('cameraPos', formatVector(state.position));
-    params.set('cameraTarget', formatVector(state.target));
-    if (state.zoom !== undefined && Number.isFinite(state.zoom) && state.zoom > 0) {
-      params.set('cameraZoom', String(Number(state.zoom.toFixed(4))));
-    } else {
-      params.delete('cameraZoom');
-    }
   });
 }
 
@@ -169,7 +121,8 @@ export function updateUrlCameraMode(mode: CameraMode) {
     const url = new URL(window.location.href);
     const cameraParams = ['mode', 'camera', 'view', 'cam', 'vue', 'orbit', 'fpv'];
     const hadParam = cameraParams.some(p => url.searchParams.has(p));
-    const hadOrbitState = ['cameraView', ...ORBIT_POSE_PARAMS].some(p => url.searchParams.has(p));
+    const hadCameraView = url.searchParams.has('cameraView');
+    const hadLegacyPose = ['cameraPos', 'cameraTarget', 'cameraZoom'].some(p => url.searchParams.has(p));
 
     for (const p of cameraParams) {
       url.searchParams.delete(p);
@@ -177,12 +130,12 @@ export function updateUrlCameraMode(mode: CameraMode) {
 
     if (mode !== 'orbit') {
       url.searchParams.delete('cameraView');
-      ORBIT_POSE_PARAMS.forEach(param => url.searchParams.delete(param));
     }
+    for (const p of ['cameraPos', 'cameraTarget', 'cameraZoom']) url.searchParams.delete(p);
 
     if (mode !== 'fpv') {
       url.searchParams.set('mode', mode);
-    } else if (!hadParam && !hadOrbitState) {
+    } else if (!hadParam && !hadCameraView && !hadLegacyPose) {
       return; // Valeur par défaut, rien à nettoyer
     }
 
