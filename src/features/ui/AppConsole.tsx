@@ -264,7 +264,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       style={{
         top: isMobile ? 'calc(env(safe-area-inset-top) + 8px)' : 16,
         right: isMobile ? 8 : 16,
-        left: isMobile ? 8 : 288,
+        left: open ? (isMobile ? 8 : 288) : 'auto',
         height: open ? (isMaximized ? (isMobile ? 'calc(100dvh - env(safe-area-inset-top) - 16px)' : 'calc(100vh - 32px)') : `${savedHeight}px`) : 'auto',
         maxHeight: isMaximized ? (isMobile ? 'calc(100dvh - env(safe-area-inset-top) - 16px)' : 'calc(100vh - 32px)') : (isMobile ? '50vh' : '75vh'),
         zIndex: 100,
