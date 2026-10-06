@@ -16,6 +16,7 @@ import { cameraState }      from '@features/scene/cameraState';
 import { SKY_START_POS }     from '@features/scene/camera';
 import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode } from '@features/scene/camera/cameraUrlParams';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
+import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
 import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController } from '@features/scene/sceneLayer';
@@ -406,6 +407,13 @@ export function Studio() {
   const onToggleLayer = useSceneStore(state => state.toggleLayer);
 
   const [showInventory, setShowInventory] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  useEffect(() => {
+    const openShortcuts = () => setShowShortcuts(true);
+    window.addEventListener('open-shortcuts-modal', openShortcuts);
+    return () => window.removeEventListener('open-shortcuts-modal', openShortcuts);
+  }, []);
   const [inventoryInitialCat, setInventoryInitialCat] = useState<string>('all');
   const [hideUI, setHideUI] = useState(() => parseUrlHideUI());
 
@@ -898,6 +906,7 @@ export function Studio() {
       </Canvas>
 
       {/* HTML overlays */}
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       <SidePanel
         layers={layers} onToggleLayer={onToggleLayer}
         onOpenInventory={() => setShowInventory(true)}

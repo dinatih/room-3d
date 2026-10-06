@@ -22,7 +22,6 @@ import {
   type LidarMode, type TabKey,
 } from './sidepanel/types';
 import { Group } from './sidepanel/Group';
-import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
 import { CvModal, type CvType } from './sidepanel/modals/CvModal';
 import { LayersSection } from './sidepanel/sections/LayersSection';
 import { InteractiveSection } from './sidepanel/sections/InteractiveSection';
@@ -65,7 +64,6 @@ export function SidePanel({
   hideUI = false,
 }: SidePanelProps) {
   const isMobile = useIsMobile();
-  const [showShortcuts, setShowShortcuts] = useState(false);
   const [showCvModal, setShowCvModal] = useState(false);
   const [selectedCvType, setSelectedCvType] = useState<CvType>('devops');
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
@@ -76,12 +74,6 @@ export function SidePanel({
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
   const setCvModalOpen = useSceneStore(state => state.setCvModalOpen);
-
-  useEffect(() => {
-    const openShortcuts = () => setShowShortcuts(true);
-    window.addEventListener('open-shortcuts-modal', openShortcuts);
-    return () => window.removeEventListener('open-shortcuts-modal', openShortcuts);
-  }, []);
 
   useEffect(() => {
     if (typeof navigator !== 'undefined' && 'xr' in navigator && (navigator as any).xr) {
@@ -537,7 +529,6 @@ export function SidePanel({
           </div>
         </div>
 
-        {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
         {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={handleCloseCv} />}
       </>
     );
@@ -560,24 +551,16 @@ export function SidePanel({
         }}
         onWheel={e => e.stopPropagation()}
       >
-        <div className="card shadow-sm glass-card overflow-hidden flex-shrink-0">
           <button
-            className={`btn btn-sm btn-danger w-100 rounded-0 ${CONTROL_HEADER_PADDING} fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0 small flex-shrink-0`}
+            type="button"
+            className={`btn btn-sm btn-danger ${CONTROL_HEADER_PADDING} fw-bold text-uppercase d-flex align-items-center gap-2 shadow-sm flex-shrink-0`}
             onClick={onOpenInventory}
             title="Ouvrir l'inventaire (Touche I)"
-            style={{ 
-              letterSpacing: '0.06em',
-              background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(185, 28, 28, 0.95) 100%)',
-              textShadow: '0 1px 1px rgba(0, 0, 0, 0.35)'
-            }}
           >
-            <span className="d-flex align-items-center gap-2">
               <span>📦 Inventaire</span>
               <kbd className="bg-white bg-opacity-25 text-white border-0 px-1 rounded font-monospace small">I</kbd>
-            </span>
-            <span className="small">▶</span>
+            <span className="ms-auto small">▶</span>
           </button>
-        </div>
 
         {/* ── Section C.V. / Profil Ingénieur / Qui suis-je ? ── */}
         <Group emoji="💼" title="Profil & CV" extra={profileHeaderButtons} defaultOpen={false}>
@@ -591,7 +574,6 @@ export function SidePanel({
         <Minimap embedded />
       </div>
 
-      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={handleCloseCv} />}
     </>
   );

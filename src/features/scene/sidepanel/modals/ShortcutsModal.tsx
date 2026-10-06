@@ -1,26 +1,43 @@
+import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
+
 export function ShortcutsModal({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopImmediatePropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', closeOnEscape, true);
+    return () => window.removeEventListener('keydown', closeOnEscape, true);
+  }, [onClose]);
+
   const kbd = (label: string, i = 0) => (
-    <kbd key={i} className="bg-secondary text-white mx-1" style={{ fontSize: '10px' }}>{label}</kbd>
+    <kbd key={i} className="bg-dark text-white px-2 py-1 rounded text-nowrap">{label}</kbd>
   );
 
   const R = ({ label, keys }: { label: string; keys: string[] }) => (
-    <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
-      <span className="text-secondary small">{label}</span>
+    <div className="d-flex justify-content-between align-items-center gap-3 py-2 border-bottom">
+      <span className="text-body">{label}</span>
       <span className="d-flex gap-1 flex-wrap justify-content-end">{keys.map(kbd)}</span>
     </div>
   );
 
   const Section = ({ title }: { title: string }) => (
-    <div className="text-muted fw-bold text-uppercase mt-3 mb-1" style={{ fontSize: '9px', letterSpacing: '0.06em' }}>{title}</div>
+    <h6 className="text-primary fw-bold text-uppercase mt-3 mb-1">{title}</h6>
   );
 
-  return (
-    <div className="modal fade show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable" style={{ maxWidth: '360px' }}>
-        <div className="modal-content text-dark glass-card">
+  return createPortal(
+    <div className="modal show d-block bg-dark bg-opacity-50" tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="shortcuts-title"
+      onClick={event => { if (event.target === event.currentTarget) onClose(); }}
+      onWheel={event => event.stopPropagation()}
+    >
+      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div className="modal-content bg-body text-body shadow">
           <div className="modal-header border-bottom-0">
-            <h5 className="modal-title fs-6 fw-bold">⌨️ Raccourcis clavier</h5>
-            <button type="button" className="btn-close" onClick={onClose}></button>
+            <h5 id="shortcuts-title" className="modal-title fs-6 fw-bold">⌨️ Raccourcis clavier</h5>
+            <button type="button" className="btn-close" aria-label="Fermer" autoFocus onClick={onClose}></button>
           </div>
           <div className="modal-body py-1">
             <div>
@@ -113,6 +130,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
