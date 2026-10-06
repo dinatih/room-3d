@@ -456,10 +456,10 @@ export function SidePanel({
               onClick={() => {
                 document.dispatchEvent(new CustomEvent('toggle-vr'));
               }}
-              className={`btn btn-sm d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isVRActive ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'} py-1 px-2`}
+              className={`btn btn-sm d-flex flex-row align-items-center justify-content-center gap-1 flex-shrink-0 ${isVRActive ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'} py-1 px-2`}
               title="Mode Réalité Virtuelle (WebXR)"
             >
-              <span className="fs-5 lh-1"><i className="bi bi-headset" aria-hidden="true" /></span>
+              <i className="bi bi-headset" aria-hidden="true" />
               <span className="fw-semibold small">{isVRActive ? '✕ VR' : 'VR'}</span>
             </button>
           )}
@@ -470,19 +470,19 @@ export function SidePanel({
             onClick={() => {
               document.dispatchEvent(new CustomEvent('toggle-immersive'));
             }}
-            className={`btn btn-sm d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isImmersiveActive ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'} py-1 px-2`}
+            className={`btn btn-sm d-flex flex-row align-items-center justify-content-center gap-1 flex-shrink-0 ${isImmersiveActive ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'} py-1 px-2`}
             title="Mode Immersif Gyroscope (Plein écran)"
           >
-            <span className="fs-5 lh-1"><i className="bi bi-eye-fill" aria-hidden="true" /></span>
+            <i className="bi bi-eye-fill" aria-hidden="true" />
             <span className="fw-semibold small">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
           </button>
 
           <button
             type="button"
             onClick={onOpenInventory}
-            className="btn btn-sm btn-outline-secondary d-flex flex-column align-items-center justify-content-center flex-shrink-0 py-1 px-2"
+            className="btn btn-sm btn-outline-secondary d-flex flex-row align-items-center justify-content-center gap-1 flex-shrink-0 py-1 px-2"
           >
-            <span className="fs-5 lh-1"><i className="bi bi-box-seam-fill" aria-hidden="true" /></span>
+            <i className="bi bi-box-seam-fill" aria-hidden="true" />
             <span className="fw-semibold small">Inventaire</span>
           </button>
           
@@ -525,9 +525,9 @@ export function SidePanel({
                 key={t.key}
                 type="button"
                 onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
-                className={`btn btn-sm d-flex flex-column align-items-center justify-content-center flex-shrink-0 py-1 px-2 ${active ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
+                className={`btn btn-sm d-flex flex-row align-items-center justify-content-center gap-1 flex-shrink-0 py-1 px-2 ${active ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
               >
-                <span className="fs-5 lh-1"><i className={`bi ${tabIcons[t.key]}`} aria-hidden="true" /></span>
+                <i className={`bi ${tabIcons[t.key]}`} aria-hidden="true" />
                 <span className="fw-semibold small">{t.label}</span>
               </button>
             );

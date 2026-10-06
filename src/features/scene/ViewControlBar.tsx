@@ -70,6 +70,9 @@ export function ViewControlBar({
     'bottom-right': { bottom: 12, right: 12 },
     'bottom-center': { bottom: 12, left: '50%', transform: 'translateX(-50%)' },
   }[position];
+  const mobilePositionStyle = isMobile && position.startsWith('bottom-')
+    ? { left: '50%', right: 'auto', transform: 'translateX(-50%)' }
+    : undefined;
   const mobileDockOffset = isMobile && position.startsWith('bottom-')
     ? { bottom: 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' }
     : undefined;
@@ -187,7 +190,7 @@ export function ViewControlBar({
   }
 
   return (
-    <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked gap-2' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle, ...mobileDockOffset }}>
+    <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked gap-2' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle, ...mobilePositionStyle, ...mobileDockOffset }}>
       {activeCameraView && (
         <span className="badge text-bg-dark bg-opacity-75 view-control-bar-dock__view-label">
           {activeCameraView === 'iso-se' ? 'ISO Sud-Est'
