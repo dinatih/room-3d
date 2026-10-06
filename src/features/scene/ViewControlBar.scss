@@ -120,11 +120,12 @@ $control-colors: (
   .view-control-bar {
     width: 100%;
     flex-wrap: nowrap !important;
-    justify-content: flex-start !important;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
   }
 
   .view-control-bar::-webkit-scrollbar {

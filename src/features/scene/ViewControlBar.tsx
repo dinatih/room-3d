@@ -96,7 +96,7 @@ export function ViewControlBar({
   );
 
   const bar = (
-    <div className={`view-control-bar glass-card d-flex flex-nowrap justify-content-center align-items-center gap-1 ${children ? 'p-1 small' : 'p-2'} rounded-3 border shadow-lg ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
+    <div className={`view-control-bar glass-card d-flex flex-nowrap ${isMobile ? 'justify-content-start' : 'justify-content-center'} align-items-center gap-1 ${children ? 'p-1 small' : 'p-2'} rounded-3 border shadow-lg ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       {showCharacterModes && (
         <button
           type="button"
