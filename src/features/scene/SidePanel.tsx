@@ -43,13 +43,13 @@ export { ANIM_CATEGORIES, getAnimCategory } from './CharacterAnimSelector';
 const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
-export function SidePanel({ 
-  layers, 
-  onToggleLayer, 
-  onOpenInventory, 
-  lidarMode, 
-  onCycleLidar, 
-  lidarOpacity, 
+export function SidePanel({
+  layers,
+  onToggleLayer,
+  onOpenInventory,
+  lidarMode,
+  onCycleLidar,
+  lidarOpacity,
   onToggleLidarOpacity,
   buildAnimMatrix = false,
   onStartBuildAnimMatrix,
@@ -433,7 +433,7 @@ export function SidePanel({
         {/* Tab bar */}
         <div
           className={`view-control-bar-dock view-control-bar-dock--bottom-menu ui-panel-bottom ${hideUI ? 'ui-hidden' : ''}`}
-          style={{ 
+          style={{
             zIndex: 100,
             bottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)',
             left: 0,
@@ -479,7 +479,7 @@ export function SidePanel({
             <i className="bi bi-box-seam-fill" aria-hidden="true" />
             <span className="fw-semibold">Inventaire</span>
           </button>
-          
+
           {TABS.filter(t => t.key !== 'personnage').map(t => {
             const active = activeTab === t.key;
             if (t.key === 'personnage') {
@@ -537,12 +537,12 @@ export function SidePanel({
   // ── Rendu desktop : sidebar accordéon Bootstrap Glassmorphic ────────────────
   return (
     <>
-      <div 
+      <div
         className={`position-fixed overflow-y-auto overflow-x-hidden d-flex flex-column gap-2 side-panel-desktop ui-panel-left ${hideUI ? 'ui-hidden' : ''}`}
         style={{
           top: 16,
           left: 16,
-          width: 260,
+          width: 230,
           maxHeight: 'calc(100vh - 32px)',
           zIndex: 100,
           scrollbarWidth: 'thin',
@@ -563,7 +563,7 @@ export function SidePanel({
           </button>
 
         {/* ── Section C.V. / Profil Ingénieur / Qui suis-je ? ── */}
-        <Group emoji="💼" title="Profil & CV" extra={profileHeaderButtons} defaultOpen={false}>
+        <Group emoji="💼" title="Profil" extra={profileHeaderButtons} defaultOpen={false}>
           {profileSectionContent}
         </Group>
 
