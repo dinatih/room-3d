@@ -50,6 +50,7 @@ function PreviewCategoryLayerGroup({
  */
 function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
   const layers = useSceneStore(state => state.layers);
+  const showZoneUi = layers.aiZones;
   const min = zone.bounds.min;
   const max = zone.bounds.max;
   const studioGroupRef = useRef<THREE.Group>(null);
@@ -142,7 +143,7 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
       </LayerRegistryContext.Provider>
 
       {/* ── Marqueurs Waypoints de la pièce ── */}
-      {waypoints.map(wp => (
+      {showZoneUi && waypoints.map(wp => (
         <group key={wp.id} position={[wp.x, 2, wp.z]}>
           <mesh rotation={[-Math.PI / 2, 0, 0]}>
             <ringGeometry args={[6, 8, 24]} />
@@ -166,7 +167,7 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
       ))}
 
       {/* ── Marqueurs SmartObjects de la pièce ── */}
-      {smartObjects.map(obj => {
+      {showZoneUi && smartObjects.map(obj => {
         const color = CATEGORY_COLORS[obj.category] || '#00e5ff';
         return (
           <group key={obj.id} position={[obj.position[0], 2, obj.position[2]]}>
@@ -255,19 +256,33 @@ function PreviewCameraController({
 
   const DIST = camDistance;
   const orthoHalf = Math.max(80, zoneSize * 0.75);
+  const cameraProjection = useSceneStore(s => s.cameraProjection);
 
   // Build cameras once
   useEffect(() => {
     perspCamRef.current = camera as THREE.PerspectiveCamera;
     const oc = new THREE.OrthographicCamera(-orthoHalf, orthoHalf, orthoHalf, -orthoHalf, -20000, 50000);
+    // Studio meshes live on category-specific Three.js layers; match the
+    // perspective camera configured by Canvas.onCreated.
+    oc.layers.enableAll();
+    oc.layers.disable(LAYER_WALKER_DETAIL);
     oc.position.set(centerX + DIST, centerY + DIST, centerZ + DIST);
     oc.up.set(0, 1, 0);
     oc.lookAt(centerX, centerY, centerZ);
     orthoCamRef.current = oc;
+    if (cameraProjection === 'ortho') {
+      set({ camera: oc });
+      requestAnimationFrame(() => {
+        if (ctrlRef.current) {
+          ctrlRef.current.object = oc;
+          ctrlRef.current.target.set(centerX, centerY, centerZ);
+          ctrlRef.current.update();
+        }
+      });
+    }
   }, []);
 
   // Sync projection toggle from the global store
-  const cameraProjection = useSceneStore(s => s.cameraProjection);
   const prevProjRef = useRef(cameraProjection);
   useEffect(() => {
     if (prevProjRef.current === cameraProjection) return;
@@ -312,16 +327,28 @@ function PreviewCameraController({
     const onView = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (!detail) return;
-      const { pos, target } = detail as {
+      const { pos, target, key } = detail as {
         pos: [number, number, number];
         target: [number, number, number];
+        key?: string;
       };
 
-      const dx = pos[0] - target[0];
-      const dy = pos[1] - target[1];
-      const dz = pos[2] - target[2];
+      // The shared presets are expressed in the apartment's world coordinates.
+      // A zone preview needs the same direction, recentered and scaled locally.
+      const directions: Record<string, [number, number, number]> = {
+        front: [0, 0, 1], back: [0, 0, -1], left: [-1, 0, 0], right: [1, 0, 0],
+        top: [0, 1, 0], bottom: [0, -1, 0],
+        'iso-se': [1, 1, 1], 'iso-sw': [-1, 1, 1], 'iso-ne': [1, 1, -1], 'iso-nw': [-1, 1, -1],
+        perspective: [0.3, 0.25, 1],
+      };
+
+      const fallback = new THREE.Vector3(pos[0] - target[0], pos[1] - target[1], pos[2] - target[2]).normalize();
+      const direction = key && directions[key] ? new THREE.Vector3(...directions[key]).normalize() : fallback;
+      const dx = direction.x;
+      const dy = direction.y;
+      const dz = direction.z;
       const roomDist = Math.hypot(dx, dy, dz) || 1;
-      const scale = DIST / roomDist;
+      const scale = Math.max(camDistance, zoneSize * 1.8) / roomDist;
 
       const newPos: [number, number, number] = [
         centerX + dx * scale,
@@ -343,7 +370,7 @@ function PreviewCameraController({
 
     document.addEventListener('camera-view', onView);
     return () => document.removeEventListener('camera-view', onView);
-  }, [camera, centerX, centerY, centerZ, DIST]);
+  }, [camera, centerX, centerY, centerZ, DIST, camDistance, zoneSize]);
 
   return (
     <OrbitControls
@@ -379,6 +406,8 @@ export function SpatialZonePreview({
   const camDistance = Math.max(220, maxDim * 1.35);
 
   const [showFpsGraph, setShowFpsGraph] = useState(true);
+  const showZoneUi = useSceneStore(state => state.layers.aiZones);
+  const toggleLayer = useSceneStore(state => state.toggleLayer);
   const [fpsSamples, setFpsSamples] = useState<number[]>([]);
   const [currentFps, setCurrentFps] = useState<number>(60);
   const fpsCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -484,6 +513,24 @@ export function SpatialZonePreview({
         display: 'flex',
         gap: 6
       }}>
+        <button
+          onClick={() => toggleLayer('aiZones')}
+          aria-pressed={showZoneUi}
+          title={showZoneUi ? 'Masquer les marqueurs des zones IA' : 'Afficher les marqueurs des zones IA'}
+          style={{
+            background: showZoneUi ? 'rgba(8, 145, 178, 0.95)' : 'rgba(15, 23, 42, 0.65)',
+            color: '#ffffff',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '3px 8px',
+            borderRadius: 4,
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          🤖 {showZoneUi ? 'Masquer zones IA' : 'Afficher zones IA'}
+        </button>
         <button
           onClick={() => setShowFpsGraph(v => !v)}
           style={{

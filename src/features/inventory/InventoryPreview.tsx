@@ -1,6 +1,6 @@
 import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, Html, Line, Grid, OrthographicCamera } from '@react-three/drei';
+import { OrbitControls, Html, Line, Grid, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
@@ -43,6 +43,7 @@ export interface GlbDebugStats {
 }
 
 const glbSizeCache = new Map<string, number>();
+type PreviewOrthoView = 'front' | 'back' | 'side' | 'right' | 'top' | 'bottom';
 
 function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () => void; onStats?: (s: GlbDebugStats) => void }) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
@@ -134,7 +135,8 @@ function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () =
     if (scene) onSize?.();
   }, [scene, onSize]);
 
-  if (!scene) return null; return <primitive object={scene} dispose={null} />;
+  if (!scene) return null;
+  return <primitive object={scene} dispose={null} />;
 }
 
 function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, d: number, h: number }; worldSize: { x: number; y: number; z: number }; grounded?: boolean; }) {
@@ -200,7 +202,7 @@ function OrthoCameraControls({
   target = [0, 0, 0],
   boundsRadius = 50,
 }: {
-  mode: 'front' | 'back' | 'side' | 'right' | 'top' | 'bottom';
+  mode: 'free' | PreviewOrthoView;
   target?: [number, number, number];
   boundsRadius?: number;
 }) {
@@ -216,6 +218,7 @@ function OrthoCameraControls({
   const viewW = viewH * aspect;
 
   const camTarget: [number, number, number] = useMemo(() => {
+    if (mode === 'free') return target;
     if (mode === 'top' || mode === 'bottom') {
       return [0, 0, 0];
     }
@@ -223,16 +226,20 @@ function OrthoCameraControls({
   }, [mode, target]);
 
   const camPos: [number, number, number] = useMemo(() => {
+    if (mode === 'free') {
+      const distance = Math.max(100, boundsRadius * 3.2);
+      return [target[0] + distance * 0.75, target[1] + distance * 0.45, target[2] + distance * 0.95];
+    }
     switch (mode) {
       case 'front':  return [0, camTarget[1], 1000];
       case 'back':   return [0, camTarget[1], -1000];
-      case 'side':   return [1000, camTarget[1], 0];
-      case 'right':  return [-1000, camTarget[1], 0];
+      case 'side':   return [-1000, camTarget[1], 0];
+      case 'right':  return [1000, camTarget[1], 0];
       case 'top':    return [0, 1000, 0];
       case 'bottom': return [0, -1000, 0];
       default:       return [0, camTarget[1], 1000];
     }
-  }, [mode, camTarget]);
+  }, [mode, camTarget, boundsRadius, target]);
 
   useLayoutEffect(() => {
     camera.layers.enableAll();
@@ -291,7 +298,61 @@ function OrthoCameraControls({
   );
 }
 
-function GroundDatumLines({ mode }: { mode: 'front' | 'back' | 'side' | 'right' | 'top' | 'bottom' }) {
+function PerspectivePresetControls({
+  mode,
+  target = [0, 0, 0],
+  boundsRadius = 50,
+}: {
+  mode: PreviewOrthoView;
+  target?: [number, number, number];
+  boundsRadius?: number;
+}) {
+  const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+  const ctrlRef = useRef<any>(null);
+  const camTarget = useMemo<[number, number, number]>(() => (
+    mode === 'top' || mode === 'bottom' ? [0, 0, 0] : [0, target[1] || 85, 0]
+  ), [mode, target]);
+  const distance = Math.max(100, (boundsRadius || 50) * 3.2);
+  const direction = useMemo(() => {
+    switch (mode) {
+      case 'front': return [0, 0, 1] as const;
+      case 'back': return [0, 0, -1] as const;
+      case 'side': return [-1, 0, 0] as const;
+      case 'right': return [1, 0, 0] as const;
+      case 'top': return [0, 1, 0] as const;
+      case 'bottom': return [0, -1, 0] as const;
+    }
+  }, [mode]);
+  const up: [number, number, number] = mode === 'top' ? [0, 0, -1] : mode === 'bottom' ? [0, 0, 1] : [0, 1, 0];
+  const position = useMemo<[number, number, number]>(() => [
+    camTarget[0] + direction[0] * distance,
+    camTarget[1] + direction[1] * distance,
+    camTarget[2] + direction[2] * distance,
+  ], [camTarget, direction, distance]);
+
+  useLayoutEffect(() => {
+    const camera = cameraRef.current;
+    if (!camera) return;
+    camera.layers.enableAll();
+    camera.up.set(...up);
+    camera.position.set(...position);
+    camera.lookAt(...camTarget);
+    camera.updateProjectionMatrix();
+    if (ctrlRef.current) {
+      ctrlRef.current.target.set(...camTarget);
+      ctrlRef.current.update();
+    }
+  }, [camTarget, position, up]);
+
+  return (
+    <>
+      <PerspectiveCamera ref={cameraRef} makeDefault fov={45} near={0.5} far={10000} position={position} />
+      <OrbitControls ref={ctrlRef} makeDefault target={camTarget} enableRotate={false} enablePan enableZoom screenSpacePanning minDistance={2} maxDistance={2500} />
+    </>
+  );
+}
+
+function GroundDatumLines({ mode }: { mode: PreviewOrthoView }) {
   const span = 150;
 
   if (mode === 'top') {
@@ -492,7 +553,9 @@ function RegistryScene({ item, actionState, showDims, onTargetChange, onBoundsCh
 
 function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: string[], initialIndex?: number, onIndexChange?: (i: number) => void }) {
   const [idx, setIdx] = useState(initialIndex);
-  useEffect(() => { setIdx(initialIndex); }, [initialIndex]);
+  useEffect(() => {
+    setIdx(initialIndex);
+  }, [initialIndex]);
 
   const handleNext = () => {
     const next = (idx + 1) % photos.length;
@@ -547,6 +610,7 @@ export function InventoryPreview({
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [previewView, setPreviewView] = useState<'free' | 'front' | 'back' | 'side' | 'right' | 'top' | 'bottom'>('free');
+  const cameraProjection = useSceneStore(state => state.cameraProjection);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const layers = useSceneStore(state => state.layers);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
@@ -607,6 +671,9 @@ export function InventoryPreview({
       const detail = (e as CustomEvent).detail;
       if (!detail) return;
       const key = detail.key as string;
+      if (detail.projection === 'ortho' || detail.projection === 'persp') {
+        useSceneStore.getState().setCameraProjection(detail.projection);
+      }
       if (key === 'front' || key === 'back' || key === 'left' || key === 'right' ||
           key === 'top' || key === 'bottom') {
         // Map left→side, right→right, rest stays the same
@@ -751,15 +818,21 @@ export function InventoryPreview({
               <ambientLight intensity={0.7} />
               <directionalLight position={[150, 250, 150]} intensity={1.0} />
               <directionalLight position={[-100, 50, -100]} intensity={0.4} color="#aabbff" />
-              {previewView === 'free' ? (
+              {cameraProjection === 'ortho' ? (
                 <>
-                  <FitCamera target={target} boundsRadius={boundsRadius} />
-                  <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={true} minDistance={2} maxDistance={2500} target={target} onStart={() => setAutoRotate(false)} />
+                  <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
+                  {previewView !== 'free' && <GroundDatumLines mode={previewView} />}
                 </>
               ) : (
                 <>
-                  <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
-                  <GroundDatumLines mode={previewView} />
+                  {previewView === 'free' ? (
+                    <>
+                      <FitCamera target={target} boundsRadius={boundsRadius} />
+                      <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan enableZoom target={target} onStart={() => setAutoRotate(false)} />
+                    </>
+                  ) : (
+                    <PerspectivePresetControls mode={previewView} target={target} boundsRadius={boundsRadius} />
+                  )}
                 </>
               )}
               <Grid infiniteGrid fadeDistance={800} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />
@@ -1091,6 +1164,13 @@ export function InventoryPreview({
         }}
         onSelectDuoPartner={(partnerId) => {
           setActionStates(s => ({ ...s, duoPartnerId: partnerId }));
+        }}
+        style={{
+          position: 'relative',
+          inset: 'auto',
+          width: 'calc(100% - 16px)',
+          margin: '8px',
+          zIndex: 2,
         }}
       />
     )}
