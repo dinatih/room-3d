@@ -29,10 +29,7 @@
 .view-control-bar {
   width: max-content;
   max-width: 100%;
-  background-color: rgba(255, 255, 255, 0.88);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border-color: rgba(255, 255, 255, 0.8) !important;
+  // Le fond, le flou et la bordure communs viennent de .glass-card.
   gap: 0.375rem !important;
 }
 
