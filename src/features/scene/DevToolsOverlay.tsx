@@ -117,11 +117,12 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
     <>
       <PerfGroup emoji="📊" title="Perf" defaultOpen headerPadding={compact ? 'py-1.5 px-2' : undefined}>
         <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
-          <div className="d-flex align-items-start justify-content-start gap-2 px-2 pb-1">
+          <div className="d-flex align-items-stretch justify-content-start gap-2 px-2 pb-1">
             <canvas
               ref={fpsCanvasCallback}
               width={FPS_W} height={FPS_H}
               className="d-block flex-shrink-0 rounded shadow-sm"
+              style={{ width: FPS_W, height: 'auto', minHeight: FPS_H }}
             />
             <div className="perf-stats d-flex flex-column text-start text-nowrap small lh-sm">
               <span className={`fw-bold ${isIdle ? 'text-warning' : fpsClass}`}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
