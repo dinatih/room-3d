@@ -245,7 +245,7 @@ export function LayersSection({
           </div>
         </div>
       )}
-      {layerBtn('gray',      'Piliers seuls (Alt+P)',           'pillarsOnly')}
+      {layerBtn('gray',      'Piliers seuls (Alt+Shift+P)',     'pillarsOnly')}
       {layerBtn('peach',     'Équipements (Alt+E)',             'equipment')}
       {layerBtn('purple',    'Mobilier (Furniture) (Alt+F)',    'furniture')}
       {layerBtn('purple',    'Habillage (Furnishings) (Alt+H)', 'furnishings')}

@@ -535,7 +535,17 @@ export function Studio() {
           store.setLaraCount(store.layers.laraCount === 15 ? 4 : 15);
           return;
         }
-        if (k === 'p') { e.preventDefault(); onToggleLayer('pillarsOnly'); cameraState.invalidate?.(); return; }
+        if (k === 'p') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            onToggleLayer('pillarsOnly');
+            cameraState.invalidate?.();
+          } else {
+            setInventoryInitialCat('characters');
+            setShowInventory(true);
+          }
+          return;
+        }
         if (k === 'm') { e.preventDefault(); onToggleLayer('measuredDimensions'); cameraState.invalidate?.(); return; }
         if (k === 'a') { e.preventDefault(); onToggleLayer('wallEdges'); cameraState.invalidate?.(); return; }
         if (k === 'i') { e.preventDefault(); onToggleLayer('inventoryGrid'); cameraState.invalidate?.(); return; }
@@ -560,9 +570,6 @@ export function Studio() {
       } else if (e.key === 'w' || e.key === 'W') {
         onToggleLayer('wireframe');
         cameraState.invalidate?.();
-      } else if (e.key === 'p' || e.key === 'P') {
-        setInventoryInitialCat('characters');
-        setShowInventory(true);
       } else if (e.key === 'i' || e.key === 'I') {
         setInventoryInitialCat('all');
         setShowInventory(prev => !prev);

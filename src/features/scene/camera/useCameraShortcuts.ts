@@ -77,6 +77,15 @@ export function useCameraShortcuts({
         return;
       }
 
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'p' || e.key === 'P')) {
+        if (modeRef.current === 'orbit' || modeRef.current === 'ortho') {
+          if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+          toggleOrbitType?.();
+        }
+        else useSceneStore.getState().toggleCameraProjection();
+        return;
+      }
+
       // Raccourcis grille Lara (vues orthographiques)
       const laraGridActive = useSceneStore.getState().layers.laraGrid;
       if (laraGridActive) {
@@ -338,7 +347,7 @@ export function useCameraShortcuts({
 
     const onCameraMode = (e: Event) => {
       if (planeModeRef.current || cameraState.isIntroRunning) return;
-      const requestedMode = (e as CustomEvent<'toggle-follow' | 'fpv'>).detail;
+      const requestedMode = (e as CustomEvent<'toggle-follow' | 'fpv' | 'orbit'>).detail;
       const curX = cameraState.characterX ?? followPos.current.x;
       const curZ = cameraState.characterZ ?? followPos.current.z;
       if (requestedMode === 'fpv') {
@@ -346,6 +355,10 @@ export function useCameraShortcuts({
       } else if (requestedMode === 'toggle-follow') {
         if (modeRef.current === 'follow') exitFollow();
         else enterFollow(curX, curZ, 'follow');
+      } else if (requestedMode === 'orbit') {
+        if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
+        else if (modeRef.current === 'top') exitTop();
+        else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
       }
     };
 

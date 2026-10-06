@@ -54,7 +54,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
   }[position];
 
   const isActive = (key: string) => activeCameraView === key;
-  const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv') => {
+  const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit') => {
     document.dispatchEvent(new CustomEvent('camera-mode', { detail: mode }));
   };
 
@@ -123,6 +123,20 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
         >
           <i className="bi bi-person-walking" />
           <span>FOLLOW</span>
+        </button>
+        <button
+          className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${cameraMode === 'orbit' ? 'fw-bold' : ''}`}
+          style={{
+            background: cameraMode === 'orbit' ? 'rgba(251,191,36,0.9)' : 'rgba(255,255,255,0.08)',
+            color: cameraMode === 'orbit' ? '#1a1a2e' : 'rgba(255,255,255,0.8)',
+            fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
+          }}
+          onClick={() => dispatchCameraMode('orbit')}
+          title="Revenir à la caméra Orbit"
+          aria-pressed={cameraMode === 'orbit'}
+        >
+          <i className="bi bi-globe2" />
+          <span>ORBIT</span>
         </button>
         <button
           className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${cameraMode === 'fpv' ? 'fw-bold' : ''}`}

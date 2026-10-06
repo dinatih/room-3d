@@ -27,7 +27,8 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <Section title="Global" />
               <R label="Photo Raytracing HD 📸"     keys={['F10']} />
               <R label="Inventaire (toggle)"        keys={['I']} />
-              <R label="Inventaire Personnages (direct)" keys={['P']} />
+              <R label="Basculer Ortho / Perspective" keys={['P']} />
+              <R label="Inventaire Personnages (direct)" keys={['Alt+P']} />
               <R label="Personnages Extra 🎭 (toggle)" keys={['E']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
               <R label="Vue perspective (reset)"    keys={['O']} />
@@ -57,7 +58,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Équipements (toggle)"       keys={['Alt+E']} />
               <R label="Miroirs HD (toggle)"        keys={['Alt+G']} />
               <R label="Arêtes des murs (toggle)"   keys={['Alt+A']} />
-              <R label="Piliers seuls (toggle)"     keys={['Alt+P']} />
+              <R label="Piliers seuls (toggle)"     keys={['Alt+Shift+P']} />
               <R label="Grille inventaire 📦 (toggle)" keys={['Alt+I']} />
               <R label="Mesures réelles 📐 (toggle)" keys={['Alt+M']} />
               <R label="Quitter follow / top-down / ortho" keys={['Échap']} />

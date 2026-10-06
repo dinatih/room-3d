@@ -626,7 +626,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       applyTopCamera(targetX, targetZ, cameraProjection);
       appLog('system', cameraProjection === 'ortho' ? '🎥 Mode Top (Ortho 2D)' : '🎥 Mode Top (Perspective 3D)');
       invalidate();
-    } else if (modeRef.current === 'follow') {
+    } else if (modeRef.current === 'follow' || modeRef.current === 'fpv') {
       const ctrl = ctrlRef.current;
       const activeCam = (cameraProjection === 'ortho' && orthoCamRef.current) ? orthoCamRef.current : defaultPerspCamRef.current;
       if (ctrl && activeCam) {
