@@ -192,8 +192,6 @@ export interface SidePanelProps {
   onToggleAutopilot?:      () => void;
   showLandingStrips?:      boolean;
   onToggleLandingStrips?:  () => void;
-  virtualDPadVisible?:     boolean;
-  onToggleVirtualDPad?:    () => void;
   hideUI?:                 boolean;
 }
 

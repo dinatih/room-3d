@@ -10,6 +10,11 @@
   align-items: stretch;
 }
 
+.view-control-bar-dock--bottom-menu {
+  position: fixed;
+  align-items: stretch;
+}
+
 .view-control-bar-dock--stacked {
   width: min(920px, calc(100vw - 24px));
   display: flex;
@@ -106,6 +111,10 @@ $control-colors: (
 
 @media (max-width: 767.98px) {
   .view-control-bar-dock {
+    width: calc(100vw - 1rem);
+  }
+
+  .view-control-bar-dock--bottom-menu {
     width: calc(100vw - 1rem);
   }
 

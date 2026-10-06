@@ -61,8 +61,6 @@ export function SidePanel({
   onToggleAutopilot,
   showLandingStrips = false,
   onToggleLandingStrips,
-  virtualDPadVisible = false,
-  onToggleVirtualDPad,
   hideUI = false,
 }: SidePanelProps) {
   const isMobile = useIsMobile();
@@ -440,15 +438,17 @@ export function SidePanel({
         )}
 
         {/* Tab bar */}
-        <div 
-          className={`position-fixed bottom-0 start-0 end-0 view-control-bar glass-card w-100 d-flex flex-nowrap justify-content-start align-items-center gap-1 overflow-x-auto p-2 rounded-3 border shadow-lg ui-panel-bottom ${hideUI ? 'ui-hidden' : ''}`}
+        <div
+          className={`view-control-bar-dock view-control-bar-dock--bottom-menu ui-panel-bottom ${hideUI ? 'ui-hidden' : ''}`}
           style={{ 
-            zIndex: 100, 
-            paddingBottom: 'env(safe-area-inset-bottom)', 
-            scrollbarWidth: 'none',
+            zIndex: 100,
+            bottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)',
+            left: '50%',
+            transform: 'translateX(-50%)',
             pointerEvents: hideUI ? 'none' : 'auto',
           }}
         >
+          <div className="view-control-bar glass-card d-flex flex-nowrap justify-content-start align-items-center gap-1 overflow-x-auto p-2 rounded-3 border shadow-lg" role="toolbar" aria-label="Menu principal">
           {/* 🥽 VR WebXR (uniquement si WebXR est réellement supporté par l'appareil) */}
           {isVRSupported && (
             <button
@@ -475,17 +475,6 @@ export function SidePanel({
           >
             <span className="fs-5 lh-1"><i className="bi bi-eye-fill" aria-hidden="true" /></span>
             <span className="fw-semibold small">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onToggleVirtualDPad}
-            aria-pressed={virtualDPadVisible}
-            className={`btn btn-sm d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${virtualDPadVisible ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'} py-1 px-2`}
-            title="Afficher ou masquer les commandes directionnelles"
-          >
-            <span className="fs-5 lh-1"><i className="bi bi-arrows-move" aria-hidden="true" /></span>
-            <span className="fw-semibold small">Dépl.</span>
           </button>
 
           <button
@@ -543,7 +532,7 @@ export function SidePanel({
               </button>
             );
           })}
-
+          </div>
         </div>
 
         {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
