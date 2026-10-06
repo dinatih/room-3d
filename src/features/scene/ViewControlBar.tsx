@@ -91,7 +91,7 @@ export function ViewControlBar({
   );
 
   const bar = (
-    <div className={`view-control-bar d-flex flex-wrap justify-content-center align-items-center gap-1 p-2 rounded-3 border shadow-lg ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
+    <div className={`view-control-bar d-flex flex-wrap justify-content-center align-items-center gap-1 ${children ? 'p-1 small' : 'p-2'} rounded-3 border shadow-lg ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       {showCharacterModes && (
         <button
           type="button"
@@ -170,7 +170,7 @@ export function ViewControlBar({
 
   if (inline) {
     return (
-      <div className={`view-control-bar-inline d-flex flex-column align-items-center gap-0 px-2 ${children ? 'py-0' : 'py-2'}`}>
+      <div className={`view-control-bar-inline d-flex flex-column align-items-center gap-0 ${children ? 'px-1 py-0' : 'px-2 py-2'}`}>
         {bar}
         {children && <div className="w-100">{children}</div>}
       </div>

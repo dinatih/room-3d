@@ -1150,6 +1150,7 @@ export function InventoryPreview({
       <ViewControlBar inline>
         {showing3D && isCharacterItem && (
           <AnimFrameController
+            compact
             animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
             animKey={actionStates.characterAnim}
             isHumanCharacter={isHumanCharacter}

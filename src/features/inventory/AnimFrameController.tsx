@@ -17,6 +17,7 @@ export interface AnimFrameControllerProps {
   onSelectAnim?: (animValue: string) => void;
   bottom?: number | string;
   className?: string;
+  compact?: boolean;
   style?: React.CSSProperties;
 
   // Support Animations Duo
@@ -37,6 +38,7 @@ export function AnimFrameController({
   onSelectAnim,
   bottom = 8,
   className = '',
+  compact = false,
   style = {},
   isHumanCharacter = false,
   characterId,
@@ -291,7 +293,7 @@ export function AnimFrameController({
 
   return (
     <div
-      className={`card glass-card rounded-3 shadow-sm p-2 text-dark user-select-none ${className}`}
+      className={`card glass-card rounded-3 shadow-sm ${compact ? 'p-1 small' : 'p-2'} text-dark user-select-none ${className}`}
       onClick={e => e.stopPropagation()}
       onMouseDown={e => e.stopPropagation()}
       style={{
