@@ -137,42 +137,51 @@ const WARMUP_ANIM_PATHS = [
 function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }) {
   const { gl, scene, camera, invalidate } = useThree();
   const readyRef = useRef(false);
+  const [warmupError, setWarmupError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!active || readyRef.current) return;
+    let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | undefined;
 
     // 1. Précharger en mémoire l'animation d'atterrissage, de chute et toutes les animations de marche aléatoires
     const animPreloads = Promise.allSettled(
       WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path))
     );
 
-    // 2. Pré-compiler les shaders de la scène
-    try {
-      gl.compile(scene, camera);
-    } catch {
-      // Ignorer si compilation async non supportée
-    }
+    const prepare = async () => {
+      // Attendre les shaders avant de rendre les frames de warm-up : un rendu
+      // anticipé pourrait forcer leur compilation synchrone et bloquer le shiba.
+      await gl.compileAsync(scene, camera);
+      if (cancelled) return;
 
-    // 3. Exécuter des frames de warm-up avec rafraîchissement du shadow map
-    let frames = 0;
-    const interval = setInterval(() => {
-      frames++;
-      gl.shadowMap.needsUpdate = true;
-      invalidate();
-      if (frames >= 7) {
-        clearInterval(interval);
-        animPreloads.finally(() => {
-          if (!readyRef.current) {
-            readyRef.current = true;
-            onReady();
-          }
-        });
-      }
-    }, 350); // ~2.4 secondes de warm-up effectif absorbé par la page de chargement
+      let frames = 0;
+      interval = setInterval(() => {
+        frames++;
+        gl.shadowMap.needsUpdate = true;
+        invalidate();
+        if (frames >= 7) {
+          clearInterval(interval);
+          void animPreloads.then(() => {
+            if (!cancelled && !readyRef.current) {
+              readyRef.current = true;
+              onReady();
+            }
+          });
+        }
+      }, 350);
+    };
+    void prepare().catch(error => {
+      if (!cancelled) setWarmupError(error instanceof Error ? error : new Error(String(error)));
+    });
 
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [active, gl, scene, camera, invalidate, onReady]);
 
+  if (warmupError) throw warmupError;
   return null;
 }
 
