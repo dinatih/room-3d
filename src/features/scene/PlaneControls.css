@@ -1,0 +1,30 @@
+.plane-controls {
+  position: absolute;
+  z-index: 100;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 1rem);
+  padding: .75rem;
+  border-radius: .75rem;
+  background: rgba(0, 0, 0, .7);
+  backdrop-filter: blur(4px);
+}
+.plane-speed { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.plane-touch { display: none; }
+.plane-hold { touch-action: none; user-select: none; min-width: 3rem; min-height: 3rem; }
+.plane-dpad { display: grid; grid-template-columns: repeat(3, 3rem); grid-template-rows: repeat(3, 3rem); gap: .25rem; }
+.plane-up { grid-area: 1 / 2; }
+.plane-left { grid-area: 2 / 1; }
+.plane-right { grid-area: 2 / 3; }
+.plane-down { grid-area: 3 / 2; }
+@media (pointer: coarse), (any-pointer: coarse) {
+  .plane-touch { display: block; }
+  .plane-keyboard { display: none; }
+  .plane-controls { width: min(26rem, calc(100% - 1rem)); }
+}
+@media (max-height: 480px) {
+  .plane-dpad { grid-template-rows: repeat(3, 2.25rem); }
+  .plane-hold { min-height: 2.25rem; padding: .25rem; }
+}

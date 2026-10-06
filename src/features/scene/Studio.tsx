@@ -39,6 +39,7 @@ import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { SunLight, SunSphere } from '@features/scene/SunLight';
 import { SkySphere } from './SkySphere';
 import { BuildAnimationMatrix } from '@features/scene/BuildAnimations';
+import { PlaneControls } from './PlaneControls';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
@@ -456,6 +457,7 @@ export function Studio() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'f' && e.key !== 'F') return;
+      if (e.repeat) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const t = e.target as HTMLElement | null;
       if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
@@ -769,7 +771,7 @@ export function Studio() {
                            model={planeModel}
                            onViewModeChange={(vm, launched) => {
                              setPlaneViewMode(vm);
-                             if (launched) setPlaneLaunched(true);
+                             setPlaneLaunched(launched);
                            }}
                          />}
         {autopilotVisible && <AutopilotPlane model={planeModel} />}
@@ -910,26 +912,8 @@ export function Studio() {
         hideUI={hideUI}
       />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
-        {planeMode && (
-          <div style={{
-            position: 'absolute', bottom: 72, left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(0,0,0,0.6)', borderRadius: 8,
-            padding: '6px 16px', color: '#ddd', fontSize: 12,
-            pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
-            backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
-          }}>
-            {!planeLaunched
-              ? '✈ Espace / C → décoller   |   F / Échap → quitter'
-              : planeViewMode === 'landing'
-                ? '⬇ Atterrissage automatique…'
-                : planeViewMode === 'landed'
-                  ? '🛬 Atterri — orbite   |   F / Échap = quitter'
-                  : `Vue: ${planeViewMode}   |   C = changer vue   |   F / Échap = quitter`
-            }
-          </div>
-        )}
-        <VirtualDPad visible={!hideUI} />
+        {planeMode && <PlaneControls viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
+        <VirtualDPad visible={!hideUI && !planeMode} />
         <ViewControlBar
           hidden={planeMode}
           showCharacterModes

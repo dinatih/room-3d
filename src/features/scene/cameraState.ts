@@ -70,6 +70,8 @@ export const cameraState = {
   planeX: 0 as number,
   planeZ: 0 as number,
   planeYaw: 0 as number,
+  /** Vitesse réelle en cm/s (échelle du studio). */
+  planeSpeed: 0 as number,
   /** Vue courante dans le mode avion */
   planeViewMode: 'prelaunch' as 'prelaunch' | 'follow' | 'cockpit' | 'character' | 'landing' | 'landed',
   /** Vrai après le décollage (prelaunch terminé) */

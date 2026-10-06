@@ -27,6 +27,7 @@ import { ROOM_W, ROOM_D, WALL_H } from './wallData';
 import { cameraState } from './cameraState';
 import { useGLTFClone } from './useGLTFClone';
 import { LANDING_STRIPS } from './LandingStrips';
+import { planeInput } from './planeInput';
 
 // ── Types exportés ────────────────────────────────────────────────────────────
 
@@ -223,6 +224,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
   const _euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const _va    = useRef(new THREE.Vector3());
   const _vb    = useRef(new THREE.Vector3());
+  const previousPosition = useRef(new THREE.Vector3());
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -246,6 +248,8 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
     cameraState.mode          = 'plane';
     cameraState.planeViewMode = 'prelaunch';
     cameraState.planeLaunched = false;
+    cameraState.planeSpeed = 0;
+    camera.up.set(0, 1, 0);
     flight.current.pos.copy(START_POS);
     flight.current.yaw   = Math.PI;
     flight.current.pitch = -0.05;
@@ -257,17 +261,21 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
     viewModeRef.current  = 'prelaunch';
     prelaunchAngle.current = 0;
     keys.current.clear();
+    onVMRef.current?.('prelaunch', false);
 
     const onDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === 'f' || e.key === 'F') {
+      if (e.ctrlKey || e.metaKey || e.altKey || (e.target instanceof HTMLElement && (e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)))) return;
+      if (e.key === 'Escape') {
         e.preventDefault(); onExitRef.current(); return;
       }
       if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        if (e.repeat) return;
         if (!launchedRef.current) { launch(); return; }
         if (landingRef.current || landedRef.current) return; // pas de cycle pendant atterro
         const modes: PlaneViewMode[] = ['follow', 'cockpit', 'character'];
         const cur = viewModeRef.current as PlaneViewMode;
-        const idx = modes.indexOf(cur as any);
+        const idx = modes.indexOf(cur);
         changeVM(modes[(idx < 0 ? 0 : (idx + 1)) % modes.length]);
         return;
       }
@@ -285,9 +293,24 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
       keys.current.delete(e.key.toLowerCase());
       if (e.key === ' ') keys.current.delete(' ');
     };
+    const onCommand = (e: Event) => {
+      const command = (e as CustomEvent<string>).detail;
+      if (command === 'launch') launch();
+      if (command === 'view') onDown(new KeyboardEvent('keydown', { key: 'c' }));
+    };
+    const clearKeys = () => keys.current.clear();
+    const onVisibility = () => { if (document.hidden) clearKeys(); };
+    document.addEventListener('plane-command', onCommand);
+    window.addEventListener('blur', clearKeys);
+    document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('keydown', onDown);
     window.addEventListener('keyup',   onUp);
     return () => {
+      document.removeEventListener('plane-command', onCommand);
+      window.removeEventListener('blur', clearKeys);
+      document.removeEventListener('visibilitychange', onVisibility);
+      camera.up.set(0, 1, 0);
+      cameraState.planeSpeed = 0;
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup',   onUp);
       cameraState.mode          = 'orbit';
@@ -303,14 +326,14 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
     const s  = flight.current;
-    const vm = viewModeRef.current;
+    const previousPos = previousPosition.current.copy(s.pos);
 
     // ── Phase prelaunch ─────────────────────────────────────────────────────
     if (!launchedRef.current) {
       prelaunchAngle.current += dt * 0.35;
       const a = prelaunchAngle.current;
       _va.current.set(s.pos.x + 150 * Math.cos(a), s.pos.y + 70, s.pos.z + 150 * Math.sin(a));
-      camera.position.lerp(_va.current, 0.04);
+      camera.position.lerp(_va.current, 1 - Math.pow(1 - 0.04, dt * 60));
       camera.lookAt(s.pos);
       planeRef.current.position.copy(s.pos);
       _euler.current.set(0, s.yaw, 0);
@@ -329,7 +352,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
         landedPos.current.y + 60,
         landedPos.current.z + 120 * Math.sin(a),
       );
-      camera.position.lerp(_va.current, 0.04);
+      camera.position.lerp(_va.current, 1 - Math.pow(1 - 0.04, dt * 60));
       camera.lookAt(landedPos.current);
       cameraState.onUpdate?.();
       invalidate(); return;
@@ -373,7 +396,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
     // ── Physique de vol (ou d'atterrissage) ─────────────────────────────────
     if (landingRef.current) {
       // Aligner le cap sur la piste, niveler
-      s.yaw   = lerpAngle(s.yaw, landTargetYaw.current, 0.08);
+      s.yaw   = lerpAngle(s.yaw, landTargetYaw.current, 1 - Math.pow(1 - 0.08, dt * 60));
       s.pitch = s.pitch * Math.max(0, 1 - 3 * dt);
       s.roll  = s.roll  * Math.max(0, 1 - 3 * dt);
       _euler.current.set(s.pitch, s.yaw, s.roll);
@@ -390,6 +413,11 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
       // Atterri ?
       if (s.pos.y <= 5) {
         s.pos.y = 5;
+        s.speed = 0;
+        s.pitch = 0;
+        s.roll = 0;
+        _euler.current.set(0, s.yaw, 0);
+        s.quat.setFromEuler(_euler.current);
         landedRef.current = true;
         landedPos.current.copy(s.pos);
         changeVM('landed');
@@ -397,7 +425,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
     } else {
       // Vol normal
       const k = keys.current;
-      let pitchIn = 0, rollIn = 0, throttleIn = 0;
+      let pitchIn = planeInput.pitch, rollIn = planeInput.roll, throttleIn = planeInput.throttle;
       if (k.has('w') || k.has('arrowup'))    pitchIn -= 1;
       if (k.has('s') || k.has('arrowdown'))  pitchIn += 1;
       if (k.has('a') || k.has('arrowleft'))  rollIn  += 1;
@@ -405,6 +433,9 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
       if (k.has(' '))     throttleIn += 1;
       if (k.has('shift')) throttleIn -= 1;
 
+      pitchIn = THREE.MathUtils.clamp(pitchIn, -1, 1);
+      rollIn = THREE.MathUtils.clamp(rollIn, -1, 1);
+      throttleIn = THREE.MathUtils.clamp(throttleIn, -1, 1);
       s.pitch += pitchIn * PITCH_RATE * dt;
       s.roll  += rollIn  * ROLL_RATE  * dt;
       if (pitchIn === 0) s.pitch *= Math.max(0, 1 - PITCH_DAMP * dt);
@@ -431,21 +462,27 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
       if (s.pos.y > MAX_Y) s.pos.y = MAX_Y;
     }
 
+    _euler.current.set(s.pitch, s.yaw, s.roll);
+    s.quat.setFromEuler(_euler.current);
     planeRef.current.position.copy(s.pos);
     planeRef.current.quaternion.copy(s.quat);
+
+    const vm = viewModeRef.current;
+    camera.up.set(0, 1, 0);
+    cameraState.planeSpeed = landedRef.current || dt === 0 ? 0 : s.pos.distanceTo(previousPos) / dt;
 
     // ── Caméra ─────────────────────────────────────────────────────────────
     if (vm === 'follow' || vm === 'landing') {
       _va.current.copy(CAM_FOLLOW_OFFSET).applyQuaternion(s.quat).add(s.pos);
-      camera.position.lerp(_va.current, CAM_LERP);
+      camera.position.lerp(_va.current, 1 - Math.pow(1 - CAM_LERP, dt * 60));
       _vb.current.copy(CAM_FOLLOW_LOOK).applyQuaternion(s.quat).add(s.pos);
       camera.lookAt(_vb.current);
 
     } else if (vm === 'cockpit') {
       _va.current.set(0, 4, -22).applyQuaternion(s.quat).add(s.pos);
       camera.position.copy(_va.current);
-      _vb.current.set(0, 0, -300).applyQuaternion(s.quat).add(s.pos);
-      camera.lookAt(_vb.current);
+      // La caméra et l'avion partagent leurs axes : tangage ET roulis.
+      camera.quaternion.copy(s.quat);
 
     } else if (vm === 'character') {
       const wx = cameraState.characterX;
