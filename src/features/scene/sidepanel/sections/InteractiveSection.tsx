@@ -1,5 +1,6 @@
 import { useSceneStore } from '../../store/useSceneStore';
 import { positionState } from '@features/scene/positionState';
+import { DOUBLE_BED_POSITIONS } from '../../furniturePositions';
 import { dispatchKey, type FurnitureState } from '../types';
 import type { PlaneModelKey } from '@features/scene/PaperPlane';
 
@@ -106,8 +107,7 @@ export function InteractiveSection({
           <span className="badge bg-primary">
             {(() => {
               const p = positionState['bed-position'];
-              const labels = ['Centré', 'Mur Ouest', 'Mur Est'];
-              return p ? labels[p.idx] ?? `Pos ${p.idx + 1}` : 'Centré';
+              return DOUBLE_BED_POSITIONS[p?.idx ?? 0]?.label ?? `Pos ${(p?.idx ?? 0) + 1}`;
             })()}
           </span>
         </button>

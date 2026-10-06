@@ -10,6 +10,7 @@ import * as THREE   from 'three';
 import { hoverState } from '@features/scene/hoverState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { positionState } from '@features/scene/positionState';
+import { DOUBLE_BED_POSITIONS } from './furniturePositions';
 import { cameraState } from '@features/scene/cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
@@ -126,8 +127,7 @@ const ACTIONS: Record<string, ActionDef> = {
   'bed-double':    { btnLabel: () => useSceneStore.getState().furniture.bedDouble ? 'Lits séparés' : 'Lit double', toggleKey: 'bed-double' },
   'bed-position':  { btnLabel: () => {
     const p = positionState['bed-position'];
-    const labels = ['Centré', 'Mur Ouest', 'Mur Est'];
-    return p ? `Position (${labels[p.idx] ?? p.idx + 1}) →` : 'Changer position →';
+    return p ? `Position (${DOUBLE_BED_POSITIONS[p.idx]?.label ?? p.idx + 1}) →` : 'Changer position →';
   }, toggleKey: 'bed-position' },
   'desk1-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk1-toggle'  },
   'desk2-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk2-toggle'  },
