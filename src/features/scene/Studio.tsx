@@ -914,27 +914,6 @@ export function Studio() {
         hideUI={hideUI}
       />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
-        {laraGridActive && (
-          <AnimFrameController
-            animName={currentLaraAnimLabel}
-            animKey={laraGridAnim}
-            onCycleAnim={cycleLaraAnim}
-            onSelectAnim={(nextVal) => {
-              setLaraGridAnim(nextVal);
-              document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-lara', value: nextVal } }));
-              useAnimPreviewStore.getState().play();
-            }}
-            bottom={16}
-            style={{
-              position: 'fixed',
-              left: isMobile ? 12 : 288,
-              right: isMobile ? 12 : 24,
-              maxWidth: isMobile ? 'calc(100vw - 24px)' : 920,
-              margin: '0 auto',
-              zIndex: 96,
-            }}
-          />
-        )}
         {planeMode && (
           <div style={{
             position: 'absolute', bottom: 72, left: '50%',
@@ -966,7 +945,28 @@ export function Studio() {
             setPlaneLaunched(false);
             setPlaneMode(true);
           }}
-        />
+        >
+          {laraGridActive && (
+            <AnimFrameController
+              compact
+              animName={currentLaraAnimLabel}
+              animKey={laraGridAnim}
+              onCycleAnim={cycleLaraAnim}
+              onSelectAnim={(nextVal) => {
+                setLaraGridAnim(nextVal);
+                document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-lara', value: nextVal } }));
+                useAnimPreviewStore.getState().play();
+              }}
+              style={{
+                position: 'relative',
+                inset: 'auto',
+                width: '100%',
+                margin: 0,
+                zIndex: 96,
+              }}
+            />
+          )}
+        </ViewControlBar>
         <HoverOverlay />
         {layers.aiZones && <ZoneAiDebugOverlay />}
         {layers.wallEdges && <EdgeHoverOverlay />}

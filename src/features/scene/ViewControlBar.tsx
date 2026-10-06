@@ -178,8 +178,9 @@ export function ViewControlBar({
   }
 
   return (
-    <div className="view-control-bar-dock" style={{ position: 'fixed', zIndex: 1000, ...positionStyle }}>
+    <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle }}>
       {bar}
+      {children && <div className="view-control-bar-dock__content w-100">{children}</div>}
       {activeCameraView && (
         <span className="badge text-bg-dark bg-opacity-75 mt-1">
           {activeCameraView === 'iso-se' ? 'ISO Sud-Est'
