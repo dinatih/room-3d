@@ -12,6 +12,10 @@ function heatColor(v: number, warn: number, danger: number) {
   return v >= danger ? '#dc2626' : v >= warn ? '#d97706' : '#2563eb';
 }
 
+function fpsTextClass(fps: number) {
+  return fps >= 50 ? 'text-success' : fps >= 30 ? 'text-warning' : 'text-danger';
+}
+
 // ── FPS canvas ────────────────────────────────────────────────────────────────
 
 const FPS_W = 140, FPS_H = 46;
@@ -103,7 +107,6 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
   const valid    = samples.filter(v => v > 0);
   const fpsMin   = valid.length ? Math.min(...valid) : 0;
   const fpsMax   = valid.length ? Math.max(...valid) : 0;
-  const fpsClass = curFps >= 50 ? 'text-success' : curFps >= 30 ? 'text-warning' : 'text-danger';
 
   const handleRefreshScene = useCallback(() => {
     devState.refreshScene?.();
@@ -125,8 +128,11 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
               style={{ width: FPS_W, height: 'auto', minHeight: FPS_H }}
             />
             <div className="perf-stats d-flex flex-column text-start text-nowrap small lh-sm">
-              <span className={`fw-bold ${isIdle ? 'text-warning' : fpsClass}`}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
-              <span className="fw-medium text-secondary">min:{fpsMin} max:{fpsMax}</span>
+              <span className={`fw-bold ${isIdle ? 'text-warning' : fpsTextClass(curFps)}`}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
+              <span className="fw-medium text-secondary">
+                min:<span className={fpsTextClass(fpsMin)}>{fpsMin}</span>{' '}
+                max:<span className={fpsTextClass(fpsMax)}>{fpsMax}</span>
+              </span>
               <span title="Draw calls" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.drawCalls >= 500 ? 'text-danger' : devState.drawCalls >= 200 ? 'text-warning' : 'text-primary'}`}>
                 DC: {isIdle ? '0' : devState.drawCalls.toLocaleString()}
               </span>
