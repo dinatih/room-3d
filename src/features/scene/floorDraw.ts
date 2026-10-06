@@ -14,6 +14,7 @@ import {
 
 import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_CLOSETS, SEG_WINDOWS, DOOR_SWINGS } from './floorData';
 import { BATHTUB } from './bathtubData';
+import { drawEquipment } from './floorEquipment';
 import {
   GARDEN_PANEL_DEFS,
   PARTITION_THICKNESS, WALL_THICKNESS,
@@ -118,6 +119,13 @@ export function drawFloorPlan(
 
   // ── Baignoire du jardin : rebord arrondi et eau, à l'échelle de la scène ─────
   if (showEquipment) {
+    ctx.save();
+    ctx.translate(tx(0), tz(0));
+    ctx.scale(S, S);
+    ctx.lineWidth = Math.max(2, 0.65 / S);
+    drawEquipment(ctx);
+    ctx.restore();
+
     ctx.save();
     ctx.translate(tx(BATHTUB.position[0]), tz(BATHTUB.position[2]));
     ctx.rotate(-BATHTUB.rotation[1]);
