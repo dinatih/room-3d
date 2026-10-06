@@ -943,7 +943,7 @@ export function Studio() {
         )}
         {isMobile && <Minimap />}
         <VirtualDPad />
-        <ViewControlBar hidden={planeMode} />
+        <ViewControlBar hidden={planeMode} showCharacterModes />
         <HoverOverlay />
         {layers.aiZones && <ZoneAiDebugOverlay />}
         {layers.wallEdges && <EdgeHoverOverlay />}

@@ -31,10 +31,13 @@ export interface ViewControlBarProps {
   inline?: boolean;
   /** Masquer le composant (ex: mode immersif) */
   hidden?: boolean;
+  /** Afficher les commandes Follow et FPV de la scène principale */
+  showCharacterModes?: boolean;
 }
 
-export function ViewControlBar({ position = 'bottom-center', inline = false, hidden = false }: ViewControlBarProps) {
+export function ViewControlBar({ position = 'bottom-center', inline = false, hidden = false, showCharacterModes = false }: ViewControlBarProps) {
   const cameraProjection = useSceneStore(s => s.cameraProjection);
+  const cameraMode = useSceneStore(s => s.cameraMode);
   const activeCameraView = useSceneStore(s => s.activeCameraView);
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
 
@@ -51,6 +54,9 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
   }[position];
 
   const isActive = (key: string) => activeCameraView === key;
+  const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv') => {
+    document.dispatchEvent(new CustomEvent('camera-mode', { detail: mode }));
+  };
 
   const viewButton = (
     v: { key: string; label: string; bi: string },
@@ -101,6 +107,38 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
         <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} style={{ fontSize: '13px' }} />
         <span>{isOrtho ? 'ORTHO' : 'PERSP'}</span>
       </button>
+
+      {showCharacterModes && <>
+        <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
+        <button
+          className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${cameraMode === 'follow' ? 'fw-bold' : ''}`}
+          style={{
+            background: cameraMode === 'follow' ? 'rgba(52,211,153,0.9)' : 'rgba(255,255,255,0.08)',
+            color: cameraMode === 'follow' ? '#1a1a2e' : 'rgba(255,255,255,0.8)',
+            fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
+          }}
+          onClick={() => dispatchCameraMode('toggle-follow')}
+          title="Activer ou quitter le suivi à la troisième personne"
+          aria-pressed={cameraMode === 'follow'}
+        >
+          <i className="bi bi-person-walking" />
+          <span>FOLLOW</span>
+        </button>
+        <button
+          className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${cameraMode === 'fpv' ? 'fw-bold' : ''}`}
+          style={{
+            background: cameraMode === 'fpv' ? 'rgba(56,189,248,0.9)' : 'rgba(255,255,255,0.08)',
+            color: cameraMode === 'fpv' ? '#1a1a2e' : 'rgba(255,255,255,0.8)',
+            fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
+          }}
+          onClick={() => dispatchCameraMode('fpv')}
+          title="Passer en vue subjective FPV"
+          aria-pressed={cameraMode === 'fpv'}
+        >
+          <i className="bi bi-eye-fill" />
+          <span>FPV</span>
+        </button>
+      </>}
 
       <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
 

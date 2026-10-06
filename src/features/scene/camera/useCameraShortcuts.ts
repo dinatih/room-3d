@@ -336,6 +336,19 @@ export function useCameraShortcuts({
       }
     };
 
+    const onCameraMode = (e: Event) => {
+      if (planeModeRef.current || cameraState.isIntroRunning) return;
+      const requestedMode = (e as CustomEvent<'toggle-follow' | 'fpv'>).detail;
+      const curX = cameraState.characterX ?? followPos.current.x;
+      const curZ = cameraState.characterZ ?? followPos.current.z;
+      if (requestedMode === 'fpv') {
+        enterFollow(curX, curZ, 'fpv');
+      } else if (requestedMode === 'toggle-follow') {
+        if (modeRef.current === 'follow') exitFollow();
+        else enterFollow(curX, curZ, 'follow');
+      }
+    };
+
     const onEnterTop = () => {
       enterTop(false);
     };
@@ -345,6 +358,7 @@ export function useCameraShortcuts({
     document.addEventListener('minimap-pov', onPov);
     document.addEventListener('camera-pov', onPov);
     document.addEventListener('camera-view', onView);
+    document.addEventListener('camera-mode', onCameraMode);
     document.addEventListener('camera-ortho-view', onOrthoView);
     document.addEventListener('camera-enter-top', onEnterTop);
     return () => {
@@ -353,6 +367,7 @@ export function useCameraShortcuts({
       document.removeEventListener('minimap-pov', onPov);
       document.removeEventListener('camera-pov', onPov);
       document.removeEventListener('camera-view', onView);
+      document.removeEventListener('camera-mode', onCameraMode);
       document.removeEventListener('camera-ortho-view', onOrthoView);
       document.removeEventListener('camera-enter-top', onEnterTop);
     };
