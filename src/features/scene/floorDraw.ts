@@ -13,6 +13,7 @@ import {
 } from './wallData';
 
 import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_CLOSETS, SEG_WINDOWS, DOOR_SWINGS } from './floorData';
+import { BATHTUB } from './bathtubData';
 import {
   GARDEN_PANEL_DEFS,
   PARTITION_THICKNESS, WALL_THICKNESS,
@@ -113,6 +114,27 @@ export function drawFloorPlan(
     ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
   }
   ctx.setLineDash([]);
+
+  // ── Baignoire du jardin : rebord arrondi et eau, à l'échelle de la scène ─────
+  ctx.save();
+  ctx.translate(tx(BATHTUB.position[0]), tz(BATHTUB.position[2]));
+  ctx.rotate(-BATHTUB.rotation[1]);
+  const tubW = BATHTUB.width * S;
+  const tubL = BATHTUB.length * S;
+  const rim = BATHTUB.wallThickness * S;
+  const radius = BATHTUB.cornerRadius * S;
+  ctx.fillStyle = '#d4b483';
+  ctx.strokeStyle = '#7a5830';
+  ctx.lineWidth = Math.max(S, 0.8);
+  ctx.beginPath();
+  ctx.roundRect(-tubW / 2, -tubL / 2, tubW, tubL, radius);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(26, 111, 168, 0.8)';
+  ctx.beginPath();
+  ctx.roundRect(-tubW / 2 + rim, -tubL / 2 + rim, tubW - 2 * rim, tubL - 2 * rim, radius - rim);
+  ctx.fill();
+  ctx.restore();
 
   // ── Segments Murs (2 faces par mur/cloison) ──────────────────────────────────
   ctx.lineCap = 'butt';

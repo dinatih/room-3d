@@ -6,8 +6,9 @@
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
+import { BATHTUB } from '../bathtubData';
 
-const TUB_L = 150, TUB_W = 70, TUB_H = 50, T = 4, RC = 35;
+const { length: TUB_L, width: TUB_W, height: TUB_H, wallThickness: T, cornerRadius: RC } = BATHTUB;
 
 const tubMat   = new THREE.MeshStandardMaterial({ color: 0xd4b483, roughness: 0.4 });
 // Intérieur de la cuve : plus sombre pour simuler l'ombre portée des parois.

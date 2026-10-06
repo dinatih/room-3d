@@ -6,6 +6,7 @@ import type { Item } from '@shared/types';
 import { ArmrestSofa } from '../items/ArmrestSofa';
 import { ArmlessSofa } from '../items/ArmlessSofa';
 import { Bathtub } from '../items/Bathtub';
+import { BATHTUB } from '../bathtubData';
 import { ChestBench } from '../items/ChestBench';
 import { PottedPalm } from '../items/PottedPalm';
 import { PottedYucca } from '../items/PottedYucca';
@@ -44,7 +45,7 @@ export function GardenFurniture() {
       </group>
 
       {/* Baignoire Balnéo */}
-      <group position={[120, 0, -300]} rotation={[0, 1, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Baignoire Balnéo' }}>
+      <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ animUnit: true, skipMerge: true, itemName: 'Baignoire Balnéo' }}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
