@@ -219,3 +219,28 @@ export function updateUrlHideUI(hidden: boolean) {
     window.history.replaceState(null, '', url.toString());
   } catch {}
 }
+
+/** ?flight, ?flight=1 ou ?flight=true ouvre le mode avion au chargement. */
+export function parseUrlFlightMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  const params = getUrlParams();
+  if (!params.has('flight')) return false;
+  const value = params.get('flight')?.trim().toLowerCase();
+  return value === '' || value === '1' || value === 'true' || value === 'yes' || value === 'on';
+}
+
+export function updateUrlFlightMode(active: boolean) {
+  if (typeof window === 'undefined') return;
+  const url = new URL(window.location.href);
+  if (active) url.searchParams.set('flight', '1');
+  else url.searchParams.delete('flight');
+  // Nettoyer aussi le flag historique dans une route hash, sans perdre ses autres paramètres.
+  const separator = url.hash.indexOf('?');
+  if (separator >= 0) {
+    const params = new URLSearchParams(url.hash.slice(separator + 1));
+    params.delete('flight');
+    const query = params.toString();
+    url.hash = url.hash.slice(0, separator) + (query ? `?${query}` : '');
+  }
+  window.history.replaceState(null, '', url.toString());
+}

@@ -23,3 +23,5 @@ export const LAYER_FLOOR_COVERINGS  = 25; // Revêtements de sol (parquet, carre
 export const LAYER_DOORS            = 26; // Portes (séjour, SDB, entrée, baie vitrée)
 export const LAYER_GRASS            = 27; // Herbe et sol extérieur (BermudaGround)
 export const LAYER_STRUCTURE        = 28; // Dalle béton, plafond (calque dédié, isolé du layer 0)
+
+export const LAYER_AIRCRAFT = 29; // Avions joueur et autopilote, inclus dans les miroirs LQ

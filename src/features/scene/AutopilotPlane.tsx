@@ -17,6 +17,8 @@ import * as THREE from 'three';
 
 import { ROOM_W } from './wallData';
 import { cameraState } from './cameraState';
+import { CategoryLayerGroup } from './sceneLayer';
+import { LAYER_AIRCRAFT } from './config';
 import { PlaneMesh, type PlaneModelKey } from './PaperPlane';
 
 // ── Paramètres ────────────────────────────────────────────────────────────────
@@ -69,7 +71,9 @@ export function AutopilotPlane({ model = 'paper' }: AutopilotPlaneProps) {
 
   return (
     <group ref={groupRef}>
-      <PlaneMesh model={model} />
+      <CategoryLayerGroup layer={LAYER_AIRCRAFT} register={false}>
+        <PlaneMesh model={model} />
+      </CategoryLayerGroup>
     </group>
   );
 }

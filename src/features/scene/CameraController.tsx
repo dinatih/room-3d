@@ -774,7 +774,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
 
     if (mode === 'follow' || mode === 'fpv') {
-      requestAnimationFrame(() => updateFollowLook());
+      requestAnimationFrame(() => { if (!planeModeRef.current) updateFollowLook(); });
     }
   }, [mode, camera, updateFollowLook]);
 
@@ -797,6 +797,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const initialModeLaunchedRef = useRef(false);
   useEffect(() => {
     if (initialModeLaunchedRef.current) return;
+    if (planeModeRef.current) return;
     initialModeLaunchedRef.current = true;
 
     const startMode = parseUrlCameraMode();
@@ -826,6 +827,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // Écoute de l'événement de lancement pour démarrer l'animation d'intro
   useEffect(() => {
     const onStartIntro = () => {
+      if (planeModeRef.current) {
+        cameraState.mode = 'plane';
+        cameraState.isSceneLaunched = true;
+        cameraState.isIntroRunning = false;
+        window.dispatchEvent(new CustomEvent('camera-intro-finished'));
+        invalidate();
+        return;
+      }
       if (!ctrlRef.current) return;
       if (!introCtrlRef.current) {
         introCtrlRef.current = new CameraIntroController(camera, ctrlRef.current);

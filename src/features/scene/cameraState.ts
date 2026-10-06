@@ -72,6 +72,8 @@ export const cameraState = {
   planeYaw: 0 as number,
   /** Vitesse réelle en cm/s (échelle du studio). */
   planeSpeed: 0 as number,
+  /** Contact de l’avion avec la limite du dôme : révèle sa grille intérieure. */
+  planeSkyContact: false as boolean,
   /** Vue courante dans le mode avion */
   planeViewMode: 'prelaunch' as 'prelaunch' | 'follow' | 'cockpit' | 'character' | 'landing' | 'landed',
   /** Vrai après le décollage (prelaunch terminé) */

@@ -29,6 +29,9 @@ import { cameraState } from './cameraState';
 import { useGLTFClone } from './useGLTFClone';
 import { LANDING_STRIPS } from './LandingStrips';
 import { planeInput } from './planeInput';
+import { CategoryLayerGroup } from './sceneLayer';
+import { LAYER_AIRCRAFT } from './config';
+import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 
 // ── Types exportés ────────────────────────────────────────────────────────────
 
@@ -39,11 +42,6 @@ export type PlaneViewMode = 'prelaunch' | 'follow' | 'cockpit' | 'character' | '
 
 const START_POS    = new THREE.Vector3(ROOM_W / 2, WALL_H + 250, ROOM_D / 2 + 200);
 const MIN_Y        = 20;
-const MAX_Y        = 2500;
-const WORLD_X_MIN  = -1500;
-const WORLD_X_MAX  = ROOM_W + 1500;
-const WORLD_Z_MIN  = -1500;
-const WORLD_Z_MAX  = ROOM_D + 1500;
 
 const GRAVITY      = 30;
 const SPEED_MIN    = 50;
@@ -235,6 +233,9 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
   const _va    = useRef(new THREE.Vector3());
   const _vb    = useRef(new THREE.Vector3());
   const previousPosition = useRef(new THREE.Vector3());
+  const planeBounds = useRef(new THREE.Box3());
+  const planeSphere = useRef(new THREE.Sphere());
+  const skyCenter = useMemo(() => new THREE.Vector3(...SKY_CENTER), []);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -259,6 +260,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
     cameraState.planeViewMode = 'prelaunch';
     cameraState.planeLaunched = false;
     cameraState.planeSpeed = 0;
+    cameraState.planeSkyContact = false;
     camera.up.set(0, 1, 0);
     flight.current.pos.copy(START_POS);
     flight.current.yaw   = Math.PI;
@@ -330,6 +332,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
       document.removeEventListener('visibilitychange', onVisibility);
       camera.up.set(0, 1, 0);
       cameraState.planeSpeed = 0;
+      cameraState.planeSkyContact = false;
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup',   onUp);
       cameraState.mode          = 'orbit';
@@ -475,16 +478,30 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
       _va.current.set(0, 0, -1).applyQuaternion(s.quat);
       s.pos.addScaledVector(_va.current, s.speed * dt);
       s.pos.y -= GRAVITY * dt;
-      s.pos.x  = Math.max(WORLD_X_MIN, Math.min(WORLD_X_MAX, s.pos.x));
-      s.pos.z  = Math.max(WORLD_Z_MIN, Math.min(WORLD_Z_MAX, s.pos.z));
       if (s.pos.y < MIN_Y) { s.pos.y = MIN_Y; s.pitch = Math.max(s.pitch, 0.1); }
-      if (s.pos.y > MAX_Y) s.pos.y = MAX_Y;
     }
 
     _euler.current.set(s.pitch, s.yaw, s.roll);
     s.quat.setFromEuler(_euler.current);
     planeRef.current.position.copy(s.pos);
     planeRef.current.quaternion.copy(s.quat);
+
+    // La limite suit le dôme réel et l'encombrement du modèle courant.
+    planeRef.current.updateWorldMatrix(true, true);
+    planeBounds.current.setFromObject(planeRef.current, true);
+    cameraState.planeSkyContact = false;
+    // Le groupe peut être vide pendant le chargement Suspense d'un modèle.
+    if (!planeBounds.current.isEmpty()) {
+      planeBounds.current.getBoundingSphere(planeSphere.current);
+      _va.current.copy(planeSphere.current.center).sub(skyCenter);
+      const distance = _va.current.length();
+      const penetration = distance + planeSphere.current.radius - SKY_RADIUS;
+      if (penetration >= 0) {
+        cameraState.planeSkyContact = true;
+        s.pos.addScaledVector(_va.current.normalize(), -penetration);
+        planeRef.current.position.copy(s.pos);
+      }
+    }
 
     const vm = viewModeRef.current;
     camera.up.set(0, 1, 0);
@@ -523,7 +540,9 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
 
   return (
     <group ref={planeRef}>
-      <PlaneMesh model={model} />
+      <CategoryLayerGroup layer={LAYER_AIRCRAFT} register={false}>
+        <PlaneMesh model={model} />
+      </CategoryLayerGroup>
     </group>
   );
 }

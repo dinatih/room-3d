@@ -7,9 +7,9 @@ import { getHdriById } from './hdriConfig';
 import { CategoryLayerGroup } from './sceneLayer';
 import { LAYER_ENVIRONMENT } from '@config';
 import { BnfSkyMarker } from './BnfSkyMarker';
+import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
+import { cameraState } from './cameraState';
 
-const SKY_CENTER: [number, number, number] = [150, 0, 150];
-const SKY_RADIUS = 3600;
 const SKY_FADE_START = SKY_RADIUS * 0.82;
 const SKY_FADE_END = SKY_RADIUS * 1.04;
 const WIREFRAME_FADE_START = SKY_RADIUS * 0.72;
@@ -94,6 +94,7 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
   const wireRef = useRef<THREE.Mesh>(null);
   const skyCenter = useMemo(() => new THREE.Vector3(...SKY_CENTER), []);
   const lastDistRef = useRef<number>(-1);
+  const lastContactRef = useRef(false);
 
   const shellMaterial = useMemo(() => new THREE.MeshBasicMaterial({
     map: texture,
@@ -107,7 +108,7 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
 
   const wireMaterial = useMemo(() => new THREE.MeshBasicMaterial({
     color: 0xff233d,
-    side: THREE.FrontSide,
+    side: THREE.DoubleSide,
     depthTest: true,
     depthWrite: false,
     fog: false,
@@ -124,7 +125,9 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
 
     const dist = camera.position.distanceTo(skyCenter);
     // Optimisation : ignorer le recalcul si la distance caméra n'a pas varié de plus de 5cm
-    if (Math.abs(dist - lastDistRef.current) < 5) return;
+    const contact = cameraState.mode === 'plane' && cameraState.planeSkyContact;
+    if (Math.abs(dist - lastDistRef.current) < 5 && contact === lastContactRef.current) return;
+    lastContactRef.current = contact;
     lastDistRef.current = dist;
 
     // 1. Dôme intérieur
@@ -134,7 +137,7 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
 
     // 2. Coque extérieure
     const shellFade = THREE.MathUtils.smoothstep(dist, EXTERIOR_FADE_START, EXTERIOR_FADE_END);
-    const wireFade = THREE.MathUtils.smoothstep(dist, WIREFRAME_FADE_START, WIREFRAME_FADE_END);
+    const wireFade = contact ? 1 : THREE.MathUtils.smoothstep(dist, WIREFRAME_FADE_START, WIREFRAME_FADE_END);
     const visible = shellFade > 0.01 || wireFade > 0.01;
 
     shell.visible = visible;
@@ -161,7 +164,7 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
         <sphereGeometry args={[SKY_RADIUS, 96, 96]} />
       </mesh>
       <mesh ref={wireRef} material={wireMaterial} renderOrder={-880} visible={false}>
-        <sphereGeometry args={[SKY_RADIUS * 1.002, 32, 24]} />
+        <sphereGeometry args={[SKY_RADIUS, 32, 24]} />
       </mesh>
     </>
   );

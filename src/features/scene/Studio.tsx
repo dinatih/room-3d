@@ -14,7 +14,7 @@ import {
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
 import { SKY_START_POS }     from '@features/scene/camera';
-import { parseUrlHideUI, updateUrlHideUI } from '@features/scene/camera/cameraUrlParams';
+import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode } from '@features/scene/camera/cameraUrlParams';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
 import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
@@ -446,7 +446,8 @@ export function Studio() {
   }, []);
 
 
-  const [planeMode,          setPlaneMode]          = useState(false);
+  const [planeMode,          setPlaneMode]          = useState(parseUrlFlightMode);
+  useEffect(() => { updateUrlFlightMode(planeMode); }, [planeMode]);
   const [planeModel,         setPlaneModel]         = useState<PlaneModelKey>('paper');
   const cyclePlaneModel = useCallback(() => {
     const models: PlaneModelKey[] = ['paper', 'rocket', 'comet'];
