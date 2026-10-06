@@ -383,6 +383,14 @@ export function SidePanel({
       perf: <DevToolsGroups Group={Group} compact headerless />,
       plan2d: <Minimap embedded showGroup={false} />,
     };
+    const tabIcons: Record<Exclude<TabKey, null>, string> = {
+      profile: 'bi-briefcase-fill',
+      layers: 'bi-layers-fill',
+      personnage: 'bi-person-fill',
+      perf: 'bi-bar-chart-fill',
+      plan2d: 'bi-map-fill',
+      interactif: 'bi-controller',
+    };
 
     return (
       <>
@@ -433,11 +441,10 @@ export function SidePanel({
 
         {/* Tab bar */}
         <div 
-          className={`position-fixed bottom-0 start-0 end-0 border-top shadow-lg d-flex align-items-center bg-white bg-opacity-75 overflow-x-auto text-nowrap py-1 ui-panel-bottom ${hideUI ? 'ui-hidden' : ''}`}
+          className={`position-fixed bottom-0 start-0 end-0 view-control-bar glass-card w-100 d-flex flex-nowrap justify-content-start align-items-center gap-1 overflow-x-auto text-nowrap p-1 rounded-3 border shadow-lg ui-panel-bottom ${hideUI ? 'ui-hidden' : ''}`}
           style={{ 
             zIndex: 100, 
             paddingBottom: 'env(safe-area-inset-bottom)', 
-            backdropFilter: 'blur(8px)',
             scrollbarWidth: 'none',
             pointerEvents: hideUI ? 'none' : 'auto',
           }}
@@ -452,7 +459,7 @@ export function SidePanel({
               className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isVRActive ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
               title="Mode Réalité Virtuelle (WebXR)"
             >
-              <span className="fs-5 lh-1">🥽</span>
+              <span className="fs-5 lh-1"><i className="bi bi-headset" aria-hidden="true" /></span>
               <span className="fw-semibold small">{isVRActive ? '✕ VR' : 'VR'}</span>
             </button>
           )}
@@ -466,7 +473,7 @@ export function SidePanel({
             className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${isImmersiveActive ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
             title="Mode Immersif Gyroscope (Plein écran)"
           >
-            <span className="fs-5 lh-1">👁️</span>
+            <span className="fs-5 lh-1"><i className="bi bi-eye-fill" aria-hidden="true" /></span>
             <span className="fw-semibold small">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
           </button>
 
@@ -477,7 +484,7 @@ export function SidePanel({
             className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 ${virtualDPadVisible ? 'text-danger fw-bold' : 'text-secondary'} py-1 px-2`}
             title="Afficher ou masquer les commandes directionnelles"
           >
-            <span className="fs-5 lh-1"><i className="bi bi-dpad-fill" aria-hidden="true" /></span>
+            <span className="fs-5 lh-1"><i className="bi bi-arrows-move" aria-hidden="true" /></span>
             <span className="fw-semibold small">Dépl.</span>
           </button>
 
@@ -486,7 +493,7 @@ export function SidePanel({
             onClick={onOpenInventory}
             className="btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 text-secondary py-1 px-2"
           >
-            <span className="fs-5 lh-1">📦</span>
+            <span className="fs-5 lh-1"><i className="bi bi-box-seam-fill" aria-hidden="true" /></span>
             <span className="fw-semibold small">Inventaire</span>
           </button>
           
@@ -500,7 +507,7 @@ export function SidePanel({
                     onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
                     className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center py-1 px-2 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
                   >
-                    <span className="fs-5 lh-1">{t.emoji}</span>
+                    <span className="fs-5 lh-1"><i className={`bi ${tabIcons[t.key]}`} aria-hidden="true" /></span>
                     <span className="fw-semibold small">{t.label}</span>
                   </button>
                   <button
@@ -531,7 +538,7 @@ export function SidePanel({
                 onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
                 className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center flex-shrink-0 py-1 px-2 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
               >
-                <span className="fs-5 lh-1">{t.emoji}</span>
+                <span className="fs-5 lh-1"><i className={`bi ${tabIcons[t.key]}`} aria-hidden="true" /></span>
                 <span className="fw-semibold small">{t.label}</span>
               </button>
             );
