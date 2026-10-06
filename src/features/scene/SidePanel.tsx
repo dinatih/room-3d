@@ -27,6 +27,8 @@ import { LayersSection } from './sidepanel/sections/LayersSection';
 import { InteractiveSection } from './sidepanel/sections/InteractiveSection';
 import { CharacterSection } from './sidepanel/sections/CharacterSection';
 import { ProfileSection } from './sidepanel/sections/ProfileSection';
+import { DevToolsGroups } from './DevToolsOverlay';
+import { Minimap } from './Minimap';
 
 export type {
   FurnitureState,
@@ -368,6 +370,7 @@ export function SidePanel({
       layers: '📑 Calques',
       personnage: '👤 PNJ',
       perf: '📊 Perf',
+      plan2d: '🗺️ Plan 2D',
       interactif: '🎮 Interactif',
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
@@ -375,7 +378,8 @@ export function SidePanel({
       layers: layersSectionContent,
       interactif: interactiveSectionContent,
       personnage: characterSectionContent,
-      perf: null,
+      perf: <DevToolsGroups Group={Group} compact />,
+      plan2d: <Minimap embedded />,
     };
 
     return (
@@ -473,7 +477,7 @@ export function SidePanel({
             <span className="fw-semibold small">Inventaire</span>
           </button>
           
-          {TABS.filter(t => t.key !== 'perf').map(t => {
+          {TABS.map(t => {
             const active = activeTab === t.key;
             if (t.key === 'personnage') {
               return (
@@ -572,6 +576,8 @@ export function SidePanel({
         <Group emoji="📑" title="Calques" extra={layersHeaderButtons}>{layersSectionContent}</Group>
         <Group emoji="🎮" title="Interactif">{interactiveSectionContent}</Group>
         <Group emoji="👤" title="PNJ" extra={personnageHeaderButtons}>{characterSectionContent}</Group>
+        <DevToolsGroups Group={Group} compact />
+        <Minimap embedded />
       </div>
 
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}

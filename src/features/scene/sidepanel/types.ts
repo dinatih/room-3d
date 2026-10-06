@@ -195,11 +195,12 @@ export interface SidePanelProps {
   hideUI?:                 boolean;
 }
 
-export type TabKey = 'profile' | 'layers' | 'personnage' | 'perf' | 'interactif' | null;
+export type TabKey = 'profile' | 'layers' | 'personnage' | 'perf' | 'plan2d' | 'interactif' | null;
 
 export const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
   { key: 'profile',    emoji: '💼', label: 'Profil' },
   { key: 'perf',       emoji: '📊', label: 'Perf' },
+  { key: 'plan2d',     emoji: '🗺️', label: 'Plan 2D' },
   { key: 'layers',     emoji: '📑', label: 'Calques' },
   { key: 'interactif', emoji: '🎮', label: 'Interact' },
   { key: 'personnage', emoji: '👤', label: 'Perso' },

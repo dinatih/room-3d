@@ -16,8 +16,6 @@ import { cameraState }      from '@features/scene/cameraState';
 import { SKY_START_POS }     from '@features/scene/camera';
 import { parseUrlHideUI, updateUrlHideUI } from '@features/scene/camera/cameraUrlParams';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
-import { RightSidePanel }   from '@features/scene/RightSidePanel';
-import { Minimap }          from '@features/scene/Minimap';
 import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController } from '@features/scene/sceneLayer';
@@ -60,7 +58,6 @@ import { WALKER_ANIM_OPTIONS }   from '@features/scene/animOptions';
 import { resolveAnimationId, resolveAnimationPath }    from './animations/animationResolver';
 import { NPC_WALK_ANIMATIONS }   from './ai/agent/agentWalkAnimations';
 import { cacheDynamicGLTF }      from './character/useCharacterAnimations';
-import { useIsMobile }           from '@shared/hooks/useIsMobile';
 import { duoSessionManager }     from './ai/duoSessionManager';
 import { LoadingShiba } from './LoadingShiba';
 
@@ -488,7 +485,6 @@ export function Studio() {
     }
   }, [laraGridActive, laraCount, extraCharacters, activeExtraIds, activeMainIds]);
 
-  const isMobile = useIsMobile();
   const [laraGridAnim, setLaraGridAnim] = useState<string>('idle');
 
   // Synchronisation avec les changements d'animation de Lara
@@ -933,7 +929,6 @@ export function Studio() {
             }
           </div>
         )}
-        {isMobile && <Minimap />}
         <VirtualDPad />
         <ViewControlBar
           hidden={planeMode}
@@ -976,7 +971,6 @@ export function Studio() {
           <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
         </Suspense>
       )}
-      <RightSidePanel hideUI={hideUI} />
       <AppConsole hidden={showInventory} hideUI={hideUI} />
       {isPhotoModeOpen && activeSceneRef.current && activeCameraRef.current && activeGlRef.current && (
         <Suspense fallback={null}>

@@ -61,7 +61,7 @@ function StatRow({ label, value, color }: { label: string; value: string | numbe
 // ── Export principal ──────────────────────────────────────────────────────────
 
 /**
- * Groupes DevTools à insérer dans SidePanel ou RightSidePanel.
+ * Groupes DevTools à insérer dans le SidePanel.
  * Accepte le composant Group pour partager les styles.
  */
 export function DevToolsGroups({ Group, compact = false }: {
