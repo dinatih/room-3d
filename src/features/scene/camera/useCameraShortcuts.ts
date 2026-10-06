@@ -78,11 +78,8 @@ export function useCameraShortcuts({
       }
 
       if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'p' || e.key === 'P')) {
-        if (modeRef.current === 'orbit' || modeRef.current === 'ortho') {
-          if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
-          toggleOrbitType?.();
-        }
-        else useSceneStore.getState().toggleCameraProjection();
+        if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+        useSceneStore.getState().toggleCameraProjection();
         return;
       }
 
