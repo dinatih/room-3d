@@ -490,7 +490,7 @@ export function SidePanel({
             <span className="fw-semibold small">Inventaire</span>
           </button>
           
-          {TABS.map(t => {
+          {TABS.filter(t => t.key !== 'personnage').map(t => {
             const active = activeTab === t.key;
             if (t.key === 'personnage') {
               return (
