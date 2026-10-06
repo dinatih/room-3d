@@ -44,6 +44,25 @@ export interface GlbDebugStats {
 
 const glbSizeCache = new Map<string, number>();
 type PreviewOrthoView = 'front' | 'back' | 'side' | 'right' | 'top' | 'bottom';
+type PreviewIsoView = 'iso-se' | 'iso-sw' | 'iso-ne' | 'iso-nw';
+type PreviewPresetView = PreviewOrthoView | PreviewIsoView;
+type PreviewCameraView = 'free' | PreviewPresetView;
+type ViewDirection = [number, number, number];
+
+const PREVIEW_VIEW_DIRECTIONS: Record<PreviewPresetView, ViewDirection> = {
+  front: [0, 0, 1], back: [0, 0, -1], side: [-1, 0, 0], right: [1, 0, 0],
+  top: [0, 1, 0], bottom: [0, -1, 0],
+  'iso-se': [1, 1, 1], 'iso-sw': [-1, 1, 1], 'iso-ne': [1, 1, -1], 'iso-nw': [-1, 1, -1],
+};
+const PREVIEW_VIEW_LABELS: Record<PreviewPresetView, string> = {
+  front: 'Face', back: 'Arrière', side: 'Profil Gauche', right: 'Profil Droit',
+  top: 'Dessus', bottom: 'Dessous',
+  'iso-se': 'ISO Sud-Est', 'iso-sw': 'ISO Sud-Ouest', 'iso-ne': 'ISO Nord-Est', 'iso-nw': 'ISO Nord-Ouest',
+};
+
+function getPreviewViewDirection(mode: PreviewPresetView): THREE.Vector3 {
+  return new THREE.Vector3(...PREVIEW_VIEW_DIRECTIONS[mode]).normalize();
+}
 
 function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () => void; onStats?: (s: GlbDebugStats) => void }) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
@@ -202,7 +221,7 @@ function OrthoCameraControls({
   target = [0, 0, 0],
   boundsRadius = 50,
 }: {
-  mode: 'free' | PreviewOrthoView;
+  mode: PreviewCameraView;
   target?: [number, number, number];
   boundsRadius?: number;
 }) {
@@ -230,15 +249,12 @@ function OrthoCameraControls({
       const distance = Math.max(100, boundsRadius * 3.2);
       return [target[0] + distance * 0.75, target[1] + distance * 0.45, target[2] + distance * 0.95];
     }
-    switch (mode) {
-      case 'front':  return [0, camTarget[1], 1000];
-      case 'back':   return [0, camTarget[1], -1000];
-      case 'side':   return [-1000, camTarget[1], 0];
-      case 'right':  return [1000, camTarget[1], 0];
-      case 'top':    return [0, 1000, 0];
-      case 'bottom': return [0, -1000, 0];
-      default:       return [0, camTarget[1], 1000];
-    }
+    const direction = getPreviewViewDirection(mode);
+    return [
+      camTarget[0] + direction.x * 1000,
+      camTarget[1] + direction.y * 1000,
+      camTarget[2] + direction.z * 1000,
+    ];
   }, [mode, camTarget, boundsRadius, target]);
 
   useLayoutEffect(() => {
@@ -303,7 +319,7 @@ function PerspectivePresetControls({
   target = [0, 0, 0],
   boundsRadius = 50,
 }: {
-  mode: PreviewOrthoView;
+  mode: PreviewPresetView;
   target?: [number, number, number];
   boundsRadius?: number;
 }) {
@@ -313,21 +329,12 @@ function PerspectivePresetControls({
     mode === 'top' || mode === 'bottom' ? [0, 0, 0] : [0, target[1] || 85, 0]
   ), [mode, target]);
   const distance = Math.max(100, (boundsRadius || 50) * 3.2);
-  const direction = useMemo(() => {
-    switch (mode) {
-      case 'front': return [0, 0, 1] as const;
-      case 'back': return [0, 0, -1] as const;
-      case 'side': return [-1, 0, 0] as const;
-      case 'right': return [1, 0, 0] as const;
-      case 'top': return [0, 1, 0] as const;
-      case 'bottom': return [0, -1, 0] as const;
-    }
-  }, [mode]);
+  const direction = useMemo(() => getPreviewViewDirection(mode), [mode]);
   const up: [number, number, number] = mode === 'top' ? [0, 0, -1] : mode === 'bottom' ? [0, 0, 1] : [0, 1, 0];
   const position = useMemo<[number, number, number]>(() => [
-    camTarget[0] + direction[0] * distance,
-    camTarget[1] + direction[1] * distance,
-    camTarget[2] + direction[2] * distance,
+    camTarget[0] + direction.x * distance,
+    camTarget[1] + direction.y * distance,
+    camTarget[2] + direction.z * distance,
   ], [camTarget, direction, distance]);
 
   useLayoutEffect(() => {
@@ -609,7 +616,7 @@ export function InventoryPreview({
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [photoIdx, setPhotoIdx] = useState(0);
-  const [previewView, setPreviewView] = useState<'free' | 'front' | 'back' | 'side' | 'right' | 'top' | 'bottom'>('free');
+  const [previewView, setPreviewView] = useState<PreviewCameraView>('free');
   const cameraProjection = useSceneStore(state => state.cameraProjection);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const layers = useSceneStore(state => state.layers);
@@ -678,7 +685,10 @@ export function InventoryPreview({
           key === 'top' || key === 'bottom') {
         // Map left→side, right→right, rest stays the same
         const mapped = key === 'left' ? 'side' : key;
-        setPreviewView(mapped as typeof previewView);
+        setPreviewView(mapped as PreviewOrthoView);
+        setAutoRotate(false);
+      } else if (key === 'iso-se' || key === 'iso-sw' || key === 'iso-ne' || key === 'iso-nw') {
+        setPreviewView(key);
         setAutoRotate(false);
       } else {
         setPreviewView('free');
@@ -821,7 +831,8 @@ export function InventoryPreview({
               {cameraProjection === 'ortho' ? (
                 <>
                   <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
-                  {previewView !== 'free' && <GroundDatumLines mode={previewView} />}
+              {previewView !== 'free' && !previewView.startsWith('iso-') &&
+                <GroundDatumLines mode={previewView as PreviewOrthoView} />}
                 </>
               ) : (
                 <>
@@ -929,7 +940,7 @@ export function InventoryPreview({
                 whiteSpace: 'nowrap'
               }}
             >
-              <span>📐 Vue Ortho : <strong>{previewView === 'front' ? 'Face' : previewView === 'back' ? 'Arrière' : previewView === 'side' ? 'Profil Gauche' : previewView === 'right' ? 'Profil Droit' : previewView === 'top' ? 'Dessus' : 'Dessous'}</strong></span>
+              <span>📐 Vue {cameraProjection === 'ortho' ? 'Ortho' : 'Perspective'} : <strong>{PREVIEW_VIEW_LABELS[previewView as PreviewPresetView]}</strong></span>
               {previewView === 'top' ? (
                 <>
                   <span style={{ color: '#00ff66', fontWeight: 'bold' }}>— Axe X (Bras)</span>
