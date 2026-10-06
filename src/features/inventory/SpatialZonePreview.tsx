@@ -34,6 +34,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   decor: '#b388ff',
 };
 
+const CAMERA_VIEW_DIRECTIONS: Record<string, [number, number, number]> = {
+  front: [0, 0, 1], back: [0, 0, -1], left: [-1, 0, 0], right: [1, 0, 0],
+  top: [0, 1, 0], bottom: [0, -1, 0],
+  'iso-se': [1, 1, 1], 'iso-sw': [-1, 1, 1], 'iso-ne': [1, 1, -1], 'iso-nw': [-1, 1, -1],
+  perspective: [0.3, 0.25, 1],
+};
+
 function PreviewCategoryLayerGroup({
   layer, children, visible = true, wireframe = false,
 }: {
@@ -249,7 +256,7 @@ function PreviewCameraController({
 }: {
   centerX: number; centerY: number; centerZ: number; camDistance: number; zoneSize: number;
 }) {
-  const { camera, set } = useThree();
+  const { camera, set, size } = useThree();
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
   const orthoCamRef = useRef<THREE.OrthographicCamera | null>(null);
   const perspCamRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -257,18 +264,29 @@ function PreviewCameraController({
   const DIST = camDistance;
   const orthoHalf = Math.max(80, zoneSize * 0.75);
   const cameraProjection = useSceneStore(s => s.cameraProjection);
+  const activeCameraView = useSceneStore(s => s.activeCameraView);
 
-  // Build cameras once
+  // Initialize both preview cameras from the active scene view. The inventory
+  // can mount after the main scene has already dispatched its camera preset.
   useEffect(() => {
-    perspCamRef.current = camera as THREE.PerspectiveCamera;
-    const oc = new THREE.OrthographicCamera(-orthoHalf, orthoHalf, orthoHalf, -orthoHalf, -20000, 50000);
+    const perspCam = camera as THREE.PerspectiveCamera;
+    perspCamRef.current = perspCam;
+    const aspect = size.width / Math.max(1, size.height);
+    const oc = new THREE.OrthographicCamera(-orthoHalf * aspect, orthoHalf * aspect, orthoHalf, -orthoHalf, -20000, 50000);
     // Studio meshes live on category-specific Three.js layers; match the
     // perspective camera configured by Canvas.onCreated.
     oc.layers.enableAll();
     oc.layers.disable(LAYER_WALKER_DETAIL);
-    oc.position.set(centerX + DIST, centerY + DIST, centerZ + DIST);
+    const direction = new THREE.Vector3(...(CAMERA_VIEW_DIRECTIONS[activeCameraView ?? 'iso-se'] ?? [1, 1, 1])).normalize();
+    const initialPosition = new THREE.Vector3(centerX, centerY, centerZ).addScaledVector(direction, DIST);
+    perspCam.position.copy(initialPosition);
+    perspCam.up.set(0, 1, 0);
+    perspCam.lookAt(centerX, centerY, centerZ);
+    perspCam.updateProjectionMatrix();
+    oc.position.copy(initialPosition);
     oc.up.set(0, 1, 0);
     oc.lookAt(centerX, centerY, centerZ);
+    oc.updateProjectionMatrix();
     orthoCamRef.current = oc;
     if (cameraProjection === 'ortho') {
       set({ camera: oc });
@@ -295,7 +313,7 @@ function PreviewCameraController({
     if (cameraProjection === 'ortho') {
       orthoCam.position.copy(camera.position);
       orthoCam.up.copy(camera.up);
-      const aspect = perspCam.aspect ?? 1;
+      const aspect = size.width / Math.max(1, size.height);
       orthoCam.left = -orthoHalf * aspect;
       orthoCam.right = orthoHalf * aspect;
       orthoCam.top = orthoHalf;
@@ -320,7 +338,19 @@ function PreviewCameraController({
         ctrlRef.current.update();
       }
     }
-  }, [cameraProjection]);
+  }, [cameraProjection, size.width, size.height]);
+
+  // Keep the orthographic frustum matched to the preview panel as it resizes.
+  useEffect(() => {
+    const orthoCam = orthoCamRef.current;
+    if (!orthoCam) return;
+    const aspect = size.width / Math.max(1, size.height);
+    orthoCam.left = -orthoHalf * aspect;
+    orthoCam.right = orthoHalf * aspect;
+    orthoCam.top = orthoHalf;
+    orthoCam.bottom = -orthoHalf;
+    orthoCam.updateProjectionMatrix();
+  }, [size.width, size.height, orthoHalf]);
 
   // Apply camera-view presets
   useEffect(() => {
@@ -335,15 +365,10 @@ function PreviewCameraController({
 
       // The shared presets are expressed in the apartment's world coordinates.
       // A zone preview needs the same direction, recentered and scaled locally.
-      const directions: Record<string, [number, number, number]> = {
-        front: [0, 0, 1], back: [0, 0, -1], left: [-1, 0, 0], right: [1, 0, 0],
-        top: [0, 1, 0], bottom: [0, -1, 0],
-        'iso-se': [1, 1, 1], 'iso-sw': [-1, 1, 1], 'iso-ne': [1, 1, -1], 'iso-nw': [-1, 1, -1],
-        perspective: [0.3, 0.25, 1],
-      };
-
       const fallback = new THREE.Vector3(pos[0] - target[0], pos[1] - target[1], pos[2] - target[2]).normalize();
-      const direction = key && directions[key] ? new THREE.Vector3(...directions[key]).normalize() : fallback;
+      const direction = key && CAMERA_VIEW_DIRECTIONS[key]
+        ? new THREE.Vector3(...CAMERA_VIEW_DIRECTIONS[key]).normalize()
+        : fallback;
       const dx = direction.x;
       const dy = direction.y;
       const dz = direction.z;
