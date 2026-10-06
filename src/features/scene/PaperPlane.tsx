@@ -62,6 +62,8 @@ const ROLL_DAMP    = 2.6;
 const CAM_FOLLOW_OFFSET = new THREE.Vector3(0, 30, 90);
 const CAM_FOLLOW_LOOK   = new THREE.Vector3(0, 0, -80);
 const CAM_LERP          = 0.18;
+const CHARACTER_EYE_OFFSET = 2; // cm devant le centre réel des yeux
+const CHARACTER_CAMERA_NEAR = 0.1; // cm, comme la caméra FPV
 
 // Atterrissage automatique
 const LAND_ALIGN_DOT    = 0.93;  // cos(22°) — seuil alignement
@@ -199,6 +201,7 @@ interface PaperPlaneProps {
 
 export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleModel }: PaperPlaneProps) {
   const { camera, invalidate } = useThree();
+  const originalNear = useRef(camera.near);
   const planeRef    = useRef<THREE.Group>(null!);
   const onExitRef   = useRef(onExit);
   onExitRef.current = onExit;
@@ -331,6 +334,8 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
       window.removeEventListener('blur', clearKeys);
       document.removeEventListener('visibilitychange', onVisibility);
       camera.up.set(0, 1, 0);
+      camera.near = originalNear.current;
+      camera.updateProjectionMatrix();
       cameraState.planeSpeed = 0;
       cameraState.planeSkyContact = false;
       window.removeEventListener('keydown', onDown);
@@ -508,7 +513,14 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
     cameraState.planeSpeed = landedRef.current || dt === 0 ? 0 : s.pos.distanceTo(previousPos) / dt;
 
     // ── Caméra ─────────────────────────────────────────────────────────────
-    if (vm === 'follow' || vm === 'landing') {
+    const eyes = cameraState.activeEyesPos;
+    const headForward = cameraState.activeHeadForward;
+    const near = vm === 'character' ? CHARACTER_CAMERA_NEAR : originalNear.current;
+    if (camera.near !== near) {
+      camera.near = near;
+      camera.updateProjectionMatrix();
+    }
+    if (vm === 'follow' || vm === 'landing' || (vm === 'character' && (!eyes || !headForward))) {
       _va.current.copy(CAM_FOLLOW_OFFSET).applyQuaternion(s.quat).add(s.pos);
       camera.position.lerp(_va.current, 1 - Math.pow(1 - CAM_LERP, dt * 60));
       _vb.current.copy(CAM_FOLLOW_LOOK).applyQuaternion(s.quat).add(s.pos);
@@ -521,11 +533,15 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
       camera.quaternion.copy(s.quat);
 
     } else if (vm === 'character') {
-      const wx = cameraState.characterX;
-      const wz = cameraState.characterZ;
-      const wh = cameraState.characterHeight * 0.93;
-      camera.position.set(wx, wh, wz);
-      camera.lookAt(s.pos);
+      // Les données anatomiques arrivent après le chargement du personnage.
+      // Pendant ce chargement, conserver la vue de suivi ci-dessus.
+      if (eyes && headForward) {
+        _va.current.set(headForward.x, headForward.y, headForward.z).normalize();
+        camera.position.set(eyes.x, eyes.y, eyes.z).addScaledVector(_va.current, CHARACTER_EYE_OFFSET);
+        const headUp = cameraState.activeHeadUp;
+        if (headUp) camera.up.set(headUp.x, headUp.y, headUp.z).normalize();
+        camera.lookAt(s.pos);
+      }
     }
 
     cameraState.camX  = camera.position.x;

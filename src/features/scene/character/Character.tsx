@@ -241,7 +241,7 @@ export function Character({
   // Synchronisation des layers (visibilité miroir vs FPV)
   useEffect(() => {
     if (groupRef.current) {
-      const isFirstPerson = isActive && (cameraMode === 'fpv' || cameraState.mode === 'fpv' || cameraState.isXR);
+      const isFirstPerson = isActive && cameraState.isFirstPersonView();
       updateCharacterLayers(groupRef.current, isFirstPerson);
       prevFirstPersonRef.current = isFirstPerson;
     }
@@ -268,7 +268,7 @@ export function Character({
 
     meshesToHook.forEach(mesh => {
       mesh.onBeforeRender = (_renderer, _sc, cam) => {
-        const isFpv = cameraState.mode === 'fpv' || cameraState.isXR;
+        const isFpv = cameraState.isFirstPersonView();
         if (isFpv && headBone) {
           const isMirror = (cam.layers.mask & (1 << LAYER_WALKER_DETAIL)) !== 0;
           if (isMirror) {
@@ -615,7 +615,7 @@ export function Character({
     }
 
     if (groupRef.current) {
-      updateCharacterLayers(groupRef.current, isActive && (cameraState.mode === 'fpv' || cameraState.isXR));
+      updateCharacterLayers(groupRef.current, isActive && cameraState.isFirstPersonView());
     }
 
     invalidate();
@@ -715,7 +715,7 @@ export function Character({
         groupRef.current.visible = false;
       }
 
-      const isFirstPerson = isActive && (cameraState.mode === 'fpv' || cameraState.isXR);
+      const isFirstPerson = isActive && cameraState.isFirstPersonView();
       if (prevFirstPersonRef.current !== isFirstPerson) {
         if (groupRef.current) {
           updateCharacterLayers(groupRef.current, isFirstPerson);

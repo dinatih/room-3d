@@ -35,6 +35,31 @@ params.updateUrlFlightMode(false);
 assert.equal(params.parseUrlFlightMode(), false);
 assert.equal(browser.location.hash, '#/studio?ui=0');
 const config = evaluate('src/features/scene/config.ts');
+const shared = evaluate('src/features/scene/cameraState.ts', {}, name => {
+  if (name === './characterConfig') return { CHARACTERS: [], parseUrlActiveCharacter: () => null };
+  if (name === './camera/cameraUrlParams') return { parseUrlCameraMode: () => 'orbit' };
+  return require(name);
+}).cameraState;
+shared.mode = 'plane';
+shared.planeViewMode = 'follow';
+assert.equal(shared.isFirstPersonView(), false, 'follow keeps character head visible');
+shared.planeViewMode = 'character';
+assert.equal(shared.isFirstPersonView(), true, 'PNJ view uses first-person head masking');
+const characterLayers = evaluate('src/features/scene/character/characterLayers.ts', {}, name => {
+  if (name === '@config') return config;
+  if (name === '../characterParts') return { isHeadMesh: mesh => mesh.name === 'head' };
+  return require(name);
+});
+const character = new THREE.Group();
+const head = new THREE.Mesh(); head.name = 'head';
+const body = new THREE.Mesh(); body.name = 'body';
+character.add(head, body);
+characterLayers.updateCharacterLayers(character, shared.isFirstPersonView());
+assert.equal(head.layers.mask, 1 << config.LAYER_WALKER_DETAIL, 'PNJ head remains on mirror-only layer');
+assert.equal(body.layers.mask, 1 << config.LAYER_WALKER, 'body remains visible');
+shared.planeViewMode = 'follow';
+characterLayers.updateCharacterLayers(character, shared.isFirstPersonView());
+assert.equal(head.layers.mask, 1 << config.LAYER_WALKER, 'leaving PNJ view restores head visibility');
 const mirrors = evaluate('src/features/scene/building/Mirrors.tsx', {}, name => {
   if (name === '@config') return config;
   if (name === 'react') return {};

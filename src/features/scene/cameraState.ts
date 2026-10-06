@@ -12,6 +12,10 @@ const initialChar = parseUrlActiveCharacter() || CHARACTERS[0];
 
 export const cameraState = {
   mode: parseUrlCameraMode() as CameraMode,
+  /** Vue placée dans les yeux : tête masquée en caméra principale, visible dans les miroirs. */
+  isFirstPersonView(): boolean {
+    return this.mode === 'fpv' || this.isXR || (this.mode === 'plane' && this.planeViewMode === 'character');
+  },
   /** Position caméra (pour l'icône follow sur la minimap) */
   camX: 150 as number,
   camZ: 200 as number,
