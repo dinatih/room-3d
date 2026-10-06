@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
-import { parseUrlCameraMode } from '@features/scene/camera/cameraUrlParams';
+import {
+  parseUrlCameraMode,
+  parseUrlCameraProjection,
+  parseUrlActiveCameraView,
+  updateUrlCameraProjection,
+  updateUrlActiveCameraView,
+} from '@features/scene/camera/cameraUrlParams';
 import { parseUrlLayerOverrides, updateUrlLayer, parseUrlGroundType, updateUrlGroundType, LAYER_DEFAULTS } from './layerUrlParams';
 import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
 import {
@@ -321,9 +327,12 @@ export const useSceneStore = create<SceneStore>((set) => ({
   bnfRadius: 45,
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
-  cameraProjection: 'persp',
-  activeCameraView: null,
-  setActiveCameraView: (view) => set({ activeCameraView: view }),
+  cameraProjection: parseUrlCameraProjection(),
+  activeCameraView: parseUrlActiveCameraView(),
+  setActiveCameraView: (view) => {
+    set({ activeCameraView: view });
+    updateUrlActiveCameraView(view);
+  },
   isCvModalOpen: false,
   isPhotoModeOpen: false,
   setBnfCoords: (coords) => {
@@ -350,10 +359,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   setCameraProjection: (proj) => {
     set({ cameraProjection: proj });
+    updateUrlCameraProjection(proj);
     cameraState.invalidate?.();
   },
   toggleCameraProjection: () => {
-    set((state) => ({ cameraProjection: state.cameraProjection === 'ortho' ? 'persp' : 'ortho' }));
+    const projection = useSceneStore.getState().cameraProjection === 'ortho' ? 'persp' : 'ortho';
+    set({ cameraProjection: projection });
+    updateUrlCameraProjection(projection);
     cameraState.invalidate?.();
   },
   setLaraCount: (count) => {

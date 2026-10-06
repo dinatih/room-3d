@@ -49,6 +49,7 @@ import {
   SKY_START_TARGET,
 } from './camera';
 import { parseUrlLayerOverrides } from './store/layerUrlParams';
+import { parseUrlOrbitCameraState, updateUrlOrbitCameraState } from './camera/cameraUrlParams';
 
 const FPV_DEFAULT_FOV = 100;
 const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
@@ -79,6 +80,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const modeRef = useRef<CameraMode>(initialMode);
 
   const cameraProjection = useSceneStore(state => state.cameraProjection);
+  const initialUrlOrbitState = useRef(parseUrlOrbitCameraState());
+  const initialUrlOrbitStateApplied = useRef(false);
   // Type d'orbite libre : perspective standard 3D ou isométrique orthographique 3D
   const orbitTypeRef = useRef<'persp' | 'ortho'>(useSceneStore.getState().cameraProjection);
   const defaultPerspCamRef = useRef<THREE.PerspectiveCamera>(camera as THREE.PerspectiveCamera);
@@ -545,22 +548,61 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (useSceneStore.getState().cameraProjection !== targetProj) {
       useSceneStore.getState().setCameraProjection(targetProj);
     }
+    updateUrlOrbitCameraState({
+      position: [activeCam.position.x, activeCam.position.y, activeCam.position.z],
+      target: [target.x, target.y, target.z],
+      zoom: isOrtho ? orthoCam.zoom : undefined,
+    });
     appLog('system', isOrtho ? '🎥 Mode Orbit 3D (Isométrique Ortho)' : '🎥 Mode Orbit 3D (Perspective)');
     invalidate();
   }, [camera, invalidate, set]);
+
+  const applyInitialOrbitUrlState = useCallback(() => {
+    const state = initialUrlOrbitState.current;
+    if (!state || initialUrlOrbitStateApplied.current || !ctrlRef.current) return;
+    initialUrlOrbitStateApplied.current = true;
+    currentTarget.current.set(...state.target);
+    savedPerspTarget.current.set(...state.target);
+    savedPerspPos.current.set(...state.position);
+    switchOrbitProjection(useSceneStore.getState().cameraProjection, {
+      pos: state.position,
+      target: state.target,
+      zoom: state.zoom,
+    });
+  }, [switchOrbitProjection]);
 
   // Réinitialiser la vue preset active dès que l'utilisateur commence à manipuler la caméra manuellement
   useEffect(() => {
     const ctrl = ctrlRef.current;
     if (!ctrl) return;
+    let lastSavedAt = 0;
+    const saveOrbitPose = (force = false) => {
+      if (modeRef.current !== 'orbit' || cameraState.isIntroRunning) return;
+      const now = performance.now();
+      if (!force && now - lastSavedAt < 100) return;
+      lastSavedAt = now;
+      const activeCam = ctrl.object;
+      const isOrtho = (activeCam as THREE.OrthographicCamera).isOrthographicCamera;
+      updateUrlOrbitCameraState({
+        position: [activeCam.position.x, activeCam.position.y, activeCam.position.z],
+        target: [ctrl.target.x, ctrl.target.y, ctrl.target.z],
+        zoom: isOrtho ? (activeCam as THREE.OrthographicCamera).zoom : undefined,
+      });
+    };
     const onStart = () => {
       if (modeRef.current === 'orbit' && useSceneStore.getState().activeCameraView) {
         useSceneStore.getState().setActiveCameraView(null);
       }
     };
+    const onChange = () => saveOrbitPose();
+    const onEnd = () => saveOrbitPose(true);
     ctrl.addEventListener('start', onStart);
+    ctrl.addEventListener('change', onChange);
+    ctrl.addEventListener('end', onEnd);
     return () => {
       ctrl.removeEventListener('start', onStart);
+      ctrl.removeEventListener('change', onChange);
+      ctrl.removeEventListener('end', onEnd);
     };
   }, []);
 
@@ -777,6 +819,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     const startMode = parseUrlCameraMode();
     if (cameraState.isSceneLaunched) {
+      if (startMode === 'orbit') applyInitialOrbitUrlState();
       if (startMode === 'fpv') {
         const curX = cameraState.characterX ?? followPos.current.x;
         const curZ = cameraState.characterZ ?? followPos.current.z;
@@ -796,7 +839,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         changeMode(startMode);
       }
     }
-  }, [enterTop, enterFollow, changeMode]);
+  }, [enterTop, enterFollow, changeMode, applyInitialOrbitUrlState]);
 
   // Écoute de l'événement de lancement pour démarrer l'animation d'intro
   useEffect(() => {
@@ -829,6 +872,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           ctrlRef.current.enablePan = !planeModeRef.current;
           ctrlRef.current.enableZoom = !planeModeRef.current;
           ctrlRef.current.update();
+          applyInitialOrbitUrlState();
         }
         invalidate();
       });
@@ -839,7 +883,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       document.removeEventListener('start-camera-intro', onStartIntro);
       introCtrlRef.current?.destroy();
     };
-  }, [camera, enterTop, enterFollow, invalidate]);
+  }, [camera, enterTop, enterFollow, invalidate, applyInitialOrbitUrlState]);
 
   // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif et suivi du target orbit
   useFrame(() => {
