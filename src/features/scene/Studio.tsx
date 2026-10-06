@@ -63,6 +63,7 @@ import { NPC_WALK_ANIMATIONS }   from './ai/agent/agentWalkAnimations';
 import { cacheDynamicGLTF }      from './character/useCharacterAnimations';
 import { useIsMobile }           from '@shared/hooks/useIsMobile';
 import { duoSessionManager }     from './ai/duoSessionManager';
+import { LoadingShiba } from './LoadingShiba';
 
 // The inventory pulls in a second R3F canvas, its GLTF loaders and a large
 // catalogue. Do not parse it until the user explicitly opens the inventory.
@@ -599,6 +600,7 @@ export function Studio() {
 
   const [buildAnimMatrix,  setBuildAnimMatrix]  = useState(false);
   const [assetsLoaded,     setAssetsLoaded]     = useState(false);
+  const [showLoadingShiba, setShowLoadingShiba] = useState(true);
   const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
   const [animDurations,    setAnimDurations]    = useState<Record<string, number>>({});
 
@@ -674,6 +676,7 @@ export function Studio() {
   }, []);
 
   const handleLaunch = useCallback(() => {
+    setShowLoadingShiba(false);
     revealScene();
   }, [revealScene]);
 
@@ -682,6 +685,7 @@ export function Studio() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <LoadingProgress sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onLaunch={handleLaunch} />
+      {showLoadingShiba && <LoadingShiba />}
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
