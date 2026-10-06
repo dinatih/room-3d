@@ -128,6 +128,20 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
           <span>ORBIT</span>
         </button>
         <button
+          className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${npcGridActive ? 'fw-bold' : ''}`}
+          style={{
+            background: npcGridActive ? 'rgba(14,165,233,0.9)' : 'rgba(255,255,255,0.08)',
+            color: npcGridActive ? '#1a1a2e' : 'rgba(255,255,255,0.8)',
+            fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
+          }}
+          onClick={() => dispatchCameraMode('toggle-npc-grid')}
+          title="Afficher ou quitter la grille des PNJ (G ; O : Orbit → NPC Grid → Follow → FPV → Orbit)"
+          aria-pressed={npcGridActive}
+        >
+          <i className="bi bi-grid-3x3-gap-fill" />
+          <span>NPC GRID</span>
+        </button>
+        <button
           className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${cameraMode === 'follow' ? 'fw-bold' : ''}`}
           style={{
             background: cameraMode === 'follow' ? 'rgba(52,211,153,0.9)' : 'rgba(255,255,255,0.08)',
@@ -154,20 +168,6 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
         >
           <i className="bi bi-eye-fill" />
           <span>FPV</span>
-        </button>
-        <button
-          className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${npcGridActive ? 'fw-bold' : ''}`}
-          style={{
-            background: npcGridActive ? 'rgba(14,165,233,0.9)' : 'rgba(255,255,255,0.08)',
-            color: npcGridActive ? '#1a1a2e' : 'rgba(255,255,255,0.8)',
-            fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
-          }}
-          onClick={() => dispatchCameraMode('toggle-npc-grid')}
-          title="Afficher ou quitter la grille des PNJ (G ; O : Orbit → NPC Grid → Follow → FPV → Orbit)"
-          aria-pressed={npcGridActive}
-        >
-          <i className="bi bi-grid-3x3-gap-fill" />
-          <span>NPC GRID</span>
         </button>
       </>}
 

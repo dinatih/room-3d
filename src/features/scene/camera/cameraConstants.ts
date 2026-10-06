@@ -10,6 +10,7 @@ export const WALK_SPEED = 2;
 export const MOUSE_SENS = 0.002;
 export const DEFAULT_ORBIT_DISTANCE = 440; // 440 cm (2x plus loin en vue 3ème personne, initialement 220 cm)
 export const DEFAULT_ORBIT_PITCH = Math.PI / 4; // 45° en radians (~0.785 rad) — inclinaison plongeante
+export const DEFAULT_FOLLOW_YAW_OFFSET = Math.PI / 4; // Angle de caméra au nord-ouest derrière le personnage
 
 /** Hauteur caméra en mode marche = niveau des yeux du character (≈ 93% de sa taille). */
 export function activeFollowH(): number {

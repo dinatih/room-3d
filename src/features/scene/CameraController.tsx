@@ -39,6 +39,7 @@ import {
   activeFollowH,
   DEFAULT_ORBIT_DISTANCE,
   DEFAULT_ORBIT_PITCH,
+  DEFAULT_FOLLOW_YAW_OFFSET,
   parseUrlCameraMode,
   updateUrlCameraMode,
   useCameraPointerEvents,
@@ -383,8 +384,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       followYaw.current = cameraState.followYaw;
     }
     if (followMode === 'follow') {
-      orbitYaw.current = followYaw.current;
-      orbitYawOffset.current = 0;
+      orbitYaw.current = followYaw.current + DEFAULT_FOLLOW_YAW_OFFSET;
+      orbitYawOffset.current = DEFAULT_FOLLOW_YAW_OFFSET;
       orbitPitch.current = DEFAULT_ORBIT_PITCH;
       orbitDistance.current = DEFAULT_ORBIT_DISTANCE;
 
