@@ -24,6 +24,10 @@ html, :root {
   --thumb: 48px;
 }
 
+.perf-stats {
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.95);
+}
+
 .perf-stats > span:not(:first-child) {
   font-size: 10px;
 }
