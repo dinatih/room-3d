@@ -64,6 +64,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const denoiseMatRef = useRef<DenoiseMaterial | null>(null);
   const enableDenoiseRef = useRef<boolean>(true);
   const savedBackgroundRef = useRef<THREE.Color | THREE.Texture | null | undefined>(undefined);
+  const savedEnvironmentRef = useRef<THREE.Texture | null | undefined>(undefined);
 
   // Mode de comparaison 3D Standard vs Raytracing
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('split');
@@ -358,6 +359,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
     // Sauvegarder le background d'origine et connecter le ciel HDRI pour illuminer et habiller le fond
     savedBackgroundRef.current = scene.background;
+    savedEnvironmentRef.current = scene.environment;
     const skyTex = getLoadedSkyTexture() || (scene.environment && (scene.environment as any).isDataTexture ? scene.environment : null);
     if (skyTex) {
       scene.background = skyTex;
@@ -386,6 +388,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     if (savedBackgroundRef.current !== undefined) {
       scene.background = savedBackgroundRef.current;
       savedBackgroundRef.current = undefined;
+    }
+    if (savedEnvironmentRef.current !== undefined) {
+      scene.environment = savedEnvironmentRef.current;
+      savedEnvironmentRef.current = undefined;
     }
 
     // Nettoyer les structures BVH (boundsTree) construites par three-mesh-bvh sur les géométries
@@ -489,14 +495,30 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     physCamera.layers.enable(LAYER_ENVIRONMENT);
     physCameraRef.current = physCamera;
 
-    // 1. Capture instantanée du rendu 3D Standard temps réel (avec ombres et matériaux d'origine) avant altération pour le path-tracer
+    // 1. Capture instantanée du rendu 3D Standard dans un canvas indépendant.
+    // Le renderer partagé sera ensuite redimensionné et utilisé par le path tracer.
     scene.updateMatrixWorld(true);
     try {
-      gl.render(scene, physCamera);
-      const snapshot = canvas.toDataURL('image/png');
-      setRasterSnapshot(snapshot);
+      const snapshotCanvas = document.createElement('canvas');
+      const snapshotRenderer = new THREE.WebGLRenderer({
+        canvas: snapshotCanvas,
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true,
+      });
+      snapshotRenderer.setPixelRatio(1);
+      snapshotRenderer.setSize(width, height, false);
+      snapshotRenderer.outputColorSpace = gl.outputColorSpace;
+      snapshotRenderer.toneMapping = gl.toneMapping;
+      snapshotRenderer.toneMappingExposure = gl.toneMappingExposure;
+      snapshotRenderer.shadowMap.enabled = gl.shadowMap.enabled;
+      snapshotRenderer.shadowMap.type = gl.shadowMap.type;
+      snapshotRenderer.render(scene, physCamera);
+      setRasterSnapshot(snapshotCanvas.toDataURL('image/png'));
+      snapshotRenderer.dispose();
     } catch (err) {
       console.warn('[Raytracing] Impossible de capturer le snapshot 3D standard:', err);
+      setRasterSnapshot(null);
     }
 
     // 2. Préparation de la scène pour le path-tracer (conversion miroir PBR, conversion matériaux, assainissement)
