@@ -56,8 +56,8 @@ button, input, select, textarea {
 }
 
 /* Boutons et éléments de liste à l'intérieur des cartes glass */
-.glass-card .btn-light,
-.glass-card button:not(.btn-danger):not(.btn-outline-danger):not(.btn-outline-secondary):not(.btn-close):not(.btn-sm):not(.btn-primary):not(.btn-warning):not(.btn-info) {
+.glass-card .btn-light:not(.view-control-bar *),
+.glass-card button:not(.view-control-bar *):not(.btn-danger):not(.btn-outline-danger):not(.btn-outline-secondary):not(.btn-close):not(.btn-sm):not(.btn-primary):not(.btn-warning):not(.btn-info) {
   background: transparent !important;
   color: #1f2937 !important;
   border: none !important;
@@ -65,8 +65,8 @@ button, input, select, textarea {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: background 0.15s ease, opacity 0.15s ease;
 }
-.glass-card .btn-light:hover,
-.glass-card button:not(.btn-danger):not(.btn-outline-danger):not(.btn-outline-secondary):not(.btn-close):not(.btn-sm):not(.btn-primary):not(.btn-warning):not(.btn-info):hover {
+.glass-card .btn-light:not(.view-control-bar *):hover,
+.glass-card button:not(.view-control-bar *):not(.btn-danger):not(.btn-outline-danger):not(.btn-outline-secondary):not(.btn-close):not(.btn-sm):not(.btn-primary):not(.btn-warning):not(.btn-info):hover {
   background: rgba(255, 255, 255, 0.35) !important;
 }
 
@@ -307,5 +307,4 @@ button, input, select, textarea {
   opacity: 0 !important;
   pointer-events: none !important;
 }
-
 
