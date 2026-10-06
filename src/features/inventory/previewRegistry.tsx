@@ -108,7 +108,7 @@ import { DoubleVenusPendant } from '@features/scene/items/DoubleVenusPendant';
 
 function ScooterPreview(props: SceneItemProps) {
   return (
-    <group rotation-y={-Math.PI / 6}>
+    <group rotation-y={-5 * Math.PI / 180}>
       <Scooter {...props} steeringAngle={props.actionState['scooter-steering-toggle'] ? -Math.PI / 6 : 0} />
     </group>
   );
