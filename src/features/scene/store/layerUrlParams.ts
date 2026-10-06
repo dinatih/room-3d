@@ -179,6 +179,11 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     urlParams: ['extracharacters', 'extra', 'extras', 'personnagesextras', 'personnages-extras', 'extra-characters'],
   },
   {
+    layerKey: 'laraGrid',
+    canonicalParam: 'npcgrid',
+    urlParams: ['npcgrid'],
+  },
+  {
     layerKey: 'bermudaGrass',
     canonicalParam: 'bermudaGrass',
     urlParams: ['bermudagrass', 'herbe', 'grass', 'terrain-ext', 'terrain'],

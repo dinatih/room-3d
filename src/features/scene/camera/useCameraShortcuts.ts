@@ -61,6 +61,14 @@ export function useCameraShortcuts({
   invalidate,
 }: UseCameraShortcutsParams) {
   useEffect(() => {
+    const toggleNpcGrid = () => {
+      const store = useSceneStore.getState();
+      const wasActive = store.layers.laraGrid;
+      store.toggleLayer('laraGrid');
+      store.setActiveCameraView(null);
+      if (wasActive) goToDefaultOrbit();
+    };
+
     const goToDefaultOrbit = () => {
       if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
       else if (modeRef.current === 'top') exitTop();
@@ -159,13 +167,15 @@ export function useCameraShortcuts({
         const curX = cameraState.characterX ?? followPos.current.x;
         const curZ = cameraState.characterZ ?? followPos.current.z;
 
-        if (modeRef.current === 'orbit') {
+        if (useSceneStore.getState().layers.laraGrid) {
+          toggleNpcGrid();
+        } else if (modeRef.current === 'orbit') {
           useSceneStore.getState().setActiveCameraView(null);
           enterFollow(curX, curZ, 'follow');
         } else if (modeRef.current === 'follow') {
           enterFollow(curX, curZ, 'fpv');
         } else if (modeRef.current === 'fpv') {
-          goToDefaultOrbit();
+          toggleNpcGrid();
         } else if (modeRef.current === 'top') {
           goToDefaultOrbit();
         } else if (modeRef.current === 'ortho' && exitOrtho) {
@@ -341,7 +351,7 @@ export function useCameraShortcuts({
 
     const onCameraMode = (e: Event) => {
       if (planeModeRef.current || cameraState.isIntroRunning) return;
-      const requestedMode = (e as CustomEvent<'toggle-follow' | 'fpv' | 'orbit'>).detail;
+      const requestedMode = (e as CustomEvent<'toggle-follow' | 'fpv' | 'orbit' | 'toggle-npc-grid'>).detail;
       const curX = cameraState.characterX ?? followPos.current.x;
       const curZ = cameraState.characterZ ?? followPos.current.z;
       if (requestedMode === 'fpv') {
@@ -351,6 +361,8 @@ export function useCameraShortcuts({
         else enterFollow(curX, curZ, 'follow');
       } else if (requestedMode === 'orbit') {
         goToDefaultOrbit();
+      } else if (requestedMode === 'toggle-npc-grid') {
+        toggleNpcGrid();
       }
     };
 

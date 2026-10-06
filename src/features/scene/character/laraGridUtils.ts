@@ -45,12 +45,13 @@ export function getLaraGridPosition(index: number, total: number = 1): { x: numb
 /**
  * Calcule la cible (target au milieu exact de la grille) et la position caméra pour cadrer l'ensemble des personnages.
  */
-export function getLaraGridCameraView(total: number): {
+export function getLaraGridCameraView(total?: number): {
   pos: [number, number, number];
   target: [number, number, number];
 } {
+  const count = total ?? getActiveSceneCharactersCount();
   const { cols, colSpacing, rowSpacing, baseY, baseZ, characterHeight, centerX, fov } = LARA_GRID_CONFIG;
-  const safeTotal = Math.max(1, total);
+  const safeTotal = Math.max(1, count);
   const totalRows = Math.ceil(safeTotal / cols);
 
   // Hauteur et largeur globales occupées par la grille

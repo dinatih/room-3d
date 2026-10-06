@@ -1,5 +1,6 @@
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView } from './sidepanel/types';
+import { getLaraGridCameraView } from './character/laraGridUtils';
 
 // ── Presets groupés ────────────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ export interface ViewControlBarProps {
 export function ViewControlBar({ position = 'bottom-center', inline = false, hidden = false, showCharacterModes = false }: ViewControlBarProps) {
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);
+  const npcGridActive = useSceneStore(s => s.layers.laraGrid);
   const activeCameraView = useSceneStore(s => s.activeCameraView);
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
 
@@ -54,7 +56,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
   }[position];
 
   const isActive = (key: string) => activeCameraView === key;
-  const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit') => {
+  const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit' | 'toggle-npc-grid') => {
     document.dispatchEvent(new CustomEvent('camera-mode', { detail: mode }));
   };
 
@@ -75,7 +77,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
         fontWeight: isActive(v.key) ? 700 : 400,
         transition: 'all 0.15s ease',
       }}
-      onClick={() => dispatchView(v.key)}
+      onClick={() => dispatchView(v.key, npcGridActive ? getLaraGridCameraView().target : undefined)}
       title={v.label}
     >
       <i className={`bi ${v.bi}`} style={{ fontSize: '14px' }} />
@@ -151,6 +153,20 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
         >
           <i className="bi bi-eye-fill" />
           <span>FPV</span>
+        </button>
+        <button
+          className={`btn btn-sm border-0 d-flex align-items-center gap-1 ${npcGridActive ? 'fw-bold' : ''}`}
+          style={{
+            background: npcGridActive ? 'rgba(14,165,233,0.9)' : 'rgba(255,255,255,0.08)',
+            color: npcGridActive ? '#1a1a2e' : 'rgba(255,255,255,0.8)',
+            fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
+          }}
+          onClick={() => dispatchCameraMode('toggle-npc-grid')}
+          title="Afficher ou quitter la grille des PNJ"
+          aria-pressed={npcGridActive}
+        >
+          <i className="bi bi-grid-3x3-gap-fill" />
+          <span>NPC GRID</span>
         </button>
       </>}
 
