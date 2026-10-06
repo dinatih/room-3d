@@ -58,14 +58,120 @@ room-3d/
     └── draco/              # Décodeurs Draco servis statiquement
 ```
 
+### Diagramme d'architecture
+
+> Diagramme interactif généré par [GitDiagram](https://gitdiagram.com/dinatih/room-3d) — cliquez les nœuds pour accéder au code source.
+
+```mermaid
+flowchart TD
+
+subgraph group_experience["Expérience 3D"]
+  node_entry["Point d'entrée<br/>[main.tsx]"]
+  node_studio["Studio 3D<br/>[Studio.tsx]"]
+end
+
+subgraph group_room["Scène appartement"]
+  node_scene["Composition pièce<br/>[Building.tsx]"]
+  node_placements["Placement meubles<br/>[Placements.tsx]"]
+  node_itemmodels["Modèles meubles"]
+  node_floorplan["Plan 2D<br/>[FloorPlan.tsx]"]
+  node_lighting["Éclairage<br/>[SunLight.tsx]"]
+end
+
+subgraph group_interaction["Caméra et contrôles"]
+  node_camera["Contrôleur caméra"]
+  node_camstate["État caméra<br/>[cameraState.ts]"]
+  node_scenecontrols["État scène<br/>[useSceneStore.ts]"]
+  node_minimap["Minimap<br/>[Minimap.tsx]"]
+end
+
+subgraph group_characters["Personnages et agents"]
+  node_agentcontroller["Contrôleur agent"]
+  node_smartobjects["Objets intelligents"]
+  node_occupancy["Occupation slots"]
+  node_duosessions["Sessions duo"]
+  node_navigation["Graphe navigation<br/>[navigationGraph.ts]"]
+  node_animations["Résolution animations"]
+  node_animationdata["Registre animations"]
+  node_duoanimations["Animations duo<br/>[duoAnimations.ts]"]
+end
+
+subgraph group_inventory["Inventaire"]
+  node_inventory["Navigateur inventaire<br/>[Inventory.tsx]"]
+  node_inventorydata["Données inventaire<br/>[inventoryData.ts]"]
+  node_preview["Prévisualisation"]
+end
+
+node_user(("Planificateur"))
+
+node_user -->|"ouvre l'app"| node_entry
+node_entry -->|"monte"| node_studio
+node_studio -->|"affiche la pièce"| node_scene
+node_studio -->|"affiche les placements"| node_placements
+node_placements -->|"place les modèles"| node_itemmodels
+node_studio -->|"affiche le plan"| node_floorplan
+node_studio -->|"affiche l'éclairage"| node_lighting
+node_studio -->|"active la navigation"| node_camera
+node_camera -->|"lit l'état"| node_scenecontrols
+node_camera -->|"met à jour la caméra"| node_camstate
+node_camera -->|"partage la position"| node_minimap
+node_studio -->|"propose l'inventaire"| node_inventory
+node_inventory -->|"parcourt les items"| node_inventorydata
+node_inventory -->|"prévisualise"| node_preview
+node_agentcontroller -->|"résout les clips"| node_animations
+node_agentcontroller -->|"utilise les affordances"| node_smartobjects
+node_agentcontroller -->|"réserve des slots"| node_occupancy
+node_agentcontroller -->|"coordonne les duos"| node_duosessions
+node_agentcontroller -->|"utilise les chemins"| node_navigation
+node_animations -->|"résout les définitions"| node_animationdata
+node_animations -->|"résout les clips duo"| node_duoanimations
+node_duosessions -->|"vérifie les réservations"| node_occupancy
+node_duosessions -->|"cherche les objets"| node_smartobjects
+
+click node_entry "https://github.com/dinatih/room-3d/blob/master/src/main.tsx"
+click node_studio "https://github.com/dinatih/room-3d/blob/master/src/features/scene/Studio.tsx"
+click node_scene "https://github.com/dinatih/room-3d/blob/master/src/features/scene/Building.tsx"
+click node_placements "https://github.com/dinatih/room-3d/blob/master/src/features/scene/Placements.tsx"
+click node_itemmodels "https://github.com/dinatih/room-3d/tree/master/src/features/scene/items"
+click node_floorplan "https://github.com/dinatih/room-3d/blob/master/src/features/scene/FloorPlan.tsx"
+click node_lighting "https://github.com/dinatih/room-3d/blob/master/src/features/scene/SunLight.tsx"
+click node_camera "https://github.com/dinatih/room-3d/blob/master/src/features/scene/CameraController.tsx"
+click node_camstate "https://github.com/dinatih/room-3d/blob/master/src/features/scene/cameraState.ts"
+click node_scenecontrols "https://github.com/dinatih/room-3d/blob/master/src/features/scene/store/useSceneStore.ts"
+click node_minimap "https://github.com/dinatih/room-3d/blob/master/src/features/scene/Minimap.tsx"
+click node_inventory "https://github.com/dinatih/room-3d/blob/master/src/features/inventory/Inventory.tsx"
+click node_inventorydata "https://github.com/dinatih/room-3d/blob/master/src/features/inventory/inventoryData.ts"
+click node_preview "https://github.com/dinatih/room-3d/blob/master/src/features/inventory/InventoryPreview.tsx"
+click node_agentcontroller "https://github.com/dinatih/room-3d/blob/master/src/features/scene/ai/useAgentController.ts"
+click node_smartobjects "https://github.com/dinatih/room-3d/blob/master/src/features/scene/ai/smartObjectRegistry.ts"
+click node_occupancy "https://github.com/dinatih/room-3d/blob/master/src/features/scene/ai/occupancyManager.ts"
+click node_duosessions "https://github.com/dinatih/room-3d/blob/master/src/features/scene/ai/duoSessionManager.ts"
+click node_navigation "https://github.com/dinatih/room-3d/blob/master/src/features/scene/ai/navigationGraph.ts"
+click node_animations "https://github.com/dinatih/room-3d/blob/master/src/features/scene/animations/animationResolver.ts"
+click node_animationdata "https://github.com/dinatih/room-3d/blob/master/src/features/scene/animations/animationRegistry.ts"
+click node_duoanimations "https://github.com/dinatih/room-3d/blob/master/src/features/scene/animations/duoAnimations.ts"
+
+classDef toneBlue fill:#dbeafe,stroke:#2563eb,stroke-width:1.5px,color:#172554
+classDef toneAmber fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#78350f
+classDef toneMint fill:#dcfce7,stroke:#16a34a,stroke-width:1.5px,color:#14532d
+classDef toneRose fill:#ffe4e6,stroke:#e11d48,stroke-width:1.5px,color:#881337
+classDef toneIndigo fill:#e0e7ff,stroke:#4f46e5,stroke-width:1.5px,color:#312e81
+class node_entry,node_studio toneBlue
+class node_scene,node_placements,node_itemmodels,node_floorplan,node_lighting toneAmber
+class node_camera,node_camstate,node_scenecontrols,node_minimap toneMint
+class node_agentcontroller,node_smartobjects,node_occupancy,node_duosessions,node_navigation,node_animations,node_animationdata,node_duoanimations toneRose
+class node_inventory,node_inventorydata,node_preview,node_user toneIndigo
+```
+
 ---
 
 ## Lancement
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # build de production dans dist/
+npm run dev        # http://localhost:5173
+npm run build      # build de production dans dist/
+npm run visualize  # lance repo-visualizer localement
 ```
 
 ---
@@ -274,6 +380,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
 | Couches visuelles | Structure / GLB / Mobilier + toggles murs rouges, grille |
 | Voisins | Appartements est/ouest semi-transparents |
 | Dev Tools | FPS graph, draw calls, stats mémoire, tailles GLB |
+| Visualisation repo | [repo-visualizer](https://dinatih.org/room-3d/visualizer/) — évolution du code au fil des commits |
 | Personnage | Walking man animé (Lara 2026) + SkeletonHelper toggle |
 
 ---

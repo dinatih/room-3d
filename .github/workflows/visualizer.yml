@@ -1,0 +1,44 @@
+name: Repo Visualizer
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  visualize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Clone repo-visualizer
+        run: git clone --depth 1 https://github.com/Jany-M/repo-visualizer.git /tmp/repo-visualizer
+
+      - name: Install visualizer dependencies
+        working-directory: /tmp/repo-visualizer
+        run: npm ci
+
+      - name: Analyze room-3d history
+        working-directory: /tmp/repo-visualizer
+        run: node scripts/analyze.mjs ${{ github.workspace }}
+
+      - name: Build visualizer
+        working-directory: /tmp/repo-visualizer
+        run: npm run build
+
+      - name: Deploy visualizer to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: /tmp/repo-visualizer/dist
+          destination_dir: visualizer
+          keep_files: true
+          cname: dinatih.org
