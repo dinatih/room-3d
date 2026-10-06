@@ -81,7 +81,7 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
   state.planeLaunching = true;
   for (let i = 0; i <= Math.ceil(origami.animations[0].duration * 60) + 1; i++) frame({}, 1 / 60);
   assert.equal(launches, 0, 'pliage encore en cours après la durée originale');
-  for (let i = 0; i <= Math.ceil(origami.animations[0].duration * 9 * 60) + 1; i++) frame({}, 1 / 60);
+  for (let i = 0; i <= Math.ceil(origami.animations[0].duration * 4 * 60) + 1; i++) frame({}, 1 / 60);
   assert.equal(launches, 1, 'launch follows completion of folding/departure exactly once');
   activeAsset = comet;
   const element = exported.AircraftMesh({ definition: definitions.AIRCRAFT_MODELS.find(entry => entry.key === 'comet') });
