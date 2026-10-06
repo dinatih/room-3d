@@ -464,7 +464,6 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
   const startPanRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
   const smallW = isMobile ? SMALL_W_MOBILE : SMALL_W_DESKTOP;
-  const smallH = Math.round(smallW * 1.35);
 
   // Boucle de rendu pour la minimap compacte (flottante ou embedded)
   useEffect(() => {
@@ -472,11 +471,16 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
     const canvas = floatingCanvasRef.current;
     if (!canvas) return;
 
-    const dpr = Math.max(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(smallW * dpr);
-    canvas.height = Math.round(smallH * dpr);
-    canvas.style.width = `${smallW}px`;
-    canvas.style.height = `${smallH}px`;
+    let currentSmallW = smallW;
+    const resize = () => {
+      currentSmallW = canvas.clientWidth;
+      const dpr = Math.max(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(currentSmallW * dpr);
+      canvas.height = canvas.width;
+    };
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
 
     let rafId: number;
     let lastDraw = 0;
@@ -485,14 +489,15 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
       if (isAppIdle()) return;
       if (now - lastDraw < 50) return; // Limite à 20 FPS (au lieu de 60/120 FPS continus)
       lastDraw = now;
-      drawMinimap(canvas, smallW);
+      drawMinimap(canvas, currentSmallW);
     };
     rafId = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(rafId);
+      observer.disconnect();
     };
-  }, [smallW, smallH, isOpen, expanded]);
+  }, [smallW, isOpen, expanded]);
 
   // Boucle de rendu pour la minimap agrandie (modal)
   useEffect(() => {
@@ -616,11 +621,13 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
         setPan({ x: 0, y: 0 });
       }}
     >
-      <canvas
-        ref={floatingCanvasRef}
-        className="rounded-2"
-        style={{ display: 'block', width: `${smallW}px`, height: `${smallH}px`, background: 'transparent', opacity: 0.95, transition: 'transform 0.15s ease' }}
-      />
+      <div className="ratio ratio-1x1 w-100">
+        <canvas
+          ref={floatingCanvasRef}
+          className="rounded-2 d-block bg-transparent"
+          style={{ opacity: 0.95, transition: 'transform 0.15s ease' }}
+        />
+      </div>
     </div>
   );
 

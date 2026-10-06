@@ -264,7 +264,7 @@ export function SidePanel({
   );
 
   const profileHeaderButtons = (
-    <div className="d-flex align-items-center gap-1 pe-1" onClick={e => e.stopPropagation()}>
+    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
       <a
         href="https://github.com/dinatih"
         target="_blank"
