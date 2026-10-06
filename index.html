@@ -143,6 +143,12 @@
         display: flex; flex-direction: column; align-items: center;
       }
 
+      #loading-shiba {
+        width: 100%; height: 50px;
+        flex-shrink: 0;
+        pointer-events: none;
+      }
+
       #loading-label {
         color: #b91c1c; font-size: 12px;
         margin-bottom: 10px; letter-spacing: 0.08em; font-weight: 700;
@@ -170,7 +176,7 @@
         text-shadow: 0 1px 1px rgba(255, 255, 255, 0.95);
       }
     </style>
-    <script type="module" crossorigin src="/assets/inventory-Q5I-01n-.js"></script>
+    <script type="module" crossorigin src="/assets/inventory-Bcn5oJik.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/inventory-TpKngtv2.css">
   </head>
   <body>
@@ -202,6 +208,7 @@
 
         <div id="loading-progress-section">
           <div id="loading-label">CHARGEMENT DE LA SCÈNE 3D…</div>
+          <div id="loading-shiba" aria-hidden="true"></div>
           <div id="loading-track"><div id="loading-bar"></div></div>
           <div id="loading-item">Chargement des éléments…</div>
         </div>
