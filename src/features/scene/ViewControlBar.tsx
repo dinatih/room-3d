@@ -25,7 +25,7 @@ const ISO_VIEWS = [
 ] as const;
 
 export interface ViewControlBarProps {
-  /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-center' */
+  /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-right' */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'bottom-center';
   /** Rendu dans le flux du document (pas position:fixed) */
   inline?: boolean;
@@ -40,7 +40,7 @@ export interface ViewControlBarProps {
 }
 
 export function ViewControlBar({
-  position = 'bottom-center',
+  position = 'bottom-right',
   inline = false,
   hidden = false,
   showCharacterModes = false,
