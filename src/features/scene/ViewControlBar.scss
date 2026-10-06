@@ -1,0 +1,103 @@
+@use 'sass:color';
+@use 'sass:list';
+@use '../../../scss/variables' as palette;
+
+.view-control-bar-dock {
+  width: max-content;
+  max-width: calc(100vw - 1rem);
+}
+
+.view-control-bar {
+  width: max-content;
+  max-width: 100%;
+  background-color: rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  gap: 0.375rem !important;
+}
+
+.view-control-bar__group {
+  flex: 0 0 auto;
+}
+
+.view-control-bar .btn {
+  white-space: nowrap;
+}
+
+.view-control-bar .btn-outline-secondary {
+  --bs-btn-color: #{palette.$gray-700};
+  --bs-btn-border-color: #{palette.$gray-500};
+  --bs-btn-hover-bg: #{palette.$gray-200};
+  --bs-btn-hover-color: #{palette.$gray-900};
+}
+
+$control-colors: (
+  'cyan': (palette.$cyan, palette.$gray-900),
+  'green': (palette.$green, palette.$white),
+  'purple': (palette.$purple, palette.$white),
+  'blue': (palette.$blue, palette.$gray-900),
+  'yellow': (palette.$yellow, palette.$gray-900),
+);
+
+@each $name, $pair in $control-colors {
+  $background: list.nth($pair, 1);
+  $foreground: list.nth($pair, 2);
+
+  .view-control-bar .view-control-bar__btn--#{$name} {
+    --bs-btn-color: #{$foreground};
+    --bs-btn-bg: #{$background};
+    --bs-btn-border-color: #{$background};
+    --bs-btn-hover-color: #{$foreground};
+    --bs-btn-hover-bg: #{color.adjust($background, $lightness: -7%)};
+    --bs-btn-hover-border-color: #{color.adjust($background, $lightness: -7%)};
+    --bs-btn-active-color: #{$foreground};
+    --bs-btn-active-bg: #{color.adjust($background, $lightness: -10%)};
+    --bs-btn-active-border-color: #{color.adjust($background, $lightness: -10%)};
+  }
+}
+
+.view-control-bar .view-control-bar__outline--orange {
+  --bs-btn-color: #{palette.$orange};
+  --bs-btn-border-color: #{palette.$orange};
+  --bs-btn-hover-color: #{palette.$gray-900};
+  --bs-btn-hover-bg: #{palette.$orange};
+  --bs-btn-hover-border-color: #{palette.$orange};
+}
+
+.view-control-bar .view-control-bar__outline--cyan {
+  --bs-btn-color: #{palette.$cyan};
+  --bs-btn-border-color: #{palette.$cyan};
+  --bs-btn-hover-color: #{palette.$gray-900};
+  --bs-btn-hover-bg: #{palette.$cyan};
+  --bs-btn-hover-border-color: #{palette.$cyan};
+}
+
+.view-control-bar--inline {
+  width: max-content;
+}
+
+.view-control-bar-inline {
+  width: 100%;
+}
+
+.view-control-bar-dock > .badge {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+@media (max-width: 767.98px) {
+  .view-control-bar {
+    width: max-content;
+    row-gap: 0.375rem !important;
+  }
+
+  .view-control-bar .btn {
+    min-height: 2.25rem;
+  }
+
+  .view-control-bar .btn-group > .btn {
+    padding-inline: 0.45rem;
+  }
+}

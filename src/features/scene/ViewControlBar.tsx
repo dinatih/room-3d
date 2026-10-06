@@ -1,4 +1,4 @@
-import './ViewControlBar.css';
+import './ViewControlBar.scss';
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView } from './sidepanel/types';
 import { getLaraGridCameraView } from './character/laraGridUtils';
@@ -68,14 +68,14 @@ export function ViewControlBar({
 
   const viewButtons = (
     views: typeof ORTHO_VIEWS | typeof EXTRA_VIEWS | typeof ISO_VIEWS,
-    activeClass: string,
+    color: 'cyan' | 'green' | 'purple',
   ) => (
     <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label={views.map(view => view.label).join(', ')}>
       {views.map(view => (
         <button
           key={view.key}
           type="button"
-          className={`btn ${isActive(view.key) ? activeClass : 'btn-outline-secondary'}`}
+          className={`btn ${isActive(view.key) ? `view-control-bar__btn--${color}` : 'btn-outline-secondary'}`}
           onClick={() => dispatchView(view.key, npcGridActive ? getLaraGridCameraView().target : undefined)}
           title={`${view.label} (${view.shortcut})`}
           aria-label={`${view.label} (${view.shortcut})`}
@@ -103,7 +103,7 @@ export function ViewControlBar({
 
       <button
         type="button"
-        className={`btn btn-sm ${isOrtho ? 'btn-primary' : 'btn-warning'}`}
+        className={`btn btn-sm ${isOrtho ? 'view-control-bar__btn--blue' : 'view-control-bar__btn--yellow'}`}
         onClick={toggleCameraProjection}
         title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (P)`}
         aria-pressed={isOrtho}
@@ -116,28 +116,28 @@ export function ViewControlBar({
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Modes caméra">
           <button
             type="button"
-            className={`btn ${cameraMode === 'orbit' ? 'btn-warning' : 'btn-outline-secondary'}`}
+            className={`btn ${cameraMode === 'orbit' ? 'view-control-bar__btn--yellow' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('orbit')}
             title="Revenir à la caméra Orbit (O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={cameraMode === 'orbit'}
           ><i className="bi bi-globe2 me-sm-1" aria-hidden="true" /><span>ORBIT</span></button>
           <button
             type="button"
-            className={`btn ${npcGridActive ? 'btn-info' : 'btn-outline-secondary'}`}
+            className={`btn ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('toggle-npc-grid')}
             title="Afficher ou quitter la grille des PNJ (G ; O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={npcGridActive}
           ><i className="bi bi-grid-3x3-gap-fill me-sm-1" aria-hidden="true" /><span>NPC GRID</span></button>
           <button
             type="button"
-            className={`btn ${cameraMode === 'follow' ? 'btn-success' : 'btn-outline-secondary'}`}
+            className={`btn ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('toggle-follow')}
             title="Activer ou quitter le suivi à la troisième personne (M : Follow ↔ FPV ; O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={cameraMode === 'follow'}
           ><i className="bi bi-person-walking me-sm-1" aria-hidden="true" /><span>FOLLOW</span></button>
           <button
             type="button"
-            className={`btn ${cameraMode === 'fpv' ? 'btn-primary' : 'btn-outline-secondary'}`}
+            className={`btn ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('fpv')}
             title="Passer en vue subjective FPV (M : Follow ↔ FPV ; O : Orbit → NPC Grid → Follow → FPV → Orbit)"
             aria-pressed={cameraMode === 'fpv'}
@@ -147,10 +147,10 @@ export function ViewControlBar({
 
       {showCharacterModes && (
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Actions de la scène">
-          <button type="button" className="btn btn-outline-warning" onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
+          <button type="button" className="btn btn-outline-secondary view-control-bar__outline--orange" onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
             <i className="bi bi-airplane-fill" aria-hidden="true" />
           </button>
-          <button type="button" className="btn btn-outline-info" onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)">
+          <button type="button" className="btn btn-outline-secondary view-control-bar__outline--cyan" onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)">
             <i className="bi bi-camera-fill me-1" aria-hidden="true" /><span>Raytracing</span>
           </button>
           <button type="button" className="btn btn-outline-secondary" onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
@@ -159,9 +159,9 @@ export function ViewControlBar({
         </div>
       )}
 
-      {viewButtons(ORTHO_VIEWS, 'btn-info')}
-      {viewButtons(EXTRA_VIEWS, 'btn-success')}
-      {viewButtons(ISO_VIEWS, 'btn-primary')}
+      {viewButtons(ORTHO_VIEWS, 'cyan')}
+      {viewButtons(EXTRA_VIEWS, 'green')}
+      {viewButtons(ISO_VIEWS, 'purple')}
     </div>
   );
 

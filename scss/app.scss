@@ -1,0 +1,19 @@
+@use './variables' as palette;
+@use 'bootstrap/scss/bootstrap' with (
+  $blue: palette.$blue,
+  $indigo: palette.$indigo,
+  $purple: palette.$purple,
+  $pink: palette.$pink,
+  $red: palette.$red,
+  $orange: palette.$orange,
+  $yellow: palette.$yellow,
+  $green: palette.$green,
+  $teal: palette.$teal,
+  $cyan: palette.$cyan,
+  $primary: palette.$primary,
+  $secondary: palette.$secondary,
+  $success: palette.$success,
+  $info: palette.$info,
+  $warning: palette.$warning,
+  $danger: palette.$danger,
+);
