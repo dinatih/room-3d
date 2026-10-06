@@ -26,7 +26,9 @@ export function AircraftMesh({ definition, onLaunchReady }: { definition: Defini
     } else if (definition.key === 'comet') {
       animations.forEach(clip => mixer.clipAction(clip).play());
     }
-    scene.updateWorldMatrix(true, true);
+    // Initialiser aussi les matrices de liaison des SkinnedMesh avant de mesurer.
+    // updateWorldMatrix ne déclenche pas leur override updateMatrixWorld.
+    scene.updateMatrixWorld(true);
     scene.traverse(object => { if ((object as THREE.SkinnedMesh).isSkinnedMesh) (object as THREE.SkinnedMesh).skeleton.update(); });
     const box = new THREE.Box3().setFromObject(scene, true);
     if (box.isEmpty()) throw new Error(`Modèle d'avion vide : ${definition.key}`);
@@ -57,6 +59,6 @@ export function AircraftMesh({ definition, onLaunchReady }: { definition: Defini
   });
 
   return <group rotation={[0, definition.yaw, 0]}>
-    <group position={offset.toArray()}><primitive object={scene} scale={scale} /></group>
+    <group position={offset.toArray()} scale={scale}><primitive object={scene} /></group>
   </group>;
 }

@@ -17,12 +17,26 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
   const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
   const { clone } = await import('three/addons/utils/SkeletonUtils.js');
   const loader = new GLTFLoader();
+  const { NodeIO } = await import('@gltf-transform/core');
+  const { ALL_EXTENSIONS } = await import('@gltf-transform/extensions');
+  const draco = require('draco3d');
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'draco3d.decoder': await draco.createDecoderModule() });
   let origami;
-  for (const definition of definitions.AIRCRAFT_MODELS.filter(entry => entry.path.startsWith('/items/aircraft/'))) {
-    const bytes = fs.readFileSync(path.join(root, 'public', definition.path));
+  let comet;
+  for (const definition of definitions.AIRCRAFT_MODELS.filter(entry => entry.path.startsWith('/items/aircraft/') || entry.key === 'comet')) {
+    const file = path.join(root, 'public', definition.path);
+    let bytes = fs.readFileSync(file);
+    if (definition.key === 'comet') {
+      const document = await io.read(file);
+      document.getRoot().listExtensionsUsed().filter(extension => extension.extensionName === 'KHR_draco_mesh_compression').forEach(extension => extension.dispose());
+      bytes = Buffer.from(await io.writeBinary(document));
+    }
     const gltf = await loader.parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
     const scene = clone(gltf.scene);
     const mixer = new THREE.AnimationMixer(scene);
+    if (definition.key === 'comet') {
+      comet = gltf;
+    }
     if (definition.key === 'origami') {
       assert(gltf.animations.some(clip => clip.tracks.some(track => track.name.includes('morphTargetInfluences'))), 'origami retains folding morphs');
       const action = mixer.clipAction(gltf.animations[0]);
@@ -49,11 +63,12 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
   const effects = [];
   let frame;
   const state = { planeLaunching: false, planeLaunched: false };
+  let activeAsset = origami;
   const exported = {};
   vm.runInNewContext(transpile('src/features/scene/AircraftMesh.tsx'), { exports: exported, require(name) {
     if (name === 'react') return { useRef: value => ({ current: value }), useMemo: fn => fn(), useEffect: fn => effects.push(fn) };
     if (name === '@react-three/fiber') return { useFrame: fn => { frame = fn; } };
-    if (name === './useGLTFClone') return { useGLTFClone: () => ({ scene: clone(origami.scene), animations: origami.animations }) };
+    if (name === './useGLTFClone') return { useGLTFClone: () => ({ scene: clone(activeAsset.scene), animations: activeAsset.animations }) };
     if (name === './cameraState') return { cameraState: state };
     return require(name);
   } });
@@ -64,5 +79,23 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
   state.planeLaunching = true;
   for (let i = 0; i <= Math.ceil(origami.animations[0].duration * 60) + 1; i++) frame({}, 1 / 60);
   assert.equal(launches, 1, 'launch follows completion of folding/departure exactly once');
+  activeAsset = comet;
+  const element = exported.AircraftMesh({ definition: definitions.AIRCRAFT_MODELS.find(entry => entry.key === 'comet') });
+  const wrapper = element.props.children;
+  const scene = wrapper.props.children.props.object;
+  const normalized = new THREE.Group();
+  normalized.position.fromArray(wrapper.props.position);
+  normalized.scale.setScalar(wrapper.props.scale ?? wrapper.props.children.props.scale);
+  normalized.add(scene);
+  normalized.updateMatrixWorld(true);
+  const size = new THREE.Box3().setFromObject(normalized, true).getSize(new THREE.Vector3());
+  assert(Math.abs(Math.max(...size.toArray()) - 55) < 0.01, `colibri normalisé à 55 cm, obtenu ${size.toArray()}`);
+  for (let i = 0; i < 120; i++) {
+    frame({}, 1 / 60);
+    normalized.updateMatrixWorld(true);
+    const animated = new THREE.Box3().setFromObject(normalized, true).getSize(new THREE.Vector3());
+    assert(Math.max(...animated.toArray()) < 110, 'animation du colibri sans agrandissement du squelette');
+  }
+  console.log('Colibri: taille initiale de 55 cm et échelle stable pendant son animation.');
   console.log('All aircraft assets and origami launch checks passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
