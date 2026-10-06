@@ -5,22 +5,22 @@ import { getLaraGridCameraView } from './character/laraGridUtils';
 // ── Presets groupés ────────────────────────────────────────────────────────
 
 const ORTHO_VIEWS = [
-  { key: 'front',  label: 'Face',     bi: 'bi-arrow-up' },
-  { key: 'back',   label: 'Arrière',  bi: 'bi-arrow-down' },
-  { key: 'left',   label: 'Gauche',   bi: 'bi-arrow-left' },
-  { key: 'right',  label: 'Droite',   bi: 'bi-arrow-right' },
+  { key: 'front',  label: 'Face',     shortcut: 'Alt+1', bi: 'bi-arrow-up' },
+  { key: 'back',   label: 'Arrière',  shortcut: 'Alt+2', bi: 'bi-arrow-down' },
+  { key: 'left',   label: 'Gauche',   shortcut: 'Alt+3', bi: 'bi-arrow-left' },
+  { key: 'right',  label: 'Droite',   shortcut: 'Alt+4', bi: 'bi-arrow-right' },
 ] as const;
 
 const EXTRA_VIEWS = [
-  { key: 'top',    label: 'Dessus',   bi: 'bi-chevron-compact-up' },
-  { key: 'bottom', label: 'Dessous',  bi: 'bi-chevron-compact-down' },
+  { key: 'top',    label: 'Dessus',   shortcut: 'Alt+5', bi: 'bi-chevron-compact-up' },
+  { key: 'bottom', label: 'Dessous',  shortcut: 'Alt+6', bi: 'bi-chevron-compact-down' },
 ] as const;
 
 const ISO_VIEWS = [
-  { key: 'iso-se', label: 'ISO SE',  bi: 'bi-arrow-down-right' },
-  { key: 'iso-sw', label: 'ISO SW',  bi: 'bi-arrow-down-left' },
-  { key: 'iso-ne', label: 'ISO NE',  bi: 'bi-arrow-up-right' },
-  { key: 'iso-nw', label: 'ISO NW',  bi: 'bi-arrow-up-left' },
+  { key: 'iso-se', label: 'ISO SE',  shortcut: 'Alt+7', bi: 'bi-arrow-down-right' },
+  { key: 'iso-sw', label: 'ISO SW',  shortcut: 'Alt+8', bi: 'bi-arrow-down-left' },
+  { key: 'iso-ne', label: 'ISO NE',  shortcut: 'Alt+9', bi: 'bi-arrow-up-right' },
+  { key: 'iso-nw', label: 'ISO NW',  shortcut: 'Alt+0', bi: 'bi-arrow-up-left' },
 ] as const;
 
 // ── Composant ──────────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
   };
 
   const viewButton = (
-    v: { key: string; label: string; bi: string },
+    v: { key: string; label: string; shortcut: string; bi: string },
     activeColor: string,
   ) => (
     <button
@@ -78,7 +78,8 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
         transition: 'all 0.15s ease',
       }}
       onClick={() => dispatchView(v.key, npcGridActive ? getLaraGridCameraView().target : undefined)}
-      title={v.label}
+      title={`${v.label} (${v.shortcut})`}
+      aria-label={`${v.label} (${v.shortcut})`}
     >
       <i className={`bi ${v.bi}`} style={{ fontSize: '14px' }} />
     </button>
@@ -104,7 +105,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
           padding: '4px 10px',
         }}
         onClick={toggleCameraProjection}
-        title={isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'}
+        title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (P)`}
       >
         <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} style={{ fontSize: '13px' }} />
         <span>{isOrtho ? 'ORTHO' : 'PERSP'}</span>
@@ -120,7 +121,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
             fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
           }}
           onClick={() => dispatchCameraMode('orbit')}
-          title="Revenir à la caméra Orbit"
+          title="Revenir à la caméra Orbit (O : Orbit → Follow → FPV → NPC Grid)"
           aria-pressed={cameraMode === 'orbit'}
         >
           <i className="bi bi-globe2" />
@@ -134,7 +135,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
             fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
           }}
           onClick={() => dispatchCameraMode('toggle-follow')}
-          title="Activer ou quitter le suivi à la troisième personne"
+          title="Activer ou quitter le suivi à la troisième personne (O : Orbit → Follow → FPV → NPC Grid)"
           aria-pressed={cameraMode === 'follow'}
         >
           <i className="bi bi-person-walking" />
@@ -148,7 +149,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
             fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
           }}
           onClick={() => dispatchCameraMode('fpv')}
-          title="Passer en vue subjective FPV"
+          title="Passer en vue subjective FPV (O : Orbit → Follow → FPV → NPC Grid)"
           aria-pressed={cameraMode === 'fpv'}
         >
           <i className="bi bi-eye-fill" />
@@ -162,7 +163,7 @@ export function ViewControlBar({ position = 'bottom-center', inline = false, hid
             fontSize: '11px', borderRadius: '8px', padding: '4px 8px',
           }}
           onClick={() => dispatchCameraMode('toggle-npc-grid')}
-          title="Afficher ou quitter la grille des PNJ"
+          title="Afficher ou quitter la grille des PNJ (O : Orbit → Follow → FPV → NPC Grid)"
           aria-pressed={npcGridActive}
         >
           <i className="bi bi-grid-3x3-gap-fill" />
