@@ -9,6 +9,7 @@ import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import { frameLaraGridOrtho, frameLaraGridCamera } from '../character/laraGridUtils';
 import { dispatchView } from '../sidepanel/types';
+import { PERSP_POS, PERSP_TARGET } from './cameraConstants';
 
 interface UseCameraShortcutsParams {
   camera: THREE.Camera;
@@ -60,6 +61,14 @@ export function useCameraShortcuts({
   invalidate,
 }: UseCameraShortcutsParams) {
   useEffect(() => {
+    const goToDefaultOrbit = () => {
+      if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
+      else if (modeRef.current === 'top') exitTop();
+      else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+      useSceneStore.getState().setActiveCameraView(null);
+      toggleOrbitType?.('persp', { pos: PERSP_POS, target: PERSP_TARGET });
+    };
+
     const onDown = (e: KeyboardEvent) => {
       // Plane mode owns input — bail out so arrow/WASD don't move character or camera.
       if (planeModeRef.current || cameraState.isIntroRunning) return;
@@ -156,11 +165,11 @@ export function useCameraShortcuts({
         } else if (modeRef.current === 'follow') {
           enterFollow(curX, curZ, 'fpv');
         } else if (modeRef.current === 'fpv') {
-          exitFollow();
+          goToDefaultOrbit();
         } else if (modeRef.current === 'top') {
-          exitTop();
+          goToDefaultOrbit();
         } else if (modeRef.current === 'ortho' && exitOrtho) {
-          exitOrtho();
+          goToDefaultOrbit();
         }
       }
 
@@ -341,9 +350,7 @@ export function useCameraShortcuts({
         if (modeRef.current === 'follow') exitFollow();
         else enterFollow(curX, curZ, 'follow');
       } else if (requestedMode === 'orbit') {
-        if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
-        else if (modeRef.current === 'top') exitTop();
-        else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+        goToDefaultOrbit();
       }
     };
 

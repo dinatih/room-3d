@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, WALL_H } from '../wallData';
+import { ROOM_W, ROOM_D } from '../wallData';
 import { cameraState } from '../cameraState';
 
 export const CX = ROOM_W / 2; // 150 cm — centre X de la pièce
@@ -16,21 +16,16 @@ export function activeFollowH(): number {
   return cameraState.characterHeight * EYE_RATIO;
 }
 
-/**
- * Position de départ de la caméra en mode Perspective / Orbit :
- * X = ROOM_W / 2 = 150 cm (centré horizontalement)
- * Y = 1000 cm = 10 m (vue en hauteur / plongée)
- * Z = -150 cm (reculé vers le nord, côté jardin, regardant vers le sud)
- */
-export const PERSP_POS: [number, number, number] = [ROOM_W / 2, 1000, -150];
+/** Position perspective par défaut, orientée Nord-Est comme la vue ISO NE. */
+const PERSPECTIVE_ISO_OFFSET = 500;
+export const PERSP_POS: [number, number, number] = [
+  ROOM_W / 2 + PERSPECTIVE_ISO_OFFSET,
+  PERSPECTIVE_ISO_OFFSET,
+  ROOM_D / 2 - PERSPECTIVE_ISO_OFFSET,
+];
 
-/**
- * Cible (look-at target) de la caméra en mode Orbit :
- * X = ROOM_W / 2 = 150 cm (centré)
- * Y = WALL_H / 3 = 83.3 cm (tiers inférieur de la hauteur des murs)
- * Z = ROOM_D / 2 = 200 cm (centre de la pièce)
- */
-export const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D / 2];
+/** Cible centrale de l'orbite perspective Nord-Est. */
+export const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, 0, ROOM_D / 2];
 
 /** Position et cible de la caméra en mode 2D Top (centré sur la pièce à 20m d'altitude) */
 export const TOP_POS: [number, number, number] = [CX, 2000, CZ];
