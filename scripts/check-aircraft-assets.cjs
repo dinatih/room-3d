@@ -8,6 +8,8 @@ const root = path.resolve(__dirname, '..');
 const transpile = file => ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
 const definitions = {};
 vm.runInNewContext(transpile('src/features/scene/aircraftModels.ts'), { exports: definitions, Math });
+assert.equal(definitions.AIRCRAFT_MODELS[0].key, 'origami');
+assert(!definitions.AIRCRAFT_MODELS.some(entry => ['paper', 'paper-glb', 'a380'].includes(entry.key)));
 // Tester les géométries et clips locaux sans décodage d'images/WebGL.
 global.self = global;
 THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new THREE.Texture(); queueMicrotask(() => onLoad(texture)); return texture; };
@@ -78,6 +80,8 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
   frame({}, 1 / 60); assert.equal(launches, 0);
   state.planeLaunching = true;
   for (let i = 0; i <= Math.ceil(origami.animations[0].duration * 60) + 1; i++) frame({}, 1 / 60);
+  assert.equal(launches, 0, 'pliage encore en cours après la durée originale');
+  for (let i = 0; i <= Math.ceil(origami.animations[0].duration * 9 * 60) + 1; i++) frame({}, 1 / 60);
   assert.equal(launches, 1, 'launch follows completion of folding/departure exactly once');
   activeAsset = comet;
   const element = exported.AircraftMesh({ definition: definitions.AIRCRAFT_MODELS.find(entry => entry.key === 'comet') });

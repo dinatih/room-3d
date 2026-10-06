@@ -37,6 +37,7 @@ export function AircraftMesh({ definition, onLaunchReady }: { definition: Defini
     if (extent <= 0) throw new Error(`Dimensions d'avion invalides : ${definition.key}`);
     const scale = 55 / extent;
     const offset = box.getCenter(new THREE.Vector3()).multiplyScalar(-scale);
+    action?.setEffectiveTimeScale(0.1); // Pliage/départ dix fois plus lent.
     if (action && onLaunchReady && !cameraState.planeLaunched) {
       action.reset().play();
       action.paused = true;

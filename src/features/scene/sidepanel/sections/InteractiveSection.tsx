@@ -21,7 +21,7 @@ export interface InteractiveSectionProps {
 
 export function InteractiveSection({
   isMobile: _isMobile,
-  planeModel = 'paper',
+  planeModel = 'origami',
   onSetPlaneModel,
   autopilotVisible = false,
   onToggleAutopilot,

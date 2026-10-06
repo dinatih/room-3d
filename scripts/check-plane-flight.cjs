@@ -25,7 +25,7 @@ vm.runInNewContext(code, {
     if (name === '@react-three/fiber') return { useThree: () => ({ camera, invalidate() {} }), useFrame(fn) { frame = fn; } };
     if (name === '@react-three/drei') return { useGLTF: Object.assign(() => {}, { preload() {} }) };
     if (name === './AircraftMesh') return {};
-    if (name === './aircraftModels') return { AIRCRAFT_MODELS: [{ key: 'paper', label: 'Papier', path: '', yaw: 0 }] };
+    if (name === './aircraftModels') return { AIRCRAFT_MODELS: [{ key: 'comet', label: 'Comète', path: '', yaw: 0 }] };
     if (name === './wallData') return { ROOM_W: 300, ROOM_D: 400, WALL_H: 250 };
     if (name === './cameraState') return { cameraState };
     if (name === './sceneLayer') return { CategoryLayerGroup: () => null };
@@ -39,9 +39,8 @@ vm.runInNewContext(code, {
 });
 let exitCount = 0;
 let modelChanges = 0;
-exportsObject.PaperPlane({ onExit: () => exitCount++, onCycleModel: () => modelChanges++ });
-const paper = exportsObject.PaperPlaneMesh();
-refs.find(ref => ref.current instanceof THREE.Group).current.add(new THREE.Mesh(paper.props.geometry, new THREE.MeshBasicMaterial()));
+exportsObject.PaperPlane({ model: 'comet', onExit: () => exitCount++, onCycleModel: () => modelChanges++ });
+refs.find(ref => ref.current instanceof THREE.Group).current.add(new THREE.Mesh(new THREE.BoxGeometry(36, 9, 48), new THREE.MeshBasicMaterial()));
 const cleanups = effects.map(fn => fn());
 const flight = refs.find(ref => ref.current && ref.current.speed === 130).current;
 const key = (type, key) => windowTarget.dispatchEvent(new KeyboardEvent(type, { key }));

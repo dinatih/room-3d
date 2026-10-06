@@ -55,7 +55,7 @@ export function SidePanel({
   onStartBuildAnimMatrix,
   onStopBuildAnim,
   animDurations = {},
-  planeModel = 'paper',
+  planeModel = 'origami',
   onSetPlaneModel,
   autopilotVisible = false,
   onToggleAutopilot,

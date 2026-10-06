@@ -78,41 +78,9 @@ function lerpAngle(a: number, b: number, t: number): number {
   return a + d * t;
 }
 
-// ── Mesh avion en papier ──────────────────────────────────────────────────────
-
-export function PaperPlaneMesh() {
-  const geo = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    // Flèche pliée : ailes en dièdre, doubles replis et quille centrale.
-    // Nez vers -Z, longueur 48 cm et envergure 36 cm.
-    const nose = [0, 0, -30];
-    const keel = [0, -6, 18];
-    const vertices: number[] = [];
-    for (const side of [-1, 1]) {
-      const fold = [side * 3, 0, 18];
-      const wingtip = [side * 18, 3, 18];
-      const innerFold = [side * 9, 0.8, 18];
-      // Panneaux sans sommets partagés : normales distinctes aux plis.
-      vertices.push(...nose, ...fold, ...wingtip);
-      vertices.push(...nose, ...innerFold, ...fold);
-      vertices.push(...nose, ...keel, ...fold);
-    }
-    const v = new Float32Array(vertices);
-    g.setAttribute('position', new THREE.BufferAttribute(v, 3));
-    g.computeVertexNormals();
-    return g;
-  }, []);
-  return (
-    <mesh geometry={geo} castShadow>
-      <meshStandardMaterial color="#f5f5ee" side={THREE.DoubleSide} roughness={0.95} flatShading />
-    </mesh>
-  );
-}
-
 export function PlaneMesh({ model, onLaunchReady }: { model: PlaneModelKey; onLaunchReady?: () => void }) {
   const definition = AIRCRAFT_MODELS.find(entry => entry.key === model)!;
-  if (model === 'paper') return <PaperPlaneMesh />;
-  return <Suspense fallback={<PaperPlaneMesh />}><AircraftMesh key={model} definition={definition} onLaunchReady={onLaunchReady} /></Suspense>;
+  return <Suspense fallback={null}><AircraftMesh key={model} definition={definition} onLaunchReady={onLaunchReady} /></Suspense>;
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
@@ -124,7 +92,7 @@ interface PaperPlaneProps {
   onViewModeChange?: (vm: PlaneViewMode, launched: boolean) => void;
 }
 
-export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleModel }: PaperPlaneProps) {
+export function PaperPlane({ onExit, model = 'origami', onViewModeChange, onCycleModel }: PaperPlaneProps) {
   const { camera, invalidate } = useThree();
   const originalNear = useRef(camera.near);
   const planeRef    = useRef<THREE.Group>(null!);

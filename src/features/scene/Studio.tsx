@@ -449,7 +449,7 @@ export function Studio() {
 
   const [planeMode,          setPlaneMode]          = useState(parseUrlFlightMode);
   useEffect(() => { updateUrlFlightMode(planeMode); }, [planeMode]);
-  const [planeModel,         setPlaneModel]         = useState<PlaneModelKey>('paper');
+  const [planeModel,         setPlaneModel]         = useState<PlaneModelKey>('origami');
   const cyclePlaneModel = useCallback(() => {
     const models: PlaneModelKey[] = AIRCRAFT_MODELS.map(entry => entry.key);
     setPlaneModel(current => models[(models.indexOf(current) + 1) % models.length]);

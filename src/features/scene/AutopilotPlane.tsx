@@ -36,7 +36,7 @@ interface AutopilotPlaneProps {
   model?: PlaneModelKey;
 }
 
-export function AutopilotPlane({ model = 'paper' }: AutopilotPlaneProps) {
+export function AutopilotPlane({ model = 'origami' }: AutopilotPlaneProps) {
   const groupRef = useRef<THREE.Group>(null!);
   const t        = useRef(0);
   const euler    = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
