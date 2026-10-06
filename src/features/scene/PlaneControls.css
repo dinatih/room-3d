@@ -1,32 +1,55 @@
 .plane-controls {
   position: absolute;
   z-index: 100;
-  bottom: max(1rem, env(safe-area-inset-bottom));
+  inset: 0;
+  pointer-events: none;
+}
+.plane-info, .plane-status, .plane-help, .plane-sensor, .plane-message {
+  position: absolute;
   left: 50%;
   transform: translateX(-50%);
   width: max-content;
   max-width: calc(100% - 1rem);
-  padding: .75rem;
-  border-radius: .75rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, .96), rgba(241, 245, 249, .94));
-  border: 1px solid rgba(148, 163, 184, .45);
-  box-shadow: 0 .5rem 1.5rem rgba(15, 23, 42, .15);
-  backdrop-filter: blur(12px);
+  background: rgba(248, 250, 252, .9);
+  border: 1px solid rgba(148, 163, 184, .35);
+  box-shadow: 0 .125rem .5rem rgba(15, 23, 42, .1);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
 }
+.plane-info { bottom: max(.5rem, env(safe-area-inset-bottom)); }
+.plane-status, .plane-help { bottom: calc(max(.5rem, env(safe-area-inset-bottom)) + 3rem); }
+.plane-help { width: 24rem; }
+.plane-status { pointer-events: none; }
 .plane-speed { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
 .plane-touch { display: none; }
-.plane-hold { touch-action: none; user-select: none; min-width: 3rem; min-height: 3rem; }
-.plane-dpad { display: grid; grid-template-columns: repeat(3, 3rem); grid-template-rows: repeat(3, 3rem); gap: .25rem; }
+.plane-hold {
+  touch-action: none;
+  user-select: none;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  background: rgba(248, 250, 252, .9);
+  pointer-events: auto;
+}
+.plane-dpad {
+  position: absolute;
+  left: max(.5rem, env(safe-area-inset-left));
+  bottom: calc(max(.5rem, env(safe-area-inset-bottom)) + 3rem);
+  display: grid;
+  grid-template-columns: repeat(3, 2.75rem);
+  grid-template-rows: repeat(3, 2.75rem);
+  gap: .125rem;
+}
+.plane-throttle {
+  position: absolute;
+  right: max(.5rem, env(safe-area-inset-right));
+  bottom: calc(max(.5rem, env(safe-area-inset-bottom)) + 3rem);
+}
+.plane-sensor { top: max(.5rem, env(safe-area-inset-top)); }
+.plane-message { top: calc(max(.5rem, env(safe-area-inset-top)) + 3rem); }
 .plane-up { grid-area: 1 / 2; }
 .plane-left { grid-area: 2 / 1; }
 .plane-right { grid-area: 2 / 3; }
 .plane-down { grid-area: 3 / 2; }
 @media (pointer: coarse), (any-pointer: coarse) {
   .plane-touch { display: block; }
-  .plane-keyboard { display: none; }
-  .plane-controls { width: min(26rem, calc(100% - 1rem)); }
-}
-@media (max-height: 480px) {
-  .plane-dpad { grid-template-rows: repeat(3, 2.25rem); }
-  .plane-hold { min-height: 2.25rem; padding: .25rem; }
 }

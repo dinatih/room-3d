@@ -54,9 +54,7 @@ const SPEED_DRAG   = 14;
 const PITCH_RATE   = 1.6;
 const ROLL_RATE    = 2.4;
 const ROLL_TO_YAW  = 1.2;
-const PITCH_LIMIT  = 1.2;
 const ROLL_LIMIT   = 1.3;
-const PITCH_DAMP   = 1.6;
 const ROLL_DAMP    = 2.6;
 
 const CAM_FOLLOW_OFFSET = new THREE.Vector3(0, 30, 90);
@@ -387,15 +385,17 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
 
     // ── Détection atterrissage automatique ──────────────────────────────────
     if (!landingRef.current && cameraState.landingStripsVisible) {
-      const planeFwdX = -Math.sin(s.yaw);
-      const planeFwdZ = -Math.cos(s.yaw);
+      _va.current.set(0, 0, -1).applyQuaternion(s.quat);
+      const planeFwdX = _va.current.x;
+      const planeFwdZ = _va.current.z;
+      const isUpright = _vb.current.set(0, 1, 0).applyQuaternion(s.quat).y > 0;
 
       for (const strip of LANDING_STRIPS) {
         const sdX = Math.sin(strip.angleY);
         const sdZ = Math.cos(strip.angleY);
         const dot = planeFwdX * sdX + planeFwdZ * sdZ;
 
-        if (Math.abs(dot) > LAND_ALIGN_DOT) {
+        if (isUpright && Math.abs(dot) > LAND_ALIGN_DOT) {
           const dX = s.pos.x - strip.cx;
           const dZ = s.pos.z - strip.cz;
           // Composante latérale (perpendiculaire à la piste)
@@ -465,9 +465,9 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
       throttleIn = THREE.MathUtils.clamp(throttleIn, -1, 1);
       s.pitch += pitchIn * PITCH_RATE * dt;
       s.roll  += rollIn  * ROLL_RATE  * dt;
-      if (pitchIn === 0) s.pitch *= Math.max(0, 1 - PITCH_DAMP * dt);
       if (rollIn  === 0) s.roll  *= Math.max(0, 1 - ROLL_DAMP  * dt);
-      s.pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, s.pitch));
+      // Angle périodique : aucune butée, les commandes traversent le dos et la verticale.
+      s.pitch = Math.atan2(Math.sin(s.pitch), Math.cos(s.pitch));
       s.roll  = Math.max(-ROLL_LIMIT,  Math.min(ROLL_LIMIT,  s.roll));
       s.yaw  += s.roll * ROLL_TO_YAW * dt;
 
@@ -483,7 +483,10 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
       _va.current.set(0, 0, -1).applyQuaternion(s.quat);
       s.pos.addScaledVector(_va.current, s.speed * dt);
       s.pos.y -= GRAVITY * dt;
-      if (s.pos.y < MIN_Y) { s.pos.y = MIN_Y; s.pitch = Math.max(s.pitch, 0.1); }
+      if (s.pos.y < MIN_Y) {
+        s.pos.y = MIN_Y;
+        if (Math.sin(s.pitch) < 0) s.pitch = Math.cos(s.pitch) >= 0 ? 0 : Math.PI;
+      }
     }
 
     _euler.current.set(s.pitch, s.yaw, s.roll);
@@ -524,6 +527,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
       _va.current.copy(CAM_FOLLOW_OFFSET).applyQuaternion(s.quat).add(s.pos);
       camera.position.lerp(_va.current, 1 - Math.pow(1 - CAM_LERP, dt * 60));
       _vb.current.copy(CAM_FOLLOW_LOOK).applyQuaternion(s.quat).add(s.pos);
+      camera.up.set(0, 1, 0).applyQuaternion(s.quat);
       camera.lookAt(_vb.current);
 
     } else if (vm === 'cockpit') {

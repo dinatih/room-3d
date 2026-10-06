@@ -13,6 +13,7 @@ export function PlaneControls({ viewMode, launched, onExit, model, onCycleModel 
   const [speed, setSpeed] = useState(0);
   const [gyro, setGyro] = useState(false);
   const [message, setMessage] = useState('');
+  const [showHelp, setShowHelp] = useState(false);
   const neutral = useRef<THREE.Quaternion | null>(null);
   const latest = useRef<THREE.Quaternion | null>(null);
   const held = useRef(new Map<number, string>());
@@ -117,7 +118,7 @@ export function PlaneControls({ viewMode, launched, onExit, model, onCycleModel 
     updateButtons();
   }
   function holdButton(action: string, label: string, title: string) {
-    return <button type="button" className={`btn btn-outline-secondary plane-hold plane-${action}`} aria-label={title} title={title} disabled={!flying} onPointerDown={e => press(e, action)} onPointerUp={lift} onPointerCancel={lift} onLostPointerCapture={lift}>{label}</button>;
+    return <button type="button" className={`btn btn-outline-secondary btn-sm plane-hold plane-${action}`} aria-label={title} title={title} disabled={!flying} onPointerDown={e => press(e, action)} onPointerUp={lift} onPointerCancel={lift} onLostPointerCapture={lift}>{label}</button>;
   }
   const fraction = THREE.MathUtils.clamp(speed / (SPEED_MAX * 0.036), 0, 1);
   // Même palette rouge → ambre → vert que le compteur FPS, interpolée.
@@ -128,27 +129,28 @@ export function PlaneControls({ viewMode, launched, onExit, model, onCycleModel 
   const viewLabels = { prelaunch: 'Pré-vol', follow: 'Suivi', cockpit: 'Cockpit', character: 'PNJ', landing: 'Atterrissage', landed: 'Au sol' };
   const modelLabels = { paper: 'Papier', rocket: 'Fusée', comet: 'Comète' };
   return <div className="plane-controls text-dark">
-    <div className="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-2">
-      <output className="plane-speed px-2" style={{ color: `#${speedColor.getHexString()}` }} aria-label="Vitesse">{speed.toFixed(1)} <small>km/h</small></output>
-      {!launched && <button className="btn btn-sm btn-primary" onClick={() => command('launch')}>Décoller</button>}
-      {flying && <button className="btn btn-sm btn-outline-secondary" onClick={() => command('view')}>Vue : {viewLabels[viewMode]}</button>}
-      <button className="btn btn-sm btn-outline-secondary" title="Changer d’avion (V)" onClick={onCycleModel}>{modelLabels[model]} · V</button>
-      <button className="btn btn-sm btn-outline-secondary" onClick={onExit}>Quitter</button>
+    <div className="plane-info d-flex align-items-center gap-1 p-1 rounded-3">
+      <output className="plane-speed px-2 small" style={{ color: `#${speedColor.getHexString()}` }} aria-label="Vitesse">{speed.toFixed(1)} <small>km/h</small></output>
+      {!launched && <button className="btn btn-sm btn-primary" title="Décoller (Espace / Ctrl / C)" onClick={() => command('launch')}>Décoller</button>}
+      {flying && <button className="btn btn-sm btn-outline-secondary" title="Changer de vue (C)" onClick={() => command('view')}>{viewLabels[viewMode]}</button>}
+      <button className="btn btn-sm btn-outline-secondary" title="Changer d’avion (V)" onClick={onCycleModel}>{modelLabels[model]}</button>
+      <button className="btn btn-sm btn-outline-secondary" title="Quitter (F / Échap)" aria-label="Quitter le vol" onClick={onExit}><i className="bi bi-x-lg" aria-hidden="true" /></button>
+      <button className="btn btn-sm btn-outline-secondary" title="Commandes" aria-label="Afficher les commandes" aria-expanded={showHelp} onClick={() => setShowHelp(value => !value)}><i className="bi bi-question-lg" aria-hidden="true" /></button>
     </div>
-    {(viewMode === 'landing' || viewMode === 'landed') && <div className="small text-center">{viewMode === 'landing' ? 'Atterrissage automatique…' : 'Atterri'}</div>}
+    {(viewMode === 'landing' || viewMode === 'landed') && <div className="plane-status small text-center rounded-3 p-1">{viewMode === 'landing' ? 'Atterrissage automatique…' : 'Atterri'}</div>}
+    {showHelp && <div className="plane-help small text-center rounded-3 p-2">↑↓ Tangage / looping · ←→ Virage · Espace/Ctrl Gaz · Shift Frein · C Vue · V Avion · F Quitter</div>}
     <div className="plane-touch">
-      <div className="d-flex justify-content-center gap-2 mb-2">
+      <div className="plane-sensor d-flex align-items-center gap-1 rounded-3 p-1">
         <button className={`btn btn-sm ${gyro ? 'btn-primary' : 'btn-outline-secondary'}`} aria-pressed={gyro} onClick={toggleGyro}>Gyroscope</button>
         {gyro && <button className="btn btn-sm btn-outline-secondary" onClick={() => { neutral.current = latest.current?.clone() ?? null; planeInput.pitch = planeInput.roll = 0; }}>Recentrer</button>}
       </div>
-      {message && <div role="status" className="small text-center mb-2">{message}</div>}
-      <div className="d-flex align-items-center justify-content-between gap-3">
+      {message && <div role="status" className="plane-message small text-center rounded-3 p-1">{message}</div>}
+      {flying && <>
         {!gyro && <div className="plane-dpad">
-          {holdButton('up', '↑', 'Piquer')}{holdButton('left', '←', 'Virer à gauche')}{holdButton('right', '→', 'Virer à droite')}{holdButton('down', '↓', 'Cabrer')}
+          {holdButton('up', '↑', 'Piquer / looping avant')}{holdButton('left', '←', 'Virer à gauche')}{holdButton('right', '→', 'Virer à droite')}{holdButton('down', '↓', 'Cabrer / looping arrière')}
         </div>}
-        <div className="d-flex flex-column gap-2 ms-auto">{holdButton('boost', '+ Gaz', 'Accélérer')}{holdButton('brake', '− Gaz', 'Freiner')}</div>
-      </div>
+        <div className="plane-throttle d-flex flex-column gap-1">{holdButton('boost', '+ Gaz', 'Accélérer')}{holdButton('brake', '− Gaz', 'Freiner')}</div>
+      </>}
     </div>
-    <div className="plane-keyboard small text-center text-secondary">↑↓ Tangage · ←→ Virage · Espace/Ctrl Gaz · Shift Frein · C Vue · V Avion · F Quitter</div>
   </div>;
 }

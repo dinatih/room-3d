@@ -93,7 +93,7 @@ assert(flight.pitch < -.05, 'up arrow/W pitches down');
 windowTarget.dispatchEvent(new Event('blur'));
 const pitch = flight.pitch;
 frame({}, 1 / 60);
-assert(flight.pitch > pitch, 'blur releases controls');
+assert.equal(flight.pitch, pitch, 'blur releases controls and retains pitch attitude');
 planeInput.pitch = 1;
 planeInput.roll = -1;
 planeInput.throttle = 1;
@@ -101,6 +101,38 @@ const speed = flight.speed;
 frame({}, 1 / 60);
 assert(flight.speed > speed, 'mobile throttle accelerates');
 assert(flight.pitch > pitch, 'mobile pitch input reaches physics');
+Object.assign(planeInput, { pitch: 0, roll: 0, throttle: 0 });
+// Deux tours complets, dans les deux sens, en cockpit et en suivi.
+for (const view of ['follow', 'cockpit']) {
+  while (cameraState.planeViewMode !== view) key('keydown', 'c');
+  for (const direction of [-1, 1]) {
+    flight.pos.set(150, 1600, 150);
+    Object.assign(flight, { yaw: 0, pitch: 0, roll: 0, speed: 130 });
+    planeInput.pitch = direction;
+    planeInput.throttle = 1;
+    let accumulated = 0;
+    let lastPitch = 0;
+    let wasInverted = false;
+    const turnFrames = Math.ceil(4 * Math.PI / (1.6 / 60));
+    let previousCameraRotation = null;
+    for (let i = 0; i < turnFrames; i++) {
+      frame({}, 1 / 60);
+      const difference = flight.pitch - lastPitch;
+      accumulated += Math.atan2(Math.sin(difference), Math.cos(difference));
+      lastPitch = flight.pitch;
+      if (Math.cos(flight.pitch) < 0) wasInverted = true;
+      if (view === 'cockpit') assert(camera.quaternion.angleTo(flight.quat) < 1e-6, 'cockpit follows full looping');
+      if (view === 'follow' && previousCameraRotation) assert(camera.quaternion.angleTo(previousCameraRotation) < .2, 'follow camera does not flip at the vertical');
+      previousCameraRotation = camera.quaternion.clone();
+    }
+    assert(wasInverted, 'loop passes through inverted attitude');
+    assert(direction * accumulated >= 4 * Math.PI, 'two complete loops without pitch limit');
+    planeInput.pitch = 0;
+    const retainedPitch = flight.pitch;
+    frame({}, 1 / 60);
+    assert(Math.abs(flight.pitch - retainedPitch) < 1e-12, 'releasing stick retains attitude after looping');
+  }
+}
 Object.assign(planeInput, { pitch: 0, roll: 0, throttle: 0 });
 flight.pos.set(150, 100, 3740);
 Object.assign(flight, { yaw: Math.PI, pitch: 0, roll: 0 });
@@ -111,9 +143,15 @@ assert(bounds.center.distanceTo(new THREE.Vector3(150, 0, 150)) + bounds.radius 
 flight.pos.set(150, 100, 3600);
 frame({}, 1 / 60);
 assert.equal(cameraState.planeSkyContact, false, 'sky contact clears after leaving boundary');
-Object.assign(flight, { yaw: Math.PI, pitch: 0, roll: 0 });
-flight.pos.set(150, 21, 200);
+Object.assign(flight, { yaw: 0, pitch: Math.PI, roll: 0 });
+flight.quat.setFromEuler(new THREE.Euler(Math.PI, 0, 0, 'YXZ'));
+flight.pos.set(150, 30, 200);
 cameraState.landingStripsVisible = true;
+frame({}, 1 / 60);
+assert.notEqual(cameraState.planeViewMode, 'landing', 'inverted flight does not trigger automatic landing');
+Object.assign(flight, { yaw: Math.PI, pitch: 0, roll: 0 });
+flight.quat.setFromEuler(new THREE.Euler(0, Math.PI, 0, 'YXZ'));
+flight.pos.set(150, 21, 200);
 for (let i = 0; i < 30; i++) frame({}, 1 / 60);
 assert.equal(cameraState.planeViewMode, 'landed');
 assert.equal(cameraState.planeSpeed, 0);
