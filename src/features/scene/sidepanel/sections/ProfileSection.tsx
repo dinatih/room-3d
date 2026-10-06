@@ -65,6 +65,18 @@ export function ProfileSection({ isMobile: _isMobile, onOpenCv }: ProfileSection
         <div>🤖 <strong>Productivité</strong> démultipliée par l'encadrement d'agents IA</div>
       </div>
 
+      <a
+        href="https://dinatih.org/room-3d/visualizer/"
+        target="_blank"
+        rel="noreferrer"
+        className="btn btn-sm btn-outline-dark d-flex align-items-center justify-content-center gap-2 shadow-sm"
+        title="Explorer graphiquement le code et son évolution au fil des commits"
+      >
+        <i className="bi bi-diagram-3" aria-hidden="true"></i>
+        <span className="fw-semibold">Visualiseur du code</span>
+        <i className="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+      </a>
+
       {/* Liens externes */}
       <div className="d-flex gap-2 mt-1">
         <a
