@@ -246,8 +246,11 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
             e.stopPropagation();
             setIsPaused(p => !p);
           }}
+          title={isPaused ? 'Reprendre le défilement' : 'Mettre le défilement en pause'}
+          aria-label={isPaused ? 'Reprendre le défilement' : 'Mettre le défilement en pause'}
+          aria-pressed={isPaused}
         >
-          {isPaused ? '▶ REP.' : '⏸ PAUSE'}
+          <i className={`bi ${isPaused ? 'bi-play-fill' : 'bi-pause-fill'}`} aria-hidden="true" />
         </button>
       )}
     </div>
@@ -268,8 +271,8 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       }}
     >
       <Group
-        emoji="🤖"
-        title="C."
+        emoji={<i className="bi bi-terminal" aria-hidden="true" />}
+        title="Console"
         open={open}
         extra={consoleControls}
         headerPadding="py-1 px-2"

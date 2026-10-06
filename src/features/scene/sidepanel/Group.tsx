@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 export interface GroupProps {
-  emoji: string;
+  emoji: React.ReactNode;
   title: string;
   defaultOpen?: boolean;
   /** Controlled open state — when provided, Group uses this instead of internal state */
@@ -25,7 +25,9 @@ export function Group({ emoji, title, defaultOpen = false, open: controlledOpen,
     <div className={`card shadow-sm glass-card overflow-hidden flex-shrink-0${className ? ` ${className}` : ''}`}>
       <div className="card-header p-0 border-0 bg-transparent d-flex align-items-center justify-content-between flex-shrink-0">
         <button
-          className={`btn btn-sm ${extra ? 'flex-shrink-0' : 'flex-grow-1'} text-start ${headerPadding} fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none text-uppercase small flex-shrink-0`}
+          type="button"
+          aria-expanded={isOpen}
+          className={`btn btn-sm ${extra ? 'flex-shrink-0' : 'flex-grow-1'} align-self-stretch text-start ${headerPadding} fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none text-uppercase small flex-shrink-0`}
           onClick={handleToggle}
         >
           <span>{emoji} {title}</span>
