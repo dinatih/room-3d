@@ -170,9 +170,9 @@ export function ViewControlBar({
 
   if (inline) {
     return (
-      <div className={`view-control-bar-inline d-flex flex-column align-items-center gap-1 px-2 ${children ? 'py-1' : 'py-2'}`}>
+      <div className={`view-control-bar-inline d-flex flex-column align-items-center gap-0 px-2 ${children ? 'py-0' : 'py-2'}`}>
         {bar}
-        {children && <div className="view-control-bar-inline__content w-100 pt-2">{children}</div>}
+        {children && <div className="w-100">{children}</div>}
       </div>
     );
   }
