@@ -56,6 +56,7 @@ function RunningShiba({ countdownStarted }: { countdownStarted: boolean }) {
   const elapsed = useRef(0);
   const nextTrick = useRef(0);
   const circle = useRef({ x: 0, z: 0, angle: 0, remaining: 0 });
+  const horizontalLimit = useRef(0);
   const { camera, size } = useThree();
   const envelope = useMemo(() => ({ radius: 0, minY: 0, height: 0, sitTime: 0 }), []);
   const mixer = useMemo(() => new AnimationMixer(model), [model]);
@@ -128,29 +129,37 @@ function RunningShiba({ countdownStarted }: { countdownStarted: boolean }) {
     activeAction.current = action;
   }, [countdownStarted, clips, mixer]);
 
+  useLayoutEffect(() => {
+    const ortho = camera as OrthographicCamera;
+    ortho.zoom = Math.min(size.height / (envelope.height + DOG_HEIGHT / 2), size.width / (envelope.radius * 2 + DOG_HEIGHT / 2));
+    ortho.updateProjectionMatrix();
+    horizontalLimit.current = Math.max(0, size.width / ortho.zoom / 2 - envelope.radius - DOG_HEIGHT / 4);
+    if (runner.current) runner.current.position.y = -envelope.minY - envelope.height / 2;
+  }, [camera, size.width, size.height, envelope]);
+
   useFrame((_, delta) => {
     const group = runner.current;
     if (!group) return;
     mixer.update(delta);
-    const ortho = camera as OrthographicCamera;
-    ortho.zoom = Math.min(size.height / (envelope.height + DOG_HEIGHT / 2), size.width / (envelope.radius * 2 + DOG_HEIGHT / 2));
-    ortho.updateProjectionMatrix();
-    group.position.y = -envelope.minY - envelope.height / 2;
-    const limit = Math.max(0, size.width / ortho.zoom / 2 - envelope.radius - DOG_HEIGHT / 4);
+    const limit = horizontalLimit.current;
     const play = (mode: 'run' | 'jump') => {
       const action = mixer.clipAction(clips[mode]);
-      action.reset().setLoop(mode === 'jump' ? LoopOnce : LoopRepeat, mode === 'jump' ? 1 : Infinity);
-      action.clampWhenFinished = mode === 'jump';
-      action.fadeIn(ANIMATION_FADE).play();
-      activeAction.current?.fadeOut(ANIMATION_FADE);
-      activeAction.current = action;
+      // Sortir d'un cercle conserve la course déjà active, sans la faire disparaître.
+      if (action !== activeAction.current) {
+        action.stopFading().reset().setEffectiveWeight(1).setEffectiveTimeScale(1);
+        action.setLoop(mode === 'jump' ? LoopOnce : LoopRepeat, mode === 'jump' ? 1 : Infinity);
+        action.clampWhenFinished = mode === 'jump';
+        action.fadeIn(ANIMATION_FADE).play();
+        activeAction.current?.fadeOut(ANIMATION_FADE);
+        activeAction.current = action;
+      }
       movement.current = mode;
       elapsed.current = 0;
       nextTrick.current = clips.run.duration * (2 + Math.random() * 3);
     };
     if (movement.current === 'sit') {
       const action = activeAction.current;
-      if (action && action.time >= envelope.sitTime) {
+      if (action && !action.paused && action.time >= envelope.sitTime) {
         action.time = envelope.sitTime;
         action.paused = true;
         mixer.update(0);
