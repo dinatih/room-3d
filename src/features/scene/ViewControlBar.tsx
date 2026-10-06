@@ -184,10 +184,8 @@ export function ViewControlBar({
 
   return (
     <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked gap-2' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle, ...mobileDockOffset }}>
-      {bar}
-      {children && <div className="view-control-bar-dock__content w-100">{children}</div>}
       {activeCameraView && (
-        <span className="badge text-bg-dark bg-opacity-75 mt-1">
+        <span className="badge text-bg-dark bg-opacity-75 view-control-bar-dock__view-label">
           {activeCameraView === 'iso-se' ? 'ISO Sud-Est'
             : activeCameraView === 'iso-sw' ? 'ISO Sud-Ouest'
             : activeCameraView === 'iso-ne' ? 'ISO Nord-Est'
@@ -202,6 +200,8 @@ export function ViewControlBar({
             : activeCameraView}
         </span>
       )}
+      {bar}
+      {children && <div className="view-control-bar-dock__content w-100">{children}</div>}
     </div>
   );
 }
