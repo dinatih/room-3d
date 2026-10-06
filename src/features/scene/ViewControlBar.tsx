@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView } from './sidepanel/types';
 import { getLaraGridCameraView } from './character/laraGridUtils';
+import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 const ORTHO_VIEWS = [
   { key: 'front', label: 'Face', shortcut: 'Alt+1', icon: 'bi-arrow-up' },
@@ -48,6 +49,7 @@ export function ViewControlBar({
   onEnterFlight,
   children,
 }: ViewControlBarProps) {
+  const isMobile = useIsMobile();
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);
   const npcGridActive = useSceneStore(s => s.layers.laraGrid);
@@ -68,6 +70,9 @@ export function ViewControlBar({
     'bottom-right': { bottom: 12, right: 12 },
     'bottom-center': { bottom: 12, left: '50%', transform: 'translateX(-50%)' },
   }[position];
+  const mobileDockOffset = isMobile && position.startsWith('bottom-')
+    ? { bottom: 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' }
+    : undefined;
 
   const viewButtons = (
     views: typeof ORTHO_VIEWS | typeof EXTRA_VIEWS | typeof ISO_VIEWS,
@@ -178,7 +183,7 @@ export function ViewControlBar({
   }
 
   return (
-    <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked gap-2' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle }}>
+    <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked gap-2' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle, ...mobileDockOffset }}>
       {bar}
       {children && <div className="view-control-bar-dock__content w-100">{children}</div>}
       {activeCameraView && (

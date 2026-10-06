@@ -32,6 +32,10 @@
   flex: 0 0 auto;
 }
 
+.view-control-bar > .btn {
+  flex: 0 0 auto;
+}
+
 .view-control-bar .btn {
   white-space: nowrap;
 }
@@ -99,9 +103,30 @@ $control-colors: (
 }
 
 @media (max-width: 767.98px) {
+  .view-control-bar-dock {
+    width: calc(100vw - 1rem);
+  }
+
+  .view-control-bar-dock--stacked {
+    width: calc(100vw - 1rem);
+  }
+
+  .view-control-bar-dock--stacked > .view-control-bar {
+    width: 100% !important;
+  }
+
   .view-control-bar {
-    width: max-content;
-    row-gap: 0.375rem !important;
+    width: 100%;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .view-control-bar::-webkit-scrollbar {
+    display: none;
   }
 
   .view-control-bar .btn {
