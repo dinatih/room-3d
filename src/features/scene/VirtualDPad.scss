@@ -1,8 +1,8 @@
 .virtual-dpad {
   position: fixed;
   right: 1rem;
-  bottom: calc(3.75rem + env(safe-area-inset-bottom) + 3.375rem);
-  z-index: 95;
+  bottom: calc(3.75rem + env(safe-area-inset-bottom) + 4.25rem);
+  z-index: 1001;
   display: grid;
   grid-template-columns: repeat(3, 2.5rem);
   grid-template-rows: repeat(3, 2.5rem);
@@ -18,23 +18,22 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  color: rgba(52, 58, 64, 0.58);
-  background-color: rgba(255, 255, 255, 0.22) !important;
-  border: 1px solid rgba(73, 80, 87, 0.16) !important;
-  border-radius: 0.625rem;
-  opacity: 0.58;
+  color: #343a40;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(73, 80, 87, 0.3) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
   touch-action: none;
 }
 
 .virtual-dpad__button:hover {
-  opacity: 0.82;
+  background-color: rgba(255, 255, 255, 0.92) !important;
 }
 
 .virtual-dpad__button.is-pressed {
-  color: rgba(255, 255, 255, 0.95);
-  background-color: rgba(211, 47, 47, 0.82) !important;
-  border-color: rgba(183, 28, 28, 0.75) !important;
-  opacity: 0.9;
+  color: #fff;
+  background-color: #d32f2f !important;
+  border-color: #b71c1c !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .virtual-dpad__button--up { grid-area: 1 / 2; }

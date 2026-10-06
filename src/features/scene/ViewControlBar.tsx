@@ -27,7 +27,6 @@ const ISO_VIEWS = [
 export interface ViewControlBarProps {
   /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-center' */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'bottom-center';
-  mobileBottomGap?: number;
   /** Rendu dans le flux du document (pas position:fixed) */
   inline?: boolean;
   /** Masquer le composant (ex: mode immersif) */
@@ -42,7 +41,6 @@ export interface ViewControlBarProps {
 
 export function ViewControlBar({
   position = 'bottom-center',
-  mobileBottomGap = 8,
   inline = false,
   hidden = false,
   showCharacterModes = false,
@@ -73,7 +71,7 @@ export function ViewControlBar({
     'bottom-center': { bottom: 12, left: '50%', transform: 'translateX(-50%)' },
   }[position];
   const mobileDockOffset = isMobile && position.startsWith('bottom-')
-    ? { bottom: `calc(3.75rem + env(safe-area-inset-bottom) + ${mobileBottomGap}px)` }
+    ? { bottom: 'calc(3.75rem + env(safe-area-inset-bottom) + 8px)' }
     : undefined;
 
   const viewButtons = (

@@ -40,7 +40,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
         <button
           key={key}
           type="button"
-          className={`btn btn-sm virtual-dpad__button virtual-dpad__button--${position} ${pressedKeys.has(key) ? 'is-pressed' : ''}`}
+          className={`btn btn-sm rounded-3 virtual-dpad__button virtual-dpad__button--${position} ${pressedKeys.has(key) ? 'is-pressed' : ''}`}
           aria-label={label}
           title={label}
           onPointerDown={event => {

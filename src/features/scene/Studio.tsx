@@ -936,7 +936,6 @@ export function Studio() {
         <ViewControlBar
           hidden={planeMode}
           showCharacterModes
-          mobileBottomGap={showVirtualDPad ? 148 : 8}
           hideUI={hideUI}
           onToggleHideUI={toggleHideUI}
           onEnterFlight={() => {
