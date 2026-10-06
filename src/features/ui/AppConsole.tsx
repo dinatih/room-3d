@@ -264,7 +264,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       style={{
         top: isMobile ? 'calc(env(safe-area-inset-top) + 8px)' : 16,
         right: isMobile ? 8 : 16,
-        width: open ? (isMobile ? 'calc(100vw - 16px)' : 'min(420px, calc(100vw - 32px))') : 'auto',
+        left: isMobile ? 8 : 288,
         height: open ? (isMaximized ? (isMobile ? 'calc(100dvh - env(safe-area-inset-top) - 16px)' : 'calc(100vh - 32px)') : `${savedHeight}px`) : 'auto',
         maxHeight: isMaximized ? (isMobile ? 'calc(100dvh - env(safe-area-inset-top) - 16px)' : 'calc(100vh - 32px)') : (isMobile ? '50vh' : '75vh'),
         zIndex: 100,
@@ -317,15 +317,12 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
             </div>
           )}
           {displayedLogs.map((entry, idx) => {
-            const isLast = idx === displayedLogs.length - 1;
             const tagParts = entry.tag.split('+').map(s => s.trim());
             const isSoloActiveTag = filterBubbleOnly && tagParts.length === 1 && tagParts[0].toLowerCase() === activeCharacterId.toLowerCase();
             return (
               <div
                 key={`${entry.id}_${idx}`}
-                className={`d-flex align-items-baseline gap-2 px-1 py-0.5 rounded-1 text-break lh-sm flex-shrink-0 ${
-                  isLast ? 'bg-white bg-opacity-50 border-start border-primary border-2 ps-1 shadow-sm' : ''
-                }`}
+                className="d-flex align-items-baseline gap-2 px-1 py-0.5 text-break lh-sm flex-shrink-0"
               >
                 <span
                   className="font-monospace flex-shrink-0 user-select-none text-muted small"
