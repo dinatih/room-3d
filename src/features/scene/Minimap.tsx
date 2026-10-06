@@ -25,6 +25,7 @@ export const SMALL_W_MOBILE  = 115;
 
 export interface MinimapProps {
   embedded?: boolean;
+  showGroup?: boolean;
 }
 
 // ── Icône avion (plan 2D) ─────────────────────────────────────────────────────
@@ -448,7 +449,7 @@ function drawMinimap(
 
 // ── Composant HTML principal ──────────────────────────────────────────────────
 
-export function Minimap({ embedded = false }: MinimapProps = {}) {
+export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {}) {
   const isMobile = useIsMobile();
   const floatingCanvasRef = useRef<HTMLCanvasElement>(null);
   const expandedCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -604,6 +605,24 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     } catch {}
   };
+
+  const minimapContent = (
+    <div
+      className="d-flex justify-content-center p-1 bg-transparent"
+      style={{ cursor: 'pointer' }}
+      onClick={() => {
+        setExpanded(true);
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+      }}
+    >
+      <canvas
+        ref={floatingCanvasRef}
+        className="rounded-2"
+        style={{ display: 'block', width: `${smallW}px`, height: `${smallH}px`, background: 'transparent', opacity: 0.95, transition: 'transform 0.15s ease' }}
+      />
+    </div>
+  );
 
   return (
     <>
@@ -767,36 +786,19 @@ export function Minimap({ embedded = false }: MinimapProps = {}) {
             <DevToolsGroups Group={Group} compact />
           </div>
         )}
-        <Group
-          emoji="🗺️"
-          title="Plan 2D"
-          defaultOpen
-          headerPadding="py-1.5 px-2"
-          onToggle={(open) => setIsOpen(open)}
-        >
-          <div
-            className="d-flex justify-content-center p-1 bg-transparent"
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              setExpanded(true);
-              setZoom(1);
-              setPan({ x: 0, y: 0 });
-            }}
+        {showGroup ? (
+          <Group
+            emoji="🗺️"
+            title="Plan 2D"
+            defaultOpen
+            headerPadding="py-1.5 px-2"
+            onToggle={(open) => setIsOpen(open)}
           >
-            <canvas
-              ref={floatingCanvasRef}
-              className="rounded-2"
-              style={{
-                display: 'block',
-                width: `${smallW}px`,
-                height: `${smallH}px`,
-                background: 'transparent',
-                opacity: 0.95,
-                transition: 'transform 0.15s ease',
-              }}
-            />
-          </div>
-        </Group>
+            {minimapContent}
+          </Group>
+        ) : (
+          minimapContent
+        )}
       </div>
     </>
   );

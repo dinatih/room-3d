@@ -58,15 +58,24 @@ function StatRow({ label, value, color }: { label: string; value: string | numbe
   );
 }
 
+const HeaderlessGroup: React.FC<{
+  emoji: string;
+  title: string;
+  defaultOpen?: boolean;
+  headerPadding?: string;
+  children: React.ReactNode;
+}> = ({ children }) => <>{children}</>;
+
 // ── Export principal ──────────────────────────────────────────────────────────
 
 /**
  * Groupes DevTools à insérer dans le SidePanel.
  * Accepte le composant Group pour partager les styles.
  */
-export function DevToolsGroups({ Group, compact = false }: {
+export function DevToolsGroups({ Group, compact = false, headerless = false }: {
   Group: React.ComponentType<{ emoji: string; title: string; defaultOpen?: boolean; headerPadding?: string; children: React.ReactNode }>;
   compact?: boolean;
+  headerless?: boolean;
 }) {
   const [, setTick] = useState(0);
   const fpsCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -102,10 +111,11 @@ export function DevToolsGroups({ Group, compact = false }: {
   }, []);
 
   const isIdle = useAppIdle();
+  const PerfGroup = headerless ? HeaderlessGroup : Group;
 
   return (
     <>
-      <Group emoji="📊" title="Perf" defaultOpen headerPadding={compact ? 'py-1.5 px-2' : undefined}>
+      <PerfGroup emoji="📊" title="Perf" defaultOpen headerPadding={compact ? 'py-1.5 px-2' : undefined}>
         <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
           <canvas
             ref={fpsCanvasCallback}
@@ -205,7 +215,7 @@ export function DevToolsGroups({ Group, compact = false }: {
             </>
           )}
         </div>
-      </Group>
+      </PerfGroup>
     </>
   );
 }

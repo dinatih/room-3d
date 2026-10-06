@@ -378,8 +378,8 @@ export function SidePanel({
       layers: layersSectionContent,
       interactif: interactiveSectionContent,
       personnage: characterSectionContent,
-      perf: <DevToolsGroups Group={Group} compact />,
-      plan2d: <Minimap embedded />,
+      perf: <DevToolsGroups Group={Group} compact headerless />,
+      plan2d: <Minimap embedded showGroup={false} />,
     };
 
     return (
