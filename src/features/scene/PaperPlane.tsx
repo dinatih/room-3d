@@ -1,7 +1,7 @@
 /**
  * PaperPlane.tsx — Mode "Avion" : pilote un avion dans le studio.
  *
- * Modèles :  paper (procédural) | rocket (GLB) | comet (GLB animé)
+ * Modèles : catalogue aircraftModels (papier, origami animé, avions et voitures volantes).
  *
  * Vues (touche C) :  prelaunch → follow → cockpit → character
  *
@@ -12,7 +12,7 @@
  *
  * Contrôles de vol :
  *   W / ↑   — piquer   S / ↓   — cabrer
- *   A / ←   — roulis G  D / →  — roulis D
+ *   A / ←   — roulis / vrille G  D / →  — roulis / vrille D
  *   Espace / Ctrl — accélérer   Shift — freiner
  *   V       — changer de modèle
  *   C       — changer vue (ou décoller depuis prelaunch)
@@ -20,13 +20,13 @@
  */
 import { useEffect, useMemo, useRef, Suspense } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { SkeletonUtils } from 'three-stdlib';
+import { AircraftMesh } from './AircraftMesh';
+import { AIRCRAFT_MODELS, type PlaneModelKey } from './aircraftModels';
+export type { PlaneModelKey } from './aircraftModels';
 
 import { ROOM_W, ROOM_D, WALL_H } from './wallData';
 import { cameraState } from './cameraState';
-import { useGLTFClone } from './useGLTFClone';
 import { LANDING_STRIPS } from './LandingStrips';
 import { planeInput } from './planeInput';
 import { CategoryLayerGroup } from './sceneLayer';
@@ -35,7 +35,6 @@ import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 
 // ── Types exportés ────────────────────────────────────────────────────────────
 
-export type PlaneModelKey = 'paper' | 'rocket' | 'comet';
 export type PlaneViewMode = 'prelaunch' | 'follow' | 'cockpit' | 'character' | 'landing' | 'landed';
 
 // ── Constantes physique ───────────────────────────────────────────────────────
@@ -54,8 +53,6 @@ const SPEED_DRAG   = 14;
 const PITCH_RATE   = 1.6;
 const ROLL_RATE    = 2.4;
 const ROLL_TO_YAW  = 1.2;
-const ROLL_LIMIT   = 1.3;
-const ROLL_DAMP    = 2.6;
 
 const CAM_FOLLOW_OFFSET = new THREE.Vector3(0, 30, 90);
 const CAM_FOLLOW_LOOK   = new THREE.Vector3(0, 0, -80);
@@ -79,23 +76,6 @@ function lerpAngle(a: number, b: number, t: number): number {
   while (d >  Math.PI) d -= 2 * Math.PI;
   while (d < -Math.PI) d += 2 * Math.PI;
   return a + d * t;
-}
-
-/**
- * Calcule le facteur d'échelle pour ramener un GLB à targetCm.
- * Box3.setFromObject avec matrixWorld mis à jour au root.scale=1
- * → prend en compte les transforms de nœuds (scale mm→m etc.).
- */
-function glbScale(root: THREE.Object3D, targetCm: number): number {
-  const saved = root.scale.clone();
-  root.scale.set(1, 1, 1);
-  root.updateMatrixWorld(true);         // force-update sur tout le sous-arbre
-  const box = new THREE.Box3().setFromObject(root);
-  root.scale.copy(saved);
-  if (box.isEmpty()) return 1;
-  const size = box.getSize(new THREE.Vector3());
-  const max  = Math.max(size.x, size.y, size.z);
-  return max > 0 ? targetCm / max : 1;
 }
 
 // ── Mesh avion en papier ──────────────────────────────────────────────────────
@@ -129,64 +109,11 @@ export function PaperPlaneMesh() {
   );
 }
 
-// ── Mesh Rocket ───────────────────────────────────────────────────────────────
-
-function RocketMesh() {
-  const { scene } = useGLTFClone('items/plane-rocket/plane-rocket.glb');
-  const s = useMemo(() => glbScale(scene, 55), [scene]);
-  return (
-    <group rotation={[0, Math.PI / 2, 0]}>
-      <primitive object={scene} scale={s} />
-    </group>
-  );
+export function PlaneMesh({ model, onLaunchReady }: { model: PlaneModelKey; onLaunchReady?: () => void }) {
+  const definition = AIRCRAFT_MODELS.find(entry => entry.key === model)!;
+  if (model === 'paper') return <PaperPlaneMesh />;
+  return <Suspense fallback={<PaperPlaneMesh />}><AircraftMesh key={model} definition={definition} onLaunchReady={onLaunchReady} /></Suspense>;
 }
-
-// ── Mesh Comète (animé, SkinnedMesh) ─────────────────────────────────────────
-
-function CometMesh() {
-  const gltf = useGLTF('items/plane-comet/plane-comet.glb');
-
-  const { cloned, s, offset } = useMemo(() => {
-    const c = SkeletonUtils.clone(gltf.scene) as THREE.Group;
-    c.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(c);
-    const center = box.isEmpty() ? new THREE.Vector3() : box.getCenter(new THREE.Vector3());
-    const size   = box.isEmpty() ? new THREE.Vector3() : box.getSize(new THREE.Vector3());
-    const max    = Math.max(size.x, size.y, size.z);
-    const sc     = max > 0 ? 55 / max : 1;
-    return { cloned: c, s: sc, offset: center.multiplyScalar(-sc) };
-  }, [gltf.scene]);
-
-  const mixer = useRef<THREE.AnimationMixer | null>(null);
-  useEffect(() => {
-    if (!gltf.animations.length) return;
-    const m = new THREE.AnimationMixer(cloned);
-    gltf.animations.forEach(clip => m.clipAction(clip).play());
-    mixer.current = m;
-    return () => { mixer.current?.stopAllAction(); mixer.current = null; };
-  }, [cloned, gltf.animations]);
-
-  useFrame((_, dt) => mixer.current?.update(dt));
-
-  return (
-    <group rotation={[0, Math.PI / 2, 0]}>
-      <group position={offset.toArray()}>
-        <primitive object={cloned} scale={s} />
-      </group>
-    </group>
-  );
-}
-
-// ── Sélecteur de mesh ─────────────────────────────────────────────────────────
-
-export function PlaneMesh({ model }: { model: PlaneModelKey }) {
-  if (model === 'rocket') return <Suspense fallback={<PaperPlaneMesh />}><RocketMesh /></Suspense>;
-  if (model === 'comet')  return <Suspense fallback={<PaperPlaneMesh />}><CometMesh /></Suspense>;
-  return <PaperPlaneMesh />;
-}
-
-useGLTF.preload('items/plane-rocket/plane-rocket.glb');
-useGLTF.preload('items/plane-comet/plane-comet.glb');
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
@@ -247,12 +174,26 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
     invalidate();
   }
 
-  function launch() {
+  function finishLaunch() {
     if (launchedRef.current) return;
+    cameraState.planeLaunching = false;
     launchedRef.current       = true;
     cameraState.planeLaunched = true;
     changeVM('follow');
   }
+
+  function launch() {
+    if (launchedRef.current || cameraState.planeLaunching) return;
+    if (model === 'origami') {
+      cameraState.planeLaunching = true;
+      invalidate();
+    } else finishLaunch();
+  }
+  const launchRef = useRef(launch);
+  launchRef.current = launch;
+  useEffect(() => {
+    if (cameraState.planeLaunching && model !== 'origami') { cameraState.planeLaunching = false; finishLaunch(); }
+  }, [model]);
 
   // ── Setup effet ──────────────────────────────────────────────────────────────
 
@@ -260,6 +201,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
     cameraState.mode          = 'plane';
     cameraState.planeViewMode = 'prelaunch';
     cameraState.planeLaunched = false;
+    cameraState.planeLaunching = false;
     cameraState.planeSpeed = 0;
     cameraState.planeSkyContact = false;
     camera.up.set(0, 1, 0);
@@ -292,7 +234,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
       if (e.key === 'c' || e.key === 'C') {
         e.preventDefault();
         if (e.repeat) return;
-        if (!launchedRef.current) { launch(); return; }
+        if (!launchedRef.current) { launchRef.current(); return; }
         if (landingRef.current || landedRef.current) return; // pas de cycle pendant atterro
         const modes: PlaneViewMode[] = ['follow', 'cockpit', 'character'];
         const cur = viewModeRef.current as PlaneViewMode;
@@ -301,7 +243,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
         return;
       }
       if ((e.key === ' ' || e.key === 'Enter' || k === 'control') && !launchedRef.current) {
-        e.preventDefault(); launch();
+        e.preventDefault(); launchRef.current();
         if (k === 'control' || k === ' ') keys.current.add(k);
         return;
       }
@@ -317,7 +259,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
     };
     const onCommand = (e: Event) => {
       const command = (e as CustomEvent<string>).detail;
-      if (command === 'launch') launch();
+      if (command === 'launch') launchRef.current();
       if (command === 'view') onDown(new KeyboardEvent('keydown', { key: 'c' }));
     };
     const clearKeys = () => keys.current.clear();
@@ -341,6 +283,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
       cameraState.mode          = 'orbit';
       cameraState.planeViewMode = 'follow';
       cameraState.planeLaunched = false;
+      cameraState.planeLaunching = false;
       keys.current.clear();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -357,13 +300,17 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
     if (!launchedRef.current) {
       prelaunchAngle.current += dt * 0.35;
       const a = prelaunchAngle.current;
-      _va.current.set(s.pos.x + 150 * Math.cos(a), s.pos.y + 70, s.pos.z + 150 * Math.sin(a));
-      camera.position.lerp(_va.current, 1 - Math.pow(1 - 0.04, dt * 60));
-      camera.lookAt(s.pos);
       planeRef.current.position.copy(s.pos);
       _euler.current.set(0, s.yaw, 0);
       planeRef.current.quaternion.setFromEuler(_euler.current);
-      cameraState.planeX = s.pos.x; cameraState.planeZ = s.pos.z; cameraState.planeYaw = s.yaw;
+      planeRef.current.updateWorldMatrix(true, true);
+      planeBounds.current.setFromObject(planeRef.current, true);
+      _vb.current.copy(s.pos);
+      if (!planeBounds.current.isEmpty()) planeBounds.current.getCenter(_vb.current);
+      _va.current.set(_vb.current.x + 150 * Math.cos(a), _vb.current.y + 70, _vb.current.z + 150 * Math.sin(a));
+      camera.position.lerp(_va.current, 1 - Math.pow(1 - 0.04, dt * 60));
+      camera.lookAt(_vb.current);
+      cameraState.planeX = _vb.current.x; cameraState.planeZ = _vb.current.z; cameraState.planeYaw = s.yaw;
       cameraState.onUpdate?.();
       invalidate(); return;
     }
@@ -465,11 +412,10 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
       throttleIn = THREE.MathUtils.clamp(throttleIn, -1, 1);
       s.pitch += pitchIn * PITCH_RATE * dt;
       s.roll  += rollIn  * ROLL_RATE  * dt;
-      if (rollIn  === 0) s.roll  *= Math.max(0, 1 - ROLL_DAMP  * dt);
       // Angle périodique : aucune butée, les commandes traversent le dos et la verticale.
       s.pitch = Math.atan2(Math.sin(s.pitch), Math.cos(s.pitch));
-      s.roll  = Math.max(-ROLL_LIMIT,  Math.min(ROLL_LIMIT,  s.roll));
-      s.yaw  += s.roll * ROLL_TO_YAW * dt;
+      s.roll = Math.atan2(Math.sin(s.roll), Math.cos(s.roll));
+      s.yaw += Math.sin(s.roll) * Math.cos(s.pitch) * ROLL_TO_YAW * dt;
 
       _euler.current.set(s.pitch, s.yaw, s.roll);
       s.quat.setFromEuler(_euler.current);
@@ -561,7 +507,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleM
   return (
     <group ref={planeRef}>
       <CategoryLayerGroup layer={LAYER_AIRCRAFT} register={false}>
-        <PlaneMesh model={model} />
+        <PlaneMesh model={model} onLaunchReady={finishLaunch} />
       </CategoryLayerGroup>
     </group>
   );

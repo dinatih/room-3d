@@ -24,6 +24,8 @@ vm.runInNewContext(code, {
     if (name === 'react') return { useRef(value) { const ref = { current: value === null && !refs.some(ref => ref.current instanceof THREE.Group) ? new THREE.Group() : value }; refs.push(ref); return ref; }, useEffect(fn) { effects.push(fn); }, useMemo(fn) { return fn(); } };
     if (name === '@react-three/fiber') return { useThree: () => ({ camera, invalidate() {} }), useFrame(fn) { frame = fn; } };
     if (name === '@react-three/drei') return { useGLTF: Object.assign(() => {}, { preload() {} }) };
+    if (name === './AircraftMesh') return {};
+    if (name === './aircraftModels') return { AIRCRAFT_MODELS: [{ key: 'paper', label: 'Papier', path: '', yaw: 0 }] };
     if (name === './wallData') return { ROOM_W: 300, ROOM_D: 400, WALL_H: 250 };
     if (name === './cameraState') return { cameraState };
     if (name === './sceneLayer') return { CategoryLayerGroup: () => null };
@@ -134,6 +136,22 @@ for (const view of ['follow', 'cockpit']) {
   }
 }
 Object.assign(planeInput, { pitch: 0, roll: 0, throttle: 0 });
+for (const direction of [-1, 1]) {
+  flight.pos.set(150, 1600, 150);
+  Object.assign(flight, { yaw: 0, pitch: 0, roll: 0, speed: 130 });
+  planeInput.roll = direction;
+  let accumulated = 0;
+  let previousRoll = 0;
+  const rollFrames = Math.ceil(4 * Math.PI / (2.4 / 60));
+  for (let i = 0; i < rollFrames; i++) {
+    frame({}, 1 / 60);
+    accumulated += Math.atan2(Math.sin(flight.roll - previousRoll), Math.cos(flight.roll - previousRoll));
+    previousRoll = flight.roll;
+    assert(camera.quaternion.angleTo(flight.quat) < 1e-6, 'cockpit follows full rolls');
+  }
+  assert(direction * accumulated >= 4 * Math.PI, 'two full rolls in each direction');
+}
+planeInput.roll = 0;
 flight.pos.set(150, 100, 3740);
 Object.assign(flight, { yaw: Math.PI, pitch: 0, roll: 0 });
 frame({}, 1 / 60);

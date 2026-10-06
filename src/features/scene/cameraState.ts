@@ -82,6 +82,7 @@ export const cameraState = {
   planeViewMode: 'prelaunch' as 'prelaunch' | 'follow' | 'cockpit' | 'character' | 'landing' | 'landed',
   /** Vrai après le décollage (prelaunch terminé) */
   planeLaunched: false as boolean,
+  planeLaunching: false as boolean,
   /** Pistes d'atterrissage visibles (minimap + 3D) */
   landingStripsVisible: false as boolean,
   /** Avion autopilote (position minimap) */

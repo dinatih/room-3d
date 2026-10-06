@@ -1,3 +1,4 @@
+import { AIRCRAFT_MODELS } from './aircraftModels';
 /**
  * AnimationsPanel.tsx — Panneau latéral des animations de construction.
  * Toujours ouvert, positionné à droite de l'écran (ou à gauche sur mobile).
@@ -203,29 +204,9 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
                 <div className="text-muted fw-semibold mb-1" style={{ fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Modèle
                 </div>
-                <div className="d-flex gap-1">
-                  <button 
-                    className={`btn btn-sm flex-grow-1 p-1 ${props.planeModel === 'paper' ? 'btn-danger' : 'btn-outline-secondary'}`}
-                    onClick={() => props.onSetPlaneModel('paper')}
-                    style={{ fontSize: '9px' }}
-                  >
-                    Papier
-                  </button>
-                  <button 
-                    className={`btn btn-sm flex-grow-1 p-1 ${props.planeModel === 'rocket' ? 'btn-danger' : 'btn-outline-secondary'}`}
-                    onClick={() => props.onSetPlaneModel('rocket')}
-                    style={{ fontSize: '9px' }}
-                  >
-                    Fusée
-                  </button>
-                  <button 
-                    className={`btn btn-sm flex-grow-1 p-1 ${props.planeModel === 'comet' ? 'btn-danger' : 'btn-outline-secondary'}`}
-                    onClick={() => props.onSetPlaneModel('comet')}
-                    style={{ fontSize: '9px' }}
-                  >
-                    Comète
-                  </button>
-                </div>
+                <select className="form-select form-select-sm" aria-label="Modèle d'avion" value={props.planeModel} onChange={event => props.onSetPlaneModel(event.target.value as PlaneModelKey)}>
+                  {AIRCRAFT_MODELS.map(entry => <option key={entry.key} value={entry.key}>{entry.label}</option>)}
+                </select>
               </div>
               
               <button

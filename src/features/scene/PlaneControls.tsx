@@ -4,6 +4,7 @@ import { cameraState } from './cameraState';
 import { planeInput } from './planeInput';
 import { SPEED_MAX, type PlaneViewMode, type PlaneModelKey } from './PaperPlane';
 import './PlaneControls.css';
+import { AIRCRAFT_MODELS } from './aircraftModels';
 
 const FULL_TILT = THREE.MathUtils.degToRad(30);
 const screenCorrection = new THREE.Quaternion(-Math.SQRT1_2, 0, 0, Math.SQRT1_2);
@@ -14,6 +15,7 @@ export function PlaneControls({ viewMode, launched, onExit, model, onCycleModel 
   const [gyro, setGyro] = useState(false);
   const [message, setMessage] = useState('');
   const [showHelp, setShowHelp] = useState(false);
+  const [launching, setLaunching] = useState(false);
   const neutral = useRef<THREE.Quaternion | null>(null);
   const latest = useRef<THREE.Quaternion | null>(null);
   const held = useRef(new Map<number, string>());
@@ -27,7 +29,7 @@ export function PlaneControls({ viewMode, launched, onExit, model, onCycleModel 
   }
   useEffect(() => {
     mounted.current = true;
-    const timer = window.setInterval(() => setSpeed(cameraState.planeSpeed * 0.036), 100);
+    const timer = window.setInterval(() => { setSpeed(cameraState.planeSpeed * 0.036); setLaunching(cameraState.planeLaunching); }, 100);
     const visibility = () => { if (document.hidden) { release(); neutral.current = null; } };
     const blur = () => { release(); neutral.current = null; };
     window.addEventListener('blur', blur);
@@ -127,18 +129,18 @@ export function PlaneControls({ viewMode, launched, onExit, model, onCycleModel 
   const high = new THREE.Color('#16a34a');
   const speedColor = fraction < 0.5 ? low.lerp(mid, fraction * 2) : mid.lerp(high, (fraction - 0.5) * 2);
   const viewLabels = { prelaunch: 'Pré-vol', follow: 'Suivi', cockpit: 'Cockpit', character: 'PNJ', landing: 'Atterrissage', landed: 'Au sol' };
-  const modelLabels = { paper: 'Papier', rocket: 'Fusée', comet: 'Comète' };
+  const modelLabel = AIRCRAFT_MODELS.find(entry => entry.key === model)!.label;
   return <div className="plane-controls text-dark">
     <div className="plane-info d-flex align-items-center gap-1 p-1 rounded-3">
       <output className="plane-speed px-2 small" style={{ color: `#${speedColor.getHexString()}` }} aria-label="Vitesse">{speed.toFixed(1)} <small>km/h</small></output>
-      {!launched && <button className="btn btn-sm btn-primary" title="Décoller (Espace / Ctrl / C)" onClick={() => command('launch')}>Décoller</button>}
+      {!launched && <button className="btn btn-sm btn-primary" title="Décoller (Espace / Ctrl / C)" disabled={launching} onClick={() => command('launch')}>{launching ? 'Pliage…' : 'Décoller'}</button>}
       {flying && <button className="btn btn-sm btn-outline-secondary" title="Changer de vue (C)" onClick={() => command('view')}>{viewLabels[viewMode]}</button>}
-      <button className="btn btn-sm btn-outline-secondary" title="Changer d’avion (V)" onClick={onCycleModel}>{modelLabels[model]}</button>
+      <button className="btn btn-sm btn-outline-secondary text-truncate plane-model" title="Changer d’avion (V)" onClick={onCycleModel}>{modelLabel}</button>
       <button className="btn btn-sm btn-outline-secondary" title="Quitter (F / Échap)" aria-label="Quitter le vol" onClick={onExit}><i className="bi bi-x-lg" aria-hidden="true" /></button>
       <button className="btn btn-sm btn-outline-secondary" title="Commandes" aria-label="Afficher les commandes" aria-expanded={showHelp} onClick={() => setShowHelp(value => !value)}><i className="bi bi-question-lg" aria-hidden="true" /></button>
     </div>
     {(viewMode === 'landing' || viewMode === 'landed') && <div className="plane-status small text-center rounded-3 p-1">{viewMode === 'landing' ? 'Atterrissage automatique…' : 'Atterri'}</div>}
-    {showHelp && <div className="plane-help small text-center rounded-3 p-2">↑↓ Tangage / looping · ←→ Virage · Espace/Ctrl Gaz · Shift Frein · C Vue · V Avion · F Quitter</div>}
+    {showHelp && <div className="plane-help small text-center rounded-3 p-2">↑↓ Tangage / looping · ←→ Virage / vrille · Espace/Ctrl Gaz · Shift Frein · C Vue · V Avion · F Quitter</div>}
     <div className="plane-touch">
       <div className="plane-sensor d-flex align-items-center gap-1 rounded-3 p-1">
         <button className={`btn btn-sm ${gyro ? 'btn-primary' : 'btn-outline-secondary'}`} aria-pressed={gyro} onClick={toggleGyro}>Gyroscope</button>

@@ -1,3 +1,4 @@
+import { AIRCRAFT_MODELS } from '../../aircraftModels';
 import { useSceneStore } from '../../store/useSceneStore';
 import { positionState } from '@features/scene/positionState';
 import { DOUBLE_BED_POSITIONS } from '../../furniturePositions';
@@ -142,26 +143,9 @@ export function InteractiveSection({
         <div className="text-muted fw-semibold mb-1 small text-uppercase">
           Modèle d'avion
         </div>
-        <div className="d-flex gap-1">
-          <button 
-            className={`btn btn-sm flex-grow-1 p-1 small ${planeModel === 'paper' ? 'btn-danger' : 'btn-outline-secondary'}`}
-            onClick={() => onSetPlaneModel?.('paper')}
-          >
-            Papier
-          </button>
-          <button 
-            className={`btn btn-sm flex-grow-1 p-1 small ${planeModel === 'rocket' ? 'btn-danger' : 'btn-outline-secondary'}`}
-            onClick={() => onSetPlaneModel?.('rocket')}
-          >
-            Fusée
-          </button>
-          <button 
-            className={`btn btn-sm flex-grow-1 p-1 small ${planeModel === 'comet' ? 'btn-danger' : 'btn-outline-secondary'}`}
-            onClick={() => onSetPlaneModel?.('comet')}
-          >
-            Comète
-          </button>
-        </div>
+        <select className="form-select form-select-sm" aria-label="Modèle d'avion" value={planeModel} onChange={event => onSetPlaneModel?.(event.target.value as PlaneModelKey)}>
+                  {AIRCRAFT_MODELS.map(entry => <option key={entry.key} value={entry.key}>{entry.label}</option>)}
+                </select>
       </div>
       <button
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"

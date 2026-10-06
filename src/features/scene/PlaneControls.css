@@ -53,3 +53,5 @@
 @media (pointer: coarse), (any-pointer: coarse) {
   .plane-touch { display: block; }
 }
+
+.plane-model { min-width: 0; }
