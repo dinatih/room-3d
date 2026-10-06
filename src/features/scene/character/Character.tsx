@@ -27,7 +27,7 @@ import {
 import { LAYER_WALKER_DETAIL } from '@config';
 import { ACTION_FULL_TOUR, buildAutonomousScenario } from '../ai/scenarios';
 import type { AgentInstruction } from '../ai/aiTypes';
-import { useAgentController } from '../ai/useAgentController';
+import { useAgentController, resetAgentDeployment } from '../ai/useAgentController';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform } from '../animations/animationResolver';
@@ -157,11 +157,12 @@ export function Character({
       disposeLaraVariantMaterials(scene);
       clearCharacterRetargetCache(id);
       if (isExtraCharacter(id)) {
+        resetAgentDeployment(isPreview ? `${id}:preview` : id);
         disposeCharacterResources(scene);
         useGLTF.clear(modelPath);
       }
     };
-  }, [id, modelPath, scene]);
+  }, [id, modelPath, scene, isPreview]);
 
   // Extraction structurée des maillages et des os
   const parts = useMemo(() => extractCharacterParts(scene), [scene]);
@@ -322,8 +323,7 @@ export function Character({
   const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomous ? autonomousScenario : EMPTY_SCENARIO);
   const loopScenario = isAutonomous;
 
-  const isExcepted = id === 'xbot' || isExtraCharacter(id);
-  const hasSkyDrop = !isExcepted && isAutonomous;
+  const hasSkyDrop = id !== 'xbot' && isAutonomous;
   const spawnDelay = hasSkyDrop ? ((characterIndex ?? 0) * 1.0) : 0;
 
   const {
@@ -333,7 +333,7 @@ export function Character({
     hasPendingDynamicTask,
     initialPos,
   } = useAgentController(
-    id,
+    isPreview ? `${id}:preview` : id,
     finalScenario,
     loopScenario,
     () => {
