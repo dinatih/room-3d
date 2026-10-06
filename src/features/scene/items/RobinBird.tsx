@@ -14,6 +14,8 @@ const GLB_PATH = '/characters/robin/robin.glb';
 
 export const BIRD_FEEDER_POS = new THREE.Vector3(95, 219, -165);
 const _tmpBirdDir = new THREE.Vector3();
+const ANIMATION_FADE = 0.2; // secondes de transition entre les poses
+const IDLE_CHANGE_RATE = 0.6; // changements par seconde, indépendant du FPS
 
 type AIState = {
   mode: 'autonomous' | 'forced';
@@ -45,7 +47,27 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
   const { invalidate } = useThree();
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const modelRef = useRef<THREE.Group>(null);
-  const isPlayingRef = useRef(false);
+  const currentAction = useRef<THREE.AnimationAction | null>(null);
+  const headRef = useRef<THREE.Object3D | null>(null);
+  const beakRef = useRef<THREE.Object3D | null>(null);
+  const headPos = useRef(new THREE.Vector3());
+  const beakPos = useRef(new THREE.Vector3());
+  const sourceBasis = useRef(new THREE.Matrix4());
+  const targetBasis = useRef(new THREE.Matrix4());
+  const sourceRotation = useRef(new THREE.Quaternion());
+  const up = useRef(new THREE.Vector3(0, 1, 0));
+  const origin = useRef(new THREE.Vector3());
+
+  function playAnimation(name: string) {
+    const clip = animations.find(a => a.name === name);
+    if (!clip) throw new Error(`Animation Robin manquante : ${name}`);
+    const next = mixerRef.current!.clipAction(clip);
+    const previous = currentAction.current;
+    if (previous === next) return;
+    next.reset().setLoop(THREE.LoopRepeat, Infinity).setEffectiveWeight(1).play();
+    if (previous) next.crossFadeFrom(previous, ANIMATION_FADE, false);
+    currentAction.current = next;
+  }
 
   const showSkeletonGlobal = useSceneStore(s => s.layers.skeleton);
   const showSkeleton = isPreview ? showSkeletonPreview : showSkeletonGlobal;
@@ -63,6 +85,10 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     scene.scale.set(1, 1, 1);
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
+
+    headRef.current = scene.getObjectByName('Head_011') ?? null;
+    beakRef.current = scene.getObjectByName('Beak_012') ?? null;
+    if (!headRef.current || !beakRef.current) throw new Error('Robin : os de tête/bec manquants');
 
     const box = glbLocalBBox(scene);
     const size = box.getSize(new THREE.Vector3());
@@ -109,10 +135,11 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopRepeat, Infinity);
       action.reset().play();
-      isPlayingRef.current = true;
+      currentAction.current = action;
     }
 
     if (modelRef.current && !isPreview) {
+      modelRef.current.rotation.reorder('YXZ');
       modelRef.current.position.copy(LANDING_POINTS[0]);
     }
 
@@ -122,6 +149,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       delete cameraState.positions['robin'];
       mixerRef.current?.stopAllAction();
       mixerRef.current?.uncacheRoot(scene);
+      currentAction.current = null;
     };
   }, [scene, animations, isPreview, previewAnim, invalidate, onSize]);
 
@@ -207,36 +235,33 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
             
             ai.state = 'flying';
             
-            mixerRef.current.stopAllAction();
-            const flyClip = animations.find(a => a.name === 'Robin_Bird_Fly') || animations[0];
-            mixerRef.current.clipAction(flyClip).setLoop(THREE.LoopRepeat, Infinity).play();
+            playAnimation('Robin_Bird_Fly');
           } else {
             // Switch idle animations (Eat, Call, Idle) occasionally
-            if (Math.random() < 0.01) {
+            if (Math.random() < 1 - Math.exp(-IDLE_CHANGE_RATE * delta)) {
               const isAtFeeder = modelRef.current.position.distanceTo(BIRD_FEEDER_POS) < 10;
               const idleAnimNames = isAtFeeder
                  ? ['Robin_Bird_Eat', 'Robin_Bird_Eat', 'Robin_Bird_Idle', 'Robin_Bird_Call']
-                : ['Robin_Bird_Idle', 'Robin_Bird_Idle2', 'Robin_Bird_Eat', 'Robin_Bird_Call'];
+                : ['Robin_Bird_Idle', 'Robin_Bird_Idle2', 'Robin_Bird_Call'];
               const randIdle = idleAnimNames[Math.floor(Math.random() * idleAnimNames.length)];
-              const clip = animations.find(a => a.name === randIdle) || animations[0];
-              mixerRef.current.stopAllAction();
-              mixerRef.current.clipAction(clip).setLoop(THREE.LoopRepeat, Infinity).play();
+              playAnimation(randIdle);
             }
           }
         } else if (ai.state === 'flying') {
           const speed = 150 * delta; // 150 cm/sec
           const dist = modelRef.current.position.distanceTo(ai.targetPos);
           
-          if (dist < speed) {
+          if (dist <= speed) {
             // Arrived
             modelRef.current.position.copy(ai.targetPos);
             ai.state = 'idle';
             const isAtFeeder = ai.targetPos.distanceTo(BIRD_FEEDER_POS) < 5;
             ai.timer = isAtFeeder ? (5 + Math.random() * 5) : (3 + Math.random() * 5); // Reste plus longtemps à la mangeoire
             
-            mixerRef.current.stopAllAction();
-            const idleClip = animations.find(a => a.name === (isAtFeeder ? 'Robin_Bird_Eat' : 'Robin_Bird_Idle')) || animations[0];
-            mixerRef.current.clipAction(idleClip).setLoop(THREE.LoopRepeat, Infinity).play();
+            modelRef.current.rotation.reorder('YXZ');
+            modelRef.current.rotation.x = 0;
+            modelRef.current.rotation.z = 0;
+            playAnimation(isAtFeeder ? 'Robin_Bird_Eat' : 'Robin_Bird_Idle');
 
             if (isAtFeeder) {
               appLog('robin', '🌾 Se pose sur la mangeoire sous le balcon et picore des graines');
@@ -246,13 +271,19 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
             const dir = _tmpBirdDir.subVectors(ai.targetPos, modelRef.current.position).normalize();
             modelRef.current.position.addScaledVector(dir, speed);
             
-            // Look at target
-            const targetRot = Math.atan2(dir.x, dir.z);
-            // Smooth rotation
-            let rotDiff = targetRot - modelRef.current.rotation.y;
-            while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
-            while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
-            modelRef.current.rotation.y += rotDiff * Math.min(1, 10 * delta);
+            // Direction réelle tête → bec dans le repère du groupe animé.
+            // Le clip peut déplacer la tête : recalculer après mixer.update.
+            headRef.current!.getWorldPosition(headPos.current);
+            beakRef.current!.getWorldPosition(beakPos.current);
+            modelRef.current.worldToLocal(headPos.current);
+            modelRef.current.worldToLocal(beakPos.current);
+            beakPos.current.sub(headPos.current).normalize();
+            if (beakPos.current.lengthSq() === 0) throw new Error('Robin : direction du bec nulle');
+            sourceBasis.current.lookAt(origin.current, beakPos.current.negate(), up.current);
+            targetBasis.current.lookAt(origin.current, _tmpBirdDir.negate(), up.current);
+            sourceRotation.current.setFromRotationMatrix(sourceBasis.current).invert();
+            modelRef.current.quaternion.setFromRotationMatrix(targetBasis.current).multiply(sourceRotation.current);
+
           }
         }
       }

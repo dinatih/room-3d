@@ -2,14 +2,14 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import * as THREE from 'three';
 import { cameraState } from './cameraState';
 import { planeInput } from './planeInput';
-import type { PlaneViewMode } from './PaperPlane';
+import { SPEED_MAX, type PlaneViewMode, type PlaneModelKey } from './PaperPlane';
 import './PlaneControls.css';
 
 const FULL_TILT = THREE.MathUtils.degToRad(30);
 const screenCorrection = new THREE.Quaternion(-Math.SQRT1_2, 0, 0, Math.SQRT1_2);
 const command = (detail: string) => document.dispatchEvent(new CustomEvent('plane-command', { detail }));
 
-export function PlaneControls({ viewMode, launched, onExit }: { viewMode: PlaneViewMode; launched: boolean; onExit: () => void }) {
+export function PlaneControls({ viewMode, launched, onExit, model, onCycleModel }: { model: PlaneModelKey; onCycleModel: () => void; viewMode: PlaneViewMode; launched: boolean; onExit: () => void }) {
   const [speed, setSpeed] = useState(0);
   const [gyro, setGyro] = useState(false);
   const [message, setMessage] = useState('');
@@ -119,11 +119,19 @@ export function PlaneControls({ viewMode, launched, onExit }: { viewMode: PlaneV
   function holdButton(action: string, label: string, title: string) {
     return <button type="button" className={`btn btn-outline-light plane-hold plane-${action}`} aria-label={title} title={title} disabled={!flying} onPointerDown={e => press(e, action)} onPointerUp={lift} onPointerCancel={lift} onLostPointerCapture={lift}>{label}</button>;
   }
+  const fraction = THREE.MathUtils.clamp(speed / (SPEED_MAX * 0.036), 0, 1);
+  // Même palette rouge → ambre → vert que le compteur FPS, interpolée.
+  const low = new THREE.Color('#ef4444');
+  const mid = new THREE.Color('#f59e0b');
+  const high = new THREE.Color('#22c55e');
+  const speedColor = fraction < 0.5 ? low.lerp(mid, fraction * 2) : mid.lerp(high, (fraction - 0.5) * 2);
+  const modelLabels = { paper: 'Papier', rocket: 'Fusée', comet: 'Comète' };
   return <div className="plane-controls text-white">
     <div className="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-2">
-      <output className="plane-speed px-2" aria-label="Vitesse">{speed.toFixed(1)} <small>km/h</small></output>
+      <output className="plane-speed px-2" style={{ color: `#${speedColor.getHexString()}` }} aria-label="Vitesse">{speed.toFixed(1)} <small>km/h</small></output>
       {!launched && <button className="btn btn-sm btn-light" onClick={() => command('launch')}>Décoller</button>}
       {flying && <button className="btn btn-sm btn-outline-light" onClick={() => command('view')}>Vue : {viewMode}</button>}
+      <button className="btn btn-sm btn-outline-light" title="Changer d’avion (V)" onClick={onCycleModel}>{modelLabels[model]} · V</button>
       <button className="btn btn-sm btn-outline-light" onClick={onExit}>Quitter</button>
     </div>
     {(viewMode === 'landing' || viewMode === 'landed') && <div className="small text-center">{viewMode === 'landing' ? 'Atterrissage automatique…' : 'Atterri'}</div>}
@@ -140,6 +148,6 @@ export function PlaneControls({ viewMode, launched, onExit }: { viewMode: PlaneV
         <div className="d-flex flex-column gap-2 ms-auto">{holdButton('boost', '+ Gaz', 'Accélérer')}{holdButton('brake', '− Gaz', 'Freiner')}</div>
       </div>
     </div>
-    <div className="plane-keyboard small text-center">↑↓ Tangage · ←→ Virage · Espace Gaz · Shift Frein · C Vue · F Quitter</div>
+    <div className="plane-keyboard small text-center">↑↓ Tangage · ←→ Virage · Espace/Ctrl Gaz · Shift Frein · C Vue · V Avion · F Quitter</div>
   </div>;
 }

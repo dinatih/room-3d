@@ -33,7 +33,8 @@ vm.runInNewContext(code, {
   },
 });
 let exitCount = 0;
-exportsObject.PaperPlane({ onExit: () => exitCount++ });
+let modelChanges = 0;
+exportsObject.PaperPlane({ onExit: () => exitCount++, onCycleModel: () => modelChanges++ });
 const cleanups = effects.map(fn => fn());
 const flight = refs.find(ref => ref.current && ref.current.speed === 130).current;
 const key = (type, key) => windowTarget.dispatchEvent(new KeyboardEvent(type, { key }));
@@ -42,6 +43,18 @@ assert.equal(cameraState.planeSpeed, 0);
 key('keydown', 'c');
 key('keydown', 'c');
 assert.equal(cameraState.planeViewMode, 'cockpit');
+key('keydown', 'v');
+assert.equal(modelChanges, 1, 'V cycles plane models');
+windowTarget.dispatchEvent(new KeyboardEvent('keydown', { key: 'v', repeat: true }));
+assert.equal(modelChanges, 1, 'holding V does not repeatedly cycle');
+const beforeCtrl = flight.speed;
+windowTarget.dispatchEvent(new KeyboardEvent('keydown', { key: 'Control', ctrlKey: true }));
+windowTarget.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', ctrlKey: true }));
+frame({}, 1 / 60);
+assert(flight.speed > beforeCtrl, 'Ctrl accelerates');
+assert(flight.roll > 0, 'steering works while Ctrl is held');
+key('keyup', 'Control');
+key('keyup', 'ArrowLeft');
 key('keydown', 'a');
 frame({}, 1 / 60);
 assert(flight.roll > 0, 'left command banks left');

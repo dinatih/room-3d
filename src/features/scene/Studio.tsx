@@ -448,6 +448,11 @@ export function Studio() {
 
   const [planeMode,          setPlaneMode]          = useState(false);
   const [planeModel,         setPlaneModel]         = useState<PlaneModelKey>('paper');
+  const cyclePlaneModel = useCallback(() => {
+    const models: PlaneModelKey[] = ['paper', 'rocket', 'comet'];
+    setPlaneModel(current => models[(models.indexOf(current) + 1) % models.length]);
+    cameraState.invalidate?.();
+  }, []);
   const [autopilotVisible,   setAutopilotVisible]   = useState(false);
   const [showLandingStrips,  setShowLandingStrips]  = useState(false);
   const [planeViewMode,      setPlaneViewMode]      = useState<PlaneViewMode>('prelaunch');
@@ -569,6 +574,7 @@ export function Studio() {
       }
 
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (cameraState.mode === 'plane' && ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) return;
 
       if (e.key === 'g' || e.key === 'G') {
         onToggleLayer('laraGrid');
@@ -769,6 +775,7 @@ export function Studio() {
         {planeMode    && <PaperPlane
                            onExit={() => setPlaneMode(false)}
                            model={planeModel}
+                           onCycleModel={cyclePlaneModel}
                            onViewModeChange={(vm, launched) => {
                              setPlaneViewMode(vm);
                              setPlaneLaunched(launched);
@@ -912,7 +919,7 @@ export function Studio() {
         hideUI={hideUI}
       />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
-        {planeMode && <PlaneControls viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
+        {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
         <VirtualDPad visible={!hideUI && !planeMode} />
         <ViewControlBar
           hidden={planeMode}

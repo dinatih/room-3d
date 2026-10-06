@@ -13,7 +13,8 @@
  * Contrôles de vol :
  *   W / ↑   — piquer   S / ↓   — cabrer
  *   A / ←   — roulis G  D / →  — roulis D
- *   Espace  — accélérer   Shift — freiner
+ *   Espace / Ctrl — accélérer   Shift — freiner
+ *   V       — changer de modèle
  *   C       — changer vue (ou décoller depuis prelaunch)
  *   F / Échap — quitter
  */
@@ -46,7 +47,7 @@ const WORLD_Z_MAX  = ROOM_D + 1500;
 
 const GRAVITY      = 30;
 const SPEED_MIN    = 50;
-const SPEED_MAX    = 450;
+export const SPEED_MAX = 450;
 const SPEED_INIT   = 130;
 const SPEED_BOOST  = 110;
 const SPEED_BRAKE  = 90;
@@ -104,22 +105,28 @@ function glbScale(root: THREE.Object3D, targetCm: number): number {
 export function PaperPlaneMesh() {
   const geo = useMemo(() => {
     const g = new THREE.BufferGeometry();
-    const L = 30, W = 18, T = 18, H = 6;
-    const v = new Float32Array([
-      0, 0, -L, -W, 0, T,  0, 0, T,
-      0, 0, -L,  0, 0, T,  W, 0, T,
-      0, 0, -L,  0, 0, T, -W, 0, T,
-      0, 0, -L,  W, 0, T,  0, 0, T,
-      0, 0, -L,  0,-H, T,  0, 0, T,
-      0, 0, -L,  0, 0, T,  0,-H, T,
-    ]);
+    // Flèche pliée : ailes en dièdre, doubles replis et quille centrale.
+    // Nez vers -Z, longueur 48 cm et envergure 36 cm.
+    const nose = [0, 0, -30];
+    const keel = [0, -6, 18];
+    const vertices: number[] = [];
+    for (const side of [-1, 1]) {
+      const fold = [side * 3, 0, 18];
+      const wingtip = [side * 18, 3, 18];
+      const innerFold = [side * 9, 0.8, 18];
+      // Panneaux sans sommets partagés : normales distinctes aux plis.
+      vertices.push(...nose, ...fold, ...wingtip);
+      vertices.push(...nose, ...innerFold, ...fold);
+      vertices.push(...nose, ...keel, ...fold);
+    }
+    const v = new Float32Array(vertices);
     g.setAttribute('position', new THREE.BufferAttribute(v, 3));
     g.computeVertexNormals();
     return g;
   }, []);
   return (
     <mesh geometry={geo} castShadow>
-      <meshStandardMaterial color="#f5f5ee" side={THREE.DoubleSide} roughness={0.85} />
+      <meshStandardMaterial color="#f5f5ee" side={THREE.DoubleSide} roughness={0.95} flatShading />
     </mesh>
   );
 }
@@ -188,14 +195,17 @@ useGLTF.preload('items/plane-comet/plane-comet.glb');
 interface PaperPlaneProps {
   onExit:            () => void;
   model?:            PlaneModelKey;
+  onCycleModel?:    () => void;
   onViewModeChange?: (vm: PlaneViewMode, launched: boolean) => void;
 }
 
-export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperPlaneProps) {
+export function PaperPlane({ onExit, model = 'paper', onViewModeChange, onCycleModel }: PaperPlaneProps) {
   const { camera, invalidate } = useThree();
   const planeRef    = useRef<THREE.Group>(null!);
   const onExitRef   = useRef(onExit);
   onExitRef.current = onExit;
+  const onCycleModelRef = useRef(onCycleModel);
+  onCycleModelRef.current = onCycleModel;
   const onVMRef     = useRef(onViewModeChange);
   onVMRef.current   = onViewModeChange;
 
@@ -264,7 +274,15 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
     onVMRef.current?.('prelaunch', false);
 
     const onDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey || (e.target instanceof HTMLElement && (e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)))) return;
+      if (e.metaKey || e.altKey || (e.target instanceof HTMLElement && (e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)))) return;
+      const k = e.key.toLowerCase();
+      const flightKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'shift', 'control', ' '];
+      if (e.ctrlKey && !flightKeys.includes(k)) return;
+      if (k === 'v') {
+        e.preventDefault();
+        if (!e.repeat) onCycleModelRef.current?.();
+        return;
+      }
       if (e.key === 'Escape') {
         e.preventDefault(); onExitRef.current(); return;
       }
@@ -279,13 +297,14 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
         changeVM(modes[(idx < 0 ? 0 : (idx + 1)) % modes.length]);
         return;
       }
-      if ((e.key === ' ' || e.key === 'Enter') && !launchedRef.current) {
-        e.preventDefault(); launch(); return;
+      if ((e.key === ' ' || e.key === 'Enter' || k === 'control') && !launchedRef.current) {
+        e.preventDefault(); launch();
+        if (k === 'control' || k === ' ') keys.current.add(k);
+        return;
       }
       if (!launchedRef.current || landingRef.current || landedRef.current) return;
       if (e.key === ' ') { keys.current.add(' '); e.preventDefault(); invalidate(); return; }
-      const k = e.key.toLowerCase();
-      if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)) {
+      if (flightKeys.includes(k)) {
         keys.current.add(k); e.preventDefault(); invalidate();
       }
     };
@@ -430,7 +449,7 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
       if (k.has('s') || k.has('arrowdown'))  pitchIn += 1;
       if (k.has('a') || k.has('arrowleft'))  rollIn  += 1;
       if (k.has('d') || k.has('arrowright')) rollIn  -= 1;
-      if (k.has(' '))     throttleIn += 1;
+      if (k.has(' ') || k.has('control')) throttleIn += 1;
       if (k.has('shift')) throttleIn -= 1;
 
       pitchIn = THREE.MathUtils.clamp(pitchIn, -1, 1);

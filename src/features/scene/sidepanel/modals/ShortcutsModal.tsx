@@ -82,9 +82,10 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <Section title="Avion (mode vol)" />
               <R label="Décoller (pré-vol)"         keys={['Espace', 'C']} />
               <R label="Changer de vue"             keys={['C']} />
+              <R label="Changer d’avion"            keys={['V']} />
               <R label="Piquer / cabrer"            keys={['↑', '↓']} />
               <R label="Roulis (vire)"              keys={['←', '→']} />
-              <R label="Accélérer"                  keys={['Espace']} />
+              <R label="Accélérer"                  keys={['Espace', 'Ctrl']} />
               <R label="Freiner"                    keys={['Shift']} />
               <R label="Quitter"                    keys={['F', 'Échap']} />
             </div>
