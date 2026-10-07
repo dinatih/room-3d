@@ -63,14 +63,16 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
     canvas.width = 1536; canvas.height = 96;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Canvas 2D indisponible pour le titre du chargement.');
-    context.font = '700 60px system-ui, -apple-system, sans-serif';
+    context.font = '900 60px system-ui, -apple-system, sans-serif';
     context.textAlign = 'center'; context.textBaseline = 'middle';
     context.fillStyle = '#b91c1c';
-    // Même relief que le décompte : ombre blanche à 1 px sous le texte de 13 px.
+    // Relief discret sous les lettres, sans halo blanc autour du rouge.
     const textureScale = 60 / 13;
     context.shadowColor = 'rgba(255, 255, 255, 0.9)';
     context.shadowOffsetY = textureScale;
-    context.shadowBlur = textureScale;
+    context.shadowBlur = textureScale / 2;
+    context.fillText('CHARGEMENT DE LA SCÈNE 3D…', 768, 48);
+    context.shadowColor = 'transparent';
     context.fillText('CHARGEMENT DE LA SCÈNE 3D…', 768, 48);
     const texture = new CanvasTexture(canvas);
     texture.colorSpace = SRGBColorSpace;
@@ -305,7 +307,7 @@ export function LoadingShiba({ countdownStarted = false, countdownSeconds = 5 }:
   if (!container) return null;
   return createPortal(
     <Canvas orthographic camera={{ position: [0, 0, 300], near: 0.1, far: 1000 }}
-      dpr={1} gl={{ alpha: true, antialias: true }}>
+      dpr={[1, 2]} gl={{ alpha: true, antialias: true }}>
       <hemisphereLight args={['#ffffff', '#d8d5cf', 2]} />
       <directionalLight position={[100, 150, 200]} intensity={1} />
       <Suspense fallback={null}><RunningShiba countdownStarted={countdownStarted} countdownSeconds={countdownSeconds} /></Suspense>
