@@ -380,7 +380,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
 | Couches visuelles | Structure / GLB / Mobilier + toggles murs rouges, grille |
 | Voisins | Appartements est/ouest semi-transparents |
 | Dev Tools | FPS graph, draw calls, stats mémoire, tailles GLB |
-| Visualisation repo | [repo-visualizer](https://dinatih.org/room-3d/visualizer/) — évolution du code au fil des commits |
+| Visualisation repo | [repo-visualizer](https://dinatih.org/visualizer/) — évolution du code au fil des commits |
 | Personnage | Walking man animé (Lara 2026) + SkeletonHelper toggle |
 
 ---

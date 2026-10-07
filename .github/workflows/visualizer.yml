@@ -32,7 +32,9 @@ jobs:
 
       - name: Build visualizer
         working-directory: /tmp/repo-visualizer
-        run: npm run build
+        run: |
+          find src -type f \( -name '*.js' -o -name '*.jsx' -o -name '*.ts' -o -name '*.tsx' \) -exec sed -i 's|/data/history.json|/visualizer/data/history.json|g; s|/repovisualizer.config.json|/visualizer/repovisualizer.config.json|g' {} +
+          npm run build -- --base=/visualizer/
 
       - name: Deploy visualizer to gh-pages
         uses: peaceiris/actions-gh-pages@v4

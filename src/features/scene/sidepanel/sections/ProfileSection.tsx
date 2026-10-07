@@ -66,7 +66,7 @@ export function ProfileSection({ isMobile: _isMobile, onOpenCv }: ProfileSection
       </div>
 
       <a
-        href="https://dinatih.org/room-3d/visualizer/"
+        href="https://dinatih.org/visualizer/"
         target="_blank"
         rel="noreferrer"
         className="btn btn-sm btn-outline-dark d-flex align-items-center justify-content-center gap-2 shadow-sm"
