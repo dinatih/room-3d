@@ -193,6 +193,11 @@ try {
     'lara-chest-left.png','lara-chest-right.png','lara-hip-left.png','lara-hip-right.png',
   ]) {
     await copyFile(`/tmp/${filename}`, `public/lara-previews/${filename}`);
-    console.log(`http://127.0.0.1:5173/lara-previews/${filename}`);
+    const url = `http://127.0.0.1:5173/lara-previews/${filename}`;
+    const response = await page.goto(url);
+    assert.equal(response.status(),200, `Preview inaccessible: ${filename}`);
+    const bytes = await response.buffer();
+    assert(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])), `Preview is not a PNG: ${filename}`);
+    console.log(url);
   }
 } finally { await browser.close(); }
