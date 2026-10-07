@@ -9,7 +9,7 @@ import {
   AgXToneMapping, PCFShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
-  PerspectiveCamera,
+  PerspectiveCamera, OrthographicCamera,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
@@ -262,10 +262,10 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
   return null;
 }
 
-function ActiveCameraCapture({ onCapture }: { onCapture: (cam: PerspectiveCamera) => void }) {
+function ActiveCameraCapture({ onCapture }: { onCapture: (cam: PerspectiveCamera | OrthographicCamera) => void }) {
   const { camera } = useThree();
   useEffect(() => {
-    onCapture(camera as PerspectiveCamera);
+    onCapture(camera as PerspectiveCamera | OrthographicCamera);
   }, [camera, onCapture]);
   return null;
 }
@@ -657,7 +657,7 @@ export function Studio() {
   const isCvModalOpen = useSceneStore(state => state.isCvModalOpen);
   const isPhotoModeOpen = useSceneStore(state => state.isPhotoModeOpen);
   const activeSceneRef = useRef<Scene | null>(null);
-  const activeCameraRef = useRef<PerspectiveCamera | null>(null);
+  const activeCameraRef = useRef<PerspectiveCamera | OrthographicCamera | null>(null);
   const activeGlRef = useRef<WebGLRenderer | null>(null);
 
   const revealScene = useCallback(() => {
@@ -747,7 +747,7 @@ export function Studio() {
           (window as any).threeCamera = camera;
           (window as any).threeGl = gl;
           activeSceneRef.current = scene;
-          activeCameraRef.current = camera as PerspectiveCamera;
+          activeCameraRef.current = camera as PerspectiveCamera | OrthographicCamera;
           activeGlRef.current = gl;
           scene.background = new Color(0x02030a);
           gl.shadowMap.enabled = true;

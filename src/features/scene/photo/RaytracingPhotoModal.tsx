@@ -25,7 +25,7 @@ import {
 export interface RaytracingPhotoModalProps {
   gl: THREE.WebGLRenderer;
   scene: THREE.Scene;
-  camera: THREE.PerspectiveCamera;
+  camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
   onClose: () => void;
 }
 
@@ -56,7 +56,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   // Moteur et références internes
   const pathTracerRef = useRef<WebGLPathTracer | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const physCameraRef = useRef<PhysicalCamera | null>(null);
+  const renderCameraRef = useRef<PhysicalCamera | THREE.OrthographicCamera | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
   const originalMaterialsMapRef = useRef<Map<THREE.Mesh, THREE.Material | THREE.Material[]>>(new Map());
   const hiddenHelpersRef = useRef<THREE.Object3D[]>([]);
@@ -296,10 +296,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           mesh.material = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.5 });
           return;
         }
-
-        const isGround =
-          (mesh.userData && (mesh.userData.brickType === 'ground' || mesh.userData.itemName?.includes('Terrain'))) ||
-          name.includes('ground') || name.includes('bermuda') || name.includes('grass');
         const isChar = (mesh.layers.mask & (1 << LAYER_WALKER)) !== 0;
 
         const isArray = Array.isArray(mesh.material);
@@ -310,19 +306,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           if (!m) {
             modified = true;
             return new THREE.MeshStandardMaterial({ color: 0xd0d0d0, roughness: 0.5 });
-          }
-
-          // Sol extérieur et pelouse : s'assurer qu'ils sont 100% opaques et double-face dans le path tracer
-          if (isGround) {
-            if (m.transparent || m.opacity < 1 || m.side !== THREE.DoubleSide) {
-              modified = true;
-              const cloned = m.clone();
-              cloned.transparent = false;
-              cloned.opacity = 1.0;
-              cloned.side = THREE.DoubleSide;
-              cloned.depthWrite = true;
-              return cloned;
-            }
           }
 
           // Personnages : s'assurer que les maillages ont DoubleSide pour éviter les faces arrière transparentes
@@ -534,29 +517,62 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     gl.toneMappingExposure = exposure;
     rendererRef.current = gl;
 
-    // Caméra physique avec support du Bokeh
-    const physCamera = new PhysicalCamera(camera.fov, width / height, camera.near, camera.far);
-    physCamera.position.copy(camera.position);
-    physCamera.quaternion.copy(camera.quaternion);
-    physCamera.focusDistance = focusDistance;
-    physCamera.fStop = fStop;
-    physCamera.bokehSize = dofEnabled ? physCamera.getFocalLength() / physCamera.fStop : 0;
-    physCamera.updateProjectionMatrix();
-    physCamera.updateMatrixWorld();
+    const isOrtho = (camera as any).isOrthographicCamera === true;
+
+    let renderCamera: PhysicalCamera | THREE.OrthographicCamera;
+
+    if (isOrtho) {
+      const ortho = camera as THREE.OrthographicCamera;
+      const origH = ortho.top - ortho.bottom;
+      const origCenterY = (ortho.top + ortho.bottom) / 2;
+      const origCenterX = (ortho.right + ortho.left) / 2;
+      const renderAspect = width / height;
+      const halfH = origH / 2;
+      const halfW = halfH * renderAspect;
+
+      const orthoCamera = new THREE.OrthographicCamera(
+        origCenterX - halfW,
+        origCenterX + halfW,
+        origCenterY + halfH,
+        origCenterY - halfH,
+        ortho.near,
+        ortho.far
+      );
+      orthoCamera.position.copy(ortho.position);
+      orthoCamera.quaternion.copy(ortho.quaternion);
+      orthoCamera.scale.copy(ortho.scale);
+      orthoCamera.zoom = ortho.zoom;
+      orthoCamera.updateProjectionMatrix();
+      orthoCamera.updateMatrixWorld(true);
+      renderCamera = orthoCamera;
+    } else {
+      const persp = camera as THREE.PerspectiveCamera;
+      const physCamera = new PhysicalCamera(persp.fov || 50, width / height, persp.near, persp.far);
+      physCamera.position.copy(persp.position);
+      physCamera.quaternion.copy(persp.quaternion);
+      physCamera.scale.copy(persp.scale);
+      physCamera.zoom = persp.zoom || 1;
+      physCamera.focusDistance = focusDistance;
+      physCamera.fStop = fStop;
+      physCamera.bokehSize = dofEnabled ? physCamera.getFocalLength() / physCamera.fStop : 0;
+      physCamera.updateProjectionMatrix();
+      physCamera.updateMatrixWorld(true);
+      renderCamera = physCamera;
+    }
 
     // Synchronisation complète des layers Three.js avec la caméra active de la scène
-    physCamera.layers.mask = camera.layers.mask;
+    renderCamera.layers.mask = camera.layers.mask;
     // S'assurer que les calques essentiels du studio sont activés
-    physCamera.layers.enable(LAYER_STRUCTURE);
-    physCamera.layers.enable(LAYER_EQUIPMENT);
-    physCamera.layers.enable(LAYER_FURNITURE);
-    physCamera.layers.enable(LAYER_FURNISHINGS);
-    physCamera.layers.enable(LAYER_DECOR);
-    physCamera.layers.enable(LAYER_WALKER);
-    physCamera.layers.enable(LAYER_MIRRORS);
-    physCamera.layers.enable(LAYER_ANIMALS);
-    physCamera.layers.enable(LAYER_ENVIRONMENT);
-    physCameraRef.current = physCamera;
+    renderCamera.layers.enable(LAYER_STRUCTURE);
+    renderCamera.layers.enable(LAYER_EQUIPMENT);
+    renderCamera.layers.enable(LAYER_FURNITURE);
+    renderCamera.layers.enable(LAYER_FURNISHINGS);
+    renderCamera.layers.enable(LAYER_DECOR);
+    renderCamera.layers.enable(LAYER_WALKER);
+    renderCamera.layers.enable(LAYER_MIRRORS);
+    renderCamera.layers.enable(LAYER_ANIMALS);
+    renderCamera.layers.enable(LAYER_ENVIRONMENT);
+    renderCameraRef.current = renderCamera;
 
     // 1. Capture instantanée du rendu 3D Standard dans un canvas indépendant.
     // Le renderer partagé sera ensuite redimensionné et utilisé par le path tracer.
@@ -576,7 +592,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       snapshotRenderer.toneMappingExposure = gl.toneMappingExposure;
       snapshotRenderer.shadowMap.enabled = gl.shadowMap.enabled;
       snapshotRenderer.shadowMap.type = gl.shadowMap.type;
-      snapshotRenderer.render(scene, physCamera);
+      snapshotRenderer.render(scene, renderCamera);
       setRasterSnapshot(snapshotCanvas.toDataURL('image/png'));
       snapshotRenderer.dispose();
     } catch (err) {
@@ -629,7 +645,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       if (isDisposed) return;
       try {
         console.log('[Raytracing] Construction du BVH pour la scène...');
-        pathTracer.setScene(scene, physCamera);
+        pathTracer.setScene(scene, renderCamera);
         pathTracerRef.current = pathTracer;
         setIsBuildingScene(false);
         console.log('[Raytracing] Scène prête ! Démarrage de l\'accumulation.');
@@ -782,16 +798,18 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
   // Synchronisation des paramètres caméra physique (DoF, focus distance, f-stop)
   useEffect(() => {
-    if (!physCameraRef.current || !pathTracerRef.current) return;
-    const cam = physCameraRef.current;
-    cam.focusDistance = focusDistance;
-    cam.fStop = fStop;
-    cam.bokehSize = dofEnabled ? cam.getFocalLength() / cam.fStop : 0;
-    cam.updateProjectionMatrix();
-    cam.updateMatrixWorld();
-    pathTracerRef.current.updateCamera();
-    denoisedAppliedRef.current = false;
-    setCurrentSamples(0);
+    if (!renderCameraRef.current || !pathTracerRef.current) return;
+    if (typeof (renderCameraRef.current as any).getFocalLength === 'function') {
+      const cam = renderCameraRef.current as PhysicalCamera;
+      cam.focusDistance = focusDistance;
+      cam.fStop = fStop;
+      cam.bokehSize = dofEnabled ? cam.getFocalLength() / cam.fStop : 0;
+      cam.updateProjectionMatrix();
+      cam.updateMatrixWorld();
+      pathTracerRef.current.updateCamera();
+      denoisedAppliedRef.current = false;
+      setCurrentSamples(0);
+    }
   }, [dofEnabled, focusDistance, fStop]);
 
   // Synchronisation de l'exposition
@@ -824,9 +842,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
 
     const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
-    if (physCameraRef.current) {
-      raycaster.layers.mask = physCameraRef.current.layers.mask;
+    const activeCam = renderCameraRef.current || camera;
+    raycaster.setFromCamera(new THREE.Vector2(x, y), activeCam);
+    if (renderCameraRef.current) {
+      raycaster.layers.mask = renderCameraRef.current.layers.mask;
     }
     const hits = raycaster.intersectObjects(scene.children, true);
 
@@ -1307,13 +1326,18 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
                   className="form-check-input"
                   type="checkbox"
                   role="switch"
-                  checked={dofEnabled}
+                  checked={dofEnabled && !(camera as any).isOrthographicCamera}
+                  disabled={(camera as any).isOrthographicCamera}
                   onChange={(e) => setDofEnabled(e.target.checked)}
                 />
               </div>
             </div>
 
-            {dofEnabled ? (
+            {(camera as any).isOrthographicCamera ? (
+              <small className="text-white-50" style={{ fontSize: '10px' }}>
+                Indisponible en vue isométrique / orthographique (l'effet Bokeh optique nécessite une projection perspective).
+              </small>
+            ) : dofEnabled ? (
               <>
                 <p className="text-white-50 mb-2" style={{ fontSize: '10px' }}>
                   💡 <em>Cliquez sur le modèle ou un objet dans l'image pour régler l'autofocus instantanément !</em>
