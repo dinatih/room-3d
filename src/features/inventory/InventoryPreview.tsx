@@ -354,7 +354,7 @@ function PerspectivePresetControls({
   return (
     <>
       <PerspectiveCamera ref={cameraRef} makeDefault fov={45} near={0.5} far={10000} position={position} />
-      <OrbitControls ref={ctrlRef} makeDefault target={camTarget} enableRotate={false} enablePan enableZoom screenSpacePanning minDistance={2} maxDistance={2500} />
+      <OrbitControls ref={ctrlRef} makeDefault target={camTarget} enablePan enableZoom screenSpacePanning minDistance={2} maxDistance={2500} />
     </>
   );
 }
