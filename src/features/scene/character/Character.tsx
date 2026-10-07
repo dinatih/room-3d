@@ -38,7 +38,7 @@ import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 import type { CharacterProps } from './characterTypes';
 import { updateCharacterLayers } from './characterLayers';
 import { GroundPoint } from './GroundPoint';
-import { HeartParachute } from './HeartParachute';
+import { HeartParachute, type HeartParachuteHandle } from './HeartParachute';
 import { useCharacterAnimations } from './useCharacterAnimations';
 import { useCharacterPhysics } from './useCharacterPhysics';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
@@ -181,6 +181,7 @@ export function Character({
   // Extraction structurée des maillages et des os
   const parts = useMemo(() => extractCharacterParts(scene), [scene]);
   const pendantRef = useRef<CharacterPendantHandle>(null);
+  const parachuteRef = useRef<HeartParachuteHandle>(null);
   const headBone = parts.bones.head;
   // Os de référence pour la position réelle de la tête (minimap) : Lara expose head_neck_upper, les modèles Mixamo leur os Head
   const headRefBone = useMemo(
@@ -1054,6 +1055,7 @@ export function Character({
     }
 
     pendantRef.current?.update(pendantDelta, resetPendant);
+    parachuteRef.current?.update(delta);
 
     // Position XZ réelle de la tête (minimap) — actif ET PNJ. Sans os de tête : non publié → non dessiné
     if (!isPreview) {
@@ -1204,7 +1206,13 @@ export function Character({
           attachTo={headBone}
         />
       )}
-      {!isPreview && <HeartParachute visible={isFalling} />}
+      {!isPreview && <HeartParachute
+        ref={parachuteRef}
+        visible={isFalling}
+        leftShoulder={parts.bones.lShoulder}
+        rightShoulder={parts.bones.rShoulder}
+        paused={isPaused}
+      />}
       {!isPreview ? (
         isActive ? <GroundPoint color="#0058a3" /> : <GroundPoint color="#ff2222" />
       ) : (
