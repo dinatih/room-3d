@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FOLDER = ROOT / 'public/characters/lara'
 SOURCE = FOLDER / 'lara_perfect.blend'
 MARKER = 'lara_clean_nude_skin'
-VERSION = 'continuous-authored-skin-transfer-v7'
+VERSION = 'authored-skin-smooth-normals-v9'
 
 
 def clean_triangle(coords, occupied):
@@ -55,6 +55,30 @@ def material(original, atlas, name):
             node.image = atlas
     copy['lara_limb_base_image'] = '8001.png.005'
     return copy
+
+
+def smooth_skin_normals(objects):
+    """Rebuild normals across duplicate vertices introduced by mesh assembly."""
+    normals = {}
+    for obj in objects:
+        mesh = obj.data
+        for face in mesh.polygons:
+            face.use_smooth = True
+            weighted = face.normal * face.area
+            for vertex in face.vertices:
+                key = tuple(obj.matrix_world @ mesh.vertices[vertex].co)
+                normals.setdefault(key, Vector((0,0,0)))
+                normals[key] += weighted
+    for obj in objects:
+        mesh = obj.data
+        values = []
+        for loop in mesh.loops:
+            key = tuple(obj.matrix_world @ mesh.vertices[loop.vertex_index].co)
+            normal = normals[key]
+            assert normal.length_squared > 0, f'Invalid skin normal: {obj.name}:{loop.vertex_index}'
+            values.append(normal.normalized())
+        mesh.normals_split_custom_set(values)
+        mesh.update()
 
 
 def main():
@@ -128,7 +152,7 @@ def main():
     for obj in objects:
         split = obj.get(limb.MARKER)==limb.LAYOUT
         uv = obj.data.uv_layers.active.data
-        changed = 0
+        changed_faces = []
         for face in obj.data.polygons:
             keep = authored.get(obj.name,{}).get(face.index,False)
             tile = limb.side(obj,face) if split else 0
@@ -154,10 +178,11 @@ def main():
                 bary = np.linalg.lstsq(edges,np.array(projected-a),rcond=None)[0]
                 coord = ua+(ub-ua)*float(bary[0])+(uc-ua)*float(bary[1])
                 uv[loop].uv = ((coord.x+tile)/2,coord.y)
-            changed += 1
+            changed_faces.append(face.index)
         for index in sorted({f.material_index for f in obj.data.polygons}):
             obj.data.materials[index] = material(obj.data.materials[index],atlas,f'Lara_Clean_Skin_{obj.name}_{index}')
-        print('Remapped',obj.name,changed,'faces; preserved authored skin elsewhere',flush=True)
+        print('Remapped',obj.name,len(changed_faces),'faces; preserved authored skin elsewhere',flush=True)
+    smooth_skin_normals(objects)
     atlas.pack()
     atlas.filepath = '//textures/8001_png_005_limbs.png'
     legs = bpy.data.objects['body_nude_legs']

@@ -115,6 +115,20 @@ try {
     }
     window.renderLara=()=>renderer.render(view,camera);window.renderLara();
     window.turnLara=(x,z)=>{camera.position.set(x,.9,z);camera.lookAt(0,.9,0);renderer.render(view,camera);};
+    window.detailLara=(side,height)=>{
+      const characters=view.children.filter(n=>n.getObjectByName('arm_left_elbow'));
+      characters.forEach((scene,i)=>{scene.visible=i===0;});
+      const targetX=characters[0].position.x;
+      camera.left=-.275;camera.right=.275;camera.top=.2;camera.bottom=-.2;
+      camera.updateProjectionMatrix();
+      camera.position.set(targetX+side*4,height,1);
+      camera.lookAt(targetX,height,0);renderer.render(view,camera);
+    };
+    window.restoreLara=()=>{
+      view.children.filter(n=>n.getObjectByName('arm_left_elbow')).forEach(scene=>{scene.visible=true;});
+      camera.left=-1.25;camera.right=1.25;camera.top=1.1;camera.bottom=-.72;
+      camera.updateProjectionMatrix();
+    };
     window.animateLara=()=>{
       for(const scene of view.children.filter(n=>n.getObjectByName('arm_left_elbow'))) {
         const arm=scene.getObjectByName('arms');
@@ -143,7 +157,13 @@ try {
   await page.screenshot({path:'/tmp/lara-limbs-three-quarter.png'});
   await page.evaluate(()=>window.turnLara(0,-4));
   await page.screenshot({path:'/tmp/lara-limbs-back.png'});
-  await page.evaluate(()=>{window.turnLara(0,4);window.animateLara();});
+  for (const [part,height] of [['chest',1.35],['hip',1]]) {
+    for (const side of [-1,1]) {
+      await page.evaluate((side,height)=>window.detailLara(side,height),side,height);
+      await page.screenshot({path:`/tmp/lara-${part}-${side===1?'left':'right'}.png`});
+    }
+  }
+  await page.evaluate(()=>{window.restoreLara();window.turnLara(0,4);window.animateLara();});
   await page.screenshot({path:'/tmp/lara-limbs-animated.png'});
   assert.deepEqual(errors,[]);
   console.log('WebGL previews: /tmp/lara-limbs-front.png, /tmp/lara-limbs-nude.png');
