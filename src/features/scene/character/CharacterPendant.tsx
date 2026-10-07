@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { LAYER_WALKER } from '@config';
+import type { LaraVariant } from '../LaraVariants';
 import { getPendantResources } from '../items/DoubleVenusPendant';
 
 export interface CharacterPendantHandle {
@@ -14,6 +15,7 @@ interface Props {
   visible: boolean;
   shadows: boolean;
   resetKey: string;
+  variant?: LaraVariant;
 }
 
 // Lara's native mesh is in metres. Measurements at Y=1.476m:
@@ -26,7 +28,7 @@ const LENGTH = BAIL_Y - COM_Y;
 const DOWN = new THREE.Vector3(0, -1, 0);
 
 export const CharacterPendant = forwardRef<CharacterPendantHandle, Props>(function CharacterPendant(
-  { neck, scene, torso, visible, shadows, resetKey }, ref,
+  { neck, scene, torso, visible, shadows, resetKey, variant }, ref,
 ) {
   if (!neck) throw new Error('Lara pendant requires a neck bone');
   const rig = useMemo(() => {
@@ -43,7 +45,8 @@ export const CharacterPendant = forwardRef<CharacterPendantHandle, Props>(functi
     const cordGeometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 64, CORD_RADIUS, 6, true);
     const cordMaterial = new THREE.MeshStandardMaterial({ color: '#b80719', roughness: .8 });
     const cord = new THREE.Mesh(cordGeometry, cordMaterial);
-    cord.name = 'lara_red_elastic_cord';
+    cord.name = 'lara_elastic_cord';
+    cord.userData.isNecklaceCord = true;
     root.add(cord);
     const pendant = new THREE.Group();
     pendant.name = 'lara_double_venus_pendant';
@@ -72,7 +75,9 @@ export const CharacterPendant = forwardRef<CharacterPendantHandle, Props>(functi
     const hits: THREE.Intersection[] = [];
     const scale = new THREE.Vector3();
     let initialized = false;
+    let syncCordColor = () => {};
     function update(delta: number, reset: boolean) {
+      syncCordColor();
       root.updateWorldMatrix(true, false);
       root.localToWorld(anchor.copy(anchorLocal));
       root.getWorldScale(scale);
@@ -147,8 +152,53 @@ export const CharacterPendant = forwardRef<CharacterPendantHandle, Props>(functi
       pendant.quaternion.setFromRotationMatrix(frame);
       lastAnchor.copy(anchor);
     }
-    return { root, cordGeometry, cordMaterial, update, reset: () => { initialized = false; } };
+    return { root, cordGeometry, cordMaterial, update, setColorSync: (sync: () => void) => { syncCordColor = sync; }, reset: () => { initialized = false; } };
   }, [neck, scene]);
+
+  // Use the same top classification as the variant styling, even when the top is hidden.
+  useLayoutEffect(() => {
+    let topMesh: THREE.Mesh | undefined;
+    scene.traverse(node => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh || mesh.userData.isNecklaceCord) return;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      if (materials.some(material => /shirt|tank|top/.test(`${mesh.name} ${material.name}`.toLowerCase()))) topMesh = mesh;
+    });
+    if (!topMesh) throw new Error('Lara necklace requires a top material');
+    const matchedTop = topMesh;
+    const matchTexture = variant === 'native' || variant === 'cha' || variant === 'rajaa';
+    let previousMaterial: THREE.Material | undefined;
+    let previousImage: unknown;
+    let previousColor: number | undefined;
+    const match = () => {
+      const materials = Array.isArray(matchedTop.material) ? matchedTop.material : [matchedTop.material];
+      const top = materials.find(material => /shirt|tank|top/.test(`${matchedTop.name} ${material.name}`.toLowerCase())) as THREE.MeshStandardMaterial;
+      const texture = top.map;
+      const color = top.color;
+      if (previousMaterial === top && previousImage === texture?.image && previousColor === color.getHex()) return;
+      previousMaterial = top; previousImage = texture?.image; previousColor = color.getHex();
+      rig.cordMaterial.color.copy(color);
+      if (matchTexture && texture?.image) {
+        const image = texture.image as HTMLImageElement;
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Cannot sample Lara top texture');
+        ctx.drawImage(image, 0, 0);
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let r = 0, g = 0, b = 0, weight = 0;
+        for (let i = 0; i < pixels.length; i += 4) {
+          const alpha = pixels[i + 3] / 255;
+          r += pixels[i] * alpha; g += pixels[i + 1] * alpha; b += pixels[i + 2] * alpha; weight += alpha;
+        }
+        if (!weight) throw new Error('Lara top texture is empty');
+        rig.cordMaterial.color.multiply(new THREE.Color().setRGB(r / weight / 255, g / weight / 255, b / weight / 255, THREE.SRGBColorSpace));
+      }
+    };
+    rig.setColorSync(match);
+    return () => rig.setColorSync(() => {});
+  }, [rig, scene, variant]);
 
   useImperativeHandle(ref, () => ({ update: rig.update }), [rig]);
   useLayoutEffect(() => {

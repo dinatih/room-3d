@@ -1181,6 +1181,7 @@ export function Character({
 
       {isLara && id !== 'romana' && variant !== 'romana' && <CharacterPendant
         ref={pendantRef}
+        variant={variant}
         neck={parts.bones.neck}
         scene={scene}
         torso={[...parts.torsoClothed, ...parts.torsoNude].map(part => part.mesh)}
