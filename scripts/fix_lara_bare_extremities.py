@@ -53,7 +53,7 @@ def trim(obj,reference,axis,side,keep_positive):
 
 
 def barefoot_legs():
-    """Reuse clean neighboring skin UVs on the strip formerly hidden by boots."""
+    """Match the exposed calf rim to clean skin and the adjacent foot color."""
     original=bpy.data.objects['body_legs']
     obj=bpy.data.objects.get('body_legs_barefoot')
     if obj is None:
@@ -67,19 +67,45 @@ def barefoot_legs():
     assert affected
     upper=max(mesh.vertices[i].co.z for f in affected for i in f.vertices)
     knee=bpy.data.objects['Armature'].data.bones['leg_left_knee'].head_local.z
+    def sample(image, pixels, texcoord):
+        x=min(image.size[0]-1,max(0,int(texcoord.x*image.size[0])))
+        y=min(image.size[1]-1,max(0,int(texcoord.y*image.size[1])))
+        index=4*(y*image.size[0]+x)
+        return pixels[index:index+3]
+
+    image=next(n.image for n in mesh.materials[0].node_tree.nodes if n.type=='TEX_IMAGE' and n.image)
+    pixels=image.pixels[:]
+    feet=bpy.data.objects['body_bare_feet_clothed'].data
+    foot_uv=feet.uv_layers.active.data
+    top=max(v.co.z for v in feet.vertices)
+    foot_edge={v.index for v in feet.vertices if abs(v.co.z-top)<2**-17}
+    foot_images={}
+    foot_skin=[]
+    for f in feet.polygons:
+        if not any(i in foot_edge for i in f.vertices):continue
+        mat=feet.materials[f.material_index]
+        foot_image=next(n.image for n in mat.node_tree.nodes if n.type=='TEX_IMAGE' and n.image)
+        if foot_image.name not in foot_images:
+            foot_images[foot_image.name]=foot_image.pixels[:]
+        for li in f.loop_indices:
+            co=feet.vertices[feet.loops[li].vertex_index].co
+            if feet.loops[li].vertex_index in foot_edge:
+                foot_skin.append((co.copy(),sample(foot_image,foot_images[foot_image.name],foot_uv[li].uv)))
+    assert foot_skin
     skin=[]
     for f in mesh.polygons:
         for li in f.loop_indices:
             co=mesh.vertices[mesh.loops[li].vertex_index].co
             if upper<co.z<knee:
-                skin.append((co.copy(),uv[li].uv.copy()))
+                skin.append((co.copy(),uv[li].uv.copy(),sample(image,pixels,uv[li].uv)))
     assert skin
     for f in affected:
         for li in f.loop_indices:
             co=mesh.vertices[mesh.loops[li].vertex_index].co
             if mesh.loops[li].vertex_index in edge:
+                foot_color=min((item for item in foot_skin if item[0].x*co.x>0),key=lambda item:(item[0].x-co.x)**2+(item[0].y-co.y)**2)[1]
                 candidates=(item for item in skin if item[0].x*co.x>0)
-                nearest=min(candidates,key=lambda item:(item[0].x-co.x)**2+(item[0].y-co.y)**2)
+                nearest=min(candidates,key=lambda item:(item[0].x-co.x)**2+(item[0].y-co.y)**2+co.x**2*sum((a-b)**2 for a,b in zip(item[2],foot_color)))
                 uv[li].uv=nearest[1]
     print('Cleaned boot-hidden calf UVs',len(affected),'faces',flush=True)
 
@@ -98,6 +124,9 @@ def main():
         if max(p.z for p in ring)<knee_z:
             side=1 if sum(p.x for p in ring)>0 else -1
             trim(clothed,ring,2,side,False)
+    # The source feet face inward, opposite to the leg surface. Reverse only
+    # this clothed-foot copy so lighting agrees across the exposed ankle.
+    clothed.data.flip_normals()
     barefoot_legs()
     bpy.context.preferences.filepaths.save_version=0
     bpy.ops.wm.save_as_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))

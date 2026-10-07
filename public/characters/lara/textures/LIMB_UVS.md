@@ -139,7 +139,9 @@ du haut et du bas. Les gants restent toujours portés.
 rejoignent les jambes habillées, ainsi qu'une copie de ces jambes réservée au
 mode pieds nus. La rangée des mollets auparavant cachée sous les bottes utilisait
 une zone sombre de la texture. Sur cette copie, ses UV reprennent la peau claire
-voisine du même côté anatomique. Les jambes d'origine restent utilisées avec les
+voisine du même côté anatomique, en rapprochant la couleur de celle des pieds au
+raccord. Les normales de la copie des pieds sont orientées comme celles des
+jambes pour éviter une ombre artificielle sur cette bordure. Les jambes d'origine restent utilisées avec les
 bottes. Les jambes sans vêtements conservent leurs pieds d'origine. Les tatouages
 des variantes sont aussi appliqués à la copie pieds nus.
 
