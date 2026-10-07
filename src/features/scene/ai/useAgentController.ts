@@ -5,7 +5,7 @@ import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { getDuoAnimationForClip } from '../animations/duoAnimations';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
-import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
+import { useSceneStore } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 import { getEstimatedClipDuration } from '../animOptions';
 import { resolveAnimationId, getAnimationDef, resolveSlotAnimation } from '../animations/animationResolver';
@@ -309,25 +309,7 @@ export function useAgentController(
 
   const triggerInstructionEvent = (instruction: AgentInstruction) => {
     if (!instruction.triggerEventKey) return;
-    const key = instruction.triggerEventKey;
-    const store = useSceneStore.getState();
-    const resolved = resolveStoreKey(key);
-    const furniture = store.furniture as any;
-    const extraStates = store.extraStates as any;
-
-    const currentVal = resolved.type === 'furniture'
-      ? Boolean(furniture[resolved.name])
-      : resolved.type === 'extra'
-      ? Boolean(extraStates[resolved.name])
-      : false;
-
-    if (instruction.triggerTargetState !== undefined) {
-      if (instruction.triggerTargetState !== currentVal) {
-        store.triggerAction(key);
-      }
-    } else {
-      store.triggerAction(key);
-    }
+    useSceneStore.getState().triggerAction(instruction.triggerEventKey);
   };
 
   const advanceToNextStep = (hasNavStep: boolean) => {
@@ -633,22 +615,7 @@ export function useAgentController(
         }
       } else if (currentInstruction.type === 'INTERACT' || currentInstruction.type === 'WAIT') {
         if (currentInstruction.triggerEventKey) {
-          const store = useSceneStore.getState();
-          const resolved = resolveStoreKey(currentInstruction.triggerEventKey);
-          const furniture = store.furniture as any;
-          const extraStates = store.extraStates as any;
-
-          const currentVal = resolved.type === 'furniture'
-            ? Boolean(furniture[resolved.name])
-            : resolved.type === 'extra'
-            ? Boolean(extraStates[resolved.name])
-            : false;
-
-          if (currentInstruction.triggerTargetState !== undefined && currentVal === currentInstruction.triggerTargetState) {
-            advanceToNextStep(hasNavStep);
-            return update(dt);
-          }
-          store.triggerAction(currentInstruction.triggerEventKey, currentInstruction.triggerTargetState);
+          triggerInstructionEvent(currentInstruction);
         }
 
         statusRef.current = 'INTERACTING';

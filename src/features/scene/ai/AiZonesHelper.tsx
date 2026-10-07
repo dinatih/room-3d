@@ -249,7 +249,7 @@ function AiZonesHelperContent() {
                   lines.push(`Répétitions : ${slot.repeatCount}${slot.repeatVariation ? ' (variation)' : ''}`);
                 }
                 if (slot.triggerEventKey) {
-                  lines.push(`Trigger : ${slot.triggerEventKey}${slot.triggerTargetState !== undefined ? ` = ${slot.triggerTargetState}` : ''}`);
+                  lines.push(`Trigger : ${slot.triggerEventKey}`);
                 }
 
                 if (obj.slots.length > 1) {
@@ -361,7 +361,6 @@ function AiZonesHelperContent() {
     </group>
   );
 }
-
 
 
 

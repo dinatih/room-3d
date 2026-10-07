@@ -983,8 +983,7 @@ export function buildSmartObjectInstructionSequence(
     repeatCount: slot.repeatCount,
     repeatVariation: slot.repeatVariation,
     rotY: slot.rotY,
-    triggerEventKey: slot.triggerEventKey,
-    triggerTargetState: slot.triggerTargetState
+    triggerEventKey: slot.triggerEventKey
   };
 
   if (objectId === 'freezer' || objectId === 'kallax-ne') {
@@ -1003,17 +1002,13 @@ export function buildSmartObjectInstructionSequence(
     ];
   }
 
-  // Traitement spécifique des meubles avec portes et routines composées
+  // Routines composées
   if (objectId === 'shower') {
     return [
       { type: 'MOVE_TO', targetWaypointId: 'bathroom-shower-entry', rotY: 0 },
-      { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: true, duration: 0.8, rotY: 0 },
       { type: 'MOVE_TO', smartObjectId: 'shower', slotId: slot.slotId },
-      { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.5 },
       baseInstruction,
-      { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: true, duration: 0.8 },
       { type: 'MOVE_TO', targetWaypointId: 'bathroom-shower-entry', rotY: Math.PI },
-      { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.5, rotY: Math.PI }
     ];
   }
 
@@ -1029,18 +1024,14 @@ export function buildSmartObjectInstructionSequence(
   if (objectId === 'sdb-closet') {
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-      { type: 'INTERACT', triggerEventKey: 'sdb-closet-r-toggle', triggerTargetState: true, duration: 0.5 },
       baseInstruction,
-      { type: 'INTERACT', triggerEventKey: 'sdb-closet-r-toggle', triggerTargetState: false, duration: 0.4 }
     ];
   }
 
   if (objectId === 'corridor-closet') {
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-      { type: 'INTERACT', triggerEventKey: 'corr-doors-toggle', triggerTargetState: true, duration: 0.5 },
       baseInstruction,
-      { type: 'INTERACT', triggerEventKey: 'corr-doors-toggle', triggerTargetState: false, duration: 0.4 }
     ];
   }
 

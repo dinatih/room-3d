@@ -23,8 +23,7 @@ export interface InteractionSlot {
   repeatVariation?: boolean;  // Si repeatCount > 1 avec animationsRandom : true = animation différente tirée à chaque répétition, false = même anim répétée X fois (défaut: false)
   availableAnims?: string[];  // Variantes possibles pour l'aléatoire
   animationsRandom?: string | string[]; // Tag (ex: 'seated-front', 'dance'), tableau de tags/alias, ou alias unique
-  triggerEventKey?: string;   // Event à déclencher (ex: 'wc-flush', 'eastGlassDoor')
-  triggerTargetState?: boolean;
+  triggerEventKey?: string;   // Event à déclencher (ex: 'wc-flush')
   // ── Support Duo Animation ──
   isDuo?: boolean;            // Indique une interaction à deux personnages synchronisés
   duoAnimId?: string;         // Identifiant de l'animation duo (dans DUO_ANIMATIONS, ex: 'sit_cuddle')
@@ -41,7 +40,6 @@ export interface SmartObjectDef {
   position?: [number, number, number]; // Position monde de référence [x, y, z] (optionnel si itemId présent)
   rotationY?: number;         // Orientation monde de l'objet (optionnel si itemId présent)
   slots: InteractionSlot[];   // Slots d'interaction disponibles
-  requiresDoorAccess?: { doorKey: string; approachNode?: string }; // Pré-conditions si nécessaire
   exclusive?: boolean;        // Si true, un seul personnage à la fois peut utiliser cet objet (exclusivité partagée par tous ses slots)
 }
 
@@ -112,7 +110,5 @@ export interface AgentInstruction {
   repeatCount?: number; // number of repetitions if duration is not set (default 1)
   repeatVariation?: boolean; // whether to re-randomize animation on each repeat cycle
   triggerEventKey?: string; // event to dispatch
-  triggerTargetState?: boolean; // optional target state to force
   rotY?: number; // target rotation to face during interaction
 }
-
