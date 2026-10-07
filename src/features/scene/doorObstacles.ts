@@ -267,8 +267,13 @@ export function computeDoorDynamics(
     const across = vx * door.openNormal.x + vz * door.openNormal.z;
     const clearance = bodyRadius + door.thickness / 2 + door.margin;
     const distance = Math.hypot(along, across);
+    // Les deux battants vitrés se partagent la même ouverture : une présence
+    // devant le droit ne doit pas aussi pousser le gauche au-delà de leur jonction.
+    const isGlassLeaf = door === DOOR_CONFIGS.glassLeft || door === DOOR_CONFIGS.glassRight;
+    const minAlong = isGlassLeaf ? 0 : -clearance;
+    const maxAlong = isGlassLeaf ? door.length : door.length + clearance;
     // Une présence dans l'arc de rotation ne suffit pas à rouvrir la porte après un passage.
-    if (along < -clearance || along > door.length + clearance || distance > door.length + clearance || across > clearance) continue;
+    if (along < minAlong || along > maxAlong || distance > door.length + clearance || across > clearance) continue;
 
     // On the opposite side the leaf starts moving as the body reaches its plane.
     // On the opening side its outer tangent keeps the whole body clear until it exits.
