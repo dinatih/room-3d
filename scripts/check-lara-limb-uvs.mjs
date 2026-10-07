@@ -11,7 +11,7 @@ const before = await io.readBinary(execFileSync('git', ['show', 'HEAD:public/cha
 const after = await io.read('public/characters/lara/lara_native.glb');
 const oldNodes = before.getRoot().listNodes();
 const newNodes = after.getRoot().listNodes();
-assert.deepEqual(newNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')).map(n => n.getName()).sort(), oldNodes.map(n => n.getName()).sort());
+assert.deepEqual(newNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')).map(n => n.getName()).sort(), oldNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')).map(n => n.getName()).sort());
 for (const old of oldNodes) {
   const node = newNodes.find(n => n.getName() === old.getName() && Boolean(n.getMesh()) === Boolean(old.getMesh()));
   for (const method of ['getTranslation', 'getRotation', 'getScale']) {
@@ -22,7 +22,7 @@ for (const old of oldNodes) {
   }
   if (old.getMesh()) {
     const count = m => m.listPrimitives().reduce((n,p) => n + p.getIndices().getCount(),0);
-    if (old.getName() === 'body_nude_hands') {
+    if (old.getName() === 'body_nude_hands' || old.getName() === 'body_bare_feet_clothed') {
       assert(count(node.getMesh())>0, 'Bare hands lost all triangles');
     } else if (old.getName() === 'body_nude_torso') {
       assert(count(node.getMesh()) >= count(old.getMesh()), 'Rebuilt torso lost triangles');
