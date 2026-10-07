@@ -20,6 +20,7 @@ import { cameraState } from './cameraState';
 import { CategoryLayerGroup } from './sceneLayer';
 import { LAYER_AIRCRAFT } from './config';
 import { PlaneMesh, type PlaneModelKey } from './PaperPlane';
+import { DEFAULT_PLANE_MODEL } from './aircraftModels';
 
 // ── Paramètres ────────────────────────────────────────────────────────────────
 
@@ -36,7 +37,7 @@ interface AutopilotPlaneProps {
   model?: PlaneModelKey;
 }
 
-export function AutopilotPlane({ model = 'origami' }: AutopilotPlaneProps) {
+export function AutopilotPlane({ model = DEFAULT_PLANE_MODEL }: AutopilotPlaneProps) {
   const groupRef = useRef<THREE.Group>(null!);
   const t        = useRef(0);
   const euler    = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));

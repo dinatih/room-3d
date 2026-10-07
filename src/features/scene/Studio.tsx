@@ -40,7 +40,7 @@ import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { SunLight, SunSphere } from '@features/scene/SunLight';
 import { SkySphere } from './SkySphere';
 import { BuildAnimationMatrix } from '@features/scene/BuildAnimations';
-import { AIRCRAFT_MODELS } from './aircraftModels';
+import { AIRCRAFT_MODELS, DEFAULT_PLANE_MODEL } from './aircraftModels';
 import { PlaneControls } from './PlaneControls';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
@@ -451,7 +451,7 @@ export function Studio() {
 
   const [planeMode,          setPlaneMode]          = useState(parseUrlFlightMode);
   useEffect(() => { updateUrlFlightMode(planeMode); }, [planeMode]);
-  const [planeModel,         setPlaneModel]         = useState<PlaneModelKey>('origami');
+  const [planeModel,         setPlaneModel]         = useState<PlaneModelKey>(DEFAULT_PLANE_MODEL);
   const cyclePlaneModel = useCallback(() => {
     const models: PlaneModelKey[] = AIRCRAFT_MODELS.map(entry => entry.key);
     setPlaneModel(current => models[(models.indexOf(current) + 1) % models.length]);

@@ -23,7 +23,8 @@ export function AircraftMesh({ definition, onLaunchReady }: { definition: Defini
       action.clampWhenFinished = true;
       action.play();
       mixer.setTime(action.getClip().duration); // Normaliser la géométrie pliée, prête à voler.
-    } else if (definition.key === 'comet') {
+    } else if (definition.key === 'comet' || definition.key === 'koi-fish') {
+      if (!animations.length) throw new Error(`Animation de vol absente : ${definition.key}`);
       animations.forEach(clip => mixer.clipAction(clip).play());
     }
     // Initialiser aussi les matrices de liaison des SkinnedMesh avant de mesurer.
@@ -56,7 +57,7 @@ export function AircraftMesh({ definition, onLaunchReady }: { definition: Defini
       if (!started.current) { started.current = true; action.reset().play(); action.paused = false; }
       mixer.update(delta);
       if (action.time >= action.getClip().duration) ready.current();
-    } else if (definition.key === 'comet') mixer.update(delta);
+    } else if (definition.key === 'comet' || definition.key === 'koi-fish') mixer.update(delta);
   });
 
   return <group rotation={[0, definition.yaw, 0]}>

@@ -8,7 +8,8 @@ const root = path.resolve(__dirname, '..');
 const transpile = file => ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
 const definitions = {};
 vm.runInNewContext(transpile('src/features/scene/aircraftModels.ts'), { exports: definitions, Math });
-assert.equal(definitions.AIRCRAFT_MODELS[0].key, 'origami');
+assert.equal(definitions.AIRCRAFT_MODELS[0].key, 'koi-fish');
+assert.equal(definitions.DEFAULT_PLANE_MODEL, 'koi-fish');
 assert(!definitions.AIRCRAFT_MODELS.some(entry => ['paper', 'paper-glb', 'a380'].includes(entry.key)));
 // Tester les géométries et clips locaux sans décodage d'images/WebGL.
 global.self = global;
@@ -25,6 +26,7 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'draco3d.decoder': await draco.createDecoderModule() });
   let origami;
   let comet;
+  let koi;
   for (const definition of definitions.AIRCRAFT_MODELS.filter(entry => entry.path.startsWith('/items/aircraft/') || entry.key === 'comet')) {
     const file = path.join(root, 'public', definition.path);
     let bytes = fs.readFileSync(file);
@@ -36,6 +38,12 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
     const gltf = await loader.parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
     const scene = clone(gltf.scene);
     const mixer = new THREE.AnimationMixer(scene);
+    if (definition.key === 'koi-fish') {
+      koi = gltf;
+      assert(gltf.animations.length > 0, 'Koï conserve son animation');
+      assert(!scene.getObjectByName('Sphere'), 'Le ciel de présentation est exclu');
+      assert(gltf.parser.json.images?.length > 0, 'La texture Koï est embarquée');
+    }
     if (definition.key === 'comet') {
       comet = gltf;
     }
@@ -101,5 +109,14 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
     assert(Math.max(...animated.toArray()) < 110, 'animation du colibri sans agrandissement du squelette');
   }
   console.log('Colibri: taille initiale de 55 cm et échelle stable pendant son animation.');
+  activeAsset = koi;
+  const koiElement = exported.AircraftMesh({ definition: definitions.AIRCRAFT_MODELS.find(entry => entry.key === 'koi-fish') });
+  const koiScene = koiElement.props.children.props.children.props.object;
+  const before = [];
+  koiScene.traverse(object => { if (object.isBone) before.push(object.quaternion.clone()); });
+  frame({}, 0.25);
+  let boneIndex = 0, moved = false;
+  koiScene.traverse(object => { if (object.isBone) { const changed = before[boneIndex++].angleTo(object.quaternion) > 0.001; moved ||= changed; } });
+  assert(moved, 'Animation Koï jouée par AircraftMesh');
   console.log('All aircraft assets and origami launch checks passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

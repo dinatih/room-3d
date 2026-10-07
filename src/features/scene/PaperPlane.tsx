@@ -22,7 +22,7 @@ import { useEffect, useMemo, useRef, Suspense } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { AircraftMesh } from './AircraftMesh';
-import { AIRCRAFT_MODELS, type PlaneModelKey } from './aircraftModels';
+import { AIRCRAFT_MODELS, DEFAULT_PLANE_MODEL, type PlaneModelKey } from './aircraftModels';
 export type { PlaneModelKey } from './aircraftModels';
 
 import { ROOM_W, ROOM_D, WALL_H } from './wallData';
@@ -92,7 +92,7 @@ interface PaperPlaneProps {
   onViewModeChange?: (vm: PlaneViewMode, launched: boolean) => void;
 }
 
-export function PaperPlane({ onExit, model = 'origami', onViewModeChange, onCycleModel }: PaperPlaneProps) {
+export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChange, onCycleModel }: PaperPlaneProps) {
   const { camera, invalidate } = useThree();
   const originalNear = useRef(camera.near);
   const planeRef    = useRef<THREE.Group>(null!);
