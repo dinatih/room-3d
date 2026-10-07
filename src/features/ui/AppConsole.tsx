@@ -93,6 +93,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   // Raccourci clavier 'B' : cycle ouvert → filtré → fermé
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
       if (e.key === 'b' || e.key === 'B') {
