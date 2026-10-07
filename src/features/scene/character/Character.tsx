@@ -6,7 +6,7 @@ import { useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, hasMountedGLTFClones } from '@features/scene/useGLTFClone';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
@@ -101,6 +101,9 @@ export function Character({
   previewRotationY,
   duoAnimDef,
   isDuoRoleB = false,
+  instanceId,
+  isGridPartner = false,
+  isAnimationMaster,
 }: CharacterProps) {
   const [localHaircut, setLocalHaircut] = useState<string>('original');
   const haircut = isPreview && previewHaircut ? previewHaircut : localHaircut;
@@ -128,7 +131,8 @@ export function Character({
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const aiFullTour = useSceneStore(state => state.extraStates.aiFullTour);
 
-  const { scene } = useGLTFClone(modelPath);
+  const renderId = instanceId ?? (isPreview ? `${id}:preview` : id);
+  const { scene } = useGLTFClone(modelPath, isGridPartner);
   const charLabel = name || (isNPC ? `PNJ (${id})` : `Personnage (${id})`);
 
   useLayoutEffect(() => {
@@ -156,14 +160,23 @@ export function Character({
   useEffect(() => {
     return () => {
       disposeLaraVariantMaterials(scene);
-      clearCharacterRetargetCache(id);
-      if (isExtraCharacter(id)) {
-        resetAgentDeployment(isPreview ? `${id}:preview` : id);
+      clearCharacterRetargetCache(renderId);
+      if (isGridPartner) {
+        scene.traverse(child => {
+          const mesh = child as THREE.Mesh;
+          if (mesh.isMesh) {
+            const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            materials.forEach(material => material.dispose());
+          }
+        });
+      }
+      if (isExtraCharacter(id) && !hasMountedGLTFClones(modelPath)) {
+        resetAgentDeployment(renderId);
         disposeCharacterResources(scene);
         useGLTF.clear(modelPath);
       }
     };
-  }, [id, modelPath, scene, isPreview]);
+  }, [id, modelPath, scene, renderId, isGridPartner]);
 
   // Extraction structurée des maillages et des os
   const parts = useMemo(() => extractCharacterParts(scene), [scene]);
@@ -216,7 +229,7 @@ export function Character({
     currentAnimClip,
     loadAndPlayClip
   } = useCharacterAnimations({
-    id,
+    id: renderId,
     scene,
     invalidate
   });
@@ -335,7 +348,7 @@ export function Character({
     hasPendingDynamicTask,
     initialPos,
   } = useAgentController(
-    isPreview ? `${id}:preview` : id,
+    renderId,
     finalScenario,
     loopScenario,
     () => {
@@ -365,7 +378,9 @@ export function Character({
       }
     },
     spawnDelay,
-    hasSkyDrop
+    hasSkyDrop,
+    'pistol-kneel-to-stand',
+    !isGridPartner
   );
 
   // Synchronisation initiale des coordonnées caméra/character actif dès le montage
@@ -379,11 +394,12 @@ export function Character({
 
   // Nettoyage de la position enregistrée dans cameraState lors du démontage
   useEffect(() => {
+    if (isPreview) return;
     return () => {
       delete cameraState.positions[id];
       delete cameraState.headPositions[id];
     };
-  }, [id]);
+  }, [id, isPreview]);
 
   // Setup échelle, offsets hanches, physiques et matériaux
   useLayoutEffect(() => {
@@ -489,7 +505,7 @@ export function Character({
   useEffect(() => {
     if (laraGrid) {
       currentAnimClip.current = null;
-      duoSessionManager.leaveDuoZone(id);
+      if (!isPreview) duoSessionManager.leaveDuoZone(id);
       if (groupRef.current) groupRef.current.rotation.set(0, 0, 0);
       if (animOriginRef.current) {
         animOriginRef.current.position.set(0, 0, 0);
@@ -509,7 +525,7 @@ export function Character({
       activeActionName.current = '';
     }
     invalidate();
-  }, [laraGrid, scene, id, invalidate]);
+  }, [laraGrid, scene, id, isPreview, invalidate]);
 
   // Synchronisation characterAnim en mode preview ou grille Lara
   useEffect(() => {
@@ -900,23 +916,13 @@ export function Character({
           const clipB = actB.getClip();
           if (clipB && clipB.duration > 0) {
             actB.setEffectiveWeight(1);
-            const targetTimeB = store.currentTime % clipB.duration;
-            if (store.isPlaying && !store.isScrubbing) {
-              if (actB.paused) {
-                actB.paused = false;
-                actB.time = targetTimeB;
-              }
-              if (Math.abs(actB.time - targetTimeB) > 0.05) {
-                resetPendant = true;
-                actB.time = targetTimeB;
-              }
-              mixer.update(animDelta);
-            } else {
-              actB.paused = false;
-              mixer.setTime(targetTimeB);
-              actB.time = targetTimeB;
-              actB.paused = true;
-            }
+            const targetTimeB = store.isLooping ? store.currentTime % clipB.duration : Math.min(store.currentTime, clipB.duration);
+            actB.setLoop(store.isLooping ? THREE.LoopRepeat : THREE.LoopOnce, store.isLooping ? Infinity : 0);
+            actB.clampWhenFinished = !store.isLooping;
+            actB.paused = false;
+            mixer.setTime(targetTimeB);
+            actB.time = targetTimeB;
+            actB.paused = !store.isPlaying || store.isScrubbing;
           }
         }
       } else if (activeActionName.current && actions[activeActionName.current]) {
@@ -924,7 +930,9 @@ export function Character({
         const clip = act.getClip();
         if (clip && clip.duration > 0) {
           const hasActivePreview = typeof document !== 'undefined' && Boolean(document.querySelector('.inventory-preview-container'));
-          const isMaster = isPreview ? true : (!hasActivePreview && (isActive || characterIndex === 0));
+          const isMaster = !hasActivePreview || isPreview
+            ? (isAnimationMaster ?? (isPreview || isActive || characterIndex === 0))
+            : false;
           if (isMaster) {
             const cleanName = duoAnimDef
               ? duoAnimDef.label
@@ -932,7 +940,7 @@ export function Character({
             store.setClipInfo(cleanName, clip.duration, false);
           }
 
-          const targetTime = store.currentTime % clip.duration;
+          const targetTime = store.isLooping ? store.currentTime % clip.duration : Math.min(store.currentTime, clip.duration);
 
           if (store.isPlaying && !store.isScrubbing) {
             if (act.paused) {
@@ -954,7 +962,8 @@ export function Character({
               act.clampWhenFinished = false;
             }
 
-            mixer.update(animDelta);
+            if (isMaster) mixer.update(animDelta);
+            else mixer.setTime(targetTime);
 
             if (isMaster) {
               if (!store.isLooping && act.time >= clip.duration) {

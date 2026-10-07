@@ -13,7 +13,6 @@ export interface AnimFrameControllerProps {
   animName?: string;
   animKey?: string;
   animDef?: AnimationDefinition;
-  onCycleAnim?: (direction: 'next' | 'prev') => void;
   onSelectAnim?: (animValue: string) => void;
   bottom?: number | string;
   className?: string;
@@ -21,6 +20,8 @@ export interface AnimFrameControllerProps {
   style?: React.CSSProperties;
 
   // Support Animations Duo
+  keyboardEnabled?: boolean;
+  allowSamePartner?: boolean;
   isHumanCharacter?: boolean;
   characterId?: string;
   duoAnimDef?: DuoAnimationDef;
@@ -34,12 +35,13 @@ export function AnimFrameController({
   animName,
   animKey,
   animDef,
-  onCycleAnim,
   onSelectAnim,
   bottom = 8,
   className = '',
   compact = false,
   style = {},
+  keyboardEnabled = true,
+  allowSamePartner = false,
   isHumanCharacter = false,
   characterId,
   duoAnimDef,
@@ -104,8 +106,8 @@ export function AnimFrameController({
 
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const availablePartners = useMemo(() => {
-    return CHARACTERS.filter(c => c.id !== characterId && (extraCharacters || !isExtraCharacter(c.id)));
-  }, [characterId, extraCharacters]);
+    return CHARACTERS.filter(c => (allowSamePartner || c.id !== characterId) && (extraCharacters || !isExtraCharacter(c.id)));
+  }, [characterId, extraCharacters, allowSamePartner]);
 
   const defA = useMemo(() => {
     if (!duoAnimDef) return undefined;
@@ -150,14 +152,6 @@ export function AnimFrameController({
     setShowAnimSelector(false);
   }, [onSelectAnim]);
 
-  const handleRandomDuoAnim = useCallback(() => {
-    const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
-    if (randomAnim) {
-      onSelectDuoAnim?.(randomAnim);
-      useAnimPreviewStore.getState().play();
-    }
-  }, [onSelectDuoAnim]);
-
   const handleRandomPartner = useCallback(() => {
     if (!availablePartners.length) return;
     const currentPartner = duoPartnerId || availablePartners[0]?.id;
@@ -168,6 +162,18 @@ export function AnimFrameController({
       onSelectDuoPartner?.(rand.id);
     }
   }, [availablePartners, duoPartnerId, onSelectDuoPartner]);
+
+  const handleRandomDuoAnim = useCallback(() => {
+    if (!onSelectDuoAnim || !availablePartners.length) return;
+    const pool = DUO_ANIMATIONS.filter(anim => anim.id !== duoAnimDef?.id);
+    const choices = pool.length ? pool : DUO_ANIMATIONS;
+    const randomAnim = choices[Math.floor(Math.random() * choices.length)];
+    if (!randomAnim) return;
+    onSelectDuoAnim(randomAnim);
+    handleRandomPartner();
+    useAnimPreviewStore.getState().seekToTime(0);
+    useAnimPreviewStore.getState().play();
+  }, [onSelectDuoAnim, availablePartners, duoAnimDef, handleRandomPartner]);
 
   // Animations filtrées selon la recherche et catégories de CharacterAnimSelector
   const filteredAnims = useMemo(() => {
@@ -190,8 +196,7 @@ export function AnimFrameController({
     }
     const nextVal = filteredAnims[nextIdx].value;
     handleSelectAnim(nextVal);
-    onCycleAnim?.(direction);
-  }, [filteredAnims, activeAnimValue, handleSelectAnim, onCycleAnim]);
+  }, [filteredAnims, activeAnimValue, handleSelectAnim]);
 
   // Sélection aléatoire d'une animation parmi la liste filtrée
   const handleRandomAnim = useCallback(() => {
@@ -202,18 +207,33 @@ export function AnimFrameController({
     if (!pool.length) pool = filteredAnims;
     const randomIndex = Math.floor(Math.random() * pool.length);
     handleSelectAnim(pool[randomIndex].value);
+    useAnimPreviewStore.getState().seekToTime(0);
+    useAnimPreviewStore.getState().play();
   }, [filteredAnims, activeAnimValue, handleSelectAnim]);
 
   // Raccourcis clavier : Espace (Play/Pause), Flèches Gauche/Droite (-1/+1 frame), Début (Frame 0), Flèches Haut/Bas (Cycle Anim filtré)
   useEffect(() => {
+    if (!keyboardEnabled) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const targetEl = e.target as HTMLElement | null;
       if (
         targetEl &&
         (targetEl.tagName === 'INPUT' ||
           targetEl.tagName === 'TEXTAREA' ||
+          targetEl.tagName === 'SELECT' ||
           targetEl.isContentEditable)
       ) {
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'd' || e.key.toLowerCase() === 'c') {
+        if (e.defaultPrevented) return;
+        if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || !isHumanCharacter) return;
+        if (e.key.toLowerCase() === 'c' && !onSelectDuoAnim) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (e.key.toLowerCase() === 'd') handleRandomAnim();
+        else handleRandomDuoAnim();
         return;
       }
 
@@ -262,7 +282,7 @@ export function AnimFrameController({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay, stepFrame, seekToFrame, cycleFilteredAnim]);
+  }, [keyboardEnabled, isHumanCharacter, onSelectDuoAnim, togglePlay, stepFrame, seekToFrame, cycleFilteredAnim, handleRandomAnim, handleRandomDuoAnim]);
 
   const handleFrameCommit = () => {
     setIsEditingFrame(false);
@@ -514,7 +534,7 @@ export function AnimFrameController({
                 className="btn btn-warning text-dark fw-bold"
                 onClick={handleRandomAnim}
                 disabled={!filteredAnims.length}
-                title="Animation solo aléatoire 🎲"
+                title="Animation solo aléatoire 🎲 (D)"
               >
                 🎲
               </button>
@@ -550,7 +570,7 @@ export function AnimFrameController({
                   type="button"
                   className="btn btn-warning text-dark fw-bold"
                   onClick={handleRandomDuoAnim}
-                  title="Animation Duo aléatoire 🎲"
+                  title="Animation Duo et partenaire aléatoires 🎲 (C)"
                 >
                   🎲
                 </button>

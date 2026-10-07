@@ -11,8 +11,10 @@ import { Character } from './Character';
 import { cacheDynamicGLTF } from './useCharacterAnimations';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import type { CharacterGroupProps } from './characterTypes';
+import { getLaraGridPosition } from './laraGridUtils';
 
 function InternalCharacterGroup(props: CharacterGroupProps) {
+  const laraGrid = useSceneStore(state => state.layers.laraGrid);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const laraCount = useSceneStore(state => state.layers.laraCount ?? 4);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
@@ -45,6 +47,39 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
       showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)
     );
   }, [activeCharacterId, characters, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds, activeMainIds]);
+
+  if (laraGrid && !props.isPreview && props.duoAnimDef) {
+    const duo = props.duoAnimDef;
+    const partner = characters.find(char => char.id === props.duoPartnerId);
+    if (!partner) throw new Error(`Partenaire de grille inconnu : ${props.duoPartnerId}`);
+    const offset = duo.offsetB ?? [0, 0, 0];
+    return <>{mountedCharacters.map((leader, index) => {
+      const pos = getLaraGridPosition(index, mountedCharacters.length);
+      return <Suspense key={leader.id} fallback={null}>
+        <Character
+          {...props}
+          id={leader.id} name={leader.name} modelPath={leader.path}
+          isLara={leader.isLara} targetHeight={leader.height} variant={leader.variant}
+          isActive={leader.id === activeCharacterId} isNPC={leader.id !== activeCharacterId}
+          characterIndex={index} totalCharacters={mountedCharacters.length}
+          characterAnim={duo.animA} isAnimationMaster={index === 0}
+        />
+        <Character
+          {...props}
+          key={partner.id}
+          id={partner.id} name={partner.name} modelPath={partner.path}
+          isLara={partner.isLara} targetHeight={partner.height} variant={partner.variant}
+          instanceId={`grid:${leader.id}:partner:${partner.id}`}
+          isPreview isGridPartner isDuoRoleB isActive={false} isNPC={false}
+          isAnimationMaster={false}
+          characterIndex={index} totalCharacters={mountedCharacters.length}
+          characterAnim={duo.animB}
+          previewPosition={[pos.x + offset[0], pos.y + offset[1], pos.z + offset[2]]}
+          previewRotationY={duo.rotB ?? 0}
+        />
+      </Suspense>;
+    })}</>;
+  }
 
   return (
     <>
@@ -95,6 +130,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
               previewHaircut={props.previewHaircut}
               previewHairColor={props.previewHairColor}
               characterIndex={props.characterIndex !== undefined ? props.characterIndex : index}
+              isAnimationMaster={props.isPreview ? !isDuoRoleB : index === 0}
               totalCharacters={mountedCharacters.length}
             />
           </Suspense>

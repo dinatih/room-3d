@@ -257,6 +257,7 @@ export function useCharacterAnimations({
     return () => {
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
+      mixerRef.current = null;
       actionsRef.current = {};
       pendingLoadsRef.current.clear();
       failedLoadsRef.current.clear();

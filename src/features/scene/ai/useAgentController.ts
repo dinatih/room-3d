@@ -49,7 +49,8 @@ export function useAgentController(
   onComplete?: () => void,
   spawnDelay: number = 0,
   hasSkyDrop: boolean = false,
-  landingAnim: string = 'pistol-kneel-to-stand'
+  landingAnim: string = 'pistol-kneel-to-stand',
+  enabled: boolean = true
 ) {
   const landingAnimId = resolveAnimationId(landingAnim);
   const landingDuration = getAnimationDef(landingAnimId)?.duration ?? 1.4;
@@ -74,7 +75,7 @@ export function useAgentController(
       timer: isFallingImmediately ? 6.0 : 0,
       delayTimer: spawnDelay,
     };
-    agentDeploymentMap.set(_characterId, deployment);
+    if (enabled) agentDeploymentMap.set(_characterId, deployment);
   }
 
   const isStillWaiting = deployment.status === 'WAITING';
@@ -142,6 +143,7 @@ export function useAgentController(
 
   // Libérer toutes les réservations au démontage et écouter les invitations de duo
   useEffect(() => {
+    if (!enabled) return;
     const onInvite = (e: any) => {
       if (e.detail?.targetId === _characterId) {
         const store = useSceneStore.getState();
@@ -241,7 +243,7 @@ export function useAgentController(
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
     };
-  }, [_characterId]);
+  }, [_characterId, enabled]);
 
   if (scenario !== prevScenarioRef.current) {
     if (claimedSlotRef.current) {

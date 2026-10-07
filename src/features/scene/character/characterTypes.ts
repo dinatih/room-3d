@@ -17,6 +17,9 @@ export interface CharacterGroupProps {
   duoAnimDef?: DuoAnimationDef;
   duoPartnerId?: string;
   isDuoRoleB?: boolean;
+  instanceId?: string;
+  isGridPartner?: boolean;
+  isAnimationMaster?: boolean;
 }
 
 export interface CharacterProps extends CharacterGroupProps {

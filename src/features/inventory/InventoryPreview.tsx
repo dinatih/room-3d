@@ -630,6 +630,7 @@ export function InventoryPreview({
   const [globalHaircut, setGlobalHaircut] = useState<string>('original');
   const [globalHairColor, setGlobalHairColor] = useState<string>('rose');
   const lastWigRef = useRef<string>('hair_101');
+  const lastSoloAnimRef = useRef<string>('idle');
 
   const handleRandomHairColor = () => {
     const allColors = ['rose', 'naturel', 'noir', 'brun', 'chatain', 'blond', 'roux', 'rouge', 'bleu', 'vert', 'violet', 'arc-en-ciel'];
@@ -660,6 +661,7 @@ export function InventoryPreview({
       duoAnimDef: initialDuoAnim,
       duoPartnerId: initialDuoPartner || (item?.id === 'native' ? 'rosanna' : 'native'),
     } : {});
+    lastSoloAnimRef.current = 'idle';
     setViewMode('3d');
     setAutoRotate(true);
     setTarget([0, 0, 0]);
@@ -755,32 +757,9 @@ export function InventoryPreview({
     ? 'T-Pose'
     : (currentAnimOpt ? currentAnimOpt.label : (actionStates.characterAnim || 'Idle'));
 
-  const cycleAnim = useCallback((direction: 'next' | 'prev') => {
-    const pool = WALKER_ANIM_OPTIONS;
-    if (!pool.length) return;
-    const currentVal = actionStates.characterAnim || 'idle';
-    const targetId = resolveAnimationId(currentVal);
-    const currIdx = pool.findIndex(a => a.value === targetId || a.value === currentVal);
-    let nextIdx = 0;
-    if (currIdx === -1) {
-      nextIdx = direction === 'next' ? 0 : pool.length - 1;
-    } else {
-      nextIdx = direction === 'next'
-        ? (currIdx + 1) % pool.length
-        : (currIdx - 1 + pool.length) % pool.length;
-    }
-    setActionStates(s => ({
-      ...s,
-      characterAnim: pool[nextIdx].value,
-      isPaused: false,
-      duoAnimDef: undefined
-    }));
-    useAnimPreviewStore.getState().play();
-  }, [actionStates.characterAnim]);
-
   // Raccourcis clavier dans la preview 3D :
   // 'K' pour afficher / masquer le squelette
-  // Flèches Haut / Bas pour changer d'animation sur le personnage sélectionné
+  // Les raccourcis d’animation sont gérés uniquement par AnimFrameController.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const targetEl = e.target as HTMLElement | null;
@@ -791,24 +770,11 @@ export function InventoryPreview({
         setActionStates(s => ({ ...s, showBones: !s.showBones }));
         return;
       }
-      if (isHumanCharacter) {
-        if (targetEl?.tagName === 'SELECT') {
-          return;
-        }
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          e.stopPropagation();
-          cycleAnim('next');
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          e.stopPropagation();
-          cycleAnim('prev');
-        }
-      }
+
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isHumanCharacter, cycleAnim]);
+  }, []);
 
   return (
     <div className="inventory-preview-container" style={{ width }}>
@@ -1175,12 +1141,13 @@ export function InventoryPreview({
             duoAnimDef={actionStates.duoAnimDef}
             duoPartnerId={actionStates.duoPartnerId}
             animalAnimOptions={animalAnimOptions}
-            onCycleAnim={cycleAnim}
             onSelectAnim={(val) => {
+              lastSoloAnimRef.current = val;
               setActionStates(s => ({ ...s, characterAnim: val, duoAnimDef: undefined }));
               useAnimPreviewStore.getState().play();
             }}
             onSelectDuoAnim={(def) => {
+              if (!actionStates.duoAnimDef) lastSoloAnimRef.current = actionStates.characterAnim || 'idle';
               const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
               const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
               setActionStates(s => ({
@@ -1188,7 +1155,7 @@ export function InventoryPreview({
                 duoAnimDef: def,
                 duoPartnerId: defaultPartner,
                 isPaused: false,
-                characterAnim: undefined,
+                characterAnim: def ? undefined : lastSoloAnimRef.current,
               }));
               useAnimPreviewStore.getState().play();
             }}

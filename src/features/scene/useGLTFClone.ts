@@ -8,16 +8,30 @@
  * SkeletonUtils.clone() s'assure que les SkinnedMesh du clone pointent vers
  * les os clonés correspondants.
  */
-import { useMemo, useContext } from 'react';
+import { useMemo, useContext, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
 import { CategoryLayerContext } from './sceneLayer';
 import { LAYER_WALKER_DETAIL } from '@config';
 
-export function useGLTFClone(path: string): { scene: THREE.Group; animations: THREE.AnimationClip[] } {
+const mountedClones = new Map<string, number>();
+export function hasMountedGLTFClones(path: string): boolean {
+  return (mountedClones.get(path) ?? 0) > 0;
+}
+
+export function useGLTFClone(path: string, ownMaterials = false): { scene: THREE.Group; animations: THREE.AnimationClip[] } {
   const gltf = useGLTF(path);
   const categoryLayer = useContext(CategoryLayerContext);
+
+  useEffect(() => {
+    mountedClones.set(path, (mountedClones.get(path) ?? 0) + 1);
+    return () => {
+      const count = mountedClones.get(path)! - 1;
+      if (count) mountedClones.set(path, count);
+      else mountedClones.delete(path);
+    };
+  }, [path]);
 
   const scene = useMemo(() => {
     const cloned = SkeletonUtils.clone(gltf.scene) as THREE.Group;
@@ -28,6 +42,12 @@ export function useGLTFClone(path: string): { scene: THREE.Group; animations: TH
     cloned.userData = { ...cloned.userData, gltfPath: path, itemName: cloned.userData.itemName || baseName };
     cloned.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
+        if (ownMaterials) {
+          const mesh = child as THREE.Mesh;
+          mesh.material = Array.isArray(mesh.material)
+            ? mesh.material.map(material => material.clone())
+            : mesh.material.clone();
+        }
         if (!child.userData.itemName) {
           child.userData.itemName = baseName;
         }
@@ -40,6 +60,6 @@ export function useGLTFClone(path: string): { scene: THREE.Group; animations: TH
       }
     });
     return cloned;
-  }, [gltf.scene, path, categoryLayer]);
+  }, [gltf.scene, path, categoryLayer, ownMaterials]);
   return { scene, animations: gltf.animations };
 }
