@@ -884,11 +884,11 @@ function normalizeSearchStr(str: string): string {
                 <h5 className="modal-title">{selected.name}</h5>
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowMobileModal(false)}></button>
               </div>
-              <div className="modal-body p-0" style={{ overflowY: 'auto' }}>
+              <div className="modal-body p-0 pb-5" style={{ overflowY: 'auto' }}>
                 <ItemDetailContent item={selected} />
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowMobileModal(false)}>Fermer</button>
+              <div className="modal-footer glass-card position-absolute bottom-0 start-0 end-0 p-2">
+                <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowMobileModal(false)}>Fermer</button>
               </div>
             </div>
           </div>
