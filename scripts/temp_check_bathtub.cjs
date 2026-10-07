@@ -26,6 +26,27 @@ mod._compile(compiled, filename);
 let size;
 const tub = mod.exports.Bathtub({ onSize: value => { size = value; } });
 assert.deepEqual(size.toArray(), [BATHTUB.width, BATHTUB.height, BATHTUB.length]);
+const wall = tub.props.children[0].props.geometry;
+const wallPositions = wall.attributes.position;
+const wallNormals = wall.attributes.normal;
+const wallSegment = BATHTUB.length / 2 - BATHTUB.cornerRadius;
+for (const group of wall.groups) {
+  if (group.materialIndex !== 1) continue;
+  for (let i = group.start; i < group.start + group.count; i++) {
+    const x = wallPositions.getX(i);
+    const z = wallPositions.getZ(i);
+    const dz = z - THREE.MathUtils.clamp(z, -wallSegment, wallSegment);
+    const r = Math.hypot(x, dz);
+    const direction = r > BATHTUB.cornerRadius - BATHTUB.wallThickness / 2 ? 1 : -1;
+    assert(Math.abs(wallNormals.getX(i) - direction * x / r) < 1e-6);
+    assert(Math.abs(wallNormals.getZ(i) - direction * dz / r) < 1e-6);
+    assert.equal(wallNormals.getY(i), 0);
+  }
+}
+const rim = tub.props.children[3].props.geometry;
+rim.computeBoundingBox();
+assert(Math.abs(rim.boundingBox.max.y - BATHTUB.height) < 1e-5);
+assert([...rim.attributes.normal.array].every(Number.isFinite));
 const water = tub.props.children[2].props;
 const shape = water.geometry.parameters.shapes;
 const points = shape.getPoints(32);
@@ -52,6 +73,8 @@ assert(Math.abs(area - Math.abs(THREE.ShapeUtils.area(points))) < 0.01,
 assert.equal(water.material.transparent, true);
 assert.equal(water.material.depthWrite, false);
 assert.equal(water.material.normalMap.wrapS, THREE.RepeatWrapping);
+assert.equal(water.material.normalMap.generateMipmaps, true);
+assert.equal(water.material.normalMap.minFilter, THREE.LinearMipmapLinearFilter);
 frames[0]({ clock: { elapsedTime: 2 } });
 assert.deepEqual(water.material.normalMap.offset.toArray(), [0.05, 0.03]);
-console.log('Bathtub validated: concentric contour, upward triangles without overlaps, transparent animated ripples.');
+console.log('Bathtub validated: smooth walls, rounded rim, non-overlapping water and animated ripples filtered at distance.');
