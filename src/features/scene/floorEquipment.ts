@@ -59,7 +59,8 @@ export function drawEquipment(ctx: CanvasRenderingContext2D) {
   rect(showerX, showerZ, 71, 71, 3);
   ctx.fillStyle = surface;
   rect(showerX, showerZ, 61, 61, 5);
-  ellipse(showerX, showerZ, 3, 3);
+  // Bonde centrée en X, tangente au bord intérieur sud du receveur.
+  ellipse(showerX, showerZ + 61 / 2 - 3, 3, 3);
   line(showerX - 15, SHOWER_SOUTH_WALL - 5, showerX + 15, SHOWER_SOUTH_WALL - 5);
 
   // Plan de travail 102×62, évier BOHOLMEN tourné à 90° (30×47).
@@ -105,7 +106,8 @@ export function drawEquipment(ctx: CanvasRenderingContext2D) {
   // Équipements suspendus : chauffe-eau Ø56, meuble haut et hotte.
   ctx.setLineDash([5, 4]);
   ellipse(BATH_WEST_WALL + 56 / 2, BATH_NORTH_WALL + 11 + 56 / 2, 28, 28);
-  rect(kitchenX + 100, ROOM_D + 60 - 37 / 2, 100, 37);
+  // METOD : base locale Y=0, rotation Z=π/2 → centre décalé de −100/2 en X.
+  rect(kitchenX + 100 - 100 / 2, ROOM_D + 60 - 37 / 2, 100, 37);
   rect(kitchenX + 70, ROOM_D + 32, 60, 21.5);
   ctx.setLineDash([]);
 
