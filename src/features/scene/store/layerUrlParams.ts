@@ -277,6 +277,36 @@ export function parseUrlLayerOverrides(): Partial<Record<keyof LayerState, boole
       lowerParams.set(key.toLowerCase(), val);
     }
 
+    // Détection explicite pour le calque personnages : npcNb=0 ou alias désactive le calque
+    const countParams = ['npcnb', 'npcs', 'laracount', 'characters', 'count', 'npccount'];
+    for (const cp of countParams) {
+      if (lowerParams.has(cp)) {
+        const val = lowerParams.get(cp)?.trim().toLowerCase();
+        if (val === '0' || val === 'none' || val === 'aucun' || val === 'off') {
+          overrides.character = false;
+          break;
+        }
+      }
+    }
+
+    const charParams = ['character', 'characters', 'personnage', 'personnages', 'pnj', 'walker'];
+    for (const cp of charParams) {
+      if (lowerParams.has(cp)) {
+        const val = lowerParams.get(cp)?.trim().toLowerCase();
+        if (val === '0' || val === 'false' || val === 'off' || val === 'no' || val === 'hide') {
+          overrides.character = false;
+          break;
+        } else if (val === '1' || val === 'true' || val === 'on' || val === 'yes' || val === 'show') {
+          overrides.character = true;
+          break;
+        }
+      }
+      if (lowerParams.has(`no-${cp}`) || lowerParams.has(`no_${cp}`)) {
+        overrides.character = false;
+        break;
+      }
+    }
+
     for (const mapping of MONITORED_LAYERS) {
       // 1. Drapeaux négatifs (ex: no-portes, no-doors, etc.)
       let foundNegative = false;
@@ -327,6 +357,7 @@ export function parseUrlLayerOverrides(): Partial<Record<keyof LayerState, boole
 export function updateUrlLayer(key: keyof LayerState, value: boolean) {
   if (typeof window === 'undefined') return;
   try {
+    if (key === 'character') return; // Géré par updateUrlNpcCount (format npcNb)
     const mapping = MONITORED_LAYERS.find(m => m.layerKey === key);
     if (!mapping) return;
 

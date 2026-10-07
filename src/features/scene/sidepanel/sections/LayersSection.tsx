@@ -250,6 +250,7 @@ export function LayersSection({
       {layerBtn('purple',    'Mobilier (Furniture) (Alt+F)',    'furniture')}
       {layerBtn('purple',    'Habillage (Furnishings) (Alt+H)', 'furnishings')}
       {layerBtn('purple',    'Décoration (Decor) (Alt+D)',      'decor')}
+      {layerBtn('light',     'Personnages 3D 👤',              'character', 'characterWireframe')}
       {layerBtn('blue',      'Animaux 🐕🐦',                   'animals')}
       {layerBtn('purple',    'Miroirs',                        'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD (Alt+G)',       'mirrorsHD')}

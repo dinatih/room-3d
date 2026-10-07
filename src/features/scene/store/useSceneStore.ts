@@ -48,14 +48,14 @@ function parseUrlNpcCount(): LaraCountMode {
   return 4;
 }
 
-export function updateUrlNpcCount(count: LaraCountMode) {
+export function updateUrlNpcCount(count: LaraCountMode | 0) {
   if (typeof window === 'undefined') return;
   try {
     const url = new URL(window.location.href);
     const countParams = ['npcNb', 'npcs', 'laraCount', 'characters', 'count', 'npcCount'];
     const hadParam = countParams.some(p => url.searchParams.has(p)) || url.searchParams.has('npc');
 
-    for (const p of [...countParams, 'npc']) {
+    for (const p of [...countParams, 'npc', 'character', 'personnage', 'pnj']) {
       url.searchParams.delete(p);
     }
 
@@ -108,7 +108,7 @@ interface SceneStore {
   setCameraMode: (mode: 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'ortho') => void;
   setCameraProjection: (proj: 'persp' | 'ortho') => void;
   toggleCameraProjection: () => void;
-  setLaraCount: (count: LaraCountMode) => void;
+  setLaraCount: (count: LaraCountMode | 0) => void;
   setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
@@ -306,6 +306,10 @@ if (initialLayers.mirrorsHD) {
   cameraState.mirrorsHD = true;
 }
 
+if (!initialLayers.character) {
+  cameraState.characterHidden = true;
+}
+
 export const useSceneStore = create<SceneStore>((set) => ({
   furniture: initialFurniture,
   layers: initialLayers,
@@ -364,10 +368,19 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   setLaraCount: (count) => {
     updateUrlNpcCount(count);
+    if (count === 0) {
+      cameraState.characterHidden = true;
+      set((state) => ({
+        layers: { ...state.layers, character: false }
+      }));
+      cameraState.invalidate?.();
+      return;
+    }
+    cameraState.characterHidden = false;
     set((state) => ({
       activeCharacterId: count === 1 ? 'xbot' : state.activeCharacterId,
       activeMainIds: getDefaultNonExtraIds(count, count === 1 ? 'xbot' : state.activeCharacterId),
-      layers: { ...state.layers, laraCount: count, showAllLaraStyles: true }
+      layers: { ...state.layers, character: true, laraCount: count, showAllLaraStyles: true }
     }));
     cameraState.invalidate?.();
   },
@@ -434,6 +447,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
       }
       if (key === 'character') {
         cameraState.characterHidden = !nextLayers.character;
+        if (!nextLayers.character) {
+          updateUrlNpcCount(0);
+        } else {
+          updateUrlNpcCount(state.layers.laraCount ?? 4);
+        }
       }
       cameraState.invalidate?.();
       return { layers: nextLayers, activeExtraIds: nextActiveExtraIds };

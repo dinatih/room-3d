@@ -409,7 +409,6 @@ export function CharacterSection({
       )}
 
       <div className="text-muted fw-semibold mb-1 text-dark mt-3 small text-uppercase">⚙️ Options d'affichage</div>
-      {layerBtn('light',  'Personnage 3D', 'character')}
       {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('pink',   'Peau & tissus réalistes (Mat) 🧴', 'laraRealisticTextures')}
       {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
@@ -423,71 +422,47 @@ export function CharacterSection({
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}
       {layerBtn('cyan', 'Squelettes / Bones 🦴 (K)', 'skeleton')}
       {layerBtn('cyan', 'Fil de fer (Wireframe) 🕸️', 'characterWireframe')}
-      {layers.character && (
-        <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
-          <div className="d-flex justify-content-between align-items-center mb-1">
-            <span className="text-muted fw-semibold text-dark small text-uppercase">
-              👥 Nombre de Personnages
-            </span>
-            <span className="badge bg-primary">
-              {activeMainIds.length !== (layers.laraCount ?? (isMobile ? 2 : 15))
-                ? `${activeMainIds.length} (Personnalisé)`
-                : (layers.laraCount ?? (isMobile ? 2 : 15)) === 1
-                ? '1 (Xbot seul)'
-                : (layers.laraCount ?? (isMobile ? 2 : 15)) === 2
-                ? '2 (Xbot + Lara)'
-                : (layers.laraCount ?? (isMobile ? 2 : 15)) === 4
-                ? '4 (Lara, Xbot, Rosanna, Cha)'
-                : (layers.laraCount ?? (isMobile ? 2 : 15)) === 10
-                ? '10 (Eco)'
-                : '15 (Toutes)'}
-            </span>
-          </div>
-          <div className="btn-group btn-group-sm w-100" role="group">
-            <button
-              type="button"
-              className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 1 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 1 ? undefined : 'transparent' }}
-              onClick={() => useSceneStore.getState().setLaraCount(1)}
-              title="1 PNJ (Xbot uniquement - léger)"
-            >
-              1
-            </button>
-            <button
-              type="button"
-              className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? undefined : 'transparent' }}
-              onClick={() => useSceneStore.getState().setLaraCount(2)}
-            >
-              2
-            </button>
-            <button
-              type="button"
-              className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 4 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 4 ? undefined : 'transparent' }}
-              onClick={() => useSceneStore.getState().setLaraCount(4)}
-            >
-              4
-            </button>
-            <button
-              type="button"
-              className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 10 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 10 ? undefined : 'transparent' }}
-              onClick={() => useSceneStore.getState().setLaraCount(10)}
-            >
-              10
-            </button>
-            <button
-              type="button"
-              className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 15 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 15 ? undefined : 'transparent' }}
-              onClick={() => useSceneStore.getState().setLaraCount(15)}
-            >
-              15
-            </button>
-          </div>
+      <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
+        <div className="d-flex justify-content-between align-items-center mb-1">
+          <span className="text-muted fw-semibold text-dark small text-uppercase">
+            👥 Nombre de Personnages
+          </span>
+          <span className={`badge ${!layers.character ? 'bg-secondary' : 'bg-primary'}`}>
+            {!layers.character
+              ? '0 (Masqué)'
+              : activeMainIds.length !== (layers.laraCount ?? (isMobile ? 2 : 15))
+              ? `${activeMainIds.length} (Personnalisé)`
+              : (layers.laraCount ?? (isMobile ? 2 : 15)) === 1
+              ? '1 (Xbot seul)'
+              : (layers.laraCount ?? (isMobile ? 2 : 15)) === 2
+              ? '2 (Xbot + Lara)'
+              : (layers.laraCount ?? (isMobile ? 2 : 15)) === 4
+              ? '4 (Lara, Xbot, Rosanna, Cha)'
+              : (layers.laraCount ?? (isMobile ? 2 : 15)) === 10
+              ? '10 (Eco)'
+              : '15 (Toutes)'}
+          </span>
         </div>
-      )}
+        <div className="btn-group btn-group-sm w-100" role="group">
+          {([0, 1, 2, 4, 10, 15] as const).map((cnt) => {
+            const isZeroActive = !layers.character;
+            const currentCount = layers.laraCount ?? (isMobile ? 2 : 15);
+            const isActive = cnt === 0 ? isZeroActive : (layers.character && currentCount === cnt);
+            return (
+              <button
+                key={cnt}
+                type="button"
+                className={`btn btn-sm ${isActive ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+                style={{ background: isActive ? undefined : 'transparent' }}
+                onClick={() => useSceneStore.getState().setLaraCount(cnt)}
+                title={cnt === 0 ? '0 PNJ (Cacher le calque)' : `${cnt} PNJ`}
+              >
+                {cnt}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <button 
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
         onClick={() => {

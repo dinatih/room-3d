@@ -226,9 +226,10 @@ export function SidePanel({
   const personnageHeaderButtons = (
     <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
       <div className="btn-group btn-group-sm" role="group">
-        {([1, 2, 4, 10, 15] as const).map((cnt) => {
+        {([0, 1, 2, 4, 10, 15] as const).map((cnt) => {
+          const isZeroActive = !layers.character;
           const currentCount = layers.laraCount ?? (isMobile ? 2 : 15);
-          const isActive = currentCount === cnt;
+          const isActive = cnt === 0 ? isZeroActive : (layers.character && currentCount === cnt);
           return (
             <button
               key={cnt}
@@ -238,7 +239,7 @@ export function SidePanel({
                 background: isActive ? undefined : 'rgba(255, 255, 255, 0.65)',
                 border: '1px solid rgba(0, 0, 0, 0.15)',
               }}
-              title={`Afficher ${cnt} PNJ (${cnt === 1 ? '1 Xbot seul (Léger)' : cnt === 2 ? '2 Duo' : cnt === 4 ? '4 (Lara, Xbot, Rosanna, Cha)' : cnt === 10 ? '10 Eco' : '15 Tous'})`}
+              title={cnt === 0 ? 'Cacher le calque PNJ (0 personnage)' : `Afficher ${cnt} PNJ (${cnt === 1 ? '1 Xbot seul (Léger)' : cnt === 2 ? '2 Duo' : cnt === 4 ? '4 (Lara, Xbot, Rosanna, Cha)' : cnt === 10 ? '10 Eco' : '15 Tous'})`}
               onClick={(e) => {
                 e.stopPropagation();
                 useSceneStore.getState().setLaraCount(cnt);
@@ -296,7 +297,7 @@ export function SidePanel({
         }}
       >
         <i className="bi bi-file-earmark-person"></i>
-        <span>CV</span>
+        <span>C.V.</span>
       </button>
       <a
         href="https://dinatih.org/visualizer/"
