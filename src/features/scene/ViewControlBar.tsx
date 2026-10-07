@@ -6,7 +6,7 @@ import { dispatchView } from './sidepanel/types';
 import { getActiveSceneCharactersCount, getLaraGridCameraView } from './character/laraGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
-import { CHARACTERS, isCharacterVisibleInMode } from './characterConfig';
+import { chooseRandomCharacter } from './store/randomCharacter';
 
 const ORTHO_VIEWS = [
   { key: 'front', label: 'Face', shortcut: 'Alt+1', icon: 'bi-arrow-up' },
@@ -151,26 +151,12 @@ export function ViewControlBar({
         <button
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-          onClick={() => {
-            const state = useSceneStore.getState();
-            const candidates = CHARACTERS.filter(character =>
-              character.id !== state.activeCharacterId && isCharacterVisibleInMode(
-                character.id,
-                state.layers.laraCount ?? 4,
-                state.activeCharacterId,
-                state.layers.extraCharacters ?? false,
-                state.activeExtraIds,
-                state.activeMainIds,
-              ),
-            );
-            if (candidates.length) {
-              state.setActiveCharacterId(candidates[Math.floor(Math.random() * candidates.length)].id);
-            }
-          }}
-          title="Changer aléatoirement le PNJ actif parmi les personnages visibles"
-          aria-label="Changer aléatoirement le PNJ actif"
+          onClick={chooseRandomCharacter}
+          title="Changer aléatoirement le PNJ actif parmi les personnages visibles (R)"
+          aria-label="Changer aléatoirement le PNJ actif (R)"
+          aria-keyshortcuts="r"
         >
-          <i className="bi bi-dice-5" aria-hidden="true" />
+          <i className="bi bi-shuffle" aria-hidden="true" />
           <i className="bi bi-person-standing-dress" aria-hidden="true" />
         </button>
       )}

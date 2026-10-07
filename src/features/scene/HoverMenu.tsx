@@ -22,6 +22,7 @@ import { isCharacterVisibleInMode } from './characterConfig';
 
 interface ActionDef { 
   btnLabel?: string | (() => string); 
+  icon?: string;
   toggleKey: string;
   type?: 'button' | 'select';
   options?: { value: string; label: string }[];
@@ -54,7 +55,7 @@ const HAIR_COLORS = [
 
 function makeMannequinActions(loc: string): Record<string, ActionDef> {
   return {
-    [`mannequin-${loc}-random`]: { btnLabel: '🎲 Aléatoire complet', toggleKey: `mannequin-${loc}-random` },
+    [`mannequin-${loc}-random`]: { btnLabel: 'Aléatoire complet', icon: 'bi-shuffle', toggleKey: `mannequin-${loc}-random` },
     [`mannequin-${loc}-wig`]:   { btnLabel: 'Perruque 💇', toggleKey: `mannequin-${loc}-wig`, type: 'select', options: mappedWigOptions },
     [`mannequin-${loc}-color`]: { btnLabel: 'Couleur cheveux 🎨', toggleKey: `mannequin-${loc}-color`, type: 'select', options: HAIR_COLORS },
     [`mannequin-${loc}-wind`]:  { btnLabel: 'Vent 💨', toggleKey: `mannequin-${loc}-wind` },
@@ -852,6 +853,7 @@ export function HoverOverlay() {
                 }}
                 style={BTN_STYLE}
               >
+                {action.icon && <i className={`bi ${action.icon} me-1`} aria-hidden="true" />}
                 {typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel}
               </button>
             );

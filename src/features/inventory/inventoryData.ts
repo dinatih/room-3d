@@ -39,6 +39,7 @@ export interface StorageSpace {
 export interface Category {
   id: string;
   label: string;
+  icon?: string;
 }
 
 export const INVENTORY: InventoryItem[] = [
@@ -569,6 +570,6 @@ export const CATEGORIES: Category[] = [
   { id: 'consumable',   label: '🛒 Consomables' },
   { id: 'characters',      label: '👥 Personnages' },
   { id: 'wigs',         label: '💇 Perruques' },
-  { id: 'glbs',         label: '🎲 GLBs' },
+  { id: 'glbs',         label: 'GLBs', icon: 'bi-shuffle' },
 ];
 // Mise à jour des catégories IKEA

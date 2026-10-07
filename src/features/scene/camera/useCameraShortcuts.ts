@@ -3,6 +3,7 @@ import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { CameraMode, FollowPosition } from './types';
+import { chooseRandomCharacter } from '../store/randomCharacter';
 import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
 import { appLog } from '@features/ui/AppConsole';
@@ -90,7 +91,7 @@ export function useCameraShortcuts({
       if (planeModeRef.current || cameraState.isIntroRunning) return;
 
       const target = e.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {
         return;
       }
 
@@ -217,6 +218,12 @@ export function useCameraShortcuts({
           enterFollow(curX, curZ, 'follow');
           appLog('system', '🎥 Mode Suivi Intelligent (3ème personne)');
         }
+        return;
+      }
+
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        if (!e.repeat) chooseRandomCharacter();
         return;
       }
 

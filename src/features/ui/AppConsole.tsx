@@ -6,7 +6,8 @@
  * avec les autres panneaux (SidePanel, Minimap, DevTools).
  */
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { CHARACTERS, findCharacter, isCharacterVisibleInMode, npcLabel } from '@features/scene/characterConfig';
+import { CHARACTERS, findCharacter, npcLabel } from '@features/scene/characterConfig';
+import { chooseRandomCharacter } from '@features/scene/store/randomCharacter';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { Group } from '@features/scene/sidepanel/Group';
@@ -58,7 +59,6 @@ function formatTime(ts: number): string {
 export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolean; hideUI?: boolean }) {
   const isMobile = useIsMobile();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
-  const sceneState = useSceneStore();
   const activeChar = findCharacter(activeCharacterId);
 
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
@@ -140,23 +140,6 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
   const availableHeight = `calc(100dvh - ${bottomDockHeight}px - ${isMobile ? 'env(safe-area-inset-top) - 16px' : '32px'})`;
   const pnjColor = activeChar?.color ?? '#6c757d';
-  const chooseRandomCharacter = () => {
-    const visibleCharacters = CHARACTERS.filter(character =>
-      isCharacterVisibleInMode(
-        character.id,
-        sceneState.layers.laraCount ?? 4,
-        sceneState.activeCharacterId,
-        sceneState.layers.extraCharacters ?? false,
-        sceneState.activeExtraIds,
-        sceneState.activeMainIds,
-      ),
-    );
-    const candidates = visibleCharacters.filter(character => character.id !== sceneState.activeCharacterId);
-    const pool = candidates.length ? candidates : visibleCharacters;
-    if (pool.length) {
-      useSceneStore.getState().setActiveCharacterId(pool[Math.floor(Math.random() * pool.length)].id);
-    }
-  };
 
   const consoleControls = (
     <div className="d-flex align-items-center gap-1">
@@ -185,10 +168,10 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
             chooseRandomCharacter();
           }}
           onPointerDown={(e) => e.stopPropagation()}
-          title="Choisir un PNJ aléatoire parmi les personnages visibles 🎲"
+          title="Choisir un PNJ aléatoire parmi les personnages visibles (R)"
           aria-label="Choisir un PNJ aléatoire"
         >
-          🎲
+          <i className="bi bi-shuffle" aria-hidden="true" />
         </button>
         <select
           className="form-select form-select-sm py-0 px-2 bg-transparent small flex-shrink-0 app-console-select"

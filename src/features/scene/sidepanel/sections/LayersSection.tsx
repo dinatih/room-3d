@@ -129,9 +129,9 @@ export function LayersSection({
               type="button"
               className="btn btn-sm btn-outline-secondary p-0 px-1 border-0 flex-shrink-0"
               onClick={handleRandomHdri}
-              title="HDRI aléatoire 🎲 (Touche 5)"
+              title="HDRI aléatoire (Touche 5)"
             >
-              🎲
+              <i className="bi bi-shuffle" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -238,9 +238,9 @@ export function LayersSection({
               type="button"
               className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
               onClick={() => setGroundType(getRandomGrassType())}
-              title="Herbe aléatoire 🎲"
+              title="Herbe aléatoire"
             >
-              🎲
+              <i className="bi bi-shuffle" aria-hidden="true" />
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 export function ShortcutsModal({ onClose }: { onClose: () => void }) {
@@ -17,7 +17,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
     <kbd key={i} className="bg-dark text-white px-2 py-1 rounded text-nowrap">{label}</kbd>
   );
 
-  const R = ({ label, keys }: { label: string; keys: string[] }) => (
+  const R = ({ label, keys }: { label: ReactNode; keys: string[] }) => (
     <div className="d-flex justify-content-between align-items-center gap-3 py-2 border-bottom">
       <span className="text-body">{label}</span>
       <span className="d-flex gap-1 flex-wrap justify-content-end">{keys.map(kbd)}</span>
@@ -42,6 +42,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
           <div className="modal-body py-1">
             <div>
               <Section title="Global" />
+              <R label={<>PNJ actif aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['R']} />
               <R label="Photo Raytracing HD 📸"     keys={['F10']} />
               <R label="Inventaire (toggle)"        keys={['I']} />
               <R label="Basculer Ortho / Perspective" keys={['P']} />
@@ -52,7 +53,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue Orbit perspective par défaut (Nord-Ouest)" keys={['Alt+O']} />
               <R label="Follow (cycle 3P / FPV)" keys={['M']} />
               <R label="Vue 3ème personne directe"  keys={['3']} />
-              <R label="Ambiance HDRI aléatoire 🎲" keys={['5']} />
+              <R label={<>Ambiance HDRI aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['5']} />
               <R label="Bulle de pensées 💭 (toggle)" keys={['6']} />
               <R label="Pistolets Lara 🔫 (toggle)" keys={['7']} />
               <R label="Accessoires Lara 🎒 (toggle)" keys={['8']} />

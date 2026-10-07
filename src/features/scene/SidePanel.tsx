@@ -212,13 +212,13 @@ export function SidePanel({
       <button
         type="button"
         className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold flex-shrink-0 small rounded"
-        title="Changer aléatoirement d'ambiance HDRI 🎲 (Touche 5)"
+        title="Changer aléatoirement d'ambiance HDRI (Touche 5)"
         onClick={(e) => {
           e.stopPropagation();
           handleRandomHdri();
         }}
       >
-        🎲
+        <i className="bi bi-shuffle" aria-hidden="true" />
       </button>
     </div>
   );
@@ -252,13 +252,13 @@ export function SidePanel({
       <button
         type="button"
         className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold small rounded"
-        title="Coupe et couleur de cheveux aléatoires 🎲"
+        title="Coupe et couleur de cheveux aléatoires"
         onClick={(e) => {
           e.stopPropagation();
           handleRandomHaircutAndColor();
         }}
       >
-        🎲
+        <i className="bi bi-shuffle" aria-hidden="true" />
       </button>
     </div>
   );
@@ -533,9 +533,9 @@ export function SidePanel({
                       right: '0.25rem',
                       zIndex: 10,
                     }}
-                    title="Coupe et couleur aléatoires 🎲"
+                    title="Coupe et couleur aléatoires"
                   >
-                    <span className="small">🎲</span>
+                    <span className="small"><i className="bi bi-shuffle" aria-hidden="true" /></span>
                   </button>
                 </div>
               );

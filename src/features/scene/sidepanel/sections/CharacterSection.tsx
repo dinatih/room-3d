@@ -93,9 +93,9 @@ export function CharacterSection({
                 borderRadius: '6px'
               }}
               onClick={handleRandomHaircutAndColor}
-              title="Changer aléatoirement la coupe et la couleur des cheveux 🎲"
+              title="Changer aléatoirement la coupe et la couleur des cheveux"
             >
-              <span>🎲</span>
+              <span><i className="bi bi-shuffle" aria-hidden="true" /></span>
               <span>Coupe & Couleur aléatoires</span>
             </button>
 
@@ -108,10 +108,10 @@ export function CharacterSection({
                   type="button"
                   className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
                   onClick={handleRandomHairColor}
-                  title="Couleur aléatoire 🎲"
+                  title="Couleur aléatoire"
                   style={{ lineHeight: 1 }}
                 >
-                  🎲
+                  <i className="bi bi-shuffle" aria-hidden="true" />
                 </button>
               </div>
               <select
@@ -149,10 +149,10 @@ export function CharacterSection({
                   type="button"
                   className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
                   onClick={handleRandomHaircut}
-                  title="Coupe aléatoire 🎲"
+                  title="Coupe aléatoire"
                   style={{ lineHeight: 1 }}
                 >
-                  🎲
+                  <i className="bi bi-shuffle" aria-hidden="true" />
                 </button>
               </div>
               <select

@@ -534,9 +534,9 @@ export function AnimFrameController({
                 className="btn btn-warning text-dark fw-bold"
                 onClick={handleRandomAnim}
                 disabled={!filteredAnims.length}
-                title="Animation solo aléatoire 🎲 (D)"
+                title="Animation solo aléatoire (D)"
               >
-                🎲
+                <i className="bi bi-shuffle" aria-hidden="true" />
               </button>
             </div>
           )}
@@ -570,9 +570,9 @@ export function AnimFrameController({
                   type="button"
                   className="btn btn-warning text-dark fw-bold"
                   onClick={handleRandomDuoAnim}
-                  title="Animation Duo et partenaire aléatoires 🎲 (C)"
+                  title="Animation Duo et partenaire aléatoires (C)"
                 >
-                  🎲
+                  <i className="bi bi-shuffle" aria-hidden="true" />
                 </button>
               </div>
 
@@ -594,9 +594,9 @@ export function AnimFrameController({
                     type="button"
                     className="btn btn-outline-secondary bg-white text-dark"
                     onClick={handleRandomPartner}
-                    title="Changer de partenaire au hasard 👤🎲"
+                    title="Changer de partenaire au hasard 👤"
                   >
-                    👤🎲
+                    👤<i className="bi bi-shuffle" aria-hidden="true" />
                   </button>
                   <button
                     type="button"

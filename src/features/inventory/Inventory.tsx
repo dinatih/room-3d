@@ -16,7 +16,7 @@ import { ViewControlBar } from '@features/scene/ViewControlBar';
 type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
 
 // Helper to determine the category icon/emoji
-function getCategoryEmoji(cat: string): string {
+function getCategoryEmoji(cat: string) {
   switch (cat) {
     case 'spaces': return '🏠';
     case 'storage': return '📦';
@@ -29,7 +29,7 @@ function getCategoryEmoji(cat: string): string {
     case 'consumable': return '🛒';
     case 'characters': return '🚶';
     case 'doors': return '🚪';
-    case 'glbs': return '🎲';
+    case 'glbs': return <i className="bi bi-shuffle" aria-hidden="true" />;
     default: return '📦';
   }
 }
@@ -230,7 +230,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
 
           {glbPath && (
             <span className="badge bg-primary text-white">
-              🎲 Modèle GLB 3D
+              <i className="bi bi-shuffle" aria-hidden="true" /> Modèle GLB 3D
             </span>
           )}
         </div>
@@ -365,7 +365,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
               <button
                 type="button"
                 className="btn btn-sm btn-warning text-dark py-0 px-2 fw-bold shadow-sm"
-                title="Lancer une animation de couple aléatoire dans la preview 3D 🎲"
+                title="Lancer une animation de couple aléatoire dans la preview 3D"
                 onClick={() => {
                   const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
                   const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
@@ -376,7 +376,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                   }
                 }}
               >
-                🎲 Aléatoire
+                <i className="bi bi-shuffle" aria-hidden="true" /> Aléatoire
               </button>
             </div>
 
@@ -705,7 +705,7 @@ function normalizeSearchStr(str: string): string {
                       className={`btn btn-sm py-0.5 px-2 rounded-pill small ${isActive ? 'btn-danger text-white shadow-sm' : 'btn-outline-secondary bg-white text-dark'}`}
                       onClick={() => setActiveCat(cat.id)}
                     >
-                      {cat.label}
+                      {cat.icon && <i className={`bi ${cat.icon} me-1`} aria-hidden="true" />}{cat.label}
                     </button>
                   );
                 })}

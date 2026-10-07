@@ -234,7 +234,7 @@ export function CharacterAnimSelector({
             title="Jouer une animation au hasard parmi la sélection"
             style={{ fontSize: '10px' }}
           >
-            🎲 Aléatoire
+            <i className="bi bi-shuffle" aria-hidden="true" /> Aléatoire
           </button>
         </div>
 
