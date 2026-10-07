@@ -76,11 +76,8 @@ export interface CharacterAnimSelectorProps {
   isMobile?: boolean;
   onClose?: () => void;
   title?: string;
-  showRecent?: boolean;
   autoFocus?: boolean;
 }
-
-const MAX_RECENT = 2;
 
 export function CharacterAnimSelector({
   activeAnimValue = 'idle',
@@ -90,7 +87,6 @@ export function CharacterAnimSelector({
   isMobile: isMobileProp,
   onClose,
   title,
-  showRecent = true,
   autoFocus = false,
 }: CharacterAnimSelectorProps) {
   const isMobileHook = useIsMobile();
@@ -104,14 +100,6 @@ export function CharacterAnimSelector({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const animsContainerRef = useRef<HTMLDivElement>(null);
 
-  const [recentAnims, setRecentAnims] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('recent_animations');
-      if (!saved) return [];
-      return (JSON.parse(saved) as string[]).slice(0, MAX_RECENT).filter(v => WALKER_ANIM_OPTIONS.some(a => a.value === v));
-    } catch { return []; }
-  });
-
   const updateSearch = (val: string) => {
     setAnimSearch(val);
   };
@@ -123,13 +111,6 @@ export function CharacterAnimSelector({
   const handleSelect = (val: string) => {
     resetAppIdle();
     onSelectAnim(val);
-    if (val && val !== 'idle') {
-      setRecentAnims(prev => {
-        const next = [val, ...prev.filter(v => v !== val)].slice(0, MAX_RECENT);
-        try { localStorage.setItem('recent_animations', JSON.stringify(next)); } catch {}
-        return next;
-      });
-    }
   };
 
   const handleCopy = (val: string, e?: React.MouseEvent) => {
@@ -346,33 +327,6 @@ export function CharacterAnimSelector({
             </div>
           )}
         </div>
-
-        {/* Animations récentes */}
-        {showRecent && recentAnims.length > 0 && !animSearch && selectedCategories.length === 0 && (
-          <div className="mb-2 p-1.5 bg-light rounded border">
-            <div className="text-muted fw-bold mb-1 px-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              🕒 Récentes ({recentAnims.length})
-            </div>
-            <div className="d-flex flex-wrap gap-1">
-              {recentAnims.map(val => {
-                const opt = ENHANCED_ANIM_OPTIONS.find(a => a.value === val);
-                const isAct = activeAnimValue === val;
-                const label = opt?.label || val;
-                return (
-                  <button
-                    key={val}
-                    className={`btn btn-xs ${isAct ? 'btn-danger fw-bold' : 'btn-outline-dark'} py-0 px-2 text-truncate`}
-                    style={{ fontSize: '10px', maxWidth: '100%' }}
-                    onClick={() => handleSelect(val)}
-                    title={label}
-                  >
-                    {isAct ? '▶ ' : ''}{label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         <div className="text-muted small px-1 d-flex justify-content-between" style={{ fontSize: '9px' }}>
           <span>{filteredAnims.length} animation{filteredAnims.length > 1 ? 's' : ''}</span>

@@ -612,7 +612,7 @@ export function AnimFrameController({
 
       {/* ── Ligne 3 : Métadonnées (Solo ou Duo) ── */}
       {showMeta && hasMeta && (
-        <div className="card bg-white bg-opacity-75 border-0 shadow-sm p-2 mt-2 text-dark user-select-text small" style={{ cursor: 'text' }}>
+        <div className="card bg-white bg-opacity-75 border-0 shadow-sm p-2 mt-2 text-dark user-select-text small" style={{ cursor: 'text', contain: 'inline-size' }}>
           {duoAnimDef ? (
             <div className="d-flex flex-column gap-2">
               {/* Entête Duo */}
