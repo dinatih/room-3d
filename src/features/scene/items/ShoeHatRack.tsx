@@ -10,10 +10,9 @@ import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { BaseballCap } from './BaseballCap';
+import { SHOE_HAT_RACK } from '../shoeHatRackData';
 
-const W  = 60;    // largeur
-const D  = 26;    // profondeur
-const H  = 154;   // hauteur totale
+const { width: W, depth: D, height: H } = SHOE_HAT_RACK;
 const TR = 0.8;   // rayon tube
 
 const H_BACK  = 72;

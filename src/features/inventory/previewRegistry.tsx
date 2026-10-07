@@ -59,6 +59,8 @@ import { ArmrestSofa }                                from '@features/scene/item
 import { ArmlessSofa }                                from '@features/scene/items/ArmlessSofa';
 import { Bathtub }                                    from '@features/scene/items/Bathtub';
 import { ChestBench }                                 from '@features/scene/items/ChestBench';
+import { ShoeHatRack } from '@features/scene/items/ShoeHatRack';
+import { SHOE_HAT_RACK } from '@features/scene/shoeHatRackData';
 import { AltappenRug }                                from '@features/scene/items/AltappenRug';
 import { JordanHexMule }                              from '@features/scene/items/JordanHexMule';
 import { SummerOutdoorBoot }                           from '@features/scene/items/SummerOutdoorBoot';
@@ -114,7 +116,16 @@ function ScooterPreview(props: SceneItemProps) {
   );
 }
 
+function ShoeHatRackPreview(props: SceneItemProps) {
+  return (
+    <group position={[-SHOE_HAT_RACK.width / 2, 0, -SHOE_HAT_RACK.depth / 2]}>
+      <ShoeHatRack {...props} noCaps />
+    </group>
+  );
+}
+
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'shoe-hat-rack':          ShoeHatRackPreview,
   'scooter':                ScooterPreview,
   'smorkull-chair':         Smorkull,
   'bird-feeder':            BirdFeeder,

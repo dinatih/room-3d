@@ -1,4 +1,6 @@
 // =============================================
+
+import { SHOE_HAT_RACK } from '@features/scene/shoeHatRackData';
 // INVENTORY DATA — port de js/ui/inventoryData.js
 // dims: { w, d, h } en cm (w=X, d=Z, h=Y)
 // =============================================
@@ -40,6 +42,18 @@ export interface Category {
 }
 
 export const INVENTORY: InventoryItem[] = [
+  {
+    id: 'shoe-hat-rack',
+    name: 'Étagère à chaussures autoportante avec porte-manteaux et crochets',
+    brand: 'Temu',
+    category: 'storage',
+    qty: 1,
+    dims: { w: SHOE_HAT_RACK.width, d: SHOE_HAT_RACK.depth, h: SHOE_HAT_RACK.height },
+    notes: 'Portant tubulaire noir, étagères à chaussures et crochets sur deux rangées. Support des huit casquettes, contre le mur est près du Kallax sud-est. Dimensions du modèle 3D.',
+    description: 'Étagère autoportante à 5 niveaux pour chaussures, chapeaux et manteaux, avec crochets multiples. Référence Temu 605504638125458.',
+    url: 'https://www.temu.com/fr/g-605504638125458.html',
+    photos: ['items/shoe-hat-rack/shoe-hat-rack-temu.jpg'],
+  },
   {id:"raskog30586783",name:"RÅSKOG desserte, blanc, 35x45x77 cm",brand:"IKEA",category:"decor",qty:1,dims:{w:45,d:35,h:77},glbPath:"items/raskog30586783/Raskog30586783.glb",photos:["items/raskog30586783/Raskog30586783.jpg","items/raskog30586783/Raskog30586783_1.jpg","items/raskog30586783/Raskog30586783_2.jpg","items/raskog30586783/Raskog30586783_3.jpg","items/raskog30586783/Raskog30586783_4.jpg","items/raskog30586783/Raskog30586783_5.jpg","items/raskog30586783/Raskog30586783_6.jpg","items/raskog30586783/Raskog30586783_7.jpg","items/raskog30586783/Raskog30586783_8.jpg"],url:"https://www.ikea.com/fr/fr/p/raskog-desserte-blanc-30586783/",price:"29,99",notes:""},
   {id:"boholmen99157501",name:"BOHOLMEN évier intégré, 1 bac, acier inoxydable, 47x30 cm",brand:"IKEA",category:"decor",qty:1,dims:{w:10,d:46.6,h:16},glbPath:"items/boholmen99157501/Boholmen99157501.glb",photos:["items/boholmen99157501/Boholmen99157501.jpg","items/boholmen99157501/Boholmen99157501_1.jpg","items/boholmen99157501/Boholmen99157501_2.jpg","items/boholmen99157501/Boholmen99157501_3.jpg","items/boholmen99157501/Boholmen99157501_4.jpg","items/boholmen99157501/Boholmen99157501_5.jpg","items/boholmen99157501/Boholmen99157501_6.jpg","items/boholmen99157501/Boholmen99157501_7.jpg","items/boholmen99157501/Boholmen99157501_8.jpg","items/boholmen99157501/Boholmen99157501_9.jpg","items/boholmen99157501/Boholmen99157501_10.jpg","items/boholmen99157501/Boholmen99157501_11.jpg","items/boholmen99157501/Boholmen99157501_12.jpg"],url:"https://www.ikea.com/fr/fr/p/boholmen-evier-integre-1-bac-acier-inoxydable-s99157501/",price:"",notes:""},
   {id:"utdrag10389142",name:"UTDRAG Hotte aspirante intégrée, acier inoxydable",brand:"IKEA",category:"decor",qty:1,dims:{w:60,d:10,h:21.5},glbPath:"items/utdrag10389142/Utdrag10389142.glb",photos:["items/utdrag10389142/Utdrag10389142.jpg","items/utdrag10389142/Utdrag10389142_1.jpg","items/utdrag10389142/Utdrag10389142_2.jpg","items/utdrag10389142/Utdrag10389142_3.jpg","items/utdrag10389142/Utdrag10389142_4.jpg","items/utdrag10389142/Utdrag10389142_5.jpg","items/utdrag10389142/Utdrag10389142_6.jpg","items/utdrag10389142/Utdrag10389142_7.jpg","items/utdrag10389142/Utdrag10389142_8.jpg"],url:"https://www.ikea.com/fr/fr/p/utdrag-hotte-aspirante-integree-acier-inoxydable-10389142/",price:"",notes:"",actions:['utdrag-toggle']},

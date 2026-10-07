@@ -1,5 +1,6 @@
 import { ROOM_W, ROOM_D, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL } from './wallData';
 import { BATHTUB } from './bathtubData';
+import { SHOE_HAT_RACK } from './shoeHatRackData';
 import {
   currentFurnitureTransforms, DESK1_POSITIONS, DESK2_POSITIONS,
   SMORKULL_POSITIONS, DOUBLE_BED_POSITIONS, type FurnitureTransform,
@@ -53,6 +54,9 @@ export function drawFurniture(ctx: CanvasRenderingContext2D) {
   rect(ROOM_W - 39 / 2, 75.5 / 2, 39, 75.5);
   const seZ = ROOM_D - 60 - 40.5 / 2;
   rect(ROOM_W - 39 / 2, seZ, 39, 41);
+  // Portant sous les huit casquettes : origine dans un coin, rotation totale −π/2.
+  rect(ROOM_W - SHOE_HAT_RACK.depth / 2, ROOM_D - 60 + SHOE_HAT_RACK.width / 2,
+    SHOE_HAT_RACK.depth, SHOE_HAT_RACK.width);
   // Meuble T intégré au KALLAX NW, déport local de 59.5 cm.
   rect(39 / 2 - 0.75, 40.5 / 2 + 59.5, 27.5, 22.5);
   rect(39 / 2 - 0.75 - 2, 40.5 / 2 + 59.5, 23.5, 80);
@@ -74,7 +78,8 @@ export function drawFurniture(ctx: CanvasRenderingContext2D) {
   at({ x: 100, z: -80, ry: Math.PI / 2 }, () => {
     rect(0, 0, 100, 60, 6); line(-50, -20, 50, -20);
   });
-  at({ x: 270, z: -110, ry: -Math.PI / 2 }, () => {
+  // Rotation du placement (−π/2) + rotation interne de Sintra (−π/2).
+  at({ x: 270, z: -110, ry: -Math.PI }, () => {
     rect(0, 0, 61, 115, 2); line(-26, -57.5, -26, 57.5);
     // Géométrie Sintra : les accoudoirs se déploient suivant Z local.
     const states = useSceneStore.getState().furniture;
