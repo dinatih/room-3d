@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { mkdir, copyFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { NodeIO } from '@gltf-transform/core';
 import { KHRDracoMeshCompression, EXTTextureWebP } from '@gltf-transform/extensions';
@@ -183,5 +184,15 @@ try {
   await page.evaluate(()=>{window.restoreLara();window.turnLara(0,4);window.animateLara();});
   await page.screenshot({path:'/tmp/lara-limbs-animated.png'});
   assert.deepEqual(errors,[]);
-  console.log('WebGL previews: /tmp/lara-limbs-front.png, /tmp/lara-limbs-nude.png');
+  // HTTP URLs are detectable by terminal emulators such as Ghostty; the
+  // tool's "Viewed image" labels contain only filenames and are not links.
+  await mkdir('public/lara-previews', {recursive:true});
+  for (const filename of [
+    'lara-limbs-front.png','lara-limbs-nude.png','lara-limbs-three-quarter.png',
+    'lara-limbs-back.png','lara-limbs-animated.png',
+    'lara-chest-left.png','lara-chest-right.png','lara-hip-left.png','lara-hip-right.png',
+  ]) {
+    await copyFile(`/tmp/${filename}`, `public/lara-previews/${filename}`);
+    console.log(`http://127.0.0.1:5173/lara-previews/${filename}`);
+  }
 } finally { await browser.close(); }

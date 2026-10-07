@@ -14,3 +14,6 @@ sources_backup/
 report-plato/
 .mimocode/
 scripts/temp_*
+
+# Generated Lara visual checks served by Vite locally
+/public/lara-previews/

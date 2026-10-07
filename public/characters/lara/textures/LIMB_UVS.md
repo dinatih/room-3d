@@ -80,3 +80,8 @@ Le contrôle Chromium produit quatre gros plans `/tmp/lara-chest-{left,right}.pn
 et `/tmp/lara-hip-{left,right}.png`, en plus des vues générales. Il vérifie les
 poids des nouveaux sommets du tronc, les attributs de géométrie, le squelette et
 les côtés tatoués. Les raccords de la taille restent ceux du corps assemblé.
+
+Les aperçus sont aussi copiés dans `public/lara-previews/` (dossier généré ignoré
+par Git). Le script affiche leurs URL HTTP sur le serveur Vite du port 5173.
+Dans Ghostty sous Linux, maintenir Ctrl et cliquer sur une URL pour l'ouvrir.
+Par exemple : `http://127.0.0.1:5173/lara-previews/lara-chest-left.png`.
