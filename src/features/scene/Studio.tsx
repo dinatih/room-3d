@@ -948,6 +948,7 @@ export function Studio() {
           {laraGridActive && (
             <AnimFrameController
               compact
+              className="mw-100"
               animName={currentLaraAnimLabel}
               animKey={laraGridAnim}
               onCycleAnim={cycleLaraAnim}
@@ -959,7 +960,7 @@ export function Studio() {
               style={{
                 position: 'relative',
                 inset: 'auto',
-                width: '100%',
+                width: 'min-content',
                 margin: 0,
                 zIndex: 96,
               }}

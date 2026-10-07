@@ -228,7 +228,7 @@ export function ViewControlBar({
         </span>
       )}
       {bar}
-      {children && <div className="view-control-bar-dock__content w-100">{children}</div>}
+      {children && <div className="view-control-bar-dock__content mw-100">{children}</div>}
     </div>
   );
 }
