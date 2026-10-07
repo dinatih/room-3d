@@ -50,6 +50,50 @@ const RESOLUTION_OPTIONS: ResolutionOption[] = [
 
 export type ComparisonMode = 'split' | 'raytracing' | 'raster';
 
+/**
+ * Réduit la résolution d'une texture HDR (ex: 8K -> 1K) pour l'échantillonnage CDF de three-gpu-pathtracer.
+ * Évite l'allocation de 1.5 à 2 Go de RAM JavaScript lors du pré-calcul des CDF de luminance, évitant ainsi les crashs OOM Chrome.
+ */
+function downsampleHdr(hdrTexture: THREE.Texture, targetWidth = 1024, targetHeight = 512): THREE.Texture {
+  if (!hdrTexture || !(hdrTexture as any).image) return hdrTexture;
+  const { width, height, data } = (hdrTexture as any).image;
+  if (!width || !height || !data) return hdrTexture;
+  if (width <= targetWidth && height <= targetHeight) return hdrTexture;
+
+  const stepX = width / targetWidth;
+  const stepY = height / targetHeight;
+  const newLength = targetWidth * targetHeight * 4;
+  const newData = new (data.constructor as any)(newLength);
+
+  for (let y = 0; y < targetHeight; y++) {
+    const srcY = Math.min(height - 1, Math.floor(y * stepY));
+    for (let x = 0; x < targetWidth; x++) {
+      const srcX = Math.min(width - 1, Math.floor(x * stepX));
+      const srcIdx = (srcY * width + srcX) * 4;
+      const dstIdx = (y * targetWidth + x) * 4;
+      newData[dstIdx] = data[srcIdx];
+      newData[dstIdx + 1] = data[srcIdx + 1];
+      newData[dstIdx + 2] = data[srcIdx + 2];
+      newData[dstIdx + 3] = data[srcIdx + 3];
+    }
+  }
+
+  const downsampled = new THREE.DataTexture(
+    newData,
+    targetWidth,
+    targetHeight,
+    hdrTexture.format as any,
+    hdrTexture.type
+  );
+  downsampled.minFilter = THREE.LinearFilter;
+  downsampled.magFilter = THREE.LinearFilter;
+  downsampled.wrapS = THREE.RepeatWrapping;
+  downsampled.wrapT = THREE.ClampToEdgeWrapping;
+  downsampled.mapping = THREE.EquirectangularReflectionMapping;
+  downsampled.needsUpdate = true;
+  return downsampled;
+}
+
 export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingPhotoModalProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -69,6 +113,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const denoisedAppliedRef = useRef<boolean>(false);
   const savedBackgroundRef = useRef<THREE.Color | THREE.Texture | null | undefined>(undefined);
   const savedEnvironmentRef = useRef<THREE.Texture | null | undefined>(undefined);
+  const downsampledEnvRef = useRef<THREE.Texture | null>(null);
   const tempLightsRef = useRef<THREE.Object3D[]>([]);
 
   // Mode de comparaison 3D Standard vs Raytracing
@@ -428,7 +473,13 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     const skyTex = getLoadedSkyTexture() || (scene.environment && (scene.environment as any).isDataTexture ? scene.environment : null);
     if (skyTex) {
       scene.background = skyTex;
-      scene.environment = skyTex;
+      // Allègement drastique de la RAM : downsample 1K (1024x512) pour l'échantillonnage CDF de three-gpu-pathtracer
+      // Évite l'allocation de 1.5 Go de FloatArrays par l'environnement 8K d'origine
+      const smallEnv = downsampleHdr(skyTex, 1024, 512);
+      if (smallEnv !== skyTex) {
+        downsampledEnvRef.current = smallEnv;
+      }
+      scene.environment = smallEnv;
       if ('backgroundIntensity' in scene && 'environmentIntensity' in scene) {
         scene.backgroundIntensity = scene.environmentIntensity;
       }
@@ -462,6 +513,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     if (savedEnvironmentRef.current !== undefined) {
       scene.environment = savedEnvironmentRef.current;
       savedEnvironmentRef.current = undefined;
+    }
+    if (downsampledEnvRef.current) {
+      downsampledEnvRef.current.dispose();
+      downsampledEnvRef.current = null;
     }
 
     // Nettoyer les structures BVH (boundsTree) construites par three-mesh-bvh sur les géométries
@@ -664,12 +719,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     pathTracer.minSamples = 1;
     pathTracer.renderDelay = 0;
     pathTracer.dynamicLowRes = false;
-    if (width > 1920) {
-      pathTracer.tiles.set(2, 2);
-    } else {
-      pathTracer.tiles.set(1, 1);
-    }
-    pathTracer.textureSize.set(1024, 1024);
+    // Découpage en tuiles 2x2 pour éviter de saturer la mémoire du GPU
+    pathTracer.tiles.set(2, 2);
+    // Limiter la taille max de l'atlas de textures à 512x512 (réduit de 75% l'empreinte mémoire VRAM/RAM)
+    pathTracer.textureSize.set(512, 512);
 
     // Débruiteur Intelligent (DenoiseMaterial)
     const denoiseMat = new DenoiseMaterial();
@@ -707,37 +760,42 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     let frameCount = 0;
     let sampleStartTime = performance.now();
     let lastSampleUpdate = 0;
+    let lastRenderTime = 0;
+    const FRAME_BUDGET_MS = 25; // ~40 FPS max pour réguler l'usage GPU et laisser respirer le garbage collector de Chrome
 
     // Boucle d'accumulation d'échantillons
     const renderLoop = () => {
       if (pathTracerRef.current && !isPausedRef.current) {
+        const now = performance.now();
         const samples = pathTracerRef.current.samples;
         const currentTarget = targetSamplesRef.current;
 
         if (samples < currentTarget) {
-          denoisedAppliedRef.current = false;
-          try {
-            pathTracerRef.current.renderSample();
-            frameCount++;
-          } catch (err: any) {
-            console.error('[Raytracing] Erreur renderSample:', err);
-            setErrorMessage(err?.message || 'Erreur pendant le calcul du raytracing.');
-            setIsPaused(true);
-            return;
-          }
+          if (now - lastRenderTime >= FRAME_BUDGET_MS) {
+            lastRenderTime = now;
+            denoisedAppliedRef.current = false;
+            try {
+              pathTracerRef.current.renderSample();
+              frameCount++;
+            } catch (err: any) {
+              console.error('[Raytracing] Erreur renderSample:', err);
+              setErrorMessage(err?.message || 'Erreur pendant le calcul du raytracing.');
+              setIsPaused(true);
+              return;
+            }
 
-          const now = performance.now();
-          // Throttling du setState React : màj toutes les 120ms au lieu de re-render React 60x par seconde
-          if (now - lastSampleUpdate >= 120) {
-            setCurrentSamples(samples);
-            lastSampleUpdate = now;
-          }
+            // Throttling du setState React : màj toutes les 120ms au lieu de re-render React 60x par seconde
+            if (now - lastSampleUpdate >= 120) {
+              setCurrentSamples(samples);
+              lastSampleUpdate = now;
+            }
 
-          if (now - lastTime >= 1000) {
-            setFps(Math.round((frameCount * 1000) / (now - lastTime)));
-            frameCount = 0;
-            lastTime = now;
-            setElapsedSeconds(Math.round((now - sampleStartTime) / 1000));
+            if (now - lastTime >= 1000) {
+              setFps(Math.round((frameCount * 1000) / (now - lastTime)));
+              frameCount = 0;
+              lastTime = now;
+              setElapsedSeconds(Math.round((now - sampleStartTime) / 1000));
+            }
           }
         } else {
           // Échantillonnage cible atteint : appliquer la passe finale de débruitage si activée
@@ -750,7 +808,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
             denoisedAppliedRef.current = true;
           }
 
-          const now = performance.now();
           if (now - lastSampleUpdate >= 250) {
             setCurrentSamples(currentTarget);
             setFps(0);
@@ -773,6 +830,12 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       try {
         denoiseQuad.dispose();
         denoiseMat.dispose();
+        const ptInternal = (pathTracer as any)._pathTracer;
+        if (ptInternal?.material) {
+          ptInternal.material.textures?.dispose?.();
+          ptInternal.material.envMapInfo?.dispose?.();
+          ptInternal.material?.dispose?.();
+        }
         pathTracer.dispose();
         // Ne PAS disposer gl (appartient à Studio / R3F)
       } catch {}
