@@ -48,7 +48,8 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Inventaire Personnages (direct)" keys={['Alt+P']} />
               <R label="Personnages Extra 🎭 (toggle)" keys={['E']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
-              <R label="Cycle Orbit / NPC Grid / Follow / FPV" keys={['O']} />
+              <R label="Basculer rotation Orbit / Pan" keys={['O']} />
+              <R label="Vue Orbit perspective par défaut (Nord-Ouest)" keys={['Alt+O']} />
               <R label="Follow (cycle 3P / FPV)" keys={['M']} />
               <R label="Vue 3ème personne directe"  keys={['3']} />
               <R label="Ambiance HDRI aléatoire 🎲" keys={['5']} />

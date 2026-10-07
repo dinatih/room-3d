@@ -79,6 +79,12 @@ export function useCameraShortcuts({
       toggleOrbitType?.('persp', { pos: PERSP_POS, target: PERSP_TARGET });
     };
 
+    const toggleOrbitMouseMode = () => {
+      const store = useSceneStore.getState();
+      store.setOrbitMouseMode(store.orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
+      invalidate();
+    };
+
     const onDown = (e: KeyboardEvent) => {
       // Plane mode owns input — bail out so arrow/WASD don't move character or camera.
       if (planeModeRef.current || cameraState.isIntroRunning) return;
@@ -103,6 +109,11 @@ export function useCameraShortcuts({
       }
 
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (e.key === 'o' || e.key === 'O') {
+          e.preventDefault();
+          if (!e.repeat) goToDefaultOrbit();
+          return;
+        }
         const viewByCode: Record<string, string> = {
           Digit1: 'front', Digit2: 'back', Digit3: 'left', Digit4: 'right',
           Digit5: 'top', Digit6: 'bottom', Digit7: 'iso-se', Digit8: 'iso-sw',
@@ -175,26 +186,8 @@ export function useCameraShortcuts({
       if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'o' || e.key === 'O')) {
         if (e.repeat) return;
         e.preventDefault();
-        const curX = cameraState.characterX ?? followPos.current.x;
-        const curZ = cameraState.characterZ ?? followPos.current.z;
-
-        if (useSceneStore.getState().layers.laraGrid) {
-          const store = useSceneStore.getState();
-          store.toggleLayer('laraGrid');
-          store.setActiveCameraView(null);
-          enterFollow(curX, curZ, 'follow');
-        } else if (modeRef.current === 'orbit') {
-          useSceneStore.getState().setActiveCameraView(null);
-          toggleNpcGrid();
-        } else if (modeRef.current === 'follow') {
-          enterFollow(curX, curZ, 'fpv');
-        } else if (modeRef.current === 'fpv') {
-          goToDefaultOrbit();
-        } else if (modeRef.current === 'top') {
-          goToDefaultOrbit();
-        } else if (modeRef.current === 'ortho' && exitOrtho) {
-          goToDefaultOrbit();
-        }
+        if (modeRef.current === 'orbit') toggleOrbitMouseMode();
+        return;
       }
 
       if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
@@ -382,9 +375,7 @@ export function useCameraShortcuts({
         else enterFollow(curX, curZ, 'follow');
       } else if (requestedMode === 'orbit') {
         if (modeRef.current === 'orbit') {
-          const store = useSceneStore.getState();
-          store.setOrbitMouseMode(store.orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
-          invalidate();
+          toggleOrbitMouseMode();
         } else {
           goToDefaultOrbit();
         }
