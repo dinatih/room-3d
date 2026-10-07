@@ -1122,7 +1122,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
             width: '320px',
             borderColor: 'rgba(255, 255, 255, 0.12)',
             background: 'rgba(10, 14, 25, 0.75)',
-            scrollbarWidth: 'thin',
           }}
         >
           {/* Section 1 : Qualité & Échantillons */}

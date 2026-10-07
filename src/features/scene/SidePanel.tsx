@@ -545,8 +545,6 @@ export function SidePanel({
           width: 230,
           maxHeight: 'calc(100vh - 32px)',
           zIndex: 100,
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(0, 0, 0, 0.35) rgba(0, 0, 0, 0.05)',
           pointerEvents: hideUI ? 'none' : 'auto',
         }}
         onWheel={e => e.stopPropagation()}
