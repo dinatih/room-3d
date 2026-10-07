@@ -17,6 +17,7 @@ import {
   LAYER_FURNISHINGS,
   LAYER_DECOR,
   LAYER_WALKER,
+  LAYER_WALKER_DETAIL,
   LAYER_MIRRORS,
   LAYER_ANIMALS,
   LAYER_ENVIRONMENT,
@@ -79,6 +80,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   // Paramètres de rendu
   const [resolution, setResolution] = useState<ResolutionPreset>('720p');
   const [enableDenoise, setEnableDenoise] = useState<boolean>(true);
+  const [showCharacters, setShowCharacters] = useState<boolean>(false);
   const [targetSamples, setTargetSamples] = useState<number>(40);
   const [bounces, setBounces] = useState<number>(2);
   const [exposure, setExposure] = useState<number>(1.0);
@@ -149,12 +151,32 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     // Mettre à jour toutes les matrices mondiales (notamment les os des SkinnedMeshes)
     scene.updateMatrixWorld(true);
 
-    // S'assurer que les modèles de personnages sont visibles
-    scene.traverse((obj) => {
-      if (obj.userData?.itemName && (obj.userData.itemName.startsWith('Personnage') || obj.userData.itemName.startsWith('PNJ'))) {
-        obj.visible = true;
-      }
-    });
+    const isCharacterObj = (obj: THREE.Object3D) => {
+      return (
+        (obj.layers.mask & (1 << LAYER_WALKER)) !== 0 ||
+        (obj.layers.mask & (1 << LAYER_WALKER_DETAIL)) !== 0 ||
+        (obj.userData?.itemName && (obj.userData.itemName.startsWith('Personnage') || obj.userData.itemName.startsWith('PNJ'))) ||
+        (obj.name || '').toLowerCase().includes('personnage') ||
+        (obj.name || '').toLowerCase().includes('pnj') ||
+        (obj.name || '').toLowerCase().includes('walker') ||
+        (obj.name || '').toLowerCase().includes('laracroft')
+      );
+    };
+
+    if (showCharacters) {
+      scene.traverse((obj) => {
+        if (isCharacterObj(obj)) {
+          obj.visible = true;
+        }
+      });
+    } else {
+      scene.traverse((obj) => {
+        if (isCharacterObj(obj) && obj.visible) {
+          obj.visible = false;
+          hidden.push(obj);
+        }
+      });
+    }
 
     scene.traverse((obj) => {
       const name = (obj.name || '').toLowerCase();
@@ -172,12 +194,14 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         return;
       }
 
-      // Ne JAMAIS masquer les personnages (LAYER_WALKER) ou les animaux (LAYER_ANIMALS)
-      const isCharacterOrAnimal =
-        (obj.layers.mask & (1 << LAYER_WALKER)) !== 0 ||
-        (obj.layers.mask & (1 << LAYER_ANIMALS)) !== 0;
+      // Personnages : gérés selon l'option showCharacters
+      if (isCharacterObj(obj)) {
+        return;
+      }
 
-      if (isCharacterOrAnimal) {
+      // Animaux : ne pas masquer
+      const isAnimal = (obj.layers.mask & (1 << LAYER_ANIMALS)) !== 0;
+      if (isAnimal) {
         return;
       }
 
@@ -412,7 +436,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
     hiddenHelpersRef.current = hidden;
     originalMaterialsMapRef.current = matMap;
-  }, [scene]);
+  }, [scene, showCharacters]);
 
   // Restauration de la scène après fermeture ou rendu
   const restoreScene = useCallback(() => {
@@ -568,11 +592,34 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     renderCamera.layers.enable(LAYER_FURNITURE);
     renderCamera.layers.enable(LAYER_FURNISHINGS);
     renderCamera.layers.enable(LAYER_DECOR);
-    renderCamera.layers.enable(LAYER_WALKER);
+    if (showCharacters) {
+      renderCamera.layers.enable(LAYER_WALKER);
+      renderCamera.layers.enable(LAYER_WALKER_DETAIL);
+    } else {
+      renderCamera.layers.disable(LAYER_WALKER);
+      renderCamera.layers.disable(LAYER_WALKER_DETAIL);
+    }
     renderCamera.layers.enable(LAYER_MIRRORS);
     renderCamera.layers.enable(LAYER_ANIMALS);
     renderCamera.layers.enable(LAYER_ENVIRONMENT);
     renderCameraRef.current = renderCamera;
+
+    // Masquer les personnages avant le snapshot 3D Standard si désactivés
+    if (!showCharacters) {
+      scene.traverse((obj) => {
+        const isChar =
+          (obj.layers.mask & (1 << LAYER_WALKER)) !== 0 ||
+          (obj.layers.mask & (1 << LAYER_WALKER_DETAIL)) !== 0 ||
+          (obj.userData?.itemName && (obj.userData.itemName.startsWith('Personnage') || obj.userData.itemName.startsWith('PNJ'))) ||
+          (obj.name || '').toLowerCase().includes('personnage') ||
+          (obj.name || '').toLowerCase().includes('pnj') ||
+          (obj.name || '').toLowerCase().includes('walker');
+        if (isChar && obj.visible) {
+          obj.visible = false;
+          hiddenHelpersRef.current.push(obj);
+        }
+      });
+    }
 
     // 1. Capture instantanée du rendu 3D Standard dans un canvas indépendant.
     // Le renderer partagé sera ensuite redimensionné et utilisé par le path tracer.
@@ -758,6 +805,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     scene,
     camera,
     resolution,
+    showCharacters,
     prepareScene,
     restoreScene,
     getRenderDimensions,
@@ -1310,6 +1358,23 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
                   role="switch"
                   checked={enableDenoise}
                   onChange={(e) => handleToggleDenoise(e.target.checked)}
+                />
+              </div>
+            </div>
+
+            {/* Calque Personnages */}
+            <div className="d-flex align-items-center justify-content-between pt-2 mt-2 border-top border-white border-opacity-10">
+              <label className="form-check-label d-flex align-items-center gap-1.5 mb-0" style={{ fontSize: '11px' }}>
+                <span>👤</span>
+                <span>Calque Personnages</span>
+              </label>
+              <div className="form-check form-switch mb-0">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  role="switch"
+                  checked={showCharacters}
+                  onChange={(e) => setShowCharacters(e.target.checked)}
                 />
               </div>
             </div>
