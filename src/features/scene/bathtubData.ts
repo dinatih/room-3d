@@ -5,6 +5,7 @@ export const BATHTUB = {
   width: 70,
   length: 150,
   height: 50,
+  waterHeight: 38,
   wallThickness: 4,
   cornerRadius: 35,
 };

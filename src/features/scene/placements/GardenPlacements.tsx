@@ -12,8 +12,8 @@ import { PottedPalm } from '../items/PottedPalm';
 import { PottedYucca } from '../items/PottedYucca';
 import { BirdFeeder } from '../items/BirdFeeder';
 import { Vatterso20562909 } from '../items/Vatterso20562909';
+import { JikinGoldfish } from '../items/JikinGoldfish';
 import { RobinBird } from '../items/RobinBird';
-import { LittlePondFish } from '../items/LittlePondFish';
 import { ShibaInu } from '../items/ShibaInu';
 import { FemaleAnatomyBones } from '../items/FemaleAnatomyBones';
 import { FemaleAnatomyMuscles } from '../items/FemaleAnatomyMuscles';
@@ -107,10 +107,9 @@ export function GardenDecor() {
 export function GardenAnimals() {
   return (
     <>
-      {/* 100 cm en diagonale nord-ouest depuis le centre de la baignoire. */}
-      <group position={[BATHTUB.position[0] - 100 / Math.SQRT2, 0, BATHTUB.position[2] - 100 / Math.SQRT2]}
-             userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Petit bassin à poissons' }}>
-        <LittlePondFish />
+      <group position={BATHTUB.position} rotation={BATHTUB.rotation}
+             userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Poisson rouge Jikin' }}>
+        <JikinGoldfish />
       </group>
       <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
         <RobinBird />

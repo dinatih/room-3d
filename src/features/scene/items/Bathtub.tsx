@@ -16,7 +16,7 @@ const tubMat   = new THREE.MeshStandardMaterial({ color: 0xd4b483, roughness: 0.
 // donc la teinte est "pré-ombragée" pour compenser.
 const innerMat  = new THREE.MeshStandardMaterial({ color: 0x7a5830, roughness: 0.85 });
 const waterMat = new THREE.MeshStandardMaterial({
-  color: 0x1a6fa8, transparent: true, opacity: 0.80, depthWrite: false,
+  color: 0x1a6fa8, transparent: true, opacity: 0.45, depthWrite: false,
   roughness: 0.05, metalness: 0.15,
 });
 
@@ -53,7 +53,7 @@ export function Bathtub({ onSize }: SceneItemProps) {
     rrTrace(waterShape, TUB_W - 2 * T - 1, TUB_L - 2 * T - 1, RC_IN);
     const wgeo = new THREE.ShapeGeometry(waterShape, 32);
     wgeo.rotateX(-Math.PI / 2);
-    wgeo.translate(0, TUB_H - 12, 0);
+    wgeo.translate(0, BATHTUB.waterHeight, 0);
 
     return { wallGeo: wg, botGeo: bg, waterGeo: wgeo };
   }, []);
