@@ -302,8 +302,8 @@ function OrthoCameraControls({
       />
       <OrbitControls
         ref={ctrlRef}
+        makeDefault
         target={camTarget}
-        enableRotate={false}
         enablePan={true}
         enableZoom={true}
         screenSpacePanning={true}
