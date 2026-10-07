@@ -2,6 +2,7 @@ import { memo, useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense }
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+import { getOrbitMouseButtons } from '@features/scene/camera/orbitMouseButtons';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
 import { drawFps } from '@features/scene/DevToolsOverlay';
@@ -264,7 +265,9 @@ function PreviewCameraController({
   const DIST = camDistance;
   const orthoHalf = Math.max(80, zoneSize * 0.75);
   const cameraProjection = useSceneStore(s => s.cameraProjection);
+  const orbitMouseMode = useSceneStore(s => s.orbitMouseMode);
   const activeCameraView = useSceneStore(s => s.activeCameraView);
+  const controlsTarget = useMemo<[number, number, number]>(() => [centerX, centerY, centerZ], [centerX, centerY, centerZ]);
 
   // Initialize both preview cameras from the active scene view. The inventory
   // can mount after the main scene has already dispatched its camera preset.
@@ -357,6 +360,9 @@ function PreviewCameraController({
     const onView = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (!detail) return;
+      if (detail.projection === 'ortho' || detail.projection === 'persp') {
+        useSceneStore.getState().setCameraProjection(detail.projection);
+      }
       const { pos, target, key } = detail as {
         pos: [number, number, number];
         target: [number, number, number];
@@ -401,7 +407,8 @@ function PreviewCameraController({
     <OrbitControls
       ref={ctrlRef}
       makeDefault
-      target={[centerX, centerY, centerZ]}
+      mouseButtons={getOrbitMouseButtons(orbitMouseMode)}
+      target={controlsTarget}
       enableDamping
       dampingFactor={0.05}
       maxPolarAngle={Math.PI}

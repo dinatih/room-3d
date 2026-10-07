@@ -20,6 +20,7 @@ import { AnimFrameController } from './AnimFrameController';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { CharacterSection } from '@features/scene/sidepanel/sections/CharacterSection';
 import { ViewControlBar } from '@features/scene/ViewControlBar';
+import { getOrbitMouseButtons } from '@features/scene/camera/orbitMouseButtons';
 import { TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 
 function disposePreviewScene(root: THREE.Object3D) {
@@ -227,6 +228,7 @@ function OrthoCameraControls({
   boundsRadius?: number;
 }) {
   const { size, camera } = useThree();
+  const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
   const aspect = size.width / Math.max(1, size.height);
   const ctrlRef = useRef<any>(null);
   const camRef = useRef<THREE.OrthographicCamera>(null);
@@ -303,6 +305,7 @@ function OrthoCameraControls({
       <OrbitControls
         ref={ctrlRef}
         makeDefault
+        mouseButtons={getOrbitMouseButtons(orbitMouseMode)}
         target={camTarget}
         enablePan={true}
         enableZoom={true}
@@ -324,13 +327,16 @@ function PerspectivePresetControls({
   boundsRadius?: number;
 }) {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+  const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
   const ctrlRef = useRef<any>(null);
   const camTarget = useMemo<[number, number, number]>(() => (
     mode === 'top' || mode === 'bottom' ? [0, 0, 0] : [0, target[1] || 85, 0]
   ), [mode, target]);
   const distance = Math.max(100, (boundsRadius || 50) * 3.2);
   const direction = useMemo(() => getPreviewViewDirection(mode), [mode]);
-  const up: [number, number, number] = mode === 'top' ? [0, 0, -1] : mode === 'bottom' ? [0, 0, 1] : [0, 1, 0];
+  const up = useMemo<[number, number, number]>(() => (
+    mode === 'top' ? [0, 0, -1] : mode === 'bottom' ? [0, 0, 1] : [0, 1, 0]
+  ), [mode]);
   const position = useMemo<[number, number, number]>(() => [
     camTarget[0] + direction.x * distance,
     camTarget[1] + direction.y * distance,
@@ -354,7 +360,7 @@ function PerspectivePresetControls({
   return (
     <>
       <PerspectiveCamera ref={cameraRef} makeDefault fov={45} near={0.5} far={10000} position={position} />
-      <OrbitControls ref={ctrlRef} makeDefault target={camTarget} enablePan enableZoom screenSpacePanning minDistance={2} maxDistance={2500} />
+      <OrbitControls ref={ctrlRef} makeDefault mouseButtons={getOrbitMouseButtons(orbitMouseMode)} target={camTarget} enablePan enableZoom screenSpacePanning minDistance={2} maxDistance={2500} />
     </>
   );
 }
@@ -619,6 +625,7 @@ export function InventoryPreview({
   const [photoIdx, setPhotoIdx] = useState(0);
   const [previewView, setPreviewView] = useState<PreviewCameraView>('free');
   const cameraProjection = useSceneStore(state => state.cameraProjection);
+  const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const layers = useSceneStore(state => state.layers);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
@@ -717,7 +724,7 @@ export function InventoryPreview({
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters');
-  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'robin-bird', 'jikin-goldfish'].includes(item.id));
+  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish'].includes(item.id));
 
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
@@ -730,7 +737,7 @@ export function InventoryPreview({
         { value: 'walk', label: 'Walk' },
       ];
     }
-    if (item.id === 'jikin-goldfish') {
+    if (['jikin-goldfish', 'tosakin-goldfish'].includes(item.id)) {
       return [
         { value: 'idle', label: 'Idle' },
         { value: 'swim', label: 'Swim' },
@@ -815,7 +822,7 @@ export function InventoryPreview({
                   {previewView === 'free' ? (
                     <>
                       <FitCamera target={target} boundsRadius={boundsRadius} />
-                      <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan enableZoom target={target} onStart={() => setAutoRotate(false)} />
+                      <OrbitControls mouseButtons={getOrbitMouseButtons(orbitMouseMode)} autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan enableZoom target={target} onStart={() => setAutoRotate(false)} />
                     </>
                   ) : (
                     <PerspectivePresetControls mode={previewView} target={target} boundsRadius={boundsRadius} />
@@ -1116,7 +1123,7 @@ export function InventoryPreview({
       )}
     </div>
     {item && (
-      <ViewControlBar inline toolbarActions={showing3D && (
+      <ViewControlBar inline showOrbitControls={showing3D} toolbarActions={showing3D && (
         <>
         <button
           type="button"

@@ -35,6 +35,8 @@ export interface ViewControlBarProps {
   hidden?: boolean;
   /** Afficher les commandes de la scène principale */
   showCharacterModes?: boolean;
+  /** Afficher la bascule Orbit/Pan pour les aperçus d'inventaire. */
+  showOrbitControls?: boolean;
   showMirrorsHD?: boolean;
   hideUI?: boolean;
   onToggleHideUI?: () => void;
@@ -48,6 +50,7 @@ export function ViewControlBar({
   inline = false,
   hidden = false,
   showCharacterModes = false,
+  showOrbitControls = false,
   showMirrorsHD = false,
   hideUI = false,
   onToggleHideUI,
@@ -73,9 +76,10 @@ export function ViewControlBar({
   if (hidden) return null;
 
   const isOrtho = cameraProjection === 'ortho';
-  const isPan = cameraMode === 'orbit' && orbitMouseMode === 'pan';
-  const orbitTitle = cameraMode === 'orbit'
-    ? (isPan ? 'Pan : glisser gauche pour déplacer, droit pour tourner. Passer en Orbit (O)' : 'Orbit : glisser gauche pour tourner, droit pour déplacer. Passer en Pan (O)')
+  const orbitActive = !showCharacterModes || cameraMode === 'orbit';
+  const isPan = orbitActive && orbitMouseMode === 'pan';
+  const orbitTitle = orbitActive
+    ? `${isPan ? 'Pan : glisser gauche pour déplacer, droit pour tourner. Passer en Orbit' : 'Orbit : glisser gauche pour tourner, droit pour déplacer. Passer en Pan'}${showCharacterModes ? ' (O)' : ''}`
     : 'Revenir à la caméra Orbit perspective par défaut (Alt+O)';
   const isActive = (key: string) => activeCameraView === key;
   const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit' | 'toggle-npc-grid') => {
@@ -153,16 +157,21 @@ export function ViewControlBar({
         <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Persp'}</span>
       </button>
 
-      {showCharacterModes && (
-        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Modes caméra">
+      {(showCharacterModes || showOrbitControls) && (
           <button
             type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'orbit' ? 'view-control-bar__btn--yellow' : 'btn-outline-secondary'}`}
-            onClick={() => dispatchCameraMode('orbit')}
+            className={`${TOOLBAR_BUTTON_CLASS} ${orbitActive ? 'view-control-bar__btn--yellow' : 'btn-outline-secondary'}`}
+            onClick={() => {
+              if (showCharacterModes) dispatchCameraMode('orbit');
+              else useSceneStore.getState().setOrbitMouseMode(orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
+            }}
             title={orbitTitle}
             aria-label={orbitTitle}
-            aria-pressed={cameraMode === 'orbit'}
+            aria-pressed={orbitActive}
           ><i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" /><span className="fw-semibold">{isPan ? 'Pan' : 'Orbit'}</span></button>
+      )}
+      {showCharacterModes && (
+        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Modes caméra">
           <button
             type="button"
             className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
