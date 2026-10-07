@@ -89,6 +89,9 @@ function testCircleCollision(door: DoorConfig, obs: CircleObstacle): number | nu
 
   const rEff = obs.radius + door.thickness / 2 + door.margin;
 
+  // Un obstacle centré derrière la charnière ne doit pas bloquer tout le battant
+  // parce que son cercle simplifié recouvre le pivot.
+  if (dist < rEff && v0 < 0) return null;
   if (dist > door.length + rEff) return null; // Trop loin
   if (dist < rEff) return 0; // Couvre le gond
 

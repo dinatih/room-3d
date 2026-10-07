@@ -26,6 +26,7 @@ const BOX_W = 170;
 
 const PANEL_FRAME_W = 8;
 const PANEL_FRAME_D = 5.5;
+const PANEL_W = W_TOTAL / 2 - FRAME;
 
 function useStaticFrameGeo() {
   return useMemo(() => {
@@ -145,8 +146,13 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
     const s = stateRef.current;
     const dynRight = computeDoorDynamics(DOOR_CONFIGS.glassRight);
     const dynLeft = computeDoorDynamics(DOOR_CONFIGS.glassLeft);
-    const leftTarget = -Math.min(dynLeft.allowed, Math.max(dynLeft.push, leftImpulse(delta)));
-    const rightTarget = Math.min(dynRight.allowed, Math.max(dynRight.push, rightImpulse(delta)));
+    const leftPush = Math.max(dynLeft.push, leftImpulse(delta));
+    const rightTarget = Math.min(
+      dynRight.allowed,
+      Math.max(dynRight.push, rightImpulse(delta), leftPush, Math.abs(leftRotRef.current))
+    );
+    const rightClearsLeft = rightRotRef.current >= Math.atan2(FRAME_D_V2, PANEL_W);
+    const leftTarget = -Math.min(dynLeft.allowed, rightClearsLeft ? leftPush : 0);
     const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
 
     doorCollisionState.glassRight.angle = rightRotRef.current;
@@ -230,7 +236,6 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   const W_INNER = W_TOTAL - FRAME * 2;
-  const PANEL_W = W_INNER / 2;
   const gw = PANEL_W - PANEL_FRAME_W * 2;
   const gh = 190 - PANEL_FRAME_W * 2;
 
