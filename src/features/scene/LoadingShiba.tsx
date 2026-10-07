@@ -65,7 +65,7 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
     if (!context) throw new Error('Canvas 2D indisponible pour le titre du chargement.');
     context.font = '900 60px system-ui, -apple-system, sans-serif';
     context.textAlign = 'center'; context.textBaseline = 'middle';
-    context.fillStyle = '#b91c1c';
+    context.fillStyle = '#991b1b';
     // Relief discret sous les lettres, sans halo blanc autour du rouge.
     const textureScale = 60 / 13;
     context.shadowColor = 'rgba(255, 255, 255, 0.9)';
