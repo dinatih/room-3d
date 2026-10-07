@@ -60,6 +60,9 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'kloppenheim_06_puresky_8k', name: 'kloppenheim 06 puresky 8k', url: '/environment/hdri/kloppenheim_06_puresky_8k.hdr', type: 'hdr' },
   { id: 'mud_road_puresky_8k', name: 'mud road puresky 8k', url: '/environment/hdri/mud_road_puresky_8k.hdr', type: 'hdr' },
   { id: 'overcast_soil_puresky_8k', name: 'overcast soil puresky 8k', url: '/environment/hdri/overcast_soil_puresky_8k.hdr', type: 'hdr' },
+  { id: 'adobestock_162298157', name: 'Tropical Cemetery B', url: '/environment/hdri/Tropical_Cemetery_B_8k.hdr', type: 'hdr' },
+  { id: 'adobestock_162297115', name: 'Concrete Bowl', url: '/environment/hdri/Concrete_Bowl_8k.hdr', type: 'hdr' },
+  { id: 'adobestock_162297233', name: 'Halle Skyline', url: '/environment/hdri/Halle_Skyline.hdr', type: 'hdr' },
 ];
 
 export const DEFAULT_HDRI_ID = 'default';
