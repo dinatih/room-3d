@@ -298,6 +298,16 @@ export function SidePanel({
         <i className="bi bi-file-earmark-person"></i>
         <span>CV</span>
       </button>
+      <a
+        href="https://dinatih.org/visualizer/"
+        target="_blank"
+        rel="noreferrer"
+        className="btn btn-sm btn-dark text-white py-0 px-1 border-0 shadow-sm d-flex align-items-center justify-content-center rounded"
+        title="Ouvrir le visualiseur du code"
+        aria-label="Ouvrir le visualiseur du code"
+      >
+        <i className="bi bi-git" aria-hidden="true"></i>
+      </a>
     </div>
   );
 
