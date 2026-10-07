@@ -26,6 +26,20 @@
   width: max-content;
 }
 
+.anim-frame-controller__controls {
+  display: flex;
+}
+
+.scene-anim-controller .anim-frame-controller__controls {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  justify-content: start !important;
+}
+
+.scene-anim-controller .anim-frame-controller__controls > :last-child {
+  grid-column: 1 / -1;
+}
+
 .view-control-bar {
   width: max-content;
   max-width: 100%;
@@ -117,6 +131,14 @@ $control-colors: (
 }
 
 @media (max-width: 767.98px) {
+  .scene-anim-controller {
+    width: 100% !important;
+  }
+
+  .scene-anim-controller .anim-frame-controller__controls {
+    display: flex;
+  }
+
   .view-control-bar-dock {
     width: calc(100vw - 1rem);
   }

@@ -936,7 +936,7 @@ export function Studio() {
           {laraGridActive && (
             <AnimFrameController
               compact
-              className="mw-100"
+              className="mw-100 scene-anim-controller"
               keyboardEnabled={!showInventory && !planeMode}
               isHumanCharacter
               allowSamePartner
@@ -958,7 +958,7 @@ export function Studio() {
               style={{
                 position: 'relative',
                 inset: 'auto',
-                width: 'min-content',
+                width: 'fit-content',
                 margin: 0,
                 zIndex: 96,
               }}

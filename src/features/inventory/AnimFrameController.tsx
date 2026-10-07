@@ -373,7 +373,7 @@ export function AnimFrameController({
       </div>
 
       {/* ── Ligne 2 : Transport, Compteurs, Sélecteur & Actions ── */}
-      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div className="anim-frame-controller__controls align-items-center justify-content-between flex-wrap gap-2">
         {/* Groupe boutons de lecture */}
         <div className="btn-group btn-group-sm" role="group">
           <button
