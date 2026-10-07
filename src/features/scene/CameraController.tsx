@@ -159,8 +159,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const changeMode = useCallback((m: CameraMode) => {
     const prev = modeRef.current;
-    if (m === 'orbit' && prev !== 'orbit') {
-      useSceneStore.getState().setOrbitMouseMode('rotate');
+    if (m === 'ortho' || (m === 'orbit' && prev !== 'orbit')) {
+      const store = useSceneStore.getState();
+      store.setOrbitMouseMode(m === 'ortho' || store.cameraProjection === 'ortho' ? 'pan' : 'rotate');
     }
     modeRef.current = m;
     cameraState.mode = m;
@@ -547,6 +548,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if ((ctrl as any).sphericalDelta) (ctrl as any).sphericalDelta.set(0, 0, 0);
     if ((ctrl as any).panOffset) (ctrl as any).panOffset.set(0, 0, 0);
     (ctrl as any).scale = 1;
+    if (options || useSceneStore.getState().cameraProjection !== targetProj) {
+      useSceneStore.getState().setOrbitMouseMode(targetProj === 'ortho' ? 'pan' : 'rotate');
+    }
     ctrl.mouseButtons = getOrbitMouseButtons(useSceneStore.getState().orbitMouseMode);
     ctrl.enableRotate = true;
     ctrl.enablePan = true;
@@ -677,7 +681,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (ctrlRef.current) {
         ctrlRef.current.object = activeCam;
         ctrlRef.current.target.copy(savedPerspTarget.current);
-        ctrlRef.current.mouseButtons = getOrbitMouseButtons('rotate');
+        ctrlRef.current.mouseButtons = getOrbitMouseButtons(proj === 'ortho' ? 'pan' : 'rotate');
         ctrlRef.current.enableRotate = true;
         ctrlRef.current.enablePan = true;
         ctrlRef.current.enableZoom = true;
@@ -1017,7 +1021,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enablePan={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         enableZoom={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'follow'}
-        mouseButtons={getOrbitMouseButtons(mode === 'orbit' ? orbitMouseMode : 'rotate')}
+        mouseButtons={getOrbitMouseButtons(mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'pan' : 'rotate')}
       />
     </>
   );

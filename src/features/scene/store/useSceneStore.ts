@@ -330,7 +330,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
   cameraProjection: parseUrlCameraProjection(),
-  orbitMouseMode: 'rotate',
+  orbitMouseMode: parseUrlCameraProjection() === 'ortho' ? 'pan' : 'rotate',
   setOrbitMouseMode: (mode) => set({ orbitMouseMode: mode }),
   activeCameraView: parseUrlActiveCameraView(),
   setActiveCameraView: (view) => {
@@ -362,13 +362,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
     set({ cameraMode: mode });
   },
   setCameraProjection: (proj) => {
-    set({ cameraProjection: proj });
+    set({ cameraProjection: proj, orbitMouseMode: proj === 'ortho' ? 'pan' : 'rotate' });
     updateUrlCameraProjection(proj);
     cameraState.invalidate?.();
   },
   toggleCameraProjection: () => {
     const projection = useSceneStore.getState().cameraProjection === 'ortho' ? 'persp' : 'ortho';
-    set({ cameraProjection: projection });
+    set({ cameraProjection: projection, orbitMouseMode: projection === 'ortho' ? 'pan' : 'rotate' });
     updateUrlCameraProjection(projection);
     cameraState.invalidate?.();
   },
