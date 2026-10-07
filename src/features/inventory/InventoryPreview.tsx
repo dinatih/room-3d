@@ -406,15 +406,36 @@ function GroundDatumLines({ mode }: { mode: PreviewOrthoView }) {
   );
 }
 
-function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, showMesh = true, glbPath, onTargetChange, onBoundsChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; showMesh?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (radius: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
+function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, wireframe = false, glbPath, onTargetChange, onBoundsChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; wireframe?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (radius: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!);
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
   const lastTargetYRef = useRef<number | null>(null);
   const lastRadiusRef = useRef<number | null>(null);
   const lastStatsRef = useRef<{ sz?: number; tris: number; calls: number } | null>(null);
 
+  const originalWireframes = useRef(new Map<THREE.Material & { wireframe: boolean }, boolean>());
+  const applyWireframe = useCallback(() => {
+    innerRef.current.traverse(node => {
+      if (!(node instanceof THREE.Mesh)) return;
+      const materials = Array.isArray(node.material) ? node.material : [node.material];
+      materials.forEach(material => {
+        if (!('wireframe' in material)) return;
+        const mat = material as THREE.Material & { wireframe: boolean };
+        if (!originalWireframes.current.has(mat)) originalWireframes.current.set(mat, mat.wireframe);
+        mat.wireframe = wireframe || originalWireframes.current.get(mat)!;
+      });
+    });
+  }, [wireframe]);
+
+  useLayoutEffect(applyWireframe, [applyWireframe]);
+  useLayoutEffect(() => () => {
+    originalWireframes.current.forEach((value, material) => { material.wireframe = value; });
+    originalWireframes.current.clear();
+  }, []);
+
   const fit = useCallback(() => {
     if (!outerRef.current || !innerRef.current) return;
+    applyWireframe();
     outerRef.current.scale.set(1, 1, 1); outerRef.current.position.set(0, 0, 0); outerRef.current.updateMatrixWorld(true);
 
     const box = new THREE.Box3();
@@ -511,7 +532,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
         onTargetChange([0, targetY, 0]);
       }
     }
-  }, [grounded, preserveOriginXZ, onTargetChange, onBoundsChange, onStats, glbPath]);
+  }, [grounded, preserveOriginXZ, onTargetChange, onBoundsChange, onStats, glbPath, applyWireframe]);
 
   useLayoutEffect(() => {
     lastStatsRef.current = null;
@@ -548,7 +569,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
 
   return (
     <group>
-      <group ref={outerRef} visible={showMesh}>
+      <group ref={outerRef}>
         <group ref={innerRef}>
           {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
         </group>
@@ -559,9 +580,9 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   );
 }
 
-function RegistryScene({ item, actionState, showDims, showMesh, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; showMesh: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
+function RegistryScene({ item, actionState, showDims, wireframe, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; wireframe: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters';
-  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} showMesh={showMesh} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />;
+  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} wireframe={wireframe} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />;
 }
 
 function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: string[], initialIndex?: number, onIndexChange?: (i: number) => void }) {
@@ -622,7 +643,7 @@ export function InventoryPreview({
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [showGrid, setShowGrid] = useState(true);
-  const [showMesh, setShowMesh] = useState(true);
+  const [wireframe, setWireframe] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [previewView, setPreviewView] = useState<PreviewCameraView>('free');
   const cameraProjection = useSceneStore(state => state.cameraProjection);
@@ -682,6 +703,15 @@ export function InventoryPreview({
     setPreviewView('free');
     useAnimPreviewStore.getState().reset();
   }, [item?.id]);
+
+  const toggleSkeleton = () => {
+    const next = !actionStates.showBones;
+    if (!next) {
+      setSelectedBoneName(null);
+      setShowBoneTree(false);
+    }
+    setActionStates(s => ({ ...s, showBones: next }));
+  };
 
   // Map ViewControlBar camera-view events to preview ortho views
   useEffect(() => {
@@ -784,14 +814,14 @@ export function InventoryPreview({
         return;
       }
       if (e.key === 'k' || e.key === 'K') {
-        setActionStates(s => ({ ...s, showBones: !s.showBones }));
+        toggleSkeleton();
         return;
       }
 
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [actionStates.showBones]);
 
   return (
     <div className="inventory-preview-container" style={{ width }}>
@@ -831,7 +861,7 @@ export function InventoryPreview({
                 </>
               )}
               {showGrid && <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />}
-              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} showMesh={showMesh} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
+              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} wireframe={wireframe} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}
                 selectedBoneName={selectedBoneName}
@@ -843,25 +873,6 @@ export function InventoryPreview({
           <div className="position-absolute top-0 end-0 m-2 z-3 d-flex gap-2 align-items-center">
             {showing3D && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'wigs') && (
               <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActionStates(s => {
-                      const next = !s.showBones;
-                      if (!next) {
-                        setSelectedBoneName(null);
-                        setShowBoneTree(false);
-                      }
-                      return { ...s, showBones: next };
-                    });
-                  }}
-                  className={`btn btn-sm ${actionStates.showBones ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
-                  style={{ fontSize: 11 }}
-                  title="Afficher/masquer le squelette 3D"
-                >
-                  {actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}
-                </button>
-
                 {actionStates.showBones && (
                   <button
                     type="button"
@@ -1125,16 +1136,28 @@ export function InventoryPreview({
     </div>
     {item && (
       <ViewControlBar inline showOrbitControls={showing3D} beforeAmbianceActions={showing3D && (
+        <>
         <button
           type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} ${showMesh ? 'btn-primary' : 'btn-outline-secondary'}`}
-          onClick={() => setShowMesh(v => !v)}
-          title={showMesh ? 'Masquer le maillage' : 'Afficher le maillage'}
-          aria-label={showMesh ? 'Masquer le maillage' : 'Afficher le maillage'}
-          aria-pressed={showMesh}
+          className={`${TOOLBAR_BUTTON_CLASS} ${actionStates.showBones ? 'btn-primary' : 'btn-outline-secondary'}`}
+          onClick={toggleSkeleton}
+          title={actionStates.showBones ? 'Masquer le squelette (K)' : 'Afficher le squelette (K)'}
+          aria-label="Squelette"
+          aria-pressed={!!actionStates.showBones}
+        >
+          <span aria-hidden="true">🦴</span>
+        </button>
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${wireframe ? 'btn-primary' : 'btn-outline-secondary'}`}
+          onClick={() => setWireframe(v => !v)}
+          title={wireframe ? 'Désactiver le wireframe' : 'Activer le wireframe'}
+          aria-label={wireframe ? 'Désactiver le wireframe' : 'Activer le wireframe'}
+          aria-pressed={wireframe}
         >
           <i className="bi bi-box" aria-hidden="true" />
         </button>
+        </>
       )} toolbarActions={showing3D && (
         <>
         <button
