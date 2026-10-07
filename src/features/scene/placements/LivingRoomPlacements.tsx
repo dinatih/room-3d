@@ -329,7 +329,7 @@ function AirPerformer_() {
   useEffect(() => { positionState['airperformer-position'] = { idx: posIdx, total: AIRPERFORMER_POSITIONS.length }; }, [posIdx]);
   const p = AIRPERFORMER_POSITIONS[posIdx];
   return (
-    <PositionTransition x={p.x} z={p.z} ry={p.ry}>
+    <PositionTransition furnitureKey="airperformer-position" x={p.x} z={p.z} ry={p.ry}>
       <group userData={{ skipMerge: true, animUnit: true, itemName: 'Air Performer', hoverAction: { label: 'Air Performer', actions: ['airPerformerPower', 'airPerformerMode', 'airPerformerSpeed', 'airperformer-position'] } }}>
         <AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -414,6 +414,9 @@ export function LivingRoomFurniture() {
       {/* Fauteuil Smörkull */}
       <Smorkull_ />
 
+      {/* Purificateur Air Performer */}
+      <AirPerformer_ />
+
       {/* Meuble Mackapär (structure sans Drona ni cintres) */}
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Meuble Mackapär' }}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noHangers />
@@ -485,9 +488,6 @@ export function LivingRoomFurnishings() {
         <DroneCell />
       </group>
 
-
-      {/* Purificateur Air Performer */}
-      <AirPerformer_ />
 
       {/* Lampe Ola */}
       <LampOla_ />

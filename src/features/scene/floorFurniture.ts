@@ -3,7 +3,7 @@ import { BATHTUB } from './bathtubData';
 import { SHOE_HAT_RACK } from './shoeHatRackData';
 import {
   currentFurnitureTransforms, DESK1_POSITIONS, DESK2_POSITIONS,
-  SMORKULL_POSITIONS, DOUBLE_BED_POSITIONS, type FurnitureTransform,
+  SMORKULL_POSITIONS, AIRPERFORMER_POSITIONS, DOUBLE_BED_POSITIONS, type FurnitureTransform,
 } from './furniturePositions';
 import { positionState } from './positionState';
 import { useSceneStore } from './store/useSceneStore';
@@ -47,6 +47,14 @@ export function drawFurniture(ctx: CanvasRenderingContext2D) {
     rect(0, 0, 65, 66, 10);
     rect(0, 2, 45, 45, 8);
     line(-25, -25, 25, -25);
+  });
+  // Air Performer : socle Ø32.5 cm et corps supérieur 24.3×12.5 cm.
+  at(pose('airperformer-position', AIRPERFORMER_POSITIONS), () => {
+    ctx.beginPath();
+    ctx.arc(0, 0, 32.5 / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    rect(0, 0, 24.3, 12.5, 12.5 / 2);
   });
 
   // KALLAX, MACKAPÄR et rangement chaussures (empilements projetés une seule fois).
