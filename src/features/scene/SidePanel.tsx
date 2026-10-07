@@ -331,7 +331,7 @@ export function SidePanel({
         isMobile={isMobile}
         onOpenCv={handleOpenCv}
       />
-      {isMobile && visitorCounter}
+      {visitorCounter}
     </>
   );
 
@@ -590,7 +590,6 @@ export function SidePanel({
         <Group emoji="💼" title="Profil" extra={profileHeaderButtons} defaultOpen={false}>
           {profileSectionContent}
         </Group>
-        {visitorCounter}
 
         <Group emoji="📑" title="Calques" extra={layersHeaderButtons}>{layersSectionContent}</Group>
         <Group emoji="🎮" title="Interactif">{interactiveSectionContent}</Group>
