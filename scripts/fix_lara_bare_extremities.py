@@ -60,19 +60,21 @@ def main():
         for ring in rims(bpy.data.objects['arms']):
             side=1 if sum(p.x for p in ring)>0 else -1
             trim(hands,ring,0,side,side>0)
-        # Nude legs already share their exact rim with the original bare feet.
-        # The clothed legs end lower, so export an independent ankle replacement.
-        feet=bpy.data.objects['body_nude_feet']
-        clothed=feet.copy();clothed.data=feet.data.copy();clothed.name='body_bare_feet_clothed';clothed.data.name='body_bare_feet_clothed'
-        bpy.context.collection.objects.link(clothed)
-        for ring in rims(bpy.data.objects['body_legs']):
-            if all(p.z==ring[0].z for p in ring):
-                side=1 if sum(p.x for p in ring)>0 else -1
-                trim(clothed,ring,2,side,False)
         bpy.context.scene[MARKER]=True
         bpy.context.preferences.filepaths.save_version=0
         bpy.ops.wm.save_as_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
-    bpy.data.objects['body_bare_feet_clothed'].data.name='body_bare_feet_clothed'
+    # Rebuild from the original feet on each export, avoiding cumulative cuts.
+    feet=bpy.data.objects['body_nude_feet']
+    clothed=bpy.data.objects.get('body_bare_feet_clothed')
+    if clothed is None:
+        clothed=feet.copy();clothed.name='body_bare_feet_clothed'
+        bpy.context.collection.objects.link(clothed)
+    clothed.data=feet.data.copy();clothed.data.name='body_bare_feet_clothed'
+    knee_z=bpy.data.objects['Armature'].data.bones['leg_left_knee'].head_local.z
+    for ring in rims(bpy.data.objects['body_legs']):
+        if max(p.z for p in ring)<knee_z:
+            side=1 if sum(p.x for p in ring)>0 else -1
+            trim(clothed,ring,2,side,False)
     bpy.context.preferences.filepaths.save_version=0
     bpy.ops.wm.save_as_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
     spec=importlib.util.spec_from_file_location('limbs',ROOT/'scripts/separate_lara_limb_uvs.py')
