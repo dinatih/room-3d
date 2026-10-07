@@ -46,7 +46,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Inventaire (toggle)"        keys={['I']} />
               <R label="Basculer Ortho / Perspective" keys={['P']} />
               <R label="Inventaire Personnages (direct)" keys={['Alt+P']} />
-              <R label="Personnages Extra 🎭 (toggle)" keys={['E']} />
+              <R label="Personnages Extra 🎭 (toggle)" keys={['Alt+E']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
               <R label="Basculer rotation Orbit / Pan" keys={['O']} />
               <R label="Vue Orbit perspective par défaut (Nord-Ouest)" keys={['Alt+O']} />
@@ -74,7 +74,6 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Mobilier (toggle)"          keys={['Alt+F']} />
               <R label="Décoration (toggle)"        keys={['Alt+D']} />
               <R label="Habillage (toggle)"         keys={['Alt+H']} />
-              <R label="Équipements (toggle)"       keys={['Alt+E']} />
               <R label="Miroirs HD (toggle)"        keys={['Alt+G']} />
               <R label="Arêtes des murs (toggle)"   keys={['Alt+A']} />
               <R label="Piliers seuls (toggle)"     keys={['Alt+Shift+P']} />

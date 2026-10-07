@@ -566,7 +566,7 @@ export function Studio() {
         if (k === 'f') { e.preventDefault(); onToggleLayer('furniture'); cameraState.invalidate?.(); return; }
         if (k === 'd') { e.preventDefault(); onToggleLayer('decor'); cameraState.invalidate?.(); return; }
         if (k === 'h') { e.preventDefault(); onToggleLayer('furnishings'); cameraState.invalidate?.(); return; }
-        if (k === 'e') { e.preventDefault(); onToggleLayer('equipment'); cameraState.invalidate?.(); return; }
+        if (k === 'e') { e.preventDefault(); onToggleLayer('extraCharacters'); cameraState.invalidate?.(); return; }
         if (k === 'g') { e.preventDefault(); onToggleLayer('mirrorsHD'); cameraState.invalidate?.(); return; }
         if (k === 'z') { e.preventDefault(); onToggleLayer('laraTopOff'); cameraState.invalidate?.(); return; }
         if (k === 'c') { e.preventDefault(); onToggleLayer('laraBottomOff'); cameraState.invalidate?.(); return; }
@@ -588,9 +588,6 @@ export function Studio() {
         setShowInventory(prev => !prev);
       } else if (e.key === 'a' || e.key === 'A') {
         onToggleLayer('aiZones');
-        cameraState.invalidate?.();
-      } else if (e.key === 'e' || e.key === 'E') {
-        onToggleLayer('extraCharacters');
         cameraState.invalidate?.();
       } else if (e.key === 'k' || e.key === 'K') {
         onToggleLayer('skeleton');
