@@ -80,6 +80,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
   // Type d'orbite libre : perspective standard 3D ou isométrique orthographique 3D
   const orbitTypeRef = useRef<'persp' | 'ortho'>(useSceneStore.getState().cameraProjection);
+  const projectionBeforeFpv = useRef<'persp' | 'ortho' | null>(null);
   const defaultPerspCamRef = useRef<THREE.PerspectiveCamera>(camera as THREE.PerspectiveCamera);
   const orthoCamRef = useRef<THREE.OrthographicCamera>(null!);
 
@@ -380,6 +381,17 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   }, [camera]);
 
   const enterFollow = useCallback((x: number, z: number, followMode: 'follow' | 'fpv' = 'follow') => {
+    const store = useSceneStore.getState();
+    if (followMode === 'fpv' && modeRef.current !== 'fpv') {
+      projectionBeforeFpv.current = store.cameraProjection;
+    }
+    if (followMode === 'fpv' && store.cameraProjection !== 'persp') {
+      store.setCameraProjection('persp');
+    } else if (followMode === 'follow' && modeRef.current === 'fpv' && projectionBeforeFpv.current) {
+      store.setCameraProjection(projectionBeforeFpv.current);
+      projectionBeforeFpv.current = null;
+    }
+
     followPos.current = { x, y: activeFollowH(), z };
     if (cameraState.followYaw !== undefined) {
       followYaw.current = cameraState.followYaw;
@@ -418,6 +430,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
     } else {
       followPitch.current = FPV_DEFAULT_PITCH;
+      const perspCam = defaultPerspCamRef.current;
+      set({ camera: perspCam });
+      if (ctrlRef.current) ctrlRef.current.object = perspCam;
     }
 
     const ctrl = ctrlRef.current;
@@ -427,7 +442,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       ctrl.enableZoom = false;
     }
 
-    const cam = camera as THREE.PerspectiveCamera;
+    const cam = defaultPerspCamRef.current;
     if (cam.isPerspectiveCamera) {
       if (followMode === 'fpv') {
         if (modeRef.current !== 'fpv') {
@@ -446,9 +461,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     hasInitialStabilizedPos.current = false;
     changeMode(followMode);
     invalidate();
-  }, [camera, changeMode, invalidate]);
+  }, [changeMode, invalidate, set]);
 
   const exitFollow = useCallback(() => {
+    if (modeRef.current === 'fpv' && projectionBeforeFpv.current) {
+      useSceneStore.getState().setCameraProjection(projectionBeforeFpv.current);
+      projectionBeforeFpv.current = null;
+    }
     dragging.current = false;
     cameraState.isDragging = false;
     keys.current.clear();
@@ -458,7 +477,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       ctrl.enablePan = true;
       ctrl.enableZoom = true;
     }
-    const cam = camera as THREE.PerspectiveCamera;
+    const cam = defaultPerspCamRef.current;
     if (cam.isPerspectiveCamera) {
       cam.fov = savedFov.current;
       cam.near = 5;
@@ -643,6 +662,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       appLog('system', cameraProjection === 'ortho' ? '🎥 Mode Top (Ortho 2D)' : '🎥 Mode Top (Perspective 3D)');
       invalidate();
     } else if (modeRef.current === 'follow' || modeRef.current === 'fpv') {
+      if (modeRef.current === 'fpv' && cameraProjection === 'ortho') {
+        useSceneStore.getState().setCameraProjection('persp');
+        return;
+      }
       const ctrl = ctrlRef.current;
       const activeCam = (cameraProjection === 'ortho' && orthoCamRef.current) ? orthoCamRef.current : defaultPerspCamRef.current;
       if (ctrl && activeCam) {
@@ -974,7 +997,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     <>
       <OrthographicCamera
         ref={orthoCamRef}
-        makeDefault={cameraProjection === 'ortho' && mode !== 'ortho'}
+        makeDefault={cameraProjection === 'ortho' && mode !== 'ortho' && mode !== 'fpv'}
         position={mode === 'top' ? (topFollowRef.current ? [cameraState.characterX, 2000, cameraState.characterZ] : TOP_POS) : undefined}
         up={mode === 'top' ? [0, 0, -1] : [0, 1, 0]}
         left={-viewW / 2}
