@@ -59,8 +59,10 @@ export function drawEquipment(ctx: CanvasRenderingContext2D) {
   rect(showerX, showerZ, 71, 71, 3);
   ctx.fillStyle = surface;
   rect(showerX, showerZ, 61, 61, 5);
-  // Bonde centrée en X, tangente au bord intérieur sud du receveur.
-  ellipse(showerX, showerZ + 61 / 2 - 3, 3, 3);
+  // Bonde centrée au sud, avec 3 cm de dégagement au bord intérieur.
+  const drainRadius = 3;
+  const drainClearance = 3;
+  ellipse(showerX, showerZ + 61 / 2 - drainRadius - drainClearance, drainRadius, drainRadius);
   line(showerX - 15, SHOWER_SOUTH_WALL - 5, showerX + 15, SHOWER_SOUTH_WALL - 5);
 
   // Plan de travail 102×62, évier BOHOLMEN tourné à 90° (30×47).
