@@ -13,6 +13,9 @@ export interface FurnitureTransform {
   ry: number;
 }
 
+/** Positions réellement affichées, y compris pendant les transitions animées. */
+export const currentFurnitureTransforms: Record<string, FurnitureTransform> = {};
+
 export const DESK1_POSITIONS: readonly FurnitureTransform[] = [
   { x: 73.5, z: 18,   ry: 0           },
   { x: 22,   z: 74.5, ry: Math.PI / 2 },

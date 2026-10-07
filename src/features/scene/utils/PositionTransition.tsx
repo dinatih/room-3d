@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { ReactNode } from 'react';
+import { currentFurnitureTransforms } from '../furniturePositions';
 
 const SPEED    = 0.09;  // lerp factor (ease-out)
 const SNAP_POS = 0.4;   // cm — seuil de snap
@@ -13,6 +14,7 @@ export function PositionTransition({
   z,
   ry = 0,
   arc = false,
+  furnitureKey,
   children,
 }: {
   x: number;
@@ -20,6 +22,7 @@ export function PositionTransition({
   z: number;
   ry?: number;
   arc?: boolean;
+  furnitureKey?: string;
   children: ReactNode;
 }) {
   const groupRef       = useRef<THREE.Group>(null!);
@@ -28,6 +31,17 @@ export function PositionTransition({
   const isAnimating    = useRef(false);
   const isTransferring = useRef(false);
   const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    if (!furnitureKey) return;
+    const transform = current.current;
+    currentFurnitureTransforms[furnitureKey] = transform;
+    return () => {
+      if (currentFurnitureTransforms[furnitureKey] === transform) {
+        delete currentFurnitureTransforms[furnitureKey];
+      }
+    };
+  }, [furnitureKey]);
 
   useEffect(() => {
     if (isInitialMount.current) {

@@ -137,13 +137,13 @@ function Beds() {
 
   return (
     <>
-      <PositionTransition x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
+      <PositionTransition furnitureKey="bed-west-position" x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
         <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: hoverActions } }}>
           <UtakerFrame item={{ id: 'utaker-upper' } as any} hasTopper={!isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </PositionTransition>
 
-      <PositionTransition x={eastPos.x} z={eastPos.z} ry={Math.PI / 2}>
+      <PositionTransition furnitureKey="bed-east-position" x={eastPos.x} z={eastPos.z} ry={Math.PI / 2}>
         <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: hoverActions } }}>
           <UtakerFrame item={{ id: 'utaker-lower' } as any} hasTopper={isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
@@ -203,14 +203,14 @@ function Desks() {
 
   return (
     <>
-      <PositionTransition x={p1.x} z={p1.z} ry={p1.ry}>
+      <PositionTransition furnitureKey="desk1-position" x={p1.x} z={p1.z} ry={p1.ry}>
         <group userData={{ hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
           <group userData={{ animUnit: true }}>
             <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
           </group>
         </group>
       </PositionTransition>
-      <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
+      <PositionTransition furnitureKey="desk2-position" x={p2.x} z={p2.z} ry={p2.ry}>
         <group userData={{ hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
           <group userData={{ animUnit: true }}>
             <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
@@ -291,7 +291,7 @@ function Smorkull_() {
   useEffect(() => { positionState['smorkull-position'] = { idx: posIdx, total: SMORKULL_POSITIONS.length }; }, [posIdx]);
   const p = SMORKULL_POSITIONS[posIdx];
   return (
-    <PositionTransition x={p.x} z={p.z} ry={p.ry}>
+    <PositionTransition furnitureKey="smorkull-position" x={p.x} z={p.z} ry={p.ry}>
       <group userData={{
         skipMerge: true,
         animUnit: true,

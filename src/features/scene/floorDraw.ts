@@ -13,7 +13,7 @@ import {
 } from './wallData';
 
 import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_CLOSETS, SEG_WINDOWS, DOOR_SWINGS } from './floorData';
-import { BATHTUB } from './bathtubData';
+import { drawFurniture } from './floorFurniture';
 import { drawEquipment } from './floorEquipment';
 import {
   GARDEN_PANEL_DEFS,
@@ -36,7 +36,7 @@ export function drawFloorPlan(
   ctx: CanvasRenderingContext2D,
   cw: number,
   ch: number,
-  { showEquipment = true }: { showEquipment?: boolean } = {},
+  { showEquipment = true, showFurniture = true }: { showEquipment?: boolean; showFurniture?: boolean } = {},
 ) {
   const S  = Math.min(cw / (PLAN_X_MAX - PLAN_X_MIN), ch / (PLAN_Z_MAX - PLAN_Z_MIN));
   const sc = cw / 150; // échelle relative pour épaisseurs et tirets
@@ -117,7 +117,7 @@ export function drawFloorPlan(
   }
   ctx.setLineDash([]);
 
-  // ── Baignoire du jardin : rebord arrondi et eau, à l'échelle de la scène ─────
+  // ── Équipements et mobilier ───────────────────────────────────────────────
   if (showEquipment) {
     ctx.save();
     ctx.translate(tx(0), tz(0));
@@ -125,26 +125,13 @@ export function drawFloorPlan(
     ctx.lineWidth = Math.max(2, 0.65 / S);
     drawEquipment(ctx);
     ctx.restore();
-
+  }
+  if (showFurniture) {
     ctx.save();
-    ctx.translate(tx(BATHTUB.position[0]), tz(BATHTUB.position[2]));
-    ctx.rotate(-BATHTUB.rotation[1]);
-    const tubW = BATHTUB.width * S;
-    const tubL = BATHTUB.length * S;
-    const rim = BATHTUB.wallThickness * S;
-    const radius = BATHTUB.cornerRadius * S;
-    ctx.fillStyle = '#d4b483';
-    ctx.strokeStyle = '#7a5830';
-    ctx.lineWidth = Math.max(S, 0.8);
-    ctx.beginPath();
-    ctx.roundRect(-tubW / 2, -tubL / 2, tubW, tubL, radius);
-    ctx.stroke();
-    ctx.roundRect(-tubW / 2 + rim, -tubL / 2 + rim, tubW - 2 * rim, tubL - 2 * rim, radius - rim);
-    ctx.fill('evenodd');
-    ctx.fillStyle = 'rgba(26, 111, 168, 0.08)';
-    ctx.beginPath();
-    ctx.roundRect(-tubW / 2 + rim, -tubL / 2 + rim, tubW - 2 * rim, tubL - 2 * rim, radius - rim);
-    ctx.fill();
+    ctx.translate(tx(0), tz(0));
+    ctx.scale(S, S);
+    ctx.lineWidth = Math.max(2, 0.65 / S);
+    drawFurniture(ctx);
     ctx.restore();
   }
 

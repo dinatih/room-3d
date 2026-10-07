@@ -105,12 +105,11 @@ export function drawEquipment(ctx: CanvasRenderingContext2D) {
   rect(ROOM_W - 6.5 - 7.1 / 2, linkyZ, 7.1, 12);
   ctx.fillStyle = surface;
 
-  // Équipements suspendus : chauffe-eau Ø56, meuble haut et hotte.
+  // Équipements suspendus : chauffe-eau Ø56 et meuble haut.
   ctx.setLineDash([5, 4]);
   ellipse(BATH_WEST_WALL + 56 / 2, BATH_NORTH_WALL + 11 + 56 / 2, 28, 28);
   // METOD : base locale Y=0, rotation Z=π/2 → centre décalé de −100/2 en X.
   rect(kitchenX + 100 - 100 / 2, ROOM_D + 60 - 37 / 2, 100, 37);
-  rect(kitchenX + 70, ROOM_D + 32, 60, 21.5);
   ctx.setLineDash([]);
 
   // Bandeau LED 35 cm et symboles des deux ampoules de plafond.
