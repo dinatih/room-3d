@@ -933,7 +933,7 @@ export function Studio() {
       />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
-        <VirtualDPad visible={!hideUI && !planeMode && !showInventory} />
+        <VirtualDPad visible={!hideUI && !planeMode && !showInventory && !laraGridActive} />
         <ViewControlBar
           hidden={planeMode || showInventory}
           showCharacterModes
