@@ -19,7 +19,7 @@
   width: min(920px, calc(100vw - 24px));
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
 }
 
 .view-control-bar-dock--stacked > .view-control-bar {
