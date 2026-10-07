@@ -490,6 +490,7 @@ export function Studio() {
   const laraGridAnim = useLaraGridStore(state => state.animation);
   const laraGridDuo = useLaraGridStore(state => state.duo);
   const laraGridPartner = useLaraGridStore(state => state.partnerId);
+  const firstGridFrame = useRef(true);
   const setLaraGridAnim = useCallback((animation: string) => {
     useLaraGridStore.setState({ animation, duo: undefined });
   }, []);
@@ -505,6 +506,10 @@ export function Studio() {
   }, [laraGridActive]);
 
   useEffect(() => {
+    if (firstGridFrame.current) {
+      firstGridFrame.current = false;
+      if (laraGridActive) return;
+    }
     if (laraGridActive && !showInventory) frameLaraGridCamera();
   }, [laraGridActive, laraCount, extraCharacters, activeExtraIds, activeMainIds, laraGridDuo, laraGridPartner, showInventory]);
 

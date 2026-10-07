@@ -23,13 +23,16 @@ function writeUrl(update: (params: URLSearchParams) => void) {
 
 export function parseUrlCameraProjection(): CameraProjection {
   if (typeof window === 'undefined') return 'persp';
-  return getUrlParams().get('projection')?.toLowerCase() === 'ortho' ? 'ortho' : 'persp';
+  const params = getUrlParams();
+  if (!params.has('projection') && !params.has('cameraView') && params.get('npcgrid') === '1') return 'ortho';
+  return params.get('projection')?.toLowerCase() === 'ortho' ? 'ortho' : 'persp';
 }
 
 export function parseUrlActiveCameraView(): string | null {
   if (typeof window === 'undefined') return null;
   const view = getUrlParams().get('cameraView')?.toLowerCase();
-  return view && ORBIT_VIEW_KEYS.has(view) ? view : null;
+  if (view && ORBIT_VIEW_KEYS.has(view)) return view;
+  return !view && getUrlParams().get('npcgrid') === '1' ? 'iso-nw' : null;
 }
 
 export function updateUrlCameraProjection(projection: CameraProjection) {
@@ -109,7 +112,7 @@ export function parseUrlCameraMode(): CameraMode {
       }
     }
   } catch {}
-  return 'fpv'; // FPV par défaut à la place d'orbit
+  return getUrlParams().get('npcgrid') === '1' ? 'orbit' : 'fpv';
 }
 
 /**
