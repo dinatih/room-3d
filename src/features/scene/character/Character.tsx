@@ -469,8 +469,8 @@ export function Character({
     invalidate();
   }, [scene, isLara, laraRealisticTextures, invalidate]);
 
-  // Visibilité des vêtements et des accessoires (synchronisation réactive unique)
-  useEffect(() => {
+  // Synchroniser les vêtements avant le premier rendu, même après chargement différé du GLB.
+  useLayoutEffect(() => {
     if (!scene || !isLara) return;
     applyClothingAndAccessoriesVisibility(parts, {
       laraNude,

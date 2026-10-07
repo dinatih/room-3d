@@ -135,7 +135,7 @@ try {
     renderer.setSize(1100,800);renderer.setClearColor(0xf3f4f6);document.body.appendChild(renderer.domElement);
     const view=new THREE.Scene();view.add(new THREE.HemisphereLight(0xffffff,0x777777,3));
     const light=new THREE.DirectionalLight(0xffffff,3);light.position.set(1,3,4);view.add(light);
-    const camera=new THREE.OrthographicCamera(-1.25,1.25,1.1,-.72,.01,10);camera.position.set(0,.9,4);camera.lookAt(0,.9,0);
+    const camera=new THREE.OrthographicCamera(-1.25,1.25,1,-.9,.01,10);camera.position.set(0,.9,4);camera.lookAt(0,.9,0);
     for(const [i,style] of ['marissa','delphina'].entries()) {
       const scene=entries.find(e=>e.style===style).scene;
       scene.position.x=i===0?-.62:.62;
@@ -164,7 +164,7 @@ try {
     };
     window.restoreLara=()=>{
       view.children.filter(n=>n.getObjectByName('arm_left_elbow')).forEach(scene=>{scene.visible=true;});
-      camera.left=-1.25;camera.right=1.25;camera.top=1.1;camera.bottom=-.72;
+      camera.left=-1.25;camera.right=1.25;camera.top=1;camera.bottom=-.9;
       camera.updateProjectionMatrix();
     };
     window.crouchLara=()=>{
@@ -240,6 +240,20 @@ try {
       camera.left=-extent;camera.right=extent;camera.top=extent*800/1100;camera.bottom=-camera.top;camera.updateProjectionMatrix();
       camera.position.copy(target).add(new THREE.Vector3(0,1,3));camera.lookAt(target);renderer.render(view,camera);
     };
+    window.poseBareHandsLara=async()=>{
+      const entry=entries.find(e=>e.style==='marissa');
+      const source=await window.laraChecks.loader.loadAsync('/animations/combat/anim_pistol_idle.glb');
+      const {retargetClip}=await import('/src/features/scene/retargeting/index.ts');
+      for(const [bone,position,quaternion,scale] of entry.restBones){bone.position.copy(position);bone.quaternion.copy(quaternion);bone.scale.copy(scale);}
+      entry.scene.updateMatrixWorld(true);source.scene.updateMatrixWorld(true);
+      const clip=retargetClip(source.animations[0],entry.scene,source.scene);
+      const mixer=new THREE.AnimationMixer(entry.scene);mixer.clipAction(clip).play();mixer.setTime(1);
+      entry.scene.updateMatrixWorld(true);entry.scene.traverse(n=>{if(n.isSkinnedMesh)n.skeleton.update();});
+      view.children.filter(n=>n.getObjectByName('arm_left_elbow')).forEach(n=>n.visible=n===entry.scene);
+      const wrist=entry.scene.getObjectByName('arm_left_wrist').getWorldPosition(new THREE.Vector3());
+      camera.left=-.15;camera.right=.15;camera.top=.11;camera.bottom=-.11;camera.updateProjectionMatrix();
+      camera.position.copy(wrist).add(new THREE.Vector3(0,-1,3));camera.lookAt(wrist);renderer.render(view,camera);
+    };
     window.nudeLara=()=>{view.traverse(m=>{if(m.isMesh) {if(m.name.startsWith('body_nude_legs')||m.name.startsWith('body_nude_feet')||m.name.startsWith('body_nude_torso')||m.name.startsWith('body_nude_panties')) m.visible=true; if(m.name.startsWith('body_bare_feet_clothed')||['body_legs','boots','shorts','body_torso','shirt'].includes(m.name)) m.visible=false;}});renderer.render(view,camera);};
   });
   await page.screenshot({path:'/tmp/lara-limbs-front.png'});
@@ -250,6 +264,8 @@ try {
     await page.evaluate(part=>window.extremityDetailLara(part),part);
     await page.screenshot({path:`/tmp/lara-${part}-bare.png`});
   }
+  await page.evaluate(()=>window.poseBareHandsLara());
+  await page.screenshot({path:'/tmp/lara-hands-pistol-pose.png'});
   await page.evaluate(()=>{window.restoreLara();window.turnLara(0,4);window.nudeLara();});
   await page.screenshot({path:'/tmp/lara-limbs-nude.png'});
   await page.evaluate(()=>window.turnLara(2,4));

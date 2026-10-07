@@ -6,6 +6,7 @@ sys.dont_write_bytecode=True
 ROOT=Path(__file__).resolve().parents[1]
 FOLDER=ROOT/'public/characters/lara'
 MARKER='lara_bare_extremity_rims_v1'
+WRIST_MARKER='lara_bare_wrist_weights_v2'
 
 
 def rims(obj):
@@ -53,6 +54,24 @@ def trim(obj,reference,axis,side,keep_positive):
     bm.normal_update();bm.to_mesh(obj.data);bm.free();obj.data.update()
 
 
+def match_wrist_weights():
+    """Give the bare hand rim the same elbow/wrist blend as the forearm rim."""
+    hands=bpy.data.objects['body_nude_hands'];arms=bpy.data.objects['arms']
+    arm_rims=rims(arms);hand_rims=rims(hands)
+    source=[v for v in arms.data.vertices if any((v.co-p).length<2**-23 for ring in arm_rims for p in ring)]
+    boundary=[v for v in hands.data.vertices if any((v.co-p).length<2**-23 for ring in hand_rims for p in ring)]
+    assert source and boundary
+    for vertex in boundary:
+        side=1 if vertex.co.x>0 else -1
+        nearest=min((v for v in source if v.co.x*side>0),key=lambda v:(v.co-vertex.co).length_squared)
+        weights={arms.vertex_groups[g.group].name:g.weight for g in nearest.groups}
+        assert weights and abs(sum(weights.values())-1)<2**-10
+        for group in hands.vertex_groups:group.remove([vertex.index])
+        for name,weight in weights.items():
+            hands.vertex_groups[name].add([vertex.index],weight,'REPLACE')
+    print('Matched bare wrist boundary weights',len(boundary),flush=True)
+
+
 def main():
     bpy.ops.wm.open_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
     if not bpy.context.scene.get(MARKER):
@@ -63,6 +82,9 @@ def main():
         bpy.context.scene[MARKER]=True
         bpy.context.preferences.filepaths.save_version=0
         bpy.ops.wm.save_as_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
+    if not bpy.context.scene.get(WRIST_MARKER):
+        match_wrist_weights()
+        bpy.context.scene[WRIST_MARKER]=True
     # Rebuild from the original feet on each export, avoiding cumulative cuts.
     feet=bpy.data.objects['body_nude_feet']
     clothed=bpy.data.objects.get('body_bare_feet_clothed')

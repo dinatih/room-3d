@@ -148,4 +148,11 @@ npm run optimize:glb
 ```
 
 Le contrôle Chromium vérifie les combinaisons chaussures/gants/haut/bas sur
-quatre variantes et produit les aperçus locaux des pieds et mains nus.
+quatre variantes et produit les aperçus locaux des pieds et mains nus. La vue
+générale cadre maintenant jusqu'aux orteils. Elle produit aussi
+`/tmp/lara-hands-pistol-pose.png` avec l'animation de pistolet.
+
+La bordure des mains nues reprend les poids du poignet et du coude de la
+bordure des avant-bras. Le correctif est enregistré dans le `.blend` et
+réexporté avec le GLB. Le réglage des vêtements est appliqué avant le premier
+rendu du personnage après le chargement du modèle.
