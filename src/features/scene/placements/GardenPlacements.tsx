@@ -12,6 +12,7 @@ import { PottedPalm } from '../items/PottedPalm';
 import { PottedYucca } from '../items/PottedYucca';
 import { BirdFeeder } from '../items/BirdFeeder';
 import { Vatterso20562909 } from '../items/Vatterso20562909';
+import { BathtubStarfish } from '../items/Starfish';
 import { JikinGoldfish } from '../items/JikinGoldfish';
 import { RobinBird } from '../items/RobinBird';
 import { ShibaInu } from '../items/ShibaInu';
@@ -110,6 +111,9 @@ export function GardenAnimals() {
       <group position={BATHTUB.position} rotation={BATHTUB.rotation}
              userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Poisson rouge Jikin' }}>
         <JikinGoldfish />
+      </group>
+      <group position={BATHTUB.position} rotation={BATHTUB.rotation}>
+        <BathtubStarfish />
       </group>
       <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
         <RobinBird />
