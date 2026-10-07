@@ -5,6 +5,7 @@ import { useSceneStore } from './store/useSceneStore';
 import { dispatchView } from './sidepanel/types';
 import { getLaraGridCameraView } from './character/laraGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
+import { HDRI_LIST } from './hdriConfig';
 
 const ORTHO_VIEWS = [
   { key: 'front', label: 'Face', shortcut: 'Alt+1', icon: 'bi-arrow-up' },
@@ -58,6 +59,8 @@ export function ViewControlBar({
   const npcGridActive = useSceneStore(s => s.layers.laraGrid);
   const activeCameraView = useSceneStore(s => s.activeCameraView);
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
+  const currentHdri = useSceneStore(s => s.currentHdri);
+  const setHdri = useSceneStore(s => s.setHdri);
 
   if (hidden) return null;
 
@@ -102,7 +105,7 @@ export function ViewControlBar({
   );
 
   const bar = (
-    <div className={`${TOOLBAR_CLASS} ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
+    <div className={`${TOOLBAR_CLASS} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       {showCharacterModes && (
         <button
           type="button"
@@ -180,6 +183,19 @@ export function ViewControlBar({
       {viewButtons(ORTHO_VIEWS, 'cyan')}
       {viewButtons(EXTRA_VIEWS, 'green')}
       {viewButtons(ISO_VIEWS, 'purple')}
+      {inline && (
+        <select
+          className="form-select form-select-sm w-auto mw-100 flex-shrink-0 bg-transparent text-body border-secondary"
+          value={currentHdri}
+          onChange={event => setHdri(event.target.value)}
+          aria-label="Ambiance de la preview 3D"
+          title="Ambiance de la preview 3D"
+        >
+          {HDRI_LIST.map(hdri => (
+            <option key={hdri.id} value={hdri.id}>{hdri.name}</option>
+          ))}
+        </select>
+      )}
       {toolbarActions}
     </div>
   );
