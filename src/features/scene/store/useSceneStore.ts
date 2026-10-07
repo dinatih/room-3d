@@ -27,7 +27,7 @@ function parseUrlNpcCount(): LaraCountMode {
       search = window.location.hash.substring(window.location.hash.indexOf('?'));
     }
     const params = new URLSearchParams(search);
-    const raw = params.get('npc_nb') ?? params.get('npcs') ?? params.get('laraCount') ?? params.get('characters') ?? params.get('count') ?? params.get('npcCount');
+    const raw = params.get('npcNb') ?? params.get('npc_nb') ?? params.get('npcs') ?? params.get('laraCount') ?? params.get('characters') ?? params.get('count') ?? params.get('npcCount');
     if (raw !== null) {
       const lower = raw.trim().toLowerCase();
       if (lower === '15' || lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return 15;
@@ -52,7 +52,7 @@ export function updateUrlNpcCount(count: LaraCountMode) {
   if (typeof window === 'undefined') return;
   try {
     const url = new URL(window.location.href);
-    const countParams = ['npc_nb', 'npcs', 'laraCount', 'characters', 'count', 'npcCount'];
+    const countParams = ['npcNb', 'npc_nb', 'npcs', 'laraCount', 'characters', 'count', 'npcCount'];
     const hadParam = countParams.some(p => url.searchParams.has(p)) || url.searchParams.has('npc');
 
     for (const p of [...countParams, 'npc']) {
@@ -60,7 +60,7 @@ export function updateUrlNpcCount(count: LaraCountMode) {
     }
 
     if (count !== 4) {
-      url.searchParams.set('npc_nb', count.toString());
+      url.searchParams.set('npcNb', count.toString());
     } else if (!hadParam) {
       return; // Valeur par défaut, rien à nettoyer
     }
