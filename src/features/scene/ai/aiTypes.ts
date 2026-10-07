@@ -100,6 +100,8 @@ export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START
 
 export interface AgentInstruction {
   type: InstructionType;
+  /** Déplacement de dégagement ou attente de fermeture avant une action proche d'une porte. */
+  doorKey?: 'living' | 'glassRight';
   smartObjectId?: string; // target smart object ID
   slotId?: string; // specific slot inside the smart object
   targetWaypointId?: string; // Waypoint cible pour la navigation
@@ -113,5 +115,4 @@ export interface AgentInstruction {
   triggerTargetState?: boolean; // optional target state to force
   rotY?: number; // target rotation to face during interaction
 }
-
 

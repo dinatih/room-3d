@@ -2,6 +2,7 @@ import { SmartObjectDef, SmartObjectCategory, AgentInstruction, ResolvedSmartObj
 import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
 import { getAllDuoAnimationIds } from '../animations/duoAnimations';
+import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -986,6 +987,22 @@ export function buildSmartObjectInstructionSequence(
     triggerTargetState: slot.triggerTargetState
   };
 
+  if (objectId === 'freezer' || objectId === 'kallax-ne') {
+    const doorKey = objectId === 'freezer' ? 'living' : 'glassRight';
+    const door = DOOR_CONFIGS[doorKey];
+    const [x, , z] = obj.position!;
+    const swingClearance = door.length + HUMAN_BODY_RADIUS + door.thickness / 2 + door.margin;
+    const safePos: [number, number, number] = objectId === 'freezer'
+      ? [door.pivot.x - Math.sqrt(swingClearance ** 2 - (z - door.pivot.z) ** 2) - door.margin, 0, z]
+      : [x, 0, door.pivot.z + Math.sqrt(swingClearance ** 2 - (x - door.pivot.x) ** 2) + door.margin];
+    return [
+      { type: 'MOVE_TO', targetPos: safePos, doorKey },
+      { type: 'WAIT', doorKey },
+      ...(objectId === 'kallax-ne' ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId }] : []),
+      baseInstruction,
+    ];
+  }
+
   // Traitement spécifique des meubles avec portes et routines composées
   if (objectId === 'shower') {
     return [
@@ -1006,13 +1023,6 @@ export function buildSmartObjectInstructionSequence(
       { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'use' },
       { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'flush' },
       { type: 'USE_OBJECT', smartObjectId: 'vasque-sdb', slotId: 'wash-hands' }
-    ];
-  }
-
-  if (objectId === 'kallax-ne') {
-    return [
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-      baseInstruction
     ];
   }
 

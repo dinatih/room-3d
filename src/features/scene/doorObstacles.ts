@@ -12,6 +12,7 @@ import { ROOM_W, pX, pZ, DiagWall } from './wallData';
 
 export const DOOR_OPEN_RESPONSE = 10;
 export const DOOR_CLOSE_RESPONSE = 4;
+export const HUMAN_BODY_RADIUS = 28;
 
 export interface CircleObstacle {
   x: number;
@@ -252,7 +253,7 @@ export function computeDoorDynamics(
   let push = 0;
   for (const id in cameraState.positions) {
     const p = cameraState.positions[id];
-    const bodyRadius = id === 'robin' ? 7.5 : id === 'shiba' ? 20 : 28;
+    const bodyRadius = id === 'robin' ? 7.5 : id === 'shiba' ? 20 : HUMAN_BODY_RADIUS;
     const height = id === 'robin' ? 15 : id === 'shiba' ? 40 : 173.4;
     if (p.y > door.yMax || p.y + height < door.yMin) continue;
 
@@ -262,7 +263,8 @@ export function computeDoorDynamics(
     const across = vx * door.openNormal.x + vz * door.openNormal.z;
     const clearance = bodyRadius + door.thickness / 2 + door.margin;
     const distance = Math.hypot(along, across);
-    if (along < -clearance || along > door.length + clearance || distance > door.length + clearance) continue;
+    // Une présence dans l'arc de rotation ne suffit pas à rouvrir la porte après un passage.
+    if (along < -clearance || along > door.length + clearance || distance > door.length + clearance || across > clearance) continue;
 
     // On the opposite side the leaf starts moving as the body reaches its plane.
     // On the opening side its outer tangent keeps the whole body clear until it exits.
