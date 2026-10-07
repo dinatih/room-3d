@@ -61,9 +61,10 @@ visibles au bassin. Le résultat visuel global n'est pas finalisé.
 Les contrôles automatiques valident les côtés tatoués, le squelette et la géométrie,
 mais ne garantissent pas la qualité de ces raccords.
 
-Les normales personnalisées héritées des morceaux assemblés sont recalculées
-avec des normales communes aux sommets de même position, sans modifier les
-positions ni les triangles. Le contrôle Chromium produit également quatre gros
-plans `/tmp/lara-chest-{left,right}.png` et `/tmp/lara-hip-{left,right}.png` pour
-vérifier les raccords latéraux, insuffisamment visibles sur les vues générales.
-Des raccords UV locaux peuvent encore nécessiter une correction.
+Le contrôle Chromium produit également quatre gros plans
+`/tmp/lara-chest-{left,right}.png` et `/tmp/lara-hip-{left,right}.png` pour vérifier
+les raccords latéraux, insuffisamment visibles sur les vues générales. Ces vues
+confirment que le raccord sous la poitrine et une zone de la hanche restent à
+corriger. L'interpolation des frontières UV et le recalcul des normales ont été
+testés puis retirés, car ils aggravaient le rendu du bassin. Les normales d'origine
+et le dernier remappage stable sont conservés.
