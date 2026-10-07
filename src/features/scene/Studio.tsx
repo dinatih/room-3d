@@ -960,7 +960,7 @@ export function Studio() {
               style={{
                 position: 'relative',
                 inset: 'auto',
-                width: 'min-content',
+                width: 'fit-content',
                 margin: 0,
                 zIndex: 96,
               }}

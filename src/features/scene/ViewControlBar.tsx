@@ -3,7 +3,7 @@ import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import type { ReactNode } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView } from './sidepanel/types';
-import { getLaraGridCameraView } from './character/laraGridUtils';
+import { getActiveSceneCharactersCount, getLaraGridCameraView } from './character/laraGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
 
@@ -61,6 +61,11 @@ export function ViewControlBar({
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
   const currentHdri = useSceneStore(s => s.currentHdri);
   const setHdri = useSceneStore(s => s.setHdri);
+  const mirrorsHD = useSceneStore(s => s.layers.mirrorsHD);
+  const toggleLayer = useSceneStore(s => s.toggleLayer);
+  const characterCount = useSceneStore(s =>
+    s.layers.character && s.layers.showAllLaraStyles ? getActiveSceneCharactersCount(s) : 0
+  );
 
   if (hidden) return null;
 
@@ -107,6 +112,7 @@ export function ViewControlBar({
   const bar = (
     <div className={`${TOOLBAR_CLASS} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       {showCharacterModes && (
+        <>
         <button
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
@@ -116,6 +122,17 @@ export function ViewControlBar({
         >
           <i className={`bi ${hideUI ? 'bi-eye' : 'bi-eye-slash'}`} aria-hidden="true" />
         </button>
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${mirrorsHD ? 'btn-danger' : 'btn-outline-secondary'}`}
+          onClick={() => toggleLayer('mirrorsHD')}
+          title="Activer ou désactiver les miroirs HD"
+          aria-label="Miroirs HD"
+          aria-pressed={mirrorsHD}
+        >
+          HD
+        </button>
+        </>
       )}
 
       <button
@@ -144,7 +161,7 @@ export function ViewControlBar({
             onClick={() => dispatchCameraMode('toggle-npc-grid')}
             title="Afficher ou quitter la grille des PNJ (G ; O : Orbit → NPCs → Follow → FPV → Orbit)"
             aria-pressed={npcGridActive}
-          ><i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" /><span className="fw-semibold">NPCs</span></button>
+          ><i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" /><span className="fw-semibold">{characterCount} NPCs</span></button>
           <button
             type="button"
             className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}

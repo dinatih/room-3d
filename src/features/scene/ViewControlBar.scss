@@ -16,7 +16,7 @@
 }
 
 .view-control-bar-dock--stacked {
-  width: min(920px, calc(100vw - 24px));
+  width: max-content;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
