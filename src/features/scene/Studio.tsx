@@ -272,11 +272,13 @@ function LoadingProgress({
   sceneReady,
   onAssetsLoaded,
   onCountdownStart,
+  onCountdownTick,
   onLaunch,
 }: {
   sceneReady: boolean;
   onAssetsLoaded: () => void;
   onCountdownStart: () => void;
+  onCountdownTick: (seconds: number) => void;
   onLaunch: () => void;
 }) {
   const { progress, active, item } = useProgress();
@@ -312,7 +314,6 @@ function LoadingProgress({
     const countdownContainer = document.getElementById('loading-countdown-container');
     const timerEl = document.getElementById('loading-countdown-timer');
     const textEl = document.getElementById('loading-countdown-text');
-    const btnPause = document.getElementById('btn-pause-launch');
     const btnStart = document.getElementById('btn-start-now');
 
     // Masquer le libellé de chargement individuel pour laisser toute la place au compte à rebours de lancement
@@ -330,26 +331,15 @@ function LoadingProgress({
         countdownTimerRef.current = null;
       }
       if (btnStart) btnStart.setAttribute('disabled', 'true');
-      if (btnPause) btnPause.style.display = 'none';
       if (textEl) textEl.textContent = '🚀 Lancement de la scène 3D…';
       onLaunch();
     };
 
     if (btnStart) btnStart.onclick = launchApp;
 
-    if (btnPause) {
-      btnPause.onclick = () => {
-        if (countdownTimerRef.current) {
-          clearInterval(countdownTimerRef.current);
-          countdownTimerRef.current = null;
-        }
-        if (textEl) textEl.textContent = '⏸ Lancement automatique suspendu. Prenez le temps de lire !';
-        btnPause.style.display = 'none';
-      };
-    }
-
     countdownTimerRef.current = setInterval(() => {
       remainingSeconds--;
+      onCountdownTick(remainingSeconds);
       if (timerEl) timerEl.textContent = remainingSeconds.toString();
       if (remainingSeconds <= 0) {
         launchApp();
@@ -362,7 +352,7 @@ function LoadingProgress({
         countdownTimerRef.current = null;
       }
     };
-  }, [sceneReady, onLaunch, onCountdownStart]);
+  }, [sceneReady, onLaunch, onCountdownStart, onCountdownTick]);
 
   return null;
 }
@@ -636,6 +626,7 @@ export function Studio() {
   const [assetsLoaded,     setAssetsLoaded]     = useState(false);
   const [showLoadingShiba, setShowLoadingShiba] = useState(true);
   const [loadingCountdownStarted, setLoadingCountdownStarted] = useState(false);
+  const [loadingCountdown, setLoadingCountdown] = useState(5);
   const handleCountdownStart = useCallback(() => setLoadingCountdownStarted(true), []);
   const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
   const [animDurations,    setAnimDurations]    = useState<Record<string, number>>({});
@@ -720,8 +711,8 @@ export function Studio() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <LoadingProgress sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onCountdownStart={handleCountdownStart} onLaunch={handleLaunch} />
-      {showLoadingShiba && <LoadingShiba countdownStarted={loadingCountdownStarted} />}
+      <LoadingProgress sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onCountdownStart={handleCountdownStart} onCountdownTick={setLoadingCountdown} onLaunch={handleLaunch} />
+      {showLoadingShiba && <LoadingShiba countdownStarted={loadingCountdownStarted} countdownSeconds={loadingCountdown} />}
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
