@@ -79,6 +79,9 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
     if (name === 'react') return { useRef: value => ({ current: value }), useMemo: fn => fn(), useEffect: fn => effects.push(fn) };
     if (name === '@react-three/fiber') return { useFrame: fn => { frame = fn; } };
     if (name === './useGLTFClone') return { useGLTFClone: () => ({ scene: clone(activeAsset.scene), animations: activeAsset.animations }) };
+    if (name === './koiFlightControls') {
+      const module = {}; vm.runInNewContext(transpile('src/features/scene/koiFlightControls.ts'), { exports: module, require, Math }); return module;
+    }
     if (name === './cameraState') return { cameraState: state };
     return require(name);
   } });
@@ -110,13 +113,34 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
   }
   console.log('Colibri: taille initiale de 55 cm et échelle stable pendant son animation.');
   activeAsset = koi;
-  const koiElement = exported.AircraftMesh({ definition: definitions.AIRCRAFT_MODELS.find(entry => entry.key === 'koi-fish') });
+  const controls = { pitch: 0, roll: 0, yaw: 0, power: 0 };
+  const koiElement = exported.AircraftMesh({ definition: definitions.AIRCRAFT_MODELS.find(entry => entry.key === 'koi-fish'), controls });
   const koiScene = koiElement.props.children.props.children.props.object;
-  const before = [];
-  koiScene.traverse(object => { if (object.isBone) before.push(object.quaternion.clone()); });
-  frame({}, 0.25);
-  let boneIndex = 0, moved = false;
-  koiScene.traverse(object => { if (object.isBone) { const changed = before[boneIndex++].angleTo(object.quaternion) > 0.001; moved ||= changed; } });
-  assert(moved, 'Animation Koï jouée par AircraftMesh');
+  const bones = {};
+  koiScene.traverse(object => { if (object.isBone) bones[object.name] = object; });
+  const rest = Object.fromEntries(Object.entries(bones).map(([name,bone])=>[name,bone.quaternion.clone().normalize()]));
+  const moved = name => rest[name].angleTo(bones[name].quaternion.clone().normalize());
+  frame({}, 0.5);
+  Object.keys(bones).forEach(name => assert(moved(name) < 1e-6, `Koï au repos : ${name}`));
+  Object.assign(controls, { roll: 1, pitch: 1, yaw: 1, power: .5 });
+  frame({}, 0.1);
+  assert(moved('FrontWingL') > 0 && moved('FrontWingL') < THREE.MathUtils.degToRad(22), 'servo progressif');
+  for (let i=0;i<120;i++) frame({}, 1/60);
+  assert(Math.abs(moved('FrontWingL') - THREE.MathUtils.degToRad(22)) < 1e-6);
+  assert(Math.abs(moved('BackWingL') - THREE.MathUtils.degToRad(25)) < 1e-6);
+  assert(Math.abs(moved('BackWingVertical') - THREE.MathUtils.degToRad(20)) < 1e-6);
+  const worldDelta = name => bones[name].getWorldQuaternion(new THREE.Quaternion()).multiply(rest[name].clone().invert().multiply(bones[name].parent.getWorldQuaternion(new THREE.Quaternion()).invert()));
+  assert(worldDelta('FrontWingL').x * worldDelta('FrontWingR').x < 0, 'ailerons opposés');
+  const first = bones.FrontWingL.quaternion.clone();
+  controls.roll = -1;
+  for (let i=0;i<120;i++) frame({}, 1/60);
+  assert(first.angleTo(bones.FrontWingL.quaternion) > THREE.MathUtils.degToRad(43), 'inversion droite/gauche');
+  const rotorBefore = bones.Rotor.quaternion.clone();
+  frame({}, 0.013);
+  assert(rotorBefore.angleTo(bones.Rotor.quaternion) > .1, 'hélice liée au moteur');
+  Object.assign(controls, { pitch:0, roll:0, yaw:0, power:0 });
+  for (let i=0;i<180;i++) frame({}, 1/60);
+  for (const name of ['FrontWingL','FrontWingR','BackWingL','BackWingR','BackWingVertical','MainPlane','WheelPivotPoint']) assert(moved(name) < 1e-6, `retour neutre ${name}`);
+  console.log('Koï: gouvernes pilotées, limites, inversion, retour au neutre et hélice validés.');
   console.log('All aircraft assets and origami launch checks passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

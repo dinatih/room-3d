@@ -21,6 +21,7 @@
 import { useEffect, useMemo, useRef, Suspense } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import type { AircraftFlightControls } from './koiFlightControls';
 import { AircraftMesh } from './AircraftMesh';
 import { AIRCRAFT_MODELS, DEFAULT_PLANE_MODEL, type PlaneModelKey } from './aircraftModels';
 export type { PlaneModelKey } from './aircraftModels';
@@ -50,9 +51,9 @@ const SPEED_BOOST  = 110;
 const SPEED_BRAKE  = 90;
 const SPEED_DIVE   = 80;
 const SPEED_DRAG   = 14;
-const PITCH_RATE   = 1.6;
-const ROLL_RATE    = 2.4;
-const ROLL_TO_YAW  = 1.2;
+export const PITCH_RATE   = 1.6;
+export const ROLL_RATE    = 2.4;
+export const ROLL_TO_YAW  = 1.2;
 
 const CAM_FOLLOW_OFFSET = new THREE.Vector3(0, 30, 90);
 const CAM_FOLLOW_LOOK   = new THREE.Vector3(0, 0, -80);
@@ -78,9 +79,9 @@ function lerpAngle(a: number, b: number, t: number): number {
   return a + d * t;
 }
 
-export function PlaneMesh({ model, onLaunchReady }: { model: PlaneModelKey; onLaunchReady?: () => void }) {
+export function PlaneMesh({ model, onLaunchReady, controls }: { model: PlaneModelKey; onLaunchReady?: () => void; controls?: AircraftFlightControls }) {
   const definition = AIRCRAFT_MODELS.find(entry => entry.key === model)!;
-  return <Suspense fallback={null}><AircraftMesh key={model} definition={definition} onLaunchReady={onLaunchReady} /></Suspense>;
+  return <Suspense fallback={null}><AircraftMesh key={model} definition={definition} onLaunchReady={onLaunchReady} controls={controls} /></Suspense>;
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
@@ -124,6 +125,7 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
     speed: SPEED_INIT,
     quat:  new THREE.Quaternion(),
   });
+  const controls = useRef<AircraftFlightControls>({ pitch: 0, roll: 0, yaw: 0, power: 0 });
   const keys  = useRef(new Set<string>());
   const _euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const _va    = useRef(new THREE.Vector3());
@@ -262,6 +264,7 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
     const s  = flight.current;
+    Object.assign(controls.current, { pitch: 0, roll: 0, yaw: 0, power: 0 });
     const previousPos = previousPosition.current.copy(s.pos);
 
     // ── Phase prelaunch ─────────────────────────────────────────────────────
@@ -337,6 +340,10 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
 
     // ── Physique de vol (ou d'atterrissage) ─────────────────────────────────
     if (landingRef.current) {
+      controls.current.pitch = THREE.MathUtils.clamp(-s.pitch, -1, 1);
+      controls.current.roll = THREE.MathUtils.clamp(-s.roll, -1, 1);
+      controls.current.yaw = THREE.MathUtils.clamp(Math.atan2(Math.sin(landTargetYaw.current - s.yaw), Math.cos(landTargetYaw.current - s.yaw)), -1, 1);
+      controls.current.power = s.speed / SPEED_MAX;
       // Aligner le cap sur la piste, niveler
       s.yaw   = lerpAngle(s.yaw, landTargetYaw.current, 1 - Math.pow(1 - 0.08, dt * 60));
       s.pitch = s.pitch * Math.max(0, 1 - 3 * dt);
@@ -378,6 +385,7 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
       pitchIn = THREE.MathUtils.clamp(pitchIn, -1, 1);
       rollIn = THREE.MathUtils.clamp(rollIn, -1, 1);
       throttleIn = THREE.MathUtils.clamp(throttleIn, -1, 1);
+      Object.assign(controls.current, { pitch: pitchIn, roll: rollIn, yaw: Math.sin(s.roll) * Math.cos(s.pitch), power: s.speed / SPEED_MAX });
       s.pitch += pitchIn * PITCH_RATE * dt;
       s.roll  += rollIn  * ROLL_RATE  * dt;
       // Angle périodique : aucune butée, les commandes traversent le dos et la verticale.
@@ -475,7 +483,7 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
   return (
     <group ref={planeRef}>
       <CategoryLayerGroup layer={LAYER_AIRCRAFT} register={false}>
-        <PlaneMesh model={model} onLaunchReady={finishLaunch} />
+        <PlaneMesh model={model} onLaunchReady={finishLaunch} controls={controls.current} />
       </CategoryLayerGroup>
     </group>
   );

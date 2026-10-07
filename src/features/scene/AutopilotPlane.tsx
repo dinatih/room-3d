@@ -19,7 +19,8 @@ import { ROOM_W } from './wallData';
 import { cameraState } from './cameraState';
 import { CategoryLayerGroup } from './sceneLayer';
 import { LAYER_AIRCRAFT } from './config';
-import { PlaneMesh, type PlaneModelKey } from './PaperPlane';
+import type { AircraftFlightControls } from './koiFlightControls';
+import { PlaneMesh, PITCH_RATE, ROLL_RATE, ROLL_TO_YAW, SPEED_MAX, type PlaneModelKey } from './PaperPlane';
 import { DEFAULT_PLANE_MODEL } from './aircraftModels';
 
 // ── Paramètres ────────────────────────────────────────────────────────────────
@@ -39,6 +40,8 @@ interface AutopilotPlaneProps {
 
 export function AutopilotPlane({ model = DEFAULT_PLANE_MODEL }: AutopilotPlaneProps) {
   const groupRef = useRef<THREE.Group>(null!);
+  const controls = useRef<AircraftFlightControls>({ pitch: 0, roll: 0, yaw: 0, power: 0 });
+  const previousPitch = useRef<number | null>(null);
   const t        = useRef(0);
   const euler    = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const { invalidate } = useThree();
@@ -59,7 +62,15 @@ export function AutopilotPlane({ model = DEFAULT_PLANE_MODEL }: AutopilotPlanePr
     const yaw  = Math.atan2(-2 * R_X * Math.cos(2 * p), -R_Z * Math.cos(p));
     const bank = BANK_MAX * Math.sin(p);
 
-    euler.current.set(0, yaw, bank);
+    const dx = 2 * R_X * Math.cos(2 * p), dz = R_Z * Math.cos(p);
+    const pitch = Math.atan2(25 * Math.cos(p), Math.hypot(dx, dz));
+    const yawRate = (dz * (-4 * R_X * Math.sin(2 * p)) - dx * (-R_Z * Math.sin(p))) / (dx * dx + dz * dz) * SPEED;
+    controls.current.pitch = previousPitch.current === null || dt === 0 ? 0 : THREE.MathUtils.clamp((pitch - previousPitch.current) / dt / PITCH_RATE, -1, 1);
+    controls.current.roll = BANK_MAX * Math.cos(p) * SPEED / ROLL_RATE;
+    controls.current.yaw = THREE.MathUtils.clamp(yawRate / ROLL_TO_YAW, -1, 1);
+    controls.current.power = THREE.MathUtils.clamp(Math.hypot(dx, dz, 25 * Math.cos(p)) * SPEED / SPEED_MAX, 0, 1);
+    previousPitch.current = pitch;
+    euler.current.set(pitch, yaw, bank);
     groupRef.current.position.set(x, h, z);
     groupRef.current.quaternion.setFromEuler(euler.current);
 
@@ -73,7 +84,7 @@ export function AutopilotPlane({ model = DEFAULT_PLANE_MODEL }: AutopilotPlanePr
   return (
     <group ref={groupRef}>
       <CategoryLayerGroup layer={LAYER_AIRCRAFT} register={false}>
-        <PlaneMesh model={model} />
+        <PlaneMesh model={model} controls={controls.current} />
       </CategoryLayerGroup>
     </group>
   );

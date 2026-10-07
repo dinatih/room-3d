@@ -3,12 +3,13 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTFClone } from './useGLTFClone';
 import { cameraState } from './cameraState';
+import { createKoiFlightControls, type AircraftFlightControls } from './koiFlightControls';
 import type { AIRCRAFT_MODELS } from './aircraftModels';
 
 type Definition = typeof AIRCRAFT_MODELS[number];
 
 /** Modèles normalisés à 55 cm ; chaque instance conserve son propre squelette/mixer. */
-export function AircraftMesh({ definition, onLaunchReady }: { definition: Definition; onLaunchReady?: () => void }) {
+export function AircraftMesh({ definition, onLaunchReady, controls }: { definition: Definition; onLaunchReady?: () => void; controls?: AircraftFlightControls }) {
   const { scene, animations } = useGLTFClone(definition.path);
   const ready = useRef(onLaunchReady);
   ready.current = onLaunchReady;
@@ -23,7 +24,7 @@ export function AircraftMesh({ definition, onLaunchReady }: { definition: Defini
       action.clampWhenFinished = true;
       action.play();
       mixer.setTime(action.getClip().duration); // Normaliser la géométrie pliée, prête à voler.
-    } else if (definition.key === 'comet' || definition.key === 'koi-fish') {
+    } else if (definition.key === 'comet') {
       if (!animations.length) throw new Error(`Animation de vol absente : ${definition.key}`);
       animations.forEach(clip => mixer.clipAction(clip).play());
     }
@@ -50,14 +51,17 @@ export function AircraftMesh({ definition, onLaunchReady }: { definition: Defini
     return { mixer, action, scale, offset };
   }, [scene, animations, definition]);
 
+  const updateKoi = useMemo(() => definition.key === 'koi-fish' ? createKoiFlightControls(scene) : null, [scene, definition]);
+
   useEffect(() => () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); }, [mixer, scene]);
   useFrame((_, delta) => {
+    updateKoi?.(delta, controls);
     if (action && ready.current) {
       if (!cameraState.planeLaunching || cameraState.planeLaunched) return;
       if (!started.current) { started.current = true; action.reset().play(); action.paused = false; }
       mixer.update(delta);
       if (action.time >= action.getClip().duration) ready.current();
-    } else if (definition.key === 'comet' || definition.key === 'koi-fish') mixer.update(delta);
+    } else if (definition.key === 'comet') mixer.update(delta);
   });
 
   return <group rotation={[0, definition.yaw, 0]}>
