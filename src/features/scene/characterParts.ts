@@ -29,6 +29,7 @@ export interface CharacterParts {
   // Clothing parts
   boots: CharacterMeshPart[];
   feet: CharacterMeshPart[];
+  feetClothed: CharacterMeshPart[];
   gloves: CharacterMeshPart[];
   hands: CharacterMeshPart[];
   torsoClothed: CharacterMeshPart[];
@@ -114,6 +115,7 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
   // 3. Prepare collection lists
   const boots: CharacterMeshPart[] = [];
   const feet: CharacterMeshPart[] = [];
+  const feetClothed: CharacterMeshPart[] = [];
   const gloves: CharacterMeshPart[] = [];
   const hands: CharacterMeshPart[] = [];
   const torsoClothed: CharacterMeshPart[] = [];
@@ -223,6 +225,8 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
       // Clothing / Body classification
       if (name === 'boots' || name.includes('boots')) {
         boots.push({ mesh });
+      } else if (name.startsWith('body_bare_feet_clothed')) {
+        feetClothed.push({ mesh });
       } else if (name === 'body_nude_feet' || name.includes('feet') || name.includes('5_feet')) {
         feet.push({ mesh });
       } else if (name === 'gloves' || name === 'fingers' || name.includes('gloves') || name.includes('fingers')) {
@@ -274,6 +278,7 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
 
     boots,
     feet,
+    feetClothed,
     gloves,
     hands,
     torsoClothed,
@@ -316,6 +321,7 @@ export interface ClothingAndAccessoriesOptions {
   laraTopOff: boolean;
   laraBottomOff: boolean;
   laraShoes: boolean;
+  laraGloves: boolean;
   showAccessories: boolean;
   laraPistols: boolean;
   equipment: { holster: boolean; pistols: boolean; backpack: boolean };
@@ -327,9 +333,10 @@ export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opt
 
   // Boots / Feet / Gloves / Hands
   setPartVisibility(parts.boots, opts.laraShoes);
-  setPartVisibility(parts.feet, !opts.laraShoes);
-  setPartVisibility(parts.gloves, true);
-  setPartVisibility(parts.hands, false);
+  setPartVisibility(parts.feet, !opts.laraShoes && isBottomNude);
+  setPartVisibility(parts.feetClothed, !opts.laraShoes && !isBottomNude);
+  setPartVisibility(parts.gloves, opts.laraGloves);
+  setPartVisibility(parts.hands, !opts.laraGloves);
 
   // Torso / Legs
   setPartVisibility(parts.torsoClothed, !isTopNude);

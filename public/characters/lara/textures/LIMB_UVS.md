@@ -119,7 +119,7 @@ npm run optimize:glb
 Le centre de l'entrejambe suit davantage le bassin. L'influence des cuisses est
 répartie selon le côté anatomique, avec une transition calculée depuis les
 articulations du modèle. La correction concerne les jambes sans vêtements,
-leur raccord et le short ; elle conserve la géométrie, les UV et le squelette.
+leur raccord, les jambes habillées et le short ; elle conserve la géométrie, les UV et le squelette.
 Elle est enregistrée dans le `.blend` et les réexécutions réexportent sans
 réappliquer le transfert.
 
@@ -128,3 +128,24 @@ l'animation de grand écart et `/tmp/lara-abduction-crotch.png` avec les cuisses
 écartées symétriquement à 90°. La comparaison avant/après de cette dernière
 pose montre la disparition du repli triangulaire et la fermeture du raccord
 central. Le défaut de ceinture signalé séparément reste à vérifier.
+
+
+## Chaussures et gants indépendants
+
+Les boutons « Chaussures Lara » et « Gants Lara » contrôlent séparément les
+bottes/pieds et les gants/mains, quel que soit l'état du haut ou du bas.
+Les deux équipements sont activés par défaut.
+
+`scripts/fix_lara_bare_extremities.py` corrige les chevauchements cachés dans le
+modèle source : les mains sont coupées au raccord des avant-bras et un second
+maillage de pieds rejoint la bordure plus basse des jambes habillées. Les jambes
+sans vêtements conservent les pieds originaux, avec lesquels elles partagent
+leur bordure. Les coupes interpolent les UV et les poids existants.
+
+```bash
+ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/fix_lara_bare_extremities.py
+npm run optimize:glb
+```
+
+Le contrôle Chromium vérifie les combinaisons chaussures/gants/haut/bas sur
+quatre variantes et produit les aperçus locaux des pieds et mains nus.

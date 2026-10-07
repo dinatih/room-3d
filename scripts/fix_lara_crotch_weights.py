@@ -7,7 +7,8 @@ import bpy
 
 ROOT = Path(__file__).resolve().parents[1]
 FOLDER = ROOT/'public/characters/lara'
-MARKER = 'lara_crotch_skin_weights_v1'
+MARKER = 'lara_crotch_clothed_weights_v2'
+PREVIOUS_MARKER = 'lara_crotch_skin_weights_v1'
 
 
 def smoothstep(value):
@@ -25,7 +26,8 @@ def main():
         hip_z = (left.z+right.z)/2
         crease_z = hip_z-(bones['pelvis'].head_local.z-hip_z)
         crotch_z = bones['pelvis'].tail_local.z
-        for name in ('body_nude_legs','body_nude_panties','shorts'):
+        targets = ('body_legs',) if bpy.context.scene.get(PREVIOUS_MARKER) else ('body_nude_legs','body_nude_panties','shorts','body_legs')
+        for name in targets:
             obj = bpy.data.objects[name]
             group_names = {g.index:g.name for g in obj.vertex_groups}
             changed = 0
@@ -65,6 +67,7 @@ def main():
                         obj.vertex_groups[bone].add([vertex.index],weight/total,'REPLACE')
                 changed += 1
             print('Corrected crotch weights',name,changed,'vertices',flush=True)
+        bpy.context.scene[PREVIOUS_MARKER] = True
         bpy.context.scene[MARKER] = True
         bpy.context.preferences.filepaths.save_version = 0
         bpy.ops.wm.save_as_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))

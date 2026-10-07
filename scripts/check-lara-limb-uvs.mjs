@@ -11,7 +11,7 @@ const before = await io.readBinary(execFileSync('git', ['show', 'HEAD:public/cha
 const after = await io.read('public/characters/lara/lara_native.glb');
 const oldNodes = before.getRoot().listNodes();
 const newNodes = after.getRoot().listNodes();
-assert.deepEqual(newNodes.map(n => n.getName()).sort(), oldNodes.map(n => n.getName()).sort());
+assert.deepEqual(newNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')).map(n => n.getName()).sort(), oldNodes.map(n => n.getName()).sort());
 for (const old of oldNodes) {
   const node = newNodes.find(n => n.getName() === old.getName() && Boolean(n.getMesh()) === Boolean(old.getMesh()));
   for (const method of ['getTranslation', 'getRotation', 'getScale']) {
@@ -22,7 +22,9 @@ for (const old of oldNodes) {
   }
   if (old.getMesh()) {
     const count = m => m.listPrimitives().reduce((n,p) => n + p.getIndices().getCount(),0);
-    if (old.getName() === 'body_nude_torso') {
+    if (old.getName() === 'body_nude_hands') {
+      assert(count(node.getMesh())>0, 'Bare hands lost all triangles');
+    } else if (old.getName() === 'body_nude_torso') {
       assert(count(node.getMesh()) >= count(old.getMesh()), 'Rebuilt torso lost triangles');
     } else {
       assert.equal(count(node.getMesh()), count(old.getMesh()), `${old.getName()} triangles`);
@@ -94,6 +96,18 @@ try {
       }});
       const restBones=[];scene.traverse(n=>{if(n.isBone) restBones.push([n,n.position.clone(),n.quaternion.clone(),n.scale.clone()]);});
       entries.push({style,scene,materials,restBones});
+    }
+    const {extractCharacterParts,applyClothingAndAccessoriesVisibility}=await import('/src/features/scene/characterParts.ts');
+    for (const {style,scene} of entries) {
+      const parts=extractCharacterParts(scene);
+      for(const key of ['boots','feet','feetClothed','gloves','hands']) if(!parts[key].length) throw Error(`${style}: missing ${key}`);
+      for(const laraShoes of [true,false]) for(const laraGloves of [true,false])
+      for(const [laraNude,laraTopOff,laraBottomOff] of [[false,false,false],[false,true,false],[false,false,true],[true,false,false]]) {
+        applyClothingAndAccessoriesVisibility(parts,{laraShoes,laraGloves,laraNude,laraTopOff,laraBottomOff,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
+        for(const [key,visible] of [['boots',laraShoes],['feet',!laraShoes&&(laraNude||laraBottomOff)],['feetClothed',!laraShoes&&!laraNude&&!laraBottomOff],['gloves',laraGloves],['hands',!laraGloves],['torsoClothed',!laraNude&&!laraTopOff],['torsoNude',laraNude||laraTopOff],['legsClothed',!laraNude&&!laraBottomOff],['legsNude',laraNude||laraBottomOff]]) {
+          if(parts[key].some(({mesh})=>mesh.visible!==visible)) throw Error(`${style}: incorrect ${key} visibility`);
+        }
+      }
     }
     window.laraChecks={entries,THREE,variants,loader};
     window.laraChanges=()=>entries.flatMap(({style,materials})=>materials.map(({mesh,mat,base})=>{
@@ -210,10 +224,33 @@ try {
       }
       renderer.render(view,camera);
     };
-    window.nudeLara=()=>{view.traverse(m=>{if(m.isMesh) {if(m.name.startsWith('body_nude_legs')||m.name.startsWith('body_nude_feet')||m.name.startsWith('body_nude_torso')||m.name.startsWith('body_nude_panties')) m.visible=true; if(['body_legs','boots','shorts','body_torso','shirt'].includes(m.name)) m.visible=false;}});renderer.render(view,camera);};
+    window.bareExtremitiesLara=()=>{
+      view.traverse(m=>{if(m.isMesh){
+        if(m.name.startsWith('body_nude_hands')||m.name.startsWith('body_bare_feet_clothed'))m.visible=true;
+        if(m.name.startsWith('body_nude_feet'))m.visible=false;
+        if(m.name.includes('gloves')||m.name.includes('fingers')||m.name.includes('boots'))m.visible=false;
+      }});renderer.render(view,camera);
+    };
+    window.extremityDetailLara=(part)=>{
+      const scene=entries.find(e=>e.style==='marissa').scene;
+      view.children.filter(n=>n.getObjectByName('arm_left_elbow')).forEach(n=>n.visible=n===scene);
+      const mesh=scene.getObjectByName(part);
+      const bounds=new THREE.Box3().setFromObject(mesh,true),target=bounds.getCenter(new THREE.Vector3());
+      const extent=bounds.getSize(new THREE.Vector3()).length()/2;
+      camera.left=-extent;camera.right=extent;camera.top=extent*800/1100;camera.bottom=-camera.top;camera.updateProjectionMatrix();
+      camera.position.copy(target).add(new THREE.Vector3(0,1,3));camera.lookAt(target);renderer.render(view,camera);
+    };
+    window.nudeLara=()=>{view.traverse(m=>{if(m.isMesh) {if(m.name.startsWith('body_nude_legs')||m.name.startsWith('body_nude_feet')||m.name.startsWith('body_nude_torso')||m.name.startsWith('body_nude_panties')) m.visible=true; if(m.name.startsWith('body_bare_feet_clothed')||['body_legs','boots','shorts','body_torso','shirt'].includes(m.name)) m.visible=false;}});renderer.render(view,camera);};
   });
   await page.screenshot({path:'/tmp/lara-limbs-front.png'});
-  await page.evaluate(()=>window.nudeLara());
+  await page.evaluate(()=>window.bareExtremitiesLara());
+  await page.screenshot({path:'/tmp/lara-no-shoes-no-gloves.png'});
+  const extremities=await page.evaluate(()=>window.laraChecks.entries.find(e=>e.style==='marissa').scene.children.flatMap(n=>{const names=[];n.traverse(m=>{if(m.isMesh&&(m.name.startsWith('body_nude_hands')||m.name.startsWith('body_bare_feet_clothed')))names.push(m.name);});return names;}));
+  for(const part of extremities){
+    await page.evaluate(part=>window.extremityDetailLara(part),part);
+    await page.screenshot({path:`/tmp/lara-${part}-bare.png`});
+  }
+  await page.evaluate(()=>{window.restoreLara();window.turnLara(0,4);window.nudeLara();});
   await page.screenshot({path:'/tmp/lara-limbs-nude.png'});
   await page.evaluate(()=>window.turnLara(2,4));
   await page.screenshot({path:'/tmp/lara-limbs-three-quarter.png'});
@@ -229,6 +266,10 @@ try {
   await page.screenshot({path:'/tmp/lara-limbs-animated.png'});
   await page.evaluate(()=>window.crouchLara());
   await page.screenshot({path:'/tmp/lara-crouch-deformation.png'});
+  await page.evaluate(()=>{const scene=window.laraChecks.entries.find(e=>e.style==='marissa').scene;scene.traverse(m=>{if(m.isMesh){if(['body_legs','shorts'].includes(m.name))m.visible=true;if(m.name.startsWith('body_nude_legs')||m.name.startsWith('body_nude_panties'))m.visible=false;}});});
+  await page.evaluate(()=>window.splitLara());
+  await page.screenshot({path:'/tmp/lara-split-clothed-crotch.png'});
+  await page.evaluate(()=>window.nudeLara());
   await page.evaluate(()=>window.splitLara());
   await page.screenshot({path:'/tmp/lara-split-crotch.png'});
   await page.evaluate(()=>window.abductLara());
