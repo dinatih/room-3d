@@ -35,6 +35,7 @@ export interface ViewControlBarProps {
   hidden?: boolean;
   /** Afficher les commandes de la scène principale */
   showCharacterModes?: boolean;
+  showMirrorsHD?: boolean;
   hideUI?: boolean;
   onToggleHideUI?: () => void;
   onEnterFlight?: () => void;
@@ -47,6 +48,7 @@ export function ViewControlBar({
   inline = false,
   hidden = false,
   showCharacterModes = false,
+  showMirrorsHD = false,
   hideUI = false,
   onToggleHideUI,
   onEnterFlight,
@@ -112,7 +114,6 @@ export function ViewControlBar({
   const bar = (
     <div className={`${TOOLBAR_CLASS} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       {showCharacterModes && (
-        <>
         <button
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
@@ -122,6 +123,8 @@ export function ViewControlBar({
         >
           <i className={`bi ${hideUI ? 'bi-eye' : 'bi-eye-slash'}`} aria-hidden="true" />
         </button>
+      )}
+      {(showCharacterModes || showMirrorsHD) && (
         <button
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} ${mirrorsHD ? 'btn-danger' : 'btn-outline-secondary'}`}
@@ -132,7 +135,6 @@ export function ViewControlBar({
         >
           HD
         </button>
-        </>
       )}
 
       <button
