@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { WebGLPathTracer, PhysicalCamera, DenoiseMaterial } from 'three-gpu-pathtracer';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { getLoadedSkyTexture } from '../SkySphere';
+import { splitMultiMaterialMeshes } from './splitMultiMaterialMeshes';
 import {
   LAYER_STRUCTURE,
   LAYER_EQUIPMENT,
@@ -104,6 +105,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const renderCameraRef = useRef<PhysicalCamera | THREE.OrthographicCamera | null>(null);
   const wakeRenderLoopRef = useRef<(() => void) | null>(null);
   const originalMaterialsMapRef = useRef<Map<THREE.Mesh, THREE.Material | THREE.Material[]>>(new Map());
+  const restoreSplitMeshesRef = useRef<(() => void) | null>(null);
   const hiddenHelpersRef = useRef<THREE.Object3D[]>([]);
   const denoiseQuadRef = useRef<FullScreenQuad | null>(null);
   const denoiseMatRef = useRef<DenoiseMaterial | null>(null);
@@ -184,8 +186,9 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
   // Préparation de la scène avant construction du BVH (remplacement des miroirs, masquage des helpers, assainissement des matériaux)
   const prepareScene = useCallback(() => {
-    const hidden: THREE.Object3D[] = [];
+    const hidden = hiddenHelpersRef.current;
     const matMap = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
+    originalMaterialsMapRef.current = matMap;
 
     // Mettre à jour toutes les matrices mondiales (notamment les os des SkinnedMeshes)
     scene.updateMatrixWorld(true);
@@ -367,8 +370,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
         const newMats = mats.map((m) => {
           if (!m) {
-            modified = true;
-            return new THREE.MeshStandardMaterial({ color: 0xd0d0d0, roughness: 0.5 });
+            throw new Error(`[Raytracing] Missing material on mesh "${mesh.name || mesh.uuid}".`);
           }
 
           // Personnages : s'assurer que les maillages ont DoubleSide pour éviter les faces arrière transparentes
@@ -441,6 +443,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       }
     });
 
+    restoreSplitMeshesRef.current = splitMultiMaterialMeshes(scene);
+
     // Détecter l'ambiance lumineuse et créer une douce lumière de remplissage physique zénithale
     let ambColor = new THREE.Color(0xfff5e0);
     let ambIntensity = 0.6;
@@ -485,6 +489,9 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
   // Restauration de la scène après fermeture ou rendu
   const restoreScene = useCallback(() => {
+    restoreSplitMeshesRef.current?.();
+    restoreSplitMeshesRef.current = null;
+
     tempLightsRef.current.forEach((obj) => {
       scene.remove(obj);
     });
@@ -496,6 +503,11 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     hiddenHelpersRef.current = [];
 
     originalMaterialsMapRef.current.forEach((origMat, mesh) => {
+      const original = Array.isArray(origMat) ? origMat : [origMat];
+      const temporary = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const material of temporary) {
+        if (!original.includes(material)) material.dispose();
+      }
       mesh.material = origMat;
     });
     originalMaterialsMapRef.current.clear();
@@ -697,7 +709,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     }
 
     // 2. Préparation de la scène pour le path-tracer (conversion miroir PBR, conversion matériaux, assainissement)
-    prepareScene();
     setIsBuildingScene(true);
     setErrorMessage(null);
     setCurrentSamples(0);
@@ -871,6 +882,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     const timer = setTimeout(() => {
       if (isDisposed) return;
       try {
+        prepareScene();
         console.log('[Raytracing] Construction du BVH pour la scène...');
         pathTracer.setScene(scene, renderCamera);
         pathTracerRef.current = pathTracer;
@@ -878,6 +890,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         console.log('[Raytracing] Scène prête ! Démarrage de l\'accumulation.');
         wakeRenderLoop();
       } catch (err: any) {
+        restoreScene();
         console.error('[Raytracing] Erreur initialisation WebGLPathTracer:', err);
         setErrorMessage(err?.message || 'Échec de la génération du maillage BVH.');
         setIsBuildingScene(false);
@@ -895,18 +908,32 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       }
       wakeRenderLoopRef.current = null;
       restoreScene();
-      try {
-        denoiseQuad.dispose();
-        denoiseMat.dispose();
-        const ptInternal = (pathTracer as any)._pathTracer;
-        if (ptInternal?.material) {
-          ptInternal.material.textures?.dispose?.();
-          ptInternal.material.envMapInfo?.dispose?.();
-          ptInternal.material?.dispose?.();
+      denoiseQuad.dispose();
+      denoiseMat.dispose();
+      const ptInternal = (pathTracer as any)._pathTracer;
+      const disposePathTracer = () => {
+        try {
+          if (ptInternal?.material) {
+            ptInternal.material.textures?.dispose?.();
+            ptInternal.material.envMapInfo?.dispose?.();
+            ptInternal.material.dispose();
+          }
+          pathTracer.dispose();
+        } catch (error) {
+          console.error('[Raytracing] Erreur de libération des ressources:', error);
         }
-        pathTracer.dispose();
-        // Ne PAS disposer gl (appartient à Studio / R3F)
-      } catch {}
+      };
+      // Three.js compileAsync still polls this material's program. Disposing it
+      // before compilation completes removes currentProgram from the renderer.
+      const pendingCompilation = ptInternal?._compilePromise as Promise<unknown> | null;
+      if (pendingCompilation) {
+        void pendingCompilation.then(disposePathTracer, error => {
+          console.error('[Raytracing] Erreur de compilation du shader:', error);
+          disposePathTracer();
+        });
+      } else {
+        disposePathTracer();
+      }
       denoiseQuadRef.current = null;
       denoiseMatRef.current = null;
       pathTracerRef.current = null;
