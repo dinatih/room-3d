@@ -43,6 +43,7 @@ export interface ViewControlBarProps {
   onToggleHideUI?: () => void;
   onEnterFlight?: () => void;
   toolbarActions?: ReactNode;
+  beforeAmbianceActions?: ReactNode;
   children?: ReactNode;
 }
 
@@ -57,6 +58,7 @@ export function ViewControlBar({
   onToggleHideUI,
   onEnterFlight,
   toolbarActions,
+  beforeAmbianceActions,
   children,
 }: ViewControlBarProps) {
   const isMobile = useIsMobile();
@@ -232,13 +234,14 @@ export function ViewControlBar({
       {viewButtons(ORTHO_VIEWS, 'cyan')}
       {viewButtons(EXTRA_VIEWS, 'green')}
       {viewButtons(ISO_VIEWS, 'purple')}
+      {beforeAmbianceActions}
       {inline && (
         <select
-          className="form-select form-select-sm py-0 ps-2 w-auto mw-100 flex-shrink-0 bg-transparent text-body border-secondary small"
+          className="form-select form-select-sm py-0 ps-2 mw-100 flex-shrink-0 bg-transparent text-body border-secondary small text-truncate view-control-bar__ambiance"
           value={currentHdri}
           onChange={event => setHdri(event.target.value)}
           aria-label="Ambiance de la preview 3D"
-          title="Ambiance de la preview 3D"
+          title={HDRI_LIST.find(hdri => hdri.id === currentHdri)?.name ?? currentHdri}
         >
           {HDRI_LIST.map(hdri => (
             <option key={hdri.id} value={hdri.id}>{hdri.name}</option>

@@ -406,7 +406,7 @@ function GroundDatumLines({ mode }: { mode: PreviewOrthoView }) {
   );
 }
 
-function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath, onTargetChange, onBoundsChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (radius: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
+function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, showMesh = true, glbPath, onTargetChange, onBoundsChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; showMesh?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (radius: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!);
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
   const lastTargetYRef = useRef<number | null>(null);
@@ -548,7 +548,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
 
   return (
     <group>
-      <group ref={outerRef}>
+      <group ref={outerRef} visible={showMesh}>
         <group ref={innerRef}>
           {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
         </group>
@@ -559,9 +559,9 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   );
 }
 
-function RegistryScene({ item, actionState, showDims, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
+function RegistryScene({ item, actionState, showDims, showMesh, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; showMesh: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters';
-  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />;
+  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} showMesh={showMesh} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />;
 }
 
 function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: string[], initialIndex?: number, onIndexChange?: (i: number) => void }) {
@@ -622,6 +622,7 @@ export function InventoryPreview({
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [showGrid, setShowGrid] = useState(true);
+  const [showMesh, setShowMesh] = useState(true);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [previewView, setPreviewView] = useState<PreviewCameraView>('free');
   const cameraProjection = useSceneStore(state => state.cameraProjection);
@@ -830,7 +831,7 @@ export function InventoryPreview({
                 </>
               )}
               {showGrid && <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />}
-              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
+              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} showMesh={showMesh} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}
                 selectedBoneName={selectedBoneName}
@@ -1123,7 +1124,18 @@ export function InventoryPreview({
       )}
     </div>
     {item && (
-      <ViewControlBar inline showOrbitControls={showing3D} toolbarActions={showing3D && (
+      <ViewControlBar inline showOrbitControls={showing3D} beforeAmbianceActions={showing3D && (
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${showMesh ? 'btn-primary' : 'btn-outline-secondary'}`}
+          onClick={() => setShowMesh(v => !v)}
+          title={showMesh ? 'Masquer le maillage' : 'Afficher le maillage'}
+          aria-label={showMesh ? 'Masquer le maillage' : 'Afficher le maillage'}
+          aria-pressed={showMesh}
+        >
+          <i className="bi bi-box" aria-hidden="true" />
+        </button>
+      )} toolbarActions={showing3D && (
         <>
         <button
           type="button"
