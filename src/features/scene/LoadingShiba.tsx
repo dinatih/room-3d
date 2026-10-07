@@ -4,7 +4,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import {
   CanvasTexture, AnimationAction, AnimationMixer, Box3, Group, LoopOnce, LoopRepeat,
-  Mesh, MeshLambertMaterial, MeshStandardMaterial, OrthographicCamera, SkinnedMesh, Vector3,
+  Mesh, MeshLambertMaterial, MeshStandardMaterial, OrthographicCamera, SkinnedMesh, SRGBColorSpace, Vector3,
 } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
@@ -63,11 +63,18 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
     canvas.width = 1536; canvas.height = 96;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Canvas 2D indisponible pour le titre du chargement.');
-    context.font = 'bold 60px sans-serif';
+    context.font = '700 60px system-ui, -apple-system, sans-serif';
     context.textAlign = 'center'; context.textBaseline = 'middle';
     context.fillStyle = '#b91c1c';
+    // Même relief que le décompte : ombre blanche à 1 px sous le texte de 13 px.
+    const textureScale = 60 / 13;
+    context.shadowColor = 'rgba(255, 255, 255, 0.9)';
+    context.shadowOffsetY = textureScale;
+    context.shadowBlur = textureScale;
     context.fillText('CHARGEMENT DE LA SCÈNE 3D…', 768, 48);
-    return new CanvasTexture(canvas);
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    return texture;
   }, []);
   useLayoutEffect(() => () => title.dispose(), [title]);
   const activeAction = useRef<AnimationAction | null>(null);
@@ -286,7 +293,7 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
   return <>
     <mesh ref={titleMesh}>
       <planeGeometry args={[1, TEXT_HEIGHT]} />
-      <meshBasicMaterial map={title} transparent alphaTest={0.1} />
+      <meshBasicMaterial map={title} transparent alphaTest={0.1} toneMapped={false} />
     </mesh>
     <mesh ref={ball}><sphereGeometry args={[BALL_RADIUS, 20, 12]} /><meshLambertMaterial color="#ef2222" /></mesh>
     <group ref={runner} dispose={null}><primitive object={model} /></group>
