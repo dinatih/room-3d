@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { getLaraLimbTattooTexture } from './LaraLimbTattoos';
 
 export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivida' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta';
 
@@ -82,7 +83,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       if (node.userData?.isCustomHair || node.userData?.isPendant || node.userData?.isNecklaceCord) return; // Preserve hair and silver jewelry
       const mesh = node as THREE.Mesh;
       const meshName = mesh.name.toLowerCase();
-      if (meshName.includes('body_nude') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) return; // Preserve pristine nude textures
+      const isNudeLimb = meshName.startsWith('body_nude_legs') || meshName.startsWith('body_nude_feet');
+      if (meshName.includes('body_nude') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) {
+        if (!isNudeLimb || (!isMarissa && !isDelphina)) return;
+      }
 
       // Variants need independent materials, but this function can run again
       // after a UI setting changes. Always clone from the immutable GLTF
@@ -103,6 +107,14 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       mesh.material = clonedMats.length === 1 ? clonedMats[0] : clonedMats;
 
       clonedMats.forEach(mat => {
+        if (isNudeLimb) {
+          if (mat.userData.lara_tattoo_projection) {
+            mat.map = getLaraLimbTattooTexture(mat, isMarissa ? 'marissa' : 'delphina',
+              isMarissa ? drawMarissaTattoosOnCanvas : drawDelphinaFloralTattoosOnCanvas);
+            mat.needsUpdate = true;
+          }
+          return;
+        }
         const matName = mat.name ? mat.name.toLowerCase() : "";
 
         const isHand = matName.includes('hand') || matName.includes('finger') || meshName.includes('hand') || meshName.includes('finger');
@@ -467,15 +479,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           }
         }
 
-        // MARISSA TATTOOS ON SKIN (Lion head on forearm & leg tattoo "BEAUTY IS AS BEAUTY DOES")
-        // N'appliquer que sur les bras/jambes spécifiques (arms, fingers, body_legs)
-        if (isMarissa && (meshName === 'arms' || meshName === 'fingers' || meshName === 'body_legs' || matName.includes('arm') || matName.includes('finger') || (matName.includes('body') && meshName.includes('leg')))) {
-          applyMarissaTattoos(mat);
-        }
-
-        // DELPHINA FLORAL TATTOOS ON SKIN (Arabesques et fleurs le long des bras et des jambes)
-        if (isDelphina && (meshName === 'arms' || meshName === 'fingers' || meshName === 'body_legs' || matName.includes('arm') || matName.includes('finger') || (matName.includes('body') && meshName.includes('leg')))) {
-          applyDelphinaTattoos(mat);
+        // Independent anatomical sides: Marissa left, Delphina right.
+        if (meshName === 'arms' || meshName === 'body_legs') {
+          if (isMarissa) applyMarissaTattoos(mat);
+          if (isDelphina) applyDelphinaTattoos(mat);
         }
 
         // SARA FRONT NECK TATTOO (Tatouage en losange du menton au bas du cou)
@@ -532,57 +539,17 @@ export function disposeLaraVariantMaterials(model: THREE.Object3D) {
 
 // ── MARISSA TATTOO CANVAS GENERATOR ──────────────────────────────────────────
 
-const marissaTattooTextureCache: Record<string, THREE.CanvasTexture> = {};
-
 function applyMarissaTattoos(mat: THREE.MeshStandardMaterial) {
-  mat.map = getMarissaTattooTexture();
+  mat.map = getLaraLimbTattooTexture(mat, 'marissa', drawMarissaTattoosOnCanvas);
   mat.needsUpdate = true;
-}
-
-function getMarissaTattooTexture(): THREE.CanvasTexture {
-  if (marissaTattooTextureCache['marissa_tattoos']) {
-    return marissaTattooTextureCache['marissa_tattoos'];
-  }
-
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.flipY = false;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  marissaTattooTextureCache['marissa_tattoos'] = tex;
-
-  const drawAll = (img?: HTMLImageElement) => {
-    if (!ctx) return;
-    if (img) {
-      try {
-        ctx.drawImage(img, 0, 0, 512, 512);
-      } catch {
-        ctx.fillStyle = '#dca888';
-        ctx.fillRect(0, 0, 512, 512);
-      }
-    } else {
-      ctx.fillStyle = '#dca888';
-      ctx.fillRect(0, 0, 512, 512);
-    }
-    drawMarissaTattoosOnCanvas(ctx);
-    tex.needsUpdate = true;
-  };
-
-  const img = new Image();
-  img.src = 'characters/lara/textures/8001.png';
-  img.onload = () => drawAll(img);
-  img.onerror = () => drawAll();
-  drawAll();
-
-  return tex;
 }
 
 function drawMarissaTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
   // ── 1. TATOUAGE TÊTE DE LION (Avant-bras gauche) ──
   ctx.save();
   ctx.translate(240, 205);
+  // Across the forearm, then down toward the wrist (measured UV tangent axes).
+  ctx.transform(-0.12435, 1.02124, 0.96822, -0.05235, 0, 0);
   ctx.fillStyle = 'rgba(18, 18, 22, 0.88)';
   ctx.strokeStyle = 'rgba(12, 12, 16, 0.95)';
   ctx.lineWidth = 2;
@@ -641,7 +608,8 @@ function drawMarissaTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
   // ── 2. TATOUAGE TEXTE "BEAUTY IS AS BEAUTY DOES" (Face avant, haut de cuisse gauche, sous la sangle du holster) ──
   ctx.save();
   ctx.translate(122, 408);
-  ctx.rotate(-Math.PI / 2);
+  // Horizontal in front view; vertical lines run down the thigh.
+  ctx.transform(-0.35476, -0.97120, 0.90327, -0.38318, 0, 0);
   ctx.fillStyle = 'rgba(15, 15, 20, 0.95)';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -660,51 +628,9 @@ function drawMarissaTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
 
 // ── DELPHINA FLORAL TATTOO CANVAS GENERATOR ──────────────────────────────────
 
-const delphinaTattooTextureCache: Record<string, THREE.CanvasTexture> = {};
-
 function applyDelphinaTattoos(mat: THREE.MeshStandardMaterial) {
-  mat.map = getDelphinaTattooTexture();
+  mat.map = getLaraLimbTattooTexture(mat, 'delphina', drawDelphinaFloralTattoosOnCanvas);
   mat.needsUpdate = true;
-}
-
-function getDelphinaTattooTexture(): THREE.CanvasTexture {
-  if (delphinaTattooTextureCache['delphina_floral_v3']) {
-    return delphinaTattooTextureCache['delphina_floral_v3'];
-  }
-
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.flipY = false;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  delphinaTattooTextureCache['delphina_floral_v3'] = tex;
-
-  const drawAll = (img?: HTMLImageElement) => {
-    if (!ctx) return;
-    if (img) {
-      try {
-        ctx.drawImage(img, 0, 0, 512, 512);
-      } catch {
-        ctx.fillStyle = '#dca888';
-        ctx.fillRect(0, 0, 512, 512);
-      }
-    } else {
-      ctx.fillStyle = '#dca888';
-      ctx.fillRect(0, 0, 512, 512);
-    }
-    drawDelphinaFloralTattoosOnCanvas(ctx);
-    tex.needsUpdate = true;
-  };
-
-  const img = new Image();
-  img.src = 'characters/lara/textures/8001.png';
-  img.onload = () => drawAll(img);
-  img.onerror = () => drawAll();
-  drawAll();
-
-  return tex;
 }
 
 function drawDelphinaFloralTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
