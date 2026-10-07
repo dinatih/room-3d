@@ -103,6 +103,31 @@ export function getLaraGridCameraView(total?: number): {
   return { pos, target };
 }
 
+/** Vue ISO nord-ouest cadrée sur toute la grille de personnages. */
+export function getLaraGridNorthWestView(total?: number): {
+  pos: [number, number, number];
+  target: [number, number, number];
+  zoom?: number;
+} {
+  const count = total ?? getActiveSceneCharactersCount();
+  const { width, height, depth, centerX, centerY, centerZ } = getGridLayout(count);
+  const aspect = typeof window !== 'undefined' && window.innerHeight > 0
+    ? window.innerWidth / window.innerHeight
+    : 16 / 9;
+  const halfFov = (LARA_GRID_CONFIG.fov / 2) * (Math.PI / 180);
+  const diameter = Math.hypot(width, height, depth) * 1.25;
+  const distance = Math.max(diameter / (2 * Math.tan(halfFov)), diameter / (2 * Math.tan(halfFov) * aspect));
+  const offset = distance / Math.sqrt(3);
+  const target: [number, number, number] = [centerX, centerY, centerZ];
+  return { pos: [centerX - offset, centerY + offset, centerZ - offset], target };
+}
+
+export function frameLaraGridNorthWest(): void {
+  document.dispatchEvent(new CustomEvent('camera-view', {
+    detail: { ...getLaraGridNorthWestView(), projection: 'ortho' },
+  }));
+}
+
 /**
  * Retourne le nombre actuel de personnages visibles dans la scène.
  */

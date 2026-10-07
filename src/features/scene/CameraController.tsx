@@ -53,6 +53,7 @@ import {
 import { parseUrlLayerOverrides } from './store/layerUrlParams';
 import { VIEWS } from './sidepanel/types';
 import { getOrbitMouseButtons } from './camera/orbitMouseButtons';
+import { getLaraGridNorthWestView } from './character/laraGridUtils';
 
 const FPV_DEFAULT_FOV = 100;
 const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
@@ -587,7 +588,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const applyInitialCameraView = useCallback(() => {
     const viewKey = useSceneStore.getState().activeCameraView;
-    const view = viewKey ? VIEWS[viewKey] : undefined;
+    const view = viewKey === 'iso-nw' && useSceneStore.getState().layers.laraGrid
+      ? getLaraGridNorthWestView()
+      : viewKey ? VIEWS[viewKey] : undefined;
     if (!view || !ctrlRef.current) return;
     switchOrbitProjection(useSceneStore.getState().cameraProjection, {
       pos: view.pos,
