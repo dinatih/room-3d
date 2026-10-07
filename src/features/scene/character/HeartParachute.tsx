@@ -9,27 +9,26 @@ export interface HeartParachuteHandle {
 
 interface HeartParachuteProps {
   visible: boolean;
-  leftShoulder: THREE.Bone | null;
-  rightShoulder: THREE.Bone | null;
+  attachTo: THREE.Bone | null;
   paused: boolean;
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
-const SUSPENSION_HEIGHT = 120; // cm au-dessus des épaules
+const SUSPENSION_HEIGHT = 120; // cm au-dessus du torse
 const DEPLOYMENT_SECONDS = 0.65;
 const SWAY_PERIOD_SECONDS = 3;
 const SWAY_ANGLE = THREE.MathUtils.degToRad(6);
 
 export const HeartParachute = forwardRef<HeartParachuteHandle, HeartParachuteProps>(
-  function HeartParachute({ visible, leftShoulder, rightShoulder, paused }, ref) {
+  function HeartParachute({ visible, attachTo, paused }, ref) {
     const rootRef = useRef<THREE.Group>(null!);
     const canopyRef = useRef<THREE.Group>(null!);
     const ropesRef = useRef<THREE.Mesh[]>([]);
     const elapsed = useRef(0);
     const { scene } = useGLTFClone('/items/famnig27470460/Famnig27470460.glb');
-    const anchors = useMemo(() => Array.from({ length: 4 }, () => new THREE.Vector3()), []);
+    const anchors = useMemo(() => Array.from({ length: 1 }, () => new THREE.Vector3()), []);
     const scratch = useMemo(() => ({
-      left: new THREE.Vector3(), right: new THREE.Vector3(),
+      attachment: new THREE.Vector3(),
       start: new THREE.Vector3(), end: new THREE.Vector3(), direction: new THREE.Vector3(),
     }), []);
 
@@ -47,7 +46,7 @@ export const HeartParachute = forwardRef<HeartParachuteHandle, HeartParachutePro
       const ray = new THREE.Raycaster();
       anchors.forEach((anchor, index) => {
         ray.set(
-          new THREE.Vector3((index < 2 ? -1 : 1) * size.x * 0.1, size.y * (index % 2 ? 0.2 : 0), size.z),
+          new THREE.Vector3(0, 0, size.z),
           new THREE.Vector3(0, 0, -1),
         );
         const hit = ray.intersectObject(attachmentSurface, true)[0];
@@ -63,22 +62,18 @@ export const HeartParachute = forwardRef<HeartParachuteHandle, HeartParachutePro
     useImperativeHandle(ref, () => ({
       update(delta) {
         if (!visible) return;
-        if (!leftShoulder || !rightShoulder) {
-          throw new Error('Le parachute nécessite les deux os des épaules du personnage');
-        }
+        if (!attachTo) throw new Error('Os du torse absent pour attacher le parachute');
         if (!paused) elapsed.current += delta;
         const root = rootRef.current;
         const canopy = canopyRef.current;
         // Appelé après le mixer du personnage pour éviter un retard d'une image.
-        leftShoulder.getWorldPosition(scratch.left);
-        rightShoulder.getWorldPosition(scratch.right);
-        root.worldToLocal(scratch.left);
-        root.worldToLocal(scratch.right);
+        attachTo.getWorldPosition(scratch.attachment);
+        root.worldToLocal(scratch.attachment);
         const deployment = THREE.MathUtils.smoothstep(elapsed.current, 0, DEPLOYMENT_SECONDS);
         const phase = elapsed.current * Math.PI * 2 / SWAY_PERIOD_SECONDS;
         const roll = Math.sin(phase) * SWAY_ANGLE * deployment;
         const pitch = Math.sin(phase * 0.5) * SWAY_ANGLE * 0.5 * deployment;
-        canopy.position.addVectors(scratch.left, scratch.right).multiplyScalar(0.5);
+        canopy.position.copy(scratch.attachment);
         canopy.position.x += Math.sin(roll) * SUSPENSION_HEIGHT;
         canopy.position.y += SUSPENSION_HEIGHT * (0.6 + 0.4 * deployment);
         canopy.position.z += Math.sin(pitch) * SUSPENSION_HEIGHT;
@@ -87,7 +82,7 @@ export const HeartParachute = forwardRef<HeartParachuteHandle, HeartParachutePro
         canopy.updateWorldMatrix(true, false);
         anchors.forEach((anchor, index) => {
           const rope = ropesRef.current[index];
-          scratch.start.copy(index < 2 ? scratch.left : scratch.right);
+          scratch.start.copy(scratch.attachment);
           scratch.end.copy(anchor);
           canopy.localToWorld(scratch.end);
           root.worldToLocal(scratch.end);
@@ -97,7 +92,7 @@ export const HeartParachute = forwardRef<HeartParachuteHandle, HeartParachutePro
           rope.quaternion.setFromUnitVectors(UP, scratch.direction.normalize());
         });
       },
-    }), [visible, paused, leftShoulder, rightShoulder, anchors, scratch]);
+    }), [visible, paused, attachTo, anchors, scratch]);
 
     return (
       <group ref={rootRef} visible={visible} name="Parachute Coeur" userData={{ itemName: 'Parachute Coeur' }}>

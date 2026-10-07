@@ -1209,8 +1209,7 @@ export function Character({
       {!isPreview && <HeartParachute
         ref={parachuteRef}
         visible={isFalling}
-        leftShoulder={parts.bones.lShoulder}
-        rightShoulder={parts.bones.rShoulder}
+        attachTo={parts.bones.spine2 ?? parts.bones.spine ?? parts.bones.hips}
         paused={isPaused}
       />}
       {!isPreview ? (
