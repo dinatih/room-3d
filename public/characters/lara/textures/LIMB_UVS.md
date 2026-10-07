@@ -129,6 +129,11 @@ l'animation de grand écart et `/tmp/lara-abduction-crotch.png` avec les cuisses
 pose montre la disparition du repli triangulaire et la fermeture du raccord
 central. Le défaut de ceinture signalé séparément reste à vérifier.
 
+La frame 333 met aussi en évidence une pointe sous la cuisse levée. Une seconde
+passe sur les poids du haut de `body_nude_legs` transfère progressivement vers
+le bassin l'influence excessive des cuisses, à partir du milieu de la cuisse.
+`/tmp/lara-split-333-crotch.png` permet de contrôler cette flexion.
+
 
 ## Pieds nus
 

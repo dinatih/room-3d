@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FOLDER = ROOT/'public/characters/lara'
 MARKER = 'lara_crotch_clothed_weights_v2'
 PREVIOUS_MARKER = 'lara_crotch_skin_weights_v1'
+LOWER_MARKER = 'lara_crotch_lower_crease_v1'
 
 
 def smoothstep(value):
@@ -18,8 +19,8 @@ def smoothstep(value):
 
 def main():
     bpy.ops.wm.open_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
+    bones = next(o for o in bpy.data.objects if o.type=='ARMATURE').data.bones
     if not bpy.context.scene.get(MARKER):
-        bones = next(o for o in bpy.data.objects if o.type=='ARMATURE').data.bones
         left,right = (bones['leg_'+side+'_thigh'].head_local for side in ('left','right'))
         center = (left.x+right.x)/2
         radius = (left.x-right.x)/2
@@ -70,6 +71,46 @@ def main():
         bpy.context.scene[PREVIOUS_MARKER] = True
         bpy.context.scene[MARKER] = True
         bpy.context.preferences.filepaths.save_version = 0
+        bpy.ops.wm.save_as_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
+    if not bpy.context.scene.get(LOWER_MARKER):
+        obj=bpy.data.objects['body_nude_legs']
+        left,right=(bones['leg_'+side+'_thigh'].head_local for side in ('left','right'))
+        center=(left.x+right.x)/2
+        radius=(left.x-right.x)/2
+        hip_z=(left.z+right.z)/2
+        knee_z=bones['leg_left_knee'].head_local.z
+        crease_z=(hip_z+knee_z)/2
+        crotch_z=bones['pelvis'].tail_local.z
+        groups={g.index:g.name for g in obj.vertex_groups}
+        changed=0
+        for vertex in obj.data.vertices:
+            blend=(1.-smoothstep(abs(vertex.co.x-center)/radius))*smoothstep((vertex.co.z-crease_z)/(crotch_z-crease_z))
+            if blend==0:continue
+            weights={groups[g.group]:g.weight for g in vertex.groups if g.weight>0}
+            thigh_names=('leg_left_thigh','leg_right_thigh')
+            total_thigh=sum(weights.get(name,0.) for name in thigh_names)
+            if total_thigh==0:continue
+            fraction=smoothstep((vertex.co.x-right.x)/(left.x-right.x))
+            old_fraction=weights.get(thigh_names[0],0.)/total_thigh
+            fraction=old_fraction*(1.-blend)+fraction*blend
+            retained=total_thigh*(1.-blend)
+            weights[thigh_names[0]]=retained*fraction
+            weights[thigh_names[1]]=retained*(1.-fraction)
+            weights['pelvis']=weights.get('pelvis',0.)+total_thigh*blend
+            for side in ('left','right'):
+                knee='leg_'+side+'_knee'
+                extra=weights.get(knee,0.)*blend
+                weights[knee]=weights.get(knee,0.)-extra
+                weights['pelvis']+=extra
+            for group in obj.vertex_groups:group.remove([vertex.index])
+            for bone,weight in weights.items():
+                if weight>0:
+                    if bone not in obj.vertex_groups:obj.vertex_groups.new(name=bone)
+                    obj.vertex_groups[bone].add([vertex.index],weight,'REPLACE')
+            changed+=1
+        print('Corrected lower crotch weights',changed,'vertices',flush=True)
+        bpy.context.scene[LOWER_MARKER]=True
+        bpy.context.preferences.filepaths.save_version=0
         bpy.ops.wm.save_as_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
     spec = importlib.util.spec_from_file_location('limbs',ROOT/'scripts/separate_lara_limb_uvs.py')
     limbs = importlib.util.module_from_spec(spec)

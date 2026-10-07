@@ -180,7 +180,7 @@ try {
       }
       window.detailLara(1,1);
     };
-    window.splitLara=async()=>{
+    window.splitLara=async(frame=770)=>{
       const {loader}=window.laraChecks;
       const source=await loader.loadAsync('/animations/yoga/anim_yoga_split_pose_a.glb');
       const {retargetClip}=await import('/src/features/scene/retargeting/index.ts');
@@ -188,7 +188,7 @@ try {
       for(const [bone,position,quaternion,scale] of entry.restBones){bone.position.copy(position);bone.quaternion.copy(quaternion);bone.scale.copy(scale);}
       entry.scene.updateMatrixWorld(true);source.scene.updateMatrixWorld(true);
       const clip=retargetClip(source.animations[0],entry.scene,source.scene);
-      const mixer=new THREE.AnimationMixer(entry.scene);mixer.clipAction(clip).play();mixer.setTime(770/30);
+      const mixer=new THREE.AnimationMixer(entry.scene);mixer.clipAction(clip).play();mixer.setTime(frame/30);
       entry.scene.updateMatrixWorld(true);entry.scene.traverse(n=>{if(n.isSkinnedMesh)n.skeleton.update();});
       view.children.filter(n=>n.getObjectByName('arm_left_elbow')).forEach(n=>{n.visible=n===entry.scene;});
       const pelvis=entry.scene.getObjectByName('pelvis').getWorldPosition(new THREE.Vector3());
@@ -273,6 +273,8 @@ try {
   await page.evaluate(()=>window.nudeLara());
   await page.evaluate(()=>window.splitLara());
   await page.screenshot({path:'/tmp/lara-split-crotch.png'});
+  await page.evaluate(()=>window.splitLara(333));
+  await page.screenshot({path:'/tmp/lara-split-333-crotch.png'});
   await page.evaluate(()=>window.abductLara());
   await page.screenshot({path:'/tmp/lara-abduction-crotch.png'});
   assert.deepEqual(errors,[]);
