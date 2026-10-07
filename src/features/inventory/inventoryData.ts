@@ -308,15 +308,11 @@ export const INVENTORY: InventoryItem[] = [
 
 import { CHARACTERS } from '@features/scene/characterConfig';
 
-const sortedCharacters = [...CHARACTERS].sort((a, b) => {
-  const priority = ['xbot', 'native'];
-  const aIdx = priority.indexOf(a.id);
-  const bIdx = priority.indexOf(b.id);
-  if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-  if (aIdx !== -1) return -1;
-  if (bIdx !== -1) return 1;
-  return 0;
-});
+const sortedCharacters = [
+  ...CHARACTERS.filter(char => char.isLara !== false),
+  ...CHARACTERS.filter(char => char.id === 'xbot'),
+  ...CHARACTERS.filter(char => char.isLara === false && char.id !== 'xbot'),
+];
 
 sortedCharacters.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
