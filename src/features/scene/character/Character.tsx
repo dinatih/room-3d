@@ -1179,7 +1179,7 @@ export function Character({
         <primitive ref={modelRef} object={scene} />
       </group>
 
-      {isLara && <CharacterPendant
+      {isLara && id !== 'romana' && variant !== 'romana' && <CharacterPendant
         ref={pendantRef}
         neck={parts.bones.neck}
         scene={scene}

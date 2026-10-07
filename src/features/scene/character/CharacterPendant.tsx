@@ -51,6 +51,7 @@ export const CharacterPendant = forwardRef<CharacterPendantHandle, Props>(functi
     const resources = getPendantResources();
     for (const geometry of [resources.body, resources.bail]) {
       const mesh = new THREE.Mesh(geometry, resources.steel);
+      mesh.userData.isPendant = true;
       mesh.position.y = -BAIL_Y;
       pendant.add(mesh);
     }

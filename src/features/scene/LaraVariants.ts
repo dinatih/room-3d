@@ -79,7 +79,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
   model.traverse(node => {
     if ((node as THREE.Mesh).isMesh) {
-      if (node.userData && node.userData.isCustomHair) return; // Skip custom hair meshes
+      if (node.userData?.isCustomHair || node.userData?.isPendant) return; // Preserve hair and silver jewelry
       const mesh = node as THREE.Mesh;
       const meshName = mesh.name.toLowerCase();
       if (meshName.includes('body_nude') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) return; // Preserve pristine nude textures
@@ -1156,7 +1156,7 @@ export function applyLaraRealisticTextures(model: THREE.Object3D, realistic: boo
   model.traverse(node => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh) return;
-    if (mesh.userData?.isCustomHair || mesh.userData?.isWigRoot) return;
+    if (mesh.userData?.isCustomHair || mesh.userData?.isWigRoot || mesh.userData?.isPendant) return;
 
     const meshName = (mesh.name || '').toLowerCase();
     const mat = mesh.material;
