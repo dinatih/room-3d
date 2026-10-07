@@ -1,17 +1,14 @@
 /**
  * doorObstacles.ts — Moteur géométrique de détection de contact et de butée d'obstacles pour les portes.
  * 
- * Calcule l'angle maximal d'ouverture avant collision avec :
- * 1. Meubles statiques (Kallax SE, congélateur CHiQ, cloisons)
- * 2. Meubles dynamiques du HoverMenu (Air Performer, chaises Smörkull, bureaux)
- * 3. Personnages PNJ en mouvement ou stationnaires (cameraState.positions)
+ * Calcule la butée des meubles et l'angle nécessaire aux personnages présents.
  *
  * Fournit également l'état dynamique des battants pour l'évitement PNJ (agentAvoidance).
  */
 
 import { cameraState } from './cameraState';
 import { getActiveFurnitureObstacles } from './ai/furnitureObstacles';
-import { ROOM_W } from './wallData';
+import { ROOM_W, pX, pZ, DiagWall } from './wallData';
 
 export interface CircleObstacle {
   x: number;
@@ -46,9 +43,11 @@ export interface DoorConfig {
  * État partagé des battants mobiles pour synchronisation inter-systèmes (PNJ, debug).
  */
 export const doorCollisionState = {
-  living: { angle: 0, isOpen: false, pivot: { x: 284.5, z: 403.6 }, length: 83, normal: { x: 0, z: -1 } },
-  glassRight: { angle: 0, isOpen: false, pivot: { x: 252.5, z: 0 }, length: 75, normal: { x: 0, z: 1 } },
-  glassLeft: { angle: 0, isOpen: false, pivot: { x: 102.5, z: 0 }, length: 75, normal: { x: 0, z: 1 } },
+  living: { angle: 0 },
+  bath: { angle: 0 },
+  entry: { angle: 0 },
+  glassRight: { angle: 0 },
+  glassLeft: { angle: 0 },
 };
 
 /**
@@ -216,12 +215,10 @@ export interface DoorDynamicsResult {
 }
 
 /**
- * Calcule dynamiquement les contraintes angulaires d'une porte (angle max autorisé et poussée PNJ)
- * en évitant strictement l'effet d'aspiration lorsqu'une porte est déjà ouverte.
+ * Calcule la butée des meubles et la place nécessaire au passage des personnages.
  */
 export function computeDoorDynamics(
   door: DoorConfig,
-  currentAngle: number = 0
 ): DoorDynamicsResult {
   // 1. Meubles statiques massifs (butée stricte infranchissable)
   let furnitureMaxAngle = door.maxAngle;
@@ -249,72 +246,39 @@ export function computeDoorDynamics(
     }
   }
 
-  let minAllowed = furnitureMaxAngle;
-  let maxPush = 0;
-
-  // 3. Personnages PNJ actifs (cameraState.positions)
-  const npcs = cameraState.positions;
-  for (const id in npcs) {
-    const p = npcs[id];
-    if (!p) continue;
+  let push = 0;
+  for (const id in cameraState.positions) {
+    const p = cameraState.positions[id];
+    const bodyRadius = id === 'robin' ? 7.5 : id === 'shiba' ? 20 : 28;
+    const height = id === 'robin' ? 15 : id === 'shiba' ? 40 : 173.4;
+    if (p.y > door.yMax || p.y + height < door.yMin) continue;
 
     const vx = p.x - door.pivot.x;
     const vz = p.z - door.pivot.z;
-    const v0 = vx * door.closedDir.x + vz * door.closedDir.z;
-    const vPerp = vx * door.openNormal.x + vz * door.openNormal.z;
-    const dist = Math.hypot(v0, vPerp);
-    const rEff = 28 + door.thickness / 2 + door.margin; // 28 cm rayon PNJ
+    const along = vx * door.closedDir.x + vz * door.closedDir.z;
+    const across = vx * door.openNormal.x + vz * door.openNormal.z;
+    const clearance = bodyRadius + door.thickness / 2 + door.margin;
+    const distance = Math.hypot(along, across);
+    if (along < -clearance || along > door.length + clearance || distance > door.length + clearance) continue;
 
-    if (dist > door.length + rEff || dist < 5) continue;
-
-    const alpha = Math.atan2(vPerp, v0);
-    const sinBeta = Math.min(1, rEff / dist);
-    const beta = Math.asin(sinBeta);
-
-    const contactFront = Math.max(0, alpha - beta);
-    const contactBack = alpha + beta;
-
-    // A. Blocage et refoulement dynamique de la porte :
-    // Un obstacle cylindrique occupe l'intervalle angulaire [contactFront, contactBack].
-    // 1. Si la porte est déjà ouverte au-delà de l'obstacle (currentAngle > contactBack - 0.02),
-    //    le battant a déjà franchi l'obstacle : l'obstacle est sur le côté fermé et n'aspire
-    //    JAMAIS la porte ouverte en arrière (supprime l'aspiration au chambranle et à la baie vitrée).
-    // 2. Si la porte est en deçà (currentAngle < contactFront) ou actuellement en pénétration
-    //    avec l'obstacle (contactFront <= currentAngle <= contactBack) :
-    //    l'obstacle contraint le débattement maximal à contactFront (effet repoussoir au congélateur).
-    if (contactFront <= furnitureMaxAngle && contactBack >= 0) {
-      if (currentAngle <= contactBack - 0.02) {
-        if (contactFront < minAllowed) {
-          minAllowed = contactFront;
-        }
-      }
-    }
-
-    // B. Poussée de la porte :
-    // Si le PNJ avance sur le battant depuis le côté fermé (v0 > 0 et alpha proche ou supérieur au battant)
-    if (alpha > 0 && v0 > 0 && v0 <= door.length + rEff) {
-      const angleDiff = alpha - currentAngle;
-      // Le PNJ est au contact du battant et pousse vers l'ouverture
-      if (angleDiff > -beta && angleDiff < beta + 0.3) {
-        const pushAngle = Math.min(furnitureMaxAngle, Math.max(0, contactBack));
-        if (pushAngle > maxPush) {
-          maxPush = pushAngle;
-        }
-      }
-    }
+    // On the opposite side the leaf starts moving as the body reaches its plane.
+    // On the opening side its outer tangent keeps the whole body clear until it exits.
+    const angle = across < 0
+      ? Math.asin(Math.min(1, Math.max(0, (clearance + across) / Math.max(clearance, along))))
+      : distance <= clearance
+        ? door.maxAngle
+        : Math.atan2(across, along) + Math.asin(Math.min(1, clearance / distance));
+    push = Math.max(push, Math.min(door.maxAngle, Math.max(0, angle)));
   }
 
-  return {
-    allowed: Math.max(0, minAllowed),
-    push: maxPush,
-  };
+  return { allowed: furnitureMaxAngle, push: Math.min(furnitureMaxAngle, push) };
 }
 
 /**
  * Calcule l'angle maximal autorisé pour une porte donnée compte tenu de tous les obstacles actifs.
  */
-export function computeDoorAllowedAngle(door: DoorConfig, currentAngle: number = 0): number {
-  return computeDoorDynamics(door, currentAngle).allowed;
+export function computeDoorAllowedAngle(door: DoorConfig): number {
+  return computeDoorDynamics(door).allowed;
 }
 
 /**
@@ -332,6 +296,28 @@ export const DOOR_CONFIGS = {
     yMax: 204,
     margin: 1.5,
   } satisfies DoorConfig,
+
+  bath: {
+    pivot: { x: pX('door-bath-n'), z: (pZ('door-bath-n') + pZ('door-bath-s')) / 2 + 83 / 2 },
+    length: 83, thickness: 4,
+    closedDir: { x: 0, z: -1 }, openNormal: { x: -1, z: 0 },
+    maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5,
+  } satisfies DoorConfig,
+
+  entry: (() => {
+    const center = DiagWall.p(DiagWall.door.start + DiagWall.door.width / 2, 5);
+    const rotation = DiagWall.rotY - Math.PI / 2;
+    return {
+      pivot: {
+        x: center.x - DiagWall.door.width / 2 * Math.cos(rotation),
+        z: center.z + DiagWall.door.width / 2 * Math.sin(rotation),
+      },
+      length: 90, thickness: 4,
+      closedDir: { x: Math.cos(rotation), z: -Math.sin(rotation) },
+      openNormal: { x: Math.sin(rotation), z: Math.cos(rotation) },
+      maxAngle: 2 * Math.PI / 3, yMin: 0, yMax: 204, margin: 1.5,
+    } satisfies DoorConfig;
+  })(),
 
   glassRight: {
     pivot: { x: 252.5, z: 0 },

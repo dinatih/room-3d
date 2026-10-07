@@ -95,10 +95,10 @@ const ACTIONS: Record<string, ActionDef> = {
   ...POSITION_ACTIONS,
 
   eastGlassDoor: {
-    btnLabel: 'Ouvrir / Fermer Droit',
+    btnLabel: 'Pousser battant droit',
     toggleKey: 'eastGlassDoor'
   },
-  glassDoorLeftOpen: { btnLabel: 'Ouvrir / Fermer Gauche', toggleKey: 'glassDoorV2LeftOpen' },
+  glassDoorLeftOpen: { btnLabel: 'Pousser battant gauche', toggleKey: 'glassDoorV2LeftOpen' },
   glassDoorShutter: {
     btnLabel: () => {
       const pos = useSceneStore.getState().furniture.glassDoorV2ShutterPos;
@@ -106,9 +106,9 @@ const ACTIONS: Record<string, ActionDef> = {
     },
     toggleKey: 'glassDoorV2ShutterPos'
   },
-  entryDoor:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'entryDoor'     },
-  livingDoor:     { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'livingDoor'    },
-  bathroomDoor:   { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'bathroomDoor'  },
+  entryDoor:      { btnLabel: 'Pousser', toggleKey: 'entryDoor' },
+  livingDoor:     { btnLabel: 'Pousser', toggleKey: 'livingDoor' },
+  bathroomDoor:   { btnLabel: 'Pousser', toggleKey: 'bathroomDoor' },
   showerDoor:     { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'showerDoor'    },
   corrDoors:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'corrDoors'     },
   sdbClosetL:     { btnLabel: 'Ouvrir / Fermer Gauche', toggleKey: 'sdbClosetL' },

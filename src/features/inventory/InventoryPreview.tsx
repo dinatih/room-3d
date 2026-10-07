@@ -1085,15 +1085,18 @@ export function InventoryPreview({
             <div className="position-absolute end-0 top-0 mt-5 me-2 z-3 d-flex flex-column gap-1">
               {actionKeys.map(key => {
                 const labels = ACTION_LABELS[key] ?? ['Ouvrir', 'Fermer'], on = !!actionStates[key];
+                const passageDoor = ['entry-door-toggle', 'living-door-toggle', 'bathroom-door-toggle', 'east-glass-door-toggle'].includes(key);
                 return (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setActionStates(s => ({ ...s, [key]: !on }))}
-                    className={`btn btn-sm ${on ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
+                    onClick={() => passageDoor
+                      ? document.dispatchEvent(new CustomEvent('door-push', { detail: { key } }))
+                      : setActionStates(s => ({ ...s, [key]: !on }))}
+                    className={`btn btn-sm ${on && !passageDoor ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
                     style={{ fontSize: 11 }}
                   >
-                    {on ? labels[1] : labels[0]}
+                    {on && !passageDoor ? labels[1] : labels[0]}
                   </button>
                 );
               })}

@@ -1012,7 +1012,6 @@ export function buildSmartObjectInstructionSequence(
   if (objectId === 'kallax-ne') {
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-      { type: 'INTERACT', smartObjectId: obj.id, slotId: slot.slotId, triggerEventKey: 'eastGlassDoor', triggerTargetState: false, duration: 0.5, rotY: Math.PI },
       baseInstruction
     ];
   }

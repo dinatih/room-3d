@@ -117,10 +117,10 @@ export function computeSteeringVector(
   // ── 3. Évitement des battants de portes ouverts ──
   const isDoorCollisionsEnabled = isFurnitureCollisionsEnabled;
   if (isDoorCollisionsEnabled) {
-    for (const key of ['living', 'glassRight', 'glassLeft'] as const) {
+    for (const key of ['living', 'bath', 'entry', 'glassRight', 'glassLeft'] as const) {
       const d = doorCollisionState[key];
       const cfg = DOOR_CONFIGS[key];
-      if (!d.isOpen || Math.abs(d.angle) < 0.1) continue;
+      if (Math.abs(d.angle) < 0.1) continue;
 
       const angle = Math.abs(d.angle);
       const cosA = Math.cos(angle);

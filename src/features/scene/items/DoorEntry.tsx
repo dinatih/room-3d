@@ -7,6 +7,8 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
+import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
+import { useDoorImpulse } from './useDoorImpulse';
 
 export const ENTRY_W = 90;
 const W  = ENTRY_W;
@@ -79,10 +81,10 @@ const metalHandleMaterial = new THREE.MeshStandardMaterial({ color: '#999999', m
 const knobMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', metalness: 0.3, roughness: 0.4 });
 const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.85, metalness: 0.05 });
 
-export function DoorEntry({ actionState, onSize }: SceneItemProps) {
+export function DoorEntry({ onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
-  const isOpen  = actionState['entry-door-toggle'] ?? false;
   const { invalidate } = useThree();
+  const impulse = useDoorImpulse('entry-door-toggle', DOOR_CONFIGS.entry.maxAngle);
 
   const frames = useEntryFrameGeo();
   const handle = useHandleGeo();
@@ -91,13 +93,15 @@ export function DoorEntry({ actionState, onSize }: SceneItemProps) {
     onSize(new THREE.Vector3(W + FW * 2, H + FW, WW));
   }, []);
 
-  useFrame(() => {
-    const target = isOpen ? -(2 * Math.PI / 3) : 0;
+  useFrame((_, delta) => {
+    const { allowed, push } = computeDoorDynamics(DOOR_CONFIGS.entry);
+    const target = -Math.min(allowed, Math.max(push, impulse(delta)));
     const current = doorRef.current.rotation.y;
+    doorCollisionState.entry.angle = current;
     if (current === target) return;
-    const delta = target - current;
-    if (Math.abs(delta) > 0.001) {
-      doorRef.current.rotation.y += delta * 0.12;
+    const difference = target - current;
+    if (Math.abs(difference) > 0.001) {
+      doorRef.current.rotation.y += difference * Math.min(1, 10 * delta);
       invalidate();
     } else {
       doorRef.current.rotation.y = target;

@@ -58,10 +58,6 @@ export function dispatchKey(key: string) {
 // ── Types d'état ─────────────────────────────────────────────────────────────
 
 export interface FurnitureState {
-  eastGlassDoor:     boolean;
-  entryDoor:    boolean;
-  livingDoor:   boolean;
-  bathroomDoor: boolean;
   corrDoors:    boolean;
   sdbClosetL:   boolean;
   sdbClosetR:   boolean;
@@ -77,7 +73,6 @@ export interface FurnitureState {
   tvOn:           boolean;
   sofaArmLeft:    boolean;
   sofaArmRight:   boolean;
-  glassDoorV2LeftOpen: boolean;
   glassDoorV2ShutterPos: number;
   mackaparDoors: boolean;
   showerDoor: boolean;

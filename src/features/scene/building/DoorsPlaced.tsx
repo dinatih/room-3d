@@ -15,11 +15,6 @@ const DOOR_W_ENTRY = 90;
 export function DoorsPlaced() {
   const layers = useSceneStore(state => state.layers);
   const as = useFurnitureToggles([
-    'east-glass-door-toggle',
-    'living-door-toggle',
-    'bathroom-door-toggle',
-    'entry-door-toggle',
-    'glass-door-v2-left-open',
     'glass-door-v2-shutter-pos',
   ]);
 

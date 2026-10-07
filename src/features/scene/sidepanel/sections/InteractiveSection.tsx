@@ -34,6 +34,16 @@ export function InteractiveSection({
 }: InteractiveSectionProps) {
   const furniture = useSceneStore(state => state.furniture);
   const toggleFurniture = useSceneStore(state => state.toggleFurniture);
+  const triggerAction = useSceneStore(state => state.triggerAction);
+
+  const doorPushBtn = (label: string, key: string) => (
+    <button
+      className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
+      onClick={() => triggerAction(key)}
+    >
+      <span>{label}</span><span className="badge bg-secondary">Pousser</span>
+    </button>
+  );
 
   const triggerBtn = (label: string, actionKey: string, badgeLabel = 'Action') => {
     return (
@@ -79,12 +89,12 @@ export function InteractiveSection({
   return (
     <div className="d-flex flex-column bg-transparent">
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">PORTES & FENÊTRES</div>
-      {furnitureBtn('Porte Entrée', 'entryDoor', 'OUVERT', 'FERMÉ')}
-      {furnitureBtn('Porte Séjour', 'livingDoor', 'OUVERT', 'FERMÉ')}
-      {furnitureBtn('Porte SDB', 'bathroomDoor', 'OUVERT', 'FERMÉ')}
+      {doorPushBtn('Porte Entrée', 'entryDoor')}
+      {doorPushBtn('Porte Séjour', 'livingDoor')}
+      {doorPushBtn('Porte SDB', 'bathroomDoor')}
       {furnitureBtn('Porte Douche', 'showerDoor', 'OUVERT', 'FERMÉ')}
-      {furnitureBtn('Baie Vitrée Est', 'eastGlassDoor', 'OUVERT', 'FERMÉ')}
-      {furnitureBtn('Baie Vitrée Ouest', 'glassDoorV2LeftOpen', 'OUVERT', 'FERMÉ')}
+      {doorPushBtn('Baie Vitrée Est', 'eastGlassDoor')}
+      {doorPushBtn('Baie Vitrée Ouest', 'glassDoorV2LeftOpen')}
       {furnitureBtn('Volets', 'glassDoorV2ShutterPos', 'ON', 'OFF', v => typeof v === 'number' ? (v === 0 ? 'OUVERT' : v === 100 ? 'FERMÉ' : `${v}%`) : `${v}%`)}
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">PLACARDS</div>

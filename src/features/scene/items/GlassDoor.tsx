@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 import { computeDoorDynamics, DOOR_CONFIGS, doorCollisionState } from '../doorObstacles';
+import { useDoorImpulse } from './useDoorImpulse';
 
 const W_TOTAL   = 160;
 const SILL_H    = 20;
@@ -126,14 +127,14 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   const shutterPercentRef = useRef(0);
   const rightRotRef = useRef(0);
   const leftRotRef = useRef(0);
+  const rightImpulse = useDoorImpulse('east-glass-door-toggle', DOOR_CONFIGS.glassRight.maxAngle);
+  const leftImpulse = useDoorImpulse('glass-door-v2-left-open', DOOR_CONFIGS.glassLeft.maxAngle);
 
   const staticFrames = useStaticFrameGeo();
   const panelFrameGeo = usePanelFrameGeo(W_TOTAL / 2 - FRAME, 190);
   const hingeGeo = useHingeGeo();
 
-  const stateRef = useRef({ isOpenRight: false, isOpenLeft: false, targetShutter: 0 });
-  stateRef.current.isOpenRight = !!actionState['east-glass-door-toggle'];
-  stateRef.current.isOpenLeft = !!actionState['glass-door-v2-left-open'];
+  const stateRef = useRef({ targetShutter: 0 });
   stateRef.current.targetShutter = actionState['glass-door-v2-shutter-pos'] ?? 0;
 
   useLayoutEffect(() => {
@@ -142,26 +143,14 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
   useFrame((_, delta) => {
     const s = stateRef.current;
-    const curRight = Math.abs(rightRotRef.current);
-    const curLeft = Math.abs(leftRotRef.current);
-    const dynRight = computeDoorDynamics(DOOR_CONFIGS.glassRight, curRight);
-    const dynLeft = computeDoorDynamics(DOOR_CONFIGS.glassLeft, curLeft);
-
-    const actualLeftOpen = (s.isOpenRight && s.isOpenLeft) || dynLeft.push > 0.05;
-    const isRightOpenEnough = rightRotRef.current > 0.25;
-    const leftTarget = (actualLeftOpen && isRightOpenEnough)
-      ? -(s.isOpenLeft ? dynLeft.allowed : dynLeft.push)
-      : 0;
-    const isLeftOpen = Math.abs(leftRotRef.current) > 0.05;
-    const rightTarget = (s.isOpenRight || dynRight.push > 0.05)
-      ? (s.isOpenRight ? dynRight.allowed : dynRight.push)
-      : (isLeftOpen ? dynRight.allowed : 0);
+    const dynRight = computeDoorDynamics(DOOR_CONFIGS.glassRight);
+    const dynLeft = computeDoorDynamics(DOOR_CONFIGS.glassLeft);
+    const leftTarget = -Math.min(dynLeft.allowed, Math.max(dynLeft.push, leftImpulse(delta)));
+    const rightTarget = Math.min(dynRight.allowed, Math.max(dynRight.push, rightImpulse(delta)));
     const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
 
     doorCollisionState.glassRight.angle = rightRotRef.current;
-    doorCollisionState.glassRight.isOpen = s.isOpenRight;
     doorCollisionState.glassLeft.angle = leftRotRef.current;
-    doorCollisionState.glassLeft.isOpen = actualLeftOpen;
 
     if (leftRotRef.current === leftTarget && rightRotRef.current === rightTarget && shutterPercentRef.current === targetShutter) {
       return;

@@ -30,9 +30,7 @@ export const AUTONOMOUS_SMART_OBJECTS: string[] = new Proxy([] as string[], {
 export const ACTION_FULL_TOUR: AgentInstruction[] = [
   // ── DÉPART : Porte d'entrée (côté couloir extérieur sud) ──
   { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
-  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.5 },
   { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
-  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },
 
   // ── ÉTAPE 1 : Couloir Sud-Est ──
   ...buildSmartObjectInstructionSequence('corridor-closet'),
@@ -81,9 +79,7 @@ export const ACTION_FULL_TOUR: AgentInstruction[] = [
 export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
   // ── 1. Arrivée et entrée ──
   { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
-  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.5 },
   { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
-  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },
 
   // ── 2. Inspection Salle de bain ──
   { type: 'MOVE_TO', targetWaypointId: 'bathroom-center' },
@@ -99,9 +95,7 @@ export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
 
   // ── 5. Sortie et direction entrée couloir Bâtiment B (attente 1min30 avant prochaine ronde) ──
   { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
-  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.5 },
   { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
-  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },
   { type: 'MOVE_TO', smartObjectId: 'building-b-corridor-end', slotId: 'visit' },
   { type: 'WAIT', duration: 90.0, animation: 'texting-while-standing' }
 ];

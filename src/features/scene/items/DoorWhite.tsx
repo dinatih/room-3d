@@ -9,6 +9,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 import { WALL_THICKNESS, PARTITION_THICKNESS } from '../wallData';
 import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState, type DoorConfig } from '../doorObstacles';
+import { useDoorImpulse } from './useDoorImpulse';
 
 const W  = 83;     // Largeur panneau (ouvrant de 83 cm)
 const H  = 204;    // Hauteur standard
@@ -132,11 +133,10 @@ interface DoorImplProps {
   handleX: number;
   mancheDir: number;
   openAngle: number;
-  actionState: Record<string, any>;
   onSize: (v: THREE.Vector3) => void;
   wallThickness?: number;
-  doorConfig?: DoorConfig;
-  doorStateKey?: 'living';
+  doorConfig: DoorConfig;
+  doorStateKey: 'living' | 'bath';
 }
 
 const frameMaterial = new THREE.MeshStandardMaterial({ color: '#f0ede8', roughness: 0.35 });
@@ -151,15 +151,14 @@ function DoorImpl({
   handleX,
   mancheDir,
   openAngle,
-  actionState,
   onSize,
   wallThickness = WALL_THICKNESS,
   doorConfig,
   doorStateKey,
 }: DoorImplProps) {
   const doorRef = useRef<THREE.Group>(null!);
-  const isOpen = actionState[actionKey] ?? false;
   const { invalidate } = useThree();
+  const impulse = useDoorImpulse(actionKey, doorConfig.maxAngle);
 
   const frameGeo  = useDoorFrameGeo(wallThickness);
   const handleGeo = useHandleGeo(mancheDir);
@@ -168,30 +167,15 @@ function DoorImpl({
     onSize(new THREE.Vector3(W, H, wallThickness + 2));
   }, [wallThickness]);
 
-  useFrame(() => {
-    let target = 0;
+  useFrame((_, delta) => {
     const currentSigned = doorRef.current.rotation.y;
-    const currentAbs = Math.abs(currentSigned);
-
-    if (doorConfig) {
-      const { allowed, push } = computeDoorDynamics(doorConfig, currentAbs);
-      if (isOpen) {
-        target = Math.sign(openAngle) * allowed;
-      } else if (push > 0.05) {
-        target = Math.sign(openAngle) * push;
-      }
-    } else {
-      target = isOpen ? openAngle : 0;
-    }
-
-    if (doorStateKey && doorCollisionState[doorStateKey]) {
-      doorCollisionState[doorStateKey].angle = currentSigned;
-      doorCollisionState[doorStateKey].isOpen = isOpen;
-    }
+    const { allowed, push } = computeDoorDynamics(doorConfig);
+    const target = Math.sign(openAngle) * Math.min(allowed, Math.max(push, impulse(delta)));
+    doorCollisionState[doorStateKey].angle = currentSigned;
     if (currentSigned === target) return;
-    const delta = target - currentSigned;
-    if (Math.abs(delta) > 0.001) {
-      doorRef.current.rotation.y += delta * 0.12;
+    const difference = target - currentSigned;
+    if (Math.abs(difference) > 0.001) {
+      doorRef.current.rotation.y += difference * Math.min(1, 10 * delta);
       invalidate();
     } else {
       doorRef.current.rotation.y = target;
@@ -221,7 +205,7 @@ function DoorImpl({
   );
 }
 
-export function DoorLiving({ actionState, onSize }: SceneItemProps) {
+export function DoorLiving({ onSize }: SceneItemProps) {
   return (
     <DoorImpl
       actionKey="living-door-toggle"
@@ -229,19 +213,21 @@ export function DoorLiving({ actionState, onSize }: SceneItemProps) {
       openAngle={-Math.PI / 2}
       doorConfig={DOOR_CONFIGS.living}
       doorStateKey="living"
-      actionState={actionState} onSize={onSize}
+      onSize={onSize}
       wallThickness={PARTITION_THICKNESS}
     />
   );
 }
 
-export function DoorBath({ actionState, onSize }: SceneItemProps) {
+export function DoorBath({ onSize }: SceneItemProps) {
   return (
     <DoorImpl
       actionKey="bathroom-door-toggle"
       pivotX={-W / 2}  panelX={W / 2}    handleX={W - 15}    mancheDir={-1}
       openAngle={Math.PI / 2}
-      actionState={actionState} onSize={onSize}
+      doorConfig={DOOR_CONFIGS.bath}
+      doorStateKey="bath"
+      onSize={onSize}
       wallThickness={PARTITION_THICKNESS}
     />
   );

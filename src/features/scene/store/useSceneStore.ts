@@ -127,10 +127,6 @@ interface SceneStore {
 }
 
 const initialFurniture: FurnitureState = {
-  eastGlassDoor: false,
-  entryDoor: false,
-  livingDoor: false,
-  bathroomDoor: false,
   corrDoors: false,
   sdbClosetL: false,
   sdbClosetR: false,
@@ -144,7 +140,6 @@ const initialFurniture: FurnitureState = {
   freezerOpen: false,
   fridge: false,
   tvOn: false,
-  glassDoorV2LeftOpen: false,
   glassDoorV2ShutterPos: 0,
   sofaArmLeft: true,
   sofaArmRight: false,
@@ -239,11 +234,6 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
     'shower-door-toggle': 'showerDoor',
     'cbn-west-toggle': 'cbnWest',
     'cbn-east-toggle': 'cbnEast',
-    'east-glass-door-toggle': 'eastGlassDoor',
-    'entry-door-toggle': 'entryDoor',
-    'living-door-toggle': 'livingDoor',
-    'bathroom-door-toggle': 'bathroomDoor',
-    'glass-door-v2-left-open': 'glassDoorV2LeftOpen',
     'glass-door-v2-shutter-pos': 'glassDoorV2ShutterPos',
     'bermuda-grass': 'bermudaGrass',
     'bermuda-grass-toggle': 'bermudaGrass',
@@ -400,16 +390,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
         const next = cur === 'high' ? 'low' : cur === 'low' ? 'procedural' : cur === 'procedural' ? 'hidden' : 'high';
         nextFurniture = { ...state.furniture, dronaMode: next };
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: next } }));
-      } else if (key === 'glassDoorV2LeftOpen') {
-        const nextLeft = !state.furniture.glassDoorV2LeftOpen;
-        const nextRight = nextLeft ? true : state.furniture.eastGlassDoor;
-        nextFurniture = {
-          ...state.furniture,
-          glassDoorV2LeftOpen: nextLeft,
-          eastGlassDoor: nextRight,
-        };
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: nextLeft } }));
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'eastGlassDoor', value: nextRight } }));
       } else {
         const val = !state.furniture[key];
         nextFurniture = { ...state.furniture, [key]: val };
@@ -564,6 +544,20 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   triggerAction: (key, targetState) => {
+    const doorPushKeys: Record<string, string> = {
+      eastGlassDoor: 'east-glass-door-toggle',
+      glassDoorV2LeftOpen: 'glass-door-v2-left-open',
+      entryDoor: 'entry-door-toggle',
+      livingDoor: 'living-door-toggle',
+      bathroomDoor: 'bathroom-door-toggle',
+    };
+    const doorPushKey = doorPushKeys[key];
+    if (doorPushKey) {
+      if (targetState === false) return;
+      document.dispatchEvent(new CustomEvent('door-push', { detail: { key: doorPushKey } }));
+      cameraState.invalidate?.();
+      return;
+    }
     if (key === 'bermuda-grass-toggle' || key === 'ground-type-cycle') {
       const order: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves', 'none'];
       set((state) => {
@@ -593,19 +587,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
           const cur = state.furniture.glassDoorV2ShutterPos;
           const next = cur === 0 ? 70 : cur === 70 ? 90 : cur === 90 ? 100 : 0;
           nextFurniture = { ...state.furniture, glassDoorV2ShutterPos: next };
-        } else if (fKey === 'glassDoorV2LeftOpen') {
-          const nextLeft = targetState !== undefined ? targetState : !state.furniture.glassDoorV2LeftOpen;
-          const nextRight = nextLeft ? true : state.furniture.eastGlassDoor;
-          nextFurniture = {
-            ...state.furniture,
-            glassDoorV2LeftOpen: nextLeft,
-            eastGlassDoor: nextRight
-          };
-          if (nextRight !== state.furniture.eastGlassDoor) {
-            setTimeout(() => {
-              document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'eastGlassDoor', value: nextRight } }));
-            }, 0);
-          }
         } else {
           const nextVal = targetState !== undefined ? targetState : !state.furniture[fKey];
           nextFurniture = { ...state.furniture, [fKey]: nextVal as any };
