@@ -50,7 +50,6 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   laraTopOff: false,
   laraBottomOff: false,
   laraShoes: true,
-  laraGloves: true,
   laraRealisticTextures: false,
   pillarsOnly: false,
   wallhack: false,

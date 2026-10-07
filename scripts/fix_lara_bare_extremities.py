@@ -1,12 +1,10 @@
-"""Trim hidden overlaps and join bare wrists/ankles to their existing skin rims."""
+"""Join bare feet to clothed ankles and clean the boot-covered calf UVs."""
 from pathlib import Path
 import bpy,bmesh,importlib.util,sys
 from mathutils import Vector
 sys.dont_write_bytecode=True
 ROOT=Path(__file__).resolve().parents[1]
 FOLDER=ROOT/'public/characters/lara'
-MARKER='lara_bare_extremity_rims_v1'
-WRIST_MARKER='lara_bare_wrist_weights_v2'
 
 
 def rims(obj):
@@ -54,37 +52,40 @@ def trim(obj,reference,axis,side,keep_positive):
     bm.normal_update();bm.to_mesh(obj.data);bm.free();obj.data.update()
 
 
-def match_wrist_weights():
-    """Give the bare hand rim the same elbow/wrist blend as the forearm rim."""
-    hands=bpy.data.objects['body_nude_hands'];arms=bpy.data.objects['arms']
-    arm_rims=rims(arms);hand_rims=rims(hands)
-    source=[v for v in arms.data.vertices if any((v.co-p).length<2**-23 for ring in arm_rims for p in ring)]
-    boundary=[v for v in hands.data.vertices if any((v.co-p).length<2**-23 for ring in hand_rims for p in ring)]
-    assert source and boundary
-    for vertex in boundary:
-        side=1 if vertex.co.x>0 else -1
-        nearest=min((v for v in source if v.co.x*side>0),key=lambda v:(v.co-vertex.co).length_squared)
-        weights={arms.vertex_groups[g.group].name:g.weight for g in nearest.groups}
-        assert weights and abs(sum(weights.values())-1)<2**-10
-        for group in hands.vertex_groups:group.remove([vertex.index])
-        for name,weight in weights.items():
-            hands.vertex_groups[name].add([vertex.index],weight,'REPLACE')
-    print('Matched bare wrist boundary weights',len(boundary),flush=True)
+def barefoot_legs():
+    """Reuse clean neighboring skin UVs on the strip formerly hidden by boots."""
+    original=bpy.data.objects['body_legs']
+    obj=bpy.data.objects.get('body_legs_barefoot')
+    if obj is None:
+        obj=original.copy();obj.name='body_legs_barefoot'
+        bpy.context.collection.objects.link(obj)
+    obj.data=original.data.copy();obj.data.name='body_legs_barefoot'
+    mesh=obj.data;uv=mesh.uv_layers.active.data
+    bottom=min(v.co.z for v in mesh.vertices)
+    edge={v.index for v in mesh.vertices if abs(v.co.z-bottom)<2**-17}
+    affected=[f for f in mesh.polygons if any(i in edge for i in f.vertices)]
+    assert affected
+    upper=max(mesh.vertices[i].co.z for f in affected for i in f.vertices)
+    knee=bpy.data.objects['Armature'].data.bones['leg_left_knee'].head_local.z
+    skin=[]
+    for f in mesh.polygons:
+        for li in f.loop_indices:
+            co=mesh.vertices[mesh.loops[li].vertex_index].co
+            if upper<co.z<knee:
+                skin.append((co.copy(),uv[li].uv.copy()))
+    assert skin
+    for f in affected:
+        for li in f.loop_indices:
+            co=mesh.vertices[mesh.loops[li].vertex_index].co
+            if mesh.loops[li].vertex_index in edge:
+                candidates=(item for item in skin if item[0].x*co.x>0)
+                nearest=min(candidates,key=lambda item:(item[0].x-co.x)**2+(item[0].y-co.y)**2)
+                uv[li].uv=nearest[1]
+    print('Cleaned boot-hidden calf UVs',len(affected),'faces',flush=True)
 
 
 def main():
     bpy.ops.wm.open_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
-    if not bpy.context.scene.get(MARKER):
-        hands=bpy.data.objects['body_nude_hands']
-        for ring in rims(bpy.data.objects['arms']):
-            side=1 if sum(p.x for p in ring)>0 else -1
-            trim(hands,ring,0,side,side>0)
-        bpy.context.scene[MARKER]=True
-        bpy.context.preferences.filepaths.save_version=0
-        bpy.ops.wm.save_as_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
-    if not bpy.context.scene.get(WRIST_MARKER):
-        match_wrist_weights()
-        bpy.context.scene[WRIST_MARKER]=True
     # Rebuild from the original feet on each export, avoiding cumulative cuts.
     feet=bpy.data.objects['body_nude_feet']
     clothed=bpy.data.objects.get('body_bare_feet_clothed')
@@ -97,6 +98,7 @@ def main():
         if max(p.z for p in ring)<knee_z:
             side=1 if sum(p.x for p in ring)>0 else -1
             trim(clothed,ring,2,side,False)
+    barefoot_legs()
     bpy.context.preferences.filepaths.save_version=0
     bpy.ops.wm.save_as_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
     spec=importlib.util.spec_from_file_location('limbs',ROOT/'scripts/separate_lara_limb_uvs.py')

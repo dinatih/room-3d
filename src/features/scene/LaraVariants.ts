@@ -480,7 +480,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         }
 
         // Independent anatomical sides: Marissa left, Delphina right.
-        if (meshName === 'arms' || meshName === 'body_legs') {
+        if (meshName === 'arms' || meshName === 'body_legs' || meshName.startsWith('body_legs_barefoot')) {
           if (isMarissa) applyMarissaTattoos(mat);
           if (isDelphina) applyDelphinaTattoos(mat);
         }
@@ -1209,4 +1209,3 @@ export function applyLaraRealisticTextures(model: THREE.Object3D, realistic: boo
     });
   });
 }
-

@@ -35,6 +35,7 @@ export interface CharacterParts {
   torsoClothed: CharacterMeshPart[];
   torsoNude: CharacterMeshPart[];
   legsClothed: CharacterMeshPart[];
+  legsBarefoot: CharacterMeshPart[];
   legsNude: CharacterMeshPart[];
   bodyFull: CharacterMeshPart[];
 
@@ -121,6 +122,7 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
   const torsoClothed: CharacterMeshPart[] = [];
   const torsoNude: CharacterMeshPart[] = [];
   const legsClothed: CharacterMeshPart[] = [];
+  const legsBarefoot: CharacterMeshPart[] = [];
   const legsNude: CharacterMeshPart[] = [];
   const bodyFull: CharacterMeshPart[] = [];
 
@@ -237,6 +239,8 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
         torsoClothed.push({ mesh });
       } else if (name === 'body_nude_torso' || (name.includes('torso') && name.includes('nude')) || name.includes('5_body_torso')) {
         torsoNude.push({ mesh });
+      } else if (name.startsWith('body_legs_barefoot')) {
+        legsBarefoot.push({ mesh });
       } else if (name === 'shorts' || name === 'body_legs' || (name.includes('legs') && !name.includes('nude')) || name.includes('shorts')) {
         legsClothed.push({ mesh });
       } else if (name === 'body_nude_legs' || name === 'body_nude_panties' || (name.includes('legs') && name.includes('nude')) || name.includes('panties') || name.includes('5_body_legs') || name.includes('5_panties')) {
@@ -284,6 +288,7 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
     torsoClothed,
     torsoNude,
     legsClothed,
+    legsBarefoot,
     legsNude,
     bodyFull,
 
@@ -321,7 +326,6 @@ export interface ClothingAndAccessoriesOptions {
   laraTopOff: boolean;
   laraBottomOff: boolean;
   laraShoes: boolean;
-  laraGloves: boolean;
   showAccessories: boolean;
   laraPistols: boolean;
   equipment: { holster: boolean; pistols: boolean; backpack: boolean };
@@ -335,13 +339,15 @@ export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opt
   setPartVisibility(parts.boots, opts.laraShoes);
   setPartVisibility(parts.feet, !opts.laraShoes && isBottomNude);
   setPartVisibility(parts.feetClothed, !opts.laraShoes && !isBottomNude);
-  setPartVisibility(parts.gloves, opts.laraGloves);
-  setPartVisibility(parts.hands, !opts.laraGloves);
+  setPartVisibility(parts.gloves, true);
+  setPartVisibility(parts.hands, false);
 
   // Torso / Legs
   setPartVisibility(parts.torsoClothed, !isTopNude);
   setPartVisibility(parts.torsoNude, isTopNude);
   setPartVisibility(parts.legsClothed, !isBottomNude);
+  setPartVisibility(parts.legsClothed.filter(({ mesh }) => mesh.name === 'body_legs'), !isBottomNude && opts.laraShoes);
+  setPartVisibility(parts.legsBarefoot, !isBottomNude && !opts.laraShoes);
   setPartVisibility(parts.legsNude, isBottomNude);
   setPartVisibility(parts.bodyFull, !isTopNude && !isBottomNude);
 
@@ -531,5 +537,4 @@ export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D, charac
     });
   });
 }
-
 

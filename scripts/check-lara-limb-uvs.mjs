@@ -11,7 +11,7 @@ const before = await io.readBinary(execFileSync('git', ['show', 'HEAD:public/cha
 const after = await io.read('public/characters/lara/lara_native.glb');
 const oldNodes = before.getRoot().listNodes();
 const newNodes = after.getRoot().listNodes();
-assert.deepEqual(newNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')).map(n => n.getName()).sort(), oldNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')).map(n => n.getName()).sort());
+assert.deepEqual(newNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort(), oldNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')).map(n => n.getName()).sort());
 for (const old of oldNodes) {
   const node = newNodes.find(n => n.getName() === old.getName() && Boolean(n.getMesh()) === Boolean(old.getMesh()));
   for (const method of ['getTranslation', 'getRotation', 'getScale']) {
@@ -31,7 +31,7 @@ for (const old of oldNodes) {
     }
   }
 }
-for (const name of ['arms','body_legs','fingers','body_nude_legs','body_nude_hands','body_nude_feet']) {
+for (const name of ['arms','body_legs','body_legs_barefoot','fingers','body_nude_legs','body_nude_hands','body_nude_feet']) {
   const mesh = newNodes.find(n => n.getName() === name).getMesh();
   for (const primitive of mesh.listPrimitives()) {
     const pos = primitive.getAttribute('POSITION');
@@ -90,7 +90,7 @@ try {
       scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) {
         if (!mat.map || !mat.userData.__ownedCharacterMaterial) continue;
         const base=m.userData.__baseVariantMaterials?.find(b=>b.name===mat.name)?.map;
-        if (base && mat.map!==base && (m.name==='arms'||m.name==='body_legs'||mat.userData.lara_tattoo_projection)) {
+        if (base && mat.map!==base && (m.name==='arms'||m.name==='body_legs'||m.name.startsWith('body_legs_barefoot')||mat.userData.lara_tattoo_projection)) {
           materials.push({mesh:m.name,mat,base});
         }
       }});
@@ -100,13 +100,14 @@ try {
     const {extractCharacterParts,applyClothingAndAccessoriesVisibility}=await import('/src/features/scene/characterParts.ts');
     for (const {style,scene} of entries) {
       const parts=extractCharacterParts(scene);
-      for(const key of ['boots','feet','feetClothed','gloves','hands']) if(!parts[key].length) throw Error(`${style}: missing ${key}`);
-      for(const laraShoes of [true,false]) for(const laraGloves of [true,false])
+      for(const key of ['boots','feet','feetClothed','legsBarefoot','gloves','hands']) if(!parts[key].length) throw Error(`${style}: missing ${key}`);
+      for(const laraShoes of [true,false])
       for(const [laraNude,laraTopOff,laraBottomOff] of [[false,false,false],[false,true,false],[false,false,true],[true,false,false]]) {
-        applyClothingAndAccessoriesVisibility(parts,{laraShoes,laraGloves,laraNude,laraTopOff,laraBottomOff,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
-        for(const [key,visible] of [['boots',laraShoes],['feet',!laraShoes&&(laraNude||laraBottomOff)],['feetClothed',!laraShoes&&!laraNude&&!laraBottomOff],['gloves',laraGloves],['hands',!laraGloves],['torsoClothed',!laraNude&&!laraTopOff],['torsoNude',laraNude||laraTopOff],['legsClothed',!laraNude&&!laraBottomOff],['legsNude',laraNude||laraBottomOff]]) {
+        applyClothingAndAccessoriesVisibility(parts,{laraShoes,laraNude,laraTopOff,laraBottomOff,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
+        for(const [key,visible] of [['boots',laraShoes],['feet',!laraShoes&&(laraNude||laraBottomOff)],['feetClothed',!laraShoes&&!laraNude&&!laraBottomOff],['legsBarefoot',!laraShoes&&!laraNude&&!laraBottomOff],['gloves',true],['hands',false],['torsoClothed',!laraNude&&!laraTopOff],['torsoNude',laraNude||laraTopOff],['legsNude',laraNude||laraBottomOff]]) {
           if(parts[key].some(({mesh})=>mesh.visible!==visible)) throw Error(`${style}: incorrect ${key} visibility`);
         }
+        if(parts.legsClothed.some(({mesh})=>mesh.visible!==(mesh.name==='body_legs'?!laraNude&&!laraBottomOff&&laraShoes:!laraNude&&!laraBottomOff))) throw Error(`${style}: clothed legs visibility`);
       }
     }
     window.laraChecks={entries,THREE,variants,loader};
@@ -125,7 +126,7 @@ try {
   const changes=await page.evaluate(()=>window.laraChanges());
   for(const row of changes) {
     assert.equal(row.changes[row.style==='marissa'?1:0],0,`${row.style} ${row.mesh}: tattoo on opposite side`);
-    if(row.mesh==='arms'||row.mesh==='body_legs') assert(row.changes[row.style==='marissa'?0:1]>0);
+    if(row.mesh==='arms'||row.mesh==='body_legs'||row.mesh.startsWith('body_legs_barefoot')) assert(row.changes[row.style==='marissa'?0:1]>0);
   }
   console.log('Browser tattoo checks:',JSON.stringify(changes));
   await page.evaluate(() => {
@@ -145,7 +146,7 @@ try {
         n.restWorldPosition=n.getWorldPosition(new THREE.Vector3());
         if(n.isSkinnedMesh)n.frustumCulled=false;
       });
-      scene.traverse(m=>{if(m.isMesh) m.visible=['arms','body_legs','fingers','face','eyes','body_torso','shirt','shorts','boots','hair_base','braid'].includes(m.name);});
+      scene.traverse(m=>{if(m.isMesh) m.visible=['arms','body_legs','fingers','gloves','face','eyes','body_torso','shirt','shorts','boots','hair_base','braid'].includes(m.name);});
       const maps=[];scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) maps.push(mat.map);});
       variants.applyLaraRealisticTextures(scene,true);variants.applyLaraRealisticTextures(scene,false);
       let j=0;scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) {if(mat.map!==maps[j++]) throw Error('Realistic mode replaced tattoo texture');}});
@@ -226,9 +227,9 @@ try {
     };
     window.bareExtremitiesLara=()=>{
       view.traverse(m=>{if(m.isMesh){
-        if(m.name.startsWith('body_nude_hands')||m.name.startsWith('body_bare_feet_clothed'))m.visible=true;
+        if(m.name.startsWith('body_bare_feet_clothed')||m.name.startsWith('body_legs_barefoot'))m.visible=true;
         if(m.name.startsWith('body_nude_feet'))m.visible=false;
-        if(m.name.includes('gloves')||m.name.includes('fingers')||m.name.includes('boots'))m.visible=false;
+        if(m.name==='body_legs'||m.name.includes('boots'))m.visible=false;
       }});renderer.render(view,camera);
     };
     window.extremityDetailLara=(part)=>{
@@ -240,32 +241,16 @@ try {
       camera.left=-extent;camera.right=extent;camera.top=extent*800/1100;camera.bottom=-camera.top;camera.updateProjectionMatrix();
       camera.position.copy(target).add(new THREE.Vector3(0,1,3));camera.lookAt(target);renderer.render(view,camera);
     };
-    window.poseBareHandsLara=async()=>{
-      const entry=entries.find(e=>e.style==='marissa');
-      const source=await window.laraChecks.loader.loadAsync('/animations/combat/anim_pistol_idle.glb');
-      const {retargetClip}=await import('/src/features/scene/retargeting/index.ts');
-      for(const [bone,position,quaternion,scale] of entry.restBones){bone.position.copy(position);bone.quaternion.copy(quaternion);bone.scale.copy(scale);}
-      entry.scene.updateMatrixWorld(true);source.scene.updateMatrixWorld(true);
-      const clip=retargetClip(source.animations[0],entry.scene,source.scene);
-      const mixer=new THREE.AnimationMixer(entry.scene);mixer.clipAction(clip).play();mixer.setTime(1);
-      entry.scene.updateMatrixWorld(true);entry.scene.traverse(n=>{if(n.isSkinnedMesh)n.skeleton.update();});
-      view.children.filter(n=>n.getObjectByName('arm_left_elbow')).forEach(n=>n.visible=n===entry.scene);
-      const wrist=entry.scene.getObjectByName('arm_left_wrist').getWorldPosition(new THREE.Vector3());
-      camera.left=-.15;camera.right=.15;camera.top=.11;camera.bottom=-.11;camera.updateProjectionMatrix();
-      camera.position.copy(wrist).add(new THREE.Vector3(0,-1,3));camera.lookAt(wrist);renderer.render(view,camera);
-    };
-    window.nudeLara=()=>{view.traverse(m=>{if(m.isMesh) {if(m.name.startsWith('body_nude_legs')||m.name.startsWith('body_nude_feet')||m.name.startsWith('body_nude_torso')||m.name.startsWith('body_nude_panties')) m.visible=true; if(m.name.startsWith('body_bare_feet_clothed')||['body_legs','boots','shorts','body_torso','shirt'].includes(m.name)) m.visible=false;}});renderer.render(view,camera);};
+    window.nudeLara=()=>{view.traverse(m=>{if(m.isMesh) {if(m.name.startsWith('body_nude_legs')||m.name.startsWith('body_nude_feet')||m.name.startsWith('body_nude_torso')||m.name.startsWith('body_nude_panties')) m.visible=true; if(m.name.startsWith('body_bare_feet_clothed')||m.name.startsWith('body_legs_barefoot')||['body_legs','boots','shorts','body_torso','shirt'].includes(m.name)) m.visible=false;}});renderer.render(view,camera);};
   });
   await page.screenshot({path:'/tmp/lara-limbs-front.png'});
   await page.evaluate(()=>window.bareExtremitiesLara());
-  await page.screenshot({path:'/tmp/lara-no-shoes-no-gloves.png'});
-  const extremities=await page.evaluate(()=>window.laraChecks.entries.find(e=>e.style==='marissa').scene.children.flatMap(n=>{const names=[];n.traverse(m=>{if(m.isMesh&&(m.name.startsWith('body_nude_hands')||m.name.startsWith('body_bare_feet_clothed')))names.push(m.name);});return names;}));
+  await page.screenshot({path:'/tmp/lara-barefoot-gloves.png'});
+  const extremities=await page.evaluate(()=>window.laraChecks.entries.find(e=>e.style==='marissa').scene.children.flatMap(n=>{const names=[];n.traverse(m=>{if(m.isMesh&&m.name.startsWith('body_bare_feet_clothed'))names.push(m.name);});return names;}));
   for(const part of extremities){
     await page.evaluate(part=>window.extremityDetailLara(part),part);
     await page.screenshot({path:`/tmp/lara-${part}-bare.png`});
   }
-  await page.evaluate(()=>window.poseBareHandsLara());
-  await page.screenshot({path:'/tmp/lara-hands-pistol-pose.png'});
   await page.evaluate(()=>{window.restoreLara();window.turnLara(0,4);window.nudeLara();});
   await page.screenshot({path:'/tmp/lara-limbs-nude.png'});
   await page.evaluate(()=>window.turnLara(2,4));

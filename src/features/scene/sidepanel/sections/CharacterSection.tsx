@@ -418,7 +418,6 @@ export function CharacterSection({
       {layerBtn('pink',   'Enlever le haut 👚 (Alt+Z)', 'laraTopOff')}
       {layerBtn('pink',   'Enlever le bas 🩳 (Alt+C)', 'laraBottomOff')}
       {layerBtn('light',  'Chaussures Lara 👢', 'laraShoes')}
-      {layerBtn('light',  'Gants Lara 🧤', 'laraGloves')}
       {layerBtn('pink',   'Physique buste 💃', 'breastPhysics')}
       {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}

@@ -130,29 +130,26 @@ pose montre la disparition du repli triangulaire et la fermeture du raccord
 central. Le défaut de ceinture signalé séparément reste à vérifier.
 
 
-## Chaussures et gants indépendants
+## Pieds nus
 
-Les boutons « Chaussures Lara » et « Gants Lara » contrôlent séparément les
-bottes/pieds et les gants/mains, quel que soit l'état du haut ou du bas.
-Les deux équipements sont activés par défaut.
+Le bouton « Chaussures Lara » contrôle les bottes et les pieds indépendamment
+du haut et du bas. Les gants restent toujours portés.
 
-`scripts/fix_lara_bare_extremities.py` corrige les chevauchements cachés dans le
-modèle source : les mains sont coupées au raccord des avant-bras et un second
-maillage de pieds rejoint la bordure plus basse des jambes habillées. Les jambes
-sans vêtements conservent les pieds originaux, avec lesquels elles partagent
-leur bordure. Les coupes interpolent les UV et les poids existants.
+`scripts/fix_lara_bare_extremities.py` ajoute au `.blend` des pieds qui
+rejoignent les jambes habillées, ainsi qu'une copie de ces jambes réservée au
+mode pieds nus. La rangée des mollets auparavant cachée sous les bottes utilisait
+une zone sombre de la texture. Sur cette copie, ses UV reprennent la peau claire
+voisine du même côté anatomique. Les jambes d'origine restent utilisées avec les
+bottes. Les jambes sans vêtements conservent leurs pieds d'origine. Les tatouages
+des variantes sont aussi appliqués à la copie pieds nus.
 
 ```bash
 ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/fix_lara_bare_extremities.py
 npm run optimize:glb
 ```
 
-Le contrôle Chromium vérifie les combinaisons chaussures/gants/haut/bas sur
-quatre variantes et produit les aperçus locaux des pieds et mains nus. La vue
-générale cadre maintenant jusqu'aux orteils. Elle produit aussi
-`/tmp/lara-hands-pistol-pose.png` avec l'animation de pistolet.
-
-La bordure des mains nues reprend les poids du poignet et du coude de la
-bordure des avant-bras. Le correctif est enregistré dans le `.blend` et
-réexporté avec le GLB. Le réglage des vêtements est appliqué avant le premier
+Le contrôle Chromium vérifie les combinaisons chaussures/haut/bas sur quatre
+variantes et produit `/tmp/lara-barefoot-gloves.png`. La vue générale cadre
+jusqu'aux orteils. Les maillages corrigés sont enregistrés dans le `.blend` et
+réexportés avec le GLB. Le réglage des vêtements est appliqué avant le premier
 rendu du personnage après le chargement du modèle.
