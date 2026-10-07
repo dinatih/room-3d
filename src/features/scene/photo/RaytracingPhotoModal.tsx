@@ -724,8 +724,11 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     pathTracer.minSamples = 1;
     pathTracer.renderDelay = 0;
     pathTracer.dynamicLowRes = false;
-    // Découpage en tuiles 2x2 initial pour le GPU
-    pathTracer.tiles.set(2, 2);
+    // Découpage fin en tuiles (ex: 7x5 = 35 tuiles en 720p, 10x7 = 70 tuiles en 1080p)
+    // Chaque tuile fait ~25 000 pixels, ce qui prend ~10ms sur le GPU
+    const tilesX = Math.max(4, Math.ceil(width / 200));
+    const tilesY = Math.max(4, Math.ceil(height / 150));
+    pathTracer.tiles.set(tilesX, tilesY);
     // Limiter la taille max de l'atlas de textures à 512x512 (réduit de 75% l'empreinte mémoire VRAM/RAM)
     pathTracer.textureSize.set(512, 512);
 
