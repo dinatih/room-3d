@@ -63,6 +63,7 @@ import { NPC_WALK_ANIMATIONS }   from './ai/agent/agentWalkAnimations';
 import { cacheDynamicGLTF }      from './character/useCharacterAnimations';
 import { duoSessionManager }     from './ai/duoSessionManager';
 import { LoadingShiba } from './LoadingShiba';
+import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 // The inventory pulls in a second R3F canvas, its GLTF loaders and a large
 // catalogue. Do not parse it until the user explicitly opens the inventory.
@@ -401,6 +402,7 @@ function SceneDirectionalLight() {
 }
 
 export function Studio() {
+  const isMobile = useIsMobile();
   const layers = useSceneStore(state => state.layers);
   const measurementActive = useSceneStore(state => state.measurementActive);
   const cameraMode = useSceneStore(state => state.cameraMode);
@@ -408,7 +410,6 @@ export function Studio() {
 
   const [showInventory, setShowInventory] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 
   useEffect(() => {
     const openShortcuts = () => setShowShortcuts(true);
@@ -909,7 +910,6 @@ export function Studio() {
       {/* HTML overlays */}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       <SidePanel
-        onMobileSheetOpenChange={setMobileSheetOpen}
         layers={layers} onToggleLayer={onToggleLayer}
         onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
@@ -933,10 +933,9 @@ export function Studio() {
       />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
-        <VirtualDPad visible={!hideUI && !planeMode} />
+        <VirtualDPad visible={!hideUI && !planeMode && !showInventory} />
         <ViewControlBar
-          disabled={mobileSheetOpen}
-          hidden={planeMode}
+          hidden={planeMode || (isMobile && showInventory)}
           showCharacterModes
           hideUI={hideUI}
           onToggleHideUI={toggleHideUI}

@@ -47,7 +47,6 @@ export function SidePanel({
   layers,
   onToggleLayer,
   onOpenInventory,
-  onMobileSheetOpenChange,
   lidarMode,
   onCycleLidar,
   lidarOpacity,
@@ -69,9 +68,6 @@ export function SidePanel({
   const [selectedCvType, setSelectedCvType] = useState<CvType>('devops');
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
-  useEffect(() => {
-    onMobileSheetOpenChange?.(isMobile && activeTab !== null && !hideUI);
-  }, [isMobile, activeTab, hideUI, onMobileSheetOpenChange]);
   const [isVRActive, setIsVRActive] = useState(false);
   const [isVRSupported, setIsVRSupported] = useState(false);
   const [isImmersiveActive, setIsImmersiveActive] = useState(false);

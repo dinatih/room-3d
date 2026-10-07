@@ -94,7 +94,11 @@ $control-colors: (
 }
 
 .view-control-bar--inline {
-  width: max-content;
+  width: 100%;
+}
+
+.view-control-bar--inline .btn {
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.95);
 }
 
 .view-control-bar-inline {

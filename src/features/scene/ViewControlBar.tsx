@@ -32,7 +32,6 @@ export interface ViewControlBarProps {
   inline?: boolean;
   /** Masquer le composant (ex: mode immersif) */
   hidden?: boolean;
-  disabled?: boolean;
   /** Afficher les commandes de la scène principale */
   showCharacterModes?: boolean;
   hideUI?: boolean;
@@ -45,7 +44,6 @@ export function ViewControlBar({
   position = 'bottom-right',
   inline = false,
   hidden = false,
-  disabled = false,
   showCharacterModes = false,
   hideUI = false,
   onToggleHideUI,
@@ -102,7 +100,7 @@ export function ViewControlBar({
   );
 
   const bar = (
-    <fieldset disabled={disabled} className={`${TOOLBAR_CLASS} ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
+    <div className={`${TOOLBAR_CLASS} ${inline ? 'view-control-bar--inline' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       {showCharacterModes && (
         <button
           type="button"
@@ -180,7 +178,7 @@ export function ViewControlBar({
       {viewButtons(ORTHO_VIEWS, 'cyan')}
       {viewButtons(EXTRA_VIEWS, 'green')}
       {viewButtons(ISO_VIEWS, 'purple')}
-    </fieldset>
+    </div>
   );
 
   if (inline) {
