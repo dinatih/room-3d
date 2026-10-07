@@ -13,6 +13,7 @@ import { ROOM_W, pX, pZ, DiagWall } from './wallData';
 export const DOOR_OPEN_RESPONSE = 10;
 export const DOOR_CLOSE_RESPONSE = 4;
 export const HUMAN_BODY_RADIUS = 28;
+export const HUMAN_BODY_HEIGHT = 173.4;
 
 export interface CircleObstacle {
   x: number;
@@ -254,7 +255,7 @@ export function computeDoorDynamics(
   for (const id in cameraState.positions) {
     const p = cameraState.positions[id];
     const bodyRadius = id === 'robin' ? 7.5 : id === 'shiba' ? 20 : HUMAN_BODY_RADIUS;
-    const height = id === 'robin' ? 15 : id === 'shiba' ? 40 : 173.4;
+    const height = id === 'robin' ? 15 : id === 'shiba' ? 40 : HUMAN_BODY_HEIGHT;
     if (p.y > door.yMax || p.y + height < door.yMin) continue;
 
     const vx = p.x - door.pivot.x;

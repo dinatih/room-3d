@@ -108,6 +108,7 @@ export function DoorEntry({ onSize }: SceneItemProps) {
       doorRef.current.rotation.y = target;
       invalidate();
     }
+    doorCollisionState.entry.angle = doorRef.current.rotation.y;
   });
 
   return (

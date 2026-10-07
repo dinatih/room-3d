@@ -178,6 +178,9 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
       moved = true;
     }
 
+    doorCollisionState.glassRight.angle = rightRotRef.current;
+    doorCollisionState.glassLeft.angle = leftRotRef.current;
+
     // Animation du volet roulant (0 à 100%)
     const dShutter = targetShutter - shutterPercentRef.current;
     if (Math.abs(dShutter) > 0.1) {

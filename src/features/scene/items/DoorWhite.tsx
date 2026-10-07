@@ -182,6 +182,7 @@ function DoorImpl({
       doorRef.current.rotation.y = target;
       invalidate();
     }
+    doorCollisionState[doorStateKey].angle = doorRef.current.rotation.y;
   });
 
   return (

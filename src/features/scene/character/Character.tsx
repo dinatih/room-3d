@@ -29,6 +29,7 @@ import { LAYER_WALKER_DETAIL } from '@config';
 import { ACTION_FULL_TOUR, buildAutonomousScenario } from '../ai/scenarios';
 import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController, resetAgentDeployment } from '../ai/useAgentController';
+import { separateAgentFromDoors } from '../ai/agent/agentAvoidance';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform } from '../animations/animationResolver';
@@ -692,6 +693,7 @@ export function Character({
 
         if (hasDynamicTask || isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
           const agentState = updateAgent(delta);
+          separateAgentFromDoors(agentState);
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
           currentAnimClip.current = agentState.animation;
@@ -719,6 +721,7 @@ export function Character({
         }
       } else if (isNPC) {
         const agentState = updateAgent(delta);
+        separateAgentFromDoors(agentState);
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
         groupRef.current.rotation.y = agentState.rotY;
         currentAnimClip.current = agentState.animation;

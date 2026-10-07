@@ -469,12 +469,7 @@ export function useAgentController(
 
     if (currentInstruction.doorKey) {
       const closed = doorCollisionState[currentInstruction.doorKey].angle === 0;
-      const sameRoom = currentInstruction.targetPos
-        ? getRoomFromCoords(stateRef.current.x, stateRef.current.z)
-          === getRoomFromCoords(currentInstruction.targetPos[0], currentInstruction.targetPos[2])
-        : false;
-      if ((currentInstruction.type === 'MOVE_TO' && statusRef.current === 'IDLE' && closed && sameRoom)
-        || (currentInstruction.type === 'WAIT' && closed)) {
+      if (currentInstruction.type === 'WAIT' && closed) {
         advanceToNextStep(hasNavStep);
         return update(dt);
       }
