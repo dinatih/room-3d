@@ -16,7 +16,7 @@ const ANIMATION_FADE = 0.2;
 type Movement = 'walk' | 'run' | 'jump' | 'circle' | 'sit' | 'idle';
 const WALK_SPEED = 50;
 const BALL_RADIUS = 3.35; // Balle de tennis de 6,7 cm.
-const TEXT_HEIGHT = 12;
+const TEXT_HEIGHT = 24;
 
 function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted: boolean; countdownSeconds: number }) {
   const gltf = useGLTF(SHIBA_PATH);
