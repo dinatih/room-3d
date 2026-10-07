@@ -22,7 +22,11 @@ for (const old of oldNodes) {
   }
   if (old.getMesh()) {
     const count = m => m.listPrimitives().reduce((n,p) => n + p.getIndices().getCount(),0);
-    assert.equal(count(node.getMesh()), count(old.getMesh()), `${old.getName()} triangles`);
+    if (old.getName() === 'body_nude_torso') {
+      assert(count(node.getMesh()) >= count(old.getMesh()), 'Rebuilt torso lost triangles');
+    } else {
+      assert.equal(count(node.getMesh()), count(old.getMesh()), `${old.getName()} triangles`);
+    }
   }
 }
 for (const name of ['arms','body_legs','fingers','body_nude_legs','body_nude_hands','body_nude_feet']) {
@@ -44,7 +48,20 @@ for (const name of ['arms','body_legs','fingers','body_nude_legs','body_nude_han
     }
   }
 }
-console.log('GLB: node transforms, joint order, triangle counts and independent UV tiles verified.');
+const torso = newNodes.find(n => n.getName() === 'body_nude_torso').getMesh();
+for (const primitive of torso.listPrimitives()) {
+  for (const name of ['POSITION','NORMAL','TEXCOORD_0','WEIGHTS_0']) {
+    const attribute = primitive.getAttribute(name);
+    assert(attribute, `Torso missing ${name}`);
+    assert(Array.from(attribute.getArray()).every(Number.isFinite), `Torso has invalid ${name}`);
+    if (name === 'WEIGHTS_0') {
+      for (let i=0;i<attribute.getCount();i++) {
+        assert(attribute.getElement(i,[]).reduce((sum,value)=>sum+value,0)>0, 'Unbound torso vertex');
+      }
+    }
+  }
+}
+console.log('GLB: transforms, joint order, topology, torso skin weights and independent UV tiles verified.');
 
 const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader'] });
 try {

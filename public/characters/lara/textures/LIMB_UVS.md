@@ -56,15 +56,27 @@ transférés, sommet par sommet dans le même îlot UV du corps HSH. Cette méth
 évite les aplats triangulaires du transfert précédent et préserve les détails
 du dos ainsi que les ombres sous la poitrine.
 
-État actuel : les aperçus du tronc et du dos sont corrigés ; des raccords restent
-visibles au bassin. Le résultat visuel global n'est pas finalisé.
-Les contrôles automatiques valident les côtés tatoués, le squelette et la géométrie,
-mais ne garantissent pas la qualité de ces raccords.
+Les jonctions faites à la main sous les seins sont reconstruites par
+`scripts/rebuild_lara_skin_bridge.py` : subdivision locale, courbure ajustée aux
+surfaces voisines et UV interpolés depuis leurs bordures. Les poids du squelette
+sont interpolés lors de la subdivision. Le reste du corps garde sa géométrie.
+L'îlot UV isolé de la hanche gauche est raccordé à la peau voisine, supprimant
+la tache sombre visible dans les gros plans. La projection évite également les
+bords vides de l'atlas dans l'empreinte du filtrage bilinéaire.
 
-Le contrôle Chromium produit également quatre gros plans
-`/tmp/lara-chest-{left,right}.png` et `/tmp/lara-hip-{left,right}.png` pour vérifier
-les raccords latéraux, insuffisamment visibles sur les vues générales. Ces vues
-confirment que le raccord sous la poitrine et une zone de la hanche restent à
-corriger. L'interpolation des frontières UV et le recalcul des normales ont été
-testés puis retirés, car ils aggravaient le rendu du bassin. Les normales d'origine
-et le dernier remappage stable sont conservés.
+Après le remappage initial :
+
+```bash
+ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/rebuild_lara_skin_bridge.py
+npm run optimize:glb
+```
+
+La reconstruction est enregistrée dans le `.blend`. Les réexécutions reconnaissent
+les zones déjà reconstruites et réexportent le modèle sans nouvelle subdivision.
+Une reconstruction depuis une sauvegarde antérieure doit se faire dans cet ordre :
+remappage de la peau, reconstruction des jonctions, optimisation du GLB.
+
+Le contrôle Chromium produit quatre gros plans `/tmp/lara-chest-{left,right}.png`
+et `/tmp/lara-hip-{left,right}.png`, en plus des vues générales. Il vérifie les
+poids des nouveaux sommets du tronc, les attributs de géométrie, le squelette et
+les côtés tatoués. Les raccords de la taille restent ceux du corps assemblé.

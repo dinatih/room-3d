@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FOLDER = ROOT / 'public/characters/lara'
 SOURCE = FOLDER / 'lara_perfect.blend'
 MARKER = 'lara_clean_nude_skin'
-VERSION = 'continuous-authored-skin-transfer-v7'
+VERSION = 'bilinear-safe-authored-skin-transfer-v11'
 
 
 def clean_triangle(coords, occupied):
@@ -82,6 +82,13 @@ def main():
                 good_faces[tri.polygon_index] = False
                 continue
         authored[obj.name] = good_faces
+    # Bilinear filtering also reads the neighboring texels. Exclude reference
+    # triangles touching empty atlas background within that sampling footprint.
+    padded = np.pad(occupied,1,constant_values=False)
+    filtered_skin = occupied.copy()
+    for dy in range(3):
+        for dx in range(3):
+            filtered_skin &= padded[dy:dy+occupied.shape[0],dx:dx+occupied.shape[1]]
     # The untouched HSH source provides the UVs omitted by the assembled body.
     with bpy.data.libraries.load(str(FOLDER/'Lara_mix.blend'), link=False) as (available, loaded):
         loaded.objects = ['5_Body_1_0_0.004']
@@ -91,7 +98,7 @@ def main():
     vertices, reference_uv, triangles = [], [], []
     for tri in source.data.loop_triangles:
         coords = [source.data.uv_layers.active.data[i].uv.copy() for i in tri.loops]
-        if not clean_triangle(coords, occupied):
+        if not clean_triangle(coords, filtered_skin):
             continue
         offset = len(vertices)
         # Imported mesh coordinates match the assembled body's rest coordinates.
