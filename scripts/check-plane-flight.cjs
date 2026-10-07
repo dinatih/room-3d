@@ -64,7 +64,7 @@ key('keyup', 'ArrowLeft');
 key('keydown', 'a');
 frame({}, 1 / 60);
 assert(flight.roll > 0, 'left command banks left');
-assert(flight.yaw > Math.PI, 'left bank turns left');
+assert(Math.atan2(Math.sin(flight.yaw - Math.PI), Math.cos(flight.yaw - Math.PI)) > 0, 'left bank turns left');
 assert(camera.quaternion.angleTo(flight.quat) < 1e-6, 'cockpit preserves aircraft roll and pitch');
 
 key('keydown', 'c');
@@ -94,7 +94,7 @@ assert(flight.pitch < -.05, 'up arrow/W pitches down');
 windowTarget.dispatchEvent(new Event('blur'));
 const pitch = flight.pitch;
 frame({}, 1 / 60);
-assert.equal(flight.pitch, pitch, 'blur releases controls and retains pitch attitude');
+assert(Math.abs(flight.pitch - pitch) < 1e-12, 'blur releases controls and retains pitch attitude');
 planeInput.pitch = 1;
 planeInput.roll = -1;
 planeInput.throttle = 1;
@@ -109,25 +109,26 @@ for (const view of ['follow', 'cockpit']) {
   for (const direction of [-1, 1]) {
     flight.pos.set(150, 1600, 150);
     Object.assign(flight, { yaw: 0, pitch: 0, roll: 0, speed: 130 });
+    flight.quat.identity();
     planeInput.pitch = direction;
     planeInput.throttle = 1;
     let accumulated = 0;
-    let lastPitch = 0;
+    let lastRotation = flight.quat.clone();
     let wasInverted = false;
     const turnFrames = Math.ceil(4 * Math.PI / (1.6 / 60));
     let previousCameraRotation = null;
     for (let i = 0; i < turnFrames; i++) {
       frame({}, 1 / 60);
-      const difference = flight.pitch - lastPitch;
-      accumulated += Math.atan2(Math.sin(difference), Math.cos(difference));
-      lastPitch = flight.pitch;
-      if (Math.cos(flight.pitch) < 0) wasInverted = true;
+      const step = lastRotation.invert().multiply(flight.quat);
+      accumulated += 2 * Math.atan2(step.x, step.w);
+      lastRotation.copy(flight.quat);
+      if (new THREE.Vector3(0,1,0).applyQuaternion(flight.quat).y < 0) wasInverted = true;
       if (view === 'cockpit') assert(camera.quaternion.angleTo(flight.quat) < 1e-6, 'cockpit follows full looping');
       if (view === 'follow' && previousCameraRotation) assert(camera.quaternion.angleTo(previousCameraRotation) < .2, 'follow camera does not flip at the vertical');
       previousCameraRotation = camera.quaternion.clone();
     }
     assert(wasInverted, 'loop passes through inverted attitude');
-    assert(direction * accumulated >= 4 * Math.PI, 'two complete loops without pitch limit');
+    assert(direction * accumulated >= 4 * Math.PI - 1e-9, 'two complete loops without pitch limit');
     planeInput.pitch = 0;
     const retainedPitch = flight.pitch;
     frame({}, 1 / 60);
@@ -138,21 +139,43 @@ Object.assign(planeInput, { pitch: 0, roll: 0, throttle: 0 });
 for (const direction of [-1, 1]) {
   flight.pos.set(150, 1600, 150);
   Object.assign(flight, { yaw: 0, pitch: 0, roll: 0, speed: 130 });
+  flight.quat.identity();
   planeInput.roll = direction;
   let accumulated = 0;
-  let previousRoll = 0;
+  let previousRotation = flight.quat.clone();
   const rollFrames = Math.ceil(4 * Math.PI / (2.4 / 60));
   for (let i = 0; i < rollFrames; i++) {
     frame({}, 1 / 60);
-    accumulated += Math.atan2(Math.sin(flight.roll - previousRoll), Math.cos(flight.roll - previousRoll));
-    previousRoll = flight.roll;
+    const step = previousRotation.invert().multiply(flight.quat);
+    accumulated += 2 * Math.atan2(step.z, step.w);
+    previousRotation.copy(flight.quat);
     assert(camera.quaternion.angleTo(flight.quat) < 1e-6, 'cockpit follows full rolls');
   }
-  assert(direction * accumulated >= 4 * Math.PI, 'two full rolls in each direction');
+  assert(direction * accumulated >= 4 * Math.PI - 1e-9, 'two full rolls in each direction');
 }
-planeInput.roll = 0;
+// Les mêmes commandes doivent garder leur signe dans le repère du cockpit,
+// indépendamment du cap et après n'importe quelle combinaison de manœuvres.
+for (const pitch of [0, Math.PI / 2, -Math.PI / 2, Math.PI]) {
+  for (const roll of [0, Math.PI / 2, -Math.PI / 2, Math.PI]) {
+    for (const yaw of [0, Math.PI / 2, Math.PI]) {
+      for (const axis of ['pitch', 'roll']) for (const direction of [-1, 1]) {
+        Object.assign(planeInput, { pitch:0, roll:0, throttle:0, [axis]:direction });
+        flight.pos.set(150,1600,150);
+        Object.assign(flight, { pitch, roll, yaw });
+        flight.quat.setFromEuler(new THREE.Euler(pitch,yaw,roll,'YXZ'));
+        const previous = flight.quat.clone();
+        frame({},1/60);
+        const relative = previous.invert().multiply(flight.quat);
+        assert(direction * relative[axis === 'pitch' ? 'x' : 'z'] > 0, `${axis} conserve son sens : ${pitch}, ${roll}, ${yaw}`);
+        assert(camera.quaternion.angleTo(flight.quat) < 1e-6, 'cockpit suit les commandes dans toutes les attitudes');
+      }
+    }
+  }
+}
+Object.assign(planeInput,{pitch:0,roll:0,throttle:0});
 flight.pos.set(150, 100, 3740);
 Object.assign(flight, { yaw: Math.PI, pitch: 0, roll: 0 });
+flight.quat.setFromEuler(new THREE.Euler(0,Math.PI,0,'YXZ'));
 frame({}, 1 / 60);
 assert.equal(cameraState.planeSkyContact, true, 'aircraft touches sky boundary');
 const bounds = new THREE.Box3().setFromObject(refs.find(ref => ref.current instanceof THREE.Group).current, true).getBoundingSphere(new THREE.Sphere());

@@ -123,11 +123,14 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
     pitch: -0.05,
     roll:  0,
     speed: SPEED_INIT,
-    quat:  new THREE.Quaternion(),
+    quat:  new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.05, Math.PI, 0, 'YXZ')),
   });
   const controls = useRef<AircraftFlightControls>({ pitch: 0, roll: 0, yaw: 0, power: 0 });
   const keys  = useRef(new Set<string>());
   const _euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
+  const rotationStep = useRef(new THREE.Quaternion());
+  const angularStep = useRef(new THREE.Vector3());
+  const worldUp = useMemo(() => new THREE.Vector3(0, 1, 0), []);
   const _va    = useRef(new THREE.Vector3());
   const _vb    = useRef(new THREE.Vector3());
   const previousPosition = useRef(new THREE.Vector3());
@@ -179,6 +182,7 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
     flight.current.yaw   = Math.PI;
     flight.current.pitch = -0.05;
     flight.current.roll  = 0;
+    flight.current.quat.setFromEuler(new THREE.Euler(-0.05, Math.PI, 0, 'YXZ'));
     flight.current.speed = SPEED_INIT;
     launchedRef.current  = false;
     landingRef.current   = false;
@@ -385,20 +389,25 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
       pitchIn = THREE.MathUtils.clamp(pitchIn, -1, 1);
       rollIn = THREE.MathUtils.clamp(rollIn, -1, 1);
       throttleIn = THREE.MathUtils.clamp(throttleIn, -1, 1);
-      Object.assign(controls.current, { pitch: pitchIn, roll: rollIn, yaw: Math.sin(s.roll) * Math.cos(s.pitch), power: s.speed / SPEED_MAX });
-      s.pitch += pitchIn * PITCH_RATE * dt;
-      s.roll  += rollIn  * ROLL_RATE  * dt;
-      // Angle périodique : aucune butée, les commandes traversent le dos et la verticale.
-      s.pitch = Math.atan2(Math.sin(s.pitch), Math.cos(s.pitch));
-      s.roll = Math.atan2(Math.sin(s.roll), Math.cos(s.roll));
-      s.yaw += Math.sin(s.roll) * Math.cos(s.pitch) * ROLL_TO_YAW * dt;
-
-      _euler.current.set(s.pitch, s.yaw, s.roll);
-      s.quat.setFromEuler(_euler.current);
+      // Le quaternion est l'attitude réelle : tangage et roulis dans le repère
+      // de l'avion, y compris sur le dos ou à la verticale.
+      angularStep.current.set(pitchIn * PITCH_RATE * dt, 0, rollIn * ROLL_RATE * dt);
+      const angle = angularStep.current.length();
+      if (angle > 0) {
+        rotationStep.current.setFromAxisAngle(angularStep.current.divideScalar(angle), angle);
+        s.quat.multiply(rotationStep.current).normalize();
+      }
+      // Virage coordonné autour de la verticale du monde, selon l'inclinaison
+      // réelle de l'aile droite ; aucun angle d'Euler ne pilote l'attitude.
+      const bank = _vb.current.set(1, 0, 0).applyQuaternion(s.quat).y;
+      rotationStep.current.setFromAxisAngle(worldUp, bank * ROLL_TO_YAW * dt);
+      s.quat.premultiply(rotationStep.current).normalize();
+      Object.assign(controls.current, { pitch: pitchIn, roll: rollIn, yaw: bank, power: s.speed / SPEED_MAX });
 
       if (throttleIn > 0) s.speed += SPEED_BOOST * dt;
       if (throttleIn < 0) s.speed -= SPEED_BRAKE * dt;
-      s.speed += -Math.sin(s.pitch) * SPEED_DIVE * dt;
+      _va.current.set(0, 0, -1).applyQuaternion(s.quat);
+      s.speed -= _va.current.y * SPEED_DIVE * dt;
       s.speed -= SPEED_DRAG * dt;
       s.speed  = Math.max(SPEED_MIN, Math.min(SPEED_MAX, s.speed));
 
@@ -407,12 +416,15 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
       s.pos.y -= GRAVITY * dt;
       if (s.pos.y < MIN_Y) {
         s.pos.y = MIN_Y;
-        if (Math.sin(s.pitch) < 0) s.pitch = Math.cos(s.pitch) >= 0 ? 0 : Math.PI;
       }
     }
 
-    _euler.current.set(s.pitch, s.yaw, s.roll);
-    s.quat.setFromEuler(_euler.current);
+    // Angles dérivés pour l'atterrissage et la minimap, jamais réinjectés en vol.
+    _euler.current.setFromQuaternion(s.quat);
+    s.pitch = _euler.current.x;
+    s.roll = _euler.current.z;
+    _va.current.set(0, 0, -1).applyQuaternion(s.quat);
+    s.yaw = Math.atan2(-_va.current.x, -_va.current.z);
     planeRef.current.position.copy(s.pos);
     planeRef.current.quaternion.copy(s.quat);
 
