@@ -929,7 +929,7 @@ export function Studio() {
             return !v;
           });
         }}
-        hideUI={hideUI}
+        hideUI={hideUI || (isMobile && showInventory)}
       />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}

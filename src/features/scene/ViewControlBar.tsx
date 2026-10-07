@@ -37,6 +37,7 @@ export interface ViewControlBarProps {
   hideUI?: boolean;
   onToggleHideUI?: () => void;
   onEnterFlight?: () => void;
+  toolbarActions?: ReactNode;
   children?: ReactNode;
 }
 
@@ -48,6 +49,7 @@ export function ViewControlBar({
   hideUI = false,
   onToggleHideUI,
   onEnterFlight,
+  toolbarActions,
   children,
 }: ViewControlBarProps) {
   const isMobile = useIsMobile();
@@ -178,6 +180,7 @@ export function ViewControlBar({
       {viewButtons(ORTHO_VIEWS, 'cyan')}
       {viewButtons(EXTRA_VIEWS, 'green')}
       {viewButtons(ISO_VIEWS, 'purple')}
+      {toolbarActions}
     </div>
   );
 

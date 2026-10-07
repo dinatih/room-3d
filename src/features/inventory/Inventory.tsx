@@ -439,7 +439,6 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
         )}
 
         <div className="d-flex gap-2 mt-3">
-          <button type="button" className="btn btn-sm btn-danger px-3 fw-semibold shadow-sm" onClick={() => alert(`Modifier : ${(item as any).name}`)}>✏️ Modifier</button>
           <button type="button" className="btn btn-sm btn-outline-secondary bg-white text-dark px-3" onClick={() => { if(confirm(`Supprimer ${(item as any).name} ?`)) alert('Supprimé (démo)'); }}>🗑 Supprimer</button>
         </div>
       </div>
@@ -890,7 +889,6 @@ function normalizeSearchStr(str: string): string {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowMobileModal(false)}>Fermer</button>
-                <button type="button" className="btn btn-danger" onClick={() => alert(`Modifier : ${selected.name}`)}>✏️ Modifier</button>
               </div>
             </div>
           </div>

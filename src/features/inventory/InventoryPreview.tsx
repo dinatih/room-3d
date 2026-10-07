@@ -20,6 +20,7 @@ import { AnimFrameController } from './AnimFrameController';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { CharacterSection } from '@features/scene/sidepanel/sections/CharacterSection';
 import { ViewControlBar } from '@features/scene/ViewControlBar';
+import { TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 
 function disposePreviewScene(root: THREE.Object3D) {
   root.traverse((node: any) => {
@@ -908,14 +909,6 @@ export function InventoryPreview({
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={() => setShowDims(v => !v)}
-              className="btn btn-sm btn-dark bg-opacity-50 border-secondary text-white py-1 px-2 small"
-              style={{ fontSize: 11 }}
-            >
-              📏 {showDims ? 'Masquer Dims' : 'Afficher Dims'}
-            </button>
           </div>
           {showing3D && previewView !== 'free' && (
             <div
@@ -1147,7 +1140,18 @@ export function InventoryPreview({
       )}
     </div>
     {item && (
-      <ViewControlBar inline>
+      <ViewControlBar inline toolbarActions={showing3D && (
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${showDims ? 'btn-primary' : 'btn-outline-secondary'}`}
+          onClick={() => setShowDims(v => !v)}
+          title={showDims ? 'Masquer les dimensions' : 'Afficher les dimensions'}
+          aria-label={showDims ? 'Masquer les dimensions' : 'Afficher les dimensions'}
+          aria-pressed={showDims}
+        >
+          <i className="bi bi-rulers" aria-hidden="true" />
+        </button>
+      )}>
         {showing3D && isCharacterItem && (
           <AnimFrameController
             compact

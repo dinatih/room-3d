@@ -357,7 +357,7 @@ export function SidePanel({
 
   // ── Rendu mobile : tab bar bottom + sheet ───────────────────────────────────
   if (isMobile) {
-    const sheetOpen = activeTab !== null;
+    const sheetOpen = activeTab !== null && !hideUI;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
       profile: '💼 Profil & CV',
       layers: '📑 Calques',
