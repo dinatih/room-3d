@@ -642,7 +642,7 @@ export function InventoryPreview({
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(true);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
-  const [showGrid, setShowGrid] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
   const [wireframe, setWireframe] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [previewView, setPreviewView] = useState<PreviewCameraView>('free');
