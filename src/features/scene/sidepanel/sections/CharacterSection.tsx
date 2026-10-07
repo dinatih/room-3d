@@ -466,7 +466,7 @@ export function CharacterSection({
       <button 
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
         onClick={() => {
-          onToggleLayer('laraGrid');
+          document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
         }}
         style={{ 
           backgroundColor: layers.laraGrid ? 'rgba(13, 110, 253, 0.08)' : undefined,

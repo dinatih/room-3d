@@ -169,6 +169,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     prevCharacterId.current = activeCharacterId;
   }, [activeCharacterId, invalidate]);
 
+  const prevLaraGridActive = useRef(laraGridActive);
   // Quand LaraGrid est actif et en mode orbit, désigner le PNJ actif au centre comme cible d'orbit
   useEffect(() => {
     if (laraGridActive && modeRef.current === 'orbit' && ctrlRef.current) {
@@ -177,8 +178,18 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       currentTarget.current.set(...gridTarget);
       ctrlRef.current.update();
       invalidate();
+    } else if (prevLaraGridActive.current && !laraGridActive) {
+      // Sécurité si LaraGrid a été désactivé et que la cible pointe encore au-dessus de la pièce
+      if (modeRef.current === 'orbit' && ctrlRef.current && ctrlRef.current.target.y > 300) {
+        ctrlRef.current.target.set(...PERSP_TARGET);
+        currentTarget.current.set(...PERSP_TARGET);
+        camera.position.set(...PERSP_POS);
+        ctrlRef.current.update();
+        invalidate();
+      }
     }
-  }, [laraGridActive, invalidate]);
+    prevLaraGridActive.current = laraGridActive;
+  }, [laraGridActive, camera, invalidate]);
 
   const changeMode = useCallback((m: CameraMode) => {
     const prev = modeRef.current;

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -63,13 +63,66 @@ export function useCameraShortcuts({
   exitOrtho,
   invalidate,
 }: UseCameraShortcutsParams) {
+  const savedGridPrevConfig = useRef<{
+    pos: [number, number, number];
+    target: [number, number, number];
+    mode: CameraMode;
+    proj: 'persp' | 'ortho';
+    charX: number;
+    charZ: number;
+  } | null>(null);
+
   useEffect(() => {
+    const exitGridAndRestore = () => {
+      const prev = savedGridPrevConfig.current;
+      savedGridPrevConfig.current = null;
+
+      if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+      if (modeRef.current === 'top') exitTop();
+
+      if (prev) {
+        if (prev.mode === 'follow' || prev.mode === 'fpv') {
+          cameraState.characterX = prev.charX;
+          cameraState.characterZ = prev.charZ;
+          enterFollow(prev.charX, prev.charZ, prev.mode);
+          return;
+        }
+        if (prev.mode === 'top') {
+          enterTop(false);
+          return;
+        }
+        if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
+        changeMode('orbit');
+        toggleOrbitType?.(prev.proj, { pos: prev.pos, target: prev.target });
+        savedPerspPos.current.set(...prev.pos);
+        savedPerspTarget.current.set(...prev.target);
+        invalidate();
+      } else {
+        goToDefaultOrbit();
+      }
+    };
+
     const toggleNpcGrid = () => {
       const store = useSceneStore.getState();
       const wasActive = store.layers.laraGrid;
-      store.toggleLayer('laraGrid');
-      store.setActiveCameraView(null);
-      if (wasActive) goToDefaultOrbit();
+      if (!wasActive) {
+        // Enregistre la configuration caméra avant d'entrer dans la grille
+        const curTarget = ctrlRef.current?.target ?? savedPerspTarget.current;
+        savedGridPrevConfig.current = {
+          pos: [camera.position.x, camera.position.y, camera.position.z],
+          target: [curTarget.x, curTarget.y, curTarget.z],
+          mode: modeRef.current,
+          proj: store.cameraProjection,
+          charX: cameraState.characterX,
+          charZ: cameraState.characterZ,
+        };
+        store.toggleLayer('laraGrid');
+        store.setActiveCameraView(null);
+      } else {
+        store.toggleLayer('laraGrid');
+        store.setActiveCameraView(null);
+        exitGridAndRestore();
+      }
     };
 
     const goToDefaultOrbit = () => {
@@ -97,6 +150,13 @@ export function useCameraShortcuts({
 
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {
+        return;
+      }
+
+      // Raccourci G / g : basculer la grille Lara (NPC)
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'g' || e.key === 'G')) {
+        e.preventDefault();
+        toggleNpcGrid();
         return;
       }
 

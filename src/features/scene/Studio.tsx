@@ -585,10 +585,7 @@ export function Studio() {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (cameraState.mode === 'plane' && ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) return;
 
-      if (e.key === 'g' || e.key === 'G') {
-        onToggleLayer('laraGrid');
-        cameraState.invalidate?.();
-      } else if (e.key === 'w' || e.key === 'W') {
+      if (e.key === 'w' || e.key === 'W') {
         onToggleLayer('wireframe');
         cameraState.invalidate?.();
       } else if (e.key === 'i' || e.key === 'I') {
