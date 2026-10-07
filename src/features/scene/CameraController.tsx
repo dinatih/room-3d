@@ -51,15 +51,10 @@ import {
 } from './camera';
 import { parseUrlLayerOverrides } from './store/layerUrlParams';
 import { VIEWS } from './sidepanel/types';
+import { getOrbitMouseButtons } from './camera/orbitMouseButtons';
 
 const FPV_DEFAULT_FOV = 100;
 const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
-
-const DEFAULT_MOUSE_BUTTONS = {
-  LEFT: THREE.MOUSE.ROTATE,
-  MIDDLE: THREE.MOUSE.DOLLY,
-  RIGHT: THREE.MOUSE.PAN,
-};
 
 const _tmpEyeTargetVec = new THREE.Vector3();
 const _tmpEyeLookVec = new THREE.Vector3();
@@ -81,6 +76,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const modeRef = useRef<CameraMode>(initialMode);
 
   const cameraProjection = useSceneStore(state => state.cameraProjection);
+  const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
   // Type d'orbite libre : perspective standard 3D ou isométrique orthographique 3D
   const orbitTypeRef = useRef<'persp' | 'ortho'>(useSceneStore.getState().cameraProjection);
   const defaultPerspCamRef = useRef<THREE.PerspectiveCamera>(camera as THREE.PerspectiveCamera);
@@ -163,6 +159,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const changeMode = useCallback((m: CameraMode) => {
     const prev = modeRef.current;
+    if (m === 'orbit' && prev !== 'orbit') {
+      useSceneStore.getState().setOrbitMouseMode('rotate');
+    }
     modeRef.current = m;
     cameraState.mode = m;
     setMode(m);
@@ -548,7 +547,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if ((ctrl as any).sphericalDelta) (ctrl as any).sphericalDelta.set(0, 0, 0);
     if ((ctrl as any).panOffset) (ctrl as any).panOffset.set(0, 0, 0);
     (ctrl as any).scale = 1;
-    ctrl.mouseButtons = DEFAULT_MOUSE_BUTTONS;
+    ctrl.mouseButtons = getOrbitMouseButtons(useSceneStore.getState().orbitMouseMode);
     ctrl.enableRotate = true;
     ctrl.enablePan = true;
     ctrl.enableZoom = true;
@@ -678,7 +677,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (ctrlRef.current) {
         ctrlRef.current.object = activeCam;
         ctrlRef.current.target.copy(savedPerspTarget.current);
-        ctrlRef.current.mouseButtons = DEFAULT_MOUSE_BUTTONS;
+        ctrlRef.current.mouseButtons = getOrbitMouseButtons('rotate');
         ctrlRef.current.enableRotate = true;
         ctrlRef.current.enablePan = true;
         ctrlRef.current.enableZoom = true;
@@ -1018,7 +1017,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enablePan={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         enableZoom={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'follow'}
-        mouseButtons={DEFAULT_MOUSE_BUTTONS}
+        mouseButtons={getOrbitMouseButtons(mode === 'orbit' ? orbitMouseMode : 'rotate')}
       />
     </>
   );

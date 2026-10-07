@@ -95,6 +95,8 @@ interface SceneStore {
   measurementActive: boolean;
   cameraMode: 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'ortho';
   cameraProjection: 'persp' | 'ortho';
+  orbitMouseMode: 'rotate' | 'pan';
+  setOrbitMouseMode: (mode: 'rotate' | 'pan') => void;
   activeCameraView: string | null;
   setActiveCameraView: (view: string | null) => void;
   isCvModalOpen: boolean;
@@ -328,6 +330,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
   cameraProjection: parseUrlCameraProjection(),
+  orbitMouseMode: 'rotate',
+  setOrbitMouseMode: (mode) => set({ orbitMouseMode: mode }),
   activeCameraView: parseUrlActiveCameraView(),
   setActiveCameraView: (view) => {
     set({ activeCameraView: view });

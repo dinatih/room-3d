@@ -58,6 +58,7 @@ export function ViewControlBar({
   const isMobile = useIsMobile();
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);
+  const orbitMouseMode = useSceneStore(s => s.orbitMouseMode);
   const npcGridActive = useSceneStore(s => s.layers.laraGrid);
   const activeCameraView = useSceneStore(s => s.activeCameraView);
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
@@ -72,6 +73,10 @@ export function ViewControlBar({
   if (hidden) return null;
 
   const isOrtho = cameraProjection === 'ortho';
+  const isPan = cameraMode === 'orbit' && orbitMouseMode === 'pan';
+  const orbitTitle = cameraMode === 'orbit'
+    ? (isPan ? 'Pan : glisser gauche pour déplacer, droit pour tourner. Passer en Orbit' : 'Orbit : glisser gauche pour tourner, droit pour déplacer. Passer en Pan')
+    : 'Revenir à la caméra Orbit (O : Orbit → NPCs → Follow → FPV → Orbit)';
   const isActive = (key: string) => activeCameraView === key;
   const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit' | 'toggle-npc-grid') => {
     document.dispatchEvent(new CustomEvent('camera-mode', { detail: mode }));
@@ -154,9 +159,10 @@ export function ViewControlBar({
             type="button"
             className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'orbit' ? 'view-control-bar__btn--yellow' : 'btn-outline-secondary'}`}
             onClick={() => dispatchCameraMode('orbit')}
-            title="Revenir à la caméra Orbit (O : Orbit → NPCs → Follow → FPV → Orbit)"
+            title={orbitTitle}
+            aria-label={orbitTitle}
             aria-pressed={cameraMode === 'orbit'}
-          ><i className="bi bi-globe2" aria-hidden="true" /><span className="fw-semibold">Orbit</span></button>
+          ><i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" /><span className="fw-semibold">{isPan ? 'Pan' : 'Orbit'}</span></button>
           <button
             type="button"
             className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}

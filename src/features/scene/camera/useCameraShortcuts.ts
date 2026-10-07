@@ -337,11 +337,6 @@ export function useCameraShortcuts({
       if (modeRef.current === 'top') {
         topFollowRef.current = false;
         if (ctrlRef.current) {
-          ctrlRef.current.mouseButtons = {
-            LEFT: THREE.MOUSE.ROTATE,
-            MIDDLE: THREE.MOUSE.DOLLY,
-            RIGHT: THREE.MOUSE.PAN,
-          };
           ctrlRef.current.enableRotate = true;
           ctrlRef.current.enablePan = true;
           ctrlRef.current.enableZoom = true;
@@ -386,7 +381,13 @@ export function useCameraShortcuts({
         if (modeRef.current === 'follow') exitFollow();
         else enterFollow(curX, curZ, 'follow');
       } else if (requestedMode === 'orbit') {
-        goToDefaultOrbit();
+        if (modeRef.current === 'orbit') {
+          const store = useSceneStore.getState();
+          store.setOrbitMouseMode(store.orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
+          invalidate();
+        } else {
+          goToDefaultOrbit();
+        }
       } else if (requestedMode === 'toggle-npc-grid') {
         toggleNpcGrid();
       }
