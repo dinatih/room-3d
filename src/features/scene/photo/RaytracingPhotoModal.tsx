@@ -127,7 +127,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const [enableDenoise, setEnableDenoise] = useState<boolean>(true);
   const [showCharacters, setShowCharacters] = useState<boolean>(false);
   const [targetSamples, setTargetSamples] = useState<number>(40);
-  const [bounces, setBounces] = useState<number>(2);
+  const [bounces, setBounces] = useState<number>(6);
   const [exposure, setExposure] = useState<number>(1.0);
 
   // Profondeur de champ (Depth of Field / Bokeh)
@@ -719,10 +719,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     pathTracer.minSamples = 1;
     pathTracer.renderDelay = 0;
     pathTracer.dynamicLowRes = false;
-    // Découpage fin en tuiles (ex: 6x4 = 24 tuiles en 720p, 8x6 = 48 tuiles en 1080p)
-    // Chaque tuile fait ~35k-40k pixels maximum, ce qui prend ~10ms sur le GPU au lieu de 400ms !
-    const tilesX = Math.max(4, Math.ceil(width / 240));
-    const tilesY = Math.max(4, Math.ceil(height / 180));
+    // Découpage fin en tuiles (ex: 7x5 = 35 tuiles en 720p, 10x7 = 70 tuiles en 1080p)
+    // Chaque tuile fait ~25 000 pixels, ce qui prend ~10ms sur le GPU
+    const tilesX = Math.max(4, Math.ceil(width / 200));
+    const tilesY = Math.max(4, Math.ceil(height / 150));
     pathTracer.tiles.set(tilesX, tilesY);
     // Limiter la taille max de l'atlas de textures à 512x512 (réduit de 75% l'empreinte mémoire VRAM/RAM)
     pathTracer.textureSize.set(512, 512);
@@ -746,25 +746,17 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let animFrameId: number | null = null;
 
+    // Synchronisation matérielle WebGL2 (FenceSync) : empêche l'accumulation de commandes GPU
+    // et garantit que le pilote graphique ne sature jamais le gestionnaire de fenêtres du système
+    const glCtx = (gl as any).getContext?.() as WebGL2RenderingContext | undefined;
+    let currentSync: WebGLSync | null = null;
+    let lastFinishTime = performance.now();
+    const GPU_COOLDOWN_MS = 25; // 25ms de repos absolu pour le GPU entre deux tuiles
+
     let lastTime = performance.now();
     let frameCount = 0;
     let sampleStartTime = performance.now();
     let lastSampleUpdate = 0;
-
-    const scheduleNextStep = () => {
-      if (isDisposed || isPausedRef.current) {
-        isRunning = false;
-        return;
-      }
-      // Pause de 15ms après chaque tuile pour libérer le thread UI, l'OS et le GPU
-      timeoutId = setTimeout(() => {
-        if (isDisposed || isPausedRef.current) {
-          isRunning = false;
-          return;
-        }
-        animFrameId = requestAnimationFrame(renderStep);
-      }, 15);
-    };
 
     const renderStep = () => {
       if (!pathTracerRef.current || isPausedRef.current || isDisposed) {
@@ -776,9 +768,46 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       const currentTarget = targetSamplesRef.current;
 
       if (samples < currentTarget) {
+        const now = performance.now();
+
+        // 1. Si une tuile précédente a été soumise au GPU, vérifier si le GPU l'a terminée
+        if (currentSync && glCtx?.clientWaitSync) {
+          const status = glCtx.clientWaitSync(currentSync, 0, 0);
+          if (status === glCtx.TIMEOUT_EXPIRED) {
+            // Le GPU est encore en train de calculer le tracé précédent :
+            // Ne SURTOUT PAS envoyer de nouvelle commande, attendre 15ms
+            timeoutId = setTimeout(() => {
+              animFrameId = requestAnimationFrame(renderStep);
+            }, 15);
+            return;
+          }
+          // Le GPU a terminé la tuile précédente
+          if (glCtx?.deleteSync) {
+            glCtx.deleteSync(currentSync);
+          }
+          currentSync = null;
+          lastFinishTime = performance.now();
+        }
+
+        // 2. Cooldown GPU : garantir au moins GPU_COOLDOWN_MS de repos complet pour le GPU et l'OS
+        if (now - lastFinishTime < GPU_COOLDOWN_MS) {
+          const waitTime = Math.max(5, GPU_COOLDOWN_MS - (now - lastFinishTime));
+          timeoutId = setTimeout(() => {
+            animFrameId = requestAnimationFrame(renderStep);
+          }, waitTime);
+          return;
+        }
+
+        // 3. Le GPU est prêt et a eu son temps de repos -> exécuter UNE tuile
         denoisedAppliedRef.current = false;
         try {
           pathTracerRef.current.renderSample();
+          if (glCtx?.fenceSync) {
+            currentSync = glCtx.fenceSync(glCtx.SYNC_GPU_COMMANDS_COMPLETE, 0);
+            glCtx.flush();
+          } else {
+            lastFinishTime = performance.now();
+          }
           frameCount++;
         } catch (err: any) {
           console.error('[Raytracing] Erreur renderSample:', err);
@@ -788,7 +817,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           return;
         }
 
-        const now = performance.now();
         // Throttling du setState React : màj toutes les 120ms au lieu de re-render React 60x par seconde
         if (now - lastSampleUpdate >= 120) {
           setCurrentSamples(samples);
@@ -802,8 +830,17 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           setElapsedSeconds(Math.round((now - sampleStartTime) / 1000));
         }
 
-        scheduleNextStep();
+        // Programmer la vérification de la prochaine tuile après le délai de repos
+        timeoutId = setTimeout(() => {
+          animFrameId = requestAnimationFrame(renderStep);
+        }, GPU_COOLDOWN_MS);
       } else {
+        // Cible atteinte : nettoyer tout sync résiduel
+        if (currentSync && glCtx?.deleteSync) {
+          glCtx.deleteSync(currentSync);
+          currentSync = null;
+        }
+
         // Échantillonnage cible atteint : appliquer la passe finale de débruitage si activée
         if (!denoisedAppliedRef.current) {
           if (enableDenoiseRef.current && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current) {
@@ -852,6 +889,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       clearTimeout(timer);
       if (timeoutId) clearTimeout(timeoutId);
       if (animFrameId) cancelAnimationFrame(animFrameId);
+      if (currentSync && glCtx?.deleteSync) {
+        glCtx.deleteSync(currentSync);
+        currentSync = null;
+      }
       wakeRenderLoopRef.current = null;
       restoreScene();
       try {
