@@ -36,8 +36,10 @@
   flex: 0 0 auto;
 }
 
-.view-control-bar__ambiance {
+.view-control-bar .form-select.view-control-bar__ambiance {
+  flex: 0 0 10rem;
   width: 10rem;
+  min-width: 0;
 }
 
 .view-control-bar > .btn {
