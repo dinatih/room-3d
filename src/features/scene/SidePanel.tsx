@@ -47,6 +47,7 @@ export function SidePanel({
   layers,
   onToggleLayer,
   onOpenInventory,
+  onMobileSheetOpenChange,
   lidarMode,
   onCycleLidar,
   lidarOpacity,
@@ -68,6 +69,9 @@ export function SidePanel({
   const [selectedCvType, setSelectedCvType] = useState<CvType>('devops');
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
+  useEffect(() => {
+    onMobileSheetOpenChange?.(isMobile && activeTab !== null && !hideUI);
+  }, [isMobile, activeTab, hideUI, onMobileSheetOpenChange]);
   const [isVRActive, setIsVRActive] = useState(false);
   const [isVRSupported, setIsVRSupported] = useState(false);
   const [isImmersiveActive, setIsImmersiveActive] = useState(false);
@@ -388,18 +392,18 @@ export function SidePanel({
         {sheetOpen && (
           <div
             onClick={() => setActiveTab(null)}
-            className="position-fixed inset-0 bg-dark bg-opacity-50"
-            style={{ backdropFilter: 'blur(2px)', zIndex: 90 }}
+            className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-50"
+            style={{ backdropFilter: 'blur(2px)', zIndex: 1001 }}
           />
         )}
 
         {sheetOpen && activeTab !== null && (
           <div
-            className="position-fixed start-0 end-0 border-top shadow-lg z-index-95 d-flex flex-column rounded-top-4"
+            className="position-fixed start-0 end-0 border-top shadow-lg d-flex flex-column rounded-top-4"
             style={{
-              bottom: '3.75rem',
+              bottom: 'calc(4.25rem + env(safe-area-inset-bottom))',
               maxHeight: 'calc(100vh - 120px)',
-              zIndex: 95,
+              zIndex: 1002,
               background: 'rgba(255, 255, 255, 0.75)',
               backdropFilter: 'blur(8px)',
             }}
@@ -434,8 +438,8 @@ export function SidePanel({
         <div
           className={`view-control-bar-dock view-control-bar-dock--bottom-menu ui-panel-bottom ${hideUI ? 'ui-hidden' : ''}`}
           style={{
-            zIndex: 100,
-            bottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)',
+            zIndex: 1003,
+            bottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
             left: 0,
             right: 0,
             marginInline: 'auto',

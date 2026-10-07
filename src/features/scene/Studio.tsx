@@ -408,6 +408,7 @@ export function Studio() {
 
   const [showInventory, setShowInventory] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 
   useEffect(() => {
     const openShortcuts = () => setShowShortcuts(true);
@@ -908,6 +909,7 @@ export function Studio() {
       {/* HTML overlays */}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       <SidePanel
+        onMobileSheetOpenChange={setMobileSheetOpen}
         layers={layers} onToggleLayer={onToggleLayer}
         onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
@@ -933,6 +935,7 @@ export function Studio() {
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
         <VirtualDPad visible={!hideUI && !planeMode} />
         <ViewControlBar
+          disabled={mobileSheetOpen}
           hidden={planeMode}
           showCharacterModes
           hideUI={hideUI}

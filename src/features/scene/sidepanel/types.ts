@@ -178,6 +178,7 @@ export interface SidePanelProps {
   layers:                  LayerState;
   onToggleLayer:           (key: keyof LayerState) => void;
   onOpenInventory:         () => void;
+  onMobileSheetOpenChange?: (open: boolean) => void;
   lidarMode:               LidarMode;
   onCycleLidar:            () => void;
   lidarOpacity:            number;
