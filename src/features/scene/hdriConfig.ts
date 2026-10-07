@@ -37,7 +37,7 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'sandsloot_4k', name: 'sandsloot 4k', url: '/environment/hdri/sandsloot_4k.hdr', type: 'hdr' },
   { id: 'satara_night_4k', name: 'satara night 4k', url: '/environment/hdri/satara_night_4k.hdr', type: 'hdr' },
   { id: 'spiaggia_di_mondello_4k', name: 'spiaggia di mondello 8k', url: '/environment/hdri/spiaggia_di_mondello_8k.hdr', type: 'hdr' },
-  { id: 'tcom_colorfulalley_colorful_alley_8k_hdri_sphere_paris', name: 'Colorful alley PARIS', url: '/environment/hdri/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere-PARIS.hdr', type: 'hdr' },
+  { id: 'tcom_colorfulalley_colorful_alley_8k_hdri_sphere_paris', name: 'Colorful alley 8k', url: '/environment/hdri/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere.hdr', type: 'hdr' },
   { id: 'tcom_norwayforest_8k_hdri_sphere', name: 'Norway Forest', url: '/environment/hdri/TCom_NorwayForest_8K_hdri_sphere.hdr', type: 'hdr' },
   { id: 'tropical_beachstairs_8k', name: 'Tropical BeachStairs 8k', url: '/environment/hdri/Tropical_BeachStairs_8k.hdr', type: 'hdr' },
   { id: 'ferndale_studio_06_8k', name: 'ferndale studio 06 8k', url: '/environment/hdri/ferndale_studio_06_8k.hdr', type: 'hdr' },
@@ -46,6 +46,16 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'qwantani_moonrise_8k', name: 'qwantani moonrise 8k', url: '/environment/hdri/qwantani_moonrise_8k.hdr', type: 'hdr' },
   { id: 'qwantani_night_8k', name: 'qwantani night 8k', url: '/environment/hdri/qwantani_night_8k.hdr', type: 'hdr' },
   { id: 'pond_8k', name: 'pond 8k', url: '/environment/hdri/pond_8k.hdr', type: 'hdr' },
+  { id: 'lakeside_8k', name: 'lakeside 8k', url: '/environment/hdri/lakeside_8k.hdr', type: 'hdr' },
+  { id: 'lakeside_night_8k', name: 'lakeside night 8k', url: '/environment/hdri/lakeside_night_8k.hdr', type: 'hdr' },
+  { id: 'garden_nook_8k', name: 'garden nook 8k', url: '/environment/hdri/garden_nook_8k.hdr', type: 'hdr' },
+  { id: 'crystal_falls_8k', name: 'crystal falls 8k', url: '/environment/hdri/crystal_falls_8k.hdr', type: 'hdr' },
+  { id: 'muddy_autumn_forest_8k', name: 'muddy autumn forest 8k', url: '/environment/hdri/muddy_autumn_forest_8k.hdr', type: 'hdr' },
+  { id: 'horn-koppe_spring_8k', name: 'horn-koppe spring 8k', url: '/environment/hdri/horn-koppe_spring_8k.hdr', type: 'hdr' },
+  { id: 'meadow_2_8k', name: 'meadow 2 8k', url: '/environment/hdri/meadow_2_8k.hdr', type: 'hdr' },
+  { id: 'spaichingen_hill_8k', name: 'spaichingen hill 8k', url: '/environment/hdri/spaichingen_hill_8k.hdr', type: 'hdr' },
+  { id: 'hilly_terrain_01_8k', name: 'hilly terrain 01 8k', url: '/environment/hdri/hilly_terrain_01_8k.hdr', type: 'hdr' },
+  { id: 'rosendal_park_sunset_8k', name: 'rosendal park sunset 8k', url: '/environment/hdri/rosendal_park_sunset_8k.hdr', type: 'hdr' },
 ];
 
 export const DEFAULT_HDRI_ID = 'default';
