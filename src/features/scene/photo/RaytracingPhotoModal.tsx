@@ -713,10 +713,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     pathTracer.minSamples = 1;
     pathTracer.renderDelay = 0;
     pathTracer.dynamicLowRes = false;
-    // Découpage fin en tuiles (ex: 7x5 = 35 tuiles en 720p, 10x7 = 70 tuiles en 1080p)
-    // Chaque tuile fait ~25 000 pixels, ce qui prend ~10ms sur le GPU
-    const tilesX = Math.max(4, Math.ceil(width / 200));
-    const tilesY = Math.max(4, Math.ceil(height / 150));
+    // Découpage ultra-fin en micro-tuiles (taille divisée par 10 : ~2 500 px par tuile au lieu de 25 000 px)
+    // À 1280x720 : ~22x16 = 352 micro-tuiles, chacune s'exécute en < 1ms sur le GPU
+    const tilesX = Math.max(12, Math.ceil(width / 60));
+    const tilesY = Math.max(10, Math.ceil(height / 45));
     pathTracer.tiles.set(tilesX, tilesY);
     // Limiter la taille max de l'atlas de textures à 512x512 (réduit de 75% l'empreinte mémoire VRAM/RAM)
     pathTracer.textureSize.set(512, 512);
@@ -730,9 +730,15 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     denoiseMatRef.current = denoiseMat;
     denoiseQuadRef.current = denoiseQuad;
 
-    // Rendu d'accumulation direct et ultra-rapide (le débruiteur lourd n'est appliqué qu'en passe finale)
+    // Throttling du blit écran : ne réafficher sur le canvas principal que 5x par seconde (toutes les 200ms)
+    // Évite de forcer un redraw plein écran à chaque micro-tuile, divisant par 50 la charge du compositeur d'affichage !
+    let lastCanvasBlit = 0;
     (pathTracer as any).renderToCanvasCallback = (_target: any, renderer: THREE.WebGLRenderer, quad: FullScreenQuad) => {
-      quad.render(renderer);
+      const now = performance.now();
+      if (now - lastCanvasBlit >= 200 || (pathTracerRef.current && pathTracerRef.current.samples >= targetSamplesRef.current)) {
+        lastCanvasBlit = now;
+        quad.render(renderer);
+      }
     };
 
     let isDisposed = false;
