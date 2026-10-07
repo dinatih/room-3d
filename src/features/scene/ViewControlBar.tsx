@@ -170,7 +170,7 @@ export function ViewControlBar({
           title="Changer aléatoirement le PNJ actif parmi les personnages visibles"
           aria-label="Changer aléatoirement le PNJ actif"
         >
-          <i className="bi bi-plus" aria-hidden="true" />
+          <i className="bi bi-dice-5" aria-hidden="true" />
           <i className="bi bi-person-standing-dress" aria-hidden="true" />
         </button>
       )}
