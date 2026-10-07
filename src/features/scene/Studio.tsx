@@ -935,7 +935,7 @@ export function Studio() {
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
         <VirtualDPad visible={!hideUI && !planeMode && !showInventory} />
         <ViewControlBar
-          hidden={planeMode || (isMobile && showInventory)}
+          hidden={planeMode || showInventory}
           showCharacterModes
           hideUI={hideUI}
           onToggleHideUI={toggleHideUI}
