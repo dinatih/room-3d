@@ -8,7 +8,7 @@
  * - Épaisseur métal : ~1.8–2.0 mm (0.18–0.20 cm)
  * - Finition : Acier inoxydable / argent poli miroir avec chanfreins (biseaux)
  */
-import { useLayoutEffect, useMemo } from 'react';
+import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 
@@ -296,38 +296,25 @@ function createBailGeometry(): THREE.BufferGeometry {
   return geo;
 }
 
+// Immutable resources shared by inventory objects and every Lara instance.
+let pendantResources: { body: THREE.BufferGeometry; bail: THREE.BufferGeometry; steel: THREE.MeshStandardMaterial } | undefined;
+export function getPendantResources() {
+  return pendantResources ??= {
+    body: createPendantBodyGeometry(),
+    bail: createBailGeometry(),
+    steel: new THREE.MeshStandardMaterial({ color: 0xdedede, metalness: 0.95, roughness: 0.18, envMapIntensity: 1.2 }),
+  };
+}
+
 export function DoubleVenusPendant({ onSize }: SceneItemProps) {
-  const bodyGeo = useMemo(createPendantBodyGeometry, []);
-  const bailGeo = useMemo(createBailGeometry, []);
-
-  // Matériau acier inoxydable poli miroir
-  const steelMaterial = useMemo(() => new THREE.MeshStandardMaterial({
-    color: 0xdedede,
-    metalness: 0.95,
-    roughness: 0.18,
-    envMapIntensity: 1.2,
-  }), []);
-
+  const { body, bail, steel } = getPendantResources();
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(PENDANT_W, PENDANT_H, PENDANT_D));
   }, [onSize]);
-
   return (
-    <group userData={{ hoverAction: { label: 'Pendentif Double Vénus' } }}>
-      {/* Corps du pendentif : double symbole ♀ entrelacé avec bélière */}
-      <mesh
-        geometry={bodyGeo}
-        material={steelMaterial}
-        castShadow
-        receiveShadow
-      />
-      {/* Bélière d'attache supérieure passant dans l'oeillet */}
-      <mesh
-        geometry={bailGeo}
-        material={steelMaterial}
-        castShadow
-        receiveShadow
-      />
+    <group dispose={null} userData={{ hoverAction: { label: 'Pendentif Double Vénus' } }}>
+      <mesh geometry={body} material={steel} castShadow receiveShadow />
+      <mesh geometry={bail} material={steel} castShadow receiveShadow />
     </group>
   );
 }

@@ -10,6 +10,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
+import { CharacterPendant, type CharacterPendantHandle } from './CharacterPendant';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../characterConfig';
@@ -166,6 +167,7 @@ export function Character({
 
   // Extraction structurée des maillages et des os
   const parts = useMemo(() => extractCharacterParts(scene), [scene]);
+  const pendantRef = useRef<CharacterPendantHandle>(null);
   const headBone = parts.bones.head;
   // Os de référence pour la position réelle de la tête (minimap) : Lara expose head_neck_upper, les modèles Mixamo leur os Head
   const headRefBone = useMemo(
@@ -879,9 +881,13 @@ export function Character({
 
     const isControlledByStore = isPreview || laraGrid;
 
+    let pendantDelta = 0;
+    let resetPendant = isTPose;
     if (isControlledByStore) {
       const store = useAnimPreviewStore.getState();
       const animDelta = delta * (store.speed || 1);
+      pendantDelta = store.isPlaying && !store.isScrubbing && !isTPose ? delta * store.speed : 0;
+      resetPendant ||= store.isScrubbing;
 
       if (isTPose) {
         if (isActive || characterIndex === 0) {
@@ -901,6 +907,7 @@ export function Character({
                 actB.time = targetTimeB;
               }
               if (Math.abs(actB.time - targetTimeB) > 0.05) {
+                resetPendant = true;
                 actB.time = targetTimeB;
               }
               mixer.update(animDelta);
@@ -935,6 +942,7 @@ export function Character({
 
             // Détection d'un saut de temps externe (ex: seekToFrame(0), retour au début pendant la lecture)
             if (Math.abs(act.time - targetTime) > 0.05) {
+              resetPendant = true;
               act.time = targetTime;
             }
 
@@ -983,6 +991,7 @@ export function Character({
         }, scene);
       }
     } else if (!isPaused && !isTPose) {
+      pendantDelta = delta;
       if (activeActionName.current && actions[activeActionName.current]) {
         const act = actions[activeActionName.current];
         if (act.paused) act.paused = false;
@@ -1034,6 +1043,8 @@ export function Character({
         }, scene);
       }
     }
+
+    pendantRef.current?.update(pendantDelta, resetPendant);
 
     // Position XZ réelle de la tête (minimap) — actif ET PNJ. Sans os de tête : non publié → non dessiné
     if (!isPreview) {
@@ -1158,6 +1169,16 @@ export function Character({
       <group ref={animOriginRef}>
         <primitive ref={modelRef} object={scene} />
       </group>
+
+      {isLara && <CharacterPendant
+        ref={pendantRef}
+        neck={parts.bones.neck}
+        scene={scene}
+        torso={[...parts.torsoClothed, ...parts.torsoNude].map(part => part.mesh)}
+        visible={showAccessories}
+        shadows={characterShadows}
+        resetKey={`${isPreview}:${laraGrid}`}
+      />}
 
       {headBone && (variant === 'vivida' || id === 'vivida') && (
         <CharacterBaseballCap attachTo={headBone} />
