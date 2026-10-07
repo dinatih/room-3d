@@ -161,8 +161,8 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       <div className="input-group input-group-sm flex-nowrap" style={{ height: '22px', width: 'auto' }}>
         <button
           type="button"
-          className="btn btn-sm p-0 px-1 border-0 flex-shrink-0"
-          style={{ height: '22px', backgroundColor: '#ffc107', color: '#212529', lineHeight: 1 }}
+          className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 flex-shrink-0"
+          style={{ height: '22px', lineHeight: 1 }}
           onClick={(e) => {
             e.stopPropagation();
             chooseRandomCharacter();
@@ -218,13 +218,13 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       {open && (
         <button
           type="button"
-          className="btn py-0 px-2 small flex-shrink-0"
+          className={`btn py-0 px-2 small flex-shrink-0 ${isPaused ? 'btn-warning text-dark fw-bold shadow-sm border-0' : ''}`}
           style={{
             fontSize: '11px',
             height: '22px',
-            ...(isPaused
-              ? { backgroundColor: '#ffc107', color: '#212529', fontWeight: 700, boxShadow: '0 1px 2px rgba(0,0,0,.15)', border: 'none' }
-              : { backgroundColor: 'transparent', color: '#6c757d', border: '1px solid rgba(108,117,125,.5)' }),
+            ...(!isPaused
+              ? { backgroundColor: 'transparent', color: '#6c757d', border: '1px solid rgba(108,117,125,.5)' }
+              : {}),
           }}
           onClick={(e) => {
             e.stopPropagation();
