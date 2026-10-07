@@ -77,7 +77,12 @@ export function useCameraShortcuts({
       else if (modeRef.current === 'top') exitTop();
       else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
       useSceneStore.getState().setActiveCameraView(null);
-      toggleOrbitType?.('persp', { pos: PERSP_POS, target: PERSP_TARGET });
+      if (useSceneStore.getState().layers.laraGrid) {
+        const view = getLaraGridCameraView();
+        toggleOrbitType?.('persp', { pos: view.pos, target: view.target });
+      } else {
+        toggleOrbitType?.('persp', { pos: PERSP_POS, target: PERSP_TARGET });
+      }
     };
 
     const toggleOrbitMouseMode = () => {

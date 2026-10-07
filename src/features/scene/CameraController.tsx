@@ -53,7 +53,7 @@ import {
 import { parseUrlLayerOverrides } from './store/layerUrlParams';
 import { VIEWS } from './sidepanel/types';
 import { getOrbitMouseButtons } from './camera/orbitMouseButtons';
-import { getLaraGridCameraView } from './character/laraGridUtils';
+import { getLaraGridCameraView, getLaraGridActiveTarget } from './character/laraGridUtils';
 
 const FPV_DEFAULT_FOV = 100;
 const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
@@ -91,6 +91,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   }, [planeMode]);
 
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const laraGridActive = useSceneStore(state => state.layers.laraGrid);
   const prevCharacterId = useRef<string | null>(null);
 
   // OrbitControls ref
@@ -154,11 +155,30 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         lastCharacterPos.current.z = cameraState.characterZ;
         hasInitialStabilizedPos.current = false;
 
+        // Si LaraGrid est actif en mode orbit, cibler le nouveau PNJ actif au centre
+        if (useSceneStore.getState().layers.laraGrid && modeRef.current === 'orbit' && ctrlRef.current) {
+          const gridTarget = getLaraGridActiveTarget();
+          ctrlRef.current.target.set(...gridTarget);
+          currentTarget.current.set(...gridTarget);
+          ctrlRef.current.update();
+        }
+
         invalidate();
       }
     }
     prevCharacterId.current = activeCharacterId;
   }, [activeCharacterId, invalidate]);
+
+  // Quand LaraGrid est actif et en mode orbit, désigner le PNJ actif au centre comme cible d'orbit
+  useEffect(() => {
+    if (laraGridActive && modeRef.current === 'orbit' && ctrlRef.current) {
+      const gridTarget = getLaraGridActiveTarget();
+      ctrlRef.current.target.set(...gridTarget);
+      currentTarget.current.set(...gridTarget);
+      ctrlRef.current.update();
+      invalidate();
+    }
+  }, [laraGridActive, invalidate]);
 
   const changeMode = useCallback((m: CameraMode) => {
     const prev = modeRef.current;
@@ -169,6 +189,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     modeRef.current = m;
     cameraState.mode = m;
     setMode(m);
+
+    if (m === 'orbit' && useSceneStore.getState().layers.laraGrid && ctrlRef.current) {
+      const gridTarget = getLaraGridActiveTarget();
+      ctrlRef.current.target.set(...gridTarget);
+      currentTarget.current.set(...gridTarget);
+      ctrlRef.current.update();
+    }
 
     // Auto-enable HD mirrors en FPV, disable hors FPV (orbit, follow, top, ortho) pour les performances.
     // On bypass toggleLayer pour ne pas polluer l'URL avec mirrorsHD=1 (comportement automatique, pas un choix utilisateur).

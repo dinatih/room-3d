@@ -14,6 +14,7 @@ import {
   _tmpDollyDir,
 } from './cameraConstants';
 import { cameraState } from '../cameraState';
+import { useSceneStore } from '../store/useSceneStore';
 
 interface UseCameraFrameUpdateParams {
   camera: THREE.Camera;
@@ -103,32 +104,35 @@ export function useCameraFrameUpdate({
       const ctrl = ctrlRef.current;
       invalidate();
 
-      // Plain arrows — move active character
-      const isPlainMove = k.has('ArrowLeft') || k.has('ArrowRight') || k.has('ArrowUp') || k.has('ArrowDown');
+      // Plain arrows — move active character (uniquement hors grille Lara)
+      const isLaraGridActive = useSceneStore.getState().layers.laraGrid;
+      const isPlainMove = !isLaraGridActive && (k.has('ArrowLeft') || k.has('ArrowRight') || k.has('ArrowUp') || k.has('ArrowDown'));
       if (isPlainMove) {
         cameraState.lastUserControlTime = performance.now();
       }
 
-      if (k.has('ArrowLeft')) cameraState.followYaw += 0.03 * dt;
-      if (k.has('ArrowRight')) cameraState.followYaw -= 0.03 * dt;
-      const wYaw = cameraState.followYaw;
-      const ws = WALK_SPEED * dt;
+      if (!isLaraGridActive) {
+        if (k.has('ArrowLeft')) cameraState.followYaw += 0.03 * dt;
+        if (k.has('ArrowRight')) cameraState.followYaw -= 0.03 * dt;
+        const wYaw = cameraState.followYaw;
+        const ws = WALK_SPEED * dt;
 
-      let wdx = 0;
-      let wdz = 0;
-      if (k.has('ArrowUp')) {
-        wdx += Math.sin(wYaw) * ws;
-        wdz += Math.cos(wYaw) * ws;
-      }
-      if (k.has('ArrowDown')) {
-        wdx -= Math.sin(wYaw) * ws;
-        wdz -= Math.cos(wYaw) * ws;
-      }
-      if (wdx !== 0 || wdz !== 0) {
-        cameraState.characterX += wdx;
-        cameraState.characterZ += wdz;
-        followPos.current.x = cameraState.characterX;
-        followPos.current.z = cameraState.characterZ;
+        let wdx = 0;
+        let wdz = 0;
+        if (k.has('ArrowUp')) {
+          wdx += Math.sin(wYaw) * ws;
+          wdz += Math.cos(wYaw) * ws;
+        }
+        if (k.has('ArrowDown')) {
+          wdx -= Math.sin(wYaw) * ws;
+          wdz -= Math.cos(wYaw) * ws;
+        }
+        if (wdx !== 0 || wdz !== 0) {
+          cameraState.characterX += wdx;
+          cameraState.characterZ += wdz;
+          followPos.current.x = cameraState.characterX;
+          followPos.current.z = cameraState.characterZ;
+        }
       }
 
       if (ctrl) {

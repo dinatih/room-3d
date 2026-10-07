@@ -11,7 +11,7 @@ import { Character } from './Character';
 import { cacheDynamicGLTF } from './useCharacterAnimations';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import type { CharacterGroupProps } from './characterTypes';
-import { getLaraGridPosition } from './laraGridUtils';
+import { getLaraGridPosition, getLaraGridCenterIndex } from './laraGridUtils';
 
 function InternalCharacterGroup(props: CharacterGroupProps) {
   const laraGrid = useSceneStore(state => state.layers.laraGrid);
@@ -43,10 +43,24 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
       }
       return characters.filter(char => char.id === props.previewCharacterId);
     }
-    return characters.filter(char =>
+    const list = characters.filter(char =>
       showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)
     );
-  }, [activeCharacterId, characters, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds, activeMainIds]);
+    if (laraGrid && list.length > 0) {
+      const activeIdx = list.findIndex(char => char.id === activeCharacterId);
+      if (activeIdx !== -1) {
+        const centerIdx = getLaraGridCenterIndex(list.length);
+        if (activeIdx !== centerIdx) {
+          const reordered = [...list];
+          const temp = reordered[centerIdx];
+          reordered[centerIdx] = reordered[activeIdx];
+          reordered[activeIdx] = temp;
+          return reordered;
+        }
+      }
+    }
+    return list;
+  }, [activeCharacterId, characters, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds, activeMainIds, laraGrid]);
 
   if (laraGrid && !props.isPreview && props.duoAnimDef) {
     const duo = props.duoAnimDef;
@@ -62,7 +76,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
           isLara={leader.isLara} targetHeight={leader.height} variant={leader.variant}
           isActive={leader.id === activeCharacterId} isNPC={leader.id !== activeCharacterId}
           characterIndex={index} totalCharacters={mountedCharacters.length}
-          characterAnim={duo.animA} isAnimationMaster={index === 0}
+          characterAnim={duo.animA} isAnimationMaster={leader.id === activeCharacterId}
         />
         <Character
           {...props}
@@ -130,7 +144,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
               previewHaircut={props.previewHaircut}
               previewHairColor={props.previewHairColor}
               characterIndex={props.characterIndex !== undefined ? props.characterIndex : index}
-              isAnimationMaster={props.isPreview ? !isDuoRoleB : index === 0}
+              isAnimationMaster={props.isPreview ? !isDuoRoleB : (laraGrid ? char.id === activeCharacterId : index === 0)}
               totalCharacters={mountedCharacters.length}
             />
           </Suspense>

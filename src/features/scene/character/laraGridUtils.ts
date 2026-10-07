@@ -72,7 +72,51 @@ export function getLaraGridPosition(index: number, total: number = 1): { x: numb
 }
 
 /**
- * Calcule la cible (target au milieu exact de la grille) et la position caméra pour cadrer l'ensemble des personnages.
+ * Calcule l'index central d'une grille de personnages.
+ * Rangée du milieu et colonne du milieu (colonne 2 pour 5 colonnes).
+ */
+export function getLaraGridCenterIndex(total: number): number {
+  if (total <= 1) return 0;
+  const cols = LARA_GRID_CONFIG.cols;
+  const totalRows = Math.ceil(total / cols);
+  if (totalRows === 1) {
+    return Math.floor((total - 1) / 2);
+  }
+  const midRow = Math.floor(totalRows / 2);
+  const midCol = Math.floor(cols / 2);
+  const candidate = midRow * cols + midCol;
+  if (candidate < total) {
+    return candidate;
+  }
+  return Math.floor((total - 1) / 2);
+}
+
+/**
+ * Calcule les coordonnées 3D cibles (au niveau du buste/centre) du personnage actif au centre de la grille.
+ */
+export function getLaraGridActiveTarget(total?: number): [number, number, number] {
+  const count = total ?? getActiveSceneCharactersCount();
+  const centerIdx = getLaraGridCenterIndex(count);
+  const pos = getLaraGridPosition(centerIdx, count);
+  const store = useSceneStore.getState();
+  const activeChar = CHARACTERS.find(c => c.id === store.activeCharacterId);
+  const charH = activeChar?.height ?? LARA_GRID_CONFIG.characterHeight;
+
+  const { duo } = useLaraGridStore.getState();
+  if (duo?.offsetB) {
+    const [offsetX, offsetY, offsetZ] = duo.offsetB;
+    return [
+      pos.x + offsetX / 2,
+      Math.round(pos.y + charH * 0.5 + offsetY / 2),
+      pos.z + offsetZ / 2,
+    ];
+  }
+
+  return [pos.x, Math.round(pos.y + charH * 0.5), pos.z];
+}
+
+/**
+ * Calcule la cible (target sur le personnage actif au centre) et la position caméra pour cadrer la grille.
  */
 export function getLaraGridCameraView(total?: number): {
   pos: [number, number, number];
@@ -80,9 +124,9 @@ export function getLaraGridCameraView(total?: number): {
   zoom?: number;
 } {
   const count = total ?? getActiveSceneCharactersCount();
-  const { width: gridWidth, height: gridHeight, depth, centerX, centerY, centerZ } = getGridLayout(count);
+  const { width: gridWidth, height: gridHeight, depth, centerZ } = getGridLayout(count);
   const { fov } = LARA_GRID_CONFIG;
-  const target: [number, number, number] = [centerX, Math.round(centerY), centerZ];
+  const target = getLaraGridActiveTarget(count);
 
   // Ratio d'aspect de la fenêtre
   const aspect = typeof window !== 'undefined' && window.innerHeight > 0
@@ -99,7 +143,7 @@ export function getLaraGridCameraView(total?: number): {
   const distH = (gridWidth * padding * 0.5) / tanHalfFovH;
   const cameraDistance = Math.max(distV, distH, 350);
 
-  const pos: [number, number, number] = [centerX, Math.round(centerY), Math.round(centerZ + depth / 2 + cameraDistance)];
+  const pos: [number, number, number] = [target[0], target[1], Math.round(centerZ + depth / 2 + cameraDistance)];
 
   return { pos, target };
 }
@@ -152,8 +196,9 @@ export interface LaraGridOrthoView {
  */
 export function getLaraGridOrthoViews(total?: number): Record<LaraGridOrthoViewKey, LaraGridOrthoView> {
   const count = total ?? getActiveSceneCharactersCount();
-  const { width: gridWidth, height: gridHeight, depth: gridDepth, centerX, centerY, centerZ: baseZ } = getGridLayout(count);
-  const target: [number, number, number] = [centerX, centerY, baseZ];
+  const { width: gridWidth, height: gridHeight, depth: gridDepth } = getGridLayout(count);
+  const target = getLaraGridActiveTarget(count);
+  const [centerX, centerY, baseZ] = target;
 
   const aspect = typeof window !== 'undefined' && window.innerHeight > 0
     ? window.innerWidth / window.innerHeight

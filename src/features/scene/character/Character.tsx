@@ -681,6 +681,10 @@ export function Character({
       currentAnimClip.current = characterAnim || null;
       if (isVisibleInCountMode && !cameraState.characterHidden && showAllLaraStyles) {
         cameraState.positions[id] = { x: targetX, y: targetY, z: targetZ, yaw: 0 };
+        if (isActive) {
+          cameraState.characterX = targetX;
+          cameraState.characterZ = targetZ;
+        }
       } else {
         delete cameraState.positions[id];
       }
