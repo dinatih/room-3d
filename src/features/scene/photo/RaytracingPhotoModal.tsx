@@ -63,8 +63,12 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const denoiseQuadRef = useRef<FullScreenQuad | null>(null);
   const denoiseMatRef = useRef<DenoiseMaterial | null>(null);
   const enableDenoiseRef = useRef<boolean>(true);
+  const isPausedRef = useRef<boolean>(false);
+  const targetSamplesRef = useRef<number>(40);
+  const denoisedAppliedRef = useRef<boolean>(false);
   const savedBackgroundRef = useRef<THREE.Color | THREE.Texture | null | undefined>(undefined);
   const savedEnvironmentRef = useRef<THREE.Texture | null | undefined>(undefined);
+  const tempLightsRef = useRef<THREE.Object3D[]>([]);
 
   // Mode de comparaison 3D Standard vs Raytracing
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('split');
@@ -241,6 +245,11 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
             dir.target.updateMatrixWorld(true);
           }
         }
+        // Masquer les sources éteintes pour ne pas polluer l'échantillonnage de lumière
+        if (light.intensity === 0 && light.visible) {
+          light.visible = false;
+          hidden.push(light);
+        }
       }
 
       // Traiter et assainir les Mesh
@@ -288,6 +297,11 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           return;
         }
 
+        const isGround =
+          (mesh.userData && (mesh.userData.brickType === 'ground' || mesh.userData.itemName?.includes('Terrain'))) ||
+          name.includes('ground') || name.includes('bermuda') || name.includes('grass');
+        const isChar = (mesh.layers.mask & (1 << LAYER_WALKER)) !== 0;
+
         const isArray = Array.isArray(mesh.material);
         const mats = isArray ? (mesh.material as THREE.Material[]) : [mesh.material as THREE.Material];
         let modified = false;
@@ -296,6 +310,30 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           if (!m) {
             modified = true;
             return new THREE.MeshStandardMaterial({ color: 0xd0d0d0, roughness: 0.5 });
+          }
+
+          // Sol extérieur et pelouse : s'assurer qu'ils sont 100% opaques et double-face dans le path tracer
+          if (isGround) {
+            if (m.transparent || m.opacity < 1 || m.side !== THREE.DoubleSide) {
+              modified = true;
+              const cloned = m.clone();
+              cloned.transparent = false;
+              cloned.opacity = 1.0;
+              cloned.side = THREE.DoubleSide;
+              cloned.depthWrite = true;
+              return cloned;
+            }
+          }
+
+          // Personnages : s'assurer que les maillages ont DoubleSide pour éviter les faces arrière transparentes
+          if (isChar) {
+            if (m.side !== THREE.DoubleSide) {
+              modified = true;
+              const cloned = m.clone();
+              cloned.side = THREE.DoubleSide;
+              cloned.depthWrite = true;
+              return cloned;
+            }
           }
 
           // Matériaux invisibles (ex: noCapMat sur découpes de murs sans embouts)
@@ -357,6 +395,26 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       }
     });
 
+    // Détecter l'ambiance lumineuse et créer une douce lumière de remplissage physique zénithale
+    let ambColor = new THREE.Color(0xfff5e0);
+    let ambIntensity = 0.6;
+    scene.traverse((obj) => {
+      if ((obj as any).isAmbientLight) {
+        const a = obj as THREE.AmbientLight;
+        ambColor = a.color;
+        ambIntensity = a.intensity;
+      }
+    });
+
+    const fillLight = new THREE.DirectionalLight(ambColor, ambIntensity * 1.5);
+    fillLight.position.set(150, 450, 100);
+    fillLight.target.position.set(150, 0, 100);
+    scene.add(fillLight);
+    scene.add(fillLight.target);
+    fillLight.updateMatrixWorld(true);
+    fillLight.target.updateMatrixWorld(true);
+    tempLightsRef.current.push(fillLight, fillLight.target);
+
     // Sauvegarder le background d'origine et connecter le ciel HDRI pour illuminer et habiller le fond
     savedBackgroundRef.current = scene.background;
     savedEnvironmentRef.current = scene.environment;
@@ -375,6 +433,11 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
   // Restauration de la scène après fermeture ou rendu
   const restoreScene = useCallback(() => {
+    tempLightsRef.current.forEach((obj) => {
+      scene.remove(obj);
+    });
+    tempLightsRef.current = [];
+
     hiddenHelpersRef.current.forEach((obj) => {
       obj.visible = true;
     });
@@ -537,8 +600,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     pathTracer.fadeDuration = 0;
     pathTracer.minSamples = 1;
     pathTracer.renderDelay = 0;
-    pathTracer.dynamicLowRes = true;
-    pathTracer.lowResScale = 0.25;
+    pathTracer.dynamicLowRes = false;
     if (width > 1920) {
       pathTracer.tiles.set(2, 2);
     } else {
@@ -548,22 +610,16 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
     // Débruiteur Intelligent (DenoiseMaterial)
     const denoiseMat = new DenoiseMaterial();
-    denoiseMat.uniforms.sigma.value = 4.0;
-    denoiseMat.uniforms.threshold.value = 0.05;
+    denoiseMat.uniforms.sigma.value = 3.5;
+    denoiseMat.uniforms.threshold.value = 0.12;
     denoiseMat.uniforms.kSigma.value = 1.0;
     const denoiseQuad = new FullScreenQuad(denoiseMat);
     denoiseMatRef.current = denoiseMat;
     denoiseQuadRef.current = denoiseQuad;
 
-    // Intégration native du débruiteur dans le pipeline de three-gpu-pathtracer
-    (pathTracer as any).renderToCanvasCallback = (target: any, renderer: THREE.WebGLRenderer, quad: FullScreenQuad) => {
-      if (enableDenoiseRef.current && denoiseMatRef.current && denoiseQuadRef.current) {
-        denoiseMatRef.current.uniforms.map.value = target.texture;
-        renderer.setRenderTarget(null);
-        denoiseQuadRef.current.render(renderer);
-      } else {
-        quad.render(renderer);
-      }
+    // Rendu d'accumulation direct et ultra-rapide (le débruiteur lourd n'est appliqué qu'en passe finale)
+    (pathTracer as any).renderToCanvasCallback = (_target: any, renderer: THREE.WebGLRenderer, quad: FullScreenQuad) => {
+      quad.render(renderer);
     };
 
     let isDisposed = false;
@@ -591,10 +647,12 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
     // Boucle d'accumulation d'échantillons
     const renderLoop = () => {
-      if (pathTracerRef.current && !isPaused) {
+      if (pathTracerRef.current && !isPausedRef.current) {
         const samples = pathTracerRef.current.samples;
+        const currentTarget = targetSamplesRef.current;
 
-        if (samples < targetSamples) {
+        if (samples < currentTarget) {
+          denoisedAppliedRef.current = false;
           try {
             pathTracerRef.current.renderSample();
             frameCount++;
@@ -619,10 +677,19 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
             setElapsedSeconds(Math.round((now - sampleStartTime) / 1000));
           }
         } else {
-          // Échantillonnage cible atteint : on fige les stats sans re-render React intempestif
+          // Échantillonnage cible atteint : appliquer la passe finale de débruitage si activée
+          if (!denoisedAppliedRef.current) {
+            if (enableDenoiseRef.current && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current) {
+              denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
+              rendererRef.current.setRenderTarget(null);
+              denoiseQuadRef.current.render(rendererRef.current);
+            }
+            denoisedAppliedRef.current = true;
+          }
+
           const now = performance.now();
           if (now - lastSampleUpdate >= 250) {
-            setCurrentSamples(targetSamples);
+            setCurrentSamples(currentTarget);
             setFps(0);
             lastSampleUpdate = now;
           }
@@ -698,6 +765,21 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     }
   }, [enableDenoise]);
 
+  // Synchronisation de l'état de pause
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+    if (isPaused && enableDenoiseRef.current && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current && pathTracerRef.current) {
+      denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
+      rendererRef.current.setRenderTarget(null);
+      denoiseQuadRef.current.render(rendererRef.current);
+    }
+  }, [isPaused]);
+
+  // Synchronisation du nombre cible d'échantillons
+  useEffect(() => {
+    targetSamplesRef.current = targetSamples;
+  }, [targetSamples]);
+
   // Synchronisation des paramètres caméra physique (DoF, focus distance, f-stop)
   useEffect(() => {
     if (!physCameraRef.current || !pathTracerRef.current) return;
@@ -708,12 +790,14 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     cam.updateProjectionMatrix();
     cam.updateMatrixWorld();
     pathTracerRef.current.updateCamera();
+    denoisedAppliedRef.current = false;
     setCurrentSamples(0);
   }, [dofEnabled, focusDistance, fStop]);
 
   // Synchronisation de l'exposition
   useEffect(() => {
     if (rendererRef.current) {
+      denoisedAppliedRef.current = false;
       rendererRef.current.toneMappingExposure = exposure;
       pathTracerRef.current?.reset();
       setCurrentSamples(0);
@@ -723,6 +807,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   // Synchronisation du nombre de rebonds
   useEffect(() => {
     if (pathTracerRef.current) {
+      denoisedAppliedRef.current = false;
       pathTracerRef.current.bounces = bounces;
       pathTracerRef.current.transmissiveBounces = bounces;
       pathTracerRef.current.reset();
@@ -762,6 +847,13 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const getExportBlob = (callback: (blob: Blob | null) => void) => {
     const canvas = gl.domElement;
     if (!canvas) return;
+
+    // S'assurer que le rendu raytracing est débruité avant export si l'option est active
+    if (enableDenoiseRef.current && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current && pathTracerRef.current) {
+      denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
+      rendererRef.current.setRenderTarget(null);
+      denoiseQuadRef.current.render(rendererRef.current);
+    }
 
     if (comparisonMode === 'raster' && rasterSnapshot) {
       const img = new Image();
@@ -842,6 +934,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
   // Redémarrer le calcul
   const handleRestart = () => {
+    denoisedAppliedRef.current = false;
     pathTracerRef.current?.reset();
     setCurrentSamples(0);
     setElapsedSeconds(0);
