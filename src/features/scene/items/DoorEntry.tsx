@@ -7,7 +7,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
-import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
+import { DOOR_CONFIGS, DOOR_OPEN_RESPONSE, DOOR_CLOSE_RESPONSE, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
 import { useDoorImpulse } from './useDoorImpulse';
 
 export const ENTRY_W = 90;
@@ -101,7 +101,8 @@ export function DoorEntry({ onSize }: SceneItemProps) {
     if (current === target) return;
     const difference = target - current;
     if (Math.abs(difference) > 0.001) {
-      doorRef.current.rotation.y += difference * Math.min(1, 10 * delta);
+      const response = Math.abs(target) < Math.abs(current) ? DOOR_CLOSE_RESPONSE : DOOR_OPEN_RESPONSE;
+      doorRef.current.rotation.y += difference * Math.min(1, response * delta);
       invalidate();
     } else {
       doorRef.current.rotation.y = target;

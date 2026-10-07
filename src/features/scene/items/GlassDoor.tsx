@@ -9,7 +9,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
-import { computeDoorDynamics, DOOR_CONFIGS, doorCollisionState } from '../doorObstacles';
+import { computeDoorDynamics, DOOR_CONFIGS, DOOR_OPEN_RESPONSE, DOOR_CLOSE_RESPONSE, doorCollisionState } from '../doorObstacles';
 import { useDoorImpulse } from './useDoorImpulse';
 
 const W_TOTAL   = 160;
@@ -160,7 +160,8 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
     const dLeft = leftTarget - leftRotRef.current;
     if (Math.abs(dLeft) > 0.001) {
-      leftRotRef.current += dLeft * Math.min(1, 10 * delta);
+      const response = Math.abs(leftTarget) < Math.abs(leftRotRef.current) ? DOOR_CLOSE_RESPONSE : DOOR_OPEN_RESPONSE;
+      leftRotRef.current += dLeft * Math.min(1, response * delta);
       moved = true;
     } else if (leftRotRef.current !== leftTarget) {
       leftRotRef.current = leftTarget;
@@ -169,7 +170,8 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
     const dRight = rightTarget - rightRotRef.current;
     if (Math.abs(dRight) > 0.001) {
-      rightRotRef.current += dRight * Math.min(1, 10 * delta);
+      const response = Math.abs(rightTarget) < Math.abs(rightRotRef.current) ? DOOR_CLOSE_RESPONSE : DOOR_OPEN_RESPONSE;
+      rightRotRef.current += dRight * Math.min(1, response * delta);
       moved = true;
     } else if (rightRotRef.current !== rightTarget) {
       rightRotRef.current = rightTarget;

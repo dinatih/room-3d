@@ -10,6 +10,9 @@ import { cameraState } from './cameraState';
 import { getActiveFurnitureObstacles } from './ai/furnitureObstacles';
 import { ROOM_W, pX, pZ, DiagWall } from './wallData';
 
+export const DOOR_OPEN_RESPONSE = 10;
+export const DOOR_CLOSE_RESPONSE = 4;
+
 export interface CircleObstacle {
   x: number;
   z: number;

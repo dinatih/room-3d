@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 import { WALL_THICKNESS, PARTITION_THICKNESS } from '../wallData';
-import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState, type DoorConfig } from '../doorObstacles';
+import { DOOR_CONFIGS, DOOR_OPEN_RESPONSE, DOOR_CLOSE_RESPONSE, computeDoorDynamics, doorCollisionState, type DoorConfig } from '../doorObstacles';
 import { useDoorImpulse } from './useDoorImpulse';
 
 const W  = 83;     // Largeur panneau (ouvrant de 83 cm)
@@ -175,7 +175,8 @@ function DoorImpl({
     if (currentSigned === target) return;
     const difference = target - currentSigned;
     if (Math.abs(difference) > 0.001) {
-      doorRef.current.rotation.y += difference * Math.min(1, 10 * delta);
+      const response = Math.abs(target) < Math.abs(currentSigned) ? DOOR_CLOSE_RESPONSE : DOOR_OPEN_RESPONSE;
+      doorRef.current.rotation.y += difference * Math.min(1, response * delta);
       invalidate();
     } else {
       doorRef.current.rotation.y = target;
