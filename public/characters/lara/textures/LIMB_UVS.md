@@ -50,7 +50,13 @@ Le script reconnaît une source déjà traitée et la réexporte sans nouveau tr
 Pour reconstruire depuis une sauvegarde antérieure au transfert, ajouter
 `-- --reference /chemin/vers/sauvegarde.blend` à la commande Blender.
 
-État actuel : les aplats noirs ont été réduits, mais des raccords de texture restent
-visibles au bassin et sous la poitrine. Le résultat visuel n'est pas finalisé.
+Les UV d’origine sont conservés sur toutes les faces qui couvrent la peau, y
+compris les morceaux ajoutés. Seuls les triangles couvrant les zones vides sont
+transférés, sommet par sommet dans le même îlot UV du corps HSH. Cette méthode
+évite les aplats triangulaires du transfert précédent et préserve les détails
+du dos ainsi que les ombres sous la poitrine.
+
+État actuel : les aperçus du tronc et du dos sont corrigés ; des raccords restent
+visibles au bassin. Le résultat visuel global n'est pas finalisé.
 Les contrôles automatiques valident les côtés tatoués, le squelette et la géométrie,
 mais ne garantissent pas la qualité de ces raccords.
