@@ -53,7 +53,7 @@ import { RealMeasurementsLayer }      from './RealMeasurementsLayer';
 import { AppConsole }                 from '@features/ui/AppConsole';
 import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 import { GridLayout }            from '@features/scene/GridLayout';
-import { frameLaraGridCamera, frameLaraGridNorthWest } from './character/laraGridUtils';
+import { frameLaraGridCamera } from './character/laraGridUtils';
 import { useLaraGridStore } from './character/useLaraGridStore';
 import { isExtraCharacter } from './characterConfig';
 import { ViewControlBar }        from './ViewControlBar';
@@ -511,8 +511,7 @@ export function Studio() {
       if (laraGridActive) return;
     }
     if (laraGridActive && !showInventory) {
-      if (useSceneStore.getState().activeCameraView === 'iso-nw') frameLaraGridNorthWest();
-      else frameLaraGridCamera();
+      frameLaraGridCamera(undefined, useSceneStore.getState().activeCameraView === 'front' ? 'ortho' : 'persp');
     }
   }, [laraGridActive, laraCount, extraCharacters, activeExtraIds, activeMainIds, laraGridDuo, laraGridPartner, showInventory]);
 

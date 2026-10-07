@@ -77,6 +77,7 @@ export function getLaraGridPosition(index: number, total: number = 1): { x: numb
 export function getLaraGridCameraView(total?: number): {
   pos: [number, number, number];
   target: [number, number, number];
+  zoom?: number;
 } {
   const count = total ?? getActiveSceneCharactersCount();
   const { width: gridWidth, height: gridHeight, depth, centerX, centerY, centerZ } = getGridLayout(count);
@@ -103,31 +104,6 @@ export function getLaraGridCameraView(total?: number): {
   return { pos, target };
 }
 
-/** Vue ISO nord-ouest cadrée sur toute la grille de personnages. */
-export function getLaraGridNorthWestView(total?: number): {
-  pos: [number, number, number];
-  target: [number, number, number];
-  zoom?: number;
-} {
-  const count = total ?? getActiveSceneCharactersCount();
-  const { width, height, depth, centerX, centerY, centerZ } = getGridLayout(count);
-  const aspect = typeof window !== 'undefined' && window.innerHeight > 0
-    ? window.innerWidth / window.innerHeight
-    : 16 / 9;
-  const halfFov = (LARA_GRID_CONFIG.fov / 2) * (Math.PI / 180);
-  const diameter = Math.hypot(width, height, depth) * 1.25;
-  const distance = Math.max(diameter / (2 * Math.tan(halfFov)), diameter / (2 * Math.tan(halfFov) * aspect));
-  const offset = distance / Math.sqrt(3);
-  const target: [number, number, number] = [centerX, centerY, centerZ];
-  return { pos: [centerX - offset, centerY + offset, centerZ - offset], target };
-}
-
-export function frameLaraGridNorthWest(): void {
-  document.dispatchEvent(new CustomEvent('camera-view', {
-    detail: { ...getLaraGridNorthWestView(), projection: 'ortho' },
-  }));
-}
-
 /**
  * Retourne le nombre actuel de personnages visibles dans la scène.
  */
@@ -147,12 +123,12 @@ export function getActiveSceneCharactersCount(state?: {
 }
 
 /**
- * Émet l'événement camera-view pour orienter et cadrer la caméra sur le centre de la grille de personnages (vue perspective).
+ * Émet l'événement camera-view pour orienter et cadrer la caméra de face sur la grille de personnages.
  */
-export function frameLaraGridCamera(total?: number): void {
+export function frameLaraGridCamera(total?: number, projection: 'persp' | 'ortho' = 'persp'): void {
   const count = total ?? getActiveSceneCharactersCount();
   const view = getLaraGridCameraView(count);
-  document.dispatchEvent(new CustomEvent('camera-view', { detail: view }));
+  document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...view, projection } }));
 }
 
 export type LaraGridOrthoViewKey = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom';

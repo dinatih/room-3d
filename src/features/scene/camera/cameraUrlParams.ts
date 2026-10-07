@@ -32,7 +32,7 @@ export function parseUrlActiveCameraView(): string | null {
   if (typeof window === 'undefined') return null;
   const view = getUrlParams().get('cameraView')?.toLowerCase();
   if (view && ORBIT_VIEW_KEYS.has(view)) return view;
-  return !view && getUrlParams().get('npcgrid') === '1' ? 'iso-nw' : null;
+  return !view && getUrlParams().get('npcgrid') === '1' ? 'front' : null;
 }
 
 export function updateUrlCameraProjection(projection: CameraProjection) {
