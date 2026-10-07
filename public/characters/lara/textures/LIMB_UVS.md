@@ -33,3 +33,24 @@ Contrôle du GLB, des côtés tatoués et de la déformation des membres dans Ch
 ```bash
 node scripts/check-lara-limb-uvs.mjs
 ```
+
+## Remappage de la peau du corps assemblé (en cours)
+
+`scripts/remap_lara_nude_skin.py` transfère les UV du corps HSH original
+(`5_Body_1_0_0.004` dans `Lara_mix.blend`) sur les morceaux ajoutés du corps
+sans vêtements, à partir de `8001_png_005_limbs.png`. Il enregistre le `.blend`,
+exporte le GLB et régénère la correspondance des tatouages des jambes.
+
+```bash
+ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/remap_lara_nude_skin.py
+npm run optimize:glb
+```
+
+Le script reconnaît une source déjà traitée et la réexporte sans nouveau transfert.
+Pour reconstruire depuis une sauvegarde antérieure au transfert, ajouter
+`-- --reference /chemin/vers/sauvegarde.blend` à la commande Blender.
+
+État actuel : les aplats noirs ont été réduits, mais des raccords de texture restent
+visibles au bassin et sous la poitrine. Le résultat visuel n'est pas finalisé.
+Les contrôles automatiques valident les côtés tatoués, le squelette et la géométrie,
+mais ne garantissent pas la qualité de ces raccords.

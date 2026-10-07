@@ -7,7 +7,7 @@ import puppeteer from 'puppeteer';
 
 const io = new NodeIO().registerExtensions([KHRDracoMeshCompression, EXTTextureWebP])
   .registerDependencies({ 'draco3d.decoder': await draco3d.createDecoderModule() });
-const before = await io.readBinary(execFileSync('git', ['show', 'HEAD:public/characters/lara/lara_native.glb']));
+const before = await io.readBinary(execFileSync('git', ['show', 'HEAD:public/characters/lara/lara_native.glb'], {maxBuffer:Infinity}));
 const after = await io.read('public/characters/lara/lara_native.glb');
 const oldNodes = before.getRoot().listNodes();
 const newNodes = after.getRoot().listNodes();
@@ -134,7 +134,7 @@ try {
       }
       renderer.render(view,camera);
     };
-    window.nudeLara=()=>{view.traverse(m=>{if(m.isMesh) {if(m.name.startsWith('body_nude_legs')||m.name.startsWith('body_nude_feet')||m.name.startsWith('body_nude_torso')) m.visible=true; if(['body_legs','boots','shorts','body_torso','shirt'].includes(m.name)) m.visible=false;}});renderer.render(view,camera);};
+    window.nudeLara=()=>{view.traverse(m=>{if(m.isMesh) {if(m.name.startsWith('body_nude_legs')||m.name.startsWith('body_nude_feet')||m.name.startsWith('body_nude_torso')||m.name.startsWith('body_nude_panties')) m.visible=true; if(['body_legs','boots','shorts','body_torso','shirt'].includes(m.name)) m.visible=false;}});renderer.render(view,camera);};
   });
   await page.screenshot({path:'/tmp/lara-limbs-front.png'});
   await page.evaluate(()=>window.nudeLara());

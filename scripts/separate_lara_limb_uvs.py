@@ -153,6 +153,10 @@ def tattoo_reference():
         triangles = [t for t in obj.data.loop_triangles if side(obj, obj.data.polygons[t.polygon_index]) == tile]
         vertices = [obj.matrix_world @ obj.data.vertices[i].co for t in triangles for i in t.vertices]
         coords = [[uv[i].uv.copy() for i in t.loops] for t in triangles]
+        if obj.get(MARKER) == LAYOUT:
+            for triangle in coords:
+                for coord in triangle:
+                    coord.x = coord.x * 2 - tile
         references.append((BVHTree.FromPolygons(vertices, [(i,i+1,i+2) for i in range(0,len(vertices),3)], all_triangles=True), vertices, coords))
     return references
 
@@ -244,12 +248,13 @@ def export():
         export_animations=True, export_yup=True, export_extras=True)
 
 
-bpy.ops.wm.open_mainfile(filepath=str(SOURCE))
-args = sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
-if '--inspect' in args:
-    inspect()
-elif '--verify' in args:
-    verify()
-else:
-    migrate()
-    export()
+if __name__ == '__main__':
+    bpy.ops.wm.open_mainfile(filepath=str(SOURCE))
+    args = sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
+    if '--inspect' in args:
+        inspect()
+    elif '--verify' in args:
+        verify()
+    else:
+        migrate()
+        export()
