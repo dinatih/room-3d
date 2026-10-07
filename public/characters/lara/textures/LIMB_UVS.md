@@ -176,3 +176,28 @@ variantes et produit `/tmp/lara-barefoot-gloves.png`. La vue générale cadre
 jusqu'aux orteils. Les maillages corrigés sont enregistrés dans le `.blend` et
 réexportés avec le GLB. Le réglage des vêtements est appliqué avant le premier
 rendu du personnage après le chargement du modèle.
+
+## Fleur sur l’épaule droite de Delphina
+
+Le torse habillé et le torse déshabillé ont également leurs UV séparés par côté
+anatomique. Le torse habillé utilise `8001_torso_sides.png` ; le torse déshabillé
+conserve son atlas de peau. Les polygones traversant la ligne médiane sont
+triangulés avant d’attribuer les côtés, sans déplacer les sommets ni leurs poids.
+
+`LaraShoulderTattoo.ts` dessine une grande fleur rose avec des feuilles sur
+l’épaule droite, jusqu’au haut de la poitrine. Les correspondances
+`*_shoulder_tattoo_uv.png` projettent un même dessin sur le bras et les deux torses.
+Le maillage du haut masque la projection sur les parties habillées : la bretelle
+reste intacte et le dessin complet apparaît lorsque le haut est retiré.
+Les matériaux enregistrent `lara_delphina_shoulder_projection` dans le `.blend`
+et le GLB. La projection du cou de Sara est régénérée avec les nouveaux UV.
+
+```bash
+ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/project_lara_shoulder_tattoo.py
+npm run optimize:glb
+node scripts/check-lara-limb-uvs.mjs
+```
+
+Le contrôle produit `/tmp/lara-delphina-shoulder-clothed.png` et
+`/tmp/lara-delphina-shoulder-top-off.png` ; il vérifie aussi l’absence d’encre
+sur le côté gauche et la conservation du tatouage de Sara.

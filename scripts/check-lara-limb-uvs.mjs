@@ -31,7 +31,7 @@ for (const old of oldNodes) {
     }
   }
 }
-for (const name of ['arms','body_legs','body_legs_barefoot','fingers','body_nude_legs','body_nude_hands','body_nude_feet']) {
+for (const name of ['arms','body_legs','body_legs_barefoot','fingers','body_nude_legs','body_nude_hands','body_nude_feet','body_torso','body_nude_torso']) {
   const mesh = newNodes.find(n => n.getName() === name).getMesh();
   for (const primitive of mesh.listPrimitives()) {
     const pos = primitive.getAttribute('POSITION');
@@ -45,7 +45,7 @@ for (const name of ['arms','body_legs','body_legs_barefoot','fingers','body_nude
       const tile = x>0 ? 0 : 1;
       for (const j of ids) {
         const u = uv.getElement(j,[])[0];
-        assert(u >= tile/2-epsilon && u <= (tile+1)/2+epsilon, `${name}: crossed anatomical UV tile`);
+        assert(u >= tile/2-epsilon && u <= (tile+1)/2+epsilon, `${name}: crossed anatomical UV tile; x=${x}, tile=${tile}, u=${u}, positions=${ids.map(k=>pos.getElement(k,[]))}`);
       }
     }
   }
@@ -90,7 +90,7 @@ try {
       scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) {
         if (!mat.map || !mat.userData.__ownedCharacterMaterial) continue;
         const base=m.userData.__baseVariantMaterials?.find(b=>b.name===mat.name)?.map;
-        if (base && mat.map!==base && (m.name==='arms'||m.name==='body_legs'||m.name.startsWith('body_legs_barefoot')||mat.userData.lara_tattoo_projection||mat.userData.lara_sara_tattoo_projection)) {
+        if (base && mat.map!==base && (m.name==='arms'||m.name==='body_legs'||m.name.startsWith('body_legs_barefoot')||mat.userData.lara_tattoo_projection||mat.userData.lara_sara_tattoo_projection||(style==='delphina'&&mat.userData.lara_delphina_shoulder_projection))) {
           materials.push({mesh:m.name,mat,base});
         }
       }});
@@ -119,16 +119,23 @@ try {
       const painted=ctx.getImageData(0,0,1024,512).data;
       const changes=[0,0];
       for(let i=0;i<original.length;i+=4) if(original[i]!==painted[i]||original[i+1]!==painted[i+1]||original[i+2]!==painted[i+2]) changes[((i/4)%1024)<512?0:1]++;
-      return {style,mesh,projection:mat.userData.lara_tattoo_projection??mat.userData.lara_sara_tattoo_projection,changes};
+      const shoulder=style==='delphina'&&Boolean(mat.userData.lara_delphina_shoulder_projection);
+      return {style,mesh,shoulder,projection:shoulder?mat.userData.lara_delphina_shoulder_projection:mat.userData.lara_tattoo_projection??mat.userData.lara_sara_tattoo_projection,changes};
     }));
   });
   await page.waitForFunction(() => ['marissa','delphina'].every(style => window.laraChanges().some(r=>r.style===style&&r.mesh.startsWith('body_nude_legs')&&r.changes[style==='marissa'?0:1]>0)));
   await page.waitForFunction(() => window.laraChanges().some(r=>r.style==='sara'&&r.mesh.startsWith('body_nude_torso')&&r.changes.some(n=>n>0)));
+  await page.waitForFunction(() => ['body_torso','body_nude_torso'].every(name=>window.laraChanges().some(r=>r.style==='delphina'&&r.mesh.startsWith(name)&&r.changes.some(n=>n>0))));
   const changes=await page.evaluate(()=>window.laraChanges());
   for(const row of changes) {
     if(row.style==='sara') {
       assert(row.mesh.startsWith('body_nude_torso'));
       assert(row.changes.reduce((sum,n)=>sum+n,0)>0, 'Sara nude neck tattoo missing');
+      continue;
+    }
+    if(row.shoulder&&row.mesh.includes('torso')) {
+      assert(row.changes[1]>0, 'Delphina shoulder flower missing');
+      assert.equal(row.changes[0],0, 'Delphina shoulder flower on the left');
       continue;
     }
     assert.equal(row.changes[row.style==='marissa'?1:0],0,`${row.style} ${row.mesh}: tattoo on opposite side`);
@@ -285,7 +292,7 @@ try {
   await page.screenshot({path:'/tmp/lara-abduction-crotch.png'});
   await page.evaluate(() => {
     const {entries,THREE,variants}=window.laraChecks;
-    const scene=entries.find(e=>e.style==='sara').scene;
+    const scene=entries.find(e=>e.style==='sara').scene;scene.visible=true;
     scene.traverse(m=>{if(m.isMesh)m.visible=['face','eyes','arms','gloves','fingers'].includes(m.name)||m.name.startsWith('body_nude_torso');});
     const maps=[];scene.traverse(m=>{if(m.isMesh)for(const mat of Array.isArray(m.material)?m.material:[m.material])maps.push(mat.map);});
     variants.applyLaraRealisticTextures(scene,true);variants.applyLaraRealisticTextures(scene,false);
@@ -302,6 +309,47 @@ try {
   await page.screenshot({path:'/tmp/lara-sara-nude-neck.png'});
   await page.evaluate(()=>window.saraClothedNeck());
   await page.screenshot({path:'/tmp/lara-sara-clothed-neck.png'});
+  await page.evaluate(async () => {
+    const {entries,THREE,variants}=window.laraChecks;
+    const {extractCharacterParts,applyClothingAndAccessoriesVisibility}=await import('/src/features/scene/characterParts.ts');
+    const scene=entries.find(e=>e.style==='delphina').scene;
+    for(const [bone,position,quaternion,scale] of entries.find(e=>e.style==='delphina').restBones){bone.position.copy(position);bone.quaternion.copy(quaternion);bone.scale.copy(scale);}
+    scene.visible=true;scene.position.set(0,0,0);scene.updateMatrixWorld(true);
+    const parts=extractCharacterParts(scene);
+    const view=new THREE.Scene();view.add(scene,new THREE.HemisphereLight(0xffffff,0x777777,3));
+    const light=new THREE.DirectionalLight(0xffffff,3);light.position.set(1,3,4);view.add(light);
+    const camera=new THREE.OrthographicCamera(-.275,.275,.2,-.2,.01,10);camera.position.set(-.1,1.4,3);camera.lookAt(-.1,1.4,0);
+    const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1100,800);renderer.setClearColor(0xf3f4f6);document.body.replaceChildren(renderer.domElement);
+    window.delphinaShoulder=topOff=>{
+      applyClothingAndAccessoriesVisibility(parts,{laraShoes:true,laraNude:false,laraTopOff:topOff,laraBottomOff:false,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
+      scene.traverse(m=>{if(m.isMesh&&(m.name.includes('hair')||m.name==='braid'))m.visible=false;});
+      renderer.render(view,camera);
+    };
+    window.delphinaShoulder(false);
+    // The new flower must leave every triangle sampled on the left shoulder unchanged.
+    scene.traverse(m=>{if(!m.isMesh||!m.name.includes('torso'))return;
+      const materials=Array.isArray(m.material)?m.material:[m.material];
+      const bases=m.userData.__baseVariantMaterials;
+      if(!bases)return;
+      const geometry=m.geometry,pos=geometry.attributes.position,uv=geometry.attributes.uv;
+      const index=geometry.index;
+      for(const [slot,mat] of materials.entries()){
+        if(!mat.userData.lara_delphina_shoulder_projection)continue;
+        const canvas=document.createElement('canvas');canvas.width=mat.map.image.width;canvas.height=mat.map.image.height;const ctx=canvas.getContext('2d');
+        ctx.drawImage(bases[slot].map.image,0,0);const base=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+        ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(mat.map.image,0,0);const ink=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+        for(let i=0;i<index.count;i+=3){const ids=[index.getX(i),index.getX(i+1),index.getX(i+2)];
+          if(ids.some(j=>pos.getX(j)<=0))continue;
+          const u=ids.reduce((sum,j)=>sum+uv.getX(j),0)/3,v=ids.reduce((sum,j)=>sum+uv.getY(j),0)/3;
+          const offset=(Math.min(canvas.height-1,Math.floor((1-v)*canvas.height))*canvas.width+Math.min(canvas.width-1,Math.floor(u*canvas.width)))*4;
+          if(base[offset]!==ink[offset]||base[offset+1]!==ink[offset+1]||base[offset+2]!==ink[offset+2])throw Error(`Delphina flower leaked to the left torso: ${m.name}, triangle ${i/3}, UV ${u},${v}, positions ${ids.map(j=>[pos.getX(j),pos.getY(j),pos.getZ(j)])}`);
+        }
+      }
+    });
+  });
+  await page.screenshot({path:'/tmp/lara-delphina-shoulder-clothed.png'});
+  await page.evaluate(()=>window.delphinaShoulder(true));
+  await page.screenshot({path:'/tmp/lara-delphina-shoulder-top-off.png'});
   assert.deepEqual(errors,[]);
   console.log('Local previews: /tmp/lara-chest-left.png, /tmp/lara-hip-left.png');
 } finally { await browser.close(); }

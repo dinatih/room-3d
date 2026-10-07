@@ -18,17 +18,8 @@ export function getLaraLimbTattooTexture(
   if (image.width !== ATLAS_WIDTH || image.height !== ATLAS_HEIGHT) {
     throw new Error(`Unexpected Lara skin atlas size: ${material.name}`);
   }
-  const key = `${style}:${base.uuid}:${projection ?? ''}`;
-  const cached = textureCache.get(key);
+  const cached = textureCache.get(`${style}:${base.uuid}:${projection ?? ''}`);
   if (cached) return cached;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = ATLAS_WIDTH;
-  canvas.height = ATLAS_HEIGHT;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Cannot create Lara tattoo canvas');
-  ctx.drawImage(image, 0, 0);
-
   const overlay = document.createElement('canvas');
   overlay.width = ATLAS_WIDTH;
   overlay.height = ATLAS_HEIGHT;
@@ -45,6 +36,30 @@ export function getLaraLimbTattooTexture(
     ink.restore();
   }
 
+  return getProjectedLaraTattooTexture(material, style, overlay, projection);
+}
+
+/** Project a shared tattoo design onto a material's own skin atlas. */
+export function getProjectedLaraTattooTexture(
+  material: THREE.MeshStandardMaterial,
+  design: string,
+  overlay: HTMLCanvasElement,
+  projection?: string,
+): THREE.CanvasTexture {
+  const base = material.map;
+  if (!base?.image) throw new Error(`Missing Lara skin atlas: ${material.name}`);
+  const image = base.image as CanvasImageSource & { width: number; height: number };
+  const key = `${design}:${base.uuid}:${projection ?? ''}`;
+  const cached = textureCache.get(key);
+  if (cached) return cached;
+  const canvas = document.createElement('canvas');
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const ctx = canvas.getContext('2d');
+  const ink = overlay.getContext('2d');
+  if (!ctx || !ink) throw new Error('Cannot create Lara tattoo canvas');
+  ctx.drawImage(image, 0, 0);
+
   const texture = new THREE.CanvasTexture(canvas);
   texture.flipY = false;
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -59,18 +74,18 @@ export function getLaraLimbTattooTexture(
   // without replacing the original skin texture.
   const lookup = new Image();
   lookup.onload = () => {
-    if (lookup.width !== ATLAS_WIDTH || lookup.height !== ATLAS_HEIGHT) {
+    if (lookup.width !== image.width || lookup.height !== image.height) {
       throw new Error(`Invalid Lara tattoo projection: ${projection}`);
     }
     const mappingCanvas = document.createElement('canvas');
-    mappingCanvas.width = ATLAS_WIDTH;
-    mappingCanvas.height = ATLAS_HEIGHT;
+    mappingCanvas.width = image.width;
+    mappingCanvas.height = image.height;
     const mappingCtx = mappingCanvas.getContext('2d');
     if (!mappingCtx) throw new Error('Cannot read Lara tattoo projection');
     mappingCtx.drawImage(lookup, 0, 0);
-    const mapping = mappingCtx.getImageData(0, 0, ATLAS_WIDTH, ATLAS_HEIGHT).data;
+    const mapping = mappingCtx.getImageData(0, 0, image.width, image.height).data;
     const source = ink.getImageData(0, 0, ATLAS_WIDTH, ATLAS_HEIGHT).data;
-    const projected = mappingCtx.createImageData(ATLAS_WIDTH, ATLAS_HEIGHT);
+    const projected = mappingCtx.createImageData(image.width, image.height);
     for (let i = 0; i < mapping.length; i += 4) {
       if (mapping[i + 3] === 0) continue; // Texels outside the mesh UV islands.
       // R + the low 2 bits of G encode X; the other 6 bits + B encode Y.

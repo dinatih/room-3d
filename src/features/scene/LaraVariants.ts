@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { getLaraLimbTattooTexture } from './LaraLimbTattoos';
+import { getDelphinaShoulderTattooTexture } from './LaraShoulderTattoo';
 
 export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivida' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta';
 
@@ -85,8 +86,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       const meshName = mesh.name.toLowerCase();
       const isNudeLimb = meshName.startsWith('body_nude_legs') || meshName.startsWith('body_nude_feet');
       const isSaraNudeTorso = isSara && meshName.startsWith('body_nude_torso');
+      const isDelphinaNudeTorso = isDelphina && meshName.startsWith('body_nude_torso');
       if (meshName.includes('body_nude') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) {
-        if (!isSaraNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
+        if (!isSaraNudeTorso && !isDelphinaNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
       }
 
       // Variants need independent materials, but this function can run again
@@ -108,6 +110,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       mesh.material = clonedMats.length === 1 ? clonedMats[0] : clonedMats;
 
       clonedMats.forEach(mat => {
+        if (isDelphinaNudeTorso) {
+          mat.map = getDelphinaShoulderTattooTexture(mat);
+          mat.needsUpdate = true;
+          return;
+        }
         if (isSaraNudeTorso) {
           const projection = mat.userData.lara_sara_tattoo_projection as string | undefined;
           if (!projection) throw new Error(`Missing Sara neck tattoo projection: ${mat.name}`);
@@ -496,6 +503,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         // SARA FRONT NECK TATTOO (Tatouage en losange du menton au bas du cou)
         if (isSara && (meshName === 'body_torso' || (meshName.includes('body') && matName.includes('body') && !meshName.includes('leg')))) {
           applySaraTorsoNeckTattoo(mat);
+        }
+        if (isDelphina && mat.userData.lara_delphina_shoulder_projection) {
+          mat.map = getDelphinaShoulderTattooTexture(mat);
+          mat.needsUpdate = true;
         }
       });
     }
@@ -899,51 +910,9 @@ function drawDelphinaFloralTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
 
 // ── SARA FRONT NECK TATTOO CANVAS GENERATOR ──────────────────────────────────
 
-const saraNeckTattooTextureCache: Record<string, THREE.CanvasTexture> = {};
-
 function applySaraTorsoNeckTattoo(mat: THREE.MeshStandardMaterial) {
-  mat.map = getSaraTorsoNeckTattooTexture();
+  mat.map = getLaraLimbTattooTexture(mat, 'sara', drawSaraTorsoNeckTattooOnCanvas);
   mat.needsUpdate = true;
-}
-
-function getSaraTorsoNeckTattooTexture(): THREE.CanvasTexture {
-  if (saraNeckTattooTextureCache['sara_torso_tattoo']) {
-    return saraNeckTattooTextureCache['sara_torso_tattoo'];
-  }
-
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.flipY = false;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  saraNeckTattooTextureCache['sara_torso_tattoo'] = tex;
-
-  const drawAll = (img?: HTMLImageElement) => {
-    if (!ctx) return;
-    if (img) {
-      try {
-        ctx.drawImage(img, 0, 0, 512, 512);
-      } catch {
-        ctx.fillStyle = '#dca888';
-        ctx.fillRect(0, 0, 512, 512);
-      }
-    } else {
-      ctx.fillStyle = '#dca888';
-      ctx.fillRect(0, 0, 512, 512);
-    }
-    drawSaraTorsoNeckTattooOnCanvas(ctx);
-    tex.needsUpdate = true;
-  };
-
-  const img = new Image();
-  img.src = 'characters/lara/textures/8001.png';
-  img.onload = () => drawAll(img);
-  img.onerror = () => drawAll();
-  drawAll();
-
-  return tex;
 }
 
 /**
