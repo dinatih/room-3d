@@ -118,8 +118,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
   // Mode de comparaison 3D Standard vs Raytracing
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('split');
-  const [splitPos, setSplitPos] = useState<number>(50); // Pourcentage 0 à 100
-  const [isDraggingSplit, setIsDraggingSplit] = useState<boolean>(false);
   const [rasterSnapshot, setRasterSnapshot] = useState<string | null>(null);
 
   // Paramètres de rendu
@@ -164,16 +162,12 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  // Écouteur global de fin de drag pour le séparateur de split
+  // Synchronisation de la hauteur max du canvas selon le mode de comparaison
   useEffect(() => {
-    const handleMouseUp = () => setIsDraggingSplit(false);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('touchend', handleMouseUp);
-    return () => {
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('touchend', handleMouseUp);
-    };
-  }, []);
+    const canvas = gl?.domElement;
+    if (!canvas) return;
+    canvas.style.maxHeight = comparisonMode === 'split' ? 'calc(50vh - 100px)' : 'calc(100vh - 180px)';
+  }, [comparisonMode, gl]);
 
   // Initialisation de la distance de focus initiale au point d'impact central de la caméra
   useEffect(() => {
@@ -1080,20 +1074,16 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       img.onload = () => {
         const c = document.createElement('canvas');
         c.width = canvas.width;
-        c.height = canvas.height;
+        c.height = canvas.height * 2;
         const ctx = c.getContext('2d');
         if (ctx) {
-          ctx.drawImage(canvas, 0, 0);
-          const splitX = Math.round((splitPos / 100) * c.width);
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(0, 0, splitX, c.height);
-          ctx.clip();
-          ctx.drawImage(img, 0, 0, c.width, c.height);
-          ctx.restore();
+          // Vue 1 : 3D Standard en haut
+          ctx.drawImage(img, 0, 0, c.width, canvas.height);
           // Ligne blanche de séparation
           ctx.fillStyle = '#ffffff';
-          ctx.fillRect(splitX - 1, 0, 3, c.height);
+          ctx.fillRect(0, canvas.height - 2, c.width, 4);
+          // Vue 2 : Raytracing en bas
+          ctx.drawImage(canvas, 0, canvas.height, c.width, canvas.height);
         }
         c.toBlob(callback, 'image/png');
       };
@@ -1211,9 +1201,9 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
             onClick={() => setComparisonMode('split')}
             className={`btn ${comparisonMode === 'split' ? 'btn-warning text-dark fw-bold' : 'btn-outline-light text-white-50'}`}
             style={{ fontSize: '11px' }}
-            title="Comparer les deux rendus côte à côte avec le séparateur (Touche Espace)"
+            title="Comparer les 2 rendus l'un au-dessus de l'autre (Touche Espace)"
           >
-            ◧ Comparer (Split)
+            ⬍ Comparer (2 Vues)
           </button>
           <button
             type="button"
@@ -1249,100 +1239,63 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         {/* Zone Canvas avec centrage et cadrage */}
         <div
           ref={containerRef}
-          className="flex-grow-1 d-flex flex-column align-items-center justify-content-center p-3 position-relative overflow-hidden"
+          className={`flex-grow-1 d-flex flex-column align-items-center ${
+            comparisonMode === 'split'
+              ? 'justify-content-start overflow-y-auto p-3 gap-3'
+              : 'justify-content-center p-3 overflow-hidden'
+          } position-relative`}
           style={{ background: 'radial-gradient(circle at center, #111528 0%, #05070f 100%)' }}
         >
+          {/* Vue 1 : Rendu 3D Standard (affiché en haut en mode Comparer, ou plein écran en mode 3D Standard) */}
+          {rasterSnapshot && comparisonMode !== 'raytracing' && (
+            <div
+              className="position-relative shadow-lg border border-primary border-opacity-50 rounded overflow-hidden bg-black flex-shrink-0"
+              style={{
+                userSelect: 'none',
+                maxWidth: '100%',
+              }}
+            >
+              <div
+                className="position-absolute top-0 start-0 m-2 px-2 py-1 badge bg-dark bg-opacity-75 border border-primary border-opacity-50 text-white pointer-events-none"
+                style={{ fontSize: '11px', zIndex: 6 }}
+              >
+                🎮 {comparisonMode === 'split' ? '1. Rendu 3D Standard' : 'Rendu 3D Standard'}
+              </div>
+              <img
+                src={rasterSnapshot}
+                alt="Rendu 3D Standard"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: comparisonMode === 'split' ? 'calc(50vh - 100px)' : 'calc(100vh - 180px)',
+                  objectFit: 'contain',
+                  display: 'block',
+                }}
+              />
+            </div>
+          )}
+
+          {/* Vue 2 : Rendu Raytracing (affiché en bas en mode Comparer, ou plein écran en mode Raytracing) */}
           <div
             ref={canvasWrapperRef}
-            className="position-relative shadow-lg border border-secondary border-opacity-25 rounded overflow-hidden"
-            style={{ userSelect: 'none', cursor: dofEnabled ? 'crosshair' : 'default' }}
+            className={`position-relative shadow-lg border border-warning border-opacity-50 rounded overflow-hidden bg-black flex-shrink-0 ${
+              comparisonMode === 'raster' ? 'd-none' : ''
+            }`}
+            style={{
+              userSelect: 'none',
+              cursor: dofEnabled ? 'crosshair' : 'default',
+              maxWidth: '100%',
+            }}
             onClick={handleCanvasClick}
             title={dofEnabled ? "Cliquez sur n'importe quel point pour ajuster l'autofocus 🎯" : undefined}
-            onMouseMove={(e) => {
-              if (isDraggingSplit && canvasWrapperRef.current) {
-                const rect = canvasWrapperRef.current.getBoundingClientRect();
-                const pos = Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
-                setSplitPos(pos);
-              }
-            }}
-            onTouchMove={(e) => {
-              if (isDraggingSplit && canvasWrapperRef.current && e.touches.length > 0) {
-                const rect = canvasWrapperRef.current.getBoundingClientRect();
-                const pos = Math.max(0, Math.min(100, Math.round(((e.touches[0].clientX - rect.left) / rect.width) * 100)));
-                setSplitPos(pos);
-              }
-            }}
           >
-            {/* Le canvas unique gl.domElement est inséré dynamiquement ici */}
-
-            {/* Calque Rendu 3D Standard avec découpe pour comparaison */}
-            {rasterSnapshot && comparisonMode !== 'raytracing' && (
+            {/* Badge Raytracing en mode comparaison */}
+            {comparisonMode === 'split' && (
               <div
-                className="position-absolute top-0 start-0 w-100 h-100 pointer-events-none overflow-hidden"
-                style={{
-                  clipPath: comparisonMode === 'raster' ? 'none' : `polygon(0 0, ${splitPos}% 0, ${splitPos}% 100%, 0 100%)`,
-                  WebkitClipPath: comparisonMode === 'raster' ? 'none' : `polygon(0 0, ${splitPos}% 0, ${splitPos}% 100%, 0 100%)`,
-                  zIndex: 2,
-                }}
+                className="position-absolute top-0 start-0 m-2 px-2 py-1 badge bg-dark bg-opacity-75 border border-warning border-opacity-50 text-warning pointer-events-none"
+                style={{ fontSize: '11px', zIndex: 6 }}
               >
-                <img
-                  src={rasterSnapshot}
-                  alt="Rendu 3D Standard"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    display: 'block',
-                  }}
-                />
+                📸 2. Rendu Raytracing
               </div>
-            )}
-
-            {/* Ligne de séparation et poignée de comparaison interactive en mode Split */}
-            {rasterSnapshot && comparisonMode === 'split' && (
-              <div
-                className="position-absolute top-0 bottom-0"
-                style={{
-                  left: `${splitPos}%`,
-                  width: '4px',
-                  backgroundColor: '#ffffff',
-                  boxShadow: '0 0 10px rgba(0,0,0,0.85), 0 0 3px #ffffff',
-                  cursor: 'ew-resize',
-                  transform: 'translateX(-50%)',
-                  zIndex: 5,
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  setIsDraggingSplit(true);
-                }}
-                onTouchStart={() => setIsDraggingSplit(true)}
-              >
-                <div
-                  className="position-absolute top-50 start-50 translate-middle badge bg-dark text-white border border-light rounded-pill shadow d-flex align-items-center justify-content-center"
-                  style={{ width: '32px', height: '32px', fontSize: '13px', cursor: 'ew-resize', userSelect: 'none' }}
-                  title="Glissez horizontalement pour comparer"
-                >
-                  ↔
-                </div>
-              </div>
-            )}
-
-            {/* Badges d'identification des deux vues en mode Split */}
-            {rasterSnapshot && comparisonMode === 'split' && (
-              <>
-                <div
-                  className="position-absolute top-0 start-0 m-2 px-2 py-1 badge bg-dark bg-opacity-75 border border-white border-opacity-25 pointer-events-none"
-                  style={{ fontSize: '10px', zIndex: 6 }}
-                >
-                  🎮 3D Standard
-                </div>
-                <div
-                  className="position-absolute top-0 end-0 m-2 px-2 py-1 badge bg-dark bg-opacity-75 border border-warning border-opacity-25 text-warning pointer-events-none"
-                  style={{ fontSize: '10px', zIndex: 6 }}
-                >
-                  📸 Raytracing
-                </div>
-              </>
             )}
 
             {/* Spinner overlay pendant la génération initiale du BVH */}
@@ -1647,7 +1600,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       >
         <div className="d-flex align-items-center gap-3">
           <span>
-            <kbd className="bg-secondary text-white px-1 rounded">Espace</kbd> Alterner 3D / Split / Raytracing
+            <kbd className="bg-secondary text-white px-1 rounded">Espace</kbd> Alterner 3D / Comparer (2 vues) / Raytracing
           </span>
           <span className="text-white-50">•</span>
           <span>
