@@ -4,9 +4,14 @@ import * as THREE from 'three';
 import { useGLTFClone } from '../useGLTFClone';
 import { isAppIdle } from '../idleState';
 import { FADE_SECONDS, FISH_SPEED, GOLDFISH_FRAMES, fishHabitat, pickFishTarget, shortestFishTurn, type FishMode } from './goldfishBehavior';
+import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import model from './goldfishModel.json';
 
-export function JikinGoldfish() {
+export function JikinGoldfish({ isPreview = false, previewAnim = 'idle', onSize }: {
+  isPreview?: boolean;
+  previewAnim?: string;
+  onSize?: (size: THREE.Vector3) => void;
+}) {
   const { scene, animations } = useGLTFClone('/characters/jikin-goldfish/jikin-goldfish.glb');
   const body = useRef<THREE.Group>(null);
   const { invalidate } = useThree();
@@ -48,18 +53,41 @@ export function JikinGoldfish() {
     });
     const ai = life.current;
     ai.timer = clips.idle.duration * 2;
-    body.current!.position.set(0, (habitat.bottom + habitat.top) / 2, 0);
-    play('idle');
+    body.current!.rotation.set(0, 0, 0);
+    body.current!.position.set(0, isPreview ? 0 : (habitat.bottom + habitat.top) / 2, 0);
+    const mode = isPreview ? previewAnim : 'idle';
+    if (!(mode in clips)) throw new Error(`Jikin: unknown animation ${mode}`);
+    play(mode as FishMode);
+    mixer.update(0);
+    if (isPreview) {
+      body.current!.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(body.current!, true);
+      body.current!.position.y -= box.min.y;
+      onSize?.(box.getSize(new THREE.Vector3()));
+      useAnimPreviewStore.getState().setClipInfo(`Jikin ${mode}`, clips[mode as FishMode].duration, false, 24);
+    }
     invalidate();
     return () => {
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
       current.current = null;
     };
-  }, [scene, clips, mixer, invalidate]);
+  }, [scene, clips, mixer, invalidate, isPreview, previewAnim, onSize]);
 
   useFrame((_, delta) => {
     if (isAppIdle() || !body.current) return;
+    if (isPreview) {
+      const store = useAnimPreviewStore.getState();
+      const time = store.tick(delta);
+      const action = current.current!;
+      // Keep the end pose available when scrubbing to the final frame.
+      action.setLoop(THREE.LoopOnce, 0);
+      action.clampWhenFinished = true;
+      action.paused = false;
+      mixer.setTime(time);
+      invalidate();
+      return;
+    }
     const fish = body.current;
     const ai = life.current;
     if (ai.mode === 'idle' || ai.mode === 'eat') {

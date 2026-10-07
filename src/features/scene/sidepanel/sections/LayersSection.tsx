@@ -262,7 +262,7 @@ export function LayersSection({
       {layerBtn('blue',   'Voisins',       'neighbors')}
 
       {layerBtn('orange', 'Grille inventaire 📦 (Alt+I)', 'inventoryGrid')}
-      {layerBtn('teal',   'Grille 🌐',     'grid')}
+      {layerBtn('teal',   'Grille 🌐 (Alt+B)',     'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('yellow', 'Mesures réelles 📐 (Alt+M)', 'measuredDimensions')}
       {layerBtn('red',    'Aff. arêtes murs (Alt+A)', 'wallEdges')}

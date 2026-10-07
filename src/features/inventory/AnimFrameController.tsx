@@ -177,8 +177,8 @@ export function AnimFrameController({
 
   // Animations filtrées selon la recherche et catégories de CharacterAnimSelector
   const filteredAnims = useMemo(() => {
-    return getFilteredAnimOptions(animSearch, selectedCategories);
-  }, [animSearch, selectedCategories]);
+    return animalAnimOptions ?? getFilteredAnimOptions(animSearch, selectedCategories);
+  }, [animSearch, selectedCategories, animalAnimOptions]);
 
   // Navigation précédente / suivante limitée strictement aux résultats filtrés
   const cycleFilteredAnim = useCallback((direction: 'next' | 'prev') => {

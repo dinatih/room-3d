@@ -98,6 +98,7 @@ import { Drona }                                      from '@features/scene/item
 import { CharacterGroup }                               from '@features/scene/character';
 import { CHARACTERS }                                 from '@features/scene/characterConfig';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
+import { JikinGoldfish } from '@features/scene/items/JikinGoldfish';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
 import { BirdFeeder }                                 from '@features/scene/items/BirdFeeder';
 import { GoogleNestMini }                             from '@features/scene/items/GoogleNestMini';
@@ -302,6 +303,10 @@ SCENE_REGISTRY['shiba-inu'] = SCENE_REGISTRY['ushiro'];
 SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
   return <RobinBird isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
 } as any;
+
+SCENE_REGISTRY['jikin-goldfish'] = function GoldfishPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+  return <JikinGoldfish isPreview previewAnim={actionState?.characterAnim || 'idle'} onSize={onSize} />;
+};
 
 WIGS_ITEMS.forEach(wig => {
   SCENE_REGISTRY[wig.id] = function WigPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {

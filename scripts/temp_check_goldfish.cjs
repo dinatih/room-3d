@@ -17,6 +17,24 @@ for (let i = 0; i < 10000; i++) {
 }
 assert(Math.abs(shortestFishTurn(Math.PI - .1, -Math.PI + .1) - .2) < 1e-9);
 assert.throws(() => fishHabitat(40));
+// Exercise the actual scene shortcut handler, including text fields and modifiers.
+const vm = require('node:vm');
+const studio = ts.createSourceFile('Studio.tsx', fs.readFileSync('src/features/scene/Studio.tsx', 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+let shortcut;
+function findShortcut(node) {
+  if (ts.isVariableDeclaration(node) && node.name.getText(studio) === 'onKey' && node.initializer?.getText(studio).includes("onToggleLayer('grid')")) shortcut = node.initializer.getText(studio);
+  ts.forEachChild(node, findShortcut);
+}
+findShortcut(studio);
+assert(shortcut);
+const toggles = [];
+const handler = vm.runInNewContext(ts.transpileModule('const onKey = ' + shortcut + '; onKey;', { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText, { onToggleLayer: key => toggles.push(key), cameraState: { invalidate() {} } });
+const event = overrides => ({ key: 'b', altKey: true, ctrlKey: false, metaKey: false, shiftKey: false, repeat: false, target: null, preventDefault() {}, ...overrides });
+handler(event({}));
+handler(event({ key: 'B' }));
+for (const overrides of [{ repeat: true }, { ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: false }, { target: { tagName: 'INPUT' } }, { target: { tagName: 'TEXTAREA' } }, { target: { tagName: 'SELECT' } }, { target: { tagName: 'DIV', isContentEditable: true } }]) handler(event(overrides));
+assert.deepEqual(toggles, ['grid', 'grid']);
+console.log('Alt+B validated: grid only, case-insensitive, no repeat or editing-field activation.');
 (async () => {
   const THREE = await import('three');
   const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
@@ -48,5 +66,38 @@ assert.throws(() => fishHabitat(40));
       assert(corner.set(x,y,z).distanceTo(center) * 100 <= model.radius + 1e-4, `animated bounds at frame ${frame}`);
     }
   }
+  const { useAnimPreviewStore } = require('../src/features/inventory/useAnimPreviewStore.ts');
+  mixer.stopAllAction();
+  for (const [name, [start, end]] of Object.entries(GOLDFISH_FRAMES)) {
+    const clip = THREE.AnimationUtils.subclip(gltf.animations[0], name, start, end + 1, 24);
+    const action = mixer.clipAction(clip).reset().setLoop(THREE.LoopOnce, 0).play();
+    action.clampWhenFinished = true;
+    const store = useAnimPreviewStore.getState();
+    store.reset();
+    store.setClipInfo(`Jikin ${name}`, clip.duration, false, 24);
+    assert.equal(useAnimPreviewStore.getState().fps, 24);
+    store.pause();
+    assert.equal(store.tick(.5), 0);
+    store.seekToFrame(12);
+    assert.equal(store.tick(.5), .5);
+    action.paused = false;
+    mixer.setTime(useAnimPreviewStore.getState().currentTime);
+    assert.equal(action.time, .5);
+    store.play();
+    store.setSpeed(2);
+    assert.equal(store.tick(.25), 1);
+    store.setLooping(false);
+    assert.equal(store.tick(clip.duration), clip.duration);
+    assert.equal(useAnimPreviewStore.getState().isPlaying, false);
+    action.paused = false;
+    mixer.setTime(clip.duration);
+    assert(Math.abs(action.time - clip.duration) < 1e-6);
+    store.seekToFrame(0);
+    action.paused = false;
+    mixer.setTime(0);
+    assert.equal(action.time, 0);
+    mixer.stopAllAction();
+  }
+  console.log('Goldfish preview validated: all 5 animations, 24 fps, pause, seek, speed, end pose and rewind.');
   console.log('Goldfish validated: embedded textures, 5 clips, all 250 animated poses fit, 20000 habitat targets inside tub.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -717,7 +717,7 @@ export function InventoryPreview({
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters');
-  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id));
+  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'robin-bird', 'jikin-goldfish'].includes(item.id));
 
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
@@ -728,6 +728,15 @@ export function InventoryPreview({
         { value: 'run', label: 'Run' },
         { value: 'sitdown', label: 'SitDown' },
         { value: 'walk', label: 'Walk' },
+      ];
+    }
+    if (item.id === 'jikin-goldfish') {
+      return [
+        { value: 'idle', label: 'Idle' },
+        { value: 'swim', label: 'Swim' },
+        { value: 'eat', label: 'Eat' },
+        { value: 'turn-left', label: 'Turn Left' },
+        { value: 'turn-right', label: 'Turn Right' },
       ];
     }
     if (item.id === 'robin-bird') {

@@ -357,7 +357,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           {(item as any).notes || "Aucune note descriptive disponible pour cet élément."}
         </div>
 
-        {!isStorage && !isZone && (item as InventoryItem).category === 'characters' && item.id !== 'ushiro' && item.id !== 'robin-bird' && (
+        {!isStorage && !isZone && (item as InventoryItem).category === 'characters' && item.id !== 'ushiro' && item.id !== 'robin-bird' && item.id !== 'jikin-goldfish' && (
           <>
             <hr className="my-3 opacity-25" />
             <div className="d-flex justify-content-between align-items-center mb-2">
@@ -507,7 +507,7 @@ export function Inventory({
     if (initialCategory) {
       setActiveCat(initialCategory);
       if (initialCategory === 'characters') {
-        const firstCharacter = INVENTORY.find(i => i.category === 'characters' && i.id !== 'ushiro' && i.id !== 'robin-bird' && (extraCharacters || !isExtraCharacter(i.id)));
+        const firstCharacter = INVENTORY.find(i => i.category === 'characters' && i.id !== 'ushiro' && i.id !== 'robin-bird' && i.id !== 'jikin-goldfish' && (extraCharacters || !isExtraCharacter(i.id)));
         if (firstCharacter) setSelected(firstCharacter);
       }
     }

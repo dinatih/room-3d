@@ -407,6 +407,17 @@ INVENTORY.push({
   notes: `Personnage : Oiseau Robin.`
 });
 
+INVENTORY.push({
+  id: 'jikin-goldfish',
+  name: 'Poisson rouge Jikin',
+  brand: 'Animal',
+  category: 'characters',
+  qty: 1,
+  dims: { w: 18.48, d: 17.85, h: 9.47 },
+  glbPath: 'characters/jikin-goldfish/jikin-goldfish.glb',
+  notes: 'Poisson rouge animé : repos, nage, repas et virages gauche/droite. Vit dans la baignoire.',
+});
+
 export interface WigItem {
   id: string;
   name: string;

@@ -534,7 +534,7 @@ export function Studio() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
-      if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
+      if (t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName))) return;
 
       // Alt+<key> → layer toggles
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
@@ -557,6 +557,7 @@ export function Studio() {
           }
           return;
         }
+        if (k === 'b' && !e.shiftKey) { e.preventDefault(); if (e.repeat) return; onToggleLayer('grid'); cameraState.invalidate?.(); return; }
         if (k === 'm') { e.preventDefault(); onToggleLayer('measuredDimensions'); cameraState.invalidate?.(); return; }
         if (k === 'a') { e.preventDefault(); onToggleLayer('wallEdges'); cameraState.invalidate?.(); return; }
         if (k === 'i') { e.preventDefault(); onToggleLayer('inventoryGrid'); cameraState.invalidate?.(); return; }
