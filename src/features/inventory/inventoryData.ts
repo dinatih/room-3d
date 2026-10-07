@@ -419,6 +419,17 @@ INVENTORY.push({
   notes: 'Poisson rouge animé : repos, nage, repas et virages gauche/droite. Vit dans la baignoire.',
 });
 
+INVENTORY.push({
+  id: 'tosakin-goldfish',
+  name: 'Poisson rouge Tosakin',
+  brand: 'Animal',
+  category: 'characters',
+  qty: 1,
+  dims: { w: 18.0, d: 16.37, h: 11.42 },
+  glbPath: 'characters/tosakin-goldfish/tosakin-goldfish.glb',
+  notes: 'Poisson rouge à queue en éventail : repos, nage, repas et virages gauche/droite. Vit avec le Jikin dans la baignoire.',
+});
+
 export interface WigItem {
   id: string;
   name: string;

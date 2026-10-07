@@ -3,28 +3,33 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTFClone } from '../useGLTFClone';
 import { isAppIdle } from '../idleState';
-import { FADE_SECONDS, FISH_SPEED, GOLDFISH_FRAMES, fishHabitat, pickFishTarget, shortestFishTurn, type FishMode } from './goldfishBehavior';
+import { FADE_SECONDS, FISH_SPEED, fishHabitat, pickFishTarget, shortestFishTurn, type FishMode } from './goldfishBehavior';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
-import model from './goldfishModel.json';
+import jikinModel from './goldfishModel.json';
+import tosakinModel from './tosakinModel.json';
 
-export function JikinGoldfish({ isPreview = false, previewAnim = 'idle', onSize }: {
+const MODELS = { jikin: jikinModel, tosakin: tosakinModel };
+
+export function Goldfish({ species = 'jikin', isPreview = false, previewAnim = 'idle', onSize }: {
+  species?: keyof typeof MODELS;
   isPreview?: boolean;
   previewAnim?: string;
   onSize?: (size: THREE.Vector3) => void;
 }) {
-  const { scene, animations } = useGLTFClone('/characters/jikin-goldfish/jikin-goldfish.glb');
+  const model = MODELS[species];
+  const { scene, animations } = useGLTFClone(`/characters/${species}-goldfish/${species}-goldfish.glb`);
   const body = useRef<THREE.Group>(null);
   const { invalidate } = useThree();
   const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene]);
   const clips = useMemo(() => {
-    if (animations.length !== 1) throw new Error('Jikin: expected the original combined animation');
-    return Object.fromEntries(Object.entries(GOLDFISH_FRAMES).map(([name, [start, end]]) => {
+    if (animations.length !== 1) throw new Error('Goldfish: expected the original combined animation');
+    return Object.fromEntries(Object.entries(model.frames).map(([name, [start, end]]) => {
       // Blender exported original frame numbers as timestamps, including frame 2 offset.
       const clip = THREE.AnimationUtils.subclip(animations[0], name, start, end + 1, 24);
-      if (clip.tracks.length === 0) throw new Error(`Jikin: empty animation ${name}`);
+      if (clip.tracks.length === 0) throw new Error(`Goldfish: empty animation ${name}`);
       return [name, clip];
     })) as Record<FishMode, THREE.AnimationClip>;
-  }, [animations]);
+  }, [animations, model]);
   const current = useRef<THREE.AnimationAction | null>(null);
   const life = useRef({
     mode: 'idle' as FishMode, timer: 0, target: new THREE.Vector3(),
@@ -54,9 +59,9 @@ export function JikinGoldfish({ isPreview = false, previewAnim = 'idle', onSize 
     const ai = life.current;
     ai.timer = clips.idle.duration * 2;
     body.current!.rotation.set(0, 0, 0);
-    body.current!.position.set(0, isPreview ? 0 : (habitat.bottom + habitat.top) / 2, 0);
+    body.current!.position.set(0, isPreview ? 0 : (habitat.bottom + habitat.top) / 2, isPreview ? 0 : (species === 'jikin' ? -20 : 20));
     const mode = isPreview ? previewAnim : 'idle';
-    if (!(mode in clips)) throw new Error(`Jikin: unknown animation ${mode}`);
+    if (!(mode in clips)) throw new Error(`Goldfish: unknown animation ${mode}`);
     play(mode as FishMode);
     mixer.update(0);
     if (isPreview) {
@@ -64,7 +69,7 @@ export function JikinGoldfish({ isPreview = false, previewAnim = 'idle', onSize 
       const box = new THREE.Box3().setFromObject(body.current!, true);
       body.current!.position.y -= box.min.y;
       onSize?.(box.getSize(new THREE.Vector3()));
-      useAnimPreviewStore.getState().setClipInfo(`Jikin ${mode}`, clips[mode as FishMode].duration, false, 24);
+      useAnimPreviewStore.getState().setClipInfo(`${species} ${mode}`, clips[mode as FishMode].duration, false, 24);
     }
     invalidate();
     return () => {
@@ -72,7 +77,7 @@ export function JikinGoldfish({ isPreview = false, previewAnim = 'idle', onSize 
       mixer.uncacheRoot(scene);
       current.current = null;
     };
-  }, [scene, clips, mixer, invalidate, isPreview, previewAnim, onSize]);
+  }, [scene, clips, mixer, invalidate, isPreview, previewAnim, onSize, species]);
 
   useFrame((_, delta) => {
     if (isAppIdle() || !body.current) return;
@@ -128,7 +133,7 @@ export function JikinGoldfish({ isPreview = false, previewAnim = 'idle', onSize 
 
   return (
     <group ref={body} rotation-order="YXZ">
-      <group scale={100}>
+      <group scale={model.scale}>
         <group position={[-model.center[0], -model.center[1], -model.center[2]]}>
           <primitive object={scene} />
         </group>
