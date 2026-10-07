@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { mkdir, copyFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { NodeIO } from '@gltf-transform/core';
 import { KHRDracoMeshCompression, EXTTextureWebP } from '@gltf-transform/extensions';
@@ -147,6 +146,18 @@ try {
       camera.left=-1.25;camera.right=1.25;camera.top=1.1;camera.bottom=-.72;
       camera.updateProjectionMatrix();
     };
+    window.crouchLara=()=>{
+      for (const scene of view.children.filter(n=>n.getObjectByName('arm_left_elbow'))) {
+        for (const side of ['left','right']) {
+          scene.getObjectByName(`leg_${side}_thigh`).rotation.x=-Math.PI/2;
+          scene.getObjectByName(`leg_${side}_knee`).rotation.x=Math.PI/2;
+        }
+        scene.getObjectByName('spine_lower').rotation.x=Math.PI/4;
+        scene.getObjectByName('spine_upper').rotation.x=Math.PI/6;
+        scene.updateMatrixWorld(true);
+      }
+      window.detailLara(1,1);
+    };
     window.animateLara=()=>{
       for(const scene of view.children.filter(n=>n.getObjectByName('arm_left_elbow'))) {
         const arm=scene.getObjectByName('arms');
@@ -183,21 +194,8 @@ try {
   }
   await page.evaluate(()=>{window.restoreLara();window.turnLara(0,4);window.animateLara();});
   await page.screenshot({path:'/tmp/lara-limbs-animated.png'});
+  await page.evaluate(()=>window.crouchLara());
+  await page.screenshot({path:'/tmp/lara-crouch-deformation.png'});
   assert.deepEqual(errors,[]);
-  // HTTP URLs are detectable by terminal emulators such as Ghostty; the
-  // tool's "Viewed image" labels contain only filenames and are not links.
-  await mkdir('public/lara-previews', {recursive:true});
-  for (const filename of [
-    'lara-limbs-front.png','lara-limbs-nude.png','lara-limbs-three-quarter.png',
-    'lara-limbs-back.png','lara-limbs-animated.png',
-    'lara-chest-left.png','lara-chest-right.png','lara-hip-left.png','lara-hip-right.png',
-  ]) {
-    await copyFile(`/tmp/${filename}`, `public/lara-previews/${filename}`);
-    const url = `http://127.0.0.1:5173/lara-previews/${filename}`;
-    const response = await page.goto(url);
-    assert.equal(response.status(),200, `Preview inaccessible: ${filename}`);
-    const bytes = await response.buffer();
-    assert(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])), `Preview is not a PNG: ${filename}`);
-    console.log(url);
-  }
+  console.log('Local previews: /tmp/lara-chest-left.png, /tmp/lara-hip-left.png');
 } finally { await browser.close(); }

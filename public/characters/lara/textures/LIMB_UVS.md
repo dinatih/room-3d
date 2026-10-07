@@ -81,7 +81,28 @@ et `/tmp/lara-hip-{left,right}.png`, en plus des vues générales. Il vérifie l
 poids des nouveaux sommets du tronc, les attributs de géométrie, le squelette et
 les côtés tatoués. Les raccords de la taille restent ceux du corps assemblé.
 
-Les aperçus sont aussi copiés dans `public/lara-previews/` (dossier généré ignoré
-par Git). Le script affiche leurs URL HTTP sur le serveur Vite du port 5173.
-Dans Ghostty sous Linux, maintenir Ctrl et cliquer sur une URL pour l'ouvrir.
-Par exemple : `http://127.0.0.1:5173/lara-previews/lara-chest-left.png`.
+## Déformation du corps sans vêtements
+
+Les poids des fesses et du tronc sont corrigés dans le `.blend` par :
+
+```bash
+ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/fix_lara_skin_weights.py
+npm run optimize:glb
+```
+
+La surface postérieure des fesses suit davantage le bassin, avec une transition
+progressive vers les cuisses. Les bornes viennent des articulations du modèle.
+Au-dessus du pivot lombaire, l'influence du bassin décroît progressivement et
+celle du haut du dos augmente ; les poids de l'attache inférieure sont conservés.
+Les trois morceaux du corps sans vêtements utilisent la même règle. Les poids
+sont normalisés, sans modification des os, des UV ni de la géométrie au repos.
+Le script reconnaît une source déjà corrigée et la réexporte sans réappliquer
+les transferts. `-- --reference /chemin/source.blend` permet de reconstruire depuis
+une sauvegarde antérieure à la correction des poids.
+
+Le contrôle produit `/tmp/lara-crouch-deformation.png` avec une flexion des hanches
+à 90°, des genoux à 90° et une flexion répartie sur les deux os du dos. La comparaison
+avec les poids précédents montre un volume postérieur mieux conservé et une
+cassure du tronc atténuée. Les plis des poses extrêmes restent limités par la
+résolution du maillage. Ces aperçus restent des fichiers locaux dans `/tmp` et
+ne sont plus copiés dans les fichiers publics du site.
