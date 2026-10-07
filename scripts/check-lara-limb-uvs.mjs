@@ -92,9 +92,10 @@ try {
           materials.push({mesh:m.name,mat,base});
         }
       }});
-      entries.push({style,scene,materials});
+      const restBones=[];scene.traverse(n=>{if(n.isBone) restBones.push([n,n.position.clone(),n.quaternion.clone(),n.scale.clone()]);});
+      entries.push({style,scene,materials,restBones});
     }
-    window.laraChecks={entries,THREE,variants};
+    window.laraChecks={entries,THREE,variants,loader};
     window.laraChanges=()=>entries.flatMap(({style,materials})=>materials.map(({mesh,mat,base})=>{
       const canvas=document.createElement('canvas'); canvas.width=1024;canvas.height=512;
       const ctx=canvas.getContext('2d');ctx.drawImage(base.image,0,0);
@@ -124,6 +125,12 @@ try {
     for(const [i,style] of ['marissa','delphina'].entries()) {
       const scene=entries.find(e=>e.style===style).scene;
       scene.position.x=i===0?-.62:.62;
+      scene.updateMatrixWorld(true);
+      scene.traverse(n=>{
+        n.restLocalQuaternion=n.quaternion.clone();n.restWorldQuaternion=n.getWorldQuaternion(new THREE.Quaternion());
+        n.restWorldPosition=n.getWorldPosition(new THREE.Vector3());
+        if(n.isSkinnedMesh)n.frustumCulled=false;
+      });
       scene.traverse(m=>{if(m.isMesh) m.visible=['arms','body_legs','fingers','face','eyes','body_torso','shirt','shorts','boots','hair_base','braid'].includes(m.name);});
       const maps=[];scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) maps.push(mat.map);});
       variants.applyLaraRealisticTextures(scene,true);variants.applyLaraRealisticTextures(scene,false);
@@ -157,6 +164,32 @@ try {
         scene.updateMatrixWorld(true);
       }
       window.detailLara(1,1);
+    };
+    window.splitLara=async()=>{
+      const {loader}=window.laraChecks;
+      const source=await loader.loadAsync('/animations/yoga/anim_yoga_split_pose_a.glb');
+      const {retargetClip}=await import('/src/features/scene/retargeting/index.ts');
+      const entry=entries.find(e=>e.style==='marissa');
+      for(const [bone,position,quaternion,scale] of entry.restBones){bone.position.copy(position);bone.quaternion.copy(quaternion);bone.scale.copy(scale);}
+      entry.scene.updateMatrixWorld(true);source.scene.updateMatrixWorld(true);
+      const clip=retargetClip(source.animations[0],entry.scene,source.scene);
+      const mixer=new THREE.AnimationMixer(entry.scene);mixer.clipAction(clip).play();mixer.setTime(770/30);
+      entry.scene.updateMatrixWorld(true);entry.scene.traverse(n=>{if(n.isSkinnedMesh)n.skeleton.update();});
+      view.children.filter(n=>n.getObjectByName('arm_left_elbow')).forEach(n=>{n.visible=n===entry.scene;});
+      const pelvis=entry.scene.getObjectByName('pelvis').getWorldPosition(new THREE.Vector3());
+      camera.left=-.275;camera.right=.275;camera.top=.2;camera.bottom=-.2;camera.updateProjectionMatrix();
+      camera.position.copy(pelvis).add(new THREE.Vector3(0,-1,3));camera.lookAt(pelvis);renderer.render(view,camera);
+    };
+    window.abductLara=()=>{
+      const entry=entries.find(e=>e.style==='marissa');
+      for(const [bone,position,quaternion,scale] of entry.restBones){bone.position.copy(position);bone.quaternion.copy(quaternion);bone.scale.copy(scale);}
+      for(const [side,sign] of [['left',1],['right',-1]]) {
+        entry.scene.getObjectByName(`leg_${side}_thigh`).quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),sign*Math.PI/2));
+      }
+      entry.scene.updateMatrixWorld(true);
+      entry.scene.traverse(n=>{if(n.isSkinnedMesh)n.skeleton.update();});
+      const pelvis=entry.scene.getObjectByName('pelvis').getWorldPosition(new THREE.Vector3());pelvis.y-=.1;
+      camera.position.copy(pelvis).add(new THREE.Vector3(0,-1,3));camera.lookAt(pelvis);renderer.render(view,camera);
     };
     window.animateLara=()=>{
       for(const scene of view.children.filter(n=>n.getObjectByName('arm_left_elbow'))) {
@@ -196,6 +229,10 @@ try {
   await page.screenshot({path:'/tmp/lara-limbs-animated.png'});
   await page.evaluate(()=>window.crouchLara());
   await page.screenshot({path:'/tmp/lara-crouch-deformation.png'});
+  await page.evaluate(()=>window.splitLara());
+  await page.screenshot({path:'/tmp/lara-split-crotch.png'});
+  await page.evaluate(()=>window.abductLara());
+  await page.screenshot({path:'/tmp/lara-abduction-crotch.png'});
   assert.deepEqual(errors,[]);
   console.log('Local previews: /tmp/lara-chest-left.png, /tmp/lara-hip-left.png');
 } finally { await browser.close(); }

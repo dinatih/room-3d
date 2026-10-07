@@ -106,3 +106,25 @@ avec les poids précédents montre un volume postérieur mieux conservé et une
 cassure du tronc atténuée. Les plis des poses extrêmes restent limités par la
 résolution du maillage. Ces aperçus restent des fichiers locaux dans `/tmp` et
 ne sont plus copiés dans les fichiers publics du site.
+
+## Entrejambe en grand écart
+
+Après la correction des fesses et du tronc, corriger les poids de l'entrejambe :
+
+```bash
+ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/fix_lara_crotch_weights.py
+npm run optimize:glb
+```
+
+Le centre de l'entrejambe suit davantage le bassin. L'influence des cuisses est
+répartie selon le côté anatomique, avec une transition calculée depuis les
+articulations du modèle. La correction concerne les jambes sans vêtements,
+leur raccord et le short ; elle conserve la géométrie, les UV et le squelette.
+Elle est enregistrée dans le `.blend` et les réexécutions réexportent sans
+réappliquer le transfert.
+
+Le contrôle Chromium produit `/tmp/lara-split-crotch.png` à la frame 770 de
+l'animation de grand écart et `/tmp/lara-abduction-crotch.png` avec les cuisses
+écartées symétriquement à 90°. La comparaison avant/après de cette dernière
+pose montre la disparition du repli triangulaire et la fermeture du raccord
+central. Le défaut de ceinture signalé séparément reste à vérifier.
