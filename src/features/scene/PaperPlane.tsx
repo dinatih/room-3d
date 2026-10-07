@@ -452,7 +452,7 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
     // ── Caméra ─────────────────────────────────────────────────────────────
     const eyes = cameraState.activeEyesPos;
     const headForward = cameraState.activeHeadForward;
-    const near = vm === 'character' ? CHARACTER_CAMERA_NEAR : originalNear.current;
+    const near = vm === 'character' || vm === 'cockpit' ? CHARACTER_CAMERA_NEAR : originalNear.current;
     if (camera.near !== near) {
       camera.near = near;
       camera.updateProjectionMatrix();
@@ -465,8 +465,13 @@ export function PaperPlane({ onExit, model = DEFAULT_PLANE_MODEL, onViewModeChan
       camera.lookAt(_vb.current);
 
     } else if (vm === 'cockpit') {
-      _va.current.set(0, 4, -22).applyQuaternion(s.quat).add(s.pos);
-      camera.position.copy(_va.current);
+      const cockpit = planeRef.current.getObjectByName('aircraft-cockpit');
+      if (cockpit) {
+        cockpit.getWorldPosition(camera.position);
+      } else {
+        _va.current.set(0, 4, -22).applyQuaternion(s.quat).add(s.pos);
+        camera.position.copy(_va.current);
+      }
       // La caméra et l'avion partagent leurs axes : tangage ET roulis.
       camera.quaternion.copy(s.quat);
 

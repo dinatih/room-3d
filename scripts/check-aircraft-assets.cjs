@@ -97,10 +97,10 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
   activeAsset = comet;
   const element = exported.AircraftMesh({ definition: definitions.AIRCRAFT_MODELS.find(entry => entry.key === 'comet') });
   const wrapper = element.props.children;
-  const scene = wrapper.props.children.props.object;
+  const scene = wrapper.props.children[0].props.object;
   const normalized = new THREE.Group();
   normalized.position.fromArray(wrapper.props.position);
-  normalized.scale.setScalar(wrapper.props.scale ?? wrapper.props.children.props.scale);
+  normalized.scale.setScalar(wrapper.props.scale);
   normalized.add(scene);
   normalized.updateMatrixWorld(true);
   const size = new THREE.Box3().setFromObject(normalized, true).getSize(new THREE.Vector3());
@@ -115,7 +115,10 @@ THREE.TextureLoader.prototype.load = function (_, onLoad) { const texture = new 
   activeAsset = koi;
   const controls = { pitch: 0, roll: 0, yaw: 0, power: 0 };
   const koiElement = exported.AircraftMesh({ definition: definitions.AIRCRAFT_MODELS.find(entry => entry.key === 'koi-fish'), controls });
-  const koiScene = koiElement.props.children.props.children.props.object;
+  const koiScene = koiElement.props.children.props.children[0].props.object;
+  const marker = koiElement.props.children.props.children[1];
+  assert.equal(marker.props.name, 'aircraft-cockpit');
+  assert.deepEqual(Array.from(marker.props.position), [0, .8, 1.2]);
   const bones = {};
   koiScene.traverse(object => { if (object.isBone) bones[object.name] = object; });
   const rest = Object.fromEntries(Object.entries(bones).map(([name,bone])=>[name,bone.quaternion.clone().normalize()]));

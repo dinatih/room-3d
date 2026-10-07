@@ -1,5 +1,5 @@
 export const AIRCRAFT_MODELS = [
-  { key: 'koi-fish', label: 'Koï — Flying Circus', path: '/items/aircraft/koi-fish.glb', yaw: 0 },
+  { key: 'koi-fish', label: 'Koï — Flying Circus', path: '/items/aircraft/koi-fish.glb', yaw: 0, cockpit: [0, 0.8, 1.2] },
   { key: 'origami', label: 'Origami', path: '/items/aircraft/origami.glb', yaw: Math.PI / 2 },
   { key: 'rocket', label: 'Fusée', path: '/items/plane-rocket/plane-rocket.glb', yaw: Math.PI / 2 },
   { key: 'comet', label: 'Comète', path: '/items/plane-comet/plane-comet.glb', yaw: Math.PI / 2 },

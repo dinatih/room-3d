@@ -65,6 +65,9 @@ export function AircraftMesh({ definition, onLaunchReady, controls }: { definiti
   });
 
   return <group rotation={[0, definition.yaw, 0]}>
-    <group position={offset.toArray()} scale={scale}><primitive object={scene} /></group>
+    <group position={offset.toArray()} scale={scale}>
+      <primitive object={scene} />
+      {'cockpit' in definition && <object3D name="aircraft-cockpit" position={[...definition.cockpit]} />}
+    </group>
   </group>;
 }
