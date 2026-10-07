@@ -204,7 +204,7 @@ export function ViewControlBar({
       {viewButtons(ISO_VIEWS, 'purple')}
       {inline && (
         <select
-          className="form-select form-select-sm w-auto mw-100 flex-shrink-0 bg-transparent text-body border-secondary"
+          className="form-select form-select-sm py-0 ps-2 w-auto mw-100 flex-shrink-0 bg-transparent text-body border-secondary small"
           value={currentHdri}
           onChange={event => setHdri(event.target.value)}
           aria-label="Ambiance de la preview 3D"

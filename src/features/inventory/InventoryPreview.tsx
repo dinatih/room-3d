@@ -615,6 +615,7 @@ export function InventoryPreview({
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(true);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
+  const [showGrid, setShowGrid] = useState(true);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [previewView, setPreviewView] = useState<PreviewCameraView>('free');
   const cameraProjection = useSceneStore(state => state.cameraProjection);
@@ -824,14 +825,14 @@ export function InventoryPreview({
           )}
           {showing3D ? (
             <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
-              <SkySphere envOnly />
+              <SkySphere envOnly={showGrid} />
               <ambientLight intensity={0.7} />
               <directionalLight position={[150, 250, 150]} intensity={1.0} />
               <directionalLight position={[-100, 50, -100]} intensity={0.4} color="#aabbff" />
               {cameraProjection === 'ortho' ? (
                 <>
                   <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
-              {previewView !== 'free' && !previewView.startsWith('iso-') &&
+              {showGrid && previewView !== 'free' && !previewView.startsWith('iso-') &&
                 <GroundDatumLines mode={previewView as PreviewOrthoView} />}
                 </>
               ) : (
@@ -846,7 +847,7 @@ export function InventoryPreview({
                   )}
                 </>
               )}
-              <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />
+              {showGrid && <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />}
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}
@@ -1141,6 +1142,17 @@ export function InventoryPreview({
     </div>
     {item && (
       <ViewControlBar inline toolbarActions={showing3D && (
+        <>
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${showGrid ? 'btn-primary' : 'btn-outline-secondary'}`}
+          onClick={() => setShowGrid(v => !v)}
+          title={showGrid ? 'Masquer la grille et afficher le ciel' : 'Afficher la grille'}
+          aria-label={showGrid ? 'Masquer la grille et afficher le ciel' : 'Afficher la grille'}
+          aria-pressed={showGrid}
+        >
+          <i className="bi bi-grid-3x3" aria-hidden="true" />
+        </button>
         <button
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} ${showDims ? 'btn-primary' : 'btn-outline-secondary'}`}
@@ -1151,6 +1163,7 @@ export function InventoryPreview({
         >
           <i className="bi bi-rulers" aria-hidden="true" />
         </button>
+        </>
       )}>
         {showing3D && isCharacterItem && (
           <AnimFrameController
