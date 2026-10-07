@@ -90,7 +90,7 @@ try {
       scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) {
         if (!mat.map || !mat.userData.__ownedCharacterMaterial) continue;
         const base=m.userData.__baseVariantMaterials?.find(b=>b.name===mat.name)?.map;
-        if (base && mat.map!==base && (m.name==='arms'||m.name==='body_legs'||m.name.startsWith('body_legs_barefoot')||mat.userData.lara_tattoo_projection)) {
+        if (base && mat.map!==base && (m.name==='arms'||m.name==='body_legs'||m.name.startsWith('body_legs_barefoot')||mat.userData.lara_tattoo_projection||mat.userData.lara_sara_tattoo_projection)) {
           materials.push({mesh:m.name,mat,base});
         }
       }});
@@ -119,12 +119,18 @@ try {
       const painted=ctx.getImageData(0,0,1024,512).data;
       const changes=[0,0];
       for(let i=0;i<original.length;i+=4) if(original[i]!==painted[i]||original[i+1]!==painted[i+1]||original[i+2]!==painted[i+2]) changes[((i/4)%1024)<512?0:1]++;
-      return {style,mesh,projection:mat.userData.lara_tattoo_projection,changes};
+      return {style,mesh,projection:mat.userData.lara_tattoo_projection??mat.userData.lara_sara_tattoo_projection,changes};
     }));
   });
   await page.waitForFunction(() => ['marissa','delphina'].every(style => window.laraChanges().some(r=>r.style===style&&r.mesh.startsWith('body_nude_legs')&&r.changes[style==='marissa'?0:1]>0)));
+  await page.waitForFunction(() => window.laraChanges().some(r=>r.style==='sara'&&r.mesh.startsWith('body_nude_torso')&&r.changes.some(n=>n>0)));
   const changes=await page.evaluate(()=>window.laraChanges());
   for(const row of changes) {
+    if(row.style==='sara') {
+      assert(row.mesh.startsWith('body_nude_torso'));
+      assert(row.changes.reduce((sum,n)=>sum+n,0)>0, 'Sara nude neck tattoo missing');
+      continue;
+    }
     assert.equal(row.changes[row.style==='marissa'?1:0],0,`${row.style} ${row.mesh}: tattoo on opposite side`);
     if(row.mesh==='arms'||row.mesh==='body_legs'||row.mesh.startsWith('body_legs_barefoot')) assert(row.changes[row.style==='marissa'?0:1]>0);
   }
@@ -277,6 +283,25 @@ try {
   await page.screenshot({path:'/tmp/lara-split-333-crotch.png'});
   await page.evaluate(()=>window.abductLara());
   await page.screenshot({path:'/tmp/lara-abduction-crotch.png'});
+  await page.evaluate(() => {
+    const {entries,THREE,variants}=window.laraChecks;
+    const scene=entries.find(e=>e.style==='sara').scene;
+    scene.traverse(m=>{if(m.isMesh)m.visible=['face','eyes','arms','gloves','fingers'].includes(m.name)||m.name.startsWith('body_nude_torso');});
+    const maps=[];scene.traverse(m=>{if(m.isMesh)for(const mat of Array.isArray(m.material)?m.material:[m.material])maps.push(mat.map);});
+    variants.applyLaraRealisticTextures(scene,true);variants.applyLaraRealisticTextures(scene,false);
+    let j=0;scene.traverse(m=>{if(m.isMesh)for(const mat of Array.isArray(m.material)?m.material:[m.material])if(mat.map!==maps[j++])throw Error('Realistic mode replaced Sara neck tattoo');});
+    const view=new THREE.Scene();view.add(scene,new THREE.HemisphereLight(0xffffff,0x777777,3));
+    const light=new THREE.DirectionalLight(0xffffff,3);light.position.set(1,3,4);view.add(light);
+    scene.updateMatrixWorld(true);
+    const target=scene.getObjectByName('head_neck_lower').getWorldPosition(new THREE.Vector3());
+    const camera=new THREE.OrthographicCamera(-.18,.18,.13,-.13,.01,10);camera.position.copy(target).add(new THREE.Vector3(0,0,3));camera.lookAt(target);
+    const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1100,800);renderer.setClearColor(0xf3f4f6);
+    document.body.replaceChildren(renderer.domElement);renderer.render(view,camera);
+    window.saraClothedNeck=()=>{scene.traverse(m=>{if(m.isMesh&&m.name.startsWith('body_nude_torso'))m.visible=false;if(m.isMesh&&m.name==='body_torso')m.visible=true;});renderer.render(view,camera);};
+  });
+  await page.screenshot({path:'/tmp/lara-sara-nude-neck.png'});
+  await page.evaluate(()=>window.saraClothedNeck());
+  await page.screenshot({path:'/tmp/lara-sara-clothed-neck.png'});
   assert.deepEqual(errors,[]);
   console.log('Local previews: /tmp/lara-chest-left.png, /tmp/lara-hip-left.png');
 } finally { await browser.close(); }

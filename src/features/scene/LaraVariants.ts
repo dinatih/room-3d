@@ -84,8 +84,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       const mesh = node as THREE.Mesh;
       const meshName = mesh.name.toLowerCase();
       const isNudeLimb = meshName.startsWith('body_nude_legs') || meshName.startsWith('body_nude_feet');
+      const isSaraNudeTorso = isSara && meshName.startsWith('body_nude_torso');
       if (meshName.includes('body_nude') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) {
-        if (!isNudeLimb || (!isMarissa && !isDelphina)) return;
+        if (!isSaraNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
       }
 
       // Variants need independent materials, but this function can run again
@@ -107,6 +108,13 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       mesh.material = clonedMats.length === 1 ? clonedMats[0] : clonedMats;
 
       clonedMats.forEach(mat => {
+        if (isSaraNudeTorso) {
+          const projection = mat.userData.lara_sara_tattoo_projection as string | undefined;
+          if (!projection) throw new Error(`Missing Sara neck tattoo projection: ${mat.name}`);
+          mat.map = getLaraLimbTattooTexture(mat, 'sara', drawSaraTorsoNeckTattooOnCanvas, projection);
+          mat.needsUpdate = true;
+          return;
+        }
         if (isNudeLimb) {
           if (mat.userData.lara_tattoo_projection) {
             mat.map = getLaraLimbTattooTexture(mat, isMarissa ? 'marissa' : 'delphina',

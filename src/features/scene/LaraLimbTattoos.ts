@@ -8,8 +8,9 @@ const SIDE_WIDTH = ATLAS_WIDTH / 2;
 /** Skin atlases use anatomical left in the first tile, right in the second. */
 export function getLaraLimbTattooTexture(
   material: THREE.MeshStandardMaterial,
-  style: 'marissa' | 'delphina',
+  style: 'marissa' | 'delphina' | 'sara',
   draw: (ctx: CanvasRenderingContext2D) => void,
+  projection = material.userData.lara_tattoo_projection as string | undefined,
 ): THREE.CanvasTexture {
   const base = material.map;
   if (!base?.image) throw new Error(`Missing Lara skin atlas: ${material.name}`);
@@ -17,7 +18,6 @@ export function getLaraLimbTattooTexture(
   if (image.width !== ATLAS_WIDTH || image.height !== ATLAS_HEIGHT) {
     throw new Error(`Unexpected Lara skin atlas size: ${material.name}`);
   }
-  const projection = material.userData.lara_tattoo_projection as string | undefined;
   const key = `${style}:${base.uuid}:${projection ?? ''}`;
   const cached = textureCache.get(key);
   if (cached) return cached;
@@ -34,14 +34,16 @@ export function getLaraLimbTattooTexture(
   overlay.height = ATLAS_HEIGHT;
   const ink = overlay.getContext('2d');
   if (!ink) throw new Error('Cannot create Lara tattoo overlay');
-  const tileX = style === 'marissa' ? 0 : SIDE_WIDTH;
-  ink.save();
-  ink.beginPath();
-  ink.rect(tileX, 0, SIDE_WIDTH, ATLAS_HEIGHT);
-  ink.clip();
-  ink.translate(tileX, 0);
-  draw(ink);
-  ink.restore();
+  const tiles = style === 'sara' ? [0, SIDE_WIDTH] : [style === 'marissa' ? 0 : SIDE_WIDTH];
+  for (const tileX of tiles) {
+    ink.save();
+    ink.beginPath();
+    ink.rect(tileX, 0, SIDE_WIDTH, ATLAS_HEIGHT);
+    ink.clip();
+    ink.translate(tileX, 0);
+    draw(ink);
+    ink.restore();
+  }
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.flipY = false;
@@ -53,8 +55,8 @@ export function getLaraLimbTattooTexture(
     return texture;
   }
 
-  // Nude legs have a different UV layout. The data image maps their texels back
-  // to the dressed leg surface without replacing their original skin texture.
+  // Nude skin has a different UV layout. Map its texels to the dressed surface
+  // without replacing the original skin texture.
   const lookup = new Image();
   lookup.onload = () => {
     if (lookup.width !== ATLAS_WIDTH || lookup.height !== ATLAS_HEIGHT) {

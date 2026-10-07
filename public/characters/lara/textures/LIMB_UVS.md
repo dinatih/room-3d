@@ -135,6 +135,22 @@ le bassin l'influence excessive des cuisses, à partir du milieu de la cuisse.
 `/tmp/lara-split-333-crotch.png` permet de contrôler cette flexion.
 
 
+## Tatouage du cou de Sara
+
+Le torse déshabillé conserve son atlas de peau et reçoit le tatouage du cou de
+Sara par projection depuis les UV de `body_torso`. Les deux matériaux utilisés
+par `body_nude_torso` enregistrent `lara_sara_tattoo_projection` dans le `.blend`
+et le GLB. Les images de correspondance restent dans le dossier des textures.
+
+```bash
+ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/project_lara_neck_tattoo.py
+npm run optimize:glb
+```
+
+Le contrôle Chromium vérifie le tatouage sur le torse déshabillé, sa conservation
+en mode réaliste et produit `/tmp/lara-sara-nude-neck.png` ainsi que
+`/tmp/lara-sara-clothed-neck.png` pour comparer son placement.
+
 ## Pieds nus
 
 Le bouton « Chaussures Lara » contrôle les bottes et les pieds indépendamment

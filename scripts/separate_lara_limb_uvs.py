@@ -144,8 +144,8 @@ def migrate():
     bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE))
 
 
-def tattoo_reference():
-    obj = bpy.data.objects['body_legs']
+def tattoo_reference(mesh_name='body_legs'):
+    obj = bpy.data.objects[mesh_name]
     obj.data.calc_loop_triangles()
     uv = obj.data.uv_layers.active.data
     references = []
