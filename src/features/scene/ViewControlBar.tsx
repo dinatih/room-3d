@@ -38,6 +38,8 @@ export interface ViewControlBarProps {
   showCharacterModes?: boolean;
   /** Afficher la bascule Orbit/Pan pour les aperçus d'inventaire. */
   showOrbitControls?: boolean;
+  /** Vue de la caméra de l'aperçu ; null pour une caméra libre. */
+  activeCameraView?: string | null;
   showMirrorsHD?: boolean;
   hideUI?: boolean;
   onToggleHideUI?: () => void;
@@ -53,6 +55,7 @@ export function ViewControlBar({
   hidden = false,
   showCharacterModes = false,
   showOrbitControls = false,
+  activeCameraView: previewCameraView,
   showMirrorsHD = false,
   hideUI = false,
   onToggleHideUI,
@@ -66,7 +69,8 @@ export function ViewControlBar({
   const cameraMode = useSceneStore(s => s.cameraMode);
   const orbitMouseMode = useSceneStore(s => s.orbitMouseMode);
   const npcGridActive = useSceneStore(s => s.layers.laraGrid);
-  const activeCameraView = useSceneStore(s => s.activeCameraView);
+  const sceneCameraView = useSceneStore(s => s.activeCameraView);
+  const activeCameraView = previewCameraView === undefined ? sceneCameraView : previewCameraView;
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
   const currentHdri = useSceneStore(s => s.currentHdri);
   const setHdri = useSceneStore(s => s.setHdri);

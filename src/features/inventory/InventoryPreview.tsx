@@ -1138,7 +1138,7 @@ export function InventoryPreview({
       )}
     </div>
     {item && (
-      <ViewControlBar inline showOrbitControls={showing3D} beforeAmbianceActions={showing3D && (
+      <ViewControlBar inline activeCameraView={showing3D && previewView !== 'free' ? (previewView === 'side' ? 'left' : previewView) : null} showOrbitControls={showing3D} beforeAmbianceActions={showing3D && (
         <>
         <button
           type="button"
