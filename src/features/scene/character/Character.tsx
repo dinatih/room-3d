@@ -348,6 +348,7 @@ export function Character({
     setPosition: setAgentPosition,
     setRotation: setAgentRotation,
     hasPendingDynamicTask,
+    getStatus: getAgentStatus,
     initialPos,
   } = useAgentController(
     renderId,
@@ -693,7 +694,8 @@ export function Character({
 
         if (hasDynamicTask || isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
           const agentState = updateAgent(delta);
-          separateAgentFromDoors(agentState);
+          const agentStatus = getAgentStatus();
+          if (agentStatus === 'INTERACTING' || agentStatus === 'FINISHED') separateAgentFromDoors(agentState);
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
           currentAnimClip.current = agentState.animation;
@@ -721,7 +723,8 @@ export function Character({
         }
       } else if (isNPC) {
         const agentState = updateAgent(delta);
-        separateAgentFromDoors(agentState);
+        const agentStatus = getAgentStatus();
+        if (agentStatus === 'INTERACTING' || agentStatus === 'FINISHED') separateAgentFromDoors(agentState);
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
         groupRef.current.rotation.y = agentState.rotY;
         currentAnimClip.current = agentState.animation;
