@@ -102,7 +102,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const pathTracerRef = useRef<WebGLPathTracer | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const renderCameraRef = useRef<PhysicalCamera | THREE.OrthographicCamera | null>(null);
-  const animFrameIdRef = useRef<number | null>(null);
+  const wakeRenderLoopRef = useRef<(() => void) | null>(null);
   const originalMaterialsMapRef = useRef<Map<THREE.Mesh, THREE.Material | THREE.Material[]>>(new Map());
   const hiddenHelpersRef = useRef<THREE.Object3D[]>([]);
   const denoiseQuadRef = useRef<FullScreenQuad | null>(null);
@@ -458,9 +458,9 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       }
     });
 
-    const fillLight = new THREE.DirectionalLight(ambColor, ambIntensity * 1.5);
-    fillLight.position.set(150, 450, 100);
-    fillLight.target.position.set(150, 0, 100);
+    const fillLight = new THREE.DirectionalLight(ambColor, ambIntensity * 2.2);
+    fillLight.position.set(300, 500, 300);
+    fillLight.target.position.set(150, 0, 150);
     scene.add(fillLight);
     scene.add(fillLight.target);
     fillLight.updateMatrixWorld(true);
@@ -719,8 +719,11 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     pathTracer.minSamples = 1;
     pathTracer.renderDelay = 0;
     pathTracer.dynamicLowRes = false;
-    // Découpage en tuiles 2x2 pour éviter de saturer la mémoire du GPU
-    pathTracer.tiles.set(2, 2);
+    // Découpage fin en tuiles (ex: 6x4 = 24 tuiles en 720p, 8x6 = 48 tuiles en 1080p)
+    // Chaque tuile fait ~35k-40k pixels maximum, ce qui prend ~10ms sur le GPU au lieu de 400ms !
+    const tilesX = Math.max(4, Math.ceil(width / 240));
+    const tilesY = Math.max(4, Math.ceil(height / 180));
+    pathTracer.tiles.set(tilesX, tilesY);
     // Limiter la taille max de l'atlas de textures à 512x512 (réduit de 75% l'empreinte mémoire VRAM/RAM)
     pathTracer.textureSize.set(512, 512);
 
@@ -739,6 +742,93 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     };
 
     let isDisposed = false;
+    let isRunning = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let animFrameId: number | null = null;
+
+    let lastTime = performance.now();
+    let frameCount = 0;
+    let sampleStartTime = performance.now();
+    let lastSampleUpdate = 0;
+
+    const scheduleNextStep = () => {
+      if (isDisposed || isPausedRef.current) {
+        isRunning = false;
+        return;
+      }
+      // Pause de 15ms après chaque tuile pour libérer le thread UI, l'OS et le GPU
+      timeoutId = setTimeout(() => {
+        if (isDisposed || isPausedRef.current) {
+          isRunning = false;
+          return;
+        }
+        animFrameId = requestAnimationFrame(renderStep);
+      }, 15);
+    };
+
+    const renderStep = () => {
+      if (!pathTracerRef.current || isPausedRef.current || isDisposed) {
+        isRunning = false;
+        return;
+      }
+
+      const samples = pathTracerRef.current.samples;
+      const currentTarget = targetSamplesRef.current;
+
+      if (samples < currentTarget) {
+        denoisedAppliedRef.current = false;
+        try {
+          pathTracerRef.current.renderSample();
+          frameCount++;
+        } catch (err: any) {
+          console.error('[Raytracing] Erreur renderSample:', err);
+          setErrorMessage(err?.message || 'Erreur pendant le calcul du raytracing.');
+          setIsPaused(true);
+          isRunning = false;
+          return;
+        }
+
+        const now = performance.now();
+        // Throttling du setState React : màj toutes les 120ms au lieu de re-render React 60x par seconde
+        if (now - lastSampleUpdate >= 120) {
+          setCurrentSamples(samples);
+          lastSampleUpdate = now;
+        }
+
+        if (now - lastTime >= 1000) {
+          setFps(Math.round((frameCount * 1000) / (now - lastTime)));
+          frameCount = 0;
+          lastTime = now;
+          setElapsedSeconds(Math.round((now - sampleStartTime) / 1000));
+        }
+
+        scheduleNextStep();
+      } else {
+        // Échantillonnage cible atteint : appliquer la passe finale de débruitage si activée
+        if (!denoisedAppliedRef.current) {
+          if (enableDenoiseRef.current && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current) {
+            denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
+            rendererRef.current.setRenderTarget(null);
+            denoiseQuadRef.current.render(rendererRef.current);
+          }
+          denoisedAppliedRef.current = true;
+        }
+
+        setCurrentSamples(currentTarget);
+        setFps(0);
+        // ARRET COMPLET : pas de nouvel appel rAF ni de setTimeout quand le rendu est terminé !
+        isRunning = false;
+      }
+    };
+
+    const wakeRenderLoop = () => {
+      if (isDisposed || isPausedRef.current || isRunning) return;
+      if (pathTracerRef.current && pathTracerRef.current.samples < targetSamplesRef.current) {
+        isRunning = true;
+        animFrameId = requestAnimationFrame(renderStep);
+      }
+    };
+    wakeRenderLoopRef.current = wakeRenderLoop;
 
     // Laisser le temps au navigateur d'afficher le spinner avant la construction synchrone du BVH
     const timer = setTimeout(() => {
@@ -749,6 +839,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         pathTracerRef.current = pathTracer;
         setIsBuildingScene(false);
         console.log('[Raytracing] Scène prête ! Démarrage de l\'accumulation.');
+        wakeRenderLoop();
       } catch (err: any) {
         console.error('[Raytracing] Erreur initialisation WebGLPathTracer:', err);
         setErrorMessage(err?.message || 'Échec de la génération du maillage BVH.');
@@ -756,76 +847,12 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       }
     }, 60);
 
-    let lastTime = performance.now();
-    let frameCount = 0;
-    let sampleStartTime = performance.now();
-    let lastSampleUpdate = 0;
-    let lastRenderTime = 0;
-    const FRAME_BUDGET_MS = 25; // ~40 FPS max pour réguler l'usage GPU et laisser respirer le garbage collector de Chrome
-
-    // Boucle d'accumulation d'échantillons
-    const renderLoop = () => {
-      if (pathTracerRef.current && !isPausedRef.current) {
-        const now = performance.now();
-        const samples = pathTracerRef.current.samples;
-        const currentTarget = targetSamplesRef.current;
-
-        if (samples < currentTarget) {
-          if (now - lastRenderTime >= FRAME_BUDGET_MS) {
-            lastRenderTime = now;
-            denoisedAppliedRef.current = false;
-            try {
-              pathTracerRef.current.renderSample();
-              frameCount++;
-            } catch (err: any) {
-              console.error('[Raytracing] Erreur renderSample:', err);
-              setErrorMessage(err?.message || 'Erreur pendant le calcul du raytracing.');
-              setIsPaused(true);
-              return;
-            }
-
-            // Throttling du setState React : màj toutes les 120ms au lieu de re-render React 60x par seconde
-            if (now - lastSampleUpdate >= 120) {
-              setCurrentSamples(samples);
-              lastSampleUpdate = now;
-            }
-
-            if (now - lastTime >= 1000) {
-              setFps(Math.round((frameCount * 1000) / (now - lastTime)));
-              frameCount = 0;
-              lastTime = now;
-              setElapsedSeconds(Math.round((now - sampleStartTime) / 1000));
-            }
-          }
-        } else {
-          // Échantillonnage cible atteint : appliquer la passe finale de débruitage si activée
-          if (!denoisedAppliedRef.current) {
-            if (enableDenoiseRef.current && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current) {
-              denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
-              rendererRef.current.setRenderTarget(null);
-              denoiseQuadRef.current.render(rendererRef.current);
-            }
-            denoisedAppliedRef.current = true;
-          }
-
-          if (now - lastSampleUpdate >= 250) {
-            setCurrentSamples(currentTarget);
-            setFps(0);
-            lastSampleUpdate = now;
-          }
-        }
-      }
-      animFrameIdRef.current = requestAnimationFrame(renderLoop);
-    };
-
-    animFrameIdRef.current = requestAnimationFrame(renderLoop);
-
     return () => {
       isDisposed = true;
       clearTimeout(timer);
-      if (animFrameIdRef.current) {
-        cancelAnimationFrame(animFrameIdRef.current);
-      }
+      if (timeoutId) clearTimeout(timeoutId);
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      wakeRenderLoopRef.current = null;
       restoreScene();
       try {
         denoiseQuad.dispose();
@@ -895,16 +922,21 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   // Synchronisation de l'état de pause
   useEffect(() => {
     isPausedRef.current = isPaused;
-    if (isPaused && enableDenoiseRef.current && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current && pathTracerRef.current) {
-      denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
-      rendererRef.current.setRenderTarget(null);
-      denoiseQuadRef.current.render(rendererRef.current);
+    if (isPaused) {
+      if (enableDenoiseRef.current && denoiseMatRef.current && denoiseQuadRef.current && rendererRef.current && pathTracerRef.current) {
+        denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
+        rendererRef.current.setRenderTarget(null);
+        denoiseQuadRef.current.render(rendererRef.current);
+      }
+    } else {
+      wakeRenderLoopRef.current?.();
     }
   }, [isPaused]);
 
   // Synchronisation du nombre cible d'échantillons
   useEffect(() => {
     targetSamplesRef.current = targetSamples;
+    wakeRenderLoopRef.current?.();
   }, [targetSamples]);
 
   // Synchronisation des paramètres caméra physique (DoF, focus distance, f-stop)
@@ -920,6 +952,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       pathTracerRef.current.updateCamera();
       denoisedAppliedRef.current = false;
       setCurrentSamples(0);
+      wakeRenderLoopRef.current?.();
     }
   }, [dofEnabled, focusDistance, fStop]);
 
@@ -930,6 +963,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       rendererRef.current.toneMappingExposure = exposure;
       pathTracerRef.current?.reset();
       setCurrentSamples(0);
+      wakeRenderLoopRef.current?.();
     }
   }, [exposure]);
 
@@ -941,6 +975,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       pathTracerRef.current.transmissiveBounces = bounces;
       pathTracerRef.current.reset();
       setCurrentSamples(0);
+      wakeRenderLoopRef.current?.();
     }
   }, [bounces]);
 
@@ -1068,6 +1103,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     pathTracerRef.current?.reset();
     setCurrentSamples(0);
     setElapsedSeconds(0);
+    wakeRenderLoopRef.current?.();
   };
 
   // Basculer le débruiteur et rafraîchir immédiatement le canvas
