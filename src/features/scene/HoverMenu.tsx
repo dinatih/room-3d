@@ -217,6 +217,7 @@ export function HoverRaycaster() {
     let lastCacheTime = 0;
     const downPos = { x: 0, y: 0 };
     let isDragGesture = false;
+    let overCameraViewMarker = false;
 
     function refreshCaches() {
       const now = performance.now();
@@ -253,7 +254,7 @@ export function HoverRaycaster() {
         hoverState.visible = false;
         hoverState.onUpdate?.();
         hideTimer = null;
-        canvas.style.cursor = '';
+        if (!overCameraViewMarker) canvas.style.cursor = '';
       }, 420);
     }
 
@@ -328,10 +329,10 @@ export function HoverRaycaster() {
     }
 
     function raycastAt(clientX: number, clientY: number): { label: string; actionIds: string[] } | null {
+      overCameraViewMarker = false;
       if (cameraState.isDragging) return null;
 
       refreshCaches();
-      if (interactiveCache.length === 0) return null;
 
       const rect = canvas.getBoundingClientRect();
       pointer.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
@@ -341,11 +342,21 @@ export function HoverRaycaster() {
       raycaster.layers.enableAll();
       raycaster.layers.disable(LAYER_NEIGHBORS);
       raycaster.layers.disable(LAYER_LIDAR);
-      const hits = raycaster.intersectObjects(interactiveCache, true);
+      // Lire les repères actuels directement : ils sont retirés au changement
+      // de vue, sans attendre l'expiration du cache des meubles interactifs.
+      const markers = scene.getObjectByName('camera-view-markers');
+      const hits = raycaster.intersectObjects(markers ? [...interactiveCache, markers] : interactiveCache, true);
       let bestAction: { label: string; actionIds: string[] } | null = null;
 
       for (const hit of hits) {
         if (!hit.object.visible) continue;
+        let marker: THREE.Object3D | null = hit.object;
+        while (marker && !marker.userData.isCameraViewMarker) marker = marker.parent;
+        if (marker) {
+          if (isOccluded(hit.point, hit.object)) continue;
+          overCameraViewMarker = true;
+          return null;
+        }
         const mat = (hit.object as THREE.Mesh).material as THREE.Material & {
           transparent?: boolean; opacity?: number;
         };
@@ -405,6 +416,15 @@ export function HoverRaycaster() {
       if (cameraState.isDragging || isDragGesture) return;
 
       const found = raycastAt(lastClientX, lastClientY);
+      if (overCameraViewMarker) {
+        cancelHide();
+        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+        currentHoverKey = null;
+        hoverState.visible = false;
+        hoverState.onUpdate?.();
+        canvas.style.cursor = 'pointer';
+        return;
+      }
       const newKey = found ? found.actionIds.join(',') : null;
 
       if (found && newKey) {
@@ -482,6 +502,7 @@ export function HoverRaycaster() {
     };
 
     const onLeave = () => { 
+      overCameraViewMarker = false;
       if (showTimer) { clearTimeout(showTimer); showTimer = null; }
       currentHoverKey = null;
       scheduleHide(); 

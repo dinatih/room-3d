@@ -66,7 +66,7 @@ export function ViewControlBar({
   const orbitActive = !showCharacterModes || cameraMode === 'orbit';
   const isPan = orbitActive && orbitMouseMode === 'pan';
   const orbitTitle = orbitActive
-    ? `${isPan ? 'Translation : glisser gauche pour déplacer, droit pour tourner. Passer en Rotation' : 'Rotation : glisser gauche pour tourner, droit pour déplacer. Passer en Translation'}${showCharacterModes ? ' (O)' : ''}`
+    ? `${isPan ? 'Trans (Translation) : glisser gauche pour déplacer, droit pour tourner. Passer en Rot' : 'Rot (Rotation) : glisser gauche pour tourner, droit pour déplacer. Passer en Trans'}${showCharacterModes ? ' (O)' : ''}`
     : 'Revenir à la caméra Orbit perspective par défaut (Alt+O)';
   const isActive = (key: string) => activeCameraView === key;
   const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit' | 'toggle-npc-grid') => {
@@ -196,7 +196,7 @@ export function ViewControlBar({
             title={orbitTitle}
             aria-label={orbitTitle}
             aria-pressed={orbitActive}
-          ><i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" /><span className="fw-semibold">{isPan ? 'Translation' : 'Rotation'}</span></button>
+          ><i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" /><span className="fw-semibold">{isPan ? 'Trans' : 'Rot'}</span></button>
       )}
       {showCharacterModes && (
         <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Modes caméra">

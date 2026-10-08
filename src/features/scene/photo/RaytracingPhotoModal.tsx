@@ -682,6 +682,18 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       });
     }
 
+    // Le Canvas R3F peut encore contenir les repères au moment où la modale
+    // s'ouvre : les exclure avant les deux captures, sans attendre son commit.
+    scene.traverse((obj) => {
+      if (!obj.userData.isCameraViewMarker) return;
+      obj.traverse((child) => {
+        if (child.visible) {
+          child.visible = false;
+          hiddenHelpersRef.current.push(child);
+        }
+      });
+    });
+
     // 1. Capture instantanée du rendu 3D Standard dans un canvas indépendant.
     // Le renderer partagé sera ensuite redimensionné et utilisé par le path tracer.
     scene.updateMatrixWorld(true);

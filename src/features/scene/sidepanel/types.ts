@@ -34,6 +34,28 @@ export const VIEWS: Record<string, CameraViewPreset> = {
   'iso-sw':    { pos: [CX - ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
 };
 
+// Les dix raccourcis communs à la barre de vues et aux repères 3D.
+export const ORTHO_VIEWS = [
+  { key: 'front', label: 'Face', shortcut: 'Alt+1', icon: 'bi-arrow-up' },
+  { key: 'back', label: 'Arrière', shortcut: 'Alt+2', icon: 'bi-arrow-down' },
+  { key: 'left', label: 'Gauche', shortcut: 'Alt+3', icon: 'bi-arrow-left' },
+  { key: 'right', label: 'Droite', shortcut: 'Alt+4', icon: 'bi-arrow-right' },
+] as const;
+
+export const EXTRA_VIEWS = [
+  { key: 'top', label: 'Dessus', shortcut: 'Alt+5', icon: 'bi-chevron-compact-up' },
+  { key: 'bottom', label: 'Dessous', shortcut: 'Alt+6', icon: 'bi-chevron-compact-down' },
+] as const;
+
+export const ISO_VIEWS = [
+  { key: 'iso-se', label: 'ISO Sud-Est', shortcut: 'Alt+7', icon: 'bi-arrow-down-right' },
+  { key: 'iso-sw', label: 'ISO Sud-Ouest', shortcut: 'Alt+8', icon: 'bi-arrow-down-left' },
+  { key: 'iso-ne', label: 'ISO Nord-Est', shortcut: 'Alt+9', icon: 'bi-arrow-up-right' },
+  { key: 'iso-nw', label: 'ISO Nord-Ouest', shortcut: 'Alt+0', icon: 'bi-arrow-up-left' },
+] as const;
+
+export const CAMERA_SHORTCUT_VIEWS = [...ORTHO_VIEWS, ...EXTRA_VIEWS, ...ISO_VIEWS];
+
 import { useSceneStore } from '../store/useSceneStore';
 
 export function dispatchView(key: string, targetOverride?: [number, number, number], preserveFollow = false) {
@@ -82,6 +104,7 @@ export interface FurnitureState {
 export type GroundType = 'bermuda' | 'medium_01' | 'medium_02' | 'celandine' | 'mud_leaves' | 'none';
 
 export interface LayerState {
+  cameraViewMarkers: boolean;
   structure: boolean;
   wallStructure: boolean;
   floorCoverings: boolean;

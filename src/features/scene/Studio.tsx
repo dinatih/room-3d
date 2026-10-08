@@ -12,6 +12,7 @@ import {
   PerspectiveCamera, OrthographicCamera,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
+import { CameraViewMarkers } from './CameraViewMarkers';
 import { cameraState }      from '@features/scene/cameraState';
 import { SKY_START_POS }     from '@features/scene/camera';
 import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode } from '@features/scene/camera/cameraUrlParams';
@@ -755,6 +756,7 @@ export function Studio() {
         }}
       >
         <ActiveCameraCapture onCapture={(cam) => { activeCameraRef.current = cam; }} />
+        <CameraViewMarkers />
         <SkySphere />
         <SceneAmbientLight />
         {layers.realSun ? (
