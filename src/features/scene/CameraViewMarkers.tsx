@@ -161,10 +161,10 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
         <meshBasicMaterial color={hovered ? '#ffffff' : red} toneMapped={false} />
       </mesh>
       {hovered && (
-        <Html position={[0, 16, -13]} center occlude style={{ pointerEvents: 'none' }}>
-          <div className="text-bg-dark rounded p-2 text-nowrap shadow small">
-            <div className="fw-bold mb-2">{view.label} ({view.shortcut})</div>
-            <pre className="m-0 small text-white">{debugText}</pre>
+        <Html position={[0, 16, -13]} center wrapperClass="pe-none" style={{ pointerEvents: 'none' }}>
+          <div role="tooltip" className="d-flex flex-column align-items-center gap-1 text-nowrap">
+            <span className="badge text-bg-danger">{view.label} ({view.shortcut})</span>
+            <pre className="text-bg-dark rounded p-2 shadow m-0 small">{debugText}</pre>
           </div>
         </Html>
       )}

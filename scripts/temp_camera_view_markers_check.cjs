@@ -8,7 +8,7 @@ const puppeteer = require('../node_modules/puppeteer');
     const errors = [];
     page.on('pageerror', error => { errors.push(error.message); console.error('Browser error:', error.message); });
     await page.setViewport({ width: 1200, height: 900 });
-    await page.goto('http://127.0.0.1:5173/AGENTS.md?mode=orbit');
+    await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5173'}/AGENTS.md?mode=orbit`);
     await page.evaluate(async () => {
       const refresh = (await import('/@react-refresh')).default;
       refresh.injectIntoGlobalHook(window);
@@ -29,6 +29,10 @@ const puppeteer = require('../node_modules/puppeteer');
       const { cameraState } = await import('/src/features/scene/cameraState.ts');
       cameraState.isSceneLaunched = true;
       document.body.replaceChildren();
+      const bootstrap = document.createElement('link');
+      bootstrap.rel = 'stylesheet';
+      bootstrap.href = '/node_modules/bootstrap/dist/css/bootstrap.min.css';
+      document.head.append(bootstrap);
       document.body.style.margin = '0';
       const container = document.createElement('div');
       container.style.width = '1200px';
@@ -68,6 +72,20 @@ const puppeteer = require('../node_modules/puppeteer');
       assert(result.angle < 1e-7, result.key);
     }
     console.log('Ten marker positions and camera orientations (including poles): OK');
+    await page.hover('button[aria-label="Face (Alt+1)"]');
+    await page.waitForFunction(() => {
+      const tooltip = document.querySelector('.view-control-bar__view-tooltip');
+      if (!tooltip) return false;
+      const rect = tooltip.getBoundingClientRect();
+      return tooltip.innerText.includes('Ortho') && tooltip.innerText.includes('Persp') &&
+        tooltip.querySelector('.badge')?.textContent === 'Face (Alt+1)' &&
+        rect.top >= 0 && rect.bottom <= window.innerHeight &&
+        getComputedStyle(tooltip).pointerEvents === 'none';
+    });
+    await page.mouse.move(0, 0);
+    await page.waitForFunction(() => !document.querySelector('.view-control-bar__view-tooltip'));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    console.log('Toolbar hover immediately shows view badge and both projection poses within viewport: OK');
     for (const { key } of geometries) {
       console.log('Checking mesh click:', key);
       await page.evaluate(key => window.frameMarker(key), key);
@@ -88,8 +106,29 @@ const puppeteer = require('../node_modules/puppeteer');
         }, key));
         throw error;
       });
+      await page.waitForFunction(() => {
+        const tooltip = document.querySelector('[role="tooltip"]');
+        if (!tooltip || !tooltip.querySelector('.badge') || !tooltip.innerText.includes('Ortho') || !tooltip.innerText.includes('Persp')) return false;
+        for (let element = tooltip; element; element = element.parentElement) {
+          const style = getComputedStyle(element);
+          if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+        }
+        return true;
+      }).catch(async error => {
+        console.log(await page.evaluate(() => ({
+          tooltips: [...document.querySelectorAll('[role="tooltip"]')].map(tooltip => ({
+            text: tooltip.innerText,
+            ancestors: [...(function* () { for (let element = tooltip; element; element = element.parentElement) yield element; })()].map(element => ({ tag: element.tagName, opacity: getComputedStyle(element).opacity, display: getComputedStyle(element).display, visibility: getComputedStyle(element).visibility })),
+          })),
+          html: document.body.innerText,
+        })));
+        throw error;
+      });
       await page.mouse.click(600, 350);
-      await page.waitForFunction(key => window.fixture.useSceneStore.getState().activeCameraView === key && window.fixture.camera.isOrthographicCamera, {}, key);
+      await page.waitForFunction(key => window.fixture.useSceneStore.getState().activeCameraView === key && window.fixture.camera.isOrthographicCamera, {}, key).catch(async error => {
+        console.log(await page.evaluate(() => ({ active: window.fixture.useSceneStore.getState().activeCameraView, camera: window.fixture.camera.type, clicks: window.fixture.clicks.map(detail => detail.key), elementAtPointer: document.elementFromPoint(600, 350)?.outerHTML })));
+        throw error;
+      });
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const applied = await page.evaluate(key => {
         const { camera, VIEWS, THREE, clicks, useSceneStore } = window.fixture;

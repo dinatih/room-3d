@@ -50,6 +50,14 @@
   flex: 0 0 auto;
 }
 
+.view-control-bar__view-tooltip {
+  z-index: 2000;
+
+  pre {
+    white-space: pre-wrap;
+  }
+}
+
 .view-control-bar__character-popover {
   position: fixed;
   inset: auto;

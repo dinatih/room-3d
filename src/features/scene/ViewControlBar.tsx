@@ -1,6 +1,7 @@
 import './ViewControlBar.scss';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS, VIEWS } from './sidepanel/types';
 import { cameraViewDebug } from './cameraViewDebug';
@@ -47,6 +48,9 @@ export function ViewControlBar({
   beforeAmbianceActions,
   children,
 }: ViewControlBarProps) {
+  const [hoveredView, setHoveredView] = useState<{
+    label: string; debug: string; top?: number; bottom?: number;
+  } | null>(null);
   const isMobile = useIsMobile();
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);
@@ -122,6 +126,18 @@ export function ViewControlBar({
             }
           }}
           title={viewTitle(view)}
+          onMouseEnter={event => {
+            const rect = event.currentTarget.getBoundingClientRect();
+            setHoveredView({
+              label: `${view.label} (${view.shortcut})`,
+              debug: showCharacterModes ? viewTitle(view).split('\n\n').slice(1).join('\n\n') : '',
+              ...(rect.top > window.innerHeight / 2
+                ? { bottom: window.innerHeight - rect.top }
+                : { top: rect.bottom }),
+            });
+          }}
+          onMouseLeave={() => setHoveredView(null)}
+          onBlur={() => setHoveredView(null)}
           aria-label={`${view.label} (${view.shortcut})`}
           aria-pressed={isActive(view.key)}
         >
@@ -131,7 +147,25 @@ export function ViewControlBar({
     </div>
   );
 
+  const hoverTooltip = hoveredView && createPortal(
+    <div
+      role="tooltip"
+      className="view-control-bar__view-tooltip position-fixed start-0 end-0 d-flex justify-content-center p-2 pe-none"
+      style={{ top: hoveredView.top, bottom: hoveredView.bottom }}
+    >
+      <div className="d-flex flex-column align-items-center gap-1 mw-100">
+        <span className="badge text-bg-danger">{hoveredView.label}</span>
+        {hoveredView.debug && (
+          <pre className="text-bg-dark rounded shadow p-2 m-0 small mw-100">{hoveredView.debug}</pre>
+        )}
+      </div>
+    </div>,
+    document.body,
+  );
+
   const bar = (
+    <>
+    {hoverTooltip}
     <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--two-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {showCharacterModes && (
@@ -280,6 +314,7 @@ export function ViewControlBar({
       )}
       </div>
     </div>
+    </>
   );
 
   if (inline) {
