@@ -145,7 +145,8 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
           color={red}
           toneMapped={false}
           transparent
-          opacity={hovered ? 0.95 : 0.8}
+          opacity={0.3}
+          depthWrite={false}
           side={THREE.DoubleSide}
         />
       </mesh>
