@@ -7,6 +7,7 @@ import { getActiveSceneCharactersCount, getLaraGridCameraView } from './characte
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
+import { CharacterCountSelect } from './CharacterCountSelect';
 
 const ORTHO_VIEWS = [
   { key: 'front', label: 'Face', shortcut: 'Alt+1', icon: 'bi-arrow-up' },
@@ -153,6 +154,8 @@ export function ViewControlBar({
         </button>
       )}
 
+      {showCharacterModes && <CharacterCountSelect />}
+
       {showCharacterModes && (
         <button
           type="button"
@@ -165,6 +168,25 @@ export function ViewControlBar({
           <i className="bi bi-shuffle" aria-hidden="true" />
           <i className="bi bi-person-standing-dress" aria-hidden="true" />
         </button>
+      )}
+
+      {showCharacterModes && (
+        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Suivi caméra">
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
+            onClick={() => dispatchCameraMode('toggle-follow')}
+            title="Activer ou quitter le suivi à la troisième personne (M : Follow ↔ FPV)"
+            aria-pressed={cameraMode === 'follow'}
+          ><i className="bi bi-person-walking" aria-hidden="true" /><span className="fw-semibold">Follow</span></button>
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
+            onClick={() => dispatchCameraMode('fpv')}
+            title="Passer en vue subjective FPV (M : Follow ↔ FPV)"
+            aria-pressed={cameraMode === 'fpv'}
+          ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
+        </div>
       )}
 
       <button
@@ -200,38 +222,6 @@ export function ViewControlBar({
             title="Afficher ou quitter la grille des PNJ (G)"
             aria-pressed={npcGridActive}
           ><i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" /><span className="fw-semibold">{characterCount} NPCs</span></button>
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
-            onClick={() => dispatchCameraMode('toggle-follow')}
-            title="Activer ou quitter le suivi à la troisième personne (M : Follow ↔ FPV)"
-            aria-pressed={cameraMode === 'follow'}
-          ><i className="bi bi-person-walking" aria-hidden="true" /><span className="fw-semibold">Follow</span></button>
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
-            onClick={() => dispatchCameraMode('fpv')}
-            title="Passer en vue subjective FPV (M : Follow ↔ FPV)"
-            aria-pressed={cameraMode === 'fpv'}
-          ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
-        </div>
-      )}
-
-      {showCharacterModes && (
-        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
-          <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`} onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
-            <i className="bi bi-airplane-fill" aria-hidden="true" />
-          </button>
-          {!isMobile && (
-            <>
-              <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan`} onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
-                <i className="bi bi-camera-fill" aria-hidden="true" />
-              </button>
-              <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`} onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
-                <i className="bi bi-keyboard-fill" aria-hidden="true" />
-              </button>
-            </>
-          )}
         </div>
       )}
 
@@ -253,6 +243,23 @@ export function ViewControlBar({
         </select>
       )}
       {toolbarActions}
+      {showCharacterModes && (
+        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
+          <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`} onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
+            <i className="bi bi-airplane-fill" aria-hidden="true" />
+          </button>
+          {!isMobile && (
+            <>
+              <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan`} onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
+                <i className="bi bi-camera-fill" aria-hidden="true" />
+              </button>
+              <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`} onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
+                <i className="bi bi-keyboard-fill" aria-hidden="true" />
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 
