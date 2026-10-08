@@ -69,6 +69,14 @@
         30%, 75% { transform: scaleX(1); opacity: 1; }
         100% { transform: scaleX(1); opacity: 0; }
       }
+      #loading-envelope.exiting::after {
+        animation: loading-canvas-close 1.4s ease-in-out both;
+      }
+      @keyframes loading-canvas-close {
+        0% { transform: scaleX(0); opacity: 1; }
+        20%, 80% { transform: scaleX(1); opacity: 1; }
+        100% { transform: scaleX(0); opacity: 1; }
+      }
       #loading-card {
         position: relative;
         z-index: 1;
@@ -84,21 +92,18 @@
         width: 100%;
         color: #1f2937;
         text-align: center;
-        transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s ease-out;
       }
       @keyframes loading-card-enter {
         from { transform: translateY(calc(100% + 12px)); }
         to { transform: translateY(0); }
       }
       #loading-card.exiting {
-        animation: none;
-        opacity: 0;
-        transform: translateY(22px) scale(0.96);
-        filter: blur(8px);
+        animation: loading-card-enter 0.84s cubic-bezier(0.22, 1, 0.36, 1) 0.28s reverse both;
         pointer-events: none;
       }
       @media (prefers-reduced-motion: reduce) {
-        #loading-card { animation: none; }
+        #loading-card, #loading-card.exiting { animation: none; }
+        #loading-card.exiting { visibility: hidden; }
         #loading-envelope::after { display: none; }
       }
 

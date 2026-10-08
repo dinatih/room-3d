@@ -661,27 +661,29 @@ export function Studio() {
   const revealScene = useCallback(() => {
     const cover = document.getElementById('loading');
     const card = document.getElementById('loading-card');
+    const envelope = document.getElementById('loading-envelope');
     const backdrop = document.getElementById('loading-backdrop');
 
-    // 1. Sortie animée de la carte (léger déplacement vers le bas et flou progressif)
-    if (card) {
-      card.classList.add('exiting');
-    }
-
-    // 2. Déclenchement du vol caméra et fondu du fond 2D après 120ms
-    const timer = setTimeout(() => {
+    // Le vol caméra attend que la carte soit rentrée et la toile refermée.
+    const startIntro = () => {
+      envelope?.removeEventListener('animationend', onEnvelopeExit);
       if (backdrop) {
         backdrop.classList.add('exiting');
       }
       window.dispatchEvent(new CustomEvent('start-camera-intro'));
       document.dispatchEvent(new CustomEvent('start-camera-intro'));
-    }, 120);
+      // Sécurité si aucun événement de fin du vol caméra n'est reçu.
+      setTimeout(cleanup, 2200);
+    };
+    const onEnvelopeExit = (event: AnimationEvent) => {
+      if (event.animationName === 'loading-canvas-close') startIntro();
+    };
 
     let cleanedUp = false;
     const cleanup = () => {
       if (cleanedUp) return;
       cleanedUp = true;
-      clearTimeout(timer);
+      envelope?.removeEventListener('animationend', onEnvelopeExit);
       cameraState.isSceneLaunched = true;
       if (cover) {
         cover.classList.add('hidden');
@@ -696,8 +698,12 @@ export function Studio() {
 
     window.addEventListener('camera-intro-finished', onIntroFinish);
 
-    // Sécurité fallback : forcer la suppression après 2.2s si aucun événement n'est reçu
-    setTimeout(cleanup, 2200);
+    envelope?.addEventListener('animationend', onEnvelopeExit);
+    card?.classList.add('exiting');
+    envelope?.classList.add('exiting');
+    if (!envelope || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      startIntro();
+    }
   }, []);
 
   const handleReady = useCallback(() => {

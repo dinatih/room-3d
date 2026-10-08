@@ -50,12 +50,36 @@ const puppeteer = require('../node_modules/puppeteer');
       await page.screenshot({ path: `/tmp/loading-envelope-${viewport.width}.png` });
       const end = await sample(1800);
       assert.equal(end.translateY, 0);
-      await page.$eval('#loading-card', card => card.classList.add('exiting'));
-      assert.equal(await page.$eval('#loading-card', card => getComputedStyle(card).animationName), 'none');
+      await page.evaluate(() => {
+        document.querySelector('#loading-envelope').classList.add('exiting');
+        document.querySelector('#loading-card').classList.add('exiting');
+        document.getAnimations().forEach(animation => animation.pause());
+      });
+      const exitStart = await sample(0);
+      assert.equal(exitStart.translateY, 0);
+      const exitMiddle = await sample(700);
+      assert(exitMiddle.translateY > 0 && exitMiddle.translateY < start.translateY);
+      assert.equal(exitMiddle.opacity, '1');
+      assert.equal(exitMiddle.filter, 'none');
+      const tucked = await sample(1120);
+      assert(tucked.cardTop >= tucked.envelopeBottom);
+      assert.equal(tucked.slitScale, 1, 'Slit stays open until card is hidden');
+      const closed = await sample(1400);
+      assert.equal(closed.slitScale, 0);
+      await page.evaluate(() => {
+        window.envelopeClosed = false;
+        document.querySelector('#loading-envelope').addEventListener('animationend', event => {
+          if (event.animationName === 'loading-canvas-close') window.envelopeClosed = true;
+        });
+        document.getAnimations().forEach(animation => { animation.currentTime = 1350; animation.play(); });
+      });
+      await page.waitForFunction(() => window.envelopeClosed);
     }
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     await page.goto('http://loading.test/');
     assert.equal(await page.$eval('#loading-card', card => getComputedStyle(card).animationName), 'none');
+    await page.$eval('#loading-card', card => card.classList.add('exiting'));
+    assert.equal(await page.$eval('#loading-card', card => getComputedStyle(card).visibility), 'hidden');
     console.log('OK: desktop/mobile slit opening, masked upward slide without fade/blur, exit and reduced motion.');
   } finally {
     await browser.close();
