@@ -129,23 +129,75 @@ l'animation de grand écart et `/tmp/lara-abduction-crotch.png` avec les cuisses
 pose montre la disparition du repli triangulaire et la fermeture du raccord
 central. Le défaut de ceinture signalé séparément reste à vérifier.
 
+La frame 333 met aussi en évidence une pointe sous la cuisse levée. Une seconde
+passe sur les poids du haut de `body_nude_legs` transfère progressivement vers
+le bassin l'influence excessive des cuisses, à partir du milieu de la cuisse.
+`/tmp/lara-split-333-crotch.png` permet de contrôler cette flexion.
 
-## Chaussures et gants indépendants
 
-Les boutons « Chaussures Lara » et « Gants Lara » contrôlent séparément les
-bottes/pieds et les gants/mains, quel que soit l'état du haut ou du bas.
-Les deux équipements sont activés par défaut.
+## Tatouage du cou de Sara
 
-`scripts/fix_lara_bare_extremities.py` corrige les chevauchements cachés dans le
-modèle source : les mains sont coupées au raccord des avant-bras et un second
-maillage de pieds rejoint la bordure plus basse des jambes habillées. Les jambes
-sans vêtements conservent les pieds originaux, avec lesquels elles partagent
-leur bordure. Les coupes interpolent les UV et les poids existants.
+Le torse déshabillé conserve son atlas de peau et reçoit le tatouage du cou de
+Sara par projection depuis les UV de `body_torso`. Les deux matériaux utilisés
+par `body_nude_torso` enregistrent `lara_sara_tattoo_projection` dans le `.blend`
+et le GLB. Les images de correspondance restent dans le dossier des textures.
+
+```bash
+ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/project_lara_neck_tattoo.py
+npm run optimize:glb
+```
+
+Le contrôle Chromium vérifie le tatouage sur le torse déshabillé, sa conservation
+en mode réaliste et produit `/tmp/lara-sara-nude-neck.png` ainsi que
+`/tmp/lara-sara-clothed-neck.png` pour comparer son placement.
+
+## Pieds nus
+
+Le bouton « Chaussures Lara » contrôle les bottes et les pieds indépendamment
+du haut et du bas. Les gants restent toujours portés.
+
+`scripts/fix_lara_bare_extremities.py` ajoute au `.blend` des pieds qui
+rejoignent les jambes habillées, ainsi qu'une copie de ces jambes réservée au
+mode pieds nus. La rangée des mollets auparavant cachée sous les bottes utilisait
+une zone sombre de la texture. Sur cette copie, ses UV reprennent la peau claire
+voisine du même côté anatomique, en rapprochant la couleur de celle des pieds au
+raccord. Les normales de la copie des pieds sont orientées comme celles des
+jambes pour éviter une ombre artificielle sur cette bordure. Les jambes d'origine restent utilisées avec les
+bottes. Les jambes sans vêtements conservent leurs pieds d'origine. Les tatouages
+des variantes sont aussi appliqués à la copie pieds nus.
 
 ```bash
 ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/fix_lara_bare_extremities.py
 npm run optimize:glb
 ```
 
-Le contrôle Chromium vérifie les combinaisons chaussures/gants/haut/bas sur
-quatre variantes et produit les aperçus locaux des pieds et mains nus.
+Le contrôle Chromium vérifie les combinaisons chaussures/haut/bas sur quatre
+variantes et produit `/tmp/lara-barefoot-gloves.png`. La vue générale cadre
+jusqu'aux orteils. Les maillages corrigés sont enregistrés dans le `.blend` et
+réexportés avec le GLB. Le réglage des vêtements est appliqué avant le premier
+rendu du personnage après le chargement du modèle.
+
+## Fleur sur l’épaule droite de Delphina
+
+Le torse habillé et le torse déshabillé ont également leurs UV séparés par côté
+anatomique. Le torse habillé utilise `8001_torso_sides.png` ; le torse déshabillé
+conserve son atlas de peau. Les polygones traversant la ligne médiane sont
+triangulés avant d’attribuer les côtés, sans déplacer les sommets ni leurs poids.
+
+`LaraShoulderTattoo.ts` dessine une grande fleur rose avec des feuilles sur
+l’épaule droite, jusqu’au haut de la poitrine. Les correspondances
+`*_shoulder_tattoo_uv.png` projettent un même dessin sur le bras et les deux torses.
+Le maillage du haut masque la projection sur les parties habillées : la bretelle
+reste intacte et le dessin complet apparaît lorsque le haut est retiré.
+Les matériaux enregistrent `lara_delphina_shoulder_projection` dans le `.blend`
+et le GLB. La projection du cou de Sara est régénérée avec les nouveaux UV.
+
+```bash
+ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/project_lara_shoulder_tattoo.py
+npm run optimize:glb
+node scripts/check-lara-limb-uvs.mjs
+```
+
+Le contrôle produit `/tmp/lara-delphina-shoulder-clothed.png` et
+`/tmp/lara-delphina-shoulder-top-off.png` ; il vérifie aussi l’absence d’encre
+sur le côté gauche et la conservation du tatouage de Sara.
