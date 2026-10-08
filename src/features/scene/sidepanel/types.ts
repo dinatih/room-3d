@@ -198,7 +198,7 @@ export const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: str
   { key: 'plan2d',     emoji: '🗺️', label: 'Plan 2D' },
   { key: 'layers',     emoji: '📑', label: 'Calques' },
   { key: 'interactif', emoji: '🎮', label: 'Interact' },
-  { key: 'personnage', emoji: '👤', label: 'Perso' },
+  { key: 'personnage', emoji: '👤', label: 'PNJ' },
 ];
 
 export const ALL_HAIR_COLORS: string[] = [

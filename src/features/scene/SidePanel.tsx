@@ -507,40 +507,8 @@ export function SidePanel({
             <span className="fw-semibold">Inventaire</span>
           </button>
 
-          {TABS.filter(t => t.key !== 'personnage').map(t => {
+          {TABS.map(t => {
             const active = activeTab === t.key;
-            if (t.key === 'personnage') {
-              return (
-                <div key={t.key} className="d-flex align-items-center position-relative flex-shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
-                    className={`btn btn-sm border-0 d-flex flex-column align-items-center justify-content-center py-1 px-2 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
-                  >
-                    <span className="fs-5 lh-1"><i className={`bi ${tabIcons[t.key]}`} aria-hidden="true" /></span>
-                    <span className="fw-semibold">{t.label}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRandomHaircutAndColor();
-                    }}
-                    className="btn btn-sm btn-warning p-0 d-flex align-items-center justify-content-center border-0 rounded-circle position-absolute shadow-sm"
-                    style={{
-                      width: '1.25rem',
-                      height: '1.25rem',
-                      top: '0.25rem',
-                      right: '0.25rem',
-                      zIndex: 10,
-                    }}
-                    title="Coupe et couleur aléatoires"
-                  >
-                    <span className="small"><i className="bi bi-shuffle" aria-hidden="true" /></span>
-                  </button>
-                </div>
-              );
-            }
             return (
               <button
                 key={t.key}
