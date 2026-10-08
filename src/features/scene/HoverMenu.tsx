@@ -205,9 +205,9 @@ function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[
 // ── Composant R3F (à placer dans Canvas) ─────────────────────────────────────
 
 export function HoverRaycaster() {
-  const { camera, gl, scene } = useThree();
-  const checkCameraHover = React.useRef<(() => void) | null>(null);
-  useFrame(() => checkCameraHover.current?.());
+  const { camera, gl, scene, invalidate } = useThree();
+  const checkFrameHover = React.useRef<(() => void) | null>(null);
+  useFrame(() => checkFrameHover.current?.());
 
   useEffect(() => {
     const canvas = gl.domElement;
@@ -220,6 +220,8 @@ export function HoverRaycaster() {
     let isDragGesture = false;
     let overCameraViewMarker = false;
     let pointerInside = false;
+    let pointerDirty = false;
+    let pointerButtons = 0;
     const lastCameraMatrix = camera.matrixWorld.clone();
     const lastProjectionMatrix = camera.projectionMatrix.clone();
 
@@ -253,6 +255,7 @@ export function HoverRaycaster() {
     function hideDot() {
       if (showTimer) { clearTimeout(showTimer); showTimer = null; }
       currentHoverKey = null;
+      showReady = false;
       if (hoverState.visible) {
         hoverState.visible = false;
         hoverState.onUpdate?.();
@@ -390,15 +393,17 @@ export function HoverRaycaster() {
 
     // ── Souris : hover → dot réactif (250ms) et suivi fluide ──
     let showTimer: ReturnType<typeof setTimeout> | null = null;
+    let showReady = false;
     let currentHoverKey: string | null = null;
     let lastClientX = 0;
     let lastClientY = 0;
-    let lastMoveCheck = 0;
 
     const onPointerDown = (e: PointerEvent) => {
       downPos.x = e.clientX;
       downPos.y = e.clientY;
       isDragGesture = false;
+      pointerButtons = e.buttons;
+      hideDot();
 
       // Si double-clic ou clic multiple rapide, fermer immédiatement tout menu
       if (e.detail >= 2) {
@@ -413,17 +418,14 @@ export function HoverRaycaster() {
     };
 
     function checkHover() {
-      if (!pointerInside || cameraState.isDragging || isDragGesture) {
+      if (!pointerInside || cameraState.isDragging || isDragGesture || pointerButtons > 0) {
         hideDot();
         return;
       }
 
       const found = raycastAt(lastClientX, lastClientY);
       if (overCameraViewMarker) {
-        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-        currentHoverKey = null;
-        hoverState.visible = false;
-        hoverState.onUpdate?.();
+        hideDot();
         canvas.style.cursor = 'pointer';
         return;
       }
@@ -431,6 +433,7 @@ export function HoverRaycaster() {
 
       if (found && newKey) {
         if (currentHoverKey === newKey) {
+          if (!showReady) return;
           hoverState.x = lastClientX;
           hoverState.y = lastClientY;
           if (!hoverState.visible) {
@@ -441,21 +444,13 @@ export function HoverRaycaster() {
           }
           hoverState.onUpdate?.();
         } else {
+          hideDot();
           currentHoverKey = newKey;
-          if (showTimer) clearTimeout(showTimer);
           showTimer = setTimeout(() => {
             showTimer = null;
-            if (cameraState.isDragging || isDragGesture) return;
-            const recheck = raycastAt(lastClientX, lastClientY);
-            if (recheck && recheck.actionIds.join(',') === newKey) {
-              hoverState.visible   = true;
-              hoverState.x         = lastClientX;
-              hoverState.y         = lastClientY;
-              hoverState.label     = recheck.label;
-              hoverState.actionIds = recheck.actionIds;
-              canvas.style.cursor  = 'pointer';
-              hoverState.onUpdate?.();
-            }
+            showReady = true;
+            pointerDirty = true;
+            invalidate();
           }, 250);
         }
       } else {
@@ -463,14 +458,15 @@ export function HoverRaycaster() {
       }
     }
 
-    checkCameraHover.current = () => {
+    checkFrameHover.current = () => {
       if (!pointerInside) return;
       if (cameraState.isDragging) {
         hideDot();
         return;
       }
-      if (!camera.matrixWorld.equals(lastCameraMatrix) ||
+      if (pointerDirty || !camera.matrixWorld.equals(lastCameraMatrix) ||
           !camera.projectionMatrix.equals(lastProjectionMatrix)) {
+        pointerDirty = false;
         lastCameraMatrix.copy(camera.matrixWorld);
         lastProjectionMatrix.copy(camera.projectionMatrix);
         checkHover();
@@ -481,6 +477,8 @@ export function HoverRaycaster() {
       if (e.pointerType === 'touch') return;
       if (hoverState.touchActive) return;
       pointerInside = true;
+      pointerButtons = e.buttons;
+      if (e.buttons === 0) isDragGesture = false;
 
       if (e.buttons > 0 && Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) > 6) {
         isDragGesture = true;
@@ -494,27 +492,18 @@ export function HoverRaycaster() {
       lastClientX = e.clientX;
       lastClientY = e.clientY;
 
-      // Si le point est déjà visible sur un objet, mise à jour fluide de ses coordonnées DOM directes
-      if (hoverState.visible && !hoverState.locked) {
-        hoverState.x = e.clientX;
-        hoverState.y = e.clientY;
-        hoverState.onUpdate?.();
-      }
+      // Regrouper les mouvements : seule la dernière position sera testée au prochain rendu.
+      pointerDirty = true;
+      invalidate();
+    };
 
-      // Throttle les raycasts pendant le déplacement de la souris (max 1 fois toutes les 80ms)
-      const now = performance.now();
-      if (now - lastMoveCheck < 80) {
-        if (showTimer) clearTimeout(showTimer);
-        showTimer = setTimeout(checkHover, 250);
-        return;
-      }
-      lastMoveCheck = now;
-
-      checkHover();
+    const onPointerUp = (e: PointerEvent) => {
+      pointerButtons = e.buttons;
     };
 
     const onLeave = () => { 
       pointerInside = false;
+      pointerDirty = false;
       overCameraViewMarker = false;
       hideDot();
     };
@@ -599,6 +588,7 @@ export function HoverRaycaster() {
     };
 
     canvas.addEventListener('pointerdown',  onPointerDown);
+    canvas.addEventListener('pointerup',    onPointerUp);
     canvas.addEventListener('pointermove',  onMove);
     canvas.addEventListener('pointerleave', onLeave);
     canvas.addEventListener('click',        onClick);
@@ -610,6 +600,7 @@ export function HoverRaycaster() {
     canvas.addEventListener('touchend',     onTouchEnd);
     return () => {
       canvas.removeEventListener('pointerdown',  onPointerDown);
+      canvas.removeEventListener('pointerup',    onPointerUp);
       canvas.removeEventListener('pointermove',  onMove);
       canvas.removeEventListener('pointerleave', onLeave);
       canvas.removeEventListener('click',        onClick);
@@ -619,10 +610,10 @@ export function HoverRaycaster() {
       canvas.removeEventListener('touchstart',   onTouchStart);
       canvas.removeEventListener('touchmove',    onTouchMove);
       canvas.removeEventListener('touchend',     onTouchEnd);
-      checkCameraHover.current = null;
+      checkFrameHover.current = null;
       onLeave();
     };
-  }, [camera, gl, scene]);
+  }, [camera, gl, scene, invalidate]);
 
   return null;
 }
