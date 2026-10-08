@@ -18,5 +18,4 @@ export const hoverState = {
   /** True when modal was opened by touch tap. */
   touchActive: false,
   onUpdate:    null as (() => void) | null,
-  cancelHide:  null as (() => void) | null,
 };

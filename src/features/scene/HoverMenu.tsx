@@ -5,7 +5,7 @@
  *   HoverOverlay    — composant HTML (hors Canvas) : dot sur hover, modal sur clic
  */
 import React, { useEffect, useState } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE   from 'three';
 import { hoverState } from '@features/scene/hoverState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
@@ -206,18 +206,22 @@ function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[
 
 export function HoverRaycaster() {
   const { camera, gl, scene } = useThree();
+  const checkCameraHover = React.useRef<(() => void) | null>(null);
+  useFrame(() => checkCameraHover.current?.());
 
   useEffect(() => {
     const canvas = gl.domElement;
     const raycaster = new THREE.Raycaster();
     const pointer   = new THREE.Vector2();
-    let hideTimer: ReturnType<typeof setTimeout> | null = null;
     let interactiveCache: THREE.Object3D[] = [];
     let occluderCache: THREE.Object3D[] = [];
     let lastCacheTime = 0;
     const downPos = { x: 0, y: 0 };
     let isDragGesture = false;
     let overCameraViewMarker = false;
+    let pointerInside = false;
+    const lastCameraMatrix = camera.matrixWorld.clone();
+    const lastProjectionMatrix = camera.projectionMatrix.clone();
 
     function refreshCaches() {
       const now = performance.now();
@@ -246,22 +250,15 @@ export function HoverRaycaster() {
       lastCacheTime = now;
     }
 
-    function scheduleHide() {
-      if (hideTimer) return;
-      if (hoverState.touchActive) return;
-      if (hoverState.locked) return;
-      hideTimer = setTimeout(() => {
+    function hideDot() {
+      if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+      currentHoverKey = null;
+      if (hoverState.visible) {
         hoverState.visible = false;
         hoverState.onUpdate?.();
-        hideTimer = null;
-        if (!overCameraViewMarker) canvas.style.cursor = '';
-      }, 420);
+      }
+      if (!overCameraViewMarker) canvas.style.cursor = '';
     }
-
-    function cancelHide() {
-      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
-    }
-    hoverState.cancelHide = cancelHide;
 
     const occlusionRaycaster = new THREE.Raycaster();
 
@@ -349,7 +346,10 @@ export function HoverRaycaster() {
       let bestAction: { label: string; actionIds: string[] } | null = null;
 
       for (const hit of hits) {
-        if (!hit.object.visible) continue;
+        let ancestor: THREE.Object3D | null = hit.object;
+        while (ancestor && ancestor !== scene && ancestor.visible) ancestor = ancestor.parent;
+        // Les caches peuvent encore contenir un objet démonté ou masqué par son parent.
+        if (ancestor !== scene || !scene.visible) continue;
         let marker: THREE.Object3D | null = hit.object;
         while (marker && !marker.userData.isCameraViewMarker) marker = marker.parent;
         if (marker) {
@@ -413,11 +413,13 @@ export function HoverRaycaster() {
     };
 
     function checkHover() {
-      if (cameraState.isDragging || isDragGesture) return;
+      if (!pointerInside || cameraState.isDragging || isDragGesture) {
+        hideDot();
+        return;
+      }
 
       const found = raycastAt(lastClientX, lastClientY);
       if (overCameraViewMarker) {
-        cancelHide();
         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
         currentHoverKey = null;
         hoverState.visible = false;
@@ -428,7 +430,6 @@ export function HoverRaycaster() {
       const newKey = found ? found.actionIds.join(',') : null;
 
       if (found && newKey) {
-        cancelHide();
         if (currentHoverKey === newKey) {
           hoverState.x = lastClientX;
           hoverState.y = lastClientY;
@@ -458,24 +459,35 @@ export function HoverRaycaster() {
           }, 250);
         }
       } else {
-        currentHoverKey = null;
-        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-        scheduleHide();
+        hideDot();
       }
     }
+
+    checkCameraHover.current = () => {
+      if (!pointerInside) return;
+      if (cameraState.isDragging) {
+        hideDot();
+        return;
+      }
+      if (!camera.matrixWorld.equals(lastCameraMatrix) ||
+          !camera.projectionMatrix.equals(lastProjectionMatrix)) {
+        lastCameraMatrix.copy(camera.matrixWorld);
+        lastProjectionMatrix.copy(camera.projectionMatrix);
+        checkHover();
+      }
+    };
 
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
       if (hoverState.touchActive) return;
+      pointerInside = true;
 
       if (e.buttons > 0 && Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) > 6) {
         isDragGesture = true;
       }
 
       if (isDragGesture || cameraState.isDragging || e.buttons > 0) {
-        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-        currentHoverKey = null;
-        scheduleHide();
+        hideDot();
         return;
       }
 
@@ -502,10 +514,9 @@ export function HoverRaycaster() {
     };
 
     const onLeave = () => { 
+      pointerInside = false;
       overCameraViewMarker = false;
-      if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-      currentHoverKey = null;
-      scheduleHide(); 
+      hideDot();
     };
 
     const onDblClick = () => {
@@ -536,7 +547,6 @@ export function HoverRaycaster() {
         if (sameObject) {
           hoverState.locked = false;
         } else {
-          cancelHide();
           hoverState.locked           = true;
           hoverState.lockedLabel      = found.label;
           hoverState.lockedActionIds  = found.actionIds;
@@ -574,7 +584,6 @@ export function HoverRaycaster() {
           hoverState.locked      = false;
           hoverState.touchActive = false;
         } else {
-          cancelHide();
           hoverState.locked           = true;
           hoverState.touchActive      = true;
           hoverState.lockedLabel      = found.label;
@@ -595,6 +604,7 @@ export function HoverRaycaster() {
     canvas.addEventListener('click',        onClick);
     canvas.addEventListener('dblclick',     onDblClick);
     window.addEventListener('keydown',      onKeyDown);
+    window.addEventListener('blur',         onLeave);
     canvas.addEventListener('touchstart',   onTouchStart, { passive: true });
     canvas.addEventListener('touchmove',    onTouchMove,  { passive: true });
     canvas.addEventListener('touchend',     onTouchEnd);
@@ -605,11 +615,12 @@ export function HoverRaycaster() {
       canvas.removeEventListener('click',        onClick);
       canvas.removeEventListener('dblclick',     onDblClick);
       window.removeEventListener('keydown',      onKeyDown);
+      window.removeEventListener('blur',         onLeave);
       canvas.removeEventListener('touchstart',   onTouchStart);
       canvas.removeEventListener('touchmove',    onTouchMove);
       canvas.removeEventListener('touchend',     onTouchEnd);
-      if (hideTimer) clearTimeout(hideTimer);
-      hoverState.cancelHide = null;
+      checkCameraHover.current = null;
+      onLeave();
     };
   }, [camera, gl, scene]);
 
@@ -744,7 +755,6 @@ export function HoverOverlay() {
       {/* ── Modal épinglé au clic ── */}
       {showModal && lockedActions.length > 0 && (
         <div
-          onMouseEnter={() => { hoverState.cancelHide?.(); }}
           onTouchEnd={e => e.stopPropagation()}
           onPointerDown={e => e.stopPropagation()}
           onClick={e => e.stopPropagation()}
