@@ -9,6 +9,7 @@ import { LAYER_ENVIRONMENT } from '@config';
 import { BnfSkyMarker } from './BnfSkyMarker';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { cameraState } from './cameraState';
+import { isMobileViewport, useIsMobile } from '../../hooks/useIsMobile';
 
 const SKY_FADE_START = SKY_RADIUS * 0.82;
 const SKY_FADE_END = SKY_RADIUS * 1.04;
@@ -22,25 +23,25 @@ const hdrLoader = new HDRLoader();
 const textureLoader = new THREE.TextureLoader();
 
 export function getLoadedSkyTexture(id?: string): THREE.Texture | null {
-  if (id) return textureCache.get(id) ?? null;
-  const currentId = useSceneStore.getState().currentHdri;
-  return textureCache.get(currentId) ?? textureCache.get('default') ?? null;
+  const hdri = getHdriById(id ?? useSceneStore.getState().currentHdri);
+  return textureCache.get(isMobileViewport() ? hdri.mobileUrl : hdri.url) ?? null;
 }
 
 export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
   const currentHdri = useSceneStore(state => state.currentHdri);
+  const isMobile = useIsMobile();
+  const hdri = getHdriById(currentHdri);
+  const url = isMobile ? hdri.mobileUrl : hdri.url;
   const [texture, setTexture] = useState<THREE.Texture | null>(() => {
-    const initialHdri = getHdriById(currentHdri);
-    return textureCache.get(initialHdri.id) ?? null;
+    return textureCache.get(url) ?? null;
   });
   const { scene, invalidate } = useThree();
 
   useEffect(() => {
-    const hdri = getHdriById(currentHdri);
     const envIntensity = hdri.environmentIntensity ?? (hdri.type === 'jpg' ? 3.2 : 1.0);
     scene.environmentIntensity = envIntensity;
 
-    const cached = textureCache.get(hdri.id);
+    const cached = textureCache.get(url);
     if (cached) {
       setTexture(cached);
       scene.environment = cached;
@@ -55,7 +56,7 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
       if (hdri.type === 'jpg') {
         loadedTexture.colorSpace = THREE.SRGBColorSpace;
       }
-      textureCache.set(hdri.id, loadedTexture);
+      textureCache.set(url, loadedTexture);
       if (isMounted) {
         setTexture(loadedTexture);
         scene.environment = loadedTexture;
@@ -65,15 +66,15 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
     };
 
     if (hdri.type === 'hdr') {
-      hdrLoader.load(hdri.url, onLoad);
+      hdrLoader.load(url, onLoad);
     } else {
-      textureLoader.load(hdri.url, onLoad);
+      textureLoader.load(url, onLoad);
     }
 
     return () => {
       isMounted = false;
     };
-  }, [currentHdri, scene, invalidate]);
+  }, [hdri, url, scene, invalidate]);
 
   if (envOnly) return null;
 
