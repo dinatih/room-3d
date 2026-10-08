@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { Html, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
@@ -85,6 +85,10 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
   }, []);
 
   const edgesGeo = useMemo(() => new THREE.EdgesGeometry(pyramidGeo), [pyramidGeo]);
+  useEffect(() => () => {
+    pyramidGeo.dispose();
+    edgesGeo.dispose();
+  }, [pyramidGeo, edgesGeo]);
 
   return (
     <group

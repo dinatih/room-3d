@@ -650,7 +650,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     return () => {
       ctrl.removeEventListener('start', onStart);
     };
-  }, []);
+  }, [camera]);
 
   const toggleOrbitType = useCallback((
     targetType?: 'persp' | 'ortho',
@@ -691,7 +691,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // Synchronisation réactive de la projection de caméra (Perspective <-> Ortho)
   useEffect(() => {
-    if (orbitTypeRef.current === cameraProjection) return;
+    const orbitCamera = cameraProjection === 'ortho' ? orthoCamRef.current : defaultPerspCamRef.current;
+    if (orbitTypeRef.current === cameraProjection && (modeRef.current !== 'orbit' || camera === orbitCamera)) return;
     orbitTypeRef.current = cameraProjection;
 
     if (modeRef.current === 'orbit') {
@@ -1036,9 +1037,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   return (
     <>
+      {/* Les commandes choisissent la caméra active. makeDefault restaurerait
+          une ancienne caméra à sa désactivation, écrasant ce choix. */}
       <OrthographicCamera
         ref={orthoCamRef}
-        makeDefault={cameraProjection === 'ortho' && mode !== 'ortho' && mode !== 'fpv'}
         position={mode === 'top' ? (topFollowRef.current ? [cameraState.characterX, 2000, cameraState.characterZ] : TOP_POS) : undefined}
         up={mode === 'top' ? [0, 0, -1] : [0, 1, 0]}
         left={-viewW / 2}

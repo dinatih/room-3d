@@ -468,7 +468,7 @@ export function HoverRaycaster() {
       if (e.pointerType === 'touch') return;
       if (hoverState.touchActive) return;
 
-      if (e.buttons > 0 || Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) > 6) {
+      if (e.buttons > 0 && Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) > 6) {
         isDragGesture = true;
       }
 
