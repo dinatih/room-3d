@@ -117,7 +117,9 @@ export function useCameraShortcuts({
           charZ: cameraState.characterZ,
         };
         store.toggleLayer('laraGrid');
-        store.setActiveCameraView(null);
+        store.setActiveCameraView('front');
+        store.setCameraProjection('persp');
+        store.setOrbitMouseMode('rotate');
       } else {
         store.toggleLayer('laraGrid');
         store.setActiveCameraView(null);
@@ -129,11 +131,15 @@ export function useCameraShortcuts({
       if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
       else if (modeRef.current === 'top') exitTop();
       else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
-      useSceneStore.getState().setActiveCameraView(null);
-      if (useSceneStore.getState().layers.laraGrid) {
+      const store = useSceneStore.getState();
+      if (store.layers.laraGrid) {
+        store.setActiveCameraView('front');
+        store.setCameraProjection('persp');
+        store.setOrbitMouseMode('rotate');
         const view = getLaraGridCameraView();
         toggleOrbitType?.('persp', { pos: view.pos, target: view.target });
       } else {
+        store.setActiveCameraView(null);
         toggleOrbitType?.('persp', { pos: PERSP_POS, target: PERSP_TARGET });
       }
     };
@@ -188,6 +194,10 @@ export function useCameraShortcuts({
         const view = viewByCode[e.code];
         if (view) {
           e.preventDefault();
+          if (useSceneStore.getState().layers.laraGrid && view === 'front') {
+            frameLaraGridCamera(undefined, useSceneStore.getState().cameraProjection);
+            return;
+          }
           const target = useSceneStore.getState().layers.laraGrid
             ? getLaraGridCameraView().target
             : undefined;

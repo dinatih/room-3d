@@ -24,7 +24,6 @@ function writeUrl(update: (params: URLSearchParams) => void) {
 export function parseUrlCameraProjection(): CameraProjection {
   if (typeof window === 'undefined') return 'persp';
   const params = getUrlParams();
-  if (!params.has('projection') && !params.has('cameraView') && params.get('npcgrid') === '1') return 'ortho';
   return params.get('projection')?.toLowerCase() === 'ortho' ? 'ortho' : 'persp';
 }
 

@@ -3,7 +3,7 @@ import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import type { ReactNode } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView } from './sidepanel/types';
-import { getLaraGridCameraView } from './character/laraGridUtils';
+import { getLaraGridCameraView, frameLaraGridCamera } from './character/laraGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
@@ -114,7 +114,13 @@ export function ViewControlBar({
           key={view.key}
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} ${isActive(view.key) ? `view-control-bar__btn--${color}` : 'btn-outline-secondary'}`}
-          onClick={() => dispatchView(view.key, npcGridActive ? getLaraGridCameraView().target : undefined)}
+          onClick={() => {
+            if (npcGridActive && view.key === 'front') {
+              frameLaraGridCamera(undefined, cameraProjection);
+            } else {
+              dispatchView(view.key, npcGridActive ? getLaraGridCameraView().target : undefined);
+            }
+          }}
           title={`${view.label} (${view.shortcut})`}
           aria-label={`${view.label} (${view.shortcut})`}
           aria-pressed={isActive(view.key)}

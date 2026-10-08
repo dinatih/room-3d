@@ -511,7 +511,7 @@ export function Studio() {
       if (laraGridActive) return;
     }
     if (laraGridActive && !showInventory) {
-      frameLaraGridCamera(undefined, useSceneStore.getState().activeCameraView === 'front' ? 'ortho' : 'persp');
+      frameLaraGridCamera(undefined, useSceneStore.getState().cameraProjection === 'ortho' ? 'ortho' : 'persp');
     }
   }, [laraGridActive, laraCount, extraCharacters, activeExtraIds, activeMainIds, laraGridDuo, laraGridPartner, showInventory]);
 

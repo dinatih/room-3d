@@ -172,7 +172,12 @@ export function getActiveSceneCharactersCount(state?: {
 export function frameLaraGridCamera(total?: number, projection: 'persp' | 'ortho' = 'persp'): void {
   const count = total ?? getActiveSceneCharactersCount();
   const view = getLaraGridCameraView(count);
-  document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...view, projection } }));
+  useSceneStore.getState().setActiveCameraView('front');
+  useSceneStore.getState().setCameraProjection(projection);
+  if (projection === 'persp') {
+    useSceneStore.getState().setOrbitMouseMode('rotate');
+  }
+  document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...view, key: 'front', projection } }));
 }
 
 export type LaraGridOrthoViewKey = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom';
