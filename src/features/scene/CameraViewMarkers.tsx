@@ -23,22 +23,20 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
 
   const markerRef = useRef<THREE.Group>(null);
-  const _tmpCamPos = useMemo(() => new THREE.Vector3(), []);
+  const cameraSpacePosition = useMemo(() => new THREE.Vector3(), []);
   const presetPosVec = useMemo(() => new THREE.Vector3(...preset.pos), [preset.pos]);
 
   useFrame(() => {
     if (!markerRef.current) return;
-    const isOrtho = (camera as THREE.OrthographicCamera).isOrthographicCamera;
-    let s = 1.0;
-    if (isOrtho) {
-      const orthoZoom = (camera as THREE.OrthographicCamera).zoom || 1;
-      s = Math.max(1.0, Math.min(12.0, 1.25 / orthoZoom));
-    } else {
-      camera.getWorldPosition(_tmpCamPos);
-      const dist = _tmpCamPos.distanceTo(presetPosVec);
-      // À 350 cm (proche), échelle standard 1.0. En s'éloignant, l'échelle grandit proportionnellement.
-      s = Math.max(1.0, Math.min(12.0, dist / 350));
-    }
+    // La base de 20 cm occupe 32 px, comme un petit contrôle de la barre de vues.
+    // Calculer les unités par pixel à sa profondeur évite le grossissement au
+    // premier plan et fonctionne aussi en orthographique, quel que soit le zoom.
+    cameraSpacePosition.copy(presetPosVec).applyMatrix4(camera.matrixWorldInverse);
+    const depth = (camera as THREE.PerspectiveCamera).isPerspectiveCamera
+      ? Math.abs(cameraSpacePosition.z)
+      : 1;
+    const worldHeight = (2 * depth) / camera.projectionMatrix.elements[5];
+    let s = (worldHeight / size.height) * (32 / 20);
     if (hovered) s *= 1.25;
     markerRef.current.scale.setScalar(s);
   });
@@ -146,7 +144,7 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
           color={red}
           toneMapped={false}
           transparent
-          opacity={0.3}
+          opacity={hovered ? 0.3 : 0.08}
           depthWrite={false}
           side={THREE.DoubleSide}
         />

@@ -45,7 +45,11 @@ const puppeteer = require('../node_modules/puppeteer');
         React.useLayoutEffect(() => { Object.assign(window.fixture, state); }, [state]);
         return null;
       }
-      createRoot(container).render(React.createElement(Canvas, { camera: { position: [0, 300, 2000], near: 5, far: 10000 } },
+      const sceneRoot = createRoot(container);
+      window.renderSizingFixture = () => sceneRoot.render(React.createElement(Canvas, {
+        camera: { position: [0, 300, 2000], near: 5, far: 10000 },
+      }, React.createElement(Capture), React.createElement(CameraViewMarkers)));
+      sceneRoot.render(React.createElement(Canvas, { camera: { position: [0, 300, 2000], near: 5, far: 10000 } },
         React.createElement(Capture), React.createElement(CameraController), React.createElement(HoverRaycaster), React.createElement(CameraViewMarkers)));
       createRoot(toolbar).render(React.createElement(ViewControlBar, { showCharacterModes: true, inline: true }));
       document.addEventListener('camera-view', event => window.fixture.clicks.push(event.detail));
@@ -248,6 +252,42 @@ const puppeteer = require('../node_modules/puppeteer');
     await touchSession.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 600, y: 350 }] });
     await touchSession.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await page.waitForFunction(() => window.fixture.useSceneStore.getState().activeCameraView === 'front');
+    await page.mouse.move(0, 0);
+    await page.evaluate(() => window.renderSizingFixture());
+    await page.waitForFunction(() => !window.fixture.scene.getObjectByProperty('type', 'OrthographicCamera'));
+    for (const projection of ['perspective', 'ortho']) {
+      for (const distance of [60, 350, 2000]) {
+        for (const zoom of [0.05, 1, 8]) {
+          await page.evaluate(({ projection, distance, zoom }) => {
+            const { THREE, scene, size, set } = window.fixture;
+            const marker = scene.getObjectByName('camera-view-marker-back');
+            const camera = projection === 'ortho'
+              ? new THREE.OrthographicCamera(-size.width / 2, size.width / 2, size.height / 2, -size.height / 2, 1, 10000)
+              : new THREE.PerspectiveCamera(50, size.width / size.height, 1, 10000);
+            // Décalage latéral : l'échelle doit dépendre de la profondeur, pas de la distance oblique.
+            camera.position.copy(marker.position).add(new THREE.Vector3(120, 0, distance).applyQuaternion(marker.quaternion));
+            camera.quaternion.copy(marker.quaternion);
+            camera.zoom = zoom;
+            camera.updateProjectionMatrix();
+            camera.updateMatrixWorld(true);
+            set({ camera });
+          }, { projection, distance, zoom });
+          await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+          const result = await page.evaluate(() => {
+            const { THREE, scene, camera, size } = window.fixture;
+            const marker = scene.getObjectByName('camera-view-marker-back');
+            marker.updateWorldMatrix(true, false);
+            const top = marker.localToWorld(new THREE.Vector3(0, 10, 0)).project(camera);
+            const bottom = marker.localToWorld(new THREE.Vector3(0, -10, 0)).project(camera);
+            const pyramid = marker.children.find(child => child.geometry?.type === 'BufferGeometry');
+            return { height: Math.abs(top.y - bottom.y) * size.height / 2, opacity: pyramid.material.opacity };
+          });
+          assert(Math.abs(result.height - 32) < 0.001, JSON.stringify({ projection, distance, zoom, ...result }));
+          assert.equal(result.opacity, 0.08);
+        }
+      }
+    }
+    console.log('Discreet 32 px marker size at near/far and off-axis positions, for perspective/orthographic zooms: OK');
     assert.deepEqual(errors, []);
     console.log('Drag, wall occlusion, red visibility toggle, photo exclusion/restoration and touch activation: OK');
   } finally { await browser.close(); }
