@@ -213,6 +213,7 @@ export function ViewControlBar({
           aria-pressed={isOrtho}
         >
           <i className="bi bi-camera-video-fill" aria-hidden="true" />
+          <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} aria-hidden="true" />
           <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Persp'}</span>
         </button>
 
