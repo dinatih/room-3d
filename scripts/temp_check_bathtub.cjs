@@ -15,10 +15,8 @@ dataModule._compile(ts.transpileModule(dataSource, {
 const { BATHTUB } = dataModule.exports;
 const mod = new Module(filename);
 mod.paths = module.paths;
-const frames = [];
 mod.require = id => {
   if (id === 'react') return { useMemo: fn => fn(), useLayoutEffect: fn => fn() };
-  if (id === '@react-three/fiber') return { useFrame: fn => frames.push(fn) };
   if (id === '../bathtubData') return { BATHTUB };
   return require(id);
 };
@@ -72,9 +70,7 @@ assert(Math.abs(area - Math.abs(THREE.ShapeUtils.area(points))) < 0.01,
   'Water triangles must cover the contour without overlapping');
 assert.equal(water.material.transparent, true);
 assert.equal(water.material.depthWrite, false);
-assert.equal(water.material.normalMap.wrapS, THREE.RepeatWrapping);
-assert.equal(water.material.normalMap.generateMipmaps, true);
-assert.equal(water.material.normalMap.minFilter, THREE.LinearMipmapLinearFilter);
-frames[0]({ clock: { elapsedTime: 2 } });
-assert.deepEqual(water.material.normalMap.offset.toArray(), [0.05, 0.03]);
-console.log('Bathtub validated: smooth walls, rounded rim, non-overlapping water and animated ripples filtered at distance.');
+assert.equal(water.material.normalMap, null);
+assert.equal(water.material.opacity, 0.45);
+assert.equal(water.material.color.getHex(), 0x1a6fa8);
+console.log('Bathtub validated: smooth walls, rounded rim and flat transparent blue water without overlaps.');

@@ -4,7 +4,6 @@
  * Placement monde dans Garden.tsx.
  */
 import { useLayoutEffect, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { BATHTUB } from '../bathtubData';
@@ -14,38 +13,9 @@ const { length: TUB_L, width: TUB_W, height: TUB_H, wallThickness: T, cornerRadi
 const tubMat = new THREE.MeshStandardMaterial({ color: 0xd9c9a5, roughness: 0.55 });
 const innerMat = new THREE.MeshStandardMaterial({ color: 0xbda575, roughness: 0.65 });
 
-// Carte périodique de petites rides : les UV de ShapeGeometry sont en cm.
-const RIPPLE_SIZE = 64;
-const RIPPLE_LENGTH = 20;
-const rippleData = new Uint8Array(RIPPLE_SIZE * RIPPLE_SIZE * 4);
-const normal = new THREE.Vector3();
-for (let y = 0; y < RIPPLE_SIZE; y++) {
-  for (let x = 0; x < RIPPLE_SIZE; x++) {
-    const u = x / RIPPLE_SIZE * Math.PI * 2;
-    const v = y / RIPPLE_SIZE * Math.PI * 2;
-    const waveA = Math.cos(u + 2 * v);
-    const waveB = Math.cos(2 * u - v);
-    const waveC = Math.cos(3 * u + v);
-    normal.set(0.5 * waveA + 0.7 * waveB + 0.45 * waveC,
-      waveA - 0.35 * waveB + 0.15 * waveC, 1).normalize();
-    const i = (y * RIPPLE_SIZE + x) * 4;
-    rippleData[i] = Math.round((normal.x * 0.5 + 0.5) * 255);
-    rippleData[i + 1] = Math.round((normal.y * 0.5 + 0.5) * 255);
-    rippleData[i + 2] = Math.round((normal.z * 0.5 + 0.5) * 255);
-    rippleData[i + 3] = 255;
-  }
-}
-const rippleMap = new THREE.DataTexture(rippleData, RIPPLE_SIZE, RIPPLE_SIZE);
-rippleMap.wrapS = rippleMap.wrapT = THREE.RepeatWrapping;
-rippleMap.magFilter = THREE.LinearFilter;
-rippleMap.minFilter = THREE.LinearMipmapLinearFilter;
-rippleMap.generateMipmaps = true;
-rippleMap.repeat.set(1 / RIPPLE_LENGTH, 1 / RIPPLE_LENGTH);
-rippleMap.needsUpdate = true;
 const waterMat = new THREE.MeshStandardMaterial({
   color: 0x1a6fa8, transparent: true, opacity: 0.45, depthWrite: false,
-  roughness: 0.22, metalness: 0,
-  normalMap: rippleMap, normalScale: new THREE.Vector2(0.035, 0.035),
+  roughness: 0.05, metalness: 0.15,
 });
 
 function rrTrace(p: THREE.Shape | THREE.Path, w: number, h: number, r: number) {
@@ -131,11 +101,6 @@ export function Bathtub({ onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(TUB_W, TUB_H, TUB_L));
   }, []);
-
-  useFrame(({ clock }) => {
-    // Même temps absolu pour toutes les instances (scène et inventaire).
-    rippleMap.offset.set(clock.elapsedTime * 0.025, clock.elapsedTime * 0.015);
-  });
 
   return (
     <group>
