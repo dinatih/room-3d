@@ -1,6 +1,6 @@
 .plane-controls {
-  position: absolute;
-  z-index: 100;
+  position: fixed;
+  z-index: 1050;
   inset: 0;
   pointer-events: none;
 }
@@ -21,7 +21,7 @@
 .plane-help { width: 24rem; }
 .plane-status { pointer-events: none; }
 .plane-speed { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
-.plane-touch { display: none; }
+.plane-touch { display: block; }
 .plane-hold {
   touch-action: none;
   user-select: none;
@@ -29,20 +29,49 @@
   min-height: 2.75rem;
   background: rgba(248, 250, 252, .9);
   pointer-events: auto;
+  box-shadow: 0 .125rem .375rem rgba(15, 23, 42, .15);
+  transition: background-color 0.1s ease, transform 0.05s ease;
+}
+.plane-hold:active,
+.plane-hold.is-pressed {
+  transform: scale(0.96);
+  background: rgba(13, 110, 253, .9) !important;
+  color: #fff !important;
+  border-color: #0d6efd !important;
+}
+.plane-hold.plane-boost {
+  min-width: 4.5rem;
+  min-height: 2.75rem;
+}
+.plane-hold.plane-boost:active,
+.plane-hold.plane-boost.is-pressed {
+  background: rgba(25, 135, 84, .9) !important;
+  color: #fff !important;
+  border-color: #198754 !important;
+}
+.plane-hold.plane-brake {
+  min-width: 4.5rem;
+  min-height: 2.75rem;
+}
+.plane-hold.plane-brake:active,
+.plane-hold.plane-brake.is-pressed {
+  background: rgba(220, 53, 69, .9) !important;
+  color: #fff !important;
+  border-color: #dc3545 !important;
 }
 .plane-dpad {
   position: absolute;
   left: max(.5rem, env(safe-area-inset-left));
-  bottom: calc(max(.5rem, env(safe-area-inset-bottom)) + 3rem);
+  bottom: calc(max(.5rem, env(safe-area-inset-bottom)) + 3.25rem);
   display: grid;
   grid-template-columns: repeat(3, 2.75rem);
   grid-template-rows: repeat(3, 2.75rem);
-  gap: .125rem;
+  gap: .25rem;
 }
 .plane-throttle {
   position: absolute;
   right: max(.5rem, env(safe-area-inset-right));
-  bottom: calc(max(.5rem, env(safe-area-inset-bottom)) + 3rem);
+  bottom: calc(max(.5rem, env(safe-area-inset-bottom)) + 3.25rem);
 }
 .plane-sensor { top: max(.5rem, env(safe-area-inset-top)); }
 .plane-message { top: calc(max(.5rem, env(safe-area-inset-top)) + 3rem); }
@@ -50,8 +79,5 @@
 .plane-left { grid-area: 2 / 1; }
 .plane-right { grid-area: 2 / 3; }
 .plane-down { grid-area: 3 / 2; }
-@media (pointer: coarse), (any-pointer: coarse) {
-  .plane-touch { display: block; }
-}
 
 .plane-model { min-width: 0; }

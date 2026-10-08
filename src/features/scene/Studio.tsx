@@ -921,7 +921,7 @@ export function Studio() {
             return !v;
           });
         }}
-        hideUI={hideUI || (isMobile && showInventory)}
+        hideUI={hideUI || planeMode || (isMobile && showInventory)}
       />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
@@ -978,7 +978,7 @@ export function Studio() {
           <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
         </Suspense>
       )}
-      <AppConsole hidden={showInventory} hideUI={hideUI} />
+      <AppConsole hidden={showInventory || planeMode} hideUI={hideUI} />
       {isPhotoModeOpen && activeSceneRef.current && activeCameraRef.current && activeGlRef.current && (
         <Suspense fallback={null}>
           <RaytracingPhotoModal
