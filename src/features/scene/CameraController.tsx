@@ -8,7 +8,7 @@
  *   top    — vue orthographique du dessus (centrée pièce ou suivi character)
  *
  * Raccourcis clavier :
- *   O          — basculer rotation orbit / pan
+ *   O          — basculer rotation / translation
  *   Alt+O      — vue orbit perspective par défaut
  *   M          — basculer follow / fpv
  *   1 / 3      — vue FPV (1) / vue 3ème personne (3)

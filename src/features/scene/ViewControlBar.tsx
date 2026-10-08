@@ -2,31 +2,12 @@ import './ViewControlBar.scss';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import type { ReactNode } from 'react';
 import { useSceneStore } from './store/useSceneStore';
-import { dispatchView } from './sidepanel/types';
+import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS } from './sidepanel/types';
 import { getLaraGridCameraView, frameLaraGridCamera } from './character/laraGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
 import { CharacterCountSelect } from './CharacterCountSelect';
-
-const ORTHO_VIEWS = [
-  { key: 'front', label: 'Face', shortcut: 'Alt+1', icon: 'bi-arrow-up' },
-  { key: 'back', label: 'Arrière', shortcut: 'Alt+2', icon: 'bi-arrow-down' },
-  { key: 'left', label: 'Gauche', shortcut: 'Alt+3', icon: 'bi-arrow-left' },
-  { key: 'right', label: 'Droite', shortcut: 'Alt+4', icon: 'bi-arrow-right' },
-] as const;
-
-const EXTRA_VIEWS = [
-  { key: 'top', label: 'Dessus', shortcut: 'Alt+5', icon: 'bi-chevron-compact-up' },
-  { key: 'bottom', label: 'Dessous', shortcut: 'Alt+6', icon: 'bi-chevron-compact-down' },
-] as const;
-
-const ISO_VIEWS = [
-  { key: 'iso-se', label: 'ISO Sud-Est', shortcut: 'Alt+7', icon: 'bi-arrow-down-right' },
-  { key: 'iso-sw', label: 'ISO Sud-Ouest', shortcut: 'Alt+8', icon: 'bi-arrow-down-left' },
-  { key: 'iso-ne', label: 'ISO Nord-Est', shortcut: 'Alt+9', icon: 'bi-arrow-up-right' },
-  { key: 'iso-nw', label: 'ISO Nord-Ouest', shortcut: 'Alt+0', icon: 'bi-arrow-up-left' },
-] as const;
 
 export interface ViewControlBarProps {
   /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-right' */
@@ -76,6 +57,7 @@ export function ViewControlBar({
   const currentHdri = useSceneStore(s => s.currentHdri);
   const setHdri = useSceneStore(s => s.setHdri);
   const mirrorsHD = useSceneStore(s => s.layers.mirrorsHD);
+  const cameraViewMarkers = useSceneStore(s => s.layers.cameraViewMarkers);
   const toggleLayer = useSceneStore(s => s.toggleLayer);
 
   if (hidden) return null;
@@ -84,7 +66,7 @@ export function ViewControlBar({
   const orbitActive = !showCharacterModes || cameraMode === 'orbit';
   const isPan = orbitActive && orbitMouseMode === 'pan';
   const orbitTitle = orbitActive
-    ? `${isPan ? 'Pan : glisser gauche pour déplacer, droit pour tourner. Passer en Orbit' : 'Orbit : glisser gauche pour tourner, droit pour déplacer. Passer en Pan'}${showCharacterModes ? ' (O)' : ''}`
+    ? `${isPan ? 'Translation : glisser gauche pour déplacer, droit pour tourner. Passer en Rotation' : 'Rotation : glisser gauche pour tourner, droit pour déplacer. Passer en Translation'}${showCharacterModes ? ' (O)' : ''}`
     : 'Revenir à la caméra Orbit perspective par défaut (Alt+O)';
   const isActive = (key: string) => activeCameraView === key;
   const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit' | 'toggle-npc-grid') => {
@@ -214,7 +196,7 @@ export function ViewControlBar({
             title={orbitTitle}
             aria-label={orbitTitle}
             aria-pressed={orbitActive}
-          ><i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" /><span className="fw-semibold">{isPan ? 'Pan' : 'Orbit'}</span></button>
+          ><i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" /><span className="fw-semibold">{isPan ? 'Translation' : 'Rotation'}</span></button>
       )}
       {showCharacterModes && (
         <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Modes caméra">
@@ -231,6 +213,18 @@ export function ViewControlBar({
       {viewButtons(ORTHO_VIEWS, 'cyan')}
       {viewButtons(EXTRA_VIEWS, 'green')}
       {viewButtons(ISO_VIEWS, 'purple')}
+      {showCharacterModes && (
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${cameraViewMarkers ? 'btn-danger' : 'btn-outline-danger'}`}
+          onClick={() => toggleLayer('cameraViewMarkers')}
+          title="Afficher ou masquer les raccourcis de vues 3D"
+          aria-label="Raccourcis de vues 3D"
+          aria-pressed={cameraViewMarkers}
+        >
+          <i className="bi bi-camera-video-fill" aria-hidden="true" />
+        </button>
+      )}
       {beforeAmbianceActions}
       {inline && (
         <select
