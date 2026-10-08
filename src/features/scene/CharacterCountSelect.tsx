@@ -1,5 +1,5 @@
 import { useId, useRef } from 'react';
-import { LARA_COUNT_MODES, type LaraCountMode } from './characterConfig';
+import { LARA_COUNT_MODES } from './characterConfig';
 import { useSceneStore } from './store/useSceneStore';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 
@@ -38,25 +38,28 @@ export function CharacterCountSelect() {
         className="view-control-bar__character-popover glass-card rounded-2 border shadow-lg p-2"
         onKeyDown={event => event.stopPropagation()}
       >
-        <label htmlFor={`${id}-select`} className="form-label small fw-semibold mb-1">
+        <div className="small fw-semibold mb-1">
           Nombre de personnages
-        </label>
-        <select
-          id={`${id}-select`}
-          className="form-select form-select-sm"
-          value={characterVisible ? count : 0}
-          onChange={event => {
-            setLaraCount(Number(event.target.value) as LaraCountMode | 0);
-            popoverRef.current!.hidePopover();
-          }}
-        >
-          <option value={0}>0 — Masquer les personnages</option>
-          {LARA_COUNT_MODES.map(value => (
-            <option key={value} value={value}>
-              {value}{value === 1 ? ' — Xbot seul' : value === 2 ? ' — Duo' : value === 10 ? ' — Éco' : value === 15 ? ' — Tous' : ''}
-            </option>
-          ))}
-        </select>
+        </div>
+        <div className="d-flex flex-column gap-1" role="group" aria-label="Choisir le nombre de personnages">
+          {([0, ...LARA_COUNT_MODES] as const).map(value => {
+            const selected = value === (characterVisible ? count : 0);
+            return (
+              <button
+                key={value}
+                type="button"
+                className={`btn btn-sm text-start ${selected ? 'btn-primary' : 'btn-outline-secondary'}`}
+                aria-pressed={selected}
+                onClick={() => {
+                  setLaraCount(value);
+                  popoverRef.current!.hidePopover();
+                }}
+              >
+                {value}{value === 0 ? ' — Masquer les personnages' : value === 1 ? ' — Xbot seul' : value === 2 ? ' — Duo' : value === 10 ? ' — Éco' : value === 15 ? ' — Tous' : ''}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </>
   );
