@@ -64,7 +64,8 @@ export function updateUrlNpcCount(count: LaraCountMode | 0) {
   } catch {}
 }
 
-import { DEFAULT_HDRI_ID } from '@features/scene/hdriConfig';
+import { DEFAULT_HDRI_ID, type HdriResolution } from '@features/scene/hdriConfig';
+import { isMobileViewport } from '../../../hooks/useIsMobile';
 
 export const GRASS_TYPES: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves'];
 
@@ -84,6 +85,8 @@ interface SceneStore {
   activeExtraIds: string[];
   activeMainIds: string[];
   currentHdri: string;
+  hdriResolution: HdriResolution;
+  setHdriResolution: (resolution: HdriResolution) => void;
   bnfAzimuth: number;
   bnfElevation: number;
   bnfRadius: number;
@@ -314,6 +317,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
   activeExtraIds: initialActiveExtraIds,
   activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
+  hdriResolution: isMobileViewport() ? '2k' : '8k',
+  setHdriResolution: (resolution) => {
+    set({ hdriResolution: resolution });
+    cameraState.invalidate?.();
+  },
   bnfAzimuth: 154.3,
   bnfElevation: -2.2,
   bnfRadius: 45,

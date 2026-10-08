@@ -3,13 +3,12 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
 import { useSceneStore } from './store/useSceneStore';
-import { getHdriById } from './hdriConfig';
+import { getHdriById, getHdriUrl } from './hdriConfig';
 import { CategoryLayerGroup } from './sceneLayer';
 import { LAYER_ENVIRONMENT } from '@config';
 import { BnfSkyMarker } from './BnfSkyMarker';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { cameraState } from './cameraState';
-import { isMobileViewport, useIsMobile } from '../../hooks/useIsMobile';
 
 const SKY_FADE_START = SKY_RADIUS * 0.82;
 const SKY_FADE_END = SKY_RADIUS * 1.04;
@@ -23,15 +22,16 @@ const hdrLoader = new HDRLoader();
 const textureLoader = new THREE.TextureLoader();
 
 export function getLoadedSkyTexture(id?: string): THREE.Texture | null {
-  const hdri = getHdriById(id ?? useSceneStore.getState().currentHdri);
-  return textureCache.get(isMobileViewport() ? hdri.mobileUrl : hdri.url) ?? null;
+  const { currentHdri, hdriResolution } = useSceneStore.getState();
+  const hdri = getHdriById(id ?? currentHdri);
+  return textureCache.get(getHdriUrl(hdri, hdriResolution)) ?? null;
 }
 
 export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
   const currentHdri = useSceneStore(state => state.currentHdri);
-  const isMobile = useIsMobile();
+  const hdriResolution = useSceneStore(state => state.hdriResolution);
   const hdri = getHdriById(currentHdri);
-  const url = isMobile ? hdri.mobileUrl : hdri.url;
+  const url = getHdriUrl(hdri, hdriResolution);
   const [texture, setTexture] = useState<THREE.Texture | null>(() => {
     return textureCache.get(url) ?? null;
   });

@@ -1,5 +1,5 @@
 import { useSceneStore, getRandomGrassType } from '../../store/useSceneStore';
-import { HDRI_LIST } from '@features/scene/hdriConfig';
+import { HDRI_LIST, type HdriResolution } from '@features/scene/hdriConfig';
 import { dispatchKey, type LayerState, type LidarMode, type GroundType } from '../types';
 
 export interface LayersSectionProps {
@@ -36,6 +36,8 @@ export function LayersSection({
 }: LayersSectionProps) {
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
+  const hdriResolution = useSceneStore(state => state.hdriResolution);
+  const setHdriResolution = useSceneStore(state => state.setHdriResolution);
   const setGroundType = useSceneStore(state => state.setGroundType);
   const bnfAzimuth = useSceneStore(state => state.bnfAzimuth ?? 154.3);
   const bnfElevation = useSceneStore(state => state.bnfElevation ?? -2.2);
@@ -147,6 +149,22 @@ export function LayersSection({
             </option>
           ))}
         </select>
+        <div className="d-flex align-items-center gap-2 mt-1">
+          <label htmlFor="hdri-resolution" className="text-muted small text-nowrap">
+            Résolution HDRI
+          </label>
+          <select
+            id="hdri-resolution"
+            className="form-select form-select-sm bg-transparent text-dark border-secondary"
+            value={hdriResolution}
+            onKeyDown={(e) => e.stopPropagation()}
+            onChange={(e) => setHdriResolution(e.target.value as HdriResolution)}
+          >
+            <option value="2k">2K — Léger</option>
+            <option value="4k">4K — Équilibré</option>
+            <option value="8k">8K — Détaillé</option>
+          </select>
+        </div>
         {(() => {
           const activeHdri = HDRI_LIST.find((h) => h.id === currentHdri);
           const fileName = activeHdri ? activeHdri.url.split('/').pop() : '';
