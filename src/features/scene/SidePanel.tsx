@@ -479,7 +479,7 @@ export function SidePanel({
               className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
               title="Mode Réalité Virtuelle (WebXR)"
             >
-              <i className="bi bi-headset" aria-hidden="true" />
+              <i className="bi bi-headset-vr" aria-hidden="true" />
               <span className="fw-semibold">{isVRActive ? '✕ VR' : 'VR'}</span>
             </button>
           )}

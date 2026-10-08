@@ -194,7 +194,7 @@ export function ViewControlBar({
               onClick={() => dispatchCameraMode('toggle-follow')}
               title="Activer ou quitter le suivi à la troisième personne (M : Follow ↔ FPV)"
               aria-pressed={cameraMode === 'follow'}
-            ><i className="bi bi-person-walking" aria-hidden="true" /><span className="fw-semibold">Follow</span></button>
+            ><i className="bi bi-camera2" aria-hidden="true" /><i className="bi bi-person-walking" aria-hidden="true" /><span className="fw-semibold">Follow</span></button>
             <button
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
