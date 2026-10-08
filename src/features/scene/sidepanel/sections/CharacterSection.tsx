@@ -409,7 +409,6 @@ export function CharacterSection({
       )}
 
       <div className="text-muted fw-semibold mb-1 text-dark mt-3 small text-uppercase">⚙️ Options d'affichage</div>
-      {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('pink',   'Peau & tissus réalistes (Mat) 🧴', 'laraRealisticTextures')}
       {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
       {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}

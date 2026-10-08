@@ -279,6 +279,7 @@ export function LayersSection({
       {layerBtn('blue',   'Collisions objets/meubles 🪑', 'furnitureCollisions')}
       {layers.furnitureCollisions && layerBtn('cyan', '↳ Debug Objets/Meubles 📐', 'debugFurnitureCollisions')}
       {layerBtn('gray',   'Ombres',        'shadows')}
+      {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
 
       {layerBtn('orange', 'Grille inventaire 📦 (Alt+I)', 'inventoryGrid')}
