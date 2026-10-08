@@ -8,10 +8,12 @@ import {
 
 interface NonExtraCharactersSelectorProps {
   isMobile: boolean;
+  compact?: boolean;
 }
 
 export function NonExtraCharactersSelector({
   isMobile,
+  compact = false,
 }: NonExtraCharactersSelectorProps) {
   const activeMainIds = useSceneStore(state => state.activeMainIds);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
@@ -35,7 +37,7 @@ export function NonExtraCharactersSelector({
   const totalCount = NON_EXTRA_CHARACTERS.length;
 
   return (
-    <div className="p-2 border-top bg-transparent d-flex flex-column gap-2 mt-2">
+    <div className={`${compact ? '' : 'p-2 border-top mt-2'} bg-transparent d-flex flex-column gap-2`}>
       {/* En-tête */}
       <div className="d-flex justify-content-between align-items-center">
         <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ fontSize: '9px' }}>
@@ -49,7 +51,7 @@ export function NonExtraCharactersSelector({
       {/* Panneau de sélection multiple */}
       <div className="p-2 rounded bg-light-subtle border border-secondary-subtle d-flex flex-column gap-2">
         {/* Presets par défaut (1, 2, 4, 10, 15) */}
-        <div>
+        {!compact && <div>
           <div className="text-muted mb-1" style={{ fontSize: '9px' }}>
             PRÉRÉGLAGES RAPIDES :
           </div>
@@ -67,7 +69,7 @@ export function NonExtraCharactersSelector({
               </button>
             ))}
           </div>
-        </div>
+        </div>}
 
         {/* Actions rapides Tous / Aucun */}
         <div className="d-flex flex-wrap gap-1 justify-content-between align-items-center">
@@ -188,7 +190,7 @@ export function NonExtraCharactersSelector({
         </div>
 
         {/* Chips / pilules des personnages actifs avec suppression rapide */}
-        {activeMainIds.length > 0 && (
+        {!compact && activeMainIds.length > 0 && (
           <div className="d-flex flex-column gap-1 pt-1 border-top border-secondary-subtle">
             <div className="text-muted d-flex justify-content-between align-items-center" style={{ fontSize: '9px' }}>
               <span>SÉLECTION ACTUELLE ({activeMainIds.length}) :</span>
