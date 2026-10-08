@@ -20,7 +20,6 @@
         align-items: center; justify-content: center;
         z-index: 9999;
         padding: 20px;
-        transition: opacity 0.4s ease;
       }
       #loading-backdrop {
         position: absolute; inset: 0;
@@ -39,8 +38,41 @@
         opacity: 0;
         transform: scale(1.05);
       }
-      #loading.hidden { opacity: 0; pointer-events: none; }
 
+      #loading-envelope {
+        position: relative;
+        z-index: 1;
+        max-width: 580px;
+        width: 100%;
+        padding-bottom: 12px;
+        /* La toile masque la carte tant qu'elle est sous la fente. */
+        clip-path: inset(-40px -40px 0);
+      }
+      #loading-envelope::after {
+        content: '';
+        position: absolute;
+        z-index: 2;
+        bottom: 0;
+        left: -16px;
+        width: calc(100% + 32px);
+        height: 8px;
+        background: #17212d;
+        clip-path: polygon(0 45%, 8% 25%, 18% 40%, 29% 15%, 40% 35%, 52% 20%, 64% 40%, 77% 15%, 89% 35%, 100% 25%, 100% 65%, 89% 75%, 77% 60%, 64% 80%, 52% 65%, 40% 85%, 29% 65%, 18% 80%, 8% 65%, 0 75%);
+        transform-origin: left center;
+        animation: loading-canvas-split 0.55s ease-in-out both;
+        pointer-events: none;
+      }
+      @keyframes loading-canvas-split {
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
+      }
+      #loading-envelope.exiting::after {
+        animation: loading-canvas-close 1.6s ease-in-out both;
+      }
+      @keyframes loading-canvas-close {
+        0%, 75% { transform: scaleX(1); }
+        100% { transform: scaleX(0); }
+      }
       #loading-card {
         position: relative;
         z-index: 1;
@@ -51,23 +83,28 @@
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.85);
         border-radius: 0.375rem;
         padding: 28px 32px;
-        animation: loading-card-enter 0.6s ease-out;
+        animation: loading-card-enter 1.15s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both;
         max-width: 580px;
         width: 100%;
         color: #1f2937;
         text-align: center;
-        transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s ease-out;
       }
       @keyframes loading-card-enter {
-        from { opacity: 0; transform: translateY(22px) scale(0.96); filter: blur(8px); }
-        to { opacity: 1; transform: none; filter: blur(0); }
+        from { transform: translateY(calc(100% + 12px)); }
+        to { transform: translateY(0); }
       }
       #loading-card.exiting {
-        animation: none;
-        opacity: 0;
-        transform: translateY(22px) scale(0.96);
-        filter: blur(8px);
+        animation: loading-card-exit 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
         pointer-events: none;
+      }
+      @keyframes loading-card-exit {
+        from { transform: translateY(0); }
+        to { transform: translateY(calc(100% + 12px)); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #loading-card, #loading-card.exiting { animation: none; }
+        #loading-card.exiting { visibility: hidden; }
+        #loading-envelope::after { display: none; }
       }
 
       #loading-header {
@@ -177,52 +214,54 @@
       #loading-item {
         font-family: monospace; font-size: 11px;
         color: #1f2937; font-weight: 600; margin-top: 8px;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 450px;
+        max-width: 100%; white-space: normal; overflow-wrap: anywhere;
         text-shadow: 0 1px 1px rgba(255, 255, 255, 0.95);
       }
     </style>
-    <script type="module" crossorigin src="/assets/inventory-BZ03kwYu.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/inventory-D7fzOAKf.css">
+    <script type="module" crossorigin src="/assets/inventory-IWDEnS4M.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/inventory-nF0GSl1a.css">
   </head>
   <body>
     <div id="loading">
       <div id="loading-backdrop"></div>
-      <div id="loading-card">
-        <div id="loading-header">
-          <div id="loading-photos">
-            <img src="https://avatars.githubusercontent.com/u/309161?v=4" alt="David HERELLE Github" class="profile-avatar" />
-            <img src="/david_profile.jpeg" alt="David HERELLE Corporate" class="profile-avatar" />
-          </div>
-          <div id="loading-title">
-            <h1>David HERELLE</h1>
-            <h2>Architecte de Systèmes d'Information Web & Tech Lead</h2>
-            <div class="subtitle">Superviseur d'Agents IA · 8+ ans d’expérience (JobTeaser, saisirprudhommes.com, tech4team, Tracktor...)</div>
-          </div>
-        </div>
-
-        <div id="loading-body">
-          <p>
-            🚀 <strong>À la recherche de mon prochain défi technique (2026) !</strong><br />
-            Spécialiste de l'architecture Web (Ruby on Rails, PostgreSQL, React, R3F, Three.js) et du pilotage d'agents IA.<br />
-            <em>"L'IA ne remplace pas le développeur, elle supprime 90% du boilerplate pour se concentrer sur l'architecture, la créativité et les décisions métier."</em>
-          </p>
-          <div class="links">
-            📍 Paris 13ème (BNF / Station F) · 🌐 <a href="https://github.com/dinatih" target="_blank">GitHub dinatih</a> · <a href="https://www.linkedin.com/in/dinatih/" target="_blank">LinkedIn Profile</a>
-          </div>
-        </div>
-
-        <div id="loading-progress-section">
-          <div id="loading-shiba" role="img" aria-label="Chargement de la scène 3D : chien et balle animés"></div>
-          <div id="loading-track"><div id="loading-bar"></div></div>
-          <div id="loading-item">Chargement des éléments…</div>
-
-          <div id="loading-countdown-container" class="flex-wrap align-items-center justify-content-center gap-2 p-2 w-100" style="display: none;">
-            <div id="loading-countdown-text" style="font-size: 13px; font-weight: 700; color: #b91c1c; text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9);">
-              Prêt ! Lancement automatique dans <span id="loading-countdown-timer">5</span>s…
+      <div id="loading-envelope">
+        <div id="loading-card">
+          <div id="loading-header">
+            <div id="loading-photos">
+              <img src="https://avatars.githubusercontent.com/u/309161?v=4" alt="David HERELLE Github" class="profile-avatar" />
+              <img src="/david_profile.jpeg" alt="David HERELLE Corporate" class="profile-avatar" />
             </div>
-            <button id="btn-start-now" class="flex-shrink-0 text-nowrap" type="button" style="background: #d32f2f; color: #ffffff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(211, 47, 47, 0.35);">
-              🚀 Lancer maintenant
-            </button>
+            <div id="loading-title">
+              <h1>David HERELLE</h1>
+              <h2>Architecte de Systèmes d'Information Web & Tech Lead</h2>
+              <div class="subtitle">Superviseur d'Agents IA · 8+ ans d’expérience (JobTeaser, saisirprudhommes.com, tech4team, Tracktor...)</div>
+            </div>
+          </div>
+
+          <div id="loading-body">
+            <p>
+              🚀 <strong>À la recherche de mon prochain défi technique (2026) !</strong><br />
+              Spécialiste de l'architecture Web (Ruby on Rails, PostgreSQL, React, R3F, Three.js) et du pilotage d'agents IA.<br />
+              <em>"L'IA ne remplace pas le développeur, elle supprime 90% du boilerplate pour se concentrer sur l'architecture, la créativité et les décisions métier."</em>
+            </p>
+            <div class="links">
+              📍 Paris 13ème (BNF / Station F) · 🌐 <a href="https://github.com/dinatih" target="_blank">GitHub dinatih</a> · <a href="https://www.linkedin.com/in/dinatih/" target="_blank">LinkedIn Profile</a>
+            </div>
+          </div>
+
+          <div id="loading-progress-section">
+            <div id="loading-shiba" role="img" aria-label="Chargement de la scène 3D : chien et balle animés"></div>
+            <div id="loading-track"><div id="loading-bar"></div></div>
+            <div id="loading-item">Chargement des éléments…</div>
+
+            <div id="loading-countdown-container" class="flex-wrap align-items-center justify-content-center gap-2 p-2 w-100" style="display: none;">
+              <div id="loading-countdown-text" style="font-size: 13px; font-weight: 700; color: #b91c1c; text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9);">
+                Prêt ! Lancement automatique dans <span id="loading-countdown-timer">5</span>s…
+              </div>
+              <button id="btn-start-now" class="flex-shrink-0 text-nowrap" type="button" style="background: #d32f2f; color: #ffffff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(211, 47, 47, 0.35);">
+                🚀 Lancer maintenant
+              </button>
+            </div>
           </div>
         </div>
       </div>
