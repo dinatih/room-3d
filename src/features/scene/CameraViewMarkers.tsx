@@ -50,11 +50,12 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
     for (const hit of raycaster.intersectObjects(scene.children, true)) {
       const mesh = hit.object as THREE.Mesh;
       if (!mesh.isMesh) continue;
-      let hidden = false;
+      let ignored = false;
       for (let parent: THREE.Object3D | null = mesh; parent; parent = parent.parent) {
-        if (!parent.visible) { hidden = true; break; }
+        // Le ciel reste traversable, même lorsque sa coque ou son filaire est visible.
+        if (!parent.visible || parent.userData.isSky) { ignored = true; break; }
       }
-      if (hidden) continue;
+      if (ignored) continue;
 
       // Si le premier objet physique rencontré appartient au marqueur lui-même, il n'est pas occlus.
       for (let parent: THREE.Object3D | null = mesh; parent; parent = parent.parent) {

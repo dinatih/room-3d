@@ -175,6 +175,42 @@ const puppeteer = require('../node_modules/puppeteer');
       assert.equal(applied.cursor, '');
     }
     console.log('All ten real mesh clicks apply the correct camera preset, projection and zoom; active marker and cursor clear: OK');
+    await page.evaluate(() => window.frameMarker('front'));
+    await page.waitForFunction(() => window.fixture.camera.isPerspectiveCamera);
+    await page.evaluate(() => {
+      const { THREE, scene, camera, VIEWS } = window.fixture;
+      const sky = new THREE.Group();
+      sky.name = 'test-sky';
+      sky.userData.isSky = true;
+      sky.position.set(...VIEWS.front.pos);
+      const radius = camera.position.distanceTo(sky.position) / 2;
+      for (const wireframe of [false, true]) {
+        sky.add(new THREE.Mesh(new THREE.SphereGeometry(radius, 32, 24),
+          new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true, opacity: 0.62, wireframe, depthWrite: false })));
+      }
+      scene.add(sky);
+      scene.updateMatrixWorld(true);
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+      if (raycaster.intersectObjects(scene.children, true)[0]?.object.parent !== sky) {
+        throw new Error('Sky shell must intersect the pointer ray before the marker');
+      }
+    });
+    await page.mouse.move(500, 350);
+    await page.mouse.move(600, 350);
+    await page.waitForFunction(() => document.querySelector('canvas').style.cursor === 'pointer' && document.querySelector('[role="tooltip"]'));
+    await page.mouse.click(600, 350);
+    await page.waitForFunction(() => window.fixture.useSceneStore.getState().activeCameraView === 'front');
+    await page.evaluate(() => {
+      const { scene } = window.fixture;
+      const sky = scene.getObjectByName('test-sky');
+      scene.remove(sky);
+      for (const mesh of sky.children) {
+        mesh.geometry.dispose();
+        mesh.material.dispose();
+      }
+    });
+    console.log('Marker hover and click pass through sky shell and wireframe: OK');
     await page.evaluate(() => {
       window.frameMarker('front');
       const { THREE, scene, VIEWS } = window.fixture;
