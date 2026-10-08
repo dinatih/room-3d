@@ -7,6 +7,12 @@ on:
 permissions:
   contents: write
 
+# Share the deployment lock with the application workflow.
+concurrency:
+  group: gh-pages-publish
+  queue: max
+  cancel-in-progress: false
+
 jobs:
   visualize:
     runs-on: ubuntu-latest

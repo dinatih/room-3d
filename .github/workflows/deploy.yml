@@ -7,6 +7,12 @@ on:
 permissions:
   contents: write
 
+# Both workflows publish to gh-pages and must not push concurrently.
+concurrency:
+  group: gh-pages-publish
+  queue: max
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
