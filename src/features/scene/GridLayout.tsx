@@ -36,6 +36,8 @@ import { ArmrestSofa } from './items/ArmrestSofa';
 import { ArmlessSofa } from './items/ArmlessSofa';
 import { ChestBench } from './items/ChestBench';
 import { UtakerStack } from './items/UtakerStack';
+import { Laptop } from './items/Laptop';
+import { Phone } from './items/Phone';
 
 interface ErrorBoundaryProps {
   fallback?: React.ReactNode;
@@ -276,8 +278,8 @@ function ProceduralItemInner({ item }: { item: UnifiedGridItem }) {
 
   useLayoutEffect(() => {
     if (!groupRef.current) return;
-    groupRef.current.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(groupRef.current);
+    groupRef.current.scale.set(1, 1, 1);
+    const box = glbLocalBBox(groupRef.current);
     const size = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
     const s = maxDim > 0 ? TARGET_DISPLAY_SIZE / maxDim : 1;
@@ -388,6 +390,13 @@ export function GridLayout() {
 
     // Ajout des objets procéduraux demandés
     const procedurals: UnifiedGridItem[] = [
+      ...INVENTORY.filter((item) => item.id === 'laptop' || item.id === 'phone').map((item) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        notes: item.notes,
+        proceduralComponent: item.id === 'laptop' ? Laptop : Phone,
+      })),
       {
         id: 'armrest-sofa',
         name: 'Canapé Jardin avec accoudoirs',
