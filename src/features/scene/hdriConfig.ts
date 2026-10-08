@@ -34,12 +34,12 @@ export const HDRI_LIST: HdriItem[] = [
   },
 
   { id: 'dikhololo_night', name: 'Nuit étoilée & Camp 🌌', url: '/environment/hdri/dikhololo_night_8k.hdr', mobileUrl: '/environment/hdri/2k/dikhololo_night_8k.hdr', url4k: '/environment/hdri/4k/dikhololo_night_8k.hdr', type: 'hdr' },
-  { id: 'rogland_clear_night_4k', name: 'rogland clear night', url: '/environment/hdri/rogland_clear_night_8k.hdr', mobileUrl: '/environment/hdri/2k/rogland_clear_night_8k.hdr', url4k: '/environment/hdri/4k/rogland_clear_night_8k.hdr', type: 'hdr' },
-  { id: 'kloofendal_48d_partly_cloudy_puresky_4k', name: 'Partly cloudy puresky', url: '/environment/hdri/kloofendal_48d_partly_cloudy_puresky_8k.hdr', mobileUrl: '/environment/hdri/2k/kloofendal_48d_partly_cloudy_puresky_8k.hdr', url4k: '/environment/hdri/4k/kloofendal_48d_partly_cloudy_puresky_8k.hdr', type: 'hdr' },
-  { id: 'sandsloot_4k', name: 'sandsloot', url: '/environment/hdri/sandsloot_8k.hdr', mobileUrl: '/environment/hdri/2k/sandsloot_8k.hdr', url4k: '/environment/hdri/4k/sandsloot_8k.hdr', type: 'hdr' },
-  { id: 'spiaggia_di_mondello_4k', name: 'spiaggia di mondello', url: '/environment/hdri/spiaggia_di_mondello_8k.hdr', mobileUrl: '/environment/hdri/2k/spiaggia_di_mondello_8k.hdr', url4k: '/environment/hdri/4k/spiaggia_di_mondello_8k.hdr', type: 'hdr' },
-  { id: 'tcom_colorfulalley_colorful_alley_8k_hdri_sphere_paris', name: 'Colorful alley', url: '/environment/hdri/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere.hdr', mobileUrl: '/environment/hdri/2k/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere.hdr', url4k: '/environment/hdri/4k/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere.hdr', type: 'hdr' },
-  { id: 'tcom_norwayforest_8k_hdri_sphere', name: 'Norway Forest', url: '/environment/hdri/TCom_NorwayForest_8K_hdri_sphere.hdr', mobileUrl: '/environment/hdri/2k/TCom_NorwayForest_8K_hdri_sphere.hdr', url4k: '/environment/hdri/4k/TCom_NorwayForest_8K_hdri_sphere.hdr', type: 'hdr' },
+  { id: 'rogland_clear_night_4k', name: 'Nuit claire à Rogland 🌙', url: '/environment/hdri/rogland_clear_night_8k.hdr', mobileUrl: '/environment/hdri/2k/rogland_clear_night_8k.hdr', url4k: '/environment/hdri/4k/rogland_clear_night_8k.hdr', type: 'hdr' },
+  { id: 'kloofendal_48d_partly_cloudy_puresky_4k', name: 'Ciel parsemé de nuages ⛅', url: '/environment/hdri/kloofendal_48d_partly_cloudy_puresky_8k.hdr', mobileUrl: '/environment/hdri/2k/kloofendal_48d_partly_cloudy_puresky_8k.hdr', url4k: '/environment/hdri/4k/kloofendal_48d_partly_cloudy_puresky_8k.hdr', type: 'hdr' },
+  { id: 'sandsloot_4k', name: 'Paysage de Sandsloot 🌿', url: '/environment/hdri/sandsloot_8k.hdr', mobileUrl: '/environment/hdri/2k/sandsloot_8k.hdr', url4k: '/environment/hdri/4k/sandsloot_8k.hdr', type: 'hdr' },
+  { id: 'spiaggia_di_mondello_4k', name: 'Plage de Mondello 🏖️', url: '/environment/hdri/spiaggia_di_mondello_8k.hdr', mobileUrl: '/environment/hdri/2k/spiaggia_di_mondello_8k.hdr', url4k: '/environment/hdri/4k/spiaggia_di_mondello_8k.hdr', type: 'hdr' },
+  { id: 'tcom_colorfulalley_colorful_alley_8k_hdri_sphere_paris', name: 'Ruelle colorée 🎨', url: '/environment/hdri/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere.hdr', mobileUrl: '/environment/hdri/2k/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere.hdr', url4k: '/environment/hdri/4k/TCom_ColorfulAlley_colorful_alley_8K_hdri_sphere.hdr', type: 'hdr' },
+  { id: 'tcom_norwayforest_8k_hdri_sphere', name: 'Forêt norvégienne 🌲', url: '/environment/hdri/TCom_NorwayForest_8K_hdri_sphere.hdr', mobileUrl: '/environment/hdri/2k/TCom_NorwayForest_8K_hdri_sphere.hdr', url4k: '/environment/hdri/4k/TCom_NorwayForest_8K_hdri_sphere.hdr', type: 'hdr' },
 ];
 
 export const DEFAULT_HDRI_ID = 'default';
