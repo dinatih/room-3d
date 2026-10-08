@@ -1,0 +1,15 @@
+// Prioritaire sur le curseur de survol des objets pendant la manipulation.
+[data-orbit-drag='rotate'],
+[data-orbit-drag='rotate'] canvas {
+  cursor: url('./orbit-rotate-cursor.svg') 16 16, grabbing !important;
+}
+
+[data-orbit-drag='pan'],
+[data-orbit-drag='pan'] canvas {
+  cursor: move !important;
+}
+
+[data-orbit-drag='zoom'],
+[data-orbit-drag='zoom'] canvas {
+  cursor: ns-resize !important;
+}

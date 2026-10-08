@@ -1,6 +1,7 @@
 import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, Html, Line, Grid, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
+import { Html, Line, Grid, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls } from '@features/scene/camera/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';

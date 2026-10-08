@@ -1,6 +1,7 @@
 import { memo, useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
+import { Html, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
+import { OrbitControls } from '@features/scene/camera/OrbitControls';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { getOrbitMouseButtons } from '@features/scene/camera/orbitMouseButtons';
 import * as THREE from 'three';
