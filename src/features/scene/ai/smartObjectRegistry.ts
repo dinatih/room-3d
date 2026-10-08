@@ -1,7 +1,7 @@
 import { SmartObjectDef, SmartObjectCategory, AgentInstruction, ResolvedSmartObject } from './aiTypes';
 import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
-import { getAllDuoAnimationIds } from '../animations/duoAnimations';
+import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
 import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
 
 /**
@@ -768,12 +768,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Duo Combat Aléatoire',
         isDuo: true,
         rotY: 0,
-        duoPool: [
-          'b1', 'd1', 'd4', 'f2', 'h1', 'h2', 'h4', 'ko1', 'ko2', 'ko3',
-          'p1', 'p2', 's1', 's2', 's3', 's4', 's5', 't1', 't3', 't4', 't5',
-          'double_leg_takedown', 'double_leg_takedown_pair', 'release_hostage',
-          'fist_fight', 'taken_hostage', 'shoulder_throw', 'brutal_assassination'
-        ],
+        duoPool: DUO_ANIMATIONS.filter(def => def.isCombat).map(def => def.id),
         duoCount: 3,
       }
     ]

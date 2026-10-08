@@ -11,6 +11,7 @@ import { Character } from './Character';
 import { cacheDynamicGLTF } from './useCharacterAnimations';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import type { CharacterGroupProps } from './characterTypes';
+import { canCharacterPerformDuo, resolveDuoPreviewParticipants } from '../animations/duoAnimations';
 import { getCharacterGridPosition, getCharacterGridCenterIndex } from './characterGridUtils';
 
 function InternalCharacterGroup(props: CharacterGroupProps) {
@@ -32,10 +33,10 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
   const mountedCharacters = useMemo(() => {
     if (props.isPreview) {
       if (props.duoAnimDef) {
-        const leaderId = props.previewCharacterId || 'native';
-        const partnerId = props.duoPartnerId || (leaderId === 'native' ? 'rosanna' : 'native');
-        const leader = characters.find(char => char.id === leaderId) || characters[0];
-        const partner = characters.find(char => char.id === partnerId) || characters.find(char => char.id !== leaderId) || characters[0];
+        const { leaderId, partnerId } = resolveDuoPreviewParticipants(props.duoAnimDef, props.previewCharacterId, props.duoPartnerId);
+        const leader = characters.find(char => char.id === leaderId);
+        const partner = characters.find(char => char.id === partnerId);
+        if (!leader || !partner) throw new Error(`Participants duo inconnus : ${leaderId}, ${partnerId}`);
         return [
           { ...leader, isDuoRoleA: true },
           { ...partner, isDuoRoleB: true }
@@ -64,10 +65,14 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
 
   if (characterGrid && !props.isPreview && props.duoAnimDef) {
     const duo = props.duoAnimDef;
-    const partner = characters.find(char => char.id === props.duoPartnerId);
+    const partnerId = props.duoPartnerId && canCharacterPerformDuo(props.duoPartnerId, duo) ? props.duoPartnerId : 'native';
+    const partner = characters.find(char => char.id === partnerId);
     if (!partner) throw new Error(`Partenaire de grille inconnu : ${props.duoPartnerId}`);
+    const animationMasterId = mountedCharacters.find(char => char.id === activeCharacterId && canCharacterPerformDuo(char.id, duo))?.id
+      ?? mountedCharacters.find(char => canCharacterPerformDuo(char.id, duo))?.id;
     const offset = duo.offsetB ?? [0, 0, 0];
     return <>{mountedCharacters.map((leader, index) => {
+      const eligible = canCharacterPerformDuo(leader.id, duo);
       const pos = getCharacterGridPosition(index, mountedCharacters.length);
       return <Suspense key={leader.id} fallback={null}>
         <Character
@@ -76,9 +81,10 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
           isLara={leader.isLara} targetHeight={leader.height} variant={leader.variant}
           isActive={leader.id === activeCharacterId} isNPC={leader.id !== activeCharacterId}
           characterIndex={index} totalCharacters={mountedCharacters.length}
-          characterAnim={duo.animA} isAnimationMaster={leader.id === activeCharacterId}
+          duoAnimDef={eligible ? duo : undefined}
+          characterAnim={eligible ? duo.animA : 'idle'} isAnimationMaster={leader.id === animationMasterId}
         />
-        <Character
+        {eligible && <Character
           {...props}
           key={partner.id}
           id={partner.id} name={partner.name} modelPath={partner.path}
@@ -90,7 +96,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
           characterAnim={duo.animB}
           previewPosition={[pos.x + offset[0], pos.y + offset[1], pos.z + offset[2]]}
           previewRotationY={duo.rotB ?? 0}
-        />
+        />}
       </Suspense>;
     })}</>;
   }
@@ -119,7 +125,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
         }
 
         const isActive = props.isPreview
-          ? char.id === props.previewCharacterId
+          ? (props.duoAnimDef ? !!isDuoRoleA : char.id === props.previewCharacterId)
           : char.id === activeCharacterId;
 
         return (

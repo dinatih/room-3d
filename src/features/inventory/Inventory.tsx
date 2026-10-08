@@ -7,7 +7,7 @@ import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type Storage
 import { InventoryPreview } from './InventoryPreview';
 import { SpatialZonePreview } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
-import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
+import { DUO_ANIMATIONS, canCharacterPerformDuo, resolveDuoPreviewParticipants, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -368,7 +368,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                 title="Lancer une animation de couple aléatoire dans la preview 3D"
                 onClick={() => {
                   const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
-                  const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
+                  const otherChars = CHARACTERS.filter(c => canCharacterPerformDuo(c.id, randomAnim) && c.id !== resolveDuoPreviewParticipants(randomAnim, item.id, selectedDuoPartner).leaderId && (extraCharacters || !isExtraCharacter(c.id)));
                   const randPartner = otherChars[Math.floor(Math.random() * otherChars.length)]?.id;
                   if (randomAnim) {
                     setSelectedDuoAnim(randomAnim);
@@ -390,8 +390,8 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                   } else {
                     const def = DUO_ANIMATIONS.find(a => a.id === val);
                     if (def) {
-                      const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-                      const randPartner = selectedDuoPartner || (otherChars[0]?.id ?? 'rosanna');
+                      const otherChars = CHARACTERS.filter(c => canCharacterPerformDuo(c.id, def) && c.id !== resolveDuoPreviewParticipants(def, item.id, selectedDuoPartner).leaderId && (extraCharacters || !isExtraCharacter(c.id)));
+                      const randPartner = otherChars.find(c => c.id === selectedDuoPartner)?.id || otherChars[0]?.id;
                       setSelectedDuoAnim(def);
                       setSelectedDuoPartner(randPartner);
                     }
@@ -416,8 +416,8 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                     key={a.id}
                     type="button"
                     onClick={() => {
-                      const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-                      const partner = selectedDuoPartner || (otherChars[0]?.id ?? 'rosanna');
+                      const otherChars = CHARACTERS.filter(c => canCharacterPerformDuo(c.id, a) && c.id !== resolveDuoPreviewParticipants(a, item.id, selectedDuoPartner).leaderId && (extraCharacters || !isExtraCharacter(c.id)));
+                      const partner = otherChars.find(c => c.id === selectedDuoPartner)?.id || otherChars[0]?.id;
                       setSelectedDuoAnim(a);
                       setSelectedDuoPartner(partner);
                     }}

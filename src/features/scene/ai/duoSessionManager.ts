@@ -1,4 +1,4 @@
-import { DUO_ANIMATIONS, DuoAnimationDef } from '../animations/duoAnimations';
+import { DUO_ANIMATIONS, DuoAnimationDef, canCharacterPerformDuo } from '../animations/duoAnimations';
 import { OccupancyManager } from './occupancyManager';
 import { appLog } from '@features/ui/AppConsole';
 import { cameraState } from '../cameraState';
@@ -359,6 +359,8 @@ class DuoSessionManager {
     const store = useSceneStore.getState();
 
     for (const npcId of AUTONOMOUS_NPC_IDS) {
+      if (!session.playlist.every(def => canCharacterPerformDuo(npcId, def))) continue;
+      if (!isCharacterVisibleInMode(npcId, store.layers.laraCount ?? 4, store.activeCharacterId, store.layers.extraCharacters ?? false, store.activeExtraIds, store.activeMainIds)) continue;
       if (npcId === callerId) continue;
       if (npcId === store.activeCharacterId) continue;
       if (session.participantA?.characterId === npcId) continue;
@@ -442,6 +444,8 @@ class DuoSessionManager {
     const playlist = this.resolveSlotPlaylist(objectId, slotId, forcedAnimId);
     if (playlist.length === 0) return null;
     const def = playlist[0];
+    const canParticipate = (id: string) => playlist.every(anim => canCharacterPerformDuo(id, anim));
+    const requestedLeaderId = leaderId;
 
     const slot = obj.slots.find(s => s.slotId === slotId)
       || obj.slots.find(s => s.animationsRandom === 'seated-front')
@@ -457,6 +461,10 @@ class DuoSessionManager {
     if (existing && !existing.isSessionComplete) {
       const curDef = existing.playlist[existing.currentAnimIndex] || def;
       const { posA, posB, rotA, rotB } = computeWorldTransform(anchorPos, anchorRotY, curDef.offsetB, curDef.rotB);
+      if (leaderId && !existing.playlist.every(anim => canCharacterPerformDuo(leaderId!, anim))) {
+        if (!existing.participantA || !existing.participantB) return null;
+        return { targetA: existing.participantA.characterId, targetB: existing.participantB.characterId, posA, posB, rotA, rotB, actualSlotId };
+      }
 
       if (leaderId && existing.participantA?.characterId === leaderId) {
         return { targetA: leaderId, targetB: existing.participantB?.characterId ?? '', posA, posB, rotA, rotB, actualSlotId };
@@ -477,9 +485,12 @@ class DuoSessionManager {
       return null;
     }
 
+    if (leaderId && !canParticipate(leaderId)) leaderId = undefined;
+    if (partnerId && !canParticipate(partnerId)) partnerId = undefined;
+
     // Résolution Leader (A) et Partenaire (B)
     const isVisibleChar = (id: string, allowPlayer = true) => {
-      if (id === 'shiba' || id === 'robin') return false;
+      if (id === 'shiba' || id === 'robin' || !canParticipate(id)) return false;
       const storeState = useSceneStore.getState();
       if (!allowPlayer && id === storeState.activeCharacterId) return false;
       return (
@@ -504,7 +515,7 @@ class DuoSessionManager {
     };
 
     const candidates = getCandidates(undefined, true);
-    const targetA = leaderId || candidates[0] || (isVisibleChar('native', true) ? 'native' : 'xbot');
+    const targetA = leaderId || candidates.find(id => id !== partnerId);
     const partnerCandidates = getCandidates(targetA, false);
     const targetB = partnerId || partnerCandidates[0];
     if (!targetA || !targetB || targetA === targetB) return null;
@@ -539,6 +550,12 @@ class DuoSessionManager {
 
     appLog(`${targetA}+${targetB}`, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur A) et ${targetB} (Partenaire B) !`);
 
+    if (requestedLeaderId && requestedLeaderId !== targetA && requestedLeaderId !== targetB) {
+      document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+        detail: { targetId: targetA, fromId: 'SmartObject', objectId, slotId: actualSlotId, forceRole: 'roleA', targetPos: posA, targetRotY: rotA }
+      }));
+    }
+
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
       detail: {
         targetId: targetB,
@@ -569,24 +586,26 @@ class DuoSessionManager {
     let session = this.sessions.get('duo-zone');
     if (!session) {
       session = createDuoSession('duo-zone', { ...this.defaultLocation }, [def], this.repeatsPerAnim);
-      this.sessions.set('duo-zone', session);
     }
 
     // Déterminer targetA et targetB
     let targetA: string | null = leaderId || session.participantA?.characterId || null;
     let targetB: string | null = partnerId || session.participantB?.characterId || null;
+    if (targetA && !canCharacterPerformDuo(targetA, def)) targetA = null;
+    if (targetB && !canCharacterPerformDuo(targetB, def)) targetB = null;
 
     if (!targetA || !targetB) {
+      const store = useSceneStore.getState();
       const candidates = Array.from(AUTONOMOUS_NPC_IDS)
-        .filter(id => id !== targetA && id !== targetB && !this.getSessionFor(id))
+        .filter(id => isCharacterVisibleInMode(id, store.layers.laraCount ?? 4, store.activeCharacterId, store.layers.extraCharacters ?? false, store.activeExtraIds, store.activeMainIds) && canCharacterPerformDuo(id, def) && id !== targetA && id !== targetB && !this.getSessionFor(id))
         .sort((a, b) => {
           const pa = cameraState.positions[a];
           const pb = cameraState.positions[b];
           return (pa ? Math.hypot(pa.x - bx, pa.z - bz) : Infinity) - (pb ? Math.hypot(pb.x - bx, pb.z - bz) : Infinity);
         });
 
-      if (!targetA) targetA = candidates.shift() || 'native';
-      if (!targetB) targetB = candidates.find(id => id !== targetA) || (targetA === 'native' ? 'rosanna' : 'native');
+      if (!targetA) targetA = candidates.shift() || null;
+      if (!targetB) targetB = candidates.find(id => id !== targetA) || null;
     }
 
     if (!targetA || !targetB || targetA === targetB) return null;
@@ -602,6 +621,7 @@ class DuoSessionManager {
     }
 
     // Configurer la session
+    this.sessions.set('duo-zone', session);
     session.playlist = [def];
     session.currentAnimIndex = 0;
     session.currentRepeatIndex = 0;

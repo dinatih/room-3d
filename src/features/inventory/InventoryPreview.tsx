@@ -11,7 +11,7 @@ import { SkeletonHierarchyPanel } from '@features/scene/utils/SkeletonHierarchyP
 import type { SkeletonGroup } from '@features/scene/utils/skeletonTypes';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 import { resolveAnimationId } from '@features/scene/animations/animationResolver';
-import type { DuoAnimationDef } from '@features/scene/animations/duoAnimations';
+import { canCharacterPerformDuo, resolveDuoPreviewParticipants, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { GroundPoint } from '@features/scene/character/GroundPoint';
 import { SkySphere } from '@features/scene/SkySphere';
@@ -752,6 +752,13 @@ export function InventoryPreview({
     }
   }, [initialDuoAnim, initialDuoPartner]);
 
+  const duoParticipants = actionStates.duoAnimDef
+    ? resolveDuoPreviewParticipants(actionStates.duoAnimDef, item?.id, actionStates.duoPartnerId)
+    : undefined;
+  const previewActionStates = duoParticipants
+    ? { ...actionStates, duoPartnerId: duoParticipants.partnerId }
+    : actionStates;
+
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters');
@@ -861,7 +868,7 @@ export function InventoryPreview({
                 </>
               )}
               {showGrid && <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />}
-              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} wireframe={wireframe} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
+              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={previewActionStates} showDims={showDims} wireframe={wireframe} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}
                 selectedBoneName={selectedBoneName}
@@ -1193,7 +1200,7 @@ export function InventoryPreview({
             isHumanCharacter={isHumanCharacter}
             characterId={item.id}
             duoAnimDef={actionStates.duoAnimDef}
-            duoPartnerId={actionStates.duoPartnerId}
+            duoPartnerId={duoParticipants?.partnerId ?? actionStates.duoPartnerId}
             animalAnimOptions={animalAnimOptions}
             onSelectAnim={(val) => {
               lastSoloAnimRef.current = val;
@@ -1202,8 +1209,8 @@ export function InventoryPreview({
             }}
             onSelectDuoAnim={(def) => {
               if (!actionStates.duoAnimDef) lastSoloAnimRef.current = actionStates.characterAnim || 'idle';
-              const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-              const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
+              const otherChars = CHARACTERS.filter(c => c.id !== (def ? resolveDuoPreviewParticipants(def, item.id, actionStates.duoPartnerId).leaderId : item.id) && (!def || canCharacterPerformDuo(c.id, def)) && (extraCharacters || !isExtraCharacter(c.id)));
+              const defaultPartner = otherChars.find(c => c.id === actionStates.duoPartnerId)?.id || otherChars[0]?.id;
               setActionStates(s => ({
                 ...s,
                 duoAnimDef: def,

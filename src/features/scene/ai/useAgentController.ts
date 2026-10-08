@@ -3,7 +3,7 @@ import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
-import { getDuoAnimationForClip } from '../animations/duoAnimations';
+import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
@@ -495,6 +495,13 @@ export function useAgentController(
           let role = duoRoleRef.current;
           if (!role) {
             const duoRes = duoSessionManager.startDuoSession(objId, reqSlotId, _characterId);
+            if ((!duoRes && _characterId === 'xbot') || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
+              statusRef.current = 'IDLE';
+              stateRef.current.animation = 'idle';
+              releaseClaimedSlot();
+              advanceToNextStep(hasNavStep);
+              return update(dt);
+            }
             if (duoRes) {
               if (duoRes.targetB === _characterId) {
                 role = 'roleB';
@@ -503,13 +510,13 @@ export function useAgentController(
                 currentInstruction.slotId = `${duoRes.actualSlotId}:roleB`;
                 currentInstruction.rotY = duoRes.rotB;
                 claimedSlotRef.current = { objectId: objId, slotId: `${duoRes.actualSlotId}:roleB` };
-              } else {
+              } else if (duoRes.targetA === _characterId) {
                 role = 'roleA';
                 duoRoleRef.current = 'roleA';
                 currentInstruction.targetPos = duoRes.posA;
                 currentInstruction.slotId = `${duoRes.actualSlotId}:roleA`;
                 currentInstruction.rotY = duoRes.rotA;
-                claimedSlotRef.current = { objectId: objId, slotId: `${duoRes.actualSlotId}:roleA` };
+                claimedSlotRef.current = { objectId: objId, slotId: `${duoRes.actualSlotId}:${duoRoleRef.current}` };
               }
               // Invalider le cache de coords pour forcer le recalcul avec targetPos
               cachedCoordsInstructionRef.current = null;
@@ -709,11 +716,18 @@ export function useAgentController(
                 undefined,
                 duoDef.id
               );
+              if ((!duoRes && !canCharacterPerformDuo(_characterId, duoDef)) || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
+                statusRef.current = 'IDLE';
+                stateRef.current.animation = 'idle';
+                releaseClaimedSlot();
+                advanceToNextStep(hasNavStep);
+                return update(dt);
+              }
               if (duoRes) {
-                duoRoleRef.current = 'roleA';
+                duoRoleRef.current = duoRes.targetB === _characterId ? 'roleB' : 'roleA';
                 duoSessionManager.markReady(_characterId);
                 duoWaitTimerRef.current = 0;
-                claimedSlotRef.current = { objectId: currentInstruction.smartObjectId!, slotId: `${duoRes.actualSlotId}:roleA` };
+                claimedSlotRef.current = { objectId: currentInstruction.smartObjectId!, slotId: `${duoRes.actualSlotId}:${duoRoleRef.current}` };
                 const isSittingDuo = Boolean(currentInstruction.slotId?.includes('sit') || currentInstruction.smartObjectId?.includes('chair') || currentInstruction.smartObjectId?.includes('sofa'));
                 stateRef.current.animation = isSittingDuo ? 'sitting-idle' : 'female-standing-pose';
               }
@@ -853,11 +867,18 @@ export function useAgentController(
                     undefined,
                     duoDef.id
                   );
+                  if ((!duoRes && !canCharacterPerformDuo(_characterId, duoDef)) || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
+                    statusRef.current = 'IDLE';
+                    stateRef.current.animation = 'idle';
+                    releaseClaimedSlot();
+                    advanceToNextStep(hasNavStep);
+                    return update(dt);
+                  }
                   if (duoRes) {
-                    duoRoleRef.current = 'roleA';
+                    duoRoleRef.current = duoRes.targetB === _characterId ? 'roleB' : 'roleA';
                     duoSessionManager.markReady(_characterId);
                     duoWaitTimerRef.current = 0;
-                    claimedSlotRef.current = { objectId: currentInstruction.smartObjectId, slotId: `${duoRes.actualSlotId}:roleA` };
+                    claimedSlotRef.current = { objectId: currentInstruction.smartObjectId, slotId: `${duoRes.actualSlotId}:${duoRoleRef.current}` };
                     const isSittingDuo = Boolean(currentInstruction.slotId?.includes('sit') || currentInstruction.smartObjectId?.includes('chair') || currentInstruction.smartObjectId?.includes('sofa'));
                     stateRef.current.animation = isSittingDuo ? 'sitting-idle' : 'female-standing-pose';
                     return stateRef.current;
