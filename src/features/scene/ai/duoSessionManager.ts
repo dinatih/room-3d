@@ -336,7 +336,7 @@ class DuoSessionManager {
     this.emitChange();
   }
 
-  /** Termine et nettoie toutes les sessions duo en cours (utilisé lors du passage en Grille Lara). */
+  /** Termine et nettoie toutes les sessions duo en cours (utilisé lors du passage en Grille de personnages). */
   public leaveAllSessions(): void {
     const chars = Array.from(this.charToSession.keys());
     for (const c of chars) {

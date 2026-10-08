@@ -8,7 +8,7 @@ import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
-import { frameLaraGridOrtho, frameLaraGridCamera, getLaraGridCameraView } from '../character/laraGridUtils';
+import { frameCharacterGridOrtho, frameCharacterGridCamera, getCharacterGridCameraView } from '../character/characterGridUtils';
 import { dispatchView } from '../sidepanel/types';
 import { PERSP_POS, PERSP_TARGET } from './cameraConstants';
 
@@ -104,7 +104,7 @@ export function useCameraShortcuts({
 
     const toggleNpcGrid = () => {
       const store = useSceneStore.getState();
-      const wasActive = store.layers.laraGrid;
+      const wasActive = store.layers.characterGrid;
       if (!wasActive) {
         // Enregistre la configuration caméra avant d'entrer dans la grille
         const curTarget = ctrlRef.current?.target ?? savedPerspTarget.current;
@@ -116,12 +116,12 @@ export function useCameraShortcuts({
           charX: cameraState.characterX,
           charZ: cameraState.characterZ,
         };
-        store.toggleLayer('laraGrid');
+        store.toggleLayer('characterGrid');
         store.setActiveCameraView('front');
         store.setCameraProjection('persp');
         store.setOrbitMouseMode('rotate');
       } else {
-        store.toggleLayer('laraGrid');
+        store.toggleLayer('characterGrid');
         store.setActiveCameraView(null);
         exitGridAndRestore();
       }
@@ -132,11 +132,11 @@ export function useCameraShortcuts({
       else if (modeRef.current === 'top') exitTop();
       else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
       const store = useSceneStore.getState();
-      if (store.layers.laraGrid) {
+      if (store.layers.characterGrid) {
         store.setActiveCameraView('front');
         store.setCameraProjection('persp');
         store.setOrbitMouseMode('rotate');
-        const view = getLaraGridCameraView();
+        const view = getCharacterGridCameraView();
         toggleOrbitType?.('persp', { pos: view.pos, target: view.target });
       } else {
         store.setActiveCameraView(null);
@@ -159,7 +159,7 @@ export function useCameraShortcuts({
         return;
       }
 
-      // Raccourci G / g : basculer la grille Lara (NPC)
+      // Raccourci G / g : basculer la grille de personnages (NPC)
       if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'g' || e.key === 'G')) {
         e.preventDefault();
         toggleNpcGrid();
@@ -194,21 +194,21 @@ export function useCameraShortcuts({
         const view = viewByCode[e.code];
         if (view) {
           e.preventDefault();
-          if (useSceneStore.getState().layers.laraGrid && view === 'front') {
-            frameLaraGridCamera(undefined, useSceneStore.getState().cameraProjection);
+          if (useSceneStore.getState().layers.characterGrid && view === 'front') {
+            frameCharacterGridCamera(undefined, useSceneStore.getState().cameraProjection);
             return;
           }
-          const target = useSceneStore.getState().layers.laraGrid
-            ? getLaraGridCameraView().target
+          const target = useSceneStore.getState().layers.characterGrid
+            ? getCharacterGridCameraView().target
             : undefined;
           dispatchView(view, target, modeRef.current === 'follow');
           return;
         }
       }
 
-      // Raccourcis grille Lara (vues orthographiques)
-      const laraGridActive = useSceneStore.getState().layers.laraGrid;
-      if (laraGridActive) {
+      // Raccourcis grille de personnages (vues orthographiques)
+      const characterGridActive = useSceneStore.getState().layers.characterGrid;
+      if (characterGridActive) {
         const isNum1 = e.code === 'Numpad1' && !e.ctrlKey;
         const isNum2 = (e.code === 'Numpad1' && e.ctrlKey) || (e.code === 'Numpad2');
         const isNum3 = e.code === 'Numpad3' && e.ctrlKey;
@@ -219,41 +219,41 @@ export function useCameraShortcuts({
 
         if (isNum1) {
           e.preventDefault();
-          frameLaraGridOrtho('front');
+          frameCharacterGridOrtho('front');
           return;
         }
         if (isNum2) {
           e.preventDefault();
-          frameLaraGridOrtho('back');
+          frameCharacterGridOrtho('back');
           return;
         }
         if (isNum3) {
           e.preventDefault();
-          frameLaraGridOrtho('left');
+          frameCharacterGridOrtho('left');
           return;
         }
         if (isNum4) {
           e.preventDefault();
-          frameLaraGridOrtho('right');
+          frameCharacterGridOrtho('right');
           return;
         }
         if (isNum7) {
           e.preventDefault();
-          frameLaraGridOrtho('top');
+          frameCharacterGridOrtho('top');
           return;
         }
         if (isNum9) {
           e.preventDefault();
-          frameLaraGridOrtho('bottom');
+          frameCharacterGridOrtho('bottom');
           return;
         }
         if (isNum5) {
           e.preventDefault();
           if (modeRef.current === 'ortho' && exitOrtho) {
             exitOrtho();
-            frameLaraGridCamera();
+            frameCharacterGridCamera();
           } else {
-            frameLaraGridOrtho('front');
+            frameCharacterGridOrtho('front');
           }
           return;
         }
@@ -324,8 +324,8 @@ export function useCameraShortcuts({
       }
 
       if (e.key === 't' || e.key === 'T') {
-        const laraGridActive = useSceneStore.getState().layers.laraGrid;
-        if (laraGridActive) {
+        const characterGridActive = useSceneStore.getState().layers.characterGrid;
+        if (characterGridActive) {
           document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-lara', value: 't-pose' } }));
           document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-xbot', value: 't-pose' } }));
         } else {
@@ -436,7 +436,7 @@ export function useCameraShortcuts({
       invalidate();
     };
 
-    // Grille Lara preset → bascule vue orthographique
+    // Grille de personnages preset → bascule vue orthographique
     const onOrthoView = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (!detail) return;

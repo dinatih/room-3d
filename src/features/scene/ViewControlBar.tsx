@@ -3,7 +3,7 @@ import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import type { ReactNode } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS } from './sidepanel/types';
-import { getLaraGridCameraView, frameLaraGridCamera } from './character/laraGridUtils';
+import { getCharacterGridCameraView, frameCharacterGridCamera } from './character/characterGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
@@ -50,7 +50,7 @@ export function ViewControlBar({
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);
   const orbitMouseMode = useSceneStore(s => s.orbitMouseMode);
-  const npcGridActive = useSceneStore(s => s.layers.laraGrid);
+  const npcGridActive = useSceneStore(s => s.layers.characterGrid);
   const sceneCameraView = useSceneStore(s => s.activeCameraView);
   const activeCameraView = previewCameraView === undefined ? sceneCameraView : previewCameraView;
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
@@ -98,9 +98,9 @@ export function ViewControlBar({
           className={`${TOOLBAR_BUTTON_CLASS} ${isActive(view.key) ? `view-control-bar__btn--${color}` : 'btn-outline-secondary'}`}
           onClick={() => {
             if (npcGridActive && view.key === 'front') {
-              frameLaraGridCamera(undefined, cameraProjection);
+              frameCharacterGridCamera(undefined, cameraProjection);
             } else {
-              dispatchView(view.key, npcGridActive ? getLaraGridCameraView().target : undefined);
+              dispatchView(view.key, npcGridActive ? getCharacterGridCameraView().target : undefined);
             }
           }}
           title={`${view.label} (${view.shortcut})`}

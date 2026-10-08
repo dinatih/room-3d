@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import { CHARACTERS, LARA_COUNT_MODES } from './characterConfig';
 import { useSceneStore } from './store/useSceneStore';
-import { getActiveSceneCharactersCount } from './character/laraGridUtils';
+import { getActiveSceneCharactersCount } from './character/characterGridUtils';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import { NonExtraCharactersSelector } from './sidepanel/sections/NonExtraCharactersSelector';
 import { useIsMobile } from '@shared/hooks/useIsMobile';

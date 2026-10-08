@@ -1,8 +1,8 @@
 import { CHARACTERS, isCharacterVisibleInMode, type LaraCountMode } from '../characterConfig';
-import { useLaraGridStore } from './useLaraGridStore';
+import { useCharacterGridStore } from './useCharacterGridStore';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 
-export const LARA_GRID_CONFIG = {
+export const CHARACTER_GRID_CONFIG = {
   cols: 5,
   colSpacing: 120,      // 120 cm entre chaque personnage sur l'axe X
   rowSpacing: 220,      // 220 cm entre chaque rangée sur l'axe Y
@@ -14,29 +14,29 @@ export const LARA_GRID_CONFIG = {
 } as const;
 
 function getGridLayout(total: number) {
-  const { duo, partnerId } = useLaraGridStore.getState();
+  const { duo, partnerId } = useCharacterGridStore.getState();
   const [offsetX, offsetY, offsetZ] = duo?.offsetB ?? [0, 0, 0];
   const store = useSceneStore.getState();
   const leaders = CHARACTERS.filter(char => isCharacterVisibleInMode(char.id,
     store.layers.laraCount ?? 4, store.activeCharacterId, store.layers.extraCharacters ?? false,
     store.activeExtraIds, store.activeMainIds));
-  const leaderHeight = Math.max(LARA_GRID_CONFIG.characterHeight, ...leaders.map(char => char.height));
+  const leaderHeight = Math.max(CHARACTER_GRID_CONFIG.characterHeight, ...leaders.map(char => char.height));
   const partnerHeight = duo ? CHARACTERS.find(char => char.id === partnerId)?.height ?? leaderHeight : 0;
   const minY = Math.min(0, offsetY);
   const pairHeight = Math.max(leaderHeight, offsetY + partnerHeight) - minY;
-  const colSpacing = LARA_GRID_CONFIG.colSpacing + Math.abs(offsetX);
-  const rowSpacing = Math.max(LARA_GRID_CONFIG.rowSpacing,
-    pairHeight + LARA_GRID_CONFIG.rowSpacing - LARA_GRID_CONFIG.characterHeight);
-  const rows = Math.ceil(Math.max(1, total) / LARA_GRID_CONFIG.cols);
-  const cols = Math.min(LARA_GRID_CONFIG.cols, Math.max(1, total));
+  const colSpacing = CHARACTER_GRID_CONFIG.colSpacing + Math.abs(offsetX);
+  const rowSpacing = Math.max(CHARACTER_GRID_CONFIG.rowSpacing,
+    pairHeight + CHARACTER_GRID_CONFIG.rowSpacing - CHARACTER_GRID_CONFIG.characterHeight);
+  const rows = Math.ceil(Math.max(1, total) / CHARACTER_GRID_CONFIG.cols);
+  const cols = Math.min(CHARACTER_GRID_CONFIG.cols, Math.max(1, total));
   return {
     colSpacing, rowSpacing,
     width: cols * colSpacing,
     height: (rows - 1) * rowSpacing + pairHeight,
-    depth: LARA_GRID_CONFIG.colSpacing + Math.abs(offsetZ),
-    centerX: LARA_GRID_CONFIG.centerX + offsetX / 2,
-    centerY: LARA_GRID_CONFIG.baseY + minY + ((rows - 1) * rowSpacing + pairHeight) / 2,
-    centerZ: LARA_GRID_CONFIG.baseZ + offsetZ / 2,
+    depth: CHARACTER_GRID_CONFIG.colSpacing + Math.abs(offsetZ),
+    centerX: CHARACTER_GRID_CONFIG.centerX + offsetX / 2,
+    centerY: CHARACTER_GRID_CONFIG.baseY + minY + ((rows - 1) * rowSpacing + pairHeight) / 2,
+    centerZ: CHARACTER_GRID_CONFIG.baseZ + offsetZ / 2,
   };
 }
 
@@ -44,8 +44,8 @@ function getGridLayout(total: number) {
  * Calcule les coordonnées (X, Y, Z) d'un personnage dans la grille dynamique par lignes de 5.
  * Rangée 0 = rangée du haut (ordre de lecture standard), dernière rangée = rangée du bas (à baseY).
  */
-export function getLaraGridPosition(index: number, total: number = 1): { x: number; y: number; z: number } {
-  const { cols, baseY, baseZ, centerX } = LARA_GRID_CONFIG;
+export function getCharacterGridPosition(index: number, total: number = 1): { x: number; y: number; z: number } {
+  const { cols, baseY, baseZ, centerX } = CHARACTER_GRID_CONFIG;
   const { colSpacing, rowSpacing } = getGridLayout(total);
   const safeTotal = Math.max(1, total);
   const totalRows = Math.ceil(safeTotal / cols);
@@ -75,9 +75,9 @@ export function getLaraGridPosition(index: number, total: number = 1): { x: numb
  * Calcule l'index central d'une grille de personnages.
  * Rangée du milieu et colonne du milieu (colonne 2 pour 5 colonnes).
  */
-export function getLaraGridCenterIndex(total: number): number {
+export function getCharacterGridCenterIndex(total: number): number {
   if (total <= 1) return 0;
-  const cols = LARA_GRID_CONFIG.cols;
+  const cols = CHARACTER_GRID_CONFIG.cols;
   const totalRows = Math.ceil(total / cols);
   if (totalRows === 1) {
     return Math.floor((total - 1) / 2);
@@ -94,15 +94,15 @@ export function getLaraGridCenterIndex(total: number): number {
 /**
  * Calcule les coordonnées 3D cibles (au niveau du buste/centre) du personnage actif au centre de la grille.
  */
-export function getLaraGridActiveTarget(total?: number): [number, number, number] {
+export function getCharacterGridActiveTarget(total?: number): [number, number, number] {
   const count = total ?? getActiveSceneCharactersCount();
-  const centerIdx = getLaraGridCenterIndex(count);
-  const pos = getLaraGridPosition(centerIdx, count);
+  const centerIdx = getCharacterGridCenterIndex(count);
+  const pos = getCharacterGridPosition(centerIdx, count);
   const store = useSceneStore.getState();
   const activeChar = CHARACTERS.find(c => c.id === store.activeCharacterId);
-  const charH = activeChar?.height ?? LARA_GRID_CONFIG.characterHeight;
+  const charH = activeChar?.height ?? CHARACTER_GRID_CONFIG.characterHeight;
 
-  const { duo } = useLaraGridStore.getState();
+  const { duo } = useCharacterGridStore.getState();
   if (duo?.offsetB) {
     const [offsetX, offsetY, offsetZ] = duo.offsetB;
     return [
@@ -118,15 +118,15 @@ export function getLaraGridActiveTarget(total?: number): [number, number, number
 /**
  * Calcule la cible (target sur le personnage actif au centre) et la position caméra pour cadrer la grille.
  */
-export function getLaraGridCameraView(total?: number): {
+export function getCharacterGridCameraView(total?: number): {
   pos: [number, number, number];
   target: [number, number, number];
   zoom?: number;
 } {
   const count = total ?? getActiveSceneCharactersCount();
   const { width: gridWidth, height: gridHeight, depth, centerZ } = getGridLayout(count);
-  const { fov } = LARA_GRID_CONFIG;
-  const target = getLaraGridActiveTarget(count);
+  const { fov } = CHARACTER_GRID_CONFIG;
+  const target = getCharacterGridActiveTarget(count);
 
   // Ratio d'aspect de la fenêtre
   const aspect = typeof window !== 'undefined' && window.innerHeight > 0
@@ -169,9 +169,9 @@ export function getActiveSceneCharactersCount(state?: {
 /**
  * Émet l'événement camera-view pour orienter et cadrer la caméra de face sur la grille de personnages.
  */
-export function frameLaraGridCamera(total?: number, projection: 'persp' | 'ortho' = 'persp'): void {
+export function frameCharacterGridCamera(total?: number, projection: 'persp' | 'ortho' = 'persp'): void {
   const count = total ?? getActiveSceneCharactersCount();
-  const view = getLaraGridCameraView(count);
+  const view = getCharacterGridCameraView(count);
   useSceneStore.getState().setActiveCameraView('front');
   useSceneStore.getState().setCameraProjection(projection);
   if (projection === 'persp') {
@@ -180,10 +180,10 @@ export function frameLaraGridCamera(total?: number, projection: 'persp' | 'ortho
   document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...view, key: 'front', projection } }));
 }
 
-export type LaraGridOrthoViewKey = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom';
+export type CharacterGridOrthoViewKey = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom';
 
-export interface LaraGridOrthoView {
-  key: LaraGridOrthoViewKey;
+export interface CharacterGridOrthoView {
+  key: CharacterGridOrthoViewKey;
   label: string;
   shortLabel: string;
   icon: string;
@@ -196,13 +196,13 @@ export interface LaraGridOrthoView {
 }
 
 /**
- * Calcule l'ensemble des 6 vues orthographiques canoniques pour la grille Lara :
+ * Calcule l'ensemble des 6 vues orthographiques canoniques pour la grille de personnages :
  * Face, Derrière (Dos), Côté Gauche, Côté Droit, Dessus, Dessous.
  */
-export function getLaraGridOrthoViews(total?: number): Record<LaraGridOrthoViewKey, LaraGridOrthoView> {
+export function getCharacterGridOrthoViews(total?: number): Record<CharacterGridOrthoViewKey, CharacterGridOrthoView> {
   const count = total ?? getActiveSceneCharactersCount();
   const { width: gridWidth, height: gridHeight, depth: gridDepth } = getGridLayout(count);
-  const target = getLaraGridActiveTarget(count);
+  const target = getCharacterGridActiveTarget(count);
   const [centerX, centerY, baseZ] = target;
 
   const aspect = typeof window !== 'undefined' && window.innerHeight > 0
@@ -292,8 +292,8 @@ export function getLaraGridOrthoViews(total?: number): Record<LaraGridOrthoViewK
 /**
  * Émet l'événement camera-ortho-view pour basculer en projection orthographique et cadrer la grille sous l'angle choisi.
  */
-export function frameLaraGridOrtho(viewKey: LaraGridOrthoViewKey, total?: number): void {
-  const views = getLaraGridOrthoViews(total);
+export function frameCharacterGridOrtho(viewKey: CharacterGridOrthoViewKey, total?: number): void {
+  const views = getCharacterGridOrthoViews(total);
   const v = views[viewKey];
   if (!v) return;
   document.dispatchEvent(new CustomEvent('camera-ortho-view', { detail: v }));

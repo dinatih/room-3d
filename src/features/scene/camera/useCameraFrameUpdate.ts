@@ -104,14 +104,14 @@ export function useCameraFrameUpdate({
       const ctrl = ctrlRef.current;
       invalidate();
 
-      // Plain arrows — move active character (uniquement hors grille Lara)
-      const isLaraGridActive = useSceneStore.getState().layers.laraGrid;
-      const isPlainMove = !isLaraGridActive && (k.has('ArrowLeft') || k.has('ArrowRight') || k.has('ArrowUp') || k.has('ArrowDown'));
+      // Plain arrows — move active character (uniquement hors grille de personnages)
+      const isCharacterGridActive = useSceneStore.getState().layers.characterGrid;
+      const isPlainMove = !isCharacterGridActive && (k.has('ArrowLeft') || k.has('ArrowRight') || k.has('ArrowUp') || k.has('ArrowDown'));
       if (isPlainMove) {
         cameraState.lastUserControlTime = performance.now();
       }
 
-      if (!isLaraGridActive) {
+      if (!isCharacterGridActive) {
         if (k.has('ArrowLeft')) cameraState.followYaw += 0.03 * dt;
         if (k.has('ArrowRight')) cameraState.followYaw -= 0.03 * dt;
         const wYaw = cameraState.followYaw;

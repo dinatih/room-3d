@@ -54,8 +54,8 @@ import { RealMeasurementsLayer }      from './RealMeasurementsLayer';
 import { AppConsole }                 from '@features/ui/AppConsole';
 import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 import { GridLayout }            from '@features/scene/GridLayout';
-import { frameLaraGridCamera } from './character/laraGridUtils';
-import { useLaraGridStore } from './character/useLaraGridStore';
+import { frameCharacterGridCamera } from './character/characterGridUtils';
+import { useCharacterGridStore } from './character/useCharacterGridStore';
 import { isExtraCharacter } from './characterConfig';
 import { ViewControlBar }        from './ViewControlBar';
 import { AnimFrameController }   from '@features/inventory/AnimFrameController';
@@ -482,63 +482,63 @@ export function Studio() {
   }, []);
 
   // Recadrage dynamique de la caméra sur la grille de comparaison (centrée sur tous les PNJ de la scène)
-  const laraGridActive = useSceneStore(state => state.layers.laraGrid);
+  const characterGridActive = useSceneStore(state => state.layers.characterGrid);
   const laraCount = useSceneStore(state => state.layers.laraCount);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeMainIds = useSceneStore(state => state.activeMainIds);
 
-  const laraGridAnim = useLaraGridStore(state => state.animation);
-  const laraGridDuo = useLaraGridStore(state => state.duo);
-  const laraGridPartner = useLaraGridStore(state => state.partnerId);
+  const characterGridAnim = useCharacterGridStore(state => state.animation);
+  const characterGridDuo = useCharacterGridStore(state => state.duo);
+  const characterGridPartner = useCharacterGridStore(state => state.partnerId);
   const firstGridFrame = useRef(true);
-  const setLaraGridAnim = useCallback((animation: string) => {
-    useLaraGridStore.setState({ animation, duo: undefined });
+  const setCharacterGridAnim = useCallback((animation: string) => {
+    useCharacterGridStore.setState({ animation, duo: undefined });
   }, []);
 
   useEffect(() => {
-    if (laraGridActive) {
-      useLaraGridStore.setState({ animation: 'idle', duo: undefined });
+    if (characterGridActive) {
+      useCharacterGridStore.setState({ animation: 'idle', duo: undefined });
       useAnimPreviewStore.getState().reset();
       duoSessionManager.leaveAllSessions();
     } else {
-      useLaraGridStore.setState({ duo: undefined });
+      useCharacterGridStore.setState({ duo: undefined });
     }
-  }, [laraGridActive]);
+  }, [characterGridActive]);
 
   useEffect(() => {
     if (firstGridFrame.current) {
       firstGridFrame.current = false;
-      if (laraGridActive) return;
+      if (characterGridActive) return;
     }
-    if (laraGridActive && !showInventory) {
-      frameLaraGridCamera(undefined, useSceneStore.getState().cameraProjection === 'ortho' ? 'ortho' : 'persp');
+    if (characterGridActive && !showInventory) {
+      frameCharacterGridCamera(undefined, useSceneStore.getState().cameraProjection === 'ortho' ? 'ortho' : 'persp');
     }
-  }, [laraGridActive, laraCount, extraCharacters, activeExtraIds, activeMainIds, laraGridDuo, laraGridPartner, showInventory]);
+  }, [characterGridActive, laraCount, extraCharacters, activeExtraIds, activeMainIds, characterGridDuo, characterGridPartner, showInventory]);
 
   useEffect(() => {
-    if (!extraCharacters && isExtraCharacter(laraGridPartner)) {
-      useLaraGridStore.setState({ partnerId: 'native' });
+    if (!extraCharacters && isExtraCharacter(characterGridPartner)) {
+      useCharacterGridStore.setState({ partnerId: 'native' });
     }
-  }, [extraCharacters, laraGridPartner]);
+  }, [extraCharacters, characterGridPartner]);
 
   // Synchronisation avec les changements d'animation de Lara
   useEffect(() => {
     const handleToggle = (e: any) => {
       if (e.detail?.key === 'character-anim-lara' && e.detail?.value) {
-        setLaraGridAnim(e.detail.value);
+        setCharacterGridAnim(e.detail.value);
       }
     };
     document.addEventListener('furniture-toggle', handleToggle);
     return () => document.removeEventListener('furniture-toggle', handleToggle);
-  }, [setLaraGridAnim]);
+  }, [setCharacterGridAnim]);
 
-  const currentLaraAnimOpt = WALKER_ANIM_OPTIONS.find(a => a.value === laraGridAnim || a.value === resolveAnimationId(laraGridAnim));
-  const currentLaraAnimLabel = laraGridAnim === 't-pose'
+  const currentLaraAnimOpt = WALKER_ANIM_OPTIONS.find(a => a.value === characterGridAnim || a.value === resolveAnimationId(characterGridAnim));
+  const currentLaraAnimLabel = characterGridAnim === 't-pose'
     ? 'T-Pose'
-    : (currentLaraAnimOpt ? currentLaraAnimOpt.label : laraGridAnim);
+    : (currentLaraAnimOpt ? currentLaraAnimOpt.label : characterGridAnim);
 
-  // G → toggle mode grille lara (ignoré quand un input/textarea est focus)
+  // G → toggle mode grille de personnages (ignoré quand un input/textarea est focus)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
@@ -838,7 +838,7 @@ export function Studio() {
           <Floor />
           {/* LAYER_WALKER (18) — Personnages 3D */}
           <CategoryLayerGroup layer={LAYER_WALKER} visible={layers.character}>
-            <CharacterGroup characterAnim={laraGridActive ? laraGridAnim : undefined} duoAnimDef={laraGridActive ? laraGridDuo : undefined} duoPartnerId={laraGridPartner} />
+            <CharacterGroup characterAnim={characterGridActive ? characterGridAnim : undefined} duoAnimDef={characterGridActive ? characterGridDuo : undefined} duoPartnerId={characterGridPartner} />
           </CategoryLayerGroup>
           <GlobalSkeletonHelpers show={layers.skeleton} />
           {/*
@@ -927,7 +927,7 @@ export function Studio() {
       />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
-        <VirtualDPad visible={!hideUI && !planeMode && !showInventory && !laraGridActive} />
+        <VirtualDPad visible={!hideUI && !planeMode && !showInventory && !characterGridActive} />
         <ViewControlBar
           hidden={planeMode || showInventory}
           showCharacterModes
@@ -939,25 +939,25 @@ export function Studio() {
             setPlaneMode(true);
           }}
         >
-          {laraGridActive && (
+          {characterGridActive && (
             <AnimFrameController
               compact
               className="mw-100 scene-anim-controller"
               keyboardEnabled={!showInventory && !planeMode}
               isHumanCharacter
               allowSamePartner
-              duoAnimDef={laraGridDuo}
-              duoPartnerId={laraGridPartner}
+              duoAnimDef={characterGridDuo}
+              duoPartnerId={characterGridPartner}
               onSelectDuoAnim={(duo) => {
-                useLaraGridStore.setState({ duo });
+                useCharacterGridStore.setState({ duo });
                 useAnimPreviewStore.getState().seekToTime(0);
                 useAnimPreviewStore.getState().play();
               }}
-              onSelectDuoPartner={(partnerId) => useLaraGridStore.setState({ partnerId })}
-              animName={laraGridDuo?.label ?? currentLaraAnimLabel}
-              animKey={laraGridAnim}
+              onSelectDuoPartner={(partnerId) => useCharacterGridStore.setState({ partnerId })}
+              animName={characterGridDuo?.label ?? currentLaraAnimLabel}
+              animKey={characterGridAnim}
               onSelectAnim={(nextVal) => {
-                setLaraGridAnim(nextVal);
+                setCharacterGridAnim(nextVal);
                 document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-lara', value: nextVal } }));
                 useAnimPreviewStore.getState().play();
               }}

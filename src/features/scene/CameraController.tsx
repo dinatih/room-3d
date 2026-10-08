@@ -53,7 +53,7 @@ import {
 import { parseUrlLayerOverrides } from './store/layerUrlParams';
 import { VIEWS } from './sidepanel/types';
 import { getOrbitMouseButtons } from './camera/orbitMouseButtons';
-import { getLaraGridCameraView, getLaraGridActiveTarget } from './character/laraGridUtils';
+import { getCharacterGridCameraView, getCharacterGridActiveTarget } from './character/characterGridUtils';
 
 const FPV_DEFAULT_FOV = 100;
 const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
@@ -91,7 +91,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   }, [planeMode]);
 
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
-  const laraGridActive = useSceneStore(state => state.layers.laraGrid);
+  const characterGridActive = useSceneStore(state => state.layers.characterGrid);
   const prevCharacterId = useRef<string | null>(null);
 
   // OrbitControls ref
@@ -155,9 +155,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         lastCharacterPos.current.z = cameraState.characterZ;
         hasInitialStabilizedPos.current = false;
 
-        // Si LaraGrid est actif en mode orbit, cibler le nouveau PNJ actif au centre
-        if (useSceneStore.getState().layers.laraGrid && modeRef.current === 'orbit' && ctrlRef.current) {
-          const gridTarget = getLaraGridActiveTarget();
+        // Si CharacterGrid est actif en mode orbit, cibler le nouveau PNJ actif au centre
+        if (useSceneStore.getState().layers.characterGrid && modeRef.current === 'orbit' && ctrlRef.current) {
+          const gridTarget = getCharacterGridActiveTarget();
           ctrlRef.current.target.set(...gridTarget);
           currentTarget.current.set(...gridTarget);
           ctrlRef.current.update();
@@ -169,17 +169,17 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     prevCharacterId.current = activeCharacterId;
   }, [activeCharacterId, invalidate]);
 
-  const prevLaraGridActive = useRef(laraGridActive);
-  // Quand LaraGrid est actif et en mode orbit, désigner le PNJ actif au centre comme cible d'orbit
+  const prevCharacterGridActive = useRef(characterGridActive);
+  // Quand CharacterGrid est actif et en mode orbit, désigner le PNJ actif au centre comme cible d'orbit
   useEffect(() => {
-    if (laraGridActive && modeRef.current === 'orbit' && ctrlRef.current) {
-      const gridTarget = getLaraGridActiveTarget();
+    if (characterGridActive && modeRef.current === 'orbit' && ctrlRef.current) {
+      const gridTarget = getCharacterGridActiveTarget();
       ctrlRef.current.target.set(...gridTarget);
       currentTarget.current.set(...gridTarget);
       ctrlRef.current.update();
       invalidate();
-    } else if (prevLaraGridActive.current && !laraGridActive) {
-      // Sécurité si LaraGrid a été désactivé et que la cible pointe encore au-dessus de la pièce
+    } else if (prevCharacterGridActive.current && !characterGridActive) {
+      // Sécurité si CharacterGrid a été désactivé et que la cible pointe encore au-dessus de la pièce
       if (modeRef.current === 'orbit' && ctrlRef.current && ctrlRef.current.target.y > 300) {
         ctrlRef.current.target.set(...PERSP_TARGET);
         currentTarget.current.set(...PERSP_TARGET);
@@ -188,8 +188,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         invalidate();
       }
     }
-    prevLaraGridActive.current = laraGridActive;
-  }, [laraGridActive, camera, invalidate]);
+    prevCharacterGridActive.current = characterGridActive;
+  }, [characterGridActive, camera, invalidate]);
 
   const changeMode = useCallback((m: CameraMode) => {
     const prev = modeRef.current;
@@ -201,8 +201,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     cameraState.mode = m;
     setMode(m);
 
-    if (m === 'orbit' && useSceneStore.getState().layers.laraGrid && ctrlRef.current) {
-      const gridTarget = getLaraGridActiveTarget();
+    if (m === 'orbit' && useSceneStore.getState().layers.characterGrid && ctrlRef.current) {
+      const gridTarget = getCharacterGridActiveTarget();
       ctrlRef.current.target.set(...gridTarget);
       currentTarget.current.set(...gridTarget);
       ctrlRef.current.update();
@@ -626,8 +626,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const applyInitialCameraView = useCallback(() => {
     const viewKey = useSceneStore.getState().activeCameraView;
-    const view = viewKey === 'front' && useSceneStore.getState().layers.laraGrid
-      ? getLaraGridCameraView()
+    const view = viewKey === 'front' && useSceneStore.getState().layers.characterGrid
+      ? getCharacterGridCameraView()
       : viewKey ? VIEWS[viewKey] : undefined;
     if (!view || !ctrlRef.current) return;
     switchOrbitProjection(useSceneStore.getState().cameraProjection, {
@@ -1031,7 +1031,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const viewH = 800;
   const viewW = viewH * aspect;
 
-  // Frustum caméra orthographique (grille Lara)
+  // Frustum caméra orthographique (grille de personnages)
   const orthoViewH = orthoConfig.viewH;
   const orthoViewW = orthoViewH * aspect;
 

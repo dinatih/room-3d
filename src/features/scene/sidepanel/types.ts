@@ -124,7 +124,7 @@ export interface LayerState {
   plan:         boolean;
   grid:         boolean;
   gridDepth:    boolean;
-  laraGrid:     boolean;
+  characterGrid:     boolean;
 
   skeleton:     boolean;
   ceiling:      boolean;

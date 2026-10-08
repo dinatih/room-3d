@@ -64,7 +64,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue top-down suivi perso (toggle)" keys={['Y']} />
               <R label="Avion en papier (toggle)"   keys={['F']} />
               <R label="Afficher / masquer la grille" keys={['Alt+B']} />
-              <R label="Grille Lara (toggle)"       keys={['G']} />
+              <R label="Grille de personnages (toggle)"       keys={['G']} />
               <R label="Wireframe coloré 🕸 (toggle)" keys={['W']} />
               <R label="Enlever le haut (toggle)"   keys={['Alt+Z']} />
               <R label="Enlever le bas (toggle)"    keys={['Alt+C']} />
@@ -91,7 +91,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Dessus / Dessous"         keys={['Alt+5', 'Alt+6']} />
               <R label="ISO Sud-Est / Sud-Ouest"  keys={['Alt+7', 'Alt+8']} />
               <R label="ISO Nord-Est / Nord-Ouest" keys={['Alt+9', 'Alt+0']} />
-              <Section title="Grille PNJ / Lara (pavé numérique)" />
+              <Section title="Grille de personnages (pavé numérique)" />
               <R label="Vue Ortho Face / Dos"      keys={['Num 1', 'Ctrl+Num 1']} />
               <R label="Vue Ortho Gauche / Droite" keys={['Ctrl+Num 3', 'Num 3']} />
               <R label="Vue Ortho Dessus / Dessous" keys={['Num 7', 'Ctrl+Num 7']} />

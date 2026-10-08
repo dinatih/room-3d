@@ -3,7 +3,7 @@ import { CHARACTERS, isCharacterVisibleInMode, npcLabel } from '@features/scene/
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 import { ExtraCharactersSelector } from './ExtraCharactersSelector';
 import { NonExtraCharactersSelector } from './NonExtraCharactersSelector';
-import { frameLaraGridCamera, frameLaraGridOrtho } from '@features/scene/character/laraGridUtils';
+import { frameCharacterGridCamera, frameCharacterGridOrtho } from '@features/scene/character/characterGridUtils';
 import type { LayerState } from '../types';
 
 export interface CharacterSectionProps {
@@ -469,18 +469,18 @@ export function CharacterSection({
           document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
         }}
         style={{ 
-          backgroundColor: layers.laraGrid ? 'rgba(13, 110, 253, 0.08)' : undefined,
+          backgroundColor: layers.characterGrid ? 'rgba(13, 110, 253, 0.08)' : undefined,
         }}
       >
         <span>
           <span className="me-2">🧬</span>
-          Grille de comparaison (Lara)
+          Grille de personnages
         </span>
-        <span className={`badge ${layers.laraGrid ? 'bg-primary' : 'bg-secondary'}`}>
-          {layers.laraGrid ? 'ON' : 'OFF'}
+        <span className={`badge ${layers.characterGrid ? 'bg-primary' : 'bg-secondary'}`}>
+          {layers.characterGrid ? 'ON' : 'OFF'}
         </span>
       </button>
-      {layers.laraGrid && (
+      {layers.characterGrid && (
         <div className="p-2 border-bottom bg-light d-flex flex-column gap-1.5">
           <div className="text-muted fw-bold small text-uppercase">
             📐 Vues Ortho (Face, Côtés, Dessus, etc.)
@@ -490,7 +490,7 @@ export function CharacterSection({
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
-              onClick={() => frameLaraGridOrtho('front')}
+              onClick={() => frameCharacterGridOrtho('front')}
               title="Vue orthographique de face (Num 1)"
             >
               <span>👤 Face</span>
@@ -499,7 +499,7 @@ export function CharacterSection({
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
-              onClick={() => frameLaraGridOrtho('left')}
+              onClick={() => frameCharacterGridOrtho('left')}
               title="Vue orthographique côté gauche (Ctrl+Num 3)"
             >
               <span>◀️ Côté G</span>
@@ -508,7 +508,7 @@ export function CharacterSection({
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
-              onClick={() => frameLaraGridOrtho('right')}
+              onClick={() => frameCharacterGridOrtho('right')}
               title="Vue orthographique côté droit (Num 3)"
             >
               <span>▶️ Côté D</span>
@@ -517,7 +517,7 @@ export function CharacterSection({
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
-              onClick={() => frameLaraGridOrtho('top')}
+              onClick={() => frameCharacterGridOrtho('top')}
               title="Vue orthographique du dessus (Num 7)"
             >
               <span>⬇️ Dessus</span>
@@ -526,7 +526,7 @@ export function CharacterSection({
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
-              onClick={() => frameLaraGridOrtho('bottom')}
+              onClick={() => frameCharacterGridOrtho('bottom')}
               title="Vue orthographique du dessous (Ctrl+Num 7)"
             >
               <span>⬆️ Dessous</span>
@@ -535,7 +535,7 @@ export function CharacterSection({
               type="button"
               className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
               style={{ lineHeight: 1.1 }}
-              onClick={() => frameLaraGridOrtho('back')}
+              onClick={() => frameCharacterGridOrtho('back')}
               title="Vue orthographique de derrière / dos (Ctrl+Num 1)"
             >
               <span>🔙 Dos</span>
@@ -546,7 +546,7 @@ export function CharacterSection({
               type="button"
               className="btn btn-outline-primary btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-1"
               
-              onClick={() => frameLaraGridCamera()}
+              onClick={() => frameCharacterGridCamera()}
               title="Recadrer la caméra sur le centre de la grille (Vue 3D Persp)"
             >
               <span>🎯</span>

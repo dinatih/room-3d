@@ -31,7 +31,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   plan: false,
   grid: false,
   gridDepth: false,
-  laraGrid: false,
+  characterGrid: false,
   wallEdges: false,
   measuredDimensions: false,
   lidar: false,
@@ -180,7 +180,7 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     urlParams: ['extracharacters', 'extra', 'extras', 'personnagesextras', 'personnages-extras', 'extra-characters'],
   },
   {
-    layerKey: 'laraGrid',
+    layerKey: 'characterGrid',
     canonicalParam: 'npcgrid',
     urlParams: ['npcgrid'],
   },

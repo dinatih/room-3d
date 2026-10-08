@@ -11,10 +11,10 @@ import { Character } from './Character';
 import { cacheDynamicGLTF } from './useCharacterAnimations';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import type { CharacterGroupProps } from './characterTypes';
-import { getLaraGridPosition, getLaraGridCenterIndex } from './laraGridUtils';
+import { getCharacterGridPosition, getCharacterGridCenterIndex } from './characterGridUtils';
 
 function InternalCharacterGroup(props: CharacterGroupProps) {
-  const laraGrid = useSceneStore(state => state.layers.laraGrid);
+  const characterGrid = useSceneStore(state => state.layers.characterGrid);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const laraCount = useSceneStore(state => state.layers.laraCount ?? 4);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
@@ -46,10 +46,10 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
     const list = characters.filter(char =>
       showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)
     );
-    if (laraGrid && list.length > 0) {
+    if (characterGrid && list.length > 0) {
       const activeIdx = list.findIndex(char => char.id === activeCharacterId);
       if (activeIdx !== -1) {
-        const centerIdx = getLaraGridCenterIndex(list.length);
+        const centerIdx = getCharacterGridCenterIndex(list.length);
         if (activeIdx !== centerIdx) {
           const reordered = [...list];
           const temp = reordered[centerIdx];
@@ -60,15 +60,15 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
       }
     }
     return list;
-  }, [activeCharacterId, characters, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds, activeMainIds, laraGrid]);
+  }, [activeCharacterId, characters, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds, activeMainIds, characterGrid]);
 
-  if (laraGrid && !props.isPreview && props.duoAnimDef) {
+  if (characterGrid && !props.isPreview && props.duoAnimDef) {
     const duo = props.duoAnimDef;
     const partner = characters.find(char => char.id === props.duoPartnerId);
     if (!partner) throw new Error(`Partenaire de grille inconnu : ${props.duoPartnerId}`);
     const offset = duo.offsetB ?? [0, 0, 0];
     return <>{mountedCharacters.map((leader, index) => {
-      const pos = getLaraGridPosition(index, mountedCharacters.length);
+      const pos = getCharacterGridPosition(index, mountedCharacters.length);
       return <Suspense key={leader.id} fallback={null}>
         <Character
           {...props}
@@ -144,7 +144,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
               previewHaircut={props.previewHaircut}
               previewHairColor={props.previewHairColor}
               characterIndex={props.characterIndex !== undefined ? props.characterIndex : index}
-              isAnimationMaster={props.isPreview ? !isDuoRoleB : (laraGrid ? char.id === activeCharacterId : index === 0)}
+              isAnimationMaster={props.isPreview ? !isDuoRoleB : (characterGrid ? char.id === activeCharacterId : index === 0)}
               totalCharacters={mountedCharacters.length}
             />
           </Suspense>

@@ -43,7 +43,7 @@ import { HeartParachute, type HeartParachuteHandle } from './HeartParachute';
 import { useCharacterAnimations } from './useCharacterAnimations';
 import { useCharacterPhysics } from './useCharacterPhysics';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
-import { getLaraGridPosition } from './laraGridUtils';
+import { getCharacterGridPosition } from './characterGridUtils';
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 const _tmpLgbtaColorA = new THREE.Color();
@@ -112,7 +112,7 @@ export function Character({
   const [localHairColor, setLocalHairColor] = useState<string | undefined>(undefined);
   const hairColor = isPreview ? previewHairColor : localHairColor;
 
-  const laraGrid = useSceneStore(state => state.layers.laraGrid);
+  const characterGrid = useSceneStore(state => state.layers.characterGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const laraCount = useSceneStore(state => state.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15));
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
@@ -504,9 +504,9 @@ export function Character({
     return () => clearTimeout(timeout);
   }, [id]);
 
-  // Réinitialisation complète lors du basculement en mode Grille Lara
+  // Réinitialisation complète lors du basculement en mode Grille de personnages
   useEffect(() => {
-    if (laraGrid) {
+    if (characterGrid) {
       currentAnimClip.current = null;
       if (!isPreview) duoSessionManager.leaveDuoZone(id);
       if (groupRef.current) groupRef.current.rotation.set(0, 0, 0);
@@ -528,18 +528,18 @@ export function Character({
       activeActionName.current = '';
     }
     invalidate();
-  }, [laraGrid, scene, id, isPreview, invalidate]);
+  }, [characterGrid, scene, id, isPreview, invalidate]);
 
-  // Synchronisation characterAnim en mode preview ou grille Lara
+  // Synchronisation characterAnim en mode preview ou grille de personnages
   useEffect(() => {
-    if (!isPreview && !laraGrid) return;
+    if (!isPreview && !characterGrid) return;
     if (!characterAnim || characterAnim === 'idle') {
       currentAnimClip.current = null;
       invalidate();
       return;
     }
     loadAndPlayClip(characterAnim);
-  }, [characterAnim, isPreview, laraGrid, loadAndPlayClip, invalidate]);
+  }, [characterAnim, isPreview, characterGrid, loadAndPlayClip, invalidate]);
 
   // Écouteurs de commandes utilisateur & UI (couleur, coupe, équipements, positions)
   useEffect(() => {
@@ -672,8 +672,8 @@ export function Character({
         groupRef.current.rotation.y = 0;
       }
       groupRef.current.visible = true;
-    } else if (laraGrid) {
-      const { x: targetX, y: targetY, z: targetZ } = getLaraGridPosition(characterIndex, totalCharacters);
+    } else if (characterGrid) {
+      const { x: targetX, y: targetY, z: targetZ } = getCharacterGridPosition(characterIndex, totalCharacters);
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
       const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds);
@@ -778,12 +778,12 @@ export function Character({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
-    const isMoving = !isPreview && !laraGrid && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
-    const rawTarget = (isPreview || laraGrid)
+    const isMoving = !isPreview && !characterGrid && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
+    const rawTarget = (isPreview || characterGrid)
       ? (characterAnim || 'idle')
       : (currentAnimClip.current || (isMoving ? 'walk' : 'idle'));
 
-    if (isActive && !laraGrid && !isGuidedTour && !hasDynamicTask && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
+    if (isActive && !characterGrid && !isGuidedTour && !hasDynamicTask && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
       currentAnimClip.current = null;
     }
 
@@ -791,8 +791,8 @@ export function Character({
 
     const { offset: targetOffset, rotY: targetRotY } = getAnimationOriginTransform(target);
     if (animOriginRef.current) {
-      if (isPreview || laraGrid) {
-        // En mode Preview 3D ou LaraGrid, calage spatial instantané exact
+      if (isPreview || characterGrid) {
+        // En mode Preview 3D ou CharacterGrid, calage spatial instantané exact
         animOriginRef.current.position.set(targetOffset[0], targetOffset[1], targetOffset[2]);
         animOriginRef.current.rotation.y = targetRotY;
       } else {
@@ -859,7 +859,7 @@ export function Character({
           to.clampWhenFinished = false;
         }
 
-        if (laraGrid) {
+        if (characterGrid) {
           if (from) from.stop();
           to.reset().play();
           to.setEffectiveWeight(1);
@@ -878,7 +878,7 @@ export function Character({
         }
         activeActionName.current = target;
 
-        const isControlledByStore = isPreview || laraGrid;
+        const isControlledByStore = isPreview || characterGrid;
         if (isControlledByStore) {
           const store = useAnimPreviewStore.getState();
           if (store.isPlaying && !store.isScrubbing) {
@@ -886,7 +886,7 @@ export function Character({
           }
         }
 
-        if (isActive && !isPreview && !laraGrid && !isTemporaryLoadingFallback && lastLoggedAnimRef.current !== target) {
+        if (isActive && !isPreview && !characterGrid && !isTemporaryLoadingFallback && lastLoggedAnimRef.current !== target) {
           lastLoggedAnimRef.current = target;
           const isWalkAnim = target === 'walk' || target.includes('/locomotion/') || target.includes('walk') || target.includes('run');
           if (!isWalkAnim) {
@@ -906,7 +906,7 @@ export function Character({
       return _charFrustum.intersectsSphere(_charBoundingSphere);
     })();
 
-    const isControlledByStore = isPreview || laraGrid;
+    const isControlledByStore = isPreview || characterGrid;
 
     let pendantDelta = 0;
     let resetPendant = isTPose;
@@ -986,7 +986,7 @@ export function Character({
                 store.setCurrentTime(act.time % clip.duration);
               }
             } else {
-              // Dans LaraGrid, synchronisation avec le master
+              // Dans CharacterGrid, synchronisation avec le master
               if (Math.abs(act.time - targetTime) > 0.05) {
                 act.time = targetTime;
               }
@@ -1199,7 +1199,7 @@ export function Character({
         torso={[...parts.torsoClothed, ...parts.torsoNude].map(part => part.mesh)}
         visible={showAccessories}
         shadows={characterShadows}
-        resetKey={`${isPreview}:${laraGrid}`}
+        resetKey={`${isPreview}:${characterGrid}`}
       />}
 
       {headBone && (variant === 'vivida' || id === 'vivida') && (
