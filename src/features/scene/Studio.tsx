@@ -685,10 +685,7 @@ export function Studio() {
       cleanedUp = true;
       envelope?.removeEventListener('animationend', onEnvelopeExit);
       cameraState.isSceneLaunched = true;
-      if (cover) {
-        cover.classList.add('hidden');
-        setTimeout(() => cover.remove(), 400);
-      }
+      cover?.remove();
     };
 
     const onIntroFinish = () => {

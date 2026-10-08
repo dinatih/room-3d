@@ -2,6 +2,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const puppeteer = require('../node_modules/puppeteer');
+const studio = fs.readFileSync(path.join(__dirname, '../src/features/scene/Studio.tsx'), 'utf8');
+// Exécuter la vraie séquence de lancement, sans charger les assets 3D.
+const revealSceneBody = studio.split('const revealScene = useCallback(() => {')[1]
+  .split('\n  }, []);')[0].replace('(event: AnimationEvent)', '(event)');
 
 (async () => {
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
@@ -36,12 +40,13 @@ const puppeteer = require('../node_modules/puppeteer');
           opacity: cardStyle.opacity,
           filter: cardStyle.filter,
           slitScale: new DOMMatrixReadOnly(getComputedStyle(envelope, '::after').transform).m11,
+          slitOpacity: getComputedStyle(envelope, '::after').opacity,
         };
       }, time);
       const start = await sample(0);
       assert(start.cardTop >= start.envelopeBottom, 'Card must begin below the slit');
       assert.equal(start.slitScale, 0);
-      const opened = await sample(540);
+      const opened = await sample(550);
       assert.equal(opened.slitScale, 1, 'Slit must open before the card rises');
       const middle = await sample(800);
       assert(middle.translateY > 0 && middle.translateY < start.translateY);
@@ -50,9 +55,24 @@ const puppeteer = require('../node_modules/puppeteer');
       await page.screenshot({ path: `/tmp/loading-envelope-${viewport.width}.png` });
       const end = await sample(1800);
       assert.equal(end.translateY, 0);
+      assert.equal(end.slitScale, 1);
+      assert.equal(end.slitOpacity, '1', 'Slit remains visible after entry');
+      // Laisser l'entrée se terminer réellement pour détecter la réutilisation
+      // accidentelle de son animation au moment de la sortie.
+      await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
+      await page.evaluate(body => {
+        window.introStarted = false;
+        window.addEventListener('start-camera-intro', () => { window.introStarted = true; });
+        new Function('cameraState', body)({ isSceneLaunched: false });
+      }, revealSceneBody);
+      const actualExitStart = await page.$eval('#loading-card', card => ({
+        y: new DOMMatrixReadOnly(getComputedStyle(card).transform).m42,
+        height: card.getBoundingClientRect().height,
+        animation: getComputedStyle(card).animationName,
+      }));
+      assert.equal(actualExitStart.animation, 'loading-card-exit');
+      assert(actualExitStart.y < actualExitStart.height, 'Exit must not jump directly below the slit');
       await page.evaluate(() => {
-        document.querySelector('#loading-envelope').classList.add('exiting');
-        document.querySelector('#loading-card').classList.add('exiting');
         document.getAnimations().forEach(animation => animation.pause());
       });
       const exitStart = await sample(0);
@@ -61,19 +81,24 @@ const puppeteer = require('../node_modules/puppeteer');
       assert(exitMiddle.translateY > 0 && exitMiddle.translateY < start.translateY);
       assert.equal(exitMiddle.opacity, '1');
       assert.equal(exitMiddle.filter, 'none');
-      const tucked = await sample(1120);
+      const tucked = await sample(1200);
       assert(tucked.cardTop >= tucked.envelopeBottom);
       assert.equal(tucked.slitScale, 1, 'Slit stays open until card is hidden');
-      const closed = await sample(1400);
+      assert.equal(await page.evaluate(() => window.introStarted), false, 'Background must wait for exit');
+      const closed = await sample(1600);
       assert.equal(closed.slitScale, 0);
       await page.evaluate(() => {
         window.envelopeClosed = false;
         document.querySelector('#loading-envelope').addEventListener('animationend', event => {
           if (event.animationName === 'loading-canvas-close') window.envelopeClosed = true;
         });
-        document.getAnimations().forEach(animation => { animation.currentTime = 1350; animation.play(); });
+        document.getAnimations().forEach(animation => { animation.currentTime = 1550; animation.play(); });
       });
       await page.waitForFunction(() => window.envelopeClosed);
+      assert.equal(await page.evaluate(() => window.introStarted), true);
+      assert.equal(await page.$eval('#loading-backdrop', backdrop => backdrop.classList.contains('exiting')), true);
+      await page.evaluate(() => window.dispatchEvent(new Event('camera-intro-finished')));
+      assert.equal(await page.$('#loading'), null);
     }
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     await page.goto('http://loading.test/');

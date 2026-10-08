@@ -20,7 +20,6 @@
         align-items: center; justify-content: center;
         z-index: 9999;
         padding: 20px;
-        transition: opacity 0.4s ease;
       }
       #loading-backdrop {
         position: absolute; inset: 0;
@@ -39,7 +38,6 @@
         opacity: 0;
         transform: scale(1.05);
       }
-      #loading.hidden { opacity: 0; pointer-events: none; }
 
       #loading-envelope {
         position: relative;
@@ -61,21 +59,19 @@
         background: #17212d;
         clip-path: polygon(0 45%, 8% 25%, 18% 40%, 29% 15%, 40% 35%, 52% 20%, 64% 40%, 77% 15%, 89% 35%, 100% 25%, 100% 65%, 89% 75%, 77% 60%, 64% 80%, 52% 65%, 40% 85%, 29% 65%, 18% 80%, 8% 65%, 0 75%);
         transform-origin: left center;
-        animation: loading-canvas-split 1.8s ease-in-out both;
+        animation: loading-canvas-split 0.55s ease-in-out both;
         pointer-events: none;
       }
       @keyframes loading-canvas-split {
-        0% { transform: scaleX(0); opacity: 1; }
-        30%, 75% { transform: scaleX(1); opacity: 1; }
-        100% { transform: scaleX(1); opacity: 0; }
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
       }
       #loading-envelope.exiting::after {
-        animation: loading-canvas-close 1.4s ease-in-out both;
+        animation: loading-canvas-close 1.6s ease-in-out both;
       }
       @keyframes loading-canvas-close {
-        0% { transform: scaleX(0); opacity: 1; }
-        20%, 80% { transform: scaleX(1); opacity: 1; }
-        100% { transform: scaleX(0); opacity: 1; }
+        0%, 75% { transform: scaleX(1); }
+        100% { transform: scaleX(0); }
       }
       #loading-card {
         position: relative;
@@ -98,8 +94,12 @@
         to { transform: translateY(0); }
       }
       #loading-card.exiting {
-        animation: loading-card-enter 0.84s cubic-bezier(0.22, 1, 0.36, 1) 0.28s reverse both;
+        animation: loading-card-exit 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
         pointer-events: none;
+      }
+      @keyframes loading-card-exit {
+        from { transform: translateY(0); }
+        to { transform: translateY(calc(100% + 12px)); }
       }
       @media (prefers-reduced-motion: reduce) {
         #loading-card, #loading-card.exiting { animation: none; }
