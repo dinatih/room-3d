@@ -211,7 +211,17 @@ function Desks() {
         </group>
       </PositionTransition>
       <PositionTransition furnitureKey="desk2-position" x={p2.x} z={p2.z} ry={p2.ry}>
-        <group userData={{ hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
+        <group userData={{
+          hoverAction: {
+            label: 'Bureau 2',
+            actions: [
+              'desk2-toggle',
+              'desk2-position',
+              'smart-object:::desk-bollsidan-2:::work-standing',
+              'desk2-screen-toggle',
+            ]
+          }
+        }}>
           <group userData={{ animUnit: true }}>
             <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
           </group>
@@ -253,7 +263,18 @@ function DeskDecor() {
       </PositionTransition>
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
         <group position={[0, d2H, -8]} rotation={[0, Math.PI, 0]} userData={{ skipMerge: true }}>
-          <group userData={{ animUnit: true, skipMerge: true, itemName: 'Ordinateur Portable' }}>
+          <group userData={{
+            animUnit: true,
+            skipMerge: true,
+            itemName: 'Ordinateur Portable',
+            hoverAction: {
+              label: 'Framework Laptop 13',
+              actions: [
+                'smart-object:::desk-bollsidan-2:::work-standing',
+                'desk2-screen-toggle',
+              ]
+            }
+          }}>
             <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
           </group>
           <group userData={{ animUnit: true, skipMerge: true, itemName: 'Smartphone' }}>
@@ -502,7 +523,18 @@ export function LivingRoomFurnishings() {
 
       {/* TV */}
       <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
-        rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{ animUnit: true, itemName: 'Téléviseur' }}>
+        rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{
+          animUnit: true,
+          skipMerge: true,
+          itemName: 'Téléviseur',
+          hoverAction: {
+            label: 'TV CHiQ L32H7A',
+            actions: [
+              'tv-toggle',
+              'desk2-screen-toggle',
+            ]
+          }
+        }}>
         <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
 

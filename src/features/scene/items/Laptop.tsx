@@ -6,11 +6,14 @@
  * Overrides : bezel + cartes d'extension rouges, positions des slots.
  * DRACOLoader configuré en amont dans main.tsx (useGLTF.setDecoderPath).
  */
-import { useLayoutEffect, useMemo } from 'react';
+import { useLayoutEffect, useMemo, useEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
+import { useDeskScreenVideo } from '@features/scene/utils/deskScreenVideo';
+import { cameraState } from '@features/scene/cameraState';
 
 const BASE_W = 29.7, BASE_D = 22.8, BASE_H = 1.6;
 const SCREEN_D = 19.5;
@@ -35,6 +38,14 @@ function moveOcc(root: THREE.Object3D, name: string, tx: number, ty: number, tz:
 
 export function Laptop({ onSize }: SceneItemProps) {
   const { scene } = useGLTF(GLB_PATH);
+  const { isVideoActive, texture: videoTex } = useDeskScreenVideo();
+  const screenMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+
+  useFrame(() => {
+    if (isVideoActive) {
+      cameraState.invalidate?.();
+    }
+  });
 
   const clone = useMemo(() => {
     const c = scene.clone(true);
@@ -69,7 +80,7 @@ export function Laptop({ onSize }: SceneItemProps) {
     // Filtrage des géométries opposées et gestion des priorités (renderOrder + polygonOffset) :
     // - L'écran (BEZEL_1_1) ne doit avoir AUCUNE face orientée vers l'arrière (-Z) pour ne pas percer le capot
     // - Le logo (COVER_LOGO_1) ne doit avoir AUCUNE face orientée vers l'avant (+Z) pour ne pas percer l'écran
-    const filterMeshFaces = (mesh: THREE.Mesh | undefined, keepPredicate: (avgZ: number) => boolean) => {
+    const filterMeshFaces = (mesh: THREE.Mesh | undefined, keepPredicate: (avgZ: number) => boolean, computePlanarUvs = false) => {
       if (!mesh || !mesh.geometry) return;
       const geo = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone();
       const posAttr = geo.getAttribute('position');
@@ -95,14 +106,38 @@ export function Laptop({ onSize }: SceneItemProps) {
       const filteredGeo = new THREE.BufferGeometry();
       filteredGeo.setAttribute('position', new THREE.Float32BufferAttribute(newPos, 3));
       if (newNorm.length) filteredGeo.setAttribute('normal', new THREE.Float32BufferAttribute(newNorm, 3));
-      if (newUv.length) filteredGeo.setAttribute('uv', new THREE.Float32BufferAttribute(newUv, 2));
+
+      if (computePlanarUvs && newPos.length > 0) {
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (let i = 0; i < newPos.length; i += 3) {
+          const x = newPos[i];
+          const y = newPos[i + 1];
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+        const spanX = maxX - minX || 1;
+        const spanY = maxY - minY || 1;
+        const planarUvs: number[] = [];
+        for (let i = 0; i < newPos.length; i += 3) {
+          planarUvs.push(
+            (newPos[i] - minX) / spanX,
+            (newPos[i + 1] - minY) / spanY
+          );
+        }
+        filteredGeo.setAttribute('uv', new THREE.Float32BufferAttribute(planarUvs, 2));
+      } else if (newUv.length) {
+        filteredGeo.setAttribute('uv', new THREE.Float32BufferAttribute(newUv, 2));
+      }
+
       mesh.geometry = filteredGeo;
     };
 
     // 1. Écran : ne garder que les faces avant (normal.z > -0.5), priorité sur le fond du bezel
     const screenMesh = c.getObjectByName('GFW00_3H_NB_ID_BEZEL_1_1') as THREE.Mesh | undefined;
     if (screenMesh && screenMesh.material) {
-      filterMeshFaces(screenMesh, avgZ => avgZ > -0.5);
+      filterMeshFaces(screenMesh, avgZ => avgZ > -0.5, true);
       const origMat = Array.isArray(screenMesh.material) ? screenMesh.material[0] : screenMesh.material;
       const screenMat = (origMat as THREE.MeshStandardMaterial).clone();
       screenMat.side = THREE.FrontSide;
@@ -111,6 +146,7 @@ export function Laptop({ onSize }: SceneItemProps) {
       screenMat.polygonOffsetUnits = -1;
       screenMesh.material = screenMat;
       screenMesh.renderOrder = 1;
+      screenMatRef.current = screenMat;
     }
 
     // 2. Logo au dos : ne garder que les faces arrière (normal.z < 0.5), priorité sur le capot
@@ -130,6 +166,30 @@ export function Laptop({ onSize }: SceneItemProps) {
     mergeGlbByMaterial(c);
     return c;
   }, [scene]);
+
+  useEffect(() => {
+    const mat = screenMatRef.current;
+    if (!mat) return;
+    if (isVideoActive) {
+      mat.map = videoTex;
+      mat.emissiveMap = videoTex;
+      mat.color = new THREE.Color(0xffffff);
+      mat.emissive = new THREE.Color(0xffffff);
+      mat.emissiveIntensity = 0.8;
+      mat.roughness = 0.1;
+      mat.metalness = 0.1;
+    } else {
+      mat.map = null;
+      mat.emissiveMap = null;
+      mat.color = new THREE.Color(0x111111);
+      mat.emissive = new THREE.Color(0x000000);
+      mat.emissiveIntensity = 0;
+      mat.roughness = 0.35;
+      mat.metalness = 0.2;
+    }
+    mat.needsUpdate = true;
+    cameraState.invalidate?.();
+  }, [isVideoActive, videoTex]);
 
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(BASE_W, BASE_H + SCREEN_D, BASE_D));

@@ -144,7 +144,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, 0],
         rotY: 0,
-        animationsRandom: 'typing',
+        animationsRandom: 'seated-front',
       }
     ]
   },
@@ -160,6 +160,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, -36],
         animationsRandom: 'standing-using-touchscreen-tablet',
+        duration: 33.2,
+        triggerEventKey: 'desk2-smart-action',
       }
     ]
   },
@@ -261,6 +263,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [0, 0, -35], // 35 cm devant le placard dans la SDB
         rotY: 0,
         animation: 'take-object-mid',
+        duration: 8
       }
     ]
   },
@@ -277,6 +280,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [30, 0, 535],
         rotY: Math.PI + Math.PI / 8,
         animation: 'take-object-mid',
+        duration: 8
       }
     ]
   },
@@ -690,6 +694,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Jardin Nord (Pluie)',
     category: 'dance',
     position: [0, 0, -430],
+    rotationY: Math.PI / 2,
     slots: [
       {
         slotId: 'dance-in-rain',

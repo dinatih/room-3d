@@ -18,6 +18,7 @@ import { computeSteeringVector, computeRotYStep } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { getExitTransition } from '../animations/animationTransitions';
 import { doorCollisionState } from '../doorObstacles';
+import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
 
 export type { AgentState };
 export { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation };
@@ -137,6 +138,9 @@ export function useAgentController(
 
   const releaseClaimedSlot = () => {
     if (claimedSlotRef.current) {
+      if (claimedSlotRef.current.objectId === 'desk-bollsidan-2') {
+        setDesk2SmartActionState(_characterId, false);
+      }
       OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
       claimedSlotRef.current = null;
     }
@@ -243,6 +247,7 @@ export function useAgentController(
       document.removeEventListener('agent-force-smartobject', onForceSmartObject);
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
+      setDesk2SmartActionState(_characterId, false);
     };
   }, [_characterId, enabled]);
 
@@ -250,6 +255,7 @@ export function useAgentController(
     if (claimedSlotRef.current) {
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
+      setDesk2SmartActionState(_characterId, false);
       claimedSlotRef.current = null;
       duoRoleRef.current = null;
       duoInvitedRef.current = false;
@@ -614,6 +620,9 @@ export function useAgentController(
         }
 
         statusRef.current = 'INTERACTING';
+        if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
+          setDesk2SmartActionState(_characterId, true);
+        }
         const target = getResolvedCoords(currentInstruction);
         if (!currentInstruction.animation && target.anim) currentInstruction.animation = target.anim;
         if (currentInstruction.rotY === undefined && target.rotY !== undefined) currentInstruction.rotY = target.rotY;
@@ -663,6 +672,9 @@ export function useAgentController(
 
         if (currentInstruction.type === 'USE_OBJECT') {
           statusRef.current = 'INTERACTING';
+          if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
+            setDesk2SmartActionState(_characterId, true);
+          }
           repeatIndexRef.current = 0;
           targetRepeatsRef.current = currentInstruction.repeatCount ?? target.repeatCount ?? 1;
           repeatVariationRef.current = currentInstruction.repeatVariation ?? target.repeatVariation ?? false;
@@ -881,11 +893,17 @@ export function useAgentController(
           timerRef.current = exit.duration;
           stateRef.current.animation = exit.anim;
           stateRef.current.y = 0;
+          if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
+            setDesk2SmartActionState(_characterId, false);
+          }
           return stateRef.current;
         }
 
         statusRef.current = 'IDLE';
         stateRef.current.y = 0;
+        if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
+          setDesk2SmartActionState(_characterId, false);
+        }
         advanceToNextStep(hasNavStep);
       }
     }

@@ -4,9 +4,12 @@
  */
 import { useLayoutEffect, useMemo, useState } from 'react';
 import { useGLTF, useTexture } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
+import { useDeskScreenVideo } from '@features/scene/utils/deskScreenVideo';
+import { cameraState } from '@features/scene/cameraState';
 
 export const TV_W = 73;
 export const TV_H = 41;
@@ -19,8 +22,18 @@ export function TV({ actionState, onSize }: SceneItemProps) {
   const screenTex = useTexture('items/omarchy-screen/omarchy-screen.png');
   screenTex.colorSpace = THREE.SRGBColorSpace;
 
-  const isOn = actionState[ACTION_KEY] ?? false;
+  const { isVideoActive, texture: videoTex } = useDeskScreenVideo();
+
+  const isTvOn = actionState[ACTION_KEY] ?? false;
+  const isDisplaying = isVideoActive || isTvOn;
+  const activeTex = isVideoActive ? videoTex : (isTvOn ? screenTex : null);
   const [screenZ, setScreenZ] = useState(0);
+
+  useFrame(() => {
+    if (isVideoActive) {
+      cameraState.invalidate?.();
+    }
+  });
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -41,17 +54,18 @@ export function TV({ actionState, onSize }: SceneItemProps) {
   }, [scene]);
 
   return (
-    <group userData={{ hoverAction: { label: 'TV CHiQ L32H7A', actionId: 'tv' } }}>
+    <group userData={{ hoverAction: { label: 'TV CHiQ L32H7A', actions: ['tv-toggle', 'desk2-screen-toggle'] } }}>
       <primitive object={scene} />
       {/* Screen overlay — DoubleSide : visible quel que soit l'angle caméra */}
       <mesh position={[0, 0, screenZ]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[TV_W - 4, TV_H - 4]} />
         <meshStandardMaterial
           side={THREE.DoubleSide}
-          map={isOn ? screenTex : null}
-          color={isOn ? 0xffffff : 0x060606}
-          emissive={isOn ? new THREE.Color(0x111111) : new THREE.Color(0x000000)}
-          emissiveIntensity={isOn ? 0.15 : 0}
+          map={activeTex}
+          color={isDisplaying ? 0xffffff : 0x060606}
+          emissive={isVideoActive ? new THREE.Color(0xffffff) : (isTvOn ? new THREE.Color(0x111111) : new THREE.Color(0x000000))}
+          emissiveMap={isVideoActive ? videoTex : null}
+          emissiveIntensity={isVideoActive ? 0.8 : (isTvOn ? 0.15 : 0)}
           roughness={0.05}
           metalness={0.2}
         />

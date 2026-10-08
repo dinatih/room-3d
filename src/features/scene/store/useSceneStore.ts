@@ -124,6 +124,8 @@ interface SceneStore {
   setGroundType: (type: GroundType) => void;
   triggerAction: (key: string, targetState?: boolean) => void;
   setActiveCharacterId: (id: string) => void;
+  desk2ScreenActive: boolean;
+  setDesk2SmartActionActive: (active: boolean) => void;
 }
 
 const initialFurniture: FurnitureState = {
@@ -200,6 +202,7 @@ const initialExtraStates: Record<string, boolean> = {
   aiKallaxNE: false,
   aiFreshAir: false,
   aiFullTour: false,
+  desk2Screen: false,
 };
 
 export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'extra' | 'transient'; name: string } {
@@ -213,6 +216,10 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
     freezer: 'freezerOpen',
     tv: 'tvOn',
     'tv-toggle': 'tvOn',
+    'desk2-screen-toggle': 'desk2Screen',
+    'desk2-screen': 'desk2Screen',
+    'desk-video': 'desk2Screen',
+    'desk-video-toggle': 'desk2Screen',
     'lamp-toggle': 'lampOn',
     'lamp-bath-toggle': 'lampBath',
     'lamp-corridor-toggle': 'lampCorridor',
@@ -333,6 +340,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   isCvModalOpen: false,
   isPhotoModeOpen: false,
+  desk2ScreenActive: false,
+  setDesk2SmartActionActive: (active: boolean) => {
+    set(state => {
+      if (state.desk2ScreenActive === active) return state;
+      cameraState.invalidate?.();
+      return { desk2ScreenActive: active };
+    });
+  },
   setBnfCoords: (coords) => {
     set((state) => ({
       bnfAzimuth: coords.azimuth !== undefined ? coords.azimuth : state.bnfAzimuth,

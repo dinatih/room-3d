@@ -132,6 +132,15 @@ const ACTIONS: Record<string, ActionDef> = {
   }, toggleKey: 'bed-position' },
   'desk1-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk1-toggle'  },
   'desk2-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk2-toggle'  },
+  'desk2-screen-toggle': {
+    btnLabel: () => {
+      const s = useSceneStore.getState();
+      const on = s.desk2ScreenActive || s.extraStates.desk2Screen;
+      return on ? '⏹️ Couper Vidéo' : '▶ Vidéo Bureau / TV';
+    },
+    toggleKey: 'desk2-screen-toggle',
+    icon: 'bi-display',
+  },
   'shiba-replay':      { btnLabel: 'Rejouer',           toggleKey: 'shiba-replay'      },
   'robin-bird-replay': { btnLabel: 'Rejouer',           toggleKey: 'robin-bird-replay' },
   'nestMini':          { btnLabel: 'Ok Google',         toggleKey: 'nestMini'          },
