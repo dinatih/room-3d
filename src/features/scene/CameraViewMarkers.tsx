@@ -4,6 +4,7 @@ import { Html, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { CAMERA_SHORTCUT_VIEWS, VIEWS, dispatchView } from './sidepanel/types';
 import { useSceneStore } from './store/useSceneStore';
+import { cameraViewDebug } from './cameraViewDebug';
 
 type ShortcutView = typeof CAMERA_SHORTCUT_VIEWS[number];
 
@@ -12,6 +13,7 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
   const [hovered, setHovered] = useState(false);
   useCursor(hovered, 'pointer', '', gl.domElement);
   const preset = VIEWS[view.key];
+  const debugText = useMemo(() => cameraViewDebug(preset), [preset]);
   const quaternion = useMemo(() => {
     // Object3D.lookAt oriente +Z ; une caméra oriente bien son objectif selon −Z.
     const markerCamera = new THREE.PerspectiveCamera();
@@ -160,7 +162,10 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
       </mesh>
       {hovered && (
         <Html position={[0, 16, -13]} center occlude style={{ pointerEvents: 'none' }}>
-          <span className="badge text-bg-danger text-nowrap">{view.label} ({view.shortcut})</span>
+          <div className="text-bg-dark rounded p-2 text-nowrap shadow small">
+            <div className="fw-bold mb-2">{view.label} ({view.shortcut})</div>
+            <pre className="m-0 small text-white">{debugText}</pre>
+          </div>
         </Html>
       )}
     </group>

@@ -2,7 +2,8 @@ import './ViewControlBar.scss';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import type { ReactNode } from 'react';
 import { useSceneStore } from './store/useSceneStore';
-import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS } from './sidepanel/types';
+import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS, VIEWS } from './sidepanel/types';
+import { cameraViewDebug } from './cameraViewDebug';
 import { getCharacterGridCameraView, frameCharacterGridCamera } from './character/characterGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
@@ -86,6 +87,23 @@ export function ViewControlBar({
     ? { bottom: 'calc(4.25rem + env(safe-area-inset-bottom) + 4px)' }
     : undefined;
 
+  const viewTitle = (view: typeof ORTHO_VIEWS[number] | typeof EXTRA_VIEWS[number] | typeof ISO_VIEWS[number]) => {
+    const label = `${view.label} (${view.shortcut})`;
+    if (!showCharacterModes) return label;
+    let preset = VIEWS[view.key];
+    if (npcGridActive) {
+      const gridView = getCharacterGridCameraView();
+      preset = view.key === 'front' ? gridView : {
+        ...preset,
+        target: gridView.target,
+        pos: preset.pos.map((value, index) =>
+          value + gridView.target[index] - preset.target[index]
+        ) as [number, number, number],
+      };
+    }
+    return `${label}\n\n${cameraViewDebug(preset)}`;
+  };
+
   const viewButtons = (
     views: typeof ORTHO_VIEWS | typeof EXTRA_VIEWS | typeof ISO_VIEWS,
     color: 'cyan' | 'green' | 'purple',
@@ -103,7 +121,7 @@ export function ViewControlBar({
               dispatchView(view.key, npcGridActive ? getCharacterGridCameraView().target : undefined);
             }
           }}
-          title={`${view.label} (${view.shortcut})`}
+          title={viewTitle(view)}
           aria-label={`${view.label} (${view.shortcut})`}
           aria-pressed={isActive(view.key)}
         >
