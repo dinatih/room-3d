@@ -23,7 +23,7 @@ export const DESK1_POSITIONS: readonly FurnitureTransform[] = [
 ];
 
 export const DESK2_POSITIONS: readonly FurnitureTransform[] = [
-  { x: 240, z: 280, ry: Math.PI     },
+  { x: 240, z: 270, ry: Math.PI     },
   { x: 200, z: 170, ry: Math.PI     },
   { x: 240, z: 120, ry: Math.PI     },
   { x: 73.5, z: 18, ry: Math.PI     },

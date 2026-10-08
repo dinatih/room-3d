@@ -15,20 +15,13 @@ npx tsc --noEmit     # Vérifier la validité des types TypeScript
 
 - **Échelle** : 1 unité = 1 cm.
 - **Axes** :
-  - **X** (rouge) = largeur de la pièce, de 0 à ROOM_W (300 cm)
-  - **Y** (vert) = hauteur, de 0 à 250 cm (`WALL_H = 250`)
-  - **Z** (bleu) = profondeur de la pièce, de 0 à ROOM_D (400+ cm)
-- **Murs** : A (X=0), B (X=ROOM_W), C (Z=0), D (Z=ROOM_D)
+  - **X** (rouge)
+  - **Y** (vert)
+  - **Z** (bleu)
 
 ## Stack & Architecture
 
 - **Technologies** : React 18 + Three.js + `@react-three/fiber` (R3F) + `@react-three/drei` + Vite + TypeScript.
-<!--- **Aliases d'importation** :
-  - `@shared/*` → `src/*` (types et configurations partagés)
-  - `@features/*` → `src/features/*` (domaines fonctionnels)
-  - `@config` → `src/config.ts` (constantes de la pièce)-->
-
-<!--## Règles d'implémentation des items (`src/features/scene/items/`)
 
 Chaque meuble ou objet interactif est un composant autonome implémentant l'interface `SceneItemProps` :
 - **Coordonnées locales** : Centré en X/Z, base au sol à Y=0 (ou sur la surface d'appui).
@@ -38,15 +31,6 @@ Chaque meuble ou objet interactif est un composant autonome implémentant l'inte
   - Toujours utiliser `glbLocalBBox(scene)` pour obtenir la Bounding Box locale en ignorant les transformations du parent.
   - Toujours faire `scene.scale.set(1, 1, 1)` au tout début du `useLayoutEffect` avant de lire la Box pour éviter les corruptions de scale lors des remounts liés à Suspense.
   - Appeler `onSize(dimensions)` à la fin de l'effet.-->
-
-<!--## États UI et Synchronisation (Événements)
-
-Les actions utilisateur (allumer une lampe, ouvrir une porte, changer la vitesse du ventilateur) sont transmises via des `CustomEvent` nommés `furniture-toggle` :
-```ts
-document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value } }))
-```
-- Pour écouter ces états de manière factorisée, utiliser le hook `useFurnitureToggles` dans `Placements.tsx`.
-- Pour les animations R3F (`useFrame`), synchroniser l'état réactif dans des refs locales (ex. `const isPowerOnRef = useRef(false)`) afin d'éviter les closures obsolètes dans la boucle d'animation.-->
 
 ## Directives UI & Styling
 
@@ -73,7 +57,7 @@ Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le c
 - **Pas d'erreurs silencieuses (Fail Fast)** : Éviter les garde-fous artificiels qui étouffent ou dissimulent les données invalides ou les comportements anormaux. Si des données sont invalides, l'erreur doit se manifester ou remonter explicitement afin d'être identifiée et corrigée à la source, plutôt que d'être masquée silencieusement par un filtre cosmétique.
 
 
-## Économie de quota et limitation d'investigation
+<!--## Économie de quota et limitation d'investigation
 
 > [!CAUTION]
 > **Interdiction absolue du micro-découpage de lecture (Anti-Pattern des 20 lignes)** :
@@ -88,4 +72,4 @@ Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le c
 - **Lectures efficaces** : Utiliser des plages de lecture larges (100 à 300+ lignes) lors des appels `view_file`.
 - **Budget d'outils par tour** : Ne JAMAIS dépasser 6 à 8 appels d'outils au total par message utilisateur. Si une analyse nécessite plus d'étapes, s'interrompre et faire un point avec l'utilisateur au lieu de boucler.
 - **Interdiction absolue d'explorer `node_modules`** : Se concentrer exclusivement sur le code du projet (`src/`). Ne jamais lire ou parcourir les dossiers de dépendances externes.
-- **Action directe** : Dès qu'une piste ou une cause probable est identifiée, appliquer la correction et tester immédiatement au lieu de sur-analyser.
+- **Action directe** : Dès qu'une piste ou une cause probable est identifiée, appliquer la correction et tester immédiatement au lieu de sur-analyser.-->
