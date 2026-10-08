@@ -171,8 +171,11 @@ export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 10, 15];
 /** Liste des 4 Laras activées pour le mode 4 joueuses */
 export const FOUR_PLAYERS_LARA_IDS = new Set(['xbot', 'native', 'rosanna', 'marissa']);
 
-/** Laras secondaires désactivées en mode 10 joueuses */
-export const PERF_EXCLUDED_LARA_IDS = new Set(['angelina', 'lgbta']);
+/** Sélection du mode 10 : Xbot et neuf Laras. */
+export const TEN_PLAYERS_LARA_IDS = new Set([
+  'xbot', 'native', 'rosanna', 'marissa', 'delphina',
+  'sara', 'cha', 'vivida', 'sabira', 'safa',
+]);
 
 /** Détermine si un personnage fait partie des extras (tous ceux qui ne sont ni Lara ni Xbot) */
 export function isExtraCharacter(c: CharacterConfig | string): boolean {
@@ -210,9 +213,9 @@ export function getDefaultNonExtraIds(
     return Array.from(set);
   }
   if (mode === 10) {
-    const list = NON_EXTRA_CHARACTERS.filter(c => !PERF_EXCLUDED_LARA_IDS.has(c.id)).map(c => c.id);
+    const list = Array.from(TEN_PLAYERS_LARA_IDS);
     if (activeCharacterId && !isExtraCharacter(activeCharacterId) && !list.includes(activeCharacterId)) {
-      list.push(activeCharacterId);
+      list[list.length - 1] = activeCharacterId;
     }
     return list;
   }
@@ -273,8 +276,7 @@ export function isCharacterVisibleInMode(
     return FOUR_PLAYERS_LARA_IDS.has(id);
   }
   if (mode === 10) {
-    if (activeCharacterId && id === activeCharacterId) return true;
-    return !PERF_EXCLUDED_LARA_IDS.has(id);
+    return getDefaultNonExtraIds(mode, activeCharacterId).includes(id);
   }
   // mode === 15: all characters
   return true;
