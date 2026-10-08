@@ -180,6 +180,7 @@ export function LayersSection({
         })()}
       </div>
       {layerBtn('purple',    'Effet fumée (Poof!) 💨',                 'smokeTransition')}
+      {layerBtn('red',       'Points de vue caméra rouges 📹',       'cameraViewMarkers')}
       {layerBtn('green',     'Structure murale 🧱 (Alt+W)',            'wallStructure', 'wireframeWallStructure')}
       {layerBtn('orange',    'Revêtements sol (+ plinthes) 🪵', 'floorCoverings')}
       {layerBtn('secondary', 'Dalle et plafond 🏛️ (Alt+Q)',            'structure', 'wireframeStructure')}

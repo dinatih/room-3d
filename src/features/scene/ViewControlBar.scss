@@ -74,7 +74,22 @@
   min-width: 0;
 }
 
-.view-control-bar > .btn {
+.view-control-bar__row {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+.view-control-bar--two-rows > .view-control-bar__row {
+  overflow-x: auto;
+  scrollbar-width: none;
+  touch-action: pan-x;
+}
+
+.view-control-bar--two-rows > .view-control-bar__row::-webkit-scrollbar {
+  display: none;
+}
+
+.view-control-bar__row > .btn {
   flex: 0 0 auto;
 }
 

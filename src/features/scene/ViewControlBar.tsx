@@ -114,149 +114,153 @@ export function ViewControlBar({
   );
 
   const bar = (
-    <div className={`${TOOLBAR_CLASS} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
-      {showCharacterModes && (
-        <button
-          type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-          onClick={onToggleHideUI}
-          title={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
-          aria-label={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
-        >
-          <i className={`bi ${hideUI ? 'bi-eye' : 'bi-eye-slash'}`} aria-hidden="true" />
-        </button>
-      )}
-      {(showCharacterModes || showMirrorsHD) && (
-        <button
-          type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} ${mirrorsHD ? 'btn-danger' : 'btn-outline-secondary'}`}
-          onClick={() => toggleLayer('mirrorsHD')}
-          title="Activer ou désactiver les miroirs HD"
-          aria-label="Miroirs HD"
-          aria-pressed={mirrorsHD}
-        >
-          HD
-        </button>
-      )}
-
-      {showCharacterModes && <CharacterCountSelect />}
-
-      {showCharacterModes && (
-        <button
-          type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-          onClick={chooseRandomCharacter}
-          title="Changer aléatoirement le PNJ actif parmi les personnages visibles (R)"
-          aria-label="Changer aléatoirement le PNJ actif (R)"
-          aria-keyshortcuts="r"
-        >
-          <i className="bi bi-shuffle" aria-hidden="true" />
-          <i className="bi bi-person-standing-dress" aria-hidden="true" />
-        </button>
-      )}
-
-      {showCharacterModes && (
-        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Suivi caméra">
+    <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--two-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        {showCharacterModes && (
           <button
             type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
-            onClick={() => dispatchCameraMode('toggle-follow')}
-            title="Activer ou quitter le suivi à la troisième personne (M : Follow ↔ FPV)"
-            aria-pressed={cameraMode === 'follow'}
-          ><i className="bi bi-person-walking" aria-hidden="true" /><span className="fw-semibold">Follow</span></button>
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
-            onClick={() => dispatchCameraMode('fpv')}
-            title="Passer en vue subjective FPV (M : Follow ↔ FPV)"
-            aria-pressed={cameraMode === 'fpv'}
-          ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
-        </div>
-      )}
-
-      <button
-        type="button"
-        className={`${TOOLBAR_BUTTON_CLASS} ${isOrtho ? 'view-control-bar__btn--blue' : 'view-control-bar__btn--yellow'}`}
-        onClick={toggleCameraProjection}
-        title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (P)`}
-        aria-pressed={isOrtho}
-      >
-        <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} aria-hidden="true" />
-        <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Persp'}</span>
-      </button>
-
-      {(showCharacterModes || showOrbitControls) && (
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${orbitActive ? 'view-control-bar__btn--yellow' : 'btn-outline-secondary'}`}
-            onClick={() => {
-              if (showCharacterModes) dispatchCameraMode('orbit');
-              else useSceneStore.getState().setOrbitMouseMode(orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
-            }}
-            title={orbitTitle}
-            aria-label={orbitTitle}
-            aria-pressed={orbitActive}
-          ><i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" /><span className="fw-semibold">{isPan ? 'Trans' : 'Rot'}</span></button>
-      )}
-      {showCharacterModes && (
-        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Modes caméra">
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
-            onClick={() => dispatchCameraMode('toggle-npc-grid')}
-            title="Afficher ou quitter la grille des PNJ (G)"
-            aria-pressed={npcGridActive}
-          ><i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" /><span className="fw-semibold">NPCs</span></button>
-        </div>
-      )}
-
-      {viewButtons(ORTHO_VIEWS, 'cyan')}
-      {viewButtons(EXTRA_VIEWS, 'green')}
-      {viewButtons(ISO_VIEWS, 'purple')}
-      {showCharacterModes && (
-        <button
-          type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} ${cameraViewMarkers ? 'btn-danger' : 'btn-outline-danger'}`}
-          onClick={() => toggleLayer('cameraViewMarkers')}
-          title="Afficher ou masquer les raccourcis de vues 3D"
-          aria-label="Raccourcis de vues 3D"
-          aria-pressed={cameraViewMarkers}
-        >
-          <i className="bi bi-camera-video-fill" aria-hidden="true" />
-        </button>
-      )}
-      {beforeAmbianceActions}
-      {inline && (
-        <select
-          className="form-select form-select-sm py-0 ps-2 mw-100 flex-shrink-0 bg-transparent text-body border-secondary small text-truncate view-control-bar__ambiance"
-          value={currentHdri}
-          onChange={event => setHdri(event.target.value)}
-          aria-label="Ambiance de la preview 3D"
-          title={HDRI_LIST.find(hdri => hdri.id === currentHdri)?.name ?? currentHdri}
-        >
-          {HDRI_LIST.map(hdri => (
-            <option key={hdri.id} value={hdri.id}>{hdri.name}</option>
-          ))}
-        </select>
-      )}
-      {toolbarActions}
-      {showCharacterModes && (
-        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
-          <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`} onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
-            <i className="bi bi-airplane-fill" aria-hidden="true" />
+            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+            onClick={onToggleHideUI}
+            title={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
+            aria-label={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
+          >
+            <i className={`bi ${hideUI ? 'bi-eye' : 'bi-eye-slash'}`} aria-hidden="true" />
           </button>
-          {!isMobile && (
-            <>
-              <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan`} onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
-                <i className="bi bi-camera-fill" aria-hidden="true" />
-              </button>
-              <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`} onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
-                <i className="bi bi-keyboard-fill" aria-hidden="true" />
-              </button>
-            </>
-          )}
+        )}
+        {(showCharacterModes || showMirrorsHD) && (
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} ${mirrorsHD ? 'btn-danger' : 'btn-outline-secondary'}`}
+            onClick={() => toggleLayer('mirrorsHD')}
+            title="Activer ou désactiver les miroirs HD"
+            aria-label="Miroirs HD"
+            aria-pressed={mirrorsHD}
+          >
+            HD
+          </button>
+        )}
+
+        {showCharacterModes && <CharacterCountSelect />}
+
+        {showCharacterModes && (
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+            onClick={chooseRandomCharacter}
+            title="Changer aléatoirement le PNJ actif parmi les personnages visibles (R)"
+            aria-label="Changer aléatoirement le PNJ actif (R)"
+            aria-keyshortcuts="r"
+          >
+            <i className="bi bi-shuffle" aria-hidden="true" />
+            <i className="bi bi-person-standing-dress" aria-hidden="true" />
+          </button>
+        )}
+
+        {showCharacterModes && (
+          <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Suivi caméra">
+            <button
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
+              onClick={() => dispatchCameraMode('toggle-follow')}
+              title="Activer ou quitter le suivi à la troisième personne (M : Follow ↔ FPV)"
+              aria-pressed={cameraMode === 'follow'}
+            ><i className="bi bi-person-walking" aria-hidden="true" /><span className="fw-semibold">Follow</span></button>
+            <button
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
+              onClick={() => dispatchCameraMode('fpv')}
+              title="Passer en vue subjective FPV (M : Follow ↔ FPV)"
+              aria-pressed={cameraMode === 'fpv'}
+            ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
+          </div>
+        )}
+
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${isOrtho ? 'view-control-bar__btn--blue' : 'view-control-bar__btn--yellow'}`}
+          onClick={toggleCameraProjection}
+          title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (P)`}
+          aria-pressed={isOrtho}
+        >
+          <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} aria-hidden="true" />
+          <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Persp'}</span>
+        </button>
+
+        {(showCharacterModes || showOrbitControls) && (
+            <button
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} ${orbitActive ? 'view-control-bar__btn--yellow' : 'btn-outline-secondary'}`}
+              onClick={() => {
+                if (showCharacterModes) dispatchCameraMode('orbit');
+                else useSceneStore.getState().setOrbitMouseMode(orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
+              }}
+              title={orbitTitle}
+              aria-label={orbitTitle}
+              aria-pressed={orbitActive}
+            ><i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" /><span className="fw-semibold">{isPan ? 'Trans' : 'Rot'}</span></button>
+        )}
+        {showCharacterModes && (
+          <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Modes caméra">
+            <button
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
+              onClick={() => dispatchCameraMode('toggle-npc-grid')}
+              title="Afficher ou quitter la grille des PNJ (G)"
+              aria-pressed={npcGridActive}
+            ><i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" /><span className="fw-semibold">NPCs</span></button>
+          </div>
+        )}
+
+      </div>
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        {viewButtons(ORTHO_VIEWS, 'cyan')}
+        {viewButtons(EXTRA_VIEWS, 'green')}
+        {viewButtons(ISO_VIEWS, 'purple')}
+        {showCharacterModes && (
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} ${cameraViewMarkers ? 'btn-danger' : 'btn-outline-danger'}`}
+            onClick={() => toggleLayer('cameraViewMarkers')}
+            title="Afficher ou masquer les raccourcis de vues 3D"
+            aria-label="Raccourcis de vues 3D"
+            aria-pressed={cameraViewMarkers}
+          >
+            <i className="bi bi-camera-video-fill" aria-hidden="true" />
+          </button>
+        )}
+        {beforeAmbianceActions}
+        {inline && (
+          <select
+            className="form-select form-select-sm py-0 ps-2 mw-100 flex-shrink-0 bg-transparent text-body border-secondary small text-truncate view-control-bar__ambiance"
+            value={currentHdri}
+            onChange={event => setHdri(event.target.value)}
+            aria-label="Ambiance de la preview 3D"
+            title={HDRI_LIST.find(hdri => hdri.id === currentHdri)?.name ?? currentHdri}
+          >
+            {HDRI_LIST.map(hdri => (
+              <option key={hdri.id} value={hdri.id}>{hdri.name}</option>
+            ))}
+          </select>
+        )}
+        {toolbarActions}
+        {showCharacterModes && (
+          <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
+            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`} onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
+              <i className="bi bi-airplane-fill" aria-hidden="true" />
+            </button>
+            {!isMobile && (
+              <>
+                <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan`} onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
+                  <i className="bi bi-camera-fill" aria-hidden="true" />
+                </button>
+                <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`} onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
+                  <i className="bi bi-keyboard-fill" aria-hidden="true" />
+                </button>
+              </>
+            )}
         </div>
       )}
+      </div>
     </div>
   );
 
