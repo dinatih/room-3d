@@ -15,7 +15,6 @@ export interface CharacterSectionProps {
   globalHaircut: string;
   setGlobalHaircut: (h: string) => void;
   lastWigRef: React.MutableRefObject<string>;
-  handleRandomHaircutAndColor: () => void;
   handleRandomHairColor: () => void;
   handleRandomHaircut: () => void;
 }
@@ -29,7 +28,6 @@ export function CharacterSection({
   globalHaircut,
   setGlobalHaircut,
   lastWigRef,
-  handleRandomHaircutAndColor,
   handleRandomHairColor,
   handleRandomHaircut,
 }: CharacterSectionProps) {
@@ -83,22 +81,6 @@ export function CharacterSection({
           </div>
 
           <div>
-            {/* Bouton global Coupe & Couleur Aléatoire */}
-            <button
-              type="button"
-              className="btn btn-sm btn-warning w-100 text-dark fw-bold mb-3 py-1.5 px-3 d-flex align-items-center justify-content-center gap-2 shadow-none small"
-              style={{
-                background: 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)',
-                border: 'none',
-                borderRadius: '6px'
-              }}
-              onClick={handleRandomHaircutAndColor}
-              title="Changer aléatoirement la coupe et la couleur des cheveux"
-            >
-              <span><i className="bi bi-shuffle" aria-hidden="true" /></span>
-              <span>Coupe & Couleur aléatoires</span>
-            </button>
-
             <div className="mb-2">
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <div className="text-muted fw-semibold text-dark small text-uppercase">

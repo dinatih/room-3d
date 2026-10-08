@@ -680,11 +680,6 @@ export function InventoryPreview({
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: newHaircut } }));
   };
 
-  const handleRandomHaircutAndColor = () => {
-    handleRandomHaircut();
-    handleRandomHairColor();
-  };
-
   useEffect(() => {
     setActionStates(initialDuoAnim ? {
       duoAnimDef: initialDuoAnim,
@@ -1081,7 +1076,6 @@ export function InventoryPreview({
                     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: h } }));
                   }}
                   lastWigRef={lastWigRef}
-                  handleRandomHaircutAndColor={handleRandomHaircutAndColor}
                   handleRandomHairColor={handleRandomHairColor}
                   handleRandomHaircut={handleRandomHaircut}
                 />

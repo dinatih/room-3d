@@ -376,7 +376,6 @@ export function SidePanel({
       globalHaircut={globalHaircut}
       setGlobalHaircut={setGlobalHaircut}
       lastWigRef={lastWigRef}
-      handleRandomHaircutAndColor={handleRandomHaircutAndColor}
       handleRandomHairColor={handleRandomHairColor}
       handleRandomHaircut={handleRandomHaircut}
     />
