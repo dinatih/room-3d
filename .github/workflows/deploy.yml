@@ -43,4 +43,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: dist
           keep_files: true
+          # Remove discarded HDRIs from gh-pages while preserving the visualizer.
+          exclude_assets: '.github,environment/hdri/Halle_Skyline.hdr,environment/hdri/Tropical_BeachStairs_8k.hdr,environment/hdri/Tropical_Cemetery_B_8k.hdr,environment/hdri/ciel_paris_4k.hdr,environment/hdri/crystal_falls_8k.hdr,environment/hdri/ferndale_studio_06_8k.hdr,environment/hdri/ferndale_studio_10_8k.hdr,environment/hdri/garden_nook_8k.hdr,environment/hdri/hilly_terrain_01_8k.hdr,environment/hdri/lakeside_8k.hdr,environment/hdri/lakeside_night_8k.hdr,environment/hdri/meadow_2_8k.hdr,environment/hdri/misty_pines_8k.hdr,environment/hdri/muddy_autumn_forest_8k.hdr,environment/hdri/pond_8k.hdr,environment/hdri/pool_8k.hdr,environment/hdri/qwantani_moonrise_8k.hdr,environment/hdri/qwantani_moonrise_puresky_8k.hdr,environment/hdri/qwantani_night_8k.hdr,environment/hdri/rogland_moonlit_night_8k.hdr,environment/hdri/satara_night_8k.hdr,environment/hdri/shanghai_bund_8k.hdr,environment/hdri/spaichingen_hill_8k.hdr'
           cname: dinatih.org
