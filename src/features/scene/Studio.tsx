@@ -53,7 +53,7 @@ import { MeasurementTool }            from './MeasurementTool';
 import { RealMeasurementsLayer }      from './RealMeasurementsLayer';
 import { AppConsole }                 from '@features/ui/AppConsole';
 import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
-import { GridLayout }            from '@features/scene/GridLayout';
+import { InventoryObjectsGrid }  from '@features/scene/InventoryObjectsGrid';
 import { frameCharacterGridCamera } from './character/characterGridUtils';
 import { useCharacterGridStore } from './character/useCharacterGridStore';
 import { isExtraCharacter } from './characterConfig';
@@ -810,7 +810,7 @@ export function Studio() {
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}
         {layers.inventoryGrid && (
           <Suspense fallback={null}>
-            <GridLayout />
+            <InventoryObjectsGrid />
           </Suspense>
         )}
         {layers.lights      && <LightHelpers />}

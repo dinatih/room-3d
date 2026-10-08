@@ -79,7 +79,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Miroirs HD (toggle)"        keys={['Alt+G']} />
               <R label="Arêtes des murs (toggle)"   keys={['Alt+A']} />
               <R label="Piliers seuls (toggle)"     keys={['Alt+Shift+P']} />
-              <R label="Grille inventaire 📦 (toggle)" keys={['Alt+I']} />
+              <R label="Grille des objets d’inventaire 📦 (toggle)" keys={['Alt+I']} />
               <R label="Mesures réelles 📐 (toggle)" keys={['Alt+M']} />
               <R label="Quitter follow / top-down / ortho" keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />

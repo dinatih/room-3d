@@ -282,7 +282,7 @@ export function LayersSection({
       {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
 
-      {layerBtn('orange', 'Grille inventaire 📦 (Alt+I)', 'inventoryGrid')}
+      {layerBtn('orange', "Grille des objets d’inventaire 📦 (Alt+I)", 'inventoryGrid')}
       {layerBtn('teal',   'Grille 🌐 (Alt+B)',     'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('yellow', 'Mesures réelles 📐 (Alt+M)', 'measuredDimensions')}

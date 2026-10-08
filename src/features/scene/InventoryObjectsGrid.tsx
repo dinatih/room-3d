@@ -1,5 +1,5 @@
 /**
- * GridLayout.tsx — Vue inventaire 3D en vitrines verticales par zone.
+ * InventoryObjectsGrid.tsx — Objets d'inventaire 3D en vitrines verticales par zone.
  *
  * Agencement 2D des vitrines (évite l'étalement excessif en largeur) :
  *   - Colonne Gauche  : Couloir (en haut) au-dessus de Salle de bain & WC (en bas)
@@ -22,7 +22,8 @@
  *   - Tåsjön mules -> Salon
  */
 
-import React, { Component, Suspense, useMemo, useLayoutEffect, useRef } from 'react';
+import React, { Component, Suspense, useMemo, useLayoutEffect, useEffect, useRef } from 'react';
+import { useThree } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -30,6 +31,8 @@ import { INVENTORY, type InventoryItem } from '@features/inventory/inventoryData
 import { useGLTFClone } from './useGLTFClone';
 import { removeGlbLines, glbLocalBBox } from './glbUtils';
 import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { useSceneStore } from './store/useSceneStore';
+import { cameraState } from './cameraState';
 
 // Composants procéduraux
 import { ArmrestSofa } from './items/ArmrestSofa';
@@ -59,7 +62,7 @@ class GridItemErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
   }
 
   componentDidCatch(error: any) {
-    console.warn('[GridLayout] Error loading item GLB:', error);
+    console.warn('[InventoryObjectsGrid] Error loading item GLB:', error);
   }
 
   render() {
@@ -375,9 +378,10 @@ function GridItem({ item, position }: { item: UnifiedGridItem; position: [number
   );
 }
 
-// ── Composant Principal : GridLayout ──────────────────────────────────────────
+// ── Composant Principal : InventoryObjectsGrid ─────────────────────────────────
 
-export function GridLayout() {
+export function InventoryObjectsGrid() {
+  const { size } = useThree();
   // Liste complète : objets GLB filtrés + objets procéduraux demandés
   const allItems = useMemo<UnifiedGridItem[]>(() => {
     const glbItems: UnifiedGridItem[] = INVENTORY.filter(isAllowedInventoryItem).map((i) => ({
@@ -528,8 +532,48 @@ export function GridLayout() {
   const rootY = 300;
   const rootZ = 180;
 
+  useEffect(() => {
+    const frameCamera = () => {
+      if (!cameraState.isSceneLaunched || cameraState.isIntroRunning) return;
+      // Inclure les panneaux, les titres et les noms dans le cadrage.
+      const minX = Math.min(...sections.map(section => section.baseX - CELL_W / 2 - 8));
+      const maxX = Math.max(...sections.map(section => section.baseX + (section.cols - 0.5) * CELL_W + 8));
+      const minY = -CELL_H / 2 - 8;
+      const maxY = Math.max(...sections.map(section =>
+        section.baseY + Math.max(1, Math.ceil(section.items.length / section.cols)) * CELL_H + 14 + 18,
+      ));
+      const viewHeight = Math.max(maxY - minY, (maxX - minX) / (size.width / size.height));
+      const target: [number, number, number] = [
+        offsetX + (minX + maxX) / 2,
+        rootY + (minY + maxY) / 2,
+        rootZ,
+      ];
+      useSceneStore.getState().setActiveCameraView('front');
+      document.dispatchEvent(new CustomEvent('camera-view', {
+        detail: {
+          key: 'front',
+          projection: 'ortho',
+          pos: [target[0], target[1], rootZ + viewHeight],
+          target,
+          zoom: 800 / viewHeight,
+        },
+      }));
+    };
+    // Attendre l'installation des écouteurs du contrôleur de caméra.
+    let frame = requestAnimationFrame(frameCamera);
+    const afterIntro = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(frameCamera);
+    };
+    window.addEventListener('camera-intro-finished', afterIntro);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('camera-intro-finished', afterIntro);
+    };
+  }, [sections, size.width, size.height, offsetX, rootY, rootZ]);
+
   return (
-    <group position={[offsetX, rootY, rootZ]}>
+    <group name="inventory-objects-grid" position={[offsetX, rootY, rootZ]}>
       {/* Éclairage direct pour la vitrine */}
       <ambientLight intensity={1.3} />
       <directionalLight position={[totalWidth / 2, 500, 400]} intensity={2.6} />
