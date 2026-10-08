@@ -207,19 +207,19 @@ export function ViewControlBar({
 
         <button
           type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} ${isOrtho ? 'view-control-bar__btn--blue' : 'view-control-bar__btn--yellow'}`}
+          className={`${TOOLBAR_BUTTON_CLASS} ${isOrtho ? 'view-control-bar__btn--indigo' : 'view-control-bar__btn--pink'}`}
           onClick={toggleCameraProjection}
           title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (P)`}
           aria-pressed={isOrtho}
         >
-          <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} aria-hidden="true" />
+          <i className="bi bi-camera-video-fill" aria-hidden="true" />
           <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Persp'}</span>
         </button>
 
         {(showCharacterModes || showOrbitControls) && (
             <button
               type="button"
-              className={`${TOOLBAR_BUTTON_CLASS} ${orbitActive ? 'view-control-bar__btn--yellow' : 'btn-outline-secondary'}`}
+              className={`${TOOLBAR_BUTTON_CLASS} ${orbitActive ? `view-control-bar__btn--${isPan ? 'teal' : 'orange'}` : 'btn-outline-secondary'}`}
               onClick={() => {
                 if (showCharacterModes) dispatchCameraMode('orbit');
                 else useSceneStore.getState().setOrbitMouseMode(orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
@@ -227,7 +227,15 @@ export function ViewControlBar({
               title={orbitTitle}
               aria-label={orbitTitle}
               aria-pressed={orbitActive}
-            ><i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" /><span className="fw-semibold">{isPan ? 'Trans' : 'Rot'}</span></button>
+            >
+              <svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 1a5 5 0 0 0-5 5h5Z" fill="currentColor" />
+                <rect x="3" y="1" width="10" height="14" rx="5" stroke="currentColor" />
+                <path d="M8 1v5M3 6h10" stroke="currentColor" />
+              </svg>
+              <i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" />
+              <span className="fw-semibold">{isPan ? 'Trans' : 'Rot'}</span>
+            </button>
         )}
         {showCharacterModes && (
           <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Modes caméra">

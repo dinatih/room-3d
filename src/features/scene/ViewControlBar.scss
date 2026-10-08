@@ -116,6 +116,10 @@ $control-colors: (
   'purple': (palette.$purple, palette.$white),
   'blue': (palette.$blue, palette.$gray-900),
   'yellow': (palette.$yellow, palette.$gray-900),
+  'indigo': (palette.$indigo, palette.$white),
+  'pink': (palette.$pink, palette.$gray-900),
+  'teal': (palette.$teal, palette.$gray-900),
+  'orange': (palette.$orange, palette.$gray-900),
 );
 
 @each $name, $pair in $control-colors {
