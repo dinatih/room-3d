@@ -47,6 +47,7 @@ import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/sc
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
+import type { LayerState } from './sidepanel/types';
 import { HDRI_LIST, getHdriById }  from '@features/scene/hdriConfig';
 import { useAppIdle }                  from './idleState';
 import { MeasurementTool }            from './MeasurementTool';
@@ -400,6 +401,12 @@ export function Studio() {
   const measurementActive = useSceneStore(state => state.measurementActive);
   const cameraMode = useSceneStore(state => state.cameraMode);
   const onToggleLayer = useSceneStore(state => state.toggleLayer);
+  const toggleLayer = useCallback((key: keyof LayerState) => {
+    if (key === 'inventoryGrid') {
+      document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-inventory-grid' }));
+    }
+    onToggleLayer(key);
+  }, [onToggleLayer]);
 
   const [showInventory, setShowInventory] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -568,7 +575,7 @@ export function Studio() {
         if (k === 'b' && !e.shiftKey) { e.preventDefault(); if (e.repeat) return; onToggleLayer('grid'); cameraState.invalidate?.(); return; }
         if (k === 'm') { e.preventDefault(); onToggleLayer('measuredDimensions'); cameraState.invalidate?.(); return; }
         if (k === 'a') { e.preventDefault(); onToggleLayer('wallEdges'); cameraState.invalidate?.(); return; }
-        if (k === 'i') { e.preventDefault(); onToggleLayer('inventoryGrid'); cameraState.invalidate?.(); return; }
+        if (k === 'i') { e.preventDefault(); toggleLayer('inventoryGrid'); cameraState.invalidate?.(); return; }
         if (k === 'w') { e.preventDefault(); onToggleLayer('wallStructure'); cameraState.invalidate?.(); return; }
         if (k === 'q') { e.preventDefault(); onToggleLayer('structure'); cameraState.invalidate?.(); return; }
         if (k === 'f') { e.preventDefault(); onToggleLayer('furniture'); cameraState.invalidate?.(); return; }
@@ -621,7 +628,7 @@ export function Studio() {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onToggleLayer]);
+  }, [onToggleLayer, toggleLayer]);
 
 
   const [buildAnimMatrix,  setBuildAnimMatrix]  = useState(false);
@@ -907,7 +914,7 @@ export function Studio() {
       {/* HTML overlays */}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       <SidePanel
-        layers={layers} onToggleLayer={onToggleLayer}
+        layers={layers} onToggleLayer={toggleLayer}
         onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}

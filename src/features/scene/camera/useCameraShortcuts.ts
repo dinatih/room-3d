@@ -71,11 +71,12 @@ export function useCameraShortcuts({
     charX: number;
     charZ: number;
   } | null>(null);
+  const savedInventoryGridPrevConfig = useRef<typeof savedGridPrevConfig.current>(null);
 
   useEffect(() => {
-    const exitGridAndRestore = () => {
-      const prev = savedGridPrevConfig.current;
-      savedGridPrevConfig.current = null;
+    const exitGridAndRestore = (savedConfig = savedGridPrevConfig) => {
+      const prev = savedConfig.current;
+      savedConfig.current = null;
 
       if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
       if (modeRef.current === 'top') exitTop();
@@ -463,6 +464,25 @@ export function useCameraShortcuts({
         }
       } else if (requestedMode === 'toggle-npc-grid') {
         toggleNpcGrid();
+      } else if (requestedMode === 'toggle-inventory-grid') {
+        const store = useSceneStore.getState();
+        if (store.layers.inventoryGrid) {
+          store.setActiveCameraView(null);
+          exitGridAndRestore(savedInventoryGridPrevConfig);
+        } else {
+          const curTarget = ctrlRef.current?.target ?? savedPerspTarget.current;
+          savedInventoryGridPrevConfig.current = {
+            pos: [camera.position.x, camera.position.y, camera.position.z],
+            target: [curTarget.x, curTarget.y, curTarget.z],
+            mode: modeRef.current,
+            proj: store.cameraProjection,
+            charX: cameraState.characterX,
+            charZ: cameraState.characterZ,
+          };
+          store.setActiveCameraView('front');
+          store.setCameraProjection('ortho');
+          store.setOrbitMouseMode('pan');
+        }
       }
     };
 

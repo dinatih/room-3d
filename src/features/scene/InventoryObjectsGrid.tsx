@@ -574,10 +574,6 @@ export function InventoryObjectsGrid() {
 
   return (
     <group name="inventory-objects-grid" position={[offsetX, rootY, rootZ]}>
-      {/* Éclairage direct pour la vitrine */}
-      <ambientLight intensity={1.3} />
-      <directionalLight position={[totalWidth / 2, 500, 400]} intensity={2.6} />
-
       {sections.map(({ zone, items, baseX, baseY, cols }) => {
         const rows = Math.max(1, Math.ceil(items.length / cols));
         const width = cols * CELL_W;
