@@ -3,8 +3,7 @@ import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import { useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useSceneStore } from './store/useSceneStore';
-import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS, VIEWS } from './sidepanel/types';
-import { cameraViewDebug } from './cameraViewDebug';
+import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS } from './sidepanel/types';
 import { getCharacterGridCameraView, frameCharacterGridCamera } from './character/characterGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
@@ -49,7 +48,7 @@ export function ViewControlBar({
   children,
 }: ViewControlBarProps) {
   const [hoveredView, setHoveredView] = useState<{
-    label: string; debug: string; top?: number; bottom?: number;
+    label: string; top?: number; bottom?: number;
   } | null>(null);
   const isMobile = useIsMobile();
   const cameraProjection = useSceneStore(s => s.cameraProjection);
@@ -91,23 +90,6 @@ export function ViewControlBar({
     ? { bottom: 'calc(4.25rem + env(safe-area-inset-bottom) + 4px)' }
     : undefined;
 
-  const viewTitle = (view: typeof ORTHO_VIEWS[number] | typeof EXTRA_VIEWS[number] | typeof ISO_VIEWS[number]) => {
-    const label = `${view.label} (${view.shortcut})`;
-    if (!showCharacterModes) return label;
-    let preset = VIEWS[view.key];
-    if (npcGridActive) {
-      const gridView = getCharacterGridCameraView();
-      preset = view.key === 'front' ? gridView : {
-        ...preset,
-        target: gridView.target,
-        pos: preset.pos.map((value, index) =>
-          value + gridView.target[index] - preset.target[index]
-        ) as [number, number, number],
-      };
-    }
-    return `${label}\n\n${cameraViewDebug(preset)}`;
-  };
-
   const viewButtons = (
     views: typeof ORTHO_VIEWS | typeof EXTRA_VIEWS | typeof ISO_VIEWS,
     color: 'cyan' | 'green' | 'purple',
@@ -125,12 +107,11 @@ export function ViewControlBar({
               dispatchView(view.key, npcGridActive ? getCharacterGridCameraView().target : undefined);
             }
           }}
-          title={viewTitle(view)}
+          title={`${view.label} (${view.shortcut})`}
           onMouseEnter={event => {
             const rect = event.currentTarget.getBoundingClientRect();
             setHoveredView({
               label: `${view.label} (${view.shortcut})`,
-              debug: showCharacterModes ? viewTitle(view).split('\n\n').slice(1).join('\n\n') : '',
               ...(rect.top > window.innerHeight / 2
                 ? { bottom: window.innerHeight - rect.top }
                 : { top: rect.bottom }),
@@ -155,9 +136,6 @@ export function ViewControlBar({
     >
       <div className="d-flex flex-column align-items-center gap-1 mw-100">
         <span className="badge text-bg-danger">{hoveredView.label}</span>
-        {hoveredView.debug && (
-          <pre className="text-bg-dark rounded shadow p-2 m-0 small mw-100">{hoveredView.debug}</pre>
-        )}
       </div>
     </div>,
     document.body,

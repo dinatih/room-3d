@@ -4,16 +4,15 @@ import { Html, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { CAMERA_SHORTCUT_VIEWS, VIEWS, dispatchView } from './sidepanel/types';
 import { useSceneStore } from './store/useSceneStore';
-import { cameraViewDebug } from './cameraViewDebug';
 
 type ShortcutView = typeof CAMERA_SHORTCUT_VIEWS[number];
 
 function CameraViewMarker({ view }: { view: ShortcutView }) {
-  const { scene, camera, gl } = useThree();
+  const { scene, camera, gl, size } = useThree();
+  const aspect = size.width / size.height;
   const [hovered, setHovered] = useState(false);
   useCursor(hovered, 'pointer', '', gl.domElement);
   const preset = VIEWS[view.key];
-  const debugText = useMemo(() => cameraViewDebug(preset), [preset]);
   const quaternion = useMemo(() => {
     // Object3D.lookAt oriente +Z ; une caméra oriente bien son objectif selon −Z.
     const markerCamera = new THREE.PerspectiveCamera();
@@ -82,8 +81,8 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
 
   const pyramidGeo = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    const w = 15; // demi-largeur de la base (30 cm)
     const h = 10; // demi-hauteur de la base (20 cm)
+    const w = h * aspect; // même ratio largeur/hauteur que le viewport du Canvas
     const d = 26; // profondeur vers −Z (26 cm)
     const pApex = [0, 0, 0];
     const pTR = [w, h, -d];
@@ -108,7 +107,7 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
     geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
     geo.computeVertexNormals();
     return geo;
-  }, []);
+  }, [aspect]);
 
   const edgesGeo = useMemo(() => new THREE.EdgesGeometry(pyramidGeo), [pyramidGeo]);
   useEffect(() => () => {
@@ -164,7 +163,6 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
         <Html position={[0, 16, -13]} center wrapperClass="pe-none" style={{ pointerEvents: 'none' }}>
           <div role="tooltip" className="d-flex flex-column align-items-center gap-1 text-nowrap">
             <span className="badge text-bg-danger">{view.label} ({view.shortcut})</span>
-            <pre className="text-bg-dark rounded p-2 shadow m-0 small">{debugText}</pre>
           </div>
         </Html>
       )}
