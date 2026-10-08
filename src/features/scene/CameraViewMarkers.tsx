@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useThree, type ThreeEvent } from '@react-three/fiber';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useThree, useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Html, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { CAMERA_SHORTCUT_VIEWS, VIEWS, dispatchView } from './sidepanel/types';
@@ -21,6 +21,27 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
   }, [preset]);
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
 
+  const markerRef = useRef<THREE.Group>(null);
+  const _tmpCamPos = useMemo(() => new THREE.Vector3(), []);
+  const presetPosVec = useMemo(() => new THREE.Vector3(...preset.pos), [preset.pos]);
+
+  useFrame(() => {
+    if (!markerRef.current) return;
+    const isOrtho = (camera as THREE.OrthographicCamera).isOrthographicCamera;
+    let s = 1.0;
+    if (isOrtho) {
+      const orthoZoom = (camera as THREE.OrthographicCamera).zoom || 1;
+      s = Math.max(1.0, Math.min(12.0, 1.25 / orthoZoom));
+    } else {
+      camera.getWorldPosition(_tmpCamPos);
+      const dist = _tmpCamPos.distanceTo(presetPosVec);
+      // À 350 cm (proche), échelle standard 1.0. En s'éloignant, l'échelle grandit proportionnellement.
+      s = Math.max(1.0, Math.min(12.0, dist / 350));
+    }
+    if (hovered) s *= 1.25;
+    markerRef.current.scale.setScalar(s);
+  });
+
   const isUnobstructed = (event: ThreeEvent<PointerEvent | MouseEvent>) => {
     // R3F n'intersecte que les objets ayant des handlers : vérifier aussi
     // les murs et les autres meshes pour respecter l'occlusion visuelle.
@@ -35,13 +56,16 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
         if (!parent.visible) { hidden = true; break; }
       }
       if (hidden) continue;
+
+      // Si le premier objet physique rencontré appartient au marqueur lui-même, il n'est pas occlus.
+      for (let parent: THREE.Object3D | null = mesh; parent; parent = parent.parent) {
+        if (parent === event.eventObject) return true;
+      }
+
       const material = Array.isArray(mesh.material)
         ? mesh.material[hit.face!.materialIndex]
         : mesh.material;
       if (!material.visible || material.opacity === 0) continue;
-      for (let parent: THREE.Object3D | null = mesh; parent; parent = parent.parent) {
-        if (parent === event.eventObject) return true;
-      }
       return false;
     }
     return false;
@@ -92,6 +116,7 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
 
   return (
     <group
+      ref={markerRef}
       name={`camera-view-marker-${view.key}`}
       userData={{ isCameraViewMarker: true, cameraView: view.key }}
       position={preset.pos}
@@ -109,6 +134,11 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
         dispatchView(view.key);
       }}
     >
+      {/* Hitbox invisible élargie pour maximiser le confort de clic et de survol */}
+      <mesh position={[0, 0, -13]}>
+        <sphereGeometry args={[22, 12, 12]} />
+        <meshBasicMaterial visible={false} />
+      </mesh>
       {/* Pyramide de visée (point de vue s'évasant vers −Z) */}
       <mesh geometry={pyramidGeo}>
         <meshBasicMaterial
