@@ -163,7 +163,7 @@ export const ACCESSORIES_MESH_NAMES = new Set([
   'grenades', 'accessories', 'handgun_part'
 ]);
 
-export type LaraCountMode = 1 | 2 | 4 | 10 | 15;
+export type LaraCountMode = number;
 
 /** Nombres de Laras autorisés dans le sélecteur d'options (1, 2, 4, 10, 15) */
 export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 10, 15];
@@ -190,36 +190,27 @@ export const EXTRA_CHARACTERS = CHARACTERS.filter(isExtraCharacter);
 /** Liste des personnages principaux / non-extras (Laras et Xbot, 15 au total) */
 export const NON_EXTRA_CHARACTERS = CHARACTERS.filter(c => !isExtraCharacter(c));
 
-/** Calcule les identifiants actifs par défaut pour les non-extras selon le mode numérique */
-export function getDefaultNonExtraIds(
-  mode: LaraCountMode = 15,
-  activeCharacterId?: string
-): string[] {
-  if (mode === 1) return ['xbot'];
-  if (mode === 2) {
-    const list = ['xbot'];
-    if (activeCharacterId && !isExtraCharacter(activeCharacterId) && activeCharacterId !== 'xbot') {
-      list.push(activeCharacterId);
-    } else {
-      list.push('native');
-    }
-    return list;
+/** Sélection numérique exacte, avec le personnage actif inclus dans le total. */
+export function getDefaultSceneCharacterIds(count: number, activeCharacterId?: string): string[] {
+  if (!Number.isInteger(count) || count < 0 || count > CHARACTERS.length) {
+    throw new RangeError(`Nombre de personnages invalide : ${count}`);
   }
-  if (mode === 4) {
-    const set = new Set(FOUR_PLAYERS_LARA_IDS);
-    if (activeCharacterId && !isExtraCharacter(activeCharacterId)) {
-      set.add(activeCharacterId);
-    }
-    return Array.from(set);
+  const orderedIds = [
+    ...TEN_PLAYERS_LARA_IDS,
+    ...NON_EXTRA_CHARACTERS.filter(c => !TEN_PLAYERS_LARA_IDS.has(c.id)).map(c => c.id),
+    ...EXTRA_CHARACTERS.map(c => c.id),
+  ];
+  const ids = orderedIds.slice(0, count);
+  if (count > 0 && activeCharacterId && !ids.includes(activeCharacterId)) {
+    if (!findCharacter(activeCharacterId)) throw new Error(`Personnage inconnu : ${activeCharacterId}`);
+    ids[ids.length - 1] = activeCharacterId;
   }
-  if (mode === 10) {
-    const list = Array.from(TEN_PLAYERS_LARA_IDS);
-    if (activeCharacterId && !isExtraCharacter(activeCharacterId) && !list.includes(activeCharacterId)) {
-      list[list.length - 1] = activeCharacterId;
-    }
-    return list;
-  }
-  return NON_EXTRA_CHARACTERS.map(c => c.id);
+  return ids;
+}
+
+/** Sélection des personnages principaux pour les contrôles du panneau latéral. */
+export function getDefaultNonExtraIds(mode: LaraCountMode = 15, activeCharacterId?: string): string[] {
+  return getDefaultSceneCharacterIds(mode, activeCharacterId).filter(id => !isExtraCharacter(id));
 }
 
 /** Groupe des 4 personnages Redmans */
@@ -259,27 +250,7 @@ export function isCharacterVisibleInMode(
     return activeMainIds instanceof Set ? activeMainIds.has(id) : activeMainIds.includes(id);
   }
 
-  // Fallback si activeMainIds n'est pas fourni (comportement par défaut)
-  if (mode === 1) {
-    // Mode 1 (Xbot seul) : Strictement Xbot uniquement (aucun modèle Lara n'est instancié/chargé)
-    return id === 'xbot';
-  }
-  if (mode === 2) {
-    if (id === 'xbot') return true;
-    if (activeCharacterId && activeCharacterId !== 'xbot') {
-      return id === activeCharacterId;
-    }
-    return id === 'native';
-  }
-  if (mode === 4) {
-    if (activeCharacterId && id === activeCharacterId) return true;
-    return FOUR_PLAYERS_LARA_IDS.has(id);
-  }
-  if (mode === 10) {
-    return getDefaultNonExtraIds(mode, activeCharacterId).includes(id);
-  }
-  // mode === 15: all characters
-  return true;
+  return getDefaultNonExtraIds(mode, activeCharacterId).includes(id);
 }
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */

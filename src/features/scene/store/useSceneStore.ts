@@ -14,7 +14,8 @@ import {
   isExtraCharacter,
   EXTRA_CHARACTERS,
   NON_EXTRA_CHARACTERS,
-  getDefaultNonExtraIds,
+  getDefaultSceneCharacterIds,
+  CHARACTERS,
   parseUrlActiveCharacter,
   updateUrlActiveCharacter,
 } from '@features/scene/characterConfig';
@@ -30,19 +31,13 @@ function parseUrlNpcCount(): LaraCountMode {
     const raw = params.get('npcNb') ?? params.get('npcs') ?? params.get('laraCount') ?? params.get('characters') ?? params.get('count') ?? params.get('npcCount');
     if (raw !== null) {
       const lower = raw.trim().toLowerCase();
-      if (lower === '15' || lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return 15;
+      if (lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return CHARACTERS.length;
       if (lower === '10' || lower === 'eco') return 10;
       if (lower === '4' || lower === 'quad') return 4;
       if (lower === '2' || lower === 'duo' || lower === 'min') return 2;
       if (lower === '1' || lower === 'solo') return 1;
-      const num = parseInt(lower, 10);
-      if (!isNaN(num)) {
-        if (num >= 15) return 15;
-        if (num >= 10) return 10;
-        if (num >= 4) return 4;
-        if (num >= 2) return 2;
-        if (num >= 1) return 1;
-      }
+      const num = Number(lower);
+      if (lower !== '' && Number.isInteger(num) && num >= 0 && num <= CHARACTERS.length) return num;
     }
   } catch {}
   return 4;
@@ -275,20 +270,12 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
 const initialActiveChar = parseUrlActiveCharacter();
 const initialActiveCharacterId = initialActiveChar ? initialActiveChar.id : (initialLayers.laraCount === 1 ? 'xbot' : 'native');
 
-let initialActiveExtraIds: string[] = [];
-if (initialActiveChar && isExtraCharacter(initialActiveChar.id)) {
-  initialActiveExtraIds = [initialActiveChar.id];
-  initialLayers.extraCharacters = true;
-  if (initialActiveChar.id in initialExtraStates) {
-    initialExtraStates[initialActiveChar.id] = true;
-  }
-}
-
-let initialActiveMainIds = getDefaultNonExtraIds(initialLayers.laraCount, initialActiveCharacterId);
-if (initialActiveChar && !isExtraCharacter(initialActiveChar.id)) {
-  if (!initialActiveMainIds.includes(initialActiveChar.id)) {
-    initialActiveMainIds = [initialActiveChar.id, ...initialActiveMainIds];
-  }
+const initialCharacterIds = getDefaultSceneCharacterIds(initialLayers.laraCount ?? 4, initialActiveCharacterId);
+const initialActiveMainIds = initialCharacterIds.filter(id => !isExtraCharacter(id));
+let initialActiveExtraIds = initialCharacterIds.filter(isExtraCharacter);
+initialLayers.extraCharacters = initialActiveExtraIds.length > 0;
+if (initialActiveChar && isExtraCharacter(initialActiveChar.id) && initialActiveChar.id in initialExtraStates) {
+  initialExtraStates[initialActiveChar.id] = true;
 }
 
 const layerOverrides = parseUrlLayerOverrides();
@@ -312,6 +299,8 @@ if (layerOverrides.extraCharacters) {
 if (initialLayers.mirrorsHD) {
   cameraState.mirrorsHD = true;
 }
+
+if (initialLayers.laraCount === 0) initialLayers.character = false;
 
 if (!initialLayers.character) {
   cameraState.characterHidden = true;
@@ -382,20 +371,25 @@ export const useSceneStore = create<SceneStore>((set) => ({
     cameraState.invalidate?.();
   },
   setLaraCount: (count) => {
+    const activeCharacterId = count === 1 ? 'xbot' : useSceneStore.getState().activeCharacterId;
+    const ids = getDefaultSceneCharacterIds(count, activeCharacterId);
+    const activeMainIds = ids.filter(id => !isExtraCharacter(id));
+    const activeExtraIds = ids.filter(isExtraCharacter);
     updateUrlNpcCount(count);
-    if (count === 0) {
-      cameraState.characterHidden = true;
-      set((state) => ({
-        layers: { ...state.layers, character: false }
-      }));
-      cameraState.invalidate?.();
-      return;
-    }
-    cameraState.characterHidden = false;
+    // La sélection numérique encode déjà les extras ; retirer leur ancien paramètre global.
+    updateUrlLayer('extraCharacters', false);
+    cameraState.characterHidden = count === 0;
     set((state) => ({
-      activeCharacterId: count === 1 ? 'xbot' : state.activeCharacterId,
-      activeMainIds: getDefaultNonExtraIds(count, count === 1 ? 'xbot' : state.activeCharacterId),
-      layers: { ...state.layers, character: true, laraCount: count, showAllLaraStyles: true }
+      activeCharacterId,
+      activeMainIds,
+      activeExtraIds,
+      layers: {
+        ...state.layers,
+        character: count > 0,
+        laraCount: count,
+        extraCharacters: activeExtraIds.length > 0,
+        showAllLaraStyles: true,
+      },
     }));
     cameraState.invalidate?.();
   },

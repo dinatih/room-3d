@@ -3,7 +3,7 @@ import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import type { ReactNode } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView } from './sidepanel/types';
-import { getActiveSceneCharactersCount, getLaraGridCameraView } from './character/laraGridUtils';
+import { getLaraGridCameraView } from './character/laraGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
@@ -77,9 +77,6 @@ export function ViewControlBar({
   const setHdri = useSceneStore(s => s.setHdri);
   const mirrorsHD = useSceneStore(s => s.layers.mirrorsHD);
   const toggleLayer = useSceneStore(s => s.toggleLayer);
-  const characterCount = useSceneStore(s =>
-    s.layers.character && s.layers.showAllLaraStyles ? getActiveSceneCharactersCount(s) : 0
-  );
 
   if (hidden) return null;
 
@@ -221,7 +218,7 @@ export function ViewControlBar({
             onClick={() => dispatchCameraMode('toggle-npc-grid')}
             title="Afficher ou quitter la grille des PNJ (G)"
             aria-pressed={npcGridActive}
-          ><i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" /><span className="fw-semibold">{characterCount} NPCs</span></button>
+          ><i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" /><span className="fw-semibold">NPCs</span></button>
         </div>
       )}
 

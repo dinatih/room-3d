@@ -1,13 +1,13 @@
 import { useId, useRef } from 'react';
-import { LARA_COUNT_MODES } from './characterConfig';
+import { CHARACTERS } from './characterConfig';
 import { useSceneStore } from './store/useSceneStore';
+import { getActiveSceneCharactersCount } from './character/laraGridUtils';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 
 export function CharacterCountSelect() {
   const id = useId();
   const popoverRef = useRef<HTMLDivElement>(null);
-  const characterVisible = useSceneStore(s => s.layers.character);
-  const count = useSceneStore(s => s.layers.laraCount ?? 4);
+  const count = useSceneStore(s => s.layers.character && s.layers.showAllLaraStyles ? getActiveSceneCharactersCount(s) : 0);
   const setLaraCount = useSceneStore(s => s.setLaraCount);
 
   return (
@@ -26,7 +26,7 @@ export function CharacterCountSelect() {
         }}
       >
         <i className="bi bi-people-fill" aria-hidden="true" />
-        <span>{characterVisible ? count : 0}</span>
+        <span>{count === CHARACTERS.length ? 'All' : count}</span>
         <i className="bi bi-chevron-down" aria-hidden="true" />
       </button>
       <div
@@ -41,21 +41,21 @@ export function CharacterCountSelect() {
         <div className="small fw-semibold mb-1">
           Nombre de personnages
         </div>
-        <div className="d-flex flex-column gap-1" role="group" aria-label="Choisir le nombre de personnages">
-          {([0, ...LARA_COUNT_MODES] as const).map(value => {
-            const selected = value === (characterVisible ? count : 0);
+        <div className="view-control-bar__character-options d-grid gap-1" role="group" aria-label="Choisir le nombre de personnages">
+          {Array.from({ length: CHARACTERS.length + 1 }, (_, index) => index).map(value => {
+            const selected = value === count;
             return (
               <button
                 key={value}
                 type="button"
-                className={`btn btn-sm text-start ${selected ? 'btn-primary' : 'btn-outline-secondary'}`}
+                className={`btn btn-sm ${selected ? 'btn-primary' : 'btn-outline-secondary'}`}
                 aria-pressed={selected}
                 onClick={() => {
                   setLaraCount(value);
                   popoverRef.current!.hidePopover();
                 }}
               >
-                {value}{value === 0 ? ' — Masquer les personnages' : value === 1 ? ' — Xbot seul' : value === 2 ? ' — Duo' : value === 10 ? ' — Éco' : value === 15 ? ' — Tous' : ''}
+                {value === CHARACTERS.length ? 'All' : value}
               </button>
             );
           })}
