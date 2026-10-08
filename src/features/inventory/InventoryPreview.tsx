@@ -200,6 +200,17 @@ function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, 
   );
 }
 
+function PreviewEnvironment({ showGrid }: { showGrid: boolean }) {
+  const neutralBackground = useMemo(() => new THREE.Color('#d2d2d2'), []);
+
+  useFrame(({ scene }) => {
+    // Le fond panoramique ne doit pas être coupé par le far de la caméra de l'objet.
+    scene.background = showGrid ? neutralBackground : scene.environment ?? neutralBackground;
+  });
+
+  return <SkySphere envOnly />;
+}
+
 function FitCamera({ target = [0, 0, 0], boundsRadius }: { target?: [number, number, number]; boundsRadius?: number }) {
   const { camera } = useThree();
   useLayoutEffect(() => {
@@ -841,7 +852,7 @@ export function InventoryPreview({
           )}
           {showing3D ? (
             <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
-              <SkySphere envOnly={showGrid} />
+              <PreviewEnvironment showGrid={showGrid} />
               <ambientLight intensity={0.7} />
               <directionalLight position={[150, 250, 150]} intensity={1.0} />
               <directionalLight position={[-100, 50, -100]} intensity={0.4} color="#aabbff" />
@@ -863,7 +874,7 @@ export function InventoryPreview({
                   )}
                 </>
               )}
-              {showGrid && <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />}
+              <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor={showGrid ? '#777777' : '#a0a0a0'} sectionColor={showGrid ? '#444444' : '#888888'} cellThickness={showGrid ? 0.5 : 0.25} sectionThickness={showGrid ? 1 : 0.4} cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={previewActionStates} showDims={showDims} wireframe={wireframe} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}
@@ -1169,8 +1180,8 @@ export function InventoryPreview({
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} ${showGrid ? 'btn-primary' : 'btn-outline-secondary'}`}
           onClick={() => setShowGrid(v => !v)}
-          title={showGrid ? 'Masquer la grille et afficher le ciel' : 'Afficher la grille'}
-          aria-label={showGrid ? 'Masquer la grille et afficher le ciel' : 'Afficher la grille'}
+          title={showGrid ? 'Afficher le ciel et la grille discrète' : 'Afficher la grille sur fond neutre'}
+          aria-label={showGrid ? 'Afficher le ciel et la grille discrète' : 'Afficher la grille sur fond neutre'}
           aria-pressed={showGrid}
         >
           <i className="bi bi-grid-3x3" aria-hidden="true" />
