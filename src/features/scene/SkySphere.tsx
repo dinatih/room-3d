@@ -76,7 +76,7 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
     };
   }, [hdri, url, scene, invalidate]);
 
-  if (envOnly) return currentHdri.includes('night') ? <SpaceBackdrop /> : null;
+  if (envOnly) return null;
 
   return (
     <CategoryLayerGroup layer={LAYER_ENVIRONMENT}>
