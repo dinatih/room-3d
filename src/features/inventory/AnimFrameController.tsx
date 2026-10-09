@@ -71,7 +71,7 @@ export function AnimFrameController({
   const [isEditingFrame, setIsEditingFrame] = useState<boolean>(false);
   const [showMeta, setShowMeta] = useState<boolean>(false);
   const [showAnimSelector, setShowAnimSelector] = useState<boolean>(false);
-  const [selectorLeft, setSelectorLeft] = useState(0);
+  const [selectorPosition, setSelectorPosition] = useState({ left: 0, bottom: 0 });
   const controllerRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLInputElement>(null);
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -334,8 +334,13 @@ export function AnimFrameController({
     const selector = selectorRef.current!;
     const badge = badgeRef.current!;
     const alignSelector = () => {
-      const buttonLeft = badge.getBoundingClientRect().left - controller.getBoundingClientRect().left - controller.clientLeft;
-      setSelectorLeft(Math.max(0, Math.min(buttonLeft, controller.clientWidth - selector.offsetWidth)));
+      const buttonRect = badge.getBoundingClientRect();
+      const controllerRect = controller.getBoundingClientRect();
+      const buttonLeft = buttonRect.left - controllerRect.left - controller.clientLeft;
+      setSelectorPosition({
+        left: Math.max(0, Math.min(buttonLeft, controller.clientWidth - selector.offsetWidth)),
+        bottom: controller.clientHeight - (buttonRect.top - controllerRect.top - controller.clientTop),
+      });
     };
     alignSelector();
     const observer = new ResizeObserver(alignSelector);
@@ -363,10 +368,11 @@ export function AnimFrameController({
       {showAnimSelector && (
         <div
           ref={selectorRef}
-          className="position-absolute bottom-100 mb-2 glass-card rounded-3 shadow-lg overflow-hidden d-flex flex-column w-100"
+          className="view-control-bar__character-popover glass-card rounded-2 border shadow-lg d-flex flex-column"
           style={{
-            left: selectorLeft,
-            maxWidth: '440px',
+            position: 'absolute',
+            ...selectorPosition,
+            maxWidth: '100%',
             zIndex: 1000,
           }}
           onClick={e => e.stopPropagation()}

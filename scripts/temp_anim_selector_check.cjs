@@ -25,6 +25,7 @@ async function main() {
       css.rel = 'stylesheet';
       css.href = '/node_modules/bootstrap/dist/css/bootstrap.min.css';
       document.head.append(css);
+      await import('/src/features/scene/ViewControlBar.scss');
       const layout = document.createElement('style');
       layout.textContent = '.anim-frame-controller__controls { display: flex; }';
       document.head.append(layout);
@@ -50,10 +51,13 @@ async function main() {
           expectedLeft: Math.max(container.left + controller.clientLeft, Math.min(button.left, container.left + controller.clientLeft + controller.clientWidth - box.width)),
           right: box.right,
           controllerRight: container.right,
+          bottom: box.bottom,
+          buttonTop: button.top,
         };
       });
       assert(Math.abs(placement.left - placement.expectedLeft) < 1, JSON.stringify(placement));
       assert(placement.right <= placement.controllerRight + 1, JSON.stringify(placement));
+      assert(Math.abs(placement.bottom - placement.buttonTop) < 1, JSON.stringify(placement));
       await page.click('button[aria-expanded]');
       await page.waitForSelector('input[type="checkbox"]');
       const bounds = await page.evaluate(() => {

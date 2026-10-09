@@ -202,8 +202,8 @@ export function CharacterAnimSelector({
     >
       {/* En-tête */}
       {(title || onClose) && (
-        <div className="d-flex flex-shrink-0 align-items-center justify-content-between px-2 py-1.5 border-bottom bg-light">
-          {title && <span className="fw-bold small text-truncate">🎬 {title}</span>}
+        <div className="d-flex flex-shrink-0 align-items-center justify-content-between p-2 border-bottom">
+          {title && <span className="fw-semibold small text-truncate">🎬 {title}</span>}
           {onClose && (
             <button
               type="button"
@@ -217,7 +217,7 @@ export function CharacterAnimSelector({
       )}
 
       {/* Contrôles et filtres */}
-      <div className="p-2 border-bottom shadow-sm flex-shrink-0" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)' }}>
+      <div className="p-2 border-bottom flex-shrink-0">
         {/* Recherche + Bouton Aléatoire */}
         <div className="input-group input-group-sm mb-1.5">
           <span className="input-group-text bg-light text-muted border-end-0">🔍</span>
@@ -253,7 +253,7 @@ export function CharacterAnimSelector({
             <button
               type="button"
               className={`btn btn-sm w-100 text-start d-flex justify-content-between align-items-center py-1 px-2 ${
-                selectedCategories.length > 0 ? 'btn-danger bg-danger text-white border-danger shadow-sm' : 'btn-outline-secondary bg-white text-dark border'
+                selectedCategories.length > 0 ? 'btn-primary' : 'btn-outline-secondary'
               }`}
               style={{ fontSize: isMobile ? '12px' : '11px', borderRadius: '4px' }}
               onClick={() => setCategoryDropdownOpen(v => !v)}
@@ -290,7 +290,7 @@ export function CharacterAnimSelector({
 
       {categoryDropdownOpen && (
         <div
-          className="p-2 bg-white overflow-auto flex-grow-1"
+          className="p-2 overflow-auto flex-grow-1"
           style={{ maxHeight: listMaxHeight, minHeight: 0 }}
         >
           <div className="d-flex justify-content-between align-items-center mb-1.5 pb-1 border-bottom">
@@ -304,7 +304,7 @@ export function CharacterAnimSelector({
             </button>
             <button
               type="button"
-              className="btn btn-link btn-sm p-0 text-decoration-none text-danger fw-semibold"
+              className="btn btn-link btn-sm p-0 text-decoration-none text-secondary fw-semibold"
               style={{ fontSize: '10.5px' }}
               onClick={() => updateCategories([])}
             >
@@ -319,7 +319,7 @@ export function CharacterAnimSelector({
                 <label
                   key={cat.key}
                   className={`d-flex align-items-center justify-content-between px-2 py-1 rounded cursor-pointer mb-0 ${
-                    isChecked ? 'bg-danger-subtle text-danger-emphasis fw-semibold' : 'hover-bg-light text-dark'
+                    isChecked ? 'bg-primary-subtle text-primary-emphasis fw-semibold' : 'hover-bg-light text-dark'
                   }`}
                   style={{ fontSize: '11px', cursor: 'pointer', userSelect: 'none' }}
                 >
@@ -334,7 +334,7 @@ export function CharacterAnimSelector({
                     />
                     <span>{cat.icon} {cat.label}</span>
                   </span>
-                  <span className={`badge ${isChecked ? 'bg-danger text-white' : 'bg-secondary-subtle text-secondary-emphasis'}`} style={{ fontSize: '9px' }}>
+                  <span className={`badge ${isChecked ? 'bg-primary text-white' : 'bg-secondary-subtle text-secondary-emphasis'}`} style={{ fontSize: '9px' }}>
                     {CATEGORY_COUNTS[cat.key] || 0}
                   </span>
                 </label>
