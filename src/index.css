@@ -308,26 +308,6 @@ button, input, select, textarea {
   min-height: 0 !important;
   overflow: hidden !important;
 }
-.app-console-character-popover {
-  position: fixed;
-  inset: auto;
-  margin: 0;
-  padding: 0;
-  width: 22rem;
-  max-width: calc(100vw - 1rem);
-  overflow-y: auto;
-}
-.app-console-character-popover:not(:popover-open) {
-  display: none;
-}
-.app-console .app-console-character-trigger {
-  font-size: inherit;
-  border-width: 1.5px;
-  color: var(--bs-dark);
-}
-.app-console .app-console-character-trigger:focus-visible {
-  box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--pnj-color, #6c757d) 25%, transparent) !important;
-}
 
 .ui-fade-overlay {
   transition: opacity 0.3s ease;

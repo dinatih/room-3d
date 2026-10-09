@@ -9,6 +9,7 @@ import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
 import { CharacterCountSelect } from './CharacterCountSelect';
+import { CharacterSelect } from './CharacterSelect';
 import { cameraState } from './cameraState';
 
 export interface ViewControlBarProps {
@@ -193,6 +194,7 @@ export function ViewControlBar({
               <i className="bi bi-shuffle" aria-hidden="true" />
               <i className="bi bi-person-standing-dress" aria-hidden="true" />
             </button>
+            <CharacterSelect hideUI={hideUI} />
             <button
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}

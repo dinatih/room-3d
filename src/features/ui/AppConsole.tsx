@@ -5,8 +5,8 @@
  * Utilise le composant Group (glass-card accordion) pour l'harmonie visuelle
  * avec les autres panneaux (SidePanel, Minimap, DevTools).
  */
-import { useState, useEffect, useLayoutEffect, useRef, useId } from 'react';
-import { CHARACTERS, findCharacter, npcLabel, isCharacterVisibleInMode } from '@features/scene/characterConfig';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { CHARACTERS, findCharacter } from '@features/scene/characterConfig';
 import { chooseRandomCharacter } from '@features/scene/store/randomCharacter';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -59,16 +59,7 @@ function formatTime(ts: number): string {
 export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolean; hideUI?: boolean }) {
   const isMobile = useIsMobile();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
-  const layers = useSceneStore(state => state.layers);
-  const activeMainIds = useSceneStore(state => state.activeMainIds);
-  const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeChar = findCharacter(activeCharacterId);
-  const visibleCharacterIds = new Set(CHARACTERS.filter(c =>
-    layers.character && layers.showAllLaraStyles && isCharacterVisibleInMode(
-      c.id, layers.laraCount ?? 4, activeCharacterId, layers.extraCharacters ?? false,
-      activeExtraIds, activeMainIds,
-    )
-  ).map(c => c.id));
 
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [open, setOpen] = useState(false);
@@ -78,34 +69,6 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const logAreaRef = useRef<HTMLDivElement>(null);
   const [bottomDockHeight, setBottomDockHeight] = useState(0);
   const [isMaximized, setIsMaximized] = useState(false);
-  const characterPopoverId = useId();
-  const characterPopoverRef = useRef<HTMLDivElement>(null);
-  const [characterPopoverOpen, setCharacterPopoverOpen] = useState(false);
-
-  useEffect(() => {
-    const popover = characterPopoverRef.current;
-    if (!popover) return;
-    const onToggle = () => {
-      const isOpen = popover.matches(':popover-open');
-      setCharacterPopoverOpen(isOpen);
-      if (isOpen) popover.querySelector<HTMLButtonElement>('[aria-pressed="true"]')!.focus();
-    };
-    const closePopover = () => popover.hidePopover();
-    popover.addEventListener('toggle', onToggle);
-    window.addEventListener('resize', closePopover);
-    return () => {
-      popover.removeEventListener('toggle', onToggle);
-      window.removeEventListener('resize', closePopover);
-    };
-  }, [hidden]);
-
-  useEffect(() => {
-    if (hidden || hideUI) {
-      characterPopoverRef.current?.hidePopover();
-      setCharacterPopoverOpen(false);
-    }
-  }, [hidden, hideUI]);
-
   // Écoute des CustomEvents 'app-log'
   useEffect(() => {
     const handler = (e: Event) => {
@@ -208,28 +171,6 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           aria-label="Choisir un PNJ aléatoire"
         >
           <i className="bi bi-shuffle" aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          className="btn btn-sm btn-outline-secondary py-0 px-2 d-flex align-items-center gap-2 flex-shrink-0 app-console-character-trigger"
-          style={{ borderColor: pnjColor, ['--pnj-color' as string]: pnjColor }}
-          {...{ popovertarget: characterPopoverId }}
-          aria-haspopup="dialog"
-          aria-expanded={characterPopoverOpen}
-          aria-controls={characterPopoverId}
-          onClick={(e) => {
-            e.stopPropagation();
-            const rect = e.currentTarget.getBoundingClientRect();
-            const popover = characterPopoverRef.current!;
-            popover.style.top = `${rect.bottom + 8}px`;
-            popover.style.right = `${Math.max(8, window.innerWidth - rect.right)}px`;
-            popover.style.maxHeight = `${window.innerHeight - rect.bottom - 16}px`;
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          title="Changer le PNJ sélectionné"
-        >
-          <span>{activeChar ? npcLabel(activeChar) : activeCharacterId}</span>
-          <i className="bi bi-chevron-down" aria-hidden="true" />
         </button>
 
         {open && (
@@ -370,55 +311,6 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           })}
         </div>
       </Group>
-      <div
-        ref={characterPopoverRef}
-        id={characterPopoverId}
-        {...{ popover: 'auto' }}
-        role="dialog"
-        aria-labelledby={`${characterPopoverId}-title`}
-        className="popover app-console-character-popover glass-card shadow-lg"
-        onClick={e => e.stopPropagation()}
-        onPointerDown={e => e.stopPropagation()}
-        onKeyDown={e => e.stopPropagation()}
-      >
-        <h2 id={`${characterPopoverId}-title`} className="popover-header bg-transparent small fw-semibold d-flex align-items-center gap-2">
-          <i className="bi bi-people" aria-hidden="true" />
-          Choisir un PNJ
-        </h2>
-        <div className="popover-body p-2">
-          <div className="small text-body-secondary d-flex align-items-center gap-1 mb-2">
-            <i className="bi bi-eye-fill text-success" aria-hidden="true" />
-            Affiché dans la scène
-          </div>
-          <div className="row row-cols-2 g-1">
-            {CHARACTERS.map(c => (
-              <div key={c.id} className="col">
-                <button
-                  type="button"
-                  className={`btn btn-sm w-100 d-flex align-items-center justify-content-between gap-1 text-start ${c.id === activeCharacterId ? 'btn-primary' : 'btn-light'}`}
-                  aria-pressed={c.id === activeCharacterId}
-                  title={visibleCharacterIds.has(c.id) ? 'Affiché dans la scène' : 'Non affiché dans la scène'}
-                  onClick={() => {
-                    useSceneStore.getState().setActiveCharacterId(c.id);
-                    characterPopoverRef.current!.hidePopover();
-                  }}
-                >
-                  <span>{npcLabel(c)}</span>
-                  <span className="d-flex align-items-center gap-1 flex-shrink-0">
-                    {visibleCharacterIds.has(c.id) && (
-                      <>
-                        <i className={`bi bi-eye-fill ${c.id === activeCharacterId ? '' : 'text-success'}`} aria-hidden="true" />
-                        <span className="visually-hidden">Affiché dans la scène</span>
-                      </>
-                    )}
-                    {c.id === activeCharacterId && <i className="bi bi-check-lg" aria-hidden="true" />}
-                  </span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
