@@ -10,6 +10,7 @@ export interface PanelPopoverProps {
   hideUI?: boolean;
   active?: boolean;
   manual?: boolean;
+  placementMode?: 'default' | 'desktop-right' | 'desktop-bottom-left';
   children: React.ReactNode;
 }
 
@@ -21,6 +22,7 @@ export function PanelPopover({
   hideUI = false,
   active = false,
   manual = false,
+  placementMode = 'default',
   children,
 }: PanelPopoverProps) {
   const id = useId();
@@ -32,14 +34,38 @@ export function PanelPopover({
     const trigger = triggerRef.current;
     const popover = popoverRef.current;
     if (!trigger || !popover) return;
+    const isDesktop = window.innerWidth >= 768;
+
+    if (isDesktop && placementMode === 'desktop-right') {
+      popover.style.top = '16px';
+      popover.style.bottom = 'auto';
+      popover.style.left = 'auto';
+      popover.style.right = '16px';
+      popover.style.maxHeight = 'calc(100vh - 32px)';
+      return;
+    }
+
+    if (isDesktop && placementMode === 'desktop-bottom-left') {
+      const menuDock = trigger.closest('.view-control-bar-dock') || trigger.closest('.view-control-bar');
+      const dockRect = menuDock ? menuDock.getBoundingClientRect() : trigger.getBoundingClientRect();
+      const popoverWidth = parseFloat(getComputedStyle(popover).width) || 352;
+      popover.style.top = 'auto';
+      popover.style.bottom = `${Math.max(16, window.innerHeight - dockRect.bottom)}px`;
+      popover.style.right = `${Math.min(window.innerWidth - popoverWidth - 16, Math.max(16, window.innerWidth - dockRect.left + 12))}px`;
+      popover.style.left = 'auto';
+      popover.style.maxHeight = 'calc(100vh - 32px)';
+      return;
+    }
+
     const rect = trigger.getBoundingClientRect();
     const popoverWidth = parseFloat(getComputedStyle(popover).width);
     const above = rect.top > window.innerHeight / 2;
     popover.style.top = above ? 'auto' : `${rect.bottom + 8}px`;
     popover.style.bottom = above ? `${window.innerHeight - rect.top + 8}px` : 'auto';
+    popover.style.left = 'auto';
     popover.style.right = `${Math.min(Math.max(8, window.innerWidth - rect.right), window.innerWidth - popoverWidth - 8)}px`;
     popover.style.maxHeight = `${(above ? rect.top : window.innerHeight - rect.bottom) - 16}px`;
-  }, []);
+  }, [placementMode]);
 
   useEffect(() => {
     const popover = popoverRef.current;

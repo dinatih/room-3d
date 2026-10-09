@@ -378,6 +378,7 @@ export function ToolbarPanelsRow({
             title="Plan"
             hideUI={hideUI}
             manual
+            placementMode="desktop-bottom-left"
           >
             <Minimap embedded showGroup={false} />
           </PanelPopover>
@@ -388,6 +389,7 @@ export function ToolbarPanelsRow({
             title="Performances & Stats"
             hideUI={hideUI}
             manual
+            placementMode="desktop-right"
           >
             <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
           </PanelPopover>
