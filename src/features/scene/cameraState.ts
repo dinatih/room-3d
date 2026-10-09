@@ -12,6 +12,9 @@ const initialChar = parseUrlActiveCharacter() || CHARACTERS[0];
 
 export const cameraState = {
   mode: parseUrlCameraMode() as CameraMode,
+  /** FPV d'observation : l'oiseau conserve son IA, sans changer le personnage actif. */
+  robinFPV: false,
+  robinView: null as { eyes: { x: number; y: number; z: number }; forward: { x: number; y: number; z: number } } | null,
   /** Vue placée dans les yeux : tête masquée en caméra principale, visible dans les miroirs. */
   isFirstPersonView(): boolean {
     return this.mode === 'fpv' || this.isXR || (this.mode === 'plane' && this.planeViewMode === 'character');

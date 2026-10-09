@@ -144,6 +144,7 @@ const ACTIONS: Record<string, ActionDef> = {
   },
   'shiba-replay':      { btnLabel: 'Rejouer',           toggleKey: 'shiba-replay'      },
   'robin-bird-replay': { btnLabel: 'Rejouer',           toggleKey: 'robin-bird-replay' },
+  'robin-bird-fpv': { btnLabel: 'Vue FPV', icon: 'bi-eye', toggleKey: 'robin-bird-fpv' },
   'nestMini':          { btnLabel: 'Ok Google',         toggleKey: 'nestMini'          },
   'tv':                { btnLabel: 'Allumer / Éteindre', toggleKey: 'tvOn'             },
   'bin':               { btnLabel: 'Ouvrir / Fermer',   toggleKey: 'bin-toggle'       },

@@ -63,6 +63,15 @@ export function useCameraFrameUpdate({
 
     cameraState.camX = camera.position.x;
     cameraState.camZ = camera.position.z;
+    if (cameraState.robinFPV && modeRef.current === 'fpv') {
+      // Vue embarquée passive : ne pas transmettre les contrôles au personnage humain.
+      cameraState.isFollowing = false;
+      cameraState.isMoving = false;
+      updateFollowLook();
+      cameraState.onUpdate?.();
+      invalidate();
+      return;
+    }
     cameraState.isFollowing = modeRef.current === 'follow' || modeRef.current === 'fpv';
     cameraState.isMoving = keys.current.has('ArrowUp') || keys.current.has('ArrowDown');
 

@@ -9,6 +9,7 @@ import { glbLocalBBox } from '@features/scene/glbUtils';
 import { appLog } from '@features/ui/AppConsole';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { cameraState } from '@features/scene/cameraState';
+import { LAYER_WALKER_DETAIL } from '@config';
 import { chooseBirdPerch, chooseBirdForagePerch, birdGroundStep, resolveBirdPerch, RobinFootContact, ROBIN_HEIGHT, type BirdPerch, type BirdFootPose } from '../birdPerches';
 
 const GLB_PATH = '/characters/robin/robin.glb';
@@ -45,6 +46,10 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
   const currentAction = useRef<THREE.AnimationAction | null>(null);
   const headRef = useRef<THREE.Object3D | null>(null);
   const beakRef = useRef<THREE.Object3D | null>(null);
+  const eyesRef = useRef<THREE.Object3D[]>([]);
+  const eyePos = useRef(new THREE.Vector3());
+  const otherEyePos = useRef(new THREE.Vector3());
+  const hiddenMeshes = useRef(new Map<THREE.Mesh, number>());
   const headPos = useRef(new THREE.Vector3());
   const beakPos = useRef(new THREE.Vector3());
   const sourceBasis = useRef(new THREE.Matrix4());
@@ -149,6 +154,11 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     headRef.current = scene.getObjectByName('Head_011') ?? null;
     beakRef.current = scene.getObjectByName('Beak_012') ?? null;
     if (!headRef.current || !beakRef.current) throw new Error('Robin : os de tête/bec manquants');
+    eyesRef.current = ['L_Eye_016', 'R_Eye_024'].map(name => {
+      const eye = scene.getObjectByName(name);
+      if (!eye) throw new Error(`Robin : os d'œil manquant (${name})`);
+      return eye;
+    });
 
     const box = glbLocalBBox(scene);
     const size = box.getSize(new THREE.Vector3());
@@ -219,7 +229,13 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     invalidate();
 
     return () => {
-      if (!isPreview) delete cameraState.positions['robin'];
+      if (!isPreview) {
+        delete cameraState.positions['robin'];
+        cameraState.robinView = null;
+        cameraState.robinFPV = false;
+      }
+      hiddenMeshes.current.forEach((mask, mesh) => { mesh.layers.mask = mask; });
+      hiddenMeshes.current.clear();
       mixerRef.current?.stopAllAction();
       mixerRef.current?.uncacheRoot(scene);
       currentAction.current = null;
@@ -341,7 +357,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       const forage = ai.forage!;
       forage.remaining -= delta;
       forage.elapsed = Math.min(forage.elapsed + delta, forage.duration);
-      const near = _state.camera.position.distanceTo(model.position) < feet.radius * 3;
+      const near = !cameraState.robinFPV && _state.camera.position.distanceTo(model.position) < feet.radius * 3;
       if (near && !cameraWasNear.current && forage.phase !== 'hop') startForagePhase('startled');
       cameraWasNear.current = near && forage.phase !== 'hop';
       if (forage.step) {
@@ -395,6 +411,25 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
         sourceRotation.current.setFromRotationMatrix(sourceBasis.current).invert();
         model.quaternion.setFromRotationMatrix(targetBasis.current).multiply(sourceRotation.current);
       }
+    }
+
+    eyesRef.current[0].getWorldPosition(eyePos.current);
+    eyesRef.current[1].getWorldPosition(otherEyePos.current);
+    eyePos.current.add(otherEyePos.current).multiplyScalar(0.5);
+    headRef.current!.getWorldPosition(headPos.current);
+    beakRef.current!.getWorldPosition(beakPos.current);
+    beakPos.current.sub(headPos.current).normalize();
+    cameraState.robinView = { eyes: { ...eyePos.current }, forward: { ...beakPos.current } };
+    if (cameraState.robinFPV && cameraState.mode === 'fpv') {
+      scene.traverse(object => {
+        const mesh = object as THREE.Mesh;
+        if (!mesh.isMesh || hiddenMeshes.current.has(mesh)) return;
+        hiddenMeshes.current.set(mesh, mesh.layers.mask);
+        mesh.layers.set(LAYER_WALKER_DETAIL);
+      });
+    } else if (hiddenMeshes.current.size) {
+      hiddenMeshes.current.forEach((mask, mesh) => { mesh.layers.mask = mask; });
+      hiddenMeshes.current.clear();
     }
 
     cameraState.positions['robin'] = {

@@ -116,7 +116,7 @@ export function GardenAnimals() {
         <Goldfish species="tosakin" />
         <BathtubStarfish />
       </group>
-      <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
+      <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actions: ['robin-bird-replay', 'robin-bird-fpv'] } }}>
         <RobinBird />
       </group>
       <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Shiba Inu', hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>

@@ -200,6 +200,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
     modeRef.current = m;
     cameraState.mode = m;
+    if (m !== 'fpv') cameraState.robinFPV = false;
     setMode(m);
 
     if (m === 'orbit' && useSceneStore.getState().layers.characterGrid && ctrlRef.current) {
@@ -247,6 +248,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (!ctrl) return;
 
     const isFPV = modeRef.current === 'fpv';
+    if (isFPV && cameraState.robinFPV && cameraState.robinView) {
+      const { eyes, forward } = cameraState.robinView;
+      camera.position.set(eyes.x, eyes.y, eyes.z);
+      camera.up.set(0, 1, 0);
+      ctrl.target.set(eyes.x + forward.x, eyes.y + forward.y, eyes.z + forward.z);
+      ctrl.update();
+      return;
+    }
     const isBobbingEnabled = useSceneStore.getState().layers.fpvHeadBobbing ?? false;
 
     // Calcul du déplacement réel pour cadencer le bobbing
@@ -432,8 +441,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       projectionBeforeFpv.current = null;
     }
 
-    followPos.current = { x, y: activeFollowH(), z };
-    if (cameraState.followYaw !== undefined) {
+    if (!cameraState.robinFPV || followMode !== 'fpv') {
+      followPos.current = { x, y: activeFollowH(), z };
       followYaw.current = cameraState.followYaw;
     }
     if (followMode === 'follow') {
@@ -469,7 +478,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         ctrlRef.current.update();
       }
     } else {
-      followPitch.current = FPV_DEFAULT_PITCH;
+      if (!cameraState.robinFPV) followPitch.current = FPV_DEFAULT_PITCH;
       const perspCam = defaultPerspCamRef.current;
       set({ camera: perspCam });
       if (ctrlRef.current) ctrlRef.current.object = perspCam;
@@ -502,6 +511,19 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     changeMode(followMode);
     invalidate();
   }, [changeMode, invalidate, set]);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      if ((event as CustomEvent<{ key: string }>).detail.key !== 'robin-bird-fpv') return;
+      const view = cameraState.robinView;
+      if (!view) return; // L'oiseau est encore en cours de chargement.
+      cameraState.robinFPV = true;
+      keys.current.clear();
+      enterFollow(view.eyes.x, view.eyes.z, 'fpv');
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, [enterFollow]);
 
   const exitFollow = useCallback(() => {
     if (modeRef.current === 'fpv' && projectionBeforeFpv.current) {
