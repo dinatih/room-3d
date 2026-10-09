@@ -8,6 +8,7 @@ import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
 import { LaserDistanceMaster } from '../items/LaserDistanceMaster';
 import { TrashBin } from '../items/TrashBin';
 import { Tackan } from '../items/Tackan';
+import { Ikea36590066708 } from '../items/Ikea36590066708';
 
 import {
   ROOM_D,
@@ -22,6 +23,12 @@ const stub = (id: string): Item =>
 const w2 = 75.5;
 const KALLAX_DEPTH = 39;
 const MACK_Z = ROOM_D - w2 - 16;
+const KALLAX_FRAME = 3.5;
+const KALLAX_DIVIDER = 1.5;
+const KALLAX_CELL_WIDTH = (w2 - 2 * KALLAX_FRAME - KALLAX_DIVIDER) / 2;
+const KALLAX_UPPER_CELL_BASE = 2 * 76.5 + KALLAX_FRAME;
+const IKEA365_COUNT = 3;
+const IKEA365_LENGTH = 17;
 
 export function KitchenEquipment() {
   return (
@@ -75,6 +82,18 @@ export function KitchenFurnishings() {
         <group position={[17.5, 6.25, -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Télémètre Laserliner' }}>
           <LaserDistanceMaster item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
+      </group>
+
+      {/* IKEA 365+ — bord avant de la case supérieure gauche (côté nord). */}
+      <group position={[BATH_WEST_WALL + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+        {Array.from({ length: IKEA365_COUNT }, (_, i) => (
+          <group key={i}
+            position={[-w2 / 2 + KALLAX_FRAME + (i + 0.5) * KALLAX_CELL_WIDTH / IKEA365_COUNT, KALLAX_UPPER_CELL_BASE, (KALLAX_DEPTH - IKEA365_LENGTH) / 2]}
+            rotation-y={Math.PI / 2}
+            userData={{ animUnit: true, itemName: 'Boîte IKEA 365+' }}>
+            <Ikea36590066708 item={stub('ikea36590066708')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+        ))}
       </group>
 
       {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}

@@ -30,6 +30,7 @@ import { Annons80298474 } from '@features/scene/items/Annons80298474';
 import { Tasjon80392023 } from '@features/scene/items/Tasjon80392023';
 import { Pepprig70567650 } from '@features/scene/items/Pepprig70567650';
 import { Metod50205532 } from '@features/scene/items/Metod50205532';
+import { Ikea36590066708 } from '@features/scene/items/Ikea36590066708';
 /**
  * Registry des composants TSX dédiés par item.id.
  * Uniquement pour les items interactifs (open/close) ou procéduraux (pas de glbPath).
@@ -125,6 +126,7 @@ function ShoeHatRackPreview(props: SceneItemProps) {
 }
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'ikea36590066708':        Ikea36590066708,
   'shoe-hat-rack':          ShoeHatRackPreview,
   'scooter':                ScooterPreview,
   'smorkull-chair':         Smorkull,
