@@ -127,6 +127,10 @@ export function InteractiveSection({
       {furnitureBtn('Accoudoir Canapé Droit', 'sofaArmRight')}
       {furnitureBtn('Congélateur', 'freezerOpen', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Réfrigérateur', 'fridge', 'OUVERT', 'FERMÉ')}
+      <button className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 small"
+        onClick={() => triggerAction('fridge-crisper-toggle')}>
+        Bac à légumes — Sortir / Rentrer
+      </button>
       {furnitureBtn('Boîtes DRÖNA', 'dronaMode', 'HIGH', 'LOW', v => v === 'high' ? 'High (45k)' : v === 'low' ? 'Low (1.6k)' : v === 'hidden' ? 'Caché (0t)' : 'Procédural (12t)')}
       {furnitureBtn('TV Allumée', 'tvOn')}
       {triggerBtn('Bureau 1 (Assis/Debout)', 'desk1-toggle')}

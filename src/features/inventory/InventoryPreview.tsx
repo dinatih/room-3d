@@ -848,7 +848,7 @@ export function InventoryPreview({
             </div>
           )}
           {showing3D ? (
-            <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
+            <Canvas key={item.id} shadows={item.id === 'fridge'} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
               <PreviewEnvironment showGrid={showGrid} />
               <ambientLight intensity={0.7} />
               <directionalLight position={[150, 250, 150]} intensity={1.0} />
@@ -1102,7 +1102,12 @@ export function InventoryPreview({
                     type="button"
                     onClick={() => passageDoor
                       ? document.dispatchEvent(new CustomEvent('door-push', { detail: { key } }))
-                      : setActionStates(s => ({ ...s, [key]: !on }))}
+                      : setActionStates(s => {
+                        const next = { ...s, [key]: !s[key] };
+                        if (key === 'fridge-toggle' && !next[key]) next['fridge-crisper-toggle'] = false;
+                        if (key === 'fridge-crisper-toggle' && next[key]) next['fridge-toggle'] = true;
+                        return next;
+                      })}
                     className={`btn btn-sm ${on && !passageDoor ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
                     style={{ fontSize: 11 }}
                   >

@@ -163,7 +163,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'metod50205532': Metod50205532,
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,
-  'fridge':                 Fridge,
+  'fridge':                 props => <Fridge {...props} isPreview />,
   'cabinet-wood':           KitchenCabinet,
   'bathroom-cabinet-west':  BathroomCabinetWest,
   'bathroom-cabinet-east':  BathroomCabinetEast,
@@ -245,6 +245,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'scooter-steering-toggle': ['Guidon 30° à gauche', 'Redresser le guidon'],
   'freezer-toggle':        ['Ouvrir', 'Fermer'],
   'fridge-toggle':         ['Ouvrir', 'Fermer'],
+  'fridge-crisper-toggle': ['Sortir le bac', 'Rentrer le bac'],
   'cabinet-toggle':        ['Ouvrir', 'Fermer'],
   'cbn-west-toggle':       ['Ouvrir', 'Fermer'],
   'cbn-east-toggle':       ['Ouvrir', 'Fermer'],

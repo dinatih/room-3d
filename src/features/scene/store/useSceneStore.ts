@@ -181,6 +181,7 @@ const initialLayers: LayerState = {
 };
 
 const initialExtraStates: Record<string, boolean> = {
+  'fridge-crisper-toggle': false,
   ninja: false,
   utdrag: false,
   'bin-toggle': false,
@@ -408,6 +409,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   toggleFurniture: (key) => {
+    if (key === 'fridge') {
+      useSceneStore.getState().triggerAction(key);
+      return;
+    }
     set((state) => {
       let nextFurniture: FurnitureState;
       if (key === 'glassDoorV2ShutterPos') {
@@ -579,6 +584,22 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   triggerAction: (key, targetState) => {
+    if (key === 'fridge' || key === 'fridge-crisper-toggle') {
+      set(state => {
+        const isDoor = key === 'fridge';
+        const next = targetState ?? !(isDoor ? state.furniture.fridge : state.extraStates[key]);
+        return {
+          furniture: { ...state.furniture, fridge: isDoor ? next : (next || state.furniture.fridge) },
+          extraStates: {
+            ...state.extraStates,
+            'fridge-crisper-toggle': isDoor ? (next && state.extraStates['fridge-crisper-toggle']) : next,
+          },
+        };
+      });
+      cameraState.invalidate?.();
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: targetState } }));
+      return;
+    }
     const doorPushKeys: Record<string, string> = {
       eastGlassDoor: 'east-glass-door-toggle',
       glassDoorV2LeftOpen: 'glass-door-v2-left-open',

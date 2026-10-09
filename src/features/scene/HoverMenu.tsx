@@ -117,6 +117,7 @@ const ACTIONS: Record<string, ActionDef> = {
   cbnEast:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cbnEast'       },
   freezer:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'freezer'       },
   fridge:         { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'fridge'        },
+  'fridge-crisper-toggle': { btnLabel: () => useSceneStore.getState().extraStates['fridge-crisper-toggle'] ? 'Rentrer le bac' : 'Sortir le bac', toggleKey: 'fridge-crisper-toggle' },
   ninja:          { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'ninja'         },
   cabinet:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cabinet'       },
   'wc-lid-toggle':  { btnLabel: 'Ouvrir / Fermer Couvercle', toggleKey: 'wc-lid-toggle'  },
