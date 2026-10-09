@@ -285,10 +285,13 @@ export function ViewControlBar({
             <button
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraTarget === 'studio' && cameraMode === 'orbit' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
-              onClick={() => setCameraTarget('studio')}
-              title="Centrer la caméra sur l'appartement / studio"
-              aria-label="Centrer la caméra sur l'appartement / studio"
-              aria-pressed={cameraTarget === 'studio'}
+              onClick={() => {
+                setCameraTarget('studio');
+                dispatchCameraMode('orbit');
+              }}
+              title="Centrer la caméra sur l'appartement / studio (Alt+O)"
+              aria-label="Centrer la caméra sur l'appartement / studio (Alt+O)"
+              aria-pressed={cameraTarget === 'studio' && cameraMode === 'orbit'}
             >
               <i className="bi bi-building" aria-hidden="true" />
               <span className="fw-semibold">Apt</span>
