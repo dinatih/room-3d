@@ -583,6 +583,15 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 196.5,
   },
   {
+    id: 'dance-sync',
+    path: 'animations/npz/dances/anim_dance_sync.glb',
+    category: 'dances',
+    label: 'Dance Sync (76f / 2.5s, 182KB)',
+    aliases: ['dance-sync-ssm', 'ssm-dance-sync'],
+    tags: ['dance', 'dance-wide', 'party', 'dance-from-npz'],
+    duration: 2.5,
+  },
+  {
     id: 'gangnam-style',
     path: 'animations/mixamo/anim_gangnam_style.glb',
     category: 'dances',
