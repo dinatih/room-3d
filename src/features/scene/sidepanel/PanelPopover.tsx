@@ -10,7 +10,8 @@ export interface PanelPopoverProps {
   hideUI?: boolean;
   active?: boolean;
   manual?: boolean;
-  placementMode?: 'default' | 'desktop-right' | 'desktop-bottom-left';
+  placementMode?: 'default' | 'desktop-top-left' | 'desktop-right' | 'desktop-bottom-left';
+  compactMode?: boolean;
   children: React.ReactNode;
 }
 
@@ -23,6 +24,7 @@ export function PanelPopover({
   active = false,
   manual = false,
   placementMode = 'default',
+  compactMode = false,
   children,
 }: PanelPopoverProps) {
   const id = useId();
@@ -35,6 +37,15 @@ export function PanelPopover({
     const popover = popoverRef.current;
     if (!trigger || !popover) return;
     const isDesktop = window.innerWidth >= 768;
+
+    if (isDesktop && placementMode === 'desktop-top-left') {
+      popover.style.top = '12px';
+      popover.style.bottom = 'auto';
+      popover.style.left = '12px';
+      popover.style.right = 'auto';
+      popover.style.maxHeight = 'calc(100vh - 24px)';
+      return;
+    }
 
     if (isDesktop && placementMode === 'desktop-right') {
       popover.style.top = '16px';
@@ -133,7 +144,7 @@ export function PanelPopover({
           {...{ popover: manual ? 'manual' : 'auto' }}
           role="dialog"
           aria-labelledby={`${id}-title`}
-          className="popover view-control-bar__npc-popover glass-card shadow-lg"
+          className={`popover view-control-bar__npc-popover glass-card shadow-lg ${compactMode ? 'view-control-bar__npc-popover--compact' : ''}`}
           onClick={e => e.stopPropagation()}
           onPointerDown={e => e.stopPropagation()}
           onKeyDown={e => e.stopPropagation()}
