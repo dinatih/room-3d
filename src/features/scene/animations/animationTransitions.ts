@@ -7,10 +7,15 @@
 
 import { getAnimationDef } from './animationResolver';
 
-const EXIT_TRANSITIONS: Record<string, string> = {
-  sitting: 'sit-to-stand',
-  laying: 'stand-up',
-  crouch: 'crouch-to-stand',
+interface ExitTransitionConfig {
+  anim: string;
+  duration?: number;
+}
+
+const EXIT_TRANSITIONS: Record<string, ExitTransitionConfig> = {
+  sitting: { anim: 'sit-to-stand', duration: 2.3 },
+  laying: { anim: 'stand-up', duration: 2.2 },
+  crouch: { anim: 'crouch-to-stand', duration: 2.5 },
 };
 
 /**
@@ -27,11 +32,11 @@ export function getExitTransition(animKey: string | null | undefined): { anim: s
   }
 
   for (const tag of def.tags) {
-    const exitAnimId = EXIT_TRANSITIONS[tag];
-    if (exitAnimId) {
-      const exitDef = getAnimationDef(exitAnimId);
-      const duration = exitDef?.duration ?? 2.0;
-      return { anim: exitAnimId, duration };
+    const config = EXIT_TRANSITIONS[tag];
+    if (config) {
+      const exitDef = getAnimationDef(config.anim);
+      const duration = config.duration ?? exitDef?.duration ?? 2.0;
+      return { anim: config.anim, duration };
     }
   }
 
