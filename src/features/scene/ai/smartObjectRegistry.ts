@@ -7,6 +7,8 @@ import { BATH_WEST_WALL, ROOM_D } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 
+export const CLOSET_DOOR_DURATION = 0.8;
+
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
  * Chaque meuble déclare ses slots d'interaction, ses animations, ses positions et ses orientations.
@@ -268,10 +270,21 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'pick-laundry',
         name: 'Prendre le sac de Linge sale',
         relative: true,
-        offset: [0, 0, -35], // 35 cm devant le placard dans la SDB
+        offset: [-20, 0, -35], // 35 cm devant la porte droite dans la SDB
         rotY: 0,
         animation: 'take-object-mid',
-        duration: 8
+        duration: 8,
+        triggerEventKey: 'sdbClosetR',
+      },
+      {
+        slotId: 'tidy-shelf',
+        name: 'Ranger sur l\'étagère',
+        relative: true,
+        offset: [20, 0, -35], // 35 cm devant la porte gauche dans la SDB
+        rotY: 0,
+        animation: 'inspect-mid-height',
+        duration: 8,
+        triggerEventKey: 'sdbClosetL',
       }
     ]
   },
@@ -448,13 +461,16 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'corridor-closet',
     name: 'Placard Couloir',
     category: 'storage',
-    position: [220, 0, 435],
+    itemId: 'corridor-closet',
     slots: [
       {
         slotId: 'open-tidy',
         name: 'Ranger des affaires',
+        relative: true,
+        offset: [58, 0, 15], // Dans le couloir face aux étagères
         rotY: -Math.PI / 2,
         animation: 'entering-code',
+        triggerEventKey: 'corrDoors',
       }
     ]
   },
@@ -1074,16 +1090,58 @@ export function buildSmartObjectInstructionSequence(
   }
 
   if (objectId === 'sdb-closet') {
+    const doorKey = slot.triggerEventKey ?? (slot.slotId === 'tidy-shelf' ? 'sdbClosetL' : 'sdbClosetR');
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-      baseInstruction,
+      {
+        type: 'WAIT',
+        smartObjectId: obj.id,
+        slotId: slot.slotId,
+        animation: 'idle',
+        duration: CLOSET_DOOR_DURATION,
+        rotY: slot.rotY,
+        triggerEventKey: doorKey,
+        triggerEventValue: true,
+      },
+      { ...baseInstruction, triggerEventKey: undefined, triggerEventValue: undefined },
+      {
+        type: 'WAIT',
+        smartObjectId: obj.id,
+        slotId: slot.slotId,
+        animation: 'idle',
+        duration: CLOSET_DOOR_DURATION,
+        rotY: slot.rotY,
+        triggerEventKey: doorKey,
+        triggerEventValue: false,
+      },
     ];
   }
 
   if (objectId === 'corridor-closet') {
+    const doorKey = slot.triggerEventKey ?? 'corrDoors';
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-      baseInstruction,
+      {
+        type: 'WAIT',
+        smartObjectId: obj.id,
+        slotId: slot.slotId,
+        animation: 'idle',
+        duration: CLOSET_DOOR_DURATION,
+        rotY: slot.rotY,
+        triggerEventKey: doorKey,
+        triggerEventValue: true,
+      },
+      { ...baseInstruction, triggerEventKey: undefined, triggerEventValue: undefined },
+      {
+        type: 'WAIT',
+        smartObjectId: obj.id,
+        slotId: slot.slotId,
+        animation: 'idle',
+        duration: CLOSET_DOOR_DURATION,
+        rotY: slot.rotY,
+        triggerEventKey: doorKey,
+        triggerEventValue: false,
+      },
     ];
   }
 

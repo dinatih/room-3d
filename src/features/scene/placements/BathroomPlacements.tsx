@@ -95,7 +95,17 @@ export function BathroomEquipment() {
       </group>
 
       {/* Placard SDB */}
-      <group position={[SDB_CLOSET_X, 0, SDB_CLOSET_Z]} userData={{ animUnit: true, itemName: 'Placard SDB' }}>
+      <group position={[SDB_CLOSET_X, 0, SDB_CLOSET_Z]} userData={{
+        animUnit: true,
+        itemName: 'Placard SDB',
+        hoverAction: {
+          label: 'Placard SDB',
+          actions: [
+            ...getObjectActionIds('sdb-closet'),
+            ...SMART_OBJECTS['sdb-closet'].slots.map(s => `smart-object:::sdb-closet:::${s.slotId}`),
+          ],
+        },
+      }}>
         <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>

@@ -11,6 +11,8 @@ import { CorridorCloset } from '../items/CorridorCloset';
 import { TradfriBulb } from '../items/TradfriBulb';
 import { Linky } from '../items/Linky';
 import { Scooter } from '../items/Scooter';
+import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
+import { getObjectActionIds } from '../objectActions';
 
 import {
   ROOM_W,
@@ -161,7 +163,17 @@ export function CorridorEquipment() {
       <LinkyGaine />
 
       {/* Placard Couloir */}
-      <group position={[(KITCHEN_EAST_WALL + PARTITION_THICKNESS + DOOR_START) / 2, 0, (CORRIDOR_NORTH_WALL + KITCHEN_SOUTH_WALL) / 2]} userData={{ animUnit: true, itemName: 'Placard Couloir' }}>
+      <group position={[(KITCHEN_EAST_WALL + PARTITION_THICKNESS + DOOR_START) / 2, 0, (CORRIDOR_NORTH_WALL + KITCHEN_SOUTH_WALL) / 2]} userData={{
+        animUnit: true,
+        itemName: 'Placard Couloir',
+        hoverAction: {
+          label: 'Placard Couloir',
+          actions: [
+            ...getObjectActionIds('corridor-closet'),
+            ...SMART_OBJECTS['corridor-closet'].slots.map(s => `smart-object:::corridor-closet:::${s.slotId}`),
+          ],
+        },
+      }}>
         <CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>

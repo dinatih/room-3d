@@ -144,6 +144,13 @@ export function useAgentController(
       if (claimedSlotRef.current.objectId === 'cuisine-group' && claimedSlotRef.current.slotId === 'cook-oven') {
         useSceneStore.getState().triggerAction('ninja', false);
       }
+      if (claimedSlotRef.current.objectId === 'corridor-closet') {
+        useSceneStore.getState().triggerAction('corrDoors', false);
+      }
+      if (claimedSlotRef.current.objectId === 'sdb-closet') {
+        useSceneStore.getState().triggerAction('sdbClosetR', false);
+        useSceneStore.getState().triggerAction('sdbClosetL', false);
+      }
       OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
       claimedSlotRef.current = null;
     }
@@ -251,6 +258,13 @@ export function useAgentController(
       if (claimedSlotRef.current?.objectId === 'cuisine-group' && claimedSlotRef.current?.slotId === 'cook-oven') {
         useSceneStore.getState().triggerAction('ninja', false);
       }
+      if (claimedSlotRef.current?.objectId === 'corridor-closet') {
+        useSceneStore.getState().triggerAction('corrDoors', false);
+      }
+      if (claimedSlotRef.current?.objectId === 'sdb-closet') {
+        useSceneStore.getState().triggerAction('sdbClosetR', false);
+        useSceneStore.getState().triggerAction('sdbClosetL', false);
+      }
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
       setDesk2SmartActionState(_characterId, false);
@@ -261,6 +275,13 @@ export function useAgentController(
     if (claimedSlotRef.current) {
       if (claimedSlotRef.current.objectId === 'cuisine-group' && claimedSlotRef.current.slotId === 'cook-oven') {
         useSceneStore.getState().triggerAction('ninja', false);
+      }
+      if (claimedSlotRef.current.objectId === 'corridor-closet') {
+        useSceneStore.getState().triggerAction('corrDoors', false);
+      }
+      if (claimedSlotRef.current.objectId === 'sdb-closet') {
+        useSceneStore.getState().triggerAction('sdbClosetR', false);
+        useSceneStore.getState().triggerAction('sdbClosetL', false);
       }
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
