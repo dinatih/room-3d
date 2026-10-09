@@ -3,6 +3,8 @@ import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { getAnimationDef, resolveAnimationId } from '@features/scene/animations/animationResolver';
 import { ANIMATION_DEFINITIONS, type AnimationDefinition } from '@features/scene/animations/animationRegistry';
 import { CharacterAnimSelector, ANIM_CATEGORIES, getAnimCategory, getFilteredAnimOptions } from '@features/scene/CharacterAnimSelector';
+import { DuoAnimSelector } from '@features/scene/DuoAnimSelector';
+import { DuoPartnerSelector } from '@features/scene/DuoPartnerSelector';
 import { DUO_ANIMATIONS, canCharacterPerformDuo, resolveDuoPreviewParticipants, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
@@ -72,11 +74,19 @@ export function AnimFrameController({
   const [isEditingFrame, setIsEditingFrame] = useState<boolean>(false);
   const [showMeta, setShowMeta] = useState<boolean>(false);
   const [showAnimSelector, setShowAnimSelector] = useState<boolean>(false);
+  const [showDuoSelector, setShowDuoSelector] = useState<boolean>(false);
+  const [showPartnerSelector, setShowPartnerSelector] = useState<boolean>(false);
   const [selectorPosition, setSelectorPosition] = useState({ left: 0, bottom: 0 });
+  const [duoSelectorPosition, setDuoSelectorPosition] = useState({ left: 0, bottom: 0 });
+  const [partnerSelectorPosition, setPartnerSelectorPosition] = useState({ left: 0, bottom: 0 });
   const controllerRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLInputElement>(null);
   const selectorRef = useRef<HTMLDivElement>(null);
   const badgeRef = useRef<HTMLButtonElement>(null);
+  const duoBadgeRef = useRef<HTMLButtonElement>(null);
+  const duoSelectorRef = useRef<HTMLDivElement>(null);
+  const partnerBadgeRef = useRef<HTMLButtonElement>(null);
+  const partnerSelectorRef = useRef<HTMLDivElement>(null);
 
   const totalFrames = duration > 0 ? Math.max(1, Math.round(duration * fps)) : 0;
   const currentFrame = duration > 0 ? Math.min(totalFrames, Math.round(currentTime * fps)) : 0;
@@ -164,6 +174,22 @@ export function AnimFrameController({
     }
     setShowAnimSelector(false);
   }, [onSelectAnim]);
+
+  const currentPartnerId = duoPartnerId || availablePartners[0]?.id;
+  const currentPartnerObj = useMemo(() => {
+    return CHARACTERS.find(c => c.id === currentPartnerId);
+  }, [currentPartnerId]);
+
+  const handleSelectDuoAnim = useCallback((selectedDef: DuoAnimationDef | undefined) => {
+    if (onSelectDuoAnim) {
+      onSelectDuoAnim(selectedDef);
+    }
+    if (selectedDef) {
+      useAnimPreviewStore.getState().seekToTime(0);
+      useAnimPreviewStore.getState().play();
+    }
+    setShowDuoSelector(false);
+  }, [onSelectDuoAnim]);
 
   const handleRandomPartner = useCallback(() => {
     if (!availablePartners.length) return;
@@ -312,22 +338,42 @@ export function AnimFrameController({
     }
   };
 
-  // Fermer le sélecteur d'animation lors d'un clic extérieur
+  // Fermer les sélecteurs d'animation lors d'un clic extérieur
   useEffect(() => {
-    if (!showAnimSelector) return;
+    if (!showAnimSelector && !showDuoSelector && !showPartnerSelector) return;
     const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as Node;
       if (
+        showAnimSelector &&
         selectorRef.current &&
-        !selectorRef.current.contains(e.target as Node) &&
+        !selectorRef.current.contains(target) &&
         badgeRef.current &&
-        !badgeRef.current.contains(e.target as Node)
+        !badgeRef.current.contains(target)
       ) {
         setShowAnimSelector(false);
+      }
+      if (
+        showDuoSelector &&
+        duoSelectorRef.current &&
+        !duoSelectorRef.current.contains(target) &&
+        duoBadgeRef.current &&
+        !duoBadgeRef.current.contains(target)
+      ) {
+        setShowDuoSelector(false);
+      }
+      if (
+        showPartnerSelector &&
+        partnerSelectorRef.current &&
+        !partnerSelectorRef.current.contains(target) &&
+        partnerBadgeRef.current &&
+        !partnerBadgeRef.current.contains(target)
+      ) {
+        setShowPartnerSelector(false);
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [showAnimSelector]);
+  }, [showAnimSelector, showDuoSelector, showPartnerSelector]);
 
   useLayoutEffect(() => {
     if (!showAnimSelector) return;
@@ -349,6 +395,50 @@ export function AnimFrameController({
     observer.observe(badge);
     return () => observer.disconnect();
   }, [showAnimSelector]);
+
+  useLayoutEffect(() => {
+    if (!showDuoSelector) return;
+    const controller = controllerRef.current;
+    const selector = duoSelectorRef.current;
+    const badge = duoBadgeRef.current;
+    if (!controller || !selector || !badge) return;
+    const alignSelector = () => {
+      const buttonRect = badge.getBoundingClientRect();
+      const controllerRect = controller.getBoundingClientRect();
+      const buttonLeft = buttonRect.left - controllerRect.left - controller.clientLeft;
+      setDuoSelectorPosition({
+        left: Math.max(0, Math.min(buttonLeft, controller.clientWidth - selector.offsetWidth)),
+        bottom: controller.clientHeight - (buttonRect.top - controllerRect.top - controller.clientTop),
+      });
+    };
+    alignSelector();
+    const observer = new ResizeObserver(alignSelector);
+    observer.observe(controller);
+    observer.observe(badge);
+    return () => observer.disconnect();
+  }, [showDuoSelector]);
+
+  useLayoutEffect(() => {
+    if (!showPartnerSelector) return;
+    const controller = controllerRef.current;
+    const selector = partnerSelectorRef.current;
+    const badge = partnerBadgeRef.current;
+    if (!controller || !selector || !badge) return;
+    const alignSelector = () => {
+      const buttonRect = badge.getBoundingClientRect();
+      const controllerRect = controller.getBoundingClientRect();
+      const buttonLeft = buttonRect.left - controllerRect.left - controller.clientLeft;
+      setPartnerSelectorPosition({
+        left: Math.max(0, Math.min(buttonLeft, controller.clientWidth - selector.offsetWidth)),
+        bottom: controller.clientHeight - (buttonRect.top - controllerRect.top - controller.clientTop),
+      });
+    };
+    alignSelector();
+    const observer = new ResizeObserver(alignSelector);
+    observer.observe(controller);
+    observer.observe(badge);
+    return () => observer.disconnect();
+  }, [showPartnerSelector]);
 
   return (
     <div
@@ -384,6 +474,58 @@ export function AnimFrameController({
             onSelectAnim={handleSelectAnim}
             onClose={() => setShowAnimSelector(false)}
             title="Animations Personnage"
+            autoFocus={true}
+          />
+        </div>
+      )}
+
+      {/* Popover Sélecteur d'animation Duo DuoAnimSelector */}
+      {showDuoSelector && (
+        <div
+          ref={duoSelectorRef}
+          className="view-control-bar__character-popover glass-card rounded-2 border shadow-lg d-flex flex-column"
+          style={{
+            position: 'absolute',
+            ...duoSelectorPosition,
+            maxWidth: '100%',
+            zIndex: 1000,
+          }}
+          onClick={e => e.stopPropagation()}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <DuoAnimSelector
+            activeDuoId={duoAnimDef?.id}
+            onSelectDuoAnim={handleSelectDuoAnim}
+            onClose={() => setShowDuoSelector(false)}
+            title="Animations Duo"
+            autoFocus={true}
+          />
+        </div>
+      )}
+
+      {/* Popover Sélecteur de partenaire Duo DuoPartnerSelector */}
+      {showPartnerSelector && (
+        <div
+          ref={partnerSelectorRef}
+          className="view-control-bar__character-popover glass-card rounded-2 border shadow-lg d-flex flex-column"
+          style={{
+            position: 'absolute',
+            ...partnerSelectorPosition,
+            maxWidth: '100%',
+            zIndex: 1000,
+          }}
+          onClick={e => e.stopPropagation()}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <DuoPartnerSelector
+            availablePartners={availablePartners}
+            activePartnerId={currentPartnerId}
+            onSelectPartner={(pId) => {
+              onSelectDuoPartner?.(pId);
+              setShowPartnerSelector(false);
+            }}
+            onClose={() => setShowPartnerSelector(false)}
+            title="Partenaire Duo (Rôle B)"
             autoFocus={true}
           />
         </div>
@@ -547,7 +689,11 @@ export function AnimFrameController({
                     : 'btn-outline-secondary text-dark'
                 }`}
                 style={{ maxWidth: '240px' }}
-                onClick={() => setShowAnimSelector(v => !v)}
+                onClick={() => {
+                  setShowAnimSelector(v => !v);
+                  setShowDuoSelector(false);
+                  setShowPartnerSelector(false);
+                }}
                 title={
                   duoAnimDef
                     ? `Duo : ${duoAnimDef.label} (Cliquer pour changer d'animation solo)`
@@ -588,26 +734,34 @@ export function AnimFrameController({
             <div className="d-flex align-items-center flex-wrap gap-1">
               {/* Sélecteur Duo + Dé */}
               <div className="btn-group btn-group-sm" role="group">
-                <select
-                  className={`form-select form-select-sm py-0 ps-2 bg-transparent text-dark w-auto small ${duoAnimDef ? 'border-primary text-primary fw-bold' : ''}`}
-                  style={{ maxWidth: '170px' }}
-                  value={duoAnimDef?.id || ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (!val) {
-                      onSelectDuoAnim?.(undefined);
-                    } else {
-                      const found = DUO_ANIMATIONS.find(a => a.id === val);
-                      onSelectDuoAnim?.(found);
-                    }
+                <button
+                  ref={duoBadgeRef}
+                  type="button"
+                  className={`btn py-0 px-2 d-inline-flex align-items-center gap-1 text-truncate ${
+                    duoAnimDef
+                      ? 'btn-primary text-white shadow-sm'
+                      : showDuoSelector
+                      ? 'btn-danger text-white shadow-sm'
+                      : 'btn-outline-secondary text-dark'
+                  }`}
+                  style={{ maxWidth: '180px' }}
+                  onClick={() => {
+                    setShowDuoSelector(v => !v);
+                    setShowAnimSelector(false);
+                    setShowPartnerSelector(false);
                   }}
-                  title="Sélectionner une animation de couple (Duo)"
+                  title={
+                    duoAnimDef
+                      ? `Duo : ${duoAnimDef.label} (Cliquer pour changer)`
+                      : "Choisir une animation Duo"
+                  }
                 >
-                  <option value="">Mode Duo...</option>
-                  {DUO_ANIMATIONS.map(a => (
-                    <option key={a.id} value={a.id}>{a.label}</option>
-                  ))}
-                </select>
+                  <i className={`bi ${duoAnimDef ? 'bi-people-fill' : 'bi-people'}`} aria-hidden="true" />
+                  <span className="text-truncate">
+                    {duoAnimDef ? `${duoAnimDef.icon} ${duoAnimDef.label}` : 'Mode Duo...'}
+                  </span>
+                  <i className={`bi ${showDuoSelector ? 'bi-chevron-up' : 'bi-chevron-down'} opacity-75 small`} aria-hidden="true" />
+                </button>
                 <button
                   type="button"
                   className="btn py-0 px-2 btn-warning text-dark fw-bold"
@@ -621,17 +775,28 @@ export function AnimFrameController({
               {/* Contrôles Partenaire B si Duo actif */}
               {duoAnimDef && (
                 <div className="btn-group btn-group-sm" role="group">
-                  <select
-                    className="form-select form-select-sm py-0 ps-2 bg-transparent text-dark w-auto small border-primary"
+                  <button
+                    ref={partnerBadgeRef}
+                    type="button"
+                    className={`btn py-0 px-2 d-inline-flex align-items-center gap-1 text-truncate ${
+                      showPartnerSelector
+                        ? 'btn-danger text-white shadow-sm'
+                        : 'btn-outline-primary text-primary fw-semibold'
+                    }`}
                     style={{ maxWidth: '165px' }}
-                    value={duoPartnerId || availablePartners[0]?.id || ''}
-                    onChange={(e) => onSelectDuoPartner?.(e.target.value)}
+                    onClick={() => {
+                      setShowPartnerSelector(v => !v);
+                      setShowDuoSelector(false);
+                      setShowAnimSelector(false);
+                    }}
                     title="Changer le partenaire (Rôle B)"
                   >
-                    {availablePartners.map(c => (
-                      <option key={c.id} value={c.id}>B: {c.name}</option>
-                    ))}
-                  </select>
+                    <i className="bi bi-person-badge" aria-hidden="true" />
+                    <span className="text-truncate">
+                      {currentPartnerObj ? `${currentPartnerObj.emoji} B: ${currentPartnerObj.name}` : `B: ${charBName}`}
+                    </span>
+                    <i className={`bi ${showPartnerSelector ? 'bi-chevron-up' : 'bi-chevron-down'} opacity-75 small`} aria-hidden="true" />
+                  </button>
                   <button
                     type="button"
                     className="btn py-0 px-2 btn-outline-secondary text-dark"
@@ -643,7 +808,11 @@ export function AnimFrameController({
                   <button
                     type="button"
                     className="btn py-0 px-2 btn-secondary text-white"
-                    onClick={() => onSelectDuoAnim?.(undefined)}
+                    onClick={() => {
+                      onSelectDuoAnim?.(undefined);
+                      setShowDuoSelector(false);
+                      setShowPartnerSelector(false);
+                    }}
                     title="Quitter le mode duo"
                   >
                     <i className="bi bi-x-lg" aria-hidden="true" />
