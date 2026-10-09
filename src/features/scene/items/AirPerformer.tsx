@@ -1,3 +1,4 @@
+import { getNextActionValue } from '../objectActionRegistry';
 import { getObjectActionIds } from '../objectActions';
 /**
  * AirPerformer.tsx — Philips Air Performer AMF870/15 3D procedural simulation.
@@ -162,19 +163,10 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
         setPower(p => !p);
         invalidate();
       } else if (key === 'airPerformerMode') {
-        setMode(m => {
-          if (m === 'auto') return 'cool';
-          if (m === 'cool') return 'heat';
-          if (m === 'heat') return 'sleep';
-          return 'auto';
-        });
+        setMode(m => getNextActionValue(key, m));
         invalidate();
       } else if (key === 'airPerformerSpeed') {
-        setSpeed(s => {
-          if (s === 3) return 6;
-          if (s === 6) return 10;
-          return 3;
-        });
+        setSpeed(s => getNextActionValue(key, s));
         invalidate();
       }
     };

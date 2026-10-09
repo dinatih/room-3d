@@ -14,7 +14,7 @@ import { pEast, pWest, pZ, pX, DiagWall } from '../wallData';
 export function DoorsPlacement() {
   const layers = useSceneStore(state => state.layers);
   const as = useFurnitureToggles([
-    'glass-door-v2-shutter-pos',
+    'glassDoorV2ShutterPos',
   ]);
 
   const entry = useMemo(() => {

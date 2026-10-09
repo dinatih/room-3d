@@ -16,7 +16,7 @@ const DOOR_W_ENTRY = 90;
 export function DoorsPlaced() {
   const layers = useSceneStore(state => state.layers);
   const as = useFurnitureToggles([
-    'glass-door-v2-shutter-pos',
+    'glassDoorV2ShutterPos',
   ]);
 
   const entry = useMemo(() => {

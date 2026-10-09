@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE   from 'three';
 import { hoverState } from '@features/scene/hoverState';
-import { useSceneStore } from '@features/scene/store/useSceneStore';
+import { useSceneStore, getSceneActionValue } from '@features/scene/store/useSceneStore';
 import { cameraState } from '@features/scene/cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
@@ -16,7 +16,7 @@ import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
 import { isCharacterVisibleInMode } from './characterConfig';
 
-import { getActionDef, type ActionDef } from './objectActionRegistry';
+import { getActionDef, getActionLabel, type ActionDef } from './objectActionRegistry';
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
   let cur: THREE.Object3D | null = obj;
@@ -581,7 +581,7 @@ export function HoverOverlay() {
           {lockedActions.map((action, i) => {
             if (action.type === 'select') {
               const opts = action.options ?? [];
-              const val = selectedValues[action.toggleKey] ?? '';
+              const val = selectedValues[action.id] ?? '';
 
               return (
                 <div key={i} className="d-flex flex-column">
@@ -591,12 +591,12 @@ export function HoverOverlay() {
                     value={val}
                     onChange={(e) => {
                       const newVal = e.target.value;
-                      setSelectedValues(prev => ({ ...prev, [action.toggleKey]: newVal }));
-                      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: action.toggleKey, value: newVal } }));
+                      setSelectedValues(prev => ({ ...prev, [action.id]: newVal }));
+                      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: action.id, value: newVal } }));
                       hoverState.onUpdate?.();
                     }}
                   >
-                    <option value="" disabled>{action.btnLabel ? (typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel) : "Choisir une option..."} ({opts.length})</option>
+                    <option value="" disabled>{getActionLabel(action.id, getSceneActionValue(action.id))} ({opts.length})</option>
                     {opts.map(opt => (
                       <option key={opt.value} value={opt.value}>
                         {opt.value === val ? `▶ ${opt.label}` : opt.label}
@@ -611,12 +611,12 @@ export function HoverOverlay() {
                 key={i}
                 className="btn btn-sm btn-outline-warning py-0 px-2 fw-semibold"
                 onClick={() => {
-                  if (action.toggleKey.startsWith('select-character-')) {
-                    const targetCharacterId = action.toggleKey.replace('select-character-', '');
+                  if (action.id.startsWith('select-character-')) {
+                    const targetCharacterId = action.id.replace('select-character-', '');
                     useSceneStore.getState().setActiveCharacterId(targetCharacterId);
                     appLog(targetCharacterId, `🎯 Personnage actif défini : ${state.lockedLabel}`);
-                  } else if (action.toggleKey.startsWith('smart-object:::')) {
-                    const [, objectId, slotId] = action.toggleKey.split(':::');
+                  } else if (action.id.startsWith('smart-object:::')) {
+                    const [, objectId, slotId] = action.id.split(':::');
                     const obj = getSmartObject(objectId);
                     const slot = obj?.slots.find(s => s.slotId === slotId);
                     const targetPos = slot?.offset ?? [0, 0, 0];
@@ -693,7 +693,7 @@ export function HoverOverlay() {
                       }
                     }
                   } else {
-                    useSceneStore.getState().triggerAction(action.toggleKey);
+                    useSceneStore.getState().triggerAction(action.id);
                   }
                   hoverState.locked      = false;
                   hoverState.touchActive = false;
@@ -701,7 +701,7 @@ export function HoverOverlay() {
                 }}
               >
                 {action.icon && <i className={`bi ${action.icon} me-1`} aria-hidden="true" />}
-                {typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel}
+                {getActionLabel(action.id, getSceneActionValue(action.id))}
               </button>
             );
           })}

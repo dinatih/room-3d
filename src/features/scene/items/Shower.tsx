@@ -196,7 +196,7 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
   const groupRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
 
-  const isDoorOpen = Boolean(actionState?.['shower-door-toggle'] ?? actionState?.['showerDoor']);
+  const isDoorOpen = !!actionState.showerDoor;
 
   useLayoutEffect(() => {
     setupScene(tray, 100 * (TRAY_CM / 68));

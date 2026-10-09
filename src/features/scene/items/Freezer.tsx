@@ -14,7 +14,7 @@ const GLB = 'items/tillreda_anim/TILLREDA_anim.glb';
 export function Freezer({ actionState, onSize, isPreview = false }: SceneItemProps & { isPreview?: boolean }) {
   const { scene, animations } = useGLTFClone(GLB);
   const sceneOpen = useSceneStore(s => s.furniture.freezerOpen);
-  const wantOpen = isPreview ? !!actionState['freezer-toggle'] : sceneOpen;
+  const wantOpen = isPreview ? !!actionState['freezer'] : sceneOpen;
   const target = useRef(wantOpen);
   target.current = wantOpen;
   const runtime = useRef<{ mixer: THREE.AnimationMixer; door: THREE.AnimationAction } | null>(null);

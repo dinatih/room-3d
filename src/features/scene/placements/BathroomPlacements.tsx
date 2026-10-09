@@ -30,9 +30,9 @@ const cbZ = BATH_NORTH_WALL + 19.5;
 export function BathroomEquipment() {
   const as = useFurnitureToggles([
     'lamp-bath-toggle',
-    'sdb-closet-l-toggle',
-    'sdb-closet-r-toggle',
-    'shower-door-toggle',
+    'sdbClosetL',
+    'sdbClosetR',
+    'showerDoor',
     'wc-lid-toggle',
     'wc-seat-toggle',
     'wc-flush',
@@ -105,7 +105,7 @@ export function BathroomEquipment() {
 
 // Pass 1 — Furniture (Structure & gros volumes)
 export function BathroomFurniture() {
-  const as = useFurnitureToggles(['cbn-west-toggle', 'cbn-east-toggle']);
+  const as = useFurnitureToggles(['cbnWest', 'cbnEast']);
 
   return (
     <MergedStaticGroup name="merged-bathroom-furniture">

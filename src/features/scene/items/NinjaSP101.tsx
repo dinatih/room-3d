@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { MergedStaticGroup } from '../Building';
 import type { SceneItemProps } from '@shared/types';
 
-const ACTION_KEY = 'ninja-toggle';
+const ACTION_KEY = 'ninja';
 
 const W = 51;     // largeur
 const D = 37;     // profondeur

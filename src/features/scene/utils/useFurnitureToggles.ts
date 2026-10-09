@@ -6,8 +6,8 @@ import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
  * Écoute l'état réactif centralisé dans le store Zustand et retourne un objet
  * indexé par event-key pour chaque clé demandée.
  *
- * Usage : useFurnitureToggles(['lamp-bath-toggle', 'corr-doors-toggle'])
- * → retourne { 'lamp-bath-toggle': boolean, 'corr-doors-toggle': boolean, … }
+ * Usage : useFurnitureToggles(['lamp-bath-toggle', 'corrDoors'])
+ * → retourne { 'lamp-bath-toggle': boolean, 'corrDoors': boolean, … }
  *
  * resolveStoreKey() traduit automatiquement chaque event-key vers la vraie
  * propriété du store (ex: 'lamp-bath-toggle' → furniture.lampBath).

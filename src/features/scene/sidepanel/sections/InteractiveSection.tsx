@@ -1,10 +1,10 @@
 import { AIRCRAFT_MODELS } from '../../aircraftModels';
-import { useSceneStore } from '../../store/useSceneStore';
+import { useSceneStore, getSceneActionValue } from '../../store/useSceneStore';
 import { positionState } from '@features/scene/positionState';
 import { DOUBLE_BED_POSITIONS } from '../../furniturePositions';
 import { dispatchKey, type FurnitureState } from '../types';
 import type { PlaneModelKey } from '@features/scene/PaperPlane';
-import { getActionDef } from '../../objectActionRegistry';
+import { getActionLabel } from '../../objectActionRegistry';
 
 export interface InteractiveSectionProps {
   isMobile: boolean;
@@ -38,7 +38,6 @@ export function InteractiveSection({
   const triggerAction = useSceneStore(state => state.triggerAction);
   useSceneStore(state => state.extraStates);
   useSceneStore(state => state.desk2ScreenActive);
-  const videoAction = getActionDef('desk2-screen-toggle')!;
 
   const doorPushBtn = (label: string, key: string) => (
     <button
@@ -140,9 +139,9 @@ export function InteractiveSection({
       <button
         type="button"
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 small bg-transparent"
-        onClick={() => triggerAction(videoAction.toggleKey)}
+        onClick={() => triggerAction('desk2-screen-toggle')}
       >
-        {typeof videoAction.btnLabel === 'function' ? videoAction.btnLabel() : videoAction.btnLabel}
+        {getActionLabel('desk2-screen-toggle', getSceneActionValue('desk2-screen-toggle'))}
       </button>
       {triggerBtn('Bureau 1 (Assis/Debout)', 'desk1-toggle')}
       {triggerBtn('Bureau 1 (Position)', 'desk1-position')}

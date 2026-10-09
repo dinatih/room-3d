@@ -16,7 +16,7 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
   const sceneOpen = useSceneStore(s => s.furniture.fridge);
   const sceneCrisper = useSceneStore(s => s.extraStates['fridge-crisper-toggle']);
   const wantCrisper = isPreview ? !!actionState['fridge-crisper-toggle'] : sceneCrisper;
-  const wantDoor = (isPreview ? !!actionState['fridge-toggle'] : sceneOpen) || wantCrisper;
+  const wantDoor = (isPreview ? !!actionState['fridge'] : sceneOpen) || wantCrisper;
   const target = useRef({ door: false, crisper: false });
   target.current = { door: wantDoor, crisper: wantCrisper };
   const runtime = useRef<{

@@ -7,7 +7,7 @@ import { glbLocalBBox, optimizeMaterials, removeGlbLines } from '@features/scene
 import { SceneItemProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
-const ACTION_KEY = 'utdrag-toggle';
+const ACTION_KEY = 'utdrag';
 const RETRACT_OFFSET = -0.16; // Course de 16 cm (en mètres dans l'espace local du GLB avant scale 100)
 
 /**
@@ -69,7 +69,7 @@ export function Utdrag10389142({ onSize, actionState, ...props }: SceneItemProps
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent<{ key: string }>).detail ?? {};
-      if (key === 'utdrag' || key === ACTION_KEY) {
+      if (key === ACTION_KEY) {
         openRef.current = !openRef.current;
         invalidate();
       }

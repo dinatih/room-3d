@@ -37,7 +37,7 @@ export function KitchenEquipment() {
 // Pass 1 — Furniture (Structure & gros volumes)
 export function KitchenFurniture() {
   const as = useFurnitureToggles([
-    'ninja-toggle',
+    'ninja',
     'bin-toggle',
   ]);
 

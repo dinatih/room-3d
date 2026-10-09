@@ -1,4 +1,3 @@
-import { useSceneStore } from './store/useSceneStore';
 import { positionState } from './positionState';
 import { DOUBLE_BED_POSITIONS } from './furniturePositions';
 import { getSmartObject } from './ai/smartObjectRegistry';
@@ -6,24 +5,18 @@ import { getObjectActionIds } from './objectActions';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 
 export interface ActionDef {
-  btnLabel?: string | (() => string);
+  id: string;
+  label: string | [string, string] | ((value: any) => string);
   icon?: string;
-  toggleKey: string;
-  previewStateKey?: string;
-  previewLabels?: [string, string];
-  preview?: boolean;
-  previewEvent?: string;
-  previewCycle?: readonly (string | number)[];
-  previewInitialValue?: string | number;
-  type?: 'button' | 'select';
+  sceneOnly?: boolean;
+  event?: 'door-push';
+  values?: readonly (string | number)[];
+  initialValue?: string | number;
+  type?: 'select';
   options?: { value: string; label: string }[];
 }
 
-
-const mappedWigOptions = WIGS_ITEMS.map((wig, i) => ({
-  value: i.toString(),
-  label: wig.name
-}));
+type ActionConfig = Omit<ActionDef, 'id'>;
 
 const HAIR_COLORS = [
   { value: 'naturel', label: 'Naturel 🟫' },
@@ -41,298 +34,123 @@ const HAIR_COLORS = [
   { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
 ];
 
-function makeMannequinActions(loc: string): Record<string, ActionDef> {
+function mannequinActions(loc: string): Record<string, ActionConfig> {
   return {
-    [`mannequin-${loc}-random`]: { btnLabel: 'Aléatoire complet', icon: 'bi-shuffle', toggleKey: `mannequin-${loc}-random` },
-    [`mannequin-${loc}-wig`]: { btnLabel: 'Perruque 💇', toggleKey: `mannequin-${loc}-wig`, type: 'select', options: mappedWigOptions },
-    [`mannequin-${loc}-color`]: { btnLabel: 'Couleur cheveux 🎨', toggleKey: `mannequin-${loc}-color`, type: 'select', options: HAIR_COLORS },
-    [`mannequin-${loc}-wind`]: { btnLabel: 'Vent 💨', toggleKey: `mannequin-${loc}-wind` },
+    [`mannequin-${loc}-random`]: { label: 'Aléatoire complet', icon: 'bi-shuffle' },
+    [`mannequin-${loc}-wig`]: { label: 'Perruque 💇', type: 'select', options: WIGS_ITEMS.map((wig, i) => ({ value: String(i), label: wig.name })) },
+    [`mannequin-${loc}-color`]: { label: 'Couleur cheveux 🎨', type: 'select', options: HAIR_COLORS },
+    [`mannequin-${loc}-wind`]: { label: 'Vent 💨' },
   };
 }
 
-function makePositionAction(key: string): Record<string, ActionDef> {
-  return {
-    [key]: {
-      preview: false,
-      btnLabel: () => {
-        const p = positionState[key];
-        return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position';
-      },
-      toggleKey: key,
-    },
-  };
+function positionAction(key: string): Record<string, ActionConfig> {
+  return { [key]: { sceneOnly: true, label: () => {
+    const p = positionState[key];
+    return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position';
+  } } };
 }
 
-const MANNEQUIN_ACTIONS: Record<string, ActionDef> = {
-  ...makeMannequinActions('kallax-nw'),
-  ...makeMannequinActions('kallax-ne'),
-  ...makeMannequinActions('meubleT'),
-  ...makeMannequinActions('lack'),
-  ...makeMannequinActions('lamp'),
+const ACTIONS: Record<string, ActionConfig> = {
+  ...mannequinActions('kallax-nw'),
+  ...mannequinActions('kallax-ne'),
+  ...mannequinActions('meubleT'),
+  ...mannequinActions('lack'),
+  ...mannequinActions('lamp'),
+  ...positionAction('desk1-position'),
+  ...positionAction('desk2-position'),
+  ...positionAction('smorkull-position'),
+  ...positionAction('airperformer-position'),
+  ...positionAction('raskog-large-position'),
+  eastGlassDoor: { label: 'Pousser battant droit', event: 'door-push' },
+  glassDoorV2LeftOpen: { label: 'Pousser battant gauche', event: 'door-push' },
+  glassDoorV2ShutterPos: { label: value => `Volet : ${value ? `${value}% fermé` : 'ouvert'}`, values: [0, 70, 90, 100], initialValue: 0 },
+  entryDoor: { label: 'Pousser', event: 'door-push' },
+  livingDoor: { label: 'Pousser', event: 'door-push' },
+  bathroomDoor: { label: 'Pousser', event: 'door-push' },
+  showerDoor: { label: ['Ouvrir', 'Fermer'] },
+  corrDoors: { label: ['Ouvrir', 'Fermer'] },
+  sdbClosetL: { label: ['Ouvrir Gauche', 'Fermer Gauche'] },
+  sdbClosetR: { label: ['Ouvrir Droite', 'Fermer Droite'] },
+  cbnWest: { label: ['Ouvrir', 'Fermer'] },
+  cbnEast: { label: ['Ouvrir', 'Fermer'] },
+  freezer: { label: ['Ouvrir', 'Fermer'] },
+  fridge: { label: ['Ouvrir', 'Fermer'] },
+  'fridge-crisper-toggle': { label: ['Sortir le bac', 'Rentrer le bac'] },
+  ninja: { label: ['Ouvrir', 'Fermer'] },
+  cabinet: { label: ['Ouvrir', 'Fermer'] },
+  'wc-lid-toggle': { label: ['Ouvrir Couvercle', 'Fermer Couvercle'] },
+  'wc-seat-toggle': { label: ['Ouvrir Siège', 'Fermer Siège'] },
+  'wc-flush': { label: ['Appuyer sur la chasse', 'Relâcher la chasse'] },
+  'lamp-toggle': { label: ['Allumer', 'Éteindre'] },
+  lampBath: { label: ['Allumer SDB', 'Éteindre SDB'] },
+  lampCorridor: { label: ['Allumer Couloir', 'Éteindre Couloir'] },
+  'bed-double': { label: ['Mettre en lit double', 'Séparer en lits simples'] },
+  'bed-position': { sceneOnly: true, label: () => {
+    const p = positionState['bed-position'];
+    return p ? `Position (${DOUBLE_BED_POSITIONS[p.idx]?.label ?? p.idx + 1}) →` : 'Changer position →';
+  } },
+  'desk-toggle': { label: ['Debout', 'Assis'] },
+  'desk1-toggle': { label: ['Debout', 'Assis'] },
+  'desk2-toggle': { label: ['Debout', 'Assis'] },
+  'desk2-screen-toggle': { label: ['▶ Vidéo bureau / TV', '⏹ Couper vidéo'], icon: 'bi-display' },
+  'shiba-replay': { label: 'Rejouer' },
+  'robin-bird-replay': { label: 'Rejouer' },
+  nestMini: { label: 'Ok Google 🎙️' },
+  'tv-toggle': { label: ['Allumer', 'Éteindre'] },
+  'bin-toggle': { label: ['Ouvrir', 'Fermer'] },
+  airPerformerPower: { label: ['Allumer', 'Éteindre'] },
+  airPerformerMode: { label: 'Changer Mode', values: ['auto', 'cool', 'heat', 'sleep'], initialValue: 'auto' },
+  airPerformerSpeed: { label: 'Vitesse +/-', values: [3, 6, 10], initialValue: 5 },
+  'character-meshes': { label: 'Meshes' },
+  'sofa-arm-left': { label: ['Mettre à plat G', 'Relever G'] },
+  'sofa-arm-right': { label: ['Mettre à plat D', 'Relever D'] },
+  'vihals-toggle': { label: ['Plier', 'Déplier'] },
+  'scooter-steering-toggle': { label: ['Guidon 30° à gauche', 'Redresser le guidon'] },
+  'lara-haircut': { label: 'Coupe de cheveux 💇‍♀️', type: 'select', options: [
+    { value: 'original', label: "Coupe d'origine 👱‍♀️" },
+    ...WIGS_ITEMS.map(wig => ({ value: wig.id, label: wig.name })),
+  ] },
+  utdrag: { label: ['Déplier', 'Rentrer'] },
 };
 
-const POSITION_ACTIONS: Record<string, ActionDef> = {
-  ...makePositionAction('desk1-position'),
-  ...makePositionAction('desk2-position'),
-  ...makePositionAction('smorkull-position'),
-  ...makePositionAction('airperformer-position'),
-  ...makePositionAction('raskog-large-position'),
-};
-
-const ACTIONS: Record<string, ActionDef> = {
-  'desk-toggle': {
-    btnLabel: 'Assis / Debout', toggleKey: 'desk-toggle',
-    previewLabels: ['Debout', 'Assis']
-  },
-  'vihals-toggle': {
-    btnLabel: 'Plier / Déplier', toggleKey: 'vihals-toggle',
-    previewLabels: ['Plier', 'Déplier']
-  },
-  'scooter-steering-toggle': {
-    btnLabel: 'Tourner / Redresser le guidon', toggleKey: 'scooter-steering-toggle',
-    previewLabels: ['Guidon 30° à gauche', 'Redresser le guidon']
-  },
-  ...MANNEQUIN_ACTIONS,
-  ...POSITION_ACTIONS,
-
-  eastGlassDoor: {
-    btnLabel: 'Pousser battant droit',
-    toggleKey: 'eastGlassDoor',
-    previewLabels: ['Pousser battant droit', 'Pousser battant droit'],
-    previewStateKey: 'east-glass-door-toggle',
-    previewEvent: 'east-glass-door-toggle'
-  },
-  glassDoorLeftOpen: {
-    btnLabel: 'Pousser battant gauche', toggleKey: 'glassDoorV2LeftOpen',
-    previewEvent: 'glass-door-v2-left-open',
-    previewLabels: ['Pousser battant gauche', 'Pousser battant gauche']
-  },
-  glassDoorShutter: {
-    btnLabel: () => {
-      const pos = useSceneStore.getState().furniture.glassDoorV2ShutterPos;
-      return pos === 0 ? 'Volet : OUVERT' : pos === 100 ? 'Volet : FERMÉ' : `Volet : ${pos}% FERMÉ`;
-    },
-    toggleKey: 'glassDoorV2ShutterPos',
-    previewStateKey: 'glass-door-v2-shutter-pos',
-    previewLabels: ['Volet : ouvert', 'Volet : fermé']
-  },
-  entryDoor: {
-    btnLabel: 'Pousser', toggleKey: 'entryDoor',
-    previewLabels: ['Pousser', 'Pousser'],
-    previewStateKey: 'entry-door-toggle',
-    previewEvent: 'entry-door-toggle'
-  },
-  livingDoor: {
-    btnLabel: 'Pousser', toggleKey: 'livingDoor',
-    previewLabels: ['Pousser', 'Pousser'],
-    previewStateKey: 'living-door-toggle',
-    previewEvent: 'living-door-toggle'
-  },
-  bathroomDoor: {
-    btnLabel: 'Pousser', toggleKey: 'bathroomDoor',
-    previewLabels: ['Pousser', 'Pousser'],
-    previewStateKey: 'bathroom-door-toggle',
-    previewEvent: 'bathroom-door-toggle'
-  },
-  showerDoor: {
-    btnLabel: 'Ouvrir / Fermer', toggleKey: 'showerDoor',
-    previewLabels: ['Ouvrir', 'Fermer'],
-    previewStateKey: 'shower-door-toggle'
-  },
-  corrDoors: {
-    btnLabel: 'Ouvrir / Fermer', toggleKey: 'corrDoors',
-    previewLabels: ['Ouvrir', 'Fermer'],
-    previewStateKey: 'corr-doors-toggle'
-  },
-  sdbClosetL: {
-    btnLabel: 'Ouvrir / Fermer Gauche', toggleKey: 'sdbClosetL',
-    previewLabels: ['Ouvrir Gauche', 'Fermer Gauche'],
-    previewStateKey: 'sdb-closet-l-toggle'
-  },
-  sdbClosetR: {
-    btnLabel: 'Ouvrir / Fermer Droite', toggleKey: 'sdbClosetR',
-    previewStateKey: 'sdb-closet-r-toggle',
-    previewLabels: ['Ouvrir Droite', 'Fermer Droite']
-  },
-  cbnWest: {
-    btnLabel: 'Ouvrir / Fermer', toggleKey: 'cbnWest',
-    previewLabels: ['Ouvrir', 'Fermer'],
-    previewStateKey: 'cbn-west-toggle'
-  },
-  cbnEast: {
-    btnLabel: 'Ouvrir / Fermer', toggleKey: 'cbnEast',
-    previewLabels: ['Ouvrir', 'Fermer'],
-    previewStateKey: 'cbn-east-toggle'
-  },
-  freezer: {
-    btnLabel: 'Ouvrir / Fermer', toggleKey: 'freezer',
-    previewLabels: ['Ouvrir', 'Fermer'],
-    previewStateKey: 'freezer-toggle'
-  },
-  fridge: {
-    btnLabel: 'Ouvrir / Fermer', toggleKey: 'fridge',
-    previewLabels: ['Ouvrir', 'Fermer'],
-    previewStateKey: 'fridge-toggle'
-  },
-  'fridge-crisper-toggle': {
-    btnLabel: () => useSceneStore.getState().extraStates['fridge-crisper-toggle'] ? 'Rentrer le bac' : 'Sortir le bac', toggleKey: 'fridge-crisper-toggle',
-    previewLabels: ['Sortir le bac', 'Rentrer le bac']
-  },
-  ninja: {
-    btnLabel: 'Ouvrir / Fermer', toggleKey: 'ninja',
-    previewLabels: ['Ouvrir', 'Fermer'],
-    previewStateKey: 'ninja-toggle'
-  },
-  cabinet: {
-    btnLabel: 'Ouvrir / Fermer', toggleKey: 'cabinet',
-    previewLabels: ['Ouvrir', 'Fermer'],
-    previewStateKey: 'cabinet-toggle'
-  },
-  'wc-lid-toggle': {
-    btnLabel: 'Ouvrir / Fermer Couvercle', toggleKey: 'wc-lid-toggle',
-    previewLabels: ['Ouvrir Couvercle', 'Fermer Couvercle']
-  },
-  'wc-seat-toggle': {
-    btnLabel: 'Ouvrir / Fermer Siège', toggleKey: 'wc-seat-toggle',
-    previewLabels: ['Ouvrir Siège', 'Fermer Siège']
-  },
-  'wc-flush': {
-    btnLabel: 'Appuyer sur la chasse', toggleKey: 'wc-flush',
-    previewLabels: ['Appuyer sur la chasse', 'Relâcher la chasse']
-  },
-  'lamp-toggle': { btnLabel: 'Allumer / Éteindre', toggleKey: 'lampOn' },
-  lampBath: { btnLabel: () => useSceneStore.getState().furniture.lampBath ? 'Éteindre SDB' : 'Allumer SDB', toggleKey: 'lampBath' },
-  lampCorridor: { btnLabel: () => useSceneStore.getState().furniture.lampCorridor ? 'Éteindre Couloir' : 'Allumer Couloir', toggleKey: 'lampCorridor' },
-  'bed-double': {
-    btnLabel: () => useSceneStore.getState().furniture.bedDouble ? 'Lits séparés' : 'Lit double', toggleKey: 'bed-double',
-    previewLabels: ['Mettre en lit double', 'Séparer en lits simples']
-  },
-  'bed-position': {
-    btnLabel: () => {
-      const p = positionState['bed-position'];
-      return p ? `Position (${DOUBLE_BED_POSITIONS[p.idx]?.label ?? p.idx + 1}) →` : 'Changer position →';
-    }, toggleKey: 'bed-position',
-    previewLabels: ['Position lit double →', 'Position lit double →'],
-    preview: false
-  },
-  'desk1-toggle': {
-    btnLabel: 'Assis / Debout', toggleKey: 'desk1-toggle',
-    previewLabels: ['Debout', 'Assis']
-  },
-  'desk2-toggle': {
-    btnLabel: 'Assis / Debout', toggleKey: 'desk2-toggle',
-    previewLabels: ['Debout', 'Assis']
-  },
-  'desk2-screen-toggle': {
-    btnLabel: () => {
-      const s = useSceneStore.getState();
-      const on = s.desk2ScreenActive || s.extraStates.desk2Screen;
-      return on ? '⏹️ Couper Vidéo' : '▶ Vidéo Bureau / TV';
-    },
-    toggleKey: 'desk2-screen-toggle',
-    icon: 'bi-display',
-    previewLabels: ['▶ Vidéo bureau / TV', '⏹ Couper vidéo']
-  },
-  'shiba-replay': { btnLabel: 'Rejouer', toggleKey: 'shiba-replay' },
-  'robin-bird-replay': { btnLabel: 'Rejouer', toggleKey: 'robin-bird-replay' },
-  'nestMini': {
-    btnLabel: 'Ok Google', toggleKey: 'nestMini',
-    previewLabels: ['Ok Google 🎙️', 'Ok Google 🎙️']
-  },
-  'tv-toggle': {
-    btnLabel: 'Allumer / Éteindre', toggleKey: 'tvOn',
-    previewLabels: ['Allumer', 'Éteindre']
-  },
-  'bin': {
-    btnLabel: 'Ouvrir / Fermer', toggleKey: 'bin-toggle',
-    previewLabels: ['Ouvrir', 'Fermer'],
-    previewStateKey: 'bin-toggle'
-  },
-  airPerformerPower: { btnLabel: 'Allumer / Éteindre', toggleKey: 'airPerformerPower' },
-  airPerformerMode: { btnLabel: 'Changer Mode', toggleKey: 'airPerformerMode', previewCycle: ['auto', 'cool', 'heat', 'sleep'], previewInitialValue: 'auto' },
-  airPerformerSpeed: { btnLabel: 'Vitesse +/-', toggleKey: 'airPerformerSpeed', previewCycle: [3, 6, 10], previewInitialValue: 5 },
-  'character-meshes': { btnLabel: 'Meshes', toggleKey: 'character-meshes' },
-  'sofa-arm-left': {
-    btnLabel: 'Accoudoir Gauche', toggleKey: 'sofaArmLeft',
-    previewLabels: ['Mettre à plat G', 'Relever G']
-  },
-  'sofa-arm-right': {
-    btnLabel: 'Accoudoir Droit', toggleKey: 'sofaArmRight',
-    previewLabels: ['Mettre à plat D', 'Relever D']
-  },
-  'lara-haircut': {
-    btnLabel: 'Coupe de cheveux 💇‍♀️', toggleKey: 'lara-haircut', type: 'select', options: [
-      { value: 'original', label: 'Coupe d\'origine 👱‍♀️' },
-      ...WIGS_ITEMS.map(wig => ({
-        value: wig.id,
-        label: wig.name
-      }))
-    ]
-  },
-  utdrag: {
-    btnLabel: () => useSceneStore.getState().extraStates.utdrag ? 'Rentrer la hotte' : 'Déplier la hotte',
-    toggleKey: 'utdrag',
-    previewLabels: ['Déplier', 'Rentrer'],
-    previewStateKey: 'utdrag-toggle'
-  },
-};
-// Helper to resolve action definition (supports dynamic actions like select-character-*)
-export function getActionDef(actionId: string): ActionDef | undefined {
-  if (/^animal-(robin|shiba|jikin|tosakin)-(fpv|follow)$/.test(actionId)) {
-    const fpv = actionId.endsWith('-fpv');
-    return { btnLabel: fpv ? 'Vue FPV' : 'Suivre', icon: fpv ? 'bi-eye' : 'bi-camera-video', toggleKey: actionId };
+export function getActionDef(id: string): ActionDef | undefined {
+  if (ACTIONS[id]) return { id, ...ACTIONS[id] };
+  if (/^animal-(robin|shiba|jikin|tosakin)-(fpv|follow)$/.test(id)) {
+    const fpv = id.endsWith('-fpv');
+    return { id, label: fpv ? 'Vue FPV' : 'Suivre', icon: fpv ? 'bi-eye' : 'bi-camera-video' };
   }
-  if (ACTIONS[actionId]) return ACTIONS[actionId];
-  if (actionId.startsWith('select-character-')) {
-    return {
-      btnLabel: '🎯 Définir comme personnage actif',
-      toggleKey: actionId,
-    };
+  if (id.startsWith('select-character-')) return { id, label: '🎯 Définir comme personnage actif' };
+  if (id.startsWith('smart-object:::')) {
+    const [, objectId, slotId] = id.split(':::');
+    const slot = getSmartObject(objectId)?.slots.find(s => s.slotId === slotId);
+    return { id, label: `${slot?.isDuo ? '🛋️ Duo' : '⚡ Utiliser'} (${slot?.name || slotId || 'Interagir'})` };
   }
-  if (actionId.startsWith('smart-object:::')) {
-    // Format : smart-object:::{objectId}:::{slotId}
-    const [, objectId, slotId] = actionId.split(':::');
-    const obj = getSmartObject(objectId);
-    const slot = obj?.slots.find(s => s.slotId === slotId);
-    const slotName = slot?.name || slotId || 'Interagir';
-    const prefix = slot?.isDuo ? '🛋️ Duo' : '⚡ Utiliser';
-    return {
-      btnLabel: `${prefix} (${slotName})`,
-      toggleKey: actionId,
-    };
-  }
-  return undefined;
 }
 
-/** Preview state uses the component's prop key, independently of the scene store. */
-export function togglePreviewAction(id: string, state: Record<string, any>): Record<string, any> {
+export function getActionLabel(id: string, value?: any): string {
   const action = getActionDef(id);
   if (!action) throw new Error(`Action inconnue : ${id}`);
-  const key = action.previewStateKey ?? id;
-  const value = action.previewCycle
-    ? action.previewCycle[(action.previewCycle.indexOf(state[key] ?? action.previewInitialValue) + 1) % action.previewCycle.length]
-    : id === 'glassDoorShutter'
-      ? ((state[key] ?? 0) === 0 ? 70 : state[key] === 70 ? 90 : state[key] === 90 ? 100 : 0)
-      : !state[key];
-  const next = { ...state, [key]: value };
+  const label = action.label;
+  return typeof label === 'function' ? label(value) : Array.isArray(label) ? (value === undefined ? label.join(' / ') : label[value ? 1 : 0]) : label;
+}
+
+export function getNextActionValue(id: string, value?: any): any {
+  const action = getActionDef(id);
+  if (!action) throw new Error(`Action inconnue : ${id}`);
+  return action.values ? action.values[(action.values.indexOf(value ?? action.initialValue) + 1) % action.values.length] : !value;
+}
+
+export function toggleObjectAction(id: string, state: Record<string, any>, value = getNextActionValue(id, state[id])): Record<string, any> {
+  const next = { ...state, [id]: value };
   if (id === 'fridge' && !value) next['fridge-crisper-toggle'] = false;
-  if (id === 'fridge-crisper-toggle' && value) next['fridge-toggle'] = true;
+  if (id === 'fridge-crisper-toggle' && value) next.fridge = true;
   return next;
-}
-
-export function getPreviewActionLabel(id: string, state: Record<string, any>): string {
-  const action = getActionDef(id);
-  if (!action) throw new Error(`Action inconnue : ${id}`);
-  const value = state[action.previewStateKey ?? id];
-  if (id === 'glassDoorShutter') return `Volet : ${value ? `${value}% fermé` : 'ouvert'}`;
-  if (action.previewLabels) return action.previewLabels[value ? 1 : 0];
-  return typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel ?? id;
 }
 
 export function getPreviewActionIds(objectId: string): readonly string[] {
   return getObjectActionIds(objectId).filter(id => {
     const action = getActionDef(id);
     if (!action) throw new Error(`Action inconnue pour ${objectId} : ${id}`);
-    return action.preview !== false;
+    return !action.sceneOnly;
   });
 }

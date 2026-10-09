@@ -35,7 +35,7 @@ const handleMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0
 
 export function CorridorCloset({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
-  const isOpen  = actionState['corr-doors-toggle'] ?? false;
+  const isOpen  = actionState['corrDoors'] ?? false;
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {

@@ -127,9 +127,9 @@ useGLTF.preload(DOOR_GLB);
 useGLTF.preload(HANDLE_GLB);
 
 export function BathroomCabinetWest(props: SceneItemProps) {
-  return <MetodCabinet {...props} openKey="cbn-west-toggle" hoverLabel="Armoire SDB Ouest" hoverObjectId="bathroom-cabinet-west" />;
+  return <MetodCabinet {...props} openKey="cbnWest" hoverLabel="Armoire SDB Ouest" hoverObjectId="bathroom-cabinet-west" />;
 }
 
 export function BathroomCabinetEast(props: SceneItemProps) {
-  return <MetodCabinet {...props} mirrorHandle openKey="cbn-east-toggle" hoverLabel="Armoire SDB Est" hoverObjectId="bathroom-cabinet-east" />;
+  return <MetodCabinet {...props} mirrorHandle openKey="cbnEast" hoverLabel="Armoire SDB Est" hoverObjectId="bathroom-cabinet-east" />;
 }

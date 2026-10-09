@@ -84,7 +84,7 @@ const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.
 export function DoorEntry({ onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
-  const impulse = useDoorImpulse('entry-door-toggle', DOOR_CONFIGS.entry.maxAngle);
+  const impulse = useDoorImpulse('entryDoor', DOOR_CONFIGS.entry.maxAngle);
 
   const frames = useEntryFrameGeo();
   const handle = useHandleGeo();

@@ -128,15 +128,15 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   const shutterPercentRef = useRef(0);
   const rightRotRef = useRef(0);
   const leftRotRef = useRef(0);
-  const rightImpulse = useDoorImpulse('east-glass-door-toggle', DOOR_CONFIGS.glassRight.maxAngle);
-  const leftImpulse = useDoorImpulse('glass-door-v2-left-open', DOOR_CONFIGS.glassLeft.maxAngle);
+  const rightImpulse = useDoorImpulse('eastGlassDoor', DOOR_CONFIGS.glassRight.maxAngle);
+  const leftImpulse = useDoorImpulse('glassDoorV2LeftOpen', DOOR_CONFIGS.glassLeft.maxAngle);
 
   const staticFrames = useStaticFrameGeo();
   const panelFrameGeo = usePanelFrameGeo(W_TOTAL / 2 - FRAME, 190);
   const hingeGeo = useHingeGeo();
 
   const stateRef = useRef({ targetShutter: 0 });
-  stateRef.current.targetShutter = actionState['glass-door-v2-shutter-pos'] ?? 0;
+  stateRef.current.targetShutter = actionState['glassDoorV2ShutterPos'] ?? 0;
 
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(W_TOTAL, GLASS_TOP, WW));

@@ -5,7 +5,7 @@ import { getObjectActionIds } from '../objectActions';
  *
  * Porte animée (pivot charnière gauche) — deux chemins :
  *  - Main scene  : furniture-toggle { key: 'cabinet' }
- *  - Inventory   : actionState['cabinet-toggle'] (prop)
+ *  - Inventory   : actionState['cabinet'] (prop)
  *
  * scene.rotation.y = π → face avant à -Z local (cabFrontZ < 0).
  * Charnière -X local, openAngle = -π/2 → porte tourne vers +Z (vers la pièce). ✓
@@ -83,11 +83,11 @@ export function KitchenCabinet({ actionState, onSize }: SceneItemProps) {
     pivot.userData.hoverAction  = ha;
   }, [scene, door, handle]);
 
-  // Chemin inventory : actionState['cabinet-toggle'] (depuis InventoryPreview)
+  // Chemin inventory : actionState['cabinet'] (depuis InventoryPreview)
   useEffect(() => {
-    openRef.current = !!(actionState['cabinet-toggle']);
+    openRef.current = !!(actionState['cabinet']);
     invalidate();
-  }, [actionState['cabinet-toggle']]);
+  }, [actionState['cabinet']]);
 
   // Chemin scène : furniture-toggle { key: 'cabinet' }
   useEffect(() => {

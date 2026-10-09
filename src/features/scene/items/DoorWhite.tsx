@@ -210,7 +210,7 @@ function DoorImpl({
 export function DoorLiving({ onSize }: SceneItemProps) {
   return (
     <DoorImpl
-      actionKey="living-door-toggle"
+      actionKey="livingDoor"
       pivotX={W / 2}   panelX={-W / 2}   handleX={-W + 15}   mancheDir={1}
       openAngle={-Math.PI / 2}
       doorConfig={DOOR_CONFIGS.living}
@@ -224,7 +224,7 @@ export function DoorLiving({ onSize }: SceneItemProps) {
 export function DoorBath({ onSize }: SceneItemProps) {
   return (
     <DoorImpl
-      actionKey="bathroom-door-toggle"
+      actionKey="bathroomDoor"
       pivotX={-W / 2}  panelX={W / 2}    handleX={W - 15}    mancheDir={-1}
       openAngle={Math.PI / 2}
       doorConfig={DOOR_CONFIGS.bath}

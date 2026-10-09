@@ -56,7 +56,7 @@ function LinkyGaine() {
 export function CorridorEquipment() {
   const as = useFurnitureToggles([
     'lamp-corridor-toggle',
-    'corr-doors-toggle',
+    'corrDoors',
   ]);
 
   const CORR_CX = (DOOR_START + ROOM_W) / 2;

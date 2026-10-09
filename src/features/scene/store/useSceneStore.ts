@@ -1,3 +1,4 @@
+import { getActionDef, getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import {
@@ -230,22 +231,8 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
     'lamp-sdb-toggle': 'lampBath',
     'lamp-couloir-toggle': 'lampCorridor',
     'bed-double': 'bedDouble',
-    bin: 'bin-toggle',
-    'bin-toggle': 'bin-toggle',
-    ninja: 'ninja',
-    'ninja-toggle': 'ninja',
-    utdrag: 'utdrag',
-    'utdrag-toggle': 'utdrag',
     'sofa-arm-left': 'sofaArmLeft',
     'sofa-arm-right': 'sofaArmRight',
-    'corr-doors-toggle': 'corrDoors',
-    'sdb-closet-toggle': 'sdbClosetL',
-    'sdb-closet-l-toggle': 'sdbClosetL',
-    'sdb-closet-r-toggle': 'sdbClosetR',
-    'shower-door-toggle': 'showerDoor',
-    'cbn-west-toggle': 'cbnWest',
-    'cbn-east-toggle': 'cbnEast',
-    'glass-door-v2-shutter-pos': 'glassDoorV2ShutterPos',
     'bermuda-grass': 'bermudaGrass',
     'bermuda-grass-toggle': 'bermudaGrass',
     'environment-toggle': 'environment',
@@ -432,7 +419,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       let nextFurniture: FurnitureState;
       if (key === 'glassDoorV2ShutterPos') {
         const cur = state.furniture.glassDoorV2ShutterPos;
-        const next = cur === 0 ? 70 : cur === 70 ? 90 : cur === 90 ? 100 : 0;
+        const next = getNextActionValue('glassDoorV2ShutterPos', cur);
         nextFurniture = { ...state.furniture, glassDoorV2ShutterPos: next };
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: next } }));
       } else if (key === 'dronaMode') {
@@ -601,31 +588,20 @@ export const useSceneStore = create<SceneStore>((set) => ({
   triggerAction: (key, targetState) => {
     if (key === 'fridge' || key === 'fridge-crisper-toggle') {
       set(state => {
-        const isDoor = key === 'fridge';
-        const next = targetState ?? !(isDoor ? state.furniture.fridge : state.extraStates[key]);
+        const next = toggleObjectAction(key, { fridge: state.furniture.fridge, 'fridge-crisper-toggle': state.extraStates['fridge-crisper-toggle'] }, targetState);
         return {
-          furniture: { ...state.furniture, fridge: isDoor ? next : (next || state.furniture.fridge) },
-          extraStates: {
-            ...state.extraStates,
-            'fridge-crisper-toggle': isDoor ? (next && state.extraStates['fridge-crisper-toggle']) : next,
-          },
+          furniture: { ...state.furniture, fridge: next.fridge },
+          extraStates: { ...state.extraStates, 'fridge-crisper-toggle': next['fridge-crisper-toggle'] },
         };
       });
       cameraState.invalidate?.();
       document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: targetState } }));
       return;
     }
-    const doorPushKeys: Record<string, string> = {
-      eastGlassDoor: 'east-glass-door-toggle',
-      glassDoorV2LeftOpen: 'glass-door-v2-left-open',
-      entryDoor: 'entry-door-toggle',
-      livingDoor: 'living-door-toggle',
-      bathroomDoor: 'bathroom-door-toggle',
-    };
-    const doorPushKey = doorPushKeys[key];
-    if (doorPushKey) {
+    const action = getActionDef(key);
+    if (action?.event) {
       if (targetState === false) return;
-      document.dispatchEvent(new CustomEvent('door-push', { detail: { key: doorPushKey } }));
+      document.dispatchEvent(new CustomEvent(action.event, { detail: { key } }));
       cameraState.invalidate?.();
       return;
     }
@@ -656,7 +632,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         let nextFurniture: FurnitureState;
         if (fKey === 'glassDoorV2ShutterPos') {
           const cur = state.furniture.glassDoorV2ShutterPos;
-          const next = cur === 0 ? 70 : cur === 70 ? 90 : cur === 90 ? 100 : 0;
+          const next = getNextActionValue('glassDoorV2ShutterPos', cur);
           nextFurniture = { ...state.furniture, glassDoorV2ShutterPos: next };
         } else {
           const nextVal = targetState !== undefined ? targetState : !state.furniture[fKey];
@@ -715,4 +691,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
 
 if (typeof window !== 'undefined') {
   (window as any).useSceneStore = useSceneStore;
+}
+
+/** Read the scene's value using the same action ID as components and previews. */
+export function getSceneActionValue(id: string): any {
+  const state = useSceneStore.getState();
+  if (id === 'desk2-screen-toggle') return state.desk2ScreenActive || state.extraStates.desk2Screen;
+  const key = resolveStoreKey(id);
+  if (key.type === 'furniture') return state.furniture[key.name as keyof FurnitureState];
+  if (key.type === 'extra') return state.extraStates[key.name];
+  if (key.type === 'layer') return state.layers[key.name as keyof LayerState];
 }

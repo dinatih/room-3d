@@ -7,7 +7,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
 import { type InventoryItem, type StorageSpace, WIGS_ITEMS } from './inventoryData';
 import { SCENE_REGISTRY } from './previewRegistry';
-import { getActionDef, getPreviewActionIds, getPreviewActionLabel, togglePreviewAction } from '@features/scene/objectActionRegistry';
+import { getActionDef, getPreviewActionIds, getActionLabel, toggleObjectAction } from '@features/scene/objectActionRegistry';
 import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpers';
 import { SkeletonHierarchyPanel } from '@features/scene/utils/SkeletonHierarchyPanel';
 import type { SkeletonGroup } from '@features/scene/utils/skeletonTypes';
@@ -1098,19 +1098,19 @@ export function InventoryPreview({
             <div className="position-absolute end-0 top-0 mt-5 me-2 z-3 d-flex flex-column gap-1">
               {actionKeys.map(key => {
                 const action = getActionDef(key)!;
-                const on = !!actionStates[action.previewStateKey ?? key];
+                const on = !!actionStates[key];
                 return (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => action.previewEvent
-                      ? document.dispatchEvent(new CustomEvent('door-push', { detail: { key: action.previewEvent } }))
-                      : setActionStates(s => togglePreviewAction(key, s))}
-                    className={`btn btn-sm ${on && !action.previewEvent ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
-                    aria-pressed={action.previewEvent ? undefined : on}
+                    onClick={() => action.event
+                      ? document.dispatchEvent(new CustomEvent(action.event, { detail: { key } }))
+                      : setActionStates(s => toggleObjectAction(key, s))}
+                    className={`btn btn-sm ${on && !action.event ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
+                    aria-pressed={action.event ? undefined : on}
                     data-object-action={key}
                   >
-                    {getPreviewActionLabel(key, actionStates)}
+                    {getActionLabel(key, actionStates[key] ?? action.initialValue ?? false)}
                   </button>
                 );
               })}

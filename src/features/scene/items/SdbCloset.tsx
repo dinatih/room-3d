@@ -45,8 +45,8 @@ const ZR = +(SEP_T / 2 + PANEL_T / 2);
 export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   const groupLRef = useRef<THREE.Group>(null!);
   const groupRRef = useRef<THREE.Group>(null!);
-  const isOpenL   = Boolean(actionState['sdb-closet-l-toggle'] ?? actionState['sdbClosetL'] ?? actionState['sdb-closet-toggle'] ?? false);
-  const isOpenR   = Boolean(actionState['sdb-closet-r-toggle'] ?? actionState['sdbClosetR'] ?? false);
+  const isOpenL   = !!actionState.sdbClosetL;
+  const isOpenR   = !!actionState.sdbClosetR;
   
   // Use refs for useFrame to prevent stale closures (as per GEMINI.md)
   const isOpenLRef = useRef(isOpenL);
