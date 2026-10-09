@@ -119,6 +119,10 @@ class SmartObjectOccupancyManager {
     const obj = SMART_OBJECTS[objectId];
     if (!obj || !obj.slots.length) return null;
 
+    if (this.isExclusiveObject(objectId) && this.isObjectFullyOccupied(objectId, characterId)) {
+      return null;
+    }
+
     if (preferredSlotId) {
       const preferred = obj.slots.find(s => s.slotId === preferredSlotId);
       if (preferred && !this.isSlotOccupied(objectId, preferred.slotId, characterId)) {

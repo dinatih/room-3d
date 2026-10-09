@@ -14,6 +14,7 @@ import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
+import { OccupancyManager } from './ai/occupancyManager';
 import { isCharacterVisibleInMode } from './characterConfig';
 
 import { getActionDef, getActionLabel, type ActionDef } from './objectActionRegistry';
@@ -621,7 +622,7 @@ export function HoverOverlay() {
                     const [, objectId, slotId] = action.id.split(':::');
                     const obj = getSmartObject(objectId);
                     const slot = obj?.slots.find(s => s.slotId === slotId);
-                    const targetPos = slot?.offset ?? [0, 0, 0];
+                    const targetPos = slot?.approachOffset ?? slot?.offset ?? obj?.position ?? [0, 0, 0];
 
                     if (slot?.isDuo) {
                       const activeId = useSceneStore.getState().activeCharacterId;
@@ -650,6 +651,16 @@ export function HoverOverlay() {
                         }));
                       }
                     } else {
+                      const targetSlot = slotId || obj?.slots[0]?.slotId || 'default';
+                      if (OccupancyManager.isSlotOccupied(objectId, targetSlot)) {
+                        const occupant = OccupancyManager.getOccupant(objectId, targetSlot);
+                        appLog('system', `⚠️ ${obj?.name ?? objectId} est déjà occupé${occupant ? ` (${occupant})` : ''}`);
+                        hoverState.locked = false;
+                        hoverState.touchActive = false;
+                        hoverState.onUpdate?.();
+                        return;
+                      }
+
                       // Trouver le personnage le plus proche (en excluant les animaux et les PNJs masqués)
                       let closestCharId: string | null = null;
                       let minDistance = Infinity;

@@ -326,7 +326,7 @@ export function Shower({ onSize, isPreview = false }: SceneItemProps) {
       <primitive object={tray} />
 
       {/* Barre douchette — platines murales au ras du mur Sud */}
-      <group position={[0, 0, TRAY_HALF - 8.6]}>
+      <group position={[0, 40, TRAY_HALF - 8.6]}>
         <primitive object={bar} />
       </group>
 

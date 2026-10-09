@@ -2088,6 +2088,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `Bartending (408f / 13.6s, 403KB)`,
     tags: ['interaction'],
     duration: 13.6,
+    defaultOffset: [0, 0, +25]
   },
   {
     id: 'bash',

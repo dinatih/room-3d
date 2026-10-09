@@ -4,7 +4,7 @@ import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
 import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
 import { BATH_WEST_WALL, ROOM_D } from '../wallData';
-import { getEstimatedClipDuration } from '../animOptions';
+import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 
 /**
@@ -1058,14 +1058,14 @@ export function buildSmartObjectInstructionSequence(
     return [
       { type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'use' },
       {
-        type: 'INTERACT', smartObjectId: 'toilet', slotId: 'use',
-        animation: 'button-pushing', duration: getEstimatedClipDuration('button-pushing'),
+        type: 'WAIT', smartObjectId: 'toilet', slotId: 'use',
+        animation: 'idle', duration: TOILET_HINGE_DURATION, rotY: Math.PI,
         triggerEventKey: 'wc-lid-toggle', triggerEventValue: true,
       },
       { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'use' },
       {
-        type: 'INTERACT', smartObjectId: 'toilet', slotId: 'use',
-        animation: 'button-pushing', duration: getEstimatedClipDuration('button-pushing'),
+        type: 'WAIT', smartObjectId: 'toilet', slotId: 'use',
+        animation: 'idle', duration: TOILET_HINGE_DURATION, rotY: Math.PI,
         triggerEventKey: 'wc-lid-toggle', triggerEventValue: false,
       },
       { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'flush', triggerEventKey: 'wc-flush', triggerEventValue: true },

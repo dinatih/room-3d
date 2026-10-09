@@ -341,7 +341,7 @@ export function useAgentController(
         }
       } else {
         const nextDynamicInstr = dynamicNavQueueRef.current[dynamicNavIndexRef.current];
-        if (claimedSlotRef.current && (!nextDynamicInstr || nextDynamicInstr.smartObjectId !== claimedSlotRef.current.objectId)) {
+        if (claimedSlotRef.current && nextDynamicInstr?.smartObjectId && nextDynamicInstr.smartObjectId !== claimedSlotRef.current.objectId) {
           releaseClaimedSlot();
         }
       }
@@ -356,7 +356,7 @@ export function useAgentController(
 
   const resetDuoState = () => {
     duoSessionManager.leaveDuoZone(_characterId);
-    claimedSlotRef.current = null;
+    releaseClaimedSlot();
     duoRoleRef.current = null;
     duoInvitedRef.current = false;
     dynamicNavQueueRef.current = [];
@@ -496,7 +496,7 @@ export function useAgentController(
 
     // ── 3. État IDLE : Initialisation et réservation de l'instruction ──
     if (statusRef.current === 'IDLE') {
-      if (!hasNavStep && currentInstruction.smartObjectId) {
+      if (currentInstruction.smartObjectId) {
         const objId = currentInstruction.smartObjectId;
         let reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
         const isDuo = isDuoSlot(objId, reqSlotId);
@@ -550,46 +550,69 @@ export function useAgentController(
             cachedCoordsRef.current = null;
             return update(dt);
           }
-        } else if (OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
-          const altSlotId = OccupancyManager.getAvailableSlot(objId, _characterId, currentInstruction.slotId);
-          if (altSlotId) {
-            currentInstruction.slotId = altSlotId;
-            const newSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === altSlotId);
-            if (newSlot) {
-              const resolved = resolveSlotAnimation(newSlot);
-              currentInstruction.animation = resolved.animation;
-              currentInstruction.duration = newSlot.duration;
-              currentInstruction.rotY = resolved.rotY;
-            }
-            OccupancyManager.claimSlot(objId, altSlotId, _characterId);
-            claimedSlotRef.current = { objectId: objId, slotId: altSlotId };
-          } else {
-            const occupant = OccupancyManager.getOccupant(objId, reqSlotId);
-            const objName = SMART_OBJECTS[objId]?.name || objId;
-
-            if (loop && scenario) {
-              appLog(_characterId, `⚠️ ${objName} est occupé${occupant ? ` (${occupant})` : ''}, recherche d'une autre place...`);
-              while (stepIndexRef.current < scenario.length && scenario[stepIndexRef.current].smartObjectId === objId) {
-                stepIndexRef.current++;
+        } else if (claimedSlotRef.current?.objectId !== objId) {
+          if (OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
+            const altSlotId = OccupancyManager.getAvailableSlot(objId, _characterId, currentInstruction.slotId);
+            if (altSlotId) {
+              currentInstruction.slotId = altSlotId;
+              const newSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === altSlotId);
+              if (newSlot) {
+                const resolved = resolveSlotAnimation(newSlot);
+                currentInstruction.animation = resolved.animation;
+                currentInstruction.duration = newSlot.duration;
+                currentInstruction.rotY = resolved.rotY;
               }
-              dynamicNavQueueRef.current = [];
-              dynamicNavIndexRef.current = 0;
-              cachedCoordsInstructionRef.current = null;
-              cachedCoordsRef.current = null;
-              return update(dt);
+              OccupancyManager.claimSlot(objId, altSlotId, _characterId);
+              claimedSlotRef.current = { objectId: objId, slotId: altSlotId };
             } else {
-              appLog(_characterId, `⚠️ ${objName} est actuellement occupé${occupant ? ` (${occupant})` : ''}`);
-              statusRef.current = 'FINISHED';
-              if (onComplete) onComplete();
-              stateRef.current.animation = 'idle';
-              return stateRef.current;
+              const occupant = OccupancyManager.getOccupant(objId, reqSlotId);
+              const objName = SMART_OBJECTS[objId]?.name || objId;
+
+              if (hasNavStep) {
+                appLog(_characterId, `⚠️ ${objName} est occupé${occupant ? ` (${occupant})` : ''}, action ignorée`);
+                while (dynamicNavIndexRef.current < dynamicNavQueueRef.current.length &&
+                       dynamicNavQueueRef.current[dynamicNavIndexRef.current].smartObjectId === objId) {
+                  dynamicNavIndexRef.current++;
+                }
+                if (dynamicNavIndexRef.current >= dynamicNavQueueRef.current.length) {
+                  dynamicNavQueueRef.current = [];
+                  dynamicNavIndexRef.current = 0;
+                }
+                cachedCoordsInstructionRef.current = null;
+                cachedCoordsRef.current = null;
+                return update(dt);
+              } else if (scenario) {
+                appLog(_characterId, `⚠️ ${objName} est occupé${occupant ? ` (${occupant})` : ''}, recherche d'une autre place...`);
+                while (stepIndexRef.current < scenario.length && scenario[stepIndexRef.current].smartObjectId === objId) {
+                  stepIndexRef.current++;
+                }
+                dynamicNavQueueRef.current = [];
+                dynamicNavIndexRef.current = 0;
+                cachedCoordsInstructionRef.current = null;
+                cachedCoordsRef.current = null;
+                return update(dt);
+              } else {
+                appLog(_characterId, `⚠️ ${objName} est actuellement occupé${occupant ? ` (${occupant})` : ''}`);
+                statusRef.current = 'FINISHED';
+                if (onComplete) onComplete();
+                stateRef.current.animation = 'idle';
+                return stateRef.current;
+              }
+            }
+          } else {
+            OccupancyManager.claimSlot(objId, reqSlotId, _characterId);
+            claimedSlotRef.current = { objectId: objId, slotId: reqSlotId };
+            const chosenSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId);
+            if (chosenSlot && !currentInstruction.animation) {
+              const resolved = resolveSlotAnimation(chosenSlot);
+              currentInstruction.animation = resolved.animation;
+              if (chosenSlot.duration && !currentInstruction.duration) currentInstruction.duration = chosenSlot.duration;
+              if (currentInstruction.rotY === undefined) currentInstruction.rotY = resolved.rotY;
             }
           }
-        } else {
-          OccupancyManager.claimSlot(objId, reqSlotId, _characterId);
-          claimedSlotRef.current = { objectId: objId, slotId: reqSlotId };
-          const chosenSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId);
-          if (chosenSlot && !currentInstruction.animation) {
+        } else if (!currentInstruction.animation) {
+          const chosenSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === claimedSlotRef.current?.slotId);
+          if (chosenSlot) {
             const resolved = resolveSlotAnimation(chosenSlot);
             currentInstruction.animation = resolved.animation;
             if (chosenSlot.duration && !currentInstruction.duration) currentInstruction.duration = chosenSlot.duration;
@@ -687,6 +710,23 @@ export function useAgentController(
         stateRef.current.z = target.tz;
 
         if (currentInstruction.type === 'USE_OBJECT') {
+          const objId = currentInstruction.smartObjectId;
+          const slotId = currentInstruction.slotId || (objId ? SMART_OBJECTS[objId]?.slots[0]?.slotId : undefined) || 'default';
+          if (objId && OccupancyManager.isSlotOccupied(objId, slotId, _characterId)) {
+            const occupant = OccupancyManager.getOccupant(objId, slotId);
+            const objName = SMART_OBJECTS[objId]?.name || objId;
+            appLog(_characterId, `⚠️ ${objName} est déjà occupé${occupant ? ` (${occupant})` : ''} à l'arrivée, passage à la suite`);
+            releaseClaimedSlot();
+            statusRef.current = 'IDLE';
+            advanceToNextStep(hasNavStep);
+            return update(dt);
+          }
+
+          if (objId && (!claimedSlotRef.current || claimedSlotRef.current.objectId !== objId)) {
+            OccupancyManager.claimSlot(objId, slotId, _characterId);
+            claimedSlotRef.current = { objectId: objId, slotId };
+          }
+
           statusRef.current = 'INTERACTING';
           if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
             setDesk2SmartActionState(_characterId, true);
