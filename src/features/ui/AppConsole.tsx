@@ -222,42 +222,6 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           <span>{activeChar ? npcLabel(activeChar) : activeCharacterId}</span>
           <i className="bi bi-chevron-down" aria-hidden="true" />
         </button>
-        <div
-          ref={characterPopoverRef}
-          id={characterPopoverId}
-          {...{ popover: 'auto' }}
-          role="dialog"
-          aria-labelledby={`${characterPopoverId}-title`}
-          className="popover app-console-character-popover shadow-lg"
-          onClick={e => e.stopPropagation()}
-          onPointerDown={e => e.stopPropagation()}
-          onKeyDown={e => e.stopPropagation()}
-        >
-          <h2 id={`${characterPopoverId}-title`} className="popover-header small fw-semibold d-flex align-items-center gap-2">
-            <i className="bi bi-people" aria-hidden="true" />
-            Choisir un PNJ
-          </h2>
-          <div className="popover-body p-2">
-            <div className="row row-cols-2 g-1">
-              {CHARACTERS.map(c => (
-                <div key={c.id} className="col">
-                  <button
-                    type="button"
-                    className={`btn btn-sm w-100 d-flex align-items-center justify-content-between gap-1 text-start ${c.id === activeCharacterId ? 'btn-primary' : 'btn-light'}`}
-                    aria-pressed={c.id === activeCharacterId}
-                    onClick={() => {
-                      useSceneStore.getState().setActiveCharacterId(c.id);
-                      characterPopoverRef.current!.hidePopover();
-                    }}
-                  >
-                    <span>{npcLabel(c)}</span>
-                    {c.id === activeCharacterId && <i className="bi bi-check-lg" aria-hidden="true" />}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
 
         {open && (
           <button
@@ -397,6 +361,42 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           })}
         </div>
       </Group>
+      <div
+        ref={characterPopoverRef}
+        id={characterPopoverId}
+        {...{ popover: 'auto' }}
+        role="dialog"
+        aria-labelledby={`${characterPopoverId}-title`}
+        className="popover app-console-character-popover glass-card shadow-lg"
+        onClick={e => e.stopPropagation()}
+        onPointerDown={e => e.stopPropagation()}
+        onKeyDown={e => e.stopPropagation()}
+      >
+        <h2 id={`${characterPopoverId}-title`} className="popover-header bg-transparent small fw-semibold d-flex align-items-center gap-2">
+          <i className="bi bi-people" aria-hidden="true" />
+          Choisir un PNJ
+        </h2>
+        <div className="popover-body p-2">
+          <div className="row row-cols-2 g-1">
+            {CHARACTERS.map(c => (
+              <div key={c.id} className="col">
+                <button
+                  type="button"
+                  className={`btn btn-sm w-100 d-flex align-items-center justify-content-between gap-1 text-start ${c.id === activeCharacterId ? 'btn-primary' : 'btn-light'}`}
+                  aria-pressed={c.id === activeCharacterId}
+                  onClick={() => {
+                    useSceneStore.getState().setActiveCharacterId(c.id);
+                    characterPopoverRef.current!.hidePopover();
+                  }}
+                >
+                  <span>{npcLabel(c)}</span>
+                  {c.id === activeCharacterId && <i className="bi bi-check-lg" aria-hidden="true" />}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
