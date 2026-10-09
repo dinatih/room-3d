@@ -7,7 +7,6 @@
  */
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { CHARACTERS, findCharacter } from '@features/scene/characterConfig';
-import { chooseRandomCharacter } from '@features/scene/store/randomCharacter';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { Group } from '@features/scene/sidepanel/Group';
@@ -157,44 +156,27 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       >
         {isMaximized ? '▲' : '▼'}
       </button>
-      <div className="input-group input-group-sm flex-nowrap" style={{ height: '22px', width: 'auto' }}>
+      {open && (
         <button
           type="button"
-          className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 flex-shrink-0"
-          style={{ height: '22px', lineHeight: 1 }}
+          className="btn btn-sm py-0 px-2 small flex-shrink-0"
+          style={{ fontSize: '11px', borderColor: pnjColor, color: pnjColor, borderWidth: '1.5px', height: '22px' }}
           onClick={(e) => {
             e.stopPropagation();
-            chooseRandomCharacter();
+            setFilterBubbleOnly(f => {
+              setCycleStep(f ? 1 : 2);
+              return !f;
+            });
           }}
-          onPointerDown={(e) => e.stopPropagation()}
-          title="Choisir un PNJ aléatoire parmi les personnages visibles (S)"
-          aria-label="Choisir un PNJ aléatoire"
+          title={
+            filterBubbleOnly
+              ? `Filtre actif : logs limités à ${activeChar?.name ?? activeCharacterId}`
+              : `Filtrer les logs pour ${activeChar?.name ?? activeCharacterId}`
+          }
         >
-          <i className="bi bi-shuffle" aria-hidden="true" />
+          {filterBubbleOnly ? '✓ Filtré' : 'Filtrer'}
         </button>
-
-        {open && (
-          <button
-            type="button"
-            className="btn btn-sm py-0 px-2 small"
-            style={{ fontSize: '11px', borderColor: pnjColor, color: pnjColor, borderWidth: '1.5px' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setFilterBubbleOnly(f => {
-                setCycleStep(f ? 1 : 2);
-                return !f;
-              });
-            }}
-            title={
-              filterBubbleOnly
-                ? `Filtre actif : logs limités à ${activeChar?.name ?? activeCharacterId}`
-                : `Filtrer les logs pour ${activeChar?.name ?? activeCharacterId}`
-            }
-          >
-            {filterBubbleOnly ? '✓ Filtré' : 'Filtrer'}
-          </button>
-        )}
-      </div>
+      )}
 
       {open && (
         <button

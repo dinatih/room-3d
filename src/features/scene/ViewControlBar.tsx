@@ -185,7 +185,7 @@ export function ViewControlBar({
             <CharacterCountSelect />
             <button
               type="button"
-              className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+              className={`${TOOLBAR_BUTTON_CLASS} view-control-bar__btn--yellow`}
               onClick={chooseRandomCharacter}
               title="Changer aléatoirement le PNJ actif parmi les personnages visibles (S)"
               aria-label="Changer aléatoirement le PNJ actif (S)"
