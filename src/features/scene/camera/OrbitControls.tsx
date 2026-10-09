@@ -5,14 +5,30 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import './OrbitControls.scss';
 
 /** Commandes partagées : le curseur indique l'action pendant un glisser souris. */
-export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof DreiOrbitControls>>(
-  function OrbitControls(props, forwardedRef) {
+export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof DreiOrbitControls> & {
+  zoomScope?: 'scene' | 'preview';
+}>(
+  function OrbitControls({ zoomScope = 'preview', ...props }, forwardedRef) {
     const [controls, setControls] = useState<OrbitControlsImpl | null>(null);
     const attachRef = useCallback((value: OrbitControlsImpl | null) => {
       setControls(value);
       if (typeof forwardedRef === 'function') forwardedRef(value);
       else if (forwardedRef) forwardedRef.current = value;
     }, [forwardedRef]);
+
+    useEffect(() => {
+      if (!controls) return;
+      const onZoom = (event: Event) => {
+        const { direction, scope } = (event as CustomEvent<{
+          direction: 'in' | 'out'; scope: 'scene' | 'preview';
+        }>).detail;
+        if (scope !== zoomScope || !controls.enabled || !controls.enableZoom) return;
+        if (direction === 'in') controls.dollyIn();
+        else controls.dollyOut();
+      };
+      document.addEventListener('camera-zoom', onZoom);
+      return () => document.removeEventListener('camera-zoom', onZoom);
+    }, [controls, zoomScope]);
 
     useEffect(() => {
       if (!controls) return;

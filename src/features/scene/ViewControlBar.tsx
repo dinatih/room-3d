@@ -252,6 +252,22 @@ export function ViewControlBar({
 
       </div>
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Zoom caméra">
+          {(['in', 'out'] as const).map(direction => (
+            <button
+              key={direction}
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+              onClick={() => document.dispatchEvent(new CustomEvent('camera-zoom', {
+                detail: { direction, scope: showCharacterModes ? 'scene' : 'preview' },
+              }))}
+              title={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
+              aria-label={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
+            >
+              <i className={`bi bi-zoom-${direction}`} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
         {viewButtons(ORTHO_VIEWS, 'cyan')}
         {viewButtons(EXTRA_VIEWS, 'green')}
         {viewButtons(ISO_VIEWS, 'purple')}
