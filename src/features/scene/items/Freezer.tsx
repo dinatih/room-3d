@@ -1,99 +1,69 @@
-import { getObjectActionIds } from '../objectActions';
-/**
- * Freezer.tsx — Réfrigérateur compact TILLREDA IKEA.
- * media/glb/TILLREDA_anim.glb — body + door avec animation "door_open".
- * Coordonnées locales : centré X/Z, Y=0 = sol.
- *
- * Deux chemins pour déclencher l'anim :
- *  - Main scene : furniture-toggle { key: 'freezerOpen' }
- *  - Inventory  : actionState['freezer-toggle'] (prop)
- */
+/** Compact freezer: complete source door, fixed hinges and modelled interior. */
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { getObjectActionIds } from '../objectActions';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/tillreda_anim/TILLREDA_anim.glb';
 
-export function Freezer({ actionState, onSize }: SceneItemProps) {
+export function Freezer({ actionState, onSize, isPreview = false }: SceneItemProps & { isPreview?: boolean }) {
   const { scene, animations } = useGLTFClone(GLB);
-  const mixerRef     = useRef<THREE.AnimationMixer | null>(null);
-  const actionRef    = useRef<THREE.AnimationAction | null>(null);
-  const openRef      = useRef(false);
-  const animatingRef = useRef(false);
+  const sceneOpen = useSceneStore(s => s.furniture.freezerOpen);
+  const wantOpen = isPreview ? !!actionState['freezer-toggle'] : sceneOpen;
+  const target = useRef(wantOpen);
+  target.current = wantOpen;
+  const runtime = useRef<{ mixer: THREE.AnimationMixer; door: THREE.AnimationAction } | null>(null);
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
+    scene.scale.set(1, 1, 1);
+    scene.position.set(0, 0, 0);
     removeGlbLines(scene);
+    const clip = animations.find(c => c.name === 'door_open');
+    if (!clip) throw new Error('Freezer: missing door_open animation');
+    const mixer = new THREE.AnimationMixer(scene);
+    const door = mixer.clipAction(clip);
+    door.setLoop(THREE.LoopOnce, 1);
+    door.clampWhenFinished = true;
+    door.play();
+    door.paused = true;
+    mixer.update(0);
     scene.scale.setScalar(100);
     scene.rotation.y = Math.PI / 2;
-    const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.4 });
-    scene.traverse(c => {
-      if (!(c as THREE.Mesh).isMesh) return;
-      (c as THREE.Mesh).material = blackMat;
-    });
     const box = glbLocalBBox(scene);
-    scene.position.set(
-      -(box.min.x + box.max.x) / 2,
-      -box.min.y,
-      -(box.min.z + box.max.z) / 2,
-    );
-    onSize(box.getSize(new THREE.Vector3()));
+    scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
+    scene.userData.skipMerge = true;
     scene.userData.hoverAction = { label: 'Congélateur CHIQ', actions: getObjectActionIds('freezer') };
-
-    const mixer = new THREE.AnimationMixer(scene);
-    mixer.addEventListener('finished', () => { animatingRef.current = false; });
-    mixerRef.current = mixer;
-    const clip = animations.find(c => c.name === 'door_open') ?? animations[0];
-    if (clip) {
-      const action = mixer.clipAction(clip);
-      action.setLoop(THREE.LoopOnce, 1);
-      action.clampWhenFinished = true;
-      actionRef.current = action;
-    }
-  }, [scene]);
-
-  const playDoor = (open: boolean) => {
-    const action = actionRef.current;
-    if (!action) return;
-    if (open === openRef.current) return;
-    openRef.current = open;
-    animatingRef.current = true;
-    action.paused  = false;
-    action.enabled = true;
-    if (open) {
-      action.timeScale = 1;
-      if (action.time >= action.getClip().duration) action.time = 0;
-    } else {
-      action.timeScale = -1;
-      if (action.time <= 0) action.time = action.getClip().duration;
-    }
-    action.play();
+    scene.traverse(obj => {
+      if ((obj as THREE.Mesh).isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      }
+    });
+    runtime.current = { mixer, door };
+    onSize(box.getSize(new THREE.Vector3()));
     invalidate();
-  };
-
-  // Inventory path: react to actionState prop
-  useEffect(() => {
-    playDoor(!!(actionState['freezer-toggle']));
-  }, [actionState['freezer-toggle']]);
-
-  // Main scene path: react to furniture-toggle event
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent<{ key: string }>).detail;
-      if (key === 'freezer') playDoor(!openRef.current);
+    return () => {
+      runtime.current = null;
+      mixer.stopAllAction();
+      mixer.uncacheRoot(scene);
     };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, []);
+  }, [scene, animations, invalidate]);
+
+  useEffect(() => { invalidate(); }, [wantOpen, invalidate]);
 
   useFrame((_, delta) => {
-    if (!animatingRef.current) return;
-    mixerRef.current?.update(Math.min(delta, 0.033));
-    invalidate();
+    const r = runtime.current;
+    if (!r) return;
+    const end = target.current ? r.door.getClip().duration : 0;
+    r.door.time = r.door.time < end ? Math.min(end, r.door.time + delta) : Math.max(end, r.door.time - delta);
+    r.mixer.update(0);
+    if (r.door.time !== end) invalidate();
   });
 
   return <primitive object={scene} />;
