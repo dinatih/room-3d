@@ -270,7 +270,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'pick-laundry',
         name: 'Prendre le sac de Linge sale',
         relative: true,
-        offset: [-20, 0, -35], // 35 cm devant la porte droite dans la SDB
+        offset: [25, 0, -35], // 35 cm devant la porte droite dans la SDB
         rotY: 0,
         animation: 'take-object-mid',
         duration: 8,
@@ -280,7 +280,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'tidy-shelf',
         name: 'Ranger sur l\'étagère',
         relative: true,
-        offset: [20, 0, -35], // 35 cm devant la porte gauche dans la SDB
+        offset: [-25, 0, -35], // 35 cm devant la porte gauche dans la SDB
         rotY: 0,
         animation: 'inspect-mid-height',
         duration: 8,
