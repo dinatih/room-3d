@@ -1,64 +1,34 @@
-# Animations 3D — Organisation des sous-dossiers
+# Animations 3D — Organisation par source
 
-Ce dossier regroupe les **835 animations GLB** du projet, classées par thématique dans des sous-dossiers dédiés :
+Ce dossier regroupe les **950 animations GLB** du projet, classées par provenance :
 
 ```text
 public/animations/
-├── locomotion/          # Déplacements (marches, courses, sauts, escaliers, chutes, glissades, acrobaties)
-│   ├── anim_walking.glb
-│   ├── anim_running.glb
-│   ├── anim_jump.glb
-│   ├── anim_falling.glb
-│   └── ... (176 fichiers)
-│
-├── dances/              # Chorégraphies & danses (hip-hop, salsa, samba, breakdance, twerk, belly, jazz...)
-│   ├── anim_belly_dance.glb
-│   ├── anim_dancing_twerk.glb
-│   ├── anim_salsa_dancing.glb
-│   ├── miley_armature_10_dance_like_sidestep.glb
-│   └── ... (101 fichiers)
-│
-├── poses_idles/         # Poses & attentes (debout, assis, couché, repos, poses photo, t-pose)
-│   ├── anim_female_standing_pose.glb
-│   ├── anim_female_sitting_pose.glb
-│   ├── anim_laying_idle_1.glb
-│   ├── anim_sitting_idle.glb
-│   └── ... (192 fichiers)
-│
-├── combat/              # Arts martiaux & combats (boxe, coups de pied, esquives, parades, capoeira, armes)
-│   ├── anim_body_jab_cross.glb
-│   ├── anim_best_double_leg_takedown_attacker.glb
-│   ├── anim_armada.glb
-│   ├── anim_block.glb
-│   └── ... (238 fichiers)
-│
-├── sports_fitness/      # Fitness, musculation & sports (pompes, squats, yoga, étirements, foot, natation)
-│   ├── anim_push_up.glb
-│   ├── anim_air_squat_bent_arms.glb
-│   ├── anim_swimming_to_edge.glb
-│   ├── anim_stall_soccerball_1.glb
-│   └── ... (42 fichiers)
-│
-├── emotes_gestures/     # Gestes expressifs & interactions sociales (saluts, applaudissements, rires, discussions)
-│   ├── anim_shaking_hands_2.glb
-│   ├── anim_hand_raising.glb
-│   ├── anim_waving.glb
-│   ├── anim_angry_gesture.glb
-│   └── ... (44 fichiers)
-│
-└── interactions/        # Actions du quotidien & manipulation d'objets (smartphone/sms, ouvrir porte, porter, taper...)
-    ├── anim_texting_while_standing.glb
-    ├── anim_open_door_outwards.glb
-    ├── anim_bartending.glb
-    └── ... (42 fichiers)
+├── miley/              # 172 animations extraites de Miley
+├── npz/
+│   ├── yoga/           # 130 animations Yoga issues de NPZ
+│   └── dances/         # 12 danses NPZ : Bachata, RnB, Salsa, Reggaeton, etc.
+├── mixamo/             # 629 animations Mixamo
+└── others/             # 7 animations signatures extraites des personnages
 ```
 
-## Utilisation dans le code
+## Règles de classement
 
-Pour charger une animation dans un composant R3F ou via Three.js :
+- `miley/` : animations extraites de Miley, nommées `miley_armature_*`.
+- `npz/yoga/` et `npz/dances/` : collections converties depuis NPZ ; leurs métadonnées JSON restent avec les GLB correspondants.
+- `mixamo/` : animations identifiées par leurs fichiers FBX sources ou leurs pistes Mixamo. Le nom d’un squelette retargeté ne définit pas sa provenance.
+- `others/` : animations signatures des personnages et toute autre provenance non confirmée. Les signatures restent ici même si la conversion a nommé leurs pistes `mixamo.com`.
+
+## Registre et interface
+
+Les chemins de chargement sont déclarés dans `src/features/scene/animations/animationRegistry.ts` :
 
 ```ts
-const animPath = 'animations/locomotion/anim_walking.glb';
-// ou
-const dancePath = 'animations/dances/anim_salsa_dancing.glb';
+const walkPath = 'animations/mixamo/anim_walking.glb';
+const mileyPath = 'animations/miley/miley_armature_idle01_f.glb';
+const bachataPath = 'animations/npz/dances/anim_bachata_vaso_01.glb';
 ```
+
+La propriété obligatoire `category` du registre définit le thème affiché dans le sélecteur : combat, danses, emotes et gestes, interactions, locomotion, poses et idles, sports et fitness, Yoga et Mocap. Elle est indépendante du dossier source. Les tags conservent leur rôle sémantique dans les interactions.
+
+Les anciens chemins thématiques ne sont plus pris en charge. Toute nouvelle animation doit être placée dans le dossier de sa source et enregistrée avec son chemin réel et sa catégorie.
