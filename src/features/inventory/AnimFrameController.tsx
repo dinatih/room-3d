@@ -558,99 +558,102 @@ export function AnimFrameController({
 
       {/* ── Ligne 2 : Transport, Compteurs, Sélecteur & Actions ── */}
       <div className="anim-frame-controller__controls align-items-center justify-content-between flex-wrap gap-1">
-        {/* Groupe boutons de lecture */}
-        <div className="btn-group btn-group-sm" role="group">
-          <button
-            type="button"
-            className="btn py-0 px-2 btn-outline-secondary text-dark"
-            onClick={() => seekToFrame(0)}
-            disabled={isTPose}
-            title="Début (Frame 0 — Début / 0)"
-          >
-            <i className="bi bi-skip-backward-fill" />
-          </button>
-          <button
-            type="button"
-            className="btn py-0 px-2 btn-outline-secondary text-dark"
-            onClick={() => stepFrame(-1)}
-            disabled={isTPose}
-            title="Frame précédente (-1f — Flèche Gauche, Maj: -5f)"
-          >
-            <i className="bi bi-caret-left-fill" />
-          </button>
-          <button
-            type="button"
-            className={`btn py-0 px-2 fw-bold d-inline-flex align-items-center gap-1 ${
-              isPlaying ? 'btn-danger text-white shadow-sm' : 'btn-warning text-dark shadow-sm'
-            }`}
-            onClick={togglePlay}
-            disabled={isTPose}
-            title={isPlaying ? 'Pause (Espace)' : 'Play (Espace)'}
-          >
-            <i className={isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill'} />
-            <span>{isPlaying ? 'Pause' : 'Play'}</span>
-          </button>
-          <button
-            type="button"
-            className="btn py-0 px-2 btn-outline-secondary text-dark"
-            onClick={() => stepFrame(1)}
-            disabled={isTPose}
-            title="Frame suivante (+1f — Flèche Droite, Maj: +5f)"
-          >
-            <i className="bi bi-caret-right-fill" />
-          </button>
-        </div>
+        {/* Gauche : Transport, Vitesse et Compteurs groupés ensemble */}
+        <div className="d-flex align-items-center flex-wrap gap-1">
+          {/* Groupe boutons de lecture */}
+          <div className="btn-group btn-group-sm" role="group">
+            <button
+              type="button"
+              className="btn py-0 px-2 btn-outline-secondary text-dark"
+              onClick={() => seekToFrame(0)}
+              disabled={isTPose}
+              title="Début (Frame 0 — Début / 0)"
+            >
+              <i className="bi bi-skip-backward-fill" />
+            </button>
+            <button
+              type="button"
+              className="btn py-0 px-2 btn-outline-secondary text-dark"
+              onClick={() => stepFrame(-1)}
+              disabled={isTPose}
+              title="Frame précédente (-1f — Flèche Gauche, Maj: -5f)"
+            >
+              <i className="bi bi-caret-left-fill" />
+            </button>
+            <button
+              type="button"
+              className={`btn py-0 px-2 fw-bold d-inline-flex align-items-center gap-1 ${
+                isPlaying ? 'btn-danger text-white shadow-sm' : 'btn-warning text-dark shadow-sm'
+              }`}
+              onClick={togglePlay}
+              disabled={isTPose}
+              title={isPlaying ? 'Pause (Espace)' : 'Play (Espace)'}
+            >
+              <i className={isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill'} />
+              <span>{isPlaying ? 'Pause' : 'Play'}</span>
+            </button>
+            <button
+              type="button"
+              className="btn py-0 px-2 btn-outline-secondary text-dark"
+              onClick={() => stepFrame(1)}
+              disabled={isTPose}
+              title="Frame suivante (+1f — Flèche Droite, Maj: +5f)"
+            >
+              <i className="bi bi-caret-right-fill" />
+            </button>
+          </div>
 
-        {/* Vitesse de lecture */}
-        <div className="d-flex align-items-center gap-1">
-          <i className="bi bi-lightning-charge text-muted small" aria-hidden="true" />
-          <select
-            className="form-select form-select-sm py-0 ps-2 bg-transparent text-dark w-auto"
-            value={speed}
-            onChange={e => setSpeed(parseFloat(e.target.value))}
-            title="Vitesse de lecture"
-          >
-            {SPEED_OPTIONS.map(s => (
-              <option key={s} value={s}>
-                {s}x
-              </option>
-            ))}
-          </select>
-        </div>
+          {/* Vitesse de lecture */}
+          <div className="d-flex align-items-center gap-1">
+            <i className="bi bi-lightning-charge text-muted small" aria-hidden="true" />
+            <select
+              className="form-select form-select-sm py-0 ps-1.5 pe-4 bg-transparent text-dark w-auto"
+              value={speed}
+              onChange={e => setSpeed(parseFloat(e.target.value))}
+              title="Vitesse de lecture"
+            >
+              {SPEED_OPTIONS.map(s => (
+                <option key={s} value={s}>
+                  {s}x
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Compteur précis de Frame & Temps */}
-        <div className="d-flex align-items-center gap-1">
-          {isTPose ? (
-            <span className="badge bg-success-subtle text-success border border-success-subtle">
-              <i className="bi bi-person-standing" aria-hidden="true" /> T-Pose (Rest)
-            </span>
-          ) : (
-            <>
-              <div className="input-group input-group-sm font-monospace w-auto" title="Cliquer pour entrer une frame précise">
-                <span className="input-group-text py-0 px-2 bg-transparent text-muted border-end-0">
-                  Frame:
-                </span>
-                <input
-                  type="number"
-                  min={0}
-                  max={totalFrames}
-                  value={inputFrame}
-                  onFocus={() => setIsEditingFrame(true)}
-                  onChange={e => setInputFrame(e.target.value)}
-                  onBlur={handleFrameCommit}
-                  onKeyDown={e => e.key === 'Enter' && handleFrameCommit()}
-                  className="form-control py-0 bg-transparent text-dark border-start-0 border-end-0 text-center fw-bold px-1"
-                  style={{ width: '4.5rem' }}
-                />
-                <span className="input-group-text py-0 px-2 bg-transparent text-muted border-start-0">
-                  / {totalFrames}
-                </span>
-              </div>
-              <span className="badge bg-transparent text-dark border shadow-sm font-monospace">
-                {currentTime.toFixed(2)}s / {duration.toFixed(2)}s
+          {/* Compteur précis de Frame & Temps */}
+          <div className="d-flex align-items-center gap-1">
+            {isTPose ? (
+              <span className="badge bg-success-subtle text-success border border-success-subtle">
+                <i className="bi bi-person-standing" aria-hidden="true" /> T-Pose (Rest)
               </span>
-            </>
-          )}
+            ) : (
+              <>
+                <div className="input-group input-group-sm font-monospace w-auto" title="Cliquer pour entrer une frame précise">
+                  <span className="input-group-text py-0 px-1 bg-transparent text-muted border-end-0 small">
+                    Frame:
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={totalFrames}
+                    value={inputFrame}
+                    onFocus={() => setIsEditingFrame(true)}
+                    onChange={e => setInputFrame(e.target.value)}
+                    onBlur={handleFrameCommit}
+                    onKeyDown={e => e.key === 'Enter' && handleFrameCommit()}
+                    className="form-control py-0 bg-transparent text-dark border-start-0 border-end-0 text-center fw-bold px-1"
+                    style={{ width: '3.2rem' }}
+                  />
+                  <span className="input-group-text py-0 px-1 bg-transparent text-muted border-start-0 small">
+                    /{totalFrames}
+                  </span>
+                </div>
+                <span className="badge bg-transparent text-dark border shadow-sm font-monospace py-1 px-1.5">
+                  {currentTime.toFixed(2)}s/{duration.toFixed(2)}s
+                </span>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Droite : Sélecteurs d'animation (Solo & Duo), Vitesse & Meta */}
