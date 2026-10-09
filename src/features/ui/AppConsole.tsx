@@ -54,6 +54,15 @@ function formatTime(ts: number): string {
   return `${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
 }
 
+function getContrastTextColor(hexColor: string): string {
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16) || 0;
+  const g = parseInt(hex.substring(2, 4), 16) || 0;
+  const b = parseInt(hex.substring(4, 6), 16) || 0;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? '#1f2937' : '#ffffff';
+}
+
 // ── Composant ──────────────────────────────────────────────────────────────
 export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolean; hideUI?: boolean }) {
   const isMobile = useIsMobile();
@@ -155,12 +164,20 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
     });
   };
 
-  const handleMaximize = (e: React.MouseEvent) => {
+  const handleResizeCycle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsMaximized(m => {
-      if (!m) setOpen(true);
-      return !m;
-    });
+    if (!open) {
+      setOpen(true);
+      setIsMaximized(false);
+      setCycleStep(1);
+    } else if (!isMaximized) {
+      setIsMaximized(true);
+    } else {
+      setOpen(false);
+      setIsMaximized(false);
+      setFilterBubbleOnly(false);
+      setCycleStep(0);
+    }
   };
 
   return (
@@ -202,8 +219,14 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
               <>
                 <button
                   type="button"
-                  className={`${TOOLBAR_BUTTON_CLASS} ${filterBubbleOnly ? 'btn-warning text-dark' : 'btn-outline-secondary'}`}
-                  style={!filterBubbleOnly && pnjColor ? { borderColor: pnjColor, color: pnjColor } : undefined}
+                  className={`${TOOLBAR_BUTTON_CLASS} ${filterBubbleOnly ? 'shadow-sm' : 'btn-outline-secondary'}`}
+                  style={
+                    filterBubbleOnly
+                      ? { backgroundColor: pnjColor, borderColor: pnjColor, color: getContrastTextColor(pnjColor) }
+                      : pnjColor
+                        ? { borderColor: pnjColor, color: pnjColor }
+                        : undefined
+                  }
                   onClick={(e) => {
                     e.stopPropagation();
                     setFilterBubbleOnly(f => {
@@ -239,9 +262,21 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
             <button
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-              onClick={handleMaximize}
-              title={isMaximized ? 'Réduire la console' : 'Agrandir la console'}
-              aria-label={isMaximized ? 'Réduire la console' : 'Agrandir la console'}
+              onClick={handleResizeCycle}
+              title={
+                !open
+                  ? 'Ouvrir la console (taille normale)'
+                  : isMaximized
+                    ? 'Fermer la console'
+                    : 'Agrandir la console en grand'
+              }
+              aria-label={
+                !open
+                  ? 'Ouvrir la console'
+                  : isMaximized
+                    ? 'Fermer la console'
+                    : 'Agrandir la console en grand'
+              }
             >
               {isMaximized ? '▼' : '▲'}
             </button>
