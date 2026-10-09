@@ -14,7 +14,6 @@ import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 import { resolveAnimationId } from '@features/scene/animations/animationResolver';
 import { canCharacterPerformDuo, resolveDuoPreviewParticipants, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
-import { GroundPoint } from '@features/scene/character/GroundPoint';
 import { SkySphere } from '@features/scene/SkySphere';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { AnimFrameController } from './AnimFrameController';
@@ -586,7 +585,6 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
           {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
         </group>
       </group>
-      <GroundPoint color="#0058a3" />
       {showDims && item?.dims && worldSize && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}
     </group>
   );
