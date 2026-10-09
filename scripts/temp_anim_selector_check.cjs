@@ -19,6 +19,7 @@ async function main() {
       window.store = useAnimPreviewStore;
       useAnimPreviewStore.getState().setSelectedCategories([]);
       useAnimPreviewStore.getState().setAnimSearch('');
+      useAnimPreviewStore.getState().setSortByDuration(false);
       document.body.innerHTML = '<div id="root"></div>';
       document.body.style.margin = '0';
       const css = document.createElement('link');
@@ -39,6 +40,20 @@ async function main() {
       await page.setViewport(viewport);
       await page.click('button[title^="Animation :"]');
       await page.waitForSelector('button[aria-expanded="false"]');
+      await page.click('button[title^="Trier par durée"]');
+      const sorting = await page.evaluate(() => {
+        const sorted = window.selector.getFilteredAnimOptions('', [], true);
+        const timed = sorted.filter(a => a.duration !== undefined);
+        if (timed.some((a, index) => index > 0 && timed[index - 1].duration < a.duration)) throw Error('Duration order mismatch');
+        if (timed.some(a => !Number.isFinite(a.duration))) throw Error('Invalid duration');
+        return {
+          first: sorted[0].label,
+          rendered: document.querySelector('.overflow-auto .border-bottom span[title]').textContent,
+          active: window.store.getState().sortByDuration,
+        };
+      });
+      assert.equal(sorting.first, sorting.rendered);
+      assert.equal(sorting.active, true);
       const placement = await page.evaluate(() => {
         const selector = document.querySelector('[tabindex="0"]').parentElement;
         const controller = selector.parentElement;
@@ -74,8 +89,16 @@ async function main() {
       assert(bounds.selector.top >= 0 && bounds.selector.bottom <= bounds.height, JSON.stringify(bounds));
       await page.evaluate(() => [...document.querySelectorAll('label')].at(-1).click());
       assert.deepEqual(await page.evaluate(() => window.store.getState().selectedCategories), ['others']);
+      const joined = await page.evaluate(() => {
+        const category = document.querySelector('button[aria-expanded]').getBoundingClientRect();
+        const reset = document.querySelector('button[aria-label="Tout désélectionner"]').getBoundingClientRect();
+        return { gap: reset.left - category.right, topDifference: reset.top - category.top };
+      });
+      assert(Math.abs(joined.gap) <= 1 && Math.abs(joined.topDifference) < 1, JSON.stringify(joined));
       await page.click('button[aria-expanded]');
       await page.waitForSelector('.overflow-auto .border-bottom');
+      await page.click('button[aria-label="Tout désélectionner"]');
+      assert.deepEqual(await page.evaluate(() => window.store.getState().selectedCategories), []);
       const results = await page.evaluate(() => {
         const { getFilteredAnimOptions, ENHANCED_ANIM_OPTIONS } = window.selector;
         const results = {};
@@ -93,6 +116,12 @@ async function main() {
         return results;
       });
       await page.click('button[aria-label="Fermer"]');
+      await page.click('button[title^="Animation suivante"]');
+      assert.equal(await page.evaluate(() => window.selectedAnimation), await page.evaluate(() => {
+        const sorted = window.selector.getFilteredAnimOptions('', [], true);
+        return sorted[(sorted.findIndex(a => a.value === 'idle') + 1) % sorted.length].value;
+      }));
+      await page.evaluate(() => window.store.getState().setSortByDuration(false));
       console.log('Reachable categories and source filters passed:', viewport, results);
     }
   } finally { await browser.close(); }

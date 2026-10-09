@@ -60,6 +60,7 @@ export function AnimFrameController({
     clipName,
     animSearch,
     selectedCategories,
+    sortByDuration,
     togglePlay,
     setSpeed,
     setScrubbing,
@@ -194,8 +195,8 @@ export function AnimFrameController({
 
   // Animations filtrées selon la recherche et catégories de CharacterAnimSelector
   const filteredAnims = useMemo(() => {
-    return animalAnimOptions ?? getFilteredAnimOptions(animSearch, selectedCategories);
-  }, [animSearch, selectedCategories, animalAnimOptions]);
+    return animalAnimOptions ?? getFilteredAnimOptions(animSearch, selectedCategories, sortByDuration);
+  }, [animSearch, selectedCategories, sortByDuration, animalAnimOptions]);
 
   // Navigation précédente / suivante limitée strictement aux résultats filtrés
   const cycleFilteredAnim = useCallback((direction: 'next' | 'prev') => {

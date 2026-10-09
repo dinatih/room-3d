@@ -25,6 +25,7 @@ export interface AnimPreviewState {
   isTPose: boolean;
   animSearch: string;
   selectedCategories: string[];
+  sortByDuration: boolean;
 
   // Actions
   play: () => void;
@@ -40,6 +41,7 @@ export interface AnimPreviewState {
   setClipInfo: (name: string, duration: number, isTPose?: boolean, fps?: number) => void;
   setAnimSearch: (search: string) => void;
   setSelectedCategories: (categories: string[]) => void;
+  setSortByDuration: (sortByDuration: boolean) => void;
   tick: (deltaSeconds: number) => number;
   reset: () => void;
 }
@@ -56,6 +58,7 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
   isTPose: false,
   animSearch: getSession('anim_search_filter', ''),
   selectedCategories: getSessionJson('anim_selected_categories', []),
+  sortByDuration: getSession('anim_sort_by_duration', 'false') === 'true',
 
   play: () => {
     const { currentTime, duration, isLooping } = get();
@@ -142,6 +145,11 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
   setSelectedCategories: (selectedCategories: string[]) => {
     setSession('anim_selected_categories', JSON.stringify(selectedCategories));
     set({ selectedCategories });
+  },
+
+  setSortByDuration: (sortByDuration: boolean) => {
+    setSession('anim_sort_by_duration', String(sortByDuration));
+    set({ sortByDuration });
   },
 
   tick: (deltaSeconds: number) => {

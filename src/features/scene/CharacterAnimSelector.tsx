@@ -54,18 +54,27 @@ export const ENHANCED_ANIM_OPTIONS = WALKER_ANIM_OPTIONS.map(anim => {
     source: def?.path.split('/')[1],
     catIcon: catObj?.icon,
     catLabel: catObj?.label,
+    duration,
     isPose: duration !== undefined && duration <= 0.15,
     filename: (def?.path || anim.value).split('/').pop() || anim.value,
     searchIndex: `${anim.label} ${anim.value}`.toLowerCase(),
   };
 });
 
-export function getFilteredAnimOptions(search: string, categories: string[]) {
+export function getFilteredAnimOptions(search: string, categories: string[], sortByDuration = false) {
   const q = search.trim().toLowerCase();
-  return ENHANCED_ANIM_OPTIONS.filter(a => {
+  const filtered = ENHANCED_ANIM_OPTIONS.filter(a => {
     if (categories.length > 0 && !categories.includes(a.category) && !(a.source && categories.includes(a.source))) return false;
     return !q || a.searchIndex.includes(q);
   });
+  if (sortByDuration) {
+    filtered.sort((a, b) => {
+      if (a.duration === undefined) return b.duration === undefined ? 0 : 1;
+      if (b.duration === undefined) return -1;
+      return b.duration - a.duration;
+    });
+  }
+  return filtered;
 }
 
 const CATEGORY_COUNTS = ENHANCED_ANIM_OPTIONS.reduce<Record<string, number>>((acc, a) => {
@@ -100,7 +109,7 @@ export function CharacterAnimSelector({
   const isMobileHook = useIsMobile();
   const isMobile = isMobileProp !== undefined ? isMobileProp : isMobileHook;
 
-  const { animSearch, selectedCategories, setAnimSearch, setSelectedCategories } = useAnimPreviewStore();
+  const { animSearch, selectedCategories, sortByDuration, setAnimSearch, setSelectedCategories, setSortByDuration } = useAnimPreviewStore();
 
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [copiedAnim, setCopiedAnim] = useState<string | null>(null);
@@ -167,8 +176,8 @@ export function CharacterAnimSelector({
   }, [activeAnimValue]);
 
   const filteredAnims = useMemo(() => {
-    return getFilteredAnimOptions(animSearch, selectedCategories);
-  }, [animSearch, selectedCategories]);
+    return getFilteredAnimOptions(animSearch, selectedCategories, sortByDuration);
+  }, [animSearch, selectedCategories, sortByDuration]);
 
   const selectNextAnim = (dir: 1 | -1) => {
     resetAppIdle();
@@ -249,13 +258,13 @@ export function CharacterAnimSelector({
 
         {/* Filtre de catégories */}
         <div className="mb-1.5">
-          <div className="d-flex gap-1">
+          <div className="btn-group btn-group-sm w-100" role="group" aria-label="Filtres de catégories">
             <button
               type="button"
-              className={`btn btn-sm w-100 text-start d-flex justify-content-between align-items-center py-1 px-2 ${
+              className={`btn flex-grow-1 overflow-hidden text-start d-flex justify-content-between align-items-center py-1 px-2 ${
                 selectedCategories.length > 0 ? 'btn-primary' : 'btn-outline-secondary bg-white text-dark'
               }`}
-              style={{ fontSize: isMobile ? '12px' : '11px', borderRadius: '4px' }}
+              style={{ fontSize: isMobile ? '12px' : '11px' }}
               onClick={() => setCategoryDropdownOpen(v => !v)}
               aria-expanded={categoryDropdownOpen}
             >
@@ -271,10 +280,11 @@ export function CharacterAnimSelector({
             {selectedCategories.length > 0 && (
               <button
                 type="button"
-                className="btn btn-sm btn-outline-danger px-2 shrink-0"
+                className="btn btn-primary px-2 flex-shrink-0"
                 style={{ fontSize: '10px' }}
                 onClick={() => updateCategories([])}
                 title="Réinitialiser toutes les catégories"
+                aria-label="Tout désélectionner"
               >
                 <i className="bi bi-x-lg" aria-hidden="true" />
               </button>
@@ -282,8 +292,17 @@ export function CharacterAnimSelector({
           </div>
         </div>
 
-        <div className="text-muted small px-1 d-flex justify-content-between" style={{ fontSize: '9px' }}>
+        <div className="text-muted small px-1 d-flex align-items-center justify-content-between gap-1" style={{ fontSize: '9px' }}>
           <span>{filteredAnims.length} animation{filteredAnims.length > 1 ? 's' : ''}</span>
+          <button
+            type="button"
+            className={`btn btn-sm py-0 px-1 ${sortByDuration ? 'btn-primary' : 'btn-outline-secondary bg-white text-dark'}`}
+            aria-pressed={sortByDuration}
+            title="Trier par durée : de la plus longue à la plus courte"
+            onClick={() => setSortByDuration(!sortByDuration)}
+          >
+            <i className="bi bi-sort-numeric-down-alt" aria-hidden="true" /> Durée
+          </button>
           <span className="text-muted"><i className="bi bi-arrow-down-up" aria-hidden="true" /> Flèches Clavier</span>
         </div>
       </div>
@@ -366,6 +385,11 @@ export function CharacterAnimSelector({
                 <div className="d-flex align-items-center gap-1 overflow-hidden me-2" style={{ flex: 1 }}>
                   {isActive && <i className="bi bi-play-fill" aria-hidden="true" />}
                   <span className="text-truncate" title={anim.label}>{anim.label}</span>
+                  {sortByDuration && anim.duration !== undefined && (
+                    <span className="badge bg-light text-dark flex-shrink-0">
+                      <i className="bi bi-stopwatch" aria-hidden="true" /> {anim.duration.toFixed(1)}s
+                    </span>
+                  )}
                   {anim.catIcon && (
                     <span
                       className={`badge ${isActive ? 'bg-white bg-opacity-25 text-white' : 'bg-secondary-subtle text-secondary-emphasis'} ms-1 fw-normal`}
