@@ -1222,11 +1222,7 @@ export function Character({
         attachTo={parts.bones.spine2 ?? parts.bones.spine ?? parts.bones.hips}
         paused={isPaused}
       />}
-      {!isPreview ? (
-        isActive ? <GroundPoint color="#0058a3" /> : <GroundPoint color="#ff2222" />
-      ) : (
-        isDuoRoleB && <GroundPoint color="#ff2222" />
-      )}
+      <GroundPoint color={(isPreview ? !isDuoRoleB : isActive) ? '#0058a3' : '#ff2222'} />
     </group>
   );
 }
