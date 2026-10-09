@@ -715,7 +715,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
             <div className="card-header border-0 border-bottom border-light-subtle bg-transparent px-2 py-1.5 d-flex flex-wrap justify-content-between align-items-center gap-2 flex-shrink-0">
               <div className="d-flex align-items-center gap-1.5">
                 <span className="fw-bold text-dark text-uppercase small d-flex align-items-center gap-1">
-                  <span>🗺️</span>
+                  <i className="bi bi-map-fill" aria-hidden="true" />
                   <span>Plan 2D</span>
                 </span>
                 {zoom !== 1 && (
@@ -808,7 +808,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
 
             {/* Footer compact avec bordure discrète */}
             <div className="card-footer border-0 border-top border-light-subtle bg-transparent text-center px-2 py-1 text-muted user-select-none text-wrap flex-shrink-0" style={{ fontSize: '10px', maxWidth: '100%' }}>
-              💡 Molette pour zoomer · Glisser pour déplacer · Double-clic pour réinitialiser · Échap pour fermer
+              <i className="bi bi-lightbulb me-1" aria-hidden="true" />Molette pour zoomer · Glisser pour déplacer · Double-clic pour réinitialiser · Échap pour fermer
             </div>
           </div>
         </div>,
@@ -834,7 +834,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
         )}
         {showGroup ? (
           <Group
-            emoji="🗺️"
+            icon="bi-map-fill"
             title="Plan 2D"
             defaultOpen
             headerPadding="py-1.5 px-2"

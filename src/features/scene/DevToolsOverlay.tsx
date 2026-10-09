@@ -63,7 +63,7 @@ function StatRow({ label, value, color }: { label: string; value: string | numbe
 }
 
 const HeaderlessGroup: React.FC<{
-  emoji: string;
+  icon: string;
   title: string;
   defaultOpen?: boolean;
   headerPadding?: string;
@@ -77,7 +77,7 @@ const HeaderlessGroup: React.FC<{
  * Accepte le composant Group pour partager les styles.
  */
 export function DevToolsGroups({ Group, compact = false, headerless = false }: {
-  Group: React.ComponentType<{ emoji: string; title: string; defaultOpen?: boolean; headerPadding?: string; children: React.ReactNode }>;
+  Group: React.ComponentType<{ icon: string; title: string; defaultOpen?: boolean; headerPadding?: string; children: React.ReactNode }>;
   compact?: boolean;
   headerless?: boolean;
 }) {
@@ -118,7 +118,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
 
   return (
     <>
-      <PerfGroup emoji="📊" title="Perf" defaultOpen headerPadding={compact ? 'py-1.5 px-2' : undefined}>
+      <PerfGroup icon="bi-bar-chart-fill" title="Perf" defaultOpen headerPadding={compact ? 'py-1.5 px-2' : undefined}>
         <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
           <div className="d-flex align-items-stretch justify-content-start gap-2 px-2 pb-1">
             <canvas
@@ -151,7 +151,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
               color: '#1d4ed8', fontSize: 10, fontWeight: 600, padding: '4px 8px', cursor: 'pointer', marginTop: 4,
             }}
           >
-            {showDetails ? '▼ Moins' : '▶ Plus d\'infos'}
+            <i className={`bi ${showDetails ? 'bi-chevron-down' : 'bi-chevron-right'} me-1`} aria-hidden="true" />{showDetails ? 'Moins' : 'Plus d\'infos'}
           </button>
 
           {showDetails && (
@@ -172,7 +172,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
                 <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#111827" />
                 <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#111827" />
                 {devState.meshes > 800 && (
-                  <div style={{ color: '#dc2626', fontSize: 10, fontWeight: 600, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
+                  <div style={{ color: '#dc2626', fontSize: 10, fontWeight: 600, padding: '2px 10px' }}><i className="bi bi-exclamation-triangle-fill me-1" aria-hidden="true" />{devState.meshes} meshes → fusionner</div>
                 )}
 
                 {devState.topObjects.length > 0 && (
@@ -214,7 +214,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
                     }}
                     title="Envoie un rapport détaillé dans APP LOGS et la console F12"
                   >
-                    🔍 Log Diagnostic
+                    <i className="bi bi-search me-1" aria-hidden="true" />Log Diagnostic
                   </button>
                 </div>
               </div>

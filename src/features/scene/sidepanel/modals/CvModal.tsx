@@ -155,7 +155,7 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
           {/* Footer */}
           <div className="modal-footer border-top py-1 px-3 d-flex justify-content-between align-items-center">
             <div className="text-muted" style={{ fontSize: '11px' }}>
-              📍 Paris 13ème (Station F / BNF) · Disponible immédiatement · Hybride / Présentiel
+              <i className="bi bi-geo-alt me-1" aria-hidden="true" />Paris 13ème (Station F / BNF) · Disponible immédiatement · Hybride / Présentiel
             </div>
             <button type="button" className="btn btn-secondary btn-sm py-1 px-3" onClick={onClose} style={{ fontSize: '12px' }}>
               Fermer

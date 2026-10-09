@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CONTROL_HEADER_PADDING } from '../toolbarStyles';
 
 export interface GroupProps {
-  emoji: React.ReactNode;
+  icon: React.ReactNode;
   title: string;
   defaultOpen?: boolean;
   /** Controlled open state — when provided, Group uses this instead of internal state */
@@ -14,7 +14,7 @@ export interface GroupProps {
   className?: string;
 }
 
-export function Group({ emoji, title, defaultOpen = false, open: controlledOpen, extra, children, headerPadding = CONTROL_HEADER_PADDING, onToggle, className }: GroupProps) {
+export function Group({ icon, title, defaultOpen = false, open: controlledOpen, extra, children, headerPadding = CONTROL_HEADER_PADDING, onToggle, className }: GroupProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isOpen = controlledOpen ?? internalOpen;
   const handleToggle = () => {
@@ -31,7 +31,7 @@ export function Group({ emoji, title, defaultOpen = false, open: controlledOpen,
           className={`btn btn-sm ${extra ? 'flex-shrink-0' : 'flex-grow-1'} align-self-stretch text-start ${headerPadding} fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none text-uppercase small flex-shrink-0`}
           onClick={handleToggle}
         >
-          <span>{emoji} {title}</span>
+          <span className="d-flex align-items-center gap-2">{typeof icon === 'string' ? <i className={`bi ${icon}`} aria-hidden="true" /> : icon}{title}</span>
           <span 
             className={`text-muted ${extra ? 'ms-2' : ''}`}
             style={{ 
@@ -40,7 +40,7 @@ export function Group({ emoji, title, defaultOpen = false, open: controlledOpen,
               transition: 'transform 0.18s' 
             }}
           >
-            ▶
+            <i className="bi bi-chevron-right" aria-hidden="true" />
           </span>
         </button>
         {extra && (

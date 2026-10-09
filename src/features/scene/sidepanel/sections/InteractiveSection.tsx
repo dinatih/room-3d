@@ -142,12 +142,12 @@ export function InteractiveSection({
       {triggerBtn('WC Siège', 'wc-seat-toggle')}
       {triggerBtn('WC Chasse d\'eau', 'wc-flush')}
       
-      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">EXPÉRIENCES & AVION ✈</div>
+      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase"><i className="bi bi-airplane me-1" aria-hidden="true" />Expériences & avion</div>
       <button
         className="btn btn-sm btn-outline-danger w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 fw-bold small"
         onClick={() => dispatchKey('f')}
       >
-        ✈ Lancer / Quitter Avion [F]
+        <i className="bi bi-airplane-fill me-2" aria-hidden="true" />Lancer / Quitter Avion [F]
       </button>
       <div className="p-2 border-bottom bg-transparent">
         <div className="text-muted fw-semibold mb-1 small text-uppercase">
@@ -176,7 +176,7 @@ export function InteractiveSection({
           opacity: showLandingStrips ? 1 : 0.55,
         }}
       >
-        <span>Pistes 🛬</span>
+        <span><i className="bi bi-sign-turn-right me-1" aria-hidden="true" />Pistes</span>
         <span className={`badge ${showLandingStrips ? 'bg-danger' : 'bg-secondary'}`}>
           {showLandingStrips ? 'ON' : 'OFF'}
         </span>
@@ -194,7 +194,7 @@ export function InteractiveSection({
           className={`btn btn-sm w-100 text-start rounded-2 py-1 px-2 fw-bold d-flex justify-content-between align-items-center small ${buildAnimMatrix ? 'btn-success text-white' : 'btn-outline-secondary text-dark'}`}
           style={{ background: buildAnimMatrix ? undefined : 'rgba(255, 255, 255, 0.7)' }}
         >
-          <span>▶ Matrix</span>
+          <span><i className="bi bi-play-fill me-1" aria-hidden="true" />Matrix</span>
           <span className="small opacity-75">{animDurations['buildAnimMatrix'] ? `~${Math.round(animDurations['buildAnimMatrix'] / 1000)}s` : ''}</span>
         </button>
         {buildAnimMatrix && (

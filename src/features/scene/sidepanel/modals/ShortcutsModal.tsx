@@ -36,27 +36,27 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
       <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div className="modal-content bg-body text-body shadow">
           <div className="modal-header border-bottom-0">
-            <h5 id="shortcuts-title" className="modal-title fs-6 fw-bold">⌨️ Raccourcis clavier</h5>
+            <h5 id="shortcuts-title" className="modal-title fs-6 fw-bold"><i className="bi bi-keyboard me-1" aria-hidden="true" />Raccourcis clavier</h5>
             <button type="button" className="btn-close" aria-label="Fermer" autoFocus onClick={onClose}></button>
           </div>
           <div className="modal-body py-1">
             <div>
               <Section title="Global" />
               <R label={<>PNJ actif aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['S']} />
-              <R label="Photo Raytracing HD 📸"     keys={['F10']} />
+              <R label={<><i className="bi bi-camera me-1" aria-hidden="true" />Photo Raytracing HD</>} keys={['F10']} />
               <R label="Inventaire (toggle)"        keys={['I']} />
               <R label="Basculer Ortho / Perspective" keys={['O', 'P']} />
               <R label="Inventaire Personnages (direct)" keys={['Alt+P']} />
-              <R label="Personnages Extra 🎭 (toggle)" keys={['Alt+E']} />
+              <R label={<><i className="bi bi-masks-theater me-1" aria-hidden="true" />Personnages Extra (toggle)</>} keys={['Alt+E']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
               <R label="Basculer Rotation / Translation" keys={['R', 'T']} />
               <R label="Vue Orbit perspective par défaut (Nord-Ouest)" keys={['Alt+O']} />
               <R label="Follow / FPV (alterner)" keys={['F', 'V']} />
               <R label="Vue 3ème personne directe"  keys={['3']} />
               <R label={<>Ambiance HDRI aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['5']} />
-              <R label="Bulle de pensées 💭 (toggle)" keys={['6']} />
-              <R label="Pistolets Lara 🔫 (toggle)" keys={['7']} />
-              <R label="Accessoires Lara 🎒 (toggle)" keys={['8']} />
+              <R label={<><i className="bi bi-chat-dots me-1" aria-hidden="true" />Bulle de pensées (toggle)</>} keys={['6']} />
+              <R label={<><i className="bi bi-crosshair me-1" aria-hidden="true" />Pistolets Lara (toggle)</>} keys={['7']} />
+              <R label={<><i className="bi bi-handbag me-1" aria-hidden="true" />Accessoires Lara (toggle)</>} keys={['8']} />
               <R label="Minimap 2D (toggle)"        keys={['9']} />
               <R label="Masquer toute l'UI (Vue clean)" keys={['0']} />
               <R label="Console de logs (toggle)"   keys={['B']} />
@@ -65,7 +65,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Avion en papier (toggle)"   keys={['Alt+V']} />
               <R label="Afficher / masquer la grille" keys={['Alt+B']} />
               <R label="Grille de personnages (toggle)"       keys={['G']} />
-              <R label="Wireframe coloré 🕸 (toggle)" keys={['W']} />
+              <R label={<><i className="bi bi-grid-3x3 me-1" aria-hidden="true" />Wireframe coloré (toggle)</>} keys={['W']} />
               <R label="Enlever le haut (toggle)"   keys={['Alt+Z']} />
               <R label="Enlever le bas (toggle)"    keys={['Alt+C']} />
               <R label="Déshabiller les Lara (toggle)" keys={['Alt+X']} />
@@ -79,8 +79,8 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Miroirs HD (toggle)"        keys={['Alt+G']} />
               <R label="Arêtes des murs (toggle)"   keys={['Alt+A']} />
               <R label="Piliers seuls (toggle)"     keys={['Alt+Shift+P']} />
-              <R label="Grille des objets d’inventaire 📦 (toggle)" keys={['Alt+I']} />
-              <R label="Mesures réelles 📐 (toggle)" keys={['Alt+M']} />
+              <R label={<><i className="bi bi-box-seam me-1" aria-hidden="true" />Grille des objets d’inventaire (toggle)</>} keys={['Alt+I']} />
+              <R label={<><i className="bi bi-rulers me-1" aria-hidden="true" />Mesures réelles (toggle)</>} keys={['Alt+M']} />
               <R label="Quitter follow / top-down / ortho" keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />
             </div>

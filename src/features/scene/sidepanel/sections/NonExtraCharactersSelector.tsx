@@ -41,7 +41,7 @@ export function NonExtraCharactersSelector({
       {/* En-tête */}
       <div className="d-flex justify-content-between align-items-center">
         <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ fontSize: '9px' }}>
-          💃 Personnages Principaux (Laras & Xbot)
+          <i className="bi bi-people-fill me-1" aria-hidden="true" />Personnages Principaux (Laras & Xbot)
         </div>
         <span className={`badge ${activeCount > 0 ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
           {activeCount} / {totalCount} actifs
@@ -81,7 +81,7 @@ export function NonExtraCharactersSelector({
               onClick={() => selectAllMainCharacters()}
               title={`Afficher la totalité des ${totalCount} personnages principaux`}
             >
-              ✅ Toutes ({totalCount})
+              <i className="bi bi-check-all me-1" aria-hidden="true" />Toutes ({totalCount})
             </button>
             <button
               type="button"
@@ -90,7 +90,7 @@ export function NonExtraCharactersSelector({
               onClick={() => clearMainCharacters()}
               title="Désélectionner tous les personnages principaux"
             >
-              ❌ Aucune
+              <i className="bi bi-x-lg me-1" aria-hidden="true" />Aucune
             </button>
           </div>
         </div>
@@ -98,7 +98,7 @@ export function NonExtraCharactersSelector({
         {/* Barre de recherche */}
         <div className="input-group input-group-sm">
           <span className="input-group-text bg-transparent border-secondary-subtle px-2" style={{ fontSize: '11px' }}>
-            🔍
+            <i className="bi bi-search" aria-hidden="true" />
           </span>
           <input
             type="text"
@@ -115,7 +115,7 @@ export function NonExtraCharactersSelector({
               onClick={() => setSearchQuery('')}
               style={{ fontSize: '10px' }}
             >
-              ✕
+              <i className="bi bi-x-lg" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -212,7 +212,7 @@ export function NonExtraCharactersSelector({
                     className="badge bg-secondary-subtle text-dark border d-flex align-items-center gap-1 py-1 px-2"
                     style={{ fontSize: '9px', fontWeight: 500 }}
                   >
-                    <span>{char ? char.emoji : '👤'}</span>
+                    <span>{char ? char.emoji : <i className="bi bi-person-fill" aria-hidden="true" />}</span>
                     <span>{char ? char.name : id}</span>
                     <button
                       type="button"

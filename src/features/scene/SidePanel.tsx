@@ -385,12 +385,12 @@ export function SidePanel({
   if (isMobile) {
     const sheetOpen = activeTab !== null && !hideUI;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
-      profile: '💼 Profil & CV',
-      layers: '📑 Calques',
-      personnage: '👤 PNJ',
-      perf: '📊 Perf',
-      plan2d: '🗺️ Plan 2D',
-      interactif: '🎮 Interactif',
+      profile: 'Profil & CV',
+      layers: 'Calques',
+      personnage: 'PNJ',
+      perf: 'Perf',
+      plan2d: 'Plan 2D',
+      interactif: 'Interactif',
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
       profile: profileSectionContent,
@@ -400,14 +400,7 @@ export function SidePanel({
       perf: <DevToolsGroups Group={Group} compact headerless />,
       plan2d: <Minimap embedded showGroup={false} />,
     };
-    const tabIcons: Record<Exclude<TabKey, null>, string> = {
-      profile: 'bi-briefcase-fill',
-      layers: 'bi-layers-fill',
-      personnage: 'bi-person-fill',
-      perf: 'bi-bar-chart-fill',
-      plan2d: 'bi-map-fill',
-      interactif: 'bi-controller',
-    };
+    const activeTabConfig = TABS.find(tab => tab.key === activeTab);
 
     return (
       <>
@@ -432,7 +425,7 @@ export function SidePanel({
             onWheel={e => e.stopPropagation()}
           >
             <div className="d-flex justify-content-between align-items-center p-3 border-bottom text-dark">
-              <span className="fw-bold">{sheetTitle[activeTab]}</span>
+              <span className="fw-bold d-flex align-items-center gap-2"><i className={`bi ${activeTabConfig?.icon}`} aria-hidden="true" />{sheetTitle[activeTab]}</span>
               <div className="d-flex align-items-center gap-2">
                 {activeTab === 'profile' && profileHeaderButtons}
                 {activeTab === 'layers' && layersHeaderButtons}
@@ -469,7 +462,7 @@ export function SidePanel({
           }}
         >
           <div className={TOOLBAR_CLASS} role="toolbar" aria-label="Menu principal">
-          {/* 🥽 VR WebXR (uniquement si WebXR est réellement supporté par l'appareil) */}
+          {/* VR WebXR (uniquement si WebXR est réellement supporté par l'appareil) */}
           {isVRSupported && (
             <button
               type="button"
@@ -480,11 +473,11 @@ export function SidePanel({
               title="Mode Réalité Virtuelle (WebXR)"
             >
               <i className="bi bi-headset-vr" aria-hidden="true" />
-              <span className="fw-semibold">{isVRActive ? '✕ VR' : 'VR'}</span>
+              <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
             </button>
           )}
 
-          {/* 👁️ Mode Immersif Gyroscopique */}
+          {/* Mode immersif gyroscopique */}
           <button
             type="button"
             onClick={() => {
@@ -515,7 +508,7 @@ export function SidePanel({
                 onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
                 className={`${TOOLBAR_BUTTON_CLASS} ${active ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
               >
-                <i className={`bi ${tabIcons[t.key]}`} aria-hidden="true" />
+                <i className={`bi ${t.icon}`} aria-hidden="true" />
                 <span className="fw-semibold">{t.label}</span>
               </button>
             );
@@ -549,19 +542,19 @@ export function SidePanel({
             onClick={onOpenInventory}
             title="Ouvrir l'inventaire (Touche I)"
           >
-              <span>📦 Inventaire</span>
+              <span className="d-flex align-items-center gap-2"><i className="bi bi-box-seam-fill" aria-hidden="true" />Inventaire</span>
               <kbd className="bg-white bg-opacity-25 text-white border-0 px-1 rounded font-monospace small">I</kbd>
-            <span className="ms-auto small">▶</span>
+            <i className="bi bi-chevron-right ms-auto small" aria-hidden="true" />
           </button>
 
         {/* ── Section C.V. / Profil Ingénieur / Qui suis-je ? ── */}
-        <Group emoji="💼" title="Profil" extra={profileHeaderButtons} defaultOpen={false}>
+        <Group icon="bi-briefcase-fill" title="Profil" extra={profileHeaderButtons} defaultOpen={false}>
           {profileSectionContent}
         </Group>
 
-        <Group emoji="📑" title="Calques" extra={layersHeaderButtons}>{layersSectionContent}</Group>
-        <Group emoji="🎮" title="Interactif">{interactiveSectionContent}</Group>
-        <Group emoji="👤" title="PNJ" extra={personnageHeaderButtons}>{characterSectionContent}</Group>
+        <Group icon="bi-layers-fill" title="Calques" extra={layersHeaderButtons}>{layersSectionContent}</Group>
+        <Group icon="bi-controller" title="Interactif">{interactiveSectionContent}</Group>
+        <Group icon="bi-person-fill" title="PNJ" extra={personnageHeaderButtons}>{characterSectionContent}</Group>
         <DevToolsGroups Group={Group} compact />
         <Minimap embedded />
       </div>

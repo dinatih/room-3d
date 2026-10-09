@@ -15,12 +15,12 @@ export interface LayersSectionProps {
 }
 
 const GROUND_OPTIONS: { id: GroundType; label: string }[] = [
-  { id: 'bermuda',    label: 'Gazon Bermuda 🌱' },
-  { id: 'medium_01',  label: 'Gazon Moyen 1 🌿' },
-  { id: 'medium_02',  label: 'Gazon Moyen 2 🌾' },
-  { id: 'celandine',  label: 'Prairie Fleurie 🌼' },
-  { id: 'mud_leaves', label: 'Terre & Feuilles 🍂' },
-  { id: 'none',       label: 'Vert uni 🟩' },
+  { id: 'bermuda',    label: 'Gazon Bermuda' },
+  { id: 'medium_01',  label: 'Gazon Moyen 1' },
+  { id: 'medium_02',  label: 'Gazon Moyen 2' },
+  { id: 'celandine',  label: 'Prairie Fleurie' },
+  { id: 'mud_leaves', label: 'Terre & Feuilles' },
+  { id: 'none',       label: 'Vert uni' },
 ];
 
 export function LayersSection({
@@ -45,6 +45,10 @@ export function LayersSection({
   const setBnfCoords = useSceneStore(state => state.setBnfCoords);
   const currentGroundType = layers.groundType ?? (layers.bermudaGrass ? 'bermuda' : 'none');
 
+  const iconLabel = (icon: string, label: string) => (
+    <span className="d-inline-flex align-items-center gap-1"><i className={`bi ${icon}`} aria-hidden="true" />{label}</span>
+  );
+
   const b0 = (_color: string, label: string, onClick: () => void) => {
     return (
       <button 
@@ -58,7 +62,7 @@ export function LayersSection({
 
   const layerBtn = (
     _color: string,
-    label: string,
+    label: React.ReactNode,
     key: keyof LayerState,
     wireframeKey?: keyof LayerState,
   ) => {
@@ -97,9 +101,9 @@ export function LayersSection({
                 e.stopPropagation();
                 onToggleLayer(wireframeKey);
               }}
-              title={`Activer/désactiver wireframe filaire 🕸 sur ${label}`}
+              title="Activer ou désactiver le wireframe"
             >
-              🕸
+              <i className="bi bi-grid-3x3" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -112,7 +116,7 @@ export function LayersSection({
       <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
         <div className="d-flex justify-content-between align-items-center mb-1 gap-2">
           <div className="text-muted fw-semibold text-dark text-nowrap small text-uppercase">
-            🌆 Ambiance HDRI / Ciel
+            <i className="bi bi-cloud-sun me-1" aria-hidden="true" />Ambiance HDRI / Ciel
           </div>
           <div className="d-flex align-items-center gap-1 text-end overflow-hidden" style={{ minWidth: 0 }}>
             {(() => {
@@ -179,14 +183,14 @@ export function LayersSection({
           ) : null;
         })()}
       </div>
-      {layerBtn('purple',    'Effet fumée (Poof!) 💨',                 'smokeTransition')}
-      {layerBtn('red',       'Points de vue caméra rouges 📹',       'cameraViewMarkers')}
-      {layerBtn('green',     'Structure murale 🧱 (Alt+W)',            'wallStructure', 'wireframeWallStructure')}
-      {layerBtn('orange',    'Revêtements sol (+ plinthes) 🪵', 'floorCoverings')}
-      {layerBtn('secondary', 'Dalle et plafond 🏛️ (Alt+Q)',            'structure', 'wireframeStructure')}
-      {layerBtn('peach',     'Portes 🚪',                      'doors', 'wireframeDoors')}
-      {layerBtn('teal',      'Ciel & Atmosphère 🌤️',           'environment')}
-      {currentHdri === 'default' && layerBtn('danger', 'Repère BNF (Domicile) 📍', 'bnfMarker')}
+      {layerBtn('purple',    iconLabel('bi-wind', 'Effet fumée (Poof!)'), 'smokeTransition')}
+      {layerBtn('red',       iconLabel('bi-camera-video', 'Points de vue caméra rouges'), 'cameraViewMarkers')}
+      {layerBtn('green',     iconLabel('bi-bricks', 'Structure murale (Alt+W)'), 'wallStructure', 'wireframeWallStructure')}
+      {layerBtn('orange',    iconLabel('bi-layers', 'Revêtements sol (+ plinthes)'), 'floorCoverings')}
+      {layerBtn('secondary', iconLabel('bi-building', 'Dalle et plafond (Alt+Q)'), 'structure', 'wireframeStructure')}
+      {layerBtn('peach',     iconLabel('bi-door-open', 'Portes'), 'doors', 'wireframeDoors')}
+      {layerBtn('teal',      iconLabel('bi-cloud-sun', 'Ciel & Atmosphère'), 'environment')}
+      {currentHdri === 'default' && layerBtn('danger', iconLabel('bi-geo-alt', 'Repère BNF (Domicile)'), 'bnfMarker')}
       {currentHdri === 'default' && (layers.bnfMarker ?? true) && (
         <div className="px-3 py-2 border-bottom bg-transparent d-flex flex-column gap-2 small">
           <div className="d-flex justify-content-between align-items-center">
@@ -231,12 +235,12 @@ export function LayersSection({
               className="btn btn-sm btn-link text-muted p-0 text-decoration-none small"
               onClick={() => setBnfCoords({ azimuth: 154.3, elevation: -2.2, radius: 45 })}
             >
-              ↺ Réinitialiser
+              <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true" />Réinitialiser
             </button>
           </div>
         </div>
       )}
-      {layerBtn('green',     'Herbe & Terrain ext. 🌱',        'bermudaGrass')}
+      {layerBtn('green',     iconLabel('bi-tree', 'Herbe & Terrain ext.'), 'bermudaGrass')}
       {layers.bermudaGrass && (
         <div className="px-3 py-1 border-bottom bg-transparent d-flex align-items-center justify-content-between gap-2">
           <span className="text-muted small">Type :</span>
@@ -269,35 +273,35 @@ export function LayersSection({
       {layerBtn('purple',    'Mobilier (Furniture) (Alt+F)',    'furniture')}
       {layerBtn('purple',    'Habillage (Furnishings) (Alt+H)', 'furnishings')}
       {layerBtn('purple',    'Décoration (Decor) (Alt+D)',      'decor')}
-      {layerBtn('light',     'Personnages 3D 👤',              'character', 'characterWireframe')}
-      {layerBtn('blue',      'Animaux 🐕🐦',                   'animals')}
+      {layerBtn('light',     iconLabel('bi-people-fill', 'Personnages 3D'), 'character', 'characterWireframe')}
+      {layerBtn('blue',      iconLabel('bi-heart-pulse', 'Animaux'), 'animals')}
       {layerBtn('purple',    'Miroirs',                        'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD (Alt+G)',       'mirrorsHD')}
-      {layerBtn('cyan',      'Zones IA 🤖 (A)',                'aiZones')}
-      {layerBtn('blue',   'Collisions inter-PNJ 👥', 'npcCollisions')}
-      {layers.npcCollisions && layerBtn('cyan', '↳ Debug PNJ (Rayon 70cm) ⭕', 'debugNpcCollisions')}
-      {layerBtn('blue',   'Collisions objets/meubles 🪑', 'furnitureCollisions')}
-      {layers.furnitureCollisions && layerBtn('cyan', '↳ Debug Objets/Meubles 📐', 'debugFurnitureCollisions')}
+      {layerBtn('cyan',      iconLabel('bi-robot', 'Zones IA (A)'), 'aiZones')}
+      {layerBtn('blue',   iconLabel('bi-people', 'Collisions inter-PNJ'), 'npcCollisions')}
+      {layers.npcCollisions && layerBtn('cyan', iconLabel('bi-circle', 'Debug PNJ (Rayon 70cm)'), 'debugNpcCollisions')}
+      {layerBtn('blue',   iconLabel('bi-house-gear', 'Collisions objets/meubles'), 'furnitureCollisions')}
+      {layers.furnitureCollisions && layerBtn('cyan', iconLabel('bi-rulers', 'Debug Objets/Meubles'), 'debugFurnitureCollisions')}
       {layerBtn('gray',   'Ombres',        'shadows')}
-      {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
+      {layerBtn('gray',   iconLabel('bi-person-fill', 'Ombres personnage'), 'characterShadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
 
-      {layerBtn('orange', "Grille des objets d’inventaire 📦 (Alt+I)", 'inventoryGrid')}
-      {layerBtn('teal',   'Grille 🌐 (Alt+B)',     'grid')}
+      {layerBtn('orange', iconLabel('bi-box-seam', 'Grille des objets d’inventaire (Alt+I)'), 'inventoryGrid')}
+      {layerBtn('teal',   iconLabel('bi-grid-3x3-gap', 'Grille (Alt+B)'), 'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
-      {layerBtn('yellow', 'Mesures réelles 📐 (Alt+M)', 'measuredDimensions')}
+      {layerBtn('yellow', iconLabel('bi-rulers', 'Mesures réelles (Alt+M)'), 'measuredDimensions')}
       {layerBtn('red',    'Aff. arêtes murs (Alt+A)', 'wallEdges')}
-      {layerBtn('cyan',   'Wireframe coloré 🕸 (W)', 'wireframe')}
-      {layerBtn('yellow', 'Lumières ☀',    'lights')}
-      {layerBtn('yellow', 'Lumières HD ✨', 'lightsHD')}
-      {layerBtn('cyan',   'LiDAR scan 📡', 'lidar')}
+      {layerBtn('cyan',   iconLabel('bi-grid-3x3', 'Wireframe coloré (W)'), 'wireframe')}
+      {layerBtn('yellow', iconLabel('bi-lightbulb', 'Lumières'), 'lights')}
+      {layerBtn('yellow', iconLabel('bi-stars', 'Lumières HD'), 'lightsHD')}
+      {layerBtn('cyan',   iconLabel('bi-broadcast', 'LiDAR scan'), 'lidar')}
       {layers.lidar && b0('cyan', ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
       {layers.lidar && b0('cyan', `Opacité ${Math.round(lidarOpacity * 100)}%`, onToggleLidarOpacity)}
-      {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
+      {layerBtn('yellow', iconLabel('bi-sun', 'Soleil réel'), 'realSun')}
 
       {sunInfo && (
         <div className="p-2 border-bottom text-muted small bg-transparent">
-          ☀️ {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
+          <i className="bi bi-sun me-1" aria-hidden="true" />{sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
         </div>
       )}
       <button 

@@ -255,7 +255,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       }}
     >
       <Group
-        emoji={<i className="bi bi-terminal" aria-hidden="true" />}
+        icon={<i className="bi bi-terminal" aria-hidden="true" />}
         title="Console"
         open={open}
         extra={consoleControls}
@@ -305,7 +305,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
                         className="badge py-0 px-1 font-monospace"
                         style={{ backgroundColor: `${getTagColor('system')}18`, color: getTagColor('system'), border: `1px solid ${getTagColor('system')}40`, fontSize: '10px' }}
                       >
-                        ⚙️ sys
+                        <><i className="bi bi-gear-fill me-1" aria-hidden="true" />sys</>
                       </span>
                     ) : tagParts.map((part, i) => {
                       const ch = findCharacter(part);

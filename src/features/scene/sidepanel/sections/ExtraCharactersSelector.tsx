@@ -54,7 +54,7 @@ export function ExtraCharactersSelector({
       {/* En-tête */}
       <div className="d-flex justify-content-between align-items-center">
         <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ fontSize: '9px' }}>
-          🎭 Personnages Hors-Série (Extra)
+          <i className="bi bi-masks-theater me-1" aria-hidden="true" />Personnages Hors-Série (Extra)
         </div>
         <span className={`badge ${activeCount > 0 ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
           {activeCount > 0 ? `${activeCount} / ${totalCount} actifs` : 'AUCUN'}
@@ -73,7 +73,7 @@ export function ExtraCharactersSelector({
               onClick={() => selectAllExtraCharacters()}
               title={`Faire spawner la totalité des ${totalCount} personnages`}
             >
-              ✅ Tous ({totalCount})
+              <i className="bi bi-check-all me-1" aria-hidden="true" />Tous ({totalCount})
             </button>
             <button
               type="button"
@@ -82,7 +82,7 @@ export function ExtraCharactersSelector({
               onClick={() => clearExtraCharacters()}
               title="Désélectionner tous les personnages extra"
             >
-              ❌ Aucun
+              <i className="bi bi-x-lg me-1" aria-hidden="true" />Aucun
             </button>
           </div>
         </div>
@@ -104,8 +104,8 @@ export function ExtraCharactersSelector({
                 : 'Sélectionner les 4 Redmans (Alex, David, James, Lewis)'
             }
           >
-            <span>{allRedmansSelected ? '✓' : '+'}</span>
-            <span>🔴 Redmans</span>
+            <i className={`bi ${allRedmansSelected ? 'bi-check-lg' : 'bi-plus-lg'}`} aria-hidden="true" />
+            <span><i className="bi bi-circle-fill text-danger me-1" aria-hidden="true" />Redmans</span>
             <span
               className={`badge rounded-pill ${allRedmansSelected ? 'bg-white text-danger' : 'bg-danger text-white'}`}
               style={{ fontSize: '8px', padding: '1px 5px' }}
@@ -129,8 +129,8 @@ export function ExtraCharactersSelector({
                 : 'Sélectionner les 9 Anatomiques (Zoe, Sophia, Mannequin, Maynard, Beth, Dummy, Rose, 2 squelettes)'
             }
           >
-            <span>{allAnatomicalSelected ? '✓' : '+'}</span>
-            <span className="text-truncate">🦴 Anat.</span>
+            <i className={`bi ${allAnatomicalSelected ? 'bi-check-lg' : 'bi-plus-lg'}`} aria-hidden="true" />
+            <span className="text-truncate"><i className="bi bi-bone me-1" aria-hidden="true" />Anat.</span>
             <span
               className={`badge rounded-pill ${allAnatomicalSelected ? 'bg-white text-primary' : 'bg-primary text-white'}`}
               style={{ fontSize: '8px', padding: '1px 5px' }}
@@ -143,7 +143,7 @@ export function ExtraCharactersSelector({
         {/* Barre de recherche */}
         <div className="input-group input-group-sm">
           <span className="input-group-text bg-transparent border-secondary-subtle px-2" style={{ fontSize: '11px' }}>
-            🔍
+            <i className="bi bi-search" aria-hidden="true" />
           </span>
           <input
             type="text"
@@ -160,7 +160,7 @@ export function ExtraCharactersSelector({
               onClick={() => setSearchQuery('')}
               style={{ fontSize: '10px' }}
             >
-              ✕
+              <i className="bi bi-x-lg" aria-hidden="true" />
             </button>
           )}
         </div>

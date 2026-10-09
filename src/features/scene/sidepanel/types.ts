@@ -215,13 +215,13 @@ export interface SidePanelProps {
 
 export type TabKey = 'profile' | 'layers' | 'personnage' | 'perf' | 'plan2d' | 'interactif' | null;
 
-export const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
-  { key: 'profile',    emoji: '💼', label: 'Profil' },
-  { key: 'perf',       emoji: '📊', label: 'Perf' },
-  { key: 'plan2d',     emoji: '🗺️', label: 'Plan 2D' },
-  { key: 'layers',     emoji: '📑', label: 'Calques' },
-  { key: 'interactif', emoji: '🎮', label: 'Interact' },
-  { key: 'personnage', emoji: '👤', label: 'PNJ' },
+export const TABS: Array<{ key: Exclude<TabKey, null>; icon: string; label: string }> = [
+  { key: 'profile',    icon: 'bi-briefcase-fill', label: 'Profil' },
+  { key: 'perf',       icon: 'bi-bar-chart-fill', label: 'Perf' },
+  { key: 'plan2d',     icon: 'bi-map-fill', label: 'Plan 2D' },
+  { key: 'layers',     icon: 'bi-layers-fill', label: 'Calques' },
+  { key: 'interactif', icon: 'bi-controller', label: 'Interact' },
+  { key: 'personnage', icon: 'bi-person-fill', label: 'PNJ' },
 ];
 
 export const ALL_HAIR_COLORS: string[] = [
