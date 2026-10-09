@@ -201,13 +201,41 @@ function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, 
 
 function PreviewEnvironment({ showGrid }: { showGrid: boolean }) {
   const neutralBackground = useMemo(() => new THREE.Color('#d2d2d2'), []);
+  const backdropRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const textureRef = useRef<THREE.Texture | null>(null);
+  const { camera } = useThree();
 
   useFrame(({ scene }) => {
-    // Le fond panoramique ne doit pas être coupé par le far de la caméra de l'objet.
-    scene.background = showGrid ? neutralBackground : scene.environment ?? neutralBackground;
+    scene.background = neutralBackground;
+    const texture = scene.environment;
+    const backdrop = backdropRef.current;
+    const material = materialRef.current;
+    if (!backdrop || !material) return;
+
+    backdrop.visible = !showGrid && !!texture;
+    backdrop.position.copy(camera.position);
+    if (texture && textureRef.current !== texture) {
+      textureRef.current = texture;
+      material.map?.dispose();
+      material.map = texture.clone();
+      material.map.mapping = THREE.UVMapping;
+      material.map.needsUpdate = true;
+      material.needsUpdate = true;
+    }
   });
 
-  return <SkySphere envOnly />;
+  useEffect(() => () => materialRef.current?.map?.dispose(), []);
+
+  return (
+    <>
+      <SkySphere envOnly />
+      <mesh ref={backdropRef} name="inventory-preview-backdrop" renderOrder={-1000} frustumCulled={false} visible={false}>
+        <sphereGeometry args={[1000, 64, 48]} />
+        <meshBasicMaterial ref={materialRef} side={THREE.BackSide} depthTest={false} depthWrite={false} />
+      </mesh>
+    </>
+  );
 }
 
 function FitCamera({ target = [0, 0, 0], boundsRadius }: { target?: [number, number, number]; boundsRadius?: number }) {
@@ -872,7 +900,7 @@ export function InventoryPreview({
                   )}
                 </>
               )}
-              <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor={showGrid ? '#777777' : '#a0a0a0'} sectionColor={showGrid ? '#444444' : '#888888'} cellThickness={showGrid ? 0.5 : 0.25} sectionThickness={showGrid ? 1 : 0.4} cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />
+              <Grid args={[boundsRadius * 4, boundsRadius * 4]} cellColor={showGrid ? '#777777' : '#a0a0a0'} sectionColor={showGrid ? '#444444' : '#888888'} cellThickness={showGrid ? 0.5 : 0.25} sectionThickness={showGrid ? 1 : 0.4} cellSize={10} sectionSize={50} position={[5, -0.01, 5]} />
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={previewActionStates} showDims={showDims} wireframe={wireframe} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}
