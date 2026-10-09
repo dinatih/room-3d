@@ -128,7 +128,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['idle', 'idle-female-1', 'stand-relax'],
     tags: ['idle', 'standing', 'relax', 'female'],
     duration: 33.1,
-    defaultOffset: [10, 0, 0]
+    defaultOffset: [20, 0, 0]
   },
   {
     id: 'miley-armature-idle02-f',
@@ -7804,7 +7804,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: "Passer l'aspirateur",
     aliases: ['vacuum', 'passer-aspirateur'],
     tags: ['vacuum', 'cleaning', 'chore', 'standing', 'interaction'],
-    duration: 19.1,
+    duration: 17.8,
   },
   {
     id: 'vacuuming-alt',
@@ -7813,7 +7813,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: "Passer l'aspirateur (Variante)",
     aliases: ['vacuum-alt', 'vacuum-var'],
     tags: ['vacuum', 'cleaning', 'chore', 'standing', 'interaction'],
-    duration: 25.2,
+    duration: 24.8,
   },
   {
     id: 'wiping-table',
@@ -7822,7 +7822,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Essuyer la table',
     aliases: ['wipe-table', 'essuyer-table'],
     tags: ['wipe', 'table', 'sponge', 'cleaning', 'chore', 'interaction'],
-    duration: 7.5,
+    duration: 6.7,
   },
   {
     id: 'wiping-table-small-circles',
@@ -7831,7 +7831,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Essuyer la table (Petits cercles)',
     aliases: ['wipe-small-circles', 'wipe-table-var'],
     tags: ['wipe', 'table', 'circle', 'cleaning', 'chore', 'interaction'],
-    duration: 8.7,
+    duration: 8.3,
   },
   {
     id: 'taking-shower',
@@ -7849,7 +7849,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Se laver',
     aliases: ['wash', 'se-laver'],
     tags: ['wash', 'hygiene', 'shower', 'bathroom', 'interaction'],
-    duration: 86.7,
+    duration: 86.6,
   },
   {
     id: 'pickup-box-floor-male',
@@ -7858,7 +7858,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Ramasser une boîte au sol (H)',
     aliases: ['pickup-box-m', 'ramasser-boite-sol'],
     tags: ['box', 'pickup', 'floor', 'lift', 'male', 'interaction'],
-    duration: 4.7,
+    duration: 4.5,
   },
   {
     id: 'pickup-box-floor-female',
@@ -7867,7 +7867,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Ramasser une boîte au sol (F)',
     aliases: ['pickup-box-f', 'ramasser-boite-sol-femme'],
     tags: ['box', 'pickup', 'floor', 'lift', 'female', 'interaction'],
-    duration: 6.3,
+    duration: 6.0,
   },
   {
     id: 'lift-box-male',
@@ -7876,7 +7876,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Soulever une boîte (H)',
     aliases: ['lift-box-m', 'soulever-boite'],
     tags: ['box', 'lift', 'carry', 'male', 'interaction'],
-    duration: 4.9,
+    duration: 4.4,
   },
   {
     id: 'lift-box-female',
@@ -7894,7 +7894,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Reposer la boîte au sol',
     aliases: ['putdown-box', 'reposer-boite'],
     tags: ['box', 'putdown', 'floor', 'walk', 'interaction'],
-    duration: 7.0,
+    duration: 6.9,
   },
   {
     id: 'sweeping-floor',
@@ -7923,7 +7923,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Boire un verre',
     aliases: ['drink', 'boire-verre', 'boire'],
     tags: ['drink', 'glass', 'kitchen', 'dining', 'standing', 'interaction'],
-    duration: 14.0,
+    duration: 12.6,
   },
   {
     id: 'holding-cup',
@@ -7932,7 +7932,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Prendre une tasse',
     aliases: ['cup', 'prendre-tasse', 'cafe'],
     tags: ['cup', 'coffee', 'kitchen', 'dining', 'standing', 'interaction'],
-    duration: 7.9,
+    duration: 6.2,
   },
   {
     id: 'cooking-stir-pan',
@@ -7941,7 +7941,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Cuisiner à la poêle',
     aliases: ['cook-pan', 'cuisiner', 'melanger-poele'],
     tags: ['cook', 'pan', 'kitchen', 'spoon', 'food', 'interaction'],
-    duration: 13.7,
+    duration: 13.0,
   },
   {
     id: 'cutting-knife',
@@ -7950,7 +7950,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Découper au couteau',
     aliases: ['cut-knife', 'decouper-couteau', 'decouper'],
     tags: ['cut', 'knife', 'kitchen', 'food', 'prep', 'interaction'],
-    duration: 12.6,
+    duration: 10.8,
   },
   {
     id: 'pouring-bottle',
@@ -7959,7 +7959,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Verser une bouteille',
     aliases: ['pour-bottle', 'verser-bouteille'],
     tags: ['pour', 'bottle', 'kitchen', 'bar', 'drink', 'interaction'],
-    duration: 9.5,
+    duration: 9,
   },
   {
     id: 'stirring-bowl',
@@ -7977,7 +7977,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: "Faire la vaisselle à l'évier",
     aliases: ['wash-dishes', 'faire-vaisselle'],
     tags: ['dishes', 'sink', 'sponge', 'kitchen', 'cleaning', 'chore', 'interaction'],
-    duration: 6.1,
+    duration: 4.8,
   },
   {
     id: 'take-book-shelf',
@@ -7986,7 +7986,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Prendre un livre sur étagère',
     aliases: ['take-book', 'prendre-livre-etagere', 'livre'],
     tags: ['book', 'shelf', 'kallax', 'living-room', 'reading', 'interaction'],
-    duration: 3.3,
+    duration: 3.2,
   },
   {
     id: 'playing-guitar',
@@ -7995,7 +7995,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Jouer de la guitare',
     aliases: ['guitar', 'guitare', 'jouer-guitare'],
     tags: ['guitar', 'music', 'instrument', 'living-room', 'relax', 'interaction'],
-    duration: 7.1,
+    duration: 5.6,
   },
   {
     id: 'conversation-gestures',
@@ -8013,7 +8013,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: "S'essuyer la tête (serviette)",
     aliases: ['dry-head', 'essuyer-tete', 'serviette'],
     tags: ['towel', 'head', 'dry', 'bathroom', 'hygiene', 'interaction'],
-    duration: 11.1,
+    duration: 10.9,
   },
   {
     id: 'groom-hair-mirror',
@@ -8022,7 +8022,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Se recoiffer devant le miroir',
     aliases: ['hair-mirror', 'se-recoiffer', 'cheveux'],
     tags: ['hair', 'mirror', 'grooming', 'bathroom', 'hygiene', 'interaction'],
-    duration: 3.5,
+    duration: 3.0,
   },
   {
     id: 'take-off-tshirt',
@@ -8031,7 +8031,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Retirer son t-shirt',
     aliases: ['take-off-shirt', 'retirer-tshirt', 'se-deshabiller'],
     tags: ['clothes', 'tshirt', 'dressing', 'bathroom', 'undress', 'interaction'],
-    duration: 4.4,
+    duration: 4.1,
   },
   {
     id: 'lie-down-bed',
@@ -8049,7 +8049,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Se relever (lit / sol)',
     aliases: ['get-up', 'se-relever', 'reveil'],
     tags: ['bed', 'get-up', 'wake', 'rise', 'transition', 'interaction'],
-    duration: 6.9,
+    duration: 5.6,
   },
 
   // ── NOUVELLES ANIMATIONS INTÉGRÉES (SPORTS, COUPLE, DANCE & VIBE) ────────────────
