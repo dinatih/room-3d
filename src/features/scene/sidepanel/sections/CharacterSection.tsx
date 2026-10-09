@@ -1,9 +1,5 @@
 import { useSceneStore } from '../../store/useSceneStore';
-import { CHARACTERS, isCharacterVisibleInMode, npcLabel } from '@features/scene/characterConfig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
-import { ExtraCharactersSelector } from './ExtraCharactersSelector';
-import { NonExtraCharactersSelector } from './NonExtraCharactersSelector';
-import { frameCharacterGridCamera, frameCharacterGridOrtho } from '@features/scene/character/characterGridUtils';
 import type { LayerState } from '../types';
 
 export interface CharacterSectionProps {
@@ -22,7 +18,7 @@ export interface CharacterSectionProps {
 export function CharacterSection({
   layers,
   onToggleLayer,
-  isMobile,
+  isMobile: _isMobile,
   globalHairColor,
   setGlobalHairColor,
   globalHaircut,
@@ -31,9 +27,6 @@ export function CharacterSection({
   handleRandomHairColor,
   handleRandomHaircut,
 }: CharacterSectionProps) {
-  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
-  const activeExtraIds = useSceneStore(state => state.activeExtraIds);
-  const activeMainIds = useSceneStore(state => state.activeMainIds);
   const extraStates = useSceneStore(state => state.extraStates);
 
   const iconLabel = (icon: string, label: string) => (
@@ -67,29 +60,12 @@ export function CharacterSection({
     <div className="d-flex flex-column bg-transparent">
       {layers.character && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
-          <div>
-            <div className="text-muted fw-semibold mb-1 text-dark small text-uppercase"><i className="bi bi-person-fill me-1" aria-hidden="true" />Choix Personnage</div>
-            <select
-              className="form-select form-select-sm bg-transparent text-dark border-secondary small"
-              value={activeCharacterId}
-              onChange={(e) => {
-                useSceneStore.getState().setActiveCharacterId(e.target.value);
-              }}
-            >
-              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeCharacterId, layers.extraCharacters ?? false, activeExtraIds, activeMainIds) || c.id === activeCharacterId).map(c => (
-                <option key={c.id} value={c.id} className="bg-light text-dark">
-                  {npcLabel(c)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <div className="mb-2">
+          <div className="d-flex flex-column gap-2">
+            <div>
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <div className="text-muted fw-semibold text-dark small text-uppercase">
+                <span className="text-muted fw-semibold text-dark text-uppercase" style={{ fontSize: '10px' }}>
                   <i className="bi bi-palette me-1" aria-hidden="true" />Couleur des cheveux
-                </div>
+                </span>
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
@@ -101,7 +77,8 @@ export function CharacterSection({
                 </button>
               </div>
               <select
-                className="form-select form-select-sm bg-transparent text-dark border-secondary small"
+                className="form-select form-select-sm bg-transparent text-dark border-secondary py-0 ps-1.5 pe-4"
+                style={{ fontSize: '11px', height: '24px' }}
                 onKeyDown={(e) => e.stopPropagation()}
                 value={globalHairColor}
                 onChange={(e) => {
@@ -126,11 +103,11 @@ export function CharacterSection({
               </select>
             </div>
 
-            <div className="mb-1">
+            <div>
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <div className="text-muted fw-semibold text-dark small text-uppercase">
+                <span className="text-muted fw-semibold text-dark text-uppercase" style={{ fontSize: '10px' }}>
                   <i className="bi bi-scissors me-1" aria-hidden="true" />Coupe de cheveux
-                </div>
+                </span>
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
@@ -142,7 +119,8 @@ export function CharacterSection({
                 </button>
               </div>
               <select
-                className="form-select form-select-sm bg-transparent text-dark border-secondary small"
+                className="form-select form-select-sm bg-transparent text-dark border-secondary py-0 ps-1.5 pe-4"
+                style={{ fontSize: '11px', height: '24px' }}
                 onKeyDown={(e) => e.stopPropagation()}
                 value={globalHaircut}
                 onChange={(e) => {
@@ -158,6 +136,7 @@ export function CharacterSection({
                 ))}
               </select>
             </div>
+          </div>
 
             {/* ── Réglages Physique Perruques (directement sous la coupe) ── */}
             {layers.hairPhysics && (
@@ -367,7 +346,6 @@ export function CharacterSection({
                 </div>
               </div>
             )}
-          </div>
         </div>
       )}
 
@@ -407,139 +385,7 @@ export function CharacterSection({
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}
       {layerBtn('cyan', iconLabel('bi-bone', 'Squelettes / Bones (K)'), 'skeleton')}
       {layerBtn('cyan', iconLabel('bi-grid-3x3', 'Fil de fer (Wireframe)'), 'characterWireframe')}
-      <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
-        <div className="d-flex justify-content-between align-items-center mb-1">
-          <span className="text-muted fw-semibold text-dark small text-uppercase">
-            <i className="bi bi-people-fill me-1" aria-hidden="true" />Nombre de Personnages
-          </span>
-          <span className={`badge ${!layers.character ? 'bg-secondary' : 'bg-primary'}`}>
-            {!layers.character
-              ? '0 (Masqué)'
-              : activeMainIds.length !== (layers.laraCount ?? (isMobile ? 2 : 15))
-              ? `${activeMainIds.length} (Personnalisé)`
-              : (layers.laraCount ?? (isMobile ? 2 : 15)) === 1
-              ? '1 (Xbot seul)'
-              : (layers.laraCount ?? (isMobile ? 2 : 15)) === 2
-              ? '2 (Xbot + Lara)'
-              : (layers.laraCount ?? (isMobile ? 2 : 15)) === 4
-              ? '4 (Lara, Xbot, Rosanna, Cha)'
-              : (layers.laraCount ?? (isMobile ? 2 : 15)) === 10
-              ? '10 (Eco)'
-              : '15 (Toutes)'}
-          </span>
-        </div>
-        <div className="btn-group btn-group-sm w-100" role="group">
-          {([0, 1, 2, 4, 10, 15] as const).map((cnt) => {
-            const isZeroActive = !layers.character;
-            const currentCount = layers.laraCount ?? (isMobile ? 2 : 15);
-            const isActive = cnt === 0 ? isZeroActive : (layers.character && currentCount === cnt);
-            return (
-              <button
-                key={cnt}
-                type="button"
-                className={`btn btn-sm ${isActive ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-                style={{ background: isActive ? undefined : 'transparent' }}
-                onClick={() => useSceneStore.getState().setLaraCount(cnt)}
-                title={cnt === 0 ? '0 PNJ (Cacher le calque)' : `${cnt} PNJ`}
-              >
-                {cnt}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <button 
-        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
-        onClick={() => {
-          document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
-        }}
-        style={{ 
-          backgroundColor: layers.characterGrid ? 'rgba(13, 110, 253, 0.08)' : undefined,
-        }}
-      >
-        <span>
-          <i className="bi bi-diagram-3 me-2" aria-hidden="true" />
-          Grille de personnages
-        </span>
-        <span className={`badge ${layers.characterGrid ? 'bg-primary' : 'bg-secondary'}`}>
-          {layers.characterGrid ? 'ON' : 'OFF'}
-        </span>
-      </button>
-      {layers.characterGrid && (
-        <div className="p-2 border-bottom bg-light d-flex flex-column gap-1.5">
-          <div className="text-muted fw-bold small text-uppercase">
-            <i className="bi bi-bounding-box me-1" aria-hidden="true" />Vues Ortho (Face, Côtés, Dessus, etc.)
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ lineHeight: 1.1 }}
-              onClick={() => frameCharacterGridOrtho('front')}
-              title="Vue orthographique de face (Num 1)"
-            >
-              <span><i className="bi bi-person-standing me-1" aria-hidden="true" />Face</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ lineHeight: 1.1 }}
-              onClick={() => frameCharacterGridOrtho('left')}
-              title="Vue orthographique côté gauche (Ctrl+Num 3)"
-            >
-              <span><i className="bi bi-arrow-left me-1" aria-hidden="true" />Côté G</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ lineHeight: 1.1 }}
-              onClick={() => frameCharacterGridOrtho('right')}
-              title="Vue orthographique côté droit (Num 3)"
-            >
-              <span><i className="bi bi-arrow-right me-1" aria-hidden="true" />Côté D</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ lineHeight: 1.1 }}
-              onClick={() => frameCharacterGridOrtho('top')}
-              title="Vue orthographique du dessus (Num 7)"
-            >
-              <span><i className="bi bi-arrow-down me-1" aria-hidden="true" />Dessus</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ lineHeight: 1.1 }}
-              onClick={() => frameCharacterGridOrtho('bottom')}
-              title="Vue orthographique du dessous (Ctrl+Num 7)"
-            >
-              <span><i className="bi bi-arrow-up me-1" aria-hidden="true" />Dessous</span>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm py-1 px-1 d-flex flex-column align-items-center justify-content-center bg-white"
-              style={{ lineHeight: 1.1 }}
-              onClick={() => frameCharacterGridOrtho('back')}
-              title="Vue orthographique de derrière / dos (Ctrl+Num 1)"
-            >
-              <span><i className="bi bi-arrow-90deg-left me-1" aria-hidden="true" />Dos</span>
-            </button>
-          </div>
-          <div className="d-flex gap-1 mt-1">
-            <button
-              type="button"
-              className="btn btn-outline-primary btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-1"
-              
-              onClick={() => frameCharacterGridCamera()}
-              title="Recadrer la caméra sur le centre de la grille (Vue 3D Persp)"
-            >
-              <i className="bi bi-bullseye" aria-hidden="true" />
-              <span>Recadrer 3D</span>
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* ── Réglages Physique Buste ── */}
       {layers.character && (
@@ -938,15 +784,6 @@ export function CharacterSection({
         </div>
       )}
 
-      {/* ── Sélecteur Personnages Principaux (Laras & Xbot) ── */}
-      <NonExtraCharactersSelector
-        isMobile={isMobile}
-      />
-
-      {/* ── Sélecteur Multiple Personnages Extra ── */}
-      <ExtraCharactersSelector
-        isMobile={isMobile}
-      />
     </div>
   );
 }
