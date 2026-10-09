@@ -9,7 +9,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { CHARACTERS, findCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
-import { Group } from '@features/scene/sidepanel/Group';
+import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
 const TAG_COLORS: Record<string, string> = {
@@ -68,6 +68,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const logAreaRef = useRef<HTMLDivElement>(null);
   const [bottomDockHeight, setBottomDockHeight] = useState(0);
   const [isMaximized, setIsMaximized] = useState(false);
+
   // Écoute des CustomEvents 'app-log'
   useEffect(() => {
     const handler = (e: Event) => {
@@ -99,6 +100,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           const next = (prev + 1) % 3;
           setOpen(next === 1 || next === 2);
           setFilterBubbleOnly(next === 2);
+          if (next === 0) setIsMaximized(false);
           return next;
         });
       }
@@ -139,69 +141,27 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const availableHeight = `calc(100dvh - ${bottomDockHeight}px - ${isMobile ? 'env(safe-area-inset-top) - 16px' : '32px'})`;
   const pnjColor = activeChar?.color ?? '#6c757d';
 
-  const consoleControls = (
-    <div className="d-flex align-items-center gap-1">
-      <button
-        type="button"
-        className="btn btn-sm border-0 py-0 px-1 lh-1 text-muted"
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsMaximized(m => {
-            if (!m) setOpen(true); // ouvrir la card si repliée
-            return !m;
-          });
-        }}
-        title={isMaximized ? 'Réduire la console' : 'Agrandir la console'}
-        style={{ fontSize: '11px' }}
-      >
-        {isMaximized ? '▲' : '▼'}
-      </button>
-      {open && (
-        <button
-          type="button"
-          className="btn btn-sm py-0 px-2 small flex-shrink-0"
-          style={{ fontSize: '11px', borderColor: pnjColor, color: pnjColor, borderWidth: '1.5px', height: '22px' }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setFilterBubbleOnly(f => {
-              setCycleStep(f ? 1 : 2);
-              return !f;
-            });
-          }}
-          title={
-            filterBubbleOnly
-              ? `Filtre actif : logs limités à ${activeChar?.name ?? activeCharacterId}`
-              : `Filtrer les logs pour ${activeChar?.name ?? activeCharacterId}`
-          }
-        >
-          {filterBubbleOnly ? '✓ Filtré' : 'Filtrer'}
-        </button>
-      )}
+  const handleToggle = () => {
+    setOpen(prev => {
+      const next = !prev;
+      if (!next) {
+        setCycleStep(0);
+        setFilterBubbleOnly(false);
+        setIsMaximized(false);
+      } else {
+        setCycleStep(filterBubbleOnly ? 2 : 1);
+      }
+      return next;
+    });
+  };
 
-      {open && (
-        <button
-          type="button"
-          className={`btn py-0 px-2 small flex-shrink-0 ${isPaused ? 'btn-warning text-dark fw-bold shadow-sm border-0' : ''}`}
-          style={{
-            fontSize: '11px',
-            height: '22px',
-            ...(!isPaused
-              ? { backgroundColor: 'transparent', color: '#6c757d', border: '1px solid rgba(108,117,125,.5)' }
-              : {}),
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsPaused(p => !p);
-          }}
-          title={isPaused ? 'Reprendre le défilement' : 'Mettre le défilement en pause'}
-          aria-label={isPaused ? 'Reprendre le défilement' : 'Mettre le défilement en pause'}
-          aria-pressed={isPaused}
-        >
-          <i className={`bi ${isPaused ? 'bi-play-fill' : 'bi-pause-fill'}`} aria-hidden="true" />
-        </button>
-      )}
-    </div>
-  );
+  const handleMaximize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMaximized(m => {
+      if (!m) setOpen(true);
+      return !m;
+    });
+  };
 
   return (
     <div
@@ -213,86 +173,133 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         height: open ? (isMaximized ? availableHeight : '140px') : 'auto',
         maxHeight: availableHeight,
         zIndex: 100,
-        fontSize: '11px',
         pointerEvents: hideUI ? 'none' : undefined,
       }}
     >
-      <Group
-        icon={<i className="bi bi-terminal" aria-hidden="true" />}
-        title="Console"
-        open={open}
-        extra={consoleControls}
-        className="flex-grow-1"
-        onToggle={(isOpen) => {
-          setOpen(isOpen);
-          if (!isOpen) {
-            setCycleStep(0);
-            setFilterBubbleOnly(false);
-            setIsMaximized(false);
-          } else {
-            setCycleStep(filterBubbleOnly ? 2 : 1);
-          }
-        }}
-      >
-        {/* Liste des logs */}
-        <div
-          ref={logAreaRef}
-          className="overflow-auto px-2 py-1 d-flex flex-column gap-1 user-select-text bg-transparent flex-grow-1"
-          style={{ minHeight: 0 }}
-        >
-          {displayedLogs.length === 0 && (
-            <div className="text-muted fst-italic py-1">
-              {filterBubbleOnly
-                ? `Aucun log pour ${activeChar?.name ?? activeCharacterId}…`
-                : 'En attente de logs…'}
-            </div>
-          )}
-          {displayedLogs.map((entry, idx) => {
-            const tagParts = entry.tag.split('+').map(s => s.trim());
-            const isSoloActiveTag = filterBubbleOnly && tagParts.length === 1 && tagParts[0].toLowerCase() === activeCharacterId.toLowerCase();
-            return (
-              <div
-                key={`${entry.id}_${idx}`}
-                className="d-flex align-items-baseline gap-2 px-1 py-0.5 text-break lh-sm flex-shrink-0"
-              >
-                <span
-                  className="font-monospace flex-shrink-0 user-select-none text-muted small"
-                  style={{ fontSize: '10px' }}
+      <div className={`${TOOLBAR_CLASS} ${open ? 'w-100 flex-column align-items-stretch flex-grow-1 overflow-hidden' : ''}`} role="region" aria-label="Console applicative">
+        <div className="d-flex flex-nowrap align-items-center justify-content-between gap-1 flex-shrink-0">
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} ${open ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+            onClick={handleToggle}
+            title={open ? 'Fermer la console (B)' : 'Ouvrir la console (B)'}
+            aria-expanded={open}
+          >
+            <i className="bi bi-terminal" aria-hidden="true" />
+            <span>Console</span>
+          </button>
+
+          <div className="d-flex align-items-center gap-1">
+            {open && (
+              <>
+                <button
+                  type="button"
+                  className={`${TOOLBAR_BUTTON_CLASS} ${filterBubbleOnly ? 'btn-warning text-dark' : 'btn-outline-secondary'}`}
+                  style={!filterBubbleOnly && pnjColor ? { borderColor: pnjColor, color: pnjColor } : undefined}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFilterBubbleOnly(f => {
+                      setCycleStep(f ? 1 : 2);
+                      return !f;
+                    });
+                  }}
+                  title={
+                    filterBubbleOnly
+                      ? `Filtre actif : logs limités à ${activeChar?.name ?? activeCharacterId}`
+                      : `Filtrer les logs pour ${activeChar?.name ?? activeCharacterId}`
+                  }
                 >
-                  {formatTime(entry.timestamp)}
-                </span>
-                {!isSoloActiveTag && (
-                  <span className="d-inline-flex align-items-center gap-0.5 flex-shrink-0">
-                    {entry.tag.toLowerCase() === 'system' ? (
-                      <span
-                        className="badge py-0 px-1 font-monospace"
-                        style={{ backgroundColor: `${getTagColor('system')}18`, color: getTagColor('system'), border: `1px solid ${getTagColor('system')}40`, fontSize: '10px' }}
-                      >
-                        <><i className="bi bi-gear-fill me-1" aria-hidden="true" />sys</>
-                      </span>
-                    ) : tagParts.map((part, i) => {
-                      const ch = findCharacter(part);
-                      const partColor = ch?.color ?? getTagColor(part);
-                      return (
-                        <span key={i}>
-                          {i > 0 && <span className="text-muted mx-0.5" style={{ fontSize: '8px' }}>+</span>}
-                          <span
-                            className="badge py-0 px-1 font-monospace"
-                            style={{ backgroundColor: `${partColor}18`, color: partColor, border: `1px solid ${partColor}40`, fontSize: '10px' }}
-                          >
-                            {ch ? `${ch.emoji} ${ch.name}` : part}
-                          </span>
-                        </span>
-                      );
-                    })}
-                  </span>
-                )}
-                <span className="flex-grow-1 text-dark fw-normal">{entry.message}</span>
-              </div>
-            );
-          })}
+                  {filterBubbleOnly ? '✓ Filtré' : 'Filtrer'}
+                </button>
+
+                <button
+                  type="button"
+                  className={`${TOOLBAR_BUTTON_CLASS} ${isPaused ? 'btn-warning text-dark' : 'btn-outline-secondary'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsPaused(p => !p);
+                  }}
+                  title={isPaused ? 'Reprendre le défilement' : 'Mettre le défilement en pause'}
+                  aria-label={isPaused ? 'Reprendre le défilement' : 'Mettre le défilement en pause'}
+                  aria-pressed={isPaused}
+                >
+                  <i className={`bi ${isPaused ? 'bi-play-fill' : 'bi-pause-fill'}`} aria-hidden="true" />
+                </button>
+              </>
+            )}
+
+            <button
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+              onClick={handleMaximize}
+              title={isMaximized ? 'Réduire la console' : 'Agrandir la console'}
+              aria-label={isMaximized ? 'Réduire la console' : 'Agrandir la console'}
+            >
+              {isMaximized ? '▼' : '▲'}
+            </button>
+          </div>
         </div>
-      </Group>
+
+        {open && (
+          <div
+            ref={logAreaRef}
+            className="overflow-auto px-1 pt-1 d-flex flex-column gap-1 user-select-text bg-transparent flex-grow-1 border-top border-light-subtle"
+            style={{ minHeight: 0, fontSize: '11px' }}
+          >
+            {displayedLogs.length === 0 && (
+              <div className="text-muted fst-italic py-1 px-1">
+                {filterBubbleOnly
+                  ? `Aucun log pour ${activeChar?.name ?? activeCharacterId}…`
+                  : 'En attente de logs…'}
+              </div>
+            )}
+            {displayedLogs.map((entry, idx) => {
+              const tagParts = entry.tag.split('+').map(s => s.trim());
+              const isSoloActiveTag = filterBubbleOnly && tagParts.length === 1 && tagParts[0].toLowerCase() === activeCharacterId.toLowerCase();
+              return (
+                <div
+                  key={`${entry.id}_${idx}`}
+                  className="d-flex align-items-baseline gap-2 px-1 py-0.5 text-break lh-sm flex-shrink-0"
+                >
+                  <span
+                    className="font-monospace flex-shrink-0 user-select-none text-muted small"
+                    style={{ fontSize: '10px' }}
+                  >
+                    {formatTime(entry.timestamp)}
+                  </span>
+                  {!isSoloActiveTag && (
+                    <span className="d-inline-flex align-items-center gap-0.5 flex-shrink-0">
+                      {entry.tag.toLowerCase() === 'system' ? (
+                        <span
+                          className="badge py-0 px-1 font-monospace"
+                          style={{ backgroundColor: `${getTagColor('system')}18`, color: getTagColor('system'), border: `1px solid ${getTagColor('system')}40`, fontSize: '10px' }}
+                        >
+                          <><i className="bi bi-gear-fill me-1" aria-hidden="true" />sys</>
+                        </span>
+                      ) : tagParts.map((part, i) => {
+                        const ch = findCharacter(part);
+                        const partColor = ch?.color ?? getTagColor(part);
+                        return (
+                          <span key={i}>
+                            {i > 0 && <span className="text-muted mx-0.5" style={{ fontSize: '8px' }}>+</span>}
+                            <span
+                              className="badge py-0 px-1 font-monospace"
+                              style={{ backgroundColor: `${partColor}18`, color: partColor, border: `1px solid ${partColor}40`, fontSize: '10px' }}
+                            >
+                              {ch ? `${ch.emoji} ${ch.name}` : part}
+                            </span>
+                          </span>
+                        );
+                      })}
+                    </span>
+                  )}
+                  <span className="flex-grow-1 text-dark fw-normal">{entry.message}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

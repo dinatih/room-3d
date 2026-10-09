@@ -299,14 +299,9 @@ button, input, select, textarea {
 }
 
 /* AppConsole : chaîne flex scrollable dans un conteneur à hauteur fixe */
-.app-console .card {
+.app-console .view-control-bar {
   flex-shrink: 1 !important;
   min-height: 0 !important;
-}
-.app-console .card-body {
-  flex: 1 1 0% !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
 }
 
 .ui-fade-overlay {
