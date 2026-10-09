@@ -24,6 +24,7 @@ export interface InteractionSlot {
   availableAnims?: string[];  // Variantes possibles pour l'aléatoire
   animationsRandom?: string | string[]; // Tag (ex: 'seated-front', 'dance'), tableau de tags/alias, ou alias unique
   triggerEventKey?: string;   // Event à déclencher (ex: 'wc-flush')
+  triggerEventValue?: boolean; // Valeur explicite à passer au trigger (ex: true ou false)
   // ── Support Duo Animation ──
   isDuo?: boolean;            // Indique une interaction à deux personnages synchronisés
   duoAnimId?: string;         // Identifiant de l'animation duo (dans DUO_ANIMATIONS, ex: 'sit_cuddle')

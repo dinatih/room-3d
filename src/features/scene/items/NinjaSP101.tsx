@@ -12,6 +12,7 @@ import { MergedStaticGroup } from '../Building';
 import type { SceneItemProps } from '@shared/types';
 
 const ACTION_KEY = 'ninja';
+export const NINJA_DOOR_DURATION = 0.8;
 
 const W = 51;     // largeur
 const D = 37;     // profondeur

@@ -5,6 +5,7 @@ import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimatio
 import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
 import { BATH_WEST_WALL, ROOM_D } from '../wallData';
 import { getEstimatedClipDuration } from '../animOptions';
+import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -400,6 +401,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [BATH_WEST_WALL + 39 / 2 + 37 / 2 + HUMAN_BODY_RADIUS, 0, ROOM_D - 75.5 / 2 - 8],
         rotY: -Math.PI / 2,
         animation: 'entering-code',
+        triggerEventKey: 'ninja',
+        triggerEventValue: true,
       },
       {
         slotId: 'cook-stove',
@@ -993,7 +996,8 @@ export function buildSmartObjectInstructionSequence(
     repeatCount: slot.repeatCount,
     repeatVariation: slot.repeatVariation,
     rotY: slot.rotY,
-    triggerEventKey: slot.triggerEventKey
+    triggerEventKey: slot.triggerEventKey,
+    triggerEventValue: slot.triggerEventValue,
   };
 
   if (objectId === 'freezer' || objectId === 'kallax-ne') {
@@ -1013,6 +1017,33 @@ export function buildSmartObjectInstructionSequence(
   }
 
   // Routines composées
+  if (objectId === 'cuisine-group' && slot.slotId === 'cook-oven') {
+    return [
+      { type: 'MOVE_TO', smartObjectId: 'cuisine-group', slotId: 'cook-oven' },
+      {
+        type: 'WAIT',
+        smartObjectId: 'cuisine-group',
+        slotId: 'cook-oven',
+        animation: 'idle',
+        duration: NINJA_DOOR_DURATION,
+        rotY: slot.rotY ?? -Math.PI / 2,
+        triggerEventKey: 'ninja',
+        triggerEventValue: true,
+      },
+      baseInstruction,
+      {
+        type: 'WAIT',
+        smartObjectId: 'cuisine-group',
+        slotId: 'cook-oven',
+        animation: 'idle',
+        duration: NINJA_DOOR_DURATION,
+        rotY: slot.rotY ?? -Math.PI / 2,
+        triggerEventKey: 'ninja',
+        triggerEventValue: false,
+      },
+    ];
+  }
+
   if (objectId === 'shower') {
     return [
       { type: 'MOVE_TO', targetWaypointId: 'bathroom-shower-entry', rotY: 0 },

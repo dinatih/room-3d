@@ -141,6 +141,9 @@ export function useAgentController(
       if (claimedSlotRef.current.objectId === 'desk-bollsidan-2') {
         setDesk2SmartActionState(_characterId, false);
       }
+      if (claimedSlotRef.current.objectId === 'cuisine-group' && claimedSlotRef.current.slotId === 'cook-oven') {
+        useSceneStore.getState().triggerAction('ninja', false);
+      }
       OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
       claimedSlotRef.current = null;
     }
@@ -245,6 +248,9 @@ export function useAgentController(
     return () => {
       document.removeEventListener('npc-invite-duo', onInvite);
       document.removeEventListener('agent-force-smartobject', onForceSmartObject);
+      if (claimedSlotRef.current?.objectId === 'cuisine-group' && claimedSlotRef.current?.slotId === 'cook-oven') {
+        useSceneStore.getState().triggerAction('ninja', false);
+      }
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
       setDesk2SmartActionState(_characterId, false);
@@ -253,6 +259,9 @@ export function useAgentController(
 
   if (scenario !== prevScenarioRef.current) {
     if (claimedSlotRef.current) {
+      if (claimedSlotRef.current.objectId === 'cuisine-group' && claimedSlotRef.current.slotId === 'cook-oven') {
+        useSceneStore.getState().triggerAction('ninja', false);
+      }
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
       setDesk2SmartActionState(_characterId, false);
