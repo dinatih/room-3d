@@ -33,6 +33,7 @@ import { removeGlbLines, glbLocalBBox } from './glbUtils';
 import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import { useSceneStore } from './store/useSceneStore';
 import { cameraState } from './cameraState';
+import { setInventoryGridCameraTarget } from './inventoryGridCamera';
 
 // Composants procéduraux
 import { ArmrestSofa } from './items/ArmrestSofa';
@@ -595,6 +596,10 @@ export function InventoryObjectsGrid() {
   const rootZ = 180;
 
   useEffect(() => {
+    return () => setInventoryGridCameraTarget(null);
+  }, []);
+
+  useEffect(() => {
     const frameCamera = () => {
       if (!cameraState.isSceneLaunched || cameraState.isIntroRunning) return;
       // Inclure les panneaux, les titres et les noms dans le cadrage.
@@ -610,6 +615,7 @@ export function InventoryObjectsGrid() {
         rootY + (minY + maxY) / 2,
         rootZ,
       ];
+      setInventoryGridCameraTarget(target);
       useSceneStore.getState().setActiveCameraView('front');
       document.dispatchEvent(new CustomEvent('camera-view', {
         detail: {
@@ -667,7 +673,7 @@ export function InventoryObjectsGrid() {
                 <group key={item.id} position={[cellX, cellY, 0]}>
                   {/* Fond de carte */}
                   <mesh position={[0, 0, -25]} geometry={CARD_BACKGROUND_GEOMETRY}>
-                    <meshBasicMaterial color="#d8dddc" />
+                    <meshBasicMaterial color="#d8dddc" transparent opacity={0.5} depthWrite={false} />
                   </mesh>
 
                   {/* Modèle, avec une zone réservée au nom sous la carte */}

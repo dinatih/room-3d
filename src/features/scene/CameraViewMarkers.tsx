@@ -4,10 +4,11 @@ import { Html, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { CAMERA_SHORTCUT_VIEWS, VIEWS, dispatchView } from './sidepanel/types';
 import { useSceneStore } from './store/useSceneStore';
+import { getInventoryGridCameraTarget } from './inventoryGridCamera';
 
 type ShortcutView = typeof CAMERA_SHORTCUT_VIEWS[number];
 
-function CameraViewMarker({ view }: { view: ShortcutView }) {
+function CameraViewMarker({ view, positionOffset }: { view: ShortcutView; positionOffset: [number, number, number] }) {
   const { scene, camera, gl, size } = useThree();
   const aspect = size.width / size.height;
   const [hovered, setHovered] = useState(false);
@@ -25,6 +26,7 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
   const markerRef = useRef<THREE.Group>(null);
   const cameraSpacePosition = useMemo(() => new THREE.Vector3(), []);
   const presetPosVec = useMemo(() => new THREE.Vector3(...preset.pos), [preset.pos]);
+  const markerPosition = useMemo(() => preset.pos.map((value, index) => value + positionOffset[index]) as [number, number, number], [preset.pos, positionOffset]);
 
   useFrame(() => {
     if (!markerRef.current) return;
@@ -122,7 +124,7 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
       ref={markerRef}
       name={`camera-view-marker-${view.key}`}
       userData={{ isCameraViewMarker: true, cameraView: view.key }}
-      position={preset.pos}
+      position={markerPosition}
       quaternion={quaternion}
       onPointerOver={onHover}
       onPointerMove={onHover}
@@ -173,15 +175,26 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
 }
 
 export function CameraViewMarkers() {
+  const [inventoryGridTarget, setInventoryGridTarget] = useState(() => getInventoryGridCameraTarget());
   const enabled = useSceneStore(s => s.layers.cameraViewMarkers);
+  const inventoryGridActive = useSceneStore(s => s.layers.inventoryGrid);
   const activeView = useSceneStore(s => s.activeCameraView);
   const photoOpen = useSceneStore(s => s.isPhotoModeOpen);
+  useEffect(() => {
+    const syncTarget = () => setInventoryGridTarget(getInventoryGridCameraTarget());
+    window.addEventListener('inventory-grid-camera-target', syncTarget);
+    return () => window.removeEventListener('inventory-grid-camera-target', syncTarget);
+  }, []);
   if (!enabled || photoOpen) return null;
+
+  const markerOffset: [number, number, number] = inventoryGridActive && inventoryGridTarget
+    ? inventoryGridTarget.map((value, index) => value - VIEWS.front.target[index]) as [number, number, number]
+    : [0, 0, 0];
 
   return (
     <group name="camera-view-markers">
       {CAMERA_SHORTCUT_VIEWS.map(view => view.key !== activeView && (
-        <CameraViewMarker key={view.key} view={view} />
+        <CameraViewMarker key={view.key} view={view} positionOffset={markerOffset} />
       ))}
     </group>
   );

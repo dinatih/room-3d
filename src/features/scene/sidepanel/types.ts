@@ -57,19 +57,24 @@ export const ISO_VIEWS = [
 export const CAMERA_SHORTCUT_VIEWS = [...ORTHO_VIEWS, ...EXTRA_VIEWS, ...ISO_VIEWS];
 
 import { useSceneStore } from '../store/useSceneStore';
+import { getInventoryGridCameraTarget } from '../inventoryGridCamera';
 
 export function dispatchView(key: string, targetOverride?: [number, number, number], preserveFollow = false) {
   useSceneStore.getState().setActiveCameraView(key);
   const v = VIEWS[key];
   if (!v) return;
-  if (!targetOverride) {
+  const inventoryGridTarget = useSceneStore.getState().layers.inventoryGrid
+    ? getInventoryGridCameraTarget()
+    : null;
+  const target = targetOverride ?? inventoryGridTarget ?? undefined;
+  if (!target) {
     document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...v, key, preserveFollow } }));
     return;
   }
-  const offset = targetOverride.map((value, index) => value - v.target[index]);
+  const offset = target.map((value, index) => value - v.target[index]);
   const pos = v.pos.map((value, index) => value + offset[index]) as [number, number, number];
   document.dispatchEvent(new CustomEvent('camera-view', {
-    detail: { ...v, pos, target: targetOverride, key, preserveFollow },
+    detail: { ...v, pos, target, key, preserveFollow },
   }));
 }
 
