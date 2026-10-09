@@ -56,9 +56,9 @@ async function main() {
         }
       }
       for (const category of categories) {
-        const expected = ENHANCED_ANIM_OPTIONS.filter(a => a.category === category);
+        const expected = ENHANCED_ANIM_OPTIONS.filter(a => (a.category === category || a.source === category));
         const filtered = getFilteredAnimOptions('', [category]);
-        check(filtered.length === expected.length && filtered.every(a => a.category === category), `Filter: ${category}`);
+        check(filtered.length === expected.length && filtered.every(a => (a.category === category || a.source === category)), `Filter: ${category}`);
       }
       const paths = new Set(sources.values());
       for (const key of ['idle', 't-pose', 'walking', 'running', 'falling', 'falling-idle']) {

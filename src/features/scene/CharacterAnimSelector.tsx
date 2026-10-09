@@ -10,6 +10,8 @@ import type { AnimationCategory } from './animations/animationRegistry';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
+type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others';
+
 export const ANIM_CATEGORIES = [
   { key: 'combat', label: 'Combat', icon: '⚔️' },
   { key: 'dances', label: 'Danses', icon: '💃' },
@@ -19,7 +21,11 @@ export const ANIM_CATEGORIES = [
   { key: 'poses_idles', label: 'Poses & Idles', icon: '🧘' },
   { key: 'sports_fitness', label: 'Sports & Fitness', icon: '⚽' },
   { key: 'yoga', label: 'Yoga & Mocap', icon: '🧘‍♀️' },
-] as const satisfies ReadonlyArray<{ key: AnimationCategory; label: string; icon: string }>;
+  { key: 'miley', label: 'Miley', icon: '📁' },
+  { key: 'mixamo', label: 'Mixamo', icon: '📁' },
+  { key: 'npz', label: 'NPZ', icon: '📁' },
+  { key: 'others', label: 'Others', icon: '📁' },
+] as const satisfies ReadonlyArray<{ key: AnimationCategory | AnimationSource; label: string; icon: string }>;
 
 export function getAnimCategory(val: string): string {
   if (val === 'idle' || val === 't-pose') return 'poses_idles';
@@ -45,6 +51,7 @@ export const ENHANCED_ANIM_OPTIONS = WALKER_ANIM_OPTIONS.map(anim => {
     defId: def?.id,
     defPath: def?.path,
     category: animCat,
+    source: def?.path.split('/')[1],
     catIcon: catObj?.icon,
     catLabel: catObj?.label,
     isPose: duration !== undefined && duration <= 0.15,
@@ -56,13 +63,14 @@ export const ENHANCED_ANIM_OPTIONS = WALKER_ANIM_OPTIONS.map(anim => {
 export function getFilteredAnimOptions(search: string, categories: string[]) {
   const q = search.trim().toLowerCase();
   return ENHANCED_ANIM_OPTIONS.filter(a => {
-    if (categories.length > 0 && !categories.includes(a.category)) return false;
+    if (categories.length > 0 && !categories.includes(a.category) && !(a.source && categories.includes(a.source))) return false;
     return !q || a.searchIndex.includes(q);
   });
 }
 
 const CATEGORY_COUNTS = ENHANCED_ANIM_OPTIONS.reduce<Record<string, number>>((acc, a) => {
   acc[a.category] = (acc[a.category] || 0) + 1;
+  if (a.source) acc[a.source] = (acc[a.source] || 0) + 1;
   return acc;
 }, {});
 
@@ -186,14 +194,15 @@ export function CharacterAnimSelector({
 
   return (
     <div
+      ref={categoryDropdownRef}
       className="d-flex flex-column bg-transparent overflow-hidden text-dark"
-      style={{ maxHeight, outline: 'none' }}
+      style={{ maxHeight, minHeight: 0, outline: 'none' }}
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
       {/* En-tête */}
       {(title || onClose) && (
-        <div className="d-flex align-items-center justify-content-between px-2 py-1.5 border-bottom bg-light">
+        <div className="d-flex flex-shrink-0 align-items-center justify-content-between px-2 py-1.5 border-bottom bg-light">
           {title && <span className="fw-bold small text-truncate">🎬 {title}</span>}
           {onClose && (
             <button
@@ -208,7 +217,7 @@ export function CharacterAnimSelector({
       )}
 
       {/* Contrôles et filtres */}
-      <div className="p-2 border-bottom shadow-sm sticky-top" style={{ zIndex: 5, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)' }}>
+      <div className="p-2 border-bottom shadow-sm flex-shrink-0" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)' }}>
         {/* Recherche + Bouton Aléatoire */}
         <div className="input-group input-group-sm mb-1.5">
           <span className="input-group-text bg-light text-muted border-end-0">🔍</span>
@@ -239,7 +248,7 @@ export function CharacterAnimSelector({
         </div>
 
         {/* Filtre de catégories */}
-        <div ref={categoryDropdownRef} className="position-relative mb-1.5">
+        <div className="mb-1.5">
           <div className="d-flex gap-1">
             <button
               type="button"
@@ -248,6 +257,7 @@ export function CharacterAnimSelector({
               }`}
               style={{ fontSize: isMobile ? '12px' : '11px', borderRadius: '4px' }}
               onClick={() => setCategoryDropdownOpen(v => !v)}
+              aria-expanded={categoryDropdownOpen}
             >
               <span className="text-truncate">
                 📁 <strong>Catégories :</strong> {selectedCategories.length === 0
@@ -270,62 +280,6 @@ export function CharacterAnimSelector({
               </button>
             )}
           </div>
-
-          {categoryDropdownOpen && (
-            <div
-              className="position-absolute start-0 end-0 mt-1 p-2 bg-white border rounded shadow-lg"
-              style={{ zIndex: 1050, backdropFilter: 'blur(12px)', maxHeight: '230px', overflowY: 'auto' }}
-            >
-              <div className="d-flex justify-content-between align-items-center mb-1.5 pb-1 border-bottom">
-                <button
-                  type="button"
-                  className="btn btn-link btn-sm p-0 text-decoration-none fw-semibold"
-                  style={{ fontSize: '10.5px' }}
-                  onClick={() => updateCategories(ANIM_CATEGORIES.map(c => c.key))}
-                >
-                  ✓ Tout cocher
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-link btn-sm p-0 text-decoration-none text-danger fw-semibold"
-                  style={{ fontSize: '10.5px' }}
-                  onClick={() => updateCategories([])}
-                >
-                  ✕ Tout décocher
-                </button>
-              </div>
-
-              <div className="d-flex flex-column gap-1">
-                {ANIM_CATEGORIES.map(cat => {
-                  const isChecked = selectedCategories.includes(cat.key);
-                  return (
-                    <label
-                      key={cat.key}
-                      className={`d-flex align-items-center justify-content-between px-2 py-1 rounded cursor-pointer mb-0 ${
-                        isChecked ? 'bg-danger-subtle text-danger-emphasis fw-semibold' : 'hover-bg-light text-dark'
-                      }`}
-                      style={{ fontSize: '11px', cursor: 'pointer', userSelect: 'none' }}
-                    >
-                      <span className="d-flex align-items-center gap-1.5">
-                        <input
-                          type="checkbox"
-                          className="form-check-input mt-0 me-1.5"
-                          checked={isChecked}
-                          onChange={() => updateCategories(
-                            isChecked ? selectedCategories.filter(k => k !== cat.key) : [...selectedCategories, cat.key]
-                          )}
-                        />
-                        <span>{cat.icon} {cat.label}</span>
-                      </span>
-                      <span className={`badge ${isChecked ? 'bg-danger text-white' : 'bg-secondary-subtle text-secondary-emphasis'}`} style={{ fontSize: '9px' }}>
-                        {CATEGORY_COUNTS[cat.key] || 0}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="text-muted small px-1 d-flex justify-content-between" style={{ fontSize: '9px' }}>
@@ -334,8 +288,64 @@ export function CharacterAnimSelector({
         </div>
       </div>
 
+      {categoryDropdownOpen && (
+        <div
+          className="p-2 bg-white overflow-auto flex-grow-1"
+          style={{ maxHeight: listMaxHeight, minHeight: 0 }}
+        >
+          <div className="d-flex justify-content-between align-items-center mb-1.5 pb-1 border-bottom">
+            <button
+              type="button"
+              className="btn btn-link btn-sm p-0 text-decoration-none fw-semibold"
+              style={{ fontSize: '10.5px' }}
+              onClick={() => updateCategories(ANIM_CATEGORIES.map(c => c.key))}
+            >
+              ✓ Tout cocher
+            </button>
+            <button
+              type="button"
+              className="btn btn-link btn-sm p-0 text-decoration-none text-danger fw-semibold"
+              style={{ fontSize: '10.5px' }}
+              onClick={() => updateCategories([])}
+            >
+              ✕ Tout décocher
+            </button>
+          </div>
+
+          <div className="d-flex flex-column gap-1">
+            {ANIM_CATEGORIES.map(cat => {
+              const isChecked = selectedCategories.includes(cat.key);
+              return (
+                <label
+                  key={cat.key}
+                  className={`d-flex align-items-center justify-content-between px-2 py-1 rounded cursor-pointer mb-0 ${
+                    isChecked ? 'bg-danger-subtle text-danger-emphasis fw-semibold' : 'hover-bg-light text-dark'
+                  }`}
+                  style={{ fontSize: '11px', cursor: 'pointer', userSelect: 'none' }}
+                >
+                  <span className="d-flex align-items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      className="form-check-input mt-0 me-1.5"
+                      checked={isChecked}
+                      onChange={() => updateCategories(
+                        isChecked ? selectedCategories.filter(k => k !== cat.key) : [...selectedCategories, cat.key]
+                      )}
+                    />
+                    <span>{cat.icon} {cat.label}</span>
+                  </span>
+                  <span className={`badge ${isChecked ? 'bg-danger text-white' : 'bg-secondary-subtle text-secondary-emphasis'}`} style={{ fontSize: '9px' }}>
+                    {CATEGORY_COUNTS[cat.key] || 0}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Liste des animations */}
-      <div ref={animsContainerRef} className="overflow-auto flex-grow-1" style={{ maxHeight: listMaxHeight, position: 'relative', scrollBehavior: 'smooth' }}>
+      <div ref={animsContainerRef} className={categoryDropdownOpen ? 'd-none' : 'overflow-auto flex-grow-1'} style={{ maxHeight: listMaxHeight, minHeight: 0, position: 'relative', scrollBehavior: 'smooth' }}>
         {filteredAnims.length === 0 ? (
           <div className="p-3 text-center text-muted small">
             Aucune animation ne correspond aux filtres actuels
