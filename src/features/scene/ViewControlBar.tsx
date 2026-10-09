@@ -99,42 +99,91 @@ export function ViewControlBar({
     ? { bottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }
     : undefined;
 
+  const renderViewButton = (
+    view: { key: string; label: string; shortcut: string; icon: string },
+    color: 'cyan' | 'green' | 'purple',
+  ) => (
+    <button
+      key={view.key}
+      type="button"
+      className={`${TOOLBAR_BUTTON_CLASS} ${isActive(view.key) ? `view-control-bar__btn--${color}` : 'btn-outline-secondary'}`}
+      onClick={() => {
+        if (npcGridActive && view.key === 'front') {
+          frameCharacterGridCamera(undefined, cameraProjection);
+        } else {
+          dispatchView(view.key, npcGridActive ? getCharacterGridCameraView().target : undefined);
+        }
+      }}
+      title={`${view.label} (${view.shortcut})`}
+      onMouseEnter={event => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        setHoveredView({
+          label: `${view.label} (${view.shortcut})`,
+          ...(rect.top > window.innerHeight / 2
+            ? { bottom: window.innerHeight - rect.top }
+            : { top: rect.bottom }),
+        });
+      }}
+      onMouseLeave={() => setHoveredView(null)}
+      onBlur={() => setHoveredView(null)}
+      aria-label={`${view.label} (${view.shortcut})`}
+      aria-pressed={isActive(view.key)}
+    >
+      <i className={`bi ${view.icon}`} aria-hidden="true" />
+    </button>
+  );
+
   const viewButtons = (
-    views: typeof ORTHO_VIEWS | typeof EXTRA_VIEWS | typeof ISO_VIEWS,
+    views: readonly { key: string; label: string; shortcut: string; icon: string }[],
     color: 'cyan' | 'green' | 'purple',
   ) => (
     <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label={views.map(view => view.label).join(', ')}>
-      {views.map(view => (
-        <button
-          key={view.key}
-          type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} ${isActive(view.key) ? `view-control-bar__btn--${color}` : 'btn-outline-secondary'}`}
-          onClick={() => {
-            if (npcGridActive && view.key === 'front') {
-              frameCharacterGridCamera(undefined, cameraProjection);
-            } else {
-              dispatchView(view.key, npcGridActive ? getCharacterGridCameraView().target : undefined);
-            }
-          }}
-          title={`${view.label} (${view.shortcut})`}
-          onMouseEnter={event => {
-            const rect = event.currentTarget.getBoundingClientRect();
-            setHoveredView({
-              label: `${view.label} (${view.shortcut})`,
-              ...(rect.top > window.innerHeight / 2
-                ? { bottom: window.innerHeight - rect.top }
-                : { top: rect.bottom }),
-            });
-          }}
-          onMouseLeave={() => setHoveredView(null)}
-          onBlur={() => setHoveredView(null)}
-          aria-label={`${view.label} (${view.shortcut})`}
-          aria-pressed={isActive(view.key)}
-        >
-          <i className={`bi ${view.icon}`} aria-hidden="true" />
-        </button>
-      ))}
+      {views.map(view => renderViewButton(view, color))}
     </div>
+  );
+
+  const zoomButton = (direction: 'in' | 'out') => (
+    <button
+      key={direction}
+      type="button"
+      className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+      onClick={() => document.dispatchEvent(new CustomEvent('camera-zoom', {
+        detail: { direction, scope: showCharacterModes ? 'scene' : 'preview' },
+      }))}
+      title={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
+      aria-label={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
+    >
+      <i className={`bi bi-zoom-${direction}`} aria-hidden="true" />
+    </button>
+  );
+
+  const perspButton = (
+    <button
+      type="button"
+      className={`${TOOLBAR_BUTTON_CLASS} ${isOrtho ? 'view-control-bar__btn--indigo' : 'view-control-bar__btn--pink'}`}
+      onClick={toggleCameraProjection}
+      title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (O / P : alterner)`}
+      aria-pressed={isOrtho}
+    >
+      <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} aria-hidden="true" />
+      <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Pers'}</span>
+    </button>
+  );
+
+  const rotButton = (showCharacterModes || showOrbitControls) && (
+    <button
+      type="button"
+      className={`${TOOLBAR_BUTTON_CLASS} ${isTranslate ? 'view-control-bar__btn--teal' : 'view-control-bar__btn--orange'}`}
+      onClick={() => {
+        useSceneStore.getState().setOrbitMouseMode(isTranslate ? 'rotate' : 'translate');
+      }}
+      title={mouseTitle}
+      aria-label={mouseTitle}
+      aria-pressed={isTranslate}
+    >
+      <i className={`bi ${isTranslate ? 'bi-arrows-move' : 'bi-arrow-repeat'}`} aria-hidden="true" />
+      <span className="fw-semibold">{isTranslate ? 'Trans' : 'Rot'}</span>
+    </button>
   );
 
   const hoverTooltip = hoveredView && createPortal(
@@ -238,49 +287,12 @@ export function ViewControlBar({
           </button>
         )}
 
-        <button
-          type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} ${isOrtho ? 'view-control-bar__btn--indigo' : 'view-control-bar__btn--pink'}`}
-          onClick={toggleCameraProjection}
-          title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (O / P : alterner)`}
-          aria-pressed={isOrtho}
-        >
-          <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} aria-hidden="true" />
-          <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Pers'}</span>
-        </button>
-
-        {(showCharacterModes || showOrbitControls) && (
-            <button
-              type="button"
-              className={`${TOOLBAR_BUTTON_CLASS} ${isTranslate ? 'view-control-bar__btn--teal' : 'view-control-bar__btn--orange'}`}
-              onClick={() => {
-                useSceneStore.getState().setOrbitMouseMode(isTranslate ? 'rotate' : 'translate');
-              }}
-              title={mouseTitle}
-              aria-label={mouseTitle}
-              aria-pressed={isTranslate}
-            >
-              <i className={`bi ${isTranslate ? 'bi-arrows-move' : 'bi-arrow-repeat'}`} aria-hidden="true" />
-              <span className="fw-semibold">{isTranslate ? 'Trans' : 'Rot'}</span>
-            </button>
-        )}
+        {perspButton}
+        {rotButton}
       </div>
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Zoom caméra">
-          {(['in', 'out'] as const).map(direction => (
-            <button
-              key={direction}
-              type="button"
-              className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-              onClick={() => document.dispatchEvent(new CustomEvent('camera-zoom', {
-                detail: { direction, scope: showCharacterModes ? 'scene' : 'preview' },
-              }))}
-              title={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
-              aria-label={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
-            >
-              <i className={`bi bi-zoom-${direction}`} aria-hidden="true" />
-            </button>
-          ))}
+          {(['in', 'out'] as const).map(direction => zoomButton(direction))}
         </div>
         {viewButtons(ORTHO_VIEWS, 'cyan')}
         {viewButtons(EXTRA_VIEWS, 'green')}
@@ -298,19 +310,6 @@ export function ViewControlBar({
           </button>
         )}
         {beforeAmbianceActions}
-        {inline && (
-          <select
-            className="form-select form-select-sm py-0 ps-2 mw-100 flex-shrink-0 bg-transparent text-body border-secondary small text-truncate view-control-bar__ambiance"
-            value={currentHdri}
-            onChange={event => setHdri(event.target.value)}
-            aria-label="Ambiance de la preview 3D"
-            title={HDRI_LIST.find(hdri => hdri.id === currentHdri)?.name ?? currentHdri}
-          >
-            {HDRI_LIST.map(hdri => (
-              <option key={hdri.id} value={hdri.id}>{hdri.name}</option>
-            ))}
-          </select>
-        )}
         {toolbarActions}
         {showCharacterModes && !isMobile && (
           <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
@@ -328,9 +327,57 @@ export function ViewControlBar({
   );
 
   if (inline) {
+    const frontView = ORTHO_VIEWS.find(v => v.key === 'front')!;
+    const leftView = ORTHO_VIEWS.find(v => v.key === 'left')!;
+    const rightView = ORTHO_VIEWS.find(v => v.key === 'right')!;
+    const topView = EXTRA_VIEWS.find(v => v.key === 'top')!;
+    const bottomView = EXTRA_VIEWS.find(v => v.key === 'bottom')!;
+
+    const inlineRow1 = (
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        {zoomButton('in')}
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues orthogonales">
+          {renderViewButton(frontView, 'cyan')}
+          {renderViewButton(leftView, 'cyan')}
+          {renderViewButton(rightView, 'cyan')}
+          {renderViewButton(topView, 'green')}
+        </div>
+        {perspButton}
+        {showMirrorsHD && hdButton}
+        {beforeAmbianceActions}
+      </div>
+    );
+
+    const inlineRow2 = (
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        {zoomButton('out')}
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales et dessous">
+          {ISO_VIEWS.map(v => renderViewButton(v, 'purple'))}
+          {renderViewButton(bottomView, 'green')}
+        </div>
+        {rotButton}
+        {toolbarActions}
+        <select
+          className="form-select form-select-sm py-0 ps-2 mw-100 flex-shrink-0 bg-transparent text-body border-secondary small text-truncate view-control-bar__ambiance"
+          value={currentHdri}
+          onChange={event => setHdri(event.target.value)}
+          aria-label="Ambiance de la preview 3D"
+          title={HDRI_LIST.find(hdri => hdri.id === currentHdri)?.name ?? currentHdri}
+        >
+          {HDRI_LIST.map(hdri => (
+            <option key={hdri.id} value={hdri.id}>{hdri.name}</option>
+          ))}
+        </select>
+      </div>
+    );
+
     return (
       <div className={`view-control-bar-inline d-flex flex-column align-items-center ${children ? 'gap-2 px-1 py-0' : 'gap-0 px-2 py-2'}`}>
-        {bar}
+        {hoverTooltip}
+        <div className={`${TOOLBAR_CLASS} flex-column align-items-stretch view-control-bar--multi-rows view-control-bar--inline overflow-x-auto`} role="toolbar" aria-label="Contrôle des vues">
+          {inlineRow1}
+          {inlineRow2}
+        </div>
         {children && <div className="w-100">{children}</div>}
       </div>
     );
