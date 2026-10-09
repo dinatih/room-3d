@@ -582,8 +582,8 @@ export function Studio() {
             toggleLayer('inventoryGrid');
             cameraState.invalidate?.();
           } else {
-            setInventoryInitialCat('characters');
-            setShowInventory(true);
+            setInventoryInitialCat('all');
+            setShowInventory(prev => !prev);
           }
           return;
         }
