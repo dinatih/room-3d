@@ -270,21 +270,11 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'pick-laundry',
         name: 'Prendre le sac de Linge sale',
         relative: true,
-        offset: [25, 0, -35], // 35 cm devant la porte droite dans la SDB
+        offset: [-30, 0, -35], // 35 cm devant la porte de droite (collée à la douche)
         rotY: 0,
         animation: 'take-object-mid',
         duration: 8,
         triggerEventKey: 'sdbClosetR',
-      },
-      {
-        slotId: 'tidy-shelf',
-        name: 'Ranger sur l\'étagère',
-        relative: true,
-        offset: [-25, 0, -35], // 35 cm devant la porte gauche dans la SDB
-        rotY: 0,
-        animation: 'inspect-mid-height',
-        duration: 8,
-        triggerEventKey: 'sdbClosetL',
       }
     ]
   },
@@ -1090,7 +1080,7 @@ export function buildSmartObjectInstructionSequence(
   }
 
   if (objectId === 'sdb-closet') {
-    const doorKey = slot.triggerEventKey ?? (slot.slotId === 'tidy-shelf' ? 'sdbClosetL' : 'sdbClosetR');
+    const doorKey = slot.triggerEventKey ?? 'sdbClosetR';
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
       {

@@ -63,8 +63,8 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
-    groupLRef.current.position.x = isOpenLRef.current ? X_CLOSED_R : X_CLOSED_L;
-    groupRRef.current.position.x = isOpenRRef.current ? X_CLOSED_L : X_CLOSED_R;
+    groupLRef.current.position.x = isOpenRRef.current ? X_CLOSED_R : X_CLOSED_L;
+    groupRRef.current.position.x = isOpenLRef.current ? X_CLOSED_L : X_CLOSED_R;
     onSize(new THREE.Vector3(W, H, RAIL_D));
   }, []);
 
@@ -96,10 +96,10 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   useFrame(() => {
-    // groupLRef (en -X) est la Porte Gauche depuis la SDB -> obéit à isOpenL
-    const targetL = isOpenLRef.current ? X_CLOSED_R : X_CLOSED_L;
-    // groupRRef (en +X) est la Porte Droite depuis la SDB -> obéit à isOpenR
-    const targetR = isOpenRRef.current ? X_CLOSED_L : X_CLOSED_R;
+    // groupLRef (en -X) est la Porte Droite depuis la SDB -> obéit à isOpenR
+    const targetL = isOpenRRef.current ? X_CLOSED_R : X_CLOSED_L;
+    // groupRRef (en +X) est la Porte Gauche depuis la SDB -> obéit à isOpenL
+    const targetR = isOpenLRef.current ? X_CLOSED_L : X_CLOSED_R;
     const curL = groupLRef.current.position.x;
     const curR = groupRRef.current.position.x;
     if (curL === targetL && curR === targetR) return;
@@ -137,9 +137,9 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
         <boxGeometry args={[W, 1.5, RAIL_D]} />
       </mesh>
 
-      {/* Panneau gauche (en -X, Porte Gauche depuis la SDB) */}
+      {/* Panneau gauche (en -X, ce qui correspond à la Droite depuis la SDB) */}
       <group ref={groupLRef} position-y={0} position-z={ZL}
-             userData={{ hoverAction: { label: 'Porte SDB G', actionId: 'sdbClosetL' } }}>
+             userData={{ hoverAction: { label: 'Porte SDB D', actionId: 'sdbClosetR' } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMats}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>
@@ -148,9 +148,9 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
         </mesh>
       </group>
 
-      {/* Panneau droit (en +X, Porte Droite depuis la SDB) */}
+      {/* Panneau droit (en +X, ce qui correspond à la Gauche depuis la SDB) */}
       <group ref={groupRRef} position-y={0} position-z={ZR}
-             userData={{ hoverAction: { label: 'Porte SDB D', actionId: 'sdbClosetR' } }}>
+             userData={{ hoverAction: { label: 'Porte SDB G', actionId: 'sdbClosetL' } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMats}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>
@@ -162,7 +162,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
       {/* Étagère triangulaire à 170cm */}
       <mesh geometry={shelfGeo} castShadow receiveShadow material={shelfMat} />
 
-      {/* Étagère à chaussures GREJIG le long de la porte gauche du placard (côté Ouest) */}
+      {/* Étagère à chaussures GREJIG le long de la porte droite du placard (côté Ouest) */}
       <group position={[X_CLOSED_L, 0, 20]} rotation={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Étagère chaussures Grejig SDB' }}>
         <Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
