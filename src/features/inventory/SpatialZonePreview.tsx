@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
 import { OrbitControls } from '@features/scene/camera/OrbitControls';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { getOrbitMouseButtons } from '@features/scene/camera/orbitMouseButtons';
+import { getOrbitMouseButtons, getOrbitTouches } from '@features/scene/camera/orbitMouseButtons';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
 import { drawFps } from '@features/scene/DevToolsOverlay';
@@ -409,6 +409,7 @@ function PreviewCameraController({
       ref={ctrlRef}
       makeDefault
       mouseButtons={getOrbitMouseButtons(orbitMouseMode)}
+      touches={getOrbitTouches(orbitMouseMode)}
       target={controlsTarget}
       enableDamping
       dampingFactor={0.05}

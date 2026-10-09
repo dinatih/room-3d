@@ -46,6 +46,14 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
 
     useEffect(() => {
       if (!controls) return;
+      if (props.mouseButtons) controls.mouseButtons = props.mouseButtons as typeof controls.mouseButtons;
+      if (props.touches) controls.touches = props.touches as typeof controls.touches;
+    }, [controls, props.mouseButtons, props.touches]);
+
+    useEffect(() => {
+
+
+      if (!controls) return;
       const element = controls.domElement;
       if (!element) throw new Error('OrbitControls doit être connecté à un élément DOM.');
       let cursor: string | undefined;

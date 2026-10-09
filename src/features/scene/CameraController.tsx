@@ -53,7 +53,7 @@ import {
 } from './camera';
 import { parseUrlLayerOverrides } from './store/layerUrlParams';
 import { VIEWS } from './sidepanel/types';
-import { getOrbitMouseButtons } from './camera/orbitMouseButtons';
+import { getOrbitMouseButtons, getOrbitTouches } from './camera/orbitMouseButtons';
 import { getCharacterGridCameraView, getCharacterGridActiveTarget } from './character/characterGridUtils';
 
 const FPV_DEFAULT_FOV = 100;
@@ -140,6 +140,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       ctrlRef.current.update();
     }
   }, [camera]);
+
+  // Synchronisation dynamique du mode d'interaction (rotation / translation) pour souris et tactile
+  useEffect(() => {
+    if (!ctrlRef.current) return;
+    const effectiveMode = mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'pan' : 'rotate';
+    ctrlRef.current.mouseButtons = getOrbitMouseButtons(effectiveMode);
+    ctrlRef.current.touches = getOrbitTouches(effectiveMode);
+  }, [mode, orbitMouseMode, cameraProjection]);
 
   // Synchronisation du changement de personnage actif
   useEffect(() => {
@@ -680,6 +688,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       useSceneStore.getState().setOrbitMouseMode(targetProj === 'ortho' ? 'pan' : 'rotate');
     }
     ctrl.mouseButtons = getOrbitMouseButtons(useSceneStore.getState().orbitMouseMode);
+    ctrl.touches = getOrbitTouches(useSceneStore.getState().orbitMouseMode);
     ctrl.enableRotate = true;
     ctrl.enablePan = true;
     ctrl.enableZoom = true;
@@ -817,6 +826,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         ctrlRef.current.object = activeCam;
         ctrlRef.current.target.copy(savedPerspTarget.current);
         ctrlRef.current.mouseButtons = getOrbitMouseButtons(proj === 'ortho' ? 'pan' : 'rotate');
+        ctrlRef.current.touches = getOrbitTouches(proj === 'ortho' ? 'pan' : 'rotate');
         ctrlRef.current.enableRotate = true;
         ctrlRef.current.enablePan = true;
         ctrlRef.current.enableZoom = true;
@@ -1160,6 +1170,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enableZoom={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'follow'}
         mouseButtons={getOrbitMouseButtons(mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'pan' : 'rotate')}
+        touches={getOrbitTouches(mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'pan' : 'rotate')}
       />
     </>
   );

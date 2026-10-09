@@ -22,7 +22,7 @@ import { AnimFrameController } from './AnimFrameController';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { CharacterSection } from '@features/scene/sidepanel/sections/CharacterSection';
 import { ViewControlBar } from '@features/scene/ViewControlBar';
-import { getOrbitMouseButtons } from '@features/scene/camera/orbitMouseButtons';
+import { getOrbitMouseButtons, getOrbitTouches } from '@features/scene/camera/orbitMouseButtons';
 import { TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 
 function disposePreviewScene(root: THREE.Object3D) {
@@ -318,6 +318,7 @@ function OrthoCameraControls({
         ref={ctrlRef}
         makeDefault
         mouseButtons={getOrbitMouseButtons(orbitMouseMode)}
+        touches={getOrbitTouches(orbitMouseMode)}
         target={camTarget}
         enablePan={true}
         enableZoom={true}
@@ -372,7 +373,7 @@ function PerspectivePresetControls({
   return (
     <>
       <PerspectiveCamera ref={cameraRef} makeDefault fov={45} near={0.5} far={10000} position={position} />
-      <OrbitControls ref={ctrlRef} makeDefault mouseButtons={getOrbitMouseButtons(orbitMouseMode)} target={camTarget} enablePan enableZoom screenSpacePanning minDistance={2} maxDistance={2500} />
+      <OrbitControls ref={ctrlRef} makeDefault mouseButtons={getOrbitMouseButtons(orbitMouseMode)} touches={getOrbitTouches(orbitMouseMode)} target={camTarget} enablePan enableZoom screenSpacePanning minDistance={2} maxDistance={2500} />
     </>
   );
 }
@@ -873,7 +874,7 @@ export function InventoryPreview({
                   {previewView === 'free' ? (
                     <>
                       <FitCamera target={target} boundsRadius={boundsRadius} />
-                      <OrbitControls mouseButtons={getOrbitMouseButtons(orbitMouseMode)} autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan enableZoom target={target} onStart={() => setAutoRotate(false)} />
+                      <OrbitControls mouseButtons={getOrbitMouseButtons(orbitMouseMode)} touches={getOrbitTouches(orbitMouseMode)} autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan enableZoom target={target} onStart={() => setAutoRotate(false)} />
                     </>
                   ) : (
                     <PerspectivePresetControls mode={previewView} target={target} boundsRadius={boundsRadius} />
