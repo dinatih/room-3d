@@ -100,8 +100,8 @@ class GridItemErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
 // ── Configuration des dimensions de cellules ──────────────────────────────────
 
 const CELL_W = 85;
-const CELL_H = 80;
-const TARGET_DISPLAY_SIZE = 55;
+const CELL_H = 104;
+const TARGET_DISPLAY_SIZE = 50;
 
 const ShoeHatRackGrid: React.ComponentType<any> = props => <ShoeHatRack {...props} noCaps />;
 
@@ -159,11 +159,11 @@ interface ZoneDef {
 }
 
 const ZONES: ZoneDef[] = [
-  { id: 'couloir', label: 'Couloir & Entrée', emoji: '🚪', color: '#e67e22', cols: 3 },
-  { id: 'sdb', label: 'Salle de bain & WC', emoji: '🚿', color: '#16a085', cols: 3 },
-  { id: 'salon', label: 'Salon & Séjour', emoji: '🛋️', color: '#2980b9', cols: 4 },
-  { id: 'jardin', label: 'Jardin & Balcon', emoji: '🌿', color: '#27ae60', cols: 3 },
-  { id: 'cuisine', label: 'Cuisine', emoji: '🍳', color: '#d35400', cols: 3 },
+  { id: 'couloir', label: 'Couloir & Entrée', emoji: '🚪', color: '#b99b73', cols: 3 },
+  { id: 'sdb', label: 'Salle de bain & WC', emoji: '🚿', color: '#7ea69a', cols: 3 },
+  { id: 'salon', label: 'Salon & Séjour', emoji: '🛋️', color: '#7d9eac', cols: 4 },
+  { id: 'jardin', label: 'Jardin & Balcon', emoji: '🌿', color: '#89a47d', cols: 3 },
+  { id: 'cuisine', label: 'Cuisine', emoji: '🍳', color: '#bd8e70', cols: 3 },
 ];
 
 /**
@@ -453,7 +453,9 @@ export function InventoryObjectsGrid() {
     }));
 
     // Les objets sans GLB réutilisent leur composant de scène dédié.
-    const procedurals: UnifiedGridItem[] = INVENTORY.filter((item) => item.id !== 'utaker-stack' && PROCEDURAL_GRID_COMPONENTS[item.id]).map((item) => ({
+    const procedurals: UnifiedGridItem[] = INVENTORY
+      .filter((item) => item.id !== 'utaker-stack' && PROCEDURAL_GRID_COMPONENTS[item.id])
+      .map((item) => ({
         id: item.id,
         name: item.name,
         category: item.category,
@@ -463,11 +465,11 @@ export function InventoryObjectsGrid() {
 
     // Présentation assemblée déjà utilisée pour les lits Utåker dans la grille.
     procedurals.push({
-        id: 'utaker-double-bed',
-        name: 'Lit Double Utåker (empilable réuni)',
-        category: 'furniture',
-        notes: 'Séjour',
-        proceduralComponent: UtakerStack,
+      id: 'utaker-double-bed',
+      name: 'Lit Double Utåker (empilable réuni)',
+      category: 'furniture',
+      notes: 'Séjour',
+      proceduralComponent: UtakerStack,
     });
 
     return [...glbItems, ...procedurals];
@@ -621,32 +623,18 @@ export function InventoryObjectsGrid() {
 
         return (
           <group key={zone.id} position={[0, baseY, 0]}>
-            {/* 🏷️ Titre de la zone : placé juste au-dessus du panneau */}
+            {/* En-tête discret de la zone */}
             <Text
-              position={[centerX, totalHeight + 14, 2]}
-              fontSize={18}
+              position={[centerX, totalHeight + 18, 2]}
+              fontSize={13}
               color={zone.color}
               anchorX="center"
               anchorY="bottom"
-              outlineWidth={1.2}
-              outlineColor="#111111"
             >
               {`${zone.emoji} ${zone.label} (${items.length})`}
             </Text>
 
-            {/* 📋 Fond opaque reculé à Z=-30 pour ne pas couper le dos des objets */}
-            <mesh position={[centerX, totalHeight / 2 - CELL_H / 2, -30]}>
-              <planeGeometry args={[width + 16, totalHeight + 16]} />
-              <meshBasicMaterial color="#1e272e" />
-            </mesh>
-
-            {/* Cadre de couleur */}
-            <lineSegments position={[centerX, totalHeight / 2 - CELL_H / 2, -29]}>
-              <edgesGeometry args={[new THREE.PlaneGeometry(width + 16, totalHeight + 16)]} />
-              <lineBasicMaterial color={zone.color} />
-            </lineSegments>
-
-            {/* 📦 Cellules */}
+            {/* Cartes */}
             {items.map((item, idx) => {
               const col = idx % cols;
               const row = Math.floor(idx / cols);
@@ -656,34 +644,34 @@ export function InventoryObjectsGrid() {
 
               return (
                 <group key={item.id} position={[cellX, cellY, 0]}>
-                  {/* Fond de case */}
+                  {/* Fond de carte */}
                   <mesh position={[0, 0, -25]}>
-                    <planeGeometry args={[CELL_W - 8, CELL_H - 8]} />
-                    <meshBasicMaterial color="#2d3436" />
+                    <planeGeometry args={[CELL_W - 6, CELL_H - 6]} />
+                    <meshBasicMaterial color="#263438" />
                   </mesh>
 
-                  {/* Tablette d'étagère */}
-                  <mesh position={[0, -CELL_H / 2 + 6, 0]}>
-                    <boxGeometry args={[CELL_W - 8, 2, 45]} />
+                  {/* Repère de couleur sobre */}
+                  <mesh position={[0, CELL_H / 2 - 5, 0]}>
+                    <planeGeometry args={[CELL_W - 18, 1.5]} />
                     <meshBasicMaterial color={zone.color} />
                   </mesh>
 
-                  {/* Modèle 3D avancé à Z=15 pour ne jamais être coupé */}
-                  <GridItem item={item} position={[0, 0, 15]} />
+                  {/* Modèle, avec une zone réservée au nom sous la carte */}
+                  <GridItem item={item} position={[0, 8, 15]} />
 
-                  {/* Nom de l'objet */}
                   <Text
-                    position={[0, -CELL_H / 2 + 1, 30]}
-                    fontSize={6.2}
-                    color="#ffffff"
+                    position={[0, -CELL_H / 2 + 9, 30]}
+                    fontSize={4.5}
+                    color="#e2e8e7"
                     anchorX="center"
                     anchorY="top"
-                    maxWidth={CELL_W - 8}
+                    maxWidth={CELL_W - 14}
                     textAlign="center"
-                    outlineWidth={0.6}
-                    outlineColor="#000000"
+                    lineHeight={1.05}
+                    whiteSpace="normal"
+                    overflowWrap="break-word"
                   >
-                    {item.name.length > 28 ? `${item.name.slice(0, 26)}…` : item.name}
+                    {item.name}
                   </Text>
                 </group>
               );
