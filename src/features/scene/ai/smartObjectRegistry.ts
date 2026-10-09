@@ -241,22 +241,24 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre une douche (Centre)',
         offset: [30, 15, 645],
         rotY: 0,
-        animation: 'miley-armature-posing-f',
-        duration: 25.0,
+        animation: 'taking-shower',
+        duration: 8.6,
       },
       {
         slotId: 'take-shower-2',
         name: 'Prendre une douche (Droite)',
         offset: [8, 15, 635],
         rotY: Math.PI / 2,
-        animation: 'miley-armature-posing-f',
+        animation: 'washing-body',
+        duration: 86.7,
       },
       {
         slotId: 'take-shower-3',
         name: 'Prendre une douche (Gauche)',
         offset: [42, 15, 660],
         rotY: -Math.PI / 2,
-        animation: 'miley-armature-posing-f',
+        animation: 'taking-shower',
+        duration: 8.6,
       }
     ]
   },
