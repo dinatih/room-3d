@@ -73,6 +73,8 @@ export function ViewControlBar({
   const mirrorsHD = useSceneStore(s => s.layers.mirrorsHD);
   const cameraViewMarkers = useSceneStore(s => s.layers.cameraViewMarkers);
   const toggleLayer = useSceneStore(s => s.toggleLayer);
+  const cameraTarget = useSceneStore(s => s.cameraTarget);
+  const setCameraTarget = useSceneStore(s => s.setCameraTarget);
 
   if (hidden) return null;
 
@@ -280,6 +282,17 @@ export function ViewControlBar({
               title="FPV / Follow (V / F : alterner)"
               aria-pressed={cameraMode === 'fpv'}
             ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
+            <button
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} ${cameraTarget === 'studio' && cameraMode === 'orbit' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
+              onClick={() => setCameraTarget('studio')}
+              title="Centrer la caméra sur l'appartement / studio"
+              aria-label="Centrer la caméra sur l'appartement / studio"
+              aria-pressed={cameraTarget === 'studio'}
+            >
+              <i className="bi bi-building" aria-hidden="true" />
+              <span className="fw-semibold">Apt</span>
+            </button>
           </div>
           {animalCameraActive && (
             <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la caméra de l’animal" aria-label="Quitter la caméra de l’animal">
