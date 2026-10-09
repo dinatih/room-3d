@@ -1,4 +1,4 @@
-"""Re-export all 28 daily and studio animations trimming calibration phases (T-pose and static freezes).
+"""Re-export daily and studio animations trimming calibration phases AND approach/retreat steps.
 
 Usage:
   blender --background --python scripts/reexport_trimmed_daily.py
@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / 'public/animations/mixamo/anim_salsa_dancing.glb'
 OUTPUT_DIR = ROOT / 'public/animations/npz/daily'
 REGISTRY_PATH = ROOT / 'src/features/scene/animations/animationRegistry.ts'
+SMART_REGISTRY_PATH = ROOT / 'src/features/scene/ai/smartObjectRegistry.ts'
 
 BONE_NAMES = [
     'mixamorig:Hips', 'mixamorig:LeftUpLeg', 'mixamorig:RightUpLeg', 'mixamorig:Spine',
@@ -30,6 +31,18 @@ BONE_NAMES = [
 MIXAMO_TRANSLATION_SCALE = 1.17
 ROOT_CANCEL = Quaternion((1, 0, 0), -math.pi / 2)
 
+# Specific in-place action ranges (cutting approach walk-in and retreat walk-out)
+CUSTOM_TRIMS = {
+    'drinking-glass': (195, 1070),    # Action pure au verre (8.8s)
+    'holding-cup': (170, 460),        # Action pure à la tasse (2.9s)
+    'cooking-stir-pan': (185, 1115),  # Action pure à la poêle (9.3s)
+    'cutting-knife': (155, 980),      # Action pure de découpe (8.2s)
+    'washing-dishes-sink': (200, 380),# Action pure vaisselle (1.8s)
+    'taking-shower': (200, 680),      # Action pure sous le jet (4.8s)
+    'washing-body': (320, 8250),      # Action pure lavage corps (79.3s)
+    'putdown-box-floor': (0, 288),    # Action pure poser la boîte au sol (2.4s)
+}
+
 
 def rodrigues_to_quat(rotation):
     angle = float(np.linalg.norm(rotation))
@@ -42,17 +55,14 @@ def rodrigues_to_quat(rotation):
 
 def find_trim_range(poses, fps):
     diffs = np.linalg.norm(np.diff(poses, axis=0), axis=1) # (N-1,)
-    w = max(2, int(round(fps * 0.15))) # 150ms window
+    w = max(2, int(round(fps * 0.15)))
     smooth_v = np.convolve(diffs, np.ones(w)/w, mode='same')
-    
-    # Arm norms
     arm_norms = np.linalg.norm(poses[:, 16*3:17*3], axis=1) + np.linalg.norm(poses[:, 17*3:18*3], axis=1)
     
     n = len(diffs)
     mid_v = np.median(smooth_v[int(n*0.2):int(n*0.8)])
     thresh = max(0.010, mid_v * 0.30)
     
-    # 1. Start frame: scan forward up to 3.5s
     start_frame = 0
     max_search_start = min(n, int(3.5 * fps))
     is_tpose_start = (arm_norms[0] < 0.65)
@@ -67,7 +77,6 @@ def find_trim_range(poses, fps):
                 start_frame = i
                 break
                 
-    # 2. End frame: scan backward up to 3.5s
     end_frame = len(poses) - 1
     max_search_end = max(start_frame + int(fps * 0.5), len(poses) - int(3.5 * fps))
     for i in range(len(smooth_v) - 1, max_search_end, -1):
@@ -78,7 +87,7 @@ def find_trim_range(poses, fps):
     return start_frame, end_frame
 
 
-def convert_trimmed(npz_path: Path, output_path: Path):
+def convert_trimmed(anim_id: str, npz_path: Path, output_path: Path):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=str(TEMPLATE))
     armatures = [o for o in bpy.data.objects if o.type == 'ARMATURE']
@@ -105,7 +114,11 @@ def convert_trimmed(npz_path: Path, output_path: Path):
         else:
             fps = 120.0
 
-    start_frame, end_frame = find_trim_range(raw_poses, fps)
+    if anim_id in CUSTOM_TRIMS:
+        start_frame, end_frame = CUSTOM_TRIMS[anim_id]
+    else:
+        start_frame, end_frame = find_trim_range(raw_poses, fps)
+
     poses = raw_poses[start_frame:end_frame]
     translations = raw_trans[start_frame:end_frame]
 
@@ -177,25 +190,33 @@ def main():
     meta_studio = json.loads((OUTPUT_DIR / "studio_meta.json").read_text())
     all_items = meta_daily + meta_studio
 
-    print(f"Starting trimmed re-export of {len(all_items)} animations...")
+    print(f"Starting in-place trimmed re-export of {len(all_items)} animations...")
     registry_text = REGISTRY_PATH.read_text(encoding='utf-8')
+    smart_text = SMART_REGISTRY_PATH.read_text(encoding='utf-8')
     updated_items = []
 
     for idx, item in enumerate(all_items, 1):
         src_path = Path(item['src'])
         dst_path = OUTPUT_DIR / item['filename']
         print(f"[{idx}/{len(all_items)}] Re-exporting {item['id']}...")
-        res = convert_trimmed(src_path, dst_path)
-        print(f"   Trimmed: cut start {res['cut_start_s']}s, cut end {res['cut_end_s']}s -> {res['frames']}f / {res['duration']}s ({res['size_kb']}KB)")
+        res = convert_trimmed(item['id'], src_path, dst_path)
+        print(f"   In-place: cut start {res['cut_start_s']}s, cut end {res['cut_end_s']}s -> {res['frames']}f / {res['duration']}s ({res['size_kb']}KB)")
         updated_items.append({**item, **res})
 
         # Update duration in animationRegistry.ts
         pattern = re.compile(rf"(id:\s*'{re.escape(item['id'])}'[\s\S]*?duration:\s*)([\d.]+)", re.MULTILINE)
         registry_text = pattern.sub(rf"\g<1>{res['duration']}", registry_text)
 
+        # Update duration in smartObjectRegistry.ts if present
+        if item['id'] == 'taking-shower':
+            smart_text = re.sub(r"(animation:\s*'taking-shower',\s*duration:\s*)([\d.]+)", rf"\g<1>{res['duration']}", smart_text)
+        elif item['id'] == 'cooking-stir-pan':
+            smart_text = re.sub(r"(animation:\s*'cooking-stir-pan',\s*duration:\s*)([\d.]+)", rf"\g<1>{res['duration']}", smart_text)
+
     REGISTRY_PATH.write_text(registry_text, encoding='utf-8')
+    SMART_REGISTRY_PATH.write_text(smart_text, encoding='utf-8')
     (OUTPUT_DIR / "all_trimmed_meta.json").write_text(json.dumps(updated_items, indent=2, ensure_ascii=False))
-    print("\nAll done! Animations trimmed and registry updated.")
+    print("\nAll done! In-place animations exported and registries updated.")
 
 
 if __name__ == '__main__':

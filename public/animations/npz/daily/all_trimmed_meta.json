@@ -109,12 +109,12 @@
       "shower",
       "douche"
     ],
-    "frames": 257,
-    "duration": 8.6,
-    "size_kb": 239,
+    "frames": 144,
+    "duration": 4.8,
+    "size_kb": 202,
     "rel_path": "animations/npz/daily/anim_taking_shower.glb",
-    "cut_start_s": 0.0,
-    "cut_end_s": 0.01
+    "cut_start_s": 2.0,
+    "cut_end_s": 1.78
   },
   {
     "id": "washing-body",
@@ -132,12 +132,12 @@
       "wash",
       "se-laver"
     ],
-    "frames": 2599,
-    "duration": 86.6,
-    "size_kb": 1221,
+    "frames": 2379,
+    "duration": 79.3,
+    "size_kb": 992,
     "rel_path": "animations/npz/daily/anim_washing_body.glb",
-    "cut_start_s": 0.03,
-    "cut_end_s": 0.02
+    "cut_start_s": 3.2,
+    "cut_end_s": 4.18
   },
   {
     "id": "pickup-box-floor-male",
@@ -249,12 +249,12 @@
       "putdown-box",
       "reposer-boite"
     ],
-    "frames": 208,
-    "duration": 6.9,
-    "size_kb": 376,
+    "frames": 72,
+    "duration": 2.4,
+    "size_kb": 178,
     "rel_path": "animations/npz/daily/anim_putdown_box_floor.glb",
     "cut_start_s": 0.0,
-    "cut_end_s": 0.01
+    "cut_end_s": 4.56
   },
   {
     "id": "sweeping-floor",
@@ -321,12 +321,12 @@
       "boire-verre",
       "boire"
     ],
-    "frames": 377,
-    "duration": 12.6,
-    "size_kb": 279,
+    "frames": 262,
+    "duration": 8.7,
+    "size_kb": 241,
     "rel_path": "animations/npz/daily/anim_drinking_glass.glb",
-    "cut_start_s": 0.48,
-    "cut_end_s": 0.93
+    "cut_start_s": 1.95,
+    "cut_end_s": 3.28
   },
   {
     "id": "holding-cup",
@@ -347,12 +347,12 @@
       "prendre-tasse",
       "cafe"
     ],
-    "frames": 185,
-    "duration": 6.2,
-    "size_kb": 220,
+    "frames": 87,
+    "duration": 2.9,
+    "size_kb": 183,
     "rel_path": "animations/npz/daily/anim_holding_cup.glb",
-    "cut_start_s": 0.27,
-    "cut_end_s": 1.44
+    "cut_start_s": 1.7,
+    "cut_end_s": 3.28
   },
   {
     "id": "cooking-stir-pan",
@@ -373,12 +373,12 @@
       "cuisiner",
       "melanger-poele"
     ],
-    "frames": 391,
-    "duration": 13.0,
-    "size_kb": 283,
+    "frames": 279,
+    "duration": 9.3,
+    "size_kb": 246,
     "rel_path": "animations/npz/daily/anim_cooking_stir_pan.glb",
-    "cut_start_s": 0.24,
-    "cut_end_s": 0.45
+    "cut_start_s": 1.85,
+    "cut_end_s": 2.57
   },
   {
     "id": "cutting-knife",
@@ -399,12 +399,12 @@
       "decouper-couteau",
       "decouper"
     ],
-    "frames": 323,
-    "duration": 10.8,
-    "size_kb": 261,
+    "frames": 248,
+    "duration": 8.3,
+    "size_kb": 236,
     "rel_path": "animations/npz/daily/anim_cutting_knife.glb",
-    "cut_start_s": 0.46,
-    "cut_end_s": 1.38
+    "cut_start_s": 1.55,
+    "cut_end_s": 2.81
   },
   {
     "id": "pouring-bottle",
@@ -475,12 +475,12 @@
       "wash-dishes",
       "faire-vaisselle"
     ],
-    "frames": 143,
-    "duration": 4.8,
-    "size_kb": 201,
+    "frames": 54,
+    "duration": 2.0,
+    "size_kb": 172,
     "rel_path": "animations/npz/daily/anim_washing_dishes_sink.glb",
-    "cut_start_s": 0.28,
-    "cut_end_s": 1.08
+    "cut_start_s": 2.0,
+    "cut_end_s": 2.34
   },
   {
     "id": "take-book-shelf",

@@ -242,7 +242,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [30, 15, 645],
         rotY: 0,
         animation: 'taking-shower',
-        duration: 8.6,
+        duration: 4.8,
       },
       {
         slotId: 'take-shower-2',
@@ -258,7 +258,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [42, 15, 660],
         rotY: -Math.PI / 2,
         animation: 'taking-shower',
-        duration: 8.6,
+        duration: 4.8,
       }
     ]
   },
@@ -413,7 +413,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'cook-stove',
         name: 'Cuisiner Plaques',
         animation: 'cooking-stir-pan',
-        duration: 13.7,
+        duration: 9.3,
         offset: [80, 0, 400],
       }
     ]

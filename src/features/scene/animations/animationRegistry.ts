@@ -7840,7 +7840,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Prendre sa douche',
     aliases: ['shower', 'douche'],
     tags: ['shower', 'hygiene', 'wash', 'bathroom', 'interaction'],
-    duration: 8.6,
+    duration: 4.8,
   },
   {
     id: 'washing-body',
@@ -7849,7 +7849,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Se laver',
     aliases: ['wash', 'se-laver'],
     tags: ['wash', 'hygiene', 'shower', 'bathroom', 'interaction'],
-    duration: 86.6,
+    duration: 79.3,
   },
   {
     id: 'pickup-box-floor-male',
@@ -7894,7 +7894,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Reposer la boîte au sol',
     aliases: ['putdown-box', 'reposer-boite'],
     tags: ['box', 'putdown', 'floor', 'walk', 'interaction'],
-    duration: 6.9,
+    duration: 2.4,
   },
   {
     id: 'sweeping-floor',
@@ -7923,7 +7923,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Boire un verre',
     aliases: ['drink', 'boire-verre', 'boire'],
     tags: ['drink', 'glass', 'kitchen', 'dining', 'standing', 'interaction'],
-    duration: 12.6,
+    duration: 8.7,
   },
   {
     id: 'holding-cup',
@@ -7932,7 +7932,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Prendre une tasse',
     aliases: ['cup', 'prendre-tasse', 'cafe'],
     tags: ['cup', 'coffee', 'kitchen', 'dining', 'standing', 'interaction'],
-    duration: 6.2,
+    duration: 2.9,
   },
   {
     id: 'cooking-stir-pan',
@@ -7941,7 +7941,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Cuisiner à la poêle',
     aliases: ['cook-pan', 'cuisiner', 'melanger-poele'],
     tags: ['cook', 'pan', 'kitchen', 'spoon', 'food', 'interaction'],
-    duration: 13.0,
+    duration: 9.3,
   },
   {
     id: 'cutting-knife',
@@ -7950,7 +7950,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Découper au couteau',
     aliases: ['cut-knife', 'decouper-couteau', 'decouper'],
     tags: ['cut', 'knife', 'kitchen', 'food', 'prep', 'interaction'],
-    duration: 10.8,
+    duration: 8.3,
   },
   {
     id: 'pouring-bottle',
@@ -7977,7 +7977,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: "Faire la vaisselle à l'évier",
     aliases: ['wash-dishes', 'faire-vaisselle'],
     tags: ['dishes', 'sink', 'sponge', 'kitchen', 'cleaning', 'chore', 'interaction'],
-    duration: 4.8,
+    duration: 2.0,
   },
   {
     id: 'take-book-shelf',
