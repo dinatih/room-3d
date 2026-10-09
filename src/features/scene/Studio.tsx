@@ -664,6 +664,7 @@ export function Studio() {
   const isIdle = useAppIdle();
   const isCvModalOpen = useSceneStore(state => state.isCvModalOpen);
   const isPhotoModeOpen = useSceneStore(state => state.isPhotoModeOpen);
+  const cameraMovement = useSceneStore(state => state.cameraMovement);
   const activeSceneRef = useRef<Scene | null>(null);
   const activeCameraRef = useRef<PerspectiveCamera | OrthographicCamera | null>(null);
   const activeGlRef = useRef<WebGLRenderer | null>(null);
@@ -722,7 +723,7 @@ export function Studio() {
     revealScene();
   }, [revealScene]);
 
-  const isAnimActive = buildAnimMatrix;
+  const isAnimActive = buildAnimMatrix || cameraMovement === 'orbit';
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>

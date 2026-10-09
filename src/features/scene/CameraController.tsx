@@ -1111,9 +1111,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   useFrame(() => {
     if (cameraState.isIntroRunning) return;
     if (modeRef.current === 'orbit' && ctrlRef.current) {
-      if (useSceneStore.getState().cameraMovement === 'orbit') {
-        invalidate();
-      }
       if (ctrlRef.current.target.lengthSq() > 1) {
         currentTarget.current.copy(ctrlRef.current.target);
       }
@@ -1275,8 +1272,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
               : undefined
         }
         autoRotate={mode === 'orbit' && cameraMovement === 'orbit'}
-        autoRotateSpeed={1.0}
-        enableDamping={mode !== 'follow'}
+        autoRotateSpeed={1.8}
+        enableDamping={mode !== 'follow' && cameraMovement !== 'orbit'}
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
         enabled={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
