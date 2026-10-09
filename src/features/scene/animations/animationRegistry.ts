@@ -128,6 +128,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['idle', 'idle-female-1', 'stand-relax'],
     tags: ['idle', 'standing', 'relax', 'female'],
     duration: 33.1,
+    defaultOffset: [10, 0, 0]
   },
   {
     id: 'miley-armature-idle02-f',
@@ -586,10 +587,10 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'dance-sync',
     path: 'animations/npz/dances/anim_dance_sync.glb',
     category: 'dances',
-    label: 'Dance Sync (76f / 2.5s, 182KB)',
+    label: 'Dance Sync (151f / 5.0s, 209KB)',
     aliases: ['dance-sync-ssm', 'ssm-dance-sync'],
     tags: ['dance', 'dance-wide', 'party', 'dance-from-npz'],
-    duration: 2.5,
+    duration: 5.0,
   },
   {
     id: 'gangnam-style',

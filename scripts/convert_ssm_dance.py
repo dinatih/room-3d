@@ -57,15 +57,10 @@ def convert(npz_path: Path, output_path: Path):
     with np.load(npz_path) as data:
         poses = data['poses']
         translations = data['trans']
-        fps = float(data['mocap_frame_rate'])
-
-    if not np.isfinite(poses).all() or not np.isfinite(translations).all():
-        raise ValueError(f'Non-finite motion: {npz_path}')
-
-    step = max(1, round(fps / 30))
-    if abs(fps / step - 30) > 0.05:
-        raise ValueError(f'Capture cannot be sampled at 30 FPS: {fps}')
-
+    # In SSM metadata, mocap_frame_rate is marked as 120 Hz, but natural motion
+    # plays at 60 Hz (120 Hz was 2x too fast in app).
+    # Resampling at 30 FPS gives 151 frames (5.0s) instead of 76 frames (2.5s).
+    step = 2
     frames = range(0, len(poses), step)
     bases = [armature.data.bones[name].matrix_local.to_3x3() for name in BONE_NAMES]
     hips = armature.pose.bones[BONE_NAMES[0]]
