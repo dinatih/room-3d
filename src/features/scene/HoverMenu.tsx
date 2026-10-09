@@ -9,8 +9,6 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE   from 'three';
 import { hoverState } from '@features/scene/hoverState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
-import { positionState } from '@features/scene/positionState';
-import { DOUBLE_BED_POSITIONS } from './furniturePositions';
 import { cameraState } from '@features/scene/cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
@@ -18,181 +16,7 @@ import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
 import { isCharacterVisibleInMode } from './characterConfig';
 
-// ── Actions disponibles ───────────────────────────────────────────────────────
-
-interface ActionDef { 
-  btnLabel?: string | (() => string); 
-  icon?: string;
-  toggleKey: string;
-  type?: 'button' | 'select';
-  options?: { value: string; label: string }[];
-}
-
-
-
-import { WIGS_ITEMS } from '@features/inventory/inventoryData';
-
-const mappedWigOptions = WIGS_ITEMS.map((wig, i) => ({
-  value: i.toString(),
-  label: wig.name
-}));
-
-const HAIR_COLORS = [
-  { value: 'naturel', label: 'Naturel 🟫' },
-  { value: 'noir', label: 'Noir ⚫' },
-  { value: 'brun', label: 'Brun 🟫' },
-  { value: 'chatain', label: 'Châtain 🟤' },
-  { value: 'blond', label: 'Blond 🌟' },
-  { value: 'roux', label: 'Roux 🦊' },
-  { value: 'blanc', label: 'Blanc ❄️' },
-  { value: 'bleu', label: 'Bleu 💙' },
-  { value: 'vert', label: 'Vert 💚' },
-  { value: 'rouge', label: 'Rouge ❤️' },
-  { value: 'rose', label: 'Rose 🌸' },
-  { value: 'violet', label: 'Violet 💜' },
-  { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
-];
-
-function makeMannequinActions(loc: string): Record<string, ActionDef> {
-  return {
-    [`mannequin-${loc}-random`]: { btnLabel: 'Aléatoire complet', icon: 'bi-shuffle', toggleKey: `mannequin-${loc}-random` },
-    [`mannequin-${loc}-wig`]:   { btnLabel: 'Perruque 💇', toggleKey: `mannequin-${loc}-wig`, type: 'select', options: mappedWigOptions },
-    [`mannequin-${loc}-color`]: { btnLabel: 'Couleur cheveux 🎨', toggleKey: `mannequin-${loc}-color`, type: 'select', options: HAIR_COLORS },
-    [`mannequin-${loc}-wind`]:  { btnLabel: 'Vent 💨', toggleKey: `mannequin-${loc}-wind` },
-  };
-}
-
-function makePositionAction(key: string): Record<string, ActionDef> {
-  return {
-    [key]: {
-      btnLabel: () => {
-        const p = positionState[key];
-        return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position';
-      },
-      toggleKey: key,
-    },
-  };
-}
-
-const MANNEQUIN_ACTIONS: Record<string, ActionDef> = {
-  ...makeMannequinActions('kallax-nw'),
-  ...makeMannequinActions('kallax-ne'),
-  ...makeMannequinActions('meubleT'),
-  ...makeMannequinActions('lack'),
-  ...makeMannequinActions('lamp'),
-};
-
-const POSITION_ACTIONS: Record<string, ActionDef> = {
-  ...makePositionAction('desk1-position'),
-  ...makePositionAction('desk2-position'),
-  ...makePositionAction('smorkull-position'),
-  ...makePositionAction('airperformer-position'),
-  ...makePositionAction('raskog-large-position'),
-};
-
-const ACTIONS: Record<string, ActionDef> = {
-  ...MANNEQUIN_ACTIONS,
-  ...POSITION_ACTIONS,
-
-  eastGlassDoor: {
-    btnLabel: 'Pousser battant droit',
-    toggleKey: 'eastGlassDoor'
-  },
-  glassDoorLeftOpen: { btnLabel: 'Pousser battant gauche', toggleKey: 'glassDoorV2LeftOpen' },
-  glassDoorShutter: {
-    btnLabel: () => {
-      const pos = useSceneStore.getState().furniture.glassDoorV2ShutterPos;
-      return pos === 0 ? 'Volet : OUVERT' : pos === 100 ? 'Volet : FERMÉ' : `Volet : ${pos}% FERMÉ`;
-    },
-    toggleKey: 'glassDoorV2ShutterPos'
-  },
-  entryDoor:      { btnLabel: 'Pousser', toggleKey: 'entryDoor' },
-  livingDoor:     { btnLabel: 'Pousser', toggleKey: 'livingDoor' },
-  bathroomDoor:   { btnLabel: 'Pousser', toggleKey: 'bathroomDoor' },
-  showerDoor:     { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'showerDoor'    },
-  corrDoors:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'corrDoors'     },
-  sdbClosetL:     { btnLabel: 'Ouvrir / Fermer Gauche', toggleKey: 'sdbClosetL' },
-  sdbClosetR:     { btnLabel: 'Ouvrir / Fermer Droite', toggleKey: 'sdbClosetR' },
-  cbnWest:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cbnWest'       },
-  cbnEast:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cbnEast'       },
-  freezer:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'freezer'       },
-  fridge:         { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'fridge'        },
-  'fridge-crisper-toggle': { btnLabel: () => useSceneStore.getState().extraStates['fridge-crisper-toggle'] ? 'Rentrer le bac' : 'Sortir le bac', toggleKey: 'fridge-crisper-toggle' },
-  ninja:          { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'ninja'         },
-  cabinet:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cabinet'       },
-  'wc-lid-toggle':  { btnLabel: 'Ouvrir / Fermer Couvercle', toggleKey: 'wc-lid-toggle'  },
-  'wc-seat-toggle': { btnLabel: 'Ouvrir / Fermer Siège',     toggleKey: 'wc-seat-toggle' },
-  'wc-flush':       { btnLabel: 'Appuyer sur la chasse',     toggleKey: 'wc-flush'       },
-  'lamp-toggle':   { btnLabel: 'Allumer / Éteindre', toggleKey: 'lampOn'        },
-  lampBath:        { btnLabel: () => useSceneStore.getState().furniture.lampBath ? 'Éteindre SDB' : 'Allumer SDB', toggleKey: 'lampBath' },
-  lampCorridor:    { btnLabel: () => useSceneStore.getState().furniture.lampCorridor ? 'Éteindre Couloir' : 'Allumer Couloir', toggleKey: 'lampCorridor' },
-  'bed-double':    { btnLabel: () => useSceneStore.getState().furniture.bedDouble ? 'Lits séparés' : 'Lit double', toggleKey: 'bed-double' },
-  'bed-position':  { btnLabel: () => {
-    const p = positionState['bed-position'];
-    return p ? `Position (${DOUBLE_BED_POSITIONS[p.idx]?.label ?? p.idx + 1}) →` : 'Changer position →';
-  }, toggleKey: 'bed-position' },
-  'desk1-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk1-toggle'  },
-  'desk2-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk2-toggle'  },
-  'desk2-screen-toggle': {
-    btnLabel: () => {
-      const s = useSceneStore.getState();
-      const on = s.desk2ScreenActive || s.extraStates.desk2Screen;
-      return on ? '⏹️ Couper Vidéo' : '▶ Vidéo Bureau / TV';
-    },
-    toggleKey: 'desk2-screen-toggle',
-    icon: 'bi-display',
-  },
-  'shiba-replay':      { btnLabel: 'Rejouer',           toggleKey: 'shiba-replay'      },
-  'robin-bird-replay': { btnLabel: 'Rejouer',           toggleKey: 'robin-bird-replay' },
-  'nestMini':          { btnLabel: 'Ok Google',         toggleKey: 'nestMini'          },
-  'tv':                { btnLabel: 'Allumer / Éteindre', toggleKey: 'tvOn'             },
-  'bin':               { btnLabel: 'Ouvrir / Fermer',   toggleKey: 'bin-toggle'       },
-  airPerformerPower:       { btnLabel: 'Allumer / Éteindre', toggleKey: 'airPerformerPower' },
-  airPerformerMode:        { btnLabel: 'Changer Mode',       toggleKey: 'airPerformerMode'  },
-  airPerformerSpeed:       { btnLabel: 'Vitesse +/-',        toggleKey: 'airPerformerSpeed' },
-  'character-meshes':         { btnLabel: 'Meshes',             toggleKey: 'character-meshes'     },
-  'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
-  'sofa-arm-right':        { btnLabel: 'Accoudoir Droit',   toggleKey: 'sofaArmRight'      },
-  'lara-haircut':          { btnLabel: 'Coupe de cheveux 💇‍♀️', toggleKey: 'lara-haircut', type: 'select', options: [
-    { value: 'original', label: 'Coupe d\'origine 👱‍♀️' },
-    ...WIGS_ITEMS.map(wig => ({
-      value: wig.id,
-      label: wig.name
-    }))
-  ] },
-  utdrag: {
-    btnLabel: () => useSceneStore.getState().extraStates.utdrag ? 'Rentrer la hotte' : 'Déplier la hotte',
-    toggleKey: 'utdrag',
-  },
-};
-
-// Helper to resolve action definition (supports dynamic actions like select-character-*)
-function getActionDef(actionId: string): ActionDef | undefined {
-  if (/^animal-(robin|shiba|jikin|tosakin)-(fpv|follow)$/.test(actionId)) {
-    const fpv = actionId.endsWith('-fpv');
-    return { btnLabel: fpv ? 'Vue FPV' : 'Suivre', icon: fpv ? 'bi-eye' : 'bi-camera-video', toggleKey: actionId };
-  }
-  if (ACTIONS[actionId]) return ACTIONS[actionId];
-  if (actionId.startsWith('select-character-')) {
-    return {
-      btnLabel: '🎯 Définir comme personnage actif',
-      toggleKey: actionId,
-    };
-  }
-  if (actionId.startsWith('smart-object:::')) {
-    // Format : smart-object:::{objectId}:::{slotId}
-    const [, objectId, slotId] = actionId.split(':::');
-    const obj = getSmartObject(objectId);
-    const slot = obj?.slots.find(s => s.slotId === slotId);
-    const slotName = slot?.name || slotId || 'Interagir';
-    const prefix = slot?.isDuo ? '🛋️ Duo' : '⚡ Utiliser';
-    return {
-      btnLabel: `${prefix} (${slotName})`,
-      toggleKey: actionId,
-    };
-  }
-  return undefined;
-}
+import { getActionDef, type ActionDef } from './objectActionRegistry';
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
   let cur: THREE.Object3D | null = obj;
@@ -646,6 +470,8 @@ export function HoverOverlay() {
   
   // S'abonne aux changements d'états du mobilier pour re-rendre les labels réactifs (ex: Ouvrir/Fermer)
   useSceneStore(state => state.furniture);
+  useSceneStore(state => state.extraStates);
+  useSceneStore(state => state.desk2ScreenActive);
   
   const [state, setState] = useState({
     visible: false, label: '', actionIds: [] as string[],

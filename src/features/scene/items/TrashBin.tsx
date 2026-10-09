@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 /**
  * TrashBin.tsx — TATAY Smart Deco 25L (26×36×47 cm)
  * Wood-effect rectangular body, black lid/base/collar, front pedal.
@@ -43,7 +44,7 @@ export function TrashBin({ actionState, onSize }: SceneItemProps) {
   });
 
   return (
-    <group userData={{ hoverAction: { label: 'Poubelle TATAY 25L', actionId: 'bin' } }}>
+    <group userData={{ hoverAction: { label: 'Poubelle TATAY 25L', actions: getObjectActionIds('trash-bin') } }}>
 
       {/* Base / pied — noir */}
       <mesh position={[0, BASE_H / 2, 0]} material={blackMat}>

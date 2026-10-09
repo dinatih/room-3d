@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 /**
  * KitchenCabinet.tsx — Meuble bas cuisine METOD + porte RINGHULT + poignée KALLROR.
  * Coordonnées locales : centré X/Z, Y=0 = sol.
@@ -75,7 +76,7 @@ export function KitchenCabinet({ actionState, onSize }: SceneItemProps) {
     door.position.set(doorOrigX - hingeX,   doorOrigY,   doorOrigZ - cabFrontZ);
     handle.position.set(handleOrigX - hingeX, handleOrigY, handleOrigZ - cabFrontZ);
 
-    const ha = { label: 'Meuble sous évier', actionId: 'cabinet' };
+    const ha = { label: 'Meuble sous évier', actions: getObjectActionIds('cabinet-wood') };
     scene.userData.hoverAction  = ha;
     door.userData.hoverAction   = ha;
     handle.userData.hoverAction = ha;

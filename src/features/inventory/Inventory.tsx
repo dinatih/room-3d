@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '@features/scene/objectActions';
 /**
  * Inventory.tsx — port de js/ui/inventory.js
  * Styled using Bootstrap 5.3, custom red theme variables and fully responsive.
@@ -216,7 +217,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
             </span>
           )}
 
-          {!isStorage && (item as InventoryItem).actions && (item as InventoryItem).actions!.length > 0 && (
+          {!isStorage && getObjectActionIds(item.id).length > 0 && (
             <span className="badge bg-warning-subtle text-dark border border-warning-subtle">
               ⚡ Actionnable
             </span>
@@ -537,7 +538,7 @@ function normalizeSearchStr(str: string): string {
       // Les ExtraCharacters ne sont visibles que si l'option extraCharacters est activée
       if (!extraCharacters && isExtraCharacter(i.id)) return false;
 
-      if (activeCat === 'actionnable' && !i.actions?.length) return false;
+      if (activeCat === 'actionnable' && !getObjectActionIds(i.id).length) return false;
       if (activeCat === 'glbs'        && !i.glbPath)         return false;
       
       // Si une recherche textuelle est saisie, chercher dans tout le catalogue pour ne pas masquer de résultats
@@ -558,7 +559,7 @@ function normalizeSearchStr(str: string): string {
 
   const showSpaces = activeCat === 'storage' || activeCat === 'actionnable';
   const spaces = activeCat === 'actionnable'
-    ? STORAGE_SPACES.filter(sp => sp.actions?.length)
+    ? STORAGE_SPACES.filter(sp => getObjectActionIds(sp.id).length)
     : STORAGE_SPACES;
 
   // Unified list: Native Lara first in 'all', then spatial zones, storage spaces and items
@@ -825,7 +826,7 @@ function normalizeSearchStr(str: string): string {
                           ) : (
                             <span className="badge bg-danger-subtle text-danger border border-danger-subtle">{catLabel}</span>
                           )}
-                          {!isStorage && (target as InventoryItem).actions && (target as InventoryItem).actions!.length > 0 && (
+                          {!isStorage && getObjectActionIds(target.id).length > 0 && (
                             <span className="badge bg-warning-subtle text-dark border border-warning-subtle">⚡ Action</span>
                           )}
                         </div>

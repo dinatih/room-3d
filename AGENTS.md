@@ -34,6 +34,15 @@ Chaque meuble ou objet interactif est un composant autonome implémentant l'inte
 
 ## Directives UI & Styling
 
+### Actions des objets 3D
+
+- Déclarer les associations objet/actions dans `src/features/scene/objectActions.ts` et les libellés, clés d'état et comportements dans `src/features/scene/objectActionRegistry.ts`.
+- La scène, les previews 3D et les filtres de l'inventaire doivent utiliser ce registre commun. Ne pas réintroduire de listes d'actions dans les données de l'inventaire ou de table de libellés dans `previewRegistry.tsx`.
+- Les placements peuvent ajouter leurs interactions IA contextuelles aux actions communes. Les commandes de déplacement dans l'appartement restent réservées à la scène.
+- Les composants reçoivent `isPreview` pour lire les états locaux de la preview ; la vidéo en preview ne doit pas piloter les écrans de l'appartement.
+
+### Styles
+
 - **Bootstrap au maximum** : Toujours privilégier les classes utilitaires et composants Bootstrap (`btn-sm`, `form-control-sm`, `form-select-sm`, `small`, `gap-*`, `p-*`, `m-*`, `w-auto`, etc.).
 - **Styles in-line restreints** : N'utiliser les styles in-line (`style={{ ... }}`) que si c'est réellement indispensable (ex. positionnement absolu dynamique, dimensions calculées dynamiquement). Ne jamais utiliser de styles in-line arbitraires (notamment `fontSize`, espacements ou dimensions fixes au hasard) lorsqu'une classe Bootstrap équivalente existe.
 

@@ -237,46 +237,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'cuisine-stack':          CuisineGroup,
 };
 
-/**
- * Labels des boutons d'action.
- * [label quand inactif, label quand actif]
- */
-export const ACTION_LABELS: Record<string, [string, string]> = {
-  'scooter-steering-toggle': ['Guidon 30° à gauche', 'Redresser le guidon'],
-  'freezer-toggle':        ['Ouvrir', 'Fermer'],
-  'fridge-toggle':         ['Ouvrir', 'Fermer'],
-  'fridge-crisper-toggle': ['Sortir le bac', 'Rentrer le bac'],
-  'cabinet-toggle':        ['Ouvrir', 'Fermer'],
-  'cbn-west-toggle':       ['Ouvrir', 'Fermer'],
-  'cbn-east-toggle':       ['Ouvrir', 'Fermer'],
-  'entry-door-toggle':     ['Pousser', 'Pousser'],
-  'living-door-toggle':    ['Pousser', 'Pousser'],
-  'bathroom-door-toggle':  ['Pousser', 'Pousser'],
-  'shower-door-toggle':    ['Ouvrir', 'Fermer'],
-  'east-glass-door-toggle':           ['Pousser', 'Pousser'],
-  'wc-lid-toggle':         ['Ouvrir Couvercle', 'Fermer Couvercle'],
-  'wc-seat-toggle':        ['Ouvrir Siège', 'Fermer Siège'],
-  'wc-flush':              ['Appuyer sur la chasse', 'Relâcher la chasse'],
-  'corr-doors-toggle':     ['Ouvrir', 'Fermer'],
-  'sdb-closet-toggle':     ['Ouvrir', 'Fermer'],
-  'ninja-toggle':          ['Ouvrir', 'Fermer'],
-  'tv-toggle':             ['Allumer', 'Éteindre'],
-  'bin-toggle':            ['Ouvrir', 'Fermer'],
-  'bed-double':            ['Mettre en lit double', 'Séparer en lits simples'],
-  'bed-position':          ['Position lit double →', 'Position lit double →'],
-  'desk-toggle':           ['Debout', 'Assis'],
-  'desk1-toggle':          ['Debout', 'Assis'],
-  'desk1-position':        ['Position →', 'Position →'],
-  'desk2-toggle':          ['Debout', 'Assis'],
-  'desk2-position':        ['Position →', 'Position →'],
-  'smorkull-position':     ['Position →', 'Position →'],
-  'vihals-toggle':         ['Plier', 'Déplier'],
-  'sofa-arm-left':         ['Mettre à plat G', 'Relever G'],
-  'sofa-arm-right':        ['Mettre à plat D', 'Relever D'],
-  'nestMini':              ['Ok Google 🎙️', 'Ok Google 🎙️'],
-  'utdrag-toggle':         ['Déplier', 'Rentrer'],
-};
-
 CHARACTERS.forEach(char => {
   SCENE_REGISTRY[char.id] = function DynamicPreview({ actionState }: { actionState?: any }) {
     return (

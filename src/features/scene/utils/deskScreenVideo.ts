@@ -61,13 +61,13 @@ export function setDesk2SmartActionState(characterId: string, active: boolean) {
   useSceneStore.getState().setDesk2SmartActionActive(activeDesk2Agents.size > 0);
 }
 
-export function useDeskScreenVideo() {
+export function useDeskScreenVideo(previewActive?: boolean) {
   const isDesk2Active = useSceneStore(s => Boolean(s.desk2ScreenActive || s.extraStates.desk2Screen));
   const enabled = useSceneStore(s => s.screenVideosEnabled);
   const quality = useSceneStore(s => s.screenVideoQuality);
   const invalidate = useThree(s => s.invalidate);
   const [resource, setResource] = useState<ScreenVideo | null>(null);
-  const requested = enabled && isDesk2Active;
+  const requested = enabled && (previewActive ?? isDesk2Active);
 
   useEffect(() => {
     if (!requested) {

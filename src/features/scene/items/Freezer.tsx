@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 /**
  * Freezer.tsx — Réfrigérateur compact TILLREDA IKEA.
  * media/glb/TILLREDA_anim.glb — body + door avec animation "door_open".
@@ -41,7 +42,7 @@ export function Freezer({ actionState, onSize }: SceneItemProps) {
       -(box.min.z + box.max.z) / 2,
     );
     onSize(box.getSize(new THREE.Vector3()));
-    scene.userData.hoverAction = { label: 'Congélateur CHIQ', actionId: 'freezer' };
+    scene.userData.hoverAction = { label: 'Congélateur CHIQ', actions: getObjectActionIds('freezer') };
 
     const mixer = new THREE.AnimationMixer(scene);
     mixer.addEventListener('finished', () => { animatingRef.current = false; });

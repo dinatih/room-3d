@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 /**
  * Shower.tsx — Receveur de douche + équipements VALLAMOSSE IKEA.
  *
@@ -213,7 +214,7 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
   }, [tray, bar, faucet, invalidate]);
 
   return (
-    <group ref={groupRef} userData={{ hoverAction: { label: 'Cabine de Douche', actions: ['showerDoor', ...SMART_OBJECTS.shower.slots.map(slot => `smart-object:::shower:::${slot.slotId}`)] } }}>
+    <group ref={groupRef} userData={{ hoverAction: { label: 'Cabine de Douche', actions: [...getObjectActionIds('shower'), ...SMART_OBJECTS.shower.slots.map(slot => `smart-object:::shower:::${slot.slotId}`)] } }}>
       {/* Receveur — setupScene centre et pose au sol (détaché parent pendant calcul). */}
       <primitive object={tray} />
 

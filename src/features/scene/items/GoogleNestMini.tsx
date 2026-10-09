@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 /**
  * GoogleNestMini.tsx — Google Nest Mini 2 (GLB items/google-nest/google-nest.glb).
  * Diamètre normalisé 10 cm (réf : Nest Mini ≈ Ø9,8 × 4,2 cm).
@@ -28,7 +29,7 @@ const GOOGLE_COLORS = [
 // Positions X des 4 LEDs (ligne horizontale centrée, ~1.5 cm d'espacement)
 const DOT_X = [-2.25, -0.75, 0.75, 2.25];
 
-export function GoogleNestMini({ onSize }: SceneItemProps) {
+export function GoogleNestMini({ onSize, actionState, isPreview = false }: SceneItemProps) {
   const { scene }    = useGLTFClone('items/google-nest/google-nest.glb');
   const dotsGroupRef = useRef<THREE.Group>(null!);
   const dotMatsRef   = useRef<THREE.MeshStandardMaterial[]>([]);
@@ -50,7 +51,7 @@ export function GoogleNestMini({ onSize }: SceneItemProps) {
     );
     onSize(box.getSize(new THREE.Vector3()));
 
-    scene.userData.hoverAction = { label: 'Google Nest Mini', actionId: 'nestMini' };
+    scene.userData.hoverAction = { label: 'Google Nest Mini', actions: getObjectActionIds('google-nest-mini') };
 
     // Positionne le groupe LEDs sur la face avant du device (face tournée vers +X)
     const frontX = (box.max.x - box.min.x) / 2;
@@ -59,6 +60,7 @@ export function GoogleNestMini({ onSize }: SceneItemProps) {
   }, [scene]);
 
   useEffect(() => {
+    if (isPreview) return;
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent<{ key: string }>).detail;
       if (key !== 'nestMini') return;
@@ -68,7 +70,14 @@ export function GoogleNestMini({ onSize }: SceneItemProps) {
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate]);
+  }, [invalidate, isPreview]);
+
+  useEffect(() => {
+    if (!isPreview || actionState.nestMini === undefined) return;
+    animRef.current = true;
+    timeRef.current = 0;
+    invalidate();
+  }, [isPreview, actionState.nestMini, invalidate]);
 
   useFrame((_, delta) => {
     if (!animRef.current) return;

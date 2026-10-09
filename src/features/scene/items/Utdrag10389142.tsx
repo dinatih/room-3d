@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -52,7 +53,7 @@ export function Utdrag10389142({ onSize, actionState, ...props }: SceneItemProps
 
     scene.userData.hoverAction = {
       label: 'Hotte UTDRAG',
-      actionId: 'utdrag',
+      actions: getObjectActionIds('utdrag10389142'),
     };
   }, [scene, onSize]);
 

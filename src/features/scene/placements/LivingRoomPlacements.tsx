@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 import { useState, useEffect } from 'react';
 import * as THREE from 'three';
 
@@ -127,7 +128,7 @@ function Beds() {
     ? currentDoublePos.east
     : { x: ROOM_W - 45.5, z: 190 };
 
-  const hoverActions = isDouble ? ['bed-double', 'bed-position'] : ['bed-double'];
+  const hoverActions = getObjectActionIds('utaker-stack').filter(id => isDouble || id !== 'bed-position');
   const westHoverActions = [
     ...hoverActions,
     ...SMART_OBJECTS['bed-west'].slots.map(slot => `smart-object:::bed-west:::${slot.slotId}`),
@@ -213,7 +214,7 @@ function Desks() {
   return (
     <>
       <PositionTransition furnitureKey="desk1-position" x={p1.x} z={p1.z} ry={p1.ry}>
-        <group userData={{ hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
+        <group userData={{ hoverAction: { label: 'Bureau 1', actions: getObjectActionIds('desk-bollsidan-1') } }}>
           <group userData={{ animUnit: true }}>
             <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
           </group>
@@ -224,10 +225,8 @@ function Desks() {
           hoverAction: {
             label: 'Bureau 2',
             actions: [
-              'desk2-toggle',
-              'desk2-position',
+              ...getObjectActionIds('desk-bollsidan-2'),
               'smart-object:::desk-bollsidan-2:::work-standing',
-              'desk2-screen-toggle',
             ]
           }
         }}>
@@ -280,7 +279,7 @@ function DeskDecor() {
               label: 'Framework Laptop 13',
               actions: [
                 'smart-object:::desk-bollsidan-2:::work-standing',
-                'desk2-screen-toggle',
+                ...getObjectActionIds('laptop'),
               ]
             }
           }}>
@@ -360,7 +359,7 @@ function AirPerformer_() {
   const p = AIRPERFORMER_POSITIONS[posIdx];
   return (
     <PositionTransition furnitureKey="airperformer-position" x={p.x} z={p.z} ry={p.ry}>
-      <group userData={{ skipMerge: true, animUnit: true, itemName: 'Air Performer', hoverAction: { label: 'Air Performer', actions: ['airPerformerPower', 'airPerformerMode', 'airPerformerSpeed', 'airperformer-position'] } }}>
+      <group userData={{ skipMerge: true, animUnit: true, itemName: 'Air Performer', hoverAction: { label: 'Air Performer', actions: getObjectActionIds('air-performer') } }}>
         <AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </PositionTransition>
@@ -538,10 +537,7 @@ export function LivingRoomFurnishings() {
           itemName: 'Téléviseur',
           hoverAction: {
             label: 'TV CHiQ L32H7A',
-            actions: [
-              'tv-toggle',
-              'desk2-screen-toggle',
-            ]
+            actions: getObjectActionIds('tv')
           }
         }}>
         <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />

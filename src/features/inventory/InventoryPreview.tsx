@@ -6,7 +6,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
 import { type InventoryItem, type StorageSpace, WIGS_ITEMS } from './inventoryData';
-import { SCENE_REGISTRY, ACTION_LABELS } from './previewRegistry';
+import { SCENE_REGISTRY } from './previewRegistry';
+import { getActionDef, getPreviewActionIds, getPreviewActionLabel, togglePreviewAction } from '@features/scene/objectActionRegistry';
 import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpers';
 import { SkeletonHierarchyPanel } from '@features/scene/utils/SkeletonHierarchyPanel';
 import type { SkeletonGroup } from '@features/scene/utils/skeletonTypes';
@@ -581,7 +582,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     <group>
       <group ref={outerRef}>
         <group ref={innerRef}>
-          {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
+          {Component ? <Component item={item ?? {} as any} isPreview actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
         </group>
       </group>
       {showDims && item?.dims && worldSize && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}
@@ -647,7 +648,9 @@ export function InventoryPreview({
 }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = !!photos && photos.length > 0;
-  const actionKeys: string[] = item && 'category' in item && (item as InventoryItem).category === 'characters' ? [] : ((item as any)?.actions || []);
+  const actionKeys = item && !('category' in item && item.category === 'characters')
+    ? getPreviewActionIds(item.id)
+    : [];
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(true);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
@@ -1094,24 +1097,20 @@ export function InventoryPreview({
           {showing3D && actionKeys.length > 0 && (
             <div className="position-absolute end-0 top-0 mt-5 me-2 z-3 d-flex flex-column gap-1">
               {actionKeys.map(key => {
-                const labels = ACTION_LABELS[key] ?? ['Ouvrir', 'Fermer'], on = !!actionStates[key];
-                const passageDoor = ['entry-door-toggle', 'living-door-toggle', 'bathroom-door-toggle', 'east-glass-door-toggle'].includes(key);
+                const action = getActionDef(key)!;
+                const on = !!actionStates[action.previewStateKey ?? key];
                 return (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => passageDoor
-                      ? document.dispatchEvent(new CustomEvent('door-push', { detail: { key } }))
-                      : setActionStates(s => {
-                        const next = { ...s, [key]: !s[key] };
-                        if (key === 'fridge-toggle' && !next[key]) next['fridge-crisper-toggle'] = false;
-                        if (key === 'fridge-crisper-toggle' && next[key]) next['fridge-toggle'] = true;
-                        return next;
-                      })}
-                    className={`btn btn-sm ${on && !passageDoor ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
-                    style={{ fontSize: 11 }}
+                    onClick={() => action.previewEvent
+                      ? document.dispatchEvent(new CustomEvent('door-push', { detail: { key: action.previewEvent } }))
+                      : setActionStates(s => togglePreviewAction(key, s))}
+                    className={`btn btn-sm ${on && !action.previewEvent ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
+                    aria-pressed={action.previewEvent ? undefined : on}
+                    data-object-action={key}
                   >
-                    {on && !passageDoor ? labels[1] : labels[0]}
+                    {getPreviewActionLabel(key, actionStates)}
                   </button>
                 );
               })}

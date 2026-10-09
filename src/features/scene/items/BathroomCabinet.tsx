@@ -17,13 +17,14 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
+import { getObjectActionIds } from '../objectActions';
 
 const GLB        = 'items/metod10205534/Metod10205534.glb';
 const DOOR_GLB   = 'items/ringhult60327137/Ringhult60327137-40x60.glb';
 const HANDLE_GLB = 'items/kallror50357002/Kallror50357002.glb';
 
-function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hoverLabel, hoverActionId }:
-  SceneItemProps & { mirrorHandle?: boolean; openKey?: string; hoverLabel?: string; hoverActionId?: string }) {
+function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hoverLabel, hoverObjectId }:
+  SceneItemProps & { mirrorHandle?: boolean; openKey?: string; hoverLabel?: string; hoverObjectId?: string }) {
 
   const { scene }         = useGLTFClone(GLB);
   const { scene: door }   = useGLTFClone(DOOR_GLB);
@@ -79,14 +80,14 @@ function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hove
     door.position.set(doorOrigX - hingeX, doorOrigY,   doorOrigZ - cabFrontZ);
     handle.position.set(handleOrigX - hingeX, handleOrigY, handleOrigZ - cabFrontZ);
 
-    if (hoverLabel && hoverActionId) {
-      const ha = { label: hoverLabel, actionId: hoverActionId };
+    if (hoverLabel && hoverObjectId) {
+      const ha = { label: hoverLabel, actions: getObjectActionIds(hoverObjectId) };
       scene.userData.hoverAction  = ha;
       door.userData.hoverAction   = ha;
       handle.userData.hoverAction = ha;
       pivot.userData.hoverAction  = ha;
     }
-  }, [scene, door, handle, mirrorHandle, hoverLabel, hoverActionId]);
+  }, [scene, door, handle, mirrorHandle, hoverLabel, hoverObjectId]);
 
   // Réagit à actionState (inventory + scene via useFurnitureToggles dans Placements)
   useEffect(() => {
@@ -126,9 +127,9 @@ useGLTF.preload(DOOR_GLB);
 useGLTF.preload(HANDLE_GLB);
 
 export function BathroomCabinetWest(props: SceneItemProps) {
-  return <MetodCabinet {...props} openKey="cbn-west-toggle" hoverLabel="Armoire SDB Ouest" hoverActionId="cbnWest" />;
+  return <MetodCabinet {...props} openKey="cbn-west-toggle" hoverLabel="Armoire SDB Ouest" hoverObjectId="bathroom-cabinet-west" />;
 }
 
 export function BathroomCabinetEast(props: SceneItemProps) {
-  return <MetodCabinet {...props} mirrorHandle openKey="cbn-east-toggle" hoverLabel="Armoire SDB Est" hoverActionId="cbnEast" />;
+  return <MetodCabinet {...props} mirrorHandle openKey="cbn-east-toggle" hoverLabel="Armoire SDB Est" hoverObjectId="bathroom-cabinet-east" />;
 }

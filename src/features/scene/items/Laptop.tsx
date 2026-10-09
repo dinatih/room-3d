@@ -34,9 +34,9 @@ function moveOcc(root: THREE.Object3D, name: string, tx: number, ty: number, tz:
 
 // ── Export ────────────────────────────────────────────────────────────────────
 
-export function Laptop({ onSize }: SceneItemProps) {
+export function Laptop({ onSize, actionState, isPreview = false }: SceneItemProps) {
   const { scene } = useGLTF(GLB_PATH);
-  const { isVideoActive, texture: videoTex } = useDeskScreenVideo();
+  const { isVideoActive, texture: videoTex } = useDeskScreenVideo(isPreview ? !!actionState['desk2-screen-toggle'] : undefined);
 
   const clone = useMemo(() => {
     const c = scene.clone(true);

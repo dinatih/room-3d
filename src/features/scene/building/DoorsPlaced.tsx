@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 /**
  * DoorsPlaced.tsx — Portes placées en coordonnées monde (séjour, SDB, entrée, baie vitrée).
  */
@@ -37,26 +38,26 @@ export function DoorsPlaced() {
           itemName: 'Porte-fenêtre double vitrée',
           hoverAction: {
             label: 'Porte-fenêtre',
-            actions: ['eastGlassDoor', 'glassDoorLeftOpen', 'glassDoorShutter']
+            actions: getObjectActionIds('door-glass')
           }
         }}>
         <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
         position={[(DOOR_START + DOOR_END) / 2, 0, pZ('door-living-w')]}
-        userData={{ animUnit: true, itemName: 'Porte séjour', hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
+        userData={{ animUnit: true, itemName: 'Porte séjour', hoverAction: { label: 'Porte séjour', actions: getObjectActionIds('door-living') } }}>
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
         position={[pX('door-bath-n'), 0, (pZ('door-bath-n') + pZ('door-bath-s')) / 2]}
         rotation-y={Math.PI / 2}
-        userData={{ animUnit: true, itemName: 'Porte SDB', hoverAction: { label: 'Porte SDB', actionId: 'bathroomDoor' } }}>
+        userData={{ animUnit: true, itemName: 'Porte SDB', hoverAction: { label: 'Porte SDB', actions: getObjectActionIds('door-sdb') } }}>
         <DoorBath item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
         position={[entry.wx, entry.wy, entry.wz]}
         rotation-y={entry.diagRotY}
-        userData={{ animUnit: true, itemName: 'Porte entrée', hoverAction: { label: 'Porte entrée', actionId: 'entryDoor' } }}>
+        userData={{ animUnit: true, itemName: 'Porte entrée', hoverAction: { label: 'Porte entrée', actions: getObjectActionIds('door-entry') } }}>
         <DoorEntry item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </group>

@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 /**
  * Vihals.tsx — VIHALS chaise pliante, rouge (705.927.44).
  * Dépliée : GLB items/vihals70592744/Vihals70592744.glb, 43×47×80cm.
@@ -135,7 +136,7 @@ export function Vihals({ onSize, actionState }: SceneItemProps) {
     <group userData={{
       hoverAction: {
         label: folded ? 'VIHALS (Pliée)' : 'VIHALS (Dépliée)',
-        actions: ['vihals-toggle'],
+        actions: getObjectActionIds('vihals-chair'),
       },
     }}>
       {folded ? <FoldedVihals onSize={onSize} /> : <OpenVihals onSize={onSize} />}

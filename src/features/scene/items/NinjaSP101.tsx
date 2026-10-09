@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 /**
  * NinjaSP101.tsx — Ninja Foodi SP101EU mini four 8-en-1 (procédural).
  * Réf : Sharkninja SP101EU, 51×37×19.5 cm, finition inox brossé + façade noire.
@@ -115,7 +116,7 @@ export function NinjaSP101({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   return (
-    <group userData={{ animUnit: true, hoverAction: { label: 'Mini four Ninja SP101EU', actions: ['ninja', 'smart-object:::cuisine-group:::cook-oven'] } }}>
+    <group userData={{ animUnit: true, hoverAction: { label: 'Mini four Ninja SP101EU', actions: [...getObjectActionIds('ninja-sp101'), 'smart-object:::cuisine-group:::cook-oven'] } }}>
       <MergedStaticGroup name="merged-ninja">
         {/* Coque inox brossée (côtés + dessus + arrière) */}
         <mesh geometry={shellGeo} material={stainless} castShadow receiveShadow />

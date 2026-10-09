@@ -4,6 +4,7 @@ import { positionState } from '@features/scene/positionState';
 import { DOUBLE_BED_POSITIONS } from '../../furniturePositions';
 import { dispatchKey, type FurnitureState } from '../types';
 import type { PlaneModelKey } from '@features/scene/PaperPlane';
+import { getActionDef } from '../../objectActionRegistry';
 
 export interface InteractiveSectionProps {
   isMobile: boolean;
@@ -35,6 +36,9 @@ export function InteractiveSection({
   const furniture = useSceneStore(state => state.furniture);
   const toggleFurniture = useSceneStore(state => state.toggleFurniture);
   const triggerAction = useSceneStore(state => state.triggerAction);
+  useSceneStore(state => state.extraStates);
+  useSceneStore(state => state.desk2ScreenActive);
+  const videoAction = getActionDef('desk2-screen-toggle')!;
 
   const doorPushBtn = (label: string, key: string) => (
     <button
@@ -133,6 +137,13 @@ export function InteractiveSection({
       </button>
       {furnitureBtn('Boîtes DRÖNA', 'dronaMode', 'HIGH', 'LOW', v => v === 'high' ? 'High (45k)' : v === 'low' ? 'Low (1.6k)' : v === 'hidden' ? 'Caché (0t)' : 'Procédural (12t)')}
       {furnitureBtn('TV Allumée', 'tvOn')}
+      <button
+        type="button"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 small bg-transparent"
+        onClick={() => triggerAction(videoAction.toggleKey)}
+      >
+        {typeof videoAction.btnLabel === 'function' ? videoAction.btnLabel() : videoAction.btnLabel}
+      </button>
       {triggerBtn('Bureau 1 (Assis/Debout)', 'desk1-toggle')}
       {triggerBtn('Bureau 1 (Position)', 'desk1-position')}
       {triggerBtn('Bureau 2 (Assis/Debout)', 'desk2-toggle')}

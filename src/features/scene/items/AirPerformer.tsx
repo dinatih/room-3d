@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 /**
  * AirPerformer.tsx — Philips Air Performer AMF870/15 3D procedural simulation.
  * Exact replication of philips_air_performer (2) best.html design.
@@ -121,7 +122,7 @@ function buildShoulder(bottomR: number, topRX: number, topRZ: number, yBottom: n
   return geo;
 }
 
-export function AirPerformer({ onSize }: SceneItemProps) {
+export function AirPerformer({ onSize, actionState, isPreview = false }: SceneItemProps) {
   const { invalidate } = useThree();
 
   // ── States & Refs for configuration ────────────────────────────────────────
@@ -154,6 +155,7 @@ export function AirPerformer({ onSize }: SceneItemProps) {
 
   // ── Event Listener for HoverMenu actions ───────────────────────────────────
   useEffect(() => {
+    if (isPreview) return;
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent<{ key: string }>).detail;
       if (key === 'airPerformerPower') {
@@ -178,7 +180,15 @@ export function AirPerformer({ onSize }: SceneItemProps) {
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate]);
+  }, [invalidate, isPreview]);
+
+  useEffect(() => {
+    if (!isPreview) return;
+    setPower(!!actionState.airPerformerPower);
+    setMode(actionState.airPerformerMode ?? 'auto');
+    setSpeed(actionState.airPerformerSpeed ?? 5);
+    invalidate();
+  }, [isPreview, actionState.airPerformerPower, actionState.airPerformerMode, actionState.airPerformerSpeed, invalidate]);
 
   // ── Web Audio Synthesizer ──────────────────────────────────────────────────
   const audioRef = useRef<{
@@ -861,7 +871,7 @@ export function AirPerformer({ onSize }: SceneItemProps) {
           label: power
             ? `Air Performer (ON - Mode ${mode.toUpperCase()} - PM2.5: ${pm25State} µg/m³)`
             : 'Air Performer (Éteint)',
-          actions: ['airPerformerPower', 'airPerformerMode', 'airPerformerSpeed', 'airperformer-position']
+          actions: getObjectActionIds('air-performer')
         }
       }}
     >

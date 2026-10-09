@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 /** LAGAN: right-hand door, sliding crisper and automatic interior bulb. */
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
@@ -49,7 +50,7 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
     const box = glbLocalBBox(scene);
     scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
     scene.userData.skipMerge = true;
-    scene.userData.hoverAction = { label: 'Réfrigérateur LAGAN', actions: ['fridge', 'fridge-crisper-toggle'] };
+    scene.userData.hoverAction = { label: 'Réfrigérateur LAGAN', actions: getObjectActionIds('fridge') };
     const anchor = scene.getObjectByName('LampAnchor');
     if (!anchor) throw new Error('LAGAN: missing interior light anchor');
     // 5 W bulb, approximately 45 lm. Convert candela from metres to centimetres.

@@ -8,19 +8,20 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { useDeskScreenVideo } from '@features/scene/utils/deskScreenVideo';
+import { getObjectActionIds } from '../objectActions';
 
 export const TV_W = 73;
 export const TV_H = 41;
 
 const ACTION_KEY = 'tv-toggle';
 
-export function TV({ actionState, onSize }: SceneItemProps) {
+export function TV({ actionState, onSize, isPreview = false }: SceneItemProps) {
   const { scene: gltfScene } = useGLTF('items/tv/tv.glb');
   const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
   const screenTex = useTexture('items/omarchy-screen/omarchy-screen.png');
   screenTex.colorSpace = THREE.SRGBColorSpace;
 
-  const { isVideoActive, texture: videoTex } = useDeskScreenVideo();
+  const { isVideoActive, texture: videoTex } = useDeskScreenVideo(isPreview ? !!actionState['desk2-screen-toggle'] : undefined);
 
   const isTvOn = actionState[ACTION_KEY] ?? false;
   const isDisplaying = isVideoActive || isTvOn;
@@ -46,7 +47,7 @@ export function TV({ actionState, onSize }: SceneItemProps) {
   }, [scene]);
 
   return (
-    <group userData={{ hoverAction: { label: 'TV CHiQ L32H7A', actions: ['tv-toggle', 'desk2-screen-toggle'] } }}>
+    <group userData={{ hoverAction: { label: 'TV CHiQ L32H7A', actions: getObjectActionIds('tv') } }}>
       <primitive object={scene} />
       {/* Screen overlay — DoubleSide : visible quel que soit l'angle caméra */}
       <mesh position={[0, 0, screenZ]} rotation={[0, Math.PI, 0]}>

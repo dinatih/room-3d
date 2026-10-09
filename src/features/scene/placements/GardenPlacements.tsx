@@ -1,3 +1,4 @@
+import { getObjectActionIds } from '../objectActions';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { MergedStaticGroup } from '../Building';
 import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -33,7 +34,7 @@ export function GardenFurniture() {
     <MergedStaticGroup name="merged-garden-furniture">
       {/* Canapé Jardin Est avec accoudoirs togglables */}
       <group position={[270, 0, -110]} rotation={[0, -Math.PI / 2, 0]}
-             userData={{ skipMerge: true, birdSupport: { id: 'sofa-east', kind: 'furniture' }, itemName: 'Canapé Jardin Est', hoverAction: { label: 'Canapé Jardin Est', actions: ['sofa-arm-left', 'sofa-arm-right', ...SMART_OBJECTS['sofa-garden-east'].slots.map(slot => `smart-object:::sofa-garden-east:::${slot.slotId}`)] } }}>
+             userData={{ skipMerge: true, birdSupport: { id: 'sofa-east', kind: 'furniture' }, itemName: 'Canapé Jardin Est', hoverAction: { label: 'Canapé Jardin Est', actions: [...getObjectActionIds('armrest-sofa'), ...SMART_OBJECTS['sofa-garden-east'].slots.map(slot => `smart-object:::sofa-garden-east:::${slot.slotId}`)] } }}>
         <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
       </group>
 

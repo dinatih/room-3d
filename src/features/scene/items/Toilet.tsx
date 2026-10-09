@@ -18,7 +18,7 @@ export const TOILET_W = 40;
 export const TOILET_D = 70;
 export const TOILET_H = 80;
 
-export function Toilet({ onSize }: SceneItemProps) {
+export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
   const { invalidate } = useThree();
 
@@ -31,6 +31,7 @@ export function Toilet({ onSize }: SceneItemProps) {
   const isFlushingRef = useRef(false);
 
   useLayoutEffect(() => {
+    if (isPreview) return;
     const handler = (e: any) => {
       const { key, value } = e.detail;
       if (key === 'wc-lid-toggle') {
@@ -54,7 +55,15 @@ export function Toilet({ onSize }: SceneItemProps) {
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate]);
+  }, [invalidate, isPreview]);
+
+  useLayoutEffect(() => {
+    if (!isPreview) return;
+    isLidOpenRef.current = !!actionState['wc-lid-toggle'];
+    isSeatOpenRef.current = !!actionState['wc-seat-toggle'];
+    isFlushingRef.current = !!actionState['wc-flush'];
+    invalidate();
+  }, [isPreview, actionState['wc-lid-toggle'], actionState['wc-seat-toggle'], actionState['wc-flush'], invalidate]);
 
   useLayoutEffect(() => {
     removeGlbLines(scene);

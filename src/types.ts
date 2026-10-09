@@ -13,7 +13,6 @@ export interface Item {
   dims: Dims;
   notes?: string;
   glbPath?: string;
-  actions?: string[];
 }
 
 export interface Category {
@@ -24,6 +23,7 @@ export interface Category {
 /** Props reçues par tout composant du SCENE_REGISTRY */
 export interface SceneItemProps {
   item: Item;
+  isPreview?: boolean;
   actionState: Record<string, any>;
   onSize: (size: import('three').Vector3) => void;
 }
