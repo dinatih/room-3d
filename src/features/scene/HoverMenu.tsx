@@ -620,18 +620,6 @@ export function HoverRaycaster() {
 
 // ── Composant HTML (à placer hors Canvas) ────────────────────────────────────
 
-const BTN_STYLE: React.CSSProperties = {
-  background: 'rgba(255,215,0,0.08)',
-  color: '#ffd700',
-  border: '1px solid rgba(255,215,0,0.35)',
-  borderRadius: 6,
-  padding: '6px 14px',
-  fontSize: 12, fontWeight: 700,
-  letterSpacing: '0.05em',
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-};
-
 // Injecte l'animation pulse une seule fois dans le document
 let pulseInjected = false;
 function injectPulse() {
@@ -746,6 +734,7 @@ export function HoverOverlay() {
       {/* ── Modal épinglé au clic ── */}
       {showModal && lockedActions.length > 0 && (
         <div
+          className="d-flex flex-column gap-1 p-2 rounded small"
           onTouchEnd={e => e.stopPropagation()}
           onPointerDown={e => e.stopPropagation()}
           onClick={e => e.stopPropagation()}
@@ -754,23 +743,19 @@ export function HoverOverlay() {
             background: 'rgba(10,10,20,0.45)',
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255,255,255,0.10)',
-            borderRadius: 10,
-            padding: '10px 14px',
-            display: 'flex', flexDirection: 'column', gap: 8,
             pointerEvents: 'all',
-            minWidth: 140,
           }}
         >
-          <div style={{ color: '#ddd', fontSize: 12, fontWeight: 600 }}>{state.lockedLabel}</div>
+          <div className="small fw-semibold text-light">{state.lockedLabel}</div>
           {lockedActions.map((action, i) => {
             if (action.type === 'select') {
               const opts = action.options ?? [];
               const val = selectedValues[action.toggleKey] ?? '';
 
               return (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div key={i} className="d-flex flex-column">
                   <select
-                    style={BTN_STYLE}
+                    className="form-select form-select-sm py-0 text-warning bg-dark border-warning"
                     onKeyDown={(e) => e.stopPropagation()}
                     value={val}
                     onChange={(e) => {
@@ -793,6 +778,7 @@ export function HoverOverlay() {
             return (
               <button
                 key={i}
+                className="btn btn-sm btn-outline-warning py-0 px-2 fw-semibold"
                 onClick={() => {
                   if (action.toggleKey.startsWith('select-character-')) {
                     const targetCharacterId = action.toggleKey.replace('select-character-', '');
@@ -882,7 +868,6 @@ export function HoverOverlay() {
                   hoverState.touchActive = false;
                   hoverState.onUpdate?.();
                 }}
-                style={BTN_STYLE}
               >
                 {action.icon && <i className={`bi ${action.icon} me-1`} aria-hidden="true" />}
                 {typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel}
