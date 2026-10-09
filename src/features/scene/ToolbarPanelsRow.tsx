@@ -403,7 +403,7 @@ export function ToolbarPanelsRow({
         {/* 4. Calques */}
         <PanelPopover
           icon="bi-layers-fill"
-          label="Calques"
+          label="Calq"
           title="Calques & Affichage"
           headerExtra={layersHeaderButtons}
           hideUI={hideUI}
@@ -414,7 +414,7 @@ export function ToolbarPanelsRow({
         {/* 5. Interactif */}
         <PanelPopover
           icon="bi-controller"
-          label="Interactif"
+          label="Inter"
           title="Objets interactifs"
           hideUI={hideUI}
         >
@@ -435,7 +435,7 @@ export function ToolbarPanelsRow({
         {/* 7. Grilles & Inventaire */}
         <PanelPopover
           icon="bi-grid-3x3-gap-fill"
-          label="Grilles"
+          label="Gril"
           title="Grilles & Inventaire"
           hideUI={hideUI}
           active={npcGridActive || Boolean(layers.inventoryGrid)}
