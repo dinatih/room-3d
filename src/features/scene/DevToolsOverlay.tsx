@@ -118,9 +118,9 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
 
   return (
     <>
-      <PerfGroup icon="bi-bar-chart-fill" title="Perf" defaultOpen headerPadding={compact ? 'py-1.5 px-2' : undefined}>
+      <PerfGroup icon="bi-bar-chart-fill" title="Perf" defaultOpen headerPadding={compact ? 'py-1 px-1.5' : undefined}>
         <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
-          <div className="d-flex align-items-stretch justify-content-start gap-2 px-2 pb-1">
+          <div className={`d-flex align-items-stretch justify-content-start ${compact ? 'gap-1.5 px-1 py-0.5' : 'gap-2 px-2 pb-1'}`}>
             <canvas
               ref={fpsCanvasCallback}
               width={FPS_W} height={FPS_H}

@@ -845,7 +845,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
           </Group>
         ) : (
           <>
-            <div className="d-flex justify-content-end px-1 pt-1">{layerButtons()}</div>
+            <div className="d-flex justify-content-end p-0.5 mb-0.5">{layerButtons(true)}</div>
             {minimapContent}
           </>
         )}

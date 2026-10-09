@@ -10,8 +10,9 @@ export interface PanelPopoverProps {
   hideUI?: boolean;
   active?: boolean;
   manual?: boolean;
-  placementMode?: 'default' | 'desktop-top-left' | 'desktop-right' | 'desktop-bottom-left';
+  placementMode?: 'default' | 'desktop-top-left' | 'desktop-right' | 'desktop-bottom-left' | 'desktop-above-viewbar';
   compactMode?: boolean;
+  noHeader?: boolean;
   children: React.ReactNode;
 }
 
@@ -25,6 +26,7 @@ export function PanelPopover({
   manual = false,
   placementMode = 'default',
   compactMode = false,
+  noHeader = false,
   children,
 }: PanelPopoverProps) {
   const id = useId();
@@ -37,6 +39,17 @@ export function PanelPopover({
     const popover = popoverRef.current;
     if (!trigger || !popover) return;
     const isDesktop = window.innerWidth >= 768;
+
+    if (isDesktop && placementMode === 'desktop-above-viewbar') {
+      const menuDock = trigger.closest('.view-control-bar-dock') || trigger.closest('.view-control-bar');
+      const dockRect = menuDock ? menuDock.getBoundingClientRect() : trigger.getBoundingClientRect();
+      popover.style.top = 'auto';
+      popover.style.bottom = `${Math.max(8, window.innerHeight - dockRect.top + 6)}px`;
+      popover.style.right = `${Math.max(8, window.innerWidth - dockRect.right)}px`;
+      popover.style.left = 'auto';
+      popover.style.maxHeight = `${Math.max(120, dockRect.top - 16)}px`;
+      return;
+    }
 
     if (isDesktop && placementMode === 'desktop-top-left') {
       popover.style.top = '12px';
@@ -149,29 +162,31 @@ export function PanelPopover({
           onPointerDown={e => e.stopPropagation()}
           onKeyDown={e => e.stopPropagation()}
         >
-          <div className="popover-header bg-transparent py-2 px-3 border-bottom d-flex align-items-center justify-content-between gap-2">
-            <div className="d-flex align-items-center gap-2 overflow-hidden text-truncate">
-              {typeof icon === 'string' ? (
-                <i className={`bi ${icon} text-primary`} aria-hidden="true" />
-              ) : (
-                <span className="text-primary d-inline-flex align-items-center gap-1">{icon}</span>
-              )}
-              <span id={`${id}-title`} className="fw-semibold small text-dark text-truncate">
-                {title ?? label}
-              </span>
+          {!noHeader && (
+            <div className="popover-header bg-transparent py-2 px-3 border-bottom d-flex align-items-center justify-content-between gap-2">
+              <div className="d-flex align-items-center gap-2 overflow-hidden text-truncate">
+                {typeof icon === 'string' ? (
+                  <i className={`bi ${icon} text-primary`} aria-hidden="true" />
+                ) : (
+                  <span className="text-primary d-inline-flex align-items-center gap-1">{icon}</span>
+                )}
+                <span id={`${id}-title`} className="fw-semibold small text-dark text-truncate">
+                  {title ?? label}
+                </span>
+              </div>
+              <div className="d-flex align-items-center gap-1 flex-shrink-0">
+                {headerExtra}
+                <button
+                  type="button"
+                  className="btn-close ms-1"
+                  style={{ fontSize: '0.65rem' }}
+                  aria-label="Fermer"
+                  onClick={() => popoverRef.current?.hidePopover()}
+                />
+              </div>
             </div>
-            <div className="d-flex align-items-center gap-1 flex-shrink-0">
-              {headerExtra}
-              <button
-                type="button"
-                className="btn-close ms-1"
-                style={{ fontSize: '0.65rem' }}
-                aria-label="Fermer"
-                onClick={() => popoverRef.current?.hidePopover()}
-              />
-            </div>
-          </div>
-          <div className="popover-body p-2">
+          )}
+          <div className={`popover-body ${noHeader || compactMode ? 'p-1' : 'p-2'}`}>
             {children}
           </div>
         </div>,
