@@ -14,7 +14,7 @@ export interface AnimOption {
 
 export const WALKER_ANIM_OPTIONS: AnimOption[] = [
   { value: 'idle', label: 'Idle / Return to Default' },
-  { value: 't-pose', label: '📐 T-Pose (Rest)' },
+  { value: 't-pose', label: 'T-Pose (Rest)' },
   ...ANIMATION_DEFINITIONS
     .filter(d => d.id !== 'idle' && d.id !== 't-pose' && d.id !== 'miley-armature-idle01-f')
     .map(d => ({

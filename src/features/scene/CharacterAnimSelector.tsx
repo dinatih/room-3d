@@ -13,18 +13,18 @@ import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others';
 
 export const ANIM_CATEGORIES = [
-  { key: 'combat', label: 'Combat', icon: '⚔️' },
-  { key: 'dances', label: 'Danses', icon: '💃' },
-  { key: 'emotes_gestures', label: 'Emotes & Gestes', icon: '👋' },
-  { key: 'interactions', label: 'Interactions', icon: '🎮' },
-  { key: 'locomotion', label: 'Locomotion', icon: '🏃' },
-  { key: 'poses_idles', label: 'Poses & Idles', icon: '🧘' },
-  { key: 'sports_fitness', label: 'Sports & Fitness', icon: '⚽' },
-  { key: 'yoga', label: 'Yoga & Mocap', icon: '🧘‍♀️' },
-  { key: 'miley', label: 'Miley', icon: '📁' },
-  { key: 'mixamo', label: 'Mixamo', icon: '📁' },
-  { key: 'npz', label: 'NPZ', icon: '📁' },
-  { key: 'others', label: 'Others', icon: '📁' },
+  { key: 'combat', label: 'Combat', icon: 'bi-shield-shaded' },
+  { key: 'dances', label: 'Danses', icon: 'bi-music-note-beamed' },
+  { key: 'emotes_gestures', label: 'Emotes & Gestes', icon: 'bi-hand-index' },
+  { key: 'interactions', label: 'Interactions', icon: 'bi-controller' },
+  { key: 'locomotion', label: 'Locomotion', icon: 'bi-person-walking' },
+  { key: 'poses_idles', label: 'Poses & Idles', icon: 'bi-person-standing' },
+  { key: 'sports_fitness', label: 'Sports & Fitness', icon: 'bi-dribbble' },
+  { key: 'yoga', label: 'Yoga & Mocap', icon: 'bi-person-arms-up' },
+  { key: 'miley', label: 'Miley', icon: 'bi-folder' },
+  { key: 'mixamo', label: 'Mixamo', icon: 'bi-folder' },
+  { key: 'npz', label: 'NPZ', icon: 'bi-folder' },
+  { key: 'others', label: 'Others', icon: 'bi-folder' },
 ] as const satisfies ReadonlyArray<{ key: AnimationCategory | AnimationSource; label: string; icon: string }>;
 
 export function getAnimCategory(val: string): string {
@@ -203,7 +203,7 @@ export function CharacterAnimSelector({
       {/* En-tête */}
       {(title || onClose) && (
         <div className="d-flex flex-shrink-0 align-items-center justify-content-between p-2 border-bottom">
-          {title && <span className="fw-semibold small text-truncate">🎬 {title}</span>}
+          {title && <span className="fw-semibold small text-truncate"><i className="bi bi-film" aria-hidden="true" /> {title}</span>}
           {onClose && (
             <button
               type="button"
@@ -220,20 +220,20 @@ export function CharacterAnimSelector({
       <div className="p-2 border-bottom flex-shrink-0">
         {/* Recherche + Bouton Aléatoire */}
         <div className="input-group input-group-sm mb-1.5">
-          <span className="input-group-text bg-light text-muted border-end-0">🔍</span>
+          <span className="input-group-text bg-light text-muted border-end-0"><i className="bi bi-search" aria-hidden="true" /></span>
           <input
             ref={searchInputRef}
             type="text"
             className="form-control border-start-0 ps-0"
-            placeholder="Filtrer texte ou ↕ flèches..."
+            placeholder="Filtrer texte ou flèches..."
             value={animSearch}
             onChange={e => updateSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             style={{ fontSize: isMobile ? '13px' : '11px' }}
           />
           {animSearch && (
-            <button className="btn btn-outline-secondary border-start-0" type="button" onClick={() => updateSearch('')} style={{ fontSize: '10px' }}>
-              ✕
+            <button className="btn btn-outline-secondary border-start-0" type="button" onClick={() => updateSearch('')} aria-label="Effacer la recherche" style={{ fontSize: '10px' }}>
+              <i className="bi bi-x-lg" aria-hidden="true" />
             </button>
           )}
           <button
@@ -260,12 +260,12 @@ export function CharacterAnimSelector({
               aria-expanded={categoryDropdownOpen}
             >
               <span className="text-truncate">
-                📁 <strong>Catégories :</strong> {selectedCategories.length === 0
+                <i className="bi bi-folder" aria-hidden="true" /> <strong>Catégories :</strong> {selectedCategories.length === 0
                   ? `Toutes (${ANIM_CATEGORIES.length})`
                   : `${selectedCategories.map(k => ANIM_CATEGORIES.find(c => c.key === k)?.label).join(', ')} (${selectedCategories.length})`
                 }
               </span>
-              <span className="ms-1 opacity-75" style={{ fontSize: '9px' }}>{categoryDropdownOpen ? '▲' : '▼'}</span>
+              <i className={`bi ${categoryDropdownOpen ? 'bi-chevron-up' : 'bi-chevron-down'} ms-1 opacity-75`} aria-hidden="true" />
             </button>
 
             {selectedCategories.length > 0 && (
@@ -276,7 +276,7 @@ export function CharacterAnimSelector({
                 onClick={() => updateCategories([])}
                 title="Réinitialiser toutes les catégories"
               >
-                ✕
+                <i className="bi bi-x-lg" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -284,7 +284,7 @@ export function CharacterAnimSelector({
 
         <div className="text-muted small px-1 d-flex justify-content-between" style={{ fontSize: '9px' }}>
           <span>{filteredAnims.length} animation{filteredAnims.length > 1 ? 's' : ''}</span>
-          <span className="text-muted">↕ Flèches Clavier</span>
+          <span className="text-muted"><i className="bi bi-arrow-down-up" aria-hidden="true" /> Flèches Clavier</span>
         </div>
       </div>
 
@@ -300,7 +300,7 @@ export function CharacterAnimSelector({
               style={{ fontSize: '10.5px' }}
               onClick={() => updateCategories(ANIM_CATEGORIES.map(c => c.key))}
             >
-              ✓ Tout cocher
+              <i className="bi bi-check-all" aria-hidden="true" /> Tout cocher
             </button>
             <button
               type="button"
@@ -308,7 +308,7 @@ export function CharacterAnimSelector({
               style={{ fontSize: '10.5px' }}
               onClick={() => updateCategories([])}
             >
-              ✕ Tout décocher
+              <i className="bi bi-x-lg" aria-hidden="true" /> Tout décocher
             </button>
           </div>
 
@@ -332,7 +332,7 @@ export function CharacterAnimSelector({
                         isChecked ? selectedCategories.filter(k => k !== cat.key) : [...selectedCategories, cat.key]
                       )}
                     />
-                    <span>{cat.icon} {cat.label}</span>
+                    <span><i className={`bi ${cat.icon}`} aria-hidden="true" /> {cat.label}</span>
                   </span>
                   <span className={`badge ${isChecked ? 'bg-primary text-white' : 'bg-secondary-subtle text-secondary-emphasis'}`} style={{ fontSize: '9px' }}>
                     {CATEGORY_COUNTS[cat.key] || 0}
@@ -364,7 +364,7 @@ export function CharacterAnimSelector({
                 onClick={() => handleSelect(anim.value)}
               >
                 <div className="d-flex align-items-center gap-1 overflow-hidden me-2" style={{ flex: 1 }}>
-                  <span style={{ fontSize: '10px' }}>{isActive ? '▶' : ''}</span>
+                  {isActive && <i className="bi bi-play-fill" aria-hidden="true" />}
                   <span className="text-truncate" title={anim.label}>{anim.label}</span>
                   {anim.catIcon && (
                     <span
@@ -372,7 +372,7 @@ export function CharacterAnimSelector({
                       style={{ fontSize: '8px', letterSpacing: '0.02em', flexShrink: 0 }}
                       title={`Catégorie: ${anim.catLabel}`}
                     >
-                      {anim.catIcon}
+                      <i className={`bi ${anim.catIcon}`} aria-hidden="true" />
                     </span>
                   )}
                   {anim.isPose && (
@@ -392,7 +392,7 @@ export function CharacterAnimSelector({
                   onClick={(e) => handleCopy(anim.value, e)}
                   title={`Copier "${anim.filename}"`}
                 >
-                  {copiedAnim === anim.value ? '✓' : '📋'}
+                  <i className={`bi ${copiedAnim === anim.value ? 'bi-check-lg' : 'bi-clipboard'}`} aria-hidden="true" />
                 </button>
               </div>
             );

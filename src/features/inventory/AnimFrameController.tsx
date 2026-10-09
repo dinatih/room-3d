@@ -142,7 +142,7 @@ export function AnimFrameController({
 
   const displayName = useMemo(() => {
     if (duoAnimDef) {
-      return `${duoAnimDef.icon} ${duoAnimDef.label}`;
+      return duoAnimDef.label;
     }
     if (animName && !animName.includes('/') && !animName.endsWith('.glb')) {
       return animName;
@@ -460,7 +460,7 @@ export function AnimFrameController({
 
         {/* Vitesse de lecture */}
         <div className="d-flex align-items-center gap-1">
-          <span className="text-muted small">⚡</span>
+          <i className="bi bi-lightning-charge text-muted small" aria-hidden="true" />
           <select
             className="form-select form-select-sm bg-white text-dark w-auto"
             value={speed}
@@ -479,7 +479,7 @@ export function AnimFrameController({
         <div className="d-flex align-items-center gap-2">
           {isTPose ? (
             <span className="badge bg-success-subtle text-success border border-success-subtle">
-              📐 T-Pose (Rest)
+              <i className="bi bi-person-standing" aria-hidden="true" /> T-Pose (Rest)
             </span>
           ) : (
             <>
@@ -555,9 +555,9 @@ export function AnimFrameController({
                     : `Animation : ${displayName} (${filteredAnims.length} filtrée(s) — Cliquer pour ouvrir)`
                 }
               >
-                <span>{duoAnimDef ? '👯‍♀️' : '🎬'}</span>
+                <i className={`bi ${duoAnimDef ? 'bi-people-fill' : 'bi-film'}`} aria-hidden="true" />
                 <span className="text-truncate">{displayName}</span>
-                <span className="opacity-75 small">{showAnimSelector ? '▲' : '▼'}</span>
+                <i className={`bi ${showAnimSelector ? 'bi-chevron-up' : 'bi-chevron-down'} opacity-75 small`} aria-hidden="true" />
               </button>
 
               <button
@@ -602,9 +602,9 @@ export function AnimFrameController({
                   }}
                   title="Sélectionner une animation de couple (Duo)"
                 >
-                  <option value="">👯 Mode Duo...</option>
+                  <option value="">Mode Duo...</option>
                   {DUO_ANIMATIONS.map(a => (
-                    <option key={a.id} value={a.id}>{a.icon} {a.label}</option>
+                    <option key={a.id} value={a.id}>{a.label}</option>
                   ))}
                 </select>
                 <button
@@ -628,16 +628,16 @@ export function AnimFrameController({
                     title="Changer le partenaire (Rôle B)"
                   >
                     {availablePartners.map(c => (
-                      <option key={c.id} value={c.id}>B: {c.emoji} {c.name}</option>
+                      <option key={c.id} value={c.id}>B: {c.name}</option>
                     ))}
                   </select>
                   <button
                     type="button"
                     className="btn btn-outline-secondary bg-white text-dark"
                     onClick={handleRandomPartner}
-                    title="Changer de partenaire au hasard 👤"
+                    title="Changer de partenaire au hasard"
                   >
-                    👤<i className="bi bi-shuffle" aria-hidden="true" />
+                    <i className="bi bi-person-fill" aria-hidden="true" /><i className="bi bi-shuffle" aria-hidden="true" />
                   </button>
                   <button
                     type="button"
@@ -645,7 +645,7 @@ export function AnimFrameController({
                     onClick={() => onSelectDuoAnim?.(undefined)}
                     title="Quitter le mode duo"
                   >
-                    ✕
+                    <i className="bi bi-x-lg" aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -679,7 +679,7 @@ export function AnimFrameController({
               {/* Entête Duo */}
               <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom pb-2">
                 <div className="d-flex align-items-center gap-2">
-                  <span className="fs-5">{duoAnimDef.icon}</span>
+                  <i className="bi bi-people-fill fs-5" aria-hidden="true" />
                   <div>
                     <strong className="text-primary fs-6">{duoAnimDef.label}</strong>
                     <code className="ms-2 text-dark bg-light px-1.5 py-0.5 rounded border small user-select-all" title="Double-cliquer pour tout sélectionner">{duoAnimDef.id}</code>
@@ -687,16 +687,16 @@ export function AnimFrameController({
                 </div>
                 <div className="d-flex flex-wrap align-items-center gap-2 font-monospace small">
                   <span className="badge bg-success-subtle text-success border border-success-subtle">
-                    ⏱️ {(duoAnimDef.duration ?? duration).toFixed(2)}s ({totalFrames}f @ {fps}fps)
+                    <i className="bi bi-stopwatch" aria-hidden="true" /> {(duoAnimDef.duration ?? duration).toFixed(2)}s ({totalFrames}f @ {fps}fps)
                   </span>
                   {duoAnimDef.offsetB && (
                     <span className="badge bg-warning-subtle text-dark border border-warning-subtle">
-                      📍 Offset B: [{duoAnimDef.offsetB.map(v => `${v}cm`).join(', ')}]
+                      <i className="bi bi-geo-alt" aria-hidden="true" /> Offset B: [{duoAnimDef.offsetB.map(v => `${v}cm`).join(', ')}]
                     </span>
                   )}
                   {duoAnimDef.rotB !== undefined && (
                     <span className="badge bg-warning-subtle text-dark border border-warning-subtle">
-                      🔄 Rot B: {(duoAnimDef.rotB * 180 / Math.PI).toFixed(0)}°
+                      <i className="bi bi-arrow-repeat" aria-hidden="true" /> Rot B: {(duoAnimDef.rotB * 180 / Math.PI).toFixed(0)}°
                     </span>
                   )}
                 </div>
@@ -718,7 +718,7 @@ export function AnimFrameController({
                       <div><strong className="text-secondary">ID:</strong> <code className="user-select-all" title="Double-cliquer pour tout sélectionner">{duoAnimDef.animA}</code></div>
                       {defA?.path && (
                         <div className="text-truncate" title={defA.path}>
-                          <strong className="text-secondary">Fichier:</strong> <span className="user-select-all">📁 {defA.path.split('/').pop()}</span>
+                          <strong className="text-secondary">Fichier:</strong> <span className="user-select-all"><i className="bi bi-folder" aria-hidden="true" /> {defA.path.split('/').pop()}</span>
                         </div>
                       )}
                     </div>
@@ -739,7 +739,7 @@ export function AnimFrameController({
                       <div><strong className="text-secondary">ID:</strong> <code className="user-select-all" title="Double-cliquer pour tout sélectionner">{duoAnimDef.animB}</code></div>
                       {defB?.path && (
                         <div className="text-truncate" title={defB.path}>
-                          <strong className="text-secondary">Fichier:</strong> <span className="user-select-all">📁 {defB.path.split('/').pop()}</span>
+                          <strong className="text-secondary">Fichier:</strong> <span className="user-select-all"><i className="bi bi-folder" aria-hidden="true" /> {defB.path.split('/').pop()}</span>
                         </div>
                       )}
                     </div>
@@ -759,7 +759,7 @@ export function AnimFrameController({
                 <div>
                   <strong className="text-muted text-uppercase me-1 small">Catégorie:</strong>
                   <span className="badge bg-light text-dark border">
-                    {catObj.icon} {catObj.label}
+                    <i className={`bi ${catObj.icon}`} aria-hidden="true" /> {catObj.label}
                   </span>
                 </div>
               )}
@@ -767,7 +767,7 @@ export function AnimFrameController({
                 <div>
                   <strong className="text-muted text-uppercase me-1 small">Fichier:</strong>
                   <code className="text-muted bg-light px-1.5 py-0.5 rounded border text-truncate d-inline-block align-middle user-select-all" style={{ maxWidth: '240px' }} title={def.path}>
-                    📁 {def.path.split('/').pop()}
+                    <i className="bi bi-folder" aria-hidden="true" /> {def.path.split('/').pop()}
                   </code>
                 </div>
               )}
@@ -795,7 +795,7 @@ export function AnimFrameController({
               </div>
               {def?.aliases && def.aliases.length > 0 && (
                 <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
-                  <strong className="text-muted text-uppercase me-1 small">🏷️ Aliases ({def.aliases.length}):</strong>
+                  <strong className="text-muted text-uppercase me-1 small"><i className="bi bi-tag" aria-hidden="true" /> Aliases ({def.aliases.length}):</strong>
                   {def.aliases.map(alias => (
                     <span key={alias} className="badge bg-light text-secondary border font-monospace user-select-all">
                       {alias}
@@ -805,7 +805,7 @@ export function AnimFrameController({
               )}
               {def?.tags && def.tags.length > 0 && (
                 <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
-                  <strong className="text-muted text-uppercase me-1 small">🔖 Tags ({def.tags.length}):</strong>
+                  <strong className="text-muted text-uppercase me-1 small"><i className="bi bi-bookmark" aria-hidden="true" /> Tags ({def.tags.length}):</strong>
                   {def.tags.map(tag => (
                     <span key={tag} className="badge bg-primary-subtle text-primary border border-primary-subtle user-select-all">
                       #{tag}
