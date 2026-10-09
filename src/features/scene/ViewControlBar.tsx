@@ -75,6 +75,7 @@ export function ViewControlBar({
   const toggleLayer = useSceneStore(s => s.toggleLayer);
   const cameraTarget = useSceneStore(s => s.cameraTarget);
   const setCameraTarget = useSceneStore(s => s.setCameraTarget);
+  const setCameraMovement = useSceneStore(s => s.setCameraMovement);
 
   if (hidden) return null;
 
@@ -287,10 +288,11 @@ export function ViewControlBar({
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraTarget === 'studio' && cameraMode === 'orbit' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
               onClick={() => {
                 setCameraTarget('studio');
+                setCameraMovement('orbit');
                 dispatchCameraMode('orbit');
               }}
-              title="Centrer la caméra sur l'appartement / studio (Alt+O)"
-              aria-label="Centrer la caméra sur l'appartement / studio (Alt+O)"
+              title="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"
+              aria-label="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"
               aria-pressed={cameraTarget === 'studio' && cameraMode === 'orbit'}
             >
               <i className="bi bi-building" aria-hidden="true" />
