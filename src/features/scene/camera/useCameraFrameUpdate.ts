@@ -68,6 +68,9 @@ export function useCameraFrameUpdate({
       cameraState.isFollowing = false;
       cameraState.isMoving = false;
       if (modeRef.current === 'follow') {
+        const radius = cameraState.animalViews[cameraState.animalTarget]?.radius;
+        if (radius && keys.current.has('CtrlArrowUp')) orbitDistance.current = Math.max(radius, orbitDistance.current - 4 * dt);
+        if (keys.current.has('CtrlArrowDown')) orbitDistance.current += 4 * dt;
         if (keys.current.has('ArrowLeft')) orbitYaw.current -= 0.03 * dt;
         if (keys.current.has('ArrowRight')) orbitYaw.current += 0.03 * dt;
         if (keys.current.has('ArrowUp')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);

@@ -15,6 +15,7 @@ export function useAnimalCamera(
   const otherEye = useRef(new THREE.Vector3());
   const head = useRef(new THREE.Vector3());
   const forward = useRef(new THREE.Vector3());
+  const dogEyeOffset = useRef(new THREE.Vector3());
   useLayoutEffect(() => {
     if (preview) return;
     const bone = (name: string) => {
@@ -25,6 +26,32 @@ export function useAnimalCamera(
     const radius = new THREE.Box3().setFromObject(root.current!, true).getSize(new THREE.Vector3()).length() / 2;
     if (radius <= 0) throw new Error(`Caméra ${id} : dimensions invalides`);
     rig.current = { head: bone(headName), mouth: bone(mouthName), eyes: eyeNames ? eyeNames.map(bone) : [], radius };
+    if (id === 'shiba') {
+      // Caméra au-dessus du crâne, derrière le museau. Le modèle n'a pas d'os d'yeux.
+      // Mesurer le sommet de la peau de tête dans le repère de l'os, à partir du bind pose.
+      const skull = new THREE.Box3();
+      const vertex = new THREE.Vector3();
+      scene.traverse(object => {
+        const mesh = object as THREE.SkinnedMesh;
+        if (!mesh.isSkinnedMesh) return;
+        const headIndex = mesh.skeleton.bones.indexOf(rig.current!.head as THREE.Bone);
+        const jawIndex = mesh.skeleton.bones.indexOf(rig.current!.mouth as THREE.Bone);
+        if (headIndex < 0) throw new Error('Caméra chien : tête absente du squelette');
+        const { position, skinIndex, skinWeight } = mesh.geometry.attributes;
+        for (let i = 0; i < position.count; i++) {
+          for (let channel = 0; channel < 4; channel++) {
+            const joint = skinIndex.getComponent(i, channel);
+            if ((joint === headIndex || joint === jawIndex) && skinWeight.getComponent(i, channel) >= 0.5) {
+              vertex.fromBufferAttribute(position, i).applyMatrix4(mesh.bindMatrix).applyMatrix4(mesh.skeleton.boneInverses[headIndex]);
+              skull.expandByPoint(vertex);
+              break;
+            }
+          }
+        }
+      });
+      if (skull.isEmpty()) throw new Error('Caméra chien : peau de tête introuvable');
+      dogEyeOffset.current.set(rig.current.mouth.position.x, skull.max.y, 0);
+    }
     return () => {
       delete cameraState.animalViews[id];
       if (cameraState.animalTarget === id) cameraState.animalTarget = null;
@@ -43,13 +70,13 @@ export function useAnimalCamera(
       r.eyes[1].getWorldPosition(otherEye.current);
       eyes.current.add(otherEye.current).multiplyScalar(0.5);
     } else {
-      // Le chien n'a pas d'os d'yeux : point de vue attaché à sa tête animée.
-      eyes.current.copy(head.current);
+      eyes.current.copy(dogEyeOffset.current);
+      r.head.localToWorld(eyes.current);
     }
     if (root.current.visible) {
       cameraState.animalViews[id] = { eyes: { ...eyes.current }, forward: { ...forward.current }, radius: r.radius };
     } else delete cameraState.animalViews[id];
-    if (cameraState.animalTarget === id && cameraState.mode === 'fpv') {
+    if (id !== 'shiba' && cameraState.animalTarget === id && cameraState.mode === 'fpv') {
       scene.traverse(object => {
         const mesh = object as THREE.Mesh;
         if (!mesh.isMesh || meshes.current.has(mesh)) return;

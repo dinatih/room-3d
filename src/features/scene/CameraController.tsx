@@ -266,7 +266,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         );
         ctrl.target.set(eyes.x, eyes.y, eyes.z);
         if (activeCam instanceof THREE.OrthographicCamera) {
-          activeCam.zoom = (activeCam.top - activeCam.bottom) / (animal.radius * 6);
+          const visibleHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(defaultPerspCamRef.current.fov / 2));
+          activeCam.zoom = (activeCam.top - activeCam.bottom) / visibleHeight;
           activeCam.updateProjectionMatrix();
         }
       }
