@@ -162,7 +162,7 @@ export function useAgentController(
     const onInvite = (e: any) => {
       if (e.detail?.targetId === _characterId) {
         const store = useSceneStore.getState();
-        const isFromUI = e.detail?.fromId === 'HoverMenu' || e.detail?.fromId === 'ZoneAiDebug' || e.detail?.fromId === 'SidePanel' || e.detail?.fromId === 'Inventory';
+        const isFromUI = e.detail?.fromId === 'HoverMenu' || e.detail?.fromId === 'ZoneAiDebug' || e.detail?.fromId === 'Toolbar' || e.detail?.fromId === 'SidePanel' || e.detail?.fromId === 'Inventory';
         if (_characterId === store.activeCharacterId && !isFromUI) {
           return;
         }

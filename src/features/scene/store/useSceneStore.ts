@@ -9,7 +9,7 @@ import {
   updateUrlActiveCameraView,
 } from '@features/scene/camera/cameraUrlParams';
 import { parseUrlLayerOverrides, updateUrlLayer, parseUrlGroundType, updateUrlGroundType, LAYER_DEFAULTS } from './layerUrlParams';
-import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
+import type { FurnitureState, LayerState, GroundType } from '../sidepanel/types';
 import {
   type LaraCountMode,
   isExtraCharacter,

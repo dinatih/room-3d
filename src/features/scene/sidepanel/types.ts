@@ -196,7 +196,7 @@ export interface LayerState {
 
 export type LidarMode = 0 | 1 | 2 | 3;
 
-export interface SidePanelProps {
+export interface ToolbarPanelsProps {
   layers:                  LayerState;
   onToggleLayer:           (key: keyof LayerState) => void;
   lidarMode:               LidarMode;

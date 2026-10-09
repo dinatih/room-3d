@@ -1,6 +1,6 @@
 /**
- * DevToolsOverlay.tsx — groupes DevTools pour le SidePanel.
- * Exporte DevToolsGroups (pas de wrapper fixe — SidePanel gère le positionnement).
+ * DevToolsOverlay.tsx — groupes DevTools pour le popover Perf de la barre d'outils.
+ * Exporte DevToolsGroups.
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { devState } from './devState';

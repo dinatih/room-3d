@@ -573,14 +573,14 @@ class DuoSessionManager {
   }
 
   /**
-   * Force le déclenchement d'une animation duo spécifique (ex: depuis le SidePanel ou l'Inventaire).
+   * Force le déclenchement d'une animation duo spécifique (ex: depuis la Barre d'outils ou l'Inventaire).
    * Si aucun meneur/partenaire n'est spécifié, sélectionne les PNJs disponibles les plus proches de la Duo Zone.
    */
   public forceDuoAnimation(
     def: DuoAnimationDef,
     leaderId?: string,
     partnerId?: string,
-    fromId = 'SidePanel'
+    fromId = 'Toolbar'
   ): { targetA: string; targetB: string } | null {
     const [bx, , bz] = this.basePos;
     let session = this.sessions.get('duo-zone');

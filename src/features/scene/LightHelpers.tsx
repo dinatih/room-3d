@@ -1,6 +1,6 @@
 /**
  * LightHelpers.tsx — Visualisation des lumières de la scène.
- * Activé via layers.lights dans SidePanel > Affichage.
+ * Activé via layers.lights dans Calques > Affichage.
  *
  * Lumières (miroir de Studio.tsx) :
  *   L1 — DirectionalLight jaune  [500, 700, 400]  intensity=1.8  castShadow

@@ -1,13 +1,11 @@
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 /**
- * SidePanel.tsx
+ * ToolbarPanelsRow.tsx
  *
- * Commandes de contrôle réparties en popovers HTML natifs intégrés à la barre d'outils
- * (Plan 2D, Perf, Profil, Calques, Interactif, PNJ).
+ * Première ligne de la barre de contrôle contenant les popovers HTML natifs
+ * (Plan 2D, Perf, Profil, Inventaire, Calques, Interactif, PNJ, NPCs).
  *
- * Composant HTML pur rendu HORS du Canvas R3F. Dispatche des events custom
- * écoutés par CameraController et le reste de la scène.
- * Styled using Bootstrap 5.3 and glassmorphism.
+ * Composant HTML pur rendu hors du Canvas R3F.
  */
 import { useState, useEffect, useRef } from 'react';
 import { solarPosition } from '@features/scene/SunLight';
@@ -18,8 +16,7 @@ import { WIGS_ITEMS } from '../inventory/inventoryData';
 
 import {
   ALL_HAIR_COLORS,
-  type FurnitureState, type LayerState, type GroundType, type SidePanelProps,
-  type LidarMode,
+  type ToolbarPanelsProps,
 } from './sidepanel/types';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import { CvModal, type CvType } from './sidepanel/modals/CvModal';
@@ -30,20 +27,12 @@ import { ProfileSection } from './sidepanel/sections/ProfileSection';
 import { DevToolsGroups } from './DevToolsOverlay';
 import { Minimap } from './Minimap';
 
-export type {
-  FurnitureState,
-  LayerState,
-  GroundType,
-  SidePanelProps,
-  LidarMode,
-};
-export { Group } from './sidepanel/Group';
-export { ANIM_CATEGORIES, getAnimCategory } from './CharacterAnimSelector';
+export type { ToolbarPanelsProps };
 
 const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
-export function SidePanel({
+export function ToolbarPanelsRow({
   layers,
   onToggleLayer,
   lidarMode,
@@ -62,7 +51,7 @@ export function SidePanel({
   onToggleLandingStrips,
   hideUI = false,
   onOpenInventory,
-}: SidePanelProps) {
+}: ToolbarPanelsProps) {
   const isMobile = useIsMobile();
   const [showCvModal, setShowCvModal] = useState(false);
   const [selectedCvType, setSelectedCvType] = useState<CvType>('devops');
@@ -279,7 +268,6 @@ export function SidePanel({
     </div>
   );
 
-  // Instanciations des sections
   const visitorCounter = (
     <div className="d-flex flex-column align-items-center rounded bg-light p-2 flex-shrink-0">
       <span className="small text-dark fw-semibold">Visites du site</span>

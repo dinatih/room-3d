@@ -1,6 +1,6 @@
 /**
  * CharacterAnimSelector.tsx — Composant réutilisable de listing, recherche, filtrage
- * et sélection des animations de personnages (SidePanel & Previews 3D).
+ * et sélection des animations de personnages (Barre d'outils & Previews 3D).
  */
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { WALKER_ANIM_OPTIONS } from './animOptions';

@@ -3,7 +3,7 @@
  * Affiche les logs applicatifs avec horodatage, couleurs par tag et filtre Bulle Think.
  *
  * Utilise le composant Group (glass-card accordion) pour l'harmonie visuelle
- * avec les autres panneaux (SidePanel, Minimap, DevTools).
+ * avec les autres composants (Minimap, DevTools).
  */
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { CHARACTERS, findCharacter } from '@features/scene/characterConfig';

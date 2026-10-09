@@ -16,7 +16,8 @@ import { CameraViewMarkers } from './CameraViewMarkers';
 import { cameraState }      from '@features/scene/cameraState';
 import { SKY_START_POS }     from '@features/scene/camera';
 import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode } from '@features/scene/camera/cameraUrlParams';
-import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
+import type { LidarMode } from './sidepanel/types';
+import { ToolbarPanelsRow } from './ToolbarPanelsRow';
 import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
 import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
@@ -925,7 +926,7 @@ export function Studio() {
           hideUI={hideUI}
           onToggleHideUI={toggleHideUI}
           panelControls={
-            <SidePanel
+            <ToolbarPanelsRow
               layers={layers} onToggleLayer={toggleLayer}
               lidarMode={lidarMode} onCycleLidar={onCycleLidar}
               lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}

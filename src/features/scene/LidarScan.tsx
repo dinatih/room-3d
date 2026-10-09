@@ -12,7 +12,7 @@
 import { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import type { LidarMode } from '@features/scene/SidePanel';
+import type { LidarMode } from './sidepanel/types';
 
 const SCAN_PATH = 'items/station-chevaleret/station-chevaleret.glb';
 

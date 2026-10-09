@@ -3,7 +3,7 @@
  * Coordonnées locales : centré par bbox, Y=0 = sol, rouge.
  * Le GLB officiel IKEA est en mètres → scale ×100 pour la scène (1 unité = 1 cm).
  *
- * Supporte 4 modes (commutable via useSceneStore / SidePanel) :
+ * Supporte 4 modes (commutable via useSceneStore / Calques) :
  *   - 'high'       : modèle officiel IKEA d'origine (~45k tris / boîte)
  *   - 'low'        : modèle décimé (~1.6k tris / boîte)
  *   - 'procedural' : BoxGeometry Three.js légère (~12 tris / boîte)
