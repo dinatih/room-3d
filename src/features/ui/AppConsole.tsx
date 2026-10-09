@@ -177,11 +177,19 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       }}
     >
       <div className={`${TOOLBAR_CLASS} ${open ? 'w-100 flex-column align-items-stretch flex-grow-1 overflow-hidden' : ''}`} role="region" aria-label="Console applicative">
-        <div className="d-flex flex-nowrap align-items-center justify-content-between gap-1 flex-shrink-0">
+        <div
+          className="d-flex flex-nowrap align-items-center justify-content-between gap-1 flex-shrink-0 user-select-none"
+          style={{ cursor: 'pointer' }}
+          onClick={handleToggle}
+          title={open ? 'Fermer la console (B)' : 'Ouvrir la console (B)'}
+        >
           <button
             type="button"
             className={`${TOOLBAR_BUTTON_CLASS} ${open ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-            onClick={handleToggle}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggle();
+            }}
             title={open ? 'Fermer la console (B)' : 'Ouvrir la console (B)'}
             aria-expanded={open}
           >
@@ -189,7 +197,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
             <span>Console</span>
           </button>
 
-          <div className="d-flex align-items-center gap-1">
+          <div className="d-flex align-items-center gap-1" onClick={(e) => e.stopPropagation()}>
             {open && (
               <>
                 <button
