@@ -32,6 +32,15 @@ export function getAnimCategory(val: string): string {
   return getAnimationDef(val)?.category ?? 'other';
 }
 
+export function normalizeSearchStr(str: string): string {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/œ/g, 'oe')
+    .replace(/æ/g, 'ae');
+}
+
 /** Métadonnées pré-calculées une seule fois pour éviter les regex et lookups sur chaque render */
 export const ENHANCED_ANIM_OPTIONS = WALKER_ANIM_OPTIONS.map(anim => {
   const def = getAnimationDef(anim.value);
@@ -45,27 +54,50 @@ export const ENHANCED_ANIM_OPTIONS = WALKER_ANIM_OPTIONS.map(anim => {
   }
   if (duration === undefined && anim.value === 't-pose') duration = 0.1;
 
+  const filename = (def?.path || anim.value).split('/').pop() || anim.value;
+  const filenameNoExt = filename.replace(/\.[^/.]+$/, '');
+  const aliases = def?.aliases ?? [];
+  const tags = def?.tags ?? [];
+
+  const rawSearchTerms = [
+    anim.label,
+    anim.value,
+    def?.id,
+    def?.path,
+    filename,
+    filenameNoExt,
+    ...aliases,
+    ...tags,
+    catObj?.label,
+    animCat,
+  ].filter(Boolean).join(' ');
+
+  const spacedTerms = rawSearchTerms.replace(/[-_.]/g, ' ');
+  const searchIndex = normalizeSearchStr(`${rawSearchTerms} ${spacedTerms}`);
+
   return {
     value: anim.value,
     label: anim.label,
     defId: def?.id,
     defPath: def?.path,
     category: animCat,
-    source: def?.path.split('/')[1],
+    source: def?.path?.split('/')[1],
     catIcon: catObj?.icon,
     catLabel: catObj?.label,
     duration,
     isPose: duration !== undefined && duration <= 0.15,
-    filename: (def?.path || anim.value).split('/').pop() || anim.value,
-    searchIndex: `${anim.label} ${anim.value}`.toLowerCase(),
+    filename,
+    searchIndex,
   };
 });
 
 export function getFilteredAnimOptions(search: string, categories: string[], sortByDuration = false) {
-  const q = search.trim().toLowerCase();
+  const q = normalizeSearchStr(search).trim();
+  const tokens = q ? q.split(/\s+/).filter(Boolean) : [];
   const filtered = ENHANCED_ANIM_OPTIONS.filter(a => {
     if (categories.length > 0 && !categories.includes(a.category) && !(a.source && categories.includes(a.source))) return false;
-    return !q || a.searchIndex.includes(q);
+    if (tokens.length === 0) return true;
+    return tokens.every(token => a.searchIndex.includes(token));
   });
   if (sortByDuration) {
     filtered.sort((a, b) => {
