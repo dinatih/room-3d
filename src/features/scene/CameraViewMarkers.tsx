@@ -52,8 +52,11 @@ function CameraViewMarker({ view }: { view: ShortcutView }) {
       if (!mesh.isMesh) continue;
       let ignored = false;
       for (let parent: THREE.Object3D | null = mesh; parent; parent = parent.parent) {
-        // Le ciel reste traversable, même lorsque sa coque ou son filaire est visible.
-        if (!parent.visible || parent.userData.isSky) { ignored = true; break; }
+        // Le ciel et le scan semi-transparent du fond du jardin restent traversables.
+        if (!parent.visible || parent.userData.isSky || parent.userData.isGardenFrontWallScan) {
+          ignored = true;
+          break;
+        }
       }
       if (ignored) continue;
 

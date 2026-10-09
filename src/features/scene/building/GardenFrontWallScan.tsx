@@ -24,12 +24,14 @@ export function GardenFrontWallScan() {
   });
 
   return (
-    <primitive
-      object={scene}
-      position={[150, 0, -786.33]}
-      rotation-y={DiagWall.rotY + Math.PI / 2}
-      scale={WALL_H / 2}
-    />
+    <group userData={{ skipMerge: true, isGardenFrontWallScan: true }}>
+      <primitive
+        object={scene}
+        position={[150, 0, -786.33]}
+        rotation-y={DiagWall.rotY + Math.PI / 2}
+        scale={WALL_H / 2}
+      />
+    </group>
   );
 }
 
