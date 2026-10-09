@@ -95,11 +95,11 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
       {zoomScope === 'scene' && showTargetMarker && <group ref={targetMarker} name="orbit-target-marker" visible={false}>
         <mesh renderOrder={1000} raycast={() => {}}>
           <ringGeometry args={[0.65, 1, 32]} />
-          <meshBasicMaterial color="#ff0000" transparent opacity={0.3} depthTest={false} depthWrite={false} toneMapped={false} />
+          <meshBasicMaterial color="#ff0000" transparent opacity={0.2} depthTest={false} depthWrite={false} toneMapped={false} />
         </mesh>
         <mesh renderOrder={1000} raycast={() => {}}>
           <circleGeometry args={[0.2, 16]} />
-          <meshBasicMaterial color="#ff0000" transparent opacity={0.3} depthTest={false} depthWrite={false} toneMapped={false} />
+          <meshBasicMaterial color="#ff0000" transparent opacity={0.2} depthTest={false} depthWrite={false} toneMapped={false} />
         </mesh>
       </group>}
     </>;
