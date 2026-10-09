@@ -2,6 +2,7 @@ import { SmartObjectDef, ResolvedSmartObject, Waypoint, SpatialZoneDef, Interact
 import { WAYPOINTS } from './ZoneNodes';
 import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
+import { DiagWall } from '../wallData';
 
 /**
  * Boîte englobante 3D [minX, minY, minZ, maxX, maxY, maxZ] (en cm)
@@ -176,7 +177,7 @@ export const SPATIAL_ZONES_CONFIG: SpatialZoneDef[] = [
     environment: 'indoor',
     // Délimité par : placard couloir (kitchen-se, kitchen-ne), corner-se, door-living-*, door-bath-*, diag-ne, door-entry-w
     bounds: {
-      min: [130, 0, 400],
+      min: [195, 0, 400],
       max: [330, 250, 685]
     }
   },
@@ -293,3 +294,24 @@ class SpatialZoneManagerClass {
 
 export const SpatialZoneManager = new SpatialZoneManagerClass();
 export const ZoneManager = SpatialZoneManager;
+
+/**
+ * Détecte si un agent se trouve dans le volume intérieur de la salle de bain.
+ */
+export function isAgentInBathroom(pos: [number, number, number] | { x: number; y?: number; z: number }): boolean {
+  const x = Array.isArray(pos) ? pos[0] : pos.x;
+  const z = Array.isArray(pos) ? pos[2] : pos.z;
+  const zDiag = DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
+  return x >= -15 && x < 195 && z >= 465 && z <= (zDiag + 5);
+}
+
+/**
+ * Détecte si un agent se trouve dans le volume intérieur du couloir d'entrée.
+ */
+export function isAgentInCorridor(pos: [number, number, number] | { x: number; y?: number; z: number }): boolean {
+  const x = Array.isArray(pos) ? pos[0] : pos.x;
+  const z = Array.isArray(pos) ? pos[2] : pos.z;
+  const zDiag = DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
+  const minX = z < 465 ? 185 : 195;
+  return x >= minX && x <= 325 && z >= 408 && z <= (zDiag + 5);
+}

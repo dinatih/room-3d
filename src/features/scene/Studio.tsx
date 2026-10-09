@@ -38,6 +38,7 @@ import { FloorPlan }                    from '@features/scene/FloorPlan';
 import { VirtualDPad }                  from '@features/scene/VirtualDPad';
 import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
+import { PresenceLightController }       from './PresenceLightController';
 import { SunLight, SunSphere } from '@features/scene/SunLight';
 import { SkySphere } from './SkySphere';
 import { BuildAnimationMatrix } from '@features/scene/BuildAnimations';
@@ -805,6 +806,7 @@ export function Studio() {
         <HoverRaycaster />
         <DevToolsCollector />
         <GlbReveal />
+        <PresenceLightController />
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.wireframe   && <WireframeLayer />}
         <Suspense fallback={null}>
