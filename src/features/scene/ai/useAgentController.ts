@@ -336,19 +336,19 @@ export function useAgentController(
         dynamicNavQueueRef.current = [];
         dynamicNavIndexRef.current = 0;
         const nextInstr = scenario && stepIndexRef.current < scenario.length ? scenario[stepIndexRef.current] : null;
-        if (claimedSlotRef.current && (!nextInstr || nextInstr.smartObjectId !== claimedSlotRef.current.objectId)) {
+        if (claimedSlotRef.current && (!nextInstr || nextInstr.smartObjectId !== claimedSlotRef.current.objectId || (nextInstr.slotId && nextInstr.slotId !== claimedSlotRef.current.slotId))) {
           releaseClaimedSlot();
         }
       } else {
         const nextDynamicInstr = dynamicNavQueueRef.current[dynamicNavIndexRef.current];
-        if (claimedSlotRef.current && nextDynamicInstr?.smartObjectId && nextDynamicInstr.smartObjectId !== claimedSlotRef.current.objectId) {
+        if (claimedSlotRef.current && nextDynamicInstr?.smartObjectId && (nextDynamicInstr.smartObjectId !== claimedSlotRef.current.objectId || (nextDynamicInstr.slotId && nextDynamicInstr.slotId !== claimedSlotRef.current.slotId))) {
           releaseClaimedSlot();
         }
       }
     } else {
       stepIndexRef.current++;
       const nextInstr = scenario && stepIndexRef.current < scenario.length ? scenario[stepIndexRef.current] : null;
-      if (claimedSlotRef.current && (!nextInstr || nextInstr.smartObjectId !== claimedSlotRef.current.objectId)) {
+      if (claimedSlotRef.current && (!nextInstr || nextInstr.smartObjectId !== claimedSlotRef.current.objectId || (nextInstr.slotId && nextInstr.slotId !== claimedSlotRef.current.slotId))) {
         releaseClaimedSlot();
       }
     }
@@ -550,7 +550,10 @@ export function useAgentController(
             cachedCoordsRef.current = null;
             return update(dt);
           }
-        } else if (claimedSlotRef.current?.objectId !== objId) {
+        } else if (claimedSlotRef.current?.objectId !== objId || (currentInstruction.slotId && claimedSlotRef.current?.slotId !== reqSlotId)) {
+          if (claimedSlotRef.current && (claimedSlotRef.current.objectId !== objId || claimedSlotRef.current.slotId !== reqSlotId)) {
+            releaseClaimedSlot();
+          }
           if (OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
             const altSlotId = OccupancyManager.getAvailableSlot(objId, _characterId, currentInstruction.slotId);
             if (altSlotId) {
@@ -611,7 +614,8 @@ export function useAgentController(
             }
           }
         } else if (!currentInstruction.animation) {
-          const chosenSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === claimedSlotRef.current?.slotId);
+          const targetSlotId = reqSlotId || claimedSlotRef.current?.slotId;
+          const chosenSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === targetSlotId);
           if (chosenSlot) {
             const resolved = resolveSlotAnimation(chosenSlot);
             currentInstruction.animation = resolved.animation;

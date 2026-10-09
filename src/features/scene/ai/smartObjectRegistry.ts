@@ -1068,8 +1068,8 @@ export function buildSmartObjectInstructionSequence(
         animation: 'idle', duration: TOILET_HINGE_DURATION, rotY: Math.PI,
         triggerEventKey: 'wc-lid-toggle', triggerEventValue: false,
       },
-      { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'flush', triggerEventKey: 'wc-flush', triggerEventValue: true },
-      { type: 'USE_OBJECT', smartObjectId: 'vasque-sdb', slotId: 'wash-hands' }
+      { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'flush', animation: 'button-pushing', duration: 2.0, rotY: Math.PI, triggerEventKey: 'wc-flush', triggerEventValue: true },
+      { type: 'USE_OBJECT', smartObjectId: 'vasque-sdb', slotId: 'wash-hands', animation: 'inspect-mid-height', rotY: Math.PI }
     ];
   }
 
