@@ -315,7 +315,7 @@ export function useAgentController(
 
   const triggerInstructionEvent = (instruction: AgentInstruction) => {
     if (!instruction.triggerEventKey) return;
-    useSceneStore.getState().triggerAction(instruction.triggerEventKey);
+    useSceneStore.getState().triggerAction(instruction.triggerEventKey, instruction.triggerEventValue);
   };
 
   const advanceToNextStep = (hasNavStep: boolean) => {

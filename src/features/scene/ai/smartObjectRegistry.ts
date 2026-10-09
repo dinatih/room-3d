@@ -4,6 +4,7 @@ import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
 import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
 import { BATH_WEST_WALL, ROOM_D } from '../wallData';
+import { getEstimatedClipDuration } from '../animOptions';
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -1024,8 +1025,19 @@ export function buildSmartObjectInstructionSequence(
 
   if (objectId === 'toilet') {
     return [
+      { type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'use' },
+      {
+        type: 'INTERACT', smartObjectId: 'toilet', slotId: 'use',
+        animation: 'button-pushing', duration: getEstimatedClipDuration('button-pushing'),
+        triggerEventKey: 'wc-lid-toggle', triggerEventValue: true,
+      },
       { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'use' },
-      { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'flush' },
+      {
+        type: 'INTERACT', smartObjectId: 'toilet', slotId: 'use',
+        animation: 'button-pushing', duration: getEstimatedClipDuration('button-pushing'),
+        triggerEventKey: 'wc-lid-toggle', triggerEventValue: false,
+      },
+      { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'flush', triggerEventKey: 'wc-flush', triggerEventValue: true },
       { type: 'USE_OBJECT', smartObjectId: 'vasque-sdb', slotId: 'wash-hands' }
     ];
   }

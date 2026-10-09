@@ -110,5 +110,6 @@ export interface AgentInstruction {
   repeatCount?: number; // number of repetitions if duration is not set (default 1)
   repeatVariation?: boolean; // whether to re-randomize animation on each repeat cycle
   triggerEventKey?: string; // event to dispatch
+  triggerEventValue?: boolean; // état explicite de l'action (sinon bascule)
   rotY?: number; // target rotation to face during interaction
 }
