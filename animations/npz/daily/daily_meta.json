@@ -1,0 +1,279 @@
+[
+  {
+    "id": "vacuuming",
+    "label": "Passer l'aspirateur",
+    "src": "/home/dinatih/3D Resources/animations/CMU/79/79_77_stageii.npz",
+    "filename": "anim_vacuuming.glb",
+    "tags": [
+      "vacuum",
+      "cleaning",
+      "chore",
+      "standing",
+      "interaction"
+    ],
+    "aliases": [
+      "vacuum",
+      "passer-aspirateur"
+    ],
+    "frames": 572,
+    "duration": 19.1,
+    "size_kb": 343,
+    "rel_path": "animations/npz/daily/anim_vacuuming.glb"
+  },
+  {
+    "id": "vacuuming-alt",
+    "label": "Passer l'aspirateur (Variante)",
+    "src": "/home/dinatih/3D Resources/animations/CMU/80/80_18_stageii.npz",
+    "filename": "anim_vacuuming_alt.glb",
+    "tags": [
+      "vacuum",
+      "cleaning",
+      "chore",
+      "standing",
+      "interaction"
+    ],
+    "aliases": [
+      "vacuum-alt",
+      "vacuum-var"
+    ],
+    "frames": 756,
+    "duration": 25.2,
+    "size_kb": 403,
+    "rel_path": "animations/npz/daily/anim_vacuuming_alt.glb"
+  },
+  {
+    "id": "wiping-table",
+    "label": "Essuyer la table",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/1487/wiping_the_table01_poses.npz",
+    "filename": "anim_wiping_table.glb",
+    "tags": [
+      "wipe",
+      "table",
+      "sponge",
+      "cleaning",
+      "chore",
+      "interaction"
+    ],
+    "aliases": [
+      "wipe-table",
+      "essuyer-table"
+    ],
+    "frames": 226,
+    "duration": 7.5,
+    "size_kb": 229,
+    "rel_path": "animations/npz/daily/anim_wiping_table.glb"
+  },
+  {
+    "id": "wiping-table-small-circles",
+    "label": "Essuyer la table (Petits cercles)",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/883/wipe_arm_smallcircle02_poses.npz",
+    "filename": "anim_wiping_table_small_circles.glb",
+    "tags": [
+      "wipe",
+      "table",
+      "circle",
+      "cleaning",
+      "chore",
+      "interaction"
+    ],
+    "aliases": [
+      "wipe-small-circles",
+      "wipe-table-var"
+    ],
+    "frames": 260,
+    "duration": 8.7,
+    "size_kb": 240,
+    "rel_path": "animations/npz/daily/anim_wiping_table_small_circles.glb"
+  },
+  {
+    "id": "taking-shower",
+    "label": "Prendre sa douche",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/674/shower_front01_poses.npz",
+    "filename": "anim_taking_shower.glb",
+    "tags": [
+      "shower",
+      "hygiene",
+      "wash",
+      "bathroom",
+      "interaction"
+    ],
+    "aliases": [
+      "shower",
+      "douche"
+    ],
+    "frames": 257,
+    "duration": 8.6,
+    "size_kb": 239,
+    "rel_path": "animations/npz/daily/anim_taking_shower.glb"
+  },
+  {
+    "id": "washing-body",
+    "label": "Se laver",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/674/wash_front02_poses.npz",
+    "filename": "anim_washing_body.glb",
+    "tags": [
+      "wash",
+      "hygiene",
+      "shower",
+      "bathroom",
+      "interaction"
+    ],
+    "aliases": [
+      "wash",
+      "se-laver"
+    ],
+    "frames": 2600,
+    "duration": 86.7,
+    "size_kb": 1252,
+    "rel_path": "animations/npz/daily/anim_washing_body.glb"
+  },
+  {
+    "id": "pickup-box-floor-male",
+    "label": "Ramasser une boîte au sol (H)",
+    "src": "/home/dinatih/3D Resources/animations/ACCAD/ACCAD/Male1General_c3d/General A5 - Pick Up Box_poses.npz",
+    "filename": "anim_pickup_box_floor_male.glb",
+    "tags": [
+      "box",
+      "pickup",
+      "floor",
+      "lift",
+      "male",
+      "interaction"
+    ],
+    "aliases": [
+      "pickup-box-m",
+      "ramasser-boite-sol"
+    ],
+    "frames": 141,
+    "duration": 4.7,
+    "size_kb": 201,
+    "rel_path": "animations/npz/daily/anim_pickup_box_floor_male.glb"
+  },
+  {
+    "id": "pickup-box-floor-female",
+    "label": "Ramasser une boîte au sol (F)",
+    "src": "/home/dinatih/3D Resources/animations/ACCAD/ACCAD/Female1General_c3d/A5 - pick up box_poses.npz",
+    "filename": "anim_pickup_box_floor_female.glb",
+    "tags": [
+      "box",
+      "pickup",
+      "floor",
+      "lift",
+      "female",
+      "interaction"
+    ],
+    "aliases": [
+      "pickup-box-f",
+      "ramasser-boite-sol-femme"
+    ],
+    "frames": 188,
+    "duration": 6.3,
+    "size_kb": 217,
+    "rel_path": "animations/npz/daily/anim_pickup_box_floor_female.glb"
+  },
+  {
+    "id": "lift-box-male",
+    "label": "Soulever une boîte (H)",
+    "src": "/home/dinatih/3D Resources/animations/ACCAD/ACCAD/Male1General_c3d/General A6 - Lift Box_poses.npz",
+    "filename": "anim_lift_box_male.glb",
+    "tags": [
+      "box",
+      "lift",
+      "carry",
+      "male",
+      "interaction"
+    ],
+    "aliases": [
+      "lift-box-m",
+      "soulever-boite"
+    ],
+    "frames": 148,
+    "duration": 4.9,
+    "size_kb": 203,
+    "rel_path": "animations/npz/daily/anim_lift_box_male.glb"
+  },
+  {
+    "id": "lift-box-female",
+    "label": "Soulever une boîte (F)",
+    "src": "/home/dinatih/3D Resources/animations/ACCAD/ACCAD/Female1General_c3d/A6 - lift box_poses.npz",
+    "filename": "anim_lift_box_female.glb",
+    "tags": [
+      "box",
+      "lift",
+      "carry",
+      "female",
+      "interaction"
+    ],
+    "aliases": [
+      "lift-box-f",
+      "soulever-boite-femme"
+    ],
+    "frames": 252,
+    "duration": 8.4,
+    "size_kb": 237,
+    "rel_path": "animations/npz/daily/anim_lift_box_female.glb"
+  },
+  {
+    "id": "putdown-box-floor",
+    "label": "Reposer la boîte au sol",
+    "src": "/home/dinatih/3D Resources/animations/ACCAD/ACCAD/Male1Walking_c3d/Walk B21 - Put Down Box to walk_poses.npz",
+    "filename": "anim_putdown_box_floor.glb",
+    "tags": [
+      "box",
+      "putdown",
+      "floor",
+      "walk",
+      "interaction"
+    ],
+    "aliases": [
+      "putdown-box",
+      "reposer-boite"
+    ],
+    "frames": 209,
+    "duration": 7.0,
+    "size_kb": 377,
+    "rel_path": "animations/npz/daily/anim_putdown_box_floor.glb"
+  },
+  {
+    "id": "sweeping-floor",
+    "label": "Balayer le sol",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_23_stageii.npz",
+    "filename": "anim_sweeping_floor.glb",
+    "tags": [
+      "sweep",
+      "broom",
+      "cleaning",
+      "chore",
+      "interaction"
+    ],
+    "aliases": [
+      "sweep-floor",
+      "balayer"
+    ],
+    "frames": 1004,
+    "duration": 33.5,
+    "size_kb": 484,
+    "rel_path": "animations/npz/daily/anim_sweeping_floor.glb"
+  },
+  {
+    "id": "cleaning-windows",
+    "label": "Laver les vitres",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_20_stageii.npz",
+    "filename": "anim_cleaning_windows.glb",
+    "tags": [
+      "window",
+      "glass",
+      "cleaning",
+      "chore",
+      "interaction"
+    ],
+    "aliases": [
+      "clean-windows",
+      "laver-vitres"
+    ],
+    "frames": 1430,
+    "duration": 47.7,
+    "size_kb": 641,
+    "rel_path": "animations/npz/daily/anim_cleaning_windows.glb"
+  }
+]
