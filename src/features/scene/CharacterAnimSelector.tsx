@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { getAnimationDef } from './animations/animationResolver';
 import { resetAppIdle } from './idleState';
+import type { AnimationCategory } from './animations/animationRegistry';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
@@ -18,12 +19,11 @@ export const ANIM_CATEGORIES = [
   { key: 'poses_idles', label: 'Poses & Idles', icon: '🧘' },
   { key: 'sports_fitness', label: 'Sports & Fitness', icon: '⚽' },
   { key: 'yoga', label: 'Yoga & Mocap', icon: '🧘‍♀️' },
-] as const;
+] as const satisfies ReadonlyArray<{ key: AnimationCategory; label: string; icon: string }>;
 
 export function getAnimCategory(val: string): string {
   if (val === 'idle' || val === 't-pose') return 'poses_idles';
-  const path = getAnimationDef(val)?.path || val;
-  return path.startsWith('animations/') ? path.split('/')[1] || 'other' : 'other';
+  return getAnimationDef(val)?.category ?? 'other';
 }
 
 /** Métadonnées pré-calculées une seule fois pour éviter les regex et lookups sur chaque render */

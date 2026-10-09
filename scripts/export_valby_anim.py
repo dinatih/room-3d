@@ -68,7 +68,7 @@ def export_valby_anim():
     root_dir = os.path.abspath(".")
     fbx_path = os.path.join(root_dir, "sources_backup/personnages/valby_nano_body_suit/source/Valby_nano_body_suit2out.fbx")
     ref_glb_path = os.path.join(root_dir, "public/characters/valby/valby.glb")
-    out_glb_path = os.path.join(root_dir, "public/animations/emotes_gestures/anim_valby_signature.glb")
+    out_glb_path = os.path.join(root_dir, "public/animations/others/anim_valby_signature.glb")
 
     print("\n=======================================================")
     print("=== Exporting Valby Signature Animation ===")

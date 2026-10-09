@@ -195,7 +195,7 @@ try {
     };
     window.splitLara=async(frame=770)=>{
       const {loader}=window.laraChecks;
-      const source=await loader.loadAsync('/animations/yoga/anim_yoga_split_pose_a.glb');
+      const source=await loader.loadAsync('/animations/npz/yoga/anim_yoga_split_pose_a.glb');
       const {retargetClip}=await import('/src/features/scene/retargeting/index.ts');
       const entry=entries.find(e=>e.style==='marissa');
       for(const [bone,position,quaternion,scale] of entry.restBones){bone.position.copy(position);bone.quaternion.copy(quaternion);bone.scale.copy(scale);}

@@ -175,6 +175,6 @@ useGLTF.preload(LARA_PATH);
 useGLTF.preload('/items/famnig27470460/Famnig27470460.glb');
 
 // Pré-chauffage asynchrone des animations de base
-cacheDynamicGLTF('animations/poses_idles/miley_armature_idle01_f.glb');
-cacheDynamicGLTF('animations/locomotion/anim_walking.glb');
-cacheDynamicGLTF('animations/locomotion/anim_running.glb');
+cacheDynamicGLTF('animations/miley/miley_armature_idle01_f.glb');
+cacheDynamicGLTF('animations/mixamo/anim_walking.glb');
+cacheDynamicGLTF('animations/mixamo/anim_running.glb');

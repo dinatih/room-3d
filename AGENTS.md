@@ -52,6 +52,7 @@ Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le c
 
 ## Simplicité du code, Anti Over-Engineering & Échec Explicite (Fail Fast)
 
+- **Pas de rétrocompatibilité** : Ce projet ne nécessite pas de rétrocompatibilité. Lors d’une modification, mettre à jour directement les références concernées et supprimer le code obsolète, sans conserver d’alias, de fallbacks ou de couches de compatibilité pour les anciens comportements.
 - **Interdiction de l'over-engineering** : Ne jamais ajouter de surcode, de couches d'abstraction superflues ou de logique alambiquée là où une solution simple, directe et idiomatique existe (Three.js, React). Aller au plus court et au plus robuste.
 - **Proscription des constantes magiques et filtres arbitraires** : Ne JAMAIS introduire de valeurs en dur arbitraires (ex. seuils de distance arbitraires, plafonds artificiels de boucles ou de particules comme `slice(0, 14)` ou `< 55`) inventées pour masquer un symptôme sans traiter la cause racine.
 - **Pas d'erreurs silencieuses (Fail Fast)** : Éviter les garde-fous artificiels qui étouffent ou dissimulent les données invalides ou les comportements anormaux. Si des données sont invalides, l'erreur doit se manifester ou remonter explicitement afin d'être identifiée et corrigée à la source, plutôt que d'être masquée silencieusement par un filtre cosmétique.
