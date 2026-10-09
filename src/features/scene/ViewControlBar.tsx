@@ -151,40 +151,49 @@ export function ViewControlBar({
     document.body,
   );
 
+  const hideUIButton = showCharacterModes && (
+    <button
+      type="button"
+      className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+      onClick={onToggleHideUI}
+      title={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
+      aria-label={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
+    >
+      <i className={`bi ${hideUI ? 'bi-eye' : 'bi-eye-slash'}`} aria-hidden="true" />
+    </button>
+  );
+
+  const hdButton = (showCharacterModes || showMirrorsHD) && (
+    <button
+      type="button"
+      className={`${TOOLBAR_BUTTON_CLASS} ${mirrorsHD ? 'btn-danger' : 'btn-outline-secondary'}`}
+      onClick={() => toggleLayer('mirrorsHD')}
+      title="Activer ou désactiver les miroirs HD"
+      aria-label="Miroirs HD"
+      aria-pressed={mirrorsHD}
+    >
+      HD
+    </button>
+  );
+
   const bar = (
     <>
     {hoverTooltip}
     <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--multi-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       {panelControls && (
         <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+          {hideUIButton}
+          {hdButton}
           {panelControls}
         </div>
       )}
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        {showCharacterModes && (
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-            onClick={onToggleHideUI}
-            title={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
-            aria-label={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
-          >
-            <i className={`bi ${hideUI ? 'bi-eye' : 'bi-eye-slash'}`} aria-hidden="true" />
-          </button>
+        {!panelControls && (
+          <>
+            {hideUIButton}
+            {hdButton}
+          </>
         )}
-        {(showCharacterModes || showMirrorsHD) && (
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${mirrorsHD ? 'btn-danger' : 'btn-outline-secondary'}`}
-            onClick={() => toggleLayer('mirrorsHD')}
-            title="Activer ou désactiver les miroirs HD"
-            aria-label="Miroirs HD"
-            aria-pressed={mirrorsHD}
-          >
-            HD
-          </button>
-        )}
-
         {showCharacterModes && (
           <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Personnages et suivi caméra">
             <CharacterCountSelect />
