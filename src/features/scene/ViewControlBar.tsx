@@ -337,12 +337,12 @@ export function ViewControlBar({
     const inlineRow1 = (
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('in')}
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues orthogonales">
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues orthogonales et dessus">
           {renderViewButton(frontView, 'cyan')}
+          {renderViewButton(backView, 'cyan')}
           {renderViewButton(leftView, 'cyan')}
           {renderViewButton(rightView, 'cyan')}
           {renderViewButton(topView, 'green')}
-          {renderViewButton(bottomView, 'green')}
         </div>
         {perspButton}
         {showMirrorsHD && hdButton}
@@ -353,9 +353,9 @@ export function ViewControlBar({
     const inlineRow2 = (
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('out')}
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales et arrière">
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales et dessous">
           {ISO_VIEWS.map(v => renderViewButton(v, 'purple'))}
-          {renderViewButton(backView, 'cyan')}
+          {renderViewButton(bottomView, 'green')}
         </div>
         {rotButton}
         {toolbarActions}
