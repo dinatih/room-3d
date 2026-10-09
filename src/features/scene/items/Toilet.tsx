@@ -11,6 +11,8 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
+import { TOILET_HINGE_ANGLE, TOILET_HINGE_SPEED, TOILET_HINGE_TOLERANCE, TOILET_FLUSH_DURATION } from './toiletAnimation';
+import { ToiletWater } from './ToiletWater';
 
 const GLB = 'items/president-toilet/president-toilet.glb';
 
@@ -29,6 +31,14 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
   const isLidOpenRef = useRef(false);
   const isSeatOpenRef = useRef(false);
   const isFlushingRef = useRef(false);
+  const flushTimeRef = useRef(0);
+  const prevPreviewFlushRef = useRef(false);
+
+  const triggerFlush = () => {
+    isFlushingRef.current = true;
+    flushTimeRef.current = 0;
+    invalidate();
+  };
 
   useLayoutEffect(() => {
     if (isPreview) return;
@@ -43,13 +53,8 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
         invalidate();
       }
       if (key === 'wc-flush') {
-        isFlushingRef.current = value !== undefined ? !!value : true;
-        invalidate();
-        if (isFlushingRef.current) {
-          setTimeout(() => {
-            isFlushingRef.current = false;
-            invalidate();
-          }, 1500);
+        if (value !== false) {
+          triggerFlush();
         }
       }
     };
@@ -61,7 +66,11 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
     if (!isPreview) return;
     isLidOpenRef.current = !!actionState['wc-lid-toggle'];
     isSeatOpenRef.current = !!actionState['wc-seat-toggle'];
-    isFlushingRef.current = !!actionState['wc-flush'];
+    const previewFlush = !!actionState['wc-flush'];
+    if (previewFlush && !prevPreviewFlushRef.current) {
+      triggerFlush();
+    }
+    prevPreviewFlushRef.current = previewFlush;
     invalidate();
   }, [isPreview, actionState['wc-lid-toggle'], actionState['wc-seat-toggle'], actionState['wc-flush'], invalidate]);
 
@@ -124,25 +133,34 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
   useFrame((_, delta) => {
     let active = false;
     if (lidHingeRef.current && lidHingeRef.current.userData.initialRotation !== undefined) {
-      const targetLidAngle = lidHingeRef.current.userData.initialRotation + (isLidOpenRef.current ? -Math.PI / 2.2 : 0);
+      const targetLidAngle = lidHingeRef.current.userData.initialRotation + (isLidOpenRef.current ? -TOILET_HINGE_ANGLE : 0);
       const diff = targetLidAngle - lidHingeRef.current.rotation.x;
-      if (Math.abs(diff) > 0.005) {
-        lidHingeRef.current.rotation.x += diff * 10 * delta;
+      if (Math.abs(diff) > TOILET_HINGE_TOLERANCE) {
+        lidHingeRef.current.rotation.x += diff * TOILET_HINGE_SPEED * delta;
         active = true;
       }
     }
     
     if (seatHingeRef.current && seatHingeRef.current.userData.initialRotation !== undefined) {
-      const targetSeatAngle = seatHingeRef.current.userData.initialRotation + (isSeatOpenRef.current ? -Math.PI / 2.2 : 0);
+      const targetSeatAngle = seatHingeRef.current.userData.initialRotation + (isSeatOpenRef.current ? -TOILET_HINGE_ANGLE : 0);
       const diff = targetSeatAngle - seatHingeRef.current.rotation.x;
-      if (Math.abs(diff) > 0.005) {
-        seatHingeRef.current.rotation.x += diff * 10 * delta;
+      if (Math.abs(diff) > TOILET_HINGE_TOLERANCE) {
+        seatHingeRef.current.rotation.x += diff * TOILET_HINGE_SPEED * delta;
         active = true;
       }
     }
 
     if (buttonRef.current && buttonRef.current.userData.originalZ !== undefined) {
-      const targetZ = isFlushingRef.current ? buttonRef.current.userData.originalZ - 0.03 : buttonRef.current.userData.originalZ;
+      let buttonPress = 0;
+      if (isFlushingRef.current) {
+        const p = flushTimeRef.current / TOILET_FLUSH_DURATION;
+        if (p < 0.15) {
+          buttonPress = p / 0.15;
+        } else if (p < 0.35) {
+          buttonPress = Math.max(0, 1.0 - (p - 0.15) / 0.20);
+        }
+      }
+      const targetZ = buttonRef.current.userData.originalZ - 0.03 * buttonPress;
       const diff = targetZ - buttonRef.current.position.z;
       if (Math.abs(diff) > 0.001) {
         buttonRef.current.position.z += diff * 15 * delta;
@@ -153,7 +171,16 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
     if (active) invalidate();
   });
 
-  return <primitive object={scene} />;
+  return (
+    <group>
+      <primitive object={scene} />
+      <ToiletWater
+        isFlushingRef={isFlushingRef}
+        flushTimeRef={flushTimeRef}
+        invalidate={invalidate}
+      />
+    </group>
+  );
 }
 
 useGLTF.preload(GLB);
