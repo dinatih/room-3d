@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { TOOLBAR_BUTTON_CLASS } from '../toolbarStyles';
 
@@ -9,6 +9,7 @@ export interface PanelPopoverProps {
   headerExtra?: React.ReactNode;
   hideUI?: boolean;
   active?: boolean;
+  manual?: boolean;
   children: React.ReactNode;
 }
 
@@ -19,11 +20,26 @@ export function PanelPopover({
   headerExtra,
   hideUI = false,
   active = false,
+  manual = false,
   children,
 }: PanelPopoverProps) {
   const id = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    const popover = popoverRef.current;
+    if (!trigger || !popover) return;
+    const rect = trigger.getBoundingClientRect();
+    const popoverWidth = parseFloat(getComputedStyle(popover).width);
+    const above = rect.top > window.innerHeight / 2;
+    popover.style.top = above ? 'auto' : `${rect.bottom + 8}px`;
+    popover.style.bottom = above ? `${window.innerHeight - rect.top + 8}px` : 'auto';
+    popover.style.right = `${Math.min(Math.max(8, window.innerWidth - rect.right), window.innerWidth - popoverWidth - 8)}px`;
+    popover.style.maxHeight = `${(above ? rect.top : window.innerHeight - rect.bottom) - 16}px`;
+  }, []);
 
   useEffect(() => {
     const popover = popoverRef.current;
@@ -31,15 +47,26 @@ export function PanelPopover({
     const onToggle = () => {
       const open = popover.matches(':popover-open');
       setIsOpen(open);
+      if (open) {
+        updatePosition();
+      }
     };
-    const closePopover = () => popover.hidePopover();
+    const handleResize = () => {
+      if (manual) {
+        if (popover.matches(':popover-open')) {
+          updatePosition();
+        }
+      } else {
+        popover.hidePopover();
+      }
+    };
     popover.addEventListener('toggle', onToggle);
-    window.addEventListener('resize', closePopover);
+    window.addEventListener('resize', handleResize);
     return () => {
       popover.removeEventListener('toggle', onToggle);
-      window.removeEventListener('resize', closePopover);
+      window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [manual, updatePosition]);
 
   useEffect(() => {
     if (hideUI) {
@@ -51,6 +78,7 @@ export function PanelPopover({
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} ${isOpen ? 'btn-danger text-white' : active ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'} view-control-bar__npc-trigger`}
         {...{ popovertarget: id }}
@@ -59,14 +87,7 @@ export function PanelPopover({
         aria-controls={id}
         onClick={(e) => {
           e.stopPropagation();
-          const rect = e.currentTarget.getBoundingClientRect();
-          const popover = popoverRef.current!;
-          const popoverWidth = parseFloat(getComputedStyle(popover).width);
-          const above = rect.top > window.innerHeight / 2;
-          popover.style.top = above ? 'auto' : `${rect.bottom + 8}px`;
-          popover.style.bottom = above ? `${window.innerHeight - rect.top + 8}px` : 'auto';
-          popover.style.right = `${Math.min(Math.max(8, window.innerWidth - rect.right), window.innerWidth - popoverWidth - 8)}px`;
-          popover.style.maxHeight = `${(above ? rect.top : window.innerHeight - rect.bottom) - 16}px`;
+          updatePosition();
         }}
         onPointerDown={(e) => e.stopPropagation()}
         title={title ?? label}
@@ -83,7 +104,7 @@ export function PanelPopover({
         <div
           ref={popoverRef}
           id={id}
-          {...{ popover: 'auto' }}
+          {...{ popover: manual ? 'manual' : 'auto' }}
           role="dialog"
           aria-labelledby={`${id}-title`}
           className="popover view-control-bar__npc-popover glass-card shadow-lg"

@@ -377,6 +377,7 @@ export function ToolbarPanelsRow({
             icon="bi-map-fill"
             title="Plan"
             hideUI={hideUI}
+            manual
           >
             <Minimap embedded showGroup={false} />
           </PanelPopover>
@@ -386,6 +387,7 @@ export function ToolbarPanelsRow({
             icon="bi-bar-chart-fill"
             title="Performances & Stats"
             hideUI={hideUI}
+            manual
           >
             <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
           </PanelPopover>
