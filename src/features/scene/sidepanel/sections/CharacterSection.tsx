@@ -724,45 +724,47 @@ export function CharacterSection({
               }}
             />
           </div>
-
-          <div className="border-top pt-2 mt-2 d-flex flex-column">
-            <div className="text-muted fw-bold text-dark text-uppercase mb-1 px-2" style={{ fontSize: '9px' }}>
-              <i className="bi bi-camera-video me-1" aria-hidden="true" />Options Caméra FPV
-            </div>
-
-            {layerBtn('light', iconLabel('bi-camera-video', 'Head Bobbing (Vue FPS)'), 'fpvHeadBobbing')}
-            {layerBtn('light', iconLabel('bi-eye', 'FPV Réaliste (Caméra Yeux)'), 'fpvRealisticEyes')}
-
-            {layers.fpvRealisticEyes && (
-              <div className="d-flex flex-column">
-                {layerBtn('light', iconLabel('bi-camera-reels', 'Stabilisation Caméra'), 'fpvStabilization')}
-
-                {(layers.fpvStabilization ?? true) && (
-                  <div className="py-1 px-2 border-bottom">
-                    <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-                      <span className="text-muted fw-semibold text-dark text-uppercase">Amorti des secousses</span>
-                      <span className="badge bg-danger text-white">{Math.round((layers.fpvStabilizationFactor ?? 0.7) * 100)}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      className="form-range form-range-sm"
-                      min="0.0"
-                      max="0.95"
-                      step="0.05"
-                      value={layers.fpvStabilizationFactor ?? 0.7}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        useSceneStore.setState(st => ({
-                          layers: { ...st.layers, fpvStabilizationFactor: val }
-                        }));
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
         </div>
+      )}
+
+      {layers.character && (
+        <>
+          <div className="text-muted fw-bold text-dark text-uppercase mt-2 mb-1 px-2" style={{ fontSize: '9px' }}>
+            <i className="bi bi-camera-video me-1" aria-hidden="true" />Options Caméra FPV
+          </div>
+
+          {layerBtn('light', iconLabel('bi-camera-video', 'Head Bobbing (Vue FPS)'), 'fpvHeadBobbing')}
+          {layerBtn('light', iconLabel('bi-eye', 'FPV Réaliste (Caméra Yeux)'), 'fpvRealisticEyes')}
+
+          {layers.fpvRealisticEyes && (
+            <>
+              {layerBtn('light', iconLabel('bi-camera-reels', 'Stabilisation Caméra'), 'fpvStabilization')}
+
+              {(layers.fpvStabilization ?? true) && (
+                <div className="py-1 px-2 border-bottom">
+                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
+                    <span className="text-muted fw-semibold text-dark text-uppercase">Amorti des secousses</span>
+                    <span className="badge bg-danger text-white">{Math.round((layers.fpvStabilizationFactor ?? 0.7) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    className="form-range form-range-sm"
+                    min="0.0"
+                    max="0.95"
+                    step="0.05"
+                    value={layers.fpvStabilizationFactor ?? 0.7}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      useSceneStore.setState(st => ({
+                        layers: { ...st.layers, fpvStabilizationFactor: val }
+                      }));
+                    }}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </>
       )}
 
     </div>
