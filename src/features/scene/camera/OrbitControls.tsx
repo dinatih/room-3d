@@ -8,8 +8,9 @@ import './OrbitControls.scss';
 /** Commandes partagées : le curseur indique l'action pendant un glisser souris. */
 export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof DreiOrbitControls> & {
   zoomScope?: 'scene' | 'preview';
+  showTargetMarker?: boolean;
 }>(
-  function OrbitControls({ zoomScope = 'preview', ...props }, forwardedRef) {
+  function OrbitControls({ zoomScope = 'preview', showTargetMarker = true, ...props }, forwardedRef) {
     const [controls, setControls] = useState<OrbitControlsImpl | null>(null);
     const targetMarker = useRef<Group>(null);
     const attachRef = useCallback((value: OrbitControlsImpl | null) => {
@@ -91,7 +92,7 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
 
     return <>
       <DreiOrbitControls {...props} ref={attachRef} />
-      {zoomScope === 'scene' && <group ref={targetMarker} name="orbit-target-marker" visible={false}>
+      {zoomScope === 'scene' && showTargetMarker && <group ref={targetMarker} name="orbit-target-marker" visible={false}>
         <mesh renderOrder={1000} raycast={() => {}}>
           <ringGeometry args={[0.65, 1, 32]} />
           <meshBasicMaterial color="#ffb000" depthTest={false} depthWrite={false} toneMapped={false} />

@@ -1143,6 +1143,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       <OrbitControls
         ref={ctrlRef}
         zoomScope="scene"
+        showTargetMarker={!characterGridActive}
         target={
           mode === 'ortho'
             ? orthoConfig.target
