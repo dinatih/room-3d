@@ -46,7 +46,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label={<><i className="bi bi-camera me-1" aria-hidden="true" />Photo Raytracing HD</>} keys={['F10']} />
               <R label="Inventaire (toggle)"        keys={['I']} />
               <R label="Basculer Ortho / Perspective" keys={['O', 'P']} />
-              <R label="Inventaire Personnages (direct)" keys={['Alt+P']} />
+              <R label="Inventaire Personnages (direct)" keys={['Alt+I', 'Alt+P']} />
               <R label={<><i className="bi bi-masks-theater me-1" aria-hidden="true" />Personnages Extra (toggle)</>} keys={['Alt+E']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
               <R label="Basculer Rotation / Translation" keys={['R', 'T']} />
@@ -79,7 +79,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Miroirs HD (toggle)"        keys={['Alt+G']} />
               <R label="Arêtes des murs (toggle)"   keys={['Alt+A']} />
               <R label="Piliers seuls (toggle)"     keys={['Alt+Shift+P']} />
-              <R label={<><i className="bi bi-box-seam me-1" aria-hidden="true" />Grille des objets d’inventaire (toggle)</>} keys={['Alt+I']} />
+              <R label={<><i className="bi bi-box-seam me-1" aria-hidden="true" />Grille des objets d’inventaire (toggle)</>} keys={['Alt+Shift+I']} />
               <R label={<><i className="bi bi-rulers me-1" aria-hidden="true" />Mesures réelles (toggle)</>} keys={['Alt+M']} />
               <R label="Quitter follow / top-down / ortho" keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />

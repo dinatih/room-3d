@@ -576,7 +576,17 @@ export function Studio() {
         if (k === 'b' && !e.shiftKey) { e.preventDefault(); if (e.repeat) return; onToggleLayer('grid'); cameraState.invalidate?.(); return; }
         if (k === 'm') { e.preventDefault(); onToggleLayer('measuredDimensions'); cameraState.invalidate?.(); return; }
         if (k === 'a') { e.preventDefault(); onToggleLayer('wallEdges'); cameraState.invalidate?.(); return; }
-        if (k === 'i') { e.preventDefault(); toggleLayer('inventoryGrid'); cameraState.invalidate?.(); return; }
+        if (k === 'i') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            toggleLayer('inventoryGrid');
+            cameraState.invalidate?.();
+          } else {
+            setInventoryInitialCat('characters');
+            setShowInventory(true);
+          }
+          return;
+        }
         if (k === 'w') { e.preventDefault(); onToggleLayer('wallStructure'); cameraState.invalidate?.(); return; }
         if (k === 'q') { e.preventDefault(); onToggleLayer('structure'); cameraState.invalidate?.(); return; }
         if (k === 'f') { e.preventDefault(); onToggleLayer('furniture'); cameraState.invalidate?.(); return; }

@@ -475,6 +475,7 @@ export function Inventory({
   });
   const [isResizing, setIsResizing]       = useState(false);
   const tableContainerRef                 = useRef<HTMLDivElement>(null);
+  const categoriesContainerRef            = useRef<HTMLDivElement>(null);
   const searchInputRef                    = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -517,6 +518,34 @@ export function Inventory({
       }
     }
   }, [initialCategory, visible, extraCharacters]);
+
+  // Défilement automatique de la barre des catégories pour centrer le groupe actif (ex. Personnages)
+  useEffect(() => {
+    if (!visible) return;
+    const scrollCategoryIntoView = () => {
+      const container = categoriesContainerRef.current;
+      if (!container || container.clientWidth === 0) return;
+      const activeBtn = container.querySelector<HTMLElement>(`[data-category-id="${activeCat}"]`);
+      if (!activeBtn) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const btnRect = activeBtn.getBoundingClientRect();
+      const offset = btnRect.left - containerRect.left + container.scrollLeft;
+      const targetScrollLeft = offset - (container.clientWidth / 2) + (btnRect.width / 2);
+
+      container.scrollTo({
+        left: Math.max(0, targetScrollLeft),
+        behavior: 'smooth',
+      });
+    };
+
+    const frameId = requestAnimationFrame(scrollCategoryIntoView);
+    const timeoutId = setTimeout(scrollCategoryIntoView, 60);
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timeoutId);
+    };
+  }, [activeCat, visible]);
 
 function normalizeSearchStr(str: string): string {
   return str
@@ -701,12 +730,13 @@ function normalizeSearchStr(str: string): string {
               <span className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>
                 Tous les items
               </span>
-              <div className="d-flex gap-1 overflow-x-auto text-nowrap pb-1" style={{ scrollbarWidth: 'none' }}>
+              <div ref={categoriesContainerRef} className="d-flex gap-1 overflow-x-auto text-nowrap pb-1" style={{ scrollbarWidth: 'none' }}>
                 {CATEGORIES.map(cat => {
                   const isActive = cat.id === activeCat;
                   return (
                     <button
                       key={cat.id}
+                      data-category-id={cat.id}
                       type="button"
                       className={`btn btn-sm py-0.5 px-2 rounded-pill small ${isActive ? 'btn-danger text-white shadow-sm' : 'btn-outline-secondary bg-white text-dark'}`}
                       onClick={() => setActiveCat(cat.id)}

@@ -320,7 +320,7 @@ export function LayersSection({
       {layerBtn('gray',   iconLabel('bi-person-fill', 'Ombres personnage'), 'characterShadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
 
-      {layerBtn('orange', iconLabel('bi-box-seam', 'Grille des objets d’inventaire (Alt+I)'), 'inventoryGrid')}
+      {layerBtn('orange', iconLabel('bi-box-seam', 'Grille des objets d’inventaire (Alt+Shift+I)'), 'inventoryGrid')}
       {layerBtn('teal',   iconLabel('bi-grid-3x3-gap', 'Grille (Alt+B)'), 'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('yellow', iconLabel('bi-rulers', 'Mesures réelles (Alt+M)'), 'measuredDimensions')}
