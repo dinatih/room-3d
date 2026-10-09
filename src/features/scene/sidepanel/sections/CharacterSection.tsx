@@ -38,7 +38,7 @@ export function CharacterSection({
     label: React.ReactNode,
     key: keyof LayerState
   ) => {
-    const on = layers[key];
+    const on = key === 'fpvStabilization' ? (layers.fpvStabilization ?? true) : Boolean(layers[key]);
     return (
       <div 
         className="w-100 border-0 border-bottom py-1 px-2 d-flex align-items-center justify-content-between gap-1"
@@ -51,7 +51,15 @@ export function CharacterSection({
           type="button"
           className="btn btn-sm btn-link p-0 text-start text-dark text-decoration-none flex-grow-1 text-truncate"
           style={{ fontSize: '11px' }}
-          onClick={() => onToggleLayer(key)}
+          onClick={() => {
+            if (key === 'fpvStabilization') {
+              useSceneStore.setState(st => ({
+                layers: { ...st.layers, fpvStabilization: !(st.layers.fpvStabilization ?? true) }
+              }));
+            } else {
+              onToggleLayer(key);
+            }
+          }}
         >
           {label}
         </button>
@@ -59,7 +67,15 @@ export function CharacterSection({
           type="button"
           className={`btn btn-sm py-0 px-2 rounded-pill ${on ? 'btn-danger text-white' : 'btn-secondary text-white'}`}
           style={{ fontSize: '9px', lineHeight: '1.4' }}
-          onClick={() => onToggleLayer(key)}
+          onClick={() => {
+            if (key === 'fpvStabilization') {
+              useSceneStore.setState(st => ({
+                layers: { ...st.layers, fpvStabilization: !(st.layers.fpvStabilization ?? true) }
+              }));
+            } else {
+              onToggleLayer(key);
+            }
+          }}
         >
           {on ? 'ON' : 'OFF'}
         </button>
@@ -709,113 +725,23 @@ export function CharacterSection({
             />
           </div>
 
-          <div className="border-top pt-2 mt-2 d-flex flex-column gap-1">
-            <div className="text-muted fw-bold text-dark text-uppercase mb-1" style={{ fontSize: '9px' }}>
+          <div className="border-top pt-2 mt-2 d-flex flex-column">
+            <div className="text-muted fw-bold text-dark text-uppercase mb-1 px-2" style={{ fontSize: '9px' }}>
               <i className="bi bi-camera-video me-1" aria-hidden="true" />Options Caméra FPV
             </div>
 
-            <div
-              className="w-100 d-flex align-items-center justify-content-between py-1 px-2 rounded"
-              style={{
-                background: layers.fpvHeadBobbing ? 'rgba(255, 107, 157, 0.12)' : 'rgba(0, 0, 0, 0.03)',
-                border: '1px solid rgba(0, 0, 0, 0.08)',
-              }}
-            >
-              <button
-                type="button"
-                className="btn btn-sm btn-link p-0 text-start text-dark text-decoration-none flex-grow-1"
-                style={{ fontSize: '11px' }}
-                onClick={() => {
-                  useSceneStore.setState(st => ({
-                    layers: { ...st.layers, fpvHeadBobbing: !st.layers.fpvHeadBobbing }
-                  }));
-                }}
-              >
-                <i className="bi bi-camera-video me-1" aria-hidden="true" />Head Bobbing (Vue FPS)
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm py-0 px-2 rounded-pill ${layers.fpvHeadBobbing ? 'btn-danger text-white' : 'btn-secondary text-white'}`}
-                style={{ fontSize: '9px', lineHeight: '1.4' }}
-                onClick={() => {
-                  useSceneStore.setState(st => ({
-                    layers: { ...st.layers, fpvHeadBobbing: !st.layers.fpvHeadBobbing }
-                  }));
-                }}
-              >
-                {layers.fpvHeadBobbing ? 'ON' : 'OFF'}
-              </button>
-            </div>
-
-            <div
-              className="w-100 d-flex align-items-center justify-content-between py-1 px-2 rounded"
-              style={{
-                background: layers.fpvRealisticEyes ? 'rgba(0, 204, 255, 0.12)' : 'rgba(0, 0, 0, 0.03)',
-                border: '1px solid rgba(0, 0, 0, 0.08)',
-              }}
-            >
-              <button
-                type="button"
-                className="btn btn-sm btn-link p-0 text-start text-dark text-decoration-none flex-grow-1"
-                style={{ fontSize: '11px' }}
-                title="Positionne la caméra au centre exact des yeux de Lara / PNJ et suit précisément les rotations et inclinaisons de la tête"
-                onClick={() => {
-                  useSceneStore.setState(st => ({
-                    layers: { ...st.layers, fpvRealisticEyes: !st.layers.fpvRealisticEyes }
-                  }));
-                }}
-              >
-                <i className="bi bi-eye me-1" aria-hidden="true" />FPV Réaliste (Caméra Yeux)
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm py-0 px-2 rounded-pill ${layers.fpvRealisticEyes ? 'btn-info text-dark' : 'btn-secondary text-white'}`}
-                style={{ fontSize: '9px', lineHeight: '1.4' }}
-                onClick={() => {
-                  useSceneStore.setState(st => ({
-                    layers: { ...st.layers, fpvRealisticEyes: !st.layers.fpvRealisticEyes }
-                  }));
-                }}
-              >
-                {layers.fpvRealisticEyes ? 'ON' : 'OFF'}
-              </button>
-            </div>
+            {layerBtn('light', iconLabel('bi-camera-video', 'Head Bobbing (Vue FPS)'), 'fpvHeadBobbing')}
+            {layerBtn('light', iconLabel('bi-eye', 'FPV Réaliste (Caméra Yeux)'), 'fpvRealisticEyes')}
 
             {layers.fpvRealisticEyes && (
-              <div className="mt-1 p-1.5 rounded d-flex flex-column gap-1" style={{ background: 'rgba(0, 0, 0, 0.03)', border: '1px solid rgba(0, 0, 0, 0.06)' }}>
-                <div className="d-flex align-items-center justify-content-between">
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-link p-0 text-start text-dark text-decoration-none flex-grow-1"
-                    style={{ fontSize: '11px' }}
-                    title="Amortit et stabilise les mouvements brusques ou violents de la tête"
-                    onClick={() => {
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, fpvStabilization: !(st.layers.fpvStabilization ?? true) }
-                      }));
-                    }}
-                  >
-                    <i className="bi bi-camera-reels me-1" aria-hidden="true" />Stabilisation Caméra
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn btn-sm py-0 px-2 rounded-pill ${(layers.fpvStabilization ?? true) ? 'btn-info text-dark' : 'btn-secondary text-white'}`}
-                    style={{ fontSize: '9px', lineHeight: '1.4' }}
-                    onClick={() => {
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, fpvStabilization: !(st.layers.fpvStabilization ?? true) }
-                      }));
-                    }}
-                  >
-                    {(layers.fpvStabilization ?? true) ? 'ON' : 'OFF'}
-                  </button>
-                </div>
+              <div className="d-flex flex-column">
+                {layerBtn('light', iconLabel('bi-camera-reels', 'Stabilisation Caméra'), 'fpvStabilization')}
 
                 {(layers.fpvStabilization ?? true) && (
-                  <div className="mt-1">
+                  <div className="py-1 px-2 border-bottom">
                     <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
                       <span className="text-muted fw-semibold text-dark text-uppercase">Amorti des secousses</span>
-                      <span className="badge bg-info text-dark">{Math.round((layers.fpvStabilizationFactor ?? 0.7) * 100)}%</span>
+                      <span className="badge bg-danger text-white">{Math.round((layers.fpvStabilizationFactor ?? 0.7) * 100)}%</span>
                     </div>
                     <input
                       type="range"
