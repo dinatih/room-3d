@@ -11,14 +11,23 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
-import { TOILET_HINGE_ANGLE, TOILET_HINGE_SPEED, TOILET_HINGE_TOLERANCE, TOILET_FLUSH_DURATION } from './toiletAnimation';
-import { ToiletWater } from './ToiletWater';
+import { TOILET_HINGE_ANGLE, TOILET_HINGE_SPEED, TOILET_HINGE_TOLERANCE } from './toiletAnimation';
 
 const GLB = 'items/president-toilet/president-toilet.glb';
 
 export const TOILET_W = 40;
 export const TOILET_D = 70;
 export const TOILET_H = 80;
+
+const waterGeo = new THREE.CircleGeometry(1, 32);
+const waterMat = new THREE.MeshStandardMaterial({
+  color: 0x2ba6e3,
+  transparent: true,
+  opacity: 0.7,
+  roughness: 0.1,
+  metalness: 0.1,
+  depthWrite: false,
+});
 
 export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
@@ -31,14 +40,6 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
   const isLidOpenRef = useRef(false);
   const isSeatOpenRef = useRef(false);
   const isFlushingRef = useRef(false);
-  const flushTimeRef = useRef(0);
-  const prevPreviewFlushRef = useRef(false);
-
-  const triggerFlush = () => {
-    isFlushingRef.current = true;
-    flushTimeRef.current = 0;
-    invalidate();
-  };
 
   useLayoutEffect(() => {
     if (isPreview) return;
@@ -53,8 +54,13 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
         invalidate();
       }
       if (key === 'wc-flush') {
-        if (value !== false) {
-          triggerFlush();
+        isFlushingRef.current = value !== undefined ? !!value : true;
+        invalidate();
+        if (isFlushingRef.current) {
+          setTimeout(() => {
+            isFlushingRef.current = false;
+            invalidate();
+          }, 1500);
         }
       }
     };
@@ -66,11 +72,7 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
     if (!isPreview) return;
     isLidOpenRef.current = !!actionState['wc-lid-toggle'];
     isSeatOpenRef.current = !!actionState['wc-seat-toggle'];
-    const previewFlush = !!actionState['wc-flush'];
-    if (previewFlush && !prevPreviewFlushRef.current) {
-      triggerFlush();
-    }
-    prevPreviewFlushRef.current = previewFlush;
+    isFlushingRef.current = !!actionState['wc-flush'];
     invalidate();
   }, [isPreview, actionState['wc-lid-toggle'], actionState['wc-seat-toggle'], actionState['wc-flush'], invalidate]);
 
@@ -151,16 +153,7 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
     }
 
     if (buttonRef.current && buttonRef.current.userData.originalZ !== undefined) {
-      let buttonPress = 0;
-      if (isFlushingRef.current) {
-        const p = flushTimeRef.current / TOILET_FLUSH_DURATION;
-        if (p < 0.15) {
-          buttonPress = p / 0.15;
-        } else if (p < 0.35) {
-          buttonPress = Math.max(0, 1.0 - (p - 0.15) / 0.20);
-        }
-      }
-      const targetZ = buttonRef.current.userData.originalZ - 0.03 * buttonPress;
+      const targetZ = isFlushingRef.current ? buttonRef.current.userData.originalZ - 0.03 : buttonRef.current.userData.originalZ;
       const diff = targetZ - buttonRef.current.position.z;
       if (Math.abs(diff) > 0.001) {
         buttonRef.current.position.z += diff * 15 * delta;
@@ -174,10 +167,14 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
   return (
     <group>
       <primitive object={scene} />
-      <ToiletWater
-        isFlushingRef={isFlushingRef}
-        flushTimeRef={flushTimeRef}
-        invalidate={invalidate}
+      <mesh
+        geometry={waterGeo}
+        material={waterMat}
+        position={[0, 17.5, 8.5]}
+        rotation-x={-Math.PI / 2}
+        scale={[8, 12, 1]}
+        receiveShadow
+        renderOrder={2}
       />
     </group>
   );
