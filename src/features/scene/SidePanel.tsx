@@ -61,6 +61,7 @@ export function SidePanel({
   showLandingStrips = false,
   onToggleLandingStrips,
   hideUI = false,
+  onOpenInventory,
 }: SidePanelProps) {
   const isMobile = useIsMobile();
   const [showCvModal, setShowCvModal] = useState(false);
@@ -409,6 +410,20 @@ export function SidePanel({
         >
           {profileSectionContent}
         </PanelPopover>
+
+        {/* Inventaire */}
+        {onOpenInventory && (
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+            onClick={onOpenInventory}
+            title="Ouvrir l'inventaire (I)"
+            aria-label="Ouvrir l'inventaire"
+          >
+            <i className="bi bi-box-seam-fill" aria-hidden="true" />
+            <span>Inventaire</span>
+          </button>
+        )}
 
         {/* 4. Calques */}
         <PanelPopover

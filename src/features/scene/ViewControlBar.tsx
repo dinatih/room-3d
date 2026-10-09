@@ -29,7 +29,6 @@ export interface ViewControlBarProps {
   hideUI?: boolean;
   onToggleHideUI?: () => void;
   onEnterFlight?: () => void;
-  onOpenInventory?: () => void;
   toolbarActions?: ReactNode;
   beforeAmbianceActions?: ReactNode;
   panelControls?: ReactNode;
@@ -47,7 +46,6 @@ export function ViewControlBar({
   hideUI = false,
   onToggleHideUI,
   onEnterFlight,
-  onOpenInventory,
   toolbarActions,
   beforeAmbianceActions,
   panelControls,
@@ -290,17 +288,6 @@ export function ViewControlBar({
         {viewButtons(ORTHO_VIEWS, 'cyan')}
         {viewButtons(EXTRA_VIEWS, 'green')}
         {viewButtons(ISO_VIEWS, 'purple')}
-        {onOpenInventory && (
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-            onClick={onOpenInventory}
-            title="Ouvrir l'inventaire (I)"
-            aria-label="Ouvrir l'inventaire"
-          >
-            <i className="bi bi-box-seam-fill" aria-hidden="true" />
-          </button>
-        )}
         {showCharacterModes && (
           <button
             type="button"

@@ -214,6 +214,7 @@ export interface SidePanelProps {
   showLandingStrips?:      boolean;
   onToggleLandingStrips?:  () => void;
   hideUI?:                 boolean;
+  onOpenInventory?:        () => void;
 }
 
 export type TabKey = 'profile' | 'layers' | 'personnage' | 'perf' | 'plan2d' | 'interactif' | null;

@@ -945,12 +945,12 @@ export function Studio() {
                 });
               }}
               hideUI={hideUI || planeMode || (isMobile && showInventory)}
+              onOpenInventory={() => {
+                setInventoryInitialCat('all');
+                setShowInventory(true);
+              }}
             />
           }
-          onOpenInventory={() => {
-            setInventoryInitialCat('all');
-            setShowInventory(true);
-          }}
           onEnterFlight={() => {
             setPlaneViewMode('prelaunch');
             setPlaneLaunched(false);
