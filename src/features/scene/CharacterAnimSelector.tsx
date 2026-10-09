@@ -182,9 +182,12 @@ export function CharacterAnimSelector({
     return () => document.removeEventListener('mousedown', onClick);
   }, [categoryDropdownOpen]);
 
-  // Focus automatique
+  // Focus automatique et sélection complète du texte pour saisie/écrasement direct
   useEffect(() => {
-    if (autoFocus) searchInputRef.current?.focus();
+    if (autoFocus && searchInputRef.current) {
+      searchInputRef.current.focus();
+      searchInputRef.current.select();
+    }
   }, [autoFocus]);
 
   // Échap pour fermer
@@ -269,6 +272,7 @@ export function CharacterAnimSelector({
             placeholder="Filtrer texte ou flèches..."
             value={animSearch}
             onChange={e => updateSearch(e.target.value)}
+            onFocus={e => e.currentTarget.select()}
             onKeyDown={handleKeyDown}
             style={{ fontSize: isMobile ? '13px' : '11px' }}
           />
