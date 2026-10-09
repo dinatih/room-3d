@@ -83,7 +83,7 @@ export function useAnimalCamera(
     if (root.current.visible) {
       cameraState.animalViews[id] = { eyes: { ...eyes.current }, forward: { ...forward.current }, radius: r.radius };
     } else delete cameraState.animalViews[id];
-    if (id !== 'shiba' && id !== 'robin' && cameraState.animalTarget === id && cameraState.mode === 'fpv') {
+    if (id !== 'shiba' && cameraState.animalTarget === id && cameraState.mode === 'fpv') {
       scene.traverse(object => {
         const mesh = object as THREE.Mesh;
         if (!mesh.isMesh || meshes.current.has(mesh)) return;

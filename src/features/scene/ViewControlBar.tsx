@@ -1,6 +1,6 @@
 import './ViewControlBar.scss';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useSceneStore } from './store/useSceneStore';
 import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS } from './sidepanel/types';
@@ -9,6 +9,7 @@ import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
 import { CharacterCountSelect } from './CharacterCountSelect';
+import { cameraState } from './cameraState';
 
 export interface ViewControlBarProps {
   /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-right' */
@@ -50,6 +51,12 @@ export function ViewControlBar({
   const [hoveredView, setHoveredView] = useState<{
     label: string; top?: number; bottom?: number;
   } | null>(null);
+  const [animalCameraActive, setAnimalCameraActive] = useState(Boolean(cameraState.animalTarget));
+  useEffect(() => {
+    const onAnimalCameraMode = (event: Event) => setAnimalCameraActive((event as CustomEvent<boolean>).detail);
+    document.addEventListener('animal-camera-mode', onAnimalCameraMode);
+    return () => document.removeEventListener('animal-camera-mode', onAnimalCameraMode);
+  }, []);
   const isMobile = useIsMobile();
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);
@@ -203,6 +210,11 @@ export function ViewControlBar({
               aria-pressed={cameraMode === 'fpv'}
             ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
           </div>
+        )}
+        {showCharacterModes && animalCameraActive && (
+          <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la caméra de l’animal" aria-label="Quitter la caméra de l’animal">
+            <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>
+          </button>
         )}
 
         <button

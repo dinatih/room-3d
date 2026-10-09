@@ -62,6 +62,8 @@ const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le
 const _tmpEyeTargetVec = new THREE.Vector3();
 const _tmpEyeLookVec = new THREE.Vector3();
 const _tmpEyeUpVec = new THREE.Vector3();
+const _tmpAnimalCamera = new THREE.Vector3();
+const _tmpAnimalTarget = new THREE.Vector3();
 
 export function CameraController({ planeMode = false }: { planeMode?: boolean } = {}) {
   const { camera, size, invalidate, gl, set } = useThree();
@@ -116,6 +118,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const smoothedLookTarget = useRef(new THREE.Vector3());
   const smoothedUp = useRef(new THREE.Vector3(0, 1, 0));
   const hasInitialStabilizedPos = useRef(false);
+  const animalFollowPos = useRef(new THREE.Vector3());
+  const animalFollowTarget = useRef(new THREE.Vector3());
+  const animalFollowYaw = useRef(0);
+  const hasAnimalFollowPose = useRef(false);
 
   // Sauvegarde d'état perspective pour retour depuis top-down
   const savedPerspPos = useRef(new THREE.Vector3(...PERSP_POS));
@@ -201,6 +207,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     modeRef.current = m;
     cameraState.mode = m;
     if (m !== 'fpv' && m !== 'follow') cameraState.animalTarget = null;
+    document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: Boolean(cameraState.animalTarget) }));
     setMode(m);
 
     if (m === 'orbit' && useSceneStore.getState().layers.characterGrid && ctrlRef.current) {
@@ -257,14 +264,26 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         activeCam.position.set(eyes.x, eyes.y, eyes.z);
         ctrl.target.set(eyes.x + forward.x, eyes.y + forward.y, eyes.z + forward.z);
       } else {
-        const yaw = Math.atan2(forward.x, forward.z) + orbitYaw.current;
         const distance = orbitDistance.current;
-        activeCam.position.set(
+        const heading = Math.atan2(forward.x, forward.z);
+        let yawDelta = heading - animalFollowYaw.current;
+        while (yawDelta > Math.PI) yawDelta -= 2 * Math.PI;
+        while (yawDelta < -Math.PI) yawDelta += 2 * Math.PI;
+        animalFollowYaw.current += yawDelta * 0.08;
+        const yaw = animalFollowYaw.current + orbitYaw.current;
+        const desiredCamera = _tmpAnimalCamera.set(
           eyes.x - Math.sin(yaw) * Math.cos(orbitPitch.current) * distance,
           eyes.y + Math.sin(orbitPitch.current) * distance,
           eyes.z - Math.cos(yaw) * Math.cos(orbitPitch.current) * distance,
         );
-        ctrl.target.set(eyes.x, eyes.y, eyes.z);
+        const desiredTarget = _tmpAnimalTarget.set(eyes.x, eyes.y, eyes.z);
+        const snap = !hasAnimalFollowPose.current || animalFollowTarget.current.distanceTo(desiredTarget) > 350;
+        const smooth = snap ? 1 : 0.15;
+        animalFollowPos.current.lerp(desiredCamera, smooth);
+        animalFollowTarget.current.lerp(desiredTarget, smooth);
+        activeCam.position.copy(animalFollowPos.current);
+        ctrl.target.copy(animalFollowTarget.current);
+        hasAnimalFollowPose.current = true;
         if (activeCam instanceof THREE.OrthographicCamera) {
           const visibleHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(defaultPerspCamRef.current.fov / 2));
           activeCam.zoom = (activeCam.top - activeCam.bottom) / visibleHeight;
@@ -538,6 +557,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       const view = cameraState.animalViews[id];
       if (!view) throw new Error(`Animal non disponible pour la caméra : ${id}`);
       cameraState.animalTarget = id;
+      animalFollowYaw.current = Math.atan2(view.forward.x, view.forward.z);
+      hasAnimalFollowPose.current = false;
+      document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: true }));
       keys.current.clear();
       enterFollow(view.eyes.x, view.eyes.z, requestedMode as 'fpv' | 'follow');
       orbitYaw.current = 0;
