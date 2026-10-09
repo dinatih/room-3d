@@ -120,7 +120,9 @@ export function HoverRaycaster() {
       }
 
       for (const occ of occHits) {
-        if (!occ.object.visible) continue;
+        let ancestor: THREE.Object3D | null = occ.object;
+        while (ancestor && ancestor !== scene && ancestor.visible) ancestor = ancestor.parent;
+        if (ancestor !== scene || !scene.visible) continue;
 
         // Ignorer les éléments non surfaciques (lignes, sprites, points)
         if ((occ.object as any).isLine || (occ.object as any).isSprite || (occ.object as any).isPoints) continue;
@@ -141,13 +143,13 @@ export function HoverRaycaster() {
         if (occ.object.userData?.brickType === 'ceiling' || occ.object.userData?.brickType === 'ground') continue;
         if (occ.object.userData?.isHelper || occ.object.name?.includes('helper') || occ.object.name?.includes('Helper')) continue;
 
-        // Ignorer les objets transparents (verre, portes vitrées, etc.)
-        const mat = (occ.object as THREE.Mesh).material as any;
+        // Tester la face touchée : les murs peuvent mêler faces opaques et invisibles.
+        const materials = (occ.object as THREE.Mesh).material;
+        const mat = (Array.isArray(materials)
+          ? materials[occ.face!.materialIndex]
+          : materials) as THREE.Material & { transmission?: number };
         if (mat) {
-          const isTransparent = Array.isArray(mat)
-            ? mat.every(m => (m.transparent && (m.opacity ?? 1) < 0.4) || m.transmission > 0.4)
-            : ((mat.transparent && (mat.opacity ?? 1) < 0.4) || mat.transmission > 0.4);
-          if (isTransparent) continue;
+          if (!mat.visible || (mat.transparent && mat.opacity < 1) || (mat.transmission ?? 0) > 0) continue;
         }
 
         // Un obstacle opaque se trouve entre la caméra et l'objet
