@@ -847,8 +847,14 @@ export function Character({
                            target === 'sit-to-stand' ||
                            target === 'anim-sit-to-stand' ||
                            target === 'crouch-to-stand' ||
+                           target === 'stand-up' ||
                            target === 'stand-up-1' ||
+                           target === 'standing-up' ||
+                           target === 'standing-up-from-bed' ||
                            target === 'getting-up' ||
+                           target === 'getting-up-from-backside' ||
+                           target === 'kip-up' ||
+                           target.includes('to-stand') ||
                            target.includes('landing');
         if (isOnceAnim) {
           to.setLoop(THREE.LoopOnce, 1);

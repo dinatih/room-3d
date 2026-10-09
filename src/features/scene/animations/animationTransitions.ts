@@ -12,13 +12,36 @@ interface ExitTransitionConfig {
   duration?: number;
 }
 
-const EXIT_TRANSITIONS: Record<string, ExitTransitionConfig> = {
+const LAYING_EXIT_TRANSITIONS: ExitTransitionConfig[] = [
+  { anim: 'sit-to-stand', duration: 2.3 },
+  { anim: 'getting-up-from-backside', duration: 2.7 },
+  { anim: 'kip-up', duration: 2.0 },
+  { anim: 'getting-up', duration: 5.0 },
+  { anim: 'standing-up-from-bed', duration: 1.7 },
+  { anim: 'stand-up', duration: 6.2 },
+  { anim: 'standing-up', duration: 8.5 },
+];
+
+const TRANSITION_CLIP_IDS = new Set([
+  'sit-to-stand',
+  'crouch-to-stand',
+  'stand-to-sit',
+  'getting-up-from-backside',
+  'kip-up',
+  'getting-up',
+  'standing-up-from-bed',
+  'stand-up',
+  'standing-up',
+  'stand-up-1',
+]);
+
+const EXIT_TRANSITIONS: Record<string, ExitTransitionConfig | ExitTransitionConfig[]> = {
   sitting: { anim: 'sit-to-stand', duration: 2.3 },
-  laying: { anim: 'sit-to-stand', duration: 2.3 },
-  'laying-front': { anim: 'sit-to-stand', duration: 2.3 },
-  'laying-front-static': { anim: 'sit-to-stand', duration: 2.3 },
-  'laying-side-static': { anim: 'sit-to-stand', duration: 2.3 },
-  sleep: { anim: 'sit-to-stand', duration: 2.3 },
+  laying: LAYING_EXIT_TRANSITIONS,
+  'laying-front': LAYING_EXIT_TRANSITIONS,
+  'laying-front-static': LAYING_EXIT_TRANSITIONS,
+  'laying-side-static': LAYING_EXIT_TRANSITIONS,
+  sleep: LAYING_EXIT_TRANSITIONS,
   crouch: { anim: 'crouch-to-stand', duration: 2.5 },
 };
 
@@ -31,13 +54,16 @@ export function getExitTransition(animKey: string | null | undefined): { anim: s
   if (!def || !def.tags) return null;
 
   // Éviter de reboucler si l'animation en cours est déjà un clip de transition
-  if (def.id === 'sit-to-stand' || def.id === 'crouch-to-stand' || def.id === 'stand-to-sit') {
+  if (TRANSITION_CLIP_IDS.has(def.id)) {
     return null;
   }
 
   for (const tag of def.tags) {
-    const config = EXIT_TRANSITIONS[tag];
-    if (config) {
+    const rawConfig = EXIT_TRANSITIONS[tag];
+    if (rawConfig) {
+      const config = Array.isArray(rawConfig)
+        ? rawConfig[Math.floor(Math.random() * rawConfig.length)]
+        : rawConfig;
       const exitDef = getAnimationDef(config.anim);
       const duration = config.duration ?? exitDef?.duration ?? 2.0;
       return { anim: config.anim, duration };
