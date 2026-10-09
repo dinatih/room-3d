@@ -477,6 +477,10 @@ export function Inventory({
   const tableContainerRef                 = useRef<HTMLDivElement>(null);
   const searchInputRef                    = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (visible) searchInputRef.current?.focus();
+  }, [visible]);
+
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
