@@ -196,6 +196,15 @@ export function ViewControlBar({
         )}
         {showCharacterModes && (
           <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Personnages et suivi caméra">
+            <button
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`}
+              onClick={onEnterFlight}
+              title="Activer le mode avion (Alt+V)"
+              aria-label="Activer le mode avion (Alt+V)"
+            >
+              <i className="bi bi-airplane-fill" aria-hidden="true" />
+            </button>
             <CharacterCountSelect />
             <button
               type="button"
@@ -305,23 +314,16 @@ export function ViewControlBar({
           </select>
         )}
         {toolbarActions}
-        {showCharacterModes && (
+        {showCharacterModes && !isMobile && (
           <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
-            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`} onClick={onEnterFlight} title="Activer le mode avion (Alt+V)" aria-label="Activer le mode avion (Alt+V)">
-              <i className="bi bi-airplane-fill" aria-hidden="true" />
+            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan`} onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
+              <i className="bi bi-camera-fill" aria-hidden="true" />
             </button>
-            {!isMobile && (
-              <>
-                <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan`} onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
-                  <i className="bi bi-camera-fill" aria-hidden="true" />
-                </button>
-                <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`} onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
-                  <i className="bi bi-keyboard-fill" aria-hidden="true" />
-                </button>
-              </>
-            )}
-        </div>
-      )}
+            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`} onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
+              <i className="bi bi-keyboard-fill" aria-hidden="true" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
     </>
