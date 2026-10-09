@@ -6,7 +6,7 @@
  * avec les autres panneaux (SidePanel, Minimap, DevTools).
  */
 import { useState, useEffect, useLayoutEffect, useRef, useId } from 'react';
-import { CHARACTERS, findCharacter, npcLabel } from '@features/scene/characterConfig';
+import { CHARACTERS, findCharacter, npcLabel, isCharacterVisibleInMode } from '@features/scene/characterConfig';
 import { chooseRandomCharacter } from '@features/scene/store/randomCharacter';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -59,7 +59,16 @@ function formatTime(ts: number): string {
 export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolean; hideUI?: boolean }) {
   const isMobile = useIsMobile();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const layers = useSceneStore(state => state.layers);
+  const activeMainIds = useSceneStore(state => state.activeMainIds);
+  const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeChar = findCharacter(activeCharacterId);
+  const visibleCharacterIds = new Set(CHARACTERS.filter(c =>
+    layers.character && layers.showAllLaraStyles && isCharacterVisibleInMode(
+      c.id, layers.laraCount ?? 4, activeCharacterId, layers.extraCharacters ?? false,
+      activeExtraIds, activeMainIds,
+    )
+  ).map(c => c.id));
 
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [open, setOpen] = useState(false);
@@ -377,6 +386,10 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           Choisir un PNJ
         </h2>
         <div className="popover-body p-2">
+          <div className="small text-body-secondary d-flex align-items-center gap-1 mb-2">
+            <i className="bi bi-eye-fill text-success" aria-hidden="true" />
+            Affiché dans la scène
+          </div>
           <div className="row row-cols-2 g-1">
             {CHARACTERS.map(c => (
               <div key={c.id} className="col">
@@ -384,13 +397,22 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
                   type="button"
                   className={`btn btn-sm w-100 d-flex align-items-center justify-content-between gap-1 text-start ${c.id === activeCharacterId ? 'btn-primary' : 'btn-light'}`}
                   aria-pressed={c.id === activeCharacterId}
+                  title={visibleCharacterIds.has(c.id) ? 'Affiché dans la scène' : 'Non affiché dans la scène'}
                   onClick={() => {
                     useSceneStore.getState().setActiveCharacterId(c.id);
                     characterPopoverRef.current!.hidePopover();
                   }}
                 >
                   <span>{npcLabel(c)}</span>
-                  {c.id === activeCharacterId && <i className="bi bi-check-lg" aria-hidden="true" />}
+                  <span className="d-flex align-items-center gap-1 flex-shrink-0">
+                    {visibleCharacterIds.has(c.id) && (
+                      <>
+                        <i className={`bi bi-eye-fill ${c.id === activeCharacterId ? '' : 'text-success'}`} aria-hidden="true" />
+                        <span className="visually-hidden">Affiché dans la scène</span>
+                      </>
+                    )}
+                    {c.id === activeCharacterId && <i className="bi bi-check-lg" aria-hidden="true" />}
+                  </span>
                 </button>
               </div>
             ))}
