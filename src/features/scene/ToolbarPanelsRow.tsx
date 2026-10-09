@@ -51,6 +51,7 @@ export function ToolbarPanelsRow({
   onToggleLandingStrips,
   hideUI = false,
   onOpenInventory,
+  prefix,
 }: ToolbarPanelsProps) {
   const isMobile = useIsMobile();
   const [showCvModal, setShowCvModal] = useState(false);
@@ -338,76 +339,82 @@ export function ToolbarPanelsRow({
 
   return (
     <>
-      {/* VR WebXR (si supporté par l'appareil) */}
-      {isVRSupported && (
-        <button
-          type="button"
-          onClick={() => {
-            document.dispatchEvent(new CustomEvent('toggle-vr'));
-          }}
-          className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-          title="Mode Réalité Virtuelle (WebXR)"
-        >
-          <i className="bi bi-headset-vr" aria-hidden="true" />
-          <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
-        </button>
-      )}
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        {prefix}
+        {/* VR WebXR (si supporté par l'appareil) */}
+        {isVRSupported && (
+          <button
+            type="button"
+            onClick={() => {
+              document.dispatchEvent(new CustomEvent('toggle-vr'));
+            }}
+            className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+            title="Mode Réalité Virtuelle (WebXR)"
+          >
+            <i className="bi bi-headset-vr" aria-hidden="true" />
+            <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
+          </button>
+        )}
 
-      {/* Mode immersif gyroscopique sur mobile */}
-      {isMobile && (
-        <button
-          type="button"
-          onClick={() => {
-            document.dispatchEvent(new CustomEvent('toggle-immersive'));
-          }}
-          className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-          title="Mode Immersif Gyroscope (Plein écran)"
-        >
-          <i className="bi bi-eye-fill" aria-hidden="true" />
-          <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
-        </button>
-      )}
+        {/* Mode immersif gyroscopique sur mobile */}
+        {isMobile && (
+          <button
+            type="button"
+            onClick={() => {
+              document.dispatchEvent(new CustomEvent('toggle-immersive'));
+            }}
+            className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+            title="Mode Immersif Gyroscope (Plein écran)"
+          >
+            <i className="bi bi-eye-fill" aria-hidden="true" />
+            <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
+          </button>
+        )}
 
-      <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux">
-        {/* 1. Plan */}
-        <PanelPopover
-          icon="bi-map-fill"
-          title="Plan"
-          hideUI={hideUI}
-        >
-          <Minimap embedded showGroup={false} />
-        </PanelPopover>
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux principaux">
+          {/* 1. Plan */}
+          <PanelPopover
+            icon="bi-map-fill"
+            title="Plan"
+            hideUI={hideUI}
+          >
+            <Minimap embedded showGroup={false} />
+          </PanelPopover>
 
-        {/* 2. Perf */}
-        <PanelPopover
-          icon="bi-bar-chart-fill"
-          title="Performances & Stats"
-          hideUI={hideUI}
-        >
-          <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
-        </PanelPopover>
+          {/* 2. Perf */}
+          <PanelPopover
+            icon="bi-bar-chart-fill"
+            title="Performances & Stats"
+            hideUI={hideUI}
+          >
+            <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
+          </PanelPopover>
 
-        {/* 3. CV */}
-        <PanelPopover
-          icon="bi-briefcase-fill"
-          label="CV"
-          title="Profil & C.V."
-          headerExtra={profileHeaderButtons}
-          hideUI={hideUI}
-        >
-          {profileSectionContent}
-        </PanelPopover>
+          {/* 3. CV */}
+          <PanelPopover
+            icon="bi-briefcase-fill"
+            label="CV"
+            title="Profil & C.V."
+            headerExtra={profileHeaderButtons}
+            hideUI={hideUI}
+          >
+            {profileSectionContent}
+          </PanelPopover>
+        </div>
+      </div>
 
-        {/* 4. Calques */}
-        <PanelPopover
-          icon="bi-layers-fill"
-          label="Calq"
-          title="Calques & Affichage"
-          headerExtra={layersHeaderButtons}
-          hideUI={hideUI}
-        >
-          {layersSectionContent}
-        </PanelPopover>
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux secondaires">
+          {/* 4. Calques */}
+          <PanelPopover
+            icon="bi-layers-fill"
+            label="Calq"
+            title="Calques & Affichage"
+            headerExtra={layersHeaderButtons}
+            hideUI={hideUI}
+          >
+            {layersSectionContent}
+          </PanelPopover>
 
         {/* 5. Interactif */}
         <PanelPopover
@@ -507,8 +514,9 @@ export function ToolbarPanelsRow({
           </div>
         </PanelPopover>
       </div>
+    </div>
 
-      {showCvModal && <CvModal initialCv={selectedCvType} onClose={handleCloseCv} />}
+    {showCvModal && <CvModal initialCv={selectedCvType} onClose={handleCloseCv} />}
     </>
   );
 }

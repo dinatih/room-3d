@@ -215,6 +215,7 @@ export interface ToolbarPanelsProps {
   onToggleLandingStrips?:  () => void;
   hideUI?:                 boolean;
   onOpenInventory?:        () => void;
+  prefix?:                 React.ReactNode;
 }
 
 export type TabKey = 'profile' | 'layers' | 'personnage' | 'perf' | 'plan2d' | 'interactif' | null;
