@@ -60,6 +60,7 @@ function applyGeomRotY(scene: THREE.Group, angle: number) {
 }
 
 function setupScene(scene: THREE.Group, scale = 100) {
+  scene.scale.set(1, 1, 1);
   removeGlbLines(scene);
   scene.scale.setScalar(scale);
   mergeGlbByMaterial(scene);
@@ -69,6 +70,60 @@ function setupScene(scene: THREE.Group, scale = 100) {
     -box.min.y,
     -(box.min.z + box.max.z) / 2,
   );
+}
+
+/** Courbe la partie libre du flexible CAD jusqu'à la sortie inférieure du mitigeur. */
+function connectShowerHose(bar: THREE.Group, faucet: THREE.Group) {
+  const hose = bar.children.find(child =>
+    (child as THREE.Mesh).isMesh &&
+    ((child as THREE.Mesh).material as THREE.Material).name === 'SimplygonCastMaterial'
+  ) as THREE.Mesh;
+  const fittings = bar.children.find(child => child !== hose) as THREE.Mesh;
+  const tap = faucet.children.find(child =>
+    ((child as THREE.Mesh).material as THREE.Material).name === 'SimplygonCastMaterial_6'
+  ) as THREE.Mesh;
+  const tapPositions = tap.geometry.getAttribute('position');
+  tap.geometry.computeBoundingBox();
+  const outlet = new THREE.Box3();
+  // Dans le GLB du mitigeur, la sortie du flexible est la face à Z maximal.
+  for (let i = 0; i < tapPositions.count; i++) {
+    if (tapPositions.getZ(i) === tap.geometry.boundingBox!.max.z) {
+      outlet.expandByPoint(new THREE.Vector3().fromBufferAttribute(tapPositions, i));
+    }
+  }
+  const end = bar.worldToLocal(tap.localToWorld(outlet.getCenter(new THREE.Vector3())));
+  hose.geometry.computeBoundingBox();
+  fittings.geometry.computeBoundingBox();
+  const box = hose.geometry.boundingBox!;
+  const center = box.getCenter(new THREE.Vector3());
+  // Le flexible conserve son raccord à la douchette et sa partie longeant la barre.
+  const splitY = fittings.geometry.boundingBox!.min.y;
+  const freeLength = splitY - box.min.y;
+  const start = new THREE.Vector3(center.x, splitY, center.z);
+  const curve = new THREE.CubicBezierCurve3(
+    start,
+    start.clone().add(new THREE.Vector3(0, -freeLength, 0)),
+    end.clone().add(new THREE.Vector3(-freeLength / 4, -freeLength / 2, 0)),
+    end,
+  );
+  hose.geometry = hose.geometry.clone();
+  const positions = hose.geometry.getAttribute('position');
+  const down = new THREE.Vector3(0, -1, 0);
+  const rotation = new THREE.Quaternion();
+  const offset = new THREE.Vector3();
+  for (let i = 0; i < positions.count; i++) {
+    const y = positions.getY(i);
+    if (y >= splitY) continue;
+    const t = (splitY - y) / freeLength;
+    rotation.setFromUnitVectors(down, curve.getTangent(t));
+    offset.set(positions.getX(i) - center.x, 0, positions.getZ(i) - center.z);
+    offset.applyQuaternion(rotation).add(curve.getPoint(t));
+    positions.setXYZ(i, offset.x, offset.y, offset.z);
+  }
+  positions.needsUpdate = true;
+  hose.geometry.computeVertexNormals();
+  hose.geometry.computeBoundingBox();
+  hose.geometry.computeBoundingSphere();
 }
 
 // Matériaux porte (module-level, partagés entre instances)
@@ -201,14 +256,18 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     setupScene(tray, 100 * (TRAY_CM / 68));
 
-    // Bar : Z→Y, puis flip sens avant/arrière
-    applyGeomRotX(bar, Math.PI / 2);
-    applyGeomRotY(bar, Math.PI);
-    setupScene(bar);
+    // Bar : Z→Y, puis flip sens avant/arrière, une seule fois par clone.
+    const prepareHose = !bar.userData.merged;
+    if (prepareHose) {
+      applyGeomRotX(bar, Math.PI / 2);
+      applyGeomRotY(bar, Math.PI);
+      setupScene(bar);
+    }
 
     setupScene(faucet);
 
     groupRef.current.updateMatrixWorld(true);
+    if (prepareHose) connectShowerHose(bar, faucet);
     onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
     invalidate();
   }, [tray, bar, faucet, invalidate]);
