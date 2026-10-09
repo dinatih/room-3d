@@ -7,7 +7,7 @@ import { getObjectActionIds } from '../objectActions';
  * - Robinetterie VALLAMOSSE : mitigeur thermostatique + barre réglable chromés
  * - Porte procédurale : verre + cadre aluminium + poignée avec pivot d'ouverture
  */
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
+import { createCondensationMaterial, ShowerEffects } from './ShowerEffects';
 
 
 const GLB_TRAY   = 'items/shower/shower.glb';
@@ -166,7 +167,7 @@ const frameMat = new THREE.MeshStandardMaterial({
 });
 
 /** Porte de douche procédurale : paroi fixe 20 cm + battant 51 cm avec pivot d'ouverture. */
-function ShowerDoor({ isOpen }: { isOpen: boolean }) {
+function ShowerDoor({ isOpen, condensation }: { isOpen: boolean; condensation: THREE.ShaderMaterial }) {
   const hf = FRAME / 2;
   const pivotRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
@@ -211,6 +212,9 @@ function ShowerDoor({ isOpen }: { isOpen: boolean }) {
       <mesh material={glassMat} position={[fixedCenterX, DOOR_H / 2, 0]} castShadow>
         <boxGeometry args={[FIXED_W - FRAME * 2, DOOR_H - FRAME * 2, DOOR_T]} />
       </mesh>
+      <mesh name="shower-condensation-fixed" material={condensation} position={[fixedCenterX, DOOR_H / 2, -DOOR_T / 2 - 0.01]} raycast={() => {}}>
+        <planeGeometry args={[FIXED_W - FRAME * 2, DOOR_H - FRAME * 2]} />
+      </mesh>
       {/* Profil bas fixe */}
       <mesh material={frameMat} position={[fixedCenterX, hf, 0]} castShadow receiveShadow>
         <boxGeometry args={[FIXED_W, FRAME, FRAME]} />
@@ -236,6 +240,9 @@ function ShowerDoor({ isOpen }: { isOpen: boolean }) {
             {/* Vitre mobile */}
             <mesh material={glassMat} position={[0, DOOR_H / 2, 0]} castShadow>
               <boxGeometry args={[DOOR_W - FRAME * 2, DOOR_H - FRAME * 2, DOOR_T]} />
+            </mesh>
+            <mesh name="shower-condensation-door" material={condensation} position={[0, DOOR_H / 2, -DOOR_T / 2 - 0.01]} raycast={() => {}}>
+              <planeGeometry args={[DOOR_W - FRAME * 2, DOOR_H - FRAME * 2]} />
             </mesh>
 
             {/* Profil bas */}
@@ -266,12 +273,16 @@ function ShowerDoor({ isOpen }: { isOpen: boolean }) {
   );
 }
 
-export function Shower({ actionState, onSize }: SceneItemProps) {
+export function Shower({ actionState, onSize, isPreview = false }: SceneItemProps) {
   const { scene: tray   } = useGLTFClone(GLB_TRAY);
   const { scene: bar    } = useGLTFClone(GLB_BAR);
   const { scene: faucet } = useGLTFClone(GLB_FAUCET);
   const groupRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
+  const waterOrigin = useMemo(() => new THREE.Vector3(), []);
+  const humidity = useMemo(() => ({ amount: 0 }), []);
+  const condensation = useMemo(createCondensationMaterial, []);
+  useEffect(() => () => condensation.dispose(), [condensation]);
 
   const isDoorOpen = !!actionState.showerDoor;
 
@@ -290,6 +301,23 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
 
     groupRef.current.updateMatrixWorld(true);
     if (prepareHose) connectShowerHose(bar, faucet);
+    const hose = bar.getObjectByName('shower-hose') as THREE.Mesh<THREE.TubeGeometry>;
+    const fitting = bar.children.find(child => child !== hose) as THREE.Mesh;
+    const headBox = new THREE.Box3();
+    const vertices = fitting.geometry.getAttribute('position');
+    const handleTop = hose.geometry.parameters.path.getPoint(0).y;
+    const frontHalf = fitting.geometry.boundingBox!.getCenter(new THREE.Vector3()).z;
+    // Isoler la tête au-dessus du raccord, sur la face avant de la barre.
+    for (let i = 0; i < vertices.count; i++) {
+      if (vertices.getY(i) > handleTop && vertices.getZ(i) < frontHalf) {
+        headBox.expandByPoint(new THREE.Vector3().fromBufferAttribute(vertices, i));
+      }
+    }
+    headBox.getCenter(waterOrigin);
+    // La tête est circulaire : son centre est un rayon sous son sommet.
+    waterOrigin.y = headBox.max.y - headBox.getSize(new THREE.Vector3()).x / 2;
+    waterOrigin.z = headBox.min.z;
+    groupRef.current.worldToLocal(fitting.localToWorld(waterOrigin));
     onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
     invalidate();
   }, [tray, bar, faucet, invalidate]);
@@ -311,8 +339,9 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
 
       {/* Porte — centrée en X, au niveau du nez nord du bac (local Z=−TRAY_HALF) */}
       <group position={[0, 20, -TRAY_HALF]}>
-        <ShowerDoor isOpen={isDoorOpen} />
+        <ShowerDoor isOpen={isDoorOpen} condensation={condensation} />
       </group>
+      <ShowerEffects origin={waterOrigin} humidity={humidity} condensation={condensation} isPreview={isPreview} />
     </group>
   );
 }
