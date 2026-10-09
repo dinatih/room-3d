@@ -21,6 +21,7 @@ export function ExtraCharactersSelector({
 }: ExtraCharactersSelectorProps) {
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const setActiveCharacterId = useSceneStore(state => state.setActiveCharacterId);
   const toggleExtraCharacter = useSceneStore(state => state.toggleExtraCharacter);
   const toggleExtraGroup = useSceneStore(state => state.toggleExtraGroup);
   const selectAllExtraCharacters = useSceneStore(state => state.selectAllExtraCharacters);
@@ -181,7 +182,7 @@ export function ExtraCharactersSelector({
                 const isPlayer = char.id === activeCharacterId;
 
                 return (
-                  <label
+                  <div
                     key={char.id}
                     className={`d-flex align-items-center justify-content-between p-1 px-2 rounded cursor-pointer border-bottom border-light ${
                       isSelected ? 'bg-primary-subtle' : 'hover-bg-light'
@@ -193,7 +194,7 @@ export function ExtraCharactersSelector({
                       transition: 'background-color 0.15s ease'
                     }}
                   >
-                    <div className="d-flex align-items-center gap-2">
+                    <label className="d-flex align-items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         className="form-check-input mt-0"
@@ -205,14 +206,18 @@ export function ExtraCharactersSelector({
                       <span className={isSelected ? 'fw-bold text-dark' : 'text-dark'}>
                         {char.name}
                       </span>
-                    </div>
+                    </label>
 
                     <div className="d-flex align-items-center gap-1">
-                      {isPlayer && (
-                        <span className="badge bg-info text-dark" style={{ fontSize: '8px' }}>
-                          JOUEUR
-                        </span>
-                      )}
+                      <button
+                        type="button"
+                        className={`btn btn-sm py-0 px-2 ${isPlayer ? 'btn-info' : 'btn-outline-info'}`}
+                        aria-label={`Contrôler ${char.name}`}
+                        aria-pressed={isPlayer}
+                        onClick={() => setActiveCharacterId(char.id)}
+                      >
+                        {isPlayer ? 'JOUEUR' : 'Contrôler'}
+                      </button>
                       <span 
                         className="badge rounded-pill" 
                         style={{ 
@@ -225,7 +230,7 @@ export function ExtraCharactersSelector({
                         title={`Couleur: ${char.color}`}
                       />
                     </div>
-                  </label>
+                  </div>
                 );
               })
             )}
