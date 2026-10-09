@@ -223,7 +223,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
 
               {/* Panneaux bois occultants jardin */}
               {GARDEN_PANEL_DEFS.map((p, i) => (
-                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true, animUnit: true, brickType: 'wall', side: 'garden' }}>
+                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ birdSupport: { id: `fence-${i}`, kind: 'fence' }, skipMerge: true, animUnit: true, brickType: 'wall', side: 'garden' }}>
                   <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
                 </group>
               ))}

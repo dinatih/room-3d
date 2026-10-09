@@ -81,6 +81,7 @@ export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.6 }: B
             position={[150, yPos, 0]}
             receiveShadow
             userData={{
+              birdSupport: { id: 'garden-ground', kind: 'ground' },
               brickType: 'ground',
               itemName: 'Terrain Extérieur',
             }}
@@ -150,7 +151,8 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       position={[150, yPos, 0]}
       receiveShadow
       userData={{
-        brickType: 'ground',
+        birdSupport: { id: 'garden-ground', kind: 'ground' },
+              brickType: 'ground',
         itemName: `Terrain Extérieur (${config.label})`,
       }}
     >

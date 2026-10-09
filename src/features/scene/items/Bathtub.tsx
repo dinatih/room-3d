@@ -107,7 +107,7 @@ export function Bathtub({ onSize }: SceneItemProps) {
       <mesh geometry={wallGeo} material={tubMat} castShadow receiveShadow />
       <mesh geometry={botGeo} material={innerMat} receiveShadow />
       <mesh geometry={waterGeo} material={waterMat} />
-      <mesh geometry={rimGeo} material={tubMat} castShadow receiveShadow />
+      <mesh userData={{ birdPerch: true }} geometry={rimGeo} material={tubMat} castShadow receiveShadow />
     </group>
   );
 }

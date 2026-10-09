@@ -9,44 +9,29 @@ import { glbLocalBBox } from '@features/scene/glbUtils';
 import { appLog } from '@features/ui/AppConsole';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { cameraState } from '@features/scene/cameraState';
+import { chooseBirdPerch, resolveBirdPerch, RobinFootContact, ROBIN_HEIGHT, type BirdPerch, type BirdFootPose } from '../birdPerches';
 
 const GLB_PATH = '/characters/robin/robin.glb';
 
-export const BIRD_FEEDER_POS = new THREE.Vector3(95, 219, -165);
 const _tmpBirdDir = new THREE.Vector3();
 const ANIMATION_FADE = 0.2; // secondes de transition entre les poses
 const IDLE_CHANGE_RATE = 0.6; // changements par seconde, indépendant du FPS
 
 type AIState = {
-  mode: 'autonomous' | 'forced';
-  state: 'idle' | 'flying';
+  state: 'waiting' | 'idle' | 'flying';
+  perch: BirdPerch | null;
+  groundedFeet: BirdFootPose | null;
   targetPos: THREE.Vector3;
   timer: number;
 };
 
-// Points d'intérêts dans le jardin (Z < 0) et zones AI etendues
-const LANDING_POINTS = [
-  BIRD_FEEDER_POS,                   // Mangeoire à oiseaux (sous balcon NO)
-  new THREE.Vector3(149, 50, -231),  // Baignoire (rebord)
-  new THREE.Vector3(270, 75, -110),  // ArmrestSofa (dossier)
-  new THREE.Vector3(100, 75, -80),   // ArmlessSofa (dossier)
-  new THREE.Vector3(40, 62, -90),    // ChestBench (dessus)
-  new THREE.Vector3(100, 140, -145), // PottedPalm (feuilles)
-  new THREE.Vector3(150, 150, -390), // Mur fond jardin
-  new THREE.Vector3(5, 120, -200),   // Palissade bois (gauche)
-  new THREE.Vector3(295, 120, -200), // Palissade bois (droite)
-  // Zones AI Ouest et Est (Entrée cours et Entrée bat B)
-  new THREE.Vector3(-350, 0, 1002),  // Entrée bat B (couloir ouest)
-  new THREE.Vector3(-350, 0, -200),  // Entrée cours bat B (jardin ouest)
-  new THREE.Vector3(650, 0, 424),    // Entrée bat B (couloir est)
-  new THREE.Vector3(650, 0, -200)    // Entrée cours bat B (jardin est)
-];
-
 export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
   const { scene, animations } = useGLTFClone(GLB_PATH);
-  const { invalidate } = useThree();
+  const { invalidate, scene: world } = useThree();
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const modelRef = useRef<THREE.Group>(null);
+  const footContact = useRef<RobinFootContact | null>(null);
+  const landingRotation = useRef(new THREE.Quaternion());
   const currentAction = useRef<THREE.AnimationAction | null>(null);
   const headRef = useRef<THREE.Object3D | null>(null);
   const beakRef = useRef<THREE.Object3D | null>(null);
@@ -75,9 +60,10 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
 
   // IA Autonome
   const aiStateRef = useRef<AIState>({
-    mode: 'autonomous',
-    state: 'idle',
-    targetPos: LANDING_POINTS[0].clone(),
+    state: 'waiting',
+    perch: null,
+    groundedFeet: null,
+    targetPos: new THREE.Vector3(),
     timer: 2.0
   });
 
@@ -93,11 +79,8 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     const box = glbLocalBBox(scene);
     const size = box.getSize(new THREE.Vector3());
 
-    if (size.y > 0) {
-      scene.scale.setScalar(15 / size.y); // Scale to 15cm height
-    } else {
-      scene.scale.setScalar(1);
-    }
+    if (size.y <= 0) throw new Error('Robin : hauteur du modèle invalide');
+    scene.scale.setScalar(ROBIN_HEIGHT / size.y);
     const scaledBox = glbLocalBBox(scene);
     scene.position.set(0, -scaledBox.min.y, 0);
     onSize?.(scaledBox.getSize(new THREE.Vector3()));
@@ -110,9 +93,8 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       if (m.geometry) {
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
-        if (m.geometry.boundingSphere) {
-          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 10, 50.0);
-        }
+        // The animated geometry may leave the bind-pose bounds.
+        m.frustumCulled = false;
       }
       if (m.material) {
         const mat = m.material as THREE.MeshStandardMaterial;
@@ -136,17 +118,23 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       action.setLoop(THREE.LoopRepeat, Infinity);
       action.reset().play();
       currentAction.current = action;
+      mixer.update(0);
     }
 
     if (modelRef.current && !isPreview) {
       modelRef.current.rotation.reorder('YXZ');
-      modelRef.current.position.copy(LANDING_POINTS[0]);
+      footContact.current = new RobinFootContact(scene);
+      const ai = aiStateRef.current;
+      ai.state = 'waiting';
+      ai.perch = null;
+      ai.groundedFeet = footContact.current.ground(modelRef.current, scene);
+      modelRef.current.visible = false;
     }
 
     invalidate();
 
     return () => {
-      delete cameraState.positions['robin'];
+      if (!isPreview) delete cameraState.positions['robin'];
       mixerRef.current?.stopAllAction();
       mixerRef.current?.uncacheRoot(scene);
       currentAction.current = null;
@@ -160,8 +148,8 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       const { key } = (e as CustomEvent).detail as { key: string };
       if (key === 'robin-bird-replay') {
         // Redémarre l'IA et force l'envol
-        aiStateRef.current.mode = 'autonomous';
-        aiStateRef.current.state = 'idle';
+        // During flight, redirect from the current position without snapping to a perch.
+        if (aiStateRef.current.state === 'flying') aiStateRef.current.perch = null;
         aiStateRef.current.timer = 0; // Trigger take off immediately
       }
     };
@@ -218,87 +206,96 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     }
     mixerRef.current.update(delta);
 
-    // Si la caméra est trop loin ou ne regarde pas la zone de l'oiseau posé, on économise le rendu forcé
     invalidate();
-    
-    if (!isPreview) {
-      const ai = aiStateRef.current;
-      if (ai.mode === 'autonomous') {
-        if (ai.state === 'idle') {
-          ai.timer -= delta;
-          if (ai.timer <= 0) {
-            // Choose a new random landing point different from current
-            let pts = LANDING_POINTS.filter(p => p.distanceTo(modelRef.current!.position) > 10);
-            if (pts.length === 0) pts = LANDING_POINTS;
-            const nextTarget = pts[Math.floor(Math.random() * pts.length)];
-            ai.targetPos.copy(nextTarget);
-            
-            ai.state = 'flying';
-            
-            playAnimation('Robin_Bird_Fly');
-          } else {
-            // Switch idle animations (Eat, Call, Idle) occasionally
-            if (Math.random() < 1 - Math.exp(-IDLE_CHANGE_RATE * delta)) {
-              const isAtFeeder = modelRef.current.position.distanceTo(BIRD_FEEDER_POS) < 10;
-              const idleAnimNames = isAtFeeder
-                 ? ['Robin_Bird_Eat', 'Robin_Bird_Eat', 'Robin_Bird_Idle', 'Robin_Bird_Call']
-                : ['Robin_Bird_Idle', 'Robin_Bird_Idle2', 'Robin_Bird_Call'];
-              const randIdle = idleAnimNames[Math.floor(Math.random() * idleAnimNames.length)];
-              playAnimation(randIdle);
-            }
-          }
-        } else if (ai.state === 'flying') {
-          const speed = 150 * delta; // 150 cm/sec
-          const dist = modelRef.current.position.distanceTo(ai.targetPos);
-          
-          if (dist <= speed) {
-            // Arrived
-            modelRef.current.position.copy(ai.targetPos);
-            ai.state = 'idle';
-            const isAtFeeder = ai.targetPos.distanceTo(BIRD_FEEDER_POS) < 5;
-            ai.timer = isAtFeeder ? (5 + Math.random() * 5) : (3 + Math.random() * 5); // Reste plus longtemps à la mangeoire
-            
-            modelRef.current.rotation.reorder('YXZ');
-            modelRef.current.rotation.x = 0;
-            modelRef.current.rotation.z = 0;
-            playAnimation(isAtFeeder ? 'Robin_Bird_Eat' : 'Robin_Bird_Idle');
+    const ai = aiStateRef.current;
+    const model = modelRef.current;
+    const feet = ai.groundedFeet!;
 
-            if (isAtFeeder) {
-              appLog('robin', '🌾 Se pose sur la mangeoire sous le balcon et picore des graines');
-            }
-          } else {
-            // Move & Rotate towards target
-            const dir = _tmpBirdDir.subVectors(ai.targetPos, modelRef.current.position).normalize();
-            modelRef.current.position.addScaledVector(dir, speed);
-            
-            // Direction réelle tête → bec dans le repère du groupe animé.
-            // Le clip peut déplacer la tête : recalculer après mixer.update.
-            headRef.current!.getWorldPosition(headPos.current);
-            beakRef.current!.getWorldPosition(beakPos.current);
-            modelRef.current.worldToLocal(headPos.current);
-            modelRef.current.worldToLocal(beakPos.current);
-            beakPos.current.sub(headPos.current).normalize();
-            if (beakPos.current.lengthSq() === 0) throw new Error('Robin : direction du bec nulle');
-            sourceBasis.current.lookAt(origin.current, beakPos.current.negate(), up.current);
-            targetBasis.current.lookAt(origin.current, _tmpBirdDir.negate(), up.current);
-            sourceRotation.current.setFromRotationMatrix(sourceBasis.current).invert();
-            modelRef.current.quaternion.setFromRotationMatrix(targetBasis.current).multiply(sourceRotation.current);
-
-          }
-        }
-      }
-
-      cameraState.positions['robin'] = {
-        x: modelRef.current.position.x,
-        y: modelRef.current.position.y,
-        z: modelRef.current.position.z,
-        yaw: modelRef.current.rotation.y,
-      };
+    if (ai.state === 'waiting') {
+      ai.perch = chooseBirdPerch(world, feet, null, 'feeder');
+      if (!ai.perch) return; // Suspense may still be mounting the garden surfaces.
+      if (!resolveBirdPerch(ai.perch, world, feet, ai.targetPos, landingRotation.current)) return;
+      model.position.copy(ai.targetPos);
+      model.quaternion.copy(landingRotation.current);
+      model.visible = true;
+      ai.timer = 2;
+      playAnimation(ai.perch.descriptor.kind === 'feeder' ? 'Robin_Bird_Eat' : 'Robin_Bird_Idle');
+      ai.state = 'idle';
     }
+
+    const available = ai.perch && resolveBirdPerch(ai.perch, world, feet, ai.targetPos, landingRotation.current);
+    if (!available) {
+      const next = chooseBirdPerch(world, feet, ai.perch);
+      if (!next) {
+        model.visible = false;
+        ai.state = 'waiting';
+        delete cameraState.positions['robin'];
+        return;
+      }
+      ai.perch = next;
+      resolveBirdPerch(next, world, feet, ai.targetPos, landingRotation.current);
+      ai.state = 'flying';
+      playAnimation('Robin_Bird_Fly');
+    }
+
+    if (ai.state === 'idle') {
+      model.position.copy(ai.targetPos);
+      model.quaternion.copy(landingRotation.current);
+      footContact.current!.ground(model, scene);
+      ai.timer -= delta;
+      if (ai.timer <= 0) {
+        const next = chooseBirdPerch(world, feet, ai.perch);
+        if (next) {
+          ai.perch = next;
+          resolveBirdPerch(next, world, feet, ai.targetPos, landingRotation.current);
+          ai.state = 'flying';
+          playAnimation('Robin_Bird_Fly');
+        }
+      } else if (Math.random() < 1 - Math.exp(-IDLE_CHANGE_RATE * delta)) {
+        const idleAnimNames = ai.perch!.descriptor.kind === 'feeder'
+          ? ['Robin_Bird_Eat', 'Robin_Bird_Eat', 'Robin_Bird_Idle', 'Robin_Bird_Call']
+          : ['Robin_Bird_Idle', 'Robin_Bird_Idle2', 'Robin_Bird_Call'];
+        playAnimation(idleAnimNames[Math.floor(Math.random() * idleAnimNames.length)]);
+      }
+    } else if (ai.state === 'flying') {
+      const speed = 150 * delta;
+      const dist = model.position.distanceTo(ai.targetPos);
+      if (dist <= speed) {
+        model.position.copy(ai.targetPos);
+        model.quaternion.copy(landingRotation.current);
+        ai.state = 'idle';
+        const isAtFeeder = ai.perch!.descriptor.kind === 'feeder';
+        ai.timer = isAtFeeder ? 5 + Math.random() * 5 : 3 + Math.random() * 5;
+        playAnimation(isAtFeeder ? 'Robin_Bird_Eat' : 'Robin_Bird_Idle');
+        footContact.current!.ground(model, scene);
+        appLog('robin', `Se pose : ${ai.perch!.descriptor.id}`);
+      } else {
+        const dir = _tmpBirdDir.subVectors(ai.targetPos, model.position).normalize();
+        model.position.addScaledVector(dir, speed);
+        // Use the animated head-to-beak direction, including animation crossfades.
+        headRef.current!.getWorldPosition(headPos.current);
+        beakRef.current!.getWorldPosition(beakPos.current);
+        model.worldToLocal(headPos.current);
+        model.worldToLocal(beakPos.current);
+        beakPos.current.sub(headPos.current).normalize();
+        if (beakPos.current.lengthSq() === 0) throw new Error('Robin : direction du bec nulle');
+        sourceBasis.current.lookAt(origin.current, beakPos.current.negate(), up.current);
+        targetBasis.current.lookAt(origin.current, _tmpBirdDir.negate(), up.current);
+        sourceRotation.current.setFromRotationMatrix(sourceBasis.current).invert();
+        model.quaternion.setFromRotationMatrix(targetBasis.current).multiply(sourceRotation.current);
+      }
+    }
+
+    cameraState.positions['robin'] = {
+      x: model.position.x,
+      y: model.position.y,
+      z: model.position.z,
+      yaw: model.rotation.y,
+    };
   });
 
   return (
-    <group ref={modelRef} position={isPreview ? undefined : LANDING_POINTS[0]}>
+    <group ref={modelRef}>
       <primitive object={scene} />
     </group>
   );

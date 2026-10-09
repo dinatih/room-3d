@@ -281,11 +281,11 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
       {/* ── 2. STATIC SEAT & BACKREST CUSHIONS ──────────────────────────────── */}
       {/* Center Seat Cushion */}
-      <mesh geometry={centerCushionGeo} material={fabricMat} position={[0, 44.5, 0]} castShadow receiveShadow />
+      <mesh userData={{ birdPerch: true }} geometry={centerCushionGeo} material={fabricMat} position={[0, 44.5, 0]} castShadow receiveShadow />
 
       {/* Tilted Rattan Backrest Panel (Pivot at top back of seat rim) */}
       <group position={[-30.5, 41, 0]} rotation={[0, 0, 0.14]}>
-        <mesh geometry={backrestFrameGeo} material={rattanMat} position={[-2, 24, 0]} castShadow receiveShadow />
+        <mesh userData={{ birdPerch: true }} geometry={backrestFrameGeo} material={rattanMat} position={[-2, 24, 0]} castShadow receiveShadow />
         
         {/* Cushions lean back with the backrest */}
         <mesh geometry={pillowGeo} material={fabricMat} position={[9, 24, -27]} rotation={[0, 0, -0.05]} castShadow />
@@ -299,7 +299,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
         {/* Rattan Armrest Frame */}
         <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, 17.125]} castShadow receiveShadow />
         {/* Left Cushion Section */}
-        <mesh geometry={armCushionGeo} material={fabricMat} position={[0, 3.5, 17.125]} castShadow receiveShadow />
+        <mesh userData={{ birdPerch: true }} geometry={armCushionGeo} material={fabricMat} position={[0, 3.5, 17.125]} castShadow receiveShadow />
       </group>
 
 
@@ -309,7 +309,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
         {/* Rattan Armrest Frame */}
         <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, -17.125]} castShadow receiveShadow />
         {/* Right Cushion Section */}
-        <mesh geometry={armCushionGeo} material={fabricMat} position={[0, 3.5, -17.125]} castShadow receiveShadow />
+        <mesh userData={{ birdPerch: true }} geometry={armCushionGeo} material={fabricMat} position={[0, 3.5, -17.125]} castShadow receiveShadow />
       </group>
     </group>
   );

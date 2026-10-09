@@ -23,7 +23,7 @@ export function ChestBench({ onSize }: SceneItemProps) {
       <mesh position={[0, (H - LID_H) / 2, 0]} castShadow receiveShadow material={cbMat}>
         <boxGeometry args={[L, H - LID_H, W]} />
       </mesh>
-      <mesh position={[0, H - LID_H / 2, 0]} castShadow material={cbLidMat}>
+      <mesh userData={{ birdPerch: true }} position={[0, H - LID_H / 2, 0]} castShadow material={cbLidMat}>
         <boxGeometry args={[L + 1.5, LID_H, W + 1.5]} />
       </mesh>
       {([-1, 1] as const).map(dx => (

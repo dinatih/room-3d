@@ -32,27 +32,27 @@ export function GardenFurniture() {
     <MergedStaticGroup name="merged-garden-furniture">
       {/* Canapé Jardin Est avec accoudoirs togglables */}
       <group position={[270, 0, -110]} rotation={[0, -Math.PI / 2, 0]}
-             userData={{ skipMerge: true, itemName: 'Canapé Jardin Est', hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
+             userData={{ skipMerge: true, birdSupport: { id: 'sofa-east', kind: 'furniture' }, itemName: 'Canapé Jardin Est', hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
         <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
       </group>
 
       {/* Canapé Jardin Ouest */}
-      <group position={[100, 0, -80]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Canapé Jardin Ouest' }}>
+      <group position={[100, 0, -80]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'sofa-west', kind: 'furniture' }, itemName: 'Canapé Jardin Ouest' }}>
         <ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
       {/* Banc Coffre */}
-      <group position={[40, 0, -90]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Banc Coffre Jardin' }}>
+      <group position={[40, 0, -90]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'chest', kind: 'furniture' }, itemName: 'Banc Coffre Jardin' }}>
         <ChestBench item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
       {/* Baignoire Balnéo */}
-      <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ animUnit: true, skipMerge: true, itemName: 'Baignoire Balnéo' }}>
+      <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'bathtub', kind: 'furniture' }, itemName: 'Baignoire Balnéo' }}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
       {/* Boîte de rangement Vättersö */}
-      <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte de Rangement Vättersö' }}>
+      <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, birdSupport: { id: 'storage', kind: 'lid' }, itemName: 'Boîte de Rangement Vättersö' }}>
         <Vatterso20562909 item={stub('vatterso-20562909')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
@@ -69,17 +69,17 @@ export function GardenDecor() {
   return (
     <MergedStaticGroup name="merged-garden-decor">
       {/* Mangeoire / nid à oiseaux sous le balcon */}
-      <group position={[95, 214, -165]} userData={{ animUnit: true, skipMerge: true, itemName: 'Mangeoire à Oiseaux' }}>
+      <group position={[95, 214, -165]} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'feeder', kind: 'feeder' }, itemName: 'Mangeoire à Oiseaux' }}>
         <BirdFeeder item={stub('bird-feeder')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Yucca Elephantipes en pot (derrière la baignoire) */}
-      <group position={[155, 0, -355]} rotation={[0, Math.PI, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Yucca Elephantipes' }}>
+      <group position={[155, 0, -355]} rotation={[0, Math.PI, 0]} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'yucca', kind: 'plant' }, itemName: 'Yucca Elephantipes' }}>
         <PottedYucca item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
       {/* Palmier en pot */}
-      <group position={[100, 0, -145]} userData={{ animUnit: true, skipMerge: true, itemName: 'Palmier en Pot' }}>
+      <group position={[100, 0, -145]} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'palm', kind: 'plant' }, itemName: 'Palmier en Pot' }}>
         <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 

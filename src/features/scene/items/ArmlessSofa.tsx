@@ -22,9 +22,9 @@ export function ArmlessSofa({ onSize }: SceneItemProps) {
 
   return (
     <group>
-      <mesh geometry={seatGeo} material={redMat}
+      <mesh userData={{ birdPerch: true }} geometry={seatGeo} material={redMat}
         position={[0, SEAT_H / 2, 0]} castShadow receiveShadow />
-      <mesh geometry={backGeo} material={redMat}
+      <mesh userData={{ birdPerch: true }} geometry={backGeo} material={redMat}
         position={[0, H / 2, -D / 2 + BACK_T / 2 + 0.5]} castShadow />
     </group>
   );

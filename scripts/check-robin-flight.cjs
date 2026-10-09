@@ -48,7 +48,7 @@ fixedMath.random = () => 0.2;
 const code = ts.transpileModule(fs.readFileSync(path.join(root, 'src/features/scene/items/RobinBird.tsx'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
 vm.runInNewContext(code, { exports: exported, Math: fixedMath, document: new EventTarget(), require(name) {
   if (name === 'react') return { useRef(value) { const ref = { current: value }; refs.push(ref); return ref; }, useEffect(fn) { effects.push(fn); }, useLayoutEffect(fn) { layouts.push(fn); } };
-  if (name === '@react-three/fiber') return { useFrame(fn) { frame = fn; }, useThree: () => ({ invalidate() {} }) };
+  if (name === '@react-three/fiber') return { useFrame(fn) { frame = fn; }, useThree: () => ({ invalidate() {}, scene: new THREE.Scene() }) };
   if (name === '@react-three/drei') return { useGLTF: { preload() {} }, useHelper() {} };
   if (name.endsWith('/useGLTFClone')) return { useGLTFClone: () => ({ scene, animations }) };
   if (name.endsWith('/useSceneStore')) return { useSceneStore: fn => fn({ layers: { skeleton: false } }) };
@@ -56,6 +56,7 @@ vm.runInNewContext(code, { exports: exported, Math: fixedMath, document: new Eve
   if (name.endsWith('/glbUtils')) return { glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(-5, 0, -5), new THREE.Vector3(5, 15, 5)) };
   if (name.endsWith('/AppConsole')) return { appLog() {} };
   if (name.endsWith('/useAnimPreviewStore')) return {};
+  if (name.endsWith('/birdPerches')) return { ROBIN_HEIGHT: 15, RobinFootContact: class { ground() { return {}; } }, chooseBirdPerch: () => ({ point: new THREE.Vector3(95, 215, -165), descriptor: { kind: 'feeder', id: 'feeder' } }), resolveBirdPerch(perch, world, feet, position, rotation) { position.copy(perch.point); rotation.identity(); return true; } };
   if (name.endsWith('/cameraState')) return { cameraState };
   return require(name);
 } });
@@ -70,7 +71,7 @@ const beak = scene.getObjectByName('Beak_012');
 for (const target of [new THREE.Vector3(200, 400, -500), new THREE.Vector3(-300, 40, 800), new THREE.Vector3(100, 700, 50)]) {
   ai.state = 'idle'; ai.timer = 0;
   frame({}, 1 / 60); // passage au clip de vol
-  ai.targetPos.copy(target);
+  ai.perch.point.copy(target);
   for (let i = 0; i < 60; i++) {
     const before = group.position.clone();
     frame({}, 1 / 60);
@@ -79,10 +80,10 @@ for (const target of [new THREE.Vector3(200, 400, -500), new THREE.Vector3(-300,
     assert(heading.dot(movement) > 0.9999, `beak follows flight: ${heading.dot(movement)}`);
   }
 }
-ai.targetPos.copy(group.position);
+ai.perch.point.copy(group.position);
 frame({}, 1 / 60);
 assert.equal(ai.state, 'idle', 'zero distance lands without invalid direction');
-assert.equal(group.rotation.x, 0, 'landing levels pitch');
-assert.equal(group.rotation.z, 0, 'landing levels roll');
+assert(Math.abs(group.rotation.x) < 1e-12, 'landing levels pitch');
+assert(Math.abs(group.rotation.z) < 1e-12, 'landing levels roll');
 cleanup.forEach(fn => fn?.());
 console.log('Robin checks passed using real GLB clips: beak follows climbing, descending and reversing flight; landing levels the bird.');
