@@ -580,7 +580,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         const pDist = Math.max(10, orthoCam.position.distanceTo(target));
         orthoCam.zoom = options.zoom ?? Math.max(0.05, Math.min(30, 800 / (2 * pDist * tanHalfFov)));
       } else {
-        orthoCam.position.copy(target).addScaledVector(dir, Math.max(dist, 2500));
+        orthoCam.position.copy(target).addScaledVector(dir, dist);
         orthoCam.zoom = options?.zoom ?? Math.max(0.05, Math.min(30, 800 / (2 * dist * tanHalfFov)));
       }
       orthoCam.near = -20000;
