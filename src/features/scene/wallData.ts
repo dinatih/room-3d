@@ -51,7 +51,7 @@ export const PARTITION_THICKNESS = 7.2;  // Épaisseur cloisons intérieures pla
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-export type WallMat = 'west' | 'east' | 'north' | 'default';
+export type WallMat = 'west' | 'east' | 'north' | 'south' | 'default';
 export type SegKind = 'wall' | 'door' | 'window';
 
 export type PillarDef = {
@@ -368,7 +368,7 @@ export const WALL_DEFS: WallDef[] = [
 
   // ── Douche ──────────────────────────────────────────────────────────────────
   ...wallZ(pX('shower-ne'), pSouth('shower-ne'), pNorth('shower-se'), 'default', PT),
-  ...wallX(pZ('shower-sw'), pEast('shower-sw'),  pWest('shower-se'),  'default', PT),
+  ...wallX(pZ('shower-sw'), pEast('shower-sw'),  pWest('shower-se'),  'south', PT),
 ];
 
 // ── Panneaux occultants bois jardin (côté Est) ────────────────────────────────

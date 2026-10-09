@@ -12,6 +12,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { DiagWall, pEast, pWest, pNorth, WALL_H } from '../wallData';
+import { boxFaceMats, noCapMat } from '../building/buildingCommon';
 import { Grejig40329868 } from './Grejig40329868';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 
@@ -30,6 +31,8 @@ const SHELF_Y = 170;
 const SHELF_T = 2;
 
 const doorMat   = new THREE.MeshStandardMaterial({ color: 0xf5f0e0, roughness: 0.5 });
+// Face sud masquée, comme les murs extérieurs ; face SDB et chants opaques.
+const doorMats  = boxFaceMats({ '+z': noCapMat }, doorMat);
 const railMat   = new THREE.MeshStandardMaterial({ color: 0xf5f0e0, roughness: 0.3 });
 const shelfMat  = new THREE.MeshStandardMaterial({ color: 0xf0f0e8, roughness: 0.4 });
 const handleMat = new THREE.MeshStandardMaterial({ color: 0xb0b0b0, roughness: 0.25, metalness: 0.8 });
@@ -137,7 +140,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
       {/* Panneau gauche (en -X, ce qui correspond à la Droite depuis la SDB) */}
       <group ref={groupLRef} position-y={0} position-z={ZL}
              userData={{ hoverAction: { label: 'Porte SDB D', actionId: 'sdbClosetR' } }}>
-        <mesh position={[0, H / 2, 0]} castShadow material={doorMat}>
+        <mesh position={[0, H / 2, 0]} castShadow material={doorMats}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>
         <mesh position={[PANEL_W / 2 - 4, H * 0.5, -PANEL_T / 2 - 0.6]} material={handleMat}>
@@ -148,7 +151,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
       {/* Panneau droit (en +X, ce qui correspond à la Gauche depuis la SDB) */}
       <group ref={groupRRef} position-y={0} position-z={ZR}
              userData={{ hoverAction: { label: 'Porte SDB G', actionId: 'sdbClosetL' } }}>
-        <mesh position={[0, H / 2, 0]} castShadow material={doorMat}>
+        <mesh position={[0, H / 2, 0]} castShadow material={doorMats}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>
         <mesh position={[-PANEL_W / 2 + 4, H * 0.5, PANEL_T / 2 + 0.6]} material={handleMat}>
