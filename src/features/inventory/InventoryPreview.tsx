@@ -9,6 +9,7 @@ import { type InventoryItem, type StorageSpace, WIGS_ITEMS } from './inventoryDa
 import { SCENE_REGISTRY } from './previewRegistry';
 import { getActionDef, getPreviewActionIds, getActionLabel, toggleObjectAction } from '@features/scene/objectActionRegistry';
 import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpers';
+import { GroundPoint } from '@features/scene/character/GroundPoint';
 import { SkeletonHierarchyPanel } from '@features/scene/utils/SkeletonHierarchyPanel';
 import type { SkeletonGroup } from '@features/scene/utils/skeletonTypes';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
@@ -592,7 +593,12 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
 
 function RegistryScene({ item, actionState, showDims, wireframe, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; wireframe: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters';
-  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} wireframe={wireframe} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />;
+  return (
+    <>
+      <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} wireframe={wireframe} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />
+      {!isCharacter && <GroundPoint />}
+    </>
+  );
 }
 
 function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: string[], initialIndex?: number, onIndexChange?: (i: number) => void }) {
