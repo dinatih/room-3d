@@ -1,4 +1,4 @@
-import type { CameraMode, CameraTarget, OrbitMouseMode } from './types';
+import type { CameraMode, CameraMovement, CameraTarget, OrbitMouseMode } from './types';
 import { findCharacterByIdOrName } from '@features/scene/characterConfig';
 
 export type CameraProjection = 'persp' | 'ortho';
@@ -112,37 +112,48 @@ export function updateUrlCameraPos(posKey: string | null) {
 
 /**
  * Analyse l'URL pour la cible de la caméra (point de focus / pivot 3D).
- * Supporte : studio, character, charactersGrid, inventoryObjectGrid, dog, cat, plane, bird.
- * Si un nom de personnage direct est passé, résout vers 'character'.
  */
 export function parseUrlCameraTarget(): CameraTarget | null {
   if (typeof window === 'undefined') return null;
-  const params = getUrlParams();
-  const raw = params.get('cameraTarget') ?? params.get('target');
+  const raw = getUrlParams().get('cameraTarget')?.trim().toLowerCase();
   if (!raw) return null;
-  const val = raw.trim().toLowerCase();
 
-  if (val === 'studio' || val === 'room' || val === 'sejour' || val === 'centre') return 'studio';
-  if (val === 'character' || val === 'perso' || val === 'pnj') return 'character';
-  if (val === 'charactersgrid' || val === 'characters-grid' || val === 'charactergrid' || val === 'npcgrid') return 'charactersGrid';
-  if (val === 'inventoryobjectgrid' || val === 'inventorygrid' || val === 'inventory' || val === 'inventaire') return 'inventoryObjectGrid';
-  if (val === 'dog' || val === 'chien' || val === 'shiba') return 'dog';
-  if (val === 'cat' || val === 'chat') return 'cat';
-  if (val === 'plane' || val === 'avion') return 'plane';
-  if (val === 'bird' || val === 'oiseau' || val === 'robin') return 'bird';
-
-  if (findCharacterByIdOrName(val)) return 'character';
-
+  const TARGETS: Record<string, CameraTarget> = {
+    studio: 'studio',
+    character: 'character',
+    charactersgrid: 'charactersGrid',
+    inventoryobjectgrid: 'inventoryObjectGrid',
+    dog: 'dog',
+    cat: 'cat',
+    plane: 'plane',
+    bird: 'bird',
+  };
+  if (TARGETS[raw]) return TARGETS[raw];
+  if (findCharacterByIdOrName(raw)) return 'character';
   return null;
 }
 
 export function updateUrlCameraTarget(target: CameraTarget | null) {
   writeUrl(params => {
     if (target && target !== 'studio') params.set('cameraTarget', target);
-    else {
-      params.delete('cameraTarget');
-      params.delete('target');
-    }
+    else params.delete('cameraTarget');
+  });
+}
+
+/**
+ * Analyse l'URL pour le mouvement de la caméra : 'fix' | 'orbit' | 'follow'.
+ */
+export function parseUrlCameraMovement(): CameraMovement {
+  if (typeof window === 'undefined') return 'fix';
+  const raw = getUrlParams().get('cameraMovement')?.trim().toLowerCase();
+  if (raw === 'orbit' || raw === 'follow') return raw;
+  return 'fix';
+}
+
+export function updateUrlCameraMovement(movement: CameraMovement) {
+  writeUrl(params => {
+    if (movement !== 'fix') params.set('cameraMovement', movement);
+    else params.delete('cameraMovement');
   });
 }
 
@@ -151,12 +162,9 @@ export function updateUrlCameraTarget(target: CameraTarget | null) {
  */
 export function parseUrlMouseMode(): OrbitMouseMode | null {
   if (typeof window === 'undefined') return null;
-  const params = getUrlParams();
-  const raw = params.get('mouseMode') ?? params.get('mouse');
-  if (!raw) return null;
-  const val = raw.trim().toLowerCase();
-  if (val === 'rotate' || val === 'rot') return 'rotate';
-  if (val === 'translate' || val === 'trans' || val === 'pan') return 'translate';
+  const raw = getUrlParams().get('mouseMode')?.trim().toLowerCase();
+  if (raw === 'rotate' || raw === 'rot') return 'rotate';
+  if (raw === 'translate' || raw === 'trans') return 'translate';
   return null;
 }
 
@@ -203,6 +211,10 @@ export function parseUrlCameraMode(): CameraMode {
       if (m === 'top' || m === 'topdown' || m === '2d' || m === 'plan') return 'top';
       if (m === 'ortho') return 'ortho';
     }
+
+    const movement = parseUrlCameraMovement();
+    if (movement === 'follow') return 'follow';
+    if (movement === 'orbit') return 'orbit';
 
     const target = parseUrlCameraTarget();
     if (target || posParsed?.type === 'angle') return 'orbit';

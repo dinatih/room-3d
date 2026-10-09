@@ -1,16 +1,18 @@
 import { getActionDef, getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
-import type { CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
+import type { CameraMovement, CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
 import {
   parseUrlCameraMode,
   parseUrlCameraProjection,
   parseUrlActiveCameraPosKey,
   parseUrlCameraTarget,
+  parseUrlCameraMovement,
   parseUrlMouseMode,
   updateUrlCameraProjection,
   updateUrlCameraPos,
   updateUrlCameraTarget,
+  updateUrlCameraMovement,
 } from '@features/scene/camera/cameraUrlParams';
 import { parseUrlLayerOverrides, updateUrlLayer, parseUrlGroundType, updateUrlGroundType, LAYER_DEFAULTS } from './layerUrlParams';
 import type { FurnitureState, LayerState, GroundType } from '../sidepanel/types';
@@ -105,6 +107,8 @@ interface SceneStore {
   cameraProjection: 'persp' | 'ortho';
   cameraTarget: CameraTarget;
   setCameraTarget: (target: CameraTarget) => void;
+  cameraMovement: CameraMovement;
+  setCameraMovement: (movement: CameraMovement) => void;
   orbitMouseMode: OrbitMouseMode;
   setOrbitMouseMode: (mode: OrbitMouseMode) => void;
   activeCameraPos: string | null;
@@ -357,6 +361,12 @@ export const useSceneStore = create<SceneStore>((set) => ({
       updates.cameraMode = 'orbit';
     }
     set(updates);
+    cameraState.invalidate?.();
+  },
+  cameraMovement: parseUrlCameraMovement(),
+  setCameraMovement: (movement) => {
+    updateUrlCameraMovement(movement);
+    set({ cameraMovement: movement });
     cameraState.invalidate?.();
   },
   orbitMouseMode: parseUrlMouseMode() ?? (parseUrlCameraProjection() === 'ortho' ? 'translate' : 'rotate'),

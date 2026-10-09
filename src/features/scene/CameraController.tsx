@@ -86,6 +86,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const cameraProjection = useSceneStore(state => state.cameraProjection);
   const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
   const cameraTarget = useSceneStore(state => state.cameraTarget);
+  const cameraMovement = useSceneStore(state => state.cameraMovement);
   const lastDynamicTargetPos = useRef<[number, number, number] | null>(null);
   // Type d'orbite libre : perspective standard 3D ou isométrique orthographique 3D
   const orbitTypeRef = useRef<'persp' | 'ortho'>(useSceneStore.getState().cameraProjection);
@@ -767,29 +768,29 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           target: PERSP_TARGET,
         });
       } else {
-        const offset: [number, number, number] = targetKey === 'character'
-          ? [-120, 100, 140]
-          : [-80, 50, 90];
-        const newPos: [number, number, number] = [
-          target[0] + offset[0],
-          target[1] + offset[1],
-          target[2] + offset[2],
+        const defaultView = VIEWS['iso-se'];
+        const offset: [number, number, number] = [
+          defaultView.pos[0] - defaultView.target[0],
+          defaultView.pos[1] - defaultView.target[1],
+          defaultView.pos[2] - defaultView.target[2],
         ];
         switchOrbitProjection(store.cameraProjection, {
-          pos: newPos,
+          pos: [target[0] + offset[0], target[1] + offset[1], target[2] + offset[2]],
           target,
         });
       }
     }
   }, [switchOrbitProjection, resolveTargetPosition]);
 
-  // Réinitialiser la position preset active dès que l'utilisateur commence à manipuler la caméra manuellement
+  // Réinitialiser la position preset active et l'auto-rotation dès que l'utilisateur manipule la caméra manuellement
   useEffect(() => {
     const ctrl = ctrlRef.current;
     if (!ctrl) return;
     const onStart = () => {
-      if (modeRef.current === 'orbit' && useSceneStore.getState().activeCameraPos) {
-        useSceneStore.getState().setActiveCameraPos(null);
+      if (modeRef.current === 'orbit') {
+        const store = useSceneStore.getState();
+        if (store.activeCameraPos) store.setActiveCameraPos(null);
+        if (store.cameraMovement === 'orbit') store.setCameraMovement('fix');
       }
     };
     ctrl.addEventListener('start', onStart);
@@ -1110,6 +1111,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   useFrame(() => {
     if (cameraState.isIntroRunning) return;
     if (modeRef.current === 'orbit' && ctrlRef.current) {
+      if (useSceneStore.getState().cameraMovement === 'orbit') {
+        invalidate();
+      }
       if (ctrlRef.current.target.lengthSq() > 1) {
         currentTarget.current.copy(ctrlRef.current.target);
       }
@@ -1270,6 +1274,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
               ? (topFollowRef.current ? undefined : TOP_TARGET)
               : undefined
         }
+        autoRotate={mode === 'orbit' && cameraMovement === 'orbit'}
+        autoRotateSpeed={1.0}
         enableDamping={mode !== 'follow'}
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}

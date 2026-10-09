@@ -12,6 +12,8 @@ export type CameraTarget =
 
 export type OrbitMouseMode = 'rotate' | 'translate';
 
+export type CameraMovement = 'fix' | 'orbit' | 'follow';
+
 export interface FollowPosition {
   x: number;
   y: number;
