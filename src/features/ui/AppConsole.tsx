@@ -5,7 +5,7 @@
  * Utilise le composant Group (glass-card accordion) pour l'harmonie visuelle
  * avec les autres panneaux (SidePanel, Minimap, DevTools).
  */
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useId } from 'react';
 import { CHARACTERS, findCharacter, npcLabel } from '@features/scene/characterConfig';
 import { chooseRandomCharacter } from '@features/scene/store/randomCharacter';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
@@ -69,6 +69,33 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const logAreaRef = useRef<HTMLDivElement>(null);
   const [bottomDockHeight, setBottomDockHeight] = useState(0);
   const [isMaximized, setIsMaximized] = useState(false);
+  const characterPopoverId = useId();
+  const characterPopoverRef = useRef<HTMLDivElement>(null);
+  const [characterPopoverOpen, setCharacterPopoverOpen] = useState(false);
+
+  useEffect(() => {
+    const popover = characterPopoverRef.current;
+    if (!popover) return;
+    const onToggle = () => {
+      const isOpen = popover.matches(':popover-open');
+      setCharacterPopoverOpen(isOpen);
+      if (isOpen) popover.querySelector<HTMLButtonElement>('[aria-pressed="true"]')!.focus();
+    };
+    const closePopover = () => popover.hidePopover();
+    popover.addEventListener('toggle', onToggle);
+    window.addEventListener('resize', closePopover);
+    return () => {
+      popover.removeEventListener('toggle', onToggle);
+      window.removeEventListener('resize', closePopover);
+    };
+  }, [hidden]);
+
+  useEffect(() => {
+    if (hidden || hideUI) {
+      characterPopoverRef.current?.hidePopover();
+      setCharacterPopoverOpen(false);
+    }
+  }, [hidden, hideUI]);
 
   // Écoute des CustomEvents 'app-log'
   useEffect(() => {
@@ -173,24 +200,64 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         >
           <i className="bi bi-shuffle" aria-hidden="true" />
         </button>
-        <select
-          className="form-select form-select-sm py-0 px-2 bg-transparent small flex-shrink-0 app-console-select"
-          style={{ fontSize: '11px', color: '#212529', borderColor: pnjColor, ['--pnj-color' as string]: pnjColor }}
-          value={activeCharacterId}
-          onClick={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-          onChange={(e) => {
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-secondary py-0 px-2 d-flex align-items-center gap-2 flex-shrink-0 app-console-character-trigger"
+          style={{ borderColor: pnjColor, ['--pnj-color' as string]: pnjColor }}
+          {...{ popovertarget: characterPopoverId }}
+          aria-haspopup="dialog"
+          aria-expanded={characterPopoverOpen}
+          aria-controls={characterPopoverId}
+          onClick={(e) => {
             e.stopPropagation();
-            useSceneStore.getState().setActiveCharacterId(e.target.value);
+            const rect = e.currentTarget.getBoundingClientRect();
+            const popover = characterPopoverRef.current!;
+            popover.style.top = `${rect.bottom + 8}px`;
+            popover.style.right = `${Math.max(8, window.innerWidth - rect.right)}px`;
+            popover.style.maxHeight = `${window.innerHeight - rect.bottom - 16}px`;
           }}
+          onPointerDown={(e) => e.stopPropagation()}
           title="Changer le PNJ sélectionné"
         >
-          {CHARACTERS.map(c => (
-            <option key={c.id} value={c.id} className="bg-light text-dark">
-              {npcLabel(c)}
-            </option>
-          ))}
-        </select>
+          <span>{activeChar ? npcLabel(activeChar) : activeCharacterId}</span>
+          <i className="bi bi-chevron-down" aria-hidden="true" />
+        </button>
+        <div
+          ref={characterPopoverRef}
+          id={characterPopoverId}
+          {...{ popover: 'auto' }}
+          role="dialog"
+          aria-labelledby={`${characterPopoverId}-title`}
+          className="popover app-console-character-popover shadow-lg"
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+          onKeyDown={e => e.stopPropagation()}
+        >
+          <h2 id={`${characterPopoverId}-title`} className="popover-header small fw-semibold d-flex align-items-center gap-2">
+            <i className="bi bi-people" aria-hidden="true" />
+            Choisir un PNJ
+          </h2>
+          <div className="popover-body p-2">
+            <div className="row row-cols-2 g-1">
+              {CHARACTERS.map(c => (
+                <div key={c.id} className="col">
+                  <button
+                    type="button"
+                    className={`btn btn-sm w-100 d-flex align-items-center justify-content-between gap-1 text-start ${c.id === activeCharacterId ? 'btn-primary' : 'btn-light'}`}
+                    aria-pressed={c.id === activeCharacterId}
+                    onClick={() => {
+                      useSceneStore.getState().setActiveCharacterId(c.id);
+                      characterPopoverRef.current!.hidePopover();
+                    }}
+                  >
+                    <span>{npcLabel(c)}</span>
+                    {c.id === activeCharacterId && <i className="bi bi-check-lg" aria-hidden="true" />}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {open && (
           <button
