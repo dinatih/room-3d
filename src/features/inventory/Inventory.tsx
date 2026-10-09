@@ -561,15 +561,16 @@ function normalizeSearchStr(str: string): string {
     ? STORAGE_SPACES.filter(sp => sp.actions?.length)
     : STORAGE_SPACES;
 
-  // Unified list: Spatial zones (if category 'spaces' or 'all'), storage spaces, then items
+  // Unified list: Native Lara first in 'all', then spatial zones, storage spaces and items
   const navList = useMemo<PreviewTarget[]>(() => {
     if (activeCat === 'spaces') {
       return spatialZones;
     }
     return [
+      ...(activeCat === 'all' ? items.filter(item => item.id === 'native') : []),
       ...(activeCat === 'all' ? spatialZones : []),
       ...(showSpaces ? spaces : []),
-      ...items,
+      ...(activeCat === 'all' ? items.filter(item => item.id !== 'native') : items),
     ];
   }, [activeCat, spatialZones, showSpaces, spaces, items]);
 
