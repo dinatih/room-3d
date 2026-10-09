@@ -28,6 +28,7 @@ const RAW_DUO_ANIMATIONS: RawDuoAnimationDef[] = [
   { id: 'farewell_kiss', isCombat: false, label: 'Farewell Kiss', icon: '👋', animA: 'miley-armature-farewell-kiss-m', animB: 'miley-armature-farewell-kiss-f', offsetB: [-70, 0, 0] },
   { id: 'date_bearhug', isCombat: false, label: 'Date Bearhug', icon: '🐻', animA: 'miley-armature-date-bearhug-m', animB: 'miley-armature-date-bearhug-f', offsetB: [0, 0, 610] },
   { id: 'propose', isCombat: false, label: 'Propose', icon: '💍', animA: 'miley-armature-propose-f', animB: 'miley-armature-propose-m', offsetB: [-65, 0, 0] },
+  { id: 'high_five', isCombat: false, label: 'High Five', icon: '🖐️', animA: 'high-five-a', animB: 'high-five-b', rotB: Math.PI, offsetB: [-120, 0, -14] },
   { id: 'b1', isCombat: true, label: 'B1', icon: '💥', animA: 'miley-armature-b1-fall-kicked-knockout', animB: 'miley-armature-b1-attack-back-somersault-flip', offsetB: [-100, 0, 0] },
   { id: 'd1', isCombat: true, label: 'D1', icon: '🤺', animA: 'miley-armature-d1-attack-arms-block', animB: 'miley-armature-d1-dodge-sideways', offsetB: [-100, 0, 0] },
   { id: 'd4', isCombat: true, label: 'D4', icon: '🤺', animA: 'miley-armature-d4-attack-reverse-front-snap-kick', animB: 'miley-armature-d4-dodge-roll-back', offsetB: [-120, 0, 0] },
