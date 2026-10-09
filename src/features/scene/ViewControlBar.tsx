@@ -295,7 +295,7 @@ export function ViewControlBar({
         {showCharacterModes && (
           <button
             type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${cameraViewMarkers ? 'btn-danger' : 'btn-outline-danger'}`}
+            className={`${TOOLBAR_BUTTON_CLASS} bg-transparent ${cameraViewMarkers ? 'btn-outline-danger text-danger' : 'btn-outline-secondary'}`}
             onClick={() => toggleLayer('cameraViewMarkers')}
             title="Afficher ou masquer les raccourcis de vues 3D"
             aria-label="Raccourcis de vues 3D"
