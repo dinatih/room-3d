@@ -381,7 +381,6 @@ export function SidePanel({
       <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux">
         {/* 1. Plan 2D */}
         <PanelPopover
-          id="panel-popover-plan2d"
           icon="bi-map-fill"
           label="Plan 2D"
           title="Plan 2D"
@@ -392,7 +391,6 @@ export function SidePanel({
 
         {/* 2. Perf */}
         <PanelPopover
-          id="panel-popover-perf"
           icon="bi-bar-chart-fill"
           label="Perf"
           title="Performances & Stats"
@@ -403,7 +401,6 @@ export function SidePanel({
 
         {/* 3. Profil */}
         <PanelPopover
-          id="panel-popover-profile"
           icon="bi-briefcase-fill"
           label="Profil"
           title="Profil & C.V."
@@ -415,7 +412,6 @@ export function SidePanel({
 
         {/* 4. Calques */}
         <PanelPopover
-          id="panel-popover-layers"
           icon="bi-layers-fill"
           label="Calques"
           title="Calques & Affichage"
@@ -427,7 +423,6 @@ export function SidePanel({
 
         {/* 5. Interactif */}
         <PanelPopover
-          id="panel-popover-interactive"
           icon="bi-controller"
           label="Interactif"
           title="Objets interactifs"
@@ -438,7 +433,6 @@ export function SidePanel({
 
         {/* 6. PNJ */}
         <PanelPopover
-          id="panel-popover-pnj"
           icon="bi-person-fill"
           label="PNJ"
           title="Personnages & PNJ"
