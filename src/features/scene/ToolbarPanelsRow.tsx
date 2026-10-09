@@ -389,10 +389,10 @@ export function ToolbarPanelsRow({
           <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
         </PanelPopover>
 
-        {/* 3. Profil */}
+        {/* 3. CV */}
         <PanelPopover
           icon="bi-briefcase-fill"
-          label="Profil"
+          label="CV"
           title="Profil & C.V."
           headerExtra={profileHeaderButtons}
           hideUI={hideUI}
@@ -421,11 +421,15 @@ export function ToolbarPanelsRow({
           {interactiveSectionContent}
         </PanelPopover>
 
-        {/* 6. PNJ */}
+        {/* 6. Config User */}
         <PanelPopover
-          icon="bi-person-fill"
-          label="PNJ"
-          title="Personnages & PNJ"
+          icon={
+            <span className="d-inline-flex align-items-center gap-1">
+              <i className="bi bi-person-fill" aria-hidden="true" />
+              <i className="bi bi-gear-fill" aria-hidden="true" />
+            </span>
+          }
+          title="Configuration utilisateur"
           headerExtra={personnageHeaderButtons}
           hideUI={hideUI}
         >

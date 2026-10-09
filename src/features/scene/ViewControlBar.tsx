@@ -206,7 +206,6 @@ export function ViewControlBar({
               aria-keyshortcuts="s"
             >
               <i className="bi bi-shuffle" aria-hidden="true" />
-              <i className="bi bi-person-standing-dress" aria-hidden="true" />
             </button>
             <CharacterSelect hideUI={hideUI} />
             <button
@@ -215,7 +214,7 @@ export function ViewControlBar({
               onClick={() => dispatchCameraMode('toggle-follow')}
               title="Follow / FPV (F / V : alterner)"
               aria-pressed={cameraMode === 'follow'}
-            ><i className="bi bi-camera2" aria-hidden="true" /><i className="bi bi-person-walking" aria-hidden="true" /><span className="fw-semibold">Follow</span></button>
+            ><span className="fw-semibold">Follow</span></button>
             <button
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
@@ -239,7 +238,7 @@ export function ViewControlBar({
           aria-pressed={isOrtho}
         >
           <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} aria-hidden="true" />
-          <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Persp'}</span>
+          <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Pers'}</span>
         </button>
 
         {(showCharacterModes || showOrbitControls) && (

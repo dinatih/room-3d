@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { TOOLBAR_BUTTON_CLASS } from '../toolbarStyles';
 
 export interface PanelPopoverProps {
-  icon: string;
-  label: string;
+  icon: React.ReactNode;
+  label?: string;
   title?: string;
   headerExtra?: React.ReactNode;
   hideUI?: boolean;
@@ -70,9 +70,14 @@ export function PanelPopover({
         }}
         onPointerDown={(e) => e.stopPropagation()}
         title={title ?? label}
+        aria-label={title ?? label}
       >
-        <i className={`bi ${icon}`} aria-hidden="true" />
-        <span>{label}</span>
+        {typeof icon === 'string' ? (
+          <i className={`bi ${icon}`} aria-hidden="true" />
+        ) : (
+          icon
+        )}
+        {label && <span>{label}</span>}
       </button>
       {createPortal(
         <div
@@ -88,7 +93,11 @@ export function PanelPopover({
         >
           <div className="popover-header bg-transparent py-2 px-3 border-bottom d-flex align-items-center justify-content-between gap-2">
             <div className="d-flex align-items-center gap-2 overflow-hidden text-truncate">
-              <i className={`bi ${icon} text-primary`} aria-hidden="true" />
+              {typeof icon === 'string' ? (
+                <i className={`bi ${icon} text-primary`} aria-hidden="true" />
+              ) : (
+                <span className="text-primary d-inline-flex align-items-center gap-1">{icon}</span>
+              )}
               <span id={`${id}-title`} className="fw-semibold small text-dark text-truncate">
                 {title ?? label}
               </span>
