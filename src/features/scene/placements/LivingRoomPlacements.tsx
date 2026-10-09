@@ -5,6 +5,7 @@ import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { useSceneStore } from '../store/useSceneStore';
 import { MergedStaticGroup } from '../Building';
 import { positionState } from '@features/scene/positionState';
+import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { PositionTransition } from '../utils/PositionTransition';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
@@ -127,6 +128,14 @@ function Beds() {
     : { x: ROOM_W - 45.5, z: 190 };
 
   const hoverActions = isDouble ? ['bed-double', 'bed-position'] : ['bed-double'];
+  const westHoverActions = [
+    ...hoverActions,
+    ...SMART_OBJECTS['bed-west'].slots.map(slot => `smart-object:::bed-west:::${slot.slotId}`),
+  ];
+  const eastHoverActions = [
+    ...hoverActions,
+    ...SMART_OBJECTS['bed-east'].slots.map(slot => `smart-object:::bed-east:::${slot.slotId}`),
+  ];
   const hoverLabel = isDouble
     ? `Lit Utåker Double (${currentDoublePos.label})`
     : 'Lit Utåker (Lits séparés)';
@@ -138,13 +147,13 @@ function Beds() {
   return (
     <>
       <PositionTransition furnitureKey="bed-west-position" x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
-        <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: hoverActions } }}>
+        <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: westHoverActions } }}>
           <UtakerFrame item={{ id: 'utaker-upper' } as any} hasTopper={!isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </PositionTransition>
 
       <PositionTransition furnitureKey="bed-east-position" x={eastPos.x} z={eastPos.z} ry={Math.PI / 2}>
-        <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: hoverActions } }}>
+        <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: eastHoverActions } }}>
           <UtakerFrame item={{ id: 'utaker-lower' } as any} hasTopper={isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </PositionTransition>
@@ -155,7 +164,7 @@ function Beds() {
             skipMerge: true,
             animUnit: true,
             itemName: 'Surmatelas NÄSFJÄLLET',
-            hoverAction: { label: hoverLabel, actions: hoverActions },
+            hoverAction: { label: hoverLabel, actions: isDouble ? eastHoverActions : westHoverActions },
           }}
         >
           <Nasfjallet10558045 item={stub('nasfjallet-topper')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />

@@ -50,33 +50,34 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'bed-west',
     name: 'Lit Utåker Ouest (Principal)',
     category: 'bed',
+    itemId: 'bed-west',
     position: [74, 0, 151.5],
     rotationY: Math.PI / 2,
     slots: [
       {
         slotId: 'seat-north',
         name: 'S\'asseoir (Nord)',
-        offset: [90, 0, 80],
+        offset: [71.5, 0, 16],
         animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
-        offset: [90, 0, 150],
+        offset: [1.5, 0, 16],
         animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-south',
         name: 'S\'asseoir (Sud)',
-        offset: [90, 0, 220],
+        offset: [-68.5, 0, 16],
         animationsRandom: 'seated-front',
       },
       {
         slotId: 'lie-down',
         name: 'Dormir couché',
-        offset: [74, 45, 150],
+        offset: [1.5, 45, 0],
         animationsRandom: 'laying-front',
-        rotY: -Math.PI,
+        rotY: Math.PI / 2,
       }
     ]
   },
@@ -84,33 +85,37 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'bed-east',
     name: 'Lit Utåker Est (Secondaire)',
     category: 'bed',
+    itemId: 'bed-east',
     position: [270, 0, 190],
-    rotationY: -Math.PI / 2,
+    rotationY: Math.PI / 2,
     slots: [
       {
         slotId: 'seat-north',
         name: 'S\'asseoir (Nord)',
-        offset: [255, 0, 120],
+        offset: [70, 0, -15],
+        rotY: Math.PI,
         animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
-        offset: [255, 0, 190],
+        offset: [0, 0, -15],
+        rotY: Math.PI,
         animationsRandom: 'seated-front',
       },
       // {
       //   slotId: 'seat-south',
       //   name: 'S\'asseoir (Sud)',
-      //   offset: [255, 0, 260],
+      //   offset: [-70, 0, -15],
+      //   rotY: Math.PI,
       //   animationsRandom: 'seated-front',
       // },
       {
         slotId: 'lie-down',
         name: 'Dormir couché',
-        offset: [270, 45, 190],
+        offset: [0, 45, 0],
         animationsRandom: 'laying-front',
-        rotY: -Math.PI,
+        rotY: Math.PI / 2,
       }
     ]
   },

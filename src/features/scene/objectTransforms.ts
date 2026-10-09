@@ -9,7 +9,7 @@ import {
   DOOR_START,
   BATH_WEST_WALL, BATH_NORTH_WALL,
   KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL,
-  ROOM_D, PARTITION_THICKNESS, CORRIDOR_NORTH_WALL, SHOWER_SOUTH_WALL
+  ROOM_W, ROOM_D, PARTITION_THICKNESS, CORRIDOR_NORTH_WALL, SHOWER_SOUTH_WALL
 } from './wallData';
 import { SDB_CLOSET_X, SDB_CLOSET_Z } from './items/SdbCloset';
 import { SHOWER_W, SHOWER_D } from './items/Shower';
@@ -42,6 +42,10 @@ const ITEM_TO_ANCHOR_KEY: Record<string, string> = {
  */
 function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
   switch (itemId) {
+    case 'bed-west':
+      return { position: [74, 0, 151.5], rotationY: Math.PI / 2 };
+    case 'bed-east':
+      return { position: [ROOM_W - 45.5, 0, 190], rotationY: Math.PI / 2 };
     case 'sdb-closet':
       return {
         position: [SDB_CLOSET_X, 0, SDB_CLOSET_Z],
@@ -103,6 +107,8 @@ function getDynamicTransform(anchorKey: string): ObjectTransform | undefined {
   if (!anchorList || anchorList.length === 0) return undefined;
 
   const state = positionState[anchorKey];
+  // Les lits séparés utilisent leurs placements statiques (idx = -1).
+  if (state && state.idx < 0) return undefined;
   const idx = state ? (state.idx % anchorList.length) : 0;
   const anchor: FurnitureTransform = anchorList[idx] || anchorList[0];
 
