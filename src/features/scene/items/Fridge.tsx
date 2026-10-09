@@ -23,7 +23,6 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
     door: THREE.AnimationAction;
     crisper: THREE.AnimationAction;
     bulb: THREE.PointLight;
-    lampMaterial: THREE.MeshStandardMaterial;
     intensity: number;
   } | null>(null);
   const { invalidate } = useThree();
@@ -52,13 +51,7 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
     scene.userData.skipMerge = true;
     scene.userData.hoverAction = { label: 'Réfrigérateur LAGAN', actions: ['fridge', 'fridge-crisper-toggle'] };
     const anchor = scene.getObjectByName('LampAnchor');
-    const lamp = scene.getObjectByName('lamp') as THREE.Mesh | undefined;
-    if (!anchor || !lamp?.isMesh) throw new Error('LAGAN: missing bulb housing or light anchor');
-    const originalMaterial = lamp.material as THREE.MeshStandardMaterial;
-    const lampMaterial = originalMaterial.clone();
-    lampMaterial.emissive.set('#fff1d6');
-    lampMaterial.emissiveIntensity = 0;
-    lamp.material = lampMaterial;
+    if (!anchor) throw new Error('LAGAN: missing interior light anchor');
     // 5 W bulb, approximately 45 lm. Convert candela from metres to centimetres.
     const intensity = anchor.userData.powerWatts * 9 / (4 * Math.PI) * 100 ** 2;
     const bulb = new THREE.PointLight('#fff1d6', 0, 0, 2);
@@ -78,7 +71,7 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
       }
     });
     anchor.add(bulb);
-    runtime.current = { mixer, door, crisper, bulb, lampMaterial, intensity };
+    runtime.current = { mixer, door, crisper, bulb, intensity };
     onSize(box.getSize(new THREE.Vector3()));
     invalidate();
     return () => {
@@ -87,8 +80,6 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
       mixer.uncacheRoot(scene);
       anchor.remove(bulb);
       bulb.dispose();
-      lamp.material = originalMaterial;
-      lampMaterial.dispose();
     };
   }, [scene, animations, invalidate]);
 
@@ -109,7 +100,6 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
     r.mixer.update(0);
     const lit = desired.door || r.door.time > 0;
     r.bulb.intensity = lit ? r.intensity : 0;
-    r.lampMaterial.emissiveIntensity = lit ? 1 : 0;
     if (r.door.time !== doorEnd || r.crisper.time !== drawerEnd) invalidate();
   });
 

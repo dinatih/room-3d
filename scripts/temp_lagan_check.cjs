@@ -66,14 +66,20 @@ const assert = require('node:assert/strict');
  const loader=new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('/draco/'));
  const source=await loader.loadAsync('/items/lagan réfrigérateur av comp congélateur indépendant-blanc 97-16 l/LAGAN Réfrigérateur av comp congélateur indépendant-blanc 97-16 l.glb');
  const result=await loader.loadAsync('/items/lagan_anim/LAGAN_anim.glb');
- const triangles=root=>{const counts=new Map();root.updateMatrixWorld(true);root.traverse(o=>{if(!o.isMesh)return;
- const p=o.geometry.attributes.position,index=o.geometry.index;for(let i=0;i<index.count;i+=3){const keys=[];for(let j=0;j<3;j++){const v=new THREE.Vector3().fromBufferAttribute(p,index.getX(i+j)).applyMatrix4(o.matrixWorld);keys.push(v.toArray().map(x=>String(Math.round(x*1e5)/1e5)).join(','));}const key=keys.sort().join('/');counts.set(key,(counts.get(key)||0)+1);}});return counts;};
- const original=triangles(source.scene),rebuilt=triangles(result.scene);let mismatch=0;for(const [k,v]of original)if(rebuilt.get(k)!==v)mismatch++;
+ const triangles=root=>{const counts=new Map(),normals=new Map();root.updateMatrixWorld(true);root.traverse(o=>{if(!o.isMesh)return;
+ const p=o.geometry.attributes.position,n=o.geometry.attributes.normal,index=o.geometry.index,normalMatrix=new THREE.Matrix3().getNormalMatrix(o.matrixWorld);
+ for(let i=0;i<index.count;i+=3){const vertices=[];for(let j=0;j<3;j++){const idx=index.getX(i+j),v=new THREE.Vector3().fromBufferAttribute(p,idx).applyMatrix4(o.matrixWorld),normal=new THREE.Vector3().fromBufferAttribute(n,idx).applyNormalMatrix(normalMatrix);
+ vertices.push({key:v.toArray().map(x=>String(Math.round(x*1e5)/1e5)).join(','),normal});}
+ vertices.sort((a,b)=>a.key.localeCompare(b.key));const key=vertices.map(v=>v.key).join('/');counts.set(key,(counts.get(key)||0)+1);normals.set(key,vertices.map(v=>v.normal));}});return {counts,normals};};
+ const original=triangles(source.scene),rebuilt=triangles(result.scene);let removed=0,added=0,normalError=0;
+ for(const [k,v]of original.counts)removed+=Math.max(0,v-(rebuilt.counts.get(k)||0));
+ for(const [k,v]of rebuilt.counts){added+=Math.max(0,v-(original.counts.get(k)||0));const before=original.normals.get(k);if(before)rebuilt.normals.get(k).forEach((n,i)=>{normalError=Math.max(normalError,n.distanceTo(before[i]));});}
+ const removedSourceTriangles=result.scene.getObjectByName('LampAnchor').userData.removedSourceTriangles;
  const mixer=new THREE.AnimationMixer(result.scene);const openAction=mixer.clipAction(result.animations.find(c=>c.name==='door_open'));openAction.setLoop(THREE.LoopOnce,1);openAction.clampWhenFinished=true;openAction.play();mixer.setTime(1);result.scene.updateMatrixWorld(true);
  const crisper=new THREE.Box3().setFromObject(result.scene.getObjectByName('crisper'));let binsMin=Infinity;
  for(let i=1;i<=3;i++) binsMin=Math.min(binsMin,new THREE.Box3().setFromObject(result.scene.getObjectByName('door_bin_'+i),true).min.x);
- return {mismatch,sourceTriangles:[...original.values()].reduce((a,b)=>a+b,0),rebuiltTriangles:[...rebuilt.values()].reduce((a,b)=>a+b,0),binsMin,drawerMax:crisper.max.x,pivot:result.scene.getObjectByName('door').position.toArray()};
- });console.log('geometry',geometry);assert.equal(geometry.sourceTriangles,17020);assert.equal(geometry.rebuiltTriangles,17020);assert.equal(geometry.mismatch,0);assert(geometry.pivot[0]>0);assert(geometry.binsMin>=geometry.drawerMax-1e-6);
+ return {removed,added,normalError,removedSourceTriangles,sourceTriangles:[...original.counts.values()].reduce((a,b)=>a+b,0),rebuiltTriangles:[...rebuilt.counts.values()].reduce((a,b)=>a+b,0),binsMin,drawerMax:crisper.max.x,pivot:result.scene.getObjectByName('door').position.toArray(),hasOldLamp:!!result.scene.getObjectByName('lamp')};
+ });console.log('geometry',geometry);assert.equal(geometry.sourceTriangles,17020);assert.equal(geometry.rebuiltTriangles,17020-geometry.removedSourceTriangles);assert.equal(geometry.removed,geometry.removedSourceTriangles);assert.equal(geometry.added,0);assert.equal(geometry.normalError,0,'Retained corner normals must match the IKEA source exactly');assert.equal(geometry.hasOldLamp,false);assert(geometry.pivot[0]>0);assert(geometry.binsMin>=geometry.drawerMax-1e-6);
  assert.deepEqual(errors,[]);console.log('LAGAN sequences, reversal, preview isolation, source geometry, clearance and light: PASS');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

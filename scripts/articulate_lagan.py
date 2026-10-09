@@ -5,6 +5,7 @@ import math
 import copy
 import json
 import struct
+import subprocess
 from collections import defaultdict
 from pathlib import Path
 from mathutils import Matrix, Vector
@@ -16,6 +17,10 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=str(SOURCE))
 source = next(o for o in bpy.context.scene.objects if o.type == 'MESH')
 mesh = source.data
+source_normals = [n.vector.copy() for n in mesh.corner_normals]
+corner_ids = mesh.attributes.new('source_corner', 'INT', 'CORNER')
+for index, entry in enumerate(corner_ids.data):
+    entry.value = index
 for material in mesh.materials:
     # IKEA's closed-model optimisation leaves single-sided interior panels.
     # Show their reverse faces now that the door can expose the interior.
@@ -47,10 +52,16 @@ assert len(parts) == 52, 'IKEA topology changed: inspect components before rebui
 
 # Complete connected islands, inspected with temp_inspect_lagan.py. No clipping
 # planes or face-centroid cuts: UV seams remain separate in the exported mesh.
-door_ids = {5, 16, 26, 28, 29, 42, 43, 44}
-crisper_ids = {41, 49}
-lamp_ids = {48}
-body_ids = set(range(len(parts))) - door_ids - crisper_ids - lamp_ids
+door_ids = {5, 16, 26, 42, 43, 44}
+crisper_ids = {41}
+# Incomplete internal proxy sheets: door panels, freezer and crisper fragments.
+# Identified individually in temp_lagan_parts_render.py, not by face size.
+proxy_ids = {28, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 49}
+# Remove the vent/control casing and bulb cover requested by the user, including
+# their detached mounting/label fragments. Keep a light anchor without a housing.
+fixture_ids = {45, 48, 50, 51}
+removed_ids = proxy_ids | fixture_ids
+body_ids = set(range(len(parts))) - door_ids - crisper_ids - removed_ids
 
 def extract(name, indices):
     keep = set().union(*(parts[i] for i in indices))
@@ -61,6 +72,14 @@ def extract(name, indices):
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.index not in keep], context='VERTS')
     bm.to_mesh(data)
     bm.free()
+    # BMesh deletion otherwise recalculates shading at split edges. Restore the
+    # imported per-corner normals instead of smoothing/recomputing the source.
+    retained_corners = data.attributes['source_corner']
+    normals = [source_normals[entry.value] for entry in retained_corners.data]
+    for face in data.polygons:
+        face.use_smooth = True
+    data.normals_split_custom_set(normals)
+    data.attributes.remove(retained_corners)
     data.transform(source.matrix_world)
     obj = bpy.data.objects.new(name, data)
     bpy.context.collection.objects.link(obj)
@@ -70,10 +89,11 @@ body = extract('body', body_ids)
 door = extract('door_surface', door_ids - {42, 43, 44})
 bins = [extract(f'door_bin_{i+1}', {part}) for i, part in enumerate([43, 44, 42])]
 crisper = extract('crisper', crisper_ids)
-lamp = extract('lamp', lamp_ids)
-objects = [body, door, *bins, crisper, lamp]
-assert sum(len(o.data.polygons) for o in objects) == len(mesh.polygons)
-assert sum(len(o.data.vertices) for o in objects) == len(mesh.vertices)
+objects = [body, door, *bins, crisper]
+removed_vertices = set().union(*(parts[i] for i in removed_ids))
+removed_faces = sum(p.vertices[0] in removed_vertices for p in mesh.polygons)
+assert sum(len(o.data.polygons) for o in objects) == len(mesh.polygons) - removed_faces
+assert sum(len(o.data.vertices) for o in objects) == len(mesh.vertices) - len(removed_vertices)
 bpy.data.objects.remove(source, do_unlink=True)
 for obj in list(bpy.context.scene.objects):
     if obj not in objects:
@@ -94,12 +114,14 @@ for obj in [door, *bins]:
 
 anchor = bpy.data.objects.new('LampAnchor', None)
 bpy.context.collection.objects.link(anchor)
-lamp_lo = Vector([min(v.co[a] for v in lamp.data.vertices) for a in range(3)])
-lamp_hi = Vector([max(v.co[a] for v in lamp.data.vertices) for a in range(3)])
+lamp_coords = [mesh.vertices[i].co for i in parts[48]]
+lamp_lo = Vector([min(v[a] for v in lamp_coords) for a in range(3)])
+lamp_hi = Vector([max(v[a] for v in lamp_coords) for a in range(3)])
 anchor.location = (lamp_lo + lamp_hi) / 2
 # Put the point source just inside the housing, on its inward (-X) face.
 anchor.location.x = lamp_lo.x - (lamp_hi.x - lamp_lo.x)
 anchor['powerWatts'] = 5.0  # Small refrigerator bulb, model units are metres.
+anchor['removedSourceTriangles'] = removed_faces
 
 scene = bpy.context.scene
 scene.render.fps = 30
@@ -193,6 +215,10 @@ encoded += b' ' * (-len(encoded) % 4)
 OUTPUT.write_bytes(struct.pack('<4sII', b'glTF', 2, 28 + len(encoded) + len(binary))
                    + struct.pack('<I4s', len(encoded), b'JSON') + encoded
                    + struct.pack('<I4s', len(binary), b'BIN\0') + binary)
-print('LAGAN: preserved', sum(len(o.data.polygons) for o in objects), 'faces;',
+# Blender quantises custom normals internally. Recover the actual decoded GLB
+# attributes, including original tangents, instead of accepting that round-trip.
+subprocess.run(['node', str(ROOT / 'scripts/restore_lagan_attributes.mjs')], check=True)
+print('LAGAN: retained', sum(len(o.data.polygons) for o in objects), 'faces;',
+      'removed internal proxies/fixtures', removed_faces,
       'right hinge', tuple(pivot.location), 'opening degrees', math.degrees(high),
       'drawer travel', depth)
