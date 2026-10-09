@@ -916,7 +916,6 @@ export function Studio() {
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       <SidePanel
         layers={layers} onToggleLayer={toggleLayer}
-        onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
         buildAnimMatrix={buildAnimMatrix}

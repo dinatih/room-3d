@@ -200,7 +200,6 @@ export type LidarMode = 0 | 1 | 2 | 3;
 export interface SidePanelProps {
   layers:                  LayerState;
   onToggleLayer:           (key: keyof LayerState) => void;
-  onOpenInventory:         () => void;
   lidarMode:               LidarMode;
   onCycleLidar:            () => void;
   lidarOpacity:            number;

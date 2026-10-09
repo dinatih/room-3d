@@ -1,4 +1,4 @@
-import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS, CONTROL_HEADER_PADDING } from './toolbarStyles';
+import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 /**
  * SidePanel.tsx
  *
@@ -46,7 +46,6 @@ const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 export function SidePanel({
   layers,
   onToggleLayer,
-  onOpenInventory,
   lidarMode,
   onCycleLidar,
   lidarOpacity,
@@ -490,15 +489,6 @@ export function SidePanel({
             <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={onOpenInventory}
-            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-          >
-            <i className="bi bi-box-seam-fill" aria-hidden="true" />
-            <span className="fw-semibold">Inventaire</span>
-          </button>
-
           {TABS.map(t => {
             const active = activeTab === t.key;
             return (
@@ -536,17 +526,6 @@ export function SidePanel({
         }}
         onWheel={e => e.stopPropagation()}
       >
-          <button
-            type="button"
-            className={`btn btn-sm btn-danger ${CONTROL_HEADER_PADDING} fw-bold text-uppercase d-flex align-items-center gap-2 shadow-sm flex-shrink-0`}
-            onClick={onOpenInventory}
-            title="Ouvrir l'inventaire (Touche I)"
-          >
-              <span className="d-flex align-items-center gap-2"><i className="bi bi-box-seam-fill" aria-hidden="true" />Inventaire</span>
-              <kbd className="bg-white bg-opacity-25 text-white border-0 px-1 rounded font-monospace small">I</kbd>
-            <i className="bi bi-chevron-right ms-auto small" aria-hidden="true" />
-          </button>
-
         {/* ── Section C.V. / Profil Ingénieur / Qui suis-je ? ── */}
         <Group icon="bi-briefcase-fill" title="Profil" extra={profileHeaderButtons} defaultOpen={false}>
           {profileSectionContent}
