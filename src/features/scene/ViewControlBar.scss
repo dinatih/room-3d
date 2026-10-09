@@ -69,6 +69,16 @@
   max-height: 75vh;
 }
 
+.view-control-bar__npc-trigger {
+  position: relative;
+  z-index: 1;
+
+  &:hover,
+  &:focus {
+    z-index: 2;
+  }
+}
+
 .view-control-bar__npc-popover {
   position: fixed;
   inset: auto;
