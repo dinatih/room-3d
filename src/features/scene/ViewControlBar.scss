@@ -135,13 +135,15 @@
   max-width: 100%;
 }
 
-.view-control-bar--two-rows > .view-control-bar__row {
+.view-control-bar--two-rows > .view-control-bar__row,
+.view-control-bar--multi-rows > .view-control-bar__row {
   overflow-x: auto;
   scrollbar-width: none;
   touch-action: pan-x;
 }
 
-.view-control-bar--two-rows > .view-control-bar__row::-webkit-scrollbar {
+.view-control-bar--two-rows > .view-control-bar__row::-webkit-scrollbar,
+.view-control-bar--multi-rows > .view-control-bar__row::-webkit-scrollbar {
   display: none;
 }
 

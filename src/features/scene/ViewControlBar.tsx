@@ -156,9 +156,13 @@ export function ViewControlBar({
   const bar = (
     <>
     {hoverTooltip}
-    <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--two-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
+    <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--multi-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
+      {panelControls && (
+        <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+          {panelControls}
+        </div>
+      )}
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        {panelControls}
         {showCharacterModes && (
           <button
             type="button"
