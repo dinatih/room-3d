@@ -847,7 +847,6 @@ export function Character({
                            target === 'sit-to-stand' ||
                            target === 'anim-sit-to-stand' ||
                            target === 'crouch-to-stand' ||
-                           target === 'stand-up' ||
                            target === 'stand-up-1' ||
                            target === 'getting-up' ||
                            target.includes('landing');

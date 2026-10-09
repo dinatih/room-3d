@@ -5605,14 +5605,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 2.3,
   },
   {
-    id: 'stand-up',
-    path: 'animations/mixamo/anim_stand_up.glb',
-    category: 'poses_idles',
-    label: `Stand Up (146f / 4.9s, 185KB)`,
-    tags: ['poses-idles'],
-    duration: 4.9,
-  },
-  {
     id: 'stand-up-1',
     path: 'animations/mixamo/anim_stand_up_1.glb',
     category: 'poses_idles',

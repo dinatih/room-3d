@@ -462,7 +462,6 @@ export function useAgentController(
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
         statusRef.current = 'IDLE';
-        stateRef.current.y = 0;
         advanceToNextStep(hasNavStepInUpdate);
       }
       return stateRef.current;
@@ -670,7 +669,6 @@ export function useAgentController(
         }
         statusRef.current = 'MOVING';
         stateRef.current.animation = currentWalkAnimRef.current;
-        stateRef.current.y = 0;
         const logKey = `move-${stepIndexRef.current}-${dynamicNavIndexRef.current}-${target.label}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
@@ -733,6 +731,9 @@ export function useAgentController(
       if (dist < ARRIVAL_THRESHOLD) {
         stateRef.current.x = target.tx;
         stateRef.current.z = target.tz;
+        if (target.ty !== undefined) {
+          stateRef.current.y = target.ty;
+        }
 
         if (currentInstruction.type === 'USE_OBJECT') {
           const objId = currentInstruction.smartObjectId;
@@ -843,7 +844,12 @@ export function useAgentController(
           advanceToNextStep(hasNavStep);
         }
       } else {
-        stateRef.current.y = 0;
+        const targetY = target.ty ?? 0;
+        if (stateRef.current.y !== targetY) {
+          const dy = targetY - stateRef.current.y;
+          const yStep = Math.sign(dy) * Math.min(Math.abs(dy), SPEED * dt * 2.0);
+          stateRef.current.y += yStep;
+        }
         stateRef.current.animation = currentWalkAnimRef.current;
 
         const dirX = dx / dist;
@@ -987,7 +993,6 @@ export function useAgentController(
           statusRef.current = 'TRANSITIONING';
           timerRef.current = exit.duration;
           stateRef.current.animation = exit.anim;
-          stateRef.current.y = 0;
           if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
             setDesk2SmartActionState(_characterId, false);
           }
@@ -995,7 +1000,6 @@ export function useAgentController(
         }
 
         statusRef.current = 'IDLE';
-        stateRef.current.y = 0;
         if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
           setDesk2SmartActionState(_characterId, false);
         }

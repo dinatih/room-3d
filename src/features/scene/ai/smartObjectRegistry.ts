@@ -1022,6 +1022,25 @@ export function buildSmartObjectInstructionSequence(
     ];
   }
 
+  // Lit Utåker (couché) : montée sur le lit et descente à pied sur le lit plutôt que de traverser le lit au sol
+  if ((objectId === 'bed-west' || objectId === 'bed-east') && slot.slotId === 'lie-down') {
+    const isWest = objectId === 'bed-west';
+    const [bx, , bz] = obj.position ?? (isWest ? [74, 0, 151.5] : [270, 0, 190]);
+    const zOffset = isWest ? -1.5 : 0;
+    const edgeX = isWest ? bx + 28 : bx - 28;
+    const floorX = isWest ? bx + 52 : bx - 52;
+    const bedEdgePos: [number, number, number] = [edgeX, 45, bz + zOffset];
+    const floorEntryPos: [number, number, number] = [floorX, 0, bz + zOffset];
+
+    return [
+      { type: 'MOVE_TO', targetPos: floorEntryPos, smartObjectId: obj.id },
+      { type: 'MOVE_TO', targetPos: bedEdgePos, smartObjectId: obj.id },
+      baseInstruction,
+      { type: 'MOVE_TO', targetPos: bedEdgePos, smartObjectId: obj.id },
+      { type: 'MOVE_TO', targetPos: floorEntryPos, smartObjectId: obj.id },
+    ];
+  }
+
   // Routines composées
   if (objectId === 'cuisine-group' && slot.slotId === 'cook-oven') {
     return [

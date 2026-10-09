@@ -14,7 +14,11 @@ interface ExitTransitionConfig {
 
 const EXIT_TRANSITIONS: Record<string, ExitTransitionConfig> = {
   sitting: { anim: 'sit-to-stand', duration: 2.3 },
-  laying: { anim: 'stand-up', duration: 2.2 },
+  laying: { anim: 'sit-to-stand', duration: 2.3 },
+  'laying-front': { anim: 'sit-to-stand', duration: 2.3 },
+  'laying-front-static': { anim: 'sit-to-stand', duration: 2.3 },
+  'laying-side-static': { anim: 'sit-to-stand', duration: 2.3 },
+  sleep: { anim: 'sit-to-stand', duration: 2.3 },
   crouch: { anim: 'crouch-to-stand', duration: 2.5 },
 };
 
@@ -27,7 +31,7 @@ export function getExitTransition(animKey: string | null | undefined): { anim: s
   if (!def || !def.tags) return null;
 
   // Éviter de reboucler si l'animation en cours est déjà un clip de transition
-  if (def.id === 'sit-to-stand' || def.id === 'stand-up' || def.id === 'crouch-to-stand' || def.id === 'stand-to-sit') {
+  if (def.id === 'sit-to-stand' || def.id === 'crouch-to-stand' || def.id === 'stand-to-sit') {
     return null;
   }
 
