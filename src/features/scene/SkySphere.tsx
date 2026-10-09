@@ -27,7 +27,7 @@ export function getLoadedSkyTexture(id?: string): THREE.Texture | null {
   return textureCache.get(getHdriUrl(hdri, hdriResolution)) ?? null;
 }
 
-export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
+export function SkySphere({ envOnly = false, showSpaceBackdrop = true }: { envOnly?: boolean; showSpaceBackdrop?: boolean } = {}) {
   const currentHdri = useSceneStore(state => state.currentHdri);
   const hdriResolution = useSceneStore(state => state.hdriResolution);
   const hdri = getHdriById(currentHdri);
@@ -81,7 +81,7 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
   return (
     <CategoryLayerGroup layer={LAYER_ENVIRONMENT}>
       <group position={SKY_CENTER} name="SkySphere" userData={{ isSky: true }}>
-        <SpaceBackdrop />
+        {showSpaceBackdrop && <SpaceBackdrop />}
         {texture && <CombinedSkyDome texture={texture} />}
         <BnfSkyMarker skyRadius={SKY_RADIUS} />
       </group>

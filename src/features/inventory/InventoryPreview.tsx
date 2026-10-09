@@ -201,41 +201,12 @@ function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, 
 
 function PreviewEnvironment({ showGrid }: { showGrid: boolean }) {
   const neutralBackground = useMemo(() => new THREE.Color('#d2d2d2'), []);
-  const backdropRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
-  const textureRef = useRef<THREE.Texture | null>(null);
-  const { camera } = useThree();
 
   useFrame(({ scene }) => {
     scene.background = neutralBackground;
-    const texture = scene.environment;
-    const backdrop = backdropRef.current;
-    const material = materialRef.current;
-    if (!backdrop || !material) return;
-
-    backdrop.visible = !showGrid && !!texture;
-    backdrop.position.copy(camera.position);
-    if (texture && textureRef.current !== texture) {
-      textureRef.current = texture;
-      material.map?.dispose();
-      material.map = texture.clone();
-      material.map.mapping = THREE.UVMapping;
-      material.map.needsUpdate = true;
-      material.needsUpdate = true;
-    }
   });
 
-  useEffect(() => () => materialRef.current?.map?.dispose(), []);
-
-  return (
-    <>
-      <SkySphere envOnly />
-      <mesh ref={backdropRef} name="inventory-preview-backdrop" renderOrder={-1000} frustumCulled={false} visible={false}>
-        <sphereGeometry args={[1000, 64, 48]} />
-        <meshBasicMaterial ref={materialRef} side={THREE.BackSide} depthTest={false} depthWrite={false} />
-      </mesh>
-    </>
-  );
+  return <SkySphere envOnly={showGrid} showSpaceBackdrop={false} />;
 }
 
 function FitCamera({ target = [0, 0, 0], boundsRadius }: { target?: [number, number, number]; boundsRadius?: number }) {
@@ -249,7 +220,7 @@ function FitCamera({ target = [0, 0, 0], boundsRadius }: { target?: [number, num
       const dist = (boundsRadius / Math.sin(fovRad / 2)) * 1.15;
       camera.position.set(dist * 0.75, target[1] + dist * 0.45, dist * 0.95);
       camera.near = Math.max(0.5, dist / 100);
-      camera.far = Math.max(2000, dist * 20);
+      camera.far = Math.max(10000, dist * 20);
       camera.updateProjectionMatrix();
     }
     camera.lookAt(new THREE.Vector3(...target));
@@ -339,7 +310,7 @@ function OrthoCameraControls({
         top={viewH / 2}
         bottom={-viewH / 2}
         near={1}
-        far={5000}
+        far={10000}
       />
       <OrbitControls
         ref={ctrlRef}
