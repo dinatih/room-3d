@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GARDEN_PANEL_DEFS, pEast, pWest, pNorth } from './wallData';
+import { GARDEN_PANEL_DEFS, DiagWall, pEast, pWest, pNorth } from './wallData';
 
 export const ROBIN_HEIGHT = 15; // cm
 
@@ -13,6 +13,7 @@ export type BirdPerch = {
   normal: THREE.Vector3;
   tangent: THREE.Vector3;
   id: string;
+  forageWall?: THREE.Object3D;
 };
 export type BirdFootPose = {
   left: THREE.Vector3;
@@ -99,12 +100,66 @@ function castAt(x: number, z: number, top: number, meshes: THREE.Mesh[]): THREE.
   return raycaster.intersectObjects(meshes, false).find(solidHit);
 }
 
+function groundObstacles(world: THREE.Scene, ground: THREE.Object3D): THREE.Object3D[] {
+  const obstacles: THREE.Object3D[] = [];
+  world.traverse(object => {
+    const data = object.userData;
+    const support = data.birdSupport as BirdSupport | undefined;
+    if (object !== ground && supportIsAvailable(object, world) &&
+        ((support && support.kind !== 'ground') ||
+         (data.animUnit && data.itemName && !data.noAnim && !support))) obstacles.push(object);
+  });
+  return obstacles;
+}
+
+const forageWallFaces = new WeakMap<THREE.Object3D, number>();
+
+function forageArea(wall: THREE.Object3D, feet: BirdFootPose) {
+  const box = new THREE.Box3().setFromObject(wall);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const along = new THREE.Vector3(DiagWall.sin, 0, DiagWall.cos);
+  const towardGarden = new THREE.Vector3(DiagWall.cos, 0, -DiagWall.sin);
+  let face = forageWallFaces.get(wall);
+  if (face === undefined) {
+    face = -Infinity;
+    wall.updateWorldMatrix(true, true);
+    wall.traverse(object => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const vertices = mesh.geometry.getAttribute('position');
+      const vertex = new THREE.Vector3();
+      for (let i = 0; i < vertices.count; i++) {
+        vertex.fromBufferAttribute(vertices, i).applyMatrix4(mesh.matrixWorld);
+        face = Math.max(face!, vertex.dot(towardGarden));
+      }
+    });
+    if (!Number.isFinite(face)) throw new Error('Robin : mur du jardin sans géométrie');
+    forageWallFaces.set(wall, face);
+  }
+  center.addScaledVector(towardGarden, face - center.dot(towardGarden));
+  return { center, along, towardGarden,
+    halfWidth: (Math.abs(along.x) * size.x + Math.abs(along.z) * size.z) / 2 - feet.radius,
+    depth: feet.height * 8, // A foraging strip eight bird heights deep, facing the garden.
+  };
+}
+
+function insideForageArea(position: THREE.Vector3, wall: THREE.Object3D, feet: BirdFootPose): boolean {
+  const area = forageArea(wall, feet);
+  const offset = position.clone().sub(area.center); offset.y = 0;
+  const depth = offset.dot(area.towardGarden);
+  return Math.abs(offset.dot(area.along)) <= area.halfWidth &&
+    depth >= feet.radius * (Math.abs(area.towardGarden.x) + Math.abs(area.towardGarden.z)) && depth <= area.depth &&
+    position.x >= pEast('corner-nw-ext') + feet.radius && position.x <= pWest('corner-ne-ext') - feet.radius;
+}
+
 /** Resolve against live geometry, including moving armrests and loaded/replaced ground. */
 export function resolveBirdPerch(
   perch: BirdPerch, world: THREE.Scene, feet: BirdFootPose,
   position: THREE.Vector3, rotation: THREE.Quaternion,
 ): boolean {
   if (!supportIsAvailable(perch.support, world)) return false;
+  if (perch.forageWall && !supportIsAvailable(perch.forageWall, world)) return false;
   perch.mesh.updateWorldMatrix(true, false);
   position.copy(perch.point).applyMatrix4(perch.mesh.matrixWorld);
   const normal = perch.normal.clone().applyNormalMatrix(new THREE.Matrix3().getNormalMatrix(perch.mesh.matrixWorld));
@@ -145,9 +200,9 @@ export function resolveBirdPerch(
       position.clone().addScaledVector(UP, feet.height / 2),
       new THREE.Vector3(feet.radius * 2, feet.height, feet.radius * 2),
     );
-    const occupied = supportsOf(world).some(root => root !== perch.support &&
+    const occupied = groundObstacles(world, perch.support).some(root =>
       body.intersectsBox(new THREE.Box3().setFromObject(root)));
-    if (occupied) return false;
+    if (occupied || (perch.forageWall && !insideForageArea(position, perch.forageWall, feet))) return false;
   }
   return true;
 }
@@ -195,6 +250,23 @@ function candidatesOf(support: THREE.Object3D, feet: BirdFootPose): BirdPerch[] 
           normal: new THREE.Vector3(0, 0, 1), tangent: new THREE.Vector3(1, 0, 0), id: `${descriptor.id}:${x}:${z}` });
       }
     }
+    const world = support.parent;
+    let root = world;
+    while (root?.parent) root = root.parent;
+    root?.traverse(wall => {
+      if (!wall.userData.isGardenFrontWallScan || !supportIsAvailable(wall, root as THREE.Scene)) return;
+      const area = forageArea(wall, feet);
+      for (let along = -area.halfWidth; along <= area.halfWidth; along += feet.height) {
+        for (let depth = feet.radius; depth <= area.depth; depth += feet.height) {
+          const position = area.center.clone().addScaledVector(area.along, along).addScaledVector(area.towardGarden, depth);
+          position.y = height;
+          if (!insideForageArea(position, wall, feet)) continue;
+          candidates.push({ support, descriptor, mesh, forageWall: wall,
+            point: mesh.worldToLocal(position), normal: new THREE.Vector3(0, 0, 1),
+            tangent: new THREE.Vector3(1, 0, 0), id: `forage:${along}:${depth}` });
+        }
+      }
+    });
   } else {
     for (const mesh of perchMeshes(support)) {
       mesh.updateWorldMatrix(true, false);
@@ -234,6 +306,38 @@ export function chooseBirdPerch(world: THREE.Scene, feet: BirdFootPose, current?
     }
   }
   return null; // All supports may legitimately be hidden or still loading.
+}
+
+export function chooseBirdForagePerch(world: THREE.Scene, feet: BirdFootPose): BirdPerch | null {
+  const position = new THREE.Vector3(), rotation = new THREE.Quaternion();
+  for (const ground of supportsOf(world).filter(root => root.userData.birdSupport.kind === 'ground')) {
+    for (const perch of shuffle(candidatesOf(ground, feet).filter(candidate => candidate.forageWall))) {
+      if (resolveBirdPerch(perch, world, feet, position, rotation)) return perch;
+    }
+  }
+  return null;
+}
+
+/** Check the whole short ground route with body-sized clearance, not just its destination. */
+export function birdGroundStep(
+  perch: BirdPerch, world: THREE.Scene, feet: BirdFootPose, from: THREE.Vector3,
+  direction: THREE.Vector3, distance: number,
+): BirdPerch | null {
+  for (const turn of [0, Math.PI / 4, -Math.PI / 4, Math.PI / 2, -Math.PI / 2, Math.PI]) {
+    const heading = direction.clone().applyAxisAngle(UP, turn);
+    let destination: BirdPerch | null = null;
+    let clear = true;
+    const samples = Math.ceil(distance / feet.radius);
+    for (let sample = 1; sample <= samples; sample++) {
+      const point = from.clone().addScaledVector(heading, distance * sample / samples);
+      const next = { ...perch, point: perch.mesh.worldToLocal(point), id: `${perch.descriptor.id}:step:${point.x}:${point.z}` };
+      const position = new THREE.Vector3(), rotation = new THREE.Quaternion();
+      if (!resolveBirdPerch(next, world, feet, position, rotation)) { clear = false; break; }
+      destination = next;
+    }
+    if (clear && destination) return destination;
+  }
+  return null;
 }
 
 /** Read the actual animated toe geometry, rather than the bind-pose body bounding box. */

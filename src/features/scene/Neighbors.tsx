@@ -33,6 +33,7 @@ function NeighborApartment({ offsetX, offsetZ }: { offsetX: number; offsetZ: num
       o.userData = { ...o.userData, noAnim: true };
       delete (o.userData as any).animUnit;
       delete o.userData.birdSupport; // Only the original garden offers bird perches.
+      delete o.userData.isGardenFrontWallScan;
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
       mesh.frustumCulled = false;

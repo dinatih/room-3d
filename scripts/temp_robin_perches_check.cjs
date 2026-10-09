@@ -30,6 +30,7 @@ const assert = require('node:assert/strict');
  const {PottedYucca}=await import('/src/features/scene/items/PottedYucca.tsx');
  const {BirdFeeder}=await import('/src/features/scene/items/BirdFeeder.tsx');
  const {WoodenFencePanel}=await import('/src/features/scene/items/WoodenFencePanel.tsx');
+ const {GardenFrontWallScan}=await import('/src/features/scene/building/GardenFrontWallScan.tsx');
  const {RobinBird}=await import('/src/features/scene/items/RobinBird.tsx');
  const perches=await import('/src/features/scene/birdPerches.ts');
  const {GARDEN_PANEL_DEFS}=await import('/src/features/scene/wallData.ts');
@@ -45,12 +46,12 @@ const assert = require('node:assert/strict');
  const root=createRoot(container);
  root.render(h(Canvas,{frameloop:'never',camera:{position:[520,390,80],near:1,far:2000,fov:48},shadows:true},
  h(Capture),h('ambientLight',{intensity:1.6}),h('directionalLight',{position:[100,400,50],intensity:3,castShadow:true}),
- h(React.Suspense,{fallback:null},h(GardenFurniture),
+ h(React.Suspense,{fallback:null},h(GardenFurniture),h(GardenFrontWallScan),
  support('palm','plant',[100,0,-145],[0,0,0],PottedPalm),
  support('yucca','plant',[155,0,-355],[0,Math.PI,0],PottedYucca),
  support('feeder','feeder',[95,214,-165],[0,0,0],BirdFeeder),
  ...GARDEN_PANEL_DEFS.map((p,i)=>h('group',{key:i,position:[p.cx,p.cy,p.cz],userData:{birdSupport:{id:`fence-${i}`,kind:'fence'}}},h(WoodenFencePanel,{w:p.w,h:p.h,d:p.d}))),
- h('mesh',{position:[150,-3.6,-220],rotation:[-Math.PI/2,0,0],userData:{birdSupport:{id:'garden-ground',kind:'ground'}}},h('planeGeometry',{args:[600,700]}),h('meshStandardMaterial',{color:'#52733d'})),
+ h('mesh',{position:[150,-3.6,0],rotation:[-Math.PI/2,0,0],userData:{birdSupport:{id:'garden-ground',kind:'ground'}}},h('planeGeometry',{args:[1100,2000]}),h('meshStandardMaterial',{color:'#52733d'})),
  h('group',{name:'test-robin'},h(RobinBird))
  )));
  });
@@ -93,6 +94,8 @@ const assert = require('node:assert/strict');
  },id);
  await page.screenshot({path:`/tmp/robin-${id}-contact.png`});
  }
+ const forageArea=await page.evaluate(()=>{const f=window.robinFixture;const p=f.perches.chooseBirdForagePerch(f.scene,f.feet);if(!p)throw Error('No grass in front of diagonal wall');const pos=new f.THREE.Vector3(),q=new f.THREE.Quaternion();if(!f.perches.resolveBirdPerch(p,f.scene,f.feet,pos,q))throw Error('Invalid forage ground');return pos.toArray()});
+ console.log('Forage area in front of garden wall:',forageArea);
  const animated = await page.evaluate(() => {
    const f=window.robinFixture,{THREE,perches,scene,bird,contact}=f;
    const perch=f.chosen.find(p=>p.descriptor.id==='chest');

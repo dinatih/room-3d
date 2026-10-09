@@ -56,7 +56,7 @@ vm.runInNewContext(code, { exports: exported, Math: fixedMath, document: new Eve
   if (name.endsWith('/glbUtils')) return { glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(-5, 0, -5), new THREE.Vector3(5, 15, 5)) };
   if (name.endsWith('/AppConsole')) return { appLog() {} };
   if (name.endsWith('/useAnimPreviewStore')) return {};
-  if (name.endsWith('/birdPerches')) return { ROBIN_HEIGHT: 15, RobinFootContact: class { ground() { return {}; } }, chooseBirdPerch: () => ({ point: new THREE.Vector3(95, 215, -165), descriptor: { kind: 'feeder', id: 'feeder' } }), resolveBirdPerch(perch, world, feet, position, rotation) { position.copy(perch.point); rotation.identity(); return true; } };
+  if (name.endsWith('/birdPerches')) return { ROBIN_HEIGHT: 15, RobinFootContact: class { ground() { return {radius:10,height:15}; } }, chooseBirdForagePerch: () => null, birdGroundStep: (perch, world, feet, from, direction, distance) => ({...perch,point:from.clone().addScaledVector(direction,distance)}), chooseBirdPerch: () => ({ point: new THREE.Vector3(95, 215, -165), descriptor: { kind: 'feeder', id: 'feeder' } }), resolveBirdPerch(perch, world, feet, position, rotation) { position.copy(perch.point); rotation.identity(); return true; } };
   if (name.endsWith('/cameraState')) return { cameraState };
   return require(name);
 } });
@@ -85,5 +85,36 @@ frame({}, 1 / 60);
 assert.equal(ai.state, 'idle', 'zero distance lands without invalid direction');
 assert(Math.abs(group.rotation.x) < 1e-12, 'landing levels pitch');
 assert(Math.abs(group.rotation.z) < 1e-12, 'landing levels roll');
+const camera = new THREE.PerspectiveCamera();
+camera.position.set(10000,10000,10000);
+ai.state = 'flying'; ai.perch.descriptor.kind = 'ground'; ai.perch.point.copy(group.position);
+frame({camera},1/60);
+assert.equal(ai.state,'foraging','landing on grass starts searching');
+const forage=ai.forage;
+forage.elapsed=forage.duration;
+frame({camera},1/60);
+assert.equal(forage.phase,'hop','search pauses can lead to short hops');
+const start=group.position.clone();
+frame({camera},forage.duration/2);
+assert(group.position.y>start.y,'hop lifts the feet above the ground');
+frame({camera},forage.duration/2);
+assert(Math.abs(group.position.y-start.y)<1e-8,'hop lands at the terrain height');
+assert(group.position.distanceTo(start)>0,'hop advances along the ground');
+// Selecting a peck after a call allows all three healthy eating clips in sequence.
+for(let i=0;i<3;i++) {
+ fixedMath.random=()=>0.4;
+ forage.phase='call'; forage.elapsed=forage.duration; forage.step=null;
+ frame({camera},1/60);
+ assert.equal(forage.phase,'peck');
+ const action=refs.find(ref=>ref.current?.getClip && ref.current.getClip().name.startsWith('Robin_Bird_')).current;
+ assert.equal(action.getClip().name,['Robin_Bird_Eat','Robin_Bird_Eat2','Robin_Bird_Eat3'][i]);
+}
+camera.position.copy(group.position);
+forage.step=null;
+frame({camera},1/60);
+assert.equal(forage.phase,'startled','a nearby camera triggers a flinch once');
+forage.elapsed=forage.duration;
+frame({camera},1/60);
+assert.equal(forage.phase,'backstep','flinching leads to a backward step');
 cleanup.forEach(fn => fn?.());
-console.log('Robin checks passed using real GLB clips: beak follows climbing, descending and reversing flight; landing levels the bird.');
+console.log('Robin checks passed: flight heading, landing, foraging, ballistic hops, three peck variants and startle/backstep.');
