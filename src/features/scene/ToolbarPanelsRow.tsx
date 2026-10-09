@@ -369,11 +369,11 @@ export function ToolbarPanelsRow({
       )}
 
       <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux">
-        {/* 1. Plan 2D */}
+        {/* 1. Plan */}
         <PanelPopover
           icon="bi-map-fill"
-          label="Plan 2D"
-          title="Plan 2D"
+          label="Plan"
+          title="Plan"
           hideUI={hideUI}
         >
           <Minimap embedded showGroup={false} />
@@ -399,20 +399,6 @@ export function ToolbarPanelsRow({
         >
           {profileSectionContent}
         </PanelPopover>
-
-        {/* Inventaire */}
-        {onOpenInventory && (
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-            onClick={onOpenInventory}
-            title="Ouvrir l'inventaire (I)"
-            aria-label="Ouvrir l'inventaire"
-          >
-            <i className="bi bi-box-seam-fill" aria-hidden="true" />
-            <span>Inventaire</span>
-          </button>
-        )}
 
         {/* 4. Calques */}
         <PanelPopover
@@ -446,20 +432,78 @@ export function ToolbarPanelsRow({
           {characterSectionContent}
         </PanelPopover>
 
-        {/* NPCs */}
-        <button
-          type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
-          onClick={() => {
-            document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
-          }}
-          title="Afficher ou quitter la grille des PNJ (G)"
-          aria-label="Afficher ou quitter la grille des PNJ (G)"
-          aria-pressed={npcGridActive}
+        {/* 7. Grilles & Inventaire */}
+        <PanelPopover
+          icon="bi-grid-3x3-gap-fill"
+          label="Grilles"
+          title="Grilles & Inventaire"
+          hideUI={hideUI}
+          active={npcGridActive || Boolean(layers.inventoryGrid)}
         >
-          <i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" />
-          <span className="fw-semibold">NPCs</span>
-        </button>
+          <div className="d-flex flex-column gap-1.5 p-1">
+            {/* 1. Inventaire */}
+            <button
+              type="button"
+              className="btn btn-sm btn-light border d-flex align-items-center justify-content-between p-2 text-dark text-start"
+              onClick={(e) => {
+                (e.currentTarget.closest('[popover]') as HTMLElement | null)?.hidePopover();
+                onOpenInventory?.();
+              }}
+              title="Ouvrir l'inventaire (I)"
+            >
+              <span className="d-flex align-items-center gap-2">
+                <i className="bi bi-box-seam-fill text-primary fs-6" aria-hidden="true" />
+                <span className="fw-semibold">Inventaire</span>
+              </span>
+              <span className="badge bg-secondary-subtle text-secondary small">I</span>
+            </button>
+
+            {/* 2. Grille/Vitrine Personnages */}
+            <button
+              type="button"
+              className={`btn btn-sm border d-flex align-items-center justify-content-between p-2 text-start ${
+                npcGridActive ? 'btn-primary text-white shadow-sm' : 'btn-light text-dark'
+              }`}
+              onClick={() => {
+                document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
+              }}
+              title="Afficher ou quitter la grille / vitrine des PNJ (G)"
+              aria-pressed={npcGridActive}
+            >
+              <span className="d-flex align-items-center gap-2">
+                <i className={`bi bi-people-fill fs-6 ${npcGridActive ? 'text-white' : 'text-primary'}`} aria-hidden="true" />
+                <span className="fw-semibold">Grille/Vitrine Personnages</span>
+              </span>
+              <div className="d-flex align-items-center gap-1">
+                {npcGridActive && <i className="bi bi-check-lg" aria-hidden="true" />}
+                <span className={`badge ${npcGridActive ? 'bg-white bg-opacity-25 text-white' : 'bg-secondary-subtle text-secondary'} small`}>G</span>
+              </div>
+            </button>
+
+            {/* 3. Grille inventaire */}
+            <button
+              type="button"
+              className={`btn btn-sm border d-flex align-items-center justify-content-between p-2 text-start ${
+                layers.inventoryGrid ? 'btn-primary text-white shadow-sm' : 'btn-light text-dark'
+              }`}
+              onClick={() => {
+                if (onToggleLayer) onToggleLayer('inventoryGrid');
+                else useSceneStore.getState().toggleLayer?.('inventoryGrid');
+              }}
+              title="Afficher ou masquer la grille des objets d'inventaire (Alt+I)"
+              aria-pressed={Boolean(layers.inventoryGrid)}
+            >
+              <span className="d-flex align-items-center gap-2">
+                <i className={`bi bi-box-seam fs-6 ${layers.inventoryGrid ? 'text-white' : 'text-primary'}`} aria-hidden="true" />
+                <span className="fw-semibold">Grille inventaire</span>
+              </span>
+              <div className="d-flex align-items-center gap-1">
+                {layers.inventoryGrid && <i className="bi bi-check-lg" aria-hidden="true" />}
+                <span className={`badge ${layers.inventoryGrid ? 'bg-white bg-opacity-25 text-white' : 'bg-secondary-subtle text-secondary'} small`}>Alt+I</span>
+              </div>
+            </button>
+          </div>
+        </PanelPopover>
       </div>
 
       {showCvModal && <CvModal initialCv={selectedCvType} onClose={handleCloseCv} />}

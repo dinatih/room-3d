@@ -716,7 +716,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
               <div className="d-flex align-items-center gap-1.5">
                 <span className="fw-bold text-dark text-uppercase small d-flex align-items-center gap-1">
                   <i className="bi bi-map-fill" aria-hidden="true" />
-                  <span>Plan 2D</span>
+                  <span>Plan</span>
                 </span>
                 {zoom !== 1 && (
                   <span className="badge bg-primary bg-opacity-75 text-white fw-semibold" style={{ fontSize: '0.65rem', padding: '0.2em 0.4em' }}>
@@ -835,7 +835,7 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
         {showGroup ? (
           <Group
             icon="bi-map-fill"
-            title="Plan 2D"
+            title="Plan"
             defaultOpen
             headerPadding="py-1.5 px-2"
             extra={layerButtons(true)}

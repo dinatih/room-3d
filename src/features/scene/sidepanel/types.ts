@@ -222,7 +222,7 @@ export type TabKey = 'profile' | 'layers' | 'personnage' | 'perf' | 'plan2d' | '
 export const TABS: Array<{ key: Exclude<TabKey, null>; icon: string; label: string }> = [
   { key: 'profile',    icon: 'bi-briefcase-fill', label: 'Profil' },
   { key: 'perf',       icon: 'bi-bar-chart-fill', label: 'Perf' },
-  { key: 'plan2d',     icon: 'bi-map-fill', label: 'Plan 2D' },
+  { key: 'plan2d',     icon: 'bi-map-fill', label: 'Plan' },
   { key: 'layers',     icon: 'bi-layers-fill', label: 'Calques' },
   { key: 'interactif', icon: 'bi-controller', label: 'Interact' },
   { key: 'personnage', icon: 'bi-person-fill', label: 'PNJ' },

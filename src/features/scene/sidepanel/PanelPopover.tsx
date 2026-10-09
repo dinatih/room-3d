@@ -8,6 +8,7 @@ export interface PanelPopoverProps {
   title?: string;
   headerExtra?: React.ReactNode;
   hideUI?: boolean;
+  active?: boolean;
   children: React.ReactNode;
 }
 
@@ -17,6 +18,7 @@ export function PanelPopover({
   title,
   headerExtra,
   hideUI = false,
+  active = false,
   children,
 }: PanelPopoverProps) {
   const id = useId();
@@ -50,7 +52,7 @@ export function PanelPopover({
     <>
       <button
         type="button"
-        className={`${TOOLBAR_BUTTON_CLASS} ${isOpen ? 'btn-danger text-white' : 'btn-outline-secondary'} view-control-bar__npc-trigger`}
+        className={`${TOOLBAR_BUTTON_CLASS} ${isOpen ? 'btn-danger text-white' : active ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'} view-control-bar__npc-trigger`}
         {...{ popovertarget: id }}
         aria-haspopup="dialog"
         aria-expanded={isOpen}

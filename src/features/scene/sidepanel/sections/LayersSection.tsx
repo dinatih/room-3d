@@ -343,7 +343,7 @@ export function LayersSection({
         onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
         style={{ background: 'transparent', opacity: layers.plan ? 1 : 0.55 }}
       >
-        <span>Plan 2D</span>
+        <span>Plan</span>
         <span className={`badge ${layers.plan ? 'bg-danger' : 'bg-secondary'}`}>
           {layers.plan ? 'ON' : 'OFF'}
         </span>

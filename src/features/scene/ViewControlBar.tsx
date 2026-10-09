@@ -229,7 +229,6 @@ export function ViewControlBar({
           title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (O / P : alterner)`}
           aria-pressed={isOrtho}
         >
-          <i className="bi bi-camera-video-fill" aria-hidden="true" />
           <i className={`bi ${isOrtho ? 'bi-easel2' : 'bi-eye'}`} aria-hidden="true" />
           <span className="fw-semibold">{isOrtho ? 'Ortho' : 'Persp'}</span>
         </button>
@@ -246,12 +245,7 @@ export function ViewControlBar({
               aria-label={orbitTitle}
               aria-pressed={orbitActive}
             >
-              <svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M8 1a5 5 0 0 0-5 5h5Z" fill="currentColor" />
-                <rect x="3" y="1" width="10" height="14" rx="5" stroke="currentColor" />
-                <path d="M8 1v5M3 6h10" stroke="currentColor" />
-              </svg>
-              <i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-globe2'}`} aria-hidden="true" />
+              <i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-arrow-repeat'}`} aria-hidden="true" />
               <span className="fw-semibold">{isPan ? 'Trans' : 'Rot'}</span>
             </button>
         )}
