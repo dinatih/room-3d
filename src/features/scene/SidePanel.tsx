@@ -73,6 +73,7 @@ export function SidePanel({
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
   const setCvModalOpen = useSceneStore(state => state.setCvModalOpen);
+  const npcGridActive = useSceneStore(state => state.layers.characterGrid);
 
   useEffect(() => {
     if (typeof navigator !== 'undefined' && 'xr' in navigator && (navigator as any).xr) {
@@ -456,6 +457,21 @@ export function SidePanel({
         >
           {characterSectionContent}
         </PanelPopover>
+
+        {/* NPCs */}
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
+          onClick={() => {
+            document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
+          }}
+          title="Afficher ou quitter la grille des PNJ (G)"
+          aria-label="Afficher ou quitter la grille des PNJ (G)"
+          aria-pressed={npcGridActive}
+        >
+          <i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" />
+          <span className="fw-semibold">NPCs</span>
+        </button>
       </div>
 
       {showCvModal && <CvModal initialCv={selectedCvType} onClose={handleCloseCv} />}

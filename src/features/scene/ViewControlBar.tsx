@@ -255,18 +255,6 @@ export function ViewControlBar({
               <span className="fw-semibold">{isPan ? 'Trans' : 'Rot'}</span>
             </button>
         )}
-        {showCharacterModes && (
-          <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Modes caméra">
-            <button
-              type="button"
-              className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
-              onClick={() => dispatchCameraMode('toggle-npc-grid')}
-              title="Afficher ou quitter la grille des PNJ (G)"
-              aria-pressed={npcGridActive}
-            ><i className="bi bi-grid-3x3-gap-fill" aria-hidden="true" /><span className="fw-semibold">NPCs</span></button>
-          </div>
-        )}
-
       </div>
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Zoom caméra">
