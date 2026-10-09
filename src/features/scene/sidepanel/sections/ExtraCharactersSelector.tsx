@@ -10,12 +10,14 @@ import {
 
 interface ExtraCharactersSelectorProps {
   isMobile: boolean;
+  compact?: boolean;
   onToggleLayer?: (key: any) => void;
   extraCharactersEnabled?: boolean;
 }
 
 export function ExtraCharactersSelector({
   isMobile,
+  compact = false,
 }: ExtraCharactersSelectorProps) {
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
@@ -50,7 +52,7 @@ export function ExtraCharactersSelector({
   const allAnatomicalSelected = anatomicalCount === ANATOMICAL_EXTRA_IDS.length;
 
   return (
-    <div className="p-2 border-top bg-transparent d-flex flex-column gap-2 mt-2">
+    <div className={`${compact ? '' : 'p-2 border-top mt-2'} bg-transparent d-flex flex-column gap-2`}>
       {/* En-tête */}
       <div className="d-flex justify-content-between align-items-center">
         <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ fontSize: '9px' }}>
@@ -230,7 +232,7 @@ export function ExtraCharactersSelector({
           </div>
 
         {/* Chips / pilules des personnages actifs avec suppression rapide */}
-        {activeExtraIds.length > 0 && (
+        {!compact && activeExtraIds.length > 0 && (
           <div className="d-flex flex-column gap-1 pt-1 border-top border-secondary-subtle">
             <div className="text-muted d-flex justify-content-between align-items-center" style={{ fontSize: '9px' }}>
               <span>SÉLECTION ACTUELLE ({activeExtraIds.length}) :</span>

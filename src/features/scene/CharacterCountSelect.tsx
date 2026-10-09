@@ -4,6 +4,7 @@ import { useSceneStore } from './store/useSceneStore';
 import { getActiveSceneCharactersCount } from './character/characterGridUtils';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import { NonExtraCharactersSelector } from './sidepanel/sections/NonExtraCharactersSelector';
+import { ExtraCharactersSelector } from './sidepanel/sections/ExtraCharactersSelector';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 const PRESETS = [
@@ -19,7 +20,7 @@ const PRESETS = [
 export function CharacterCountSelect() {
   const id = useId();
   const popoverRef = useRef<HTMLDivElement>(null);
-  const [tab, setTab] = useState<'presets' | 'laras'>('presets');
+  const [tab, setTab] = useState<'presets' | 'laras' | 'extra'>('presets');
   const isMobile = useIsMobile();
   const count = useSceneStore(s => s.layers.character && s.layers.showAllLaraStyles ? getActiveSceneCharactersCount(s) : 0);
   const setLaraCount = useSceneStore(s => s.setLaraCount);
@@ -77,9 +78,12 @@ export function CharacterCountSelect() {
             <div id={`${id}-laras-panel`} role="tabpanel" aria-labelledby={`${id}-laras-tab`} hidden={tab !== 'laras'}>
               <NonExtraCharactersSelector isMobile={isMobile} compact />
             </div>
+            <div id={`${id}-extra-panel`} role="tabpanel" aria-labelledby={`${id}-extra-tab`} hidden={tab !== 'extra'}>
+              <ExtraCharactersSelector isMobile={isMobile} compact />
+            </div>
           </div>
           <div className="nav nav-pills nav-fill border-top p-1 gap-1 flex-shrink-0" role="tablist" aria-label="Sélection des personnages">
-            {(['presets', 'laras'] as const).map(value => (
+            {(['presets', 'laras', 'extra'] as const).map(value => (
               <button
                 key={value}
                 id={`${id}-${value}-tab`}
@@ -90,7 +94,7 @@ export function CharacterCountSelect() {
                 aria-controls={`${id}-${value}-panel`}
                 onClick={() => setTab(value)}
               >
-                {value === 'presets' ? 'Presets' : 'Laras'}
+                {value === 'presets' ? 'Presets' : value === 'laras' ? 'Laras' : 'Extra'}
               </button>
             ))}
           </div>
