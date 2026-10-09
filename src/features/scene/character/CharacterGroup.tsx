@@ -12,6 +12,7 @@ import { cacheDynamicGLTF } from './useCharacterAnimations';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import type { CharacterGroupProps } from './characterTypes';
 import { canCharacterPerformDuo, resolveDuoPreviewParticipants } from '../animations/duoAnimations';
+import { getDuoAnimationTransformOverride } from '../animations/animationResolver';
 import { getCharacterGridPosition, getCharacterGridCenterIndex } from './characterGridUtils';
 
 function InternalCharacterGroup(props: CharacterGroupProps) {
@@ -70,7 +71,9 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
     if (!partner) throw new Error(`Partenaire de grille inconnu : ${props.duoPartnerId}`);
     const animationMasterId = mountedCharacters.find(char => char.id === activeCharacterId && canCharacterPerformDuo(char.id, duo))?.id
       ?? mountedCharacters.find(char => canCharacterPerformDuo(char.id, duo))?.id;
-    const offset = duo.offsetB ?? [0, 0, 0];
+    const duoOverride = getDuoAnimationTransformOverride(duo.id);
+    const offset = duoOverride?.offsetB ?? duo.offsetB ?? [0, 0, 0];
+    const rotB = duoOverride?.rotB !== undefined ? duoOverride.rotB : (duo.rotB ?? 0);
     return <>{mountedCharacters.map((leader, index) => {
       const eligible = canCharacterPerformDuo(leader.id, duo);
       const pos = getCharacterGridPosition(index, mountedCharacters.length);
@@ -95,7 +98,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
           characterIndex={index} totalCharacters={mountedCharacters.length}
           characterAnim={duo.animB}
           previewPosition={[pos.x + offset[0], pos.y + offset[1], pos.z + offset[2]]}
-          previewRotationY={duo.rotB ?? 0}
+          previewRotationY={rotB}
         />}
       </Suspense>;
     })}</>;
@@ -113,14 +116,18 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
 
         if (props.duoAnimDef) {
           const def = props.duoAnimDef;
+          const duoOverride = getDuoAnimationTransformOverride(def.id);
+          const effectiveOffsetB = duoOverride?.offsetB ?? def.offsetB;
+          const effectiveRotB = duoOverride?.rotB !== undefined ? duoOverride.rotB : def.rotB;
+
           if (isDuoRoleA) {
             charAnim = def.animA;
             charPos = [0, 0, 0];
             charRot = 0;
           } else if (isDuoRoleB) {
             charAnim = def.animB;
-            charPos = def.offsetB ? [def.offsetB[0], def.offsetB[1], def.offsetB[2]] : [0, 0, 0];
-            charRot = def.rotB !== undefined ? def.rotB : 0;
+            charPos = effectiveOffsetB ? [effectiveOffsetB[0], effectiveOffsetB[1], effectiveOffsetB[2]] : [0, 0, 0];
+            charRot = effectiveRotB !== undefined ? effectiveRotB : 0;
           }
         }
 

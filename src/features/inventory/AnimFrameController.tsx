@@ -1,6 +1,14 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
-import { getAnimationDef, resolveAnimationId } from '@features/scene/animations/animationResolver';
+import {
+  getAnimationDef,
+  resolveAnimationId,
+  subscribeAnimationOverrides,
+  getAnimationTransformOverride,
+  setAnimationTransformOverride,
+  getDuoAnimationTransformOverride,
+  setDuoAnimationTransformOverride,
+} from '@features/scene/animations/animationResolver';
 import { ANIMATION_DEFINITIONS, type AnimationDefinition } from '@features/scene/animations/animationRegistry';
 import { CharacterAnimSelector, ANIM_CATEGORIES, getAnimCategory, getFilteredAnimOptions } from '@features/scene/CharacterAnimSelector';
 import { DuoAnimSelector } from '@features/scene/DuoAnimSelector';
@@ -163,6 +171,121 @@ export function AnimFrameController({
 
   const hasMeta = Boolean(def || isTPose || duoAnimDef);
   const activeAnimValue = animKey || def?.id || 'idle';
+
+  // State local d'invalidation pour refléter immédiatement les modifications d'offset
+  const [, setOverrideTick] = useState(0);
+  const [copiedSoloTs, setCopiedSoloTs] = useState(false);
+  const [copiedDuoTs, setCopiedDuoTs] = useState(false);
+
+  useEffect(() => {
+    return subscribeAnimationOverrides(() => {
+      setOverrideTick(t => t + 1);
+    });
+  }, []);
+
+  // Décalages effectifs (registre + overrides live)
+  const soloOverride = def ? getAnimationTransformOverride(def.id) : undefined;
+  const hasSoloOverride = Boolean(soloOverride && (soloOverride.offset !== undefined || soloOverride.rotY !== undefined));
+  const effectiveSoloOffset = useMemo<[number, number, number]>(() => {
+    if (soloOverride?.offset) return soloOverride.offset;
+    if (def?.defaultOffset) return [def.defaultOffset[0], def.defaultOffset[1], def.defaultOffset[2]];
+    return [0, 0, 0];
+  }, [soloOverride, def]);
+
+  const effectiveSoloRotYRad = soloOverride?.rotY !== undefined ? soloOverride.rotY : (def?.defaultRotYOffset ?? 0);
+  const effectiveSoloRotYDeg = (effectiveSoloRotYRad * 180) / Math.PI;
+
+  const handleUpdateSoloOffset = useCallback((axis: 0 | 1 | 2, val: number) => {
+    if (!def) return;
+    const nextOffset: [number, number, number] = [...effectiveSoloOffset];
+    nextOffset[axis] = val;
+    setAnimationTransformOverride(def.id, { offset: nextOffset });
+  }, [def, effectiveSoloOffset]);
+
+  const handleUpdateSoloRotDeg = useCallback((deg: number) => {
+    if (!def) return;
+    const rad = (deg * Math.PI) / 180;
+    setAnimationTransformOverride(def.id, { rotY: rad });
+  }, [def]);
+
+  const handleResetSoloTransform = useCallback(() => {
+    if (!def) return;
+    setAnimationTransformOverride(def.id, null);
+  }, [def]);
+
+  const handleCopySoloTs = useCallback(() => {
+    if (!def) return;
+    const lines: string[] = [];
+    if (effectiveSoloOffset[0] !== 0 || effectiveSoloOffset[1] !== 0 || effectiveSoloOffset[2] !== 0) {
+      lines.push(`defaultOffset: [${effectiveSoloOffset.join(', ')}],`);
+    }
+    if (effectiveSoloRotYRad !== 0) {
+      const rotExp = Math.abs(effectiveSoloRotYRad - Math.PI) < 0.001
+        ? 'Math.PI'
+        : Math.abs(effectiveSoloRotYRad - Math.PI / 2) < 0.001
+        ? 'Math.PI / 2'
+        : Math.abs(effectiveSoloRotYRad + Math.PI / 2) < 0.001
+        ? '-Math.PI / 2'
+        : `${(effectiveSoloRotYRad).toFixed(3)}`;
+      lines.push(`defaultRotYOffset: ${rotExp},`);
+    }
+    const snippet = lines.join('\n');
+    navigator.clipboard.writeText(snippet || '// Aucun offset (0, 0, 0 / 0°)');
+    setCopiedSoloTs(true);
+    setTimeout(() => setCopiedSoloTs(false), 2000);
+  }, [def, effectiveSoloOffset, effectiveSoloRotYRad]);
+
+  // Duo transforms
+  const duoOverride = duoAnimDef ? getDuoAnimationTransformOverride(duoAnimDef.id) : undefined;
+  const hasDuoOverride = Boolean(duoOverride && (duoOverride.offsetB !== undefined || duoOverride.rotB !== undefined));
+  const effectiveOffsetB = useMemo<[number, number, number]>(() => {
+    if (duoOverride?.offsetB) return duoOverride.offsetB;
+    if (duoAnimDef?.offsetB) return [duoAnimDef.offsetB[0], duoAnimDef.offsetB[1], duoAnimDef.offsetB[2]];
+    return [0, 0, 0];
+  }, [duoOverride, duoAnimDef]);
+
+  const effectiveRotBRad = duoOverride?.rotB !== undefined ? duoOverride.rotB : (duoAnimDef?.rotB ?? 0);
+  const effectiveRotBDeg = (effectiveRotBRad * 180) / Math.PI;
+
+  const handleUpdateDuoOffset = useCallback((axis: 0 | 1 | 2, val: number) => {
+    if (!duoAnimDef) return;
+    const nextOffset: [number, number, number] = [...effectiveOffsetB];
+    nextOffset[axis] = val;
+    setDuoAnimationTransformOverride(duoAnimDef.id, { offsetB: nextOffset });
+  }, [duoAnimDef, effectiveOffsetB]);
+
+  const handleUpdateDuoRotDeg = useCallback((deg: number) => {
+    if (!duoAnimDef) return;
+    const rad = (deg * Math.PI) / 180;
+    setDuoAnimationTransformOverride(duoAnimDef.id, { rotB: rad });
+  }, [duoAnimDef]);
+
+  const handleResetDuoTransform = useCallback(() => {
+    if (!duoAnimDef) return;
+    setDuoAnimationTransformOverride(duoAnimDef.id, null);
+  }, [duoAnimDef]);
+
+  const handleCopyDuoTs = useCallback(() => {
+    if (!duoAnimDef) return;
+    const lines: string[] = [];
+    if (effectiveOffsetB[0] !== 0 || effectiveOffsetB[1] !== 0 || effectiveOffsetB[2] !== 0) {
+      lines.push(`offsetB: [${effectiveOffsetB.join(', ')}],`);
+    }
+    if (effectiveRotBRad !== 0) {
+      const rotExp = Math.abs(effectiveRotBRad - Math.PI) < 0.001
+        ? 'Math.PI'
+        : Math.abs(effectiveRotBRad - Math.PI / 2) < 0.001
+        ? 'Math.PI / 2'
+        : Math.abs(effectiveRotBRad + Math.PI / 2) < 0.001
+        ? '-Math.PI / 2'
+        : `${(effectiveRotBRad).toFixed(3)}`;
+      lines.push(`rotB: ${rotExp},`);
+    }
+    const snippet = lines.join('\n');
+    navigator.clipboard.writeText(snippet || '// Aucun offset B (0, 0, 0 / 0°)');
+    setCopiedDuoTs(true);
+    setTimeout(() => setCopiedDuoTs(false), 2000);
+  }, [duoAnimDef, effectiveOffsetB, effectiveRotBRad]);
 
   const handleSelectAnim = useCallback((val: string) => {
     if (onSelectAnim) {
@@ -919,71 +1042,251 @@ export function AnimFrameController({
                   </div>
                 </div>
               </div>
+
+              {/* Editeur en direct Offset Pos & Rot (Duo B) */}
+              <div className="card bg-white border p-2 mt-1">
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <div className="d-flex align-items-center gap-1.5 fw-bold text-dark small">
+                    <i className="bi bi-sliders text-primary" aria-hidden="true" />
+                    <span>Ajustement live Offset &amp; Rotation B</span>
+                    {hasDuoOverride && (
+                      <span className="badge bg-primary text-white" style={{ fontSize: '10px' }}>Modifié</span>
+                    )}
+                  </div>
+                  <div className="d-flex align-items-center gap-1">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary btn-sm py-0 px-2"
+                      style={{ fontSize: '11px' }}
+                      onClick={handleCopyDuoTs}
+                      title="Copier au format TypeScript pour duoAnimations.ts"
+                    >
+                      <i className={`bi ${copiedDuoTs ? 'bi-check-lg text-success' : 'bi-clipboard'}`} aria-hidden="true" />
+                      <span className="ms-1">{copiedDuoTs ? 'Copié !' : 'Copier TS'}</span>
+                    </button>
+                    {hasDuoOverride && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger btn-sm py-0 px-2"
+                        style={{ fontSize: '11px' }}
+                        onClick={handleResetDuoTransform}
+                        title="Réinitialiser aux valeurs d'origine"
+                      >
+                        <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
+                        <span className="ms-1">Reset</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="row g-2 align-items-center">
+                  <div className="col-6 col-md-3">
+                    <div className="input-group input-group-sm">
+                      <span className="input-group-text font-monospace fw-bold text-danger bg-light py-0 px-1.5">X</span>
+                      <input
+                        type="number"
+                        step="1"
+                        className="form-control form-control-sm text-end font-monospace py-0 px-1"
+                        value={effectiveOffsetB[0]}
+                        onChange={e => handleUpdateDuoOffset(0, parseFloat(e.target.value) || 0)}
+                        title="Décalage X en cm"
+                      />
+                      <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-3">
+                    <div className="input-group input-group-sm">
+                      <span className="input-group-text font-monospace fw-bold text-success bg-light py-0 px-1.5">Y</span>
+                      <input
+                        type="number"
+                        step="1"
+                        className="form-control form-control-sm text-end font-monospace py-0 px-1"
+                        value={effectiveOffsetB[1]}
+                        onChange={e => handleUpdateDuoOffset(1, parseFloat(e.target.value) || 0)}
+                        title="Décalage Y en cm"
+                      />
+                      <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-3">
+                    <div className="input-group input-group-sm">
+                      <span className="input-group-text font-monospace fw-bold text-primary bg-light py-0 px-1.5">Z</span>
+                      <input
+                        type="number"
+                        step="1"
+                        className="form-control form-control-sm text-end font-monospace py-0 px-1"
+                        value={effectiveOffsetB[2]}
+                        onChange={e => handleUpdateDuoOffset(2, parseFloat(e.target.value) || 0)}
+                        title="Décalage Z en cm"
+                      />
+                      <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-3">
+                    <div className="input-group input-group-sm">
+                      <span className="input-group-text font-monospace fw-bold text-warning bg-light py-0 px-1.5">Rot</span>
+                      <input
+                        type="number"
+                        step="5"
+                        className="form-control form-control-sm text-end font-monospace py-0 px-1"
+                        value={Math.round(effectiveRotBDeg)}
+                        onChange={e => handleUpdateDuoRotDeg(parseFloat(e.target.value) || 0)}
+                        title="Rotation Y en degrés"
+                      />
+                      <span className="input-group-text small bg-light py-0 px-1 text-muted">°</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="d-flex flex-wrap align-items-center gap-2">
-              <div>
-                <strong className="text-muted text-uppercase me-1 small">ID:</strong>
-                <code className="text-dark bg-light px-1.5 py-0.5 rounded border user-select-all" title="Double-cliquer pour tout sélectionner">
-                  {def?.id || (isTPose ? 't-pose' : displayName)}
-                </code>
-              </div>
-              {catObj && (
+            <div className="d-flex flex-column gap-2">
+              <div className="d-flex flex-wrap align-items-center gap-2">
                 <div>
-                  <strong className="text-muted text-uppercase me-1 small">Catégorie:</strong>
-                  <span className="badge bg-light text-dark border">
-                    <i className={`bi ${catObj.icon}`} aria-hidden="true" /> {catObj.label}
-                  </span>
-                </div>
-              )}
-              {def?.path && (
-                <div>
-                  <strong className="text-muted text-uppercase me-1 small">Fichier:</strong>
-                  <code className="text-muted bg-light px-1.5 py-0.5 rounded border text-truncate d-inline-block align-middle user-select-all" style={{ maxWidth: '240px' }} title={def.path}>
-                    <i className="bi bi-folder" aria-hidden="true" /> {def.path.split('/').pop()}
+                  <strong className="text-muted text-uppercase me-1 small">ID:</strong>
+                  <code className="text-dark bg-light px-1.5 py-0.5 rounded border user-select-all" title="Double-cliquer pour tout sélectionner">
+                    {def?.id || (isTPose ? 't-pose' : displayName)}
                   </code>
                 </div>
-              )}
-              {def?.defaultOffset && (
+                {catObj && (
+                  <div>
+                    <strong className="text-muted text-uppercase me-1 small">Catégorie:</strong>
+                    <span className="badge bg-light text-dark border">
+                      <i className={`bi ${catObj.icon}`} aria-hidden="true" /> {catObj.label}
+                    </span>
+                  </div>
+                )}
+                {def?.path && (
+                  <div>
+                    <strong className="text-muted text-uppercase me-1 small">Fichier:</strong>
+                    <code className="text-muted bg-light px-1.5 py-0.5 rounded border text-truncate d-inline-block align-middle user-select-all" style={{ maxWidth: '240px' }} title={def.path}>
+                      <i className="bi bi-folder" aria-hidden="true" /> {def.path.split('/').pop()}
+                    </code>
+                  </div>
+                )}
                 <div>
-                  <strong className="text-muted text-uppercase me-1 small">Offset Pos:</strong>
-                  <span className="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace">
-                    [{def.defaultOffset.map(v => `${v}cm`).join(', ')}]
+                  <strong className="text-muted text-uppercase me-1 small">Durée:</strong>
+                  <span className="text-success fw-bold font-monospace">
+                    {(def?.duration ?? duration).toFixed(2)}s ({totalFrames}f @ {fps}fps)
                   </span>
                 </div>
-              )}
-              {def?.defaultRotYOffset !== undefined && (
-                <div>
-                  <strong className="text-muted text-uppercase me-1 small">Offset Rot Y:</strong>
-                  <span className="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace">
-                    {(def.defaultRotYOffset * (180 / Math.PI)).toFixed(1)}°
-                  </span>
-                </div>
-              )}
-              <div>
-                <strong className="text-muted text-uppercase me-1 small">Durée:</strong>
-                <span className="text-success fw-bold font-monospace">
-                  {(def?.duration ?? duration).toFixed(2)}s ({totalFrames}f @ {fps}fps)
-                </span>
+                {def?.aliases && def.aliases.length > 0 && (
+                  <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
+                    <strong className="text-muted text-uppercase me-1 small"><i className="bi bi-tag" aria-hidden="true" /> Aliases ({def.aliases.length}):</strong>
+                    {def.aliases.map(alias => (
+                      <span key={alias} className="badge bg-light text-secondary border font-monospace user-select-all">
+                        {alias}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {def?.tags && def.tags.length > 0 && (
+                  <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
+                    <strong className="text-muted text-uppercase me-1 small"><i className="bi bi-bookmark" aria-hidden="true" /> Tags ({def.tags.length}):</strong>
+                    {def.tags.map(tag => (
+                      <span key={tag} className="badge bg-primary-subtle text-primary border border-primary-subtle user-select-all">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
-              {def?.aliases && def.aliases.length > 0 && (
-                <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
-                  <strong className="text-muted text-uppercase me-1 small"><i className="bi bi-tag" aria-hidden="true" /> Aliases ({def.aliases.length}):</strong>
-                  {def.aliases.map(alias => (
-                    <span key={alias} className="badge bg-light text-secondary border font-monospace user-select-all">
-                      {alias}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {def?.tags && def.tags.length > 0 && (
-                <div className="d-flex flex-wrap align-items-center gap-1 w-100 mt-1">
-                  <strong className="text-muted text-uppercase me-1 small"><i className="bi bi-bookmark" aria-hidden="true" /> Tags ({def.tags.length}):</strong>
-                  {def.tags.map(tag => (
-                    <span key={tag} className="badge bg-primary-subtle text-primary border border-primary-subtle user-select-all">
-                      #{tag}
-                    </span>
-                  ))}
+
+              {/* Editeur en direct Offset Pos & Rot (Solo) */}
+              {def && (
+                <div className="card bg-white border p-2 mt-1">
+                  <div className="d-flex align-items-center justify-content-between mb-2">
+                    <div className="d-flex align-items-center gap-1.5 fw-bold text-dark small">
+                      <i className="bi bi-sliders text-primary" aria-hidden="true" />
+                      <span>Ajustement live Offset Pos &amp; Rot Y</span>
+                      {hasSoloOverride && (
+                        <span className="badge bg-primary text-white" style={{ fontSize: '10px' }}>Modifié</span>
+                      )}
+                    </div>
+                    <div className="d-flex align-items-center gap-1">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm py-0 px-2"
+                        style={{ fontSize: '11px' }}
+                        onClick={handleCopySoloTs}
+                        title="Copier au format TypeScript pour animationRegistry.ts"
+                      >
+                        <i className={`bi ${copiedSoloTs ? 'bi-check-lg text-success' : 'bi-clipboard'}`} aria-hidden="true" />
+                        <span className="ms-1">{copiedSoloTs ? 'Copié !' : 'Copier TS'}</span>
+                      </button>
+                      {hasSoloOverride && (
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger btn-sm py-0 px-2"
+                          style={{ fontSize: '11px' }}
+                          onClick={handleResetSoloTransform}
+                          title="Réinitialiser aux valeurs d'origine"
+                        >
+                          <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
+                          <span className="ms-1">Reset</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="row g-2 align-items-center">
+                    <div className="col-6 col-md-3">
+                      <div className="input-group input-group-sm">
+                        <span className="input-group-text font-monospace fw-bold text-danger bg-light py-0 px-1.5">X</span>
+                        <input
+                          type="number"
+                          step="1"
+                          className="form-control form-control-sm text-end font-monospace py-0 px-1"
+                          value={effectiveSoloOffset[0]}
+                          onChange={e => handleUpdateSoloOffset(0, parseFloat(e.target.value) || 0)}
+                          title="Décalage X en cm"
+                        />
+                        <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
+                      </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                      <div className="input-group input-group-sm">
+                        <span className="input-group-text font-monospace fw-bold text-success bg-light py-0 px-1.5">Y</span>
+                        <input
+                          type="number"
+                          step="1"
+                          className="form-control form-control-sm text-end font-monospace py-0 px-1"
+                          value={effectiveSoloOffset[1]}
+                          onChange={e => handleUpdateSoloOffset(1, parseFloat(e.target.value) || 0)}
+                          title="Décalage Y en cm"
+                        />
+                        <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
+                      </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                      <div className="input-group input-group-sm">
+                        <span className="input-group-text font-monospace fw-bold text-primary bg-light py-0 px-1.5">Z</span>
+                        <input
+                          type="number"
+                          step="1"
+                          className="form-control form-control-sm text-end font-monospace py-0 px-1"
+                          value={effectiveSoloOffset[2]}
+                          onChange={e => handleUpdateSoloOffset(2, parseFloat(e.target.value) || 0)}
+                          title="Décalage Z en cm"
+                        />
+                        <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
+                      </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                      <div className="input-group input-group-sm">
+                        <span className="input-group-text font-monospace fw-bold text-warning bg-light py-0 px-1.5">Rot Y</span>
+                        <input
+                          type="number"
+                          step="5"
+                          className="form-control form-control-sm text-end font-monospace py-0 px-1"
+                          value={Math.round(effectiveSoloRotYDeg * 10) / 10}
+                          onChange={e => handleUpdateSoloRotDeg(parseFloat(e.target.value) || 0)}
+                          title="Rotation Y en degrés"
+                        />
+                        <span className="input-group-text small bg-light py-0 px-1 text-muted">°</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

@@ -378,16 +378,82 @@ export interface AnimationOriginTransform {
   rotY: number;
 }
 
+// Overrides d'offset et de rotation en session/debug en direct
+const animOffsetOverrides = new Map<string, { offset?: [number, number, number]; rotY?: number }>();
+const duoOffsetOverrides = new Map<string, { offsetB?: [number, number, number]; rotB?: number }>();
+const listeners = new Set<() => void>();
+
+function notifyOverrideChange() {
+  listeners.forEach(fn => fn());
+}
+
+export function subscribeAnimationOverrides(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+export function setAnimationTransformOverride(
+  keyOrId: string,
+  transform: { offset?: [number, number, number]; rotY?: number } | null
+) {
+  const normKey = keyOrId.trim().toLowerCase();
+  const def = getAnimationDef(normKey);
+  const targetKey = def?.id ? def.id.toLowerCase() : normKey;
+  if (!transform) {
+    animOffsetOverrides.delete(targetKey);
+  } else {
+    const existing = animOffsetOverrides.get(targetKey) || {};
+    animOffsetOverrides.set(targetKey, {
+      ...existing,
+      ...transform,
+    });
+  }
+  notifyOverrideChange();
+}
+
+export function getAnimationTransformOverride(keyOrId: string): { offset?: [number, number, number]; rotY?: number } | undefined {
+  const normKey = keyOrId.trim().toLowerCase();
+  const def = getAnimationDef(normKey);
+  const targetKey = def?.id ? def.id.toLowerCase() : normKey;
+  return animOffsetOverrides.get(targetKey);
+}
+
+export function setDuoAnimationTransformOverride(
+  duoId: string,
+  transform: { offsetB?: [number, number, number]; rotB?: number } | null
+) {
+  const targetKey = duoId.trim().toLowerCase();
+  if (!transform) {
+    duoOffsetOverrides.delete(targetKey);
+  } else {
+    const existing = duoOffsetOverrides.get(targetKey) || {};
+    duoOffsetOverrides.set(targetKey, {
+      ...existing,
+      ...transform,
+    });
+  }
+  notifyOverrideChange();
+}
+
+export function getDuoAnimationTransformOverride(duoId: string): { offsetB?: [number, number, number]; rotB?: number } | undefined {
+  return duoOffsetOverrides.get(duoId.trim().toLowerCase());
+}
+
 /**
  * Retourne le décalage spatial (offset [x, y, z]) et l'orientation (rotY en radians)
- * natifs d'une animation tels que déclarés dans le registre d'animations.
+ * natifs d'une animation tels que déclarés dans le registre d'animations ou surchargés en direct.
  */
 export function getAnimationOriginTransform(keyOrId?: string): AnimationOriginTransform {
   if (!keyOrId) return { offset: [0, 0, 0], rotY: 0 };
   const def = getAnimationDef(keyOrId);
+  const override = getAnimationTransformOverride(def?.id || keyOrId);
+
+  const defaultOffset: [number, number, number] = def?.defaultOffset ? [def.defaultOffset[0], def.defaultOffset[1], def.defaultOffset[2]] : [0, 0, 0];
+  const defaultRotY = def?.defaultRotYOffset !== undefined ? def.defaultRotYOffset : 0;
+
   return {
-    offset: def?.defaultOffset ? [def.defaultOffset[0], def.defaultOffset[1], def.defaultOffset[2]] : [0, 0, 0],
-    rotY: def?.defaultRotYOffset !== undefined ? def.defaultRotYOffset : 0,
+    offset: override?.offset ? [override.offset[0], override.offset[1], override.offset[2]] : defaultOffset,
+    rotY: override?.rotY !== undefined ? override.rotY : defaultRotY,
   };
 }
 
