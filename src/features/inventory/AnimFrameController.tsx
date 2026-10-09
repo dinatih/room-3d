@@ -829,16 +829,16 @@ export function AnimFrameController({
           {hasMeta && (
             <button
               type="button"
-              className={`btn py-0 px-2 btn-sm d-inline-flex align-items-center gap-1 ${
+              className={`btn py-0 px-2 btn-sm d-inline-flex align-items-center justify-content-center ${
                 showMeta
                   ? 'btn-secondary text-white shadow-sm'
                   : 'btn-outline-secondary text-dark'
               }`}
               onClick={() => setShowMeta(v => !v)}
               title={showMeta ? 'Masquer le volet métadonnées' : 'Afficher le volet métadonnées'}
+              aria-label={showMeta ? 'Masquer le volet métadonnées' : 'Afficher le volet métadonnées'}
             >
-              <i className="bi bi-info-circle" />
-              <span className="fw-semibold">Meta</span>
+              <i className="bi bi-info-circle" aria-hidden="true" />
             </button>
           )}
         </div>
