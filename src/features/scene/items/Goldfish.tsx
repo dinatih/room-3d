@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useAnimalCamera } from '../camera/useAnimalCamera';
 import { useGLTFClone } from '../useGLTFClone';
 import { isAppIdle } from '../idleState';
 import { FADE_SECONDS, FISH_SPEED, fishHabitat, pickFishTarget, shortestFishTurn, type FishMode } from './goldfishBehavior';
@@ -131,8 +132,13 @@ export function Goldfish({ species = 'jikin', isPreview = false, previewAnim = '
     invalidate();
   });
 
+  useAnimalCamera(species, body, scene, isPreview, 'B_DEF_Head', 'B_DEF_MouthT', ['B_DEF_Eye_L', 'B_DEF_Eye_R']);
+
   return (
-    <group ref={body} rotation-order="YXZ">
+    <group ref={body} rotation-order="YXZ" userData={isPreview ? {} : {
+      itemName: species === 'jikin' ? 'Poisson Jikin' : 'Poisson Tosakin',
+      hoverAction: { label: species === 'jikin' ? 'Poisson Jikin' : 'Poisson Tosakin', actions: [`animal-${species}-fpv`, `animal-${species}-follow`] },
+    }}>
       <group scale={model.scale}>
         <group position={[-model.center[0], -model.center[1], -model.center[2]]}>
           <primitive object={scene} />

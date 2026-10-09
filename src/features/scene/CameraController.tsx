@@ -200,7 +200,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
     modeRef.current = m;
     cameraState.mode = m;
-    if (m !== 'fpv') cameraState.robinFPV = false;
+    if (m !== 'fpv' && m !== 'follow') cameraState.animalTarget = null;
     setMode(m);
 
     if (m === 'orbit' && useSceneStore.getState().layers.characterGrid && ctrlRef.current) {
@@ -248,11 +248,28 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (!ctrl) return;
 
     const isFPV = modeRef.current === 'fpv';
-    if (isFPV && cameraState.robinFPV && cameraState.robinView) {
-      const { eyes, forward } = cameraState.robinView;
-      camera.position.set(eyes.x, eyes.y, eyes.z);
-      camera.up.set(0, 1, 0);
-      ctrl.target.set(eyes.x + forward.x, eyes.y + forward.y, eyes.z + forward.z);
+    const animal = cameraState.animalTarget && cameraState.animalViews[cameraState.animalTarget];
+    if (animal && (isFPV || modeRef.current === 'follow')) {
+      const { eyes, forward } = animal;
+      const activeCam = ctrl.object;
+      activeCam.up.set(0, 1, 0);
+      if (isFPV) {
+        activeCam.position.set(eyes.x, eyes.y, eyes.z);
+        ctrl.target.set(eyes.x + forward.x, eyes.y + forward.y, eyes.z + forward.z);
+      } else {
+        const yaw = Math.atan2(forward.x, forward.z) + orbitYaw.current;
+        const distance = orbitDistance.current;
+        activeCam.position.set(
+          eyes.x - Math.sin(yaw) * Math.cos(orbitPitch.current) * distance,
+          eyes.y + Math.sin(orbitPitch.current) * distance,
+          eyes.z - Math.cos(yaw) * Math.cos(orbitPitch.current) * distance,
+        );
+        ctrl.target.set(eyes.x, eyes.y, eyes.z);
+        if (activeCam instanceof THREE.OrthographicCamera) {
+          activeCam.zoom = (activeCam.top - activeCam.bottom) / (animal.radius * 6);
+          activeCam.updateProjectionMatrix();
+        }
+      }
       ctrl.update();
       return;
     }
@@ -441,7 +458,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       projectionBeforeFpv.current = null;
     }
 
-    if (!cameraState.robinFPV || followMode !== 'fpv') {
+    if (!cameraState.animalTarget) {
       followPos.current = { x, y: activeFollowH(), z };
       followYaw.current = cameraState.followYaw;
     }
@@ -478,7 +495,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         ctrlRef.current.update();
       }
     } else {
-      if (!cameraState.robinFPV) followPitch.current = FPV_DEFAULT_PITCH;
+      if (!cameraState.animalTarget) followPitch.current = FPV_DEFAULT_PITCH;
       const perspCam = defaultPerspCamRef.current;
       set({ camera: perspCam });
       if (ctrlRef.current) ctrlRef.current.object = perspCam;
@@ -514,12 +531,18 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   useEffect(() => {
     const handler = (event: Event) => {
-      if ((event as CustomEvent<{ key: string }>).detail.key !== 'robin-bird-fpv') return;
-      const view = cameraState.robinView;
-      if (!view) return; // L'oiseau est encore en cours de chargement.
-      cameraState.robinFPV = true;
+      const match = /^animal-(robin|shiba|jikin|tosakin)-(fpv|follow)$/.exec((event as CustomEvent<{ key: string }>).detail.key);
+      if (!match) return;
+      const [, id, requestedMode] = match;
+      const view = cameraState.animalViews[id];
+      if (!view) throw new Error(`Animal non disponible pour la caméra : ${id}`);
+      cameraState.animalTarget = id;
       keys.current.clear();
-      enterFollow(view.eyes.x, view.eyes.z, 'fpv');
+      enterFollow(view.eyes.x, view.eyes.z, requestedMode as 'fpv' | 'follow');
+      orbitYaw.current = 0;
+      orbitPitch.current = DEFAULT_ORBIT_PITCH;
+      orbitDistance.current = view.radius * 3;
+
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);

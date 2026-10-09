@@ -144,7 +144,6 @@ const ACTIONS: Record<string, ActionDef> = {
   },
   'shiba-replay':      { btnLabel: 'Rejouer',           toggleKey: 'shiba-replay'      },
   'robin-bird-replay': { btnLabel: 'Rejouer',           toggleKey: 'robin-bird-replay' },
-  'robin-bird-fpv': { btnLabel: 'Vue FPV', icon: 'bi-eye', toggleKey: 'robin-bird-fpv' },
   'nestMini':          { btnLabel: 'Ok Google',         toggleKey: 'nestMini'          },
   'tv':                { btnLabel: 'Allumer / Éteindre', toggleKey: 'tvOn'             },
   'bin':               { btnLabel: 'Ouvrir / Fermer',   toggleKey: 'bin-toggle'       },
@@ -169,6 +168,10 @@ const ACTIONS: Record<string, ActionDef> = {
 
 // Helper to resolve action definition (supports dynamic actions like select-character-*)
 function getActionDef(actionId: string): ActionDef | undefined {
+  if (/^animal-(robin|shiba|jikin|tosakin)-(fpv|follow)$/.test(actionId)) {
+    const fpv = actionId.endsWith('-fpv');
+    return { btnLabel: fpv ? 'Vue FPV' : 'Suivre', icon: fpv ? 'bi-eye' : 'bi-camera-video', toggleKey: actionId };
+  }
   if (ACTIONS[actionId]) return ACTIONS[actionId];
   if (actionId.startsWith('select-character-')) {
     return {

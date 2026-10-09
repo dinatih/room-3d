@@ -58,7 +58,7 @@ export function useCameraPointerEvents({
     };
 
     const onMove = (e: MouseEvent) => {
-      if (cameraState.robinFPV) return;
+      if ((cameraState.animalTarget && modeRef.current === 'fpv')) return;
       if (!dragging.current || (modeRef.current !== 'follow' && modeRef.current !== 'fpv')) return;
       if (modeRef.current === 'follow') {
         orbitYaw.current += e.movementX * MOUSE_SENS;
@@ -89,7 +89,7 @@ export function useCameraPointerEvents({
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (cameraState.robinFPV) return;
+      if ((cameraState.animalTarget && modeRef.current === 'fpv')) return;
       if (modeRef.current !== 'follow' && modeRef.current !== 'fpv') return;
 
       if (e.touches.length === 2) {

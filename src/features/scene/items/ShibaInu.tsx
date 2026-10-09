@@ -4,6 +4,7 @@ import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
+import { useAnimalCamera } from '../camera/useAnimalCamera';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
@@ -260,6 +261,8 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       };
     }
   });
+
+  useAnimalCamera('shiba', modelRef, scene, isPreview, 'Dogger_head_j', 'Dogger_jaw_j');
 
   return (
     <group ref={modelRef as any} position={isPreview ? undefined : [180, 0, -120]} rotation={isPreview ? undefined : [0, -Math.PI / 4, 0]}>

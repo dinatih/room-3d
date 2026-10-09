@@ -12,12 +12,12 @@ const initialChar = parseUrlActiveCharacter() || CHARACTERS[0];
 
 export const cameraState = {
   mode: parseUrlCameraMode() as CameraMode,
-  /** FPV d'observation : l'oiseau conserve son IA, sans changer le personnage actif. */
-  robinFPV: false,
-  robinView: null as { eyes: { x: number; y: number; z: number }; forward: { x: number; y: number; z: number } } | null,
+  /** Animal observé, indépendant du personnage humain actif. */
+  animalTarget: null as string | null,
+  animalViews: {} as Record<string, { eyes: { x: number; y: number; z: number }; forward: { x: number; y: number; z: number }; radius: number }>,
   /** Vue placée dans les yeux : tête masquée en caméra principale, visible dans les miroirs. */
   isFirstPersonView(): boolean {
-    return this.mode === 'fpv' || this.isXR || (this.mode === 'plane' && this.planeViewMode === 'character');
+    return (this.mode === 'fpv' && !this.animalTarget) || this.isXR || (this.mode === 'plane' && this.planeViewMode === 'character');
   },
   /** Position caméra (pour l'icône follow sur la minimap) */
   camX: 150 as number,
