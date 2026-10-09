@@ -55,7 +55,10 @@ export function CharacterCountSelect() {
         onKeyDown={event => event.stopPropagation()}
       >
         <div className="view-control-bar__character-panel d-flex flex-column">
-          <div className="p-2 border-bottom small fw-semibold">Nombre de personnages</div>
+          <div className="p-2 border-bottom small fw-semibold d-flex align-items-center gap-1.5">
+            <i className="bi bi-people-fill text-primary" aria-hidden="true" />
+            <span>Nombre de personnages</span>
+          </div>
           <div className="view-control-bar__character-content overflow-y-auto p-2 flex-grow-1">
             <div id={`${id}-presets-panel`} role="tabpanel" aria-labelledby={`${id}-presets-tab`} hidden={tab !== 'presets'}>
               <div className="d-flex flex-column gap-1">

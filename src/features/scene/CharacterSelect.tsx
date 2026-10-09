@@ -85,7 +85,7 @@ export function CharacterSelect({ hideUI = false }: { hideUI?: boolean }) {
           onKeyDown={e => e.stopPropagation()}
         >
           <h2 id={`${characterPopoverId}-title`} className="popover-header bg-transparent small fw-semibold d-flex align-items-center gap-2">
-            <i className="bi bi-people" aria-hidden="true" />
+            <i className="bi bi-people text-primary" aria-hidden="true" />
             Choisir un PNJ
           </h2>
           <div className="popover-body p-2">

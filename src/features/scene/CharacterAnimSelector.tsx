@@ -212,7 +212,7 @@ export function CharacterAnimSelector({
       {/* En-tête */}
       {(title || onClose) && (
         <div className="d-flex flex-shrink-0 align-items-center justify-content-between p-2 border-bottom">
-          {title && <span className="fw-semibold small text-truncate"><i className="bi bi-film" aria-hidden="true" /> {title}</span>}
+          {title && <span className="fw-semibold small text-truncate"><i className="bi bi-film text-primary" aria-hidden="true" /> {title}</span>}
           {onClose && (
             <button
               type="button"
