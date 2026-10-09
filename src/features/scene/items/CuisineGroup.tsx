@@ -126,7 +126,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
       </group>
 
       {/* Plaques */}
-      <group userData={{ animUnit: true }}>
+      <group userData={{ animUnit: true, hoverAction: { label: 'Plaques de cuisine', actions: ['smart-object:::cuisine-group:::cook-stove'] } }}>
         <group position={[CABINET_W + FRIDGE_W / 2, COUNTER_H + COUNTER_SLAB - 4.5, KIT_D / 2]} rotation={[0, -Math.PI, 0]}>
           <Valbildad20467592 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>

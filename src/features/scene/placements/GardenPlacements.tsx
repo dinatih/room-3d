@@ -2,6 +2,7 @@ import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { MergedStaticGroup } from '../Building';
 import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
+import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 
 import { ArmrestSofa } from '../items/ArmrestSofa';
 import { ArmlessSofa } from '../items/ArmlessSofa';
@@ -32,12 +33,12 @@ export function GardenFurniture() {
     <MergedStaticGroup name="merged-garden-furniture">
       {/* Canapé Jardin Est avec accoudoirs togglables */}
       <group position={[270, 0, -110]} rotation={[0, -Math.PI / 2, 0]}
-             userData={{ skipMerge: true, birdSupport: { id: 'sofa-east', kind: 'furniture' }, itemName: 'Canapé Jardin Est', hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
+             userData={{ skipMerge: true, birdSupport: { id: 'sofa-east', kind: 'furniture' }, itemName: 'Canapé Jardin Est', hoverAction: { label: 'Canapé Jardin Est', actions: ['sofa-arm-left', 'sofa-arm-right', ...SMART_OBJECTS['sofa-garden-east'].slots.map(slot => `smart-object:::sofa-garden-east:::${slot.slotId}`)] } }}>
         <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
       </group>
 
       {/* Canapé Jardin Ouest */}
-      <group position={[100, 0, -80]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'sofa-west', kind: 'furniture' }, itemName: 'Canapé Jardin Ouest' }}>
+      <group position={[100, 0, -80]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'sofa-west', kind: 'furniture' }, itemName: 'Canapé Jardin Ouest', hoverAction: { label: 'Canapé Jardin Ouest', actions: SMART_OBJECTS['sofa-garden-west'].slots.map(slot => `smart-object:::sofa-garden-west:::${slot.slotId}`) } }}>
         <ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
@@ -47,7 +48,7 @@ export function GardenFurniture() {
       </group>
 
       {/* Baignoire Balnéo */}
-      <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'bathtub', kind: 'furniture' }, itemName: 'Baignoire Balnéo' }}>
+      <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'bathtub', kind: 'furniture' }, itemName: 'Baignoire Balnéo', hoverAction: { label: 'Baignoire Balnéo', actions: SMART_OBJECTS['bathtub-garden'].slots.map(slot => `smart-object:::bathtub-garden:::${slot.slotId}`) } }}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 

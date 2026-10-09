@@ -3,6 +3,7 @@ import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
 import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
+import { BATH_WEST_WALL, ROOM_D } from '../wallData';
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -393,6 +394,9 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'cook-oven',
         name: 'Cuisiner Four',
+        // Ninja : Kallax de profondeur 39 cm, four de profondeur 37 cm,
+        // décalage local X = -8, rotation monde Y = PI/2 (façade vers +X).
+        offset: [BATH_WEST_WALL + 39 / 2 + 37 / 2 + HUMAN_BODY_RADIUS, 0, ROOM_D - 75.5 / 2 - 8],
         rotY: -Math.PI / 2,
         animation: 'entering-code',
       },

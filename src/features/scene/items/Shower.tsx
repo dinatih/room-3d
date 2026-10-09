@@ -13,6 +13,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
+import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 
 
 const GLB_TRAY   = 'items/shower/shower.glb';
@@ -212,7 +213,7 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
   }, [tray, bar, faucet, invalidate]);
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} userData={{ hoverAction: { label: 'Cabine de Douche', actions: ['showerDoor', ...SMART_OBJECTS.shower.slots.map(slot => `smart-object:::shower:::${slot.slotId}`)] } }}>
       {/* Receveur — setupScene centre et pose au sol (détaché parent pendant calcul). */}
       <primitive object={tray} />
 
@@ -227,7 +228,7 @@ export function Shower({ actionState, onSize }: SceneItemProps) {
       </group>
 
       {/* Porte — centrée en X, au niveau du nez nord du bac (local Z=−TRAY_HALF) */}
-      <group position={[0, 20, -TRAY_HALF]} userData={{ hoverAction: { label: 'Porte de douche', actionId: 'showerDoor' } }}>
+      <group position={[0, 20, -TRAY_HALF]}>
         <ShowerDoor isOpen={isDoorOpen} />
       </group>
     </group>
