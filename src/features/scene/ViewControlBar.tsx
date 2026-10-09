@@ -264,7 +264,7 @@ export function ViewControlBar({
             aria-label="Raccourcis de vues 3D"
             aria-pressed={cameraViewMarkers}
           >
-            <i className="bi bi-camera-video-fill" aria-hidden="true" />
+            <i className="bi bi-camera-video" aria-hidden="true" />
           </button>
         )}
         {beforeAmbianceActions}
