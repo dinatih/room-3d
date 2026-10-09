@@ -372,7 +372,6 @@ export function ToolbarPanelsRow({
         {/* 1. Plan */}
         <PanelPopover
           icon="bi-map-fill"
-          label="Plan"
           title="Plan"
           hideUI={hideUI}
         >
@@ -382,7 +381,6 @@ export function ToolbarPanelsRow({
         {/* 2. Perf */}
         <PanelPopover
           icon="bi-bar-chart-fill"
-          label="Perf"
           title="Performances & Stats"
           hideUI={hideUI}
         >
