@@ -93,6 +93,33 @@
   display: none;
 }
 
+.view-control-bar__panel-trigger {
+  position: relative;
+  z-index: 1;
+
+  &:hover,
+  &:focus {
+    z-index: 2;
+  }
+}
+
+.view-control-bar__panel-popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  width: 20rem;
+  max-width: calc(100vw - 1rem);
+  max-height: 75vh;
+  overflow-y: auto;
+  z-index: 2100;
+  border-radius: 0.5rem;
+}
+
+.view-control-bar__panel-popover:not(:popover-open) {
+  display: none;
+}
+
 .view-control-bar__character-content {
   min-height: 0;
 }

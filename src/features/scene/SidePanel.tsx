@@ -1,9 +1,9 @@
-import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
+import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 /**
  * SidePanel.tsx
  *
- * Desktop : panneau accordéon à gauche (sections Calques / Interactif / Personnage / Profil).
- * Mobile  : tab bar fixe en bas qui ouvre un bottom-sheet plein-largeur.
+ * Commandes de contrôle réparties en popovers HTML natifs intégrés à la barre d'outils
+ * (Plan 2D, Perf, Profil, Calques, Interactif, PNJ).
  *
  * Composant HTML pur rendu HORS du Canvas R3F. Dispatche des events custom
  * écoutés par CameraController et le reste de la scène.
@@ -17,11 +17,11 @@ import { HDRI_LIST } from './hdriConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 
 import {
-  TABS, ALL_HAIR_COLORS,
+  ALL_HAIR_COLORS,
   type FurnitureState, type LayerState, type GroundType, type SidePanelProps,
-  type LidarMode, type TabKey,
+  type LidarMode,
 } from './sidepanel/types';
-import { Group } from './sidepanel/Group';
+import { PanelPopover } from './sidepanel/PanelPopover';
 import { CvModal, type CvType } from './sidepanel/modals/CvModal';
 import { LayersSection } from './sidepanel/sections/LayersSection';
 import { InteractiveSection } from './sidepanel/sections/InteractiveSection';
@@ -66,7 +66,6 @@ export function SidePanel({
   const [showCvModal, setShowCvModal] = useState(false);
   const [selectedCvType, setSelectedCvType] = useState<CvType>('devops');
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>(null);
   const [isVRActive, setIsVRActive] = useState(false);
   const [isVRSupported, setIsVRSupported] = useState(false);
   const [isImmersiveActive, setIsImmersiveActive] = useState(false);
@@ -188,15 +187,7 @@ export function SidePanel({
     return () => document.removeEventListener('toggle-lara-haircut', handleToggleHaircut as any);
   }, []);
 
-  // Ferme le sheet via Escape sur mobile
-  useEffect(() => {
-    if (!isMobile || !activeTab) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setActiveTab(null); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isMobile, activeTab]);
-
-  // En-têtes boutons pour desktop et mobile
+  // En-têtes boutons
   const activeHdriItem = HDRI_LIST.find(h => h.id === currentHdri);
   const activeHdriName = activeHdriItem?.name ?? currentHdri;
 
@@ -355,165 +346,110 @@ export function SidePanel({
     />
   );
 
-  // ── Rendu mobile : tab bar bottom + sheet ───────────────────────────────────
-  if (isMobile) {
-    const sheetOpen = activeTab !== null && !hideUI;
-    const sheetTitle: Record<Exclude<TabKey, null>, string> = {
-      profile: 'Profil & CV',
-      layers: 'Calques',
-      personnage: 'PNJ',
-      perf: 'Perf',
-      plan2d: 'Plan 2D',
-      interactif: 'Interactif',
-    };
-    const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
-      profile: profileSectionContent,
-      layers: layersSectionContent,
-      interactif: interactiveSectionContent,
-      personnage: characterSectionContent,
-      perf: <DevToolsGroups Group={Group} compact headerless />,
-      plan2d: <Minimap embedded showGroup={false} />,
-    };
-    const activeTabConfig = TABS.find(tab => tab.key === activeTab);
-
-    return (
-      <>
-        {sheetOpen && (
-          <div
-            onClick={() => setActiveTab(null)}
-            className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-50"
-            style={{ backdropFilter: 'blur(2px)', zIndex: 1001 }}
-          />
-        )}
-
-        {sheetOpen && activeTab !== null && (
-          <div
-            className="position-fixed start-0 end-0 border-top shadow-lg d-flex flex-column rounded-top-4"
-            style={{
-              bottom: 'calc(4.25rem + env(safe-area-inset-bottom))',
-              maxHeight: 'calc(100vh - 120px)',
-              zIndex: 1002,
-              background: 'rgba(255, 255, 255, 0.75)',
-              backdropFilter: 'blur(8px)',
-            }}
-            onWheel={e => e.stopPropagation()}
-          >
-            <div className="d-flex justify-content-between align-items-center p-3 border-bottom text-dark">
-              <span className="fw-bold d-flex align-items-center gap-2"><i className={`bi ${activeTabConfig?.icon}`} aria-hidden="true" />{sheetTitle[activeTab]}</span>
-              <div className="d-flex align-items-center gap-2">
-                {activeTab === 'profile' && profileHeaderButtons}
-                {activeTab === 'layers' && layersHeaderButtons}
-                {activeTab === 'personnage' && personnageHeaderButtons}
-                <button
-                  type="button"
-                  className="btn-close"
-                  aria-label="Close"
-                  onClick={() => setActiveTab(null)}
-                />
-              </div>
-            </div>
-
-            <div className="overflow-auto p-2" style={{ flex: 1 }}>
-                {Object.entries(sheetBody).map(([k, content]) => (
-                  <div key={k} style={{ display: activeTab === k ? 'block' : 'none' }}>
-                    {content}
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tab bar */}
-        <div
-          className={`view-control-bar-dock view-control-bar-dock--bottom-menu ui-panel-bottom ${hideUI ? 'ui-hidden' : ''}`}
-          style={{
-            zIndex: 1003,
-            bottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
-            left: 0,
-            right: 0,
-            marginInline: 'auto',
-            pointerEvents: hideUI ? 'none' : 'auto',
-          }}
-        >
-          <div className={TOOLBAR_CLASS} role="toolbar" aria-label="Menu principal">
-          {/* VR WebXR (uniquement si WebXR est réellement supporté par l'appareil) */}
-          {isVRSupported && (
-            <button
-              type="button"
-              onClick={() => {
-                document.dispatchEvent(new CustomEvent('toggle-vr'));
-              }}
-              className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-              title="Mode Réalité Virtuelle (WebXR)"
-            >
-              <i className="bi bi-headset-vr" aria-hidden="true" />
-              <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
-            </button>
-          )}
-
-          {/* Mode immersif gyroscopique */}
-          <button
-            type="button"
-            onClick={() => {
-              document.dispatchEvent(new CustomEvent('toggle-immersive'));
-            }}
-            className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-            title="Mode Immersif Gyroscope (Plein écran)"
-          >
-            <i className="bi bi-eye-fill" aria-hidden="true" />
-            <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
-          </button>
-
-          {TABS.map(t => {
-            const active = activeTab === t.key;
-            return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
-                className={`${TOOLBAR_BUTTON_CLASS} ${active ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-              >
-                <i className={`bi ${t.icon}`} aria-hidden="true" />
-                <span className="fw-semibold">{t.label}</span>
-              </button>
-            );
-          })}
-          </div>
-        </div>
-
-        {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={handleCloseCv} />}
-      </>
-    );
-  }
-
-  // ── Rendu desktop : sidebar accordéon Bootstrap Glassmorphic ────────────────
   return (
     <>
-      <div
-        className={`position-fixed overflow-y-auto overflow-x-hidden d-flex flex-column gap-2 side-panel-desktop ui-panel-left ${hideUI ? 'ui-hidden' : ''}`}
-        style={{
-          top: 16,
-          left: 16,
-          width: 230,
-          maxHeight: 'calc(100vh - 32px)',
-          zIndex: 100,
-          pointerEvents: hideUI ? 'none' : 'auto',
-        }}
-        onWheel={e => e.stopPropagation()}
-      >
-        {/* ── Section C.V. / Profil Ingénieur / Qui suis-je ? ── */}
-        <Group icon="bi-briefcase-fill" title="Profil" extra={profileHeaderButtons} defaultOpen={false}>
-          {profileSectionContent}
-        </Group>
+      {/* VR WebXR (si supporté par l'appareil) */}
+      {isVRSupported && (
+        <button
+          type="button"
+          onClick={() => {
+            document.dispatchEvent(new CustomEvent('toggle-vr'));
+          }}
+          className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+          title="Mode Réalité Virtuelle (WebXR)"
+        >
+          <i className="bi bi-headset-vr" aria-hidden="true" />
+          <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
+        </button>
+      )}
 
-        <Group icon="bi-layers-fill" title="Calques" extra={layersHeaderButtons}>{layersSectionContent}</Group>
-        <Group icon="bi-controller" title="Interactif">{interactiveSectionContent}</Group>
-        <Group icon="bi-person-fill" title="PNJ" extra={personnageHeaderButtons}>{characterSectionContent}</Group>
-        <DevToolsGroups Group={Group} compact />
-        <Minimap embedded />
+      {/* Mode immersif gyroscopique sur mobile */}
+      {isMobile && (
+        <button
+          type="button"
+          onClick={() => {
+            document.dispatchEvent(new CustomEvent('toggle-immersive'));
+          }}
+          className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+          title="Mode Immersif Gyroscope (Plein écran)"
+        >
+          <i className="bi bi-eye-fill" aria-hidden="true" />
+          <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
+        </button>
+      )}
+
+      <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux">
+        {/* 1. Plan 2D */}
+        <PanelPopover
+          id="panel-popover-plan2d"
+          icon="bi-map-fill"
+          label="Plan 2D"
+          title="Plan 2D"
+          hideUI={hideUI}
+        >
+          <Minimap embedded showGroup={false} />
+        </PanelPopover>
+
+        {/* 2. Perf */}
+        <PanelPopover
+          id="panel-popover-perf"
+          icon="bi-bar-chart-fill"
+          label="Perf"
+          title="Performances & Stats"
+          hideUI={hideUI}
+        >
+          <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
+        </PanelPopover>
+
+        {/* 3. Profil */}
+        <PanelPopover
+          id="panel-popover-profile"
+          icon="bi-briefcase-fill"
+          label="Profil"
+          title="Profil & C.V."
+          headerExtra={profileHeaderButtons}
+          hideUI={hideUI}
+        >
+          {profileSectionContent}
+        </PanelPopover>
+
+        {/* 4. Calques */}
+        <PanelPopover
+          id="panel-popover-layers"
+          icon="bi-layers-fill"
+          label="Calques"
+          title="Calques & Affichage"
+          headerExtra={layersHeaderButtons}
+          hideUI={hideUI}
+        >
+          {layersSectionContent}
+        </PanelPopover>
+
+        {/* 5. Interactif */}
+        <PanelPopover
+          id="panel-popover-interactive"
+          icon="bi-controller"
+          label="Interactif"
+          title="Objets interactifs"
+          hideUI={hideUI}
+        >
+          {interactiveSectionContent}
+        </PanelPopover>
+
+        {/* 6. PNJ */}
+        <PanelPopover
+          id="panel-popover-pnj"
+          icon="bi-person-fill"
+          label="PNJ"
+          title="Personnages & PNJ"
+          headerExtra={personnageHeaderButtons}
+          hideUI={hideUI}
+        >
+          {characterSectionContent}
+        </PanelPopover>
       </div>
 
-      {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={handleCloseCv} />}
+      {showCvModal && <CvModal initialCv={selectedCvType} onClose={handleCloseCv} />}
     </>
   );
 }

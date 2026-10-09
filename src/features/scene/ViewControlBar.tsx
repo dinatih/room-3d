@@ -32,6 +32,7 @@ export interface ViewControlBarProps {
   onOpenInventory?: () => void;
   toolbarActions?: ReactNode;
   beforeAmbianceActions?: ReactNode;
+  panelControls?: ReactNode;
   children?: ReactNode;
 }
 
@@ -49,6 +50,7 @@ export function ViewControlBar({
   onOpenInventory,
   toolbarActions,
   beforeAmbianceActions,
+  panelControls,
   children,
 }: ViewControlBarProps) {
   const [hoveredView, setHoveredView] = useState<{
@@ -97,7 +99,7 @@ export function ViewControlBar({
     ? { left: 0, right: 0, marginInline: 'auto', transform: 'none' }
     : undefined;
   const mobileDockOffset = isMobile && position.startsWith('bottom-')
-    ? { bottom: 'calc(4.25rem + env(safe-area-inset-bottom) + 4px)' }
+    ? { bottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }
     : undefined;
 
   const viewButtons = (
@@ -156,6 +158,7 @@ export function ViewControlBar({
     {hoverTooltip}
     <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--two-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        {panelControls}
         {showCharacterModes && (
           <button
             type="button"

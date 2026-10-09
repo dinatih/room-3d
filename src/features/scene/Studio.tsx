@@ -916,27 +916,6 @@ export function Studio() {
 
       {/* HTML overlays */}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
-      <SidePanel
-        layers={layers} onToggleLayer={toggleLayer}
-        lidarMode={lidarMode} onCycleLidar={onCycleLidar}
-        lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
-        buildAnimMatrix={buildAnimMatrix}
-        onStartBuildAnimMatrix={startMatrix}
-        onStopBuildAnim={stopAll}
-        animDurations={animDurations}
-        planeModel={planeModel}
-        onSetPlaneModel={setPlaneModel}
-        autopilotVisible={autopilotVisible}
-        onToggleAutopilot={() => setAutopilotVisible(v => !v)}
-        showLandingStrips={showLandingStrips}
-        onToggleLandingStrips={() => {
-          setShowLandingStrips(v => {
-            cameraState.landingStripsVisible = !v;
-            return !v;
-          });
-        }}
-        hideUI={hideUI || planeMode || (isMobile && showInventory)}
-      />
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
         <VirtualDPad visible={!hideUI && !planeMode && !showInventory && !characterGridActive} />
@@ -945,6 +924,29 @@ export function Studio() {
           showCharacterModes
           hideUI={hideUI}
           onToggleHideUI={toggleHideUI}
+          panelControls={
+            <SidePanel
+              layers={layers} onToggleLayer={toggleLayer}
+              lidarMode={lidarMode} onCycleLidar={onCycleLidar}
+              lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
+              buildAnimMatrix={buildAnimMatrix}
+              onStartBuildAnimMatrix={startMatrix}
+              onStopBuildAnim={stopAll}
+              animDurations={animDurations}
+              planeModel={planeModel}
+              onSetPlaneModel={setPlaneModel}
+              autopilotVisible={autopilotVisible}
+              onToggleAutopilot={() => setAutopilotVisible(v => !v)}
+              showLandingStrips={showLandingStrips}
+              onToggleLandingStrips={() => {
+                setShowLandingStrips(v => {
+                  cameraState.landingStripsVisible = !v;
+                  return !v;
+                });
+              }}
+              hideUI={hideUI || planeMode || (isMobile && showInventory)}
+            />
+          }
           onOpenInventory={() => {
             setInventoryInitialCat('all');
             setShowInventory(true);
