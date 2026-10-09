@@ -247,7 +247,7 @@ export function ViewControlBar({
           </>
         )}
         {showCharacterModes && (
-          <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Personnages et suivi caméra">
+          <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Sélection des personnages">
             <CharacterCountSelect />
             <button
               type="button"
@@ -260,6 +260,12 @@ export function ViewControlBar({
               <i className="bi bi-shuffle" aria-hidden="true" />
             </button>
             <CharacterSelect hideUI={hideUI} />
+          </div>
+        )}
+      </div>
+      {showCharacterModes && (
+        <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+          <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Suivi caméra du personnage">
             <button
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
@@ -275,13 +281,13 @@ export function ViewControlBar({
               aria-pressed={cameraMode === 'fpv'}
             ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
           </div>
-        )}
-        {showCharacterModes && animalCameraActive && (
-          <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la caméra de l’animal" aria-label="Quitter la caméra de l’animal">
-            <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>
-          </button>
-        )}
-      </div>
+          {animalCameraActive && (
+            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la caméra de l’animal" aria-label="Quitter la caméra de l’animal">
+              <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>
+            </button>
+          )}
+        </div>
+      )}
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('in')}
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues orthogonales et dessus">
