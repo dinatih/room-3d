@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { getAnimationDef, resolveAnimationId } from '@features/scene/animations/animationResolver';
 import { ANIMATION_DEFINITIONS, type AnimationDefinition } from '@features/scene/animations/animationRegistry';
@@ -71,6 +71,8 @@ export function AnimFrameController({
   const [isEditingFrame, setIsEditingFrame] = useState<boolean>(false);
   const [showMeta, setShowMeta] = useState<boolean>(false);
   const [showAnimSelector, setShowAnimSelector] = useState<boolean>(false);
+  const [selectorLeft, setSelectorLeft] = useState(0);
+  const controllerRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLInputElement>(null);
   const selectorRef = useRef<HTMLDivElement>(null);
   const badgeRef = useRef<HTMLButtonElement>(null);
@@ -326,8 +328,25 @@ export function AnimFrameController({
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [showAnimSelector]);
 
+  useLayoutEffect(() => {
+    if (!showAnimSelector) return;
+    const controller = controllerRef.current!;
+    const selector = selectorRef.current!;
+    const badge = badgeRef.current!;
+    const alignSelector = () => {
+      const buttonLeft = badge.getBoundingClientRect().left - controller.getBoundingClientRect().left - controller.clientLeft;
+      setSelectorLeft(Math.max(0, Math.min(buttonLeft, controller.clientWidth - selector.offsetWidth)));
+    };
+    alignSelector();
+    const observer = new ResizeObserver(alignSelector);
+    observer.observe(controller);
+    observer.observe(badge);
+    return () => observer.disconnect();
+  }, [showAnimSelector]);
+
   return (
     <div
+      ref={controllerRef}
       className={`card glass-card rounded-3 shadow-sm ${compact ? 'p-1 small' : 'p-2'} text-dark user-select-none ${className}`}
       onClick={e => e.stopPropagation()}
       onMouseDown={e => e.stopPropagation()}
@@ -344,8 +363,9 @@ export function AnimFrameController({
       {showAnimSelector && (
         <div
           ref={selectorRef}
-          className="position-absolute bottom-100 end-0 mb-2 glass-card rounded-3 shadow-lg overflow-hidden d-flex flex-column w-100"
+          className="position-absolute bottom-100 mb-2 glass-card rounded-3 shadow-lg overflow-hidden d-flex flex-column w-100"
           style={{
+            left: selectorLeft,
             maxWidth: '440px',
             zIndex: 1000,
           }}

@@ -25,6 +25,9 @@ async function main() {
       css.rel = 'stylesheet';
       css.href = '/node_modules/bootstrap/dist/css/bootstrap.min.css';
       document.head.append(css);
+      const layout = document.createElement('style');
+      layout.textContent = '.anim-frame-controller__controls { display: flex; }';
+      document.head.append(layout);
       createRoot(document.getElementById('root')).render(React.createElement(AnimFrameController, {
         animKey: 'idle', isHumanCharacter: true,
         onSelectAnim: value => { window.selectedAnimation = value; },
@@ -35,6 +38,22 @@ async function main() {
       await page.setViewport(viewport);
       await page.click('button[title^="Animation :"]');
       await page.waitForSelector('button[aria-expanded="false"]');
+      const placement = await page.evaluate(() => {
+        const selector = document.querySelector('[tabindex="0"]').parentElement;
+        const controller = selector.parentElement;
+        const badge = document.querySelector('button[title="Fermer le sélecteur d\'animations"]');
+        const box = selector.getBoundingClientRect();
+        const container = controller.getBoundingClientRect();
+        const button = badge.getBoundingClientRect();
+        return {
+          left: box.left,
+          expectedLeft: Math.max(container.left + controller.clientLeft, Math.min(button.left, container.left + controller.clientLeft + controller.clientWidth - box.width)),
+          right: box.right,
+          controllerRight: container.right,
+        };
+      });
+      assert(Math.abs(placement.left - placement.expectedLeft) < 1, JSON.stringify(placement));
+      assert(placement.right <= placement.controllerRight + 1, JSON.stringify(placement));
       await page.click('button[aria-expanded]');
       await page.waitForSelector('input[type="checkbox"]');
       const bounds = await page.evaluate(() => {
