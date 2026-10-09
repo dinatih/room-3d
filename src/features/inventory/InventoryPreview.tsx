@@ -900,7 +900,7 @@ export function InventoryPreview({
                   )}
                 </>
               )}
-              <Grid args={[boundsRadius * 4, boundsRadius * 4]} cellColor={showGrid ? '#777777' : '#a0a0a0'} sectionColor={showGrid ? '#444444' : '#888888'} cellThickness={showGrid ? 0.5 : 0.25} sectionThickness={showGrid ? 1 : 0.4} cellSize={10} sectionSize={50} position={[5, -0.01, 5]} />
+              <Grid infiniteGrid fadeDistance={5000} cellColor={showGrid ? '#777777' : '#a0a0a0'} sectionColor={showGrid ? '#444444' : '#888888'} cellThickness={showGrid ? 0.5 : 0.25} sectionThickness={showGrid ? 1 : 0.4} cellSize={10} sectionSize={50} position={[5, -0.01, 5]} />
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={previewActionStates} showDims={showDims} wireframe={wireframe} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}

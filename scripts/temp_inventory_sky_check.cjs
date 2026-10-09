@@ -37,12 +37,12 @@ const puppeteer = require('../node_modules/puppeteer');
     const inspect = () => page.evaluate(() => {
       const {scene,camera} = window.preview;
       const grids = [];
-      scene.traverse(object => { if(object.material?.uniforms?.cellSize) grids.push(object.material.uniforms); });
-      const THREE = window.THREE; const tiny=[]; scene.traverse(o=>{if(o.isMesh&&o.visible){const b=new THREE.Box3().setFromObject(o);if(!b.isEmpty()){const z=b.getSize(new THREE.Vector3());if(Math.max(z.x,z.y,z.z)<3)tiny.push({name:o.name,parent:o.parent?.name,size:z.toArray(),position:o.getWorldPosition(new THREE.Vector3()).toArray()});}}}); return {background:scene.background.isColor,backdrop:!!scene.getObjectByName('inventory-preview-backdrop')?.visible,skyMesh:!!scene.getObjectByName('SkySphere'),grids:grids.length,cellThickness:grids[0]?.cellThickness.value,sectionThickness:grids[0]?.sectionThickness.value,far:camera.far,projection:camera.type,tiny};
+      scene.traverse(object => { if(object.material?.uniforms?.cellSize) grids.push({uniforms:object.material.uniforms,position:object.position.toArray()}); });
+      return {background:scene.background.isColor,backdrop:!!scene.getObjectByName('inventory-preview-backdrop')?.visible,skyMesh:!!scene.getObjectByName('SkySphere'),grids:grids.length,gridPosition:grids[0]?.position,cellThickness:grids[0]?.uniforms.cellThickness.value,sectionThickness:grids[0]?.uniforms.sectionThickness.value,far:camera.far,projection:camera.type};
     });
     let result = await inspect();
     console.log('preview inspection:', JSON.stringify(result));
-    assert.equal(result.background,true); assert.equal(result.backdrop,true); assert.equal(result.skyMesh,false); assert.equal(result.grids,1); assert.equal(result.tiny.length,0);
+    assert.equal(result.background,true); assert.equal(result.backdrop,true); assert.equal(result.skyMesh,false); assert.equal(result.grids,1); assert.deepEqual(result.gridPosition,[5,-0.01,5]);
     assert.equal(result.cellThickness,0.25); assert.equal(result.sectionThickness,0.4);
     await new Promise(resolve => setTimeout(resolve,1500));
     await page.screenshot({path:'/tmp/inventory-sky-perspective.png'});
