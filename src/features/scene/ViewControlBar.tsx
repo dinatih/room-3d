@@ -328,6 +328,7 @@ export function ViewControlBar({
 
   if (inline) {
     const frontView = ORTHO_VIEWS.find(v => v.key === 'front')!;
+    const backView = ORTHO_VIEWS.find(v => v.key === 'back')!;
     const leftView = ORTHO_VIEWS.find(v => v.key === 'left')!;
     const rightView = ORTHO_VIEWS.find(v => v.key === 'right')!;
     const topView = EXTRA_VIEWS.find(v => v.key === 'top')!;
@@ -341,6 +342,7 @@ export function ViewControlBar({
           {renderViewButton(leftView, 'cyan')}
           {renderViewButton(rightView, 'cyan')}
           {renderViewButton(topView, 'green')}
+          {renderViewButton(bottomView, 'green')}
         </div>
         {perspButton}
         {showMirrorsHD && hdButton}
@@ -351,9 +353,9 @@ export function ViewControlBar({
     const inlineRow2 = (
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('out')}
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales et dessous">
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales et arrière">
           {ISO_VIEWS.map(v => renderViewButton(v, 'purple'))}
-          {renderViewButton(bottomView, 'green')}
+          {renderViewButton(backView, 'cyan')}
         </div>
         {rotButton}
         {toolbarActions}
