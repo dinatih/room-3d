@@ -41,6 +41,30 @@ import { ChestBench } from './items/ChestBench';
 import { UtakerStack } from './items/UtakerStack';
 import { Laptop } from './items/Laptop';
 import { Phone } from './items/Phone';
+import { ShoeHatRack } from './items/ShoeHatRack';
+import { MeubleT } from './items/MeubleT';
+import { TV } from './items/TV';
+import { MllseG2Pro } from './items/MllseG2Pro';
+import { AirPerformer } from './items/AirPerformer';
+import { MatterHub } from './items/MatterHub';
+import { LaserDistanceMaster } from './items/LaserDistanceMaster';
+import { DoubleVenusPendant } from './items/DoubleVenusPendant';
+import { Counter } from './items/Counter';
+import { NinjaSP101 } from './items/NinjaSP101';
+import { TrashBin } from './items/TrashBin';
+import { WaterHeater } from './items/WaterHeater';
+import { Bathtub } from './items/Bathtub';
+import { Backpack } from './items/Backpack';
+import { JordanHexMule } from './items/JordanHexMule';
+import { SummerOutdoorBoot } from './items/SummerOutdoorBoot';
+import { WinterOutdoorBoot } from './items/WinterOutdoorBoot';
+import { TShirt } from './items/TShirt';
+import { MaillotInyeong } from './items/MaillotInyeong';
+import { MannequinHead } from './items/MannequinHead';
+import { DoorEntry } from './items/DoorEntry';
+import { DoorLiving, DoorBath } from './items/DoorWhite';
+import { GlassDoor } from './items/GlassDoor';
+import { DoorFrame } from './items/DoorFrame';
 
 interface ErrorBoundaryProps {
   fallback?: React.ReactNode;
@@ -78,6 +102,42 @@ class GridItemErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
 const CELL_W = 85;
 const CELL_H = 80;
 const TARGET_DISPLAY_SIZE = 55;
+
+const ShoeHatRackGrid: React.ComponentType<any> = props => <ShoeHatRack {...props} noCaps />;
+
+const PROCEDURAL_GRID_COMPONENTS: Record<string, React.ComponentType<any>> = {
+  'shoe-hat-rack': ShoeHatRackGrid,
+  'meuble-t': MeubleT,
+  tv: TV,
+  'mini-pc': MllseG2Pro,
+  laptop: Laptop,
+  phone: Phone,
+  'air-performer': AirPerformer,
+  'matter-hub': MatterHub,
+  'laser-distancemaster': LaserDistanceMaster,
+  'double-venus-pendant': DoubleVenusPendant,
+  counter: Counter,
+  'ninja-sp101': NinjaSP101,
+  'trash-bin': TrashBin,
+  'water-heater': WaterHeater,
+  bathtub: Bathtub,
+  backpack: Backpack,
+  'jordan-hex-mule': JordanHexMule,
+  'summer-outdoor-boot': SummerOutdoorBoot,
+  'winter-outdoor-boot': WinterOutdoorBoot,
+  'tshirt-noir-L': TShirt,
+  'tshirt-noir-XL': TShirt,
+  'maillot-coreen-inyeong': MaillotInyeong,
+  'mannequin-head': MannequinHead,
+  'door-entry': DoorEntry,
+  'door-living': DoorLiving,
+  'door-sdb': DoorBath,
+  'door-glass': GlassDoor,
+  'door-frame': DoorFrame,
+  'armrest-sofa': ArmrestSofa,
+  'armless-sofa': ArmlessSofa,
+  'chest-bench': ChestBench,
+};
 
 export interface UnifiedGridItem {
   id: string;
@@ -392,44 +452,23 @@ export function InventoryObjectsGrid() {
       glbPath: i.glbPath,
     }));
 
-    // Ajout des objets procéduraux demandés
-    const procedurals: UnifiedGridItem[] = [
-      ...INVENTORY.filter((item) => item.id === 'laptop' || item.id === 'phone').map((item) => ({
+    // Les objets sans GLB réutilisent leur composant de scène dédié.
+    const procedurals: UnifiedGridItem[] = INVENTORY.filter((item) => item.id !== 'utaker-stack' && PROCEDURAL_GRID_COMPONENTS[item.id]).map((item) => ({
         id: item.id,
         name: item.name,
         category: item.category,
         notes: item.notes,
-        proceduralComponent: item.id === 'laptop' ? Laptop : Phone,
-      })),
-      {
-        id: 'armrest-sofa',
-        name: 'Canapé Jardin avec accoudoirs',
-        category: 'furniture',
-        notes: 'Jardin',
-        proceduralComponent: ArmrestSofa,
-      },
-      {
-        id: 'armless-sofa',
-        name: 'Canapé Jardin sans accoudoir',
-        category: 'furniture',
-        notes: 'Jardin',
-        proceduralComponent: ArmlessSofa,
-      },
-      {
-        id: 'chest-bench',
-        name: 'Banc Coffre Jardin Yitahome',
-        category: 'furniture',
-        notes: 'Jardin',
-        proceduralComponent: ChestBench,
-      },
-      {
+        proceduralComponent: PROCEDURAL_GRID_COMPONENTS[item.id],
+      }));
+
+    // Présentation assemblée déjà utilisée pour les lits Utåker dans la grille.
+    procedurals.push({
         id: 'utaker-double-bed',
         name: 'Lit Double Utåker (empilable réuni)',
         category: 'furniture',
         notes: 'Séjour',
         proceduralComponent: UtakerStack,
-      },
-    ];
+    });
 
     return [...glbItems, ...procedurals];
   }, []);

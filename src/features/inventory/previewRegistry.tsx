@@ -88,7 +88,6 @@ import { MatterHub }                                  from '@features/scene/item
 import { JblCharge3 }                                 from '@features/scene/items/JblCharge3';
 import { TrashBin }                                   from '@features/scene/items/TrashBin';
 import { VacuumCleaner }                              from '@features/scene/items/VacuumCleaner';
-import { Tent }                                       from '@features/scene/items/Tent';
 import { Vihals }                                     from '@features/scene/items/Vihals';
 import { Linky }                                      from '@features/scene/items/Linky';
 import { Scooter }                                    from '@features/scene/items/Scooter';
@@ -220,7 +219,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'sony-srs-xb33':          JblCharge3,
   'trash-bin':              TrashBin,
   'vacuum-cleaner':         VacuumCleaner,
-  'tent-quechua-2sec':      Tent,
   'vihals-chair':           Vihals,
   'google-nest-mini':       GoogleNestMini,
   'lagerpoppel00561816':    Lagerpoppel00561816,
