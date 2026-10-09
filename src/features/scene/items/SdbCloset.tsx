@@ -15,6 +15,8 @@ import { DiagWall, pEast, pWest, pNorth, WALL_H } from '../wallData';
 import { boxFaceMats, noCapMat } from '../building/buildingCommon';
 import { Grejig40329868 } from './Grejig40329868';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
+import { getObjectActionIds } from '../objectActions';
 
 export const SDB_CLOSET_W = pWest('bath-se') - pEast('shower-ne');
 export const SDB_CLOSET_D = 7;
@@ -126,8 +128,10 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
     if (changed) invalidate();
   });
 
+  const sdbSmartActions = SMART_OBJECTS['sdb-closet'].slots.map(s => `smart-object:::sdb-closet:::${s.slotId}`);
+
   return (
-    <group>
+    <group userData={{ animUnit: true, hoverAction: { label: 'Placard SDB', actions: [...getObjectActionIds('sdb-closet'), ...sdbSmartActions] } }}>
       {/* Rail haut */}
       <mesh position={[0, H - 1.5, 0]} castShadow material={railMat}>
         <boxGeometry args={[W, 3, RAIL_D]} />
@@ -139,7 +143,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
 
       {/* Panneau gauche (en -X, ce qui correspond à la Droite depuis la SDB) */}
       <group ref={groupLRef} position-y={0} position-z={ZL}
-             userData={{ hoverAction: { label: 'Porte SDB D', actionId: 'sdbClosetR' } }}>
+             userData={{ hoverAction: { label: 'Porte SDB D', actions: ['sdbClosetR', ...sdbSmartActions] } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMats}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>
@@ -150,7 +154,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
 
       {/* Panneau droit (en +X, ce qui correspond à la Gauche depuis la SDB) */}
       <group ref={groupRRef} position-y={0} position-z={ZR}
-             userData={{ hoverAction: { label: 'Porte SDB G', actionId: 'sdbClosetL' } }}>
+             userData={{ hoverAction: { label: 'Porte SDB G', actions: ['sdbClosetL', ...sdbSmartActions] } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMats}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>

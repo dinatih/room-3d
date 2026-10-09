@@ -1,4 +1,5 @@
 import { getObjectActionIds } from '../objectActions';
+import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 /**
  * Placard couloir — géométrie procédurale fidèle à js/structure/corridor.js.
  * Rendu en coordonnées locales : X/Z centrés sur le caisson, Y=0 = sol.
@@ -57,8 +58,11 @@ export function CorridorCloset({ actionState, onSize }: SceneItemProps) {
     }
   });
 
+  const smartActions = SMART_OBJECTS['corridor-closet'].slots.map(s => `smart-object:::corridor-closet:::${s.slotId}`);
+  const closetActions = [...getObjectActionIds('corridor-closet'), ...smartActions];
+
   return (
-    <group>
+    <group userData={{ animUnit: true, hoverAction: { label: 'Placard couloir', actions: closetActions } }}>
       {/* Étagères — remplissent toute la largeur et profondeur du caisson */}
       {[60, 120, 180].map((y) => (
         <mesh key={y} position={[0, y, 0]} castShadow receiveShadow material={shelfMat}>
@@ -70,7 +74,7 @@ export function CorridorCloset({ actionState, onSize }: SceneItemProps) {
           Centre décalé de -1 cm en X : face ext à x=0 (pivot), face int à x=-2.
           À l'ouverture +π/2, x=0 → z=0 et x=-2 → z=+2 : aucune pénétration nord. */}
       <group ref={doorRef} position={[DOOR_PIVOT_X, 0, DOOR_PIVOT_Z]}
-        userData={{ hoverAction: { label: 'Placard couloir', actions: getObjectActionIds('corridor-closet') } }}>
+        userData={{ hoverAction: { label: 'Placard couloir', actions: closetActions } }}>
         <mesh position={[-1, WALL_H / 2, CLOSET_D / 2]} castShadow material={doorMat}>
           <boxGeometry args={[2, WALL_H - DOOR_GAP * 2, CLOSET_D - DOOR_GAP * 2]} />
         </mesh>
