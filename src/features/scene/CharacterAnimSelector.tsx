@@ -253,7 +253,7 @@ export function CharacterAnimSelector({
             <button
               type="button"
               className={`btn btn-sm w-100 text-start d-flex justify-content-between align-items-center py-1 px-2 ${
-                selectedCategories.length > 0 ? 'btn-primary' : 'btn-outline-secondary'
+                selectedCategories.length > 0 ? 'btn-primary' : 'btn-outline-secondary bg-white text-dark'
               }`}
               style={{ fontSize: isMobile ? '12px' : '11px', borderRadius: '4px' }}
               onClick={() => setCategoryDropdownOpen(v => !v)}
