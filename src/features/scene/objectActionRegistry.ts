@@ -67,7 +67,7 @@ const ACTIONS: Record<string, ActionConfig> = {
   entryDoor: { label: 'Pousser', event: 'door-push' },
   livingDoor: { label: 'Pousser', event: 'door-push' },
   bathroomDoor: { label: 'Pousser', event: 'door-push' },
-  showerDoor: { label: ['Ouvrir', 'Fermer'] },
+  showerDoor: { label: 'Pousser', event: 'door-push' },
   corrDoors: { label: ['Ouvrir', 'Fermer'] },
   sdbClosetL: { label: ['Ouvrir Gauche', 'Fermer Gauche'] },
   sdbClosetR: { label: ['Ouvrir Droite', 'Fermer Droite'] },

@@ -32,7 +32,6 @@ export function BathroomEquipment() {
     'lamp-bath-toggle',
     'sdbClosetL',
     'sdbClosetR',
-    'showerDoor',
     'wc-lid-toggle',
     'wc-seat-toggle',
     'wc-flush',

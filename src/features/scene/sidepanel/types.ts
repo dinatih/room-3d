@@ -102,7 +102,6 @@ export interface FurnitureState {
   sofaArmRight:   boolean;
   glassDoorV2ShutterPos: number;
   mackaparDoors: boolean;
-  showerDoor: boolean;
   dronaMode: 'high' | 'low' | 'procedural' | 'hidden';
 }
 

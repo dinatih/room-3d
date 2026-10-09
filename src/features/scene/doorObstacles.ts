@@ -8,7 +8,7 @@
 
 import { cameraState } from './cameraState';
 import { getActiveFurnitureObstacles } from './ai/furnitureObstacles';
-import { ROOM_W, pX, pZ, DiagWall } from './wallData';
+import { ROOM_W, pX, pZ, DiagWall, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from './wallData';
 
 export const DOOR_OPEN_RESPONSE = 10;
 export const DOOR_CLOSE_RESPONSE = 4;
@@ -53,6 +53,7 @@ export const doorCollisionState = {
   entry: { angle: 0 },
   glassRight: { angle: 0 },
   glassLeft: { angle: 0 },
+  shower: { angle: 0 },
 };
 
 /**
@@ -299,6 +300,13 @@ export function computeDoorAllowedAngle(door: DoorConfig): number {
  * Configurations préétablies pour les portes principales du modèle.
  */
 export const DOOR_CONFIGS = {
+  shower: {
+    pivot: { x: BATH_WEST_WALL + 20, z: SHOWER_SOUTH_WALL - 71 },
+    length: 51, thickness: 2,
+    closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: -1 },
+    maxAngle: Math.PI * 0.47, yMin: 20, yMax: 220, margin: 1.5,
+  } satisfies DoorConfig,
+
   living: {
     pivot: { x: 284.5, z: 403.6 },
     length: 83,
