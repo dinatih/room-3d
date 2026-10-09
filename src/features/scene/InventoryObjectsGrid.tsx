@@ -102,7 +102,6 @@ class GridItemErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
 const CELL_W = 85;
 const CELL_H = 104;
 const TARGET_DISPLAY_SIZE = 50;
-const GRID_LIGHT_LAYER = 1;
 
 function createRoundedCardGeometry() {
   const halfWidth = (CELL_W - 6) / 2;
@@ -370,7 +369,6 @@ function ProceduralItemInner({ item }: { item: UnifiedGridItem }) {
 
     const center = box.getCenter(new THREE.Vector3());
     groupRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
-    groupRef.current.traverse(object => object.layers.set(GRID_LIGHT_LAYER));
   }, []);
 
   return (
@@ -418,7 +416,6 @@ function GlbItemInner({ item }: { item: UnifiedGridItem }) {
     scene.position.set(-center.x, -center.y, -center.z);
 
     scene.traverse((child) => {
-      child.layers.set(GRID_LIGHT_LAYER);
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         mesh.castShadow = false;
@@ -463,20 +460,7 @@ function GridItem({ item, position }: { item: UnifiedGridItem; position: [number
 // ── Composant Principal : InventoryObjectsGrid ─────────────────────────────────
 
 export function InventoryObjectsGrid() {
-  const { size, camera } = useThree();
-
-  useLayoutEffect(() => {
-    const previousLayers = camera.layers.mask;
-    camera.layers.enable(GRID_LIGHT_LAYER);
-    return () => { camera.layers.mask = previousLayers; };
-  }, [camera]);
-
-  const ambientLightRef = useRef<THREE.AmbientLight>(null!);
-  const directionalLightRef = useRef<THREE.DirectionalLight>(null!);
-  useLayoutEffect(() => {
-    ambientLightRef.current.layers.set(GRID_LIGHT_LAYER);
-    directionalLightRef.current.layers.set(GRID_LIGHT_LAYER);
-  }, []);
+  const { size } = useThree();
   // Liste complète : objets GLB filtrés + objets procéduraux demandés
   const allItems = useMemo<UnifiedGridItem[]>(() => {
     const glbItems: UnifiedGridItem[] = INVENTORY.filter(isAllowedInventoryItem).map((i) => ({
@@ -652,8 +636,6 @@ export function InventoryObjectsGrid() {
 
   return (
     <group name="inventory-objects-grid" position={[offsetX, rootY, rootZ]}>
-      <ambientLight ref={ambientLightRef} intensity={1.7} />
-      <directionalLight ref={directionalLightRef} position={[totalWidth / 2, 500, 400]} intensity={2.2} />
       {sections.map(({ zone, items, baseX, baseY, cols }) => {
         const rows = Math.max(1, Math.ceil(items.length / cols));
         const width = cols * CELL_W;
@@ -686,12 +668,6 @@ export function InventoryObjectsGrid() {
                   {/* Fond de carte */}
                   <mesh position={[0, 0, -25]} geometry={CARD_BACKGROUND_GEOMETRY}>
                     <meshBasicMaterial color="#d8dddc" />
-                  </mesh>
-
-                  {/* Repère de couleur sobre */}
-                  <mesh position={[0, CELL_H / 2 - 5, 0]}>
-                    <planeGeometry args={[CELL_W - 18, 1.5]} />
-                    <meshBasicMaterial color={zone.color} />
                   </mesh>
 
                   {/* Modèle, avec une zone réservée au nom sous la carte */}
