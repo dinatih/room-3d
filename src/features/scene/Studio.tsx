@@ -597,6 +597,7 @@ export function Studio() {
         onToggleLayer('wireframe');
         cameraState.invalidate?.();
       } else if (e.key === 'i' || e.key === 'I') {
+        e.preventDefault();
         setInventoryInitialCat('all');
         setShowInventory(prev => !prev);
       } else if (e.key === 'a' || e.key === 'A') {
