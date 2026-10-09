@@ -42,16 +42,16 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
           <div className="modal-body py-1">
             <div>
               <Section title="Global" />
-              <R label={<>PNJ actif aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['R']} />
+              <R label={<>PNJ actif aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['S']} />
               <R label="Photo Raytracing HD 📸"     keys={['F10']} />
               <R label="Inventaire (toggle)"        keys={['I']} />
-              <R label="Basculer Ortho / Perspective" keys={['P']} />
+              <R label="Basculer Ortho / Perspective" keys={['O', 'P']} />
               <R label="Inventaire Personnages (direct)" keys={['Alt+P']} />
               <R label="Personnages Extra 🎭 (toggle)" keys={['Alt+E']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
-              <R label="Basculer Rotation / Translation" keys={['O']} />
+              <R label="Basculer Rotation / Translation" keys={['R', 'T']} />
               <R label="Vue Orbit perspective par défaut (Nord-Ouest)" keys={['Alt+O']} />
-              <R label="Follow (cycle 3P / FPV)" keys={['M']} />
+              <R label="Follow / FPV (alterner)" keys={['F', 'V']} />
               <R label="Vue 3ème personne directe"  keys={['3']} />
               <R label={<>Ambiance HDRI aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['5']} />
               <R label="Bulle de pensées 💭 (toggle)" keys={['6']} />
@@ -60,9 +60,9 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Minimap 2D (toggle)"        keys={['9']} />
               <R label="Masquer toute l'UI (Vue clean)" keys={['0']} />
               <R label="Console de logs (toggle)"   keys={['B']} />
-              <R label="Vue top-down (toggle)"      keys={['T']} />
+              <R label="Vue top-down (toggle)"      keys={['Alt+T']} />
               <R label="Vue top-down suivi perso (toggle)" keys={['Y']} />
-              <R label="Avion en papier (toggle)"   keys={['F']} />
+              <R label="Avion en papier (toggle)"   keys={['Alt+V']} />
               <R label="Afficher / masquer la grille" keys={['Alt+B']} />
               <R label="Grille de personnages (toggle)"       keys={['G']} />
               <R label="Wireframe coloré 🕸 (toggle)" keys={['W']} />

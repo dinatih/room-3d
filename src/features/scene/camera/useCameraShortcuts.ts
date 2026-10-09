@@ -145,9 +145,12 @@ export function useCameraShortcuts({
       }
     };
 
-    const toggleOrbitMouseMode = () => {
+    const toggleOrbitMouseMode = (requestedMode?: 'rotate' | 'pan') => {
       const store = useSceneStore.getState();
-      store.setOrbitMouseMode(store.orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
+      const targetMode = requestedMode ?? (store.orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
+      store.setOrbitMouseMode(store.orbitMouseMode === targetMode
+        ? targetMode === 'rotate' ? 'pan' : 'rotate'
+        : targetMode);
       invalidate();
     };
 
@@ -175,9 +178,16 @@ export function useCameraShortcuts({
         return;
       }
 
-      if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'p' || e.key === 'P')) {
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'o' || e.key === 'O' || e.key === 'p' || e.key === 'P')) {
+        if (e.repeat) return;
+        e.preventDefault();
         if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
-        useSceneStore.getState().toggleCameraProjection();
+        const store = useSceneStore.getState();
+        const requestedProjection = e.key.toLowerCase() === 'o' ? 'ortho' : 'persp';
+        const projection = store.cameraProjection === requestedProjection
+          ? requestedProjection === 'ortho' ? 'persp' : 'ortho'
+          : requestedProjection;
+        store.setCameraProjection(projection);
         return;
       }
 
@@ -260,10 +270,12 @@ export function useCameraShortcuts({
         }
       }
 
-      if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'o' || e.key === 'O')) {
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'r' || e.key === 'R' || e.key === 't' || e.key === 'T')) {
         if (e.repeat) return;
         e.preventDefault();
-        if (modeRef.current === 'orbit') toggleOrbitMouseMode();
+        if (modeRef.current === 'orbit') {
+          toggleOrbitMouseMode(e.key.toLowerCase() === 'r' ? 'rotate' : 'pan');
+        }
         return;
       }
 
@@ -283,21 +295,25 @@ export function useCameraShortcuts({
         return;
       }
 
-      if (!e.altKey && (e.key === 'm' || e.key === 'M')) {
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'f' || e.key === 'F' || e.key === 'v' || e.key === 'V')) {
+        if (e.repeat) return;
         const curX = cameraState.characterX ?? followPos.current.x;
         const curZ = cameraState.characterZ ?? followPos.current.z;
-        if (modeRef.current === 'follow') {
+        const requestedMode = e.key.toLowerCase() === 'f' ? 'follow' : 'fpv';
+        const targetMode = modeRef.current === requestedMode
+          ? requestedMode === 'follow' ? 'fpv' : 'follow'
+          : requestedMode;
+        if (targetMode === 'fpv') {
           enterFollow(curX, curZ, 'fpv');
           appLog('system', '🎥 Mode FPV (1ère personne)');
         } else {
-          // Si en FPV, Orbit ou Top : passer en 3ème personne intelligente
           enterFollow(curX, curZ, 'follow');
           appLog('system', '🎥 Mode Suivi Intelligent (3ème personne)');
         }
         return;
       }
 
-      if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'r') {
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
         if (!e.repeat) chooseRandomCharacter();
         return;
@@ -324,7 +340,8 @@ export function useCameraShortcuts({
         return;
       }
 
-      if (e.key === 't' || e.key === 'T') {
+      if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 't' || e.key === 'T')) {
+        if (e.repeat) return;
         const characterGridActive = useSceneStore.getState().layers.characterGrid;
         if (characterGridActive) {
           document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-lara', value: 't-pose' } }));

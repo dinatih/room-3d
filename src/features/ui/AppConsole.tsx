@@ -168,7 +168,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
             chooseRandomCharacter();
           }}
           onPointerDown={(e) => e.stopPropagation()}
-          title="Choisir un PNJ aléatoire parmi les personnages visibles (R)"
+          title="Choisir un PNJ aléatoire parmi les personnages visibles (S)"
           aria-label="Choisir un PNJ aléatoire"
         >
           <i className="bi bi-shuffle" aria-hidden="true" />

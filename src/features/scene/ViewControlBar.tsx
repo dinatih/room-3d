@@ -70,7 +70,7 @@ export function ViewControlBar({
   const orbitActive = !showCharacterModes || cameraMode === 'orbit';
   const isPan = orbitActive && orbitMouseMode === 'pan';
   const orbitTitle = orbitActive
-    ? `${isPan ? 'Trans (Translation) : glisser gauche pour déplacer, droit pour tourner. Passer en Rot' : 'Rot (Rotation) : glisser gauche pour tourner, droit pour déplacer. Passer en Trans'}${showCharacterModes ? ' (O)' : ''}`
+    ? `${isPan ? 'Trans (Translation) : glisser gauche pour déplacer, droit pour tourner. Passer en Rot' : 'Rot (Rotation) : glisser gauche pour tourner, droit pour déplacer. Passer en Trans'}${showCharacterModes ? ' (R / T)' : ''}`
     : 'Revenir à la caméra Orbit perspective par défaut (Alt+O)';
   const isActive = (key: string) => activeCameraView === key;
   const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit' | 'toggle-npc-grid') => {
@@ -177,9 +177,9 @@ export function ViewControlBar({
             type="button"
             className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
             onClick={chooseRandomCharacter}
-            title="Changer aléatoirement le PNJ actif parmi les personnages visibles (R)"
-            aria-label="Changer aléatoirement le PNJ actif (R)"
-            aria-keyshortcuts="r"
+            title="Changer aléatoirement le PNJ actif parmi les personnages visibles (S)"
+            aria-label="Changer aléatoirement le PNJ actif (S)"
+            aria-keyshortcuts="s"
           >
             <i className="bi bi-shuffle" aria-hidden="true" />
             <i className="bi bi-person-standing-dress" aria-hidden="true" />
@@ -192,14 +192,14 @@ export function ViewControlBar({
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
               onClick={() => dispatchCameraMode('toggle-follow')}
-              title="Activer ou quitter le suivi à la troisième personne (M : Follow ↔ FPV)"
+              title="Follow / FPV (F / V : alterner)"
               aria-pressed={cameraMode === 'follow'}
             ><i className="bi bi-camera2" aria-hidden="true" /><i className="bi bi-person-walking" aria-hidden="true" /><span className="fw-semibold">Follow</span></button>
             <button
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
               onClick={() => dispatchCameraMode('fpv')}
-              title="Passer en vue subjective FPV (M : Follow ↔ FPV)"
+              title="FPV / Follow (V / F : alterner)"
               aria-pressed={cameraMode === 'fpv'}
             ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
           </div>
@@ -209,7 +209,7 @@ export function ViewControlBar({
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} ${isOrtho ? 'view-control-bar__btn--indigo' : 'view-control-bar__btn--pink'}`}
           onClick={toggleCameraProjection}
-          title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (P)`}
+          title={`${isOrtho ? 'Basculer en Perspective (3D conique)' : 'Basculer en Orthographique (isométrique)'} (O / P : alterner)`}
           aria-pressed={isOrtho}
         >
           <i className="bi bi-camera-video-fill" aria-hidden="true" />
@@ -284,7 +284,7 @@ export function ViewControlBar({
         {toolbarActions}
         {showCharacterModes && (
           <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
-            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`} onClick={onEnterFlight} title="Activer le mode avion (F)" aria-label="Activer le mode avion (F)">
+            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`} onClick={onEnterFlight} title="Activer le mode avion (Alt+V)" aria-label="Activer le mode avion (Alt+V)">
               <i className="bi bi-airplane-fill" aria-hidden="true" />
             </button>
             {!isMobile && (

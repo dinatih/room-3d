@@ -470,12 +470,12 @@ export function Studio() {
   const [planeViewMode,      setPlaneViewMode]      = useState<PlaneViewMode>('prelaunch');
   const [planeLaunched,      setPlaneLaunched]      = useState(false);
 
-  // F → toggle mode avion (ignoré quand un input/textarea est focus)
+  // Alt+V → toggle mode avion (ignoré quand un input/textarea est focus)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'f' && e.key !== 'F') return;
+      if (e.key !== 'v' && e.key !== 'V') return;
       if (e.repeat) return;
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (!e.altKey || e.ctrlKey || e.metaKey) return;
       const t = e.target as HTMLElement | null;
       if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
       setPlaneMode(p => {
