@@ -8,12 +8,10 @@
  */
 import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import { useDeskScreenVideo } from '@features/scene/utils/deskScreenVideo';
-import { cameraState } from '@features/scene/cameraState';
 
 const BASE_W = 29.7, BASE_D = 22.8, BASE_H = 1.6;
 const SCREEN_D = 19.5;
@@ -39,12 +37,6 @@ function moveOcc(root: THREE.Object3D, name: string, tx: number, ty: number, tz:
 export function Laptop({ onSize }: SceneItemProps) {
   const { scene } = useGLTF(GLB_PATH);
   const { isVideoActive, texture: videoTex } = useDeskScreenVideo();
-
-  useFrame(() => {
-    if (isVideoActive) {
-      cameraState.invalidate?.();
-    }
-  });
 
   const clone = useMemo(() => {
     const c = scene.clone(true);

@@ -4,12 +4,10 @@
  */
 import { useLayoutEffect, useMemo, useState } from 'react';
 import { useGLTF, useTexture } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { useDeskScreenVideo } from '@features/scene/utils/deskScreenVideo';
-import { cameraState } from '@features/scene/cameraState';
 
 export const TV_W = 73;
 export const TV_H = 41;
@@ -28,12 +26,6 @@ export function TV({ actionState, onSize }: SceneItemProps) {
   const isDisplaying = isVideoActive || isTvOn;
   const activeTex = isVideoActive ? videoTex : (isTvOn ? screenTex : null);
   const [screenZ, setScreenZ] = useState(0);
-
-  useFrame(() => {
-    if (isVideoActive) {
-      cameraState.invalidate?.();
-    }
-  });
 
   useLayoutEffect(() => {
     removeGlbLines(scene);

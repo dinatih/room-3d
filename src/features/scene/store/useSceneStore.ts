@@ -66,6 +66,7 @@ export function updateUrlNpcCount(count: LaraCountMode | 0) {
 
 import { DEFAULT_HDRI_ID, type HdriResolution } from '@features/scene/hdriConfig';
 import { isMobileViewport } from '../../../hooks/useIsMobile';
+import type { ScreenVideoQuality } from '../screenVideoConfig';
 
 export const GRASS_TYPES: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves'];
 
@@ -86,6 +87,10 @@ interface SceneStore {
   activeMainIds: string[];
   currentHdri: string;
   hdriResolution: HdriResolution;
+  screenVideosEnabled: boolean;
+  screenVideoQuality: ScreenVideoQuality;
+  setScreenVideosEnabled: (enabled: boolean) => void;
+  setScreenVideoQuality: (quality: ScreenVideoQuality) => void;
   setHdriResolution: (resolution: HdriResolution) => void;
   bnfAzimuth: number;
   bnfElevation: number;
@@ -319,6 +324,16 @@ export const useSceneStore = create<SceneStore>((set) => ({
   activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
   hdriResolution: isMobileViewport() ? '2k' : '8k',
+  screenVideosEnabled: true,
+  screenVideoQuality: isMobileViewport() ? 'ld' : 'hd',
+  setScreenVideosEnabled: (enabled) => {
+    set({ screenVideosEnabled: enabled });
+    cameraState.invalidate?.();
+  },
+  setScreenVideoQuality: (quality) => {
+    set({ screenVideoQuality: quality });
+    cameraState.invalidate?.();
+  },
   setHdriResolution: (resolution) => {
     set({ hdriResolution: resolution });
     cameraState.invalidate?.();

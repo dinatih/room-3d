@@ -1,5 +1,6 @@
 import { useSceneStore, getRandomGrassType } from '../../store/useSceneStore';
 import { HDRI_LIST, type HdriResolution } from '@features/scene/hdriConfig';
+import type { ScreenVideoQuality } from '../../screenVideoConfig';
 import { dispatchKey, type LayerState, type LidarMode, type GroundType } from '../types';
 
 export interface LayersSectionProps {
@@ -38,6 +39,10 @@ export function LayersSection({
   const setHdri = useSceneStore(state => state.setHdri);
   const hdriResolution = useSceneStore(state => state.hdriResolution);
   const setHdriResolution = useSceneStore(state => state.setHdriResolution);
+  const screenVideosEnabled = useSceneStore(state => state.screenVideosEnabled);
+  const screenVideoQuality = useSceneStore(state => state.screenVideoQuality);
+  const setScreenVideosEnabled = useSceneStore(state => state.setScreenVideosEnabled);
+  const setScreenVideoQuality = useSceneStore(state => state.setScreenVideoQuality);
   const setGroundType = useSceneStore(state => state.setGroundType);
   const bnfAzimuth = useSceneStore(state => state.bnfAzimuth ?? 154.3);
   const bnfElevation = useSceneStore(state => state.bnfElevation ?? -2.2);
@@ -184,6 +189,35 @@ export function LayersSection({
         })()}
       </div>
       {layerBtn('purple',    iconLabel('bi-wind', 'Effet fumée (Poof!)'), 'smokeTransition')}
+      <div className="px-3 py-2 border-bottom d-flex flex-column gap-2">
+        <div className="form-check form-switch small mb-0">
+          <input
+            id="screen-videos-enabled"
+            type="checkbox"
+            role="switch"
+            className="form-check-input"
+            checked={screenVideosEnabled}
+            onChange={(e) => setScreenVideosEnabled(e.target.checked)}
+          />
+          <label htmlFor="screen-videos-enabled" className="form-check-label">
+            Vidéos sur les écrans
+          </label>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <label htmlFor="screen-video-quality" className="text-muted small text-nowrap">Qualité vidéo</label>
+          <select
+            id="screen-video-quality"
+            className="form-select form-select-sm bg-transparent text-dark border-secondary"
+            value={screenVideoQuality}
+            disabled={!screenVideosEnabled}
+            onKeyDown={(e) => e.stopPropagation()}
+            onChange={(e) => setScreenVideoQuality(e.target.value as ScreenVideoQuality)}
+          >
+            <option value="ld">LD — 640 × 428 · 15 i/s</option>
+            <option value="hd">HD — 1280 × 854 · 30 i/s</option>
+          </select>
+        </div>
+      </div>
       {layerBtn('red',       iconLabel('bi-camera-video', 'Points de vue caméra rouges'), 'cameraViewMarkers')}
       {layerBtn('green',     iconLabel('bi-bricks', 'Structure murale (Alt+W)'), 'wallStructure', 'wireframeWallStructure')}
       {layerBtn('orange',    iconLabel('bi-layers', 'Revêtements sol (+ plinthes)'), 'floorCoverings')}

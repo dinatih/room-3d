@@ -1,45 +1,52 @@
 import * as THREE from 'three';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useThree } from '@react-three/fiber';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
+import { SCREEN_VIDEO_SOURCES, type ScreenVideoQuality } from '../screenVideoConfig';
 
-const VIDEO_SRC = 'videos/screenrecording.mp4';
-
-let sharedVideo: HTMLVideoElement | null = null;
-let sharedTexture: THREE.VideoTexture | null = null;
-let activeUsersCount = 0;
-
-export function getDeskVideoTexture(): { video: HTMLVideoElement; texture: THREE.VideoTexture } {
-  if (!sharedVideo) {
-    sharedVideo = document.createElement('video');
-    sharedVideo.src = VIDEO_SRC;
-    sharedVideo.crossOrigin = 'anonymous';
-    sharedVideo.loop = true;
-    sharedVideo.muted = true;
-    sharedVideo.playsInline = true;
-    sharedVideo.preload = 'auto';
-
-    sharedTexture = new THREE.VideoTexture(sharedVideo);
-    sharedTexture.colorSpace = THREE.SRGBColorSpace;
-    sharedTexture.minFilter = THREE.LinearFilter;
-    sharedTexture.magFilter = THREE.LinearFilter;
-    sharedTexture.generateMipmaps = false;
-  }
-  return { video: sharedVideo, texture: sharedTexture! };
+interface ScreenVideo {
+  video: HTMLVideoElement;
+  texture: THREE.VideoTexture;
+  quality: ScreenVideoQuality;
+  users: number;
 }
 
-export function playDeskVideo() {
-  activeUsersCount++;
-  const { video } = getDeskVideoTexture();
-  if (video.paused) {
-    video.play().catch(() => {});
+const sharedVideos = new Map<ScreenVideoQuality, ScreenVideo>();
+
+function acquireVideo(quality: ScreenVideoQuality): ScreenVideo {
+  let resource = sharedVideos.get(quality);
+  if (!resource) {
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    video.loop = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.src = SCREEN_VIDEO_SOURCES[quality];
+
+    const texture = new THREE.VideoTexture(video);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    resource = { video, texture, quality, users: 0 };
+    sharedVideos.set(quality, resource);
+    video.play().catch((error: DOMException) => {
+      // Removing the source during cleanup interrupts pending play requests.
+      if (error.name !== 'AbortError') console.error('Lecture vidéo écran impossible', error);
+    });
   }
+  resource.users++;
+  return resource;
 }
 
-export function pauseDeskVideo() {
-  activeUsersCount = Math.max(0, activeUsersCount - 1);
-  if (activeUsersCount === 0 && sharedVideo && !sharedVideo.paused) {
-    sharedVideo.pause();
-    sharedVideo.currentTime = 0;
+function releaseVideo(resource: ScreenVideo) {
+  resource.users--;
+  if (resource.users === 0) {
+    resource.video.pause();
+    resource.texture.dispose();
+    resource.video.removeAttribute('src');
+    resource.video.load();
+    sharedVideos.delete(resource.quality);
   }
 }
 
@@ -51,22 +58,39 @@ export function setDesk2SmartActionState(characterId: string, active: boolean) {
   } else {
     activeDesk2Agents.delete(characterId);
   }
-  const isAnyActive = activeDesk2Agents.size > 0;
-  useSceneStore.getState().setDesk2SmartActionActive(isAnyActive);
+  useSceneStore.getState().setDesk2SmartActionActive(activeDesk2Agents.size > 0);
 }
 
 export function useDeskScreenVideo() {
   const isDesk2Active = useSceneStore(s => Boolean(s.desk2ScreenActive || s.extraStates.desk2Screen));
-  const { video, texture } = getDeskVideoTexture();
+  const enabled = useSceneStore(s => s.screenVideosEnabled);
+  const quality = useSceneStore(s => s.screenVideoQuality);
+  const invalidate = useThree(s => s.invalidate);
+  const [resource, setResource] = useState<ScreenVideo | null>(null);
+  const requested = enabled && isDesk2Active;
 
   useEffect(() => {
-    if (isDesk2Active) {
-      playDeskVideo();
-      return () => {
-        pauseDeskVideo();
-      };
+    if (!requested) {
+      setResource(null);
+      return;
     }
-  }, [isDesk2Active]);
+    const acquired = acquireVideo(quality);
+    setResource(acquired);
+    // Render on decoded video frames, rather than forcing a continuous render loop.
+    let frameId: number;
+    const onVideoFrame = () => {
+      invalidate();
+      frameId = acquired.video.requestVideoFrameCallback(onVideoFrame);
+    };
+    frameId = acquired.video.requestVideoFrameCallback(onVideoFrame);
+    invalidate();
+    return () => {
+      acquired.video.cancelVideoFrameCallback(frameId);
+      releaseVideo(acquired);
+      invalidate();
+    };
+  }, [requested, quality, invalidate]);
 
-  return { isVideoActive: isDesk2Active, texture, video };
+  const active = requested && resource?.quality === quality;
+  return { isVideoActive: active, texture: active ? resource.texture : null };
 }
