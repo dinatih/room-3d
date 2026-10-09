@@ -465,7 +465,7 @@ export function useCameraShortcuts({
 
     const onCameraMode = (e: Event) => {
       if (planeModeRef.current || cameraState.isIntroRunning) return;
-      const requestedMode = (e as CustomEvent<'toggle-follow' | 'fpv' | 'orbit' | 'toggle-npc-grid'>).detail;
+      const requestedMode = (e as CustomEvent<'toggle-follow' | 'fpv' | 'orbit' | 'reset-orbit' | 'toggle-npc-grid' | 'toggle-inventory-grid'>).detail;
       const curX = cameraState.characterX ?? followPos.current.x;
       const curZ = cameraState.characterZ ?? followPos.current.z;
       if (requestedMode === 'fpv') {
@@ -479,6 +479,8 @@ export function useCameraShortcuts({
         } else {
           goToDefaultOrbit();
         }
+      } else if (requestedMode === 'reset-orbit') {
+        goToDefaultOrbit();
       } else if (requestedMode === 'toggle-npc-grid') {
         toggleNpcGrid();
       } else if (requestedMode === 'toggle-inventory-grid') {

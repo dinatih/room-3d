@@ -85,7 +85,7 @@ export function ViewControlBar({
     ? 'Translation (clic gauche : déplacer, clic droit : tourner) — Passer en Rotation (R / T)'
     : 'Rotation (clic gauche : tourner, clic droit : déplacer) — Passer en Translation (R / T)';
   const isActive = (key: string) => activeCameraPos === key;
-  const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit' | 'toggle-npc-grid') => {
+  const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit' | 'reset-orbit' | 'toggle-npc-grid') => {
     document.dispatchEvent(new CustomEvent('camera-mode', { detail: mode }));
   };
   const positionStyle: React.CSSProperties | undefined = inline ? undefined : {
@@ -289,7 +289,7 @@ export function ViewControlBar({
               onClick={() => {
                 setCameraTarget('studio');
                 setCameraMovement('orbit');
-                dispatchCameraMode('orbit');
+                dispatchCameraMode('reset-orbit');
               }}
               title="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"
               aria-label="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"
