@@ -172,7 +172,7 @@ export function getActiveSceneCharactersCount(state?: {
 export function frameCharacterGridCamera(total?: number, projection: 'persp' | 'ortho' = 'persp'): void {
   const count = total ?? getActiveSceneCharactersCount();
   const view = getCharacterGridCameraView(count);
-  useSceneStore.getState().setActiveCameraView('front');
+  useSceneStore.getState().setActiveCameraPos('front');
   useSceneStore.getState().setCameraProjection(projection);
   if (projection === 'persp') {
     useSceneStore.getState().setOrbitMouseMode('rotate');

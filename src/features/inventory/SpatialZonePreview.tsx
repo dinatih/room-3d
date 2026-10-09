@@ -40,6 +40,7 @@ const CAMERA_VIEW_DIRECTIONS: Record<string, [number, number, number]> = {
   front: [0, 0, 1], back: [0, 0, -1], left: [-1, 0, 0], right: [1, 0, 0],
   top: [0, 1, 0], bottom: [0, -1, 0],
   'iso-se': [1, 1, 1], 'iso-sw': [-1, 1, 1], 'iso-ne': [1, 1, -1], 'iso-nw': [-1, 1, -1],
+  's-e': [1, 1, 1], 's-o': [-1, 1, 1], 'n-e': [1, 1, -1], 'n-o': [-1, 1, -1],
   perspective: [0.3, 0.25, 1],
 };
 
@@ -267,7 +268,7 @@ function PreviewCameraController({
   const orthoHalf = Math.max(80, zoneSize * 0.75);
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const orbitMouseMode = useSceneStore(s => s.orbitMouseMode);
-  const activeCameraView = useSceneStore(s => s.activeCameraView);
+  const activeCameraPos = useSceneStore(s => s.activeCameraPos);
   const controlsTarget = useMemo<[number, number, number]>(() => [centerX, centerY, centerZ], [centerX, centerY, centerZ]);
 
   // Initialize both preview cameras from the active scene view. The inventory
@@ -281,7 +282,7 @@ function PreviewCameraController({
     // perspective camera configured by Canvas.onCreated.
     oc.layers.enableAll();
     oc.layers.disable(LAYER_WALKER_DETAIL);
-    const direction = new THREE.Vector3(...(CAMERA_VIEW_DIRECTIONS[activeCameraView ?? 'iso-se'] ?? [1, 1, 1])).normalize();
+    const direction = new THREE.Vector3(...(CAMERA_VIEW_DIRECTIONS[activeCameraPos ?? 'iso-se'] ?? [1, 1, 1])).normalize();
     const initialPosition = new THREE.Vector3(centerX, centerY, centerZ).addScaledVector(direction, DIST);
     perspCam.position.copy(initialPosition);
     perspCam.up.set(0, 1, 0);

@@ -178,7 +178,7 @@ export function CameraViewMarkers() {
   const [inventoryGridTarget, setInventoryGridTarget] = useState(() => getInventoryGridCameraTarget());
   const enabled = useSceneStore(s => s.layers.cameraViewMarkers);
   const inventoryGridActive = useSceneStore(s => s.layers.inventoryGrid);
-  const activeView = useSceneStore(s => s.activeCameraView);
+  const activeView = useSceneStore(s => s.activeCameraPos);
   const photoOpen = useSceneStore(s => s.isPhotoModeOpen);
   useEffect(() => {
     const syncTarget = () => setInventoryGridTarget(getInventoryGridCameraTarget());

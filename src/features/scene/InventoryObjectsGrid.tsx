@@ -616,7 +616,7 @@ export function InventoryObjectsGrid() {
         rootZ,
       ];
       setInventoryGridCameraTarget(target);
-      useSceneStore.getState().setActiveCameraView('front');
+      useSceneStore.getState().setActiveCameraPos('front');
       document.dispatchEvent(new CustomEvent('camera-view', {
         detail: {
           key: 'front',

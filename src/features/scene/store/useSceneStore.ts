@@ -1,12 +1,16 @@
 import { getActionDef, getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
+import type { CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
 import {
   parseUrlCameraMode,
   parseUrlCameraProjection,
-  parseUrlActiveCameraView,
+  parseUrlActiveCameraPosKey,
+  parseUrlCameraTarget,
+  parseUrlMouseMode,
   updateUrlCameraProjection,
-  updateUrlActiveCameraView,
+  updateUrlCameraPos,
+  updateUrlCameraTarget,
 } from '@features/scene/camera/cameraUrlParams';
 import { parseUrlLayerOverrides, updateUrlLayer, parseUrlGroundType, updateUrlGroundType, LAYER_DEFAULTS } from './layerUrlParams';
 import type { FurnitureState, LayerState, GroundType } from '../sidepanel/types';
@@ -99,10 +103,12 @@ interface SceneStore {
   measurementActive: boolean;
   cameraMode: 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'ortho';
   cameraProjection: 'persp' | 'ortho';
-  orbitMouseMode: 'rotate' | 'pan';
-  setOrbitMouseMode: (mode: 'rotate' | 'pan') => void;
-  activeCameraView: string | null;
-  setActiveCameraView: (view: string | null) => void;
+  cameraTarget: CameraTarget;
+  setCameraTarget: (target: CameraTarget) => void;
+  orbitMouseMode: OrbitMouseMode;
+  setOrbitMouseMode: (mode: OrbitMouseMode) => void;
+  activeCameraPos: string | null;
+  setActiveCameraPos: (pos: string | null) => void;
   isCvModalOpen: boolean;
   isPhotoModeOpen: boolean;
   setCvModalOpen: (open: boolean) => void;
@@ -297,6 +303,13 @@ if (initialLayers.mirrorsHD) {
 
 if (initialLayers.laraCount === 0) initialLayers.character = false;
 
+const initialTarget = parseUrlCameraTarget();
+if (initialTarget === 'charactersGrid') {
+  initialLayers.characterGrid = true;
+} else if (initialTarget === 'inventoryObjectGrid') {
+  initialLayers.inventoryGrid = true;
+}
+
 if (!initialLayers.character) {
   cameraState.characterHidden = true;
 }
@@ -330,12 +343,28 @@ export const useSceneStore = create<SceneStore>((set) => ({
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
   cameraProjection: parseUrlCameraProjection(),
-  orbitMouseMode: parseUrlCameraProjection() === 'ortho' ? 'pan' : 'rotate',
+  cameraTarget: initialTarget ?? 'studio',
+  setCameraTarget: (target) => {
+    updateUrlCameraTarget(target);
+    const updates: Partial<SceneStore> = { cameraTarget: target };
+    if (target === 'charactersGrid') {
+      updates.layers = { ...useSceneStore.getState().layers, characterGrid: true };
+    } else if (target === 'inventoryObjectGrid') {
+      updates.layers = { ...useSceneStore.getState().layers, inventoryGrid: true };
+    }
+    const currentMode = useSceneStore.getState().cameraMode;
+    if (currentMode !== 'orbit') {
+      updates.cameraMode = 'orbit';
+    }
+    set(updates);
+    cameraState.invalidate?.();
+  },
+  orbitMouseMode: parseUrlMouseMode() ?? (parseUrlCameraProjection() === 'ortho' ? 'translate' : 'rotate'),
   setOrbitMouseMode: (mode) => set({ orbitMouseMode: mode }),
-  activeCameraView: parseUrlActiveCameraView(),
-  setActiveCameraView: (view) => {
-    set({ activeCameraView: view });
-    updateUrlActiveCameraView(view);
+  activeCameraPos: parseUrlActiveCameraPosKey(),
+  setActiveCameraPos: (pos) => {
+    set({ activeCameraPos: pos });
+    updateUrlCameraPos(pos);
   },
   isCvModalOpen: false,
   isPhotoModeOpen: false,
@@ -370,13 +399,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
     set({ cameraMode: mode });
   },
   setCameraProjection: (proj) => {
-    set({ cameraProjection: proj, orbitMouseMode: proj === 'ortho' ? 'pan' : 'rotate' });
+    set({ cameraProjection: proj, orbitMouseMode: proj === 'ortho' ? 'translate' : 'rotate' });
     updateUrlCameraProjection(proj);
     cameraState.invalidate?.();
   },
   toggleCameraProjection: () => {
     const projection = useSceneStore.getState().cameraProjection === 'ortho' ? 'persp' : 'ortho';
-    set({ cameraProjection: projection, orbitMouseMode: projection === 'ortho' ? 'pan' : 'rotate' });
+    set({ cameraProjection: projection, orbitMouseMode: projection === 'ortho' ? 'translate' : 'rotate' });
     updateUrlCameraProjection(projection);
     cameraState.invalidate?.();
   },

@@ -102,8 +102,9 @@ export function findCharacterByIdOrName(query: string): CharacterConfig | undefi
 }
 
 /**
- * Analyse l'URL pour détecter si un PNJ actif spécifique est demandé par son id ou son nom.
- * Supporte : ?npc=..., ?pnj=..., ?char=..., ?character=..., ?perso=..., ?walker=..., ?player=...
+ * Analyse l'URL pour détecter si un personnage actif spécifique est demandé par son id ou son nom.
+ * Supporte : ?character=..., ?char=..., ?perso=..., ?player=..., ?joueur=..., ?npc=..., ?pnj=...
+ * Supporte également la déduction automatique si cameraTarget ou cameraPos désigne un personnage.
  */
 export function parseUrlActiveCharacter(): CharacterConfig | undefined {
   if (typeof window === 'undefined') return undefined;
@@ -113,30 +114,45 @@ export function parseUrlActiveCharacter(): CharacterConfig | undefined {
       search = window.location.hash.substring(window.location.hash.indexOf('?'));
     }
     const params = new URLSearchParams(search);
-    const raw = params.get('npc') ??
-                params.get('pnj') ??
+    const raw = params.get('character') ??
                 params.get('char') ??
-                params.get('character') ??
                 params.get('perso') ??
-                params.get('walker') ??
                 params.get('player') ??
-                params.get('joueur');
+                params.get('joueur') ??
+                params.get('npc') ??
+                params.get('pnj') ??
+                params.get('walker');
 
     if (raw) {
-      return findCharacterByIdOrName(raw);
+      const found = findCharacterByIdOrName(raw);
+      if (found) return found;
+    }
+
+    // Déduction depuis cameraTarget (ex: ?cameraTarget=rosanna)
+    const targetRaw = params.get('cameraTarget') ?? params.get('target');
+    if (targetRaw) {
+      const match = findCharacterByIdOrName(targetRaw);
+      if (match) return match;
+    }
+
+    // Déduction depuis cameraPos (ex: ?cameraPos=rosanna pour FPV)
+    const posRaw = params.get('cameraPos') ?? params.get('cameraPosition') ?? params.get('camPos') ?? params.get('pos');
+    if (posRaw) {
+      const match = findCharacterByIdOrName(posRaw);
+      if (match) return match;
     }
   } catch {}
   return undefined;
 }
 
 /**
- * Met à jour le paramètre d'URL pour le PNJ actif (canonique: ?npc=, alias français: ?pnj=)
+ * Met à jour le paramètre d'URL pour le personnage actif (canonique: ?character=)
  */
 export function updateUrlActiveCharacter(charIdOrName: string) {
   if (typeof window === 'undefined') return;
   try {
     const url = new URL(window.location.href);
-    const charParams = ['npc', 'pnj', 'char', 'character', 'perso', 'walker', 'player', 'joueur'];
+    const charParams = ['character', 'char', 'perso', 'player', 'joueur', 'npc', 'pnj', 'walker'];
     const hadParam = charParams.some(p => url.searchParams.has(p));
 
     for (const p of charParams) {
@@ -145,7 +161,7 @@ export function updateUrlActiveCharacter(charIdOrName: string) {
 
     const defaultCharId = CHARACTERS[0]?.id;
     if (charIdOrName !== defaultCharId) {
-      url.searchParams.set('npc', charIdOrName);
+      url.searchParams.set('character', charIdOrName);
     } else if (!hadParam) {
       return; // Valeur par défaut, rien à nettoyer
     }

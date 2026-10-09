@@ -44,6 +44,7 @@ import {
   DEFAULT_FOLLOW_YAW_OFFSET,
   parseUrlCameraMode,
   updateUrlCameraMode,
+  parseUrlCameraPos,
   useCameraPointerEvents,
   useCameraShortcuts,
   useCameraFrameUpdate,
@@ -51,10 +52,12 @@ import {
   SKY_START_POS,
   SKY_START_TARGET,
 } from './camera';
+import type { CameraTarget } from './camera/types';
 import { parseUrlLayerOverrides } from './store/layerUrlParams';
 import { VIEWS } from './sidepanel/types';
 import { getOrbitMouseButtons, getOrbitTouches } from './camera/orbitMouseButtons';
 import { getCharacterGridCameraView, getCharacterGridActiveTarget } from './character/characterGridUtils';
+import { getInventoryGridCameraTarget } from './inventoryGridCamera';
 
 const FPV_DEFAULT_FOV = 100;
 const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
@@ -82,6 +85,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const cameraProjection = useSceneStore(state => state.cameraProjection);
   const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
+  const cameraTarget = useSceneStore(state => state.cameraTarget);
+  const lastDynamicTargetPos = useRef<[number, number, number] | null>(null);
   // Type d'orbite libre : perspective standard 3D ou isométrique orthographique 3D
   const orbitTypeRef = useRef<'persp' | 'ortho'>(useSceneStore.getState().cameraProjection);
   const projectionBeforeFpv = useRef<'persp' | 'ortho' | null>(null);
@@ -144,10 +149,45 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // Synchronisation dynamique du mode d'interaction (rotation / translation) pour souris et tactile
   useEffect(() => {
     if (!ctrlRef.current) return;
-    const effectiveMode = mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'pan' : 'rotate';
+    const effectiveMode = mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'translate' : 'rotate';
     ctrlRef.current.mouseButtons = getOrbitMouseButtons(effectiveMode);
     ctrlRef.current.touches = getOrbitTouches(effectiveMode);
   }, [mode, orbitMouseMode, cameraProjection]);
+
+  const resolveTargetPosition = useCallback((targetKey: CameraTarget): [number, number, number] => {
+    switch (targetKey) {
+      case 'studio':
+        return PERSP_TARGET;
+      case 'charactersGrid':
+        return getCharacterGridActiveTarget();
+      case 'inventoryObjectGrid':
+        return getInventoryGridCameraTarget() ?? PERSP_TARGET;
+      case 'character': {
+        const charH = cameraState.characterHeight ?? 170;
+        return [
+          cameraState.characterX ?? followPos.current.x,
+          charH * 0.5,
+          cameraState.characterZ ?? followPos.current.z,
+        ];
+      }
+      case 'dog': {
+        const view = cameraState.animalViews['shiba'];
+        return view ? [view.eyes.x, view.eyes.y, view.eyes.z] : [180, 25, -120];
+      }
+      case 'bird': {
+        const view = cameraState.animalViews['robin'];
+        return view ? [view.eyes.x, view.eyes.y, view.eyes.z] : [200, 50, -50];
+      }
+      case 'plane':
+        return [cameraState.planeX ?? 150, 75, cameraState.planeZ ?? 80];
+      case 'cat': {
+        const view = cameraState.animalViews['cat'];
+        return view ? [view.eyes.x, view.eyes.y, view.eyes.z] : [100, 25, -100];
+      }
+      default:
+        return PERSP_TARGET;
+    }
+  }, [followPos]);
 
   // Synchronisation du changement de personnage actif
   useEffect(() => {
@@ -170,11 +210,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         lastCharacterPos.current.z = cameraState.characterZ;
         hasInitialStabilizedPos.current = false;
 
-        // Si CharacterGrid est actif en mode orbit, cibler le nouveau PNJ actif au centre
-        if (useSceneStore.getState().layers.characterGrid && modeRef.current === 'orbit' && ctrlRef.current) {
-          const gridTarget = getCharacterGridActiveTarget();
-          ctrlRef.current.target.set(...gridTarget);
-          currentTarget.current.set(...gridTarget);
+        // Si cameraTarget === 'character', recadrer sur le nouveau personnage
+        if (useSceneStore.getState().cameraTarget === 'character' && modeRef.current === 'orbit' && ctrlRef.current) {
+          const charTarget = resolveTargetPosition('character');
+          ctrlRef.current.target.set(...charTarget);
+          currentTarget.current.set(...charTarget);
           ctrlRef.current.update();
         }
 
@@ -182,35 +222,24 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
     }
     prevCharacterId.current = activeCharacterId;
-  }, [activeCharacterId, invalidate]);
+  }, [activeCharacterId, resolveTargetPosition, invalidate]);
 
-  const prevCharacterGridActive = useRef(characterGridActive);
-  // Quand CharacterGrid est actif et en mode orbit, désigner le PNJ actif au centre comme cible d'orbit
+  // Synchronisation lors du changement de cameraTarget dans le store
   useEffect(() => {
-    if (characterGridActive && modeRef.current === 'orbit' && ctrlRef.current) {
-      const gridTarget = getCharacterGridActiveTarget();
-      ctrlRef.current.target.set(...gridTarget);
-      currentTarget.current.set(...gridTarget);
+    if (modeRef.current === 'orbit' && ctrlRef.current) {
+      const targetPos = resolveTargetPosition(cameraTarget);
+      ctrlRef.current.target.set(...targetPos);
+      currentTarget.current.set(...targetPos);
       ctrlRef.current.update();
       invalidate();
-    } else if (prevCharacterGridActive.current && !characterGridActive) {
-      // Sécurité si CharacterGrid a été désactivé et que la cible pointe encore au-dessus de la pièce
-      if (modeRef.current === 'orbit' && ctrlRef.current && ctrlRef.current.target.y > 300) {
-        ctrlRef.current.target.set(...PERSP_TARGET);
-        currentTarget.current.set(...PERSP_TARGET);
-        camera.position.set(...PERSP_POS);
-        ctrlRef.current.update();
-        invalidate();
-      }
     }
-    prevCharacterGridActive.current = characterGridActive;
-  }, [characterGridActive, camera, invalidate]);
+  }, [cameraTarget, resolveTargetPosition, invalidate]);
 
   const changeMode = useCallback((m: CameraMode) => {
     const prev = modeRef.current;
     if (m === 'ortho' || (m === 'orbit' && prev !== 'orbit')) {
       const store = useSceneStore.getState();
-      store.setOrbitMouseMode(m === 'ortho' || store.cameraProjection === 'ortho' ? 'pan' : 'rotate');
+      store.setOrbitMouseMode(m === 'ortho' || store.cameraProjection === 'ortho' ? 'translate' : 'rotate');
     }
     modeRef.current = m;
     cameraState.mode = m;
@@ -218,10 +247,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: Boolean(cameraState.animalTarget) }));
     setMode(m);
 
-    if (m === 'orbit' && useSceneStore.getState().layers.characterGrid && ctrlRef.current) {
-      const gridTarget = getCharacterGridActiveTarget();
-      ctrlRef.current.target.set(...gridTarget);
-      currentTarget.current.set(...gridTarget);
+    if (m === 'orbit' && ctrlRef.current) {
+      const targetPos = resolveTargetPosition(useSceneStore.getState().cameraTarget);
+      ctrlRef.current.target.set(...targetPos);
+      currentTarget.current.set(...targetPos);
       ctrlRef.current.update();
     }
 
@@ -685,7 +714,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if ((ctrl as any).panOffset) (ctrl as any).panOffset.set(0, 0, 0);
     (ctrl as any).scale = 1;
     if (options || useSceneStore.getState().cameraProjection !== targetProj) {
-      useSceneStore.getState().setOrbitMouseMode(targetProj === 'ortho' ? 'pan' : 'rotate');
+      useSceneStore.getState().setOrbitMouseMode(targetProj === 'ortho' ? 'translate' : 'rotate');
     }
     ctrl.mouseButtons = getOrbitMouseButtons(useSceneStore.getState().orbitMouseMode);
     ctrl.touches = getOrbitTouches(useSceneStore.getState().orbitMouseMode);
@@ -703,25 +732,64 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   }, [camera, invalidate, set]);
 
   const applyInitialCameraView = useCallback(() => {
-    const viewKey = useSceneStore.getState().activeCameraView;
-    const view = viewKey === 'front' && useSceneStore.getState().layers.characterGrid
-      ? getCharacterGridCameraView()
-      : viewKey ? VIEWS[viewKey] : undefined;
-    if (!view || !ctrlRef.current) return;
-    switchOrbitProjection(useSceneStore.getState().cameraProjection, {
-      pos: view.pos,
-      target: view.target,
-      zoom: view.zoom,
-    });
-  }, [switchOrbitProjection]);
+    const store = useSceneStore.getState();
+    const posKey = store.activeCameraPos;
+    const targetKey = store.cameraTarget;
+    const target = resolveTargetPosition(targetKey);
 
-  // Réinitialiser la vue preset active dès que l'utilisateur commence à manipuler la caméra manuellement
+    const view = posKey === 'front' && store.layers.characterGrid
+      ? getCharacterGridCameraView()
+      : posKey ? VIEWS[posKey] : undefined;
+
+    if (view && ctrlRef.current) {
+      const offset = [
+        view.pos[0] - view.target[0],
+        view.pos[1] - view.target[1],
+        view.pos[2] - view.target[2],
+      ];
+      const newPos: [number, number, number] = [
+        target[0] + offset[0],
+        target[1] + offset[1],
+        target[2] + offset[2],
+      ];
+      switchOrbitProjection(store.cameraProjection, {
+        pos: newPos,
+        target,
+        zoom: view.zoom,
+      });
+      return;
+    }
+
+    if (ctrlRef.current) {
+      if (targetKey === 'studio') {
+        switchOrbitProjection(store.cameraProjection, {
+          pos: PERSP_POS,
+          target: PERSP_TARGET,
+        });
+      } else {
+        const offset: [number, number, number] = targetKey === 'character'
+          ? [-120, 100, 140]
+          : [-80, 50, 90];
+        const newPos: [number, number, number] = [
+          target[0] + offset[0],
+          target[1] + offset[1],
+          target[2] + offset[2],
+        ];
+        switchOrbitProjection(store.cameraProjection, {
+          pos: newPos,
+          target,
+        });
+      }
+    }
+  }, [switchOrbitProjection, resolveTargetPosition]);
+
+  // Réinitialiser la position preset active dès que l'utilisateur commence à manipuler la caméra manuellement
   useEffect(() => {
     const ctrl = ctrlRef.current;
     if (!ctrl) return;
     const onStart = () => {
-      if (modeRef.current === 'orbit' && useSceneStore.getState().activeCameraView) {
-        useSceneStore.getState().setActiveCameraView(null);
+      if (modeRef.current === 'orbit' && useSceneStore.getState().activeCameraPos) {
+        useSceneStore.getState().setActiveCameraPos(null);
       }
     };
     ctrl.addEventListener('start', onStart);
@@ -807,7 +875,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const targetX = follow ? cameraState.characterX : CX;
     const targetZ = follow ? cameraState.characterZ : CZ;
     applyTopCamera(targetX, targetZ, useSceneStore.getState().cameraProjection);
-    useSceneStore.getState().setActiveCameraView('top');
+    useSceneStore.getState().setActiveCameraPos('top');
     changeMode('top');
     invalidate();
   }, [applyTopCamera, camera.position, changeMode, exitFollow, invalidate]);
@@ -825,15 +893,15 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (ctrlRef.current) {
         ctrlRef.current.object = activeCam;
         ctrlRef.current.target.copy(savedPerspTarget.current);
-        ctrlRef.current.mouseButtons = getOrbitMouseButtons(proj === 'ortho' ? 'pan' : 'rotate');
-        ctrlRef.current.touches = getOrbitTouches(proj === 'ortho' ? 'pan' : 'rotate');
+        ctrlRef.current.mouseButtons = getOrbitMouseButtons(proj === 'ortho' ? 'translate' : 'rotate');
+        ctrlRef.current.touches = getOrbitTouches(proj === 'ortho' ? 'translate' : 'rotate');
         ctrlRef.current.enableRotate = true;
         ctrlRef.current.enablePan = true;
         ctrlRef.current.enableZoom = true;
         ctrlRef.current.update();
       }
     }
-    useSceneStore.getState().setActiveCameraView(null);
+    useSceneStore.getState().setActiveCameraPos(null);
     changeMode('orbit');
     appLog('system', proj === 'ortho' ? '🎥 Mode Orbit 3D (Isométrique Ortho)' : '🎥 Mode Orbit 3D (Perspective)');
     invalidate();
@@ -948,6 +1016,23 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (planeModeRef.current) return;
     initialModeLaunchedRef.current = true;
 
+    const posParsed = parseUrlCameraPos();
+    if (posParsed?.type === 'fpv') {
+      if (posParsed.entity === 'shiba' || posParsed.entity === 'robin' || posParsed.entity === 'cat') {
+        const view = cameraState.animalViews[posParsed.entity];
+        cameraState.animalTarget = posParsed.entity;
+        document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: true }));
+        if (view) {
+          animalFollowYaw.current = Math.atan2(view.forward.x, view.forward.z);
+          enterFollow(view.eyes.x, view.eyes.z, 'fpv');
+        } else {
+          enterFollow(180, -120, 'fpv');
+        }
+        appLog('system', `🎥 Mode FPV animal (${posParsed.entity}) initialisé via URL`);
+        return;
+      }
+    }
+
     const startMode = parseUrlCameraMode();
     if (cameraState.isSceneLaunched) {
       if (startMode === 'orbit') applyInitialCameraView();
@@ -1004,13 +1089,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           enterTop(false);
           appLog('system', '🎥 Mode 2D Top initialisé');
         } else if (targetMode === 'orbit') {
-          camera.position.set(...PERSP_POS);
-          ctrlRef.current.target.set(...PERSP_TARGET);
           ctrlRef.current.enabled = !planeModeRef.current;
           ctrlRef.current.enableRotate = !planeModeRef.current;
           ctrlRef.current.enablePan = !planeModeRef.current;
           ctrlRef.current.enableZoom = !planeModeRef.current;
-          ctrlRef.current.update();
           applyInitialCameraView();
         }
         invalidate();
@@ -1024,12 +1106,39 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     };
   }, [camera, enterTop, enterFollow, invalidate, applyInitialCameraView]);
 
-  // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif et suivi du target orbit
+  // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif et suivi dynamique du target orbit
   useFrame(() => {
     if (cameraState.isIntroRunning) return;
     if (modeRef.current === 'orbit' && ctrlRef.current) {
       if (ctrlRef.current.target.lengthSq() > 1) {
         currentTarget.current.copy(ctrlRef.current.target);
+      }
+      const currentCameraTarget = useSceneStore.getState().cameraTarget;
+      if (
+        currentCameraTarget !== 'studio' &&
+        currentCameraTarget !== 'charactersGrid' &&
+        currentCameraTarget !== 'inventoryObjectGrid'
+      ) {
+        const curTarget = resolveTargetPosition(currentCameraTarget);
+        if (lastDynamicTargetPos.current) {
+          const dx = curTarget[0] - lastDynamicTargetPos.current[0];
+          const dy = curTarget[1] - lastDynamicTargetPos.current[1];
+          const dz = curTarget[2] - lastDynamicTargetPos.current[2];
+          if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001 || Math.abs(dz) > 0.001) {
+            ctrlRef.current.target.x += dx;
+            ctrlRef.current.target.y += dy;
+            ctrlRef.current.target.z += dz;
+            camera.position.x += dx;
+            camera.position.y += dy;
+            camera.position.z += dz;
+            currentTarget.current.copy(ctrlRef.current.target);
+            ctrlRef.current.update();
+            invalidate();
+          }
+        }
+        lastDynamicTargetPos.current = curTarget;
+      } else {
+        lastDynamicTargetPos.current = null;
       }
     }
     if (prevIsXR.current !== cameraState.isXR) {
@@ -1169,8 +1278,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enablePan={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         enableZoom={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'follow'}
-        mouseButtons={getOrbitMouseButtons(mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'pan' : 'rotate')}
-        touches={getOrbitTouches(mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'pan' : 'rotate')}
+        mouseButtons={getOrbitMouseButtons(mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'translate' : 'rotate')}
+        touches={getOrbitTouches(mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'translate' : 'rotate')}
       />
     </>
   );

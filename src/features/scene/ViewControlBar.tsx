@@ -23,8 +23,8 @@ export interface ViewControlBarProps {
   showCharacterModes?: boolean;
   /** Afficher la bascule Orbit/Pan pour les aperçus d'inventaire. */
   showOrbitControls?: boolean;
-  /** Vue de la caméra de l'aperçu ; null pour une caméra libre. */
-  activeCameraView?: string | null;
+  /** Vue / position de la caméra de l'aperçu ; null pour une caméra libre. */
+  activeCameraPos?: string | null;
   showMirrorsHD?: boolean;
   hideUI?: boolean;
   onToggleHideUI?: () => void;
@@ -41,7 +41,7 @@ export function ViewControlBar({
   hidden = false,
   showCharacterModes = false,
   showOrbitControls = false,
-  activeCameraView: previewCameraView,
+  activeCameraPos: previewCameraPos,
   showMirrorsHD = false,
   hideUI = false,
   onToggleHideUI,
@@ -65,8 +65,8 @@ export function ViewControlBar({
   const cameraMode = useSceneStore(s => s.cameraMode);
   const orbitMouseMode = useSceneStore(s => s.orbitMouseMode);
   const npcGridActive = useSceneStore(s => s.layers.characterGrid);
-  const sceneCameraView = useSceneStore(s => s.activeCameraView);
-  const activeCameraView = previewCameraView === undefined ? sceneCameraView : previewCameraView;
+  const sceneCameraPos = useSceneStore(s => s.activeCameraPos);
+  const activeCameraPos = previewCameraPos === undefined ? sceneCameraPos : previewCameraPos;
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
   const currentHdri = useSceneStore(s => s.currentHdri);
   const setHdri = useSceneStore(s => s.setHdri);
@@ -77,12 +77,11 @@ export function ViewControlBar({
   if (hidden) return null;
 
   const isOrtho = cameraProjection === 'ortho';
-  const orbitActive = !showCharacterModes || cameraMode === 'orbit';
-  const isPan = orbitActive && orbitMouseMode === 'pan';
-  const orbitTitle = orbitActive
-    ? `${isPan ? 'Trans (Translation) : glisser gauche pour déplacer, droit pour tourner. Passer en Rot' : 'Rot (Rotation) : glisser gauche pour tourner, droit pour déplacer. Passer en Trans'}${showCharacterModes ? ' (R / T)' : ''}`
-    : 'Revenir à la caméra Orbit perspective par défaut (Alt+O)';
-  const isActive = (key: string) => activeCameraView === key;
+  const isTranslate = orbitMouseMode === 'translate';
+  const mouseTitle = isTranslate
+    ? 'Translation (clic gauche : déplacer, clic droit : tourner) — Passer en Rotation (R / T)'
+    : 'Rotation (clic gauche : tourner, clic droit : déplacer) — Passer en Translation (R / T)';
+  const isActive = (key: string) => activeCameraPos === key;
   const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit' | 'toggle-npc-grid') => {
     document.dispatchEvent(new CustomEvent('camera-mode', { detail: mode }));
   };
@@ -253,17 +252,16 @@ export function ViewControlBar({
         {(showCharacterModes || showOrbitControls) && (
             <button
               type="button"
-              className={`${TOOLBAR_BUTTON_CLASS} ${orbitActive ? `view-control-bar__btn--${isPan ? 'teal' : 'orange'}` : 'btn-outline-secondary'}`}
+              className={`${TOOLBAR_BUTTON_CLASS} ${isTranslate ? 'view-control-bar__btn--teal' : 'view-control-bar__btn--orange'}`}
               onClick={() => {
-                if (showCharacterModes) dispatchCameraMode('orbit');
-                else useSceneStore.getState().setOrbitMouseMode(orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
+                useSceneStore.getState().setOrbitMouseMode(isTranslate ? 'rotate' : 'translate');
               }}
-              title={orbitTitle}
-              aria-label={orbitTitle}
-              aria-pressed={orbitActive}
+              title={mouseTitle}
+              aria-label={mouseTitle}
+              aria-pressed={isTranslate}
             >
-              <i className={`bi ${isPan ? 'bi-arrows-move' : 'bi-arrow-repeat'}`} aria-hidden="true" />
-              <span className="fw-semibold">{isPan ? 'Trans' : 'Rot'}</span>
+              <i className={`bi ${isTranslate ? 'bi-arrows-move' : 'bi-arrow-repeat'}`} aria-hidden="true" />
+              <span className="fw-semibold">{isTranslate ? 'Trans' : 'Rot'}</span>
             </button>
         )}
       </div>
@@ -340,20 +338,20 @@ export function ViewControlBar({
 
   return (
     <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked gap-2' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle, ...mobilePositionStyle, ...mobileDockOffset }}>
-      {activeCameraView && (
+      {activeCameraPos && (
         <span className="badge text-bg-dark bg-opacity-75 view-control-bar-dock__view-label">
-          {activeCameraView === 'iso-se' ? 'ISO Sud-Est'
-            : activeCameraView === 'iso-sw' ? 'ISO Sud-Ouest'
-            : activeCameraView === 'iso-ne' ? 'ISO Nord-Est'
-            : activeCameraView === 'iso-nw' ? 'ISO Nord-Ouest'
-            : activeCameraView === 'front' ? 'Face'
-            : activeCameraView === 'back' ? 'Arrière'
-            : activeCameraView === 'left' ? 'Gauche'
-            : activeCameraView === 'right' ? 'Droite'
-            : activeCameraView === 'perspective' ? 'Perspective'
-            : activeCameraView === 'top' ? 'Dessus'
-            : activeCameraView === 'bottom' ? 'Dessous'
-            : activeCameraView}
+          {activeCameraPos === 'iso-se' || activeCameraPos === 's-e' ? 'ISO Sud-Est'
+            : activeCameraPos === 'iso-sw' || activeCameraPos === 's-o' ? 'ISO Sud-Ouest'
+            : activeCameraPos === 'iso-ne' || activeCameraPos === 'n-e' ? 'ISO Nord-Est'
+            : activeCameraPos === 'iso-nw' || activeCameraPos === 'n-o' ? 'ISO Nord-Ouest'
+            : activeCameraPos === 'front' ? 'Face'
+            : activeCameraPos === 'back' ? 'Arrière'
+            : activeCameraPos === 'left' ? 'Gauche'
+            : activeCameraPos === 'right' ? 'Droite'
+            : activeCameraPos === 'perspective' ? 'Perspective'
+            : activeCameraPos === 'top' ? 'Dessus'
+            : activeCameraPos === 'bottom' ? 'Dessous'
+            : activeCameraPos}
         </span>
       )}
       {bar}

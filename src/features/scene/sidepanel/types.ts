@@ -60,7 +60,7 @@ import { useSceneStore } from '../store/useSceneStore';
 import { getInventoryGridCameraTarget } from '../inventoryGridCamera';
 
 export function dispatchView(key: string, targetOverride?: [number, number, number], preserveFollow = false) {
-  useSceneStore.getState().setActiveCameraView(key);
+  useSceneStore.getState().setActiveCameraPos(key);
   const v = VIEWS[key];
   if (!v) return;
   const inventoryGridTarget = useSceneStore.getState().layers.inventoryGrid

@@ -118,12 +118,12 @@ export function useCameraShortcuts({
           charZ: cameraState.characterZ,
         };
         store.toggleLayer('characterGrid');
-        store.setActiveCameraView('front');
+        store.setActiveCameraPos('front');
         store.setCameraProjection('persp');
         store.setOrbitMouseMode('rotate');
       } else {
         store.toggleLayer('characterGrid');
-        store.setActiveCameraView(null);
+        store.setActiveCameraPos(null);
         exitGridAndRestore();
       }
     };
@@ -134,22 +134,22 @@ export function useCameraShortcuts({
       else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
       const store = useSceneStore.getState();
       if (store.layers.characterGrid) {
-        store.setActiveCameraView('front');
+        store.setActiveCameraPos('front');
         store.setCameraProjection('persp');
         store.setOrbitMouseMode('rotate');
         const view = getCharacterGridCameraView();
         toggleOrbitType?.('persp', { pos: view.pos, target: view.target });
       } else {
-        store.setActiveCameraView(null);
+        store.setActiveCameraPos(null);
         toggleOrbitType?.('persp', { pos: PERSP_POS, target: PERSP_TARGET });
       }
     };
 
-    const toggleOrbitMouseMode = (requestedMode?: 'rotate' | 'pan') => {
+    const toggleOrbitMouseMode = (requestedMode?: 'rotate' | 'translate') => {
       const store = useSceneStore.getState();
-      const targetMode = requestedMode ?? (store.orbitMouseMode === 'rotate' ? 'pan' : 'rotate');
+      const targetMode = requestedMode ?? (store.orbitMouseMode === 'rotate' ? 'translate' : 'rotate');
       store.setOrbitMouseMode(store.orbitMouseMode === targetMode
-        ? targetMode === 'rotate' ? 'pan' : 'rotate'
+        ? targetMode === 'rotate' ? 'translate' : 'rotate'
         : targetMode);
       invalidate();
     };
@@ -274,7 +274,7 @@ export function useCameraShortcuts({
         if (e.repeat) return;
         e.preventDefault();
         if (modeRef.current === 'orbit') {
-          toggleOrbitMouseMode(e.key.toLowerCase() === 'r' ? 'rotate' : 'pan');
+          toggleOrbitMouseMode(e.key.toLowerCase() === 'r' ? 'rotate' : 'translate');
         }
         return;
       }
@@ -484,7 +484,7 @@ export function useCameraShortcuts({
       } else if (requestedMode === 'toggle-inventory-grid') {
         const store = useSceneStore.getState();
         if (store.layers.inventoryGrid) {
-          store.setActiveCameraView(null);
+          store.setActiveCameraPos(null);
           exitGridAndRestore(savedInventoryGridPrevConfig);
         } else {
           const curTarget = ctrlRef.current?.target ?? savedPerspTarget.current;
@@ -496,9 +496,9 @@ export function useCameraShortcuts({
             charX: cameraState.characterX,
             charZ: cameraState.characterZ,
           };
-          store.setActiveCameraView('front');
+          store.setActiveCameraPos('front');
           store.setCameraProjection('ortho');
-          store.setOrbitMouseMode('pan');
+          store.setOrbitMouseMode('translate');
         }
       }
     };

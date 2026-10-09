@@ -1,4 +1,5 @@
 import { MOUSE, TOUCH } from 'three';
+import type { OrbitMouseMode } from './types';
 
 const ROTATE_MOUSE_BUTTONS = {
   LEFT: MOUSE.ROTATE,
@@ -6,7 +7,7 @@ const ROTATE_MOUSE_BUTTONS = {
   RIGHT: MOUSE.PAN,
 };
 
-const PAN_MOUSE_BUTTONS = {
+const TRANSLATE_MOUSE_BUTTONS = {
   LEFT: MOUSE.PAN,
   MIDDLE: MOUSE.DOLLY,
   RIGHT: MOUSE.ROTATE,
@@ -17,16 +18,17 @@ const ROTATE_TOUCHES = {
   TWO: TOUCH.DOLLY_PAN,
 };
 
-const PAN_TOUCHES = {
+const TRANSLATE_TOUCHES = {
   ONE: TOUCH.PAN,
   TWO: TOUCH.DOLLY_ROTATE,
 };
 
-export function getOrbitMouseButtons(mode: 'rotate' | 'pan') {
-  return mode === 'pan' ? PAN_MOUSE_BUTTONS : ROTATE_MOUSE_BUTTONS;
+export function getOrbitMouseButtons(mode: OrbitMouseMode) {
+  return mode === 'translate' ? TRANSLATE_MOUSE_BUTTONS : ROTATE_MOUSE_BUTTONS;
 }
 
-export function getOrbitTouches(mode: 'rotate' | 'pan') {
-  return mode === 'pan' ? PAN_TOUCHES : ROTATE_TOUCHES;
+export function getOrbitTouches(mode: OrbitMouseMode) {
+  return mode === 'translate' ? TRANSLATE_TOUCHES : ROTATE_TOUCHES;
 }
+
 
