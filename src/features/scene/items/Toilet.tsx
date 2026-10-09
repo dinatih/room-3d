@@ -170,9 +170,9 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
       <mesh
         geometry={waterGeo}
         material={waterMat}
-        position={[0, 17.5, 8.5]}
+        position={[0, 17.5, 10]}
         rotation-x={-Math.PI / 2}
-        scale={[8, 12, 1]}
+        scale={[4.5, 6, 1]}
         receiveShadow
         renderOrder={2}
       />
