@@ -102,6 +102,26 @@ class GridItemErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
 const CELL_W = 85;
 const CELL_H = 104;
 const TARGET_DISPLAY_SIZE = 50;
+const GRID_LIGHT_LAYER = 1;
+
+function createRoundedCardGeometry() {
+  const halfWidth = (CELL_W - 6) / 2;
+  const halfHeight = (CELL_H - 6) / 2;
+  const radius = 5;
+  const shape = new THREE.Shape();
+  shape.moveTo(-halfWidth + radius, -halfHeight);
+  shape.lineTo(halfWidth - radius, -halfHeight);
+  shape.quadraticCurveTo(halfWidth, -halfHeight, halfWidth, -halfHeight + radius);
+  shape.lineTo(halfWidth, halfHeight - radius);
+  shape.quadraticCurveTo(halfWidth, halfHeight, halfWidth - radius, halfHeight);
+  shape.lineTo(-halfWidth + radius, halfHeight);
+  shape.quadraticCurveTo(-halfWidth, halfHeight, -halfWidth, halfHeight - radius);
+  shape.lineTo(-halfWidth, -halfHeight + radius);
+  shape.quadraticCurveTo(-halfWidth, -halfHeight, -halfWidth + radius, -halfHeight);
+  return new THREE.ShapeGeometry(shape);
+}
+
+const CARD_BACKGROUND_GEOMETRY = createRoundedCardGeometry();
 
 const ShoeHatRackGrid: React.ComponentType<any> = props => <ShoeHatRack {...props} noCaps />;
 
@@ -350,6 +370,7 @@ function ProceduralItemInner({ item }: { item: UnifiedGridItem }) {
 
     const center = box.getCenter(new THREE.Vector3());
     groupRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
+    groupRef.current.traverse(object => object.layers.set(GRID_LIGHT_LAYER));
   }, []);
 
   return (
@@ -397,6 +418,7 @@ function GlbItemInner({ item }: { item: UnifiedGridItem }) {
     scene.position.set(-center.x, -center.y, -center.z);
 
     scene.traverse((child) => {
+      child.layers.set(GRID_LIGHT_LAYER);
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         mesh.castShadow = false;
@@ -441,7 +463,20 @@ function GridItem({ item, position }: { item: UnifiedGridItem; position: [number
 // ── Composant Principal : InventoryObjectsGrid ─────────────────────────────────
 
 export function InventoryObjectsGrid() {
-  const { size } = useThree();
+  const { size, camera } = useThree();
+
+  useLayoutEffect(() => {
+    const previousLayers = camera.layers.mask;
+    camera.layers.enable(GRID_LIGHT_LAYER);
+    return () => { camera.layers.mask = previousLayers; };
+  }, [camera]);
+
+  const ambientLightRef = useRef<THREE.AmbientLight>(null!);
+  const directionalLightRef = useRef<THREE.DirectionalLight>(null!);
+  useLayoutEffect(() => {
+    ambientLightRef.current.layers.set(GRID_LIGHT_LAYER);
+    directionalLightRef.current.layers.set(GRID_LIGHT_LAYER);
+  }, []);
   // Liste complète : objets GLB filtrés + objets procéduraux demandés
   const allItems = useMemo<UnifiedGridItem[]>(() => {
     const glbItems: UnifiedGridItem[] = INVENTORY.filter(isAllowedInventoryItem).map((i) => ({
@@ -501,7 +536,9 @@ export function InventoryObjectsGrid() {
     const sdbItems = grouped.get('sdb') ?? [];
     const salonItems = grouped.get('salon') ?? [];
     const jardinItems = grouped.get('jardin') ?? [];
-    const cuisineItems = grouped.get('cuisine') ?? [];
+    const cuisineItems = [...(grouped.get('cuisine') ?? [])];
+    const ovenIndex = cuisineItems.findIndex(item => item.id === 'ninja-sp101');
+    if (ovenIndex > 0) cuisineItems.unshift(cuisineItems.splice(ovenIndex, 1)[0]);
 
     const col0Width = 3 * CELL_W;
     const col1Width = 4 * CELL_W;
@@ -615,6 +652,8 @@ export function InventoryObjectsGrid() {
 
   return (
     <group name="inventory-objects-grid" position={[offsetX, rootY, rootZ]}>
+      <ambientLight ref={ambientLightRef} intensity={1.7} />
+      <directionalLight ref={directionalLightRef} position={[totalWidth / 2, 500, 400]} intensity={2.2} />
       {sections.map(({ zone, items, baseX, baseY, cols }) => {
         const rows = Math.max(1, Math.ceil(items.length / cols));
         const width = cols * CELL_W;
@@ -622,7 +661,7 @@ export function InventoryObjectsGrid() {
         const centerX = baseX + width / 2 - CELL_W / 2;
 
         return (
-          <group key={zone.id} position={[0, baseY, 0]}>
+        <group key={zone.id} position={[0, baseY, 0]}>
             {/* En-tête discret de la zone */}
             <Text
               position={[centerX, totalHeight + 18, 2]}
@@ -645,9 +684,8 @@ export function InventoryObjectsGrid() {
               return (
                 <group key={item.id} position={[cellX, cellY, 0]}>
                   {/* Fond de carte */}
-                  <mesh position={[0, 0, -25]}>
-                    <planeGeometry args={[CELL_W - 6, CELL_H - 6]} />
-                    <meshBasicMaterial color="#263438" />
+                  <mesh position={[0, 0, -25]} geometry={CARD_BACKGROUND_GEOMETRY}>
+                    <meshBasicMaterial color="#d8dddc" />
                   </mesh>
 
                   {/* Repère de couleur sobre */}
@@ -660,12 +698,12 @@ export function InventoryObjectsGrid() {
                   <GridItem item={item} position={[0, 8, 15]} />
 
                   <Text
-                    position={[0, -CELL_H / 2 + 9, 30]}
-                    fontSize={4.5}
-                    color="#e2e8e7"
+                    position={[0, -CELL_H / 2 + 19, 30]}
+                    fontSize={4.1}
+                    color="#263238"
                     anchorX="center"
                     anchorY="top"
-                    maxWidth={CELL_W - 14}
+                    maxWidth={CELL_W - 18}
                     textAlign="center"
                     lineHeight={1.05}
                     whiteSpace="normal"
