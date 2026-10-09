@@ -1,0 +1,360 @@
+[
+  {
+    "id": "drinking-glass",
+    "label": "Boire un verre",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/551/drink01_poses.npz",
+    "filename": "anim_drinking_glass.glb",
+    "category": "interactions",
+    "tags": [
+      "drink",
+      "glass",
+      "kitchen",
+      "dining",
+      "standing",
+      "interaction"
+    ],
+    "aliases": [
+      "drink",
+      "boire-verre",
+      "boire"
+    ],
+    "frames": 419,
+    "duration": 14.0,
+    "size_kb": 297,
+    "rel_path": "animations/npz/daily/anim_drinking_glass.glb"
+  },
+  {
+    "id": "holding-cup",
+    "label": "Prendre une tasse",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/551/cup02_poses.npz",
+    "filename": "anim_holding_cup.glb",
+    "category": "interactions",
+    "tags": [
+      "cup",
+      "coffee",
+      "kitchen",
+      "dining",
+      "standing",
+      "interaction"
+    ],
+    "aliases": [
+      "cup",
+      "prendre-tasse",
+      "cafe"
+    ],
+    "frames": 236,
+    "duration": 7.9,
+    "size_kb": 235,
+    "rel_path": "animations/npz/daily/anim_holding_cup.glb"
+  },
+  {
+    "id": "cooking-stir-pan",
+    "label": "Cuisiner à la poêle",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/551/mixing_cooking_spoon01_poses.npz",
+    "filename": "anim_cooking_stir_pan.glb",
+    "category": "interactions",
+    "tags": [
+      "cook",
+      "pan",
+      "kitchen",
+      "spoon",
+      "food",
+      "interaction"
+    ],
+    "aliases": [
+      "cook-pan",
+      "cuisiner",
+      "melanger-poele"
+    ],
+    "frames": 412,
+    "duration": 13.7,
+    "size_kb": 290,
+    "rel_path": "animations/npz/daily/anim_cooking_stir_pan.glb"
+  },
+  {
+    "id": "cutting-knife",
+    "label": "Découper au couteau",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/551/cutting_cucumber01_poses.npz",
+    "filename": "anim_cutting_knife.glb",
+    "category": "interactions",
+    "tags": [
+      "cut",
+      "knife",
+      "kitchen",
+      "food",
+      "prep",
+      "interaction"
+    ],
+    "aliases": [
+      "cut-knife",
+      "decouper-couteau",
+      "decouper"
+    ],
+    "frames": 378,
+    "duration": 12.6,
+    "size_kb": 279,
+    "rel_path": "animations/npz/daily/anim_cutting_knife.glb"
+  },
+  {
+    "id": "pouring-bottle",
+    "label": "Verser une bouteille",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/1487/pouring_the_bottle02_poses.npz",
+    "filename": "anim_pouring_bottle.glb",
+    "category": "interactions",
+    "tags": [
+      "pour",
+      "bottle",
+      "kitchen",
+      "bar",
+      "drink",
+      "interaction"
+    ],
+    "aliases": [
+      "pour-bottle",
+      "verser-bouteille"
+    ],
+    "frames": 285,
+    "duration": 9.5,
+    "size_kb": 248,
+    "rel_path": "animations/npz/daily/anim_pouring_bottle.glb"
+  },
+  {
+    "id": "stirring-bowl",
+    "label": "Mélanger dans un saladier",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/1487/stirring_in_the_bowl03_poses.npz",
+    "filename": "anim_stirring_bowl.glb",
+    "category": "interactions",
+    "tags": [
+      "stir",
+      "bowl",
+      "kitchen",
+      "prep",
+      "food",
+      "interaction"
+    ],
+    "aliases": [
+      "stir-bowl",
+      "melanger-saladier"
+    ],
+    "frames": 223,
+    "duration": 7.4,
+    "size_kb": 228,
+    "rel_path": "animations/npz/daily/anim_stirring_bowl.glb"
+  },
+  {
+    "id": "washing-dishes-sink",
+    "label": "Faire la vaisselle à l'évier",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/551/sponge_big_and_mixing_bowl_big01_poses.npz",
+    "filename": "anim_washing_dishes_sink.glb",
+    "category": "interactions",
+    "tags": [
+      "dishes",
+      "sink",
+      "sponge",
+      "kitchen",
+      "cleaning",
+      "chore",
+      "interaction"
+    ],
+    "aliases": [
+      "wash-dishes",
+      "faire-vaisselle"
+    ],
+    "frames": 184,
+    "duration": 6.1,
+    "size_kb": 215,
+    "rel_path": "animations/npz/daily/anim_washing_dishes_sink.glb"
+  },
+  {
+    "id": "take-book-shelf",
+    "label": "Prendre un livre sur étagère",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/1229/take_book_from_shelf_right_arm_03_poses.npz",
+    "filename": "anim_take_book_shelf.glb",
+    "category": "interactions",
+    "tags": [
+      "book",
+      "shelf",
+      "kallax",
+      "living-room",
+      "reading",
+      "interaction"
+    ],
+    "aliases": [
+      "take-book",
+      "prendre-livre-etagere",
+      "livre"
+    ],
+    "frames": 98,
+    "duration": 3.3,
+    "size_kb": 187,
+    "rel_path": "animations/npz/daily/anim_take_book_shelf.glb"
+  },
+  {
+    "id": "playing-guitar",
+    "label": "Jouer de la guitare",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/572/guitar_left01_poses.npz",
+    "filename": "anim_playing_guitar.glb",
+    "category": "interactions",
+    "tags": [
+      "guitar",
+      "music",
+      "instrument",
+      "living-room",
+      "relax",
+      "interaction"
+    ],
+    "aliases": [
+      "guitar",
+      "guitare",
+      "jouer-guitare"
+    ],
+    "frames": 214,
+    "duration": 7.1,
+    "size_kb": 225,
+    "rel_path": "animations/npz/daily/anim_playing_guitar.glb"
+  },
+  {
+    "id": "conversation-gestures",
+    "label": "Gestuelle de conversation",
+    "src": "/home/dinatih/3D Resources/animations/ACCAD/ACCAD/Female1Gestures_c3d/D3 - Conversation Gestures_poses.npz",
+    "filename": "anim_conversation_gestures.glb",
+    "category": "emotes_gestures",
+    "tags": [
+      "talk",
+      "conversation",
+      "social",
+      "gestures",
+      "standing",
+      "emotes"
+    ],
+    "aliases": [
+      "talk-gestures",
+      "conversation",
+      "discuter"
+    ],
+    "frames": 1522,
+    "duration": 50.7,
+    "size_kb": 655,
+    "rel_path": "animations/npz/daily/anim_conversation_gestures.glb"
+  },
+  {
+    "id": "dry-head-towel",
+    "label": "S'essuyer la tête (serviette)",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/674/dry_head01_poses.npz",
+    "filename": "anim_dry_head_towel.glb",
+    "category": "interactions",
+    "tags": [
+      "towel",
+      "head",
+      "dry",
+      "bathroom",
+      "hygiene",
+      "interaction"
+    ],
+    "aliases": [
+      "dry-head",
+      "essuyer-tete",
+      "serviette"
+    ],
+    "frames": 333,
+    "duration": 11.1,
+    "size_kb": 264,
+    "rel_path": "animations/npz/daily/anim_dry_head_towel.glb"
+  },
+  {
+    "id": "groom-hair-mirror",
+    "label": "Se recoiffer devant le miroir",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/1229/hand_through_hair_right_arm_01_poses.npz",
+    "filename": "anim_groom_hair_mirror.glb",
+    "category": "interactions",
+    "tags": [
+      "hair",
+      "mirror",
+      "grooming",
+      "bathroom",
+      "hygiene",
+      "interaction"
+    ],
+    "aliases": [
+      "hair-mirror",
+      "se-recoiffer",
+      "cheveux"
+    ],
+    "frames": 106,
+    "duration": 3.5,
+    "size_kb": 189,
+    "rel_path": "animations/npz/daily/anim_groom_hair_mirror.glb"
+  },
+  {
+    "id": "take-off-tshirt",
+    "label": "Retirer son t-shirt",
+    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/1229/take_of_t-shirt_right_arm_02_poses.npz",
+    "filename": "anim_take_off_tshirt.glb",
+    "category": "interactions",
+    "tags": [
+      "clothes",
+      "tshirt",
+      "dressing",
+      "bathroom",
+      "undress",
+      "interaction"
+    ],
+    "aliases": [
+      "take-off-shirt",
+      "retirer-tshirt",
+      "se-deshabiller"
+    ],
+    "frames": 131,
+    "duration": 4.4,
+    "size_kb": 197,
+    "rel_path": "animations/npz/daily/anim_take_off_tshirt.glb"
+  },
+  {
+    "id": "lie-down-bed",
+    "label": "S'allonger (lit / sol)",
+    "src": "/home/dinatih/3D Resources/animations/ACCAD/ACCAD/Male1General_c3d/General A8 - Crouch to Lie Down_poses.npz",
+    "filename": "anim_lie_down_bed.glb",
+    "category": "interactions",
+    "tags": [
+      "bed",
+      "lie",
+      "sleep",
+      "rest",
+      "transition",
+      "interaction"
+    ],
+    "aliases": [
+      "lie-down",
+      "s-allonger",
+      "coucher"
+    ],
+    "frames": 237,
+    "duration": 7.9,
+    "size_kb": 233,
+    "rel_path": "animations/npz/daily/anim_lie_down_bed.glb"
+  },
+  {
+    "id": "get-up-bed",
+    "label": "Se relever (lit / sol)",
+    "src": "/home/dinatih/3D Resources/animations/CMU/140/140_01_stageii.npz",
+    "filename": "anim_get_up_bed.glb",
+    "category": "interactions",
+    "tags": [
+      "bed",
+      "get-up",
+      "wake",
+      "rise",
+      "transition",
+      "interaction"
+    ],
+    "aliases": [
+      "get-up",
+      "se-relever",
+      "reveil"
+    ],
+    "frames": 208,
+    "duration": 6.9,
+    "size_kb": 223,
+    "rel_path": "animations/npz/daily/anim_get_up_bed.glb"
+  }
+]

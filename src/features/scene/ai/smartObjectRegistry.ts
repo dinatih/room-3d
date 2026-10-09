@@ -412,9 +412,9 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'cook-stove',
         name: 'Cuisiner Plaques',
-        animation: 'bartending',
+        animation: 'cooking-stir-pan',
+        duration: 13.7,
         offset: [80, 0, 400],
-        // interactions/anim_cards.glb, interactions/anim_drinking_fountain.glb,
       }
     ]
   },
@@ -435,7 +435,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
 
   // ── RANGEMENTS, KALLAX & COULOIR ──────────────────────────────────────────
   'kallax-ne': {
-
     id: 'kallax-ne',
     name: 'Kallax Nord-Est',
     category: 'storage',
@@ -443,9 +442,10 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [
       {
         slotId: 'inspect',
-        name: 'Prendre un objet en hauteur',
+        name: 'Prendre un livre sur étagère',
         rotY: Math.PI / 2,
-        animation: 'texting-while-standing',
+        animation: 'take-book-shelf',
+        duration: 3.3,
       }
     ]
   },
@@ -474,10 +474,11 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [
       {
         slotId: 'admire',
-        name: 'S\'admirer dans le miroir',
+        name: 'Se recoiffer devant le miroir',
         offset: [160, 0, 340],
         rotY: 0,
-        animation: 'miley-armature-change-pose',
+        animation: 'groom-hair-mirror',
+        duration: 3.5,
       }
     ]
   },
