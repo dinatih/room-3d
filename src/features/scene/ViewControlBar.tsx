@@ -28,6 +28,7 @@ export interface ViewControlBarProps {
   hideUI?: boolean;
   onToggleHideUI?: () => void;
   onEnterFlight?: () => void;
+  onOpenInventory?: () => void;
   toolbarActions?: ReactNode;
   beforeAmbianceActions?: ReactNode;
   children?: ReactNode;
@@ -44,6 +45,7 @@ export function ViewControlBar({
   hideUI = false,
   onToggleHideUI,
   onEnterFlight,
+  onOpenInventory,
   toolbarActions,
   beforeAmbianceActions,
   children,
@@ -101,7 +103,7 @@ export function ViewControlBar({
     views: typeof ORTHO_VIEWS | typeof EXTRA_VIEWS | typeof ISO_VIEWS,
     color: 'cyan' | 'green' | 'purple',
   ) => (
-    <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label={views.map(view => view.label).join(', ')}>
+    <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label={views.map(view => view.label).join(', ')}>
       {views.map(view => (
         <button
           key={view.key}
@@ -177,24 +179,20 @@ export function ViewControlBar({
           </button>
         )}
 
-        {showCharacterModes && <CharacterCountSelect />}
-
         {showCharacterModes && (
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-            onClick={chooseRandomCharacter}
-            title="Changer aléatoirement le PNJ actif parmi les personnages visibles (S)"
-            aria-label="Changer aléatoirement le PNJ actif (S)"
-            aria-keyshortcuts="s"
-          >
-            <i className="bi bi-shuffle" aria-hidden="true" />
-            <i className="bi bi-person-standing-dress" aria-hidden="true" />
-          </button>
-        )}
-
-        {showCharacterModes && (
-          <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Suivi caméra">
+          <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Personnages et suivi caméra">
+            <CharacterCountSelect />
+            <button
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+              onClick={chooseRandomCharacter}
+              title="Changer aléatoirement le PNJ actif parmi les personnages visibles (S)"
+              aria-label="Changer aléatoirement le PNJ actif (S)"
+              aria-keyshortcuts="s"
+            >
+              <i className="bi bi-shuffle" aria-hidden="true" />
+              <i className="bi bi-person-standing-dress" aria-hidden="true" />
+            </button>
             <button
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
@@ -264,7 +262,7 @@ export function ViewControlBar({
 
       </div>
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Zoom caméra">
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Zoom caméra">
           {(['in', 'out'] as const).map(direction => (
             <button
               key={direction}
@@ -283,6 +281,17 @@ export function ViewControlBar({
         {viewButtons(ORTHO_VIEWS, 'cyan')}
         {viewButtons(EXTRA_VIEWS, 'green')}
         {viewButtons(ISO_VIEWS, 'purple')}
+        {onOpenInventory && (
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+            onClick={onOpenInventory}
+            title="Ouvrir l'inventaire (I)"
+            aria-label="Ouvrir l'inventaire"
+          >
+            <i className="bi bi-box-seam-fill" aria-hidden="true" />
+          </button>
+        )}
         {showCharacterModes && (
           <button
             type="button"

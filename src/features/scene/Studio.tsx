@@ -944,6 +944,10 @@ export function Studio() {
           showCharacterModes
           hideUI={hideUI}
           onToggleHideUI={toggleHideUI}
+          onOpenInventory={() => {
+            setInventoryInitialCat('all');
+            setShowInventory(true);
+          }}
           onEnterFlight={() => {
             setPlaneViewMode('prelaunch');
             setPlaneLaunched(false);
