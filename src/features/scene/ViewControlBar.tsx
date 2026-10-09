@@ -133,14 +133,14 @@ export function ViewControlBar({
     </button>
   );
 
-  const viewButtons = (
-    views: readonly { key: string; label: string; shortcut: string; icon: string }[],
-    color: 'cyan' | 'green' | 'purple',
-  ) => (
-    <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label={views.map(view => view.label).join(', ')}>
-      {views.map(view => renderViewButton(view, color))}
-    </div>
-  );
+  const frontView = ORTHO_VIEWS.find(v => v.key === 'front')!;
+  const backView = ORTHO_VIEWS.find(v => v.key === 'back')!;
+  const leftView = ORTHO_VIEWS.find(v => v.key === 'left')!;
+  const rightView = ORTHO_VIEWS.find(v => v.key === 'right')!;
+  const topView = EXTRA_VIEWS.find(v => v.key === 'top')!;
+  const bottomView = EXTRA_VIEWS.find(v => v.key === 'bottom')!;
+
+
 
   const zoomButton = (direction: 'in' | 'out') => (
     <button
@@ -286,17 +286,25 @@ export function ViewControlBar({
             <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>
           </button>
         )}
-
-        {perspButton}
-        {rotButton}
       </div>
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Zoom caméra">
-          {(['in', 'out'] as const).map(direction => zoomButton(direction))}
+        {zoomButton('in')}
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues orthogonales et dessus">
+          {renderViewButton(frontView, 'cyan')}
+          {renderViewButton(backView, 'cyan')}
+          {renderViewButton(leftView, 'cyan')}
+          {renderViewButton(rightView, 'cyan')}
+          {renderViewButton(topView, 'green')}
         </div>
-        {viewButtons(ORTHO_VIEWS, 'cyan')}
-        {viewButtons(EXTRA_VIEWS, 'green')}
-        {viewButtons(ISO_VIEWS, 'purple')}
+        {perspButton}
+      </div>
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        {zoomButton('out')}
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales et dessous">
+          {ISO_VIEWS.map(v => renderViewButton(v, 'purple'))}
+          {renderViewButton(bottomView, 'green')}
+        </div>
+        {rotButton}
         {showCharacterModes && (
           <button
             type="button"
@@ -327,12 +335,6 @@ export function ViewControlBar({
   );
 
   if (inline) {
-    const frontView = ORTHO_VIEWS.find(v => v.key === 'front')!;
-    const backView = ORTHO_VIEWS.find(v => v.key === 'back')!;
-    const leftView = ORTHO_VIEWS.find(v => v.key === 'left')!;
-    const rightView = ORTHO_VIEWS.find(v => v.key === 'right')!;
-    const topView = EXTRA_VIEWS.find(v => v.key === 'top')!;
-    const bottomView = EXTRA_VIEWS.find(v => v.key === 'bottom')!;
 
     const inlineRow1 = (
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
