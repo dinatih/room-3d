@@ -56,13 +56,15 @@ function LinkyGaine() {
 }
 
 const CORRIDOR_LIGHT_COLORS = [
-  new THREE.Color(0xff2222), // Rouge
+  new THREE.Color(0xff2222), // Rouge (1)
+  new THREE.Color(0xff2222), // Rouge (2)
+  new THREE.Color(0xff2222), // Rouge (3)
   new THREE.Color(0xff7700), // Orange
   new THREE.Color(0xffdd00), // Jaune
   new THREE.Color(0xff2a85), // Rose
 ];
 const DURATION_PER_COLOR = 1.0; // 1s par couleur
-const TOTAL_CYCLE_DURATION = CORRIDOR_LIGHT_COLORS.length * DURATION_PER_COLOR; // 4s au total
+const TOTAL_CYCLE_DURATION = CORRIDOR_LIGHT_COLORS.length * DURATION_PER_COLOR; // 6s au total (3s rouge + 1s orange + 1s jaune + 1s rose)
 const _tempColor = new THREE.Color();
 
 function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) {
