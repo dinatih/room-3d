@@ -78,7 +78,6 @@ function connectShowerHose(bar: THREE.Group, faucet: THREE.Group) {
     (child as THREE.Mesh).isMesh &&
     ((child as THREE.Mesh).material as THREE.Material).name === 'SimplygonCastMaterial'
   ) as THREE.Mesh;
-  const fittings = bar.children.find(child => child !== hose) as THREE.Mesh;
   const tap = faucet.children.find(child =>
     ((child as THREE.Mesh).material as THREE.Material).name === 'SimplygonCastMaterial_6'
   ) as THREE.Mesh;
@@ -93,37 +92,60 @@ function connectShowerHose(bar: THREE.Group, faucet: THREE.Group) {
   }
   const end = bar.worldToLocal(tap.localToWorld(outlet.getCenter(new THREE.Vector3())));
   hose.geometry.computeBoundingBox();
-  fittings.geometry.computeBoundingBox();
   const box = hose.geometry.boundingBox!;
-  const center = box.getCenter(new THREE.Vector3());
-  // Le flexible conserve son raccord à la douchette et sa partie longeant la barre.
-  const splitY = fittings.geometry.boundingBox!.min.y;
-  const freeLength = splitY - box.min.y;
-  const start = new THREE.Vector3(center.x, splitY, center.z);
-  const curve = new THREE.CubicBezierCurve3(
-    start,
-    start.clone().add(new THREE.Vector3(0, -freeLength, 0)),
-    end.clone().add(new THREE.Vector3(-freeLength / 4, -freeLength / 2, 0)),
-    end,
-  );
-  hose.geometry = hose.geometry.clone();
+  const hoseRadius = 0.55; // Flexible de douche de diamètre 11 mm (repère en cm).
+  const topRing = new THREE.Box3();
   const positions = hose.geometry.getAttribute('position');
-  const down = new THREE.Vector3(0, -1, 0);
-  const rotation = new THREE.Quaternion();
-  const offset = new THREE.Vector3();
   for (let i = 0; i < positions.count; i++) {
-    const y = positions.getY(i);
-    if (y >= splitY) continue;
-    const t = (splitY - y) / freeLength;
-    rotation.setFromUnitVectors(down, curve.getTangent(t));
-    offset.set(positions.getX(i) - center.x, 0, positions.getZ(i) - center.z);
-    offset.applyQuaternion(rotation).add(curve.getPoint(t));
-    positions.setXYZ(i, offset.x, offset.y, offset.z);
+    if (positions.getY(i) === box.max.y) {
+      topRing.expandByPoint(new THREE.Vector3().fromBufferAttribute(positions, i));
+    }
   }
-  positions.needsUpdate = true;
-  hose.geometry.computeVertexNormals();
-  hose.geometry.computeBoundingBox();
-  hose.geometry.computeBoundingSphere();
+  const start = topRing.getCenter(new THREE.Vector3());
+  const tapToBar = new THREE.Matrix4().copy(bar.matrixWorld).invert().multiply(tap.matrixWorld);
+  const tapBox = tap.geometry.boundingBox!.clone().applyMatrix4(tapToBar);
+  // La descente reste devant la face avant du robinet avec un diamètre de jeu.
+  const frontZ = tapBox.min.z - 3 * hoseRadius;
+  const loopRadius = tapBox.getSize(new THREE.Vector3()).x / 4;
+  const hoseLength = box.max.y - box.min.y;
+  const loopY = (start.y + end.y + Math.PI * loopRadius - hoseLength) / 2;
+  const left = new THREE.Vector3(end.x - 2 * loopRadius, loopY, frontZ);
+  const bottom = new THREE.Vector3(end.x - loopRadius, loopY - loopRadius, frontZ);
+  const right = new THREE.Vector3(end.x, loopY, frontZ);
+  const quarterCircleHandle = loopRadius * 4 / 3 * Math.tan(Math.PI / 8);
+  const curve = new THREE.CurvePath<THREE.Vector3>();
+  const descentHandle = (start.y - loopY) / 3;
+  curve.add(new THREE.CubicBezierCurve3(
+    start,
+    start.clone().add(new THREE.Vector3(0, -descentHandle, 0)),
+    left.clone().add(new THREE.Vector3(0, descentHandle, 0)),
+    left,
+  ));
+  // Deux quarts de cercle forment un U large, avec des tangentes continues.
+  curve.add(new THREE.CubicBezierCurve3(
+    left,
+    left.clone().add(new THREE.Vector3(0, -quarterCircleHandle, 0)),
+    bottom.clone().add(new THREE.Vector3(-quarterCircleHandle, 0, 0)),
+    bottom,
+  ));
+  curve.add(new THREE.CubicBezierCurve3(
+    bottom,
+    bottom.clone().add(new THREE.Vector3(quarterCircleHandle, 0, 0)),
+    right.clone().add(new THREE.Vector3(0, -quarterCircleHandle, 0)),
+    right,
+  ));
+  const returnHandle = (end.y - loopY) / 3;
+  curve.add(new THREE.CubicBezierCurve3(
+    right,
+    right.clone().add(new THREE.Vector3(0, returnHandle, 0)),
+    end.clone().add(new THREE.Vector3(0, -returnHandle, 0)),
+    end,
+  ));
+  // Reconstruire le tube évite les angles dus aux rares sommets du flexible CAD.
+  hose.geometry = new THREE.TubeGeometry(curve, Math.ceil(curve.getLength() / hoseRadius), hoseRadius, 12, false);
+  hose.material = frameMat;
+  hose.name = 'shower-hose';
+
 }
 
 // Matériaux porte (module-level, partagés entre instances)

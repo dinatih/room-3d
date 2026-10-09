@@ -1,5 +1,6 @@
 const { createRequire } = require('node:module');
 const fs = require('node:fs');
+const assert = require('node:assert/strict');
 const puppeteer = createRequire(`${process.cwd()}/package.json`)('puppeteer');
 
 (async () => {
@@ -59,6 +60,31 @@ const puppeteer = createRequire(`${process.cwd()}/package.json`)('puppeteer');
     });
     fs.writeFileSync('/tmp/room-shower-geometry.json', JSON.stringify(geometry));
     await page.screenshot({ path: '/tmp/room-shower-hose.png' });
+    const clearance = await page.evaluate(() => {
+      const { scene, THREE } = window.fixture;
+      const hose = scene.getObjectByName('shower-hose');
+      let tapRoot;
+      scene.traverse(object => {
+        if (object.userData.gltfPath?.includes('vallamosse mitigeur')) tapRoot = object;
+      });
+      const tapBox = new THREE.Box3().setFromObject(tapRoot);
+      const { path, radius, tubularSegments } = hose.geometry.parameters;
+      const points = path.getPoints(tubularSegments).map(point => hose.localToWorld(point));
+      const crossing = points.slice(0, -1).filter(point => point.y >= tapBox.min.y && point.y <= tapBox.max.y);
+      const minClearance = Math.min(...crossing.map(point => tapBox.min.z - point.z - radius));
+      const end = points.at(-1);
+      return { minClearance, crossingCount: crossing.length, endpointHeightError: Math.abs(end.y - tapBox.min.y) };
+    });
+    assert(clearance.crossingCount > 0, 'The descending hose must pass the height of the faucet');
+    assert(clearance.minClearance > 0, `Hose intersects the faucet: ${JSON.stringify(clearance)}`);
+    assert(clearance.endpointHeightError < 1e-5, 'Hose end must meet the bottom outlet');
+    console.log('Front clearance and outlet connection:', clearance);
+    await page.evaluate(() => {
+      window.fixture.camera.position.set(220, 125, -40);
+      window.fixture.camera.lookAt(0, 120, 25);
+    });
+    await new Promise(resolve => setTimeout(resolve, 250));
+    await page.screenshot({ path: '/tmp/room-shower-hose-side.png' });
     if (errors.length) throw new Error(errors.join('\n'));
     console.log('Shower rendered without browser errors. Geometry: /tmp/room-shower-geometry.json; image: /tmp/room-shower-hose.png');
   } finally { await browser.close(); }
