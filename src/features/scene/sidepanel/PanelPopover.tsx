@@ -13,6 +13,7 @@ export interface PanelPopoverProps {
   placementMode?: 'default' | 'desktop-top-left' | 'desktop-right' | 'desktop-bottom-left' | 'desktop-above-viewbar';
   compactMode?: boolean;
   noHeader?: boolean;
+  className?: string;
   children: React.ReactNode;
 }
 
@@ -27,6 +28,7 @@ export function PanelPopover({
   placementMode = 'default',
   compactMode = false,
   noHeader = false,
+  className,
   children,
 }: PanelPopoverProps) {
   const id = useId();
@@ -181,7 +183,7 @@ export function PanelPopover({
           role="dialog"
           aria-labelledby={`${id}-title`}
           data-popover-placement={placementMode}
-          className={`popover view-control-bar__npc-popover glass-card shadow-lg ${compactMode ? 'view-control-bar__npc-popover--compact' : ''} ${placementMode === 'desktop-above-viewbar' ? 'view-control-bar__npc-popover--above-viewbar view-control-bar__npc-popover--dock-width' : ''}`}
+          className={`popover view-control-bar__npc-popover glass-card shadow-lg ${compactMode ? 'view-control-bar__npc-popover--compact' : ''} ${placementMode === 'desktop-above-viewbar' ? 'view-control-bar__npc-popover--above-viewbar view-control-bar__npc-popover--dock-width' : ''} ${className ?? ''}`}
           onClick={e => e.stopPropagation()}
           onPointerDown={e => e.stopPropagation()}
           onKeyDown={e => e.stopPropagation()}

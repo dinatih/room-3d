@@ -96,6 +96,10 @@
     width: auto;
     min-width: 0;
   }
+
+  &--minimap {
+    background: rgba(255, 255, 255, 0.28) !important;
+  }
 }
 
 .view-control-bar__npc-popover:not(:popover-open) {

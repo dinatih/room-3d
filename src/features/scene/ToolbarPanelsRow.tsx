@@ -381,6 +381,7 @@ export function ToolbarPanelsRow({
             placementMode="desktop-above-viewbar"
             compactMode
             noHeader
+            className="view-control-bar__npc-popover--minimap"
           >
             <Minimap embedded showGroup={false} />
           </PanelPopover>
