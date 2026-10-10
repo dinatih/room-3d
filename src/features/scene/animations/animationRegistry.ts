@@ -8107,7 +8107,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Hasaposerviko : Danse de couple folk',
     aliases: ['hasaposerviko', 'danse-couple-folk'],
     tags: ['dance', 'couple', 'duo', 'folk', 'greek', 'partner'],
-    duration: 264.5,
+    duration: 132.3,
   },
   {
     id: 'zorbas-dance',
@@ -8116,7 +8116,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Danse Zorba : Duo folk',
     aliases: ['zorba', 'danse-zorba'],
     tags: ['dance', 'couple', 'zorba', 'folk', 'greek', 'partner'],
-    duration: 454.6,
+    duration: 227.3,
   },
   {
     id: 'duo-martial-arts-combat',
@@ -8143,7 +8143,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Danse de joie (Happy Dance)',
     aliases: ['happy-dance', 'danse-joie', 'joie'],
     tags: ['dance', 'happy', 'joy', 'enjoy', 'celebration'],
-    duration: 181.4,
+    duration: 90.7,
   },
   {
     id: 'excited-dance-olivia',
@@ -8152,7 +8152,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Danse excitée & festive',
     aliases: ['excited-dance', 'fete', 'danse-festive'],
     tags: ['dance', 'excited', 'party', 'enjoy', 'celebration'],
-    duration: 186.4,
+    duration: 93.2,
   },
   {
     id: 'relaxed-groove-olivia',
@@ -8161,7 +8161,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Groove détendu & chill',
     aliases: ['relaxed-groove', 'danse-detendue', 'chill'],
     tags: ['dance', 'relaxed', 'chill', 'groove', 'enjoy'],
-    duration: 199.9,
+    duration: 99.9,
   },
   {
     id: 'pleased-dance-olivia',
@@ -8170,6 +8170,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Danse satisfaite & agréable',
     aliases: ['pleased-dance', 'satisfait'],
     tags: ['dance', 'pleased', 'satisfaction', 'enjoy'],
-    duration: 193.7,
+    duration: 96.8,
   },
 ];

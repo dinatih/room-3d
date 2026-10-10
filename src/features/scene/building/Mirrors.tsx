@@ -15,7 +15,7 @@ import {
 import {
   LAYER_STRUCTURE, LAYER_WALL_STRUCTURE, LAYER_FLOOR_COVERINGS, LAYER_DOORS, LAYER_GRASS,
   LAYER_WALKER_DETAIL, LAYER_WALKER, LAYER_AI_ZONES, LAYER_LIDAR, LAYER_NEIGHBORS, LAYER_ANIMALS,
-  LAYER_ENVIRONMENT, LAYER_AIRCRAFT,
+  LAYER_ENVIRONMENT, LAYER_AIRCRAFT, LAYER_EQUIPMENT, LAYER_FURNITURE,
 } from '@config';
 
 const kallaxW1 = 40.5;
@@ -26,6 +26,8 @@ export const MIRROR_BASE_MASK =
   (1 << LAYER_FLOOR_COVERINGS) |
   (1 << LAYER_DOORS) |
   (1 << LAYER_GRASS) |
+  (1 << LAYER_EQUIPMENT) |
+  (1 << LAYER_FURNITURE) |
   (1 << LAYER_WALKER_DETAIL) |
   (1 << LAYER_WALKER) |
   (1 << LAYER_ANIMALS) |
@@ -258,6 +260,46 @@ export function MirrorBath({ showReflection }: { showReflection: boolean }) {
   );
 }
 
+const silverMirrorMat = new THREE.MeshStandardMaterial({
+  color: 0xd0d8e0,
+  roughness: 0.05,
+  metalness: 0.95,
+  envMapIntensity: 1.5,
+});
+
+function MergedAmbientMirror({ planes, position, rotationY }: {
+  planes: { w: number; h: number; x: number; y: number }[];
+  position: [number, number, number];
+  rotationY: number;
+}) {
+  const geo = useMemo(() => {
+    const geos = planes.map(p => {
+      const g = new THREE.PlaneGeometry(p.w, p.h);
+      g.translate(p.x, p.y, 0);
+      return g;
+    });
+    const merged = mergeGeometries(geos, false);
+    merged.computeBoundingBox();
+    return merged;
+  }, [planes]);
+
+  return (
+    <mesh geometry={geo} material={silverMirrorMat} position={position} rotation-y={rotationY} />
+  );
+}
+
+function AmbientReflectorMirror({ w, h, position, rotationY }: {
+  w: number; h: number;
+  position: [number, number, number];
+  rotationY: number;
+}) {
+  return (
+    <mesh position={position} rotation-y={rotationY} material={silverMirrorMat}>
+      <planeGeometry args={[w, h]} />
+    </mesh>
+  );
+}
+
 /** Cadres GLB/procéduraux des miroirs — toujours visibles (LAYER_FURNITURE). */
 export function MirrorFrames() {
   return (
@@ -268,8 +310,66 @@ export function MirrorFrames() {
   );
 }
 
-/** Plans de réflexion Reflector uniquement — pas de cadres GLB (déjà dans MirrorFrames). */
-export function MirrorReflectors() {
+/** Glace de miroir PBR passive sans Reflector (reflet de l'environnement HDRI) */
+export function AmbientMirrorPlanes() {
+  const W_M = 65, H_M = 65;
+  const FT = 1.8;
+  const cx = (KITCHEN_EAST_WALL + DOOR_START) / 2;
+  const mirZ = ROOM_D - 5.5;
+
+  const planesD = useMemo(() => [0, 1, 2].map(i => {
+    const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
+    return { w: W_M - FT * 2, h: H_M - FT * 2, x: -cx, y: cy };
+  }), [cx]);
+
+  const MA_W = 40, MA_H = 150;
+  const M4_W = 70, M4_H = 160;
+  const MA_START_Z = kallaxW1 + 10;
+  const MA_BOTTOM_Y = 6;
+  const mirX = 5.5;
+
+  const planesA = useMemo(() => {
+    const p: { w: number; h: number; x: number; y: number }[] = [];
+    for (let i = 0; i < 3; i++) {
+      const mz = MA_START_Z + MA_W / 2 + i * MA_W;
+      const cy = MA_BOTTOM_Y + MA_H / 2;
+      p.push({ w: MA_W - FT * 2, h: MA_H - FT * 2, x: -mz, y: cy });
+    }
+    const mz4 = MA_START_Z + 3 * MA_W + M4_W / 2;
+    const cy4 = MA_BOTTOM_Y + M4_H / 2;
+    p.push({ w: M4_W - FT * 2, h: M4_H - FT * 2, x: -mz4, y: cy4 });
+    return p;
+  }, []);
+
+  const VANITY_W = 60, VANITY_D = 47, VANITY_Y0 = 30, VANITY_H = 50;
+  const VANITY_CX = DOOR_START - 84;
+  const VANITY_CZ = KITCHEN_SOUTH_WALL + PARTITION_THICKNESS + 1 + VANITY_D / 2;
+  const counterTopY = VANITY_Y0 + VANITY_H + 4;
+  const mirrorW = VANITY_W + 3;
+  const mirrorH = 90;
+  const mirrorY = counterTopY + mirrorH / 2;
+  const mirrorZ = -VANITY_D / 2 + 0.5;
+
+  return (
+    <>
+      <MergedAmbientMirror planes={planesD} position={[0, 0, mirZ]} rotationY={Math.PI} />
+      <MergedAmbientMirror planes={planesA} position={[mirX, 0, 0]} rotationY={Math.PI / 2} />
+      <AmbientReflectorMirror
+        w={mirrorW} h={mirrorH}
+        position={[VANITY_CX, mirrorY, VANITY_CZ + mirrorZ + 0.3]}
+        rotationY={0}
+      />
+    </>
+  );
+}
+
+/** Plans de réflexion Reflector uniquement — pas de cadres GLB (déjà dans MirrorFrames).
+ * Si showReflection est false, affiche la glace de miroir PBR passive (reflet ambiance HDRI).
+ */
+export function MirrorReflectors({ showReflection = true }: { showReflection?: boolean }) {
+  if (!showReflection) {
+    return <AmbientMirrorPlanes />;
+  }
   return (
     <>
       <MirrorsD showReflection={true} reflectorOnly={true} />
