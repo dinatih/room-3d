@@ -8060,7 +8060,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Basket : Tir & Dribble',
     aliases: ['basketball', 'basket', 'tir-panier'],
     tags: ['basketball', 'basket', 'shoot', 'dribble', 'ball', 'sports'],
-    duration: 2.0,
+    duration: 3.8,
   },
   {
     id: 'basketball-cmu',
@@ -8069,7 +8069,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Basket : Jeu & Dribbles',
     aliases: ['basketball-play', 'jouer-basket'],
     tags: ['basketball', 'basket', 'dribble', 'play', 'sports'],
-    duration: 4.1,
+    duration: 8.2,
   },
   {
     id: 'soccer-dribble-kick',
@@ -8078,7 +8078,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Football : Conduite & Frappe',
     aliases: ['soccer', 'football', 'foot', 'tir-foot'],
     tags: ['soccer', 'football', 'kick', 'dribble', 'ball', 'sports'],
-    duration: 2.8,
+    duration: 5.8,
   },
   {
     id: 'soccer-kick',
@@ -8087,7 +8087,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Football : Frappe au but',
     aliases: ['soccer-kick', 'frappe-foot'],
     tags: ['soccer', 'football', 'kick', 'shot', 'sports'],
-    duration: 6.6,
+    duration: 13.3,
   },
   {
     id: 'clap-sync-duo',
@@ -8107,7 +8107,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Hasaposerviko : Danse de couple folk',
     aliases: ['hasaposerviko', 'danse-couple-folk'],
     tags: ['dance', 'couple', 'duo', 'folk', 'greek', 'partner'],
-    duration: 126.3,
+    duration: 264.5,
   },
   {
     id: 'zorbas-dance',
@@ -8116,7 +8116,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Danse Zorba : Duo folk',
     aliases: ['zorba', 'danse-zorba'],
     tags: ['dance', 'couple', 'zorba', 'folk', 'greek', 'partner'],
-    duration: 225.4,
+    duration: 454.6,
   },
   {
     id: 'duo-martial-arts-combat',
@@ -8125,7 +8125,16 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Combat d’arts martiaux en duo',
     aliases: ['duo-fight', 'combat-duo', 'arts-martiaux-duo'],
     tags: ['combat', 'duo', 'martial-arts', 'fight', 'action'],
-    duration: 37.3,
+    duration: 74.7,
+  },
+  {
+    id: 'duo-martial-arts-combat-b',
+    path: 'animations/npz/combat/anim_duo_martial_arts_b.glb',
+    category: 'combat',
+    label: 'Combat d’arts martiaux en duo (Défenseur B)',
+    aliases: ['duo-fight-b', 'combat-duo-b'],
+    tags: ['combat', 'duo', 'martial-arts', 'fight', 'action'],
+    duration: 74.7,
   },
   {
     id: 'happy-dance-olivia',
@@ -8134,7 +8143,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Danse de joie (Happy Dance)',
     aliases: ['happy-dance', 'danse-joie', 'joie'],
     tags: ['dance', 'happy', 'joy', 'enjoy', 'celebration'],
-    duration: 87.4,
+    duration: 181.4,
   },
   {
     id: 'excited-dance-olivia',
@@ -8143,7 +8152,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Danse excitée & festive',
     aliases: ['excited-dance', 'fete', 'danse-festive'],
     tags: ['dance', 'excited', 'party', 'enjoy', 'celebration'],
-    duration: 93.2,
+    duration: 186.4,
   },
   {
     id: 'relaxed-groove-olivia',
@@ -8152,7 +8161,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Groove détendu & chill',
     aliases: ['relaxed-groove', 'danse-detendue', 'chill'],
     tags: ['dance', 'relaxed', 'chill', 'groove', 'enjoy'],
-    duration: 99.9,
+    duration: 199.9,
   },
   {
     id: 'pleased-dance-olivia',
@@ -8161,6 +8170,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Danse satisfaite & agréable',
     aliases: ['pleased-dance', 'satisfait'],
     tags: ['dance', 'pleased', 'satisfaction', 'enjoy'],
-    duration: 96.8,
+    duration: 193.7,
   },
 ];

@@ -187,7 +187,10 @@ def convert(npz_path: Path, output_path: Path):
             fps = 120.0
 
     target_fps = 30.0
-    duration_sec = len(poses) / fps
+    # Correction vitesse x2 : les données AMASS jouent 2x trop vite avec le fps brut.
+    # Diviser par 2.0 ramène la cadence au timing naturel humain 1.0x (normal speed).
+    playback_fps = fps / 2.0
+    duration_sec = len(poses) / playback_fps
     num_frames = max(1, int(round(duration_sec * target_fps)))
 
     bases = [armature.data.bones[name].matrix_local.to_3x3() for name in BONE_NAMES]
@@ -203,7 +206,7 @@ def convert(npz_path: Path, output_path: Path):
 
     for frame in range(1, num_frames + 1):
         t_sec = (frame - 1) / target_fps
-        source_frame = min(len(poses) - 1, int(round(t_sec * fps)))
+        source_frame = min(len(poses) - 1, int(round(t_sec * playback_fps)))
         pose = poses[source_frame]
         translation = translations[source_frame]
 
@@ -242,50 +245,14 @@ def convert(npz_path: Path, output_path: Path):
 
 def register_in_ts(converted_list):
     content = REGISTRY_PATH.read_text(encoding='utf-8')
-    existing_ids = set()
     import re
-    for m in re.finditer(r"id:\s*'([^']+)'", content):
-        existing_ids.add(m.group(1))
-
-    new_blocks = []
+    # Update durations for existing items
     for item in converted_list:
-        if item['id'] in existing_ids:
-            print(f"Skipping registration for {item['id']} (already exists in registry)")
-            continue
+        pattern = rf"(id:\s*'{re.escape(item['id'])}'.*?duration:\s*)([\d.]+)"
+        content = re.sub(pattern, rf"\g<1>{item['duration']}", content, flags=re.DOTALL)
 
-        rel_path = f"animations/npz/{item['sub_dir']}/{item['filename']}"
-        aliases_str = ", ".join(f"'{a}'" for a in item['aliases'])
-        tags_str = ", ".join(f"'{t}'" for t in item['tags'])
-        block = f"""  {{
-    id: '{item['id']}',
-    path: '{rel_path}',
-    category: '{item['category']}',
-    label: '{item['label']}',
-    aliases: [{aliases_str}],
-    tags: [{tags_str}],
-    duration: {item['duration']},
-  }},"""
-        new_blocks.append(block)
-
-    if not new_blocks:
-        print("No new definitions to append to animationRegistry.ts")
-        return
-
-    # Insert right before the closing `];` of ANIMATION_DEFINITIONS
-    last_bracket_pos = content.rfind('];')
-    if last_bracket_pos == -1:
-        print("Error: Could not find closing '];' in animationRegistry.ts")
-        return
-
-    updated_content = (
-        content[:last_bracket_pos] +
-        "\n  // ── NOUVELLES ANIMATIONS INTÉGRÉES (SPORTS, COUPLE, DANCE & VIBE) ────────────────\n" +
-        "\n".join(new_blocks) +
-        "\n" +
-        content[last_bracket_pos:]
-    )
-    REGISTRY_PATH.write_text(updated_content, encoding='utf-8')
-    print(f"Successfully registered {len(new_blocks)} new animations in {REGISTRY_PATH.name}!")
+    REGISTRY_PATH.write_text(content, encoding='utf-8')
+    print(f"Updated durations for {len(converted_list)} animations in {REGISTRY_PATH.name}!")
 
 
 def main():
