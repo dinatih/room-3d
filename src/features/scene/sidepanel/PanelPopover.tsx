@@ -41,10 +41,33 @@ export function PanelPopover({
     const isDesktop = window.innerWidth >= 768;
 
     if (isDesktop && placementMode === 'desktop-above-viewbar') {
-      const menuDock = trigger.closest('.view-control-bar-dock') || trigger.closest('.view-control-bar');
+      const menuDock = trigger.closest('.view-control-bar-dock') || trigger.closest('.view-control-bar') || document.querySelector('.view-control-bar-dock');
       const dockRect = menuDock ? menuDock.getBoundingClientRect() : trigger.getBoundingClientRect();
+      const dockWidth = Math.max(160, dockRect.width);
+      popover.style.width = `${dockWidth}px`;
+      popover.style.maxWidth = `${dockWidth}px`;
+
+      // Multi-popover vertical stacking logic
+      // Find all open above-viewbar popovers to compute stacked bottom
+      const openAbovePopovers = Array.from(
+        document.querySelectorAll<HTMLElement>('.view-control-bar__npc-popover--above-viewbar:popover-open')
+      );
+      
+      const isStackedAboveOther = openAbovePopovers.some(other => other !== popover && other.dataset.popoverPlacement === 'desktop-above-viewbar');
+      let baseBottom = Math.max(8, window.innerHeight - dockRect.top + 6);
+
+      if (isStackedAboveOther) {
+        // If this popover is stacking above another, find the bottom-most one and place this above it
+        const other = openAbovePopovers.find(o => o !== popover);
+        if (other) {
+          const otherRect = other.getBoundingClientRect();
+          // Height of the other popover + spacing
+          baseBottom = Math.max(baseBottom, window.innerHeight - otherRect.top + 6);
+        }
+      }
+
       popover.style.top = 'auto';
-      popover.style.bottom = `${Math.max(8, window.innerHeight - dockRect.top + 6)}px`;
+      popover.style.bottom = `${baseBottom}px`;
       popover.style.right = `${Math.max(8, window.innerWidth - dockRect.right)}px`;
       popover.style.left = 'auto';
       popover.style.maxHeight = `${Math.max(120, dockRect.top - 16)}px`;
@@ -157,7 +180,8 @@ export function PanelPopover({
           {...{ popover: manual ? 'manual' : 'auto' }}
           role="dialog"
           aria-labelledby={`${id}-title`}
-          className={`popover view-control-bar__npc-popover glass-card shadow-lg ${compactMode ? 'view-control-bar__npc-popover--compact' : ''}`}
+          data-popover-placement={placementMode}
+          className={`popover view-control-bar__npc-popover glass-card shadow-lg ${compactMode ? 'view-control-bar__npc-popover--compact' : ''} ${placementMode === 'desktop-above-viewbar' ? 'view-control-bar__npc-popover--above-viewbar view-control-bar__npc-popover--dock-width' : ''}`}
           onClick={e => e.stopPropagation()}
           onPointerDown={e => e.stopPropagation()}
           onKeyDown={e => e.stopPropagation()}

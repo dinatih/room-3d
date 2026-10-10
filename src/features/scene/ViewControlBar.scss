@@ -91,6 +91,11 @@
   &--compact {
     width: 15.5rem;
   }
+
+  &--dock-width {
+    width: auto;
+    min-width: 0;
+  }
 }
 
 .view-control-bar__npc-popover:not(:popover-open) {
