@@ -382,7 +382,6 @@ export function ToolbarPanelsRow({
             compactMode
             noHeader
             toggleEvent="toggle-minimap"
-            className="view-control-bar__npc-popover--minimap"
           >
             <Minimap embedded showGroup={false} />
           </PanelPopover>

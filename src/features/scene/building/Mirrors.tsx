@@ -16,10 +16,12 @@ import {
   LAYER_STRUCTURE, LAYER_WALL_STRUCTURE, LAYER_FLOOR_COVERINGS, LAYER_DOORS, LAYER_GRASS,
   LAYER_WALKER_DETAIL, LAYER_WALKER, LAYER_AI_ZONES, LAYER_LIDAR, LAYER_NEIGHBORS, LAYER_ANIMALS,
   LAYER_ENVIRONMENT, LAYER_AIRCRAFT, LAYER_EQUIPMENT, LAYER_FURNITURE,
+  LAYER_FURNISHINGS, LAYER_DECOR,
 } from '@config';
 
 const kallaxW1 = 40.5;
 
+// MD : Structure, Murs, Sols, Portes, Végetation, Personnages, Animaux, Ciel + Equipements & Furniture
 export const MIRROR_BASE_MASK =
   (1 << LAYER_STRUCTURE) |
   (1 << LAYER_WALL_STRUCTURE) |
@@ -33,6 +35,13 @@ export const MIRROR_BASE_MASK =
   (1 << LAYER_ANIMALS) |
   (1 << LAYER_ENVIRONMENT) |
   (1 << LAYER_AIRCRAFT);
+
+// HD : Full miroir (inclut en plus Furnishings tapis/rideaux et Decor bibelots/plantes/props)
+export const MIRROR_HD_MASK =
+  MIRROR_BASE_MASK |
+  (1 << LAYER_FURNISHINGS) |
+  (1 << LAYER_DECOR);
+
 const MIRROR_EXCLUDED_MASK = (1 << LAYER_AI_ZONES) | (1 << LAYER_LIDAR) | (1 << LAYER_NEIGHBORS);
 
 let _reflectionDepth = 0;
@@ -72,7 +81,7 @@ function ReflectorMirror({ w, h, position, rotationY }: {
         renderTarget.setSize(targetRes, targetRes);
       }
 
-      const mirrorMask = (cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
+      const mirrorMask = (cameraState.mirrorsHD ? MIRROR_HD_MASK : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
 
       const reflectionCamera = (mir as any).getReflectionCamera(renderCam);
       if (reflectionCamera) {
@@ -136,7 +145,7 @@ function MergedReflector({ planes, position, rotationY }: {
         renderTarget.setSize(targetRes, targetRes);
       }
 
-      const mirrorMask = (cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
+      const mirrorMask = (cameraState.mirrorsHD ? MIRROR_HD_MASK : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
 
       const reflectionCamera = (mir as any).getReflectionCamera(renderCam);
       if (reflectionCamera) {
