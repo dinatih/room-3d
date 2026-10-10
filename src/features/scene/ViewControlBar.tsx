@@ -1,8 +1,8 @@
 import './ViewControlBar.scss';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
-import { useEffect, useState, cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react';
+import { useEffect, useState, useRef, useId, cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useSceneStore } from './store/useSceneStore';
+import { useSceneStore, type GraphicsQualityPreset } from './store/useSceneStore';
 import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS } from './sidepanel/types';
 import { getCharacterGridCameraView, frameCharacterGridCamera } from './character/characterGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -70,7 +70,8 @@ export function ViewControlBar({
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
   const currentHdri = useSceneStore(s => s.currentHdri);
   const setHdri = useSceneStore(s => s.setHdri);
-  const mirrorsHD = useSceneStore(s => s.layers.mirrorsHD);
+  const graphicsQualityPreset = useSceneStore(s => s.graphicsQualityPreset);
+  const setGraphicsQualityPreset = useSceneStore(s => s.setGraphicsQualityPreset);
   const cameraViewMarkers = useSceneStore(s => s.layers.cameraViewMarkers);
   const toggleLayer = useSceneStore(s => s.toggleLayer);
   const cameraTarget = useSceneStore(s => s.cameraTarget);
@@ -214,17 +215,127 @@ export function ViewControlBar({
     </button>
   );
 
+  const qualityPopoverId = useId();
+  const qualityTriggerRef = useRef<HTMLButtonElement>(null);
+  const qualityPopoverRef = useRef<HTMLDivElement>(null);
+  const [qualityPopoverOpen, setQualityPopoverOpen] = useState(false);
+
+  const updateQualityPopoverPosition = () => {
+    const trigger = qualityTriggerRef.current;
+    const popover = qualityPopoverRef.current;
+    if (!trigger || !popover) return;
+    const rect = trigger.getBoundingClientRect();
+    const above = rect.top > window.innerHeight / 2;
+    popover.style.top = above ? 'auto' : `${rect.bottom + 6}px`;
+    popover.style.bottom = above ? `${window.innerHeight - rect.top + 6}px` : 'auto';
+    popover.style.left = `${Math.max(8, rect.left)}px`;
+    popover.style.right = 'auto';
+  };
+
+  useEffect(() => {
+    const popover = qualityPopoverRef.current;
+    if (!popover) return;
+    const onToggle = () => {
+      const open = popover.matches(':popover-open');
+      setQualityPopoverOpen(open);
+      if (open) updateQualityPopoverPosition();
+    };
+    popover.addEventListener('toggle', onToggle);
+    return () => popover.removeEventListener('toggle', onToggle);
+  }, []);
+
+  const qualityPresets: { id: GraphicsQualityPreset; label: string; desc: string; badge: string }[] = [
+    {
+      id: 'sd',
+      label: 'SD (Basse définition)',
+      desc: 'Miroirs désactivés (reflet ambiance HDRI), vidéos désactivées, ciel 2K',
+      badge: 'SD',
+    },
+    {
+      id: 'md',
+      label: 'MD (Moyenne définition)',
+      desc: 'Miroirs actifs (avec équipement & furniture), Vidéos HD, Ciel 8K',
+      badge: 'MD',
+    },
+    {
+      id: 'hd',
+      label: 'HD (Haute définition)',
+      desc: 'Miroirs HD plein écran, Vidéos HD, Ciel 8K',
+      badge: 'HD',
+    },
+  ];
+
   const hdButton = (showCharacterModes || showMirrorsHD) && (
-    <button
-      type="button"
-      className={`${TOOLBAR_BUTTON_CLASS} ${mirrorsHD ? 'btn-danger' : 'btn-outline-secondary'}`}
-      onClick={() => toggleLayer('mirrorsHD')}
-      title="Activer ou désactiver les miroirs HD"
-      aria-label="Miroirs HD"
-      aria-pressed={mirrorsHD}
-    >
-      HD
-    </button>
+    <>
+      <button
+        ref={qualityTriggerRef}
+        type="button"
+        className={`${TOOLBAR_BUTTON_CLASS} ${qualityPopoverOpen ? 'btn-danger text-white' : graphicsQualityPreset === 'hd' ? 'btn-danger' : graphicsQualityPreset === 'md' ? 'btn-warning text-dark' : 'btn-outline-secondary'}`}
+        {...{ popovertarget: qualityPopoverId }}
+        onClick={(e) => {
+          e.stopPropagation();
+          updateQualityPopoverPosition();
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        title={`Définition & Performances : ${graphicsQualityPreset.toUpperCase()}`}
+        aria-label="Preset de définition graphique"
+        aria-expanded={qualityPopoverOpen}
+      >
+        <span className="fw-bold">{graphicsQualityPreset.toUpperCase()}</span>
+      </button>
+      {createPortal(
+        <div
+          ref={qualityPopoverRef}
+          id={qualityPopoverId}
+          {...{ popover: 'auto' }}
+          role="dialog"
+          aria-labelledby={`${qualityPopoverId}-title`}
+          className="popover view-control-bar__npc-popover glass-card shadow-lg p-2"
+          style={{ width: '19rem', maxWidth: 'calc(100vw - 1rem)' }}
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+        >
+          <div className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+            <span id={`${qualityPopoverId}-title`} className="fw-semibold small text-dark d-flex align-items-center gap-1">
+              <i className="bi bi-speedometer2 text-primary" aria-hidden="true" />
+              Qualité graphique & Perfs
+            </span>
+            <button
+              type="button"
+              className="btn-close"
+              style={{ fontSize: '0.65rem' }}
+              aria-label="Fermer"
+              onClick={() => qualityPopoverRef.current?.hidePopover()}
+            />
+          </div>
+          <div className="d-flex flex-column gap-1">
+            {qualityPresets.map(preset => {
+              const isSelected = graphicsQualityPreset === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className={`btn btn-sm text-start p-2 rounded d-flex flex-column gap-1 border ${isSelected ? 'btn-primary text-white border-primary' : 'btn-light text-body border-secondary-subtle'}`}
+                  onClick={() => {
+                    setGraphicsQualityPreset(preset.id);
+                    qualityPopoverRef.current?.hidePopover();
+                  }}
+                >
+                  <div className="d-flex align-items-center justify-content-between w-100">
+                    <span className="fw-bold small">{preset.label}</span>
+                    <span className={`badge ${isSelected ? 'text-bg-light' : 'text-bg-secondary'}`}>{preset.badge}</span>
+                  </div>
+                  <span className={`small lh-sm ${isSelected ? 'text-white-50' : 'text-muted'}`} style={{ fontSize: '0.75rem' }}>
+                    {preset.desc}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
   );
 
   const bar = (

@@ -242,15 +242,16 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [30, 15, 645],
         rotY: 0,
         animation: 'taking-shower',
-        duration: 4.8,
+        duration: 12,
       },
       {
         slotId: 'take-shower-2',
         name: 'Prendre une douche (Droite)',
         offset: [8, 15, 635],
         rotY: Math.PI / 2,
-        animation: 'washing-body',
-        duration: 86.7,
+        animation: 'take-off-tshirt',
+        animationsRandom: ['take-off-tshirt', 'taking-shower'],
+        duration: 12,
       },
       {
         slotId: 'take-shower-3',
@@ -258,7 +259,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [42, 15, 660],
         rotY: -Math.PI / 2,
         animation: 'taking-shower',
-        duration: 4.8,
+        duration: 12,
       }
     ]
   },

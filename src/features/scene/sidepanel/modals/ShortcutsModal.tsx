@@ -57,7 +57,8 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label={<><i className="bi bi-chat-dots me-1" aria-hidden="true" />Bulle de pensées (toggle)</>} keys={['6']} />
               <R label={<><i className="bi bi-crosshair me-1" aria-hidden="true" />Pistolets Lara (toggle)</>} keys={['7']} />
               <R label={<><i className="bi bi-handbag me-1" aria-hidden="true" />Accessoires Lara (toggle)</>} keys={['8']} />
-              <R label="Minimap 2D (toggle)"        keys={['9']} />
+              <R label="Minimap 2D (toggle)"        keys={['M', '9']} />
+              <R label="Performances & Stats (toggle)" keys={['H']} />
               <R label="Masquer toute l'UI (Vue clean)" keys={['0']} />
               <R label="Console de logs (toggle)"   keys={['B']} />
               <R label="Vue top-down (toggle)"      keys={['Alt+T']} />

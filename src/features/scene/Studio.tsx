@@ -623,6 +623,12 @@ export function Studio() {
         cameraState.invalidate?.();
       } else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
         toggleHideUI();
+      } else if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent('toggle-perf'));
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent('toggle-minimap'));
       } else if (e.key === 'F10' || e.code === 'F10') {
         e.preventDefault();
         useSceneStore.getState().setPhotoModeOpen(true);
@@ -892,9 +898,9 @@ export function Studio() {
             <Animals />
           </CategoryLayerGroup>
 
-          {/* LAYER_MIRRORS (17) — plans de réflexion Reflector uniquement (coûteux) */}
-          <CategoryLayerGroup layer={LAYER_MIRRORS} visible={layers.mirrors}>
-            <MirrorReflectors />
+          {/* LAYER_MIRRORS (17) — plans de réflexion Reflector (MD/HD) ou glaces ambiantes PBR (SD) */}
+          <CategoryLayerGroup layer={LAYER_MIRRORS} visible={true}>
+            <MirrorReflectors showReflection={layers.mirrors} />
           </CategoryLayerGroup>
 
           {/* LAYER_NEIGHBORS (14) — appartements voisins */}

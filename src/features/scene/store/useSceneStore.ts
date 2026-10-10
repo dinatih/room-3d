@@ -85,6 +85,8 @@ export function getRandomGrassType(): GroundType {
   return GRASS_TYPES[Math.floor(Math.random() * GRASS_TYPES.length)];
 }
 
+export type GraphicsQualityPreset = 'sd' | 'md' | 'hd';
+
 interface SceneStore {
   furniture: FurnitureState;
   layers: LayerState;
@@ -96,9 +98,11 @@ interface SceneStore {
   hdriResolution: HdriResolution;
   screenVideosEnabled: boolean;
   screenVideoQuality: ScreenVideoQuality;
+  graphicsQualityPreset: GraphicsQualityPreset;
   setScreenVideosEnabled: (enabled: boolean) => void;
   setScreenVideoQuality: (quality: ScreenVideoQuality) => void;
   setHdriResolution: (resolution: HdriResolution) => void;
+  setGraphicsQualityPreset: (preset: GraphicsQualityPreset) => void;
   bnfAzimuth: number;
   bnfElevation: number;
   bnfRadius: number;
@@ -329,6 +333,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   hdriResolution: isMobileViewport() ? '2k' : '8k',
   screenVideosEnabled: true,
   screenVideoQuality: isMobileViewport() ? 'ld' : 'hd',
+  graphicsQualityPreset: initialLayers.mirrorsHD ? 'hd' : (initialLayers.mirrors ? 'md' : 'sd'),
   setScreenVideosEnabled: (enabled) => {
     set({ screenVideosEnabled: enabled });
     cameraState.invalidate?.();
@@ -339,6 +344,54 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   setHdriResolution: (resolution) => {
     set({ hdriResolution: resolution });
+    cameraState.invalidate?.();
+  },
+  setGraphicsQualityPreset: (preset) => {
+    if (preset === 'sd') {
+      cameraState.mirrorsHD = false;
+      updateUrlLayer('mirrors', false);
+      updateUrlLayer('mirrorsHD', false);
+      set(state => ({
+        graphicsQualityPreset: 'sd',
+        screenVideosEnabled: false,
+        hdriResolution: '2k',
+        layers: {
+          ...state.layers,
+          mirrors: false,
+          mirrorsHD: false,
+        },
+      }));
+    } else if (preset === 'md') {
+      cameraState.mirrorsHD = false;
+      updateUrlLayer('mirrors', true);
+      updateUrlLayer('mirrorsHD', false);
+      set(state => ({
+        graphicsQualityPreset: 'md',
+        screenVideosEnabled: true,
+        screenVideoQuality: 'hd',
+        hdriResolution: '8k',
+        layers: {
+          ...state.layers,
+          mirrors: true,
+          mirrorsHD: false,
+        },
+      }));
+    } else if (preset === 'hd') {
+      cameraState.mirrorsHD = true;
+      updateUrlLayer('mirrors', true);
+      updateUrlLayer('mirrorsHD', true);
+      set(state => ({
+        graphicsQualityPreset: 'hd',
+        screenVideosEnabled: true,
+        screenVideoQuality: 'hd',
+        hdriResolution: '8k',
+        layers: {
+          ...state.layers,
+          mirrors: true,
+          mirrorsHD: true,
+        },
+      }));
+    }
     cameraState.invalidate?.();
   },
   bnfAzimuth: 154.3,

@@ -163,8 +163,7 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
   useLayoutEffect(() => {
     camera.layers.enableAll();
     camera.layers.disable(LAYER_WALKER_DETAIL);
-    if (layers.mirrors === false) camera.layers.disable(17);
-  }, [camera, layers.mirrors]);
+  }, [camera]);
 
   return <LayerSmokeTransition layers={layers as any} />;
 }

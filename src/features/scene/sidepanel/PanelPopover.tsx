@@ -14,6 +14,7 @@ export interface PanelPopoverProps {
   compactMode?: boolean;
   noHeader?: boolean;
   className?: string;
+  toggleEvent?: string;
   children: React.ReactNode;
 }
 
@@ -29,6 +30,7 @@ export function PanelPopover({
   compactMode = false,
   noHeader = false,
   className,
+  toggleEvent,
   children,
 }: PanelPopoverProps) {
   const id = useId();
@@ -149,6 +151,22 @@ export function PanelPopover({
       setIsOpen(false);
     }
   }, [hideUI]);
+
+  useEffect(() => {
+    if (!toggleEvent) return;
+    const handleToggle = () => {
+      const popover = popoverRef.current;
+      if (!popover) return;
+      if (popover.matches(':popover-open')) {
+        popover.hidePopover();
+      } else {
+        popover.showPopover();
+        updatePosition();
+      }
+    };
+    document.addEventListener(toggleEvent, handleToggle);
+    return () => document.removeEventListener(toggleEvent, handleToggle);
+  }, [toggleEvent, updatePosition]);
 
   return (
     <>

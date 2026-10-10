@@ -375,12 +375,13 @@ export function ToolbarPanelsRow({
           {/* 1. Plan */}
           <PanelPopover
             icon="bi-map-fill"
-            title="Plan"
+            title="Plan (M)"
             hideUI={hideUI}
             manual
             placementMode="desktop-above-viewbar"
             compactMode
             noHeader
+            toggleEvent="toggle-minimap"
             className="view-control-bar__npc-popover--minimap"
           >
             <Minimap embedded showGroup={false} />
@@ -389,12 +390,13 @@ export function ToolbarPanelsRow({
           {/* 2. Perf */}
           <PanelPopover
             icon="bi-bar-chart-fill"
-            title="Performances & Stats"
+            title="Performances & Stats (H)"
             hideUI={hideUI}
             manual
             placementMode="desktop-above-viewbar"
             compactMode
             noHeader
+            toggleEvent="toggle-perf"
           >
             <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
           </PanelPopover>
