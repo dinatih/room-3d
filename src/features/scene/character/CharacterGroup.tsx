@@ -4,7 +4,7 @@
  * CharacterGroup.tsx — Orchestrateur multi-personnages (Characters & NPCs).
  * Filtre, distribue les props et gère le montage de chaque Character.
  */
-import { Suspense, useMemo } from 'react';
+import { Suspense, useMemo, useState, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Character } from './Character';
@@ -12,10 +12,16 @@ import { cacheDynamicGLTF } from './useCharacterAnimations';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import type { CharacterGroupProps } from './characterTypes';
 import { canCharacterPerformDuo, resolveDuoPreviewParticipants } from '../animations/duoAnimations';
-import { getDuoAnimationTransformOverride } from '../animations/animationResolver';
+import { getDuoAnimationTransformOverride, subscribeAnimationOverrides } from '../animations/animationResolver';
 import { getCharacterGridPosition, getCharacterGridCenterIndex } from './characterGridUtils';
 
 function InternalCharacterGroup(props: CharacterGroupProps) {
+  const [, setOverrideTick] = useState(0);
+  useEffect(() => {
+    return subscribeAnimationOverrides(() => {
+      setOverrideTick(t => t + 1);
+    });
+  }, []);
   const characterGrid = useSceneStore(state => state.layers.characterGrid);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const laraCount = useSceneStore(state => state.layers.laraCount ?? 4);
