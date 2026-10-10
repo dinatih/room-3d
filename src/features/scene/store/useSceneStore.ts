@@ -554,12 +554,19 @@ export const useSceneStore = create<SceneStore>((set) => ({
       const nextLayers = { ...state.layers, [key]: isActivating };
       updateUrlLayer(key, isActivating);
       if (key === 'mirrors') {
-        // Force l'invalidation pour que SceneLayerController mette à jour le mask camera
         cameraState.invalidate?.();
+        if (!isActivating) {
+          nextLayers.mirrorsHD = false;
+          cameraState.mirrorsHD = false;
+        }
       }
       if (key === 'mirrorsHD') {
-        cameraState.mirrorsHD = nextLayers.mirrorsHD;
+        cameraState.mirrorsHD = isActivating;
+        if (isActivating && !nextLayers.mirrors) {
+          nextLayers.mirrors = true;
+        }
       }
+      const nextPreset: GraphicsQualityPreset = nextLayers.mirrorsHD ? 'hd' : (nextLayers.mirrors ? 'md' : 'sd');
       if (key === 'character') {
         cameraState.characterHidden = !nextLayers.character;
         if (!nextLayers.character) {
@@ -569,7 +576,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         }
       }
       cameraState.invalidate?.();
-      return { layers: nextLayers, activeExtraIds: nextActiveExtraIds };
+      return { layers: nextLayers, activeExtraIds: nextActiveExtraIds, graphicsQualityPreset: nextPreset };
     });
   },
 

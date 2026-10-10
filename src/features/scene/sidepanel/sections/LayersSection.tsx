@@ -309,8 +309,8 @@ export function LayersSection({
       {layerBtn('purple',    'Décoration (Decor) (Alt+D)',      'decor')}
       {layerBtn('light',     iconLabel('bi-people-fill', 'Personnages 3D'), 'character', 'characterWireframe')}
       {layerBtn('blue',      iconLabel('bi-heart-pulse', 'Animaux'), 'animals')}
-      {layerBtn('purple',    'Miroirs',                        'mirrors')}
-      {layers.mirrors && layerBtn('purple', 'Miroirs HD (Alt+G)',       'mirrorsHD')}
+      {layerBtn('purple',    'Miroirs MD (Moyenne déf)',       'mirrors')}
+      {layerBtn('purple',    'Miroirs HD (Haute déf) (Alt+G)', 'mirrorsHD')}
       {layerBtn('cyan',      iconLabel('bi-robot', 'Zones IA (A)'), 'aiZones')}
       {layerBtn('blue',   iconLabel('bi-people', 'Collisions inter-PNJ'), 'npcCollisions')}
       {layers.npcCollisions && layerBtn('cyan', iconLabel('bi-circle', 'Debug PNJ (Rayon 70cm)'), 'debugNpcCollisions')}
