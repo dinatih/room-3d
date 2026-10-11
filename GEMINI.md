@@ -3,20 +3,16 @@
 Toujours lire intégralement [AGENTS.md](AGENTS.md) avant de commencer une tâche et appliquer toutes ses directives, notamment le commit obligatoire des modifications avant chaque réponse finale.
 
 
-# Plus que pour toi parceque tu ne comprends pas !!!
-## Économie de quota et limitation d'investigation
+# DIRECTIVES IMPÉRATIVES D'ÉCONOMIE DE TOKENS ET DE QUOTA
 
 > [!CAUTION]
 > **Interdiction absolue du micro-découpage de lecture (Anti-Pattern des 20 lignes)** :
-> Ne JAMAIS morceler les lectures de fichiers en blocs de 15 à 30 lignes successifs. C'est un piège absurde et inefficace :
-> - **Le piège du modèle** : Quand un LLM cherche un morceau de code précis sans vue globale, son réflexe paranoïaque est d'inspecter 20 lignes autour de la cible, puis 20 lignes plus bas, entrant dans une boucle infernale de micro-lectures.
-> - **L'effet pervers sur le contexte et les tokens** : Chaque appel d'outil génère un tour de boucle complet (entrée/sortie d'outil + renvoi de tout l'historique au modèle). Faire 25 lectures de 20 lignes consomme **infiniment plus de tokens, de temps et de quota d'appels API** que de lire une seule fois 400 ou 800 lignes d'un coup ! C'est extrêmement coûteux et contre-productif.
-> - **Règle impérative** :
->   - Si un fichier fait moins de 800 lignes, le lire en un seul appel `view_file` (ou cibler précisément avec `grep_search`).
->   - Si une plage est nécessaire, utiliser des plages larges de **100 à 300 lignes minimum**.
->   - L'utilisateur en tant que développeur doit surveiller ce comportement et interrompre l'IA si elle retombe dans ce travers.
-
-- **Lectures efficaces** : Utiliser des plages de lecture larges (100 à 300+ lignes) lors des appels `view_file`.
-- **Budget d'outils par tour** : Ne JAMAIS dépasser 6 à 8 appels d'outils au total par message utilisateur. Si une analyse nécessite plus d'étapes, s'interrompre et faire un point avec l'utilisateur au lieu de boucler.
-- **Interdiction absolue d'explorer `node_modules`** : Se concentrer exclusivement sur le code du projet (`src/`). Ne jamais lire ou parcourir les dossiers de dépendances externes.
-- **Action directe** : Dès qu'une piste ou une cause probable est identifiée, appliquer la correction et tester immédiatement au lieu de sur-analyser.
+> Ne JAMAIS morceler les lectures de fichiers en blocs successifs. C'est un piège absurde et inefficace :
+> - **L'effet destructeur sur le contexte et les tokens** : Chaque appel d'outil renvoie l'intégralité de l'historique de la conversation au modèle. Faire 15 lectures de 30 lignes consomme **10 à 20 fois plus de tokens et de quota** que de lire une seule fois le fichier en entier !
+> - **RÈGLE N°1 (Strictement contraignante)** : Tout fichier de moins de 800 lignes (la quasi-totalité du projet) **DOIT être lu en UN SEUL appel `view_file` complet** (sans spécifier `StartLine` ni `EndLine`). L'utilisation de micro-plages de 20-50 lignes est **FORMELLEMENT INTERDITE**.
+> - **RÈGLE N°2 (Plafond de lectures par tour)** : **Maximum 1 à 2 lectures de fichiers (`view_file`) par message utilisateur**. Après 2 lectures, l'agent a l'interdiction de lire d'autres fichiers : il DOIT immédiatement passer à l'action (`replace_file_content` / modification) ou poser une question à l'utilisateur.
+> - **RÈGLE N°3 (Interdiction de re-lecture)** : Interdiction d'appeler `view_file` plusieurs fois sur un même fichier au cours du même tour. Si le fichier a déjà été lu, l'information est déjà dans le contexte.
+> - **Recherche préalable** : Utiliser `git grep -n` pour identifier les lignes d'intérêt AVANT toute modification, au lieu de chercher à tâtons avec `view_file`.
+> - **Budget d'outils par tour** : Ne JAMAIS dépasser 4 à 5 appels d'outils au total par message utilisateur.
+> - **Interdiction absolue d'explorer `node_modules`** : Se concentrer exclusivement sur le code du projet (`src/`).
+> - **Action directe** : Dès qu'une piste ou une cause probable est identifiée, appliquer la correction et tester immédiatement au lieu de sur-analyser.
