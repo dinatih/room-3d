@@ -220,7 +220,7 @@ export const DOOR_SWINGS: DoorSwingDef[] = [
   })(),
   // 5. Porte de douche — pivot à 20cm du mur Ouest (shower-nw), s'ouvre vers la SDB (Nord)
   {
-    pivot: { x: pEast('shower-nw') + 20, z: pNorth('shower-ne') },
+    pivot: { x: pEast('shower-nw') + 20, z: pNorth('shower-ne') + 3 },
     radius: pWest('shower-ne') - (pEast('shower-nw') + 20),
     startAngle: 0,
     endAngle: Math.PI * 1.5,

@@ -25,7 +25,8 @@ export const MEASURED_DIST_CORNER_NE_TO_SE          = 405;
 /** Largeur de la douche entre shower-nw et shower-ne : 71 cm */
 export const MEASURED_DIST_SHOWER_NW_TO_NE = 71;
 
-export const MEASURED_DIST_SHOWER_NW_TO_SW = 73; // env 3cm + 70cm du bac
+/** Distance entre face nord shower-ne et face nord shower-sw (3 cm de retrait + 71 cm du bac) : 74 cm */
+export const MEASURED_DIST_SHOWER_NW_TO_SW = 74;
 /** Largeur du couloir entre la porte SDB (door-bath-e) et le mur Est couloir (corner-se.x / diag-ne.x) : 116 cm */
 export const MEASURED_DIST_DOOR_BATH_E_TO_CORR_E    = 116;
 /** Largeur de la pièce entre niche-beam (poutre/niche) et le mur Est (corner-ne.x / corner-se.x) : 316 cm */
@@ -100,7 +101,7 @@ const _BATH_CORRIDOR_WALL_X = _BATH_WEST_WALL + MEASURED_DIST_BATH_W_TO_DOOR_BAT
 // Repères calculés de la douche
 const _BATH_SOUTH_WALL = _BATH_NORTH_WALL + MEASURED_DIST_BATH_N_TO_SHOWER_NE;
 const _BATH_SOUTH_WALL_Z = _BATH_SOUTH_WALL + PT / 2;
-const _SHOWER_SOUTH_WALL_Z = _BATH_SOUTH_WALL_Z + MEASURED_DIST_SHOWER_NW_TO_SW + PT / 2;
+const _SHOWER_SOUTH_WALL_Z = _BATH_SOUTH_WALL + MEASURED_DIST_SHOWER_NW_TO_SW + PT / 2;
 const _SHOWER_EAST_WALL_X = _BATH_WEST_WALL + MEASURED_DIST_SHOWER_NW_TO_NE + PT / 2;
 
 // Porte : 80cm d'ouverture, alignée après mur couloir (X=200)
