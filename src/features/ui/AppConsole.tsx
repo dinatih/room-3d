@@ -13,7 +13,7 @@ import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyl
 import { Minimap } from '@features/scene/Minimap';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { ProfileButton } from '@features/scene/ProfileButton';
-import { QualityButton } from '@features/scene/QualityButton';
+import { PresetButton } from '@features/scene/PresetButton';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
 const TAG_COLORS: Record<string, string> = {
@@ -427,8 +427,8 @@ export function AppConsole({
           <span>Perf</span>
         </button>
 
-        {/* 4. HD */}
-        <QualityButton hideUI={hideUI} />
+        {/* 4. Preset */}
+        <PresetButton hideUI={hideUI} />
 
         {/* 5. Hide UI (après le btn HD) */}
         {onToggleHideUI && (

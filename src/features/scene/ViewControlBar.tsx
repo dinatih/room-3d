@@ -11,7 +11,7 @@ import { chooseRandomCharacter } from './store/randomCharacter';
 import { CharacterCountSelect } from './CharacterCountSelect';
 import { CharacterSelect } from './CharacterSelect';
 import { cameraState } from './cameraState';
-import { QualityButton } from './QualityButton';
+import { PresetButton } from './PresetButton';
 
 export interface ViewControlBarProps {
   /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-right' */
@@ -338,7 +338,7 @@ export function ViewControlBar({
           {renderViewButton(topView, 'green')}
         </div>
         {perspButton}
-        {showMirrorsHD && <QualityButton hideUI={hideUI} />}
+        {showMirrorsHD && <PresetButton hideUI={hideUI} />}
         {beforeAmbianceActions}
       </div>
     );

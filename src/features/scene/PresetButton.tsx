@@ -30,7 +30,7 @@ const qualityPresets: { id: GraphicsQualityPreset; label: string; desc: string; 
   },
 ];
 
-export function QualityButton({ hideUI = false }: { hideUI?: boolean }) {
+export function PresetButton({ hideUI = false }: { hideUI?: boolean }) {
   const qualityPopoverId = useId();
   const qualityTriggerRef = useRef<HTMLButtonElement>(null);
   const qualityPopoverRef = useRef<HTMLDivElement>(null);
