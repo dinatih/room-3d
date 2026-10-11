@@ -382,11 +382,21 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   setGraphicsQualityPreset: (preset) => {
     updateUrlPreset(preset);
+    // Supprimer les paramètres de miroirs de l'URL s'ils correspondent aux valeurs par défaut du preset
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        const mirrorKeys = ['mirrors', 'mirror', 'miroir', 'miroirs', 'mirrorshd', 'mirrorhd', 'mirror-hd', 'miroirhd', 'miroir-hd', 'miroirs-hd', 'miroirshd'];
+        for (const k of Array.from(url.searchParams.keys())) {
+          if (mirrorKeys.includes(k.toLowerCase())) url.searchParams.delete(k);
+        }
+        window.history.replaceState(null, '', url.toString());
+      } catch {}
+    }
+
     if (preset === 'low') {
       cameraState.mirrorsHD = false;
       cameraState.mirrorQuality = 'mid-low';
-      updateUrlLayer('mirrors', false);
-      updateUrlLayer('mirrorsHD', false);
       set(state => ({
         graphicsQualityPreset: 'low',
         screenVideosEnabled: false,
@@ -400,8 +410,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
     } else if (preset === 'mid-low') {
       cameraState.mirrorsHD = false;
       cameraState.mirrorQuality = 'mid-low';
-      updateUrlLayer('mirrors', true);
-      updateUrlLayer('mirrorsHD', false);
       set(state => ({
         graphicsQualityPreset: 'mid-low',
         screenVideosEnabled: true,
@@ -416,8 +424,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
     } else if (preset === 'mid') {
       cameraState.mirrorsHD = false;
       cameraState.mirrorQuality = 'mid';
-      updateUrlLayer('mirrors', true);
-      updateUrlLayer('mirrorsHD', false);
       set(state => ({
         graphicsQualityPreset: 'mid',
         screenVideosEnabled: true,
@@ -432,8 +438,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
     } else if (preset === 'high') {
       cameraState.mirrorsHD = true;
       cameraState.mirrorQuality = 'high';
-      updateUrlLayer('mirrors', true);
-      updateUrlLayer('mirrorsHD', true);
       set(state => ({
         graphicsQualityPreset: 'high',
         screenVideosEnabled: true,

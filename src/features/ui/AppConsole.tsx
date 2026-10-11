@@ -5,7 +5,7 @@
  * Utilise le composant Group (glass-card accordion) pour l'harmonie visuelle
  * avec les autres composants (Minimap, DevTools).
  */
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { CHARACTERS, findCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -72,10 +72,12 @@ export function AppConsole({
   hidden = false,
   hideUI = false,
   onToggleHideUI,
+  actionsMenu,
 }: {
   hidden?: boolean;
   hideUI?: boolean;
   onToggleHideUI?: () => void;
+  actionsMenu?: ReactNode;
 }) {
   const isMobile = useIsMobile();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
@@ -412,7 +414,7 @@ export function AppConsole({
           aria-expanded={showMinimap}
         >
           <i className="bi bi-map-fill" aria-hidden="true" />
-          <span>Minimap</span>
+          <span>Plan</span>
         </button>
 
         {/* 3. Perf */}
@@ -430,7 +432,10 @@ export function AppConsole({
         {/* 4. Preset */}
         <PresetButton hideUI={hideUI} />
 
-        {/* 5. Hide UI (après le btn HD) */}
+        {/* 5. + Chevrons (à la suite du btn Preset) */}
+        {actionsMenu}
+
+        {/* 6. Hide UI */}
         {onToggleHideUI && (
           <button
             type="button"

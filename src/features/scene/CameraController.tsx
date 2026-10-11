@@ -257,11 +257,12 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     // Auto-enable HD mirrors en FPV, disable hors FPV (orbit, follow, top, ortho) pour les performances.
     // On bypass toggleLayer pour ne pas polluer l'URL avec mirrorsHD=1 (comportement automatique, pas un choix utilisateur).
-    // On respecte uniquement un mirrorsHD=0 explicite dans l'URL pour forcer la désactivation.
+    // On respecte uniquement un mirrorsHD=0 explicite dans l'URL ou un preset low pour forcer la désactivation.
     const urlLayerOverrides = parseUrlLayerOverrides();
     const isMirrorsHDExplicitlyOff = urlLayerOverrides.mirrorsHD === false;
     const isMirrorsHD = useSceneStore.getState().layers.mirrorsHD;
-    if (m === 'fpv' && !isMirrorsHD && !isMirrorsHDExplicitlyOff) {
+    const currentPreset = useSceneStore.getState().graphicsQualityPreset;
+    if (m === 'fpv' && !isMirrorsHD && !isMirrorsHDExplicitlyOff && currentPreset !== 'low') {
       useSceneStore.setState(state => ({
         layers: { ...state.layers, mirrorsHD: true },
         graphicsQualityPreset: 'high',
@@ -270,7 +271,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     } else if (m !== 'fpv' && isMirrorsHD && urlLayerOverrides.mirrorsHD !== true) {
       useSceneStore.setState(state => ({
         layers: { ...state.layers, mirrorsHD: false },
-        graphicsQualityPreset: state.layers.mirrors ? (cameraState.mirrorQuality === 'mid-low' ? 'mid-low' : 'mid') : 'low',
+        graphicsQualityPreset: currentPreset === 'low' ? 'low' : (state.layers.mirrors ? (cameraState.mirrorQuality === 'mid-low' ? 'mid-low' : 'mid') : 'low'),
       }));
       cameraState.mirrorsHD = false;
     }

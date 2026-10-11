@@ -18,6 +18,8 @@ import { SKY_START_POS }     from '@features/scene/camera';
 import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode } from '@features/scene/camera/cameraUrlParams';
 import type { LidarMode } from './sidepanel/types';
 import { ToolbarPanelsRow } from './ToolbarPanelsRow';
+import { PanelPopover } from './sidepanel/PanelPopover';
+import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
 import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
@@ -932,39 +934,6 @@ export function Studio() {
           showCharacterModes
           hideUI={hideUI}
           onToggleHideUI={toggleHideUI}
-          panelControls={
-            <ToolbarPanelsRow
-              layers={layers} onToggleLayer={toggleLayer}
-              lidarMode={lidarMode} onCycleLidar={onCycleLidar}
-              lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
-              buildAnimMatrix={buildAnimMatrix}
-              onStartBuildAnimMatrix={startMatrix}
-              onStopBuildAnim={stopAll}
-              animDurations={animDurations}
-              planeModel={planeModel}
-              onSetPlaneModel={setPlaneModel}
-              autopilotVisible={autopilotVisible}
-              onToggleAutopilot={() => setAutopilotVisible(v => !v)}
-              showLandingStrips={showLandingStrips}
-              onToggleLandingStrips={() => {
-                setShowLandingStrips(v => {
-                  cameraState.landingStripsVisible = !v;
-                  return !v;
-                });
-              }}
-              hideUI={hideUI || planeMode || (isMobile && showInventory)}
-              onOpenInventory={() => {
-                setInventoryInitialCat('all');
-                setShowInventory(true);
-              }}
-              asVerticalList
-            />
-          }
-          onEnterFlight={() => {
-            setPlaneViewMode('prelaunch');
-            setPlaneLaunched(false);
-            setPlaneMode(true);
-          }}
         >
           {characterGridActive && (
             <AnimFrameController
@@ -1007,7 +976,88 @@ export function Studio() {
           <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
         </Suspense>
       )}
-      <AppConsole hidden={showInventory || planeMode} hideUI={hideUI} onToggleHideUI={toggleHideUI} />
+      <AppConsole
+        hidden={showInventory || planeMode}
+        hideUI={hideUI}
+        onToggleHideUI={toggleHideUI}
+        actionsMenu={
+          <PanelPopover
+            icon="bi-plus-lg"
+            chevron
+            title="Outils & Actions"
+            noHeader
+            className="view-control-bar__npc-popover--actions-menu"
+            hideUI={hideUI}
+          >
+            <div className="d-flex flex-column gap-1 p-1">
+              <button
+                type="button"
+                className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}
+                onClick={() => {
+                  setPlaneViewMode('prelaunch');
+                  setPlaneLaunched(false);
+                  setPlaneMode(true);
+                }}
+                title="Activer le mode avion (Alt+V)"
+                aria-label="Activer le mode avion (Alt+V)"
+              >
+                <i className="bi bi-airplane-fill" aria-hidden="true" />
+                <span className="fw-semibold">Avion</span>
+              </button>
+              <ToolbarPanelsRow
+                layers={layers} onToggleLayer={toggleLayer}
+                lidarMode={lidarMode} onCycleLidar={onCycleLidar}
+                lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
+                buildAnimMatrix={buildAnimMatrix}
+                onStartBuildAnimMatrix={startMatrix}
+                onStopBuildAnim={stopAll}
+                animDurations={animDurations}
+                planeModel={planeModel}
+                onSetPlaneModel={setPlaneModel}
+                autopilotVisible={autopilotVisible}
+                onToggleAutopilot={() => setAutopilotVisible(v => !v)}
+                showLandingStrips={showLandingStrips}
+                onToggleLandingStrips={() => {
+                  setShowLandingStrips(v => {
+                    cameraState.landingStripsVisible = !v;
+                    return !v;
+                  });
+                }}
+                hideUI={hideUI || planeMode || (isMobile && showInventory)}
+                onOpenInventory={() => {
+                  setInventoryInitialCat('all');
+                  setShowInventory(true);
+                }}
+                asVerticalList
+              />
+              {!isMobile && (
+                <>
+                  <button
+                    type="button"
+                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}
+                    onClick={() => useSceneStore.getState().setPhotoModeOpen(true)}
+                    title="Ouvrir le mode photo Raytracing (F10)"
+                    aria-label="Ouvrir le mode photo Raytracing (F10)"
+                  >
+                    <i className="bi bi-camera-fill" aria-hidden="true" />
+                    <span className="fw-semibold">Raytracing (F10)</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}
+                    onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))}
+                    title="Afficher tous les raccourcis clavier"
+                    aria-label="Afficher tous les raccourcis clavier"
+                  >
+                    <i className="bi bi-keyboard-fill" aria-hidden="true" />
+                    <span className="fw-semibold">Raccourcis</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </PanelPopover>
+        }
+      />
       {isPhotoModeOpen && activeSceneRef.current && activeCameraRef.current && activeGlRef.current && (
         <Suspense fallback={null}>
           <RaytracingPhotoModal

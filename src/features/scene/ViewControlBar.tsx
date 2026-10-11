@@ -12,7 +12,6 @@ import { CharacterCountSelect } from './CharacterCountSelect';
 import { CharacterSelect } from './CharacterSelect';
 import { cameraState } from './cameraState';
 import { PresetButton } from './PresetButton';
-import { PanelPopover } from './sidepanel/PanelPopover';
 
 export interface ViewControlBarProps {
   /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-right' */
@@ -47,10 +46,10 @@ export function ViewControlBar({
   showMirrorsHD = false,
   hideUI = false,
   onToggleHideUI: _onToggleHideUI,
-  onEnterFlight,
+  onEnterFlight: _onEnterFlight,
   toolbarActions,
   beforeAmbianceActions,
-  panelControls,
+  panelControls: _panelControls,
   children,
 }: ViewControlBarProps) {
   const [hoveredView, setHoveredView] = useState<{
@@ -285,56 +284,6 @@ export function ViewControlBar({
               <span className="fw-semibold">Apt</span>
             </button>
           </div>
-          <PanelPopover
-            icon="bi-plus-lg"
-            chevron
-            title="Outils & Actions"
-            noHeader
-            className="view-control-bar__npc-popover--actions-menu"
-            hideUI={hideUI}
-          >
-            <div className="d-flex flex-column gap-1 p-1">
-              {showCharacterModes && (
-                <button
-                  type="button"
-                  className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}
-                  onClick={onEnterFlight}
-                  title="Activer le mode avion (Alt+V)"
-                  aria-label="Activer le mode avion (Alt+V)"
-                >
-                  <i className="bi bi-airplane-fill" aria-hidden="true" />
-                  <span className="fw-semibold">Avion</span>
-                </button>
-              )}
-              {panelControls}
-              {beforeAmbianceActions}
-              {toolbarActions}
-              {showCharacterModes && !isMobile && (
-                <>
-                  <button
-                    type="button"
-                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}
-                    onClick={() => useSceneStore.getState().setPhotoModeOpen(true)}
-                    title="Ouvrir le mode photo Raytracing (F10)"
-                    aria-label="Ouvrir le mode photo Raytracing (F10)"
-                  >
-                    <i className="bi bi-camera-fill" aria-hidden="true" />
-                    <span className="fw-semibold">Raytracing (F10)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}
-                    onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))}
-                    title="Afficher tous les raccourcis clavier"
-                    aria-label="Afficher tous les raccourcis clavier"
-                  >
-                    <i className="bi bi-keyboard-fill" aria-hidden="true" />
-                    <span className="fw-semibold">Raccourcis</span>
-                  </button>
-                </>
-              )}
-            </div>
-          </PanelPopover>
           {(isVRSupported || isMobile) && (
             <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Modes immersifs">
               {isVRSupported && (
