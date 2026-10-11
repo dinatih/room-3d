@@ -791,8 +791,18 @@ export function Character({
 
     const { offset: targetOffset, rotY: targetRotY } = getAnimationOriginTransform(target);
     if (animOriginRef.current) {
-      animOriginRef.current.position.set(targetOffset[0], targetOffset[1], targetOffset[2]);
-      animOriginRef.current.rotation.y = targetRotY;
+      if (isPreview || characterGrid) {
+        // En mode Preview 3D ou CharacterGrid, calage spatial instantané exact
+        animOriginRef.current.position.set(targetOffset[0], targetOffset[1], targetOffset[2]);
+        animOriginRef.current.rotation.y = targetRotY;
+      } else {
+        // En scène principale interactive, interpolation fluide
+        const offsetLerpFactor = Math.min(1.0, delta * 8.0);
+        animOriginRef.current.position.x = THREE.MathUtils.lerp(animOriginRef.current.position.x, targetOffset[0], offsetLerpFactor);
+        animOriginRef.current.position.y = THREE.MathUtils.lerp(animOriginRef.current.position.y, targetOffset[1], offsetLerpFactor);
+        animOriginRef.current.position.z = THREE.MathUtils.lerp(animOriginRef.current.position.z, targetOffset[2], offsetLerpFactor);
+        animOriginRef.current.rotation.y = THREE.MathUtils.lerp(animOriginRef.current.rotation.y, targetRotY, offsetLerpFactor);
+      }
     }
 
     const isTPose = target === 't-pose';
