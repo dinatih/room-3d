@@ -301,13 +301,17 @@ function LoadingProgress({
     const itemEl = document.getElementById('loading-item');
 
     if (bar) bar.style.width = `${progress}%`;
-    if (itemEl && item && !assetsDoneRef.current) itemEl.textContent = item;
+    if (itemEl && item && !assetsDoneRef.current) {
+      itemEl.textContent = item;
+      itemEl.title = item;
+    }
 
     if (!active && progress >= 100 && !assetsDoneRef.current) {
       assetsDoneRef.current = true;
       onAssetsLoaded();
       if (itemEl && !sceneReady) {
         itemEl.textContent = '⚡ Optimisation GPU & compilation des shaders…';
+        itemEl.title = itemEl.textContent;
       }
     }
   }, [progress, active, item, sceneReady, onAssetsLoaded]);

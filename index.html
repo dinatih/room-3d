@@ -215,7 +215,8 @@
         font-family: monospace; font-size: 11px;
         color: #1f2937; font-weight: 600; margin-top: 8px;
         margin-bottom: 14px;
-        max-width: 100%; white-space: normal; overflow-wrap: anywhere;
+        width: 100%; max-width: 100%;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         text-shadow: 0 1px 1px rgba(255, 255, 255, 0.95);
       }
     </style>
@@ -251,7 +252,7 @@
           <div id="loading-progress-section">
             <div id="loading-shiba" role="img" aria-label="Chargement de la scène 3D : chien et balle animés"></div>
             <div id="loading-track"><div id="loading-bar"></div></div>
-            <div id="loading-item">Chargement des éléments…</div>
+            <div id="loading-item" class="text-truncate w-100 px-3">Chargement des éléments…</div>
 
             <div id="loading-countdown-container" class="flex-wrap align-items-center justify-content-center gap-2 p-2 w-100" style="display: none;">
               <div id="loading-countdown-text" style="font-size: 13px; font-weight: 700; color: #b91c1c; text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9);">
