@@ -1087,13 +1087,13 @@ export function buildSmartObjectInstructionSequence(
     return [
       { type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'use' },
       {
-        type: 'WAIT', smartObjectId: 'toilet', slotId: 'use',
+        type: 'WAIT', smartObjectId: 'toilet', slotId: 'flush',
         animation: 'idle', duration: TOILET_HINGE_DURATION, rotY: Math.PI,
         triggerEventKey: 'wc-lid-toggle', triggerEventValue: true,
       },
       { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'use' },
       {
-        type: 'WAIT', smartObjectId: 'toilet', slotId: 'use',
+        type: 'WAIT', smartObjectId: 'toilet', slotId: 'flush',
         animation: 'idle', duration: TOILET_HINGE_DURATION, rotY: Math.PI,
         triggerEventKey: 'wc-lid-toggle', triggerEventValue: false,
       },

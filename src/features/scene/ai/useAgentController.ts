@@ -988,7 +988,8 @@ export function useAgentController(
         repeatIndexRef.current = 0;
         targetRepeatsRef.current = 1;
 
-        const exit = getExitTransition(stateRef.current.animation);
+        const exitTransitionsEnabled = useSceneStore.getState().layers.exitTransitions ?? true;
+        const exit = exitTransitionsEnabled ? getExitTransition(stateRef.current.animation) : null;
         if (exit) {
           statusRef.current = 'TRANSITIONING';
           timerRef.current = exit.duration;

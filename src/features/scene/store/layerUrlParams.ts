@@ -77,6 +77,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   smokeTransition: true,
   animOriginLerp: true,
   animCrossfade: true,
+  exitTransitions: true,
 };
 
 export interface LayerUrlMapping {
@@ -195,6 +196,11 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: 'animCrossfade',
     canonicalParam: 'animCrossfade',
     urlParams: ['animcrossfade', 'crossfade', 'fonducrossfade', 'animblend'],
+  },
+  {
+    layerKey: 'exitTransitions',
+    canonicalParam: 'exitTransitions',
+    urlParams: ['exittransitions', 'transitionspose', 'transitions-pose', 'inbetween', 'in-between', 'sit-to-stand'],
   },
 ];
 
