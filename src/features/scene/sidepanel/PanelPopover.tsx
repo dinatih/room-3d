@@ -5,6 +5,7 @@ import { TOOLBAR_BUTTON_CLASS } from '../toolbarStyles';
 export interface PanelPopoverProps {
   icon: React.ReactNode;
   label?: string;
+  chevron?: boolean;
   title?: string;
   headerExtra?: React.ReactNode;
   hideUI?: boolean;
@@ -21,6 +22,7 @@ export interface PanelPopoverProps {
 export function PanelPopover({
   icon,
   label,
+  chevron = false,
   title,
   headerExtra,
   hideUI = false,
@@ -192,6 +194,7 @@ export function PanelPopover({
           icon
         )}
         {label && <span>{label}</span>}
+        {chevron && <i className="bi bi-chevron-down" aria-hidden="true" />}
       </button>
       {createPortal(
         <div

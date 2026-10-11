@@ -12,6 +12,7 @@ import { CharacterCountSelect } from './CharacterCountSelect';
 import { CharacterSelect } from './CharacterSelect';
 import { cameraState } from './cameraState';
 import { PresetButton } from './PresetButton';
+import { PanelPopover } from './sidepanel/PanelPopover';
 
 export interface ViewControlBarProps {
   /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-right' */
@@ -283,6 +284,41 @@ export function ViewControlBar({
               <i className="bi bi-building" aria-hidden="true" />
               <span className="fw-semibold">Apt</span>
             </button>
+            <PanelPopover
+              icon="bi-plus-lg"
+              chevron
+              title="Outils & Actions"
+              noHeader
+              className="view-control-bar__npc-popover--actions-menu"
+              hideUI={hideUI}
+            >
+              <div className="d-flex flex-wrap align-items-center gap-1 p-1">
+                {showCharacterModes && (
+                  <button
+                    type="button"
+                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`}
+                    onClick={onEnterFlight}
+                    title="Activer le mode avion (Alt+V)"
+                    aria-label="Activer le mode avion (Alt+V)"
+                  >
+                    <i className="bi bi-airplane-fill" aria-hidden="true" />
+                  </button>
+                )}
+                {panelControls}
+                {beforeAmbianceActions}
+                {toolbarActions}
+                {showCharacterModes && !isMobile && (
+                  <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
+                    <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan`} onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
+                      <i className="bi bi-camera-fill" aria-hidden="true" />
+                    </button>
+                    <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`} onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
+                      <i className="bi bi-keyboard-fill" aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </PanelPopover>
             {isVRSupported && (
               <button
                 type="button"
@@ -335,32 +371,6 @@ export function ViewControlBar({
           {renderViewButton(bottomView, 'green')}
         </div>
         {rotButton}
-      </div>
-      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        {showCharacterModes && (
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`}
-            onClick={onEnterFlight}
-            title="Activer le mode avion (Alt+V)"
-            aria-label="Activer le mode avion (Alt+V)"
-          >
-            <i className="bi bi-airplane-fill" aria-hidden="true" />
-          </button>
-        )}
-        {panelControls}
-        {beforeAmbianceActions}
-        {toolbarActions}
-        {showCharacterModes && !isMobile && (
-          <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
-            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan`} onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
-              <i className="bi bi-camera-fill" aria-hidden="true" />
-            </button>
-            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`} onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
-              <i className="bi bi-keyboard-fill" aria-hidden="true" />
-            </button>
-          </div>
-        )}
       </div>
     </div>
     </>

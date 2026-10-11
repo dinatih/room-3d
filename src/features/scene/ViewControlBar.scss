@@ -92,6 +92,11 @@
     width: 15.5rem;
   }
 
+  &--actions-menu {
+    width: max-content;
+    max-width: calc(100vw - 1rem);
+  }
+
   &--dock-width {
     width: auto;
     min-width: 0;
