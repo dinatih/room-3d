@@ -78,6 +78,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const [_cycleStep, setCycleStep] = useState(0); // 0=fermé, 1=ouvert, 2=ouvert+filtré
   const logAreaRef = useRef<HTMLDivElement>(null);
   const [bottomDockHeight, setBottomDockHeight] = useState(0);
+  const [bottomDockWidth, setBottomDockWidth] = useState<number | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
   const [showPerf, setShowPerf] = useState(false);
@@ -146,23 +147,35 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   useLayoutEffect(() => {
     if (hidden) return;
     const docks = Array.from(document.querySelectorAll<HTMLElement>('.view-control-bar-dock'));
-    const updateBottomDockHeight = () => {
-      const dockTop = Math.min(window.innerHeight, ...docks.map(dock => dock.getBoundingClientRect().top));
-      setBottomDockHeight(window.innerHeight - dockTop);
+    const updateBottomDockDims = () => {
+      if (docks.length > 0) {
+        const dockTop = Math.min(window.innerHeight, ...docks.map(dock => dock.getBoundingClientRect().top));
+        setBottomDockHeight(window.innerHeight - dockTop);
+      }
+      const mainDock = document.querySelector<HTMLElement>('.view-control-bar-dock') || document.querySelector<HTMLElement>('.view-control-bar');
+      if (mainDock) {
+        const rect = mainDock.getBoundingClientRect();
+        if (rect.width > 0) {
+          setBottomDockWidth(Math.round(rect.width));
+        }
+      }
     };
-    const observer = new ResizeObserver(updateBottomDockHeight);
+    const observer = new ResizeObserver(updateBottomDockDims);
     docks.forEach(dock => observer.observe(dock));
-    window.addEventListener('resize', updateBottomDockHeight);
-    updateBottomDockHeight();
+    const mainBar = document.querySelector<HTMLElement>('.view-control-bar');
+    if (mainBar) observer.observe(mainBar);
+    window.addEventListener('resize', updateBottomDockDims);
+    updateBottomDockDims();
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', updateBottomDockHeight);
+      window.removeEventListener('resize', updateBottomDockDims);
     };
   }, [hidden, isMobile]);
 
   if (hidden) return null;
 
   const availableHeight = `calc(100dvh - ${bottomDockHeight}px - ${isMobile ? 'env(safe-area-inset-top) - 16px' : '32px'})`;
+  const panelWidth = bottomDockWidth ?? (isMobile ? 260 : 320);
   const pnjColor = activeChar?.color ?? '#6c757d';
 
   const handleToggle = () => {
@@ -369,7 +382,11 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       {/* Barre de contrôle sous la card Console (Minimap, Perf) */}
       <div
         className={`${TOOLBAR_CLASS} flex-shrink-0 align-self-end`}
-        style={{ pointerEvents: 'auto' }}
+        style={{
+          pointerEvents: 'auto',
+          width: `${panelWidth}px`,
+          maxWidth: 'calc(100vw - 16px)',
+        }}
         role="toolbar"
         aria-label="Contrôles secondaires"
       >
@@ -399,8 +416,12 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       {/* Bodies de Minimap et Perf s'ouvrant l'un en dessous de l'autre */}
       {showMinimap && (
         <div
-          className="glass-card shadow-lg rounded-2 p-1 align-self-end"
-          style={{ pointerEvents: 'auto', width: 'fit-content' }}
+          className="glass-card shadow-lg rounded-2 p-1 align-self-end overflow-hidden"
+          style={{
+            pointerEvents: 'auto',
+            width: `${panelWidth}px`,
+            maxWidth: 'calc(100vw - 16px)',
+          }}
         >
           <Minimap embedded showGroup={false} />
         </div>
@@ -408,8 +429,12 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
       {showPerf && (
         <div
-          className="glass-card shadow-lg rounded-2 p-1 align-self-end"
-          style={{ pointerEvents: 'auto', width: 'fit-content' }}
+          className="glass-card shadow-lg rounded-2 p-1 align-self-end overflow-hidden"
+          style={{
+            pointerEvents: 'auto',
+            width: `${panelWidth}px`,
+            maxWidth: 'calc(100vw - 16px)',
+          }}
         >
           <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
         </div>
