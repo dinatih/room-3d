@@ -264,13 +264,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (m === 'fpv' && !isMirrorsHD && !isMirrorsHDExplicitlyOff) {
       useSceneStore.setState(state => ({
         layers: { ...state.layers, mirrorsHD: true },
-        graphicsQualityPreset: 'hd',
+        graphicsQualityPreset: 'high',
       }));
       cameraState.mirrorsHD = true;
     } else if (m !== 'fpv' && isMirrorsHD && urlLayerOverrides.mirrorsHD !== true) {
       useSceneStore.setState(state => ({
         layers: { ...state.layers, mirrorsHD: false },
-        graphicsQualityPreset: state.layers.mirrors ? 'md' : 'sd',
+        graphicsQualityPreset: state.layers.mirrors ? (cameraState.mirrorQuality === 'mid-low' ? 'mid-low' : 'mid') : 'low',
       }));
       cameraState.mirrorsHD = false;
     }

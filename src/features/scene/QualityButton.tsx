@@ -5,28 +5,28 @@ import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 
 const qualityPresets: { id: GraphicsQualityPreset; label: string; desc: string; badge: string }[] = [
   {
-    id: 'sd',
-    label: 'SD (Basse définition)',
-    desc: 'Miroirs désactivés (reflet ambiance HDRI), vidéos en image fixe, ciel 2K',
-    badge: 'SD',
+    id: 'low',
+    label: 'Low (Éco / Perfs maximales)',
+    desc: 'Miroirs désactivés (reflet ciel passif), vidéos en image fixe, ciel 2K',
+    badge: 'Low',
   },
   {
-    id: 'md-low',
-    label: 'MD- (Moyenne basse)',
+    id: 'mid-low',
+    label: 'Mid- (Moyenne basse)',
     desc: 'Miroir 128px (murs/sols sans perso), Vidéo LD, Ciel 4K',
-    badge: 'MD-',
+    badge: 'Mid-',
   },
   {
-    id: 'md',
-    label: 'MD (Moyenne définition)',
-    desc: 'Miroir 256px (avec équipement & furniture), Vidéos HD, Ciel 8K',
-    badge: 'MD',
+    id: 'mid',
+    label: 'Mid (Moyenne / Standard)',
+    desc: 'Miroir 256px (équipements & mobilier), Vidéos HD, Ciel 8K',
+    badge: 'Mid',
   },
   {
-    id: 'hd',
-    label: 'HD (Haute définition)',
+    id: 'high',
+    label: 'High (Haute qualité)',
     desc: 'Miroir 512px plein détail, Vidéos HD, Ciel 8K',
-    badge: 'HD',
+    badge: 'High',
   },
 ];
 
@@ -69,23 +69,31 @@ export function QualityButton({ hideUI = false }: { hideUI?: boolean }) {
     }
   }, [hideUI]);
 
+  const badgeText = graphicsQualityPreset === 'mid-low'
+    ? 'Mid-'
+    : graphicsQualityPreset === 'mid'
+      ? 'Mid'
+      : graphicsQualityPreset === 'high'
+        ? 'High'
+        : 'Low';
+
   return (
     <>
       <button
         ref={qualityTriggerRef}
         type="button"
-        className={`${TOOLBAR_BUTTON_CLASS} ${qualityPopoverOpen ? 'btn-danger text-white' : graphicsQualityPreset === 'hd' ? 'btn-danger' : graphicsQualityPreset === 'md' ? 'btn-warning text-dark' : graphicsQualityPreset === 'md-low' ? 'btn-info text-dark' : 'btn-outline-secondary'}`}
+        className={`${TOOLBAR_BUTTON_CLASS} ${qualityPopoverOpen ? 'btn-danger text-white' : graphicsQualityPreset === 'high' ? 'btn-danger' : graphicsQualityPreset === 'mid' ? 'btn-warning text-dark' : graphicsQualityPreset === 'mid-low' ? 'btn-info text-dark' : 'btn-outline-secondary'}`}
         {...{ popovertarget: qualityPopoverId }}
         onClick={(e) => {
           e.stopPropagation();
           updateQualityPopoverPosition();
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        title={`Définition & Performances : ${graphicsQualityPreset.toUpperCase()}`}
-        aria-label="Preset de définition graphique"
+        title={`Preset Performances & Graphismes : ${badgeText}`}
+        aria-label="Preset de performances graphiques"
         aria-expanded={qualityPopoverOpen}
       >
-        <span className="fw-bold">{graphicsQualityPreset.toUpperCase()}</span>
+        <span className="fw-bold">{badgeText}</span>
       </button>
       {typeof document !== 'undefined' && createPortal(
         <div

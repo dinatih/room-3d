@@ -21,8 +21,8 @@ import {
 
 const kallaxW1 = 40.5;
 
-// MD- : Miroir basse qualité (128px) : calques mur, structure, sol, portes, herbe seulement (sans perso, sans mobilier)
-export const MIRROR_MD_LOW_MASK =
+// Mid-low : Miroir basse qualité (128px) : calques mur, structure, sol, portes, herbe seulement (sans perso, sans mobilier)
+export const MIRROR_MID_LOW_MASK =
   (1 << LAYER_STRUCTURE) |
   (1 << LAYER_WALL_STRUCTURE) |
   (1 << LAYER_FLOOR_COVERINGS) |
@@ -31,16 +31,16 @@ export const MIRROR_MD_LOW_MASK =
   (1 << LAYER_ENVIRONMENT) |
   (1 << LAYER_AIRCRAFT);
 
-// MD : Structure, Murs, Sols, Portes, Végetation, Personnages, Animaux, Ciel + Equipements & Furniture (256px)
+// Mid : Structure, Murs, Sols, Portes, Végetation, Personnages, Animaux, Ciel + Equipements & Furniture (256px)
 export const MIRROR_BASE_MASK =
-  MIRROR_MD_LOW_MASK |
+  MIRROR_MID_LOW_MASK |
   (1 << LAYER_EQUIPMENT) |
   (1 << LAYER_FURNITURE) |
   (1 << LAYER_WALKER_DETAIL) |
   (1 << LAYER_WALKER) |
   (1 << LAYER_ANIMALS);
 
-// HD : Full miroir (inclut en plus Furnishings tapis/rideaux et Decor bibelots/plantes/props) (512px)
+// High : Full miroir (inclut en plus Furnishings tapis/rideaux et Decor bibelots/plantes/props) (512px)
 export const MIRROR_HD_MASK =
   MIRROR_BASE_MASK |
   (1 << LAYER_FURNISHINGS) |
@@ -49,11 +49,11 @@ export const MIRROR_HD_MASK =
 const MIRROR_EXCLUDED_MASK = (1 << LAYER_AI_ZONES) | (1 << LAYER_LIDAR) | (1 << LAYER_NEIGHBORS);
 
 function getMirrorTargetConfig(): { res: number; mask: number } {
-  if (cameraState.mirrorsHD || cameraState.mirrorQuality === 'hd') {
+  if (cameraState.mirrorsHD || cameraState.mirrorQuality === 'high') {
     return { res: 512, mask: MIRROR_HD_MASK & ~MIRROR_EXCLUDED_MASK };
   }
-  if (cameraState.mirrorQuality === 'md-low') {
-    return { res: 128, mask: MIRROR_MD_LOW_MASK & ~MIRROR_EXCLUDED_MASK };
+  if (cameraState.mirrorQuality === 'mid-low') {
+    return { res: 128, mask: MIRROR_MID_LOW_MASK & ~MIRROR_EXCLUDED_MASK };
   }
   return { res: 256, mask: MIRROR_BASE_MASK & ~MIRROR_EXCLUDED_MASK };
 }

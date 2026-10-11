@@ -14,7 +14,16 @@ import {
   updateUrlCameraTarget,
   updateUrlCameraMovement,
 } from '@features/scene/camera/cameraUrlParams';
-import { parseUrlLayerOverrides, updateUrlLayer, parseUrlGroundType, updateUrlGroundType, LAYER_DEFAULTS } from './layerUrlParams';
+import {
+  parseUrlLayerOverrides,
+  updateUrlLayer,
+  parseUrlGroundType,
+  updateUrlGroundType,
+  parseUrlPreset,
+  updateUrlPreset,
+  type GraphicsPreset,
+  LAYER_DEFAULTS,
+} from './layerUrlParams';
 import type { FurnitureState, LayerState, GroundType } from '../sidepanel/types';
 import {
   type LaraCountMode,
@@ -85,7 +94,7 @@ export function getRandomGrassType(): GroundType {
   return GRASS_TYPES[Math.floor(Math.random() * GRASS_TYPES.length)];
 }
 
-export type GraphicsQualityPreset = 'sd' | 'md-low' | 'md' | 'hd';
+export type GraphicsQualityPreset = GraphicsPreset;
 
 interface SceneStore {
   furniture: FurnitureState;
@@ -318,6 +327,31 @@ if (initialTarget === 'charactersGrid') {
   initialLayers.inventoryGrid = true;
 }
 
+const urlPreset = parseUrlPreset();
+const initialPreset: GraphicsPreset = urlPreset ?? (initialLayers.mirrorsHD ? 'high' : (initialLayers.mirrors ? 'mid' : 'low'));
+
+if (initialPreset === 'low') {
+  initialLayers.mirrors = false;
+  initialLayers.mirrorsHD = false;
+  cameraState.mirrorsHD = false;
+  cameraState.mirrorQuality = 'mid-low';
+} else if (initialPreset === 'mid-low') {
+  initialLayers.mirrors = true;
+  initialLayers.mirrorsHD = false;
+  cameraState.mirrorsHD = false;
+  cameraState.mirrorQuality = 'mid-low';
+} else if (initialPreset === 'mid') {
+  initialLayers.mirrors = true;
+  initialLayers.mirrorsHD = false;
+  cameraState.mirrorsHD = false;
+  cameraState.mirrorQuality = 'mid';
+} else if (initialPreset === 'high') {
+  initialLayers.mirrors = true;
+  initialLayers.mirrorsHD = true;
+  cameraState.mirrorsHD = true;
+  cameraState.mirrorQuality = 'high';
+}
+
 if (!initialLayers.character) {
   cameraState.characterHidden = true;
 }
@@ -330,10 +364,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
   activeExtraIds: initialActiveExtraIds,
   activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
-  hdriResolution: isMobileViewport() ? '2k' : '8k',
-  screenVideosEnabled: true,
-  screenVideoQuality: isMobileViewport() ? 'ld' : 'hd',
-  graphicsQualityPreset: initialLayers.mirrorsHD ? 'hd' : (initialLayers.mirrors ? 'md' : 'sd'),
+  hdriResolution: initialPreset === 'low' ? '2k' : (initialPreset === 'mid-low' ? '4k' : '8k'),
+  screenVideosEnabled: initialPreset !== 'low',
+  screenVideoQuality: initialPreset === 'mid-low' ? 'ld' : (isMobileViewport() ? 'ld' : 'hd'),
+  graphicsQualityPreset: initialPreset,
   setScreenVideosEnabled: (enabled) => {
     set({ screenVideosEnabled: enabled });
     cameraState.invalidate?.();
@@ -347,13 +381,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
     cameraState.invalidate?.();
   },
   setGraphicsQualityPreset: (preset) => {
-    if (preset === 'sd') {
+    updateUrlPreset(preset);
+    if (preset === 'low') {
       cameraState.mirrorsHD = false;
-      cameraState.mirrorQuality = 'md-low';
+      cameraState.mirrorQuality = 'mid-low';
       updateUrlLayer('mirrors', false);
       updateUrlLayer('mirrorsHD', false);
       set(state => ({
-        graphicsQualityPreset: 'sd',
+        graphicsQualityPreset: 'low',
         screenVideosEnabled: false,
         hdriResolution: '2k',
         layers: {
@@ -362,13 +397,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
           mirrorsHD: false,
         },
       }));
-    } else if (preset === 'md-low') {
+    } else if (preset === 'mid-low') {
       cameraState.mirrorsHD = false;
-      cameraState.mirrorQuality = 'md-low';
+      cameraState.mirrorQuality = 'mid-low';
       updateUrlLayer('mirrors', true);
       updateUrlLayer('mirrorsHD', false);
       set(state => ({
-        graphicsQualityPreset: 'md-low',
+        graphicsQualityPreset: 'mid-low',
         screenVideosEnabled: true,
         screenVideoQuality: 'ld',
         hdriResolution: '4k',
@@ -378,13 +413,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
           mirrorsHD: false,
         },
       }));
-    } else if (preset === 'md') {
+    } else if (preset === 'mid') {
       cameraState.mirrorsHD = false;
-      cameraState.mirrorQuality = 'md';
+      cameraState.mirrorQuality = 'mid';
       updateUrlLayer('mirrors', true);
       updateUrlLayer('mirrorsHD', false);
       set(state => ({
-        graphicsQualityPreset: 'md',
+        graphicsQualityPreset: 'mid',
         screenVideosEnabled: true,
         screenVideoQuality: 'hd',
         hdriResolution: '8k',
@@ -394,13 +429,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
           mirrorsHD: false,
         },
       }));
-    } else if (preset === 'hd') {
+    } else if (preset === 'high') {
       cameraState.mirrorsHD = true;
-      cameraState.mirrorQuality = 'hd';
+      cameraState.mirrorQuality = 'high';
       updateUrlLayer('mirrors', true);
       updateUrlLayer('mirrorsHD', true);
       set(state => ({
-        graphicsQualityPreset: 'hd',
+        graphicsQualityPreset: 'high',
         screenVideosEnabled: true,
         screenVideoQuality: 'hd',
         hdriResolution: '8k',
@@ -586,10 +621,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
         }
       }
       const nextPreset: GraphicsQualityPreset = nextLayers.mirrorsHD
-        ? 'hd'
+        ? 'high'
         : nextLayers.mirrors
-          ? (cameraState.mirrorQuality === 'md-low' ? 'md-low' : 'md')
-          : 'sd';
+          ? (cameraState.mirrorQuality === 'mid-low' ? 'mid-low' : 'mid')
+          : 'low';
       if (key === 'character') {
         cameraState.characterHidden = !nextLayers.character;
         if (!nextLayers.character) {

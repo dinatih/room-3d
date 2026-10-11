@@ -65,8 +65,8 @@ export const cameraState = {
   isXR: false as boolean,
   /** HD mirrors : reflector camera hérite du mask complet de la caméra principale */
   mirrorsHD: false as boolean,
-  /** Qualité du miroir : 'hd' (512, all layers), 'md' (256, equipment+furniture), 'md-low' (128, structure+walls+floor) */
-  mirrorQuality: 'md' as 'hd' | 'md' | 'md-low',
+  /** Qualité du miroir : 'high' (512, all layers), 'mid' (256, equipment+furniture), 'mid-low' (128, structure+walls+floor) */
+  mirrorQuality: 'mid' as 'high' | 'mid' | 'mid-low',
   /** Masque le mesh du Character actif (utilisé en vue première personne pendant la visite guidée) */
   characterHidden: false as boolean,
   /** Vrai des que la scene 3D est lancee (apres prechargement et warm-up GPU) */
