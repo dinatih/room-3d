@@ -1020,10 +1020,10 @@ export function Studio() {
       <button
         onClick={showUI}
         className={`btn btn-dark btn-sm position-fixed opacity-50 hover-opacity-100 shadow-sm ui-fade-overlay ${!hideUI ? 'ui-hidden' : ''}`}
-        style={{ top: 12, right: 12, zIndex: 9999, fontSize: '10px' }}
+        style={{ bottom: 12, right: 12, zIndex: 9999, fontSize: '10px' }}
         title="Réafficher l'interface (Touche 0)"
       >
-        👁️ Afficher UI [0]
+        👁️ Afficher UI
       </button>
     </div>
   );
