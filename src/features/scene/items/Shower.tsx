@@ -167,6 +167,11 @@ const frameMat = new THREE.MeshStandardMaterial({
   metalness: 0.85,
   roughness: 0.15,
 });
+const coffrageMat = new THREE.MeshStandardMaterial({
+  color: 0xf5f5f5,
+  roughness: 0.2,
+  metalness: 0.05,
+});
 
 /** Porte de douche procédurale : paroi fixe 20 cm + battant 51 cm avec pivot d'ouverture. */
 function ShowerDoor({ isPreview, condensation }: { isPreview: boolean; condensation: THREE.ShaderMaterial }) {
@@ -286,9 +291,6 @@ export function Shower({ onSize, isPreview = false }: SceneItemProps) {
 
   useLayoutEffect(() => {
     setupScene(tray, 100 * (TRAY_CM / 68));
-    // Échelle et calage en Y pour que le tablier du bac touche le sol (Y=0) et rejoigne la porte (Y=20)
-    tray.scale.y *= 1.7;
-    tray.position.y = -8.85;
 
     // Bar : Z→Y, puis flip sens avant/arrière, une seule fois par clone.
     const prepareHose = !bar.userData.merged;
@@ -327,6 +329,11 @@ export function Shower({ onSize, isPreview = false }: SceneItemProps) {
     <group ref={groupRef} userData={{ hoverAction: { label: 'Cabine de Douche', actions: [...getObjectActionIds('shower'), ...SMART_OBJECTS.shower.slots.map(slot => `smart-object:::shower:::${slot.slotId}`)] } }}>
       {/* Receveur — setupScene centre et pose au sol (détaché parent pendant calcul). */}
       <primitive object={tray} />
+
+      {/* Planche de coffrage sous le bac côté SDB (de Y=0 à Y=6cm) */}
+      <mesh position={[0, 3, -TRAY_HALF + 0.75]} material={coffrageMat} castShadow receiveShadow>
+        <boxGeometry args={[SHOWER_W, 6, 1.5]} />
+      </mesh>
 
       {/* Barre douchette — platines murales au ras du mur Sud */}
       <group position={[0, 40, TRAY_HALF - 8.6]}>
