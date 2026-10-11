@@ -980,27 +980,23 @@ export function Character({
 
             if (isMaster) {
               if (store.activeSegments.length > 0) {
-                // Quand des coupes sont actives, le temps exact du store pilote directement le mixer
-                mixer.setTime(targetTime);
+                // Quand des coupes sont actives, le store avance son temps via tick(delta) (qui saute automatiquement les trous)
+                const newTime = store.tick(delta);
+                act.time = newTime;
+                mixer.setTime(newTime);
               } else {
                 mixer.update(animDelta);
+                if (!store.isLooping && act.time >= clip.duration) {
+                  act.time = clip.duration;
+                  act.paused = true;
+                  store.setCurrentTime(clip.duration);
+                  store.pause();
+                } else {
+                  store.setCurrentTime(act.time % clip.duration);
+                }
               }
             } else {
               mixer.setTime(targetTime);
-            }
-
-            if (isMaster) {
-              if (store.activeSegments.length > 0) {
-                // Le store pilote lui-même son avancée et son saut de segments via tick()
-              } else if (!store.isLooping && act.time >= clip.duration) {
-                act.time = clip.duration;
-                act.paused = true;
-                store.setCurrentTime(clip.duration);
-                store.pause();
-              } else {
-                store.setCurrentTime(act.time % clip.duration);
-              }
-            } else {
               // Dans CharacterGrid, synchronisation avec le master
               if (Math.abs(act.time - targetTime) > 0.05) {
                 act.time = targetTime;

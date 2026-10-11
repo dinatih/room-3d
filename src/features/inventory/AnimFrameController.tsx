@@ -1411,119 +1411,184 @@ export function AnimFrameController({
             </div>
           </div>
 
-          {/* Actions rapides basées sur la tête de lecture courante */}
-          <div className="d-flex flex-wrap align-items-center gap-2 mb-2 p-2 bg-light rounded border">
-            <span className="fw-semibold text-muted small me-1">
-              Position courante : <strong className="text-dark font-monospace">{currentFrame}f</strong> ({currentTime.toFixed(2)}s)
-            </span>
+          {/* Actions de coupe simples et intuitives */}
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 p-2 bg-light rounded border">
+            <div className="d-flex align-items-center gap-2">
+              <span className="fw-semibold text-muted small">
+                Tête de lecture : <strong className="text-dark font-monospace">{currentFrame}f</strong> ({currentTime.toFixed(2)}s)
+              </span>
+            </div>
 
-            {/* Bouton pour couper le début avant la frame courante */}
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-primary py-0 px-2"
-              onClick={() => {
-                const nowSec = currentTime;
-                if (effectiveSegments.length === 0) {
-                  // Crée un segment [nowSec, duration]
-                  handleUpdateSegments([[nowSec, duration]]);
-                } else {
-                  // Ajuste le début du premier segment
-                  const nextSegs: Array<[number, number]> = [...effectiveSegments];
-                  nextSegs[0] = [nowSec, Math.max(nowSec + 0.1, nextSegs[0][1])];
-                  handleUpdateSegments(nextSegs);
-                }
-              }}
-              title="Couper tout ce qui est avant cette frame (Point IN début)"
-            >
-              <i className="bi bi-box-arrow-in-right me-1" />
-              Couper Début ici [IN]
-            </button>
-
-            {/* Bouton pour couper la fin après la frame courante */}
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-primary py-0 px-2"
-              onClick={() => {
-                const nowSec = currentTime;
-                if (effectiveSegments.length === 0) {
-                  // Crée un segment [0, nowSec]
-                  handleUpdateSegments([[0, Math.max(0.1, nowSec)]]);
-                } else {
-                  // Ajuste la fin du dernier segment
-                  const nextSegs: Array<[number, number]> = [...effectiveSegments];
-                  const lastIdx = nextSegs.length - 1;
-                  nextSegs[lastIdx] = [Math.min(nextSegs[lastIdx][0], nowSec - 0.1), nowSec];
-                  handleUpdateSegments(nextSegs);
-                }
-              }}
-              title="Couper tout ce qui est après cette frame (Point OUT fin)"
-            >
-              <i className="bi bi-box-arrow-in-left me-1" />
-              Couper Fin ici [OUT]
-            </button>
-
-            {/* Bouton pour couper au milieu (scinder en deux segments autour d'un trou) */}
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-warning text-dark fw-semibold py-0 px-2"
-              onClick={() => {
-                const nowSec = currentTime;
-                // Découpe un trou de 1 seconde (ou 30 frames) autour de la position courante
-                const holeStart = Math.max(0, nowSec);
-                const holeEnd = Math.min(duration, nowSec + 0.5);
-                if (effectiveSegments.length === 0) {
-                  handleUpdateSegments([
-                    [0, holeStart],
-                    [holeEnd, duration],
-                  ]);
-                } else {
-                  // Trouve quel segment contient la position et le scinde
-                  const nextSegs: Array<[number, number]> = [];
-                  let splitDone = false;
-                  for (const [s, e] of effectiveSegments) {
-                    if (!splitDone && nowSec > s && nowSec < e) {
-                      const seg1End = nowSec;
-                      const seg2Start = Math.min(e, nowSec + 0.5);
-                      if (seg1End > s + 0.05) nextSegs.push([s, seg1End]);
-                      if (e > seg2Start + 0.05) nextSegs.push([seg2Start, e]);
-                      splitDone = true;
-                    } else {
-                      nextSegs.push([s, e]);
+            <div className="d-flex flex-wrap align-items-center gap-1.5">
+              {/* Couper tout le début avant ici */}
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary py-0 px-2"
+                onClick={() => {
+                  const nowSec = currentTime;
+                  if (nowSec <= 0.05) return;
+                  if (effectiveSegments.length === 0) {
+                    handleUpdateSegments([[nowSec, duration]]);
+                  } else {
+                    // Supprime ou ajuste tout segment se trouvant avant nowSec
+                    const next: Array<[number, number]> = [];
+                    for (const [s, e] of effectiveSegments) {
+                      if (e <= nowSec) continue; // complètement avant, éliminé
+                      if (s < nowSec) {
+                        next.push([nowSec, e]);
+                      } else {
+                        next.push([s, e]);
+                      }
                     }
+                    handleUpdateSegments(next.length > 0 ? next : [[nowSec, duration]]);
                   }
-                  if (!splitDone) {
-                    // Ajoute un nouveau segment
-                    nextSegs.push([holeStart, holeEnd]);
-                    nextSegs.sort((a, b) => a[0] - b[0]);
+                }}
+                disabled={currentFrame <= 0}
+                title="Supprime tout ce qui précède la frame courante (Coupe Début)"
+              >
+                <i className="bi bi-box-arrow-in-right me-1" />
+                Couper Début (avant {currentFrame}f)
+              </button>
+
+              {/* Couper toute la fin après ici */}
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary py-0 px-2"
+                onClick={() => {
+                  const nowSec = currentTime;
+                  if (nowSec >= duration - 0.05) return;
+                  if (effectiveSegments.length === 0) {
+                    handleUpdateSegments([[0, nowSec]]);
+                  } else {
+                    // Supprime ou ajuste tout segment se trouvant après nowSec
+                    const next: Array<[number, number]> = [];
+                    for (const [s, e] of effectiveSegments) {
+                      if (s >= nowSec) continue; // complètement après, éliminé
+                      if (e > nowSec) {
+                        next.push([s, nowSec]);
+                      } else {
+                        next.push([s, e]);
+                      }
+                    }
+                    handleUpdateSegments(next.length > 0 ? next : [[0, nowSec]]);
                   }
-                  handleUpdateSegments(nextSegs);
-                }
-              }}
-              title="Insère une coupe au milieu à partir de cette position"
-            >
-              <i className="bi bi-scissors me-1" />
-              Couper au milieu (+ Trou ✂️)
-            </button>
+                }}
+                disabled={currentFrame >= totalFrames}
+                title="Supprime tout ce qui suit la frame courante (Coupe Fin)"
+              >
+                <i className="bi bi-box-arrow-in-left me-1" />
+                Couper Fin (après {currentFrame}f)
+              </button>
+
+              {/* Supprimer une plage au milieu : scinde proprement à la frame courante */}
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-warning text-dark fw-semibold py-0 px-2"
+                onClick={() => {
+                  const nowSec = currentTime;
+                  const cutLengthSec = Math.min(1.0, duration * 0.2); // Trou de 1s ou 20%
+                  const cutEnd = Math.min(duration, nowSec + cutLengthSec);
+
+                  if (effectiveSegments.length === 0) {
+                    const seg1: [number, number] = [0, nowSec];
+                    const seg2: [number, number] = [cutEnd, duration];
+                    const res: Array<[number, number]> = [];
+                    if (seg1[1] > seg1[0] + 0.05) res.push(seg1);
+                    if (seg2[1] > seg2[0] + 0.05) res.push(seg2);
+                    handleUpdateSegments(res);
+                  } else {
+                    // Coupe dans les segments existants
+                    const next: Array<[number, number]> = [];
+                    for (const [s, e] of effectiveSegments) {
+                      if (nowSec >= s && nowSec < e) {
+                        if (nowSec > s + 0.05) next.push([s, nowSec]);
+                        if (e > cutEnd + 0.05) next.push([cutEnd, e]);
+                      } else {
+                        next.push([s, e]);
+                      }
+                    }
+                    handleUpdateSegments(next);
+                  }
+                }}
+                title="Insère une coupure (trou) à partir de la frame courante"
+              >
+                <i className="bi bi-scissors me-1" />
+                Couper au milieu (Trou ✂️)
+              </button>
+            </div>
           </div>
 
-          {/* Liste des segments actifs */}
+          {/* Visualisation visuelle de la timeline avec zones vertes (gardées) et zones rouges (coupées) */}
+          <div className="mb-2">
+            <div className="d-flex align-items-center justify-content-between mb-1">
+              <span className="small fw-semibold text-muted">Aperçu visuel de la timeline :</span>
+              <span className="small text-muted font-monospace">
+                Total conservé : <strong className="text-success">{
+                  (effectiveSegments.length > 0
+                    ? effectiveSegments.reduce((acc, [s, e]) => acc + Math.max(0, e - s), 0)
+                    : duration
+                  ).toFixed(2)
+                }s</strong> / {duration.toFixed(2)}s
+              </span>
+            </div>
+            <div
+              className="position-relative w-100 rounded overflow-hidden border"
+              style={{ height: '14px', background: effectiveSegments.length > 0 ? '#ffcccc' : '#c8e6c9' }}
+              title={effectiveSegments.length > 0 ? 'Vert = conservé / Rouge = coupé' : 'Animation intégrale lue'}
+            >
+              {effectiveSegments.length > 0 && duration > 0 && effectiveSegments.map(([s, e], i) => {
+                const leftPct = (s / duration) * 100;
+                const widthPct = Math.max(0, ((e - s) / duration) * 100);
+                return (
+                  <div
+                    key={i}
+                    className="position-absolute h-100 bg-success"
+                    style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                    title={`Segment #${i + 1} conservé : de ${Math.round(s * fps)}f (${s.toFixed(2)}s) à ${Math.round(e * fps)}f (${e.toFixed(2)}s)`}
+                  />
+                );
+              })}
+              {/* Curseur de lecture */}
+              {duration > 0 && (
+                <div
+                  className="position-absolute top-0 bottom-0 bg-danger"
+                  style={{
+                    left: `${Math.min(100, Math.max(0, (currentTime / duration) * 100))}%`,
+                    width: '3px',
+                    transform: 'translateX(-50%)',
+                    zIndex: 2,
+                  }}
+                />
+              )}
+            </div>
+            <div className="d-flex justify-content-between mt-0.5 text-muted font-monospace" style={{ fontSize: '10px' }}>
+              <span>0f (0.0s)</span>
+              <span>{totalFrames}f ({duration.toFixed(2)}s)</span>
+            </div>
+          </div>
+
+          {/* Liste des segments actifs avec correction automatique et ordonnancement strict */}
           <div className="d-flex flex-column gap-1.5">
             <div className="d-flex align-items-center justify-content-between">
               <span className="fw-bold small text-dark">
-                Segments utiles conservés ({effectiveSegments.length || 'Aucun — Animation complète'}):
+                Segments conservés ({effectiveSegments.length || '1 segment plein — Animation complète'}):
               </span>
               <button
                 type="button"
                 className="btn btn-outline-success btn-sm py-0 px-2"
                 style={{ fontSize: '11px' }}
                 onClick={() => {
-                  const segs: Array<[number, number]> = effectiveSegments.length > 0 ? [...effectiveSegments] : [[0, duration]];
-                  const lastEnd = segs[segs.length - 1][1];
-                  const newStart = Math.min(duration - 0.2, lastEnd + 0.2);
-                  const newEnd = duration;
-                  if (newEnd > newStart) {
-                    segs.push([newStart, newEnd]);
-                    handleUpdateSegments(segs);
+                  if (effectiveSegments.length === 0) {
+                    handleUpdateSegments([[0, duration]]);
+                  } else {
+                    const segs: Array<[number, number]> = [...effectiveSegments];
+                    const lastEnd = segs[segs.length - 1][1];
+                    const newStart = Math.min(duration - 0.2, lastEnd + 0.1);
+                    const newEnd = duration;
+                    if (newEnd > newStart) {
+                      segs.push([newStart, newEnd]);
+                      handleUpdateSegments(segs);
+                    }
                   }
                 }}
               >
@@ -1534,21 +1599,21 @@ export function AnimFrameController({
 
             {effectiveSegments.length === 0 ? (
               <div className="text-muted p-2 bg-light rounded text-center small fst-italic">
-                L'animation est lue intégralement de 0 à {duration.toFixed(2)}s. Utilisez les boutons ci-dessus pour couper le début, la fin ou le milieu.
+                L'animation entière est conservée (de la frame 0 à {totalFrames}). Utilisez les boutons ci-dessus pour couper le début, la fin ou découper au milieu.
               </div>
             ) : (
               <div className="d-flex flex-column gap-1">
                 {effectiveSegments.map(([startSec, endSec], idx) => {
                   const startF = Math.round(startSec * fps);
                   const endF = Math.round(endSec * fps);
-                  const segDur = endSec - startSec;
+                  const segDur = Math.max(0, endSec - startSec);
 
                   return (
                     <div key={idx} className="d-flex flex-wrap align-items-center justify-content-between gap-2 p-1.5 bg-light rounded border">
                       <div className="d-flex align-items-center gap-2">
-                        <span className="badge bg-primary text-white">Segment #{idx + 1}</span>
+                        <span className="badge bg-success text-white">Segment #{idx + 1}</span>
                         <span className="font-monospace small text-muted">
-                          Durée: <strong className="text-dark">{segDur.toFixed(2)}s</strong> ({Math.round(segDur * fps)}f)
+                          Durée : <strong className="text-dark">{segDur.toFixed(2)}s</strong> ({Math.round(segDur * fps)}f)
                         </span>
                       </div>
 
@@ -1567,8 +1632,9 @@ export function AnimFrameController({
                             value={startF}
                             onChange={e => {
                               const f = Math.max(0, Math.min(totalFrames, parseInt(e.target.value, 10) || 0));
-                              const next = [...effectiveSegments];
-                              next[idx] = [f / fps, next[idx][1]];
+                              const next: Array<[number, number]> = [...effectiveSegments];
+                              next[idx] = [f / fps, Math.max(f / fps, next[idx][1])];
+                              next.sort((a, b) => a[0] - b[0]);
                               handleUpdateSegments(next);
                             }}
                             title="Frame de début"
@@ -1589,14 +1655,45 @@ export function AnimFrameController({
                             value={endF}
                             onChange={e => {
                               const f = Math.max(0, Math.min(totalFrames, parseInt(e.target.value, 10) || 0));
-                              const next = [...effectiveSegments];
-                              next[idx] = [next[idx][0], f / fps];
+                              const next: Array<[number, number]> = [...effectiveSegments];
+                              next[idx] = [Math.min(f / fps, next[idx][0]), f / fps];
+                              next.sort((a, b) => a[0] - b[0]);
                               handleUpdateSegments(next);
                             }}
                             title="Frame de fin"
                           />
                           <span className="input-group-text py-0 px-1 bg-white small text-muted">f</span>
                         </div>
+
+                        {/* Bouton pour caler le début à la position courante */}
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary btn-sm py-0 px-1.5"
+                          onClick={() => {
+                            const next: Array<[number, number]> = [...effectiveSegments];
+                            next[idx] = [currentTime, Math.max(currentTime, next[idx][1])];
+                            next.sort((a, b) => a[0] - b[0]);
+                            handleUpdateSegments(next);
+                          }}
+                          title={`Caler le début de ce segment à la frame courante (${currentFrame}f)`}
+                        >
+                          Début=ici
+                        </button>
+
+                        {/* Bouton pour caler la fin à la position courante */}
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary btn-sm py-0 px-1.5"
+                          onClick={() => {
+                            const next: Array<[number, number]> = [...effectiveSegments];
+                            next[idx] = [Math.min(currentTime, next[idx][0]), currentTime];
+                            next.sort((a, b) => a[0] - b[0]);
+                            handleUpdateSegments(next);
+                          }}
+                          title={`Caler la fin de ce segment à la frame courante (${currentFrame}f)`}
+                        >
+                          Fin=ici
+                        </button>
 
                         {/* Bouton sauter à ce segment */}
                         <button
