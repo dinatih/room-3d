@@ -21,28 +21,42 @@ import {
 
 const kallaxW1 = 40.5;
 
-// MD : Structure, Murs, Sols, Portes, Végetation, Personnages, Animaux, Ciel + Equipements & Furniture
-export const MIRROR_BASE_MASK =
+// MD- : Miroir basse qualité (128px) : calques mur, structure, sol, portes, herbe seulement (sans perso, sans mobilier)
+export const MIRROR_MD_LOW_MASK =
   (1 << LAYER_STRUCTURE) |
   (1 << LAYER_WALL_STRUCTURE) |
   (1 << LAYER_FLOOR_COVERINGS) |
   (1 << LAYER_DOORS) |
   (1 << LAYER_GRASS) |
+  (1 << LAYER_ENVIRONMENT) |
+  (1 << LAYER_AIRCRAFT);
+
+// MD : Structure, Murs, Sols, Portes, Végetation, Personnages, Animaux, Ciel + Equipements & Furniture (256px)
+export const MIRROR_BASE_MASK =
+  MIRROR_MD_LOW_MASK |
   (1 << LAYER_EQUIPMENT) |
   (1 << LAYER_FURNITURE) |
   (1 << LAYER_WALKER_DETAIL) |
   (1 << LAYER_WALKER) |
-  (1 << LAYER_ANIMALS) |
-  (1 << LAYER_ENVIRONMENT) |
-  (1 << LAYER_AIRCRAFT);
+  (1 << LAYER_ANIMALS);
 
-// HD : Full miroir (inclut en plus Furnishings tapis/rideaux et Decor bibelots/plantes/props)
+// HD : Full miroir (inclut en plus Furnishings tapis/rideaux et Decor bibelots/plantes/props) (512px)
 export const MIRROR_HD_MASK =
   MIRROR_BASE_MASK |
   (1 << LAYER_FURNISHINGS) |
   (1 << LAYER_DECOR);
 
 const MIRROR_EXCLUDED_MASK = (1 << LAYER_AI_ZONES) | (1 << LAYER_LIDAR) | (1 << LAYER_NEIGHBORS);
+
+function getMirrorTargetConfig(): { res: number; mask: number } {
+  if (cameraState.mirrorsHD || cameraState.mirrorQuality === 'hd') {
+    return { res: 512, mask: MIRROR_HD_MASK & ~MIRROR_EXCLUDED_MASK };
+  }
+  if (cameraState.mirrorQuality === 'md-low') {
+    return { res: 128, mask: MIRROR_MD_LOW_MASK & ~MIRROR_EXCLUDED_MASK };
+  }
+  return { res: 256, mask: MIRROR_BASE_MASK & ~MIRROR_EXCLUDED_MASK };
+}
 
 let _reflectionDepth = 0;
 
@@ -52,7 +66,7 @@ function ReflectorMirror({ w, h, position, rotationY }: {
   rotationY: number;
 }) {
   const reflector = useMemo(() => {
-    const res = cameraState.mirrorsHD ? 512 : 256;
+    const { res } = getMirrorTargetConfig();
     const geo = new THREE.PlaneGeometry(w, h);
     geo.computeBoundingBox();
     const mir = new Reflector(geo, {
@@ -75,13 +89,11 @@ function ReflectorMirror({ w, h, position, rotationY }: {
 
       _reflectionDepth++;
 
-      const targetRes = cameraState.mirrorsHD ? 512 : 256;
+      const { res: targetRes, mask: mirrorMask } = getMirrorTargetConfig();
       const renderTarget = (mir as any).getRenderTarget();
       if (renderTarget && renderTarget.width !== targetRes) {
         renderTarget.setSize(targetRes, targetRes);
       }
-
-      const mirrorMask = (cameraState.mirrorsHD ? MIRROR_HD_MASK : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
 
       const reflectionCamera = (mir as any).getReflectionCamera(renderCam);
       if (reflectionCamera) {
@@ -118,7 +130,7 @@ function MergedReflector({ planes, position, rotationY }: {
     const mergedGeo = mergeGeometries(geos, false);
     mergedGeo.computeBoundingBox();
 
-    const res = cameraState.mirrorsHD ? 512 : 256;
+    const { res } = getMirrorTargetConfig();
     const mir = new Reflector(mergedGeo, {
       textureWidth:  res,
       textureHeight: res,
@@ -139,13 +151,11 @@ function MergedReflector({ planes, position, rotationY }: {
 
       _reflectionDepth++;
 
-      const targetRes = cameraState.mirrorsHD ? 512 : 256;
+      const { res: targetRes, mask: mirrorMask } = getMirrorTargetConfig();
       const renderTarget = (mir as any).getRenderTarget();
       if (renderTarget && renderTarget.width !== targetRes) {
         renderTarget.setSize(targetRes, targetRes);
       }
-
-      const mirrorMask = (cameraState.mirrorsHD ? MIRROR_HD_MASK : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
 
       const reflectionCamera = (mir as any).getReflectionCamera(renderCam);
       if (reflectionCamera) {

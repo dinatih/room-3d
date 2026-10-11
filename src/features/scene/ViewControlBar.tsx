@@ -248,19 +248,25 @@ export function ViewControlBar({
     {
       id: 'sd',
       label: 'SD (Basse définition)',
-      desc: 'Miroirs désactivés (reflet ambiance HDRI), vidéos désactivées, ciel 2K',
+      desc: 'Miroirs désactivés (reflet ambiance HDRI), vidéos en image fixe, ciel 2K',
       badge: 'SD',
+    },
+    {
+      id: 'md-low',
+      label: 'MD- (Moyenne basse)',
+      desc: 'Miroir 128px (murs/sols sans perso), Vidéo LD, Ciel 4K',
+      badge: 'MD-',
     },
     {
       id: 'md',
       label: 'MD (Moyenne définition)',
-      desc: 'Miroirs actifs (avec équipement & furniture), Vidéos HD, Ciel 8K',
+      desc: 'Miroir 256px (avec équipement & furniture), Vidéos HD, Ciel 8K',
       badge: 'MD',
     },
     {
       id: 'hd',
       label: 'HD (Haute définition)',
-      desc: 'Miroirs HD plein écran, Vidéos HD, Ciel 8K',
+      desc: 'Miroir 512px plein détail, Vidéos HD, Ciel 8K',
       badge: 'HD',
     },
   ];
@@ -270,7 +276,7 @@ export function ViewControlBar({
       <button
         ref={qualityTriggerRef}
         type="button"
-        className={`${TOOLBAR_BUTTON_CLASS} ${qualityPopoverOpen ? 'btn-danger text-white' : graphicsQualityPreset === 'hd' ? 'btn-danger' : graphicsQualityPreset === 'md' ? 'btn-warning text-dark' : 'btn-outline-secondary'}`}
+        className={`${TOOLBAR_BUTTON_CLASS} ${qualityPopoverOpen ? 'btn-danger text-white' : graphicsQualityPreset === 'hd' ? 'btn-danger' : graphicsQualityPreset === 'md' ? 'btn-warning text-dark' : graphicsQualityPreset === 'md-low' ? 'btn-info text-dark' : 'btn-outline-secondary'}`}
         {...{ popovertarget: qualityPopoverId }}
         onClick={(e) => {
           e.stopPropagation();

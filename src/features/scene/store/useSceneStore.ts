@@ -85,7 +85,7 @@ export function getRandomGrassType(): GroundType {
   return GRASS_TYPES[Math.floor(Math.random() * GRASS_TYPES.length)];
 }
 
-export type GraphicsQualityPreset = 'sd' | 'md' | 'hd';
+export type GraphicsQualityPreset = 'sd' | 'md-low' | 'md' | 'hd';
 
 interface SceneStore {
   furniture: FurnitureState;
@@ -349,6 +349,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   setGraphicsQualityPreset: (preset) => {
     if (preset === 'sd') {
       cameraState.mirrorsHD = false;
+      cameraState.mirrorQuality = 'md-low';
       updateUrlLayer('mirrors', false);
       updateUrlLayer('mirrorsHD', false);
       set(state => ({
@@ -361,8 +362,25 @@ export const useSceneStore = create<SceneStore>((set) => ({
           mirrorsHD: false,
         },
       }));
+    } else if (preset === 'md-low') {
+      cameraState.mirrorsHD = false;
+      cameraState.mirrorQuality = 'md-low';
+      updateUrlLayer('mirrors', true);
+      updateUrlLayer('mirrorsHD', false);
+      set(state => ({
+        graphicsQualityPreset: 'md-low',
+        screenVideosEnabled: true,
+        screenVideoQuality: 'ld',
+        hdriResolution: '4k',
+        layers: {
+          ...state.layers,
+          mirrors: true,
+          mirrorsHD: false,
+        },
+      }));
     } else if (preset === 'md') {
       cameraState.mirrorsHD = false;
+      cameraState.mirrorQuality = 'md';
       updateUrlLayer('mirrors', true);
       updateUrlLayer('mirrorsHD', false);
       set(state => ({
@@ -378,6 +396,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       }));
     } else if (preset === 'hd') {
       cameraState.mirrorsHD = true;
+      cameraState.mirrorQuality = 'hd';
       updateUrlLayer('mirrors', true);
       updateUrlLayer('mirrorsHD', true);
       set(state => ({
@@ -566,7 +585,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
           nextLayers.mirrors = true;
         }
       }
-      const nextPreset: GraphicsQualityPreset = nextLayers.mirrorsHD ? 'hd' : (nextLayers.mirrors ? 'md' : 'sd');
+      const nextPreset: GraphicsQualityPreset = nextLayers.mirrorsHD
+        ? 'hd'
+        : nextLayers.mirrors
+          ? (cameraState.mirrorQuality === 'md-low' ? 'md-low' : 'md')
+          : 'sd';
       if (key === 'character') {
         cameraState.characterHidden = !nextLayers.character;
         if (!nextLayers.character) {

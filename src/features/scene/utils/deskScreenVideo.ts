@@ -67,13 +67,32 @@ export function useDeskScreenVideo(previewActive?: boolean) {
   const quality = useSceneStore(s => s.screenVideoQuality);
   const invalidate = useThree(s => s.invalidate);
   const [resource, setResource] = useState<ScreenVideo | null>(null);
-  const requested = enabled && (previewActive ?? isDesk2Active);
+  const [stillTexture, setStillTexture] = useState<THREE.Texture | null>(null);
+  const requested = previewActive ?? isDesk2Active;
 
   useEffect(() => {
     if (!requested) {
       setResource(null);
+      setStillTexture(null);
       return;
     }
+
+    if (!enabled) {
+      // En SD : les vidéos sont désactivées, charger l'image statique (poster)
+      setResource(null);
+      const loader = new THREE.TextureLoader();
+      const tex = loader.load('items/omarchy-screen/omarchy-screen.png', () => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        invalidate();
+      });
+      tex.colorSpace = THREE.SRGBColorSpace;
+      setStillTexture(tex);
+      return () => {
+        tex.dispose();
+      };
+    }
+
+    setStillTexture(null);
     const acquired = acquireVideo(quality);
     setResource(acquired);
     // Render on decoded video frames, rather than forcing a continuous render loop.
@@ -89,8 +108,9 @@ export function useDeskScreenVideo(previewActive?: boolean) {
       releaseVideo(acquired);
       invalidate();
     };
-  }, [requested, quality, invalidate]);
+  }, [requested, enabled, quality, invalidate]);
 
-  const active = requested && resource?.quality === quality;
-  return { isVideoActive: active, texture: active ? resource.texture : null };
+  const active = requested && (enabled ? resource?.quality === quality : Boolean(stillTexture));
+  const currentTex = enabled ? (resource?.texture ?? null) : stillTexture;
+  return { isVideoActive: active, texture: active ? currentTex : null };
 }
