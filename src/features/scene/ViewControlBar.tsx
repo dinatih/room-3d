@@ -233,7 +233,7 @@ export function ViewControlBar({
     <>
     {hoverTooltip}
     <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--multi-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
-      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+      <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
         {showCharacterModes && (
           <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Sélection des personnages">
             <CharacterCountSelect />
@@ -252,7 +252,7 @@ export function ViewControlBar({
         )}
       </div>
       {showCharacterModes && (
-        <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
           <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Suivi caméra du personnage">
             <button
               type="button"
@@ -261,6 +261,32 @@ export function ViewControlBar({
               title="Follow / FPV (F / V : alterner)"
               aria-pressed={cameraMode === 'follow'}
             ><span className="fw-semibold">Follow</span></button>
+            {isVRSupported && (
+              <button
+                type="button"
+                onClick={() => {
+                  document.dispatchEvent(new CustomEvent('toggle-vr'));
+                }}
+                className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+                title="Mode Réalité Virtuelle (WebXR)"
+              >
+                <i className="bi bi-headset-vr" aria-hidden="true" />
+                <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
+              </button>
+            )}
+            {isMobile && (
+              <button
+                type="button"
+                onClick={() => {
+                  document.dispatchEvent(new CustomEvent('toggle-immersive'));
+                }}
+                className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+                title="Mode Immersif Gyroscope (Plein écran)"
+              >
+                <i className="bi bi-eye-fill" aria-hidden="true" />
+                <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immer'}</span>
+              </button>
+            )}
             <button
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
@@ -268,52 +294,22 @@ export function ViewControlBar({
               title="FPV / Follow (V / F : alterner)"
               aria-pressed={cameraMode === 'fpv'}
             ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
-            <button
-              type="button"
-              className={`${TOOLBAR_BUTTON_CLASS} ${cameraTarget === 'studio' && cameraMode === 'orbit' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
-              onClick={() => {
-                setCameraTarget('studio');
-                setCameraMovement('orbit');
-                dispatchCameraMode('reset-orbit');
-              }}
-              title="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"
-              aria-label="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"
-              aria-pressed={cameraTarget === 'studio' && cameraMode === 'orbit'}
-            >
-              <i className="bi bi-building" aria-hidden="true" />
-              <span className="fw-semibold">Apt</span>
-            </button>
           </div>
-          {(isVRSupported || isMobile) && (
-            <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Modes immersifs">
-              {isVRSupported && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    document.dispatchEvent(new CustomEvent('toggle-vr'));
-                  }}
-                  className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-                  title="Mode Réalité Virtuelle (WebXR)"
-                >
-                  <i className="bi bi-headset-vr" aria-hidden="true" />
-                  <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
-                </button>
-              )}
-              {isMobile && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    document.dispatchEvent(new CustomEvent('toggle-immersive'));
-                  }}
-                  className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-                  title="Mode Immersif Gyroscope (Plein écran)"
-                >
-                  <i className="bi bi-eye-fill" aria-hidden="true" />
-                  <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
-                </button>
-              )}
-            </div>
-          )}
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} ${cameraTarget === 'studio' && cameraMode === 'orbit' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
+            onClick={() => {
+              setCameraTarget('studio');
+              setCameraMovement('orbit');
+              dispatchCameraMode('reset-orbit');
+            }}
+            title="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"
+            aria-label="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"
+            aria-pressed={cameraTarget === 'studio' && cameraMode === 'orbit'}
+          >
+            <i className="bi bi-building" aria-hidden="true" />
+            <span className="fw-semibold">Apt</span>
+          </button>
           {animalCameraActive && (
             <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la caméra de l’animal" aria-label="Quitter la caméra de l’animal">
               <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>
@@ -321,7 +317,7 @@ export function ViewControlBar({
           )}
         </div>
       )}
-      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+      <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
         {zoomButton('in')}
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues orthogonales et dessus">
           {renderViewButton(frontView, 'cyan')}
@@ -332,7 +328,7 @@ export function ViewControlBar({
         </div>
         {perspButton}
       </div>
-      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+      <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
         {zoomButton('out')}
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales et dessous">
           {ISO_VIEWS.map(v => renderViewButton(v, 'purple'))}
