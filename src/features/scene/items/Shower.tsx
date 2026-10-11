@@ -146,12 +146,17 @@ function connectShowerHose(bar: THREE.Group, faucet: THREE.Group) {
   ));
   // Reconstruire le tube évite les angles dus aux rares sommets du flexible CAD.
   hose.geometry = new THREE.TubeGeometry(curve, Math.ceil(curve.getLength() / hoseRadius), hoseRadius, 12, false);
-  hose.material = frameMat;
+  hose.material = hoseChromeMat;
   hose.name = 'shower-hose';
 
 }
 
 // Matériaux porte (module-level, partagés entre instances)
+const hoseChromeMat = new THREE.MeshStandardMaterial({
+  color: 0xd8d8d8,
+  metalness: 0.85,
+  roughness: 0.15,
+});
 const glassMat = new THREE.MeshPhysicalMaterial({
   color: 0xd0eaf5,
   transparent: true,
@@ -163,9 +168,9 @@ const glassMat = new THREE.MeshPhysicalMaterial({
   depthWrite: false,
 });
 const frameMat = new THREE.MeshStandardMaterial({
-  color: 0xd8d8d8,
-  metalness: 0.85,
-  roughness: 0.15,
+  color: 0xf8f8f8,
+  metalness: 0.02,
+  roughness: 0.3,
 });
 const coffrageMat = new THREE.MeshStandardMaterial({
   color: 0xf5f5f5,
