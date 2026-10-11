@@ -815,7 +815,10 @@ export function AnimFrameController({
                     /{totalFrames}
                   </span>
                 </div>
-                <span className="badge bg-transparent text-dark border shadow-sm font-monospace py-1 px-1.5">
+                <span
+                  className="badge bg-transparent text-dark border shadow-sm font-monospace py-1 px-1.5 text-center"
+                  style={{ minWidth: '7.5rem', fontVariantNumeric: 'tabular-nums' }}
+                >
                   {currentTime.toFixed(2)}s/{duration.toFixed(2)}s
                 </span>
               </>
@@ -1413,9 +1416,13 @@ export function AnimFrameController({
 
           {/* Actions de coupe simples et intuitives */}
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 p-2 bg-light rounded border">
-            <div className="d-flex align-items-center gap-2">
-              <span className="fw-semibold text-muted small">
-                Tête de lecture : <strong className="text-dark font-monospace">{currentFrame}f</strong> ({currentTime.toFixed(2)}s)
+            <div className="d-flex align-items-center gap-1.5" style={{ minWidth: '175px' }}>
+              <span className="fw-semibold text-muted small">Tête de lecture :</span>
+              <strong className="text-dark font-monospace small" style={{ display: 'inline-block', width: '38px', textAlign: 'right' }}>
+                {currentFrame}f
+              </strong>
+              <span className="text-muted font-monospace small" style={{ display: 'inline-block', width: '48px', textAlign: 'left' }}>
+                ({currentTime.toFixed(2)}s)
               </span>
             </div>
 
@@ -1444,10 +1451,10 @@ export function AnimFrameController({
                   }
                 }}
                 disabled={currentFrame <= 0}
-                title="Supprime tout ce qui précède la frame courante (Coupe Début)"
+                title={`Supprime tout ce qui précède la frame courante (${currentFrame}f)`}
               >
                 <i className="bi bi-box-arrow-in-right me-1" />
-                Couper Début (avant {currentFrame}f)
+                Couper Début (avant ici)
               </button>
 
               {/* Couper toute la fin après ici */}
@@ -1474,10 +1481,10 @@ export function AnimFrameController({
                   }
                 }}
                 disabled={currentFrame >= totalFrames}
-                title="Supprime tout ce qui suit la frame courante (Coupe Fin)"
+                title={`Supprime tout ce qui suit la frame courante (${currentFrame}f)`}
               >
                 <i className="bi bi-box-arrow-in-left me-1" />
-                Couper Fin (après {currentFrame}f)
+                Couper Fin (après ici)
               </button>
 
               {/* Supprimer une plage au milieu : scinde proprement à la frame courante */}
