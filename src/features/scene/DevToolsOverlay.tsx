@@ -107,6 +107,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
   const valid    = samples.filter(v => v > 0);
   const fpsMin   = valid.length ? Math.min(...valid) : 0;
   const fpsMax   = valid.length ? Math.max(...valid) : 0;
+  const fpsAvg   = valid.length ? Math.round(valid.reduce((acc, v) => acc + v, 0) / valid.length) : 0;
 
   const handleRefreshScene = useCallback(() => {
     devState.refreshScene?.();
@@ -120,19 +121,24 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
     <>
       <PerfGroup icon="bi-bar-chart-fill" title="Perf" defaultOpen headerPadding={compact ? 'py-1 px-1.5' : undefined}>
         <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
-          <div className={`d-flex align-items-stretch justify-content-start ${compact ? 'gap-1.5 px-1 py-0.5' : 'gap-2 px-2 pb-1'}`}>
+          <div className={`d-flex flex-column ${compact ? 'gap-1 px-1 py-0.5' : 'gap-1.5 px-2 pb-1'}`}>
             <canvas
               ref={fpsCanvasCallback}
               width={FPS_W} height={FPS_H}
-              className="d-block flex-shrink-0 rounded shadow-sm"
-              style={{ width: FPS_W, height: 'auto', minHeight: FPS_H }}
+              className="d-block w-100 rounded shadow-sm"
+              style={{ height: FPS_H }}
             />
-            <div className="perf-stats d-flex flex-column text-start text-nowrap small lh-sm">
-              <span className={`fw-bold ${isIdle ? 'text-warning' : fpsTextClass(curFps)}`}>{isIdle ? 'Veille' : `${curFps} FPS`}</span>
+            <div className="d-flex align-items-center justify-content-between text-nowrap small lh-sm">
+              <span className={`fw-bold ${isIdle ? 'text-warning' : fpsTextClass(curFps)}`}>
+                {isIdle ? 'Veille' : `${curFps} FPS`}
+              </span>
               <span className="fw-medium text-secondary">
                 min:<span className={fpsTextClass(fpsMin)}>{fpsMin}</span>{' '}
+                moy:<span className={fpsTextClass(fpsAvg)}>{fpsAvg}</span>{' '}
                 max:<span className={fpsTextClass(fpsMax)}>{fpsMax}</span>
               </span>
+            </div>
+            <div className="d-flex align-items-center justify-content-between text-nowrap small lh-sm">
               <span title="Draw calls" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.drawCalls >= 500 ? 'text-danger' : devState.drawCalls >= 200 ? 'text-warning' : 'text-primary'}`}>
                 DC: {isIdle ? '0' : devState.drawCalls.toLocaleString()}
               </span>
