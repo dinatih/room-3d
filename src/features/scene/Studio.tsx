@@ -1006,7 +1006,7 @@ export function Studio() {
           <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
         </Suspense>
       )}
-      <AppConsole hidden={showInventory || planeMode} hideUI={hideUI} />
+      <AppConsole hidden={showInventory || planeMode} hideUI={hideUI} onToggleHideUI={toggleHideUI} />
       {isPhotoModeOpen && activeSceneRef.current && activeCameraRef.current && activeGlRef.current && (
         <Suspense fallback={null}>
           <RaytracingPhotoModal

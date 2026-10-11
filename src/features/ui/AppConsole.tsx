@@ -12,6 +12,8 @@ import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 import { Minimap } from '@features/scene/Minimap';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
+import { ProfileButton } from '@features/scene/ProfileButton';
+import { QualityButton } from '@features/scene/QualityButton';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
 const TAG_COLORS: Record<string, string> = {
@@ -66,7 +68,15 @@ function getContrastTextColor(hexColor: string): string {
 }
 
 // ── Composant ──────────────────────────────────────────────────────────────
-export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolean; hideUI?: boolean }) {
+export function AppConsole({
+  hidden = false,
+  hideUI = false,
+  onToggleHideUI,
+}: {
+  hidden?: boolean;
+  hideUI?: boolean;
+  onToggleHideUI?: () => void;
+}) {
   const isMobile = useIsMobile();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const activeChar = findCharacter(activeCharacterId);
@@ -380,7 +390,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         )}
       </div>
 
-      {/* Barre de contrôle sous la card Console (Minimap, Perf) - largeur minimale nécessaire */}
+      {/* Barre de contrôle sous la card Console - largeur minimale nécessaire */}
       <div
         className={`${TOOLBAR_CLASS} flex-shrink-0 align-self-end`}
         style={{
@@ -390,6 +400,10 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         role="toolbar"
         aria-label="Contrôles secondaires"
       >
+        {/* 1. Mon CV (en premier) */}
+        <ProfileButton hideUI={hideUI} />
+
+        {/* 2. Minimap */}
         <button
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} ${showMinimap ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
@@ -401,6 +415,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           <span>Minimap</span>
         </button>
 
+        {/* 3. Perf */}
         <button
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} ${showPerf ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
@@ -411,6 +426,22 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           <i className="bi bi-bar-chart-fill" aria-hidden="true" />
           <span>Perf</span>
         </button>
+
+        {/* 4. HD */}
+        <QualityButton hideUI={hideUI} />
+
+        {/* 5. Hide UI (après le btn HD) */}
+        {onToggleHideUI && (
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+            onClick={onToggleHideUI}
+            title={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
+            aria-label={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
+          >
+            <i className={`bi ${hideUI ? 'bi-eye' : 'bi-eye-slash'}`} aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {/* Bodies de Minimap et Perf s'ouvrant l'un en dessous de l'autre */}

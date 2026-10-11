@@ -19,11 +19,9 @@ import {
   type ToolbarPanelsProps,
 } from './sidepanel/types';
 import { PanelPopover } from './sidepanel/PanelPopover';
-import { CvModal, type CvType } from './sidepanel/modals/CvModal';
 import { LayersSection } from './sidepanel/sections/LayersSection';
 import { InteractiveSection } from './sidepanel/sections/InteractiveSection';
 import { CharacterSection } from './sidepanel/sections/CharacterSection';
-import { ProfileSection } from './sidepanel/sections/ProfileSection';
 
 export type { ToolbarPanelsProps };
 
@@ -49,18 +47,15 @@ export function ToolbarPanelsRow({
   onToggleLandingStrips,
   hideUI = false,
   onOpenInventory,
-  prefix,
+  prefix: _prefix,
 }: ToolbarPanelsProps) {
   const isMobile = useIsMobile();
-  const [showCvModal, setShowCvModal] = useState(false);
-  const [selectedCvType, setSelectedCvType] = useState<CvType>('devops');
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [isVRActive, setIsVRActive] = useState(false);
   const [isVRSupported, setIsVRSupported] = useState(false);
   const [isImmersiveActive, setIsImmersiveActive] = useState(false);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
-  const setCvModalOpen = useSceneStore(state => state.setCvModalOpen);
   const npcGridActive = useSceneStore(state => state.layers.characterGrid);
 
   useEffect(() => {
@@ -87,17 +82,6 @@ export function ToolbarPanelsRow({
       document.removeEventListener('immersive-state-change', onImmersive);
     };
   }, []);
-
-  const handleOpenCv = (type: CvType = 'devops') => {
-    setSelectedCvType(type);
-    setShowCvModal(true);
-    setCvModalOpen(true);
-  };
-
-  const handleCloseCv = () => {
-    setShowCvModal(false);
-    setCvModalOpen(false);
-  };
 
   useEffect(() => {
     if (!layers.realSun) { setSunInfo(null); return; }
@@ -219,77 +203,6 @@ export function ToolbarPanelsRow({
     </div>
   );
 
-  const profileHeaderButtons = (
-    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
-      <a
-        href="https://github.com/dinatih"
-        target="_blank"
-        rel="noreferrer"
-        className="btn btn-sm btn-dark text-white p-0 border-0 shadow-sm d-flex align-items-center justify-content-center rounded"
-        style={{ height: '22px', width: '24px' }}
-        title="Voir mon profil GitHub"
-      >
-        <i className="bi bi-github"></i>
-      </a>
-      <a
-        href="https://www.linkedin.com/in/dinatih/"
-        target="_blank"
-        rel="noreferrer"
-        className="btn btn-sm btn-primary text-white p-0 border-0 shadow-sm d-flex align-items-center justify-content-center rounded"
-        style={{ height: '22px', width: '24px', background: '#0a66c2', borderColor: '#0a66c2' }}
-        title="Voir mon profil LinkedIn"
-      >
-        <i className="bi bi-linkedin"></i>
-      </a>
-      <button
-        type="button"
-        className="btn btn-sm btn-danger text-white px-2 border-0 shadow-sm fw-bold d-flex align-items-center gap-1 justify-content-center small rounded"
-        style={{ height: '22px', whiteSpace: 'nowrap' }}
-        title="Afficher mes CVs (Ingénieur DevOps / Admin Systèmes)"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleOpenCv('devops');
-        }}
-      >
-        <i className="bi bi-file-earmark-person"></i>
-        <span>C.V.</span>
-      </button>
-      <a
-        href="https://dinatih.org/visualizer/"
-        target="_blank"
-        rel="noreferrer"
-        className="btn btn-sm btn-dark text-white py-0 px-1 border-0 shadow-sm d-flex align-items-center justify-content-center rounded"
-        title="Ouvrir le visualiseur du code"
-        aria-label="Ouvrir le visualiseur du code"
-      >
-        <i className="bi bi-git" aria-hidden="true"></i>
-      </a>
-    </div>
-  );
-
-  const visitorCounter = (
-    <div className="d-flex flex-column align-items-center rounded bg-light p-2 flex-shrink-0">
-      <span className="small text-dark fw-semibold">Visites du site</span>
-      <iframe
-        src="https://dinatih.goatcounter.com/counter/TOTAL.html?no_branding=1"
-        title="Nombre total de visites du site"
-        width="200"
-        height="60"
-        className="border-0 mw-100"
-      />
-    </div>
-  );
-
-  const profileSectionContent = (
-    <>
-      <ProfileSection
-        isMobile={isMobile}
-        onOpenCv={handleOpenCv}
-      />
-      {visitorCounter}
-    </>
-  );
-
   const layersSectionContent = (
     <LayersSection
       layers={layers}
@@ -337,51 +250,37 @@ export function ToolbarPanelsRow({
 
   return (
     <>
-      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        {prefix}
-        {/* VR WebXR (si supporté par l'appareil) */}
-        {isVRSupported && (
-          <button
-            type="button"
-            onClick={() => {
-              document.dispatchEvent(new CustomEvent('toggle-vr'));
-            }}
-            className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-            title="Mode Réalité Virtuelle (WebXR)"
-          >
-            <i className="bi bi-headset-vr" aria-hidden="true" />
-            <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
-          </button>
-        )}
+      {(isVRSupported || isMobile) && (
+        <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+          {isVRSupported && (
+            <button
+              type="button"
+              onClick={() => {
+                document.dispatchEvent(new CustomEvent('toggle-vr'));
+              }}
+              className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+              title="Mode Réalité Virtuelle (WebXR)"
+            >
+              <i className="bi bi-headset-vr" aria-hidden="true" />
+              <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
+            </button>
+          )}
 
-        {/* Mode immersif gyroscopique sur mobile */}
-        {isMobile && (
-          <button
-            type="button"
-            onClick={() => {
-              document.dispatchEvent(new CustomEvent('toggle-immersive'));
-            }}
-            className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-            title="Mode Immersif Gyroscope (Plein écran)"
-          >
-            <i className="bi bi-eye-fill" aria-hidden="true" />
-            <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
-          </button>
-        )}
-
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux principaux">
-          {/* CV */}
-          <PanelPopover
-            icon="bi-briefcase-fill"
-            label="CV"
-            title="Profil & C.V."
-            headerExtra={profileHeaderButtons}
-            hideUI={hideUI}
-          >
-            {profileSectionContent}
-          </PanelPopover>
+          {isMobile && (
+            <button
+              type="button"
+              onClick={() => {
+                document.dispatchEvent(new CustomEvent('toggle-immersive'));
+              }}
+              className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+              title="Mode Immersif Gyroscope (Plein écran)"
+            >
+              <i className="bi bi-eye-fill" aria-hidden="true" />
+              <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
+            </button>
+          )}
         </div>
-      </div>
+      )}
 
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux secondaires">
@@ -496,7 +395,6 @@ export function ToolbarPanelsRow({
       </div>
     </div>
 
-    {showCvModal && <CvModal initialCv={selectedCvType} onClose={handleCloseCv} />}
     </>
   );
 }

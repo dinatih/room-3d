@@ -1,8 +1,8 @@
 import './ViewControlBar.scss';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
-import { useEffect, useState, useRef, useId, cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useSceneStore, type GraphicsQualityPreset } from './store/useSceneStore';
+import { useSceneStore } from './store/useSceneStore';
 import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS } from './sidepanel/types';
 import { getCharacterGridCameraView, frameCharacterGridCamera } from './character/characterGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -11,6 +11,7 @@ import { chooseRandomCharacter } from './store/randomCharacter';
 import { CharacterCountSelect } from './CharacterCountSelect';
 import { CharacterSelect } from './CharacterSelect';
 import { cameraState } from './cameraState';
+import { QualityButton } from './QualityButton';
 
 export interface ViewControlBarProps {
   /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-right' */
@@ -44,7 +45,7 @@ export function ViewControlBar({
   activeCameraPos: previewCameraPos,
   showMirrorsHD = false,
   hideUI = false,
-  onToggleHideUI,
+  onToggleHideUI: _onToggleHideUI,
   onEnterFlight,
   toolbarActions,
   beforeAmbianceActions,
@@ -70,8 +71,6 @@ export function ViewControlBar({
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
   const currentHdri = useSceneStore(s => s.currentHdri);
   const setHdri = useSceneStore(s => s.setHdri);
-  const graphicsQualityPreset = useSceneStore(s => s.graphicsQualityPreset);
-  const setGraphicsQualityPreset = useSceneStore(s => s.setGraphicsQualityPreset);
   const cameraViewMarkers = useSceneStore(s => s.layers.cameraViewMarkers);
   const toggleLayer = useSceneStore(s => s.toggleLayer);
   const cameraTarget = useSceneStore(s => s.cameraTarget);
@@ -203,169 +202,12 @@ export function ViewControlBar({
     document.body,
   );
 
-  const hideUIButton = showCharacterModes && (
-    <button
-      type="button"
-      className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-      onClick={onToggleHideUI}
-      title={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
-      aria-label={`${hideUI ? 'Afficher' : 'Masquer'} l'interface 2D (0)`}
-    >
-      <i className={`bi ${hideUI ? 'bi-eye' : 'bi-eye-slash'}`} aria-hidden="true" />
-    </button>
-  );
-
-  const qualityPopoverId = useId();
-  const qualityTriggerRef = useRef<HTMLButtonElement>(null);
-  const qualityPopoverRef = useRef<HTMLDivElement>(null);
-  const [qualityPopoverOpen, setQualityPopoverOpen] = useState(false);
-
-  const updateQualityPopoverPosition = () => {
-    const trigger = qualityTriggerRef.current;
-    const popover = qualityPopoverRef.current;
-    if (!trigger || !popover) return;
-    const rect = trigger.getBoundingClientRect();
-    const above = rect.top > window.innerHeight / 2;
-    popover.style.top = above ? 'auto' : `${rect.bottom + 6}px`;
-    popover.style.bottom = above ? `${window.innerHeight - rect.top + 6}px` : 'auto';
-    popover.style.left = `${Math.max(8, rect.left)}px`;
-    popover.style.right = 'auto';
-  };
-
-  useEffect(() => {
-    const popover = qualityPopoverRef.current;
-    if (!popover) return;
-    const onToggle = () => {
-      const open = popover.matches(':popover-open');
-      setQualityPopoverOpen(open);
-      if (open) updateQualityPopoverPosition();
-    };
-    popover.addEventListener('toggle', onToggle);
-    return () => popover.removeEventListener('toggle', onToggle);
-  }, []);
-
-  const qualityPresets: { id: GraphicsQualityPreset; label: string; desc: string; badge: string }[] = [
-    {
-      id: 'sd',
-      label: 'SD (Basse définition)',
-      desc: 'Miroirs désactivés (reflet ambiance HDRI), vidéos en image fixe, ciel 2K',
-      badge: 'SD',
-    },
-    {
-      id: 'md-low',
-      label: 'MD- (Moyenne basse)',
-      desc: 'Miroir 128px (murs/sols sans perso), Vidéo LD, Ciel 4K',
-      badge: 'MD-',
-    },
-    {
-      id: 'md',
-      label: 'MD (Moyenne définition)',
-      desc: 'Miroir 256px (avec équipement & furniture), Vidéos HD, Ciel 8K',
-      badge: 'MD',
-    },
-    {
-      id: 'hd',
-      label: 'HD (Haute définition)',
-      desc: 'Miroir 512px plein détail, Vidéos HD, Ciel 8K',
-      badge: 'HD',
-    },
-  ];
-
-  const hdButton = (showCharacterModes || showMirrorsHD) && (
-    <>
-      <button
-        ref={qualityTriggerRef}
-        type="button"
-        className={`${TOOLBAR_BUTTON_CLASS} ${qualityPopoverOpen ? 'btn-danger text-white' : graphicsQualityPreset === 'hd' ? 'btn-danger' : graphicsQualityPreset === 'md' ? 'btn-warning text-dark' : graphicsQualityPreset === 'md-low' ? 'btn-info text-dark' : 'btn-outline-secondary'}`}
-        {...{ popovertarget: qualityPopoverId }}
-        onClick={(e) => {
-          e.stopPropagation();
-          updateQualityPopoverPosition();
-        }}
-        onPointerDown={(e) => e.stopPropagation()}
-        title={`Définition & Performances : ${graphicsQualityPreset.toUpperCase()}`}
-        aria-label="Preset de définition graphique"
-        aria-expanded={qualityPopoverOpen}
-      >
-        <span className="fw-bold">{graphicsQualityPreset.toUpperCase()}</span>
-      </button>
-      {createPortal(
-        <div
-          ref={qualityPopoverRef}
-          id={qualityPopoverId}
-          {...{ popover: 'auto' }}
-          role="dialog"
-          aria-labelledby={`${qualityPopoverId}-title`}
-          className="popover view-control-bar__npc-popover glass-card shadow-lg p-2"
-          style={{ width: '19rem', maxWidth: 'calc(100vw - 1rem)' }}
-          onClick={e => e.stopPropagation()}
-          onPointerDown={e => e.stopPropagation()}
-        >
-          <div className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
-            <span id={`${qualityPopoverId}-title`} className="fw-semibold small text-dark d-flex align-items-center gap-1">
-              <i className="bi bi-speedometer2 text-primary" aria-hidden="true" />
-              Qualité graphique & Perfs
-            </span>
-            <button
-              type="button"
-              className="btn-close"
-              style={{ fontSize: '0.65rem' }}
-              aria-label="Fermer"
-              onClick={() => qualityPopoverRef.current?.hidePopover()}
-            />
-          </div>
-          <div className="d-flex flex-column gap-1">
-            {qualityPresets.map(preset => {
-              const isSelected = graphicsQualityPreset === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  className={`btn btn-sm text-start p-2 rounded d-flex flex-column gap-1 border ${isSelected ? 'btn-primary text-white border-primary' : 'btn-light text-body border-secondary-subtle'}`}
-                  onClick={() => {
-                    setGraphicsQualityPreset(preset.id);
-                    qualityPopoverRef.current?.hidePopover();
-                  }}
-                >
-                  <div className="d-flex align-items-center justify-content-between w-100">
-                    <span className="fw-bold small">{preset.label}</span>
-                    <span className={`badge ${isSelected ? 'text-bg-light' : 'text-bg-secondary'}`}>{preset.badge}</span>
-                  </div>
-                  <span className={`small lh-sm ${isSelected ? 'text-white-50' : 'text-muted'}`} style={{ fontSize: '0.75rem' }}>
-                    {preset.desc}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>,
-        document.body,
-      )}
-    </>
-  );
-
   const bar = (
     <>
     {hoverTooltip}
     <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--multi-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
-      {panelControls && (
-        isValidElement(panelControls)
-          ? cloneElement(panelControls as ReactElement<any>, { prefix: <>{hideUIButton}{hdButton}</> })
-          : (
-            <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-              {hideUIButton}
-              {hdButton}
-              {panelControls}
-            </div>
-          )
-      )}
+      {panelControls}
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        {!panelControls && (
-          <>
-            {hideUIButton}
-            {hdButton}
-          </>
-        )}
         {showCharacterModes && (
           <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Sélection des personnages">
             <CharacterCountSelect />
@@ -496,7 +338,7 @@ export function ViewControlBar({
           {renderViewButton(topView, 'green')}
         </div>
         {perspButton}
-        {showMirrorsHD && hdButton}
+        {showMirrorsHD && <QualityButton hideUI={hideUI} />}
         {beforeAmbianceActions}
       </div>
     );
