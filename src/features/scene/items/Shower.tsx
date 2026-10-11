@@ -286,6 +286,8 @@ export function Shower({ onSize, isPreview = false }: SceneItemProps) {
 
   useLayoutEffect(() => {
     setupScene(tray, 100 * (TRAY_CM / 68));
+    // Scale en Y pour que le bac de douche atteigne le sol
+    tray.scale.y *= 1.45;
 
     // Bar : Z→Y, puis flip sens avant/arrière, une seule fois par clone.
     const prepareHose = !bar.userData.merged;
