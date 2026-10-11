@@ -26,6 +26,8 @@ export interface AnimPreviewState {
   animSearch: string;
   selectedCategories: string[];
   sortByDuration: boolean;
+  /** Segments utiles actifs [start, end][]. Si non vide, la lecture saute les zones coupées. */
+  activeSegments: Array<[number, number]>;
 
   // Actions
   play: () => void;
@@ -42,6 +44,7 @@ export interface AnimPreviewState {
   setAnimSearch: (search: string) => void;
   setSelectedCategories: (categories: string[]) => void;
   setSortByDuration: (sortByDuration: boolean) => void;
+  setActiveSegments: (segments: Array<[number, number]> | undefined) => void;
   tick: (deltaSeconds: number) => number;
   reset: () => void;
 }
@@ -59,23 +62,40 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
   animSearch: getSession('anim_search_filter', ''),
   selectedCategories: getSessionJson('anim_selected_categories', []),
   sortByDuration: getSession('anim_sort_by_duration', 'false') === 'true',
+  activeSegments: [],
 
   play: () => {
-    const { currentTime, duration, isLooping } = get();
-    if (!isLooping && duration > 0 && currentTime >= duration - 0.02) {
+    const { currentTime, duration, isLooping, activeSegments } = get();
+    if (activeSegments.length > 0) {
+      const firstSeg = activeSegments[0];
+      const lastSeg = activeSegments[activeSegments.length - 1];
+      if (!isLooping && currentTime >= lastSeg[1] - 0.02) {
+        set({ currentTime: firstSeg[0], isPlaying: true });
+        return;
+      }
+    } else if (!isLooping && duration > 0 && currentTime >= duration - 0.02) {
       set({ currentTime: 0, isPlaying: true });
-    } else {
-      set({ isPlaying: true });
+      return;
     }
+    set({ isPlaying: true });
   },
   pause: () => set({ isPlaying: false }),
   togglePlay: () => {
-    const { isPlaying, currentTime, duration, isLooping } = get();
-    if (!isPlaying && !isLooping && duration > 0 && currentTime >= duration - 0.02) {
-      set({ currentTime: 0, isPlaying: true });
-    } else {
-      set({ isPlaying: !isPlaying });
+    const { isPlaying, currentTime, duration, isLooping, activeSegments } = get();
+    if (!isPlaying) {
+      if (activeSegments.length > 0) {
+        const firstSeg = activeSegments[0];
+        const lastSeg = activeSegments[activeSegments.length - 1];
+        if (!isLooping && currentTime >= lastSeg[1] - 0.02) {
+          set({ currentTime: firstSeg[0], isPlaying: true });
+          return;
+        }
+      } else if (!isLooping && duration > 0 && currentTime >= duration - 0.02) {
+        set({ currentTime: 0, isPlaying: true });
+        return;
+      }
     }
+    set({ isPlaying: !isPlaying });
   },
 
   setSpeed: (speed: number) => set({ speed }),
@@ -103,16 +123,27 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
   },
 
   stepFrame: (deltaFrames: number) => {
-    const { currentTime, duration, fps, isLooping } = get();
+    const { currentTime, duration, fps, isLooping, activeSegments } = get();
     if (duration <= 0) return;
     const totalFrames = Math.max(1, Math.round(duration * fps));
     const currentFrame = Math.round(currentTime * fps);
     let nextFrame = currentFrame + deltaFrames;
 
-    if (isLooping) {
-      nextFrame = (nextFrame % (totalFrames + 1) + (totalFrames + 1)) % (totalFrames + 1);
+    if (activeSegments.length > 0) {
+      const minFrame = Math.round(activeSegments[0][0] * fps);
+      const maxFrame = Math.round(activeSegments[activeSegments.length - 1][1] * fps);
+      if (isLooping) {
+        if (nextFrame > maxFrame) nextFrame = minFrame;
+        else if (nextFrame < minFrame) nextFrame = maxFrame;
+      } else {
+        nextFrame = Math.max(minFrame, Math.min(maxFrame, nextFrame));
+      }
     } else {
-      nextFrame = Math.max(0, Math.min(totalFrames, nextFrame));
+      if (isLooping) {
+        nextFrame = (nextFrame % (totalFrames + 1) + (totalFrames + 1)) % (totalFrames + 1);
+      } else {
+        nextFrame = Math.max(0, Math.min(totalFrames, nextFrame));
+      }
     }
 
     set({ currentTime: nextFrame / fps, isPlaying: false });
@@ -128,12 +159,14 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
       return;
     }
 
+    const defaultStartTime = current.activeSegments.length > 0 ? current.activeSegments[0][0] : 0;
+
     set({
       clipName: name,
       duration,
       fps,
       isTPose,
-      currentTime: isTPose ? 0 : (nameChanged && !current.isScrubbing && current.isPlaying ? 0 : Math.min(current.currentTime, duration)),
+      currentTime: isTPose ? 0 : (nameChanged && !current.isScrubbing && current.isPlaying ? defaultStartTime : Math.min(current.currentTime, duration)),
     });
   },
 
@@ -152,13 +185,55 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
     set({ sortByDuration });
   },
 
+  setActiveSegments: (segments: Array<[number, number]> | undefined) => {
+    const valid = (segments || []).filter(s => s[1] > s[0]).sort((a, b) => a[0] - b[0]);
+    set({ activeSegments: valid });
+  },
+
   tick: (deltaSeconds: number) => {
-    const { isPlaying, isScrubbing, currentTime, duration, speed, isLooping, isTPose } = get();
+    const { isPlaying, isScrubbing, currentTime, duration, speed, isLooping, isTPose, activeSegments } = get();
     if (!isPlaying || isScrubbing || isTPose || duration <= 0) {
       return currentTime;
     }
 
     let nextTime = currentTime + deltaSeconds * speed;
+
+    // Gestion multi-segments (découpes au début, fin ou milieu)
+    if (activeSegments.length > 0) {
+      const firstSeg = activeSegments[0];
+      const lastSeg = activeSegments[activeSegments.length - 1];
+
+      // Si avant le premier segment, se placer au début du 1er segment
+      if (nextTime < firstSeg[0]) {
+        nextTime = firstSeg[0];
+      } else if (nextTime >= lastSeg[1]) {
+        if (isLooping) {
+          nextTime = firstSeg[0];
+        } else {
+          nextTime = lastSeg[1];
+          set({ isPlaying: false, currentTime: lastSeg[1] });
+          return lastSeg[1];
+        }
+      } else {
+        // Vérifier si nextTime tombe dans une zone coupée (entre deux segments)
+        for (let i = 0; i < activeSegments.length; i++) {
+          const seg = activeSegments[i];
+          if (nextTime >= seg[0] && nextTime <= seg[1]) {
+            // Dans un segment valide
+            break;
+          }
+          if (i < activeSegments.length - 1 && nextTime > seg[1] && nextTime < activeSegments[i + 1][0]) {
+            // Tombé dans le trou entre seg[i] et seg[i+1] -> Sauter directement au début de seg[i+1]
+            nextTime = activeSegments[i + 1][0];
+            break;
+          }
+        }
+      }
+
+      set({ currentTime: nextTime });
+      return nextTime;
+    }
+
     if (nextTime >= duration) {
       if (isLooping) {
         nextTime = duration > 0 ? nextTime % duration : 0;

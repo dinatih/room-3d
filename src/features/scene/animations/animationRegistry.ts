@@ -33,6 +33,11 @@ export interface AnimationDefinition {
   defaultRotYOffset?: number;  // Décalage natif de rotation (radians) si l'animation n'est pas alignée sur 0
   defaultOffset?: [number, number, number]; // Décalage natif de position [x, y, z] (cm) pour corriger les animations hors norme
   duration: number;            // Durée en secondes (obligatoire)
+  /**
+   * Segments de lecture utiles [startSeconds, endSeconds][].
+   * Permet de couper le début, la fin et/ou des sections au milieu de l'animation.
+   */
+  segments?: Array<[number, number]>;
 }
 
 export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [

@@ -978,11 +978,21 @@ export function Character({
               act.clampWhenFinished = false;
             }
 
-            if (isMaster) mixer.update(animDelta);
-            else mixer.setTime(targetTime);
+            if (isMaster) {
+              if (store.activeSegments.length > 0) {
+                // Quand des coupes sont actives, le temps exact du store pilote directement le mixer
+                mixer.setTime(targetTime);
+              } else {
+                mixer.update(animDelta);
+              }
+            } else {
+              mixer.setTime(targetTime);
+            }
 
             if (isMaster) {
-              if (!store.isLooping && act.time >= clip.duration) {
+              if (store.activeSegments.length > 0) {
+                // Le store pilote lui-même son avancée et son saut de segments via tick()
+              } else if (!store.isLooping && act.time >= clip.duration) {
                 act.time = clip.duration;
                 act.paused = true;
                 store.setCurrentTime(clip.duration);

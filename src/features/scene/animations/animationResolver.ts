@@ -439,6 +439,42 @@ export function getDuoAnimationTransformOverride(duoId: string): { offsetB?: [nu
   return duoOffsetOverrides.get(duoId.trim().toLowerCase());
 }
 
+// Overrides de découpe/segments [start, end][] en session/debug en direct
+const animSegmentsOverrides = new Map<string, Array<[number, number]>>();
+
+export function setAnimationSegmentsOverride(
+  keyOrId: string,
+  segments: Array<[number, number]> | null
+) {
+  const normKey = keyOrId.trim().toLowerCase();
+  const def = getAnimationDef(normKey);
+  const targetKey = def?.id ? def.id.toLowerCase() : normKey;
+  if (!segments || segments.length === 0) {
+    animSegmentsOverrides.delete(targetKey);
+  } else {
+    animSegmentsOverrides.set(targetKey, segments);
+  }
+  notifyOverrideChange();
+}
+
+export function getAnimationSegmentsOverride(keyOrId: string): Array<[number, number]> | undefined {
+  const normKey = keyOrId.trim().toLowerCase();
+  const def = getAnimationDef(normKey);
+  const targetKey = def?.id ? def.id.toLowerCase() : normKey;
+  return animSegmentsOverrides.get(targetKey);
+}
+
+/**
+ * Retourne les segments effectifs d'une animation (déclarés dans le registre ou surchargés en direct).
+ */
+export function getAnimationEffectiveSegments(keyOrId?: string): Array<[number, number]> | undefined {
+  if (!keyOrId) return undefined;
+  const def = getAnimationDef(keyOrId);
+  const override = getAnimationSegmentsOverride(def?.id || keyOrId);
+  if (override !== undefined) return override;
+  return def?.segments;
+}
+
 /**
  * Retourne le décalage spatial (offset [x, y, z]) et l'orientation (rotY en radians)
  * natifs d'une animation tels que déclarés dans le registre d'animations ou surchargés en direct.

@@ -8,6 +8,8 @@ import {
   setAnimationTransformOverride,
   getDuoAnimationTransformOverride,
   setDuoAnimationTransformOverride,
+  getAnimationSegmentsOverride,
+  setAnimationSegmentsOverride,
 } from '@features/scene/animations/animationResolver';
 import { ANIMATION_DEFINITIONS, type AnimationDefinition } from '@features/scene/animations/animationRegistry';
 import { CharacterAnimSelector, ANIM_CATEGORIES, getAnimCategory, getFilteredAnimOptions } from '@features/scene/CharacterAnimSelector';
@@ -176,12 +178,54 @@ export function AnimFrameController({
   const [, setOverrideTick] = useState(0);
   const [copiedSoloTs, setCopiedSoloTs] = useState(false);
   const [copiedDuoTs, setCopiedDuoTs] = useState(false);
+  const [showTrimPanel, setShowTrimPanel] = useState<boolean>(false);
+  const [copiedTrimTs, setCopiedTrimTs] = useState<boolean>(false);
 
   useEffect(() => {
     return subscribeAnimationOverrides(() => {
       setOverrideTick(t => t + 1);
     });
   }, []);
+
+  // Découpes / segments effectifs (registre + overrides live)
+  const segmentsOverride = def ? getAnimationSegmentsOverride(def.id) : undefined;
+  const hasSegmentsOverride = segmentsOverride !== undefined;
+  const effectiveSegments = useMemo<Array<[number, number]>>(() => {
+    if (segmentsOverride !== undefined) return segmentsOverride;
+    if (def?.segments && def.segments.length > 0) return def.segments;
+    return [];
+  }, [segmentsOverride, def]);
+
+  // Synchronisation des segments actifs dans le store pour la lecture
+  const setActiveSegments = useAnimPreviewStore(state => state.setActiveSegments);
+  useEffect(() => {
+    setActiveSegments(effectiveSegments);
+  }, [effectiveSegments, setActiveSegments]);
+
+  const handleUpdateSegments = useCallback((nextSegs: Array<[number, number]> | null) => {
+    if (!def) return;
+    setAnimationSegmentsOverride(def.id, nextSegs);
+  }, [def]);
+
+  const handleResetSegments = useCallback(() => {
+    if (!def) return;
+    setAnimationSegmentsOverride(def.id, null);
+  }, [def]);
+
+  const handleCopyTrimTs = useCallback(() => {
+    if (!def) return;
+    if (!effectiveSegments || effectiveSegments.length === 0) {
+      navigator.clipboard.writeText('// Aucun segment / trim (animation entière)');
+    } else {
+      const formatted = effectiveSegments
+        .map(([s, e]) => `    [${s.toFixed(2)}, ${e.toFixed(2)}],`)
+        .join('\n');
+      const snippet = `  segments: [\n${formatted}\n  ],`;
+      navigator.clipboard.writeText(snippet);
+    }
+    setCopiedTrimTs(true);
+    setTimeout(() => setCopiedTrimTs(false), 2000);
+  }, [def, effectiveSegments]);
 
   // Décalages effectifs (registre + overrides live)
   const soloOverride = def ? getAnimationTransformOverride(def.id) : undefined;
@@ -948,6 +992,38 @@ export function AnimFrameController({
             </div>
           )}
 
+          {/* Bouton Toggle Outil de Coupe / Trimming (Dev Only) */}
+          {def && (
+            <button
+              type="button"
+              className={`btn py-0 px-2 btn-sm d-inline-flex align-items-center justify-content-center ${
+                showTrimPanel
+                  ? 'btn-danger text-white shadow-sm'
+                  : effectiveSegments.length > 0
+                  ? 'btn-warning text-dark border-warning'
+                  : 'btn-outline-secondary text-dark'
+              }`}
+              onClick={() => {
+                setShowTrimPanel(v => !v);
+              }}
+              title={
+                showTrimPanel
+                  ? 'Fermer l\'outil de découpe'
+                  : effectiveSegments.length > 0
+                  ? `Outil de découpe (${effectiveSegments.length} segment(s) actif(s))`
+                  : 'Outil de découpe d\'animation (Trimming & Cuts)'
+              }
+              aria-label="Outil de découpe d'animation"
+            >
+              <i className="bi bi-scissors" aria-hidden="true" />
+              {effectiveSegments.length > 0 && (
+                <span className="badge bg-dark text-white rounded-pill ms-1 py-0 px-1" style={{ fontSize: '9px' }}>
+                  {effectiveSegments.length}
+                </span>
+              )}
+            </button>
+          )}
+
           {/* Bouton Toggle Métadonnées */}
           {hasMeta && (
             <button
@@ -1291,6 +1367,266 @@ export function AnimFrameController({
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Ligne 4 : Volet Dev Découpe d'Animation (Trimming & Multi-Cuts) ── */}
+      {showTrimPanel && def && (
+        <div className="card bg-white bg-opacity-90 border shadow-sm p-2 mt-2 text-dark user-select-text small" style={{ cursor: 'text' }}>
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom pb-2 mb-2">
+            <div className="d-flex align-items-center gap-2">
+              <i className="bi bi-scissors text-danger fs-5" aria-hidden="true" />
+              <div>
+                <strong className="text-dark fs-6">Découpe d'Animation (Trims &amp; Cuts)</strong>
+                <span className="ms-2 badge bg-light text-secondary border font-monospace">{def.id}</span>
+                {hasSegmentsOverride && (
+                  <span className="ms-1 badge bg-primary text-white" style={{ fontSize: '10px' }}>Modifié en direct</span>
+                )}
+              </div>
+            </div>
+
+            <div className="d-flex align-items-center gap-1">
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm py-0 px-2"
+                style={{ fontSize: '11px' }}
+                onClick={handleCopyTrimTs}
+                title="Copier au format TypeScript pour animationRegistry.ts"
+              >
+                <i className={`bi ${copiedTrimTs ? 'bi-check-lg text-success' : 'bi-clipboard'}`} aria-hidden="true" />
+                <span className="ms-1">{copiedTrimTs ? 'Copié !' : 'Copier TS'}</span>
+              </button>
+              {effectiveSegments.length > 0 && (
+                <button
+                  type="button"
+                  className="btn btn-outline-danger btn-sm py-0 px-2"
+                  style={{ fontSize: '11px' }}
+                  onClick={handleResetSegments}
+                  title="Réinitialiser tous les trims et restaurer l'animation complète"
+                >
+                  <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
+                  <span className="ms-1">Reset (Tout garder)</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Actions rapides basées sur la tête de lecture courante */}
+          <div className="d-flex flex-wrap align-items-center gap-2 mb-2 p-2 bg-light rounded border">
+            <span className="fw-semibold text-muted small me-1">
+              Position courante : <strong className="text-dark font-monospace">{currentFrame}f</strong> ({currentTime.toFixed(2)}s)
+            </span>
+
+            {/* Bouton pour couper le début avant la frame courante */}
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-primary py-0 px-2"
+              onClick={() => {
+                const nowSec = currentTime;
+                if (effectiveSegments.length === 0) {
+                  // Crée un segment [nowSec, duration]
+                  handleUpdateSegments([[nowSec, duration]]);
+                } else {
+                  // Ajuste le début du premier segment
+                  const nextSegs: Array<[number, number]> = [...effectiveSegments];
+                  nextSegs[0] = [nowSec, Math.max(nowSec + 0.1, nextSegs[0][1])];
+                  handleUpdateSegments(nextSegs);
+                }
+              }}
+              title="Couper tout ce qui est avant cette frame (Point IN début)"
+            >
+              <i className="bi bi-box-arrow-in-right me-1" />
+              Couper Début ici [IN]
+            </button>
+
+            {/* Bouton pour couper la fin après la frame courante */}
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-primary py-0 px-2"
+              onClick={() => {
+                const nowSec = currentTime;
+                if (effectiveSegments.length === 0) {
+                  // Crée un segment [0, nowSec]
+                  handleUpdateSegments([[0, Math.max(0.1, nowSec)]]);
+                } else {
+                  // Ajuste la fin du dernier segment
+                  const nextSegs: Array<[number, number]> = [...effectiveSegments];
+                  const lastIdx = nextSegs.length - 1;
+                  nextSegs[lastIdx] = [Math.min(nextSegs[lastIdx][0], nowSec - 0.1), nowSec];
+                  handleUpdateSegments(nextSegs);
+                }
+              }}
+              title="Couper tout ce qui est après cette frame (Point OUT fin)"
+            >
+              <i className="bi bi-box-arrow-in-left me-1" />
+              Couper Fin ici [OUT]
+            </button>
+
+            {/* Bouton pour couper au milieu (scinder en deux segments autour d'un trou) */}
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-warning text-dark fw-semibold py-0 px-2"
+              onClick={() => {
+                const nowSec = currentTime;
+                // Découpe un trou de 1 seconde (ou 30 frames) autour de la position courante
+                const holeStart = Math.max(0, nowSec);
+                const holeEnd = Math.min(duration, nowSec + 0.5);
+                if (effectiveSegments.length === 0) {
+                  handleUpdateSegments([
+                    [0, holeStart],
+                    [holeEnd, duration],
+                  ]);
+                } else {
+                  // Trouve quel segment contient la position et le scinde
+                  const nextSegs: Array<[number, number]> = [];
+                  let splitDone = false;
+                  for (const [s, e] of effectiveSegments) {
+                    if (!splitDone && nowSec > s && nowSec < e) {
+                      const seg1End = nowSec;
+                      const seg2Start = Math.min(e, nowSec + 0.5);
+                      if (seg1End > s + 0.05) nextSegs.push([s, seg1End]);
+                      if (e > seg2Start + 0.05) nextSegs.push([seg2Start, e]);
+                      splitDone = true;
+                    } else {
+                      nextSegs.push([s, e]);
+                    }
+                  }
+                  if (!splitDone) {
+                    // Ajoute un nouveau segment
+                    nextSegs.push([holeStart, holeEnd]);
+                    nextSegs.sort((a, b) => a[0] - b[0]);
+                  }
+                  handleUpdateSegments(nextSegs);
+                }
+              }}
+              title="Insère une coupe au milieu à partir de cette position"
+            >
+              <i className="bi bi-scissors me-1" />
+              Couper au milieu (+ Trou ✂️)
+            </button>
+          </div>
+
+          {/* Liste des segments actifs */}
+          <div className="d-flex flex-column gap-1.5">
+            <div className="d-flex align-items-center justify-content-between">
+              <span className="fw-bold small text-dark">
+                Segments utiles conservés ({effectiveSegments.length || 'Aucun — Animation complète'}):
+              </span>
+              <button
+                type="button"
+                className="btn btn-outline-success btn-sm py-0 px-2"
+                style={{ fontSize: '11px' }}
+                onClick={() => {
+                  const segs: Array<[number, number]> = effectiveSegments.length > 0 ? [...effectiveSegments] : [[0, duration]];
+                  const lastEnd = segs[segs.length - 1][1];
+                  const newStart = Math.min(duration - 0.2, lastEnd + 0.2);
+                  const newEnd = duration;
+                  if (newEnd > newStart) {
+                    segs.push([newStart, newEnd]);
+                    handleUpdateSegments(segs);
+                  }
+                }}
+              >
+                <i className="bi bi-plus-lg me-1" />
+                Ajouter un segment
+              </button>
+            </div>
+
+            {effectiveSegments.length === 0 ? (
+              <div className="text-muted p-2 bg-light rounded text-center small fst-italic">
+                L'animation est lue intégralement de 0 à {duration.toFixed(2)}s. Utilisez les boutons ci-dessus pour couper le début, la fin ou le milieu.
+              </div>
+            ) : (
+              <div className="d-flex flex-column gap-1">
+                {effectiveSegments.map(([startSec, endSec], idx) => {
+                  const startF = Math.round(startSec * fps);
+                  const endF = Math.round(endSec * fps);
+                  const segDur = endSec - startSec;
+
+                  return (
+                    <div key={idx} className="d-flex flex-wrap align-items-center justify-content-between gap-2 p-1.5 bg-light rounded border">
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="badge bg-primary text-white">Segment #{idx + 1}</span>
+                        <span className="font-monospace small text-muted">
+                          Durée: <strong className="text-dark">{segDur.toFixed(2)}s</strong> ({Math.round(segDur * fps)}f)
+                        </span>
+                      </div>
+
+                      {/* Édition interactive Début et Fin */}
+                      <div className="d-flex align-items-center gap-2">
+                        {/* Début */}
+                        <div className="input-group input-group-sm w-auto">
+                          <span className="input-group-text py-0 px-1 bg-white small text-muted">Début</span>
+                          <input
+                            type="number"
+                            step="1"
+                            min="0"
+                            max={totalFrames}
+                            className="form-control form-control-sm font-monospace text-end py-0 px-1"
+                            style={{ width: '60px' }}
+                            value={startF}
+                            onChange={e => {
+                              const f = Math.max(0, Math.min(totalFrames, parseInt(e.target.value, 10) || 0));
+                              const next = [...effectiveSegments];
+                              next[idx] = [f / fps, next[idx][1]];
+                              handleUpdateSegments(next);
+                            }}
+                            title="Frame de début"
+                          />
+                          <span className="input-group-text py-0 px-1 bg-white small text-muted">f</span>
+                        </div>
+
+                        {/* Fin */}
+                        <div className="input-group input-group-sm w-auto">
+                          <span className="input-group-text py-0 px-1 bg-white small text-muted">Fin</span>
+                          <input
+                            type="number"
+                            step="1"
+                            min="0"
+                            max={totalFrames}
+                            className="form-control form-control-sm font-monospace text-end py-0 px-1"
+                            style={{ width: '60px' }}
+                            value={endF}
+                            onChange={e => {
+                              const f = Math.max(0, Math.min(totalFrames, parseInt(e.target.value, 10) || 0));
+                              const next = [...effectiveSegments];
+                              next[idx] = [next[idx][0], f / fps];
+                              handleUpdateSegments(next);
+                            }}
+                            title="Frame de fin"
+                          />
+                          <span className="input-group-text py-0 px-1 bg-white small text-muted">f</span>
+                        </div>
+
+                        {/* Bouton sauter à ce segment */}
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary btn-sm py-0 px-1.5"
+                          onClick={() => seekToFrame(startF)}
+                          title="Aller au début de ce segment"
+                        >
+                          <i className="bi bi-play-circle" />
+                        </button>
+
+                        {/* Bouton supprimer ce segment */}
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger btn-sm py-0 px-1.5"
+                          onClick={() => {
+                            const next = effectiveSegments.filter((_, i) => i !== idx);
+                            handleUpdateSegments(next.length > 0 ? next : null);
+                          }}
+                          title="Supprimer ce segment"
+                        >
+                          <i className="bi bi-trash" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
