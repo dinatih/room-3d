@@ -76,6 +76,35 @@ export function ViewControlBar({
   const setCameraTarget = useSceneStore(s => s.setCameraTarget);
   const setCameraMovement = useSceneStore(s => s.setCameraMovement);
 
+  const [isVRActive, setIsVRActive] = useState(false);
+  const [isVRSupported, setIsVRSupported] = useState(false);
+  const [isImmersiveActive, setIsImmersiveActive] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && 'xr' in navigator && (navigator as any).xr) {
+      (navigator as any).xr.isSessionSupported('immersive-vr')
+        .then((supported: boolean) => setIsVRSupported(supported))
+        .catch(() => setIsVRSupported(false));
+    }
+  }, []);
+
+  useEffect(() => {
+    const onVR = (e: Event) => {
+      const detail = (e as CustomEvent<{ active: boolean }>).detail;
+      if (detail && typeof detail.active === 'boolean') setIsVRActive(detail.active);
+    };
+    const onImmersive = (e: Event) => {
+      const detail = (e as CustomEvent<{ active: boolean }>).detail;
+      if (detail && typeof detail.active === 'boolean') setIsImmersiveActive(detail.active);
+    };
+    document.addEventListener('vr-state-change', onVR);
+    document.addEventListener('immersive-state-change', onImmersive);
+    return () => {
+      document.removeEventListener('vr-state-change', onVR);
+      document.removeEventListener('immersive-state-change', onImmersive);
+    };
+  }, []);
+
   if (hidden) return null;
 
   const isOrtho = cameraProjection === 'ortho';
@@ -200,35 +229,6 @@ export function ViewControlBar({
     </div>,
     document.body,
   );
-
-  const [isVRActive, setIsVRActive] = useState(false);
-  const [isVRSupported, setIsVRSupported] = useState(false);
-  const [isImmersiveActive, setIsImmersiveActive] = useState(false);
-
-  useEffect(() => {
-    if (typeof navigator !== 'undefined' && 'xr' in navigator && (navigator as any).xr) {
-      (navigator as any).xr.isSessionSupported('immersive-vr')
-        .then((supported: boolean) => setIsVRSupported(supported))
-        .catch(() => setIsVRSupported(false));
-    }
-  }, []);
-
-  useEffect(() => {
-    const onVR = (e: Event) => {
-      const detail = (e as CustomEvent<{ active: boolean }>).detail;
-      if (detail && typeof detail.active === 'boolean') setIsVRActive(detail.active);
-    };
-    const onImmersive = (e: Event) => {
-      const detail = (e as CustomEvent<{ active: boolean }>).detail;
-      if (detail && typeof detail.active === 'boolean') setIsImmersiveActive(detail.active);
-    };
-    document.addEventListener('vr-state-change', onVR);
-    document.addEventListener('immersive-state-change', onImmersive);
-    return () => {
-      document.removeEventListener('vr-state-change', onVR);
-      document.removeEventListener('immersive-state-change', onImmersive);
-    };
-  }, []);
 
   const bar = (
     <>
