@@ -24,8 +24,6 @@ import { LayersSection } from './sidepanel/sections/LayersSection';
 import { InteractiveSection } from './sidepanel/sections/InteractiveSection';
 import { CharacterSection } from './sidepanel/sections/CharacterSection';
 import { ProfileSection } from './sidepanel/sections/ProfileSection';
-import { DevToolsGroups } from './DevToolsOverlay';
-import { Minimap } from './Minimap';
 
 export type { ToolbarPanelsProps };
 
@@ -372,35 +370,7 @@ export function ToolbarPanelsRow({
         )}
 
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux principaux">
-          {/* 1. Plan */}
-          <PanelPopover
-            icon="bi-map-fill"
-            title="Plan (M)"
-            hideUI={hideUI}
-            manual
-            placementMode="desktop-above-viewbar"
-            compactMode
-            noHeader
-            toggleEvent="toggle-minimap"
-          >
-            <Minimap embedded showGroup={false} />
-          </PanelPopover>
-
-          {/* 2. Perf */}
-          <PanelPopover
-            icon="bi-bar-chart-fill"
-            title="Performances & Stats (H)"
-            hideUI={hideUI}
-            manual
-            placementMode="desktop-above-viewbar"
-            compactMode
-            noHeader
-            toggleEvent="toggle-perf"
-          >
-            <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
-          </PanelPopover>
-
-          {/* 3. CV */}
+          {/* CV */}
           <PanelPopover
             icon="bi-briefcase-fill"
             label="CV"

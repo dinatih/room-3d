@@ -10,6 +10,8 @@ import { CHARACTERS, findCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
+import { Minimap } from '@features/scene/Minimap';
+import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
 const TAG_COLORS: Record<string, string> = {
@@ -77,6 +79,19 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const logAreaRef = useRef<HTMLDivElement>(null);
   const [bottomDockHeight, setBottomDockHeight] = useState(0);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [showMinimap, setShowMinimap] = useState(false);
+  const [showPerf, setShowPerf] = useState(false);
+
+  useEffect(() => {
+    const onToggleMinimap = () => setShowMinimap(v => !v);
+    const onTogglePerf = () => setShowPerf(v => !v);
+    document.addEventListener('toggle-minimap', onToggleMinimap);
+    document.addEventListener('toggle-perf', onTogglePerf);
+    return () => {
+      document.removeEventListener('toggle-minimap', onToggleMinimap);
+      document.removeEventListener('toggle-perf', onTogglePerf);
+    };
+  }, []);
 
   // Écoute des CustomEvents 'app-log'
   useEffect(() => {
@@ -182,18 +197,25 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
 
   return (
     <div
-      className={`app-console position-fixed ui-panel-top d-flex flex-column overflow-hidden ${hideUI ? 'ui-hidden' : ''}`}
+      className={`app-console position-fixed ui-panel-top d-flex flex-column align-items-end gap-1 ${hideUI ? 'ui-hidden' : ''}`}
       style={{
         top: isMobile ? 'calc(env(safe-area-inset-top) + 8px)' : 16,
         right: isMobile ? 8 : 16,
         left: open ? (isMobile ? 8 : 288) : 'auto',
-        height: open ? (isMaximized ? availableHeight : '140px') : 'auto',
         maxHeight: availableHeight,
         zIndex: 100,
-        pointerEvents: hideUI ? 'none' : undefined,
+        pointerEvents: 'none',
       }}
     >
-      <div className={`${TOOLBAR_CLASS} ${open ? 'w-100 flex-column align-items-stretch flex-grow-1 overflow-hidden' : ''}`} role="region" aria-label="Console applicative">
+      <div
+        className={`${TOOLBAR_CLASS} ${open ? 'w-100 flex-column align-items-stretch overflow-hidden' : ''}`}
+        style={{
+          pointerEvents: 'auto',
+          ...(open ? { height: isMaximized ? availableHeight : '140px', flexShrink: 0 } : {}),
+        }}
+        role="region"
+        aria-label="Console applicative"
+      >
         <div
           className="d-flex flex-nowrap align-items-center justify-content-between gap-1 flex-shrink-0 user-select-none"
           style={{ cursor: 'pointer' }}
@@ -343,6 +365,55 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
           </div>
         )}
       </div>
+
+      {/* Barre de contrôle sous la card Console (Minimap, Perf) */}
+      <div
+        className={`${TOOLBAR_CLASS} flex-shrink-0 align-self-end`}
+        style={{ pointerEvents: 'auto' }}
+        role="toolbar"
+        aria-label="Contrôles secondaires"
+      >
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${showMinimap ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+          onClick={() => setShowMinimap(v => !v)}
+          title="Plan 2D (Touche M)"
+          aria-expanded={showMinimap}
+        >
+          <i className="bi bi-map-fill" aria-hidden="true" />
+          <span>Minimap</span>
+        </button>
+
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${showPerf ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+          onClick={() => setShowPerf(v => !v)}
+          title="Performances & Stats (Touche H)"
+          aria-expanded={showPerf}
+        >
+          <i className="bi bi-bar-chart-fill" aria-hidden="true" />
+          <span>Perf</span>
+        </button>
+      </div>
+
+      {/* Bodies de Minimap et Perf s'ouvrant l'un en dessous de l'autre */}
+      {showMinimap && (
+        <div
+          className="glass-card shadow-lg rounded-2 p-1 align-self-end"
+          style={{ pointerEvents: 'auto', width: 'fit-content' }}
+        >
+          <Minimap embedded showGroup={false} />
+        </div>
+      )}
+
+      {showPerf && (
+        <div
+          className="glass-card shadow-lg rounded-2 p-1 align-self-end"
+          style={{ pointerEvents: 'auto', width: 'fit-content' }}
+        >
+          <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
+        </div>
+      )}
     </div>
   );
 }
