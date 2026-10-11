@@ -284,68 +284,87 @@ export function ViewControlBar({
               <i className="bi bi-building" aria-hidden="true" />
               <span className="fw-semibold">Apt</span>
             </button>
-            <PanelPopover
-              icon="bi-plus-lg"
-              chevron
-              title="Outils & Actions"
-              noHeader
-              className="view-control-bar__npc-popover--actions-menu"
-              hideUI={hideUI}
-            >
-              <div className="d-flex flex-wrap align-items-center gap-1 p-1">
-                {showCharacterModes && (
+          </div>
+          <PanelPopover
+            icon="bi-plus-lg"
+            chevron
+            title="Outils & Actions"
+            noHeader
+            className="view-control-bar__npc-popover--actions-menu"
+            hideUI={hideUI}
+          >
+            <div className="d-flex flex-column gap-1 p-1">
+              {showCharacterModes && (
+                <button
+                  type="button"
+                  className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange d-flex align-items-center gap-2 text-start w-100`}
+                  onClick={onEnterFlight}
+                  title="Activer le mode avion (Alt+V)"
+                  aria-label="Activer le mode avion (Alt+V)"
+                >
+                  <i className="bi bi-airplane-fill" aria-hidden="true" />
+                  <span className="fw-semibold">Avion</span>
+                </button>
+              )}
+              {panelControls}
+              {beforeAmbianceActions}
+              {toolbarActions}
+              {showCharacterModes && !isMobile && (
+                <>
                   <button
                     type="button"
-                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange`}
-                    onClick={onEnterFlight}
-                    title="Activer le mode avion (Alt+V)"
-                    aria-label="Activer le mode avion (Alt+V)"
+                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan d-flex align-items-center gap-2 text-start w-100`}
+                    onClick={() => useSceneStore.getState().setPhotoModeOpen(true)}
+                    title="Ouvrir le mode photo Raytracing (F10)"
+                    aria-label="Ouvrir le mode photo Raytracing (F10)"
                   >
-                    <i className="bi bi-airplane-fill" aria-hidden="true" />
+                    <i className="bi bi-camera-fill" aria-hidden="true" />
+                    <span className="fw-semibold">Raytracing (F10)</span>
                   </button>
-                )}
-                {panelControls}
-                {beforeAmbianceActions}
-                {toolbarActions}
-                {showCharacterModes && !isMobile && (
-                  <div className="d-flex gap-1 view-control-bar__group" role="group" aria-label="Actions de la scène">
-                    <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan`} onClick={() => useSceneStore.getState().setPhotoModeOpen(true)} title="Ouvrir le mode photo Raytracing (F10)" aria-label="Ouvrir le mode photo Raytracing (F10)">
-                      <i className="bi bi-camera-fill" aria-hidden="true" />
-                    </button>
-                    <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`} onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))} title="Afficher tous les raccourcis clavier" aria-label="Afficher tous les raccourcis clavier">
-                      <i className="bi bi-keyboard-fill" aria-hidden="true" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </PanelPopover>
-            {isVRSupported && (
-              <button
-                type="button"
-                onClick={() => {
-                  document.dispatchEvent(new CustomEvent('toggle-vr'));
-                }}
-                className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-                title="Mode Réalité Virtuelle (WebXR)"
-              >
-                <i className="bi bi-headset-vr" aria-hidden="true" />
-                <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
-              </button>
-            )}
-            {isMobile && (
-              <button
-                type="button"
-                onClick={() => {
-                  document.dispatchEvent(new CustomEvent('toggle-immersive'));
-                }}
-                className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-                title="Mode Immersif Gyroscope (Plein écran)"
-              >
-                <i className="bi bi-eye-fill" aria-hidden="true" />
-                <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
-              </button>
-            )}
-          </div>
+                  <button
+                    type="button"
+                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}
+                    onClick={() => window.dispatchEvent(new Event('open-shortcuts-modal'))}
+                    title="Afficher tous les raccourcis clavier"
+                    aria-label="Afficher tous les raccourcis clavier"
+                  >
+                    <i className="bi bi-keyboard-fill" aria-hidden="true" />
+                    <span className="fw-semibold">Raccourcis</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </PanelPopover>
+          {(isVRSupported || isMobile) && (
+            <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Modes immersifs">
+              {isVRSupported && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    document.dispatchEvent(new CustomEvent('toggle-vr'));
+                  }}
+                  className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+                  title="Mode Réalité Virtuelle (WebXR)"
+                >
+                  <i className="bi bi-headset-vr" aria-hidden="true" />
+                  <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
+                </button>
+              )}
+              {isMobile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    document.dispatchEvent(new CustomEvent('toggle-immersive'));
+                  }}
+                  className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+                  title="Mode Immersif Gyroscope (Plein écran)"
+                >
+                  <i className="bi bi-eye-fill" aria-hidden="true" />
+                  <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
+                </button>
+              )}
+            </div>
+          )}
           {animalCameraActive && (
             <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la caméra de l’animal" aria-label="Quitter la caméra de l’animal">
               <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>

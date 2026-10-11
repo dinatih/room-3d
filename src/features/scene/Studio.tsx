@@ -957,6 +957,7 @@ export function Studio() {
                 setInventoryInitialCat('all');
                 setShowInventory(true);
               }}
+              asVerticalList
             />
           }
           onEnterFlight={() => {

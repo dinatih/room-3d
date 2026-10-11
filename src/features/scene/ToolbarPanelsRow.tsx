@@ -28,6 +28,10 @@ export type { ToolbarPanelsProps };
 const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
+export interface ToolbarPanelsRowProps extends ToolbarPanelsProps {
+  asVerticalList?: boolean;
+}
+
 export function ToolbarPanelsRow({
   layers,
   onToggleLayer,
@@ -48,7 +52,8 @@ export function ToolbarPanelsRow({
   hideUI = false,
   onOpenInventory,
   prefix: _prefix,
-}: ToolbarPanelsProps) {
+  asVerticalList = false,
+}: ToolbarPanelsRowProps) {
   const isMobile = useIsMobile();
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const currentHdri = useSceneStore(state => state.currentHdri);
@@ -221,7 +226,7 @@ export function ToolbarPanelsRow({
   );
 
   return (
-    <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux de configuration et grilles">
+    <div className={asVerticalList ? 'd-flex flex-column gap-1 w-100' : 'btn-group btn-group-sm view-control-bar__group'} role="group" aria-label="Panneaux de configuration et grilles">
       {/* 1. Calques */}
       <PanelPopover
         icon="bi-layers-fill"
