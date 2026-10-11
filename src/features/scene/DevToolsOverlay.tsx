@@ -142,23 +142,24 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
               <span title="Draw calls" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.drawCalls >= 500 ? 'text-danger' : devState.drawCalls >= 200 ? 'text-warning' : 'text-primary'}`}>
                 DC: {isIdle ? '0' : devState.drawCalls.toLocaleString()}
               </span>
-              <span title="Triangles rendus" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.triangles >= 2_000_000 ? 'text-danger' : devState.triangles >= 1_000_000 ? 'text-warning' : 'text-primary'}`}>
-                Tris: {isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'}
-              </span>
+              <div className="d-flex align-items-center gap-1">
+                <span title="Triangles rendus" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.triangles >= 2_000_000 ? 'text-danger' : devState.triangles >= 1_000_000 ? 'text-warning' : 'text-primary'}`}>
+                  Tris: {isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="btn btn-link btn-sm p-0 text-decoration-none text-primary d-inline-flex align-items-center lh-1"
+                  style={{ fontSize: 11 }}
+                  title={showDetails ? 'Moins d\'infos' : 'Plus d\'infos'}
+                  aria-label={showDetails ? 'Moins d\'infos' : 'Plus d\'infos'}
+                >
+                  <i className="bi bi-info-circle me-0.5" aria-hidden="true" />
+                  <span>{showDetails ? '-' : '+'}</span>
+                </button>
+              </div>
             </div>
           </div>
-
-          {/* Bouton pour afficher les infos supplémentaires */}
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            style={{
-              display: 'block', width: '100%', textAlign: 'left',
-              background: 'transparent', border: 'none',
-              color: '#1d4ed8', fontSize: 10, fontWeight: 600, padding: '4px 8px', cursor: 'pointer', marginTop: 4,
-            }}
-          >
-            <i className={`bi ${showDetails ? 'bi-chevron-down' : 'bi-chevron-right'} me-1`} aria-hidden="true" />{showDetails ? 'Moins' : 'Plus d\'infos'}
-          </button>
 
           {showDetails && (
             <>
