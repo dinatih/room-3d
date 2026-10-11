@@ -51,37 +51,9 @@ export function ToolbarPanelsRow({
 }: ToolbarPanelsProps) {
   const isMobile = useIsMobile();
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
-  const [isVRActive, setIsVRActive] = useState(false);
-  const [isVRSupported, setIsVRSupported] = useState(false);
-  const [isImmersiveActive, setIsImmersiveActive] = useState(false);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
   const npcGridActive = useSceneStore(state => state.layers.characterGrid);
-
-  useEffect(() => {
-    if (typeof navigator !== 'undefined' && 'xr' in navigator && (navigator as any).xr) {
-      (navigator as any).xr.isSessionSupported('immersive-vr')
-        .then((supported: boolean) => setIsVRSupported(supported))
-        .catch(() => setIsVRSupported(false));
-    }
-  }, []);
-
-  useEffect(() => {
-    const onVR = (e: Event) => {
-      const detail = (e as CustomEvent<{ active: boolean }>).detail;
-      if (detail && typeof detail.active === 'boolean') setIsVRActive(detail.active);
-    };
-    const onImmersive = (e: Event) => {
-      const detail = (e as CustomEvent<{ active: boolean }>).detail;
-      if (detail && typeof detail.active === 'boolean') setIsImmersiveActive(detail.active);
-    };
-    document.addEventListener('vr-state-change', onVR);
-    document.addEventListener('immersive-state-change', onImmersive);
-    return () => {
-      document.removeEventListener('vr-state-change', onVR);
-      document.removeEventListener('immersive-state-change', onImmersive);
-    };
-  }, []);
 
   useEffect(() => {
     if (!layers.realSun) { setSunInfo(null); return; }
@@ -249,152 +221,88 @@ export function ToolbarPanelsRow({
   );
 
   return (
-    <>
-      {(isVRSupported || isMobile) && (
-        <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-          {isVRSupported && (
-            <button
-              type="button"
-              onClick={() => {
-                document.dispatchEvent(new CustomEvent('toggle-vr'));
-              }}
-              className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-              title="Mode Réalité Virtuelle (WebXR)"
-            >
-              <i className="bi bi-headset-vr" aria-hidden="true" />
-              <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
-            </button>
-          )}
+    <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux de configuration et grilles">
+      {/* 1. Calques */}
+      <PanelPopover
+        icon="bi-layers-fill"
+        label="Calq"
+        title="Calques & Affichage"
+        headerExtra={layersHeaderButtons}
+        hideUI={hideUI}
+      >
+        {layersSectionContent}
+      </PanelPopover>
 
-          {isMobile && (
-            <button
-              type="button"
-              onClick={() => {
-                document.dispatchEvent(new CustomEvent('toggle-immersive'));
-              }}
-              className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-              title="Mode Immersif Gyroscope (Plein écran)"
-            >
-              <i className="bi bi-eye-fill" aria-hidden="true" />
-              <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
-            </button>
-          )}
-        </div>
+      {/* 2. Interactif */}
+      <PanelPopover
+        icon="bi-controller"
+        label="Inter"
+        title="Objets interactifs"
+        hideUI={hideUI}
+      >
+        {interactiveSectionContent}
+      </PanelPopover>
+
+      {/* 3. Config User / PNJ */}
+      <PanelPopover
+        icon={
+          <span className="d-inline-flex align-items-center gap-1">
+            <i className="bi bi-person-fill" aria-hidden="true" />
+            <i className="bi bi-gear-fill" aria-hidden="true" />
+          </span>
+        }
+        label="PNJ"
+        title="Configuration utilisateur & PNJ"
+        headerExtra={personnageHeaderButtons}
+        hideUI={hideUI}
+      >
+        {characterSectionContent}
+      </PanelPopover>
+
+      {/* 4. Inventaire */}
+      {onOpenInventory && (
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+          onClick={onOpenInventory}
+          title="Ouvrir l'inventaire (I)"
+          aria-label="Ouvrir l'inventaire (I)"
+        >
+          <i className="bi bi-box-seam-fill" aria-hidden="true" />
+          <span className="fw-semibold">Inv</span>
+        </button>
       )}
 
-      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Panneaux secondaires">
-          {/* 4. Calques */}
-          <PanelPopover
-            icon="bi-layers-fill"
-            label="Calq"
-            title="Calques & Affichage"
-            headerExtra={layersHeaderButtons}
-            hideUI={hideUI}
-          >
-            {layersSectionContent}
-          </PanelPopover>
+      {/* 5. Grille / Vitrine PNJ */}
+      <button
+        type="button"
+        className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
+        onClick={() => {
+          document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
+        }}
+        title="Afficher ou quitter la grille / vitrine des PNJ (G)"
+        aria-label="Afficher ou quitter la grille des PNJ (G)"
+        aria-pressed={npcGridActive}
+      >
+        <i className="bi bi-people-fill" aria-hidden="true" />
+        <span className="fw-semibold">Grille PNJ</span>
+      </button>
 
-        {/* 5. Interactif */}
-        <PanelPopover
-          icon="bi-controller"
-          label="Inter"
-          title="Objets interactifs"
-          hideUI={hideUI}
-        >
-          {interactiveSectionContent}
-        </PanelPopover>
-
-        {/* 6. Config User */}
-        <PanelPopover
-          icon={
-            <span className="d-inline-flex align-items-center gap-1">
-              <i className="bi bi-person-fill" aria-hidden="true" />
-              <i className="bi bi-gear-fill" aria-hidden="true" />
-            </span>
-          }
-          title="Configuration utilisateur"
-          headerExtra={personnageHeaderButtons}
-          hideUI={hideUI}
-        >
-          {characterSectionContent}
-        </PanelPopover>
-
-        {/* 7. Grilles & Inventaire */}
-        <PanelPopover
-          icon="bi-grid-3x3-gap-fill"
-          label="Gril"
-          title="Grilles & Inventaire"
-          hideUI={hideUI}
-          active={npcGridActive || Boolean(layers.inventoryGrid)}
-        >
-          <div className="d-flex flex-column gap-1.5 p-1">
-            {/* 1. Inventaire */}
-            <button
-              type="button"
-              className="btn btn-sm btn-light border d-flex align-items-center justify-content-between p-2 text-dark text-start"
-              onClick={(e) => {
-                (e.currentTarget.closest('[popover]') as HTMLElement | null)?.hidePopover();
-                onOpenInventory?.();
-              }}
-              title="Ouvrir l'inventaire (I)"
-            >
-              <span className="d-flex align-items-center gap-2">
-                <i className="bi bi-box-seam-fill text-primary fs-6" aria-hidden="true" />
-                <span className="fw-semibold">Inventaire</span>
-              </span>
-              <span className="badge bg-secondary-subtle text-secondary small">I</span>
-            </button>
-
-            {/* 2. Grille/Vitrine Personnages */}
-            <button
-              type="button"
-              className={`btn btn-sm border d-flex align-items-center justify-content-between p-2 text-start ${
-                npcGridActive ? 'btn-primary text-white shadow-sm' : 'btn-light text-dark'
-              }`}
-              onClick={() => {
-                document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
-              }}
-              title="Afficher ou quitter la grille / vitrine des PNJ (G)"
-              aria-pressed={npcGridActive}
-            >
-              <span className="d-flex align-items-center gap-2">
-                <i className={`bi bi-people-fill fs-6 ${npcGridActive ? 'text-white' : 'text-primary'}`} aria-hidden="true" />
-                <span className="fw-semibold">Grille/Vitrine Personnages</span>
-              </span>
-              <div className="d-flex align-items-center gap-1">
-                {npcGridActive && <i className="bi bi-check-lg" aria-hidden="true" />}
-                <span className={`badge ${npcGridActive ? 'bg-white bg-opacity-25 text-white' : 'bg-secondary-subtle text-secondary'} small`}>G</span>
-              </div>
-            </button>
-
-            {/* 3. Grille inventaire */}
-            <button
-              type="button"
-              className={`btn btn-sm border d-flex align-items-center justify-content-between p-2 text-start ${
-                layers.inventoryGrid ? 'btn-primary text-white shadow-sm' : 'btn-light text-dark'
-              }`}
-              onClick={() => {
-                if (onToggleLayer) onToggleLayer('inventoryGrid');
-                else useSceneStore.getState().toggleLayer?.('inventoryGrid');
-              }}
-              title="Afficher ou masquer la grille des objets d'inventaire (Alt+I)"
-              aria-pressed={Boolean(layers.inventoryGrid)}
-            >
-              <span className="d-flex align-items-center gap-2">
-                <i className={`bi bi-box-seam fs-6 ${layers.inventoryGrid ? 'text-white' : 'text-primary'}`} aria-hidden="true" />
-                <span className="fw-semibold">Grille inventaire</span>
-              </span>
-              <div className="d-flex align-items-center gap-1">
-                {layers.inventoryGrid && <i className="bi bi-check-lg" aria-hidden="true" />}
-                <span className={`badge ${layers.inventoryGrid ? 'bg-white bg-opacity-25 text-white' : 'bg-secondary-subtle text-secondary'} small`}>Alt+I</span>
-              </div>
-            </button>
-          </div>
-        </PanelPopover>
-      </div>
+      {/* 6. Grille inventaire */}
+      <button
+        type="button"
+        className={`${TOOLBAR_BUTTON_CLASS} ${layers.inventoryGrid ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
+        onClick={() => {
+          if (onToggleLayer) onToggleLayer('inventoryGrid');
+          else useSceneStore.getState().toggleLayer?.('inventoryGrid');
+        }}
+        title="Afficher ou masquer la grille des objets d'inventaire (Alt+I)"
+        aria-label="Grille inventaire (Alt+I)"
+        aria-pressed={Boolean(layers.inventoryGrid)}
+      >
+        <i className="bi bi-box-seam" aria-hidden="true" />
+        <span className="fw-semibold">Grille Inv</span>
+      </button>
     </div>
-
-    </>
   );
 }

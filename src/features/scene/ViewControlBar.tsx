@@ -71,8 +71,6 @@ export function ViewControlBar({
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
   const currentHdri = useSceneStore(s => s.currentHdri);
   const setHdri = useSceneStore(s => s.setHdri);
-  const cameraViewMarkers = useSceneStore(s => s.layers.cameraViewMarkers);
-  const toggleLayer = useSceneStore(s => s.toggleLayer);
   const cameraTarget = useSceneStore(s => s.cameraTarget);
   const setCameraTarget = useSceneStore(s => s.setCameraTarget);
   const setCameraMovement = useSceneStore(s => s.setCameraMovement);
@@ -202,11 +200,39 @@ export function ViewControlBar({
     document.body,
   );
 
+  const [isVRActive, setIsVRActive] = useState(false);
+  const [isVRSupported, setIsVRSupported] = useState(false);
+  const [isImmersiveActive, setIsImmersiveActive] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && 'xr' in navigator && (navigator as any).xr) {
+      (navigator as any).xr.isSessionSupported('immersive-vr')
+        .then((supported: boolean) => setIsVRSupported(supported))
+        .catch(() => setIsVRSupported(false));
+    }
+  }, []);
+
+  useEffect(() => {
+    const onVR = (e: Event) => {
+      const detail = (e as CustomEvent<{ active: boolean }>).detail;
+      if (detail && typeof detail.active === 'boolean') setIsVRActive(detail.active);
+    };
+    const onImmersive = (e: Event) => {
+      const detail = (e as CustomEvent<{ active: boolean }>).detail;
+      if (detail && typeof detail.active === 'boolean') setIsImmersiveActive(detail.active);
+    };
+    document.addEventListener('vr-state-change', onVR);
+    document.addEventListener('immersive-state-change', onImmersive);
+    return () => {
+      document.removeEventListener('vr-state-change', onVR);
+      document.removeEventListener('immersive-state-change', onImmersive);
+    };
+  }, []);
+
   const bar = (
     <>
     {hoverTooltip}
     <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--multi-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
-      {panelControls}
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {showCharacterModes && (
           <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Sélection des personnages">
@@ -257,6 +283,32 @@ export function ViewControlBar({
               <i className="bi bi-building" aria-hidden="true" />
               <span className="fw-semibold">Apt</span>
             </button>
+            {isVRSupported && (
+              <button
+                type="button"
+                onClick={() => {
+                  document.dispatchEvent(new CustomEvent('toggle-vr'));
+                }}
+                className={`${TOOLBAR_BUTTON_CLASS} ${isVRActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+                title="Mode Réalité Virtuelle (WebXR)"
+              >
+                <i className="bi bi-headset-vr" aria-hidden="true" />
+                <span className="fw-semibold">{isVRActive && <i className="bi bi-x-lg me-1" aria-hidden="true" />}VR</span>
+              </button>
+            )}
+            {isMobile && (
+              <button
+                type="button"
+                onClick={() => {
+                  document.dispatchEvent(new CustomEvent('toggle-immersive'));
+                }}
+                className={`${TOOLBAR_BUTTON_CLASS} ${isImmersiveActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+                title="Mode Immersif Gyroscope (Plein écran)"
+              >
+                <i className="bi bi-eye-fill" aria-hidden="true" />
+                <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immersif'}</span>
+              </button>
+            )}
           </div>
           {animalCameraActive && (
             <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la caméra de l’animal" aria-label="Quitter la caméra de l’animal">
@@ -296,18 +348,7 @@ export function ViewControlBar({
             <i className="bi bi-airplane-fill" aria-hidden="true" />
           </button>
         )}
-        {showCharacterModes && (
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} bg-transparent ${cameraViewMarkers ? 'btn-outline-danger text-danger' : 'btn-outline-secondary'}`}
-            onClick={() => toggleLayer('cameraViewMarkers')}
-            title="Afficher ou masquer les raccourcis de vues 3D"
-            aria-label="Raccourcis de vues 3D"
-            aria-pressed={cameraViewMarkers}
-          >
-            <i className="bi bi-camera-video" aria-hidden="true" />
-          </button>
-        )}
+        {panelControls}
         {beforeAmbianceActions}
         {toolbarActions}
         {showCharacterModes && !isMobile && (
