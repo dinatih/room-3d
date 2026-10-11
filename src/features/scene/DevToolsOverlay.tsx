@@ -154,8 +154,8 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
                   title={showDetails ? 'Moins d\'infos' : 'Plus d\'infos'}
                   aria-label={showDetails ? 'Moins d\'infos' : 'Plus d\'infos'}
                 >
-                  <i className="bi bi-info-circle me-0.5" aria-hidden="true" />
                   <span>{showDetails ? '-' : '+'}</span>
+                  <i className="bi bi-info-circle me-0.5" aria-hidden="true" />
                 </button>
               </div>
             </div>

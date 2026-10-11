@@ -136,7 +136,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'work-sitting',
         name: 'Travailler assis',
         relative: true,
-        offset: [0, 0, 30],
+        offset: [0, 0, 0],
         rotY: Math.PI,
         animationsRandom: ['having-a-meeting-female', 'having-a-meeting-male'],
       }

@@ -163,6 +163,30 @@ export function useCameraPointerEvents({
       invalidate();
     };
 
+    // Boutons de zoom de la barre d'outils (camera-zoom)
+    const onCameraZoom = (event: Event) => {
+      if (cameraState.isIntroRunning) return;
+      if (modeRef.current !== 'follow' && modeRef.current !== 'fpv') return;
+      const { direction, scope } = (event as CustomEvent<{
+        direction: 'in' | 'out';
+        scope: 'scene' | 'preview';
+      }>).detail;
+      if (scope !== 'scene') return;
+
+      if (modeRef.current === 'follow') {
+        const step = direction === 'in' ? -25 : 25;
+        orbitDistance.current = Math.max(30, orbitDistance.current + step);
+        updateFollowLook();
+      } else {
+        const cam = camera as THREE.PerspectiveCamera;
+        if (!cam.isPerspectiveCamera || cameraState.isXR) return;
+        const step = direction === 'in' ? -5 : 5;
+        cam.fov = Math.max(30, Math.min(120, cam.fov + step));
+        cam.updateProjectionMatrix();
+      }
+      invalidate();
+    };
+
     domElement.addEventListener('mousedown', onDown);
     document.addEventListener('mouseup', onUp);
     document.addEventListener('mousemove', onMove);
@@ -172,6 +196,7 @@ export function useCameraPointerEvents({
     document.addEventListener('touchend', onTouchEnd, { passive: true });
 
     domElement.addEventListener('wheel', onWheel, { passive: false });
+    document.addEventListener('camera-zoom', onCameraZoom);
     return () => {
       domElement.removeEventListener('mousedown', onDown);
       document.removeEventListener('mouseup', onUp);
@@ -182,6 +207,7 @@ export function useCameraPointerEvents({
       document.removeEventListener('touchend', onTouchEnd);
 
       domElement.removeEventListener('wheel', onWheel);
+      document.removeEventListener('camera-zoom', onCameraZoom);
     };
   }, [domElement, camera, modeRef, orbitYaw, orbitPitch, orbitDistance, followYaw, followPitch, dragging, updateFollowLook, invalidate]);
 }
