@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { cameraState } from './cameraState';
 import { ROOM_W, ROOM_D } from './wallData';
 
-const WALK_SPEED = 2;
+const WALK_SPEED = 2.7; // 2.7 cm / frame @ 60fps = 162 cm/s (synchro anim_walking.glb)
 
 export function VRMode() {
   const { gl, camera, scene } = useThree();

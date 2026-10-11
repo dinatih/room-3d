@@ -12,7 +12,7 @@ import { resolveAnimationId, getAnimationDef, resolveSlotAnimation } from '../an
 
 import { AgentState, AgentStatus } from './agent/agentTypes';
 import { cameraState } from '../cameraState';
-import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation } from './agent/agentWalkAnimations';
+import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation, getWalkSpeedForAnimation } from './agent/agentWalkAnimations';
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
 import { computeSteeringVector, computeRotYStep } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
@@ -340,7 +340,6 @@ export function useAgentController(
     }
   }
 
-  const SPEED = 100;
   const ROT_SPEED = 5;
 
   const triggerInstructionEvent = (instruction: AgentInstruction) => {
@@ -845,9 +844,10 @@ export function useAgentController(
         }
       } else {
         const targetY = target.ty ?? 0;
+        const currentSpeed = getWalkSpeedForAnimation(currentWalkAnimRef.current);
         if (stateRef.current.y !== targetY) {
           const dy = targetY - stateRef.current.y;
-          const yStep = Math.sign(dy) * Math.min(Math.abs(dy), SPEED * dt * 2.0);
+          const yStep = Math.sign(dy) * Math.min(Math.abs(dy), currentSpeed * dt * 2.0);
           stateRef.current.y += yStep;
         }
         stateRef.current.animation = currentWalkAnimRef.current;
@@ -865,7 +865,7 @@ export function useAgentController(
           currentInstruction.smartObjectId
         );
 
-        const moveDist = Math.min(SPEED * dt, dist);
+        const moveDist = Math.min(currentSpeed * dt, dist);
         stateRef.current.x += steerX * moveDist;
         stateRef.current.z += steerZ * moveDist;
 

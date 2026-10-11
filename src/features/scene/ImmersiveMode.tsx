@@ -15,7 +15,7 @@ import { cameraState } from './cameraState';
 import { ROOM_W, ROOM_D } from './wallData';
 
 const WALK_HEAD_OFFSET = 10;
-const WALK_SPEED       = 2;
+const WALK_SPEED       = 2.7; // 2.7 cm / frame @ 60fps = 162 cm/s (synchro anim_walking.glb)
 
 function activeFollowH(): number {
   const h = cameraState.characterHeight;
