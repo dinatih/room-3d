@@ -107,6 +107,14 @@
       --bs-btn-hover-bg: #{palette.$gray-200};
       --bs-btn-hover-color: #{palette.$gray-900};
     }
+
+    .view-control-bar__outline--red {
+      --bs-btn-color: #{palette.$red};
+      --bs-btn-border-color: #{palette.$red};
+      --bs-btn-hover-color: #{palette.$white};
+      --bs-btn-hover-bg: #{palette.$red};
+      --bs-btn-hover-border-color: #{palette.$red};
+    }
   }
 
   &--dock-width {
@@ -115,16 +123,12 @@
   }
 }
 
-.view-control-bar__btn--inventory {
+.view-control-bar .view-control-bar__outline--red {
   --bs-btn-color: #{palette.$red};
   --bs-btn-border-color: #{palette.$red};
   --bs-btn-hover-color: #{palette.$white};
   --bs-btn-hover-bg: #{palette.$red};
   --bs-btn-hover-border-color: #{palette.$red};
-
-  &:hover {
-    color: palette.$white !important;
-  }
 }
 
 .view-control-bar__npc-popover:not(:popover-open) {
