@@ -38,7 +38,6 @@ export function GroundPoint({ color = '#0058a3', scale = 1, hipsBone }: GroundPo
       gapSize: 1,
       transparent: true,
       opacity: 0.8,
-      depthTest: false,
     });
   }, [color]);
 
@@ -105,7 +104,7 @@ export function GroundPoint({ color = '#0058a3', scale = 1, hipsBone }: GroundPo
 
       {/* Ligne pointillée reliant root_joint et root_hip */}
       {hipsBone && (
-        <lineSegments ref={lineRef} material={dashedLineMat} renderOrder={9999} frustumCulled={false}>
+        <lineSegments ref={lineRef} material={dashedLineMat} frustumCulled={false}>
           <bufferGeometry ref={lineGeomRef} />
         </lineSegments>
       )}
