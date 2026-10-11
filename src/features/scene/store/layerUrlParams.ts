@@ -335,8 +335,8 @@ export function parseUrlLayerOverrides(): Partial<Record<keyof LayerState, boole
       lowerParams.set(key.toLowerCase(), val);
     }
 
-    // Détection explicite pour le calque personnages : npcNb=0 ou alias désactive le calque
-    const countParams = ['npcnb', 'npcs', 'laracount', 'characters', 'count', 'npccount'];
+    // Détection explicite pour le calque personnages : characterCount=0 ou alias désactive le calque
+    const countParams = ['charactercount', 'characters', 'count', 'npcnb', 'npcs', 'laracount', 'npccount'];
     for (const cp of countParams) {
       if (lowerParams.has(cp)) {
         const val = lowerParams.get(cp)?.trim().toLowerCase();
@@ -415,7 +415,7 @@ export function parseUrlLayerOverrides(): Partial<Record<keyof LayerState, boole
 export function updateUrlLayer(key: keyof LayerState, value: boolean) {
   if (typeof window === 'undefined') return;
   try {
-    if (key === 'character') return; // Géré par updateUrlNpcCount (format npcNb)
+    if (key === 'character') return; // Géré par updateUrlCharacterCount (format characterCount)
     const mapping = MONITORED_LAYERS.find(m => m.layerKey === key);
     if (!mapping) return;
 

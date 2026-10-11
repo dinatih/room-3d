@@ -36,7 +36,7 @@ import {
   updateUrlActiveCharacter,
 } from '@features/scene/characterConfig';
 
-function parseUrlNpcCount(): LaraCountMode {
+function parseUrlCharacterCount(): LaraCountMode {
   if (typeof window === 'undefined') return 4;
   try {
     let search = window.location.search;
@@ -44,7 +44,7 @@ function parseUrlNpcCount(): LaraCountMode {
       search = window.location.hash.substring(window.location.hash.indexOf('?'));
     }
     const params = new URLSearchParams(search);
-    const raw = params.get('npcNb') ?? params.get('npcs') ?? params.get('laraCount') ?? params.get('characters') ?? params.get('count') ?? params.get('npcCount');
+    const raw = params.get('characterCount') ?? params.get('characters') ?? params.get('count') ?? params.get('npcNb') ?? params.get('npcs') ?? params.get('laraCount') ?? params.get('npcCount');
     if (raw !== null) {
       const lower = raw.trim().toLowerCase();
       if (lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return CHARACTERS.length;
@@ -59,19 +59,19 @@ function parseUrlNpcCount(): LaraCountMode {
   return 4;
 }
 
-export function updateUrlNpcCount(count: LaraCountMode | 0) {
+export function updateUrlCharacterCount(count: LaraCountMode | 0) {
   if (typeof window === 'undefined') return;
   try {
     const url = new URL(window.location.href);
-    const countParams = ['npcNb', 'npcs', 'laraCount', 'characters', 'count', 'npcCount'];
+    const countParams = ['characterCount', 'characters', 'count', 'npcNb', 'npcs', 'laraCount', 'npcCount'];
     const hadParam = countParams.some(p => url.searchParams.has(p)) || url.searchParams.has('npc');
 
-    for (const p of [...countParams, 'npc', 'character', 'personnage', 'pnj']) {
+    for (const p of [...countParams, 'npc', 'pnj']) {
       url.searchParams.delete(p);
     }
 
     if (count !== 4) {
-      url.searchParams.set('npcNb', count.toString());
+      url.searchParams.set('characterCount', count.toString());
     } else if (!hadParam) {
       return; // Valeur par défaut, rien à nettoyer
     }
@@ -180,7 +180,7 @@ const initialLayers: LayerState = {
   // Booléens depuis LAYER_DEFAULTS (source unique de vérité)
   ...(LAYER_DEFAULTS as unknown as LayerState),
   // Valeurs non-booléennes (pas dans LAYER_DEFAULTS)
-  laraCount: parseUrlNpcCount(),
+  laraCount: parseUrlCharacterCount(),
   groundType: getRandomGrassType(),
   // Physique poitrine
   breastIntensity: 1.0,
@@ -535,7 +535,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
     const ids = getDefaultSceneCharacterIds(count, activeCharacterId);
     const activeMainIds = ids.filter(id => !isExtraCharacter(id));
     const activeExtraIds = ids.filter(isExtraCharacter);
-    updateUrlNpcCount(count);
+    updateUrlCharacterCount(count);
     // La sélection numérique encode déjà les extras ; retirer leur ancien paramètre global.
     updateUrlLayer('extraCharacters', false);
     cameraState.characterHidden = count === 0;
@@ -632,9 +632,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
       if (key === 'character') {
         cameraState.characterHidden = !nextLayers.character;
         if (!nextLayers.character) {
-          updateUrlNpcCount(0);
+          updateUrlCharacterCount(0);
         } else {
-          updateUrlNpcCount(state.layers.laraCount ?? 4);
+          updateUrlCharacterCount(state.layers.laraCount ?? 4);
         }
       }
       cameraState.invalidate?.();
