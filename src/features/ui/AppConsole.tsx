@@ -79,6 +79,7 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   const logAreaRef = useRef<HTMLDivElement>(null);
   const [bottomDockHeight, setBottomDockHeight] = useState(0);
   const [bottomDockWidth, setBottomDockWidth] = useState<number | null>(null);
+  const [bottomDockRight, setBottomDockRight] = useState<number | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
   const [showMinimap, setShowMinimap] = useState(false);
   const [showPerf, setShowPerf] = useState(false);
@@ -143,27 +144,26 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
       })
     : logs;
 
-  // Réserver l'espace occupé par les commandes et le menu du bas.
+  // Réserver l'espace et aligner les dimensions/espacements sur le menu principal du bas.
   useLayoutEffect(() => {
     if (hidden) return;
-    const docks = Array.from(document.querySelectorAll<HTMLElement>('.view-control-bar-dock'));
     const updateBottomDockDims = () => {
-      if (docks.length > 0) {
-        const dockTop = Math.min(window.innerHeight, ...docks.map(dock => dock.getBoundingClientRect().top));
-        setBottomDockHeight(window.innerHeight - dockTop);
-      }
-      const mainDock = document.querySelector<HTMLElement>('.view-control-bar-dock') || document.querySelector<HTMLElement>('.view-control-bar');
-      if (mainDock) {
-        const rect = mainDock.getBoundingClientRect();
+      const bottomBar = document.querySelector<HTMLElement>('.view-control-bar-dock .view-control-bar')
+        ?? document.querySelector<HTMLElement>('.view-control-bar-dock');
+      if (bottomBar) {
+        const rect = bottomBar.getBoundingClientRect();
         if (rect.width > 0) {
           setBottomDockWidth(Math.round(rect.width));
         }
+        if (rect.right > 0) {
+          setBottomDockRight(Math.round(window.innerWidth - rect.right));
+        }
+        setBottomDockHeight(Math.max(0, window.innerHeight - rect.top));
       }
     };
+    const targetElements = Array.from(document.querySelectorAll<HTMLElement>('.view-control-bar-dock, .view-control-bar-dock .view-control-bar'));
     const observer = new ResizeObserver(updateBottomDockDims);
-    docks.forEach(dock => observer.observe(dock));
-    const mainBar = document.querySelector<HTMLElement>('.view-control-bar');
-    if (mainBar) observer.observe(mainBar);
+    targetElements.forEach(el => observer.observe(el));
     window.addEventListener('resize', updateBottomDockDims);
     updateBottomDockDims();
     return () => {
@@ -175,7 +175,8 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
   if (hidden) return null;
 
   const availableHeight = `calc(100dvh - ${bottomDockHeight}px - ${isMobile ? 'env(safe-area-inset-top) - 16px' : '32px'})`;
-  const panelWidth = bottomDockWidth ?? (isMobile ? 260 : 320);
+  const panelWidth = bottomDockWidth ?? (isMobile ? 260 : 280);
+  const dockRightOffset = bottomDockRight ?? (isMobile ? 8 : 12);
   const pnjColor = activeChar?.color ?? '#6c757d';
 
   const handleToggle = () => {
@@ -212,8 +213,8 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
     <div
       className={`app-console position-fixed ui-panel-top d-flex flex-column align-items-end gap-1 ${hideUI ? 'ui-hidden' : ''}`}
       style={{
-        top: isMobile ? 'calc(env(safe-area-inset-top) + 8px)' : 16,
-        right: isMobile ? 8 : 16,
+        top: isMobile ? 'calc(env(safe-area-inset-top) + 8px)' : 12,
+        right: dockRightOffset,
         left: open ? (isMobile ? 8 : 288) : 'auto',
         maxHeight: availableHeight,
         zIndex: 100,
@@ -379,13 +380,12 @@ export function AppConsole({ hidden = false, hideUI = false }: { hidden?: boolea
         )}
       </div>
 
-      {/* Barre de contrôle sous la card Console (Minimap, Perf) */}
+      {/* Barre de contrôle sous la card Console (Minimap, Perf) - largeur minimale nécessaire */}
       <div
         className={`${TOOLBAR_CLASS} flex-shrink-0 align-self-end`}
         style={{
           pointerEvents: 'auto',
-          width: `${panelWidth}px`,
-          maxWidth: 'calc(100vw - 16px)',
+          width: 'fit-content',
         }}
         role="toolbar"
         aria-label="Contrôles secondaires"
