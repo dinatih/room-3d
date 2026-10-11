@@ -297,7 +297,7 @@ export function ViewControlBar({
               {showCharacterModes && (
                 <button
                   type="button"
-                  className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--orange d-flex align-items-center gap-2 text-start w-100`}
+                  className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}
                   onClick={onEnterFlight}
                   title="Activer le mode avion (Alt+V)"
                   aria-label="Activer le mode avion (Alt+V)"
@@ -313,7 +313,7 @@ export function ViewControlBar({
                 <>
                   <button
                     type="button"
-                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--cyan d-flex align-items-center gap-2 text-start w-100`}
+                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}
                     onClick={() => useSceneStore.getState().setPhotoModeOpen(true)}
                     title="Ouvrir le mode photo Raytracing (F10)"
                     aria-label="Ouvrir le mode photo Raytracing (F10)"

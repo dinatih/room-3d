@@ -268,7 +268,7 @@ export function ToolbarPanelsRow({
       {onOpenInventory && (
         <button
           type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
+          className={`${TOOLBAR_BUTTON_CLASS} view-control-bar__btn--inventory`}
           onClick={onOpenInventory}
           title="Ouvrir l'inventaire (I)"
           aria-label="Ouvrir l'inventaire (I)"
@@ -296,7 +296,7 @@ export function ToolbarPanelsRow({
       {/* 6. Grille inventaire */}
       <button
         type="button"
-        className={`${TOOLBAR_BUTTON_CLASS} ${layers.inventoryGrid ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
+        className={`${TOOLBAR_BUTTON_CLASS} ${layers.inventoryGrid ? 'btn-danger text-white' : 'view-control-bar__btn--inventory'}`}
         onClick={() => {
           if (onToggleLayer) onToggleLayer('inventoryGrid');
           else useSceneStore.getState().toggleLayer?.('inventoryGrid');

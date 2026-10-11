@@ -95,13 +95,36 @@
   &--actions-menu {
     width: max-content;
     max-width: calc(100vw - 1rem);
+
+    .btn {
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    .btn-outline-secondary {
+      --bs-btn-color: #{palette.$gray-700};
+      --bs-btn-border-color: #{palette.$gray-500};
+      --bs-btn-hover-bg: #{palette.$gray-200};
+      --bs-btn-hover-color: #{palette.$gray-900};
+    }
   }
 
   &--dock-width {
     width: auto;
     min-width: 0;
   }
+}
 
+.view-control-bar__btn--inventory {
+  --bs-btn-color: #{palette.$red};
+  --bs-btn-border-color: #{palette.$red};
+  --bs-btn-hover-color: #{palette.$white};
+  --bs-btn-hover-bg: #{palette.$red};
+  --bs-btn-hover-border-color: #{palette.$red};
+
+  &:hover {
+    color: palette.$white !important;
+  }
 }
 
 .view-control-bar__npc-popover:not(:popover-open) {
