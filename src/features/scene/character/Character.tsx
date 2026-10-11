@@ -128,6 +128,8 @@ export function Character({
   const laraRealisticTextures = useSceneStore(state => state.layers.laraRealisticTextures ?? false);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
+  const animOriginLerp = useSceneStore(state => state.layers.animOriginLerp ?? true);
+  const animCrossfade = useSceneStore(state => state.layers.animCrossfade ?? true);
   const cameraMode = useSceneStore(state => state.cameraMode);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const aiFullTour = useSceneStore(state => state.extraStates.aiFullTour);
@@ -791,12 +793,12 @@ export function Character({
 
     const { offset: targetOffset, rotY: targetRotY } = getAnimationOriginTransform(target);
     if (animOriginRef.current) {
-      if (isPreview || characterGrid) {
-        // En mode Preview 3D ou CharacterGrid, calage spatial instantané exact
+      if (isPreview || characterGrid || !animOriginLerp) {
+        // En mode Preview 3D, CharacterGrid ou sans lissage, calage spatial instantané exact
         animOriginRef.current.position.set(targetOffset[0], targetOffset[1], targetOffset[2]);
         animOriginRef.current.rotation.y = targetRotY;
       } else {
-        // En scène principale interactive, interpolation fluide
+        // En scène principale interactive avec lissage activé, interpolation fluide
         const offsetLerpFactor = Math.min(1.0, delta * 8.0);
         animOriginRef.current.position.x = THREE.MathUtils.lerp(animOriginRef.current.position.x, targetOffset[0], offsetLerpFactor);
         animOriginRef.current.position.y = THREE.MathUtils.lerp(animOriginRef.current.position.y, targetOffset[1], offsetLerpFactor);
@@ -873,11 +875,15 @@ export function Character({
             to.reset();
             to.setEffectiveTimeScale(1);
             to.setEffectiveWeight(1);
-            const crossDuration = isPreview ? Math.min(blendDuration, 0.15) : blendDuration;
-            to.crossFadeFrom(from, crossDuration, true);
+            if (animCrossfade) {
+              const crossDuration = isPreview ? Math.min(blendDuration, 0.15) : blendDuration;
+              to.crossFadeFrom(from, crossDuration, true);
+            } else {
+              from.stop();
+            }
             to.play();
           } else {
-            to.reset().fadeIn(isPreview ? 0.1 : blendDuration).play();
+            to.reset().fadeIn(animCrossfade ? (isPreview ? 0.1 : blendDuration) : 0).play();
             to.setEffectiveWeight(1);
           }
         }

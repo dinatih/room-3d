@@ -192,6 +192,8 @@ export interface LayerState {
   fpvStabilizationFactor?: number;
   inventoryGrid?: boolean;
   smokeTransition?: boolean;
+  animOriginLerp?: boolean;
+  animCrossfade?: boolean;
 }
 
 export type LidarMode = 0 | 1 | 2 | 3;

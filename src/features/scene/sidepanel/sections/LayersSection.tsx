@@ -308,6 +308,8 @@ export function LayersSection({
       {layerBtn('purple',    'Habillage (Furnishings) (Alt+H)', 'furnishings')}
       {layerBtn('purple',    'Décoration (Decor) (Alt+D)',      'decor')}
       {layerBtn('light',     iconLabel('bi-people-fill', 'Personnages 3D'), 'character', 'characterWireframe')}
+      {layerBtn('light',     iconLabel('bi-arrows-move', 'Lissage origine (anti-téléportation)'), 'animOriginLerp')}
+      {layerBtn('light',     iconLabel('bi-bezier2', 'Fondu squelettique (Crossfade)'), 'animCrossfade')}
       {layerBtn('blue',      iconLabel('bi-heart-pulse', 'Animaux'), 'animals')}
       {layerBtn('purple',    'Miroirs MD (Moyenne déf)',       'mirrors')}
       {layerBtn('purple',    'Miroirs HD (Haute déf) (Alt+G)', 'mirrorsHD')}

@@ -75,6 +75,8 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   // Divers
   inventoryGrid: false,
   smokeTransition: true,
+  animOriginLerp: true,
+  animCrossfade: true,
 };
 
 export interface LayerUrlMapping {
@@ -183,6 +185,16 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: 'bermudaGrass',
     canonicalParam: 'bermudaGrass',
     urlParams: ['bermudagrass', 'herbe', 'grass', 'terrain-ext', 'terrain'],
+  },
+  {
+    layerKey: 'animOriginLerp',
+    canonicalParam: 'animOriginLerp',
+    urlParams: ['animoriginlerp', 'originlerp', 'antiteleport', 'anti-teleport', 'lerporigin'],
+  },
+  {
+    layerKey: 'animCrossfade',
+    canonicalParam: 'animCrossfade',
+    urlParams: ['animcrossfade', 'crossfade', 'fonducrossfade', 'animblend'],
   },
 ];
 
