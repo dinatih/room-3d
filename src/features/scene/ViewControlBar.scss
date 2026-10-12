@@ -48,12 +48,6 @@
 
 .view-control-bar__group {
   flex: 0 0 auto;
-
-  > .btn + .btn,
-  > .btn + * > .btn,
-  > * + .btn {
-    margin-left: -1px;
-  }
 }
 
 .view-control-bar__view-tooltip {

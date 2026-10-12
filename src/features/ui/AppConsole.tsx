@@ -420,7 +420,7 @@ export function AppConsole({
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Performances et qualité graphique">
           <button
             type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${showPerf ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+            className={`${TOOLBAR_BUTTON_CLASS} ${showPerf ? 'btn-danger text-white' : 'btn-outline-secondary'} border-end-0`}
             onClick={() => setShowPerf(v => !v)}
             title="Performances & Stats (Touche H)"
             aria-expanded={showPerf}
