@@ -12,7 +12,6 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
 import { CharacterPendant, type CharacterPendantHandle } from './CharacterPendant';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
-import { CharacterBallProp } from './CharacterBallProp';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../characterConfig';
 import { disposeCharacterResources } from './characterDisposal';
@@ -193,8 +192,6 @@ export function Character({
     [scene, headBone],
   );
   const hipsBone = parts.bones.hips;
-  const rHandBone = parts.bones.rHand;
-  const rFootBone = parts.bones.rFoot;
   const leftEyeBone = useMemo(() => (scene ? (scene.getObjectByName('head_eyeball_left') as THREE.Bone | null) : null), [scene]);
   const rightEyeBone = useMemo(() => (scene ? (scene.getObjectByName('head_eyeball_right') as THREE.Bone | null) : null), [scene]);
 
@@ -219,7 +216,6 @@ export function Character({
   const hasLoggedIdleRef = useRef<boolean>(false);
   const lastLoggedAnimRef = useRef<string>('');
   const [isFalling, setIsFalling] = useState<boolean>(false);
-  const [currentActiveAnim, setCurrentActiveAnim] = useState<string>('');
 
   const [equipment, _setEquipment] = useState<{ holster: boolean; pistols: boolean; backpack: boolean }>({
     holster: true,
@@ -812,9 +808,6 @@ export function Character({
     }
 
     const isTPose = target === 't-pose';
-    if (currentActiveAnim !== target) {
-      setCurrentActiveAnim(target);
-    }
 
     let isTemporaryLoadingFallback = false;
     if (!isTPose && !actions[target]) {
@@ -1234,14 +1227,6 @@ export function Character({
 
       {headBone && (variant === 'vivida' || id === 'vivida') && (
         <CharacterBaseballCap attachTo={headBone} />
-      )}
-
-      {/* Accessoire Ballon dynamique pour les animations Foot et Basket Free Fire */}
-      {(currentActiveAnim === 'ff-ballon' || currentActiveAnim === 'ff-football') && (
-        <CharacterBallProp attachTo={rFootBone ?? rHandBone} mode="foot" />
-      )}
-      {currentActiveAnim.includes('basketball') && (
-        <CharacterBallProp attachTo={rHandBone ?? rFootBone} mode="basket" />
       )}
 
       {headBone && id !== 'native' && variant !== 'native' && haircut !== 'original' && (
