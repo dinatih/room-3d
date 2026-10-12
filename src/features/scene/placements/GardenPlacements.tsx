@@ -52,10 +52,8 @@ export function GardenFurniture() {
       {/* Baignoire Balnéo */}
       <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'bathtub', kind: 'furniture' }, itemName: 'Baignoire Balnéo', hoverAction: { label: 'Baignoire Balnéo', actions: SMART_OBJECTS['bathtub-garden'].slots.map(slot => `smart-object:::bathtub-garden:::${slot.slotId}`) } }}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
-        {/* Ballon de plage posé sur l'eau de la baignoire */}
-        <group position={[25, BATHTUB.waterHeight, 0]} rotation={[0.2, 0.4, 0.1]}>
-          <BeachBall item={stub('beach-ball')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
+        {/* Ballon de plage flottant sur l'eau de la baignoire avec physique */}
+        <BeachBall item={stub('beach-ball')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Boîte de rangement Vättersö */}

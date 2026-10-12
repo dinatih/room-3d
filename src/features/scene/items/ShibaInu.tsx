@@ -188,14 +188,53 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     invalidate();
     
     if (!isPreview) {
-      const ai = aiStateRef.current;
-      if (ai.mode === 'autonomous') {
-        if (ai.state === 'idle') {
-          ai.timer -= delta;
-          if (ai.timer <= 0) {
-            // Pick new target (champ d'action complet appartement, jardin et zones AI etendues)
-            const rand = Math.random();
-            let tx, tz;
+      // Vérifier si un personnage actif exécute l'animation Dance With Dog
+      let dancingChar: { x: number; y: number; z: number; yaw: number } | null = null;
+      for (const charId in cameraState.positions) {
+        const c = cameraState.positions[charId];
+        if (c?.anim && (c.anim.includes('dancewithdog') || c.anim.includes('dance-with-dog'))) {
+          dancingChar = c;
+          break;
+        }
+      }
+
+      if (dancingChar) {
+        // Mode danse synchronisée : le chien vient danser juste devant son maître
+        const t = performance.now() * 0.001;
+        // Décalage orbital fluide autour du maître (courbe de danse)
+        const danceRadius = 75; // 75 cm devant le maître
+        const angle = dancingChar.yaw + Math.sin(t * 2.5) * 0.45;
+        const targetX = dancingChar.x + Math.sin(angle) * danceRadius;
+        const targetZ = dancingChar.z + Math.cos(angle) * danceRadius;
+
+        modelRef.current.position.x += (targetX - modelRef.current.position.x) * Math.min(1.0, delta * 6.0);
+        modelRef.current.position.z += (targetZ - modelRef.current.position.z) * Math.min(1.0, delta * 6.0);
+        // Le chien regarde son maître en dansant
+        const faceOwnerYaw = Math.atan2(dancingChar.x - modelRef.current.position.x, dancingChar.z - modelRef.current.position.z);
+        let yawDiff = faceOwnerYaw - modelRef.current.rotation.y;
+        while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
+        while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
+        modelRef.current.rotation.y += yawDiff * Math.min(1.0, delta * 8.0);
+
+        // Si le chien n'est pas encore en train de sauter/danser de joie
+        const ai = aiStateRef.current;
+        if (ai.state !== 'running') {
+          ai.state = 'running';
+          mixerRef.current.stopAllAction();
+          const jumpClip = findDogClip(animations, 'jump');
+          const act = mixerRef.current.clipAction(jumpClip);
+          act.setLoop(THREE.LoopRepeat, Infinity);
+          act.reset().play();
+        }
+      } else {
+        const ai = aiStateRef.current;
+        if (ai.mode === 'autonomous') {
+          if (ai.state === 'idle') {
+            ai.timer -= delta;
+            if (ai.timer <= 0) {
+              // Pick new target (champ d'action complet appartement, jardin et zones AI etendues)
+              const rand = Math.random();
+              let tx, tz;
             if (rand < 0.5) {
               // Garden étendu (50%)
               tx = -350 + Math.random() * 1000;  // X: -350 to 650
@@ -250,6 +289,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         }
       }
     }
+  }
     
     
     if (!isPreview) {
