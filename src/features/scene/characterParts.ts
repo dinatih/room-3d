@@ -14,6 +14,8 @@ export interface CharacterBones {
   neck: THREE.Bone | null;
   lShoulder: THREE.Bone | null;
   rShoulder: THREE.Bone | null;
+  rHand: THREE.Bone | null;
+  rFoot: THREE.Bone | null;
   nativeHairBones: THREE.Bone[];
   breastBones: THREE.Bone[];
 }
@@ -109,6 +111,10 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
   const lShoulder = rLShoulder ? (scene.getObjectByName(rLShoulder) as THREE.Bone | null) : null;
   const rRShoulder = resolveTargetBoneName(scene, 'RightShoulder');
   const rShoulder = rRShoulder ? (scene.getObjectByName(rRShoulder) as THREE.Bone | null) : null;
+  const rRHand = resolveTargetBoneName(scene, 'RightHand');
+  const rHand = rRHand ? (scene.getObjectByName(rRHand) as THREE.Bone | null) : null;
+  const rRFoot = resolveTargetBoneName(scene, 'RightFoot') || resolveTargetBoneName(scene, 'RightToeBase');
+  const rFoot = rRFoot ? (scene.getObjectByName(rRFoot) as THREE.Bone | null) : null;
 
   const nativeHairBones: THREE.Bone[] = [];
   const breastBones: THREE.Bone[] = [];
@@ -276,6 +282,8 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
       neck,
       lShoulder,
       rShoulder,
+      rHand,
+      rFoot,
       nativeHairBones,
       breastBones
     },
