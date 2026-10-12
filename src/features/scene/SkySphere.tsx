@@ -154,7 +154,7 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
         <meshBasicMaterial
           ref={domeMatRef}
           map={texture}
-          side={THREE.BackSide}
+          side={THREE.DoubleSide}
           depthTest
           depthWrite={false}
           fog={false}
