@@ -437,6 +437,23 @@ export function AnimFrameController({
         return;
       }
 
+      if (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z') {
+        if (e.defaultPrevented) return;
+        if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || !isHumanCharacter) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (e.key.toLowerCase() === 'a') {
+          setShowAnimSelector(v => !v);
+          setShowDuoSelector(false);
+          setShowPartnerSelector(false);
+        } else if (e.key.toLowerCase() === 'z' && onSelectDuoAnim) {
+          setShowDuoSelector(v => !v);
+          setShowAnimSelector(false);
+          setShowPartnerSelector(false);
+        }
+        return;
+      }
+
       if (e.key.toLowerCase() === 'd' || e.key.toLowerCase() === 'c') {
         if (e.defaultPrevented) return;
         if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || !isHumanCharacter) return;
@@ -869,10 +886,10 @@ export function AnimFrameController({
                 }}
                 title={
                   duoAnimDef
-                    ? `Duo : ${duoAnimDef.label} (Cliquer pour changer d'animation solo)`
+                    ? `Duo : ${duoAnimDef.label} (Cliquer ou A pour changer d'animation solo)`
                     : showAnimSelector
-                    ? "Fermer le sélecteur d'animations"
-                    : `Animation : ${displayName} (${filteredAnims.length} filtrée(s) — Cliquer pour ouvrir)`
+                    ? "Fermer le sélecteur d'animations (A)"
+                    : `Animation : ${displayName} (${filteredAnims.length} filtrée(s) — A pour ouvrir)`
                 }
               >
                 <i className={`bi ${duoAnimDef ? 'bi-people-fill' : 'bi-film'}`} aria-hidden="true" />
@@ -925,8 +942,8 @@ export function AnimFrameController({
                   }}
                   title={
                     duoAnimDef
-                      ? `Duo : ${duoAnimDef.label} (Cliquer pour changer)`
-                      : "Choisir une animation Duo"
+                      ? `Duo : ${duoAnimDef.label} (Cliquer ou Z pour changer)`
+                      : "Choisir une animation Duo (Z)"
                   }
                 >
                   <i className={`bi ${duoAnimDef ? 'bi-people-fill' : 'bi-people'}`} aria-hidden="true" />

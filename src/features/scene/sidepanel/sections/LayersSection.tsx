@@ -314,7 +314,7 @@ export function LayersSection({
       {layerBtn('blue',      iconLabel('bi-heart-pulse', 'Animaux'), 'animals')}
       {layerBtn('purple',    'Miroirs MD (Moyenne déf)',       'mirrors')}
       {layerBtn('purple',    'Miroirs HD (Haute déf) (Alt+G)', 'mirrorsHD')}
-      {layerBtn('cyan',      iconLabel('bi-robot', 'Zones IA (A)'), 'aiZones')}
+      {layerBtn('cyan',      iconLabel('bi-robot', 'Zones IA'), 'aiZones')}
       {layerBtn('blue',   iconLabel('bi-people', 'Collisions inter-PNJ'), 'npcCollisions')}
       {layers.npcCollisions && layerBtn('cyan', iconLabel('bi-circle', 'Debug PNJ (Rayon 70cm)'), 'debugNpcCollisions')}
       {layerBtn('blue',   iconLabel('bi-house-gear', 'Collisions objets/meubles'), 'furnitureCollisions')}

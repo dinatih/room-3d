@@ -608,9 +608,6 @@ export function Studio() {
         e.preventDefault();
         setInventoryInitialCat('all');
         setShowInventory(prev => !prev);
-      } else if (e.key === 'a' || e.key === 'A') {
-        onToggleLayer('aiZones');
-        cameraState.invalidate?.();
       } else if (e.key === 'k' || e.key === 'K') {
         onToggleLayer('skeleton');
         cameraState.invalidate?.();
