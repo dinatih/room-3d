@@ -212,7 +212,7 @@ export function ViewControlBar({
       aria-pressed={isTranslate}
     >
       <i className={`bi ${isTranslate ? 'bi-arrows-move' : 'bi-arrow-repeat'}`} aria-hidden="true" />
-      <span className="fw-semibold">{isTranslate ? 'Trans' : 'Rot'}</span>
+      <span className="fw-semibold">{isTranslate ? 'Trans' : 'Rota'}</span>
     </button>
   );
 
