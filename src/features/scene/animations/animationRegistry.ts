@@ -133,7 +133,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['idle', 'idle-female-1', 'stand-relax'],
     tags: ['idle', 'standing', 'relax', 'female'],
     duration: 33.1,
-    defaultOffset: [20, 0, 0]
+    // defaultOffset: [-20, 0, 0]
   },
   {
     id: 'miley-armature-idle02-f',
@@ -2864,6 +2864,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `Crouch To Stand (101f / 3.4s, 101KB)`,
     tags: ['poses-idles'],
     duration: 3.4,
+    defaultOffset: [27, 0, 0],
   },
   {
     id: 'crying',
