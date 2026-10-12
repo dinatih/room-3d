@@ -187,6 +187,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'use',
         name: 'Faire ses besoins',
+        offset: [50, 0, 538],
+        approachOffset: [50, 0, 550],
         rotY: 0,
         animation: 'sit-idle',
         duration: 10.0,
@@ -207,7 +209,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Vasque Salle de bain',
     category: 'hygiene',
     exclusive: true,
-    position: [116, 0, 530],
+    position: [116, 0, 534],
     slots: [
       {
         slotId: 'wash-hands',
@@ -236,21 +238,21 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     category: 'hygiene',
     position: [25, 15, 645],
     slots: [
-      {
-        slotId: 'take-shower-1',
-        name: 'Prendre une douche (Centre)',
-        offset: [30, 15, 645],
-        rotY: 0,
-        animation: 'taking-shower',
-        duration: 12,
-      },
+      // {
+      //   slotId: 'take-shower-1',
+      //   name: 'Prendre une douche (Centre)',
+      //   offset: [30, 15, 645],
+      //   rotY: 0,
+      //   animation: 'taking-shower',
+      //   duration: 12,
+      // },
       {
         slotId: 'take-shower-2',
         name: 'Prendre une douche (Droite)',
-        offset: [8, 15, 635],
+        offset: [8, 15, 650],
         rotY: Math.PI / 2,
         animation: 'take-off-tshirt',
-        animationsRandom: ['take-off-tshirt', 'taking-shower'],
+        animationsRandom: ['take-off-tshirt'],
         duration: 12,
       },
       {
@@ -258,7 +260,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre une douche (Gauche)',
         offset: [42, 15, 660],
         rotY: -Math.PI / 2,
-        animation: 'taking-shower',
+        animation: 'take-off-tshirt',
         duration: 12,
       }
     ]
@@ -1085,7 +1087,7 @@ export function buildSmartObjectInstructionSequence(
 
   if (objectId === 'toilet') {
     return [
-      { type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'use' },
+      { type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'flush' },
       {
         type: 'WAIT', smartObjectId: 'toilet', slotId: 'flush',
         animation: 'idle', duration: TOILET_HINGE_DURATION, rotY: Math.PI,
