@@ -22,6 +22,7 @@ import { FemaleAnatomyBones } from '../items/FemaleAnatomyBones';
 import { FemaleAnatomyMuscles } from '../items/FemaleAnatomyMuscles';
 import { HumanSkeleton } from '../items/HumanSkeleton';
 import { FemaleAnatomyTrio } from '../items/FemaleAnatomyTrio';
+import { BeachBall } from '../items/BeachBall';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
@@ -51,6 +52,10 @@ export function GardenFurniture() {
       {/* Baignoire Balnéo */}
       <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'bathtub', kind: 'furniture' }, itemName: 'Baignoire Balnéo', hoverAction: { label: 'Baignoire Balnéo', actions: SMART_OBJECTS['bathtub-garden'].slots.map(slot => `smart-object:::bathtub-garden:::${slot.slotId}`) } }}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
+        {/* Ballon de plage posé sur l'eau de la baignoire */}
+        <group position={[25, BATHTUB.waterHeight, 0]} rotation={[0.2, 0.4, 0.1]}>
+          <BeachBall item={stub('beach-ball')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
 
       {/* Boîte de rangement Vättersö */}
