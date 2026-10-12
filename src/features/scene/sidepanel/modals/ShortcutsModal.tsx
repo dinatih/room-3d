@@ -50,6 +50,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label={<><i className="bi bi-masks-theater me-1" aria-hidden="true" />Personnages Extra (toggle)</>} keys={['Alt+E']} />
               <R label="Sélecteur d'animations (toggle)" keys={['A']} />
               <R label="Sélecteur animations Duo (toggle)" keys={['Z']} />
+              <R label="Zones IA (toggle)"          keys={['Alt+Z']} />
               <R label="Basculer Rotation / Translation" keys={['R', 'T']} />
               <R label="Vue Orbit perspective par défaut (Nord-Ouest)" keys={['Alt+O']} />
               <R label="Follow / FPV (alterner)" keys={['F', 'V']} />
