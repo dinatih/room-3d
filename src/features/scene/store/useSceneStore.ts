@@ -32,12 +32,13 @@ import {
   NON_EXTRA_CHARACTERS,
   getDefaultSceneCharacterIds,
   CHARACTERS,
+  DEFAULT_LARA_COUNT,
   parseUrlActiveCharacter,
   updateUrlActiveCharacter,
 } from '@features/scene/characterConfig';
 
 function parseUrlCharacterCount(): LaraCountMode {
-  if (typeof window === 'undefined') return 4;
+  if (typeof window === 'undefined') return DEFAULT_LARA_COUNT;
   try {
     let search = window.location.search;
     if (!search && window.location.hash.includes('?')) {
@@ -49,6 +50,7 @@ function parseUrlCharacterCount(): LaraCountMode {
       const lower = raw.trim().toLowerCase();
       if (lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return CHARACTERS.length;
       if (lower === '10' || lower === 'eco') return 10;
+      if (lower === '7') return 7;
       if (lower === '4' || lower === 'quad') return 4;
       if (lower === '2' || lower === 'duo' || lower === 'min') return 2;
       if (lower === '1' || lower === 'solo') return 1;
@@ -56,7 +58,7 @@ function parseUrlCharacterCount(): LaraCountMode {
       if (lower !== '' && Number.isInteger(num) && num >= 0 && num <= CHARACTERS.length) return num;
     }
   } catch {}
-  return 4;
+  return DEFAULT_LARA_COUNT;
 }
 
 export function updateUrlCharacterCount(count: LaraCountMode | 0) {
@@ -70,7 +72,7 @@ export function updateUrlCharacterCount(count: LaraCountMode | 0) {
       url.searchParams.delete(p);
     }
 
-    if (count !== 4) {
+    if (count !== DEFAULT_LARA_COUNT) {
       url.searchParams.set('characterCount', count.toString());
     } else if (!hadParam) {
       return; // Valeur par défaut, rien à nettoyer
@@ -288,7 +290,7 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
 const initialActiveChar = parseUrlActiveCharacter();
 const initialActiveCharacterId = initialActiveChar ? initialActiveChar.id : (initialLayers.laraCount === 1 ? 'xbot' : 'native');
 
-const initialCharacterIds = getDefaultSceneCharacterIds(initialLayers.laraCount ?? 4, initialActiveCharacterId);
+const initialCharacterIds = getDefaultSceneCharacterIds(initialLayers.laraCount ?? DEFAULT_LARA_COUNT, initialActiveCharacterId);
 const initialActiveMainIds = initialCharacterIds.filter(id => !isExtraCharacter(id));
 let initialActiveExtraIds = initialCharacterIds.filter(isExtraCharacter);
 initialLayers.extraCharacters = initialActiveExtraIds.length > 0;
@@ -634,7 +636,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         if (!nextLayers.character) {
           updateUrlCharacterCount(0);
         } else {
-          updateUrlCharacterCount(state.layers.laraCount ?? 4);
+          updateUrlCharacterCount(state.layers.laraCount ?? DEFAULT_LARA_COUNT);
         }
       }
       cameraState.invalidate?.();

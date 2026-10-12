@@ -181,8 +181,11 @@ export const ACCESSORIES_MESH_NAMES = new Set([
 
 export type LaraCountMode = number;
 
-/** Nombres de Laras autorisés dans le sélecteur d'options (1, 2, 4, 10, 15) */
-export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 10, 15];
+/** Nombre de personnages par défaut */
+export const DEFAULT_LARA_COUNT: LaraCountMode = 7;
+
+/** Nombres de Laras autorisés dans le sélecteur d'options (1, 2, 4, 7, 10, 15) */
+export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 7, 10, 15];
 
 /** Liste des 4 Laras activées pour le mode 4 joueuses */
 export const FOUR_PLAYERS_LARA_IDS = new Set(['xbot', 'native', 'rosanna', 'marissa']);
