@@ -3,7 +3,7 @@ import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
  * ToolbarPanelsRow.tsx
  *
  * Première ligne de la barre de contrôle contenant les popovers HTML natifs
- * (Plan 2D, Perf, Profil, Inventaire, Calques, Interactif, PNJ, NPCs).
+ * (Plan 2D, Perf, Profil, Inventaire, Calques, Interactif, Personnages, NPCs).
  *
  * Composant HTML pur rendu hors du Canvas R3F.
  */
@@ -230,7 +230,7 @@ export function ToolbarPanelsRow({
       {/* 1. Calques */}
       <PanelPopover
         icon="bi-layers-fill"
-        label="Calq"
+        label="Calques"
         title="Calques & Affichage"
         headerExtra={layersHeaderButtons}
         hideUI={hideUI}
@@ -241,14 +241,14 @@ export function ToolbarPanelsRow({
       {/* 2. Interactif */}
       <PanelPopover
         icon="bi-controller"
-        label="Inter"
+        label="Interactions"
         title="Objets interactifs"
         hideUI={hideUI}
       >
         {interactiveSectionContent}
       </PanelPopover>
 
-      {/* 3. Config User / PNJ */}
+      {/* 3. Config User / Personnages */}
       <PanelPopover
         icon={
           <span className="d-inline-flex align-items-center gap-1">
@@ -256,8 +256,8 @@ export function ToolbarPanelsRow({
             <i className="bi bi-gear-fill" aria-hidden="true" />
           </span>
         }
-        label="PNJ"
-        title="Configuration utilisateur & PNJ"
+        label="Personnages"
+        title="Configuration utilisateur & Personnages"
         headerExtra={personnageHeaderButtons}
         hideUI={hideUI}
       >
@@ -274,23 +274,23 @@ export function ToolbarPanelsRow({
           aria-label="Ouvrir l'inventaire (I)"
         >
           <i className="bi bi-box-seam-fill" aria-hidden="true" />
-          <span className="fw-semibold">Inv</span>
+          <span className="fw-semibold">Mon Inventaire</span>
         </button>
       )}
 
-      {/* 5. Grille / Vitrine PNJ */}
+      {/* 5. Grille / Vitrine Personnages */}
       <button
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
         onClick={() => {
           document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
         }}
-        title="Afficher ou quitter la grille / vitrine des PNJ (G)"
-        aria-label="Afficher ou quitter la grille des PNJ (G)"
+        title="Afficher ou quitter la grille / vitrine des Personnages (G)"
+        aria-label="Afficher ou quitter la grille des Personnages (G)"
         aria-pressed={npcGridActive}
       >
         <i className="bi bi-people-fill" aria-hidden="true" />
-        <span className="fw-semibold">Grille PNJ</span>
+        <span className="fw-semibold">Grille Personnages</span>
       </button>
 
       {/* 6. Grille inventaire */}
@@ -306,7 +306,7 @@ export function ToolbarPanelsRow({
         aria-pressed={Boolean(layers.inventoryGrid)}
       >
         <i className="bi bi-box-seam" aria-hidden="true" />
-        <span className="fw-semibold">Grille Inv</span>
+        <span className="fw-semibold">Grille Inventaire</span>
       </button>
     </div>
   );

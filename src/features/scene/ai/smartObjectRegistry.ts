@@ -187,7 +187,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'use',
         name: 'Faire ses besoins',
-        offset: [50, 0, 500],
+        // offset: [50, 0, 550],
         approachOffset: [50, 0, 550],
         rotY: 0,
         animation: 'sit-idle',

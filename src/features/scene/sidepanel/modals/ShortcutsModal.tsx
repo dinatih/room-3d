@@ -67,9 +67,9 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Afficher / masquer la grille" keys={['Alt+B']} />
               <R label="Grille de personnages (toggle)"       keys={['G']} />
               <R label={<><i className="bi bi-grid-3x3 me-1" aria-hidden="true" />Wireframe coloré (toggle)</>} keys={['W']} />
-              <R label="Enlever le haut (toggle)"   keys={['Alt+Z']} />
+              {/*<R label="Enlever le haut (toggle)"   keys={['Alt+Z']} />
               <R label="Enlever le bas (toggle)"    keys={['Alt+C']} />
-              <R label="Déshabiller les Lara (toggle)" keys={['Alt+X']} />
+              <R label="Déshabiller les Lara (toggle)" keys={['Alt+X']} />*/}
               <R label="Squelettes / Bones (toggle)" keys={['K']} />
               <R label="Structure murale (toggle)"  keys={['Alt+W']} />
               <R label="Dalle et plafond (toggle)"  keys={['Alt+Q']} />

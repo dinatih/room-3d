@@ -98,7 +98,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'ff-bhangra',
-    path: 'animations/others/anim_ff_bhangra.glb',
+    path: 'animations/aloneimation/anim_ff_bhangra.glb',
     category: 'emotes_gestures',
     label: 'Free Fire Bhangra',
     aliases: ['ff-bhangra'],
@@ -107,7 +107,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'ff-booyah-day',
-    path: 'animations/others/anim_ff_booyahday.glb',
+    path: 'animations/aloneimation/anim_ff_booyahday.glb',
     category: 'emotes_gestures',
     label: 'Free Fire Booyah Day',
     aliases: ['ff-booyah'],
@@ -116,7 +116,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'ff-bounty-dance',
-    path: 'animations/others/anim_ff_bountydance.glb',
+    path: 'animations/aloneimation/anim_ff_bountydance.glb',
     category: 'emotes_gestures',
     label: 'Free Fire Bounty Dance',
     aliases: ['ff-bounty'],

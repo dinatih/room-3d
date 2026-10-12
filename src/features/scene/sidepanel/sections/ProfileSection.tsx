@@ -59,7 +59,7 @@ export function ProfileSection({ isMobile: _isMobile, onOpenCv }: ProfileSection
 
       {/* Points forts */}
       <div className="p-2 rounded bg-white bg-opacity-40 border border-light-subtle text-muted small lh-sm d-flex flex-column gap-1">
-        <div><i className="bi bi-award me-1" aria-hidden="true" /><strong>8+ ans d'expérience</strong> en startups (JobTeaser, Saisirprudhommes, Tracktor, Mooncard)</div>
+        <div><i className="bi bi-award me-1" aria-hidden="true" /><strong>8+ ans d'expérience</strong> en startups (JobTeaser, Saisirprudhommes, tech4team, Tracktor, Mooncard)</div>
         <div><i className="bi bi-lightning-charge me-1" aria-hidden="true" /><strong>Opérationnel Jour 1</strong> : sans temps d'onboarding, autonome et pragmatique</div>
         <div><i className="bi bi-lightbulb me-1" aria-hidden="true" /><strong>Stack</strong> : Ruby on Rails, TypeScript, React 18, R3F / Three.js, PostgreSQL, Heroku, Linux</div>
         <div><i className="bi bi-robot me-1" aria-hidden="true" /><strong>Productivité</strong> démultipliée par l'encadrement d'agents IA</div>

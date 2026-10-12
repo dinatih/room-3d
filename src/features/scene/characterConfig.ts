@@ -193,7 +193,7 @@ export const FOUR_PLAYERS_LARA_IDS = new Set(['xbot', 'native', 'rosanna', 'mari
 /** Sélection du mode 10 : Xbot et neuf Laras. */
 export const TEN_PLAYERS_LARA_IDS = new Set([
   'xbot', 'native', 'rosanna', 'marissa', 'delphina',
-  'sara', 'cha', 'vivida', 'sabira', 'safa',
+  'sara', 'sabira', 'cha', 'vivida', 'safa',
 ]);
 
 /** Détermine si un personnage fait partie des extras (tous ceux qui ne sont ni Lara ni Xbot) */
@@ -274,6 +274,6 @@ export function isCharacterVisibleInMode(
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'hayley', 'gloria', 'zoe', 'sophia', 'valby',
+  'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'hayley', 'gloria', 'zoe', 'sophia', 'valby',
   'alex', 'david', 'mannequin', 'jennifer', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'lewis', 'maynard', 'nurse'
 ]);
