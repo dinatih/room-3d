@@ -37,7 +37,10 @@ export function resolveInstructionCoords(
     const slot = instr.slotId
       ? (obj.slots.find(s => s.slotId === instr.slotId) ?? obj.slots[0])
       : obj.slots[0];
-    const pos = (slot?.approachOffset ?? slot?.offset) ?? obj.position ?? [0, 0, 0];
+    const isMoveOnly = instr.type === 'MOVE_TO';
+    const pos = isMoveOnly
+      ? (slot?.approachOffset ?? slot?.offset ?? obj.position ?? [0, 0, 0])
+      : (slot?.offset ?? slot?.approachOffset ?? obj.position ?? [0, 0, 0]);
     const resolved = slot ? resolveSlotAnimation(slot) : null;
     const finalRotY = resolved?.rotY ?? slot?.rotY;
 
