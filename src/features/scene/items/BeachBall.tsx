@@ -6,7 +6,7 @@ import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@features/scene/sceneItemProps';
+import type { SceneItemProps } from '@shared/types';
 
 export function BeachBall({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone('items/beach_ball.glb');
@@ -39,7 +39,7 @@ export function BeachBall({ onSize }: SceneItemProps) {
       }
     });
 
-    onSize?.({ width: targetDiameter, depth: targetDiameter, height: targetDiameter });
+    onSize?.(new THREE.Vector3(targetDiameter, targetDiameter, targetDiameter));
   }, [scene, onSize]);
 
   return <primitive object={scene} />;
