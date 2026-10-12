@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { cameraState } from '@features/scene/cameraState';
+import { getLoadedSkyTexture } from '../SkySphere';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from '../items/NissedalMirror';
 import { MergedStaticGroup } from './MergedStaticGroup';
 import { PARTITION_THICKNESS } from '../wallData';
@@ -103,7 +104,10 @@ function ReflectorMirror({ w, h, position, rotationY }: {
       const oldMask = renderCam.layers.mask;
       renderCam.layers.mask = mirrorMask;
 
+      const oldBackground = scene.background;
+      scene.background = getLoadedSkyTexture() ?? oldBackground;
       origOnBeforeRender(renderer, scene, renderCam, geometry, material, group);
+      scene.background = oldBackground;
 
       renderCam.projectionMatrix.copy(savedProj);
       renderCam.layers.mask = oldMask;
@@ -165,7 +169,10 @@ function MergedReflector({ planes, position, rotationY }: {
       const oldMask = renderCam.layers.mask;
       renderCam.layers.mask = mirrorMask;
 
+      const oldBackground = scene.background;
+      scene.background = getLoadedSkyTexture() ?? oldBackground;
       origOnBeforeRender(renderer, scene, renderCam, geometry, material, group);
+      scene.background = oldBackground;
 
       renderCam.projectionMatrix.copy(savedProj);
       renderCam.layers.mask = oldMask;
