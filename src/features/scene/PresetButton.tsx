@@ -94,6 +94,7 @@ export function PresetButton({ hideUI = false }: { hideUI?: boolean }) {
         aria-expanded={qualityPopoverOpen}
       >
         <span className="fw-bold">{badgeText}</span>
+        <i className="bi bi-chevron-down ms-1" style={{ fontSize: '0.65rem' }} aria-hidden="true" />
       </button>
       {typeof document !== 'undefined' && createPortal(
         <div

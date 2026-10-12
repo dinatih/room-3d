@@ -414,23 +414,21 @@ export function AppConsole({
           aria-expanded={showMinimap}
         >
           <i className="bi bi-map-fill" aria-hidden="true" />
-          <span>Plan</span>
         </button>
 
-        {/* 3. Perf */}
-        <button
-          type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} ${showPerf ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-          onClick={() => setShowPerf(v => !v)}
-          title="Performances & Stats (Touche H)"
-          aria-expanded={showPerf}
-        >
-          <i className="bi bi-bar-chart-fill" aria-hidden="true" />
-          <span>Perf</span>
-        </button>
-
-        {/* 4. Preset */}
-        <PresetButton hideUI={hideUI} />
+        {/* 3 & 4. Groupe Perf + Preset */}
+        <div className="btn-group btn-group-sm" role="group" aria-label="Performances et qualité graphique">
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} ${showPerf ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+            onClick={() => setShowPerf(v => !v)}
+            title="Performances & Stats (Touche H)"
+            aria-expanded={showPerf}
+          >
+            <i className="bi bi-bar-chart-fill" aria-hidden="true" />
+          </button>
+          <PresetButton hideUI={hideUI} />
+        </div>
 
         {/* 5. + Chevrons (à la suite du btn Preset) */}
         {actionsMenu}
