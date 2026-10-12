@@ -591,6 +591,21 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
               const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
 
+              // Enforce quaternion continuity with previous frame to prevent 360° hemisphere flips
+              if (j > 0) {
+                const prevX = clone.values[4*(j-1)];
+                const prevY = clone.values[4*(j-1)+1];
+                const prevZ = clone.values[4*(j-1)+2];
+                const prevW = clone.values[4*(j-1)+3];
+                const dot = prevX * tgtLocalQ.x + prevY * tgtLocalQ.y + prevZ * tgtLocalQ.z + prevW * tgtLocalQ.w;
+                if (dot < 0) {
+                  tgtLocalQ.x = -tgtLocalQ.x;
+                  tgtLocalQ.y = -tgtLocalQ.y;
+                  tgtLocalQ.z = -tgtLocalQ.z;
+                  tgtLocalQ.w = -tgtLocalQ.w;
+                }
+              }
+
               clone.values[4*j]   = tgtLocalQ.x;
               clone.values[4*j+1] = tgtLocalQ.y;
               clone.values[4*j+2] = tgtLocalQ.z;
@@ -608,7 +623,21 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               const resQ = parentInv.clone()
                 .multiply(q)
                 .multiply(parentRestWorldQ)
-                .multiply(boneRestLocalQ);
+                .multiply(boneRestLocalQ).normalize();
+
+              if (i >= 4) {
+                const prevX = clone.values[i-4];
+                const prevY = clone.values[i-3];
+                const prevZ = clone.values[i-2];
+                const prevW = clone.values[i-1];
+                const dot = prevX * resQ.x + prevY * resQ.y + prevZ * resQ.z + prevW * resQ.w;
+                if (dot < 0) {
+                  resQ.x = -resQ.x;
+                  resQ.y = -resQ.y;
+                  resQ.z = -resQ.z;
+                  resQ.w = -resQ.w;
+                }
+              }
 
               clone.values[i] = resQ.x;
               clone.values[i+1] = resQ.y;
