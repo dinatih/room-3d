@@ -6,7 +6,8 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { getOrbitMouseButtons, getOrbitTouches } from '@features/scene/camera/orbitMouseButtons';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
-import { drawFps } from '@features/scene/DevToolsOverlay';
+import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
+import { DevToolsCollector } from '@features/scene/DevToolsCollector';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { CategoryLayerGroup, LayerRegistryContext } from '@features/scene/sceneLayer';
 import { CharacterGroup } from '@features/scene/character';
@@ -216,19 +217,6 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
 // the full apartment's furniture tree several times per second.
 const MemoizedStudioCroppedScene = memo(StudioCroppedScene);
 
-function SpatialZoneFpsCollector({ onFps }: { onFps: (fps: number) => void }) {
-  const lastTime = useRef(performance.now());
-  useFrame(() => {
-    const now = performance.now();
-    const dt = now - lastTime.current;
-    lastTime.current = now;
-    if (dt > 0 && dt < 2000) {
-      const fps = Math.round(1000 / dt);
-      onFps(fps);
-    }
-  });
-  return null;
-}
 
 function SpatialZoneStatsCollector({ onStats }: { onStats?: (s: { triangles: number; drawCalls: number }) => void }) {
   const { gl } = useThree();
@@ -443,48 +431,10 @@ export function SpatialZonePreview({
   const [showFpsGraph, setShowFpsGraph] = useState(true);
   const showZoneUi = useSceneStore(state => state.layers.aiZones);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
-  const [fpsSamples, setFpsSamples] = useState<number[]>([]);
-  const [currentFps, setCurrentFps] = useState<number>(60);
-  const fpsCanvasRef = useRef<HTMLCanvasElement>(null);
-  const samplesRef = useRef<number[]>([]);
-  const lastFpsDrawRef = useRef<number>(0);
-  const lastReactUpdateRef = useRef<number>(0);
 
   const camPosition: [number, number, number] = [
     centerX + camDistance * 0.75, centerY + camDistance * 0.7, centerZ + camDistance * 0.75,
   ];
-
-  const handleFps = (fps: number) => {
-    const s = samplesRef.current;
-    s.push(fps);
-    if (s.length > 80) s.shift();
-    const now = performance.now();
-
-    // Match DevToolsCollector: collect every frame, redraw the graph at 10 Hz.
-    if (fpsCanvasRef.current && now - lastFpsDrawRef.current > 100) {
-      lastFpsDrawRef.current = now;
-      drawFps(fpsCanvasRef.current, s);
-    }
-
-    // Match DevToolsCollector's 4 Hz React update cadence for the FPS labels.
-    if (now - lastReactUpdateRef.current > 250) {
-      lastReactUpdateRef.current = now;
-      setCurrentFps(fps);
-      setFpsSamples([...s]);
-    }
-  };
-
-  const valid = fpsSamples.filter(v => v > 0);
-  const fpsMin = valid.length ? Math.min(...valid) : 0;
-  const fpsMax = valid.length ? Math.max(...valid) : 0;
-  const fpsColor = currentFps >= 50 ? '#16a34a' : currentFps >= 30 ? '#d97706' : '#dc2626';
-
-  const [liveStats, setLiveStats] = useState<{ triangles: number; drawCalls: number } | null>(null);
-
-  const handleStats = (s: { triangles: number; drawCalls: number }) => {
-    setLiveStats(s);
-    onStats?.(s);
-  };
 
   return (
     <div style={{ width: '100%', height, aspectRatio: '1 / 1', maxHeight: '65vh', position: 'relative', background: '#0b1120', borderRadius: 8, overflow: 'hidden' }}>
@@ -509,8 +459,8 @@ export function SpatialZonePreview({
           <MemoizedStudioCroppedScene zone={zone} />
         </Suspense>
 
-        <SpatialZoneFpsCollector onFps={handleFps} />
-        <SpatialZoneStatsCollector onStats={handleStats} />
+        <DevToolsCollector />
+        <SpatialZoneStatsCollector onStats={onStats} />
 
         <PreviewCameraController
           centerX={centerX}
@@ -584,51 +534,10 @@ export function SpatialZonePreview({
         </button>
       </div>
 
-      {/* Frame Rate Graph Overlay & Triangles/Draw Calls */}
+      {/* Mini perf partagé avec la scène principale */}
       {showFpsGraph && (
-        <div style={{
-          position: 'absolute',
-          bottom: 28,
-          left: 10,
-          background: 'rgba(15, 23, 42, 0.88)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: 6,
-          padding: '6px 8px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-          backdropFilter: 'blur(6px)',
-          zIndex: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 3,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 10 }}>
-            <span style={{ color: fpsColor, fontWeight: 700 }}>{currentFps} FPS</span>
-            <span style={{ color: '#94a3b8', fontSize: 9 }}>min:{fpsMin} max:{fpsMax}</span>
-          </div>
-          <canvas
-            ref={fpsCanvasRef}
-            width={140}
-            height={46}
-            style={{ display: 'block', borderRadius: 4 }}
-          />
-          {liveStats && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              fontSize: 9,
-              color: '#cbd5e1',
-              borderTop: '1px solid rgba(255,255,255,0.1)',
-              paddingTop: 3,
-              marginTop: 1,
-              fontFamily: 'monospace'
-            }}>
-              <span>📐 {liveStats.triangles.toLocaleString()} tris</span>
-              <span style={{ color: liveStats.drawCalls > 80 ? '#f87171' : '#4ade80' }}>
-                ⚡ {liveStats.drawCalls} calls
-              </span>
-            </div>
-          )}
+        <div className="glass-card shadow-lg rounded-2 p-1 position-absolute start-0 m-2 z-3" style={{ bottom: 28, width: 190 }}>
+          <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
         </div>
       )}
 

@@ -21,6 +21,8 @@ import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { AnimFrameController } from './AnimFrameController';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { CharacterSection } from '@features/scene/sidepanel/sections/CharacterSection';
+import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
+import { DevToolsCollector } from '@features/scene/DevToolsCollector';
 import { ViewControlBar } from '@features/scene/ViewControlBar';
 import { getOrbitMouseButtons, getOrbitTouches } from '@features/scene/camera/orbitMouseButtons';
 import { TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
@@ -858,6 +860,7 @@ export function InventoryPreview({
             </div>
           )}
           {showing3D ? (
+            <>
             <Canvas key={item.id} shadows={item.id === 'fridge'} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
               <PreviewEnvironment showGrid={showGrid} />
               <ambientLight intensity={0.7} />
@@ -889,7 +892,12 @@ export function InventoryPreview({
                 onSelectBoneName={setSelectedBoneName}
                 onSkeletonGroupsChange={setSkeletonGroups}
               />
+              <DevToolsCollector />
             </Canvas>
+            <div className="glass-card shadow-lg rounded-2 p-1 position-absolute start-0 bottom-0 m-2 z-3" style={{ width: 190 }}>
+              <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
+            </div>
+            </>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
           <div className="position-absolute top-0 end-0 m-2 z-3 d-flex gap-2 align-items-center">
             {showing3D && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'wigs') && (
