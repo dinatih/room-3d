@@ -1025,6 +1025,12 @@ export function Character({
         }
       }
 
+      // Verrouillage optionnel des hanches sur place (Hips-Lock X/Z) pour tester/comparer
+      if (store.lockHipsXZ && parts.bones.hips) {
+        parts.bones.hips.position.x = 0;
+        parts.bones.hips.position.z = 0;
+      }
+
       if (isVisibleInFrustum) {
         updatePhysics(store.isPlaying && !isTPose ? delta * store.speed : 0, {
           haircut,

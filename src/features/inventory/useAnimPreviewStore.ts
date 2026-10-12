@@ -28,11 +28,15 @@ export interface AnimPreviewState {
   sortByDuration: boolean;
   /** Segments utiles actifs [start, end][]. Si non vide, la lecture saute les zones coupées. */
   activeSegments: Array<[number, number]>;
+  /** Verrouiller le déplacement horizontal X/Z des hanches sur place */
+  lockHipsXZ: boolean;
 
   // Actions
   play: () => void;
   pause: () => void;
   togglePlay: () => void;
+  toggleLockHipsXZ: () => void;
+  setLockHipsXZ: (locked: boolean) => void;
   setSpeed: (speed: number) => void;
   setLooping: (loop: boolean) => void;
   setScrubbing: (scrubbing: boolean) => void;
@@ -63,6 +67,17 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
   selectedCategories: getSessionJson('anim_selected_categories', []),
   sortByDuration: getSession('anim_sort_by_duration', 'false') === 'true',
   activeSegments: [],
+  lockHipsXZ: getSession('anim_lock_hips_xz', 'false') === 'true',
+
+  toggleLockHipsXZ: () => {
+    const next = !get().lockHipsXZ;
+    setSession('anim_lock_hips_xz', String(next));
+    set({ lockHipsXZ: next });
+  },
+  setLockHipsXZ: (locked: boolean) => {
+    setSession('anim_lock_hips_xz', String(locked));
+    set({ lockHipsXZ: locked });
+  },
 
   play: () => {
     const { currentTime, duration, isLooping, activeSegments } = get();

@@ -1300,16 +1300,6 @@
     "cut_end_s": 0.6
   },
   {
-    "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Cow_Face_Pose_or_Gomukhasana_-d_stageii.npz",
-    "out_path": "/home/dinatih/Projects/room-3d/public/animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_d.glb",
-    "filename": "anim_yoga_cow_face_pose_or_gomukhasana_d.glb",
-    "frames": 894,
-    "duration": 29.8,
-    "size_kb": 476,
-    "cut_start_s": 0.38,
-    "cut_end_s": 1.22
-  },
-  {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Cow_Face_Pose_or_Gomukhasana_-e_stageii.npz",
     "out_path": "/home/dinatih/Projects/room-3d/public/animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_e.glb",
     "filename": "anim_yoga_cow_face_pose_or_gomukhasana_e.glb",

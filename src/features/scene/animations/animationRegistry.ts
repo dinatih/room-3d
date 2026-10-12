@@ -8609,15 +8609,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     tags: ['yoga', 'fitness'],
     duration: 26.6,
   },
-  {
-    id: 'yoga-cow-face-pose-or-gomukhasana-d',
-    path: 'animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_d.glb',
-    category: 'yoga',
-    label: `[YOGA] Cow Face Pose (Gomukhasana) — D (942f / 31.4s, 494KB)`,
-    tags: ['yoga', 'fitness'],
-    duration: 29.8,
-  },
-  {
+    {
     id: 'yoga-cow-face-pose-or-gomukhasana-e',
     path: 'animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_e.glb',
     category: 'yoga',

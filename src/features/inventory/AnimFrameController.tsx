@@ -73,7 +73,9 @@ export function AnimFrameController({
     animSearch,
     selectedCategories,
     sortByDuration,
+    lockHipsXZ,
     togglePlay,
+    toggleLockHipsXZ,
     setSpeed,
     setScrubbing,
     seekToFrame,
@@ -803,6 +805,25 @@ export function AnimFrameController({
               ))}
             </select>
           </div>
+
+          {/* Toggle Lock Hips XZ (Sur place / In-place vs Déplacement réel) */}
+          <button
+            type="button"
+            className={`btn btn-sm py-0 px-2 d-inline-flex align-items-center gap-1 ${
+              lockHipsXZ
+                ? 'btn-danger text-white shadow-sm'
+                : 'btn-outline-secondary text-dark'
+            }`}
+            onClick={toggleLockHipsXZ}
+            title={
+              lockHipsXZ
+                ? 'Hips-Lock ACTIF : Déplacement horizontal X/Z bloqué au centre (cliquer pour libérer)'
+                : 'Hips-Lock INACTIF : Déplacement horizontal X/Z libre dans l\'espace (cliquer pour verrouiller sur place)'
+            }
+          >
+            <i className={`bi ${lockHipsXZ ? 'bi-pin-fill' : 'bi-arrows-move'}`} aria-hidden="true" />
+            <span className="small">{lockHipsXZ ? 'Hips-Lock (Fixe)' : 'Trajectoire libre'}</span>
+          </button>
 
           {/* Compteur précis de Frame & Temps */}
           <div className="d-flex align-items-center gap-1">
