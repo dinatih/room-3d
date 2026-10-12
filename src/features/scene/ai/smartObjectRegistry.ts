@@ -182,12 +182,12 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Toilettes WC',
     category: 'hygiene',
     exclusive: true,
-    position: [50, 0, 500],
+    position: [50, 0, 550],
     slots: [
       {
         slotId: 'use',
         name: 'Faire ses besoins',
-        offset: [50, 0, 538],
+        offset: [50, 0, 500],
         approachOffset: [50, 0, 550],
         rotY: 0,
         animation: 'sit-idle',
@@ -253,7 +253,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         rotY: Math.PI / 2,
         animation: 'take-off-tshirt',
         animationsRandom: ['take-off-tshirt'],
-        duration: 12,
+        duration: 24,
       },
       {
         slotId: 'take-shower-3',
@@ -261,7 +261,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [42, 15, 660],
         rotY: -Math.PI / 2,
         animation: 'take-off-tshirt',
-        duration: 12,
+        duration: 24,
       }
     ]
   },

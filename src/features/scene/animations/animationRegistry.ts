@@ -201,6 +201,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['sit-idle', 'sit-default'],
     tags: ['sitting', 'seated-front', 'idle', 'relax'],
     duration: 6.4,
+    defaultOffset: [0, 0, -42],
   },
   {
     id: 'sitting-2',
