@@ -8658,22 +8658,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 16.2,
   },
   {
-    id: 'yoga-downward-facing-dog-pose-or-adho-mukha-svanasana-a',
-    path: 'animations/npz/yoga/anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_a.glb',
-    category: 'yoga',
-    label: `[YOGA] Downward-Facing Dog pose (Adho Mukha Svanasana) — A (480f / 16.0s, 195KB)`,
-    tags: ['yoga', 'fitness'],
-    duration: 16.0,
-  },
-  {
-    id: 'yoga-downward-facing-dog-pose-or-adho-mukha-svanasana-b',
-    path: 'animations/npz/yoga/anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_b.glb',
-    category: 'yoga',
-    label: `[YOGA] Downward-Facing Dog pose (Adho Mukha Svanasana) — B (555f / 18.5s, 355KB)`,
-    tags: ['yoga', 'fitness'],
-    duration: 11.5,
-  },
-  {
     id: 'yoga-downward-facing-dog-pose-or-adho-mukha-svanasana-c',
     path: 'animations/npz/yoga/anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_c.glb',
     category: 'yoga',
