@@ -67,6 +67,18 @@ function getContrastTextColor(hexColor: string): string {
   return luminance > 0.6 ? '#1f2937' : '#ffffff';
 }
 
+/** Identifiants techniques (anim, slot, objet…) : snake_case, kebab-case, camelCase ou texte entre guillemets. */
+const IDENTIFIER_REGEX = /("[^"]+"|\b[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+)+\b|\b[a-z]+(?:[A-Z][a-z0-9]+)+\b)/g;
+
+/** Chaque identifiant est sélectionné en entier d'un seul clic (`user-select-all`). */
+function renderMessage(message: string): ReactNode[] {
+  return message.split(IDENTIFIER_REGEX).map((part, i) =>
+    i % 2 === 1
+      ? <span key={i} className="user-select-all font-monospace bg-body-secondary rounded px-1">{part}</span>
+      : part
+  );
+}
+
 // ── Composant ──────────────────────────────────────────────────────────────
 export function AppConsole({
   hidden = false,
@@ -384,7 +396,7 @@ export function AppConsole({
                       })}
                     </span>
                   )}
-                  <span className="flex-grow-1 text-dark fw-normal">{entry.message}</span>
+                  <span className="flex-grow-1 text-dark fw-normal">{renderMessage(entry.message)}</span>
                 </div>
               );
             })}
