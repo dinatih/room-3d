@@ -18,9 +18,9 @@
       "boire-verre",
       "boire"
     ],
-    "frames": 419,
-    "duration": 14.0,
-    "size_kb": 297,
+    "frames": 262,
+    "duration": 8.7,
+    "size_kb": 241,
     "rel_path": "animations/npz/daily/anim_drinking_glass.glb"
   },
   {
@@ -42,9 +42,9 @@
       "prendre-tasse",
       "cafe"
     ],
-    "frames": 236,
-    "duration": 7.9,
-    "size_kb": 235,
+    "frames": 87,
+    "duration": 2.9,
+    "size_kb": 183,
     "rel_path": "animations/npz/daily/anim_holding_cup.glb"
   },
   {
@@ -66,9 +66,9 @@
       "cuisiner",
       "melanger-poele"
     ],
-    "frames": 412,
-    "duration": 13.7,
-    "size_kb": 290,
+    "frames": 279,
+    "duration": 9.3,
+    "size_kb": 246,
     "rel_path": "animations/npz/daily/anim_cooking_stir_pan.glb"
   },
   {
@@ -90,9 +90,9 @@
       "decouper-couteau",
       "decouper"
     ],
-    "frames": 378,
-    "duration": 12.6,
-    "size_kb": 279,
+    "frames": 248,
+    "duration": 8.3,
+    "size_kb": 236,
     "rel_path": "animations/npz/daily/anim_cutting_knife.glb"
   },
   {
@@ -113,9 +113,9 @@
       "pour-bottle",
       "verser-bouteille"
     ],
-    "frames": 285,
-    "duration": 9.5,
-    "size_kb": 248,
+    "frames": 270,
+    "duration": 9,
+    "size_kb": 244,
     "rel_path": "animations/npz/daily/anim_pouring_bottle.glb"
   },
   {
@@ -136,7 +136,7 @@
       "stir-bowl",
       "melanger-saladier"
     ],
-    "frames": 223,
+    "frames": 222,
     "duration": 7.4,
     "size_kb": 228,
     "rel_path": "animations/npz/daily/anim_stirring_bowl.glb"
@@ -160,9 +160,9 @@
       "wash-dishes",
       "faire-vaisselle"
     ],
-    "frames": 184,
-    "duration": 6.1,
-    "size_kb": 215,
+    "frames": 54,
+    "duration": 1.8,
+    "size_kb": 172,
     "rel_path": "animations/npz/daily/anim_washing_dishes_sink.glb"
   },
   {
@@ -184,9 +184,9 @@
       "prendre-livre-etagere",
       "livre"
     ],
-    "frames": 98,
-    "duration": 3.3,
-    "size_kb": 187,
+    "frames": 95,
+    "duration": 3.2,
+    "size_kb": 186,
     "rel_path": "animations/npz/daily/anim_take_book_shelf.glb"
   },
   {
@@ -208,9 +208,9 @@
       "guitare",
       "jouer-guitare"
     ],
-    "frames": 214,
-    "duration": 7.1,
-    "size_kb": 225,
+    "frames": 169,
+    "duration": 5.6,
+    "size_kb": 210,
     "rel_path": "animations/npz/daily/anim_playing_guitar.glb"
   },
   {
@@ -232,9 +232,9 @@
       "conversation",
       "discuter"
     ],
-    "frames": 1522,
+    "frames": 1521,
     "duration": 50.7,
-    "size_kb": 655,
+    "size_kb": 654,
     "rel_path": "animations/npz/daily/anim_conversation_gestures.glb"
   },
   {
@@ -256,9 +256,9 @@
       "essuyer-tete",
       "serviette"
     ],
-    "frames": 333,
-    "duration": 11.1,
-    "size_kb": 264,
+    "frames": 327,
+    "duration": 10.9,
+    "size_kb": 262,
     "rel_path": "animations/npz/daily/anim_dry_head_towel.glb"
   },
   {
@@ -280,9 +280,9 @@
       "se-recoiffer",
       "cheveux"
     ],
-    "frames": 106,
-    "duration": 3.5,
-    "size_kb": 189,
+    "frames": 89,
+    "duration": 3,
+    "size_kb": 184,
     "rel_path": "animations/npz/daily/anim_groom_hair_mirror.glb"
   },
   {
@@ -304,9 +304,9 @@
       "retirer-tshirt",
       "se-deshabiller"
     ],
-    "frames": 131,
-    "duration": 4.4,
-    "size_kb": 197,
+    "frames": 124,
+    "duration": 4.1,
+    "size_kb": 195,
     "rel_path": "animations/npz/daily/anim_take_off_tshirt.glb"
   },
   {
@@ -328,9 +328,9 @@
       "s-allonger",
       "coucher"
     ],
-    "frames": 237,
+    "frames": 236,
     "duration": 7.9,
-    "size_kb": 233,
+    "size_kb": 232,
     "rel_path": "animations/npz/daily/anim_lie_down_bed.glb"
   },
   {
@@ -352,9 +352,9 @@
       "se-relever",
       "reveil"
     ],
-    "frames": 208,
-    "duration": 6.9,
-    "size_kb": 223,
+    "frames": 169,
+    "duration": 5.6,
+    "size_kb": 210,
     "rel_path": "animations/npz/daily/anim_get_up_bed.glb"
   }
 ]

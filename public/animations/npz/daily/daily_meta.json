@@ -15,9 +15,9 @@
       "vacuum",
       "passer-aspirateur"
     ],
-    "frames": 572,
-    "duration": 19.1,
-    "size_kb": 343,
+    "frames": 534,
+    "duration": 17.8,
+    "size_kb": 330,
     "rel_path": "animations/npz/daily/anim_vacuuming.glb"
   },
   {
@@ -36,9 +36,9 @@
       "vacuum-alt",
       "vacuum-var"
     ],
-    "frames": 756,
-    "duration": 25.2,
-    "size_kb": 403,
+    "frames": 744,
+    "duration": 24.8,
+    "size_kb": 399,
     "rel_path": "animations/npz/daily/anim_vacuuming_alt.glb"
   },
   {
@@ -58,9 +58,9 @@
       "wipe-table",
       "essuyer-table"
     ],
-    "frames": 226,
-    "duration": 7.5,
-    "size_kb": 229,
+    "frames": 200,
+    "duration": 6.7,
+    "size_kb": 220,
     "rel_path": "animations/npz/daily/anim_wiping_table.glb"
   },
   {
@@ -80,9 +80,9 @@
       "wipe-small-circles",
       "wipe-table-var"
     ],
-    "frames": 260,
-    "duration": 8.7,
-    "size_kb": 240,
+    "frames": 248,
+    "duration": 8.3,
+    "size_kb": 236,
     "rel_path": "animations/npz/daily/anim_wiping_table_small_circles.glb"
   },
   {
@@ -101,9 +101,9 @@
       "shower",
       "douche"
     ],
-    "frames": 257,
-    "duration": 8.6,
-    "size_kb": 239,
+    "frames": 144,
+    "duration": 4.8,
+    "size_kb": 202,
     "rel_path": "animations/npz/daily/anim_taking_shower.glb"
   },
   {
@@ -122,9 +122,9 @@
       "wash",
       "se-laver"
     ],
-    "frames": 2600,
-    "duration": 86.7,
-    "size_kb": 1252,
+    "frames": 2379,
+    "duration": 79.3,
+    "size_kb": 992,
     "rel_path": "animations/npz/daily/anim_washing_body.glb"
   },
   {
@@ -144,9 +144,9 @@
       "pickup-box-m",
       "ramasser-boite-sol"
     ],
-    "frames": 141,
-    "duration": 4.7,
-    "size_kb": 201,
+    "frames": 134,
+    "duration": 4.5,
+    "size_kb": 198,
     "rel_path": "animations/npz/daily/anim_pickup_box_floor_male.glb"
   },
   {
@@ -166,9 +166,9 @@
       "pickup-box-f",
       "ramasser-boite-sol-femme"
     ],
-    "frames": 188,
-    "duration": 6.3,
-    "size_kb": 217,
+    "frames": 179,
+    "duration": 6,
+    "size_kb": 213,
     "rel_path": "animations/npz/daily/anim_pickup_box_floor_female.glb"
   },
   {
@@ -187,9 +187,9 @@
       "lift-box-m",
       "soulever-boite"
     ],
-    "frames": 148,
-    "duration": 4.9,
-    "size_kb": 203,
+    "frames": 132,
+    "duration": 4.4,
+    "size_kb": 198,
     "rel_path": "animations/npz/daily/anim_lift_box_male.glb"
   },
   {
@@ -208,7 +208,7 @@
       "lift-box-f",
       "soulever-boite-femme"
     ],
-    "frames": 252,
+    "frames": 251,
     "duration": 8.4,
     "size_kb": 237,
     "rel_path": "animations/npz/daily/anim_lift_box_female.glb"
@@ -229,9 +229,9 @@
       "putdown-box",
       "reposer-boite"
     ],
-    "frames": 209,
-    "duration": 7.0,
-    "size_kb": 377,
+    "frames": 72,
+    "duration": 2.4,
+    "size_kb": 178,
     "rel_path": "animations/npz/daily/anim_putdown_box_floor.glb"
   },
   {

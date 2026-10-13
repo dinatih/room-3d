@@ -1,0 +1,216 @@
+{
+  "baseline": "c14e25c6",
+  "restored": [
+    {
+      "id": "randb-anna-cortesi-c3d",
+      "file": "public/animations/npz/dances/anim_randb_anna_cortesi_c3d.glb",
+      "before": {
+        "jumps": 37,
+        "maxJump": 37.34,
+        "duration": 138.06666564941406,
+        "hipsRange": [
+          1.2135665622301417,
+          0.26700867635143566,
+          1.2090399615215168
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": [
+          {
+            "bone": "mixamorig:RightUpLeg",
+            "jumps": 28,
+            "max": 34.18
+          },
+          {
+            "bone": "mixamorig:RightFoot",
+            "jumps": 1,
+            "max": 31.41
+          },
+          {
+            "bone": "mixamorig:LeftHand",
+            "jumps": 1,
+            "max": 26.36
+          },
+          {
+            "bone": "mixamorig:RightForeArm",
+            "jumps": 1,
+            "max": 26.77
+          },
+          {
+            "bone": "mixamorig:RightHand",
+            "jumps": 6,
+            "max": 37.34
+          }
+        ]
+      },
+      "restored": {
+        "jumps": 673,
+        "maxJump": 110.8,
+        "duration": 138.06666564941406,
+        "hipsRange": [
+          1.225821048040217,
+          0.2688410390974191,
+          1.2403871238549409
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": [
+          {
+            "bone": "mixamorig:Hips",
+            "jumps": 35,
+            "max": 38.08
+          },
+          {
+            "bone": "mixamorig:LeftUpLeg",
+            "jumps": 69,
+            "max": 58.68
+          },
+          {
+            "bone": "mixamorig:LeftLeg",
+            "jumps": 15,
+            "max": 42.07
+          },
+          {
+            "bone": "mixamorig:LeftFoot",
+            "jumps": 1,
+            "max": 26.06
+          },
+          {
+            "bone": "mixamorig:RightUpLeg",
+            "jumps": 185,
+            "max": 72.22
+          },
+          {
+            "bone": "mixamorig:RightLeg",
+            "jumps": 58,
+            "max": 50.15
+          },
+          {
+            "bone": "mixamorig:RightFoot",
+            "jumps": 28,
+            "max": 72.17
+          },
+          {
+            "bone": "mixamorig:Spine",
+            "jumps": 37,
+            "max": 41
+          },
+          {
+            "bone": "mixamorig:LeftForeArm",
+            "jumps": 19,
+            "max": 39.59
+          },
+          {
+            "bone": "mixamorig:LeftHand",
+            "jumps": 75,
+            "max": 67.52
+          },
+          {
+            "bone": "mixamorig:RightForeArm",
+            "jumps": 21,
+            "max": 57.48
+          },
+          {
+            "bone": "mixamorig:RightHand",
+            "jumps": 130,
+            "max": 110.8
+          }
+        ]
+      }
+    },
+    {
+      "id": "yoga-boat-pose-or-paripurna-navasana-a",
+      "file": "public/animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_a.glb",
+      "before": {
+        "jumps": 0,
+        "maxJump": 15.5,
+        "duration": 14.199999809265137,
+        "hipsRange": [
+          0,
+          0.9399654695218944,
+          0.012142511004809484
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": []
+      },
+      "restored": {
+        "jumps": 0,
+        "maxJump": 15.5,
+        "duration": 12.199999809265137,
+        "hipsRange": [
+          0.8578988264970739,
+          0.9428926242461911,
+          0.7767250718322474
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": []
+      }
+    },
+    {
+      "id": "duo-martial-arts-combat",
+      "file": "public/animations/npz/combat/anim_duo_martial_arts.glb",
+      "before": {
+        "jumps": 3,
+        "maxJump": 46.65,
+        "duration": 74.73332977294922,
+        "hipsRange": [
+          1.2943268677370199,
+          0.6456873227366621,
+          2.469858643978241
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": [
+          {
+            "bone": "mixamorig:LeftForeArm",
+            "jumps": 1,
+            "max": 25.67
+          },
+          {
+            "bone": "mixamorig:LeftHand",
+            "jumps": 2,
+            "max": 46.65
+          }
+        ]
+      },
+      "restored": {
+        "jumps": 5,
+        "maxJump": 61.83,
+        "duration": 37.33333206176758,
+        "hipsRange": [
+          1.2943268677370199,
+          0.645525504439924,
+          2.455080048340207
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": [
+          {
+            "bone": "mixamorig:LeftForeArm",
+            "jumps": 2,
+            "max": 46.41
+          },
+          {
+            "bone": "mixamorig:LeftHand",
+            "jumps": 3,
+            "max": 61.83
+          }
+        ]
+      }
+    }
+  ]
+}

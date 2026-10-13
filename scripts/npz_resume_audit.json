@@ -1,0 +1,3928 @@
+[
+  {
+    "id": "bachata-vaso-01",
+    "file": "public/animations/npz/dances/anim_bachata_vaso_01.glb",
+    "jumps": 178,
+    "maxJump": 126.88,
+    "duration": 133.60000610351562,
+    "hipsRange": [
+      1.9227068662038391,
+      0.21210782229783243,
+      1.5280365840917787
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 31,
+        "max": 61.21
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 85,
+        "max": 85.47
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 14,
+        "max": 47.27
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 48,
+        "max": 126.88
+      }
+    ]
+  },
+  {
+    "id": "bachata-stefanos-c3d",
+    "file": "public/animations/npz/dances/anim_bachata_stefanos_c3d.glb",
+    "jumps": 3,
+    "maxJump": 36.81,
+    "duration": 144.1999969482422,
+    "hipsRange": [
+      1.1155588663617024,
+      0.23801975847143664,
+      1.1945258521426325
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 2,
+        "max": 36.81
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 1,
+        "max": 25.8
+      }
+    ]
+  },
+  {
+    "id": "bachata-stefanos-v2-c3d",
+    "file": "public/animations/npz/dances/anim_bachata_stefanos_v2_c3d.glb",
+    "jumps": 0,
+    "maxJump": 24.8,
+    "duration": 123.69999694824219,
+    "hipsRange": [
+      1.5699369842573176,
+      0.16807090969654426,
+      1.2944472929660051
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "reggaeton-vaso-01",
+    "file": "public/animations/npz/dances/anim_reggaeton_vaso_01.glb",
+    "jumps": 257,
+    "maxJump": 137.91,
+    "duration": 128.3000030517578,
+    "hipsRange": [
+      1.2180046190767442,
+      0.7168556817395993,
+      1.4338209678704894
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 1,
+        "max": 27.48
+      },
+      {
+        "bone": "mixamorig:LeftToeBase",
+        "jumps": 4,
+        "max": 36.29
+      },
+      {
+        "bone": "mixamorig:RightToeBase",
+        "jumps": 3,
+        "max": 59.6
+      },
+      {
+        "bone": "mixamorig:LeftShoulder",
+        "jumps": 4,
+        "max": 39.44
+      },
+      {
+        "bone": "mixamorig:LeftArm",
+        "jumps": 8,
+        "max": 36.93
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 41,
+        "max": 84.67
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 98,
+        "max": 133.06
+      },
+      {
+        "bone": "mixamorig:RightArm",
+        "jumps": 2,
+        "max": 29.13
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 20,
+        "max": 38.6
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 76,
+        "max": 137.91
+      }
+    ]
+  },
+  {
+    "id": "salsa-shines-vaso-01",
+    "file": "public/animations/npz/dances/anim_salsa_shines_vaso_01.glb",
+    "jumps": 26,
+    "maxJump": 49.51,
+    "duration": 127.53333282470703,
+    "hipsRange": [
+      1.5583628496893596,
+      0.21761208136138643,
+      1.4697298824396552
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 4,
+        "max": 26.68
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 2,
+        "max": 26.09
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 20,
+        "max": 49.51
+      }
+    ]
+  },
+  {
+    "id": "hiphop-fanie-c3d",
+    "file": "public/animations/npz/dances/anim_hiphop_fanie_c3d.glb",
+    "jumps": 429,
+    "maxJump": 155.31,
+    "duration": 129.89999389648438,
+    "hipsRange": [
+      2.0109843758273627,
+      1.0686015736316965,
+      1.722506163719216
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:Hips",
+        "jumps": 2,
+        "max": 35.77
+      },
+      {
+        "bone": "mixamorig:LeftUpLeg",
+        "jumps": 2,
+        "max": 61.55
+      },
+      {
+        "bone": "mixamorig:LeftLeg",
+        "jumps": 17,
+        "max": 58.2
+      },
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 34,
+        "max": 61.43
+      },
+      {
+        "bone": "mixamorig:LeftToeBase",
+        "jumps": 4,
+        "max": 58.5
+      },
+      {
+        "bone": "mixamorig:RightLeg",
+        "jumps": 11,
+        "max": 31.94
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 36,
+        "max": 64.7
+      },
+      {
+        "bone": "mixamorig:RightToeBase",
+        "jumps": 9,
+        "max": 37.2
+      },
+      {
+        "bone": "mixamorig:Spine",
+        "jumps": 2,
+        "max": 41.74
+      },
+      {
+        "bone": "mixamorig:Spine1",
+        "jumps": 1,
+        "max": 42.66
+      },
+      {
+        "bone": "mixamorig:Spine2",
+        "jumps": 1,
+        "max": 26.1
+      },
+      {
+        "bone": "mixamorig:LeftShoulder",
+        "jumps": 6,
+        "max": 45.37
+      },
+      {
+        "bone": "mixamorig:LeftArm",
+        "jumps": 8,
+        "max": 71.16
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 57,
+        "max": 84.48
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 88,
+        "max": 60.23
+      },
+      {
+        "bone": "mixamorig:Neck",
+        "jumps": 4,
+        "max": 35.19
+      },
+      {
+        "bone": "mixamorig:Head",
+        "jumps": 2,
+        "max": 27.76
+      },
+      {
+        "bone": "mixamorig:RightShoulder",
+        "jumps": 2,
+        "max": 42.13
+      },
+      {
+        "bone": "mixamorig:RightArm",
+        "jumps": 6,
+        "max": 82.45
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 53,
+        "max": 155.31
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 84,
+        "max": 117.08
+      }
+    ]
+  },
+  {
+    "id": "musical-theater-fanie-c3d",
+    "file": "public/animations/npz/dances/anim_musical_theater_fanie_c3d.glb",
+    "jumps": 556,
+    "maxJump": 88.39,
+    "duration": 127.43333435058594,
+    "hipsRange": [
+      2.475217306124776,
+      0.8980541508792397,
+      2.8230321316737474
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftLeg",
+        "jumps": 32,
+        "max": 65.25
+      },
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 20,
+        "max": 40.92
+      },
+      {
+        "bone": "mixamorig:RightLeg",
+        "jumps": 14,
+        "max": 30.72
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 25,
+        "max": 40.13
+      },
+      {
+        "bone": "mixamorig:RightToeBase",
+        "jumps": 1,
+        "max": 26.55
+      },
+      {
+        "bone": "mixamorig:LeftShoulder",
+        "jumps": 3,
+        "max": 41.37
+      },
+      {
+        "bone": "mixamorig:LeftArm",
+        "jumps": 3,
+        "max": 33.37
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 104,
+        "max": 88.39
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 159,
+        "max": 81.9
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 61,
+        "max": 44.38
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 134,
+        "max": 73.29
+      }
+    ]
+  },
+  {
+    "id": "zumba-fanie-c3d",
+    "file": "public/animations/npz/dances/anim_zumba_fanie_c3d.glb",
+    "jumps": 483,
+    "maxJump": 91.97,
+    "duration": 225,
+    "hipsRange": [
+      1.6027933143945035,
+      0.3632218847251958,
+      1.3621655107023642
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftUpLeg",
+        "jumps": 1,
+        "max": 26.26
+      },
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 2,
+        "max": 26.42
+      },
+      {
+        "bone": "mixamorig:RightLeg",
+        "jumps": 3,
+        "max": 27.22
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 1,
+        "max": 26.92
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 44,
+        "max": 43.55
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 244,
+        "max": 89.16
+      },
+      {
+        "bone": "mixamorig:RightArm",
+        "jumps": 2,
+        "max": 26.57
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 28,
+        "max": 91.97
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 158,
+        "max": 81.99
+      }
+    ]
+  },
+  {
+    "id": "bellydance2-anna-cortesi-c3d",
+    "file": "public/animations/npz/dances/anim_bellydance2_anna_cortesi_c3d.glb",
+    "jumps": 434,
+    "maxJump": 133.48,
+    "duration": 280.76666259765625,
+    "hipsRange": [
+      0.9665927289442848,
+      0.9038809421403209,
+      1.0240423913732264
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftUpLeg",
+        "jumps": 1,
+        "max": 28.15
+      },
+      {
+        "bone": "mixamorig:LeftLeg",
+        "jumps": 4,
+        "max": 54.25
+      },
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 2,
+        "max": 41.49
+      },
+      {
+        "bone": "mixamorig:RightUpLeg",
+        "jumps": 1,
+        "max": 30.76
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 1,
+        "max": 31.33
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 37,
+        "max": 52.83
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 247,
+        "max": 133.48
+      },
+      {
+        "bone": "mixamorig:RightArm",
+        "jumps": 2,
+        "max": 26.78
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 15,
+        "max": 44.29
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 124,
+        "max": 67.94
+      }
+    ]
+  },
+  {
+    "id": "randb-anna-cortesi-c3d",
+    "file": "public/animations/npz/dances/anim_randb_anna_cortesi_c3d.glb",
+    "jumps": 673,
+    "maxJump": 110.8,
+    "duration": 138.06666564941406,
+    "hipsRange": [
+      1.225821048040217,
+      0.2688410390974191,
+      1.2403871238549409
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:Hips",
+        "jumps": 35,
+        "max": 38.08
+      },
+      {
+        "bone": "mixamorig:LeftUpLeg",
+        "jumps": 69,
+        "max": 58.68
+      },
+      {
+        "bone": "mixamorig:LeftLeg",
+        "jumps": 15,
+        "max": 42.07
+      },
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 1,
+        "max": 26.06
+      },
+      {
+        "bone": "mixamorig:RightUpLeg",
+        "jumps": 185,
+        "max": 72.22
+      },
+      {
+        "bone": "mixamorig:RightLeg",
+        "jumps": 58,
+        "max": 50.15
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 28,
+        "max": 72.17
+      },
+      {
+        "bone": "mixamorig:Spine",
+        "jumps": 37,
+        "max": 41
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 19,
+        "max": 39.59
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 75,
+        "max": 67.52
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 21,
+        "max": 57.48
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 130,
+        "max": 110.8
+      }
+    ]
+  },
+  {
+    "id": "reggaeton-stefanos-c3d",
+    "file": "public/animations/npz/dances/anim_reggaeton_stefanos_c3d.glb",
+    "jumps": 7,
+    "maxJump": 33.03,
+    "duration": 163.3333282470703,
+    "hipsRange": [
+      0.8088996706403861,
+      0.8568135634134132,
+      1.0004788189759897
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 3,
+        "max": 33.03
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 3,
+        "max": 28.57
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 1,
+        "max": 25.67
+      }
+    ]
+  },
+  {
+    "id": "salsa-stefanos-c3d",
+    "file": "public/animations/npz/dances/anim_salsa_stefanos_c3d.glb",
+    "jumps": 189,
+    "maxJump": 169.22,
+    "duration": 196.46665954589844,
+    "hipsRange": [
+      1.2457196529421282,
+      0.6714483474473877,
+      1.3040622454318826
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 10,
+        "max": 36.85
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 10,
+        "max": 41.85
+      },
+      {
+        "bone": "mixamorig:RightToeBase",
+        "jumps": 1,
+        "max": 26.32
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 10,
+        "max": 74.3
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 79,
+        "max": 169.22
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 6,
+        "max": 44.76
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 73,
+        "max": 86.55
+      }
+    ]
+  },
+  {
+    "id": "dance-sync",
+    "file": "public/animations/npz/dances/anim_dance_sync.glb",
+    "jumps": 0,
+    "maxJump": 20.74,
+    "duration": 5.0333333015441895,
+    "hipsRange": [
+      0.27078498235080417,
+      0.08340378152152228,
+      0.14606197348359015
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-front-back-walking",
+    "file": "public/animations/npz/yoga/anim_yoga_front_back_walking.glb",
+    "jumps": 0,
+    "maxJump": 12.53,
+    "duration": 14.333333015441895,
+    "hipsRange": [
+      0.8748803515386498,
+      0.09858144700479787,
+      1.2133327777460619
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-circle-around",
+    "file": "public/animations/npz/yoga/anim_yoga_circle_around.glb",
+    "jumps": 0,
+    "maxJump": 15.94,
+    "duration": 14.433333396911621,
+    "hipsRange": [
+      2.573260745705795,
+      0.12633750600741023,
+      3.923974125455983
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-random-movements-jumps",
+    "file": "public/animations/npz/yoga/anim_yoga_random_movements_jumps.glb",
+    "jumps": 0,
+    "maxJump": 20.45,
+    "duration": 13.633333206176758,
+    "hipsRange": [
+      0.7484629654482831,
+      0.42480779743680974,
+      3.4814710383322485
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-random-movements-squats",
+    "file": "public/animations/npz/yoga/anim_yoga_random_movements_squats.glb",
+    "jumps": 0,
+    "maxJump": 23.22,
+    "duration": 24,
+    "hipsRange": [
+      2.589028338737151,
+      0.752329425991151,
+      3.581495503838306
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-akarna-dhanurasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_akarna_dhanurasana_a.glb",
+    "jumps": 0,
+    "maxJump": 13.57,
+    "duration": 20.733333587646484,
+    "hipsRange": [
+      0.8904383651069168,
+      0.9322533808247422,
+      0.5287337733106463
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-akarna-dhanurasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_akarna_dhanurasana_b.glb",
+    "jumps": 0,
+    "maxJump": 13.09,
+    "duration": 19.766666412353516,
+    "hipsRange": [
+      0.8650194546948491,
+      0.9396782681403021,
+      0.48254473174178136
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-akarna-dhanurasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_akarna_dhanurasana_c.glb",
+    "jumps": 0,
+    "maxJump": 13.57,
+    "duration": 19.799999237060547,
+    "hipsRange": [
+      0.8516829491030506,
+      0.9405922030369412,
+      0.5945942268960651
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bharadvajas-twist-pose-or-bharadvajasana-i-a",
+    "file": "public/animations/npz/yoga/anim_yoga_bharadvajas_twist_pose_or_bharadvajasana_i_a.glb",
+    "jumps": 0,
+    "maxJump": 22.31,
+    "duration": 36.56666564941406,
+    "hipsRange": [
+      1.0314016099705927,
+      0.9333762179689016,
+      0.46491797210499897
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bharadvajas-twist-pose-or-bharadvajasana-i-b",
+    "file": "public/animations/npz/yoga/anim_yoga_bharadvajas_twist_pose_or_bharadvajasana_i_b.glb",
+    "jumps": 0,
+    "maxJump": 18.84,
+    "duration": 24.733333587646484,
+    "hipsRange": [
+      1.1581810692359262,
+      0.9417953919278226,
+      0.5627425370670875
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bharadvajas-twist-pose-or-bharadvajasana-i-c",
+    "file": "public/animations/npz/yoga/anim_yoga_bharadvajas_twist_pose_or_bharadvajasana_i_c.glb",
+    "jumps": 0,
+    "maxJump": 13.01,
+    "duration": 24.33333396911621,
+    "hipsRange": [
+      0.7728226298207943,
+      0.9065279530940837,
+      0.8451064129490027
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-boat-pose-or-paripurna-navasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_a.glb",
+    "jumps": 0,
+    "maxJump": 15.5,
+    "duration": 12.199999809265137,
+    "hipsRange": [
+      0.8578988264970739,
+      0.9428926242461911,
+      0.7767250718322474
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-boat-pose-or-paripurna-navasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_b.glb",
+    "jumps": 0,
+    "maxJump": 15.16,
+    "duration": 14.066666603088379,
+    "hipsRange": [
+      0.6748220364416677,
+      0.9496952238753729,
+      0.847550315741194
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-boat-pose-or-paripurna-navasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_c.glb",
+    "jumps": 0,
+    "maxJump": 20.43,
+    "duration": 14,
+    "hipsRange": [
+      0.7943681157894105,
+      0.9533214255878664,
+      0.7446429675081311
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-boat-pose-or-paripurna-navasana-d",
+    "file": "public/animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_d.glb",
+    "jumps": 0,
+    "maxJump": 9.88,
+    "duration": 11.666666984558105,
+    "hipsRange": [
+      0.8342395786738486,
+      0.946043438221023,
+      0.7654569182294225
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-boat-pose-or-paripurna-navasana-e",
+    "file": "public/animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_e.glb",
+    "jumps": 0,
+    "maxJump": 21.02,
+    "duration": 15.899999618530273,
+    "hipsRange": [
+      0.7830002991184521,
+      0.9358552964914977,
+      0.7513349261869626
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-boat-pose-or-paripurna-navasana-f",
+    "file": "public/animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_f.glb",
+    "jumps": 0,
+    "maxJump": 8.98,
+    "duration": 13.433333396911621,
+    "hipsRange": [
+      0.714145873319822,
+      0.9388060617091276,
+      0.6625487419766221
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bound-angle-pose-or-baddha-konasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_a.glb",
+    "jumps": 0,
+    "maxJump": 20.7,
+    "duration": 22.83333396911621,
+    "hipsRange": [
+      0.8397145345870878,
+      0.9419062111521691,
+      0.6879107575765008
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bound-angle-pose-or-baddha-konasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_b.glb",
+    "jumps": 0,
+    "maxJump": 11.49,
+    "duration": 25.46666717529297,
+    "hipsRange": [
+      0.7739403456313827,
+      0.9295308013312275,
+      0.5790511945943908
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bound-angle-pose-or-baddha-konasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_c.glb",
+    "jumps": 0,
+    "maxJump": 13.64,
+    "duration": 20.200000762939453,
+    "hipsRange": [
+      0.8040231906468449,
+      0.9291428610619332,
+      0.6667838579373748
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bound-angle-pose-or-baddha-konasana-d",
+    "file": "public/animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_d.glb",
+    "jumps": 0,
+    "maxJump": 24.71,
+    "duration": 25.66666603088379,
+    "hipsRange": [
+      0.7170846850331567,
+      0.9264138873493467,
+      0.6303725672641951
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bound-angle-pose-or-baddha-konasana-e",
+    "file": "public/animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_e.glb",
+    "jumps": 0,
+    "maxJump": 24.13,
+    "duration": 22.600000381469727,
+    "hipsRange": [
+      0.7410094769073391,
+      0.92797093789899,
+      0.5417118608263914
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bound-angle-pose-or-baddha-konasana-f",
+    "file": "public/animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_f.glb",
+    "jumps": 0,
+    "maxJump": 10.52,
+    "duration": 13.933333396911621,
+    "hipsRange": [
+      0.8359939149917528,
+      0.9304796853385414,
+      0.5455058393879879
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bound-angle-pose-or-baddha-konasana-g",
+    "file": "public/animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_g.glb",
+    "jumps": 0,
+    "maxJump": 13.02,
+    "duration": 15.899999618530273,
+    "hipsRange": [
+      0.8862902562404362,
+      0.9266870652422067,
+      0.3585353680021924
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bow-pose-or-dhanurasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_bow_pose_or_dhanurasana_a.glb",
+    "jumps": 0,
+    "maxJump": 12.25,
+    "duration": 20.600000381469727,
+    "hipsRange": [
+      0.9147464547735495,
+      1.0044927732890119,
+      0.7336901197490227
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bow-pose-or-dhanurasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_bow_pose_or_dhanurasana_b.glb",
+    "jumps": 0,
+    "maxJump": 13.52,
+    "duration": 20.16666603088379,
+    "hipsRange": [
+      0.8836834519278227,
+      1.0120115055465528,
+      0.8083248481726296
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bridge-pose-or-setu-bandha-sarvangasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_a.glb",
+    "jumps": 0,
+    "maxJump": 9.52,
+    "duration": 27.233333587646484,
+    "hipsRange": [
+      0.9365294485569864,
+      0.9726014472487245,
+      0.9226707204405447
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bridge-pose-or-setu-bandha-sarvangasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_b.glb",
+    "jumps": 0,
+    "maxJump": 13.58,
+    "duration": 26.200000762939453,
+    "hipsRange": [
+      0.9341111165111258,
+      0.9680802840637048,
+      0.985786003372448
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bridge-pose-or-setu-bandha-sarvangasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_c.glb",
+    "jumps": 0,
+    "maxJump": 14.65,
+    "duration": 23.600000381469727,
+    "hipsRange": [
+      0.8565536450619922,
+      0.9772679576802467,
+      0.9597327513155101
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bridge-pose-or-setu-bandha-sarvangasana-d",
+    "file": "public/animations/npz/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_d.glb",
+    "jumps": 0,
+    "maxJump": 19.71,
+    "duration": 29.866666793823242,
+    "hipsRange": [
+      1.0080659784063846,
+      0.9778669011891271,
+      1.024500496516402
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-bridge-pose-or-setu-bandha-sarvangasana-e",
+    "file": "public/animations/npz/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_e.glb",
+    "jumps": 0,
+    "maxJump": 14.66,
+    "duration": 33.733333587646484,
+    "hipsRange": [
+      1.0110776293781925,
+      0.972018673745633,
+      0.8286105435954516
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-camel-pose-or-ustrasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_camel_pose_or_ustrasana_a.glb",
+    "jumps": 0,
+    "maxJump": 13.73,
+    "duration": 25.46666717529297,
+    "hipsRange": [
+      0.9818054742707574,
+      0.7377002905080132,
+      1.104779403071853
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-camel-pose-or-ustrasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_camel_pose_or_ustrasana_b.glb",
+    "jumps": 0,
+    "maxJump": 11.03,
+    "duration": 22.66666603088379,
+    "hipsRange": [
+      0.9258059485449053,
+      0.7039120916200632,
+      1.0972547247689186
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-camel-pose-or-ustrasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_camel_pose_or_ustrasana_c.glb",
+    "jumps": 0,
+    "maxJump": 10.71,
+    "duration": 22.733333587646484,
+    "hipsRange": [
+      0.8387835172090634,
+      0.7413179601268033,
+      1.142330148324294
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-camel-pose-or-ustrasana-d",
+    "file": "public/animations/npz/yoga/anim_yoga_camel_pose_or_ustrasana_d.glb",
+    "jumps": 0,
+    "maxJump": 9.5,
+    "duration": 27.200000762939453,
+    "hipsRange": [
+      0.9714191219638479,
+      0.7260984606788509,
+      1.011936267178438
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cat-cow-pose-or-marjaryasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_cat_cow_pose_or_marjaryasana_a.glb",
+    "jumps": 0,
+    "maxJump": 10.2,
+    "duration": 15.899999618530273,
+    "hipsRange": [
+      0.8175984533667906,
+      0.6777443080601728,
+      0.751709560512806
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cat-cow-pose-or-marjaryasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_cat_cow_pose_or_marjaryasana_b.glb",
+    "jumps": 0,
+    "maxJump": 10.6,
+    "duration": 16.066667556762695,
+    "hipsRange": [
+      0.8564541911381287,
+      0.6595575948632455,
+      0.8026996980448154
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cat-cow-pose-or-marjaryasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_cat_cow_pose_or_marjaryasana_c.glb",
+    "jumps": 0,
+    "maxJump": 11.63,
+    "duration": 21.83333396911621,
+    "hipsRange": [
+      0.7883516981821124,
+      0.675336737086583,
+      0.8231452930849327
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-chair-pose-or-utkatasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_chair_pose_or_utkatasana_a.glb",
+    "jumps": 0,
+    "maxJump": 13.64,
+    "duration": 14.399999618530273,
+    "hipsRange": [
+      0.8449688060961181,
+      0.6024195850584415,
+      0.2796458536033601
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-chair-pose-or-utkatasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_chair_pose_or_utkatasana_b.glb",
+    "jumps": 0,
+    "maxJump": 10.71,
+    "duration": 18.799999237060547,
+    "hipsRange": [
+      0.8390786786583357,
+      0.5820776426372716,
+      0.4917819906777155
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-chair-pose-or-utkatasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_chair_pose_or_utkatasana_c.glb",
+    "jumps": 0,
+    "maxJump": 13.7,
+    "duration": 18.133333206176758,
+    "hipsRange": [
+      0.8380934742519224,
+      0.2395858984491095,
+      0.3627474148527817
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-child-pose-or-balasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_child_pose_or_balasana_a.glb",
+    "jumps": 0,
+    "maxJump": 13.04,
+    "duration": 21.600000381469727,
+    "hipsRange": [
+      0.8339400012655551,
+      0.8315517066168732,
+      0.6881928674417486
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-child-pose-or-balasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_child_pose_or_balasana_b.glb",
+    "jumps": 0,
+    "maxJump": 11.71,
+    "duration": 16.633333206176758,
+    "hipsRange": [
+      0.8672872730950871,
+      0.8277270310289654,
+      0.747449866199995
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cobra-pose-or-bhujangasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_cobra_pose_or_bhujangasana_a.glb",
+    "jumps": 0,
+    "maxJump": 7.82,
+    "duration": 21.53333282470703,
+    "hipsRange": [
+      0.8915386000676762,
+      0.9282802215583762,
+      0.966103915452748
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cobra-pose-or-bhujangasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_cobra_pose_or_bhujangasana_b.glb",
+    "jumps": 0,
+    "maxJump": 9.26,
+    "duration": 21.433332443237305,
+    "hipsRange": [
+      0.9249963321165066,
+      0.9027080586155372,
+      0.9854849513012383
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cobra-pose-or-bhujangasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_cobra_pose_or_bhujangasana_c.glb",
+    "jumps": 0,
+    "maxJump": 10.43,
+    "duration": 18.33333396911621,
+    "hipsRange": [
+      0.8730289025672766,
+      0.9948105661856487,
+      0.71586819436101
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cobra-pose-or-bhujangasana-d",
+    "file": "public/animations/npz/yoga/anim_yoga_cobra_pose_or_bhujangasana_d.glb",
+    "jumps": 0,
+    "maxJump": 10.2,
+    "duration": 16.133333206176758,
+    "hipsRange": [
+      0.7548636458472089,
+      0.983341303638125,
+      1.0467195936581255
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cockerel-pose-b",
+    "file": "public/animations/npz/yoga/anim_yoga_cockerel_pose_b.glb",
+    "jumps": 0,
+    "maxJump": 15.23,
+    "duration": 60.733333587646484,
+    "hipsRange": [
+      0.9819395990236188,
+      0.9506973047997539,
+      0.8740671757082479
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-corpse-pose-or-savasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_corpse_pose_or_savasana_a.glb",
+    "jumps": 0,
+    "maxJump": 9.84,
+    "duration": 21.233333587646484,
+    "hipsRange": [
+      0.8512424278726627,
+      0.981168623007804,
+      0.7614258070392835
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cow-face-pose-or-gomukhasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_a.glb",
+    "jumps": 0,
+    "maxJump": 15.52,
+    "duration": 30.600000381469727,
+    "hipsRange": [
+      1.0439650492973982,
+      0.8869646804589256,
+      0.7741403905753436
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cow-face-pose-or-gomukhasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_b.glb",
+    "jumps": 0,
+    "maxJump": 10.06,
+    "duration": 20.066667556762695,
+    "hipsRange": [
+      0.9753900786774583,
+      0.8969464652171785,
+      0.9050689690005796
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cow-face-pose-or-gomukhasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_c.glb",
+    "jumps": 0,
+    "maxJump": 13.1,
+    "duration": 26.600000381469727,
+    "hipsRange": [
+      0.9700837705265628,
+      0.9067131505005613,
+      0.7110289424198523
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-cow-face-pose-or-gomukhasana-e",
+    "file": "public/animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_e.glb",
+    "jumps": 0,
+    "maxJump": 11.11,
+    "duration": 21.933332443237305,
+    "hipsRange": [
+      1.1085397281824108,
+      0.8893146417885686,
+      0.6973456165054966
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-crane-crow-pose-or-bakasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_crane_crow_pose_or_bakasana_a.glb",
+    "jumps": 0,
+    "maxJump": 16.92,
+    "duration": 25.399999618530273,
+    "hipsRange": [
+      0.8093906984614421,
+      0.32864751529038005,
+      0.6179135230250675
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-crane-crow-pose-or-bakasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_crane_crow_pose_or_bakasana_b.glb",
+    "jumps": 0,
+    "maxJump": 12.68,
+    "duration": 17.33333396911621,
+    "hipsRange": [
+      0.8788312715553204,
+      0.682296501006086,
+      0.6238745446983245
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-dolphin-plank-pose-or-makara-adho-mukha-svanasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_dolphin_plank_pose_or_makara_adho_mukha_svanasana_a.glb",
+    "jumps": 0,
+    "maxJump": 14.05,
+    "duration": 17.899999618530273,
+    "hipsRange": [
+      0.9354036503567471,
+      0.709297273617741,
+      0.923086620468946
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-dolphin-pose-or-ardha-pincha-mayurasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_dolphin_pose_or_ardha_pincha_mayurasana_a.glb",
+    "jumps": 1048,
+    "maxJump": 178.84,
+    "duration": 16.200000762939453,
+    "hipsRange": [
+      0.9653342984914559,
+      0.5071280850960846,
+      0.6857487361135842
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:Hips",
+        "jumps": 7,
+        "max": 50.53
+      },
+      {
+        "bone": "mixamorig:LeftUpLeg",
+        "jumps": 8,
+        "max": 113.61
+      },
+      {
+        "bone": "mixamorig:LeftLeg",
+        "jumps": 7,
+        "max": 151.17
+      },
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 4,
+        "max": 58.28
+      },
+      {
+        "bone": "mixamorig:LeftToeBase",
+        "jumps": 10,
+        "max": 39.88
+      },
+      {
+        "bone": "mixamorig:RightUpLeg",
+        "jumps": 7,
+        "max": 94.32
+      },
+      {
+        "bone": "mixamorig:RightLeg",
+        "jumps": 9,
+        "max": 120.28
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 9,
+        "max": 43.65
+      },
+      {
+        "bone": "mixamorig:RightToeBase",
+        "jumps": 35,
+        "max": 56.35
+      },
+      {
+        "bone": "mixamorig:Spine",
+        "jumps": 23,
+        "max": 178.62
+      },
+      {
+        "bone": "mixamorig:Spine1",
+        "jumps": 50,
+        "max": 135.49
+      },
+      {
+        "bone": "mixamorig:Spine2",
+        "jumps": 54,
+        "max": 174.73
+      },
+      {
+        "bone": "mixamorig:LeftShoulder",
+        "jumps": 88,
+        "max": 178.84
+      },
+      {
+        "bone": "mixamorig:LeftArm",
+        "jumps": 96,
+        "max": 175.69
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 89,
+        "max": 177.76
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 78,
+        "max": 176.19
+      },
+      {
+        "bone": "mixamorig:Neck",
+        "jumps": 64,
+        "max": 175.85
+      },
+      {
+        "bone": "mixamorig:Head",
+        "jumps": 56,
+        "max": 174.02
+      },
+      {
+        "bone": "mixamorig:RightShoulder",
+        "jumps": 85,
+        "max": 175.6
+      },
+      {
+        "bone": "mixamorig:RightArm",
+        "jumps": 99,
+        "max": 170.93
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 88,
+        "max": 173.62
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 82,
+        "max": 177.77
+      }
+    ]
+  },
+  {
+    "id": "yoga-downward-facing-dog-pose-or-adho-mukha-svanasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_c.glb",
+    "jumps": 0,
+    "maxJump": 9.84,
+    "duration": 18.33333396911621,
+    "hipsRange": [
+      0.8670563313277881,
+      0.16189561340496428,
+      0.716080983569364
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-eagle-pose-or-garudasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_eagle_pose_or_garudasana_a.glb",
+    "jumps": 0,
+    "maxJump": 20.53,
+    "duration": 25.266666412353516,
+    "hipsRange": [
+      0.8905975422222712,
+      0.19448377346591805,
+      0.2638870402413559
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-eight-angle-pose-or-astavakrasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_eight_angle_pose_or_astavakrasana_a.glb",
+    "jumps": 0,
+    "maxJump": 15.3,
+    "duration": 15.666666984558105,
+    "hipsRange": [
+      0.7663859576049602,
+      0.7895043481198918,
+      0.7976339930586672
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-extended-puppy-pose-or-uttana-shishosana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_extended_puppy_pose_or_uttana_shishosana_a.glb",
+    "jumps": 0,
+    "maxJump": 10.08,
+    "duration": 23.733333587646484,
+    "hipsRange": [
+      0.8632508657146047,
+      0.6855418155817234,
+      0.6935650601117508
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-extended-revolved-side-angle-pose-or-utthita-parsvakonasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_a.glb",
+    "jumps": 0,
+    "maxJump": 16.89,
+    "duration": 18.16666603088379,
+    "hipsRange": [
+      0.8373663607828383,
+      0.48653034665314365,
+      0.9799444297197085
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-extended-revolved-side-angle-pose-or-utthita-parsvakonasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_b.glb",
+    "jumps": 0,
+    "maxJump": 14.5,
+    "duration": 20.433332443237305,
+    "hipsRange": [
+      0.8360320190482131,
+      0.4195245406835576,
+      0.9634727345356018
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-extended-revolved-side-angle-pose-or-utthita-parsvakonasana-c",
+    "file": "public/animations/npz/yoga/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_c.glb",
+    "jumps": 0,
+    "maxJump": 10.42,
+    "duration": 17.53333282470703,
+    "hipsRange": [
+      0.9309424472389564,
+      0.4897575555611654,
+      0.7795625685159834
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-extended-revolved-side-angle-pose-or-utthita-parsvakonasana-d",
+    "file": "public/animations/npz/yoga/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_d.glb",
+    "jumps": 0,
+    "maxJump": 10.4,
+    "duration": 31.266666412353516,
+    "hipsRange": [
+      0.8975457533252439,
+      0.4348587941893718,
+      0.9302581190014358
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-extended-revolved-side-angle-pose-or-utthita-parsvakonasana-e",
+    "file": "public/animations/npz/yoga/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_e.glb",
+    "jumps": 0,
+    "maxJump": 8.25,
+    "duration": 23.633333206176758,
+    "hipsRange": [
+      0.9080935465970583,
+      0.4680561144294204,
+      0.9826671347101238
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-extended-revolved-triangle-pose-or-utthita-trikonasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_extended_revolved_triangle_pose_or_utthita_trikonasana_a.glb",
+    "jumps": 0,
+    "maxJump": 11.29,
+    "duration": 25.700000762939453,
+    "hipsRange": [
+      0.8858218185792452,
+      0.2101974123117918,
+      0.7290233847336117
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-extended-revolved-triangle-pose-or-utthita-trikonasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_extended_revolved_triangle_pose_or_utthita_trikonasana_b.glb",
+    "jumps": 0,
+    "maxJump": 7.33,
+    "duration": 22.100000381469727,
+    "hipsRange": [
+      0.864652530893999,
+      0.18208054848426258,
+      0.625324233293859
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-feathered-peacock-pose-or-pincha-mayurasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_feathered_peacock_pose_or_pincha_mayurasana_a.glb",
+    "jumps": 0,
+    "maxJump": 11.24,
+    "duration": 35.13333511352539,
+    "hipsRange": [
+      0.9559395624114666,
+      0.6131226133201837,
+      0.6538397634496498
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-feathered-peacock-pose-or-pincha-mayurasana-b",
+    "file": "public/animations/npz/yoga/anim_yoga_feathered_peacock_pose_or_pincha_mayurasana_b.glb",
+    "jumps": 0,
+    "maxJump": 10.68,
+    "duration": 34.5,
+    "hipsRange": [
+      0.8764046532719283,
+      0.6406067805899358,
+      0.6886958729811077
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-firefly-pose-or-tittibhasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_firefly_pose_or_tittibhasana_a.glb",
+    "jumps": 0,
+    "maxJump": 17.95,
+    "duration": 18.899999618530273,
+    "hipsRange": [
+      0.8973407640157465,
+      0.6918944403088368,
+      0.432168287653969
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-fish-pose-or-matsyasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_fish_pose_or_matsyasana_a.glb",
+    "jumps": 0,
+    "maxJump": 19.09,
+    "duration": 38.5,
+    "hipsRange": [
+      1.034504352334789,
+      1.0133923292332978,
+      1.1871973316535624
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-four-limbed-staff-pose-or-chaturanga-dandasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_four_limbed_staff_pose_or_chaturanga_dandasana_a.glb",
+    "jumps": 0,
+    "maxJump": 9.48,
+    "duration": 16.399999618530273,
+    "hipsRange": [
+      0.9786678858399114,
+      0.8153656593397488,
+      0.8581047885489135
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-frog-pose-or-bhekasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_frog_pose_or_bhekasana_a.glb",
+    "jumps": 0,
+    "maxJump": 15.92,
+    "duration": 24.53333282470703,
+    "hipsRange": [
+      0.9273890478747546,
+      1.012415950492431,
+      0.8233648189855848
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-garland-pose-or-malasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_garland_pose_or_malasana_a.glb",
+    "jumps": 0,
+    "maxJump": 17.72,
+    "duration": 12.166666984558105,
+    "hipsRange": [
+      1.0854742943016964,
+      0.7883522316860395,
+      0.6629890939667823
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-gate-pose-or-parighasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_gate_pose_or_parighasana_a.glb",
+    "jumps": 0,
+    "maxJump": 15.59,
+    "duration": 19.866666793823242,
+    "hipsRange": [
+      0.9589361357926691,
+      0.5956024038488978,
+      0.3815530165061829
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-half-lord-of-the-fishes-pose-or-ardha-matsyendrasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_half_lord_of_the_fishes_pose_or_ardha_matsyendrasana_a.glb",
+    "jumps": 0,
+    "maxJump": 10.13,
+    "duration": 20.766666412353516,
+    "hipsRange": [
+      0.8958714571027873,
+      0.9301921137310053,
+      0.7006496286797377
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-half-moon-pose-or-ardha-chandrasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_half_moon_pose_or_ardha_chandrasana_a.glb",
+    "jumps": 0,
+    "maxJump": 13.42,
+    "duration": 22.133333206176758,
+    "hipsRange": [
+      0.8319076250812193,
+      0.12444198325095135,
+      0.42128078188310286
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-handstand-pose-or-adho-mukha-vrksasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_handstand_pose_or_adho_mukha_vrksasana_a.glb",
+    "jumps": 0,
+    "maxJump": 21.45,
+    "duration": 48.20000076293945,
+    "hipsRange": [
+      0.16318751924065822,
+      0.5737694668682595,
+      1.0412963509369624
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-happy-baby-pose-or-ananda-balasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_happy_baby_pose_or_ananda_balasana_a.glb",
+    "jumps": 0,
+    "maxJump": 12.84,
+    "duration": 19.133333206176758,
+    "hipsRange": [
+      0.9185527214731408,
+      0.976152981843333,
+      1.1258297435060713
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-head-to-knee-forward-bend-pose-or-janu-sirsasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_head_to_knee_forward_bend_pose_or_janu_sirsasana_a.glb",
+    "jumps": 0,
+    "maxJump": 24.75,
+    "duration": 22.200000762939453,
+    "hipsRange": [
+      0.7670992775164702,
+      0.9412658670507297,
+      0.32386223146843685
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-heron-pose-or-krounchasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_heron_pose_or_krounchasana_a.glb",
+    "jumps": 0,
+    "maxJump": 12.08,
+    "duration": 25.200000762939453,
+    "hipsRange": [
+      1.0390441257627125,
+      0.9313556514898499,
+      0.5916902263638009
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-intense-side-stretch-pose-or-parsvottanasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_intense_side_stretch_pose_or_parsvottanasana_a.glb",
+    "jumps": 0,
+    "maxJump": 7.83,
+    "duration": 17.53333282470703,
+    "hipsRange": [
+      0.8376297572784921,
+      0.17836003313746818,
+      0.40899051251565
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-legs-up-the-wall-pose-or-viparita-karani-a",
+    "file": "public/animations/npz/yoga/anim_yoga_legs_up_the_wall_pose_or_viparita_karani_a.glb",
+    "jumps": 0,
+    "maxJump": 10.41,
+    "duration": 20.133333206176758,
+    "hipsRange": [
+      0.9674135373365829,
+      0.9698246275268736,
+      0.8818564509349623
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-locust-pose-or-salabhasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_locust_pose_or_salabhasana_a.glb",
+    "jumps": 0,
+    "maxJump": 13.71,
+    "duration": 15.733333587646484,
+    "hipsRange": [
+      0.9524763991130198,
+      1.0084012804069162,
+      0.7322092226223699
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-lord-of-the-dance-pose-or-natarajasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_lord_of_the_dance_pose_or_natarajasana_a.glb",
+    "jumps": 0,
+    "maxJump": 8.77,
+    "duration": 24.66666603088379,
+    "hipsRange": [
+      0.882298122593057,
+      0.07249898675190702,
+      0.584530236761422
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-low-lunge-pose-or-anjaneyasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_low_lunge_pose_or_anjaneyasana_a.glb",
+    "jumps": 0,
+    "maxJump": 12.01,
+    "duration": 21.866666793823242,
+    "hipsRange": [
+      0.9395725894814891,
+      0.6517221488844123,
+      0.9832391614184136
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-noose-pose-or-pasasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_noose_pose_or_pasasana_a.glb",
+    "jumps": 0,
+    "maxJump": 24.96,
+    "duration": 33.400001525878906,
+    "hipsRange": [
+      0.9214423069035487,
+      0.7945612667700781,
+      0.2668689315997375
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-peacock-pose-or-mayurasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_peacock_pose_or_mayurasana_a.glb",
+    "jumps": 0,
+    "maxJump": 15.4,
+    "duration": 33,
+    "hipsRange": [
+      0.8710016342028606,
+      0.7885555245640901,
+      0.8064227942696257
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-pigeon-pose-or-kapotasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_pigeon_pose_or_kapotasana_a.glb",
+    "jumps": 0,
+    "maxJump": 24.97,
+    "duration": 65.80000305175781,
+    "hipsRange": [
+      1.0745639751576483,
+      0.7107278387727054,
+      1.4614800294510941
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-plank-pose-or-kumbhakasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_plank_pose_or_kumbhakasana_a.glb",
+    "jumps": 0,
+    "maxJump": 11.28,
+    "duration": 14.300000190734863,
+    "hipsRange": [
+      0.9670358030415515,
+      0.5460018508083432,
+      0.7370896156248384
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-plow-pose-or-halasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_plow_pose_or_halasana_a.glb",
+    "jumps": 0,
+    "maxJump": 14.51,
+    "duration": 27.933332443237305,
+    "hipsRange": [
+      1.1354316553004455,
+      0.9874135848752508,
+      1.9499342868564427
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-pose-dedicated-to-the-sage-koundinya-or-eka-pada-koundinyanasana-i-and-ii-a",
+    "file": "public/animations/npz/yoga/anim_yoga_pose_dedicated_to_the_sage_koundinya_or_eka_pada_koundinyanasana_i_and_ii_a.glb",
+    "jumps": 0,
+    "maxJump": 11.79,
+    "duration": 32.13333511352539,
+    "hipsRange": [
+      0.9302928573572737,
+      0.7067796375613968,
+      1.2778958787548007
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-rajakapotasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_rajakapotasana_a.glb",
+    "jumps": 2,
+    "maxJump": 25.55,
+    "duration": 43.233333587646484,
+    "hipsRange": [
+      1.0077360452472552,
+      0.9337476964631347,
+      0.9853974600622878
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 2,
+        "max": 25.55
+      }
+    ]
+  },
+  {
+    "id": "yoga-reclining-hand-to-big-toe-pose-or-supta-padangusthasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_reclining_hand_to_big_toe_pose_or_supta_padangusthasana_a.glb",
+    "jumps": 0,
+    "maxJump": 14.31,
+    "duration": 23.399999618530273,
+    "hipsRange": [
+      0.9928782002729575,
+      0.9658773395460793,
+      0.9411295167519922
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-revolved-head-to-knee-pose-or-parivrtta-janu-sirsasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_revolved_head_to_knee_pose_or_parivrtta_janu_sirsasana_a.glb",
+    "jumps": 0,
+    "maxJump": 13.36,
+    "duration": 24.933332443237305,
+    "hipsRange": [
+      0.7107146008898031,
+      0.9234495945849234,
+      0.42147993308135306
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-scale-pose-or-tolasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_scale_pose_or_tolasana_a.glb",
+    "jumps": 0,
+    "maxJump": 14.9,
+    "duration": 28.933332443237305,
+    "hipsRange": [
+      0.8046649753004687,
+      0.951389362821045,
+      0.39440162733485973
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-scorpion-pose-or-vrischikasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_scorpion_pose_or_vrischikasana_a.glb",
+    "jumps": 0,
+    "maxJump": 11.76,
+    "duration": 43.266666412353516,
+    "hipsRange": [
+      0.8441169287834254,
+      0.6173169902720821,
+      0.6465421862021502
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-seated-forward-bend-pose-or-paschimottanasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_seated_forward_bend_pose_or_paschimottanasana_a.glb",
+    "jumps": 0,
+    "maxJump": 11.62,
+    "duration": 18.799999237060547,
+    "hipsRange": [
+      0.9023148430366472,
+      0.9568825597187989,
+      0.5362922162007432
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-shoulder-pressing-pose-or-bhujapidasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_shoulder_pressing_pose_or_bhujapidasana_a.glb",
+    "jumps": 0,
+    "maxJump": 10.94,
+    "duration": 18.33333396911621,
+    "hipsRange": [
+      0.938347604758718,
+      0.6525960495239795,
+      0.5871225622799449
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-side-crane-crow-pose-or-parsva-bakasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_side_crane_crow_pose_or_parsva_bakasana_a.glb",
+    "jumps": 0,
+    "maxJump": 20.42,
+    "duration": 22.899999618530273,
+    "hipsRange": [
+      0.846168599288867,
+      0.6035088253758139,
+      0.6611079557711328
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-side-plank-pose-or-vasisthasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_side_plank_pose_or_vasisthasana_a.glb",
+    "jumps": 0,
+    "maxJump": 18.34,
+    "duration": 19.133333206176758,
+    "hipsRange": [
+      0.982218090991271,
+      0.4809743416459282,
+      0.8846853028270917
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-side-reclining-leg-lift-pose-or-anantasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_side_reclining_leg_lift_pose_or_anantasana_a.glb",
+    "jumps": 0,
+    "maxJump": 17.53,
+    "duration": 26.933332443237305,
+    "hipsRange": [
+      0.9457812956173424,
+      0.9260596011058756,
+      0.6997252137656678
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-sitting-pose-1-normal-a",
+    "file": "public/animations/npz/yoga/anim_yoga_sitting_pose_1_normal_a.glb",
+    "jumps": 0,
+    "maxJump": 11.63,
+    "duration": 15.199999809265137,
+    "hipsRange": [
+      0.7807169167537182,
+      0.9333244186190769,
+      0.45046698451239353
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-split-pose-a",
+    "file": "public/animations/npz/yoga/anim_yoga_split_pose_a.glb",
+    "jumps": 0,
+    "maxJump": 13.23,
+    "duration": 39.43333435058594,
+    "hipsRange": [
+      1.040287131958742,
+      0.9299825750890502,
+      1.0138214770275027
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-staff-pose-or-dandasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_staff_pose_or_dandasana_a.glb",
+    "jumps": 0,
+    "maxJump": 10.55,
+    "duration": 21.03333282470703,
+    "hipsRange": [
+      0.777668225072289,
+      0.9558953691647714,
+      0.47777598857642495
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-standing-big-toe-hold-pose-or-utthita-padangusthasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_standing_big_toe_hold_pose_or_utthita_padangusthasana_a.glb",
+    "jumps": 0,
+    "maxJump": 17.27,
+    "duration": 27.33333396911621,
+    "hipsRange": [
+      0.8911432520044609,
+      0.11052977855480228,
+      0.39867190613666215
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-standing-forward-bend-pose-or-uttanasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_standing_forward_bend_pose_or_uttanasana_a.glb",
+    "jumps": 0,
+    "maxJump": 11.59,
+    "duration": 16.433332443237305,
+    "hipsRange": [
+      0.793793111582254,
+      0.1256343631546617,
+      0.5176212117305348
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-standing-split-pose-or-urdhva-prasarita-eka-padasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_standing_split_pose_or_urdhva_prasarita_eka_padasana_a.glb",
+    "jumps": 0,
+    "maxJump": 7.15,
+    "duration": 15.666666984558105,
+    "hipsRange": [
+      0.8216083104548977,
+      0.09882545309098922,
+      0.6823272214311293
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-supported-headstand-pose-or-salamba-sirsasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_supported_headstand_pose_or_salamba_sirsasana_a.glb",
+    "jumps": 0,
+    "maxJump": 12.82,
+    "duration": 26.733333587646484,
+    "hipsRange": [
+      1.0804640528455955,
+      0.6587661831311542,
+      1.3233860528115984
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-supported-shoulderstand-pose-or-salamba-sarvangasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_supported_shoulderstand_pose_or_salamba_sarvangasana_a.glb",
+    "jumps": 0,
+    "maxJump": 9.21,
+    "duration": 25,
+    "hipsRange": [
+      0.9617673992715607,
+      0.9814561847986936,
+      1.17113066939673
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-supta-baddha-konasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_supta_baddha_konasana_a.glb",
+    "jumps": 0,
+    "maxJump": 14.42,
+    "duration": 24.399999618530273,
+    "hipsRange": [
+      1.0637538326437654,
+      0.9882609976279398,
+      1.007691775364506
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-supta-virasana-vajrasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_supta_virasana_vajrasana_a.glb",
+    "jumps": 0,
+    "maxJump": 20.83,
+    "duration": 28,
+    "hipsRange": [
+      1.094315575935343,
+      0.9169326819978255,
+      1.0768685404772935
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-tortoise-pose-a",
+    "file": "public/animations/npz/yoga/anim_yoga_tortoise_pose_a.glb",
+    "jumps": 3,
+    "maxJump": 49.8,
+    "duration": 61,
+    "hipsRange": [
+      0.11783910487951843,
+      0.9670635653051413,
+      0.4822709637435409
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:RightToeBase",
+        "jumps": 3,
+        "max": 49.8
+      }
+    ]
+  },
+  {
+    "id": "yoga-tree-pose-or-vrksasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_tree_pose_or_vrksasana_a.glb",
+    "jumps": 0,
+    "maxJump": 11.45,
+    "duration": 19.133333206176758,
+    "hipsRange": [
+      0.8486966181837774,
+      0.08502300884994218,
+      0.5557624970756245
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-upward-bow-wheel-pose-or-urdhva-dhanurasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_upward_bow_wheel_pose_or_urdhva_dhanurasana_a.glb",
+    "jumps": 0,
+    "maxJump": 11.1,
+    "duration": 27.100000381469727,
+    "hipsRange": [
+      0.9298694402753682,
+      0.9952574073424223,
+      1.1083237753640705
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-upward-facing-two-foot-staff-pose-or-dwi-pada-viparita-dandasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_upward_facing_two_foot_staff_pose_or_dwi_pada_viparita_dandasana_a.glb",
+    "jumps": 0,
+    "maxJump": 18.21,
+    "duration": 37.266666412353516,
+    "hipsRange": [
+      0.824773312253356,
+      0.4452868234075914,
+      1.2181336730814003
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-upward-plank-pose-or-purvottanasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_upward_plank_pose_or_purvottanasana_a.glb",
+    "jumps": 0,
+    "maxJump": 14.23,
+    "duration": 23.766666412353516,
+    "hipsRange": [
+      0.7854310569443314,
+      0.9640650720302979,
+      0.6870490197746376
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-viparita-virabhadrasana-or-reverse-warrior-pose-a",
+    "file": "public/animations/npz/yoga/anim_yoga_viparita_virabhadrasana_or_reverse_warrior_pose_a.glb",
+    "jumps": 0,
+    "maxJump": 9.2,
+    "duration": 22.266666412353516,
+    "hipsRange": [
+      0.8634955523126817,
+      0.3526142166262426,
+      1.0405715627952117
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-virasana-or-vajrasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_virasana_or_vajrasana_a.glb",
+    "jumps": 0,
+    "maxJump": 10.66,
+    "duration": 18.83333396911621,
+    "hipsRange": [
+      0.8345576740527669,
+      0.8344148991304117,
+      0.973799000295066
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-warrior-i-pose-or-virabhadrasana-i-a",
+    "file": "public/animations/npz/yoga/anim_yoga_warrior_i_pose_or_virabhadrasana_i_a.glb",
+    "jumps": 0,
+    "maxJump": 9.03,
+    "duration": 20.266666412353516,
+    "hipsRange": [
+      0.9193721708795684,
+      0.31525702124975297,
+      0.8914345857851229
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-warrior-ii-pose-or-virabhadrasana-ii-a",
+    "file": "public/animations/npz/yoga/anim_yoga_warrior_ii_pose_or_virabhadrasana_ii_a.glb",
+    "jumps": 0,
+    "maxJump": 8.69,
+    "duration": 19.133333206176758,
+    "hipsRange": [
+      0.8563927840502679,
+      0.3276131844518948,
+      0.8277571911706199
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-warrior-iii-pose-or-virabhadrasana-iii-a",
+    "file": "public/animations/npz/yoga/anim_yoga_warrior_iii_pose_or_virabhadrasana_iii_a.glb",
+    "jumps": 0,
+    "maxJump": 10.81,
+    "duration": 19.066667556762695,
+    "hipsRange": [
+      0.7766172903042143,
+      0.08251485618766297,
+      0.4536821386290882
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-wide-angle-seated-forward-bend-pose-or-upavistha-konasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_wide_angle_seated_forward_bend_pose_or_upavistha_konasana_a.glb",
+    "jumps": 0,
+    "maxJump": 10.09,
+    "duration": 32,
+    "hipsRange": [
+      0.916479762573247,
+      0.9625593377086115,
+      0.724643036443265
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-wide-legged-forward-bend-pose-or-prasarita-padottanasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_wide_legged_forward_bend_pose_or_prasarita_padottanasana_a.glb",
+    "jumps": 0,
+    "maxJump": 11.92,
+    "duration": 26.83333396911621,
+    "hipsRange": [
+      1.1552489594687003,
+      0.334715160789143,
+      0.7129157917020125
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-wild-thing-pose-or-camatkarasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_wild_thing_pose_or_camatkarasana_a.glb",
+    "jumps": 0,
+    "maxJump": 9.99,
+    "duration": 25.46666717529297,
+    "hipsRange": [
+      1.1227634083607025,
+      0.7464355628883484,
+      0.7978414632391473
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-wind-relieving-pose-or-pawanmuktasana-a",
+    "file": "public/animations/npz/yoga/anim_yoga_wind_relieving_pose_or_pawanmuktasana_a.glb",
+    "jumps": 0,
+    "maxJump": 18.27,
+    "duration": 18.16666603088379,
+    "hipsRange": [
+      0.9219023498467571,
+      0.9979288124952792,
+      1.1918464264805457
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "yoga-yogic-sleep-pose-a",
+    "file": "public/animations/npz/yoga/anim_yoga_yogic_sleep_pose_a.glb",
+    "jumps": 10,
+    "maxJump": 59.68,
+    "duration": 58.46666717529297,
+    "hipsRange": [
+      0.21804162014927808,
+      0.9932921998249605,
+      0.4904451748427649
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:RightArm",
+        "jumps": 4,
+        "max": 59.68
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 5,
+        "max": 54.19
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 1,
+        "max": 36.62
+      }
+    ]
+  },
+  {
+    "id": "vacuuming",
+    "file": "public/animations/npz/daily/anim_vacuuming.glb",
+    "jumps": 0,
+    "maxJump": 9.04,
+    "duration": 17.799999237060547,
+    "hipsRange": [
+      0.24962397971099648,
+      0.03249252712622952,
+      0.2745971333745297
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "vacuuming-alt",
+    "file": "public/animations/npz/daily/anim_vacuuming_alt.glb",
+    "jumps": 0,
+    "maxJump": 11.14,
+    "duration": 24.799999237060547,
+    "hipsRange": [
+      0.09649256490560099,
+      0.010416186436524422,
+      0.08723196647209139
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "wiping-table",
+    "file": "public/animations/npz/daily/anim_wiping_table.glb",
+    "jumps": 0,
+    "maxJump": 6.45,
+    "duration": 6.666666507720947,
+    "hipsRange": [
+      0.056909730056455776,
+      0.007150346417416742,
+      0.03076571003757839
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "wiping-table-small-circles",
+    "file": "public/animations/npz/daily/anim_wiping_table_small_circles.glb",
+    "jumps": 0,
+    "maxJump": 15.33,
+    "duration": 8.266666412353516,
+    "hipsRange": [
+      0.00732527969795585,
+      0.007078399916412348,
+      0.007231753004036145
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "taking-shower",
+    "file": "public/animations/npz/daily/anim_taking_shower.glb",
+    "jumps": 0,
+    "maxJump": 9.51,
+    "duration": 4.800000190734863,
+    "hipsRange": [
+      0.10262694606273737,
+      0.015270606995950953,
+      0.2540129877493598
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "washing-body",
+    "file": "public/animations/npz/daily/anim_washing_body.glb",
+    "jumps": 0,
+    "maxJump": 15.41,
+    "duration": 79.30000305175781,
+    "hipsRange": [
+      1.1655816008393103,
+      0.08140643392694757,
+      1.8434160218597595
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "pickup-box-floor-male",
+    "file": "public/animations/npz/daily/anim_pickup_box_floor_male.glb",
+    "jumps": 0,
+    "maxJump": 17,
+    "duration": 4.4666666984558105,
+    "hipsRange": [
+      0.04533682006589723,
+      0.3650771138204516,
+      0.21164143345782035
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "pickup-box-floor-female",
+    "file": "public/animations/npz/daily/anim_pickup_box_floor_female.glb",
+    "jumps": 0,
+    "maxJump": 24.6,
+    "duration": 5.9666666984558105,
+    "hipsRange": [
+      0.047698226697037494,
+      0.667853710507101,
+      0.21663250501753395
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "lift-box-male",
+    "file": "public/animations/npz/daily/anim_lift_box_male.glb",
+    "jumps": 0,
+    "maxJump": 18.8,
+    "duration": 4.400000095367432,
+    "hipsRange": [
+      0.007456413936844153,
+      0.02388961347064522,
+      0.04859962177433926
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "lift-box-female",
+    "file": "public/animations/npz/daily/anim_lift_box_female.glb",
+    "jumps": 0,
+    "maxJump": 13.34,
+    "duration": 8.366666793823242,
+    "hipsRange": [
+      0.053231433334244016,
+      0.6983435467097066,
+      0.25833260802999075
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "putdown-box-floor",
+    "file": "public/animations/npz/daily/anim_putdown_box_floor.glb",
+    "jumps": 0,
+    "maxJump": 19.78,
+    "duration": 2.4000000953674316,
+    "hipsRange": [
+      0.021466332194216564,
+      0.28183941907798615,
+      0.20322781243693375
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "sweeping-floor",
+    "file": "public/animations/npz/daily/anim_sweeping_floor.glb",
+    "jumps": 0,
+    "maxJump": 19.99,
+    "duration": 33.46666717529297,
+    "hipsRange": [
+      0.670885280872465,
+      0.062437158244321056,
+      1.5102548749858822
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "cleaning-windows",
+    "file": "public/animations/npz/daily/anim_cleaning_windows.glb",
+    "jumps": 0,
+    "maxJump": 24.7,
+    "duration": 47.66666793823242,
+    "hipsRange": [
+      0.590182634513468,
+      0.11560767618611645,
+      0.5745914434471275
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "drinking-glass",
+    "file": "public/animations/npz/daily/anim_drinking_glass.glb",
+    "jumps": 0,
+    "maxJump": 8.46,
+    "duration": 8.733333587646484,
+    "hipsRange": [
+      0.0601839719671613,
+      0.02177227908623247,
+      0.22611385753921417
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "holding-cup",
+    "file": "public/animations/npz/daily/anim_holding_cup.glb",
+    "jumps": 0,
+    "maxJump": 4.45,
+    "duration": 2.9000000953674316,
+    "hipsRange": [
+      0.1413289849163073,
+      0.02692277990930747,
+      0.3072723541557927
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "cooking-stir-pan",
+    "file": "public/animations/npz/daily/anim_cooking_stir_pan.glb",
+    "jumps": 0,
+    "maxJump": 10.72,
+    "duration": 9.300000190734863,
+    "hipsRange": [
+      0.0794401508694853,
+      0.025066417228052584,
+      0.22267984976345542
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "cutting-knife",
+    "file": "public/animations/npz/daily/anim_cutting_knife.glb",
+    "jumps": 0,
+    "maxJump": 6.97,
+    "duration": 8.266666412353516,
+    "hipsRange": [
+      0.2564018716722307,
+      0.021869302000696367,
+      0.23040675951150721
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "pouring-bottle",
+    "file": "public/animations/npz/daily/anim_pouring_bottle.glb",
+    "jumps": 0,
+    "maxJump": 10.75,
+    "duration": 9,
+    "hipsRange": [
+      0.030588503988344118,
+      0.009341059948568153,
+      0.05695961491979439
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "stirring-bowl",
+    "file": "public/animations/npz/daily/anim_stirring_bowl.glb",
+    "jumps": 0,
+    "maxJump": 6.53,
+    "duration": 7.400000095367432,
+    "hipsRange": [
+      0.06332135327187133,
+      0.009786088769482726,
+      0.09656297884972612
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "washing-dishes-sink",
+    "file": "public/animations/npz/daily/anim_washing_dishes_sink.glb",
+    "jumps": 0,
+    "maxJump": 5.88,
+    "duration": 1.7999999523162842,
+    "hipsRange": [
+      0.11158640612096171,
+      0.020091194307777727,
+      0.40619129626842315
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "take-book-shelf",
+    "file": "public/animations/npz/daily/anim_take_book_shelf.glb",
+    "jumps": 0,
+    "maxJump": 9.73,
+    "duration": 3.1666667461395264,
+    "hipsRange": [
+      0.017043175316381998,
+      0.006582648100656119,
+      0.02196060382494678
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "playing-guitar",
+    "file": "public/animations/npz/daily/anim_playing_guitar.glb",
+    "jumps": 0,
+    "maxJump": 18.22,
+    "duration": 5.633333206176758,
+    "hipsRange": [
+      0.016151184972721666,
+      0.0028172275477524877,
+      0.01186009719471882
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "conversation-gestures",
+    "file": "public/animations/npz/daily/anim_conversation_gestures.glb",
+    "jumps": 0,
+    "maxJump": 24.58,
+    "duration": 50.70000076293945,
+    "hipsRange": [
+      0.42187589656093927,
+      0.07157381135436047,
+      0.7945485355974996
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "dry-head-towel",
+    "file": "public/animations/npz/daily/anim_dry_head_towel.glb",
+    "jumps": 0,
+    "maxJump": 12.67,
+    "duration": 10.899999618530273,
+    "hipsRange": [
+      0.4504786676806507,
+      0.02808561101024354,
+      0.23668916983352076
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "groom-hair-mirror",
+    "file": "public/animations/npz/daily/anim_groom_hair_mirror.glb",
+    "jumps": 0,
+    "maxJump": 12.57,
+    "duration": 2.9666666984558105,
+    "hipsRange": [
+      0.0113965343278676,
+      0.009638445748416657,
+      0.020697449761228722
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "take-off-tshirt",
+    "file": "public/animations/npz/daily/anim_take_off_tshirt.glb",
+    "jumps": 0,
+    "maxJump": 8.39,
+    "duration": 4.133333206176758,
+    "hipsRange": [
+      0.009609290742666476,
+      0.013554232123047072,
+      0.013150756037820436
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "lie-down-bed",
+    "file": "public/animations/npz/daily/anim_lie_down_bed.glb",
+    "jumps": 0,
+    "maxJump": 18.8,
+    "duration": 7.866666793823242,
+    "hipsRange": [
+      0.1170777986106768,
+      0.2725038790202814,
+      0.41884484221427487
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "get-up-bed",
+    "file": "public/animations/npz/daily/anim_get_up_bed.glb",
+    "jumps": 0,
+    "maxJump": 11.62,
+    "duration": 5.633333206176758,
+    "hipsRange": [
+      0.1984423056593021,
+      0.9455738723395152,
+      1.1917838407664518
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "basketball-shoot",
+    "file": "public/animations/npz/sports/anim_basketball_shoot.glb",
+    "jumps": 3,
+    "maxJump": 38.69,
+    "duration": 3.8333332538604736,
+    "hipsRange": [
+      0.15587478766125162,
+      0.33171791119100025,
+      0.17400114346313467
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 3,
+        "max": 38.69
+      }
+    ]
+  },
+  {
+    "id": "basketball-cmu",
+    "file": "public/animations/npz/sports/anim_basketball_cmu.glb",
+    "jumps": 0,
+    "maxJump": 8.04,
+    "duration": 8.233333587646484,
+    "hipsRange": [
+      0.2747064908286967,
+      0.06380016089815821,
+      4.965959912958705
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "soccer-dribble-kick",
+    "file": "public/animations/npz/sports/anim_soccer_dribble_kick.glb",
+    "jumps": 1,
+    "maxJump": 29.44,
+    "duration": 5.833333492279053,
+    "hipsRange": [
+      0.4760039676128929,
+      0.0956020342284627,
+      0.8399128580240152
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:RightLeg",
+        "jumps": 1,
+        "max": 29.44
+      }
+    ]
+  },
+  {
+    "id": "soccer-kick",
+    "file": "public/animations/npz/sports/anim_soccer_kick.glb",
+    "jumps": 0,
+    "maxJump": 24.93,
+    "duration": 13.333333015441895,
+    "hipsRange": [
+      0.6110925418639357,
+      0.17118146201861495,
+      1.9294072717047972
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "clap-sync-duo",
+    "file": "public/animations/npz/interactions/anim_clap_sync_duo.glb",
+    "jumps": 0,
+    "maxJump": 24.88,
+    "duration": 1.3333333730697632,
+    "hipsRange": [
+      0.007541988956734781,
+      0.015560144025990486,
+      0.043079468883277634
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "hasaposerviko-duo",
+    "file": "public/animations/npz/dances/anim_hasaposerviko_duo.glb",
+    "jumps": 14,
+    "maxJump": 58.97,
+    "duration": 126.26667022705078,
+    "hipsRange": [
+      2.4807650202341733,
+      0.8843615849761399,
+      2.26071417669852
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 5,
+        "max": 31.38
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 3,
+        "max": 26.92
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 2,
+        "max": 36.44
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 4,
+        "max": 58.97
+      }
+    ]
+  },
+  {
+    "id": "zorbas-dance",
+    "file": "public/animations/npz/dances/anim_zorbas_dance.glb",
+    "jumps": 7,
+    "maxJump": 60.49,
+    "duration": 225.36666870117188,
+    "hipsRange": [
+      2.0284598850803093,
+      0.6694957719752392,
+      2.4550041199653396
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 7,
+        "max": 60.49
+      }
+    ]
+  },
+  {
+    "id": "duo-martial-arts-combat",
+    "file": "public/animations/npz/combat/anim_duo_martial_arts.glb",
+    "jumps": 0,
+    "maxJump": 23.75,
+    "duration": 37.33333206176758,
+    "hipsRange": [
+      1.2943268677370199,
+      0.645525504439924,
+      2.455080048340207
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": []
+  },
+  {
+    "id": "duo-martial-arts-combat-b",
+    "file": "public/animations/npz/combat/anim_duo_martial_arts_b.glb",
+    "jumps": 5,
+    "maxJump": 39.55,
+    "duration": 37.36666488647461,
+    "hipsRange": [
+      1.3012339491866385,
+      0.6530683018205655,
+      2.4740210040438306
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 2,
+        "max": 27.94
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 3,
+        "max": 39.55
+      }
+    ]
+  },
+  {
+    "id": "happy-dance-olivia",
+    "file": "public/animations/npz/dances/anim_happy_dance.glb",
+    "jumps": 585,
+    "maxJump": 179.65,
+    "duration": 87.43333435058594,
+    "hipsRange": [
+      2.2352479053605805,
+      0.4678877204614035,
+      2.276762405457351
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftLeg",
+        "jumps": 12,
+        "max": 35.46
+      },
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 49,
+        "max": 81.45
+      },
+      {
+        "bone": "mixamorig:LeftToeBase",
+        "jumps": 3,
+        "max": 43.94
+      },
+      {
+        "bone": "mixamorig:RightLeg",
+        "jumps": 3,
+        "max": 36.05
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 22,
+        "max": 82.88
+      },
+      {
+        "bone": "mixamorig:RightToeBase",
+        "jumps": 3,
+        "max": 44.04
+      },
+      {
+        "bone": "mixamorig:LeftArm",
+        "jumps": 5,
+        "max": 36.26
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 61,
+        "max": 124.01
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 161,
+        "max": 151.1
+      },
+      {
+        "bone": "mixamorig:RightArm",
+        "jumps": 4,
+        "max": 31.91
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 61,
+        "max": 64.11
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 201,
+        "max": 179.65
+      }
+    ]
+  },
+  {
+    "id": "excited-dance-olivia",
+    "file": "public/animations/npz/dances/anim_excited_dance.glb",
+    "jumps": 499,
+    "maxJump": 173.49,
+    "duration": 93.19999694824219,
+    "hipsRange": [
+      2.431098807355042,
+      0.5327704712489895,
+      1.8423556395029816
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftLeg",
+        "jumps": 6,
+        "max": 34.75
+      },
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 21,
+        "max": 48.14
+      },
+      {
+        "bone": "mixamorig:RightLeg",
+        "jumps": 1,
+        "max": 32.95
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 24,
+        "max": 63.47
+      },
+      {
+        "bone": "mixamorig:RightToeBase",
+        "jumps": 2,
+        "max": 30.63
+      },
+      {
+        "bone": "mixamorig:LeftArm",
+        "jumps": 3,
+        "max": 29.35
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 50,
+        "max": 93.52
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 137,
+        "max": 147.85
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 46,
+        "max": 111.98
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 209,
+        "max": 173.49
+      }
+    ]
+  },
+  {
+    "id": "relaxed-groove-olivia",
+    "file": "public/animations/npz/dances/anim_relaxed_groove.glb",
+    "jumps": 11,
+    "maxJump": 48.88,
+    "duration": 99.93333435058594,
+    "hipsRange": [
+      1.8403539627711325,
+      0.3829360251650472,
+      2.145970456559881
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 6,
+        "max": 35.75
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 2,
+        "max": 33.95
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 1,
+        "max": 37.28
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 2,
+        "max": 48.88
+      }
+    ]
+  },
+  {
+    "id": "pleased-dance-olivia",
+    "file": "public/animations/npz/dances/anim_pleased_dance.glb",
+    "jumps": 422,
+    "maxJump": 169.94,
+    "duration": 96.83333587646484,
+    "hipsRange": [
+      3.0013379761277577,
+      0.4222876058156505,
+      2.455200023664373
+    ],
+    "interpolations": [
+      "LINEAR",
+      "STEP"
+    ],
+    "bones": [
+      {
+        "bone": "mixamorig:LeftLeg",
+        "jumps": 4,
+        "max": 35.89
+      },
+      {
+        "bone": "mixamorig:LeftFoot",
+        "jumps": 17,
+        "max": 46.4
+      },
+      {
+        "bone": "mixamorig:LeftToeBase",
+        "jumps": 3,
+        "max": 32.44
+      },
+      {
+        "bone": "mixamorig:RightFoot",
+        "jumps": 8,
+        "max": 42.51
+      },
+      {
+        "bone": "mixamorig:RightToeBase",
+        "jumps": 4,
+        "max": 33.77
+      },
+      {
+        "bone": "mixamorig:LeftArm",
+        "jumps": 11,
+        "max": 44.58
+      },
+      {
+        "bone": "mixamorig:LeftForeArm",
+        "jumps": 55,
+        "max": 128.99
+      },
+      {
+        "bone": "mixamorig:LeftHand",
+        "jumps": 130,
+        "max": 161.79
+      },
+      {
+        "bone": "mixamorig:RightArm",
+        "jumps": 3,
+        "max": 39.04
+      },
+      {
+        "bone": "mixamorig:RightForeArm",
+        "jumps": 51,
+        "max": 98.03
+      },
+      {
+        "bone": "mixamorig:RightHand",
+        "jumps": 136,
+        "max": 169.94
+      }
+    ]
+  }
+]
