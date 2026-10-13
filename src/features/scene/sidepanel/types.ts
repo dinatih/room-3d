@@ -159,7 +159,6 @@ export interface LayerState {
   aiZones: boolean;
   npcCollisions: boolean;
   debugNpcCollisions: boolean;
-  furnitureCollisions: boolean;
   debugFurnitureCollisions: boolean;
   breastPhysics: boolean;
   breastIntensity?: number;

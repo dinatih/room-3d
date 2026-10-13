@@ -1,3 +1,5 @@
+import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
+import { doorRequested } from '../ai/navigation/doorRequests';
 import { getObjectActionIds } from '../objectActions';
 /**
  * Shower.tsx — Receveur de douche + équipements VALLAMOSSE IKEA.
@@ -180,6 +182,7 @@ const coffrageMat = new THREE.MeshStandardMaterial({
 
 /** Porte de douche procédurale : paroi fixe 20 cm + battant 51 cm avec pivot d'ouverture. */
 function ShowerDoor({ isPreview, condensation }: { isPreview: boolean; condensation: THREE.ShaderMaterial }) {
+  const navigationEnabled = useNavigationEnabled() && !isPreview;
   const hf = FRAME / 2;
   const pivotRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
@@ -188,22 +191,22 @@ function ShowerDoor({ isPreview, condensation }: { isPreview: boolean; condensat
 
   useFrame((_, delta) => {
     if (!pivotRef.current) return;
-    const { allowed, push } = isPreview
+    const { allowed, push } = !navigationEnabled
       ? { allowed: DOOR_CONFIGS.shower.maxAngle, push: 0 }
       : computeDoorDynamics(DOOR_CONFIGS.shower);
-    const targetAngle = Math.min(allowed, Math.max(push, impulse(delta)));
+    const targetAngle = Math.min(allowed, Math.max(push, impulse(delta), navigationEnabled && doorRequested('shower') ? allowed : 0));
     const current = pivotRef.current.rotation.y;
-    if (!isPreview) doorCollisionState.shower.angle = current;
+    if (navigationEnabled) doorCollisionState.shower.angle = current;
     if (current === targetAngle) return;
     if (Math.abs(targetAngle - current) < 0.001) {
       pivotRef.current.rotation.y = targetAngle;
-      if (!isPreview) doorCollisionState.shower.angle = targetAngle;
+      if (navigationEnabled) doorCollisionState.shower.angle = targetAngle;
       invalidate();
       return;
     }
     const response = targetAngle < current ? DOOR_CLOSE_RESPONSE : DOOR_OPEN_RESPONSE;
     pivotRef.current.rotation.y += (targetAngle - current) * Math.min(1, response * delta);
-    if (!isPreview) doorCollisionState.shower.angle = pivotRef.current.rotation.y;
+    if (navigationEnabled) doorCollisionState.shower.angle = pivotRef.current.rotation.y;
     invalidate();
   });
 

@@ -14,6 +14,7 @@ export interface FurnitureTransform {
 }
 
 /** Positions réellement affichées, y compris pendant les transitions animées. */
+export const movingFurniture = new Set<string>();
 export const currentFurnitureTransforms: Record<string, FurnitureTransform> = {};
 
 export const DESK1_POSITIONS: readonly FurnitureTransform[] = [

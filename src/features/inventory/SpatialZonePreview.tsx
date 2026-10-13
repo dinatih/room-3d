@@ -5,6 +5,7 @@ import { OrbitControls } from '@features/scene/camera/OrbitControls';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { getOrbitMouseButtons, getOrbitTouches } from '@features/scene/camera/orbitMouseButtons';
 import * as THREE from 'three';
+import { NavigationEnabledContext } from '@features/scene/ai/navigation/NavigationContext';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { DevToolsCollector } from '@features/scene/DevToolsCollector';
@@ -108,7 +109,6 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
   }, [clippingPlanes]);
 
   const smartObjects = useMemo(() => zone.getSmartObjects(), [zone]);
-  const waypoints = useMemo(() => zone.getWaypoints(), [zone]);
 
   return (
     <group>
@@ -152,30 +152,6 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
       </group>
       {layers.wallEdges && <WallEdgesLayer isolated clippingPlanes={clippingPlanes} />}
       </LayerRegistryContext.Provider>
-
-      {/* ── Marqueurs Waypoints de la pièce ── */}
-      {showZoneUi && waypoints.map(wp => (
-        <group key={wp.id} position={[wp.x, 2, wp.z]}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[6, 8, 24]} />
-            <meshBasicMaterial color="#ffffff" depthTest={false} />
-          </mesh>
-          <Html position={[0, 10, 0]} center transform={false} sprite>
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.85)',
-              color: '#ffffff',
-              padding: '2px 6px',
-              borderRadius: '4px',
-              fontSize: '11px',
-              whiteSpace: 'nowrap',
-              border: '1px solid #ffffff',
-              pointerEvents: 'none'
-            }}>
-              📍 {wp.name || wp.id}
-            </div>
-          </Html>
-        </group>
-      ))}
 
       {/* ── Marqueurs SmartObjects de la pièce ── */}
       {showZoneUi && smartObjects.map(obj => {
@@ -456,7 +432,7 @@ export function SpatialZonePreview({
         <directionalLight position={[-200, 300, -200]} intensity={1.0} />
 
         <Suspense fallback={null}>
-          <MemoizedStudioCroppedScene zone={zone} />
+          <NavigationEnabledContext.Provider value={false}><MemoizedStudioCroppedScene zone={zone} /></NavigationEnabledContext.Provider>
         </Suspense>
 
         <DevToolsCollector />

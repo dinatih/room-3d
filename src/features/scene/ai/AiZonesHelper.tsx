@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { useMemo, useState, useEffect } from 'react';
 import { useSceneStore } from '../store/useSceneStore';
-import { WAYPOINTS } from './ZoneNodes';
 import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -150,13 +149,7 @@ function AiZonesHelperContent() {
   }, [toggleVersion]);
 
   // Génération mémoïsée des sprites de labels
-  const waypointSprites = useMemo(() => {
-    const map: Record<string, THREE.Sprite> = {};
-    Object.values(WAYPOINTS).forEach(wp => {
-      map[wp.id] = makeLabelSprite(`📍 ${wp.name || wp.id}`, [], '#ffffff', 4.5);
-    });
-    return map;
-  }, []);
+
 
   // Géométrie mémoïsée du triangle d'orientation 2D (arêtes droites nettes, base plate)
   const arrowGeo = useMemo(() => {
@@ -174,24 +167,6 @@ function AiZonesHelperContent() {
 
   return (
     <group renderOrder={99999}>
-      {/* ── Points de passage / Waypoints (masqués lorsqu'un slot est survolé) ── */}
-      {!hoveredSlotKey && Object.values(WAYPOINTS).map(wp => {
-        const sprite = waypointSprites[wp.id];
-        return (
-          <group key={`wp-${wp.id}`} position={[wp.x, baseHeight, wp.z]}>
-            <mesh rotation={[-Math.PI / 2, 0, 0]}>
-              <circleGeometry args={[6, 24]} />
-              <meshBasicMaterial color="#ffffff" opacity={0.35} transparent depthTest={false} depthWrite={false} />
-            </mesh>
-            <mesh rotation={[-Math.PI / 2, 0, 0]}>
-              <ringGeometry args={[5, 6, 24]} />
-              <meshBasicMaterial color="#aaaaaa" depthTest={false} depthWrite={false} />
-            </mesh>
-            {sprite && <primitive object={sprite} position={[0, isTopView ? 8 : 16, 0]} />}
-          </group>
-        );
-      })}
-
       {/* ── Smart Objects et leurs Slots d'affordance (cercles 10cm au sol, détails au survol) ── */}
       {resolvedSmartObjects.map(obj => {
         return (

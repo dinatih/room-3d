@@ -1,7 +1,5 @@
 import { cameraState } from '../../cameraState';
 import { useSceneStore } from '../../store/useSceneStore';
-import { getActiveFurnitureObstacles } from '../furnitureObstacles';
-import { doorCollisionState, DOOR_CONFIGS, HUMAN_BODY_HEIGHT, HUMAN_BODY_RADIUS } from '../../doorObstacles';
 
 export interface SteeringResult {
   steerX: number;
@@ -11,36 +9,9 @@ export interface SteeringResult {
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
 
-/** Écarte un personnage lorsque le battant atteint sa position, même pendant une interaction. */
-export function separateAgentFromDoors(position: { x: number; y: number; z: number }): void {
-  for (const key of ['living', 'bath', 'entry', 'glassRight', 'glassLeft'] as const) {
-    const angle = Math.abs(doorCollisionState[key].angle);
-    if (angle === 0) continue;
-
-    const door = DOOR_CONFIGS[key];
-    if (position.y > door.yMax || position.y + HUMAN_BODY_HEIGHT < door.yMin) continue;
-
-    const leafX = Math.cos(angle) * door.closedDir.x + Math.sin(angle) * door.openNormal.x;
-    const leafZ = Math.cos(angle) * door.closedDir.z + Math.sin(angle) * door.openNormal.z;
-    const along = (position.x - door.pivot.x) * leafX + (position.z - door.pivot.z) * leafZ;
-    const nearest = Math.max(0, Math.min(door.length, along));
-    const dx = position.x - (door.pivot.x + leafX * nearest);
-    const dz = position.z - (door.pivot.z + leafZ * nearest);
-    const distance = Math.hypot(dx, dz);
-    const clearance = HUMAN_BODY_RADIUS + door.thickness / 2 + door.margin;
-    if (distance >= clearance) continue;
-
-    // La normale choisit le côté déjà occupé par le personnage.
-    const normalX = distance > 0 ? dx / distance : door.openNormal.x;
-    const normalZ = distance > 0 ? dz / distance : door.openNormal.z;
-    position.x += normalX * (clearance - distance);
-    position.z += normalZ * (clearance - distance);
-  }
-}
-
 /**
  * Calcule la direction résultante (steerX, steerZ) en combinant la direction vers la cible
- * et les forces répulsives d'évitement des autres personnages et des meubles.
+ * et l’évitement local des autres personnages. Les obstacles solides sont traités par la navigation.
  * Réutilise une structure statique partagée pour zéro allocation d'objet par frame.
  */
 export function computeSteeringVector(
@@ -49,13 +20,12 @@ export function computeSteeringVector(
   currentZ: number,
   dirX: number,
   dirZ: number,
-  distToTarget: number,
-  targetSmartObjectId?: string
+  distToTarget: number
 ): SteeringResult {
   let avoidanceForceX = 0;
   let avoidanceForceZ = 0;
 
-  // Si nous sommes très proches du waypoint de destination (< 30 cm), réduire l'évitement pour garantir l'arrivée
+  // Si nous sommes très proches de la destination (< 30 cm), réduire l'évitement pour garantir l'arrivée
   const targetProximityDampener = distToTarget < 30.0 ? distToTarget / 30.0 : 1.0;
 
   // ── 1. Évitement et contournement des autres personnages (NPCs et joueur) ──
@@ -96,45 +66,6 @@ export function computeSteeringVector(
               avoidanceForceX -= (toOtherX / otherDist) * repulseIntensity;
               avoidanceForceZ -= (toOtherZ / otherDist) * repulseIntensity;
             }
-          }
-        }
-      }
-    }
-  }
-
-  // ── 2. Évitement et contournement des meubles au sol ──
-  const isFurnitureCollisionsEnabled = useSceneStore.getState().layers.furnitureCollisions;
-  if (isFurnitureCollisionsEnabled) {
-    const furnitureObstacles = getActiveFurnitureObstacles();
-    const len = furnitureObstacles.length;
-
-    for (let i = 0; i < len; i++) {
-      const obs = furnitureObstacles[i];
-      if (targetSmartObjectId && obs.smartObjectIds && obs.smartObjectIds.includes(targetSmartObjectId)) {
-        continue;
-      }
-
-      const toObsX = obs.x - currentX;
-      const toObsZ = obs.z - currentZ;
-      const obsDist = Math.hypot(toObsX, toObsZ);
-      const obsLookahead = obs.radius + 40;
-
-      if (obsDist > 0.1 && obsDist < obsLookahead) {
-        const forwardProj = toObsX * dirX + toObsZ * dirZ;
-
-        if (forwardProj > 0) {
-          const perpDist = Math.abs(-dirZ * toObsX + dirX * toObsZ);
-
-          if (perpDist < obs.radius) {
-            const cross = dirX * toObsZ - dirZ * toObsX;
-            const steerSide = cross >= 0 ? -1 : 1;
-
-            const lateralWeight = Math.max(0.3, (obs.radius - perpDist) / obs.radius);
-            const proximityWeight = Math.max(0.3, (obsLookahead - obsDist) / obsLookahead);
-            const steerIntensity = lateralWeight * proximityWeight * targetProximityDampener;
-
-            avoidanceForceX += -dirZ * steerSide * steerIntensity;
-            avoidanceForceZ += dirX * steerSide * steerIntensity;
           }
         }
       }

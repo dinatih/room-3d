@@ -29,8 +29,7 @@ export const AUTONOMOUS_SMART_OBJECTS: string[] = new Proxy([] as string[], {
  */
 export const ACTION_FULL_TOUR: AgentInstruction[] = [
   // ── DÉPART : Porte d'entrée (côté couloir extérieur sud) ──
-  { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
-  { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
+  { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
 
   // ── ÉTAPE 1 : Couloir Sud-Est ──
   ...buildSmartObjectInstructionSequence('corridor-closet'),
@@ -68,7 +67,7 @@ export const ACTION_FULL_TOUR: AgentInstruction[] = [
   ...buildSmartObjectInstructionSequence('building-b-corridor'),
 
   // ── ÉTAPE 7 : Fin de la visite & retour au point de départ ──
-  { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
+  { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
   { type: 'RETURN_TO_START' }
 ];
 
@@ -78,24 +77,22 @@ export const ACTION_FULL_TOUR: AgentInstruction[] = [
  */
 export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
   // ── 1. Arrivée et entrée ──
-  { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
-  { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
+  { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
 
   // ── 2. Inspection Salle de bain ──
-  { type: 'MOVE_TO', targetWaypointId: 'bathroom-center' },
+  { type: 'MOVE_TO', targetZoneId: 'bathroom' },
   { type: 'ROTATE_360', duration: 5.0 },
 
   // ── 3. Inspection Salon / Séjour ──
-  { type: 'MOVE_TO', targetWaypointId: 'living-center' },
+  { type: 'MOVE_TO', targetZoneId: 'living' },
   { type: 'ROTATE_360', duration: 6.0 },
 
   // ── 4. Inspection Couloir ──
-  { type: 'MOVE_TO', targetWaypointId: 'corridor-center' },
+  { type: 'MOVE_TO', targetZoneId: 'corridor' },
   { type: 'ROTATE_360', duration: 4.0 },
 
   // ── 5. Sortie et direction entrée couloir Bâtiment B (attente 1min30 avant prochaine ronde) ──
-  { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
-  { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
+  { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
   { type: 'MOVE_TO', smartObjectId: 'building-b-corridor-end', slotId: 'visit' },
   { type: 'WAIT', duration: 90.0, animation: 'texting-while-standing' }
 ];

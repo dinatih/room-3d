@@ -1,3 +1,4 @@
+import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getObjectActionIds } from '../objectActions';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { useSceneStore } from '../store/useSceneStore';
@@ -48,12 +49,12 @@ export function BathroomEquipment() {
 
       {/* Meuble Vasque SDB */}
       <group position={[BATH_EAST_WALL - 76, 14, BATH_NORTH_WALL + HAVBACK_D / 2]} userData={{ animUnit: true, itemName: 'Meuble Vasque SDB', hoverAction: { label: 'Lavabo Salle de bain', actions: SMART_OBJECTS['vasque-sdb'].slots.map(slot => `smart-object:::vasque-sdb:::${slot.slotId}`) } }}>
-        <Havback49514017 item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="vasque-sdb"><Havback49514017 item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
 
       {/* WC President */}
       <group position={[BATH_WEST_WALL + 60, 1, BATH_NORTH_WALL + TOILET_D / 2 + 1.5]} userData={{ skipMerge: true, animUnit: true, itemName: 'WC President', hoverAction: { label: 'WC President', actions: [...getObjectActionIds('toilet'), 'smart-object:::toilet:::use'] } }}>
-        <Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="toilet"><Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
 
       {/* Ampoule SDB (TRÅDFRI) */}
@@ -106,7 +107,7 @@ export function BathroomEquipment() {
           ],
         },
       }}>
-        <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="sdb-closet"><SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );
@@ -120,15 +121,15 @@ export function BathroomFurniture() {
     <MergedStaticGroup name="merged-bathroom-furniture">
       {/* Meubles SDB Ouest et Est */}
       <group position={[BATH_WEST_WALL + 20, 0, cbZ]} userData={{ animUnit: true, itemName: 'Meuble SDB Ouest' }}>
-        <BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="drona-west"><BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
       <group position={[BATH_EAST_WALL - 23, 0, cbZ]} userData={{ animUnit: true, itemName: 'Meuble SDB Est' }}>
-        <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="drona-east"><BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
 
       {/* Poubelle Fniss SDB */}
       <group position={[110, 1, BATH_NORTH_WALL + FNISS_D / 2 + 1]} userData={{ animUnit: true, itemName: 'Poubelle Fniss SDB' }}>
-        <Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="fniss-bath"><Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );

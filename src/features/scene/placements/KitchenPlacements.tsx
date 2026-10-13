@@ -1,3 +1,4 @@
+import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { MergedStaticGroup } from '../Building';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -35,7 +36,7 @@ export function KitchenEquipment() {
     <MergedStaticGroup name="merged-kitchen-equipment">
       {/* Meubles Cuisine (évier, structure) */}
       <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ skipMerge: true, animUnit: true, itemName: 'Meubles Cuisine' }}>
-        <CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
+        <NavigationObstacle id="cuisine-group"><CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );
@@ -52,12 +53,12 @@ export function KitchenFurniture() {
     <MergedStaticGroup name="merged-kitchen-furniture">
       {/* Kallax Cuisine en séparation (structure sans Drona) */}
       <group position={[BATH_WEST_WALL + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax Cuisine' }}>
-        <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} noDrona />
+        <NavigationObstacle id="kallax-cuisine"><KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
       </group>
 
       {/* Poubelle TATAY — angle KallaxCuisine × Mackapar */}
       <group position={[BATH_WEST_WALL + KALLAX_DEPTH + 18, 0, MACK_Z + w2 / 2 - 6]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Poubelle Tatay' }}>
-        <TrashBin item={stub('trash-bin')} actionState={as} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="trash-bin"><TrashBin item={stub('trash-bin')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );

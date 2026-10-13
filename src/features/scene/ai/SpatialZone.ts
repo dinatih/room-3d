@@ -1,5 +1,4 @@
-import { SmartObjectDef, ResolvedSmartObject, Waypoint, SpatialZoneDef, InteractionType } from './aiTypes';
-import { WAYPOINTS } from './ZoneNodes';
+import { SmartObjectDef, ResolvedSmartObject, SpatialZoneDef, InteractionType } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 import { DiagWall } from '../wallData';
@@ -37,7 +36,6 @@ export class SpatialZone {
   public bounds: BoundingBox3D;
 
   private smartObjects: Map<string, ResolvedSmartObject> = new Map();
-  private waypoints: Map<string, Waypoint> = new Map();
 
   constructor(def: SpatialZoneDef) {
     this.id = def.id;
@@ -65,18 +63,6 @@ export class SpatialZone {
     return Array.from(this.smartObjects.values());
   }
 
-  public registerWaypoint(wp: Waypoint): void {
-    this.waypoints.set(wp.id, wp);
-  }
-
-  public unregisterWaypoint(waypointId: string): void {
-    this.waypoints.delete(waypointId);
-  }
-
-  public getWaypoints(): Waypoint[] {
-    return Array.from(this.waypoints.values());
-  }
-
   /**
    * Recherche un SmartObject disponible selon un type d'interaction ou une catégorie,
    * le plus proche de la position de l'agent si applicable.
@@ -85,11 +71,11 @@ export class SpatialZone {
     interactionTypeOrCategory: InteractionType | string,
     agentPosition?: [number, number, number] | { x: number; y?: number; z: number },
     characterId?: string
-  ): { smartObject: SmartObjectDef; slotId: string; approachWaypoint: Waypoint } | null {
+  ): { smartObject: SmartObjectDef; slotId: string; approachPosition: { x: number; y: number; z: number; rotationY?: number } } | null {
     const candidates: Array<{
       smartObject: SmartObjectDef;
       slotId: string;
-      approachWaypoint: Waypoint;
+      approachPosition: { x: number; y: number; z: number; rotationY?: number };
       distance: number;
     }> = [];
 
@@ -119,9 +105,7 @@ export class SpatialZone {
           const targetCoords = slot.approachOffset ?? slot.offset ?? [0, 0, 0];
           const dist = Math.hypot(targetCoords[0] - agentX, targetCoords[2] - agentZ);
           
-          const approachWaypoint: Waypoint = {
-            id: `approach-${obj.id}-${slot.slotId}`,
-            name: `Approche ${obj.name} (${slot.name})`,
+          const approachPosition: { x: number; y: number; z: number; rotationY?: number } = {
             x: targetCoords[0],
             y: targetCoords[1],
             z: targetCoords[2],
@@ -131,7 +115,7 @@ export class SpatialZone {
           candidates.push({
             smartObject: obj,
             slotId: slot.slotId,
-            approachWaypoint,
+            approachPosition,
             distance: dist
           });
         }
@@ -245,20 +229,10 @@ class SpatialZoneManagerClass {
     for (const conf of SPATIAL_ZONES_CONFIG) {
       this.zones.set(conf.id, new SpatialZone(conf));
     }
-    this.indexSmartObjectsAndWaypoints();
+    this.indexSmartObjects();
   }
 
-  public indexSmartObjectsAndWaypoints(): void {
-    // Indexation des Waypoints
-    for (const wp of Object.values(WAYPOINTS)) {
-      const pos: [number, number, number] = [wp.x, wp.y ?? 0, wp.z];
-      for (const zone of this.zones.values()) {
-        if (zone.contains(pos)) {
-          zone.registerWaypoint(wp);
-        }
-      }
-    }
-
+  public indexSmartObjects(): void {
     // Indexation des SmartObjects
     for (const key of Object.keys(SMART_OBJECTS)) {
       const obj = getSmartObject(key);

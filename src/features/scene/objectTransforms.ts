@@ -14,7 +14,7 @@ import {
 import { SDB_CLOSET_X, SDB_CLOSET_Z } from './items/SdbCloset';
 import { SHOWER_W, SHOWER_D } from './items/Shower';
 import { positionState } from './positionState';
-import { DYNAMIC_FURNITURE_ANCHORS, FurnitureTransform } from './furniturePositions';
+import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, FurnitureTransform } from './furniturePositions';
 
 export interface ObjectTransform {
   position: [number, number, number];
@@ -103,6 +103,8 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
  * Récupère le transform d'un objet dynamique depuis positionState et DYNAMIC_FURNITURE_ANCHORS
  */
 function getDynamicTransform(anchorKey: string): ObjectTransform | undefined {
+  const current = currentFurnitureTransforms[anchorKey];
+  if (current) return { position: [current.x, 0, current.z], rotationY: current.ry };
   const anchorList = DYNAMIC_FURNITURE_ANCHORS[anchorKey];
   if (!anchorList || anchorList.length === 0) return undefined;
 

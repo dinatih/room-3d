@@ -1,20 +1,32 @@
 import { AgentInstruction } from '../aiTypes';
-import { WAYPOINTS } from '../ZoneNodes';
+import { getObjectApproach, getDoorApproach } from '../navigation/service';
+import { hasAgentProfile } from '../navigation/obstacles';
+import { getZoneDestination } from '../navigation/destinations';
 import { getSmartObject } from '../smartObjectRegistry';
 import { resolveSlotAnimation } from '../../animations/animationResolver';
 import { ResolvedInstructionCoords } from './agentTypes';
 
 export function resolveInstructionCoords(
   instr: AgentInstruction,
-  startPos: { x: number; z: number } | null
+  startPos: { x: number; z: number } | null,
+  agentId?: string,
+  currentPosition?: { x: number; z: number }
 ): ResolvedInstructionCoords {
   if (instr.type === 'RETURN_TO_START' && startPos) {
     return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
   }
-  const waypointId = instr.targetWaypointId;
-  if (waypointId && WAYPOINTS[waypointId]) {
-    const node = WAYPOINTS[waypointId];
-    return { tx: node.x, tz: node.z, label: node.name || node.id, rotY: instr.rotY ?? node.rotationY };
+  if (instr.targetZoneId) {
+    const pos = getZoneDestination(instr.targetZoneId, agentId);
+    return { tx: pos.x, tz: pos.z, label: instr.targetZoneId, rotY: instr.rotY };
+  }
+  if (instr.targetLocalPos) {
+    const obj = instr.smartObjectId ? getSmartObject(instr.smartObjectId) : undefined;
+    if (!obj) throw new Error('A local navigation target requires a SmartObject');
+    const [x, y, z] = instr.targetLocalPos, c = Math.cos(obj.rotationY), s = Math.sin(obj.rotationY);
+    const target = { x: obj.position[0] + x * c + z * s, z: obj.position[2] - x * s + z * c };
+    const approach = instr.navigation !== 'interaction' && agentId && hasAgentProfile(agentId) ? getObjectApproach(obj.id, target, agentId, currentPosition) : target;
+    if (!approach) throw new Error(`No approach for ${obj.id}`);
+    return { tx: approach.x, ty: obj.position[1] + y, tz: approach.z, label: obj.name, rotY: instr.rotY };
   }
   // Si targetPos est fourni explicitement, il est prioritaire (ex: Rôle A ou B d'une animation Duo sur SmartObject)
   if (instr.targetPos) {
@@ -44,10 +56,13 @@ export function resolveInstructionCoords(
     const resolved = slot ? resolveSlotAnimation(slot) : null;
     const finalRotY = resolved?.rotY ?? slot?.rotY;
 
+    const desired = isMoveOnly && obj.approachDoor ? getDoorApproach(obj.approachDoor, agentId && hasAgentProfile(agentId) ? agentId : undefined) : { x: pos[0], z: pos[2] };
+    const approach = isMoveOnly && agentId && hasAgentProfile(agentId) ? getObjectApproach(obj.id, desired, agentId, currentPosition) : desired;
+    if (!approach) throw new Error(`No approach for ${obj.id}`);
     return {
-      tx: pos[0],
-      ty: pos[1],
-      tz: pos[2],
+      tx: approach.x,
+      ty: isMoveOnly && obj.approachDoor ? 0 : pos[1],
+      tz: approach.z,
       label: `${obj.name}${slot ? ` (${slot.name})` : ''}`,
       rotY: finalRotY,
       anim: resolved?.animation ?? slot?.animation,
@@ -56,5 +71,6 @@ export function resolveInstructionCoords(
       repeatVariation: slot?.repeatVariation
     };
   }
-  return { tx: 0, tz: 0, label: 'inconnu' };
+  if (instr.type === 'WAIT' || instr.type === 'ROTATE_360') return { tx: 0, tz: 0, label: instr.type };
+  throw new Error(`Instruction without a destination: ${instr.type}`);
 }

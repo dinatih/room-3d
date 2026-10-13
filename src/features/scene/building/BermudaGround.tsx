@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
+import { EXTERIOR_GROUND } from '../environmentData';
 import { useTexture } from '@react-three/drei';
 import type { GroundType } from '../sidepanel/types';
 import { groundExteriorMat } from './buildingCommon';
@@ -78,7 +79,7 @@ export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.6 }: B
           <mesh
             material={groundExteriorMat}
             rotation={[-Math.PI / 2, 0, 0]}
-            position={[150, yPos, 0]}
+            position={[EXTERIOR_GROUND.x, yPos, EXTERIOR_GROUND.z]}
             receiveShadow
             userData={{
               birdSupport: { id: 'garden-ground', kind: 'ground' },
@@ -86,7 +87,7 @@ export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.6 }: B
               itemName: 'Terrain Extérieur',
             }}
           >
-            <planeGeometry args={[1100, 2000]} />
+            <planeGeometry args={[EXTERIOR_GROUND.width, EXTERIOR_GROUND.depth]} />
           </mesh>
         </CategoryLayerGroup>
       )}
@@ -113,8 +114,8 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
   });
 
   const material = useMemo(() => {
-    const repeatX = 1100 / config.tileSize;
-    const repeatY = 2000 / config.tileSize;
+    const repeatX = EXTERIOR_GROUND.width / config.tileSize;
+    const repeatY = EXTERIOR_GROUND.depth / config.tileSize;
 
     [textures.map, textures.normalMap, textures.roughnessMap].forEach((tex) => {
       if (tex) {
@@ -148,7 +149,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
     <mesh
       material={material}
       rotation={[-Math.PI / 2, 0, 0]}
-      position={[150, yPos, 0]}
+      position={[EXTERIOR_GROUND.x, yPos, EXTERIOR_GROUND.z]}
       receiveShadow
       userData={{
         birdSupport: { id: 'garden-ground', kind: 'ground' },
@@ -156,7 +157,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
         itemName: `Terrain Extérieur (${config.label})`,
       }}
     >
-      <planeGeometry args={[1100, 2000]} />
+      <planeGeometry args={[EXTERIOR_GROUND.width, EXTERIOR_GROUND.depth]} />
     </mesh>
   );
 }

@@ -4,7 +4,10 @@ import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from '.
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
+import { createRouteState, followRoute, resetRoute } from './navigation/service';
+import { movingFurniture } from '../furniturePositions';
+import { hasAgentProfile, getObstacleRevision } from './navigation/obstacles';
+import { distance } from './navigation/geometry';
 import { useSceneStore } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 import { getEstimatedClipDuration } from '../animOptions';
@@ -102,10 +105,13 @@ export function useAgentController(
   const startPosRef = useRef<{ x: number; y: number; z: number; rotY: number } | null>(initialPos);
   const claimedSlotRef = useRef<{ objectId: string; slotId: string } | null>(null);
 
-  // Navigation dynamique inter-pièces
+  // Instructions temporaires (actions demandées, rendez-vous et interactions duo).
   const dynamicNavQueueRef = useRef<AgentInstruction[]>([]);
   const dynamicNavIndexRef = useRef(0);
-  const activeNavStepIndexRef = useRef<number>(-1);
+  const routeRef = useRef(createRouteState());
+  const routeInstructionRef = useRef<AgentInstruction | null>(null);
+  const navigationErrorRef = useRef<string | null>(null);
+  const initialProfileResolvedRef = useRef(false);
 
   // Animation de marche courante pour les trajets
   const currentWalkAnimRef = useRef<string>(getRandomNpcWalkAnimation(_characterId));
@@ -127,16 +133,23 @@ export function useAgentController(
   // Cache de la résolution de l'instruction en cours pour éviter de réallouer / recalculer resolveInstructionCoords à chaque frame
   const cachedCoordsRef = useRef<ReturnType<typeof resolveInstructionCoords> | null>(null);
   const cachedCoordsInstructionRef = useRef<AgentInstruction | null>(null);
+  const cachedCoordsRevisionRef = useRef(-1);
 
   const getResolvedCoords = (instr: AgentInstruction) => {
-    if (cachedCoordsInstructionRef.current !== instr || !cachedCoordsRef.current) {
+    const revision = getObstacleRevision();
+    const followsInteraction = statusRef.current === 'INTERACTING' && !!instr.smartObjectId;
+    if (followsInteraction || (!movingFurniture.size && cachedCoordsRevisionRef.current !== revision) || cachedCoordsInstructionRef.current !== instr || !cachedCoordsRef.current) {
       cachedCoordsInstructionRef.current = instr;
-      cachedCoordsRef.current = resolveInstructionCoords(instr, startPosRef.current);
+      cachedCoordsRevisionRef.current = revision;
+      cachedCoordsRef.current = resolveInstructionCoords(instr, startPosRef.current, _characterId, stateRef.current);
     }
     return cachedCoordsRef.current;
   };
 
+  useEffect(() => () => resetRoute(routeRef.current, _characterId), [_characterId]);
+
   const releaseClaimedSlot = () => {
+    resetRoute(routeRef.current, _characterId);
     if (claimedSlotRef.current) {
       if (claimedSlotRef.current.objectId === 'desk-bollsidan-2') {
         setDesk2SmartActionState(_characterId, false);
@@ -188,7 +201,8 @@ export function useAgentController(
             { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId, targetPos: eventTargetPos, rotY: eventTargetRotY }
           ];
           dynamicNavIndexRef.current = 0;
-          activeNavStepIndexRef.current = -1;
+          resetRoute(routeRef.current, _characterId);
+          routeInstructionRef.current = null;
           cachedCoordsInstructionRef.current = null;
           cachedCoordsRef.current = null;
 
@@ -241,7 +255,8 @@ export function useAgentController(
           }
           dynamicNavQueueRef.current = seq;
           dynamicNavIndexRef.current = 0;
-          activeNavStepIndexRef.current = -1;
+          resetRoute(routeRef.current, _characterId);
+          routeInstructionRef.current = null;
           statusRef.current = 'IDLE';
           cachedCoordsInstructionRef.current = null;
           cachedCoordsRef.current = null;
@@ -272,7 +287,8 @@ export function useAgentController(
       stateRef.current.rotY = position.rotY;
       dynamicNavQueueRef.current = [{ type: 'WAIT', animation, duration }];
       dynamicNavIndexRef.current = 0;
-      activeNavStepIndexRef.current = -1;
+      resetRoute(routeRef.current, _characterId);
+      routeInstructionRef.current = null;
       cachedCoordsInstructionRef.current = null;
       cachedCoordsRef.current = null;
       statusRef.current = 'IDLE';
@@ -349,7 +365,8 @@ export function useAgentController(
     prevScenarioRef.current = scenario;
     dynamicNavQueueRef.current = [];
     dynamicNavIndexRef.current = 0;
-    activeNavStepIndexRef.current = -1;
+    resetRoute(routeRef.current, _characterId);
+    routeInstructionRef.current = null;
     cachedCoordsInstructionRef.current = null;
     cachedCoordsRef.current = null;
 
@@ -418,6 +435,18 @@ export function useAgentController(
   };
 
   const update = (dt: number): AgentState => {
+    if (!initialProfileResolvedRef.current && enabled && hasAgentProfile(_characterId)) {
+      initialProfileResolvedRef.current = true;
+      cachedCoordsRef.current = null;
+      if (scenario?.length) {
+        const first = resolveInstructionCoords(scenario[0], null, _characterId);
+        if (first.tx !== 0 || first.tz !== 0) {
+          stateRef.current.x = first.tx;
+          stateRef.current.z = first.tz;
+          startPosRef.current = { ...stateRef.current, y: first.ty ?? 0 };
+        }
+      }
+    }
     const hasNavStepInUpdate = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length;
     if (!scenario && !hasNavStepInUpdate) {
       stateRef.current.animation = 'idle';
@@ -504,7 +533,8 @@ export function useAgentController(
       releaseClaimedSlot();
       if (loop && scenarioLength > 0) {
         stepIndexRef.current = 0;
-        activeNavStepIndexRef.current = -1;
+        resetRoute(routeRef.current, _characterId);
+        routeInstructionRef.current = null;
         cachedCoordsInstructionRef.current = null;
         cachedCoordsRef.current = null;
         const loopKey = `loop-${_characterId}`;
@@ -678,25 +708,6 @@ export function useAgentController(
       if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START' || currentInstruction.type === 'USE_OBJECT') {
         const target = getResolvedCoords(currentInstruction);
 
-        if (!hasNavStep && activeNavStepIndexRef.current !== stepIndexRef.current) {
-          activeNavStepIndexRef.current = stepIndexRef.current;
-          const startRoom = getRoomFromCoords(stateRef.current.x, stateRef.current.z);
-          const targetRoom = getRoomFromCoords(target.tx, target.tz);
-
-          if (startRoom !== targetRoom) {
-            const navSteps = buildNavigationWaypoints(
-              { x: stateRef.current.x, z: stateRef.current.z },
-              { x: target.tx, z: target.tz }
-            );
-            if (navSteps.length > 0) {
-              dynamicNavQueueRef.current = navSteps;
-              dynamicNavIndexRef.current = 0;
-              cachedCoordsInstructionRef.current = null;
-              cachedCoordsRef.current = null;
-              return update(dt);
-            }
-          }
-        }
         statusRef.current = 'MOVING';
         stateRef.current.animation = currentWalkAnimRef.current;
         const logKey = `move-${stepIndexRef.current}-${dynamicNavIndexRef.current}-${target.label}`;
@@ -749,21 +760,44 @@ export function useAgentController(
     }
 
     // ── 4. Déplacement (MOVING) ──
-    if (statusRef.current === 'MOVING') {
+    if (statusRef.current === 'MOVING' || statusRef.current === 'BLOCKED') {
       const target = getResolvedCoords(currentInstruction);
-      const dx = target.tx - stateRef.current.x;
-      const dz = target.tz - stateRef.current.z;
-      const dist = Math.hypot(dx, dz);
 
+      if (!hasAgentProfile(_characterId)) return stateRef.current;
+      if (routeInstructionRef.current !== currentInstruction) {
+        resetRoute(routeRef.current, _characterId);
+        routeInstructionRef.current = currentInstruction;
+        navigationErrorRef.current = null;
+      }
       const isDuoAction = isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId) || !!duoRoleRef.current;
-      const ARRIVAL_THRESHOLD = isDuoAction ? 30.0 : ((currentInstruction.type === 'USE_OBJECT' || (!hasNavStep && currentInstruction.smartObjectId)) ? 8.0 : 18.0);
-
-      if (dist < ARRIVAL_THRESHOLD) {
-        stateRef.current.x = target.tx;
-        stateRef.current.z = target.tz;
-        if (target.ty !== undefined) {
-          stateRef.current.y = target.ty;
+      const speed = getWalkSpeedForAnimation(currentWalkAnimRef.current);
+      const oldPosition = { x: stateRef.current.x, z: stateRef.current.z };
+      const position = followRoute(routeRef.current, _characterId, oldPosition, { x: target.tx, z: target.tz }, speed * dt,
+        (direction, remaining) => {
+          const steering = computeSteeringVector(_characterId, oldPosition.x, oldPosition.z, direction.x, direction.z, remaining);
+          return { x: steering.steerX, z: steering.steerZ };
+        }, currentInstruction.smartObjectId, currentInstruction.type === 'USE_OBJECT' || currentInstruction.navigation === 'interaction');
+      stateRef.current.x = position.x;
+      stateRef.current.z = position.z;
+      const moved = distance(oldPosition, position);
+      if (currentInstruction.navigation === 'interaction' && target.ty !== undefined && moved > 0) {
+        const remaining = distance(oldPosition, { x: target.tx, z: target.tz });
+        stateRef.current.y += (target.ty - stateRef.current.y) * Math.min(1, moved / remaining);
+      }
+      if (moved > 0) stateRef.current.rotY = computeRotYStep(stateRef.current.rotY, Math.atan2(position.x - oldPosition.x, position.z - oldPosition.z), ROT_SPEED, dt);
+      if (routeRef.current.error) {
+        stateRef.current.animation = 'idle';
+        statusRef.current = 'BLOCKED';
+        if (navigationErrorRef.current !== routeRef.current.error) {
+          navigationErrorRef.current = routeRef.current.error;
+          appLog(_characterId, `⚠️ Navigation vers ${target.label} : ${routeRef.current.error}`);
         }
+        return stateRef.current;
+      }
+      statusRef.current = 'MOVING';
+      if (distance(position, { x: target.tx, z: target.tz }) < 1e-6) {
+        if (currentInstruction.smartObjectId) { stateRef.current.x = target.tx; stateRef.current.z = target.tz; }
+        if (target.ty !== undefined) stateRef.current.y = target.ty;
 
         if (currentInstruction.type === 'USE_OBJECT') {
           const objId = currentInstruction.smartObjectId;
@@ -874,34 +908,7 @@ export function useAgentController(
           advanceToNextStep(hasNavStep);
         }
       } else {
-        const targetY = target.ty ?? 0;
-        const currentSpeed = getWalkSpeedForAnimation(currentWalkAnimRef.current);
-        if (stateRef.current.y !== targetY) {
-          const dy = targetY - stateRef.current.y;
-          const yStep = Math.sign(dy) * Math.min(Math.abs(dy), currentSpeed * dt * 2.0);
-          stateRef.current.y += yStep;
-        }
-        stateRef.current.animation = currentWalkAnimRef.current;
-
-        const dirX = dx / dist;
-        const dirZ = dz / dist;
-
-        const { steerX, steerZ } = computeSteeringVector(
-          _characterId,
-          stateRef.current.x,
-          stateRef.current.z,
-          dirX,
-          dirZ,
-          dist,
-          currentInstruction.smartObjectId
-        );
-
-        const moveDist = Math.min(currentSpeed * dt, dist);
-        stateRef.current.x += steerX * moveDist;
-        stateRef.current.z += steerZ * moveDist;
-
-        const targetRot = Math.atan2(steerX, steerZ);
-        stateRef.current.rotY = computeRotYStep(stateRef.current.rotY, targetRot, ROT_SPEED, dt);
+        stateRef.current.animation = moved > 0 ? currentWalkAnimRef.current : 'idle';
       }
     } else if (statusRef.current === 'INTERACTING') {
       // ── 5. Interactions (INTERACTING) ──
@@ -948,6 +955,7 @@ export function useAgentController(
 
       const target = getResolvedCoords(currentInstruction);
       stateRef.current.animation = resolveAnimationId(currentInstruction.animation || target.anim || 'idle');
+      if (currentInstruction.smartObjectId) { stateRef.current.x = target.tx; stateRef.current.z = target.tz; }
       if (target.ty !== undefined) stateRef.current.y = target.ty;
 
       const targetRotY = currentInstruction.rotY !== undefined ? currentInstruction.rotY : target.rotY;
@@ -1045,6 +1053,9 @@ export function useAgentController(
   };
 
   const setPosition = (x: number, y: number, z: number) => {
+    initialProfileResolvedRef.current = true;
+    resetRoute(routeRef.current, _characterId);
+    routeRef.current.owner = undefined;
     stateRef.current.x = x;
     stateRef.current.y = y;
     stateRef.current.z = z;

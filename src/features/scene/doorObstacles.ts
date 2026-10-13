@@ -7,8 +7,9 @@
  */
 
 import { cameraState } from './cameraState';
-import { getActiveFurnitureObstacles } from './ai/furnitureObstacles';
-import { ROOM_W, pX, pZ, DiagWall, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from './wallData';
+import { furnitureObstacles, getObstacleRevision, getAgentProfile, hasAgentProfile } from './ai/navigation/obstacles';
+import { inflate, pointInRing, type Polygon } from './ai/navigation/geometry';
+import { pX, pZ, DiagWall, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from './wallData';
 
 export const DOOR_OPEN_RESPONSE = 10;
 export const DOOR_CLOSE_RESPONSE = 4;
@@ -47,6 +48,8 @@ export interface DoorConfig {
 /**
  * État partagé des battants mobiles pour synchronisation inter-systèmes (PNJ, debug).
  */
+export const glassShutterState = { clearHeight: 210 };
+
 export const doorCollisionState = {
   living: { angle: 0 },
   bath: { angle: 0 },
@@ -57,99 +60,14 @@ export const doorCollisionState = {
 };
 
 /**
- * Obstacles meubles statiques massifs rectangulaires le long des zones de débattement.
- */
-const STATIC_BOX_OBSTACLES: BoxObstacle[] = [
-  // Tour Kallax SE + Congélateur CHiQ (Mur B / Sud-Est)
-  // X: face avant freezer à X = 273.5, Kallax SE à X = 277 (centre X = 296.5)
-  // Z: Kallax SE [282, 357.5], Freezer [296, 344]
-  {
-    minX: 273.5,
-    maxX: ROOM_W,
-    minZ: 282,
-    maxZ: 358,
-    yMin: 0,
-    yMax: 160,
-  },
-];
-
-/**
  * Résout l'angle critique de contact entre un battant et un obstacle cylindrique.
  */
-function testCircleCollision(door: DoorConfig, obs: CircleObstacle): number | null {
-  if (obs.yMin !== undefined && obs.yMax !== undefined) {
-    if (obs.yMax < door.yMin || obs.yMin > door.yMax) return null;
-  }
-
-  const vx = obs.x - door.pivot.x;
-  const vz = obs.z - door.pivot.z;
-
-  const v0 = vx * door.closedDir.x + vz * door.closedDir.z;
-  const vPerp = vx * door.openNormal.x + vz * door.openNormal.z;
-  const dist = Math.hypot(v0, vPerp);
-
-  const rEff = obs.radius + door.thickness / 2 + door.margin;
-
-  // Un obstacle centré derrière la charnière ne doit pas bloquer tout le battant
-  // parce que son cercle simplifié recouvre le pivot.
-  if (dist < rEff && v0 < 0) return null;
-  if (dist > door.length + rEff) return null; // Trop loin
-  if (dist < rEff) return 0; // Couvre le gond
-
-  const alpha = Math.atan2(vPerp, v0);
-  const sinBeta = Math.min(1, rEff / dist);
-  const beta = Math.asin(sinBeta);
-
-  // Cas 1 : Contact tangentiel sur la face du battant
-  const tangentDist = dist * Math.cos(beta);
-  if (tangentDist <= door.length) {
-    const contactAngle = alpha - beta;
-    if (contactAngle >= 0 && contactAngle <= door.maxAngle) {
-      return contactAngle;
-    }
-    // Si l'obstacle chevauche déjà l'état fermé
-    if (contactAngle < 0 && alpha + beta > 0) {
-      return 0;
-    }
-  }
-
-  // Cas 2 : Contact avec l'extrémité / tranche du battant
-  if (dist - rEff <= door.length) {
-    const L = door.length;
-    const cosDelta = (L * L + dist * dist - rEff * rEff) / (2 * L * dist);
-    if (cosDelta >= -1 && cosDelta <= 1) {
-      const delta = Math.acos(cosDelta);
-      const tipAngle = alpha - delta;
-      if (tipAngle >= 0 && tipAngle <= door.maxAngle) {
-        return tipAngle;
-      }
-    }
-  }
-
-  return null;
-}
-
 /**
  * Résout l'angle critique de contact entre un battant et une boîte AABB.
  */
-function testBoxCollision(door: DoorConfig, box: BoxObstacle): number | null {
-  if (box.yMax !== undefined && box.yMin !== undefined) {
-    if (box.yMax < door.yMin || box.yMin > door.yMax) return null;
-  }
-
-  const hT = door.thickness / 2 + door.margin;
-  const bMinX = box.minX - hT;
-  const bMaxX = box.maxX + hT;
-  const bMinZ = box.minZ - hT;
-  const bMaxZ = box.maxZ + hT;
-
-  const corners = [
-    { x: bMinX, z: bMinZ },
-    { x: bMaxX, z: bMinZ },
-    { x: bMaxX, z: bMaxZ },
-    { x: bMinX, z: bMaxZ },
-  ];
-
+export function getDoorContactAngle(door: DoorConfig, polygon: Polygon): number | null {
+  const corners = inflate(polygon, door.thickness / 2 + door.margin);
+  // Inflate the polygon by the leaf half-thickness and the door's own margin.
   let earliestContact: number | null = null;
 
   // 1. Test des 4 sommets de la boîte
@@ -172,12 +90,7 @@ function testBoxCollision(door: DoorConfig, box: BoxObstacle): number | null {
   }
 
   // 2. Test d'intersection de l'arc de l'extrémité avec les 4 segments de la boîte
-  const edges = [
-    { p1: corners[0], p2: corners[1] },
-    { p1: corners[1], p2: corners[2] },
-    { p1: corners[2], p2: corners[3] },
-    { p1: corners[3], p2: corners[0] },
-  ];
+  const edges = corners.map((p1, i) => ({ p1, p2: corners[(i + 1) % corners.length] }));
 
   for (const { p1, p2 } of edges) {
     // Équation de distance pour intersection segment-cercle
@@ -229,36 +142,12 @@ export interface DoorDynamicsResult {
 export function computeDoorDynamics(
   door: DoorConfig,
 ): DoorDynamicsResult {
-  // 1. Meubles statiques massifs (butée stricte infranchissable)
-  let furnitureMaxAngle = door.maxAngle;
-
-  for (const box of STATIC_BOX_OBSTACLES) {
-    const contact = testBoxCollision(door, box);
-    if (contact !== null && contact < furnitureMaxAngle) {
-      furnitureMaxAngle = contact;
-    }
-  }
-
-  // 2. Meubles dynamiques (exclure le congélateur qui est déjà modélisé dans STATIC_BOX_OBSTACLES)
-  const furniture = getActiveFurnitureObstacles();
-  for (const f of furniture) {
-    if (f.id === 'freezer') continue;
-    const contact = testCircleCollision(door, {
-      x: f.x,
-      z: f.z,
-      radius: f.radius,
-      yMin: 0,
-      yMax: 150,
-    });
-    if (contact !== null && contact < furnitureMaxAngle) {
-      furnitureMaxAngle = contact;
-    }
-  }
+  const furnitureMaxAngle = computeDoorAllowedAngle(door);
 
   let push = 0;
   for (const id in cameraState.positions) {
     const p = cameraState.positions[id];
-    const bodyRadius = id === 'robin' ? 7.5 : id === 'shiba' ? 20 : HUMAN_BODY_RADIUS;
+    const bodyRadius = hasAgentProfile(id) ? getAgentProfile(id).radius : (id === 'robin' ? 7.5 : HUMAN_BODY_RADIUS);
     const height = id === 'robin' ? 15 : id === 'shiba' ? 40 : HUMAN_BODY_HEIGHT;
     if (p.y > door.yMax || p.y + height < door.yMin) continue;
 
@@ -292,8 +181,27 @@ export function computeDoorDynamics(
 /**
  * Calcule l'angle maximal autorisé pour une porte donnée compte tenu de tous les obstacles actifs.
  */
+const allowedAngles = new WeakMap<DoorConfig, { revision: number; angle: number }>();
 export function computeDoorAllowedAngle(door: DoorConfig): number {
-  return computeDoorDynamics(door).allowed;
+  const revision = getObstacleRevision();
+  const cached = allowedAngles.get(door);
+  if (cached?.revision === revision) return cached.angle;
+  let furnitureMaxAngle = door.maxAngle;
+  for (const obstacle of furnitureObstacles.values()) {
+    if (obstacle.yMax < door.yMin || obstacle.yMin > door.yMax) continue;
+    // A leaf already touching a massive object cannot swing through it.
+    const c = door.closedDir;
+    const closedCenter = { x: door.pivot.x + c.x * door.length / 2, z: door.pivot.z + c.z * door.length / 2 };
+    if (pointInRing(closedCenter, obstacle.polygon)) {
+      furnitureMaxAngle = 0;
+      continue;
+    }
+    const contact = getDoorContactAngle(door, obstacle.polygon);
+    if (contact !== null) furnitureMaxAngle = Math.min(furnitureMaxAngle, contact);
+  }
+
+  allowedAngles.set(door, { revision, angle: furnitureMaxAngle });
+  return furnitureMaxAngle;
 }
 
 /**
@@ -308,7 +216,7 @@ export const DOOR_CONFIGS = {
   } satisfies DoorConfig,
 
   living: {
-    pivot: { x: 284.5, z: 403.6 },
+    pivot: { x: (pX('door-living-w') + pX('door-living-e')) / 2 + 83 / 2, z: pZ('door-living-w') },
     length: 83,
     thickness: 4,
     closedDir: { x: -1, z: 0 },

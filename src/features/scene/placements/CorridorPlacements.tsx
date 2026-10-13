@@ -1,3 +1,4 @@
+import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -160,7 +161,7 @@ export function CorridorEquipment() {
       <CorridorLamp isOn={!!as['lamp-corridor-toggle']} lightsHD={lightsHD} />
 
       {/* Gaine plastique couloir mur est + Linky */}
-      <LinkyGaine />
+      <NavigationObstacle id="linky"><LinkyGaine /></NavigationObstacle>
 
       {/* Placard Couloir */}
       <group position={[(KITCHEN_EAST_WALL + PARTITION_THICKNESS + DOOR_START) / 2, 0, (CORRIDOR_NORTH_WALL + KITCHEN_SOUTH_WALL) / 2]} userData={{
@@ -174,7 +175,7 @@ export function CorridorEquipment() {
           ],
         },
       }}>
-        <CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="corridor-closet"><CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );
@@ -186,7 +187,7 @@ export function CorridorFurnishings() {
     <MergedStaticGroup name="merged-corridor-furnishings">
       {/* Trottinette Xiaomi */}
       <group position={[298, 0, 470]} rotation-y={Math.PI - THREE.MathUtils.degToRad(5)} userData={{ skipMerge: true, animUnit: true, itemName: 'Trottinette Xiaomi' }}>
-        <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} steeringAngle={-Math.PI / 6} />
+        <NavigationObstacle id="scooter" hull><Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} steeringAngle={-Math.PI / 6} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );

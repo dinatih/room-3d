@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { ReactNode } from 'react';
-import { currentFurnitureTransforms } from '../furniturePositions';
+import { currentFurnitureTransforms, movingFurniture } from '../furniturePositions';
 
 const SPEED    = 0.09;  // lerp factor (ease-out)
 const SNAP_POS = 0.4;   // cm — seuil de snap
@@ -37,6 +37,7 @@ export function PositionTransition({
     const transform = current.current;
     currentFurnitureTransforms[furnitureKey] = transform;
     return () => {
+      if (furnitureKey) movingFurniture.delete(furnitureKey);
       if (currentFurnitureTransforms[furnitureKey] === transform) {
         delete currentFurnitureTransforms[furnitureKey];
       }
@@ -49,6 +50,7 @@ export function PositionTransition({
       return;
     }
     isAnimating.current = true;
+    if (furnitureKey) movingFurniture.add(furnitureKey);
     if (arc) isTransferring.current = true;
     invalidate();
   }, [x, y, z, ry, arc, invalidate]);
@@ -95,6 +97,7 @@ export function PositionTransition({
       invalidate();
     } else if (isAnimating.current) {
       isAnimating.current = false;
+      if (furnitureKey) movingFurniture.delete(furnitureKey);
       isTransferring.current = false;
       c.x = x;
       c.y = y;
@@ -106,7 +109,7 @@ export function PositionTransition({
       g.rotation.y = ry;
       invalidate();
     }
-  });
+  }, -2);
 
   return (
     <group

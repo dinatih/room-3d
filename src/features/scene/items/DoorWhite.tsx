@@ -1,3 +1,5 @@
+import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
+import { doorRequested } from '../ai/navigation/doorRequests';
 /**
  * Porte blanche intérieure — Refondue pour s'adapter aux ouvertures de 80cm.
  * 75cm (panneau) + 2.5cm * 2 (dormant) = 80cm total.
@@ -137,6 +139,7 @@ interface DoorImplProps {
   wallThickness?: number;
   doorConfig: DoorConfig;
   doorStateKey: 'living' | 'bath';
+  isPreview?: boolean;
 }
 
 const frameMaterial = new THREE.MeshStandardMaterial({ color: '#f0ede8', roughness: 0.35 });
@@ -155,7 +158,9 @@ function DoorImpl({
   wallThickness = WALL_THICKNESS,
   doorConfig,
   doorStateKey,
+  isPreview = false,
 }: DoorImplProps) {
+  const navigationEnabled = useNavigationEnabled() && !isPreview;
   const doorRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
   const impulse = useDoorImpulse(actionKey, doorConfig.maxAngle);
@@ -169,9 +174,9 @@ function DoorImpl({
 
   useFrame((_, delta) => {
     const currentSigned = doorRef.current.rotation.y;
-    const { allowed, push } = computeDoorDynamics(doorConfig);
-    const target = Math.sign(openAngle) * Math.min(allowed, Math.max(push, impulse(delta)));
-    doorCollisionState[doorStateKey].angle = currentSigned;
+    const { allowed, push } = navigationEnabled ? computeDoorDynamics(doorConfig) : { allowed: doorConfig.maxAngle, push: 0 };
+    const target = Math.sign(openAngle) * Math.min(allowed, Math.max(push, impulse(delta), navigationEnabled && doorRequested(doorStateKey) ? allowed : 0));
+    if (navigationEnabled) doorCollisionState[doorStateKey].angle = currentSigned;
     if (currentSigned === target) return;
     const difference = target - currentSigned;
     if (Math.abs(difference) > 0.001) {
@@ -182,7 +187,7 @@ function DoorImpl({
       doorRef.current.rotation.y = target;
       invalidate();
     }
-    doorCollisionState[doorStateKey].angle = doorRef.current.rotation.y;
+    if (navigationEnabled) doorCollisionState[doorStateKey].angle = doorRef.current.rotation.y;
   });
 
   return (
@@ -207,7 +212,7 @@ function DoorImpl({
   );
 }
 
-export function DoorLiving({ onSize }: SceneItemProps) {
+export function DoorLiving({ onSize, isPreview = false }: SceneItemProps) {
   return (
     <DoorImpl
       actionKey="livingDoor"
@@ -216,12 +221,13 @@ export function DoorLiving({ onSize }: SceneItemProps) {
       doorConfig={DOOR_CONFIGS.living}
       doorStateKey="living"
       onSize={onSize}
+      isPreview={isPreview}
       wallThickness={PARTITION_THICKNESS}
     />
   );
 }
 
-export function DoorBath({ onSize }: SceneItemProps) {
+export function DoorBath({ onSize, isPreview = false }: SceneItemProps) {
   return (
     <DoorImpl
       actionKey="bathroomDoor"
@@ -230,6 +236,7 @@ export function DoorBath({ onSize }: SceneItemProps) {
       doorConfig={DOOR_CONFIGS.bath}
       doorStateKey="bath"
       onSize={onSize}
+      isPreview={isPreview}
       wallThickness={PARTITION_THICKNESS}
     />
   );

@@ -67,7 +67,6 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
   if (isZone) {
     const zone = item as SpatialZone;
     const smartObjects = zone.getSmartObjects();
-    const waypoints = zone.getWaypoints();
     const min = zone.bounds.min;
     const max = zone.bounds.max;
     const sizeStr = `${(max[0] - min[0]).toFixed(0)} × ${(max[2] - min[2]).toFixed(0)} × ${(max[1] - min[1]).toFixed(0)} cm`;
@@ -98,9 +97,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
             <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle">
               ✨ {smartObjects.length} Smart Object{smartObjects.length > 1 ? 's' : ''}
             </span>
-            <span className="badge bg-light text-dark border">
-              📍 {waypoints.length} Waypoint{waypoints.length > 1 ? 's' : ''}
-            </span>
+
           </div>
 
           <div className="row g-2 mb-3">
@@ -160,15 +157,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
             )}
           </div>
 
-          <hr className="my-3 opacity-25" />
-          <div className="text-uppercase text-muted fw-bold small mb-2" style={{ fontSize: '0.7rem' }}>Points de Passage (Waypoints)</div>
-          <div className="d-flex flex-wrap gap-1">
-            {waypoints.map(wp => (
-              <span key={wp.id} className="badge bg-light text-dark border font-monospace">
-                📍 {wp.name || wp.id} ({wp.x.toFixed(0)}, {wp.z.toFixed(0)})
-              </span>
-            ))}
-          </div>
+
         </div>
       </div>
     );

@@ -232,6 +232,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
 
   'shower': {
     id: 'shower',
+    approachDoor: 'shower',
     name: 'Douche',
     category: 'hygiene',
     position: [25, 15, 645],
@@ -1029,19 +1030,16 @@ export function buildSmartObjectInstructionSequence(
   // Lit Utåker (couché) : montée sur le lit et descente à pied sur le lit plutôt que de traverser le lit au sol
   if ((objectId === 'bed-west' || objectId === 'bed-east') && slot.slotId === 'lie-down') {
     const isWest = objectId === 'bed-west';
-    const [bx, , bz] = obj.position ?? (isWest ? [74, 0, 151.5] : [270, 0, 190]);
-    const zOffset = isWest ? -1.5 : 0;
-    const edgeX = isWest ? bx + 28 : bx - 28;
-    const floorX = isWest ? bx + 52 : bx - 52;
-    const bedEdgePos: [number, number, number] = [edgeX, 45, bz + zOffset];
-    const floorEntryPos: [number, number, number] = [floorX, 0, bz + zOffset];
-
+    // Utåker is rotated by PI/2: local +Z faces the room for west, -Z for east.
+    const side = isWest ? 1 : -1;
+    const edge: [number, number, number] = [0, 45, side * 28];
+    const floor: [number, number, number] = [0, 0, side * 52];
     return [
-      { type: 'MOVE_TO', targetPos: floorEntryPos, smartObjectId: obj.id },
-      { type: 'MOVE_TO', targetPos: bedEdgePos, smartObjectId: obj.id },
+      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id },
+      { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, navigation: 'interaction' },
       baseInstruction,
-      { type: 'MOVE_TO', targetPos: bedEdgePos, smartObjectId: obj.id },
-      { type: 'MOVE_TO', targetPos: floorEntryPos, smartObjectId: obj.id },
+      { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, navigation: 'interaction' },
+      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id },
     ];
   }
 
@@ -1075,10 +1073,9 @@ export function buildSmartObjectInstructionSequence(
 
   if (objectId === 'shower') {
     return [
-      { type: 'MOVE_TO', targetWaypointId: 'bathroom-shower-entry', rotY: 0 },
-      { type: 'MOVE_TO', smartObjectId: 'shower', slotId: slot.slotId },
+      { type: 'MOVE_TO', smartObjectId: 'shower', slotId: slot.slotId, rotY: 0 },
       baseInstruction,
-      { type: 'MOVE_TO', targetWaypointId: 'bathroom-shower-entry', rotY: Math.PI },
+      { type: 'MOVE_TO', smartObjectId: 'shower', slotId: slot.slotId, rotY: Math.PI },
     ];
   }
 

@@ -42,6 +42,7 @@ export interface SmartObjectDef {
   rotationY?: number;         // Orientation monde de l'objet (optionnel si itemId présent)
   slots: InteractionSlot[];   // Slots d'interaction disponibles
   exclusive?: boolean;        // Si true, un seul personnage à la fois peut utiliser cet objet (exclusivité partagée par tous ses slots)
+  approachDoor?: import('./navigation/doorRequests').DoorKey;
 }
 
 export type ResolvedSmartObject = SmartObjectDef & {
@@ -70,19 +71,6 @@ export type InteractionType =
   | 'storage';
 
 /**
- * WAYPOINT : Repère spatial ponctuel [x, y, z] avec rotation optionnelle.
- * Sert au positionnement, au pathfinding et aux slots d'approche.
- */
-export interface Waypoint {
-  id: string;
-  name?: string;
-  x: number;
-  y?: number;
-  z: number;
-  rotationY?: number;
-}
-
-/**
  * SPATIAL ZONE : Volume englobant 3D (Pièce, Jardin, etc.)
  */
 export interface SpatialZoneDef {
@@ -103,7 +91,9 @@ export interface AgentInstruction {
   doorKey?: 'living' | 'glassRight';
   smartObjectId?: string; // target smart object ID
   slotId?: string; // specific slot inside the smart object
-  targetWaypointId?: string; // Waypoint cible pour la navigation
+  targetZoneId?: string; // Destination intentionnelle déduite de la géométrie de zone
+  navigation?: 'interaction'; // Transition locale autorisée uniquement avec son objet
+  targetLocalPos?: [number, number, number]; // Coordonnées locales du SmartObject, résolues au déplacement
   targetPos?: [number, number, number]; // direct position instead of waypoint
   actionId?: string; // for INTERACT
   animation?: string; // animation to play

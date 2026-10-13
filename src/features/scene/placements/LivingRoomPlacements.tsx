@@ -1,3 +1,4 @@
+import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getObjectActionIds } from '../objectActions';
 import { useState, useEffect } from 'react';
 import * as THREE from 'three';
@@ -149,13 +150,13 @@ function Beds() {
     <>
       <PositionTransition furnitureKey="bed-west-position" x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
         <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: westHoverActions } }}>
-          <UtakerFrame item={{ id: 'utaker-upper' } as any} hasTopper={!isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <NavigationObstacle id="bed-west" owner={isDouble ? 'bed-double' : 'bed-west'}><UtakerFrame item={{ id: 'utaker-upper' } as any} hasTopper={!isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
         </group>
       </PositionTransition>
 
       <PositionTransition furnitureKey="bed-east-position" x={eastPos.x} z={eastPos.z} ry={Math.PI / 2}>
         <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: eastHoverActions } }}>
-          <UtakerFrame item={{ id: 'utaker-lower' } as any} hasTopper={isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <NavigationObstacle id="bed-east" owner={isDouble ? 'bed-double' : 'bed-east'}><UtakerFrame item={{ id: 'utaker-lower' } as any} hasTopper={isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
         </group>
       </PositionTransition>
 
@@ -216,7 +217,7 @@ function Desks() {
       <PositionTransition furnitureKey="desk1-position" x={p1.x} z={p1.z} ry={p1.ry}>
         <group userData={{ hoverAction: { label: 'Bureau 1', actions: getObjectActionIds('desk-bollsidan-1') } }}>
           <group userData={{ animUnit: true }}>
-            <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
+            <NavigationObstacle id="desk-bollsidan-1"><Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} /></NavigationObstacle>
           </group>
         </group>
       </PositionTransition>
@@ -231,7 +232,7 @@ function Desks() {
           }
         }}>
           <group userData={{ animUnit: true }}>
-            <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
+            <NavigationObstacle id="desk-bollsidan-2"><Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} /></NavigationObstacle>
           </group>
         </group>
       </PositionTransition>
@@ -333,7 +334,7 @@ function Smorkull_() {
           ]
         }
       }}>
-        <Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="chair-office"><Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
     </PositionTransition>
   );
@@ -360,7 +361,7 @@ function AirPerformer_() {
   return (
     <PositionTransition furnitureKey="airperformer-position" x={p.x} z={p.z} ry={p.ry}>
       <group userData={{ skipMerge: true, animUnit: true, itemName: 'Air Performer', hoverAction: { label: 'Air Performer', actions: getObjectActionIds('air-performer') } }}>
-        <AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="air-performer"><AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
     </PositionTransition>
   );
@@ -425,15 +426,15 @@ export function LivingRoomFurniture() {
     <MergedStaticGroup name="merged-living-room-furniture">
       {/* Meubles Kallax (structure sans Drona ni Mannequins) */}
       <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax NW' }}>
-        <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noMannequins />
+        <NavigationObstacle id="kallax-nw"><KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noMannequins /></NavigationObstacle>
       </group>
 
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax NE' }}>
-        <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
+        <NavigationObstacle id="kallax-ne"><KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
       </group>
 
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax SE' }}>
-        <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noCaps />
+        <NavigationObstacle id="kallax-se" compound><KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noCaps /></NavigationObstacle>
       </group>
 
       {/* Lits et Bureaux */}
@@ -448,27 +449,27 @@ export function LivingRoomFurniture() {
 
       {/* Meuble Mackapär (structure sans Drona ni cintres) */}
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Meuble Mackapär' }}>
-        <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noHangers />
+        <NavigationObstacle id="mackapar"><MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noHangers /></NavigationObstacle>
       </group>
 
       {/* Rangement chaussures Grejig */}
       {[0, 18, 36].map(y => (
         <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true, itemName: `Range-chaussures Grejig ${y / 18 + 1}` }}>
-          <Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <NavigationObstacle id={`grejig-${y}`} owner="grejig"><Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
         </group>
       ))}
 
       {/* Poubelle Fniss Séjour */}
       <group position={[21, 1, 110]} userData={{ animUnit: true, itemName: 'Poubelle Fniss Séjour' }}>
-        <Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="fniss-living"><Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
 
       {/* Sacs Dimpa mur Ouest (posés au sol, utilisés comme poufs) */}
       <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Sac Dimpa Ouest 1' }}>
-        <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="dimpa-1"><Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
       <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Sac Dimpa Ouest 2' }}>
-        <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="dimpa-2"><Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );

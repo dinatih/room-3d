@@ -1,3 +1,5 @@
+import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
+import { doorRequested } from '../ai/navigation/doorRequests';
 /**
  * Porte-fenêtre double battant PVC blanc — 160×210cm total (seuil 20cm).
  * V2 : Deux battants ouvrants individuels, logique de dépendance physique,
@@ -9,7 +11,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
-import { computeDoorDynamics, DOOR_CONFIGS, DOOR_OPEN_RESPONSE, DOOR_CLOSE_RESPONSE, doorCollisionState } from '../doorObstacles';
+import { computeDoorDynamics, DOOR_CONFIGS, DOOR_OPEN_RESPONSE, DOOR_CLOSE_RESPONSE, doorCollisionState, glassShutterState } from '../doorObstacles';
 import { useDoorImpulse } from './useDoorImpulse';
 
 const W_TOTAL   = 160;
@@ -119,7 +121,8 @@ const metalMaterial = new THREE.MeshStandardMaterial({ color: '#cccccc', metalne
 const darkMetalMaterial = new THREE.MeshStandardMaterial({ color: '#555555', metalness: 0.7, roughness: 0.3 });
 const shutterMaterial = new THREE.MeshStandardMaterial({ color: '#dcdcdc', roughness: 0.4, metalness: 0.1 });
 
-export function GlassDoor({ actionState, onSize }: SceneItemProps) {
+export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemProps) {
+  const navigationEnabled = useNavigationEnabled() && !isPreview;
   const { invalidate } = useThree();
   const rightDoorRef = useRef<THREE.Group>(null!);
   const leftDoorRef = useRef<THREE.Group>(null!);
@@ -144,19 +147,20 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
   useFrame((_, delta) => {
     const s = stateRef.current;
-    const dynRight = computeDoorDynamics(DOOR_CONFIGS.glassRight);
-    const dynLeft = computeDoorDynamics(DOOR_CONFIGS.glassLeft);
-    const leftPush = Math.max(dynLeft.push, leftImpulse(delta));
+    if (navigationEnabled) glassShutterState.clearHeight = SILL_H + GLASS_H * (1 - shutterPercentRef.current / 100);
+    const dynRight = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassRight) : { allowed: DOOR_CONFIGS.glassRight.maxAngle, push: 0 };
+    const dynLeft = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassLeft) : { allowed: DOOR_CONFIGS.glassLeft.maxAngle, push: 0 };
+    const leftPush = Math.max(dynLeft.push, leftImpulse(delta), navigationEnabled && doorRequested('glassLeft') ? dynLeft.allowed : 0);
     const rightTarget = Math.min(
       dynRight.allowed,
-      Math.max(dynRight.push, rightImpulse(delta), leftPush, Math.abs(leftRotRef.current))
+      Math.max(dynRight.push, rightImpulse(delta), leftPush, Math.abs(leftRotRef.current), navigationEnabled && doorRequested('glassRight') ? dynRight.allowed : 0)
     );
     const rightClearsLeft = rightRotRef.current >= Math.atan2(FRAME_D_V2, PANEL_W);
     const leftTarget = -Math.min(dynLeft.allowed, rightClearsLeft ? leftPush : 0);
     const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
 
-    doorCollisionState.glassRight.angle = rightRotRef.current;
-    doorCollisionState.glassLeft.angle = leftRotRef.current;
+    if (navigationEnabled) doorCollisionState.glassRight.angle = rightRotRef.current;
+    if (navigationEnabled) doorCollisionState.glassLeft.angle = leftRotRef.current;
 
     if (leftRotRef.current === leftTarget && rightRotRef.current === rightTarget && shutterPercentRef.current === targetShutter) {
       return;
@@ -184,8 +188,8 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
       moved = true;
     }
 
-    doorCollisionState.glassRight.angle = rightRotRef.current;
-    doorCollisionState.glassLeft.angle = leftRotRef.current;
+    if (navigationEnabled) doorCollisionState.glassRight.angle = rightRotRef.current;
+    if (navigationEnabled) doorCollisionState.glassLeft.angle = leftRotRef.current;
 
     // Animation du volet roulant (0 à 100%)
     const dShutter = targetShutter - shutterPercentRef.current;

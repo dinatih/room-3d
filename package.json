@@ -20,6 +20,7 @@
     "3d-tiles-renderer": "^0.4.24",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.13.1",
+    "polygon-clipping": "^0.15.7",
     "r3f-perf": "^7.2.3",
     "react": "^18",
     "react-dom": "^18",

@@ -68,7 +68,6 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   aiZones: false,
   npcCollisions: true,
   debugNpcCollisions: false,
-  furnitureCollisions: true,
   debugFurnitureCollisions: false,
   // Terrain
   bermudaGrass: true,

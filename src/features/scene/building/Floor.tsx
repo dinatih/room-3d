@@ -3,6 +3,7 @@
  */
 import { useMemo } from 'react';
 import * as THREE from 'three';
+import { NEIGHBOR_OFFSETS, EXTERIOR_CORRIDOR } from '../environmentData';
 import { useSceneStore } from '../store/useSceneStore';
 import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
@@ -467,8 +468,8 @@ export function BathSkirting() {
 }
 
 export function RedPVCCorridor() {
-  const WIDTH = 120;
-  const TOTAL_LENGTH = 1200;
+  const WIDTH = EXTERIOR_CORRIDOR.width;
+  const TOTAL_LENGTH = EXTERIOR_CORRIDOR.length;
   const dCenter = DiagWall.len / 2;
   const center = DiagWall.p(dCenter, DiagWall.depth / 2 + WIDTH / 2);
 
@@ -596,8 +597,7 @@ export function Floor() {
         <group name="slab-group" userData={{ itemName: 'Dalle Béton' }}>
           <MergedStaticGroup name="merged-slab">
             <SlabUnit x={0} z={0} />
-            <SlabUnit x={ 346} z={-199.76} />
-            <SlabUnit x={-346} z={ 199.76} />
+            {NEIGHBOR_OFFSETS.map(p => <SlabUnit key={p.x} x={p.x} z={p.z} />)}
           </MergedStaticGroup>
         </group>
 

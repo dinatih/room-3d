@@ -1,3 +1,5 @@
+import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
+import { doorRequested } from '../ai/navigation/doorRequests';
 /**
  * Porte d'entrée rouge — 90×204cm, charnière gauche, ouvre à -120°.
  * Encadrement rouge (extérieur) + blanc (intérieur).
@@ -81,7 +83,8 @@ const metalHandleMaterial = new THREE.MeshStandardMaterial({ color: '#999999', m
 const knobMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', metalness: 0.3, roughness: 0.4 });
 const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.85, metalness: 0.05 });
 
-export function DoorEntry({ onSize }: SceneItemProps) {
+export function DoorEntry({ onSize, isPreview = false }: SceneItemProps) {
+  const navigationEnabled = useNavigationEnabled() && !isPreview;
   const doorRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
   const impulse = useDoorImpulse('entryDoor', DOOR_CONFIGS.entry.maxAngle);
@@ -94,10 +97,10 @@ export function DoorEntry({ onSize }: SceneItemProps) {
   }, []);
 
   useFrame((_, delta) => {
-    const { allowed, push } = computeDoorDynamics(DOOR_CONFIGS.entry);
-    const target = -Math.min(allowed, Math.max(push, impulse(delta)));
+    const { allowed, push } = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.entry) : { allowed: DOOR_CONFIGS.entry.maxAngle, push: 0 };
+    const target = -Math.min(allowed, Math.max(push, impulse(delta), navigationEnabled && doorRequested('entry') ? allowed : 0));
     const current = doorRef.current.rotation.y;
-    doorCollisionState.entry.angle = current;
+    if (navigationEnabled) doorCollisionState.entry.angle = current;
     if (current === target) return;
     const difference = target - current;
     if (Math.abs(difference) > 0.001) {
@@ -108,7 +111,7 @@ export function DoorEntry({ onSize }: SceneItemProps) {
       doorRef.current.rotation.y = target;
       invalidate();
     }
-    doorCollisionState.entry.angle = doorRef.current.rotation.y;
+    if (navigationEnabled) doorCollisionState.entry.angle = doorRef.current.rotation.y;
   });
 
   return (

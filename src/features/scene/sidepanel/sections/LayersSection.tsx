@@ -316,9 +316,8 @@ export function LayersSection({
       {layerBtn('purple',    'Miroirs HD (Haute déf) (Alt+G)', 'mirrorsHD')}
       {layerBtn('cyan',      iconLabel('bi-robot', 'Zones IA (Alt+Z)'), 'aiZones')}
       {layerBtn('blue',   iconLabel('bi-people', 'Collisions inter-PNJ'), 'npcCollisions')}
-      {layers.npcCollisions && layerBtn('cyan', iconLabel('bi-circle', 'Debug PNJ (Rayon 70cm)'), 'debugNpcCollisions')}
-      {layerBtn('blue',   iconLabel('bi-house-gear', 'Collisions objets/meubles'), 'furnitureCollisions')}
-      {layers.furnitureCollisions && layerBtn('cyan', iconLabel('bi-rulers', 'Debug Objets/Meubles'), 'debugFurnitureCollisions')}
+      {layers.npcCollisions && layerBtn('cyan', iconLabel('bi-circle', 'Debug gabarits PNJ'), 'debugNpcCollisions')}
+      {layerBtn('cyan', iconLabel('bi-rulers', 'Debug trajets et obstacles'), 'debugFurnitureCollisions')}
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('gray',   iconLabel('bi-person-fill', 'Ombres personnage'), 'characterShadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}

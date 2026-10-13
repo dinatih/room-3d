@@ -29,7 +29,9 @@ import { LAYER_WALKER_DETAIL } from '@config';
 import { ACTION_FULL_TOUR, buildAutonomousScenario } from '../ai/scenarios';
 import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController, resetAgentDeployment } from '../ai/useAgentController';
-import { separateAgentFromDoors } from '../ai/agent/agentAvoidance';
+import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
+import { measureHumanProfile } from '../ai/navigation/profiles';
+import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform } from '../animations/animationResolver';
@@ -134,6 +136,7 @@ export function Character({
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const aiFullTour = useSceneStore(state => state.extraStates.aiFullTour);
 
+  const navigationEnabled = useNavigationEnabled();
   const renderId = instanceId ?? (isPreview ? `${id}:preview` : id);
   const { scene } = useGLTFClone(modelPath, isGridPartner);
   const charLabel = name || (isNPC ? `PNJ (${id})` : `Personnage (${id})`);
@@ -350,7 +353,6 @@ export function Character({
     setPosition: setAgentPosition,
     setRotation: setAgentRotation,
     hasPendingDynamicTask,
-    getStatus: getAgentStatus,
     initialPos,
   } = useAgentController(
     renderId,
@@ -385,7 +387,7 @@ export function Character({
     spawnDelay,
     hasSkyDrop,
     'pistol-kneel-to-stand',
-    !isGridPartner
+    !isGridPartner && navigationEnabled
   );
 
   // Synchronisation initiale des coordonnées caméra/character actif dès le montage
@@ -463,7 +465,9 @@ export function Character({
 
     hairChainRef.current = isLara ? buildHairChain(parts.bones.nativeHairBones) : [];
     baseScenePosRef.current.copy(scene.position);
-  }, [scene, parts, isLara, targetHeight, variant, id, laraRealisticTextures]);
+    if (navigationEnabled && !isPreview && !isGridPartner) setAgentProfile(renderId, measureHumanProfile(scene, targetHeight));
+    return () => { if (navigationEnabled && !isPreview && !isGridPartner) removeAgentProfile(renderId); };
+  }, [scene, parts, isLara, targetHeight, variant, id, renderId, isPreview, isGridPartner, navigationEnabled, laraRealisticTextures]);
 
   // Textures réalistes (peau et tissus mats) pour les Lara
   useEffect(() => {
@@ -700,8 +704,7 @@ export function Character({
 
         if (hasDynamicTask || isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
           const agentState = updateAgent(delta);
-          const agentStatus = getAgentStatus();
-          if (agentStatus === 'INTERACTING' || agentStatus === 'FINISHED') separateAgentFromDoors(agentState);
+
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
           currentAnimClip.current = agentState.animation;
@@ -729,8 +732,7 @@ export function Character({
         }
       } else if (isNPC) {
         const agentState = updateAgent(delta);
-        const agentStatus = getAgentStatus();
-        if (agentStatus === 'INTERACTING' || agentStatus === 'FINISHED') separateAgentFromDoors(agentState);
+
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
         groupRef.current.rotation.y = agentState.rotY;
         currentAnimClip.current = agentState.animation;

@@ -6,6 +6,7 @@ import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 
+import { NEIGHBOR_OFFSETS } from './environmentData';
 import { wallsGroupRef } from './Building';
 import { LAYER_NEIGHBORS } from '@config';
 import { useSceneStore } from './store/useSceneStore';
@@ -53,8 +54,7 @@ function NeighborApartment({ offsetX, offsetZ }: { offsetX: number; offsetZ: num
 export function Neighbors() {
   return (
     <>
-      <NeighborApartment offsetX={-346} offsetZ={199.76} />
-      <NeighborApartment offsetX={346}  offsetZ={-199.76} />
+      {NEIGHBOR_OFFSETS.map(p => <NeighborApartment key={p.x} offsetX={p.x} offsetZ={p.z} />)}
     </>
   );
 }
