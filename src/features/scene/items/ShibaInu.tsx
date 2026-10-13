@@ -10,13 +10,24 @@ import { isAppIdle } from '@features/scene/idleState';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { glbLocalBBox } from '../glbUtils';
 import { getObjectActionIds } from '../objectActions';
+import { getAnimationOriginTransform } from '../animations/animationResolver';
 
 const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
-const DANCE_RADIUS = 75; // cm devant le partenaire
-const DANCE_FREQUENCY = 2.5;
-const DANCE_ARC = 0.45;
-const DANCE_ROT_Y = -Math.PI / 2; // Essai demandé : −90° pendant la danse.
+const DANCE_RADIUS = 75; // cm du partenaire
+const WALK_SPEED = 50; // cm/s, approche avec Dog|Walk
 const _tmpDogDir = new THREE.Vector3();
+
+function dogDanceTarget(x: number, y: number, z: number, yaw: number) {
+  const { offset, rotY } = getAnimationOriginTransform('ff-dancewithdog');
+  // Dans le clip Free Fire, le personnage se tourne vers son compagnon sur +X.
+  const angle = yaw + rotY + Math.PI / 2;
+  return {
+    x: x + offset[0] * Math.cos(yaw) + offset[2] * Math.sin(yaw) + Math.sin(angle) * DANCE_RADIUS,
+    y,
+    z: z - offset[0] * Math.sin(yaw) + offset[2] * Math.cos(yaw) + Math.cos(angle) * DANCE_RADIUS,
+    yaw: angle + Math.PI,
+  };
+}
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
@@ -34,7 +45,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
   const playingRef = useRef(false);
-  const danceRef = useRef({ owner: null as string | null, elapsed: 0 });
+  const danceRef = useRef({ owner: null as string | null, jumping: false });
   
   const showSkeletonGlobal = useSceneStore(s => s.layers.skeleton);
   const showSkeleton = isPreview ? showSkeletonPreview : showSkeletonGlobal;
@@ -106,8 +117,9 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       modelRef.current.rotation.y = -Math.PI / 4;
     }
     if (modelRef.current && isPreview && dancePreview) {
-      modelRef.current.position.set(0, 0, DANCE_RADIUS);
-      modelRef.current.rotation.y = Math.PI + DANCE_ROT_Y;
+      const target = dogDanceTarget(0, 0, 0, 0);
+      modelRef.current.position.set(target.x, target.y, target.z);
+      modelRef.current.rotation.y = target.yaw;
     }
 
     invalidate();
@@ -163,9 +175,9 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       action.time = time % clip.duration;
       action.paused = true;
       mixerRef.current.update(0);
-      const angle = Math.sin(time * DANCE_FREQUENCY) * DANCE_ARC;
-      modelRef.current.position.set(Math.sin(angle) * DANCE_RADIUS, 0, Math.cos(angle) * DANCE_RADIUS);
-      modelRef.current.rotation.y = angle + Math.PI + DANCE_ROT_Y;
+      const target = dogDanceTarget(0, 0, 0, 0);
+      modelRef.current.position.set(target.x, target.y, target.z);
+      modelRef.current.rotation.y = target.yaw;
       invalidate();
       return;
     }
@@ -230,28 +242,37 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
         const dance = danceRef.current;
         if (dance.owner !== dancingId) {
           dance.owner = dancingId;
-          dance.elapsed = 0;
+          dance.jumping = false;
           mixerRef.current.stopAllAction();
-          const jumpClip = animations.find(clip => clip.name === 'Dog|Jump');
-          if (!jumpClip) throw new Error('Shiba choreography requires Dog|Jump');
-          mixerRef.current.clipAction(jumpClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
+          const walkClip = animations.find(clip => clip.name === 'Dog|Walk');
+          if (!walkClip) throw new Error('Shiba choreography requires Dog|Walk');
+          mixerRef.current.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
         }
-        dance.elapsed += delta;
-        const t = dance.elapsed;
-        // Décalage orbital fluide autour du maître (courbe de danse)
-        const danceRadius = DANCE_RADIUS;
-        const angle = dancingChar.yaw + Math.sin(t * DANCE_FREQUENCY) * DANCE_ARC;
-        const targetX = dancingChar.x + Math.sin(angle) * danceRadius;
-        const targetZ = dancingChar.z + Math.cos(angle) * danceRadius;
-
-        modelRef.current.position.x += (targetX - modelRef.current.position.x) * Math.min(1.0, delta * 6.0);
-        modelRef.current.position.z += (targetZ - modelRef.current.position.z) * Math.min(1.0, delta * 6.0);
-        // Le chien regarde son maître en dansant
-        const faceOwnerYaw = Math.atan2(dancingChar.x - modelRef.current.position.x, dancingChar.z - modelRef.current.position.z) + DANCE_ROT_Y;
-        let yawDiff = faceOwnerYaw - modelRef.current.rotation.y;
-        while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
-        while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
-        modelRef.current.rotation.y += yawDiff * Math.min(1.0, delta * 8.0);
+        const target = dogDanceTarget(dancingChar.x, dancingChar.y, dancingChar.z, dancingChar.yaw);
+        const direction = _tmpDogDir.set(target.x, target.y, target.z).sub(modelRef.current.position);
+        const distance = direction.length();
+        const step = WALK_SPEED * delta;
+        if (distance > step) {
+          if (dance.jumping) {
+            dance.jumping = false;
+            mixerRef.current.stopAllAction();
+            const walkClip = animations.find(clip => clip.name === 'Dog|Walk');
+            if (!walkClip) throw new Error('Shiba choreography requires Dog|Walk');
+            mixerRef.current.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
+          }
+          modelRef.current.position.addScaledVector(direction.normalize(), step);
+          modelRef.current.rotation.y = Math.atan2(direction.x, direction.z);
+        } else {
+          modelRef.current.position.set(target.x, target.y, target.z);
+          modelRef.current.rotation.y = target.yaw;
+          if (!dance.jumping) {
+            dance.jumping = true;
+            mixerRef.current.stopAllAction();
+            const jumpClip = animations.find(clip => clip.name === 'Dog|Jump');
+            if (!jumpClip) throw new Error('Shiba choreography requires Dog|Jump');
+            mixerRef.current.clipAction(jumpClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
+          }
+        }
 
       } else {
         const ai = aiStateRef.current;

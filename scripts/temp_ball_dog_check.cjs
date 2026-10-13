@@ -1,4 +1,58 @@
 const puppeteer = require('puppeteer');
+async function reviewDance(browser) {
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1100, height: 850 });
+  page.on('pageerror', error => console.error(error.message));
+  await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5185'}/AGENTS.md`);
+  await page.evaluate(async () => {
+    (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
+    window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => type => type;
+    window.__vite_plugin_react_preamble_installed__ = true;
+    const React = (await import('/node_modules/.vite/deps/react.js')).default;
+    const { createRoot } = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
+    const { Canvas, useThree } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
+    const THREE = await import('/node_modules/.vite/deps/three.js');
+    (await import('/node_modules/.vite/deps/@react-three_drei.js')).useGLTF.setDecoderPath('/draco/');
+    const { SCENE_REGISTRY } = await import('/src/features/inventory/previewRegistry.tsx');
+    const { useAnimPreviewStore } = await import('/src/features/inventory/useAnimPreviewStore.ts');
+    document.body.innerHTML = '<div id="fixture" style="height:100vh"></div>';
+    document.body.style.margin = '0';
+    function Capture() {
+      window.f = { ...useThree(), THREE, useAnimPreviewStore };
+      window.f.camera.layers.enableAll();
+      return null;
+    }
+    const e = React.createElement;
+    createRoot(document.getElementById('fixture')).render(e(Canvas, { camera: { position: [220, 160, 240], near: 1, far: 2000 } }, e(Capture),
+      e('color', { attach: 'background', args: ['#d2d2d2'] }), e('ambientLight', { intensity: 2 }),
+      e(React.Suspense, { fallback: null }, e(SCENE_REGISTRY.native, { actionState: { characterAnim: 'ff-dancewithdog' } }))));
+  });
+  await page.waitForFunction(() => window.f?.useAnimPreviewStore.getState().clipName.toLowerCase().includes('dog'), { timeout: 60000 });
+  for (const time of [0, 0.2, 0.4, 0.6, 0.8, 1, 2, 4, 6]) {
+    console.log(JSON.stringify(await page.evaluate(time => {
+      const f = window.f;
+      f.setFrameloop('never');
+      f.useAnimPreviewStore.getState().pause();
+      f.useAnimPreviewStore.getState().seekToTime(time);
+      f.advance(f.clock.elapsedTime + 1 / 60);
+      f.camera.lookAt(0, 80, 0); f.camera.updateMatrixWorld(true);
+      f.scene.updateMatrixWorld(true);
+      const names = ['head_neck_upper', 'head_eyeball_left', 'head_eyeball_right', 'Dogger_head_j', 'Dogger_jaw_j', 'Dogger_forefoot_l_j', 'Dogger_root_j'];
+      const bones = names.map(name => { const bone = f.scene.getObjectByName(name); return { name, world: bone.getWorldPosition(new f.THREE.Vector3()).toArray(), z: new f.THREE.Vector3(0,0,1).transformDirection(bone.matrixWorld).toArray() }; });
+      const head = new f.THREE.Vector3(...bones[0].world);
+      const dogHead = new f.THREE.Vector3(...bones[3].world);
+      const humanFacingDog = new f.THREE.Vector3(...bones[0].z).dot(dogHead.clone().sub(head).normalize());
+      const muzzle = new f.THREE.Vector3(...bones[4].world).sub(dogHead); muzzle.y = 0; muzzle.normalize();
+      const humanRoot = f.scene.getObjectByName('Native').getWorldPosition(new f.THREE.Vector3());
+      const towardsHuman = humanRoot.sub(dogHead); towardsHuman.y = 0; towardsHuman.normalize();
+      const dogFacingHuman = muzzle.dot(towardsHuman);
+      if ((time === 2 || time === 4) && humanFacingDog < 0.9) throw new Error(`Human gaze misses dog at ${time}: ${humanFacingDog}`);
+      if (dogFacingHuman < 0.95) throw new Error(`Dog muzzle faces away at ${time}: ${dogFacingHuman}`);
+      return { time, humanFacingDog, dogFacingHuman };
+    }, time)));
+    await page.screenshot({ path: `/tmp/room-dog-review-${time}.png` });
+  }
+}
 if (process.argv.includes('--inspect-model')) {
   const data = require('node:fs').readFileSync('public/characters/ushiro/shiba_inu_dog_ushiro.glb');
   const gltf = JSON.parse(data.subarray(20, 20 + data.readUInt32LE(12)).toString());
@@ -8,12 +62,13 @@ if (process.argv.includes('--inspect-model')) {
 (async () => {
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   try {
+    if (process.argv.includes('--dance-review')) { await reviewDance(browser); return; }
     const page = await browser.newPage();
     await page.setViewport({ width: 1100, height: 850 });
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     page.on('console', message => { if (message.type() === 'error') console.error(message.text()); });
-    await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5182'}/AGENTS.md`);
+    await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5185'}/AGENTS.md`);
     await page.evaluate(async () => {
       (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
       window.$RefreshReg$ = () => {};
@@ -146,16 +201,31 @@ if (process.argv.includes('--inspect-model')) {
       const contactStart = ball.position.clone();
       tick(0.5);
       check(ball.position.distanceTo(contactStart) > 2, 'NPC contact in rotated tub must push ball');
-      f.cameraState.positions['fixture-user'] = { x: 120, y: 0, z: -300, yaw: Math.PI / 2, anim: 'ff-dancewithdog' };
+      window.actorEnabled = false;
+      f.cameraState.positions.xbot.anim = 'idle';
+      f.cameraState.positions['fixture-user'] = { x: dog.position.x - 75, y: 0, z: dog.position.z, yaw: 0, anim: 'ff-dancewithdog' };
       tick(3);
-      check(Math.abs(Math.hypot(dog.position.x - 120, dog.position.z + 300) - 75) < 5, 'Dog must dance 75 cm from owner');
+      const owner = f.cameraState.positions['fixture-user'];
+      check(Math.abs(Math.hypot(dog.position.x - owner.x, dog.position.z - owner.z) - 75) < 1e-6, 'Dog must dance 75 cm from owner');
       const dogStart = dog.position.clone();
-      let orbitTravel = 0;
+      let jumpDrift = 0;
       for (let i = 0; i < 60; i++) {
         tick(1 / 60);
-        orbitTravel = Math.max(orbitTravel, dog.position.distanceTo(dogStart));
+        jumpDrift = Math.max(jumpDrift, dog.position.distanceTo(dogStart));
       }
-      check(orbitTravel > 5, 'Dog must orbit while dancing');
+      check(jumpDrift < 1e-6, 'Dog must jump on the spot without sliding');
+      for (const yaw of [0, Math.PI / 2, Math.PI]) {
+        owner.yaw = yaw;
+        owner.x = dog.position.x - Math.cos(yaw) * 75;
+        owner.z = dog.position.z + Math.sin(yaw) * 75;
+        tick(0.4);
+        dog.updateMatrixWorld(true);
+        const head = dog.getObjectByName('Dogger_head_j').getWorldPosition(new f.THREE.Vector3());
+        const jaw = dog.getObjectByName('Dogger_jaw_j').getWorldPosition(new f.THREE.Vector3());
+        const muzzle = jaw.sub(head); muzzle.y = 0; muzzle.normalize();
+        const towardsOwner = new f.THREE.Vector3(owner.x - head.x, 0, owner.z - head.z).normalize();
+        check(muzzle.dot(towardsOwner) > 0.95, 'Dog muzzle must face owner at every scene orientation');
+      }
       const bones = [];
       dog.traverse(o => { if (o.isBone) bones.push(o); });
       const pose = bones.map(b => b.position.clone());
@@ -165,7 +235,7 @@ if (process.argv.includes('--inspect-model')) {
       const end = dog.position.clone();
       tick(3);
       check(dog.position.distanceTo(end) > 10, 'Dog must resume autonomous walking');
-      return { diameter: 25, horizontalDrift: true, smartObjectImpulse: true, roundedWallRebound: true, rotatedNpcContact: true, dogOrbit: true, animatedJump: true, dogResumesWalking: true };
+      return { diameter: 25, horizontalDrift: true, smartObjectImpulse: true, roundedWallRebound: true, rotatedNpcContact: true, dogFacesOwner: true, plantedJump: true, animatedJump: true, dogResumesWalking: true };
     });
     await page.evaluate(() => window.mountPreview());
     await page.waitForFunction(() => window.previewReady, { timeout: 60000 });
@@ -190,7 +260,7 @@ if (process.argv.includes('--inspect-model')) {
       dog.traverse(o => { if (o.isBone) bones.push(o); });
       const pose = bones.map(b => ({ position: b.position.clone(), rotation: b.quaternion.clone() }));
       seek(0.45);
-      if (dog.position.distanceTo(start) < 5) throw new Error('Preview dog orbit must follow timeline scrubbing');
+      if (dog.position.distanceTo(start) > 1e-6) throw new Error('Preview dog must stay planted during timeline scrubbing');
       if (!bones.some((bone, i) => bone.position.distanceTo(pose[i].position) > 0.001 || bone.quaternion.angleTo(pose[i].rotation) > 0.001)) throw new Error('Preview jump skeleton must follow timeline scrubbing');
       const paused = dog.position.clone();
       f.advance(f.clock.elapsedTime + 1);
@@ -224,8 +294,20 @@ if (process.argv.includes('--inspect-model')) {
     });
     await page.waitForFunction(() => Math.abs(window.f.useAnimPreviewStore.getState().currentTime - 4.56) < 0.01);
     await page.screenshot({ path: '/tmp/room-shiba-inventory-fixed.png' });
+    for (const time of [0, 1, 2, 4, 6]) {
+      await page.evaluate(time => window.f.useAnimPreviewStore.getState().seekToTime(time), time);
+      await page.waitForFunction(time => Math.abs(window.f.useAnimPreviewStore.getState().currentTime - time) < 0.01, {}, time);
+      await new Promise(resolve => setTimeout(resolve, 150));
+      console.log(JSON.stringify(await page.evaluate(() => {
+        const scene = window.__THREE_SCENE__;
+        scene.updateMatrixWorld(true);
+        const dog = scene.getObjectByName('shiba-inu');
+        return { time: window.f.useAnimPreviewStore.getState().currentTime, dogPosition: dog.position.toArray(), dogYaw: dog.rotation.y };
+      })));
+      await page.screenshot({ path: `/tmp/room-dog-dance-${time}.png` });
+    }
     if (errors.length) throw new Error(errors.join('\n'));
     console.log(JSON.stringify(results));
-    console.log('Dog hover click, active character action, NPC action, inventory companion, scrub/pause and preview isolation validated');
+    console.log('Chrome: dog menu, NPC action, muzzle direction, stationary jumps, inventory timeline and isolation validated');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
