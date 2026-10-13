@@ -1,351 +1,114 @@
-import { AgentInstruction } from './aiTypes';
-import { BATH_NORTH_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL, KITCHEN_WEST_WALL, ROOM_SOUTH_WALL } from '../wallData';
+import type { AgentInstruction } from './aiTypes';
+import {
+  BATH_EAST_WALL, BATH_NORTH_WALL, BATH_WEST_WALL, CORRIDOR_EAST_WALL,
+  CORRIDOR_NORTH_WALL, DiagWall, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL,
+  KITCHEN_WEST_WALL, ROOM_EAST_WALL, ROOM_NORTH_WALL, ROOM_SOUTH_WALL,
+} from '../wallData';
 
 export type RoomId =
-  | 'living'
-  | 'corridor'
-  | 'bathroom'
-  | 'garden'
-  | 'west_neighbor'
-  | 'east_neighbor'
-  | 'outdoor_corridor'
-  | 'outdoor_garden';
+  | 'living' | 'corridor' | 'bathroom' | 'garden'
+  | 'west_neighbor' | 'east_neighbor' | 'outdoor_corridor' | 'outdoor_garden';
 
-/**
- * Détermine la pièce (RoomId) à partir de coordonnées 2D (x, z).
- * Repères architecturaux de l'appartement :
- * - Séjour (living) : jusqu'au mur sud, avec la niche cuisine ouverte sur le séjour
- * - Couloir (corridor) : 192 <= X <= 310 et 400 < Z <= 580
- * - Salle de bain (bathroom) : -10 <= X < 192, à partir de BATH_NORTH_WALL jusqu'à Z=680
- * - Jardin intérieur / terrasse nord (garden) : -10 <= X <= 300 et -420 <= Z < 0
- * - Studio voisin Ouest (west_neighbor) : X < -10 et 0 <= Z <= 750 (terrasse à Z~100)
- * - Studio voisin Est (east_neighbor) : X > 300 et -420 <= Z <= 350 (terrasse à Z~-250)
- * - Extérieur Couloir / Sortie Sud-Ouest (outdoor_corridor) : Z > 680, ou (X > 270 && Z > 580), ou (X < -10 && Z > 750), ou (X > 300 && Z > 350)
- * - Extérieur Cours / Jardin Ouest & Grand Nord (outdoor_garden) : X < -100 et Z <= 0, ou Z < -420
- */
+// Limites des zones de navigation extérieures, sans équivalent dans wallData.
+const EXTERIOR_LIMITS = { westNeighborSouth: 750, eastNeighborSouth: 350, gardenNorth: -420, courtyardEast: -100 };
+
 export function getRoomFromCoords(x: number, z: number): RoomId {
-  // La niche cuisine prolonge le séjour au-delà de sa cloison sud.
-  // La tester avant la SDB et le couloir pour conserver les passages par les portes.
-  if (
-    (x >= -10 && x <= 300 && z >= 0 && z <= ROOM_SOUTH_WALL) ||
-    (x >= KITCHEN_WEST_WALL && x <= KITCHEN_EAST_WALL && z >= ROOM_SOUTH_WALL && z <= KITCHEN_SOUTH_WALL)
-  ) {
-    return 'living';
-  }
+  if (!Number.isFinite(x) || !Number.isFinite(z)) throw new Error(`Invalid navigation coordinates: (${x}, ${z})`);
 
-  // Salle de bain complète (inclut le receveur de douche jusqu'à Z=680 et les sanitaires)
-  if (x >= -10 && x < 192 && z >= BATH_NORTH_WALL && z <= 680) {
-    return 'bathroom';
-  }
+  const insideWidth = x >= BATH_WEST_WALL && x <= ROOM_EAST_WALL;
+  const diagonalZ = DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
 
-  // Couloir intérieur (Z > 400 et X >= 192 jusqu'à la porte d'entrée)
-  if (x >= 192 && x <= 310 && z >= 400 && z <= 580) {
-    return 'corridor';
-  }
+  // La cuisine est une extension du séjour, ouverte au nord.
+  if (insideWidth && z >= ROOM_NORTH_WALL && z <= ROOM_SOUTH_WALL) return 'living';
+  if (x >= KITCHEN_WEST_WALL && x <= KITCHEN_EAST_WALL && z >= ROOM_SOUTH_WALL && z <= KITCHEN_SOUTH_WALL) return 'living';
+  if (insideWidth && x < BATH_EAST_WALL && z >= BATH_NORTH_WALL && z <= diagonalZ) return 'bathroom';
+  if (x >= BATH_EAST_WALL && x <= CORRIDOR_EAST_WALL && z >= CORRIDOR_NORTH_WALL && z <= diagonalZ) return 'corridor';
 
-  // Studio voisin Ouest (Églantine) & sa terrasse
-  if (x < -10 && z >= 0 && z <= 750) {
-    return 'west_neighbor';
-  }
+  if (x < BATH_WEST_WALL && z >= ROOM_NORTH_WALL && z <= EXTERIOR_LIMITS.westNeighborSouth) return 'west_neighbor';
+  if (x > ROOM_EAST_WALL && z >= EXTERIOR_LIMITS.gardenNorth && z <= EXTERIOR_LIMITS.eastNeighborSouth) return 'east_neighbor';
+  if (z > diagonalZ || (x < BATH_WEST_WALL && z > EXTERIOR_LIMITS.westNeighborSouth) || (x > ROOM_EAST_WALL && z > EXTERIOR_LIMITS.eastNeighborSouth)) return 'outdoor_corridor';
+  if ((x < EXTERIOR_LIMITS.courtyardEast && z <= ROOM_NORTH_WALL) || z < EXTERIOR_LIMITS.gardenNorth) return 'outdoor_garden';
+  if (z < ROOM_NORTH_WALL) return 'garden';
 
-  // Studio voisin Est (Damien) & sa terrasse
-  if (x > 300 && z >= -420 && z <= 350) {
-    return 'east_neighbor';
-  }
-
-  // Extérieur Bâtiment B (Sortie Couloir Sud-Ouest / Ruelle sud)
-  if ((x < -10 && z > 750) || z > 680 || (x > 270 && z > 580) || (x > 300 && z > 350)) {
-    return 'outdoor_corridor';
-  }
-
-  // Extérieur Bâtiment B (Cour Jardin Ouest / Nord)
-  if (x < -100 && z <= 0) {
-    return 'outdoor_garden';
-  }
-  if (z < -420) {
-    return 'outdoor_garden';
-  }
-
-  // Jardin intérieur / terrasse nord
-  if (z < 0) {
-    return 'garden';
-  }
-
-  // Zone sud couloir
-  if (z > 400) {
-    return 'corridor';
-  }
-
-  return 'living';
+  // Les seuils de portes et les volumes entre cloisons appartiennent au couloir.
+  return z > ROOM_SOUTH_WALL ? 'corridor' : 'living';
 }
 
+const move = (...waypoints: string[]): AgentInstruction[] =>
+  waypoints.map(targetWaypointId => ({ type: 'MOVE_TO', targetWaypointId }));
 
-
-/**
- * Définition d'un portail (passage entre deux pièces adjacentes).
- */
-export interface RoomPortal {
-  from: RoomId;
-  to: RoomId;
-  /** Instructions à exécuter pour traverser ce portail de `from` vers `to` */
-  traverseInstructions: AgentInstruction[];
-}
-
-export const ROOM_PORTALS: RoomPortal[] = [
-  // ── SÉJOUR <-> JARDIN (via Baie Vitrée) ──
-  {
-    from: 'living',
-    to: 'garden',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'living-glass-door' },
-      { type: 'MOVE_TO', targetWaypointId: 'garden-patio' }
-    ]
+// L'ordre des destinations départage les chemins de même longueur.
+const ROOM_PORTALS: Record<RoomId, Partial<Record<RoomId, AgentInstruction[]>>> = {
+  living: {
+    garden: move('living-glass-door', 'garden-patio'),
+    corridor: move('living-corridor-door', 'corridor-entry-door'),
   },
-  {
-    from: 'garden',
-    to: 'living',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'garden-patio' },
-      { type: 'MOVE_TO', targetWaypointId: 'living-glass-door' },
-      { type: 'MOVE_TO', targetPos: [200, 0, 80] } // Avance dans le salon
-    ]
+  corridor: {
+    living: move('living-corridor-door', 'living-from-corridor'),
+    bathroom: move('corridor-bathroom-door', 'bathroom-entry'),
+    outdoor_corridor: move('corridor-entry-door', 'outdoor-entry-door'),
   },
-
-  // ── SÉJOUR <-> COULOIR (via Porte Séjour) ──
-  {
-    from: 'living',
-    to: 'corridor',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'living-corridor-door' },
-      { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' }
-    ]
+  bathroom: {
+    corridor: move('bathroom-entry', 'corridor-bathroom-door'),
   },
-  {
-    from: 'corridor',
-    to: 'living',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'living-corridor-door' },
-      { type: 'MOVE_TO', targetPos: [230, 0, 320] } // Avance dans le salon
-    ]
+  garden: {
+    living: move('garden-patio', 'living-glass-door', 'living-from-garden'),
+    west_neighbor: move('outdoor-garden-west', 'west-neighbor-terrace'),
+    east_neighbor: move('garden-north', 'outdoor-garden-east', 'east-neighbor-terrace'),
+    outdoor_garden: move('outdoor-garden-west'),
   },
-
-  // ── COULOIR <-> SALLE DE BAIN (via Porte SDB) ──
-  {
-    from: 'corridor',
-    to: 'bathroom',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'corridor-bathroom-door' },
-      { type: 'MOVE_TO', targetWaypointId: 'bathroom-entry' }
-    ]
+  west_neighbor: {
+    garden: move('west-neighbor-terrace', 'outdoor-garden-west', 'garden-patio'),
+    outdoor_garden: move('west-neighbor-terrace', 'outdoor-garden-west'),
   },
-  {
-    from: 'bathroom',
-    to: 'corridor',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'bathroom-entry' },
-      { type: 'MOVE_TO', targetWaypointId: 'corridor-bathroom-door' }
-    ]
+  east_neighbor: {
+    garden: move('east-neighbor-terrace', 'outdoor-garden-east', 'garden-north', 'garden-patio'),
+    outdoor_garden: move('east-neighbor-terrace', 'outdoor-garden-east'),
   },
-
-  // ── COULOIR <-> COULOIR EXTÉRIEUR (via Porte d'entrée) ──
-  {
-    from: 'corridor',
-    to: 'outdoor_corridor',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' }
-    ]
-  },
-  {
-    from: 'outdoor_corridor',
-    to: 'corridor',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
-      { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' }
-    ]
-  },
-
-  // ── JARDIN <-> STUDIO VOISIN OUEST (Passage par la terrasse Ouest) ──
-  {
-    from: 'garden',
-    to: 'west_neighbor',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' },
-      { type: 'MOVE_TO', targetWaypointId: 'west-neighbor-terrace' }
-    ]
-  },
-  {
-    from: 'west_neighbor',
-    to: 'garden',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'west-neighbor-terrace' },
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' },
-      { type: 'MOVE_TO', targetWaypointId: 'garden-patio' }
-    ]
-  },
-
-  // ── JARDIN <-> STUDIO VOISIN EST (Contournement palissade bois vers terrasse Est) ──
-  {
-    from: 'garden',
-    to: 'east_neighbor',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'garden-north' },
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-east' },
-      { type: 'MOVE_TO', targetWaypointId: 'east-neighbor-terrace' }
-    ]
-  },
-  {
-    from: 'east_neighbor',
-    to: 'garden',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'east-neighbor-terrace' },
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-east' },
-      { type: 'MOVE_TO', targetWaypointId: 'garden-north' },
-      { type: 'MOVE_TO', targetWaypointId: 'garden-patio' }
-    ]
-  },
-
-  // ── JARDIN <-> COUR EXTÉRIEURE / JARDIN BÂTIMENT B ──
-  {
-    from: 'garden',
-    to: 'outdoor_garden',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' }
-    ]
-  },
-  {
-    from: 'outdoor_garden',
-    to: 'garden',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' },
-      { type: 'MOVE_TO', targetWaypointId: 'garden-patio' }
-    ]
-  },
-
-  // ── COUR EXTÉRIEURE <-> STUDIO VOISIN OUEST ──
-  {
-    from: 'outdoor_garden',
-    to: 'west_neighbor',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' },
-      { type: 'MOVE_TO', targetWaypointId: 'west-neighbor-terrace' }
-    ]
-  },
-  {
-    from: 'west_neighbor',
-    to: 'outdoor_garden',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'west-neighbor-terrace' },
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' }
-    ]
-  },
-
-  // ── COUR EXTÉRIEURE <-> STUDIO VOISIN EST ──
-  {
-    from: 'outdoor_garden',
-    to: 'east_neighbor',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-east' },
-      { type: 'MOVE_TO', targetWaypointId: 'east-neighbor-terrace' }
-    ]
-  },
-  {
-    from: 'east_neighbor',
-    to: 'outdoor_garden',
-    traverseInstructions: [
-      { type: 'MOVE_TO', targetWaypointId: 'east-neighbor-terrace' },
-      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-east' }
-    ]
-  },
-
-  // ── COURS EXTÉRIEURE <-> COULOIR EXTÉRIEUR (Passage direct Cour Bât B) ──
-  {
-    from: 'outdoor_corridor',
-    to: 'outdoor_garden',
-    traverseInstructions: [
+  outdoor_corridor: {
+    corridor: move('outdoor-entry-door', 'corridor-entry-door'),
+    outdoor_garden: [
       { type: 'MOVE_TO', smartObjectId: 'building-b-corridor', slotId: 'visit' },
-      { type: 'MOVE_TO', smartObjectId: 'building-b-garden', slotId: 'admire' }
-    ]
-  },
-  {
-    from: 'outdoor_garden',
-    to: 'outdoor_corridor',
-    traverseInstructions: [
       { type: 'MOVE_TO', smartObjectId: 'building-b-garden', slotId: 'admire' },
-      { type: 'MOVE_TO', smartObjectId: 'building-b-corridor', slotId: 'visit' }
-    ]
-  }
-];
-
-/** Graphe d'adjacence des pièces pour BFS (recherche du chemin le plus court) */
-const ADJACENCY: Record<RoomId, RoomId[]> = {
-  living: ['garden', 'corridor'],
-  corridor: ['living', 'bathroom', 'outdoor_corridor'],
-  bathroom: ['corridor'],
-  garden: ['living', 'west_neighbor', 'east_neighbor', 'outdoor_garden'],
-  west_neighbor: ['garden', 'outdoor_garden'],
-  east_neighbor: ['garden', 'outdoor_garden'],
-  outdoor_corridor: ['corridor', 'outdoor_garden'],
-  outdoor_garden: ['garden', 'west_neighbor', 'east_neighbor', 'outdoor_corridor']
+    ],
+  },
+  outdoor_garden: {
+    garden: move('outdoor-garden-west', 'garden-patio'),
+    west_neighbor: move('outdoor-garden-west', 'west-neighbor-terrace'),
+    east_neighbor: move('outdoor-garden-east', 'east-neighbor-terrace'),
+    outdoor_corridor: [
+      { type: 'MOVE_TO', smartObjectId: 'building-b-garden', slotId: 'admire' },
+      { type: 'MOVE_TO', smartObjectId: 'building-b-corridor', slotId: 'visit' },
+    ],
+  },
 };
 
-
-
-/**
- * Calcule la séquence de pièces à traverser pour aller de `startRoom` à `targetRoom` (BFS).
- */
+/** Recherche en largeur : chaque arête correspond à un passage déclaré. */
 export function findRoomPath(startRoom: RoomId, targetRoom: RoomId): RoomId[] {
-  if (startRoom === targetRoom) return [startRoom];
-
-  const queue: Array<{ current: RoomId; path: RoomId[] }> = [
-    { current: startRoom, path: [startRoom] }
-  ];
+  const queue: RoomId[][] = [[startRoom]];
   const visited = new Set<RoomId>([startRoom]);
 
-  while (queue.length > 0) {
-    const { current, path } = queue.shift()!;
-    if (current === targetRoom) {
-      return path;
-    }
-
-    const neighbors = ADJACENCY[current] || [];
-    for (const neighbor of neighbors) {
-      if (!visited.has(neighbor)) {
-        visited.add(neighbor);
-        queue.push({ current: neighbor, path: [...path, neighbor] });
-      }
+  for (const path of queue) {
+    const current = path[path.length - 1];
+    if (current === targetRoom) return path;
+    for (const neighbor of Object.keys(ROOM_PORTALS[current]) as RoomId[]) {
+      if (visited.has(neighbor)) continue;
+      visited.add(neighbor);
+      queue.push([...path, neighbor]);
     }
   }
-
-  return [startRoom, targetRoom];
+  throw new Error(`No navigation path from ${startRoom} to ${targetRoom}`);
 }
 
-/**
- * Génère toutes les étapes de transition (waypoints et ouvertures de portes) nécessaires
- * pour naviguer de la position actuelle `startPos` jusqu'à la position cible `targetPos`.
- */
 export function buildNavigationWaypoints(
   startPos: { x: number; z: number },
   targetPos: { x: number; z: number }
 ): AgentInstruction[] {
-  const startRoom = getRoomFromCoords(startPos.x, startPos.z);
-  const targetRoom = getRoomFromCoords(targetPos.x, targetPos.z);
-
-  if (startRoom === targetRoom) {
-    return []; // Pas de franchissement de mur
-  }
-
-  const roomPath = findRoomPath(startRoom, targetRoom);
-  const instructions: AgentInstruction[] = [];
-
-  for (let i = 0; i < roomPath.length - 1; i++) {
-    const from = roomPath[i];
-    const to = roomPath[i + 1];
-    const portal = ROOM_PORTALS.find(p => p.from === from && p.to === to);
-    if (portal) {
-      instructions.push(...portal.traverseInstructions);
-    }
-  }
-
-  return instructions;
+  const path = findRoomPath(getRoomFromCoords(startPos.x, startPos.z), getRoomFromCoords(targetPos.x, targetPos.z));
+  return path.slice(1).flatMap((to, i) => {
+    const from = path[i];
+    const instructions = ROOM_PORTALS[from][to];
+    if (!instructions) throw new Error(`Missing navigation portal from ${from} to ${to}`);
+    return instructions.map(instruction => ({ ...instruction }));
+  });
 }

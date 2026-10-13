@@ -13,6 +13,8 @@ export const WAYPOINTS: Record<string, Waypoint> = {
   'bathroom-entry':         { id: 'bathroom-entry',         name: 'Entrée Salle de bain',        x: 140, z: 560 },
   'bathroom-shower-entry':  { id: 'bathroom-shower-entry',  name: 'Devant Douche',               x: 25,  z: 570 },
   'living-glass-door':      { id: 'living-glass-door',      name: 'Séjour (Devant Baie Vitrée)', x: 200, z: 20  },
+  'living-from-garden':     { id: 'living-from-garden',     name: 'Séjour (Après Baie Vitrée)', x: 200, z: 80 },
+  'living-from-corridor':   { id: 'living-from-corridor',   name: 'Séjour (Après Porte)',      x: 230, z: 320 },
   'garden-patio':           { id: 'garden-patio',           name: 'Jardin (Terrasse)',           x: 200, z: -50 },
   'outdoor-garden-west':    { id: 'outdoor-garden-west',    name: 'Cour Ouest',                  x: -200, z: -100 },
   'west-neighbor-terrace':  { id: 'west-neighbor-terrace',  name: 'Terrasse Voisin Ouest',       x: -200, z: 100  },
