@@ -84,8 +84,9 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
   const [, setTick] = useState(0);
   const fpsCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fpsCanvasCallback = useCallback((canvas: HTMLCanvasElement | null) => {
+    if (canvas) devState.fpsCanvas = canvas;
+    else if (devState.fpsCanvas === fpsCanvasRef.current) devState.fpsCanvas = null;
     fpsCanvasRef.current = canvas;
-    devState.fpsCanvas = canvas;
     if (canvas && devState.fpsSamples.length > 0) {
       drawFps(canvas, devState.fpsSamples);
     }
@@ -94,11 +95,12 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    devState.onUpdate = () => setTick(t => t + 1);
+    const onUpdate = () => setTick(t => t + 1);
+    devState.onUpdate = onUpdate;
     devState.refreshScene?.();
     return () => {
-      devState.onUpdate = null;
-      devState.fpsCanvas = null;
+      if (devState.onUpdate === onUpdate) devState.onUpdate = null;
+      if (devState.fpsCanvas === fpsCanvasRef.current) devState.fpsCanvas = null;
     };
   }, []);
 
@@ -119,14 +121,14 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
 
   return (
     <>
-      <PerfGroup icon="bi-bar-chart-fill" title="Perf" defaultOpen headerPadding={compact ? 'py-1 px-1.5' : undefined}>
-        <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
-          <div className={`d-flex flex-column ${compact ? 'gap-1 px-1 py-0.5' : 'gap-1.5 px-2 pb-1'}`}>
+      <PerfGroup icon="bi-bar-chart-fill" title="Perf" defaultOpen headerPadding={compact ? 'py-0 px-1' : undefined}>
+        <div className={`d-flex flex-column bg-transparent overflow-auto ${compact ? 'small' : ''}`} style={{ maxHeight: '45vh' }}>
+          <div className={`d-flex flex-column ${compact ? 'gap-0 p-0' : 'gap-1 px-2 pb-1'}`}>
             <canvas
               ref={fpsCanvasCallback}
               width={FPS_W} height={FPS_H}
               className="d-block w-100 rounded shadow-sm"
-              style={{ height: FPS_H }}
+              style={{ height: compact ? FPS_H / 2 : FPS_H }}
             />
             <div className="d-flex align-items-center justify-content-between text-nowrap small lh-sm">
               <span className={`fw-bold ${isIdle ? 'text-warning' : fpsTextClass(curFps)}`}>
@@ -150,12 +152,11 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
                   type="button"
                   onClick={() => setShowDetails(!showDetails)}
                   className="btn btn-link btn-sm p-0 text-decoration-none text-primary d-inline-flex align-items-center lh-1"
-                  style={{ fontSize: 11 }}
                   title={showDetails ? 'Moins d\'infos' : 'Plus d\'infos'}
                   aria-label={showDetails ? 'Moins d\'infos' : 'Plus d\'infos'}
                 >
                   <span>{showDetails ? '-' : '+'}</span>
-                  <i className="bi bi-info-circle me-0.5" aria-hidden="true" />
+                  <i className="bi bi-info-circle" aria-hidden="true" />
                 </button>
               </div>
             </div>

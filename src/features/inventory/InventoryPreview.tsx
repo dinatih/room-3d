@@ -820,7 +820,6 @@ export function InventoryPreview({
   }, [item?.id]);
 
   const datumBannerBottom = 8;
-  const debugUrlsBottom = hideFooter ? 4 : 40;
   const currentTargetId = resolveAnimationId(actionStates.characterAnim || 'idle');
   const currentAnimOpt = isHumanCharacter ? WALKER_ANIM_OPTIONS.find(a => a.value === currentTargetId || a.value === actionStates.characterAnim) : null;
   const currentAnimLabel = actionStates.characterAnim === 't-pose'
@@ -1131,25 +1130,6 @@ export function InventoryPreview({
               })}
             </div>
           )}
-
-          {/* Debug URLs Overlay */}
-          <div
-            className="position-absolute text-truncate mw-100 font-monospace pe-none"
-            style={{
-              bottom: debugUrlsBottom,
-              left: 8,
-              zIndex: 3,
-              fontSize: 9,
-              opacity: 0.5,
-              color: '#222',
-              textShadow: '0 0 2px rgba(255,255,255,0.8)',
-              pointerEvents: 'none',
-              userSelect: 'none',
-            }}
-            title={`${glbPath || 'No GLB'} | ${photos ? photos.join(', ') : 'No photos'}`}
-          >
-            {glbPath ? `GLB: ${glbPath}` : 'No GLB'} {photos && photos.length > 0 ? `| IMG: ${photos[0]} ${photos.length > 1 ? `(+${photos.length-1})` : ''}` : ''}
-          </div>
 
           {!hideFooter && (
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 10px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center' }}>

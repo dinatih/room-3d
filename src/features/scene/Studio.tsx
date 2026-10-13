@@ -815,7 +815,7 @@ export function Studio() {
         <VRMode />
         <ImmersiveMode />
         <HoverRaycaster />
-        <DevToolsCollector />
+        {!showInventory && <DevToolsCollector />}
         <GlbReveal />
         <PresenceLightController />
         {/* Overlays React (non soumis aux layers Three.js) */}
