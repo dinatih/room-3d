@@ -15,6 +15,7 @@ const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
 const DANCE_RADIUS = 75; // cm devant le partenaire
 const DANCE_FREQUENCY = 2.5;
 const DANCE_ARC = 0.45;
+const DANCE_ROT_Y = Math.PI / 2; // Essai demandé : +90° pendant la danse.
 const _tmpDogDir = new THREE.Vector3();
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
@@ -106,7 +107,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     }
     if (modelRef.current && isPreview && dancePreview) {
       modelRef.current.position.set(0, 0, DANCE_RADIUS);
-      modelRef.current.rotation.y = Math.PI;
+      modelRef.current.rotation.y = Math.PI + DANCE_ROT_Y;
     }
 
     invalidate();
@@ -164,7 +165,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       mixerRef.current.update(0);
       const angle = Math.sin(time * DANCE_FREQUENCY) * DANCE_ARC;
       modelRef.current.position.set(Math.sin(angle) * DANCE_RADIUS, 0, Math.cos(angle) * DANCE_RADIUS);
-      modelRef.current.rotation.y = angle + Math.PI;
+      modelRef.current.rotation.y = angle + Math.PI + DANCE_ROT_Y;
       invalidate();
       return;
     }
@@ -246,7 +247,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
         modelRef.current.position.x += (targetX - modelRef.current.position.x) * Math.min(1.0, delta * 6.0);
         modelRef.current.position.z += (targetZ - modelRef.current.position.z) * Math.min(1.0, delta * 6.0);
         // Le chien regarde son maître en dansant
-        const faceOwnerYaw = Math.atan2(dancingChar.x - modelRef.current.position.x, dancingChar.z - modelRef.current.position.z);
+        const faceOwnerYaw = Math.atan2(dancingChar.x - modelRef.current.position.x, dancingChar.z - modelRef.current.position.z) + DANCE_ROT_Y;
         let yawDiff = faceOwnerYaw - modelRef.current.rotation.y;
         while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
         while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
