@@ -536,7 +536,7 @@ export function SpatialZonePreview({
 
       {/* Mini perf partagé avec la scène principale */}
       {showFpsGraph && (
-        <div className="glass-card shadow-lg rounded-2 p-1 position-absolute start-0 m-2 z-3" style={{ bottom: 28, width: 190 }}>
+        <div className="glass-card shadow-lg rounded-2 p-1 position-absolute start-0 m-2 z-1" style={{ bottom: 28, width: 190 }}>
           <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
         </div>
       )}

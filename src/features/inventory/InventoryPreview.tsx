@@ -893,7 +893,7 @@ export function InventoryPreview({
               />
               <DevToolsCollector />
             </Canvas>
-            <div className="glass-card shadow-lg rounded-2 p-1 position-absolute start-0 bottom-0 m-2 z-3" style={{ width: 190 }}>
+            <div className="glass-card shadow-lg rounded-2 p-1 position-absolute start-0 bottom-0 m-2 z-1" style={{ width: 190 }}>
               <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
             </div>
             </>
