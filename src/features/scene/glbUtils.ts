@@ -190,12 +190,23 @@ export function removeGlbLines(root: THREE.Object3D) {
  * the parent's matrixWorld may already be set to a non-identity transform.
  */
 export function glbLocalBBox(root: THREE.Object3D): THREE.Box3 {
+  // Les sommets skinnés dépendent des matrices des os, pas seulement du mesh.
+  root.updateWorldMatrix(true, false);
+  root.updateMatrixWorld(true); // actualise aussi bindMatrixInverse des SkinnedMesh
   const innerBox = new THREE.Box3();
   const m = new THREE.Matrix4();
   root.traverse(node => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh) return;
-    if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+    let box: THREE.Box3;
+    if ((mesh as THREE.SkinnedMesh).isSkinnedMesh) {
+      const skinned = mesh as THREE.SkinnedMesh;
+      skinned.computeBoundingBox();
+      box = skinned.boundingBox!;
+    } else {
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+      box = mesh.geometry.boundingBox!;
+    }
     m.identity();
     let cur: THREE.Object3D | null = node;
     while (cur && cur !== root) {
@@ -203,7 +214,7 @@ export function glbLocalBBox(root: THREE.Object3D): THREE.Box3 {
       m.premultiply(cur.matrix);
       cur = cur.parent;
     }
-    innerBox.union(mesh.geometry.boundingBox!.clone().applyMatrix4(m));
+    innerBox.union(box.clone().applyMatrix4(m));
   });
   root.updateMatrix();
   const rootRS = root.matrix.clone().setPosition(0, 0, 0);

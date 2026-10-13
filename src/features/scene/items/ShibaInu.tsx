@@ -57,7 +57,8 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     const rawSize = rawBox.getSize(new THREE.Vector3());
 
     const targetHeight = 40; // 40 cm au garrot
-    const scaleFactor = rawSize.y > 0 ? targetHeight / rawSize.y : 1;
+    if (!Number.isFinite(rawSize.y) || rawSize.y <= 0) throw new Error('Invalid Shiba model height');
+    const scaleFactor = targetHeight / rawSize.y;
 
     scene.scale.setScalar(scaleFactor);
     scene.position.set(0, 0, 0);
@@ -74,13 +75,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      if (m.geometry) {
-        m.geometry.computeBoundingBox();
-        m.geometry.computeBoundingSphere();
-        if (m.geometry.boundingSphere) {
-          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 10, 50.0);
-        }
-      }
+      m.frustumCulled = false; // Le saut déforme le mesh hors des bornes de sa pose initiale.
       if (m.material) {
         const mats = Array.isArray(m.material) ? m.material : [m.material];
         mats.forEach(mat => {

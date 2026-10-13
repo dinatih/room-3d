@@ -1,12 +1,19 @@
 const puppeteer = require('puppeteer');
+if (process.argv.includes('--inspect-model')) {
+  const data = require('node:fs').readFileSync('public/characters/ushiro/shiba_inu_dog_ushiro.glb');
+  const gltf = JSON.parse(data.subarray(20, 20 + data.readUInt32LE(12)).toString());
+  console.log(JSON.stringify({ nodes: gltf.nodes.map((n, i) => ({ i, name: n.name, mesh: n.mesh, skin: n.skin, scale: n.scale })).filter(n => n.mesh !== undefined || !gltf.nodes.some(parent => parent.children?.includes(n.i))), meshes: gltf.meshes.map(m => ({ name: m.name, positions: m.primitives.map(p => ({ min: gltf.accessors[p.attributes.POSITION].min, max: gltf.accessors[p.attributes.POSITION].max })) })), animations: gltf.animations.map(a => ({ name: a.name, rootTargets: a.channels.filter(c => [45, 44, 47].includes(c.target.node)).map(c => c.target) })) }));
+  process.exit(0);
+}
 (async () => {
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   try {
     const page = await browser.newPage();
+    await page.setViewport({ width: 1100, height: 850 });
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     page.on('console', message => { if (message.type() === 'error') console.error(message.text()); });
-    await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5180'}/AGENTS.md`);
+    await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5182'}/AGENTS.md`);
     await page.evaluate(async () => {
       (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
       window.$RefreshReg$ = () => {};
@@ -69,6 +76,9 @@ const puppeteer = require('puppeteer');
       const proxy = dog.children.find(child => child.userData.isHoverProxy);
       if (!proxy) throw new Error('Dog needs a selection proxy');
       f.scene.updateMatrixWorld(true);
+      const model = dog.children.find(child => !child.userData.isHoverProxy);
+      const dogHeight = new f.THREE.Box3().setFromObject(model, true).getSize(new f.THREE.Vector3()).y;
+      if (Math.abs(dogHeight - 40) > 1) throw new Error(`Rendered scene Shiba must be 40 cm tall, got ${dogHeight}, scale ${model.scale.toArray()}, children ${JSON.stringify(model.children.map(c => ({ name: c.name, scale: c.scale.toArray() })))}`);
       const target = proxy.getWorldPosition(new f.THREE.Vector3());
       f.camera.position.copy(target).add(new f.THREE.Vector3(0, 100, 200));
       f.camera.lookAt(target);
@@ -164,6 +174,11 @@ const puppeteer = require('puppeteer');
       f.setFrameloop('never');
       const dog = f.scene.getObjectByName('shiba-inu');
       if (!dog) throw new Error('Inventory character dance must include a dog');
+      dog.updateWorldMatrix(true, true);
+      const model = dog.children[0];
+      const localBounds = new f.THREE.Box3().setFromObject(model, true);
+      const renderedHeight = localBounds.getSize(new f.THREE.Vector3()).y;
+      if (renderedHeight > 80) throw new Error(`Preview Shiba must remain dog-sized during jump, got ${renderedHeight}`);
       f.useAnimPreviewStore.getState().pause();
       const seek = time => {
         f.useAnimPreviewStore.getState().seekToTime(time);
@@ -185,6 +200,30 @@ const puppeteer = require('puppeteer');
       window.setPreviewAnimation('idle');
     });
     await page.waitForFunction(() => !window.f.scene.getObjectByName('shiba-inu'));
+    await page.evaluate(async () => {
+      const React = (await import('/node_modules/.vite/deps/react.js')).default;
+      const { InventoryPreview } = await import('/src/features/inventory/InventoryPreview.tsx');
+      const link = document.createElement('link');
+      link.rel = 'stylesheet'; link.href = '/node_modules/bootstrap/dist/css/bootstrap.min.css';
+      document.head.appendChild(link);
+      window.root.render(React.createElement(InventoryPreview, { height: 650, hideFooter: true, item: { id: 'native', name: 'Native', category: 'characters', brand: 'Mixamo', qty: 1, dims: { w: 50, d: 30, h: 173.4 } } }));
+    });
+    await page.waitForFunction(() => document.querySelector('[title^="Animation :"]'));
+    await page.evaluate(() => {
+      window.f.useAnimPreviewStore.getState().setSelectedCategories([]);
+      window.f.useAnimPreviewStore.getState().setAnimSearch('Dance With Dog');
+      document.querySelector('[title^="Animation :"]').click();
+    });
+    await page.waitForFunction(() => [...document.querySelectorAll('.hover-bg-light')].some(b => b.textContent.includes('Free Fire Dance With Dog')));
+    await page.evaluate(() => [...document.querySelectorAll('.hover-bg-light')].find(b => b.textContent.includes('Free Fire Dance With Dog')).click());
+    await page.waitForFunction(() => window.__THREE_SCENE__?.getObjectByName('shiba-inu'));
+    await page.waitForFunction(() => window.f.useAnimPreviewStore.getState().clipName.toLowerCase().includes('dog'), { timeout: 60000 });
+    await page.evaluate(() => {
+      window.f.useAnimPreviewStore.getState().pause();
+      window.f.useAnimPreviewStore.getState().seekToTime(4.56);
+    });
+    await page.waitForFunction(() => Math.abs(window.f.useAnimPreviewStore.getState().currentTime - 4.56) < 0.01);
+    await page.screenshot({ path: '/tmp/room-shiba-inventory-fixed.png' });
     if (errors.length) throw new Error(errors.join('\n'));
     console.log(JSON.stringify(results));
     console.log('Dog hover click, active character action, NPC action, inventory companion, scrub/pause and preview isolation validated');
