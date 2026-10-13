@@ -38,6 +38,12 @@ assert.ok(new g.VisibilityGraph(holed).find({ x: 0, z: 0 }, { x: 5, z: 5 }));
 requestDoor('bath', 'a'); assert.equal(requestDoor('bath', 'b'), false);
 releaseDoor('bath', 'a'); assert.equal(requestDoor('bath', 'b'), true);
 releaseAgentDoors('b'); assert.equal(doorRequested('bath'), false);
+assert.equal(requestDoor('glassRight', 'a'), true);
+assert.equal(requestDoor('glassLeft', 'b'), false);
+assert.equal(doorRequested('glassLeft'), true);
+releaseAgentDoors('a');
+assert.equal(requestDoor('glassRight', 'b'), true);
+releaseAgentDoors('b');
 console.log('Geometry checks passed: shortest route, direct routes, inflation, rotation, overlaps, holes, invalid targets, FIFO door reservations.');
 
 if (process.argv.includes('--browser')) (async () => {
@@ -73,6 +79,7 @@ if (process.argv.includes('--browser')) (async () => {
       window.furnitureState = await import('/src/features/scene/furniturePositions.ts');
       window.positionState = (await import('/src/features/scene/positionState.ts')).positionState;
       window.cameraState = (await import('/src/features/scene/cameraState.ts')).cameraState;
+      window.steer = (await import('/src/features/scene/ai/agent/agentAvoidance.ts')).computeSteeringVector;
       const e = React.createElement;
       document.body.innerHTML = '<div id="fixture" style="height:100vh"></div>';
       const native = CHARACTERS.find(c => c.id === 'native');
@@ -100,6 +107,51 @@ if (process.argv.includes('--browser')) (async () => {
     });
     await page.waitForFunction(() => window.nav?.furnitureObstacles.size > 25 && window.nav.hasAgentProfile('native'), { timeout: 60000 }).catch(async error => { console.log('Readiness:', await page.evaluate(() => ({ ids: [...window.nav.furnitureObstacles.keys()], native: window.nav.hasAgentProfile('native'), scene: window.fixtureScene.children.map(c => c.name), agent: window.agent.getStatus() }))); throw error; });
     console.log('Scene assets ready:', await page.evaluate(() => ({ profile: window.nav.getAgentProfile('native'), obstacles: window.nav.furnitureObstacles.size })));
+    if (process.argv.includes('--doors-only')) {
+      const doors = await page.evaluate(async () => {
+        const nav = window.nav, g = window.geom;
+        const profile = nav.getAgentProfile('native');
+        nav.useSceneStore.setState(s => ({ layers: { ...s.layers, npcCollisions: true } }));
+        const results = [];
+        const scenarios = [
+          [180, 200, 220].map(x => [{ x, z: -50 }, { x: 160, z: 300 }]),
+          [140, 150, 160].map(x => [{ x, z: 300 }, { x: 200, z: -50 }]),
+          [[{ x: 180, z: -50 }, { x: 160, z: 300 }], [{ x: 160, z: 300 }, { x: 200, z: -50 }]],
+        ];
+        for (const [scenarioIndex, destinations] of scenarios.entries()) {
+        const actors = destinations.map(([position, target], i) => ({ id: `door-${i}`, position, target, route: nav.createRouteState() }));
+        actors.forEach(a => nav.setAgentProfile(a.id, profile));
+        const deadline = performance.now() + 30000;
+        let nextLog = 0;
+        while (performance.now() < deadline && actors.some(a => g.distance(a.position, a.target) > 1e-6)) {
+          for (const a of actors) {
+            if (g.distance(a.position, a.target) <= 1e-6) continue;
+            const before = a.position;
+            a.position = nav.followRoute(a.route, a.id, a.position, a.target, 1, (direction, remaining) => {
+              const s = window.steer(a.id, a.position.x, a.position.z, direction.x, direction.z, remaining);
+              return { x: s.steerX, z: s.steerZ };
+            });
+            window.cameraState.positions[a.id] = { ...a.position, y: 0, yaw: 0 };
+            for (const key of nav.doorKeys) {
+              const leaf = [[g.inflate(nav.doorPolygon(key, nav.doorCollisionState[key].angle), profile.radius + nav.DOOR_CONFIGS[key].margin)]];
+              if (g.distance(before, a.position) > 0 && !g.segmentFree(before, a.position, leaf)) throw new Error(`Crowd crossed ${key}`);
+            }
+          }
+          if (performance.now() > nextLog) {
+            console.log('Agent trace:', JSON.stringify({ actors: actors.map(a => ({ id: a.id, position: a.position, index: a.route.index, next: a.route.path[a.route.index], error: a.route.error, doors: [...a.route.doors] })), angles: nav.doorCollisionState }));
+            nextLog = performance.now() + 5000;
+          }
+          await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+        results.push(...actors.map(a => ({ scenarioIndex, id: a.id, position: a.position, remaining: g.distance(a.position, a.target), error: a.route.error })));
+        for (const a of actors) { nav.resetRoute(a.route, a.id); delete window.cameraState.positions[a.id]; }
+        }
+        return results;
+      });
+      console.log('Door crowd:', JSON.stringify(doors));
+      assert.ok(doors.every(a => a.remaining < 1e-6 && !a.error), 'Every actor must clear the glass doorway');
+      return;
+    }
     const result = await page.evaluate(() => {
       const nav = window.nav;
       const geometry = window.geom;

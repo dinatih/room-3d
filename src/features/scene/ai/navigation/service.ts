@@ -4,7 +4,7 @@ import { architectureObstacles, walkableSurfaces } from './architecture';
 import { furnitureObstacles, getObstacleRevision, getAgentProfile, navigationDebug, type AgentProfile } from './obstacles';
 import { inflate, union, VisibilityGraph, rectangle, pointInRing, insideObstacle, segmentFree, distance, projectToSegment, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState } from '../../doorObstacles';
-import { requestDoor, releaseDoor, releaseAgentDoors, type DoorKey } from './doorRequests';
+import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, type DoorKey } from './doorRequests';
 
 export { architectureObstacles };
 export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
@@ -116,21 +116,44 @@ export function planRoute(route: RouteState, agentId: string, start: Point, targ
   return false;
 }
 
+function releaseClearedDoors(route: RouteState, agentId: string, profile: AgentProfile, position: Point): void {
+  for (const opening of route.doors) {
+    const leaves = doorKeys.filter(k => doorOpeningKey(k) === opening);
+    const points = [position, ...route.path.slice(route.index)];
+    const crossingAhead = leaves.some(k => {
+      const closed = [[inflate(doorPolygon(k, 0), profile.radius + DOOR_CONFIGS[k].margin)]];
+      return points.some((p, i) => i > 0 && !segmentFree(points[i - 1], p, closed));
+    });
+    const clear = leaves.every(k => {
+      const d = DOOR_CONFIGS[k], clearance = profile.radius + d.thickness / 2 + d.margin;
+      const across = (position.x - d.pivot.x) * d.openNormal.x + (position.z - d.pivot.z) * d.openNormal.z;
+      return across < -clearance || distance(position, d.pivot) > d.length + clearance;
+    });
+    if (!crossingAhead && clear) {
+      releaseDoor(opening, agentId);
+      route.doors.delete(opening);
+    }
+  }
+}
+
 function passDoors(route: RouteState, agentId: string, profile: AgentProfile, start: Point, next: Point, proposed: Point, travel: number): Point {
+  releaseClearedDoors(route, agentId, profile, start);
   for (const key of doorKeys) {
     const d = DOOR_CONFIGS[key];
+    const opening = doorOpeningKey(key);
     if (d.yMin >= profile.height || d.yMax <= 0) continue;
     const clearance = profile.radius + d.thickness / 2 + d.margin;
-    if (route.doors.has(key) && distance(start, d.pivot) > d.length + clearance) { releaseDoor(key, agentId); route.doors.delete(key); }
     const closed = [[inflate(doorPolygon(key, 0), profile.radius + d.margin)]];
     const crossing = !segmentFree(start, next, closed);
-    if (route.doors.has(key) || (crossing && (distance(start, d.pivot) <= d.length + clearance + travel || !segmentFree(start, proposed, closed)))) {
-      if (!requestDoor(key, agentId)) return start;
-      route.doors.add(key);
-    }
     const actual = [[inflate(doorPolygon(key, doorCollisionState[key].angle), profile.radius + d.margin)]];
-    if (!segmentFree(start, proposed, actual)) return start;
+    const blocked = !segmentFree(start, proposed, actual);
+    if (route.doors.has(opening) || blocked || (crossing && (distance(start, d.pivot) <= d.length + clearance + travel || !segmentFree(start, proposed, closed)))) {
+      if (!requestDoor(opening, agentId)) return start;
+      route.doors.add(opening);
+    }
+    if (blocked) return start;
   }
+  releaseClearedDoors(route, agentId, profile, proposed);
   return proposed;
 }
 
@@ -202,12 +225,19 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
   while (route.index < route.path.length && distance(start, route.path[route.index]) < 1e-6) route.index++;
   const next = route.path[route.index];
   if (!next) { resetRoute(route, agentId); return target; }
+  // A displaced agent must regain a valid route before continuing toward an old vertex.
+  if (!segmentFree(start, next, graph.obstacles)) {
+    if (!planRoute(route, agentId, start, target)) return start;
+    return followRoute(route, agentId, start, target, travel, steer, owner, interaction);
+  }
   const remaining = distance(start, next);
   const direction = { x: (next.x - start.x) / remaining, z: (next.z - start.z) / remaining };
   const steered = steer?.(direction, remaining) ?? direction;
   const step = Math.min(travel, remaining);
   let proposed = { x: start.x + steered.x * step, z: start.z + steered.z * step };
-  if (!segmentFree(start, proposed, graph.obstacles)) proposed = { x: start.x + direction.x * step, z: start.z + direction.z * step };
+  // Steering may enter free space that cannot see the next corner. Preserve visibility
+  // so avoiding a neighbour cannot strand the actor behind that corner.
+  if (!segmentFree(start, proposed, graph.obstacles) || !segmentFree(proposed, next, graph.obstacles)) proposed = { x: start.x + direction.x * step, z: start.z + direction.z * step };
   if (!segmentFree(start, proposed, graph.obstacles)) return start;
   if (step === remaining && steered.x === direction.x && steered.z === direction.z) proposed = { ...next };
   return passDoors(route, agentId, profile, start, next, proposed, travel);

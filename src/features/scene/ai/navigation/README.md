@@ -15,9 +15,15 @@ chemin avec A* sur les contours des obstacles réunis par `polygon-clipping`.
 - `service.ts` conserve les graphes tant que la géométrie est inchangée. Pendant
   une transition de meuble, l'agent attend si son segment devient dangereux,
   puis recalcule avec la géométrie finale.
-- `doorRequests.ts` réserve chaque battant dans l'ordre des demandes. Le
+- `doorRequests.ts` réserve chaque ouverture dans l'ordre des demandes (les deux
+  battants vitrés partagent une réservation). Le
   mouvement vérifie sa position réelle avant chaque pas ; les poussées manuelles
   restent gérées par les composants de porte.
+
+L'évitement d'un autre agent doit conserver la visibilité du prochain virage.
+Si une position déplacée perd cette visibilité, le trajet est recalculé. Une
+réservation reste active tant qu'un franchissement est encore prévu, puis se
+libère dès que le corps est hors de la fermeture et du débattement des battants.
 
 Une approche reste dans l'espace libre accessible depuis l'agent. Seule la
 transition d'interaction peut ignorer le meuble utilisé, en conservant les
@@ -36,3 +42,5 @@ les ambiguïtés numériques sur les arêtes CAD coïncidentes.
 Validation : `node scripts/temp_kitchen_navigation_check.cjs` ; ajouter
 `--browser` avec un serveur Vite et éventuellement `ROOM_TEST_URL` pour vérifier
 la scène réelle, les portes, la cuisine, la douche et les lits déplacés.
+`--browser --doors-only` vérifie les files à la porte-fenêtre dans les deux sens
+et les croisements, avec l'évitement des autres personnages activé.

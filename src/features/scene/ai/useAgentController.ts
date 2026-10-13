@@ -396,6 +396,8 @@ export function useAgentController(
   };
 
   const advanceToNextStep = (hasNavStep: boolean) => {
+    resetRoute(routeRef.current, _characterId);
+    routeInstructionRef.current = null;
     cachedCoordsInstructionRef.current = null;
     cachedCoordsRef.current = null;
     if (hasNavStep) {
