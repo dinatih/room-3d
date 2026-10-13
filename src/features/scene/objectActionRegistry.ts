@@ -9,7 +9,7 @@ export interface ActionDef {
   label: string | [string, string] | ((value: any) => string);
   icon?: string;
   sceneOnly?: boolean;
-  event?: 'door-push';
+  event?: 'door-push' | 'dog-dance';
   values?: readonly (string | number)[];
   initialValue?: string | number;
   type?: 'select';
@@ -93,7 +93,8 @@ const ACTIONS: Record<string, ActionConfig> = {
   'desk1-toggle': { label: ['Debout', 'Assis'] },
   'desk2-toggle': { label: ['Debout', 'Assis'] },
   'desk2-screen-toggle': { label: ['▶ Vidéo bureau / TV', '⏹ Couper vidéo'], icon: 'bi-display' },
-  'shiba-replay': { label: 'Rejouer' },
+  'shiba-replay': { label: 'Rejouer', sceneOnly: true },
+  'shiba-dance': { label: '🐕 Danser avec le personnage actif', sceneOnly: true, event: 'dog-dance' },
   'robin-bird-replay': { label: 'Rejouer' },
   nestMini: { label: 'Ok Google 🎙️' },
   'tv-toggle': { label: ['Allumer', 'Éteindre'] },
@@ -117,9 +118,10 @@ export function getActionDef(id: string): ActionDef | undefined {
   if (ACTIONS[id]) return { id, ...ACTIONS[id] };
   if (/^animal-(robin|shiba|jikin|tosakin)-(fpv|follow)$/.test(id)) {
     const fpv = id.endsWith('-fpv');
-    return { id, label: fpv ? 'Vue FPV' : 'Suivre', icon: fpv ? 'bi-eye' : 'bi-camera-video' };
+    return { id, label: fpv ? 'Vue FPV' : 'Suivre', icon: fpv ? 'bi-eye' : 'bi-camera-video', sceneOnly: true };
   }
   if (id.startsWith('select-character-')) return { id, label: '🎯 Définir comme personnage actif' };
+  if (id.startsWith('dance-with-dog:::')) return { id, label: '🐕 Danser avec le Shiba', sceneOnly: true, event: 'dog-dance' };
   if (id.startsWith('smart-object:::')) {
     const [, objectId, slotId] = id.split(':::');
     const slot = getSmartObject(objectId)?.slots.find(s => s.slotId === slotId);

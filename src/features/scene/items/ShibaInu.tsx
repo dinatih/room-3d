@@ -1,4 +1,4 @@
-import { useRef, useLayoutEffect, useEffect } from 'react';
+import { useRef, useLayoutEffect, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
@@ -8,8 +8,13 @@ import { useAnimalCamera } from '../camera/useAnimalCamera';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
+import { glbLocalBBox } from '../glbUtils';
+import { getObjectActionIds } from '../objectActions';
 
 const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
+const DANCE_RADIUS = 75; // cm devant le partenaire
+const DANCE_FREQUENCY = 2.5;
+const DANCE_ARC = 0.45;
 const _tmpDogDir = new THREE.Vector3();
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
@@ -23,7 +28,7 @@ function findDogClip(animations: THREE.AnimationClip[], keyword: string): THREE.
   );
 }
 
-export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
+export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = false, showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, dancePreview?: boolean, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
   const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
@@ -33,6 +38,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   const showSkeletonGlobal = useSceneStore(s => s.layers.skeleton);
   const showSkeleton = isPreview ? showSkeletonPreview : showSkeletonGlobal;
   const modelRef = useRef<THREE.Group>(null);
+  const [bounds, setBounds] = useState<{ size: THREE.Vector3; center: THREE.Vector3 } | null>(null);
   useHelper(showSkeleton ? modelRef as any : null, THREE.SkeletonHelper);
 
   const aiStateRef = useRef<AIState>({
@@ -47,8 +53,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
 
-    scene.updateMatrixWorld(true);
-    const rawBox = new THREE.Box3().setFromObject(scene);
+    const rawBox = glbLocalBBox(scene);
     const rawSize = rawBox.getSize(new THREE.Vector3());
 
     const targetHeight = 40; // 40 cm au garrot
@@ -62,7 +67,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       targetHeight,
       rawSize.z * scaleFactor
     );
-    onSize?.(finalSize);
+    setBounds({ size: finalSize, center: rawBox.getCenter(new THREE.Vector3()).multiplyScalar(scaleFactor) });
 
     scene.traverse(c => {
       const m = c as THREE.Mesh;
@@ -104,14 +109,19 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       modelRef.current.position.set(180, 0, -120);
       modelRef.current.rotation.y = -Math.PI / 4;
     }
+    if (modelRef.current && isPreview && dancePreview) {
+      modelRef.current.position.set(0, 0, DANCE_RADIUS);
+      modelRef.current.rotation.y = Math.PI;
+    }
 
     invalidate();
+    onSize?.(finalSize);
 
     return () => {
       mixerRef.current?.stopAllAction();
       mixerRef.current?.uncacheRoot(scene);
     };
-  }, [scene, animations, isPreview, previewAnim, invalidate, onSize]);
+  }, [scene, animations, isPreview, previewAnim, dancePreview, invalidate, onSize]);
 
   useEffect(() => {
     if (isPreview) return;
@@ -140,11 +150,29 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       }
     };
     document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
+    return () => {
+      document.removeEventListener('furniture-toggle', handler);
+      delete cameraState.positions.shiba;
+    };
   }, [invalidate, isPreview, animations]);
 
   useFrame((_, delta) => {
     if (isAppIdle() || !modelRef.current || !mixerRef.current) return;
+    if (isPreview && dancePreview) {
+      // Le personnage pilote la timeline ; le compagnon ne doit ni la modifier ni l'avancer.
+      const time = useAnimPreviewStore.getState().currentTime;
+      const clip = animations.find(clip => clip.name === 'Dog|Jump');
+      if (!clip) throw new Error('Shiba choreography requires Dog|Jump');
+      const action = mixerRef.current.clipAction(clip);
+      action.time = time % clip.duration;
+      action.paused = true;
+      mixerRef.current.update(0);
+      const angle = Math.sin(time * DANCE_FREQUENCY) * DANCE_ARC;
+      modelRef.current.position.set(Math.sin(angle) * DANCE_RADIUS, 0, Math.cos(angle) * DANCE_RADIUS);
+      modelRef.current.rotation.y = angle + Math.PI;
+      invalidate();
+      return;
+    }
     if (isPreview) {
       const clip = findDogClip(animations, previewAnim || 'idle');
       if (clip && clip.duration > 0) {
@@ -215,8 +243,8 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         dance.elapsed += delta;
         const t = dance.elapsed;
         // Décalage orbital fluide autour du maître (courbe de danse)
-        const danceRadius = 75; // 75 cm devant le maître
-        const angle = dancingChar.yaw + Math.sin(t * 2.5) * 0.45;
+        const danceRadius = DANCE_RADIUS;
+        const angle = dancingChar.yaw + Math.sin(t * DANCE_FREQUENCY) * DANCE_ARC;
         const targetX = dancingChar.x + Math.sin(angle) * danceRadius;
         const targetZ = dancingChar.z + Math.cos(angle) * danceRadius;
 
@@ -316,7 +344,12 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   useAnimalCamera('shiba', modelRef, scene, isPreview, 'Dogger_head_j', 'Dogger_jaw_j');
 
   return (
-    <group name="shiba-inu" ref={modelRef as any} position={isPreview ? undefined : [180, 0, -120]} rotation={isPreview ? undefined : [0, -Math.PI / 4, 0]}>
+    <group name="shiba-inu" ref={modelRef as any} position={isPreview ? undefined : [180, 0, -120]} rotation={isPreview ? undefined : [0, -Math.PI / 4, 0]}
+      userData={isPreview ? {} : { hoverAction: { label: 'Shiba Inu', actions: getObjectActionIds('shiba-inu') } }}>
+      {!isPreview && bounds && <mesh position={bounds.center} userData={{ isHoverProxy: true }}>
+        <boxGeometry args={bounds.size.toArray()} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>}
       <primitive object={scene} />
     </group>
   );

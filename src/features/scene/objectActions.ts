@@ -1,4 +1,6 @@
 const OBJECT_ACTIONS: Record<string, readonly string[]> = {
+  'shiba-inu': ['shiba-dance', 'shiba-replay', 'animal-shiba-fpv', 'animal-shiba-follow'],
+  'ushiro': ['shiba-dance', 'shiba-replay', 'animal-shiba-fpv', 'animal-shiba-follow'],
   'utdrag10389142': ['utdrag'],
   'bollsidan30574370': ['desk-toggle'],
   'utaker-stack': ['bed-double', 'bed-position'],

@@ -1201,7 +1201,7 @@ export function Character({
             isHoverProxy: true,
             hoverAction: {
               label: charLabel,
-              actions: [`select-character-${id}`],
+              actions: [`select-character-${id}`, `dance-with-dog:::${id}`],
             },
           }}
         >

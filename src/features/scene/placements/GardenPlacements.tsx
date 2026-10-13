@@ -124,7 +124,7 @@ export function GardenAnimals() {
       <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actions: ['robin-bird-replay', 'animal-robin-fpv', 'animal-robin-follow'] } }}>
         <RobinBird />
       </group>
-      <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Shiba Inu', hoverAction: { label: 'Shiba Inu', actions: ['shiba-replay', 'animal-shiba-fpv', 'animal-shiba-follow'] } }}>
+      <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Shiba Inu' }}>
         <ShibaInu />
       </group>
     </>

@@ -98,6 +98,7 @@ import { Drona }                                      from '@features/scene/item
 import { CharacterGroup }                               from '@features/scene/character';
 import { CHARACTERS }                                 from '@features/scene/characterConfig';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
+import { resolveAnimationId } from '@features/scene/animations/animationResolver';
 import { Goldfish } from '@features/scene/items/Goldfish';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
 import { BirdFeeder }                                 from '@features/scene/items/BirdFeeder';
@@ -240,18 +241,22 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
 };
 
 CHARACTERS.forEach(char => {
-  SCENE_REGISTRY[char.id] = function DynamicPreview({ actionState }: { actionState?: any }) {
+  SCENE_REGISTRY[char.id] = function DynamicPreview({ actionState, onSize }: { actionState?: any; onSize?: SceneItemProps['onSize'] }) {
     return (
-      <CharacterGroup
-        isPreview={true}
-        previewCharacterId={char.id}
-        isPaused={actionState?.isPaused}
-        characterAnim={actionState?.characterAnim}
-        duoAnimDef={actionState?.duoAnimDef}
-        duoPartnerId={actionState?.duoPartnerId}
-        previewHaircut={actionState?.previewHaircut}
-        previewHairColor={actionState?.previewHairColor}
-      />
+      <>
+        <CharacterGroup
+          isPreview={true}
+          previewCharacterId={char.id}
+          isPaused={actionState?.isPaused}
+          characterAnim={actionState?.characterAnim}
+          duoAnimDef={actionState?.duoAnimDef}
+          duoPartnerId={actionState?.duoPartnerId}
+          previewHaircut={actionState?.previewHaircut}
+          previewHairColor={actionState?.previewHairColor}
+        />
+        {!actionState?.duoAnimDef && resolveAnimationId(actionState?.characterAnim || 'idle') === 'ff-dancewithdog' &&
+          <ShibaInu isPreview dancePreview previewAnim="Dog|Jump" onSize={onSize} />}
+      </>
     );
   } as any;
 });

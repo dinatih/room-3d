@@ -250,9 +250,40 @@ export function useAgentController(
       }
     };
 
+    const onDogDance = (event: Event) => {
+      const { key } = (event as CustomEvent<{ key: string }>).detail;
+      const targetId = key === 'shiba-dance' ? useSceneStore.getState().activeCharacterId : key.split(':::')[1];
+      if (targetId !== _characterId) return;
+      if (!cameraState.positions.shiba) {
+        appLog(_characterId, '🐕 Activez les animaux pour danser avec le Shiba.');
+        return;
+      }
+      const animation = 'ff-dancewithdog';
+      const duration = getAnimationDef(animation)?.duration;
+      if (!duration) throw new Error('Dog dance requires a registered duration');
+      releaseClaimedSlot();
+      duoSessionManager.leaveDuoZone(_characterId);
+      duoRoleRef.current = null;
+      duoInvitedRef.current = false;
+      const position = getRealPosition();
+      stateRef.current.x = position.x;
+      stateRef.current.y = position.y;
+      stateRef.current.z = position.z;
+      stateRef.current.rotY = position.rotY;
+      dynamicNavQueueRef.current = [{ type: 'WAIT', animation, duration }];
+      dynamicNavIndexRef.current = 0;
+      activeNavStepIndexRef.current = -1;
+      cachedCoordsInstructionRef.current = null;
+      cachedCoordsRef.current = null;
+      statusRef.current = 'IDLE';
+      appLog(_characterId, '🐕 Danse avec le Shiba');
+    };
+
+    document.addEventListener('dog-dance', onDogDance);
     document.addEventListener('npc-invite-duo', onInvite);
     document.addEventListener('agent-force-smartobject', onForceSmartObject);
     return () => {
+      document.removeEventListener('dog-dance', onDogDance);
       document.removeEventListener('npc-invite-duo', onInvite);
       document.removeEventListener('agent-force-smartobject', onForceSmartObject);
       if (claimedSlotRef.current?.objectId === 'cuisine-group' && claimedSlotRef.current?.slotId === 'cook-oven') {
