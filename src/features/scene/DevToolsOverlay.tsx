@@ -122,7 +122,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
   return (
     <>
       <PerfGroup icon="bi-bar-chart-fill" title="Perf" defaultOpen headerPadding={compact ? 'py-0 px-1' : undefined}>
-        <div className={`d-flex flex-column bg-transparent overflow-auto ${compact ? 'small' : ''}`} style={{ maxHeight: '45vh' }}>
+        <div className={`d-flex flex-column bg-transparent ${compact ? 'small' : ''}`}>
           <div className={`d-flex flex-column ${compact ? 'gap-0 p-0' : 'gap-1 px-2 pb-1'}`}>
             <canvas
               ref={fpsCanvasCallback}
@@ -163,7 +163,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
           </div>
 
           {showDetails && (
-            <>
+            <div className="overflow-auto" style={{ maxHeight: '45vh' }}>
               <div style={{ paddingBottom: 4 }}>
                 <StatRow label="Géométries" value={devState.geometries} color="#111827" />
                 <StatRow label="Textures"   value={devState.textures}   color="#111827" />
@@ -226,7 +226,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
                   </button>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </PerfGroup>
