@@ -103,8 +103,9 @@ export function useCameraFrameUpdate({
 
     // Save active character position
     cameraState.positions[activeCharacterId] = {
+      ...cameraState.positions[activeCharacterId],
       x: cameraState.characterX,
-      y: 0,
+      y: cameraState.positions[activeCharacterId]?.y ?? 0,
       z: cameraState.characterZ,
       yaw: cameraState.characterYaw,
     };

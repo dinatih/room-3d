@@ -7,24 +7,31 @@
  * smart actions de la baignoire (onde de choc / poussée aquatique).
  */
 import { useRef, useLayoutEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { BATHTUB } from '../bathtubData';
 import { cameraState } from '../cameraState';
-import { useSceneStore } from '../store/useSceneStore';
+import { OccupancyManager } from '../ai/occupancyManager';
+import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
+import { HUMAN_BODY_RADIUS } from '../doorObstacles';
+import { isAppIdle } from '../idleState';
 
 // Limites intérieures strictes de la baignoire (coordonnées locales au groupe BATHTUB)
 // Longueur totale = 150 (axe Z), Largeur = 70 (axe X), Paroi = 4cm
 // Rayon du ballon = 12.5 cm (diamètre 25 cm pour loger confortablement dans la baignoire de 62cm intérieur)
 const BALL_RADIUS = 12.5;
-const INNER_HALF_X = (BATHTUB.width / 2) - BATHTUB.wallThickness - BALL_RADIUS - 1.5; // ~17 cm max
-const INNER_HALF_Z = (BATHTUB.length / 2) - BATHTUB.wallThickness - BALL_RADIUS - 2.0; // ~53 cm max
+const INNER_RADIUS = BATHTUB.cornerRadius - BATHTUB.wallThickness - BALL_RADIUS;
+const INNER_SEGMENT = BATHTUB.length / 2 - BATHTUB.cornerRadius;
+const WATER_DRAG = 0.4; // amortissement par seconde
+const WAVE_SPEED = 65; // cm/s, impulsion d'entrée dans l'eau
+const RESTITUTION = 0.75;
 const WATER_Y = BATHTUB.waterHeight;
 
-export function BeachBall({ onSize }: SceneItemProps) {
+export function BeachBall({ onSize, isPreview = false }: SceneItemProps) {
+  const { invalidate } = useThree();
   const { scene } = useGLTFClone('items/beach_ball.glb');
   const groupRef = useRef<THREE.Group>(null);
 
@@ -34,8 +41,9 @@ export function BeachBall({ onSize }: SceneItemProps) {
   const rotRef = useRef(new THREE.Vector3(0.2, 0.4, 0.1));
 
   // Écoute de l'état d'interaction de la baignoire (Valby ou autre dans l'eau)
-  const isTubActive = useSceneStore(s => (s.furniture as Record<string, any>).aiBathtub ?? false);
-  const wasTubActiveRef = useRef(false);
+  const occupantsRef = useRef(new Map<string, string>());
+  const charLocalRef = useRef(new THREE.Vector3());
+  const directionRef = useRef(new THREE.Vector2());
 
   useLayoutEffect(() => {
     if (!scene) return;
@@ -44,7 +52,8 @@ export function BeachBall({ onSize }: SceneItemProps) {
 
     const box = glbLocalBBox(scene);
     const rawSize = box.getSize(new THREE.Vector3());
-    const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 2.0;
+    const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z);
+    if (!Number.isFinite(maxDim) || maxDim <= 0) throw new Error('Invalid beach ball geometry');
 
     // Échelle : diamètre 25 cm (parfaitement proportionné au bassin)
     const targetDiameter = BALL_RADIUS * 2;
@@ -68,65 +77,61 @@ export function BeachBall({ onSize }: SceneItemProps) {
     onSize?.(new THREE.Vector3(targetDiameter, targetDiameter, targetDiameter));
   }, [scene, onSize]);
 
-  // Transform matrice monde de la baignoire pour projeter les personnages en local
-  const tubWorldPos = useRef(new THREE.Vector3(...BATHTUB.position));
-
   useFrame((state, delta) => {
-    if (!groupRef.current) return;
-    const dt = Math.min(delta, 0.05);
+    if (!groupRef.current || isAppIdle()) return;
+    const dt = delta;
     const t = state.clock.elapsedTime;
 
     const pos = posRef.current;
     const vel = velRef.current;
 
-    // 1. Détection impulsion quand quelqu'un entre dans la baignoire
-    if (isTubActive && !wasTubActiveRef.current) {
-      vel.x += (Math.random() - 0.5) * 25;
-      vel.y += (Math.random() - 0.5) * 35;
-    }
-    wasTubActiveRef.current = isTubActive;
-
-    // 2. Interaction de poussée par les personnages à proximité
-    // Repère monde de la baignoire : position BATHTUB.position
-    const charPos = cameraState.positions['native'] ?? { x: cameraState.characterX, z: cameraState.characterZ, y: 0 };
-    // Coordonnées relatives du personnage par rapport à la baignoire
-    const relCharX = charPos.x - tubWorldPos.current.x;
-    const relCharZ = charPos.z - tubWorldPos.current.z;
-    const distToChar = Math.hypot(relCharX - pos.x, relCharZ - pos.y);
-
-    if (distToChar < BALL_RADIUS + 28 && charPos.y < 45) {
-      // Poussée du personnage vers le ballon
-      const pushDirX = (pos.x - relCharX) / (distToChar || 1);
-      const pushDirZ = (pos.y - relCharZ) / (distToChar || 1);
-      vel.x += pushDirX * 18 * dt;
-      vel.y += pushDirZ * 18 * dt;
+    const tub = groupRef.current.parent!;
+    if (!isPreview) {
+      // Le menu hover et les scénarios IA réservent les mêmes slots.
+      for (const slot of SMART_OBJECTS['bathtub-garden'].slots) {
+        const occupant = OccupancyManager.getOccupant('bathtub-garden', slot.slotId);
+        if (occupant && occupantsRef.current.get(slot.slotId) !== occupant) {
+          const source = slot.offset ?? SMART_OBJECTS['bathtub-garden'].position;
+          if (!source) throw new Error('Bathtub slot requires a world position');
+          tub.worldToLocal(charLocalRef.current.set(...source));
+          const direction = directionRef.current.set(pos.x - charLocalRef.current.x, pos.y - charLocalRef.current.z);
+          if (direction.lengthSq() === 0) direction.set(0, 1);
+          vel.addScaledVector(direction.normalize(), WAVE_SPEED);
+        }
+        if (occupant) occupantsRef.current.set(slot.slotId, occupant);
+        else occupantsRef.current.delete(slot.slotId);
+      }
+      for (const character of Object.values(cameraState.positions)) {
+        if (!character.anim) continue; // les animaux ne sont pas des baigneurs
+        tub.worldToLocal(charLocalRef.current.set(character.x, character.y, character.z));
+        if (charLocalRef.current.y > BATHTUB.height) continue;
+        const direction = directionRef.current.set(pos.x - charLocalRef.current.x, pos.y - charLocalRef.current.z);
+        const distance = direction.length();
+        const contactRadius = BALL_RADIUS + HUMAN_BODY_RADIUS;
+        if (distance < contactRadius) {
+          if (distance === 0) direction.set(0, 1);
+          vel.addScaledVector(direction.normalize(), WAVE_SPEED * (1 - distance / contactRadius) * dt);
+        }
+      }
     }
 
     // 3. Mise à jour position + frottement fluide de l'eau
     pos.x += vel.x * dt;
     pos.y += vel.y * dt;
-    vel.x *= Math.pow(0.88, dt * 60);
-    vel.y *= Math.pow(0.88, dt * 60);
+    vel.multiplyScalar(Math.exp(-WATER_DRAG * dt));
 
     // Ambiance douce d'eau (petite ondulation automatique résiduelle)
     vel.x += Math.sin(t * 1.5 + pos.y * 0.1) * 0.8 * dt;
     vel.y += Math.cos(t * 1.2 + pos.x * 0.1) * 0.8 * dt;
 
-    // 4. Collision avec les rebords intérieurs (rebond élastique sans jamais traverser)
-    if (pos.x < -INNER_HALF_X) {
-      pos.x = -INNER_HALF_X;
-      vel.x = Math.abs(vel.x) * 0.75;
-    } else if (pos.x > INNER_HALF_X) {
-      pos.x = INNER_HALF_X;
-      vel.x = -Math.abs(vel.x) * 0.75;
-    }
-
-    if (pos.y < -INNER_HALF_Z) {
-      pos.y = -INNER_HALF_Z;
-      vel.y = Math.abs(vel.y) * 0.75;
-    } else if (pos.y > INNER_HALF_Z) {
-      pos.y = INNER_HALF_Z;
-      vel.y = -Math.abs(vel.y) * 0.75;
+    // Capsule intérieure : côtés droits et extrémités arrondies, moins le rayon du ballon.
+    const centerZ = THREE.MathUtils.clamp(pos.y, -INNER_SEGMENT, INNER_SEGMENT);
+    const normal = directionRef.current.set(pos.x, pos.y - centerZ);
+    if (normal.length() > INNER_RADIUS) {
+      normal.normalize();
+      pos.set(normal.x * INNER_RADIUS, centerZ + normal.y * INNER_RADIUS);
+      const outwardSpeed = vel.dot(normal);
+      if (outwardSpeed > 0) vel.addScaledVector(normal, -(1 + RESTITUTION) * outwardSpeed);
     }
 
     // 5. Flottaison et roulis (clapotis sur l'eau)
@@ -142,10 +147,11 @@ export function BeachBall({ onSize }: SceneItemProps) {
       rotRef.current.y,
       rotRef.current.z + Math.cos(t * 2.0) * 0.05
     );
+    invalidate();
   });
 
   return (
-    <group ref={groupRef}>
+    <group name="beach-ball" ref={groupRef} userData={{ skipMerge: true, animUnit: true }}>
       <primitive object={scene} />
     </group>
   );

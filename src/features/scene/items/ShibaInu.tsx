@@ -28,6 +28,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
   const playingRef = useRef(false);
+  const danceRef = useRef({ owner: null as string | null, elapsed: 0 });
   
   const showSkeletonGlobal = useSceneStore(s => s.layers.skeleton);
   const showSkeleton = isPreview ? showSkeletonPreview : showSkeletonGlobal;
@@ -190,17 +191,29 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     if (!isPreview) {
       // Vérifier si un personnage actif exécute l'animation Dance With Dog
       let dancingChar: { x: number; y: number; z: number; yaw: number } | null = null;
+      let dancingId: string | null = null;
       for (const charId in cameraState.positions) {
         const c = cameraState.positions[charId];
         if (c?.anim && (c.anim.includes('dancewithdog') || c.anim.includes('dance-with-dog'))) {
           dancingChar = c;
+          dancingId = charId;
           break;
         }
       }
 
       if (dancingChar) {
         // Mode danse synchronisée : le chien vient danser juste devant son maître
-        const t = performance.now() * 0.001;
+        const dance = danceRef.current;
+        if (dance.owner !== dancingId) {
+          dance.owner = dancingId;
+          dance.elapsed = 0;
+          mixerRef.current.stopAllAction();
+          const jumpClip = animations.find(clip => clip.name === 'Dog|Jump');
+          if (!jumpClip) throw new Error('Shiba choreography requires Dog|Jump');
+          mixerRef.current.clipAction(jumpClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
+        }
+        dance.elapsed += delta;
+        const t = dance.elapsed;
         // Décalage orbital fluide autour du maître (courbe de danse)
         const danceRadius = 75; // 75 cm devant le maître
         const angle = dancingChar.yaw + Math.sin(t * 2.5) * 0.45;
@@ -216,18 +229,16 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
         modelRef.current.rotation.y += yawDiff * Math.min(1.0, delta * 8.0);
 
-        // Si le chien n'est pas encore en train de sauter/danser de joie
-        const ai = aiStateRef.current;
-        if (ai.state !== 'running') {
-          ai.state = 'running';
-          mixerRef.current.stopAllAction();
-          const jumpClip = findDogClip(animations, 'jump');
-          const act = mixerRef.current.clipAction(jumpClip);
-          act.setLoop(THREE.LoopRepeat, Infinity);
-          act.reset().play();
-        }
       } else {
         const ai = aiStateRef.current;
+        if (danceRef.current.owner !== null) {
+          danceRef.current.owner = null;
+          ai.mode = 'autonomous';
+          ai.state = 'idle';
+          ai.timer = 1;
+          mixerRef.current.stopAllAction();
+          mixerRef.current.clipAction(findDogClip(animations, 'idle')).setLoop(THREE.LoopRepeat, Infinity).reset().play();
+        }
         if (ai.mode === 'autonomous') {
           if (ai.state === 'idle') {
             ai.timer -= delta;
@@ -305,7 +316,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   useAnimalCamera('shiba', modelRef, scene, isPreview, 'Dogger_head_j', 'Dogger_jaw_j');
 
   return (
-    <group ref={modelRef as any} position={isPreview ? undefined : [180, 0, -120]} rotation={isPreview ? undefined : [0, -Math.PI / 4, 0]}>
+    <group name="shiba-inu" ref={modelRef as any} position={isPreview ? undefined : [180, 0, -120]} rotation={isPreview ? undefined : [0, -Math.PI / 4, 0]}>
       <primitive object={scene} />
     </group>
   );
