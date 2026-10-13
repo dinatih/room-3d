@@ -30,7 +30,7 @@ const RAW_DUO_ANIMATIONS: RawDuoAnimationDef[] = [
   { id: 'high_five', isCombat: false, label: 'High Five', icon: '🖐️', animA: 'high-five-a', animB: 'high-five-b', offsetB: [-80, 0, 4], rotB: Math.PI },
   { id: 'greek_folk_duo', isCombat: false, label: 'Duo Danse Folk (Hasaposerviko & Zorba)', icon: '💃', animA: 'hasaposerviko-duo', animB: 'zorbas-dance', offsetB: [-120, 0, 0] },
   { id: 'clap_sync_duo', isCombat: false, label: 'Complices : Applaudir à deux', icon: '👏', animA: 'clap-sync-duo', animB: 'clap-sync-duo', rotB: Math.PI, offsetB: [0, 0, 100] },
-  { id: 'duo-martial-arts-combat', isCombat: true, label: "Combat d'arts martiaux en duo", icon: '🥋', animA: 'duo-martial-arts-combat', animB: 'duo-martial-arts-combat-b', offsetB: [0, 0, 0] },
+  { id: 'duo-martial-arts-combat', isCombat: true, label: "Combat d'arts martiaux en duo", icon: '🥋', animA: 'duo-martial-arts-combat', animB: 'duo-martial-arts-combat-b', offsetB: [120, 0, 0] },
   { id: 'b1', isCombat: true, label: 'B1', icon: '💥', animA: 'miley-armature-b1-fall-kicked-knockout', animB: 'miley-armature-b1-attack-back-somersault-flip', offsetB: [-100, 0, 0] },
   { id: 'd1', isCombat: true, label: 'D1', icon: '🤺', animA: 'miley-armature-d1-attack-arms-block', animB: 'miley-armature-d1-dodge-sideways', offsetB: [-100, 0, 0] },
   { id: 'd4', isCombat: true, label: 'D4', icon: '🤺', animA: 'miley-armature-d4-attack-reverse-front-snap-kick', animB: 'miley-armature-d4-dodge-roll-back', offsetB: [-120, 0, 0] },
