@@ -15,7 +15,7 @@ const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
 const DANCE_RADIUS = 75; // cm devant le partenaire
 const DANCE_FREQUENCY = 2.5;
 const DANCE_ARC = 0.45;
-const DANCE_ROT_Y = Math.PI / 2; // Essai demandé : +90° pendant la danse.
+const DANCE_ROT_Y = -Math.PI / 2; // Essai demandé : −90° pendant la danse.
 const _tmpDogDir = new THREE.Vector3();
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
