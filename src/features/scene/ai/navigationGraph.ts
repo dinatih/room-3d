@@ -1,4 +1,5 @@
 import { AgentInstruction } from './aiTypes';
+import { BATH_NORTH_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL, KITCHEN_WEST_WALL, ROOM_SOUTH_WALL } from '../wallData';
 
 export type RoomId =
   | 'living'
@@ -13,9 +14,9 @@ export type RoomId =
 /**
  * Détermine la pièce (RoomId) à partir de coordonnées 2D (x, z).
  * Repères architecturaux de l'appartement :
- * - Séjour (living) : -10 <= X <= 300 et 0 <= Z <= 400
+ * - Séjour (living) : jusqu'au mur sud, avec la niche cuisine ouverte sur le séjour
  * - Couloir (corridor) : 192 <= X <= 310 et 400 < Z <= 580
- * - Salle de bain (bathroom) : -10 <= X < 192 et 400 <= Z <= 680
+ * - Salle de bain (bathroom) : -10 <= X < 192, à partir de BATH_NORTH_WALL jusqu'à Z=680
  * - Jardin intérieur / terrasse nord (garden) : -10 <= X <= 300 et -420 <= Z < 0
  * - Studio voisin Ouest (west_neighbor) : X < -10 et 0 <= Z <= 750 (terrasse à Z~100)
  * - Studio voisin Est (east_neighbor) : X > 300 et -420 <= Z <= 350 (terrasse à Z~-250)
@@ -23,8 +24,17 @@ export type RoomId =
  * - Extérieur Cours / Jardin Ouest & Grand Nord (outdoor_garden) : X < -100 et Z <= 0, ou Z < -420
  */
 export function getRoomFromCoords(x: number, z: number): RoomId {
+  // La niche cuisine prolonge le séjour au-delà de sa cloison sud.
+  // La tester avant la SDB et le couloir pour conserver les passages par les portes.
+  if (
+    (x >= -10 && x <= 300 && z >= 0 && z <= ROOM_SOUTH_WALL) ||
+    (x >= KITCHEN_WEST_WALL && x <= KITCHEN_EAST_WALL && z >= ROOM_SOUTH_WALL && z <= KITCHEN_SOUTH_WALL)
+  ) {
+    return 'living';
+  }
+
   // Salle de bain complète (inclut le receveur de douche jusqu'à Z=680 et les sanitaires)
-  if (x >= -10 && x < 192 && z >= 400 && z <= 680) {
+  if (x >= -10 && x < 192 && z >= BATH_NORTH_WALL && z <= 680) {
     return 'bathroom';
   }
 
@@ -59,11 +69,6 @@ export function getRoomFromCoords(x: number, z: number): RoomId {
   // Jardin intérieur / terrasse nord
   if (z < 0) {
     return 'garden';
-  }
-
-  // Séjour intérieur
-  if (z <= 400 && x >= -10 && x <= 300) {
-    return 'living';
   }
 
   // Zone sud couloir
