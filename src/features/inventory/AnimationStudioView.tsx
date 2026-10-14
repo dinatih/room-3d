@@ -436,6 +436,7 @@ export function AnimationStudioView({ isMobile = false }: { isMobile?: boolean }
             height="100%"
             hideFooter={false}
             hideAnimFrameController={true}
+            hideViewControlBar={true}
             initialAnim={mode === 'solo' ? activeSoloAnim : undefined}
             initialDuoAnim={mode === 'duo' ? activeDuoDef : undefined}
             initialDuoPartner={mode === 'duo' ? duoPartnerId : undefined}

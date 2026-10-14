@@ -647,6 +647,7 @@ export function InventoryPreview({
   initialDuoPartner,
   initialAnim,
   hideAnimFrameController = false,
+  hideViewControlBar = false,
   onGlbStats,
 }: {
   item: PreviewTarget;
@@ -657,6 +658,7 @@ export function InventoryPreview({
   initialDuoPartner?: string;
   initialAnim?: string;
   hideAnimFrameController?: boolean;
+  hideViewControlBar?: boolean;
   onGlbStats?: (s: GlbDebugStats | null) => void;
 }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
@@ -1174,7 +1176,7 @@ export function InventoryPreview({
         </>
       )}
     </div>
-    {item && (
+    {item && !hideViewControlBar && (
       <ViewControlBar inline activeCameraPos={showing3D && previewView !== 'free' ? (previewView === 'side' ? 'left' : previewView) : null} showOrbitControls={showing3D} beforeAmbianceActions={showing3D && (
         <>
         <button
