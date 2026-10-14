@@ -40,7 +40,29 @@ export interface AnimationDefinition {
   segments?: Array<[number, number]>;
 }
 
+const INTERX_DUO_RECORDINGS = [
+  { recording: 'g001t000a000r000', id: 'interx-hug-001-r000', label: 'Câlin · prise 1', duration: 27.47 },
+  { recording: 'g001t000a000r001', id: 'interx-hug-002-r001', label: 'Câlin · prise 2', duration: 18.93 },
+  { recording: 'g001t000a000r002', id: 'interx-hug-003-r002', label: 'Câlin · prise 3', duration: 17.73 },
+  { recording: 'g001t000a000r003', id: 'interx-hug-004-r003', label: 'Câlin · prise 4', duration: 18.93 },
+  { recording: 'g001t000a000r004', id: 'interx-hug-005-r004', label: 'Câlin · prise 5', duration: 25.87 },
+  { recording: 'g001t000a001r005', id: 'interx-handshake-001-r005', label: 'Poignée de main · prise 1', duration: 18 },
+  { recording: 'g001t000a001r006', id: 'interx-handshake-002-r006', label: 'Poignée de main · prise 2', duration: 20.8 },
+  { recording: 'g001t000a001r007', id: 'interx-handshake-003-r007', label: 'Poignée de main · prise 3', duration: 22.93 },
+  { recording: 'g001t000a001r008', id: 'interx-handshake-004-r008', label: 'Poignée de main · prise 4', duration: 21.73 },
+  { recording: 'g001t000a001r009', id: 'interx-handshake-005-r009', label: 'Poignée de main · prise 5', duration: 21.07 },
+];
+
 export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
+  ...INTERX_DUO_RECORDINGS.flatMap(({ recording, id, label, duration }) => (['p1', 'p2'] as const).map((participant) => ({
+    id: `${id}-${participant}`,
+    path: `animations/npz/interx/${recording}-${participant}.glb`,
+    category: 'interactions' as const,
+    label: `${label} (${participant.toUpperCase()})`,
+    aliases: [],
+    tags: ['inter-x', 'duo', 'interaction', recording.includes('a000') ? 'hug' : 'handshake'],
+    duration,
+  }))),
   // ── ANIMATIONS SIGNATURES DES PERSONNAGES ───────────────────────────────────
   {
     id: 'inyeong-nitro-intro',

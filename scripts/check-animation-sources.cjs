@@ -38,7 +38,7 @@ async function main() {
       const categories = new Set(ANIM_CATEGORIES.map(c => c.key));
       const sources = new Map();
       for (const def of definitions) {
-        check(/^animations\/(miley|mixamo|others|npz\/(yoga|dances))\/[^/]+\.glb$/.test(def.path), def.path);
+        check(/^animations\/(miley|mixamo|others|npz\/(yoga|dances|interx))\/[^/]+\.glb$/.test(def.path), def.path);
         check(categories.has(def.category), `Missing category: ${def.id}`);
         check(getAnimCategory(def.id) === def.category && getAnimCategory(def.path) === def.category, `Category lookup: ${def.id}`);
         check(resolveAnimationPath(def.id) === def.path, `ID lookup: ${def.id}`);
