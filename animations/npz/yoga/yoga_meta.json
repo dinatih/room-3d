@@ -192,18 +192,6 @@
     "cut_end_s": 1.53
   },
   {
-    "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Downward-Facing_Dog_pose_or_Adho_Mukha_Svanasana_-a_stageii.npz",
-    "out_path": "/home/dinatih/Projects/room-3d/public/animations/npz/yoga/anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_a.glb",
-    "key": "Downward-Facing_Dog_pose_or_Adho_Mukha_Svanasana_-a",
-    "filename": "anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_a.glb",
-    "title": "Downward-Facing Dog pose - Adho Mukha Svanasana",
-    "frames": 479,
-    "duration": 16.0,
-    "size_kb": 327,
-    "cut_start_s": 0.0,
-    "cut_end_s": 0.02
-  },
-  {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Eagle_Pose_or_Garudasana_-a_stageii.npz",
     "out_path": "/home/dinatih/Projects/room-3d/public/animations/npz/yoga/anim_yoga_eagle_pose_or_garudasana_a.glb",
     "key": "Eagle_Pose_or_Garudasana_-a",
@@ -247,7 +235,7 @@
     "title": "Extended Revolved Side Angle Pose - Utthita Parsvakonasana",
     "frames": 545,
     "duration": 18.2,
-    "size_kb": 351,
+    "size_kb": 357,
     "cut_start_s": 0.32,
     "cut_end_s": 0.43
   },
@@ -271,7 +259,7 @@
     "title": "Feathered Peacock Pose - Pincha Mayurasana",
     "frames": 1054,
     "duration": 35.1,
-    "size_kb": 546,
+    "size_kb": 534,
     "cut_start_s": 0.5,
     "cut_end_s": 0.05
   },
@@ -379,7 +367,7 @@
     "title": "Handstand pose - Adho Mukha Vrksasana",
     "frames": 1446,
     "duration": 48.2,
-    "size_kb": 692,
+    "size_kb": 675,
     "cut_start_s": 0.73,
     "cut_end_s": 0.05
   },
@@ -463,7 +451,7 @@
     "title": "Lord of the Dance Pose - Natarajasana",
     "frames": 740,
     "duration": 24.7,
-    "size_kb": 421,
+    "size_kb": 430,
     "cut_start_s": 0.8,
     "cut_end_s": 0.03
   },
@@ -487,7 +475,7 @@
     "title": "Noose Pose - Pasasana",
     "frames": 1002,
     "duration": 33.4,
-    "size_kb": 527,
+    "size_kb": 515,
     "cut_start_s": 0.37,
     "cut_end_s": 0.07
   },
@@ -523,7 +511,7 @@
     "title": "Plank Pose - Kumbhakasana",
     "frames": 429,
     "duration": 14.3,
-    "size_kb": 314,
+    "size_kb": 309,
     "cut_start_s": 0.33,
     "cut_end_s": 0.45
   },
@@ -535,7 +523,7 @@
     "title": "Plow Pose - Halasana",
     "frames": 838,
     "duration": 27.9,
-    "size_kb": 456,
+    "size_kb": 525,
     "cut_start_s": 0.45,
     "cut_end_s": 0.67
   },
@@ -702,7 +690,7 @@
     "filename": "anim_yoga_staff_pose_or_dandasana_a.glb",
     "title": "Staff Pose - Dandasana",
     "frames": 631,
-    "duration": 21.0,
+    "duration": 21,
     "size_kb": 382,
     "cut_start_s": 0.38,
     "cut_end_s": 0.03
@@ -763,7 +751,7 @@
     "title": "Supported Shoulderstand pose - Salamba Sarvangasana",
     "frames": 750,
     "duration": 25,
-    "size_kb": 425,
+    "size_kb": 434,
     "cut_start_s": 0.52,
     "cut_end_s": 1.27
   },
@@ -775,7 +763,7 @@
     "title": "Supta Baddha Konasana",
     "frames": 732,
     "duration": 24.4,
-    "size_kb": 418,
+    "size_kb": 427,
     "cut_start_s": 0.33,
     "cut_end_s": 0.08
   },
@@ -811,7 +799,7 @@
     "title": "Tree Pose - Vrksasana",
     "frames": 574,
     "duration": 19.1,
-    "size_kb": 388,
+    "size_kb": 375,
     "cut_start_s": 0.03,
     "cut_end_s": 0.4
   },
@@ -859,7 +847,7 @@
     "title": "viparita virabhadrasana - reverse warrior pose",
     "frames": 668,
     "duration": 22.3,
-    "size_kb": 395,
+    "size_kb": 403,
     "cut_start_s": 0.07,
     "cut_end_s": 0.02
   },
@@ -883,7 +871,7 @@
     "title": "Warrior I Pose - Virabhadrasana I",
     "frames": 608,
     "duration": 20.3,
-    "size_kb": 381,
+    "size_kb": 374,
     "cut_start_s": 0.22,
     "cut_end_s": 0.02
   },
@@ -907,7 +895,7 @@
     "title": "Warrior III Pose - Virabhadrasana III",
     "frames": 572,
     "duration": 19.1,
-    "size_kb": 367,
+    "size_kb": 360,
     "cut_start_s": 0.17,
     "cut_end_s": 0.07
   },
@@ -920,7 +908,7 @@
     "frames": 960,
     "duration": 32,
     "size_kb": 500,
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.1
   },
   {
@@ -931,7 +919,7 @@
     "title": "Wide-Legged Forward Bend pose - Prasarita Padottanasana",
     "frames": 805,
     "duration": 26.8,
-    "size_kb": 445,
+    "size_kb": 454,
     "cut_start_s": 0.15,
     "cut_end_s": 0.23
   },
@@ -943,7 +931,7 @@
     "title": "Wild Thing pose - Camatkarasana",
     "frames": 764,
     "duration": 25.5,
-    "size_kb": 439,
+    "size_kb": 430,
     "cut_start_s": 0.37,
     "cut_end_s": 0.45
   },
@@ -1037,7 +1025,7 @@
     "filename": "anim_yoga_boat_pose_or_paripurna_navasana_d.glb",
     "frames": 350,
     "duration": 11.7,
-    "size_kb": 280,
+    "size_kb": 281,
     "cut_start_s": 0.52,
     "cut_end_s": 1.23
   },
@@ -1109,7 +1097,7 @@
     "duration": 13.9,
     "size_kb": 305,
     "cut_start_s": 0.73,
-    "cut_end_s": 1.0
+    "cut_end_s": 1
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Bound_Angle_Pose_or_Baddha_Konasana_-g_stageii.npz",
@@ -1238,7 +1226,7 @@
     "frames": 544,
     "duration": 18.1,
     "size_kb": 351,
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.05
   },
   {
@@ -1312,16 +1300,6 @@
     "cut_end_s": 0.6
   },
   {
-    "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Cow_Face_Pose_or_Gomukhasana_-d_stageii.npz",
-    "out_path": "/home/dinatih/Projects/room-3d/public/animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_d.glb",
-    "filename": "anim_yoga_cow_face_pose_or_gomukhasana_d.glb",
-    "frames": 894,
-    "duration": 29.8,
-    "size_kb": 476,
-    "cut_start_s": 0.38,
-    "cut_end_s": 1.22
-  },
-  {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Cow_Face_Pose_or_Gomukhasana_-e_stageii.npz",
     "out_path": "/home/dinatih/Projects/room-3d/public/animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_e.glb",
     "filename": "anim_yoga_cow_face_pose_or_gomukhasana_e.glb",
@@ -1340,16 +1318,6 @@
     "size_kb": 342,
     "cut_start_s": 0.62,
     "cut_end_s": 0.27
-  },
-  {
-    "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Downward-Facing_Dog_pose_or_Adho_Mukha_Svanasana_-b_stageii.npz",
-    "out_path": "/home/dinatih/Projects/room-3d/public/animations/npz/yoga/anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_b.glb",
-    "filename": "anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_b.glb",
-    "frames": 346,
-    "duration": 11.5,
-    "size_kb": 279,
-    "cut_start_s": 3.45,
-    "cut_end_s": 3.48
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Downward-Facing_Dog_pose_or_Adho_Mukha_Svanasana_-c_stageii.npz",
@@ -1387,7 +1355,7 @@
     "filename": "anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_d.glb",
     "frames": 938,
     "duration": 31.3,
-    "size_kb": 492,
+    "size_kb": 503,
     "cut_start_s": 0.35,
     "cut_end_s": 0.75
   },
@@ -1397,7 +1365,7 @@
     "filename": "anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_e.glb",
     "frames": 709,
     "duration": 23.6,
-    "size_kb": 410,
+    "size_kb": 418,
     "cut_start_s": 0.57,
     "cut_end_s": 0.05
   },
@@ -1407,7 +1375,7 @@
     "filename": "anim_yoga_extended_revolved_triangle_pose_or_utthita_trikonasana_b.glb",
     "frames": 663,
     "duration": 22.1,
-    "size_kb": 401,
+    "size_kb": 393,
     "cut_start_s": 0.35,
     "cut_end_s": 0.43
   },
@@ -1417,7 +1385,7 @@
     "filename": "anim_yoga_feathered_peacock_pose_or_pincha_mayurasana_b.glb",
     "frames": 1035,
     "duration": 34.5,
-    "size_kb": 527,
+    "size_kb": 539,
     "cut_start_s": 0.02,
     "cut_end_s": 0.05
   }

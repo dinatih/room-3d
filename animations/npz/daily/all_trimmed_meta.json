@@ -113,7 +113,7 @@
     "duration": 4.8,
     "size_kb": 202,
     "rel_path": "animations/npz/daily/anim_taking_shower.glb",
-    "cut_start_s": 2.0,
+    "cut_start_s": 2,
     "cut_end_s": 1.78
   },
   {
@@ -160,7 +160,7 @@
     "duration": 4.5,
     "size_kb": 198,
     "rel_path": "animations/npz/daily/anim_pickup_box_floor_male.glb",
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.24
   },
   {
@@ -181,10 +181,10 @@
       "ramasser-boite-sol-femme"
     ],
     "frames": 179,
-    "duration": 6.0,
+    "duration": 6,
     "size_kb": 213,
     "rel_path": "animations/npz/daily/anim_pickup_box_floor_female.glb",
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.32
   },
   {
@@ -207,7 +207,7 @@
     "duration": 4.4,
     "size_kb": 198,
     "rel_path": "animations/npz/daily/anim_lift_box_male.glb",
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.53
   },
   {
@@ -230,7 +230,7 @@
     "duration": 8.4,
     "size_kb": 237,
     "rel_path": "animations/npz/daily/anim_lift_box_female.glb",
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.01
   },
   {
@@ -253,7 +253,7 @@
     "duration": 2.4,
     "size_kb": 178,
     "rel_path": "animations/npz/daily/anim_putdown_box_floor.glb",
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 4.56
   },
   {
@@ -276,7 +276,7 @@
     "duration": 33.5,
     "size_kb": 484,
     "rel_path": "animations/npz/daily/anim_sweeping_floor.glb",
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.01
   },
   {
@@ -299,7 +299,7 @@
     "duration": 47.7,
     "size_kb": 641,
     "rel_path": "animations/npz/daily/anim_cleaning_windows.glb",
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.01
   },
   {
@@ -453,7 +453,7 @@
     "duration": 7.4,
     "size_kb": 228,
     "rel_path": "animations/npz/daily/anim_stirring_bowl.glb",
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.03
   },
   {
@@ -476,10 +476,10 @@
       "faire-vaisselle"
     ],
     "frames": 54,
-    "duration": 2.0,
+    "duration": 1.8,
     "size_kb": 172,
     "rel_path": "animations/npz/daily/anim_washing_dishes_sink.glb",
-    "cut_start_s": 2.0,
+    "cut_start_s": 2,
     "cut_end_s": 2.34
   },
   {
@@ -557,7 +557,7 @@
     "duration": 50.7,
     "size_kb": 654,
     "rel_path": "animations/npz/daily/anim_conversation_gestures.glb",
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.01
   },
   {
@@ -606,7 +606,7 @@
       "cheveux"
     ],
     "frames": 89,
-    "duration": 3.0,
+    "duration": 3,
     "size_kb": 184,
     "rel_path": "animations/npz/daily/anim_groom_hair_mirror.glb",
     "cut_start_s": 0.2,
@@ -661,7 +661,7 @@
     "duration": 7.9,
     "size_kb": 232,
     "rel_path": "animations/npz/daily/anim_lie_down_bed.glb",
-    "cut_start_s": 0.0,
+    "cut_start_s": 0,
     "cut_end_s": 0.03
   },
   {
