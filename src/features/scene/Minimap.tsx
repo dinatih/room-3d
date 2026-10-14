@@ -264,6 +264,133 @@ function drawMinimap(
     ctx.restore();
   }
 
+  // ── Drone Black Hornet Nano ─────────────────────────────────────────────────
+  const dronePos = cameraState.positions['drone'];
+  if (dronePos) {
+    const rDrone = Math.max(2.0 * sc, 7.0 * S);
+    const rawX = tx(dronePos.x);
+    const rawZ = tz(dronePos.z);
+    const px = Math.max(rDrone + 2, Math.min(W - rDrone - 2, rawX));
+    const pz = Math.max(rDrone + 2, Math.min(H - rDrone - 2, rawZ));
+    const isOffscreen = rawX < rDrone || rawX > W - rDrone || rawZ < rDrone || rawZ > H - rDrone;
+
+    ctx.save();
+    ctx.translate(px, pz);
+    ctx.rotate(-dronePos.yaw);
+
+    // Fuselage du drone (noir furtif militaire)
+    ctx.fillStyle = '#09090b';
+    ctx.strokeStyle = isOffscreen ? 'rgba(234, 88, 12, 0.9)' : '#06b6d4';
+    ctx.lineWidth = Math.max(0.8, 0.9 * sc);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rDrone * 0.65, rDrone * 1.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Pales du rotor principal (disque / halo cyan)
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.65)';
+    ctx.lineWidth = Math.max(0.6, 0.7 * sc);
+    ctx.beginPath();
+    ctx.arc(0, 0, rDrone * 1.2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Rotor de queue
+    ctx.strokeStyle = '#06b6d4';
+    ctx.beginPath();
+    ctx.moveTo(-rDrone * 0.45, -rDrone * 1.35);
+    ctx.lineTo(rDrone * 0.45, -rDrone * 1.35);
+    ctx.stroke();
+
+    // Capteur optique / caméra avant (point LED cyan vif vers +Y)
+    ctx.fillStyle = '#22d3ee';
+    ctx.beginPath();
+    ctx.arc(0, rDrone * 1.25, rDrone * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // ── Robots autonomes (Unitree G1, Unitree Go2, Jumper) ─────────────────────
+  const ROBOT_CONFIGS: Array<{ id: string; name: string; color: string; accent: string; type: 'humanoid' | 'dog' | 'jumper' }> = [
+    { id: 'unitree-g1', name: 'G1', color: '#1e293b', accent: '#3b82f6', type: 'humanoid' },
+    { id: 'unitree-go2', name: 'Go2', color: '#0f172a', accent: '#0284c7', type: 'dog' },
+    { id: 'jumper-robot', name: 'Jumper', color: '#14532d', accent: '#22c55e', type: 'jumper' },
+  ];
+
+  for (const bot of ROBOT_CONFIGS) {
+    const pos = cameraState.positions[bot.id];
+    if (!pos) continue;
+
+    const rBot = Math.max(2.2 * sc, 8.0 * S);
+    const rawX = tx(pos.x);
+    const rawZ = tz(pos.z);
+    const px = Math.max(rBot + 2, Math.min(W - rBot - 2, rawX));
+    const pz = Math.max(rBot + 2, Math.min(H - rBot - 2, rawZ));
+    const isOffscreen = rawX < rBot || rawX > W - rBot || rawZ < rBot || rawZ > H - rBot;
+
+    ctx.save();
+    ctx.translate(px, pz);
+    ctx.rotate(-pos.yaw);
+
+    ctx.fillStyle = bot.color;
+    ctx.strokeStyle = isOffscreen ? 'rgba(234, 88, 12, 0.9)' : bot.accent;
+    ctx.lineWidth = Math.max(0.8, 1.0 * sc);
+
+    if (bot.type === 'humanoid') {
+      // Épaules et torse humanoïde
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(-rBot * 0.9, -rBot * 0.6, rBot * 1.8, rBot * 1.2, rBot * 0.3);
+      } else {
+        ctx.rect(-rBot * 0.9, -rBot * 0.6, rBot * 1.8, rBot * 1.2);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      // Visière / tête
+      ctx.fillStyle = bot.accent;
+      ctx.beginPath();
+      ctx.arc(0, rBot * 0.5, rBot * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (bot.type === 'dog') {
+      // Châssis chien robot quadrupède
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rBot * 0.8, rBot * 1.1, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // 4 pattes robotiques
+      ctx.fillStyle = bot.accent;
+      const legX = rBot * 0.75;
+      const legZ = rBot * 0.75;
+      const legR = rBot * 0.22;
+      for (const [lx, lz] of [[-legX, legZ], [legX, legZ], [-legX, -legZ], [legX, -legZ]]) {
+        ctx.beginPath();
+        ctx.arc(lx, lz, legR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Capteur LiDAR / Tête
+      ctx.beginPath();
+      ctx.arc(0, rBot * 0.95, rBot * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Robot Jumper (corps compact + base motrice)
+      ctx.beginPath();
+      ctx.arc(0, 0, rBot * 0.9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Œil / dôme lumineux vers l'avant
+      ctx.fillStyle = bot.accent;
+      ctx.beginPath();
+      ctx.arc(0, rBot * 0.55, rBot * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
   // ── Avion joueur ────────────────────────────────────────────────────────────
   if (cameraState.mode === 'plane') {
     drawPlaneIcon(
