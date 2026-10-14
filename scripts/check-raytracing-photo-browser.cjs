@@ -1,8 +1,9 @@
+const launchBrowser = require('./browser-test-options.cjs');
 const assert = require('node:assert/strict');
 const puppeteer = require('puppeteer');
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader'] });
+  const browser = await launchBrowser({ headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader'] });
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 900 });

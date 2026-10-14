@@ -1,3 +1,4 @@
+const launchBrowser = require('./browser-test-options.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const ts = require('typescript');
@@ -120,7 +121,7 @@ console.log('Geometry checks passed: shortest route, direct routes, inflation, r
 
 if (process.argv.includes('--browser')) (async () => {
   const puppeteer = require('puppeteer');
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
+  const browser = await launchBrowser({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   try {
     const page = await browser.newPage();
     if (process.argv.includes('--profile')) {

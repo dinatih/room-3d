@@ -1,8 +1,9 @@
+const launchBrowser = require('./browser-test-options.cjs');
 const { createRequire } = require('node:module');
 const puppeteer = createRequire(`${process.cwd()}/package.json`)('puppeteer');
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
+  const browser = await launchBrowser({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   try {
     const page = await browser.newPage();
     const errors = [];

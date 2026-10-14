@@ -1,3 +1,4 @@
+const launchBrowser = require('./browser-test-options.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -18,7 +19,7 @@ async function main() {
     console.log(`${baseline.files.length} GLB moved with unchanged contents`);
   }
 
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  const browser = await launchBrowser({ headless: true, args: ['--no-sandbox'] });
   try {
     const page = await browser.newPage();
     await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5176'}/AGENTS.md`);

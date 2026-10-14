@@ -68,3 +68,11 @@ Le terminal ou l'IDE utilisé ne détermine pas l'identité de l'agent. Codex ne
 - **Interdiction de l'over-engineering** : Ne jamais ajouter de surcode, de couches d'abstraction superflues ou de logique alambiquée là où une solution simple, directe et idiomatique existe (Three.js, React). Aller au plus court et au plus robuste.
 - **Proscription des constantes magiques et filtres arbitraires** : Ne JAMAIS introduire de valeurs en dur arbitraires (ex. seuils de distance arbitraires, plafonds artificiels de boucles ou de particules comme `slice(0, 14)` ou `< 55`) inventées pour masquer un symptôme sans traiter la cause racine.
 - **Pas d'erreurs silencieuses (Fail Fast)** : Éviter les garde-fous artificiels qui étouffent ou dissimulent les données invalides ou les comportements anormaux. Si des données sont invalides, l'erreur doit se manifester ou remonter explicitement afin d'être identifiée et corrigée à la source, plutôt que d'être masquée silencieusement par un filtre cosmétique.
+
+## Tests navigateur Codex
+
+- Utiliser `scripts/browser-test-options.cjs` pour lancer Puppeteer dans les tests (import par défaut en ESM, `require` en CommonJS). Le lanceur impose headless, ajoute `--codex-browser-test=room-3d` et transmet stderr/stdout Chromium aux logs du test.
+- `--headed` est réservé à une demande explicite de fenêtre visible de l'utilisateur. Un test GPU ou de profilage ne constitue pas une autorisation. Garder headless aussi avec `--hardware-gpu` ; sélectionner Wayland seulement avec `--headed`.
+- Tout nouveau test Playwright ou lancement direct Chromium doit appliquer la même règle et le même marqueur ; aucun lanceur Playwright n'est présent actuellement.
+- La surcharge utilisateur `~/.config/systemd/user/omarchy-crash-watch.service.d/codex.conf` lance `~/.local/bin/omarchy-crash-watch-codex`. Ses sources sont `scripts/omarchy-crash-watch` et `scripts/omarchy-crash-watch.conf`. Seuls les événements de navigateurs portant ce marqueur sont privés de notification ; systemd-coredump reste inchangé. Les exclusions sont journalisées dans `journalctl --user -u omarchy-crash-watch.service`.
+- Vérification réelle : `node scripts/temp_browser_nuisance_check.cjs` ; log `/tmp/room-browser-verification.log`. Pour enregistrer aussi stderr Chromium : `node scripts/temp_browser_nuisance_check.cjs > /tmp/room-browser-test.log 2>&1`.

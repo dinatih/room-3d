@@ -1,3 +1,4 @@
+import launchBrowser from './browser-test-options.cjs';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { NodeIO } from '@gltf-transform/core';
@@ -65,7 +66,7 @@ for (const primitive of torso.listPrimitives()) {
 }
 console.log('GLB: transforms, joint order, topology, torso skin weights and independent UV tiles verified.');
 
-const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader'] });
+const browser = await launchBrowser({ headless: true, args: ['--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader'] });
 try {
   const page = await browser.newPage();
   await page.setViewport({width:1100,height:800});

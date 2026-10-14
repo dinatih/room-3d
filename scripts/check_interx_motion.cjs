@@ -1,3 +1,4 @@
+const launchBrowser = require('./browser-test-options.cjs');
 /** Compare NPZ reference motion with actual exported and retargeted GLB motion.
  * python3 scripts/check_interx_pipeline.py --reference /tmp/interx-motion-reference.json
  * node scripts/check_interx_motion.cjs
@@ -118,7 +119,7 @@ async function main() {
 async function visualCheck() {
   // The visual capture uses the app's inventory and actual character renderer.
   const puppeteer = require('puppeteer');
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'], defaultViewport: { width: 1400, height: 1000 } });
+  const browser = await launchBrowser({ headless: true, args: ['--no-sandbox'], defaultViewport: { width: 1400, height: 1000 } });
   try {
     const page = await browser.newPage();
     page.on('pageerror', error => console.error('Browser page error:', error.message));

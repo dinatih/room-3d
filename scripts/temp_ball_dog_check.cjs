@@ -1,3 +1,4 @@
+const launchBrowser = require('./browser-test-options.cjs');
 const puppeteer = require('puppeteer');
 async function reviewDance(browser) {
   const page = await browser.newPage();
@@ -60,7 +61,7 @@ if (process.argv.includes('--inspect-model')) {
   process.exit(0);
 }
 (async () => {
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
+  const browser = await launchBrowser({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   try {
     if (process.argv.includes('--dance-review')) { await reviewDance(browser); return; }
     const page = await browser.newPage();
