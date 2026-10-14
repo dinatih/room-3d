@@ -50,8 +50,8 @@ export const INVENTORY: InventoryItem[] = [
     dims: { w: 37.14, d: 45.22, h: 132.28 },
     glbPath: 'items/unitree-g1/unitree-g1.glb',
     url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/g1_description',
-    description: 'Humanoïde G1 à 29 degrés de liberté. Maillages officiels Unitree assemblés avec leurs couleurs URDF.',
-    notes: 'Modèle statique en posture neutre, version rev_1_0. Dimensions mesurées sur le modèle 3D. Licence BSD-3-Clause.',
+    description: 'Humanoïde G1 rouge à 29 degrés de liberté. Maillages et articulations officiels Unitree.',
+    notes: 'Animations créées pour le projet : repos, marche sur place, coucou, révérence et danse. Version rev_1_0. Dimensions en posture neutre. Maillages sous licence BSD-3-Clause.',
   },
   {
     id: 'unitree-go2',
@@ -62,8 +62,8 @@ export const INVENTORY: InventoryItem[] = [
     dims: { w: 32.4, d: 73.21, h: 38.83 },
     glbPath: 'items/unitree-go2/unitree-go2.glb',
     url: 'https://github.com/unitreerobotics/unitree_mujoco/tree/main/unitree_robots/go2',
-    description: 'Quadrupède Go2 à 12 degrés de liberté. Assemblage et matériaux officiels Unitree.',
-    notes: 'Modèle statique dans la posture debout home du modèle MuJoCo officiel. Dimensions mesurées sur le modèle 3D. Licence BSD-3-Clause.',
+    description: 'Quadrupède bionique Go2 rouge à 12 degrés de liberté. Maillages et articulations officiels Unitree.',
+    notes: 'Animations créées pour le projet : repos, trot sur place, patte, étirement et danse. Posture de référence home du modèle MuJoCo officiel. Maillages sous licence BSD-3-Clause.',
   },
   {
     id: 'jumper-robot',

@@ -51,6 +51,27 @@ function positionAction(key: string): Record<string, ActionConfig> {
 }
 
 const ACTIONS: Record<string, ActionConfig> = {
+  'unitree-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
+  'unitree-g1-motion': {
+    label: 'Animation du G1', type: 'select', initialValue: 'idle',
+    options: [
+      { value: 'idle', label: 'Repos' },
+      { value: 'walk', label: 'Marche sur place' },
+      { value: 'wave', label: 'Faire coucou' },
+      { value: 'bow', label: 'Révérence' },
+      { value: 'dance', label: 'Danse' },
+    ],
+  },
+  'unitree-go2-motion': {
+    label: 'Animation du Go2', type: 'select', initialValue: 'idle',
+    options: [
+      { value: 'idle', label: 'Repos' },
+      { value: 'trot', label: 'Trot sur place' },
+      { value: 'paw', label: 'Donner la patte' },
+      { value: 'bow', label: 'Étirement' },
+      { value: 'dance', label: 'Danse' },
+    ],
+  },
   'jumper-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
   'jumper-motion': {
     label: 'Animation du robot', type: 'select', initialValue: 'idle',

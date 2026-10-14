@@ -1,4 +1,6 @@
 const OBJECT_ACTIONS: Record<string, readonly string[]> = {
+  'unitree-g1': ['unitree-g1-motion', 'unitree-replay'],
+  'unitree-go2': ['unitree-go2-motion', 'unitree-replay'],
   'jumper-robot': ['jumper-motion', 'jumper-replay'],
   'shiba-inu': ['shiba-dance', 'shiba-replay', 'animal-shiba-fpv', 'animal-shiba-follow'],
   'ushiro': ['shiba-dance', 'shiba-replay', 'animal-shiba-fpv', 'animal-shiba-follow'],
