@@ -109,6 +109,36 @@ Sorties par défaut : `/tmp/interx-smplx-report.json`,
 `/tmp/interx-smplx-reference.json`, `/tmp/interx-smplx-avatar-comparison.json`.
 Le comparateur Node utilise ces chemins par défaut.
 
+### Trouver des binômes de tailles proches
+
+```bash
+python3 scripts/temp_interx_grounding.py --find-similar-heights A000 A001
+```
+
+Ce mode parcourt les groupes G et variations T des actions demandées, conserve
+la première prise disponible de chaque G/T/A, puis classe les paires selon
+l'écart de hauteur des templates SMPL-X avec leurs betas. Il ne déduit pas la
+taille de `trans.y`. Les hauteurs sont mises en cache par genre et betas ; toutes
+les prises retenues figurent dans `/tmp/interx-height-candidates.json`, avec
+les empreintes des modèles. Le terminal affiche un représentant par groupe.
+`--ranking-report '/chemin/rapport.json'` change le chemin de sortie.
+
+Pour A000 et A001 : **60 premières prises, 58 groupes et 4 codes T par action**.
+Il ne s'agit pas d'un comptage de personnes distinctes : G identifie un binôme.
+
+| Groupe | P1 | P2 | Écart | Premier câlin | Première poignée de main |
+| --- | ---: | ---: | ---: | --- | --- |
+| G039 | 161,69 cm | 161,81 cm | 0,12 cm | G039T000A000R000 | G039T000A001R008 |
+| G041 | 161,89 cm | 162,12 cm | 0,23 cm | G041T000A000R000 | G041T001A001R000 |
+| G053 | 174,81 cm | 175,31 cm | 0,50 cm | G053T000A000R000 | G053T000A001R005 |
+| G056 | 170,85 cm | 171,49 cm | 0,64 cm | G056T000A000R000 | G056T000A001R005 |
+| G021 | 177,28 cm | 177,97 cm | 0,69 cm | G021T000A000R000 | G021T000A001R005 |
+
+G039 minimise l'écart entre partenaires. G053 est le candidat recommandé pour
+Native et Rosanna (173,4 cm), car les deux tailles source sont proches de celles
+des avatars. Ce classement est un diagnostic : le catalogue publié et la
+sélection à 218 duos continuent d'utiliser leurs enregistrements actuels.
+
 Références : [viewer Inter-X](https://github.com/liangxuy/Inter-X/blob/main/visualize/smplx_viewer_tool/data_viewer.py)
 et [skinning SMPL-X](https://github.com/vchoutas/smplx/blob/main/smplx/lbs.py).
 

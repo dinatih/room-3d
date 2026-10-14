@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 
 import numpy as np
-from interx_catalog import DEFAULT_SOURCE, MANIFEST
+from interx_catalog import DEFAULT_SOURCE, MANIFEST, RECORDING
 
 
 def rotations(vectors):
@@ -57,12 +57,62 @@ def reconstruct(model, motion):
     return shaped, rest, joints, np.array(sole_y)
 
 
+def find_height_pairs(source, models, hashes, action_codes, output):
+    first_takes = {}
+    for folder in sorted(source.iterdir()):
+        if not folder.is_dir():
+            continue
+        match = RECORDING.fullmatch(folder.name)
+        if not match:
+            raise ValueError(f'Invalid recording folder: {folder}')
+        group, session, action, take = match.groups()
+        if action in action_codes:
+            first_takes.setdefault((group, session, action), folder.name)
+    heights, candidates = {}, {action: [] for action in action_codes}
+    for (group, session, action), recording in sorted(first_takes.items()):
+        people = []
+        for person in ('P1', 'P2'):
+            with np.load(source / recording / f'{person}.npz', allow_pickle=False) as data:
+                gender = str(data['gender'].item())
+                beta = data['betas'].reshape(-1).astype(np.float64)
+                frames = len(data['trans'])
+            if not np.isfinite(beta).all() or frames < 1:
+                raise ValueError(f'Invalid morphology: {recording}/{person}')
+            key = (gender, tuple(beta))
+            if key not in heights:
+                model = models[gender]
+                shaped = model['v_template'] + np.einsum('vck,k->vc', model['shapedirs'][:, :, :len(beta)], beta)
+                heights[key] = float(np.ptp(shaped[:, 1]) * 100)
+            people.append({'participant': person, 'gender': gender, 'heightCm': heights[key], 'frames': frames})
+        if people[0]['frames'] != people[1]['frames']:
+            raise ValueError(f'Participants out of sync: {recording}')
+        candidates[action].append({'recording': recording, 'group': group, 'variation': session,
+                                   'participants': people, 'heightDifferenceCm': abs(people[0]['heightCm'] - people[1]['heightCm'])})
+    for action, pairs in candidates.items():
+        if not pairs:
+            raise ValueError(f'No candidates for {action}')
+        pairs.sort(key=lambda item: (item['heightDifferenceCm'], item['recording']))
+        by_group = {}
+        for pair in pairs:
+            by_group.setdefault(pair['group'], pair)
+        print(f'{action}: {len(pairs)} first takes, {len(by_group)} groups, {len({item["variation"] for item in pairs})} T variations', flush=True)
+        # Display one representative per group; retain all takes in the JSON ranking.
+        for pair in by_group.values():
+            a, b = (item['heightCm'] for item in pair['participants'])
+            print(f"  {pair['recording']}: P1 {a:.2f} cm, P2 {b:.2f} cm, gap {pair['heightDifferenceCm']:.2f} cm", flush=True)
+    output.write_text(json.dumps({'models': hashes, 'takePolicy': 'first-available-per-G-T-A',
+                                 'ranking': 'ascending-height-difference', 'actions': candidates}, indent=2) + '\n')
+    print(f'Full ranking: {output}', flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--models', type=Path, default=Path('/home/dinatih/3D Resources/animations'))
     parser.add_argument('--source', type=Path, default=DEFAULT_SOURCE)
     parser.add_argument('--report', type=Path, default=Path('/tmp/interx-smplx-report.json'))
     parser.add_argument('--reference', type=Path, default=Path('/tmp/interx-smplx-reference.json'))
+    parser.add_argument('--find-similar-heights', nargs='+', choices=[f'A{index:03d}' for index in range(40)])
+    parser.add_argument('--ranking-report', type=Path, default=Path('/tmp/interx-height-candidates.json'))
     args = parser.parse_args()
     models, hashes = {}, {}
     for gender in ('female', 'male', 'neutral'):
@@ -90,6 +140,9 @@ def main():
         np.testing.assert_allclose(moved_joints - joints, np.broadcast_to(shifted['trans'][:, None], joints.shape), atol=1e-12)
         np.testing.assert_allclose(moved_soles - soles, [2.], atol=1e-12)
         hashes[gender] = {'file': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+    if args.find_similar_heights:
+        find_height_pairs(args.source, models, hashes, args.find_similar_heights, args.ranking_report)
+        return
     report, reference = [], []
     for duo in json.loads(MANIFEST.read_text())['duos']:
         people, trajectories = [], []
