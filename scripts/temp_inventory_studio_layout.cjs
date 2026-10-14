@@ -48,7 +48,7 @@ const launch = require('./browser-test-options.cjs');
  assert(result.toolbar.bottom<=result.transport.top+1,'toolbar overlaps timeline');
  assert(result.transport.bottom<=result.annotations.top+1,'timeline overlaps annotations');
  assert(result.preview.top>=result.workspace.top,'actors remain above preview');
- assert(Math.abs((result.canvas.right-result.canvas.left)/result.canvas.height-4/3)<0.01,'canvas aspect ratio 4:3');
+ assert(Math.abs((result.canvas.right-result.canvas.left)/result.canvas.height-3/2)<0.01,'canvas aspect ratio 3:2');
  }
  await mount();
  // Verify shortcuts inside the modal despite its propagation boundary.

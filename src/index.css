@@ -162,7 +162,7 @@ button, input, select, textarea {
   -webkit-user-select: none;
 }
 
-/* The catalog stays beside a scrolling workspace with a 4:3 analysis canvas. */
+/* The catalog stays beside a scrolling workspace with a 3:2 analysis canvas. */
 .animation-studio {
   display: grid;
   grid-template-columns: minmax(0, 30%) 5px minmax(0, 1fr);
@@ -186,7 +186,7 @@ button, input, select, textarea {
   flex: 0 0 auto;
   min-height: 0;
   max-height: none;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 2;
 }
 .animation-studio__preview .view-control-bar-inline {
   flex-shrink: 0;
