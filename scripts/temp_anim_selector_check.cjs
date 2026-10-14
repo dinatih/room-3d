@@ -58,7 +58,7 @@ async function main() {
       const placement = await page.evaluate(() => {
         const selector = document.querySelector('[tabindex="0"]').parentElement;
         const controller = selector.parentElement;
-        const badge = document.querySelector('button[title="Fermer le sélecteur d\'animations"]');
+        const badge = document.querySelector('button[title^="Fermer le sélecteur d\'animations"]');
         const box = selector.getBoundingClientRect();
         const container = controller.getBoundingClientRect();
         const button = badge.getBoundingClientRect();
@@ -85,11 +85,11 @@ async function main() {
         const selector = document.querySelector('[tabindex="0"]').getBoundingClientRect();
         return { count: document.querySelectorAll('input[type="checkbox"]').length, item: {top: item.top, bottom: item.bottom}, scroll: {top: scroll.top, bottom: scroll.bottom}, selector: {top: selector.top, bottom: selector.bottom}, height: innerHeight };
       });
-      assert.equal(bounds.count, 12);
+      assert.equal(bounds.count, 13);
       assert(bounds.item.top >= bounds.scroll.top && bounds.item.bottom <= bounds.scroll.bottom + 1, JSON.stringify(bounds));
       assert(bounds.selector.top >= 0 && bounds.selector.bottom <= bounds.height, JSON.stringify(bounds));
       await page.evaluate(() => [...document.querySelectorAll('label')].at(-1).click());
-      assert.deepEqual(await page.evaluate(() => window.store.getState().selectedCategories), ['others']);
+      assert.deepEqual(await page.evaluate(() => window.store.getState().selectedCategories), ['fab']);
       const joined = await page.evaluate(() => {
         const category = document.querySelector('button[aria-expanded]').getBoundingClientRect();
         const reset = document.querySelector('button[aria-label="Tout désélectionner"]').getBoundingClientRect();
@@ -103,7 +103,7 @@ async function main() {
       const results = await page.evaluate(() => {
         const { getFilteredAnimOptions, ENHANCED_ANIM_OPTIONS } = window.selector;
         const results = {};
-        for (const source of ['miley', 'mixamo', 'npz', 'others']) {
+        for (const source of ['miley', 'mixamo', 'npz', 'others', 'fab']) {
           const filtered = getFilteredAnimOptions('', [source]);
           if (!filtered.length || filtered.some(a => a.source !== source)) throw Error(`Invalid source filter: ${source}`);
           results[source] = filtered.length;

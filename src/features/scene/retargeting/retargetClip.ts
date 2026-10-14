@@ -3,7 +3,7 @@ import { CC3_TO_MIXAMO } from './boneMappings';
 import { getDepth } from './hairChain';
 import { resolveTargetBoneName } from './boneResolver';
 
-export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, animScene: THREE.Object3D | undefined, rootMotionSpace?: 'world-meters'): THREE.AnimationClip {
+export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, animScene: THREE.Object3D | undefined, rootMotionSpace?: 'world-meters' | 'rest-meters'): THREE.AnimationClip {
   const animBones: Record<string, any> = {};
   const sourceHairMap = new Map<string, string>();
 
@@ -391,7 +391,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
                         animNameLower.includes('stairs')) &&
                        !animNameLower.includes('dance');
 
-        if (rootMotionSpace === 'world-meters') {
+        if (rootMotionSpace === 'world-meters' || rootMotionSpace === 'rest-meters') {
           const sourceBone = animBones[baseName]?.bone as THREE.Bone | undefined;
           const originalTrack = rawClip.tracks.find(track => track.name === tr.name);
           if (!sourceBone?.parent || !bone.parent?.restWorldQuaternion || !originalTrack) {
@@ -406,7 +406,11 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
             bone.parent.getWorldScale(new THREE.Vector3())
           );
           const centimetersToTarget = new THREE.Matrix3().setFromMatrix4(targetRest).invert();
-          const origin = new THREE.Vector3().fromArray(originalTrack.values);
+          // Solo imports retain their height relative to the standing bind pose;
+          // paired Inter-X motion continues to use its first-frame origin.
+          const origin = rootMotionSpace === 'rest-meters'
+            ? sourceBone.position.clone()
+            : new THREE.Vector3().fromArray(originalTrack.values);
           for (let index = 0; index < originalTrack.values.length; index += 3) {
             const displacement = new THREE.Vector3().fromArray(originalTrack.values, index)
               .sub(origin).applyMatrix3(sourceToMeters).multiplyScalar(100)

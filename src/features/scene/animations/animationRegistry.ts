@@ -6,6 +6,7 @@
  */
 
 import { INTERX_ANIMATION_DEFINITIONS } from './interxManifest';
+import { FAB_ANIMATION_DEFINITIONS } from './fabManifest';
 
 export type AnimationCategory = 'combat' | 'dances' | 'emotes_gestures' | 'interactions' | 'locomotion' | 'poses_idles' | 'sports_fitness' | 'yoga';
 
@@ -35,8 +36,14 @@ export interface AnimationDefinition {
   defaultRotYOffset?: number;  // Décalage natif de rotation (radians) si l'animation n'est pas alignée sur 0
   defaultOffset?: [number, number, number]; // Décalage natif de position [x, y, z] (cm) pour corriger les animations hors norme
   duration: number;            // Durée en secondes (obligatoire)
-  /** Preserve metric root displacement independently of target character proportions. */
-  rootMotionSpace?: 'world-meters';
+  /** Equipment displayed only while this animation is active. */
+  equipment?: 'dual-pistols';
+  /** Explicit one-shot playback for imported transitions. */
+  loop?: 'once';
+  /** Natural forward speed measured from the source motion, in cm/s. */
+  walkSpeed?: number;
+  /** Metric displacement from the first frame (duos) or standing rest pose (solo motions). */
+  rootMotionSpace?: 'world-meters' | 'rest-meters';
   /** Explicit standing Inter-X correction; original wrist trajectories are retained. */
   interxGrounding?: { baseHeightMeters: number; wristTargetsMeters?: number[][][] };
   /**
@@ -48,6 +55,7 @@ export interface AnimationDefinition {
 
 export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   ...INTERX_ANIMATION_DEFINITIONS,
+  ...FAB_ANIMATION_DEFINITIONS,
   // ── ANIMATIONS SIGNATURES DES PERSONNAGES ───────────────────────────────────
   {
     id: 'inyeong-nitro-intro',

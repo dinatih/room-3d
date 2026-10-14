@@ -22,6 +22,7 @@ import { glbLocalBBox } from '@features/scene/glbUtils';
 import {
   extractCharacterParts,
   applyClothingAndAccessoriesVisibility,
+  applyPistolVisibility,
   applyRenderProperties,
   normalizeNonLaraCharacterMaterials,
   isHeadMesh,
@@ -35,7 +36,7 @@ import { measureHumanProfile } from '../ai/navigation/profiles';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
-import { resolveAnimationId, getAnimationOriginTransform } from '../animations/animationResolver';
+import { resolveAnimationId, getAnimationOriginTransform, getAnimationDef } from '../animations/animationResolver';
 import { getCrossfadeDuration } from '../animations/animationTransitions';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 
@@ -226,6 +227,7 @@ export function Character({
     pistols: true,
     backpack: true,
   });
+  const animationEquipmentRef = useRef<'dual-pistols' | undefined>(undefined);
 
   const { invalidate } = useThree();
 
@@ -487,6 +489,7 @@ export function Character({
       laraShoes,
       showAccessories,
       laraPistols,
+      animationEquipment: animationEquipmentRef.current,
       equipment
     });
     invalidate();
@@ -825,6 +828,12 @@ export function Character({
       isTemporaryLoadingFallback = true;
     }
 
+    const animationEquipment = isTPose ? undefined : getAnimationDef(target)?.equipment;
+    if (isLara && animationEquipmentRef.current !== animationEquipment) {
+      animationEquipmentRef.current = animationEquipment;
+      applyPistolVisibility(parts, { showAccessories, laraPistols, equipment, animationEquipment });
+    }
+
     if (isTPose) {
       if (activeActionName.current !== 't-pose') {
         if (activeActionName.current && actions[activeActionName.current]) {
@@ -847,7 +856,8 @@ export function Character({
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
         const blendDuration = getCrossfadeDuration(activeActionName.current, target);
 
-        const isOnceAnim = target === 'pistol-kneel-to-stand' ||
+        const isOnceAnim = getAnimationDef(target)?.loop === 'once' ||
+                           target === 'pistol-kneel-to-stand' ||
                            target === 'anim-pistol-kneel-to-stand' ||
                            target === 'sit-to-stand' ||
                            target === 'anim-sit-to-stand' ||

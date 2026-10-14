@@ -337,6 +337,13 @@ export interface ClothingAndAccessoriesOptions {
   showAccessories: boolean;
   laraPistols: boolean;
   equipment: { holster: boolean; pistols: boolean; backpack: boolean };
+  animationEquipment?: 'dual-pistols';
+}
+
+export function applyPistolVisibility(parts: CharacterParts, opts: Pick<ClothingAndAccessoriesOptions, 'showAccessories' | 'laraPistols' | 'equipment' | 'animationEquipment'>) {
+  const dualPistols = opts.animationEquipment === 'dual-pistols';
+  setPartVisibility(parts.handPistols, dualPistols || (opts.showAccessories && opts.equipment.pistols && opts.laraPistols));
+  setPartVisibility(parts.holsterPistols, !dualPistols && opts.showAccessories && opts.equipment.pistols && !opts.laraPistols);
 }
 
 export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opts: ClothingAndAccessoriesOptions) {
@@ -360,14 +367,11 @@ export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opt
   setPartVisibility(parts.bodyFull, !isTopNude && !isBottomNude);
 
   // Weapons & Accessories
-  const showHandPistols = opts.showAccessories && opts.equipment.pistols && opts.laraPistols;
-  const showHolsterPistols = opts.showAccessories && opts.equipment.pistols && !opts.laraPistols;
   const showHolsters = opts.showAccessories && opts.equipment.holster;
   const showBackpacks = opts.showAccessories && opts.equipment.backpack;
   const showOtherAcc = opts.showAccessories;
 
-  setPartVisibility(parts.handPistols, showHandPistols);
-  setPartVisibility(parts.holsterPistols, showHolsterPistols);
+  applyPistolVisibility(parts, opts);
   setPartVisibility(parts.holsters, showHolsters);
   setPartVisibility(parts.backpacks, showBackpacks);
   setPartVisibility(parts.otherAccessories, showOtherAcc);

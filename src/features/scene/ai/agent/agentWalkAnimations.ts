@@ -1,4 +1,9 @@
+import { FAB_ANIMATION_DEFINITIONS } from '../../animations/fabManifest';
+
+const fabWalks = FAB_ANIMATION_DEFINITIONS.filter(def => def.tags.includes('npc-walk'));
+
 export const NPC_WALK_ANIMATIONS = [
+  ...fabWalks.map(def => def.id),
   'miley-armature-elegant-walk-2l',
   'miley-armature-catwalk-loop',
   'miley-armature-walk-f',
@@ -29,6 +34,7 @@ export const NPC_WALK_ANIMATIONS = [
  * 1 unité 3D = 1 cm.
  */
 export const ANIMATION_WALK_SPEEDS: Record<string, number> = {
+  ...Object.fromEntries(fabWalks.map(def => [def.id, def.walkSpeed!])),
   'walking': 162.0,
   'walk': 162.0,
   'female-walk': 124.0,

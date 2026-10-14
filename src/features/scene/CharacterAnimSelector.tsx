@@ -10,7 +10,7 @@ import type { AnimationCategory } from './animations/animationRegistry';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
-type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others';
+type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others' | 'fab';
 
 export const ANIM_CATEGORIES = [
   { key: 'combat', label: 'Combat', icon: 'bi-shield-shaded' },
@@ -25,6 +25,7 @@ export const ANIM_CATEGORIES = [
   { key: 'mixamo', label: 'Mixamo', icon: 'bi-folder' },
   { key: 'npz', label: 'NPZ', icon: 'bi-folder' },
   { key: 'others', label: 'Others', icon: 'bi-folder' },
+  { key: 'fab', label: 'Fab / ActorCore', icon: 'bi-folder' },
 ] as const satisfies ReadonlyArray<{ key: AnimationCategory | AnimationSource; label: string; icon: string }>;
 
 export function getAnimCategory(val: string): string {
