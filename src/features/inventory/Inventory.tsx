@@ -16,6 +16,7 @@ import { ViewControlBar } from '@features/scene/ViewControlBar';
 import { AnimationStudioView } from './AnimationStudioView';
 import { DevAnnotationPanel } from './DevAnnotationPanel';
 import { useItemAnnotations } from './useItemAnnotations';
+import { updateUrlInventory } from './inventoryUrlParams';
 
 type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
 
@@ -530,6 +531,12 @@ export function Inventory({
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
   };
+
+  useEffect(() => {
+    if (visible) {
+      updateUrlInventory(true, activeCat);
+    }
+  }, [visible, activeCat]);
 
   useEffect(() => {
     if (initialCategory) {

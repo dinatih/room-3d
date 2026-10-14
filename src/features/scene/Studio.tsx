@@ -16,6 +16,7 @@ import { CameraViewMarkers } from './CameraViewMarkers';
 import { cameraState }      from '@features/scene/cameraState';
 import { SKY_START_POS }     from '@features/scene/camera';
 import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode, parseUrlSkipIntro } from '@features/scene/camera/cameraUrlParams';
+import { parseUrlInventory, updateUrlInventory } from '@features/inventory/inventoryUrlParams';
 import type { LidarMode } from './sidepanel/types';
 import { ToolbarPanelsRow } from './ToolbarPanelsRow';
 import { PanelPopover } from './sidepanel/PanelPopover';
@@ -461,7 +462,9 @@ export function Studio() {
     onToggleLayer(key);
   }, [onToggleLayer]);
 
-  const [showInventory, setShowInventory] = useState(false);
+  const initialInvUrl = useRef(parseUrlInventory()).current;
+  const [showInventory, setShowInventory] = useState(initialInvUrl.open);
+  const [inventoryInitialCat, setInventoryInitialCat] = useState<string>(initialInvUrl.category);
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   useEffect(() => {
@@ -469,7 +472,6 @@ export function Studio() {
     window.addEventListener('open-shortcuts-modal', openShortcuts);
     return () => window.removeEventListener('open-shortcuts-modal', openShortcuts);
   }, []);
-  const [inventoryInitialCat, setInventoryInitialCat] = useState<string>('all');
   const [hideUI, setHideUI] = useState(() => parseUrlHideUI());
 
   const toggleHideUI = useCallback(() => {
@@ -1023,7 +1025,14 @@ export function Studio() {
       </div>
       {showInventory && (
         <Suspense fallback={null}>
-          <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
+          <Inventory
+            visible
+            onClose={() => {
+              setShowInventory(false);
+              updateUrlInventory(false);
+            }}
+            initialCategory={inventoryInitialCat}
+          />
         </Suspense>
       )}
       <AppConsole
