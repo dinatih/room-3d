@@ -1,0 +1,69 @@
+{
+  "revision": "78966f45de6f2b6de3f7cea017f32a39f8b993e6",
+  "clips": [
+    {
+      "name": "idle",
+      "duration": 1.0,
+      "frames": 2,
+      "provenance": "official standing pose",
+      "loop": true
+    },
+    {
+      "name": "hello",
+      "duration": 7.3,
+      "frames": 366,
+      "provenance": "official",
+      "loop": false
+    },
+    {
+      "name": "bow",
+      "duration": 8.54,
+      "frames": 428,
+      "provenance": "official",
+      "loop": false
+    },
+    {
+      "name": "paw",
+      "duration": 6.36,
+      "frames": 319,
+      "provenance": "official",
+      "loop": false
+    },
+    {
+      "name": "salute",
+      "duration": 6.0,
+      "frames": 301,
+      "provenance": "official",
+      "loop": false
+    },
+    {
+      "name": "maze",
+      "duration": 9.98,
+      "frames": 500,
+      "provenance": "official",
+      "loop": true
+    },
+    {
+      "name": "walk",
+      "duration": 0.5,
+      "frames": 26,
+      "provenance": "reconstructed foot-path IK",
+      "loop": true
+    },
+    {
+      "name": "turn-left",
+      "duration": 9.5,
+      "frames": 476,
+      "provenance": "reconstructed foot-path IK",
+      "loop": true
+    },
+    {
+      "name": "turn-right",
+      "duration": 9.5,
+      "frames": 476,
+      "provenance": "reconstructed foot-path IK",
+      "loop": true
+    }
+  ],
+  "max_ik_error_m": 1.0923611587161849e-11
+}
