@@ -20,7 +20,6 @@ OUTPUT = ROOT / 'public/animations/npz/interx'
 SOURCE_FPS = 120
 TARGET_FPS = 30
 TRANSLATION_SCALE = 1.17
-ROOT_CANCEL = Quaternion((1, 0, 0), -math.pi / 2)
 BONE_NAMES = [
     'mixamorig:Hips', 'mixamorig:LeftUpLeg', 'mixamorig:RightUpLeg', 'mixamorig:Spine',
     'mixamorig:LeftLeg', 'mixamorig:RightLeg', 'mixamorig:Spine1', 'mixamorig:LeftFoot',
@@ -29,7 +28,7 @@ BONE_NAMES = [
     'mixamorig:LeftArm', 'mixamorig:RightArm', 'mixamorig:LeftForeArm', 'mixamorig:RightForeArm',
     'mixamorig:LeftHand', 'mixamorig:RightHand',
 ]
-# Inter-X stores SMPL-X body joints in a different order than the SMPL template.
+# The 21 SMPL-X body joints correspond to the mapped bones after Hips.
 BODY_TO_MIXAMO = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
 
 
@@ -65,8 +64,10 @@ def convert(source_path, output_path):
         bone.rotation_mode = 'QUATERNION'
     bases = [armature.data.bones[name].matrix_local.to_3x3() for name in BONE_NAMES]
     hips = armature.pose.bones[BONE_NAMES[0]]
-    first_root = ROOT_CANCEL @ rodrigues_to_quat(root[0])
-    yaw_cancel = Quaternion((0, 1, 0), -first_root.to_euler().y)
+    # Inter-X is Y-up already. Normalize only heading, preserving its upright axis.
+    first_root = rodrigues_to_quat(root[0])
+    forward = first_root @ Vector((0, 0, 1))
+    yaw_cancel = Quaternion((0, 1, 0), -math.atan2(forward.x, forward.z))
     initial_translation = translations[0]
 
     sample_step = SOURCE_FPS // TARGET_FPS
@@ -85,13 +86,14 @@ def convert(source_path, output_path):
             bone.rotation_quaternion = (basis.inverted() @ rotation.to_matrix() @ basis).to_quaternion()
             bone.keyframe_insert(data_path='rotation_quaternion', frame=frame)
 
-        root_rotation = yaw_cancel @ ROOT_CANCEL @ rotations[0]
+        root_rotation = yaw_cancel @ rotations[0]
         hips.rotation_quaternion = (bases[0].inverted() @ root_rotation.to_matrix() @ bases[0]).to_quaternion()
         hips.keyframe_insert(data_path='rotation_quaternion', frame=frame)
         offset = translation - initial_translation
-        world_translation = Vector((float(offset[0]), float(offset[2]), -float(offset[1])))
+        world_translation = Vector(tuple(float(value) for value in offset))
         world_translation = yaw_cancel.to_matrix() @ world_translation
-        hips.location = world_translation * (100 * TRANSLATION_SCALE) - hips.bone.head
+        # Keep the template's standing pelvis height; only animate source displacement.
+        hips.location = world_translation * (100 * TRANSLATION_SCALE)
         hips.keyframe_insert(data_path='location', frame=frame)
 
     scene.frame_start = 1
