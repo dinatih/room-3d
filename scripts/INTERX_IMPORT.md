@@ -38,6 +38,13 @@ baseP1 = ancre
 baseP2 = ancre + rotation_ancre × (100 × start_offset)
 ```
 
+Les deux pilotes câlin et poignée de main utilisent explicitement
+`placement.verticalOrigin: "rig-ground"` : seule la composante Y du placement
+initial est mise à zéro pour les rigs de même taille. Le `start_offset` source
+reste intact, X/Z et les déplacements verticaux animés restent conservés.
+Ce réglage par duo est conservé lors des réexports ; les autres duos utilisent
+leur offset source complet.
+
 Les deux parents utilisent la même orientation. Aucune rotation de π ni
 translation forfaitaire n'est ajoutée. La hauteur de repos des rigs est
 conservée ; les déplacements des racines ne sont pas rescalés selon leur
@@ -112,7 +119,8 @@ L'interface `InterXManifest` définit le schéma dans `interxManifest.ts` :
 
 Les registres lisent exclusivement ce manifest pour leurs entrées Inter-X.
 Les contrôles existants de placement restent utilisables ; « réinitialiser »
-restaure l'offset calculé depuis les sources et une rotation parent relative nulle.
+restaure l'offset calculé depuis les sources avec le réglage de hauteur du duo
+et une rotation parent relative nulle.
 
 ## Vérifications
 

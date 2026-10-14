@@ -48,7 +48,10 @@ async function main() {
     const ref = reference.find(item => item.id === entry.id);
     assert(def && ref);
     assert.equal(def.rotB, 0);
-    near(new THREE.Vector3(...def.offsetB), new THREE.Vector3(...entry.start_offset).multiplyScalar(100), 'Manifest start offset');
+    const initialOffset = new THREE.Vector3(...entry.start_offset).multiplyScalar(100);
+    const grounded = entry.placement?.verticalOrigin === 'rig-ground';
+    if (grounded) initialOffset.y = 0;
+    near(new THREE.Vector3(...def.offsetB), initialOffset, 'Manifest placement offset');
     for (const scale of [75, 100, 150]) {
       const participants = [];
       for (const person of ['p1', 'p2']) {
@@ -97,6 +100,7 @@ async function main() {
           return actual;
         });
         const expectedRelative = new THREE.Vector3(...ref.participants[1].trans[frame]).sub(new THREE.Vector3(...ref.participants[0].trans[frame])).multiplyScalar(100);
+        if (grounded) expectedRelative.y -= entry.start_offset[1] * 100;
         const relative = new THREE.Vector3(...def.offsetB).add(displacements[1]).sub(displacements[0]);
         near(relative, expectedRelative, `${entry.id} paired motion frame=${frame}`);
         for (const rotation of [0, Math.PI / 2]) {
@@ -118,14 +122,14 @@ async function main() {
 
 async function visualCheck() {
   // The visual capture uses the app's inventory and actual character renderer.
-  const puppeteer = require('puppeteer');
   const browser = await launchBrowser({ headless: true, args: ['--no-sandbox'], defaultViewport: { width: 1400, height: 1000 } });
   try {
     const page = await browser.newPage();
     page.on('pageerror', error => console.error('Browser page error:', error.message));
     page.on('console', message => { if (message.type() === 'error') console.error('Browser:', message.text()); });
     await page.goto((process.env.ROOM_TEST_URL || 'http://127.0.0.1:5173') + '/AGENTS.md', { waitUntil: 'domcontentloaded' });
-    await page.evaluate(async () => {
+    for (const [recording, label] of [['g001t000a000r000', 'Câlin'], ['g001t000a001r005', 'Poignée']]) {
+    await page.evaluate(async recording => {
       window.$RefreshReg$ = () => {};
       window.$RefreshSig$ = () => type => type;
       window.__vite_plugin_react_preamble_installed__ = true;
@@ -145,13 +149,15 @@ async function visualCheck() {
       document.head.append(css);
       await import('/src/features/scene/ViewControlBar.scss');
       const item = INVENTORY.find(item => item.id === 'native');
-      const duo = DUO_ANIMATIONS.find(duo => duo.id === 'interx-g001t000a000r000');
+      const duo = DUO_ANIMATIONS.find(duo => duo.id === `interx-${recording}`);
       if (!item || !duo) throw new Error('Pilot character or duo is absent from the catalog');
-      createRoot(document.getElementById('root')).render(React.createElement(InventoryPreview, {
+      window.interxRoot?.unmount();
+      window.interxRoot = createRoot(document.getElementById('root'));
+      window.interxRoot.render(React.createElement(InventoryPreview, {
         item, height: '950px', initialDuoAnim: duo, initialDuoPartner: 'rosanna',
       }));
-    });
-    await page.waitForFunction(() => window.interxPreview.getState().clipName.includes('Câlin') && window.interxPreview.getState().duration > 6, { timeout: 45000 }).catch(async error => {
+    }, recording);
+    await page.waitForFunction(label => window.interxPreview.getState().clipName.includes(label) && window.interxPreview.getState().duration > 0, { timeout: 45000 }, label).catch(async error => {
       console.log('Preview state:', await page.evaluate(() => ({ state: window.interxPreview?.getState(), text: document.body.innerText.slice(-1800), canvases: document.querySelectorAll('canvas').length })));
       await page.screenshot({ path: '/tmp/interx-pilot-failure.png' });
       throw error;
@@ -165,9 +171,10 @@ async function visualCheck() {
     for (const [label, time] of [['start', 0], ['contact', 3.5]]) {
       await page.evaluate(time => window.interxPreview.getState().seekToTime(time), time);
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-      await page.screenshot({ path: `/tmp/interx-pilot-${label}.png` });
+      await page.screenshot({ path: `/tmp/interx-${recording}-${label}.png` });
     }
-    console.log('Inventory pilot rendered at frame zero and contact: /tmp/interx-pilot-start.png, /tmp/interx-pilot-contact.png');
+    console.log(`Inventory ${recording} rendered at frame zero and contact.`);
+    }
   } finally {
     await browser.close();
   }

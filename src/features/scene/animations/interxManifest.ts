@@ -44,6 +44,7 @@ export interface InterXManifest {
     }>;
     rootMotion: { mode: string; translationUnit: string; upAxis: string };
     start_offset: [number, number, number];
+    placement?: { verticalOrigin: 'rig-ground' };
     tags: string[];
   }>;
 }
@@ -59,6 +60,7 @@ const paths = new Set<string>();
 for (const duo of INTERX_MANIFEST.duos) {
   if (ids.has(duo.id) || !actionByCode.has(duo.actionCode)
     || duo.start_offset.length !== 3 || !duo.start_offset.every(Number.isFinite)
+    || (duo.placement !== undefined && duo.placement.verticalOrigin !== 'rig-ground')
     || duo.rootMotion.mode !== 'relative-to-first-frame'
     || duo.rootMotion.translationUnit !== 'meters' || duo.rootMotion.upAxis !== 'Y') {
     throw new Error(`Métadonnées Inter-X invalides : ${duo.id}`);
@@ -99,7 +101,11 @@ export const INTERX_DUO_ANIMATIONS: DuoAnimationDef[] = INTERX_MANIFEST.duos.map
     isCombat: action.isCombat,
     animA: `${duo.id}-p1`,
     animB: `${duo.id}-p2`,
-    offsetB: duo.start_offset.map(value => value * 100) as [number, number, number],
+    offsetB: [
+      duo.start_offset[0] * 100,
+      duo.placement?.verticalOrigin === 'rig-ground' ? 0 : duo.start_offset[1] * 100,
+      duo.start_offset[2] * 100,
+    ],
     rotB: 0,
     duration: duo.clips.p1.durationSeconds,
     tags: duo.tags,

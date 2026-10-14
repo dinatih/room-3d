@@ -494,6 +494,7 @@
   "duos": [
     {
       "id": "interx-g001t000a000r000",
+      "placement": { "verticalOrigin": "rig-ground" },
       "actionCode": "A000",
       "variation": "T000",
       "source": {
@@ -543,6 +544,7 @@
     },
     {
       "id": "interx-g001t000a001r005",
+      "placement": { "verticalOrigin": "rig-ground" },
       "actionCode": "A001",
       "variation": "T000",
       "source": {

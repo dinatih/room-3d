@@ -161,6 +161,8 @@ def main():
             continue
         pair = read_pair(args.source, entry['source']['recording'])
         exported = {key: value for key, value in entry.items() if key not in ('expectedFrameCount', 'expectedDurationSeconds', 'estimatedBytes')}
+        if old and 'placement' in old:
+            exported['placement'] = old['placement']
         exported['clips'] = {}
         with tempfile.TemporaryDirectory(prefix='interx-export-', dir=MANIFEST.parent) as temporary:
             paths = []
