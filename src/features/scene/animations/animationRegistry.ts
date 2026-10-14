@@ -7,8 +7,10 @@
 
 import { INTERX_ANIMATION_DEFINITIONS } from './interxManifest';
 import { FAB_ANIMATION_DEFINITIONS } from './fabManifest';
+import { BEHAVE_ANIMATION_DEFINITIONS } from './behaveManifest';
 
 export type AnimationCategory = 'combat' | 'dances' | 'emotes_gestures' | 'interactions' | 'locomotion' | 'poses_idles' | 'sports_fitness' | 'yoga';
+
 
 export interface AnimationDefinition {
   /**
@@ -56,6 +58,7 @@ export interface AnimationDefinition {
 export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   ...INTERX_ANIMATION_DEFINITIONS,
   ...FAB_ANIMATION_DEFINITIONS,
+  ...BEHAVE_ANIMATION_DEFINITIONS,
   // ── ANIMATIONS SIGNATURES DES PERSONNAGES ───────────────────────────────────
   {
     id: 'inyeong-nitro-intro',
