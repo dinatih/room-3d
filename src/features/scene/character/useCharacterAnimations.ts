@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { retargetClip, _retargetCache } from '../retargeting/index';
 import { resolveAnimationPath, getAnimationDef } from '../animations/animationResolver';
+import { animationSourcePlugin, extractAnimationSource, type AnimationSource } from './animationSource';
 
 const silentManager = new THREE.LoadingManager();
 
@@ -11,39 +12,20 @@ const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
 const MAX_DYNAMIC_GLTF_CACHE = 64;
 const MAX_RETARGETED_CLIPS = 256;
-const globalGLTFCache = new Map<string, Promise<any>>();
+const globalGLTFCache = new Map<string, Promise<AnimationSource>>();
 
-function disposeGltfResources(gltf: any) {
-  if (!gltf?.scene) return;
-  gltf.scene.traverse((child: any) => {
-    if (child.isMesh) {
-      child.geometry?.dispose();
-      if (Array.isArray(child.material)) {
-        child.material.forEach((m: any) => {
-          m?.map?.dispose?.();
-          m?.normalMap?.dispose?.();
-          m?.dispose?.();
-        });
-      } else if (child.material) {
-        child.material.map?.dispose?.();
-        child.material.normalMap?.dispose?.();
-        child.material.dispose?.();
-      }
-    }
-  });
-}
-
-export function cacheDynamicGLTF(path: string): Promise<any> {
+export function cacheDynamicGLTF(path: string): Promise<AnimationSource> {
   const cached = globalGLTFCache.get(path);
   if (cached) {
     globalGLTFCache.delete(path);
     globalGLTFCache.set(path, cached);
     return cached;
   }
-  const pending = new Promise((resolve, reject) => {
+  const pending = new Promise<AnimationSource>((resolve, reject) => {
     const loader = new GLTFLoader(silentManager);
     loader.setDRACOLoader(dracoLoader);
-    loader.load(path, resolve, undefined, (err) => {
+    loader.register(animationSourcePlugin);
+    loader.load(path, gltf => resolve(extractAnimationSource(gltf)), undefined, (err) => {
       const msg = `[GLB 404] Fichier introuvable : "${path}" — ${(err as any)?.message ?? err}`;
       console.error(msg);
       reject(new Error(msg));
@@ -53,11 +35,7 @@ export function cacheDynamicGLTF(path: string): Promise<any> {
   while (globalGLTFCache.size > MAX_DYNAMIC_GLTF_CACHE) {
     const oldestKey = globalGLTFCache.keys().next().value;
     if (oldestKey) {
-      const oldPromise = globalGLTFCache.get(oldestKey);
       globalGLTFCache.delete(oldestKey);
-      if (oldPromise) {
-        oldPromise.then(disposeGltfResources).catch(() => {});
-      }
     }
   }
   return pending;

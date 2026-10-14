@@ -1,7 +1,7 @@
 /**
  * Mirrors.tsx — Miroirs Nissedal et plans de réflexion Three.js Reflector.
  */
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -105,18 +105,25 @@ function ReflectorMirror({ w, h, position, rotationY }: {
       renderCam.layers.mask = mirrorMask;
 
       const oldBackground = scene.background;
+      const worldAutoUpdate = scene.matrixWorldAutoUpdate;
       scene.background = getLoadedSkyTexture() ?? oldBackground;
-      origOnBeforeRender(renderer, scene, renderCam, geometry, material, group);
-      scene.background = oldBackground;
-
-      renderCam.projectionMatrix.copy(savedProj);
-      renderCam.layers.mask = oldMask;
-      _reflectionDepth--;
+      // The main render has already updated all world matrices for this frame.
+      scene.matrixWorldAutoUpdate = false;
+      try {
+        origOnBeforeRender(renderer, scene, renderCam, geometry, material, group);
+      } finally {
+        scene.background = oldBackground;
+        scene.matrixWorldAutoUpdate = worldAutoUpdate;
+        renderCam.projectionMatrix.copy(savedProj);
+        renderCam.layers.mask = oldMask;
+        _reflectionDepth--;
+      }
     };
 
     return mir;
   }, []);
 
+  useEffect(() => () => { reflector.dispose(); reflector.geometry.dispose(); }, [reflector]);
   return <primitive object={reflector} />;
 }
 
@@ -170,18 +177,24 @@ function MergedReflector({ planes, position, rotationY }: {
       renderCam.layers.mask = mirrorMask;
 
       const oldBackground = scene.background;
+      const worldAutoUpdate = scene.matrixWorldAutoUpdate;
       scene.background = getLoadedSkyTexture() ?? oldBackground;
-      origOnBeforeRender(renderer, scene, renderCam, geometry, material, group);
-      scene.background = oldBackground;
-
-      renderCam.projectionMatrix.copy(savedProj);
-      renderCam.layers.mask = oldMask;
-      _reflectionDepth--;
+      scene.matrixWorldAutoUpdate = false;
+      try {
+        origOnBeforeRender(renderer, scene, renderCam, geometry, material, group);
+      } finally {
+        scene.background = oldBackground;
+        scene.matrixWorldAutoUpdate = worldAutoUpdate;
+        renderCam.projectionMatrix.copy(savedProj);
+        renderCam.layers.mask = oldMask;
+        _reflectionDepth--;
+      }
     };
 
     return mir;
   }, [planes]);
 
+  useEffect(() => () => { reflector.dispose(); reflector.geometry.dispose(); }, [reflector]);
   return <primitive object={reflector} />;
 }
 

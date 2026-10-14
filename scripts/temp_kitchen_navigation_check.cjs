@@ -17,6 +17,97 @@ require.extensions['.ts'] = (module, filename) => {
   module._compile(outputText, filename);
 };
 const g = require('../src/features/scene/ai/navigation/geometry.ts');
+if (process.argv.includes('--animation-asset-stats')) {
+  const sources=[];
+  for (const name of fs.readdirSync('public/animations',{recursive:true}).filter(name=>name.endsWith('.glb'))) {
+    const fd=fs.openSync(`public/animations/${name}`,'r'),header=Buffer.alloc(20);fs.readSync(fd,header,0,20,0);
+    const jsonBytes=Buffer.alloc(header.readUInt32LE(12));fs.readSync(fd,jsonBytes,0,jsonBytes.length,20);fs.closeSync(fd);
+    const json=JSON.parse(jsonBytes.toString());
+    if (json.meshes?.length) sources.push({name,meshes:json.meshes.length,vertices:json.meshes.reduce((sum,mesh)=>sum+mesh.primitives.reduce((sum,p)=>sum+json.accessors[p.attributes.POSITION].count,0),0)});
+  }
+  console.log('Animation files with unused source meshes:',JSON.stringify(sources));
+  return;
+}
+if (process.argv.includes('--animation-source')) {
+  (async () => {
+    const THREE = require('three'), { GLTFLoader } = require('three/examples/jsm/loaders/GLTFLoader.js');
+    const { animationSourcePlugin, extractAnimationSource } = require('../src/features/scene/character/animationSource.ts');
+    if (!global.ProgressEvent) global.ProgressEvent = class extends Event { constructor(type, options) { super(type); Object.assign(this,options); } };
+    const data = Buffer.from(new Float32Array([0,1, 0,100,0, 100,100,0]).buffer);
+    const json = {asset:{version:'2.0'},scene:0,scenes:[{nodes:[0]}],
+      nodes:[{name:'Root',mesh:0,skin:0,translation:[2,3,4],scale:[0.01,0.01,0.01],children:[1]}, {name:'Hips',translation:[0,100,0]}],
+      skins:[{joints:[1]}],meshes:[{primitives:[{attributes:{POSITION:1},material:0}]}],
+      materials:[{pbrMetallicRoughness:{baseColorTexture:{index:0}}}],textures:[{source:0}],images:[{uri:'unused-character-texture.png'}],
+      buffers:[{byteLength:data.length,uri:'data:application/octet-stream;base64,'+data.toString('base64')}],
+      bufferViews:[{buffer:0,byteOffset:0,byteLength:8},{buffer:0,byteOffset:8,byteLength:24}],
+      accessors:[{bufferView:0,componentType:5126,count:2,type:'SCALAR',min:[0],max:[1]}, {bufferView:1,componentType:5126,count:2,type:'VEC3'}],
+      animations:[{name:'walk',samplers:[{input:0,output:1}],channels:[{sampler:0,target:{node:1,path:'translation'}}]}]};
+    const loader = new GLTFLoader().register(animationSourcePlugin);
+    const source = extractAnimationSource(await loader.parseAsync(JSON.stringify(json),''));
+    source.scene.updateMatrixWorld(true);
+    const bone = source.scene.getObjectByName('Hips');
+    assert.ok(bone.isBone);
+    assert.deepEqual(bone.getWorldPosition(new THREE.Vector3()).toArray(),[2,4,4]);
+    assert.equal(source.animations[0].duration,1);
+    assert.deepEqual([...source.animations[0].tracks[0].values],[0,100,0,100,100,0]);
+    source.scene.traverse(node => { assert.equal(node.isMesh, undefined); assert.equal(node.geometry, undefined); assert.equal(node.material, undefined); });
+    console.log('Skeletal GLTF loading preserves transforms and animation tracks without loading the unused character mesh or texture.');
+  })().catch(error=>{console.error(error);process.exitCode=1;});
+  return;
+}
+if (process.argv.includes('--app-profile')) {
+  (async () => {
+    const hardware = process.argv.includes('--hardware-gpu') || process.argv.includes('--hardware-headless');
+    const browser = await launchBrowser({ args: ['--no-sandbox', ...(hardware ? ['--enable-gpu', '--use-angle=vulkan', '--enable-features=Vulkan,VulkanFromANGLE', '--render-node-override=/dev/dri/renderD128', ...(process.argv.includes('--headed') ? ['--ozone-platform=wayland'] : ['--disable-vulkan-surface'])] : ['--enable-unsafe-swiftshader'])] });
+    try {
+      const page = await browser.newPage(), client = await page.createCDPSession();
+      if (process.argv.includes('--baseline-assets')) {
+        await page.setRequestInterception(true);
+        page.on('request', async request => {
+          if (request.url().includes('/character/useCharacterAnimations.ts')) {
+            const response = await fetch(request.url()), body = await response.text();
+            assert.ok(body.includes('resolve(extractAnimationSource(gltf))'));
+            await request.respond({ status:200, contentType:'application/javascript', body:body.replace('resolve(extractAnimationSource(gltf))','resolve(gltf)').replace('loader.register(animationSourcePlugin);','') });
+          } else await request.continue();
+        });
+      }
+      page.on('pageerror', error => console.log('App error:', error.message));
+      await page.evaluateOnNewDocument(() => {
+        window.freezeSamples = [];
+        new PerformanceObserver(list => { for (const entry of list.getEntries()) window.freezeSamples.push({ start: entry.startTime, duration: entry.duration }); }).observe({ type: 'longtask', buffered: true });
+        window.frameSamples = [];
+        let previous;
+        function frame(time) { if (previous !== undefined) window.frameSamples.push(time - previous); previous = time; requestAnimationFrame(frame); }
+        requestAnimationFrame(frame);
+      });
+      await client.send('Profiler.enable');
+      await client.send('Profiler.start');
+      await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5186'}/?characterCount=15&animOriginLerp=false&animCrossfade=false&exitTransitions=false`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await page.evaluate(async () => {
+        const idle = await import('/src/features/scene/idleState.ts');
+        setInterval(idle.resetAppIdle, 1000);
+      });
+      const phases = process.argv.includes('--long-profile') ? 6 : 3;
+      for (let phase = 0; phase < phases; phase++) {
+        await page.bringToFront();
+        await page.mouse.move(100 + phase,100 + phase);
+        await new Promise(resolve => setTimeout(resolve, 20000));
+        console.log('App sample:', JSON.stringify(await page.evaluate(() => {
+          const renderer = window.__THREE_GL__, context = renderer?.getContext(), debug = context?.getExtension('WEBGL_debug_renderer_info');
+          return { seconds: performance.now() / 1000, visibility:document.visibilityState, gpu: debug && context.getParameter(debug.UNMASKED_RENDERER_WEBGL), programs: renderer?.info.programs.length, drawCalls:window.__DEV_STATE__?.drawCalls, triangles:window.__DEV_STATE__?.triangles, heap: performance.memory?.usedJSHeapSize, frames: window.frameSamples.length, worstFrame: Math.max(0, ...window.frameSamples), longTasks: window.freezeSamples.sort((a,b) => b.duration-a.duration).slice(0, 8), recentLongTasks: window.freezeSamples.filter(t => t.start >= performance.now()-20000).sort((a,b)=>b.duration-a.duration).slice(0, 5) };
+        })));
+      }
+      const { profile } = await client.send('Profiler.stop');
+      fs.writeFileSync(process.argv.includes('--baseline-assets') ? '/tmp/room-app-cpu-baseline.json' : '/tmp/room-app-cpu-profile.json', JSON.stringify(profile));
+      await client.send('HeapProfiler.collectGarbage');
+      console.log('Collected app memory:', JSON.stringify(await client.send('Runtime.getHeapUsage')));
+      const nodes = new Map(profile.nodes.map(node => [node.id, node])), totals = new Map();
+      profile.samples.forEach((id, i) => { const frame = nodes.get(id).callFrame, key = `${frame.functionName} ${frame.url}:${frame.lineNumber + 1}`; totals.set(key, (totals.get(key) || 0) + profile.timeDeltas[i]); });
+      console.log('CPU self time (ms):', JSON.stringify([...totals].sort((a,b)=>b[1]-a[1]).slice(0, 30).map(([frame, us])=>({ frame, ms: us/1000 })), null, 2));
+    } finally { await browser.close(); }
+  })().catch(error => { console.error(error); process.exitCode = 1; });
+  return;
+}
 if (process.argv.includes('--benchmark') || process.argv.includes('--benchmark-audit')) {
   const Module = require('node:module');
   const source = require('node:child_process').execFileSync('git', ['show', `${process.env.ROOM_NAV_BASELINE || 'HEAD'}:src/features/scene/ai/navigation/geometry.ts`], { encoding: 'utf8' });
@@ -136,6 +227,117 @@ if (process.argv.includes('--browser')) (async () => {
     page.on('requestfailed', request => console.log('REQUEST:', request.url(), request.failure()?.errorText));
     page.on('pageerror', error => { errors.push(error.message); console.error('PAGE:', error.message); });
     await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5186'}/AGENTS.md`);
+    if (process.argv.includes('--mirror-resources')) {
+      await page.evaluate(async () => {
+        (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
+        window.$RefreshReg$=()=>{};window.$RefreshSig$=()=>type=>type;window.__vite_plugin_react_preamble_installed__=true;
+        const React=(await import('/node_modules/.vite/deps/react.js')).default;
+        const {createRoot}=(await import('/node_modules/.vite/deps/react-dom_client.js')).default;
+        const {Canvas} = await import('/node_modules/.vite/deps/@react-three_fiber.js');
+        const {MirrorsA,MirrorBath}=await import('/src/features/scene/building/Mirrors.tsx');
+        document.body.innerHTML='<div id="mirror-test" style="height:100vh"></div>';
+        const e=React.createElement,root=createRoot(document.getElementById('mirror-test'));
+        window.renderMirrors=visible=>root.render(e(Canvas,{frameloop:'never',onCreated:({scene,gl,camera})=>{window.mirrorContext={scene,gl,camera};}}, visible&&e(React.Fragment,null,e(MirrorsA,{showReflection:true,reflectorOnly:true}),e(MirrorBath,{showReflection:true}))));
+        window.renderMirrors(true);
+      });
+      await page.waitForFunction(()=>{let n=0;window.mirrorContext?.scene.traverse(node=>{if(node.isReflector)n++;});return n===2;});
+      const matrices=await page.evaluate(()=>{
+        const {scene,gl,camera}=window.mirrorContext;
+        camera.position.set(180,100,300);camera.lookAt(5.5,100,100);camera.layers.enableAll();
+        const update=scene.updateMatrixWorld.bind(scene),render=gl.render.bind(gl);let calls=0,renders=0;
+        scene.updateMatrixWorld=(...args)=>{calls++;return update(...args);};
+        gl.render=(...args)=>{renders++;return render(...args);};
+        gl.render(scene,camera);
+        window.mirrorDisposed={target:0,geometry:0};
+        scene.traverse(node=>{if(node.isReflector){node.getRenderTarget().addEventListener('dispose',()=>window.mirrorDisposed.target++);node.geometry.addEventListener('dispose',()=>window.mirrorDisposed.geometry++);}});
+        return {calls,renders,autoUpdate:scene.matrixWorldAutoUpdate};
+      });
+      assert.ok(matrices.renders>1,'Test must actually render a reflection');assert.equal(matrices.calls,1,'Reflection passes must reuse the main render matrices');assert.equal(matrices.autoUpdate,true);
+      await page.evaluate(()=>window.renderMirrors(false));
+      await page.waitForFunction(()=>window.mirrorDisposed.target===2);
+      assert.deepEqual(await page.evaluate(()=>window.mirrorDisposed),{target:2,geometry:2});
+      assert.equal(errors.length,0);
+      console.log('Mirror regressions passed: one world-matrix update per frame; both reflector targets and geometries released on unmount.');
+      return;
+    }
+    if (process.argv.includes('--animation-real')) {
+      const report = await page.evaluate(async () => {
+        const { GLTFLoader } = await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
+        const { DRACOLoader } = await import('/node_modules/three/examples/jsm/loaders/DRACOLoader.js');
+        const { animationSourcePlugin } = await import('/src/features/scene/character/animationSource.ts');
+        const { retargetClip } = await import('/src/features/scene/retargeting/retargetClip.ts');
+        const { clone } = await import('/node_modules/three/examples/jsm/utils/SkeletonUtils.js');
+        const draco = new DRACOLoader().setDecoderPath('/draco/'), results=[];
+        for (const path of ['/animations/mixamo/anim_walking.glb','/animations/npz/sports/anim_soccer_kick.glb','/animations/mixamo/anim_female_locomotion_pose.glb']) {
+          const full = await new GLTFLoader().setDRACOLoader(draco).loadAsync(path);
+          const lean = await new GLTFLoader().setDRACOLoader(draco).register(animationSourcePlugin).loadAsync(path);
+          full.scene.updateMatrixWorld(true); lean.scene.updateMatrixWorld(true);
+          const fullBones=[], leanBones=[];
+          full.scene.traverse(node=>{if(node.isBone)fullBones.push({name:node.name,matrix:node.matrixWorld.elements});});
+          lean.scene.traverse(node=>{if(node.isBone)leanBones.push({name:node.name,matrix:node.matrixWorld.elements});});
+          const target=clone(full.scene);
+          target.updateMatrixWorld(true);
+          target.traverse(node=>{if(node.isBone){node.restLocalQuaternion=node.quaternion.clone();node.restWorldQuaternion=node.getWorldQuaternion(node.quaternion.clone());node.restWorldPosition=node.getWorldPosition(node.position.clone());node.defaultPosition=node.position.clone();}});
+          const before=retargetClip(full.animations[0],target,full.scene), after=retargetClip(lean.animations[0],target,lean.scene);
+          const tracks=clip=>clip.tracks.map(track=>({name:track.name,times:[...track.times],values:[...track.values]}));
+          let meshes=0,fullMeshes=0;const geometryBuffers=new Set();
+          lean.scene.traverse(node=>{if(node.isMesh)meshes++;});
+          full.scene.traverse(node=>{if(node.isMesh){fullMeshes++;for(const attribute of Object.values(node.geometry.attributes))geometryBuffers.add(attribute.array.buffer);if(node.geometry.index)geometryBuffers.add(node.geometry.index.array.buffer);}});
+          results.push({path,bonesIdentical:JSON.stringify(fullBones)===JSON.stringify(leanBones),retargetIdentical:JSON.stringify(tracks(before))===JSON.stringify(tracks(after)),meshes,fullMeshes,unusedGeometryBytes:[...geometryBuffers].reduce((sum,buffer)=>sum+buffer.byteLength,0),tracks:after.tracks.length});
+        }
+        draco.dispose(); return results;
+      });
+      assert.ok(report.every(result=>result.bonesIdentical&&result.retargetIdentical&&result.meshes===0),JSON.stringify(report));
+      assert.equal(errors.length,0);
+      console.log('Actual animation GLTF regressions:',JSON.stringify(report));
+      return;
+    }
+    if (process.argv.includes('--wig-resources')) {
+      await page.evaluate(async () => {
+        (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
+        window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => type => type; window.__vite_plugin_react_preamble_installed__ = true;
+        const React = (await import('/node_modules/.vite/deps/react.js')).default;
+        const { createRoot } = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
+        const { Canvas } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
+        const { useGLTF } = await import('/node_modules/.vite/deps/@react-three_drei.js');
+        useGLTF.setDecoderPath('/draco/');
+        const { Wig } = await import('/src/features/scene/items/Wig.tsx');
+        document.body.innerHTML = '<div id="wig-test" style="height:100vh"></div>';
+        const root = createRoot(document.getElementById('wig-test')), e = React.createElement;
+        window.renderWigs = (color, first = true) => root.render(e(Canvas, {frameloop:'never', onCreated: ({scene}) => {window.wigScene=scene;}}, e(React.Suspense, {fallback:null}, first && e(Wig, {key:'first',id:'100',color}), e(Wig, {key:'second',id:'100',color:'blond'}))));
+        window.renderWigs('brun');
+      });
+      await page.waitForFunction(() => { let count=0; window.wigScene?.traverse(node=>{if(node.userData.__ownedWigSkeleton)count++;}); return count>=2; }, {timeout:60000});
+      const before = await page.evaluate(() => {
+        window.wigMeshes=[];
+        const roots=[];
+        window.wigScene.traverse(node=>{if(node.name==='lara_custom_hair_attachment')roots.push(node);});
+        roots[0].traverse(node=>{if(node.userData.__ownedWigSkeleton)window.wigMeshes.push(node);});
+        const first=window.wigMeshes[0];
+        let second;
+        roots[1].traverse(node=>{if(node.geometry===first.geometry)second=node;});
+        window.wigDisposed={geometry:0,texture:0,material:0,skeleton:0};
+        first.geometry.addEventListener('dispose',()=>window.wigDisposed.geometry++);
+        const material=Array.isArray(first.material)?first.material[0]:first.material;
+        material.addEventListener('dispose',()=>window.wigDisposed.material++);
+        material.map?.addEventListener('dispose',()=>window.wigDisposed.texture++);
+        first.skeleton.computeBoneTexture();
+        first.skeleton.boneTexture.addEventListener('dispose',()=>window.wigDisposed.skeleton++);
+        window.wigMaterial=material;
+        return { sharedGeometry:first.geometry===second.geometry, material:material.uuid };
+      });
+      assert.equal(before.sharedGeometry,true);
+      await page.evaluate(() => window.renderWigs('rouge'));
+      await page.waitForFunction(() => window.wigMaterial.color.r>0.5);
+      const afterColor=await page.evaluate(()=>{const m=window.wigMeshes[0].material; return (Array.isArray(m)?m[0]:m).uuid;});
+      assert.equal(afterColor,before.material,'Colour changes must reuse the instance material');
+      await page.evaluate(() => window.renderWigs('rouge',false));
+      await page.waitForFunction(()=>window.wigDisposed.material>0);
+      assert.deepEqual(await page.evaluate(()=>window.wigDisposed),{geometry:0,texture:0,material:1,skeleton:1});
+      assert.equal(errors.length,0);
+      console.log('Wig ownership passed: colours reuse materials; unmount frees owned material and preserves shared GLTF geometry / textures.');
+      return;
+    }
     await page.evaluate(idleTest => { window.idleTest = idleTest; }, process.argv.includes('--idle-only'));
     await page.evaluate(casesTest => { window.casesTest = casesTest; }, process.argv.includes('--cases-only'));
     await page.evaluate(async () => {

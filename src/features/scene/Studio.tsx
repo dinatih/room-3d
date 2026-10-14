@@ -761,7 +761,6 @@ export function Studio() {
           alpha:        false,
           toneMapping:  AgXToneMapping,
           toneMappingExposure: 1,
-          preserveDrawingBuffer: true,
         }}
         onCreated={({ scene, gl, camera }) => {
           (window as any).threeScene = scene;

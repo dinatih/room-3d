@@ -44,34 +44,23 @@ export interface WigProps {
 export { RIGGED_WIGS_PATHS };
 
 export function disposeOwnedWigResources(root: THREE.Object3D) {
-  const disposedGeometries = new Set<THREE.BufferGeometry>();
   const disposedMaterials = new Set<THREE.Material>();
-  const disposedTextures = new Set<THREE.Texture>();
 
   root.traverse((node: any) => {
     if (node.isMesh) {
-      if (node.geometry && !disposedGeometries.has(node.geometry)) {
-        disposedGeometries.add(node.geometry);
-        node.geometry.dispose();
-      }
+      // SkeletonUtils.clone shares GLTF geometry and textures with other wigs.
+      // Only the material and skeleton created for this instance belong to it.
       if (node.material) {
         const materials = Array.isArray(node.material) ? node.material : [node.material];
         for (const mat of materials) {
           if (!mat || disposedMaterials.has(mat)) continue;
           if (mat.userData.__ownedWigMaterial) {
             disposedMaterials.add(mat);
-            for (const key of Object.keys(mat)) {
-              const prop = (mat as any)[key];
-              if (prop && typeof prop === 'object' && prop.isTexture && !disposedTextures.has(prop)) {
-                disposedTextures.add(prop);
-                prop.dispose();
-              }
-            }
             mat.dispose();
           }
         }
       }
-      if (node.skeleton) {
+      if (node.userData.__ownedWigSkeleton) {
         node.skeleton.dispose();
       }
     }
@@ -107,6 +96,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         const newBones = sm.skeleton.bones.map(b => clonedBones[b.name] || b);
         const newSkeleton = new THREE.Skeleton(newBones, sm.skeleton.boneInverses);
         sm.bind(newSkeleton, sm.bindMatrix);
+        sm.userData.__ownedWigSkeleton = true;
       } else if ((child as THREE.Mesh).isMesh) {
         child.userData.itemName = `Perruque (${cleanId})`;
         child.frustumCulled = false;
@@ -248,7 +238,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         if (Array.isArray(m.material)) {
           m.material = m.material.map((_mat: any) => {
             if (!_mat) return _mat;
-            const clonedMat = _mat.clone();
+            const clonedMat = _mat.userData.__ownedWigMaterial ? _mat : _mat.clone();
             clonedMat.userData.__ownedWigMaterial = true;
             clonedMat.side = THREE.DoubleSide;
             clonedMat.transparent = false;
@@ -256,11 +246,10 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
             clonedMat.alphaTest = 0.5;
             clonedMat.depthWrite = true;
             if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
-            clonedMat.needsUpdate = true;
             return clonedMat;
           });
         } else if (m.material) {
-          const clonedMat = (m.material as THREE.Material).clone();
+          const clonedMat = m.material.userData.__ownedWigMaterial ? m.material : (m.material as THREE.Material).clone();
           clonedMat.userData.__ownedWigMaterial = true;
           clonedMat.side = THREE.DoubleSide;
           clonedMat.transparent = false;
@@ -268,7 +257,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           clonedMat.alphaTest = 0.5;
           clonedMat.depthWrite = true;
           if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
-          clonedMat.needsUpdate = true;
           m.material = clonedMat;
         }
       }
@@ -318,8 +306,8 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       attachTo.add(scene);
     }
     return () => {
-      if (attachTo && scene) {
-        attachTo.remove(scene);
+      if (scene) {
+        attachTo?.remove(scene);
         disposeOwnedWigResources(scene);
       }
     };
