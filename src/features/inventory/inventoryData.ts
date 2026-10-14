@@ -74,7 +74,7 @@ export const INVENTORY: InventoryItem[] = [
     dims: { w: 41.53, d: 36.85, h: 17.84 },
     glbPath: 'items/jumper/jumper.glb',
     url: 'https://github.com/KingKongRobotics/jumper',
-    description: 'Robot crabe à 22 degrés de liberté. Assemblage 3D officiel avec ses couleurs d’origine.',
+    description: 'Robot crabe à 22 degrés de liberté. Assemblage 3D officiel, carrosserie rouge assortie au Unitree Go2.',
     notes: 'Animations : repos, marche et virages recréés ; salut, révérence, patte, salut militaire et danse officiels. Dimensions mesurées en position debout. Modèle sous licence Apache-2.0.',
   },
 

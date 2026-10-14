@@ -19,10 +19,10 @@ import { appLog } from '@features/ui/AppConsole';
 // A small shared patrol in the open garden, away from the furniture and statues.
 const PATROL = { minX: 90, maxX: 300, minZ: -580, maxZ: -420 };
 const ROBOTS = [
-  { id: 'unitree-g1', Component: UnitreeG1, position: [90, 0, -480], walk: 'walk', speed: 30, pause: 2 },
-  { id: 'unitree-go2', Component: UnitreeGo2, position: [200, 0, -580], walk: 'trot', speed: 25.2, pause: 4 },
-  { id: 'jumper-robot', Component: Jumper, position: [300, 0, -480], walk: 'walk', speed: 28.8, pause: 6 },
-] satisfies { id: string; Component: ComponentType<SceneItemProps>; position: [number, number, number]; walk: string; speed: number; pause: number }[];
+  { id: 'unitree-g1', Component: UnitreeG1, position: [90, 0, -480], walk: 'walk', speed: 30, pause: 2, radiusScale: 1 / 2 },
+  { id: 'unitree-go2', Component: UnitreeGo2, position: [200, 0, -580], walk: 'trot', speed: 25.2, pause: 4, radiusScale: 2 / 3 },
+  { id: 'jumper-robot', Component: Jumper, position: [300, 0, -480], walk: 'walk', speed: 28.8, pause: 6, radiusScale: 2 / 3 },
+] satisfies { id: string; Component: ComponentType<SceneItemProps>; position: [number, number, number]; walk: string; speed: number; pause: number; radiusScale: number }[];
 
 function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const { id, Component } = config;
@@ -44,9 +44,9 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     setActions(previous => ({ ...previous, [motionKey]: motion }));
   }, [motionKey]);
   const onSize = useCallback((size: Vector3) => {
-    const measured = { radius: Math.hypot(size.x, size.z) / 2, height: size.y, solid: true };
+    const measured = { radius: Math.hypot(size.x, size.z) / 2 * config.radiusScale, height: size.y, solid: true };
     setProfile(previous => previous?.radius === measured.radius && previous.height === measured.height ? previous : measured);
-  }, []);
+  }, [config.radiusScale]);
 
   // Registration and removal belong to the same effect, including StrictMode/HMR remounts.
   useLayoutEffect(() => {

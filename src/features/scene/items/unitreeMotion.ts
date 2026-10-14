@@ -46,8 +46,9 @@ export function createUnitreeMotion(scene: Object3D, model: 'g1' | 'go2') {
       for (const [side, offset] of [['left', 0], ['right', Math.PI]] as const) {
         const stride = Math.sin(phase * 0.8 + offset);
         let hip = 0, knee = 0;
-        set(`${side}_shoulder_pitch_joint`, 0.1 * entry);
-        set(`${side}_elbow_joint`, 0.3 * entry);
+        set(`${side}_shoulder_pitch_joint`, motion === 'idle' ? 0 : 0.1 * entry);
+        // In the source URDF, the forearm points forward at zero; +90° lowers it.
+        set(`${side}_elbow_joint`, motion === 'idle' ? Math.PI / 2 : 0.3 * entry);
         if (motion === 'walk') {
           hip = -0.28 * stride * entry;
           knee = (0.1 + 0.45 * Math.max(0, stride)) * entry;
