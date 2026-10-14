@@ -51,12 +51,16 @@ function positionAction(key: string): Record<string, ActionConfig> {
 }
 
 const ACTIONS: Record<string, ActionConfig> = {
-  'unitree-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
+  'unitree-g1-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
+  'unitree-go2-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
+  'unitree-g1-autonomous': { label: 'Vie autonome', icon: 'bi-play-circle', sceneOnly: true },
+  'unitree-go2-autonomous': { label: 'Vie autonome', icon: 'bi-play-circle', sceneOnly: true },
+  'jumper-robot-autonomous': { label: 'Vie autonome', icon: 'bi-play-circle', sceneOnly: true },
   'unitree-g1-motion': {
     label: 'Animation du G1', type: 'select', initialValue: 'idle',
     options: [
       { value: 'idle', label: 'Repos' },
-      { value: 'walk', label: 'Marche sur place' },
+      { value: 'walk', label: 'Marche' },
       { value: 'wave', label: 'Faire coucou' },
       { value: 'bow', label: 'Révérence' },
       { value: 'dance', label: 'Danse' },
@@ -66,7 +70,7 @@ const ACTIONS: Record<string, ActionConfig> = {
     label: 'Animation du Go2', type: 'select', initialValue: 'idle',
     options: [
       { value: 'idle', label: 'Repos' },
-      { value: 'trot', label: 'Trot sur place' },
+      { value: 'trot', label: 'Trot' },
       { value: 'paw', label: 'Donner la patte' },
       { value: 'bow', label: 'Étirement' },
       { value: 'dance', label: 'Danse' },

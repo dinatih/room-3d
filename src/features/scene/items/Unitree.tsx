@@ -12,7 +12,7 @@ function UnitreeModel({ model, onSize, actionState }: SceneItemProps & { model: 
   const animate = useMemo(() => createUnitreeMotion(scene, model), [scene, model]);
   const time = useRef(0);
   const motion = actionState[`unitree-${model}-motion`] ?? 'idle';
-  const replay = actionState['unitree-replay'];
+  const replay = actionState[`unitree-${model}-replay`];
   useLayoutEffect(() => {
     time.current = 0;
     animate(motion, 0);

@@ -4,6 +4,7 @@ import { AnimationMixer, LoopOnce, LoopRepeat, Vector3 } from 'three';
 import { useGLTFClone } from '../useGLTFClone';
 import { glbLocalBBox } from '../glbUtils';
 import type { SceneItemProps } from '@shared/types';
+import { isAppIdle } from '../idleState';
 
 /** Rigid articulated robot: each GLB link rotates about its original URDF pivot. */
 export function Jumper({ actionState, onSize }: SceneItemProps) {
@@ -36,6 +37,10 @@ export function Jumper({ actionState, onSize }: SceneItemProps) {
   }, [animations, mixer, motion, replay]);
 
   useLayoutEffect(() => () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); }, [mixer, scene]);
-  useFrame((_, delta) => { mixer.update(delta); });
+  useFrame((state, delta) => {
+    if (isAppIdle()) return;
+    mixer.update(delta);
+    if (motion !== 'idle') state.invalidate();
+  });
   return <primitive object={scene} />;
 }

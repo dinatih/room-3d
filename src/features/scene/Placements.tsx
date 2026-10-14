@@ -14,6 +14,7 @@ import { KitchenEquipment, KitchenFurniture, KitchenFurnishings, KitchenDecor } 
 import { CorridorEquipment, CorridorFurniture, CorridorFurnishings } from './placements/CorridorPlacements';
 import { LivingRoomFurniture, LivingRoomFurnishings, LivingRoomDecor } from './placements/LivingRoomPlacements';
 import { GardenFurniture, GardenFurnishings, GardenDecor, GardenAnimals } from './placements/GardenPlacements';
+import { RobotPlacements } from './placements/RobotPlacements';
 
 // Layer 1 — Équipements sanitaires, cuisine et technique
 export function Equipment() {
@@ -69,6 +70,7 @@ export function Animals() {
   return (
     <>
       <GardenAnimals />
+      <RobotPlacements />
     </>
   );
 }
