@@ -15,9 +15,14 @@ import type { Point } from '../ai/navigation/geometry';
 import { cameraState } from '../cameraState';
 import { isAppIdle } from '../idleState';
 import { appLog } from '@features/ui/AppConsole';
+import { WALL_DEFS, WALL_THICKNESS } from '../wallData';
 
-// Spread starts and patrols across the open garden, away from furniture and statues.
-const PATROL = { minX: 50, maxX: 430, minZ: -620, maxZ: -420 };
+// Extend patrols 2 metres beyond the studio's actual west/east exterior walls.
+const PATROL = {
+  minX: Math.min(...WALL_DEFS.map(wall => wall.axis === 'x' ? wall.x1 : wall.xc - (wall.t ?? WALL_THICKNESS) / 2)) - 200,
+  maxX: Math.max(...WALL_DEFS.map(wall => wall.axis === 'x' ? wall.x2 : wall.xc + (wall.t ?? WALL_THICKNESS) / 2)) + 200,
+  minZ: -620, maxZ: -420,
+};
 const ROBOTS = [
   { id: 'unitree-g1', Component: UnitreeG1, position: [50, 0, -450], walk: 'walk', speed: 30, pause: 2, radiusScale: 1 / 2 },
   { id: 'unitree-go2', Component: UnitreeGo2, position: [220, 0, -620], walk: 'trot', speed: 25.2, pause: 4, radiusScale: 2 / 3 },
