@@ -2,6 +2,30 @@ const launchBrowser = require('./browser-test-options.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const ts = require('typescript');
+if (process.argv.includes('--duo-patch')) {
+  const diff = require('node:child_process').execFileSync('git',['diff','--','src/features/scene/ai/smartObjectRegistry.ts'],{encoding:'utf8'});
+  const [header,...hunks] = diff.split(/(?=^@@)/m);
+  const own = hunks.filter(hunk=>hunk.includes('INYEONG_CHA_DUO_IDS'));
+  assert.equal(own.length,2,'The duo patch must contain only its imports / geometry and its SmartObject placement');
+  fs.writeFileSync('/tmp/room-duo-placement.patch',header+own.join(''));
+  console.log('Duo-only registry patch written; pre-existing slot edits excluded.');
+  return;
+}
+if (process.argv.includes('--bearhug-data')) {
+  for (const role of ['m','f']) {
+    const bytes = fs.readFileSync(`public/animations/miley/miley_armature_date_bearhug_${role}.glb`);
+    const jsonLength = bytes.readUInt32LE(12), gltf = JSON.parse(bytes.subarray(20,20+jsonLength).toString());
+    const tracks = gltf.animations[0].channels.filter(channel => channel.target.path === 'translation' && /root|hips|pelvis/i.test(gltf.nodes[channel.target.node].name)).map(channel => {
+      const accessor = gltf.accessors[gltf.animations[0].samplers[channel.sampler].output], view = gltf.bufferViews[accessor.bufferView];
+      assert.equal(accessor.componentType,5126);
+      const offset = 28+jsonLength+(view.byteOffset||0)+(accessor.byteOffset||0), stride = view.byteStride||12;
+      const points = Array.from({length:accessor.count},(_,i)=>[0,1,2].map(axis=>bytes.readFloatLE(offset+i*stride+axis*4)));
+      return {node:gltf.nodes[channel.target.node].name,first:points[0],last:points.at(-1),min:[0,1,2].map(axis=>Math.min(...points.map(p=>p[axis]))),max:[0,1,2].map(axis=>Math.max(...points.map(p=>p[axis])))};
+    });
+    console.log(role,JSON.stringify(tracks));
+  }
+  return;
+}
 if (process.argv.includes('--scooter-data')) {
   const bytes = fs.readFileSync('public/items/xiaomi-scooter4/xiaomi-scooter4.glb');
   const gltf = JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());
@@ -503,6 +527,7 @@ if (process.argv.includes('--browser')) (async () => {
     await page.evaluate(idleTest => { window.idleTest = idleTest; }, process.argv.includes('--idle-only'));
     await page.evaluate(casesTest => { window.casesTest = casesTest; }, process.argv.includes('--cases-only') || process.argv.includes('--shower-only'));
     await page.evaluate(showerTest => { window.showerTest = showerTest; }, process.argv.includes('--shower-only'));
+    await page.evaluate(duoTest => { window.duoTest = duoTest; }, process.argv.includes('--duo-navigation'));
     await page.evaluate(async () => {
       (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
       window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => type => type; window.__vite_plugin_react_preamble_installed__ = true;
@@ -530,6 +555,15 @@ if (process.argv.includes('--browser')) (async () => {
       window.steer = (await import('/src/features/scene/ai/agent/agentAvoidance.ts')).computeSteeringVector;
       const scenarios = await import('/src/features/scene/ai/scenarios.ts');
       window.autonomousAgents = new Map();
+      window.duoManager = (await import('/src/features/scene/ai/duoSessionManager.ts')).duoSessionManager;
+      window.duoAnimations = (await import('/src/features/scene/animations/duoAnimations.ts')).DUO_ANIMATIONS;
+      window.duoTransform = (await import('/src/features/scene/animations/duoWorldTransform.ts')).computeWorldTransform;
+      function DuoProbe({id,x}) {
+        const scenario = React.useMemo(()=>[{type:'WAIT',duration:1000,animation:'idle'}],[]);
+        const agent = useAgentController(id,scenario,false,()=>({x,y:0,z:-600,rotY:0}));
+        window.autonomousAgents.set(id,{agent,scenario});
+        return null;
+      }
       function AutonomousProbe({ id }) {
         const scenario = React.useMemo(() => scenarios.buildAutonomousScenario(id), [id]);
         const agent = useAgentController(id, scenario, true, () => ({ x: 160, y: 0, z: 300, rotY: 0 }));
@@ -574,6 +608,7 @@ if (process.argv.includes('--browser')) (async () => {
       window.root.render(e(Canvas, { camera: { position: [600, 900, 900], far: 5000 } }, e('ambientLight', { intensity: 2 }), e(Probe),
         ...(window.idleTest ? Object.keys(scenarios.INITIAL_SMART_OBJECT_BY_CHAR).slice(0, 15).map(id => e(AutonomousProbe, { key: id, id })) : []),
         ...(window.casesTest ? regressionCases.map((_, index) => e(RegressionProbe, { key: index, index })) : []),
+        ...(window.duoTest ? [e(DuoProbe,{key:'sara',id:'sara',x:-300}),e(DuoProbe,{key:'marissa',id:'marissa',x:100})] : []),
         e(React.Suspense, { fallback: null }, e(placements.Equipment), e(placements.Furniture), e(placements.Furnishings), e(placements.Decor), e(DoorsPlacement),
           e(Character, { ...native, modelPath: native.path, targetHeight: native.height, isLara: true, isActive: false, isNPC: false, scenario: null }))));
     });
@@ -617,6 +652,45 @@ if (process.argv.includes('--browser')) (async () => {
       }, queries);
       console.log('Repeated navigation / collected heap:', JSON.stringify(samples));
       assert.equal(errors.length, 0);
+      return;
+    }
+    if (process.argv.includes('--duo-navigation')) {
+      const audit = await page.evaluate(async () => {
+        const nav = window.nav, g = window.geom, manager = window.duoManager;
+        const profile = nav.getAgentProfile('native'), graph = nav.getNavigationGraph(profile);
+        const obj = window.smartObjects.getSmartObject('inyeong-cha-hugs-point');
+        const slot = obj.slots[0];
+        if (graph.find({x:-300,z:-600},{x:0,z:210})) throw new Error('Old Bearhug destination must reproduce the wall collision');
+        const placements = slot.duoPool.map(id => {
+          const def = window.duoAnimations.find(def=>def.id===id);
+          const pose = window.duoTransform(slot.offset,slot.rotY,def.offsetB,def.rotB);
+          const a = {x:pose.posA[0],z:pose.posA[2]}, b = {x:pose.posB[0],z:pose.posB[2]};
+          if (!graph.find({x:-300,z:-600},a) || !graph.find({x:100,z:-600},b) || !g.segmentFree(a,b,graph.obstacles)) throw new Error(`Duo ${id} crosses an obstacle or has an unreachable participant`);
+          return {id,...pose};
+        });
+        const bearhug = placements.find(p=>p.id==='date_bearhug');
+        if (Math.abs(g.distance({x:bearhug.posA[0],z:bearhug.posA[2]},{x:bearhug.posB[0],z:bearhug.posB[2]})-610)>g.GEOMETRY_EPSILON) throw new Error('Bearhug alignment was changed');
+        manager.leaveAllSessions();
+        for (const [id,{agent}] of window.autonomousAgents) {nav.setAgentProfile(id,profile);agent.update(0);}
+        const session = manager.startDuoSession(obj.id,slot.slotId,'sara','marissa','date_bearhug');
+        if (!session) throw new Error('Bearhug session failed to start');
+        document.dispatchEvent(new CustomEvent('npc-invite-duo',{detail:{targetId:'sara',fromId:'SmartObject',objectId:obj.id,slotId:slot.slotId,forceRole:'roleA',targetPos:session.posA,targetRotY:session.rotA}}));
+        const deadline = performance.now()+30000;
+        while (!manager.isPlaying('sara') && performance.now()<deadline) {
+          for (const [id,{agent}] of window.autonomousAgents) {
+            const state = agent.update(0.1);
+            window.cameraState.positions[id] = {...state,yaw:state.rotY};
+            if (agent.getStatus()==='BLOCKED') throw new Error(`${id}: ${nav.navigationDebug.get(id)?.error}`);
+          }
+          await new Promise(resolve=>requestAnimationFrame(resolve));
+        }
+        if (!manager.isPlaying('sara')) throw new Error('The two participants never reached their duo positions');
+        const result = {placements,playing:manager.isPlaying('sara'),roles:[manager.getParticipantA('sara'),manager.getParticipantB('sara')]};
+        manager.leaveAllSessions();
+        return result;
+      });
+      console.log('Outdoor duo navigation:',JSON.stringify(audit));
+      assert.equal(errors.length,0);
       return;
     }
     if (process.argv.includes('--cases-only') || process.argv.includes('--shower-only')) {
