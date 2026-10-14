@@ -2,12 +2,17 @@ import { cameraState } from '../../cameraState';
 import { useSceneStore } from '../../store/useSceneStore';
 import { getAgentProfile, hasAgentProfile } from '../navigation/obstacles';
 import { inflate, CLEARANCE_ERROR, type Point, type Polygon } from '../navigation/geometry';
+import { duoSessionManager } from '../duoSessionManager';
 
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
 const destinations = new Map<string, Point>();
 const passingSides = new Map<string, Map<string, number>>();
+const areDuoPartners = (id: string, otherId: string) => {
+  const session = duoSessionManager.getSessionFor(id);
+  return Boolean(session && session === duoSessionManager.getSessionFor(otherId));
+};
 
 export function reserveAgentDestination(id: string, target: Point | null): void {
   if (target) destinations.set(id, { ...target });
@@ -22,7 +27,7 @@ export function reserveAgentDestination(id: string, target: Point | null): void 
 export function isAgentDestinationFree(id: string, target: Point): boolean {
   const profile = getAgentProfile(id);
   for (const otherId in cameraState.positions) {
-    if (otherId === id || !hasAgentProfile(otherId)) continue;
+    if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
     const other = cameraState.positions[otherId];
     const body = getAgentProfile(otherId);
     const separation = profile.radius + body.radius;
@@ -43,7 +48,7 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
     let sides = passingSides.get(characterId);
     if (!sides) { sides = new Map(); passingSides.set(characterId, sides); }
     for (const otherId in cameraState.positions) {
-      if (otherId === characterId || !hasAgentProfile(otherId)) continue;
+      if (otherId === characterId || !hasAgentProfile(otherId) || areDuoPartners(characterId, otherId)) continue;
       const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
       if (other.y >= y + profile.height || other.y + body.height <= y) continue;
       const dx = other.x - currentX, dz = other.z - currentZ;
@@ -93,7 +98,7 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
   const y = cameraState.positions[id]?.y ?? 0;
   let fraction = 1;
   for (const otherId in cameraState.positions) {
-    if (otherId === id || !hasAgentProfile(otherId)) continue;
+    if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
     const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
     if (!(profile.solid || body.solid) || other.y >= y + profile.height || other.y + body.height <= y) continue;
     const dx = start.x - other.x, dz = start.z - other.z;
@@ -115,15 +120,15 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
 }
 
 /** Obstacles for a route around actors, using the same footprint as movement clearance. */
-export function getAgentObstacles(id: string, start: Point): Polygon[] {
+export function getAgentObstacles(id: string, start: Point, includeHumans = false): Polygon[] {
   if (!useSceneStore.getState().layers.npcCollisions) return [];
   const profile = getAgentProfile(id);
   const y = cameraState.positions[id]?.y ?? 0;
   const obstacles: Polygon[] = [];
   for (const otherId in cameraState.positions) {
-    if (otherId === id || !hasAgentProfile(otherId)) continue;
+    if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
     const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
-    if (!(profile.solid || body.solid) || other.y >= y + profile.height || other.y + body.height <= y) continue;
+    if (!(includeHumans || profile.solid || body.solid) || other.y >= y + profile.height || other.y + body.height <= y) continue;
     const radius = profile.radius + body.radius;
     // Already intersecting actors must remain able to leave their shared space.
     if (Math.hypot(start.x - other.x, start.z - other.z) <= radius + CLEARANCE_ERROR) continue;

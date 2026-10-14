@@ -526,10 +526,13 @@ if (process.argv.includes('--browser')) (async () => {
       return;
     }
     await page.evaluate(idleTest => { window.idleTest = idleTest; }, process.argv.includes('--idle-only'));
-    await page.evaluate(casesTest => { window.casesTest = casesTest; }, process.argv.includes('--cases-only') || process.argv.includes('--shower-only') || process.argv.includes('--spawn-objects'));
+    await page.evaluate(casesTest => { window.casesTest = casesTest; }, process.argv.includes('--cases-only') || process.argv.includes('--shower-only') || process.argv.includes('--spawn-objects') || process.argv.includes('--bathroom-cases'));
+    await page.evaluate(bathroomTest => { window.bathroomTest = bathroomTest; }, process.argv.includes('--bathroom-cases'));
     await page.evaluate(spawnTest => { window.spawnTest = spawnTest; }, process.argv.includes('--spawn-objects'));
     await page.evaluate(showerTest => { window.showerTest = showerTest; }, process.argv.includes('--shower-only'));
-    await page.evaluate(duoTest => { window.duoTest = duoTest; }, process.argv.includes('--duo-navigation'));
+    await page.evaluate(duoTest => { window.duoTest = duoTest; }, process.argv.includes('--duo-navigation') || process.argv.includes('--all-duos') || process.argv.includes('--skydrop-invite'));
+    await page.evaluate(skyTest => { window.skyTest = skyTest; }, process.argv.includes('--skydrop-invite'));
+    await page.evaluate(xbotTest => { window.xbotTest = xbotTest; }, process.argv.includes('--xbot-tour'));
     await page.evaluate(async () => {
       (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
       window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => type => type; window.__vite_plugin_react_preamble_installed__ = true;
@@ -566,13 +569,24 @@ if (process.argv.includes('--browser')) (async () => {
         window.autonomousAgents.set(id,{agent,scenario});
         return null;
       }
+      function XbotProbe() {
+        const scenario = React.useMemo(()=>scenarios.XBOT_CONCIERGE_TOUR.map(i=>({...i,duration:i.duration ? 0.1 : undefined})),[]);
+        const agent = useAgentController('xbot-probe',scenario,false,()=>({x:288,y:0,z:603,rotY:0}));
+        window.autonomousAgents.set('xbot-probe',{agent,scenario});
+        return null;
+      }
+      function SkyProbe({id}) {
+        const scenario = React.useMemo(()=>[{type:'USE_OBJECT',smartObjectId:'bed-west',slotId:'seat-middle',duration:0.1,animation:'idle'},{type:'MOVE_TO',targetPos:id==='sabira' ? [200,0,-50] : [160,0,-150]}],[id]);
+        const agent = useAgentController(id,scenario,false,()=>({x:90,y:0,z:150,rotY:0}),undefined,0,true);
+        window.autonomousAgents.set(id,{agent,scenario}); return null;
+      }
       function AutonomousProbe({ id }) {
         const scenario = React.useMemo(() => scenarios.buildAutonomousScenario(id), [id]);
         const agent = useAgentController(id, scenario, true, () => ({ x: 160, y: 0, z: 300, rotY: 0 }));
         window.autonomousAgents.set(id, { agent, scenario });
         return null;
       }
-      const regressionCases = window.spawnTest ? ['bed-west','bed-east','desk-bollsidan-1','desk-bollsidan-2','chair-office'].flatMap(id => window.smartObjects.SMART_OBJECTS[id].slots.map(slot => [id,slot.slotId])) : window.showerTest ? window.smartObjects.SMART_OBJECTS.shower.slots.map(slot => ['shower',slot.slotId]) : [
+      const regressionCases = window.bathroomTest ? ['drona-west','drona-east','sdb-closet'].flatMap(id => window.smartObjects.SMART_OBJECTS[id].slots.map(slot => [id,slot.slotId])) : window.spawnTest ? ['bed-west','bed-east','desk-bollsidan-1','desk-bollsidan-2','chair-office'].flatMap(id => window.smartObjects.SMART_OBJECTS[id].slots.map(slot => [id,slot.slotId])) : window.showerTest ? window.smartObjects.SMART_OBJECTS.shower.slots.map(slot => ['shower',slot.slotId]) : [
         ['desk-bollsidan-1', 'work-sitting'], ['desk-bollsidan-2', 'work-standing'],
         ['cuisine-group', 'cook-oven'], ['freezer', 'open-pick'], ['kallax-ne', 'inspect'],
         ['drona-west', 'pick-item'], ['sofa-garden-west', 'seat-2'], ['building-b-corridor', 'trash'],
@@ -589,6 +603,7 @@ if (process.argv.includes('--browser')) (async () => {
       const e = React.createElement;
       document.body.innerHTML = '<div id="fixture" style="height:100vh"></div>';
       const native = CHARACTERS.find(c => c.id === 'native');
+      const xbot = CHARACTERS.find(c => c.id === 'xbot');
       window.geom = await import('/src/features/scene/ai/navigation/geometry.ts');
       window.nav = { ...nav, ...registry, doorCollisionState, DOOR_CONFIGS, computeDoorAllowedAngle, getDoorContactAngle, useSceneStore };
       function Probe() {
@@ -611,11 +626,71 @@ if (process.argv.includes('--browser')) (async () => {
         ...(window.idleTest ? Object.keys(scenarios.INITIAL_SMART_OBJECT_BY_CHAR).slice(0, 15).map(id => e(AutonomousProbe, { key: id, id })) : []),
         ...(window.casesTest ? regressionCases.map((_, index) => e(RegressionProbe, { key: index, index })) : []),
         ...(window.duoTest ? [e(DuoProbe,{key:'sara',id:'sara',x:-300}),e(DuoProbe,{key:'marissa',id:'marissa',x:100})] : []),
+        ...(window.xbotTest ? [e(XbotProbe),e(React.Suspense,{fallback:null},e(Character,{...xbot,modelPath:xbot.path,targetHeight:xbot.height,isActive:false,isNPC:false,scenario:null}))] : []),
+        ...(window.skyTest ? ['sabira','sabira-order'].map(id=>e(SkyProbe,{id,key:id})) : []),
         e(React.Suspense, { fallback: null }, e(placements.Equipment), e(placements.Furniture), e(placements.Furnishings), e(placements.Decor), e(DoorsPlacement),
           e(Character, { ...native, modelPath: native.path, targetHeight: native.height, isLara: true, isActive: false, isNPC: false, scenario: null }))));
     });
     await page.waitForFunction(() => window.nav?.furnitureObstacles.size > 25 && window.nav.hasAgentProfile('native'), { timeout: 60000 }).catch(async error => { console.log('Readiness:', await page.evaluate(() => ({ ids: [...window.nav.furnitureObstacles.keys()], native: window.nav.hasAgentProfile('native'), scene: window.fixtureScene.children.map(c => c.name), agent: window.agent.getStatus() }))); throw error; });
     console.log('Scene assets ready:', await page.evaluate(() => ({ profile: window.nav.getAgentProfile('native'), obstacles: window.nav.furnitureObstacles.size })));
+    if (process.argv.includes('--skydrop-invite')) {
+      const result=await page.evaluate(async()=>{
+        const nav=window.nav, manager=window.duoManager, profile=nav.getAgentProfile('native');
+        window.cameraState.isSceneLaunched=true;
+        for(const [id,{agent}] of window.autonomousAgents) { nav.setAgentProfile(id,profile); if(!id.startsWith('sabira')) agent.update(0); }
+        const {agent:sabira}=window.autonomousAgents.get('sabira');
+        const before={...sabira.update(3.2)};
+        const session=manager.startDuoSession('inyeong-cha-hugs-point','hugs-6','sara','sabira','kiss_man_woman');
+        if(!session || sabira.getStatus()!=='FALLING') throw new Error('A duo invitation must wait for the sky drop to finish');
+        document.dispatchEvent(new CustomEvent('npc-invite-duo',{detail:{targetId:'sara',fromId:'SmartObject',objectId:'inyeong-cha-hugs-point',slotId:'hugs-6:roleA',forceRole:'roleA',targetPos:session.posA,targetRotY:session.rotA}}));
+        const {agent:ordered}=window.autonomousAgents.get('sabira-order'); ordered.update(3.2);
+        document.dispatchEvent(new CustomEvent('agent-force-smartobject',{detail:{targetId:'sabira-order',objectId:'drona-west',slotId:'pick-item'}}));
+        if(ordered.getStatus()!=='FALLING') throw new Error('A furniture order must wait for landing');
+        const deadline=performance.now()+30000;
+        let reachedDuo=false;
+        while(performance.now()<deadline && (!reachedDuo || ordered.getStatus()!=='FINISHED')) {
+          for(const id of ['sara','sabira','sabira-order']) {
+            const {agent}=window.autonomousAgents.get(id), state=agent.update(0.1);
+            window.cameraState.positions[id]={...state,yaw:state.rotY};
+            if(agent.getStatus()==='BLOCKED') throw new Error(`${id}: ${nav.navigationDebug.get(id)?.error}`);
+          }
+          reachedDuo ||= manager.isPlaying('sabira');
+          await new Promise(resolve=>requestAnimationFrame(resolve));
+        }
+        const after={...sabira.update(0)};
+        if(after.y!==0 || !reachedDuo || ordered.getStatus()!=='FINISHED') throw new Error(`Sky drop did not land and complete its pending orders: ${JSON.stringify({after,reachedDuo,ordered:ordered.getStatus(),route:nav.navigationDebug.get('sabira-order')})}`);
+        manager.leaveAllSessions(); return {before,after,reachedDuo,ordered:ordered.getStatus()};
+      });
+      console.log('Sky drop interruption:',JSON.stringify(result)); return;
+    }
+    if (process.argv.includes('--xbot-tour')) {
+      await page.waitForFunction(()=>window.nav.hasAgentProfile('xbot'));
+      const audit = await page.evaluate(async()=>{
+        const nav=window.nav, {agent}=window.autonomousAgents.get('xbot-probe');
+        const profile=nav.getAgentProfile('xbot'); nav.setAgentProfile('xbot-probe',profile);
+        const occupantProfile=nav.getAgentProfile('native'); nav.setAgentProfile('bath-occupant',occupantProfile);
+        const occupied=window.resolveCoords({type:'MOVE_TO',targetZoneId:'bathroom'},null,'bath-occupant');
+        window.cameraState.positions['bath-occupant']={x:occupied.tx,y:0,z:occupied.tz,yaw:0};
+        const alternative=window.resolveCoords({type:'MOVE_TO',targetZoneId:'bathroom'},null,'xbot-probe');
+        if(Math.hypot(alternative.tx-occupied.tx,alternative.tz-occupied.tz)<profile.radius+occupantProfile.radius) throw new Error('Xbot must inspect a free place in an occupied bathroom');
+        const deadline=performance.now()+60000;
+        let state, previous;
+        while(performance.now()<deadline) {
+          state={...agent.update(0.1)};
+          if(previous && window.geom.distance(previous,state)>0) for(const key of nav.doorKeys) {
+            const leaf=[[window.geom.inflate(nav.doorPolygon(key,nav.doorCollisionState[key].angle),profile.radius+nav.DOOR_CONFIGS[key].margin)]];
+            if(!window.geom.segmentFree(previous,state,leaf)) throw new Error(`Xbot crossed the actual ${key} door`);
+          }
+          previous=state;
+          window.cameraState.positions['xbot-probe']={...state,yaw:state.rotY};
+          if(['FINISHED','BLOCKED'].includes(agent.getStatus())) break;
+          await new Promise(resolve=>requestAnimationFrame(resolve));
+        }
+        delete window.cameraState.positions['bath-occupant'];
+        return {profile,occupied,alternative,status:agent.getStatus(),state,route:nav.navigationDebug.get('xbot-probe')};
+      });
+      console.log('Xbot tour:',JSON.stringify(audit)); assert.equal(audit.status,'FINISHED'); return;
+    }
     if (process.argv.includes('--duo-audit') || process.argv.includes('--spawn-objects')) {
       console.log('Duo obstacle audit:', JSON.stringify(await page.evaluate(() => {
         const nav = window.nav, g = window.geom, profile = nav.getAgentProfile('native');
@@ -671,8 +746,8 @@ if (process.argv.includes('--browser')) (async () => {
       assert.equal(errors.length, 0);
       return;
     }
-    if (process.argv.includes('--duo-navigation')) {
-      const audit = await page.evaluate(async () => {
+    if (process.argv.includes('--duo-navigation') || process.argv.includes('--all-duos')) {
+      const audit = await page.evaluate(async allDuos => {
         const nav = window.nav, g = window.geom, manager = window.duoManager;
         const profile = nav.getAgentProfile('native'), graph = nav.getNavigationGraph(profile);
         const obj = window.smartObjects.getSmartObject('inyeong-cha-hugs-point');
@@ -691,7 +766,14 @@ if (process.argv.includes('--browser')) (async () => {
         if (slot.duoPool.includes('date_bearhug') || slot.duoPool.includes('p2')) throw new Error('Duos which collide with this zone must not be selected for its playlist');
         manager.leaveAllSessions();
         for (const [id,{agent}] of window.autonomousAgents) {nav.setAgentProfile(id,profile);agent.update(0);}
-        const session = manager.startDuoSession(obj.id,slot.slotId,'sara','marissa','kiss_man_woman');
+        const sessions=[];
+        for (const animationId of (allDuos ? slot.duoPool : ['kiss_man_woman'])) {
+        manager.leaveAllSessions();
+        for (const [id,{agent}] of window.autonomousAgents) {
+          agent.setPosition(id==='sara' ? -300 : 100,0,-600);
+          window.cameraState.positions[id]={x:id==='sara' ? -300 : 100,y:0,z:-600,yaw:0};
+        }
+        const session = manager.startDuoSession(obj.id,slot.slotId,'sara','marissa',animationId);
         if (!session) throw new Error('Kiss session failed to start');
         document.dispatchEvent(new CustomEvent('npc-invite-duo',{detail:{targetId:'sara',fromId:'SmartObject',objectId:obj.id,slotId:slot.slotId,forceRole:'roleA',targetPos:session.posA,targetRotY:session.rotA}}));
         const deadline = performance.now()+30000;
@@ -704,15 +786,39 @@ if (process.argv.includes('--browser')) (async () => {
           await new Promise(resolve=>requestAnimationFrame(resolve));
         }
         if (!manager.isPlaying('sara')) throw new Error('The two participants never reached their duo positions');
-        const result = {placements,playing:manager.isPlaying('sara'),roles:[manager.getParticipantA('sara'),manager.getParticipantB('sara')]};
+        sessions.push({animationId,playing:manager.isPlaying('sara'),roles:[{...manager.getParticipantA('sara')},{...manager.getParticipantB('sara')}]});
+        }
         manager.leaveAllSessions();
-        return result;
-      });
+        return {placements,sessions};
+      },process.argv.includes('--all-duos'));
       console.log('Outdoor duo navigation:',JSON.stringify(audit));
       assert.equal(errors.length,0);
       return;
     }
-    if (process.argv.includes('--cases-only') || process.argv.includes('--shower-only') || process.argv.includes('--spawn-objects')) {
+    if (process.argv.includes('--cases-only') || process.argv.includes('--shower-only') || process.argv.includes('--spawn-objects') || process.argv.includes('--bathroom-cases')) {
+      if (process.argv.includes('--bathroom-cases')) {
+        const recovery=await page.evaluate(()=>{
+          const nav=window.nav, g=window.geom, profile=nav.getAgentProfile('native');
+          nav.useSceneStore.setState(s=>({layers:{...s.layers,npcCollisions:true}}));
+          nav.setAgentProfile('occupied-probe',profile); nav.setAgentProfile('occupied-robot',{...profile,solid:true});
+          const target={x:200,z:-100}, start={x:200,z:-200}, route=nav.createRouteState();
+          window.cameraState.positions['occupied-robot']={...target,y:0,yaw:0};
+          const find=g.VisibilityGraph.prototype.find; let calls=0;
+          g.VisibilityGraph.prototype.find=function(...args){calls++;return find.apply(this,args);};
+          try {
+            const stopped=nav.followRoute(route,'occupied-probe',start,target,g.distance(start,target));
+            if(route.error!=='Destination occupée par un autre acteur') throw new Error('The occupied target must report its blockage');
+            const firstCalls=calls;
+            for(let frame=0;frame<300;frame++) nav.followRoute(route,'occupied-probe',stopped,target,1);
+            if(calls!==firstCalls) throw new Error('An unchanged occupied destination must not replan each frame');
+            delete window.cameraState.positions['occupied-robot'];
+            const resumed=nav.followRoute(route,'occupied-probe',stopped,target,g.distance(stopped,target));
+            if(route.error || g.distance(resumed,target)>g.GEOMETRY_EPSILON) throw new Error('A target freed by an actor must resume without a geometry revision');
+            return {stopped,resumed,repeatedSearches:0};
+          } finally {g.VisibilityGraph.prototype.find=find; delete window.cameraState.positions['occupied-robot'];nav.resetRoute(route,'occupied-probe');}
+        });
+        console.log('Occupied destination recovery:',JSON.stringify(recovery));
+      }
       if (process.argv.includes('--shower-only')) {
         const blocked = await page.evaluate(() => {
           const nav = window.nav, g = window.geom;
@@ -752,6 +858,13 @@ if (process.argv.includes('--browser')) (async () => {
         const profile = window.nav.getAgentProfile('native'), results = [];
         for (const [id, { agent, label, scenario }] of window.autonomousAgents) {
           window.nav.setAgentProfile(id, profile);
+          if(window.bathroomTest && label==='drona-west:pick-item') {
+            const instruction=scenario.find(i=>i.type==='USE_OBJECT'), desired=window.resolveCoords(instruction,null,id);
+            window.nav.setAgentProfile('laundry-occupant',profile);
+            window.cameraState.positions['laundry-occupant']={x:desired.tx,y:0,z:desired.tz,yaw:0};
+            const alternative=window.resolveCoords(instruction,null,id,{x:160,z:300});
+            if(Math.hypot(alternative.tx-desired.tx,alternative.tz-desired.tz)<profile.radius*2) throw new Error('Laundry approach must leave room for the resting actor');
+          }
           const deadline = performance.now() + 30000;
           let state, status;
           const spawn = window.spawnTest ? { ...agent.update(0) } : undefined;
@@ -781,11 +894,12 @@ if (process.argv.includes('--browser')) (async () => {
           results.push({ label, status, spawn, interaction, state, route: window.nav.navigationDebug.get(id) });
           console.log('Agent trace:', JSON.stringify(results[results.length - 1]));
           delete window.cameraState.positions[id];
+          delete window.cameraState.positions['laundry-occupant'];
           if (status !== 'FINISHED' && !window.spawnTest) break;
         }
         return results;
       });
-      assert.equal(cases.length, process.argv.includes('--spawn-objects') ? 10 : process.argv.includes('--shower-only') ? 2 : 8);
+      assert.equal(cases.length, process.argv.includes('--bathroom-cases') ? 3 : process.argv.includes('--spawn-objects') ? 10 : process.argv.includes('--shower-only') ? 2 : 8);
       assert.ok(cases.every(c => c.status === 'FINISHED'), JSON.stringify(cases));
       if (process.argv.includes('--spawn-objects')) assert.ok(cases.every(c=>c.interaction),'Each spawned agent must actually enter its interaction before departing');
       assert.equal(errors.length,0,'Interaction tests must not emit uncaught exceptions');

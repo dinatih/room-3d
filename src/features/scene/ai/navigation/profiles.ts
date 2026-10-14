@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { AgentProfile } from './obstacles';
 
-/** Body vertices in the model's bind pose; animated arms, hair and equipment do not widen the collider. */
+/** Torso vertices measured during model setup; arms, hair and equipment do not widen the collider. */
 export function measureHumanProfile(root: THREE.Object3D, height: number): AgentProfile {
   root.updateWorldMatrix(true, true);
   const inverse = root.matrixWorld.clone().invert();
@@ -11,6 +11,7 @@ export function measureHumanProfile(root: THREE.Object3D, height: number): Agent
   root.traverse(node => { if ((node as THREE.SkinnedMesh).isSkinnedMesh) meshes.push(node as THREE.SkinnedMesh); });
   const nude = meshes.filter(m => /nude|naked/i.test(m.name));
   for (const mesh of nude.length ? nude : meshes) {
+    mesh.skeleton.update();
     const indices = mesh.geometry.getAttribute('skinIndex'), weights = mesh.geometry.getAttribute('skinWeight');
     const positions = mesh.geometry.getAttribute('position');
     const matrix = inverse.clone().multiply(mesh.matrixWorld);
@@ -19,7 +20,9 @@ export function measureHumanProfile(root: THREE.Object3D, height: number): Agent
       for (let j = 1; j < 4; j++) if (weights.getComponent(i, j) > weights.getComponent(i, dominant)) dominant = j;
       const bone = mesh.skeleton.bones[indices.getComponent(i, dominant)];
       if (!/spine|chest|pelvis|hip|torso/i.test(bone.name)) continue;
-      vertex.fromBufferAttribute(positions, i).applyMatrix4(matrix);
+      // Skinning includes the armature's scale, which can differ from the mesh's
+      // scale (Xbot embeds a 0.01 mesh transform under a centimetre armature).
+      mesh.getVertexPosition(i, vertex).applyMatrix4(matrix);
       box.expandByPoint(vertex);
     }
   }

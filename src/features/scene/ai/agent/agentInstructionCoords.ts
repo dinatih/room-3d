@@ -17,7 +17,7 @@ export function resolveInstructionCoords(
     return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
   }
   if (instr.targetZoneId) {
-    const pos = getZoneDestination(instr.targetZoneId, agentId);
+    const pos = getZoneDestination(instr.targetZoneId, agentId, currentPosition, departureOwner);
     return { tx: pos.x, tz: pos.z, label: instr.targetZoneId, rotY: instr.rotY };
   }
   if (instr.targetLocalPos) {

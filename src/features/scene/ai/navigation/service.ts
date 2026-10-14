@@ -69,9 +69,9 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
   const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile, undefined, closedDoor);
   if (start && departureOwner && !exiting && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true, undefined, closedDoor) ?? start;
   const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
-  if (!exiting && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles) && (!start || graph.find(start, goal))) return goal;
+  if (!exiting && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles) && isAgentDestinationFree(agentId, goal) && (!start || graph.find(start, goal))) return goal;
   exiting = exiting || Boolean(start && owned.some(p => pointInRing(start, p)));
-  const contours = owned.length && !flexible ? owned : graph.obstacles.flat();
+  const contours = owned.length && !flexible ? owned : [...graph.obstacles.flat(), ...getAgentObstacles(agentId, start ?? goal, true)];
   const edges = contours.flatMap(polygon => polygon.map((a, i) => [a, polygon[(i + 1) % polygon.length]] as const));
   const candidates = edges.flatMap(([a, b]) => [a, projectToSegment(goal, a, b), ...(start ? [projectToSegment(start, a, b)] : [])]);
   // Other obstacles can cover an entire corner: include their intersections with the owner's boundary.
@@ -87,7 +87,7 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
   }
   candidates.sort((a, b) => distance(a, goal) - distance(b, goal));
   for (const p of candidates) {
-    if (!inSurface(p) || !graph.find(p, p)) continue;
+    if (!inSurface(p) || !isAgentDestinationFree(agentId, p) || !graph.find(p, p)) continue;
     if (exiting && start ? !segmentFree(start, p, getNavigationGraph(profile, owner, closedDoor).obstacles) : !graph.find(p, p)) continue;
     if (start && !exiting && !graph.find(start, p)) continue;
     return p;
@@ -193,6 +193,12 @@ function passDoors(route: RouteState, agentId: string, profile: AgentProfile, st
 /** Returns a safe movement, or the current point while waiting for a door / another agent. */
 export function followRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, closedDoor?: DoorKey): Point {
   owner = owner ? getInteractionOwner(owner) : undefined;
+  if (route.error === 'Destination occupée par un autre acteur') {
+    if (!isAgentDestinationFree(agentId, target)) return start;
+    route.error = null;
+    route.graph = null;
+    route.crowd = undefined;
+  }
   const failed = route.failure;
   if (failed) {
     if (failed.graph === getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor)
@@ -229,7 +235,11 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
         // Stay outside the conservative detour boundary until its first step.
         return start;
       }
-      if (insideObstacle(goal, obstacles.map(polygon => [polygon]))) route.error = 'Destination occupée par un autre acteur';
+      if (insideObstacle(goal, obstacles.map(polygon => [polygon]))) {
+        route.error = 'Destination occupée par un autre acteur';
+        releaseAgentDoors(agentId);
+        route.doors.clear();
+      }
     }
   }
   return limited;

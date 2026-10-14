@@ -17,7 +17,7 @@ import { AgentState, AgentStatus } from './agent/agentTypes';
 import { cameraState } from '../cameraState';
 import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation, getWalkSpeedForAnimation } from './agent/agentWalkAnimations';
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
-import { computeSteeringVector, computeRotYStep } from './agent/agentAvoidance';
+import { computeSteeringVector, computeRotYStep, isAgentDestinationFree } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { getExitTransition } from '../animations/animationTransitions';
 import { doorCollisionState } from '../doorObstacles';
@@ -139,7 +139,9 @@ export function useAgentController(
   const getResolvedCoords = (instr: AgentInstruction) => {
     const revision = getObstacleRevision();
     const followsInteraction = statusRef.current === 'INTERACTING' && !!instr.smartObjectId && movingFurniture.size > 0;
-    if (followsInteraction || (!movingFurniture.size && cachedCoordsRevisionRef.current !== revision) || cachedCoordsInstructionRef.current !== instr || !cachedCoordsRef.current) {
+    const occupiedApproach = statusRef.current !== 'INTERACTING' && cachedCoordsRef.current && hasAgentProfile(_characterId)
+      && !isAgentDestinationFree(_characterId, { x: cachedCoordsRef.current.tx, z: cachedCoordsRef.current.tz });
+    if (followsInteraction || occupiedApproach || (!movingFurniture.size && cachedCoordsRevisionRef.current !== revision) || cachedCoordsInstructionRef.current !== instr || !cachedCoordsRef.current) {
       cachedCoordsInstructionRef.current = instr;
       cachedCoordsRevisionRef.current = revision;
       cachedCoordsRef.current = resolveInstructionCoords(instr, startPosRef.current, _characterId, stateRef.current, routeRef.current.owner);
@@ -207,6 +209,10 @@ export function useAgentController(
           cachedCoordsInstructionRef.current = null;
           cachedCoordsRef.current = null;
 
+          if (!deployment.hasCompleted) {
+            appLog(_characterId, `🪂 Invitation duo en attente de l'atterrissage`);
+            return;
+          }
           if (e.detail?.alreadyThere) {
             statusRef.current = 'INTERACTING';
             duoSessionManager.markReady(_characterId);
@@ -258,7 +264,7 @@ export function useAgentController(
           dynamicNavIndexRef.current = 0;
           resetRoute(routeRef.current, _characterId);
           routeInstructionRef.current = null;
-          statusRef.current = 'IDLE';
+          if (deployment.hasCompleted) statusRef.current = 'IDLE';
           cachedCoordsInstructionRef.current = null;
           cachedCoordsRef.current = null;
           appLog(_characterId, `⚡ Ordre direct reçu : ${objectId}${slotId ? ` (${slotId})` : ''}${animation ? ` [${animation}]` : ''}`);
@@ -292,7 +298,7 @@ export function useAgentController(
       routeInstructionRef.current = null;
       cachedCoordsInstructionRef.current = null;
       cachedCoordsRef.current = null;
-      statusRef.current = 'IDLE';
+      if (deployment.hasCompleted) statusRef.current = 'IDLE';
       appLog(_characterId, '🐕 Danse avec le Shiba');
     };
 
@@ -452,6 +458,8 @@ export function useAgentController(
             deployment.y = stateRef.current.y;
           }
           startPosRef.current = { ...stateRef.current, y: first.ty ?? 0 };
+          const owner = first.owner ?? scenario[0].smartObjectId;
+          routeRef.current.owner = owner ? getInteractionOwner(owner) : undefined;
         }
       }
     }
