@@ -23,15 +23,12 @@ export function unregisterObstacle(id: string): void {
 export interface AgentProfile {
   radius: number;
   height: number;
-  /** Full rotating footprint for local avoidance of elongated bodies. */
-  bodyRadius?: number;
   /** Robots and animals retain physical separation, including from human agents. */
   solid?: boolean;
 }
 const profiles = new Map<string, AgentProfile>();
 export function setAgentProfile(id: string, profile: AgentProfile): void {
   if (!Number.isFinite(profile.radius) || !Number.isFinite(profile.height) || !(profile.radius > 0) || !(profile.height > 0)) throw new Error(`Invalid navigation profile ${id}`);
-  if (profile.bodyRadius !== undefined && (!Number.isFinite(profile.bodyRadius) || profile.bodyRadius < profile.radius)) throw new Error(`Invalid avoidance footprint ${id}`);
   profiles.set(id, profile);
 }
 export function removeAgentProfile(id: string): void { profiles.delete(id); }

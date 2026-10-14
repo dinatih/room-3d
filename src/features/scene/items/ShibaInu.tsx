@@ -90,7 +90,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     );
     if (!isPreview && navigationEnabled) setAgentProfile('shiba', {
       radius: Math.min(finalSize.x, finalSize.z) / 2,
-      bodyRadius: Math.hypot(finalSize.x, finalSize.z) / 2,
       height: targetHeight, solid: true,
     });
     setBounds({ size: finalSize, center: rawBox.getCenter(new THREE.Vector3()).multiplyScalar(scaleFactor) });
@@ -353,6 +352,14 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
             if (routeRef.current.error && routeRef.current.error !== lastError.current) {
               lastError.current = routeRef.current.error;
               appLog('shiba', `⚠️ Navigation : ${routeRef.current.error}`);
+            }
+            if (routeRef.current.error) {
+              resetRoute(routeRef.current, 'shiba');
+              reserveAgentDestination('shiba', null);
+              ai.state = 'idle';
+              ai.timer = 1;
+              mixerRef.current.stopAllAction();
+              mixerRef.current.clipAction(findDogClip(animations, 'idle')).setLoop(THREE.LoopRepeat, Infinity).reset().play();
             }
             position.x = next.x; position.z = next.z;
             if (next.x !== previous.x || next.z !== previous.z) {

@@ -1,7 +1,7 @@
 import { cameraState } from '../../cameraState';
 import { useSceneStore } from '../../store/useSceneStore';
 import { getAgentProfile, hasAgentProfile } from '../navigation/obstacles';
-import type { Point } from '../navigation/geometry';
+import { inflate, CLEARANCE_ERROR, type Point, type Polygon } from '../navigation/geometry';
 
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
@@ -25,7 +25,7 @@ export function isAgentDestinationFree(id: string, target: Point): boolean {
     if (otherId === id || !hasAgentProfile(otherId)) continue;
     const other = cameraState.positions[otherId];
     const body = getAgentProfile(otherId);
-    const separation = (profile.bodyRadius ?? profile.radius) + (body.bodyRadius ?? body.radius);
+    const separation = profile.radius + body.radius;
     if (other.y >= profile.height || other.y + body.height <= 0) continue;
     if (Math.hypot(target.x - other.x, target.z - other.z) < separation) return false;
     const destination = destinations.get(otherId);
@@ -48,7 +48,7 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
       if (other.y >= y + profile.height || other.y + body.height <= y) continue;
       const dx = other.x - currentX, dz = other.z - currentZ;
       const distance = Math.hypot(dx, dz);
-      const clearance = (profile.bodyRadius ?? profile.radius) + (body.bodyRadius ?? body.radius);
+      const clearance = profile.radius + body.radius;
       const lookahead = clearance * 2;
       if (distance >= lookahead) { sides.delete(otherId); continue; }
       const forward = dx * dirX + dz * dirZ;
@@ -65,6 +65,15 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
         const penetration = (clearance - distance) / clearance;
         steerX -= dx / distance * penetration;
         steerZ -= dz / distance * penetration;
+      }
+      // At contact, remove inward velocity so an actor can slide and separate.
+      if (distance > 0 && distance <= clearance + CLEARANCE_ERROR) {
+        const inward = (steerX * dx + steerZ * dz) / distance;
+        if (inward >= 0) {
+          const correction = inward + CLEARANCE_ERROR / clearance;
+          steerX -= dx / distance * correction;
+          steerZ -= dz / distance * correction;
+        }
       }
     }
   }
@@ -88,7 +97,7 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
     const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
     if (!(profile.solid || body.solid) || other.y >= y + profile.height || other.y + body.height <= y) continue;
     const dx = start.x - other.x, dz = start.z - other.z;
-    const radius = (profile.bodyRadius ?? profile.radius) + (body.bodyRadius ?? body.radius);
+    const radius = profile.radius + body.radius;
     const b = dx * vx + dz * vz;
     const c = dx * dx + dz * dz - radius * radius;
     // Existing overlaps may separate, but must not deepen.
@@ -103,6 +112,24 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
     if (contact >= 0 && contact < fraction) fraction = Math.max(0, contact - Number.EPSILON);
   }
   return fraction === 1 ? proposed : { x: start.x + vx * fraction, z: start.z + vz * fraction };
+}
+
+/** Obstacles for a route around actors, using the same footprint as movement clearance. */
+export function getAgentObstacles(id: string, start: Point): Polygon[] {
+  if (!useSceneStore.getState().layers.npcCollisions) return [];
+  const profile = getAgentProfile(id);
+  const y = cameraState.positions[id]?.y ?? 0;
+  const obstacles: Polygon[] = [];
+  for (const otherId in cameraState.positions) {
+    if (otherId === id || !hasAgentProfile(otherId)) continue;
+    const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
+    if (!(profile.solid || body.solid) || other.y >= y + profile.height || other.y + body.height <= y) continue;
+    const radius = profile.radius + body.radius;
+    // Already intersecting actors must remain able to leave their shared space.
+    if (Math.hypot(start.x - other.x, start.z - other.z) <= radius + CLEARANCE_ERROR) continue;
+    obstacles.push(inflate([{ x: other.x, z: other.z }], radius));
+  }
+  return obstacles;
 }
 
 /** Smooth the shortest angular arc, bounded by the actor's turn speed in radians/s. */

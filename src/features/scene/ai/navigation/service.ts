@@ -5,7 +5,7 @@ import { furnitureObstacles, getObstacleRevision, getAgentProfile, navigationDeb
 import { inflate, union, VisibilityGraph, rectangle, pointInRing, insideObstacle, segmentFree, distance, projectToSegment, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, type DoorKey } from './doorRequests';
-import { limitAgentMovement, isAgentDestinationFree } from '../agent/agentAvoidance';
+import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles } from '../agent/agentAvoidance';
 
 export { architectureObstacles };
 export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
@@ -100,6 +100,7 @@ export interface RouteState {
   index: number;
   target: Point | null;
   graph: VisibilityGraph | null;
+  crowd?: { base: VisibilityGraph; graph: VisibilityGraph | null; signature: string };
   error: string | null;
   doors: Set<DoorKey>;
   closedDoor?: DoorKey;
@@ -116,17 +117,24 @@ export function resetRoute(route: RouteState, agentId: string, keepClosedDoor?: 
   route.approach = undefined; route.interactionTarget = undefined;
   route.exit = undefined;
   route.failure = undefined;
+  route.crowd = undefined;
   route.closedDoor = keepClosedDoor;
   if (keepClosedDoor) route.doors.add(doorOpeningKey(keepClosedDoor));
   navigationDebug.delete(agentId);
 }
 
 export function planRoute(route: RouteState, agentId: string, start: Point, target: Point): boolean {
-  const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile, undefined, route.closedDoor);
+  const base = getNavigationGraph(getAgentProfile(agentId), undefined, route.closedDoor);
+  let graph = route.crowd?.base === base && route.crowd.graph ? route.crowd.graph : base;
   if (!inSurface(start) || !inSurface(target)) {
     route.error = 'Destination ou départ hors du sol praticable';
   } else {
-    const path = graph.find(start, target);
+    let path = graph.find(start, target);
+    if (!path && graph !== base) {
+      route.crowd = undefined;
+      graph = base;
+      path = graph.find(start, target);
+    }
     if (path) {
       route.path = path; route.index = 0; route.target = { ...target }; route.graph = graph; route.error = null;
       navigationDebug.set(agentId, { path: [start, ...path], target });
@@ -204,7 +212,27 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     releaseAgentDoors(agentId);
     route.doors.clear();
   }
-  return limitAgentMovement(agentId, start, position);
+  const limited = limitAgentMovement(agentId, start, position);
+  if (limited.x !== position.x || limited.z !== position.z) {
+    // A stop at contact is insufficient: keep a real path around the other bodies.
+    const base = getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor);
+    const obstacles = getAgentObstacles(agentId, start);
+    const signature = JSON.stringify(obstacles);
+    if (obstacles.length && (route.crowd?.base !== base || route.crowd.signature !== signature)) {
+      const graph = new VisibilityGraph([...base.obstacles, ...obstacles.map(polygon => [polygon])]);
+      const goal = route.target ?? target;
+      const path = graph.find(start, goal);
+      route.crowd = { base, graph: path ? graph : null, signature };
+      if (path) {
+        route.path = path; route.index = 0; route.graph = graph; route.target = { ...goal };
+        navigationDebug.set(agentId, { path: [start, ...path], target: goal });
+        // Stay outside the conservative detour boundary until its first step.
+        return start;
+      }
+      if (insideObstacle(goal, obstacles.map(polygon => [polygon]))) route.error = 'Destination occupée par un autre acteur';
+    }
+  }
+  return limited;
 }
 
 function advanceRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, closedDoor?: DoorKey): Point {
@@ -222,7 +250,8 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
     const changed = [...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0).map(o => [inflate(o.polygon, profile.radius)]);
     if (!segmentFree(start, next, changed)) return start;
   }
-  const graph = movingFurniture.size && route.graph ? route.graph : getNavigationGraph(profile, undefined, closedDoor);
+  const base = getNavigationGraph(profile, undefined, closedDoor);
+  let graph = movingFurniture.size && route.graph ? route.graph : route.crowd?.base === base && route.crowd.graph ? route.crowd.graph : base;
   const owned = (id: string) => [...furnitureObstacles.values()].filter(o => o.owner === id && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
   const contained = (id: string, p: Point) => owned(id).some(polygon => pointInRing(p, polygon));
   const localMove = (goal: Point, id: string): Point => {
@@ -273,6 +302,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   }
   if (!route.target || route.target.x !== target.x || route.target.z !== target.z || route.graph !== graph) {
     if (!planRoute(route, agentId, start, target)) return start;
+    graph = route.graph!;
   }
   if (route.error) return start;
   while (route.index < route.path.length && distance(start, route.path[route.index]) === 0) route.index++;
@@ -281,6 +311,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   // A displaced agent must regain a valid route before continuing toward an old vertex.
   if (!segmentFree(start, next, graph.obstacles)) {
     if (!planRoute(route, agentId, start, target)) return start;
+    graph = route.graph!;
     while (route.index < route.path.length && distance(start, route.path[route.index]) === 0) route.index++;
     next = route.path[route.index];
     if (!next || !segmentFree(start, next, graph.obstacles)) {

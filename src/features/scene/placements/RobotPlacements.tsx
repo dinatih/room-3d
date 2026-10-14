@@ -30,7 +30,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const group = useRef<Group>(null);
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const route = useRef(createRouteState());
-  const life = useRef({ automatic: true, target: null as Point | null, wait: config.pause });
+  const life = useRef({ automatic: true, target: null as Point | null, wait: config.pause, searching: false });
   const [actions, setActions] = useState<Record<string, any>>({});
   const motionKey = id === 'jumper-robot' ? 'jumper-motion' : `${id}-motion`;
   const currentMotion = useRef('idle');
@@ -70,6 +70,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
       resetRoute(route.current, id);
       reserveAgentDestination(id, null);
       life.current.target = null;
+      life.current.searching = false;
       if (key === automaticKey) {
         life.current.automatic = true;
         life.current.wait = 2;
@@ -97,16 +98,6 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     const ai = life.current;
     if (ai.automatic) {
       if (ai.target) {
-        // A resting animal or person may occupy a previously free stopping point.
-        if (!isAgentDestinationFree(id, ai.target)) {
-          resetRoute(route.current, id);
-          reserveAgentDestination(id, null);
-          ai.target = null;
-          ai.wait = config.pause;
-          selectMotion('idle');
-          state.invalidate();
-          return;
-        }
         const before = { x: root.position.x, z: root.position.z };
         const corner = route.current.path[route.current.index] ?? ai.target;
         const heading = Math.atan2(corner.x - before.x, corner.z - before.z);
@@ -133,7 +124,8 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
         ai.wait -= delta;
         if (ai.wait <= 0) {
           selectMotion('idle');
-          if (Math.random() < 2 / 3) {
+          if (ai.searching || Math.random() < 2 / 3) {
+            ai.searching = true;
             const target = {
               x: PATROL.minX + Math.random() * (PATROL.maxX - PATROL.minX),
               z: PATROL.minZ + Math.random() * (PATROL.maxZ - PATROL.minZ),
@@ -142,9 +134,10 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
             if (Math.hypot(start.x - target.x, start.z - target.z) >= profile.radius * 2
               && isAgentDestinationFree(id, target) && getNavigationGraph(profile).find(start, target)) {
               ai.target = target;
+              ai.searching = false;
               reserveAgentDestination(id, target);
             }
-            ai.wait = 3;
+            ai.wait = ai.target ? 3 : 0;
           } else {
             const gestures = getActionDef(motionKey)!.options!.filter(option => !['idle', config.walk, 'turn-left', 'turn-right'].includes(option.value));
             selectMotion(gestures[Math.floor(Math.random() * gestures.length)].value);
