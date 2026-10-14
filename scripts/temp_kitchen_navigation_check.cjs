@@ -16,6 +16,29 @@ require.extensions['.ts'] = (module, filename) => {
   module._compile(outputText, filename);
 };
 const g = require('../src/features/scene/ai/navigation/geometry.ts');
+if (process.argv.includes('--benchmark') || process.argv.includes('--benchmark-audit')) {
+  const Module = require('node:module');
+  const source = require('node:child_process').execFileSync('git', ['show', `${process.env.ROOM_NAV_BASELINE || 'HEAD'}:src/features/scene/ai/navigation/geometry.ts`], { encoding: 'utf8' });
+  const baseline = new Module(__filename, module);
+  baseline.paths = module.paths;
+  baseline._compile(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true } }).outputText, __filename);
+  const fixture = process.argv.includes('--benchmark-audit') ? JSON.parse(fs.readFileSync('/tmp/room-navigation-audit.json', 'utf8')).blocked[0] : JSON.parse(fs.readFileSync('/tmp/room-navigation-benchmark.json', 'utf8'));
+  const { obstacles } = fixture;
+  const queries = fixture.queries ?? [[fixture.state, fixture.route.target]];
+  const results = [];
+  for (const [start, target] of queries) {
+    const compare = implementation => {
+      const graph = new implementation.VisibilityGraph(obstacles);
+      const started = performance.now(), route = graph.find(start, target);
+      return { ms: performance.now() - started, length: route ? route.reduce((sum, p, i) => sum + g.distance(i ? route[i - 1] : start, p), 0) : null };
+    };
+    const before = compare(baseline.exports), after = compare(g);
+    assert.ok(before.length === after.length || (before.length !== null && after.length !== null && Math.abs(before.length - after.length) < 1e-6), 'Scene shortest path changed');
+    results.push({ start, target, before, after });
+  }
+  console.log(JSON.stringify(results, null, 2));
+  process.exit(0);
+}
 const { requestDoor, releaseDoor, releaseAgentDoors, doorRequested } = require('../src/features/scene/ai/navigation/doorRequests.ts');
 const square = g.rectangle(0, 0, 10, 10);
 const obstacles = g.union([square]);
@@ -43,6 +66,41 @@ assert.equal(overlap.length, 1);
 const holed = g.union([g.rectangle(0, -10, 30, 4), g.rectangle(0, 10, 30, 4), g.rectangle(-13, 0, 4, 20), g.rectangle(13, 0, 4, 20)]);
 assert.equal(g.insideObstacle({ x: 0, z: 0 }, holed), false);
 assert.ok(new g.VisibilityGraph(holed).find({ x: 0, z: 0 }, { x: 5, z: 5 }));
+// Independent Dijkstra oracle keeps every visible edge, including non-tangents.
+function completeVisibilityDistance(obstacles, start, target) {
+  if (g.insideObstacle(start, obstacles) || g.insideObstacle(target, obstacles)) return Infinity;
+  const nodes = [start, target, ...obstacles.flat(2)];
+  const costs = nodes.map(() => Infinity), visited = new Set();
+  costs[0] = 0;
+  while (visited.size < nodes.length) {
+    let current = -1;
+    for (let i = 0; i < nodes.length; i++) if (!visited.has(i) && (current < 0 || costs[i] < costs[current])) current = i;
+    if (current === 1 || costs[current] === Infinity) return costs[1];
+    visited.add(current);
+    for (let i = 0; i < nodes.length; i++) {
+      if (visited.has(i) || !g.segmentFree(nodes[current], nodes[i], obstacles, true)) continue;
+      costs[i] = Math.min(costs[i], costs[current] + g.distance(nodes[current], nodes[i]));
+    }
+  }
+  return costs[1];
+}
+const fixtures = [
+  g.union([g.inflate(g.rectangle(-6, 0, 4, 18, Math.PI / 5), 1), g.inflate(g.rectangle(7, 0, 4, 14, -Math.PI / 7), 1)]),
+  g.union([g.rectangle(-4, 0, 8, 20), g.rectangle(3, 6, 14, 8)]),
+  g.union([g.rectangle(0, -20, 50, 4), g.rectangle(0, 20, 50, 4), g.rectangle(-23, 0, 4, 40), g.rectangle(23, 0, 4, 40), g.rectangle(0, 0, 8, 16)]),
+];
+const endpoints = [{x:-18,z:-15}, {x:18,z:15}, {x:0,z:15}, {x:0,z:-15}, {x:-30,z:0}, {x:30,z:0}];
+for (const obstacles of fixtures) {
+  const graph = new g.VisibilityGraph(obstacles);
+  for (let i = 0; i < endpoints.length; i++) for (let j = i + 1; j < endpoints.length; j++) {
+    const start = endpoints[i], target = endpoints[j], route = graph.find(start, target);
+    const actual = route ? route.reduce((sum, p, i) => sum + g.distance(i ? route[i - 1] : start, p), 0) : Infinity;
+    const expected = completeVisibilityDistance(obstacles, start, target);
+    assert.ok(actual === expected || Math.abs(actual - expected) < 1e-6, `Tangent graph changed shortest distance: ${actual} vs ${expected}`);
+    if (route) route.forEach((p, i) => assert.ok(g.segmentFree(i ? route[i - 1] : start, p, obstacles)));
+  }
+}
+console.log('Tangent graph matches complete visibility Dijkstra on 45 routes: rounded, rotated, concave, enclosed and disconnected obstacles.');
 requestDoor('bath', 'a'); assert.equal(requestDoor('bath', 'b'), false);
 releaseDoor('bath', 'a'); assert.equal(requestDoor('bath', 'b'), true);
 releaseAgentDoors('b'); assert.equal(doorRequested('bath'), false);
@@ -65,6 +123,13 @@ if (process.argv.includes('--browser')) (async () => {
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   try {
     const page = await browser.newPage();
+    if (process.argv.includes('--profile')) {
+      const client = await page.createCDPSession();
+      await page.exposeFunction('measureHeap', async () => {
+        await client.send('HeapProfiler.collectGarbage');
+        return client.send('Runtime.getHeapUsage');
+      });
+    }
     const errors = [];
     page.on('console', message => { if (message.text().startsWith('Controlled exit:') || message.text().startsWith('Agent trace:') || message.type() === 'error') console.log('CONSOLE:', message.text()); });
     page.on('requestfailed', request => console.log('REQUEST:', request.url(), request.failure()?.errorText));
@@ -148,6 +213,46 @@ if (process.argv.includes('--browser')) (async () => {
     });
     await page.waitForFunction(() => window.nav?.furnitureObstacles.size > 25 && window.nav.hasAgentProfile('native'), { timeout: 60000 }).catch(async error => { console.log('Readiness:', await page.evaluate(() => ({ ids: [...window.nav.furnitureObstacles.keys()], native: window.nav.hasAgentProfile('native'), scene: window.fixtureScene.children.map(c => c.name), agent: window.agent.getStatus() }))); throw error; });
     console.log('Scene assets ready:', await page.evaluate(() => ({ profile: window.nav.getAgentProfile('native'), obstacles: window.nav.furnitureObstacles.size })));
+    if (process.argv.includes('--profile')) {
+      fs.writeFileSync('/tmp/room-navigation-benchmark.json', JSON.stringify(await page.evaluate(() => ({
+        obstacles: window.nav.getNavigationGraph(window.nav.getAgentProfile('native')).obstacles,
+        queries: [
+          [{x:80,z:380}, {x:140,z:560}], [{x:160,z:300}, {x:200,z:-50}],
+          [{x:500,z:-100}, {x:169,z:535}], [{x:-100,z:-170}, {x:14.13891,z:535}],
+          [{x:37.19498,z:269.58378000000005}, {x:-300,z:-200}],
+        ],
+      }))));
+      await page.evaluate(() => {
+        window.navigationTimings = { calls: 0, totalMs: 0, longest: [] };
+        const find = window.geom.VisibilityGraph.prototype.find;
+        window.geom.VisibilityGraph.prototype.find = function (...args) {
+          const started = performance.now();
+          const result = find.apply(this, args);
+          const ms = performance.now() - started, timings = window.navigationTimings;
+          timings.calls++; timings.totalMs += ms;
+          timings.longest.push({ ms, vertices: this.vertices.length, start: { x: args[0].x, z: args[0].z }, target: { x: args[1].x, z: args[1].z }, found: !!result });
+          timings.longest.sort((a, b) => b.ms - a.ms);
+          timings.longest.length = Math.min(timings.longest.length, 12);
+          return result;
+        };
+      });
+    }
+    if (process.argv.includes('--profile-only')) {
+      const { queries } = JSON.parse(fs.readFileSync('/tmp/room-navigation-benchmark.json', 'utf8'));
+      const samples = await page.evaluate(async queries => {
+        const graph = window.nav.getNavigationGraph(window.nav.getAgentProfile('native'));
+        const samples = [{ batch: 0, ...await window.measureHeap() }];
+        for (let batch = 1; batch <= 3; batch++) {
+          for (let repetition = 0; repetition < 100; repetition++) for (const [start, target] of queries) graph.find(start, target);
+          await new Promise(resolve => requestAnimationFrame(resolve));
+          samples.push({ batch, ...await window.measureHeap() });
+        }
+        return { samples, timings: window.navigationTimings };
+      }, queries);
+      console.log('Repeated navigation / collected heap:', JSON.stringify(samples));
+      assert.equal(errors.length, 0);
+      return;
+    }
     if (process.argv.includes('--cases-only')) {
       const cases = await page.evaluate(async () => {
         const profile = window.nav.getAgentProfile('native'), results = [];
@@ -178,25 +283,39 @@ if (process.argv.includes('--browser')) (async () => {
         const profile = window.nav.getAgentProfile('native');
         for (const id of window.autonomousAgents.keys()) window.nav.setAgentProfile(id, profile);
         const blocked = new Map(), failures = [];
-        for (let frame = 0; frame < 1200; frame++) {
+        const heapSamples = [];
+        const frames = window.measureHeap ? 3600 : 1200;
+        let completedFrames = 0;
+        for (let frame = 0; frame < frames; frame++) {
+          if (window.measureHeap && frame % 1200 === 0) {
+            const heap = await window.measureHeap();
+            heapSamples.push({ frame, ...heap });
+            console.log('Agent trace:', JSON.stringify({ heap: heapSamples[heapSamples.length - 1], timings: window.navigationTimings }));
+          }
           for (const [id, { agent }] of window.autonomousAgents) {
             try {
               const state = { ...agent.update(0.1) };
               window.cameraState.positions[id] = { ...state, yaw: state.rotY };
               const status = agent.getStatus(), route = window.nav.navigationDebug.get(id);
-              if (status === 'BLOCKED') blocked.set(id, { id, frame, state, route,
+              if (status === 'BLOCKED') blocked.set(id, { id, frame, state, route, obstacles: window.nav.getNavigationGraph(profile).obstacles,
                 blockers: [...window.nav.architectureObstacles, ...window.nav.furnitureObstacles.values()].filter(o => window.geom.pointInRing(route.target, window.geom.inflate(o.polygon, profile.radius))).map(o => ({id:o.id,owner:o.owner,polygon:o.polygon})),
                 startBlockers: [...window.nav.architectureObstacles, ...window.nav.furnitureObstacles.values()].filter(o => window.geom.pointInRing(state, window.geom.inflate(o.polygon, profile.radius))).map(o => ({id:o.id,owner:o.owner,polygon:o.polygon})),
               });
-              if (frame % 300 === 0) console.log('Agent trace:', JSON.stringify({ id, frame, status, state, target: route?.target, error: route?.error }));
+              if (!window.measureHeap && frame % 300 === 0) console.log('Agent trace:', JSON.stringify({ id, frame, status, state, target: route?.target, error: route?.error }));
             } catch (error) { failures.push({ id, frame, error: error.message }); }
           }
+          completedFrames = frame + 1;
           if (blocked.size || failures.length) break;
           await new Promise(resolve => requestAnimationFrame(resolve));
         }
-        return { blocked: [...blocked.values()], failures };
+        if (window.measureHeap) heapSamples.push({ frame: completedFrames, ...await window.measureHeap() });
+        return { blocked: [...blocked.values()], failures, heapSamples };
       });
-      console.log('Autonomous audit:', JSON.stringify(audit));
+      console.log('Autonomous audit:', JSON.stringify({ ...audit, blocked: audit.blocked.map(({ obstacles, ...result }) => result) }));
+      fs.writeFileSync('/tmp/room-navigation-audit.json', JSON.stringify(audit, null, 2));
+      if (process.argv.includes('--profile')) {
+        console.log('Navigation profile:', JSON.stringify(await page.evaluate(() => window.navigationTimings)));
+      }
       console.log('Plant geometry:', await page.evaluate(() => {
         const entries = [];
         window.fixtureScene.traverse(node => {

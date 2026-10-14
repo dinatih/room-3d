@@ -120,16 +120,29 @@ export function segmentFree(a: Point, b: Point, obstacles: Polygon[][], endpoint
 
 export class VisibilityGraph {
   readonly vertices: Point[];
+  private corners: { previous: Point; next: Point; convex: boolean }[];
   private edges = new Map<number, { to: number; cost: number }[]>();
   constructor(readonly obstacles: Polygon[][]) {
     this.vertices = obstacles.flat(2);
+    this.corners = obstacles.flatMap(rings => rings.flatMap(ring => ring.map((point, i) => {
+      const previous = ring[(i + ring.length - 1) % ring.length], next = ring[(i + 1) % ring.length];
+      return { previous, next, convex: cross(previous, point, next) > GEOMETRY_EPSILON };
+    })));
+  }
+  private tangent(index: number, target: Point): boolean {
+    const { previous, next, convex } = this.corners[index];
+    if (!convex) return false;
+    const a = cross(this.vertices[index], previous, target), b = cross(this.vertices[index], next, target);
+    // A shortest path can only turn at a convex obstacle corner, along a tangent.
+    // Rays between the two boundary directions can always be shortened past it.
+    return !((a > GEOMETRY_EPSILON && b < -GEOMETRY_EPSILON) || (a < -GEOMETRY_EPSILON && b > GEOMETRY_EPSILON));
   }
   private neighbors(index: number) {
     let edges = this.edges.get(index);
     if (!edges) {
       edges = [];
       for (let i = 0; i < this.vertices.length; i++) {
-        if (i !== index && segmentFree(this.vertices[index], this.vertices[i], this.obstacles, true)) edges.push({ to: i, cost: distance(this.vertices[index], this.vertices[i]) });
+        if (i !== index && this.tangent(index, this.vertices[i]) && this.tangent(i, this.vertices[index]) && segmentFree(this.vertices[index], this.vertices[i], this.obstacles, true)) edges.push({ to: i, cost: distance(this.vertices[index], this.vertices[i]) });
       }
       this.edges.set(index, edges);
     }
@@ -144,7 +157,7 @@ export class VisibilityGraph {
     const endpointEdges = new Map<number, { to: number; cost: number }[]>();
     const endConnections = new Map<number, { to: number; cost: number }[]>();
     for (const endpoint of [startIndex, targetIndex]) for (let i = 0; i < this.vertices.length; i++) {
-      if (!segmentFree(nodes[endpoint], nodes[i], this.obstacles, true)) continue;
+      if (!this.tangent(i, nodes[endpoint]) || !segmentFree(nodes[endpoint], nodes[i], this.obstacles, true)) continue;
       const cost = distance(nodes[endpoint], nodes[i]);
       const edges = endpointEdges.get(endpoint) ?? [];
       edges.push({ to: i, cost }); endpointEdges.set(endpoint, edges);
