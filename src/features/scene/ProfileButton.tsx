@@ -73,9 +73,9 @@ export function ProfileButton({ hideUI = false }: { hideUI?: boolean }) {
   const visitorCounter = (
     <div className="d-flex flex-column align-items-center rounded bg-light p-2 flex-shrink-0">
       <span className="small text-dark fw-semibold">Visites du site</span>
-      <iframe
-        src="https://dinatih.goatcounter.com/counter/TOTAL.html?no_branding=1"
-        title="Nombre total de visites du site"
+      <img
+        src="https://dinatih.goatcounter.com/counter/TOTAL.svg?no_branding=1"
+        alt="Nombre total de visites du site"
         width="200"
         height="60"
         className="border-0 mw-100"
