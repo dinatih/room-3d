@@ -79,6 +79,31 @@ function renderMessage(message: string): ReactNode[] {
   );
 }
 
+/** État des panneaux partageable dans la query string, y compris les URL avec hash. */
+function useUrlPanelToggle(key: 'minimap' | 'perfMini') {
+  const [visible, setVisible] = useState(() => {
+    const { search, hash } = window.location;
+    const query = search || (hash.includes('?') ? hash.slice(hash.indexOf('?')) : '');
+    const value = new URLSearchParams(query).get(key);
+    return value === '1' || value === 'true';
+  });
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const hashQuery = !url.search && url.hash.includes('?');
+    const separator = url.hash.indexOf('?');
+    const params = hashQuery
+      ? new URLSearchParams(url.hash.slice(separator + 1))
+      : url.searchParams;
+    if (!visible && !params.has(key)) return;
+    params.set(key, visible ? '1' : '0');
+    if (hashQuery) url.hash = `${url.hash.slice(0, separator)}?${params}`;
+    window.history.replaceState(window.history.state, '', url);
+  }, [key, visible]);
+
+  return [visible, setVisible] as const;
+}
+
 // ── Composant ──────────────────────────────────────────────────────────────
 export function AppConsole({
   hidden = false,
@@ -105,8 +130,8 @@ export function AppConsole({
   const [bottomDockWidth, setBottomDockWidth] = useState<number | null>(null);
   const [bottomDockRight, setBottomDockRight] = useState<number | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
-  const [showMinimap, setShowMinimap] = useState(false);
-  const [showPerf, setShowPerf] = useState(false);
+  const [showMinimap, setShowMinimap] = useUrlPanelToggle('minimap');
+  const [showPerf, setShowPerf] = useUrlPanelToggle('perfMini');
 
   useEffect(() => {
     const onToggleMinimap = () => setShowMinimap(v => !v);
