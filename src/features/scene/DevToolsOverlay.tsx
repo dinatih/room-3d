@@ -13,8 +13,12 @@ function heatColor(v: number, warn: number, danger: number) {
 }
 
 function fpsTextClass(fps: number) {
-  return fps >= 50 ? 'text-success' : fps >= 30 ? 'text-warning' : 'text-danger';
+  return fps >= 50 ? 'text-success' : fps >= 30 ? 'text-warning-emphasis' : 'text-danger';
 }
+
+const engraveStyle: React.CSSProperties = {
+  textShadow: '0 1px 1px rgba(255, 255, 255, 0.95), 0 -1px 1px rgba(0, 0, 0, 0.15)',
+};
 
 // ── FPS canvas ────────────────────────────────────────────────────────────────
 
@@ -130,22 +134,22 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
               className="d-block w-100 rounded shadow-sm"
               style={{ height: compact ? FPS_H / 2 : FPS_H }}
             />
-            <div className="d-flex align-items-center justify-content-between text-nowrap small lh-sm">
-              <span className={`fw-bold ${isIdle ? 'text-warning' : fpsTextClass(curFps)}`}>
+            <div className="d-flex align-items-center justify-content-between text-nowrap small lh-sm" style={engraveStyle}>
+              <span className={`fw-bold ${isIdle ? 'text-warning-emphasis' : fpsTextClass(curFps)}`}>
                 {isIdle ? 'Veille' : `${curFps} FPS`}
               </span>
-              <span className="fw-medium text-secondary">
+              <span className="fw-semibold text-secondary">
                 min:<span className={fpsTextClass(fpsMin)}>{fpsMin}</span>{' '}
                 moy:<span className={fpsTextClass(fpsAvg)}>{fpsAvg}</span>{' '}
                 max:<span className={fpsTextClass(fpsMax)}>{fpsMax}</span>
               </span>
             </div>
-            <div className="d-flex align-items-center justify-content-between text-nowrap small lh-sm">
-              <span title="Draw calls" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.drawCalls >= 500 ? 'text-danger' : devState.drawCalls >= 200 ? 'text-warning' : 'text-primary'}`}>
+            <div className="d-flex align-items-center justify-content-between text-nowrap small lh-sm" style={engraveStyle}>
+              <span title="Draw calls" className={`fw-bold ${isIdle ? 'text-secondary' : devState.drawCalls >= 500 ? 'text-danger' : devState.drawCalls >= 200 ? 'text-warning-emphasis' : 'text-primary'}`}>
                 DC: {isIdle ? '0' : devState.drawCalls.toLocaleString()}
               </span>
               <div className="d-flex align-items-center gap-1">
-                <span title="Triangles soumis au GPU par image, toutes passes comprises (vue principale, ombres et réflexions)" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.triangles >= 2_000_000 ? 'text-danger' : devState.triangles >= 1_000_000 ? 'text-warning' : 'text-primary'}`}>
+                <span title="Triangles soumis au GPU par image, toutes passes comprises (vue principale, ombres et réflexions)" className={`fw-bold ${isIdle ? 'text-secondary' : devState.triangles >= 2_000_000 ? 'text-danger' : devState.triangles >= 1_000_000 ? 'text-warning-emphasis' : 'text-primary'}`}>
                   Tris: {isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'}
                 </span>
                 <button
