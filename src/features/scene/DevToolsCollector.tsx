@@ -159,19 +159,14 @@ export function DevToolsCollector() {
       const dc = devState.drawCalls;
       const trisK = (devState.triangles / 1000).toFixed(1);
 
-      if (autoReason) {
-        appLog('perf', `⚠️ Chute FPS détectée (${curFps} FPS) — ${autoReason}`);
-      } else {
-        appLog('perf', `🔍 Diagnostic Perf lancé — ${curFps} FPS | ${dc} Draw calls | ${trisK}k Triangles`);
-      }
+      const topTris = [...devState.topObjects].sort((a, b) => b.tris - a.tris).slice(0, 3);
+      const topSummary = topTris.map(t => `${t.name}: ${(t.tris / 1000).toFixed(1)}k`).join(', ');
 
-      // Top 5 coupables par triangles
-      const topTris = [...devState.topObjects].sort((a, b) => b.tris - a.tris).slice(0, 5);
-      topTris.forEach((item, idx) => {
-        const kTris = (item.tris / 1000).toFixed(1);
-        const instStr = item.instances > 0 ? ` (+${item.instances} inst)` : '';
-        appLog('perf', `#${idx + 1} ${item.name} : ${kTris}k tris, ${item.meshes} meshes${instStr}`);
-      });
+      if (autoReason) {
+        appLog('perf', `⚠️ Chute FPS (${curFps} FPS) — ${autoReason} [${topSummary}]`);
+      } else {
+        appLog('perf', `🔍 Perf : ${curFps} FPS | ${dc} DC | ${trisK}k tris [${topSummary}]`);
+      }
 
       // Affichage détaillé dans la console développeur du navigateur
       console.group('%c[PERF DIAGNOSTIC] Analyse de la scène 3D', 'color: #ffaa00; font-weight: bold; font-size: 12px;');

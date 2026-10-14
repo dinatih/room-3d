@@ -175,7 +175,7 @@ export function AppConsole({
           const next = (prev + 1) % 3;
           setOpen(next === 1 || next === 2);
           setFilterBubbleOnly(next === 2);
-          if (next === 0) setIsMaximized(false);
+          setIsMaximized(next === 1 || next === 2);
           return next;
         });
       }
@@ -237,6 +237,7 @@ export function AppConsole({
         setIsMaximized(false);
       } else {
         setCycleStep(filterBubbleOnly ? 2 : 1);
+        setIsMaximized(true);
       }
       return next;
     });
@@ -246,7 +247,7 @@ export function AppConsole({
     e.stopPropagation();
     if (!open) {
       setOpen(true);
-      setIsMaximized(false);
+      setIsMaximized(true);
       setCycleStep(1);
     } else if (!isMaximized) {
       setIsMaximized(true);
