@@ -154,7 +154,9 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
         <meshBasicMaterial
           ref={domeMatRef}
           map={texture}
-          side={THREE.DoubleSide}
+          // Le plan near négatif en ortho expose aussi l'hémisphère derrière
+          // la caméra : seule la face intérieure doit afficher le panorama.
+          side={THREE.BackSide}
           depthTest
           depthWrite={false}
           fog={false}
