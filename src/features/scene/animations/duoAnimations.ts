@@ -1,4 +1,5 @@
 import { ANIMATION_DEFINITIONS } from './animationRegistry';
+import { INTERX_DUO_ANIMATIONS } from './interxManifest';
 
 export interface DuoAnimationDef {
   id: string;
@@ -10,6 +11,7 @@ export interface DuoAnimationDef {
   rotB?: number;
   offsetB?: [number, number, number];
   duration: number;
+  tags?: string[];
 }
 
 interface RawDuoAnimationDef extends Omit<DuoAnimationDef, 'duration'> {
@@ -17,6 +19,7 @@ interface RawDuoAnimationDef extends Omit<DuoAnimationDef, 'duration'> {
 }
 
 const RAW_DUO_ANIMATIONS: RawDuoAnimationDef[] = [
+  ...INTERX_DUO_ANIMATIONS,
   { id: 'cuddle_kiss', isCombat: false, label: 'Sit Cuddle Kiss', icon: '😘', animA: 'miley-armature-cuddle-kiss-m', animB: 'miley-armature-cuddle-kiss-f', offsetB: [10, 0, 20] },
   { id: 'sit-cuddle', isCombat: false, label: 'Sit Cuddle Hug', icon: '🛋️', animA: 'miley-armature-sit-cuddle-hug-m', animB: 'miley-armature-sit-cuddle-hug-f', offsetB: [0, 0, 20] },
   { id: 'pop_dance', isCombat: false, label: 'Pop Dance', icon: '🕺', animA: 'miley-armature-couple-pop-dance-m', animB: 'miley-armature-couple-pop-dance-f', offsetB: [-30, 0, -5] },
@@ -28,17 +31,6 @@ const RAW_DUO_ANIMATIONS: RawDuoAnimationDef[] = [
   { id: 'farewell_kiss', isCombat: false, label: 'Farewell Kiss', icon: '👋', animA: 'miley-armature-farewell-kiss-m', animB: 'miley-armature-farewell-kiss-f', offsetB: [-70, 0, 0] },
   { id: 'date_bearhug', isCombat: false, label: 'Date Bearhug', icon: '🐻', animA: 'miley-armature-date-bearhug-m', animB: 'miley-armature-date-bearhug-f', offsetB: [0, 0, 610] },
   { id: 'high_five', isCombat: false, label: 'High Five', icon: '🖐️', animA: 'high-five-a', animB: 'high-five-b', offsetB: [-80, 0, 4], rotB: Math.PI },
-  // Premier lot Inter-X : les cinq prises de câlin et les cinq prises de poignée de main.
-  { id: 'interx-hug-001-r000', isCombat: false, label: 'Inter-X · Câlin (prise 1)', icon: '🫂', animA: 'interx-hug-001-r000-p1', animB: 'interx-hug-001-r000-p2', offsetB: [0, 0, 100], rotB: Math.PI },
-  { id: 'interx-hug-002-r001', isCombat: false, label: 'Inter-X · Câlin (prise 2)', icon: '🫂', animA: 'interx-hug-002-r001-p1', animB: 'interx-hug-002-r001-p2', offsetB: [0, 0, 100], rotB: Math.PI },
-  { id: 'interx-hug-003-r002', isCombat: false, label: 'Inter-X · Câlin (prise 3)', icon: '🫂', animA: 'interx-hug-003-r002-p1', animB: 'interx-hug-003-r002-p2', offsetB: [0, 0, 100], rotB: Math.PI },
-  { id: 'interx-hug-004-r003', isCombat: false, label: 'Inter-X · Câlin (prise 4)', icon: '🫂', animA: 'interx-hug-004-r003-p1', animB: 'interx-hug-004-r003-p2', offsetB: [0, 0, 100], rotB: Math.PI },
-  { id: 'interx-hug-005-r004', isCombat: false, label: 'Inter-X · Câlin (prise 5)', icon: '🫂', animA: 'interx-hug-005-r004-p1', animB: 'interx-hug-005-r004-p2', offsetB: [0, 0, 100], rotB: Math.PI },
-  { id: 'interx-handshake-001-r005', isCombat: false, label: 'Inter-X · Poignée de main (prise 1)', icon: '🤝', animA: 'interx-handshake-001-r005-p1', animB: 'interx-handshake-001-r005-p2', offsetB: [0, 0, 100], rotB: Math.PI },
-  { id: 'interx-handshake-002-r006', isCombat: false, label: 'Inter-X · Poignée de main (prise 2)', icon: '🤝', animA: 'interx-handshake-002-r006-p1', animB: 'interx-handshake-002-r006-p2', offsetB: [0, 0, 100], rotB: Math.PI },
-  { id: 'interx-handshake-003-r007', isCombat: false, label: 'Inter-X · Poignée de main (prise 3)', icon: '🤝', animA: 'interx-handshake-003-r007-p1', animB: 'interx-handshake-003-r007-p2', offsetB: [0, 0, 100], rotB: Math.PI },
-  { id: 'interx-handshake-004-r008', isCombat: false, label: 'Inter-X · Poignée de main (prise 4)', icon: '🤝', animA: 'interx-handshake-004-r008-p1', animB: 'interx-handshake-004-r008-p2', offsetB: [0, 0, 100], rotB: Math.PI },
-  { id: 'interx-handshake-005-r009', isCombat: false, label: 'Inter-X · Poignée de main (prise 5)', icon: '🤝', animA: 'interx-handshake-005-r009-p1', animB: 'interx-handshake-005-r009-p2', offsetB: [0, 0, 100], rotB: Math.PI },
   { id: 'greek_folk_duo', isCombat: false, label: 'Duo Danse Folk (Hasaposerviko & Zorba)', icon: '💃', animA: 'hasaposerviko-duo', animB: 'zorbas-dance', offsetB: [-120, 0, 0] },
   { id: 'clap_sync_duo', isCombat: false, label: 'Complices : Applaudir à deux', icon: '👏', animA: 'clap-sync-duo', animB: 'clap-sync-duo', rotB: Math.PI, offsetB: [0, 0, 100] },
   { id: 'duo-martial-arts-combat', isCombat: true, label: "Combat d'arts martiaux en duo", icon: '🥋', animA: 'duo-martial-arts-combat', animB: 'duo-martial-arts-combat-b', offsetB: [120, 0, 0] },

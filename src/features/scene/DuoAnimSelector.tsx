@@ -45,7 +45,8 @@ export function DuoAnimSelector({
         a.label.toLowerCase().includes(q) ||
         a.id.toLowerCase().includes(q) ||
         a.animA.toLowerCase().includes(q) ||
-        a.animB.toLowerCase().includes(q)
+        a.animB.toLowerCase().includes(q) ||
+        a.tags?.some(tag => tag.toLowerCase().includes(q))
       );
     });
   }, [search, filter]);

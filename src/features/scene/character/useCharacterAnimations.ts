@@ -177,7 +177,7 @@ export function useCharacterAnimations({
       let finalClip = _retargetCache[cacheKey];
       if (!finalClip) {
         if (sourceScene) sourceScene.updateMatrixWorld(true);
-        finalClip = retargetClip(clip, scene, sourceScene);
+        finalClip = retargetClip(clip, scene, sourceScene, def?.rootMotionSpace);
         cacheRetargetedClip(cacheKey, finalClip);
       }
       finalClip.name = animId;

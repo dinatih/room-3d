@@ -3,7 +3,7 @@ import { CC3_TO_MIXAMO } from './boneMappings';
 import { getDepth } from './hairChain';
 import { resolveTargetBoneName } from './boneResolver';
 
-export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, animScene: THREE.Object3D | undefined): THREE.AnimationClip {
+export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, animScene: THREE.Object3D | undefined, rootMotionSpace?: 'world-meters'): THREE.AnimationClip {
   const animBones: Record<string, any> = {};
   const sourceHairMap = new Map<string, string>();
 
@@ -391,7 +391,29 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
                         animNameLower.includes('stairs')) &&
                        !animNameLower.includes('dance');
 
-        if (isFlat && isWalk) {
+        if (rootMotionSpace === 'world-meters') {
+          const sourceBone = animBones[baseName]?.bone as THREE.Bone | undefined;
+          const originalTrack = rawClip.tracks.find(track => track.name === tr.name);
+          if (!sourceBone?.parent || !bone.parent?.restWorldQuaternion || !originalTrack) {
+            throw new Error(`Repère du root motion métrique manquant : ${rawClip.name}`);
+          }
+          // Source GLB transforms carry its exact metre scale. Target rest
+          // rotation and current model scale map centimetres to bone space.
+          // Do not use the target/source hip-height ratio for paired motion.
+          const sourceToMeters = new THREE.Matrix3().setFromMatrix4(sourceBone.parent.matrixWorld);
+          const targetRest = new THREE.Matrix4().compose(
+            new THREE.Vector3(), bone.parent.restWorldQuaternion,
+            bone.parent.getWorldScale(new THREE.Vector3())
+          );
+          const centimetersToTarget = new THREE.Matrix3().setFromMatrix4(targetRest).invert();
+          const origin = new THREE.Vector3().fromArray(originalTrack.values);
+          for (let index = 0; index < originalTrack.values.length; index += 3) {
+            const displacement = new THREE.Vector3().fromArray(originalTrack.values, index)
+              .sub(origin).applyMatrix3(sourceToMeters).multiplyScalar(100)
+              .applyMatrix3(centimetersToTarget);
+            bone.defaultPosition.clone().add(displacement).toArray(clone.values, index);
+          }
+        } else if (isFlat && isWalk) {
           const duration = workingClip.duration;
           const fps = 30;
           const numFrames = Math.ceil(duration * fps) + 1;
