@@ -80,7 +80,7 @@ function renderMessage(message: string): ReactNode[] {
 }
 
 /** État des panneaux partageable dans la query string, y compris les URL avec hash. */
-function useUrlPanelToggle(key: 'minimap' | 'perfMini') {
+function useUrlPanelToggle(key: 'minimap' | 'perfGraph') {
   const [visible, setVisible] = useState(() => {
     const { search, hash } = window.location;
     const query = search || (hash.includes('?') ? hash.slice(hash.indexOf('?')) : '');
@@ -131,7 +131,7 @@ export function AppConsole({
   const [bottomDockRight, setBottomDockRight] = useState<number | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
   const [showMinimap, setShowMinimap] = useUrlPanelToggle('minimap');
-  const [showPerf, setShowPerf] = useUrlPanelToggle('perfMini');
+  const [showPerf, setShowPerf] = useUrlPanelToggle('perfGraph');
 
   useEffect(() => {
     const onToggleMinimap = () => setShowMinimap(v => !v);
