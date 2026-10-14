@@ -162,6 +162,46 @@ button, input, select, textarea {
   -webkit-user-select: none;
 }
 
+/* The studio owns the available height; the generic square preview must not
+   determine its size or push the actor controls out of the viewport. */
+.animation-studio {
+  display: grid;
+  grid-template-columns: minmax(0, 30%) minmax(0, 1fr);
+  min-height: 0;
+}
+.animation-studio__workspace {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) minmax(0, 40%);
+  min-width: 0;
+  min-height: 0;
+}
+.animation-studio__preview {
+  min-height: 0;
+  min-width: 0;
+}
+.animation-studio__preview > .inventory-preview-container {
+  height: 100%;
+  min-height: 0;
+}
+.animation-studio__preview .inventory-preview-canvas-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: auto;
+}
+.animation-studio__preview .view-control-bar-inline {
+  flex-shrink: 0;
+  max-width: 100%;
+}
+.animation-studio__tools {
+  min-height: 0;
+  min-width: 0;
+}
+.animation-studio--mobile {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 25%) minmax(0, 1fr);
+}
+
 
 @media (max-width: 767px) {
   .inventory-overlay {

@@ -648,6 +648,7 @@ export function InventoryPreview({
   initialAnim,
   hideAnimFrameController = false,
   hideViewControlBar = false,
+  showPhotoGallery = true,
   onGlbStats,
 }: {
   item: PreviewTarget;
@@ -659,6 +660,7 @@ export function InventoryPreview({
   initialAnim?: string;
   hideAnimFrameController?: boolean;
   hideViewControlBar?: boolean;
+  showPhotoGallery?: boolean;
   onGlbStats?: (s: GlbDebugStats | null) => void;
 }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
@@ -1266,7 +1268,7 @@ export function InventoryPreview({
         )}
       </ViewControlBar>
     )}
-    {item && hasPhotos && (
+    {item && hasPhotos && showPhotoGallery && (
       <div style={{ display: 'flex', overflowX: 'auto', gap: 6, padding: '8px', width: '100%', background: '#eaeaea' }}>
         {has3D && (
           <div onClick={() => setViewMode('3d')} style={{ width: 56, height: 56, flexShrink: 0, border: '1px solid #ccc', borderRadius: 4, background: viewMode === '3d' ? '#ddd' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: viewMode === '3d' ? 0.5 : 1 }} title="Vue 3D">

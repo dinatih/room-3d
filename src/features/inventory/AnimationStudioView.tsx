@@ -101,11 +101,10 @@ export function AnimationStudioView({ isMobile = false }: { isMobile?: boolean }
   }, [mode, activeDuoDef, compatiblePartners, duoPartnerId]);
 
   return (
-    <div className="d-flex flex-column flex-md-row w-100 h-100 overflow-hidden">
+    <div className={`animation-studio w-100 h-100 overflow-hidden ${isMobile ? 'animation-studio--mobile' : ''}`}>
       {/* ── COLONNE DE GAUCHE : LISTE DES ANIMATIONS (SOLO OU DUO) ── */}
       <div
-        className="d-flex flex-column border-end bg-white bg-opacity-75 flex-shrink-0 overflow-hidden"
-        style={{ width: isMobile ? '100%' : '380px' }}
+        className="animation-studio__list d-flex flex-column border-end bg-white bg-opacity-75 overflow-hidden"
       >
         {/* En-tête : Switcher Mode Solo / Duo */}
         <div className="p-2 border-bottom bg-light bg-opacity-50">
@@ -349,7 +348,7 @@ export function AnimationStudioView({ isMobile = false }: { isMobile?: boolean }
       </div>
 
       {/* ── ZONE CENTRALE : PRÉVISUALISATION 3D ET CONTRÔLES ── */}
-      <div className="d-flex flex-column flex-grow-1 overflow-auto bg-light">
+      <div className="animation-studio__workspace bg-light">
         {/* Barre supérieure : Choix des Acteurs / Personnages */}
         <div className="p-2 border-bottom bg-white d-flex flex-wrap align-items-center justify-content-between gap-2 shadow-sm">
           {mode === 'solo' ? (
@@ -429,14 +428,14 @@ export function AnimationStudioView({ isMobile = false }: { isMobile?: boolean }
         </div>
 
         {/* 3D Canvas / InventoryPreview Container */}
-        <div className="w-100 position-relative flex-grow-1" style={{ minHeight: '340px' }}>
+        <div className="animation-studio__preview w-100 position-relative">
           <InventoryPreview
-            key={`${currentItem.id}-${mode}-${mode === 'solo' ? activeSoloAnim : activeDuoDef?.id}-${duoPartnerId}`}
-            item={currentItem as any}
+            key={`${currentItem.id}-${mode}`}
+            item={currentItem}
             height="100%"
-            hideFooter={false}
+            hideFooter
+            showPhotoGallery={false}
             hideAnimFrameController={true}
-            hideViewControlBar={true}
             initialAnim={mode === 'solo' ? activeSoloAnim : undefined}
             initialDuoAnim={mode === 'duo' ? activeDuoDef : undefined}
             initialDuoPartner={mode === 'duo' ? duoPartnerId : undefined}
@@ -444,42 +443,44 @@ export function AnimationStudioView({ isMobile = false }: { isMobile?: boolean }
         </div>
 
         {/* Barre de transport AnimFrameController */}
-        <div className="p-2 border-top bg-white flex-shrink-0">
-          <AnimFrameController
-            compact
-            animName={mode === 'solo' ? currentAnnotationName : activeDuoDef?.label}
-            animKey={mode === 'solo' ? activeSoloAnim : undefined}
-            isHumanCharacter={true}
-            characterId={currentItem.id}
-            duoAnimDef={mode === 'duo' ? activeDuoDef : undefined}
-            duoPartnerId={mode === 'duo' ? duoPartnerId : undefined}
-            onSelectAnim={(val) => {
-              setActiveSoloAnim(val);
-              useAnimPreviewStore.getState().play();
-            }}
-            onSelectDuoAnim={(def) => {
-              setActiveDuoDef(def);
-              useAnimPreviewStore.getState().play();
-            }}
-            onSelectDuoPartner={(partnerId) => {
-              setDuoPartnerId(partnerId);
-            }}
-            style={{
-              position: 'relative',
-              inset: 'auto',
-              width: '100%',
-              margin: 0,
-            }}
-          />
-        </div>
+        <div className="animation-studio__tools overflow-auto">
+          <div className="animation-studio__transport p-2 border-top bg-white">
+            <AnimFrameController
+              compact
+              animName={mode === 'solo' ? currentAnnotationName : activeDuoDef?.label}
+              animKey={mode === 'solo' ? activeSoloAnim : undefined}
+              isHumanCharacter={true}
+              characterId={currentItem.id}
+              duoAnimDef={mode === 'duo' ? activeDuoDef : undefined}
+              duoPartnerId={mode === 'duo' ? duoPartnerId : undefined}
+              onSelectAnim={(val) => {
+                setActiveSoloAnim(val);
+                useAnimPreviewStore.getState().play();
+              }}
+              onSelectDuoAnim={(def) => {
+                setActiveDuoDef(def);
+                useAnimPreviewStore.getState().play();
+              }}
+              onSelectDuoPartner={(partnerId) => {
+                setDuoPartnerId(partnerId);
+              }}
+              style={{
+                position: 'relative',
+                zIndex: 'auto',
+                inset: 'auto',
+                width: '100%',
+                margin: 0,
+              }}
+            />
+          </div>
 
-        {/* Panneau inférieur : Annotations Dev en LocalStorage pour l'animation active */}
-        <div className="p-2 border-top bg-light flex-shrink-0">
-          <DevAnnotationPanel
-            targetId={currentAnnotationId}
-            targetName={currentAnnotationName}
-            compact
-          />
+          {/* Panneau inférieur : Annotations Dev en LocalStorage pour l'animation active */}
+          <div className="animation-studio__annotations p-2 border-top bg-light">
+            <DevAnnotationPanel
+              targetId={currentAnnotationId}
+              targetName={currentAnnotationName}
+            />
+          </div>
         </div>
       </div>
     </div>

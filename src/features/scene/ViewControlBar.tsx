@@ -52,8 +52,6 @@ export function ViewControlBar({
   panelControls: _panelControls,
   children,
 }: ViewControlBarProps) {
-  if (hidden) return null;
-
   const [hoveredView, setHoveredView] = useState<{
     label: string; top?: number; bottom?: number;
   } | null>(null);
