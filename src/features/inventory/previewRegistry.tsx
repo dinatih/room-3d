@@ -1,4 +1,5 @@
 import { Jumper } from '@features/scene/items/Jumper';
+import { UnitreeG1, UnitreeGo2 } from '@features/scene/items/Unitree';
 import { Raskog30586783 } from '@features/scene/items/Raskog30586783';
 import { Boholmen99157501 } from '@features/scene/items/Boholmen99157501';
 import { Utdrag10389142 } from '@features/scene/items/Utdrag10389142';
@@ -129,6 +130,8 @@ function ShoeHatRackPreview(props: SceneItemProps) {
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'jumper-robot': Jumper,
+  'unitree-g1': UnitreeG1,
+  'unitree-go2': UnitreeGo2,
   'ikea36590066708':        Ikea36590066708,
   'shoe-hat-rack':          ShoeHatRackPreview,
   'scooter':                ScooterPreview,
