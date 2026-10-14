@@ -85,7 +85,7 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
     id: `${duo.id}-${participant}`,
     category: action.category,
     path: duo.clips[participant].path,
-    label: `Inter-X · ${action.label} (${duo.variation}, ${participant.toUpperCase()})`,
+    label: `Inter-X · ${action.label} (${duo.source.group}, ${duo.variation}, ${participant.toUpperCase()})`,
     tags: duo.tags,
     duration: duo.clips[participant].durationSeconds,
     rootMotionSpace: 'world-meters' as const,
@@ -97,7 +97,7 @@ export const INTERX_DUO_ANIMATIONS: DuoAnimationDef[] = INTERX_MANIFEST.duos.map
   const action = actionByCode.get(duo.actionCode)!;
   return {
     id: duo.id,
-    label: `Inter-X · ${action.label} (${duo.variation})`,
+    label: `Inter-X · ${action.label} (${duo.source.group}, ${duo.variation})`,
     icon: action.icon,
     isCombat: action.isCombat,
     animA: `${duo.id}-p1`,

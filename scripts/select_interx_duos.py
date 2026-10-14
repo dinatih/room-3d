@@ -40,11 +40,12 @@ def main():
     parser.add_argument('--max-per-action', type=int, default=8)
     parser.add_argument('--output', type=Path, default=ROOT / 'scripts/interx_selection.json')
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--recordings', nargs='+', help='Explicit pilot recordings instead of the full catalog selection')
     args = parser.parse_args()
     model = estimate_model()
-    selected = select_recordings(args.source, args.max_per_action)
+    selected = args.recordings if args.recordings else select_recordings(args.source, args.max_per_action)
     selection = {'schemaVersion': 1, 'dataset': 'inter-x', 'conversion': CONVERSION,
-                 'policy': {'take': 'first-available', 'representative': 'lowest-group-per-action-session', 'maxPerAction': args.max_per_action},
+                 'policy': {'take': 'first-available', 'representative': 'explicit-recordings' if args.recordings else 'lowest-group-per-action-session', 'maxPerAction': args.max_per_action},
                  'sizeEstimate': model, 'actions': actions(),
                  'duos': [entry_for(args.source, recording, model) for recording in selected]}
     report(selection)

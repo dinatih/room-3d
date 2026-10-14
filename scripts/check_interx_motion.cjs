@@ -203,10 +203,10 @@ async function main() {
   console.log(`Maximum root displacement error: ${worstError.toFixed(8)} cm`);
   console.log(`Maximum wrist error: ${worstWristError.toFixed(8)} cm; maximum shoulder adjustment at native height: ${largestShoulderMove.toFixed(4)} cm`);
   if (smplx) fs.writeFileSync('/tmp/interx-smplx-avatar-comparison.json', JSON.stringify(comparisons, null, 2) + '\n');
-  if (process.argv.includes('--browser')) await visualCheck();
+  if (process.argv.includes('--browser')) await visualCheck(manifest.duos);
 }
 
-async function visualCheck() {
+async function visualCheck(duos) {
   // The visual capture uses the app's inventory and actual character renderer.
   const browser = await launchBrowser({ headless: true, args: ['--no-sandbox'], defaultViewport: { width: 1400, height: 1000 } });
   try {
@@ -214,7 +214,13 @@ async function visualCheck() {
     page.on('pageerror', error => console.error('Browser page error:', error.message));
     page.on('console', message => { if (message.type() === 'error') console.error('Browser:', message.text()); });
     await page.goto((process.env.ROOM_TEST_URL || 'http://127.0.0.1:5173') + '/AGENTS.md', { waitUntil: 'domcontentloaded' });
-    for (const [recording, label] of [['g001t000a000r000', 'Câlin'], ['g001t000a001r005', 'Poignée']]) {
+    const groupIndex = process.argv.indexOf('--group');
+    const group = groupIndex === -1 ? undefined : process.argv[groupIndex + 1];
+    const selected = duos.filter(duo => !group || duo.source.group === group);
+    assert(selected.length, `No visual pilots for ${group}`);
+    for (const entry of selected) {
+    const recording = entry.source.recording.toLowerCase();
+    const label = entry.actionCode === 'A000' ? 'Câlin' : 'Poignée';
     await page.evaluate(async recording => {
       window.$RefreshReg$ = () => {};
       window.$RefreshSig$ = () => type => type;
@@ -243,7 +249,7 @@ async function visualCheck() {
         item, height: '950px', initialDuoAnim: duo, initialDuoPartner: 'rosanna',
       }));
     }, recording);
-    await page.waitForFunction(label => window.interxPreview.getState().clipName.includes(label) && window.interxPreview.getState().duration > 0, { timeout: 45000 }, label).catch(async error => {
+    await page.waitForFunction((label, group) => window.interxPreview.getState().clipName.includes(label) && window.interxPreview.getState().clipName.includes(group) && window.interxPreview.getState().duration > 0, { timeout: 45000 }, label, entry.source.group).catch(async error => {
       console.log('Preview state:', await page.evaluate(() => ({ state: window.interxPreview?.getState(), text: document.body.innerText.slice(-1800), canvases: document.querySelectorAll('canvas').length })));
       await page.screenshot({ path: '/tmp/interx-pilot-failure.png' });
       throw error;
@@ -254,7 +260,7 @@ async function visualCheck() {
       const rotate = [...document.querySelectorAll('button')].find(button => button.textContent.includes('Rota'));
       if (rotate && rotate.classList.contains('btn-warning')) rotate.click();
     });
-    for (const [label, time] of [['start', 0], ['contact', recording.includes('a001') ? 59 / 30 : 3.5]]) {
+    for (const [label, time] of [['start', 0], ['contact', entry.clips.p1.durationSeconds / 2]]) {
       await page.evaluate(time => window.interxPreview.getState().seekToTime(time), time);
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       await page.screenshot({ path: `/tmp/interx-${recording}-${label}.png` });

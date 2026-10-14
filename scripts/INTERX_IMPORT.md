@@ -136,8 +136,30 @@ Il ne s'agit pas d'un comptage de personnes distinctes : G identifie un binôme.
 
 G039 minimise l'écart entre partenaires. G053 est le candidat recommandé pour
 Native et Rosanna (173,4 cm), car les deux tailles source sont proches de celles
-des avatars. Ce classement est un diagnostic : le catalogue publié et la
-sélection à 218 duos continuent d'utiliser leurs enregistrements actuels.
+des avatars. Les deux prises G053 sont désormais publiées en plus des pilotes
+G001, avec des libellés incluant le groupe pour permettre la comparaison.
+Elles utilisent également `soles-preserve-hands`. Le catalogue général à
+218 duos conserve sa sélection ; les G053 proviennent d'une sélection pilote
+explicite distincte, limitée aux deux prises autorisées.
+
+Reproduire cet import ciblé (première prise disponible par G/T/A) :
+
+```bash
+python3 scripts/select_interx_duos.py \
+  --recordings G053T000A000R000 G053T000A001R005 \
+  --output scripts/interx_g053_selection.json
+ALSOFT_DRIVERS=null blender -noaudio --background --python-exit-code 1 \
+  --python scripts/convert_interx_duos.py -- \
+  --selection scripts/interx_g053_selection.json --ground-standing
+python3 scripts/check_interx_pipeline.py --reference /tmp/interx-motion-reference.json
+node scripts/check_interx_motion.cjs --browser --group G053
+```
+
+La sélection explicite utilise `representative: "explicit-recordings"`.
+Elle conserve le contrôle des quotas et de l'unicité A/T et refuse une prise
+qui ne serait pas la première disponible. `--ground-standing` active uniquement
+la correction des pilotes A000/A001 ; il met aussi à jour cette métadonnée pour
+des exports déjà vérifiés, sans réexporter leurs GLB.
 
 Références : [viewer Inter-X](https://github.com/liangxuy/Inter-X/blob/main/visualize/smplx_viewer_tool/data_viewer.py)
 et [skinning SMPL-X](https://github.com/vchoutas/smplx/blob/main/smplx/lbs.py).

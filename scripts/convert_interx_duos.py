@@ -97,7 +97,7 @@ def load_selection(path, source):
     if selection['schemaVersion'] != 1 or selection['dataset'] != 'inter-x' or selection['conversion'] != CONVERSION:
         raise ValueError('Selection schema or conversion settings do not match this converter')
     policy = selection['policy']
-    if policy['take'] != 'first-available' or policy['representative'] != 'lowest-group-per-action-session' or not 1 <= policy['maxPerAction'] <= 8:
+    if policy['take'] != 'first-available' or policy['representative'] not in ('lowest-group-per-action-session', 'explicit-recordings') or not 1 <= policy['maxPerAction'] <= 8:
         raise ValueError('Invalid selection policy')
     counts = Counter(entry['actionCode'] for entry in selection['duos'])
     variations = {(entry['actionCode'], entry['variation']) for entry in selection['duos']}
@@ -109,6 +109,9 @@ def load_selection(path, source):
         if not RECORDING.fullmatch(recording) or recording in seen:
             raise ValueError(f'Invalid or duplicate recording: {recording}')
         seen.add(recording)
+        first_take = min(path.name for path in source.glob(recording[:12] + 'R*') if path.is_dir())
+        if recording != first_take:
+            raise ValueError(f'Not the first available take: {recording}; expected {first_take}')
         current = entry_for(source, recording, selection['sizeEstimate'])
         if current != entry:
             raise ValueError(f'Stale or modified selection for {recording}; regenerate the selection')
@@ -132,6 +135,7 @@ def main():
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--rebuild', action='store_true', help='Re-export explicitly requested pairs instead of resuming verified outputs')
     parser.add_argument('--prune', action='store_true', help='Delete tracked Inter-X GLBs excluded by the selection after verifying the published manifest')
+    parser.add_argument('--ground-standing', action='store_true', help='Ground target soles and preserve wrist targets for standing hug/handshake pilots')
     arguments = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]
     args = parser.parse_args(arguments)
     selection = load_selection(args.selection, args.source)
@@ -141,6 +145,8 @@ def main():
         if unknown:
             raise ValueError(f'Recordings outside selection: {sorted(unknown)}')
         entries = [entry for entry in entries if entry['source']['recording'] in args.recordings]
+    if args.ground_standing and any(entry['actionCode'] not in ('A000', 'A001') for entry in entries):
+        raise ValueError('--ground-standing is only supported for hug/handshake pilots')
     if args.dry_run:
         report(selection, entries)
         return
@@ -157,12 +163,16 @@ def main():
     for entry in entries:
         old = ready.get(entry['id'])
         if not args.rebuild and old and all(old[key] == entry[key] for key in ('id', 'actionCode', 'variation', 'source', 'rootMotion', 'start_offset', 'tags')) and verified(old):
+            if args.ground_standing:
+                old['placement'] = {'verticalOrigin': 'soles-preserve-hands'}
             print(f"Already verified: {entry['source']['recording']}", flush=True)
             continue
         pair = read_pair(args.source, entry['source']['recording'])
         exported = {key: value for key, value in entry.items() if key not in ('expectedFrameCount', 'expectedDurationSeconds', 'estimatedBytes')}
         if old and 'placement' in old:
             exported['placement'] = old['placement']
+        if args.ground_standing:
+            exported['placement'] = {'verticalOrigin': 'soles-preserve-hands'}
         exported['clips'] = {}
         with tempfile.TemporaryDirectory(prefix='interx-export-', dir=MANIFEST.parent) as temporary:
             paths = []

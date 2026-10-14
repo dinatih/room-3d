@@ -494,7 +494,9 @@
   "duos": [
     {
       "id": "interx-g001t000a000r000",
-      "placement": { "verticalOrigin": "soles-preserve-hands" },
+      "placement": {
+        "verticalOrigin": "soles-preserve-hands"
+      },
       "actionCode": "A000",
       "variation": "T000",
       "source": {
@@ -543,8 +545,62 @@
       ]
     },
     {
+      "id": "interx-g053t000a000r000",
+      "actionCode": "A000",
+      "variation": "T000",
+      "source": {
+        "recording": "G053T000A000R000",
+        "group": "G053",
+        "take": "R000",
+        "p1": "G053T000A000R000/P1.npz",
+        "p2": "G053T000A000R000/P2.npz",
+        "frameCount": 976,
+        "sha256": {
+          "p1": "3dabaf6dd7ba29ca654deb2f71fcaa5239f30564d81234e5d92e6bd80906cd95",
+          "p2": "aec749c1a809e46479e48240a1442e839c2a7eaf865588aa493d27fba80a4190"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t000a000r000-p1.glb",
+          "frameCount": 244,
+          "durationSeconds": 8.1,
+          "sizeBytes": 152012,
+          "sha256": "0c826ee63014b48b4a3ffa6ec55f6f11cbfbec530991afe8a7b81ada1e82cc6f"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t000a000r000-p2.glb",
+          "frameCount": 244,
+          "durationSeconds": 8.1,
+          "sizeBytes": 151580,
+          "sha256": "735116bdf685649f7ea6cb975477871959a3c4275c1a8831c34200795f4a4305"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.3917853236198425,
+        0.043398499488830566,
+        0.07758122682571411
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "hug",
+        "affection"
+      ],
+      "placement": {
+        "verticalOrigin": "soles-preserve-hands"
+      }
+    },
+    {
       "id": "interx-g001t000a001r005",
-      "placement": { "verticalOrigin": "soles-preserve-hands" },
+      "placement": {
+        "verticalOrigin": "soles-preserve-hands"
+      },
       "actionCode": "A001",
       "variation": "T000",
       "source": {
@@ -591,6 +647,58 @@
         "handshake",
         "social"
       ]
+    },
+    {
+      "id": "interx-g053t000a001r005",
+      "actionCode": "A001",
+      "variation": "T000",
+      "source": {
+        "recording": "G053T000A001R005",
+        "group": "G053",
+        "take": "R005",
+        "p1": "G053T000A001R005/P1.npz",
+        "p2": "G053T000A001R005/P2.npz",
+        "frameCount": 912,
+        "sha256": {
+          "p1": "cc80500c1ee07ab4b11a1d3fc00897078d07a35af68286d862c428b08e648121",
+          "p2": "caabdaf03f1d51d541e70c4190a39b08dcb55341faf437abf9c9a3fc35a870c6"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t000a001r005-p1.glb",
+          "frameCount": 228,
+          "durationSeconds": 7.566666666666666,
+          "sizeBytes": 146136,
+          "sha256": "b8db15c62b55a973c902ca311c90343df1b39cbab7e3d68416f1ec9772dce565"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t000a001r005-p2.glb",
+          "frameCount": 228,
+          "durationSeconds": 7.566666666666666,
+          "sizeBytes": 146424,
+          "sha256": "25cdaa82af687c9ee38ee7826d9921857bf312298ceafea3ffa1012fe2934508"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.6032366156578064,
+        0.06203746795654297,
+        0.04456734657287598
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "handshake",
+        "social"
+      ],
+      "placement": {
+        "verticalOrigin": "soles-preserve-hands"
+      }
     }
   ]
 }
