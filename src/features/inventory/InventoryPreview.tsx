@@ -1112,6 +1112,18 @@ export function InventoryPreview({
             <div className="position-absolute end-0 top-0 mt-5 me-2 z-3 d-flex flex-column gap-1">
               {actionKeys.map(key => {
                 const action = getActionDef(key)!;
+                if (action.type === 'select') return (
+                  <select
+                    key={key}
+                    className="form-select form-select-sm"
+                    aria-label={getActionLabel(key)}
+                    data-object-action={key}
+                    value={actionStates[key] ?? action.initialValue ?? action.options?.[0]?.value}
+                    onChange={event => setActionStates(s => toggleObjectAction(key, s, event.target.value))}
+                  >
+                    {action.options!.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  </select>
+                );
                 const on = !!actionStates[key];
                 return (
                   <button

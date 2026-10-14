@@ -47,11 +47,11 @@ export const INVENTORY: InventoryItem[] = [
     brand: 'KingKong Robotics',
     category: 'tech',
     qty: 1,
-    dims: { w: 61.86, d: 20.55, h: 12.31 },
+    dims: { w: 41.53, d: 36.85, h: 17.84 },
     glbPath: 'items/jumper/jumper.glb',
     url: 'https://github.com/KingKongRobotics/jumper',
     description: 'Robot crabe à 22 degrés de liberté. Assemblage 3D officiel avec ses couleurs d’origine.',
-    notes: 'Pose de référence URDF, sans animation. Dimensions mesurées sur le modèle. Modèle sous licence Apache-2.0.',
+    notes: 'Animations : repos, marche et virages recréés ; salut, révérence, patte, salut militaire et danse officiels. Dimensions mesurées en position debout. Modèle sous licence Apache-2.0.',
   },
 
   {

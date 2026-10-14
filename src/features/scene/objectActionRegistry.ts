@@ -51,6 +51,21 @@ function positionAction(key: string): Record<string, ActionConfig> {
 }
 
 const ACTIONS: Record<string, ActionConfig> = {
+  'jumper-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
+  'jumper-motion': {
+    label: 'Animation du robot', type: 'select', initialValue: 'idle',
+    options: [
+      { value: 'idle', label: 'Repos' },
+      { value: 'walk', label: 'Marche (recréée)' },
+      { value: 'turn-left', label: 'Virage à gauche (recréé)' },
+      { value: 'turn-right', label: 'Virage à droite (recréé)' },
+      { value: 'hello', label: 'Faire coucou' },
+      { value: 'bow', label: 'Révérence' },
+      { value: 'paw', label: 'Donner la patte' },
+      { value: 'salute', label: 'Salut militaire' },
+      { value: 'maze', label: 'Danse Maze' },
+    ],
+  },
   ...mannequinActions('kallax-nw'),
   ...mannequinActions('kallax-ne'),
   ...mannequinActions('meubleT'),
