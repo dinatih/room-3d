@@ -306,6 +306,16 @@ if (process.argv.includes('--browser')) (async () => {
   const browser = await launchBrowser({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   try {
     const page = await browser.newPage();
+    if (process.argv.includes('--shower-only')) {
+      await page.setRequestInterception(true);
+      page.on('request',async request => {
+        if (!request.url().includes('/agent/agentInstructionCoords.ts')) { await request.continue(); return; }
+        const response = await fetch(request.url()), body = await response.text();
+        const declaration = /export function resolveInstructionCoords\([^)]*\) \{/;
+        assert.ok(declaration.test(body),'Coordinate instrumentation no longer matches');
+        await request.respond({status:200,contentType:'application/javascript',body:body.replace(declaration,'$&\nwindow.coordinateResolveCalls = (window.coordinateResolveCalls || 0) + 1;')});
+      });
+    }
     if (process.argv.includes('--profile')) {
       const client = await page.createCDPSession();
       await page.exposeFunction('measureHeap', async () => {
@@ -430,7 +440,8 @@ if (process.argv.includes('--browser')) (async () => {
       return;
     }
     await page.evaluate(idleTest => { window.idleTest = idleTest; }, process.argv.includes('--idle-only'));
-    await page.evaluate(casesTest => { window.casesTest = casesTest; }, process.argv.includes('--cases-only'));
+    await page.evaluate(casesTest => { window.casesTest = casesTest; }, process.argv.includes('--cases-only') || process.argv.includes('--shower-only'));
+    await page.evaluate(showerTest => { window.showerTest = showerTest; }, process.argv.includes('--shower-only'));
     await page.evaluate(async () => {
       (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
       window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => type => type; window.__vite_plugin_react_preamble_installed__ = true;
@@ -464,7 +475,7 @@ if (process.argv.includes('--browser')) (async () => {
         window.autonomousAgents.set(id, { agent, scenario });
         return null;
       }
-      const regressionCases = [
+      const regressionCases = window.showerTest ? window.smartObjects.SMART_OBJECTS.shower.slots.map(slot => ['shower',slot.slotId]) : [
         ['desk-bollsidan-1', 'work-sitting'], ['desk-bollsidan-2', 'work-standing'],
         ['cuisine-group', 'cook-oven'], ['freezer', 'open-pick'], ['kallax-ne', 'inspect'],
         ['drona-west', 'pick-item'], ['sofa-garden-west', 'seat-2'], ['building-b-corridor', 'trash'],
@@ -547,7 +558,42 @@ if (process.argv.includes('--browser')) (async () => {
       assert.equal(errors.length, 0);
       return;
     }
-    if (process.argv.includes('--cases-only')) {
+    if (process.argv.includes('--cases-only') || process.argv.includes('--shower-only')) {
+      if (process.argv.includes('--shower-only')) {
+        const blocked = await page.evaluate(() => {
+          const nav = window.nav, g = window.geom;
+          const [id,{agent,scenario}] = window.autonomousAgents.entries().next().value;
+          const profile = nav.getAgentProfile('native'); nav.setAgentProfile(id,profile);
+          agent.update(0.1);
+          const vertices = nav.getNavigationGraph(profile).vertices;
+          const xs = vertices.map(p=>p.x), zs = vertices.map(p=>p.z);
+          const minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs);
+          nav.registerObstacle({ id:'blocked-shower-test', polygon:g.rectangle((minX+maxX)/2,(minZ+maxZ)/2,maxX-minX,maxZ-minZ), yMin:0,yMax:profile.height });
+          const find = g.VisibilityGraph.prototype.find;
+          let calls = 0;
+          g.VisibilityGraph.prototype.find = function(...args) { calls++; return find.apply(this,args); };
+          try {
+            agent.update(0.1);
+            if (agent.getStatus() !== 'BLOCKED' || !nav.navigationDebug.get(id)?.error) throw new Error('An impossible shower approach must remain explicitly blocked');
+            const firstCalls = calls;
+            const firstCoordinates = window.coordinateResolveCalls;
+            for (let frame=0;frame<300;frame++) agent.update(0.1);
+            if (calls !== firstCalls) throw new Error('Blocked coordinates repeated path searches');
+            if (window.coordinateResolveCalls !== firstCoordinates) throw new Error('Blocked coordinates were resolved again');
+            const instruction = scenario[1];
+            scenario[1] = { type:'MOVE_TO' };
+            let invalidError;
+            try { agent.update(0.1); } catch (error) { invalidError = error; }
+            finally { scenario[1] = instruction; }
+            if (!invalidError || invalidError.name === 'NavigationBlockedError') throw new Error('Invalid instruction data must still throw');
+            nav.unregisterObstacle('blocked-shower-test');
+            agent.update(0.1);
+            if (agent.getStatus() === 'BLOCKED') throw new Error('Shower approach did not recover after the obstacle was removed');
+            return { repeatedCoordinateResolutions:0, status:agent.getStatus(),invalidDataError:invalidError.message };
+          } finally { g.VisibilityGraph.prototype.find = find; nav.unregisterObstacle('blocked-shower-test'); }
+        });
+        console.log('Shower blocked-coordinate recovery:',JSON.stringify(blocked));
+      }
       const cases = await page.evaluate(async () => {
         const profile = window.nav.getAgentProfile('native'), results = [];
         for (const [id, { agent, label }] of window.autonomousAgents) {
@@ -567,8 +613,9 @@ if (process.argv.includes('--browser')) (async () => {
         }
         return results;
       });
-      assert.equal(cases.length, 8);
+      assert.equal(cases.length, process.argv.includes('--shower-only') ? 2 : 8);
       assert.ok(cases.every(c => c.status === 'FINISHED'), JSON.stringify(cases));
+      assert.equal(errors.length,0,'Interaction tests must not emit uncaught exceptions');
       console.log('Interaction regressions passed with all three animation options OFF.');
       return;
     }

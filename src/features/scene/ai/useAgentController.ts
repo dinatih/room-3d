@@ -4,9 +4,9 @@ import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from '.
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { createRouteState, followRoute, resetRoute, getInteractionOwner } from './navigation/service';
+import { createRouteState, followRoute, resetRoute, getInteractionOwner, NavigationBlockedError, getNavigationGraph } from './navigation/service';
 import { movingFurniture } from '../furniturePositions';
-import { hasAgentProfile, getObstacleRevision } from './navigation/obstacles';
+import { hasAgentProfile, getObstacleRevision, getAgentProfile, navigationDebug } from './navigation/obstacles';
 import { distance } from './navigation/geometry';
 import { useSceneStore } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
@@ -112,6 +112,7 @@ export function useAgentController(
   const routeInstructionRef = useRef<AgentInstruction | null>(null);
   const navigationErrorRef = useRef<string | null>(null);
   const initialProfileResolvedRef = useRef(false);
+  const blockedCoordsRef = useRef<{ instruction: AgentInstruction; graph: ReturnType<typeof getNavigationGraph>; x: number; z: number; owner?: string; status: AgentStatus } | null>(null);
 
   // Animation de marche courante pour les trajets
   const currentWalkAnimRef = useRef<string>(getRandomNpcWalkAnimation(_characterId));
@@ -437,7 +438,7 @@ export function useAgentController(
     statusRef.current = 'IDLE';
   };
 
-  const update = (dt: number): AgentState => {
+  const advance = (dt: number): AgentState => {
     if (!initialProfileResolvedRef.current && enabled && hasAgentProfile(_characterId)) {
       initialProfileResolvedRef.current = true;
       cachedCoordsRef.current = null;
@@ -1056,6 +1057,31 @@ export function useAgentController(
     deployment.status = statusRef.current;
     deployment.y = stateRef.current.y;
     return stateRef.current;
+  };
+
+  const update = (dt: number): AgentState => {
+    const instruction = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length
+      ? dynamicNavQueueRef.current[dynamicNavIndexRef.current] : scenario?.[stepIndexRef.current];
+    const blocked = blockedCoordsRef.current;
+    if (blocked && blocked.instruction === instruction && blocked.x === stateRef.current.x && blocked.z === stateRef.current.z
+      && blocked.owner === routeRef.current.owner && blocked.graph === getNavigationGraph(getAgentProfile(_characterId), undefined, instruction?.closedDoor)) return stateRef.current;
+    if (blocked && blocked.instruction === instruction) statusRef.current = blocked.status;
+    blockedCoordsRef.current = null;
+    const status = statusRef.current;
+    try { return advance(dt); }
+    catch (error) {
+      if (!(error instanceof NavigationBlockedError) || !instruction) throw error;
+      blockedCoordsRef.current = { instruction, graph: getNavigationGraph(getAgentProfile(_characterId), undefined, instruction.closedDoor), x:stateRef.current.x, z:stateRef.current.z, owner:routeRef.current.owner, status };
+      stateRef.current.animation = 'idle';
+      statusRef.current = 'BLOCKED';
+      resetRoute(routeRef.current, _characterId);
+      cachedCoordsRef.current = null;
+      cachedCoordsInstructionRef.current = null;
+      navigationDebug.set(_characterId, { path:[], target:error.target, error:error.message });
+      if (navigationErrorRef.current !== error.message) appLog(_characterId, `⚠️ Navigation : ${error.message}`);
+      navigationErrorRef.current = error.message;
+      return stateRef.current;
+    }
   };
 
   const setPosition = (x: number, y: number, z: number) => {

@@ -8,6 +8,9 @@ import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, type DoorK
 
 export { architectureObstacles };
 export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
+export class NavigationBlockedError extends Error {
+  constructor(message: string, readonly target: Point) { super(message); this.name = 'NavigationBlockedError'; }
+}
 export function doorPolygon(key: DoorKey, angle: number): Polygon {
   const d = DOOR_CONFIGS[key], c = Math.cos(Math.abs(angle)), s = Math.sin(Math.abs(angle));
   const dx = c * d.closedDir.x + s * d.openNormal.x, dz = c * d.closedDir.z + s * d.openNormal.z;
@@ -33,7 +36,7 @@ export function getDoorApproach(key: DoorKey, agentId?: string, preferred?: Poin
     && (p.x - door.pivot.x) * door.openNormal.x + (p.z - door.pivot.z) * door.openNormal.z > 0);
   candidates.sort((a, b) => distance(a, goal) - distance(b, goal));
   const candidate = candidates.find(p => !start || Boolean(graph.find(start, p)));
-  if (!candidate) throw new Error(`No safe approach for door ${key}`);
+  if (!candidate) throw new NavigationBlockedError(`No safe approach for door ${key}`, goal);
   return candidate;
 }
 export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string, closedDoor?: DoorKey): VisibilityGraph {

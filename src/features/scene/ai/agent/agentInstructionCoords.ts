@@ -1,5 +1,5 @@
 import { AgentInstruction } from '../aiTypes';
-import { getObjectApproach, getDoorApproach } from '../navigation/service';
+import { getObjectApproach, getDoorApproach, NavigationBlockedError } from '../navigation/service';
 import { hasAgentProfile } from '../navigation/obstacles';
 import { getZoneDestination } from '../navigation/destinations';
 import { getSmartObject } from '../smartObjectRegistry';
@@ -26,7 +26,7 @@ export function resolveInstructionCoords(
     const [x, y, z] = instr.targetLocalPos, c = Math.cos(obj.rotationY), s = Math.sin(obj.rotationY);
     const target = { x: obj.position[0] + x * c + z * s, z: obj.position[2] - x * s + z * c };
     const approach = instr.navigation !== 'interaction' && agentId && hasAgentProfile(agentId) ? getObjectApproach(obj.id, target, agentId, currentPosition, false, departureOwner, instr.closedDoor) : target;
-    if (!approach) throw new Error(`No approach for ${obj.id}`);
+    if (!approach) throw new NavigationBlockedError(`No approach for ${obj.id}`, target);
     return { tx: approach.x, ty: obj.position[1] + y, tz: approach.z, label: obj.name, rotY: instr.rotY };
   }
   // Si targetPos est fourni explicitement, il est prioritaire (ex: Rôle A ou B d'une animation Duo sur SmartObject)
@@ -60,12 +60,12 @@ export function resolveInstructionCoords(
     const profileId = agentId && hasAgentProfile(agentId) ? agentId : undefined;
     const desired = isMoveOnly && instr.doorKey
       ? getDoorApproach(instr.doorKey, profileId, { x: pos[0], z: pos[2] }, currentPosition, departureOwner, instr.closedDoor)
-      : isMoveOnly && obj.approachDoor ? getDoorApproach(obj.approachDoor, profileId) : { x: pos[0], z: pos[2] };
-    const flexible = slot?.arrival === 'approach' || obj.category === 'storage' || obj.category === 'outdoor';
+      : isMoveOnly && obj.approachDoor ? getDoorApproach(obj.approachDoor, profileId, undefined, currentPosition, departureOwner, instr.closedDoor) : { x: pos[0], z: pos[2] };
+    const flexible = slot?.arrival === 'approach' || Boolean(obj.approachDoor) || obj.category === 'storage' || obj.category === 'outdoor';
     const usesApproach = isMoveOnly || flexible;
     const owner = slot?.navigationOwner ?? obj.id;
-    const approach = usesApproach && profileId ? getObjectApproach(owner, desired, profileId, currentPosition, false, departureOwner, instr.closedDoor, flexible) : desired;
-    if (!approach) throw new Error(`No approach for ${obj.id}`);
+    const approach = usesApproach && profileId && !(isMoveOnly && obj.approachDoor) ? getObjectApproach(owner, desired, profileId, currentPosition, false, departureOwner, instr.closedDoor, flexible) : desired;
+    if (!approach) throw new NavigationBlockedError(`No approach for ${obj.id}`, desired);
     return {
       owner,
       tx: approach.x,
