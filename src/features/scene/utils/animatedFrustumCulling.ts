@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const configuredMeshes = new WeakSet<THREE.SkinnedMesh>();
+const configuredMeshes = new WeakMap<THREE.SkinnedMesh, THREE.Box3>();
 
 /** Bounds follow the current skeleton without skinning every vertex each frame. */
 export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
@@ -64,5 +64,28 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
       return sphere;
     },
   });
-  configuredMeshes.add(skinned);
+  configuredMeshes.set(skinned, posedBox);
+}
+
+/** Current world bounds for shadow receivers, including skeletal deformation. */
+export function meshWorldBounds(mesh: THREE.Mesh, target: THREE.Box3) {
+  const skinned = mesh as THREE.SkinnedMesh;
+  const instanced = mesh as THREE.InstancedMesh;
+  if (skinned.isSkinnedMesh) {
+    const pose = configuredMeshes.get(skinned);
+    if (pose) {
+      skinned.computeBoundingSphere();
+      target.copy(pose);
+    } else {
+      skinned.computeBoundingBox();
+      target.copy(skinned.boundingBox!);
+    }
+  } else if (instanced.isInstancedMesh) {
+    instanced.computeBoundingBox();
+    target.copy(instanced.boundingBox!);
+  } else {
+    if (mesh.geometry.boundingBox === null) mesh.geometry.computeBoundingBox();
+    target.copy(mesh.geometry.boundingBox!);
+  }
+  return target.applyMatrix4(mesh.matrixWorld);
 }

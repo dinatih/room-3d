@@ -9,7 +9,7 @@ import {
   AgXToneMapping, PCFShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
-  PerspectiveCamera, OrthographicCamera,
+  PerspectiveCamera, OrthographicCamera, type LightShadow,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { CameraViewMarkers } from './CameraViewMarkers';
@@ -35,7 +35,7 @@ import { GridLayer }        from '@features/scene/Grid';
 import { LightHelpers }     from '@features/scene/LightHelpers';
 import { HoverRaycaster, HoverOverlay } from '@features/scene/HoverMenu';
 import { DevToolsCollector }            from '@features/scene/DevToolsCollector';
-import { hasVisibleShadowReceiver } from './utils/visibleShadowReceivers';
+import { getUnusedShadows } from './utils/visibleShadowReceivers';
 import { VRMode }                       from '@features/scene/VRMode';
 import { ImmersiveMode }                from '@features/scene/ImmersiveMode';
 import { FloorPlan }                    from '@features/scene/FloorPlan';
@@ -204,6 +204,7 @@ function ShadowController({ enabled }: { enabled: boolean }) {
     let autoUpdate = gl.shadowMap.autoUpdate;
     let needsUpdate = gl.shadowMap.needsUpdate;
     let skipped = false;
+    let shadowUpdates: { shadow: LightShadow; autoUpdate: boolean; needsUpdate: boolean }[] = [];
 
     scene.onBeforeRender = (...args) => {
       beforeRender.apply(scene, args);
@@ -211,7 +212,13 @@ function ShadowController({ enabled }: { enabled: boolean }) {
       if (renderer.getRenderTarget() !== null) return;
       autoUpdate = renderer.shadowMap.autoUpdate;
       needsUpdate = renderer.shadowMap.needsUpdate;
-      skipped = renderer.shadowMap.enabled && !hasVisibleShadowReceiver(currentScene, camera);
+      const unused = renderer.shadowMap.enabled ? getUnusedShadows(currentScene, camera) : { shadows: [], allUnused: false };
+      shadowUpdates = unused.shadows.map(shadow => ({ shadow, autoUpdate: shadow.autoUpdate, needsUpdate: shadow.needsUpdate }));
+      for (const { shadow } of shadowUpdates) {
+        shadow.autoUpdate = false;
+        shadow.needsUpdate = false;
+      }
+      skipped = unused.allUnused;
       if (skipped) {
         renderer.shadowMap.autoUpdate = false;
         renderer.shadowMap.needsUpdate = false;
@@ -219,9 +226,15 @@ function ShadowController({ enabled }: { enabled: boolean }) {
     };
     scene.onAfterRender = (...args) => {
       const [renderer] = args;
-      if (renderer.getRenderTarget() === null && skipped) {
-        renderer.shadowMap.autoUpdate = autoUpdate;
-        renderer.shadowMap.needsUpdate = needsUpdate;
+      if (renderer.getRenderTarget() === null) {
+        if (skipped) {
+          renderer.shadowMap.autoUpdate = autoUpdate;
+          renderer.shadowMap.needsUpdate = needsUpdate;
+        }
+        for (const update of shadowUpdates) {
+          update.shadow.autoUpdate = update.autoUpdate;
+          update.shadow.needsUpdate = update.needsUpdate;
+        }
       }
       afterRender.apply(scene, args);
     };
@@ -237,20 +250,11 @@ function ShadowController({ enabled }: { enabled: boolean }) {
 
   useEffect(() => {
     gl.shadowMap.enabled = enabled;
-    scene.traverse(obj => {
-      if ((obj as any).isLight || (obj as any).isMesh) {
-        if (obj.userData?.skipShadowToggle) return;
-        // On ne touche qu'aux objets qui ont déjà un réglage d'ombre,
-        // pour ne pas activer des ombres là où il n'y en avait pas.
-        if (enabled) {
-          if (obj.userData?.wasCastingShadow) obj.castShadow = true;
-        } else {
-          if (obj.castShadow) {
-            obj.userData.wasCastingShadow = true;
-            obj.castShadow = false;
-          }
-        }
-      }
+    scene.traverse(object => {
+      const mesh = object as Mesh;
+      if (!mesh.isMesh) return;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const material of materials) material.needsUpdate = true;
     });
     gl.shadowMap.needsUpdate = true;
     invalidate();
