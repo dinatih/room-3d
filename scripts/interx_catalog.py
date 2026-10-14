@@ -74,7 +74,7 @@ def publish_manifest(value):
     atomic_json(RUNTIME_MANIFEST, value)
 
 
-def read_pair(source, recording):
+def read_pair(source, recording, include_hands=False):
     match = RECORDING.fullmatch(recording)
     if not match or int(match[3][1:]) >= len(ACTION_LABELS):
         raise ValueError(f'Invalid recording: {recording}')
@@ -82,9 +82,12 @@ def read_pair(source, recording):
     for person in ('P1', 'P2'):
         path = source / recording / f'{person}.npz'
         with np.load(path, allow_pickle=False) as data:
-            arrays = {key: data[key].copy() for key in ('pose_body', 'root_orient', 'trans')}
+            keys = ('pose_body', 'root_orient', 'trans', 'pose_lhand', 'pose_rhand') if include_hands else ('pose_body', 'root_orient', 'trans')
+            arrays = {key: data[key].copy() for key in keys}
         count = len(arrays['trans'])
         expected = {'pose_body': (count, 21, 3), 'root_orient': (count, 3), 'trans': (count, 3)}
+        if include_hands:
+            expected.update({'pose_lhand': (count, 15, 3), 'pose_rhand': (count, 15, 3)})
         if count == 0:
             raise ValueError(f'Empty motion: {path}')
         for key, shape in expected.items():
@@ -116,9 +119,11 @@ def glb_info(path):
             'sizeBytes': len(binary), 'sha256': hashlib.sha256(binary).hexdigest()}
 
 
-def estimate_model():
+def estimate_model(hand_motion=None):
     samples = []
-    calibration_paths = [ROOT / 'public' / clip['path'] for entry in json.loads(MANIFEST.read_text())['duos'] for clip in entry['clips'].values()] if MANIFEST.exists() else sorted(MANIFEST.parent.glob('*.glb'))
+    calibration_paths = [ROOT / 'public' / clip['path'] for entry in json.loads(MANIFEST.read_text())['duos']
+                         if hand_motion is None or entry.get('handMotion') == hand_motion
+                         for clip in entry['clips'].values()] if MANIFEST.exists() else sorted(MANIFEST.parent.glob('*.glb'))
     for path in calibration_paths:
         binary, gltf = glb_document(path)
         # Calibrate against the motion clip; the old pilot files also carry an

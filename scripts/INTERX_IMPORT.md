@@ -158,8 +158,68 @@ node scripts/check_interx_motion.cjs --browser --group G053
 La sélection explicite utilise `representative: "explicit-recordings"`.
 Elle conserve le contrôle des quotas et de l'unicité A/T et refuse une prise
 qui ne serait pas la première disponible. `--ground-standing` active uniquement
-la correction des pilotes A000/A001 ; il met aussi à jour cette métadonnée pour
+la correction des interactions debout prises en charge ; il met aussi à jour cette métadonnée pour
 des exports déjà vérifiés, sans réexporter leurs GLB.
+
+### Lots de dix avec tailles proches
+
+Le premier lot après les pilotes G053 est enregistré dans
+`scripts/interx_batch_001_selection.json` : dix nouveaux duos G053, vingt GLB,
+**7 532 828 octets (7,53 Mo)**. Il contient A011 (tapoter le dos), A016
+(high-five), A018 (chuchoter), A019 (soutenir avec la main), A020
+(pierre-feuille-ciseaux), A021 (danser), A022 (bras dessus dessous), A023
+(épaule contre épaule), A029 (discuter), A030 (caresser la joue).
+
+Les métadonnées `heightSelection` gardent les hauteurs des partenaires et les
+empreintes des modèles. Pour chaque A/T, le choix minimise l'écart maximal
+entre les deux tailles source et la taille des avatars, puis l'écart entre
+partenaires. Le lot alterne les actions, ignore les A/T déjà publiés et respecte
+le plafond de huit variations par action. `--batch-size 10` limite le lot à dix
+duos ; le dernier lot peut être plus petit si moins de prises restent disponibles.
+La commande prépare un seul lot.
+
+Préparer le prochain lot des mêmes thèmes (dry-run sans écriture) :
+
+```bash
+python3 scripts/temp_interx_grounding.py \
+  --find-similar-heights A011 A016 A018 A019 A020 A021 A022 A023 A029 A030 \
+  --ranking-report /tmp/interx-next-batch-candidates.json
+python3 scripts/select_interx_duos.py \
+  --height-ranking /tmp/interx-next-batch-candidates.json \
+  --batch-size 10 --target-height 173.4 --hand-motion --dry-run
+```
+
+Remplacer `--dry-run` par `--output scripts/interx_batch_002_selection.json`
+pour enregistrer le lot suivant. L'estimation `--hand-motion` est calibrée sur
+les GLB ayant des doigts animés. L'estimation initiale du lot 001 (3,77 Mo)
+utilisait des exports du corps seuls ; les doigts animés augmentent le poids final.
+
+Reprendre uniquement le lot 001 :
+
+```bash
+ALSOFT_DRIVERS=null blender -noaudio --background --python-exit-code 1 \
+  --python scripts/convert_interx_duos.py -- \
+  --selection scripts/interx_batch_001_selection.json \
+  --ground-standing --hand-motion
+python3 scripts/check_interx_pipeline.py --reference /tmp/interx-motion-reference.json
+node scripts/check_interx_motion.cjs --browser \
+  --selection scripts/interx_batch_001_selection.json
+```
+
+`--hand-motion` exige les poses finies et synchronisées `(frames, 15, 3)` des
+deux mains et exporte leurs trente articulations de doigts. Le manifest marque
+ces duos avec `handMotion: "full-axis-angle"`. La reprise vérifie cette marque
+pour distinguer un export du corps seul de l'export demandé. Le retargeting
+utilise les correspondances de doigts existantes ; le calage IK conserve leurs
+orientations animées, ainsi que celles des poignets. Comme pour les pilotes,
+il conserve les anciens poignets retargetés, pas des contacts SMPL-X exacts.
+L'ajustement maximal d'épaule mesuré sur ce lot et les pilotes à hauteur native
+atteint 11,0635 cm : les contacts et déformations restent à apprécier visuellement.
+
+Le calage debout est pris en charge pour A000/A001 et les dix actions du lot
+001. Il conserve les déplacements verticaux après le départ, y compris ceux
+de la danse. Les actions couchées, assises et de portage demandent leur propre
+traitement des appuis ; ce mode les refuse explicitement.
 
 Références : [viewer Inter-X](https://github.com/liangxuy/Inter-X/blob/main/visualize/smplx_viewer_tool/data_viewer.py)
 et [skinning SMPL-X](https://github.com/vchoutas/smplx/blob/main/smplx/lbs.py).

@@ -39,7 +39,7 @@ def main():
     reference = []
     for entry in manifest['duos']:
         assert verified(entry)
-        pair = read_pair(DEFAULT_SOURCE, entry['source']['recording'])
+        pair = read_pair(DEFAULT_SOURCE, entry['source']['recording'], include_hands=entry.get('handMotion') == 'full-axis-angle')
         expected = pair[1]['trans'][0].astype(np.float64) - pair[0]['trans'][0].astype(np.float64)
         np.testing.assert_array_equal(entry['start_offset'], expected)
         assert entry['clips']['p1']['frameCount'] == entry['clips']['p2']['frameCount']

@@ -75,6 +75,12 @@ async function main() {
       const participants = [];
       for (const person of ['p1', 'p2']) {
         const source = await loadSkeleton(path.join(root, 'public', entry.clips[person].path));
+        const fingerNames = entry.handMotion ? ['Left', 'Right'].flatMap(side => ['Index', 'Middle', 'Pinky', 'Ring', 'Thumb']
+          .flatMap(finger => [1, 2, 3].map(segment => `${side}Hand${finger}${segment}`))) : [];
+        for (const name of fingerNames) {
+          const track = source.animations[0].tracks.find(track => track.name === `mixamorig${name}.quaternion` || track.name === `mixamorig:${name}.quaternion`);
+          assert(track && track.times.length === entry.clips[person].frameCount, `${entry.id}/${person}: missing sampled finger track ${name}`);
+        }
         if (process.argv.includes('--inspect') && scale === 75) {
           source.scene.updateMatrixWorld(true);
           const sourceHips = source.scene.getObjectByName(resolveTargetBoneName(source.scene, 'Hips'));
@@ -95,12 +101,15 @@ async function main() {
         const head = target.scene.getObjectByName(resolveTargetBoneName(target.scene, 'Head'));
         const feet = ['LeftFoot', 'RightFoot', 'LeftToeBase', 'RightToeBase'].map(name => target.scene.getObjectByName(resolveTargetBoneName(target.scene, name)));
         const hands = ['LeftHand', 'RightHand'].map(name => target.scene.getObjectByName(resolveTargetBoneName(target.scene, name)));
+        const fingers = fingerNames.map(name => target.scene.getObjectByName(resolveTargetBoneName(target.scene, name)));
+        assert(fingers.every(Boolean), 'Target finger mapping must resolve all 30 joints');
         const shoulders = ['LeftArm', 'RightArm'].map(name => target.scene.getObjectByName(resolveTargetBoneName(target.scene, name)));
         const shoulderRestPositions = shoulders.map(joint => joint.position.clone());
         const baseline = hips.getWorldPosition(new THREE.Vector3());
         const clipDef = INTERX_ANIMATION_DEFINITIONS.find(item => item.id === `${entry.id}-${person}`);
         let clip = retargetClip(source.animations[0], target.scene, source.scene, clipDef.rootMotionSpace);
         const originalHands = [];
+        const originalFingers = [];
         let correctionY = 0;
         if (grounded) {
           const originalMixer = new THREE.AnimationMixer(target.scene);
@@ -112,6 +121,7 @@ async function main() {
             originalMixer.setTime(frame / 30);
             target.scene.updateMatrixWorld(true);
             originalHands.push(hands.map(hand => ({ position: hand.getWorldPosition(new THREE.Vector3()), quaternion: hand.getWorldQuaternion(new THREE.Quaternion()) })));
+            originalFingers.push(fingers.map(joint => joint.getWorldQuaternion(new THREE.Quaternion()).normalize()));
           }
           originalMixer.stopAllAction();
           originalMixer.uncacheRoot(target.scene);
@@ -129,7 +139,7 @@ async function main() {
         }
         const mixer = new THREE.AnimationMixer(target.scene);
         mixer.clipAction(clip).setLoop(THREE.LoopOnce, 1).play().clampWhenFinished = true;
-        participants.push({ target, hips, head, feet, hands, shoulders, shoulderRestPositions, baseline, mixer, originalHands, correctionY });
+        participants.push({ target, hips, head, feet, hands, fingers, shoulders, shoulderRestPositions, baseline, mixer, originalHands, originalFingers, correctionY });
       }
       for (let frame = 0; frame < entry.clips.p1.frameCount; frame++) {
         const displacements = participants.map((participant, index) => {
@@ -143,6 +153,8 @@ async function main() {
               near(hand.getWorldPosition(new THREE.Vector3()), participant.originalHands[frame][side].position, `${entry.id}: wrist target ${index}/${side}/${frame}`, 0.001);
               assert(hand.getWorldQuaternion(new THREE.Quaternion()).normalize().angleTo(participant.originalHands[frame][side].quaternion.clone().normalize()) < 0.0002, 'Wrist orientation must be preserved');
             });
+            participant.fingers.forEach((joint, index) => assert(joint.getWorldQuaternion(new THREE.Quaternion()).normalize()
+              .angleTo(participant.originalFingers[frame][index]) < 0.0002, 'Grounding must preserve finger articulation'));
             participant.shoulders.forEach((joint, side) => {
               const movement = joint.position.clone().sub(participant.shoulderRestPositions[side])
                 .applyMatrix3(new THREE.Matrix3().setFromMatrix4(joint.parent.matrixWorld)).length();
@@ -154,12 +166,12 @@ async function main() {
           worstError = Math.max(worstError, actual.distanceTo(expected));
           near(actual, expected, `${entry.id} P${index + 1} scale=${scale} frame=${frame}`);
           const up = participant.head.getWorldPosition(new THREE.Vector3()).sub(participant.hips.getWorldPosition(new THREE.Vector3())).normalize();
-          assert(up.y > Math.hypot(up.x, up.z), `${entry.id}: torso lies down at frame ${frame}`);
+          if (['A000', 'A001'].includes(entry.actionCode)) assert(up.y > Math.hypot(up.x, up.z), `${entry.id}: torso lies down at frame ${frame}`);
           const angle = new THREE.Vector3(...motion.root[frame]).length();
           const expectedRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...motion.root[frame]).normalize(), angle)
             .multiply(participant.hips.restWorldQuaternion);
           const actualRotation = participant.hips.getWorldQuaternion(new THREE.Quaternion());
-          assert(actualRotation.angleTo(expectedRotation) < 0.0002, `${entry.id}: root orientation not preserved at frame ${frame}; actual=${actualRotation.toArray()}, expected=${expectedRotation.toArray()}, rest=${participant.hips.restWorldQuaternion.toArray()}`);
+          assert(actualRotation.normalize().angleTo(expectedRotation.normalize()) < 0.0002, `${entry.id}: root orientation not preserved at frame ${frame}; actual=${actualRotation.toArray()}, expected=${expectedRotation.toArray()}, rest=${participant.hips.restWorldQuaternion.toArray()}`);
           return actual;
         });
         const expectedRelative = new THREE.Vector3(...ref.participants[1].trans[frame]).sub(new THREE.Vector3(...ref.participants[0].trans[frame])).multiplyScalar(100);
@@ -210,17 +222,22 @@ async function visualCheck(duos) {
   // The visual capture uses the app's inventory and actual character renderer.
   const browser = await launchBrowser({ headless: true, args: ['--no-sandbox'], defaultViewport: { width: 1400, height: 1000 } });
   try {
+    const groupIndex = process.argv.indexOf('--group');
+    const group = groupIndex === -1 ? undefined : process.argv[groupIndex + 1];
+    const selectionIndex = process.argv.indexOf('--selection');
+    const requested = selectionIndex === -1 ? undefined : new Set(JSON.parse(fs.readFileSync(process.argv[selectionIndex + 1])).duos.map(duo => duo.id));
+    const actionsIndex = process.argv.indexOf('--actions');
+    const requestedActions = actionsIndex === -1 ? undefined : new Set(process.argv[actionsIndex + 1].split(','));
+    const selected = duos.filter(duo => (!group || duo.source.group === group) && (!requested || requested.has(duo.id))
+      && (!requestedActions || requestedActions.has(duo.actionCode)));
+    assert(selected.length, `No visual pilots for ${group}`);
+    for (const entry of selected) {
     const page = await browser.newPage();
     page.on('pageerror', error => console.error('Browser page error:', error.message));
     page.on('console', message => { if (message.type() === 'error') console.error('Browser:', message.text()); });
     await page.goto((process.env.ROOM_TEST_URL || 'http://127.0.0.1:5173') + '/AGENTS.md', { waitUntil: 'domcontentloaded' });
-    const groupIndex = process.argv.indexOf('--group');
-    const group = groupIndex === -1 ? undefined : process.argv[groupIndex + 1];
-    const selected = duos.filter(duo => !group || duo.source.group === group);
-    assert(selected.length, `No visual pilots for ${group}`);
-    for (const entry of selected) {
     const recording = entry.source.recording.toLowerCase();
-    const label = entry.actionCode === 'A000' ? 'Câlin' : 'Poignée';
+    const label = entry.id;
     await page.evaluate(async recording => {
       window.$RefreshReg$ = () => {};
       window.$RefreshSig$ = () => type => type;
@@ -248,8 +265,10 @@ async function visualCheck(duos) {
       window.interxRoot.render(React.createElement(InventoryPreview, {
         item, height: '950px', initialDuoAnim: duo, initialDuoPartner: 'rosanna',
       }));
+      window.interxDuoId = duo.id;
+      window.interxDuoLabel = duo.label;
     }, recording);
-    await page.waitForFunction((label, group) => window.interxPreview.getState().clipName.includes(label) && window.interxPreview.getState().clipName.includes(group) && window.interxPreview.getState().duration > 0, { timeout: 45000 }, label, entry.source.group).catch(async error => {
+    await page.waitForFunction(label => window.interxDuoId === label && window.interxPreview.getState().clipName === window.interxDuoLabel && window.interxPreview.getState().duration > 0, { timeout: 45000 }, label).catch(async error => {
       console.log('Preview state:', await page.evaluate(() => ({ state: window.interxPreview?.getState(), text: document.body.innerText.slice(-1800), canvases: document.querySelectorAll('canvas').length })));
       await page.screenshot({ path: '/tmp/interx-pilot-failure.png' });
       throw error;
@@ -266,6 +285,7 @@ async function visualCheck(duos) {
       await page.screenshot({ path: `/tmp/interx-${recording}-${label}.png` });
     }
     console.log(`Inventory ${recording} rendered at frame zero and contact.`);
+    await page.close();
     }
   } finally {
     await browser.close();

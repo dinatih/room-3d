@@ -21,6 +21,7 @@ from interx_catalog import (
 )
 
 TEMPLATE = ROOT / 'public/animations/mixamo/anim_salsa_dancing.glb'
+GROUND_STANDING_ACTIONS = {'A000', 'A001', 'A011', 'A016', 'A018', 'A019', 'A020', 'A021', 'A022', 'A023', 'A029', 'A030'}
 BONE_NAMES = [
     'mixamorig:Hips', 'mixamorig:LeftUpLeg', 'mixamorig:RightUpLeg', 'mixamorig:Spine',
     'mixamorig:LeftLeg', 'mixamorig:RightLeg', 'mixamorig:Spine1', 'mixamorig:LeftFoot',
@@ -57,7 +58,11 @@ def convert(motion, output_path):
         bone.rotation_quaternion = Quaternion((1, 0, 0, 0))
         bone.location.zero()
         bone.scale = (1, 1, 1)
-    bases = [armature.data.bones[name].matrix_local.to_3x3() for name in BONE_NAMES]
+    # SMPL-X orders each hand as index, middle, pinky, ring, thumb, three joints each.
+    finger_names = [f'mixamorig:{side}Hand{finger}{segment}' for side in ('Left', 'Right')
+                    for finger in ('Index', 'Middle', 'Pinky', 'Ring', 'Thumb') for segment in (1, 2, 3)] if 'pose_lhand' in motion else []
+    names = BONE_NAMES + finger_names
+    bases = [armature.data.bones[name].matrix_local.to_3x3() for name in names]
     hips = armature.pose.bones[BONE_NAMES[0]]
     # GLTF Y-up metres -> Blender Z-up world -> the actual pelvis rest space.
     # This uses the rig transforms rather than assuming a centimetre bone scale.
@@ -72,7 +77,9 @@ def convert(motion, output_path):
     for frame, source_frame in enumerate(frames):
         rotations = [rotation(motion['root_orient'][source_frame])] + [rotation(value) for value in body[source_frame]]
         rotations[0] = rotations[0] @ hips_rest_world.inverted()
-        for name, basis, quaternion in zip(BONE_NAMES, bases, rotations):
+        if finger_names:
+            rotations += [rotation(value) for key in ('pose_lhand', 'pose_rhand') for value in motion[key][source_frame]]
+        for name, basis, quaternion in zip(names, bases, rotations):
             bone = armature.pose.bones[name]
             bone.rotation_quaternion = (basis.inverted() @ quaternion.to_matrix() @ basis).to_quaternion()
             bone.keyframe_insert(data_path='rotation_quaternion', frame=frame)
@@ -97,7 +104,7 @@ def load_selection(path, source):
     if selection['schemaVersion'] != 1 or selection['dataset'] != 'inter-x' or selection['conversion'] != CONVERSION:
         raise ValueError('Selection schema or conversion settings do not match this converter')
     policy = selection['policy']
-    if policy['take'] != 'first-available' or policy['representative'] not in ('lowest-group-per-action-session', 'explicit-recordings') or not 1 <= policy['maxPerAction'] <= 8:
+    if policy['take'] != 'first-available' or policy['representative'] not in ('lowest-group-per-action-session', 'explicit-recordings', 'height-matched-per-action-session') or not 1 <= policy['maxPerAction'] <= 8:
         raise ValueError('Invalid selection policy')
     counts = Counter(entry['actionCode'] for entry in selection['duos'])
     variations = {(entry['actionCode'], entry['variation']) for entry in selection['duos']}
@@ -135,7 +142,8 @@ def main():
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--rebuild', action='store_true', help='Re-export explicitly requested pairs instead of resuming verified outputs')
     parser.add_argument('--prune', action='store_true', help='Delete tracked Inter-X GLBs excluded by the selection after verifying the published manifest')
-    parser.add_argument('--ground-standing', action='store_true', help='Ground target soles and preserve wrist targets for standing hug/handshake pilots')
+    parser.add_argument('--ground-standing', action='store_true', help='Ground target soles and preserve wrist targets for supported standing interactions')
+    parser.add_argument('--hand-motion', action='store_true', help='Export the 30 finger joints from full SMPL-X hand poses')
     arguments = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]
     args = parser.parse_args(arguments)
     selection = load_selection(args.selection, args.source)
@@ -145,8 +153,8 @@ def main():
         if unknown:
             raise ValueError(f'Recordings outside selection: {sorted(unknown)}')
         entries = [entry for entry in entries if entry['source']['recording'] in args.recordings]
-    if args.ground_standing and any(entry['actionCode'] not in ('A000', 'A001') for entry in entries):
-        raise ValueError('--ground-standing is only supported for hug/handshake pilots')
+    if args.ground_standing and any(entry['actionCode'] not in GROUND_STANDING_ACTIONS for entry in entries):
+        raise ValueError('--ground-standing requested for an unsupported action')
     if args.dry_run:
         report(selection, entries)
         return
@@ -162,17 +170,19 @@ def main():
     ready = {entry['id']: entry for entry in manifest['duos']}
     for entry in entries:
         old = ready.get(entry['id'])
-        if not args.rebuild and old and all(old[key] == entry[key] for key in ('id', 'actionCode', 'variation', 'source', 'rootMotion', 'start_offset', 'tags')) and verified(old):
+        if not args.rebuild and old and (not args.hand_motion or old.get('handMotion') == 'full-axis-angle') and all(old[key] == entry[key] for key in ('id', 'actionCode', 'variation', 'source', 'rootMotion', 'start_offset', 'tags')) and verified(old):
             if args.ground_standing:
                 old['placement'] = {'verticalOrigin': 'soles-preserve-hands'}
             print(f"Already verified: {entry['source']['recording']}", flush=True)
             continue
-        pair = read_pair(args.source, entry['source']['recording'])
+        pair = read_pair(args.source, entry['source']['recording'], include_hands=args.hand_motion)
         exported = {key: value for key, value in entry.items() if key not in ('expectedFrameCount', 'expectedDurationSeconds', 'estimatedBytes')}
         if old and 'placement' in old:
             exported['placement'] = old['placement']
         if args.ground_standing:
             exported['placement'] = {'verticalOrigin': 'soles-preserve-hands'}
+        if args.hand_motion:
+            exported['handMotion'] = 'full-axis-angle'
         exported['clips'] = {}
         with tempfile.TemporaryDirectory(prefix='interx-export-', dir=MANIFEST.parent) as temporary:
             paths = []

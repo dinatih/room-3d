@@ -77,7 +77,7 @@ function solveArm(upper: THREE.Object3D, lower: THREE.Object3D, hand: THREE.Obje
 }
 
 /** Bake a constant initial sole correction and preserve both original wrist trajectories with arm IK.
- * Root motion and leg rotations remain intact. This is an explicit policy for the two standing pilots.
+ * Root motion and leg rotations remain intact. This is an explicit policy for standing interactions.
  */
 export function groundInterxClip(clip: THREE.AnimationClip, model: THREE.Object3D, baseHeightMeters: number): THREE.AnimationClip {
   const saved: Array<{ object: THREE.Object3D; position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }> = [];

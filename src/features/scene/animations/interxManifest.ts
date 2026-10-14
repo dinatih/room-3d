@@ -45,6 +45,7 @@ export interface InterXManifest {
     rootMotion: { mode: string; translationUnit: string; upAxis: string };
     start_offset: [number, number, number];
     placement?: { verticalOrigin: 'soles-preserve-hands' };
+    handMotion?: 'full-axis-angle';
     tags: string[];
   }>;
 }
@@ -61,6 +62,7 @@ for (const duo of INTERX_MANIFEST.duos) {
   if (ids.has(duo.id) || !actionByCode.has(duo.actionCode)
     || duo.start_offset.length !== 3 || !duo.start_offset.every(Number.isFinite)
     || (duo.placement !== undefined && duo.placement.verticalOrigin !== 'soles-preserve-hands')
+    || (duo.handMotion !== undefined && duo.handMotion !== 'full-axis-angle')
     || duo.rootMotion.mode !== 'relative-to-first-frame'
     || duo.rootMotion.translationUnit !== 'meters' || duo.rootMotion.upAxis !== 'Y') {
     throw new Error(`Métadonnées Inter-X invalides : ${duo.id}`);
