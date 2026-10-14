@@ -56,11 +56,61 @@ Diagnostic des pilotes : les NPZ utilisent des morphologies différentes
 Native et Rosanna partagent le rig Lara de 173,4 cm. La conversion des rotations
 ne reprend pas les proportions SMPL-X. Les offsets initiaux Y sont respectivement
 9,1207 cm et 16,6345 cm ; ce ne sont pas des mesures de hauteur de semelle.
-Les modèles SMPL-X féminin/masculin et les squelettes source ne sont pas présents
-localement : les pieds source ne sont donc pas reconstruits avec un modèle
-SMPL féminin approximatif. Le calage utilise la géométrie réelle des avatars.
-Il corrige l'appui initial, pas le glissement ou les appuis ultérieurs, et préserve
-le contact précédent sans prétendre reconstruire les contacts SMPL-X exacts.
+Les trois modèles SMPL-X fournis dans `/home/dinatih/3D Resources/animations`
+sont maintenant utilisés par `scripts/temp_interx_grounding.py` pour reconstruire
+les sources en NumPy : formes selon les 10 betas, rotations axis-angle, hiérarchie
+des 55 articulations, correctifs de pose et skinning des semelles. Visage et
+expression restent neutres ; les rotations des mains sont prises directement
+dans les NPZ. Le diagnostic enregistre les empreintes des modèles pour pouvoir
+reproduire les mesures. Les modèles et leurs maillages ne sont pas publiés.
+
+### Mesures des deux pilotes avec les modèles SMPL-X fournis
+
+Les mêmes morphologies G001 sont utilisées pour les deux prises : la hauteur
+verticale du template après application des betas est **162,56 cm pour P1** et
+**177,31 cm pour P2**. Il s'agit de hauteurs de modèle, pas de tailles mesurées
+des volontaires. Native et Rosanna restent des avatars de 173,4 cm.
+
+| Duo | Delta `trans.y` | Delta bassin mondial | Semelle P1, frame 0 | Semelle P2, frame 0 |
+| --- | ---: | ---: | ---: | ---: |
+| Câlin G001T000A000R000 | 9,1207 cm | 6,8530 cm | −2,1552 cm | −2,4951 cm |
+| Poignée G001T000A001R005 | 16,6345 cm | 14,3669 cm | −2,4335 cm | 4,2678 cm |
+
+`trans` translate le modèle entier. Le bassin mondial vaut
+`trans + J_rest[0]`, et sa position Y de repos varie selon le modèle et les betas
+(−33,2173 cm pour P1, −35,4849 cm pour P2). Copier le delta de translation sur
+deux bassins Lara ayant la même origine interne ne reconstitue donc pas les
+positions des bassins source. Le delta brut reste conservé dans le manifest.
+Les semelles source ne décrivent pas non plus un sol parfait : la poignée de
+main présente déjà un écart initial de 6,7014 cm entre les deux semelles.
+
+Le calage de la preview utilise les semelles réelles des avatars et conserve
+les anciens poignets retargetés avec l'IK. À la frame où les poignets source
+sont les plus proches, leurs vecteurs relatifs diffèrent encore de ceux des
+avatars de 8,8166 cm (câlin, frame 135 à 30 Hz) et 6,2110 cm (poignée, frame 48).
+Les distances entre articulations des poignets ne sont pas des mesures de
+distance entre surfaces des mains : elles ne prouvent pas un contact ou son
+absence. Ce contrôle distingue la fidélité aux sources de la conservation des
+anciens poignets, que les tests vérifient à moins de 0,001 cm.
+L'IK actuelle corrige l'appui initial, pas les appuis ultérieurs, et ne prétend
+pas reconstruire les contacts SMPL-X exacts sur un avatar aux proportions différentes.
+
+Reproduire le diagnostic puis la comparaison avec les avatars :
+
+```bash
+python3 scripts/temp_interx_grounding.py
+python3 scripts/check_interx_pipeline.py --reference /tmp/interx-motion-reference.json
+node scripts/check_interx_motion.cjs --smplx
+```
+
+Options : `--models '/dossier/des/modeles'`, `--source '/dossier/motions'`,
+`--report '/chemin/rapport.json'` et `--reference '/chemin/trajectoires.json'`.
+Sorties par défaut : `/tmp/interx-smplx-report.json`,
+`/tmp/interx-smplx-reference.json`, `/tmp/interx-smplx-avatar-comparison.json`.
+Le comparateur Node utilise ces chemins par défaut.
+
+Références : [viewer Inter-X](https://github.com/liangxuy/Inter-X/blob/main/visualize/smplx_viewer_tool/data_viewer.py)
+et [skinning SMPL-X](https://github.com/vchoutas/smplx/blob/main/smplx/lbs.py).
 
 Les deux parents utilisent la même orientation. Aucune rotation de π ni
 translation forfaitaire n'est ajoutée. La hauteur de repos des rigs est

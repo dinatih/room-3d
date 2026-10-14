@@ -29,6 +29,9 @@ async function main() {
   const { retargetClip, resolveTargetBoneName, INTERX_DUO_ANIMATIONS, INTERX_ANIMATION_DEFINITIONS, computeWorldTransform, groundInterxClip, interxSoleHeight } = await import(pathToFileURL(bundle));
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'public/animations/npz/interx/animations_manifest.json')));
   const reference = JSON.parse(fs.readFileSync('/tmp/interx-motion-reference.json'));
+  const smplx = process.argv.includes('--smplx') ? JSON.parse(fs.readFileSync('/tmp/interx-smplx-reference.json')) : undefined;
+  const smplxReport = smplx ? JSON.parse(fs.readFileSync('/tmp/interx-smplx-report.json')) : undefined;
+  const comparisons = [];
   const { NodeIO } = await import('@gltf-transform/core');
   const { ALL_EXTENSIONS } = await import('@gltf-transform/extensions');
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'draco3d.decoder': await require('draco3d').createDecoderModule() });
@@ -60,6 +63,9 @@ async function main() {
   for (const entry of manifest.duos) {
     const def = INTERX_DUO_ANIMATIONS.find(duo => duo.id === entry.id);
     const ref = reference.find(item => item.id === entry.id);
+    const sourceBody = smplx?.find(item => item.id === entry.id);
+    const sourceReport = smplxReport?.duos.find(item => item.id === entry.id);
+    if (smplx) assert(sourceBody && sourceReport, `Missing reconstructed source pair: ${entry.id}`);
     assert(def && ref);
     assert.equal(def.rotB, 0);
     const initialOffset = new THREE.Vector3(...entry.start_offset).multiplyScalar(100);
@@ -157,6 +163,19 @@ async function main() {
           return actual;
         });
         const expectedRelative = new THREE.Vector3(...ref.participants[1].trans[frame]).sub(new THREE.Vector3(...ref.participants[0].trans[frame])).multiplyScalar(100);
+        if (sourceBody && scale === 100 && frame === sourceReport.closestWrists.frame30fps) {
+          const sideA = sourceReport.closestWrists.p1Side === 'left' ? 0 : 1;
+          const sideB = sourceReport.closestWrists.p2Side === 'left' ? 0 : 1;
+          const rawDelta = new THREE.Vector3(...sourceBody.participants[1].wrists[frame][sideB])
+            .sub(new THREE.Vector3(...sourceBody.participants[0].wrists[frame][sideA])).multiplyScalar(100);
+          const targetDelta = participants[1].hands[sideB].getWorldPosition(new THREE.Vector3()).add(initialOffset)
+            .sub(participants[0].hands[sideA].getWorldPosition(new THREE.Vector3()));
+          const comparison = { id: entry.id, frame, sourceWristDeltaCm: rawDelta.toArray(), avatarWristDeltaCm: targetDelta.toArray(),
+            sourceWristDistanceCm: rawDelta.length(), avatarWristDistanceCm: targetDelta.length(), vectorDifferenceCm: rawDelta.distanceTo(targetDelta),
+            initialSourceSoleGapCm: sourceReport.participants[1].initialSoleYCm - sourceReport.participants[0].initialSoleYCm };
+          comparisons.push(comparison);
+          console.log('SMPL-X comparison:', JSON.stringify(comparison));
+        }
         expectedRelative.y += participants[1].correctionY - participants[0].correctionY;
         if (process.argv.includes('--feet') && scale === 100 && [0, 59, 100].includes(frame)) {
           console.log(entry.id, frame, JSON.stringify(participants.map((participant, index) => ({
@@ -183,6 +202,7 @@ async function main() {
   }
   console.log(`Maximum root displacement error: ${worstError.toFixed(8)} cm`);
   console.log(`Maximum wrist error: ${worstWristError.toFixed(8)} cm; maximum shoulder adjustment at native height: ${largestShoulderMove.toFixed(4)} cm`);
+  if (smplx) fs.writeFileSync('/tmp/interx-smplx-avatar-comparison.json', JSON.stringify(comparisons, null, 2) + '\n');
   if (process.argv.includes('--browser')) await visualCheck();
 }
 

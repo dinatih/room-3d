@@ -1,14 +1,128 @@
+"""Reconstruct published Inter-X pairs with gendered SMPL-X models and NumPy.
+
+Full axis-angle hands, neutral face/expression. Outputs measurements and joint
+trajectories in /tmp; model files and reconstructed meshes stay outside the app.
+"""
+import argparse
+import hashlib
 import json
 from pathlib import Path
-import numpy as np
 
-source = Path('/home/dinatih/3D Resources/animations/Inter-X_Dataset-motions/motions')
-manifest = json.loads(Path('public/animations/npz/interx/animations_manifest.json').read_text())
-for duo in manifest['duos']:
-    print(duo['id'])
-    for person in ('p1', 'p2'):
-        with np.load(source / duo['source'][person], allow_pickle=False) as data:
-            print(person, {key: list(data[key].shape) for key in data.files})
-            for key in ('trans', 'betas', 'gender'):
-                if key in data:
-                    print(key, data[key].reshape(-1)[:16])
+import numpy as np
+from interx_catalog import DEFAULT_SOURCE, MANIFEST
+
+
+def rotations(vectors):
+    angles = np.linalg.norm(vectors, axis=-1)
+    axes = np.divide(vectors, angles[..., None], out=np.zeros_like(vectors), where=angles[..., None] != 0)
+    cross = np.zeros((*angles.shape, 3, 3))
+    cross[..., 0, 1], cross[..., 0, 2] = -axes[..., 2], axes[..., 1]
+    cross[..., 1, 0], cross[..., 1, 2] = axes[..., 2], -axes[..., 0]
+    cross[..., 2, 0], cross[..., 2, 1] = -axes[..., 1], axes[..., 0]
+    return np.eye(3) + np.sin(angles)[..., None, None] * cross + (1 - np.cos(angles))[..., None, None] * (cross @ cross)
+
+
+def reconstruct(model, motion):
+    beta = motion['betas'].reshape(-1)
+    shaped = model['v_template'] + np.einsum('vck,k->vc', model['shapedirs'][:, :, :len(beta)], beta)
+    rest = model['J_regressor'] @ shaped
+    parents = model['kintree_table'][0].astype(np.int64)
+    if any(not 0 <= parents[joint] < joint for joint in range(1, 55)):
+        raise ValueError('Invalid SMPL-X joint hierarchy')
+    count = len(motion['trans'])
+    pose = np.concatenate((motion['root_orient'][:, None], motion['pose_body'],
+                           np.zeros((count, 3, 3)), motion['pose_lhand'], motion['pose_rhand']), axis=1)
+    matrices = rotations(pose.astype(np.float64))
+    world = np.empty_like(matrices)
+    joints = np.empty((count, 55, 3))
+    world[:, 0], joints[:, 0] = matrices[:, 0], rest[0]
+    for joint in range(1, 55):
+        parent = parents[joint]
+        world[:, joint] = world[:, parent] @ matrices[:, joint]
+        joints[:, joint] = joints[:, parent] + np.einsum('fij,j->fi', world[:, parent], rest[joint] - rest[parent])
+    # Canonical SMPL-X ankles and toes. Skin their vertices to measure the soles.
+    feet = np.flatnonzero(np.any(model['weights'][:, [7, 8, 10, 11]] > 0, axis=1))
+    weights = model['weights'][feet]
+    pose_directions = model['posedirs'][feet].reshape(-1, 486)
+    sole_y = []
+    for frame in range(count):
+        posed = shaped[feet] + (pose_directions @ (matrices[frame, 1:] - np.eye(3)).reshape(-1)).reshape(-1, 3)
+        blended = np.einsum('vj,jab->vab', weights, world[frame])
+        offsets = joints[frame] - np.einsum('jab,jb->ja', world[frame], rest)
+        vertices = np.einsum('vab,vb->va', blended, posed) + weights @ offsets + motion['trans'][frame]
+        sole_y.append(float(vertices[:, 1].min()))
+    joints += motion['trans'][:, None]
+    if not np.isfinite(joints).all() or not np.isfinite(sole_y).all():
+        raise ValueError('Non-finite reconstructed motion')
+    return shaped, rest, joints, np.array(sole_y)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--models', type=Path, default=Path('/home/dinatih/3D Resources/animations'))
+    parser.add_argument('--source', type=Path, default=DEFAULT_SOURCE)
+    parser.add_argument('--report', type=Path, default=Path('/tmp/interx-smplx-report.json'))
+    parser.add_argument('--reference', type=Path, default=Path('/tmp/interx-smplx-reference.json'))
+    args = parser.parse_args()
+    models, hashes = {}, {}
+    for gender in ('female', 'male', 'neutral'):
+        path = args.models / f'SMPLX_{gender.upper()}.npz'
+        with np.load(path, allow_pickle=False) as data:
+            models[gender] = {key: data[key].astype(np.float64) for key in
+                             ('v_template', 'shapedirs', 'posedirs', 'J_regressor', 'weights', 'kintree_table')}
+        model = models[gender]
+        if model['v_template'].shape != (10475, 3) or model['J_regressor'].shape != (55, 10475) or model['posedirs'].shape != (10475, 3, 486):
+            raise ValueError(f'Unexpected SMPL-X topology: {path}')
+        if not all(np.isfinite(array).all() for array in model.values()):
+            raise ValueError(f'Non-finite model: {path}')
+        np.testing.assert_allclose(model['weights'].sum(axis=1), 1, atol=1e-6)
+        # Independent invariants: zero pose reproduces the shaped rest joints
+        # and unposed soles; root translation moves them by exactly that vector.
+        zero = {'betas': np.zeros((1, 10)), 'trans': np.zeros((1, 3)),
+                'root_orient': np.zeros((1, 3)), 'pose_body': np.zeros((1, 21, 3)),
+                'pose_lhand': np.zeros((1, 15, 3)), 'pose_rhand': np.zeros((1, 15, 3))}
+        shaped, rest, joints, soles = reconstruct(model, zero)
+        np.testing.assert_allclose(joints[0], rest, atol=1e-12)
+        foot_mask = np.any(model['weights'][:, [7, 8, 10, 11]] > 0, axis=1)
+        np.testing.assert_allclose(soles[0], shaped[foot_mask, 1].min(), atol=1e-6)
+        shifted = {**zero, 'trans': np.array([[1., 2., 3.]])}
+        _, _, moved_joints, moved_soles = reconstruct(model, shifted)
+        np.testing.assert_allclose(moved_joints - joints, np.broadcast_to(shifted['trans'][:, None], joints.shape), atol=1e-12)
+        np.testing.assert_allclose(moved_soles - soles, [2.], atol=1e-12)
+        hashes[gender] = {'file': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+    report, reference = [], []
+    for duo in json.loads(MANIFEST.read_text())['duos']:
+        people, trajectories = [], []
+        for person in ('p1', 'p2'):
+            with np.load(args.source / duo['source'][person], allow_pickle=False) as data:
+                motion = {key: data[key] for key in data.files}
+            gender = str(motion['gender'].item())
+            print(f"Reconstructing {duo['id']} {person} ({gender})", flush=True)
+            shaped, rest, joints, feet = reconstruct(models[gender], motion)
+            people.append({'participant': person, 'gender': gender,
+                           'shapedTemplateHeightCm': float(np.ptp(shaped[:, 1]) * 100),
+                           'restPelvisCm': (rest[0] * 100).tolist(),
+                           'initialTransYCm': float(motion['trans'][0, 1] * 100),
+                           'initialPelvisYCm': float(joints[0, 0, 1] * 100),
+                           'initialSoleYCm': float(feet[0] * 100),
+                           'soleRangeCm': [float(feet.min() * 100), float(feet.max() * 100)]})
+            trajectories.append({'hips': joints[::4, 0].tolist(), 'wrists': joints[::4, [20, 21]].tolist(), 'soleY': feet[::4].tolist()})
+        a, b = (np.asarray(item['wrists']) for item in trajectories)
+        distances = np.linalg.norm(a[:, :, None] - b[:, None], axis=-1)
+        closest = np.unravel_index(np.argmin(distances), distances.shape)
+        item = {'id': duo['id'], 'participants': people,
+                'initialPelvisDeltaYCm': people[1]['initialPelvisYCm'] - people[0]['initialPelvisYCm'],
+                'closestWrists': {'frame30fps': int(closest[0]), 'p1Side': ['left', 'right'][closest[1]],
+                                  'p2Side': ['left', 'right'][closest[2]], 'distanceCm': float(distances[closest] * 100)}}
+        report.append(item)
+        reference.append({'id': duo['id'], 'participants': trajectories})
+        print(json.dumps(item, ensure_ascii=False, indent=2), flush=True)
+    args.report.write_text(json.dumps({'models': hashes,
+                                     'assumptions': {'units': 'meters', 'upAxis': 'Y', 'handPose': 'full-axis-angle', 'faceAndExpression': 'neutral',
+                                                     'heightMeasurement': 'shaped template vertical extent, before animation'},
+                                     'duos': report}, indent=2) + '\n')
+    args.reference.write_text(json.dumps(reference) + '\n')
+
+
+if __name__ == '__main__':
+    main()
