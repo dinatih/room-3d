@@ -103,6 +103,7 @@ import { ShibaInu }                                   from '@features/scene/item
 import { resolveAnimationId } from '@features/scene/animations/animationResolver';
 import { Goldfish } from '@features/scene/items/Goldfish';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
+import { BlackHornetDrone }                            from '@features/scene/items/BlackHornetDrone';
 import { BirdFeeder }                                 from '@features/scene/items/BirdFeeder';
 import { GoogleNestMini }                             from '@features/scene/items/GoogleNestMini';
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
@@ -273,6 +274,10 @@ SCENE_REGISTRY['shiba-inu'] = SCENE_REGISTRY['ushiro'];
 
 SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
   return <RobinBird isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
+} as any;
+
+SCENE_REGISTRY['black-hornet-drone'] = function BlackHornetDronePreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+  return <BlackHornetDrone isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
 } as any;
 
 SCENE_REGISTRY['jikin-goldfish'] = function GoldfishPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {

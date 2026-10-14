@@ -441,6 +441,18 @@ INVENTORY.push({
 });
 
 INVENTORY.push({
+  id: 'black-hornet-drone',
+  name: 'Black Hornet Nano Drone',
+  brand: 'FLIR / Teledyne',
+  category: 'characters',
+  qty: 1,
+  dims: { w: 12, d: 17, h: 4 },
+  glbPath: 'items/black-hornet/black-hornet.glb',
+  photos: [],
+  notes: `Nano-drone Black Hornet autonome capable de survoler le jardin et toutes les pièces du studio.`
+});
+
+INVENTORY.push({
   id: 'jikin-goldfish',
   name: 'Poisson rouge Jikin',
   brand: 'Animal',

@@ -18,6 +18,7 @@ import { Vatterso20562909 } from '../items/Vatterso20562909';
 import { BathtubStarfish } from '../items/Starfish';
 import { Goldfish } from '../items/Goldfish';
 import { RobinBird } from '../items/RobinBird';
+import { BlackHornetDrone } from '../items/BlackHornetDrone';
 import { ShibaInu } from '../items/ShibaInu';
 import { FemaleAnatomyBones } from '../items/FemaleAnatomyBones';
 import { FemaleAnatomyMuscles } from '../items/FemaleAnatomyMuscles';
@@ -124,6 +125,9 @@ export function GardenAnimals() {
       </group>
       <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actions: ['robin-bird-replay', 'animal-robin-fpv', 'animal-robin-follow'] } }}>
         <RobinBird />
+      </group>
+      <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Drone Black Hornet Nano', hoverAction: { label: 'Black Hornet Nano Drone', actions: ['drone-patrol-all', 'drone-goto-garden', 'drone-goto-living', 'drone-goto-kitchen', 'drone-goto-bathroom', 'drone-goto-corridor', 'drone-toggle-land'] } }}>
+        <BlackHornetDrone />
       </group>
       <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Shiba Inu' }}>
         <ShibaInu />
