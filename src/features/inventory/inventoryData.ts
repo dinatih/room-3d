@@ -42,6 +42,19 @@ export interface Category {
 
 export const INVENTORY: InventoryItem[] = [
   {
+    id: 'jumper-robot',
+    name: 'Jumper — robot crabe',
+    brand: 'KingKong Robotics',
+    category: 'tech',
+    qty: 1,
+    dims: { w: 61.86, d: 20.55, h: 12.31 },
+    glbPath: 'items/jumper/jumper.glb',
+    url: 'https://github.com/KingKongRobotics/jumper',
+    description: 'Robot crabe à 22 degrés de liberté. Assemblage 3D officiel avec ses couleurs d’origine.',
+    notes: 'Pose de référence URDF, sans animation. Dimensions mesurées sur le modèle. Modèle sous licence Apache-2.0.',
+  },
+
+  {
     id: 'shoe-hat-rack',
     name: 'Étagère à chaussures autoportante avec porte-manteaux et crochets',
     brand: 'Temu',
