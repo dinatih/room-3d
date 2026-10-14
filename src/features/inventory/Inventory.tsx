@@ -37,6 +37,28 @@ function getCategoryEmoji(cat: string) {
 
 // ── Detail Pane Content Component ─────────────────────────────────────────────
 
+function SpatialZonePreviewOnDemand({ zone, onStats }: {
+  zone: SpatialZone;
+  onStats: (stats: { triangles: number; drawCalls: number }) => void;
+}) {
+  const [loaded, setLoaded] = useState(false);
+
+  if (loaded) {
+    return <SpatialZonePreview zone={zone} height="100%" onStats={onStats} />;
+  }
+
+  return (
+    <div className="ratio ratio-1x1 bg-light">
+      <div className="d-flex flex-column align-items-center justify-content-center gap-3 p-3 text-center">
+        <span className="text-muted small">L’aperçu 3D de cette zone se charge à la demande.</span>
+        <button type="button" className="btn btn-sm btn-primary" onClick={() => setLoaded(true)}>
+          Charger l’aperçu 3D
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ItemDetailContent({ item }: { item: PreviewTarget }) {
   if (!item) return null;
 
@@ -75,9 +97,9 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
       <div className="d-flex flex-column w-100">
         {/* Rendu 3D isolé de la pièce / espace sans obstruction */}
         <div className="w-100 position-relative">
-          <SpatialZonePreview
+          <SpatialZonePreviewOnDemand
+            key={zone.id}
             zone={zone}
-            height="100%"
             onStats={s => setGlbStats({ triangles: s.triangles, drawCalls: s.drawCalls })}
           />
         </div>
@@ -128,7 +150,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                       </span>
                     </>
                   ) : (
-                    <span className="text-muted small">Calcul en cours…</span>
+                    <span className="text-muted small">Chargez l’aperçu 3D pour calculer les statistiques.</span>
                   )}
                 </div>
               </div>
@@ -894,14 +916,14 @@ function normalizeSearchStr(str: string): string {
                 <p className="small mb-0">Sélectionnez un item<br />pour afficher son détail</p>
               </div>
             ) : (
-              <ItemDetailContent item={selected} />
+              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} />
             )}
           </div>
         </div>
       </div>
 
       {/* MODAL DETAIL (mobile) */}
-      {showMobileModal && selected && (
+      {visible && showMobileModal && selected && (
         <div className="modal fade show d-block" tabIndex={-1} role="dialog" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }} onClick={(e) => { e.stopPropagation(); setShowMobileModal(false); }}>
           <div className="modal-dialog modal-fullscreen-sm-down modal-dialog-scrollable" role="document">
             <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -910,7 +932,7 @@ function normalizeSearchStr(str: string): string {
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowMobileModal(false)}></button>
               </div>
               <div className="modal-body p-0 pb-5" style={{ overflowY: 'auto' }}>
-                <ItemDetailContent item={selected} />
+                <ItemDetailContent key={selected.id} item={selected} />
               </div>
               <div className="modal-footer glass-card position-absolute bottom-0 start-0 end-0 p-2">
                 <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowMobileModal(false)}>Fermer</button>
