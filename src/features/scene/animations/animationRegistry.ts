@@ -38,7 +38,7 @@ export interface AnimationDefinition {
   /** Preserve metric root displacement independently of target character proportions. */
   rootMotionSpace?: 'world-meters';
   /** Explicit standing Inter-X correction; original wrist trajectories are retained. */
-  interxGrounding?: { baseHeightMeters: number };
+  interxGrounding?: { baseHeightMeters: number; wristTargetsMeters?: number[][][] };
   /**
    * Segments de lecture utiles [startSeconds, endSeconds][].
    * Permet de couper le début, la fin et/ou des sections au milieu de l'animation.

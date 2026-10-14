@@ -16,6 +16,7 @@ from convert_interx_duos import load_selection, verified
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--reference', type=Path)
+    parser.add_argument('--manifest', type=Path, default=MANIFEST)
     args = parser.parse_args()
     selection_path = ROOT / 'scripts/interx_selection.json'
     selection = load_selection(selection_path, DEFAULT_SOURCE)
@@ -34,7 +35,7 @@ def main():
         groups = sorted(path.name for path in DEFAULT_SOURCE.glob('G*' + entry['variation'] + entry['actionCode'] + 'R*'))
         assert entry['source']['recording'] == groups[0]
     assert next(entry for entry in selection['duos'] if entry['actionCode'] == 'A003')['source']['take'] == 'R016'
-    manifest = json.loads(MANIFEST.read_text())
+    manifest = json.loads(args.manifest.read_text())
     assert MANIFEST.read_bytes() == RUNTIME_MANIFEST.read_bytes()
     reference = []
     for entry in manifest['duos']:

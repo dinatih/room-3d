@@ -157,7 +157,7 @@ export function useCharacterAnimations({
       if (!finalClip) {
         if (sourceScene) sourceScene.updateMatrixWorld(true);
         finalClip = retargetClip(clip, scene, sourceScene, def?.rootMotionSpace);
-        if (def?.interxGrounding) finalClip = groundInterxClip(finalClip, scene, def.interxGrounding.baseHeightMeters);
+        if (def?.interxGrounding) finalClip = groundInterxClip(finalClip, scene, def.interxGrounding.baseHeightMeters, def.interxGrounding.wristTargetsMeters);
         cacheRetargetedClip(cacheKey, finalClip);
       }
       finalClip.name = animId;

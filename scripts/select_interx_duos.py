@@ -36,7 +36,7 @@ def select_recordings(source, maximum):
     return selected
 
 
-def select_height_batch(ranking, maximum, batch_size, target_height):
+def select_height_batch(ranking, maximum, batch_size, target_height, eligible=None):
     if batch_size < 1 or target_height <= 0 or not 1 <= maximum <= 8:
         raise ValueError('Invalid batch size, target height or category quota')
     published = json.loads(MANIFEST.read_text())['duos']
@@ -47,6 +47,8 @@ def select_height_batch(ranking, maximum, batch_size, target_height):
         best = {}
         for pair in pairs:
             variation = pair['variation']
+            if eligible is not None and (action, variation) not in eligible:
+                continue
             score = (max(abs(person['heightCm'] - target_height) for person in pair['participants']),
                      pair['heightDifferenceCm'], pair['recording'])
             if variation not in best or score < best[variation][0]:
@@ -81,6 +83,7 @@ def main():
     parser.add_argument('--batch-size', type=int, help='Maximum number of new duos to export in this batch')
     parser.add_argument('--target-height', type=float, default=173.4, help='Target avatar height in centimetres')
     parser.add_argument('--hand-motion', action='store_true', help='Estimate disk size from clips with finger animation')
+    parser.add_argument('--priority-themes', action='store_true', help='Select remaining affection, help/relaxation and play/dance sessions from the original capped catalog')
     args = parser.parse_args()
     model = estimate_model('full-axis-angle' if args.hand_motion else None)
     if args.height_ranking and (args.recordings or args.batch_size is None):
@@ -90,7 +93,13 @@ def main():
     matched = None
     if args.height_ranking:
         ranking = json.loads(args.height_ranking.read_text())
-        matched = select_height_batch(ranking, args.max_per_action, args.batch_size, args.target_height)
+        eligible = None
+        if args.priority_themes:
+            preferred = {action['code'] for action in actions() if set(action['tags']) & {'affection', 'help-relaxation', 'play-dance'}}
+            eligible = {(RECORDING.fullmatch(recording)[3], RECORDING.fullmatch(recording)[2]) for recording in select_recordings(args.source, args.max_per_action) if RECORDING.fullmatch(recording)[3] in preferred}
+        matched = select_height_batch(ranking, args.max_per_action, args.batch_size, args.target_height, eligible)
+    elif args.priority_themes:
+        raise ValueError('--priority-themes requires --height-ranking')
     selected = [pair['recording'] for pair in matched] if matched else args.recordings if args.recordings else select_recordings(args.source, args.max_per_action)
     selection = {'schemaVersion': 1, 'dataset': 'inter-x', 'conversion': CONVERSION,
                  'policy': {'take': 'first-available', 'representative': 'height-matched-per-action-session' if matched else 'explicit-recordings' if args.recordings else 'lowest-group-per-action-session', 'maxPerAction': args.max_per_action},

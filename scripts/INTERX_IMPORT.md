@@ -358,3 +358,57 @@ Les captures sont écrites dans `/tmp/interx-pilot-start.png` et
 `/tmp/interx-pilot-contact.png`. Le contrôle de buste debout de ce test concerne
 uniquement les deux pilotes publiés ; les futures actions au sol doivent être
 vérifiées selon leur posture attendue.
+# Export des thèmes prioritaires en une passe
+
+Export terminé : **91 nouveaux duos / 182 GLB / 45,17 Mo** de GLB.
+Catalogue publié : **115 duos / 230 GLB / 58,85 Mo** de GLB, comprenant
+les deux comparaisons G001/G053 conservées. Les thèmes prioritaires sont
+complets ; **105 sessions** restent dans les autres catégories du catalogue
+initial. Les JSON contenant les trajectoires des poignets s'ajoutent à ces
+poids de GLB.
+
+Validation : les 91 nouveaux duos sont contrôlés à chaque frame aux échelles
+75/100/150 et aux orientations de session 0°/90°. Un représentant G053 de
+chacune des cinq actions complexes est rendu à la première frame et au milieu
+du clip dans la preview du studio. TypeScript et les empreintes des fichiers
+publiés sont vérifiés. Les cibles articulaires ne garantissent pas un contact
+parfait des surfaces des mains pour toutes les morphologies.
+
+La sélection `scripts/interx_priority_selection.json` ajoute 91 duos (182 GLB),
+sur les sessions du catalogue initial de 218 duos : affection, aide/détente,
+jeux et danse. Les binômes sont choisis avec les modèles SMPL-X selon leur
+proximité de la taille des avatars, sans ajouter de répétitions G pour un même A/T.
+
+```bash
+env ALSOFT_DRIVERS=null blender -noaudio --background --python-exit-code 1 --python scripts/convert_interx_duos.py -- --selection scripts/interx_priority_selection.json --hand-motion --draft-manifest scripts/interx_priority_draft_manifest.json
+python3 scripts/temp_interx_grounding.py --placement-selection scripts/interx_priority_selection.json --report /tmp/interx-priority-support.json
+python3 scripts/temp_interx_priority.py
+npm run dev -- --host 127.0.0.1 --port 5178 --strictPort --config scripts/temp_interx_priority_vite.mjs
+# Dans un second terminal, avec le serveur provisoire lancé :
+ROOM_TEST_URL=http://127.0.0.1:5178 ROOM_VITE_DEPS_BASE=/@fs/tmp/room-interx-priority-vite/deps node scripts/check_interx_motion.cjs --browser-only --manifest scripts/interx_priority_draft_manifest.json --group G053 --actions A025,A026,A027,A028,A035
+python3 scripts/temp_interx_priority.py --publish
+```
+
+Chaque duo exporté est enregistré dans le manifest provisoire. Relancer la
+conversion reprend les fichiers vérifiés. `--draft-manifest` ne modifie pas le
+catalogue du studio. La publication vérifie les fichiers, les offsets source,
+les doigts, les trajectoires et les orientations retargetées aux trois échelles.
+
+Les interactions debout déjà validées gardent le calage des semelles au sol
+avec conservation des poignets. Pour les autres actions, le placement
+`source-support-preserve-hands` enregistre les deux hauteurs initiales des
+semelles reconstruites avec SMPL-X et leur plan commun (la plus basse des deux
+semelles à la première frame). Les pieds du participant porté conservent ainsi
+leur élévation initiale. Cette correction constante conserve le déplacement
+vertical de l'animation. Pour les portages, massages, bras de fer et scènes
+d'aide à se relever, `wristTargetsMeters` contient les positions des deux
+poignets SMPL-X à 30 FPS dans le repère commun, relativement à la base de
+chaque participant. L'IK utilise ces cibles source au lieu de conserver les
+poignets d'un retargeting dont la morphologie peut décaler les contacts.
+
+Cette mesure décrit un repère d'appui initial, pas une détection automatique
+de chaise ou de table. Les accessoires absents du dataset restent à placer pour
+les massages assis ou le bras de fer. Le retargeting conserve les mouvements,
+mais ne garantit pas un contact de surface exact entre des morphologies
+différentes. Les modèles SMPL-X restent hors du projet ; seuls leurs empreintes
+et les mesures nécessaires au placement sont enregistrés.

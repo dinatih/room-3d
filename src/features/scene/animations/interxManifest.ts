@@ -44,13 +44,21 @@ export interface InterXManifest {
     }>;
     rootMotion: { mode: string; translationUnit: string; upAxis: string };
     start_offset: [number, number, number];
-    placement?: { verticalOrigin: 'soles-preserve-hands' };
+    placement?: { verticalOrigin: 'soles-preserve-hands' } | {
+      verticalOrigin: 'source-support-preserve-hands';
+      initialSoleHeightMeters: [number, number];
+      sourceInitialSolesMeters: [number, number];
+      sourceReferencePlaneMeters: number;
+      wristTargetsMeters?: Record<'p1' | 'p2', number[][][]>;
+    };
     handMotion?: 'full-axis-angle';
     tags: string[];
   }>;
 }
 
-export const INTERX_MANIFEST = data as InterXManifest;
+// JSON inference widens tuples and discriminants; validate the external data
+// below before using it as the manifest contract.
+export const INTERX_MANIFEST = data as unknown as InterXManifest;
 if (data.schemaVersion !== 1 || data.dataset !== 'inter-x' || data.conversion.sourceFps !== 120 || data.conversion.targetFps !== 30) {
   throw new Error('Manifest Inter-X incompatible avec le pipeline de conversion');
 }
@@ -61,13 +69,32 @@ const paths = new Set<string>();
 for (const duo of INTERX_MANIFEST.duos) {
   if (ids.has(duo.id) || !actionByCode.has(duo.actionCode)
     || duo.start_offset.length !== 3 || !duo.start_offset.every(Number.isFinite)
-    || (duo.placement !== undefined && duo.placement.verticalOrigin !== 'soles-preserve-hands')
+    || (duo.placement !== undefined && !['soles-preserve-hands', 'source-support-preserve-hands'].includes(duo.placement.verticalOrigin))
+    || (duo.placement?.verticalOrigin === 'source-support-preserve-hands' &&
+      (duo.placement.initialSoleHeightMeters.length !== 2 || !duo.placement.initialSoleHeightMeters.every(value => Number.isFinite(value) && value >= 0)))
     || (duo.handMotion !== undefined && duo.handMotion !== 'full-axis-angle')
     || duo.rootMotion.mode !== 'relative-to-first-frame'
     || duo.rootMotion.translationUnit !== 'meters' || duo.rootMotion.upAxis !== 'Y') {
     throw new Error(`Métadonnées Inter-X invalides : ${duo.id}`);
   }
   ids.add(duo.id);
+  if (duo.placement?.verticalOrigin === 'source-support-preserve-hands') {
+    const placement = duo.placement;
+    if (placement.sourceInitialSolesMeters.length !== 2 || !placement.sourceInitialSolesMeters.every(Number.isFinite)
+      || !Number.isFinite(placement.sourceReferencePlaneMeters)) {
+      throw new Error(`Appuis SMPL-X invalides : ${duo.id}`);
+    }
+    if (placement.wristTargetsMeters) {
+      for (const participant of ['p1', 'p2'] as const) {
+        const frames = placement.wristTargetsMeters[participant];
+        if (!Array.isArray(frames) || frames.length !== duo.clips[participant].frameCount
+          || frames.some(frame => !Array.isArray(frame) || frame.length !== 2
+            || frame.some(point => !Array.isArray(point) || point.length !== 3 || !point.every(Number.isFinite)))) {
+          throw new Error(`Poignets SMPL-X invalides : ${duo.id}/${participant}`);
+        }
+      }
+    }
+  }
   for (const clip of Object.values(duo.clips)) {
     if (paths.has(clip.path) || !/^animations\/npz\/interx\/g\d{3}t\d{3}a\d{3}r\d{3}-p[12]\.glb$/.test(clip.path)
       || !Number.isInteger(clip.frameCount) || clip.frameCount < 1
@@ -91,7 +118,9 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
     tags: duo.tags,
     duration: duo.clips[participant].durationSeconds,
     rootMotionSpace: 'world-meters' as const,
-    interxGrounding: duo.placement ? { baseHeightMeters: participant === 'p2' ? duo.start_offset[1] : 0 } : undefined,
+    interxGrounding: duo.placement ? { baseHeightMeters: (participant === 'p2' ? duo.start_offset[1] : 0)
+      - (duo.placement.verticalOrigin === 'source-support-preserve-hands' ? duo.placement.initialSoleHeightMeters[participant === 'p2' ? 1 : 0] : 0),
+      wristTargetsMeters: duo.placement.verticalOrigin === 'source-support-preserve-hands' ? duo.placement.wristTargetsMeters?.[participant] : undefined } : undefined,
   }));
 });
 

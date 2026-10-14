@@ -22,7 +22,7 @@ def rotations(vectors):
     return np.eye(3) + np.sin(angles)[..., None, None] * cross + (1 - np.cos(angles))[..., None, None] * (cross @ cross)
 
 
-def reconstruct(model, motion):
+def reconstruct(model, motion, measure_all_soles=True):
     beta = motion['betas'].reshape(-1)
     shaped = model['v_template'] + np.einsum('vck,k->vc', model['shapedirs'][:, :, :len(beta)], beta)
     rest = model['J_regressor'] @ shaped
@@ -45,7 +45,7 @@ def reconstruct(model, motion):
     weights = model['weights'][feet]
     pose_directions = model['posedirs'][feet].reshape(-1, 486)
     sole_y = []
-    for frame in range(count):
+    for frame in range(count if measure_all_soles else 1):
         posed = shaped[feet] + (pose_directions @ (matrices[frame, 1:] - np.eye(3)).reshape(-1)).reshape(-1, 3)
         blended = np.einsum('vj,jab->vab', weights, world[frame])
         offsets = joints[frame] - np.einsum('jab,jb->ja', world[frame], rest)
@@ -113,6 +113,7 @@ def main():
     parser.add_argument('--reference', type=Path, default=Path('/tmp/interx-smplx-reference.json'))
     parser.add_argument('--find-similar-heights', nargs='+', choices=[f'A{index:03d}' for index in range(40)])
     parser.add_argument('--ranking-report', type=Path, default=Path('/tmp/interx-height-candidates.json'))
+    parser.add_argument('--placement-selection', type=Path, help='Measure first-frame source soles for a selection, without publishing it')
     args = parser.parse_args()
     models, hashes = {}, {}
     for gender in ('female', 'male', 'neutral'):
@@ -142,6 +143,30 @@ def main():
         hashes[gender] = {'file': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
     if args.find_similar_heights:
         find_height_pairs(args.source, models, hashes, args.find_similar_heights, args.ranking_report)
+        return
+    if args.placement_selection:
+        result = {}
+        for duo in json.loads(args.placement_selection.read_text())['duos']:
+            soles, wrists, starts = [], [], []
+            contacts = duo['actionCode'] in {'A025', 'A026', 'A027', 'A028', 'A035'}
+            for person in ('p1', 'p2'):
+                with np.load(args.source / duo['source'][person], allow_pickle=False) as data:
+                    motion = {key: data[key].copy() for key in data.files}
+                for key in ('trans', 'root_orient', 'pose_body', 'pose_lhand', 'pose_rhand'):
+                    motion[key] = motion[key][::4] if contacts else motion[key][:1]
+                starts.append(motion['trans'][0].astype(np.float64))
+                _, _, joints, feet = reconstruct(models[str(motion['gender'].item())], motion, measure_all_soles=False)
+                soles.append(float(feet[0]))
+                wrists.append(joints[:, [20, 21]])
+            floor = min(soles)
+            result[duo['id']] = {'sourceInitialSolesMeters': soles, 'sourceReferencePlaneMeters': floor,
+                                 'initialSoleHeightMeters': [value - floor for value in soles]}
+            if contacts:
+                origin = np.array([starts[0][0], floor, starts[0][2]])
+                result[duo['id']]['wristTargetsMeters'] = {
+                    person: (positions - origin - (start - starts[0])).tolist()
+                    for person, positions, start in zip(('p1', 'p2'), wrists, starts)}
+        args.report.write_text(json.dumps({'models': hashes, 'duos': result}, indent=2) + '\n')
         return
     report, reference = [], []
     for duo in json.loads(MANIFEST.read_text())['duos']:

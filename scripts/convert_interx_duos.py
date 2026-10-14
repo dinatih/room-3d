@@ -17,7 +17,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from interx_catalog import (
     ROOT, DEFAULT_SOURCE, MANIFEST, CONVERSION, TARGET_FPS, SOURCE_FPS,
-    RECORDING, publish_manifest, entry_for, glb_info, read_pair, report,
+    RECORDING, publish_manifest, atomic_json, entry_for, glb_info, read_pair, report,
 )
 
 TEMPLATE = ROOT / 'public/animations/mixamo/anim_salsa_dancing.glb'
@@ -144,6 +144,7 @@ def main():
     parser.add_argument('--prune', action='store_true', help='Delete tracked Inter-X GLBs excluded by the selection after verifying the published manifest')
     parser.add_argument('--ground-standing', action='store_true', help='Ground target soles and preserve wrist targets for supported standing interactions')
     parser.add_argument('--hand-motion', action='store_true', help='Export the 30 finger joints from full SMPL-X hand poses')
+    parser.add_argument('--draft-manifest', type=Path, help='Save verified exports to a separate manifest without exposing them in the studio')
     arguments = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]
     args = parser.parse_args(arguments)
     selection = load_selection(args.selection, args.source)
@@ -161,7 +162,11 @@ def main():
     if 'bpy' not in sys.modules:
         raise RuntimeError('Exports require Blender; use blender --background --python scripts/convert_interx_duos.py -- --selection ...')
     MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-    manifest = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {
+    destination_manifest = args.draft_manifest or MANIFEST
+    save_manifest = (lambda value: atomic_json(destination_manifest, value)) if args.draft_manifest else publish_manifest
+    if args.draft_manifest and args.prune:
+        raise ValueError('Pruning is only allowed for the published catalog')
+    manifest = json.loads(destination_manifest.read_text()) if destination_manifest.exists() else {
         'schemaVersion': 1, 'dataset': 'inter-x', 'conversion': CONVERSION,
         'actions': selection['actions'], 'duos': [],
     }
@@ -197,9 +202,9 @@ def main():
                 path.replace(destination)
         ready[entry['id']] = exported
         manifest['duos'] = sorted(ready.values(), key=lambda item: (item['actionCode'], item['variation'], item['id']))
-        publish_manifest(manifest)
-        print(f"Published: {entry['source']['recording']} start_offset={entry['start_offset']}", flush=True)
-    publish_manifest(manifest)
+        save_manifest(manifest)
+        print(f"{'Draft' if args.draft_manifest else 'Published'}: {entry['source']['recording']} start_offset={entry['start_offset']}", flush=True)
+    save_manifest(manifest)
     if args.prune:
         selected_ids = {entry['id'] for entry in selection['duos']}
         if any(entry['id'] not in selected_ids or not verified(entry) for entry in manifest['duos']):

@@ -6,16 +6,60 @@ const launchBrowser = require('./browser-test-options.cjs');
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const esbuild = require('esbuild');
 const root = path.resolve(__dirname, '..');
 
 async function main() {
+  const debugIndex = process.argv.indexOf('--debug-browser');
+  if (debugIndex !== -1) {
+    if (process.argv.includes('--warm-vite')) {
+      const response = await fetch((process.env.ROOM_TEST_URL || 'http://127.0.0.1:5173') + '/src/main.tsx');
+      console.log('Vite entry transformed:', response.status, (await response.text()).length);
+    }
+    const browser = await require('puppeteer').connect({ browserURL: process.argv[debugIndex + 1] });
+    if (process.argv.includes('--close-browser')) {
+      await browser.close();
+      return;
+    }
+    for (const page of await browser.pages()) {
+      console.log('Open page:', page.url());
+      const session = await page.createCDPSession();
+      console.log(await session.send('Runtime.evaluate', { expression: 'JSON.stringify({ready:document.readyState, resources:performance.getEntriesByType("resource").map(r=>r.name),text:document.body.innerText.slice(-1000)})', returnByValue: true }));
+    }
+    browser.disconnect();
+    return;
+  }
+  if (process.argv.includes('--browser-only')) {
+    const index = process.argv.indexOf('--manifest');
+    const manifest = JSON.parse(fs.readFileSync(index === -1 ? path.join(root, 'public/animations/npz/interx/animations_manifest.json') : process.argv[index + 1]));
+    await visualCheck(manifest.duos);
+    return;
+  }
+  if (!process.argv.includes('--duo')) {
+    const index = process.argv.indexOf('--manifest');
+    const manifest = JSON.parse(fs.readFileSync(index === -1 ? path.join(root, 'public/animations/npz/interx/animations_manifest.json') : process.argv[index + 1]));
+    const args = process.argv.slice(2).filter(argument => argument !== '--browser');
+    const comparisons = [];
+    // Release the GLTF parser, skin geometry and animation graphs completely
+    // between duos. A single process grows beyond the heap on the full catalog.
+    for (const entry of manifest.duos) {
+      require('node:child_process').execFileSync(process.execPath, ['--expose-gc', __filename, ...args, '--duo', entry.id], { stdio: 'inherit' });
+      if (process.argv.includes('--smplx')) comparisons.push(...JSON.parse(fs.readFileSync('/tmp/interx-smplx-avatar-comparison.json')));
+    }
+    if (process.argv.includes('--smplx')) fs.writeFileSync('/tmp/interx-smplx-avatar-comparison.json', JSON.stringify(comparisons, null, 2) + '\n');
+    console.log(`Numeric validation passed: ${manifest.duos.length} duos.`);
+    if (process.argv.includes('--browser')) await visualCheck(manifest.duos);
+    return;
+  }
   const THREE = await import('three');
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
   global.ProgressEvent = class { constructor(type, details) { Object.assign(this, { type }, details); } };
   const bundle = '/tmp/interx-motion-check-module.mjs';
+  const manifestIndex = process.argv.indexOf('--manifest');
+  const manifestPath = manifestIndex === -1 ? path.join(root, 'public/animations/npz/interx/animations_manifest.json') : path.resolve(process.argv[manifestIndex + 1]);
   await esbuild.build({
     stdin: { contents: `
       export {retargetClip} from './src/features/scene/retargeting/retargetClip';
@@ -25,9 +69,12 @@ async function main() {
       export {groundInterxClip, interxSoleHeight} from './src/features/scene/retargeting/groundInterxClip';
     `, resolveDir: root },
     bundle: true, platform: 'node', format: 'esm', outfile: bundle,
+    plugins: [{ name: 'interx-validation-manifest', setup(build) {
+      build.onLoad({ filter: /animations_manifest\.json$/ }, () => ({ contents: fs.readFileSync(manifestPath, 'utf8'), loader: 'json' }));
+    } }],
   });
   const { retargetClip, resolveTargetBoneName, INTERX_DUO_ANIMATIONS, INTERX_ANIMATION_DEFINITIONS, computeWorldTransform, groundInterxClip, interxSoleHeight } = await import(pathToFileURL(bundle));
-  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'public/animations/npz/interx/animations_manifest.json')));
+  const manifest = JSON.parse(fs.readFileSync(manifestPath));
   const reference = JSON.parse(fs.readFileSync('/tmp/interx-motion-reference.json'));
   const smplx = process.argv.includes('--smplx') ? JSON.parse(fs.readFileSync('/tmp/interx-smplx-reference.json')) : undefined;
   const smplxReport = smplx ? JSON.parse(fs.readFileSync('/tmp/interx-smplx-report.json')) : undefined;
@@ -54,13 +101,19 @@ async function main() {
     for (const key of ['textures', 'images', 'materials', 'extensionsRequired', 'extensionsUsed']) delete json[key];
     return new GLTFLoader().parseAsync(JSON.stringify(json), '');
   }
-  function near(actual, expected, message, tolerance = 0.0001) {
+  function near(actual, expected, message, tolerance = (100 + actual.length() + expected.length()) * 2 ** -19) {
+    // Float32 GLB tracks, metres -> centimetres, with accumulated matrix and
+    // paired-subtraction roundoff. Scale the bound to the coordinates tested.
     assert(actual.distanceTo(expected) < tolerance, `${message}: actual=${actual.toArray()}, expected=${expected.toArray()}`);
   }
   let worstError = 0;
   let worstWristError = 0;
   let largestShoulderMove = 0;
-  for (const entry of manifest.duos) {
+  const duoIndex = process.argv.indexOf('--duo');
+  const requestedDuo = duoIndex === -1 ? undefined : process.argv[duoIndex + 1];
+  const checkedDuos = manifest.duos.filter(entry => !requestedDuo || entry.id === requestedDuo);
+  assert(checkedDuos.length, 'No duos selected for numeric validation');
+  for (const entry of checkedDuos) {
     const def = INTERX_DUO_ANIMATIONS.find(duo => duo.id === entry.id);
     const ref = reference.find(item => item.id === entry.id);
     const sourceBody = smplx?.find(item => item.id === entry.id);
@@ -69,7 +122,7 @@ async function main() {
     assert(def && ref);
     assert.equal(def.rotB, 0);
     const initialOffset = new THREE.Vector3(...entry.start_offset).multiplyScalar(100);
-    const grounded = entry.placement?.verticalOrigin === 'soles-preserve-hands';
+    const grounded = Boolean(entry.placement);
     near(new THREE.Vector3(...def.offsetB), initialOffset, 'Manifest placement offset');
     for (const scale of [75, 100, 150]) {
       const participants = [];
@@ -120,7 +173,9 @@ async function main() {
           for (let frame = 0; frame < entry.clips[person].frameCount; frame++) {
             originalMixer.setTime(frame / 30);
             target.scene.updateMatrixWorld(true);
-            originalHands.push(hands.map(hand => ({ position: hand.getWorldPosition(new THREE.Vector3()), quaternion: hand.getWorldQuaternion(new THREE.Quaternion()) })));
+            originalHands.push(hands.map((hand, side) => ({ position: clipDef.interxGrounding.wristTargetsMeters
+              ? new THREE.Vector3(...clipDef.interxGrounding.wristTargetsMeters[frame][side]).multiplyScalar(100)
+              : hand.getWorldPosition(new THREE.Vector3()), quaternion: hand.getWorldQuaternion(new THREE.Quaternion()) })));
             originalFingers.push(fingers.map(joint => joint.getWorldQuaternion(new THREE.Quaternion()).normalize()));
           }
           originalMixer.stopAllAction();
@@ -130,7 +185,7 @@ async function main() {
           shoulders[0].position.x += 0.01;
           const liveTransforms = [];
           target.scene.traverse(object => liveTransforms.push({ object, position: object.position.clone(), quaternion: object.quaternion.clone(), scale: object.scale.clone() }));
-          clip = groundInterxClip(clip, target.scene, clipDef.interxGrounding.baseHeightMeters);
+          clip = groundInterxClip(clip, target.scene, clipDef.interxGrounding.baseHeightMeters, clipDef.interxGrounding.wristTargetsMeters);
           liveTransforms.forEach(saved => {
             assert(saved.object.position.equals(saved.position) && saved.object.quaternion.equals(saved.quaternion) && saved.object.scale.equals(saved.scale), 'Baking must restore the live pose');
           });
@@ -147,7 +202,10 @@ async function main() {
           participant.target.scene.updateMatrixWorld(true);
           const actual = participant.hips.getWorldPosition(new THREE.Vector3()).sub(participant.baseline);
           if (grounded) {
-            if (frame === 0) assert(Math.abs(interxSoleHeight(participant.target.scene) + (index ? initialOffset.y : 0)) < 0.0001, 'Initial soles must meet the shared floor');
+            if (frame === 0) {
+              const height = entry.placement.verticalOrigin === 'source-support-preserve-hands' ? entry.placement.initialSoleHeightMeters[index] * 100 : 0;
+              assert(Math.abs(interxSoleHeight(participant.target.scene) + (index ? initialOffset.y : 0) - height) < 0.0001, 'Initial soles must match the declared support height');
+            }
             participant.hands.forEach((hand, side) => {
               worstWristError = Math.max(worstWristError, hand.getWorldPosition(new THREE.Vector3()).distanceTo(participant.originalHands[frame][side].position));
               near(hand.getWorldPosition(new THREE.Vector3()), participant.originalHands[frame][side].position, `${entry.id}: wrist target ${index}/${side}/${frame}`, 0.001);
@@ -209,8 +267,22 @@ async function main() {
           near(delta, expectedRelative.clone().applyQuaternion(q), 'Translated/rotated session motion');
         }
       }
+      participants.forEach(participant => {
+        participant.mixer.stopAllAction();
+        participant.mixer.uncacheRoot(participant.target.scene);
+        participant.target.scene.traverse(object => {
+          if (object.isMesh) {
+            object.geometry.dispose();
+            for (const material of Array.isArray(object.material) ? object.material : [object.material]) material.dispose();
+          }
+        });
+      });
+      participants.length = 0;
+      // This batch tool repeatedly decodes full skinned avatars. Release each
+      // scale before loading the next pair instead of retaining parser graphs.
+      if (global.gc) global.gc();
     }
-    console.log(`${entry.id}: initial soles grounded, original wrists preserved at every frame; metric motion and headings retained; scales 75/100/150, anchors 0°/90°.`);
+    console.log(`${entry.id}: declared support heights retained, ${entry.placement?.wristTargetsMeters ? 'SMPL-X wrist targets matched' : 'original wrists preserved'} at every frame; metric motion and headings retained; scales 75/100/150, anchors 0°/90°.`);
   }
   console.log(`Maximum root displacement error: ${worstError.toFixed(8)} cm`);
   console.log(`Maximum wrist error: ${worstWristError.toFixed(8)} cm; maximum shoulder adjustment at native height: ${largestShoulderMove.toFixed(4)} cm`);
@@ -219,6 +291,11 @@ async function main() {
 }
 
 async function visualCheck(duos) {
+  // A fresh Vite optimizer commits dependencies after transforming its entry.
+  // Loading only a text document followed by a deps URL can otherwise deadlock.
+  const entryResponse = await fetch((process.env.ROOM_TEST_URL || 'http://127.0.0.1:5173') + '/src/main.tsx');
+  assert(entryResponse.ok, 'Vite entry must load before importing optimized dependencies');
+  await entryResponse.text();
   // The visual capture uses the app's inventory and actual character renderer.
   const browser = await launchBrowser({ headless: true, args: ['--no-sandbox'], defaultViewport: { width: 1400, height: 1000 } });
   try {
@@ -233,17 +310,21 @@ async function visualCheck(duos) {
     assert(selected.length, `No visual pilots for ${group}`);
     for (const entry of selected) {
     const page = await browser.newPage();
-    page.on('pageerror', error => console.error('Browser page error:', error.message));
+    console.log(`Opening draft preview: ${entry.id}`);
+    page.on('requestfailed', request => console.error('Browser request failed:', request.url(), request.failure()?.errorText));
+    const pageErrors = [];
+    page.on('pageerror', error => { pageErrors.push(error.message); console.error('Browser page error:', error.message); });
     page.on('console', message => { if (message.type() === 'error') console.error('Browser:', message.text()); });
     await page.goto((process.env.ROOM_TEST_URL || 'http://127.0.0.1:5173') + '/AGENTS.md', { waitUntil: 'domcontentloaded' });
+    console.log(`Loading preview modules: ${entry.id}`);
     const recording = entry.source.recording.toLowerCase();
     const label = entry.id;
-    await page.evaluate(async recording => {
+    await page.evaluate(async ({ recording, deps }) => {
       window.$RefreshReg$ = () => {};
       window.$RefreshSig$ = () => type => type;
       window.__vite_plugin_react_preamble_installed__ = true;
-      const { default: React } = await import('/node_modules/.vite/deps/react.js');
-      const { default: { createRoot } } = await import('/node_modules/.vite/deps/react-dom_client.js');
+      const { default: React } = await import(`${deps}/react.js`);
+      const { default: { createRoot } } = await import(`${deps}/react-dom_client.js`);
       const { InventoryPreview } = await import('/src/features/inventory/InventoryPreview.tsx');
       const { INVENTORY } = await import('/src/features/inventory/inventoryData.ts');
       const { DUO_ANIMATIONS } = await import('/src/features/scene/animations/duoAnimations.ts');
@@ -267,7 +348,7 @@ async function visualCheck(duos) {
       }));
       window.interxDuoId = duo.id;
       window.interxDuoLabel = duo.label;
-    }, recording);
+    }, { recording, deps: process.env.ROOM_VITE_DEPS_BASE || '/node_modules/.vite/deps' });
     await page.waitForFunction(label => window.interxDuoId === label && window.interxPreview.getState().clipName === window.interxDuoLabel && window.interxPreview.getState().duration > 0, { timeout: 45000 }, label).catch(async error => {
       console.log('Preview state:', await page.evaluate(() => ({ state: window.interxPreview?.getState(), text: document.body.innerText.slice(-1800), canvases: document.querySelectorAll('canvas').length })));
       await page.screenshot({ path: '/tmp/interx-pilot-failure.png' });
@@ -285,8 +366,15 @@ async function visualCheck(duos) {
       await page.screenshot({ path: `/tmp/interx-${recording}-${label}.png` });
     }
     console.log(`Inventory ${recording} rendered at frame zero and contact.`);
+    assert.deepEqual(pageErrors, [], `${entry.id}: browser rendering errors`);
     await page.close();
     }
+    const index = process.argv.indexOf('--manifest');
+    const manifestPath = index === -1 ? path.join(root, 'public/animations/npz/interx/animations_manifest.json') : process.argv[index + 1];
+    fs.writeFileSync('/tmp/interx-browser-validation.json', JSON.stringify({
+      manifestSha256: crypto.createHash('sha256').update(fs.readFileSync(manifestPath)).digest('hex'),
+      ids: selected.map(entry => entry.id),
+    }));
   } finally {
     await browser.close();
   }
