@@ -10,7 +10,8 @@ export function resolveInstructionCoords(
   instr: AgentInstruction,
   startPos: { x: number; z: number } | null,
   agentId?: string,
-  currentPosition?: { x: number; z: number }
+  currentPosition?: { x: number; z: number },
+  departureOwner?: string
 ): ResolvedInstructionCoords {
   if (instr.type === 'RETURN_TO_START' && startPos) {
     return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
@@ -24,7 +25,7 @@ export function resolveInstructionCoords(
     if (!obj) throw new Error('A local navigation target requires a SmartObject');
     const [x, y, z] = instr.targetLocalPos, c = Math.cos(obj.rotationY), s = Math.sin(obj.rotationY);
     const target = { x: obj.position[0] + x * c + z * s, z: obj.position[2] - x * s + z * c };
-    const approach = instr.navigation !== 'interaction' && agentId && hasAgentProfile(agentId) ? getObjectApproach(obj.id, target, agentId, currentPosition) : target;
+    const approach = instr.navigation !== 'interaction' && agentId && hasAgentProfile(agentId) ? getObjectApproach(obj.id, target, agentId, currentPosition, false, departureOwner, instr.closedDoor) : target;
     if (!approach) throw new Error(`No approach for ${obj.id}`);
     return { tx: approach.x, ty: obj.position[1] + y, tz: approach.z, label: obj.name, rotY: instr.rotY };
   }
@@ -56,10 +57,17 @@ export function resolveInstructionCoords(
     const resolved = slot ? resolveSlotAnimation(slot) : null;
     const finalRotY = resolved?.rotY ?? slot?.rotY;
 
-    const desired = isMoveOnly && obj.approachDoor ? getDoorApproach(obj.approachDoor, agentId && hasAgentProfile(agentId) ? agentId : undefined) : { x: pos[0], z: pos[2] };
-    const approach = isMoveOnly && agentId && hasAgentProfile(agentId) ? getObjectApproach(obj.id, desired, agentId, currentPosition) : desired;
+    const profileId = agentId && hasAgentProfile(agentId) ? agentId : undefined;
+    const desired = isMoveOnly && instr.doorKey
+      ? getDoorApproach(instr.doorKey, profileId, { x: pos[0], z: pos[2] }, currentPosition, departureOwner, instr.closedDoor)
+      : isMoveOnly && obj.approachDoor ? getDoorApproach(obj.approachDoor, profileId) : { x: pos[0], z: pos[2] };
+    const flexible = slot?.arrival === 'approach' || obj.category === 'storage' || obj.category === 'outdoor';
+    const usesApproach = isMoveOnly || flexible;
+    const owner = slot?.navigationOwner ?? obj.id;
+    const approach = usesApproach && profileId ? getObjectApproach(owner, desired, profileId, currentPosition, false, departureOwner, instr.closedDoor, flexible) : desired;
     if (!approach) throw new Error(`No approach for ${obj.id}`);
     return {
+      owner,
       tx: approach.x,
       ty: isMoveOnly && obj.approachDoor ? 0 : pos[1],
       tz: approach.z,

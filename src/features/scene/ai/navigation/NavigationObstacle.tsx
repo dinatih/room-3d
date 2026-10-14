@@ -7,7 +7,7 @@ import { registerObstacle, unregisterObstacle } from './obstacles';
 import { convexHull, type Polygon } from './geometry';
 
 /** Capture the rendered item's local bounds once; follow its placement, including animated moves. */
-export function NavigationObstacle({ id, owner = id, compound = false, hull = false, children }: { id: string; owner?: string; compound?: boolean; hull?: boolean; children: ReactNode }) {
+export function NavigationObstacle({ id, owner = id, compound = false, hull = false, solidOnly = false, children }: { id: string; owner?: string; compound?: boolean; hull?: boolean; solidOnly?: boolean; children: ReactNode }) {
   const enabled = useNavigationEnabled();
   const ref = useRef<THREE.Group>(null!);
   const bounds = useRef<THREE.Box3[]>([]);
@@ -29,7 +29,9 @@ export function NavigationObstacle({ id, owner = id, compound = false, hull = fa
     ref.current.scale.set(1, 1, 1);
     let root = ref.current as THREE.Object3D;
     if (compound) while (root.children.length === 1 && !(root as THREE.Mesh).isMesh) root = root.children[0];
-    bounds.current = compound ? root.children.map(child => {
+    const solids: THREE.Object3D[] = [];
+    if (solidOnly) root.traverse(node => { if ((node as THREE.Mesh).isMesh && node.userData.navigationSolid) solids.push(node); });
+    bounds.current = (solidOnly ? solids : compound ? root.children : [ref.current]).map(child => {
       const box = glbLocalBBox(child);
       const matrix = new THREE.Matrix4();
       let parent: THREE.Object3D | null = child;
@@ -39,7 +41,7 @@ export function NavigationObstacle({ id, owner = id, compound = false, hull = fa
         parent = parent.parent;
       }
       return box.applyMatrix4(matrix);
-    }) : [glbLocalBBox(ref.current)];
+    });
     if (!bounds.current.length || bounds.current.some(box => box.isEmpty())) throw new Error(`Empty navigation geometry: ${id}`);
     footprints.current = bounds.current.map(b => [
       { x: b.min.x, z: b.min.z }, { x: b.max.x, z: b.min.z },
@@ -63,7 +65,7 @@ export function NavigationObstacle({ id, owner = id, compound = false, hull = fa
     }
     previousMatrix.current.makeScale(0, 0, 0);
     update();
-  }, [id, owner, compound, hull, children, enabled]);
+  }, [id, owner, compound, hull, solidOnly, children, enabled]);
   useLayoutEffect(() => () => {
     if (enabled) for (const i of bounds.current.keys()) unregisterObstacle(`${id}:${i}`);
   }, [id, enabled]);

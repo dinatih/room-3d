@@ -16,6 +16,8 @@ export interface InteractionSlot {
   relative?: boolean;         // Si true, offset et approachOffset sont exprimés dans le repère local de l'objet parent
   offset?: [number, number, number]; // Position relative ou absolue d'interaction [x, y, z] (hérite de obj.position si absent)
   approachOffset?: [number, number, number]; // Position d'arrivée avant d'interagir
+  arrival?: 'approach';       // Interaction debout : trouver un appui au sol libre près de l'objet
+  navigationOwner?: string;   // Volume physique utilisé par ce slot d'un objet composé
   rotY?: number;              // Orientation (radians relative si relative=true ou absolue) ; hérite de obj.rotationY si non spécifié
   animation?: string;         // Chemin vers le clip d'animation GLB
   duration?: number;          // Durée par défaut en secondes (si vide/non fourni, l'animation est jouée repeatCount fois)
@@ -89,6 +91,7 @@ export interface AgentInstruction {
   type: InstructionType;
   /** Déplacement de dégagement ou attente de fermeture avant une action proche d'une porte. */
   doorKey?: 'living' | 'glassRight';
+  closedDoor?: 'living' | 'glassRight'; // Garder le battant fermé pendant l'interaction et son dégagement
   smartObjectId?: string; // target smart object ID
   slotId?: string; // specific slot inside the smart object
   targetZoneId?: string; // Destination intentionnelle déduite de la géométrie de zone

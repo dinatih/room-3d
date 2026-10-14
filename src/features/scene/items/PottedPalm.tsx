@@ -22,6 +22,13 @@ export function PottedPalm({ onSize }: SceneItemProps) {
     const s = TARGET_H / Math.max(raw.x, raw.y, raw.z);
     scene.scale.setScalar(s);
     mergeGlbByMaterial(scene);
+    // The ceramic pot and soil are solid; the flexible crown must not become a wall.
+    scene.traverse(node => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      mesh.userData.navigationSolid = materials.some(m => ['Areca_Palm_ceramic_1', 'edge_color246246246255', 'ground1'].includes(m.name));
+    });
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,

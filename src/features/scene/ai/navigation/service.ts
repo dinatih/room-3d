@@ -13,10 +13,10 @@ export function doorPolygon(key: DoorKey, angle: number): Polygon {
   const dx = c * d.closedDir.x + s * d.openNormal.x, dz = c * d.closedDir.z + s * d.openNormal.z;
   return rectangle(d.pivot.x + dx * d.length / 2, d.pivot.z + dz * d.length / 2, d.length, d.thickness, Math.atan2(-dz, dx));
 }
-const colliderOwner = (owner: string) => (owner === 'bed-west' || owner === 'bed-east') && positionState['bed-double']?.idx === 1 ? 'bed-double' : owner;
+export const getInteractionOwner = (owner: string) => (owner === 'bed-west' || owner === 'bed-east') && positionState['bed-double']?.idx === 1 ? 'bed-double' : owner;
 const caches = new Map<string, { revision: number; doorAngles: string; graph: VisibilityGraph }>();
 const inSurface = (p: Point) => walkableSurfaces.some(rings => pointInRing(p, rings[0]) && !rings.slice(1).some(h => pointInRing(p, h)));
-export function getDoorApproach(key: DoorKey, agentId?: string): Point {
+export function getDoorApproach(key: DoorKey, agentId?: string, preferred?: Point, start?: Point, departureOwner?: string, closedDoor?: DoorKey): Point {
   const door = DOOR_CONFIGS[key];
   const radius = agentId ? getAgentProfile(agentId).radius : 0;
   const clearance = radius + door.thickness / 2 + door.margin;
@@ -25,19 +25,22 @@ export function getDoorApproach(key: DoorKey, agentId?: string): Point {
     z: door.pivot.z + door.closedDir.z * (door.length + clearance) + door.openNormal.z * clearance,
   };
   if (!agentId) return desired;
-  const graph = getNavigationGraph(getAgentProfile(agentId));
-  if (!insideObstacle(desired, graph.obstacles)) return desired;
-  const candidates = graph.vertices.filter(p => inSurface(p) && distance(p, door.pivot) >= door.length + clearance
+  const graph = getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor);
+  if (!preferred && !insideObstacle(desired, graph.obstacles)) return desired;
+  const goal = preferred ?? desired;
+  if (start && departureOwner && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true, undefined, closedDoor) ?? start;
+  const candidates = [desired, ...graph.vertices].filter(p => inSurface(p) && !insideObstacle(p, graph.obstacles) && distance(p, door.pivot) >= door.length + clearance
     && (p.x - door.pivot.x) * door.openNormal.x + (p.z - door.pivot.z) * door.openNormal.z > 0);
-  candidates.sort((a, b) => distance(a, desired) - distance(b, desired));
-  if (!candidates.length) throw new Error(`No safe approach for door ${key}`);
-  return candidates[0];
+  candidates.sort((a, b) => distance(a, goal) - distance(b, goal));
+  const candidate = candidates.find(p => !start || Boolean(graph.find(start, p)));
+  if (!candidate) throw new Error(`No safe approach for door ${key}`);
+  return candidate;
 }
-export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string): VisibilityGraph {
-  if (excludeOwner) excludeOwner = colliderOwner(excludeOwner);
-  const key = `${profile.radius}:${profile.height}:${excludeOwner ?? ''}`;
+export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string, closedDoor?: DoorKey): VisibilityGraph {
+  if (excludeOwner) excludeOwner = getInteractionOwner(excludeOwner);
+  const key = `${profile.radius}:${profile.height}:${excludeOwner ?? ''}:${closedDoor ?? ''}`;
   const revision = getObstacleRevision();
-  const angles = doorKeys.map(k => computeDoorAllowedAngle(DOOR_CONFIGS[k]));
+  const angles = doorKeys.map(k => closedDoor && doorOpeningKey(k) === doorOpeningKey(closedDoor) ? 0 : computeDoorAllowedAngle(DOOR_CONFIGS[k]));
   const shutterBlocked = glassShutterState.clearHeight < profile.height;
   const doorAngles = `${angles.join(':')}:${shutterBlocked}`;
   const old = caches.get(key);
@@ -57,20 +60,31 @@ export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string)
 }
 
 /** Reach an object's inflated boundary without ignoring unrelated obstacles. */
-export function getObjectApproach(owner: string, goal: Point, agentId: string, start?: Point, exiting = false): Point | null {
-  owner = colliderOwner(owner);
-  const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile);
+export function getObjectApproach(owner: string, goal: Point, agentId: string, start?: Point, exiting = false, departureOwner?: string, closedDoor?: DoorKey, flexible = false): Point | null {
+  owner = getInteractionOwner(owner);
+  const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile, undefined, closedDoor);
+  if (start && departureOwner && !exiting && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true, undefined, closedDoor) ?? start;
   const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
-  if (!exiting && !owned.some(p => pointInRing(goal, p))) return goal;
+  if (!exiting && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles)) return goal;
   exiting = exiting || Boolean(start && owned.some(p => pointInRing(start, p)));
-  const edges = owned.flatMap(polygon => polygon.map((a, i) => [a, polygon[(i + 1) % polygon.length]] as const));
+  const contours = owned.length && !flexible ? owned : graph.obstacles.flat();
+  const edges = contours.flatMap(polygon => polygon.map((a, i) => [a, polygon[(i + 1) % polygon.length]] as const));
   const candidates = edges.flatMap(([a, b]) => [a, projectToSegment(goal, a, b), ...(start ? [projectToSegment(start, a, b)] : [])]);
   // Other obstacles can cover an entire corner: include their intersections with the owner's boundary.
-  candidates.push(...graph.vertices.filter(p => edges.some(([a, b]) => distance(p, projectToSegment(p, a, b)) <= Math.SQRT2 * BOOLEAN_PRECISION)));
+  if (owned.length && !flexible) for (const [a, b] of edges) {
+    const cuts = [a, b, ...graph.vertices.filter(p => distance(p, projectToSegment(p, a, b)) <= Math.SQRT2 * BOOLEAN_PRECISION).map(p => projectToSegment(p, a, b))];
+    cuts.sort((p, q) => distance(a, p) - distance(a, q));
+    candidates.push(...cuts);
+    for (let i = 1; i < cuts.length; i++) {
+      const p = cuts[i - 1], q = cuts[i];
+      // Test the free portions of an edge, rather than only its covered corners.
+      candidates.push({ x: (p.x + q.x) / 2, z: (p.z + q.z) / 2 }, projectToSegment(goal, p, q));
+    }
+  }
   candidates.sort((a, b) => distance(a, goal) - distance(b, goal));
   for (const p of candidates) {
     if (!inSurface(p) || !graph.find(p, p)) continue;
-    if (exiting && start ? !segmentFree(start, p, getNavigationGraph(profile, owner).obstacles) : !graph.find(p, p)) continue;
+    if (exiting && start ? !segmentFree(start, p, getNavigationGraph(profile, owner, closedDoor).obstacles) : !graph.find(p, p)) continue;
     if (start && !exiting && !graph.find(start, p)) continue;
     return p;
   }
@@ -84,22 +98,25 @@ export interface RouteState {
   graph: VisibilityGraph | null;
   error: string | null;
   doors: Set<DoorKey>;
+  closedDoor?: DoorKey;
   owner?: string;
   approach?: Point;
   interactionTarget?: Point;
   exit?: { owner: string; graph: VisibilityGraph; point: Point };
 }
 export const createRouteState = (): RouteState => ({ path: [], index: 0, target: null, graph: null, error: null, doors: new Set() });
-export function resetRoute(route: RouteState, agentId: string): void {
-  releaseAgentDoors(agentId);
+export function resetRoute(route: RouteState, agentId: string, keepClosedDoor?: DoorKey): void {
+  releaseAgentDoors(agentId, keepClosedDoor);
   route.path = []; route.index = 0; route.target = null; route.graph = null; route.error = null; route.doors.clear();
   route.approach = undefined; route.interactionTarget = undefined;
   route.exit = undefined;
+  route.closedDoor = keepClosedDoor;
+  if (keepClosedDoor) route.doors.add(doorOpeningKey(keepClosedDoor));
   navigationDebug.delete(agentId);
 }
 
 export function planRoute(route: RouteState, agentId: string, start: Point, target: Point): boolean {
-  const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile);
+  const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile, undefined, route.closedDoor);
   if (!inSurface(start) || !inSurface(target)) {
     route.error = 'Destination ou départ hors du sol praticable';
   } else {
@@ -118,6 +135,7 @@ export function planRoute(route: RouteState, agentId: string, start: Point, targ
 
 function releaseClearedDoors(route: RouteState, agentId: string, profile: AgentProfile, position: Point): void {
   for (const opening of route.doors) {
+    if (route.closedDoor && opening === doorOpeningKey(route.closedDoor)) continue;
     const leaves = doorKeys.filter(k => doorOpeningKey(k) === opening);
     const points = [position, ...route.path.slice(route.index)];
     const crossingAhead = leaves.some(k => {
@@ -148,6 +166,7 @@ function passDoors(route: RouteState, agentId: string, profile: AgentProfile, st
     const actual = [[inflate(doorPolygon(key, doorCollisionState[key].angle), profile.radius + d.margin)]];
     const blocked = !segmentFree(start, proposed, actual);
     if (route.doors.has(opening) || blocked || (crossing && (distance(start, d.pivot) <= d.length + clearance + travel || !segmentFree(start, proposed, closed)))) {
+      if (route.closedDoor && opening === doorOpeningKey(route.closedDoor)) { if (blocked) return start; continue; }
       if (!requestDoor(opening, agentId)) return start;
       route.doors.add(opening);
     }
@@ -158,9 +177,14 @@ function passDoors(route: RouteState, agentId: string, profile: AgentProfile, st
 }
 
 /** Returns a safe movement, or the current point while waiting for a door / another agent. */
-export function followRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false): Point {
-  if (owner) owner = colliderOwner(owner);
+export function followRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, closedDoor?: DoorKey): Point {
+  if (owner) owner = getInteractionOwner(owner);
   const profile = getAgentProfile(agentId);
+  route.closedDoor = closedDoor;
+  if (closedDoor) {
+    if (!requestDoor(closedDoor, agentId, 'closed')) return start;
+    route.doors.add(doorOpeningKey(closedDoor));
+  }
   // Furniture transitions change continuously. Keep the existing route if safe, and wait
   // for the final geometry before computing a replacement; never rebuild per frame.
   if (movingFurniture.size) {
@@ -169,11 +193,11 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     const changed = [...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0).map(o => [inflate(o.polygon, profile.radius)]);
     if (!segmentFree(start, next, changed)) return start;
   }
-  const graph = movingFurniture.size && route.graph ? route.graph : getNavigationGraph(profile);
+  const graph = movingFurniture.size && route.graph ? route.graph : getNavigationGraph(profile, undefined, closedDoor);
   const owned = (id: string) => [...furnitureObstacles.values()].filter(o => o.owner === id && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
   const contained = (id: string, p: Point) => owned(id).some(polygon => pointInRing(p, polygon));
   const localMove = (goal: Point, id: string): Point => {
-    const localGraph = getNavigationGraph(profile, id);
+    const localGraph = getNavigationGraph(profile, id, closedDoor);
     if (route.graph !== localGraph || route.target?.x !== goal.x || route.target?.z !== goal.z) {
       const path = localGraph.find(start, goal);
       if (!path) {
@@ -193,7 +217,7 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     const proposed = step === length ? { ...next } : { x: start.x + (next.x - start.x) * step / length, z: start.z + (next.z - start.z) * step / length };
     return passDoors(route, agentId, profile, start, next, proposed, travel);
   };
-  const approachFor = (id: string, goal: Point, exiting: boolean) => getObjectApproach(id, goal, agentId, start, exiting);
+  const approachFor = (id: string, goal: Point, exiting: boolean) => getObjectApproach(id, goal, agentId, start, exiting, undefined, closedDoor);
   if (!route.owner && owner && contained(owner, start)) route.owner = owner;
   if (route.owner && contained(route.owner, start) && !(interaction && owner === route.owner)) {
     if (route.exit?.owner !== route.owner || route.exit.graph !== graph) {
@@ -224,11 +248,11 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
   if (route.error) return start;
   while (route.index < route.path.length && distance(start, route.path[route.index]) < 1e-6) route.index++;
   const next = route.path[route.index];
-  if (!next) { resetRoute(route, agentId); return target; }
+  if (!next) { resetRoute(route, agentId, closedDoor); return target; }
   // A displaced agent must regain a valid route before continuing toward an old vertex.
   if (!segmentFree(start, next, graph.obstacles)) {
     if (!planRoute(route, agentId, start, target)) return start;
-    return followRoute(route, agentId, start, target, travel, steer, owner, interaction);
+    return followRoute(route, agentId, start, target, travel, steer, owner, interaction, closedDoor);
   }
   const remaining = distance(start, next);
   const direction = { x: (next.x - start.x) / remaining, z: (next.z - start.z) / remaining };

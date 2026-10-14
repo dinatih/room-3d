@@ -10,6 +10,7 @@ export interface AgentState {
 export type AgentStatus = 'WAITING' | 'FALLING' | 'LANDING' | 'TRANSITIONING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED' | 'BLOCKED';
 
 export interface ResolvedInstructionCoords {
+  owner?: string;
   tx: number;
   ty?: number;
   tz: number;

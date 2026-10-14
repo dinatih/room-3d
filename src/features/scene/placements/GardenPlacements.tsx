@@ -86,7 +86,7 @@ export function GardenDecor() {
 
       {/* Palmier en pot */}
       <group position={[100, 0, -145]} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'palm', kind: 'plant' }, itemName: 'Palmier en Pot' }}>
-        <NavigationObstacle id="palm"><PottedPalm item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="palm" solidOnly><PottedPalm item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
       </group>
 
       {/* Statues anatomiques (Chera - Squelette & Muscles) déplacées à gauche du trio */}

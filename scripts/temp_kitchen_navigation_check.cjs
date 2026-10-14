@@ -1,6 +1,14 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const ts = require('typescript');
+if (process.argv.includes('--plant-data')) {
+  for (const path of ['public/items/plant-monstera/potted_palm.glb', 'public/items/yucca10329308/Yucca10329308.glb']) {
+    const buffer = fs.readFileSync(path);
+    const json = JSON.parse(buffer.subarray(20, 20 + buffer.readUInt32LE(12)).toString());
+    console.log(path, JSON.stringify({ materials: json.materials.map(m=>({name:m.name,alphaMode:m.alphaMode})), nodes: json.nodes.map(n=>({name:n.name,mesh:n.mesh})), meshes: json.meshes.map(m=>({name:m.name,materials:m.primitives.map(p=>p.material)})) }));
+  }
+  process.exit(0);
+}
 require.extensions['.ts'] = (module, filename) => {
   const { outputText } = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true }, fileName: filename,
@@ -44,6 +52,12 @@ assert.equal(doorRequested('glassLeft'), true);
 releaseAgentDoors('a');
 assert.equal(requestDoor('glassRight', 'b'), true);
 releaseAgentDoors('b');
+assert.equal(requestDoor('glassRight', 'a', 'closed'), true);
+assert.equal(requestDoor('glassLeft', 'b'), false);
+assert.equal(doorRequested('glassRight'), false);
+releaseAgentDoors('a');
+assert.equal(doorRequested('glassLeft'), true);
+releaseAgentDoors('b');
 console.log('Geometry checks passed: shortest route, direct routes, inflation, rotation, overlaps, holes, invalid targets, FIFO door reservations.');
 
 if (process.argv.includes('--browser')) (async () => {
@@ -56,6 +70,8 @@ if (process.argv.includes('--browser')) (async () => {
     page.on('requestfailed', request => console.log('REQUEST:', request.url(), request.failure()?.errorText));
     page.on('pageerror', error => { errors.push(error.message); console.error('PAGE:', error.message); });
     await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5186'}/AGENTS.md`);
+    await page.evaluate(idleTest => { window.idleTest = idleTest; }, process.argv.includes('--idle-only'));
+    await page.evaluate(casesTest => { window.casesTest = casesTest; }, process.argv.includes('--cases-only'));
     await page.evaluate(async () => {
       (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
       window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => type => type; window.__vite_plugin_react_preamble_installed__ = true;
@@ -72,6 +88,7 @@ if (process.argv.includes('--browser')) (async () => {
       const registry = await import('/src/features/scene/ai/navigation/obstacles.ts');
       const { doorCollisionState, DOOR_CONFIGS, computeDoorAllowedAngle, getDoorContactAngle } = await import('/src/features/scene/doorObstacles.ts');
       const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
+      useSceneStore.setState(s => ({ layers: { ...s.layers, animOriginLerp: false, animCrossfade: false, exitTransitions: false } }));
       const { useAgentController } = await import('/src/features/scene/ai/useAgentController.ts');
       const { resetAppIdle } = await import('/src/features/scene/idleState.ts');
       window.resolveCoords = (await import('/src/features/scene/ai/agent/agentInstructionCoords.ts')).resolveInstructionCoords;
@@ -80,6 +97,28 @@ if (process.argv.includes('--browser')) (async () => {
       window.positionState = (await import('/src/features/scene/positionState.ts')).positionState;
       window.cameraState = (await import('/src/features/scene/cameraState.ts')).cameraState;
       window.steer = (await import('/src/features/scene/ai/agent/agentAvoidance.ts')).computeSteeringVector;
+      const scenarios = await import('/src/features/scene/ai/scenarios.ts');
+      window.autonomousAgents = new Map();
+      function AutonomousProbe({ id }) {
+        const scenario = React.useMemo(() => scenarios.buildAutonomousScenario(id), [id]);
+        const agent = useAgentController(id, scenario, true, () => ({ x: 160, y: 0, z: 300, rotY: 0 }));
+        window.autonomousAgents.set(id, { agent, scenario });
+        return null;
+      }
+      const regressionCases = [
+        ['desk-bollsidan-1', 'work-sitting'], ['desk-bollsidan-2', 'work-standing'],
+        ['cuisine-group', 'cook-oven'], ['freezer', 'open-pick'], ['kallax-ne', 'inspect'],
+        ['drona-west', 'pick-item'], ['sofa-garden-west', 'seat-2'], ['building-b-corridor', 'trash'],
+      ];
+      function RegressionProbe({ index }) {
+        const id = `regression-${index}`;
+        const scenario = React.useMemo(() => [{ type: 'MOVE_TO', targetPos: [160, 0, 300] },
+          ...window.smartObjects.buildSmartObjectInstructionSequence(...regressionCases[index]).map(instruction => instruction.type === 'USE_OBJECT' ? { ...instruction, duration: 0.1, repeatCount: 1, animation: 'idle' } : instruction),
+          { type: 'MOVE_TO', targetPos: [200, 0, -50] }], []);
+        const agent = useAgentController(id, scenario, false, () => ({ x: 160, y: 0, z: 300, rotY: 0 }));
+        window.autonomousAgents.set(id, { agent, scenario, label: regressionCases[index].join(':') });
+        return null;
+      }
       const e = React.createElement;
       document.body.innerHTML = '<div id="fixture" style="height:100vh"></div>';
       const native = CHARACTERS.find(c => c.id === 'native');
@@ -102,11 +141,73 @@ if (process.argv.includes('--browser')) (async () => {
       }
       window.root = createRoot(document.getElementById('fixture'));
       window.root.render(e(Canvas, { camera: { position: [600, 900, 900], far: 5000 } }, e('ambientLight', { intensity: 2 }), e(Probe),
+        ...(window.idleTest ? Object.keys(scenarios.INITIAL_SMART_OBJECT_BY_CHAR).slice(0, 15).map(id => e(AutonomousProbe, { key: id, id })) : []),
+        ...(window.casesTest ? regressionCases.map((_, index) => e(RegressionProbe, { key: index, index })) : []),
         e(React.Suspense, { fallback: null }, e(placements.Equipment), e(placements.Furniture), e(placements.Furnishings), e(placements.Decor), e(DoorsPlacement),
           e(Character, { ...native, modelPath: native.path, targetHeight: native.height, isLara: true, isActive: false, isNPC: false, scenario: null }))));
     });
     await page.waitForFunction(() => window.nav?.furnitureObstacles.size > 25 && window.nav.hasAgentProfile('native'), { timeout: 60000 }).catch(async error => { console.log('Readiness:', await page.evaluate(() => ({ ids: [...window.nav.furnitureObstacles.keys()], native: window.nav.hasAgentProfile('native'), scene: window.fixtureScene.children.map(c => c.name), agent: window.agent.getStatus() }))); throw error; });
     console.log('Scene assets ready:', await page.evaluate(() => ({ profile: window.nav.getAgentProfile('native'), obstacles: window.nav.furnitureObstacles.size })));
+    if (process.argv.includes('--cases-only')) {
+      const cases = await page.evaluate(async () => {
+        const profile = window.nav.getAgentProfile('native'), results = [];
+        for (const [id, { agent, label }] of window.autonomousAgents) {
+          window.nav.setAgentProfile(id, profile);
+          const deadline = performance.now() + 30000;
+          let state, status;
+          while (performance.now() < deadline) {
+            state = { ...agent.update(0.1) }; status = agent.getStatus();
+            window.cameraState.positions[id] = { ...state, yaw: state.rotY };
+            if (status === 'FINISHED' || status === 'BLOCKED') break;
+            await new Promise(resolve => requestAnimationFrame(resolve));
+          }
+          results.push({ label, status, state, route: window.nav.navigationDebug.get(id) });
+          console.log('Agent trace:', JSON.stringify(results[results.length - 1]));
+          delete window.cameraState.positions[id];
+          if (status !== 'FINISHED') break;
+        }
+        return results;
+      });
+      assert.equal(cases.length, 8);
+      assert.ok(cases.every(c => c.status === 'FINISHED'), JSON.stringify(cases));
+      console.log('Interaction regressions passed with all three animation options OFF.');
+      return;
+    }
+    if (process.argv.includes('--idle-only')) {
+      const audit = await page.evaluate(async () => {
+        const profile = window.nav.getAgentProfile('native');
+        for (const id of window.autonomousAgents.keys()) window.nav.setAgentProfile(id, profile);
+        const blocked = new Map(), failures = [];
+        for (let frame = 0; frame < 1200; frame++) {
+          for (const [id, { agent }] of window.autonomousAgents) {
+            try {
+              const state = { ...agent.update(0.1) };
+              window.cameraState.positions[id] = { ...state, yaw: state.rotY };
+              const status = agent.getStatus(), route = window.nav.navigationDebug.get(id);
+              if (status === 'BLOCKED') blocked.set(id, { id, frame, state, route,
+                blockers: [...window.nav.architectureObstacles, ...window.nav.furnitureObstacles.values()].filter(o => window.geom.pointInRing(route.target, window.geom.inflate(o.polygon, profile.radius))).map(o => ({id:o.id,owner:o.owner,polygon:o.polygon})),
+                startBlockers: [...window.nav.architectureObstacles, ...window.nav.furnitureObstacles.values()].filter(o => window.geom.pointInRing(state, window.geom.inflate(o.polygon, profile.radius))).map(o => ({id:o.id,owner:o.owner,polygon:o.polygon})),
+              });
+              if (frame % 300 === 0) console.log('Agent trace:', JSON.stringify({ id, frame, status, state, target: route?.target, error: route?.error }));
+            } catch (error) { failures.push({ id, frame, error: error.message }); }
+          }
+          if (blocked.size || failures.length) break;
+          await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+        return { blocked: [...blocked.values()], failures };
+      });
+      console.log('Autonomous audit:', JSON.stringify(audit));
+      console.log('Plant geometry:', await page.evaluate(() => {
+        const entries = [];
+        window.fixtureScene.traverse(node => {
+          if (node.userData.itemName?.match(/palm|palmier/i)) entries.push({name:node.name,label:node.userData.itemName,children:node.children.map(c=>({name:c.name,children:c.children.map(m=>({name:m.name,type:m.type}))}))});
+        });
+        return JSON.stringify(entries);
+      }));
+      assert.equal(audit.blocked.length, 0, 'Autonomous actors must not get permanently blocked');
+      assert.equal(audit.failures.length, 0, 'Autonomous coordinates must resolve');
+      return;
+    }
     if (process.argv.includes('--doors-only')) {
       const doors = await page.evaluate(async () => {
         const nav = window.nav, g = window.geom;

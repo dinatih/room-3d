@@ -2,7 +2,7 @@ import { SmartObjectDef, SmartObjectCategory, AgentInstruction, ResolvedSmartObj
 import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
-import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
+import { HUMAN_BODY_RADIUS } from '../doorObstacles';
 import { BATH_WEST_WALL, ROOM_D } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
@@ -166,6 +166,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [
       {
         slotId: 'work-standing',
+        arrival: 'approach',
         name: 'Travailler debout',
         relative: true,
         offset: [0, 0, -36],
@@ -402,6 +403,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [
       {
         slotId: 'cook-oven',
+        arrival: 'approach',
+        navigationOwner: 'kallax-cuisine',
         name: 'Cuisiner Four',
         // Ninja : Kallax de profondeur 39 cm, four de profondeur 37 cm,
         // décalage local X = -8, rotation monde Y = PI/2 (façade vers +X).
@@ -1013,17 +1016,11 @@ export function buildSmartObjectInstructionSequence(
 
   if (objectId === 'freezer' || objectId === 'kallax-ne') {
     const doorKey = objectId === 'freezer' ? 'living' : 'glassRight';
-    const door = DOOR_CONFIGS[doorKey];
-    const [x, , z] = obj.position!;
-    const swingClearance = door.length + HUMAN_BODY_RADIUS + door.thickness / 2 + door.margin;
-    const safePos: [number, number, number] = objectId === 'freezer'
-      ? [door.pivot.x - Math.sqrt(swingClearance ** 2 - (z - door.pivot.z) ** 2) - door.margin, 0, z]
-      : [x, 0, door.pivot.z + Math.sqrt(swingClearance ** 2 - (x - door.pivot.x) ** 2) + door.margin];
     return [
-      { type: 'MOVE_TO', targetPos: safePos, doorKey },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey },
       { type: 'WAIT', doorKey },
-      ...(objectId === 'kallax-ne' ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId }] : []),
-      baseInstruction,
+      { ...baseInstruction, closedDoor: doorKey },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey, closedDoor: doorKey },
     ];
   }
 

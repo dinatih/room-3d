@@ -4,7 +4,7 @@ import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from '.
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { createRouteState, followRoute, resetRoute } from './navigation/service';
+import { createRouteState, followRoute, resetRoute, getInteractionOwner } from './navigation/service';
 import { movingFurniture } from '../furniturePositions';
 import { hasAgentProfile, getObstacleRevision } from './navigation/obstacles';
 import { distance } from './navigation/geometry';
@@ -137,11 +137,11 @@ export function useAgentController(
 
   const getResolvedCoords = (instr: AgentInstruction) => {
     const revision = getObstacleRevision();
-    const followsInteraction = statusRef.current === 'INTERACTING' && !!instr.smartObjectId;
+    const followsInteraction = statusRef.current === 'INTERACTING' && !!instr.smartObjectId && movingFurniture.size > 0;
     if (followsInteraction || (!movingFurniture.size && cachedCoordsRevisionRef.current !== revision) || cachedCoordsInstructionRef.current !== instr || !cachedCoordsRef.current) {
       cachedCoordsInstructionRef.current = instr;
       cachedCoordsRevisionRef.current = revision;
-      cachedCoordsRef.current = resolveInstructionCoords(instr, startPosRef.current, _characterId, stateRef.current);
+      cachedCoordsRef.current = resolveInstructionCoords(instr, startPosRef.current, _characterId, stateRef.current, routeRef.current.owner);
     }
     return cachedCoordsRef.current;
   };
@@ -396,7 +396,8 @@ export function useAgentController(
   };
 
   const advanceToNextStep = (hasNavStep: boolean) => {
-    resetRoute(routeRef.current, _characterId);
+    const next = hasNavStep ? dynamicNavQueueRef.current[dynamicNavIndexRef.current + 1] ?? scenario?.[stepIndexRef.current] : scenario?.[stepIndexRef.current + 1];
+    resetRoute(routeRef.current, _characterId, next?.closedDoor);
     routeInstructionRef.current = null;
     cachedCoordsInstructionRef.current = null;
     cachedCoordsRef.current = null;
@@ -767,7 +768,7 @@ export function useAgentController(
 
       if (!hasAgentProfile(_characterId)) return stateRef.current;
       if (routeInstructionRef.current !== currentInstruction) {
-        resetRoute(routeRef.current, _characterId);
+        resetRoute(routeRef.current, _characterId, currentInstruction.closedDoor);
         routeInstructionRef.current = currentInstruction;
         navigationErrorRef.current = null;
       }
@@ -778,7 +779,7 @@ export function useAgentController(
         (direction, remaining) => {
           const steering = computeSteeringVector(_characterId, oldPosition.x, oldPosition.z, direction.x, direction.z, remaining);
           return { x: steering.steerX, z: steering.steerZ };
-        }, currentInstruction.smartObjectId, currentInstruction.type === 'USE_OBJECT' || currentInstruction.navigation === 'interaction');
+        }, target.owner ?? currentInstruction.smartObjectId, currentInstruction.type === 'USE_OBJECT' || currentInstruction.navigation === 'interaction', currentInstruction.closedDoor);
       stateRef.current.x = position.x;
       stateRef.current.z = position.z;
       const moved = distance(oldPosition, position);
@@ -803,6 +804,7 @@ export function useAgentController(
 
         if (currentInstruction.type === 'USE_OBJECT') {
           const objId = currentInstruction.smartObjectId;
+          if (objId) routeRef.current.owner = getInteractionOwner(target.owner ?? objId);
           const slotId = currentInstruction.slotId || (objId ? SMART_OBJECTS[objId]?.slots[0]?.slotId : undefined) || 'default';
           if (objId && OccupancyManager.isSlotOccupied(objId, slotId, _characterId)) {
             const occupant = OccupancyManager.getOccupant(objId, slotId);
@@ -957,8 +959,10 @@ export function useAgentController(
 
       const target = getResolvedCoords(currentInstruction);
       stateRef.current.animation = resolveAnimationId(currentInstruction.animation || target.anim || 'idle');
-      if (currentInstruction.smartObjectId) { stateRef.current.x = target.tx; stateRef.current.z = target.tz; }
-      if (target.ty !== undefined) stateRef.current.y = target.ty;
+      if (currentInstruction.type === 'USE_OBJECT' || currentInstruction.type === 'INTERACT') {
+        if (currentInstruction.smartObjectId) { stateRef.current.x = target.tx; stateRef.current.z = target.tz; }
+        if (target.ty !== undefined) stateRef.current.y = target.ty;
+      }
 
       const targetRotY = currentInstruction.rotY !== undefined ? currentInstruction.rotY : target.rotY;
       if (targetRotY !== undefined) {
