@@ -278,12 +278,12 @@ class DuoSessionManager {
     if (!session) return;
 
     const { objectId: objId, slotId } = session.location;
-    const releaseRole = (role: DuoRole) => {
+    const releaseRole = (role: DuoRole, occupantId = characterId) => {
       if (slotId) {
-        OccupancyManager.releaseSlot(objId, `${slotId}:${role}`, characterId);
-        OccupancyManager.releaseSlot(objId, slotId, characterId);
+        OccupancyManager.releaseSlot(objId, `${slotId}:${role}`, occupantId);
+        OccupancyManager.releaseSlot(objId, slotId, occupantId);
       }
-      OccupancyManager.releaseSlot(objId, role, characterId);
+      OccupancyManager.releaseSlot(objId, role, occupantId);
     };
 
     if (session.participantA?.characterId === characterId) {
@@ -293,7 +293,7 @@ class DuoSessionManager {
       // Si le meneur A quitte, libérer également le partenaire B pour éviter une session orpheline
       if (session.participantB) {
         const partnerBId = session.participantB.characterId;
-        releaseRole('roleB');
+        releaseRole('roleB', partnerBId);
         this.charToSession.delete(partnerBId);
         session.participantB = null;
       }
@@ -305,7 +305,7 @@ class DuoSessionManager {
       // Si le partenaire s'en va alors que la session jouait, libérer également le meneur et clore la session
       if (session.isSessionPlaying && session.participantA) {
         const leaderAId = session.participantA.characterId;
-        releaseRole('roleA');
+        releaseRole('roleA', leaderAId);
         this.charToSession.delete(leaderAId);
         session.participantA = null;
         this.sessions.delete(session.sessionId);
@@ -440,6 +440,10 @@ class DuoSessionManager {
 
     // Si une session existe déjà pour cet objet
     const existing = this.sessions.get(objectId);
+    if (existing?.isSessionComplete) {
+      const participantId = existing.participantA?.characterId ?? existing.participantB?.characterId;
+      if (participantId) this.leaveDuoZone(participantId);
+    }
     if (existing && !existing.isSessionComplete) {
       const curDef = existing.playlist[existing.currentAnimIndex] || def;
       const { posA, posB, rotA, rotB } = computeWorldTransform(anchorPos, anchorRotY, curDef.offsetB, curDef.rotB);

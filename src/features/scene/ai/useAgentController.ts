@@ -102,7 +102,7 @@ export function useAgentController(
   const statusRef = useRef<AgentStatus>(deployment.status);
   const delayTimerRef = useRef(deployment.delayTimer);
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
-  const startPosRef = useRef<{ x: number; y: number; z: number; rotY: number } | null>(initialPos);
+  const startPosRef = useRef<{ x: number; y: number; z: number; rotY: number }>(initialPos);
   const claimedSlotRef = useRef<{ objectId: string; slotId: string } | null>(null);
 
   // Instructions temporaires (actions demandées, rendez-vous et interactions duo).
@@ -1116,5 +1116,5 @@ export function useAgentController(
 
   const getStatus = () => statusRef.current;
 
-  return { update, setPosition, setRotation, hasPendingDynamicTask, getStatus, initialPos };
+  return { update, setPosition, setRotation, hasPendingDynamicTask, getStatus, initialPos: startPosRef.current };
 }

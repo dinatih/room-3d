@@ -532,6 +532,7 @@ if (process.argv.includes('--browser')) (async () => {
     await page.evaluate(showerTest => { window.showerTest = showerTest; }, process.argv.includes('--shower-only'));
     await page.evaluate(duoTest => { window.duoTest = duoTest; }, process.argv.includes('--duo-navigation') || process.argv.includes('--all-duos') || process.argv.includes('--skydrop-invite'));
     await page.evaluate(skyTest => { window.skyTest = skyTest; }, process.argv.includes('--skydrop-invite'));
+    await page.evaluate(showerSpawnTest => { window.showerSpawnTest = showerSpawnTest; }, process.argv.includes('--shower-spawn'));
     await page.evaluate(xbotTest => { window.xbotTest = xbotTest; }, process.argv.includes('--xbot-tour'));
     await page.evaluate(async () => {
       (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
@@ -561,6 +562,7 @@ if (process.argv.includes('--browser')) (async () => {
       const scenarios = await import('/src/features/scene/ai/scenarios.ts');
       window.autonomousAgents = new Map();
       window.duoManager = (await import('/src/features/scene/ai/duoSessionManager.ts')).duoSessionManager;
+      window.occupancy = (await import('/src/features/scene/ai/occupancyManager.ts')).OccupancyManager;
       window.duoAnimations = (await import('/src/features/scene/animations/duoAnimations.ts')).DUO_ANIMATIONS;
       window.duoTransform = (await import('/src/features/scene/animations/duoWorldTransform.ts')).computeWorldTransform;
       function DuoProbe({id,x}) {
@@ -579,6 +581,13 @@ if (process.argv.includes('--browser')) (async () => {
         const scenario = React.useMemo(()=>[{type:'USE_OBJECT',smartObjectId:'bed-west',slotId:'seat-middle',duration:0.1,animation:'idle'},{type:'MOVE_TO',targetPos:id==='sabira' ? [200,0,-50] : [160,0,-150]}],[id]);
         const agent = useAgentController(id,scenario,false,()=>({x:90,y:0,z:150,rotY:0}),undefined,0,true);
         window.autonomousAgents.set(id,{agent,scenario}); return null;
+      }
+      window.showerRerenders=new Map();
+      function ShowerSpawnProbe({id,slotId}) {
+        const [,rerender]=React.useState(0);
+        const scenario=React.useMemo(()=>[...window.smartObjects.buildSmartObjectInstructionSequence('shower',slotId).map(i=>i.type==='USE_OBJECT' ? {...i,duration:0.1,animation:'idle'} : i),{type:'MOVE_TO',targetPos:[200,0,-50]}],[slotId]);
+        const agent=useAgentController(id,scenario,false,()=>({x:25,y:0,z:645,rotY:0}),undefined,0,true);
+        window.autonomousAgents.set(id,{agent,scenario}); window.showerRerenders.set(id,()=>rerender(v=>v+1)); return null;
       }
       function AutonomousProbe({ id }) {
         const scenario = React.useMemo(() => scenarios.buildAutonomousScenario(id), [id]);
@@ -628,11 +637,45 @@ if (process.argv.includes('--browser')) (async () => {
         ...(window.duoTest ? [e(DuoProbe,{key:'sara',id:'sara',x:-300}),e(DuoProbe,{key:'marissa',id:'marissa',x:100})] : []),
         ...(window.xbotTest ? [e(XbotProbe),e(React.Suspense,{fallback:null},e(Character,{...xbot,modelPath:xbot.path,targetHeight:xbot.height,isActive:false,isNPC:false,scenario:null}))] : []),
         ...(window.skyTest ? ['sabira','sabira-order'].map(id=>e(SkyProbe,{id,key:id})) : []),
+        ...(window.showerSpawnTest ? window.smartObjects.SMART_OBJECTS.shower.slots.flatMap(slot=>['closed','open'].map(door=>e(ShowerSpawnProbe,{id:`delphina-${slot.slotId}-${door}`,slotId:slot.slotId,key:`${slot.slotId}-${door}`}))) : []),
         e(React.Suspense, { fallback: null }, e(placements.Equipment), e(placements.Furniture), e(placements.Furnishings), e(placements.Decor), e(DoorsPlacement),
           e(Character, { ...native, modelPath: native.path, targetHeight: native.height, isLara: true, isActive: false, isNPC: false, scenario: null }))));
     });
     await page.waitForFunction(() => window.nav?.furnitureObstacles.size > 25 && window.nav.hasAgentProfile('native'), { timeout: 60000 }).catch(async error => { console.log('Readiness:', await page.evaluate(() => ({ ids: [...window.nav.furnitureObstacles.keys()], native: window.nav.hasAgentProfile('native'), scene: window.fixtureScene.children.map(c => c.name), agent: window.agent.getStatus() }))); throw error; });
     console.log('Scene assets ready:', await page.evaluate(() => ({ profile: window.nav.getAgentProfile('native'), obstacles: window.nav.furnitureObstacles.size })));
+    if(process.argv.includes('--shower-spawn')) {
+      const result=await page.evaluate(async()=>{
+        const nav=window.nav,g=window.geom,profile=nav.getAgentProfile('native'),requests=await import('/src/features/scene/ai/navigation/doorRequests.ts');
+        window.cameraState.isSceneLaunched=true;
+        const results=[];
+        for(const [id,entry] of window.autonomousAgents) {
+          if(id.endsWith('-open')) requests.requestDoor('shower','shower-test-holder');
+          else requests.releaseAgentDoors('shower-test-holder');
+          await new Promise(resolve=>requestAnimationFrame(resolve));
+          nav.setAgentProfile(id,profile); entry.agent.update(0);
+          window.showerRerenders.get(id)();
+          await new Promise(resolve=>requestAnimationFrame(resolve));
+          const {agent}=window.autonomousAgents.get(id), spawn=agent.initialPos;
+          const leaf=[[g.inflate(nav.doorPolygon('shower',0),profile.radius+nav.DOOR_CONFIGS.shower.margin)]];
+          if(g.insideObstacle(spawn,leaf)) throw new Error(`Rendered spawn intersects the closed shower door: ${JSON.stringify({id,spawn,state:agent.update(0)})}`);
+          requests.releaseAgentDoors('shower-test-holder');
+          const deadline=performance.now()+30000;
+          let state;
+          while(performance.now()<deadline) {
+            state={...agent.update(0.1)};
+            window.cameraState.positions[id]={...state,yaw:state.rotY};
+            if(agent.getStatus()==='LANDING' && g.insideObstacle(state,[[g.inflate(nav.doorPolygon('shower',nav.doorCollisionState.shower.angle),profile.radius+nav.DOOR_CONFIGS.shower.margin)]])) throw new Error(`${id}: landed in the actual door`);
+            if(['FINISHED','BLOCKED'].includes(agent.getStatus())) break;
+            await new Promise(resolve=>requestAnimationFrame(resolve));
+          }
+          results.push({id,spawn,state,status:agent.getStatus(),route:nav.navigationDebug.get(id)});
+          delete window.cameraState.positions[id];
+          if(agent.getStatus()!=='FINISHED') throw new Error(JSON.stringify(results));
+        }
+        return results;
+      });
+      console.log('Shower spawn:',JSON.stringify(result)); return;
+    }
     if (process.argv.includes('--skydrop-invite')) {
       const result=await page.evaluate(async()=>{
         const nav=window.nav, manager=window.duoManager, profile=nav.getAgentProfile('native');
@@ -752,6 +795,18 @@ if (process.argv.includes('--browser')) (async () => {
         const profile = nav.getAgentProfile('native'), graph = nav.getNavigationGraph(profile);
         const obj = window.smartObjects.getSmartObject('inyeong-cha-hugs-point');
         const slot = obj.slots[0];
+        manager.leaveAllSessions();
+        const firstSession=manager.startDuoSession(obj.id,slot.slotId,'sara','marissa','slow_dance');
+        if(!firstSession) throw new Error('Initial lifecycle test session failed');
+        manager.markReady('sara');manager.markReady('marissa');
+        manager.tickSession('sara',window.duoAnimations.find(d=>d.id==='slow_dance').duration+0.1);
+        if(!manager.isCompletedFor('sara')) throw new Error('Lifecycle fixture did not finish its first session');
+        const replacement=manager.startDuoSession(obj.id,slot.slotId,'sabira','sara','slow_dance');
+        if(!replacement || window.occupancy.getOccupant(obj.id,`${slot.slotId}:roleB`)!=='sara') throw new Error('The previous partner retained the replacement duo slot');
+        manager.leaveDuoZone('marissa');
+        if(!manager.getSessionFor('sara') || manager.getSessionFor('sara')!==manager.getSessionFor('sabira')) throw new Error('Late cleanup of the previous duo removed its replacement');
+        manager.leaveDuoZone('sabira');
+        if(window.occupancy.isSlotOccupied(obj.id,`${slot.slotId}:roleB`)) throw new Error('Leaving the leader must also release the actual partner slot');
         if (graph.find({x:-300,z:-600},{x:0,z:210})) throw new Error('Old Bearhug destination must reproduce the wall collision');
         const placements = slot.duoPool.map(id => {
           const def = window.duoAnimations.find(def=>def.id===id);
