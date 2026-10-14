@@ -5,9 +5,10 @@ const ts = require('typescript');
 if (process.argv.includes('--duo-patch')) {
   const diff = require('node:child_process').execFileSync('git',['diff','--','src/features/scene/ai/smartObjectRegistry.ts'],{encoding:'utf8'});
   const [header,...hunks] = diff.split(/(?=^@@)/m);
-  const own = hunks.filter(hunk=>hunk.includes('inyeongChaSpan'));
+  const own = hunks.filter(hunk=>hunk.includes('INYEONG_CHA_DUO_IDS') || hunk.includes("+        arrival: 'approach'"));
   assert.equal(own.length,2,'The duo patch must contain only its imports / geometry and its SmartObject placement');
-  fs.writeFileSync('/tmp/room-duo-placement.patch',header+own.join(''));
+  const patch = (header+own.join('')).replace('-        offset: [0, 0, 0],\n+        offset: [0, 0, 60],\n','         offset: [0, 0, 0],\n');
+  fs.writeFileSync('/tmp/room-duo-placement.patch',patch);
   console.log('Duo-only registry patch written; pre-existing slot edits excluded.');
   return;
 }
@@ -525,7 +526,8 @@ if (process.argv.includes('--browser')) (async () => {
       return;
     }
     await page.evaluate(idleTest => { window.idleTest = idleTest; }, process.argv.includes('--idle-only'));
-    await page.evaluate(casesTest => { window.casesTest = casesTest; }, process.argv.includes('--cases-only') || process.argv.includes('--shower-only'));
+    await page.evaluate(casesTest => { window.casesTest = casesTest; }, process.argv.includes('--cases-only') || process.argv.includes('--shower-only') || process.argv.includes('--spawn-objects'));
+    await page.evaluate(spawnTest => { window.spawnTest = spawnTest; }, process.argv.includes('--spawn-objects'));
     await page.evaluate(showerTest => { window.showerTest = showerTest; }, process.argv.includes('--shower-only'));
     await page.evaluate(duoTest => { window.duoTest = duoTest; }, process.argv.includes('--duo-navigation'));
     await page.evaluate(async () => {
@@ -570,14 +572,14 @@ if (process.argv.includes('--browser')) (async () => {
         window.autonomousAgents.set(id, { agent, scenario });
         return null;
       }
-      const regressionCases = window.showerTest ? window.smartObjects.SMART_OBJECTS.shower.slots.map(slot => ['shower',slot.slotId]) : [
+      const regressionCases = window.spawnTest ? ['bed-west','bed-east','desk-bollsidan-1','desk-bollsidan-2','chair-office'].flatMap(id => window.smartObjects.SMART_OBJECTS[id].slots.map(slot => [id,slot.slotId])) : window.showerTest ? window.smartObjects.SMART_OBJECTS.shower.slots.map(slot => ['shower',slot.slotId]) : [
         ['desk-bollsidan-1', 'work-sitting'], ['desk-bollsidan-2', 'work-standing'],
         ['cuisine-group', 'cook-oven'], ['freezer', 'open-pick'], ['kallax-ne', 'inspect'],
         ['drona-west', 'pick-item'], ['sofa-garden-west', 'seat-2'], ['building-b-corridor', 'trash'],
       ];
       function RegressionProbe({ index }) {
         const id = `regression-${index}`;
-        const scenario = React.useMemo(() => [{ type: 'MOVE_TO', targetPos: [160, 0, 300] },
+        const scenario = React.useMemo(() => [...(window.spawnTest ? [] : [{ type: 'MOVE_TO', targetPos: [160, 0, 300] }]),
           ...window.smartObjects.buildSmartObjectInstructionSequence(...regressionCases[index]).map(instruction => instruction.type === 'USE_OBJECT' ? { ...instruction, duration: 0.1, repeatCount: 1, animation: 'idle' } : instruction),
           { type: 'MOVE_TO', targetPos: [200, 0, -50] }], []);
         const agent = useAgentController(id, scenario, false, () => ({ x: 160, y: 0, z: 300, rotY: 0 }));
@@ -614,6 +616,21 @@ if (process.argv.includes('--browser')) (async () => {
     });
     await page.waitForFunction(() => window.nav?.furnitureObstacles.size > 25 && window.nav.hasAgentProfile('native'), { timeout: 60000 }).catch(async error => { console.log('Readiness:', await page.evaluate(() => ({ ids: [...window.nav.furnitureObstacles.keys()], native: window.nav.hasAgentProfile('native'), scene: window.fixtureScene.children.map(c => c.name), agent: window.agent.getStatus() }))); throw error; });
     console.log('Scene assets ready:', await page.evaluate(() => ({ profile: window.nav.getAgentProfile('native'), obstacles: window.nav.furnitureObstacles.size })));
+    if (process.argv.includes('--duo-audit') || process.argv.includes('--spawn-objects')) {
+      console.log('Duo obstacle audit:', JSON.stringify(await page.evaluate(() => {
+        const nav = window.nav, g = window.geom, profile = nav.getAgentProfile('native');
+        const obj = window.smartObjects.getSmartObject('inyeong-cha-hugs-point'), slot = obj.slots[0];
+        const solids = [...nav.architectureObstacles,...nav.furnitureObstacles.values()].filter(o=>o.yMin<profile.height && o.yMax>0);
+        return slot.duoPool.map(id => {
+          const def = window.duoAnimations.find(d=>d.id===id);
+          const pose = window.duoTransform(slot.offset,slot.rotY,def.offsetB,def.rotB);
+          const blockers = pos => solids.filter(o=>g.pointInRing({x:pos[0],z:pos[2]},g.inflate(o.polygon,profile.radius))).map(o=>o.id);
+          const a = {x:pose.posA[0],z:pose.posA[2]}, b = {x:pose.posB[0],z:pose.posB[2]};
+          return {id,...pose,blockersA:blockers(pose.posA),blockersB:blockers(pose.posB),crossings:solids.filter(o=>!g.segmentFree(a,b,[[g.inflate(o.polygon,profile.radius)]])).map(o=>o.id),reachableA:Boolean(nav.getNavigationGraph(profile).find({x:-300,z:-600},a)),reachableB:Boolean(nav.getNavigationGraph(profile).find({x:100,z:-600},b))};
+        });
+      })));
+      if (process.argv.includes('--duo-audit')) return;
+    }
     if (process.argv.includes('--profile')) {
       fs.writeFileSync('/tmp/room-navigation-benchmark.json', JSON.stringify(await page.evaluate(() => ({
         obstacles: window.nav.getNavigationGraph(window.nav.getAgentProfile('native')).obstacles,
@@ -668,12 +685,14 @@ if (process.argv.includes('--browser')) (async () => {
           if (!graph.find({x:-300,z:-600},a) || !graph.find({x:100,z:-600},b) || !g.segmentFree(a,b,graph.obstacles)) throw new Error(`Duo ${id} crosses an obstacle or has an unreachable participant`);
           return {id,...pose};
         });
-        const bearhug = placements.find(p=>p.id==='date_bearhug');
+        const bearhugDef = window.duoAnimations.find(d=>d.id==='date_bearhug');
+        const bearhug = window.duoTransform(slot.offset,slot.rotY,bearhugDef.offsetB,bearhugDef.rotB);
         if (Math.abs(g.distance({x:bearhug.posA[0],z:bearhug.posA[2]},{x:bearhug.posB[0],z:bearhug.posB[2]})-610)>g.GEOMETRY_EPSILON) throw new Error('Bearhug alignment was changed');
+        if (slot.duoPool.includes('date_bearhug') || slot.duoPool.includes('p2')) throw new Error('Duos which collide with this zone must not be selected for its playlist');
         manager.leaveAllSessions();
         for (const [id,{agent}] of window.autonomousAgents) {nav.setAgentProfile(id,profile);agent.update(0);}
-        const session = manager.startDuoSession(obj.id,slot.slotId,'sara','marissa','date_bearhug');
-        if (!session) throw new Error('Bearhug session failed to start');
+        const session = manager.startDuoSession(obj.id,slot.slotId,'sara','marissa','kiss_man_woman');
+        if (!session) throw new Error('Kiss session failed to start');
         document.dispatchEvent(new CustomEvent('npc-invite-duo',{detail:{targetId:'sara',fromId:'SmartObject',objectId:obj.id,slotId:slot.slotId,forceRole:'roleA',targetPos:session.posA,targetRotY:session.rotA}}));
         const deadline = performance.now()+30000;
         while (!manager.isPlaying('sara') && performance.now()<deadline) {
@@ -693,7 +712,7 @@ if (process.argv.includes('--browser')) (async () => {
       assert.equal(errors.length,0);
       return;
     }
-    if (process.argv.includes('--cases-only') || process.argv.includes('--shower-only')) {
+    if (process.argv.includes('--cases-only') || process.argv.includes('--shower-only') || process.argv.includes('--spawn-objects')) {
       if (process.argv.includes('--shower-only')) {
         const blocked = await page.evaluate(() => {
           const nav = window.nav, g = window.geom;
@@ -731,25 +750,44 @@ if (process.argv.includes('--browser')) (async () => {
       }
       const cases = await page.evaluate(async () => {
         const profile = window.nav.getAgentProfile('native'), results = [];
-        for (const [id, { agent, label }] of window.autonomousAgents) {
+        for (const [id, { agent, label, scenario }] of window.autonomousAgents) {
           window.nav.setAgentProfile(id, profile);
           const deadline = performance.now() + 30000;
           let state, status;
+          const spawn = window.spawnTest ? { ...agent.update(0) } : undefined;
+          if (spawn) {
+            const target = window.resolveCoords(scenario[0],null,id);
+            if (spawn.y !== (target.ty ?? 0)) throw new Error(`${label}: spawn height differs from its resolved target`);
+          }
+          let interaction;
+          const inspectInteraction = state => {
+            interaction = { ...state };
+            const instruction = scenario.find(i=>i.type==='USE_OBJECT');
+            const target = window.resolveCoords(instruction,null,id,state);
+            if (state.y !== (target.ty ?? 0)) throw new Error(`${label}: interaction height differs from its slot`);
+            const graph = window.nav.getNavigationGraph(profile,target.owner);
+            if (window.geom.insideObstacle(state,graph.obstacles)) throw new Error(`${label}: interaction starts inside an unrelated obstacle`);
+          };
+          if (spawn && agent.getStatus() === 'INTERACTING') inspectInteraction(spawn);
           while (performance.now() < deadline) {
             state = { ...agent.update(0.1) }; status = agent.getStatus();
+            if (window.spawnTest && status === 'INTERACTING') {
+              inspectInteraction(state);
+            }
             window.cameraState.positions[id] = { ...state, yaw: state.rotY };
             if (status === 'FINISHED' || status === 'BLOCKED') break;
             await new Promise(resolve => requestAnimationFrame(resolve));
           }
-          results.push({ label, status, state, route: window.nav.navigationDebug.get(id) });
+          results.push({ label, status, spawn, interaction, state, route: window.nav.navigationDebug.get(id) });
           console.log('Agent trace:', JSON.stringify(results[results.length - 1]));
           delete window.cameraState.positions[id];
-          if (status !== 'FINISHED') break;
+          if (status !== 'FINISHED' && !window.spawnTest) break;
         }
         return results;
       });
-      assert.equal(cases.length, process.argv.includes('--shower-only') ? 2 : 8);
+      assert.equal(cases.length, process.argv.includes('--spawn-objects') ? 10 : process.argv.includes('--shower-only') ? 2 : 8);
       assert.ok(cases.every(c => c.status === 'FINISHED'), JSON.stringify(cases));
+      if (process.argv.includes('--spawn-objects')) assert.ok(cases.every(c=>c.interaction),'Each spawned agent must actually enter its interaction before departing');
       assert.equal(errors.length,0,'Interaction tests must not emit uncaught exceptions');
       console.log('Interaction regressions passed with all three animation options OFF.');
       return;

@@ -9,7 +9,8 @@ import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
-const INYEONG_CHA_DUO_IDS = ['slow_dance', 'eye_to_eye', 'farewell_kiss', 'kiss_man_woman', 'kiss', 'date_bearhug', 'p2', 'pop_dance', 'energetic_dance'];
+// At 90°, p2 starts in the chest-bench; date_bearhug's walk crosses the fence and garden furniture.
+const INYEONG_CHA_DUO_IDS = ['slow_dance', 'eye_to_eye', 'farewell_kiss', 'kiss_man_woman', 'kiss', 'pop_dance', 'energetic_dance'];
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -137,6 +138,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'work-sitting',
         name: 'Travailler assis',
+        arrival: 'approach',
         relative: true,
         offset: [0, 0, 0],
         rotY: Math.PI,

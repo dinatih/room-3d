@@ -447,6 +447,10 @@ export function useAgentController(
         if (first.tx !== 0 || first.tz !== 0) {
           stateRef.current.x = first.tx;
           stateRef.current.z = first.tz;
+          if (statusRef.current !== 'WAITING' && statusRef.current !== 'FALLING') {
+            stateRef.current.y = first.ty ?? 0;
+            deployment.y = stateRef.current.y;
+          }
           startPosRef.current = { ...stateRef.current, y: first.ty ?? 0 };
         }
       }
