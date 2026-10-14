@@ -2,7 +2,7 @@ const launchBrowser = require('./browser-test-options.cjs');
 /** Compare NPZ reference motion with actual exported and retargeted GLB motion.
  * python3 scripts/check_interx_pipeline.py --reference /tmp/interx-motion-reference.json
  * node scripts/check_interx_motion.cjs
- * Add --browser for a visual capture of the published hug in the inventory.
+ * Add --browser for visual captures of both published duos in the inventory.
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -22,35 +22,48 @@ async function main() {
       export {resolveTargetBoneName} from './src/features/scene/retargeting/boneResolver';
       export {INTERX_DUO_ANIMATIONS, INTERX_ANIMATION_DEFINITIONS} from './src/features/scene/animations/interxManifest';
       export {computeWorldTransform} from './src/features/scene/animations/duoWorldTransform';
+      export {groundInterxClip, interxSoleHeight} from './src/features/scene/retargeting/groundInterxClip';
     `, resolveDir: root },
     bundle: true, platform: 'node', format: 'esm', outfile: bundle,
   });
-  const { retargetClip, resolveTargetBoneName, INTERX_DUO_ANIMATIONS, INTERX_ANIMATION_DEFINITIONS, computeWorldTransform } = await import(pathToFileURL(bundle));
+  const { retargetClip, resolveTargetBoneName, INTERX_DUO_ANIMATIONS, INTERX_ANIMATION_DEFINITIONS, computeWorldTransform, groundInterxClip, interxSoleHeight } = await import(pathToFileURL(bundle));
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'public/animations/npz/interx/animations_manifest.json')));
   const reference = JSON.parse(fs.readFileSync('/tmp/interx-motion-reference.json'));
-  async function loadSkeleton(file) {
-    const bytes = fs.readFileSync(file);
+  const { NodeIO } = await import('@gltf-transform/core');
+  const { ALL_EXTENSIONS } = await import('@gltf-transform/extensions');
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'draco3d.decoder': await require('draco3d').createDecoderModule() });
+  const decoded = new Map();
+  async function loadSkeleton(file, keepMeshes = false) {
+    if (keepMeshes && !decoded.has(file)) {
+      const document = await io.read(file);
+      document.getRoot().listExtensionsUsed().filter(extension => extension.extensionName === 'KHR_draco_mesh_compression').forEach(extension => extension.dispose());
+      decoded.set(file, Buffer.from(await io.writeBinary(document)));
+    }
+    const bytes = keepMeshes ? decoded.get(file) : fs.readFileSync(file);
     const jsonLength = bytes.readUInt32LE(12);
     const json = JSON.parse(bytes.subarray(20, 20 + jsonLength));
     const binStart = 20 + jsonLength;
     const bin = bytes.subarray(binStart + 8, binStart + 8 + bytes.readUInt32LE(binStart));
     json.buffers[0].uri = 'data:application/octet-stream;base64,' + bin.toString('base64');
-    for (const node of json.nodes) { delete node.mesh; delete node.skin; }
-    for (const key of ['meshes', 'textures', 'images', 'materials', 'extensionsRequired', 'extensionsUsed']) delete json[key];
+    if (!keepMeshes) for (const node of json.nodes) { delete node.mesh; delete node.skin; }
+    if (!keepMeshes) delete json.meshes;
+    for (const mesh of json.meshes || []) for (const primitive of mesh.primitives) delete primitive.material;
+    for (const key of ['textures', 'images', 'materials', 'extensionsRequired', 'extensionsUsed']) delete json[key];
     return new GLTFLoader().parseAsync(JSON.stringify(json), '');
   }
   function near(actual, expected, message, tolerance = 0.0001) {
     assert(actual.distanceTo(expected) < tolerance, `${message}: actual=${actual.toArray()}, expected=${expected.toArray()}`);
   }
   let worstError = 0;
+  let worstWristError = 0;
+  let largestShoulderMove = 0;
   for (const entry of manifest.duos) {
     const def = INTERX_DUO_ANIMATIONS.find(duo => duo.id === entry.id);
     const ref = reference.find(item => item.id === entry.id);
     assert(def && ref);
     assert.equal(def.rotB, 0);
     const initialOffset = new THREE.Vector3(...entry.start_offset).multiplyScalar(100);
-    const grounded = entry.placement?.verticalOrigin === 'rig-ground';
-    if (grounded) initialOffset.y = 0;
+    const grounded = entry.placement?.verticalOrigin === 'soles-preserve-hands';
     near(new THREE.Vector3(...def.offsetB), initialOffset, 'Manifest placement offset');
     for (const scale of [75, 100, 150]) {
       const participants = [];
@@ -61,7 +74,7 @@ async function main() {
           const sourceHips = source.scene.getObjectByName(resolveTargetBoneName(source.scene, 'Hips'));
           console.log('Source root', sourceHips.name, 'parent quaternion', sourceHips.parent.getWorldQuaternion(new THREE.Quaternion()).toArray(), 'local quaternion', sourceHips.quaternion.toArray(), 'first animated quaternion', source.animations[0].tracks.find(track => track.name.endsWith('.quaternion') && /hips/i.test(track.name)).values.slice(0, 4));
         }
-        const target = await loadSkeleton(path.join(root, 'public/characters/lara/lara_native.glb'));
+        const target = await loadSkeleton(path.join(root, 'public/characters/lara/lara_native.glb'), grounded);
         target.scene.updateMatrixWorld(true);
         target.scene.traverse(object => {
           object.restWorldQuaternion = object.getWorldQuaternion(new THREE.Quaternion());
@@ -74,18 +87,62 @@ async function main() {
         target.scene.updateMatrixWorld(true);
         const hips = target.scene.getObjectByName(resolveTargetBoneName(target.scene, 'Hips'));
         const head = target.scene.getObjectByName(resolveTargetBoneName(target.scene, 'Head'));
+        const feet = ['LeftFoot', 'RightFoot', 'LeftToeBase', 'RightToeBase'].map(name => target.scene.getObjectByName(resolveTargetBoneName(target.scene, name)));
+        const hands = ['LeftHand', 'RightHand'].map(name => target.scene.getObjectByName(resolveTargetBoneName(target.scene, name)));
+        const shoulders = ['LeftArm', 'RightArm'].map(name => target.scene.getObjectByName(resolveTargetBoneName(target.scene, name)));
+        const shoulderRestPositions = shoulders.map(joint => joint.position.clone());
         const baseline = hips.getWorldPosition(new THREE.Vector3());
         const clipDef = INTERX_ANIMATION_DEFINITIONS.find(item => item.id === `${entry.id}-${person}`);
-        const clip = retargetClip(source.animations[0], target.scene, source.scene, clipDef.rootMotionSpace);
+        let clip = retargetClip(source.animations[0], target.scene, source.scene, clipDef.rootMotionSpace);
+        const originalHands = [];
+        let correctionY = 0;
+        if (grounded) {
+          const originalMixer = new THREE.AnimationMixer(target.scene);
+          const originalAction = originalMixer.clipAction(clip).setLoop(THREE.LoopOnce, 1).play();
+          originalAction.clampWhenFinished = true;
+          originalMixer.setTime(0);
+          correctionY = -(clipDef.interxGrounding.baseHeightMeters * 100 + interxSoleHeight(target.scene));
+          for (let frame = 0; frame < entry.clips[person].frameCount; frame++) {
+            originalMixer.setTime(frame / 30);
+            target.scene.updateMatrixWorld(true);
+            originalHands.push(hands.map(hand => ({ position: hand.getWorldPosition(new THREE.Vector3()), quaternion: hand.getWorldQuaternion(new THREE.Quaternion()) })));
+          }
+          originalMixer.stopAllAction();
+          originalMixer.uncacheRoot(target.scene);
+          // Baking a new clip while the instance is already posed must neither
+          // inherit that pose nor change the live instance on completion.
+          shoulders[0].position.x += 0.01;
+          const liveTransforms = [];
+          target.scene.traverse(object => liveTransforms.push({ object, position: object.position.clone(), quaternion: object.quaternion.clone(), scale: object.scale.clone() }));
+          clip = groundInterxClip(clip, target.scene, clipDef.interxGrounding.baseHeightMeters);
+          liveTransforms.forEach(saved => {
+            assert(saved.object.position.equals(saved.position) && saved.object.quaternion.equals(saved.quaternion) && saved.object.scale.equals(saved.scale), 'Baking must restore the live pose');
+          });
+          shoulders[0].position.copy(shoulderRestPositions[0]);
+          baseline.y += correctionY;
+        }
         const mixer = new THREE.AnimationMixer(target.scene);
         mixer.clipAction(clip).setLoop(THREE.LoopOnce, 1).play().clampWhenFinished = true;
-        participants.push({ target, hips, head, baseline, mixer });
+        participants.push({ target, hips, head, feet, hands, shoulders, shoulderRestPositions, baseline, mixer, originalHands, correctionY });
       }
       for (let frame = 0; frame < entry.clips.p1.frameCount; frame++) {
         const displacements = participants.map((participant, index) => {
           participant.mixer.setTime(frame / 30);
           participant.target.scene.updateMatrixWorld(true);
           const actual = participant.hips.getWorldPosition(new THREE.Vector3()).sub(participant.baseline);
+          if (grounded) {
+            if (frame === 0) assert(Math.abs(interxSoleHeight(participant.target.scene) + (index ? initialOffset.y : 0)) < 0.0001, 'Initial soles must meet the shared floor');
+            participant.hands.forEach((hand, side) => {
+              worstWristError = Math.max(worstWristError, hand.getWorldPosition(new THREE.Vector3()).distanceTo(participant.originalHands[frame][side].position));
+              near(hand.getWorldPosition(new THREE.Vector3()), participant.originalHands[frame][side].position, `${entry.id}: wrist target ${index}/${side}/${frame}`, 0.001);
+              assert(hand.getWorldQuaternion(new THREE.Quaternion()).normalize().angleTo(participant.originalHands[frame][side].quaternion.clone().normalize()) < 0.0002, 'Wrist orientation must be preserved');
+            });
+            participant.shoulders.forEach((joint, side) => {
+              const movement = joint.position.clone().sub(participant.shoulderRestPositions[side])
+                .applyMatrix3(new THREE.Matrix3().setFromMatrix4(joint.parent.matrixWorld)).length();
+              if (scale === 100) largestShoulderMove = Math.max(largestShoulderMove, movement);
+            });
+          }
           const motion = ref.participants[index];
           const expected = new THREE.Vector3(...motion.trans[frame]).sub(new THREE.Vector3(...motion.trans[0])).multiplyScalar(100);
           worstError = Math.max(worstError, actual.distanceTo(expected));
@@ -100,23 +157,32 @@ async function main() {
           return actual;
         });
         const expectedRelative = new THREE.Vector3(...ref.participants[1].trans[frame]).sub(new THREE.Vector3(...ref.participants[0].trans[frame])).multiplyScalar(100);
-        if (grounded) expectedRelative.y -= entry.start_offset[1] * 100;
-        const relative = new THREE.Vector3(...def.offsetB).add(displacements[1]).sub(displacements[0]);
+        expectedRelative.y += participants[1].correctionY - participants[0].correctionY;
+        if (process.argv.includes('--feet') && scale === 100 && [0, 59, 100].includes(frame)) {
+          console.log(entry.id, frame, JSON.stringify(participants.map((participant, index) => ({
+            hips: participant.hips.getWorldPosition(new THREE.Vector3()).toArray(),
+            feet: participant.feet.map(bone => bone.getWorldPosition(new THREE.Vector3()).toArray()),
+            hands: participant.hands.map(bone => bone.getWorldPosition(new THREE.Vector3()).add(index ? initialOffset : new THREE.Vector3()).toArray()),
+          }))));
+        }
+        const placedDisplacements = displacements.map((value, index) => value.clone().add(new THREE.Vector3(0, participants[index].correctionY, 0)));
+        const relative = new THREE.Vector3(...def.offsetB).add(placedDisplacements[1]).sub(placedDisplacements[0]);
         near(relative, expectedRelative, `${entry.id} paired motion frame=${frame}`);
         for (const rotation of [0, Math.PI / 2]) {
           const anchor = [123, 20, -456];
           const transforms = computeWorldTransform(anchor, rotation, def.offsetB, def.rotB);
           const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotation);
           near(new THREE.Vector3(...transforms.posB).sub(new THREE.Vector3(...transforms.posA)), new THREE.Vector3(...def.offsetB).applyQuaternion(q), 'Session anchor start offset');
-          const delta = new THREE.Vector3(...transforms.posB).add(displacements[1].clone().applyQuaternion(q))
-            .sub(new THREE.Vector3(...transforms.posA).add(displacements[0].clone().applyQuaternion(q)));
+          const delta = new THREE.Vector3(...transforms.posB).add(placedDisplacements[1].clone().applyQuaternion(q))
+            .sub(new THREE.Vector3(...transforms.posA).add(placedDisplacements[0].clone().applyQuaternion(q)));
           near(delta, expectedRelative.clone().applyQuaternion(q), 'Translated/rotated session motion');
         }
       }
     }
-    console.log(`${entry.id}: every frame, exact P1/P2 offsets and headings; model scales 75/100/150; anchors 0°/90°.`);
+    console.log(`${entry.id}: initial soles grounded, original wrists preserved at every frame; metric motion and headings retained; scales 75/100/150, anchors 0°/90°.`);
   }
   console.log(`Maximum root displacement error: ${worstError.toFixed(8)} cm`);
+  console.log(`Maximum wrist error: ${worstWristError.toFixed(8)} cm; maximum shoulder adjustment at native height: ${largestShoulderMove.toFixed(4)} cm`);
   if (process.argv.includes('--browser')) await visualCheck();
 }
 
@@ -168,7 +234,7 @@ async function visualCheck() {
       const rotate = [...document.querySelectorAll('button')].find(button => button.textContent.includes('Rota'));
       if (rotate && rotate.classList.contains('btn-warning')) rotate.click();
     });
-    for (const [label, time] of [['start', 0], ['contact', 3.5]]) {
+    for (const [label, time] of [['start', 0], ['contact', recording.includes('a001') ? 59 / 30 : 3.5]]) {
       await page.evaluate(time => window.interxPreview.getState().seekToTime(time), time);
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       await page.screenshot({ path: `/tmp/interx-${recording}-${label}.png` });

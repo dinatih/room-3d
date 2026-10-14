@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { retargetClip, _retargetCache } from '../retargeting/index';
+import { groundInterxClip } from '../retargeting/groundInterxClip';
 import { resolveAnimationPath, getAnimationDef } from '../animations/animationResolver';
 import { animationSourcePlugin, extractAnimationSource, type AnimationSource } from './animationSource';
 
@@ -156,6 +157,7 @@ export function useCharacterAnimations({
       if (!finalClip) {
         if (sourceScene) sourceScene.updateMatrixWorld(true);
         finalClip = retargetClip(clip, scene, sourceScene, def?.rootMotionSpace);
+        if (def?.interxGrounding) finalClip = groundInterxClip(finalClip, scene, def.interxGrounding.baseHeightMeters);
         cacheRetargetedClip(cacheKey, finalClip);
       }
       finalClip.name = animId;

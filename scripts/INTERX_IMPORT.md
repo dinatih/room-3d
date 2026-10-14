@@ -39,11 +39,28 @@ baseP2 = ancre + rotation_ancre × (100 × start_offset)
 ```
 
 Les deux pilotes câlin et poignée de main utilisent explicitement
-`placement.verticalOrigin: "rig-ground"` : seule la composante Y du placement
-initial est mise à zéro pour les rigs de même taille. Le `start_offset` source
-reste intact, X/Z et les déplacements verticaux animés restent conservés.
+`placement.verticalOrigin: "soles-preserve-hands"`. Le parent conserve l'offset
+source complet. Après retargeting, on mesure les sommets skinnés des semelles
+à la première frame, puis on applique une correction constante au bassin pour
+poser chaque avatar sur le même sol. Les déplacements animés restent conservés.
+Une IK des bras conserve les positions et orientations originales des poignets
+à chaque échantillon. Sur Lara, qui n'a pas de clavicule indépendante, une cible
+au-delà de la portée des deux segments déplace l'épaule du minimum nécessaire,
+sans allonger le bras ni l'avant-bras. Les transformations du modèle sont
+restaurées après le calcul ; les corrections sont stockées dans le clip en cache.
 Ce réglage par duo est conservé lors des réexports ; les autres duos utilisent
-leur offset source complet.
+leur offset source complet sans cette correction.
+
+Diagnostic des pilotes : les NPZ utilisent des morphologies différentes
+(`gender=female` pour P1, `male` pour P2 et des `betas` différents), tandis que
+Native et Rosanna partagent le rig Lara de 173,4 cm. La conversion des rotations
+ne reprend pas les proportions SMPL-X. Les offsets initiaux Y sont respectivement
+9,1207 cm et 16,6345 cm ; ce ne sont pas des mesures de hauteur de semelle.
+Les modèles SMPL-X féminin/masculin et les squelettes source ne sont pas présents
+localement : les pieds source ne sont donc pas reconstruits avec un modèle
+SMPL féminin approximatif. Le calage utilise la géométrie réelle des avatars.
+Il corrige l'appui initial, pas le glissement ou les appuis ultérieurs, et préserve
+le contact précédent sans prétendre reconstruire les contacts SMPL-X exacts.
 
 Les deux parents utilisent la même orientation. Aucune rotation de π ni
 translation forfaitaire n'est ajoutée. La hauteur de repos des rigs est

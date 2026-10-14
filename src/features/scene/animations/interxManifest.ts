@@ -44,7 +44,7 @@ export interface InterXManifest {
     }>;
     rootMotion: { mode: string; translationUnit: string; upAxis: string };
     start_offset: [number, number, number];
-    placement?: { verticalOrigin: 'rig-ground' };
+    placement?: { verticalOrigin: 'soles-preserve-hands' };
     tags: string[];
   }>;
 }
@@ -60,7 +60,7 @@ const paths = new Set<string>();
 for (const duo of INTERX_MANIFEST.duos) {
   if (ids.has(duo.id) || !actionByCode.has(duo.actionCode)
     || duo.start_offset.length !== 3 || !duo.start_offset.every(Number.isFinite)
-    || (duo.placement !== undefined && duo.placement.verticalOrigin !== 'rig-ground')
+    || (duo.placement !== undefined && duo.placement.verticalOrigin !== 'soles-preserve-hands')
     || duo.rootMotion.mode !== 'relative-to-first-frame'
     || duo.rootMotion.translationUnit !== 'meters' || duo.rootMotion.upAxis !== 'Y') {
     throw new Error(`Métadonnées Inter-X invalides : ${duo.id}`);
@@ -89,6 +89,7 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
     tags: duo.tags,
     duration: duo.clips[participant].durationSeconds,
     rootMotionSpace: 'world-meters' as const,
+    interxGrounding: duo.placement ? { baseHeightMeters: participant === 'p2' ? duo.start_offset[1] : 0 } : undefined,
   }));
 });
 
@@ -103,7 +104,7 @@ export const INTERX_DUO_ANIMATIONS: DuoAnimationDef[] = INTERX_MANIFEST.duos.map
     animB: `${duo.id}-p2`,
     offsetB: [
       duo.start_offset[0] * 100,
-      duo.placement?.verticalOrigin === 'rig-ground' ? 0 : duo.start_offset[1] * 100,
+      duo.start_offset[1] * 100,
       duo.start_offset[2] * 100,
     ],
     rotB: 0,
