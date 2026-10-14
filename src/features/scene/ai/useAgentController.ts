@@ -26,6 +26,8 @@ import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo'
 export type { AgentState };
 export { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation };
 
+const BLOCKED_ANIMATION = resolveAnimationId('sad-idle');
+
 interface AgentDeploymentState {
   hasStarted: boolean;
   hasLoggedFalling: boolean;
@@ -802,7 +804,7 @@ export function useAgentController(
       }
       if (moved > 0) stateRef.current.rotY = computeRotYStep(stateRef.current.rotY, Math.atan2(position.x - oldPosition.x, position.z - oldPosition.z), ROT_SPEED, dt);
       if (routeRef.current.error) {
-        stateRef.current.animation = 'idle';
+        stateRef.current.animation = BLOCKED_ANIMATION;
         statusRef.current = 'BLOCKED';
         if (navigationErrorRef.current !== routeRef.current.error) {
           navigationErrorRef.current = routeRef.current.error;
@@ -1084,7 +1086,7 @@ export function useAgentController(
     catch (error) {
       if (!(error instanceof NavigationBlockedError) || !instruction) throw error;
       blockedCoordsRef.current = { instruction, graph: getNavigationGraph(getAgentProfile(_characterId), undefined, instruction.closedDoor), x:stateRef.current.x, z:stateRef.current.z, owner:routeRef.current.owner, status };
-      stateRef.current.animation = 'idle';
+      stateRef.current.animation = BLOCKED_ANIMATION;
       statusRef.current = 'BLOCKED';
       resetRoute(routeRef.current, _characterId);
       cachedCoordsRef.current = null;
