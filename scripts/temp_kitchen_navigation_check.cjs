@@ -61,6 +61,40 @@ if (process.argv.includes('--app-profile')) {
     const browser = await launchBrowser({ args: ['--no-sandbox', ...(hardware ? ['--enable-gpu', '--use-angle=vulkan', '--enable-features=Vulkan,VulkanFromANGLE', '--render-node-override=/dev/dri/renderD128', ...(process.argv.includes('--headed') ? ['--ozone-platform=wayland'] : ['--disable-vulkan-surface'])] : ['--enable-unsafe-swiftshader'])] });
     try {
       const page = await browser.newPage(), client = await page.createCDPSession();
+      const navigationAudit = process.argv.includes('--navigation-cost');
+      if (navigationAudit) {
+        await page.setRequestInterception(true);
+        page.on('request', async request => {
+          const agent = request.url().includes('/ai/useAgentController.ts');
+          const obstacle = request.url().includes('/navigation/NavigationObstacle.tsx');
+          if (!agent && !obstacle) { await request.continue(); return; }
+          console.log('Instrumenting:', request.url());
+          const response = await fetch(request.url());
+          let body = await response.text();
+          if (agent) {
+            assert.ok(body.includes('return { update,'), 'Controller interception no longer matches');
+            body = body.replace('return { update,', `return { update: (dt) => {
+              if (window.pauseNavigationAudit) return stateRef.current;
+              const started = performance.now();
+              try { return update(dt); } finally {
+                const stats = window.navigationAudit.controller;
+                stats.calls++; stats.ms += performance.now() - started;
+              }
+            },`);
+          } else {
+            assert.ok(body.includes('useFrame(update, -1)'), 'Obstacle interception no longer matches');
+            body = body.replace('useFrame(update, -1)', `useFrame(() => {
+              if (window.pauseNavigationAudit) return;
+              const started = performance.now();
+              try { update(); } finally {
+                const stats = window.navigationAudit.obstacles;
+                stats.calls++; stats.ms += performance.now() - started;
+              }
+            }, -1)`);
+          }
+          await request.respond({ status:200, contentType:'application/javascript', body });
+        });
+      }
       if (process.argv.includes('--baseline-assets')) {
         await page.setRequestInterception(true);
         page.on('request', async request => {
@@ -74,6 +108,7 @@ if (process.argv.includes('--app-profile')) {
       page.on('pageerror', error => console.log('App error:', error.message));
       await page.evaluateOnNewDocument(() => {
         window.freezeSamples = [];
+        window.navigationAudit = { controller: { calls:0, ms:0 }, obstacles: { calls:0, ms:0 } };
         new PerformanceObserver(list => { for (const entry of list.getEntries()) window.freezeSamples.push({ start: entry.startTime, duration: entry.duration }); }).observe({ type: 'longtask', buffered: true });
         window.frameSamples = [];
         let previous;
@@ -82,16 +117,66 @@ if (process.argv.includes('--app-profile')) {
       });
       await client.send('Profiler.enable');
       await client.send('Profiler.start');
-      await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5186'}/?characterCount=15&animOriginLerp=false&animCrossfade=false&exitTransitions=false`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5186'}/?${process.env.ROOM_APP_QUERY || 'characterCount=15'}&animOriginLerp=false&animCrossfade=false&exitTransitions=false`, { waitUntil: 'domcontentloaded', timeout: 120000 });
       await page.evaluate(async () => {
         const idle = await import('/src/features/scene/idleState.ts');
         setInterval(idle.resetAppIdle, 1000);
       });
+      let pointerTick = 0;
+      const keepActiveFor = async milliseconds => {
+        const until = Date.now() + milliseconds;
+        while (Date.now() < until) {
+          await page.mouse.move(100 + pointerTick++ % 2, 100);
+          await new Promise(resolve => setTimeout(resolve, Math.min(1000, Math.max(0, until - Date.now()))));
+        }
+      };
+      if (navigationAudit) {
+        await page.bringToFront();
+        const readyDeadline = Date.now() + 120000;
+        let nextReadyLog = Date.now();
+        while (!await page.evaluate(() => window.navigationAudit.controller.calls > 0)) {
+          assert.ok(Date.now() < readyDeadline, 'Navigation never became active');
+          if (Date.now() >= nextReadyLog) {
+            console.log('Waiting for scene:', JSON.stringify(await page.evaluate(() => ({
+              navigation:window.navigationAudit, drawCalls:window.__DEV_STATE__?.drawCalls,
+              programs:window.__THREE_GL__?.info.programs.length,
+              text:document.body.innerText.slice(0, 600),
+            }))));
+            nextReadyLog = Date.now() + 10000;
+          }
+          await keepActiveFor(1000);
+        }
+        await keepActiveFor(20000);
+        if (process.argv.includes('--sky-view')) await page.evaluate(async () => {
+          const THREE = await import('/node_modules/.vite/deps/three.js');
+          const renderer = window.__THREE_GL__, render = renderer.render;
+          const saved = new THREE.Quaternion(), target = new THREE.Vector3();
+          renderer.render = function(scene, camera) {
+            if (this.getRenderTarget() !== null || !camera.isPerspectiveCamera) return render.call(this, scene, camera);
+            saved.copy(camera.quaternion);
+            target.copy(camera.position); target.y += 1;
+            camera.lookAt(target);
+            try { return render.call(this, scene, camera); }
+            finally { camera.quaternion.copy(saved); camera.updateMatrixWorld(); }
+          };
+        });
+      }
       const phases = process.argv.includes('--long-profile') ? 6 : 3;
       for (let phase = 0; phase < phases; phase++) {
+        if (navigationAudit) await page.evaluate(paused => {
+          window.pauseNavigationAudit = paused;
+          window.navigationAudit = { controller: { calls:0, ms:0 }, obstacles: { calls:0, ms:0 } };
+          window.frameSamples = [];
+          window.freezeSamples = [];
+        }, phase === 1);
         await page.bringToFront();
         await page.mouse.move(100 + phase,100 + phase);
-        await new Promise(resolve => setTimeout(resolve, 20000));
+        await keepActiveFor(20000);
+        if (navigationAudit) console.log('Navigation cost:', JSON.stringify(await page.evaluate(() => ({
+          paused:!!window.pauseNavigationAudit, ...window.navigationAudit,
+          frameCount:window.frameSamples.length,
+          meanFrameMs:window.frameSamples.reduce((sum,ms)=>sum+ms,0)/window.frameSamples.length,
+        }))));
         console.log('App sample:', JSON.stringify(await page.evaluate(() => {
           const renderer = window.__THREE_GL__, context = renderer?.getContext(), debug = context?.getExtension('WEBGL_debug_renderer_info');
           return { seconds: performance.now() / 1000, visibility:document.visibilityState, gpu: debug && context.getParameter(debug.UNMASKED_RENDERER_WEBGL), programs: renderer?.info.programs.length, drawCalls:window.__DEV_STATE__?.drawCalls, triangles:window.__DEV_STATE__?.triangles, heap: performance.memory?.usedJSHeapSize, frames: window.frameSamples.length, worstFrame: Math.max(0, ...window.frameSamples), longTasks: window.freezeSamples.sort((a,b) => b.duration-a.duration).slice(0, 8), recentLongTasks: window.freezeSamples.filter(t => t.start >= performance.now()-20000).sort((a,b)=>b.duration-a.duration).slice(0, 5) };
