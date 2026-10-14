@@ -10,9 +10,10 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-type ScooterProps = SceneItemProps & { steeringAngle?: number };
+type ScooterProps = SceneItemProps & { steeringAngle?: number; onWheels?: (front: THREE.Vector3[], rear: THREE.Vector3[]) => void };
+export const SCOOTER_STEERING_ANGLE = -Math.PI / 3;
 
-export function Scooter({ onSize, steeringAngle = 0 }: ScooterProps) {
+export function Scooter({ onSize, steeringAngle = 0, onWheels }: ScooterProps) {
   const { scene } = useGLTFClone('items/xiaomi-scooter4/xiaomi-scooter4.glb');
   const steering = useMemo(() => {
     const pivot = scene.getObjectByName('SteeringPivot');
@@ -47,8 +48,27 @@ export function Scooter({ onSize, steeringAngle = 0 }: ScooterProps) {
     steering.pivot.quaternion.copy(steering.rest).multiply(
       new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), steeringAngle),
     );
-    onSize(glbLocalBBox(scene).getSize(new THREE.Vector3()));
-  }, [steering, steeringAngle, onSize]);
+    const box = glbLocalBBox(scene);
+    scene.position.y = -box.min.y;
+    onSize(box.getSize(new THREE.Vector3()));
+    if (onWheels) {
+      scene.updateWorldMatrix(true, true);
+      const inverse = scene.parent!.matrixWorld.clone().invert();
+      const wheels = (root: THREE.Object3D): THREE.Vector3[] => {
+        const points: THREE.Vector3[] = [];
+        root.traverse(node => {
+          const mesh = node as THREE.Mesh;
+          if (!mesh.isMesh || Array.isArray(mesh.material) || mesh.material.name !== 'Black.001') return;
+          const matrix = inverse.clone().multiply(mesh.matrixWorld);
+          const positions = mesh.geometry.getAttribute('position');
+          for (let i = 0; i < positions.count; i++) points.push(new THREE.Vector3().fromBufferAttribute(positions, i).applyMatrix4(matrix));
+        });
+        if (!points.length) throw new Error('Scooter GLB is missing its wheel geometry');
+        return points;
+      };
+      onWheels(wheels(scene.getObjectByName('SteeringAssembly')!), wheels(scene.getObjectByName('ScooterBody')!));
+    }
+  }, [scene, steering, steeringAngle, onSize, onWheels]);
 
   return <primitive object={scene} />;
 }

@@ -1,5 +1,5 @@
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
-import { useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
@@ -11,7 +11,7 @@ import type { Item } from '@shared/types';
 import { CorridorCloset } from '../items/CorridorCloset';
 import { TradfriBulb } from '../items/TradfriBulb';
 import { Linky } from '../items/Linky';
-import { Scooter } from '../items/Scooter';
+import { Scooter, SCOOTER_STEERING_ANGLE } from '../items/Scooter';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { getObjectActionIds } from '../objectActions';
 
@@ -24,7 +24,7 @@ import {
   KITCHEN_EAST_WALL,
   PARTITION_THICKNESS
 } from '../wallData';
-import { CORRIDOR_NORTH_WALL, pZ } from '../wallData';
+import { CORRIDOR_NORTH_WALL, ROOM_EAST_WALL, pZ } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
@@ -183,11 +183,25 @@ export function CorridorEquipment() {
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function CorridorFurnishings() {
+  const [parking, setParking] = useState({ x:0, z:0, angle:Math.PI });
+  const parkScooter = useCallback((front: THREE.Vector3[], rear: THREE.Vector3[]) => {
+    const eastContact = (points: THREE.Vector3[], angle: number) => Math.max(...points.map(p => p.x * Math.cos(angle) + p.z * Math.sin(angle)));
+    // Both tire surfaces touch the east wall; the front tire also touches the north wall.
+    let lower = Math.PI / 2, upper = 3 * Math.PI / 2, angle = Math.PI;
+    while (angle !== lower && angle !== upper) {
+      const difference = eastContact(front, angle) - eastContact(rear, angle);
+      if (difference === 0) break;
+      if (difference > 0) lower = angle; else upper = angle;
+      angle = (lower + upper) / 2;
+    }
+    const northContact = Math.min(...front.map(p => -p.x * Math.sin(angle) + p.z * Math.cos(angle)));
+    setParking({ x:ROOM_EAST_WALL - eastContact(front, angle), z:CORRIDOR_NORTH_WALL - northContact, angle });
+  }, []);
   return (
     <MergedStaticGroup name="merged-corridor-furnishings">
       {/* Trottinette Xiaomi */}
-      <group position={[298, 0, 470]} rotation-y={Math.PI - THREE.MathUtils.degToRad(5)} userData={{ skipMerge: true, animUnit: true, itemName: 'Trottinette Xiaomi' }}>
-        <NavigationObstacle id="scooter" hull><Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} steeringAngle={-Math.PI / 6} /></NavigationObstacle>
+      <group position={[parking.x, 0, parking.z]} rotation-y={parking.angle} userData={{ skipMerge: true, animUnit: true, itemName: 'Trottinette Xiaomi' }}>
+        <NavigationObstacle id="scooter" hull><Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} steeringAngle={SCOOTER_STEERING_ANGLE} onWheels={parkScooter} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );

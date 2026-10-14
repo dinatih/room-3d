@@ -106,7 +106,7 @@ const ACTIONS: Record<string, ActionConfig> = {
   'sofa-arm-left': { label: ['Mettre à plat G', 'Relever G'] },
   'sofa-arm-right': { label: ['Mettre à plat D', 'Relever D'] },
   'vihals-toggle': { label: ['Plier', 'Déplier'] },
-  'scooter-steering-toggle': { label: ['Guidon 30° à gauche', 'Redresser le guidon'] },
+  'scooter-steering-toggle': { label: ['Guidon 60° à gauche', 'Redresser le guidon'] },
   'lara-haircut': { label: 'Coupe de cheveux 💇‍♀️', type: 'select', options: [
     { value: 'original', label: "Coupe d'origine 👱‍♀️" },
     ...WIGS_ITEMS.map(wig => ({ value: wig.id, label: wig.name })),

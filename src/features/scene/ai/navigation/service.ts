@@ -234,7 +234,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
       navigationDebug.set(agentId, { path: [start, ...path], target: goal });
     }
     route.error = null;
-    while (route.index < route.path.length && distance(start, route.path[route.index]) < 1e-6) route.index++;
+    while (route.index < route.path.length && distance(start, route.path[route.index]) === 0) route.index++;
     const next = route.path[route.index];
     if (!next) return goal;
     const length = distance(start, next);
@@ -271,24 +271,34 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
     if (!planRoute(route, agentId, start, target)) return start;
   }
   if (route.error) return start;
-  while (route.index < route.path.length && distance(start, route.path[route.index]) < 1e-6) route.index++;
-  const next = route.path[route.index];
+  while (route.index < route.path.length && distance(start, route.path[route.index]) === 0) route.index++;
+  let next = route.path[route.index];
   if (!next) { resetRoute(route, agentId, closedDoor); return target; }
   // A displaced agent must regain a valid route before continuing toward an old vertex.
   if (!segmentFree(start, next, graph.obstacles)) {
     if (!planRoute(route, agentId, start, target)) return start;
-    return followRoute(route, agentId, start, target, travel, steer, owner, interaction, closedDoor);
+    while (route.index < route.path.length && distance(start, route.path[route.index]) === 0) route.index++;
+    next = route.path[route.index];
+    if (!next || !segmentFree(start, next, graph.obstacles)) {
+      route.error = 'Le chemin calculé contient un segment impraticable';
+      navigationDebug.set(agentId, { path: [start, ...route.path], target, error: route.error });
+      return start;
+    }
   }
   const remaining = distance(start, next);
   const direction = { x: (next.x - start.x) / remaining, z: (next.z - start.z) / remaining };
   const steered = steer?.(direction, remaining) ?? direction;
   const step = Math.min(travel, remaining);
   let proposed = { x: start.x + steered.x * step, z: start.z + steered.z * step };
+  let straight = steered.x === direction.x && steered.z === direction.z;
   // Steering may enter free space that cannot see the next corner. Preserve visibility
   // so avoiding a neighbour cannot strand the actor behind that corner.
-  if (!segmentFree(start, proposed, graph.obstacles) || !segmentFree(proposed, next, graph.obstacles)) proposed = { x: start.x + direction.x * step, z: start.z + direction.z * step };
+  if (!segmentFree(start, proposed, graph.obstacles) || !segmentFree(proposed, next, graph.obstacles)) {
+    proposed = { x: start.x + direction.x * step, z: start.z + direction.z * step };
+    straight = true;
+  }
+  if (step === remaining && straight) proposed = { ...next };
   if (!segmentFree(start, proposed, graph.obstacles)) return start;
-  if (step === remaining && steered.x === direction.x && steered.z === direction.z) proposed = { ...next };
   return passDoors(route, agentId, profile, start, next, proposed, travel);
 }
 

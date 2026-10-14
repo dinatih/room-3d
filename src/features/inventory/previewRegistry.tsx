@@ -91,7 +91,7 @@ import { TrashBin }                                   from '@features/scene/item
 import { VacuumCleaner }                              from '@features/scene/items/VacuumCleaner';
 import { Vihals }                                     from '@features/scene/items/Vihals';
 import { Linky }                                      from '@features/scene/items/Linky';
-import { Scooter }                                    from '@features/scene/items/Scooter';
+import { Scooter, SCOOTER_STEERING_ANGLE }              from '@features/scene/items/Scooter';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { ElectricRacket }                             from '@features/scene/items/ElectricRacket';
 import { Drona }                                      from '@features/scene/items/Drona';
@@ -113,7 +113,7 @@ import { DoubleVenusPendant } from '@features/scene/items/DoubleVenusPendant';
 function ScooterPreview(props: SceneItemProps) {
   return (
     <group rotation-y={-5 * Math.PI / 180}>
-      <Scooter {...props} steeringAngle={props.actionState['scooter-steering-toggle'] ? -Math.PI / 6 : 0} />
+      <Scooter {...props} steeringAngle={props.actionState['scooter-steering-toggle'] ? SCOOTER_STEERING_ANGLE : 0} />
     </group>
   );
 }

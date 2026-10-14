@@ -2,6 +2,12 @@ const launchBrowser = require('./browser-test-options.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const ts = require('typescript');
+if (process.argv.includes('--scooter-data')) {
+  const bytes = fs.readFileSync('public/items/xiaomi-scooter4/xiaomi-scooter4.glb');
+  const gltf = JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());
+  console.log(JSON.stringify({ materials:gltf.materials.map(m=>m.name), nodes:gltf.nodes, meshes:gltf.meshes.map(mesh => ({name:mesh.name, bounds:mesh.primitives.map(p => ({material:gltf.materials[p.material].name, position:gltf.accessors[p.attributes.POSITION]}))})) },null,2));
+  return;
+}
 if (process.argv.includes('--plant-data')) {
   for (const path of ['public/items/plant-monstera/potted_palm.glb', 'public/items/yucca10329308/Yucca10329308.glb']) {
     const buffer = fs.readFileSync(path);
@@ -564,6 +570,62 @@ if (process.argv.includes('--browser')) (async () => {
       assert.equal(cases.length, 8);
       assert.ok(cases.every(c => c.status === 'FINISHED'), JSON.stringify(cases));
       console.log('Interaction regressions passed with all three animation options OFF.');
+      return;
+    }
+    if (process.argv.includes('--route-recovery')) {
+      const result = await page.evaluate(() => {
+        const nav = window.nav, g = window.geom;
+        nav.setAgentProfile('corner-probe',nav.getAgentProfile('native'));
+        const graph = nav.getNavigationGraph(nav.getAgentProfile('corner-probe'));
+        const oldObstacles = graph.obstacles, oldFind = graph.find;
+        const square = new g.VisibilityGraph([[g.rectangle(160,300,20,20)]]);
+        graph.obstacles = square.obstacles; graph.find = square.find.bind(square);
+        try {
+          const delta = 5 * g.GEOMETRY_EPSILON;
+          const start = { x:150-delta,z:290+delta }, target = { x:171,z:290.5 };
+          const path = graph.find(start,target);
+          if (!path || g.distance(start,path[0]) >= 1e-6 || g.segmentFree(start,path[1],graph.obstacles)) throw new Error('Fixture must reproduce an unsafe shortcut past a nearby corner');
+          const route = nav.createRouteState();
+          const moved = nav.followRoute(route,'corner-probe',start,target,1);
+          if (route.error || moved.x !== path[0].x || moved.z !== path[0].z) throw new Error('The nearby corner was skipped');
+          const onward = nav.followRoute(route,'corner-probe',moved,target,1);
+          if (onward.x <= moved.x || route.error) throw new Error('The actor did not continue past its corner');
+          let calls = 0;
+          graph.find = () => { calls++; return [{ x:160,z:300 },target]; };
+          const invalid = nav.createRouteState();
+          nav.followRoute(invalid,'corner-probe',start,target,1);
+          const firstCalls = calls;
+          for (let frame=0;frame<300;frame++) nav.followRoute(invalid,'corner-probe',start,target,1);
+          if (!invalid.error || calls !== firstCalls) throw new Error('An invalid planned segment must report an error without recursive or repeated searches');
+          return { moved,onward,firstCalls,repeatedCalls:calls-firstCalls,error:invalid.error };
+        } finally { graph.obstacles = oldObstacles; graph.find = oldFind; nav.resetRoute(nav.createRouteState(),'corner-probe'); }
+      });
+      console.log('Corner and recursion regressions:',JSON.stringify(result));
+      if (!process.argv.includes('--scooter-parking')) return;
+    }
+    if (process.argv.includes('--scooter-parking')) {
+      const result = await page.evaluate(async () => {
+        const THREE = await import('/node_modules/.vite/deps/three.js');
+        const walls = await import('/src/features/scene/wallData.ts');
+        window.fixtureScene.updateMatrixWorld(true);
+        let scooter;
+        window.fixtureScene.traverse(node => { if (node.userData.itemName === 'Trottinette Xiaomi') scooter = node; });
+        const wheels = { front:[],rear:[] };
+        scooter.traverse(mesh => {
+          if (!mesh.isMesh || mesh.material.name !== 'Black.001') return;
+          let parent = mesh;
+          while (parent && parent.name !== 'SteeringAssembly' && parent.name !== 'ScooterBody') parent = parent.parent;
+          if (!parent) throw new Error('Wheel is outside its expected scooter assembly');
+          const points = wheels[parent.name === 'SteeringAssembly' ? 'front' : 'rear'];
+          const positions = mesh.geometry.getAttribute('position');
+          for (let i=0;i<positions.count;i++) points.push(new THREE.Vector3().fromBufferAttribute(positions,i).applyMatrix4(mesh.matrixWorld));
+        });
+        const frontEast = Math.max(...wheels.front.map(p=>p.x)), rearEast = Math.max(...wheels.rear.map(p=>p.x));
+        const frontNorth = Math.min(...wheels.front.map(p=>p.z));
+        if ([frontEast-walls.ROOM_EAST_WALL,rearEast-walls.ROOM_EAST_WALL,frontNorth-walls.CORRIDOR_NORTH_WALL].some(gap=>Math.abs(gap)>1e-7)) throw new Error('Scooter tires do not touch the specified walls');
+        return { position:scooter.position.toArray(),angle:scooter.rotation.y,frontEast,rearEast,frontNorth,obstacle:window.nav.furnitureObstacles.get('scooter:0') };
+      });
+      console.log('Scooter parking:',JSON.stringify(result));
       return;
     }
     if (process.argv.includes('--blocked-retry')) {
