@@ -17,7 +17,7 @@ import { AgentState, AgentStatus } from './agent/agentTypes';
 import { cameraState } from '../cameraState';
 import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation, getWalkSpeedForAnimation } from './agent/agentWalkAnimations';
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
-import { computeSteeringVector, computeRotYStep, isAgentDestinationFree } from './agent/agentAvoidance';
+import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { getExitTransition } from '../animations/animationTransitions';
 import { doorCollisionState } from '../doorObstacles';
@@ -115,7 +115,7 @@ export function useAgentController(
   const navigationErrorRef = useRef<string | null>(null);
   const initialProfileResolvedRef = useRef(false);
   const spawnObstacleRevisionRef = useRef(-1);
-  const blockedCoordsRef = useRef<{ instruction: AgentInstruction; graph: ReturnType<typeof getNavigationGraph>; x: number; z: number; owner?: string; status: AgentStatus } | null>(null);
+  const blockedCoordsRef = useRef<{ instruction: AgentInstruction; graph: ReturnType<typeof getNavigationGraph>; x: number; z: number; owner?: string; status: AgentStatus; actorBlockers: ActorBlockers } | null>(null);
 
   // Animation de marche courante pour les trajets
   const currentWalkAnimRef = useRef<string>(getRandomNpcWalkAnimation(_characterId));
@@ -147,7 +147,12 @@ export function useAgentController(
     if (followsInteraction || occupiedApproach || (!movingFurniture.size && cachedCoordsRevisionRef.current !== revision) || cachedCoordsInstructionRef.current !== instr || !cachedCoordsRef.current) {
       cachedCoordsInstructionRef.current = instr;
       cachedCoordsRevisionRef.current = revision;
-      cachedCoordsRef.current = resolveInstructionCoords(instr, startPosRef.current, _characterId, stateRef.current, routeRef.current.owner);
+      beginActorBlockCheck(_characterId);
+      try { cachedCoordsRef.current = resolveInstructionCoords(instr, startPosRef.current, _characterId, stateRef.current, routeRef.current.owner); }
+      catch (error) {
+        if (error instanceof NavigationBlockedError) error.actorBlockers = endActorBlockCheck(_characterId);
+        throw error;
+      } finally { endActorBlockCheck(_characterId); }
     }
     return cachedCoordsRef.current;
   };
@@ -1082,14 +1087,15 @@ export function useAgentController(
       ? dynamicNavQueueRef.current[dynamicNavIndexRef.current] : scenario?.[stepIndexRef.current];
     const blocked = blockedCoordsRef.current;
     if (blocked && blocked.instruction === instruction && blocked.x === stateRef.current.x && blocked.z === stateRef.current.z
-      && blocked.owner === routeRef.current.owner && blocked.graph === getNavigationGraph(getAgentProfile(_characterId), undefined, instruction?.closedDoor)) return stateRef.current;
+      && blocked.owner === routeRef.current.owner && blocked.graph === getNavigationGraph(getAgentProfile(_characterId), undefined, instruction?.closedDoor)
+      && actorBlocksUnchanged(blocked.actorBlockers)) return stateRef.current;
     if (blocked && blocked.instruction === instruction) statusRef.current = blocked.status;
     blockedCoordsRef.current = null;
     const status = statusRef.current;
     try { return advance(dt); }
     catch (error) {
       if (!(error instanceof NavigationBlockedError) || !instruction) throw error;
-      blockedCoordsRef.current = { instruction, graph: getNavigationGraph(getAgentProfile(_characterId), undefined, instruction.closedDoor), x:stateRef.current.x, z:stateRef.current.z, owner:routeRef.current.owner, status };
+      blockedCoordsRef.current = { instruction, graph: getNavigationGraph(getAgentProfile(_characterId), undefined, instruction.closedDoor), x:stateRef.current.x, z:stateRef.current.z, owner:routeRef.current.owner, status, actorBlockers:error.actorBlockers };
       stateRef.current.animation = BLOCKED_ANIMATION;
       statusRef.current = 'BLOCKED';
       resetRoute(routeRef.current, _characterId);

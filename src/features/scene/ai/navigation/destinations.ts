@@ -25,7 +25,7 @@ export function getZoneDestination(id: string, agentId?: string, start?: Point, 
   const belongs = (p: Point) => id === 'living' ? p.x >= BATH_WEST_WALL && p.x <= ROOM_EAST_WALL && p.z >= ROOM_NORTH_WALL && p.z <= ROOM_SOUTH_WALL
     : id === 'bathroom' ? p.x >= BATH_WEST_WALL && p.x < BATH_EAST_WALL && p.z >= BATH_NORTH_WALL && p.z <= diagonal(p.x)
     : id === 'corridor' ? p.x >= BATH_EAST_WALL && p.x <= ROOM_EAST_WALL && p.z >= CORRIDOR_NORTH_WALL && p.z <= diagonal(p.x) : true;
-  const candidates = [...graph.vertices, ...getAgentObstacles(agentId, start ?? center, true).flat()].filter(p => belongs(p) && !insideObstacle(p, graph.obstacles) && isAgentDestinationFree(agentId, p));
+  const candidates = [...graph.vertices, ...getAgentObstacles(agentId, start ?? center).flat()].filter(p => belongs(p) && !insideObstacle(p, graph.obstacles) && isAgentDestinationFree(agentId, p));
   candidates.sort((a, b) => distance(a, center) - distance(b, center));
   const target = candidates.find(p => !start || Boolean(graph.find(start, p)));
   if (!target) throw new NavigationBlockedError(`No free destination inside ${id}`, center);

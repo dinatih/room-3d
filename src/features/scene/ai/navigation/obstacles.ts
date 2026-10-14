@@ -23,8 +23,6 @@ export function unregisterObstacle(id: string): void {
 export interface AgentProfile {
   radius: number;
   height: number;
-  /** Robots and animals retain physical separation, including from human agents. */
-  solid?: boolean;
 }
 const profiles = new Map<string, AgentProfile>();
 export function setAgentProfile(id: string, profile: AgentProfile): void {

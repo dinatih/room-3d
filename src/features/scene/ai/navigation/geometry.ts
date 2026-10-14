@@ -68,8 +68,13 @@ export function pointInRing(p: Point, ring: Polygon): boolean {
 
 /** Rings keep their holes: a courtyard enclosed by obstacles must remain free. */
 export function union(polygons: Polygon[]): Polygon[][] {
-  if (!polygons.length) return [];
-  const inputs = polygons.map(p => [p.map(v => [snap(v.x), snap(v.z)] as [number, number])]);
+  return mergeObstacles(polygons.map(p => [p]));
+}
+
+/** Merge existing obstacles while preserving holes and new intersection corners. */
+export function mergeObstacles(obstacles: Polygon[][]): Polygon[][] {
+  if (!obstacles.length) return [];
+  const inputs = obstacles.map(rings => rings.map(r => r.map(v => [snap(v.x), snap(v.z)] as [number, number])));
   return polygonClipping.union(inputs[0], ...inputs.slice(1)).map(p => p.map(r => r.slice(0, -1).map(([x, z]) => ({ x, z }))));
 }
 

@@ -49,7 +49,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     setActions(previous => ({ ...previous, [motionKey]: motion }));
   }, [motionKey]);
   const onSize = useCallback((size: Vector3) => {
-    const measured = { radius: Math.hypot(size.x, size.z) / 2 * config.radiusScale, height: size.y, solid: true };
+    const measured = { radius: Math.hypot(size.x, size.z) / 2 * config.radiusScale, height: size.y };
     setProfile(previous => previous?.radius === measured.radius && previous.height === measured.height ? previous : measured);
   }, [config.radiusScale]);
 

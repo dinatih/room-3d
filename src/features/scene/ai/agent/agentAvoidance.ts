@@ -1,7 +1,7 @@
 import { cameraState } from '../../cameraState';
 import { useSceneStore } from '../../store/useSceneStore';
 import { getAgentProfile, hasAgentProfile } from '../navigation/obstacles';
-import { inflate, CLEARANCE_ERROR, type Point, type Polygon } from '../navigation/geometry';
+import { inflate, CLEARANCE_ERROR, BOOLEAN_PRECISION, GEOMETRY_EPSILON, pointInRing, projectToSegment, distance, type Point, type Polygon } from '../navigation/geometry';
 import { duoSessionManager } from '../duoSessionManager';
 
 export interface SteeringResult { steerX: number; steerZ: number }
@@ -9,10 +9,31 @@ const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
 const destinations = new Map<string, Point>();
 const passingSides = new Map<string, Map<string, number>>();
+// Only actors which rejected a candidate invalidate a failed approach. Unrelated
+// moving actors must not trigger expensive searches for an impossible geometry.
+export type ActorBlockers = Map<string, string>;
+const observedBlockers = new Map<string, ActorBlockers>();
+function actorState(id: string): string {
+  const p = cameraState.positions[id], d = destinations.get(id);
+  return JSON.stringify([p?.x, p?.y, p?.z, hasAgentProfile(id) ? getAgentProfile(id) : null, d, duoSessionManager.getSessionFor(id)?.sessionId]);
+}
+export function beginActorBlockCheck(id: string): void { observedBlockers.set(id, new Map()); }
+export function endActorBlockCheck(id: string): ActorBlockers {
+  const blockers = observedBlockers.get(id) ?? new Map();
+  observedBlockers.delete(id);
+  return blockers;
+}
+export function actorBlocksUnchanged(blockers: ActorBlockers): boolean {
+  if (!blockers.size) return true;
+  return useSceneStore.getState().layers.npcCollisions && [...blockers].every(([id, state]) => actorState(id) === state);
+}
 const areDuoPartners = (id: string, otherId: string) => {
   const session = duoSessionManager.getSessionFor(id);
   return Boolean(session && session === duoSessionManager.getSessionFor(otherId));
 };
+const actorOverlap = (point: Point, center: Point, radius: number) =>
+  distance(point, center) <= radius + CLEARANCE_ERROR + Math.SQRT2 * BOOLEAN_PRECISION
+  && pointInRing(point, inflate([{ x:center.x, z:center.z }], radius));
 
 export function reserveAgentDestination(id: string, target: Point | null): void {
   if (target) destinations.set(id, { ...target });
@@ -25,6 +46,7 @@ export function reserveAgentDestination(id: string, target: Point | null): void 
 
 /** A stopping place must fit both bodies, even when another actor is resting. */
 export function isAgentDestinationFree(id: string, target: Point): boolean {
+  if (!useSceneStore.getState().layers.npcCollisions) return true;
   const profile = getAgentProfile(id);
   for (const otherId in cameraState.positions) {
     if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
@@ -32,9 +54,11 @@ export function isAgentDestinationFree(id: string, target: Point): boolean {
     const body = getAgentProfile(otherId);
     const separation = profile.radius + body.radius;
     if (other.y >= profile.height || other.y + body.height <= 0) continue;
-    if (Math.hypot(target.x - other.x, target.z - other.z) < separation) return false;
     const destination = destinations.get(otherId);
-    if (destination && Math.hypot(target.x - destination.x, target.z - destination.z) < separation) return false;
+    if (actorOverlap(target, other, separation) || destination && actorOverlap(target, destination, separation)) {
+      observedBlockers.get(id)?.set(otherId, actorState(otherId));
+      return false;
+    }
   }
   return true;
 }
@@ -88,7 +112,7 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
   return SHARED_STEER;
 }
 
-/** Sweep the proposed step against solid actor bodies, without teleporting or tunnelling. */
+/** Sweep every actor body, without teleporting or tunnelling. */
 export function limitAgentMovement(id: string, start: Point, proposed: Point): Point {
   if (!useSceneStore.getState().layers.npcCollisions) return proposed;
   const profile = getAgentProfile(id);
@@ -100,27 +124,40 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
   for (const otherId in cameraState.positions) {
     if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
     const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
-    if (!(profile.solid || body.solid) || other.y >= y + profile.height || other.y + body.height <= y) continue;
+    if (other.y >= y + profile.height || other.y + body.height <= y) continue;
     const dx = start.x - other.x, dz = start.z - other.z;
+    // Most actors are nowhere near this swept step; avoid constructing their polygons.
     const radius = profile.radius + body.radius;
-    const b = dx * vx + dz * vz;
-    const c = dx * dx + dz * dz - radius * radius;
+    if (distance(other, projectToSegment(other, start, proposed)) > radius + CLEARANCE_ERROR + Math.SQRT2 * BOOLEAN_PRECISION) continue;
+    const polygon = inflate([{ x: other.x, z: other.z }], radius);
     // Existing overlaps may separate, but must not deepen.
-    if (c <= 0) {
-      if (b < 0) fraction = 0;
+    if (pointInRing(start, polygon)) {
+      if (dx * vx + dz * vz < 0) fraction = 0;
       continue;
     }
-    if (b >= 0) continue;
-    const discriminant = b * b - lengthSquared * c;
-    if (discriminant <= 0) continue;
-    const contact = (-b - Math.sqrt(discriminant)) / lengthSquared;
-    if (contact >= 0 && contact < fraction) fraction = Math.max(0, contact - Number.EPSILON);
+    // Clip the step against the very same convex footprint as the planner.
+    // Boundary tangents are permitted; a transverse entry stops at contact.
+    let enter = 0, leave = 1;
+    for (let i = 0; i < polygon.length; i++) {
+      const a = polygon[i], b = polygon[(i + 1) % polygon.length];
+      const ex = b.x - a.x, ez = b.z - a.z;
+      const side = ex * (start.z - a.z) - ez * (start.x - a.x);
+      const slope = ex * vz - ez * vx;
+      if (Math.abs(slope) <= GEOMETRY_EPSILON) {
+        if (side <= GEOMETRY_EPSILON) { leave = 0; break; }
+      } else {
+        const contact = -side / slope;
+        if (slope > 0) enter = Math.max(enter, contact);
+        else leave = Math.min(leave, contact);
+      }
+    }
+    if (enter < leave && leave > 0 && enter < fraction) fraction = Math.max(0, enter);
   }
   return fraction === 1 ? proposed : { x: start.x + vx * fraction, z: start.z + vz * fraction };
 }
 
 /** Obstacles for a route around actors, using the same footprint as movement clearance. */
-export function getAgentObstacles(id: string, start: Point, includeHumans = false): Polygon[] {
+export function getAgentObstacles(id: string, start: Point): Polygon[] {
   if (!useSceneStore.getState().layers.npcCollisions) return [];
   const profile = getAgentProfile(id);
   const y = cameraState.positions[id]?.y ?? 0;
@@ -128,11 +165,12 @@ export function getAgentObstacles(id: string, start: Point, includeHumans = fals
   for (const otherId in cameraState.positions) {
     if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
     const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
-    if (!(includeHumans || profile.solid || body.solid) || other.y >= y + profile.height || other.y + body.height <= y) continue;
+    if (other.y >= y + profile.height || other.y + body.height <= y) continue;
     const radius = profile.radius + body.radius;
     // Already intersecting actors must remain able to leave their shared space.
-    if (Math.hypot(start.x - other.x, start.z - other.z) <= radius + CLEARANCE_ERROR) continue;
-    obstacles.push(inflate([{ x: other.x, z: other.z }], radius));
+    const polygon = inflate([{ x: other.x, z: other.z }], radius);
+    if (pointInRing(start, polygon)) continue;
+    obstacles.push(polygon);
   }
   return obstacles;
 }

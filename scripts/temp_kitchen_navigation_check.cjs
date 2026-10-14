@@ -567,7 +567,8 @@ if (process.argv.includes('--browser')) (async () => {
       window.furnitureState = await import('/src/features/scene/furniturePositions.ts');
       window.positionState = (await import('/src/features/scene/positionState.ts')).positionState;
       window.cameraState = (await import('/src/features/scene/cameraState.ts')).cameraState;
-      window.steer = (await import('/src/features/scene/ai/agent/agentAvoidance.ts')).computeSteeringVector;
+      window.avoidance = await import('/src/features/scene/ai/agent/agentAvoidance.ts');
+      window.steer = window.avoidance.computeSteeringVector;
       const scenarios = await import('/src/features/scene/ai/scenarios.ts');
       window.autonomousAgents = new Map();
       window.duoManager = (await import('/src/features/scene/ai/duoSessionManager.ts')).duoSessionManager;
@@ -932,12 +933,113 @@ if (process.argv.includes('--browser')) (async () => {
       assert.equal(errors.length,0);
       return;
     }
+    if (process.argv.includes('--crowd-collisions') || process.argv.includes('--bathroom-cases')) {
+      const results = await page.evaluate(async () => {
+        const nav=window.nav,g=window.geom,a=window.avoidance,profile=nav.getAgentProfile('native');
+        nav.useSceneStore.setState(s=>({layers:{...s.layers,npcCollisions:true}}));
+        const results=[], ids=['crowd-a','crowd-b'];
+        ids.forEach(id=>nav.setAgentProfile(id,profile));
+        const base=nav.getNavigationGraph(profile);
+        const left={x:-300,z:-600},right={x:100,z:-600};
+        if(!base.find(left,right)) throw new Error('Crowd fixture needs a reachable ground path');
+        for(const stationary of [true,false]) {
+          const actors=[{id:ids[0],position:{...left},target:right,route:nav.createRouteState()},
+            {id:ids[1],position:stationary?{x:-100,z:-600}:{...right},target:left,route:nav.createRouteState()}];
+          actors.forEach(p=>window.cameraState.positions[p.id]={...p.position,y:0,yaw:0});
+          let minimum=Infinity,frames=0,searches=0;
+          const find=g.VisibilityGraph.prototype.find;
+          g.VisibilityGraph.prototype.find=function(...args){searches++;return find.apply(this,args);};
+          try {
+            for(;frames<3000;frames++) {
+              if(actors.every((p,i)=>stationary&&i===1||g.distance(p.position,p.target)<1e-6)) break;
+              for(const [i,p] of actors.entries()) {
+                if(stationary&&i===1||g.distance(p.position,p.target)<1e-6)continue;
+                const before=p.position;
+                p.position=nav.followRoute(p.route,p.id,before,p.target,1,(dir,remaining)=>{
+                  const s=window.steer(p.id,before.x,before.z,dir.x,dir.z,remaining);return {x:s.steerX,z:s.steerZ};
+                });
+                if(!g.segmentFree(before,p.position,base.obstacles))throw new Error('Actor bypass crossed static geometry');
+                window.cameraState.positions[p.id]={...p.position,y:0,yaw:0};
+                minimum=Math.min(minimum,g.distance(actors[0].position,actors[1].position));
+              }
+            }
+          } finally {g.VisibilityGraph.prototype.find=find;}
+          results.push({stationary,frames,minimum,searches,actors:actors.map(p=>({remaining:g.distance(p.position,p.target),error:p.route.error,position:p.position}))});
+          if(minimum<profile.radius*2-1e-6)throw new Error('Actor bodies penetrated');
+          if(frames===3000)throw new Error(`Crowd did not clear: ${JSON.stringify(results.at(-1))}`);
+          actors.forEach(p=>{nav.resetRoute(p.route,p.id);delete window.cameraState.positions[p.id];});
+        }
+        // A touching body must remain a planner obstacle after the sweep stops.
+        window.cameraState.positions[ids[1]]={x:-100,y:0,z:-600,yaw:0};
+        const before={x:-200,z:-600},contact=a.limitAgentMovement(ids[0],before,{x:-100,z:-600});
+        if(!a.getAgentObstacles(ids[0],contact).length)throw new Error('Contact actor disappeared from the detour planner');
+        // Failed approach dependencies retry only when the obstructing body moves.
+        a.beginActorBlockCheck(ids[0]);
+        if(a.isAgentDestinationFree(ids[0],{x:-100,z:-600}))throw new Error('Occupied point was accepted');
+        const blockers=a.endActorBlockCheck(ids[0]);
+        if(!a.actorBlocksUnchanged(blockers))throw new Error('Stable blocker changed');
+        window.cameraState.positions[ids[1]].x=100;
+        if(a.actorBlocksUnchanged(blockers))throw new Error('Departed blocker retained a cached failure');
+        nav.useSceneStore.setState(s=>({layers:{...s.layers,npcCollisions:false}}));
+        if(!a.isAgentDestinationFree(ids[0],{x:100,z:-600}))throw new Error('Disabled actor collisions still block destinations');
+        delete window.cameraState.positions[ids[1]];
+        return results;
+      });
+      console.log('Crowd collisions:',JSON.stringify(results));
+      if (process.argv.includes('--crowd-collisions')) return;
+    }
+    if (process.argv.includes('--doors-only') || process.argv.includes('--bathroom-cases')) {
+      const doors = await page.evaluate(async () => {
+        const nav = window.nav, g = window.geom;
+        const profile = nav.getAgentProfile('native');
+        nav.useSceneStore.setState(s => ({ layers: { ...s.layers, npcCollisions: true } }));
+        const results = [];
+        const scenarios = [
+          [180, 200, 220].map((x,i) => [{ x, z: -50-i*(profile.radius*2+g.CLEARANCE_ERROR*2) }, { x: 160, z: 300-i*(profile.radius*2+g.CLEARANCE_ERROR*2) }]),
+          [0, 1, 2].map(i => [{ x:160, z: 300-i*(profile.radius*2+g.CLEARANCE_ERROR*2) }, { x: 200, z: -50-i*(profile.radius*2+g.CLEARANCE_ERROR*2) }]),
+          [[{ x: 180, z: -50 }, { x: 160, z: 300 }], [{ x: 160, z: 300 }, { x: 200, z: -50 }]],
+        ];
+        for (const [scenarioIndex, destinations] of scenarios.entries()) {
+        const actors = destinations.map(([position, target], i) => ({ id: `door-${i}`, position, target, route: nav.createRouteState() }));
+        for (const a of actors) if (!nav.getNavigationGraph(profile).find(a.position,a.target)) throw new Error(`Door fixture contains an unreachable endpoint: ${JSON.stringify(a)}`);
+        actors.forEach(a => { nav.setAgentProfile(a.id, profile); window.cameraState.positions[a.id]={...a.position,y:0,yaw:0}; });
+        const deadline = performance.now() + 30000;
+        let nextLog = 0;
+        while (performance.now() < deadline && actors.some(a => g.distance(a.position, a.target) > 1e-6)) {
+          for (const a of actors) {
+            if (g.distance(a.position, a.target) <= 1e-6) continue;
+            const before = a.position;
+            a.position = nav.followRoute(a.route, a.id, a.position, a.target, 1, (direction, remaining) => {
+              const s = window.steer(a.id, a.position.x, a.position.z, direction.x, direction.z, remaining);
+              return { x: s.steerX, z: s.steerZ };
+            });
+            window.cameraState.positions[a.id] = { ...a.position, y: 0, yaw: 0 };
+            for (const key of nav.doorKeys) {
+              const leaf = [[g.inflate(nav.doorPolygon(key, nav.doorCollisionState[key].angle), profile.radius + nav.DOOR_CONFIGS[key].margin)]];
+              if (g.distance(before, a.position) > 0 && !g.segmentFree(before, a.position, leaf)) throw new Error(`Crowd crossed ${key}`);
+            }
+          }
+          if (performance.now() > nextLog) {
+            console.log('Agent trace:', JSON.stringify({ actors: actors.map(a => ({ id: a.id, position: a.position, index: a.route.index, next: a.route.path[a.route.index], error: a.route.error, doors: [...a.route.doors] })), angles: nav.doorCollisionState }));
+            nextLog = performance.now() + 5000;
+          }
+          await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+        results.push(...actors.map(a => ({ scenarioIndex, id: a.id, position: a.position, remaining: g.distance(a.position, a.target), error: a.route.error })));
+        for (const a of actors) { nav.resetRoute(a.route, a.id); delete window.cameraState.positions[a.id]; }
+        }
+        return results;
+      });
+      console.log('Door crowd:', JSON.stringify(doors));
+      assert.ok(doors.every(a => a.remaining < 1e-6 && !a.error), 'Every actor must clear the glass doorway');
+      if (process.argv.includes('--doors-only')) return;
+    }
     if (process.argv.includes('--cases-only') || process.argv.includes('--shower-only') || process.argv.includes('--spawn-objects') || process.argv.includes('--bathroom-cases')) {
       if (process.argv.includes('--bathroom-cases')) {
         const recovery=await page.evaluate(()=>{
           const nav=window.nav, g=window.geom, profile=nav.getAgentProfile('native');
           nav.useSceneStore.setState(s=>({layers:{...s.layers,npcCollisions:true}}));
-          nav.setAgentProfile('occupied-probe',profile); nav.setAgentProfile('occupied-robot',{...profile,solid:true});
+          nav.setAgentProfile('occupied-probe',profile); nav.setAgentProfile('occupied-robot',profile);
           const target={x:200,z:-100}, start={x:200,z:-200}, route=nav.createRouteState();
           window.cameraState.positions['occupied-robot']={...target,y:0,yaw:0};
           const find=g.VisibilityGraph.prototype.find; let calls=0;
@@ -1135,13 +1237,29 @@ if (process.argv.includes('--browser')) (async () => {
           nav.followRoute(route,'blocked-probe',{ x:target.x+1,z:target.z },start,1,undefined,owner,true);
           if (searches === approachSearches) throw new Error('A changed departure must retry');
           nav.unregisterObstacle(owner); nav.unregisterObstacle('blocked-cover');
+          // An actor occupying all exits is temporary; unrelated movement is not
+          // a reason to repeat the failed geometry search.
+          nav.registerObstacle({id:owner,owner,polygon:g.rectangle(-100,-600,10,10),yMin:0,yMax:200});
+          nav.setAgentProfile('exit-occupant',{radius:nav.getAgentProfile('native').radius*2,height:200});
+          window.cameraState.positions['exit-occupant']={x:-100,y:0,z:-600,yaw:0};
+          const exitStart={x:-100,z:-600},exitTarget={x:100,z:-600};
+          nav.resetRoute(route,'blocked-probe');route.owner=owner;
+          nav.followRoute(route,'blocked-probe',exitStart,exitTarget,1);
+          if(!route.error||!route.failure.actorBlockers.size)throw new Error('Crowded exit must retain its actor dependency');
+          const actorSearches=searches;
+          for(let frame=0;frame<300;frame++)nav.followRoute(route,'blocked-probe',exitStart,exitTarget,1);
+          if(searches!==actorSearches)throw new Error('Stable occupied exit repeated searches');
+          window.cameraState.positions['exit-occupant'].z=-750;
+          const actorRecovery=nav.followRoute(route,'blocked-probe',exitStart,exitTarget,1);
+          if(route.error||g.distance(actorRecovery,exitStart)===0)throw new Error('A freed furniture exit did not resume');
+          delete window.cameraState.positions['exit-occupant'];nav.unregisterObstacle(owner);
           [[160,260,84,4],[160,340,84,4],[120,300,4,84],[200,300,4,84]].forEach(([x,z,w,d],i) =>
             nav.registerObstacle({ id:`blocked-ring-${i}`, polygon:g.rectangle(x,z,w,d), yMin:0, yMax:200 }));
           const graph = nav.getNavigationGraph(nav.getAgentProfile('blocked-probe'));
           if (g.insideObstacle(start,graph.obstacles) || graph.find(target,start)) throw new Error('Fixture must contain a free but unreachable destination');
           const approach = nav.getObjectApproach('free-target',start,'blocked-probe',target,false,undefined,undefined,true);
           if (!approach || !graph.find(target,approach)) throw new Error('Approach must be reachable from the actor');
-          return { firstSearches, repeatedSearches, repeatedApproachSearches, recoverySearches, moved, approach, error:recoveredError };
+          return { firstSearches, repeatedSearches, repeatedApproachSearches, recoverySearches, moved, approach, actorRecovery, error:recoveredError };
         } finally {
           g.VisibilityGraph.prototype.find = find;
           nav.resetRoute(route,'blocked-probe');
@@ -1205,51 +1323,6 @@ if (process.argv.includes('--browser')) (async () => {
       }));
       assert.equal(audit.blocked.length, 0, 'Autonomous actors must not get permanently blocked');
       assert.equal(audit.failures.length, 0, 'Autonomous coordinates must resolve');
-      return;
-    }
-    if (process.argv.includes('--doors-only')) {
-      const doors = await page.evaluate(async () => {
-        const nav = window.nav, g = window.geom;
-        const profile = nav.getAgentProfile('native');
-        nav.useSceneStore.setState(s => ({ layers: { ...s.layers, npcCollisions: true } }));
-        const results = [];
-        const scenarios = [
-          [180, 200, 220].map(x => [{ x, z: -50 }, { x: 160, z: 300 }]),
-          [140, 150, 160].map(x => [{ x, z: 300 }, { x: 200, z: -50 }]),
-          [[{ x: 180, z: -50 }, { x: 160, z: 300 }], [{ x: 160, z: 300 }, { x: 200, z: -50 }]],
-        ];
-        for (const [scenarioIndex, destinations] of scenarios.entries()) {
-        const actors = destinations.map(([position, target], i) => ({ id: `door-${i}`, position, target, route: nav.createRouteState() }));
-        actors.forEach(a => nav.setAgentProfile(a.id, profile));
-        const deadline = performance.now() + 30000;
-        let nextLog = 0;
-        while (performance.now() < deadline && actors.some(a => g.distance(a.position, a.target) > 1e-6)) {
-          for (const a of actors) {
-            if (g.distance(a.position, a.target) <= 1e-6) continue;
-            const before = a.position;
-            a.position = nav.followRoute(a.route, a.id, a.position, a.target, 1, (direction, remaining) => {
-              const s = window.steer(a.id, a.position.x, a.position.z, direction.x, direction.z, remaining);
-              return { x: s.steerX, z: s.steerZ };
-            });
-            window.cameraState.positions[a.id] = { ...a.position, y: 0, yaw: 0 };
-            for (const key of nav.doorKeys) {
-              const leaf = [[g.inflate(nav.doorPolygon(key, nav.doorCollisionState[key].angle), profile.radius + nav.DOOR_CONFIGS[key].margin)]];
-              if (g.distance(before, a.position) > 0 && !g.segmentFree(before, a.position, leaf)) throw new Error(`Crowd crossed ${key}`);
-            }
-          }
-          if (performance.now() > nextLog) {
-            console.log('Agent trace:', JSON.stringify({ actors: actors.map(a => ({ id: a.id, position: a.position, index: a.route.index, next: a.route.path[a.route.index], error: a.route.error, doors: [...a.route.doors] })), angles: nav.doorCollisionState }));
-            nextLog = performance.now() + 5000;
-          }
-          await new Promise(resolve => requestAnimationFrame(resolve));
-        }
-        results.push(...actors.map(a => ({ scenarioIndex, id: a.id, position: a.position, remaining: g.distance(a.position, a.target), error: a.route.error })));
-        for (const a of actors) { nav.resetRoute(a.route, a.id); delete window.cameraState.positions[a.id]; }
-        }
-        return results;
-      });
-      console.log('Door crowd:', JSON.stringify(doors));
-      assert.ok(doors.every(a => a.remaining < 1e-6 && !a.error), 'Every actor must clear the glass doorway');
       return;
     }
     const result = await page.evaluate(() => {

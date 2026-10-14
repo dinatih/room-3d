@@ -2,14 +2,15 @@ import { positionState } from '../../positionState';
 import { movingFurniture } from '../../furniturePositions';
 import { architectureObstacles, walkableSurfaces } from './architecture';
 import { furnitureObstacles, getObstacleRevision, getAgentProfile, navigationDebug, type AgentProfile } from './obstacles';
-import { inflate, union, VisibilityGraph, rectangle, pointInRing, insideObstacle, segmentFree, distance, projectToSegment, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
+import { inflate, union, mergeObstacles, VisibilityGraph, rectangle, pointInRing, insideObstacle, segmentFree, distance, projectToSegment, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, type DoorKey } from './doorRequests';
-import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles } from '../agent/agentAvoidance';
+import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from '../agent/agentAvoidance';
 
 export { architectureObstacles };
 export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
 export class NavigationBlockedError extends Error {
+  actorBlockers: ActorBlockers = new Map();
   constructor(message: string, readonly target: Point) { super(message); this.name = 'NavigationBlockedError'; }
 }
 export function doorPolygon(key: DoorKey, angle: number): Polygon {
@@ -71,7 +72,7 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
   const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
   if (!exiting && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles) && isAgentDestinationFree(agentId, goal) && (!start || graph.find(start, goal))) return goal;
   exiting = exiting || Boolean(start && owned.some(p => pointInRing(start, p)));
-  const contours = owned.length && !flexible ? owned : [...graph.obstacles.flat(), ...getAgentObstacles(agentId, start ?? goal, true)];
+  const contours = owned.length && !flexible ? owned : [...graph.obstacles.flat(), ...getAgentObstacles(agentId, start ?? goal)];
   const edges = contours.flatMap(polygon => polygon.map((a, i) => [a, polygon[(i + 1) % polygon.length]] as const));
   const candidates = edges.flatMap(([a, b]) => [a, projectToSegment(goal, a, b), ...(start ? [projectToSegment(start, a, b)] : [])]);
   // Other obstacles can cover an entire corner: include their intersections with the owner's boundary.
@@ -100,7 +101,7 @@ export interface RouteState {
   index: number;
   target: Point | null;
   graph: VisibilityGraph | null;
-  crowd?: { base: VisibilityGraph; graph: VisibilityGraph | null; signature: string };
+  crowd?: { base: VisibilityGraph; graph: VisibilityGraph | null; signature: string; resume: { start: Point; next: Point } };
   error: string | null;
   doors: Set<DoorKey>;
   closedDoor?: DoorKey;
@@ -108,7 +109,7 @@ export interface RouteState {
   approach?: Point;
   interactionTarget?: Point;
   exit?: { owner: string; graph: VisibilityGraph; point: Point };
-  failure?: { graph: VisibilityGraph; start: Point; target: Point; owner?: string; interaction: boolean; closedDoor?: DoorKey };
+  failure?: { graph: VisibilityGraph; start: Point; target: Point; owner?: string; interaction: boolean; closedDoor?: DoorKey; actorBlockers: ActorBlockers };
 }
 export const createRouteState = (): RouteState => ({ path: [], index: 0, target: null, graph: null, error: null, doors: new Set() });
 export function resetRoute(route: RouteState, agentId: string, keepClosedDoor?: DoorKey): void {
@@ -193,6 +194,16 @@ function passDoors(route: RouteState, agentId: string, profile: AgentProfile, st
 /** Returns a safe movement, or the current point while waiting for a door / another agent. */
 export function followRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, closedDoor?: DoorKey): Point {
   owner = owner ? getInteractionOwner(owner) : undefined;
+  const crowd = route.crowd;
+  if (crowd?.graph) {
+    const reachable = limitAgentMovement(agentId, crowd.resume.start, crowd.resume.next);
+    if (reachable.x === crowd.resume.next.x && reachable.z === crowd.resume.next.z) {
+      // The obstruction has cleared: recover the shorter static route without
+      // rebuilding a crowd graph every time a distant actor moves.
+      route.crowd = undefined;
+      route.graph = null;
+    }
+  }
   if (route.error === 'Destination occupée par un autre acteur') {
     if (!isAgentDestinationFree(agentId, target)) return start;
     route.error = null;
@@ -204,16 +215,21 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     if (failed.graph === getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor)
       && failed.start.x === start.x && failed.start.z === start.z
       && failed.target.x === target.x && failed.target.z === target.z
-      && failed.owner === owner && failed.interaction === interaction && failed.closedDoor === closedDoor) return start;
+      && failed.owner === owner && failed.interaction === interaction && failed.closedDoor === closedDoor
+      && actorBlocksUnchanged(failed.actorBlockers)) return start;
     route.failure = undefined;
     route.error = null;
     route.graph = null;
     route.approach = undefined;
     route.exit = undefined;
   }
-  const position = advanceRoute(route, agentId, start, target, travel, steer, owner, interaction, closedDoor);
+  beginActorBlockCheck(agentId);
+  let position: Point;
+  let actorBlockers: ActorBlockers;
+  try { position = advanceRoute(route, agentId, start, target, travel, steer, owner, interaction, closedDoor); }
+  finally { actorBlockers = endActorBlockCheck(agentId); }
   if (route.error) {
-    route.failure = { graph: getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor), start: { ...start }, target: { ...target }, owner, interaction, closedDoor };
+    route.failure = { graph: getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor), start: { ...start }, target: { ...target }, owner, interaction, closedDoor, actorBlockers };
     // An impossible route must not retain a passage needed by other agents.
     releaseAgentDoors(agentId);
     route.doors.clear();
@@ -225,10 +241,11 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     const obstacles = getAgentObstacles(agentId, start);
     const signature = JSON.stringify(obstacles);
     if (obstacles.length && (route.crowd?.base !== base || route.crowd.signature !== signature)) {
-      const graph = new VisibilityGraph([...base.obstacles, ...obstacles.map(polygon => [polygon])]);
+      const graph = new VisibilityGraph(mergeObstacles([...base.obstacles, ...obstacles.map(polygon => [polygon])]));
       const goal = route.target ?? target;
       const path = graph.find(start, goal);
-      route.crowd = { base, graph: path ? graph : null, signature };
+      route.crowd = { base, graph: path ? graph : null, signature,
+        resume: route.crowd?.resume ?? { start: { ...start }, next: route.path[route.index] ?? goal } };
       if (path) {
         route.path = path; route.index = 0; route.graph = graph; route.target = { ...goal };
         navigationDebug.set(agentId, { path: [start, ...path], target: goal });

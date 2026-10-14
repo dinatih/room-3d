@@ -90,7 +90,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     );
     if (!isPreview && navigationEnabled) setAgentProfile('shiba', {
       radius: Math.min(finalSize.x, finalSize.z) / 2,
-      height: targetHeight, solid: true,
+      height: targetHeight,
     });
     setBounds({ size: finalSize, center: rawBox.getCenter(new THREE.Vector3()).multiplyScalar(scaleFactor) });
 
