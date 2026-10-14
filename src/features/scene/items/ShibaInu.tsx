@@ -14,6 +14,7 @@ import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { glbLocalBBox } from '../glbUtils';
+import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 import { getObjectActionIds } from '../objectActions';
 import { getAnimationOriginTransform } from '../animations/animationResolver';
 
@@ -95,7 +96,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      m.frustumCulled = false; // Le saut déforme le mesh hors des bornes de sa pose initiale.
+      enableAnimatedFrustumCulling(m);
       if (m.material) {
         const mats = Array.isArray(m.material) ? m.material : [m.material];
         mats.forEach(mat => {

@@ -1,6 +1,7 @@
 import { useRef, useLayoutEffect, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 import * as THREE from 'three';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
@@ -168,8 +169,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       if (m.geometry) {
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
-        // The animated geometry may leave the bind-pose bounds.
-        m.frustumCulled = false;
+        enableAnimatedFrustumCulling(m);
       }
       if (m.material) {
         const mat = m.material as THREE.MeshStandardMaterial;

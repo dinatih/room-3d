@@ -29,7 +29,6 @@ function NeighborApartment({ offsetX, offsetZ }: { offsetX: number; offsetZ: num
 
     const clone = src.clone(true);
     clone.traverse((o) => {
-      o.frustumCulled = false;
       o.layers.set(LAYER_NEIGHBORS);
       o.userData = { ...o.userData, noAnim: true };
       delete (o.userData as any).animUnit;
@@ -37,7 +36,7 @@ function NeighborApartment({ offsetX, offsetZ }: { offsetX: number; offsetZ: num
       delete o.userData.isGardenFrontWallScan;
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
-      mesh.frustumCulled = false;
+      mesh.frustumCulled = true;
       mesh.material = neighborMat;
       mesh.castShadow = false;
       mesh.receiveShadow = false;

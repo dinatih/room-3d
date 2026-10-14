@@ -145,7 +145,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
                 DC: {isIdle ? '0' : devState.drawCalls.toLocaleString()}
               </span>
               <div className="d-flex align-items-center gap-1">
-                <span title="Triangles rendus" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.triangles >= 2_000_000 ? 'text-danger' : devState.triangles >= 1_000_000 ? 'text-warning' : 'text-primary'}`}>
+                <span title="Triangles soumis au GPU par image, toutes passes comprises (vue principale, ombres et réflexions)" className={`fw-semibold ${isIdle ? 'text-secondary' : devState.triangles >= 2_000_000 ? 'text-danger' : devState.triangles >= 1_000_000 ? 'text-warning' : 'text-primary'}`}>
                   Tris: {isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'}
                 </span>
                 <button

@@ -5,6 +5,7 @@ import { useGLTF } from '@react-three/drei';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { LAYER_WALKER, LAYER_DECOR } from '@config';
 import { RIGGED_WIGS_PATHS } from '@features/inventory/inventoryData';
+import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
   naturel:  new THREE.Color(0.4, 0.25, 0.1),
@@ -91,15 +92,15 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
         const sm = child as THREE.SkinnedMesh;
         sm.userData.itemName = `Perruque (${cleanId})`;
-        sm.frustumCulled = false;
         // Reconstruct the skeleton using the cloned bones instead of the originals
         const newBones = sm.skeleton.bones.map(b => clonedBones[b.name] || b);
         const newSkeleton = new THREE.Skeleton(newBones, sm.skeleton.boneInverses);
         sm.bind(newSkeleton, sm.bindMatrix);
+        enableAnimatedFrustumCulling(sm);
         sm.userData.__ownedWigSkeleton = true;
       } else if ((child as THREE.Mesh).isMesh) {
         child.userData.itemName = `Perruque (${cleanId})`;
-        child.frustumCulled = false;
+        enableAnimatedFrustumCulling(child as THREE.Mesh);
       }
     });
 
@@ -198,11 +199,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     // 1. Extraire les os pour l'animation/physique et configurer les matériaux
     const extractedBones: WigBone[] = [];
     scene.traverse((child: any) => {
-      child.frustumCulled = false;
-      if (child.geometry) {
-        child.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 100);
-      }
-      
       if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
         const sm = child as THREE.SkinnedMesh;
         // Extract bones DIRECTLY from the SkinnedMesh's skeleton!

@@ -35,6 +35,7 @@ import { GridLayer }        from '@features/scene/Grid';
 import { LightHelpers }     from '@features/scene/LightHelpers';
 import { HoverRaycaster, HoverOverlay } from '@features/scene/HoverMenu';
 import { DevToolsCollector }            from '@features/scene/DevToolsCollector';
+import { hasVisibleShadowReceiver } from './utils/visibleShadowReceivers';
 import { VRMode }                       from '@features/scene/VRMode';
 import { ImmersiveMode }                from '@features/scene/ImmersiveMode';
 import { FloorPlan }                    from '@features/scene/FloorPlan';
@@ -196,6 +197,39 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
 /** Active/désactive les ombres en réponse au toggle UI. */
 function ShadowController({ enabled }: { enabled: boolean }) {
   const { gl, scene, invalidate } = useThree();
+
+  useEffect(() => {
+    const beforeRender = scene.onBeforeRender;
+    const afterRender = scene.onAfterRender;
+    let autoUpdate = gl.shadowMap.autoUpdate;
+    let needsUpdate = gl.shadowMap.needsUpdate;
+    let skipped = false;
+
+    scene.onBeforeRender = (...args) => {
+      beforeRender.apply(scene, args);
+      const [renderer, currentScene, camera] = args;
+      if (renderer.getRenderTarget() !== null) return;
+      autoUpdate = renderer.shadowMap.autoUpdate;
+      needsUpdate = renderer.shadowMap.needsUpdate;
+      skipped = renderer.shadowMap.enabled && !hasVisibleShadowReceiver(currentScene, camera);
+      if (skipped) {
+        renderer.shadowMap.autoUpdate = false;
+        renderer.shadowMap.needsUpdate = false;
+      }
+    };
+    scene.onAfterRender = (...args) => {
+      const [renderer] = args;
+      if (renderer.getRenderTarget() === null && skipped) {
+        renderer.shadowMap.autoUpdate = autoUpdate;
+        renderer.shadowMap.needsUpdate = needsUpdate;
+      }
+      afterRender.apply(scene, args);
+    };
+    return () => {
+      scene.onBeforeRender = beforeRender;
+      scene.onAfterRender = afterRender;
+    };
+  }, [gl, scene]);
 
   useEffect(() => {
     (window as any).__THREE_SCENE__ = scene;

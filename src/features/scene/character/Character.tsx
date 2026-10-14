@@ -7,6 +7,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone, hasMountedGLTFClones } from '@features/scene/useGLTFClone';
+import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
@@ -155,7 +156,7 @@ export function Character({
           ...child.userData,
           itemName: charLabel,
         };
-        child.frustumCulled = false;
+        enableAnimatedFrustumCulling(child as THREE.Mesh);
         // Désactiver le raycast triangle par triangle sur les maillages haute résolution
         child.raycast = () => {};
       }
