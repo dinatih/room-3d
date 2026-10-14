@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path('/home/dinatih/3D Resources/animations/Inter-X_Dataset-motions/motions')
 TEMPLATE = ROOT / 'public/animations/mixamo/anim_salsa_dancing.glb'
 OUTPUT = ROOT / 'public/animations/npz/interx'
-FPS = 30
+SOURCE_FPS = 120
+TARGET_FPS = 30
 TRANSLATION_SCALE = 1.17
 ROOT_CANCEL = Quaternion((1, 0, 0), -math.pi / 2)
 BONE_NAMES = [
@@ -59,7 +60,7 @@ def convert(source_path, output_path):
     armature.animation_data_create()
     armature.animation_data.action = bpy.data.actions.new(name='ArmatureAction')
     scene = bpy.context.scene
-    scene.render.fps = FPS
+    scene.render.fps = TARGET_FPS
     for bone in armature.pose.bones:
         bone.rotation_mode = 'QUATERNION'
     bases = [armature.data.bones[name].matrix_local.to_3x3() for name in BONE_NAMES]
@@ -68,7 +69,14 @@ def convert(source_path, output_path):
     yaw_cancel = Quaternion((0, 1, 0), -first_root.to_euler().y)
     initial_translation = translations[0]
 
-    for frame, (root_rotation, body_pose, translation) in enumerate(zip(root, body, translations), start=1):
+    sample_step = SOURCE_FPS // TARGET_FPS
+    source_frames = range(0, len(body), sample_step)
+    if SOURCE_FPS % TARGET_FPS:
+        raise ValueError(f'Cannot sample {SOURCE_FPS} FPS at {TARGET_FPS} FPS')
+    for frame, source_frame in enumerate(source_frames, start=1):
+        root_rotation = root[source_frame]
+        body_pose = body[source_frame]
+        translation = translations[source_frame]
         rotations = [rodrigues_to_quat(root_rotation)] + [rodrigues_to_quat(value) for value in body_pose]
         for index, (bone_index, rotation) in enumerate(zip(BODY_TO_MIXAMO, rotations[1:]), start=1):
             target = BONE_NAMES[bone_index]
@@ -87,7 +95,7 @@ def convert(source_path, output_path):
         hips.keyframe_insert(data_path='location', frame=frame)
 
     scene.frame_start = 1
-    scene.frame_end = len(body)
+    scene.frame_end = frame
     output_path.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.export_scene.gltf(filepath=str(output_path), export_format='GLB', export_animations=True)
     binary = output_path.read_bytes()
