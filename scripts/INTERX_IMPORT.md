@@ -221,6 +221,38 @@ Le calage debout est pris en charge pour A000/A001 et les dix actions du lot
 de la danse. Les actions couchées, assises et de portage demandent leur propre
 traitement des appuis ; ce mode les refuse explicitement.
 
+### Lot 002 : dix variantes supplémentaires
+
+`scripts/interx_batch_002_selection.json` contient dix prises inédites des mêmes
+thèmes, sans reprendre les A/T du lot 001. Vingt GLB supplémentaires sont
+publiés, avec les doigts animés et le calage initial des semelles :
+**5 053 704 octets (5,05 Mo)**. Le catalogue Inter-X compte désormais 24 duos
+(48 GLB), dont les quatre pilotes utilisés pour la comparaison.
+
+| Action | Prise | Durée |
+| --- | --- | ---: |
+| Tapoter le dos | G049T003A011R006 | 5,80 s |
+| High-five | G049T004A016R006 | 3,73 s |
+| Chuchoter | G008T004A018R000 | 3,03 s |
+| Soutenir avec la main | G008T004A019R002 | 2,80 s |
+| Pierre-feuille-ciseaux | G053T005A020R000 | 8,13 s |
+| Danser | G056T004A021R005 | 11,67 s |
+| Bras dessus dessous | G056T004A022R012 | 5,00 s |
+| Épaule contre épaule | G056T004A023R016 | 8,97 s |
+| Discuter | G056T005A029R018 | 16,20 s |
+| Caresser la joue | G056T006A030R000 | 7,83 s |
+
+Les binômes G056, G049 et G008 sont les meilleurs candidats disponibles pour
+les sessions inédites selon le critère de proximité avec les avatars. G053
+reste utilisé pour l'autre session de pierre-feuille-ciseaux. La prise signalée
+comme étrange dans le lot 001 est conservée pour comparaison.
+
+Reprise du lot 002 : utiliser les commandes du lot 001 en remplaçant le nom du
+fichier de sélection par `scripts/interx_batch_002_selection.json`. Pour le
+prochain lot, enregistrer une nouvelle sélection dans
+`scripts/interx_batch_003_selection.json` après le dry-run ; les A/T des deux
+lots précédents sont automatiquement exclus.
+
 Références : [viewer Inter-X](https://github.com/liangxuy/Inter-X/blob/main/visualize/smplx_viewer_tool/data_viewer.py)
 et [skinning SMPL-X](https://github.com/vchoutas/smplx/blob/main/smplx/lbs.py).
 
