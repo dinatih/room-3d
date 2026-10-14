@@ -132,8 +132,8 @@ export function Character({
   const laraRealisticTextures = useSceneStore(state => state.layers.laraRealisticTextures ?? false);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
-  const animOriginLerp = useSceneStore(state => state.layers.animOriginLerp ?? true);
-  const animCrossfade = useSceneStore(state => state.layers.animCrossfade ?? true);
+  const animOriginLerp = useSceneStore(state => state.layers.animOriginLerp ?? false);
+  const animCrossfade = useSceneStore(state => state.layers.animCrossfade ?? false);
   const cameraMode = useSceneStore(state => state.cameraMode);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const aiFullTour = useSceneStore(state => state.extraStates.aiFullTour);
