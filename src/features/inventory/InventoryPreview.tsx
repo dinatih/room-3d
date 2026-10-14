@@ -649,6 +649,8 @@ export function InventoryPreview({
   hideAnimFrameController = false,
   hideViewControlBar = false,
   showPhotoGallery = true,
+  defaultShowGrid = false,
+  defaultAutoRotate = true,
   onGlbStats,
 }: {
   item: PreviewTarget;
@@ -661,17 +663,19 @@ export function InventoryPreview({
   hideAnimFrameController?: boolean;
   hideViewControlBar?: boolean;
   showPhotoGallery?: boolean;
+  defaultShowGrid?: boolean;
+  defaultAutoRotate?: boolean;
   onGlbStats?: (s: GlbDebugStats | null) => void;
 }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
-  const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = !!photos && photos.length > 0;
+  const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = showPhotoGallery && !!photos && photos.length > 0;
   const actionKeys = item && !('category' in item && item.category === 'characters')
     ? getPreviewActionIds(item.id)
     : [];
-  const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(true);
+  const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(defaultAutoRotate);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
-  const [showGrid, setShowGrid] = useState(false);
+  const [showGrid, setShowGrid] = useState(defaultShowGrid);
   const [wireframe, setWireframe] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [previewView, setPreviewView] = useState<PreviewCameraView>('free');
@@ -716,7 +720,7 @@ export function InventoryPreview({
     } : {});
     lastSoloAnimRef.current = 'idle';
     setViewMode('3d');
-    setAutoRotate(true);
+    setAutoRotate(defaultAutoRotate);
     setTarget([0, 0, 0]);
     setBoundsRadius(50);
     setPhotoIdx(0);

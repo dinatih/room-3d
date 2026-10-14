@@ -1,486 +1,269 @@
-/**
- * AnimationStudioView.tsx — Environnement dédié d'analyse et test d'animations.
- * Gère à la fois les animations Solo et les animations Duo :
- * - Switcher de personnage (Lara, Bob, Malcolm, Michelle, etc.)
- * - Choix et lecture des animations Solo ou Duo
- * - Synchronisation et barre de transport avec AnimFrameController
- * - Décalage/ajustement des offsets (hauteur sol, rotation, position relative)
- * - Annotations persistantes en LocalStorage (tags, statuts, notes)
- */
-import { useState, useMemo, useEffect } from 'react';
-import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
-import { DUO_ANIMATIONS, canCharacterPerformDuo, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
-import { ENHANCED_ANIM_OPTIONS, ANIM_CATEGORIES, getFilteredAnimOptions } from '@features/scene/CharacterAnimSelector';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
+import { CHARACTERS } from '@features/scene/characterConfig';
+import { canCharacterPerformDuo } from '@features/scene/animations/duoAnimations';
+import { ANIM_CATEGORIES } from '@features/scene/CharacterAnimSelector';
 import { InventoryPreview } from './InventoryPreview';
 import { AnimFrameController } from './AnimFrameController';
 import { DevAnnotationPanel } from './DevAnnotationPanel';
-import { useItemAnnotations } from './useItemAnnotations';
-import { useSceneStore } from '@features/scene/store/useSceneStore';
+import { useItemAnnotations, updateAnnotation, exportAnnotationsJson } from './useItemAnnotations';
+import { getAnimationOriginTransform, getDuoAnimationTransformOverride, setAnimationTransformOverride, setDuoAnimationTransformOverride } from '@features/scene/animations/animationResolver';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { INVENTORY } from './inventoryData';
+import {
+  STUDIO_CATALOG, SOURCE_LABELS, EMPTY_STUDIO_FILTERS,
+  filterStudioAnimations, adjacentStudioAnimation, type StudioFilters, type StudioAnimation,
+} from './animationStudioCatalog';
 
-export function AnimationStudioView({ isMobile = false }: { isMobile?: boolean }) {
-  const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
+const STATUS_LABELS = { ok: '✅ OK', issue: '⚠️ Problème', wip: '🚧 À revoir', favorite: '⭐ Favori' };
+const STATUS_COLORS = { ok: 'success', issue: 'danger', wip: 'warning', favorite: 'primary' };
 
-  // Mode Solo ou Duo
+export function AnimationStudioView({ isMobile = false, listWidth = 380, onResizeStart }: {
+  isMobile?: boolean;
+  listWidth?: number;
+  onResizeStart?: (event: MouseEvent) => void;
+}) {
   const [mode, setMode] = useState<'solo' | 'duo'>('solo');
-
-  // Sélection Personnages
-  const availableCharacters = useMemo(() => {
-    return CHARACTERS.filter(c => 
-      c.id !== 'ushiro' && c.id !== 'robin-bird' && c.id !== 'jikin-goldfish' && c.id !== 'tosakin-goldfish' &&
-      (extraCharacters || !isExtraCharacter(c.id))
-    );
-  }, [extraCharacters]);
-
-  const [activeCharId, setActiveCharId] = useState<string>(() => availableCharacters[0]?.id || 'native');
-  const [duoLeaderId, setDuoLeaderId]   = useState<string>(() => availableCharacters[0]?.id || 'native');
-  const [duoPartnerId, setDuoPartnerId] = useState<string>(() => availableCharacters[1]?.id || 'character-bob');
-
-  // Animations Solo
-  const [soloSearch, setSoloSearch] = useState('');
-  const [selectedSoloCats, setSelectedSoloCats] = useState<string[]>([]);
-  const [activeSoloAnim, setActiveSoloAnim] = useState<string>('idle');
-
-  // Animations Duo
-  const [duoSearch, setDuoSearch] = useState('');
-  const [duoFilter, setDuoFilter] = useState<'all' | 'combat' | 'social'>('all');
-  const [activeDuoDef, setActiveDuoDef] = useState<DuoAnimationDef | undefined>(DUO_ANIMATIONS[0]);
-
-  // Récupération de l'item d'inventaire correspondant pour InventoryPreview
-  const currentItem = useMemo(() => {
-    const charId = mode === 'solo' ? activeCharId : duoLeaderId;
-    return INVENTORY.find(i => i.id === charId) || INVENTORY.find(i => i.id === 'native')!;
-  }, [mode, activeCharId, duoLeaderId]);
-
-  // ID pour les annotations
-  const currentAnnotationId = mode === 'solo' ? `anim:${activeSoloAnim}` : `duo:${activeDuoDef?.id || 'none'}`;
-  const currentAnnotationName = mode === 'solo'
-    ? (ENHANCED_ANIM_OPTIONS.find(a => a.value === activeSoloAnim)?.label || activeSoloAnim)
-    : (activeDuoDef?.label || 'Duo');
-
+  const [filtersByMode, setFiltersByMode] = useState({ solo: { ...EMPTY_STUDIO_FILTERS }, duo: { ...EMPTY_STUDIO_FILTERS } });
+  const [selection, setSelection] = useState({ solo: 'idle', duo: STUDIO_CATALOG.duo[0].id });
+  const [actorId, setActorId] = useState('native');
+  const [partnerId, setPartnerId] = useState('rosanna');
+  const [moreFilters, setMoreFilters] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const { allAnnotations } = useItemAnnotations();
+  const filters = filtersByMode[mode];
+  const catalog = STUDIO_CATALOG[mode];
+  const results = useMemo(() => filterStudioAnimations(catalog, filters, allAnnotations), [catalog, filters, allAnnotations]);
+  const active = results.find(a => a.id === selection[mode]) ?? results[0];
+  const activeIndex = active ? results.indexOf(active) : -1;
+  const characters = useMemo(() => CHARACTERS.filter(c =>
+    INVENTORY.some(item => item.id === c.id && item.category === 'characters') &&
+    !['ushiro', 'shiba-inu', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish'].includes(c.id)
+  ), []);
+  const leaders = characters.filter(c => !active?.duo || canCharacterPerformDuo(c.id, active.duo));
+  const leader = leaders.find(c => c.id === actorId) ?? leaders[0];
+  const partners = leaders.filter(c => c.id !== leader?.id);
+  const partner = partners.find(c => c.id === partnerId) ?? partners[0];
+  const currentItem = INVENTORY.find(i => i.id === leader?.id);
+  const sources = [...new Set(catalog.flatMap(a => a.sources))].sort();
+  const categories = mode === 'solo'
+    ? [...new Set(catalog.map(a => a.category))].map(key => ({ key, label: ANIM_CATEGORIES.find(c => c.key === key)?.label ?? key }))
+    : [{ key: 'combat', label: 'Combat' }, { key: 'social', label: 'Danse & Social' }];
+  const tags = [...new Set(catalog.flatMap(a => allAnnotations[a.annotationId]?.tags ?? []))].sort();
+  const advancedCount = [filters.status, filters.tag, filters.minDuration, filters.maxDuration].filter(Boolean).length;
+  const isFiltered = Object.entries(filters).some(([key, value]) => value !== EMPTY_STUDIO_FILTERS[key as keyof StudioFilters]);
 
-  // Filtrage Solo
-  const filteredSoloAnims = useMemo(() => {
-    return getFilteredAnimOptions(soloSearch, selectedSoloCats, false);
-  }, [soloSearch, selectedSoloCats]);
-
-  // Filtrage Duo
-  const filteredDuoAnims = useMemo(() => {
-    const q = duoSearch.trim().toLowerCase();
-    return DUO_ANIMATIONS.filter(a => {
-      if (duoFilter === 'combat' && !a.isCombat) return false;
-      if (duoFilter === 'social' && a.isCombat) return false;
-      if (!q) return true;
-      return (
-        a.label.toLowerCase().includes(q) ||
-        a.id.toLowerCase().includes(q) ||
-        a.animA.toLowerCase().includes(q) ||
-        a.animB.toLowerCase().includes(q) ||
-        a.tags?.some(tag => tag.toLowerCase().includes(q))
-      );
+  function updateFilters(patch: Partial<StudioFilters>) {
+    setFiltersByMode(previous => ({ ...previous, [mode]: { ...previous[mode], ...patch } }));
+  }
+  function selectAnimation(animation: StudioAnimation | undefined) {
+    if (!animation) return;
+    setSelection(previous => ({ ...previous, [mode]: animation.id }));
+    const transport = useAnimPreviewStore.getState();
+    transport.seekToTime(0);
+    transport.play();
+  }
+  function navigate(direction: 1 | -1) {
+    selectAnimation(adjacentStudioAnimation(results, active?.id, direction));
+  }
+  function random() {
+    const pool = results.filter(a => a.id !== active?.id);
+    selectAnimation(pool.length ? pool[Math.floor(Math.random() * pool.length)] : active);
+  }
+  function saveAlignment() {
+    if (!active) return;
+    const override = active.duo ? getDuoAnimationTransformOverride(active.id) : undefined;
+    const solo = getAnimationOriginTransform(active.id);
+    const offset = active.duo ? override?.offsetB ?? active.duo.offsetB ?? [0, 0, 0] : solo.offset;
+    const rotation = active.duo ? override?.rotB ?? active.duo.rotB ?? 0 : solo.rotY;
+    updateAnnotation(active.annotationId, {
+      customOffsets: { x: offset[0], y: offset[1], z: offset[2], rotY: rotation },
+      ...(active.duo ? { duoPartner: partner?.id } : {}),
     });
-  }, [duoSearch, duoFilter]);
-
-  // Partenaires compatibles pour le Duo sélectionné
-  const compatiblePartners = useMemo(() => {
-    if (!activeDuoDef) return availableCharacters;
-    return availableCharacters.filter(c => c.id !== duoLeaderId && canCharacterPerformDuo(c.id, activeDuoDef));
-  }, [availableCharacters, duoLeaderId, activeDuoDef]);
-
-  // S'assurer que le partenaire actuel est compatible lors du changement d'anim
-  useEffect(() => {
-    if (mode === 'duo' && activeDuoDef) {
-      if (!compatiblePartners.some(c => c.id === duoPartnerId)) {
-        if (compatiblePartners.length > 0) {
-          setDuoPartnerId(compatiblePartners[0].id);
-        }
-      }
+  }
+  function applyAlignment() {
+    if (!active) return;
+    const saved = allAnnotations[active.annotationId];
+    const offsets = saved?.customOffsets;
+    if (!offsets) return;
+    const offset: [number, number, number] = [offsets.x ?? 0, offsets.y ?? 0, offsets.z ?? 0];
+    if (active.duo) {
+      setDuoAnimationTransformOverride(active.id, { offsetB: offset, rotB: offsets.rotY ?? 0 });
+      if (saved.duoPartner) setPartnerId(saved.duoPartner);
+    } else setAnimationTransformOverride(active.id, { offset, rotY: offsets.rotY ?? 0 });
+  }
+  function exportAnnotations() {
+    const url = URL.createObjectURL(new Blob([exportAnnotationsJson()], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'room3d-annotations.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+  function handleKeys(event: KeyboardEvent) {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
+    const element = event.target as HTMLElement;
+    const typing = element.matches('input, textarea, select') || element.isContentEditable;
+    // Search remains editable; up/down browses its results without losing focus.
+    if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && (!typing || element === searchRef.current)) {
+      event.preventDefault(); event.stopPropagation();
+      navigate(event.key === 'ArrowDown' ? 1 : -1);
+      return;
     }
-  }, [mode, activeDuoDef, compatiblePartners, duoPartnerId]);
+    if (typing) return;
+    const transport = useAnimPreviewStore.getState();
+    if (event.code === 'Space') transport.togglePlay();
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') transport.stepFrame((event.key === 'ArrowLeft' ? -1 : 1) * (event.shiftKey ? 5 : 1));
+    else if (event.key === 'Home') transport.seekToFrame(0);
+    else if (event.key.toLowerCase() === 'd') random();
+    else return;
+    event.preventDefault(); event.stopPropagation();
+  }
+
+  useEffect(() => {
+    const transport = useAnimPreviewStore.getState();
+    transport.seekToTime(0);
+    if (active) transport.play();
+    else transport.pause();
+  }, [active?.id, mode]);
+  useEffect(() => {
+    if (active && selection[mode] !== active.id) setSelection(previous => ({ ...previous, [mode]: active.id }));
+  }, [active, mode, selection]);
+  useEffect(() => {
+    // Only scroll the list, never the surrounding tool panel or modal.
+    const list = listRef.current;
+    const row = list?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (!list || !row) return;
+    const listBox = list.getBoundingClientRect();
+    const rowBox = row.getBoundingClientRect();
+    if (rowBox.top < listBox.top) list.scrollTop += rowBox.top - listBox.top;
+    else if (rowBox.bottom > listBox.bottom) list.scrollTop += rowBox.bottom - listBox.bottom;
+  }, [active?.id, results]);
 
   return (
-    <div className={`animation-studio w-100 h-100 overflow-hidden ${isMobile ? 'animation-studio--mobile' : ''}`}>
-      {/* ── COLONNE DE GAUCHE : LISTE DES ANIMATIONS (SOLO OU DUO) ── */}
-      <div
-        className="animation-studio__list d-flex flex-column border-end bg-white bg-opacity-75 overflow-hidden"
-      >
-        {/* En-tête : Switcher Mode Solo / Duo */}
-        <div className="p-2 border-bottom bg-light bg-opacity-50">
-          <div className="btn-group btn-group-sm w-100 shadow-sm" role="group">
-            <button
-              type="button"
-              className={`btn py-1.5 fw-semibold ${mode === 'solo' ? 'btn-danger text-white' : 'btn-outline-secondary bg-white text-dark'}`}
-              onClick={() => setMode('solo')}
-            >
-              <i className="bi bi-person-fill me-1" aria-hidden="true" />
-              Solo ({ENHANCED_ANIM_OPTIONS.length})
-            </button>
-            <button
-              type="button"
-              className={`btn py-1.5 fw-semibold ${mode === 'duo' ? 'btn-danger text-white' : 'btn-outline-secondary bg-white text-dark'}`}
-              onClick={() => setMode('duo')}
-            >
-              <i className="bi bi-people-fill me-1" aria-hidden="true" />
-              Duo ({DUO_ANIMATIONS.length})
+    <div className={`animation-studio w-100 h-100 overflow-hidden ${isMobile ? 'animation-studio--mobile' : ''}`}
+      style={isMobile ? undefined : { gridTemplateColumns: `${listWidth}px 5px minmax(0, 1fr)` }}
+      onKeyDown={handleKeys}>
+      <div className="animation-studio__list d-flex flex-column border-end bg-white overflow-hidden">
+        <div className="p-2 border-bottom flex-shrink-0">
+          <div className="btn-group btn-group-sm w-100 mb-2" role="group" aria-label="Type d’animation">
+            {(['solo', 'duo'] as const).map(value => <button key={value} type="button" aria-pressed={mode === value}
+              className={`btn ${mode === value ? 'btn-danger' : 'btn-outline-secondary'}`} onClick={() => setMode(value)}>
+              {value === 'solo' ? 'Solo' : 'Duo'} ({STUDIO_CATALOG[value].length})
+            </button>)}
+          </div>
+          <input ref={searchRef} type="search" className="form-control form-control-sm mb-2" aria-label="Rechercher une animation"
+            placeholder="Nom, identifiant, tags, notes…" value={filters.search} onChange={e => updateFilters({ search: e.target.value })} />
+          <div className="d-flex gap-2 mb-2">
+            <select aria-label="Catégorie d’animation" className="form-select form-select-sm" value={filters.category} onChange={e => updateFilters({ category: e.target.value })}>
+              <option value="">Toutes les catégories</option>
+              {categories.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+            </select>
+            <select aria-label="Source d’animation" className="form-select form-select-sm" value={filters.source} onChange={e => updateFilters({ source: e.target.value })}>
+              <option value="">Toutes les sources</option>
+              {sources.map(source => <option key={source} value={source}>{SOURCE_LABELS[source] ?? source}</option>)}
+            </select>
+          </div>
+          <div className="d-flex gap-2 align-items-center">
+            <select aria-label="Trier les animations" className="form-select form-select-sm" value={filters.sort} onChange={e => updateFilters({ sort: e.target.value as StudioFilters['sort'] })}>
+              <option value="catalog">Ordre du catalogue</option><option value="name">Nom A → Z</option>
+              <option value="shortest">Durée croissante</option><option value="longest">Durée décroissante</option>
+            </select>
+            <button type="button" className="btn btn-sm btn-outline-secondary text-nowrap" aria-expanded={moreFilters} onClick={() => setMoreFilters(v => !v)}>
+              Filtres{advancedCount > 0 ? ` (${advancedCount})` : ''}
             </button>
           </div>
-        </div>
-
-        {/* Barre de recherche et filtres de catégories */}
-        <div className="p-2 border-bottom flex-shrink-0">
-          {mode === 'solo' ? (
-            <>
-              <div className="input-group input-group-sm mb-1.5">
-                <span className="input-group-text bg-white text-muted border-end-0">
-                  <i className="bi bi-search" aria-hidden="true" />
-                </span>
-                <input
-                  type="text"
-                  className="form-control border-start-0"
-                  placeholder="Rechercher une animation solo..."
-                  value={soloSearch}
-                  onChange={e => setSoloSearch(e.target.value)}
-                  style={{ fontSize: '0.8rem' }}
-                />
-                {soloSearch && (
-                  <button className="btn btn-outline-secondary border-start-0" onClick={() => setSoloSearch('')}>
-                    <i className="bi bi-x-lg" aria-hidden="true" />
-                  </button>
-                )}
-              </div>
-
-              {/* Catégories Solo sous forme de pills scrollables */}
-              <div className="d-flex gap-1 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                <button
-                  type="button"
-                  className={`btn btn-sm py-0 px-2 rounded-pill small text-nowrap ${
-                    selectedSoloCats.length === 0 ? 'btn-primary' : 'btn-outline-secondary bg-white text-dark'
-                  }`}
-                  style={{ fontSize: '0.72rem' }}
-                  onClick={() => setSelectedSoloCats([])}
-                >
-                  Toutes
-                </button>
-                {ANIM_CATEGORIES.map(cat => {
-                  const isChecked = selectedSoloCats.includes(cat.key);
-                  return (
-                    <button
-                      key={cat.key}
-                      type="button"
-                      className={`btn btn-sm py-0 px-2 rounded-pill small text-nowrap ${
-                        isChecked ? 'btn-primary text-white' : 'btn-outline-secondary bg-white text-dark'
-                      }`}
-                      style={{ fontSize: '0.72rem' }}
-                      onClick={() =>
-                        setSelectedSoloCats(prev =>
-                          prev.includes(cat.key) ? prev.filter(k => k !== cat.key) : [...prev, cat.key]
-                        )
-                      }
-                    >
-                      <i className={`bi ${cat.icon} me-1`} aria-hidden="true" />
-                      {cat.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="input-group input-group-sm mb-1.5">
-                <span className="input-group-text bg-white text-muted border-end-0">
-                  <i className="bi bi-search" aria-hidden="true" />
-                </span>
-                <input
-                  type="text"
-                  className="form-control border-start-0"
-                  placeholder="Rechercher un duo/combat..."
-                  value={duoSearch}
-                  onChange={e => setDuoSearch(e.target.value)}
-                  style={{ fontSize: '0.8rem' }}
-                />
-                {duoSearch && (
-                  <button className="btn btn-outline-secondary border-start-0" onClick={() => setDuoSearch('')}>
-                    <i className="bi bi-x-lg" aria-hidden="true" />
-                  </button>
-                )}
-              </div>
-
-              {/* Filtres Duo */}
-              <div className="btn-group btn-group-sm w-100" role="group">
-                <button
-                  type="button"
-                  className={`btn py-0.5 px-2 ${duoFilter === 'all' ? 'btn-primary' : 'btn-outline-secondary bg-white text-dark'}`}
-                  style={{ fontSize: '0.75rem' }}
-                  onClick={() => setDuoFilter('all')}
-                >
-                  Toutes ({DUO_ANIMATIONS.length})
-                </button>
-                <button
-                  type="button"
-                  className={`btn py-0.5 px-2 ${duoFilter === 'combat' ? 'btn-primary' : 'btn-outline-secondary bg-white text-dark'}`}
-                  style={{ fontSize: '0.75rem' }}
-                  onClick={() => setDuoFilter('combat')}
-                >
-                  Combat 🥋
-                </button>
-                <button
-                  type="button"
-                  className={`btn py-0.5 px-2 ${duoFilter === 'social' ? 'btn-primary' : 'btn-outline-secondary bg-white text-dark'}`}
-                  style={{ fontSize: '0.75rem' }}
-                  onClick={() => setDuoFilter('social')}
-                >
-                  Danse & Duo 💃
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Liste défilante des animations */}
-        <div className="overflow-auto flex-grow-1">
-          {mode === 'solo' ? (
-            filteredSoloAnims.length === 0 ? (
-              <div className="p-3 text-center text-muted small">Aucune animation solo trouvée.</div>
-            ) : (
-              filteredSoloAnims.map(anim => {
-                const isSelected = activeSoloAnim === anim.value;
-                const annot = allAnnotations[`anim:${anim.value}`];
-                const statusColor =
-                  annot?.status === 'ok'
-                    ? 'success'
-                    : annot?.status === 'issue'
-                    ? 'danger'
-                    : annot?.status === 'wip'
-                    ? 'warning'
-                    : annot?.status === 'favorite'
-                    ? 'primary'
-                    : null;
-
-                return (
-                  <div
-                    key={anim.value}
-                    className={`d-flex align-items-center justify-content-between p-2 border-bottom cursor-pointer ${
-                      isSelected ? 'bg-danger bg-opacity-10 border-start border-danger border-3 fw-bold' : 'hover-bg-light'
-                    }`}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => setActiveSoloAnim(anim.value)}
-                  >
-                    <div className="d-flex align-items-center gap-1.5 overflow-hidden flex-grow-1 me-2">
-                      {isSelected && <i className="bi bi-play-fill text-danger flex-shrink-0" aria-hidden="true" />}
-                      <span className="text-truncate small">{anim.label}</span>
-                      {anim.duration !== undefined && (
-                        <span className="badge bg-light text-muted border small flex-shrink-0" style={{ fontSize: '0.65rem' }}>
-                          {anim.duration.toFixed(1)}s
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="d-flex align-items-center gap-1 flex-shrink-0">
-                      {statusColor && (
-                        <span className={`badge bg-${statusColor} p-1 rounded-circle`} title={`Statut: ${annot?.status}`} />
-                      )}
-                      {annot?.tags && annot.tags.length > 0 && (
-                        <span className="badge bg-secondary-subtle text-dark border small" style={{ fontSize: '0.65rem' }}>
-                          #{annot.tags[0]}
-                          {annot.tags.length > 1 ? ` +${annot.tags.length - 1}` : ''}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )
-          ) : (
-            filteredDuoAnims.length === 0 ? (
-              <div className="p-3 text-center text-muted small">Aucune animation duo trouvée.</div>
-            ) : (
-              filteredDuoAnims.map(duo => {
-                const isSelected = activeDuoDef?.id === duo.id;
-                const annot = allAnnotations[`duo:${duo.id}`];
-                const statusColor =
-                  annot?.status === 'ok'
-                    ? 'success'
-                    : annot?.status === 'issue'
-                    ? 'danger'
-                    : annot?.status === 'wip'
-                    ? 'warning'
-                    : annot?.status === 'favorite'
-                    ? 'primary'
-                    : null;
-
-                return (
-                  <div
-                    key={duo.id}
-                    className={`d-flex align-items-center justify-content-between p-2 border-bottom cursor-pointer ${
-                      isSelected ? 'bg-primary bg-opacity-10 border-start border-primary border-3 fw-bold' : 'hover-bg-light'
-                    }`}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => setActiveDuoDef(duo)}
-                  >
-                    <div className="d-flex align-items-center gap-1.5 overflow-hidden flex-grow-1 me-2">
-                      <span className="fs-6 flex-shrink-0">{duo.icon}</span>
-                      <div className="d-flex flex-column overflow-hidden">
-                        <span className="text-truncate small">{duo.label}</span>
-                        <span className="text-muted text-truncate" style={{ fontSize: '0.65rem' }}>
-                          {duo.animA} ↔ {duo.animB}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="d-flex align-items-center gap-1 flex-shrink-0">
-                      {statusColor && (
-                        <span className={`badge bg-${statusColor} p-1 rounded-circle`} title={`Statut: ${annot?.status}`} />
-                      )}
-                      {annot?.tags && annot.tags.length > 0 && (
-                        <span className="badge bg-secondary-subtle text-dark border small" style={{ fontSize: '0.65rem' }}>
-                          #{annot.tags[0]}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )
-          )}
-        </div>
-      </div>
-
-      {/* ── ZONE CENTRALE : PRÉVISUALISATION 3D ET CONTRÔLES ── */}
-      <div className="animation-studio__workspace bg-light">
-        {/* Barre supérieure : Choix des Acteurs / Personnages */}
-        <div className="p-2 border-bottom bg-white d-flex flex-wrap align-items-center justify-content-between gap-2 shadow-sm">
-          {mode === 'solo' ? (
-            <div className="d-flex align-items-center gap-2">
-              <span className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.72rem' }}>
-                <i className="bi bi-person me-1" aria-hidden="true" />
-                Personnage testé :
-              </span>
-              <select
-                className="form-select form-select-sm w-auto fw-semibold"
-                value={activeCharId}
-                onChange={e => setActiveCharId(e.target.value)}
-              >
-                {availableCharacters.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+          {moreFilters && <div className="d-flex flex-column gap-2 mt-2">
+            <div className="d-flex gap-2">
+              <select aria-label="Statut d’annotation" className="form-select form-select-sm" value={filters.status} onChange={e => updateFilters({ status: e.target.value as StudioFilters['status'] })}>
+                <option value="">Tous les statuts</option><option value="unannotated">Sans annotation</option>
+                {Object.entries(STATUS_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+              </select>
+              <select aria-label="Tag d’annotation" className="form-select form-select-sm" value={filters.tag} onChange={e => updateFilters({ tag: e.target.value })}>
+                <option value="">Tous les tags</option>{tags.map(tag => <option key={tag} value={tag}>#{tag}</option>)}
               </select>
             </div>
-          ) : (
-            <div className="d-flex flex-wrap align-items-center gap-2">
-              {/* Leader */}
-              <div className="d-flex align-items-center gap-1">
-                <span className="badge bg-primary">Leader</span>
-                <select
-                  className="form-select form-select-sm w-auto fw-semibold"
-                  value={duoLeaderId}
-                  onChange={e => setDuoLeaderId(e.target.value)}
-                >
-                  {availableCharacters.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Bouton Swap */}
-              <button
-                type="button"
-                className="btn btn-outline-secondary btn-sm py-0 px-2"
-                title="Échanger Leader et Partenaire"
-                onClick={() => {
-                  const prevL = duoLeaderId;
-                  const prevP = duoPartnerId;
-                  setDuoLeaderId(prevP);
-                  setDuoPartnerId(prevL);
-                }}
-              >
-                <i className="bi bi-arrow-left-right" aria-hidden="true" />
-              </button>
-
-              {/* Partenaire */}
-              <div className="d-flex align-items-center gap-1">
-                <span className="badge bg-secondary">Partenaire</span>
-                <select
-                  className="form-select form-select-sm w-auto fw-semibold"
-                  value={duoPartnerId}
-                  onChange={e => setDuoPartnerId(e.target.value)}
-                >
-                  {compatiblePartners.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="d-flex gap-2 align-items-center small">
+              <span>Durée (s)</span>
+              <input aria-label="Durée minimale" type="number" min="0" step="any" className="form-control form-control-sm" placeholder="Min" value={filters.minDuration} onChange={e => updateFilters({ minDuration: e.target.value })} />
+              <input aria-label="Durée maximale" type="number" min="0" step="any" className="form-control form-control-sm" placeholder="Max" value={filters.maxDuration} onChange={e => updateFilters({ maxDuration: e.target.value })} />
             </div>
-          )}
-
-          <div className="d-flex align-items-center gap-2">
-            <span className="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">
-              🎬 {mode === 'solo' ? activeSoloAnim : activeDuoDef?.label}
-            </span>
+          </div>}
+          <div className="d-flex justify-content-between align-items-center mt-2 small text-muted">
+            <span aria-live="polite">{results.length} / {catalog.length} animations</span>
+            <button type="button" className="btn btn-link btn-sm p-0" onClick={exportAnnotations} title="Exporter toutes les annotations locales en JSON">Exporter</button>
+            <button type="button" className="btn btn-link btn-sm p-0" disabled={!isFiltered} onClick={() => updateFilters(EMPTY_STUDIO_FILTERS)}>Réinitialiser</button>
           </div>
         </div>
-
-        {/* 3D Canvas / InventoryPreview Container */}
+        <div ref={listRef} className="animation-studio__results overflow-auto flex-grow-1" role="listbox" aria-label="Animations filtrées">
+          {!results.length && <p className="p-3 small text-muted">Aucune animation ne correspond aux filtres.</p>}
+          {results.map(a => {
+            const annotation = allAnnotations[a.annotationId];
+            return <button key={a.id} type="button" role="option" aria-selected={a.id === active?.id} tabIndex={a.id === active?.id ? 0 : -1} data-animation-id={a.id}
+              className={`animation-studio__row w-100 text-start border-0 border-bottom p-2 ${a.id === active?.id ? 'bg-danger-subtle fw-semibold' : 'bg-transparent'}`}
+              onClick={() => selectAnimation(a)}>
+              <span className="d-flex gap-2 align-items-start justify-content-between">
+                <span className="text-break small">{a.label}</span>
+                {a.duration !== undefined && <span className="badge bg-light text-secondary border flex-shrink-0">{a.duration.toFixed(1)}s</span>}
+              </span>
+              <span className="d-flex flex-wrap align-items-center gap-1 mt-1 small text-muted">
+                {a.sources.map(source => <span key={source}>{SOURCE_LABELS[source] ?? source}</span>)}
+                {annotation?.status && <span className={`badge text-bg-${STATUS_COLORS[annotation.status]}`}>{STATUS_LABELS[annotation.status]}</span>}
+                {annotation?.tags.map(tag => <span key={tag} className="badge bg-secondary-subtle text-dark">#{tag}</span>)}
+                {annotation?.notes && <i className="bi bi-chat-left-text" title={annotation.notes} aria-label="Note enregistrée" />}
+              </span>
+            </button>;
+          })}
+        </div>
+      </div>
+      {!isMobile && <div className="animation-studio__splitter bg-secondary bg-opacity-25" role="separator" aria-orientation="vertical"
+        aria-label="Redimensionner la liste des animations" onMouseDown={onResizeStart} title="Glisser pour redimensionner la liste" />}
+      <div className="animation-studio__workspace bg-light">
+        <div className="p-2 border-bottom bg-white d-flex flex-wrap align-items-center gap-2">
+          <label className="d-flex align-items-center gap-2 small">{mode === 'solo' ? 'Personnage' : 'Leader A'}
+            <select aria-label="Personnage testé" className="form-select form-select-sm w-auto" value={leader?.id ?? ''} onChange={e => setActorId(e.target.value)}>
+              {leaders.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </label>
+          {mode === 'duo' && <>
+            <button type="button" className="btn btn-sm btn-outline-secondary" aria-label="Échanger les personnages" disabled={!partner}
+              onClick={() => { setActorId(partner!.id); setPartnerId(leader.id); }}><i className="bi bi-arrow-left-right" /></button>
+            <label className="d-flex align-items-center gap-2 small">Partenaire B
+              <select aria-label="Partenaire du duo" className="form-select form-select-sm w-auto" value={partner?.id ?? ''} onChange={e => setPartnerId(e.target.value)}>
+                {partners.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+          </>}
+        </div>
         <div className="animation-studio__preview w-100 position-relative">
-          <InventoryPreview
-            key={`${currentItem.id}-${mode}`}
-            item={currentItem}
-            height="100%"
-            hideFooter
-            showPhotoGallery={false}
-            hideAnimFrameController={true}
-            initialAnim={mode === 'solo' ? activeSoloAnim : undefined}
-            initialDuoAnim={mode === 'duo' ? activeDuoDef : undefined}
-            initialDuoPartner={mode === 'duo' ? duoPartnerId : undefined}
-          />
+          {active && currentItem ? <InventoryPreview key={`${currentItem.id}-${mode}`} item={currentItem} height="100%" hideFooter showPhotoGallery={false} defaultShowGrid defaultAutoRotate={false} hideAnimFrameController
+            initialAnim={mode === 'solo' ? active.id : undefined} initialDuoAnim={active.duo} initialDuoPartner={partner?.id} />
+            : <div className="h-100 d-flex align-items-center justify-content-center text-muted p-3">Modifiez les filtres pour sélectionner une animation.</div>}
         </div>
-
-        {/* Barre de transport AnimFrameController */}
-        <div className="animation-studio__tools overflow-auto">
+        <div className="animation-studio__tools">
           <div className="animation-studio__transport p-2 border-top bg-white">
-            <AnimFrameController
-              compact
-              animName={mode === 'solo' ? currentAnnotationName : activeDuoDef?.label}
-              animKey={mode === 'solo' ? activeSoloAnim : undefined}
-              isHumanCharacter={true}
-              characterId={currentItem.id}
-              duoAnimDef={mode === 'duo' ? activeDuoDef : undefined}
-              duoPartnerId={mode === 'duo' ? duoPartnerId : undefined}
-              onSelectAnim={(val) => {
-                setActiveSoloAnim(val);
-                useAnimPreviewStore.getState().play();
-              }}
-              onSelectDuoAnim={(def) => {
-                setActiveDuoDef(def);
-                useAnimPreviewStore.getState().play();
-              }}
-              onSelectDuoPartner={(partnerId) => {
-                setDuoPartnerId(partnerId);
-              }}
-              style={{
-                position: 'relative',
-                zIndex: 'auto',
-                inset: 'auto',
-                width: '100%',
-                margin: 0,
-              }}
-            />
+            <div className="d-flex gap-2 align-items-center mb-2">
+              <div className="btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Parcourir les résultats filtrés">
+                <button type="button" className="btn btn-outline-secondary" aria-label="Animation précédente" title="Précédente (↑)" disabled={!active} onClick={() => navigate(-1)}><i className="bi bi-chevron-up" /></button>
+                <button type="button" className="btn btn-outline-secondary" aria-label="Animation suivante" title="Suivante (↓)" disabled={!active} onClick={() => navigate(1)}><i className="bi bi-chevron-down" /></button>
+                <button type="button" className="btn btn-outline-secondary" aria-label="Animation aléatoire filtrée" title="Aléatoire dans les résultats (D)" disabled={!active} onClick={random}><i className="bi bi-shuffle" /></button>
+              </div>
+              <span className="small text-muted text-nowrap">{activeIndex + 1} / {results.length}</span>
+              <span className="small text-truncate" title={active?.label}>{active?.label ?? 'Aucune sélection'}</span>
+            </div>
+            {active && currentItem && <AnimFrameController key={mode} compact keyboardEnabled={false} showAnimationSelectors={false}
+              animName={active.label} animKey={mode === 'solo' ? active.id : undefined} isHumanCharacter characterId={currentItem.id}
+              duoAnimDef={active.duo} duoPartnerId={partner?.id}
+              style={{ position: 'relative', zIndex: 'auto', inset: 'auto', width: '100%', margin: 0 }} />}
           </div>
-
-          {/* Panneau inférieur : Annotations Dev en LocalStorage pour l'animation active */}
-          <div className="animation-studio__annotations p-2 border-top bg-light">
-            <DevAnnotationPanel
-              targetId={currentAnnotationId}
-              targetName={currentAnnotationName}
-            />
-          </div>
+          {active && <div className="animation-studio__annotations p-2 border-top bg-light">
+            <div className="d-flex flex-wrap gap-2 mb-2">
+              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={saveAlignment}>Mémoriser le calage{active.duo ? ' B' : ''}</button>
+              <button type="button" className="btn btn-sm btn-outline-secondary" disabled={!allAnnotations[active.annotationId]?.customOffsets} onClick={applyAlignment}>Appliquer le calage mémorisé</button>
+            </div>
+            <DevAnnotationPanel key={active.annotationId} targetId={active.annotationId} targetName={active.label} />
+          </div>}
         </div>
       </div>
     </div>

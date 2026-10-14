@@ -10,7 +10,7 @@ import type { AnimationCategory } from './animations/animationRegistry';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
-type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others' | 'fab';
+type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others' | 'fab' | 'interx' | 'behave';
 
 export const ANIM_CATEGORIES = [
   { key: 'combat', label: 'Combat', icon: 'bi-shield-shaded' },
@@ -26,6 +26,8 @@ export const ANIM_CATEGORIES = [
   { key: 'npz', label: 'NPZ', icon: 'bi-folder' },
   { key: 'others', label: 'Others', icon: 'bi-folder' },
   { key: 'fab', label: 'Fab / ActorCore', icon: 'bi-folder' },
+  { key: 'interx', label: 'Inter-X', icon: 'bi-folder' },
+  { key: 'behave', label: 'BEHAVE', icon: 'bi-folder' },
 ] as const satisfies ReadonlyArray<{ key: AnimationCategory | AnimationSource; label: string; icon: string }>;
 
 export function getAnimCategory(val: string): string {
@@ -40,6 +42,13 @@ export function normalizeSearchStr(str: string): string {
     .toLowerCase()
     .replace(/œ/g, 'oe')
     .replace(/æ/g, 'ae');
+}
+
+/** NPZ is a format family; Inter-X is a dataset within that family. */
+export function getAnimSources(path?: string): string[] {
+  if (!path) return [];
+  const [, family, dataset] = path.split('/');
+  return family === 'npz' && dataset === 'interx' ? ['npz', 'interx'] : family ? [family] : [];
 }
 
 /** Métadonnées pré-calculées une seule fois pour éviter les regex et lookups sur chaque render */
@@ -82,7 +91,8 @@ export const ENHANCED_ANIM_OPTIONS = WALKER_ANIM_OPTIONS.map(anim => {
     defId: def?.id,
     defPath: def?.path,
     category: animCat,
-    source: def?.path?.split('/')[1],
+    source: getAnimSources(def?.path).slice(-1)[0],
+    sources: getAnimSources(def?.path),
     catIcon: catObj?.icon,
     catLabel: catObj?.label,
     duration,
@@ -96,7 +106,7 @@ export function getFilteredAnimOptions(search: string, categories: string[], sor
   const q = normalizeSearchStr(search).trim();
   const tokens = q ? q.split(/\s+/).filter(Boolean) : [];
   const filtered = ENHANCED_ANIM_OPTIONS.filter(a => {
-    if (categories.length > 0 && !categories.includes(a.category) && !(a.source && categories.includes(a.source))) return false;
+    if (categories.length > 0 && !categories.includes(a.category) && !a.sources.some(source => categories.includes(source))) return false;
     if (tokens.length === 0) return true;
     return tokens.every(token => a.searchIndex.includes(token));
   });
@@ -112,7 +122,7 @@ export function getFilteredAnimOptions(search: string, categories: string[], sor
 
 const CATEGORY_COUNTS = ENHANCED_ANIM_OPTIONS.reduce<Record<string, number>>((acc, a) => {
   acc[a.category] = (acc[a.category] || 0) + 1;
-  if (a.source) acc[a.source] = (acc[a.source] || 0) + 1;
+  for (const source of a.sources) acc[source] = (acc[source] || 0) + 1;
   return acc;
 }, {});
 

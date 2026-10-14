@@ -713,7 +713,7 @@ function normalizeSearchStr(str: string): string {
             <span className="rounded-circle bg-danger d-inline-block" style={{ width: 8, height: 8 }} />
             <span>Inventaire</span>
           </div>
-          <div className="input-group input-group-sm flex-grow-1" style={{ maxWidth: 360 }}>
+          <div className={`input-group input-group-sm flex-grow-1 ${activeCat === 'animations' ? 'd-none' : ''}`} style={{ maxWidth: 360 }}>
             <span className="input-group-text bg-white text-muted border-end-0">
               <i className="bi bi-search" />
             </span>
@@ -742,7 +742,7 @@ function normalizeSearchStr(str: string): string {
           </div>
           <div className="d-flex align-items-center gap-2 ms-auto">
             <span className="text-muted small text-nowrap">
-              {navList.length} item{navList.length > 1 ? 's' : ''}
+              {activeCat === 'animations' ? 'Studio animations' : `${navList.length} item${navList.length > 1 ? 's' : ''}`}
             </span>
             <button type="button" className="btn-close" onClick={onClose} aria-label="Fermer" />
           </div>
@@ -770,8 +770,8 @@ function normalizeSearchStr(str: string): string {
 
         {/* CONTENU PRINCIPAL */}
         {activeCat === 'animations' ? (
-          <div className="d-flex flex-grow-1 overflow-hidden">
-            <AnimationStudioView isMobile={isMobile} />
+          <div className="d-flex flex-grow-1 overflow-hidden" style={{ userSelect: isResizing ? 'none' : undefined }}>
+            <AnimationStudioView isMobile={isMobile} listWidth={listWidth} onResizeStart={handleResizeStart} />
           </div>
         ) : (
           <div className="d-flex flex-grow-1 overflow-hidden" style={{ userSelect: isResizing ? 'none' : undefined }}>

@@ -162,16 +162,15 @@ button, input, select, textarea {
   -webkit-user-select: none;
 }
 
-/* The studio owns the available height; the generic square preview must not
-   determine its size or push the actor controls out of the viewport. */
+/* The catalog stays beside a scrolling workspace with a 4:3 analysis canvas. */
 .animation-studio {
   display: grid;
-  grid-template-columns: minmax(0, 30%) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 30%) 5px minmax(0, 1fr);
   min-height: 0;
 }
 .animation-studio__workspace {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) minmax(0, 40%);
+  display: block;
+  overflow-y: auto;
   min-width: 0;
   min-height: 0;
 }
@@ -180,14 +179,14 @@ button, input, select, textarea {
   min-width: 0;
 }
 .animation-studio__preview > .inventory-preview-container {
-  height: 100%;
+  height: auto;
   min-height: 0;
 }
 .animation-studio__preview .inventory-preview-canvas-wrap {
-  flex: 1 1 0;
+  flex: 0 0 auto;
   min-height: 0;
   max-height: none;
-  aspect-ratio: auto;
+  aspect-ratio: 4 / 3;
 }
 .animation-studio__preview .view-control-bar-inline {
   flex-shrink: 0;
@@ -199,7 +198,7 @@ button, input, select, textarea {
 }
 .animation-studio--mobile {
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(0, 25%) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 40%) minmax(0, 1fr);
 }
 
 
@@ -351,3 +350,10 @@ button, input, select, textarea {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+.animation-studio__list { min-height: 0; min-width: 0; }
+.animation-studio__list > :first-child { max-height: 65%; overflow-y: auto; }
+.animation-studio__splitter { cursor: col-resize; }
+.animation-studio__row { color: inherit; }
+.animation-studio__row:hover { box-shadow: inset 0 0 0 1px var(--bs-danger); }
+.animation-studio__results { min-height: 0; }

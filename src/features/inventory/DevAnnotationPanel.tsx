@@ -40,6 +40,7 @@ export function DevAnnotationPanel({
       tags: currentTags,
       notes: currentNotes,
       customOffsets: annotation?.customOffsets,
+      duoPartner: annotation?.duoPartner,
     };
     navigator.clipboard.writeText(JSON.stringify(data, null, 2));
     setCopied(true);
@@ -78,6 +79,8 @@ export function DevAnnotationPanel({
           )}
         </div>
       </div>
+
+      {targetName && <div className="small text-truncate mb-2" title={targetName}>{targetName}</div>}
 
       {/* Boutons d'état rapide */}
       <div className="d-flex flex-wrap gap-1 mb-2">

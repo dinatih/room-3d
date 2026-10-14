@@ -40,6 +40,7 @@ export interface AnimFrameControllerProps {
   duoPartnerId?: string;
   onSelectDuoAnim?: (def: DuoAnimationDef | undefined) => void;
   onSelectDuoPartner?: (partnerId: string) => void;
+  showAnimationSelectors?: boolean;
   animalAnimOptions?: { value: string; label: string }[];
 }
 
@@ -61,6 +62,7 @@ export function AnimFrameController({
   onSelectDuoAnim,
   onSelectDuoPartner,
   animalAnimOptions,
+  showAnimationSelectors = true,
 }: AnimFrameControllerProps) {
   const {
     isPlaying,
@@ -74,6 +76,8 @@ export function AnimFrameController({
     selectedCategories,
     sortByDuration,
     lockHipsXZ,
+    isLooping,
+    setLooping,
     togglePlay,
     toggleLockHipsXZ,
     setSpeed,
@@ -913,6 +917,7 @@ export function AnimFrameController({
 
         {/* Droite : Sélecteurs d'animation (Solo & Duo), Vitesse & Meta */}
         <div className="d-flex align-items-center flex-wrap gap-1">
+          {showAnimationSelectors && <>
           {/* Groupe Solo Anim (ou select pour quadrupèdes/oiseaux) */}
           {animalAnimOptions && animalAnimOptions.length > 0 ? (
             <select
@@ -1101,6 +1106,11 @@ export function AnimFrameController({
             </div>
           )}
 
+          </>}
+          <button type="button" className={`btn btn-sm py-0 px-2 ${isLooping ? 'btn-secondary' : 'btn-outline-secondary'}`}
+            aria-label="Lecture en boucle" aria-pressed={isLooping} onClick={() => setLooping(!isLooping)} title="Lecture en boucle">
+            <i className="bi bi-repeat" aria-hidden="true" />
+          </button>
           {/* Bouton Toggle Outil de Coupe / Trimming (Dev Only) */}
           {def && (
             <button
