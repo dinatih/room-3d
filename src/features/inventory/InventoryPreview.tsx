@@ -646,6 +646,7 @@ export function InventoryPreview({
   initialDuoAnim,
   initialDuoPartner,
   initialAnim,
+  hideAnimFrameController = false,
   onGlbStats,
 }: {
   item: PreviewTarget;
@@ -655,6 +656,7 @@ export function InventoryPreview({
   initialDuoAnim?: DuoAnimationDef;
   initialDuoPartner?: string;
   initialAnim?: string;
+  hideAnimFrameController?: boolean;
   onGlbStats?: (s: GlbDebugStats | null) => void;
 }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
@@ -1220,7 +1222,7 @@ export function InventoryPreview({
         </button>
         </>
       )}>
-        {showing3D && isCharacterItem && (
+        {showing3D && isCharacterItem && !hideAnimFrameController && (
           <AnimFrameController
             compact
             animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
