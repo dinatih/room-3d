@@ -580,7 +580,11 @@ export function AnimFrameController({
     const observer = new ResizeObserver(alignSelector);
     observer.observe(controller);
     observer.observe(badge);
-    return () => observer.disconnect();
+    window.addEventListener('resize', alignSelector);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', alignSelector);
+    };
   }, [showAnimSelector]);
 
   useLayoutEffect(() => {
@@ -603,7 +607,11 @@ export function AnimFrameController({
     const observer = new ResizeObserver(alignSelector);
     observer.observe(controller);
     observer.observe(badge);
-    return () => observer.disconnect();
+    window.addEventListener('resize', alignSelector);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', alignSelector);
+    };
   }, [showDuoSelector]);
 
   useLayoutEffect(() => {
