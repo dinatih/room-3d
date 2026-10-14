@@ -16,12 +16,12 @@ import { cameraState } from '../cameraState';
 import { isAppIdle } from '../idleState';
 import { appLog } from '@features/ui/AppConsole';
 
-// A small shared patrol in the open garden, away from the furniture and statues.
-const PATROL = { minX: 90, maxX: 300, minZ: -580, maxZ: -420 };
+// Spread starts and patrols across the open garden, away from furniture and statues.
+const PATROL = { minX: 50, maxX: 430, minZ: -620, maxZ: -420 };
 const ROBOTS = [
-  { id: 'unitree-g1', Component: UnitreeG1, position: [90, 0, -480], walk: 'walk', speed: 30, pause: 2, radiusScale: 1 / 2 },
-  { id: 'unitree-go2', Component: UnitreeGo2, position: [200, 0, -580], walk: 'trot', speed: 25.2, pause: 4, radiusScale: 2 / 3 },
-  { id: 'jumper-robot', Component: Jumper, position: [300, 0, -480], walk: 'walk', speed: 28.8, pause: 6, radiusScale: 2 / 3 },
+  { id: 'unitree-g1', Component: UnitreeG1, position: [50, 0, -450], walk: 'walk', speed: 30, pause: 2, radiusScale: 1 / 2 },
+  { id: 'unitree-go2', Component: UnitreeGo2, position: [220, 0, -620], walk: 'trot', speed: 25.2, pause: 4, radiusScale: 2 / 3 },
+  { id: 'jumper-robot', Component: Jumper, position: [430, 0, -450], walk: 'walk', speed: 28.8, pause: 6, radiusScale: 2 / 3 },
 ] satisfies { id: string; Component: ComponentType<SceneItemProps>; position: [number, number, number]; walk: string; speed: number; pause: number; radiusScale: number }[];
 
 function Robot({ config }: { config: typeof ROBOTS[number] }) {
