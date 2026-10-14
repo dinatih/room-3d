@@ -411,6 +411,32 @@ export function AnimFrameController({
     handleSelectAnim(nextVal);
   }, [filteredAnims, activeAnimValue, handleSelectAnim]);
 
+  // Navigation précédente / suivante pour les animations duo
+  const cycleFilteredDuoAnim = useCallback((direction: 'next' | 'prev') => {
+    if (!onSelectDuoAnim || !DUO_ANIMATIONS.length) return;
+    const currentId = duoAnimDef?.id;
+    const currIdx = DUO_ANIMATIONS.findIndex(a => a.id === currentId);
+    let nextIdx = 0;
+    if (currIdx === -1) {
+      nextIdx = direction === 'next' ? 0 : DUO_ANIMATIONS.length - 1;
+    } else {
+      nextIdx = direction === 'next'
+        ? (currIdx + 1) % DUO_ANIMATIONS.length
+        : (currIdx - 1 + DUO_ANIMATIONS.length) % DUO_ANIMATIONS.length;
+    }
+    const nextAnim = DUO_ANIMATIONS[nextIdx];
+    handleSelectDuoAnim(nextAnim, showDuoSelector);
+    if (nextAnim && characterId) {
+      const leaderId = resolveDuoPreviewParticipants(nextAnim, characterId, duoPartnerId).leaderId;
+      const validPartners = CHARACTERS.filter(
+        c => (allowSamePartner || c.id !== leaderId) && canCharacterPerformDuo(c.id, nextAnim) && (extraCharacters || !isExtraCharacter(c.id))
+      );
+      if (validPartners.length > 0 && (!duoPartnerId || !canCharacterPerformDuo(duoPartnerId, nextAnim))) {
+        onSelectDuoPartner?.(validPartners[0].id);
+      }
+    }
+  }, [onSelectDuoAnim, duoAnimDef, showDuoSelector, characterId, duoPartnerId, allowSamePartner, extraCharacters, handleSelectDuoAnim, onSelectDuoPartner]);
+
   // Sélection aléatoire d'une animation parmi la liste filtrée
   const handleRandomAnim = useCallback(() => {
     if (!filteredAnims.length) return;
@@ -498,21 +524,29 @@ export function AnimFrameController({
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         e.stopPropagation();
-        cycleFilteredAnim('prev');
+        if (duoAnimDef || showDuoSelector) {
+          cycleFilteredDuoAnim('prev');
+        } else {
+          cycleFilteredAnim('prev');
+        }
         return;
       }
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         e.stopPropagation();
-        cycleFilteredAnim('next');
+        if (duoAnimDef || showDuoSelector) {
+          cycleFilteredDuoAnim('next');
+        } else {
+          cycleFilteredAnim('next');
+        }
         return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [keyboardEnabled, isHumanCharacter, onSelectDuoAnim, togglePlay, stepFrame, seekToFrame, cycleFilteredAnim, handleRandomAnim, handleRandomDuoAnim]);
+  }, [keyboardEnabled, isHumanCharacter, onSelectDuoAnim, duoAnimDef, showDuoSelector, togglePlay, stepFrame, seekToFrame, cycleFilteredAnim, cycleFilteredDuoAnim, handleRandomAnim, handleRandomDuoAnim]);
 
   const handleFrameCommit = () => {
     setIsEditingFrame(false);
@@ -911,7 +945,7 @@ export function AnimFrameController({
                     ? 'btn-danger text-white shadow-sm'
                     : 'btn-outline-secondary text-dark'
                 }`}
-                style={{ maxWidth: '240px' }}
+                style={{ maxWidth: '360px' }}
                 onClick={() => {
                   setShowAnimSelector(v => !v);
                   setShowDuoSelector(false);
@@ -955,8 +989,18 @@ export function AnimFrameController({
           {/* Contrôles Animations Duo (humains uniquement) */}
           {isHumanCharacter && (
             <div className="d-flex align-items-center flex-wrap gap-1">
-              {/* Sélecteur Duo + Dé */}
+              {/* Sélecteur Duo + Précédent / Suivant + Dé */}
               <div className="btn-group btn-group-sm" role="group">
+                <button
+                  type="button"
+                  className="btn py-0 px-2 btn-outline-secondary text-dark"
+                  onClick={() => cycleFilteredDuoAnim('prev')}
+                  disabled={!onSelectDuoAnim}
+                  title="Animation duo précédente (Flèche Haut quand duo actif)"
+                >
+                  <i className="bi bi-chevron-up" />
+                </button>
+
                 <button
                   ref={duoBadgeRef}
                   type="button"
@@ -967,7 +1011,7 @@ export function AnimFrameController({
                       ? 'btn-danger text-white shadow-sm'
                       : 'btn-outline-secondary text-dark'
                   }`}
-                  style={{ maxWidth: '180px' }}
+                  style={{ maxWidth: '280px' }}
                   onClick={() => {
                     setShowDuoSelector(v => !v);
                     setShowAnimSelector(false);
@@ -985,6 +1029,17 @@ export function AnimFrameController({
                   </span>
                   <i className={`bi ${showDuoSelector ? 'bi-chevron-up' : 'bi-chevron-down'} opacity-75 small`} aria-hidden="true" />
                 </button>
+
+                <button
+                  type="button"
+                  className="btn py-0 px-2 btn-outline-secondary text-dark"
+                  onClick={() => cycleFilteredDuoAnim('next')}
+                  disabled={!onSelectDuoAnim}
+                  title="Animation duo suivante (Flèche Bas quand duo actif)"
+                >
+                  <i className="bi bi-chevron-down" />
+                </button>
+
                 <button
                   type="button"
                   className="btn py-0 px-2 btn-warning text-dark fw-bold"
