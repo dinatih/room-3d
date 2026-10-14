@@ -3753,7 +3753,6 @@ export const FAB_ANIMATION_DEFINITIONS: AnimationDefinition[] = [
       "tiptoe",
       "walk",
       "in-place",
-      "npc-walk",
       "locomotion"
     ],
     "duration": 6.966667,
