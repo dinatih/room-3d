@@ -741,7 +741,27 @@ function normalizeSearchStr(str: string): string {
           </div>
         </div>
 
-        {/* LAYOUT SPLIT */}
+        {/* BARRE DES CATÉGORIES (Commune à tout l'inventaire) */}
+        <div className="p-2 border-bottom d-flex flex-column gap-1 bg-light bg-opacity-50 flex-shrink-0">
+          <div ref={categoriesContainerRef} className="d-flex gap-1 overflow-x-auto text-nowrap pb-1" style={{ scrollbarWidth: 'none' }}>
+            {CATEGORIES.map(cat => {
+              const isActive = cat.id === activeCat;
+              return (
+                <button
+                  key={cat.id}
+                  data-category-id={cat.id}
+                  type="button"
+                  className={`btn btn-sm py-0.5 px-2 rounded-pill small ${isActive ? 'btn-danger text-white shadow-sm' : 'btn-outline-secondary bg-white text-dark'}`}
+                  onClick={() => setActiveCat(cat.id)}
+                >
+                  {cat.icon && <i className={`bi ${cat.icon} me-1`} aria-hidden="true" />}{cat.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* CONTENU PRINCIPAL */}
         {activeCat === 'animations' ? (
           <div className="d-flex flex-grow-1 overflow-hidden">
             <AnimationStudioView isMobile={isMobile} />
@@ -753,26 +773,10 @@ function normalizeSearchStr(str: string): string {
             className="inventory-pane-list d-flex flex-column border-end bg-white bg-opacity-50 overflow-hidden flex-shrink-0"
             style={{ width: isMobile ? '100%' : `${listWidth}px` }}
           >
-            <div className="p-2 border-bottom d-flex flex-column gap-1 bg-light bg-opacity-50">
+            <div className="p-2 border-bottom d-flex flex-column gap-1 bg-light bg-opacity-25">
               <span className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>
-                Tous les items
+                Items ({navList.length})
               </span>
-              <div ref={categoriesContainerRef} className="d-flex gap-1 overflow-x-auto text-nowrap pb-1" style={{ scrollbarWidth: 'none' }}>
-                {CATEGORIES.map(cat => {
-                  const isActive = cat.id === activeCat;
-                  return (
-                    <button
-                      key={cat.id}
-                      data-category-id={cat.id}
-                      type="button"
-                      className={`btn btn-sm py-0.5 px-2 rounded-pill small ${isActive ? 'btn-danger text-white shadow-sm' : 'btn-outline-secondary bg-white text-dark'}`}
-                      onClick={() => setActiveCat(cat.id)}
-                    >
-                      {cat.icon && <i className={`bi ${cat.icon} me-1`} aria-hidden="true" />}{cat.label}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             <div ref={tableContainerRef} className="overflow-auto flex-grow-1">

@@ -683,6 +683,7 @@ export function AnimFrameController({
         right: 10,
         zIndex: 90,
         ...style,
+        ...(style?.position && style.position !== 'absolute' ? { bottom: undefined, left: undefined, right: undefined } : {}),
       }}
     >
       {/* Popover Sélecteur d'animation CharacterAnimSelector */}
