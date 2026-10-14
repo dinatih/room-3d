@@ -79,7 +79,8 @@ export function createUnitreeMotion(scene: Object3D, model: 'g1' | 'go2') {
         if (motion === 'trot') {
           // Two-link sagittal IK. Link lengths and home angles are from go2.xml.
           const gait = phase * 1.4 + diagonal;
-          const x = 0.045 * Math.cos(gait) * entry;
+          // +X points forward: swing travels back to front; stance pushes backward.
+          const x = -0.045 * Math.cos(gait) * entry;
           const down = 2 * 0.213 * Math.cos(0.9) - 0.04 * Math.max(0, Math.sin(gait)) * entry;
           calf = -Math.acos((x * x + down * down - 2 * 0.213 ** 2) / (2 * 0.213 ** 2));
           thigh = Math.atan2(-x, down) - calf / 2;
