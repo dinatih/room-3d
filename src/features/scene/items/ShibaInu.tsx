@@ -1,7 +1,7 @@
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 import { createRouteState, followRoute, resetRoute, randomReachableTarget } from '../ai/navigation/service';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
-import { computeSteeringVector, computeRotYStep } from '../ai/agent/agentAvoidance';
+import { computeSteeringVector, computeRotYStep, reserveAgentDestination } from '../ai/agent/agentAvoidance';
 import { appLog } from '@features/ui/AppConsole';
 import { useRef, useLayoutEffect, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -88,7 +88,11 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       targetHeight,
       rawSize.z * scaleFactor
     );
-    if (!isPreview && navigationEnabled) setAgentProfile('shiba', { radius: Math.min(finalSize.x, finalSize.z) / 2, height: targetHeight });
+    if (!isPreview && navigationEnabled) setAgentProfile('shiba', {
+      radius: Math.min(finalSize.x, finalSize.z) / 2,
+      bodyRadius: Math.hypot(finalSize.x, finalSize.z) / 2,
+      height: targetHeight, solid: true,
+    });
     setBounds({ size: finalSize, center: rawBox.getCenter(new THREE.Vector3()).multiplyScalar(scaleFactor) });
 
     scene.traverse(c => {
@@ -135,11 +139,11 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     onSize?.(finalSize);
 
     return () => {
-      if (!isPreview && navigationEnabled) { removeAgentProfile('shiba'); resetRoute(routeRef.current, 'shiba'); }
+      if (!isPreview && navigationEnabled) { removeAgentProfile('shiba'); resetRoute(routeRef.current, 'shiba'); reserveAgentDestination('shiba', null); }
       mixerRef.current?.stopAllAction();
       mixerRef.current?.uncacheRoot(scene);
     };
-  }, [scene, animations, isPreview, previewAnim, dancePreview, invalidate, onSize]);
+  }, [scene, animations, isPreview, previewAnim, dancePreview, invalidate, onSize, navigationEnabled]);
 
   useEffect(() => {
     if (isPreview) return;
@@ -147,6 +151,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       const { key } = (e as CustomEvent).detail as { key: string };
       
       if (key === 'shiba-replay') {
+        reserveAgentDestination('shiba', null);
         // Return to autonomous mode
         resetRoute(routeRef.current, 'shiba');
         aiStateRef.current.mode = 'autonomous';
@@ -154,6 +159,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
         aiStateRef.current.timer = 1.0;
         
       } else if (key.startsWith('shiba-play-') && mixerRef.current) {
+        reserveAgentDestination('shiba', null);
         // Forced manual animation
         const idx = parseInt(key.split('-')[2], 10);
         if (!isNaN(idx) && animations[idx]) {
@@ -262,9 +268,13 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
           mixerRef.current.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
         }
         const target = dogDanceTarget(dancingChar.x, dancingChar.y, dancingChar.z, dancingChar.yaw);
+        reserveAgentDestination('shiba', target);
         const position = modelRef.current.position;
         const before = { x: position.x, z: position.z };
-        const next = followRoute(routeRef.current, 'shiba', before, target, WALK_SPEED * delta);
+        const next = followRoute(routeRef.current, 'shiba', before, target, WALK_SPEED * delta, (direction, remaining) => {
+          const steer = computeSteeringVector('shiba', before.x, before.z, direction.x, direction.z, remaining);
+          return { x: steer.steerX, z: steer.steerZ };
+        });
         position.x = next.x; position.z = next.z;
         const arrived = Math.hypot(position.x - target.x, position.z - target.z) < 1e-6;
         if (!arrived) {
@@ -275,10 +285,10 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
             if (!walkClip) throw new Error('Shiba choreography requires Dog|Walk');
             mixerRef.current.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
           }
-          if (next.x !== before.x || next.z !== before.z) modelRef.current.rotation.y = Math.atan2(next.x - before.x, next.z - before.z);
+          if (next.x !== before.x || next.z !== before.z) modelRef.current.rotation.y = computeRotYStep(modelRef.current.rotation.y, Math.atan2(next.x - before.x, next.z - before.z), Math.PI, delta);
         } else {
           modelRef.current.position.y = target.y;
-          modelRef.current.rotation.y = target.yaw;
+          modelRef.current.rotation.y = computeRotYStep(modelRef.current.rotation.y, target.yaw, Math.PI, delta);
           if (!dance.jumping) {
             dance.jumping = true;
             mixerRef.current.stopAllAction();
@@ -291,6 +301,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       } else {
         const ai = aiStateRef.current;
         if (danceRef.current.owner !== null) {
+          reserveAgentDestination('shiba', null);
           resetRoute(routeRef.current, 'shiba');
           danceRef.current.owner = null;
           ai.mode = 'autonomous';
@@ -307,6 +318,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
               if (!destination) return;
               resetRoute(routeRef.current, 'shiba');
               ai.targetPos.set(destination.x, 0, destination.z);
+              reserveAgentDestination('shiba', destination);
             const dist = modelRef.current.position.distanceTo(ai.targetPos);
             ai.state = dist > 150 ? 'running' : 'walking';
             
@@ -321,6 +333,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
           const speed = ai.state === 'running' ? 120 : 50;
           const dist = modelRef.current.position.distanceTo(ai.targetPos);
           if (dist < 5) {
+            reserveAgentDestination('shiba', null);
             resetRoute(routeRef.current, 'shiba');
             ai.state = 'idle';
             ai.timer = 3 + Math.random() * 8; // wait 3 to 11 seconds
@@ -343,7 +356,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
             }
             position.x = next.x; position.z = next.z;
             if (next.x !== previous.x || next.z !== previous.z) {
-              modelRef.current.rotation.y = computeRotYStep(modelRef.current.rotation.y, Math.atan2(next.x - previous.x, next.z - previous.z), 10, delta);
+              modelRef.current.rotation.y = computeRotYStep(modelRef.current.rotation.y, Math.atan2(next.x - previous.x, next.z - previous.z), Math.PI, delta);
             }
 
           }

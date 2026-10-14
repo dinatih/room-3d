@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState, type ComponentType } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3 } from 'three';
 import type { SceneItemProps } from '@shared/types';
@@ -10,14 +10,14 @@ import { getActionDef } from '../objectActionRegistry';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 import { getNavigationGraph, createRouteState, followRoute, resetRoute } from '../ai/navigation/service';
 import { setAgentProfile, removeAgentProfile, type AgentProfile } from '../ai/navigation/obstacles';
-import { computeSteeringVector } from '../ai/agent/agentAvoidance';
+import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, reserveAgentDestination } from '../ai/agent/agentAvoidance';
 import type { Point } from '../ai/navigation/geometry';
 import { cameraState } from '../cameraState';
 import { isAppIdle } from '../idleState';
 import { appLog } from '@features/ui/AppConsole';
 
 // A small shared patrol in the open garden, away from the furniture and statues.
-const PATROL: Point[] = [{ x: 90, z: -480 }, { x: 200, z: -580 }, { x: 300, z: -480 }, { x: 200, z: -420 }];
+const PATROL = { minX: 90, maxX: 300, minZ: -580, maxZ: -420 };
 const ROBOTS = [
   { id: 'unitree-g1', Component: UnitreeG1, position: [90, 0, -480], walk: 'walk', speed: 30, pause: 2 },
   { id: 'unitree-go2', Component: UnitreeGo2, position: [200, 0, -580], walk: 'trot', speed: 25.2, pause: 4 },
@@ -28,7 +28,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const { id, Component } = config;
   const navigationEnabled = useNavigationEnabled();
   const group = useRef<Group>(null);
-  const profile = useRef<AgentProfile | null>(null);
+  const [profile, setProfile] = useState<AgentProfile | null>(null);
   const route = useRef(createRouteState());
   const life = useRef({ automatic: true, target: null as Point | null, wait: config.pause });
   const [actions, setActions] = useState<Record<string, any>>({});
@@ -44,9 +44,23 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     setActions(previous => ({ ...previous, [motionKey]: motion }));
   }, [motionKey]);
   const onSize = useCallback((size: Vector3) => {
-    profile.current = { radius: Math.hypot(size.x, size.z) / 2, height: size.y };
-    if (navigationEnabled) setAgentProfile(id, profile.current);
-  }, [id, navigationEnabled]);
+    const measured = { radius: Math.hypot(size.x, size.z) / 2, height: size.y, solid: true };
+    setProfile(previous => previous?.radius === measured.radius && previous.height === measured.height ? previous : measured);
+  }, []);
+
+  // Registration and removal belong to the same effect, including StrictMode/HMR remounts.
+  useLayoutEffect(() => {
+    if (!navigationEnabled || !profile) return;
+    setAgentProfile(id, profile);
+    const root = group.current!;
+    cameraState.positions[id] = { x: root.position.x, y: root.position.y, z: root.position.z, yaw: root.rotation.y };
+    return () => {
+      resetRoute(route.current, id);
+      removeAgentProfile(id);
+      reserveAgentDestination(id, null);
+      delete cameraState.positions[id];
+    };
+  }, [id, navigationEnabled, profile]);
 
   useEffect(() => {
     if (!navigationEnabled) return;
@@ -54,6 +68,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
       const { key, value } = (event as CustomEvent<{ key: string; value?: string }>).detail;
       if (key !== automaticKey && key !== motionKey && key !== replayKey) return;
       resetRoute(route.current, id);
+      reserveAgentDestination(id, null);
       life.current.target = null;
       if (key === automaticKey) {
         life.current.automatic = true;
@@ -72,32 +87,44 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     document.addEventListener('furniture-toggle', handler);
     return () => {
       document.removeEventListener('furniture-toggle', handler);
-      resetRoute(route.current, id);
-      removeAgentProfile(id);
-      delete cameraState.positions[id];
     };
   }, [id, navigationEnabled, automaticKey, motionKey, replayKey, selectMotion]);
 
   // Run before each model's animation callback so placement and animation agree.
   useFrame((state, delta) => {
     const root = group.current;
-    if (!root || !profile.current || !navigationEnabled || isAppIdle()) return;
+    if (!root || !profile || !navigationEnabled || isAppIdle()) return;
     const ai = life.current;
     if (ai.automatic) {
       if (ai.target) {
+        // A resting animal or person may occupy a previously free stopping point.
+        if (!isAgentDestinationFree(id, ai.target)) {
+          resetRoute(route.current, id);
+          reserveAgentDestination(id, null);
+          ai.target = null;
+          ai.wait = config.pause;
+          selectMotion('idle');
+          state.invalidate();
+          return;
+        }
         const before = { x: root.position.x, z: root.position.z };
-        const next = followRoute(route.current, id, before, ai.target, config.speed * delta, (direction, remaining) => {
+        const corner = route.current.path[route.current.index] ?? ai.target;
+        const heading = Math.atan2(corner.x - before.x, corner.z - before.z);
+        // Turn before advancing when the next leg of the route is behind the body.
+        const travel = config.speed * delta * Math.max(0, Math.cos(heading - root.rotation.y));
+        const next = followRoute(route.current, id, before, ai.target, travel, (direction, remaining) => {
           const steer = computeSteeringVector(id, before.x, before.z, direction.x, direction.z, remaining);
+          root.rotation.y = computeRotYStep(root.rotation.y, Math.atan2(steer.steerX, steer.steerZ), Math.PI, delta);
           return { x: steer.steerX, z: steer.steerZ };
         });
         const moved = next.x !== before.x || next.z !== before.z;
         root.position.x = next.x;
         root.position.z = next.z;
-        if (moved) root.rotation.y = Math.atan2(next.x - before.x, next.z - before.z);
         selectMotion(moved ? config.walk : 'idle');
         if (route.current.error || (next.x === ai.target.x && next.z === ai.target.z)) {
           if (route.current.error) appLog(id, `Navigation : ${route.current.error}`);
           resetRoute(route.current, id);
+          reserveAgentDestination(id, null);
           ai.target = null;
           ai.wait = 3 + Math.random() * 4;
           selectMotion('idle');
@@ -107,9 +134,16 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
         if (ai.wait <= 0) {
           selectMotion('idle');
           if (Math.random() < 2 / 3) {
-            const target = PATROL[Math.floor(Math.random() * PATROL.length)];
+            const target = {
+              x: PATROL.minX + Math.random() * (PATROL.maxX - PATROL.minX),
+              z: PATROL.minZ + Math.random() * (PATROL.maxZ - PATROL.minZ),
+            };
             const start = { x: root.position.x, z: root.position.z };
-            if ((start.x !== target.x || start.z !== target.z) && getNavigationGraph(profile.current).find(start, target)) ai.target = target;
+            if (Math.hypot(start.x - target.x, start.z - target.z) >= profile.radius * 2
+              && isAgentDestinationFree(id, target) && getNavigationGraph(profile).find(start, target)) {
+              ai.target = target;
+              reserveAgentDestination(id, target);
+            }
             ai.wait = 3;
           } else {
             const gestures = getActionDef(motionKey)!.options!.filter(option => !['idle', config.walk, 'turn-left', 'turn-right'].includes(option.value));

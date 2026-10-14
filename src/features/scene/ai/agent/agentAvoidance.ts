@@ -1,106 +1,116 @@
 import { cameraState } from '../../cameraState';
 import { useSceneStore } from '../../store/useSceneStore';
+import { getAgentProfile, hasAgentProfile } from '../navigation/obstacles';
+import type { Point } from '../navigation/geometry';
 
-export interface SteeringResult {
-  steerX: number;
-  steerZ: number;
-}
-
+export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
+const destinations = new Map<string, Point>();
+const passingSides = new Map<string, Map<string, number>>();
 
-/**
- * Calcule la direction résultante (steerX, steerZ) en combinant la direction vers la cible
- * et l’évitement local des autres personnages. Les obstacles solides sont traités par la navigation.
- * Réutilise une structure statique partagée pour zéro allocation d'objet par frame.
- */
-export function computeSteeringVector(
-  characterId: string,
-  currentX: number,
-  currentZ: number,
-  dirX: number,
-  dirZ: number,
-  distToTarget: number
-): SteeringResult {
-  let avoidanceForceX = 0;
-  let avoidanceForceZ = 0;
+export function reserveAgentDestination(id: string, target: Point | null): void {
+  if (target) destinations.set(id, { ...target });
+  else {
+    destinations.delete(id);
+    passingSides.delete(id);
+    for (const sides of passingSides.values()) sides.delete(id);
+  }
+}
 
-  // Si nous sommes très proches de la destination (< 30 cm), réduire l'évitement pour garantir l'arrivée
-  const targetProximityDampener = distToTarget < 30.0 ? distToTarget / 30.0 : 1.0;
+/** A stopping place must fit both bodies, even when another actor is resting. */
+export function isAgentDestinationFree(id: string, target: Point): boolean {
+  const profile = getAgentProfile(id);
+  for (const otherId in cameraState.positions) {
+    if (otherId === id || !hasAgentProfile(otherId)) continue;
+    const other = cameraState.positions[otherId];
+    const body = getAgentProfile(otherId);
+    const separation = (profile.bodyRadius ?? profile.radius) + (body.bodyRadius ?? body.radius);
+    if (other.y >= profile.height || other.y + body.height <= 0) continue;
+    if (Math.hypot(target.x - other.x, target.z - other.z) < separation) return false;
+    const destination = destinations.get(otherId);
+    if (destination && Math.hypot(target.x - destination.x, target.z - destination.z) < separation) return false;
+  }
+  return true;
+}
 
-  // ── 1. Évitement et contournement des autres personnages (NPCs et joueur) ──
-  const isNpcCollisionsEnabled = useSceneStore.getState().layers.npcCollisions;
-  if (isNpcCollisionsEnabled) {
-    const AVOID_RADIUS = 35;
-    const LOOKAHEAD_DIST = 70;
-    const positions = cameraState.positions;
-
-    for (const otherId in positions) {
-      if (otherId === characterId) continue;
-      const pos = positions[otherId];
-      if (!pos) continue;
-
-      const toOtherX = pos.x - currentX;
-      const toOtherZ = pos.z - currentZ;
-      const otherDist = Math.hypot(toOtherX, toOtherZ);
-
-      if (otherDist > 0.1 && otherDist < LOOKAHEAD_DIST) {
-        const forwardProj = toOtherX * dirX + toOtherZ * dirZ;
-
-        if (forwardProj > 0 || otherDist < AVOID_RADIUS) {
-          const perpDist = Math.abs(-dirZ * toOtherX + dirX * toOtherZ);
-
-          if (perpDist < AVOID_RADIUS) {
-            const cross = dirX * toOtherZ - dirZ * toOtherX;
-            const steerSide = cross >= 0 ? -1 : 1;
-
-            const lateralWeight = Math.max(0.2, (AVOID_RADIUS - perpDist) / AVOID_RADIUS);
-            const proximityWeight = Math.max(0.3, (LOOKAHEAD_DIST - otherDist) / LOOKAHEAD_DIST);
-            const steerIntensity = lateralWeight * proximityWeight * targetProximityDampener;
-
-            avoidanceForceX += -dirZ * steerSide * steerIntensity;
-            avoidanceForceZ += dirX * steerSide * steerIntensity;
-
-            if (otherDist < AVOID_RADIUS) {
-              const repulseIntensity = ((AVOID_RADIUS - otherDist) / AVOID_RADIUS) * 0.7 * targetProximityDampener;
-              avoidanceForceX -= (toOtherX / otherDist) * repulseIntensity;
-              avoidanceForceZ -= (toOtherZ / otherDist) * repulseIntensity;
-            }
-          }
-        }
+/** Anticipate contact using measured bodies; keep the passing side for the encounter. */
+export function computeSteeringVector(characterId: string, currentX: number, currentZ: number, dirX: number, dirZ: number, _distToTarget: number): SteeringResult {
+  let steerX = dirX, steerZ = dirZ;
+  if (useSceneStore.getState().layers.npcCollisions) {
+    const profile = getAgentProfile(characterId);
+    const y = cameraState.positions[characterId]?.y ?? 0;
+    let sides = passingSides.get(characterId);
+    if (!sides) { sides = new Map(); passingSides.set(characterId, sides); }
+    for (const otherId in cameraState.positions) {
+      if (otherId === characterId || !hasAgentProfile(otherId)) continue;
+      const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
+      if (other.y >= y + profile.height || other.y + body.height <= y) continue;
+      const dx = other.x - currentX, dz = other.z - currentZ;
+      const distance = Math.hypot(dx, dz);
+      const clearance = (profile.bodyRadius ?? profile.radius) + (body.bodyRadius ?? body.radius);
+      const lookahead = clearance * 2;
+      if (distance >= lookahead) { sides.delete(otherId); continue; }
+      const forward = dx * dirX + dz * dirZ;
+      const cross = dirX * dz - dirZ * dx;
+      if (forward > 0 && Math.abs(cross) < clearance) {
+        let side = sides.get(otherId);
+        if (side === undefined) { side = cross > 0 ? -1 : 1; sides.set(otherId, side); }
+        const proximity = (lookahead - distance) / clearance;
+        const lateral = (clearance - Math.abs(cross)) / clearance;
+        steerX -= dirZ * side * proximity * lateral;
+        steerZ += dirX * side * proximity * lateral;
+      }
+      if (distance > 0 && distance < clearance) {
+        const penetration = (clearance - distance) / clearance;
+        steerX -= dx / distance * penetration;
+        steerZ -= dz / distance * penetration;
       }
     }
   }
-
-  let steerX = dirX + avoidanceForceX;
-  let steerZ = dirZ + avoidanceForceZ;
-  const steerLen = Math.hypot(steerX, steerZ);
-
-  if (steerLen > 0.001) {
-    steerX /= steerLen;
-    steerZ /= steerLen;
-  } else {
-    steerX = dirX;
-    steerZ = dirZ;
-  }
-
-  SHARED_STEER.steerX = steerX;
-  SHARED_STEER.steerZ = steerZ;
+  const length = Math.hypot(steerX, steerZ);
+  SHARED_STEER.steerX = length > 0 ? steerX / length : dirX;
+  SHARED_STEER.steerZ = length > 0 ? steerZ / length : dirZ;
   return SHARED_STEER;
 }
 
-/**
- * Calcule l'incrément de rotation pour s'orienter de manière fluide vers targetRotY.
- * Utilise une normalisation angulaire directe sans boucle while.
- */
-export function computeRotYStep(currentRotY: number, targetRotY: number, rotSpeed: number, dt: number): number {
-  let rotDiff = (targetRotY - currentRotY) % TWO_PI;
-  if (rotDiff > Math.PI) rotDiff -= TWO_PI;
-  else if (rotDiff < -Math.PI) rotDiff += TWO_PI;
-
-  const maxRot = rotSpeed * dt;
-  if (Math.abs(rotDiff) <= maxRot) {
-    return targetRotY;
+/** Sweep the proposed step against solid actor bodies, without teleporting or tunnelling. */
+export function limitAgentMovement(id: string, start: Point, proposed: Point): Point {
+  if (!useSceneStore.getState().layers.npcCollisions) return proposed;
+  const profile = getAgentProfile(id);
+  const vx = proposed.x - start.x, vz = proposed.z - start.z;
+  const lengthSquared = vx * vx + vz * vz;
+  if (lengthSquared === 0) return proposed;
+  const y = cameraState.positions[id]?.y ?? 0;
+  let fraction = 1;
+  for (const otherId in cameraState.positions) {
+    if (otherId === id || !hasAgentProfile(otherId)) continue;
+    const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
+    if (!(profile.solid || body.solid) || other.y >= y + profile.height || other.y + body.height <= y) continue;
+    const dx = start.x - other.x, dz = start.z - other.z;
+    const radius = (profile.bodyRadius ?? profile.radius) + (body.bodyRadius ?? body.radius);
+    const b = dx * vx + dz * vz;
+    const c = dx * dx + dz * dz - radius * radius;
+    // Existing overlaps may separate, but must not deepen.
+    if (c <= 0) {
+      if (b < 0) fraction = 0;
+      continue;
+    }
+    if (b >= 0) continue;
+    const discriminant = b * b - lengthSquared * c;
+    if (discriminant <= 0) continue;
+    const contact = (-b - Math.sqrt(discriminant)) / lengthSquared;
+    if (contact >= 0 && contact < fraction) fraction = Math.max(0, contact - Number.EPSILON);
   }
-  return currentRotY + Math.sign(rotDiff) * maxRot;
+  return fraction === 1 ? proposed : { x: start.x + vx * fraction, z: start.z + vz * fraction };
+}
+
+/** Smooth the shortest angular arc, bounded by the actor's turn speed in radians/s. */
+export function computeRotYStep(currentRotY: number, targetRotY: number, rotSpeed: number, dt: number): number {
+  let diff = (targetRotY - currentRotY) % TWO_PI;
+  if (diff > Math.PI) diff -= TWO_PI;
+  else if (diff < -Math.PI) diff += TWO_PI;
+  const eased = diff * (1 - Math.exp(-rotSpeed * dt));
+  const limit = rotSpeed * dt;
+  return currentRotY + Math.max(-limit, Math.min(limit, eased));
 }

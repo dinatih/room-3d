@@ -5,6 +5,7 @@ import { furnitureObstacles, getObstacleRevision, getAgentProfile, navigationDeb
 import { inflate, union, VisibilityGraph, rectangle, pointInRing, insideObstacle, segmentFree, distance, projectToSegment, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, type DoorKey } from './doorRequests';
+import { limitAgentMovement, isAgentDestinationFree } from '../agent/agentAvoidance';
 
 export { architectureObstacles };
 export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
@@ -203,7 +204,7 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     releaseAgentDoors(agentId);
     route.doors.clear();
   }
-  return position;
+  return limitAgentMovement(agentId, start, position);
 }
 
 function advanceRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, closedDoor?: DoorKey): Point {
@@ -312,5 +313,5 @@ export function randomReachableTarget(agentId: string, start: Point): Point | nu
   const xs = rings.flat().map(p => p.x), zs = rings.flat().map(p => p.z);
   const xMin = Math.min(...xs), xMax = Math.max(...xs), zMin = Math.min(...zs), zMax = Math.max(...zs);
   const candidate = { x: xMin + Math.random() * (xMax - xMin), z: zMin + Math.random() * (zMax - zMin) };
-  return inSurface(candidate) && graph.find(start, candidate) ? candidate : null;
+  return inSurface(candidate) && isAgentDestinationFree(agentId, candidate) && graph.find(start, candidate) ? candidate : null;
 }
