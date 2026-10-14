@@ -26,9 +26,9 @@ export function getDoorApproach(key: DoorKey, agentId?: string, preferred?: Poin
   };
   if (!agentId) return desired;
   const graph = getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor);
-  if (!preferred && !insideObstacle(desired, graph.obstacles)) return desired;
   const goal = preferred ?? desired;
   if (start && departureOwner && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true, undefined, closedDoor) ?? start;
+  if (!preferred && !insideObstacle(desired, graph.obstacles) && (!start || graph.find(start, desired))) return desired;
   const candidates = [desired, ...graph.vertices].filter(p => inSurface(p) && !insideObstacle(p, graph.obstacles) && distance(p, door.pivot) >= door.length + clearance
     && (p.x - door.pivot.x) * door.openNormal.x + (p.z - door.pivot.z) * door.openNormal.z > 0);
   candidates.sort((a, b) => distance(a, goal) - distance(b, goal));
@@ -65,7 +65,7 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
   const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile, undefined, closedDoor);
   if (start && departureOwner && !exiting && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true, undefined, closedDoor) ?? start;
   const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
-  if (!exiting && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles)) return goal;
+  if (!exiting && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles) && (!start || graph.find(start, goal))) return goal;
   exiting = exiting || Boolean(start && owned.some(p => pointInRing(start, p)));
   const contours = owned.length && !flexible ? owned : graph.obstacles.flat();
   const edges = contours.flatMap(polygon => polygon.map((a, i) => [a, polygon[(i + 1) % polygon.length]] as const));
@@ -103,6 +103,7 @@ export interface RouteState {
   approach?: Point;
   interactionTarget?: Point;
   exit?: { owner: string; graph: VisibilityGraph; point: Point };
+  failure?: { graph: VisibilityGraph; start: Point; target: Point; owner?: string; interaction: boolean; closedDoor?: DoorKey };
 }
 export const createRouteState = (): RouteState => ({ path: [], index: 0, target: null, graph: null, error: null, doors: new Set() });
 export function resetRoute(route: RouteState, agentId: string, keepClosedDoor?: DoorKey): void {
@@ -110,6 +111,7 @@ export function resetRoute(route: RouteState, agentId: string, keepClosedDoor?: 
   route.path = []; route.index = 0; route.target = null; route.graph = null; route.error = null; route.doors.clear();
   route.approach = undefined; route.interactionTarget = undefined;
   route.exit = undefined;
+  route.failure = undefined;
   route.closedDoor = keepClosedDoor;
   if (keepClosedDoor) route.doors.add(doorOpeningKey(keepClosedDoor));
   navigationDebug.delete(agentId);
@@ -178,7 +180,30 @@ function passDoors(route: RouteState, agentId: string, profile: AgentProfile, st
 
 /** Returns a safe movement, or the current point while waiting for a door / another agent. */
 export function followRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, closedDoor?: DoorKey): Point {
-  if (owner) owner = getInteractionOwner(owner);
+  owner = owner ? getInteractionOwner(owner) : undefined;
+  const failed = route.failure;
+  if (failed) {
+    if (failed.graph === getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor)
+      && failed.start.x === start.x && failed.start.z === start.z
+      && failed.target.x === target.x && failed.target.z === target.z
+      && failed.owner === owner && failed.interaction === interaction && failed.closedDoor === closedDoor) return start;
+    route.failure = undefined;
+    route.error = null;
+    route.graph = null;
+    route.approach = undefined;
+    route.exit = undefined;
+  }
+  const position = advanceRoute(route, agentId, start, target, travel, steer, owner, interaction, closedDoor);
+  if (route.error) {
+    route.failure = { graph: getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor), start: { ...start }, target: { ...target }, owner, interaction, closedDoor };
+    // An impossible route must not retain a passage needed by other agents.
+    releaseAgentDoors(agentId);
+    route.doors.clear();
+  }
+  return position;
+}
+
+function advanceRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, closedDoor?: DoorKey): Point {
   const profile = getAgentProfile(agentId);
   route.closedDoor = closedDoor;
   if (closedDoor) {

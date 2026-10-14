@@ -566,6 +566,65 @@ if (process.argv.includes('--browser')) (async () => {
       console.log('Interaction regressions passed with all three animation options OFF.');
       return;
     }
+    if (process.argv.includes('--blocked-retry')) {
+      const result = await page.evaluate(async () => {
+        const nav = window.nav, g = window.geom;
+        const requests = await import('/src/features/scene/ai/navigation/doorRequests.ts');
+        nav.setAgentProfile('blocked-probe', nav.getAgentProfile('native'));
+        const start = { x:160, z:300 }, target = { x:200, z:-50 };
+        const owner = 'blocked-owner';
+        nav.registerObstacle({ id:owner, owner, polygon:g.rectangle(start.x,start.z,10,10), yMin:0, yMax:200 });
+        nav.registerObstacle({ id:'blocked-cover', polygon:g.rectangle(start.x,start.z,200,200), yMin:0, yMax:200 });
+        const route = nav.createRouteState(); route.owner = owner;
+        requests.requestDoor('living','blocked-probe'); route.doors.add('living');
+        const find = g.VisibilityGraph.prototype.find;
+        let searches = 0;
+        g.VisibilityGraph.prototype.find = function(...args) { searches++; return find.apply(this,args); };
+        try {
+          nav.followRoute(route,'blocked-probe',start,target,1);
+          if (!route.error) throw new Error('Fixture must have an impossible object exit');
+          if (requests.doorRequested('living')) throw new Error('An impossible route retained its door reservation');
+          const firstSearches = searches, error = route.error;
+          for (let frame=0; frame<300; frame++) nav.followRoute(route,'blocked-probe',start,target,1);
+          const repeatedSearches = searches - firstSearches;
+          if (route.error !== error) throw new Error('Cached failure lost its diagnostic');
+          nav.unregisterObstacle('blocked-cover');
+          const moved = nav.followRoute(route,'blocked-probe',start,target,1);
+          const recoverySearches = searches - firstSearches;
+          const recoveredError = route.error;
+          nav.resetRoute(route,'blocked-probe'); route.owner = undefined;
+          nav.registerObstacle({ id:'blocked-cover', polygon:g.rectangle(start.x,start.z,200,200), yMin:0, yMax:200 });
+          nav.followRoute(route,'blocked-probe',target,start,1,undefined,owner,true);
+          if (!route.error) throw new Error('Fixture must have an impossible object approach');
+          const approachSearches = searches;
+          for (let frame=0; frame<300; frame++) nav.followRoute(route,'blocked-probe',target,start,1,undefined,owner,true);
+          const repeatedApproachSearches = searches - approachSearches;
+          nav.followRoute(route,'blocked-probe',{ x:target.x+1,z:target.z },start,1,undefined,owner,true);
+          if (searches === approachSearches) throw new Error('A changed departure must retry');
+          nav.unregisterObstacle(owner); nav.unregisterObstacle('blocked-cover');
+          [[160,260,84,4],[160,340,84,4],[120,300,4,84],[200,300,4,84]].forEach(([x,z,w,d],i) =>
+            nav.registerObstacle({ id:`blocked-ring-${i}`, polygon:g.rectangle(x,z,w,d), yMin:0, yMax:200 }));
+          const graph = nav.getNavigationGraph(nav.getAgentProfile('blocked-probe'));
+          if (g.insideObstacle(start,graph.obstacles) || graph.find(target,start)) throw new Error('Fixture must contain a free but unreachable destination');
+          const approach = nav.getObjectApproach('free-target',start,'blocked-probe',target,false,undefined,undefined,true);
+          if (!approach || !graph.find(target,approach)) throw new Error('Approach must be reachable from the actor');
+          return { firstSearches, repeatedSearches, repeatedApproachSearches, recoverySearches, moved, approach, error:recoveredError };
+        } finally {
+          g.VisibilityGraph.prototype.find = find;
+          nav.resetRoute(route,'blocked-probe');
+          nav.unregisterObstacle(owner); nav.unregisterObstacle('blocked-cover');
+          for (let i=0;i<4;i++) nav.unregisterObstacle(`blocked-ring-${i}`);
+        }
+      });
+      console.log('Blocked route retry:', JSON.stringify(result));
+      assert.ok(result.firstSearches > 0);
+      assert.equal(result.repeatedSearches,0,'An unchanged impossible exit must not search again');
+      assert.equal(result.repeatedApproachSearches,0,'An unchanged impossible approach must not search again');
+      assert.ok(result.recoverySearches > 0,'Geometry changes must retry immediately');
+      assert.equal(result.error,null,'Removing the obstruction must restore movement');
+      assert.ok(result.moved.x !== 160 || result.moved.z !== 300);
+      return;
+    }
     if (process.argv.includes('--idle-only')) {
       const audit = await page.evaluate(async () => {
         const profile = window.nav.getAgentProfile('native');
