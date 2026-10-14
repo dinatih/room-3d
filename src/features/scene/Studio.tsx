@@ -15,7 +15,7 @@ import { CameraController } from '@features/scene/CameraController';
 import { CameraViewMarkers } from './CameraViewMarkers';
 import { cameraState }      from '@features/scene/cameraState';
 import { SKY_START_POS }     from '@features/scene/camera';
-import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode } from '@features/scene/camera/cameraUrlParams';
+import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode, parseUrlSkipIntro } from '@features/scene/camera/cameraUrlParams';
 import type { LidarMode } from './sidepanel/types';
 import { ToolbarPanelsRow } from './ToolbarPanelsRow';
 import { PanelPopover } from './sidepanel/PanelPopover';
@@ -315,12 +315,14 @@ function ActiveCameraCapture({ onCapture }: { onCapture: (cam: PerspectiveCamera
 }
 
 function LoadingProgress({
+  skipIntro,
   sceneReady,
   onAssetsLoaded,
   onCountdownStart,
   onCountdownTick,
   onLaunch,
 }: {
+  skipIntro: boolean;
   sceneReady: boolean;
   onAssetsLoaded: () => void;
   onCountdownStart: () => void;
@@ -358,6 +360,11 @@ function LoadingProgress({
   useEffect(() => {
     if (!assetsDoneRef.current || !sceneReady || countdownStartedRef.current) return;
     countdownStartedRef.current = true;
+    if (skipIntro) {
+      hasLaunchedRef.current = true;
+      onLaunch();
+      return;
+    }
     onCountdownStart();
 
     const itemEl = document.getElementById('loading-item');
@@ -402,7 +409,7 @@ function LoadingProgress({
         countdownTimerRef.current = null;
       }
     };
-  }, [sceneReady, onLaunch, onCountdownStart, onCountdownTick]);
+  }, [sceneReady, skipIntro, onLaunch, onCountdownStart, onCountdownTick]);
 
   return null;
 }
@@ -721,6 +728,11 @@ export function Studio() {
     const card = document.getElementById('loading-card');
     const envelope = document.getElementById('loading-envelope');
     const backdrop = document.getElementById('loading-backdrop');
+    if (parseUrlSkipIntro()) {
+      document.dispatchEvent(new CustomEvent('start-camera-intro', { detail: { skip:true } }));
+      cover?.remove();
+      return;
+    }
 
     // Le vol caméra attend que la carte soit rentrée et la toile refermée.
     const startIntro = () => {
@@ -774,7 +786,7 @@ export function Studio() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <LoadingProgress sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onCountdownStart={handleCountdownStart} onCountdownTick={setLoadingCountdown} onLaunch={handleLaunch} />
+      <LoadingProgress skipIntro={parseUrlSkipIntro()} sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onCountdownStart={handleCountdownStart} onCountdownTick={setLoadingCountdown} onLaunch={handleLaunch} />
       {showLoadingShiba && <LoadingShiba countdownStarted={loadingCountdownStarted} countdownSeconds={loadingCountdown} />}
       <Canvas
         style={{ width: '100%', height: '100%' }}

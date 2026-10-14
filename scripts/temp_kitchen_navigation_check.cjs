@@ -23,6 +23,67 @@ require.extensions['.ts'] = (module, filename) => {
   module._compile(outputText, filename);
 };
 const g = require('../src/features/scene/ai/navigation/geometry.ts');
+if (process.argv.includes('--startup-url')) {
+  (async () => {
+    const studio = fs.readFileSync('src/features/scene/Studio.tsx','utf8');
+    const loadingSource = studio.slice(studio.indexOf('function LoadingProgress('),studio.indexOf('function SceneAmbientLight('));
+    const loadingJS = ts.transpileModule(loadingSource,{compilerOptions:{target:ts.ScriptTarget.ES2020}}).outputText;
+    const revealSource = studio.split('const revealScene = useCallback(() => {')[1].split('\n  }, []);')[0];
+    const revealJS = ts.transpileModule(`function revealScene() {${revealSource}\n}`,{compilerOptions:{target:ts.ScriptTarget.ES2020}}).outputText;
+    const browser = await launchBrowser({args:['--no-sandbox']});
+    try {
+      const page = await browser.newPage();
+      await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5187'}/AGENTS.md`);
+      const results = await page.evaluate(async ({loadingJS,revealJS}) => {
+        const params = await import('/src/features/scene/camera/cameraUrlParams.ts');
+        const THREE = await import('/node_modules/.vite/deps/three.js');
+        const {CameraIntroController,getIntroTargetPose} = await import('/src/features/scene/camera/cameraIntroTransition.ts');
+        const {cameraState} = await import('/src/features/scene/cameraState.ts');
+        const React = (await import('/node_modules/.vite/deps/react.js')).default;
+        const {createRoot} = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
+        const {flushSync} = (await import('/node_modules/.vite/deps/react-dom.js')).default;
+        const setURL = query => history.replaceState(null,'',`/AGENTS.md${query}`);
+        const modes = ['orbit','fpv','follow','top','ortho'];
+        setURL(''); if (params.parseUrlSkipIntro() || params.parseUrlCameraMode() !== 'fpv') throw new Error('Startup defaults changed');
+        for (const mode of modes) {
+          setURL(`?skipIntro=1&mode=${mode}`);
+          if (!params.parseUrlSkipIntro() || params.parseUrlCameraMode() !== mode) throw new Error(`Invalid startup mode ${mode}`);
+          params.updateUrlCameraMode(mode);
+          if (params.parseUrlCameraMode() !== mode || !params.parseUrlSkipIntro()) throw new Error(`Mode ${mode} was lost when the URL was updated`);
+        }
+        setURL('?skipIntro=0'); if (params.parseUrlSkipIntro()) throw new Error('skipIntro=0 must keep the intro');
+        setURL('#/?skipIntro=1&mode=orbit'); if (!params.parseUrlSkipIntro() || params.parseUrlCameraMode() !== 'orbit') throw new Error('Hash startup parameters failed');
+        params.updateUrlCameraMode('orbit'); if (!params.parseUrlSkipIntro()) throw new Error('Updating the mode lost the hash skip flag');
+        setURL('?skipIntro=1&mode=orbit');
+        let frames = 0, launches = 0, countdowns = 0, assets = 0;
+        const originalRAF = window.requestAnimationFrame;
+        window.requestAnimationFrame = callback => {frames++;return originalRAF(callback);};
+        const camera = new THREE.PerspectiveCamera();
+        const controls = {target:new THREE.Vector3(),enabled:true,update:()=>{}};
+        const intro = new CameraIntroController(camera,controls);
+        const reveal = new Function('cameraState','parseUrlSkipIntro',`${revealJS};return revealScene;`)(cameraState,params.parseUrlSkipIntro);
+        const onStart = event => intro.start('orbit',()=>{launches++;},event.detail.skip);
+        document.addEventListener('start-camera-intro',onStart);
+        document.body.innerHTML = '<div id="loading"><div id="loading-envelope"></div></div><div id="startup-test"></div>';
+        const root = createRoot(document.getElementById('startup-test'));
+        const Loading = new Function('useProgress','useRef','useEffect',`${loadingJS};return LoadingProgress;`)(()=>({progress:100,active:false,item:''}),React.useRef,React.useEffect);
+        const render = ready => flushSync(()=>root.render(React.createElement(Loading,{skipIntro:true,sceneReady:ready,onAssetsLoaded:()=>{assets++;},onCountdownStart:()=>{countdowns++;},onCountdownTick:()=>{},onLaunch:reveal})));
+        render(false);
+        if (launches || countdowns) throw new Error('Debug startup must wait for scene readiness');
+        render(true);
+        if (launches !== 1 || countdowns || !assets || document.getElementById('loading') || !cameraState.isSceneLaunched || cameraState.isIntroRunning) throw new Error('Direct startup did not complete immediately: '+JSON.stringify({launches,countdowns,assets,cover:!!document.getElementById('loading'),launched:cameraState.isSceneLaunched,intro:cameraState.isIntroRunning}));
+        if (frames !== 0 || camera.position.distanceTo(getIntroTargetPose('orbit').pos) !== 0) throw new Error('Skipped intro scheduled a flight or left the camera in the sky');
+        root.unmount(); document.removeEventListener('start-camera-intro',onStart);
+        intro.start('orbit',()=>{});
+        if (!cameraState.isIntroRunning || frames !== 1) throw new Error('Normal intro no longer animates');
+        intro.destroy(); window.requestAnimationFrame = originalRAF;
+        return {modes,launches,countdowns,assets,skippedFlightFrames:0};
+      },{loadingJS,revealJS});
+      console.log('Startup URL and actual loading / intro checks:',JSON.stringify(results));
+    } finally { await browser.close(); }
+  })().catch(error=>{console.error(error);process.exitCode=1;});
+  return;
+}
 if (process.argv.includes('--animation-asset-stats')) {
   const sources=[];
   for (const name of fs.readdirSync('public/animations',{recursive:true}).filter(name=>name.endsWith('.glb'))) {

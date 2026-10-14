@@ -1063,7 +1063,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // Écoute de l'événement de lancement pour démarrer l'animation d'intro
   useEffect(() => {
-    const onStartIntro = () => {
+    const onStartIntro = (event: Event) => {
       if (planeModeRef.current) {
         cameraState.mode = 'plane';
         cameraState.isSceneLaunched = true;
@@ -1092,6 +1092,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         } else if (targetMode === 'top') {
           enterTop(false);
           appLog('system', '🎥 Mode 2D Top initialisé');
+        } else if (targetMode === 'ortho') {
+          enterOrtho(orthoConfig);
         } else if (targetMode === 'orbit') {
           ctrlRef.current.enabled = !planeModeRef.current;
           ctrlRef.current.enableRotate = !planeModeRef.current;
@@ -1100,7 +1102,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           applyInitialCameraView();
         }
         invalidate();
-      });
+      }, (event as CustomEvent<{ skip?:boolean }>).detail?.skip === true);
     };
 
     document.addEventListener('start-camera-intro', onStartIntro);
@@ -1108,7 +1110,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       document.removeEventListener('start-camera-intro', onStartIntro);
       introCtrlRef.current?.destroy();
     };
-  }, [camera, enterTop, enterFollow, invalidate, applyInitialCameraView]);
+  }, [camera, enterTop, enterFollow, enterOrtho, orthoConfig, invalidate, applyInitialCameraView]);
 
   // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif et suivi dynamique du target orbit
   useFrame(() => {

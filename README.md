@@ -572,6 +572,12 @@ mesh fusionné. Utilisé par `drona.js` et `casquettes.js`.
 
 ## Dev Tools (panneau UI)
 
+Pour démarrer directement dans la scène après chargement :
+`http://localhost:5173/?skipIntro=1&mode=orbit&cameraPos=iso-ne`.
+`skipIntro=1` supprime le compte à rebours et les animations d'introduction.
+`mode` choisit la vue initiale : `orbit`, `fpv`, `follow`, `top` ou `ortho`.
+Sans ces paramètres, le lancement conserve l'introduction et la vue FPV par défaut.
+
 Le panneau **🛠 Dev Tools** dans le side-panel affiche en temps réel :
 
 - **Graph FPS** (80 échantillons, seuils 30/60 FPS)

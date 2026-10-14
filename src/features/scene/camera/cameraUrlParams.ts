@@ -60,6 +60,13 @@ export function parseUrlCameraProjection(): CameraProjection {
   return params.get('projection')?.toLowerCase() === 'ortho' ? 'ortho' : 'persp';
 }
 
+/** ?skipIntro=1 skips the launch countdown and camera flight after loading. */
+export function parseUrlSkipIntro(): boolean {
+  if (typeof window === 'undefined') return false;
+  const value = getUrlParams().get('skipIntro')?.trim().toLowerCase();
+  return value === '' || value === '1' || value === 'true' || value === 'on';
+}
+
 /**
  * Analyse l'URL pour la position de caméra demandée :
  *  - Soit un point de vue subjectif FPV sur une entité (ex: cameraPos=rosanna ou cameraPos=shiba)
@@ -206,6 +213,7 @@ export function parseUrlCameraMode(): CameraMode {
     const raw = params.get('mode') ?? params.get('camera') ?? params.get('cam');
     if (raw) {
       const m = raw.trim().toLowerCase();
+      if (m === 'orbit') return 'orbit';
       if (m === 'fpv' || m === 'firstperson' || m === '1p' || m === 'fps') return 'fpv';
       if (m === 'follow' || m === '3p' || m === 'thirdperson') return 'follow';
       if (m === 'top' || m === 'topdown' || m === '2d' || m === 'plan') return 'top';
@@ -229,13 +237,12 @@ export function updateUrlCameraMode(mode: CameraMode) {
   if (typeof window === 'undefined') return;
   try {
     const url = new URL(window.location.href);
+    url.search = getUrlParams().toString();
     const cameraParams = ['mode', 'camera', 'cam', 'orbit', 'fpv', 'follow'];
     for (const p of cameraParams) {
       url.searchParams.delete(p);
     }
-    if (mode !== 'orbit' && mode !== 'fpv') {
-      url.searchParams.set('mode', mode);
-    }
+    url.searchParams.set('mode', mode);
     window.history.replaceState(null, '', url.toString());
   } catch {}
 }

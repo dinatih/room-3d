@@ -104,7 +104,7 @@ export class CameraIntroController {
     this.ctrl = ctrl;
   }
 
-  public start(mode: CameraMode, onComplete: () => void) {
+  public start(mode: CameraMode, onComplete: () => void, skip = false) {
     if (this.isRunning) return;
 
     this.isRunning = true;
@@ -121,6 +121,10 @@ export class CameraIntroController {
 
     // Cible finale selon le mode
     this.targetPose = getIntroTargetPose(mode);
+    if (skip) {
+      this.finish(true);
+      return;
+    }
 
     // Enregistrer le callback de skip dans cameraState
     cameraState.skipIntro = () => this.finish(true);
