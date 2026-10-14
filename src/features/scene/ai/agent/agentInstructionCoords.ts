@@ -69,7 +69,7 @@ export function resolveInstructionCoords(
     return {
       owner,
       tx: approach.x,
-      ty: isMoveOnly && obj.approachDoor ? 0 : pos[1],
+      ty: isMoveOnly ? 0 : pos[1],
       tz: approach.z,
       label: `${obj.name}${slot ? ` (${slot.name})` : ''}`,
       rotY: finalRotY,

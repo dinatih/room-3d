@@ -130,12 +130,15 @@ function Beds() {
     : { x: ROOM_W - 45.5, z: 190 };
 
   const hoverActions = getObjectActionIds('utaker-stack').filter(id => isDouble || id !== 'bed-position');
+  const doubleBedActions = isDouble ? SMART_OBJECTS['bed-double'].slots.map(slot => `smart-object:::bed-double:::${slot.slotId}`) : [];
   const westHoverActions = [
     ...hoverActions,
+    ...doubleBedActions,
     ...SMART_OBJECTS['bed-west'].slots.map(slot => `smart-object:::bed-west:::${slot.slotId}`),
   ];
   const eastHoverActions = [
     ...hoverActions,
+    ...doubleBedActions,
     ...SMART_OBJECTS['bed-east'].slots.map(slot => `smart-object:::bed-east:::${slot.slotId}`),
   ];
   const hoverLabel = isDouble

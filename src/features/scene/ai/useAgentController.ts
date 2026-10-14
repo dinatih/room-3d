@@ -114,6 +114,7 @@ export function useAgentController(
   const routeInstructionRef = useRef<AgentInstruction | null>(null);
   const navigationErrorRef = useRef<string | null>(null);
   const initialProfileResolvedRef = useRef(false);
+  const spawnObstacleRevisionRef = useRef(-1);
   const blockedCoordsRef = useRef<{ instruction: AgentInstruction; graph: ReturnType<typeof getNavigationGraph>; x: number; z: number; owner?: string; status: AgentStatus } | null>(null);
 
   // Animation de marche courante pour les trajets
@@ -447,8 +448,9 @@ export function useAgentController(
   };
 
   const advance = (dt: number): AgentState => {
-    if (!initialProfileResolvedRef.current && enabled && hasAgentProfile(_characterId)) {
-      initialProfileResolvedRef.current = true;
+    const landingThisFrame = statusRef.current === 'FALLING' && timerRef.current <= dt && cameraState.isSceneLaunched;
+    const changedLanding = !deployment.hasCompleted && (spawnObstacleRevisionRef.current !== getObstacleRevision() || landingThisFrame);
+    if ((!initialProfileResolvedRef.current || changedLanding) && enabled && hasAgentProfile(_characterId)) {
       cachedCoordsRef.current = null;
       if (scenario?.length) {
         const first = resolveInstructionCoords(scenario[0], null, _characterId);
@@ -464,6 +466,8 @@ export function useAgentController(
           routeRef.current.owner = owner ? getInteractionOwner(owner) : undefined;
         }
       }
+      initialProfileResolvedRef.current = true;
+      spawnObstacleRevisionRef.current = getObstacleRevision();
     }
     const hasNavStepInUpdate = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length;
     if (!scenario && !hasNavStepInUpdate) {

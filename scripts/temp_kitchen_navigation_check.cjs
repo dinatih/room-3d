@@ -2,6 +2,13 @@ const launchBrowser = require('./browser-test-options.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const ts = require('typescript');
+if (process.argv.includes('--bed-patch')) {
+  const diff=require('node:child_process').execFileSync('git',['diff','--','src/features/scene/ai/smartObjectRegistry.ts'],{encoding:'utf8'});
+  const [header,...hunks]=diff.split(/(?=^@@)/m);
+  const own=hunks.filter(h=>h.includes("+import { positionState }") || h.includes("+  'bed-double': {") || h.includes('export function getAllSmartObjectIds()') || h.includes("+  if (objectId === 'bed-double'"));
+  assert.equal(own.length,4,'Only the double-bed definition, import, availability and interaction sequence belong to this task');
+  fs.writeFileSync('/tmp/room-double-bed.patch',header+own.join(''));return;
+}
 if (process.argv.includes('--duo-patch')) {
   const diff = require('node:child_process').execFileSync('git',['diff','--','src/features/scene/ai/smartObjectRegistry.ts'],{encoding:'utf8'});
   const [header,...hunks] = diff.split(/(?=^@@)/m);
@@ -533,6 +540,8 @@ if (process.argv.includes('--browser')) (async () => {
     await page.evaluate(duoTest => { window.duoTest = duoTest; }, process.argv.includes('--duo-navigation') || process.argv.includes('--all-duos') || process.argv.includes('--skydrop-invite'));
     await page.evaluate(skyTest => { window.skyTest = skyTest; }, process.argv.includes('--skydrop-invite'));
     await page.evaluate(showerSpawnTest => { window.showerSpawnTest = showerSpawnTest; }, process.argv.includes('--shower-spawn'));
+    await page.evaluate(nativeSpawnTest => { window.nativeSpawnTest = nativeSpawnTest; }, process.argv.includes('--native-spawn'));
+    await page.evaluate(doubleBedTest => { window.doubleBedTest = doubleBedTest; }, process.argv.includes('--double-bed-cases'));
     await page.evaluate(xbotTest => { window.xbotTest = xbotTest; }, process.argv.includes('--xbot-tour'));
     await page.evaluate(async () => {
       (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
@@ -589,6 +598,21 @@ if (process.argv.includes('--browser')) (async () => {
         const agent=useAgentController(id,scenario,false,()=>({x:25,y:0,z:645,rotY:0}),undefined,0,true);
         window.autonomousAgents.set(id,{agent,scenario}); window.showerRerenders.set(id,()=>rerender(v=>v+1)); return null;
       }
+      function NativeSpawnProbe() {
+        const scenario=React.useMemo(()=>[{type:'USE_OBJECT',smartObjectId:'desk-bollsidan-2',slotId:'work-standing',duration:0.1,animation:'idle'},{type:'MOVE_TO',targetPos:[200,0,-50]}],[]);
+        const agent=useAgentController('native-spawn',scenario,false,()=>({x:240,y:0,z:270,rotY:0}),undefined,0,true);
+        window.autonomousAgents.set('native-spawn',{agent,scenario}); return null;
+      }
+      function DoubleBedProbe({config,slotId}) {
+        const id=`double-${config}-${slotId}`;
+        const scenario=React.useMemo(()=>[{type:'MOVE_TO',targetPos:[200,0,-50]},...window.smartObjects.buildSmartObjectInstructionSequence('bed-double',slotId).map(i=>i.type==='USE_OBJECT' ? {...i,duration:0.1,animation:'idle'} : i),{type:'MOVE_TO',targetPos:[200,0,-200]}],[slotId]);
+        const agent=useAgentController(id,scenario,false,()=>({x:200,y:0,z:-50,rotY:0}));
+        window.autonomousAgents.set(id,{agent,scenario});return null;
+      }
+      function DoubleBedProbes() {
+        const [config,setConfig]=React.useState(null);window.mountDoubleProbes=setConfig;
+        return config===null ? null : window.smartObjects.SMART_OBJECTS['bed-double'].slots.map(slot=>React.createElement(DoubleBedProbe,{config,slotId:slot.slotId,key:`${config}-${slot.slotId}`}));
+      }
       function AutonomousProbe({ id }) {
         const scenario = React.useMemo(() => scenarios.buildAutonomousScenario(id), [id]);
         const agent = useAgentController(id, scenario, true, () => ({ x: 160, y: 0, z: 300, rotY: 0 }));
@@ -638,11 +662,69 @@ if (process.argv.includes('--browser')) (async () => {
         ...(window.xbotTest ? [e(XbotProbe),e(React.Suspense,{fallback:null},e(Character,{...xbot,modelPath:xbot.path,targetHeight:xbot.height,isActive:false,isNPC:false,scenario:null}))] : []),
         ...(window.skyTest ? ['sabira','sabira-order'].map(id=>e(SkyProbe,{id,key:id})) : []),
         ...(window.showerSpawnTest ? window.smartObjects.SMART_OBJECTS.shower.slots.flatMap(slot=>['closed','open'].map(door=>e(ShowerSpawnProbe,{id:`delphina-${slot.slotId}-${door}`,slotId:slot.slotId,key:`${slot.slotId}-${door}`}))) : []),
+        ...(window.nativeSpawnTest ? [e(NativeSpawnProbe)] : []),
+        ...(window.doubleBedTest ? [e(DoubleBedProbes)] : []),
         e(React.Suspense, { fallback: null }, e(placements.Equipment), e(placements.Furniture), e(placements.Furnishings), e(placements.Decor), e(DoorsPlacement),
           e(Character, { ...native, modelPath: native.path, targetHeight: native.height, isLara: true, isActive: false, isNPC: false, scenario: null }))));
     });
     await page.waitForFunction(() => window.nav?.furnitureObstacles.size > 25 && window.nav.hasAgentProfile('native'), { timeout: 60000 }).catch(async error => { console.log('Readiness:', await page.evaluate(() => ({ ids: [...window.nav.furnitureObstacles.keys()], native: window.nav.hasAgentProfile('native'), scene: window.fixtureScene.children.map(c => c.name), agent: window.agent.getStatus() }))); throw error; });
     console.log('Scene assets ready:', await page.evaluate(() => ({ profile: window.nav.getAgentProfile('native'), obstacles: window.nav.furnitureObstacles.size })));
+    if(process.argv.includes('--double-bed-cases')) {
+      const audit=await page.evaluate(async()=>{
+        const nav=window.nav,g=window.geom,profile=nav.getAgentProfile('native'),results=[];
+        if(window.smartObjects.getAllSmartObjectIds().includes('bed-double')) throw new Error('Separate beds must not offer the combined SmartObject');
+        nav.useSceneStore.getState().triggerAction('bed-double',true);
+        const configs=(await import('/src/features/scene/furniturePositions.ts')).DOUBLE_BED_POSITIONS;
+        for(let config=0;config<configs.length;config++) {
+          if(config) nav.useSceneStore.getState().triggerAction('bed-position');
+          const deadline=performance.now()+15000;
+          do {await new Promise(resolve=>requestAnimationFrame(resolve));}
+          while((window.furnitureState.movingFurniture.size || window.positionState['bed-double']?.idx!==1 || window.positionState['bed-position']?.idx!==config) && performance.now()<deadline);
+          if(!window.smartObjects.getAllSmartObjectIds().includes('bed-double')) throw new Error('Combined bed must expose its SmartObject');
+          window.autonomousAgents.clear();window.mountDoubleProbes(config);
+          await new Promise(resolve=>requestAnimationFrame(resolve));
+          for(const [id,{agent,scenario}] of window.autonomousAgents) {
+            nav.setAgentProfile(id,profile);
+            const deadline=performance.now()+30000;let state,interaction;
+            while(performance.now()<deadline) {
+              state={...agent.update(0.1)};window.cameraState.positions[id]={...state,yaw:state.rotY};
+              if(agent.getStatus()==='INTERACTING') {
+                interaction={...state};const target=window.resolveCoords(scenario.find(i=>i.type==='USE_OBJECT'),null,id);
+                if(state.y!==target.ty || g.insideObstacle(state,nav.getNavigationGraph(profile,'bed-double').obstacles)) throw new Error(`${id}: invalid bed surface pose`);
+              }
+              if(['FINISHED','BLOCKED'].includes(agent.getStatus())) break;
+              await new Promise(resolve=>requestAnimationFrame(resolve));
+            }
+            results.push({id,status:agent.getStatus(),interaction,state,route:nav.navigationDebug.get(id)});delete window.cameraState.positions[id];
+            if(agent.getStatus()!=='FINISHED' || !interaction) throw new Error(JSON.stringify(results));
+          }
+        }
+        return results;
+      });
+      assert.equal(audit.length,12);console.log('Double bed interactions:',JSON.stringify(audit));return;
+    }
+    if(process.argv.includes('--native-spawn')) {
+      const audit=await page.evaluate(async()=>{
+        const nav=window.nav,g=window.geom,{agent}=window.autonomousAgents.get('native-spawn'),profile=nav.getAgentProfile('native');
+        nav.setAgentProfile('native-spawn',profile);window.cameraState.isSceneLaunched=false;
+        const late=[...nav.furnitureObstacles.values()].filter(o=>['bed-east','desk-bollsidan-2'].includes(o.owner));
+        late.forEach(o=>nav.unregisterObstacle(o.id));
+        const early={...agent.update(0)};
+        late.forEach(o=>nav.registerObstacle(o));
+        window.cameraState.isSceneLaunched=true;
+        const adjusted={...agent.update(0.1)};
+        if(g.insideObstacle(adjusted,nav.getNavigationGraph(profile).obstacles)) throw new Error(`Spawn ignored furniture registered after the body profile: ${JSON.stringify({early,adjusted})}`);
+        const deadline=performance.now()+30000;let state;
+        while(performance.now()<deadline) {
+          state={...agent.update(0.1)};window.cameraState.positions['native-spawn']={...state,yaw:state.rotY};
+          if(['FINISHED','BLOCKED'].includes(agent.getStatus())) break;
+          await new Promise(resolve=>requestAnimationFrame(resolve));
+        }
+        if(agent.getStatus()!=='FINISHED') throw new Error(JSON.stringify({state,status:agent.getStatus(),route:nav.navigationDebug.get('native-spawn')}));
+        return {early,adjusted,state,status:agent.getStatus()};
+      });
+      console.log('Native late-furniture spawn:',JSON.stringify(audit));return;
+    }
     if(process.argv.includes('--shower-spawn')) {
       const result=await page.evaluate(async()=>{
         const nav=window.nav,g=window.geom,profile=nav.getAgentProfile('native'),requests=await import('/src/features/scene/ai/navigation/doorRequests.ts');

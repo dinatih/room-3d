@@ -6,6 +6,7 @@ import { HUMAN_BODY_RADIUS } from '../doorObstacles';
 import { BATH_WEST_WALL, ROOM_D } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
+import { positionState } from '../positionState';
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
@@ -18,42 +19,42 @@ const INYEONG_CHA_DUO_IDS = ['slow_dance', 'eye_to_eye', 'farewell_kiss', 'kiss_
  */
 export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   // ── LITS ───────────────────────────────────────────────────────────────────
-  // 'bed-double': {
-  //   id: 'bed-double',
-  //   name: 'Lit Utåker Double',
-  //   category: 'bed',
-  //   itemId: 'bed-double',
-  //   slots: [
-  //     {
-  //       slotId: 'seat-left',
-  //       name: 'S\'asseoir (Gauche)',
-  //       relative: true,
-  //       offset: [0, 0, -50],
-  //       animationsRandom: 'seated-front',
-  //     },
-  //     {
-  //       slotId: 'seat-right',
-  //       name: 'S\'asseoir (Droite)',
-  //       relative: true,
-  //       offset: [0, 0, 50],
-  //       animationsRandom: 'seated-front',
-  //     },
-  //     {
-  //       slotId: 'lie-down-left',
-  //       name: 'Dormir couché (Gauche)',
-  //       relative: true,
-  //       offset: [-35, 45, 0],
-  //       animationsRandom: 'laying',
-  //     },
-  //     {
-  //       slotId: 'lie-down-right',
-  //       name: 'Dormir couché (Droite)',
-  //       relative: true,
-  //       offset: [35, 45, 0],
-  //       animationsRandom: 'laying',
-  //     }
-  //   ]
-  // },
+  'bed-double': {
+    id: 'bed-double',
+    name: 'Lit Utåker Double',
+    category: 'bed',
+    itemId: 'bed-double',
+    slots: [
+      {
+        slotId: 'seat-left',
+        name: 'S\'asseoir (Gauche)',
+        relative: true,
+        offset: [0, 0, -50],
+        animationsRandom: 'seated-front',
+      },
+      {
+        slotId: 'seat-right',
+        name: 'S\'asseoir (Droite)',
+        relative: true,
+        offset: [0, 0, 50],
+        animationsRandom: 'seated-front',
+      },
+      {
+        slotId: 'lie-down-left',
+        name: 'Dormir couché (Gauche)',
+        relative: true,
+        offset: [-35, 45, 0],
+        animationsRandom: 'laying',
+      },
+      {
+        slotId: 'lie-down-right',
+        name: 'Dormir couché (Droite)',
+        relative: true,
+        offset: [35, 45, 0],
+        animationsRandom: 'laying',
+      }
+    ]
+  },
   'bed-west': {
     id: 'bed-west',
     name: 'Lit Utåker Ouest (Principal)',
@@ -960,13 +961,13 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
  * Utilitaires d'accès et de requêtage pour les Smart Objects
  */
 export function getAllSmartObjects(): ResolvedSmartObject[] {
-  return Object.keys(SMART_OBJECTS)
+  return getAllSmartObjectIds()
     .map(id => getSmartObject(id))
     .filter((obj): obj is ResolvedSmartObject => Boolean(obj));
 }
 
 export function getAllSmartObjectIds(): string[] {
-  return Object.keys(SMART_OBJECTS);
+  return Object.keys(SMART_OBJECTS).filter(id => id !== 'bed-double' || positionState['bed-double']?.idx === 1);
 }
 
 export function getSmartObjectsByCategory(category: SmartObjectCategory): ResolvedSmartObject[] {
@@ -1029,6 +1030,16 @@ export function buildSmartObjectInstructionSequence(
   }
 
   // Lit Utåker (couché) : montée sur le lit et descente à pied sur le lit plutôt que de traverser le lit au sol
+  if (objectId === 'bed-double' && slot.slotId.startsWith('lie-down')) {
+    const localSlot = SMART_OBJECTS[objectId].slots.find(s => s.slotId === slot.slotId);
+    if (!localSlot?.offset) throw new Error(`Missing bed surface position for ${slot.slotId}`);
+    return [
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
+      { type: 'MOVE_TO', targetLocalPos: localSlot.offset, smartObjectId: obj.id, navigation: 'interaction' },
+      baseInstruction,
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
+    ];
+  }
   if ((objectId === 'bed-west' || objectId === 'bed-east') && slot.slotId === 'lie-down') {
     const isWest = objectId === 'bed-west';
     // Utåker is rotated by PI/2: local +Z faces the room for west, -Z for east.
