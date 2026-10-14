@@ -5,7 +5,7 @@ import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 export interface DuoAnimSelectorProps {
   activeDuoId?: string;
-  onSelectDuoAnim: (animDef: DuoAnimationDef | undefined) => void;
+  onSelectDuoAnim: (animDef: DuoAnimationDef | undefined, keepOpen?: boolean) => void;
   onClose?: () => void;
   title?: string;
   autoFocus?: boolean;
@@ -20,8 +20,8 @@ export function DuoAnimSelector({
   onClose,
   title = 'Animations Duo',
   autoFocus = false,
-  maxHeight = 'min(45vh, 320px)',
-  listMaxHeight = 'min(24vh, 160px)',
+  maxHeight = '70vh',
+  listMaxHeight = '50vh',
   isMobile: isMobileProp,
 }: DuoAnimSelectorProps) {
   const isMobileHook = useIsMobile();
@@ -77,12 +77,12 @@ export function DuoAnimSelector({
     if (activeDuoId && containerRef.current) {
       containerRef.current.querySelector('.active-anim-item')?.scrollIntoView({ block: 'nearest' });
     }
-  }, [activeDuoId]);
+  }, [activeDuoId, search, filter]);
 
-  const handleSelect = (anim: DuoAnimationDef) => {
+  const handleSelect = (anim: DuoAnimationDef, keepOpen = false) => {
     resetAppIdle();
-    onSelectDuoAnim(anim);
-    onClose?.();
+    onSelectDuoAnim(anim, keepOpen);
+    if (!keepOpen) onClose?.();
   };
 
   const handleClearDuo = () => {
@@ -101,16 +101,20 @@ export function DuoAnimSelector({
     }
   };
 
+  const selectNextDuo = (direction: 1 | -1) => {
+    if (!filteredList.length) return;
+    const index = filteredList.findIndex(anim => anim.id === activeDuoId);
+    const nextIndex = index === -1
+      ? (direction === 1 ? 0 : filteredList.length - 1)
+      : (index + direction + filteredList.length) % filteredList.length;
+    handleSelect(filteredList[nextIndex], true);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       e.stopPropagation();
-      if (!filteredList.length) return;
-      const idx = filteredList.findIndex(a => a.id === activeDuoId);
-      const nextIdx = e.key === 'ArrowDown'
-        ? (idx + 1) % filteredList.length
-        : (idx - 1 + filteredList.length) % filteredList.length;
-      handleSelect(filteredList[nextIdx]);
+      selectNextDuo(e.key === 'ArrowDown' ? 1 : -1);
     }
   };
 
@@ -147,7 +151,7 @@ export function DuoAnimSelector({
             ref={searchInputRef}
             type="text"
             className="form-control border-start-0 ps-0"
-            placeholder="Filtrer animation duo..."
+            placeholder="Filtrer texte ou flèches..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             onFocus={e => e.currentTarget.select()}
@@ -204,6 +208,17 @@ export function DuoAnimSelector({
         </div>
 
         {/* Info & action Quitter */}
+        <div className="d-flex align-items-center gap-2 my-2">
+          <div className="btn-group btn-group-sm" role="group" aria-label="Parcourir les animations duo">
+            <button type="button" className="btn btn-outline-secondary" disabled={!filteredList.length} onClick={() => selectNextDuo(-1)} aria-label="Animation duo précédente" title="Animation précédente (flèche haut)">
+              <i className="bi bi-arrow-up" aria-hidden="true" /> Précédente
+            </button>
+            <button type="button" className="btn btn-outline-secondary" disabled={!filteredList.length} onClick={() => selectNextDuo(1)} aria-label="Animation duo suivante" title="Animation suivante (flèche bas)">
+              Suivante <i className="bi bi-arrow-down" aria-hidden="true" />
+            </button>
+          </div>
+          <span className="small text-muted">↑ / ↓</span>
+        </div>
         <div className="d-flex align-items-center justify-content-between px-1 text-muted small" style={{ fontSize: '10px' }}>
           <span>{filteredList.length} animation{filteredList.length > 1 ? 's' : ''} duo</span>
           {activeDuoId && (
@@ -244,12 +259,12 @@ export function DuoAnimSelector({
                 style={{ fontSize: isMobile ? '13px' : '11px', cursor: 'pointer', transition: 'all 0.15s ease' }}
                 onClick={() => handleSelect(anim)}
               >
-                <div className="d-flex align-items-center gap-1.5 overflow-hidden me-2" style={{ flex: 1 }}>
+                <div className="d-flex align-items-center flex-wrap flex-grow-1 gap-1.5 me-2">
                   {isActive && <i className="bi bi-play-fill" aria-hidden="true" />}
                   <span className="fs-6 me-1 flex-shrink-0" role="img" aria-label={anim.label}>
                     {anim.icon}
                   </span>
-                  <span className="text-truncate" title={anim.label}>
+                  <span className="text-wrap text-break" title={anim.label}>
                     {anim.label}
                   </span>
                   <span

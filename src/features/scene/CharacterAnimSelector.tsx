@@ -119,7 +119,7 @@ export interface CharacterAnimSelectorProps {
   /** Identifiant de l'animation active en kebab-case strict */
   activeAnimValue?: string;
   /** Callback de sélection d'animation */
-  onSelectAnim: (animValue: string) => void;
+  onSelectAnim: (animValue: string, keepOpen?: boolean) => void;
   maxHeight?: string | number;
   listMaxHeight?: string | number;
   isMobile?: boolean;
@@ -131,8 +131,8 @@ export interface CharacterAnimSelectorProps {
 export function CharacterAnimSelector({
   activeAnimValue = 'idle',
   onSelectAnim,
-  maxHeight = 'min(45vh, 320px)',
-  listMaxHeight = 'min(24vh, 150px)',
+  maxHeight = '70vh',
+  listMaxHeight = '50vh',
   isMobile: isMobileProp,
   onClose,
   title,
@@ -219,7 +219,7 @@ export function CharacterAnimSelector({
     if (!filteredAnims.length) return;
     const idx = filteredAnims.findIndex(a => a.value === activeAnimValue);
     const nextIdx = idx === -1 ? 0 : (idx + dir + filteredAnims.length) % filteredAnims.length;
-    handleSelect(filteredAnims[nextIdx].value);
+    onSelectAnim(filteredAnims[nextIdx].value, true);
   };
 
   const playRandomAnim = () => {
@@ -418,9 +418,9 @@ export function CharacterAnimSelector({
                 style={{ fontSize: isMobile ? '13px' : '11px', cursor: 'pointer', transition: 'all 0.15s ease' }}
                 onClick={() => handleSelect(anim.value)}
               >
-                <div className="d-flex align-items-center gap-1 overflow-hidden me-2" style={{ flex: 1 }}>
+                <div className="d-flex align-items-center flex-wrap flex-grow-1 gap-1 me-2">
                   {isActive && <i className="bi bi-play-fill" aria-hidden="true" />}
-                  <span className="text-truncate" title={anim.label}>{anim.label}</span>
+                  <span className="text-wrap text-break" title={anim.label}>{anim.label}</span>
                   {sortByDuration && anim.duration !== undefined && (
                     <span className="badge bg-light text-dark flex-shrink-0">
                       <i className="bi bi-stopwatch" aria-hidden="true" /> {anim.duration.toFixed(1)}s

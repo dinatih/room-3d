@@ -88,8 +88,8 @@ export function AnimFrameController({
   const [showAnimSelector, setShowAnimSelector] = useState<boolean>(false);
   const [showDuoSelector, setShowDuoSelector] = useState<boolean>(false);
   const [showPartnerSelector, setShowPartnerSelector] = useState<boolean>(false);
-  const [selectorPosition, setSelectorPosition] = useState({ left: 0, bottom: 0 });
-  const [duoSelectorPosition, setDuoSelectorPosition] = useState({ left: 0, bottom: 0 });
+  const [selectorPosition, setSelectorPosition] = useState({ left: 0, bottom: 0, maxHeight: '70vh' });
+  const [duoSelectorPosition, setDuoSelectorPosition] = useState({ left: 0, bottom: 0, maxHeight: '70vh' });
   const [partnerSelectorPosition, setPartnerSelectorPosition] = useState({ left: 0, bottom: 0 });
   const controllerRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLInputElement>(null);
@@ -333,7 +333,7 @@ export function AnimFrameController({
     setTimeout(() => setCopiedDuoTs(false), 2000);
   }, [duoAnimDef, effectiveOffsetB, effectiveRotBRad]);
 
-  const handleSelectAnim = useCallback((val: string) => {
+  const handleSelectAnim = useCallback((val: string, keepOpen = false) => {
     if (onSelectAnim) {
       onSelectAnim(val);
     } else {
@@ -341,7 +341,7 @@ export function AnimFrameController({
       document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-xbot', value: val } }));
       useAnimPreviewStore.getState().play();
     }
-    setShowAnimSelector(false);
+    if (!keepOpen) setShowAnimSelector(false);
   }, [onSelectAnim]);
 
   const currentPartnerId = duoPartnerId || availablePartners[0]?.id;
@@ -349,7 +349,7 @@ export function AnimFrameController({
     return CHARACTERS.find(c => c.id === currentPartnerId);
   }, [currentPartnerId]);
 
-  const handleSelectDuoAnim = useCallback((selectedDef: DuoAnimationDef | undefined) => {
+  const handleSelectDuoAnim = useCallback((selectedDef: DuoAnimationDef | undefined, keepOpen = false) => {
     if (onSelectDuoAnim) {
       onSelectDuoAnim(selectedDef);
     }
@@ -357,7 +357,7 @@ export function AnimFrameController({
       useAnimPreviewStore.getState().seekToTime(0);
       useAnimPreviewStore.getState().play();
     }
-    setShowDuoSelector(false);
+    if (!keepOpen) setShowDuoSelector(false);
   }, [onSelectDuoAnim]);
 
   const handleRandomPartner = useCallback(() => {
@@ -571,6 +571,7 @@ export function AnimFrameController({
       const controllerRect = controller.getBoundingClientRect();
       const buttonLeft = buttonRect.left - controllerRect.left - controller.clientLeft;
       setSelectorPosition({
+        maxHeight: `min(70vh, ${Math.max(0, buttonRect.top)}px)`,
         left: Math.max(0, Math.min(buttonLeft, controller.clientWidth - selector.offsetWidth)),
         bottom: controller.clientHeight - (buttonRect.top - controllerRect.top - controller.clientTop),
       });
@@ -593,6 +594,7 @@ export function AnimFrameController({
       const controllerRect = controller.getBoundingClientRect();
       const buttonLeft = buttonRect.left - controllerRect.left - controller.clientLeft;
       setDuoSelectorPosition({
+        maxHeight: `min(70vh, ${Math.max(0, buttonRect.top)}px)`,
         left: Math.max(0, Math.min(buttonLeft, controller.clientWidth - selector.offsetWidth)),
         bottom: controller.clientHeight - (buttonRect.top - controllerRect.top - controller.clientTop),
       });
@@ -645,7 +647,7 @@ export function AnimFrameController({
       {showAnimSelector && (
         <div
           ref={selectorRef}
-          className="view-control-bar__character-popover glass-card rounded-2 border shadow-lg d-flex flex-column"
+          className="view-control-bar__character-popover view-control-bar__animation-popover glass-card rounded-2 border shadow-lg d-flex flex-column"
           style={{
             position: 'absolute',
             ...selectorPosition,
@@ -657,6 +659,7 @@ export function AnimFrameController({
         >
           <CharacterAnimSelector
             activeAnimValue={activeAnimValue}
+            maxHeight={selectorPosition.maxHeight}
             onSelectAnim={handleSelectAnim}
             onClose={() => setShowAnimSelector(false)}
             title="Animations Personnage"
@@ -669,7 +672,7 @@ export function AnimFrameController({
       {showDuoSelector && (
         <div
           ref={duoSelectorRef}
-          className="view-control-bar__character-popover glass-card rounded-2 border shadow-lg d-flex flex-column"
+          className="view-control-bar__character-popover view-control-bar__animation-popover glass-card rounded-2 border shadow-lg d-flex flex-column"
           style={{
             position: 'absolute',
             ...duoSelectorPosition,
@@ -681,6 +684,7 @@ export function AnimFrameController({
         >
           <DuoAnimSelector
             activeDuoId={duoAnimDef?.id}
+            maxHeight={duoSelectorPosition.maxHeight}
             onSelectDuoAnim={handleSelectDuoAnim}
             onClose={() => setShowDuoSelector(false)}
             title="Animations Duo"

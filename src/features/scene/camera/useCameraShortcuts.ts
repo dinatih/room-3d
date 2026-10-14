@@ -170,6 +170,18 @@ export function useCameraShortcuts({
         return;
       }
 
+      // Debug gabarits et trajets : activer ou désactiver les deux ensemble.
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        if (e.repeat) return;
+        const store = useSceneStore.getState();
+        const enabled = !(store.layers.debugNpcCollisions && store.layers.debugFurnitureCollisions);
+        if (store.layers.debugNpcCollisions !== enabled) store.toggleLayer('debugNpcCollisions');
+        if (store.layers.debugFurnitureCollisions !== enabled) store.toggleLayer('debugFurnitureCollisions');
+        invalidate();
+        return;
+      }
+
       // Global shortcuts
       if (e.key === 'Escape') {
         if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
