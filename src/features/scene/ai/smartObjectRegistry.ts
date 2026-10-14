@@ -3,21 +3,13 @@ import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
 import { HUMAN_BODY_RADIUS } from '../doorObstacles';
-import { BATH_WEST_WALL, ROOM_D, GARDEN_PANEL_DEFS } from '../wallData';
-import { EXTERIOR_GROUND, NEIGHBOR_OFFSETS } from '../environmentData';
+import { BATH_WEST_WALL, ROOM_D } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
 const INYEONG_CHA_DUO_IDS = ['slow_dance', 'eye_to_eye', 'farewell_kiss', 'kiss_man_woman', 'kiss', 'date_bearhug', 'p2', 'pop_dance', 'energetic_dance'];
-const inyeongChaSpan = Math.max(...INYEONG_CHA_DUO_IDS.map(id => {
-  const duo = DUO_ANIMATIONS.find(def => def.id === id);
-  if (!duo) throw new Error(`Unknown Inyeong-Cha duo: ${id}`);
-  return duo.offsetB?.[2] ?? 0;
-}));
-const frontGardenZ = Math.min(...GARDEN_PANEL_DEFS.map(panel => panel.cz - panel.d / 2)) + Math.min(0, ...NEIGHBOR_OFFSETS.map(offset => offset.z));
-const frontGroundZ = EXTERIOR_GROUND.z - EXTERIOR_GROUND.depth / 2;
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -782,8 +774,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'inyeong-cha-hugs-point',
     name: '💖 Point Câlins Inyeong-Cha',
     category: 'decor',
-    // Keep the six-metre approach across the front lawn, clear of every apartment.
-    position: [EXTERIOR_GROUND.x - inyeongChaSpan / 2, 0, (frontGroundZ + frontGardenZ) / 2],
+    position: [0, 0, -400],
     rotationY: Math.PI / 2,
     slots: [
       {

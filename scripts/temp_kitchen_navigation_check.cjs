@@ -5,7 +5,7 @@ const ts = require('typescript');
 if (process.argv.includes('--duo-patch')) {
   const diff = require('node:child_process').execFileSync('git',['diff','--','src/features/scene/ai/smartObjectRegistry.ts'],{encoding:'utf8'});
   const [header,...hunks] = diff.split(/(?=^@@)/m);
-  const own = hunks.filter(hunk=>hunk.includes('INYEONG_CHA_DUO_IDS'));
+  const own = hunks.filter(hunk=>hunk.includes('inyeongChaSpan'));
   assert.equal(own.length,2,'The duo patch must contain only its imports / geometry and its SmartObject placement');
   fs.writeFileSync('/tmp/room-duo-placement.patch',header+own.join(''));
   console.log('Duo-only registry patch written; pre-existing slot edits excluded.');
