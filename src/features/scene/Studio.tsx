@@ -653,8 +653,10 @@ export function Studio() {
         cameraState.invalidate?.();
       } else if (e.key === 'i' || e.key === 'I') {
         e.preventDefault();
-        setInventoryInitialCat('all');
-        setShowInventory(prev => !prev);
+        if (e.repeat) return;
+        setInventoryInitialCat(e.shiftKey ? 'animations' : 'all');
+        if (e.shiftKey) setShowInventory(true);
+        else setShowInventory(prev => !prev);
       } else if (e.key === 'k' || e.key === 'K') {
         onToggleLayer('skeleton');
         cameraState.invalidate?.();

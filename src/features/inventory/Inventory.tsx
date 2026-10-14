@@ -662,15 +662,18 @@ function normalizeSearchStr(str: string): string {
     if (!visible) return;
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
-      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA';
+      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement)?.isContentEditable;
       if (e.key === 'Escape') {
         e.preventDefault();
         onClose();
         return;
       }
-      if (!isTyping && (e.key === 'i' || e.key === 'I')) {
+      if (!isTyping && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'i' || e.key === 'I')) {
         e.preventDefault();
-        onClose();
+        e.stopPropagation();
+        if (e.repeat) return;
+        if (e.shiftKey) setActiveCat('animations');
+        else onClose();
         return;
       }
       const targetEl = e.target as HTMLElement | null;
@@ -692,8 +695,8 @@ function normalizeSearchStr(str: string): string {
         }
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
   }, [navList, focusedIndex, isMobile, onClose, visible]);
 
   return (

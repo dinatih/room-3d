@@ -19,7 +19,8 @@ const launch = require('./browser-test-options.cjs');
  window.catalog=await import('/src/features/inventory/animationStudioCatalog.ts');
  window.resolver=await import('/src/features/scene/animations/animationResolver.ts');
  document.body.innerHTML='<div id="test-root"></div>';
- createRoot(document.getElementById('test-root')).render(React.createElement(Inventory,{initialCategory:'animations',onClose:()=>{}}));
+ window.inventoryClosedCount=0;
+ createRoot(document.getElementById('test-root')).render(React.createElement(Inventory,{initialCategory:'animations',onClose:()=>{window.inventoryClosedCount++;}}));
  });
  await page.waitForSelector('[role="option"][aria-selected="true"]');
  await page.waitForFunction(()=>{
@@ -50,6 +51,20 @@ const launch = require('./browser-test-options.cjs');
  assert(Math.abs((result.canvas.right-result.canvas.left)/result.canvas.height-4/3)<0.01,'canvas aspect ratio 4:3');
  }
  await mount();
+ // Verify shortcuts inside the modal despite its propagation boundary.
+ await page.$eval('[data-category-id="tech"]',e=>e.click());
+ await page.focus('[data-category-id="tech"]');
+ await page.keyboard.down('Shift');await page.keyboard.press('i');await page.keyboard.up('Shift');
+ await page.waitForSelector('.animation-studio');
+ assert.equal(await page.evaluate(()=>window.inventoryClosedCount),0);
+ await page.focus('[aria-label="Rechercher une animation"]');
+ await page.keyboard.down('Shift');await page.keyboard.press('i');await page.keyboard.up('Shift');
+ assert.equal(await page.evaluate(()=>window.inventoryClosedCount),0);
+ await setInput('Rechercher une animation','');
+ await page.focus('[data-category-id="animations"]');
+ await page.keyboard.press('i');
+ assert.equal(await page.evaluate(()=>window.inventoryClosedCount),1);
+ console.log('Shortcuts: Shift+I switches to animations, typing is preserved, plain I closes: PASS');
  const model=await page.evaluate(()=>{
   const {STUDIO_CATALOG:c,EMPTY_STUDIO_FILTERS:f,filterStudioAnimations:filter,adjacentStudioAnimation:adj}=window.catalog;
   for(const mode of ['solo','duo']) {

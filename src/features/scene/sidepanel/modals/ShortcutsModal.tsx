@@ -45,6 +45,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label={<>PNJ actif aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['S']} />
               <R label={<><i className="bi bi-camera me-1" aria-hidden="true" />Photo Raytracing HD</>} keys={['F10']} />
               <R label="Inventaire (toggle)"        keys={['I']} />
+              <R label="Inventaire Animations (direct)" keys={['Shift+I']} />
               <R label="Basculer Ortho / Perspective" keys={['O', 'P']} />
               <R label="Inventaire Personnages (direct)" keys={['Alt+P']} />
               <R label={<><i className="bi bi-masks-theater me-1" aria-hidden="true" />Personnages Extra (toggle)</>} keys={['Alt+E']} />

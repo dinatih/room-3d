@@ -270,7 +270,7 @@ export function ToolbarPanelsRow({
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--red`}
           onClick={onOpenInventory}
-          title="Ouvrir l'inventaire (I)"
+          title="Ouvrir l'inventaire (I) · Studio animations (Maj+I)"
           aria-label="Ouvrir l'inventaire (I)"
         >
           <i className="bi bi-box-seam-fill" aria-hidden="true" />
