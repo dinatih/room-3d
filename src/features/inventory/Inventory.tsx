@@ -13,6 +13,9 @@ import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { ViewControlBar } from '@features/scene/ViewControlBar';
+import { AnimationStudioView } from './AnimationStudioView';
+import { DevAnnotationPanel } from './DevAnnotationPanel';
+import { useItemAnnotations } from './useItemAnnotations';
 
 type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
 
@@ -178,8 +181,8 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
               ))
             )}
           </div>
-
-
+          <hr className="my-3 opacity-25" />
+          <DevAnnotationPanel targetId={`zone:${zone.id}`} targetName={zone.name} className="mb-3" />
         </div>
       </div>
     );
@@ -450,6 +453,13 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           </>
         )}
 
+        <hr className="my-3 opacity-25" />
+        <DevAnnotationPanel
+          targetId={`item:${item.id}`}
+          targetName={(item as any).name || item.id}
+          className="mb-3"
+        />
+
         <div className="d-flex gap-2 mt-3">
           <button type="button" className="btn btn-sm btn-outline-secondary bg-white text-dark px-3" onClick={() => { if(confirm(`Supprimer ${(item as any).name} ?`)) alert('Supprimé (démo)'); }}>🗑 Supprimer</button>
         </div>
@@ -471,6 +481,7 @@ export function Inventory({
 }) {
   const isMobile = useIsMobile();
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
+  const { allAnnotations } = useItemAnnotations();
   const [activeCat, setActiveCat]         = useState(initialCategory);
   const [search, setSearch]               = useState('');
   const [selected, setSelected]           = useState<PreviewTarget>(null);
@@ -731,7 +742,12 @@ function normalizeSearchStr(str: string): string {
         </div>
 
         {/* LAYOUT SPLIT */}
-        <div className="d-flex flex-grow-1 overflow-hidden" style={{ userSelect: isResizing ? 'none' : undefined }}>
+        {activeCat === 'animations' ? (
+          <div className="d-flex flex-grow-1 overflow-hidden">
+            <AnimationStudioView isMobile={isMobile} />
+          </div>
+        ) : (
+          <div className="d-flex flex-grow-1 overflow-hidden" style={{ userSelect: isResizing ? 'none' : undefined }}>
           {/* LIST PANE */}
           <div
             className="inventory-pane-list d-flex flex-column border-end bg-white bg-opacity-50 overflow-hidden flex-shrink-0"
@@ -874,6 +890,21 @@ function normalizeSearchStr(str: string): string {
                           {!isStorage && getObjectActionIds(target.id).length > 0 && (
                             <span className="badge bg-warning-subtle text-dark border border-warning-subtle">⚡ Action</span>
                           )}
+                          {(() => {
+                            const annot = allAnnotations[`item:${target.id}`];
+                            if (!annot) return null;
+                            const statusColor = annot.status === 'ok' ? 'success' : annot.status === 'issue' ? 'danger' : annot.status === 'wip' ? 'warning' : annot.status === 'favorite' ? 'primary' : null;
+                            return (
+                              <span className="d-inline-flex align-items-center gap-1">
+                                {statusColor && <span className={`badge bg-${statusColor} p-1 rounded-circle`} title={`Statut: ${annot.status}`} />}
+                                {annot.tags && annot.tags.length > 0 && (
+                                  <span className="badge bg-light text-secondary border small" style={{ fontSize: '0.65rem' }}>
+                                    #{annot.tags[0]}
+                                  </span>
+                                )}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                       <div className="text-muted small flex-shrink-0 text-end">
@@ -920,6 +951,7 @@ function normalizeSearchStr(str: string): string {
             )}
           </div>
         </div>
+        )}
       </div>
 
       {/* MODAL DETAIL (mobile) */}

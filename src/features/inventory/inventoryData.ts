@@ -612,6 +612,7 @@ export const CATEGORIES: Category[] = [
   { id: 'decor',        label: 'Déco' },
   { id: 'consumable',   label: '🛒 Consomables' },
   { id: 'characters',      label: '👥 Personnages' },
+  { id: 'animations',      label: '🎬 Animations' },
   { id: 'wigs',         label: '💇 Perruques' },
   { id: 'glbs',         label: 'GLBs', icon: 'bi-shuffle' },
 ];

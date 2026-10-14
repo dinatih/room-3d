@@ -645,6 +645,7 @@ export function InventoryPreview({
   hideFooter = false,
   initialDuoAnim,
   initialDuoPartner,
+  initialAnim,
   onGlbStats,
 }: {
   item: PreviewTarget;
@@ -653,6 +654,7 @@ export function InventoryPreview({
   hideFooter?: boolean;
   initialDuoAnim?: DuoAnimationDef;
   initialDuoPartner?: string;
+  initialAnim?: string;
   onGlbStats?: (s: GlbDebugStats | null) => void;
 }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
@@ -754,6 +756,18 @@ export function InventoryPreview({
     document.addEventListener('camera-view', onView);
     return () => document.removeEventListener('camera-view', onView);
   }, []);
+
+  useEffect(() => {
+    if (initialAnim && !initialDuoAnim) {
+      setActionStates(s => ({
+        ...s,
+        characterAnim: initialAnim,
+        duoAnimDef: undefined,
+        isPaused: false,
+      }));
+      useAnimPreviewStore.getState().play();
+    }
+  }, [initialAnim, initialDuoAnim]);
 
   useEffect(() => {
     if (initialDuoAnim) {
