@@ -10,6 +10,8 @@ interface SlotReservation {
   claimedAt: number;
 }
 
+export const BATHROOM_OBJECTS = new Set(['toilet', 'vasque-sdb', 'sdb-closet', 'shower']);
+
 class SmartObjectOccupancyManager {
   // Clef: `${objectId}:${slotId}` -> { characterId, claimedAt }
   private occupiedSlots = new Map<string, SlotReservation>();
@@ -38,6 +40,16 @@ class SmartObjectOccupancyManager {
     }
 
     // Règles spécifiques d'exclusion mutuelle par meuble :
+
+    // 0. Capacité de la Salle de bain (1 personne à la fois pour éviter l'engorgement physique de 2m²)
+    if (BATHROOM_OBJECTS.has(objectId)) {
+      for (const [k, r] of this.occupiedSlots.entries()) {
+        const [occObj] = k.split(':');
+        if (BATHROOM_OBJECTS.has(occObj) && (!forCharacterId || r.characterId !== forCharacterId)) {
+          return true;
+        }
+      }
+    }
 
     // 1. Objets à usage exclusif (vasque-sdb, toilet...) : occupation totale si quelqu'un d'autre occupe un slot
     if (this.isExclusiveObject(objectId)) {
@@ -118,6 +130,15 @@ class SmartObjectOccupancyManager {
   getAvailableSlot(objectId: string, characterId: string, preferredSlotId?: string): string | null {
     const obj = SMART_OBJECTS[objectId];
     if (!obj || !obj.slots.length) return null;
+
+    if (BATHROOM_OBJECTS.has(objectId)) {
+      for (const [k, r] of this.occupiedSlots.entries()) {
+        const [occObj] = k.split(':');
+        if (BATHROOM_OBJECTS.has(occObj) && r.characterId !== characterId) {
+          return null;
+        }
+      }
+    }
 
     if (this.isExclusiveObject(objectId) && this.isObjectFullyOccupied(objectId, characterId)) {
       return null;

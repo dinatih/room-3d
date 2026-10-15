@@ -93,6 +93,13 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
     if (start && !exiting && !graph.find(start, p)) continue;
     return p;
   }
+  if (exiting) {
+    for (const p of candidates) {
+      if (!inSurface(p) || !graph.find(p, p)) continue;
+      if (start && !segmentFree(start, p, getNavigationGraph(profile, owner, closedDoor).obstacles)) continue;
+      return p;
+    }
+  }
   return null;
 }
 
@@ -109,7 +116,7 @@ export interface RouteState {
   approach?: Point;
   interactionTarget?: Point;
   exit?: { owner: string; graph: VisibilityGraph; point: Point };
-  failure?: { graph: VisibilityGraph; start: Point; target: Point; owner?: string; interaction: boolean; closedDoor?: DoorKey; actorBlockers: ActorBlockers };
+  failure?: { graph: VisibilityGraph; start: Point; target: Point; owner?: string; interaction: boolean; closedDoor?: DoorKey; actorBlockers: ActorBlockers; timestamp?: number };
 }
 export const createRouteState = (): RouteState => ({ path: [], index: 0, target: null, graph: null, error: null, doors: new Set() });
 export function resetRoute(route: RouteState, agentId: string, keepClosedDoor?: DoorKey): void {
@@ -212,7 +219,10 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
   }
   const failed = route.failure;
   if (failed) {
-    if (failed.graph === getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor)
+    const elapsed = Date.now() - (failed.timestamp ?? 0);
+    const retryEmpty = !failed.actorBlockers.size && elapsed > 1000;
+    if (!retryEmpty
+      && failed.graph === getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor)
       && failed.start.x === start.x && failed.start.z === start.z
       && failed.target.x === target.x && failed.target.z === target.z
       && failed.owner === owner && failed.interaction === interaction && failed.closedDoor === closedDoor
@@ -229,7 +239,7 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
   try { position = advanceRoute(route, agentId, start, target, travel, steer, owner, interaction, closedDoor); }
   finally { actorBlockers = endActorBlockCheck(agentId); }
   if (route.error) {
-    route.failure = { graph: getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor), start: { ...start }, target: { ...target }, owner, interaction, closedDoor, actorBlockers };
+    route.failure = { graph: getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor), start: { ...start }, target: { ...target }, owner, interaction, closedDoor, actorBlockers, timestamp: Date.now() };
     // An impossible route must not retain a passage needed by other agents.
     releaseAgentDoors(agentId);
     route.doors.clear();
@@ -304,6 +314,10 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   };
   const approachFor = (id: string, goal: Point, exiting: boolean) => getObjectApproach(id, goal, agentId, start, exiting, undefined, closedDoor);
   if (!route.owner && owner && contained(owner, start)) route.owner = owner;
+  if (!route.owner) {
+    const container = [...furnitureObstacles.values()].find(o => o.yMin < profile.height && o.yMax > 0 && pointInRing(start, inflate(o.polygon, profile.radius)));
+    if (container?.owner) route.owner = getInteractionOwner(container.owner);
+  }
   if (route.owner && contained(route.owner, start) && !(interaction && owner === route.owner)) {
     if (route.exit?.owner !== route.owner || route.exit.graph !== graph) {
       const point = approachFor(route.owner, target, true);

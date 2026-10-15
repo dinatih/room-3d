@@ -688,6 +688,7 @@ export function useAgentController(
                   dynamicNavQueueRef.current = [];
                   dynamicNavIndexRef.current = 0;
                 }
+                resetRoute(routeRef.current, _characterId);
                 cachedCoordsInstructionRef.current = null;
                 cachedCoordsRef.current = null;
                 return update(dt);
@@ -698,6 +699,7 @@ export function useAgentController(
                 }
                 dynamicNavQueueRef.current = [];
                 dynamicNavIndexRef.current = 0;
+                resetRoute(routeRef.current, _characterId);
                 cachedCoordsInstructionRef.current = null;
                 cachedCoordsRef.current = null;
                 return update(dt);

@@ -136,15 +136,15 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     category: 'surface',
     itemId: 'desk-bollsidan-1',
     slots: [
-      {
-        slotId: 'work-sitting',
-        name: 'Travailler assis',
-        arrival: 'approach',
-        relative: true,
-        offset: [0, 0, 0],
-        rotY: Math.PI,
-        animationsRandom: ['having-a-meeting-female', 'having-a-meeting-male'],
-      }
+      // {
+      //   slotId: 'work-sitting',
+      //   name: 'Travailler assis',
+      //   arrival: 'approach',
+      //   relative: true,
+      //   offset: [0, 0, 60],
+      //   rotY: Math.PI,
+      //   animationsRandom: ['having-a-meeting-female', 'having-a-meeting-male'],
+      // }
     ]
   },
   'chair-office': {
@@ -174,9 +174,9 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         arrival: 'approach',
         name: 'Travailler debout',
         relative: true,
-        offset: [0, 0, -36],
+        // offset: [0, 0, -36],
         animationsRandom: 'standing-using-touchscreen-tablet',
-        duration: 33.2,
+        duration: 24,
         triggerEventKey: 'desk2-smart-action',
       }
     ]
@@ -213,7 +213,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Vasque Salle de bain',
     category: 'hygiene',
     exclusive: true,
-    position: [116, 0, 534],
+    position: [116, 0, 540],
     slots: [
       {
         slotId: 'wash-hands',
@@ -225,13 +225,13 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'brush-teeth',
         name: 'Se laver les dents',
         rotY: Math.PI,
-        animation: 'take-object-mid',
+        animation: 'fab-daily-life-brush-teeth',
       },
       {
         slotId: 'shave-makeup',
         name: 'Se Raser / Maquiller',
         rotY: Math.PI,
-        animation: 'inspect-mid-height',
+        animation: 'fab-daily-life-comb-hair',
       }
     ]
   },
@@ -243,16 +243,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     category: 'hygiene',
     position: [25, 15, 645],
     slots: [
-      // {
-      //   slotId: 'take-shower-1',
-      //   name: 'Prendre une douche (Centre)',
-      //   offset: [30, 15, 645],
-      //   rotY: 0,
-      //   animation: 'taking-shower',
-      //   duration: 12,
-      // },
       {
-        slotId: 'take-shower-2',
+        slotId: 'take-shower-1',
         name: 'Prendre une douche (Droite)',
         offset: [8, 15, 650],
         rotY: Math.PI / 2,
@@ -261,7 +253,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         duration: 24,
       },
       {
-        slotId: 'take-shower-3',
+        slotId: 'take-shower-2',
         name: 'Prendre une douche (Gauche)',
         offset: [42, 15, 660],
         rotY: -Math.PI / 2,
@@ -301,7 +293,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [30, 0, 535],
         rotY: Math.PI + Math.PI / 8,
         animation: 'take-object-mid',
-        duration: 8
       }
     ]
   },
@@ -583,6 +574,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Studio voisin Ouest (Églantine)',
     category: 'outdoor',
     position: [-200, 0, 500],
+    rotationY: Math.PI / 2,
     slots: [
       {
         slotId: 'yoga',
@@ -655,6 +647,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Studio voisin Est (Damien)',
     category: 'outdoor',
     position: [500, 0, 100],
+    rotationY: -Math.PI / 2,
     slots: [
       {
         slotId: 'salsa-samba',
