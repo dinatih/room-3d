@@ -1,8 +1,12 @@
-.virtual-dpad {
-  position: fixed;
-  right: 1rem;
-  bottom: calc(3.75rem + env(safe-area-inset-bottom) + 4.25rem);
+.virtual-controls {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
   z-index: 1001;
+  max-width: calc(100vw - 2rem);
+}
+
+.virtual-dpad {
   display: grid;
   grid-template-columns: repeat(3, 2.75rem);
   grid-template-rows: repeat(3, 2.75rem);

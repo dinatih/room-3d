@@ -116,19 +116,22 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
             </div>
 
             <div>
-              <Section title="Orbit — style Google Earth" />
-              <R label="Déplacer le personnage"         keys={['↑', '↓', '←', '→']} />
+              <Section title="Flèches — choix près de la croix" />
+              <p className="small text-body-secondary mb-1">Les touches du clavier et la croix virtuelle utilisent le même contrôle. Le choix est conservé dans l’URL.</p>
+              <R label="Caméra · Studio / Caméra · PNJ : tourner et incliner" keys={['↑↓←→']} />
+              <R label="Déplacer · PNJ : avancer / reculer" keys={['↑', '↓']} />
+              <R label="Déplacer · PNJ : tourner le personnage" keys={['←', '→']} />
+              <Section title="Vue libre — commandes supplémentaires" />
               <R label="Orbiter autour"             keys={['Shift + ↑↓←→']} />
-              <R label="Rotation caméra"            keys={['Ctrl + ↑↓←→']} />
+              <R label="Translation"                keys={['Ctrl + ↑↓←→']} />
               <R label="Translation"                keys={['Alt + ↑↓←→']} />
               <R label="Translation diagonale"       keys={['Shift+Ctrl + ↑↓←→']} />
             </div>
 
             <div>
-              <Section title="Follow mode" />
-              <R label="Avancer / reculer"          keys={['↑', '↓']} />
-              <R label="Pivoter gauche / droite"    keys={['←', '→']} />
-              <R label="Incliner la caméra"         keys={['Ctrl + ↑↓']} />
+              <Section title="Suivi PNJ / FPV" />
+              <R label="Suivi : zoomer / dézoomer" keys={['Ctrl + ↑↓']} />
+              <R label="FPV : incliner le regard" keys={['Ctrl + ↑↓']} />
               <R label="Monter / descendre"         keys={['Alt + ↑↓']} />
               <R label="Regarder librement"         keys={['Clic + glisser']} />
             </div>

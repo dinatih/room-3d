@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import type { CameraMode, FollowPosition } from './types';
+import type { ArrowControl, CameraMode, FollowPosition } from './types';
 import { chooseRandomCharacter } from '../store/randomCharacter';
 import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
@@ -74,6 +74,42 @@ export function useCameraShortcuts({
   const savedInventoryGridPrevConfig = useRef<typeof savedGridPrevConfig.current>(null);
 
   useEffect(() => {
+    const chooseFollow = (x: number, z: number, mode: 'follow' | 'fpv' = 'follow') => {
+      useSceneStore.getState().setArrowControl(mode === 'fpv' ? 'character' : 'camera');
+      enterFollow(x, z, mode);
+    };
+    const releaseControls = () => {
+      keys.current.clear();
+      cameraState.isMoving = false;
+      invalidate();
+    };
+    const onVisibility = () => {
+      if (document.hidden) releaseControls();
+    };
+    const onFocus = (event: FocusEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.matches('input, textarea, select, [contenteditable="true"]')) releaseControls();
+    };
+    const unsubscribe = useSceneStore.subscribe((state, previous) => {
+      if (state.arrowControl !== previous.arrowControl || state.cameraMode !== previous.cameraMode || state.cameraTarget !== previous.cameraTarget || state.activeCharacterId !== previous.activeCharacterId) releaseControls();
+    });
+    const onArrowControl = (event: Event) => {
+      if (planeModeRef.current || cameraState.isIntroRunning) return;
+      releaseControls();
+      const { target, control } = (event as CustomEvent<{ target: 'studio' | 'character'; control: ArrowControl }>).detail;
+      if (target === 'studio') {
+        goToDefaultOrbit();
+      } else {
+        const wasAnimal = Boolean(cameraState.animalTarget);
+        cameraState.animalTarget = null;
+        if (modeRef.current === 'top') exitTop();
+        if (modeRef.current === 'ortho') exitOrtho?.();
+        if (modeRef.current !== 'follow' || wasAnimal) {
+          enterFollow(cameraState.characterX, cameraState.characterZ, 'follow');
+        }
+      }
+      useSceneStore.getState().setArrowControl(control);
+    };
     const exitGridAndRestore = (savedConfig = savedGridPrevConfig) => {
       const prev = savedConfig.current;
       savedConfig.current = null;
@@ -129,6 +165,10 @@ export function useCameraShortcuts({
     };
 
     const goToDefaultOrbit = () => {
+      const current = useSceneStore.getState();
+      current.setArrowControl('camera');
+      if (!current.layers.characterGrid) current.setCameraTarget('studio');
+      current.setCameraMovement('fix');
       if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
       else if (modeRef.current === 'top') exitTop();
       else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
@@ -294,7 +334,7 @@ export function useCameraShortcuts({
       if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
         const curX = cameraState.characterX ?? followPos.current.x;
         const curZ = cameraState.characterZ ?? followPos.current.z;
-        enterFollow(curX, curZ, 'fpv');
+        chooseFollow(curX, curZ, 'fpv');
         appLog('system', '🎥 Mode FPV (1ère personne)');
         return;
       }
@@ -302,7 +342,7 @@ export function useCameraShortcuts({
       if (e.key === '3' || e.code === 'Digit3' || e.code === 'Numpad3') {
         const curX = cameraState.characterX ?? followPos.current.x;
         const curZ = cameraState.characterZ ?? followPos.current.z;
-        enterFollow(curX, curZ, 'follow');
+        chooseFollow(curX, curZ, 'follow');
         appLog('system', '🎥 Mode Follow (3ème personne)');
         return;
       }
@@ -316,10 +356,10 @@ export function useCameraShortcuts({
           ? requestedMode === 'follow' ? 'fpv' : 'follow'
           : requestedMode;
         if (targetMode === 'fpv') {
-          enterFollow(curX, curZ, 'fpv');
+          chooseFollow(curX, curZ, 'fpv');
           appLog('system', '🎥 Mode FPV (1ère personne)');
         } else {
-          enterFollow(curX, curZ, 'follow');
+          chooseFollow(curX, curZ, 'follow');
           appLog('system', '🎥 Mode Suivi Intelligent (3ème personne)');
         }
         return;
@@ -367,6 +407,13 @@ export function useCameraShortcuts({
 
       const k = e.key;
       const isArrow = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(k);
+      if (isArrow && modeRef.current === 'orbit') {
+        const store = useSceneStore.getState();
+        if (store.arrowControl === 'camera' || e.shiftKey || e.ctrlKey || e.altKey) {
+          if (store.activeCameraPos) store.setActiveCameraPos(null);
+          if (store.cameraMovement === 'orbit') store.setCameraMovement('fix');
+        }
+      }
 
       // Orbit-mode zoom (PageUp/PageDown)
       if (modeRef.current === 'orbit' && (k === 'PageUp' || k === 'PageDown')) {
@@ -377,9 +424,9 @@ export function useCameraShortcuts({
       }
 
       // Orbit and Top mode arrow keys (Google Earth style)
-      if ((modeRef.current === 'orbit' || modeRef.current === 'top') && isArrow) {
+      if ((modeRef.current === 'orbit' || modeRef.current === 'top' || modeRef.current === 'ortho') && isArrow) {
         if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
-          keys.current.add(k);                      // plain  → move character
+          keys.current.add(k);                      // plain → selected control
         } else if (e.shiftKey && e.ctrlKey) {
           keys.current.add('ShiftCtrl' + k);         // Shift+Ctrl → pan
         } else if (e.shiftKey) {
@@ -425,7 +472,7 @@ export function useCameraShortcuts({
     // Minimap / panel click → enter follow in that room
     const onPov = (e: Event) => {
       const { x, z } = (e as CustomEvent).detail as { x: number; z: number };
-      enterFollow(x, z);
+      chooseFollow(x, z);
     };
 
     // Panel camera preset → move orbit camera
@@ -481,10 +528,10 @@ export function useCameraShortcuts({
       const curX = cameraState.characterX ?? followPos.current.x;
       const curZ = cameraState.characterZ ?? followPos.current.z;
       if (requestedMode === 'fpv') {
-        enterFollow(curX, curZ, 'fpv');
+        chooseFollow(curX, curZ, 'fpv');
       } else if (requestedMode === 'toggle-follow') {
         if (modeRef.current === 'follow') exitFollow();
-        else enterFollow(curX, curZ, 'follow');
+        else chooseFollow(curX, curZ, 'follow');
       } else if (requestedMode === 'orbit') {
         if (modeRef.current === 'orbit') {
           toggleOrbitMouseMode();
@@ -523,6 +570,11 @@ export function useCameraShortcuts({
 
     window.addEventListener('keydown', onDown);
     window.addEventListener('keyup', onUp);
+    window.addEventListener('blur', releaseControls);
+    document.addEventListener('visibilitychange', onVisibility);
+    document.addEventListener('focusin', onFocus);
+    document.addEventListener('camera-controls-release', releaseControls);
+    document.addEventListener('camera-arrow-control', onArrowControl);
     document.addEventListener('minimap-pov', onPov);
     document.addEventListener('camera-pov', onPov);
     document.addEventListener('camera-view', onView);
@@ -532,6 +584,12 @@ export function useCameraShortcuts({
     return () => {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
+      window.removeEventListener('blur', releaseControls);
+      document.removeEventListener('visibilitychange', onVisibility);
+      document.removeEventListener('focusin', onFocus);
+      document.removeEventListener('camera-controls-release', releaseControls);
+      document.removeEventListener('camera-arrow-control', onArrowControl);
+      unsubscribe();
       document.removeEventListener('minimap-pov', onPov);
       document.removeEventListener('camera-pov', onPov);
       document.removeEventListener('camera-view', onView);

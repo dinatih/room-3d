@@ -982,12 +982,12 @@ export function Studio() {
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
-        <VirtualDPad visible={!hideUI && !planeMode && !showInventory && !characterGridActive} />
         <ViewControlBar
           hidden={planeMode || showInventory}
           showCharacterModes
           hideUI={hideUI}
           onToggleHideUI={toggleHideUI}
+          directionalControls={<VirtualDPad visible={!hideUI && !planeMode && !showInventory && !characterGridActive} />}
         >
           {characterGridActive && (
             <AnimFrameController

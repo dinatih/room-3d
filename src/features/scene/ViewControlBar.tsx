@@ -33,6 +33,8 @@ export interface ViewControlBarProps {
   toolbarActions?: ReactNode;
   beforeAmbianceActions?: ReactNode;
   panelControls?: ReactNode;
+  /** Commandes directionnelles placées au-dessus du dock de la scène. */
+  directionalControls?: ReactNode;
   children?: ReactNode;
 }
 
@@ -50,6 +52,7 @@ export function ViewControlBar({
   toolbarActions,
   beforeAmbianceActions,
   panelControls: _panelControls,
+  directionalControls,
   children,
 }: ViewControlBarProps) {
   const [hoveredView, setHoveredView] = useState<{
@@ -395,6 +398,7 @@ export function ViewControlBar({
 
   return (
     <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked gap-2' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle, ...mobilePositionStyle, ...mobileDockOffset }}>
+      {directionalControls}
       {activeCameraPos && (
         <span className="badge text-bg-dark bg-opacity-75 view-control-bar-dock__view-label">
           {activeCameraPos === 'iso-se' || activeCameraPos === 's-e' ? 'ISO Sud-Est'

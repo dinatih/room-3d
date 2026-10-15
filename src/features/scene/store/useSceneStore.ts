@@ -1,13 +1,15 @@
 import { getActionDef, getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
-import type { CameraMovement, CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
+import type { ArrowControl, CameraMovement, CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
 import {
   parseUrlCameraMode,
   parseUrlCameraProjection,
   parseUrlActiveCameraPosKey,
   parseUrlCameraTarget,
   parseUrlCameraMovement,
+  parseUrlArrowControl,
+  updateUrlArrowControl,
   parseUrlMouseMode,
   updateUrlCameraProjection,
   updateUrlCameraPos,
@@ -121,6 +123,9 @@ interface SceneStore {
   cameraMode: 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'ortho';
   cameraProjection: 'persp' | 'ortho';
   cameraTarget: CameraTarget;
+  arrowControl: ArrowControl;
+  setArrowControl: (control: ArrowControl) => void;
+  selectArrowControl: (target: 'studio' | 'character', control: ArrowControl) => void;
   setCameraTarget: (target: CameraTarget) => void;
   cameraMovement: CameraMovement;
   setCameraMovement: (movement: CameraMovement) => void;
@@ -459,6 +464,20 @@ export const useSceneStore = create<SceneStore>((set) => ({
   bnfRadius: 45,
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
+  arrowControl: parseUrlArrowControl(),
+  setArrowControl: (control) => {
+    set({ arrowControl: control });
+    updateUrlArrowControl(control);
+    cameraState.invalidate?.();
+  },
+  selectArrowControl: (target, control) => {
+    updateUrlCameraTarget(target);
+    updateUrlArrowControl(control);
+    updateUrlCameraMovement('fix');
+    set({ cameraTarget: target, arrowControl: control, cameraMovement: 'fix' });
+    document.dispatchEvent(new CustomEvent('camera-arrow-control', { detail: { target, control } }));
+    cameraState.invalidate?.();
+  },
   cameraProjection: parseUrlCameraProjection(),
   cameraTarget: initialTarget ?? 'studio',
   setCameraTarget: (target) => {

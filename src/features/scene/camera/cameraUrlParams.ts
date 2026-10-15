@@ -1,4 +1,4 @@
-import type { CameraMode, CameraMovement, CameraTarget, OrbitMouseMode } from './types';
+import type { ArrowControl, CameraMode, CameraMovement, CameraTarget, OrbitMouseMode } from './types';
 import { findCharacterByIdOrName } from '@features/scene/characterConfig';
 
 export type CameraProjection = 'persp' | 'ortho';
@@ -142,9 +142,20 @@ export function parseUrlCameraTarget(): CameraTarget | null {
 
 export function updateUrlCameraTarget(target: CameraTarget | null) {
   writeUrl(params => {
-    if (target && target !== 'studio') params.set('cameraTarget', target);
+    if (target) params.set('cameraTarget', target);
     else params.delete('cameraTarget');
   });
+}
+
+/** Shared links distinguish camera orbit from PNJ movement in the same Follow view. */
+export function parseUrlArrowControl(): ArrowControl {
+  const raw = typeof window === 'undefined' ? null : getUrlParams().get('arrowControl');
+  if (raw !== null && raw !== 'camera' && raw !== 'character') throw new Error(`Contrôle des flèches inconnu : ${raw}`);
+  return parseUrlCameraMode() === 'fpv' ? 'character' : raw ?? 'camera';
+}
+
+export function updateUrlArrowControl(control: ArrowControl) {
+  writeUrl(params => params.set('arrowControl', control));
 }
 
 /**
@@ -184,12 +195,12 @@ export function updateUrlCameraProjection(projection: CameraProjection) {
 
 /**
  * Analyse l'URL pour détecter le mode caméra initial :
- *  - FPV par défaut
+ *  - Orbit studio par défaut
  *  - FPV explicite si cameraPos est une entité
  *  - Orbit si une cible ou un angle de position est spécifié
  */
 export function parseUrlCameraMode(): CameraMode {
-  if (typeof window === 'undefined') return 'fpv';
+  if (typeof window === 'undefined') return 'orbit';
   try {
     const posParsed = parseUrlCameraPos();
     if (posParsed?.type === 'fpv') return 'fpv';
@@ -227,7 +238,7 @@ export function parseUrlCameraMode(): CameraMode {
     const target = parseUrlCameraTarget();
     if (target || posParsed?.type === 'angle') return 'orbit';
   } catch {}
-  return 'fpv';
+  return 'orbit';
 }
 
 /**
@@ -241,6 +252,9 @@ export function updateUrlCameraMode(mode: CameraMode) {
     const cameraParams = ['mode', 'camera', 'cam', 'orbit', 'fpv', 'follow'];
     for (const p of cameraParams) {
       url.searchParams.delete(p);
+    }
+    if (mode !== 'fpv' && parseUrlCameraPos()?.type === 'fpv') {
+      for (const p of ['cameraPos', 'cameraPosition', 'camPos', 'pos', 'cameraView']) url.searchParams.delete(p);
     }
     url.searchParams.set('mode', mode);
     window.history.replaceState(null, '', url.toString());

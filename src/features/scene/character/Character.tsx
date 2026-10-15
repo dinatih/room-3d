@@ -669,6 +669,10 @@ export function Character({
     }
 
     const hasDynamicTask = hasPendingDynamicTask();
+    const hasCharacterControl = cameraState.isXR || (!cameraState.animalTarget && (
+      cameraState.mode === 'fpv' || useSceneStore.getState().arrowControl === 'character'
+    ));
+    const isUserManuallyMoving = hasCharacterControl && cameraState.isUserControlling();
 
     if (isPreview) {
       if (previewPosition) {
@@ -700,12 +704,6 @@ export function Character({
       }
     } else {
       if (isActive) {
-        const isUserManuallyMoving = 
-          (cameraState.isXR ||
-           cameraState.mode === 'fpv' ||
-           cameraState.mode === 'orbit' ||
-           cameraState.mode === 'top') && cameraState.isUserControlling();
-
         if (hasDynamicTask || isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
           const agentState = updateAgent(delta);
 
@@ -786,12 +784,12 @@ export function Character({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
-    const isMoving = !isPreview && !characterGrid && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
+    const isMoving = !isPreview && !characterGrid && isActive && (cameraState.isXR || isUserManuallyMoving) && cameraState.isMoving;
     const rawTarget = (isPreview || characterGrid)
       ? (characterAnim || 'idle')
       : (currentAnimClip.current || (isMoving ? 'walk' : 'idle'));
 
-    if (isActive && !characterGrid && !isGuidedTour && !hasDynamicTask && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
+    if (isActive && !characterGrid && !isGuidedTour && !hasDynamicTask && (cameraState.isXR || isUserManuallyMoving) && currentAnimClip.current) {
       currentAnimClip.current = null;
     }
 

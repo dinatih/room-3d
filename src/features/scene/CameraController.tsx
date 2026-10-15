@@ -44,6 +44,8 @@ import {
   DEFAULT_FOLLOW_YAW_OFFSET,
   parseUrlCameraMode,
   updateUrlCameraMode,
+  updateUrlCameraTarget,
+  updateUrlArrowControl,
   parseUrlCameraPos,
   useCameraPointerEvents,
   useCameraShortcuts,
@@ -238,6 +240,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const changeMode = useCallback((m: CameraMode) => {
     const prev = modeRef.current;
+    if (prev !== m) {
+      keys.current.clear();
+      useSceneStore.getState().setArrowControl(m === 'fpv' ? 'character' : 'camera');
+    }
     if (m === 'ortho' || (m === 'orbit' && prev !== 'orbit')) {
       const store = useSceneStore.getState();
       store.setOrbitMouseMode(m === 'ortho' || store.cameraProjection === 'ortho' ? 'translate' : 'rotate');
@@ -462,7 +468,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         }
       }
 
-      if (cameraState.isDragging || keys.current.has('ArrowLeft') || keys.current.has('ArrowRight')) {
+      if (cameraState.isDragging || (useSceneStore.getState().arrowControl === 'camera' && (keys.current.has('ArrowLeft') || keys.current.has('ArrowRight')))) {
         let diff = orbitYaw.current - followYaw.current;
         while (diff > Math.PI) diff -= 2 * Math.PI;
         while (diff < -Math.PI) diff += 2 * Math.PI;
@@ -509,6 +515,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const enterFollow = useCallback((x: number, z: number, followMode: 'follow' | 'fpv' = 'follow') => {
     const store = useSceneStore.getState();
+    if (!cameraState.animalTarget) {
+      useSceneStore.setState({ cameraTarget: 'character' });
+      updateUrlCameraTarget('character');
+    }
     if (followMode === 'fpv' && modeRef.current !== 'fpv') {
       projectionBeforeFpv.current = store.cameraProjection;
     }
@@ -980,6 +990,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   useEffect(() => {
     useSceneStore.setState({ cameraMode: mode });
     updateUrlCameraMode(mode);
+    updateUrlArrowControl(useSceneStore.getState().arrowControl);
     if (mode !== 'top') {
       useSceneStore.getState().setMeasurementActive(false);
     }

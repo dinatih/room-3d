@@ -1,5 +1,7 @@
 export type CameraMode = 'orbit' | 'follow' | 'fpv' | 'top' | 'ortho';
 
+export type ArrowControl = 'camera' | 'character';
+
 export type CameraTarget =
   | 'studio'
   | 'character'
