@@ -33,53 +33,22 @@ class SmartObjectOccupancyManager {
    * Vérifie si un slot donné est occupé par un AUTRE personnage.
    */
   isSlotOccupied(objectId: string, slotId: string, forCharacterId?: string): boolean {
-    const key = this.slotKey(objectId, slotId);
-    const res = this.occupiedSlots.get(key);
-    if (res && (!forCharacterId || res.characterId !== forCharacterId)) {
-      return true;
-    }
-
-    // Règles spécifiques d'exclusion mutuelle par meuble :
-
-    // 0. Capacité de la Salle de bain (1 personne à la fois pour éviter l'engorgement physique de 2m²)
-    if (BATHROOM_OBJECTS.has(objectId)) {
-      for (const [k, r] of this.occupiedSlots.entries()) {
-        const [occObj] = k.split(':');
-        if (BATHROOM_OBJECTS.has(occObj) && (!forCharacterId || r.characterId !== forCharacterId)) {
-          return true;
-        }
-      }
-    }
-
-    // 1. Objets à usage exclusif (vasque-sdb, toilet...) : occupation totale si quelqu'un d'autre occupe un slot
-    if (this.isExclusiveObject(objectId)) {
-      for (const [k, r] of this.occupiedSlots.entries()) {
-        if (k.startsWith(`${objectId}:`) && (!forCharacterId || r.characterId !== forCharacterId)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
+    return this.getOccupant(objectId, slotId, forCharacterId) !== null;
   }
 
-  /**
-   * Obtient le nom ou l'ID du personnage occupant un slot.
-   */
-  getOccupant(objectId: string, slotId: string): string | null {
-    const key = this.slotKey(objectId, slotId);
-    const res = this.occupiedSlots.get(key);
-    if (res) return res.characterId;
-
-    if (this.isExclusiveObject(objectId)) {
-      for (const [k, r] of this.occupiedSlots.entries()) {
-        if (k.startsWith(`${objectId}:`)) return r.characterId;
-      }
-    }
-    if (objectId.startsWith('bed-') && slotId === 'lie-down') {
-      for (const [k, r] of this.occupiedSlots.entries()) {
-        if (k.startsWith(`${objectId}:`)) return r.characterId;
-      }
+  /** The same conflict rules serve availability checks and their diagnostic. */
+  getOccupant(objectId: string, slotId: string, forCharacterId?: string): string | null {
+    const slots = SMART_OBJECTS[objectId]?.slots;
+    const requested = slots?.find(slot => slot.slotId === slotId);
+    for (const [key, reservation] of this.occupiedSlots) {
+      if (reservation.characterId === forCharacterId) continue;
+      const separator = key.indexOf(':');
+      const occupiedObject = key.slice(0, separator), occupiedSlot = key.slice(separator + 1);
+      if (BATHROOM_OBJECTS.has(objectId) && BATHROOM_OBJECTS.has(occupiedObject)) return reservation.characterId;
+      if (occupiedObject !== objectId) continue;
+      const occupied = slots?.find(slot => slot.slotId === occupiedSlot);
+      if (occupiedSlot === slotId || this.isExclusiveObject(objectId)
+        || requested?.excludes?.includes(occupiedSlot) || occupied?.excludes?.includes(slotId)) return reservation.characterId;
     }
     return null;
   }

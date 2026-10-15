@@ -41,6 +41,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       },
       {
         slotId: 'lie-down-left',
+        excludes: ['seat-left', 'seat-right'],
         name: 'Dormir couché (Gauche)',
         relative: true,
         offset: [-35, 45, 0],
@@ -48,6 +49,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       },
       {
         slotId: 'lie-down-right',
+        excludes: ['seat-left', 'seat-right'],
         name: 'Dormir couché (Droite)',
         relative: true,
         offset: [35, 45, 0],
@@ -83,6 +85,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       },
       {
         slotId: 'lie-down',
+        excludes: ['seat-north', 'seat-middle', 'seat-south'],
         name: 'Dormir couché',
         offset: [1.5, 45, 0],
         animationsRandom: 'laying-front',
@@ -121,6 +124,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       // },
       {
         slotId: 'lie-down',
+        excludes: ['seat-north', 'seat-middle'],
         name: 'Dormir couché',
         offset: [0, 45, 0],
         animationsRandom: 'laying-front',
@@ -1028,7 +1032,7 @@ export function buildSmartObjectInstructionSequence(
     if (!localSlot?.offset) throw new Error(`Missing bed surface position for ${slot.slotId}`);
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-      { type: 'MOVE_TO', targetLocalPos: localSlot.offset, smartObjectId: obj.id, navigation: 'interaction' },
+      { type: 'MOVE_TO', targetLocalPos: localSlot.offset, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
       baseInstruction,
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
     ];
@@ -1040,11 +1044,11 @@ export function buildSmartObjectInstructionSequence(
     const edge: [number, number, number] = [0, 45, side * 28];
     const floor: [number, number, number] = [0, 0, side * 52];
     return [
-      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id },
-      { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, navigation: 'interaction' },
+      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id, slotId: slot.slotId },
+      { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
       baseInstruction,
-      { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, navigation: 'interaction' },
-      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id },
+      { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
+      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id, slotId: slot.slotId },
     ];
   }
 

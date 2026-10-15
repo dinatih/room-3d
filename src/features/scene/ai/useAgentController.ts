@@ -674,6 +674,20 @@ export function useAgentController(
               }
               OccupancyManager.claimSlot(objId, altSlotId, _characterId);
               claimedSlotRef.current = { objectId: objId, slotId: altSlotId };
+              cachedCoordsInstructionRef.current = null;
+              cachedCoordsRef.current = null;
+              if (currentInstruction.type === 'MOVE_TO') {
+                // A different action can require a different approach and bed
+                // climb. Replace the whole routine, including its exit steps.
+                const queue = hasNavStep ? dynamicNavQueueRef.current : scenario;
+                if (!queue) throw new Error(`Missing instruction queue for ${objId}`);
+                const index = hasNavStep ? dynamicNavIndexRef.current : stepIndexRef.current;
+                let end = index;
+                while (end < queue.length && queue[end].smartObjectId === objId) end++;
+                queue.splice(index, end - index, ...buildSmartObjectInstructionSequence(objId, altSlotId, _characterId));
+                resetRoute(routeRef.current, _characterId);
+                return update(dt);
+              }
             } else {
               const occupant = OccupancyManager.getOccupant(objId, reqSlotId);
               const objName = SMART_OBJECTS[objId]?.name || objId;

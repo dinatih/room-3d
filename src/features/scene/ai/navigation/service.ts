@@ -115,14 +115,16 @@ export interface RouteState {
   owner?: string;
   approach?: Point;
   interactionTarget?: Point;
+  occupiedTarget?: { point: Point; destination: Point };
   exit?: { owner: string; graph: VisibilityGraph; point: Point };
-  failure?: { graph: VisibilityGraph; start: Point; target: Point; owner?: string; interaction: boolean; closedDoor?: DoorKey; actorBlockers: ActorBlockers; timestamp?: number };
+  failure?: { graph: VisibilityGraph; start: Point; target: Point; owner?: string; interaction: boolean; closedDoor?: DoorKey; actorBlockers: ActorBlockers };
 }
 export const createRouteState = (): RouteState => ({ path: [], index: 0, target: null, graph: null, error: null, doors: new Set() });
 export function resetRoute(route: RouteState, agentId: string, keepClosedDoor?: DoorKey): void {
   releaseAgentDoors(agentId, keepClosedDoor);
   route.path = []; route.index = 0; route.target = null; route.graph = null; route.error = null; route.doors.clear();
   route.approach = undefined; route.interactionTarget = undefined;
+  route.occupiedTarget = undefined;
   route.exit = undefined;
   route.failure = undefined;
   route.crowd = undefined;
@@ -212,17 +214,17 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     }
   }
   if (route.error === 'Destination occupée par un autre acteur') {
-    if (!isAgentDestinationFree(agentId, target)) return start;
+    const occupied = route.occupiedTarget;
+    if ((!occupied || distance(occupied.destination, target) === 0)
+      && !isAgentDestinationFree(agentId, occupied?.point ?? target)) return start;
+    route.occupiedTarget = undefined;
     route.error = null;
     route.graph = null;
     route.crowd = undefined;
   }
   const failed = route.failure;
   if (failed) {
-    const elapsed = Date.now() - (failed.timestamp ?? 0);
-    const retryEmpty = !failed.actorBlockers.size && elapsed > 1000;
-    if (!retryEmpty
-      && failed.graph === getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor)
+    if (failed.graph === getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor)
       && failed.start.x === start.x && failed.start.z === start.z
       && failed.target.x === target.x && failed.target.z === target.z
       && failed.owner === owner && failed.interaction === interaction && failed.closedDoor === closedDoor
@@ -239,7 +241,7 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
   try { position = advanceRoute(route, agentId, start, target, travel, steer, owner, interaction, closedDoor); }
   finally { actorBlockers = endActorBlockCheck(agentId); }
   if (route.error) {
-    route.failure = { graph: getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor), start: { ...start }, target: { ...target }, owner, interaction, closedDoor, actorBlockers, timestamp: Date.now() };
+    route.failure = { graph: getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor), start: { ...start }, target: { ...target }, owner, interaction, closedDoor, actorBlockers };
     // An impossible route must not retain a passage needed by other agents.
     releaseAgentDoors(agentId);
     route.doors.clear();
@@ -247,7 +249,8 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
   const limited = limitAgentMovement(agentId, start, position);
   if (limited.x !== position.x || limited.z !== position.z) {
     // A stop at contact is insufficient: keep a real path around the other bodies.
-    const base = getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor);
+    const base = route.crowd?.graph === route.graph ? route.crowd.base
+      : route.graph ?? getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor);
     const obstacles = getAgentObstacles(agentId, start);
     const signature = JSON.stringify(obstacles);
     if (obstacles.length && (route.crowd?.base !== base || route.crowd.signature !== signature)) {
@@ -264,6 +267,7 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
       }
       if (insideObstacle(goal, obstacles.map(polygon => [polygon]))) {
         route.error = 'Destination occupée par un autre acteur';
+        route.occupiedTarget = { point: { ...goal }, destination: { ...target } };
         releaseAgentDoors(agentId);
         route.doors.clear();
       }
@@ -292,7 +296,8 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   const owned = (id: string) => [...furnitureObstacles.values()].filter(o => o.owner === id && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
   const contained = (id: string, p: Point) => owned(id).some(polygon => pointInRing(p, polygon));
   const localMove = (goal: Point, id: string): Point => {
-    const localGraph = getNavigationGraph(profile, id, closedDoor);
+    const baseLocal = getNavigationGraph(profile, id, closedDoor);
+    const localGraph = route.crowd?.base === baseLocal && route.crowd.graph ? route.crowd.graph : baseLocal;
     if (route.graph !== localGraph || route.target?.x !== goal.x || route.target?.z !== goal.z) {
       const path = localGraph.find(start, goal);
       if (!path) {

@@ -18,6 +18,7 @@ export interface InteractionSlot {
   approachOffset?: [number, number, number]; // Position d'arrivée avant d'interagir
   arrival?: 'approach';       // Interaction debout : trouver un appui au sol libre près de l'objet
   navigationOwner?: string;   // Volume physique utilisé par ce slot d'un objet composé
+  excludes?: string[];       // Actions du même meuble qui utilisent le même espace physique
   rotY?: number;              // Orientation (radians relative si relative=true ou absolue) ; hérite de obj.rotationY si non spécifié
   animation?: string;         // Chemin vers le clip d'animation GLB
   duration?: number;          // Durée par défaut en secondes (si vide/non fourni, l'animation est jouée repeatCount fois)

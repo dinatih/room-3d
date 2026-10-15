@@ -542,6 +542,7 @@ if (process.argv.includes('--browser')) (async () => {
     await page.evaluate(showerSpawnTest => { window.showerSpawnTest = showerSpawnTest; }, process.argv.includes('--shower-spawn'));
     await page.evaluate(nativeSpawnTest => { window.nativeSpawnTest = nativeSpawnTest; }, process.argv.includes('--native-spawn'));
     await page.evaluate(doubleBedTest => { window.doubleBedTest = doubleBedTest; }, process.argv.includes('--double-bed-cases'));
+    await page.evaluate(bedReservationTest => { window.bedReservationTest = bedReservationTest; }, process.argv.includes('--bed-occupancy') || process.argv.includes('--blocked-retry'));
     await page.evaluate(xbotTest => { window.xbotTest = xbotTest; }, process.argv.includes('--xbot-tour'));
     await page.evaluate(async () => {
       (await import('/@react-refresh')).default.injectIntoGlobalHook(window);
@@ -614,6 +615,11 @@ if (process.argv.includes('--browser')) (async () => {
         const [config,setConfig]=React.useState(null);window.mountDoubleProbes=setConfig;
         return config===null ? null : window.smartObjects.SMART_OBJECTS['bed-double'].slots.map(slot=>React.createElement(DoubleBedProbe,{config,slotId:slot.slotId,key:`${config}-${slot.slotId}`}));
       }
+      function BedReservationProbe({id}) {
+        const scenario=React.useMemo(()=>[...window.smartObjects.buildSmartObjectInstructionSequence('bed-west','lie-down'),{type:'MOVE_TO',targetPos:[200,0,-50]}],[]);
+        const agent=useAgentController(id,scenario,false,()=>({x:160,y:0,z:300,rotY:0}));
+        window.autonomousAgents.set(id,{agent,scenario});return null;
+      }
       function AutonomousProbe({ id }) {
         const scenario = React.useMemo(() => scenarios.buildAutonomousScenario(id), [id]);
         const agent = useAgentController(id, scenario, true, () => ({ x: 160, y: 0, z: 300, rotY: 0 }));
@@ -665,11 +671,71 @@ if (process.argv.includes('--browser')) (async () => {
         ...(window.showerSpawnTest ? window.smartObjects.SMART_OBJECTS.shower.slots.flatMap(slot=>['closed','open'].map(door=>e(ShowerSpawnProbe,{id:`delphina-${slot.slotId}-${door}`,slotId:slot.slotId,key:`${slot.slotId}-${door}`}))) : []),
         ...(window.nativeSpawnTest ? [e(NativeSpawnProbe)] : []),
         ...(window.doubleBedTest ? [e(DoubleBedProbes)] : []),
+        ...(window.bedReservationTest ? ['bed-alternative-north','bed-alternative-south','bed-full','bed-reserved'].map(id=>e(BedReservationProbe,{id,key:id})) : []),
         e(React.Suspense, { fallback: null }, e(placements.Equipment), e(placements.Furniture), e(placements.Furnishings), e(placements.Decor), e(DoorsPlacement),
           e(Character, { ...native, modelPath: native.path, targetHeight: native.height, isLara: true, isActive: false, isNPC: false, scenario: null }))));
     });
     await page.waitForFunction(() => window.nav?.furnitureObstacles.size > 25 && window.nav.hasAgentProfile('native'), { timeout: 60000 }).catch(async error => { console.log('Readiness:', await page.evaluate(() => ({ ids: [...window.nav.furnitureObstacles.keys()], native: window.nav.hasAgentProfile('native'), scene: window.fixtureScene.children.map(c => c.name), agent: window.agent.getStatus() }))); throw error; });
     console.log('Scene assets ready:', await page.evaluate(() => ({ profile: window.nav.getAgentProfile('native'), obstacles: window.nav.furnitureObstacles.size })));
+    if(process.argv.includes('--bed-occupancy') || process.argv.includes('--blocked-retry')) {
+      const audit=await page.evaluate(async()=>{
+        const nav=window.nav, manager=window.occupancy, profile=nav.getAgentProfile('native'),results=[];
+        const smart=window.smartObjects;
+        const durations=smart.SMART_OBJECTS['bed-west'].slots.map(slot=>slot.duration);
+        smart.SMART_OBJECTS['bed-west'].slots.forEach(slot=>slot.duration=0.1);
+        for(const bed of ['bed-west','bed-east','bed-double']) {
+          const slots=smart.SMART_OBJECTS[bed].slots;
+          for(const lying of slots.filter(slot=>slot.slotId.startsWith('lie-down'))) {
+            for(const sitting of slots.filter(slot=>slot.slotId.startsWith('seat-'))) {
+              if(!manager.claimSlot(bed,sitting.slotId,'bed-holder'))throw new Error('Cannot reserve bed fixture');
+              if(manager.claimSlot(bed,lying.slotId,'bed-contender'))throw new Error(`${bed}: sleeping overlaps a sitter`);
+              if(manager.getOccupant(bed,lying.slotId)!=='bed-holder')throw new Error('Conflicting occupant missing from diagnostic');
+              manager.releaseAllForCharacter('bed-holder');
+              manager.claimSlot(bed,lying.slotId,'bed-holder');
+              if(manager.claimSlot(bed,sitting.slotId,'bed-contender'))throw new Error(`${bed}: sitting overlaps a sleeper`);
+              manager.releaseAllForCharacter('bed-holder');
+            }
+            const sequence=smart.buildSmartObjectInstructionSequence(bed,lying.slotId);
+            if(sequence.some(i=>i.smartObjectId===bed&&i.slotId!==lying.slotId))throw new Error(`${bed}: an entry or exit changes its reservation`);
+          }
+        }
+        if(!manager.claimSlot('bed-double','lie-down-left','bed-holder')||!manager.claimSlot('bed-double','lie-down-right','bed-contender'))throw new Error('Two separate sleeping places must remain usable');
+        manager.releaseAllForCharacter('bed-holder');manager.releaseAllForCharacter('bed-contender');
+        for(const [id,{agent,scenario}] of window.autonomousAgents) {
+          nav.setAgentProfile(id,profile);agent.setPosition(160,0,300);
+          if(id!=='bed-reserved') {
+            const slot=id==='bed-full'?'lie-down':'seat-middle';
+            manager.claimSlot('bed-west',slot,'sabira');nav.setAgentProfile('sabira',profile);
+            const coords=window.resolveCoords({type:'USE_OBJECT',smartObjectId:'bed-west',slotId:slot},null);
+            window.cameraState.positions.sabira={x:coords.tx,y:coords.ty,z:coords.tz,yaw:0};
+            if(id.startsWith('bed-alternative-')) manager.claimSlot('bed-west',id.endsWith('north')?'seat-south':'seat-north','bed-seat-reservation');
+          }
+          const deadline=performance.now()+30000;let state,interactions=0,climbed=false;
+          while(performance.now()<deadline) {
+            state={...agent.update(0.1)};window.cameraState.positions[id]={...state,yaw:state.rotY};
+            if(agent.getStatus()==='BLOCKED')throw new Error(`${id}: ${nav.navigationDebug.get(id)?.error}`);
+            if(state.y>0)climbed=true;
+            if(agent.getStatus()==='INTERACTING') {
+              interactions++;
+              if(id==='bed-reserved'&&manager.claimSlot('bed-west','seat-middle','late-arrival'))throw new Error('Reservation was lost during bed entry');
+            }
+            if(agent.getStatus()==='FINISHED')break;
+            await new Promise(resolve=>requestAnimationFrame(resolve));
+          }
+          if(agent.getStatus()!=='FINISHED')throw new Error(`${id} never finished: ${JSON.stringify({state,status:agent.getStatus(),route:nav.navigationDebug.get(id),scenario})}`);
+          const action=scenario.find(i=>i.type==='USE_OBJECT');
+          if(id.startsWith('bed-alternative-')&&(action.slotId!==`seat-${id.split('-').at(-1)}`||!interactions||climbed))throw new Error('An alternative seat retained the sleeping climb');
+          if(id==='bed-full'&&interactions)throw new Error('A fully occupied bed was entered');
+          if(id==='bed-reserved'&&(!interactions||!climbed||manager.getOccupant('bed-west','lie-down')===id))throw new Error('Bed routine did not hold and release its sleeping place');
+          results.push({id,slot:action?.slotId,interactions,climbed,status:agent.getStatus()});
+          manager.releaseAllForCharacter(id);manager.releaseAllForCharacter('sabira');manager.releaseAllForCharacter('bed-seat-reservation');delete window.cameraState.positions[id];delete window.cameraState.positions.sabira;
+        }
+        smart.SMART_OBJECTS['bed-west'].slots.forEach((slot,i)=>slot.duration=durations[i]);
+        return results;
+      });
+      console.log('Bed reservations:',JSON.stringify(audit));
+      if(process.argv.includes('--bed-occupancy'))return;
+    }
     if(process.argv.includes('--double-bed-cases')) {
       const audit=await page.evaluate(async()=>{
         const nav=window.nav,g=window.geom,profile=nav.getAgentProfile('native'),results=[];
@@ -1237,29 +1303,45 @@ if (process.argv.includes('--browser')) (async () => {
           nav.followRoute(route,'blocked-probe',{ x:target.x+1,z:target.z },start,1,undefined,owner,true);
           if (searches === approachSearches) throw new Error('A changed departure must retry');
           nav.unregisterObstacle(owner); nav.unregisterObstacle('blocked-cover');
-          // An actor occupying all exits is temporary; unrelated movement is not
-          // a reason to repeat the failed geometry search.
+          // An actor spawned in another body must be able to separate while
+          // leaving its furniture, without deepening the existing overlap.
           nav.registerObstacle({id:owner,owner,polygon:g.rectangle(-100,-600,10,10),yMin:0,yMax:200});
           nav.setAgentProfile('exit-occupant',{radius:nav.getAgentProfile('native').radius*2,height:200});
           window.cameraState.positions['exit-occupant']={x:-100,y:0,z:-600,yaw:0};
           const exitStart={x:-100,z:-600},exitTarget={x:100,z:-600};
           nav.resetRoute(route,'blocked-probe');route.owner=owner;
-          nav.followRoute(route,'blocked-probe',exitStart,exitTarget,1);
-          if(!route.error||!route.failure.actorBlockers.size)throw new Error('Crowded exit must retain its actor dependency');
-          const actorSearches=searches;
-          for(let frame=0;frame<300;frame++)nav.followRoute(route,'blocked-probe',exitStart,exitTarget,1);
-          if(searches!==actorSearches)throw new Error('Stable occupied exit repeated searches');
-          window.cameraState.positions['exit-occupant'].z=-750;
-          const actorRecovery=nav.followRoute(route,'blocked-probe',exitStart,exitTarget,1);
-          if(route.error||g.distance(actorRecovery,exitStart)===0)throw new Error('A freed furniture exit did not resume');
+          let actorRecovery=exitStart;
+          for(let frame=0;frame<300&&g.distance(actorRecovery,exitTarget)>g.GEOMETRY_EPSILON;frame++) {
+            const before=actorRecovery;
+            actorRecovery=nav.followRoute(route,'blocked-probe',before,exitTarget,1);
+            if(route.error||g.distance(actorRecovery,exitStart)<g.distance(before,exitStart)-g.GEOMETRY_EPSILON)throw new Error('Furniture exit deepened an existing actor overlap');
+          }
+          if(g.distance(actorRecovery,exitTarget)>g.GEOMETRY_EPSILON)throw new Error('Overlapping actors could not separate during their furniture exit');
           delete window.cameraState.positions['exit-occupant'];nav.unregisterObstacle(owner);
+          // Waiting on an occupied local exit must track that exit, not the
+          // distant final destination, which is already free.
+          nav.registerObstacle({id:owner,owner,polygon:g.rectangle(-100,-600,10,10),yMin:0,yMax:200});
+          [[-120,-600,2,100],[-100,-620,100,2],[-100,-580,100,2]].forEach(([x,z,w,d],i)=>nav.registerObstacle({id:`exit-wall-${i}`,polygon:g.rectangle(x,z,w,d),yMin:0,yMax:200}));
+          nav.setAgentProfile('exit-occupant',nav.getAgentProfile('native'));
+          window.cameraState.positions['exit-occupant']={x:-60,y:0,z:-600,yaw:0};
+          nav.resetRoute(route,'blocked-probe');route.owner=owner;
+          let localPosition=exitStart;
+          for(let frame=0;frame<100&&!route.error;frame++)localPosition=nav.followRoute(route,'blocked-probe',localPosition,exitTarget,1);
+          if(route.error!=='Destination occupée par un autre acteur'||!route.occupiedTarget)throw new Error('Local exit fixture did not stop at its occupant');
+          const localSearches=searches;
+          for(let frame=0;frame<300;frame++)nav.followRoute(route,'blocked-probe',localPosition,exitTarget,1);
+          if(searches!==localSearches)throw new Error('Waiting for a local exit rebuilt paths every frame');
+          delete window.cameraState.positions['exit-occupant'];
+          for(let frame=0;frame<300&&g.distance(localPosition,exitTarget)>g.GEOMETRY_EPSILON;frame++)localPosition=nav.followRoute(route,'blocked-probe',localPosition,exitTarget,1);
+          if(route.error||g.distance(localPosition,exitTarget)>g.GEOMETRY_EPSILON)throw new Error('Local exit did not resume after its occupant left');
+          nav.unregisterObstacle(owner);for(let i=0;i<3;i++)nav.unregisterObstacle(`exit-wall-${i}`);
           [[160,260,84,4],[160,340,84,4],[120,300,4,84],[200,300,4,84]].forEach(([x,z,w,d],i) =>
             nav.registerObstacle({ id:`blocked-ring-${i}`, polygon:g.rectangle(x,z,w,d), yMin:0, yMax:200 }));
           const graph = nav.getNavigationGraph(nav.getAgentProfile('blocked-probe'));
           if (g.insideObstacle(start,graph.obstacles) || graph.find(target,start)) throw new Error('Fixture must contain a free but unreachable destination');
           const approach = nav.getObjectApproach('free-target',start,'blocked-probe',target,false,undefined,undefined,true);
           if (!approach || !graph.find(target,approach)) throw new Error('Approach must be reachable from the actor');
-          return { firstSearches, repeatedSearches, repeatedApproachSearches, recoverySearches, moved, approach, actorRecovery, error:recoveredError };
+          return { firstSearches, repeatedSearches, repeatedApproachSearches, recoverySearches, moved, approach, actorRecovery, localPosition, error:recoveredError };
         } finally {
           g.VisibilityGraph.prototype.find = find;
           nav.resetRoute(route,'blocked-probe');

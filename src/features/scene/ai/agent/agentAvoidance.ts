@@ -24,7 +24,7 @@ export function endActorBlockCheck(id: string): ActorBlockers {
   return blockers;
 }
 export function actorBlocksUnchanged(blockers: ActorBlockers): boolean {
-  if (!blockers.size) return false;
+  if (!blockers.size) return true;
   return useSceneStore.getState().layers.npcCollisions && [...blockers].every(([id, state]) => actorState(id) === state);
 }
 const areDuoPartners = (id: string, otherId: string) => {
