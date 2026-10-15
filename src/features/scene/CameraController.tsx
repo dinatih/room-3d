@@ -42,6 +42,7 @@ import {
   DEFAULT_ORBIT_DISTANCE,
   DEFAULT_ORBIT_PITCH,
   DEFAULT_FOLLOW_YAW_OFFSET,
+  ORBIT_CAMERA_LERP,
   parseUrlCameraMode,
   updateUrlCameraMode,
   updateUrlCameraTarget,
@@ -492,7 +493,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       // Détection de saut brusque / changement de pièce (> 350 cm)
       const distToTarget = Math.hypot(targetX - ctrl.target.x, targetZ - ctrl.target.z);
       const isSnap = distToTarget > 350;
-      const lerpFactor = isSnap ? 1.0 : 0.15;
+      const lerpFactor = isSnap ? 1.0 : ORBIT_CAMERA_LERP;
 
       ctrl.target.x += (targetX - ctrl.target.x) * lerpFactor;
       ctrl.target.y += (targetY - ctrl.target.y) * lerpFactor;

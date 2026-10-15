@@ -1,10 +1,11 @@
-import type { MutableRefObject } from 'react';
+import { useEffect, useRef, type MutableRefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { CameraMode, FollowPosition } from './types';
 import {
   WALK_SPEED,
+  ORBIT_CAMERA_LERP,
   _tmpOffset,
   _tmpSph,
   _tmpCamDir,
@@ -53,6 +54,26 @@ export function useCameraFrameUpdate({
   updateFollowLook,
   invalidate,
 }: UseCameraFrameUpdateParams) {
+  const keyboardOrbit = useRef<THREE.Vector3 | null>(null);
+  useEffect(() => {
+    const reset = () => { keyboardOrbit.current = null; };
+    const controls = ctrlRef.current;
+    controls?.addEventListener('start', reset);
+    const events = ['camera-controls-release', 'camera-view', 'camera-mode', 'camera-arrow-control', 'camera-enter-top', 'camera-ortho-view', 'camera-zoom'];
+    events.forEach(event => document.addEventListener(event, reset));
+    const onKey = (event: KeyboardEvent) => { if (!event.key.startsWith('Arrow')) reset(); };
+    window.addEventListener('keydown', onKey);
+    const unsubscribe = useSceneStore.subscribe((state, previous) => {
+      if (state.cameraMode !== previous.cameraMode || state.cameraTarget !== previous.cameraTarget || state.cameraProjection !== previous.cameraProjection) reset();
+    });
+    return () => {
+      controls?.removeEventListener('start', reset);
+      events.forEach(event => document.removeEventListener(event, reset));
+      window.removeEventListener('keydown', onKey);
+      unsubscribe();
+    };
+  }, [ctrlRef]);
+
   useFrame((_, delta) => {
     if (cameraState.isXR) return;
     if (planeModeRef.current) return;
@@ -152,15 +173,15 @@ export function useCameraFrameUpdate({
         // Shift+arrows — orbit (rotate camera around target)
         if ((plainCamera && hasPlainArrow) || k.has('ShiftArrowLeft') || k.has('ShiftArrowRight') || k.has('ShiftArrowUp') || k.has('ShiftArrowDown')) {
           const rotates = (key: string) => k.has('Shift' + key) || (plainCamera && k.has(key));
-          _tmpOffset.subVectors(activeCamera.position, ctrl.target);
+          if (!keyboardOrbit.current) keyboardOrbit.current = activeCamera.position.clone().sub(ctrl.target);
+          _tmpOffset.copy(keyboardOrbit.current);
           _tmpSph.setFromVector3(_tmpOffset);
-          if (rotates('ArrowLeft')) _tmpSph.theta += 0.03 * dt;
-          if (rotates('ArrowRight')) _tmpSph.theta -= 0.03 * dt;
+          if (rotates('ArrowLeft')) _tmpSph.theta -= 0.03 * dt;
+          if (rotates('ArrowRight')) _tmpSph.theta += 0.03 * dt;
           if (rotates('ArrowUp')) _tmpSph.phi -= 0.03 * dt;
           if (rotates('ArrowDown')) _tmpSph.phi += 0.03 * dt;
           _tmpSph.makeSafe();
-          activeCamera.position.setFromSpherical(_tmpSph).add(ctrl.target);
-          ctrl.update();
+          keyboardOrbit.current.setFromSpherical(_tmpSph);
         }
 
         // Ctrl, Alt ou Shift+Ctrl+arrows — pan rapide (translate camera + target ensemble)
@@ -168,6 +189,7 @@ export function useCameraFrameUpdate({
           a => k.has('Ctrl' + a) || k.has('Alt' + a) || k.has('ShiftCtrl' + a)
         );
         if (hasPan) {
+          keyboardOrbit.current = null;
           if (plainPan && hasPlainArrow) topFollowRef.current = false;
           activeCamera.getWorldDirection(_tmpCamDir);
           if (plainPan) _tmpCamRight.setFromMatrixColumn(activeCamera.matrixWorld, 0);
@@ -195,6 +217,7 @@ export function useCameraFrameUpdate({
 
         // PageUp/PageDown — zoom (dolly le long de l'axe caméra→cible)
         if (k.has('PageUp') || k.has('PageDown')) {
+          keyboardOrbit.current = null;
           _tmpDollyDir.subVectors(ctrl.target, camera.position);
           const dist = _tmpDollyDir.length();
           _tmpDollyDir.normalize();
@@ -204,6 +227,17 @@ export function useCameraFrameUpdate({
           ctrl.update();
         }
       }
+    }
+
+    if (keyboardOrbit.current && ctrlRef.current) {
+      const ctrl = ctrlRef.current;
+      _tmpOffset.copy(keyboardOrbit.current).add(ctrl.target);
+      ctrl.object.position.lerp(_tmpOffset, ORBIT_CAMERA_LERP);
+      ctrl.update();
+      // Arrêter la boucle à la précision numérique de la position monde.
+      if (ctrl.object.position.distanceToSquared(_tmpOffset) <= Number.EPSILON * Math.max(1, _tmpOffset.lengthSq())) {
+        keyboardOrbit.current = null;
+      } else invalidate();
     }
 
     if (modeRef.current === 'top' && topFollowRef.current) {

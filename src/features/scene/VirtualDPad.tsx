@@ -30,7 +30,6 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   const releaseKey = useCallback((key: ArrowKey) => {
     if (!activeKeys.current.delete(key)) return;
     fire('keyup', key);
-    setPressedKeys(new Set(activeKeys.current));
   }, []);
 
   const releaseAll = useCallback(() => {
@@ -38,6 +37,12 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
     activeKeys.current.clear();
     setPressedKeys(new Set());
     document.dispatchEvent(new Event('camera-controls-release'));
+  }, []);
+
+  useEffect(() => {
+    const onArrowKeys = (event: Event) => setPressedKeys(new Set((event as CustomEvent<ArrowKey[]>).detail));
+    document.addEventListener('camera-arrow-keys', onArrowKeys);
+    return () => document.removeEventListener('camera-arrow-keys', onArrowKeys);
   }, []);
 
   useEffect(() => {
@@ -81,25 +86,27 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   ] as const;
 
   return (
-    <div className="virtual-controls d-flex align-items-end gap-2">
-      <div className="d-flex flex-column gap-1" role="group" aria-label="Choisir le contrôle des flèches">
+    <div className="virtual-controls d-flex flex-column align-items-center gap-1">
+      <div className="virtual-controls__modes glass-card d-flex gap-1 p-1 rounded-2" role="group" aria-label="Choisir le contrôle des flèches">
         {choices.map(choice => (
           <button
             key={choice.label}
             type="button"
-            className={`btn btn-sm ${choice.active ? 'btn-primary' : 'btn-light'} text-nowrap text-start`}
+            className={`btn btn-sm py-0 px-2 ${choice.active ? 'btn-primary' : 'btn-outline-secondary'}`}
+            aria-label={choice.label}
+            title={choice.label}
             aria-pressed={choice.active}
             onClick={() => {
               releaseAll();
               selectControl(choice.target, choice.control);
             }}
           >
-            <i className={`bi ${choice.icon} me-1`} aria-hidden="true" />{choice.label}
+            <i className={`bi ${choice.icon}`} aria-hidden="true" />
           </button>
         ))}
       </div>
       <div className="d-flex flex-column align-items-center gap-1">
-        <span className="badge text-bg-dark" role="status">{caption}</span>
+        <span className="visually-hidden" role="status">{caption}</span>
         <div className="virtual-dpad" role="group" aria-label={`Flèches : ${caption}`}>
           {DIRECTIONS.map(({ key, icon, label: movementLabel, position }) => {
             const label = moving ? movementLabel : orbiting
@@ -111,6 +118,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
                 type="button"
                 className={`btn btn-sm rounded-3 virtual-dpad__button virtual-dpad__button--${position} ${pressedKeys.has(key) ? 'is-pressed' : ''}`}
                 aria-label={label}
+                aria-pressed={pressedKeys.has(key)}
                 title={label}
                 disabled={Boolean(animal && mode === 'fpv')}
                 onPointerDown={event => {
@@ -118,7 +126,6 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
                   event.currentTarget.setPointerCapture(event.pointerId);
                   if (activeKeys.current.has(key)) return;
                   activeKeys.current.add(key);
-                  setPressedKeys(new Set(activeKeys.current));
                   fire('keydown', key);
                 }}
                 onPointerUp={() => releaseKey(key)}

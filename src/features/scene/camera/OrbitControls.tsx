@@ -1,7 +1,8 @@
 import { forwardRef, useCallback, useEffect, useRef, useState, type ComponentProps } from 'react';
 import { OrbitControls as DreiOrbitControls } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { MOUSE, type Group } from 'three';
+import { MOUSE, Vector3, Quaternion, type Group } from 'three';
+import { cameraState } from '../cameraState';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import './OrbitControls.scss';
 
@@ -13,6 +14,8 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
   function OrbitControls({ zoomScope = 'preview', showTargetMarker = true, ...props }, forwardedRef) {
     const [controls, setControls] = useState<OrbitControlsImpl | null>(null);
     const targetMarker = useRef<Group>(null);
+    const interacting = useRef(false);
+    const previousPose = useRef({ position: new Vector3(), target: new Vector3(), rotation: new Quaternion(), initialized: false });
     const attachRef = useCallback((value: OrbitControlsImpl | null) => {
       setControls(value);
       if (typeof forwardedRef === 'function') forwardedRef(value);
@@ -22,9 +25,25 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
     useFrame(({ camera, viewport, size }) => {
       const marker = targetMarker.current;
       if (!marker || !controls) return;
-      if (!controls.enabled || !controls.enableRotate) marker.visible = false;
-      if (!marker.visible) return;
+      const previous = previousPose.current;
+      const precision = Number.EPSILON * Math.max(1, camera.position.lengthSq(), controls.target.lengthSq());
+      const rotationDelta = (previous.rotation.x - camera.quaternion.x) ** 2 +
+        (previous.rotation.y - camera.quaternion.y) ** 2 +
+        (previous.rotation.z - camera.quaternion.z) ** 2 +
+        (previous.rotation.w - camera.quaternion.w) ** 2;
+      const moved = previous.initialized && (
+        previous.position.distanceToSquared(camera.position) > precision ||
+        previous.target.distanceToSquared(controls.target) > precision ||
+        rotationDelta > Number.EPSILON
+      );
+      previous.position.copy(camera.position);
+      previous.target.copy(controls.target);
+      previous.rotation.copy(camera.quaternion);
+      previous.initialized = true;
+      marker.visible = (interacting.current || cameraState.isDragging || moved) &&
+        !cameraState.isIntroRunning && !cameraState.isXR && cameraState.mode !== 'fpv' && cameraState.mode !== 'plane';
       marker.position.copy(controls.target);
+      if (!marker.visible) return;
       marker.quaternion.copy(camera.quaternion);
       // Rayon de 8 pixels, quelle que soit la projection ou la distance.
       marker.scale.setScalar(8 * viewport.getCurrentViewport(camera, controls.target).height / size.height);
@@ -58,6 +77,7 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
       if (!element) throw new Error('OrbitControls doit être connecté à un élément DOM.');
       let cursor: string | undefined;
       const reset = () => {
+        interacting.current = false;
         cursor = undefined;
         delete element.dataset.orbitDrag;
         if (targetMarker.current) targetMarker.current.visible = false;
@@ -78,8 +98,8 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
         else if (action === MOUSE.DOLLY && controls.enableZoom) cursor = 'zoom';
       };
       const onStart = () => {
+        interacting.current = true;
         if (cursor) element.dataset.orbitDrag = cursor;
-        if (targetMarker.current) targetMarker.current.visible = cursor === 'rotate';
       };
       element.addEventListener('pointerdown', onDown, true);
       controls.addEventListener('start', onStart);

@@ -13,7 +13,7 @@ async function mount(page, query = '', width = 1200) {
     window.__vite_plugin_react_preamble_installed__ = true;
     const React = (await import('/node_modules/.vite/deps/react.js')).default;
     const { createRoot } = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
-    const { Canvas, useThree } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
+    const { Canvas, useThree, useFrame } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
     const { CameraController } = await import('/src/features/scene/CameraController.tsx');
     const { VirtualDPad } = await import('/src/features/scene/VirtualDPad.tsx');
     const { ViewControlBar } = await import('/src/features/scene/ViewControlBar.tsx');
@@ -26,6 +26,11 @@ async function mount(page, query = '', width = 1200) {
     css.rel = 'stylesheet';
     css.href = '/node_modules/bootstrap/dist/css/bootstrap.min.css';
     document.head.append(css);
+    const icons = document.createElement('link');
+    icons.rel = 'stylesheet';
+    icons.href = '/node_modules/bootstrap-icons/font/bootstrap-icons.css';
+    document.head.append(icons);
+    await import('/src/index.css');
     document.body.style.margin = '0';
     const container = document.createElement('div');
     container.style.height = '600px';
@@ -35,6 +40,9 @@ async function mount(page, query = '', width = 1200) {
     function Capture() {
       const state = useThree();
       React.useLayoutEffect(() => { Object.assign(window.fixture, state); }, [state]);
+      useFrame(() => {
+        if (window.motionFrames) window.motionFrames.push(state.camera.position.toArray());
+      });
       return null;
     }
     const character = new URLSearchParams(location.search).has('testCharacter')
@@ -56,6 +64,7 @@ const snapshot = page => page.evaluate(() => {
   const { camera, cameraState: s, useSceneStore } = window.fixture;
   const state = useSceneStore.getState();
   return { camera: camera.position.toArray(), character: [s.characterX, s.characterZ], yaw: s.followYaw,
+    pivot: window.fixture.scene.getObjectByName('orbit-target-marker').position.toArray(),
     moving: s.isMoving, mode: state.cameraMode, target: state.cameraTarget, control: state.arrowControl,
     userTime: s.lastUserControlTime, url: location.search };
 });
@@ -70,6 +79,8 @@ async function press(page, key, virtual = false) {
     await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
     await page.mouse.down();
   } else await page.keyboard.down(key);
+  const pos = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }[key];
+  await page.waitForSelector(`.virtual-dpad__button--${pos}.is-pressed`);
   await page.waitForFunction(({ before, key }) => {
     const { cameraState: s, camera, useSceneStore } = window.fixture;
     const state = useSceneStore.getState();
@@ -81,16 +92,18 @@ async function press(page, key, virtual = false) {
     return Math.hypot(...camera.position.toArray().map((n, i) => n - before.camera[i])) > 1;
   }, { timeout: 10000 }, { before, key });
   await pause(100);
+  if (before.mode !== 'fpv') await page.waitForFunction(() => window.fixture.scene.getObjectByName('orbit-target-marker').visible);
   const during = await snapshot(page);
   if (virtual) { await page.mouse.move(10, 10); await page.mouse.up(); }
   else await page.keyboard.up(key);
   await page.waitForFunction(() => !window.fixture.cameraState.isMoving);
+  await page.waitForSelector(`.virtual-dpad__button--${pos}:not(.is-pressed)`);
   return during;
 }
 async function choose(page, label) {
   await page.waitForSelector('.virtual-controls');
-  await page.evaluate(label => [...document.querySelectorAll('.virtual-controls button')].find(button => button.textContent.trim() === label).click(), label);
-  await page.waitForFunction(label => [...document.querySelectorAll('.virtual-controls button')].some(button => button.textContent.trim() === label && button.getAttribute('aria-pressed') === 'true'), {}, label);
+  await page.evaluate(label => [...document.querySelectorAll('.virtual-controls__modes button')].find(button => button.getAttribute('aria-label') === label).click(), label);
+  await page.waitForFunction(label => [...document.querySelectorAll('.virtual-controls__modes button')].some(button => button.getAttribute('aria-label') === label && button.getAttribute('aria-pressed') === 'true'), {}, label);
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 }
 
@@ -102,6 +115,28 @@ async function choose(page, label) {
     page.on('pageerror', error => errors.push(error.message));
     await mount(page, '?preset=low&characterCount=1&skipIntro=1');
     assert.equal((await snapshot(page)).mode, 'orbit');
+    // Both orbit targets must turn the same way and ease out after key release.
+    const directionResults = [];
+    for (const label of ['Caméra · Studio', 'Caméra · PNJ']) {
+      await choose(page, label);
+      const before = await snapshot(page);
+      const during = await press(page, 'ArrowLeft');
+      const angle = pose => Math.atan2(pose.camera[0] - pose.pivot[0], pose.camera[2] - pose.pivot[2]);
+      const delta = angle(during) - angle(before);
+      directionResults.push(Math.atan2(Math.sin(delta), Math.cos(delta)));
+      await page.evaluate(() => { window.motionFrames = []; });
+      await page.evaluate(() => new Promise(resolve => {
+        let frames = 0;
+        const sample = () => { if (++frames === 12) resolve(); else requestAnimationFrame(sample); };
+        requestAnimationFrame(sample);
+      }));
+      const frames = await page.evaluate(() => { const frames = window.motionFrames; window.motionFrames = null; return frames; });
+      assert(distance(frames[0], frames[1]) > distance(frames.at(-2), frames.at(-1)), `${label} must ease out`);
+      assert(await page.evaluate(() => window.fixture.scene.getObjectByName('orbit-target-marker').visible), 'Target circle visible during camera easing');
+      await page.waitForFunction(() => !window.fixture.scene.getObjectByName('orbit-target-marker').visible);
+    }
+    assert(directionResults.every(delta => delta < 0), 'Left must have the same direction for studio and PNJ');
+    await choose(page, 'Caméra · Studio');
     for (const virtual of [false, true]) {
       const before = await snapshot(page);
       const during = await press(page, 'ArrowUp', virtual);
@@ -176,7 +211,7 @@ async function choose(page, label) {
       assert.equal(restored.mode, mode);
       assert.equal(restored.target, target);
       assert.equal(restored.control, control);
-      assert.equal(await page.$eval('.virtual-controls button[aria-pressed="true"]', button => button.textContent.trim()), label);
+      assert.equal(await page.$eval('.virtual-controls__modes button[aria-pressed="true"]', button => button.getAttribute('aria-label')), label);
     }
     await page.keyboard.press('v');
     await pause(120);
@@ -224,6 +259,15 @@ async function choose(page, label) {
       });
       assert(layout.left >= 0 && layout.right <= width, `Controls fit width ${width}`);
       assert(layout.bottom <= layout.barTop, `Controls clear toolbar at width ${width}`);
+      const compact = await page.evaluate(() => {
+        const modes = document.querySelector('.virtual-controls__modes');
+        return { width: document.querySelector('.virtual-controls').getBoundingClientRect().width,
+          padWidth: document.querySelector('.virtual-dpad').getBoundingClientRect().width,
+          background: getComputedStyle(modes).backgroundColor, blur: getComputedStyle(modes).backdropFilter };
+      });
+      assert.equal(compact.width, compact.padWidth, 'Mode buttons must not widen the directional pad');
+      assert.equal(compact.background, 'rgba(255, 255, 255, 0.58)');
+      assert.equal(compact.blur, 'blur(14px)');
       if (width === 1200 || width === 320) await page.screenshot({ path: `/tmp/room-arrow-controls-${width}.png` });
     }
     await mount(page, '?mode=follow&arrowControl=character&preset=low&characterCount=1&testCharacter=1');

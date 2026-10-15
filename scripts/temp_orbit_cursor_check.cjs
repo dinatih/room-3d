@@ -55,13 +55,13 @@ const puppeteer = require('../node_modules/puppeteer');
       await page.mouse.move(300, 250);
       if (modifier) await page.keyboard.down(modifier);
       await page.mouse.down({ button });
-      await page.waitForFunction(expected => window.fixture.scene.getObjectByName('orbit-target-marker').visible === (expected === 'rotate'), {}, expected);
+      await page.waitForFunction(expected => window.fixture.scene.getObjectByName('orbit-target-marker').visible === Boolean(expected), {}, expected);
       const pressed = await cursor();
-      assert.equal(pressed.markerVisible, expected === 'rotate', 'marker appears on press before movement');
+      assert.equal(pressed.markerVisible, Boolean(expected), 'marker appears for every camera interaction');
       await page.mouse.move(350, 270);
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const value = await cursor();
-      assert.equal(value.markerVisible, expected === 'rotate');
+      assert.equal(value.markerVisible, Boolean(expected));
       if (value.markerVisible) assert.deepEqual(value.markerPosition, value.target);
       assert.equal(value.action, expected, JSON.stringify(await page.evaluate(() => ({
         starts: window.fixture.starts,
@@ -75,14 +75,14 @@ const puppeteer = require('../node_modules/puppeteer');
       await page.mouse.up({ button });
       if (modifier) await page.keyboard.up(modifier);
       assert.equal((await cursor()).action, undefined);
-      assert.equal((await cursor()).markerVisible, false);
+      await page.waitForFunction(() => !window.fixture.scene.getObjectByName('orbit-target-marker').visible);
     }
     await drag('left', 'rotate');
     await drag('right', 'pan');
     await drag('left', 'pan', 'Control');
     await drag('right', 'rotate', 'Shift');
     await drag('middle', 'zoom');
-    await page.evaluate(() => window.fixture.setMode('pan'));
+    await page.evaluate(() => window.fixture.setMode('translate'));
     await page.waitForFunction(() => window.fixture.controls.mouseButtons.LEFT === 2);
     await drag('left', 'pan');
     await drag('right', 'rotate');

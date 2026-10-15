@@ -74,12 +74,18 @@ export function useCameraShortcuts({
   const savedInventoryGridPrevConfig = useRef<typeof savedGridPrevConfig.current>(null);
 
   useEffect(() => {
+    const publishArrowKeys = () => {
+      const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].filter(arrow =>
+        [...keys.current].some(key => key.endsWith(arrow)));
+      document.dispatchEvent(new CustomEvent('camera-arrow-keys', { detail: arrows }));
+    };
     const chooseFollow = (x: number, z: number, mode: 'follow' | 'fpv' = 'follow') => {
       useSceneStore.getState().setArrowControl(mode === 'fpv' ? 'character' : 'camera');
       enterFollow(x, z, mode);
     };
     const releaseControls = () => {
       keys.current.clear();
+      publishArrowKeys();
       cameraState.isMoving = false;
       invalidate();
     };
@@ -436,6 +442,7 @@ export function useCameraShortcuts({
         } else if (e.altKey) {
           keys.current.add('Alt' + k);               // Alt    → pan
         }
+        publishArrowKeys();
         e.preventDefault();
         invalidate();
         return;
@@ -453,6 +460,7 @@ export function useCameraShortcuts({
         }
         e.preventDefault();
       }
+      publishArrowKeys();
       if (keys.current.size > 0) invalidate();
     };
 
@@ -467,6 +475,7 @@ export function useCameraShortcuts({
       if (k === 'Shift')   for (const key of [...keys.current]) { if (key.startsWith('Shift')) keys.current.delete(key); }
       if (k === 'Control') for (const key of [...keys.current]) { if (key.startsWith('Ctrl')) keys.current.delete(key); }
       if (k === 'Alt')     for (const key of [...keys.current]) { if (key.startsWith('Alt')) keys.current.delete(key); }
+      publishArrowKeys();
     };
 
     // Minimap / panel click → enter follow in that room

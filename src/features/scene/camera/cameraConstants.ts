@@ -8,6 +8,7 @@ export const CZ = ROOM_D / 2; // 200 cm — centre Z du séjour
 export const EYE_RATIO  = 0.93; // niveau des yeux ≈ 93% de la taille totale du personnage
 export const WALK_SPEED = 2.7; // 2.7 cm / frame @ 60fps = 162 cm/s (vitesse exacte du cycle de marche anim_walking.glb)
 export const MOUSE_SENS = 0.002;
+export const ORBIT_CAMERA_LERP = 0.15; // Même amortissement pour l'orbite studio et le suivi PNJ.
 export const DEFAULT_ORBIT_DISTANCE = 440; // 440 cm (2x plus loin en vue 3ème personne, initialement 220 cm)
 export const DEFAULT_ORBIT_PITCH = Math.PI / 4; // 45° en radians (~0.785 rad) — inclinaison plongeante
 export const DEFAULT_FOLLOW_YAW_OFFSET = -3 * Math.PI / 4; // Caméra devant et à gauche du personnage
