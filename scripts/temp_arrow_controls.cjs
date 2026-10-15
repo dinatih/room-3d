@@ -115,6 +115,20 @@ async function choose(page, label) {
     page.on('pageerror', error => errors.push(error.message));
     await mount(page, '?preset=low&characterCount=1&skipIntro=1');
     assert.equal((await snapshot(page)).mode, 'orbit');
+    // The compact zoom buttons must use the existing scene zoom in both camera modes.
+    for (const label of ['Caméra · Studio', 'Caméra · PNJ']) {
+      await choose(page, label);
+      await page.waitForFunction(() => !window.fixture.scene.getObjectByName('orbit-target-marker').visible);
+      const zoomDistance = () => page.evaluate(() => window.fixture.camera.position.distanceTo(
+        window.fixture.scene.getObjectByName('orbit-target-marker').position));
+      const before = await zoomDistance();
+      await page.click('.virtual-controls__modes button[aria-label="Zoomer"]');
+      await page.waitForFunction(before => window.fixture.camera.position.distanceTo(window.fixture.scene.getObjectByName('orbit-target-marker').position) < before, {}, before);
+      await page.waitForFunction(() => !window.fixture.scene.getObjectByName('orbit-target-marker').visible);
+      const closer = await zoomDistance();
+      await page.click('.virtual-controls__modes button[aria-label="Dézoomer"]');
+      await page.waitForFunction(closer => window.fixture.camera.position.distanceTo(window.fixture.scene.getObjectByName('orbit-target-marker').position) > closer, {}, closer);
+    }
     // Both orbit targets must turn the same way and ease out after key release.
     const directionResults = [];
     for (const label of ['Caméra · Studio', 'Caméra · PNJ']) {

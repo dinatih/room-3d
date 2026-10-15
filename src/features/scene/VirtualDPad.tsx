@@ -87,12 +87,12 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
 
   return (
     <div className="virtual-controls d-flex flex-column align-items-center gap-1">
-      <div className="virtual-controls__modes glass-card d-flex gap-1 p-1 rounded-2" role="group" aria-label="Choisir le contrôle des flèches">
+      <div className="virtual-controls__modes glass-card btn-group btn-group-sm p-1 rounded-2" role="group" aria-label="Contrôle des flèches et zoom caméra">
         {choices.map(choice => (
           <button
             key={choice.label}
             type="button"
-            className={`btn btn-sm py-0 px-2 ${choice.active ? 'btn-primary' : 'btn-outline-secondary'}`}
+            className={`btn btn-sm py-0 px-1 ${choice.active ? 'btn-primary' : 'btn-outline-secondary'}`}
             aria-label={choice.label}
             title={choice.label}
             aria-pressed={choice.active}
@@ -102,6 +102,20 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
             }}
           >
             <i className={`bi ${choice.icon}`} aria-hidden="true" />
+          </button>
+        ))}
+        {(['in', 'out'] as const).map(direction => (
+          <button
+            key={direction}
+            type="button"
+            className="btn btn-sm btn-outline-secondary py-0 px-1"
+            aria-label={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
+            title={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
+            onClick={() => document.dispatchEvent(new CustomEvent('camera-zoom', {
+              detail: { direction, scope: 'scene' },
+            }))}
+          >
+            <i className={`bi bi-zoom-${direction}`} aria-hidden="true" />
           </button>
         ))}
       </div>
