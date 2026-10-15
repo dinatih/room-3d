@@ -875,16 +875,79 @@ export function InventoryPreview({
         {!item && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 12, pointerEvents: 'none' }}>Sélectionner un objet</div>}
       {item && (
         <>
-          {has3D && hasPhotos && (
-            <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 3, display: 'flex', gap: 3 }}>
+          <div className="position-absolute top-0 start-0 m-2 z-3 d-flex flex-column align-items-start gap-1">
+            {showing3D && <div className="inventory-mini-perf glass-card shadow-lg rounded-2 p-1" style={{ width: 190 }}>
+              <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
+            </div>}
+            {has3D && hasPhotos && (
+            <div className="d-flex gap-1">
               {(['3d', 'photos'] as const).map(mode => (
                 <button key={mode} onClick={() => setViewMode(mode)} style={{ padding: '2px 7px', fontSize: 10, background: viewMode === mode ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.35)', border: viewMode === mode ? '1px solid #aaa' : '1px solid transparent', borderRadius: 4, color: '#eee', cursor: 'pointer' }}>{mode === '3d' ? '3D' : `📷 ${photos!.length}`}</button>
               ))}
             </div>
+            )}
+          {/* Menu Arbre des os & Influence heatmap */}
+          {showing3D && actionStates.showBones && (showBoneTree || selectedBoneName) && (
+            <div
+              className="d-flex flex-column gap-2"
+              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+              onWheel={e => e.stopPropagation()}
+            >
+              {selectedBoneName && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, background: 'rgba(15, 23, 42, 0.92)', border: '1.5px solid #e63946', padding: '6px 8px', borderRadius: 6, maxWidth: 280, boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
+                    <span className="text-truncate">
+                      🎨 Influence : <span style={{ fontFamily: 'monospace', color: '#fffa65', textDecoration: 'underline' }}>{selectedBoneName}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBoneName(null)}
+                      style={{ background: 'none', border: 'none', color: '#ff7979', cursor: 'pointer', fontSize: 13, padding: '0 2px', lineHeight: 1 }}
+                      title="Désactiver l'influence de l'os"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {/* Légende Heatmap des couleurs d'influence */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8.5, color: '#94a3b8' }}>
+                      <span>0.0 (Bleu)</span>
+                      <span>0.5 (Vert/Jaune)</span>
+                      <span>1.0 (Rouge)</span>
+                    </div>
+                    <div
+                      style={{
+                        height: 6,
+                        borderRadius: 3,
+                        background: 'linear-gradient(to right, rgb(15,25,76) 0%, rgb(0,217,242) 25%, rgb(0,247,0) 50%, rgb(242,247,0) 75%, rgb(255,0,0) 100%)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                      }}
+                      title="Bleu = 0% | Jaune = ~75% | Rouge = 100% (le maillage suit l'os à 100%)"
+                    />
+                    <div style={{ fontSize: 8, color: '#cbd5e1', textAlign: 'center', opacity: 0.9 }}>
+                      Rouge: 100% suit l'os | Bleu: statique (0%)
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {showBoneTree && (
+                <SkeletonHierarchyPanel
+                  skeletons={skeletonGroups}
+                  selectedBoneName={selectedBoneName}
+                  onSelectBoneName={setSelectedBoneName}
+                  onClose={() => setShowBoneTree(false)}
+                />
+              )}
+            </div>
           )}
+
+          </div>
           {showing3D ? (
             <>
-            <Canvas key={item.id} shadows={item.id === 'fridge'} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
+            <Canvas className="inventory-preview-renderer" key={item.id} shadows={item.id === 'fridge'} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
               <PreviewEnvironment showGrid={showGrid} />
               <ambientLight intensity={0.7} />
               <directionalLight position={[150, 250, 150]} intensity={1.0} />
@@ -917,9 +980,6 @@ export function InventoryPreview({
               />
               <DevToolsCollector />
             </Canvas>
-            <div className="glass-card shadow-lg rounded-2 p-1 position-absolute start-0 bottom-0 m-2 z-1" style={{ width: 190 }}>
-              <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
-            </div>
             </>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
           <div className="position-absolute top-0 end-0 m-2 z-3 d-flex gap-2 align-items-center">
@@ -996,64 +1056,6 @@ export function InventoryPreview({
               <span style={{ color: '#aaa', fontSize: 9 }}>↕ Molette: Zoom | Glisser: Pan</span>
             </div>
           )}
-          {/* Menu Arbre des os & Influence heatmap */}
-          {showing3D && actionStates.showBones && (showBoneTree || selectedBoneName) && (
-            <div
-              className="position-absolute top-0 start-0 m-2 mt-5 z-3 d-flex flex-column gap-2"
-              onClick={e => e.stopPropagation()}
-              onMouseDown={e => e.stopPropagation()}
-              onPointerDown={e => e.stopPropagation()}
-              onWheel={e => e.stopPropagation()}
-            >
-              {selectedBoneName && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, background: 'rgba(15, 23, 42, 0.92)', border: '1.5px solid #e63946', padding: '6px 8px', borderRadius: 6, maxWidth: 280, boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
-                    <span className="text-truncate">
-                      🎨 Influence : <span style={{ fontFamily: 'monospace', color: '#fffa65', textDecoration: 'underline' }}>{selectedBoneName}</span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedBoneName(null)}
-                      style={{ background: 'none', border: 'none', color: '#ff7979', cursor: 'pointer', fontSize: 13, padding: '0 2px', lineHeight: 1 }}
-                      title="Désactiver l'influence de l'os"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  {/* Légende Heatmap des couleurs d'influence */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8.5, color: '#94a3b8' }}>
-                      <span>0.0 (Bleu)</span>
-                      <span>0.5 (Vert/Jaune)</span>
-                      <span>1.0 (Rouge)</span>
-                    </div>
-                    <div
-                      style={{
-                        height: 6,
-                        borderRadius: 3,
-                        background: 'linear-gradient(to right, rgb(15,25,76) 0%, rgb(0,217,242) 25%, rgb(0,247,0) 50%, rgb(242,247,0) 75%, rgb(255,0,0) 100%)',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                      }}
-                      title="Bleu = 0% | Jaune = ~75% | Rouge = 100% (le maillage suit l'os à 100%)"
-                    />
-                    <div style={{ fontSize: 8, color: '#cbd5e1', textAlign: 'center', opacity: 0.9 }}>
-                      Rouge: 100% suit l'os | Bleu: statique (0%)
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {showBoneTree && (
-                <SkeletonHierarchyPanel
-                  skeletons={skeletonGroups}
-                  selectedBoneName={selectedBoneName}
-                  onSelectBoneName={setSelectedBoneName}
-                  onClose={() => setShowBoneTree(false)}
-                />
-              )}
-            </div>
-          )}
-
           {/* Panneau latéral Section PNJ (Persistant en DOM pour préserver le scroll) */}
           <div
               style={{

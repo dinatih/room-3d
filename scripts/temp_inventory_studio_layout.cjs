@@ -24,10 +24,14 @@ const launch = require('./browser-test-options.cjs');
  });
  await page.waitForSelector('[role="option"][aria-selected="true"]');
  await page.waitForFunction(()=>{
-  const canvas=document.querySelector('.animation-studio canvas');
+  const canvas=document.querySelector('.animation-studio .inventory-preview-renderer canvas');
   const wrap=document.querySelector('.inventory-preview-canvas-wrap');
   return canvas && wrap && Math.abs(canvas.getBoundingClientRect().width-wrap.getBoundingClientRect().width)<1
    && Math.abs(canvas.getBoundingClientRect().height-wrap.getBoundingClientRect().height)<1;
+ }).catch(async error=>{
+  console.error('Canvas sizing',await page.evaluate(()=>[...document.querySelectorAll('.animation-studio canvas, .inventory-preview-canvas-wrap')].map(e=>({tag:e.tagName,rect:e.getBoundingClientRect().toJSON()}))));
+  await page.screenshot({path:'/tmp/inventory-studio-failure.png'});
+  throw error;
  });
  }
  const selected=()=>page.$eval('[role="option"][aria-selected="true"]',e=>e.dataset.animationId);
@@ -41,14 +45,19 @@ const launch = require('./browser-test-options.cjs');
  async function check(label) {
  const result=await page.evaluate(()=>{
  const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height}};
- return {preview:rect('.animation-studio__preview'), toolbar:rect('.animation-studio .view-control-bar-inline'),transport:rect('.animation-studio__transport'),annotations:rect('.animation-studio__annotations'),workspace:rect('.animation-studio__workspace'), canvas:rect('.animation-studio canvas'),modal:rect('.inventory-modal')};
+ return {preview:rect('.animation-studio__preview'), toolbar:rect('.animation-studio .view-control-bar-inline'),transport:rect('.animation-studio__transport'),annotations:rect('.animation-studio__annotations'),workspace:rect('.animation-studio__workspace'), canvas:rect('.animation-studio .inventory-preview-renderer canvas'),modal:rect('.inventory-modal')};
  });
  console.log(label,JSON.stringify(result));
  assert(result.canvas.height>0,'canvas visible');
  assert(result.toolbar.bottom<=result.transport.top+1,'toolbar overlaps timeline');
  assert(result.transport.bottom<=result.annotations.top+1,'timeline overlaps annotations');
  assert(result.preview.top>=result.workspace.top,'actors remain above preview');
- assert(Math.abs((result.canvas.right-result.canvas.left)/result.canvas.height-3/2)<0.01,'canvas aspect ratio 3:2');
+ assert(Math.abs((result.canvas.right-result.canvas.left)/result.canvas.height-16/9)<0.01,'canvas aspect ratio 16:9');
+ const perf=await page.$eval('.inventory-mini-perf',e=>{
+  const r=e.getBoundingClientRect();const style=getComputedStyle(e.parentElement);
+  return {top:r.top,left:r.left,marginTop:parseFloat(style.marginTop),marginLeft:parseFloat(style.marginLeft)};
+ });
+ assert(Math.abs(perf.top-result.canvas.top-perf.marginTop)<1 && Math.abs(perf.left-result.canvas.left-perf.marginLeft)<1,'mini perf at top left');
  }
  await mount();
  // Verify shortcuts inside the modal despite its propagation boundary.
@@ -65,6 +74,29 @@ const launch = require('./browser-test-options.cjs');
  await page.keyboard.press('i');
  assert.equal(await page.evaluate(()=>window.inventoryClosedCount),1);
  console.log('Shortcuts: Shift+I switches to animations, typing is preserved, plain I closes: PASS');
+ // User-entered tags have a shared, persistent history of five unique entries.
+ const addCustomTag=async tag=>{
+  await setInput('Ajouter un tag personnalisé',tag);
+  await page.$eval('[aria-label="Ajouter un tag personnalisé"]',e=>e.form.requestSubmit());
+  await page.waitForFunction(tag=>[...document.querySelectorAll('[aria-label="Tags rapides"] button')].some(e=>e.textContent.trim()==='#'+tag),{},tag);
+ };
+ for(const tag of ['custom-one','custom-two','custom-three','custom-four','custom-five','custom-six']) await addCustomTag(tag);
+ const recent=()=>page.$$eval('[aria-label="Tags rapides"] button',buttons=>buttons.map(e=>e.textContent.trim()).slice(8));
+ assert.deepEqual(await recent(),['#custom-six','#custom-five','#custom-four','#custom-three','#custom-two']);
+ await addCustomTag('custom-three');
+ await page.waitForFunction(()=>document.querySelectorAll('[aria-label="Tags rapides"] button')[8]?.textContent.trim()==='#custom-three');
+ assert.deepEqual(await recent(),['#custom-three','#custom-six','#custom-five','#custom-four','#custom-two']);
+ await addCustomTag('top');
+ assert.equal((await recent()).length,5);
+ await page.$$eval('.animation-studio__annotations button',buttons=>buttons.find(b=>b.textContent.includes('À supprimer')).click());
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem('room3d_dev_annotations_v1'))['anim:idle']?.status==='delete');
+ await page.$eval('.animation-studio__list button[aria-expanded]',e=>e.click());
+ await page.select('[aria-label="Statut d’annotation"]','delete');
+ await page.waitForFunction(()=>document.querySelectorAll('[role="option"]').length===1);
+ assert.deepEqual(await ids(),['idle']);
+ await page.select('[aria-label="Statut d’annotation"]','');
+ await page.$eval('.animation-studio__list button[aria-expanded]',e=>e.click());
+ console.log('Recent custom tags, deduplication, default tags, delete status and filtering: PASS');
  const model=await page.evaluate(()=>{
   const {STUDIO_CATALOG:c,EMPTY_STUDIO_FILTERS:f,filterStudioAnimations:filter,adjacentStudioAnimation:adj}=window.catalog;
   for(const mode of ['solo','duo']) {
@@ -134,6 +166,8 @@ const launch = require('./browser-test-options.cjs');
  });
  await page.waitForFunction(()=>Object.entries(JSON.parse(localStorage.getItem('room3d_dev_annotations_v1'))).some(([k,v])=>k.startsWith('duo:')&&v.notes==='Test persistance duo'&&v.status==='favorite'));
  await mount();
+ assert.deepEqual(await recent(),['#custom-three','#custom-six','#custom-five','#custom-four','#custom-two']);
+ assert(await page.evaluate(()=>JSON.parse(localStorage.getItem('room3d_dev_annotations_v1'))['anim:idle'].status==='delete'));
  assert.equal(await page.$eval('.animation-studio__list',e=>Math.round(e.getBoundingClientRect().width)),Math.round(after));
  assert(await page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('room3d_dev_annotations_v1'))).some(v=>v.notes==='Test persistance duo')));
  await page.setViewport({width:390,height:844});await mount();

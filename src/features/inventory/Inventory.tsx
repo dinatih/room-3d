@@ -15,7 +15,7 @@ import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { ViewControlBar } from '@features/scene/ViewControlBar';
 import { AnimationStudioView } from './AnimationStudioView';
 import { DevAnnotationPanel } from './DevAnnotationPanel';
-import { useItemAnnotations } from './useItemAnnotations';
+import { useItemAnnotations, ANNOTATION_STATUSES } from './useItemAnnotations';
 import { updateUrlInventory } from './inventoryUrlParams';
 
 type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
@@ -907,10 +907,10 @@ function normalizeSearchStr(str: string): string {
                           {(() => {
                             const annot = allAnnotations[`item:${target.id}`];
                             if (!annot) return null;
-                            const statusColor = annot.status === 'ok' ? 'success' : annot.status === 'issue' ? 'danger' : annot.status === 'wip' ? 'warning' : annot.status === 'favorite' ? 'primary' : null;
+                            const status = annot.status ? ANNOTATION_STATUSES[annot.status] : undefined;
                             return (
                               <span className="d-inline-flex align-items-center gap-1">
-                                {statusColor && <span className={`badge bg-${statusColor} p-1 rounded-circle`} title={`Statut: ${annot.status}`} />}
+                                {status && <span className={`badge bg-${status.color} p-1 rounded-circle`} title={status.label} />}
                                 {annot.tags && annot.tags.length > 0 && (
                                   <span className="badge bg-light text-secondary border small" style={{ fontSize: '0.65rem' }}>
                                     #{annot.tags[0]}

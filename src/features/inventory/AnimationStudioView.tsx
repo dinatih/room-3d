@@ -6,7 +6,7 @@ import { ANIM_CATEGORIES } from '@features/scene/CharacterAnimSelector';
 import { InventoryPreview } from './InventoryPreview';
 import { AnimFrameController } from './AnimFrameController';
 import { DevAnnotationPanel } from './DevAnnotationPanel';
-import { useItemAnnotations, updateAnnotation, exportAnnotationsJson } from './useItemAnnotations';
+import { useItemAnnotations, updateAnnotation, exportAnnotationsJson, ANNOTATION_STATUSES } from './useItemAnnotations';
 import { getAnimationOriginTransform, getDuoAnimationTransformOverride, setAnimationTransformOverride, setDuoAnimationTransformOverride } from '@features/scene/animations/animationResolver';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { INVENTORY } from './inventoryData';
@@ -14,9 +14,6 @@ import {
   STUDIO_CATALOG, SOURCE_LABELS, EMPTY_STUDIO_FILTERS,
   filterStudioAnimations, adjacentStudioAnimation, type StudioFilters, type StudioAnimation,
 } from './animationStudioCatalog';
-
-const STATUS_LABELS = { ok: '✅ OK', issue: '⚠️ Problème', wip: '🚧 À revoir', favorite: '⭐ Favori' };
-const STATUS_COLORS = { ok: 'success', issue: 'danger', wip: 'warning', favorite: 'primary' };
 
 export function AnimationStudioView({ isMobile = false, listWidth = 380, onResizeStart }: {
   isMobile?: boolean;
@@ -178,7 +175,7 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
             <div className="d-flex gap-2">
               <select aria-label="Statut d’annotation" className="form-select form-select-sm" value={filters.status} onChange={e => updateFilters({ status: e.target.value as StudioFilters['status'] })}>
                 <option value="">Tous les statuts</option><option value="unannotated">Sans annotation</option>
-                {Object.entries(STATUS_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                {Object.entries(ANNOTATION_STATUSES).map(([key, status]) => <option key={key} value={key}>{status.label}</option>)}
               </select>
               <select aria-label="Tag d’annotation" className="form-select form-select-sm" value={filters.tag} onChange={e => updateFilters({ tag: e.target.value })}>
                 <option value="">Tous les tags</option>{tags.map(tag => <option key={tag} value={tag}>#{tag}</option>)}
@@ -209,7 +206,7 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
               </span>
               <span className="d-flex flex-wrap align-items-center gap-1 mt-1 small text-muted">
                 {a.sources.map(source => <span key={source}>{SOURCE_LABELS[source] ?? source}</span>)}
-                {annotation?.status && <span className={`badge text-bg-${STATUS_COLORS[annotation.status]}`}>{STATUS_LABELS[annotation.status]}</span>}
+                {annotation?.status && <span className={`badge text-bg-${ANNOTATION_STATUSES[annotation.status].color}`}>{ANNOTATION_STATUSES[annotation.status].label}</span>}
                 {annotation?.tags.map(tag => <span key={tag} className="badge bg-secondary-subtle text-dark">#{tag}</span>)}
                 {annotation?.notes && <i className="bi bi-chat-left-text" title={annotation.notes} aria-label="Note enregistrée" />}
               </span>

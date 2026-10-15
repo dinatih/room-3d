@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useItemAnnotations, type AnnotationStatus } from './useItemAnnotations';
+import { useItemAnnotations, ANNOTATION_STATUSES, DEFAULT_QUICK_TAGS, type AnnotationStatus } from './useItemAnnotations';
 
 interface DevAnnotationPanelProps {
   targetId: string;
@@ -8,15 +8,13 @@ interface DevAnnotationPanelProps {
   compact?: boolean;
 }
 
-const DEFAULT_QUICK_TAGS = ['top', 'glitch-pied', 'offset', 'wip', 'favori', 'cut', 'loop', 'sync'];
-
 export function DevAnnotationPanel({
   targetId,
   targetName,
   className = '',
   compact = false,
 }: DevAnnotationPanelProps) {
-  const { annotation, setStatus, setNotes, addTag, removeTag, clear } = useItemAnnotations(targetId);
+  const { annotation, setStatus, setNotes, addTag, addCustomTag, recentCustomTags, removeTag, clear } = useItemAnnotations(targetId);
   const [newTagInput, setNewTagInput] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -27,7 +25,7 @@ export function DevAnnotationPanel({
   const handleAddTagSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTagInput.trim()) {
-      addTag(newTagInput);
+      addCustomTag(newTagInput);
       setNewTagInput('');
     }
   };
@@ -84,24 +82,17 @@ export function DevAnnotationPanel({
 
       {/* Boutons d'état rapide */}
       <div className="d-flex flex-wrap gap-1 mb-2">
-        {(
-          [
-            { id: 'ok', label: '✅ OK', btnClass: 'btn-outline-success' },
-            { id: 'issue', label: '⚠️ Problème', btnClass: 'btn-outline-danger' },
-            { id: 'wip', label: '🚧 À revoir', btnClass: 'btn-outline-warning' },
-            { id: 'favorite', label: '⭐ Favori', btnClass: 'btn-outline-primary' },
-          ] as const
-        ).map(item => {
-          const isSelected = currentStatus === item.id;
+        {Object.entries(ANNOTATION_STATUSES).map(([id, item]) => {
+          const isSelected = currentStatus === id;
           return (
             <button
-              key={item.id}
+              key={id}
               type="button"
               className={`btn btn-sm py-0 px-2 rounded-pill small ${
-                isSelected ? 'btn-dark text-white fw-bold shadow-sm' : `${item.btnClass} bg-white`
+                isSelected ? 'btn-dark text-white fw-bold shadow-sm' : `btn-outline-${item.color} bg-white`
               }`}
               style={{ fontSize: '0.75rem' }}
-              onClick={() => setStatus(isSelected ? undefined : (item.id as AnnotationStatus))}
+              onClick={() => setStatus(isSelected ? undefined : (id as AnnotationStatus))}
             >
               {item.label}
             </button>
@@ -114,8 +105,8 @@ export function DevAnnotationPanel({
         <div className="text-muted small fw-semibold mb-1" style={{ fontSize: '0.68rem' }}>
           TAGS RAPIDES :
         </div>
-        <div className="d-flex flex-wrap gap-1">
-          {DEFAULT_QUICK_TAGS.map(tag => {
+        <div className="d-flex flex-wrap gap-1" aria-label="Tags rapides">
+          {[...DEFAULT_QUICK_TAGS, ...recentCustomTags].map(tag => {
             const hasTag = currentTags.includes(tag);
             return (
               <button
@@ -162,6 +153,7 @@ export function DevAnnotationPanel({
           type="text"
           className="form-control form-control-sm bg-white"
           placeholder="Ajouter un tag personnalisé..."
+          aria-label="Ajouter un tag personnalisé"
           value={newTagInput}
           onChange={e => setNewTagInput(e.target.value)}
           style={{ fontSize: '0.75rem' }}

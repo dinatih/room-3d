@@ -447,24 +447,28 @@ export function SpatialZonePreview({
         />
       </Canvas>
 
-      <div style={{
-        position: 'absolute',
-        top: 10,
-        left: 10,
-        background: 'rgba(15, 23, 42, 0.85)',
-        color: '#ffffff',
-        padding: '4px 10px',
-        borderRadius: 6,
-        fontSize: 12,
-        fontWeight: 'bold',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        backdropFilter: 'blur(4px)'
-      }}>
-        <span>{zone.environment === 'indoor' ? '🏠' : '🌳'}</span>
-        <span>Vue Découpée : {zone.name}</span>
+      <div className="position-absolute top-0 start-0 m-2 z-1 d-flex flex-column align-items-start gap-1">
+        {showFpsGraph && (
+          <div className="inventory-mini-perf glass-card shadow-lg rounded-2 p-1" style={{ width: 190 }}>
+            <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
+          </div>
+        )}
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.85)',
+          color: '#ffffff',
+          padding: '4px 10px',
+          borderRadius: 6,
+          fontSize: 12,
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(4px)'
+        }}>
+          <span>{zone.environment === 'indoor' ? '🏠' : '🌳'}</span>
+          <span>Vue Découpée : {zone.name}</span>
+        </div>
       </div>
 
       <div style={{
@@ -509,13 +513,6 @@ export function SpatialZonePreview({
           📊 {showFpsGraph ? 'Masquer FPS' : 'Afficher FPS'}
         </button>
       </div>
-
-      {/* Mini perf partagé avec la scène principale */}
-      {showFpsGraph && (
-        <div className="glass-card shadow-lg rounded-2 p-1 position-absolute start-0 m-2 z-1" style={{ bottom: 28, width: 190 }}>
-          <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
-        </div>
-      )}
 
       <div style={{
         position: 'absolute',

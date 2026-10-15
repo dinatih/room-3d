@@ -6,7 +6,22 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 
-export type AnnotationStatus = 'ok' | 'issue' | 'wip' | 'favorite';
+export type AnnotationStatus = 'ok' | 'issue' | 'wip' | 'favorite' | 'delete';
+
+export const ANNOTATION_STATUSES: Record<AnnotationStatus, { label: string; color: string }> = {
+  ok: { label: '✅ OK', color: 'success' },
+  issue: { label: '⚠️ Problème', color: 'danger' },
+  wip: { label: '🚧 À revoir', color: 'warning' },
+  favorite: { label: '⭐ Favori', color: 'primary' },
+  delete: { label: '🗑️ À supprimer', color: 'danger' },
+};
+export const DEFAULT_QUICK_TAGS = ['top', 'glitch-pied', 'offset', 'wip', 'favori', 'cut', 'loop', 'sync'];
+const RECENT_CUSTOM_TAGS_KEY = 'room3d_dev_recent_custom_tags';
+const RECENT_CUSTOM_TAGS_COUNT = 5;
+
+function loadRecentCustomTags(): string[] {
+  return JSON.parse(localStorage.getItem(RECENT_CUSTOM_TAGS_KEY) ?? '[]');
+}
 
 export interface ItemAnnotation {
   tags: string[];
@@ -85,10 +100,12 @@ export function importAnnotationsJson(jsonStr: string): boolean {
 
 export function useItemAnnotations(targetId?: string) {
   const [annotations, setAnnotations] = useState<Record<string, ItemAnnotation>>(loadAllAnnotations);
+  const [recentCustomTags, setRecentCustomTags] = useState<string[]>(loadRecentCustomTags);
 
   useEffect(() => {
     const handler = () => {
       setAnnotations(loadAllAnnotations());
+      setRecentCustomTags(loadRecentCustomTags());
     };
     window.addEventListener(EVENT_NAME, handler);
     window.addEventListener('storage', handler);
@@ -146,6 +163,18 @@ export function useItemAnnotations(targetId?: string) {
     [targetId, currentAnnotation, update]
   );
 
+  const addCustomTag = useCallback((tag: string) => {
+    if (!targetId) return;
+    const clean = tag.trim().toLowerCase().replace(/^#/, '');
+    if (!clean) return;
+    addTag(clean);
+    if (DEFAULT_QUICK_TAGS.includes(clean)) return;
+    const recent = [clean, ...loadRecentCustomTags().filter(previous => previous !== clean)]
+      .slice(0, RECENT_CUSTOM_TAGS_COUNT);
+    localStorage.setItem(RECENT_CUSTOM_TAGS_KEY, JSON.stringify(recent));
+    window.dispatchEvent(new CustomEvent(EVENT_NAME));
+  }, [targetId, addTag]);
+
   const setCustomOffsets = useCallback(
     (offsets?: { x?: number; y?: number; z?: number; rotY?: number }) => {
       if (!targetId) return;
@@ -166,6 +195,8 @@ export function useItemAnnotations(targetId?: string) {
     setStatus,
     setNotes,
     addTag,
+    addCustomTag,
+    recentCustomTags,
     removeTag,
     setCustomOffsets,
     clear,
