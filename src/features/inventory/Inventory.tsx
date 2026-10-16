@@ -108,7 +108,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           />
         </div>
 
-        <ViewControlBar inline showOrbitControls showMirrorsHD />
+        <ViewControlBar inline showOrbitControls showMirrorsHD inventoryLayout />
 
         <div className="p-3">
           <h3 className="fw-bold mb-1 text-dark fs-5">{zone.name}</h3>

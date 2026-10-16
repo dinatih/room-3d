@@ -26,6 +26,8 @@ export interface ViewControlBarProps {
   showOrbitControls?: boolean;
   /** Vue / position de la caméra de l'aperçu ; null pour une caméra libre. */
   activeCameraPos?: string | null;
+  /** Rangée unique réordonnée pour la barre de contrôle de l’inventaire. */
+  inventoryLayout?: boolean;
   showMirrorsHD?: boolean;
   hideUI?: boolean;
   onToggleHideUI?: () => void;
@@ -45,6 +47,7 @@ export function ViewControlBar({
   showCharacterModes = false,
   showOrbitControls = false,
   activeCameraPos: previewCameraPos,
+  inventoryLayout = false,
   showMirrorsHD = false,
   hideUI = false,
   onToggleHideUI: _onToggleHideUI,
@@ -384,12 +387,47 @@ export function ViewControlBar({
       </div>
     );
 
+    const inventoryRow = (
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        {zoomButton('out')}
+        {zoomButton('in')}
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues de face">
+          {renderViewButton(frontView, 'cyan')}
+          {renderViewButton(backView, 'cyan')}
+          {renderViewButton(leftView, 'cyan')}
+          {renderViewButton(rightView, 'cyan')}
+        </div>
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales">
+          {ISO_VIEWS.map(v => renderViewButton(v, 'purple'))}
+        </div>
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues de dessus et dessous">
+          {renderViewButton(topView, 'green')}
+          {renderViewButton(bottomView, 'green')}
+        </div>
+        {rotButton}
+        {perspButton}
+        {showMirrorsHD && <PresetButton hideUI={hideUI} />}
+        {beforeAmbianceActions}
+        {toolbarActions}
+        <select
+          className="form-select form-select-sm py-0 ps-2 mw-100 flex-shrink-0 bg-transparent text-body border-secondary small text-truncate view-control-bar__ambiance"
+          value={currentHdri}
+          onChange={event => setHdri(event.target.value)}
+          aria-label="Ambiance de la preview 3D"
+          title={HDRI_LIST.find(hdri => hdri.id === currentHdri)?.name ?? currentHdri}
+        >
+          {HDRI_LIST.map(hdri => (
+            <option key={hdri.id} value={hdri.id}>{hdri.name}</option>
+          ))}
+        </select>
+      </div>
+    );
+
     return (
       <div className={`view-control-bar-inline d-flex flex-column align-items-center ${children ? 'gap-2 px-1 py-0' : 'gap-0 px-2 py-2'}`}>
         {hoverTooltip}
-        <div className={`${TOOLBAR_CLASS} flex-column align-items-stretch view-control-bar--multi-rows view-control-bar--inline overflow-x-auto`} role="toolbar" aria-label="Contrôle des vues">
-          {inlineRow1}
-          {inlineRow2}
+        <div className={`${TOOLBAR_CLASS} ${inventoryLayout ? 'view-control-bar--inventory-single-row' : 'flex-column align-items-stretch view-control-bar--multi-rows'} view-control-bar--inline overflow-x-auto`} role="toolbar" aria-label="Contrôle des vues">
+          {inventoryLayout ? inventoryRow : <>{inlineRow1}{inlineRow2}</>}
         </div>
         {children && <div className="w-100">{children}</div>}
       </div>
