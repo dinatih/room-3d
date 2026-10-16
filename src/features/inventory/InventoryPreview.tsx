@@ -1223,16 +1223,6 @@ export function InventoryPreview({
               aria-pressed={showPnjPanel}
             >💃 <span className="fw-semibold">Section PNJ</span></button>
           )}
-          {has3D && hasPhotos && (
-            <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Mode d’aperçu">
-              {(['3d', 'photos'] as const).map(mode => (
-                <button key={mode} type="button" className={`${TOOLBAR_BUTTON_CLASS} ${viewMode === mode ? 'btn-primary' : 'btn-outline-secondary'}`}
-                  onClick={() => setViewMode(mode)} aria-pressed={viewMode === mode}>
-                  {mode === '3d' ? '3D' : `📷 ${photos!.length}`}
-                </button>
-              ))}
-            </div>
-          )}
         </>
       }>
         {showing3D && isCharacterItem && !hideAnimFrameController && (
