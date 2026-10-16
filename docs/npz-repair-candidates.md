@@ -13,6 +13,8 @@ Le contrôle historique global `verify` échoue actuellement sur 230 fichiers In
 
 Les originaux restent actifs et inchangés. Les versions candidates sont accessibles dans le sélecteur existant sous **[ESSAI correction]**, identifiant original suffixé `-repair-preview`. Aucun remplacement définitif n’a été effectué. Les candidats portent uniquement le tag `npz-repair-candidate`, sans les alias ni tags comportementaux des originaux, pour ne pas rejoindre les tirages IA par tags.
 
+> Mise à jour Bachata : stabilisation supplémentaire des poignets en espace monde, sans modifier le reste de la version validée. Voir `npz-refinement-and-extracts.md` pour la méthode et les mesures des mains.
+
 ## Méthode et limites
 
 Alignement temporel NPZ/GLB par comparaison de la vitesse angulaire du bassin sur tous les instants exportés. Estimation du changement de base à partir des rotations relatives, puis vérification sur toutes les orientations de chaque articulation. Les discordances dépassant le budget numérique Float32 sont signalées et laissées intactes : elles ne sont pas attribuées automatiquement au capteur.
@@ -23,7 +25,7 @@ Alignement temporel NPZ/GLB par comparaison de la vitesse angulaire du bassin su
 
 | Animation | Avant | Candidate | Os modifiés | Intervalles longs signalés |
 |---|---:|---:|---:|---:|
-| bachata-vaso-01 | 178 | 123 | 4 | 67 |
+| bachata-vaso-01 | 178 | 68 | 4 | 67 |
 | reggaeton-vaso-01 | 257 | 180 | 10 | 124 |
 | hiphop-fanie-c3d | 429 | 336 | 20 | 195 |
 | musical-theater-fanie-c3d | 556 | 478 | 11 | 282 |

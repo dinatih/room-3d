@@ -1,4 +1,4 @@
-/** Audit/reprise NPZ: node scripts/temp_npz_resume.cjs audit|restore|smooth|retime-combat-b|olivia|metadata|verify
+/** NPZ workflow: node scripts/temp_npz_resume.cjs repair|repair-test|repair-browser|refine|refine-test|refine-browser
  * Baseline c14e25c6: calibrage déjà rogné, avant les corrections Y/hips-lock.
  * Les sauts sont des alertes angulaires (>25°/33 ms), pas une preuve d'occlusion.
  */
@@ -116,7 +116,11 @@ function audit(g) {
 }
 function main() {
   const mode = process.argv[2] || 'audit';
-  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(mode==='refine-scan') return scanRefinement();
+  if(mode==='refine') return refineAndExtract();
+  if(mode==='refine-test') return testRefinement();
+  if(mode==='refine-browser') return reviewRefinement();
   if(mode==='repair') return prepareRepairs();
   if(mode==='repair-test') return testRepairs();
   if(mode==='repair-browser') return reviewRepairs();
@@ -620,26 +624,34 @@ function testRepairs() {
         if(JSON.stringify(q)===JSON.stringify(b.tracks[trackIndex].output.values[key])) return;
         assert(key>0 && key<tr.times.length-1,'Track endpoint modified');
         assert(detail?.modified.some(s=>key>=s.firstKey && key<=s.lastKey),'Undocumented changed key');
-        assert(detail?.observedJumpIntervals.some(s=>key>=s.firstKey && key<=s.lastKey),'Healthy GLB key modified');
+        const wrist=row.wristRefinement?.wrists.find(w=>w.bone===tr.bone);
+        assert(detail?.observedJumpIntervals.some(s=>key>=s.firstKey && key<=s.lastKey)||wrist?.changed.some(s=>key>=s.firstKey && key<=s.lastKey),'Healthy GLB key modified');
       });
     });
   }
   console.log('Tests passed: isolated repair, healthy movement, q/-q, sustained corruption, basis fit, 12 GLB invariants and comparison entries.');
 }
-async function reviewRepairs() {
-  const report=JSON.parse(fs.readFileSync(path.join(root,repairReport),'utf8'));
+async function reviewRepairs(reviewRows,reportFile='npz_repair_browser.json',references={},outDir='/tmp/room-npz-repair-review') {
+  const report=reviewRows?{rows:reviewRows}:JSON.parse(fs.readFileSync(path.join(root,repairReport),'utf8'));
   const launch=require('./browser-test-options.cjs');
   const browser=await launch({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
-  const outDir='/tmp/room-npz-repair-review';fs.mkdirSync(outDir,{recursive:true});
+  fs.mkdirSync(outDir,{recursive:true});
   const results=[], errors=[];
   try {
     const page=await browser.newPage();await page.setViewport({width:1400,height:800});
     page.on('pageerror',err=>errors.push(String(err)));
+    if(Object.keys(references).length) {
+      await page.setRequestInterception(true);
+      page.on('request',request=>{
+        const bytes=references[new URL(request.url()).pathname];
+        if(bytes) request.respond({status:200,contentType:'model/gltf-binary',body:bytes});else request.continue();
+      });
+    }
     const url=process.env.ROOM_TEST_URL||'http://127.0.0.1:5193';
     await page.goto(url+'/AGENTS.md');
     await page.setContent('<html><body style="margin:0;background:#17212d;color:white;font:16px sans-serif"><div id="title" style="padding:12px"></div><canvas id="review"></canvas><div style="padding:12px">Gauche : original · Droite : essai correction · Même instant, mêmes translations XYZ</div></body></html>');
     for(const row of report.rows) {
-      const pilot=['bachata-vaso-01','randb-anna-cortesi-c3d','yoga-dolphin-pose-or-ardha-pincha-mayurasana-a'].includes(row.id);
+      const pilot=row.capture??['bachata-vaso-01','randb-anna-cortesi-c3d','yoga-dolphin-pose-or-ardha-pincha-mayurasana-a'].includes(row.id);
       const hand=row.details.find(d=>d.bone==='LeftHand' && d.modified.length)||row.details.find(d=>d.modified.length);
       const affected=hand?.modified[0]?.start??row.before.duration/2;
       const times=[row.alignment.outputStart,affected,row.before.duration/2,row.before.duration];
@@ -648,7 +660,7 @@ async function reviewRepairs() {
         const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
         const {getAnimationDef,getAnimationsByTags}=await import('/src/features/scene/animations/animationResolver.ts');
         if(getAnimationDef(row.candidateId)?.path!==row.candidateFile.replace(/^public\//,'')) throw Error('Candidate does not resolve through app registry');
-        if(getAnimationDef(row.id)?.path!==row.originalFile.replace(/^public\//,'')) throw Error('Original resolver mapping changed');
+        if(getAnimationDef(row.originalRegistryId||row.id)?.path!==(row.originalRegistryFile||row.originalFile).replace(/^public\//,'')) throw Error('Original resolver mapping changed');
         if(getAnimationsByTags(['dance','yoga'],'any').some(d=>d.id===row.candidateId)) throw Error('Candidate entered normal behavior queries');
         const loader=new GLTFLoader();
         const models=await Promise.all([row.originalFile,row.candidateFile].map(f=>loader.loadAsync('/'+f.replace(/^public\//,''))));
@@ -659,14 +671,15 @@ async function reviewRepairs() {
         });
         const footDifferences=[];
         for(const time of times) {
-          states.forEach(s=>{s.action.reset().play();s.mixer.setTime(time);s.g.scene.updateMatrixWorld(true);});
-          if(models[0].animations[0].duration!==models[1].animations[0].duration) throw Error('Browser clip duration mismatch');
+          states.forEach((s,i)=>{s.action.reset().play();s.mixer.setTime(time+(i===0?(row.sourceStart||0):0));s.g.scene.updateMatrixWorld(true);});
+          if(row.sourceStart===undefined && models[0].animations[0].duration!==models[1].animations[0].duration) throw Error('Browser clip duration mismatch');
+          if(row.sourceStart!==undefined && Math.abs(models[1].animations[0].duration-row.before.duration)>1e-5) throw Error('Extract duration mismatch');
           for(const s of states) for(const bone of s.bones) if(bone.matrixWorld.elements.some(x=>!Number.isFinite(x))) throw Error('Non-finite skeleton');
-          for(const s of states) {
+          for(const [index,s] of states.entries()) {
             const hips=s.bones.find(b=>b.name==='mixamorigHips');
             const track=s.g.animations[0].tracks.find(t=>t.name===hips.name+'.quaternion');
             if(!track) throw Error('Missing animated hips track');
-            const expected=new T.Quaternion().fromArray(track.createInterpolant().evaluate(time)).normalize();
+            const expected=new T.Quaternion().fromArray(track.createInterpolant().evaluate(time+(index===0?(row.sourceStart||0):0))).normalize();
             if(expected.angleTo(hips.quaternion.clone().normalize())>1e-5) throw Error('Mixer is not evaluating the requested frame');
           }
           // GLTFLoader applique PropertyBinding.sanitizeNodeName (retire ':').
@@ -681,7 +694,7 @@ async function reviewRepairs() {
         renderer.setSize(1400,680);renderer.setScissorTest(true);
         function draw(time) {
           const positions=[];
-          states.forEach(s=>{s.action.reset().play();s.mixer.setTime(time);s.g.scene.updateMatrixWorld(true);s.bones.forEach(b=>positions.push(b.getWorldPosition(new T.Vector3())));});
+          states.forEach((s,i)=>{s.action.reset().play();s.mixer.setTime(time+(i===0?(row.sourceStart||0):0));s.g.scene.updateMatrixWorld(true);s.bones.forEach(b=>positions.push(b.getWorldPosition(new T.Vector3())));});
           const box=new T.Box3().setFromPoints(positions),center=box.getCenter(new T.Vector3()), size=box.getSize(new T.Vector3());
           const radius=Math.max(size.x,size.y,size.z);
           if(!(radius>0)) throw Error('Empty skeleton');
@@ -712,7 +725,281 @@ async function reviewRepairs() {
       results.push(result);console.log('Browser OK:',row.id);
     }
     if(errors.length) throw Error(errors.join('\n'));
-    fs.writeFileSync(path.join(root,'scripts/npz_repair_browser.json'),JSON.stringify({headless:true,notes:'Skeleton loader/render checks; not a visual acceptance of character retargeting or contacts.',results},null,2)+'\n');
+    fs.writeFileSync(path.join(root,'scripts',reportFile),JSON.stringify({headless:true,notes:'Skeleton loader/render checks; not a visual acceptance of character retargeting or contacts.',results},null,2)+'\n');
   } finally {await browser.close();}
+}
+const acceptedRepairCommit='c6c5468f';
+const refinementPath=path.join(root,'scripts/npz_refinement.json');
+const minimumExtractSeconds=5; // Choix explicite de l'utilisateur.
+function acceptedClip(id) {
+  const rows=JSON.parse(fs.readFileSync(path.join(root,repairReport),'utf8')).rows;
+  const row=rows.find(r=>r.id===id);
+  if(!row) throw Error('Unknown reviewed clip '+id);
+  return {row,g:parse(git('show',`${acceptedRepairCommit}:${row.candidateFile}`))};
+}
+function clipTimeline(g) {
+  const hips=g.tracks.find(t=>t.bone==='mixamorig:Hips' && t.type==='rotation');
+  if(!hips || hips.times.length<2) throw Error('No animated reference timeline');
+  return hips.times;
+}
+function unstableFrames(g,times) {
+  const bad=new Set(),events=[];
+  for(const tr of g.tracks.filter(t=>t.type==='rotation')) {
+    const cursor={value:0},q=times.map(t=>sample(tr,t,cursor));
+    for(let i=1;i<q.length;i++) {
+      const step=angle(q[i-1],q[i]);
+      if(step>jumpThreshold) {bad.add(i-1);bad.add(i);events.push({bone:tr.bone,time:times[i],type:'angular-step',degrees:step});}
+    }
+    for(let i=1;i<q.length-1;i++) {
+      const excess=angle(q[i-1],q[i])+angle(q[i],q[i+1])-angle(q[i-1],q[i+1]);
+      if(excess>jumpThreshold) {bad.add(i-1);bad.add(i);bad.add(i+1);events.push({bone:tr.bone,time:times[i],type:'angular-return',degrees:excess});}
+    }
+  }
+  return {bad,events};
+}
+function stableExtracts(g) {
+  const times=clipTimeline(g),{bad,events}=unstableFrames(g,times);
+  const good=new Set(times.map((_,i)=>i).filter(i=>!bad.has(i)));
+  const runs=changedIntervals(good,times);
+  return {events,accepted:runs.filter(s=>s.end-s.start>=minimumExtractSeconds),discarded:runs.filter(s=>s.end-s.start<minimumExtractSeconds),unstable:changedIntervals(bad,times)};
+}
+function poseRig(g) {
+  const nodes=g.json.nodes.map(n=>{
+    const obj=new THREE.Object3D();obj.name=n.name||'';
+    if(n.matrix) new THREE.Matrix4().fromArray(n.matrix).decompose(obj.position,obj.quaternion,obj.scale);
+    else {obj.position.fromArray(n.translation||[0,0,0]);obj.quaternion.fromArray(n.rotation||[0,0,0,1]);obj.scale.fromArray(n.scale||[1,1,1]);}
+    return obj;
+  });
+  g.json.nodes.forEach((n,i)=>(n.children||[]).forEach(child=>nodes[i].add(nodes[child])));
+  const scene=new THREE.Group();nodes.filter(n=>!n.parent).forEach(n=>scene.add(n));
+  const cursors=g.tracks.map(()=>({value:0}));
+  function setTime(time) {
+    g.tracks.forEach((tr,i)=>{
+      if(time<tr.times[0]) cursors[i].value=0;
+      const q=time<tr.times[0]?tr.output.values[0]:sample(tr,time,cursors[i]);
+      const target={translation:'position',rotation:'quaternion',scale:'scale'}[tr.type];
+      if(!target) throw Error('Unsupported animated property '+tr.type);
+      nodes[tr.node][target].fromArray(q);
+    });
+    scene.updateMatrixWorld(true);
+  }
+  return {nodes,scene,setTime};
+}
+function wristSeries(g) {
+  const rig=poseRig(g),times=clipTimeline(g);
+  const hands=['mixamorig:LeftHand','mixamorig:RightHand'].map(bone=>({bone,node:rig.nodes.find(n=>n.name===bone),world:[],parent:[]}));
+  if(hands.some(h=>!h.node?.parent)) throw Error('Missing wrist hierarchy');
+  for(const time of times) {
+    rig.setTime(time);
+    for(const h of hands) {h.world.push(h.node.getWorldQuaternion(new THREE.Quaternion()).toArray());h.parent.push(h.node.parent.getWorldQuaternion(new THREE.Quaternion()).toArray());}
+  }
+  return {times,hands};
+}
+function rotationNoise(q) {
+  let jumps=0,returns=0,maxStep=0,returnEnergy=0;
+  for(let i=1;i<q.length;i++) {const d=angle(q[i-1],q[i]);if(d>jumpThreshold)jumps++;maxStep=Math.max(maxStep,d);}
+  for(let i=1;i<q.length-1;i++) {const excess=Math.max(0,angle(q[i-1],q[i])+angle(q[i],q[i+1])-angle(q[i-1],q[i+1]));if(excess>jumpThreshold)returns++;returnEnergy+=excess*excess;}
+  return {jumps,returns,maxStep,returnEnergy};
+}
+function filterWrist(q,passes) {
+  const hot=new Set();
+  for(let i=1;i<q.length-1;i++) {
+    const excess=angle(q[i-1],q[i])+angle(q[i],q[i+1])-angle(q[i-1],q[i+1]);
+    if(excess>jumpThreshold || angle(q[i-1],q[i])>jumpThreshold || angle(q[i],q[i+1])>jumpThreshold) {
+      // Support de chaque moyenne symétrique [1,2,1] : une clé voisine.
+      for(const k of [i-1,i,i+1]) if(k>0 && k<q.length-1) hot.add(k);
+    }
+  }
+  let out=q.map(v=>v.slice());
+  for(let pass=0;pass<passes;pass++) {
+    const src=out;out=out.map(v=>v.slice());
+    for(const i of hot) out[i]=slerp(src[i],slerp(src[i-1],src[i+1],0.5),0.5);
+  }
+  return {quats:out,hot};
+}
+function scanRefinement() {
+  for(const id of ['randb-anna-cortesi-c3d','yoga-dolphin-pose-or-ardha-pincha-mayurasana-a']) {
+    const {g}=acceptedClip(id),scan=stableExtracts(g);
+    const longest=scan.discarded.reduce((a,b)=>!a||b.end-b.start>a.end-a.start?b:a,null);
+    console.log(id,JSON.stringify({accepted:scan.accepted.map(s=>({start:s.start,end:s.end,duration:s.end-s.start})),longestDiscarded:longest?{...longest,duration:longest.end-longest.start}:null,shorterRuns:scan.discarded.length,alerts:scan.events.length}));
+  }
+  const {g}=acceptedClip('bachata-vaso-01'),{hands}=wristSeries(g);
+  for(const h of hands) console.log(h.bone,JSON.stringify({before:rotationNoise(h.world),trials:[1,2,3].map(p=>({passes:p,...rotationNoise(filterWrist(h.world,p).quats)}))}));
+}
+const hashBytes=buf=>require('node:crypto').createHash('sha256').update(buf).digest('hex');
+function assertWristsOnly(before,after) {
+  assertPreserved(before,after);
+  const allowed=new Uint8Array(before.buf.length);
+  for(const tr of before.tracks.filter(t=>t.type==='rotation' && ['mixamorig:LeftHand','mixamorig:RightHand'].includes(t.bone))) {
+    for(let i=0;i<tr.output.values.length;i++) allowed.fill(1,tr.output.offset+i*tr.output.stride,tr.output.offset+i*tr.output.stride+16);
+  }
+  for(let i=0;i<before.buf.length;i++) if(before.buf[i]!==after.buf[i] && !allowed[i]) throw Error('Accepted non-wrist data changed');
+}
+function smoothWorldWrist(world) {
+  let passes=0,best=world.map(q=>q.slice()),metrics=rotationNoise(best),hot=new Set();
+  const history=[{passes,...metrics}];
+  while(metrics.returns>0) {
+    const next=filterWrist(world,++passes), trial=rotationNoise(next.quats);
+    // Critère de convergence numérique, pas de plafond arbitraire de passes.
+    if(metrics.returnEnergy-trial.returnEnergy<=Number.EPSILON*Math.max(1,metrics.returnEnergy)) break;
+    best=next.quats;metrics=trial;hot=next.hot;history.push({passes,...metrics});
+  }
+  return {quats:best,passes:history.at(-1).passes,hot,history};
+}
+async function extractGLB(g,start,end,name) {
+  const {NodeIO,PropertyType}=require('@gltf-transform/core');
+  const {ALL_EXTENSIONS}=require('@gltf-transform/extensions');
+  const {prune}=require('@gltf-transform/functions');
+  const io=new NodeIO().registerExtensions(ALL_EXTENSIONS),doc=await io.readBinary(g.buf);
+  const animations=doc.getRoot().listAnimations(), source=animations[0];
+  if(!source) throw Error('No source clip');
+  const buffer=doc.getRoot().listBuffers()[0], out=doc.createAnimation(name);
+  for(const channel of source.listChannels()) {
+    const tr=g.tracks.find(t=>t.bone===channel.getTargetNode().getName() && t.type===channel.getTargetPath());
+    if(!tr || !['LINEAR','STEP'].includes(tr.interpolation)) throw Error('Unsupported extraction sampler');
+    const internal=tr.times.map((t,i)=>({t,i})).filter(({t})=>t>start && t<end);
+    const times=[start,...internal.map(v=>v.t),end];
+    const cursor={value:0},values=[sample(tr,start,cursor),...internal.map(({i})=>tr.output.values[i]),sample(tr,end,cursor)];
+    const input=doc.createAccessor().setType('SCALAR').setArray(new Float32Array(times.map(t=>t-start))).setBuffer(buffer);
+    const output=doc.createAccessor().setType(channel.getSampler().getOutput().getType()).setArray(new Float32Array(values.flat())).setBuffer(buffer);
+    const sampler=doc.createAnimationSampler().setInput(input).setOutput(output).setInterpolation(tr.interpolation);
+    out.addSampler(sampler).addChannel(doc.createAnimationChannel().setTargetNode(channel.getTargetNode()).setTargetPath(channel.getTargetPath()).setSampler(sampler));
+  }
+  for(const animation of animations) {
+    for(const c of animation.listChannels()) c.dispose();
+    for(const s of animation.listSamplers()) s.dispose();
+    animation.dispose();
+  }
+  // Supprimer uniquement les anciens accessors ; conserver toute la hiérarchie.
+  await doc.transform(prune({propertyTypes:[PropertyType.ACCESSOR]}));
+  return Buffer.from(await io.writeBinary(doc));
+}
+function assertExtract(source,clip,start,end) {
+  const assert=require('node:assert/strict');
+  assert.equal(clip.json.animations.length,1,'Residual template clip must not remain');
+  assert.equal(clip.tracks.length,source.tracks.length,'Animated channels lost');
+  assert(Math.abs(audit(clip).duration-(end-start))<1e-5,'Clip cadence/duration changed');
+  for(const tr of clip.tracks) {
+    const original=source.tracks.find(t=>t.bone===tr.bone && t.type===tr.type);
+    assert(original,'Unknown channel');
+    assert.equal(tr.interpolation,original.interpolation);
+    const cursor={value:0};
+    tr.times.forEach((time,i)=>{
+      const expected=sample(original,start+time,cursor),actual=tr.output.values[i];
+      if(tr.type==='rotation') assert(angle(expected,actual)<0.001,'Clip rotation changed '+tr.bone);
+      else actual.forEach((v,k)=>assert(Math.abs(v-expected[k])<=2**-20*Math.max(1,Math.abs(expected[k])),'Clip translation/scale changed '+tr.bone));
+    });
+  }
+  // Le clip complet, pas seulement ses extrémités, doit rester sous les alertes.
+  assert.equal(unstableFrames(clip,clipTimeline(clip)).events.length,0,'Unstable extract');
+}
+async function refineAndExtract() {
+  const {row,g:base}=acceptedClip('bachata-vaso-01'),g=parse(Buffer.from(base.buf));
+  const original=parse(fs.readFileSync(path.join(root,row.originalFile))),series=wristSeries(base),wrists=[];
+  const rows=JSON.parse(fs.readFileSync(path.join(root,repairReport),'utf8')).rows, current=rows.find(r=>r.id===row.id);
+  for(const h of series.hands) {
+    const tr=g.tracks.find(t=>t.type==='rotation' && t.bone===h.bone);
+    if(JSON.stringify(tr.times)!==JSON.stringify(series.times)) throw Error('Wrist timeline mismatch');
+    const result=smoothWorldWrist(h.world),changed=new Set();
+    for(const i of result.hot) {
+      const local=qObj(h.parent[i]).invert().multiply(qObj(result.quats[i])).normalize().toArray();
+      if(dot(local,tr.output.values[i])<0) local.forEach((v,k)=>local[k]=-v);
+      local.forEach((v,k)=>g.buf.writeFloatLE(v,tr.output.offset+i*tr.output.stride+k*4));changed.add(i);
+    }
+    const detail=current.details.find(d=>'mixamorig:'+d.bone===h.bone);
+    const raw=original.tracks.find(t=>t.type==='rotation' && t.bone===h.bone);
+    const final=parse(g.buf).tracks.find(t=>t.type==='rotation' && t.bone===h.bone);
+    const allChanged=new Set(final.output.values.map((q,i)=>JSON.stringify(q)!==JSON.stringify(raw.output.values[i])?i:-1).filter(i=>i>=0));
+    detail.modified=changedIntervals(allChanged,tr.times);
+    wrists.push({bone:h.bone,passes:result.passes,beforeWorld:rotationNoise(h.world),history:result.history,changed:changedIntervals(changed,tr.times)});
+  }
+  assertWristsOnly(base,parse(g.buf));
+  const actual=wristSeries(parse(g.buf));
+  wrists.forEach(w=>w.afterWorld=rotationNoise(actual.hands.find(h=>h.bone===w.bone).world));
+  fs.writeFileSync(path.join(root,row.candidateFile),g.buf);
+  current.after=audit(parse(g.buf));current.wristRefinement={baseCommit:acceptedRepairCommit,wrists};
+  fs.writeFileSync(path.join(root,repairReport),JSON.stringify({version:1,method:'native source repairs; Bachata wrists additionally stabilized in world space',rows},null,2)+'\n');
+  const summaryPath=path.join(root,'docs/npz-repair-candidates.md');
+  let summary=fs.readFileSync(summaryPath,'utf8').replace(/^> Mise à jour Bachata[^\n]*\n\n/m,'');
+  const note='> Mise à jour Bachata : stabilisation supplémentaire des poignets en espace monde, sans modifier le reste de la version validée. Voir `npz-refinement-and-extracts.md` pour la méthode et les mesures des mains.';
+  summary=summary.replace('## Méthode et limites',note+'\n\n## Méthode et limites').replace(/^\| bachata-vaso-01 \|[^\n]*$/m,`| bachata-vaso-01 | ${current.before.jumps} | ${current.after.jumps} | ${current.details.filter(d=>d.modified.length).length} | ${current.details.reduce((n,d)=>n+d.unresolvedSourceIntervals.length,0)} |`);
+  fs.writeFileSync(summaryPath,summary);
+  const manifest={acceptedRepairCommit,selection:'User selected RnB 4.37s and Dolphin 3.53s/5.30s; no concatenation or crossfade',bachata:{file:row.candidateFile,acceptedSHA256:hashBytes(base.buf),resultSHA256:hashBytes(g.buf),wrists},sources:[],extracts:[]};
+  for(const id of ['randb-anna-cortesi-c3d','yoga-dolphin-pose-or-ardha-pincha-mayurasana-a']) {
+    const {row:parent,g:source}=acceptedClip(id),scan=stableExtracts(source);
+    const selected=id==='randb-anna-cortesi-c3d'?[scan.discarded.reduce((a,b)=>!a||b.end-b.start>a.end-a.start?b:a,null)]:[scan.discarded.reduce((a,b)=>!a||b.end-b.start>a.end-a.start?b:a,null),...scan.accepted];
+    if(selected.some(s=>!s) || selected.length!==(id.startsWith('randb')?1:2)) throw Error('Reviewed extraction intervals changed');
+    manifest.sources.push({id,file:parent.candidateFile,sourceSHA256:hashBytes(source.buf),unstable:scan.unstable,otherStableRuns:scan.discarded.filter(s=>!selected.includes(s))});
+    for(let i=0;i<selected.length;i++) {
+      const span=selected[i],clipId=`${id}-clean-${String(i+1).padStart(2,'0')}`;
+      const file=`public/animations/npz/clean-extracts/${clipId}.glb`,buf=await extractGLB(source,span.start,span.end,clipId);
+      const parsed=parse(buf);assertExtract(source,parsed,span.start,span.end);
+      fs.mkdirSync(path.dirname(path.join(root,file)),{recursive:true});fs.writeFileSync(path.join(root,file),buf);
+      manifest.extracts.push({id:clipId,parentId:id,file,start:span.start,end:span.end,duration:span.end-span.start,sha256:hashBytes(buf),quality:audit(parsed)});
+    }
+  }
+  const definitions=manifest.extracts.map(r=>`  {\n    id: '${r.id}',\n    path: '${r.file.slice(7)}',\n    category: '${r.parentId.startsWith('yoga-')?'yoga':'dances'}',\n    label: '[EXTRAIT] ${r.parentId.startsWith('yoga-')?'Dolphin':'RnB Anna'} — ${r.id.endsWith('02')?'02':'01'} (${r.start.toFixed(2)}–${r.end.toFixed(2)} s)',\n    tags: ['npz-clean-extract'],\n    duration: ${Math.round(r.duration*1000)/1000},\n  },`).join('\n');
+  const start='  // BEGIN NPZ CLEAN EXTRACTS',end='  // END NPZ CLEAN EXTRACTS',block=`${start}\n${definitions}\n${end}\n`;
+  let text=fs.readFileSync(path.join(root,registryPath),'utf8');
+  text=text.includes(start)?text.replace(new RegExp(start+'[\\s\\S]*?'+end+'\\n'),block):text.replace(/\n\];\s*$/,'\n'+block+'];\n');
+  fs.writeFileSync(path.join(root,registryPath),text);
+  fs.writeFileSync(refinementPath,JSON.stringify(manifest,null,2)+'\n');
+  let md='# Mains de Bachata et extraits RnB / Dolphin\n\n';
+  md+='## Bachata Vaso\n\nLa version acceptée du commit `c6c5468f` est la référence immuable. Seules les rotations locales LeftHand/RightHand sont réécrites pour lisser leurs orientations en espace monde ; bras, avant-bras, doigts, bassin, jambes, translations XYZ, échelles et dates restent identiques octet par octet. Le filtre [1,2,1] symétrique est limité aux zones d’alerte des mains. Le nombre de passes est le premier supprimant les retours angulaires >25°, avec arrêt si l’énergie ne diminue plus. Les rotations rapides monotones ne sont pas assimilées à des vibrations dans le bilan. Les positions des poignets ne sont pas déplacées.\n\n| Main | Retours >25° avant → après | Passes |\n|---|---:|---:|\n';
+  for(const w of wrists) md+=`| ${w.bone} | ${w.beforeWorld.returns} → ${w.afterWorld.returns} | ${w.passes} |\n`;
+  md+='\n## Trois extraits choisis\n\nLe seuil initial de cinq secondes ne laissait aucun RnB et un seul Dolphin. L’utilisateur a choisi ces trois exceptions précises. Chaque extrait est un fichier GLB autonome, avec ses temps rebases à zéro, ses valeurs de pose et ses translations XYZ conservées dans les coordonnées originales. Aucun recentrage, verrouillage de bassin, fondu, collage ou changement de vitesse. Les extraits ne sont pas rendus bouclables artificiellement : désactiver la boucle pour observer leurs limites naturelles.\n\n| Sélecteur | Passage source | Durée | Alertes rotation / retour |\n|---|---|---:|---:|\n';
+  for(const c of manifest.extracts) md+=`| ${c.id} | ${c.start.toFixed(3)}–${c.end.toFixed(3)} s | ${c.duration.toFixed(3)} s | 0 |\n`;
+  md+='\nLes alertes sont définies à 30 Hz : saut >25° sur un os ou excès d’aller-retour >25° sur trois frames. Les deux côtés d’un saut et les trois frames d’un retour sont exclus. Ce critère ne garantit pas la qualité visuelle du retargeting ni les contacts au sol ; les fragments restent à examiner en lecture. Les versions complètes et les originaux ne sont pas supprimés. Les extraits portent uniquement le tag `npz-clean-extract` pour rester hors des tirages IA habituels.\n\nLe JSON `scripts/npz_refinement.json` consigne les masques des mains, les mesures, les références SHA-256 et les passages rejetés. Commandes : `node scripts/temp_npz_resume.cjs refine`, `refine-test` et `refine-browser`.\n';
+  fs.writeFileSync(path.join(root,'docs/npz-refinement-and-extracts.md'),md);
+  console.log(JSON.stringify({wrists:wrists.map(w=>({bone:w.bone,before:w.beforeWorld.returns,after:w.afterWorld.returns,passes:w.passes})),extracts:manifest.extracts.map(c=>({id:c.id,start:c.start,end:c.end,duration:c.duration}))},null,2));
+}
+function testRefinement() {
+  const assert=require('node:assert/strict'),manifest=JSON.parse(fs.readFileSync(refinementPath,'utf8'));
+  const {g:base}=acceptedClip('bachata-vaso-01'),current=parse(fs.readFileSync(path.join(root,manifest.bachata.file)));
+  assert.equal(hashBytes(base.buf),manifest.bachata.acceptedSHA256);assert.equal(hashBytes(current.buf),manifest.bachata.resultSHA256);
+  assertWristsOnly(base,current);
+  const actual=wristSeries(current);
+  for(const w of manifest.bachata.wrists) {
+    const noise=rotationNoise(actual.hands.find(h=>h.bone===w.bone).world);
+    assert.equal(noise.returns,0,'Residual violent wrist returns');assert.deepEqual(noise,w.afterWorld);
+  }
+  const oldRig=poseRig(base),newRig=poseRig(current);
+  for(const t of clipTimeline(current)) {
+    oldRig.setTime(t);newRig.setTime(t);
+    for(const bone of ['mixamorig:LeftHand','mixamorig:RightHand','mixamorig:LeftFoot','mixamorig:RightFoot','mixamorig:Hips']) {
+      const a=oldRig.nodes.find(n=>n.name===bone).getWorldPosition(new THREE.Vector3());
+      const b=newRig.nodes.find(n=>n.name===bone).getWorldPosition(new THREE.Vector3());
+      assert(a.distanceTo(b)<1e-8,'Wrist/body origin moved');
+    }
+  }
+  assert.equal(manifest.extracts.length,3);
+  for(const r of manifest.extracts) {
+    const {row,g}=acceptedClip(r.parentId),clip=parse(fs.readFileSync(path.join(root,r.file)));
+    assert.equal(hashBytes(clip.buf),r.sha256);
+    assert.equal(hashBytes(fs.readFileSync(path.join(root,row.candidateFile))),hashBytes(g.buf),'Parent candidate changed');
+    assertExtract(g,clip,r.start,r.end);
+    assert(entries.some(e=>e.id===r.id && e.file===r.file),'Missing selectable extract');
+    const clipRig=poseRig(clip),sourceRig=poseRig(g);
+    for(const t of clipTimeline(clip)) {
+      clipRig.setTime(t);sourceRig.setTime(t+r.start);
+      for(const node of clipRig.nodes) {
+        const ref=sourceRig.nodes.find(n=>n.name===node.name);
+        assert(ref,'Lost/renamed hierarchy node');
+        const a=node.getWorldPosition(new THREE.Vector3()),b=ref.getWorldPosition(new THREE.Vector3());
+        assert(a.distanceTo(b)<=2**-18*Math.max(1,b.length()),'Extract world trajectory changed '+node.name);
+      }
+    }
+  }
+  testRepairs();
+  console.log('Refinement OK: wrists only, 0 violent world returns, unchanged wrist/foot/hips positions at every frame, 3 selected clips, full-channel and world-pose equivalence, 0 extract alerts.');
+}
+async function reviewRefinement() {
+  const manifest=JSON.parse(fs.readFileSync(refinementPath,'utf8')),{row,g:base}=acceptedClip('bachata-vaso-01');
+  const rows=[{id:row.candidateId,candidateId:row.candidateId,originalFile:'public/__npz_accepted_bachata.glb',originalRegistryId:row.candidateId,originalRegistryFile:row.candidateFile,candidateFile:row.candidateFile,before:audit(base),alignment:{outputStart:clipTimeline(base)[0]},details:[{bone:'LeftHand',modified:[{start:manifest.bachata.wrists[0].changed[0]?.start||0}]}],capture:true}];
+  for(const c of manifest.extracts) {
+    const {row:parent}=acceptedClip(c.parentId);
+    rows.push({id:c.id,candidateId:c.id,originalRegistryId:parent.candidateId,originalFile:parent.candidateFile,candidateFile:c.file,sourceStart:c.start,before:{duration:c.duration},alignment:{outputStart:0},details:[],capture:true});
+  }
+  return reviewRepairs(rows,'npz_refinement_browser.json',{'/__npz_accepted_bachata.glb':base.buf},'/tmp/room-npz-refinement-review');
 }
 Promise.resolve(main()).catch(err=>{console.error(err);process.exitCode=1;});

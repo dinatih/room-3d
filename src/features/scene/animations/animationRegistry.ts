@@ -9711,4 +9711,30 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 16.2,
   },
   // END NPZ REPAIR COMPARISONS
+  // BEGIN NPZ CLEAN EXTRACTS
+  {
+    id: 'randb-anna-cortesi-c3d-clean-01',
+    path: 'animations/npz/clean-extracts/randb-anna-cortesi-c3d-clean-01.glb',
+    category: 'dances',
+    label: '[EXTRAIT] RnB Anna — 01 (133.70–138.07 s)',
+    tags: ['npz-clean-extract'],
+    duration: 4.367,
+  },
+  {
+    id: 'yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-01',
+    path: 'animations/npz/clean-extracts/yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-01.glb',
+    category: 'yoga',
+    label: '[EXTRAIT] Dolphin — 01 (4.20–7.73 s)',
+    tags: ['npz-clean-extract'],
+    duration: 3.533,
+  },
+  {
+    id: 'yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-02',
+    path: 'animations/npz/clean-extracts/yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-02.glb',
+    category: 'yoga',
+    label: '[EXTRAIT] Dolphin — 02 (10.90–16.20 s)',
+    tags: ['npz-clean-extract'],
+    duration: 5.3,
+  },
+  // END NPZ CLEAN EXTRACTS
 ];

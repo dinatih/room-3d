@@ -1,0 +1,218 @@
+{
+  "headless": true,
+  "notes": "Skeleton loader/render checks; not a visual acceptance of character retargeting or contacts.",
+  "results": [
+    {
+      "id": "bachata-vaso-01-repair-preview",
+      "duration": 133.60000610351562,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        6.800000190734863,
+        66.80000305175781,
+        133.60000610351562
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 6.800000190734863,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 66.80000305175781,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 133.60000610351562,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-refinement-review/bachata-vaso-01-repair-preview.png"
+    },
+    {
+      "id": "randb-anna-cortesi-c3d-clean-01",
+      "duration": 138.06666564941406,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0,
+        2.1833343505859375,
+        2.1833343505859375,
+        4.366668701171875
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 3.8642033688875806e-8,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 2.1833343505859375,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 2.1833343505859375,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 4.366668701171875,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-refinement-review/randb-anna-cortesi-c3d-clean-01.png"
+    },
+    {
+      "id": "yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-01",
+      "duration": 16.200000762939453,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0,
+        1.7666666507720947,
+        1.7666666507720947,
+        3.5333333015441895
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0,
+          "deltas": {
+            "mixamorigLeftFoot": 1.7440963831902975e-8,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 3.8077106044274457e-8,
+            "mixamorigRightHand": 2.3985613369486763e-8
+          }
+        },
+        {
+          "time": 1.7666666507720947,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 1.7666666507720947,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 3.5333333015441895,
+          "deltas": {
+            "mixamorigLeftFoot": 4.2903640230549057e-8,
+            "mixamorigRightFoot": 1.0654198796460366e-7,
+            "mixamorigLeftHand": 9.645743286552524e-8,
+            "mixamorigRightHand": 4.9515929579537685e-8
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-refinement-review/yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-01.png"
+    },
+    {
+      "id": "yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-02",
+      "duration": 16.200000762939453,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0,
+        2.65000057220459,
+        2.65000057220459,
+        5.30000114440918
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 4.648793067887052e-9,
+            "mixamorigLeftHand": 2.880882805155189e-8,
+            "mixamorigRightHand": 7.654820004237683e-9
+          }
+        },
+        {
+          "time": 2.65000057220459,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 2.65000057220459,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 5.30000114440918,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-refinement-review/yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-02.png"
+    }
+  ]
+}
