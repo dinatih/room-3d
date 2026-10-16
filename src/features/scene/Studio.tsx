@@ -949,7 +949,7 @@ export function Studio() {
             <Decor />
           </CategoryLayerGroup>
 
-          {/* LAYER_ANIMALS (20) — Animaux autonomes (Robin Bird, Shiba Inu) */}
+          {/* LAYER_ANIMALS (20) — Animaux autonomes (Robin, Shiba, poissons, étoiles de mer) et robots (G1, Go2, Jumper, Drone) */}
           <CategoryLayerGroup layer={LAYER_ANIMALS} visible={layers.animals}>
             <Animals />
           </CategoryLayerGroup>

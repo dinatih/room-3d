@@ -65,7 +65,7 @@ export function Decor() {
   );
 }
 
-// Pass 4 — Animals : Animaux autonomes (Robin Bird, Shiba Inu)
+// Pass 4 — Animals : Animaux autonomes (Robin Bird, Shiba Inu, poissons, étoiles de mer) et robots (G1, Go2, Jumper, Drone)
 export function Animals() {
   return (
     <>

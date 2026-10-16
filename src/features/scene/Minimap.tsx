@@ -157,6 +157,7 @@ function drawMinimap(
   const showAllLaraStyles = useSceneStore.getState().layers.showAllLaraStyles;
   const laraCount = useSceneStore.getState().layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
   const extraCharacters = useSceneStore.getState().layers.extraCharacters ?? false;
+  const showAnimals = useSceneStore.getState().layers.animals ?? true;
   const activeExtraIds = useSceneStore.getState().activeExtraIds;
   const activeMainIds = useSceneStore.getState().activeMainIds;
   
@@ -186,8 +187,9 @@ function drawMinimap(
     }
   });
 
-  // ── Shiba Inu (Ushiro) ──────────────────────────────────────────────────────
-  const shibaPos = cameraState.positions['shiba'];
+  if (showAnimals) {
+    // ── Shiba Inu (Ushiro) ──────────────────────────────────────────────────────
+    const shibaPos = cameraState.positions['shiba'];
   if (shibaPos) {
     const rShiba = Math.max(2.2 * sc, 8 * S);
     const rawX = tx(shibaPos.x);
@@ -390,6 +392,7 @@ function drawMinimap(
 
     ctx.restore();
   }
+}
 
   // ── Avion joueur ────────────────────────────────────────────────────────────
   if (cameraState.mode === 'plane') {
