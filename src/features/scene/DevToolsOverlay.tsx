@@ -150,7 +150,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
               </span>
               <div className="d-flex align-items-center gap-1">
                 <span title="Triangles soumis au GPU par image, toutes passes comprises (vue principale, ombres et réflexions)" className={`fw-bold ${isIdle ? 'text-secondary' : devState.triangles >= 2_000_000 ? 'text-danger' : devState.triangles >= 1_000_000 ? 'text-warning-emphasis' : 'text-primary'}`}>
-                  Tris: {isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'}
+                  Tris: {isIdle ? '0k' : (devState.triangles / 1000).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'k'}
                 </span>
                 <button
                   type="button"
@@ -181,8 +181,8 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
                 <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
                 <StatRow label="Instanced" value={devState.instances} />
                 <StatRow label="Lights"    value={devState.lights} color="#111827" />
-                <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#111827" />
-                <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#111827" />
+                <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000).toLocaleString() + 'k' : '—'} color="#111827" />
+                <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000).toLocaleString() + 'k' : '—'} color="#111827" />
                 {devState.meshes > 800 && (
                   <div style={{ color: '#dc2626', fontSize: 10, fontWeight: 600, padding: '2px 10px' }}><i className="bi bi-exclamation-triangle-fill me-1" aria-hidden="true" />{devState.meshes} meshes → fusionner</div>
                 )}
@@ -198,7 +198,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
                           {obj.name}
                         </span>
                         <span className="flex-shrink-0 ms-2 fw-semibold" style={{ color: heatColor(obj.tris, 50_000, 200_000), fontVariantNumeric: 'tabular-nums' }}>
-                          {(obj.tris / 1000).toFixed(1)}k
+                          {(obj.tris / 1000).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k
                         </span>
                       </div>
                     ))}
