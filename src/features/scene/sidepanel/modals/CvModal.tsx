@@ -61,7 +61,7 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
     <div
       className="modal fade show d-block"
       tabIndex={-1}
-      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', zIndex: 10050 }}
+      style={{ background: 'rgba(0,0,0,0.65)', zIndex: 10050 }}
       onClick={onClose}
     >
       <div

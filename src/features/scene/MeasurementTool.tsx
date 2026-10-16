@@ -155,7 +155,6 @@ export function MeasurementTool() {
               whiteSpace: 'nowrap',
               pointerEvents: 'none',
               boxShadow: '0 2px 8px rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(3px)',
               userSelect: 'none',
             }}
           >

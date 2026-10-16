@@ -135,7 +135,6 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
             {anyRunning && isActive && (
               <div 
                 className="card border border-danger-subtle p-2 d-flex flex-column gap-2 bg-danger-subtle bg-opacity-10 text-dark shadow-sm"
-                style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
               >
                 {/* Timer */}
                 <div className="d-flex justify-content-between small fw-bold text-danger" style={{ fontSize: '10px' }}>

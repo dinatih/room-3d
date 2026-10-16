@@ -464,7 +464,6 @@ export function SpatialZonePreview({
           alignItems: 'center',
           gap: 6,
           border: '1px solid rgba(255, 255, 255, 0.15)',
-          backdropFilter: 'blur(4px)'
         }}>
           <span>{zone.environment === 'indoor' ? '🏠' : '🌳'}</span>
           <span>Vue Découpée : {zone.name}</span>
@@ -491,7 +490,6 @@ export function SpatialZonePreview({
             fontSize: 11,
             fontWeight: 600,
             cursor: 'pointer',
-            backdropFilter: 'blur(4px)'
           }}
         >
           🤖 {showZoneUi ? 'Masquer zones IA' : 'Afficher zones IA'}
@@ -507,7 +505,6 @@ export function SpatialZonePreview({
             fontSize: 11,
             fontWeight: 600,
             cursor: 'pointer',
-            backdropFilter: 'blur(4px)'
           }}
         >
           📊 {showFpsGraph ? 'Masquer FPS' : 'Afficher FPS'}

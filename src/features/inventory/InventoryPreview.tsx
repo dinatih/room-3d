@@ -166,7 +166,7 @@ function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () =
 
 function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, d: number, h: number }; worldSize: { x: number; y: number; z: number }; grounded?: boolean; }) {
   const hx = worldSize.x / 2, hy = worldSize.y / 2, hz = worldSize.z / 2, off = Math.max(5, Math.min(worldSize.x, worldSize.z) * 0.1), LC = '#0058a3';
-  const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.4)', padding: '2px 5px', color: LC, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(3px)', borderRadius: 3 };
+  const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.4)', padding: '2px 5px', color: LC, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', pointerEvents: 'none', borderRadius: 3 };
 
   const axes = useMemo(() => {
     const h = new THREE.AxesHelper(Math.max(20, Math.max(worldSize.x, worldSize.y, worldSize.z) * 0.25));
@@ -1007,7 +1007,6 @@ export function InventoryPreview({
                 transform: 'translateX(-50%)',
                 zIndex: 1,
                 background: 'rgba(0, 0, 0, 0.8)',
-                backdropFilter: 'blur(6px)',
                 color: '#fff',
                 padding: '3px 12px',
                 borderRadius: 12,
@@ -1151,7 +1150,7 @@ export function InventoryPreview({
           )}
 
           {!hideFooter && (
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 10px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center' }}>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 10px', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 'bold', fontSize: 12 }}>{item.name}</div>
                 <div style={{ opacity: 0.8 }}>

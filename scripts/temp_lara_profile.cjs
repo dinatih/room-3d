@@ -1,8 +1,9 @@
 const fs = require('node:fs');
 const { spawn } = require('node:child_process');
 const launch = require('./browser-test-options.cjs');
+const verify = process.argv.includes('--verify-no-blur');
 const isolate = process.argv.includes('--isolate-blur');
-const out = isolate ? '/tmp/room-lara-blur-isolation' : '/tmp/room-lara-profile';
+const out = verify ? '/tmp/room-lara-no-blur' : isolate ? '/tmp/room-lara-blur-isolation' : '/tmp/room-lara-profile';
 const delay = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   fs.mkdirSync(out, { recursive: true });
@@ -34,7 +35,13 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
     const client = await page.createCDPSession();
     await client.send('Profiler.enable');
     const results = [];
-    let conditions;
+    let conditions = verify ? ['baseline'] : undefined;
+    async function assertNoBackdropFilters(label) {
+      const filters = await page.evaluate(() => [...document.querySelectorAll('*')].filter(el => getComputedStyle(el).backdropFilter !== 'none').map(el => ({ tag: el.tagName, classes: el.className, filter: getComputedStyle(el).backdropFilter })));
+      if (filters.length) throw Error(`${label}: remaining backdrop filters: ${JSON.stringify(filters)}`);
+      console.log(`${label}: no backdrop filters`);
+    }
+    if (verify) await assertNoBackdropFilters('inventory');
     if (isolate) {
       const elements = await page.evaluate(() => [...document.querySelectorAll('*')].filter(el => {
         const css = getComputedStyle(el), rect = el.getBoundingClientRect();
@@ -77,6 +84,12 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
       const top = [...costs].sort((a,b)=>b[1]-a[1]).slice(0,25).map(([name,us])=>({name,ms:Math.round(us/1000)}));
       results.push({ condition, ...metrics, top });
       console.log(JSON.stringify(results.at(-1), null, 2));
+    }
+    if (verify) {
+      await page.goto('http://localhost:5173/', { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await page.waitForSelector('canvas', { timeout: 120000 });
+      await delay(5000);
+      await assertNoBackdropFilters('scene');
     }
     fs.writeFileSync(`${out}/summary.json`, JSON.stringify({ results, errors }, null, 2));
   } finally { await browser?.close(); server?.kill(); }

@@ -1206,8 +1206,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       style={{
         zIndex: 10000,
         backgroundColor: 'rgba(5, 7, 15, 0.88)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
       }}
     >
       {/* ── Barre d'en-tête supérieure ─────────────────────────── */}
