@@ -1,0 +1,633 @@
+{
+  "headless": true,
+  "notes": "Skeleton loader/render checks; not a visual acceptance of character retargeting or contacts.",
+  "results": [
+    {
+      "id": "bachata-vaso-01",
+      "duration": 133.60000610351562,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        27.133333206176758,
+        66.80000305175781,
+        133.60000610351562
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 27.133333206176758,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 66.80000305175781,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 133.60000610351562,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-repair-review/bachata-vaso-01.png"
+    },
+    {
+      "id": "reggaeton-vaso-01",
+      "duration": 128.3000030517578,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        13.100000381469727,
+        64.1500015258789,
+        128.3000030517578
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 13.100000381469727,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0.00198992871588388,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 64.1500015258789,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 128.3000030517578,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "hiphop-fanie-c3d",
+      "duration": 129.89999389648438,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        9.366666793823242,
+        64.94999694824219,
+        129.89999389648438
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 9.366666793823242,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 64.94999694824219,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 129.89999389648438,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "musical-theater-fanie-c3d",
+      "duration": 127.43333435058594,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        3.5999999046325684,
+        63.71666717529297,
+        127.43333435058594
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 3.5999999046325684,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 63.71666717529297,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 127.43333435058594,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "zumba-fanie-c3d",
+      "duration": 225,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        30.600000381469727,
+        112.5,
+        225
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 30.600000381469727,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 112.5,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 225,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "bellydance2-anna-cortesi-c3d",
+      "duration": 280.76666259765625,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        30.100000381469727,
+        140.38333129882812,
+        280.76666259765625
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 30.100000381469727,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 140.38333129882812,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 280.76666259765625,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "randb-anna-cortesi-c3d",
+      "duration": 138.06666564941406,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        2.299999952316284,
+        69.03333282470703,
+        138.06666564941406
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 2.299999952316284,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0.023729502783284565
+          }
+        },
+        {
+          "time": 69.03333282470703,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 138.06666564941406,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-repair-review/randb-anna-cortesi-c3d.png"
+    },
+    {
+      "id": "salsa-stefanos-c3d",
+      "duration": 196.46665954589844,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        6.699999809265137,
+        98.23332977294922,
+        196.46665954589844
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 6.699999809265137,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 98.23332977294922,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 196.46665954589844,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "happy-dance-olivia",
+      "duration": 87.43333435058594,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        0.7333333492279053,
+        43.71666717529297,
+        87.43333435058594
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 0.7333333492279053,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 43.71666717529297,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 87.43333435058594,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "excited-dance-olivia",
+      "duration": 93.19999694824219,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        7.099999904632568,
+        46.599998474121094,
+        93.19999694824219
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 7.099999904632568,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 46.599998474121094,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 93.19999694824219,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "pleased-dance-olivia",
+      "duration": 96.83333587646484,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        15.266666412353516,
+        48.41666793823242,
+        96.83333587646484
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 15.266666412353516,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 48.41666793823242,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0.005023532744979661,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 96.83333587646484,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "yoga-dolphin-pose-or-ardha-pincha-mayurasana-a",
+      "duration": 16.200000762939453,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        3.4000000953674316,
+        8.100000381469727,
+        16.200000762939453
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 3.4000000953674316,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0.23579641206555418,
+            "mixamorigRightHand": 0.3226708693196625
+          }
+        },
+        {
+          "time": 8.100000381469727,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0.23657332912165127,
+            "mixamorigRightHand": 0.2217050089952795
+          }
+        },
+        {
+          "time": 16.200000762939453,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-repair-review/yoga-dolphin-pose-or-ardha-pincha-mayurasana-a.png"
+    }
+  ]
+}

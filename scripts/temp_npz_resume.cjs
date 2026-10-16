@@ -116,7 +116,10 @@ function audit(g) {
 }
 function main() {
   const mode = process.argv[2] || 'audit';
-  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(mode==='repair') return prepareRepairs();
+  if(mode==='repair-test') return testRepairs();
+  if(mode==='repair-browser') return reviewRepairs();
   if(mode==='metadata') {syncMetadata();return;}
   if(mode==='verify') {
     const assert=require('node:assert/strict');
@@ -246,38 +249,9 @@ function main() {
     return;
   }
   if (process.argv[2] === 'olivia') {
-    const zlib = require('node:zlib');
-    function npz(file) {
-      const b = fs.readFileSync(file), out = { names: [] };
-      let end = b.length-22;
-      while (end >= 0 && b.readUInt32LE(end) !== 0x06054b50) end--;
-      if (end < 0) throw Error('Missing ZIP directory');
-      let off = b.readUInt32LE(end+16);
-      for (let i=0; i<b.readUInt16LE(end+10); i++) {
-        if (b.readUInt32LE(off) !== 0x02014b50) throw Error('Invalid ZIP directory');
-        const n = b.readUInt16LE(off+28), extra = b.readUInt16LE(off+30), comment=b.readUInt16LE(off+32);
-        const name = b.toString('utf8',off+46,off+46+n), start=b.readUInt32LE(off+42), size=b.readUInt32LE(off+20), method=b.readUInt16LE(off+10);
-        out.names.push(name);
-        const dataStart=start+30+b.readUInt16LE(start+26)+b.readUInt16LE(start+28);
-        const raw=b.subarray(dataStart,dataStart+size);
-        if (/^(poses|mocap_frame_rate|mocap_framerate|fps)\.npy$/.test(name)) {
-          const data=method===8?zlib.inflateRawSync(raw):raw;
-          if (method!==8 && method!==0) throw Error('Unsupported ZIP compression');
-          const major=data[6], headerStart=major===1?10:12, len=major===1?data.readUInt16LE(8):data.readUInt32LE(8);
-          const header=data.toString('ascii',headerStart,headerStart+len);
-          if (!/'fortran_order': False/.test(header)) throw Error('Unsupported NPY order');
-          const dtype=header.match(/'descr': '([^']+)'/)[1], shape=header.match(/'shape': \(([^)]*)\)/)[1].split(',').map(x=>x.trim()).filter(Boolean).map(Number);
-          if (!['<f8','<f4'].includes(dtype)) throw Error('Unsupported NPY dtype '+dtype);
-          const width=dtype==='<f8'?8:4, count=shape.reduce((a,b)=>a*b,1), offset=headerStart+len;
-          out[name.slice(0,-4)]={shape, values:Array.from({length:count},(_,i)=>width===8?data.readDoubleLE(offset+i*width):data.readFloatLE(offset+i*width))};
-        }
-        off+=46+n+extra+comment;
-      }
-      return out;
-    }
     const dir='/home/dinatih/3D Resources/animations/DanceDB/DanceDB/20131001_OliviaKyriakides';
     const rows=fs.readdirSync(dir).filter(f=>f.endsWith('_poses.npz')).map(file=>{
-      const data=npz(path.join(dir,file)), poses=data.poses, fps=(data.mocap_frame_rate || data.mocap_framerate || data.fps)?.values[0];
+      const data=readMotionNPZ(path.join(dir,file)), poses=data.poses, fps=(data.mocap_frame_rate || data.mocap_framerate || data.fps)?.values[0];
       if (!fps || !poses || poses.shape.length!==2) throw Error('Missing capture metadata '+file+' '+JSON.stringify({names:data.names,shape:poses?.shape,fps}));
       const [n,stride]=poses.shape; let jumps=0, max=0;
       for (let bone=0;bone<22;bone++) {
@@ -374,4 +348,371 @@ function syncMetadata() {
     if (JSON.stringify(data)!==JSON.stringify(updated)) fs.writeFileSync(full,output);
   }
 }
-main();
+function readMotionNPZ(file) {
+  const zlib = require('node:zlib'), b = fs.readFileSync(file), out = { names: [] };
+  let end = b.length - 22;
+  while (end >= 0 && b.readUInt32LE(end) !== 0x06054b50) end--;
+  if (end < 0) throw Error('Missing ZIP directory: ' + file);
+  let off = b.readUInt32LE(end + 16);
+  for (let i = 0; i < b.readUInt16LE(end + 10); i++) {
+    if (b.readUInt32LE(off) !== 0x02014b50) throw Error('Invalid ZIP directory');
+    const n=b.readUInt16LE(off+28), extra=b.readUInt16LE(off+30), comment=b.readUInt16LE(off+32);
+    const name=b.toString('utf8',off+46,off+46+n), start=b.readUInt32LE(off+42), size=b.readUInt32LE(off+20), method=b.readUInt16LE(off+10);
+    out.names.push(name);
+    if (/^(poses|mocap_frame_rate|mocap_framerate|fps)\.npy$/.test(name)) {
+      if (![0,8].includes(method)) throw Error('Unsupported ZIP compression');
+      const dataStart=start+30+b.readUInt16LE(start+26)+b.readUInt16LE(start+28), raw=b.subarray(dataStart,dataStart+size);
+      const data=method===8?zlib.inflateRawSync(raw):raw;
+      if (data.toString('latin1',0,6)!=='\x93NUMPY') throw Error('Invalid NPY magic');
+      const major=data[6];
+      if (![1,2,3].includes(major)) throw Error('Unsupported NPY version');
+      const headerStart=major===1?10:12, len=major===1?data.readUInt16LE(8):data.readUInt32LE(8);
+      const header=data.toString('ascii',headerStart,headerStart+len);
+      if (!/'fortran_order': False/.test(header)) throw Error('Unsupported NPY order');
+      const dtype=header.match(/'descr': '([^']+)'/)[1], shape=header.match(/'shape': \(([^)]*)\)/)[1].split(',').map(x=>x.trim()).filter(Boolean).map(Number);
+      if (!['<f8','<f4'].includes(dtype)) throw Error('Unsupported NPY dtype '+dtype);
+      const width=dtype==='<f8'?8:4, count=shape.reduce((a,b)=>a*b,1), offset=headerStart+len;
+      if(offset+count*width!==data.length) throw Error('Invalid NPY length');
+      const values=Array.from({length:count},(_,j)=>width===8?data.readDoubleLE(offset+j*width):data.readFloatLE(offset+j*width));
+      if(values.some(x=>!Number.isFinite(x))) throw Error('Non-finite NPZ motion');
+      out[name.slice(0,-4)]={shape,values};
+    }
+    off+=46+n+extra+comment;
+  }
+  return out;
+}
+
+// SMPL/SMPL-H body ordering used by the existing exporters (22 articulations).
+const smplBones=['Hips','LeftUpLeg','RightUpLeg','Spine','LeftLeg','RightLeg','Spine1','LeftFoot','RightFoot','Spine2','LeftToeBase','RightToeBase','Neck','LeftShoulder','RightShoulder','Head','LeftArm','RightArm','LeftForeArm','RightForeArm','LeftHand','RightHand'];
+const repairSources={
+  'bachata-vaso-01':'20120807_VasoAristeidou/Vasso_Bachata_01_poses.npz',
+  'reggaeton-vaso-01':'20120807_VasoAristeidou/Vasso_Reggaeton_01_poses.npz',
+  'hiphop-fanie-c3d':'20140121_FanieAlexandrou/Fanie_Hiphop_C3D_poses.npz',
+  'musical-theater-fanie-c3d':'20140121_FanieAlexandrou/Fanie_MusicalTheater_C3D_poses.npz',
+  'zumba-fanie-c3d':'20140121_FanieAlexandrou/Fanie_Zumba_C3D_poses.npz',
+  'bellydance2-anna-cortesi-c3d':'20140506_AnnaCortesi/AnnaCortesi_BellyDance2_C3D_poses.npz',
+  'randb-anna-cortesi-c3d':'20140506_AnnaCortesi/AnnaCortesi_RandB_C3D_poses.npz',
+  'salsa-stefanos-c3d':'20140526_StephanosKoullapis/StefanosKoullapis_Salsa_C3D_poses.npz',
+  'happy-dance-olivia':'20131001_OliviaKyriakides/Olivia_Happy_C3D_poses.npz',
+  'excited-dance-olivia':'20131001_OliviaKyriakides/Olivia_Excited_C3D_poses.npz',
+  'pleased-dance-olivia':'20131001_OliviaKyriakides/Olivia_Pleased_C3D_poses.npz',
+};
+const repairReport='scripts/npz_repair_candidates.json';
+const qObj=q=>new THREE.Quaternion().fromArray(q).normalize();
+const relative=(a,b)=>qObj(a).invert().multiply(qObj(b)).normalize().toArray();
+function rotvec(q) {
+  q=norm(q);if(q[3]<0)q=q.map(x=>-x);
+  const sine=Math.hypot(q[0],q[1],q[2]);
+  return sine===0?new THREE.Vector3():new THREE.Vector3(q[0],q[1],q[2]).multiplyScalar(2*Math.atan2(sine,q[3])/sine);
+}
+function sourceMotion(file) {
+  const data=readMotionNPZ(file), p=data.poses, fps=(data.mocap_frame_rate||data.mocap_framerate||data.fps)?.values[0];
+  if(!p || p.shape.length!==2 || p.shape[1]<smplBones.length*3 || !Number.isFinite(fps) || fps<=0) throw Error('Invalid source motion '+file);
+  const [count,stride]=p.shape;
+  const quats=smplBones.map((_,bone)=>Array.from({length:count},(_,frame)=>{
+    const idx=frame*stride+bone*3, v=new THREE.Vector3(...p.values.slice(idx,idx+3)), theta=v.length();
+    return theta===0?[0,0,0,1]:new THREE.Quaternion().setFromAxisAngle(v.divideScalar(theta),theta).toArray();
+  }));
+  return {fps,count,quats};
+}
+function alignSource(g,motion) {
+  const tr=g.tracks.find(t=>t.bone==='mixamorig:Hips' && t.type==='rotation');
+  if(!tr || tr.interpolation!=='LINEAR') throw Error('No linear hips track for source alignment');
+  const frames=tr.times.map(t=>Math.round((t-tr.times[0])*motion.fps));
+  const maxStart=motion.count-1-frames.at(-1);
+  if(maxStart<0) throw Error('GLB longer than its source');
+  const source=motion.quats[0], target=tr.output.values.map(norm);
+  const steps=new Map();
+  for(let i=1;i<frames.length;i++) {
+    const step=frames[i]-frames[i-1];
+    if(step<=0) throw Error('Invalid source sampling cadence');
+    if(!steps.has(step)) steps.set(step,source.slice(0,-step).map((q,j)=>angle(q,source[j+step])));
+  }
+  const targetAngles=target.slice(1).map((q,i)=>angle(target[i],q));
+  const candidates=[];
+  for(let start=0;start<=maxStart;start++) {
+    let error=0;
+    for(let i=1;i<frames.length;i++) error+=Math.abs(steps.get(frames[i]-frames[i-1])[start+frames[i-1]]-targetAngles[i-1]);
+    candidates.push({start,meanAngularStepError:error/targetAngles.length});
+  }
+  candidates.sort((a,b)=>a.meanAngularStepError-b.meanAngularStepError);
+  return {...candidates[0],startSeconds:candidates[0].start/motion.fps,outputStart:tr.times[0],runnerUpError:candidates[1]?.meanAngularStepError??null};
+}
+function fitBasis(source,target) {
+  const pairs=source.slice(1).map((q,i)=>({a:rotvec(relative(source[i],q)),b:rotvec(relative(target[i],target[i+1]))}));
+  const first=pairs.reduce((best,p)=>p.a.lengthSq()>best.a.lengthSq()?p:best,{a:new THREE.Vector3(),b:new THREE.Vector3()});
+  if(first.a.lengthSq()===0) return new THREE.Quaternion();
+  const second=pairs.reduce((best,p)=>first.a.clone().cross(p.a).lengthSq()>first.a.clone().cross(best.a).lengthSq()?p:best,first);
+  if(first.a.clone().cross(second.a).lengthSq()<=Number.EPSILON*first.a.lengthSq()*second.a.lengthSq()) return new THREE.Quaternion().setFromUnitVectors(first.a.clone().normalize(),first.b.clone().normalize());
+  function basis(a,b) {
+    const x=a.clone().normalize(), y=b.clone().addScaledVector(x,-b.dot(x)).normalize();
+    return new THREE.Matrix4().makeBasis(x,y,x.clone().cross(y));
+  }
+  return new THREE.Quaternion().setFromRotationMatrix(basis(first.b,second.b).multiply(basis(first.a,second.a).invert())).normalize();
+}
+function changedIntervals(indices,times) {
+  const out=[];
+  for(const i of [...indices].sort((a,b)=>a-b)) {
+    const prev=out.at(-1);
+    if(prev && i===prev.lastKey+1) {prev.lastKey=i;prev.end=times[i];}
+    else out.push({firstKey:i,lastKey:i,start:times[i],end:times[i]});
+  }
+  return out;
+}
+function repairNative(src,fps) {
+  const q=src.map(v=>v.slice()), repaired=new Set(), hot=new Set(), proposed=new Set();
+  // 25° à 30 Hz = 750°/s. Ce critère d'alerte existant ne suffit pas :
+  // exiger également le retour vers une orientation voisine cohérente.
+  const speed=jumpThreshold*30;
+  for(let i=1;i<src.length-1;i++) {
+    if(angle(src[i-1],src[i])*fps>speed && angle(src[i],src[i+1])*fps>speed && angle(src[i-1],src[i+1])*fps/2<speed) {
+      proposed.add(i);
+    }
+  }
+  for(const i of proposed) if(!proposed.has(i-1) && !proposed.has(i+1)) {
+    q[i]=slerp(src[i-1],src[i+1],0.5);repaired.add(i);
+  }
+  const bad=new Set();
+  for(let i=1;i<q.length;i++) if(angle(q[i-1],q[i])*fps>speed) {bad.add(i-1);bad.add(i);}
+  const intervals=changedIntervals(bad,q.map((_,i)=>i/fps)), unresolved=[];
+  // Une reconstruction locale est limitée à un intervalle de sortie (1/30 s).
+  // Au-delà, conserver les données et signaler : aucune pose n'est inventée.
+  for(const span of intervals) {
+    if(span.end-span.start>1/30) {unresolved.push(span);continue;}
+    for(let i=span.firstKey;i<=span.lastKey;i++) if(i>0 && i<q.length-1) hot.add(i);
+  }
+  for(const i of repaired) for(const k of [i-1,i,i+1]) if(k>0 && k<q.length-1 && !unresolved.some(s=>k>=s.firstKey && k<=s.lastKey)) hot.add(k);
+  const pass=q.map(v=>v.slice());
+  for(const i of hot) q[i]=slerp(pass[i],slerp(pass[i-1],pass[i+1],0.5),0.5);
+  for(const span of unresolved) for(let i=span.firstKey;i<=span.lastKey;i++) {
+    q[i]=src[i].slice();repaired.delete(i);hot.delete(i);
+  }
+  return {quats:q,isolated:[...repaired],filtered:[...hot],unresolved};
+}
+function prepareRepairs() {
+  // Lot explicitement revu : ne pas dépendre d'un audit mutable pouvant
+  // contenir les candidats eux-mêmes ou de nouvelles animations du projet.
+  const targets=[...Object.keys(repairSources),'yoga-dolphin-pose-or-ardha-pincha-mayurasana-a'].map(id=>({id}));
+  const yoga=JSON.parse(fs.readFileSync(path.join(root,'public/animations/npz/yoga/yoga_meta.json'),'utf8'));
+  const rows=[];
+  const tolerance=2*Math.acos(1-8*2**-23)*180/Math.PI; // Float32 normalization/dot error budget.
+  for(const item of targets) {
+    const entry=entries.find(e=>e.id===item.id);
+    if(!entry) throw Error('Missing registry entry '+item.id);
+    const input=fs.readFileSync(path.join(root,entry.file)), original=parse(input), g=parse(Buffer.from(input));
+    const sourceFile=item.id.startsWith('yoga-')?yoga.find(m=>m.filename===path.basename(entry.file))?.npz:path.join('/home/dinatih/3D Resources/animations/DanceDB/DanceDB',repairSources[item.id]);
+    if(!sourceFile || !fs.existsSync(sourceFile)) throw Error('Missing NPZ source '+item.id);
+    const motion=sourceMotion(sourceFile), alignment=alignSource(original,motion);
+    const details=[];
+    for(const tr of g.tracks.filter(t=>t.type==='rotation' && t.interpolation==='LINEAR')) {
+      const bone=tr.bone.replace('mixamorig:',''), index=smplBones.indexOf(bone);
+      if(index<0 || tr.times.length<2) continue;
+      const frameAt=t=>alignment.start+Math.round((t-alignment.outputStart)*motion.fps);
+      const source=motion.quats[index], sampled=tr.times.map(t=>source[frameAt(t)]), target=tr.output.values.map(norm);
+      if(sampled.some(q=>!q)) throw Error('Source time outside capture '+JSON.stringify({id:item.id,bone,alignment,count:motion.count,firstTime:tr.times[0],lastTime:tr.times.at(-1),fps:motion.fps,firstFrame:frameAt(tr.times[0]),lastFrame:frameAt(tr.times.at(-1))}));
+      const basis=fitBasis(sampled,target), inv=basis.clone().invert(), s0=qObj(sampled[0]).invert(), t0=qObj(target[0]);
+      const convert=q=>t0.clone().multiply(basis).multiply(s0).multiply(qObj(q)).multiply(inv).normalize().toArray();
+      const errors=sampled.map((q,i)=>angle(convert(q),target[i]));
+      const maxError=Math.max(...errors);
+      const detail={bone,sourceConsistencyMaxDegrees:maxError,numericToleranceDegrees:tolerance,modified:[],isolatedSourceTimes:[],filteredSourceTimes:[],unresolvedSourceIntervals:[]};
+      if(maxError>tolerance) {
+        detail.status='source/export mismatch: left unchanged for investigation';details.push(detail);continue;
+      }
+      const native=repairNative(source,motion.fps);
+      detail.status='source/export rotations consistent';
+      // Protéger les mouvements qui ne présentaient pas d'alerte dans le GLB :
+      // seuls les deux bouts d'un saut observé peuvent être modifiés.
+      const suspect=new Set();
+      for(let i=1;i<target.length;i++) if(angle(target[i-1],target[i])/(tr.times[i]-tr.times[i-1])/30>jumpThreshold) {suspect.add(i-1);suspect.add(i);}
+      detail.observedJumpIntervals=changedIntervals(suspect,tr.times);
+      detail.unresolvedSourceIntervals=native.unresolved.map(s=>({start:s.start-alignment.startSeconds+alignment.outputStart,end:s.end-alignment.startSeconds+alignment.outputStart})).filter(s=>s.end>=tr.times[0] && s.start<=tr.times.at(-1));
+      const changed=new Set();
+      for(let i=1;i<tr.times.length-1;i++) {
+        if(!suspect.has(i)) continue;
+        const frame=frameAt(tr.times[i]);
+        if(angle(native.quats[frame],source[frame])<=tolerance) continue;
+        const q=convert(native.quats[frame]);
+        if(dot(q,target[i])<0) q.forEach((v,k)=>q[k]=-v);
+        q.forEach((v,k)=>g.buf.writeFloatLE(v,tr.output.offset+i*tr.output.stride+k*4));changed.add(i);
+      }
+      detail.modified=changedIntervals(changed,tr.times);details.push(detail);
+      const exportedFrames=new Set([...changed].map(i=>frameAt(tr.times[i])));
+      const support=new Set([...exportedFrames].flatMap(i=>[i-1,i,i+1]));
+      detail.isolatedSourceTimes=native.isolated.filter(i=>support.has(i)).map(i=>i/motion.fps);
+      detail.filteredSourceTimes=native.filtered.filter(i=>exportedFrames.has(i)).map(i=>i/motion.fps);
+    }
+    assertPreserved(original,parse(g.buf));
+    const candidateFile=`public/animations/npz/repair-candidates/${path.basename(entry.file)}`;
+    fs.mkdirSync(path.join(root,path.dirname(candidateFile)),{recursive:true});
+    fs.writeFileSync(path.join(root,candidateFile),g.buf);
+    const row={id:item.id,candidateId:item.id+'-repair-preview',originalFile:entry.file,candidateFile,sourceFile,sourceFPS:motion.fps,alignment,before:audit(original),after:audit(parse(g.buf)),details,originalSHA256:require('node:crypto').createHash('sha256').update(input).digest('hex'),acceptance:'pending visual comparison; original retained'};
+    rows.push(row);console.log(item.id,`${row.before.jumps} → ${row.after.jumps}`,`source offset ${alignment.startSeconds}s`);
+  }
+  const registryText=fs.readFileSync(path.join(root,registryPath),'utf8');
+  const start='  // BEGIN NPZ REPAIR COMPARISONS',end='  // END NPZ REPAIR COMPARISONS';
+  const comparisons=rows.map(r=>{
+    const e=entries.find(e=>e.id===r.id);
+    return e.block.replace(/id: '[^']+'/,`id: '${r.candidateId}'`).replace(/path: '[^']+'/,`path: '${r.candidateFile.slice('public/'.length)}'`).replace(/label: (['`])([^\n]+?)\1/,(_,quote,label)=>`label: ${quote}[ESSAI correction] ${label}${quote}`).replace(/^ +aliases:.*\n/m,'').replace(/tags: \[[^\]]*\]/,"tags: ['npz-repair-candidate']");
+  }).join('\n');
+  const block=`${start}\n${comparisons}\n${end}\n`;
+  const next=registryText.includes(start)?registryText.replace(new RegExp(start+'[\\s\\S]*?'+end+'\\n'),block):registryText.replace(/\n\];\s*$/,'\n'+block+'];\n');
+  if(next===registryText && !registryText.includes(start)) throw Error('Cannot add comparison entries');
+  fs.writeFileSync(path.join(root,registryPath),next);
+  fs.writeFileSync(path.join(root,repairReport),JSON.stringify({version:1,method:'native isolated-return repair + local symmetric geodesic smoothing; long intervals retained',rows},null,2)+'\n');
+  writeRepairReport(rows);
+}
+function writeRepairReport(rows) {
+  let md='# Comparaisons de correction des 12 animations NPZ\n\nLes originaux restent actifs et inchangés. Les versions candidates sont accessibles dans le sélecteur existant sous **[ESSAI correction]**, identifiant original suffixé `-repair-preview`. Aucun remplacement définitif n’a été effectué. Les candidats portent uniquement le tag `npz-repair-candidate`, sans les alias ni tags comportementaux des originaux, pour ne pas rejoindre les tirages IA par tags.\n\n';
+  md+='## Méthode et limites\n\nAlignement temporel NPZ/GLB par comparaison de la vitesse angulaire du bassin sur tous les instants exportés. Estimation du changement de base à partir des rotations relatives, puis vérification sur toutes les orientations de chaque articulation. Les discordances dépassant le budget numérique Float32 sont signalées et laissées intactes : elles ne sont pas attribuées automatiquement au capteur.\n\nÀ la cadence native : remplacement des pics isolés avec retour vers des voisins cohérents par SLERP ; moyenne géodésique symétrique [1,2,1] sur les transitoires courts. Les intervalles de vitesse élevée continus dépassant 1/30 s sont conservés et signalés. Le seuil historique 25° à 30 Hz est une alerte, pas une limite biomécanique. Les dates, translations XYZ, échelles, extrémités et autres octets des GLB sont préservés. Le traitement ne corrige ni la hauteur du sol ni les appuis par IK.\n\n';
+  md+='## Résultats (premier clip, 30 Hz)\n\n| Animation | Avant | Candidate | Os modifiés | Intervalles longs signalés |\n|---|---:|---:|---:|---:|\n';
+  for(const r of rows) md+=`| ${r.id} | ${r.before.jumps} | ${r.after.jumps} | ${r.details.filter(d=>d.modified.length).length} | ${r.details.reduce((n,d)=>n+d.unresolvedSourceIntervals.length,0)} |\n`;
+  md+='\n## Vérification visuelle à effectuer\n\nComparer les versions aux mêmes instants, avec vitesse 1 et Hips-Lock désactivé. Observer les poignets, les cuisses et le bassin sur les passages modifiés, mais aussi les pieds/mains en appui et des passages non modifiés. Une baisse du compteur ne constitue pas une validation. RnB, Bachata Vaso et Dolphin sont les trois pilotes ; les neuf autres candidats restent eux aussi en attente de validation.\n\n';
+  for(const r of rows) {
+    md+=`### ${r.id}\n\nSource : ${path.basename(r.sourceFile)}, ${r.sourceFPS} Hz. Décalage : ${r.alignment.startSeconds.toFixed(4)} s. Erreur moyenne d’alignement : ${r.alignment.meanAngularStepError.toFixed(6)}°.\n\n`;
+    for(const d of r.details.filter(d=>d.modified.length||d.unresolvedSourceIntervals.length||d.status.includes('mismatch'))) md+=`- **${d.bone}** : ${d.modified.length} plage(s) modifiée(s), ${d.unresolvedSourceIntervals.length} plage(s) longue(s) conservée(s). ${d.status}.\n`;
+  }
+  md+='\nLe rapport JSON `scripts/npz_repair_candidates.json` fournit les dates exactes, clés et articulations modifiées, les erreurs source/export et les intervalles restants.\n';
+  md+='\n## Contrôles reproductibles\n\n- `node scripts/temp_npz_resume.cjs repair` : régénérer les 12 candidats depuis les originaux (aucun lissage cumulatif).\n- `node scripts/temp_npz_resume.cjs repair-test` : pics isolés, mouvement sain, signes q/−q, symétrie temporelle, longues zones intactes, récupération de base, alignement NPZ/GLB et invariants binaires des 12 paires.\n- `node scripts/temp_npz_resume.cjs repair-browser` : avec Vite sur le port 5193 (ou `ROOM_TEST_URL`), vérifier les deux squelettes dans Chromium headless aux mêmes instants, puis écrire `scripts/npz_repair_browser.json` et trois captures pilotes dans `/tmp/room-npz-repair-review/`. Les deltas d’extrémités sont mesurés sur ces instants seulement. Ce contrôle du chargement, du mixeur et du rendu des squelettes ne valide pas les contacts ni le retargeting sur les personnages de l’application.\n';
+  md+='\n## Limite du contrôle historique global\n\nLe mode historique `verify` ne lit que les entrées littérales du registre et échoue actuellement sur 230 fichiers InterX déclarés par un manifeste importé. Il ne constitue donc pas une validation globale du catalogue actuel. Les tests ciblés `repair-test` et `repair-browser` vérifient les 12 paires de ce rapport, y compris leur résolution par le véritable registre de l’application.\n';
+  fs.writeFileSync(path.join(root,'docs/npz-repair-candidates.md'),md);
+}
+function testRepairs() {
+  const assert=require('node:assert/strict');
+  const q=d=>new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),d*Math.PI/180).toArray();
+  const clean=Array.from({length:30},(_,i)=>q(i));
+  assert.deepEqual(repairNative(clean,120).quats,clean,'Healthy motion must remain exact');
+  const flipped=clean.map((v,i)=>i%2?v.map(x=>-x):v);
+  assert.equal(repairNative(flipped,120).isolated.length,0,'Quaternion signs are not spikes');
+  const spike=clean.map(v=>v.slice());spike[12]=q(120);
+  assert(angle(repairNative(spike,120).quats[12],clean[12])<1e-4,'Isolated spike must be repaired');
+  const forward=repairNative(spike,120).quats, reverse=repairNative([...spike].reverse(),120).quats.reverse();
+  forward.forEach((v,i)=>assert(angle(v,reverse[i])<1e-4,'Filter must be symmetric in time'));
+  const noisy=Array.from({length:40},(_,i)=>q(i%2?120:-120));
+  const severe=repairNative(noisy,120);
+  assert(severe.unresolved.length>0,'Long corruption must be reported');
+  for(const span of severe.unresolved) for(let i=span.firstKey;i<=span.lastKey;i++) assert.deepEqual(severe.quats[i],noisy[i],'Long corruption must remain exact');
+  const basis=new THREE.Quaternion().setFromEuler(new THREE.Euler(0.4,0.8,-0.3));
+  const source=Array.from({length:30},(_,i)=>new THREE.Quaternion().setFromEuler(new THREE.Euler(i/30,Math.sin(i/10),i*i/900)).toArray());
+  const target=source.map(q=>basis.clone().multiply(qObj(q)).multiply(basis.clone().invert()).toArray());
+  assert(basis.angleTo(fitBasis(source,target))<1e-5,'Change of basis recovery');
+  const times=Array.from({length:5},(_,i)=>(i+1)/30);
+  const clipped={tracks:[{bone:'mixamorig:Hips',type:'rotation',interpolation:'LINEAR',times,output:{values:times.map((_,i)=>target[4+i*4])}}]};
+  const aligned=alignSource(clipped,{fps:120,count:source.length,quats:[source]});
+  assert.equal(aligned.start,4,'Native source crop alignment');
+  assert.equal(aligned.outputStart,1/30,'GLB initial frame offset');
+  const report=JSON.parse(fs.readFileSync(path.join(root,repairReport),'utf8'));
+  assert.equal(report.rows.length,12);
+  for(const row of report.rows) {
+    const input=fs.readFileSync(path.join(root,row.originalFile)), output=fs.readFileSync(path.join(root,row.candidateFile));
+    assert.equal(require('node:crypto').createHash('sha256').update(input).digest('hex'),row.originalSHA256,'Original changed');
+    assertPreserved(parse(input),parse(output));
+    assert.deepEqual(audit(parse(output)),row.after,'Report mismatch');
+    const candidateEntry=entries.find(e=>e.id===row.candidateId && e.file===row.candidateFile);
+    assert(candidateEntry,'Candidate not selectable');
+    assert(candidateEntry.block.includes("tags: ['npz-repair-candidate']"),'Comparison must not join normal behavior tag queries');
+    assert.equal(row.before.duration,row.after.duration);
+    assert.deepEqual(row.before.hipsRange,row.after.hipsRange);
+    const a=parse(input),b=parse(output);
+    a.tracks.forEach((tr,trackIndex)=>{
+      if(tr.type!=='rotation') return;
+      const detail=row.details.find(d=>'mixamorig:'+d.bone===tr.bone);
+      tr.output.values.forEach((q,key)=>{
+        if(JSON.stringify(q)===JSON.stringify(b.tracks[trackIndex].output.values[key])) return;
+        assert(key>0 && key<tr.times.length-1,'Track endpoint modified');
+        assert(detail?.modified.some(s=>key>=s.firstKey && key<=s.lastKey),'Undocumented changed key');
+        assert(detail?.observedJumpIntervals.some(s=>key>=s.firstKey && key<=s.lastKey),'Healthy GLB key modified');
+      });
+    });
+  }
+  console.log('Tests passed: isolated repair, healthy movement, q/-q, sustained corruption, basis fit, 12 GLB invariants and comparison entries.');
+}
+async function reviewRepairs() {
+  const report=JSON.parse(fs.readFileSync(path.join(root,repairReport),'utf8'));
+  const launch=require('./browser-test-options.cjs');
+  const browser=await launch({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+  const outDir='/tmp/room-npz-repair-review';fs.mkdirSync(outDir,{recursive:true});
+  const results=[], errors=[];
+  try {
+    const page=await browser.newPage();await page.setViewport({width:1400,height:800});
+    page.on('pageerror',err=>errors.push(String(err)));
+    const url=process.env.ROOM_TEST_URL||'http://127.0.0.1:5193';
+    await page.goto(url+'/AGENTS.md');
+    await page.setContent('<html><body style="margin:0;background:#17212d;color:white;font:16px sans-serif"><div id="title" style="padding:12px"></div><canvas id="review"></canvas><div style="padding:12px">Gauche : original · Droite : essai correction · Même instant, mêmes translations XYZ</div></body></html>');
+    for(const row of report.rows) {
+      const pilot=['bachata-vaso-01','randb-anna-cortesi-c3d','yoga-dolphin-pose-or-ardha-pincha-mayurasana-a'].includes(row.id);
+      const hand=row.details.find(d=>d.bone==='LeftHand' && d.modified.length)||row.details.find(d=>d.modified.length);
+      const affected=hand?.modified[0]?.start??row.before.duration/2;
+      const times=[row.alignment.outputStart,affected,row.before.duration/2,row.before.duration];
+      const result=await page.evaluate(async({row,times})=>{
+        const T=await import('/node_modules/three/build/three.module.js');
+        const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
+        const {getAnimationDef,getAnimationsByTags}=await import('/src/features/scene/animations/animationResolver.ts');
+        if(getAnimationDef(row.candidateId)?.path!==row.candidateFile.replace(/^public\//,'')) throw Error('Candidate does not resolve through app registry');
+        if(getAnimationDef(row.id)?.path!==row.originalFile.replace(/^public\//,'')) throw Error('Original resolver mapping changed');
+        if(getAnimationsByTags(['dance','yoga'],'any').some(d=>d.id===row.candidateId)) throw Error('Candidate entered normal behavior queries');
+        const loader=new GLTFLoader();
+        const models=await Promise.all([row.originalFile,row.candidateFile].map(f=>loader.loadAsync('/'+f.replace(/^public\//,''))));
+        const states=models.map(g=>{
+          const mixer=new T.AnimationMixer(g.scene),action=mixer.clipAction(g.animations[0]);action.setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();
+          const bones=[];g.scene.traverse(n=>{if(n.isBone)bones.push(n);});
+          return {g,mixer,action,bones};
+        });
+        const footDifferences=[];
+        for(const time of times) {
+          states.forEach(s=>{s.action.reset().play();s.mixer.setTime(time);s.g.scene.updateMatrixWorld(true);});
+          if(models[0].animations[0].duration!==models[1].animations[0].duration) throw Error('Browser clip duration mismatch');
+          for(const s of states) for(const bone of s.bones) if(bone.matrixWorld.elements.some(x=>!Number.isFinite(x))) throw Error('Non-finite skeleton');
+          for(const s of states) {
+            const hips=s.bones.find(b=>b.name==='mixamorigHips');
+            const track=s.g.animations[0].tracks.find(t=>t.name===hips.name+'.quaternion');
+            if(!track) throw Error('Missing animated hips track');
+            const expected=new T.Quaternion().fromArray(track.createInterpolant().evaluate(time)).normalize();
+            if(expected.angleTo(hips.quaternion.clone().normalize())>1e-5) throw Error('Mixer is not evaluating the requested frame');
+          }
+          // GLTFLoader applique PropertyBinding.sanitizeNodeName (retire ':').
+          const endpoints=['mixamorigLeftFoot','mixamorigRightFoot','mixamorigLeftHand','mixamorigRightHand'];
+          footDifferences.push({time,deltas:Object.fromEntries(endpoints.map(name=>{
+            const a=states[0].bones.find(b=>b.name===name), b=states[1].bones.find(b=>b.name===name);
+            if(!a||!b) throw Error('Missing comparison endpoint '+name);
+            return [name,a.getWorldPosition(new T.Vector3()).distanceTo(b.getWorldPosition(new T.Vector3()))];
+          }))});
+        }
+        const renderer=new T.WebGLRenderer({canvas:document.getElementById('review'),antialias:true,preserveDrawingBuffer:true});
+        renderer.setSize(1400,680);renderer.setScissorTest(true);
+        function draw(time) {
+          const positions=[];
+          states.forEach(s=>{s.action.reset().play();s.mixer.setTime(time);s.g.scene.updateMatrixWorld(true);s.bones.forEach(b=>positions.push(b.getWorldPosition(new T.Vector3())));});
+          const box=new T.Box3().setFromPoints(positions),center=box.getCenter(new T.Vector3()), size=box.getSize(new T.Vector3());
+          const radius=Math.max(size.x,size.y,size.z);
+          if(!(radius>0)) throw Error('Empty skeleton');
+          states.forEach((s,i)=>{
+            const scene=new T.Scene(),vertices=[];
+            for(const bone of s.bones) if(bone.parent?.isBone) {
+              const a=bone.getWorldPosition(new T.Vector3()),b=bone.parent.getWorldPosition(new T.Vector3());
+              vertices.push(...a.toArray(),...b.toArray());
+            }
+            const geometry=new T.BufferGeometry().setAttribute('position',new T.Float32BufferAttribute(vertices,3));
+            const material=new T.LineBasicMaterial({color:i?0x61e4ba:0xffca76});
+            const skeleton=new T.LineSegments(geometry,material);scene.add(skeleton);
+            const grid=new T.GridHelper(radius*3,12,0x6c7b8f,0x334155);grid.position.set(center.x,0,center.z);scene.add(grid);
+            const camera=new T.PerspectiveCamera(40,700/680,radius/100,radius*20);
+            camera.position.copy(center).add(new T.Vector3(radius*1.1,radius*0.55,radius*1.8));camera.lookAt(center);
+            renderer.setViewport(i*700,0,700,680);renderer.setScissor(i*700,0,700,680);renderer.setClearColor(0x17212d);renderer.render(scene,camera);
+            geometry.dispose();material.dispose();grid.geometry.dispose();grid.material.dispose();
+          });
+          document.getElementById('title').textContent=row.id+' — '+time.toFixed(3)+' s';
+        }
+        draw(times[1]);
+        // Preserve the canvas for the screenshot; dispose WebGL resources after it.
+        window.disposeReview=()=>{renderer.dispose();states.forEach(s=>s.mixer.stopAllAction());};
+        return {id:row.id,duration:models[0].animations[0].duration,bones:states.map(s=>s.bones.length),evaluatedTimes:times,endpointDeltas:footDifferences};
+      },{row,times});
+      if(pilot) {result.screenshot=path.join(outDir,row.id+'.png');await page.screenshot({path:result.screenshot});}
+      await page.evaluate(()=>window.disposeReview());
+      results.push(result);console.log('Browser OK:',row.id);
+    }
+    if(errors.length) throw Error(errors.join('\n'));
+    fs.writeFileSync(path.join(root,'scripts/npz_repair_browser.json'),JSON.stringify({headless:true,notes:'Skeleton loader/render checks; not a visual acceptance of character retargeting or contacts.',results},null,2)+'\n');
+  } finally {await browser.close();}
+}
+Promise.resolve(main()).catch(err=>{console.error(err);process.exitCode=1;});

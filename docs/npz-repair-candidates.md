@@ -7,7 +7,7 @@
 - `npx tsc --noEmit` et `npm run build` : réussis. Le build signale les avertissements Sass et de taille de bundles déjà présents.
 - Aucune validation visuelle des personnages ou des contacts n’est déduite de ces tests. Les originaux restent actifs ; les candidats sont proposés pour comparaison seulement.
 
-Les fichiers de cette implémentation ont été inclus par un commit concurrent, `753fd142`, dont le titre concerne aussi le marqueur BNF. Cette note documente séparément les vérifications du lot NPZ sans modifier cet historique.
+Le lot NPZ est versionné séparément des travaux concurrents sur le marqueur BNF.
 
 Le contrôle historique global `verify` échoue actuellement sur 230 fichiers InterX déclarés par un manifeste importé qu’il ne sait pas lire. Les contrôles ciblés de ce lot sont `repair-test` et `repair-browser`, avec résolution des 12 variantes par le véritable registre de l’application.
 
