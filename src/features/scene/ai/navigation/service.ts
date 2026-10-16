@@ -319,7 +319,7 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
   if (limited.x !== position.x || limited.z !== position.z) {
     route.waitReason = 'Déplacement limité par le corps d’un autre PNJ';
     // A stop at contact is insufficient: keep a real path around the other bodies.
-    const base = route.crowd?.graph === route.graph ? route.crowd.base
+    const base = route.crowd && (route.crowd.graph === route.graph || route.crowd.planning) ? route.crowd.base
       : route.graph ?? getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor);
     const obstacles = getAgentObstacles(agentId, start);
     const signature = JSON.stringify(obstacles);
@@ -408,9 +408,9 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
     route.owner = getContainingObjectOwner(agentId, start);
   }
   if (route.owner && contained(route.owner, start) && !(interaction && owner === route.owner)) {
-    if (route.exit?.owner !== route.owner || route.exit.graph !== graph) {
+    if (route.exit?.owner !== route.owner || route.exit.graph !== base) {
       const point = approachFor(route.owner, target, true);
-      route.exit = point ? { owner: route.owner, graph, point } : undefined;
+      route.exit = point ? { owner: route.owner, graph: base, point } : undefined;
     }
     const exit = route.exit?.point;
     if (!exit) { route.error = `Aucune sortie praticable de ${route.owner}`; navigationDebug.set(agentId, { path: [], target, error: route.error }); return start; }

@@ -1,4 +1,4 @@
-/** An opening is reserved until the agent has cleared it. Manual pushes remain independent. */
+/** Open passage requests can coexist; closing an opening requires exclusive access. */
 export type DoorKey = 'living' | 'bath' | 'entry' | 'glassRight' | 'glassLeft' | 'shower';
 const queues = new Map<DoorKey, { id: string; mode: 'open' | 'closed' }[]>();
 /** The glass leaves share one opening and cannot grant competing reservations. */
@@ -9,7 +9,8 @@ export function requestDoor(key: DoorKey, agentId: string, mode: 'open' | 'close
   const entry = queue.find(e => e.id === agentId);
   if (entry) entry.mode = mode; else queue.push({ id: agentId, mode });
   queues.set(key, queue);
-  return queue[0].id === agentId;
+  const index = queue.findIndex(e => e.id === agentId);
+  return mode === 'closed' ? index === 0 : queue.slice(0, index).every(e => e.mode === 'open');
 }
 export function doorRequested(key: DoorKey): boolean { return queues.get(doorOpeningKey(key))?.[0]?.mode === 'open'; }
 export function releaseDoor(key: DoorKey, agentId: string): void {
