@@ -890,6 +890,7 @@ export function AnimFrameController({
                   </span>
                   <input
                     type="number"
+                    aria-label="Frame courante"
                     min={0}
                     max={totalFrames}
                     value={inputFrame}
@@ -898,7 +899,7 @@ export function AnimFrameController({
                     onBlur={handleFrameCommit}
                     onKeyDown={e => e.key === 'Enter' && handleFrameCommit()}
                     className="form-control py-0 bg-transparent text-dark border-start-0 border-end-0 text-center fw-bold px-1"
-                    style={{ width: '3.2rem' }}
+                    style={{ width: `calc(${Math.max(String(totalFrames).length, inputFrame.length)}ch + 3rem)`, flex: '0 0 auto' }}
                   />
                   <span className="input-group-text py-0 px-1 bg-transparent text-muted border-start-0 small">
                     /{totalFrames}

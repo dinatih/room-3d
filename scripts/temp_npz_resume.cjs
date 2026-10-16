@@ -196,7 +196,8 @@ function audit(g) {
 }
 function main() {
   const mode = process.argv[2] || 'audit';
-  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser','next-three'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser','next-three','frame-check'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(mode==='frame-check') return checkFrameCounter();
   if(mode==='next-three') return nextThree();
   if(mode==='refine-scan') return scanRefinement();
   if(mode==='refine') return refineAndExtract();
@@ -1130,5 +1131,63 @@ async function nextThree() {
   fs.writeFileSync(path.join(root,'docs/npz-next-three.md'),md);
   if(process.argv.includes('--browser')) await reviewRepairs(browserRows,'npz_next_three_browser.json',{},'/tmp/room-npz-next-three-review');
   console.log('Next three: invariant checks passed; visual acceptance pending.');
+}
+async function checkFrameCounter() {
+  const assert=require('node:assert/strict');
+  const browser=await require('./browser-test-options.cjs')({args:['--no-sandbox']});
+  try {
+    const page=await browser.newPage();await page.setViewport({width:1496,height:872});
+    await page.goto('http://127.0.0.1:5193/AGENTS.md');
+    await page.evaluate(async()=>{
+      window.$RefreshReg$=()=>{};window.$RefreshSig$=()=>type=>type;
+      window.__vite_plugin_react_preamble_installed__=true;
+      const {default:React}=await import('/node_modules/.vite/deps/react.js');
+      const {default:{createRoot}}=await import('/node_modules/.vite/deps/react-dom_client.js');
+      const {AnimFrameController}=await import('/src/features/inventory/AnimFrameController.tsx');
+      const {useAnimPreviewStore}=await import('/src/features/inventory/useAnimPreviewStore.ts');
+      window.frameStore=useAnimPreviewStore;
+      document.body.innerHTML='<div id="root"></div>';
+      const css=document.createElement('link');css.rel='stylesheet';css.href='/node_modules/bootstrap/dist/css/bootstrap.min.css';document.head.append(css);
+      useAnimPreviewStore.getState().setClipInfo('Bachata',133.6,false,30);
+      useAnimPreviewStore.getState().pause();
+      createRoot(document.getElementById('root')).render(React.createElement(AnimFrameController,{compact:true,isHumanCharacter:true,animKey:'bachata-vaso-01',showAnimationSelectors:false,keyboardEnabled:false,style:{position:'relative',width:'700px'}}));
+    });
+    const selector='[aria-label="Frame courante"]';await page.waitForSelector(selector);
+    const widths=[];
+    for(const frame of [998,999,1000,1001,1083,4008]) {
+      await page.evaluate(f=>window.frameStore.getState().seekToFrame(f),frame);
+      await page.waitForFunction((s,f)=>document.querySelector(s).value===String(f),{},selector,frame);
+      const state=await page.$eval(selector,input=>{
+        const style=getComputedStyle(input),ctx=document.createElement('canvas').getContext('2d');ctx.font=style.font;
+        return {value:input.value,width:input.clientWidth,textWidth:ctx.measureText(input.value).width,padding:parseFloat(style.paddingLeft)+parseFloat(style.paddingRight)};
+      });
+      assert(state.width-state.padding>=state.textWidth+parseFloat('24'),'Numeric input lacks room for digits and native spin controls');
+      widths.push({frame,...state});
+    }
+    const clips=await page.evaluate(async()=>{
+      const T=await import('/node_modules/three/build/three.module.js');
+      const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
+      const results=[];
+      for(const folder of ['dances','repair-candidates']) {
+        const model=await new GLTFLoader().loadAsync(`/animations/npz/${folder}/anim_bachata_vaso_01.glb`);
+        const clip=model.animations[0],mixer=new T.AnimationMixer(model.scene),action=mixer.clipAction(clip).play();
+        mixer.setTime(998/30);
+        const frames=[];
+        for(let i=0;i<86;i++) {
+          mixer.update(1/30);
+          window.frameStore.getState().setCurrentTime(action.time);
+          const frame=Math.round(window.frameStore.getState().currentTime*30);
+          if(frame!==999+i) throw Error('Frame discontinuity '+folder+' '+frame);
+          frames.push(frame);
+        }
+        results.push({folder,duration:clip.duration,first:frames[0],last:frames.at(-1),speed:action.getEffectiveTimeScale()});
+      }
+      return results;
+    });
+    await page.waitForFunction(s=>document.querySelector(s).value==='1084',{},selector);
+    await page.screenshot({path:'/tmp/room-bachata-frame-counter.png'});
+    console.log(JSON.stringify({widths,clips},null,2));
+    console.log('Frame counter and both Bachata mixers cross frame 999 at unchanged speed: PASS');
+  } finally {await browser.close();}
 }
 Promise.resolve(main()).catch(err=>{console.error(err);process.exitCode=1;});
