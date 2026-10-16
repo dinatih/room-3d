@@ -3,7 +3,6 @@ import { FAB_ANIMATION_DEFINITIONS } from '../../animations/fabManifest';
 const fabWalks = FAB_ANIMATION_DEFINITIONS.filter(def => def.tags.includes('npc-walk'));
 
 export const NPC_WALK_ANIMATIONS = [
-  ...fabWalks.map(def => def.id),
   'miley-armature-elegant-walk-2l',
   'miley-armature-catwalk-loop',
   'miley-armature-walk-f',
