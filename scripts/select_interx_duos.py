@@ -37,7 +37,7 @@ def select_recordings(source, maximum):
 
 
 def select_height_batch(ranking, maximum, batch_size, target_height, eligible=None):
-    if batch_size < 1 or target_height <= 0 or not 1 <= maximum <= 8:
+    if batch_size < 1 or target_height <= 0 or (maximum is not None and not 1 <= maximum <= 8):
         raise ValueError('Invalid batch size, target height or category quota')
     published = json.loads(MANIFEST.read_text())['duos']
     covered = {(duo['actionCode'], duo['variation']) for duo in published}
@@ -59,7 +59,7 @@ def select_height_batch(ranking, maximum, batch_size, target_height, eligible=No
     while len(selected) < batch_size:
         added = False
         for action, queue in queues.items():
-            if queue and counts[action] < maximum:
+            if queue and (maximum is None or counts[action] < maximum):
                 selected.append(queue.pop(0))
                 counts[action] += 1
                 added = True
@@ -67,7 +67,7 @@ def select_height_batch(ranking, maximum, batch_size, target_height, eligible=No
                     break
         if not added:
             break
-    if not selected:
+    if not selected and maximum is not None:
         raise ValueError('No unpublished action/session remains in this ranking')
     return selected
 
@@ -84,9 +84,14 @@ def main():
     parser.add_argument('--target-height', type=float, default=173.4, help='Target avatar height in centimetres')
     parser.add_argument('--hand-motion', action='store_true', help='Estimate disk size from clips with finger animation')
     parser.add_argument('--priority-themes', action='store_true', help='Select remaining affection, help/relaxation and play/dance sessions from the original capped catalog')
+    parser.add_argument('--all-variations', action='store_true', help='Remove the per-action quota, retaining one height-matched pair per action/session')
     args = parser.parse_args()
     model = estimate_model('full-axis-angle' if args.hand_motion else None)
-    if args.height_ranking and (args.recordings or args.batch_size is None):
+    if args.all_variations and (not args.height_ranking or args.priority_themes):
+        raise ValueError('--all-variations requires --height-ranking and cannot use --priority-themes')
+    if args.all_variations and args.batch_size is not None:
+        raise ValueError('--all-variations selects all sessions and cannot use --batch-size')
+    if args.height_ranking and (args.recordings or (args.batch_size is None and not args.all_variations)):
         raise ValueError('--height-ranking requires --batch-size and cannot be combined with --recordings')
     if args.batch_size is not None and not args.height_ranking:
         raise ValueError('--batch-size requires --height-ranking')
@@ -97,16 +102,24 @@ def main():
         if args.priority_themes:
             preferred = {action['code'] for action in actions() if set(action['tags']) & {'affection', 'help-relaxation', 'play-dance'}}
             eligible = {(RECORDING.fullmatch(recording)[3], RECORDING.fullmatch(recording)[2]) for recording in select_recordings(args.source, args.max_per_action) if RECORDING.fullmatch(recording)[3] in preferred}
-        matched = select_height_batch(ranking, args.max_per_action, args.batch_size, args.target_height, eligible)
+        batch_size = sum(len({pair['variation'] for pair in pairs}) for pairs in ranking['actions'].values()) if args.all_variations else args.batch_size
+        matched = select_height_batch(ranking, None if args.all_variations else args.max_per_action, batch_size, args.target_height, eligible)
     elif args.priority_themes:
         raise ValueError('--priority-themes requires --height-ranking')
-    selected = [pair['recording'] for pair in matched] if matched else args.recordings if args.recordings else select_recordings(args.source, args.max_per_action)
+    selected = [pair['recording'] for pair in matched] if matched is not None else args.recordings if args.recordings else select_recordings(args.source, args.max_per_action)
     selection = {'schemaVersion': 1, 'dataset': 'inter-x', 'conversion': CONVERSION,
-                 'policy': {'take': 'first-available', 'representative': 'height-matched-per-action-session' if matched else 'explicit-recordings' if args.recordings else 'lowest-group-per-action-session', 'maxPerAction': args.max_per_action},
+                 'policy': {'take': 'first-available', 'representative': 'height-matched-all-action-sessions' if args.all_variations else 'height-matched-per-action-session' if matched is not None else 'explicit-recordings' if args.recordings else 'lowest-group-per-action-session', 'maxPerAction': None if args.all_variations else args.max_per_action},
                  'sizeEstimate': model, 'actions': actions(),
                  'duos': [entry_for(args.source, recording, model) for recording in selected]}
-    if matched:
+    if matched is not None:
         selection['heightSelection'] = {'targetHeightCm': args.target_height, 'models': ranking['models'], 'candidates': matched}
+        published = {(duo['actionCode'], duo['variation']) for duo in json.loads(MANIFEST.read_text())['duos']}
+        selection['coverage'] = {action: {
+            'availableVariations': sorted({pair['variation'] for pair in pairs}),
+            'publishedVariations': sorted(variation for code, variation in published if code == action),
+        } for action, pairs in ranking['actions'].items()}
+        for action, coverage in selection['coverage'].items():
+            print(f"COVERAGE {action}: {len(coverage['publishedVariations'])}/{len(coverage['availableVariations'])} sessions published")
     report(selection)
     if not args.dry_run:
         atomic_json(args.output, selection)

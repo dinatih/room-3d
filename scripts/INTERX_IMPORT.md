@@ -360,6 +360,40 @@ uniquement les deux pilotes publiés ; les futures actions au sol doivent être
 vérifiées selon leur posture attendue.
 # Export des thèmes prioritaires en une passe
 
+## Complément du 16 octobre 2026 : toutes les variantes T demandées
+
+Les sept actions demandées couvrent désormais toutes leurs sessions T source,
+avec un binôme choisi selon la taille et la première prise disponible par G/T/A.
+Les répétitions G et R restent exclues. T désigne une session, sans garantir
+un style sémantique différent.
+
+| Action | Variantes T disponibles et publiées |
+| --- | ---: |
+| Câlin | 4 |
+| Prendre la pose | 6 |
+| Tapoter le dos | 5 |
+| Chuchoter à l'oreille | 5 |
+| Soutenir avec la main | 5 |
+| Danser | 6 |
+| Bras dessus dessous | 5 |
+| Total | 36 |
+
+Seuls trois chuchotements manquaient : G030T006A018R007,
+G059T001A018R026 et G004T007A018R017. Leurs six GLB sont ajoutés avec
+les doigts, le calage debout et les offsets source exacts. Le catalogue
+Inter-X compte désormais 118 duos, en conservant les comparaisons G001/G053.
+
+Le sélecteur de batch accepte `--all-variations` avec `--height-ranking` :
+ce mode retire le quota de huit sessions par action et sélectionne toutes les
+sessions encore absentes. Il ne se combine pas avec `--batch-size` ou
+`--priority-themes`. Le convertisseur accepte ce choix explicite sous la
+politique `height-matched-all-action-sessions` et `maxPerAction: null`.
+Le rapport de couverture indique les sessions déjà publiées ; une relance
+en `--dry-run` termine normalement avec zéro export si tout est couvert.
+
+La sélection exacte de ce complément est conservée dans
+`scripts/interx_expanded_selection.json`.
+
 Export terminé : **91 nouveaux duos / 182 GLB / 45,17 Mo** de GLB.
 Catalogue publié : **115 duos / 230 GLB / 58,85 Mo** de GLB, comprenant
 les deux comparaisons G001/G053 conservées. Les thèmes prioritaires sont

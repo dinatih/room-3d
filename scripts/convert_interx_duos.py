@@ -104,11 +104,13 @@ def load_selection(path, source):
     if selection['schemaVersion'] != 1 or selection['dataset'] != 'inter-x' or selection['conversion'] != CONVERSION:
         raise ValueError('Selection schema or conversion settings do not match this converter')
     policy = selection['policy']
-    if policy['take'] != 'first-available' or policy['representative'] not in ('lowest-group-per-action-session', 'explicit-recordings', 'height-matched-per-action-session') or not 1 <= policy['maxPerAction'] <= 8:
+    unlimited = policy['representative'] == 'height-matched-all-action-sessions'
+    valid_quota = policy['maxPerAction'] is None if unlimited else isinstance(policy['maxPerAction'], int) and 1 <= policy['maxPerAction'] <= 8
+    if policy['take'] != 'first-available' or policy['representative'] not in ('lowest-group-per-action-session', 'explicit-recordings', 'height-matched-per-action-session', 'height-matched-all-action-sessions') or not valid_quota:
         raise ValueError('Invalid selection policy')
     counts = Counter(entry['actionCode'] for entry in selection['duos'])
     variations = {(entry['actionCode'], entry['variation']) for entry in selection['duos']}
-    if len(variations) != len(selection['duos']) or any(count > policy['maxPerAction'] for count in counts.values()):
+    if len(variations) != len(selection['duos']) or (not unlimited and any(count > policy['maxPerAction'] for count in counts.values())):
         raise ValueError('Selection duplicates an action/session or exceeds the per-action quota')
     seen = set()
     for entry in selection['duos']:
