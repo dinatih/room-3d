@@ -332,6 +332,9 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
     return passDoors(route, agentId, profile, start, next, proposed, travel);
   };
   const approachFor = (id: string, goal: Point, exiting: boolean) => getObjectApproach(id, goal, agentId, start, exiting, undefined, closedDoor);
+  // A previous interaction may leave us inside a different object's clearance.
+  // Discard its owner before detecting the obstacle we actually need to exit.
+  if (route.owner && !contained(route.owner, start)) route.owner = undefined;
   if (!route.owner && owner && contained(owner, start)) route.owner = owner;
   if (!route.owner) {
     const container = [...furnitureObstacles.values()].find(o => o.yMin < profile.height && o.yMax > 0 && pointInRing(start, inflate(o.polygon, profile.radius)));
@@ -346,7 +349,6 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
     if (!exit) { route.error = `Aucune sortie praticable de ${route.owner}`; navigationDebug.set(agentId, { path: [], target, error: route.error }); return start; }
     return localMove(exit, route.owner);
   }
-  if (route.owner && !contained(route.owner, start)) route.owner = undefined;
   if (interaction && owner && contained(owner, target)) {
     if (route.owner === owner) return localMove(target, owner);
     if (!route.approach || route.interactionTarget?.x !== target.x || route.interactionTarget?.z !== target.z) {
