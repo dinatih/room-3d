@@ -12,6 +12,7 @@ import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 import { Minimap } from '@features/scene/Minimap';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
+import { useAppIdle } from '@features/scene/idleState';
 import { ProfileButton } from '@features/scene/ProfileButton';
 import { PresetButton } from '@features/scene/PresetButton';
 
@@ -119,6 +120,7 @@ export function AppConsole({
   const isMobile = useIsMobile();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const activeChar = findCharacter(activeCharacterId);
+  const isIdle = useAppIdle();
 
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [open, setOpen] = useState(false);
@@ -453,6 +455,17 @@ export function AppConsole({
         >
           <i className="bi bi-map-fill" aria-hidden="true" />
         </button>
+
+        {/* Indicateur de veille */}
+        {isIdle && (
+          <span
+            className="badge text-warning-emphasis bg-warning-subtle border border-warning-subtle py-1 px-2 fw-semibold user-select-none d-flex align-items-center gap-1"
+            title="Application en veille (rendu 3D suspendu)"
+          >
+            <i className="bi bi-moon-stars-fill" aria-hidden="true" />
+            <span>En veille</span>
+          </span>
+        )}
 
         {/* 3 & 4. Groupe Perf + Preset */}
         <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Performances et qualité graphique">
