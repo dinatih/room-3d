@@ -7,6 +7,86 @@ const path = require('node:path');
 const cp = require('node:child_process');
 const THREE = require('three');
 const root = path.resolve(__dirname, '..');
+// User selection after visual review: retain only the two Dolphin excerpts.
+if (process.argv[2] === 'curate') {
+  const assert = require('node:assert/strict');
+  const removedIds = new Set([
+    'randb-anna-cortesi-c3d', 'randb-anna-cortesi-c3d-repair-preview', 'randb-anna-cortesi-c3d-clean-01',
+    'yoga-dolphin-pose-or-ardha-pincha-mayurasana-a', 'yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-repair-preview',
+  ]);
+  const registryFile = path.join(root, 'src/features/scene/animations/animationRegistry.ts');
+  let text = fs.readFileSync(registryFile, 'utf8');
+  text = text.replace(/^ +\{\n[\s\S]*?^ +\},?\n/gm, block => {
+    const id = block.match(/\bid:\s*'([^']+)'/)?.[1];
+    if (!removedIds.has(id)) return block;
+    const asset = block.match(/\bpath:\s*'([^']+)'/)[1];
+    fs.rmSync(path.join(root, 'public', asset), { force: true });
+    return '';
+  });
+  fs.writeFileSync(registryFile, text);
+  for (const relative of ['dances/dancedb_meta.json', 'yoga/yoga_meta.json']) {
+    const file = path.join(root, 'public/animations/npz', relative);
+    const rows = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const kept = rows.filter(row => !/anim_randb_anna_cortesi_c3d\.glb|anim_yoga_dolphin_pose_or_ardha_pincha_mayurasana_a\.glb/.test(JSON.stringify(row)));
+    fs.writeFileSync(file, JSON.stringify(kept, null, 2) + '\n');
+  }
+  for (const id of removedIds) assert(!text.includes(`id: '${id}'`));
+  for (const suffix of ['01', '02']) {
+    const id = `yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-${suffix}`;
+    assert(text.includes(`id: '${id}'`));
+    assert(fs.existsSync(path.join(root, 'public/animations/npz/clean-extracts', id + '.glb')));
+  }
+  console.log('Curated catalog: RnB removed; long/trial Dolphin removed; both Dolphin excerpts retained.');
+  if (process.argv.includes('--browser')) {
+    (async () => {
+      const browser = await require('./browser-test-options.cjs')({ args: ['--no-sandbox'] });
+      try {
+        const page = await browser.newPage();
+        // Exercise the real list controls independently of heavy character rendering.
+        await page.setRequestInterception(true);
+        page.on('request', request => {
+          if (new URL(request.url()).pathname === '/src/features/inventory/InventoryPreview.tsx')
+            return request.respond({ status: 200, contentType: 'application/javascript', body: 'export function InventoryPreview() { return null; }' });
+          return request.continue();
+        });
+        await page.goto('http://127.0.0.1:5193/AGENTS.md');
+        await page.evaluate(async () => {
+          window.$RefreshReg$ = () => {};
+          window.$RefreshSig$ = () => type => type;
+          window.__vite_plugin_react_preamble_installed__ = true;
+          const { default: React } = await import('/node_modules/.vite/deps/react.js');
+          const { default: { createRoot } } = await import('/node_modules/.vite/deps/react-dom_client.js');
+          const { AnimationStudioView } = await import('/src/features/inventory/AnimationStudioView.tsx');
+          const { STUDIO_CATALOG } = await import('/src/features/inventory/animationStudioCatalog.ts');
+          if (STUDIO_CATALOG.solo.some(row => /randb-anna-cortesi/.test(row.id))) throw Error('RnB still selectable');
+          const dolphin = STUDIO_CATALOG.solo.filter(row => row.id.startsWith('yoga-dolphin-pose-or-ardha-pincha-mayurasana-a'));
+          if (dolphin.length !== 2 || dolphin.some(row => !row.id.includes('-clean-'))) throw Error('Wrong Dolphin selection');
+          document.body.innerHTML = '<div id="root"></div>';
+          const css = document.createElement('link'); css.rel = 'stylesheet';
+          css.href = '/node_modules/bootstrap/dist/css/bootstrap.min.css'; document.head.append(css);
+          createRoot(document.getElementById('root')).render(React.createElement(AnimationStudioView));
+        });
+        const input = '[aria-label="Rechercher une animation"]';
+        const clear = '[aria-label="Effacer la recherche d’animation"]';
+        await page.waitForSelector(input);
+        for (const corner of ['top-left', 'bottom-right']) {
+          await page.type(input, 'zz_no_match');
+          await page.waitForSelector(clear);
+          const button = await page.$(clear), box = await button.boundingBox();
+          assert(box.width >= box.height, 'Clear target should be at least square');
+          await page.mouse.click(corner === 'top-left' ? box.x + 3 : box.x + box.width - 3,
+            corner === 'top-left' ? box.y + 3 : box.y + box.height - 3);
+          await page.waitForFunction(selector => document.querySelector(selector).value === '', {}, input);
+          assert(await page.$eval(input, node => node === document.activeElement), 'Search focus restored');
+          console.log('Clear button corner click passed:', corner, box.width, box.height);
+        }
+        console.log('Browser catalog and search controls: PASS');
+      } finally { await browser.close(); }
+    })().then(() => process.exit(0), error => { console.error(error); process.exit(1); });
+    return;
+  }
+  process.exit(0);
+}
 const registryPath = 'src/features/scene/animations/animationRegistry.ts';
 const reportPath = path.join(__dirname, 'npz_resume_audit.json');
 const manifestPath = path.join(__dirname, 'npz_resume_changes.json');

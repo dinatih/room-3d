@@ -2021,15 +2021,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 280.8,
   },
   {
-    id: 'randb-anna-cortesi-c3d',
-    path: 'animations/npz/dances/anim_randb_anna_cortesi_c3d.glb',
-    category: 'dances',
-    label: 'RandB Anna Cortesi C3D (4142f / 138.1s, 1515KB)',
-    aliases: ['dance-randb-anna-cortesi', 'randb-anna-cortesi', 'rnb-anna-cortesi'],
-    tags: ['dance', 'rnb', 'randb', 'urban', 'dance-wide', 'party', 'dance-from-npz'],
-    duration: 138.1,
-  },
-  {
     id: 'reggaeton-stefanos-c3d',
     path: 'animations/npz/dances/anim_reggaeton_stefanos_c3d.glb',
     category: 'dances',
@@ -8660,14 +8651,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 17.9,
   },
   {
-    id: 'yoga-dolphin-pose-or-ardha-pincha-mayurasana-a',
-    path: 'animations/npz/yoga/anim_yoga_dolphin_pose_or_ardha_pincha_mayurasana_a.glb',
-    category: 'yoga',
-    label: `[YOGA] Dolphin Pose (Ardha Pincha Mayurasana) (486f / 16.2s, 330KB)`,
-    tags: ['yoga', 'fitness'],
-    duration: 16.2,
-  },
-  {
     id: 'yoga-downward-facing-dog-pose-or-adho-mukha-svanasana-c',
     path: 'animations/npz/yoga/anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_c.glb',
     category: 'yoga',
@@ -9663,14 +9646,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 280.8,
   },
   {
-    id: 'randb-anna-cortesi-c3d-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_randb_anna_cortesi_c3d.glb',
-    category: 'dances',
-    label: '[ESSAI correction] RandB Anna Cortesi C3D (4142f / 138.1s, 1515KB)',
-    tags: ['npz-repair-candidate'],
-    duration: 138.1,
-  },
-  {
     id: 'salsa-stefanos-c3d-repair-preview',
     path: 'animations/npz/repair-candidates/anim_salsa_stefanos_c3d.glb',
     category: 'dances',
@@ -9702,24 +9677,8 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     tags: ['npz-repair-candidate'],
     duration: 96.8,
   },
-  {
-    id: 'yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_yoga_dolphin_pose_or_ardha_pincha_mayurasana_a.glb',
-    category: 'yoga',
-    label: `[ESSAI correction] [YOGA] Dolphin Pose (Ardha Pincha Mayurasana) (486f / 16.2s, 330KB)`,
-    tags: ['npz-repair-candidate'],
-    duration: 16.2,
-  },
   // END NPZ REPAIR COMPARISONS
   // BEGIN NPZ CLEAN EXTRACTS
-  {
-    id: 'randb-anna-cortesi-c3d-clean-01',
-    path: 'animations/npz/clean-extracts/randb-anna-cortesi-c3d-clean-01.glb',
-    category: 'dances',
-    label: '[EXTRAIT] RnB Anna — 01 (133.70–138.07 s)',
-    tags: ['npz-clean-extract'],
-    duration: 4.367,
-  },
   {
     id: 'yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-01',
     path: 'animations/npz/clean-extracts/yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-01.glb',

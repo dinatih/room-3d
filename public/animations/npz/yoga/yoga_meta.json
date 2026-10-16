@@ -180,18 +180,6 @@
     "cut_end_s": 0.6
   },
   {
-    "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Dolphin_Pose_or_Ardha_Pincha_Mayurasana_-a_stageii.npz",
-    "out_path": "/home/dinatih/Projects/room-3d/public/animations/npz/yoga/anim_yoga_dolphin_pose_or_ardha_pincha_mayurasana_a.glb",
-    "key": "Dolphin_Pose_or_Ardha_Pincha_Mayurasana_-a",
-    "filename": "anim_yoga_dolphin_pose_or_ardha_pincha_mayurasana_a.glb",
-    "title": "Dolphin Pose - Ardha Pincha Mayurasana",
-    "frames": 486,
-    "duration": 16.2,
-    "size_kb": 330,
-    "cut_start_s": 0.5,
-    "cut_end_s": 1.53
-  },
-  {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Eagle_Pose_or_Garudasana_-a_stageii.npz",
     "out_path": "/home/dinatih/Projects/room-3d/public/animations/npz/yoga/anim_yoga_eagle_pose_or_garudasana_a.glb",
     "key": "Eagle_Pose_or_Garudasana_-a",

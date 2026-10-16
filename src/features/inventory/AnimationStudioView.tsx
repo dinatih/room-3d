@@ -150,8 +150,15 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
               {value === 'solo' ? 'Solo' : 'Duo'} ({STUDIO_CATALOG[value].length})
             </button>)}
           </div>
-          <input ref={searchRef} type="search" className="form-control form-control-sm mb-2" aria-label="Rechercher une animation"
-            placeholder="Nom, identifiant, tags, notes…" value={filters.search} onChange={e => updateFilters({ search: e.target.value })} />
+          <div className="input-group input-group-sm mb-2">
+            <input ref={searchRef} type="text" className="form-control" aria-label="Rechercher une animation"
+              placeholder="Nom, identifiant, tags, notes…" value={filters.search} onChange={e => updateFilters({ search: e.target.value })} />
+            {filters.search && <button type="button" className="btn btn-outline-secondary px-3"
+              aria-label="Effacer la recherche d’animation" title="Effacer la recherche"
+              onClick={() => { updateFilters({ search: '' }); searchRef.current?.focus(); }}>
+              <i className="bi bi-x-lg" aria-hidden="true" />
+            </button>}
+          </div>
           <div className="d-flex gap-2 mb-2">
             <select aria-label="Catégorie d’animation" className="form-select form-select-sm" value={filters.category} onChange={e => updateFilters({ category: e.target.value })}>
               <option value="">Toutes les catégories</option>
