@@ -1943,7 +1943,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'bachata-vaso-01',
-    path: 'animations/npz/dances/anim_bachata_vaso_01.glb',
+    path: 'animations/npz/repair-candidates/anim_bachata_vaso_01.glb',
     category: 'dances',
     label: 'Bachata Vaso 01',
     aliases: ['dance-bachata-vaso', 'bachata-vaso', 'bachata-1'],
@@ -9564,7 +9564,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'happy-dance-olivia',
-    path: 'animations/npz/dances/anim_happy_dance.glb',
+    path: 'animations/npz/repair-candidates/anim_happy_dance.glb',
     category: 'dances',
     label: 'Danse de joie (Happy Dance)',
     aliases: ['happy-dance', 'danse-joie', 'joie'],
@@ -9573,7 +9573,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'excited-dance-olivia',
-    path: 'animations/npz/dances/anim_excited_dance.glb',
+    path: 'animations/npz/repair-candidates/anim_excited_dance.glb',
     category: 'dances',
     label: 'Danse excitée & festive',
     aliases: ['excited-dance', 'fete', 'danse-festive'],
@@ -9591,7 +9591,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'pleased-dance-olivia',
-    path: 'animations/npz/dances/anim_pleased_dance.glb',
+    path: 'animations/npz/repair-candidates/anim_pleased_dance.glb',
     category: 'dances',
     label: 'Danse satisfaite & agréable',
     aliases: ['pleased-dance', 'satisfait'],
@@ -9599,38 +9599,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 96.8,
   },
   // BEGIN NPZ REPAIR COMPARISONS
-  {
-    id: 'bachata-vaso-01-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_bachata_vaso_01.glb',
-    category: 'dances',
-    label: '[ESSAI correction] Bachata Vaso 01',
-    tags: ['npz-repair-candidate'],
-    duration: 133.6,
-  },
-  {
-    id: 'happy-dance-olivia-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_happy_dance.glb',
-    category: 'dances',
-    label: '[ESSAI correction] Danse de joie (Happy Dance)',
-    tags: ['npz-repair-candidate'],
-    duration: 87.4,
-  },
-  {
-    id: 'excited-dance-olivia-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_excited_dance.glb',
-    category: 'dances',
-    label: '[ESSAI correction] Danse excitée & festive',
-    tags: ['npz-repair-candidate'],
-    duration: 93.2,
-  },
-  {
-    id: 'pleased-dance-olivia-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_pleased_dance.glb',
-    category: 'dances',
-    label: '[ESSAI correction] Danse satisfaite & agréable',
-    tags: ['npz-repair-candidate'],
-    duration: 96.8,
-  },
   // END NPZ REPAIR COMPARISONS
   // BEGIN NPZ CLEAN EXTRACTS
   {

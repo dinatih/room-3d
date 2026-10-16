@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "id": "happy-dance-olivia",
+      "candidateId": "happy-dance-olivia-repair-preview",
+      "file": "public/animations/npz/repair-candidates/anim_happy_dance.glb",
+      "resultSHA256": "10b69cf490eb219ffb595cc79fe82e5c1f507a3aff61d64df8ed9274509cfc8d",
+      "originalSHA256": "c66fc0b9826693a6216fa48fc31b513863c21d9436af12ad09c72b10f23b64a1",
+      "acceptance": "accepted visually by user; promoted to canonical ID; uncorrected GLB deleted"
+    },
+    {
+      "id": "excited-dance-olivia",
+      "candidateId": "excited-dance-olivia-repair-preview",
+      "file": "public/animations/npz/repair-candidates/anim_excited_dance.glb",
+      "resultSHA256": "ac549797af0f87495ac357ec928b9cd71fb8440b245f6f50c6ec45bef89dfce3",
+      "originalSHA256": "34e25f482b74b8830421c970680059e1a7692bc0fc1aa6cb685fa71a81690832",
+      "acceptance": "accepted visually by user; promoted to canonical ID; uncorrected GLB deleted"
+    },
+    {
+      "id": "pleased-dance-olivia",
+      "candidateId": "pleased-dance-olivia-repair-preview",
+      "file": "public/animations/npz/repair-candidates/anim_pleased_dance.glb",
+      "resultSHA256": "218244d09b80b73b3b35109f602e68aa620ceb080f35f1c650755b6b05bc07dd",
+      "originalSHA256": "c147a0cd731191923d2e1fa40d79e33e2293cb6fe44cf273c50c5df29312c54d",
+      "acceptance": "accepted visually by user; promoted to canonical ID; uncorrected GLB deleted"
+    },
+    {
+      "id": "bachata-vaso-01",
+      "candidateId": "bachata-vaso-01-repair-preview",
+      "file": "public/animations/npz/repair-candidates/anim_bachata_vaso_01.glb",
+      "resultSHA256": "30f740afbab22b8c80951a6ab1f466c1c8abde159560ad2db381222ea9e2642c",
+      "originalSHA256": "3457adfaac0849abc6eff502a08c140db80bba874789b2063fb461686e5ac228",
+      "acceptance": "accepted visually by user; promoted to canonical ID; uncorrected GLB deleted"
+    }
+  ]
+}

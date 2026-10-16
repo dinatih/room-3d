@@ -199,7 +199,7 @@ function main() {
   if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser','next-three','following-three','olivia-three','distal','promote-three','frame-check'].includes(mode)) throw Error('Unknown mode '+mode);
   if(mode==='distal') return refineDistal();
   if(mode==='olivia-three') return nextThree(false,true);
-  if(mode==='promote-three') return promoteThree(process.argv.includes('--following'));
+  if(mode==='promote-three') return promoteThree(process.argv.includes('--following'),process.argv.includes('--final'));
   if(mode==='following-three') return nextThree(true);
   if(mode==='frame-check') return checkFrameCounter();
   if(mode==='next-three') return nextThree();
@@ -1092,11 +1092,17 @@ async function reviewRefinement() {
   }
   return reviewRepairs(rows,'npz_refinement_browser.json',{'/__npz_accepted_bachata.glb':base.buf},'/tmp/room-npz-refinement-review');
 }
-function promoteThree(following=false) {
+function promoteThree(following=false,final=false) {
   const assert=require('node:assert/strict');
-  const reportName=following?'npz_following_three':'npz_next_three';
-  const docName=following?'npz-following-three':'npz-next-three';
-  const report=JSON.parse(fs.readFileSync(path.join(root,`scripts/${reportName}.json`),'utf8'));
+  const reportName=final?'npz_final_accepted':following?'npz_following_three':'npz_next_three';
+  const docName=final?'npz-olivia-distal':following?'npz-following-three':'npz-next-three';
+  let report;
+  if(final) {
+    const prior=JSON.parse(fs.readFileSync(path.join(root,repairReport),'utf8')).rows;
+    const distal=JSON.parse(fs.readFileSync(path.join(root,'scripts/npz_olivia_distal.json'),'utf8')).results;
+    const bachata=JSON.parse(fs.readFileSync(path.join(root,'scripts/npz_refinement.json'),'utf8')).bachata;
+    report={results:[...distal,{id:'bachata-vaso-01',...bachata}].map(r=>({id:r.id,candidateId:r.id+'-repair-preview',file:r.file,resultSHA256:r.resultSHA256,originalSHA256:prior.find(p=>p.id===r.id).originalSHA256}))};
+  } else report=JSON.parse(fs.readFileSync(path.join(root,`scripts/${reportName}.json`),'utf8'));
   const file=path.join(root,registryPath);let text=fs.readFileSync(file,'utf8');
   const before=text;
   const metaFile=path.join(root,'public/animations/npz/dances/dancedb_meta.json');
@@ -1119,7 +1125,7 @@ function promoteThree(following=false) {
   }
   fs.writeFileSync(file,text);fs.writeFileSync(metaFile,JSON.stringify(metadata,null,2)+'\n');
   fs.writeFileSync(path.join(root,`scripts/${reportName}.json`),JSON.stringify(report,null,2)+'\n');
-  fs.appendFileSync(path.join(root,`docs/${docName}.md`),'\n## Validation utilisateur\n\nLes trois essais sont validés et remplacent désormais les versions non corrigées sous leurs identifiants habituels. Les GLB non corrigés et les entrées doublons `[ESSAI correction]` sont supprimés. Les fichiers corrigés restent dans `repair-candidates`, avec le même SHA-256 que les versions validées. Les métadonnées pointent sur ces fichiers. Ce lot est finalisé : ne pas relancer sa génération.\n');
+  fs.appendFileSync(path.join(root,`docs/${docName}.md`),`\n## Validation utilisateur\n\n${final?'Les trois Olivia ainsi que Bachata Vaso 01 sont validées':'Les trois essais sont validés'} et remplacent désormais les versions non corrigées sous leurs identifiants habituels. Les GLB non corrigés et les entrées doublons \`[ESSAI correction]\` sont supprimés. Les fichiers corrigés restent dans \`repair-candidates\`, avec le même SHA-256 que les versions validées. Les métadonnées existantes pointent sur ces fichiers. Ce lot est finalisé : ne pas relancer sa génération.\n`);
   // Isoler le patch du registre des ajouts simultanés d’autres agents.
   fs.writeFileSync('/tmp/room-npz-promotion-before.ts',before);
   fs.writeFileSync('/tmp/room-npz-promotion-after.ts',text);
@@ -1128,7 +1134,7 @@ function promoteThree(following=false) {
   catch(error) { if(error.status!==1) throw error;patch=error.stdout.toString(); }
   patch=patch.replaceAll('a/tmp/room-npz-promotion-before.ts','a/'+registryPath).replaceAll('b/tmp/room-npz-promotion-after.ts','b/'+registryPath);
   fs.writeFileSync('/tmp/room-npz-promotion.patch',patch);
-  console.log('Three accepted candidates promoted; uncorrected GLBs and duplicate preview entries removed.');
+  console.log(report.results.length+' accepted candidates promoted; uncorrected GLBs and duplicate preview entries removed.');
 }
 async function nextThree(following=false,olivia=false) {
   const assert=require('node:assert/strict');
@@ -1338,6 +1344,7 @@ async function refineDistal() {
   assert.deepEqual(reduceReturns(turn).quats,turn,'Intentional fast turn changed');
   const sourceRows=JSON.parse(fs.readFileSync(path.join(root,'scripts/npz_repair_candidates.json'),'utf8')).rows;
   const ids=['happy-dance-olivia','excited-dance-olivia','pleased-dance-olivia'];
+  for(const id of ids) if(!entries.some(e=>e.id===id+'-repair-preview')) throw Error('Olivia batch already finalized: '+id);
   const results=[],browserRows=[];
   for(const id of ids) {
     const row=sourceRows.find(r=>r.id===id),bytes=git('show',`${reference}:${row.candidateFile}`),base=parse(bytes),g=parse(Buffer.from(bytes));

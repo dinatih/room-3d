@@ -1,5 +1,7 @@
 # Comparaisons de correction des 12 animations NPZ
 
+État final après validation utilisateur : les dix danses conservées (Bachata Vaso, Reggaeton Vaso, Hip-hop Fanie, Musical Theater Fanie, Zumba Fanie, Belly Dance Anna, Salsa Stefanos et les trois Olivia) utilisent leurs fichiers corrigés sous leurs noms habituels ; leurs versions non corrigées et doublons d’essai sont supprimés. RnB est supprimée, Dolphin ne conserve que ses deux extraits validés. Les mesures et contrôles ci-dessous décrivent les étapes historiques, pas douze paires encore disponibles. La dernière promotion Olivia/Bachata est consignée dans `scripts/npz_final_accepted.json`.
+
 ## Validation effectuée le 16 octobre 2026
 
 - `repair-test` : tests du filtre et de l’alignement réussis, originaux inchangés par SHA-256, translations XYZ, dates, extrémités et clés non ciblées préservées sur les 12 paires.

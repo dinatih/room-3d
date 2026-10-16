@@ -20,3 +20,7 @@ Pieds : orientation neutre tirée du squelette de référence, cap horizontal co
 | pleased-dance-olivia | mixamorig:RightFoot | 4 → 4 |
 
 Cadence, temps, translations XYZ, autres rotations et extrémités du clip préservés. Contrôle binaire et vérification des pivots bassin/poignets/chevilles sur chaque frame, et de la limite de hauteur des orteils. Dates exactes, amplitudes, poids d’appui et mesures dans `scripts/npz_olivia_distal.json`. Commande : `node scripts/temp_npz_resume.cjs distal` ; ajouter `--browser` pour contrôler le chargement et le mixeur avec Vite sur 5193. Les versions `[ESSAI correction]` sont mises à jour ; les originaux restent disponibles. Validation visuelle requise.
+
+## Validation utilisateur
+
+Les trois Olivia ainsi que Bachata Vaso 01 sont validées et remplacent désormais les versions non corrigées sous leurs identifiants habituels. Les GLB non corrigés et les entrées doublons `[ESSAI correction]` sont supprimés. Les fichiers corrigés restent dans `repair-candidates`, avec le même SHA-256 que les versions validées. Les métadonnées existantes pointent sur ces fichiers. Ce lot est finalisé : ne pas relancer sa génération.
