@@ -183,21 +183,44 @@ export function removeGlbLines(root: THREE.Object3D) {
  * applying the root's own rotation/scale but ignoring the root's translation and
  * all ancestor transforms.
  *
+ * Set precise to measure posed vertices rather than transformed local AABBs.
+ *
  * Drop-in replacement for:
  *   root.updateMatrixWorld(true);
  *   new THREE.Box3().setFromObject(root)
  * …without the parent-corruption bug that occurs on Suspense remounts where
  * the parent's matrixWorld may already be set to a non-identity transform.
  */
-export function glbLocalBBox(root: THREE.Object3D): THREE.Box3 {
+export function glbLocalBBox(root: THREE.Object3D, precise = false): THREE.Box3 {
   // Les sommets skinnés dépendent des matrices des os, pas seulement du mesh.
   root.updateWorldMatrix(true, false);
   root.updateMatrixWorld(true); // actualise aussi bindMatrixInverse des SkinnedMesh
+  root.updateMatrix();
+  const rootRS = root.matrix.clone().setPosition(0, 0, 0);
   const innerBox = new THREE.Box3();
   const m = new THREE.Matrix4();
+  const vertex = new THREE.Vector3();
   root.traverse(node => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh) return;
+    m.identity();
+    let cur: THREE.Object3D | null = node;
+    while (cur && cur !== root) {
+      cur.updateMatrix();
+      m.premultiply(cur.matrix);
+      cur = cur.parent;
+    }
+    if (precise) {
+      // Transform vertices directly: rotating a local AABB overestimates the
+      // dimensions of FBX meshes whose object axes differ from their geometry.
+      m.premultiply(rootRS);
+      const count = mesh.geometry.getAttribute('position').count;
+      for (let index = 0; index < count; index++) {
+        mesh.getVertexPosition(index, vertex);
+        innerBox.expandByPoint(vertex.applyMatrix4(m));
+      }
+      return;
+    }
     let box: THREE.Box3;
     if ((mesh as THREE.SkinnedMesh).isSkinnedMesh) {
       const skinned = mesh as THREE.SkinnedMesh;
@@ -207,16 +230,7 @@ export function glbLocalBBox(root: THREE.Object3D): THREE.Box3 {
       if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
       box = mesh.geometry.boundingBox!;
     }
-    m.identity();
-    let cur: THREE.Object3D | null = node;
-    while (cur && cur !== root) {
-      cur.updateMatrix();
-      m.premultiply(cur.matrix);
-      cur = cur.parent;
-    }
     innerBox.union(box.clone().applyMatrix4(m));
   });
-  root.updateMatrix();
-  const rootRS = root.matrix.clone().setPosition(0, 0, 0);
-  return innerBox.applyMatrix4(rootRS);
+  return precise ? innerBox : innerBox.applyMatrix4(rootRS);
 }

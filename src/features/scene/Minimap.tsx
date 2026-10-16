@@ -188,33 +188,34 @@ function drawMinimap(
   });
 
   if (showAnimals) {
-    // ── Shiba Inu (Ushiro) ──────────────────────────────────────────────────────
-    const shibaPos = cameraState.positions['shiba'];
-  if (shibaPos) {
-    const rShiba = Math.max(2.2 * sc, 8 * S);
-    const rawX = tx(shibaPos.x);
-    const rawZ = tz(shibaPos.z);
-    const px = Math.max(rShiba + 2, Math.min(W - rShiba - 2, rawX));
-    const pz = Math.max(rShiba + 2, Math.min(H - rShiba - 2, rawZ));
-    const isOffscreen = rawX < rShiba || rawX > W - rShiba || rawZ < rShiba || rawZ > H - rShiba;
+    // Ushiro et Ulotte.
+    for (const dogId of ['shiba', 'ulotte']) {
+      const dogPos = cameraState.positions[dogId];
+      if (!dogPos) continue;
+      const rDog = Math.max(2.2 * sc, 8 * S);
+      const rawX = tx(dogPos.x);
+      const rawZ = tz(dogPos.z);
+      const px = Math.max(rDog + 2, Math.min(W - rDog - 2, rawX));
+      const pz = Math.max(rDog + 2, Math.min(H - rDog - 2, rawZ));
+      const isOffscreen = rawX < rDog || rawX > W - rDog || rawZ < rDog || rawZ > H - rDog;
 
-    ctx.save();
-    ctx.translate(px, pz);
-    ctx.rotate(-shibaPos.yaw);
-    ctx.fillStyle = 'rgba(255, 153, 0, 0.85)'; // Orange
-    ctx.strokeStyle = isOffscreen ? 'rgba(234, 88, 12, 0.9)' : 'rgba(255, 255, 255, 0.7)';
-    ctx.lineWidth = Math.max(0.8, 1 * sc);
-    ctx.beginPath(); 
-    ctx.arc(0, 0, rShiba, 0, Math.PI * 2); 
-    ctx.fill(); 
-    ctx.stroke();
-    // Petit museau pour indiquer la direction
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(0, rShiba, rShiba * 0.35, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
+      ctx.save();
+      ctx.translate(px, pz);
+      ctx.rotate(-dogPos.yaw);
+      ctx.fillStyle = dogId === 'ulotte' ? 'rgba(139, 83, 44, 0.9)' : 'rgba(255, 153, 0, 0.85)';
+      ctx.strokeStyle = isOffscreen ? 'rgba(234, 88, 12, 0.9)' : 'rgba(255, 255, 255, 0.7)';
+      ctx.lineWidth = Math.max(0.8, 1 * sc);
+      ctx.beginPath();
+      ctx.arc(0, 0, rDog, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      // Petit museau pour indiquer la direction.
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(0, rDog, rDog * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
 
   // ── Oiseau Robin (Rouge-gorge) ──────────────────────────────────────────────
   const robinPos = cameraState.positions['robin'];

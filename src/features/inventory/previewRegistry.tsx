@@ -99,6 +99,7 @@ import { ElectricRacket }                             from '@features/scene/item
 import { Drona }                                      from '@features/scene/items/Drona';
 import { CharacterGroup }                               from '@features/scene/character';
 import { CHARACTERS }                                 from '@features/scene/characterConfig';
+import { Dachshund } from '@features/scene/items/Dachshund';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
 import { resolveAnimationId } from '@features/scene/animations/animationResolver';
 import { Goldfish } from '@features/scene/items/Goldfish';
@@ -271,6 +272,9 @@ SCENE_REGISTRY['ushiro'] = function ShibaPreview({ actionState, onSize }: { acti
   return <ShibaInu isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
 } as any;
 SCENE_REGISTRY['shiba-inu'] = SCENE_REGISTRY['ushiro'];
+SCENE_REGISTRY['ulotte'] = function UlottePreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+  return <Dachshund isPreview previewAnim={actionState?.['ulotte-motion'] ?? actionState?.characterAnim ?? 'idle-1'} onSize={onSize} />;
+};
 
 SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
   return <RobinBird isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;

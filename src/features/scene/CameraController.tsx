@@ -603,7 +603,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   useEffect(() => {
     const handler = (event: Event) => {
-      const match = /^animal-(robin|shiba|jikin|tosakin)-(fpv|follow)$/.exec((event as CustomEvent<{ key: string }>).detail.key);
+      const match = /^animal-(robin|shiba|ulotte|jikin|tosakin)-(fpv|follow)$/.exec((event as CustomEvent<{ key: string }>).detail.key);
       if (!match) return;
       const [, id, requestedMode] = match;
       const view = cameraState.animalViews[id];
@@ -1034,7 +1034,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     const posParsed = parseUrlCameraPos();
     if (posParsed?.type === 'fpv') {
-      if (posParsed.entity === 'shiba' || posParsed.entity === 'robin' || posParsed.entity === 'cat') {
+      if (posParsed.entity === 'shiba' || posParsed.entity === 'ulotte' || posParsed.entity === 'robin' || posParsed.entity === 'cat') {
         const view = cameraState.animalViews[posParsed.entity];
         cameraState.animalTarget = posParsed.entity;
         document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: true }));

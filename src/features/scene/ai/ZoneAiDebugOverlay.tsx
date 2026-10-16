@@ -60,7 +60,7 @@ function ZoneAiDebugOverlayContent() {
     const extraChars = layers.extraCharacters ?? false;
     return CHARACTERS.filter(
       (c) =>
-        c.id !== 'shiba' &&
+        c.id !== 'ulotte' && c.id !== 'shiba' &&
         c.id !== 'robin' &&
         (isCharacterVisibleInMode(c.id, laraCount, activeCharacterId, extraChars, activeExtraIds, activeMainIds) ||
           c.id === activeCharacterId)

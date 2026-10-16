@@ -19,6 +19,7 @@ import { BathtubStarfish } from '../items/Starfish';
 import { Goldfish } from '../items/Goldfish';
 import { RobinBird } from '../items/RobinBird';
 import { BlackHornetDrone } from '../items/BlackHornetDrone';
+import { Dachshund } from '../items/Dachshund';
 import { ShibaInu } from '../items/ShibaInu';
 import { FemaleAnatomyBones } from '../items/FemaleAnatomyBones';
 import { FemaleAnatomyMuscles } from '../items/FemaleAnatomyMuscles';
@@ -131,6 +132,9 @@ export function GardenAnimals() {
       </group>
       <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Shiba Inu' }}>
         <ShibaInu />
+      </group>
+      <group position={[210, 0, -200]} rotation={[0, -Math.PI / 4, 0]} userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Ulotte (Teckel)' }}>
+        <Dachshund />
       </group>
     </>
   );

@@ -26,7 +26,7 @@ export function useAnimalCamera(
     const radius = new THREE.Box3().setFromObject(root.current!, true).getSize(new THREE.Vector3()).length() / 2;
     if (radius <= 0) throw new Error(`Caméra ${id} : dimensions invalides`);
     rig.current = { head: bone(headName), mouth: bone(mouthName), eyes: eyeNames ? eyeNames.map(bone) : [], radius };
-    if (id === 'shiba' || id === 'robin') {
+    if (id === 'shiba' || id === 'ulotte' || id === 'robin') {
       // Caméra au-dessus du crâne, derrière le museau ou le bec.
       // Mesurer le sommet de la peau de tête dans le repère de l'os, à partir du bind pose.
       const skull = new THREE.Box3();
@@ -70,7 +70,7 @@ export function useAnimalCamera(
     r.head.getWorldPosition(head.current);
     r.mouth.getWorldPosition(forward.current);
     forward.current.sub(head.current).normalize();
-    if (id === 'shiba' || id === 'robin') {
+    if (id === 'shiba' || id === 'ulotte' || id === 'robin') {
       eyes.current.copy(crownOffset.current);
       r.head.localToWorld(eyes.current);
     } else if (r.eyes.length) {
@@ -83,7 +83,7 @@ export function useAnimalCamera(
     if (root.current.visible) {
       cameraState.animalViews[id] = { eyes: { ...eyes.current }, forward: { ...forward.current }, radius: r.radius };
     } else delete cameraState.animalViews[id];
-    if (id !== 'shiba' && cameraState.animalTarget === id && cameraState.mode === 'fpv') {
+    if (id !== 'shiba' && id !== 'ulotte' && cameraState.animalTarget === id && cameraState.mode === 'fpv') {
       scene.traverse(object => {
         const mesh = object as THREE.Mesh;
         if (!mesh.isMesh || meshes.current.has(mesh)) return;

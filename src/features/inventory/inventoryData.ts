@@ -429,6 +429,18 @@ INVENTORY.push({
 });
 
 INVENTORY.push({
+  id: 'ulotte',
+  name: 'Chienne Ulotte (Teckel)',
+  brand: 'Animal',
+  category: 'characters',
+  qty: 1,
+  dims: { w: 19.2, d: 50.2, h: 30 },
+  glbPath: 'characters/ulotte/ulotte.glb',
+  photos: ['characters/ulotte/ulotte_3d_preview.png'],
+  notes: `Chienne teckel Ulotte. Animations : repos, repos alternatif, marche, course, saut et repas.`
+});
+
+INVENTORY.push({
   id: 'robin-bird',
   name: 'Oiseau Robin',
   brand: 'Animal',

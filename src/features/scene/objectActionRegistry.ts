@@ -133,6 +133,18 @@ const ACTIONS: Record<string, ActionConfig> = {
   'desk1-toggle': { label: ['Debout', 'Assis'] },
   'desk2-toggle': { label: ['Debout', 'Assis'] },
   'desk2-screen-toggle': { label: ['▶ Vidéo bureau / TV', '⏹ Couper vidéo'], icon: 'bi-display' },
+  'ulotte-replay': { label: 'Vie autonome', sceneOnly: true, icon: 'bi-play-circle' },
+  'ulotte-motion': {
+    label: 'Animation d’Ulotte', type: 'select', sceneOnly: true, initialValue: 'idle-1',
+    options: [
+      { value: 'idle-1', label: 'Repos' },
+      { value: 'idle-2', label: 'Repos alternatif' },
+      { value: 'walk', label: 'Marche' },
+      { value: 'run', label: 'Course' },
+      { value: 'jump', label: 'Saut' },
+      { value: 'eating', label: 'Repas' },
+    ],
+  },
   'shiba-replay': { label: 'Rejouer', sceneOnly: true },
   'shiba-dance': { label: '🐕 Danser avec le personnage actif', sceneOnly: true, event: 'dog-dance' },
   'robin-bird-replay': { label: 'Rejouer' },
@@ -163,7 +175,7 @@ const ACTIONS: Record<string, ActionConfig> = {
 
 export function getActionDef(id: string): ActionDef | undefined {
   if (ACTIONS[id]) return { id, ...ACTIONS[id] };
-  if (/^animal-(robin|shiba|jikin|tosakin)-(fpv|follow)$/.test(id)) {
+  if (/^animal-(robin|shiba|ulotte|jikin|tosakin)-(fpv|follow)$/.test(id)) {
     const fpv = id.endsWith('-fpv');
     return { id, label: fpv ? 'Vue FPV' : 'Suivre', icon: fpv ? 'bi-eye' : 'bi-camera-video', sceneOnly: true };
   }

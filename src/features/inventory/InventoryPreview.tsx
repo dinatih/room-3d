@@ -802,10 +802,11 @@ export function InventoryPreview({
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters');
-  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish'].includes(item.id));
+  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish'].includes(item.id));
 
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
+    if (item.id === 'ulotte') return getActionDef('ulotte-motion')!.options;
     if (['ushiro', 'shiba-inu'].includes(item.id)) {
       return [
         { value: 'idle', label: 'Idle' },

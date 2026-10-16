@@ -87,6 +87,7 @@ export function parseUrlCameraPos(): { type: 'fpv'; entity: string } | { type: '
   const char = findCharacterByIdOrName(val);
   if (char) return { type: 'fpv', entity: char.id };
 
+  if (val === 'ulotte') return { type: 'fpv', entity: 'ulotte' };
   if (val === 'shiba' || val === 'chien' || val === 'dog') return { type: 'fpv', entity: 'shiba' };
   if (val === 'robin' || val === 'oiseau' || val === 'bird') return { type: 'fpv', entity: 'robin' };
   if (val === 'cat' || val === 'chat') return { type: 'fpv', entity: 'cat' };

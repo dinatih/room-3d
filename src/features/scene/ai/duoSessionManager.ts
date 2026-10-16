@@ -476,7 +476,7 @@ class DuoSessionManager {
 
     // Résolution Leader (A) et Partenaire (B)
     const isVisibleChar = (id: string, allowPlayer = true) => {
-      if (id === 'shiba' || id === 'robin' || !canParticipate(id)) return false;
+      if (id === 'ulotte' || id === 'shiba' || id === 'robin' || !canParticipate(id)) return false;
       const storeState = useSceneStore.getState();
       if (!allowPlayer && id === storeState.activeCharacterId) return false;
       return (

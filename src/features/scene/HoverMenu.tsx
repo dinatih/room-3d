@@ -626,7 +626,7 @@ export function HoverOverlay() {
 
                     if (slot?.isDuo) {
                       const activeId = useSceneStore.getState().activeCharacterId;
-                      const leaderId = (activeId && activeId !== 'shiba' && activeId !== 'robin')
+                      const leaderId = (activeId && activeId !== 'ulotte' && activeId !== 'shiba' && activeId !== 'robin')
                         ? activeId
                         : undefined;
 
@@ -674,7 +674,7 @@ export function HoverOverlay() {
 
                       const candidateIds = Object.keys(cameraState.positions).filter(
                         (charId) =>
-                          charId !== 'shiba' &&
+                          charId !== 'ulotte' && charId !== 'shiba' &&
                           charId !== 'robin' &&
                           (isCharacterVisibleInMode(charId, laraCount, activeCharacterId, extraChars, activeExtraIds, activeMainIds) ||
                             charId === activeCharacterId)

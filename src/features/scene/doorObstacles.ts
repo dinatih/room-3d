@@ -148,7 +148,7 @@ export function computeDoorDynamics(
   for (const id in cameraState.positions) {
     const p = cameraState.positions[id];
     const bodyRadius = hasAgentProfile(id) ? getAgentProfile(id).radius : (id === 'robin' ? 7.5 : HUMAN_BODY_RADIUS);
-    const height = id === 'robin' ? 15 : id === 'shiba' ? 40 : HUMAN_BODY_HEIGHT;
+    const height = hasAgentProfile(id) ? getAgentProfile(id).height : (id === 'robin' ? 15 : HUMAN_BODY_HEIGHT);
     if (p.y > door.yMax || p.y + height < door.yMin) continue;
 
     const vx = p.x - door.pivot.x;

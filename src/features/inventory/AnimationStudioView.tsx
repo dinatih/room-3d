@@ -36,7 +36,7 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
   const activeIndex = active ? results.indexOf(active) : -1;
   const characters = useMemo(() => CHARACTERS.filter(c =>
     INVENTORY.some(item => item.id === c.id && item.category === 'characters') &&
-    !['ushiro', 'shiba-inu', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish'].includes(c.id)
+    !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish'].includes(c.id)
   ), []);
   const leaders = characters.filter(c => !active?.duo || canCharacterPerformDuo(c.id, active.duo));
   const leader = leaders.find(c => c.id === actorId) ?? leaders[0];
