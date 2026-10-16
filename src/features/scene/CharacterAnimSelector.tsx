@@ -10,7 +10,7 @@ import type { AnimationCategory } from './animations/animationRegistry';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
-type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others' | 'fab' | 'interx' | 'behave';
+type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others' | 'fab' | 'interx' | 'behave' | 'kit';
 
 export const ANIM_CATEGORIES = [
   { key: 'combat', label: 'Combat', icon: 'bi-shield-shaded' },
@@ -28,6 +28,7 @@ export const ANIM_CATEGORIES = [
   { key: 'fab', label: 'Fab / ActorCore', icon: 'bi-folder' },
   { key: 'interx', label: 'Inter-X', icon: 'bi-folder' },
   { key: 'behave', label: 'BEHAVE', icon: 'bi-folder' },
+  { key: 'kit', label: 'KIT', icon: 'bi-folder' },
 ] as const satisfies ReadonlyArray<{ key: AnimationCategory | AnimationSource; label: string; icon: string }>;
 
 export function getAnimCategory(val: string): string {
@@ -48,6 +49,7 @@ export function normalizeSearchStr(str: string): string {
 export function getAnimSources(path?: string): string[] {
   if (!path) return [];
   const [, family, dataset] = path.split('/');
+  if (family === 'npz' && dataset === 'kit') return ['npz', 'kit'];
   return family === 'npz' && dataset === 'interx' ? ['npz', 'interx'] : family ? [family] : [];
 }
 
