@@ -1,0 +1,1192 @@
+{
+  "schemaVersion": 1,
+  "dataset": "inter-x",
+  "conversion": {
+    "revision": 1,
+    "sourceFps": 120,
+    "targetFps": 30,
+    "upAxis": "Y",
+    "rootMotionMode": "relative-to-first-frame",
+    "translationUnit": "meters"
+  },
+  "actions": [
+    {
+      "code": "A000",
+      "key": "hug",
+      "label": "Câlin",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "hug",
+        "affection"
+      ]
+    },
+    {
+      "code": "A001",
+      "key": "handshake",
+      "label": "Poignée de main",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "handshake",
+        "social"
+      ]
+    },
+    {
+      "code": "A002",
+      "key": "wave",
+      "label": "Signe de la main",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "wave",
+        "social"
+      ]
+    },
+    {
+      "code": "A003",
+      "key": "grab",
+      "label": "Saisir",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "grab",
+        "combat"
+      ]
+    },
+    {
+      "code": "A004",
+      "key": "hit",
+      "label": "Frapper",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "hit",
+        "combat"
+      ]
+    },
+    {
+      "code": "A005",
+      "key": "kick",
+      "label": "Coup de pied",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "kick",
+        "combat"
+      ]
+    },
+    {
+      "code": "A006",
+      "key": "posing",
+      "label": "Prendre la pose",
+      "category": "poses_idles",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "posing",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A007",
+      "key": "push",
+      "label": "Pousser",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "push",
+        "combat"
+      ]
+    },
+    {
+      "code": "A008",
+      "key": "pull",
+      "label": "Tirer",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "pull",
+        "combat"
+      ]
+    },
+    {
+      "code": "A009",
+      "key": "sit-on-leg",
+      "label": "S’asseoir sur la jambe",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "sit-on-leg",
+        "social"
+      ]
+    },
+    {
+      "code": "A010",
+      "key": "slap",
+      "label": "Gifler",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "slap",
+        "combat"
+      ]
+    },
+    {
+      "code": "A011",
+      "key": "pat-on-back",
+      "label": "Tapoter le dos",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "pat-on-back",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A012",
+      "key": "point-finger",
+      "label": "Pointer du doigt",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "point-finger",
+        "social"
+      ]
+    },
+    {
+      "code": "A013",
+      "key": "walk-towards",
+      "label": "Marcher vers l’autre",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "walk-towards",
+        "social"
+      ]
+    },
+    {
+      "code": "A014",
+      "key": "knock-over",
+      "label": "Renverser",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "knock-over",
+        "combat"
+      ]
+    },
+    {
+      "code": "A015",
+      "key": "step-on-foot",
+      "label": "Marcher sur le pied",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "step-on-foot",
+        "combat"
+      ]
+    },
+    {
+      "code": "A016",
+      "key": "high-five",
+      "label": "High-five",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "high-five",
+        "social"
+      ]
+    },
+    {
+      "code": "A017",
+      "key": "chase",
+      "label": "Poursuivre",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "chase",
+        "social"
+      ]
+    },
+    {
+      "code": "A018",
+      "key": "whisper",
+      "label": "Chuchoter à l’oreille",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "whisper",
+        "social"
+      ]
+    },
+    {
+      "code": "A019",
+      "key": "support-with-hand",
+      "label": "Soutenir avec la main",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "support-with-hand",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A020",
+      "key": "rock-paper-scissors",
+      "label": "Pierre-feuille-ciseaux",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "rock-paper-scissors",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A021",
+      "key": "dance",
+      "label": "Danser",
+      "category": "dances",
+      "icon": "💃",
+      "isCombat": false,
+      "tags": [
+        "dance",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A022",
+      "key": "link-arms",
+      "label": "Bras dessus dessous",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "link-arms",
+        "affection"
+      ]
+    },
+    {
+      "code": "A023",
+      "key": "shoulder-to-shoulder",
+      "label": "Épaule contre épaule",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "shoulder-to-shoulder",
+        "affection"
+      ]
+    },
+    {
+      "code": "A024",
+      "key": "bend",
+      "label": "Se pencher",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "bend",
+        "social"
+      ]
+    },
+    {
+      "code": "A025",
+      "key": "carry-back",
+      "label": "Porter sur le dos",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "carry-back",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A026",
+      "key": "massage-shoulder",
+      "label": "Masser les épaules",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "massage-shoulder",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A027",
+      "key": "massage-leg",
+      "label": "Masser les jambes",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "massage-leg",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A028",
+      "key": "arm-wrestling",
+      "label": "Bras de fer",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "arm-wrestling",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A029",
+      "key": "chat",
+      "label": "Discuter",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "chat",
+        "social"
+      ]
+    },
+    {
+      "code": "A030",
+      "key": "pat-on-cheek",
+      "label": "Caresser la joue",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "pat-on-cheek",
+        "affection"
+      ]
+    },
+    {
+      "code": "A031",
+      "key": "thumb-up",
+      "label": "Pouce levé",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "thumb-up",
+        "social"
+      ]
+    },
+    {
+      "code": "A032",
+      "key": "touch-head",
+      "label": "Toucher la tête",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "touch-head",
+        "affection"
+      ]
+    },
+    {
+      "code": "A033",
+      "key": "imitate",
+      "label": "Imiter",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "imitate",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A034",
+      "key": "kiss-on-cheek",
+      "label": "Baiser sur la joue",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "kiss-on-cheek",
+        "affection"
+      ]
+    },
+    {
+      "code": "A035",
+      "key": "help-up",
+      "label": "Aider à se relever",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "help-up",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A036",
+      "key": "cover-mouth",
+      "label": "Couvrir la bouche",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "cover-mouth",
+        "social"
+      ]
+    },
+    {
+      "code": "A037",
+      "key": "look-back",
+      "label": "Regarder derrière soi",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "look-back",
+        "social"
+      ]
+    },
+    {
+      "code": "A038",
+      "key": "block",
+      "label": "Bloquer",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "block",
+        "combat"
+      ]
+    },
+    {
+      "code": "A039",
+      "key": "fly-kiss",
+      "label": "Envoyer un baiser",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "fly-kiss",
+        "affection"
+      ]
+    }
+  ],
+  "duos": [
+    {
+      "id": "interx-g053t000a003r022",
+      "actionCode": "A003",
+      "variation": "T000",
+      "source": {
+        "recording": "G053T000A003R022",
+        "group": "G053",
+        "take": "R022",
+        "p1": "G053T000A003R022/P1.npz",
+        "p2": "G053T000A003R022/P2.npz",
+        "frameCount": 1460,
+        "sha256": {
+          "p1": "e80572c73332df673f0cf63a0a9009a8ef1db8623f6ea2016ef74e73df6af563",
+          "p2": "d86a02027a80bb2a3ae8355ce780c9734ed2e272fcccbf7151b4248f6569ca33"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t000a003r022-p1.glb",
+          "frameCount": 365,
+          "durationSeconds": 12.133333333333333,
+          "sizeBytes": 374912,
+          "sha256": "872897f98c297e859a0c9d0090ae04fda48c5632c185011b0f69527ee6c79316"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t000a003r022-p2.glb",
+          "frameCount": 365,
+          "durationSeconds": 12.133333333333333,
+          "sizeBytes": 375464,
+          "sha256": "3ae4afacf4ed14b58191c4b92b1877b39df9c6da8b37ec4a588a06099baa6f03"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.5154921412467957,
+        0.05325353145599365,
+        0.07650703191757202
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.04823379197891975,
+          -0.009312919284981902
+        ],
+        "sourceReferencePlaneMeters": -0.04823379197891975,
+        "initialSoleHeightMeters": [
+          0.0,
+          0.03892087269393785
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    },
+    {
+      "id": "interx-g053t000a003r023",
+      "actionCode": "A003",
+      "variation": "T000",
+      "source": {
+        "recording": "G053T000A003R023",
+        "group": "G053",
+        "take": "R023",
+        "p1": "G053T000A003R023/P1.npz",
+        "p2": "G053T000A003R023/P2.npz",
+        "frameCount": 660,
+        "sha256": {
+          "p1": "e0bfde6506e0fed102bf1bfea8e7184c3e2304c084778c27961ad39463f2f5a2",
+          "p2": "b8de2ba34df713311f219b43871cd8e14094771d2a3a9ecd833f7b0679e78219"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t000a003r023-p1.glb",
+          "frameCount": 165,
+          "durationSeconds": 5.466666666666667,
+          "sizeBytes": 205360,
+          "sha256": "b5900405fc96b627a28a576097a7a50193de51694ce9e3e023dd4cdbc66389de"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t000a003r023-p2.glb",
+          "frameCount": 165,
+          "durationSeconds": 5.466666666666667,
+          "sizeBytes": 205224,
+          "sha256": "2931b710d1f981e5aea095fd2f0fb53862a3f809c8900cc57d84bb9a7780c2b4"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.5467552542686462,
+        0.05892062187194824,
+        0.15641170740127563
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.04486314257553836,
+          -0.0037291755597568255
+        ],
+        "sourceReferencePlaneMeters": -0.04486314257553836,
+        "initialSoleHeightMeters": [
+          0.0,
+          0.041133967015781536
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    },
+    {
+      "id": "interx-g053t000a003r024",
+      "actionCode": "A003",
+      "variation": "T000",
+      "source": {
+        "recording": "G053T000A003R024",
+        "group": "G053",
+        "take": "R024",
+        "p1": "G053T000A003R024/P1.npz",
+        "p2": "G053T000A003R024/P2.npz",
+        "frameCount": 648,
+        "sha256": {
+          "p1": "21985db3a067f1ce78d36a6b9027a8503717cd0c99bf1d217b87b7449e832dcd",
+          "p2": "2a9557a29c26a967dc34977cdf001def3a1576403171f8cdc89b2459486b3326"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t000a003r024-p1.glb",
+          "frameCount": 162,
+          "durationSeconds": 5.366666666666666,
+          "sizeBytes": 202952,
+          "sha256": "ae0ba8bd1c5ddcfe65cbd7b2e413d21eb7dc5aa97a40f6d0ea0d4fa210e022f5"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t000a003r024-p2.glb",
+          "frameCount": 162,
+          "durationSeconds": 5.366666666666666,
+          "sizeBytes": 202676,
+          "sha256": "538be97b756ac7926b02a67ff632f0127e33c5e996bcdfb8d2a2275186c1c730"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.3672734797000885,
+        0.052118659019470215,
+        0.16609519720077515
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.04362501269086172,
+          -0.007124371175742494
+        ],
+        "sourceReferencePlaneMeters": -0.04362501269086172,
+        "initialSoleHeightMeters": [
+          0.0,
+          0.036500641515119225
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    },
+    {
+      "id": "interx-g053t000a003r025",
+      "actionCode": "A003",
+      "variation": "T000",
+      "source": {
+        "recording": "G053T000A003R025",
+        "group": "G053",
+        "take": "R025",
+        "p1": "G053T000A003R025/P1.npz",
+        "p2": "G053T000A003R025/P2.npz",
+        "frameCount": 700,
+        "sha256": {
+          "p1": "de5fde1d0f6bf1e077d1c9bd208332d040975ea7f49ded7cd46ee376e81db706",
+          "p2": "0bcda49c03e37f9f3a535f23b799ea9db76851c4120f27439038d5cc2db47ac7"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t000a003r025-p1.glb",
+          "frameCount": 175,
+          "durationSeconds": 5.8,
+          "sizeBytes": 214096,
+          "sha256": "40994745e687a8bdcca552631a414b2a38daca7c922d0eff8fd48981212e160a"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t000a003r025-p2.glb",
+          "frameCount": 175,
+          "durationSeconds": 5.8,
+          "sizeBytes": 213820,
+          "sha256": "ee7f70a5b3eeb6be9945f74685f86c209813cee7e8defcce59a75c27ed2939f0"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.40305757522583,
+        0.055139780044555664,
+        -0.017899751663208008
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.05137971024025001,
+          -0.011361972628814332
+        ],
+        "sourceReferencePlaneMeters": -0.05137971024025001,
+        "initialSoleHeightMeters": [
+          0.0,
+          0.04001773761143568
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    },
+    {
+      "id": "interx-g053t000a003r026",
+      "actionCode": "A003",
+      "variation": "T000",
+      "source": {
+        "recording": "G053T000A003R026",
+        "group": "G053",
+        "take": "R026",
+        "p1": "G053T000A003R026/P1.npz",
+        "p2": "G053T000A003R026/P2.npz",
+        "frameCount": 1248,
+        "sha256": {
+          "p1": "df7002038701efd4b19aee7a225b0544a81be9d5a6879b0c9be3df58249fbb55",
+          "p2": "a3899d3ed7a7ff06f4031f19ed9bbf5bfa12b54d3188582944c114beaec59090"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t000a003r026-p1.glb",
+          "frameCount": 312,
+          "durationSeconds": 10.366666666666667,
+          "sizeBytes": 330368,
+          "sha256": "a33e51dce7dd63dea76a6dec0c8548fef2b7de7c8490973bd92d5177c9db2019"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t000a003r026-p2.glb",
+          "frameCount": 312,
+          "durationSeconds": 10.366666666666667,
+          "sizeBytes": 330096,
+          "sha256": "1c45833ecd62ce42f975d6bafa3a867f897064eff33d41f8ff6f3121d4f88307"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.7904647588729858,
+        0.040700435638427734,
+        -0.12394881248474121
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.045829522136439094,
+          -0.024755347489166635
+        ],
+        "sourceReferencePlaneMeters": -0.045829522136439094,
+        "initialSoleHeightMeters": [
+          0.0,
+          0.02107417464727246
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    },
+    {
+      "id": "interx-g030t001a003r004",
+      "actionCode": "A003",
+      "variation": "T001",
+      "source": {
+        "recording": "G030T001A003R004",
+        "group": "G030",
+        "take": "R004",
+        "p1": "G030T001A003R004/P1.npz",
+        "p2": "G030T001A003R004/P2.npz",
+        "frameCount": 488,
+        "sha256": {
+          "p1": "c05960fbbe75a3878c028830673e97b851671730835d74611f48c85da06b0c10",
+          "p2": "08bd37ed63c3254a42ad85f030b41e8a9be19a13f6a86ba488c35c2db476144d"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t001a003r004-p1.glb",
+          "frameCount": 122,
+          "durationSeconds": 4.033333333333333,
+          "sizeBytes": 168844,
+          "sha256": "d1616444cc505ee1b0e3e51f68f72fdf4258385959c5cd3c56de15a297d4c1f9"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t001a003r004-p2.glb",
+          "frameCount": 122,
+          "durationSeconds": 4.033333333333333,
+          "sizeBytes": 168984,
+          "sha256": "27626b41e4f3055f3f4adc08f9fb68161de0679c511eea6904ea5813294de75b"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.6329558491706848,
+        0.07676899433135986,
+        -0.7864999622106552
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.039741442535185856,
+          -0.01571724149702236
+        ],
+        "sourceReferencePlaneMeters": -0.039741442535185856,
+        "initialSoleHeightMeters": [
+          0.0,
+          0.024024201038163495
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    },
+    {
+      "id": "interx-g004t003a003r020",
+      "actionCode": "A003",
+      "variation": "T003",
+      "source": {
+        "recording": "G004T003A003R020",
+        "group": "G004",
+        "take": "R020",
+        "p1": "G004T003A003R020/P1.npz",
+        "p2": "G004T003A003R020/P2.npz",
+        "frameCount": 760,
+        "sha256": {
+          "p1": "2829a46ecf9f2eafa969a7e5e66fc2483bc56a74c26b437ab7355464d9ca3247",
+          "p2": "da2940379ec06b8c8910a1e1421ed8b76f54c8d68dcf5d5cb2b86088a9827870"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t003a003r020-p1.glb",
+          "frameCount": 190,
+          "durationSeconds": 6.3,
+          "sizeBytes": 226824,
+          "sha256": "f2869c815d809028df417fadd5c60afeb4433872e4f717a9501f328a59b791ce"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t003a003r020-p2.glb",
+          "frameCount": 190,
+          "durationSeconds": 6.3,
+          "sizeBytes": 227100,
+          "sha256": "7b15715f436ae7ce721fa719cbf23083bce8eab03a7932601de1b4327418891d"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.0792360305786133,
+        -0.13940727710723877,
+        1.823850840330124
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.0059845485117888675,
+          -0.06505196675437652
+        ],
+        "sourceReferencePlaneMeters": -0.06505196675437652,
+        "initialSoleHeightMeters": [
+          0.059067418242587655,
+          0.0
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    },
+    {
+      "id": "interx-g004t003a003r021",
+      "actionCode": "A003",
+      "variation": "T003",
+      "source": {
+        "recording": "G004T003A003R021",
+        "group": "G004",
+        "take": "R021",
+        "p1": "G004T003A003R021/P1.npz",
+        "p2": "G004T003A003R021/P2.npz",
+        "frameCount": 840,
+        "sha256": {
+          "p1": "89e6bd8c2d996a019adf377c209541d3b9a0a52907b8ed15d282b56649830b99",
+          "p2": "ad2053ce3ea45e5a6a306ea2e5cbcb27fa38b17267033ebbc6435c1db0f72f80"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t003a003r021-p1.glb",
+          "frameCount": 210,
+          "durationSeconds": 6.966666666666667,
+          "sizeBytes": 243828,
+          "sha256": "92da210449cd0dfbd8b69664ecb98aa153e020355bc4dc8e4e4bb080e2741f8c"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t003a003r021-p2.glb",
+          "frameCount": 210,
+          "durationSeconds": 6.966666666666667,
+          "sizeBytes": 243688,
+          "sha256": "17a441be7886de23a954b1888ef2afb48d512cc3e04ae2c59e0e80ca006697d4"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        2.1195961833000183,
+        -0.39365071058273315,
+        -0.6883622333407402
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.016815623965906523,
+          -0.07198084965784668
+        ],
+        "sourceReferencePlaneMeters": -0.07198084965784668,
+        "initialSoleHeightMeters": [
+          0.055165225691940156,
+          0.0
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    },
+    {
+      "id": "interx-g004t003a003r022",
+      "actionCode": "A003",
+      "variation": "T003",
+      "source": {
+        "recording": "G004T003A003R022",
+        "group": "G004",
+        "take": "R022",
+        "p1": "G004T003A003R022/P1.npz",
+        "p2": "G004T003A003R022/P2.npz",
+        "frameCount": 700,
+        "sha256": {
+          "p1": "02e55dee02fe2a1dc51330335707a9be531fd7aadcdb42229a1958e38e77e350",
+          "p2": "68c7032820d36f1cb7fc26d706705978647fa10169c4ec539962b135161abce2"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t003a003r022-p1.glb",
+          "frameCount": 175,
+          "durationSeconds": 5.8,
+          "sizeBytes": 214232,
+          "sha256": "6d7209fc9237801ad3a2672325405f27faad8a00649945522e3d42e8e4ee3205"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t003a003r022-p2.glb",
+          "frameCount": 175,
+          "durationSeconds": 5.8,
+          "sizeBytes": 213956,
+          "sha256": "1188afea1044ae2d3b3e333b1513e98462fb02bfb7274757bac7ca95b18be4d0"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.09267136454582214,
+        -0.13065218925476074,
+        1.4408579170703888
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.015239278399875822,
+          -0.027875150935227522
+        ],
+        "sourceReferencePlaneMeters": -0.027875150935227522,
+        "initialSoleHeightMeters": [
+          0.0126358725353517,
+          0.0
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    },
+    {
+      "id": "interx-g004t003a003r023",
+      "actionCode": "A003",
+      "variation": "T003",
+      "source": {
+        "recording": "G004T003A003R023",
+        "group": "G004",
+        "take": "R023",
+        "p1": "G004T003A003R023/P1.npz",
+        "p2": "G004T003A003R023/P2.npz",
+        "frameCount": 756,
+        "sha256": {
+          "p1": "5dba0dea6208552c24d5cbb2db48c38208348dafa39475c8bbd97c2b1180fbae",
+          "p2": "b490b5a79c680520f9f1bdc7281e794616ddd60d7993273fcef7ebb08a444cd2"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t003a003r023-p1.glb",
+          "frameCount": 189,
+          "durationSeconds": 6.266666666666667,
+          "sizeBytes": 226140,
+          "sha256": "01025287aed79681920cfd0ba925a6975fa25b3a46706911831c55cdea4c1b85"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t003a003r023-p2.glb",
+          "frameCount": 189,
+          "durationSeconds": 6.266666666666667,
+          "sizeBytes": 225864,
+          "sha256": "a3fd6327526e0289a7100bc2ff20b9b90dff15076264e3a55994b8674adea05b"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.31822991371154785,
+        -0.12817609310150146,
+        1.3026141226291656
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.026248871474445545,
+          -0.04349981009667081
+        ],
+        "sourceReferencePlaneMeters": -0.04349981009667081,
+        "initialSoleHeightMeters": [
+          0.017250938622225265,
+          0.0
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    },
+    {
+      "id": "interx-g004t003a003r024",
+      "actionCode": "A003",
+      "variation": "T003",
+      "source": {
+        "recording": "G004T003A003R024",
+        "group": "G004",
+        "take": "R024",
+        "p1": "G004T003A003R024/P1.npz",
+        "p2": "G004T003A003R024/P2.npz",
+        "frameCount": 840,
+        "sha256": {
+          "p1": "04df56f59e04472a69f33e09d3b51c0606a40c193e07369288751b79d4085fee",
+          "p2": "32ddc4e349cf14224a41d946fba6419d176cc3066e02ce5a781f4c8040bcb576"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t003a003r024-p1.glb",
+          "frameCount": 210,
+          "durationSeconds": 6.966666666666667,
+          "sizeBytes": 243828,
+          "sha256": "9188c42682971c368aebe0c258aa7b311ee709959dfc0f47a96cdc58458ee8c3"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t003a003r024-p2.glb",
+          "frameCount": 210,
+          "durationSeconds": 6.966666666666667,
+          "sizeBytes": 243276,
+          "sha256": "2e045bc18155c429590d86dce7b5bce4261da519ba84745980fc6b6e2849bcac"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.3974057585000992,
+        -0.09527027606964111,
+        -1.2128304243087769
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "placement": {
+        "verticalOrigin": "source-support-preserve-hands",
+        "sourceInitialSolesMeters": [
+          -0.015082841138093439,
+          0.00524615320550792
+        ],
+        "sourceReferencePlaneMeters": -0.015082841138093439,
+        "initialSoleHeightMeters": [
+          0.0,
+          0.02032899434360136
+        ]
+      },
+      "handMotion": "full-axis-angle"
+    }
+  ],
+  "supportModels": {
+    "female": {
+      "file": "SMPLX_FEMALE.npz",
+      "sha256": "2312f6dd2df506c9ce68b66294e2e122d39edfe04dcaac507ef33b5b522c51ee"
+    },
+    "male": {
+      "file": "SMPLX_MALE.npz",
+      "sha256": "12ebe2cae3c4836b7b80806ea2db2026a1d8f700272dfe0f901ec9c575e11d87"
+    },
+    "neutral": {
+      "file": "SMPLX_NEUTRAL.npz",
+      "sha256": "4f11cb22fbd49f46828ed67f018abd7a8289ef696a2cd3cfef20b147aa55bc71"
+    }
+  }
+}

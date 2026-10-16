@@ -1,0 +1,1438 @@
+{
+  "schemaVersion": 1,
+  "dataset": "inter-x",
+  "conversion": {
+    "revision": 1,
+    "sourceFps": 120,
+    "targetFps": 30,
+    "upAxis": "Y",
+    "rootMotionMode": "relative-to-first-frame",
+    "translationUnit": "meters"
+  },
+  "policy": {
+    "take": "all-splits",
+    "representative": "selected-groups-all-shoots",
+    "maxPerAction": null,
+    "allowedGroups": {
+      "A021": [
+        "G004",
+        "G022",
+        "G030",
+        "G053",
+        "G059"
+      ]
+    }
+  },
+  "sizeEstimate": {
+    "baseBytes": 63621.86551796149,
+    "bytesPerFrame": 867.0447004867905
+  },
+  "actions": [
+    {
+      "code": "A000",
+      "key": "hug",
+      "label": "Câlin",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "hug",
+        "affection"
+      ]
+    },
+    {
+      "code": "A001",
+      "key": "handshake",
+      "label": "Poignée de main",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "handshake",
+        "social"
+      ]
+    },
+    {
+      "code": "A002",
+      "key": "wave",
+      "label": "Signe de la main",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "wave",
+        "social"
+      ]
+    },
+    {
+      "code": "A003",
+      "key": "grab",
+      "label": "Saisir",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "grab",
+        "combat"
+      ]
+    },
+    {
+      "code": "A004",
+      "key": "hit",
+      "label": "Frapper",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "hit",
+        "combat"
+      ]
+    },
+    {
+      "code": "A005",
+      "key": "kick",
+      "label": "Coup de pied",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "kick",
+        "combat"
+      ]
+    },
+    {
+      "code": "A006",
+      "key": "posing",
+      "label": "Prendre la pose",
+      "category": "poses_idles",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "posing",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A007",
+      "key": "push",
+      "label": "Pousser",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "push",
+        "combat"
+      ]
+    },
+    {
+      "code": "A008",
+      "key": "pull",
+      "label": "Tirer",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "pull",
+        "combat"
+      ]
+    },
+    {
+      "code": "A009",
+      "key": "sit-on-leg",
+      "label": "S’asseoir sur la jambe",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "sit-on-leg",
+        "social"
+      ]
+    },
+    {
+      "code": "A010",
+      "key": "slap",
+      "label": "Gifler",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "slap",
+        "combat"
+      ]
+    },
+    {
+      "code": "A011",
+      "key": "pat-on-back",
+      "label": "Tapoter le dos",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "pat-on-back",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A012",
+      "key": "point-finger",
+      "label": "Pointer du doigt",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "point-finger",
+        "social"
+      ]
+    },
+    {
+      "code": "A013",
+      "key": "walk-towards",
+      "label": "Marcher vers l’autre",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "walk-towards",
+        "social"
+      ]
+    },
+    {
+      "code": "A014",
+      "key": "knock-over",
+      "label": "Renverser",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "knock-over",
+        "combat"
+      ]
+    },
+    {
+      "code": "A015",
+      "key": "step-on-foot",
+      "label": "Marcher sur le pied",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "step-on-foot",
+        "combat"
+      ]
+    },
+    {
+      "code": "A016",
+      "key": "high-five",
+      "label": "High-five",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "high-five",
+        "social"
+      ]
+    },
+    {
+      "code": "A017",
+      "key": "chase",
+      "label": "Poursuivre",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "chase",
+        "social"
+      ]
+    },
+    {
+      "code": "A018",
+      "key": "whisper",
+      "label": "Chuchoter à l’oreille",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "whisper",
+        "social"
+      ]
+    },
+    {
+      "code": "A019",
+      "key": "support-with-hand",
+      "label": "Soutenir avec la main",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "support-with-hand",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A020",
+      "key": "rock-paper-scissors",
+      "label": "Pierre-feuille-ciseaux",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "rock-paper-scissors",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A021",
+      "key": "dance",
+      "label": "Danser",
+      "category": "dances",
+      "icon": "💃",
+      "isCombat": false,
+      "tags": [
+        "dance",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A022",
+      "key": "link-arms",
+      "label": "Bras dessus dessous",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "link-arms",
+        "affection"
+      ]
+    },
+    {
+      "code": "A023",
+      "key": "shoulder-to-shoulder",
+      "label": "Épaule contre épaule",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "shoulder-to-shoulder",
+        "affection"
+      ]
+    },
+    {
+      "code": "A024",
+      "key": "bend",
+      "label": "Se pencher",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "bend",
+        "social"
+      ]
+    },
+    {
+      "code": "A025",
+      "key": "carry-back",
+      "label": "Porter sur le dos",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "carry-back",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A026",
+      "key": "massage-shoulder",
+      "label": "Masser les épaules",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "massage-shoulder",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A027",
+      "key": "massage-leg",
+      "label": "Masser les jambes",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "massage-leg",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A028",
+      "key": "arm-wrestling",
+      "label": "Bras de fer",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "arm-wrestling",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A029",
+      "key": "chat",
+      "label": "Discuter",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "chat",
+        "social"
+      ]
+    },
+    {
+      "code": "A030",
+      "key": "pat-on-cheek",
+      "label": "Caresser la joue",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "pat-on-cheek",
+        "affection"
+      ]
+    },
+    {
+      "code": "A031",
+      "key": "thumb-up",
+      "label": "Pouce levé",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "thumb-up",
+        "social"
+      ]
+    },
+    {
+      "code": "A032",
+      "key": "touch-head",
+      "label": "Toucher la tête",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "touch-head",
+        "affection"
+      ]
+    },
+    {
+      "code": "A033",
+      "key": "imitate",
+      "label": "Imiter",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "imitate",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A034",
+      "key": "kiss-on-cheek",
+      "label": "Baiser sur la joue",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "kiss-on-cheek",
+        "affection"
+      ]
+    },
+    {
+      "code": "A035",
+      "key": "help-up",
+      "label": "Aider à se relever",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "help-up",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A036",
+      "key": "cover-mouth",
+      "label": "Couvrir la bouche",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "cover-mouth",
+        "social"
+      ]
+    },
+    {
+      "code": "A037",
+      "key": "look-back",
+      "label": "Regarder derrière soi",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "look-back",
+        "social"
+      ]
+    },
+    {
+      "code": "A038",
+      "key": "block",
+      "label": "Bloquer",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "block",
+        "combat"
+      ]
+    },
+    {
+      "code": "A039",
+      "key": "fly-kiss",
+      "label": "Envoyer un baiser",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "fly-kiss",
+        "affection"
+      ]
+    }
+  ],
+  "duos": [
+    {
+      "id": "interx-g059t003a021r004",
+      "actionCode": "A021",
+      "variation": "T003",
+      "source": {
+        "recording": "G059T003A021R004",
+        "group": "G059",
+        "take": "R004",
+        "p1": "G059T003A021R004/P1.npz",
+        "p2": "G059T003A021R004/P2.npz",
+        "frameCount": 920,
+        "sha256": {
+          "p1": "1830fe2f0479b013c017b754e51c2f7c306bf06b3778998571cf9064256a98f3",
+          "p2": "df844aecc435a188032bdd140a897da0bc611d4d55cccdf4e05acecefb8fd177"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t003a021r004-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t003a021r004-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.5678913742303848,
+        0.034188032150268555,
+        0.10807597637176514
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 230,
+      "expectedDurationSeconds": 7.633333333333334,
+      "estimatedBytes": 526084
+    },
+    {
+      "id": "interx-g059t003a021r005",
+      "actionCode": "A021",
+      "variation": "T003",
+      "source": {
+        "recording": "G059T003A021R005",
+        "group": "G059",
+        "take": "R005",
+        "p1": "G059T003A021R005/P1.npz",
+        "p2": "G059T003A021R005/P2.npz",
+        "frameCount": 1160,
+        "sha256": {
+          "p1": "417810c86e8f0147e024481b209c9d135adc6b6e0cc68028d622f37ed0ce2f95",
+          "p2": "50452bab59f740627883e689ecc15e5c13e943223bec6b72cf9b71c48f77d8f3"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t003a021r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t003a021r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.6537488624453545,
+        0.039612770080566406,
+        0.02149897813796997
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 290,
+      "expectedDurationSeconds": 9.633333333333333,
+      "estimatedBytes": 630130
+    },
+    {
+      "id": "interx-g059t003a021r006",
+      "actionCode": "A021",
+      "variation": "T003",
+      "source": {
+        "recording": "G059T003A021R006",
+        "group": "G059",
+        "take": "R006",
+        "p1": "G059T003A021R006/P1.npz",
+        "p2": "G059T003A021R006/P2.npz",
+        "frameCount": 1232,
+        "sha256": {
+          "p1": "c2ebdc5e2f9978053e15b0e577365a085f26853f7dacd4482f517ffcb2116af3",
+          "p2": "ba9d82bc552532925897d1ed76c1a9924175940e2b6752a9049cc0ad05feba61"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t003a021r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t003a021r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.8393319100141525,
+        0.026050925254821777,
+        0.24767160415649414
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 308,
+      "expectedDurationSeconds": 10.233333333333333,
+      "estimatedBytes": 661343
+    },
+    {
+      "id": "interx-g059t003a021r007",
+      "actionCode": "A021",
+      "variation": "T003",
+      "source": {
+        "recording": "G059T003A021R007",
+        "group": "G059",
+        "take": "R007",
+        "p1": "G059T003A021R007/P1.npz",
+        "p2": "G059T003A021R007/P2.npz",
+        "frameCount": 964,
+        "sha256": {
+          "p1": "836136117a22b2ed3242781f322daffbff4d22ac72c353a22df2f04a0f4a4c8f",
+          "p2": "173dcd30db31dd5c91fb0c5d9ae50f96dcac2c70844c0e0b3a745522f17d533f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t003a021r007-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t003a021r007-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.621500663459301,
+        0.030307888984680176,
+        0.305446058511734
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 241,
+      "expectedDurationSeconds": 8.0,
+      "estimatedBytes": 545159
+    },
+    {
+      "id": "interx-g053t005a021r004",
+      "actionCode": "A021",
+      "variation": "T005",
+      "source": {
+        "recording": "G053T005A021R004",
+        "group": "G053",
+        "take": "R004",
+        "p1": "G053T005A021R004/P1.npz",
+        "p2": "G053T005A021R004/P2.npz",
+        "frameCount": 1208,
+        "sha256": {
+          "p1": "bade8354723aea58fe5e7269b7ba733ddfba2dac79416a82002142c93ed59e8b",
+          "p2": "61e2ddc81dd0bc8370b6dc3bd4ea1aa95393f4c23e979c6a1d5dbfc9e60df80c"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t005a021r004-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t005a021r004-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.0019177347421646,
+        0.054235219955444336,
+        0.024912893772125244
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 302,
+      "expectedDurationSeconds": 10.033333333333333,
+      "estimatedBytes": 650939
+    },
+    {
+      "id": "interx-g053t005a021r005",
+      "actionCode": "A021",
+      "variation": "T005",
+      "source": {
+        "recording": "G053T005A021R005",
+        "group": "G053",
+        "take": "R005",
+        "p1": "G053T005A021R005/P1.npz",
+        "p2": "G053T005A021R005/P2.npz",
+        "frameCount": 544,
+        "sha256": {
+          "p1": "e64082d240018b8bf7325d55e74766c8084cad239d806ab1f14b1e2d93e3e8f1",
+          "p2": "8f153da4aa598b72b0409062e6d513bbd4eb344045a3456c8830e45d702ea7b7"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t005a021r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t005a021r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7186579406261444,
+        0.01827394962310791,
+        0.2071244716644287
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 136,
+      "expectedDurationSeconds": 4.5,
+      "estimatedBytes": 363080
+    },
+    {
+      "id": "interx-g053t005a021r006",
+      "actionCode": "A021",
+      "variation": "T005",
+      "source": {
+        "recording": "G053T005A021R006",
+        "group": "G053",
+        "take": "R006",
+        "p1": "G053T005A021R006/P1.npz",
+        "p2": "G053T005A021R006/P2.npz",
+        "frameCount": 1504,
+        "sha256": {
+          "p1": "ff63e6087de75261eb753bb4d6d659e854d7cb8c82411f159f1dfc81818e4df0",
+          "p2": "aa32429de8c19efd50797b093cf0d86140f0dde0aed2d9958c772b1486646373"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t005a021r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t005a021r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.9169596135616302,
+        0.0028113126754760742,
+        0.29497480392456055
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 376,
+      "expectedDurationSeconds": 12.5,
+      "estimatedBytes": 779261
+    },
+    {
+      "id": "interx-g053t005a021r007",
+      "actionCode": "A021",
+      "variation": "T005",
+      "source": {
+        "recording": "G053T005A021R007",
+        "group": "G053",
+        "take": "R007",
+        "p1": "G053T005A021R007/P1.npz",
+        "p2": "G053T005A021R007/P2.npz",
+        "frameCount": 4512,
+        "sha256": {
+          "p1": "ad49c550723ebe4cd37ab1f9375c5beac4e094461fb98bb815899c73ced749fb",
+          "p2": "23d7402a8b4dd9381338f9ae80c4d5613df2ffa0a00802bcfdabfb368d06255e"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t005a021r007-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t005a021r007-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.4326339177787304,
+        0.021300196647644043,
+        0.7367517352104187
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 1128,
+      "expectedDurationSeconds": 37.56666666666667,
+      "estimatedBytes": 2083297
+    },
+    {
+      "id": "interx-g022t005a021r005",
+      "actionCode": "A021",
+      "variation": "T005",
+      "source": {
+        "recording": "G022T005A021R005",
+        "group": "G022",
+        "take": "R005",
+        "p1": "G022T005A021R005/P1.npz",
+        "p2": "G022T005A021R005/P2.npz",
+        "frameCount": 1264,
+        "sha256": {
+          "p1": "ac1c779bc4de151bcee9d6ab582927befab582793e4ef17675c165bdd08ee78d",
+          "p2": "233411748b4d4409e49e2aa6f87f22509a0e15830e0e7564b3f99c510d3b6c78"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t005a021r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t005a021r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.8202913254499435,
+        0.02765512466430664,
+        0.34770941734313965
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 316,
+      "expectedDurationSeconds": 10.5,
+      "estimatedBytes": 675216
+    },
+    {
+      "id": "interx-g022t005a021r006",
+      "actionCode": "A021",
+      "variation": "T005",
+      "source": {
+        "recording": "G022T005A021R006",
+        "group": "G022",
+        "take": "R006",
+        "p1": "G022T005A021R006/P1.npz",
+        "p2": "G022T005A021R006/P2.npz",
+        "frameCount": 1180,
+        "sha256": {
+          "p1": "e3ce5da0179dea0fc2630c6c0e546a016e65613d5b7dbd1e8c344ca9354fc3e0",
+          "p2": "f54367f7e8361eb98e2e9dcd45338631599e437d28e0e28c46a0d54639ac018e"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t005a021r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t005a021r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7711116969585419,
+        0.024073243141174316,
+        0.3880637288093567
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 295,
+      "expectedDurationSeconds": 9.8,
+      "estimatedBytes": 638800
+    },
+    {
+      "id": "interx-g022t005a021r007",
+      "actionCode": "A021",
+      "variation": "T005",
+      "source": {
+        "recording": "G022T005A021R007",
+        "group": "G022",
+        "take": "R007",
+        "p1": "G022T005A021R007/P1.npz",
+        "p2": "G022T005A021R007/P2.npz",
+        "frameCount": 620,
+        "sha256": {
+          "p1": "24d9011d258e5f4af8014e8f38f0fbace607124ee3d02dd16f73a42a4f701dcd",
+          "p2": "ba807be4c65794b9cafa8ade3a1c5c29240c29f1ee3efd38fb7745f71437afa8"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t005a021r007-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t005a021r007-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.5454734973609447,
+        0.04487144947052002,
+        0.8088599443435669
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 155,
+      "expectedDurationSeconds": 5.133333333333334,
+      "estimatedBytes": 396028
+    },
+    {
+      "id": "interx-g022t006a021r001",
+      "actionCode": "A021",
+      "variation": "T006",
+      "source": {
+        "recording": "G022T006A021R001",
+        "group": "G022",
+        "take": "R001",
+        "p1": "G022T006A021R001/P1.npz",
+        "p2": "G022T006A021R001/P2.npz",
+        "frameCount": 1240,
+        "sha256": {
+          "p1": "563e3291b19add3dd51705a628e5589c7b0e78385a9f1f0467bd97e6efc25329",
+          "p2": "4dab470357fd3e3c46116e262df3719b32fd1529e4da78cf8e995da46dbb9380"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t006a021r001-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t006a021r001-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.0118056014180183,
+        0.020261406898498535,
+        0.2644517421722412
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 310,
+      "expectedDurationSeconds": 10.3,
+      "estimatedBytes": 664811
+    },
+    {
+      "id": "interx-g030t007a021r003",
+      "actionCode": "A021",
+      "variation": "T007",
+      "source": {
+        "recording": "G030T007A021R003",
+        "group": "G030",
+        "take": "R003",
+        "p1": "G030T007A021R003/P1.npz",
+        "p2": "G030T007A021R003/P2.npz",
+        "frameCount": 816,
+        "sha256": {
+          "p1": "d80d98c8b43010680de3f7bf711c626233399e549cdd120ebb7846c59b5c4ccc",
+          "p2": "f41310b2111cd2b5d378b1c16bee2a5a7d75d8ab60e3a567d67af27a01ac7866"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t007a021r003-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t007a021r003-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.8636627793312073,
+        0.018447041511535645,
+        -0.9614778757095337
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 204,
+      "expectedDurationSeconds": 6.766666666666667,
+      "estimatedBytes": 480998
+    },
+    {
+      "id": "interx-g030t007a021r004",
+      "actionCode": "A021",
+      "variation": "T007",
+      "source": {
+        "recording": "G030T007A021R004",
+        "group": "G030",
+        "take": "R004",
+        "p1": "G030T007A021R004/P1.npz",
+        "p2": "G030T007A021R004/P2.npz",
+        "frameCount": 856,
+        "sha256": {
+          "p1": "f24c97708b34b025fc121002014dba78f61c63e128d12f56407d1c718c79be14",
+          "p2": "3568dd2482de23e6c8b9ca6b675bf3fdd6c0d8ba8114499b7b3ae248c62243fb"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t007a021r004-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t007a021r004-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.46834419667720795,
+        0.07851135730743408,
+        -1.0911791622638702
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 214,
+      "expectedDurationSeconds": 7.1,
+      "estimatedBytes": 498339
+    },
+    {
+      "id": "interx-g030t007a021r005",
+      "actionCode": "A021",
+      "variation": "T007",
+      "source": {
+        "recording": "G030T007A021R005",
+        "group": "G030",
+        "take": "R005",
+        "p1": "G030T007A021R005/P1.npz",
+        "p2": "G030T007A021R005/P2.npz",
+        "frameCount": 876,
+        "sha256": {
+          "p1": "2d5824a0f8f86850d425432e11844f085b4c3c7dc84f58d9c65041b5cd7c4a2e",
+          "p2": "b31ffd85fb30cd7540b03f6cb5223232f44874b010d8528715d3b063fd5ce74f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t007a021r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t007a021r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.48354717530310154,
+        0.06529545783996582,
+        -0.4792415201663971
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 219,
+      "expectedDurationSeconds": 7.266666666666667,
+      "estimatedBytes": 507009
+    },
+    {
+      "id": "interx-g030t007a021r006",
+      "actionCode": "A021",
+      "variation": "T007",
+      "source": {
+        "recording": "G030T007A021R006",
+        "group": "G030",
+        "take": "R006",
+        "p1": "G030T007A021R006/P1.npz",
+        "p2": "G030T007A021R006/P2.npz",
+        "frameCount": 1028,
+        "sha256": {
+          "p1": "c07866979a1bbbcf71352374cd6397a279d9fb8750016142fc80ad6dfafadf31",
+          "p2": "c695a034ad74a8483e1c9a963286584f87f8e41238800177484de209848535d0"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t007a021r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t007a021r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.9230212569236755,
+        0.07062375545501709,
+        -0.1540437936782837
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 257,
+      "expectedDurationSeconds": 8.533333333333333,
+      "estimatedBytes": 572905
+    },
+    {
+      "id": "interx-g004t008a021r004",
+      "actionCode": "A021",
+      "variation": "T008",
+      "source": {
+        "recording": "G004T008A021R004",
+        "group": "G004",
+        "take": "R004",
+        "p1": "G004T008A021R004/P1.npz",
+        "p2": "G004T008A021R004/P2.npz",
+        "frameCount": 1108,
+        "sha256": {
+          "p1": "3d97de119da76c85a325be744b0f1fee2ad8c9ba167669db4532862936d055d8",
+          "p2": "7785c6bf8a5302d8f16876a2ddfcdff00383f0e723182eac2dee8d18167b4fbd"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t008a021r004-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t008a021r004-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.0412374436855316,
+        -0.1096113920211792,
+        -0.22379040718078613
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 277,
+      "expectedDurationSeconds": 9.2,
+      "estimatedBytes": 607586
+    },
+    {
+      "id": "interx-g004t008a021r005",
+      "actionCode": "A021",
+      "variation": "T008",
+      "source": {
+        "recording": "G004T008A021R005",
+        "group": "G004",
+        "take": "R005",
+        "p1": "G004T008A021R005/P1.npz",
+        "p2": "G004T008A021R005/P2.npz",
+        "frameCount": 2412,
+        "sha256": {
+          "p1": "c9b8c0e9f8a1974db98a6be96651fcc030c78ede06e21dcc98bc68327985e5cd",
+          "p2": "6ecc1212108167e0a703131a61943a2ac48e9a5329f77bcfb19bf61d3e7aff20"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t008a021r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t008a021r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.16465120762586594,
+        -0.09487736225128174,
+        1.4184411093592644
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 603,
+      "expectedDurationSeconds": 20.066666666666666,
+      "estimatedBytes": 1172900
+    },
+    {
+      "id": "interx-g004t008a021r006",
+      "actionCode": "A021",
+      "variation": "T008",
+      "source": {
+        "recording": "G004T008A021R006",
+        "group": "G004",
+        "take": "R006",
+        "p1": "G004T008A021R006/P1.npz",
+        "p2": "G004T008A021R006/P2.npz",
+        "frameCount": 644,
+        "sha256": {
+          "p1": "6bf7dd51c8e4c591490276568ca05703a473c40b0cf16ee1a32791cb2c8a73d7",
+          "p2": "333931db46265d859772fe738d5515f98c821b7f7f68c8dac0406cdf5c5e87fa"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t008a021r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t008a021r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.9162750840187073,
+        -0.11008250713348389,
+        -0.25374647974967957
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 161,
+      "expectedDurationSeconds": 5.333333333333333,
+      "estimatedBytes": 406432
+    },
+    {
+      "id": "interx-g004t008a021r007",
+      "actionCode": "A021",
+      "variation": "T008",
+      "source": {
+        "recording": "G004T008A021R007",
+        "group": "G004",
+        "take": "R007",
+        "p1": "G004T008A021R007/P1.npz",
+        "p2": "G004T008A021R007/P2.npz",
+        "frameCount": 1504,
+        "sha256": {
+          "p1": "7c41860b92fe997b9a38ee7fc22f116f2f6d636cc04aea2c0d994045cde9d1b2",
+          "p2": "72a5c947c2daaf7140490cbebeea187eab48dc96541982d2272eeee3d517472c"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t008a021r007-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t008a021r007-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7053395360708237,
+        -0.10696542263031006,
+        0.32363858819007874
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 376,
+      "expectedDurationSeconds": 12.5,
+      "estimatedBytes": 779261
+    },
+    {
+      "id": "interx-g004t008a021r008",
+      "actionCode": "A021",
+      "variation": "T008",
+      "source": {
+        "recording": "G004T008A021R008",
+        "group": "G004",
+        "take": "R008",
+        "p1": "G004T008A021R008/P1.npz",
+        "p2": "G004T008A021R008/P2.npz",
+        "frameCount": 1164,
+        "sha256": {
+          "p1": "3985956afd346da1d60c134f0de68d5b337b40e73ef379884ce2caccd7bd0e47",
+          "p2": "fb984ccf06083047e067ac0ad6f2eff0cdc851607ae44987cbf4967d8ab1785b"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t008a021r008-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t008a021r008-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7376965284347534,
+        -0.10014784336090088,
+        -0.5090087056159973
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "dance",
+        "play-dance"
+      ],
+      "expectedFrameCount": 291,
+      "expectedDurationSeconds": 9.666666666666666,
+      "estimatedBytes": 631864
+    }
+  ]
+}

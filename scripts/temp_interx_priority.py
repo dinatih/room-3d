@@ -5,11 +5,98 @@ import json
 import subprocess
 from pathlib import Path
 import math
+import os
 
 import numpy as np
 
-from interx_catalog import ROOT, MANIFEST, DEFAULT_SOURCE, RECORDING, SOURCE_FPS, TARGET_FPS, actions, atomic_json, publish_manifest, estimate_model
-from convert_interx_duos import GROUND_STANDING_ACTIONS, verified
+from interx_catalog import ROOT, MANIFEST, DEFAULT_SOURCE, RECORDING, CONVERSION, SOURCE_FPS, TARGET_FPS, actions, atomic_json, publish_manifest, estimate_model, entry_for
+from convert_interx_duos import GROUND_STANDING_ACTIONS, verified, load_selection
+
+
+def convert_themes(codes, plan_path, directory):
+    plan_path, directory = plan_path.resolve(), directory.resolve()
+    if len(codes) != len(set(codes)):
+        raise ValueError('Duplicate action in the theme order')
+    plan = json.loads(plan_path.read_text())
+    if plan['scope'] != 'all-missing-T-R-for-current-G-A-representatives':
+        raise ValueError('This batch requires the approved all-T/R segment estimate')
+    definitions = {action['code']: action for action in actions()}
+    if set(codes) - set(definitions):
+        raise ValueError('Unknown action code')
+    directory.mkdir(parents=True, exist_ok=True)
+    state = {'schemaVersion': 1, 'sourcePlan': str(plan_path.relative_to(ROOT)), 'themes': [
+        {'code': code, 'label': definitions[code]['label'], 'status': 'pending',
+         'plannedDuos': sum(entry['actionCode'] == code for entry in plan['duos'])}
+        for code in codes]}
+    progress = directory / 'progress.json'
+    atomic_json(progress, state)
+    for theme in state['themes']:
+        code = theme['code']
+        specs = [entry for entry in plan['duos'] if entry['actionCode'] == code]
+        if not specs:
+            raise ValueError(f'No approved recordings for {code}')
+        selection_path = directory / f'{code}_selection.json'
+        placement_path = directory / f'{code}_placement.json'
+        draft_path = directory / f'{code}_draft_manifest.json'
+        if not selection_path.exists():
+            entries = [entry_for(DEFAULT_SOURCE, item['recording'], plan['sizeEstimate']) for item in specs]
+            for entry, item in zip(entries, specs):
+                if entry['expectedFrameCount'] != item['frameCount']:
+                    raise ValueError(f"Source timing changed since the estimate: {item['recording']}")
+            atomic_json(selection_path, {'schemaVersion': 1, 'dataset': 'inter-x', 'conversion': CONVERSION,
+                'policy': {'take': 'all-splits', 'representative': 'selected-groups-all-shoots', 'maxPerAction': None,
+                           'allowedGroups': {code: sorted({item['group'] for item in specs})}},
+                'sizeEstimate': plan['sizeEstimate'], 'actions': actions(), 'duos': entries})
+        selection = load_selection(selection_path, DEFAULT_SOURCE)
+        if {entry['source']['recording'] for entry in selection['duos']} != {item['recording'] for item in specs}:
+            raise ValueError(f'Saved batch differs from the approved segment plan: {code}')
+        theme['status'] = 'exporting'
+        atomic_json(progress, state)
+        print(f"THEME_START {code} {theme['label']}: {len(specs)} duos", flush=True)
+        log = Path(f'/tmp/interx-segments-{code}-export.log')
+        try:
+            ready = {entry['id']: entry for entry in json.loads(MANIFEST.read_text())['duos']}
+            complete = all(entry['id'] in ready and ready[entry['id']]['source'] == entry['source']
+                           and ready[entry['id']].get('handMotion') == 'full-axis-angle'
+                           and 'placement' in ready[entry['id']] and verified(ready[entry['id']]) for entry in selection['duos'])
+            if not complete:
+                if not draft_path.exists():
+                    current = json.loads(MANIFEST.read_text())
+                    ids = {entry['id'] for entry in selection['duos']}
+                    atomic_json(draft_path, {**current, 'duos': [entry for entry in current['duos'] if entry['id'] in ids]})
+                log = Path(f'/tmp/interx-segments-{code}-support.log')
+                with log.open('w') as output:
+                    subprocess.run(['python3', 'scripts/temp_interx_grounding.py', '--placement-selection', str(selection_path),
+                                    '--report', str(placement_path)], cwd=ROOT, stdout=output, stderr=subprocess.STDOUT, check=True)
+                log = Path(f'/tmp/interx-segments-{code}-export.log')
+                with log.open('w') as output:
+                    subprocess.run(['blender', '-noaudio', '--background', '--python-exit-code', '1', '--python',
+                                    'scripts/convert_interx_duos.py', '--', '--selection', str(selection_path), '--hand-motion',
+                                    '--placement-metadata', str(placement_path), '--draft-manifest', str(draft_path)], cwd=ROOT,
+                                   env={**os.environ, 'ALSOFT_DRIVERS': 'null'}, stdout=output, stderr=subprocess.STDOUT, check=True)
+                draft = json.loads(draft_path.read_text())
+                if {entry['id'] for entry in draft['duos']} != {entry['id'] for entry in selection['duos']} or not all(verified(entry) for entry in draft['duos']):
+                    raise ValueError(f'Incomplete draft: {code}')
+                current = json.loads(MANIFEST.read_text())
+                ready = {entry['id']: entry for entry in current['duos']}
+                ready.update({entry['id']: entry for entry in draft['duos']})
+                current['duos'] = sorted(ready.values(), key=lambda entry: (entry['actionCode'], entry['variation'], entry['id']))
+                current['supportModels'] = draft['supportModels']
+                publish_manifest(current)
+            ready = {entry['id']: entry for entry in json.loads(MANIFEST.read_text())['duos']}
+            for entry in selection['duos']:
+                if entry['id'] not in ready or ready[entry['id']]['source'] != entry['source'] or not verified(ready[entry['id']]):
+                    raise ValueError(f"Incomplete or invalid published duo: {entry['id']}")
+            theme.update(status='complete', publishedDuos=len(specs), sizeBytes=sum(
+                clip['sizeBytes'] for entry in selection['duos'] for clip in ready[entry['id']]['clips'].values()))
+            atomic_json(progress, state)
+            print(f"THEME_DONE {code} {theme['label']}: {len(specs)} duos / {2 * len(specs)} GLB / {theme['sizeBytes'] / 1e6:.2f} MB", flush=True)
+        except Exception:
+            theme['status'] = 'failed'
+            atomic_json(progress, state)
+            print(f'THEME_FAILED {code}; inspect {log}', flush=True)
+            raise
+    print(f"BATCH_DONE {sum(theme['publishedDuos'] for theme in state['themes'])} duos / {sum(theme['sizeBytes'] for theme in state['themes']) / 1e6:.2f} MB", flush=True)
 
 
 def main():
@@ -18,7 +105,13 @@ def main():
     parser.add_argument('--inventory', type=Path, help='Write source/session coverage for all 40 actions as Markdown')
     parser.add_argument('--estimate-segments', type=Path, help='Estimate additional R segments for currently selected G/T/A recordings without exporting')
     parser.add_argument('--include-other-shoots', action='store_true', help='Also include other T recordings for the same selected binomes and action')
+    parser.add_argument('--convert-themes', nargs='+', help='Export approved segment themes sequentially, in the specified order')
+    parser.add_argument('--segments-plan', type=Path, default=ROOT / 'docs/INTERX_ALL_SELECTED_GROUP_SEGMENTS_ESTIMATE.json')
+    parser.add_argument('--batch-directory', type=Path, default=ROOT / 'scripts/interx_segment_batches')
     args = parser.parse_args()
+    if args.convert_themes:
+        convert_themes(args.convert_themes, args.segments_plan, args.batch_directory)
+        return
     if args.include_other_shoots and not args.estimate_segments:
         raise ValueError('--include-other-shoots requires --estimate-segments')
     if args.estimate_segments:

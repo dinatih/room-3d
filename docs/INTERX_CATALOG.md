@@ -46,5 +46,5 @@ Un binôme de taille adaptée par session T, première prise disponible ; les r�
 | A039 | Envoyer un baiser | 6 | 6 | 0 |
 | Total | | 218 | 218 | 0 |
 
-Le catalogue contient 220 duos, comparaisons de binômes conservées comprises.
-Fichiers : 440 GLB, soit 103.10 Mo. Les métadonnées JSON s'ajoutent à ce poids.
+Le catalogue contient 763 duos, comparaisons de binômes conservées comprises.
+Fichiers : 1526 GLB, soit 365.99 Mo. Les métadonnées JSON s'ajoutent à ce poids.

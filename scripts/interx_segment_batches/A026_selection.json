@@ -1,0 +1,1527 @@
+{
+  "schemaVersion": 1,
+  "dataset": "inter-x",
+  "conversion": {
+    "revision": 1,
+    "sourceFps": 120,
+    "targetFps": 30,
+    "upAxis": "Y",
+    "rootMotionMode": "relative-to-first-frame",
+    "translationUnit": "meters"
+  },
+  "policy": {
+    "take": "all-splits",
+    "representative": "selected-groups-all-shoots",
+    "maxPerAction": null,
+    "allowedGroups": {
+      "A026": [
+        "G004",
+        "G022",
+        "G039",
+        "G053",
+        "G056",
+        "G059"
+      ]
+    }
+  },
+  "sizeEstimate": {
+    "baseBytes": 63621.86551796149,
+    "bytesPerFrame": 867.0447004867905
+  },
+  "actions": [
+    {
+      "code": "A000",
+      "key": "hug",
+      "label": "Câlin",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "hug",
+        "affection"
+      ]
+    },
+    {
+      "code": "A001",
+      "key": "handshake",
+      "label": "Poignée de main",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "handshake",
+        "social"
+      ]
+    },
+    {
+      "code": "A002",
+      "key": "wave",
+      "label": "Signe de la main",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "wave",
+        "social"
+      ]
+    },
+    {
+      "code": "A003",
+      "key": "grab",
+      "label": "Saisir",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "grab",
+        "combat"
+      ]
+    },
+    {
+      "code": "A004",
+      "key": "hit",
+      "label": "Frapper",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "hit",
+        "combat"
+      ]
+    },
+    {
+      "code": "A005",
+      "key": "kick",
+      "label": "Coup de pied",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "kick",
+        "combat"
+      ]
+    },
+    {
+      "code": "A006",
+      "key": "posing",
+      "label": "Prendre la pose",
+      "category": "poses_idles",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "posing",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A007",
+      "key": "push",
+      "label": "Pousser",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "push",
+        "combat"
+      ]
+    },
+    {
+      "code": "A008",
+      "key": "pull",
+      "label": "Tirer",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "pull",
+        "combat"
+      ]
+    },
+    {
+      "code": "A009",
+      "key": "sit-on-leg",
+      "label": "S’asseoir sur la jambe",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "sit-on-leg",
+        "social"
+      ]
+    },
+    {
+      "code": "A010",
+      "key": "slap",
+      "label": "Gifler",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "slap",
+        "combat"
+      ]
+    },
+    {
+      "code": "A011",
+      "key": "pat-on-back",
+      "label": "Tapoter le dos",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "pat-on-back",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A012",
+      "key": "point-finger",
+      "label": "Pointer du doigt",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "point-finger",
+        "social"
+      ]
+    },
+    {
+      "code": "A013",
+      "key": "walk-towards",
+      "label": "Marcher vers l’autre",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "walk-towards",
+        "social"
+      ]
+    },
+    {
+      "code": "A014",
+      "key": "knock-over",
+      "label": "Renverser",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "knock-over",
+        "combat"
+      ]
+    },
+    {
+      "code": "A015",
+      "key": "step-on-foot",
+      "label": "Marcher sur le pied",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "step-on-foot",
+        "combat"
+      ]
+    },
+    {
+      "code": "A016",
+      "key": "high-five",
+      "label": "High-five",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "high-five",
+        "social"
+      ]
+    },
+    {
+      "code": "A017",
+      "key": "chase",
+      "label": "Poursuivre",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "chase",
+        "social"
+      ]
+    },
+    {
+      "code": "A018",
+      "key": "whisper",
+      "label": "Chuchoter à l’oreille",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "whisper",
+        "social"
+      ]
+    },
+    {
+      "code": "A019",
+      "key": "support-with-hand",
+      "label": "Soutenir avec la main",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "support-with-hand",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A020",
+      "key": "rock-paper-scissors",
+      "label": "Pierre-feuille-ciseaux",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "rock-paper-scissors",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A021",
+      "key": "dance",
+      "label": "Danser",
+      "category": "dances",
+      "icon": "💃",
+      "isCombat": false,
+      "tags": [
+        "dance",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A022",
+      "key": "link-arms",
+      "label": "Bras dessus dessous",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "link-arms",
+        "affection"
+      ]
+    },
+    {
+      "code": "A023",
+      "key": "shoulder-to-shoulder",
+      "label": "Épaule contre épaule",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "shoulder-to-shoulder",
+        "affection"
+      ]
+    },
+    {
+      "code": "A024",
+      "key": "bend",
+      "label": "Se pencher",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "bend",
+        "social"
+      ]
+    },
+    {
+      "code": "A025",
+      "key": "carry-back",
+      "label": "Porter sur le dos",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "carry-back",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A026",
+      "key": "massage-shoulder",
+      "label": "Masser les épaules",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "massage-shoulder",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A027",
+      "key": "massage-leg",
+      "label": "Masser les jambes",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "massage-leg",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A028",
+      "key": "arm-wrestling",
+      "label": "Bras de fer",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "arm-wrestling",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A029",
+      "key": "chat",
+      "label": "Discuter",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "chat",
+        "social"
+      ]
+    },
+    {
+      "code": "A030",
+      "key": "pat-on-cheek",
+      "label": "Caresser la joue",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "pat-on-cheek",
+        "affection"
+      ]
+    },
+    {
+      "code": "A031",
+      "key": "thumb-up",
+      "label": "Pouce levé",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "thumb-up",
+        "social"
+      ]
+    },
+    {
+      "code": "A032",
+      "key": "touch-head",
+      "label": "Toucher la tête",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "touch-head",
+        "affection"
+      ]
+    },
+    {
+      "code": "A033",
+      "key": "imitate",
+      "label": "Imiter",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "imitate",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A034",
+      "key": "kiss-on-cheek",
+      "label": "Baiser sur la joue",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "kiss-on-cheek",
+        "affection"
+      ]
+    },
+    {
+      "code": "A035",
+      "key": "help-up",
+      "label": "Aider à se relever",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "help-up",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A036",
+      "key": "cover-mouth",
+      "label": "Couvrir la bouche",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "cover-mouth",
+        "social"
+      ]
+    },
+    {
+      "code": "A037",
+      "key": "look-back",
+      "label": "Regarder derrière soi",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "look-back",
+        "social"
+      ]
+    },
+    {
+      "code": "A038",
+      "key": "block",
+      "label": "Bloquer",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "block",
+        "combat"
+      ]
+    },
+    {
+      "code": "A039",
+      "key": "fly-kiss",
+      "label": "Envoyer un baiser",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "fly-kiss",
+        "affection"
+      ]
+    }
+  ],
+  "duos": [
+    {
+      "id": "interx-g059t004a026r014",
+      "actionCode": "A026",
+      "variation": "T004",
+      "source": {
+        "recording": "G059T004A026R014",
+        "group": "G059",
+        "take": "R014",
+        "p1": "G059T004A026R014/P1.npz",
+        "p2": "G059T004A026R014/P2.npz",
+        "frameCount": 1368,
+        "sha256": {
+          "p1": "7bfd830e9c4a4e0187faee6db3d8c45a6dd81d73309bb0b5f664c243dc0fb008",
+          "p2": "a433e6a7d7c0726a654fd6ba00071df22f1a35eb0176845a1bfa673138d0e8a1"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t004a026r014-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t004a026r014-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.6018015518784523,
+        0.043475985527038574,
+        0.044766828417778015
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 342,
+      "expectedDurationSeconds": 11.366666666666667,
+      "estimatedBytes": 720302
+    },
+    {
+      "id": "interx-g059t004a026r015",
+      "actionCode": "A026",
+      "variation": "T004",
+      "source": {
+        "recording": "G059T004A026R015",
+        "group": "G059",
+        "take": "R015",
+        "p1": "G059T004A026R015/P1.npz",
+        "p2": "G059T004A026R015/P2.npz",
+        "frameCount": 692,
+        "sha256": {
+          "p1": "062dfc07af7bbf9d433b054d24a8d11d48feda8499caca18d33709194f5dbd23",
+          "p2": "51d85614f436543aa9a8ef8ff88323a6ca54d6e331f2dfa41cabd4a9cc3a6e29"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t004a026r015-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t004a026r015-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.624819315969944,
+        0.04812777042388916,
+        0.058161795139312744
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 173,
+      "expectedDurationSeconds": 5.733333333333333,
+      "estimatedBytes": 427241
+    },
+    {
+      "id": "interx-g059t004a026r016",
+      "actionCode": "A026",
+      "variation": "T004",
+      "source": {
+        "recording": "G059T004A026R016",
+        "group": "G059",
+        "take": "R016",
+        "p1": "G059T004A026R016/P1.npz",
+        "p2": "G059T004A026R016/P2.npz",
+        "frameCount": 932,
+        "sha256": {
+          "p1": "b6c3a80a8d7d86b698f10061094b47118471742fc507ae537c2f84366be251fd",
+          "p2": "5491a5859ac76ed4fe5c10aa9ceb51ba500cc560dde002447e27354ae62a411f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t004a026r016-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t004a026r016-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.5525975972414017,
+        0.052405357360839844,
+        0.42388916015625
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 233,
+      "expectedDurationSeconds": 7.733333333333333,
+      "estimatedBytes": 531287
+    },
+    {
+      "id": "interx-g056t005a026r006",
+      "actionCode": "A026",
+      "variation": "T005",
+      "source": {
+        "recording": "G056T005A026R006",
+        "group": "G056",
+        "take": "R006",
+        "p1": "G056T005A026R006/P1.npz",
+        "p2": "G056T005A026R006/P2.npz",
+        "frameCount": 768,
+        "sha256": {
+          "p1": "aab74727e6862f039fb13a4109df4e2a0ca9277ffb2ab20573849c06813a88fe",
+          "p2": "0a3c9f730599adf356bcaa90433be35fe046844cf7451dbb7b1739057f226619"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g056t005a026r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g056t005a026r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.6021665036678314,
+        -0.3065494894981384,
+        0.0380437970161438
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 192,
+      "expectedDurationSeconds": 6.366666666666666,
+      "estimatedBytes": 460189
+    },
+    {
+      "id": "interx-g056t005a026r007",
+      "actionCode": "A026",
+      "variation": "T005",
+      "source": {
+        "recording": "G056T005A026R007",
+        "group": "G056",
+        "take": "R007",
+        "p1": "G056T005A026R007/P1.npz",
+        "p2": "G056T005A026R007/P2.npz",
+        "frameCount": 1752,
+        "sha256": {
+          "p1": "f7c799fed05fdd8219d0926d76907955c380b1858b564f1c0e8b153a37f43a74",
+          "p2": "102a70605bfed612f059688c5b01fc408dcacde2f6507e2e35333b8c07921e36"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g056t005a026r007-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g056t005a026r007-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.566495269536972,
+        0.03396415710449219,
+        0.6491364240646362
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 438,
+      "expectedDurationSeconds": 14.566666666666666,
+      "estimatedBytes": 886775
+    },
+    {
+      "id": "interx-g056t005a026r008",
+      "actionCode": "A026",
+      "variation": "T005",
+      "source": {
+        "recording": "G056T005A026R008",
+        "group": "G056",
+        "take": "R008",
+        "p1": "G056T005A026R008/P1.npz",
+        "p2": "G056T005A026R008/P2.npz",
+        "frameCount": 1172,
+        "sha256": {
+          "p1": "5ecad39548ac92d7c0f7c055237fddee05913c3e588d2567fc2cc5d166d97df5",
+          "p2": "042dc87fbb5e6595e93a259fc848a390ffae9401b77b44978996e8a69f87bcb9"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g056t005a026r008-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g056t005a026r008-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.11489748954772949,
+        0.31256163120269775,
+        -0.6244022846221924
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 293,
+      "expectedDurationSeconds": 9.733333333333333,
+      "estimatedBytes": 635332
+    },
+    {
+      "id": "interx-g053t006a026r009",
+      "actionCode": "A026",
+      "variation": "T006",
+      "source": {
+        "recording": "G053T006A026R009",
+        "group": "G053",
+        "take": "R009",
+        "p1": "G053T006A026R009/P1.npz",
+        "p2": "G053T006A026R009/P2.npz",
+        "frameCount": 660,
+        "sha256": {
+          "p1": "90ecd67699574ece2f612e59f6d4a7c8cf7f25db83d1b331a6aaa62906ade434",
+          "p2": "9c75df48344b024cc957f5b5f7f18761148397246a4cdfe0a3c3f3c065d9e988"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t006a026r009-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t006a026r009-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.658877819776535,
+        0.026624202728271484,
+        0.09262914210557938
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 165,
+      "expectedDurationSeconds": 5.466666666666667,
+      "estimatedBytes": 413368
+    },
+    {
+      "id": "interx-g053t006a026r010",
+      "actionCode": "A026",
+      "variation": "T006",
+      "source": {
+        "recording": "G053T006A026R010",
+        "group": "G053",
+        "take": "R010",
+        "p1": "G053T006A026R010/P1.npz",
+        "p2": "G053T006A026R010/P2.npz",
+        "frameCount": 1796,
+        "sha256": {
+          "p1": "b18fd6a4e409c2daefe2c4253ccbe22bf363e2c055c91366ea5c6b1bd3325cc7",
+          "p2": "79c16af2727f43238b8c8d018c3f9fb4666991f9a98044c4d8e57fb4c7670f40"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t006a026r010-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t006a026r010-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.2566590905189514,
+        0.10027968883514404,
+        0.20944684743881226
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 449,
+      "expectedDurationSeconds": 14.933333333333334,
+      "estimatedBytes": 905850
+    },
+    {
+      "id": "interx-g053t006a026r011",
+      "actionCode": "A026",
+      "variation": "T006",
+      "source": {
+        "recording": "G053T006A026R011",
+        "group": "G053",
+        "take": "R011",
+        "p1": "G053T006A026R011/P1.npz",
+        "p2": "G053T006A026R011/P2.npz",
+        "frameCount": 2800,
+        "sha256": {
+          "p1": "27372c12f0d614865b321fed4ae240e9e6f9f05cf2892e99509ba1092c7672be",
+          "p2": "464361cdbc0b18456d52e59253396d057de619f56b1bf3bb679653a7da067446"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t006a026r011-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t006a026r011-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.19827156513929367,
+        0.3406814932823181,
+        -0.5633876994252205
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 700,
+      "expectedDurationSeconds": 23.3,
+      "estimatedBytes": 1341106
+    },
+    {
+      "id": "interx-g053t006a026r012",
+      "actionCode": "A026",
+      "variation": "T006",
+      "source": {
+        "recording": "G053T006A026R012",
+        "group": "G053",
+        "take": "R012",
+        "p1": "G053T006A026R012/P1.npz",
+        "p2": "G053T006A026R012/P2.npz",
+        "frameCount": 1860,
+        "sha256": {
+          "p1": "ed327d4a0483685ef04cdc45bb4cb82c3d97c34d8c70e2b5bdcd5116c5dfda52",
+          "p2": "8e1e539929391022912d2b13300af0710c274da93a6732f28dd3387ca86c25b8"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t006a026r012-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t006a026r012-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.3550274074077606,
+        0.03777801990509033,
+        0.9903025925159454
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 465,
+      "expectedDurationSeconds": 15.466666666666667,
+      "estimatedBytes": 933595
+    },
+    {
+      "id": "interx-g053t006a026r013",
+      "actionCode": "A026",
+      "variation": "T006",
+      "source": {
+        "recording": "G053T006A026R013",
+        "group": "G053",
+        "take": "R013",
+        "p1": "G053T006A026R013/P1.npz",
+        "p2": "G053T006A026R013/P2.npz",
+        "frameCount": 600,
+        "sha256": {
+          "p1": "ba2f1007f85a699b494bb36194f9bcfd53047c207159d71d7be196fe02c0c57c",
+          "p2": "3d8c9eb620f98bb333cfd41806f8c3d0dabce250e89bacf128b8b4085c4b8a5d"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t006a026r013-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t006a026r013-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.00940924882888794,
+        0.34091299772262573,
+        -0.44596022367477417
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 150,
+      "expectedDurationSeconds": 4.966666666666667,
+      "estimatedBytes": 387357
+    },
+    {
+      "id": "interx-g039t007a026r006",
+      "actionCode": "A026",
+      "variation": "T007",
+      "source": {
+        "recording": "G039T007A026R006",
+        "group": "G039",
+        "take": "R006",
+        "p1": "G039T007A026R006/P1.npz",
+        "p2": "G039T007A026R006/P2.npz",
+        "frameCount": 1208,
+        "sha256": {
+          "p1": "0a4853e851fb178a2a338963c5de33dae6a878aaf0e6fecdb4be4daf0090ec27",
+          "p2": "7326a4509958d7ad4965e77ff1f6083d8774b254a6ffe38bcf6cd5041c78aae8"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g039t007a026r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g039t007a026r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.21501537784934044,
+        0.06511986255645752,
+        -0.10792640596628189
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 302,
+      "expectedDurationSeconds": 10.033333333333333,
+      "estimatedBytes": 650939
+    },
+    {
+      "id": "interx-g039t007a026r007",
+      "actionCode": "A026",
+      "variation": "T007",
+      "source": {
+        "recording": "G039T007A026R007",
+        "group": "G039",
+        "take": "R007",
+        "p1": "G039T007A026R007/P1.npz",
+        "p2": "G039T007A026R007/P2.npz",
+        "frameCount": 1412,
+        "sha256": {
+          "p1": "5cdf49d7283969012283d91691f8e0490d5750bd59016c7275f6d9a174004f85",
+          "p2": "ad0385dba63d9a6cc4bc2313840b278abb132bc61784096dcdda651246dc06b4"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g039t007a026r007-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g039t007a026r007-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.1506168246269226,
+        0.2991102337837219,
+        -0.4294378310441971
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 353,
+      "expectedDurationSeconds": 11.733333333333333,
+      "estimatedBytes": 739377
+    },
+    {
+      "id": "interx-g039t007a026r008",
+      "actionCode": "A026",
+      "variation": "T007",
+      "source": {
+        "recording": "G039T007A026R008",
+        "group": "G039",
+        "take": "R008",
+        "p1": "G039T007A026R008/P1.npz",
+        "p2": "G039T007A026R008/P2.npz",
+        "frameCount": 832,
+        "sha256": {
+          "p1": "decec6364535dafed45790f53bef1e273eff6eeb2db3ac9125500bacbbec0b1d",
+          "p2": "29a39f573bf16116fc35025c72442a40cc31cb6b5f18f0dec66639ae49ca69ae"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g039t007a026r008-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g039t007a026r008-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.22458909451961517,
+        -0.20175904035568237,
+        0.36100261844694614
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 208,
+      "expectedDurationSeconds": 6.9,
+      "estimatedBytes": 487934
+    },
+    {
+      "id": "interx-g039t007a026r009",
+      "actionCode": "A026",
+      "variation": "T007",
+      "source": {
+        "recording": "G039T007A026R009",
+        "group": "G039",
+        "take": "R009",
+        "p1": "G039T007A026R009/P1.npz",
+        "p2": "G039T007A026R009/P2.npz",
+        "frameCount": 832,
+        "sha256": {
+          "p1": "c96401e654b9cebd97bf525ca8d4061b7c76a532576866f557cb1710fa38e1fa",
+          "p2": "26098e9e9db31ed82bca621d4f71d9087bb004658e05ba26b7af9a6966452f6d"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g039t007a026r009-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g039t007a026r009-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.209293894469738,
+        -0.19204705953598022,
+        0.40759725496172905
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 208,
+      "expectedDurationSeconds": 6.9,
+      "estimatedBytes": 487934
+    },
+    {
+      "id": "interx-g022t008a026r001",
+      "actionCode": "A026",
+      "variation": "T008",
+      "source": {
+        "recording": "G022T008A026R001",
+        "group": "G022",
+        "take": "R001",
+        "p1": "G022T008A026R001/P1.npz",
+        "p2": "G022T008A026R001/P2.npz",
+        "frameCount": 968,
+        "sha256": {
+          "p1": "a2658d8a9b2dd751c0d34a413d5e373efc761ec9f3d293f93286578217028b69",
+          "p2": "4a341926c93195f521ac9e3248c28f9c32cda9264843acd2bf96cf2feec10108"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t008a026r001-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t008a026r001-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.46974608302116394,
+        -0.23080062866210938,
+        0.5595790445804596
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 242,
+      "expectedDurationSeconds": 8.033333333333333,
+      "estimatedBytes": 546893
+    },
+    {
+      "id": "interx-g022t008a026r002",
+      "actionCode": "A026",
+      "variation": "T008",
+      "source": {
+        "recording": "G022T008A026R002",
+        "group": "G022",
+        "take": "R002",
+        "p1": "G022T008A026R002/P1.npz",
+        "p2": "G022T008A026R002/P2.npz",
+        "frameCount": 760,
+        "sha256": {
+          "p1": "dfa080ccec8492d4af02ea12f96fdfd763cf48a006553659b3a8836174916a9a",
+          "p2": "3ead21ab9173142d5d3c436701d9ea3064f7ef6509df5df2a378eb1bff05bdc8"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t008a026r002-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t008a026r002-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.34319671988487244,
+        -0.24073880910873413,
+        0.6320424377918243
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 190,
+      "expectedDurationSeconds": 6.3,
+      "estimatedBytes": 456721
+    },
+    {
+      "id": "interx-g022t008a026r003",
+      "actionCode": "A026",
+      "variation": "T008",
+      "source": {
+        "recording": "G022T008A026R003",
+        "group": "G022",
+        "take": "R003",
+        "p1": "G022T008A026R003/P1.npz",
+        "p2": "G022T008A026R003/P2.npz",
+        "frameCount": 916,
+        "sha256": {
+          "p1": "d3932d47900ac95b59540105dbf9c2a169a67eebb7891bbfa41bf1329f771d55",
+          "p2": "8641d7245592c175b40ad5f1cf1a85773761c527f7fa2c970f5b857a8068d13d"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t008a026r003-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t008a026r003-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.5042215138673782,
+        0.037186622619628906,
+        0.5258719325065613
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 229,
+      "expectedDurationSeconds": 7.6,
+      "estimatedBytes": 524350
+    },
+    {
+      "id": "interx-g022t008a026r004",
+      "actionCode": "A026",
+      "variation": "T008",
+      "source": {
+        "recording": "G022T008A026R004",
+        "group": "G022",
+        "take": "R004",
+        "p1": "G022T008A026R004/P1.npz",
+        "p2": "G022T008A026R004/P2.npz",
+        "frameCount": 780,
+        "sha256": {
+          "p1": "d878cca107a64f6f3e2c3c0868653b8a8961eb6cc8a97fc9c1b28f79d1024ca7",
+          "p2": "920c3df359657858dcd4139c3356b8c5a1f7b2d86dcd8515f65526c321b81260"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t008a026r004-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t008a026r004-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.3134510703384876,
+        0.032119154930114746,
+        0.7596941441297531
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 195,
+      "expectedDurationSeconds": 6.466666666666667,
+      "estimatedBytes": 465391
+    },
+    {
+      "id": "interx-g004t011a026r004",
+      "actionCode": "A026",
+      "variation": "T011",
+      "source": {
+        "recording": "G004T011A026R004",
+        "group": "G004",
+        "take": "R004",
+        "p1": "G004T011A026R004/P1.npz",
+        "p2": "G004T011A026R004/P2.npz",
+        "frameCount": 2092,
+        "sha256": {
+          "p1": "e417cba3beed07dcb0a7a74dde4d525f71ca1b851e4a8ad7ebd12a857ca2f198",
+          "p2": "cc0a6a944f0a5759561f789e4a0cf74c154fb48e6cf4dfe7f6ea29de4d02c7bb"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t011a026r004-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t011a026r004-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.5254524052143097,
+        -0.056209683418273926,
+        -1.4471749514341354
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 523,
+      "expectedDurationSeconds": 17.4,
+      "estimatedBytes": 1034172
+    },
+    {
+      "id": "interx-g004t011a026r005",
+      "actionCode": "A026",
+      "variation": "T011",
+      "source": {
+        "recording": "G004T011A026R005",
+        "group": "G004",
+        "take": "R005",
+        "p1": "G004T011A026R005/P1.npz",
+        "p2": "G004T011A026R005/P2.npz",
+        "frameCount": 1108,
+        "sha256": {
+          "p1": "d83347cf3319689a2f783665049d59015258d0fc9ae1bbe1d387ada7dda89ec8",
+          "p2": "3e0292d8e27689683df8766e63dbfb5366e58dea46cffb2ccba413db9aa65194"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t011a026r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t011a026r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.5147328451275826,
+        -0.09710931777954102,
+        -0.15169012546539307
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 277,
+      "expectedDurationSeconds": 9.2,
+      "estimatedBytes": 607586
+    },
+    {
+      "id": "interx-g004t011a026r006",
+      "actionCode": "A026",
+      "variation": "T011",
+      "source": {
+        "recording": "G004T011A026R006",
+        "group": "G004",
+        "take": "R006",
+        "p1": "G004T011A026R006/P1.npz",
+        "p2": "G004T011A026R006/P2.npz",
+        "frameCount": 1112,
+        "sha256": {
+          "p1": "e1a1b0164d11af361315d2fa2b60e1bed35c9fc2a4a8f694555c89e3b986817a",
+          "p2": "ceee7ad7fc6003a6ae6c0a481225cddbf65326e82f116a67411ef6d37eee6c3f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t011a026r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t011a026r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.29804936423897743,
+        -0.10210990905761719,
+        0.4261873960494995
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 278,
+      "expectedDurationSeconds": 9.233333333333333,
+      "estimatedBytes": 609321
+    },
+    {
+      "id": "interx-g004t011a026r007",
+      "actionCode": "A026",
+      "variation": "T011",
+      "source": {
+        "recording": "G004T011A026R007",
+        "group": "G004",
+        "take": "R007",
+        "p1": "G004T011A026R007/P1.npz",
+        "p2": "G004T011A026R007/P2.npz",
+        "frameCount": 1428,
+        "sha256": {
+          "p1": "af1b321d921755f3e23558f9b45acf08ac09b3617ee44f7afb50d5e7c5faca22",
+          "p2": "508cf135d8ef12d183180b72cfb81aca4038097359c9bf66c7922da7ab443376"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t011a026r007-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t011a026r007-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.420504555106163,
+        -0.09606528282165527,
+        -0.33529675006866455
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "massage-shoulder",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 357,
+      "expectedDurationSeconds": 11.866666666666667,
+      "estimatedBytes": 746314
+    }
+  ]
+}

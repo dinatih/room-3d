@@ -1,0 +1,1129 @@
+{
+  "schemaVersion": 1,
+  "dataset": "inter-x",
+  "conversion": {
+    "revision": 1,
+    "sourceFps": 120,
+    "targetFps": 30,
+    "upAxis": "Y",
+    "rootMotionMode": "relative-to-first-frame",
+    "translationUnit": "meters"
+  },
+  "policy": {
+    "take": "all-splits",
+    "representative": "selected-groups-all-shoots",
+    "maxPerAction": null,
+    "allowedGroups": {
+      "A019": [
+        "G004",
+        "G030",
+        "G053",
+        "G059"
+      ]
+    }
+  },
+  "sizeEstimate": {
+    "baseBytes": 63621.86551796149,
+    "bytesPerFrame": 867.0447004867905
+  },
+  "actions": [
+    {
+      "code": "A000",
+      "key": "hug",
+      "label": "Câlin",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "hug",
+        "affection"
+      ]
+    },
+    {
+      "code": "A001",
+      "key": "handshake",
+      "label": "Poignée de main",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "handshake",
+        "social"
+      ]
+    },
+    {
+      "code": "A002",
+      "key": "wave",
+      "label": "Signe de la main",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "wave",
+        "social"
+      ]
+    },
+    {
+      "code": "A003",
+      "key": "grab",
+      "label": "Saisir",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "grab",
+        "combat"
+      ]
+    },
+    {
+      "code": "A004",
+      "key": "hit",
+      "label": "Frapper",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "hit",
+        "combat"
+      ]
+    },
+    {
+      "code": "A005",
+      "key": "kick",
+      "label": "Coup de pied",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "kick",
+        "combat"
+      ]
+    },
+    {
+      "code": "A006",
+      "key": "posing",
+      "label": "Prendre la pose",
+      "category": "poses_idles",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "posing",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A007",
+      "key": "push",
+      "label": "Pousser",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "push",
+        "combat"
+      ]
+    },
+    {
+      "code": "A008",
+      "key": "pull",
+      "label": "Tirer",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "pull",
+        "combat"
+      ]
+    },
+    {
+      "code": "A009",
+      "key": "sit-on-leg",
+      "label": "S’asseoir sur la jambe",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "sit-on-leg",
+        "social"
+      ]
+    },
+    {
+      "code": "A010",
+      "key": "slap",
+      "label": "Gifler",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "slap",
+        "combat"
+      ]
+    },
+    {
+      "code": "A011",
+      "key": "pat-on-back",
+      "label": "Tapoter le dos",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "pat-on-back",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A012",
+      "key": "point-finger",
+      "label": "Pointer du doigt",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "point-finger",
+        "social"
+      ]
+    },
+    {
+      "code": "A013",
+      "key": "walk-towards",
+      "label": "Marcher vers l’autre",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "walk-towards",
+        "social"
+      ]
+    },
+    {
+      "code": "A014",
+      "key": "knock-over",
+      "label": "Renverser",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "knock-over",
+        "combat"
+      ]
+    },
+    {
+      "code": "A015",
+      "key": "step-on-foot",
+      "label": "Marcher sur le pied",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "step-on-foot",
+        "combat"
+      ]
+    },
+    {
+      "code": "A016",
+      "key": "high-five",
+      "label": "High-five",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "high-five",
+        "social"
+      ]
+    },
+    {
+      "code": "A017",
+      "key": "chase",
+      "label": "Poursuivre",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "chase",
+        "social"
+      ]
+    },
+    {
+      "code": "A018",
+      "key": "whisper",
+      "label": "Chuchoter à l’oreille",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "whisper",
+        "social"
+      ]
+    },
+    {
+      "code": "A019",
+      "key": "support-with-hand",
+      "label": "Soutenir avec la main",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "support-with-hand",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A020",
+      "key": "rock-paper-scissors",
+      "label": "Pierre-feuille-ciseaux",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "rock-paper-scissors",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A021",
+      "key": "dance",
+      "label": "Danser",
+      "category": "dances",
+      "icon": "💃",
+      "isCombat": false,
+      "tags": [
+        "dance",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A022",
+      "key": "link-arms",
+      "label": "Bras dessus dessous",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "link-arms",
+        "affection"
+      ]
+    },
+    {
+      "code": "A023",
+      "key": "shoulder-to-shoulder",
+      "label": "Épaule contre épaule",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "shoulder-to-shoulder",
+        "affection"
+      ]
+    },
+    {
+      "code": "A024",
+      "key": "bend",
+      "label": "Se pencher",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "bend",
+        "social"
+      ]
+    },
+    {
+      "code": "A025",
+      "key": "carry-back",
+      "label": "Porter sur le dos",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "carry-back",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A026",
+      "key": "massage-shoulder",
+      "label": "Masser les épaules",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "massage-shoulder",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A027",
+      "key": "massage-leg",
+      "label": "Masser les jambes",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "massage-leg",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A028",
+      "key": "arm-wrestling",
+      "label": "Bras de fer",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "arm-wrestling",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A029",
+      "key": "chat",
+      "label": "Discuter",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "chat",
+        "social"
+      ]
+    },
+    {
+      "code": "A030",
+      "key": "pat-on-cheek",
+      "label": "Caresser la joue",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "pat-on-cheek",
+        "affection"
+      ]
+    },
+    {
+      "code": "A031",
+      "key": "thumb-up",
+      "label": "Pouce levé",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "thumb-up",
+        "social"
+      ]
+    },
+    {
+      "code": "A032",
+      "key": "touch-head",
+      "label": "Toucher la tête",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "touch-head",
+        "affection"
+      ]
+    },
+    {
+      "code": "A033",
+      "key": "imitate",
+      "label": "Imiter",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "imitate",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A034",
+      "key": "kiss-on-cheek",
+      "label": "Baiser sur la joue",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "kiss-on-cheek",
+        "affection"
+      ]
+    },
+    {
+      "code": "A035",
+      "key": "help-up",
+      "label": "Aider à se relever",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "help-up",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A036",
+      "key": "cover-mouth",
+      "label": "Couvrir la bouche",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "cover-mouth",
+        "social"
+      ]
+    },
+    {
+      "code": "A037",
+      "key": "look-back",
+      "label": "Regarder derrière soi",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "look-back",
+        "social"
+      ]
+    },
+    {
+      "code": "A038",
+      "key": "block",
+      "label": "Bloquer",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "block",
+        "combat"
+      ]
+    },
+    {
+      "code": "A039",
+      "key": "fly-kiss",
+      "label": "Envoyer un baiser",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "fly-kiss",
+        "affection"
+      ]
+    }
+  ],
+  "duos": [
+    {
+      "id": "interx-g059t001a019r029",
+      "actionCode": "A019",
+      "variation": "T001",
+      "source": {
+        "recording": "G059T001A019R029",
+        "group": "G059",
+        "take": "R029",
+        "p1": "G059T001A019R029/P1.npz",
+        "p2": "G059T001A019R029/P2.npz",
+        "frameCount": 120,
+        "sha256": {
+          "p1": "f3bf76b994dace724494d76a47847c0f7342cc365f5b48e26da76dd14efbf275",
+          "p2": "3325ba9c35862f3f737a74b6d7c44e05b64f7fae054c67e832146df7bc4d57eb"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t001a019r029-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t001a019r029-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.48344042897224426,
+        0.03947865962982178,
+        0.06184118986129761
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 30,
+      "expectedDurationSeconds": 0.9666666666666667,
+      "estimatedBytes": 179266
+    },
+    {
+      "id": "interx-g059t001a019r030",
+      "actionCode": "A019",
+      "variation": "T001",
+      "source": {
+        "recording": "G059T001A019R030",
+        "group": "G059",
+        "take": "R030",
+        "p1": "G059T001A019R030/P1.npz",
+        "p2": "G059T001A019R030/P2.npz",
+        "frameCount": 908,
+        "sha256": {
+          "p1": "c1cafceb5759c29025560b1145d6508f606a6615367e34e71d5a2cf37d724a09",
+          "p2": "f08dab54e9db4b6cb50800c864fb25aeb43dc60a1f9b725dacd8451478e6f883"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t001a019r030-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t001a019r030-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7925232276320457,
+        0.04271841049194336,
+        -0.1483072191476822
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 227,
+      "expectedDurationSeconds": 7.533333333333333,
+      "estimatedBytes": 520882
+    },
+    {
+      "id": "interx-g059t001a019r031",
+      "actionCode": "A019",
+      "variation": "T001",
+      "source": {
+        "recording": "G059T001A019R031",
+        "group": "G059",
+        "take": "R031",
+        "p1": "G059T001A019R031/P1.npz",
+        "p2": "G059T001A019R031/P2.npz",
+        "frameCount": 876,
+        "sha256": {
+          "p1": "ee969d340d71cf4c93ea677568a88a929a710ed6cc43e283c27fcd377b2b2563",
+          "p2": "6e424ab5e66907d3ee05b72891b80c9325bf7266bea13b37e0c8ab9f279979cc"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t001a019r031-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t001a019r031-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.629427719861269,
+        0.05202686786651611,
+        0.6952021270990372
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 219,
+      "expectedDurationSeconds": 7.266666666666667,
+      "estimatedBytes": 507009
+    },
+    {
+      "id": "interx-g053t003a019r022",
+      "actionCode": "A019",
+      "variation": "T003",
+      "source": {
+        "recording": "G053T003A019R022",
+        "group": "G053",
+        "take": "R022",
+        "p1": "G053T003A019R022/P1.npz",
+        "p2": "G053T003A019R022/P2.npz",
+        "frameCount": 956,
+        "sha256": {
+          "p1": "608f5d194f494023ae4e5722c4ceb62c907444fe3d29ae74b8717b060994969b",
+          "p2": "35ac12643f8a801b52bbbe260a3554a3619331f4431b21d56bdb41bb166559eb"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t003a019r022-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t003a019r022-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.0978413559496403,
+        0.05543386936187744,
+        0.009319782257080078
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 239,
+      "expectedDurationSeconds": 7.933333333333334,
+      "estimatedBytes": 541691
+    },
+    {
+      "id": "interx-g053t003a019r023",
+      "actionCode": "A019",
+      "variation": "T003",
+      "source": {
+        "recording": "G053T003A019R023",
+        "group": "G053",
+        "take": "R023",
+        "p1": "G053T003A019R023/P1.npz",
+        "p2": "G053T003A019R023/P2.npz",
+        "frameCount": 820,
+        "sha256": {
+          "p1": "0189653434985e10685bf003999cd79ae27293bfff14216132ff7187c7159b4c",
+          "p2": "003ab7ed589b22b69656c6bf75151fa31950838ce882dd6f60a7656cfa075318"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t003a019r023-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t003a019r023-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.39237363636493683,
+        0.007668018341064453,
+        0.3383166193962097
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 205,
+      "expectedDurationSeconds": 6.8,
+      "estimatedBytes": 482732
+    },
+    {
+      "id": "interx-g053t003a019r024",
+      "actionCode": "A019",
+      "variation": "T003",
+      "source": {
+        "recording": "G053T003A019R024",
+        "group": "G053",
+        "take": "R024",
+        "p1": "G053T003A019R024/P1.npz",
+        "p2": "G053T003A019R024/P2.npz",
+        "frameCount": 1340,
+        "sha256": {
+          "p1": "7da497c077cf615fcec653d94edeffc1874dacce2de3b2cedb2dc95c95f5f43d",
+          "p2": "73c791dc0cbf42c4eb4304a880c922188ee7c6fbdf493a103753c516e00887cd"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t003a019r024-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t003a019r024-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.3105013370513916,
+        -0.021890997886657715,
+        0.3315852880477905
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 335,
+      "expectedDurationSeconds": 11.133333333333333,
+      "estimatedBytes": 708164
+    },
+    {
+      "id": "interx-g053t003a019r025",
+      "actionCode": "A019",
+      "variation": "T003",
+      "source": {
+        "recording": "G053T003A019R025",
+        "group": "G053",
+        "take": "R025",
+        "p1": "G053T003A019R025/P1.npz",
+        "p2": "G053T003A019R025/P2.npz",
+        "frameCount": 1076,
+        "sha256": {
+          "p1": "f04e24989652dcb276b25556e66f2128e80da865b405f92329a87bac9cedf5ef",
+          "p2": "a2d0024994a6009336c88f17257d4b0db318491b2e20cd677214c528ecbe9ee0"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t003a019r025-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t003a019r025-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.676942927762866,
+        0.01324605941772461,
+        0.4323277473449707
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 269,
+      "expectedDurationSeconds": 8.933333333333334,
+      "estimatedBytes": 593714
+    },
+    {
+      "id": "interx-g030t006a019r012",
+      "actionCode": "A019",
+      "variation": "T006",
+      "source": {
+        "recording": "G030T006A019R012",
+        "group": "G030",
+        "take": "R012",
+        "p1": "G030T006A019R012/P1.npz",
+        "p2": "G030T006A019R012/P2.npz",
+        "frameCount": 656,
+        "sha256": {
+          "p1": "a4b0a0914cfd0a68377154278d9fb8819c8f62ada8256f93b92c373aa499e661",
+          "p2": "9da2a5254036def0fbf0f6f16b694b3cf63e55103fdd41e84d84eb131280a6c5"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t006a019r012-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t006a019r012-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.16946762800216675,
+        0.054287075996398926,
+        0.44461554288864136
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 164,
+      "expectedDurationSeconds": 5.433333333333334,
+      "estimatedBytes": 411634
+    },
+    {
+      "id": "interx-g030t006a019r013",
+      "actionCode": "A019",
+      "variation": "T006",
+      "source": {
+        "recording": "G030T006A019R013",
+        "group": "G030",
+        "take": "R013",
+        "p1": "G030T006A019R013/P1.npz",
+        "p2": "G030T006A019R013/P2.npz",
+        "frameCount": 832,
+        "sha256": {
+          "p1": "5abcf5934da4339eeaf0c25574b20bf178da529526c0f3c472d41f8e38376ee0",
+          "p2": "aa8d2ea6eed90ab4ba1784c088d3910a67c83f473bd9f14373be6e40ae3259ae"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t006a019r013-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t006a019r013-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.804390013217926,
+        0.05899226665496826,
+        -0.4844285771250725
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 208,
+      "expectedDurationSeconds": 6.9,
+      "estimatedBytes": 487934
+    },
+    {
+      "id": "interx-g030t006a019r014",
+      "actionCode": "A019",
+      "variation": "T006",
+      "source": {
+        "recording": "G030T006A019R014",
+        "group": "G030",
+        "take": "R014",
+        "p1": "G030T006A019R014/P1.npz",
+        "p2": "G030T006A019R014/P2.npz",
+        "frameCount": 652,
+        "sha256": {
+          "p1": "cc1517b24c4ea5cb162c2e88f58ebd3e455e682505661ac2918f0f51cf0c78fb",
+          "p2": "f18415dad29690944a8e3721ff520c99fd1cffe22bdebe7b53ccd391dac82d1a"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t006a019r014-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t006a019r014-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.4027026891708374,
+        0.04121088981628418,
+        0.11951057612895966
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 163,
+      "expectedDurationSeconds": 5.4,
+      "estimatedBytes": 409900
+    },
+    {
+      "id": "interx-g004t007a019r024",
+      "actionCode": "A019",
+      "variation": "T007",
+      "source": {
+        "recording": "G004T007A019R024",
+        "group": "G004",
+        "take": "R024",
+        "p1": "G004T007A019R024/P1.npz",
+        "p2": "G004T007A019R024/P2.npz",
+        "frameCount": 944,
+        "sha256": {
+          "p1": "bba6b647688af32bbecc9b9eaf3323bc3cc5096a0506e8b4294c40d2fee1d764",
+          "p2": "91c0818f0cc5478862a4d3ee13722869ab7346fa589fc067c60aaa231643fe3f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t007a019r024-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t007a019r024-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.2787845581769943,
+        -0.13954377174377441,
+        0.9568422734737396
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 236,
+      "expectedDurationSeconds": 7.833333333333333,
+      "estimatedBytes": 536489
+    },
+    {
+      "id": "interx-g004t007a019r025",
+      "actionCode": "A019",
+      "variation": "T007",
+      "source": {
+        "recording": "G004T007A019R025",
+        "group": "G004",
+        "take": "R025",
+        "p1": "G004T007A019R025/P1.npz",
+        "p2": "G004T007A019R025/P2.npz",
+        "frameCount": 960,
+        "sha256": {
+          "p1": "94149860fe54180f0a579abf01f7b4e1f35581dfdd0904d4c30f1342b96de949",
+          "p2": "a6deb7b7796de20c026bd1eee439012052c108154f757546e40f4c5666e1c5b6"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t007a019r025-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t007a019r025-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.8993374854326248,
+        -0.1135638952255249,
+        -0.37466689944267273
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 240,
+      "expectedDurationSeconds": 7.966666666666667,
+      "estimatedBytes": 543425
+    },
+    {
+      "id": "interx-g004t007a019r026",
+      "actionCode": "A019",
+      "variation": "T007",
+      "source": {
+        "recording": "G004T007A019R026",
+        "group": "G004",
+        "take": "R026",
+        "p1": "G004T007A019R026/P1.npz",
+        "p2": "G004T007A019R026/P2.npz",
+        "frameCount": 1272,
+        "sha256": {
+          "p1": "23203fbec7cd58c9b8029084ff29973bcc3ab2e7101b012a79566790f474bb98",
+          "p2": "59a2cc7168cbe1085359419698c5fc6f36e9d8b9069d6aad2e5815776d2b902e"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t007a019r026-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t007a019r026-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7261941824108362,
+        -0.11082220077514648,
+        0.5289630889892578
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 318,
+      "expectedDurationSeconds": 10.566666666666666,
+      "estimatedBytes": 678684
+    },
+    {
+      "id": "interx-g004t007a019r027",
+      "actionCode": "A019",
+      "variation": "T007",
+      "source": {
+        "recording": "G004T007A019R027",
+        "group": "G004",
+        "take": "R027",
+        "p1": "G004T007A019R027/P1.npz",
+        "p2": "G004T007A019R027/P2.npz",
+        "frameCount": 956,
+        "sha256": {
+          "p1": "6c2cde75320921ca1bc85ea9f1115d8a545e5a64b7f51e8568d60e31cd99c259",
+          "p2": "8a5d03a93b8a30d8ff8ddaccbc9b058a9fd7d32c6af4ca142859f8d38cf22c31"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t007a019r027-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t007a019r027-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.509942352771759,
+        -0.12855255603790283,
+        0.49113769829273224
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "support-with-hand",
+        "help-relaxation"
+      ],
+      "expectedFrameCount": 239,
+      "expectedDurationSeconds": 7.933333333333334,
+      "estimatedBytes": 541691
+    }
+  ]
+}

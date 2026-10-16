@@ -360,6 +360,48 @@ uniquement les deux pilotes publiés ; les futures actions au sol doivent être
 vérifiées selon leur posture attendue.
 # Export des thèmes prioritaires en une passe
 
+## Extension par thème : tous les segments des binômes retenus
+
+Les bilans précédents de 218/218 mesurent la couverture des sessions T avec
+un segment représentatif. L'extension autorisée ajoute 543 segments duo sur
+26 actions : tous les T/R encore absents des binômes G déjà retenus pour
+chaque action, selon `docs/INTERX_ALL_SELECTED_GROUP_SEGMENTS_ESTIMATE.json`.
+T désigne le numéro de tournage et R le numéro de découpage, d'après le
+[README officiel Inter-X](https://github.com/liangxuy/Inter-X#data-loading).
+
+```bash
+python3 scripts/temp_interx_priority.py --convert-themes A000 A006 A009 A003 A011 A013 A017 A018 A019 A021 A022 A023 A024 A025 A026 A027 A029 A030 A032 A033 A034 A035 A036 A037 A038 A039
+```
+
+Le runner suit cet ordre, prépare une sélection et les mesures SMPL-X pour
+chaque thème, puis exporte les doigts et les deux rôles. La politique
+`all-splits` / `selected-groups-all-shoots` autorise plusieurs segments du
+même G/T/A et vérifie la liste explicite des binômes autorisés.
+
+Les fichiers de reprise sont dans `scripts/interx_segment_batches/` :
+
+- `progress.json` : état des 26 thèmes, quantités et poids réels terminés ;
+- `Axxx_selection.json` : sources exactes, empreintes, offsets et durées ;
+- `Axxx_placement.json` : appuis et éventuelles cibles de poignets SMPL-X ;
+- `Axxx_draft_manifest.json` : les duos vérifiés, sauvegardés après chaque paire.
+
+Chaque thème complet est fusionné dans le catalogue du studio en une seule
+publication. Les autres thèmes restent disponibles pendant la conversion.
+Relancer la même commande reprend les paires vérifiées. Les sorties détaillées
+sont dans `/tmp/interx-segments-Axxx-support.log` et
+`/tmp/interx-segments-Axxx-export.log` ; le runner imprime `THEME_START`,
+`THEME_DONE` ou `THEME_FAILED`, avec arrêt explicite en cas d'erreur.
+
+Les libellés du sélecteur comprennent G, T et R pour identifier chaque segment.
+Les champs historiques `source.take` continuent de stocker le code R.
+
+Extension terminée : **543 nouveaux duos / 1 086 nouveaux GLB / 262,88 Mo**,
+sur les 26 thèmes autorisés. Le catalogue publié contient désormais
+**763 duos / 1 526 GLB / 365,99 Mo de GLB**. Les sélections, mesures et
+manifestes JSON s'ajoutent à ces poids. Chaque paire a passé les contrôles
+d'export (durée, frames, empreintes et métadonnées) ; cela ne constitue pas
+une revue visuelle de tous les mouvements dans le studio.
+
 ## Conversion du reste du catalogue
 
 Conversion terminée : 97 nouveaux duos et 194 nouveaux GLB. Le bilan source

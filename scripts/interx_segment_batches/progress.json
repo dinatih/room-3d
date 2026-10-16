@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "sourcePlan": "docs/INTERX_ALL_SELECTED_GROUP_SEGMENTS_ESTIMATE.json",
+  "themes": [
+    {
+      "code": "A000",
+      "label": "Câlin",
+      "status": "complete",
+      "plannedDuos": 21,
+      "publishedDuos": 21,
+      "sizeBytes": 11920840
+    },
+    {
+      "code": "A006",
+      "label": "Prendre la pose",
+      "status": "complete",
+      "plannedDuos": 21,
+      "publishedDuos": 21,
+      "sizeBytes": 9215692
+    },
+    {
+      "code": "A009",
+      "label": "S’asseoir sur la jambe",
+      "status": "complete",
+      "plannedDuos": 21,
+      "publishedDuos": 21,
+      "sizeBytes": 11220440
+    },
+    {
+      "code": "A003",
+      "label": "Saisir",
+      "status": "complete",
+      "plannedDuos": 11,
+      "publishedDuos": 11,
+      "sizeBytes": 5301532
+    },
+    {
+      "code": "A011",
+      "label": "Tapoter le dos",
+      "status": "complete",
+      "plannedDuos": 21,
+      "publishedDuos": 21,
+      "sizeBytes": 9264736
+    },
+    {
+      "code": "A013",
+      "label": "Marcher vers l’autre",
+      "status": "complete",
+      "plannedDuos": 12,
+      "publishedDuos": 12,
+      "sizeBytes": 5377132
+    },
+    {
+      "code": "A017",
+      "label": "Poursuivre",
+      "status": "complete",
+      "plannedDuos": 15,
+      "publishedDuos": 15,
+      "sizeBytes": 7223908
+    },
+    {
+      "code": "A018",
+      "label": "Chuchoter à l’oreille",
+      "status": "complete",
+      "plannedDuos": 15,
+      "publishedDuos": 15,
+      "sizeBytes": 7497788
+    },
+    {
+      "code": "A019",
+      "label": "Soutenir avec la main",
+      "status": "complete",
+      "plannedDuos": 14,
+      "publishedDuos": 14,
+      "sizeBytes": 7381584
+    },
+    {
+      "code": "A021",
+      "label": "Danser",
+      "status": "complete",
+      "plannedDuos": 21,
+      "publishedDuos": 21,
+      "sizeBytes": 14106524
+    },
+    {
+      "code": "A022",
+      "label": "Bras dessus dessous",
+      "status": "complete",
+      "plannedDuos": 19,
+      "publishedDuos": 19,
+      "sizeBytes": 10451636
+    },
+    {
+      "code": "A023",
+      "label": "Épaule contre épaule",
+      "status": "complete",
+      "plannedDuos": 21,
+      "publishedDuos": 21,
+      "sizeBytes": 12314756
+    },
+    {
+      "code": "A024",
+      "label": "Se pencher",
+      "status": "complete",
+      "plannedDuos": 21,
+      "publishedDuos": 21,
+      "sizeBytes": 7873772
+    },
+    {
+      "code": "A025",
+      "label": "Porter sur le dos",
+      "status": "complete",
+      "plannedDuos": 25,
+      "publishedDuos": 25,
+      "sizeBytes": 13634376
+    },
+    {
+      "code": "A026",
+      "label": "Masser les épaules",
+      "status": "complete",
+      "plannedDuos": 23,
+      "publishedDuos": 23,
+      "sizeBytes": 14856676
+    },
+    {
+      "code": "A027",
+      "label": "Masser les jambes",
+      "status": "complete",
+      "plannedDuos": 20,
+      "publishedDuos": 20,
+      "sizeBytes": 10801880
+    },
+    {
+      "code": "A029",
+      "label": "Discuter",
+      "status": "complete",
+      "plannedDuos": 25,
+      "publishedDuos": 25,
+      "sizeBytes": 13129244
+    },
+    {
+      "code": "A030",
+      "label": "Caresser la joue",
+      "status": "complete",
+      "plannedDuos": 25,
+      "publishedDuos": 25,
+      "sizeBytes": 9848320
+    },
+    {
+      "code": "A032",
+      "label": "Toucher la tête",
+      "status": "complete",
+      "plannedDuos": 23,
+      "publishedDuos": 23,
+      "sizeBytes": 9648364
+    },
+    {
+      "code": "A033",
+      "label": "Imiter",
+      "status": "complete",
+      "plannedDuos": 22,
+      "publishedDuos": 22,
+      "sizeBytes": 11641596
+    },
+    {
+      "code": "A034",
+      "label": "Baiser sur la joue",
+      "status": "complete",
+      "plannedDuos": 20,
+      "publishedDuos": 20,
+      "sizeBytes": 8299928
+    },
+    {
+      "code": "A035",
+      "label": "Aider à se relever",
+      "status": "complete",
+      "plannedDuos": 27,
+      "publishedDuos": 27,
+      "sizeBytes": 13143188
+    },
+    {
+      "code": "A036",
+      "label": "Couvrir la bouche",
+      "status": "complete",
+      "plannedDuos": 26,
+      "publishedDuos": 26,
+      "sizeBytes": 9409456
+    },
+    {
+      "code": "A037",
+      "label": "Regarder derrière soi",
+      "status": "complete",
+      "plannedDuos": 27,
+      "publishedDuos": 27,
+      "sizeBytes": 10777060
+    },
+    {
+      "code": "A038",
+      "label": "Bloquer",
+      "status": "complete",
+      "plannedDuos": 22,
+      "publishedDuos": 22,
+      "sizeBytes": 9569968
+    },
+    {
+      "code": "A039",
+      "label": "Envoyer un baiser",
+      "status": "complete",
+      "plannedDuos": 25,
+      "publishedDuos": 25,
+      "sizeBytes": 8972392
+    }
+  ]
+}

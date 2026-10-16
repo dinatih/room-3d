@@ -104,13 +104,15 @@ def load_selection(path, source):
     if selection['schemaVersion'] != 1 or selection['dataset'] != 'inter-x' or selection['conversion'] != CONVERSION:
         raise ValueError('Selection schema or conversion settings do not match this converter')
     policy = selection['policy']
-    unlimited = policy['representative'] == 'height-matched-all-action-sessions'
+    all_splits = policy['take'] == 'all-splits' and policy['representative'] == 'selected-groups-all-shoots'
+    unlimited = all_splits or policy['representative'] == 'height-matched-all-action-sessions'
     valid_quota = policy['maxPerAction'] is None if unlimited else isinstance(policy['maxPerAction'], int) and 1 <= policy['maxPerAction'] <= 8
-    if policy['take'] != 'first-available' or policy['representative'] not in ('lowest-group-per-action-session', 'explicit-recordings', 'height-matched-per-action-session', 'height-matched-all-action-sessions') or not valid_quota:
+    first_only = policy['take'] == 'first-available' and policy['representative'] in ('lowest-group-per-action-session', 'explicit-recordings', 'height-matched-per-action-session', 'height-matched-all-action-sessions')
+    if not (all_splits or first_only) or not valid_quota:
         raise ValueError('Invalid selection policy')
     counts = Counter(entry['actionCode'] for entry in selection['duos'])
     variations = {(entry['actionCode'], entry['variation']) for entry in selection['duos']}
-    if len(variations) != len(selection['duos']) or (not unlimited and any(count > policy['maxPerAction'] for count in counts.values())):
+    if (not all_splits and len(variations) != len(selection['duos'])) or (not unlimited and any(count > policy['maxPerAction'] for count in counts.values())):
         raise ValueError('Selection duplicates an action/session or exceeds the per-action quota')
     seen = set()
     for entry in selection['duos']:
@@ -118,9 +120,13 @@ def load_selection(path, source):
         if not RECORDING.fullmatch(recording) or recording in seen:
             raise ValueError(f'Invalid or duplicate recording: {recording}')
         seen.add(recording)
-        first_take = min(path.name for path in source.glob(recording[:12] + 'R*') if path.is_dir())
-        if recording != first_take:
-            raise ValueError(f'Not the first available take: {recording}; expected {first_take}')
+        if all_splits:
+            if entry['source']['group'] not in policy['allowedGroups'][entry['actionCode']]:
+                raise ValueError(f'Binome outside the selected groups: {recording}')
+        else:
+            first_take = min(path.name for path in source.glob(recording[:12] + 'R*') if path.is_dir())
+            if recording != first_take:
+                raise ValueError(f'Not the first available take: {recording}; expected {first_take}')
         current = entry_for(source, recording, selection['sizeEstimate'])
         if current != entry:
             raise ValueError(f'Stale or modified selection for {recording}; regenerate the selection')
