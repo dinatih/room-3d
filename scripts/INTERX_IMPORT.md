@@ -360,6 +360,41 @@ uniquement les deux pilotes publiés ; les futures actions au sol doivent être
 vérifiées selon leur posture attendue.
 # Export des thèmes prioritaires en une passe
 
+## Conversion du reste du catalogue
+
+Conversion terminée : 97 nouveaux duos et 194 nouveaux GLB. Le bilan source
+est de **218 sessions T publiées sur 218, sur les 40 actions**, sans variante
+T restante. Avec les deux comparaisons de binômes conservées, le catalogue
+contient **220 duos / 440 GLB / 103,10 Mo de GLB**. Les métadonnées JSON
+s'ajoutent à ce poids. Les répétitions G et R du dataset brut restent exclues.
+
+La dernière sélection `scripts/interx_remaining_selection.json` contient les
+97 sessions T encore absentes, réparties sur les 18 thèmes non importés et
+les deux thèmes partiels (Poignée de main et High-five). Elle conserve un
+binôme adapté à la taille cible de 173,4 cm et la première prise disponible.
+
+```bash
+python3 scripts/temp_interx_grounding.py --placement-selection scripts/interx_remaining_selection.json --report scripts/interx_remaining_placement.json
+env ALSOFT_DRIVERS=null blender -noaudio --background --python-exit-code 1 --python scripts/convert_interx_duos.py -- --selection scripts/interx_remaining_selection.json --hand-motion --placement-metadata scripts/interx_remaining_placement.json
+python3 scripts/temp_interx_priority.py --inventory docs/INTERX_CATALOG.md
+```
+
+Le mode `--placement-metadata` applique la politique debout déjà validée aux
+actions concernées et les hauteurs d'appui SMPL-X aux autres. L'action
+S'asseoir sur la jambe utilise aussi les trajectoires des poignets source,
+comme les portages et massages. Les empreintes des NPZ et des modèles SMPL-X
+sont vérifiées avant les exports pour empêcher l'emploi de mesures obsolètes.
+Les modèles et les meshes SMPL-X restent hors du dépôt.
+
+Les deux GLB sont contrôlés (animation unique, nombre de frames et durée)
+avant leur publication atomique dans le manifest. Chaque duo est sauvegardé
+individuellement ; relancer la commande reprend les exports vérifiés.
+
+Le placement règle les appuis initiaux et conserve le mouvement vertical
+source. Il ne fournit pas de simulation physique ni de contact de surface
+exact entre les personnages. Une chaise ou un autre support peut rester
+nécessaire selon l'action choisie.
+
 ## Second complément du 16 octobre 2026
 
 Les onze actions suivantes couvrent désormais toutes leurs sessions T :

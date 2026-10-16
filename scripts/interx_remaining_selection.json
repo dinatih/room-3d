@@ -1,0 +1,6939 @@
+{
+  "schemaVersion": 1,
+  "dataset": "inter-x",
+  "conversion": {
+    "revision": 1,
+    "sourceFps": 120,
+    "targetFps": 30,
+    "upAxis": "Y",
+    "rootMotionMode": "relative-to-first-frame",
+    "translationUnit": "meters"
+  },
+  "policy": {
+    "take": "first-available",
+    "representative": "height-matched-all-action-sessions",
+    "maxPerAction": null
+  },
+  "sizeEstimate": {
+    "baseBytes": 63312.94228706526,
+    "bytesPerFrame": 871.6159517631746
+  },
+  "actions": [
+    {
+      "code": "A000",
+      "key": "hug",
+      "label": "Câlin",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "hug",
+        "affection"
+      ]
+    },
+    {
+      "code": "A001",
+      "key": "handshake",
+      "label": "Poignée de main",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "handshake",
+        "social"
+      ]
+    },
+    {
+      "code": "A002",
+      "key": "wave",
+      "label": "Signe de la main",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "wave",
+        "social"
+      ]
+    },
+    {
+      "code": "A003",
+      "key": "grab",
+      "label": "Saisir",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "grab",
+        "combat"
+      ]
+    },
+    {
+      "code": "A004",
+      "key": "hit",
+      "label": "Frapper",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "hit",
+        "combat"
+      ]
+    },
+    {
+      "code": "A005",
+      "key": "kick",
+      "label": "Coup de pied",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "kick",
+        "combat"
+      ]
+    },
+    {
+      "code": "A006",
+      "key": "posing",
+      "label": "Prendre la pose",
+      "category": "poses_idles",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "posing",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A007",
+      "key": "push",
+      "label": "Pousser",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "push",
+        "combat"
+      ]
+    },
+    {
+      "code": "A008",
+      "key": "pull",
+      "label": "Tirer",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "pull",
+        "combat"
+      ]
+    },
+    {
+      "code": "A009",
+      "key": "sit-on-leg",
+      "label": "S’asseoir sur la jambe",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "sit-on-leg",
+        "social"
+      ]
+    },
+    {
+      "code": "A010",
+      "key": "slap",
+      "label": "Gifler",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "slap",
+        "combat"
+      ]
+    },
+    {
+      "code": "A011",
+      "key": "pat-on-back",
+      "label": "Tapoter le dos",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "pat-on-back",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A012",
+      "key": "point-finger",
+      "label": "Pointer du doigt",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "point-finger",
+        "social"
+      ]
+    },
+    {
+      "code": "A013",
+      "key": "walk-towards",
+      "label": "Marcher vers l’autre",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "walk-towards",
+        "social"
+      ]
+    },
+    {
+      "code": "A014",
+      "key": "knock-over",
+      "label": "Renverser",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "knock-over",
+        "combat"
+      ]
+    },
+    {
+      "code": "A015",
+      "key": "step-on-foot",
+      "label": "Marcher sur le pied",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "step-on-foot",
+        "combat"
+      ]
+    },
+    {
+      "code": "A016",
+      "key": "high-five",
+      "label": "High-five",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "high-five",
+        "social"
+      ]
+    },
+    {
+      "code": "A017",
+      "key": "chase",
+      "label": "Poursuivre",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "chase",
+        "social"
+      ]
+    },
+    {
+      "code": "A018",
+      "key": "whisper",
+      "label": "Chuchoter à l’oreille",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "whisper",
+        "social"
+      ]
+    },
+    {
+      "code": "A019",
+      "key": "support-with-hand",
+      "label": "Soutenir avec la main",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "support-with-hand",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A020",
+      "key": "rock-paper-scissors",
+      "label": "Pierre-feuille-ciseaux",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "rock-paper-scissors",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A021",
+      "key": "dance",
+      "label": "Danser",
+      "category": "dances",
+      "icon": "💃",
+      "isCombat": false,
+      "tags": [
+        "dance",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A022",
+      "key": "link-arms",
+      "label": "Bras dessus dessous",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "link-arms",
+        "affection"
+      ]
+    },
+    {
+      "code": "A023",
+      "key": "shoulder-to-shoulder",
+      "label": "Épaule contre épaule",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "shoulder-to-shoulder",
+        "affection"
+      ]
+    },
+    {
+      "code": "A024",
+      "key": "bend",
+      "label": "Se pencher",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "bend",
+        "social"
+      ]
+    },
+    {
+      "code": "A025",
+      "key": "carry-back",
+      "label": "Porter sur le dos",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "carry-back",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A026",
+      "key": "massage-shoulder",
+      "label": "Masser les épaules",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "massage-shoulder",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A027",
+      "key": "massage-leg",
+      "label": "Masser les jambes",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "massage-leg",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A028",
+      "key": "arm-wrestling",
+      "label": "Bras de fer",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "arm-wrestling",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A029",
+      "key": "chat",
+      "label": "Discuter",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "chat",
+        "social"
+      ]
+    },
+    {
+      "code": "A030",
+      "key": "pat-on-cheek",
+      "label": "Caresser la joue",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "pat-on-cheek",
+        "affection"
+      ]
+    },
+    {
+      "code": "A031",
+      "key": "thumb-up",
+      "label": "Pouce levé",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "thumb-up",
+        "social"
+      ]
+    },
+    {
+      "code": "A032",
+      "key": "touch-head",
+      "label": "Toucher la tête",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "touch-head",
+        "affection"
+      ]
+    },
+    {
+      "code": "A033",
+      "key": "imitate",
+      "label": "Imiter",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "imitate",
+        "play-dance"
+      ]
+    },
+    {
+      "code": "A034",
+      "key": "kiss-on-cheek",
+      "label": "Baiser sur la joue",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "kiss-on-cheek",
+        "affection"
+      ]
+    },
+    {
+      "code": "A035",
+      "key": "help-up",
+      "label": "Aider à se relever",
+      "category": "interactions",
+      "icon": "🤲",
+      "isCombat": false,
+      "tags": [
+        "help-up",
+        "help-relaxation"
+      ]
+    },
+    {
+      "code": "A036",
+      "key": "cover-mouth",
+      "label": "Couvrir la bouche",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "cover-mouth",
+        "social"
+      ]
+    },
+    {
+      "code": "A037",
+      "key": "look-back",
+      "label": "Regarder derrière soi",
+      "category": "interactions",
+      "icon": "🤝",
+      "isCombat": false,
+      "tags": [
+        "look-back",
+        "social"
+      ]
+    },
+    {
+      "code": "A038",
+      "key": "block",
+      "label": "Bloquer",
+      "category": "combat",
+      "icon": "🥊",
+      "isCombat": true,
+      "tags": [
+        "block",
+        "combat"
+      ]
+    },
+    {
+      "code": "A039",
+      "key": "fly-kiss",
+      "label": "Envoyer un baiser",
+      "category": "interactions",
+      "icon": "🫂",
+      "isCombat": false,
+      "tags": [
+        "fly-kiss",
+        "affection"
+      ]
+    }
+  ],
+  "duos": [
+    {
+      "id": "interx-g004t003a001r006",
+      "actionCode": "A001",
+      "variation": "T003",
+      "source": {
+        "recording": "G004T003A001R006",
+        "group": "G004",
+        "take": "R006",
+        "p1": "G004T003A001R006/P1.npz",
+        "p2": "G004T003A001R006/P2.npz",
+        "frameCount": 276,
+        "sha256": {
+          "p1": "3d1f314e02919b895d04311f3b5ff05401db6067966be48010c00df8375617d7",
+          "p2": "2a560a5449f330029f7a0674df86814f2a5cf44e3b3086b6c2f427109d10fe75"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t003a001r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t003a001r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.4184715747833252,
+        -0.09838438034057617,
+        1.221909999847412
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "handshake",
+        "social"
+      ],
+      "expectedFrameCount": 69,
+      "expectedDurationSeconds": 2.2666666666666666,
+      "estimatedBytes": 246909
+    },
+    {
+      "id": "interx-g053t000a002r010",
+      "actionCode": "A002",
+      "variation": "T000",
+      "source": {
+        "recording": "G053T000A002R010",
+        "group": "G053",
+        "take": "R010",
+        "p1": "G053T000A002R010/P1.npz",
+        "p2": "G053T000A002R010/P2.npz",
+        "frameCount": 2560,
+        "sha256": {
+          "p1": "a2716a379557db4dcb88be6241aac118830a6f5776a1c0a4346e48489875f2f6",
+          "p2": "9860dfc25e29b32a860da1828b8ad11c1e7abc632c496e546f47088886b19efb"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t000a002r010-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t000a002r010-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.4224968552589417,
+        0.05713224411010742,
+        0.13815295696258545
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "wave",
+        "social"
+      ],
+      "expectedFrameCount": 640,
+      "expectedDurationSeconds": 21.3,
+      "estimatedBytes": 1242294
+    },
+    {
+      "id": "interx-g053t000a003r021",
+      "actionCode": "A003",
+      "variation": "T000",
+      "source": {
+        "recording": "G053T000A003R021",
+        "group": "G053",
+        "take": "R021",
+        "p1": "G053T000A003R021/P1.npz",
+        "p2": "G053T000A003R021/P2.npz",
+        "frameCount": 1376,
+        "sha256": {
+          "p1": "db99bf0831049e9310388e88e3708f30a2db130dc78f355a839f41d34782a72e",
+          "p2": "b7833e79a40c94083a61ec249434d99b4019403d9339735a17c8294e3a3a1e68"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t000a003r021-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t000a003r021-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.3868507146835327,
+        0.055379271507263184,
+        0.318828284740448
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "expectedFrameCount": 344,
+      "expectedDurationSeconds": 11.433333333333334,
+      "estimatedBytes": 726298
+    },
+    {
+      "id": "interx-g053t000a004r027",
+      "actionCode": "A004",
+      "variation": "T000",
+      "source": {
+        "recording": "G053T000A004R027",
+        "group": "G053",
+        "take": "R027",
+        "p1": "G053T000A004R027/P1.npz",
+        "p2": "G053T000A004R027/P2.npz",
+        "frameCount": 1828,
+        "sha256": {
+          "p1": "05cb195d7329265bc9d3d2a08c1517aa21ba15547b0fcdef6495e28f7891ac08",
+          "p2": "0a84f21dce762d93af860f174328c649635a85191846cf424b1e1f59a65f4abd"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t000a004r027-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t000a004r027-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.337678611278534,
+        0.05550110340118408,
+        0.014574289321899414
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "hit",
+        "combat"
+      ],
+      "expectedFrameCount": 457,
+      "expectedDurationSeconds": 15.2,
+      "estimatedBytes": 923283
+    },
+    {
+      "id": "interx-g053t001a005r000",
+      "actionCode": "A005",
+      "variation": "T001",
+      "source": {
+        "recording": "G053T001A005R000",
+        "group": "G053",
+        "take": "R000",
+        "p1": "G053T001A005R000/P1.npz",
+        "p2": "G053T001A005R000/P2.npz",
+        "frameCount": 960,
+        "sha256": {
+          "p1": "9e35b1ec52622c147c944ceb12883e08ced970d3bfa0bb70228dc36bb6a5e235",
+          "p2": "6faa705b8b53b6a66bfa3cb9a9e9c76788311b27aa1fe227b0e416bdccc88a2b"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t001a005r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t001a005r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.7364340424537659,
+        0.05619943141937256,
+        -0.2969360053539276
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "kick",
+        "combat"
+      ],
+      "expectedFrameCount": 240,
+      "expectedDurationSeconds": 7.966666666666667,
+      "estimatedBytes": 545002
+    },
+    {
+      "id": "interx-g053t001a007r012",
+      "actionCode": "A007",
+      "variation": "T001",
+      "source": {
+        "recording": "G053T001A007R012",
+        "group": "G053",
+        "take": "R012",
+        "p1": "G053T001A007R012/P1.npz",
+        "p2": "G053T001A007R012/P2.npz",
+        "frameCount": 1276,
+        "sha256": {
+          "p1": "cad174a3345e6e86496d69233395bb6acec9021eea64901a52ca871231c97f87",
+          "p2": "58bea756e48bf4de7029b1a101a9876e39302f2a16bd76235dfc06438811e53e"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t001a007r012-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t001a007r012-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.2407270967960358,
+        0.06739926338195801,
+        -0.021096527576446533
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "push",
+        "combat"
+      ],
+      "expectedFrameCount": 319,
+      "expectedDurationSeconds": 10.6,
+      "estimatedBytes": 682717
+    },
+    {
+      "id": "interx-g053t001a008r017",
+      "actionCode": "A008",
+      "variation": "T001",
+      "source": {
+        "recording": "G053T001A008R017",
+        "group": "G053",
+        "take": "R017",
+        "p1": "G053T001A008R017/P1.npz",
+        "p2": "G053T001A008R017/P2.npz",
+        "frameCount": 1852,
+        "sha256": {
+          "p1": "a02233118ba9147b008fb68c4c75ca584ea0c57a1f0981c8c007aa2e5940d98c",
+          "p2": "4494e73ea9c0b51cf3c3e54362df3cd607c7f5fa13e8276fc3b9a06671a6ff9d"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t001a008r017-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t001a008r017-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.4130314588546753,
+        0.050267815589904785,
+        -0.027224063873291016
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "pull",
+        "combat"
+      ],
+      "expectedFrameCount": 463,
+      "expectedDurationSeconds": 15.4,
+      "estimatedBytes": 933742
+    },
+    {
+      "id": "interx-g053t001a009r022",
+      "actionCode": "A009",
+      "variation": "T001",
+      "source": {
+        "recording": "G053T001A009R022",
+        "group": "G053",
+        "take": "R022",
+        "p1": "G053T001A009R022/P1.npz",
+        "p2": "G053T001A009R022/P2.npz",
+        "frameCount": 1308,
+        "sha256": {
+          "p1": "3bae640bf6490aa6ab5450489a06f28cba6e0bf4f080c41512e3e9e8a847ea7e",
+          "p2": "b35603fb05955288521dce20fe7eddc5254d4e37983dd8df99ee61eacc35acfc"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t001a009r022-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t001a009r022-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.6431640684604645,
+        -0.3125545382499695,
+        -0.6113103777170181
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "sit-on-leg",
+        "social"
+      ],
+      "expectedFrameCount": 327,
+      "expectedDurationSeconds": 10.866666666666667,
+      "estimatedBytes": 696663
+    },
+    {
+      "id": "interx-g053t002a010r000",
+      "actionCode": "A010",
+      "variation": "T002",
+      "source": {
+        "recording": "G053T002A010R000",
+        "group": "G053",
+        "take": "R000",
+        "p1": "G053T002A010R000/P1.npz",
+        "p2": "G053T002A010R000/P2.npz",
+        "frameCount": 1316,
+        "sha256": {
+          "p1": "b1a969fc4b6e7ea25d6940bbb435b722a3d8ed4d251345d508766f85512befc7",
+          "p2": "cba7d2f1825e57871dba393598bf536557e2de40dd233cd04afe8f8b5db5aba7"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t002a010r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t002a010r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.8775737583637238,
+        0.05037456750869751,
+        0.08668266050517559
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "slap",
+        "combat"
+      ],
+      "expectedFrameCount": 329,
+      "expectedDurationSeconds": 10.933333333333334,
+      "estimatedBytes": 700149
+    },
+    {
+      "id": "interx-g053t002a012r013",
+      "actionCode": "A012",
+      "variation": "T002",
+      "source": {
+        "recording": "G053T002A012R013",
+        "group": "G053",
+        "take": "R013",
+        "p1": "G053T002A012R013/P1.npz",
+        "p2": "G053T002A012R013/P2.npz",
+        "frameCount": 676,
+        "sha256": {
+          "p1": "9587b7c9eeed26bcc9d5a3c39a6e4a8bd26424e6560c563838ca13f8a56504b4",
+          "p2": "2155daa8ba4001bb8a840ae74c4b7fb197d49ad14069dc13f0aade65557dc4ae"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t002a012r013-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t002a012r013-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.220404863357544,
+        0.06849753856658936,
+        0.05823272466659546
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "point-finger",
+        "social"
+      ],
+      "expectedFrameCount": 169,
+      "expectedDurationSeconds": 5.6,
+      "estimatedBytes": 421232
+    },
+    {
+      "id": "interx-g053t002a013r020",
+      "actionCode": "A013",
+      "variation": "T002",
+      "source": {
+        "recording": "G053T002A013R020",
+        "group": "G053",
+        "take": "R020",
+        "p1": "G053T002A013R020/P1.npz",
+        "p2": "G053T002A013R020/P2.npz",
+        "frameCount": 580,
+        "sha256": {
+          "p1": "3aee5fc54281b1d788fdd157dc51163fa674065110e45f74c8b6e682ee0221f9",
+          "p2": "3594a1ac5ef9c85342eaa6a599bfc939b48fc7ffea71b81dd2dd45472078cb65"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t002a013r020-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t002a013r020-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.9903055429458618,
+        0.07925081253051758,
+        -0.18057912588119507
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "walk-towards",
+        "social"
+      ],
+      "expectedFrameCount": 145,
+      "expectedDurationSeconds": 4.8,
+      "estimatedBytes": 379395
+    },
+    {
+      "id": "interx-g053t002a014r026",
+      "actionCode": "A014",
+      "variation": "T002",
+      "source": {
+        "recording": "G053T002A014R026",
+        "group": "G053",
+        "take": "R026",
+        "p1": "G053T002A014R026/P1.npz",
+        "p2": "G053T002A014R026/P2.npz",
+        "frameCount": 1436,
+        "sha256": {
+          "p1": "430de4e8e1c4c1d3035ad78bbab08a083d12ff2600ddc3f887e6ce6457510494",
+          "p2": "f25ddefd872ad571221482fdbe94026b19c4ef6a855e3caab855253e54ed988b"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t002a014r026-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t002a014r026-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -2.4799643754959106,
+        0.09092676639556885,
+        -0.2853900194168091
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "knock-over",
+        "combat"
+      ],
+      "expectedFrameCount": 359,
+      "expectedDurationSeconds": 11.933333333333334,
+      "estimatedBytes": 752446
+    },
+    {
+      "id": "interx-g053t003a015r000",
+      "actionCode": "A015",
+      "variation": "T003",
+      "source": {
+        "recording": "G053T003A015R000",
+        "group": "G053",
+        "take": "R000",
+        "p1": "G053T003A015R000/P1.npz",
+        "p2": "G053T003A015R000/P2.npz",
+        "frameCount": 1148,
+        "sha256": {
+          "p1": "aede574ae3b8a68fc53b301eebe2551d280a0298554b02ed515b07753754b63c",
+          "p2": "3fd6a88727a63d0c83c237c924036be29f96b45efd3edb4f8319ba65ebe1a40c"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t003a015r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t003a015r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.2811875939369202,
+        0.042609572410583496,
+        -0.03179985284805298
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "step-on-foot",
+        "combat"
+      ],
+      "expectedFrameCount": 287,
+      "expectedDurationSeconds": 9.533333333333333,
+      "estimatedBytes": 626933
+    },
+    {
+      "id": "interx-g030t006a016r001",
+      "actionCode": "A016",
+      "variation": "T006",
+      "source": {
+        "recording": "G030T006A016R001",
+        "group": "G030",
+        "take": "R001",
+        "p1": "G030T006A016R001/P1.npz",
+        "p2": "G030T006A016R001/P2.npz",
+        "frameCount": 424,
+        "sha256": {
+          "p1": "bf328680a7e51219cbdb04f73e3c6ebbe74f24a0f2b3a0b4fbaefd36a29bc482",
+          "p2": "5e605d7411c7ca2cf7e704bdc81b220fbfeec75318f245d6921dc77d05bc47cc"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t006a016r001-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t006a016r001-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.2023887932300568,
+        0.08013045787811279,
+        -0.5659146904945374
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "high-five",
+        "social"
+      ],
+      "expectedFrameCount": 106,
+      "expectedDurationSeconds": 3.5,
+      "estimatedBytes": 311408
+    },
+    {
+      "id": "interx-g053t003a017r010",
+      "actionCode": "A017",
+      "variation": "T003",
+      "source": {
+        "recording": "G053T003A017R010",
+        "group": "G053",
+        "take": "R010",
+        "p1": "G053T003A017R010/P1.npz",
+        "p2": "G053T003A017R010/P2.npz",
+        "frameCount": 1424,
+        "sha256": {
+          "p1": "02eb3b08b8985b86e1e35c2c2eebbad58927f5feb5b560d4f7014480e74cbe3e",
+          "p2": "9e29b9f2d5012ff606e135d24e3ccc9adfd15785fd2e3d3e3982ecabb7aee09a"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t003a017r010-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t003a017r010-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -2.1112539768218994,
+        0.04831373691558838,
+        -0.08475595712661743
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "chase",
+        "social"
+      ],
+      "expectedFrameCount": 356,
+      "expectedDurationSeconds": 11.833333333333334,
+      "estimatedBytes": 747216
+    },
+    {
+      "id": "interx-g053t005a024r020",
+      "actionCode": "A024",
+      "variation": "T005",
+      "source": {
+        "recording": "G053T005A024R020",
+        "group": "G053",
+        "take": "R020",
+        "p1": "G053T005A024R020/P1.npz",
+        "p2": "G053T005A024R020/P2.npz",
+        "frameCount": 792,
+        "sha256": {
+          "p1": "e4477051bcc4a146baf875b5391e83bae2ae0afadd38b61904fed0e8f283466e",
+          "p2": "1db66bd890b4c23cc478e9f4e9badd0f50cc99d497accdb8f76ee3a30b211323"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t005a024r020-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t005a024r020-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.7269402146339417,
+        0.06511735916137695,
+        -0.040863871574401855
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "bend",
+        "social"
+      ],
+      "expectedFrameCount": 198,
+      "expectedDurationSeconds": 6.566666666666666,
+      "estimatedBytes": 471786
+    },
+    {
+      "id": "interx-g053t007a031r006",
+      "actionCode": "A031",
+      "variation": "T007",
+      "source": {
+        "recording": "G053T007A031R006",
+        "group": "G053",
+        "take": "R006",
+        "p1": "G053T007A031R006/P1.npz",
+        "p2": "G053T007A031R006/P2.npz",
+        "frameCount": 748,
+        "sha256": {
+          "p1": "4d50dc62532fd355e9fbbd775fdd0ab1ba100738a152606a06745b93db22dd9a",
+          "p2": "dd6f3ee6a84862216ff112761a3e0cebbadde6bd2a85bf949b4ad7c8d0f31fb7"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t007a031r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t007a031r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.0634981095790863,
+        0.05892515182495117,
+        0.27815717458724976
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "thumb-up",
+        "social"
+      ],
+      "expectedFrameCount": 187,
+      "expectedDurationSeconds": 6.2,
+      "estimatedBytes": 452610
+    },
+    {
+      "id": "interx-g053t008a036r006",
+      "actionCode": "A036",
+      "variation": "T008",
+      "source": {
+        "recording": "G053T008A036R006",
+        "group": "G053",
+        "take": "R006",
+        "p1": "G053T008A036R006/P1.npz",
+        "p2": "G053T008A036R006/P2.npz",
+        "frameCount": 1368,
+        "sha256": {
+          "p1": "c98e0892b97cdff0f28ff571807a524c69434ac73527aaed2988f41f38929256",
+          "p2": "77d9931cb8d034f4323906999b26a6a324525d85ebbf225d8c094a1d8e5a25b3"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t008a036r006-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t008a036r006-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.2747797966003418,
+        0.0429307222366333,
+        0.04497039318084717
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "cover-mouth",
+        "social"
+      ],
+      "expectedFrameCount": 342,
+      "expectedDurationSeconds": 11.366666666666667,
+      "estimatedBytes": 722811
+    },
+    {
+      "id": "interx-g053t008a037r011",
+      "actionCode": "A037",
+      "variation": "T008",
+      "source": {
+        "recording": "G053T008A037R011",
+        "group": "G053",
+        "take": "R011",
+        "p1": "G053T008A037R011/P1.npz",
+        "p2": "G053T008A037R011/P2.npz",
+        "frameCount": 804,
+        "sha256": {
+          "p1": "7093e5dc396c74fdaae2f9e6cf1868bcc116893d804005d4e2f3ad22898662c0",
+          "p2": "f4764a9d5a811c3202282c10c4ee841a1b96b843eb8c4ac4ced8e5cb5bfe5564"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t008a037r011-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t008a037r011-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.389763355255127,
+        0.05182290077209473,
+        0.08593535423278809
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "look-back",
+        "social"
+      ],
+      "expectedFrameCount": 201,
+      "expectedDurationSeconds": 6.666666666666667,
+      "estimatedBytes": 477015
+    },
+    {
+      "id": "interx-g053t008a038r016",
+      "actionCode": "A038",
+      "variation": "T008",
+      "source": {
+        "recording": "G053T008A038R016",
+        "group": "G053",
+        "take": "R016",
+        "p1": "G053T008A038R016/P1.npz",
+        "p2": "G053T008A038R016/P2.npz",
+        "frameCount": 732,
+        "sha256": {
+          "p1": "736deeb2c492bb8999af0fe6bf0b95273e63664b63b34141ad2075be542c6383",
+          "p2": "216ad7b26330f2b2308d4118e91d84a9009903155c74a9474f468120e18316ce"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g053t008a038r016-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g053t008a038r016-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.04816406965255737,
+        0.03667175769805908,
+        1.3378655910491943
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "block",
+        "combat"
+      ],
+      "expectedFrameCount": 183,
+      "expectedDurationSeconds": 6.066666666666666,
+      "estimatedBytes": 445637
+    },
+    {
+      "id": "interx-g041t001a001r000",
+      "actionCode": "A001",
+      "variation": "T001",
+      "source": {
+        "recording": "G041T001A001R000",
+        "group": "G041",
+        "take": "R000",
+        "p1": "G041T001A001R000/P1.npz",
+        "p2": "G041T001A001R000/P2.npz",
+        "frameCount": 372,
+        "sha256": {
+          "p1": "cbf98f26148bdb76475aa432b4d803e0faf4c6d6c196f315ee0bd20417ab57c8",
+          "p2": "f1e543b2eba9e782448eaf86d00dfeb8a3c875862e8bc0577f11dde17693be7a"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g041t001a001r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g041t001a001r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.0527600646018982,
+        0.04550457000732422,
+        -0.14031767845153809
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "handshake",
+        "social"
+      ],
+      "expectedFrameCount": 93,
+      "expectedDurationSeconds": 3.066666666666667,
+      "estimatedBytes": 288746
+    },
+    {
+      "id": "interx-g030t001a002r000",
+      "actionCode": "A002",
+      "variation": "T001",
+      "source": {
+        "recording": "G030T001A002R000",
+        "group": "G030",
+        "take": "R000",
+        "p1": "G030T001A002R000/P1.npz",
+        "p2": "G030T001A002R000/P2.npz",
+        "frameCount": 496,
+        "sha256": {
+          "p1": "4fb80d7a3d3e3af86c35a40e9cb078d274a7ac1eccbcf6dd8455802074a08617",
+          "p2": "a481700a7d932273f4d91f9f7bc10753b6228a0ffb1b6975dce7ec04f89fb5fc"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t001a002r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t001a002r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.5637893825769424,
+        0.08409404754638672,
+        -1.554579257965088
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "wave",
+        "social"
+      ],
+      "expectedFrameCount": 124,
+      "expectedDurationSeconds": 4.1,
+      "estimatedBytes": 342787
+    },
+    {
+      "id": "interx-g030t001a003r003",
+      "actionCode": "A003",
+      "variation": "T001",
+      "source": {
+        "recording": "G030T001A003R003",
+        "group": "G030",
+        "take": "R003",
+        "p1": "G030T001A003R003/P1.npz",
+        "p2": "G030T001A003R003/P2.npz",
+        "frameCount": 396,
+        "sha256": {
+          "p1": "77272acdf8766ba0df0ed168874d0535fd0918a5058aa3b8d4df631d16ba4029",
+          "p2": "ae2078c4598ba5930a12a277c7efd8a4c8d9a922f5a50b8f5fd52d368f53d748"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t001a003r003-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t001a003r003-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.8957861140370369,
+        0.07933688163757324,
+        -0.6016717255115509
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "expectedFrameCount": 99,
+      "expectedDurationSeconds": 3.2666666666666666,
+      "estimatedBytes": 299206
+    },
+    {
+      "id": "interx-g030t001a004r005",
+      "actionCode": "A004",
+      "variation": "T001",
+      "source": {
+        "recording": "G030T001A004R005",
+        "group": "G030",
+        "take": "R005",
+        "p1": "G030T001A004R005/P1.npz",
+        "p2": "G030T001A004R005/P2.npz",
+        "frameCount": 380,
+        "sha256": {
+          "p1": "3da488a5edf4634ca4d9c01bf313186b323f56aee772d62639b6e0673dadbb87",
+          "p2": "39afbc564baced275d5eb30765fd58a8c1be503687ea4a183f2cdbe64c736ac6"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t001a004r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t001a004r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.5144767500460148,
+        0.06773853302001953,
+        -0.5119905173778534
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "hit",
+        "combat"
+      ],
+      "expectedFrameCount": 95,
+      "expectedDurationSeconds": 3.1333333333333333,
+      "estimatedBytes": 292233
+    },
+    {
+      "id": "interx-g030t003a005r000",
+      "actionCode": "A005",
+      "variation": "T003",
+      "source": {
+        "recording": "G030T003A005R000",
+        "group": "G030",
+        "take": "R000",
+        "p1": "G030T003A005R000/P1.npz",
+        "p2": "G030T003A005R000/P2.npz",
+        "frameCount": 336,
+        "sha256": {
+          "p1": "6a1b49b125de5edf54d0d00c1919431eb1b04cfbb038e5f57cd516ba2b69ee8f",
+          "p2": "cfd4706d03a1dee168a5c4cd66c11115a9c2876d3f898eddceb27d1b1739c5af"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t003a005r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t003a005r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.357820987701416,
+        0.09562540054321289,
+        -0.7491132616996765
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "kick",
+        "combat"
+      ],
+      "expectedFrameCount": 84,
+      "expectedDurationSeconds": 2.7666666666666666,
+      "estimatedBytes": 273057
+    },
+    {
+      "id": "interx-g049t002a007r000",
+      "actionCode": "A007",
+      "variation": "T002",
+      "source": {
+        "recording": "G049T002A007R000",
+        "group": "G049",
+        "take": "R000",
+        "p1": "G049T002A007R000/P1.npz",
+        "p2": "G049T002A007R000/P2.npz",
+        "frameCount": 412,
+        "sha256": {
+          "p1": "a0f0544cb7b774328a33cf7f61401961563aa1c51b02607389e98716b3ef31bf",
+          "p2": "8ef7b348fef00451359e8d073725a54369fd375c7c5af0692f6469da80c868fd"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g049t002a007r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g049t002a007r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.9003383219242096,
+        -0.018095731735229492,
+        -0.7265897542238235
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "push",
+        "combat"
+      ],
+      "expectedFrameCount": 103,
+      "expectedDurationSeconds": 3.4,
+      "estimatedBytes": 306179
+    },
+    {
+      "id": "interx-g049t002a008r005",
+      "actionCode": "A008",
+      "variation": "T002",
+      "source": {
+        "recording": "G049T002A008R005",
+        "group": "G049",
+        "take": "R005",
+        "p1": "G049T002A008R005/P1.npz",
+        "p2": "G049T002A008R005/P2.npz",
+        "frameCount": 472,
+        "sha256": {
+          "p1": "96960d9a6fe9f8a88ab47de558d566e5eb4ab665f15536cdb3a04d9117cbe580",
+          "p2": "21daef62657b418f8c62e16c9b6729069fd78b4ea601b5c7a56d2c8f8e4aedeb"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g049t002a008r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g049t002a008r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.6877831574529409,
+        -0.024885177612304688,
+        -0.1781976819038391
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "pull",
+        "combat"
+      ],
+      "expectedFrameCount": 118,
+      "expectedDurationSeconds": 3.9,
+      "estimatedBytes": 332327
+    },
+    {
+      "id": "interx-g049t002a009r011",
+      "actionCode": "A009",
+      "variation": "T002",
+      "source": {
+        "recording": "G049T002A009R011",
+        "group": "G049",
+        "take": "R011",
+        "p1": "G049T002A009R011/P1.npz",
+        "p2": "G049T002A009R011/P2.npz",
+        "frameCount": 1152,
+        "sha256": {
+          "p1": "14785ea7ec8666e7ca1fcb2a2274dc684bfa0bc9f09731e17c31303457d9df83",
+          "p2": "b929f4c2eee8b649ccd38802c71bcbdead522432c179e183aa95dab804f166d7"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g049t002a009r011-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g049t002a009r011-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.6540457308292389,
+        0.26559120416641235,
+        -0.05171072483062744
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "sit-on-leg",
+        "social"
+      ],
+      "expectedFrameCount": 288,
+      "expectedDurationSeconds": 9.566666666666666,
+      "estimatedBytes": 628677
+    },
+    {
+      "id": "interx-g049t003a010r000",
+      "actionCode": "A010",
+      "variation": "T003",
+      "source": {
+        "recording": "G049T003A010R000",
+        "group": "G049",
+        "take": "R000",
+        "p1": "G049T003A010R000/P1.npz",
+        "p2": "G049T003A010R000/P2.npz",
+        "frameCount": 372,
+        "sha256": {
+          "p1": "af21a022963732ad7da613d068bfc57dcb6d88d537deb5b21257a6d031284fa0",
+          "p2": "5e3a3989c4d27a54127d51eb52b9c312618aa5339f79799090c6e3b0ff2d7d4a"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g049t003a010r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g049t003a010r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.649040013551712,
+        -0.05550193786621094,
+        -0.016428425908088684
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "slap",
+        "combat"
+      ],
+      "expectedFrameCount": 93,
+      "expectedDurationSeconds": 3.066666666666667,
+      "estimatedBytes": 288746
+    },
+    {
+      "id": "interx-g049t003a012r011",
+      "actionCode": "A012",
+      "variation": "T003",
+      "source": {
+        "recording": "G049T003A012R011",
+        "group": "G049",
+        "take": "R011",
+        "p1": "G049T003A012R011/P1.npz",
+        "p2": "G049T003A012R011/P2.npz",
+        "frameCount": 696,
+        "sha256": {
+          "p1": "0142cccabe43c991b8438aba9a78354ce52a961a14a35a9333646652ddde68fa",
+          "p2": "99d1f02492e99d186e0bbd6962db5a932b0967dff2e200260b1382c460461346"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g049t003a012r011-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g049t003a012r011-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.5287019461393356,
+        -0.02214980125427246,
+        -0.45726197957992554
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "point-finger",
+        "social"
+      ],
+      "expectedFrameCount": 174,
+      "expectedDurationSeconds": 5.766666666666667,
+      "estimatedBytes": 429948
+    },
+    {
+      "id": "interx-g049t003a013r016",
+      "actionCode": "A013",
+      "variation": "T003",
+      "source": {
+        "recording": "G049T003A013R016",
+        "group": "G049",
+        "take": "R016",
+        "p1": "G049T003A013R016/P1.npz",
+        "p2": "G049T003A013R016/P2.npz",
+        "frameCount": 492,
+        "sha256": {
+          "p1": "d03abb097a24b8aecfbe129fc9832d25234328400568da4e8310487234503c01",
+          "p2": "ed6c714e48b84721a9c526bbff2ad37d08cd6349e1c4efc09e5dab6f5e237fce"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g049t003a013r016-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g049t003a013r016-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.5055610239505768,
+        -0.005805611610412598,
+        -0.33237776160240173
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "walk-towards",
+        "social"
+      ],
+      "expectedFrameCount": 123,
+      "expectedDurationSeconds": 4.066666666666666,
+      "estimatedBytes": 341043
+    },
+    {
+      "id": "interx-g049t003a014r021",
+      "actionCode": "A014",
+      "variation": "T003",
+      "source": {
+        "recording": "G049T003A014R021",
+        "group": "G049",
+        "take": "R021",
+        "p1": "G049T003A014R021/P1.npz",
+        "p2": "G049T003A014R021/P2.npz",
+        "frameCount": 620,
+        "sha256": {
+          "p1": "6b146666c7662bddac1aacd062e43e7b1781ecd9b96e8f3aaa71ae130cffcc94",
+          "p2": "58761041a912dd03586f947cbf9bca14b6b5f5dd728bed3dc625e8113af74ea1"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g049t003a014r021-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g049t003a014r021-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.7268543541431427,
+        -0.02503037452697754,
+        -0.1399620845913887
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "knock-over",
+        "combat"
+      ],
+      "expectedFrameCount": 155,
+      "expectedDurationSeconds": 5.133333333333334,
+      "estimatedBytes": 396827
+    },
+    {
+      "id": "interx-g049t004a015r000",
+      "actionCode": "A015",
+      "variation": "T004",
+      "source": {
+        "recording": "G049T004A015R000",
+        "group": "G049",
+        "take": "R000",
+        "p1": "G049T004A015R000/P1.npz",
+        "p2": "G049T004A015R000/P2.npz",
+        "frameCount": 444,
+        "sha256": {
+          "p1": "657d2ce0e496884e366b44fe8b9dcc4958ba77a7d1eead3c6ba8b029085ee749",
+          "p2": "29252deff02a0e4450a960682accb1b066998c29f5060c6671bd077bc4100394"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g049t004a015r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g049t004a015r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.5742708593606949,
+        -0.055045485496520996,
+        0.1688193678855896
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "step-on-foot",
+        "combat"
+      ],
+      "expectedFrameCount": 111,
+      "expectedDurationSeconds": 3.6666666666666665,
+      "estimatedBytes": 320125
+    },
+    {
+      "id": "interx-g059t001a016r019",
+      "actionCode": "A016",
+      "variation": "T001",
+      "source": {
+        "recording": "G059T001A016R019",
+        "group": "G059",
+        "take": "R019",
+        "p1": "G059T001A016R019/P1.npz",
+        "p2": "G059T001A016R019/P2.npz",
+        "frameCount": 424,
+        "sha256": {
+          "p1": "97e2bc9f929e73a6e2623882974624af310934043f0661f6cb02b6d588f05e5f",
+          "p2": "4798c6c7b7d240ce444caa29eb4018d2d1e560a54452faefa47037c715a865b2"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t001a016r019-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t001a016r019-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.4682022035121918,
+        0.05609619617462158,
+        0.19837518967688084
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "high-five",
+        "social"
+      ],
+      "expectedFrameCount": 106,
+      "expectedDurationSeconds": 3.5,
+      "estimatedBytes": 311408
+    },
+    {
+      "id": "interx-g049t004a017r011",
+      "actionCode": "A017",
+      "variation": "T004",
+      "source": {
+        "recording": "G049T004A017R011",
+        "group": "G049",
+        "take": "R011",
+        "p1": "G049T004A017R011/P1.npz",
+        "p2": "G049T004A017R011/P2.npz",
+        "frameCount": 380,
+        "sha256": {
+          "p1": "d84814332de8812b42c028110d1fdec644ce79d473f635bab62df300253c37ca",
+          "p2": "7a7b7ed3416169a252d9f34eacd0e64180b4ba863110a5c9c5d846c68ad7ec2f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g049t004a017r011-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g049t004a017r011-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.41364526748657227,
+        -0.36202096939086914,
+        -1.8865850269794464
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "chase",
+        "social"
+      ],
+      "expectedFrameCount": 95,
+      "expectedDurationSeconds": 3.1333333333333333,
+      "estimatedBytes": 292233
+    },
+    {
+      "id": "interx-g056t004a024r021",
+      "actionCode": "A024",
+      "variation": "T004",
+      "source": {
+        "recording": "G056T004A024R021",
+        "group": "G056",
+        "take": "R021",
+        "p1": "G056T004A024R021/P1.npz",
+        "p2": "G056T004A024R021/P2.npz",
+        "frameCount": 420,
+        "sha256": {
+          "p1": "405c0383e2af70a0885786c0948f2e797928c41333a072b474948660db9c1401",
+          "p2": "b3f4d02dd97ed4db613c78068677a4a7c1dc7bf325169ce3bd034ae4f9dc8d17"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g056t004a024r021-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g056t004a024r021-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.6034202575683594,
+        0.02985978126525879,
+        -0.05742773413658142
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "bend",
+        "social"
+      ],
+      "expectedFrameCount": 105,
+      "expectedDurationSeconds": 3.466666666666667,
+      "estimatedBytes": 309665
+    },
+    {
+      "id": "interx-g056t006a031r005",
+      "actionCode": "A031",
+      "variation": "T006",
+      "source": {
+        "recording": "G056T006A031R005",
+        "group": "G056",
+        "take": "R005",
+        "p1": "G056T006A031R005/P1.npz",
+        "p2": "G056T006A031R005/P2.npz",
+        "frameCount": 428,
+        "sha256": {
+          "p1": "5724bbd9ad86d82b82366b6739975625f3da2ebc90c86ded31205df2230cfb2e",
+          "p2": "5e94b7629eee3b83a406d8443c7091960feb493a9e7c5ee97785e752e4d4a59e"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g056t006a031r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g056t006a031r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.1016176342964172,
+        0.01590096950531006,
+        -0.04786771535873413
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "thumb-up",
+        "social"
+      ],
+      "expectedFrameCount": 107,
+      "expectedDurationSeconds": 3.533333333333333,
+      "estimatedBytes": 313152
+    },
+    {
+      "id": "interx-g056t007a036r005",
+      "actionCode": "A036",
+      "variation": "T007",
+      "source": {
+        "recording": "G056T007A036R005",
+        "group": "G056",
+        "take": "R005",
+        "p1": "G056T007A036R005/P1.npz",
+        "p2": "G056T007A036R005/P2.npz",
+        "frameCount": 560,
+        "sha256": {
+          "p1": "eb8007b5158ffbcc32d48f54ffcbf3e830ba098304d66e90dd7701157aeda0ce",
+          "p2": "4a8622d23e56b6d8093ecca616993f33dfd9f0f28ddedca2041531224b262305"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g056t007a036r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g056t007a036r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.0405498445034027,
+        0.020098447799682617,
+        -0.14172767102718353
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "cover-mouth",
+        "social"
+      ],
+      "expectedFrameCount": 140,
+      "expectedDurationSeconds": 4.633333333333334,
+      "estimatedBytes": 370678
+    },
+    {
+      "id": "interx-g056t007a037r011",
+      "actionCode": "A037",
+      "variation": "T007",
+      "source": {
+        "recording": "G056T007A037R011",
+        "group": "G056",
+        "take": "R011",
+        "p1": "G056T007A037R011/P1.npz",
+        "p2": "G056T007A037R011/P2.npz",
+        "frameCount": 1488,
+        "sha256": {
+          "p1": "ee5096c91b4c69bc3f23cd1990c18809e684d0bae08bb8b49dbac9def571c83d",
+          "p2": "868a0b7c47fc66ad51c9f93f4bf6ba6873144181d4fc58a7880b669aec3e4fe9"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g056t007a037r011-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g056t007a037r011-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.3960565328598022,
+        -0.045560240745544434,
+        0.3223589360713959
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "look-back",
+        "social"
+      ],
+      "expectedFrameCount": 372,
+      "expectedDurationSeconds": 12.366666666666667,
+      "estimatedBytes": 775108
+    },
+    {
+      "id": "interx-g056t007a038r014",
+      "actionCode": "A038",
+      "variation": "T007",
+      "source": {
+        "recording": "G056T007A038R014",
+        "group": "G056",
+        "take": "R014",
+        "p1": "G056T007A038R014/P1.npz",
+        "p2": "G056T007A038R014/P2.npz",
+        "frameCount": 876,
+        "sha256": {
+          "p1": "ac6f15bf3cb6a0e30155870ef7bf753ad8933507f902f06001019844361b8e08",
+          "p2": "8aeef1e350d126a2230a90af5561bbf7b2a456e43c4c5d2f119a11a0e2b63845"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g056t007a038r014-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g056t007a038r014-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.114678531885147,
+        -0.040078043937683105,
+        0.6657392233610153
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "block",
+        "combat"
+      ],
+      "expectedFrameCount": 219,
+      "expectedDurationSeconds": 7.266666666666667,
+      "estimatedBytes": 508394
+    },
+    {
+      "id": "interx-g041t002a001r000",
+      "actionCode": "A001",
+      "variation": "T002",
+      "source": {
+        "recording": "G041T002A001R000",
+        "group": "G041",
+        "take": "R000",
+        "p1": "G041T002A001R000/P1.npz",
+        "p2": "G041T002A001R000/P2.npz",
+        "frameCount": 400,
+        "sha256": {
+          "p1": "4513668ce2eba516c4307e9bf1a5ea112ebf6c307a4d0d0399438a92b781314b",
+          "p2": "240d0f2b31ac716531d6bf63c9242f353c312e78670da60e3a32654ed2ec2662"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g041t002a001r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g041t002a001r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.9172400683164597,
+        0.03395652770996094,
+        -0.24904781579971313
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "handshake",
+        "social"
+      ],
+      "expectedFrameCount": 100,
+      "expectedDurationSeconds": 3.3,
+      "estimatedBytes": 300949
+    },
+    {
+      "id": "interx-g004t003a002r014",
+      "actionCode": "A002",
+      "variation": "T003",
+      "source": {
+        "recording": "G004T003A002R014",
+        "group": "G004",
+        "take": "R014",
+        "p1": "G004T003A002R014/P1.npz",
+        "p2": "G004T003A002R014/P2.npz",
+        "frameCount": 372,
+        "sha256": {
+          "p1": "4ae47d5c244cefd0a3e567dc4b6deb11e2173c1463296b5e21655d68e757c1ec",
+          "p2": "0f9d57a6c8be21b8440405fa15b34759cc5b5789d4e090507bea88125a78c32e"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t003a002r014-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t003a002r014-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.332928717136383,
+        -0.13561856746673584,
+        0.06353986263275146
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "wave",
+        "social"
+      ],
+      "expectedFrameCount": 93,
+      "expectedDurationSeconds": 3.066666666666667,
+      "estimatedBytes": 288746
+    },
+    {
+      "id": "interx-g004t003a003r019",
+      "actionCode": "A003",
+      "variation": "T003",
+      "source": {
+        "recording": "G004T003A003R019",
+        "group": "G004",
+        "take": "R019",
+        "p1": "G004T003A003R019/P1.npz",
+        "p2": "G004T003A003R019/P2.npz",
+        "frameCount": 504,
+        "sha256": {
+          "p1": "55140210c796bd8c6bb0159cb3eb3cc8f0a8b1b7c9c22f81f6d48a180f3015e2",
+          "p2": "18efee6eba9eb12ddf4b9eb52e8e54ae8776196fdbb37e917d51ed1552ec0696"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t003a003r019-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t003a003r019-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.8305354416370392,
+        -0.13918471336364746,
+        1.7644192911684513
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "grab",
+        "combat"
+      ],
+      "expectedFrameCount": 126,
+      "expectedDurationSeconds": 4.166666666666667,
+      "estimatedBytes": 346273
+    },
+    {
+      "id": "interx-g004t003a004r025",
+      "actionCode": "A004",
+      "variation": "T003",
+      "source": {
+        "recording": "G004T003A004R025",
+        "group": "G004",
+        "take": "R025",
+        "p1": "G004T003A004R025/P1.npz",
+        "p2": "G004T003A004R025/P2.npz",
+        "frameCount": 564,
+        "sha256": {
+          "p1": "8b4c18c8d0155d37c0ac4159887f2fb74295266e2c8da8a562594fff7cfa79bf",
+          "p2": "fbf425965d0824ba944b943bfb11229f9234e93cc272bdfedd76c91001669e57"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t003a004r025-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t003a004r025-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.0762631595134735,
+        -0.1341855525970459,
+        1.3042762652039528
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "hit",
+        "combat"
+      ],
+      "expectedFrameCount": 141,
+      "expectedDurationSeconds": 4.666666666666667,
+      "estimatedBytes": 372422
+    },
+    {
+      "id": "interx-g059t000a005r017",
+      "actionCode": "A005",
+      "variation": "T000",
+      "source": {
+        "recording": "G059T000A005R017",
+        "group": "G059",
+        "take": "R017",
+        "p1": "G059T000A005R017/P1.npz",
+        "p2": "G059T000A005R017/P2.npz",
+        "frameCount": 396,
+        "sha256": {
+          "p1": "8bbeaf7abb69ccf5c1ac029ba39a040c35d914244c6841b784ebc2b9b577a5e2",
+          "p2": "2b81e7219e704db0cfd03b1cd189df3e6450b47d601f53f81174d63450b8e802"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t000a005r017-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t000a005r017-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7255108803510666,
+        0.043358683586120605,
+        0.11874011158943176
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "kick",
+        "combat"
+      ],
+      "expectedFrameCount": 99,
+      "expectedDurationSeconds": 3.2666666666666666,
+      "estimatedBytes": 299206
+    },
+    {
+      "id": "interx-g030t004a007r000",
+      "actionCode": "A007",
+      "variation": "T004",
+      "source": {
+        "recording": "G030T004A007R000",
+        "group": "G030",
+        "take": "R000",
+        "p1": "G030T004A007R000/P1.npz",
+        "p2": "G030T004A007R000/P2.npz",
+        "frameCount": 300,
+        "sha256": {
+          "p1": "87900cbae4c521c50a81c9f1022144ee4eccb9e6079e7c3e210a2c63c36984d8",
+          "p2": "fe439c4482e4578d0e54435d6ca6a1cf0b864eadc70682cb16a3b70d4d2de398"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t004a007r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t004a007r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.7304998114705086,
+        0.07083868980407715,
+        -0.5062797665596008
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "push",
+        "combat"
+      ],
+      "expectedFrameCount": 75,
+      "expectedDurationSeconds": 2.466666666666667,
+      "estimatedBytes": 257368
+    },
+    {
+      "id": "interx-g030t004a008r005",
+      "actionCode": "A008",
+      "variation": "T004",
+      "source": {
+        "recording": "G030T004A008R005",
+        "group": "G030",
+        "take": "R005",
+        "p1": "G030T004A008R005/P1.npz",
+        "p2": "G030T004A008R005/P2.npz",
+        "frameCount": 828,
+        "sha256": {
+          "p1": "71d3a18afacdd1e4d70e97f30d99dd39532c0bea850bc525985b888b227a265f",
+          "p2": "509111022fe67a554b409b21c4f3ac8e1e229362df397254ba62d13fb83bab8c"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t004a008r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t004a008r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.904386356472969,
+        0.07605361938476562,
+        -0.4749481678009033
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "pull",
+        "combat"
+      ],
+      "expectedFrameCount": 207,
+      "expectedDurationSeconds": 6.866666666666666,
+      "estimatedBytes": 487475
+    },
+    {
+      "id": "interx-g030t004a009r010",
+      "actionCode": "A009",
+      "variation": "T004",
+      "source": {
+        "recording": "G030T004A009R010",
+        "group": "G030",
+        "take": "R010",
+        "p1": "G030T004A009R010/P1.npz",
+        "p2": "G030T004A009R010/P2.npz",
+        "frameCount": 820,
+        "sha256": {
+          "p1": "3fbcf587514118071f9aa25f242a6598c341ec66a5288f2a3563516282e28796",
+          "p2": "633ce57c24de469e32179affb7e22ed48cd83e8050904ceec4dd4bd11c1589c4"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t004a009r010-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t004a009r010-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.4557820297777653,
+        -0.2541952133178711,
+        -0.49133190512657166
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "sit-on-leg",
+        "social"
+      ],
+      "expectedFrameCount": 205,
+      "expectedDurationSeconds": 6.8,
+      "estimatedBytes": 483988
+    },
+    {
+      "id": "interx-g030t005a010r000",
+      "actionCode": "A010",
+      "variation": "T005",
+      "source": {
+        "recording": "G030T005A010R000",
+        "group": "G030",
+        "take": "R000",
+        "p1": "G030T005A010R000/P1.npz",
+        "p2": "G030T005A010R000/P2.npz",
+        "frameCount": 424,
+        "sha256": {
+          "p1": "559e0e60a33a8aca1bf20622b0de24a79865b77c6af3dc71ae3843829a21efe7",
+          "p2": "662282143ee0c2e40557254eead8a5c532653917e5e04f31ff5e6300d97f1ce0"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t005a010r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t005a010r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.7601210027933121,
+        0.05796027183532715,
+        -0.06265231966972351
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "slap",
+        "combat"
+      ],
+      "expectedFrameCount": 106,
+      "expectedDurationSeconds": 3.5,
+      "estimatedBytes": 311408
+    },
+    {
+      "id": "interx-g030t005a012r007",
+      "actionCode": "A012",
+      "variation": "T005",
+      "source": {
+        "recording": "G030T005A012R007",
+        "group": "G030",
+        "take": "R007",
+        "p1": "G030T005A012R007/P1.npz",
+        "p2": "G030T005A012R007/P2.npz",
+        "frameCount": 468,
+        "sha256": {
+          "p1": "a058bd8fb23e688c1eee28b2662fd1f8a2ee4d1cb9c55ed728d24530ee7b5e94",
+          "p2": "9336217c758296f886c6e03900182d7b749d704198db5bc27511ec75cbb4b8ee"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t005a012r007-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t005a012r007-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.0184373557567596,
+        0.056464314460754395,
+        -0.7186696352437139
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "point-finger",
+        "social"
+      ],
+      "expectedFrameCount": 117,
+      "expectedDurationSeconds": 3.8666666666666667,
+      "estimatedBytes": 330584
+    },
+    {
+      "id": "interx-g030t005a013r010",
+      "actionCode": "A013",
+      "variation": "T005",
+      "source": {
+        "recording": "G030T005A013R010",
+        "group": "G030",
+        "take": "R010",
+        "p1": "G030T005A013R010/P1.npz",
+        "p2": "G030T005A013R010/P2.npz",
+        "frameCount": 284,
+        "sha256": {
+          "p1": "7bf39d8edc3bd3275a01e2569989fa4ac2c48999890aab5155d84b805f466cd4",
+          "p2": "8cccbbd94d86e2941e4a58514fcbaa7d400d44fb294d094cb61d18b8d1e7cbba"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t005a013r010-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t005a013r010-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.1759424805641174,
+        0.05099058151245117,
+        1.6978691071271896
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "walk-towards",
+        "social"
+      ],
+      "expectedFrameCount": 71,
+      "expectedDurationSeconds": 2.3333333333333335,
+      "estimatedBytes": 250395
+    },
+    {
+      "id": "interx-g030t005a014r012",
+      "actionCode": "A014",
+      "variation": "T005",
+      "source": {
+        "recording": "G030T005A014R012",
+        "group": "G030",
+        "take": "R012",
+        "p1": "G030T005A014R012/P1.npz",
+        "p2": "G030T005A014R012/P2.npz",
+        "frameCount": 456,
+        "sha256": {
+          "p1": "56cbdb5ca8f9c0433f0e23e9087511f45035481dcfab8ae2a987c2826d695f83",
+          "p2": "0f34b34fe05726719f8865806ef6216f49c9f185e1135c6f28d167bf9ad3281c"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t005a014r012-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t005a014r012-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.2002914398908615,
+        -0.015760183334350586,
+        -1.1258493661880493
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "knock-over",
+        "combat"
+      ],
+      "expectedFrameCount": 114,
+      "expectedDurationSeconds": 3.7666666666666666,
+      "estimatedBytes": 325354
+    },
+    {
+      "id": "interx-g007t002a015r013",
+      "actionCode": "A015",
+      "variation": "T002",
+      "source": {
+        "recording": "G007T002A015R013",
+        "group": "G007",
+        "take": "R013",
+        "p1": "G007T002A015R013/P1.npz",
+        "p2": "G007T002A015R013/P2.npz",
+        "frameCount": 356,
+        "sha256": {
+          "p1": "4cf46b2a6ad613c6303c4a3495d6c92820db803a4b00b069dfa75e6846f609d6",
+          "p2": "3b5ca7df998cbcbcceccdd5308674cc46f5f9dc5340b6fcaf77e44932350e205"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g007t002a015r013-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g007t002a015r013-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.916254848241806,
+        0.04062783718109131,
+        -0.041413843631744385
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "step-on-foot",
+        "combat"
+      ],
+      "expectedFrameCount": 89,
+      "expectedDurationSeconds": 2.933333333333333,
+      "estimatedBytes": 281774
+    },
+    {
+      "id": "interx-g004t007a016r007",
+      "actionCode": "A016",
+      "variation": "T007",
+      "source": {
+        "recording": "G004T007A016R007",
+        "group": "G004",
+        "take": "R007",
+        "p1": "G004T007A016R007/P1.npz",
+        "p2": "G004T007A016R007/P2.npz",
+        "frameCount": 592,
+        "sha256": {
+          "p1": "e57aa9898607566507738569f288b3de56c687112dd1eafbbc5da6c7cc587683",
+          "p2": "ca08cf32845d4804b6129b1080020de81ccbbf2436d9fc14a9dce833f30662fb"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t007a016r007-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t007a016r007-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.41076212003827095,
+        -0.11844348907470703,
+        0.6527918577194214
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "high-five",
+        "social"
+      ],
+      "expectedFrameCount": 148,
+      "expectedDurationSeconds": 4.9,
+      "estimatedBytes": 384624
+    },
+    {
+      "id": "interx-g030t006a017r005",
+      "actionCode": "A017",
+      "variation": "T006",
+      "source": {
+        "recording": "G030T006A017R005",
+        "group": "G030",
+        "take": "R005",
+        "p1": "G030T006A017R005/P1.npz",
+        "p2": "G030T006A017R005/P2.npz",
+        "frameCount": 428,
+        "sha256": {
+          "p1": "d8274dbf3c58fa258956c47fc26cf26965d28fc7e8308af26d24575753940ef6",
+          "p2": "54b1b687d1a06d04a2d2fec609f5ce93376cd9906239ce5d3ec5c95523e22621"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t006a017r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t006a017r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.5317228697240353,
+        -0.0065784454345703125,
+        -0.44673264026641846
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "chase",
+        "social"
+      ],
+      "expectedFrameCount": 107,
+      "expectedDurationSeconds": 3.533333333333333,
+      "estimatedBytes": 313152
+    },
+    {
+      "id": "interx-g022t006a024r012",
+      "actionCode": "A024",
+      "variation": "T006",
+      "source": {
+        "recording": "G022T006A024R012",
+        "group": "G022",
+        "take": "R012",
+        "p1": "G022T006A024R012/P1.npz",
+        "p2": "G022T006A024R012/P2.npz",
+        "frameCount": 448,
+        "sha256": {
+          "p1": "8aee44b96753ffbac2b7f0857ac7cd5139bb6c8286c8ddda967df2032d54c66b",
+          "p2": "42fce2c4490f9c5f95104d7507861744e1b34607f02e50973620f7aff523fb64"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t006a024r012-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t006a024r012-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.1573710590600967,
+        0.06810951232910156,
+        0.043286800384521484
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "bend",
+        "social"
+      ],
+      "expectedFrameCount": 112,
+      "expectedDurationSeconds": 3.7,
+      "estimatedBytes": 321868
+    },
+    {
+      "id": "interx-g031t008a031r005",
+      "actionCode": "A031",
+      "variation": "T008",
+      "source": {
+        "recording": "G031T008A031R005",
+        "group": "G031",
+        "take": "R005",
+        "p1": "G031T008A031R005/P1.npz",
+        "p2": "G031T008A031R005/P2.npz",
+        "frameCount": 540,
+        "sha256": {
+          "p1": "4bd810de3f124a3364c4f6c84e5b7714c9fbf13b8dcc3322158d8ea57b851176",
+          "p2": "1c65edd754fa88ca5e5fdccdcd4f96a79721a23fd01a672854f90f37b9e36744"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g031t008a031r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g031t008a031r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.1789863407611847,
+        0.08226847648620605,
+        -0.11031252145767212
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "thumb-up",
+        "social"
+      ],
+      "expectedFrameCount": 135,
+      "expectedDurationSeconds": 4.466666666666667,
+      "estimatedBytes": 361962
+    },
+    {
+      "id": "interx-g045t009a036r004",
+      "actionCode": "A036",
+      "variation": "T009",
+      "source": {
+        "recording": "G045T009A036R004",
+        "group": "G045",
+        "take": "R004",
+        "p1": "G045T009A036R004/P1.npz",
+        "p2": "G045T009A036R004/P2.npz",
+        "frameCount": 256,
+        "sha256": {
+          "p1": "2e8446ab9104daf69d9f6086d9af98822f5dd720377fbb74417aef50759534e0",
+          "p2": "639da2d69fd34a45058bd8c078bd63b2d3878cb9f75d2547cf29d3cb3182d9bd"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g045t009a036r004-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g045t009a036r004-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.1509065926074982,
+        0.08560705184936523,
+        -0.0772331953048706
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "cover-mouth",
+        "social"
+      ],
+      "expectedFrameCount": 64,
+      "expectedDurationSeconds": 2.1,
+      "estimatedBytes": 238193
+    },
+    {
+      "id": "interx-g045t009a037r009",
+      "actionCode": "A037",
+      "variation": "T009",
+      "source": {
+        "recording": "G045T009A037R009",
+        "group": "G045",
+        "take": "R009",
+        "p1": "G045T009A037R009/P1.npz",
+        "p2": "G045T009A037R009/P2.npz",
+        "frameCount": 428,
+        "sha256": {
+          "p1": "697d8d37286b68d15c8e2b4ad177242c6c3f1e9fe87f56f21a5913325bbebe8a",
+          "p2": "481fea8af90627d8653b28f586e512ceb091c96b1de4d9cc4e66047e80b035dd"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g045t009a037r009-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g045t009a037r009-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.206259310245514,
+        0.10261714458465576,
+        -0.4468265175819397
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "look-back",
+        "social"
+      ],
+      "expectedFrameCount": 107,
+      "expectedDurationSeconds": 3.533333333333333,
+      "estimatedBytes": 313152
+    },
+    {
+      "id": "interx-g045t009a038r014",
+      "actionCode": "A038",
+      "variation": "T009",
+      "source": {
+        "recording": "G045T009A038R014",
+        "group": "G045",
+        "take": "R014",
+        "p1": "G045T009A038R014/P1.npz",
+        "p2": "G045T009A038R014/P2.npz",
+        "frameCount": 320,
+        "sha256": {
+          "p1": "9b150dc9eb1f50635abf310e7a84a0ab250d806a8cc9768547e0bf5aaefda457",
+          "p2": "5d1eaf5b5181a9ec61df8b1b622f6740ac4c8c2f1a9edba7488445993bc4a479"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g045t009a038r014-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g045t009a038r014-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.1327296197414398,
+        0.04990577697753906,
+        -0.49251723289489746
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "block",
+        "combat"
+      ],
+      "expectedFrameCount": 80,
+      "expectedDurationSeconds": 2.6333333333333333,
+      "estimatedBytes": 266084
+    },
+    {
+      "id": "interx-g041t005a004r000",
+      "actionCode": "A004",
+      "variation": "T005",
+      "source": {
+        "recording": "G041T005A004R000",
+        "group": "G041",
+        "take": "R000",
+        "p1": "G041T005A004R000/P1.npz",
+        "p2": "G041T005A004R000/P2.npz",
+        "frameCount": 296,
+        "sha256": {
+          "p1": "f2dd29f4be7e674bbed06d8b411d6f50739a452470c5cc3fd7f90a1761cdf6bc",
+          "p2": "1a0fcd77e3fb37b404017f513f3de76a4431c86e3c71a7128bb118897d4ca280"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g041t005a004r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g041t005a004r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.8923583775758743,
+        0.03542518615722656,
+        -0.26616066694259644
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "hit",
+        "combat"
+      ],
+      "expectedFrameCount": 74,
+      "expectedDurationSeconds": 2.433333333333333,
+      "estimatedBytes": 255625
+    },
+    {
+      "id": "interx-g004t005a005r000",
+      "actionCode": "A005",
+      "variation": "T005",
+      "source": {
+        "recording": "G004T005A005R000",
+        "group": "G004",
+        "take": "R000",
+        "p1": "G004T005A005R000/P1.npz",
+        "p2": "G004T005A005R000/P2.npz",
+        "frameCount": 548,
+        "sha256": {
+          "p1": "b068c8f6f89ccc1468c468e1f88093ffbd60ec5a0b061801918b14b79cbd7e05",
+          "p2": "dbec448b3af29b54a9b31372c8f7ea63771e1c56b6e1a9ba97a9b3074280771e"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t005a005r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t005a005r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.9129155278205872,
+        -0.14786016941070557,
+        0.27772656083106995
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "kick",
+        "combat"
+      ],
+      "expectedFrameCount": 137,
+      "expectedDurationSeconds": 4.533333333333333,
+      "estimatedBytes": 365449
+    },
+    {
+      "id": "interx-g059t000a007r023",
+      "actionCode": "A007",
+      "variation": "T000",
+      "source": {
+        "recording": "G059T000A007R023",
+        "group": "G059",
+        "take": "R023",
+        "p1": "G059T000A007R023/P1.npz",
+        "p2": "G059T000A007R023/P2.npz",
+        "frameCount": 360,
+        "sha256": {
+          "p1": "f9429263adf6e9c5fe1e5890377f52cf5d427ef7974c072fd2bfd197a6a02af8",
+          "p2": "856b7cd98d08ad5629cabbde77b47a3bc5562930e10c21719c73a4e1225b3763"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t000a007r023-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t000a007r023-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7722425907850266,
+        0.03801107406616211,
+        0.12144321203231812
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "push",
+        "combat"
+      ],
+      "expectedFrameCount": 90,
+      "expectedDurationSeconds": 2.966666666666667,
+      "estimatedBytes": 283517
+    },
+    {
+      "id": "interx-g059t000a008r027",
+      "actionCode": "A008",
+      "variation": "T000",
+      "source": {
+        "recording": "G059T000A008R027",
+        "group": "G059",
+        "take": "R027",
+        "p1": "G059T000A008R027/P1.npz",
+        "p2": "G059T000A008R027/P2.npz",
+        "frameCount": 532,
+        "sha256": {
+          "p1": "955eae9e9573981204d2ddce9b2a13bd7f76683fc4f74076ae221129876ac653",
+          "p2": "b92288c8b429e8554285e068960a6278382077d70e8eb8968ca4b68841e9ccbe"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t000a008r027-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t000a008r027-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.8425619453191757,
+        0.02608180046081543,
+        0.09698516130447388
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "pull",
+        "combat"
+      ],
+      "expectedFrameCount": 133,
+      "expectedDurationSeconds": 4.4,
+      "estimatedBytes": 358476
+    },
+    {
+      "id": "interx-g059t000a009r030",
+      "actionCode": "A009",
+      "variation": "T000",
+      "source": {
+        "recording": "G059T000A009R030",
+        "group": "G059",
+        "take": "R030",
+        "p1": "G059T000A009R030/P1.npz",
+        "p2": "G059T000A009R030/P2.npz",
+        "frameCount": 756,
+        "sha256": {
+          "p1": "c06fb10b53d6bcb93f171fd93aca72ef93b36087930437abddaac54399e53254",
+          "p2": "0bec3c2b9a31478572a5a5287b862c49fd055e339c76876871e200211b92653d"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t000a009r030-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t000a009r030-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.5363792385905981,
+        -0.2409130334854126,
+        -0.4045958463102579
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "sit-on-leg",
+        "social"
+      ],
+      "expectedFrameCount": 189,
+      "expectedDurationSeconds": 6.266666666666667,
+      "estimatedBytes": 456097
+    },
+    {
+      "id": "interx-g059t001a010r000",
+      "actionCode": "A010",
+      "variation": "T001",
+      "source": {
+        "recording": "G059T001A010R000",
+        "group": "G059",
+        "take": "R000",
+        "p1": "G059T001A010R000/P1.npz",
+        "p2": "G059T001A010R000/P2.npz",
+        "frameCount": 572,
+        "sha256": {
+          "p1": "2e7022ef32b4ba40909db76796381048c7d7f7ddccbb1bf830f94934b7894bc2",
+          "p2": "2122eaa466d95a6125cbea613d8b4931473fb12cd6e6b3a6cb0855968217e493"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t001a010r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t001a010r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.738403744995594,
+        0.0523068904876709,
+        0.15629264246672392
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "slap",
+        "combat"
+      ],
+      "expectedFrameCount": 143,
+      "expectedDurationSeconds": 4.733333333333333,
+      "estimatedBytes": 375908
+    },
+    {
+      "id": "interx-g059t001a012r007",
+      "actionCode": "A012",
+      "variation": "T001",
+      "source": {
+        "recording": "G059T001A012R007",
+        "group": "G059",
+        "take": "R007",
+        "p1": "G059T001A012R007/P1.npz",
+        "p2": "G059T001A012R007/P2.npz",
+        "frameCount": 800,
+        "sha256": {
+          "p1": "0019542c810d44fdae1dc9e6ad8d6da110af204237c5b08fbe5fabae4128416d",
+          "p2": "66977d3cd0879d1ff6565dc11153966b568ae1f95900c7ea39f62e2b755ab50f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t001a012r007-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t001a012r007-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.6736953258514404,
+        0.05026590824127197,
+        0.17491161823272705
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "point-finger",
+        "social"
+      ],
+      "expectedFrameCount": 200,
+      "expectedDurationSeconds": 6.633333333333334,
+      "estimatedBytes": 475272
+    },
+    {
+      "id": "interx-g059t001a013r010",
+      "actionCode": "A013",
+      "variation": "T001",
+      "source": {
+        "recording": "G059T001A013R010",
+        "group": "G059",
+        "take": "R010",
+        "p1": "G059T001A013R010/P1.npz",
+        "p2": "G059T001A013R010/P2.npz",
+        "frameCount": 460,
+        "sha256": {
+          "p1": "d03814aa506c38d16d0fda321e6b8ad12de31d368cd291dc9c969b631340b3eb",
+          "p2": "f43e93e68bca1a6c8e8f51440840eb256425064c846b2ef68b73afb8f1df900e"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t001a013r010-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t001a013r010-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.8057900667190552,
+        0.006888985633850098,
+        0.15312226861715317
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "walk-towards",
+        "social"
+      ],
+      "expectedFrameCount": 115,
+      "expectedDurationSeconds": 3.8,
+      "estimatedBytes": 327098
+    },
+    {
+      "id": "interx-g059t001a014r013",
+      "actionCode": "A014",
+      "variation": "T001",
+      "source": {
+        "recording": "G059T001A014R013",
+        "group": "G059",
+        "take": "R013",
+        "p1": "G059T001A014R013/P1.npz",
+        "p2": "G059T001A014R013/P2.npz",
+        "frameCount": 348,
+        "sha256": {
+          "p1": "75f0ca4cab4af3fbfe304db001d42fc07b1d902f307e36e06adb51c16e140d79",
+          "p2": "8080e9a4f73f8c7267307cb08dc3be6c6d5336d808a32ee486be338bab2e6a19"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t001a014r013-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t001a014r013-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.0000522583723068,
+        0.03938484191894531,
+        0.06423947215080261
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "knock-over",
+        "combat"
+      ],
+      "expectedFrameCount": 87,
+      "expectedDurationSeconds": 2.8666666666666667,
+      "estimatedBytes": 278287
+    },
+    {
+      "id": "interx-g030t006a015r000",
+      "actionCode": "A015",
+      "variation": "T006",
+      "source": {
+        "recording": "G030T006A015R000",
+        "group": "G030",
+        "take": "R000",
+        "p1": "G030T006A015R000/P1.npz",
+        "p2": "G030T006A015R000/P2.npz",
+        "frameCount": 484,
+        "sha256": {
+          "p1": "cb63f6216bc6edf640a04bd02d3723e61c7b0144dd25660bdb0264d9185caab9",
+          "p2": "40a441fd97a3c469ae876b4e37bd8db0c7541a93b3b1b308edfb85faf9ad235f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g030t006a015r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g030t006a015r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.434024155139923,
+        -0.25791454315185547,
+        -0.38793139159679413
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "step-on-foot",
+        "combat"
+      ],
+      "expectedFrameCount": 121,
+      "expectedDurationSeconds": 4.0,
+      "estimatedBytes": 337557
+    },
+    {
+      "id": "interx-g059t001a017r022",
+      "actionCode": "A017",
+      "variation": "T001",
+      "source": {
+        "recording": "G059T001A017R022",
+        "group": "G059",
+        "take": "R022",
+        "p1": "G059T001A017R022/P1.npz",
+        "p2": "G059T001A017R022/P2.npz",
+        "frameCount": 768,
+        "sha256": {
+          "p1": "fb8cea0b666b1d58da029366b61fa499c0b61df7b14fb97bf458262ebdc02831",
+          "p2": "dae5cf28c1cb3b4d50db9f00f01b94fb13a4e2e0dd078850883540dbf1ccd82f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t001a017r022-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t001a017r022-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.8015028536319733,
+        0.03440141677856445,
+        0.21441714093089104
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "chase",
+        "social"
+      ],
+      "expectedFrameCount": 192,
+      "expectedDurationSeconds": 6.366666666666666,
+      "estimatedBytes": 461326
+    },
+    {
+      "id": "interx-g004t009a024r010",
+      "actionCode": "A024",
+      "variation": "T009",
+      "source": {
+        "recording": "G004T009A024R010",
+        "group": "G004",
+        "take": "R010",
+        "p1": "G004T009A024R010/P1.npz",
+        "p2": "G004T009A024R010/P2.npz",
+        "frameCount": 764,
+        "sha256": {
+          "p1": "d6a3ad311ec4dda4937e678bfe0315cd68006b3119fa12ef575fc57ee45a706d",
+          "p2": "682a2195497687fbacd0bcd356fcb78155135d8d8f02ed35ed118cbc131105f5"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t009a024r010-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t009a024r010-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.5234169363975525,
+        -0.13635778427124023,
+        -0.8179678618907928
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "bend",
+        "social"
+      ],
+      "expectedFrameCount": 191,
+      "expectedDurationSeconds": 6.333333333333333,
+      "estimatedBytes": 459583
+    },
+    {
+      "id": "interx-g022t009a031r005",
+      "actionCode": "A031",
+      "variation": "T009",
+      "source": {
+        "recording": "G022T009A031R005",
+        "group": "G022",
+        "take": "R005",
+        "p1": "G022T009A031R005/P1.npz",
+        "p2": "G022T009A031R005/P2.npz",
+        "frameCount": 828,
+        "sha256": {
+          "p1": "1fccc2859c3f4baddb366783ba6f737d9d33b93a8d6bfcc22cd5ab2eaa5159e7",
+          "p2": "ce3e26e17d8f0695fc158bdfb7d113a94492a51f113ef3565d488274f90a6c20"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t009a031r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t009a031r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7313148081302643,
+        0.04144728183746338,
+        -0.07131153345108032
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "thumb-up",
+        "social"
+      ],
+      "expectedFrameCount": 207,
+      "expectedDurationSeconds": 6.866666666666666,
+      "estimatedBytes": 487475
+    },
+    {
+      "id": "interx-g022t010a036r005",
+      "actionCode": "A036",
+      "variation": "T010",
+      "source": {
+        "recording": "G022T010A036R005",
+        "group": "G022",
+        "take": "R005",
+        "p1": "G022T010A036R005/P1.npz",
+        "p2": "G022T010A036R005/P2.npz",
+        "frameCount": 492,
+        "sha256": {
+          "p1": "5c8d6f9c303b5c0d6ccdeee08dc6875c8337e15105378b8355ea9aad63ec4e0c",
+          "p2": "f8980b406532e182e04be9dcee79b09b39f24012a19f3c675870bc1c59b31939"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t010a036r005-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t010a036r005-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.0081542134284973,
+        0.021498680114746094,
+        0.03891950845718384
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "cover-mouth",
+        "social"
+      ],
+      "expectedFrameCount": 123,
+      "expectedDurationSeconds": 4.066666666666666,
+      "estimatedBytes": 341043
+    },
+    {
+      "id": "interx-g022t010a037r011",
+      "actionCode": "A037",
+      "variation": "T010",
+      "source": {
+        "recording": "G022T010A037R011",
+        "group": "G022",
+        "take": "R011",
+        "p1": "G022T010A037R011/P1.npz",
+        "p2": "G022T010A037R011/P2.npz",
+        "frameCount": 552,
+        "sha256": {
+          "p1": "72d68bf9a79748e80efa2a1e19da10179ad302cb3fba2a8ae197c3d56c9aa89b",
+          "p2": "189b13017831f41d6d113e6a7bb4c7aa42d39e45bbe082ad0f7100999e1c3472"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t010a037r011-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t010a037r011-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.591168224811554,
+        0.07989859580993652,
+        -0.49354132637381554
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "look-back",
+        "social"
+      ],
+      "expectedFrameCount": 138,
+      "expectedDurationSeconds": 4.566666666666666,
+      "estimatedBytes": 367192
+    },
+    {
+      "id": "interx-g022t010a038r015",
+      "actionCode": "A038",
+      "variation": "T010",
+      "source": {
+        "recording": "G022T010A038R015",
+        "group": "G022",
+        "take": "R015",
+        "p1": "G022T010A038R015/P1.npz",
+        "p2": "G022T010A038R015/P2.npz",
+        "frameCount": 652,
+        "sha256": {
+          "p1": "0c18d88457d214b5f5143e911471ae07866c1ab61d904caf53f4e197b808a2d4",
+          "p2": "a6c790d7eb74a93d6539b50ab467121c0b7dfdf687da5096077744800483bccf"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g022t010a038r015-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g022t010a038r015-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.2292403541505337,
+        0.33509594202041626,
+        1.1835476933047175
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "block",
+        "combat"
+      ],
+      "expectedFrameCount": 163,
+      "expectedDurationSeconds": 5.4,
+      "estimatedBytes": 410773
+    },
+    {
+      "id": "interx-g041t004a005r000",
+      "actionCode": "A005",
+      "variation": "T004",
+      "source": {
+        "recording": "G041T004A005R000",
+        "group": "G041",
+        "take": "R000",
+        "p1": "G041T004A005R000/P1.npz",
+        "p2": "G041T004A005R000/P2.npz",
+        "frameCount": 320,
+        "sha256": {
+          "p1": "9868cafb7e95d43a8548667f0a62f4f5a70581d84bea0e79080385ba8231ceb7",
+          "p2": "54965a6a69addca9c2f67fca570f66240727c37fa810c1bb726d071b323cddc1"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g041t004a005r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g041t004a005r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.6673568338155746,
+        -0.028012990951538086,
+        0.07058687508106232
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "kick",
+        "combat"
+      ],
+      "expectedFrameCount": 80,
+      "expectedDurationSeconds": 2.6333333333333333,
+      "estimatedBytes": 266084
+    },
+    {
+      "id": "interx-g004t005a007r012",
+      "actionCode": "A007",
+      "variation": "T005",
+      "source": {
+        "recording": "G004T005A007R012",
+        "group": "G004",
+        "take": "R012",
+        "p1": "G004T005A007R012/P1.npz",
+        "p2": "G004T005A007R012/P2.npz",
+        "frameCount": 492,
+        "sha256": {
+          "p1": "cdf3c5d8ca4f64a453abf7dd55de3d67fa8ad69a7ed83c26fc2821c4a181a6b6",
+          "p2": "2ca3bb310b99355811cede32d1502b06253ae44e025a046e270a6e3df67f6b49"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t005a007r012-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t005a007r012-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.188830390572548,
+        -0.12782728672027588,
+        0.5546216741204262
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "push",
+        "combat"
+      ],
+      "expectedFrameCount": 123,
+      "expectedDurationSeconds": 4.066666666666666,
+      "estimatedBytes": 341043
+    },
+    {
+      "id": "interx-g004t005a008r011",
+      "actionCode": "A008",
+      "variation": "T005",
+      "source": {
+        "recording": "G004T005A008R011",
+        "group": "G004",
+        "take": "R011",
+        "p1": "G004T005A008R011/P1.npz",
+        "p2": "G004T005A008R011/P2.npz",
+        "frameCount": 1180,
+        "sha256": {
+          "p1": "8924b55d096f56389dadd5dff763da6ab27f8f66a25f2ce49da6e54205b76b1e",
+          "p2": "47a6668d45975fcdb1e479105a36981962f1c666b6b71834d7e7f71e671859c3"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t005a008r011-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t005a008r011-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.3936170637607574,
+        -0.13684654235839844,
+        0.25115978717803955
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "pull",
+        "combat"
+      ],
+      "expectedFrameCount": 295,
+      "expectedDurationSeconds": 9.8,
+      "estimatedBytes": 640879
+    },
+    {
+      "id": "interx-g004t005a009r023",
+      "actionCode": "A009",
+      "variation": "T005",
+      "source": {
+        "recording": "G004T005A009R023",
+        "group": "G004",
+        "take": "R023",
+        "p1": "G004T005A009R023/P1.npz",
+        "p2": "G004T005A009R023/P2.npz",
+        "frameCount": 840,
+        "sha256": {
+          "p1": "d26e308d0bdd4dfe0fbbf34b0efc7ce1fa6bd5359cdeccb257775fb07b37995f",
+          "p2": "1ad0bd06ce428a4810a6255de7c2b190ab4cab2c6f046d1f5761793ab84f8cec"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t005a009r023-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t005a009r023-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.8862780928611755,
+        0.20458823442459106,
+        0.06368003413081169
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "sit-on-leg",
+        "social"
+      ],
+      "expectedFrameCount": 210,
+      "expectedDurationSeconds": 6.966666666666667,
+      "estimatedBytes": 492705
+    },
+    {
+      "id": "interx-g004t006a010r000",
+      "actionCode": "A010",
+      "variation": "T006",
+      "source": {
+        "recording": "G004T006A010R000",
+        "group": "G004",
+        "take": "R000",
+        "p1": "G004T006A010R000/P1.npz",
+        "p2": "G004T006A010R000/P2.npz",
+        "frameCount": 836,
+        "sha256": {
+          "p1": "3b98288247ed14db69e6f638ccf539adbfbbd72061be46ae00982feccf267ed7",
+          "p2": "202449a76b69c0e9fd27b46c60405cd1d363adca5a7d8a8eec6b9e24e10c5e93"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t006a010r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t006a010r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.9486408531665802,
+        -0.1055455207824707,
+        -0.2240927815437317
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "slap",
+        "combat"
+      ],
+      "expectedFrameCount": 209,
+      "expectedDurationSeconds": 6.933333333333334,
+      "estimatedBytes": 490961
+    },
+    {
+      "id": "interx-g004t006a012r010",
+      "actionCode": "A012",
+      "variation": "T006",
+      "source": {
+        "recording": "G004T006A012R010",
+        "group": "G004",
+        "take": "R010",
+        "p1": "G004T006A012R010/P1.npz",
+        "p2": "G004T006A012R010/P2.npz",
+        "frameCount": 776,
+        "sha256": {
+          "p1": "386f1c944a556c66281dcadbe89a10d7def97eeb9040c71890a1bffa0597fa4b",
+          "p2": "0cc192c6844cfddadebf9cbb97d9c2fe4d69fd10cbe0274fcd825986a29be97f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t006a012r010-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t006a012r010-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.9344048202037811,
+        -0.2933558225631714,
+        0.5348776988685131
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "point-finger",
+        "social"
+      ],
+      "expectedFrameCount": 194,
+      "expectedDurationSeconds": 6.433333333333334,
+      "estimatedBytes": 464813
+    },
+    {
+      "id": "interx-g004t006a014r019",
+      "actionCode": "A014",
+      "variation": "T006",
+      "source": {
+        "recording": "G004T006A014R019",
+        "group": "G004",
+        "take": "R019",
+        "p1": "G004T006A014R019/P1.npz",
+        "p2": "G004T006A014R019/P2.npz",
+        "frameCount": 864,
+        "sha256": {
+          "p1": "10dc72805977609ebd40e5d8bdb3dfdeb67829404d67b5a96fb028834283cb36",
+          "p2": "733faa9f3cc8434e65ff63597fddbe87c3eed0f34bba8883e7c6527892462db3"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t006a014r019-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t006a014r019-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.4776857439428568,
+        -0.04700160026550293,
+        -1.5172163248062134
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "knock-over",
+        "combat"
+      ],
+      "expectedFrameCount": 216,
+      "expectedDurationSeconds": 7.166666666666667,
+      "estimatedBytes": 503164
+    },
+    {
+      "id": "interx-g059t001a015r016",
+      "actionCode": "A015",
+      "variation": "T001",
+      "source": {
+        "recording": "G059T001A015R016",
+        "group": "G059",
+        "take": "R016",
+        "p1": "G059T001A015R016/P1.npz",
+        "p2": "G059T001A015R016/P2.npz",
+        "frameCount": 568,
+        "sha256": {
+          "p1": "7b506e1f0eafe13d701e67bb3c278a1c8e5abfa1831b81e3a3281327bff6c81d",
+          "p2": "cebb8ca7bf89a64b083e37a0bfcd41fbb1f3bcd95faef77752c94da0176c9803"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t001a015r016-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t001a015r016-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.5529645681381226,
+        0.05755472183227539,
+        -0.42317494936287403
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "step-on-foot",
+        "combat"
+      ],
+      "expectedFrameCount": 142,
+      "expectedDurationSeconds": 4.7,
+      "estimatedBytes": 374165
+    },
+    {
+      "id": "interx-g004t007a017r012",
+      "actionCode": "A017",
+      "variation": "T007",
+      "source": {
+        "recording": "G004T007A017R012",
+        "group": "G004",
+        "take": "R012",
+        "p1": "G004T007A017R012/P1.npz",
+        "p2": "G004T007A017R012/P2.npz",
+        "frameCount": 904,
+        "sha256": {
+          "p1": "46dac70313e6155f4c2a6f3d9e497e1990ec59a22caffd6a7672f9f226b32898",
+          "p2": "2d491659b98935de70246f2191bdc1617da78e268695597849baa8f9fa4c8003"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t007a017r012-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t007a017r012-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.1153375506401062,
+        -0.06452322006225586,
+        -2.267452597618103
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "chase",
+        "social"
+      ],
+      "expectedFrameCount": 226,
+      "expectedDurationSeconds": 7.5,
+      "estimatedBytes": 520596
+    },
+    {
+      "id": "interx-g041t007a024r020",
+      "actionCode": "A024",
+      "variation": "T007",
+      "source": {
+        "recording": "G041T007A024R020",
+        "group": "G041",
+        "take": "R020",
+        "p1": "G041T007A024R020/P1.npz",
+        "p2": "G041T007A024R020/P2.npz",
+        "frameCount": 264,
+        "sha256": {
+          "p1": "2c029c7a64edce6e44dc9143c3367763326bf73217ad928cecd28a4aadb05b3b",
+          "p2": "8206e24153a7c3fdd7afeaf3026dcce374333f26c3592134b622c781329fe798"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g041t007a024r020-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g041t007a024r020-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.2944528982043266,
+        -0.24024087190628052,
+        -0.15868224948644638
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "bend",
+        "social"
+      ],
+      "expectedFrameCount": 66,
+      "expectedDurationSeconds": 2.1666666666666665,
+      "estimatedBytes": 241679
+    },
+    {
+      "id": "interx-g059t005a031r004",
+      "actionCode": "A031",
+      "variation": "T005",
+      "source": {
+        "recording": "G059T005A031R004",
+        "group": "G059",
+        "take": "R004",
+        "p1": "G059T005A031R004/P1.npz",
+        "p2": "G059T005A031R004/P2.npz",
+        "frameCount": 352,
+        "sha256": {
+          "p1": "6ed8eadb13b496809776c05ac0459468ac462a72f38988d77a59a3371f04b845",
+          "p2": "e29059a360ee1e8426cfbf8e8c1cbb40392015f4cb85944f675a2f40e697a419"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t005a031r004-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t005a031r004-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.9879438951611519,
+        0.02979910373687744,
+        0.17290621995925903
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "thumb-up",
+        "social"
+      ],
+      "expectedFrameCount": 88,
+      "expectedDurationSeconds": 2.9,
+      "estimatedBytes": 280030
+    },
+    {
+      "id": "interx-g059t005a036r016",
+      "actionCode": "A036",
+      "variation": "T005",
+      "source": {
+        "recording": "G059T005A036R016",
+        "group": "G059",
+        "take": "R016",
+        "p1": "G059T005A036R016/P1.npz",
+        "p2": "G059T005A036R016/P2.npz",
+        "frameCount": 628,
+        "sha256": {
+          "p1": "39acb48e70590c340e0fdeced26ae5f22e6e38de17e55c23e0c7701c513e15b2",
+          "p2": "f9e0838ea656736e8174ee401d0424bbaf657fb9dd2244a0696205d27989ce65"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t005a036r016-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t005a036r016-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.6026517152786255,
+        0.03502523899078369,
+        0.14155805110931396
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "cover-mouth",
+        "social"
+      ],
+      "expectedFrameCount": 157,
+      "expectedDurationSeconds": 5.2,
+      "estimatedBytes": 400313
+    },
+    {
+      "id": "interx-g059t005a037r021",
+      "actionCode": "A037",
+      "variation": "T005",
+      "source": {
+        "recording": "G059T005A037R021",
+        "group": "G059",
+        "take": "R021",
+        "p1": "G059T005A037R021/P1.npz",
+        "p2": "G059T005A037R021/P2.npz",
+        "frameCount": 328,
+        "sha256": {
+          "p1": "f950ef8accb7fef5d4f077d18866a3dada401df50d4a6980d5f9a5662bfcd133",
+          "p2": "9cc265951fb808abef480a655ef84ddbe96d083f471403182cdd6f5002cf712f"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t005a037r021-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t005a037r021-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        1.3748353123664856,
+        0.02158200740814209,
+        0.08569508790969849
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "look-back",
+        "social"
+      ],
+      "expectedFrameCount": 82,
+      "expectedDurationSeconds": 2.7,
+      "estimatedBytes": 269571
+    },
+    {
+      "id": "interx-g059t005a038r024",
+      "actionCode": "A038",
+      "variation": "T005",
+      "source": {
+        "recording": "G059T005A038R024",
+        "group": "G059",
+        "take": "R024",
+        "p1": "G059T005A038R024/P1.npz",
+        "p2": "G059T005A038R024/P2.npz",
+        "frameCount": 676,
+        "sha256": {
+          "p1": "c449985940079b02e6a66a233b54a95ac904487494e348ab41fc98e190cdb204",
+          "p2": "b5e873dada29e9fd2b6554dca95ddeab961a5d410cae4d4be6d85584f86244b3"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g059t005a038r024-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g059t005a038r024-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.8098398000001907,
+        0.05221700668334961,
+        0.19479882717132568
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "block",
+        "combat"
+      ],
+      "expectedFrameCount": 169,
+      "expectedDurationSeconds": 5.6,
+      "estimatedBytes": 421232
+    },
+    {
+      "id": "interx-g039t002a005r000",
+      "actionCode": "A005",
+      "variation": "T002",
+      "source": {
+        "recording": "G039T002A005R000",
+        "group": "G039",
+        "take": "R000",
+        "p1": "G039T002A005R000/P1.npz",
+        "p2": "G039T002A005R000/P2.npz",
+        "frameCount": 268,
+        "sha256": {
+          "p1": "b95caf3e8b95fb78c9fd11b87b1bd741f5fbd3494e1168a6abbdd7c055eafca5",
+          "p2": "bf27352f29e343b2b1c24748a36c7611d883e56c7ffb2d8a43a38ccfcb9e87df"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g039t002a005r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g039t002a005r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.6272060126066208,
+        0.03845572471618652,
+        0.2830895483493805
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "kick",
+        "combat"
+      ],
+      "expectedFrameCount": 67,
+      "expectedDurationSeconds": 2.2,
+      "estimatedBytes": 243422
+    },
+    {
+      "id": "interx-g004t007a015r000",
+      "actionCode": "A015",
+      "variation": "T007",
+      "source": {
+        "recording": "G004T007A015R000",
+        "group": "G004",
+        "take": "R000",
+        "p1": "G004T007A015R000/P1.npz",
+        "p2": "G004T007A015R000/P2.npz",
+        "frameCount": 492,
+        "sha256": {
+          "p1": "b42b26ae58d5f12f4d2fab808f244cf0720c0a9dcb98cdcdd449a2988b70fb46",
+          "p2": "e0e552d6890f36d6235b5935a9f438bba4b21792bb1bcec9081f2e6e3e9bc3b6"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t007a015r000-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t007a015r000-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7811225056648254,
+        -0.09177887439727783,
+        -1.4348653554916382
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "step-on-foot",
+        "combat"
+      ],
+      "expectedFrameCount": 123,
+      "expectedDurationSeconds": 4.066666666666666,
+      "estimatedBytes": 341043
+    },
+    {
+      "id": "interx-g004t012a031r015",
+      "actionCode": "A031",
+      "variation": "T012",
+      "source": {
+        "recording": "G004T012A031R015",
+        "group": "G004",
+        "take": "R015",
+        "p1": "G004T012A031R015/P1.npz",
+        "p2": "G004T012A031R015/P2.npz",
+        "frameCount": 924,
+        "sha256": {
+          "p1": "cb9deb0fbdd837eae7c9dac0ff2b457e3ce247ebad8b0c8596abdb6c19171022",
+          "p2": "bd67696b5541e7f5627e79132bfd593347e5ade1776218782c034d81e09b57ce"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t012a031r015-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t012a031r015-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        0.7392389178276062,
+        -0.11729753017425537,
+        0.9086216744035482
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "thumb-up",
+        "social"
+      ],
+      "expectedFrameCount": 231,
+      "expectedDurationSeconds": 7.666666666666667,
+      "estimatedBytes": 529312
+    },
+    {
+      "id": "interx-g004t013a036r010",
+      "actionCode": "A036",
+      "variation": "T013",
+      "source": {
+        "recording": "G004T013A036R010",
+        "group": "G004",
+        "take": "R010",
+        "p1": "G004T013A036R010/P1.npz",
+        "p2": "G004T013A036R010/P2.npz",
+        "frameCount": 688,
+        "sha256": {
+          "p1": "accf62590efd2676f82b91560a7fb71ad488329e0164634a1c9b797f4c206dd8",
+          "p2": "2b4cfa476134067149e62f0263556cf9f90043fd96402d293cc74b3c79c87a94"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t013a036r010-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t013a036r010-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.6731266528367996,
+        -0.046875596046447754,
+        -0.31628453731536865
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "cover-mouth",
+        "social"
+      ],
+      "expectedFrameCount": 172,
+      "expectedDurationSeconds": 5.7,
+      "estimatedBytes": 426462
+    },
+    {
+      "id": "interx-g004t013a037r015",
+      "actionCode": "A037",
+      "variation": "T013",
+      "source": {
+        "recording": "G004T013A037R015",
+        "group": "G004",
+        "take": "R015",
+        "p1": "G004T013A037R015/P1.npz",
+        "p2": "G004T013A037R015/P2.npz",
+        "frameCount": 564,
+        "sha256": {
+          "p1": "1d63c7d0613d693ce81d24de03b815ddaac0e7fed53d58c413285cae32b9e36c",
+          "p2": "9e163e0b6f70a27c5ae3e9185f5c6295c1248eb5a95477a324fa2e2df1e9aa73"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t013a037r015-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t013a037r015-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.24462521076202393,
+        -0.06454002857208252,
+        -1.3700018227100372
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "look-back",
+        "social"
+      ],
+      "expectedFrameCount": 141,
+      "expectedDurationSeconds": 4.666666666666667,
+      "estimatedBytes": 372422
+    },
+    {
+      "id": "interx-g004t013a038r021",
+      "actionCode": "A038",
+      "variation": "T013",
+      "source": {
+        "recording": "G004T013A038R021",
+        "group": "G004",
+        "take": "R021",
+        "p1": "G004T013A038R021/P1.npz",
+        "p2": "G004T013A038R021/P2.npz",
+        "frameCount": 596,
+        "sha256": {
+          "p1": "0d65d1bb36f0176ae092f9513997952b383c2d23282c6bada53c0abe306f967d",
+          "p2": "5275dc8abe14754d78f0606084bd490f14dd5264296e846b45796ed0f0879f4c"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g004t013a038r021-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g004t013a038r021-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -1.560024470090866,
+        -0.04478573799133301,
+        0.021626532077789307
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "block",
+        "combat"
+      ],
+      "expectedFrameCount": 149,
+      "expectedDurationSeconds": 4.933333333333334,
+      "estimatedBytes": 386367
+    },
+    {
+      "id": "interx-g042t002a037r011",
+      "actionCode": "A037",
+      "variation": "T002",
+      "source": {
+        "recording": "G042T002A037R011",
+        "group": "G042",
+        "take": "R011",
+        "p1": "G042T002A037R011/P1.npz",
+        "p2": "G042T002A037R011/P2.npz",
+        "frameCount": 360,
+        "sha256": {
+          "p1": "4021b0dce7ea79417ce428d662966928319df4b716c917e56d8a9286c0220636",
+          "p2": "7837e65d098736ec7eb8feaa7359287e913478287623cd99d2f8a8e987d247a4"
+        }
+      },
+      "clips": {
+        "p1": {
+          "path": "animations/npz/interx/g042t002a037r011-p1.glb"
+        },
+        "p2": {
+          "path": "animations/npz/interx/g042t002a037r011-p2.glb"
+        }
+      },
+      "rootMotion": {
+        "mode": "relative-to-first-frame",
+        "translationUnit": "meters",
+        "upAxis": "Y"
+      },
+      "start_offset": [
+        -0.3090856969356537,
+        -0.1320001482963562,
+        1.1628571152687073
+      ],
+      "tags": [
+        "inter-x",
+        "duo",
+        "look-back",
+        "social"
+      ],
+      "expectedFrameCount": 90,
+      "expectedDurationSeconds": 2.966666666666667,
+      "estimatedBytes": 283517
+    }
+  ],
+  "heightSelection": {
+    "targetHeightCm": 173.4,
+    "models": {
+      "female": {
+        "file": "SMPLX_FEMALE.npz",
+        "sha256": "2312f6dd2df506c9ce68b66294e2e122d39edfe04dcaac507ef33b5b522c51ee"
+      },
+      "male": {
+        "file": "SMPLX_MALE.npz",
+        "sha256": "12ebe2cae3c4836b7b80806ea2db2026a1d8f700272dfe0f901ec9c575e11d87"
+      },
+      "neutral": {
+        "file": "SMPLX_NEUTRAL.npz",
+        "sha256": "4f11cb22fbd49f46828ed67f018abd7a8289ef696a2cd3cfef20b147aa55bc71"
+      }
+    },
+    "candidates": [
+      {
+        "recording": "G004T003A001R006",
+        "group": "G004",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 276
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 276
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G053T000A002R010",
+        "group": "G053",
+        "variation": "T000",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 2560
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 2560
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T000A003R021",
+        "group": "G053",
+        "variation": "T000",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 1376
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 1376
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T000A004R027",
+        "group": "G053",
+        "variation": "T000",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 1828
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 1828
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T001A005R000",
+        "group": "G053",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 960
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 960
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T001A007R012",
+        "group": "G053",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 1276
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 1276
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T001A008R017",
+        "group": "G053",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 1852
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 1852
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T001A009R022",
+        "group": "G053",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 1308
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 1308
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T002A010R000",
+        "group": "G053",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 1316
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 1316
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T002A012R013",
+        "group": "G053",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 676
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 676
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T002A013R020",
+        "group": "G053",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 580
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 580
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T002A014R026",
+        "group": "G053",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 1436
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 1436
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T003A015R000",
+        "group": "G053",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 1148
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 1148
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G030T006A016R001",
+        "group": "G030",
+        "variation": "T006",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 424
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 424
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G053T003A017R010",
+        "group": "G053",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 1424
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 1424
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T005A024R020",
+        "group": "G053",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 792
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 792
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T007A031R006",
+        "group": "G053",
+        "variation": "T007",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 748
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 748
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T008A036R006",
+        "group": "G053",
+        "variation": "T008",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 1368
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 1368
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T008A037R011",
+        "group": "G053",
+        "variation": "T008",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 804
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 804
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G053T008A038R016",
+        "group": "G053",
+        "variation": "T008",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.81080956449912,
+            "frames": 732
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 175.31218974696273,
+            "frames": 732
+          }
+        ],
+        "heightDifferenceCm": 0.5013801824636062
+      },
+      {
+        "recording": "G041T001A001R000",
+        "group": "G041",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 161.89156978118598,
+            "frames": 372
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 162.11680741000316,
+            "frames": 372
+          }
+        ],
+        "heightDifferenceCm": 0.22523762881718312
+      },
+      {
+        "recording": "G030T001A002R000",
+        "group": "G030",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 496
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 496
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G030T001A003R003",
+        "group": "G030",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 396
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 396
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G030T001A004R005",
+        "group": "G030",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 380
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 380
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G030T003A005R000",
+        "group": "G030",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 336
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 336
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G049T002A007R000",
+        "group": "G049",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 169.5128783908887,
+            "frames": 412
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 167.1985118998559,
+            "frames": 412
+          }
+        ],
+        "heightDifferenceCm": 2.3143664910327857
+      },
+      {
+        "recording": "G049T002A008R005",
+        "group": "G049",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 169.5128783908887,
+            "frames": 472
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 167.1985118998559,
+            "frames": 472
+          }
+        ],
+        "heightDifferenceCm": 2.3143664910327857
+      },
+      {
+        "recording": "G049T002A009R011",
+        "group": "G049",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 169.5128783908887,
+            "frames": 1152
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 167.1985118998559,
+            "frames": 1152
+          }
+        ],
+        "heightDifferenceCm": 2.3143664910327857
+      },
+      {
+        "recording": "G049T003A010R000",
+        "group": "G049",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 169.5128783908887,
+            "frames": 372
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 167.1985118998559,
+            "frames": 372
+          }
+        ],
+        "heightDifferenceCm": 2.3143664910327857
+      },
+      {
+        "recording": "G049T003A012R011",
+        "group": "G049",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 169.5128783908887,
+            "frames": 696
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 167.1985118998559,
+            "frames": 696
+          }
+        ],
+        "heightDifferenceCm": 2.3143664910327857
+      },
+      {
+        "recording": "G049T003A013R016",
+        "group": "G049",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 169.5128783908887,
+            "frames": 492
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 167.1985118998559,
+            "frames": 492
+          }
+        ],
+        "heightDifferenceCm": 2.3143664910327857
+      },
+      {
+        "recording": "G049T003A014R021",
+        "group": "G049",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 169.5128783908887,
+            "frames": 620
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 167.1985118998559,
+            "frames": 620
+          }
+        ],
+        "heightDifferenceCm": 2.3143664910327857
+      },
+      {
+        "recording": "G049T004A015R000",
+        "group": "G049",
+        "variation": "T004",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 169.5128783908887,
+            "frames": 444
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 167.1985118998559,
+            "frames": 444
+          }
+        ],
+        "heightDifferenceCm": 2.3143664910327857
+      },
+      {
+        "recording": "G059T001A016R019",
+        "group": "G059",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 424
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 424
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G049T004A017R011",
+        "group": "G049",
+        "variation": "T004",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 169.5128783908887,
+            "frames": 380
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 167.1985118998559,
+            "frames": 380
+          }
+        ],
+        "heightDifferenceCm": 2.3143664910327857
+      },
+      {
+        "recording": "G056T004A024R021",
+        "group": "G056",
+        "variation": "T004",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 170.8473381576089,
+            "frames": 420
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 171.4867527218415,
+            "frames": 420
+          }
+        ],
+        "heightDifferenceCm": 0.6394145642325952
+      },
+      {
+        "recording": "G056T006A031R005",
+        "group": "G056",
+        "variation": "T006",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 170.8473381576089,
+            "frames": 428
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 171.4867527218415,
+            "frames": 428
+          }
+        ],
+        "heightDifferenceCm": 0.6394145642325952
+      },
+      {
+        "recording": "G056T007A036R005",
+        "group": "G056",
+        "variation": "T007",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 170.8473381576089,
+            "frames": 560
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 171.4867527218415,
+            "frames": 560
+          }
+        ],
+        "heightDifferenceCm": 0.6394145642325952
+      },
+      {
+        "recording": "G056T007A037R011",
+        "group": "G056",
+        "variation": "T007",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 170.8473381576089,
+            "frames": 1488
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 171.4867527218415,
+            "frames": 1488
+          }
+        ],
+        "heightDifferenceCm": 0.6394145642325952
+      },
+      {
+        "recording": "G056T007A038R014",
+        "group": "G056",
+        "variation": "T007",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 170.8473381576089,
+            "frames": 876
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 171.4867527218415,
+            "frames": 876
+          }
+        ],
+        "heightDifferenceCm": 0.6394145642325952
+      },
+      {
+        "recording": "G041T002A001R000",
+        "group": "G041",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 161.89156978118598,
+            "frames": 400
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 162.11680741000316,
+            "frames": 400
+          }
+        ],
+        "heightDifferenceCm": 0.22523762881718312
+      },
+      {
+        "recording": "G004T003A002R014",
+        "group": "G004",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 372
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 372
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T003A003R019",
+        "group": "G004",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 504
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 504
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T003A004R025",
+        "group": "G004",
+        "variation": "T003",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 564
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 564
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G059T000A005R017",
+        "group": "G059",
+        "variation": "T000",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 396
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 396
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G030T004A007R000",
+        "group": "G030",
+        "variation": "T004",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 300
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 300
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G030T004A008R005",
+        "group": "G030",
+        "variation": "T004",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 828
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 828
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G030T004A009R010",
+        "group": "G030",
+        "variation": "T004",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 820
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 820
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G030T005A010R000",
+        "group": "G030",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 424
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 424
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G030T005A012R007",
+        "group": "G030",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 468
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 468
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G030T005A013R010",
+        "group": "G030",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 284
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 284
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G030T005A014R012",
+        "group": "G030",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 456
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 456
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G007T002A015R013",
+        "group": "G007",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 170.95297658933433,
+            "frames": 356
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.08818014751688,
+            "frames": 356
+          }
+        ],
+        "heightDifferenceCm": 10.135203558182553
+      },
+      {
+        "recording": "G004T007A016R007",
+        "group": "G004",
+        "variation": "T007",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 592
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 592
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G030T006A017R005",
+        "group": "G030",
+        "variation": "T006",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 428
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 428
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G022T006A024R012",
+        "group": "G022",
+        "variation": "T006",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.56051714592104,
+            "frames": 448
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 173.19567629106893,
+            "frames": 448
+          }
+        ],
+        "heightDifferenceCm": 8.635159145147895
+      },
+      {
+        "recording": "G031T008A031R005",
+        "group": "G031",
+        "variation": "T008",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 173.2900224089174,
+            "frames": 540
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.28116491299556,
+            "frames": 540
+          }
+        ],
+        "heightDifferenceCm": 7.991142504078169
+      },
+      {
+        "recording": "G045T009A036R004",
+        "group": "G045",
+        "variation": "T009",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 170.37420294893377,
+            "frames": 256
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 176.4814759620661,
+            "frames": 256
+          }
+        ],
+        "heightDifferenceCm": 6.107273013132328
+      },
+      {
+        "recording": "G045T009A037R009",
+        "group": "G045",
+        "variation": "T009",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 170.37420294893377,
+            "frames": 428
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 176.4814759620661,
+            "frames": 428
+          }
+        ],
+        "heightDifferenceCm": 6.107273013132328
+      },
+      {
+        "recording": "G045T009A038R014",
+        "group": "G045",
+        "variation": "T009",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 170.37420294893377,
+            "frames": 320
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 176.4814759620661,
+            "frames": 320
+          }
+        ],
+        "heightDifferenceCm": 6.107273013132328
+      },
+      {
+        "recording": "G041T005A004R000",
+        "group": "G041",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 161.89156978118598,
+            "frames": 296
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 162.11680741000316,
+            "frames": 296
+          }
+        ],
+        "heightDifferenceCm": 0.22523762881718312
+      },
+      {
+        "recording": "G004T005A005R000",
+        "group": "G004",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 548
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 548
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G059T000A007R023",
+        "group": "G059",
+        "variation": "T000",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 360
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 360
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G059T000A008R027",
+        "group": "G059",
+        "variation": "T000",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 532
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 532
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G059T000A009R030",
+        "group": "G059",
+        "variation": "T000",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 756
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 756
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G059T001A010R000",
+        "group": "G059",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 572
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 572
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G059T001A012R007",
+        "group": "G059",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 800
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 800
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G059T001A013R010",
+        "group": "G059",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 460
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 460
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G059T001A014R013",
+        "group": "G059",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 348
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 348
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G030T006A015R000",
+        "group": "G030",
+        "variation": "T006",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 175.3879651013883,
+            "frames": 484
+          },
+          {
+            "participant": "P2",
+            "gender": "male",
+            "heightCm": 181.21197453046256,
+            "frames": 484
+          }
+        ],
+        "heightDifferenceCm": 5.824009429074266
+      },
+      {
+        "recording": "G059T001A017R022",
+        "group": "G059",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 768
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 768
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G004T009A024R010",
+        "group": "G004",
+        "variation": "T009",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 764
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 764
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G022T009A031R005",
+        "group": "G022",
+        "variation": "T009",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.56051714592104,
+            "frames": 828
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 173.19567629106893,
+            "frames": 828
+          }
+        ],
+        "heightDifferenceCm": 8.635159145147895
+      },
+      {
+        "recording": "G022T010A036R005",
+        "group": "G022",
+        "variation": "T010",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.56051714592104,
+            "frames": 492
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 173.19567629106893,
+            "frames": 492
+          }
+        ],
+        "heightDifferenceCm": 8.635159145147895
+      },
+      {
+        "recording": "G022T010A037R011",
+        "group": "G022",
+        "variation": "T010",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.56051714592104,
+            "frames": 552
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 173.19567629106893,
+            "frames": 552
+          }
+        ],
+        "heightDifferenceCm": 8.635159145147895
+      },
+      {
+        "recording": "G022T010A038R015",
+        "group": "G022",
+        "variation": "T010",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.56051714592104,
+            "frames": 652
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 173.19567629106893,
+            "frames": 652
+          }
+        ],
+        "heightDifferenceCm": 8.635159145147895
+      },
+      {
+        "recording": "G041T004A005R000",
+        "group": "G041",
+        "variation": "T004",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 161.89156978118598,
+            "frames": 320
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 162.11680741000316,
+            "frames": 320
+          }
+        ],
+        "heightDifferenceCm": 0.22523762881718312
+      },
+      {
+        "recording": "G004T005A007R012",
+        "group": "G004",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 492
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 492
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T005A008R011",
+        "group": "G004",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 1180
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 1180
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T005A009R023",
+        "group": "G004",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 840
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 840
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T006A010R000",
+        "group": "G004",
+        "variation": "T006",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 836
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 836
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T006A012R010",
+        "group": "G004",
+        "variation": "T006",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 776
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 776
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T006A014R019",
+        "group": "G004",
+        "variation": "T006",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 864
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 864
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G059T001A015R016",
+        "group": "G059",
+        "variation": "T001",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 568
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 568
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G004T007A017R012",
+        "group": "G004",
+        "variation": "T007",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 904
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 904
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G041T007A024R020",
+        "group": "G041",
+        "variation": "T007",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 161.89156978118598,
+            "frames": 264
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 162.11680741000316,
+            "frames": 264
+          }
+        ],
+        "heightDifferenceCm": 0.22523762881718312
+      },
+      {
+        "recording": "G059T005A031R004",
+        "group": "G059",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 352
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 352
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G059T005A036R016",
+        "group": "G059",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 628
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 628
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G059T005A037R021",
+        "group": "G059",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 328
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 328
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G059T005A038R024",
+        "group": "G059",
+        "variation": "T005",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 164.4810608991526,
+            "frames": 676
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 172.893311577953,
+            "frames": 676
+          }
+        ],
+        "heightDifferenceCm": 8.412250678800405
+      },
+      {
+        "recording": "G039T002A005R000",
+        "group": "G039",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 161.68534627918217,
+            "frames": 268
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 161.80888018778037,
+            "frames": 268
+          }
+        ],
+        "heightDifferenceCm": 0.12353390859820479
+      },
+      {
+        "recording": "G004T007A015R000",
+        "group": "G004",
+        "variation": "T007",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 492
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 492
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T012A031R015",
+        "group": "G004",
+        "variation": "T012",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 924
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 924
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T013A036R010",
+        "group": "G004",
+        "variation": "T013",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 688
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 688
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T013A037R015",
+        "group": "G004",
+        "variation": "T013",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 564
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 564
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G004T013A038R021",
+        "group": "G004",
+        "variation": "T013",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "male",
+            "heightCm": 174.5159535973761,
+            "frames": 596
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 164.04035531550508,
+            "frames": 596
+          }
+        ],
+        "heightDifferenceCm": 10.475598281871015
+      },
+      {
+        "recording": "G042T002A037R011",
+        "group": "G042",
+        "variation": "T002",
+        "participants": [
+          {
+            "participant": "P1",
+            "gender": "female",
+            "heightCm": 156.02842761921107,
+            "frames": 360
+          },
+          {
+            "participant": "P2",
+            "gender": "female",
+            "heightCm": 173.17393965755753,
+            "frames": 360
+          }
+        ],
+        "heightDifferenceCm": 17.145512038346453
+      }
+    ]
+  },
+  "coverage": {
+    "A001": {
+      "availableVariations": [
+        "T000",
+        "T001",
+        "T002",
+        "T003"
+      ],
+      "publishedVariations": [
+        "T000"
+      ]
+    },
+    "A002": {
+      "availableVariations": [
+        "T000",
+        "T001",
+        "T003"
+      ],
+      "publishedVariations": []
+    },
+    "A003": {
+      "availableVariations": [
+        "T000",
+        "T001",
+        "T003"
+      ],
+      "publishedVariations": []
+    },
+    "A004": {
+      "availableVariations": [
+        "T000",
+        "T001",
+        "T003",
+        "T005"
+      ],
+      "publishedVariations": []
+    },
+    "A005": {
+      "availableVariations": [
+        "T000",
+        "T001",
+        "T002",
+        "T003",
+        "T004",
+        "T005"
+      ],
+      "publishedVariations": []
+    },
+    "A007": {
+      "availableVariations": [
+        "T000",
+        "T001",
+        "T002",
+        "T004",
+        "T005"
+      ],
+      "publishedVariations": []
+    },
+    "A008": {
+      "availableVariations": [
+        "T000",
+        "T001",
+        "T002",
+        "T004",
+        "T005"
+      ],
+      "publishedVariations": []
+    },
+    "A009": {
+      "availableVariations": [
+        "T000",
+        "T001",
+        "T002",
+        "T004",
+        "T005"
+      ],
+      "publishedVariations": []
+    },
+    "A010": {
+      "availableVariations": [
+        "T001",
+        "T002",
+        "T003",
+        "T005",
+        "T006"
+      ],
+      "publishedVariations": []
+    },
+    "A012": {
+      "availableVariations": [
+        "T001",
+        "T002",
+        "T003",
+        "T005",
+        "T006"
+      ],
+      "publishedVariations": []
+    },
+    "A013": {
+      "availableVariations": [
+        "T001",
+        "T002",
+        "T003",
+        "T005"
+      ],
+      "publishedVariations": []
+    },
+    "A014": {
+      "availableVariations": [
+        "T001",
+        "T002",
+        "T003",
+        "T005",
+        "T006"
+      ],
+      "publishedVariations": []
+    },
+    "A015": {
+      "availableVariations": [
+        "T001",
+        "T002",
+        "T003",
+        "T004",
+        "T006",
+        "T007"
+      ],
+      "publishedVariations": []
+    },
+    "A016": {
+      "availableVariations": [
+        "T001",
+        "T003",
+        "T004",
+        "T006",
+        "T007"
+      ],
+      "publishedVariations": [
+        "T003",
+        "T004"
+      ]
+    },
+    "A017": {
+      "availableVariations": [
+        "T001",
+        "T003",
+        "T004",
+        "T006",
+        "T007"
+      ],
+      "publishedVariations": []
+    },
+    "A024": {
+      "availableVariations": [
+        "T004",
+        "T005",
+        "T006",
+        "T007",
+        "T009"
+      ],
+      "publishedVariations": []
+    },
+    "A031": {
+      "availableVariations": [
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T009",
+        "T012"
+      ],
+      "publishedVariations": []
+    },
+    "A036": {
+      "availableVariations": [
+        "T005",
+        "T007",
+        "T008",
+        "T009",
+        "T010",
+        "T013"
+      ],
+      "publishedVariations": []
+    },
+    "A037": {
+      "availableVariations": [
+        "T002",
+        "T005",
+        "T007",
+        "T008",
+        "T009",
+        "T010",
+        "T013"
+      ],
+      "publishedVariations": []
+    },
+    "A038": {
+      "availableVariations": [
+        "T005",
+        "T007",
+        "T008",
+        "T009",
+        "T010",
+        "T013"
+      ],
+      "publishedVariations": []
+    }
+  }
+}

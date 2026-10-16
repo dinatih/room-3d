@@ -147,10 +147,32 @@ def main():
     parser.add_argument('--ground-standing', action='store_true', help='Ground target soles and preserve wrist targets for supported standing interactions')
     parser.add_argument('--hand-motion', action='store_true', help='Export the 30 finger joints from full SMPL-X hand poses')
     parser.add_argument('--draft-manifest', type=Path, help='Save verified exports to a separate manifest without exposing them in the studio')
+    parser.add_argument('--placement-metadata', type=Path, help='SMPL-X support measurements generated for this exact selection')
     arguments = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]
     args = parser.parse_args(arguments)
     selection = load_selection(args.selection, args.source)
     entries = selection['duos']
+    support = json.loads(args.placement_metadata.read_text()) if args.placement_metadata else None
+    if support is not None:
+        if args.ground_standing:
+            raise ValueError('--placement-metadata and --ground-standing are alternative placement policies')
+        if set(support['duos']) != {entry['id'] for entry in entries}:
+            raise ValueError('Placement metadata must cover the exact selection')
+        for entry in entries:
+            if support['sourceSha256'][entry['id']] != entry['source']['sha256']:
+                raise ValueError(f"Stale source support measurements: {entry['id']}")
+            placement = support['duos'][entry['id']]
+            for key in ('sourceInitialSolesMeters', 'initialSoleHeightMeters'):
+                values = np.asarray(placement[key])
+                if values.shape != (2,) or not np.isfinite(values).all():
+                    raise ValueError(f"Invalid support heights: {entry['id']}/{key}")
+            if not math.isfinite(placement['sourceReferencePlaneMeters']) or min(placement['initialSoleHeightMeters']) < 0:
+                raise ValueError(f"Invalid source support plane: {entry['id']}")
+            if 'wristTargetsMeters' in placement:
+                for person in ('p1', 'p2'):
+                    values = np.asarray(placement['wristTargetsMeters'][person])
+                    if values.shape != (entry['expectedFrameCount'], 2, 3) or not np.isfinite(values).all():
+                        raise ValueError(f"Invalid wrist targets: {entry['id']}/{person}")
     if args.recordings:
         unknown = set(args.recordings) - {entry['source']['recording'] for entry in entries}
         if unknown:
@@ -174,12 +196,20 @@ def main():
     }
     if manifest['conversion'] != CONVERSION:
         raise ValueError('Published conversion settings have changed; remove obsolete entries explicitly before re-export')
+    if support is not None:
+        if 'supportModels' in manifest and manifest['supportModels'] != support['models']:
+            raise ValueError('SMPL-X models differ from those used for the published catalog')
+        manifest['supportModels'] = support['models']
     ready = {entry['id']: entry for entry in manifest['duos']}
     for entry in entries:
+        placement = ({'verticalOrigin': 'soles-preserve-hands'} if entry['actionCode'] in GROUND_STANDING_ACTIONS else {
+            'verticalOrigin': 'source-support-preserve-hands', **support['duos'][entry['id']]}) if support else None
         old = ready.get(entry['id'])
         if not args.rebuild and old and (not args.hand_motion or old.get('handMotion') == 'full-axis-angle') and all(old[key] == entry[key] for key in ('id', 'actionCode', 'variation', 'source', 'rootMotion', 'start_offset', 'tags')) and verified(old):
             if args.ground_standing:
                 old['placement'] = {'verticalOrigin': 'soles-preserve-hands'}
+            if placement:
+                old['placement'] = placement
             print(f"Already verified: {entry['source']['recording']}", flush=True)
             continue
         pair = read_pair(args.source, entry['source']['recording'], include_hands=args.hand_motion)
@@ -188,6 +218,8 @@ def main():
             exported['placement'] = old['placement']
         if args.ground_standing:
             exported['placement'] = {'verticalOrigin': 'soles-preserve-hands'}
+        if placement:
+            exported['placement'] = placement
         if args.hand_motion:
             exported['handMotion'] = 'full-axis-angle'
         exported['clips'] = {}

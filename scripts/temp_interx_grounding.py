@@ -148,7 +148,7 @@ def main():
         result = {}
         for duo in json.loads(args.placement_selection.read_text())['duos']:
             soles, wrists, starts = [], [], []
-            contacts = duo['actionCode'] in {'A025', 'A026', 'A027', 'A028', 'A035'}
+            contacts = duo['actionCode'] in {'A009', 'A025', 'A026', 'A027', 'A028', 'A035'}
             for person in ('p1', 'p2'):
                 with np.load(args.source / duo['source'][person], allow_pickle=False) as data:
                     motion = {key: data[key].copy() for key in data.files}
@@ -166,7 +166,10 @@ def main():
                 result[duo['id']]['wristTargetsMeters'] = {
                     person: (positions - origin - (start - starts[0])).tolist()
                     for person, positions, start in zip(('p1', 'p2'), wrists, starts)}
-        args.report.write_text(json.dumps({'models': hashes, 'duos': result}, indent=2) + '\n')
+        selection = json.loads(args.placement_selection.read_text())
+        args.report.write_text(json.dumps({'models': hashes,
+                                          'sourceSha256': {entry['id']: entry['source']['sha256'] for entry in selection['duos']},
+                                          'duos': result}, indent=2) + '\n')
         return
     report, reference = [], []
     for duo in json.loads(MANIFEST.read_text())['duos']:

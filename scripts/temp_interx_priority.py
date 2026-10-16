@@ -38,8 +38,11 @@ def main():
             totals = [a + b for a, b in zip(totals, counts)]
             lines.append(f"| {code} | {action['label']} | {counts[0]} | {counts[1]} | {counts[2]} |")
             print(f"{code} {action['label']}: {counts[1]}/{counts[0]} published; {counts[2]} remaining")
+        size = sum(clip['sizeBytes'] for entry in published for clip in entry['clips'].values())
         lines.extend([f'| Total | | {totals[0]} | {totals[1]} | {totals[2]} |', '',
-                      f"Le catalogue contient {len(published)} duos, comparaisons de binômes conservées comprises.", ''])
+                      f"Le catalogue contient {len(published)} duos, comparaisons de binômes conservées comprises.",
+                      f"Fichiers : {2 * len(published)} GLB, soit {size / 1e6:.2f} Mo. Les métadonnées JSON s'ajoutent à ce poids.", ''])
+        print(f"TOTAL: {totals[1]}/{totals[0]} sessions, {totals[2]} remaining; {len(published)} duos / {2 * len(published)} GLB / {size / 1e6:.2f} MB")
         args.inventory.write_text('\n'.join(lines))
         return
     selection = json.loads((ROOT / 'scripts/interx_priority_selection.json').read_text())
