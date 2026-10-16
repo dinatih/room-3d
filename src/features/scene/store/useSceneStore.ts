@@ -87,6 +87,7 @@ export function updateUrlCharacterCount(count: LaraCountMode | 0) {
 import { DEFAULT_HDRI_ID, type HdriResolution } from '@features/scene/hdriConfig';
 import { isMobileViewport } from '../../../hooks/useIsMobile';
 import type { ScreenVideoQuality } from '../screenVideoConfig';
+import { DEFAULT_BNF_COORDS } from '../bnfMarkerConfig';
 
 export const GRASS_TYPES: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves'];
 
@@ -139,6 +140,7 @@ interface SceneStore {
   setPhotoModeOpen: (open: boolean) => void;
   setMeasurementActive: (active: boolean) => void;
   setBnfCoords: (coords: { azimuth?: number; elevation?: number; radius?: number }) => void;
+  resetBnfCoords: () => void;
   setCameraMode: (mode: 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'ortho') => void;
   setCameraProjection: (proj: 'persp' | 'ortho') => void;
   toggleCameraProjection: () => void;
@@ -459,9 +461,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
     }
     cameraState.invalidate?.();
   },
-  bnfAzimuth: 154.3,
-  bnfElevation: -1.5,
-  bnfRadius: 30,
+  bnfAzimuth: DEFAULT_BNF_COORDS.azimuth,
+  bnfElevation: DEFAULT_BNF_COORDS.elevation,
+  bnfRadius: DEFAULT_BNF_COORDS.radius,
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
   arrowControl: parseUrlArrowControl(),
@@ -524,6 +526,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
       bnfElevation: coords.elevation !== undefined ? coords.elevation : state.bnfElevation,
       bnfRadius: coords.radius !== undefined ? coords.radius : state.bnfRadius,
     }));
+    cameraState.invalidate?.();
+  },
+  resetBnfCoords: () => {
+    set({
+      bnfAzimuth: DEFAULT_BNF_COORDS.azimuth,
+      bnfElevation: DEFAULT_BNF_COORDS.elevation,
+      bnfRadius: DEFAULT_BNF_COORDS.radius,
+    });
     cameraState.invalidate?.();
   },
   setCvModalOpen: (open: boolean) => {
