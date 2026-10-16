@@ -4,8 +4,11 @@ import hashlib
 import json
 import subprocess
 from pathlib import Path
+import math
 
-from interx_catalog import ROOT, MANIFEST, DEFAULT_SOURCE, RECORDING, actions, atomic_json, publish_manifest
+import numpy as np
+
+from interx_catalog import ROOT, MANIFEST, DEFAULT_SOURCE, RECORDING, SOURCE_FPS, TARGET_FPS, actions, atomic_json, publish_manifest, estimate_model
 from convert_interx_duos import GROUND_STANDING_ACTIONS, verified
 
 
@@ -13,7 +16,69 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--publish', action='store_true')
     parser.add_argument('--inventory', type=Path, help='Write source/session coverage for all 40 actions as Markdown')
+    parser.add_argument('--estimate-segments', type=Path, help='Estimate additional R segments for currently selected G/T/A recordings without exporting')
     args = parser.parse_args()
+    if args.estimate_segments:
+        published = json.loads(MANIFEST.read_text())['duos']
+        representatives = {}
+        for entry in published:
+            key = (entry['actionCode'], entry['variation'])
+            previous = representatives.get(key)
+            if previous is None:
+                representatives[key] = entry
+            elif {previous['source']['group'], entry['source']['group']} == {'G001', 'G053'}:
+                # Explicit historical pilot comparisons: retain the matched G053.
+                representatives[key] = next(item for item in (previous, entry) if item['source']['group'] == 'G053')
+            else:
+                raise ValueError(f'Unresolved representative comparison: {key}')
+        model = estimate_model('full-axis-angle')
+        existing = {entry['source']['recording'] for entry in published}
+        folders = {}
+        for folder in DEFAULT_SOURCE.iterdir():
+            if not folder.is_dir():
+                continue
+            if not RECORDING.fullmatch(folder.name):
+                raise ValueError(f'Invalid recording: {folder}')
+            folders.setdefault(folder.name[:12], []).append(folder)
+        estimates = []
+        for entry in representatives.values():
+            for folder in sorted(folders[entry['source']['recording'][:12]]):
+                if folder.name in existing:
+                    continue
+                counts = []
+                for person in ('P1', 'P2'):
+                    with np.load(folder / f'{person}.npz', allow_pickle=False) as data:
+                        translation = data['trans']
+                    if translation.ndim != 2 or translation.shape[1] != 3 or not len(translation) or not np.isfinite(translation).all():
+                        raise ValueError(f'Invalid translation: {folder}/{person}')
+                    counts.append(len(translation))
+                if counts[0] != counts[1]:
+                    raise ValueError(f'Unsynchronized participants: {folder}')
+                frames = math.ceil(counts[0] / (SOURCE_FPS // TARGET_FPS))
+                estimates.append({'recording': folder.name, 'actionCode': entry['actionCode'], 'variation': entry['variation'],
+                                  'group': entry['source']['group'], 'frameCount': frames,
+                                  'estimatedBytes': round(2 * (model['baseBytes'] + model['bytesPerFrame'] * frames))})
+        lines = ['# Estimation des segments R supplémentaires', '',
+                 'Périmètre : binôme actuellement sélectionné pour chaque action/session G/T/A ; tous les R encore absents.',
+                 'Les anciennes comparaisons G001/G053 retiennent G053. Aucun autre binôme G n’est ajouté.',
+                 'Poids estimés à partir des GLB avec doigts déjà exportés, hors métadonnées JSON. Aucune conversion lancée.', '',
+                 '| Action | Duos supplémentaires | GLB supplémentaires | Poids estimé (Mo) |', '| --- | ---: | ---: | ---: |']
+        for action in actions():
+            items = [entry for entry in estimates if entry['actionCode'] == action['code']]
+            size = sum(item['estimatedBytes'] for item in items)
+            lines.append(f"| {action['label']} | {len(items)} | {2 * len(items)} | {size / 1e6:.2f} |")
+            print(f"{action['label']}: +{len(items)} duos / +{2 * len(items)} GLB / ~{size / 1e6:.2f} Mo")
+        total = sum(item['estimatedBytes'] for item in estimates)
+        lines.extend([f'| Total | {len(estimates)} | {2 * len(estimates)} | {total / 1e6:.2f} |', ''])
+        args.estimate_segments.write_text('\n'.join(lines))
+        atomic_json(args.estimate_segments.with_suffix('.json'), {'scope': 'all-missing-R-for-current-G-T-A-representatives',
+                                                                'sizeEstimate': model, 'duos': estimates})
+        g053 = [item for item in estimates if item['group'] == 'G053' and item['actionCode'] == 'A000']
+        print(f"G053 hugs only: +{len(g053)} duos / +{2 * len(g053)} GLB / ~{sum(item['estimatedBytes'] for item in g053) / 1e6:.2f} Mo")
+        print(f'TOTAL: +{len(estimates)} duos / +{2 * len(estimates)} GLB / ~{total / 1e6:.2f} Mo')
+        current_size = sum(clip['sizeBytes'] for entry in published for clip in entry['clips'].values())
+        print(f'PROJECTED CATALOG: {len(published) + len(estimates)} duos / {2 * (len(published) + len(estimates))} GLB / ~{(current_size + total) / 1e6:.2f} Mo')
+        return
     if args.inventory:
         available = {action['code']: set() for action in actions()}
         for folder in DEFAULT_SOURCE.iterdir():
