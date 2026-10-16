@@ -38,7 +38,8 @@ export function BnfSkyMarker({
 
   useFrame(({ clock }) => {
     if (pulseRingRef.current) {
-      const t = clock.getElapsedTime();
+      // R3F already advances the shared clock before running frame callbacks.
+      const t = clock.elapsedTime;
       const s = 1 + Math.sin(t * 2.8) * 0.08;
       pulseRingRef.current.scale.set(s, s, 1);
     }
