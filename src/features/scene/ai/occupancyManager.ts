@@ -11,6 +11,7 @@ interface SlotReservation {
 }
 
 export const BATHROOM_OBJECTS = new Set(['toilet', 'vasque-sdb', 'sdb-closet', 'shower']);
+export const BATHROOM_CAPACITY = 3;
 
 class SmartObjectOccupancyManager {
   // Clef: `${objectId}:${slotId}` -> { characterId, claimedAt }
@@ -18,6 +19,17 @@ class SmartObjectOccupancyManager {
 
   private slotKey(objectId: string, slotId: string): string {
     return `${objectId}:${slotId}`;
+  }
+
+  getBathroomOccupants(forCharacterId?: string): Set<string> {
+    const occupants = new Set<string>();
+    for (const [key, reservation] of this.occupiedSlots) {
+      if (forCharacterId && reservation.characterId === forCharacterId) continue;
+      const separator = key.indexOf(':');
+      const occupiedObject = key.slice(0, separator);
+      if (BATHROOM_OBJECTS.has(occupiedObject)) occupants.add(reservation.characterId);
+    }
+    return occupants;
   }
 
   /**
@@ -40,11 +52,14 @@ class SmartObjectOccupancyManager {
   getOccupant(objectId: string, slotId: string, forCharacterId?: string): string | null {
     const slots = SMART_OBJECTS[objectId]?.slots;
     const requested = slots?.find(slot => slot.slotId === slotId);
+    if (BATHROOM_OBJECTS.has(objectId)) {
+      const occupants = this.getBathroomOccupants(forCharacterId);
+      if (occupants.size >= BATHROOM_CAPACITY) return [...occupants][0];
+    }
     for (const [key, reservation] of this.occupiedSlots) {
       if (reservation.characterId === forCharacterId) continue;
       const separator = key.indexOf(':');
       const occupiedObject = key.slice(0, separator), occupiedSlot = key.slice(separator + 1);
-      if (BATHROOM_OBJECTS.has(objectId) && BATHROOM_OBJECTS.has(occupiedObject)) return reservation.characterId;
       if (occupiedObject !== objectId) continue;
       const occupied = slots?.find(slot => slot.slotId === occupiedSlot);
       if (occupiedSlot === slotId || this.isExclusiveObject(objectId)
@@ -101,11 +116,8 @@ class SmartObjectOccupancyManager {
     if (!obj || !obj.slots.length) return null;
 
     if (BATHROOM_OBJECTS.has(objectId)) {
-      for (const [k, r] of this.occupiedSlots.entries()) {
-        const [occObj] = k.split(':');
-        if (BATHROOM_OBJECTS.has(occObj) && r.characterId !== characterId) {
-          return null;
-        }
+      if (this.getBathroomOccupants(characterId).size >= BATHROOM_CAPACITY) {
+        return null;
       }
     }
 

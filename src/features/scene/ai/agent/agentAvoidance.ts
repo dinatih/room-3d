@@ -7,6 +7,9 @@ import { duoSessionManager } from '../duoSessionManager';
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
+export const ACTOR_AVOIDANCE_SCALE = 0.5;
+export const actorClearance = (profile: { radius: number }, body: { radius: number }): number =>
+  (profile.radius + body.radius) * ACTOR_AVOIDANCE_SCALE;
 const destinations = new Map<string, Point>();
 const passingSides = new Map<string, Map<string, number>>();
 // Only actors which rejected a candidate invalidate a failed approach. Unrelated
@@ -52,7 +55,7 @@ export function isAgentDestinationFree(id: string, target: Point): boolean {
     if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
     const other = cameraState.positions[otherId];
     const body = getAgentProfile(otherId);
-    const separation = profile.radius + body.radius;
+    const separation = actorClearance(profile, body);
     if (other.y >= profile.height || other.y + body.height <= 0) continue;
     const destination = destinations.get(otherId);
     if (actorOverlap(target, other, separation) || destination && actorOverlap(target, destination, separation)) {
@@ -77,7 +80,7 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
       if (other.y >= y + profile.height || other.y + body.height <= y) continue;
       const dx = other.x - currentX, dz = other.z - currentZ;
       const distance = Math.hypot(dx, dz);
-      const clearance = profile.radius + body.radius;
+      const clearance = actorClearance(profile, body);
       const lookahead = clearance * 2;
       if (distance >= lookahead) { sides.delete(otherId); continue; }
       const forward = dx * dirX + dz * dirZ;
@@ -127,7 +130,7 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
     if (other.y >= y + profile.height || other.y + body.height <= y) continue;
     const dx = start.x - other.x, dz = start.z - other.z;
     // Most actors are nowhere near this swept step; avoid constructing their polygons.
-    const radius = profile.radius + body.radius;
+    const radius = actorClearance(profile, body);
     if (distance(other, projectToSegment(other, start, proposed)) > radius + CLEARANCE_ERROR + Math.SQRT2 * BOOLEAN_PRECISION) continue;
     const polygon = inflate([{ x: other.x, z: other.z }], radius);
     // Existing overlaps may separate, but must not deepen.
@@ -166,7 +169,7 @@ export function getAgentObstacles(id: string, start: Point): Polygon[] {
     if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
     const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
     if (other.y >= y + profile.height || other.y + body.height <= y) continue;
-    const radius = profile.radius + body.radius;
+    const radius = actorClearance(profile, body);
     // Already intersecting actors must remain able to leave their shared space.
     const polygon = inflate([{ x: other.x, z: other.z }], radius);
     if (pointInRing(start, polygon)) continue;
