@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { cameraState } from './cameraState';
+import { ORBIT_CAMERA_LERP } from './camera/cameraConstants';
 import './VirtualDPad.scss';
 
 type ArrowKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight';
@@ -25,6 +26,8 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   const selectControl = useSceneStore(state => state.selectArrowControl);
   const [animal, setAnimal] = useState(cameraState.animalTarget);
   const activeKeys = useRef(new Set<ArrowKey>());
+  const zoomFrame = useRef<number | null>(null);
+  const zoomRemaining = useRef(0);
   const [pressedKeys, setPressedKeys] = useState<Set<ArrowKey>>(new Set());
 
   const releaseKey = useCallback((key: ArrowKey) => {
@@ -32,12 +35,51 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
     fire('keyup', key);
   }, []);
 
+  const cancelZoom = useCallback(() => {
+    if (zoomFrame.current !== null) cancelAnimationFrame(zoomFrame.current);
+    zoomFrame.current = null;
+    zoomRemaining.current = 0;
+  }, []);
+
+  const zoom = useCallback((direction: 'in' | 'out') => {
+    zoomRemaining.current += direction === 'in' ? 1 : -1;
+    if (zoomFrame.current !== null) return;
+    let previousTime = performance.now();
+    const step = () => {
+      const time = performance.now();
+      const remaining = zoomRemaining.current;
+      const amount = Math.abs(remaining) <= Number.EPSILON
+        ? remaining : remaining * (1 - Math.pow(1 - ORBIT_CAMERA_LERP, (time - previousTime) * 60 / 1000));
+      previousTime = time;
+      zoomRemaining.current -= amount;
+      if (amount !== 0) document.dispatchEvent(new CustomEvent('camera-zoom', {
+        detail: { direction: amount > 0 ? 'in' : 'out', scope: 'scene', amount: Math.abs(amount) },
+      }));
+      zoomFrame.current = zoomRemaining.current === 0 ? null : requestAnimationFrame(step);
+    };
+    zoomFrame.current = requestAnimationFrame(step);
+  }, []);
+
   const releaseAll = useCallback(() => {
+    cancelZoom();
     activeKeys.current.forEach(key => fire('keyup', key));
     activeKeys.current.clear();
     setPressedKeys(new Set());
     document.dispatchEvent(new Event('camera-controls-release'));
-  }, []);
+  }, [cancelZoom]);
+
+  useEffect(() => {
+    const onZoom = (event: Event) => {
+      if ((event as CustomEvent<{ amount?: number }>).detail.amount === undefined) cancelZoom();
+    };
+    document.addEventListener('camera-zoom', onZoom);
+    window.addEventListener('wheel', cancelZoom, { passive: true });
+    return () => {
+      document.removeEventListener('camera-zoom', onZoom);
+      window.removeEventListener('wheel', cancelZoom);
+      cancelZoom();
+    };
+  }, [cancelZoom]);
 
   useEffect(() => {
     const onArrowKeys = (event: Event) => setPressedKeys(new Set((event as CustomEvent<ArrowKey[]>).detail));
@@ -111,9 +153,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
             className="btn btn-sm btn-outline-secondary py-0 px-1"
             aria-label={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
             title={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
-            onClick={() => document.dispatchEvent(new CustomEvent('camera-zoom', {
-              detail: { direction, scope: 'scene' },
-            }))}
+            onClick={() => zoom(direction)}
           >
             <i className={`bi bi-zoom-${direction}`} aria-hidden="true" />
           </button>

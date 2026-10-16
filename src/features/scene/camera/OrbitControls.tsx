@@ -3,6 +3,7 @@ import { OrbitControls as DreiOrbitControls } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { MOUSE, Vector3, Quaternion, type Group } from 'three';
 import { cameraState } from '../cameraState';
+import type { CameraZoomDetail } from './types';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import './OrbitControls.scss';
 
@@ -52,12 +53,12 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
     useEffect(() => {
       if (!controls) return;
       const onZoom = (event: Event) => {
-        const { direction, scope } = (event as CustomEvent<{
-          direction: 'in' | 'out'; scope: 'scene' | 'preview';
-        }>).detail;
+        const { direction, scope, amount } = (event as CustomEvent<CameraZoomDetail>).detail;
         if (scope !== zoomScope || !controls.enabled || !controls.enableZoom) return;
-        if (direction === 'in') controls.dollyIn();
-        else controls.dollyOut();
+        // Même facteur que le pas natif OrbitControls, fractionné pour l'amorti.
+        const scale = amount === undefined ? undefined : Math.pow(0.95, controls.zoomSpeed * amount);
+        if (direction === 'in') controls.dollyIn(scale);
+        else controls.dollyOut(scale);
       };
       document.addEventListener('camera-zoom', onZoom);
       return () => document.removeEventListener('camera-zoom', onZoom);

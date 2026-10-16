@@ -70,6 +70,7 @@ const snapshot = page => page.evaluate(() => {
 });
 const distance = (a, b) => Math.hypot(...a.map((n, i) => n - b[i]));
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+const rendered = page => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 async function press(page, key, virtual = false) {
   const before = await snapshot(page);
   if (virtual) {
@@ -115,6 +116,10 @@ async function choose(page, label) {
     page.on('pageerror', error => errors.push(error.message));
     await mount(page, '?preset=low&characterCount=1&skipIntro=1');
     assert.equal((await snapshot(page)).mode, 'orbit');
+    await page.evaluate(() => {
+      window.zoomEvents = [];
+      document.addEventListener('camera-zoom', event => window.zoomEvents.push(event.detail));
+    });
     // The compact zoom buttons must use the existing scene zoom in both camera modes.
     for (const label of ['Caméra · Studio', 'Caméra · PNJ']) {
       await choose(page, label);
@@ -122,12 +127,34 @@ async function choose(page, label) {
       const zoomDistance = () => page.evaluate(() => window.fixture.camera.position.distanceTo(
         window.fixture.scene.getObjectByName('orbit-target-marker').position));
       const before = await zoomDistance();
+      await page.evaluate(() => { window.zoomEvents = []; });
       await page.click('.virtual-controls__modes button[aria-label="Zoomer"]');
       await page.waitForFunction(before => window.fixture.camera.position.distanceTo(window.fixture.scene.getObjectByName('orbit-target-marker').position) < before, {}, before);
+      await rendered(page);
       await page.waitForFunction(() => !window.fixture.scene.getObjectByName('orbit-target-marker').visible);
+      await page.waitForFunction(() => window.zoomEvents.reduce((sum, event) => sum + event.amount, 0) > 1 - 1e-6);
+      const eased = await page.evaluate(() => window.zoomEvents);
+      assert(eased.length > 1, 'Pad zoom must animate across frames');
+      assert(eased.every(event => event.amount > 0 && event.amount < 1), 'Pad zoom must use fractional steps');
       const closer = await zoomDistance();
+      const expectedRatio = closer / before;
       await page.click('.virtual-controls__modes button[aria-label="Dézoomer"]');
       await page.waitForFunction(closer => window.fixture.camera.position.distanceTo(window.fixture.scene.getObjectByName('orbit-target-marker').position) > closer, {}, closer);
+      await rendered(page);
+      await page.waitForFunction(() => !window.fixture.scene.getObjectByName('orbit-target-marker').visible);
+      const beforeMenu = await zoomDistance();
+      const menuEvents = await page.evaluate(() => {
+        window.zoomEvents = [];
+        document.querySelector('.view-control-bar button[aria-label="Zoomer"]').click();
+        return window.zoomEvents;
+      });
+      assert.equal(menuEvents.length, 1, 'Main menu must keep one immediate zoom command');
+      assert.equal(menuEvents[0].amount, undefined, 'Main menu must not request amortization');
+      await rendered(page);
+      await page.waitForFunction(() => !window.fixture.scene.getObjectByName('orbit-target-marker').visible);
+      const afterMenu = await zoomDistance();
+      if (label === 'Caméra · Studio') assert(Math.abs(afterMenu / beforeMenu - expectedRatio) < 1e-5, 'Smoothed zoom must preserve the native zoom step');
+      else assert(Math.abs((before - closer) - (beforeMenu - afterMenu)) < 1e-3, 'Smoothed follow zoom must preserve the menu step');
     }
     // Both orbit targets must turn the same way and ease out after key release.
     const directionResults = [];

@@ -2,6 +2,13 @@ export type CameraMode = 'orbit' | 'follow' | 'fpv' | 'top' | 'ortho';
 
 export type ArrowControl = 'camera' | 'character';
 
+export interface CameraZoomDetail {
+  direction: 'in' | 'out';
+  scope: 'scene' | 'preview';
+  /** Fraction d'un clic pour les boutons de zoom amortis. */
+  amount?: number;
+}
+
 export type CameraTarget =
   | 'studio'
   | 'character'

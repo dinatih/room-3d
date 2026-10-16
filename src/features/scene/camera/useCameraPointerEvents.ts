@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { MutableRefObject } from 'react';
 import type * as THREE from 'three';
-import type { CameraMode } from './types';
+import type { CameraMode, CameraZoomDetail } from './types';
 import { MOUSE_SENS } from './cameraConstants';
 import { cameraState } from '../cameraState';
 
@@ -167,20 +167,17 @@ export function useCameraPointerEvents({
     const onCameraZoom = (event: Event) => {
       if (cameraState.isIntroRunning) return;
       if (modeRef.current !== 'follow' && modeRef.current !== 'fpv') return;
-      const { direction, scope } = (event as CustomEvent<{
-        direction: 'in' | 'out';
-        scope: 'scene' | 'preview';
-      }>).detail;
+      const { direction, scope, amount = 1 } = (event as CustomEvent<CameraZoomDetail>).detail;
       if (scope !== 'scene') return;
 
       if (modeRef.current === 'follow') {
-        const step = direction === 'in' ? -25 : 25;
+        const step = (direction === 'in' ? -25 : 25) * amount;
         orbitDistance.current = Math.max(30, orbitDistance.current + step);
         updateFollowLook();
       } else {
         const cam = camera as THREE.PerspectiveCamera;
         if (!cam.isPerspectiveCamera || cameraState.isXR) return;
-        const step = direction === 'in' ? -5 : 5;
+        const step = (direction === 'in' ? -5 : 5) * amount;
         cam.fov = Math.max(30, Math.min(120, cam.fov + step));
         cam.updateProjectionMatrix();
       }
