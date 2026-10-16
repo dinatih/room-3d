@@ -37,19 +37,35 @@ export function getUnusedShadows(scene: THREE.Scene, camera: THREE.Camera) {
     const light = object as ShadowLight;
     if (light.isLight && light.castShadow && cameras.some(view => view.layers.test(light.layers))) lights.push(light);
   });
+  // A visible mirror can show receivers outside the main camera. Detect it
+  // before collecting receiver bounds: those bounds cannot reject any active
+  // light in this case, and skinning their vertices would be wasted work.
   for (const view of cameras) {
     projection.multiplyMatrices(view.projectionMatrix, view.matrixWorldInverse);
     frustum.setFromProjectionMatrix(projection, view.coordinateSystem, view.reversedDepth);
     scene.traverseVisible(object => {
-      const mesh = object as THREE.Mesh & { isReflector?: boolean };
-      if (!mesh.isMesh || (!mesh.receiveShadow && !mesh.isReflector) || !mesh.layers.test(view.layers)) return;
+      const mirror = object as THREE.Mesh & { isReflector?: boolean };
+      if (hasMirror || !mirror.isReflector || !mirror.layers.test(view.layers)) return;
+      const materials = Array.isArray(mirror.material) ? mirror.material : [mirror.material];
+      if (!materials.some(material => material.visible)) return;
+      if (mirror.frustumCulled && !frustum.intersectsObject(mirror)) return;
+      meshWorldBounds(mirror, box);
+      if (!mirror.frustumCulled || frustum.intersectsBox(box)) hasMirror = true;
+    });
+  }
+  const needsCoverageTest = lights.some(light => light.shadow.map !== null && light.intensity !== 0 && light.shadow.intensity !== 0);
+  if (!hasMirror && needsCoverageTest) for (const view of cameras) {
+    projection.multiplyMatrices(view.projectionMatrix, view.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(projection, view.coordinateSystem, view.reversedDepth);
+    scene.traverseVisible(object => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.receiveShadow || !mesh.layers.test(view.layers)) return;
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       if (!materials.some(material => material.visible)) return;
       if (mesh.frustumCulled && !frustum.intersectsObject(mesh)) return;
       meshWorldBounds(mesh, box);
       if (mesh.frustumCulled && !frustum.intersectsBox(box)) return;
-      if (mesh.isReflector) hasMirror = true;
-      if (mesh.receiveShadow) receivers.push(box.clone());
+      receivers.push(box.clone());
     });
   }
 

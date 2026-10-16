@@ -21,6 +21,9 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
   const transform = new THREE.Matrix4();
   const sphere = new THREE.Sphere();
   let morphWeights: number[] = [];
+  const boneMatrices = skeleton.bones.map(() => new THREE.Matrix4());
+  const lastBindInverse = new THREE.Matrix4();
+  let hasBounds = false;
 
   const rebuildBoneBoxes = () => {
     for (const box of boneBoxes) box.makeEmpty();
@@ -41,16 +44,27 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
   rebuildBoneBoxes();
 
   skinned.computeBoundingSphere = () => {
-    if (skinned.morphTargetInfluences?.some((weight, index) => weight !== morphWeights[index])) rebuildBoneBoxes();
+    if (skinned.morphTargetInfluences?.some((weight, index) => weight !== morphWeights[index])) {
+      rebuildBoneBoxes();
+      hasBounds = false;
+    }
+    // Frustum tests and shadow receivers read the same pose several times in
+    // one render. Reuse bounds only while every contributing bone matrix and
+    // the bind transform are identical; explicit bone edits invalidate it too.
+    if (hasBounds && skinned.bindMatrixInverse.equals(lastBindInverse) &&
+        boneBoxes.every((bounds, bone) => bounds.isEmpty() || skeleton.bones[bone].matrixWorld.equals(boneMatrices[bone]))) return;
     posedBox.makeEmpty();
     for (let bone = 0; bone < boneBoxes.length; bone++) {
       if (boneBoxes[bone].isEmpty()) continue;
       transform.multiplyMatrices(skinned.bindMatrixInverse, skeleton.bones[bone].matrixWorld);
+      boneMatrices[bone].copy(skeleton.bones[bone].matrixWorld);
       transformedBox.copy(boneBoxes[bone]).applyMatrix4(transform);
       posedBox.union(transformedBox);
     }
     // Normalized skin weights form a convex combination of the transformed boxes.
     posedBox.getBoundingSphere(sphere);
+    lastBindInverse.copy(skinned.bindMatrixInverse);
+    hasBounds = true;
   };
 
   // Three.js tests the frustum after updating world matrices but before mesh

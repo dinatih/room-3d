@@ -14,6 +14,7 @@ import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
 import { CategoryLayerContext } from './sceneLayer';
 import { LAYER_WALKER_DETAIL } from '@config';
+import { enableAnimatedFrustumCulling } from './utils/animatedFrustumCulling';
 
 const mountedClones = new Map<string, number>();
 export function hasMountedGLTFClones(path: string): boolean {
@@ -41,6 +42,9 @@ export function useGLTFClone(path: string, ownMaterials = false): { scene: THREE
     }
     cloned.userData = { ...cloned.userData, gltfPath: path, itemName: cloned.userData.itemName || baseName };
     cloned.traverse((child) => {
+      if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
+        enableAnimatedFrustumCulling(child as THREE.SkinnedMesh);
+      }
       if ((child as THREE.Mesh).isMesh) {
         if (ownMaterials) {
           const mesh = child as THREE.Mesh;
