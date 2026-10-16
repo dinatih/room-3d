@@ -196,7 +196,8 @@ function audit(g) {
 }
 function main() {
   const mode = process.argv[2] || 'audit';
-  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser','next-three','following-three','promote-three','frame-check'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser','next-three','following-three','olivia-three','promote-three','frame-check'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(mode==='olivia-three') return nextThree(false,true);
   if(mode==='promote-three') return promoteThree(process.argv.includes('--following'));
   if(mode==='following-three') return nextThree(true);
   if(mode==='frame-check') return checkFrameCounter();
@@ -1128,11 +1129,11 @@ function promoteThree(following=false) {
   fs.writeFileSync('/tmp/room-npz-promotion.patch',patch);
   console.log('Three accepted candidates promoted; uncorrected GLBs and duplicate preview entries removed.');
 }
-async function nextThree(following=false) {
+async function nextThree(following=false,olivia=false) {
   const assert=require('node:assert/strict');
-  const ids=following?['zumba-fanie-c3d','bellydance2-anna-cortesi-c3d','salsa-stefanos-c3d']:['reggaeton-vaso-01','hiphop-fanie-c3d','musical-theater-fanie-c3d'];
-  const reportName=following?'npz_following_three':'npz_next_three';
-  const docName=following?'npz-following-three':'npz-next-three';
+  const ids=olivia?['happy-dance-olivia','excited-dance-olivia','pleased-dance-olivia']:following?['zumba-fanie-c3d','bellydance2-anna-cortesi-c3d','salsa-stefanos-c3d']:['reggaeton-vaso-01','hiphop-fanie-c3d','musical-theater-fanie-c3d'];
+  const reportName=olivia?'npz_olivia_three':following?'npz_following_three':'npz_next_three';
+  const docName=olivia?'npz-olivia-three':following?'npz-following-three':'npz-next-three';
   for(const id of ids) if(!entries.some(e=>e.id===id+'-repair-preview')) throw Error('Batch already finalized: '+id);
   const results=[],browserRows=[];
   for(const id of ids) {
@@ -1172,10 +1173,10 @@ async function nextThree(following=false) {
     console.log(id,JSON.stringify({jumps:result.after.jumps,wrists:wrists.map(w=>({bone:w.bone,before:w.before.returns,after:w.after.returns,passes:w.passes}))}));
   }
   fs.writeFileSync(path.join(root,`scripts/${reportName}.json`),JSON.stringify({ids,results},null,2)+'\n');
-  let md=`# ${following?'Troisième lot : Zumba Fanie, Belly Dance Anna, Salsa Stefanos':'Deuxième lot : Reggaeton Vaso, Hip-hop Fanie, Musical Theater Fanie'}\n\nVersions \`[ESSAI correction]\` à comparer aux originaux. Référence non cumulative : candidats du commit \`c6c5468f\`. Seules les deux rotations des mains changent par rapport à ces candidats. Méthode Bachata : moyenne géodésique symétrique [1,2,1] dans les zones d’alerte des poignets en espace monde, puis retour dans la base locale. Arrêt dès disparition des retours >25° ou convergence numérique. Aucun changement des temps, vitesses, translations XYZ, hauteurs, rotations du bassin, bras ou jambes.\n\n| Animation | Sauts locaux original → premier essai → nouvel essai | Retours main gauche | Retours main droite |\n|---|---:|---:|---:|\n`;
+  let md=`# ${olivia?'Dernier lot initial : Happy, Excited et Pleased Dance Olivia':following?'Troisième lot : Zumba Fanie, Belly Dance Anna, Salsa Stefanos':'Deuxième lot : Reggaeton Vaso, Hip-hop Fanie, Musical Theater Fanie'}\n\nVersions \`[ESSAI correction]\` à comparer aux originaux. Référence non cumulative : candidats du commit \`c6c5468f\`. Seules les deux rotations des mains changent par rapport à ces candidats. Méthode Bachata : moyenne géodésique symétrique [1,2,1] dans les zones d’alerte des poignets en espace monde, puis retour dans la base locale. Arrêt dès disparition des retours >25° ou convergence numérique. Aucun changement des temps, vitesses, translations XYZ, hauteurs, rotations du bassin, bras ou jambes.\n\n| Animation | Sauts locaux original → premier essai → nouvel essai | Retours main gauche | Retours main droite |\n|---|---:|---:|---:|\n`;
   for(const r of results) md+=`| ${r.id} | ${r.raw.jumps} → ${r.before.jumps} → ${r.after.jumps} | ${r.wrists[0].before.returns} → ${r.wrists[0].after.returns} | ${r.wrists[1].before.returns} → ${r.wrists[1].after.returns} |\n`;
   md+='\nLes sauts locaux rapides et les retours des mains en espace monde sont deux mesures différentes. Leur diminution ne garantit ni les appuis ni la qualité visuelle. Les longs mouvements suspects du premier essai restent signalés dans le rapport historique ; aucun autre lissage du corps n’est ajouté.\n\nLes dates et articulations adoucies figurent dans `scripts/npz_next_three.json` (`wrists[].changed`, `history`). Les originaux sont conservés. Aucun extrait supplémentaire ni animation supprimée n’est régénéré.\n\nTests : invariants binaires hors rotations des mains, dates et translations identiques, positions des poignets/pieds/bassin identiques sur toutes les frames, références originales inchangées par SHA-256. Commande reproductible : `node scripts/temp_npz_resume.cjs next-three`. Avec Vite sur 5193 : ajouter `--browser` pour vérifier chargement et mixeur dans Chromium headless.\n';
-  md=md.replaceAll('npz_next_three.json',reportName+'.json').replaceAll('next-three`',(following?'following-three':'next-three')+'`');
+  md=md.replaceAll('npz_next_three.json',reportName+'.json').replaceAll('next-three`',(olivia?'olivia-three':following?'following-three':'next-three')+'`');
   fs.writeFileSync(path.join(root,`docs/${docName}.md`),md);
   if(process.argv.includes('--browser')) {
     if(following) browserRows[0].accepted=JSON.parse(fs.readFileSync(path.join(root,'scripts/npz_next_three.json'),'utf8')).results;

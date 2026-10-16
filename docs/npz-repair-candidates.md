@@ -17,7 +17,9 @@ Les originaux restent actifs et inchangés. Les versions candidates sont accessi
 
 > Deuxième lot : Reggaeton Vaso, Hip-hop Fanie et Musical Theater Fanie sont validés par l’utilisateur. Leurs fichiers non corrigés et les doublons « essai » sont supprimés ; les identifiants habituels utilisent les fichiers corrigés. Les mesures et les intervalles supplémentaires sont dans `docs/npz-next-three.md` et `scripts/npz_next_three.json`.
 
-> Troisième lot : Zumba Fanie, Belly Dance Anna et Salsa Stefanos sont également validés par l’utilisateur et utilisent désormais les fichiers corrigés sous leurs identifiants habituels. Les originaux et doublons « essai » sont supprimés. Voir `docs/npz-following-three.md` et `scripts/npz_following_three.json`. Les trois danses Olivia restent à examiner. Le tableau ci-dessous est historique et décrit les premiers essais.
+> Troisième lot : Zumba Fanie, Belly Dance Anna et Salsa Stefanos sont également validés par l’utilisateur et utilisent désormais les fichiers corrigés sous leurs identifiants habituels. Les originaux et doublons « essai » sont supprimés. Voir `docs/npz-following-three.md` et `scripts/npz_following_three.json`. Le tableau ci-dessous est historique et décrit les premiers essais.
+
+> Dernier lot initial : les trois essais Happy, Excited et Pleased Dance Olivia bénéficient du même traitement supplémentaire des poignets, avec leurs originaux conservés pour comparaison. Ils restent en attente de validation visuelle. Les mesures, intervalles et retours suspects persistants sont consignés dans `docs/npz-olivia-three.md` et `scripts/npz_olivia_three.json`.
 
 ## Méthode et limites
 

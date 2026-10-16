@@ -1,0 +1,165 @@
+{
+  "headless": true,
+  "notes": "Skeleton loader/render checks; not a visual acceptance of character retargeting or contacts.",
+  "results": [
+    {
+      "id": "happy-dance-olivia",
+      "duration": 87.43333435058594,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        0.7333333492279053,
+        43.71666717529297,
+        87.43333435058594
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 0.7333333492279053,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 43.71666717529297,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 87.43333435058594,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-olivia-three-review/happy-dance-olivia.png"
+    },
+    {
+      "id": "excited-dance-olivia",
+      "duration": 93.19999694824219,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        7.099999904632568,
+        46.599998474121094,
+        93.19999694824219
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 7.099999904632568,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 46.599998474121094,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 93.19999694824219,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-olivia-three-review/excited-dance-olivia.png"
+    },
+    {
+      "id": "pleased-dance-olivia",
+      "duration": 96.83333587646484,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        15.266666412353516,
+        48.41666793823242,
+        96.83333587646484
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 15.266666412353516,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 48.41666793823242,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0.005023532744979661,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 96.83333587646484,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-olivia-three-review/pleased-dance-olivia.png"
+    }
+  ]
+}
