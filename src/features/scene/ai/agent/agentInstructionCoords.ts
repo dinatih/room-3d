@@ -8,13 +8,13 @@ import { ResolvedInstructionCoords } from './agentTypes';
 
 export function resolveInstructionCoords(
   instr: AgentInstruction,
-  startPos: { x: number; z: number } | null,
+  startPos: { x: number; y?: number; z: number; rotY?: number; owner?: string } | null,
   agentId?: string,
   currentPosition?: { x: number; z: number },
   departureOwner?: string
 ): ResolvedInstructionCoords {
   if (instr.type === 'RETURN_TO_START' && startPos) {
-    return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
+    return { tx: startPos.x, ty: startPos.y, tz: startPos.z, rotY: startPos.rotY, owner: startPos.owner, label: 'point de départ' };
   }
   if (instr.targetZoneId) {
     const pos = getZoneDestination(instr.targetZoneId, agentId, currentPosition, departureOwner);
@@ -46,6 +46,16 @@ export function resolveInstructionCoords(
     };
   }
   const obj = instr.smartObjectId ? getSmartObject(instr.smartObjectId) : undefined;
+  if (instr.type === 'OBSERVE_OBJECT') {
+    if (!obj) throw new Error(`Unknown observation target ${instr.smartObjectId}`);
+    const goal = { x: obj.position[0], z: obj.position[2] };
+    const approach = agentId && hasAgentProfile(agentId)
+      ? getObjectApproach(obj.id, goal, agentId, currentPosition, false, departureOwner, undefined, true)
+      : goal;
+    if (!approach) throw new NavigationBlockedError(`No observation approach for ${obj.id}`, goal);
+    return { tx: approach.x, ty: 0, tz: approach.z, label: obj.name,
+      rotY: Math.atan2(goal.x - approach.x, goal.z - approach.z), anim: 'idle', duration: instr.duration };
+  }
   if (obj) {
     const slot = instr.slotId
       ? (obj.slots.find(s => s.slotId === instr.slotId) ?? obj.slots[0])

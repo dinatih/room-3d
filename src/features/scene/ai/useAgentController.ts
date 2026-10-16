@@ -4,7 +4,7 @@ import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from '.
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { createRouteState, followRoute, resetRoute, getInteractionOwner, NavigationBlockedError, getNavigationGraph, describeNavigationBlock } from './navigation/service';
+import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, NavigationBlockedError, getNavigationGraph, describeNavigationBlock } from './navigation/service';
 import { movingFurniture } from '../furniturePositions';
 import { hasAgentProfile, getObstacleRevision, getAgentProfile, navigationDebug } from './navigation/obstacles';
 import { distance } from './navigation/geometry';
@@ -64,7 +64,7 @@ export function useAgentController(
   // Déduire le fondu croisé (0.2s) pour que l'enchaînement vers l'étape suivante s'opère pile à la fin du clip sans rejeu
   const landingPhaseDuration = Math.max(0.1, landingDuration - 0.2);
 
-  const firstCoords = (scenario && scenario.length > 0) ? resolveInstructionCoords(scenario[0], null) : null;
+  const firstCoords = (scenario && scenario.length > 0 && scenario[0].type !== 'OBSERVE_OBJECT') ? resolveInstructionCoords(scenario[0], null) : null;
   const initialPos = (firstCoords && (firstCoords.tx !== 0 || firstCoords.tz !== 0))
     ? { x: firstCoords.tx, y: firstCoords.ty ?? 0, z: firstCoords.tz, rotY: firstCoords.rotY ?? 0 }
     : getRealPosition();
@@ -104,7 +104,7 @@ export function useAgentController(
   const statusRef = useRef<AgentStatus>(deployment.status);
   const delayTimerRef = useRef(deployment.delayTimer);
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
-  const startPosRef = useRef<{ x: number; y: number; z: number; rotY: number }>(initialPos);
+  const startPosRef = useRef<{ x: number; y: number; z: number; rotY: number; owner?: string }>(initialPos);
   const claimedSlotRef = useRef<{ objectId: string; slotId: string } | null>(null);
 
   // Instructions temporaires (actions demandées, rendez-vous et interactions duo).
@@ -148,7 +148,7 @@ export function useAgentController(
   const getResolvedCoords = (instr: AgentInstruction) => {
     const revision = getObstacleRevision();
     const followsInteraction = statusRef.current === 'INTERACTING' && !!instr.smartObjectId && movingFurniture.size > 0;
-    const occupiedApproach = statusRef.current !== 'INTERACTING' && cachedCoordsRef.current && hasAgentProfile(_characterId)
+    const occupiedApproach = (statusRef.current !== 'INTERACTING' || instr.type === 'OBSERVE_OBJECT') && cachedCoordsRef.current && hasAgentProfile(_characterId)
       && !isAgentDestinationFree(_characterId, { x: cachedCoordsRef.current.tx, z: cachedCoordsRef.current.tz });
     if (followsInteraction || occupiedApproach || (!movingFurniture.size && cachedCoordsRevisionRef.current !== revision) || cachedCoordsInstructionRef.current !== instr || !cachedCoordsRef.current) {
       cachedCoordsInstructionRef.current = instr;
@@ -198,6 +198,7 @@ export function useAgentController(
         }
 
         const targetObjId = e.detail?.objectId;
+        if (targetObjId && !OccupancyManager.canUseObject(targetObjId, _characterId)) return;
         const role = (e.detail?.forceRole as DuoRole) || 'roleB';
         if (role) {
           duoRoleRef.current = role;
@@ -246,6 +247,10 @@ export function useAgentController(
     const onForceSmartObject = (e: any) => {
       if (e.detail?.targetId === _characterId && e.detail?.objectId) {
         const { objectId, slotId, animation } = e.detail;
+        if (!OccupancyManager.canUseObject(objectId, _characterId)) {
+          appLog(_characterId, `⚠️ Accès refusé : ${SMART_OBJECTS[objectId]?.name ?? objectId} est réservé à ${SMART_OBJECTS[objectId]?.ownerCharacterId}`);
+          return;
+        }
         const targetSlot = slotId || SMART_OBJECTS[objectId]?.slots[0]?.slotId;
         if (targetSlot && OccupancyManager.isSlotOccupied(objectId, targetSlot, _characterId)) {
           const occupant = OccupancyManager.getOccupant(objectId, targetSlot);
@@ -308,6 +313,8 @@ export function useAgentController(
   }, [_characterId, enabled]);
 
   if (scenario !== prevScenarioRef.current) {
+    const departureOwner = routeRef.current.owner ?? claimedSlotRef.current?.objectId
+      ?? (hasAgentProfile(_characterId) ? getContainingObjectOwner(_characterId, getRealPosition()) : undefined);
     if (claimedSlotRef.current) {
       if (claimedSlotRef.current.objectId === 'cuisine-group' && claimedSlotRef.current.slotId === 'cook-oven') {
         useSceneStore.getState().triggerAction('ninja', false);
@@ -346,34 +353,37 @@ export function useAgentController(
         deployment.hasStarted = true;
       }
     } else {
-      statusRef.current = deployment.status;
-      timerRef.current = deployment.timer;
+      statusRef.current = deployment.hasCompleted ? 'IDLE' : deployment.status;
+      timerRef.current = deployment.hasCompleted ? 0 : deployment.timer;
       delayTimerRef.current = deployment.delayTimer;
     }
 
+    const firstScenario = prevScenarioRef.current === undefined;
     prevScenarioRef.current = scenario;
     dynamicNavQueueRef.current = [];
     dynamicNavIndexRef.current = 0;
     resetRoute(routeRef.current, _characterId);
+    routeRef.current.owner = departureOwner;
     routeInstructionRef.current = null;
     cachedCoordsInstructionRef.current = null;
     cachedCoordsRef.current = null;
 
     if (scenario) {
-      const stepCoords = scenario.length > 0 ? resolveInstructionCoords(scenario[0], null) : null;
+      const stepCoords = firstScenario && scenario.length > 0 && scenario[0].type !== 'OBSERVE_OBJECT'
+        ? resolveInstructionCoords(scenario[0], null) : null;
       const real = (stepCoords && (stepCoords.tx !== 0 || stepCoords.tz !== 0))
         ? { x: stepCoords.tx, y: stepCoords.ty ?? 0, z: stepCoords.tz, rotY: stepCoords.rotY ?? 0 }
         : getRealPosition();
 
       stateRef.current.x = real.x;
-      stateRef.current.y = deployment.y;
+      stateRef.current.y = deployment.hasCompleted ? real.y : deployment.y;
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
       stateRef.current.isSpawned = deployment.status !== 'WAITING';
       stateRef.current.animation = deployment.status === 'FALLING'
         ? (deployment.timer <= 3.0 ? 'falling-idle' : 'falling')
         : (deployment.status === 'WAITING' ? 'idle' : (stepCoords?.anim ? resolveAnimationId(stepCoords.anim) : 'idle'));
-      startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
+      startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY, owner: departureOwner };
     }
   }
 
@@ -433,7 +443,7 @@ export function useAgentController(
     const changedLanding = !deployment.hasCompleted && (spawnObstacleRevisionRef.current !== getObstacleRevision() || landingThisFrame);
     if ((!initialProfileResolvedRef.current || changedLanding) && enabled && hasAgentProfile(_characterId)) {
       cachedCoordsRef.current = null;
-      if (scenario?.length) {
+      if (scenario?.length && scenario[0].type !== 'OBSERVE_OBJECT') {
         const first = resolveInstructionCoords(scenario[0], null, _characterId);
         if (first.tx !== 0 || first.tz !== 0) {
           stateRef.current.x = first.tx;
@@ -579,7 +589,10 @@ export function useAgentController(
 
     // ── 3. État IDLE : Initialisation et réservation de l'instruction ──
     if (statusRef.current === 'IDLE') {
-      if (currentInstruction.smartObjectId) {
+      if (currentInstruction.smartObjectId && currentInstruction.type !== 'OBSERVE_OBJECT') {
+        if (!OccupancyManager.canUseObject(currentInstruction.smartObjectId, _characterId)) {
+          throw new Error(`Access denied to ${currentInstruction.smartObjectId} for ${_characterId}`);
+        }
         const objId = currentInstruction.smartObjectId;
         let reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
         const isDuo = isDuoSlot(objId, reqSlotId);
@@ -724,7 +737,7 @@ export function useAgentController(
         }
       }
 
-      if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START' || currentInstruction.type === 'USE_OBJECT') {
+      if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START' || currentInstruction.type === 'USE_OBJECT' || currentInstruction.type === 'OBSERVE_OBJECT') {
         const target = getResolvedCoords(currentInstruction);
 
         statusRef.current = 'MOVING';
@@ -795,7 +808,8 @@ export function useAgentController(
         (direction, remaining) => {
           const steering = computeSteeringVector(_characterId, oldPosition.x, oldPosition.z, direction.x, direction.z, remaining);
           return { x: steering.steerX, z: steering.steerZ };
-        }, target.owner ?? currentInstruction.smartObjectId, currentInstruction.type === 'USE_OBJECT' || currentInstruction.navigation === 'interaction', currentInstruction.closedDoor);
+        }, target.owner ?? currentInstruction.smartObjectId, currentInstruction.type === 'USE_OBJECT' || currentInstruction.navigation === 'interaction'
+          || (currentInstruction.type === 'RETURN_TO_START' && Boolean(target.owner)), currentInstruction.closedDoor);
       stateRef.current.x = position.x;
       stateRef.current.z = position.z;
       const moved = distance(oldPosition, position);
@@ -821,7 +835,12 @@ export function useAgentController(
         if (currentInstruction.smartObjectId) { stateRef.current.x = target.tx; stateRef.current.z = target.tz; }
         if (target.ty !== undefined) stateRef.current.y = target.ty;
 
-        if (currentInstruction.type === 'USE_OBJECT') {
+        if (currentInstruction.type === 'OBSERVE_OBJECT') {
+          statusRef.current = 'INTERACTING';
+          timerRef.current = currentInstruction.duration!;
+          stateRef.current.animation = resolveAnimationId('idle');
+          appLog(_characterId, `👀 Observation : ${target.label}`);
+        } else if (currentInstruction.type === 'USE_OBJECT') {
           const objId = currentInstruction.smartObjectId;
           if (objId) routeRef.current.owner = getInteractionOwner(target.owner ?? objId);
           const slotId = currentInstruction.slotId || (objId ? SMART_OBJECTS[objId]?.slots[0]?.slotId : undefined) || 'default';
@@ -934,6 +953,22 @@ export function useAgentController(
         stateRef.current.animation = moved > 0 ? currentWalkAnimRef.current : 'idle';
       }
     } else if (statusRef.current === 'INTERACTING') {
+      // Observation never resolves a slot animation or joins a duo session.
+      if (currentInstruction.type === 'OBSERVE_OBJECT') {
+        const target = getResolvedCoords(currentInstruction);
+        if (distance(stateRef.current, { x: target.tx, z: target.tz }) >= 1e-6) {
+          statusRef.current = 'MOVING';
+          return stateRef.current;
+        }
+        stateRef.current.animation = resolveAnimationId('idle');
+        stateRef.current.rotY = computeRotYStep(stateRef.current.rotY, target.rotY!, ROT_SPEED, dt);
+        timerRef.current -= dt;
+        if (timerRef.current <= 0) {
+          statusRef.current = 'IDLE';
+          advanceToNextStep(hasNavStep);
+        }
+        return stateRef.current;
+      }
       // ── 5. Interactions (INTERACTING) ──
       const isDuoAction = isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId)
         || !!duoRoleRef.current;
@@ -971,7 +1006,7 @@ export function useAgentController(
         timerRef.current -= dt;
         if (timerRef.current <= 0) {
           statusRef.current = 'IDLE';
-          stepIndexRef.current++;
+          advanceToNextStep(hasNavStep);
         }
         return stateRef.current;
       }

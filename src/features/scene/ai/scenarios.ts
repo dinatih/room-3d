@@ -1,153 +1,32 @@
 import { AgentInstruction } from './aiTypes';
-import { buildSmartObjectInstructionSequence, getAllSmartObjectIds } from './smartObjectRegistry';
+import { getAllSmartObjects } from './smartObjectRegistry';
 
-/**
- * SCENARIOS — Visite guidée et génération de séquences autonomes basées sur les Smart Objects.
- */
-
-// Liste dynamique de tous les Smart Objects disponibles pour la vie quotidienne autonome
-export const AUTONOMOUS_SMART_OBJECTS: string[] = new Proxy([] as string[], {
-  get(_target, prop, receiver) {
-    const all = getAllSmartObjectIds();
-    if (prop === 'length') return all.length;
-    if (prop === Symbol.iterator) return all[Symbol.iterator].bind(all);
-    if (typeof prop === 'string' && !isNaN(Number(prop))) {
-      return all[Number(prop)];
-    }
-    const val = Reflect.get(all, prop, receiver);
-    if (typeof val === 'function') {
-      return (val as Function).bind(all);
-    }
-    return val;
+/** Snapshot active public objects at launch; each tour owns its instructions. */
+export function buildGuidedTour(start: { x: number; z: number }): AgentInstruction[] {
+  const remaining = getAllSmartObjects().filter(obj => !obj.ownerCharacterId);
+  const instructions: AgentInstruction[] = [];
+  let current = start;
+  while (remaining.length) {
+    const distance = (position: [number, number, number]) => Math.hypot(position[0] - current.x, position[2] - current.z);
+    remaining.sort((a, b) => distance(a.position) - distance(b.position) || a.id.localeCompare(b.id));
+    const next = remaining.shift()!;
+    instructions.push({ type: 'OBSERVE_OBJECT', smartObjectId: next.id, duration: 2 });
+    current = { x: next.position[0], z: next.position[2] };
   }
-});
+  instructions.push({ type: 'RETURN_TO_START' });
+  return instructions;
+}
 
-/**
- * Visite guidée complète de l'appartement (Full Tour)
- * Départ : Porte d'entrée (extérieur couloir sud)
- * Parcours : En zig-zag de l'Est à l'Ouest et du Sud au Nord
- */
-export const ACTION_FULL_TOUR: AgentInstruction[] = [
-  // ── DÉPART : Porte d'entrée (côté couloir extérieur sud) ──
-  { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
-
-  // ── ÉTAPE 1 : Couloir Sud-Est ──
-  ...buildSmartObjectInstructionSequence('corridor-closet'),
-
-  // ── ÉTAPE 2 : Salle de bain (Sud-Ouest) ──
-  ...buildSmartObjectInstructionSequence('toilet'),
-  ...buildSmartObjectInstructionSequence('drona-west'),
-  ...buildSmartObjectInstructionSequence('vasque-sdb'),
-  ...buildSmartObjectInstructionSequence('drona-east'),
-  ...buildSmartObjectInstructionSequence('sdb-closet'),
-  ...buildSmartObjectInstructionSequence('shower'),
-
-  // ── ÉTAPE 3 : Séjour Sud (Zig-zag Est -> Centre -> Ouest) ──
-  ...buildSmartObjectInstructionSequence('freezer'),
-  ...buildSmartObjectInstructionSequence('mirror-south'),
-  ...buildSmartObjectInstructionSequence('cuisine-group'),
-
-  // ── ÉTAPE 4 : Séjour Milieu (Zig-zag Ouest -> Est -> Centre-Est -> Ouest) ──
-  ...buildSmartObjectInstructionSequence('chair-office'),
-  ...buildSmartObjectInstructionSequence('bed-east'),
-  ...buildSmartObjectInstructionSequence('desk-bollsidan-2'),
-  ...buildSmartObjectInstructionSequence('bed-west'),
-
-  // ── ÉTAPE 5 : Séjour Nord (Zig-zag Ouest -> Est -> Baie vitrée) ──
-  ...buildSmartObjectInstructionSequence('desk-bollsidan-1'),
-  ...buildSmartObjectInstructionSequence('kallax-ne'),
-
-  // ── ÉTAPE 6 : Jardin & Extérieurs Nord (Zig-zag Ouest -> Est -> Nord) ──
-  ...buildSmartObjectInstructionSequence('sofa-garden-west'),
-  ...buildSmartObjectInstructionSequence('sofa-garden-east'),
-  ...buildSmartObjectInstructionSequence('bathtub-garden'),
-  ...buildSmartObjectInstructionSequence('rain-dance'),
-  ...buildSmartObjectInstructionSequence('garden-fresh-air'),
-  ...buildSmartObjectInstructionSequence('building-b-garden'),
-  ...buildSmartObjectInstructionSequence('building-b-corridor'),
-
-  // ── ÉTAPE 7 : Fin de la visite & retour au point de départ ──
-  { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
-  { type: 'RETURN_TO_START' }
-];
-
-/**
- * Scénario Concierge pour Xbot :
- * Ronde d'état des lieux (Entrée -> SDB 360° -> Salon 360° -> Couloir 360° -> Sortie vers appartement voisin)
- */
-export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
-  // ── 1. Arrivée et entrée ──
-  { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
-
-  // ── 2. Inspection Salle de bain ──
-  { type: 'MOVE_TO', targetZoneId: 'bathroom' },
-  { type: 'ROTATE_360', duration: 5.0 },
-
-  // ── 3. Inspection Salon / Séjour ──
-  { type: 'MOVE_TO', targetZoneId: 'living' },
-  { type: 'ROTATE_360', duration: 6.0 },
-
-  // ── 4. Inspection Couloir ──
-  { type: 'MOVE_TO', targetZoneId: 'corridor' },
-  { type: 'ROTATE_360', duration: 4.0 },
-
-  // ── 5. Sortie et direction entrée couloir Bâtiment B (attente 1min30 avant prochaine ronde) ──
-  { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
-  { type: 'MOVE_TO', smartObjectId: 'building-b-corridor-end', slotId: 'visit' },
-  { type: 'WAIT', duration: 90.0, animation: 'texting-while-standing' }
-];
-
-// Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)
-export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
-  native:   'desk-bollsidan-2',
-  rosanna:  'bed-east',
-  marissa:  'sofa-garden-east',
-  delphina: 'shower',
-  sara:     'inyeong-cha-hugs-point',
-  cha:      'inyeong-cha-hugs-point',
-  vivida:   'hugs-point',
-  sabira:   'bed-west',
-  safa:     'west-neighbor-flat',
-  romana:   'west-neighbor-flat',
-  angelina: 'west-neighbor-flat',
-  lgbta:    'hugs-point',
-  sandra:   'duo-zone',
-  rajaa:    'duo-zone',
-  hayley:   'inyeong-cha-hugs-point',
-  gloria:   'sofa-garden-east',
-  zoe:      'hugs-point',
-  sophia:   'building-b-corridor',
-  valby:    'bathtub-garden',
-  alex:     'est-neighbor-flat',
-  mannequin:'est-neighbor-flat',
-  david:    'est-neighbor-flat',
-  james:    'est-neighbor-flat',
-  lewis:    'est-neighbor-flat',
-  jennifer: 'dance-bed-west-mid',
-  skeleton: 'combat-point',
-  curious_skeleton: 'combat-point',
-};
-
-/**
- * Construit un scénario autonome complet de vie quotidienne
- */
-export function buildAutonomousScenario(characterId?: string): AgentInstruction[] {
-  if (characterId === 'xbot') {
-    return XBOT_CONCIERGE_TOUR;
-  }
-
-  const preferredFirst = characterId ? INITIAL_SMART_OBJECT_BY_CHAR[characterId] : undefined;
-
-  const otherObjects = preferredFirst
-    ? AUTONOMOUS_SMART_OBJECTS.filter(id => id !== preferredFirst)
-    : AUTONOMOUS_SMART_OBJECTS;
-
-  const shuffled = [...otherObjects].sort(() => Math.random() - 0.5);
-  const orderedIds = preferredFirst ? [preferredFirst, ...shuffled] : shuffled;
-
-  const smartActions = orderedIds
-    .map(id => buildSmartObjectInstructionSequence(id, undefined, characterId))
-    .filter(seq => seq.length > 0);
-
-  return smartActions.flat();
+/** Doors and routes are handled by the existing navigation controller. */
+export function buildConciergeTour(): AgentInstruction[] {
+  return [
+    { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
+    ...['corridor', 'bathroom', 'living', 'garden'].flatMap<AgentInstruction>(targetZoneId => [
+      { type: 'MOVE_TO', targetZoneId },
+      { type: 'ROTATE_360', duration: 3 },
+    ]),
+    { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
+    { type: 'MOVE_TO', smartObjectId: 'building-b-corridor-end', slotId: 'visit' },
+    { type: 'WAIT', smartObjectId: 'building-b-corridor-end', slotId: 'visit', duration: 90, animation: 'texting-while-standing' },
+  ];
 }

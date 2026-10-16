@@ -21,6 +21,11 @@ class SmartObjectOccupancyManager {
     return `${objectId}:${slotId}`;
   }
 
+  canUseObject(objectId: string, characterId?: string): boolean {
+    const owner = SMART_OBJECTS[objectId]?.ownerCharacterId;
+    return !owner || owner === characterId;
+  }
+
   getBathroomOccupants(forCharacterId?: string): Set<string> {
     const occupants = new Set<string>();
     for (const [key, reservation] of this.occupiedSlots) {
@@ -73,7 +78,7 @@ class SmartObjectOccupancyManager {
    * Retourne true si succès, false si déjà occupé.
    */
   claimSlot(objectId: string, slotId: string, characterId: string): boolean {
-    if (this.isSlotOccupied(objectId, slotId, characterId)) {
+    if (!this.canUseObject(objectId, characterId) || this.isSlotOccupied(objectId, slotId, characterId)) {
       return false;
     }
     const key = this.slotKey(objectId, slotId);
@@ -113,7 +118,7 @@ class SmartObjectOccupancyManager {
    */
   getAvailableSlot(objectId: string, characterId: string, preferredSlotId?: string): string | null {
     const obj = SMART_OBJECTS[objectId];
-    if (!obj || !obj.slots.length) return null;
+    if (!obj || !obj.slots.length || !this.canUseObject(objectId, characterId)) return null;
 
     if (BATHROOM_OBJECTS.has(objectId)) {
       if (this.getBathroomOccupants(characterId).size >= BATHROOM_CAPACITY) {

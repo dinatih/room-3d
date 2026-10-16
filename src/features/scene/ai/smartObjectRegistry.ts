@@ -511,7 +511,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
   'building-b-corridor-end': {
     id: 'building-b-corridor-end',
-    name: 'Gardien Fond Bâtiment B (Couloir)',
+    name: 'Repos du concierge (Couloir Bâtiment B)',
+    ownerCharacterId: 'xbot',
     category: 'outdoor',
     exclusive: true,
     position: [650, 0, 400],
@@ -992,16 +993,20 @@ export function buildSmartObjectInstructionSequence(
   characterId?: string
 ): AgentInstruction[] {
   const obj = getSmartObject(objectId) || SMART_OBJECTS[objectId];
-  if (!obj || !obj.slots.length) return [];
+  if (!obj || !obj.slots.length || !OccupancyManager.canUseObject(objectId, characterId)) return [];
 
   // Trouver un slot disponible si un characterId est fourni, ou utiliser le slot demandé
   let chosenSlotId = slotId;
   if (!chosenSlotId && characterId) {
     chosenSlotId = OccupancyManager.getAvailableSlot(objectId, characterId) ?? undefined;
+    // Duo-only objects still participate in free activities through the duo manager.
+    chosenSlotId ??= obj.slots.find(slot => slot.isDuo && !OccupancyManager.isSlotOccupied(objectId, slot.slotId, characterId))?.slotId;
+    if (!chosenSlotId) return [];
   }
 
+  if (chosenSlotId && !obj.slots.some(s => s.slotId === chosenSlotId)) throw new Error(`Unknown slot ${objectId}:${chosenSlotId}`);
   const slot = chosenSlotId
-    ? obj.slots.find(s => s.slotId === chosenSlotId) ?? obj.slots[0]
+    ? obj.slots.find(s => s.slotId === chosenSlotId)!
     : obj.slots[Math.floor(Math.random() * obj.slots.length)];
 
   const baseInstruction: AgentInstruction = {

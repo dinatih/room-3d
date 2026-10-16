@@ -393,7 +393,7 @@ export function CharacterSection({
               borderColor: 'rgba(0, 0, 0, 0.12)',
             }}
           >
-            <span><i className="bi bi-person-walking me-1" aria-hidden="true" />Visite Complète (Sud ➔ Nord)</span>
+            <span><i className="bi bi-person-walking me-1" aria-hidden="true" />Observer tous les Smart Objects</span>
             <span className={`badge rounded-pill ${extraStates?.aiFullTour ? 'bg-primary text-white' : 'bg-secondary text-white'}`} style={{ fontSize: '9px', lineHeight: '1.4' }}>
               {extraStates?.aiFullTour ? 'EN COURS' : 'DÉMARRER'}
             </span>

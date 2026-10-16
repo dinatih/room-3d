@@ -39,6 +39,13 @@ function doorFootprint(profile: AgentProfile, key: DoorKey, angle = 0): Polygon[
   return footprint.actual;
 }
 export const getInteractionOwner = (owner: string) => (owner === 'bed-west' || owner === 'bed-east') && positionState['bed-double']?.idx === 1 ? 'bed-double' : owner;
+/** Recover the furniture to exit when a scenario starts from a seated character. */
+export function getContainingObjectOwner(agentId: string, position: Point): string | undefined {
+  const profile = getAgentProfile(agentId);
+  const obstacle = [...furnitureObstacles.values()].find(o => o.yMin < profile.height && o.yMax > 0
+    && pointInRing(position, inflate(o.polygon, profile.radius)));
+  return obstacle?.owner ? getInteractionOwner(obstacle.owner) : undefined;
+}
 const caches = new WeakMap<AgentProfile, Map<string, { revision: number; doorAngles: string; graph: VisibilityGraph }>>();
 const inSurface = (p: Point) => walkableSurfaces.some(rings => pointInRing(p, rings[0]) && !rings.slice(1).some(h => pointInRing(p, h)));
 export function getDoorApproach(key: DoorKey, agentId?: string, preferred?: Point, start?: Point, departureOwner?: string, closedDoor?: DoorKey): Point {
@@ -362,8 +369,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   if (route.owner && !contained(route.owner, start)) route.owner = undefined;
   if (!route.owner && owner && contained(owner, start)) route.owner = owner;
   if (!route.owner) {
-    const container = [...furnitureObstacles.values()].find(o => o.yMin < profile.height && o.yMax > 0 && pointInRing(start, inflate(o.polygon, profile.radius)));
-    if (container?.owner) route.owner = getInteractionOwner(container.owner);
+    route.owner = getContainingObjectOwner(agentId, start);
   }
   if (route.owner && contained(route.owner, start) && !(interaction && owner === route.owner)) {
     if (route.exit?.owner !== route.owner || route.exit.graph !== graph) {

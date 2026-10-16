@@ -594,7 +594,7 @@ if (process.argv.includes('--browser')) (async () => {
       window.cameraState = (await import('/src/features/scene/cameraState.ts')).cameraState;
       window.avoidance = await import('/src/features/scene/ai/agent/agentAvoidance.ts');
       window.steer = window.avoidance.computeSteeringVector;
-      const scenarios = await import('/src/features/scene/ai/scenarios.ts');
+      const scenarios = { ...(await import('/src/features/scene/ai/scenarios.ts')), ...(await import('/src/features/scene/ai/autonomousActivities.ts')) };
       window.autonomousAgents = new Map();
       window.duoManager = (await import('/src/features/scene/ai/duoSessionManager.ts')).duoSessionManager;
       window.occupancy = (await import('/src/features/scene/ai/occupancyManager.ts')).OccupancyManager;
@@ -607,9 +607,9 @@ if (process.argv.includes('--browser')) (async () => {
         return null;
       }
       function XbotProbe() {
-        const scenario = React.useMemo(()=>scenarios.XBOT_CONCIERGE_TOUR.map(i=>({...i,duration:i.duration ? 0.1 : undefined})),[]);
-        const agent = useAgentController('xbot-probe',scenario,false,()=>({x:288,y:0,z:603,rotY:0}));
-        window.autonomousAgents.set('xbot-probe',{agent,scenario});
+        const scenario = React.useMemo(()=>scenarios.buildConciergeTour().map(i=>({...i,duration:i.duration ? 0.1 : undefined})),[]);
+        const agent = useAgentController('xbot',scenario,false,()=>({x:288,y:0,z:603,rotY:0}));
+        window.autonomousAgents.set('xbot',{agent,scenario});
         return null;
       }
       function SkyProbe({id}) {
@@ -645,7 +645,7 @@ if (process.argv.includes('--browser')) (async () => {
         window.autonomousAgents.set(id,{agent,scenario});return null;
       }
       function AutonomousProbe({ id }) {
-        const scenario = React.useMemo(() => scenarios.buildAutonomousScenario(id), [id]);
+        const scenario = React.useMemo(() => (id === 'xbot' ? scenarios.buildConciergeTour() : scenarios.buildAutonomousActivities(id)), [id]);
         const agent = useAgentController(id, scenario, true, () => ({ x: 160, y: 0, z: 300, rotY: 0 }));
         window.autonomousAgents.set(id, { agent, scenario });
         return null;
@@ -708,6 +708,12 @@ if (process.argv.includes('--browser')) (async () => {
     });
     await page.waitForFunction(() => window.nav?.furnitureObstacles.size > 25 && window.nav.hasAgentProfile('native'), { timeout: 60000 }).catch(async error => { console.log('Readiness:', await page.evaluate(() => ({ ids: [...window.nav.furnitureObstacles.keys()], native: window.nav.hasAgentProfile('native'), scene: window.fixtureScene.children.map(c => c.name), agent: window.agent.getStatus() }))); throw error; });
     console.log('Scene assets ready:', await page.evaluate(() => ({ profile: window.nav.getAgentProfile('native'), obstacles: window.nav.furnitureObstacles.size })));
+    if (process.argv.includes('--scenarios-only') || process.argv.includes('--scenarios-seated-only')) {
+      await page.evaluate(seated => { window.scenariosSeatedOnly = seated; }, process.argv.includes('--scenarios-seated-only'));
+      await require('./scenarios-check.cjs')(page);
+      assert.deepEqual(errors, [], 'No browser errors during scenario checks');
+      return;
+    }
     if (process.argv.includes('--occupied-loop')) {
       let result;
       try { result = await page.evaluate(() => {
@@ -916,13 +922,15 @@ if (process.argv.includes('--browser')) (async () => {
     if (process.argv.includes('--xbot-tour')) {
       await page.waitForFunction(()=>window.nav.hasAgentProfile('xbot'));
       const audit = await page.evaluate(async()=>{
-        const nav=window.nav, {agent}=window.autonomousAgents.get('xbot-probe');
-        const profile=nav.getAgentProfile('xbot'); nav.setAgentProfile('xbot-probe',profile);
+        const nav=window.nav, {agent}=window.autonomousAgents.get('xbot');
+        nav.useSceneStore.setState(s=>({layers:{...s.layers,npcCollisions:true}}));
+        const profile=nav.getAgentProfile('xbot');
         const occupantProfile=nav.getAgentProfile('native'); nav.setAgentProfile('bath-occupant',occupantProfile);
         const occupied=window.resolveCoords({type:'MOVE_TO',targetZoneId:'bathroom'},null,'bath-occupant');
         window.cameraState.positions['bath-occupant']={x:occupied.tx,y:0,z:occupied.tz,yaw:0};
-        const alternative=window.resolveCoords({type:'MOVE_TO',targetZoneId:'bathroom'},null,'xbot-probe');
-        if(Math.hypot(alternative.tx-occupied.tx,alternative.tz-occupied.tz)<profile.radius+occupantProfile.radius) throw new Error('Xbot must inspect a free place in an occupied bathroom');
+        const alternative=window.resolveCoords({type:'MOVE_TO',targetZoneId:'bathroom'},null,'xbot');
+        if(Math.hypot(alternative.tx-occupied.tx,alternative.tz-occupied.tz)<window.avoidance.actorClearance(profile,occupantProfile)
+          || !window.avoidance.isAgentDestinationFree('xbot',{x:alternative.tx,z:alternative.tz})) throw new Error('Xbot must inspect a free place in an occupied bathroom');
         const deadline=performance.now()+60000;
         let state, previous;
         while(performance.now()<deadline) {
@@ -932,12 +940,12 @@ if (process.argv.includes('--browser')) (async () => {
             if(!window.geom.segmentFree(previous,state,leaf)) throw new Error(`Xbot crossed the actual ${key} door`);
           }
           previous=state;
-          window.cameraState.positions['xbot-probe']={...state,yaw:state.rotY};
+          window.cameraState.positions.xbot={...state,yaw:state.rotY};
           if(['FINISHED','BLOCKED'].includes(agent.getStatus())) break;
           await new Promise(resolve=>requestAnimationFrame(resolve));
         }
         delete window.cameraState.positions['bath-occupant'];
-        return {profile,occupied,alternative,status:agent.getStatus(),state,route:nav.navigationDebug.get('xbot-probe')};
+        return {profile,occupied,alternative,status:agent.getStatus(),state,route:nav.navigationDebug.get('xbot')};
       });
       console.log('Xbot tour:',JSON.stringify(audit)); assert.equal(audit.status,'FINISHED'); return;
     }

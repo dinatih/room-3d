@@ -675,7 +675,7 @@ export function HoverOverlay() {
                       const candidateIds = Object.keys(cameraState.positions).filter(
                         (charId) =>
                           charId !== 'ulotte' && charId !== 'shiba' &&
-                          charId !== 'robin' &&
+                          charId !== 'robin' && OccupancyManager.canUseObject(objectId, charId) &&
                           (isCharacterVisibleInMode(charId, laraCount, activeCharacterId, extraChars, activeExtraIds, activeMainIds) ||
                             charId === activeCharacterId)
                       );

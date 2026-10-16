@@ -1,44 +1,43 @@
-# Scénario Concierge pour Xbot (État des lieux)
+# Scénarios et activités autonomes
 
-Ce document décrit l'architecture et le déroulement du scénario d'état des lieux et de conciergerie automatisé pour le personnage **Xbot** (concierge humanoïde collectif/hôtelier).
+Deux parcours sont construits à la demande dans `scenarios.ts`. Chaque personnage
+possède ses propres instructions ; aucun tableau de scénario mutable n'est partagé.
 
-## 1. Vue d'ensemble
+## Visite guidée
 
-Xbot effectue des rondes de contrôle et d'inspection dans les logements :
-1. **Arrivée** par l'extérieur / couloir d'entrée.
-2. **Entrée** dans l'appartement via la porte d'entrée.
-3. **Salle de bain** : rejoint le centre de la pièce et effectue une rotation à 360° lente pour inspecter l'espace.
-4. **Salon / Séjour** : rejoint le centre de la pièce et effectue une rotation à 360° lente.
-5. **Couloir** : rejoint le centre du couloir et effectue une rotation à 360° lente.
-6. **Sortie** de l'appartement en refermant la porte.
-7. **Suite du parcours** : se déplace dans le couloir extérieur vers l'appartement voisin (palier sud/ouest).
+Le bouton du personnage actif lance une seule visite depuis sa position réelle.
+Les Smart Objects publics actifs sont collectés au lancement, y compris les points
+de danse, de duo, les destinations voisines et les objets sans actions. Le prochain
+objet est le plus proche en position monde (égalité départagée par identifiant).
 
----
+`OBSERVE_OBJECT` rejoint une approche libre, regarde l'objet pendant 2 secondes,
+sans action, réservation de slot ou invitation duo. Les transformations et obstacles
+actuels déterminent l'approche ; une destination inaccessible reste explicitement
+bloquée. La visite se termine par un retour au départ, puis le fonctionnement
+habituel reprend. Elle ne boucle jamais.
 
-## 2. Déroulé des étapes (Instructions IA)
+## Concierge Xbot
 
-| Étape | Nœud / Cible | Type d'instruction | Description & Déclencheurs |
-|---|---|---|---|
-| 0 | `outdoor-entry-door` | `MOVE_TO` | Positionnement devant la porte d'entrée (X: 288, Z: 603) |
-| 1 | Porte d'entrée | `INTERACT` | Ouverture de la porte (`entryDoor = true`) |
-| 2 | `corridor-entry-door` | `MOVE_TO` | Franchissement du seuil |
-| 3 | Porte d'entrée | `INTERACT` | Fermeture de la porte (`entryDoor = false`) |
-| 4 | `bathroom-center` | `MOVE_TO` | Déplacement vers le centre de la SDB (X: 100, Z: 550) |
-| 5 | SDB | `ROTATE_360` | Tour complet à 360° lent (~5s) en rotation simple |
-| 6 | `living-center` | `MOVE_TO` | Déplacement vers le centre du séjour (X: 160, Z: 200) |
-| 7 | Salon | `ROTATE_360` | Tour complet à 360° lent (~6s) en rotation simple |
-| 8 | `corridor-center` | `MOVE_TO` | Déplacement vers le centre du couloir (X: 240, Z: 480) |
-| 9 | Couloir | `ROTATE_360` | Tour complet à 360° lent (~4s) en rotation simple |
-| 10 | Porte d'entrée | `INTERACT` | Ouverture de la porte (`entryDoor = true`) |
-| 11 | `outdoor-entry-door` | `MOVE_TO` | Sortie vers le couloir extérieur |
-| 12 | Porte d'entrée | `INTERACT` | Fermeture de la porte (`entryDoor = false`) |
-| 13 | `building-b-corridor` | `MOVE_TO` | Marche jusqu'à l'entrée couloir du Bâtiment B |
-| 14 | Entrée Bât B | `WAIT` | Attente de 1min30 (90s) avant la prochaine ronde |
+La ronde automatique en boucle suit : entrée extérieure → couloir → salle de bain
+→ séjour → jardin → entrée extérieure → repos dans le couloir du bâtiment B.
+Chaque zone reçoit une inspection visuelle à 360° de 3 secondes. Aucun équipement
+n'est utilisé et aucune tâche ménagère n'est exécutée.
 
----
+Au repos, Xbot consulte son téléphone pendant 90 secondes avant la ronde suivante.
+Le Smart Object `building-b-corridor-end` conserve son emplacement et porte
+`ownerCharacterId: 'xbot'`. Cette restriction permanente s'applique même lorsque
+Xbot est absent ou a libéré ses réservations ; elle n'interdit pas le passage.
 
-## 3. Évolutions futures prévues
+## Activités libres
 
-- Tâches d'hygiène et d'entretien ciblées :
-  - Nettoyage douche / vasque / toilettes.
-  - Entretien plan de travail / évier cuisine.
+`autonomousActivities.ts` conserve les activités aléatoires et les affectations
+initiales des autres PNJ, utilisées également pour les interactions duo. Les objets
+privés interdits au personnage sont exclus de la sélection. Les ordres directs,
+les recherches de slots et les réservations appliquent le même contrôle d'accès.
+
+## Vérification
+
+Avec Vite lancé sur le port 5186 :
+`node scripts/temp_kitchen_navigation_check.cjs --browser --scenarios-only`.
+Ce test headless charge le mobilier réel, vérifie une visite complète, les objets
+occupés, les points duo, les ordres refusés et deux rondes avec repos de 90 secondes.

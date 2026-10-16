@@ -28,7 +28,8 @@ import {
   isHeadMesh,
 } from '../characterParts';
 import { LAYER_WALKER_DETAIL } from '@config';
-import { ACTION_FULL_TOUR, buildAutonomousScenario } from '../ai/scenarios';
+import { buildGuidedTour, buildConciergeTour } from '../ai/scenarios';
+import { buildAutonomousActivities } from '../ai/autonomousActivities';
 import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController, resetAgentDeployment } from '../ai/useAgentController';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
@@ -333,20 +334,23 @@ export function Character({
   }, [aiFullTour]);
 
   const activeActionScenario = useMemo(() => {
-    if (activeActionKey === 'aiFullTour') return ACTION_FULL_TOUR;
+    if (!isPreview && id === activeCharacterId && activeActionKey === 'aiFullTour') {
+      const position = groupRef.current?.position;
+      return buildGuidedTour(position ? { x: position.x, z: position.z } : { x: npcPosition[0], z: npcPosition[2] });
+    }
     return null;
-  }, [activeActionKey]);
+  }, [activeActionKey, activeCharacterId, id, isPreview]);
 
   const isAutonomous = !isPreview && AUTONOMOUS_NPC_IDS.has(id);
   const isGuidedTour = !isPreview && Boolean(activeActionKey && id === activeCharacterId);
 
   const autonomousScenario = useMemo(() => {
     if (!isAutonomous) return null;
-    return buildAutonomousScenario(id);
+    return id === 'xbot' ? buildConciergeTour() : buildAutonomousActivities(id);
   }, [isAutonomous, id]);
 
   const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomous ? autonomousScenario : EMPTY_SCENARIO);
-  const loopScenario = isAutonomous;
+  const loopScenario = isAutonomous && !isGuidedTour;
 
   const hasSkyDrop = id !== 'xbot' && isAutonomous;
   const spawnDelay = hasSkyDrop ? ((characterIndex ?? 0) * 1.0) : 0;
@@ -381,7 +385,7 @@ export function Character({
       };
     },
     () => {
-      if (activeActionKey) {
+      if (isGuidedTour && activeActionKey) {
         useSceneStore.setState(s => ({
           extraStates: { ...s.extraStates, [activeActionKey]: false }
         }));

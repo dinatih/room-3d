@@ -44,6 +44,7 @@ export interface SmartObjectDef {
   position?: [number, number, number]; // Position monde de référence [x, y, z] (optionnel si itemId présent)
   rotationY?: number;         // Orientation monde de l'objet (optionnel si itemId présent)
   slots: InteractionSlot[];   // Slots d'interaction disponibles
+  ownerCharacterId?: string;  // Permanent access restriction, independent of occupancy
   exclusive?: boolean;        // Si true, un seul personnage à la fois peut utiliser cet objet (exclusivité partagée par tous ses slots)
   approachDoor?: import('./navigation/doorRequests').DoorKey;
 }
@@ -86,7 +87,7 @@ export interface SpatialZoneDef {
   };
 }
 
-export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START' | 'USE_OBJECT' | 'ROTATE_360';
+export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START' | 'USE_OBJECT' | 'ROTATE_360' | 'OBSERVE_OBJECT';
 
 export interface AgentInstruction {
   type: InstructionType;
@@ -101,7 +102,7 @@ export interface AgentInstruction {
   targetPos?: [number, number, number]; // direct position instead of waypoint
   actionId?: string; // for INTERACT
   animation?: string; // animation to play
-  duration?: number; // for WAIT or INTERACT
+  duration?: number; // for WAIT, INTERACT, ROTATE_360 or OBSERVE_OBJECT
   repeatCount?: number; // number of repetitions if duration is not set (default 1)
   repeatVariation?: boolean; // whether to re-randomize animation on each repeat cycle
   triggerEventKey?: string; // event to dispatch

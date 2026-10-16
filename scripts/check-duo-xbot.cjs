@@ -23,13 +23,22 @@ function load(relativePath, dependencies) {
   return module.exports;
 }
 const events = [];
-const registry = load('src/features/scene/animations/animationRegistry.ts', {});
-const duo = load('src/features/scene/animations/duoAnimations.ts', { './animationRegistry': registry });
+const interx = load('src/features/scene/animations/interxManifest.ts', {
+  './interx_manifest.json': { default: require('../src/features/scene/animations/interx_manifest.json') },
+});
+const registry = load('src/features/scene/animations/animationRegistry.ts', {
+  './interxManifest': interx,
+  './fabManifest': load('src/features/scene/animations/fabManifest.ts', {}),
+  './behaveManifest': load('src/features/scene/animations/behaveManifest.ts', {}),
+  './kitManifest': load('src/features/scene/animations/kitManifest.ts', {}),
+});
+const duo = load('src/features/scene/animations/duoAnimations.ts', { './animationRegistry': registry, './interxManifest': interx });
 const combatIds = new Set([
   'b1', 'd1', 'd4', 'f2', 'h1', 'h2', 'h4', 'ko1', 'ko2', 'ko3', 'p1', 'p2',
   's1', 's2', 's3', 's4', 's5', 't1', 't3', 't4', 't5', 'double_leg_takedown',
   'double_leg_takedown_pair', 'release_hostage', 'fist_fight', 'taken_hostage',
-  'shoulder_throw', 'brutal_assassination',
+  'shoulder_throw', 'brutal_assassination', 'duo-martial-arts-combat',
+  ...interx.INTERX_DUO_ANIMATIONS.filter(def => def.isCombat).map(def => def.id),
 ]);
 for (const def of duo.DUO_ANIMATIONS) {
   assert.equal(def.isCombat, combatIds.has(def.id), def.id);
@@ -62,7 +71,9 @@ for (const [id, pool] of [['dance', ['slow_dance']], ['fight', ['fist_fight']], 
 }
 const manager = load('src/features/scene/ai/duoSessionManager.ts', {
   '../animations/duoAnimations': duo,
+  '../animations/duoWorldTransform': load('src/features/scene/animations/duoWorldTransform.ts', {}),
   './occupancyManager': { OccupancyManager: {
+    canUseObject(object, id) { return !objects[object]?.ownerCharacterId || objects[object].ownerCharacterId === id; },
     claimSlot(object, slot, id) { reservations.set(`${object}:${slot}`, id); return true; },
     releaseSlot(object, slot, id) { if (reservations.get(`${object}:${slot}`) === id) reservations.delete(`${object}:${slot}`); },
   } },
@@ -70,7 +81,7 @@ const manager = load('src/features/scene/ai/duoSessionManager.ts', {
   '../cameraState': { cameraState },
   '../characterConfig': { AUTONOMOUS_NPC_IDS: npcIds, isCharacterVisibleInMode: id => visible.has(id) },
   './smartObjectRegistry': { getSmartObject: id => objects[id] },
-  './scenarios': { INITIAL_SMART_OBJECT_BY_CHAR: {} },
+  './autonomousActivities': { INITIAL_SMART_OBJECT_BY_CHAR: {} },
   '../store/useSceneStore': { useSceneStore: { getState: () => store } },
 }).duoSessionManager;
 function reset() {
@@ -86,6 +97,11 @@ function excludesXbot(result) {
   assert.ok(events.every(event => event.targetId !== 'xbot'));
   assert.ok([...reservations.values()].every(id => id !== 'xbot'));
 }
+objects.private = { ...objects.fight, ownerCharacterId: 'xbot' };
+assert.equal(manager.startDuoSession('private', 'session', 'native', 'rosanna'), null);
+assert.equal(manager.startDuoSession('private', 'session', 'xbot', 'native'), null);
+assert.equal(events.length, 0, 'Private objects do not invite unauthorized participants');
+assert.equal(reservations.size, 0, 'Private objects do not reserve unauthorized duo slots');
 for (const object of ['dance', 'mixed']) {
   reset(); excludesXbot(manager.startDuoSession(object, 'session', 'xbot', 'native'));
   assert.ok(events.some(event => event.forceRole === 'roleA'), 'Replacement leader is invited');
@@ -140,7 +156,7 @@ assert.ok(events.every(event => event.targetId !== 'xbot'));
 const characters = [...npcIds].map(id => ({ id, name: id, path: `${id}.glb`, isLara: id !== 'xbot', height: 170, variant: 'native' }));
 const jsx = (type, props) => ({ type, props });
 const group = load('src/features/scene/character/CharacterGroup.tsx', {
-  react: { Suspense: 'Suspense', useMemo: fn => fn(), createElement: jsx },
+  react: { Suspense: 'Suspense', useMemo: fn => fn(), useState: initial => [initial, () => {}], useEffect() {}, createElement: jsx },
   'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' },
   '@react-three/drei': { useGLTF: { preload() {} } },
   '@features/scene/store/useSceneStore': { useSceneStore: selector => selector({ ...store, layers: { characterGrid: true, showAllLaraStyles: true, laraCount: 4 } }) },
@@ -148,6 +164,7 @@ const group = load('src/features/scene/character/CharacterGroup.tsx', {
   './useCharacterAnimations': { cacheDynamicGLTF() {} },
   '../characterConfig': { CHARACTERS: characters, isCharacterVisibleInMode: () => true },
   '../animations/duoAnimations': duo,
+  '../animations/animationResolver': { getDuoAnimationTransformOverride: () => undefined, subscribeAnimationOverrides: () => () => {} },
   './characterGridUtils': { getCharacterGridPosition: index => ({ x: index * 300, y: 0, z: 0 }), getCharacterGridCenterIndex: () => 1 },
 });
 function renderedCharacters(props) {

@@ -5,7 +5,7 @@ import { appLog } from '@features/ui/AppConsole';
 import { cameraState } from '../cameraState';
 import { AUTONOMOUS_NPC_IDS, isCharacterVisibleInMode } from '../characterConfig';
 import { getSmartObject } from './smartObjectRegistry';
-import { INITIAL_SMART_OBJECT_BY_CHAR } from './scenarios';
+import { INITIAL_SMART_OBJECT_BY_CHAR } from './autonomousActivities';
 import { useSceneStore } from '../store/useSceneStore';
 
 export type DuoRole = 'roleA' | 'roleB';
@@ -421,7 +421,8 @@ class DuoSessionManager {
     forcedAnimId?: string
   ): { targetA: string; targetB: string; posA: [number, number, number]; posB: [number, number, number]; rotA: number; rotB: number; actualSlotId: string } | null {
     const obj = getSmartObject(objectId);
-    if (!obj) return null;
+    if (!obj || (leaderId && !OccupancyManager.canUseObject(objectId, leaderId))
+      || (partnerId && !OccupancyManager.canUseObject(objectId, partnerId))) return null;
 
     const playlist = this.resolveSlotPlaylist(objectId, slotId, forcedAnimId);
     if (playlist.length === 0) return null;
@@ -476,7 +477,7 @@ class DuoSessionManager {
 
     // Résolution Leader (A) et Partenaire (B)
     const isVisibleChar = (id: string, allowPlayer = true) => {
-      if (id === 'ulotte' || id === 'shiba' || id === 'robin' || !canParticipate(id)) return false;
+      if (id === 'ulotte' || id === 'shiba' || id === 'robin' || !canParticipate(id) || !OccupancyManager.canUseObject(objectId, id)) return false;
       const storeState = useSceneStore.getState();
       if (!allowPlayer && id === storeState.activeCharacterId) return false;
       return (

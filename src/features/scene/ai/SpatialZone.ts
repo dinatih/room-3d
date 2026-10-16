@@ -84,7 +84,7 @@ export class SpatialZone {
 
     for (const rawObj of this.smartObjects.values()) {
       const obj = getSmartObject(rawObj.id) || rawObj;
-      if (!obj || !obj.position) continue;
+      if (!obj || !obj.position || !OccupancyManager.canUseObject(obj.id, characterId)) continue;
       // Filtrage par catégorie ou par slots d'interaction
       const matchesCategory = obj.category === interactionTypeOrCategory;
       const matchingSlots = obj.slots.filter(slot => {
