@@ -426,6 +426,8 @@ export function useAgentController(
     statusRef.current = 'IDLE';
   };
 
+  // Process instruction changes on the next frame. Recursive retries can loop
+  // forever within one frame when every object in a looping scenario is busy.
   const advance = (dt: number): AgentState => {
     const landingThisFrame = statusRef.current === 'FALLING' && timerRef.current <= dt && cameraState.isSceneLaunched;
     const changedLanding = !deployment.hasCompleted && (spawnObstacleRevisionRef.current !== getObstacleRevision() || landingThisFrame);
@@ -567,7 +569,7 @@ export function useAgentController(
       const closed = doorCollisionState[currentInstruction.doorKey].angle === 0;
       if (currentInstruction.type === 'WAIT' && closed) {
         advanceToNextStep(hasNavStep);
-        return update(dt);
+        return stateRef.current;
       }
       if (currentInstruction.type === 'WAIT') {
         stateRef.current.animation = 'idle';
@@ -590,7 +592,7 @@ export function useAgentController(
               stateRef.current.animation = 'idle';
               releaseClaimedSlot();
               advanceToNextStep(hasNavStep);
-              return update(dt);
+              return stateRef.current;
             }
             if (duoRes) {
               if (duoRes.targetB === _characterId) {
@@ -629,7 +631,7 @@ export function useAgentController(
             dynamicNavIndexRef.current = 0;
             cachedCoordsInstructionRef.current = null;
             cachedCoordsRef.current = null;
-            return update(dt);
+            return stateRef.current;
           }
         } else if (claimedSlotRef.current?.objectId !== objId || (currentInstruction.slotId && claimedSlotRef.current?.slotId !== reqSlotId)) {
           if (claimedSlotRef.current && (claimedSlotRef.current.objectId !== objId || claimedSlotRef.current.slotId !== reqSlotId)) {
@@ -660,7 +662,7 @@ export function useAgentController(
                 while (end < queue.length && queue[end].smartObjectId === objId) end++;
                 queue.splice(index, end - index, ...buildSmartObjectInstructionSequence(objId, altSlotId, _characterId));
                 resetRoute(routeRef.current, _characterId);
-                return update(dt);
+                return stateRef.current;
               }
             } else {
               const occupant = OccupancyManager.getOccupant(objId, reqSlotId);
@@ -679,7 +681,7 @@ export function useAgentController(
                 resetRoute(routeRef.current, _characterId);
                 cachedCoordsInstructionRef.current = null;
                 cachedCoordsRef.current = null;
-                return update(dt);
+                return stateRef.current;
               } else if (scenario) {
                 appLog(_characterId, `⚠️ ${objName} est occupé${occupant ? ` (${occupant})` : ''}, recherche d'une autre place...`);
                 while (stepIndexRef.current < scenario.length && scenario[stepIndexRef.current].smartObjectId === objId) {
@@ -690,7 +692,7 @@ export function useAgentController(
                 resetRoute(routeRef.current, _characterId);
                 cachedCoordsInstructionRef.current = null;
                 cachedCoordsRef.current = null;
-                return update(dt);
+                return stateRef.current;
               } else {
                 appLog(_characterId, `⚠️ ${objName} est actuellement occupé${occupant ? ` (${occupant})` : ''}`);
                 statusRef.current = 'FINISHED';
@@ -830,7 +832,7 @@ export function useAgentController(
             releaseClaimedSlot();
             statusRef.current = 'IDLE';
             advanceToNextStep(hasNavStep);
-            return update(dt);
+            return stateRef.current;
           }
 
           if (objId && (!claimedSlotRef.current || claimedSlotRef.current.objectId !== objId)) {
@@ -881,7 +883,7 @@ export function useAgentController(
                 stateRef.current.animation = 'idle';
                 releaseClaimedSlot();
                 advanceToNextStep(hasNavStep);
-                return update(dt);
+                return stateRef.current;
               }
               if (duoRes) {
                 duoRoleRef.current = duoRes.targetB === _characterId ? 'roleB' : 'roleA';
@@ -1014,7 +1016,7 @@ export function useAgentController(
                     stateRef.current.animation = 'idle';
                     releaseClaimedSlot();
                     advanceToNextStep(hasNavStep);
-                    return update(dt);
+                    return stateRef.current;
                   }
                   if (duoRes) {
                     duoRoleRef.current = duoRes.targetB === _characterId ? 'roleB' : 'roleA';

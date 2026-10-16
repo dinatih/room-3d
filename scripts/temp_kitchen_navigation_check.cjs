@@ -399,6 +399,19 @@ if (process.argv.includes('--browser')) (async () => {
   const browser = await launchBrowser({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   try {
     const page = await browser.newPage();
+    if (process.argv.includes('--occupied-loop-baseline')) {
+      await page.setRequestInterception(true);
+      page.on('request', async request => {
+        if (!request.url().includes('/ai/useAgentController.ts')) { await request.continue(); return; }
+        const response = await fetch(request.url());
+        let body = await response.text();
+        const branch = body.indexOf("recherche d'une autre place...");
+        const retry = body.indexOf('return stateRef.current;', branch);
+        assert.ok(branch >= 0 && retry > branch, 'Occupied-loop baseline no longer matches the controller');
+        body = body.slice(0,retry) + 'return update(dt);' + body.slice(retry+'return stateRef.current;'.length);
+        await request.respond({ status:200, contentType:'application/javascript', body });
+      });
+    }
     if (process.argv.includes('--physical-baseline')) {
       await page.setRequestInterception(true);
       page.on('request', async request => {
@@ -543,6 +556,7 @@ if (process.argv.includes('--browser')) (async () => {
       return;
     }
     await page.evaluate(idleTest => { window.idleTest = idleTest; }, process.argv.includes('--idle-only'));
+    await page.evaluate(loopTest => { window.occupiedLoopTest = loopTest; }, process.argv.includes('--occupied-loop'));
     await page.evaluate(casesTest => { window.casesTest = casesTest; }, process.argv.includes('--cases-only') || process.argv.includes('--shower-only') || process.argv.includes('--spawn-objects') || process.argv.includes('--bathroom-cases'));
     await page.evaluate(bathroomTest => { window.bathroomTest = bathroomTest; }, process.argv.includes('--bathroom-cases'));
     await page.evaluate(spawnTest => { window.spawnTest = spawnTest; }, process.argv.includes('--spawn-objects'));
@@ -636,6 +650,12 @@ if (process.argv.includes('--browser')) (async () => {
         window.autonomousAgents.set(id, { agent, scenario });
         return null;
       }
+      function OccupiedLoopProbe() {
+        const scenario = React.useMemo(() => [{ type: 'USE_OBJECT', smartObjectId: 'bed-west', slotId: 'lie-down', animation: 'idle', duration: 0.1 }], []);
+        const agent = useAgentController('occupied-loop', scenario, true, () => ({ x: 160, y: 0, z: 300, rotY: 0 }));
+        window.autonomousAgents.set('occupied-loop', { agent, scenario });
+        return null;
+      }
       const regressionCases = window.bathroomTest ? ['drona-west','drona-east','sdb-closet'].flatMap(id => window.smartObjects.SMART_OBJECTS[id].slots.map(slot => [id,slot.slotId])) : window.spawnTest ? ['bed-west','bed-east','desk-bollsidan-1','desk-bollsidan-2','chair-office'].flatMap(id => window.smartObjects.SMART_OBJECTS[id].slots.map(slot => [id,slot.slotId])) : window.showerTest ? window.smartObjects.SMART_OBJECTS.shower.slots.map(slot => ['shower',slot.slotId]) : [
         ['desk-bollsidan-1', 'work-sitting'], ['desk-bollsidan-2', 'work-standing'],
         ['cuisine-group', 'cook-oven'], ['freezer', 'open-pick'], ['kallax-ne', 'inspect'],
@@ -674,6 +694,7 @@ if (process.argv.includes('--browser')) (async () => {
       window.root = createRoot(document.getElementById('fixture'));
       window.root.render(e(Canvas, { camera: { position: [600, 900, 900], far: 5000 } }, e('ambientLight', { intensity: 2 }), e(Probe),
         ...(window.idleTest ? Object.keys(scenarios.INITIAL_SMART_OBJECT_BY_CHAR).slice(0, 15).map(id => e(AutonomousProbe, { key: id, id })) : []),
+        ...(window.occupiedLoopTest ? [e(OccupiedLoopProbe)] : []),
         ...(window.casesTest ? regressionCases.map((_, index) => e(RegressionProbe, { key: index, index })) : []),
         ...(window.duoTest ? [e(DuoProbe,{key:'sara',id:'sara',x:-300}),e(DuoProbe,{key:'marissa',id:'marissa',x:100})] : []),
         ...(window.xbotTest ? [e(XbotProbe),e(React.Suspense,{fallback:null},e(Character,{...xbot,modelPath:xbot.path,targetHeight:xbot.height,isActive:false,isNPC:false,scenario:null}))] : []),
@@ -687,6 +708,33 @@ if (process.argv.includes('--browser')) (async () => {
     });
     await page.waitForFunction(() => window.nav?.furnitureObstacles.size > 25 && window.nav.hasAgentProfile('native'), { timeout: 60000 }).catch(async error => { console.log('Readiness:', await page.evaluate(() => ({ ids: [...window.nav.furnitureObstacles.keys()], native: window.nav.hasAgentProfile('native'), scene: window.fixtureScene.children.map(c => c.name), agent: window.agent.getStatus() }))); throw error; });
     console.log('Scene assets ready:', await page.evaluate(() => ({ profile: window.nav.getAgentProfile('native'), obstacles: window.nav.furnitureObstacles.size })));
+    if (process.argv.includes('--occupied-loop')) {
+      let result;
+      try { result = await page.evaluate(() => {
+        const { agent } = window.autonomousAgents.get('occupied-loop');
+        window.nav.setAgentProfile('occupied-loop', window.nav.getAgentProfile('native'));
+        agent.setPosition(160, 0, 300);
+        for (const slot of window.smartObjects.SMART_OBJECTS['bed-west'].slots) window.occupancy.claimSlot('bed-west', slot.slotId, 'test-occupier');
+        const started = performance.now();
+        for (let frame = 0; frame < 100; frame++) agent.update(0.1);
+        const waiting = agent.getStatus();
+        if (waiting !== 'IDLE') throw new Error(`Busy looping scenario must yield in IDLE, got ${waiting}`);
+        window.occupancy.releaseAllForCharacter('test-occupier');
+        agent.update(0.1);
+        if (agent.getStatus() === 'IDLE') throw new Error('Loop must resume when the object becomes available');
+        return { updates: 100, waiting, resumed: agent.getStatus(), ms: performance.now() - started };
+      }); } catch (error) {
+        if (process.argv.includes('--occupied-loop-baseline') && /Maximum call stack size exceeded/.test(error.message)) {
+          console.log('Confirmed baseline defect: occupied looping scenario overflows the stack in one update.');
+          return;
+        }
+        throw error;
+      }
+      assert.ok(!process.argv.includes('--occupied-loop-baseline'), 'Baseline recursion should have overflowed');
+      console.log('Occupied loop recovery:', JSON.stringify(result));
+      assert.equal(errors.length, 0);
+      return;
+    }
     if(process.argv.includes('--bed-occupancy') || process.argv.includes('--blocked-retry')) {
       const audit=await page.evaluate(async()=>{
         const nav=window.nav, manager=window.occupancy, profile=nav.getAgentProfile('native'),results=[];
@@ -1042,7 +1090,7 @@ if (process.argv.includes('--browser')) (async () => {
             }
           } finally {g.VisibilityGraph.prototype.find=find;}
           results.push({stationary,frames,minimum,searches,actors:actors.map(p=>({remaining:g.distance(p.position,p.target),error:p.route.error,position:p.position}))});
-          if(minimum<profile.radius*2-1e-6)throw new Error('Actor bodies penetrated');
+          if(minimum<a.actorClearance(profile,profile)-1e-6)throw new Error('Actor bodies penetrated');
           if(frames===3000)throw new Error(`Crowd did not clear: ${JSON.stringify(results.at(-1))}`);
           actors.forEach(p=>{nav.resetRoute(p.route,p.id);delete window.cameraState.positions[p.id];});
         }
@@ -1296,10 +1344,11 @@ if (process.argv.includes('--browser')) (async () => {
           nav.followRoute(route,'blocked-probe',start,target,1);
           if (!route.error) throw new Error('Fixture must have an impossible object exit');
           if (requests.doorRequested('living')) throw new Error('An impossible route retained its door reservation');
-          const firstSearches = searches, error = route.error;
+          const firstSearches = searches, error = route.error, firstFailure = route.failure;
           for (let frame=0; frame<300; frame++) nav.followRoute(route,'blocked-probe',start,target,1);
           const repeatedSearches = searches - firstSearches;
           if (route.error !== error) throw new Error('Cached failure lost its diagnostic');
+          if (route.failure !== firstFailure) throw new Error('Unchanged covered exit was retried');
           nav.unregisterObstacle('blocked-cover');
           const moved = nav.followRoute(route,'blocked-probe',start,target,1);
           const recoverySearches = searches - firstSearches;
@@ -1308,11 +1357,13 @@ if (process.argv.includes('--browser')) (async () => {
           nav.registerObstacle({ id:'blocked-cover', polygon:g.rectangle(start.x,start.z,200,200), yMin:0, yMax:200 });
           nav.followRoute(route,'blocked-probe',target,start,1,undefined,owner,true);
           if (!route.error) throw new Error('Fixture must have an impossible object approach');
-          const approachSearches = searches;
+          const approachSearches = searches, firstApproachFailure = route.failure;
           for (let frame=0; frame<300; frame++) nav.followRoute(route,'blocked-probe',target,start,1,undefined,owner,true);
           const repeatedApproachSearches = searches - approachSearches;
+          if (route.failure !== firstApproachFailure) throw new Error('Unchanged covered approach was retried');
+          const failedApproach = route.failure;
           nav.followRoute(route,'blocked-probe',{ x:target.x+1,z:target.z },start,1,undefined,owner,true);
-          if (searches === approachSearches) throw new Error('A changed departure must retry');
+          if (route.failure === failedApproach || route.failure?.start.x !== target.x+1) throw new Error('A changed departure must retry');
           nav.unregisterObstacle(owner); nav.unregisterObstacle('blocked-cover');
           // An actor spawned in another body must be able to separate while
           // leaving its furniture, without deepening the existing overlap.
@@ -1334,7 +1385,8 @@ if (process.argv.includes('--browser')) (async () => {
           nav.registerObstacle({id:owner,owner,polygon:g.rectangle(-100,-600,10,10),yMin:0,yMax:200});
           [[-120,-600,2,100],[-100,-620,100,2],[-100,-580,100,2]].forEach(([x,z,w,d],i)=>nav.registerObstacle({id:`exit-wall-${i}`,polygon:g.rectangle(x,z,w,d),yMin:0,yMax:200}));
           nav.setAgentProfile('exit-occupant',nav.getAgentProfile('native'));
-          window.cameraState.positions['exit-occupant']={x:-60,y:0,z:-600,yaw:0};
+          const exitBoundary = Math.max(...g.inflate(g.rectangle(exitStart.x,exitStart.z,10,10),nav.getAgentProfile('blocked-probe').radius).map(p=>p.x));
+          window.cameraState.positions['exit-occupant']={x:exitBoundary,y:0,z:-600,yaw:0};
           nav.resetRoute(route,'blocked-probe');route.owner=owner;
           let localPosition=exitStart;
           for(let frame=0;frame<100&&!route.error;frame++)localPosition=nav.followRoute(route,'blocked-probe',localPosition,exitTarget,1);
@@ -1361,7 +1413,7 @@ if (process.argv.includes('--browser')) (async () => {
         }
       });
       console.log('Blocked route retry:', JSON.stringify(result));
-      assert.ok(result.firstSearches > 0);
+      assert.equal(result.firstSearches, 0, 'A covered exit must be rejected geometrically without path searches');
       assert.equal(result.repeatedSearches,0,'An unchanged impossible exit must not search again');
       assert.equal(result.repeatedApproachSearches,0,'An unchanged impossible approach must not search again');
       assert.ok(result.recoverySearches > 0,'Geometry changes must retry immediately');
@@ -1392,11 +1444,14 @@ if (process.argv.includes('--browser')) (async () => {
                 blockers: [...window.nav.architectureObstacles, ...window.nav.furnitureObstacles.values()].filter(o => window.geom.pointInRing(route.target, window.geom.inflate(o.polygon, profile.radius))).map(o => ({id:o.id,owner:o.owner,polygon:o.polygon})),
                 startBlockers: [...window.nav.architectureObstacles, ...window.nav.furnitureObstacles.values()].filter(o => window.geom.pointInRing(state, window.geom.inflate(o.polygon, profile.radius))).map(o => ({id:o.id,owner:o.owner,polygon:o.polygon})),
               });
+              else blocked.delete(id);
               if (!window.measureHeap && frame % 300 === 0) console.log('Agent trace:', JSON.stringify({ id, frame, status, state, target: route?.target, error: route?.error }));
             } catch (error) { failures.push({ id, frame, error: error.message }); }
           }
           completedFrames = frame + 1;
-          if (blocked.size || failures.length) break;
+          // A temporary occupied destination is expected with 15 actors.
+          // Run the whole audit to distinguish waiting from a persistent stop.
+          if (failures.length) break;
           await new Promise(resolve => requestAnimationFrame(resolve));
         }
         if (window.measureHeap) heapSamples.push({ frame: completedFrames, ...await window.measureHeap() });

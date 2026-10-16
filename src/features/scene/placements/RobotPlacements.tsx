@@ -9,7 +9,7 @@ import { getObjectActionIds } from '../objectActions';
 import { getActionDef } from '../objectActionRegistry';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 import { getNavigationGraph, createRouteState, followRoute, resetRoute } from '../ai/navigation/service';
-import { setAgentProfile, removeAgentProfile, type AgentProfile } from '../ai/navigation/obstacles';
+import { setAgentProfile, getAgentProfile, removeAgentProfile, type AgentProfile } from '../ai/navigation/obstacles';
 import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, reserveAgentDestination } from '../ai/agent/agentAvoidance';
 import type { Point } from '../ai/navigation/geometry';
 import { cameraState } from '../cameraState';
@@ -137,7 +137,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
             };
             const start = { x: root.position.x, z: root.position.z };
             if (Math.hypot(start.x - target.x, start.z - target.z) >= profile.radius * 2
-              && isAgentDestinationFree(id, target) && getNavigationGraph(profile).find(start, target)) {
+              && isAgentDestinationFree(id, target) && getNavigationGraph(getAgentProfile(id)).canReach(start, target)) {
               ai.target = target;
               ai.searching = false;
               reserveAgentDestination(id, target);

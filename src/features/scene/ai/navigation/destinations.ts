@@ -21,13 +21,13 @@ export function getZoneDestination(id: string, agentId?: string, start?: Point, 
   if (!agentId || !hasAgentProfile(agentId)) return center;
   const graph = getNavigationGraph(getAgentProfile(agentId));
   if (start && departureOwner && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, center, agentId, start, true) ?? start;
-  if (!insideObstacle(center, graph.obstacles) && isAgentDestinationFree(agentId, center) && (!start || graph.find(start, center))) return center;
+  if (!insideObstacle(center, graph.obstacles) && (!start || graph.canReach(start, center)) && isAgentDestinationFree(agentId, center)) return center;
   const belongs = (p: Point) => id === 'living' ? p.x >= BATH_WEST_WALL && p.x <= ROOM_EAST_WALL && p.z >= ROOM_NORTH_WALL && p.z <= ROOM_SOUTH_WALL
     : id === 'bathroom' ? p.x >= BATH_WEST_WALL && p.x < BATH_EAST_WALL && p.z >= BATH_NORTH_WALL && p.z <= diagonal(p.x)
     : id === 'corridor' ? p.x >= BATH_EAST_WALL && p.x <= ROOM_EAST_WALL && p.z >= CORRIDOR_NORTH_WALL && p.z <= diagonal(p.x) : true;
-  const candidates = [...graph.vertices, ...getAgentObstacles(agentId, start ?? center).flat()].filter(p => belongs(p) && !insideObstacle(p, graph.obstacles) && isAgentDestinationFree(agentId, p));
+  const candidates = [...graph.vertices, ...getAgentObstacles(agentId, start ?? center).flat()].filter(p => belongs(p) && !insideObstacle(p, graph.obstacles));
   candidates.sort((a, b) => distance(a, center) - distance(b, center));
-  const target = candidates.find(p => !start || Boolean(graph.find(start, p)));
+  const target = candidates.find(p => (!start || graph.canReach(start, p)) && isAgentDestinationFree(agentId, p));
   if (!target) throw new NavigationBlockedError(`No free destination inside ${id}`, center);
   return target;
 }

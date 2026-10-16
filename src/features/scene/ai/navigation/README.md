@@ -15,6 +15,13 @@ le calcul physique pour atteindre leurs coordonnées exactes.
 La recherche pondérée évalue les connexions à la demande. Les distances du graphe
 physique servent d'estimation admissible pour éviter d'explorer les pièces
 séparées par des murs comme si elles étaient accessibles en ligne droite.
+Le cache des coûts de confort utilise des lignes triangulaires de doubles,
+allouées à la demande : au maximum `8 × N × (N - 1) / 2` octets de coûts pour
+`N` sommets, sans entrées `Map` ni nombres encapsulés par paire.
+Les vérifications oui/non d'une approche utilisent `canReach` sur le graphe
+physique ; seule la construction d'un trajet optimise le coût de confort.
+Les tests de segment limitent leurs vérifications aux obstacles dont la boîte
+englobe une partie du segment, en conservant les trous des contours.
 
 Le debug représente la préférence de confort de Native en bleu ; les contours
 orange conservent leur signification physique. Validation ciblée :
@@ -33,6 +40,12 @@ orange conservent leur signification physique. Validation ciblée :
 - `service.ts` conserve les graphes tant que la géométrie est inchangée. Pendant
   une transition de meuble, l'agent attend si son segment devient dangereux,
   puis recalcule avec la géométrie finale.
+- Les gabarits identiques partagent leur identité et leurs caches. Ces caches
+  sont faibles : retirer le dernier agent d'un gabarit permet de libérer ses
+  graphes. Pour une porte, seules la pose fermée et la dernière pose animée sont
+  conservées, jamais l'historique des angles.
+- Un objet composé retire ses anciens volumes lorsqu'il rétrécit ou change
+  d'identifiant. Désactiver la navigation ou démonter l'objet vide ses entrées.
 - `doorRequests.ts` réserve chaque ouverture dans l'ordre des demandes (les deux
   battants vitrés partagent une réservation). Le
   mouvement vérifie sa position réelle avant chaque pas ; les poussées manuelles
@@ -42,6 +55,10 @@ L'évitement d'un autre agent doit conserver la visibilité du prochain virage.
 Si une position déplacée perd cette visibilité, le trajet est recalculé. Une
 réservation reste active tant qu'un franchissement est encore prévu, puis se
 libère dès que le corps est hors de la fermeture et du débattement des battants.
+Le contournement des corps mobiles utilise un trajet physique, sans refaire
+l'optimisation de confort sur chaque instantané des PNJ. Le trajet statique de
+confort reprend dès que le segment initialement occupé redevient libre. Les
+collisions physiques sont conservées pendant les deux phases.
 
 Une approche reste dans l'espace libre accessible depuis l'agent. Seule la
 transition d'interaction peut ignorer le meuble utilisé, en conservant les
@@ -63,6 +80,45 @@ fermée pour cette ouverture et vérifient toujours la pose réelle du battant.
 Une destination inaccessible produit un état `BLOCKED` et une explication dans
 la console et le debug des trajets. Les aperçus d'inventaire désactivent le
 registre de navigation via `NavigationContext`.
+Une instruction ignorée ou remplacée reprend à l'image suivante, sans rappel
+récursif du contrôleur : un scénario en boucle dont tous les objets sont occupés
+doit toujours rendre la main au navigateur.
+
+Régressions mémoire et CPU (comparaison avec le commit précédant ces corrections) :
+
+```bash
+git show 9339258d:src/features/scene/ai/navigation/geometry.ts > /tmp/room-navigation-baseline-geometry.ts
+git show 9339258d:src/features/scene/ai/navigation/service.ts > /tmp/room-navigation-baseline-service.ts
+node --expose-gc scripts/temp_navigation_memory_audit.cjs
+```
+
+Le test vérifie le partage des graphes, leur collecte après retrait des gabarits,
+les empreintes des portes, les échecs mémorisés, leur reprise et le cycle de vie
+des obstacles composés. Avec Vite sur le port 5186 :
+
+```bash
+node scripts/temp_kitchen_navigation_check.cjs --browser --occupied-loop
+node scripts/temp_kitchen_navigation_check.cjs --browser --occupied-loop --occupied-loop-baseline
+node scripts/temp_kitchen_navigation_check.cjs --browser --idle-only --profile
+```
+
+Le deuxième test réintroduit uniquement le rappel récursif d'origine dans la
+réponse HTTP du contrôleur pour confirmer le débordement de pile initial.
+L'audit autonome observe toute la durée prévue ; une attente temporaire ne
+constitue pas à elle seule un blocage permanent. Après capture par `--profile`,
+`node scripts/temp_navigation_memory_audit.cjs --scene-benchmark` compare les
+trajets pondérés et les collisions à l'ancienne version.
+
+Mesures ponctuelles de l'audit du 16 octobre 2026 : cinq vérifications
+d'accessibilité passent d'environ 588 ms à 20 ms, avec les mêmes réponses.
+La simulation de 15 contrôleurs sur six minutes simulées termine sans blocage
+ni exception lors du dernier passage. Après collecte, son tas JavaScript mesure
+environ 71 / 77 / 79 / 78 Mo ; les buffers mesurent 543 / 578 / 592 / 582 Mo.
+Ces relevés concernent la fixture de navigation, pas la RAM totale de l'app.
+Les scénarios étant aléatoires, ils ne constituent pas une comparaison globale
+avant/après. Certains trajets statiques de confort prennent encore jusqu'à
+environ 1,9 seconde dans ce test ; les captures antérieures ont aussi révélé des
+destinations inaccessibles et un placement dans une clôture, signalés `BLOCKED`.
 
 Les contours arrondis sont approximés conservativement avec une erreur maximale
 de 1 mm. Les coordonnées des opérations booléennes sont quantifiées pour éviter

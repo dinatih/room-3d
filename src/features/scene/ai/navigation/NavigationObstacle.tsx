@@ -12,6 +12,7 @@ export function NavigationObstacle({ id, owner = id, compound = false, hull = fa
   const ref = useRef<THREE.Group>(null!);
   const bounds = useRef<THREE.Box3[]>([]);
   const footprints = useRef<Polygon[]>([]);
+  const registeredCount = useRef(0);
   const previousMatrix = useRef(new THREE.Matrix4().makeScale(0, 0, 0));
   const update = () => {
     if (!enabled || !bounds.current.length) return;
@@ -23,7 +24,14 @@ export function NavigationObstacle({ id, owner = id, compound = false, hull = fa
       const worldBox = b.clone().applyMatrix4(ref.current.matrixWorld);
       registerObstacle({ id: `${id}:${i}`, owner, polygon: corners.map(p => ({ x: p.x, z: p.z })), yMin: worldBox.min.y, yMax: worldBox.max.y });
     }
+    for (let i = bounds.current.length; i < registeredCount.current; i++) unregisterObstacle(`${id}:${i}`);
+    registeredCount.current = bounds.current.length;
   };
+  // Cleanup must run before measuring/registering a replacement id.
+  useLayoutEffect(() => () => {
+    if (enabled) for (let i = 0; i < registeredCount.current; i++) unregisterObstacle(`${id}:${i}`);
+    registeredCount.current = 0;
+  }, [id, enabled]);
   useLayoutEffect(() => {
     if (!enabled) return;
     ref.current.scale.set(1, 1, 1);
@@ -66,9 +74,6 @@ export function NavigationObstacle({ id, owner = id, compound = false, hull = fa
     previousMatrix.current.makeScale(0, 0, 0);
     update();
   }, [id, owner, compound, hull, solidOnly, children, enabled]);
-  useLayoutEffect(() => () => {
-    if (enabled) for (const i of bounds.current.keys()) unregisterObstacle(`${id}:${i}`);
-  }, [id, enabled]);
   useFrame(update, -1);
   return <group ref={ref}>{children}</group>;
 }

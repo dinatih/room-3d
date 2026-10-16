@@ -93,13 +93,20 @@ export function insideObstacle(p: Point, obstacles: Polygon[][]): boolean {
 }
 
 export function segmentFree(a: Point, b: Point, obstacles: Polygon[][], endpointsFree = false): boolean {
-  if (!endpointsFree && (insideObstacle(a, obstacles) || insideObstacle(b, obstacles))) return false;
+  const minX = Math.min(a.x, b.x), maxX = Math.max(a.x, b.x), minZ = Math.min(a.z, b.z), maxZ = Math.max(a.z, b.z);
+  // An obstacle outside the segment's bounds cannot contain an endpoint or
+  // any interval sample either. Keep holes with their outer contour.
+  const nearby = obstacles.filter(rings => {
+    const box = bounds(rings[0]);
+    return maxX >= box.minX && minX <= box.maxX && maxZ >= box.minZ && minZ <= box.maxZ;
+  });
+  if (!endpointsFree && (insideObstacle(a, nearby) || insideObstacle(b, nearby))) return false;
   const ts = [0, 1];
   const dx = b.x - a.x, dz = b.z - a.z;
   const endpointTolerance = GEOMETRY_EPSILON / Math.max(GEOMETRY_EPSILON, distance(a, b));
-  for (const rings of obstacles) for (const ring of rings) {
+  for (const rings of nearby) for (const ring of rings) {
     const box = bounds(ring);
-    if (Math.max(a.x, b.x) < box.minX || Math.min(a.x, b.x) > box.maxX || Math.max(a.z, b.z) < box.minZ || Math.min(a.z, b.z) > box.maxZ) continue;
+    if (maxX < box.minX || minX > box.maxX || maxZ < box.minZ || minZ > box.maxZ) continue;
     for (let i = 0; i < ring.length; i++) {
     const c = ring[i], d = ring[(i + 1) % ring.length];
     const ex = d.x - c.x, ez = d.z - c.z;
@@ -119,7 +126,7 @@ export function segmentFree(a: Point, b: Point, obstacles: Polygon[][], endpoint
   ts.sort((x, y) => x - y);
   for (let i = 1; i < ts.length; i++) {
     const t = (ts[i - 1] + ts[i]) / 2;
-    if (insideObstacle({ x: a.x + dx * t, z: a.z + dz * t }, obstacles)) return false;
+    if (insideObstacle({ x: a.x + dx * t, z: a.z + dz * t }, nearby)) return false;
   }
   return true;
 }
@@ -131,7 +138,9 @@ export class VisibilityGraph {
   private comfortField?: ComfortField;
   private physicalGraph?: VisibilityGraph;
   private clearances: number[] = [];
-  private comfortEdges = new Map<number, Map<number, number>>();
+  // One double per unordered vertex pair, instead of nested Map entries and
+  // boxed costs. Rows are allocated on demand and cannot grow with queries.
+  private comfortEdges: (Float64Array | undefined)[] = [];
   constructor(readonly obstacles: Polygon[][], readonly comfort?: NavigationComfort) {
     this.vertices = obstacles.flat(2);
     this.corners = obstacles.flatMap(rings => rings.flatMap(ring => ring.map((point, i) => {
@@ -262,11 +271,11 @@ export class VisibilityGraph {
       let cost: number;
       if (current < this.vertices.length && to < this.vertices.length) {
         const first = Math.min(current, to), second = Math.max(current, to);
-        let connections = this.comfortEdges.get(first);
-        if (!connections) { connections = new Map(); this.comfortEdges.set(first, connections); }
-        const cached = connections.get(second);
-        cost = cached ?? (segmentFree(nodes[current], nodes[to], this.obstacles, true) ? this.segmentCost(nodes[current], nodes[to]) : Infinity);
-        if (cached === undefined) connections.set(second, cost);
+        let connections = this.comfortEdges[first];
+        if (!connections) { connections = new Float64Array(this.vertices.length - first - 1).fill(NaN); this.comfortEdges[first] = connections; }
+        const index = second - first - 1, cached = connections[index];
+        cost = Number.isNaN(cached) ? (segmentFree(nodes[current], nodes[to], this.obstacles, true) ? this.segmentCost(nodes[current], nodes[to]) : Infinity) : cached;
+        if (Number.isNaN(cached)) connections[index] = cost;
       } else cost = segmentFree(nodes[current], nodes[to], this.obstacles, true) ? this.segmentCost(nodes[current], nodes[to]) : Infinity;
       const candidate = costs.get(current)! + cost;
       const priority = candidate + estimate(to);
@@ -293,9 +302,16 @@ export class VisibilityGraph {
     }
     return edges;
   }
+  /** Reachability does not require optimizing the soft comfort cost. */
+  canReach(start: Point, target: Point): boolean {
+    return (this.physicalGraph ?? this).find(start, target) !== null;
+  }
   find(start: Point, target: Point): Point[] | null {
     if (![start.x, start.z, target.x, target.z].every(Number.isFinite)) throw new Error('Non-finite navigation coordinates');
     if (insideObstacle(start, this.obstacles) || insideObstacle(target, this.obstacles)) return null;
+    // Approach candidates use find(p, p) as a free-space check. Avoid the
+    // additional geometry scans in the comfort search for a zero-length route.
+    if (start.x === target.x && start.z === target.z) return [target];
     if (this.comfort) return this.findComfort(start, target);
     if (segmentFree(start, target, this.obstacles, true)) return [target];
     const nodes = [...this.vertices, start, target];

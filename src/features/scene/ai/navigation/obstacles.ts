@@ -27,7 +27,10 @@ export interface AgentProfile {
 const profiles = new Map<string, AgentProfile>();
 export function setAgentProfile(id: string, profile: AgentProfile): void {
   if (!Number.isFinite(profile.radius) || !Number.isFinite(profile.height) || !(profile.radius > 0) || !(profile.height > 0)) throw new Error(`Invalid navigation profile ${id}`);
-  profiles.set(id, profile);
+  // Equal bodies share graph caches, while removed/replaced bodies must not
+  // keep every historical graph alive in a global string-keyed cache.
+  const shared = [...profiles.values()].find(p => p.radius === profile.radius && p.height === profile.height);
+  profiles.set(id, shared ?? { ...profile });
 }
 export function removeAgentProfile(id: string): void { profiles.delete(id); }
 export function getAgentProfile(id: string): AgentProfile {

@@ -80,7 +80,7 @@ function pickDestination(state: DogBehavior, id: string) {
     x: THREE.MathUtils.lerp(zone.bounds.min[0], zone.bounds.max[0], Math.random()),
     z: THREE.MathUtils.lerp(zone.bounds.min[2], zone.bounds.max[2], Math.random()),
   };
-  return isAgentDestinationFree(id, target) && getNavigationGraph(getAgentProfile(id)).find(state.position, target) ? target : null;
+  return isAgentDestinationFree(id, target) && getNavigationGraph(getAgentProfile(id)).canReach(state.position, target) ? target : null;
 }
 function postponeMeal(state: DogBehavior, context: DogContext) {
   state.mealRemaining = DOG_ACTIVITY.mealRetrySeconds;
@@ -100,7 +100,7 @@ export function updateDogBehavior(state: DogBehavior, context: DogContext, delta
     if (context.eatingMuzzle && station && state.mealRemaining <= 0) {
       // Arrivée orientée vers +Z : le museau doit tomber au centre de la gamelle.
       const target = { x: station.x - context.eatingMuzzle.x, z: station.z - context.eatingMuzzle.z };
-      if (!isAgentDestinationFree(id, target) || !getNavigationGraph(getAgentProfile(id)).find(state.position, target)) {
+      if (!isAgentDestinationFree(id, target) || !getNavigationGraph(getAgentProfile(id)).canReach(state.position, target)) {
         postponeMeal(state, context);
         return;
       }
