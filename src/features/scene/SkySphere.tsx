@@ -56,6 +56,14 @@ export function SkySphere({ envOnly = false, showSpaceBackdrop = true }: { envOn
       if (hdri.type === 'jpg') {
         loadedTexture.colorSpace = THREE.SRGBColorSpace;
       }
+      if (textureCache.size >= 2) {
+        const oldestUrl = textureCache.keys().next().value;
+        if (oldestUrl && oldestUrl !== url) {
+          const oldTex = textureCache.get(oldestUrl);
+          oldTex?.dispose();
+          textureCache.delete(oldestUrl);
+        }
+      }
       textureCache.set(url, loadedTexture);
       if (isMounted) {
         setTexture(loadedTexture);

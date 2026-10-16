@@ -373,7 +373,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   activeExtraIds: initialActiveExtraIds,
   activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
-  hdriResolution: initialPreset === 'low' ? '2k' : (initialPreset === 'mid-low' ? '4k' : '8k'),
+  hdriResolution: (initialPreset === 'low' || initialPreset === 'mid-low') ? '2k' : (initialPreset === 'mid' ? '4k' : '8k'),
   screenVideosEnabled: initialPreset !== 'low',
   screenVideoQuality: initialPreset === 'mid-low' ? 'ld' : (isMobileViewport() ? 'ld' : 'hd'),
   graphicsQualityPreset: initialPreset,
@@ -423,7 +423,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         graphicsQualityPreset: 'mid-low',
         screenVideosEnabled: true,
         screenVideoQuality: 'ld',
-        hdriResolution: '4k',
+        hdriResolution: '2k',
         layers: {
           ...state.layers,
           mirrors: true,
@@ -437,7 +437,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         graphicsQualityPreset: 'mid',
         screenVideosEnabled: true,
         screenVideoQuality: 'hd',
-        hdriResolution: '8k',
+        hdriResolution: '4k',
         layers: {
           ...state.layers,
           mirrors: true,

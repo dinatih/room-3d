@@ -49,7 +49,6 @@ export interface InterXManifest {
       initialSoleHeightMeters: [number, number];
       sourceInitialSolesMeters: [number, number];
       sourceReferencePlaneMeters: number;
-      wristTargetsMeters?: Record<'p1' | 'p2', number[][][]>;
     };
     handMotion?: 'full-axis-angle';
     tags: string[];
@@ -84,16 +83,6 @@ for (const duo of INTERX_MANIFEST.duos) {
       || !Number.isFinite(placement.sourceReferencePlaneMeters)) {
       throw new Error(`Appuis SMPL-X invalides : ${duo.id}`);
     }
-    if (placement.wristTargetsMeters) {
-      for (const participant of ['p1', 'p2'] as const) {
-        const frames = placement.wristTargetsMeters[participant];
-        if (!Array.isArray(frames) || frames.length !== duo.clips[participant].frameCount
-          || frames.some(frame => !Array.isArray(frame) || frame.length !== 2
-            || frame.some(point => !Array.isArray(point) || point.length !== 3 || !point.every(Number.isFinite)))) {
-          throw new Error(`Poignets SMPL-X invalides : ${duo.id}/${participant}`);
-        }
-      }
-    }
   }
   for (const clip of Object.values(duo.clips)) {
     if (paths.has(clip.path) || !/^animations\/npz\/interx\/g\d{3}t\d{3}a\d{3}r\d{3}-p[12]\.glb$/.test(clip.path)
@@ -119,8 +108,7 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
     duration: duo.clips[participant].durationSeconds,
     rootMotionSpace: 'world-meters' as const,
     interxGrounding: duo.placement ? { baseHeightMeters: (participant === 'p2' ? duo.start_offset[1] : 0)
-      - (duo.placement.verticalOrigin === 'source-support-preserve-hands' ? duo.placement.initialSoleHeightMeters[participant === 'p2' ? 1 : 0] : 0),
-      wristTargetsMeters: duo.placement.verticalOrigin === 'source-support-preserve-hands' ? duo.placement.wristTargetsMeters?.[participant] : undefined } : undefined,
+      - (duo.placement.verticalOrigin === 'source-support-preserve-hands' ? duo.placement.initialSoleHeightMeters[participant === 'p2' ? 1 : 0] : 0) } : undefined,
   }));
 });
 
