@@ -1968,7 +1968,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'reggaeton-vaso-01',
-    path: 'animations/npz/dances/anim_reggaeton_vaso_01.glb',
+    path: 'animations/npz/repair-candidates/anim_reggaeton_vaso_01.glb',
     category: 'dances',
     label: 'Reggaeton Vaso 01 (3849f / 128.3s, 1629KB)',
     aliases: ['dance-reggaeton-vaso', 'reggaeton-vaso'],
@@ -1986,7 +1986,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'hiphop-fanie-c3d',
-    path: 'animations/npz/dances/anim_hiphop_fanie_c3d.glb',
+    path: 'animations/npz/repair-candidates/anim_hiphop_fanie_c3d.glb',
     category: 'dances',
     label: 'Hiphop Fanie C3D (3897f / 129.9s, 1693KB)',
     aliases: ['dance-hiphop-fanie', 'hiphop-fanie'],
@@ -1995,7 +1995,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'musical-theater-fanie-c3d',
-    path: 'animations/npz/dances/anim_musical_theater_fanie_c3d.glb',
+    path: 'animations/npz/repair-candidates/anim_musical_theater_fanie_c3d.glb',
     category: 'dances',
     label: 'Musical Theater Fanie C3D (3823f / 127.4s, 1574KB)',
     aliases: ['dance-musical-theater-fanie', 'musical-theater-fanie'],
@@ -9604,30 +9604,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: '[ESSAI correction] Bachata Vaso 01',
     tags: ['npz-repair-candidate'],
     duration: 133.6,
-  },
-  {
-    id: 'reggaeton-vaso-01-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_reggaeton_vaso_01.glb',
-    category: 'dances',
-    label: '[ESSAI correction] Reggaeton Vaso 01 (3849f / 128.3s, 1629KB)',
-    tags: ['npz-repair-candidate'],
-    duration: 128.3,
-  },
-  {
-    id: 'hiphop-fanie-c3d-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_hiphop_fanie_c3d.glb',
-    category: 'dances',
-    label: '[ESSAI correction] Hiphop Fanie C3D (3897f / 129.9s, 1693KB)',
-    tags: ['npz-repair-candidate'],
-    duration: 129.9,
-  },
-  {
-    id: 'musical-theater-fanie-c3d-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_musical_theater_fanie_c3d.glb',
-    category: 'dances',
-    label: '[ESSAI correction] Musical Theater Fanie C3D (3823f / 127.4s, 1574KB)',
-    tags: ['npz-repair-candidate'],
-    duration: 127.4,
   },
   {
     id: 'zumba-fanie-c3d-repair-preview',

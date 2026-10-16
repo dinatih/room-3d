@@ -1677,7 +1677,7 @@
           }
         }
       ],
-      "acceptance": "pending visual review"
+      "acceptance": "accepted visually by user; promoted to canonical ID; uncorrected GLB deleted"
     },
     {
       "id": "hiphop-fanie-c3d",
@@ -3759,7 +3759,7 @@
           }
         }
       ],
-      "acceptance": "pending visual review"
+      "acceptance": "accepted visually by user; promoted to canonical ID; uncorrected GLB deleted"
     },
     {
       "id": "musical-theater-fanie-c3d",
@@ -5687,7 +5687,7 @@
           }
         }
       ],
-      "acceptance": "pending visual review"
+      "acceptance": "accepted visually by user; promoted to canonical ID; uncorrected GLB deleted"
     }
   ]
 }
