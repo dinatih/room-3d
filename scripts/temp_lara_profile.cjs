@@ -6,6 +6,7 @@ const isolate = process.argv.includes('--isolate-blur');
 const out = verify ? '/tmp/room-lara-no-blur' : isolate ? '/tmp/room-lara-blur-isolation' : '/tmp/room-lara-profile';
 const delay = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
+  if (process.argv.includes('--scene-comparison')) return await compareScene();
   fs.mkdirSync(out, { recursive: true });
   let server, browser;
   try {
@@ -94,3 +95,81 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
     fs.writeFileSync(`${out}/summary.json`, JSON.stringify({ results, errors }, null, 2));
   } finally { await browser?.close(); server?.kill(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });
+
+
+// Serve historical UI sources in memory: never replace the working tree.
+async function compareScene() {
+  const { createServer } = await import('vite');
+  const { execFileSync } = require('node:child_process');
+  const path = require('node:path');
+  const directory = '/tmp/room-scene-backdrop-comparison';
+  fs.mkdirSync(directory, { recursive: true });
+  const files = execFileSync('git', ['diff-tree', '--no-commit-id', '--name-only', '-r', '5ec34fe7'], { encoding: 'utf8' }).trim().split('\n').filter(file => file.startsWith('src/'));
+  const historical = new Map(files.map(file => [path.resolve(file), execFileSync('git', ['show', `824b2903:${file}`], { encoding: 'utf8' })]));
+  const servers = []; let browser;
+  const results = [], errors = [];
+  try {
+    for (const old of [true, false]) {
+      const server = await createServer({
+        server: { host: '127.0.0.1', port: old ? 5184 : 5185, strictPort: true },
+        plugins: old ? [{ name: 'historical-backdrop-sources', enforce: 'pre', load(id) { return historical.get(id.split('?')[0]); } }] : [],
+      });
+      await server.listen(); servers.push(server);
+    }
+    browser = await launch({ args: ['--no-sandbox', '--enable-gpu', '--use-angle=vulkan', '--enable-features=Vulkan,VulkanFromANGLE', '--disable-vulkan-surface'] });
+    const system = await browser.target().createCDPSession();
+    fs.writeFileSync(`${directory}/gpu.json`, JSON.stringify(await system.send('SystemInfo.getInfo'), null, 2));
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1362, height: 810, deviceScaleFactor: 1 });
+    page.on('pageerror', error => errors.push(String(error)));
+    // ABBA order controls for a gradual change in load or temperature.
+    for (const [index, old] of [true, false, false, true].entries()) {
+      await page.goto(`http://127.0.0.1:${old ? 5184 : 5185}/?skipIntro=1`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await page.waitForFunction(async () => {
+        const { cameraState } = await import('/src/features/scene/cameraState.ts');
+        return cameraState.isSceneLaunched && !cameraState.isIntroRunning && !!window.__THREE_GL__;
+      }, { timeout: 180000 });
+      await page.evaluate(async () => {
+        const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
+        const { cameraState } = await import('/src/features/scene/cameraState.ts');
+        useSceneStore.getState().setCameraMovement('fix');
+        useSceneStore.setState(state => ({ layers: { ...state.layers, groundType: 'bermuda' } }));
+        window.__sceneProfileActivity = setInterval(() => { window.dispatchEvent(new MouseEvent('mousemove')); cameraState.invalidate(); }, 1000);
+        const forceFrame = () => { cameraState.invalidate(); window.__sceneProfileRaf = requestAnimationFrame(forceFrame); };
+        forceFrame();
+      });
+      await delay(12000);
+      const metrics = await page.evaluate(async () => {
+        const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
+        const state = useSceneStore.getState();
+        const filters = [...document.querySelectorAll('*')].filter(el => {
+          const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).backdropFilter !== 'none';
+        }).map(el => ({ classes: typeof el.className === 'string' ? el.className : '', filter: getComputedStyle(el).backdropFilter }));
+        const gl = window.__THREE_GL__, scene = window.__THREE_SCENE__, originalRender = gl.render;
+        const rendered = []; let cameraPose;
+        gl.render = function(s, camera) {
+          if (s === scene && this.getRenderTarget() === null) {
+            rendered.push(performance.now());
+            cameraPose = { position: camera.position.toArray(), quaternion: camera.quaternion.toArray() };
+          }
+          return originalRender.call(this, s, camera);
+        };
+        const start = performance.now();
+        await new Promise(resolve => { const tick = now => now-start < 10000 ? requestAnimationFrame(tick) : resolve(); requestAnimationFrame(tick); });
+        gl.render = originalRender;
+        const intervals = rendered.slice(1).map((time,i) => time-rendered[i]);
+        if (!intervals.length) throw Error('No main-scene frames recorded');
+        const sorted = [...intervals].sort((a,b)=>a-b);
+        const debug = gl.getContext().getExtension('WEBGL_debug_renderer_info');
+        return { fps: intervals.length*1000/intervals.reduce((a,b)=>a+b,0), frames: rendered.length, p50: sorted[Math.floor(sorted.length*.5)], p95: sorted[Math.floor(sorted.length*.95)], p99: sorted[Math.floor(sorted.length*.99)], over25ms: intervals.filter(ms=>ms>25).length, cameraPose, filters, render: {...gl.info.render}, layers: state.layers, renderer: debug ? gl.getContext().getParameter(debug.UNMASKED_RENDERER_WEBGL) : null };
+      });
+      if (old && !metrics.filters.length) throw Error('Historical version has no active backdrop filters');
+      if (!old && metrics.filters.length) throw Error('Current version still has active backdrop filters');
+      results.push({ version: old ? 'before-with-blur' : 'after-no-blur', run: index+1, ...metrics });
+      console.log(JSON.stringify(results.at(-1), null, 2));
+      await page.screenshot({ path: `${directory}/${index+1}-${old ? 'before' : 'after'}.png` });
+      await page.goto('about:blank');
+    }
+    fs.writeFileSync(`${directory}/summary.json`, JSON.stringify({ viewport: { width: 1362, height: 810, dpr: 1 }, method: 'ABBA, fixed camera, continuous scene invalidation, 12s warmup then 10s sampling of main-scene renders', results, errors }, null, 2));
+  } finally { await browser?.close(); await Promise.all(servers.map(server => server.close())); }
+}
