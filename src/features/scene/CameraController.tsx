@@ -518,7 +518,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const store = useSceneStore.getState();
     if (!cameraState.animalTarget) {
       useSceneStore.setState({ cameraTarget: 'character' });
-      updateUrlCameraTarget('character');
+      updateUrlCameraTarget(followMode === 'fpv' ? null : 'character');
     }
     if (followMode === 'fpv' && modeRef.current !== 'fpv') {
       projectionBeforeFpv.current = store.cameraProjection;
