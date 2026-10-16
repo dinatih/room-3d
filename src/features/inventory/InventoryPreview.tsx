@@ -880,13 +880,6 @@ export function InventoryPreview({
             {showing3D && <div className="inventory-mini-perf glass-card shadow-lg rounded-2 p-1" style={{ width: 190 }}>
               <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
             </div>}
-            {has3D && hasPhotos && (
-            <div className="d-flex gap-1">
-              {(['3d', 'photos'] as const).map(mode => (
-                <button key={mode} onClick={() => setViewMode(mode)} style={{ padding: '2px 7px', fontSize: 10, background: viewMode === mode ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.35)', border: viewMode === mode ? '1px solid #aaa' : '1px solid transparent', borderRadius: 4, color: '#eee', cursor: 'pointer' }}>{mode === '3d' ? '3D' : `📷 ${photos!.length}`}</button>
-              ))}
-            </div>
-            )}
           {/* Menu Arbre des os & Influence heatmap */}
           {showing3D && actionStates.showBones && (showBoneTree || selectedBoneName) && (
             <div
@@ -1002,19 +995,6 @@ export function InventoryPreview({
                   </button>
                 )}
               </>
-            )}
-
-            {isHumanCharacter && (
-              <button
-                type="button"
-                onClick={() => setShowPnjPanel(v => !v)}
-                className={`btn btn-sm ${showPnjPanel ? 'btn-danger fw-bold' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small d-flex align-items-center gap-1`}
-                style={{ fontSize: 11 }}
-                title={showPnjPanel ? "Masquer la section PNJ" : "Afficher la section PNJ (Physique buste, tenues, perruques...)"}
-              >
-                <span>💃</span>
-                <span>{showPnjPanel ? 'Masquer Section PNJ' : 'Section PNJ'}</span>
-              </button>
             )}
 
           </div>
@@ -1232,7 +1212,29 @@ export function InventoryPreview({
           <i className="bi bi-rulers" aria-hidden="true" />
         </button>
         </>
-      )}>
+      )} afterToolbarActions={
+        <>
+          {isHumanCharacter && (
+            <button
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} ${showPnjPanel ? 'btn-danger' : 'btn-outline-secondary'}`}
+              onClick={() => setShowPnjPanel(v => !v)}
+              title={showPnjPanel ? 'Masquer la section PNJ' : 'Afficher la section PNJ (Physique buste, tenues, perruques...)'}
+              aria-pressed={showPnjPanel}
+            >💃 <span className="fw-semibold">Section PNJ</span></button>
+          )}
+          {has3D && hasPhotos && (
+            <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Mode d’aperçu">
+              {(['3d', 'photos'] as const).map(mode => (
+                <button key={mode} type="button" className={`${TOOLBAR_BUTTON_CLASS} ${viewMode === mode ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  onClick={() => setViewMode(mode)} aria-pressed={viewMode === mode}>
+                  {mode === '3d' ? '3D' : `📷 ${photos!.length}`}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      }>
         {showing3D && isCharacterItem && !hideAnimFrameController && (
           <AnimFrameController
             compact

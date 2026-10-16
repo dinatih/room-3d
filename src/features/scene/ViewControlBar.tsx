@@ -33,6 +33,7 @@ export interface ViewControlBarProps {
   onToggleHideUI?: () => void;
   onEnterFlight?: () => void;
   toolbarActions?: ReactNode;
+  afterToolbarActions?: ReactNode;
   beforeAmbianceActions?: ReactNode;
   panelControls?: ReactNode;
   /** Commandes directionnelles placées au-dessus du dock de la scène. */
@@ -53,6 +54,7 @@ export function ViewControlBar({
   onToggleHideUI: _onToggleHideUI,
   onEnterFlight: _onEnterFlight,
   toolbarActions,
+  afterToolbarActions,
   beforeAmbianceActions,
   panelControls: _panelControls,
   directionalControls,
@@ -384,6 +386,7 @@ export function ViewControlBar({
             <option key={hdri.id} value={hdri.id}>{hdri.name}</option>
           ))}
         </select>
+        {afterToolbarActions}
       </div>
     );
 
