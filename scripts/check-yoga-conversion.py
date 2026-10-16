@@ -1,6 +1,6 @@
 """Compare a regenerated known-good GLB against its calibrated reference.
 
-python3 scripts/check-yoga-conversion.py public/animations/npz/yoga/anim_yoga_akarna_dhanurasana_a.glb /tmp/yoga-reference/anim_yoga_akarna_dhanurasana_a.glb
+python3 scripts/check-yoga-conversion.py public/animations/npz/moyo/anim_yoga_akarna_dhanurasana_a.glb /tmp/yoga-reference/anim_yoga_akarna_dhanurasana_a.glb
 """
 import json
 import math

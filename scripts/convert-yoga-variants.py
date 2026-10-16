@@ -17,7 +17,7 @@ import numpy as np
 from mathutils import Quaternion, Vector
 
 ROOT = Path(__file__).resolve().parents[1]
-YOGA_DIR = ROOT / 'public/animations/npz/yoga'
+YOGA_DIR = ROOT / 'public/animations/npz/moyo'
 TEMPLATE = ROOT / 'public/animations/mixamo/anim_salsa_dancing.glb'
 BONE_NAMES = [
     'mixamorig:Hips', 'mixamorig:LeftUpLeg', 'mixamorig:RightUpLeg', 'mixamorig:Spine',
@@ -126,7 +126,7 @@ def main():
     filenames = args.filenames or sorted(p.name for p in YOGA_DIR.glob('*.glb') if re.search(r'_[b-z]\.glb$', p.name))
     tasks = collect_tasks(args.source_dir, filenames)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    metadata_path = YOGA_DIR / 'yoga_meta.json'
+    metadata_path = ROOT / 'public/animations/npz/_metadata/yoga_meta.json'
     metadata = {item['filename']: item for item in json.loads(metadata_path.read_text())}
     registry_path = ROOT / 'src/features/scene/animations/animationRegistry.ts'
     registry = registry_path.read_text()
@@ -135,7 +135,7 @@ def main():
         output = args.output_dir / filename
         info = convert(npz_path, output)
         if args.output_dir.resolve() == YOGA_DIR.resolve():
-            pattern = r"(  \{\n    id: '[^']+',\n    path: 'animations/npz/yoga/" + re.escape(filename) + r"',[\s\S]*?\n  \},)"
+            pattern = r"(  \{\n    id: '[^']+',\n    path: 'animations/npz/moyo/" + re.escape(filename) + r"',[\s\S]*?\n  \},)"
             match = re.search(pattern, registry)
             if not match:
                 raise ValueError(f'Unregistered animation: {filename}')

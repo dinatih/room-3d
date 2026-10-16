@@ -18,7 +18,7 @@
     "frames": 534,
     "duration": 17.8,
     "size_kb": 330,
-    "rel_path": "animations/npz/daily/anim_vacuuming.glb"
+    "rel_path": "animations/npz/cmu/anim_vacuuming.glb"
   },
   {
     "id": "vacuuming-alt",
@@ -39,7 +39,7 @@
     "frames": 744,
     "duration": 24.8,
     "size_kb": 399,
-    "rel_path": "animations/npz/daily/anim_vacuuming_alt.glb"
+    "rel_path": "animations/npz/cmu/anim_vacuuming_alt.glb"
   },
   {
     "id": "wiping-table",
@@ -61,7 +61,7 @@
     "frames": 200,
     "duration": 6.7,
     "size_kb": 220,
-    "rel_path": "animations/npz/daily/anim_wiping_table.glb"
+    "rel_path": "animations/npz/kit/anim_wiping_table.glb"
   },
   {
     "id": "wiping-table-small-circles",
@@ -83,7 +83,7 @@
     "frames": 248,
     "duration": 8.3,
     "size_kb": 236,
-    "rel_path": "animations/npz/daily/anim_wiping_table_small_circles.glb"
+    "rel_path": "animations/npz/kit/anim_wiping_table_small_circles.glb"
   },
   {
     "id": "taking-shower",
@@ -104,7 +104,7 @@
     "frames": 144,
     "duration": 4.8,
     "size_kb": 202,
-    "rel_path": "animations/npz/daily/anim_taking_shower.glb"
+    "rel_path": "animations/npz/kit/anim_taking_shower.glb"
   },
   {
     "id": "washing-body",
@@ -125,7 +125,7 @@
     "frames": 2379,
     "duration": 79.3,
     "size_kb": 992,
-    "rel_path": "animations/npz/daily/anim_washing_body.glb"
+    "rel_path": "animations/npz/kit/anim_washing_body.glb"
   },
   {
     "id": "pickup-box-floor-male",
@@ -147,7 +147,7 @@
     "frames": 134,
     "duration": 4.5,
     "size_kb": 198,
-    "rel_path": "animations/npz/daily/anim_pickup_box_floor_male.glb"
+    "rel_path": "animations/npz/accad/anim_pickup_box_floor_male.glb"
   },
   {
     "id": "pickup-box-floor-female",
@@ -169,7 +169,7 @@
     "frames": 179,
     "duration": 6,
     "size_kb": 213,
-    "rel_path": "animations/npz/daily/anim_pickup_box_floor_female.glb"
+    "rel_path": "animations/npz/accad/anim_pickup_box_floor_female.glb"
   },
   {
     "id": "lift-box-male",
@@ -190,7 +190,7 @@
     "frames": 132,
     "duration": 4.4,
     "size_kb": 198,
-    "rel_path": "animations/npz/daily/anim_lift_box_male.glb"
+    "rel_path": "animations/npz/accad/anim_lift_box_male.glb"
   },
   {
     "id": "lift-box-female",
@@ -211,7 +211,7 @@
     "frames": 251,
     "duration": 8.4,
     "size_kb": 237,
-    "rel_path": "animations/npz/daily/anim_lift_box_female.glb"
+    "rel_path": "animations/npz/accad/anim_lift_box_female.glb"
   },
   {
     "id": "putdown-box-floor",
@@ -232,7 +232,7 @@
     "frames": 72,
     "duration": 2.4,
     "size_kb": 178,
-    "rel_path": "animations/npz/daily/anim_putdown_box_floor.glb"
+    "rel_path": "animations/npz/accad/anim_putdown_box_floor.glb"
   },
   {
     "id": "sweeping-floor",
@@ -253,7 +253,7 @@
     "frames": 1004,
     "duration": 33.5,
     "size_kb": 484,
-    "rel_path": "animations/npz/daily/anim_sweeping_floor.glb"
+    "rel_path": "animations/npz/cmu/anim_sweeping_floor.glb"
   },
   {
     "id": "cleaning-windows",
@@ -274,6 +274,6 @@
     "frames": 1430,
     "duration": 47.7,
     "size_kb": 641,
-    "rel_path": "animations/npz/daily/anim_cleaning_windows.glb"
+    "rel_path": "animations/npz/cmu/anim_cleaning_windows.glb"
   }
 ]

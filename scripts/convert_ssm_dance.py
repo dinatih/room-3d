@@ -14,7 +14,7 @@ from mathutils import Quaternion, Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCE = Path('/home/dinatih/3D Resources/animations/SSM/20161014_50033/dance_sync_stageii.npz')
-DEFAULT_OUTPUT = ROOT / 'public/animations/npz/dances/anim_dance_sync.glb'
+DEFAULT_OUTPUT = ROOT / 'public/animations/npz/ssm/anim_dance_sync.glb'
 TEMPLATE = ROOT / 'public/animations/mixamo/anim_salsa_dancing.glb'
 
 BONE_NAMES = [

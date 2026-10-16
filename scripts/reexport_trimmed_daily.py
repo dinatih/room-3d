@@ -15,7 +15,7 @@ from mathutils import Quaternion, Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / 'public/animations/mixamo/anim_salsa_dancing.glb'
-OUTPUT_DIR = ROOT / 'public/animations/npz/daily'
+OUTPUT_DIR = ROOT / 'public/animations/npz/_metadata'
 REGISTRY_PATH = ROOT / 'src/features/scene/animations/animationRegistry.ts'
 SMART_REGISTRY_PATH = ROOT / 'src/features/scene/ai/smartObjectRegistry.ts'
 
@@ -197,7 +197,8 @@ def main():
 
     for idx, item in enumerate(all_items, 1):
         src_path = Path(item['src'])
-        dst_path = OUTPUT_DIR / item['filename']
+        dataset = Path(item['src']).parts[Path(item['src']).parts.index('animations') + 1].lower()
+        dst_path = ROOT / 'public/animations/npz' / dataset / item['filename']
         print(f"[{idx}/{len(all_items)}] Re-exporting {item['id']}...")
         res = convert_trimmed(item['id'], src_path, dst_path)
         print(f"   In-place: cut start {res['cut_start_s']}s, cut end {res['cut_end_s']}s -> {res['frames']}f / {res['duration']}s ({res['size_kb']}KB)")

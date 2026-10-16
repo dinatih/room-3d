@@ -5,7 +5,7 @@ const path = require('node:path');
 const puppeteer = require('puppeteer');
 
 async function main() {
-  const files = fs.readdirSync(path.resolve(__dirname, '../public/animations/npz/yoga')).filter(f => f.endsWith('.glb'));
+  const files = fs.readdirSync(path.resolve(__dirname, '../public/animations/npz/moyo')).filter(f => f.endsWith('.glb'));
   const browser = await launchBrowser({ headless: true, args: ['--no-sandbox'] });
   try {
     const page = await browser.newPage();
@@ -32,7 +32,7 @@ async function main() {
       const loader = new GLTFLoader();
       loader.setDRACOLoader(new DRACOLoader().setDecoderPath('/draco/'));
       loader.setMeshoptDecoder(MeshoptDecoder);
-      const reference = await loader.loadAsync('/animations/npz/yoga/anim_yoga_akarna_dhanurasana_a.glb');
+      const reference = await loader.loadAsync('/animations/npz/moyo/anim_yoga_akarna_dhanurasana_a.glb');
       const referenceBones = new Map();
       reference.scene.traverse(o => { if (o.isBone) referenceBones.set(o.name, o); });
       const target = (await loader.loadAsync('/characters/lara/lara_native.glb')).scene;
@@ -52,7 +52,7 @@ async function main() {
       const variants = new Map();
       let played = 0;
       for (const filename of files) {
-        const def = defs.find(d => d.path === `animations/npz/yoga/${filename}`);
+        const def = defs.find(d => d.path === `animations/npz/moyo/${filename}`);
         check(def && options.some(o => o.value === def.id), `Missing option: ${filename}`);
         check(resolveAnimationPath(def.id) === def.path, `Unresolved variant: ${filename}`);
         if (!/_[b-z]\.glb$/.test(filename)) continue;

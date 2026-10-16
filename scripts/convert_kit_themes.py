@@ -48,7 +48,7 @@ def main():
     sys.path.insert(0, str(ROOT / 'scripts'))
     from convert_studio_life import convert
 
-    imported_meta = ROOT / 'public/animations/npz/daily/all_trimmed_meta.json'
+    imported_meta = ROOT / 'public/animations/npz/_metadata/all_trimmed_meta.json'
     imported = {
         str(Path(item['src']).resolve())
         for item in json.loads(imported_meta.read_text())

@@ -1943,7 +1943,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'bachata-vaso-01',
-    path: 'animations/npz/repair-candidates/anim_bachata_vaso_01.glb',
+    path: 'animations/npz/dancedb/anim_bachata_vaso_01.glb',
     category: 'dances',
     label: 'Bachata Vaso 01',
     aliases: ['dance-bachata-vaso', 'bachata-vaso', 'bachata-1'],
@@ -1952,7 +1952,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'bachata-stefanos-c3d',
-    path: 'animations/npz/dances/anim_bachata_stefanos_c3d.glb',
+    path: 'animations/npz/dancedb/anim_bachata_stefanos_c3d.glb',
     category: 'dances',
     label: 'Bachata Stefanos C3D',
     aliases: ['dance-bachata-stefanos', 'bachata-stefanos', 'bachata-2'],
@@ -1961,7 +1961,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'bachata-stefanos-v2-c3d',
-    path: 'animations/npz/dances/anim_bachata_stefanos_v2_c3d.glb',
+    path: 'animations/npz/dancedb/anim_bachata_stefanos_v2_c3d.glb',
     category: 'dances',
     label: 'Bachata Stefanos v2 C3D',
     aliases: ['dance-bachata-stefanos-v2', 'bachata-stefanos-v2', 'bachata-3'],
@@ -1970,7 +1970,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'reggaeton-vaso-01',
-    path: 'animations/npz/repair-candidates/anim_reggaeton_vaso_01.glb',
+    path: 'animations/npz/dancedb/anim_reggaeton_vaso_01.glb',
     category: 'dances',
     label: 'Reggaeton Vaso 01 (3849f / 128.3s, 1629KB)',
     aliases: ['dance-reggaeton-vaso', 'reggaeton-vaso'],
@@ -1979,7 +1979,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'salsa-shines-vaso-01',
-    path: 'animations/npz/dances/anim_salsa_shines_vaso_01.glb',
+    path: 'animations/npz/dancedb/anim_salsa_shines_vaso_01.glb',
     category: 'dances',
     label: 'Salsa Shines Vaso 01 (3826f / 127.5s, 1575KB)',
     aliases: ['dance-salsa-shines-vaso', 'salsa-shines-vaso'],
@@ -1988,7 +1988,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'hiphop-fanie-c3d',
-    path: 'animations/npz/repair-candidates/anim_hiphop_fanie_c3d.glb',
+    path: 'animations/npz/dancedb/anim_hiphop_fanie_c3d.glb',
     category: 'dances',
     label: 'Hiphop Fanie C3D (3897f / 129.9s, 1693KB)',
     aliases: ['dance-hiphop-fanie', 'hiphop-fanie'],
@@ -1997,7 +1997,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'musical-theater-fanie-c3d',
-    path: 'animations/npz/repair-candidates/anim_musical_theater_fanie_c3d.glb',
+    path: 'animations/npz/dancedb/anim_musical_theater_fanie_c3d.glb',
     category: 'dances',
     label: 'Musical Theater Fanie C3D (3823f / 127.4s, 1574KB)',
     aliases: ['dance-musical-theater-fanie', 'musical-theater-fanie'],
@@ -2006,7 +2006,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'zumba-fanie-c3d',
-    path: 'animations/npz/repair-candidates/anim_zumba_fanie_c3d.glb',
+    path: 'animations/npz/dancedb/anim_zumba_fanie_c3d.glb',
     category: 'dances',
     label: 'Zumba Fanie C3D (6750f / 225s, 2924KB)',
     aliases: ['dance-zumba-fanie', 'zumba-fanie'],
@@ -2015,7 +2015,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'bellydance2-anna-cortesi-c3d',
-    path: 'animations/npz/repair-candidates/anim_bellydance2_anna_cortesi_c3d.glb',
+    path: 'animations/npz/dancedb/anim_bellydance2_anna_cortesi_c3d.glb',
     category: 'dances',
     label: 'Belly Dance 2 Anna Cortesi C3D (8423f / 280.8s, 2919KB)',
     aliases: ['dance-bellydance2-anna-cortesi', 'bellydance2-anna-cortesi'],
@@ -2024,7 +2024,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'reggaeton-stefanos-c3d',
-    path: 'animations/npz/dances/anim_reggaeton_stefanos_c3d.glb',
+    path: 'animations/npz/dancedb/anim_reggaeton_stefanos_c3d.glb',
     category: 'dances',
     label: 'Reggaeton Stefanos C3D (4900f / 163.3s, 2204KB)',
     aliases: ['dance-reggaeton-stefanos', 'reggaeton-stefanos'],
@@ -2033,7 +2033,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'salsa-stefanos-c3d',
-    path: 'animations/npz/repair-candidates/anim_salsa_stefanos_c3d.glb',
+    path: 'animations/npz/dancedb/anim_salsa_stefanos_c3d.glb',
     category: 'dances',
     label: 'Salsa Stefanos C3D (5894f / 196.5s, 2550KB)',
     aliases: ['dance-salsa-stefanos', 'salsa-stefanos'],
@@ -2042,7 +2042,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'dance-sync',
-    path: 'animations/npz/dances/anim_dance_sync.glb',
+    path: 'animations/npz/ssm/anim_dance_sync.glb',
     category: 'dances',
     label: 'Dance Sync (151f / 5s, 209KB)',
     aliases: ['dance-sync-ssm', 'ssm-dance-sync'],
@@ -8214,7 +8214,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-front-back-walking',
-    path: 'animations/npz/yoga/anim_yoga_front_back_walking.glb',
+    path: 'animations/npz/moyo/anim_yoga_front_back_walking.glb',
     category: 'yoga',
     label: `[YOGA] Front Back Walking (430f / 14.3s, 310KB)`,
     tags: ['yoga', 'fitness', 'pose'],
@@ -8222,7 +8222,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-circle-around',
-    path: 'animations/npz/yoga/anim_yoga_circle_around.glb',
+    path: 'animations/npz/moyo/anim_yoga_circle_around.glb',
     category: 'yoga',
     label: `[YOGA] Circle Around (433f / 14.4s, 407KB)`,
     tags: ['yoga', 'fitness'],
@@ -8230,7 +8230,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-random-movements-jumps',
-    path: 'animations/npz/yoga/anim_yoga_random_movements_jumps.glb',
+    path: 'animations/npz/moyo/anim_yoga_random_movements_jumps.glb',
     category: 'yoga',
     label: `[YOGA] Random Movements Jumps (409f / 13.6s, 345KB)`,
     tags: ['yoga', 'fitness'],
@@ -8238,7 +8238,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-random-movements-squats',
-    path: 'animations/npz/yoga/anim_yoga_random_movements_squats.glb',
+    path: 'animations/npz/moyo/anim_yoga_random_movements_squats.glb',
     category: 'yoga',
     label: `[YOGA] Random Movements Squats (720f / 24s, 557KB)`,
     tags: ['yoga', 'fitness'],
@@ -8246,7 +8246,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-akarna-dhanurasana-a',
-    path: 'animations/npz/yoga/anim_yoga_akarna_dhanurasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_akarna_dhanurasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Akarna Dhanurasana — A (622f / 20.7s, 379KB)`,
     tags: ['yoga', 'fitness'],
@@ -8254,7 +8254,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-akarna-dhanurasana-b',
-    path: 'animations/npz/yoga/anim_yoga_akarna_dhanurasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_akarna_dhanurasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Akarna Dhanurasana — B (593f / 19.8s, 368KB)`,
     tags: ['yoga', 'fitness'],
@@ -8262,7 +8262,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-akarna-dhanurasana-c',
-    path: 'animations/npz/yoga/anim_yoga_akarna_dhanurasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_akarna_dhanurasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Akarna Dhanurasana — C (594f / 19.8s, 369KB)`,
     tags: ['yoga', 'fitness'],
@@ -8270,7 +8270,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bharadvajas-twist-pose-or-bharadvajasana-i-a',
-    path: 'animations/npz/yoga/anim_yoga_bharadvajas_twist_pose_or_bharadvajasana_i_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_bharadvajas_twist_pose_or_bharadvajasana_i_a.glb',
     category: 'yoga',
     label: `[YOGA] Bharadvajas Twist pose (Bharadvajasana I) — A (1097f / 36.6s, 550KB)`,
     tags: ['yoga', 'fitness'],
@@ -8278,7 +8278,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bharadvajas-twist-pose-or-bharadvajasana-i-b',
-    path: 'animations/npz/yoga/anim_yoga_bharadvajas_twist_pose_or_bharadvajasana_i_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_bharadvajas_twist_pose_or_bharadvajasana_i_b.glb',
     category: 'yoga',
     label: `[YOGA] Bharadvajas Twist pose (Bharadvajasana I) — B (742f / 24.7s, 422KB)`,
     tags: ['yoga', 'fitness'],
@@ -8286,7 +8286,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bharadvajas-twist-pose-or-bharadvajasana-i-c',
-    path: 'animations/npz/yoga/anim_yoga_bharadvajas_twist_pose_or_bharadvajasana_i_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_bharadvajas_twist_pose_or_bharadvajasana_i_c.glb',
     category: 'yoga',
     label: `[YOGA] Bharadvajas Twist pose (Bharadvajasana I) — C (730f / 24.3s, 418KB)`,
     tags: ['yoga', 'fitness'],
@@ -8294,7 +8294,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-boat-pose-or-paripurna-navasana-a',
-    path: 'animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_boat_pose_or_paripurna_navasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Boat Pose (Paripurna Navasana) — A (366f / 12.2s, 287KB)`,
     tags: ['yoga', 'fitness'],
@@ -8302,7 +8302,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-boat-pose-or-paripurna-navasana-b',
-    path: 'animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_boat_pose_or_paripurna_navasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Boat Pose (Paripurna Navasana) — B (422f / 14.1s, 306KB)`,
     tags: ['yoga', 'fitness'],
@@ -8310,7 +8310,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-boat-pose-or-paripurna-navasana-c',
-    path: 'animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_boat_pose_or_paripurna_navasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Boat Pose (Paripurna Navasana) — C (420f / 14s, 306KB)`,
     tags: ['yoga', 'fitness'],
@@ -8318,7 +8318,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-boat-pose-or-paripurna-navasana-d',
-    path: 'animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_d.glb',
+    path: 'animations/npz/moyo/anim_yoga_boat_pose_or_paripurna_navasana_d.glb',
     category: 'yoga',
     label: `[YOGA] Boat Pose (Paripurna Navasana) — D (350f / 11.7s, 281KB)`,
     tags: ['yoga', 'fitness'],
@@ -8326,7 +8326,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-boat-pose-or-paripurna-navasana-e',
-    path: 'animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_e.glb',
+    path: 'animations/npz/moyo/anim_yoga_boat_pose_or_paripurna_navasana_e.glb',
     category: 'yoga',
     label: `[YOGA] Boat Pose (Paripurna Navasana) — E (477f / 15.9s, 327KB)`,
     tags: ['yoga', 'fitness'],
@@ -8334,7 +8334,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-boat-pose-or-paripurna-navasana-f',
-    path: 'animations/npz/yoga/anim_yoga_boat_pose_or_paripurna_navasana_f.glb',
+    path: 'animations/npz/moyo/anim_yoga_boat_pose_or_paripurna_navasana_f.glb',
     category: 'yoga',
     label: `[YOGA] Boat Pose (Paripurna Navasana) — F (403f / 13.4s, 300KB)`,
     tags: ['yoga', 'fitness'],
@@ -8342,7 +8342,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bound-angle-pose-or-baddha-konasana-a',
-    path: 'animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_bound_angle_pose_or_baddha_konasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Bound Angle Pose (Baddha Konasana) — A (685f / 22.8s, 401KB)`,
     tags: ['yoga', 'fitness'],
@@ -8350,7 +8350,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bound-angle-pose-or-baddha-konasana-b',
-    path: 'animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_bound_angle_pose_or_baddha_konasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Bound Angle Pose (Baddha Konasana) — B (764f / 25.5s, 430KB)`,
     tags: ['yoga', 'fitness'],
@@ -8358,7 +8358,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bound-angle-pose-or-baddha-konasana-c',
-    path: 'animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_bound_angle_pose_or_baddha_konasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Bound Angle Pose (Baddha Konasana) — C (606f / 20.2s, 373KB)`,
     tags: ['yoga', 'fitness'],
@@ -8366,7 +8366,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bound-angle-pose-or-baddha-konasana-d',
-    path: 'animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_d.glb',
+    path: 'animations/npz/moyo/anim_yoga_bound_angle_pose_or_baddha_konasana_d.glb',
     category: 'yoga',
     label: `[YOGA] Bound Angle Pose (Baddha Konasana) — D (770f / 25.7s, 432KB)`,
     tags: ['yoga', 'fitness'],
@@ -8374,7 +8374,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bound-angle-pose-or-baddha-konasana-e',
-    path: 'animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_e.glb',
+    path: 'animations/npz/moyo/anim_yoga_bound_angle_pose_or_baddha_konasana_e.glb',
     category: 'yoga',
     label: `[YOGA] Bound Angle Pose (Baddha Konasana) — E (678f / 22.6s, 399KB)`,
     tags: ['yoga', 'fitness'],
@@ -8382,7 +8382,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bound-angle-pose-or-baddha-konasana-f',
-    path: 'animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_f.glb',
+    path: 'animations/npz/moyo/anim_yoga_bound_angle_pose_or_baddha_konasana_f.glb',
     category: 'yoga',
     label: `[YOGA] Bound Angle Pose (Baddha Konasana) — F (418f / 13.9s, 305KB)`,
     tags: ['yoga', 'fitness'],
@@ -8390,7 +8390,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bound-angle-pose-or-baddha-konasana-g',
-    path: 'animations/npz/yoga/anim_yoga_bound_angle_pose_or_baddha_konasana_g.glb',
+    path: 'animations/npz/moyo/anim_yoga_bound_angle_pose_or_baddha_konasana_g.glb',
     category: 'yoga',
     label: `[YOGA] Bound Angle Pose (Baddha Konasana) — G (477f / 15.9s, 326KB)`,
     tags: ['yoga', 'fitness'],
@@ -8398,7 +8398,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bow-pose-or-dhanurasana-a',
-    path: 'animations/npz/yoga/anim_yoga_bow_pose_or_dhanurasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_bow_pose_or_dhanurasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Bow Pose (Dhanurasana) — A (618f / 20.6s, 377KB)`,
     tags: ['yoga', 'fitness'],
@@ -8406,7 +8406,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bow-pose-or-dhanurasana-b',
-    path: 'animations/npz/yoga/anim_yoga_bow_pose_or_dhanurasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_bow_pose_or_dhanurasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Bow Pose (Dhanurasana) — B (605f / 20.2s, 373KB)`,
     tags: ['yoga', 'fitness'],
@@ -8414,7 +8414,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bridge-pose-or-setu-bandha-sarvangasana-a',
-    path: 'animations/npz/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Bridge Pose (Setu Bandha Sarvangasana) — A (817f / 27.2s, 449KB)`,
     tags: ['yoga', 'fitness'],
@@ -8422,7 +8422,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bridge-pose-or-setu-bandha-sarvangasana-b',
-    path: 'animations/npz/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Bridge Pose (Setu Bandha Sarvangasana) — B (786f / 26.2s, 438KB)`,
     tags: ['yoga', 'fitness'],
@@ -8430,7 +8430,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bridge-pose-or-setu-bandha-sarvangasana-c',
-    path: 'animations/npz/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Bridge Pose (Setu Bandha Sarvangasana) — C (708f / 23.6s, 410KB)`,
     tags: ['yoga', 'fitness'],
@@ -8438,7 +8438,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bridge-pose-or-setu-bandha-sarvangasana-d',
-    path: 'animations/npz/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_d.glb',
+    path: 'animations/npz/moyo/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_d.glb',
     category: 'yoga',
     label: `[YOGA] Bridge Pose (Setu Bandha Sarvangasana) — D (896f / 29.9s, 477KB)`,
     tags: ['yoga', 'fitness'],
@@ -8446,7 +8446,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-bridge-pose-or-setu-bandha-sarvangasana-e',
-    path: 'animations/npz/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_e.glb',
+    path: 'animations/npz/moyo/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_e.glb',
     category: 'yoga',
     label: `[YOGA] Bridge Pose (Setu Bandha Sarvangasana) — E (1012f / 33.7s, 519KB)`,
     tags: ['yoga', 'fitness'],
@@ -8454,7 +8454,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-camel-pose-or-ustrasana-a',
-    path: 'animations/npz/yoga/anim_yoga_camel_pose_or_ustrasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_camel_pose_or_ustrasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Camel Pose (Ustrasana) — A (764f / 25.5s, 430KB)`,
     tags: ['yoga', 'fitness'],
@@ -8462,7 +8462,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-camel-pose-or-ustrasana-b',
-    path: 'animations/npz/yoga/anim_yoga_camel_pose_or_ustrasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_camel_pose_or_ustrasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Camel Pose (Ustrasana) — B (680f / 22.7s, 400KB)`,
     tags: ['yoga', 'fitness'],
@@ -8470,7 +8470,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-camel-pose-or-ustrasana-c',
-    path: 'animations/npz/yoga/anim_yoga_camel_pose_or_ustrasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_camel_pose_or_ustrasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Camel Pose (Ustrasana) — C (682f / 22.7s, 400KB)`,
     tags: ['yoga', 'fitness'],
@@ -8478,7 +8478,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-camel-pose-or-ustrasana-d',
-    path: 'animations/npz/yoga/anim_yoga_camel_pose_or_ustrasana_d.glb',
+    path: 'animations/npz/moyo/anim_yoga_camel_pose_or_ustrasana_d.glb',
     category: 'yoga',
     label: `[YOGA] Camel Pose (Ustrasana) — D (816f / 27.2s, 448KB)`,
     tags: ['yoga', 'fitness'],
@@ -8486,7 +8486,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cat-cow-pose-or-marjaryasana-a',
-    path: 'animations/npz/yoga/anim_yoga_cat_cow_pose_or_marjaryasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_cat_cow_pose_or_marjaryasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Cat Cow Pose (Marjaryasana) — A (477f / 15.9s, 327KB)`,
     tags: ['yoga', 'fitness'],
@@ -8494,7 +8494,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cat-cow-pose-or-marjaryasana-b',
-    path: 'animations/npz/yoga/anim_yoga_cat_cow_pose_or_marjaryasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_cat_cow_pose_or_marjaryasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Cat Cow Pose (Marjaryasana) — B (482f / 16.1s, 328KB)`,
     tags: ['yoga', 'fitness'],
@@ -8502,7 +8502,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cat-cow-pose-or-marjaryasana-c',
-    path: 'animations/npz/yoga/anim_yoga_cat_cow_pose_or_marjaryasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_cat_cow_pose_or_marjaryasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Cat Cow Pose (Marjaryasana) — C (655f / 21.8s, 390KB)`,
     tags: ['yoga', 'fitness'],
@@ -8510,7 +8510,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-chair-pose-or-utkatasana-a',
-    path: 'animations/npz/yoga/anim_yoga_chair_pose_or_utkatasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_chair_pose_or_utkatasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Chair Pose (Utkatasana) — A (432f / 14.4s, 310KB)`,
     tags: ['yoga', 'fitness'],
@@ -8518,7 +8518,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-chair-pose-or-utkatasana-b',
-    path: 'animations/npz/yoga/anim_yoga_chair_pose_or_utkatasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_chair_pose_or_utkatasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Chair Pose (Utkatasana) — B (564f / 18.8s, 358KB)`,
     tags: ['yoga', 'fitness'],
@@ -8526,7 +8526,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-chair-pose-or-utkatasana-c',
-    path: 'animations/npz/yoga/anim_yoga_chair_pose_or_utkatasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_chair_pose_or_utkatasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Chair Pose (Utkatasana) — C (544f / 18.1s, 351KB)`,
     tags: ['yoga', 'fitness'],
@@ -8534,7 +8534,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-child-pose-or-balasana-a',
-    path: 'animations/npz/yoga/anim_yoga_child_pose_or_balasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_child_pose_or_balasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Child Pose (Balasana) — A (648f / 21.6s, 388KB)`,
     tags: ['yoga', 'fitness'],
@@ -8542,7 +8542,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-child-pose-or-balasana-b',
-    path: 'animations/npz/yoga/anim_yoga_child_pose_or_balasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_child_pose_or_balasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Child Pose (Balasana) — B (499f / 16.6s, 334KB)`,
     tags: ['yoga', 'fitness'],
@@ -8550,7 +8550,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cobra-pose-or-bhujangasana-a',
-    path: 'animations/npz/yoga/anim_yoga_cobra_pose_or_bhujangasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_cobra_pose_or_bhujangasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Cobra Pose (Bhujangasana) — A (646f / 21.5s, 387KB)`,
     tags: ['yoga', 'fitness'],
@@ -8558,7 +8558,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cobra-pose-or-bhujangasana-b',
-    path: 'animations/npz/yoga/anim_yoga_cobra_pose_or_bhujangasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_cobra_pose_or_bhujangasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Cobra Pose (Bhujangasana) — B (643f / 21.4s, 386KB)`,
     tags: ['yoga', 'fitness'],
@@ -8566,7 +8566,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cobra-pose-or-bhujangasana-c',
-    path: 'animations/npz/yoga/anim_yoga_cobra_pose_or_bhujangasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_cobra_pose_or_bhujangasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Cobra Pose (Bhujangasana) — C (550f / 18.3s, 353KB)`,
     tags: ['yoga', 'fitness'],
@@ -8574,7 +8574,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cobra-pose-or-bhujangasana-d',
-    path: 'animations/npz/yoga/anim_yoga_cobra_pose_or_bhujangasana_d.glb',
+    path: 'animations/npz/moyo/anim_yoga_cobra_pose_or_bhujangasana_d.glb',
     category: 'yoga',
     label: `[YOGA] Cobra Pose (Bhujangasana) — D (484f / 16.1s, 329KB)`,
     tags: ['yoga', 'fitness'],
@@ -8582,7 +8582,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cockerel-pose-b',
-    path: 'animations/npz/yoga/anim_yoga_cockerel_pose_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_cockerel_pose_b.glb',
     category: 'yoga',
     label: `[YOGA] Cockerel Pose — B (1822f / 60.7s, 810KB)`,
     tags: ['yoga', 'fitness'],
@@ -8590,7 +8590,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-corpse-pose-or-savasana-a',
-    path: 'animations/npz/yoga/anim_yoga_corpse_pose_or_savasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_corpse_pose_or_savasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Corpse Pose (Savasana) (637f / 21.2s, 384KB)`,
     tags: ['yoga', 'fitness'],
@@ -8598,7 +8598,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cow-face-pose-or-gomukhasana-a',
-    path: 'animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_cow_face_pose_or_gomukhasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Cow Face Pose (Gomukhasana) — A (918f / 30.6s, 485KB)`,
     tags: ['yoga', 'fitness'],
@@ -8606,7 +8606,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cow-face-pose-or-gomukhasana-b',
-    path: 'animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_cow_face_pose_or_gomukhasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Cow Face Pose (Gomukhasana) — B (602f / 20.1s, 371KB)`,
     tags: ['yoga', 'fitness'],
@@ -8614,7 +8614,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-cow-face-pose-or-gomukhasana-c',
-    path: 'animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_cow_face_pose_or_gomukhasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Cow Face Pose (Gomukhasana) — C (798f / 26.6s, 442KB)`,
     tags: ['yoga', 'fitness'],
@@ -8622,7 +8622,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
     {
     id: 'yoga-cow-face-pose-or-gomukhasana-e',
-    path: 'animations/npz/yoga/anim_yoga_cow_face_pose_or_gomukhasana_e.glb',
+    path: 'animations/npz/moyo/anim_yoga_cow_face_pose_or_gomukhasana_e.glb',
     category: 'yoga',
     label: `[YOGA] Cow Face Pose (Gomukhasana) — E (658f / 21.9s, 392KB)`,
     tags: ['yoga', 'fitness'],
@@ -8630,7 +8630,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-crane-crow-pose-or-bakasana-a',
-    path: 'animations/npz/yoga/anim_yoga_crane_crow_pose_or_bakasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_crane_crow_pose_or_bakasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Crane Crow Pose (Bakasana) — A (762f / 25.4s, 429KB)`,
     tags: ['yoga', 'fitness'],
@@ -8638,7 +8638,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-crane-crow-pose-or-bakasana-b',
-    path: 'animations/npz/yoga/anim_yoga_crane_crow_pose_or_bakasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_crane_crow_pose_or_bakasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Crane Crow Pose (Bakasana) — B (520f / 17.3s, 342KB)`,
     tags: ['yoga', 'fitness'],
@@ -8646,7 +8646,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-dolphin-plank-pose-or-makara-adho-mukha-svanasana-a',
-    path: 'animations/npz/yoga/anim_yoga_dolphin_plank_pose_or_makara_adho_mukha_svanasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_dolphin_plank_pose_or_makara_adho_mukha_svanasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Dolphin Plank Pose (Makara Adho Mukha Svanasana) (537f / 17.9s, 348KB)`,
     tags: ['yoga', 'fitness'],
@@ -8654,7 +8654,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-downward-facing-dog-pose-or-adho-mukha-svanasana-c',
-    path: 'animations/npz/yoga/anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Downward-Facing Dog pose (Adho Mukha Svanasana) — C (550f / 18.3s, 353KB)`,
     tags: ['yoga', 'fitness'],
@@ -8662,7 +8662,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-eagle-pose-or-garudasana-a',
-    path: 'animations/npz/yoga/anim_yoga_eagle_pose_or_garudasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_eagle_pose_or_garudasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Eagle Pose (Garudasana) (758f / 25.3s, 427KB)`,
     tags: ['yoga', 'fitness'],
@@ -8670,7 +8670,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-eight-angle-pose-or-astavakrasana-a',
-    path: 'animations/npz/yoga/anim_yoga_eight_angle_pose_or_astavakrasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_eight_angle_pose_or_astavakrasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Eight-Angle Pose (Astavakrasana) (470f / 15.7s, 324KB)`,
     tags: ['yoga', 'fitness'],
@@ -8678,7 +8678,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-extended-puppy-pose-or-uttana-shishosana-a',
-    path: 'animations/npz/yoga/anim_yoga_extended_puppy_pose_or_uttana_shishosana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_extended_puppy_pose_or_uttana_shishosana_a.glb',
     category: 'yoga',
     label: `[YOGA] Extended Puppy Pose (Uttana Shishosana) (712f / 23.7s, 411KB)`,
     tags: ['yoga', 'fitness'],
@@ -8686,7 +8686,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-extended-revolved-side-angle-pose-or-utthita-parsvakonasana-a',
-    path: 'animations/npz/yoga/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Extended Revolved Side Angle Pose (Utthita Parsvakonasana) — A (545f / 18.2s, 357KB)`,
     tags: ['yoga', 'fitness'],
@@ -8694,7 +8694,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-extended-revolved-side-angle-pose-or-utthita-parsvakonasana-b',
-    path: 'animations/npz/yoga/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Extended Revolved Side Angle Pose (Utthita Parsvakonasana) — B (613f / 20.4s, 375KB)`,
     tags: ['yoga', 'fitness'],
@@ -8702,7 +8702,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-extended-revolved-side-angle-pose-or-utthita-parsvakonasana-c',
-    path: 'animations/npz/yoga/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_c.glb',
+    path: 'animations/npz/moyo/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_c.glb',
     category: 'yoga',
     label: `[YOGA] Extended Revolved Side Angle Pose (Utthita Parsvakonasana) — C (526f / 17.5s, 344KB)`,
     tags: ['yoga', 'fitness'],
@@ -8710,7 +8710,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-extended-revolved-side-angle-pose-or-utthita-parsvakonasana-d',
-    path: 'animations/npz/yoga/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_d.glb',
+    path: 'animations/npz/moyo/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_d.glb',
     category: 'yoga',
     label: `[YOGA] Extended Revolved Side Angle Pose (Utthita Parsvakonasana) — D (938f / 31.3s, 503KB)`,
     tags: ['yoga', 'fitness'],
@@ -8718,7 +8718,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-extended-revolved-side-angle-pose-or-utthita-parsvakonasana-e',
-    path: 'animations/npz/yoga/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_e.glb',
+    path: 'animations/npz/moyo/anim_yoga_extended_revolved_side_angle_pose_or_utthita_parsvakonasana_e.glb',
     category: 'yoga',
     label: `[YOGA] Extended Revolved Side Angle Pose (Utthita Parsvakonasana) — E (709f / 23.6s, 418KB)`,
     tags: ['yoga', 'fitness'],
@@ -8726,7 +8726,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-extended-revolved-triangle-pose-or-utthita-trikonasana-a',
-    path: 'animations/npz/yoga/anim_yoga_extended_revolved_triangle_pose_or_utthita_trikonasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_extended_revolved_triangle_pose_or_utthita_trikonasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Extended Revolved Triangle Pose (Utthita Trikonasana) — A (771f / 25.7s, 432KB)`,
     tags: ['yoga', 'fitness'],
@@ -8734,7 +8734,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-extended-revolved-triangle-pose-or-utthita-trikonasana-b',
-    path: 'animations/npz/yoga/anim_yoga_extended_revolved_triangle_pose_or_utthita_trikonasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_extended_revolved_triangle_pose_or_utthita_trikonasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Extended Revolved Triangle Pose (Utthita Trikonasana) — B (663f / 22.1s, 393KB)`,
     tags: ['yoga', 'fitness'],
@@ -8742,7 +8742,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-feathered-peacock-pose-or-pincha-mayurasana-a',
-    path: 'animations/npz/yoga/anim_yoga_feathered_peacock_pose_or_pincha_mayurasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_feathered_peacock_pose_or_pincha_mayurasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Feathered Peacock Pose (Pincha Mayurasana) — A (1054f / 35.1s, 534KB)`,
     tags: ['yoga', 'fitness'],
@@ -8750,7 +8750,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-feathered-peacock-pose-or-pincha-mayurasana-b',
-    path: 'animations/npz/yoga/anim_yoga_feathered_peacock_pose_or_pincha_mayurasana_b.glb',
+    path: 'animations/npz/moyo/anim_yoga_feathered_peacock_pose_or_pincha_mayurasana_b.glb',
     category: 'yoga',
     label: `[YOGA] Feathered Peacock Pose (Pincha Mayurasana) — B (1035f / 34.5s, 539KB)`,
     tags: ['yoga', 'fitness'],
@@ -8758,7 +8758,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-firefly-pose-or-tittibhasana-a',
-    path: 'animations/npz/yoga/anim_yoga_firefly_pose_or_tittibhasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_firefly_pose_or_tittibhasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Firefly Pose (Tittibhasana) (567f / 18.9s, 359KB)`,
     tags: ['yoga', 'fitness'],
@@ -8766,7 +8766,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-fish-pose-or-matsyasana-a',
-    path: 'animations/npz/yoga/anim_yoga_fish_pose_or_matsyasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_fish_pose_or_matsyasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Fish Pose (Matsyasana) (1155f / 38.5s, 570KB)`,
     tags: ['yoga', 'fitness'],
@@ -8774,7 +8774,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-four-limbed-staff-pose-or-chaturanga-dandasana-a',
-    path: 'animations/npz/yoga/anim_yoga_four_limbed_staff_pose_or_chaturanga_dandasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_four_limbed_staff_pose_or_chaturanga_dandasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Four-Limbed Staff Pose (Chaturanga Dandasana) (492f / 16.4s, 332KB)`,
     tags: ['yoga', 'fitness'],
@@ -8782,7 +8782,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-frog-pose-or-bhekasana-a',
-    path: 'animations/npz/yoga/anim_yoga_frog_pose_or_bhekasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_frog_pose_or_bhekasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Frog Pose (Bhekasana) (736f / 24.5s, 419KB)`,
     tags: ['yoga', 'fitness'],
@@ -8790,7 +8790,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-garland-pose-or-malasana-a',
-    path: 'animations/npz/yoga/anim_yoga_garland_pose_or_malasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_garland_pose_or_malasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Garland Pose (Malasana) (365f / 12.2s, 286KB)`,
     tags: ['yoga', 'fitness'],
@@ -8798,7 +8798,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-gate-pose-or-parighasana-a',
-    path: 'animations/npz/yoga/anim_yoga_gate_pose_or_parighasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_gate_pose_or_parighasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Gate Pose (Parighasana) (596f / 19.9s, 369KB)`,
     tags: ['yoga', 'fitness'],
@@ -8806,7 +8806,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-half-lord-of-the-fishes-pose-or-ardha-matsyendrasana-a',
-    path: 'animations/npz/yoga/anim_yoga_half_lord_of_the_fishes_pose_or_ardha_matsyendrasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_half_lord_of_the_fishes_pose_or_ardha_matsyendrasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Half Lord of the Fishes Pose (Ardha Matsyendrasana) (623f / 20.8s, 379KB)`,
     tags: ['yoga', 'fitness'],
@@ -8814,7 +8814,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-half-moon-pose-or-ardha-chandrasana-a',
-    path: 'animations/npz/yoga/anim_yoga_half_moon_pose_or_ardha_chandrasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_half_moon_pose_or_ardha_chandrasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Half Moon Pose (Ardha Chandrasana) (664f / 22.1s, 394KB)`,
     tags: ['yoga', 'fitness'],
@@ -8822,7 +8822,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-handstand-pose-or-adho-mukha-vrksasana-a',
-    path: 'animations/npz/yoga/anim_yoga_handstand_pose_or_adho_mukha_vrksasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_handstand_pose_or_adho_mukha_vrksasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Handstand pose (Adho Mukha Vrksasana) (1446f / 48.2s, 675KB)`,
     tags: ['yoga', 'fitness'],
@@ -8830,7 +8830,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-happy-baby-pose-or-ananda-balasana-a',
-    path: 'animations/npz/yoga/anim_yoga_happy_baby_pose_or_ananda_balasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_happy_baby_pose_or_ananda_balasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Happy Baby Pose (Ananda Balasana) (574f / 19.1s, 361KB)`,
     tags: ['yoga', 'fitness'],
@@ -8838,7 +8838,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-head-to-knee-forward-bend-pose-or-janu-sirsasana-a',
-    path: 'animations/npz/yoga/anim_yoga_head_to_knee_forward_bend_pose_or_janu_sirsasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_head_to_knee_forward_bend_pose_or_janu_sirsasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Head-to-Knee Forward Bend pose (Janu Sirsasana) (666f / 22.2s, 394KB)`,
     tags: ['yoga', 'fitness'],
@@ -8846,7 +8846,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-heron-pose-or-krounchasana-a',
-    path: 'animations/npz/yoga/anim_yoga_heron_pose_or_krounchasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_heron_pose_or_krounchasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Heron Pose (Krounchasana) (756f / 25.2s, 426KB)`,
     tags: ['yoga', 'fitness'],
@@ -8854,7 +8854,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-intense-side-stretch-pose-or-parsvottanasana-a',
-    path: 'animations/npz/yoga/anim_yoga_intense_side_stretch_pose_or_parsvottanasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_intense_side_stretch_pose_or_parsvottanasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Intense Side Stretch Pose (Parsvottanasana) (526f / 17.5s, 344KB)`,
     tags: ['yoga', 'fitness'],
@@ -8862,7 +8862,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-legs-up-the-wall-pose-or-viparita-karani-a',
-    path: 'animations/npz/yoga/anim_yoga_legs_up_the_wall_pose_or_viparita_karani_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_legs_up_the_wall_pose_or_viparita_karani_a.glb',
     category: 'yoga',
     label: `[YOGA] Legs-Up-the-Wall Pose (Viparita Karani) (604f / 20.1s, 372KB)`,
     tags: ['yoga', 'fitness'],
@@ -8870,7 +8870,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-locust-pose-or-salabhasana-a',
-    path: 'animations/npz/yoga/anim_yoga_locust_pose_or_salabhasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_locust_pose_or_salabhasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Locust Pose (Salabhasana) (472f / 15.7s, 325KB)`,
     tags: ['yoga', 'fitness'],
@@ -8878,7 +8878,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-lord-of-the-dance-pose-or-natarajasana-a',
-    path: 'animations/npz/yoga/anim_yoga_lord_of_the_dance_pose_or_natarajasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_lord_of_the_dance_pose_or_natarajasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Lord of the Dance Pose (Natarajasana) (740f / 24.7s, 430KB)`,
     tags: ['yoga', 'fitness'],
@@ -8886,7 +8886,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-low-lunge-pose-or-anjaneyasana-a',
-    path: 'animations/npz/yoga/anim_yoga_low_lunge_pose_or_anjaneyasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_low_lunge_pose_or_anjaneyasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Low Lunge pose (Anjaneyasana) (656f / 21.9s, 390KB)`,
     tags: ['yoga', 'fitness'],
@@ -8894,7 +8894,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-noose-pose-or-pasasana-a',
-    path: 'animations/npz/yoga/anim_yoga_noose_pose_or_pasasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_noose_pose_or_pasasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Noose Pose (Pasasana) (1002f / 33.4s, 515KB)`,
     tags: ['yoga', 'fitness'],
@@ -8902,7 +8902,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-peacock-pose-or-mayurasana-a',
-    path: 'animations/npz/yoga/anim_yoga_peacock_pose_or_mayurasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_peacock_pose_or_mayurasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Peacock Pose (Mayurasana) (990f / 33s, 511KB)`,
     tags: ['yoga', 'fitness'],
@@ -8910,7 +8910,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-pigeon-pose-or-kapotasana-a',
-    path: 'animations/npz/yoga/anim_yoga_pigeon_pose_or_kapotasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_pigeon_pose_or_kapotasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Pigeon Pose (Kapotasana) (1974f / 65.8s, 864KB)`,
     tags: ['yoga', 'fitness'],
@@ -8918,7 +8918,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-plank-pose-or-kumbhakasana-a',
-    path: 'animations/npz/yoga/anim_yoga_plank_pose_or_kumbhakasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_plank_pose_or_kumbhakasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Plank Pose (Kumbhakasana) (429f / 14.3s, 309KB)`,
     tags: ['yoga', 'fitness'],
@@ -8926,7 +8926,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-plow-pose-or-halasana-a',
-    path: 'animations/npz/yoga/anim_yoga_plow_pose_or_halasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_plow_pose_or_halasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Plow Pose (Halasana) (838f / 27.9s, 525KB)`,
     tags: ['yoga', 'fitness'],
@@ -8934,7 +8934,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-pose-dedicated-to-the-sage-koundinya-or-eka-pada-koundinyanasana-i-and-ii-a',
-    path: 'animations/npz/yoga/anim_yoga_pose_dedicated_to_the_sage_koundinya_or_eka_pada_koundinyanasana_i_and_ii_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_pose_dedicated_to_the_sage_koundinya_or_eka_pada_koundinyanasana_i_and_ii_a.glb',
     category: 'yoga',
     label: `[YOGA] Pose Dedicated to the Sage Koundinya (Eka Pada Koundinyanasana I and II) (964f / 32.1s, 502KB)`,
     tags: ['yoga', 'fitness'],
@@ -8942,7 +8942,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-rajakapotasana-a',
-    path: 'animations/npz/yoga/anim_yoga_rajakapotasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_rajakapotasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Rajakapotasana (1297f / 43.2s, 621KB)`,
     tags: ['yoga', 'fitness'],
@@ -8950,7 +8950,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-reclining-hand-to-big-toe-pose-or-supta-padangusthasana-a',
-    path: 'animations/npz/yoga/anim_yoga_reclining_hand_to_big_toe_pose_or_supta_padangusthasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_reclining_hand_to_big_toe_pose_or_supta_padangusthasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Reclining Hand-to-Big-Toe Pose (Supta Padangusthasana) (702f / 23.4s, 407KB)`,
     tags: ['yoga', 'fitness'],
@@ -8958,7 +8958,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-revolved-head-to-knee-pose-or-parivrtta-janu-sirsasana-a',
-    path: 'animations/npz/yoga/anim_yoga_revolved_head_to_knee_pose_or_parivrtta_janu_sirsasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_revolved_head_to_knee_pose_or_parivrtta_janu_sirsasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Revolved Head-to-Knee Pose (Parivrtta Janu Sirsasana) (748f / 24.9s, 424KB)`,
     tags: ['yoga', 'fitness'],
@@ -8966,7 +8966,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-scale-pose-or-tolasana-a',
-    path: 'animations/npz/yoga/anim_yoga_scale_pose_or_tolasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_scale_pose_or_tolasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Scale Pose (Tolasana) (868f / 28.9s, 467KB)`,
     tags: ['yoga', 'fitness'],
@@ -8974,7 +8974,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-scorpion-pose-or-vrischikasana-a',
-    path: 'animations/npz/yoga/anim_yoga_scorpion_pose_or_vrischikasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_scorpion_pose_or_vrischikasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Scorpion pose (vrischikasana) (1298f / 43.3s, 621KB)`,
     tags: ['yoga', 'fitness'],
@@ -8982,7 +8982,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-seated-forward-bend-pose-or-paschimottanasana-a',
-    path: 'animations/npz/yoga/anim_yoga_seated_forward_bend_pose_or_paschimottanasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_seated_forward_bend_pose_or_paschimottanasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Seated Forward Bend pose (Paschimottanasana) (564f / 18.8s, 357KB)`,
     tags: ['yoga', 'fitness'],
@@ -8990,7 +8990,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-shoulder-pressing-pose-or-bhujapidasana-a',
-    path: 'animations/npz/yoga/anim_yoga_shoulder_pressing_pose_or_bhujapidasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_shoulder_pressing_pose_or_bhujapidasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Shoulder-Pressing Pose (Bhujapidasana) (550f / 18.3s, 352KB)`,
     tags: ['yoga', 'fitness'],
@@ -8998,7 +8998,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-side-crane-crow-pose-or-parsva-bakasana-a',
-    path: 'animations/npz/yoga/anim_yoga_side_crane_crow_pose_or_parsva_bakasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_side_crane_crow_pose_or_parsva_bakasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Side Crane Crow Pose (Parsva Bakasana) (687f / 22.9s, 402KB)`,
     tags: ['yoga', 'fitness'],
@@ -9006,7 +9006,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-side-plank-pose-or-vasisthasana-a',
-    path: 'animations/npz/yoga/anim_yoga_side_plank_pose_or_vasisthasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_side_plank_pose_or_vasisthasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Side Plank Pose (Vasisthasana) (574f / 19.1s, 361KB)`,
     tags: ['yoga', 'fitness'],
@@ -9014,7 +9014,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-side-reclining-leg-lift-pose-or-anantasana-a',
-    path: 'animations/npz/yoga/anim_yoga_side_reclining_leg_lift_pose_or_anantasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_side_reclining_leg_lift_pose_or_anantasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Side-Reclining Leg Lift pose (Anantasana) (808f / 26.9s, 445KB)`,
     tags: ['yoga', 'fitness'],
@@ -9022,7 +9022,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-sitting-pose-1-normal-a',
-    path: 'animations/npz/yoga/anim_yoga_sitting_pose_1_normal_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_sitting_pose_1_normal_a.glb',
     category: 'yoga',
     label: `[YOGA] Sitting pose 1 normal (456f / 15.2s, 319KB)`,
     tags: ['yoga', 'fitness'],
@@ -9030,7 +9030,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-split-pose-a',
-    path: 'animations/npz/yoga/anim_yoga_split_pose_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_split_pose_a.glb',
     category: 'yoga',
     label: `[YOGA] Split pose (1183f / 39.4s, 580KB)`,
     tags: ['yoga', 'fitness'],
@@ -9038,7 +9038,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-staff-pose-or-dandasana-a',
-    path: 'animations/npz/yoga/anim_yoga_staff_pose_or_dandasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_staff_pose_or_dandasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Staff Pose (Dandasana) (631f / 21s, 382KB)`,
     tags: ['yoga', 'fitness'],
@@ -9046,7 +9046,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-standing-big-toe-hold-pose-or-utthita-padangusthasana-a',
-    path: 'animations/npz/yoga/anim_yoga_standing_big_toe_hold_pose_or_utthita_padangusthasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_standing_big_toe_hold_pose_or_utthita_padangusthasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Standing big toe hold pose (Utthita Padangusthasana) (820f / 27.3s, 459KB)`,
     tags: ['yoga', 'fitness'],
@@ -9054,7 +9054,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-standing-forward-bend-pose-or-uttanasana-a',
-    path: 'animations/npz/yoga/anim_yoga_standing_forward_bend_pose_or_uttanasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_standing_forward_bend_pose_or_uttanasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Standing Forward Bend pose (Uttanasana) (493f / 16.4s, 332KB)`,
     tags: ['yoga', 'fitness'],
@@ -9062,7 +9062,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-standing-split-pose-or-urdhva-prasarita-eka-padasana-a',
-    path: 'animations/npz/yoga/anim_yoga_standing_split_pose_or_urdhva_prasarita_eka_padasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_standing_split_pose_or_urdhva_prasarita_eka_padasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Standing Split pose (Urdhva Prasarita Eka Padasana) (470f / 15.7s, 324KB)`,
     tags: ['yoga', 'fitness'],
@@ -9070,7 +9070,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-supported-headstand-pose-or-salamba-sirsasana-a',
-    path: 'animations/npz/yoga/anim_yoga_supported_headstand_pose_or_salamba_sirsasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_supported_headstand_pose_or_salamba_sirsasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Supported Headstand pose (Salamba Sirsasana) (802f / 26.7s, 452KB)`,
     tags: ['yoga', 'fitness'],
@@ -9078,7 +9078,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-supported-shoulderstand-pose-or-salamba-sarvangasana-a',
-    path: 'animations/npz/yoga/anim_yoga_supported_shoulderstand_pose_or_salamba_sarvangasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_supported_shoulderstand_pose_or_salamba_sarvangasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Supported Shoulderstand pose (Salamba Sarvangasana) (750f / 25s, 434KB)`,
     tags: ['yoga', 'fitness'],
@@ -9086,7 +9086,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-supta-baddha-konasana-a',
-    path: 'animations/npz/yoga/anim_yoga_supta_baddha_konasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_supta_baddha_konasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Supta Baddha Konasana (732f / 24.4s, 427KB)`,
     tags: ['yoga', 'fitness'],
@@ -9094,7 +9094,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-supta-virasana-vajrasana-a',
-    path: 'animations/npz/yoga/anim_yoga_supta_virasana_vajrasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_supta_virasana_vajrasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Supta Virasana Vajrasana (840f / 28s, 457KB)`,
     tags: ['yoga', 'fitness'],
@@ -9102,7 +9102,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-tortoise-pose-a',
-    path: 'animations/npz/yoga/anim_yoga_tortoise_pose_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_tortoise_pose_a.glb',
     category: 'yoga',
     label: `[YOGA] Tortoise Pose (1830f / 61s, 813KB)`,
     tags: ['yoga', 'fitness'],
@@ -9110,7 +9110,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-tree-pose-or-vrksasana-a',
-    path: 'animations/npz/yoga/anim_yoga_tree_pose_or_vrksasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_tree_pose_or_vrksasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Tree Pose (Vrksasana) (574f / 19.1s, 375KB)`,
     tags: ['yoga', 'fitness'],
@@ -9118,7 +9118,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-upward-bow-wheel-pose-or-urdhva-dhanurasana-a',
-    path: 'animations/npz/yoga/anim_yoga_upward_bow_wheel_pose_or_urdhva_dhanurasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_upward_bow_wheel_pose_or_urdhva_dhanurasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Upward Bow Wheel Pose (Urdhva Dhanurasana) (813f / 27.1s, 447KB)`,
     tags: ['yoga', 'fitness'],
@@ -9126,7 +9126,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-upward-facing-two-foot-staff-pose-or-dwi-pada-viparita-dandasana-a',
-    path: 'animations/npz/yoga/anim_yoga_upward_facing_two_foot_staff_pose_or_dwi_pada_viparita_dandasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_upward_facing_two_foot_staff_pose_or_dwi_pada_viparita_dandasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Upward Facing Two-Foot Staff Pose (Dwi Pada Viparita Dandasana) (1118f / 37.3s, 557KB)`,
     tags: ['yoga', 'fitness'],
@@ -9134,7 +9134,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-upward-plank-pose-or-purvottanasana-a',
-    path: 'animations/npz/yoga/anim_yoga_upward_plank_pose_or_purvottanasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_upward_plank_pose_or_purvottanasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Upward Plank Pose (Purvottanasana) (713f / 23.8s, 411KB)`,
     tags: ['yoga', 'fitness'],
@@ -9142,7 +9142,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-viparita-virabhadrasana-or-reverse-warrior-pose-a',
-    path: 'animations/npz/yoga/anim_yoga_viparita_virabhadrasana_or_reverse_warrior_pose_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_viparita_virabhadrasana_or_reverse_warrior_pose_a.glb',
     category: 'yoga',
     label: `[YOGA] viparita virabhadrasana (reverse warrior pose) (668f / 22.3s, 403KB)`,
     tags: ['yoga', 'fitness'],
@@ -9150,7 +9150,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-virasana-or-vajrasana-a',
-    path: 'animations/npz/yoga/anim_yoga_virasana_or_vajrasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_virasana_or_vajrasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Virasana (Vajrasana) (565f / 18.8s, 358KB)`,
     tags: ['yoga', 'fitness'],
@@ -9158,7 +9158,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-warrior-i-pose-or-virabhadrasana-i-a',
-    path: 'animations/npz/yoga/anim_yoga_warrior_i_pose_or_virabhadrasana_i_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_warrior_i_pose_or_virabhadrasana_i_a.glb',
     category: 'yoga',
     label: `[YOGA] Warrior I Pose (Virabhadrasana I) (608f / 20.3s, 374KB)`,
     tags: ['yoga', 'fitness'],
@@ -9166,7 +9166,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-warrior-ii-pose-or-virabhadrasana-ii-a',
-    path: 'animations/npz/yoga/anim_yoga_warrior_ii_pose_or_virabhadrasana_ii_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_warrior_ii_pose_or_virabhadrasana_ii_a.glb',
     category: 'yoga',
     label: `[YOGA] Warrior II Pose (Virabhadrasana II) (574f / 19.1s, 361KB)`,
     tags: ['yoga', 'fitness'],
@@ -9174,7 +9174,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-warrior-iii-pose-or-virabhadrasana-iii-a',
-    path: 'animations/npz/yoga/anim_yoga_warrior_iii_pose_or_virabhadrasana_iii_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_warrior_iii_pose_or_virabhadrasana_iii_a.glb',
     category: 'yoga',
     label: `[YOGA] Warrior III Pose (Virabhadrasana III) (572f / 19.1s, 360KB)`,
     tags: ['yoga', 'fitness'],
@@ -9182,7 +9182,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-wide-angle-seated-forward-bend-pose-or-upavistha-konasana-a',
-    path: 'animations/npz/yoga/anim_yoga_wide_angle_seated_forward_bend_pose_or_upavistha_konasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_wide_angle_seated_forward_bend_pose_or_upavistha_konasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Wide-Angle Seated Forward Bend pose (Upavistha Konasana) (960f / 32s, 500KB)`,
     tags: ['yoga', 'fitness'],
@@ -9190,7 +9190,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-wide-legged-forward-bend-pose-or-prasarita-padottanasana-a',
-    path: 'animations/npz/yoga/anim_yoga_wide_legged_forward_bend_pose_or_prasarita_padottanasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_wide_legged_forward_bend_pose_or_prasarita_padottanasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Wide-Legged Forward Bend pose (Prasarita Padottanasana) (805f / 26.8s, 454KB)`,
     tags: ['yoga', 'fitness'],
@@ -9198,7 +9198,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-wild-thing-pose-or-camatkarasana-a',
-    path: 'animations/npz/yoga/anim_yoga_wild_thing_pose_or_camatkarasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_wild_thing_pose_or_camatkarasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Wild Thing pose (Camatkarasana) (764f / 25.5s, 430KB)`,
     tags: ['yoga', 'fitness'],
@@ -9206,7 +9206,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-wind-relieving-pose-or-pawanmuktasana-a',
-    path: 'animations/npz/yoga/anim_yoga_wind_relieving_pose_or_pawanmuktasana_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_wind_relieving_pose_or_pawanmuktasana_a.glb',
     category: 'yoga',
     label: `[YOGA] Wind Relieving pose (Pawanmuktasana) (545f / 18.2s, 351KB)`,
     tags: ['yoga', 'fitness'],
@@ -9214,7 +9214,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-yogic-sleep-pose-a',
-    path: 'animations/npz/yoga/anim_yoga_yogic_sleep_pose_a.glb',
+    path: 'animations/npz/moyo/anim_yoga_yogic_sleep_pose_a.glb',
     category: 'yoga',
     label: `[YOGA] Yogic sleep pose (1754f / 58.5s, 785KB)`,
     tags: ['yoga', 'fitness', 'laying-front'],
@@ -9225,7 +9225,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   // ── ENTRETIEN & ACTIONS DU QUOTIDIEN (AMASS / CMU / KIT / ACCAD) ─────────────
   {
     id: 'vacuuming',
-    path: 'animations/npz/daily/anim_vacuuming.glb',
+    path: 'animations/npz/cmu/anim_vacuuming.glb',
     category: 'interactions',
     label: "Passer l'aspirateur",
     aliases: ['vacuum', 'passer-aspirateur'],
@@ -9234,7 +9234,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'vacuuming-alt',
-    path: 'animations/npz/daily/anim_vacuuming_alt.glb',
+    path: 'animations/npz/cmu/anim_vacuuming_alt.glb',
     category: 'interactions',
     label: "Passer l'aspirateur (Variante)",
     aliases: ['vacuum-alt', 'vacuum-var'],
@@ -9243,7 +9243,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'wiping-table',
-    path: 'animations/npz/daily/anim_wiping_table.glb',
+    path: 'animations/npz/kit/anim_wiping_table.glb',
     category: 'interactions',
     label: 'Essuyer la table',
     aliases: ['wipe-table', 'essuyer-table'],
@@ -9252,7 +9252,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'wiping-table-small-circles',
-    path: 'animations/npz/daily/anim_wiping_table_small_circles.glb',
+    path: 'animations/npz/kit/anim_wiping_table_small_circles.glb',
     category: 'interactions',
     label: 'Essuyer la table (Petits cercles)',
     aliases: ['wipe-small-circles', 'wipe-table-var'],
@@ -9261,7 +9261,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'taking-shower',
-    path: 'animations/npz/daily/anim_taking_shower.glb',
+    path: 'animations/npz/kit/anim_taking_shower.glb',
     category: 'interactions',
     label: 'Prendre sa douche',
     aliases: ['shower', 'douche'],
@@ -9270,7 +9270,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'washing-body',
-    path: 'animations/npz/daily/anim_washing_body.glb',
+    path: 'animations/npz/kit/anim_washing_body.glb',
     category: 'interactions',
     label: 'Se laver',
     aliases: ['wash', 'se-laver'],
@@ -9279,7 +9279,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'pickup-box-floor-male',
-    path: 'animations/npz/daily/anim_pickup_box_floor_male.glb',
+    path: 'animations/npz/accad/anim_pickup_box_floor_male.glb',
     category: 'interactions',
     label: 'Ramasser une boîte au sol (H)',
     aliases: ['pickup-box-m', 'ramasser-boite-sol'],
@@ -9288,7 +9288,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'pickup-box-floor-female',
-    path: 'animations/npz/daily/anim_pickup_box_floor_female.glb',
+    path: 'animations/npz/accad/anim_pickup_box_floor_female.glb',
     category: 'interactions',
     label: 'Ramasser une boîte au sol (F)',
     aliases: ['pickup-box-f', 'ramasser-boite-sol-femme'],
@@ -9297,7 +9297,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'lift-box-male',
-    path: 'animations/npz/daily/anim_lift_box_male.glb',
+    path: 'animations/npz/accad/anim_lift_box_male.glb',
     category: 'interactions',
     label: 'Soulever une boîte (H)',
     aliases: ['lift-box-m', 'soulever-boite'],
@@ -9306,7 +9306,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'lift-box-female',
-    path: 'animations/npz/daily/anim_lift_box_female.glb',
+    path: 'animations/npz/accad/anim_lift_box_female.glb',
     category: 'interactions',
     label: 'Soulever une boîte (F)',
     aliases: ['lift-box-f', 'soulever-boite-femme'],
@@ -9315,7 +9315,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'putdown-box-floor',
-    path: 'animations/npz/daily/anim_putdown_box_floor.glb',
+    path: 'animations/npz/accad/anim_putdown_box_floor.glb',
     category: 'interactions',
     label: 'Reposer la boîte au sol',
     aliases: ['putdown-box', 'reposer-boite'],
@@ -9324,7 +9324,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'sweeping-floor',
-    path: 'animations/npz/daily/anim_sweeping_floor.glb',
+    path: 'animations/npz/cmu/anim_sweeping_floor.glb',
     category: 'interactions',
     label: 'Balayer le sol',
     aliases: ['sweep-floor', 'balayer'],
@@ -9333,7 +9333,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'cleaning-windows',
-    path: 'animations/npz/daily/anim_cleaning_windows.glb',
+    path: 'animations/npz/cmu/anim_cleaning_windows.glb',
     category: 'interactions',
     label: 'Laver les vitres',
     aliases: ['clean-windows', 'laver-vitres'],
@@ -9344,7 +9344,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   // ── VIE DE STUDIO (CUISINE, SALON, DÉTENTE, SDB & REPOS) ────────────────────
   {
     id: 'drinking-glass',
-    path: 'animations/npz/daily/anim_drinking_glass.glb',
+    path: 'animations/npz/kit/anim_drinking_glass.glb',
     category: 'interactions',
     label: 'Boire un verre',
     aliases: ['drink', 'boire-verre', 'boire'],
@@ -9353,7 +9353,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'holding-cup',
-    path: 'animations/npz/daily/anim_holding_cup.glb',
+    path: 'animations/npz/kit/anim_holding_cup.glb',
     category: 'interactions',
     label: 'Prendre une tasse',
     aliases: ['cup', 'prendre-tasse', 'cafe'],
@@ -9362,7 +9362,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'cooking-stir-pan',
-    path: 'animations/npz/daily/anim_cooking_stir_pan.glb',
+    path: 'animations/npz/kit/anim_cooking_stir_pan.glb',
     category: 'interactions',
     label: 'Cuisiner à la poêle',
     aliases: ['cook-pan', 'cuisiner', 'melanger-poele'],
@@ -9371,7 +9371,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'cutting-knife',
-    path: 'animations/npz/daily/anim_cutting_knife.glb',
+    path: 'animations/npz/kit/anim_cutting_knife.glb',
     category: 'interactions',
     label: 'Découper au couteau',
     aliases: ['cut-knife', 'decouper-couteau', 'decouper'],
@@ -9380,7 +9380,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'pouring-bottle',
-    path: 'animations/npz/daily/anim_pouring_bottle.glb',
+    path: 'animations/npz/kit/anim_pouring_bottle.glb',
     category: 'interactions',
     label: 'Verser une bouteille',
     aliases: ['pour-bottle', 'verser-bouteille'],
@@ -9389,7 +9389,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'stirring-bowl',
-    path: 'animations/npz/daily/anim_stirring_bowl.glb',
+    path: 'animations/npz/kit/anim_stirring_bowl.glb',
     category: 'interactions',
     label: 'Mélanger dans un saladier',
     aliases: ['stir-bowl', 'melanger-saladier'],
@@ -9398,7 +9398,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'washing-dishes-sink',
-    path: 'animations/npz/daily/anim_washing_dishes_sink.glb',
+    path: 'animations/npz/kit/anim_washing_dishes_sink.glb',
     category: 'interactions',
     label: "Faire la vaisselle à l'évier",
     aliases: ['wash-dishes', 'faire-vaisselle'],
@@ -9407,7 +9407,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'take-book-shelf',
-    path: 'animations/npz/daily/anim_take_book_shelf.glb',
+    path: 'animations/npz/kit/anim_take_book_shelf.glb',
     category: 'interactions',
     label: 'Prendre un livre sur étagère',
     aliases: ['take-book', 'prendre-livre-etagere', 'livre'],
@@ -9416,7 +9416,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'playing-guitar',
-    path: 'animations/npz/daily/anim_playing_guitar.glb',
+    path: 'animations/npz/kit/anim_playing_guitar.glb',
     category: 'interactions',
     label: 'Jouer de la guitare',
     aliases: ['guitar', 'guitare', 'jouer-guitare'],
@@ -9425,7 +9425,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'conversation-gestures',
-    path: 'animations/npz/daily/anim_conversation_gestures.glb',
+    path: 'animations/npz/accad/anim_conversation_gestures.glb',
     category: 'emotes_gestures',
     label: 'Gestuelle de conversation',
     aliases: ['talk-gestures', 'conversation', 'discuter'],
@@ -9434,7 +9434,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'dry-head-towel',
-    path: 'animations/npz/daily/anim_dry_head_towel.glb',
+    path: 'animations/npz/kit/anim_dry_head_towel.glb',
     category: 'interactions',
     label: "S'essuyer la tête (serviette)",
     aliases: ['dry-head', 'essuyer-tete', 'serviette'],
@@ -9443,7 +9443,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'groom-hair-mirror',
-    path: 'animations/npz/daily/anim_groom_hair_mirror.glb',
+    path: 'animations/npz/kit/anim_groom_hair_mirror.glb',
     category: 'interactions',
     label: 'Se recoiffer devant le miroir',
     aliases: ['hair-mirror', 'se-recoiffer', 'cheveux'],
@@ -9452,7 +9452,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'take-off-tshirt',
-    path: 'animations/npz/daily/anim_take_off_tshirt.glb',
+    path: 'animations/npz/kit/anim_take_off_tshirt.glb',
     category: 'interactions',
     label: 'Retirer son t-shirt',
     aliases: ['take-off-shirt', 'retirer-tshirt', 'se-deshabiller'],
@@ -9461,7 +9461,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'lie-down-bed',
-    path: 'animations/npz/daily/anim_lie_down_bed.glb',
+    path: 'animations/npz/accad/anim_lie_down_bed.glb',
     category: 'interactions',
     label: "S'allonger (lit / sol)",
     aliases: ['lie-down', 's-allonger', 'coucher'],
@@ -9470,7 +9470,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'get-up-bed',
-    path: 'animations/npz/daily/anim_get_up_bed.glb',
+    path: 'animations/npz/cmu/anim_get_up_bed.glb',
     category: 'interactions',
     label: 'Se relever (lit / sol)',
     aliases: ['get-up', 'se-relever', 'reveil'],
@@ -9481,7 +9481,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   // ── NOUVELLES ANIMATIONS INTÉGRÉES (SPORTS, COUPLE, DANCE & VIBE) ────────────────
   {
     id: 'basketball-shoot',
-    path: 'animations/npz/sports/anim_basketball_shoot.glb',
+    path: 'animations/npz/ssm/anim_basketball_shoot.glb',
     category: 'sports_fitness',
     label: 'Basket : Tir & Dribble',
     aliases: ['basketball', 'basket', 'tir-panier'],
@@ -9490,7 +9490,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'basketball-cmu',
-    path: 'animations/npz/sports/anim_basketball_cmu.glb',
+    path: 'animations/npz/cmu/anim_basketball_cmu.glb',
     category: 'sports_fitness',
     label: 'Basket : Jeu & Dribbles',
     aliases: ['basketball-play', 'jouer-basket'],
@@ -9499,7 +9499,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'soccer-dribble-kick',
-    path: 'animations/npz/sports/anim_soccer_dribble_kick.glb',
+    path: 'animations/npz/ssm/anim_soccer_dribble_kick.glb',
     category: 'sports_fitness',
     label: 'Football : Conduite & Frappe',
     aliases: ['soccer', 'football', 'foot', 'tir-foot'],
@@ -9508,7 +9508,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'soccer-kick',
-    path: 'animations/npz/sports/anim_soccer_kick.glb',
+    path: 'animations/npz/cmu/anim_soccer_kick.glb',
     category: 'sports_fitness',
     label: 'Football : Frappe au but',
     aliases: ['soccer-kick', 'frappe-foot'],
@@ -9517,7 +9517,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'clap-sync-duo',
-    path: 'animations/npz/interactions/anim_clap_sync_duo.glb',
+    path: 'animations/npz/ssm/anim_clap_sync_duo.glb',
     category: 'interactions',
     label: 'Complices : Applaudir & Check à deux',
     aliases: ['clap-duo', 'complices', 'applaudir-duo'],
@@ -9528,7 +9528,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   // ── NOUVELLES ANIMATIONS INTÉGRÉES (SPORTS, COUPLE, DANCE & VIBE) ────────────────
   {
     id: 'hasaposerviko-duo',
-    path: 'animations/npz/dances/anim_hasaposerviko_duo.glb',
+    path: 'animations/npz/dancedb/anim_hasaposerviko_duo.glb',
     category: 'dances',
     label: 'Hasaposerviko : Danse de couple folk',
     aliases: ['hasaposerviko', 'danse-couple-folk'],
@@ -9537,7 +9537,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'zorbas-dance',
-    path: 'animations/npz/dances/anim_zorbas_dance.glb',
+    path: 'animations/npz/dancedb/anim_zorbas_dance.glb',
     category: 'dances',
     label: 'Danse Zorba : Duo folk',
     aliases: ['zorba', 'danse-zorba'],
@@ -9546,7 +9546,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'duo-martial-arts-combat',
-    path: 'animations/npz/combat/anim_duo_martial_arts.glb',
+    path: 'animations/npz/cmu/anim_duo_martial_arts.glb',
     category: 'combat',
     label: 'Combat d’arts martiaux en duo',
     aliases: ['duo-fight', 'combat-duo', 'arts-martiaux-duo'],
@@ -9555,7 +9555,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'duo-martial-arts-combat-b',
-    path: 'animations/npz/combat/anim_duo_martial_arts_b.glb',
+    path: 'animations/npz/cmu/anim_duo_martial_arts_b.glb',
     category: 'combat',
     label: 'Combat d’arts martiaux en duo (Défenseur B)',
     aliases: ['duo-fight-b', 'combat-duo-b'],
@@ -9564,7 +9564,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'happy-dance-olivia',
-    path: 'animations/npz/repair-candidates/anim_happy_dance.glb',
+    path: 'animations/npz/dancedb/anim_happy_dance.glb',
     category: 'dances',
     label: 'Danse de joie (Happy Dance)',
     aliases: ['happy-dance', 'danse-joie', 'joie'],
@@ -9573,7 +9573,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'excited-dance-olivia',
-    path: 'animations/npz/repair-candidates/anim_excited_dance.glb',
+    path: 'animations/npz/dancedb/anim_excited_dance.glb',
     category: 'dances',
     label: 'Danse excitée & festive',
     aliases: ['excited-dance', 'fete', 'danse-festive'],
@@ -9582,7 +9582,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'relaxed-groove-olivia',
-    path: 'animations/npz/dances/anim_relaxed_groove.glb',
+    path: 'animations/npz/dancedb/anim_relaxed_groove.glb',
     category: 'dances',
     label: 'Groove détendu & chill',
     aliases: ['relaxed-groove', 'danse-detendue', 'chill'],
@@ -9591,7 +9591,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'pleased-dance-olivia',
-    path: 'animations/npz/repair-candidates/anim_pleased_dance.glb',
+    path: 'animations/npz/dancedb/anim_pleased_dance.glb',
     category: 'dances',
     label: 'Danse satisfaite & agréable',
     aliases: ['pleased-dance', 'satisfait'],
@@ -9603,7 +9603,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   // BEGIN NPZ CLEAN EXTRACTS
   {
     id: 'yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-01',
-    path: 'animations/npz/clean-extracts/yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-01.glb',
+    path: 'animations/npz/moyo/yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-01.glb',
     category: 'yoga',
     label: '[EXTRAIT] Dolphin — 01 (4.20–7.73 s)',
     tags: ['npz-clean-extract'],
@@ -9611,7 +9611,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-02',
-    path: 'animations/npz/clean-extracts/yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-02.glb',
+    path: 'animations/npz/moyo/yoga-dolphin-pose-or-ardha-pincha-mayurasana-a-clean-02.glb',
     category: 'yoga',
     label: '[EXTRAIT] Dolphin — 02 (10.90–16.20 s)',
     tags: ['npz-clean-extract'],

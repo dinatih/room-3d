@@ -190,13 +190,13 @@ def main():
         registry_text = pattern.sub(rf"\g<1>{res['duration']}", registry_text)
 
     # 2. Process Yoga
-    yoga_meta_path = ROOT / "public/animations/npz/yoga/yoga_meta.json"
+    yoga_meta_path = ROOT / "public/animations/npz/_metadata/yoga_meta.json"
     yoga_meta = json.loads(yoga_meta_path.read_text(encoding='utf-8'))
     print(f"\n=== [2/2] Trimming {len(yoga_meta)} Yoga animations ===")
     updated_yoga = []
     for idx, item in enumerate(yoga_meta, 1):
         src_path = Path(item.get('npz', ''))
-        dst_path = ROOT / "public/animations/npz/yoga" / item['filename']
+        dst_path = ROOT / "public/animations/npz/moyo" / item['filename']
         if not src_path.exists():
             continue
         print(f"[{idx}/{len(yoga_meta)}] Trimming {item['filename']}...")
@@ -205,7 +205,7 @@ def main():
         updated_yoga.append({**item, **res})
 
         # Update block in registry
-        pattern = re.compile(rf"(animations/npz/yoga/{re.escape(item['filename'])}'[\s\S]*?duration:\s*)([\d.]+)", re.MULTILINE)
+        pattern = re.compile(rf"(animations/npz/moyo/{re.escape(item['filename'])}'[\s\S]*?duration:\s*)([\d.]+)", re.MULTILINE)
         registry_text = pattern.sub(rf"\g<1>{res['duration']}", registry_text)
 
     REGISTRY_PATH.write_text(registry_text, encoding='utf-8')

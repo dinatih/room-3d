@@ -21,7 +21,7 @@
     "frames": 262,
     "duration": 8.7,
     "size_kb": 241,
-    "rel_path": "animations/npz/daily/anim_drinking_glass.glb"
+    "rel_path": "animations/npz/kit/anim_drinking_glass.glb"
   },
   {
     "id": "holding-cup",
@@ -45,7 +45,7 @@
     "frames": 87,
     "duration": 2.9,
     "size_kb": 183,
-    "rel_path": "animations/npz/daily/anim_holding_cup.glb"
+    "rel_path": "animations/npz/kit/anim_holding_cup.glb"
   },
   {
     "id": "cooking-stir-pan",
@@ -69,7 +69,7 @@
     "frames": 279,
     "duration": 9.3,
     "size_kb": 246,
-    "rel_path": "animations/npz/daily/anim_cooking_stir_pan.glb"
+    "rel_path": "animations/npz/kit/anim_cooking_stir_pan.glb"
   },
   {
     "id": "cutting-knife",
@@ -93,7 +93,7 @@
     "frames": 248,
     "duration": 8.3,
     "size_kb": 236,
-    "rel_path": "animations/npz/daily/anim_cutting_knife.glb"
+    "rel_path": "animations/npz/kit/anim_cutting_knife.glb"
   },
   {
     "id": "pouring-bottle",
@@ -116,7 +116,7 @@
     "frames": 270,
     "duration": 9,
     "size_kb": 244,
-    "rel_path": "animations/npz/daily/anim_pouring_bottle.glb"
+    "rel_path": "animations/npz/kit/anim_pouring_bottle.glb"
   },
   {
     "id": "stirring-bowl",
@@ -139,7 +139,7 @@
     "frames": 222,
     "duration": 7.4,
     "size_kb": 228,
-    "rel_path": "animations/npz/daily/anim_stirring_bowl.glb"
+    "rel_path": "animations/npz/kit/anim_stirring_bowl.glb"
   },
   {
     "id": "washing-dishes-sink",
@@ -163,7 +163,7 @@
     "frames": 54,
     "duration": 1.8,
     "size_kb": 172,
-    "rel_path": "animations/npz/daily/anim_washing_dishes_sink.glb"
+    "rel_path": "animations/npz/kit/anim_washing_dishes_sink.glb"
   },
   {
     "id": "take-book-shelf",
@@ -187,7 +187,7 @@
     "frames": 95,
     "duration": 3.2,
     "size_kb": 186,
-    "rel_path": "animations/npz/daily/anim_take_book_shelf.glb"
+    "rel_path": "animations/npz/kit/anim_take_book_shelf.glb"
   },
   {
     "id": "playing-guitar",
@@ -211,7 +211,7 @@
     "frames": 169,
     "duration": 5.6,
     "size_kb": 210,
-    "rel_path": "animations/npz/daily/anim_playing_guitar.glb"
+    "rel_path": "animations/npz/kit/anim_playing_guitar.glb"
   },
   {
     "id": "conversation-gestures",
@@ -235,7 +235,7 @@
     "frames": 1521,
     "duration": 50.7,
     "size_kb": 654,
-    "rel_path": "animations/npz/daily/anim_conversation_gestures.glb"
+    "rel_path": "animations/npz/accad/anim_conversation_gestures.glb"
   },
   {
     "id": "dry-head-towel",
@@ -259,7 +259,7 @@
     "frames": 327,
     "duration": 10.9,
     "size_kb": 262,
-    "rel_path": "animations/npz/daily/anim_dry_head_towel.glb"
+    "rel_path": "animations/npz/kit/anim_dry_head_towel.glb"
   },
   {
     "id": "groom-hair-mirror",
@@ -283,7 +283,7 @@
     "frames": 89,
     "duration": 3,
     "size_kb": 184,
-    "rel_path": "animations/npz/daily/anim_groom_hair_mirror.glb"
+    "rel_path": "animations/npz/kit/anim_groom_hair_mirror.glb"
   },
   {
     "id": "take-off-tshirt",
@@ -307,7 +307,7 @@
     "frames": 124,
     "duration": 4.1,
     "size_kb": 195,
-    "rel_path": "animations/npz/daily/anim_take_off_tshirt.glb"
+    "rel_path": "animations/npz/kit/anim_take_off_tshirt.glb"
   },
   {
     "id": "lie-down-bed",
@@ -331,7 +331,7 @@
     "frames": 236,
     "duration": 7.9,
     "size_kb": 232,
-    "rel_path": "animations/npz/daily/anim_lie_down_bed.glb"
+    "rel_path": "animations/npz/accad/anim_lie_down_bed.glb"
   },
   {
     "id": "get-up-bed",
@@ -355,6 +355,6 @@
     "frames": 169,
     "duration": 5.6,
     "size_kb": 210,
-    "rel_path": "animations/npz/daily/anim_get_up_bed.glb"
+    "rel_path": "animations/npz/cmu/anim_get_up_bed.glb"
   }
 ]

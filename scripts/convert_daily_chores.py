@@ -14,7 +14,7 @@ from mathutils import Quaternion, Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / 'public/animations/mixamo/anim_salsa_dancing.glb'
-OUTPUT_DIR = ROOT / 'public/animations/npz/daily'
+OUTPUT_DIR = ROOT / 'public/animations/npz/_metadata'
 
 BONE_NAMES = [
     'mixamorig:Hips', 'mixamorig:LeftUpLeg', 'mixamorig:RightUpLeg', 'mixamorig:Spine',
@@ -230,11 +230,13 @@ def main():
     print(f"Starting conversion of {len(ANIMATIONS)} animations...")
     for idx, item in enumerate(ANIMATIONS, 1):
         src_path = Path(item['src'])
-        dst_path = OUTPUT_DIR / item['filename']
+        dataset = Path(item['src']).parts[Path(item['src']).parts.index('animations') + 1].lower()
+        dst_path = ROOT / 'public/animations/npz' / dataset / item['filename']
+        dst_path.parent.mkdir(parents=True, exist_ok=True)
         print(f"[{idx}/{len(ANIMATIONS)}] Converting {item['id']} from {src_path.name} -> {dst_path.name}...")
         res = convert(src_path, dst_path)
         print(f"   Done: {res['frames']} frames, {res['duration']}s, {res['size_kb']}KB")
-        results.append({**item, **res, 'rel_path': f"animations/npz/daily/{item['filename']}"})
+        results.append({**item, **res, 'rel_path': f"animations/npz/{dataset}/{item['filename']}"})
 
     meta_file = OUTPUT_DIR / 'daily_meta.json'
     meta_file.write_text(json.dumps(results, indent=2, ensure_ascii=False))

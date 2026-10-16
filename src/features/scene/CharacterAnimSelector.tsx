@@ -10,7 +10,7 @@ import type { AnimationCategory } from './animations/animationRegistry';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
-type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others' | 'fab' | 'interx' | 'behave' | 'kit';
+type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others' | 'fab' | 'interx' | 'behave' | 'kit' | 'accad' | 'cmu' | 'dancedb' | 'moyo' | 'ssm';
 
 export const ANIM_CATEGORIES = [
   { key: 'combat', label: 'Combat', icon: 'bi-shield-shaded' },
@@ -29,6 +29,11 @@ export const ANIM_CATEGORIES = [
   { key: 'interx', label: 'Inter-X', icon: 'bi-folder' },
   { key: 'behave', label: 'BEHAVE', icon: 'bi-folder' },
   { key: 'kit', label: 'KIT', icon: 'bi-folder' },
+  { key: 'accad', label: 'ACCAD', icon: 'bi-folder' },
+  { key: 'cmu', label: 'CMU', icon: 'bi-folder' },
+  { key: 'dancedb', label: 'DanceDB', icon: 'bi-folder' },
+  { key: 'moyo', label: 'MOYO (Yoga)', icon: 'bi-folder' },
+  { key: 'ssm', label: 'SSM', icon: 'bi-folder' },
 ] as const satisfies ReadonlyArray<{ key: AnimationCategory | AnimationSource; label: string; icon: string }>;
 
 export function getAnimCategory(val: string): string {
@@ -45,12 +50,11 @@ export function normalizeSearchStr(str: string): string {
     .replace(/æ/g, 'ae');
 }
 
-/** NPZ is a format family; Inter-X is a dataset within that family. */
+/** NPZ is a format family; its second path segment identifies the dataset. */
 export function getAnimSources(path?: string): string[] {
   if (!path) return [];
   const [, family, dataset] = path.split('/');
-  if (family === 'npz' && dataset === 'kit') return ['npz', 'kit'];
-  return family === 'npz' && dataset === 'interx' ? ['npz', 'interx'] : family ? [family] : [];
+  return family === 'npz' && dataset ? ['npz', dataset] : family ? [family] : [];
 }
 
 /** Métadonnées pré-calculées une seule fois pour éviter les regex et lookups sur chaque render */

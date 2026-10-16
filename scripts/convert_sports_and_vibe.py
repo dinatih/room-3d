@@ -263,7 +263,8 @@ def main():
         if not src_path.exists():
             print(f"[{idx}/{len(ANIMATIONS)}] WARNING: {src_path} does not exist, skipping.")
             continue
-        out_dir = ROOT / 'public/animations/npz' / item['sub_dir']
+        dataset = src_path.parts[src_path.parts.index('animations') + 1].lower()
+        out_dir = ROOT / 'public/animations/npz' / dataset
         out_dir.mkdir(parents=True, exist_ok=True)
         dst_path = out_dir / item['filename']
 
