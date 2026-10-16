@@ -34,6 +34,7 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
   const clips = useMemo(() => Object.fromEntries(animations.map(clip => [clip.name, clip])), [animations]);
   const active = useRef<THREE.AnimationAction | null>(null);
   const worldPosition = useMemo(() => new THREE.Vector3(), []);
+  const localPosition = useMemo(() => new THREE.Vector3(), []);
   const worldRotation = useMemo(() => new THREE.Quaternion(), []);
   const worldEuler = useMemo(() => new THREE.Euler(0, 0, 0, 'YXZ'), []);
   const route = useRef(createRouteState());
@@ -75,6 +76,7 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
     if (!isPreview && navigationEnabled) {
       setAgentProfile('ulotte', { radius: Math.min(size.x, size.z) / 2, height: HEIGHT });
     }
+    if (!isPreview) root.current!.getWorldPosition(worldPosition);
     life.current.timer = clips['idle-1'].duration * 2;
     invalidate();
     onSize?.(size);
@@ -88,7 +90,7 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
       }
       if (!isPreview && navigationEnabled) delete cameraState.positions.ulotte;
     };
-  }, [scene, mixer, clips, isPreview, navigationEnabled, invalidate, onSize]);
+  }, [scene, mixer, clips, isPreview, navigationEnabled, invalidate, onSize, worldPosition]);
 
   useEffect(() => {
     if (!isPreview) return;
@@ -129,7 +131,8 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
     if (!navigationEnabled) return;
     const body = root.current;
     const ai = life.current;
-    body.getWorldPosition(worldPosition);
+    // Keep the planner’s exact coordinates: a round trip through the rotated
+    // placement would perturb reached vertices and prevent advancing the route.
     body.getWorldQuaternion(worldRotation);
     const worldYaw = worldEuler.setFromQuaternion(worldRotation).y;
     if (ai.autonomous) {
@@ -154,7 +157,7 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
           return { x: steer.steerX, z: steer.steerZ };
         });
         worldPosition.set(next.x, worldPosition.y, next.z);
-        body.position.copy(body.parent!.worldToLocal(worldPosition));
+        body.position.copy(body.parent!.worldToLocal(localPosition.copy(worldPosition)));
         if (next.x !== before.x || next.z !== before.z) {
           body.rotation.y = body.rotation.y + computeRotYStep(worldYaw, Math.atan2(next.x - before.x, next.z - before.z), Math.PI, delta) - worldYaw;
         }
@@ -169,7 +172,7 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
       }
     }
     mixer.update(delta);
-    const position = body.getWorldPosition(worldPosition);
+    const position = worldPosition;
     body.getWorldQuaternion(worldRotation);
     cameraState.positions.ulotte = { x: position.x, y: position.y, z: position.z, yaw: worldEuler.setFromQuaternion(worldRotation).y };
     invalidate();

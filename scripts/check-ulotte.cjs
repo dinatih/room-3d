@@ -24,12 +24,13 @@ const launchBrowser = require('./browser-test-options.cjs');
       const { NavigationEnabledContext } = await import('/src/features/scene/ai/navigation/NavigationContext.ts');
       const navigation = await import('/src/features/scene/ai/navigation/service.ts');
       const obstacles = await import('/src/features/scene/ai/navigation/obstacles.ts');
+      const { walkableSurfaces } = await import('/src/features/scene/ai/navigation/architecture.ts');
       const geometry = await import('/src/features/scene/ai/navigation/geometry.ts');
       const { getActionDef } = await import('/src/features/scene/objectActionRegistry.ts');
       document.body.innerHTML = '<div id="fixture" style="height:100vh"></div>';
       document.body.style.margin = '0';
       const e = React.createElement;
-      function Capture() { window.f = { ...useThree(), THREE, cameraState, useAnimPreviewStore, getActionDef, navigation, obstacles, geometry }; return null; }
+      function Capture() { window.f = { ...useThree(), THREE, cameraState, useAnimPreviewStore, getActionDef, navigation, obstacles, geometry, walkableSurfaces }; return null; }
       const root = createRoot(document.getElementById('fixture'));
       function Fixture() {
         const [mode, setMode] = React.useState('preview');
@@ -93,6 +94,39 @@ const launchBrowser = require('./browser-test-options.cjs');
       return { pos, view };
     });
     console.log('scene', scene);
+    console.log('corner regression', await page.evaluate(() => {
+      const f = window.f;
+      f.setFrameloop('never');
+      const start = { ...f.cameraState.positions.ulotte };
+      const target = { x: 110, z: -180 };
+      f.obstacles.registerObstacle({ id: 'ulotte-corner-regression', polygon: f.geometry.rectangle(160, -190, 30, 40), yMin: 0, yMax: 60 });
+      const profile = f.obstacles.getAgentProfile('ulotte');
+      const path = f.navigation.getNavigationGraph(profile).find(start, target);
+      if (!path || path.length < 2) throw new Error(`Regression requires a detour: ${JSON.stringify(path)}`);
+      const points = f.walkableSurfaces.flat(2);
+      const xs = points.map(p => p.x), zs = points.map(p => p.z);
+      const xMin = Math.min(...xs), xMax = Math.max(...xs), zMin = Math.min(...zs), zMax = Math.max(...zs);
+      const samples = [(target.x - xMin) / (xMax - xMin), (target.z - zMin) / (zMax - zMin)];
+      const originalRandom = Math.random;
+      let sample = 0;
+      Math.random = () => samples[sample++ % 2];
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'ulotte-replay' } }));
+      const length = path.reduce((sum, point, index) => sum + f.geometry.distance(index ? path[index-1] : start, point), 0);
+      const seconds = length / 50 + f.useAnimPreviewStore.getState().duration * 2;
+      let closest = Infinity;
+      try {
+        for (let i = 0; i < Math.ceil(seconds * 60); i++) {
+          f.advance(f.clock.elapsedTime + 1 / 60);
+          closest = Math.min(closest, f.geometry.distance(f.cameraState.positions.ulotte, target));
+        }
+      } finally {
+        Math.random = originalRandom;
+        f.obstacles.unregisterObstacle('ulotte-corner-regression');
+      }
+      const end = f.cameraState.positions.ulotte;
+      if (closest > 1e-6) throw new Error(`Blocked at detour corner: ${JSON.stringify({ start, path, end, closest, route:f.obstacles.navigationDebug.get('ulotte') })}`);
+      return { start, path, end, closest };
+    }));
     console.log('navigation', await page.evaluate(() => {
       const f = window.f;
       f.setFrameloop('never');
