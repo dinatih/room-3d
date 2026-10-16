@@ -669,7 +669,7 @@ export function InventoryPreview({
 }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = showPhotoGallery && !!photos && photos.length > 0;
-  const actionKeys = item && !('category' in item && item.category === 'characters')
+  const actionKeys = item && (!('category' in item && item.category === 'characters') || ['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id))
     ? getPreviewActionIds(item.id)
     : [];
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(defaultAutoRotate);
@@ -801,8 +801,8 @@ export function InventoryPreview({
 
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
-  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters');
-  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish'].includes(item.id));
+  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters') && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id);
+  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone'].includes(item.id));
 
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;

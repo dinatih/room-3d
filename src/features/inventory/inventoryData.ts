@@ -42,43 +42,6 @@ export interface Category {
 
 export const INVENTORY: InventoryItem[] = [
   {
-    id: 'unitree-g1',
-    name: 'Unitree G1 — robot humanoïde',
-    brand: 'Unitree Robotics',
-    category: 'tech',
-    qty: 1,
-    dims: { w: 37.14, d: 45.22, h: 132.28 },
-    glbPath: 'items/unitree-g1/unitree-g1.glb',
-    url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/g1_description',
-    description: 'Humanoïde G1 rouge à 29 degrés de liberté. Maillages et articulations officiels Unitree.',
-    notes: 'Animations créées pour le projet : repos, marche, coucou, révérence et danse. Version rev_1_0. Dimensions en posture neutre. Maillages sous licence BSD-3-Clause.',
-  },
-  {
-    id: 'unitree-go2',
-    name: 'Unitree Go2 — quadrupède bionique',
-    brand: 'Unitree Robotics',
-    category: 'tech',
-    qty: 1,
-    dims: { w: 32.4, d: 73.21, h: 38.83 },
-    glbPath: 'items/unitree-go2/unitree-go2.glb',
-    url: 'https://github.com/unitreerobotics/unitree_mujoco/tree/main/unitree_robots/go2',
-    description: 'Quadrupède bionique Go2 rouge à 12 degrés de liberté. Maillages et articulations officiels Unitree.',
-    notes: 'Animations créées pour le projet : repos, trot, patte, étirement et danse. Posture de référence home du modèle MuJoCo officiel. Maillages sous licence BSD-3-Clause.',
-  },
-  {
-    id: 'jumper-robot',
-    name: 'Jumper — robot crabe',
-    brand: 'KingKong Robotics',
-    category: 'tech',
-    qty: 1,
-    dims: { w: 41.53, d: 36.85, h: 17.84 },
-    glbPath: 'items/jumper/jumper.glb',
-    url: 'https://github.com/KingKongRobotics/jumper',
-    description: 'Robot crabe à 22 degrés de liberté. Assemblage 3D officiel, carrosserie rouge assortie au Unitree Go2.',
-    notes: 'Animations : repos, marche et virages recréés ; salut, révérence, patte, salut militaire et danse officiels. Dimensions mesurées en position debout. Modèle sous licence Apache-2.0.',
-  },
-
-  {
     id: 'shoe-hat-rack',
     name: 'Étagère à chaussures autoportante avec porte-manteaux et crochets',
     brand: 'Temu',
@@ -490,6 +453,45 @@ INVENTORY.push({
   dims: { w: 18.0, d: 16.37, h: 11.42 },
   glbPath: 'characters/tosakin-goldfish/tosakin-goldfish.glb',
   notes: 'Poisson rouge à queue en éventail : repos, nage, repas et virages gauche/droite. Vit avec le Jikin dans la baignoire.',
+});
+
+INVENTORY.push({
+  id: 'unitree-g1',
+  name: 'Unitree G1 — robot humanoïde',
+  brand: 'Unitree Robotics',
+  category: 'characters',
+  qty: 1,
+  dims: { w: 37.14, d: 45.22, h: 132.28 },
+  glbPath: 'items/unitree-g1/unitree-g1.glb',
+  url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/g1_description',
+  description: 'Humanoïde G1 rouge à 29 degrés de liberté. Maillages et articulations officiels Unitree.',
+  notes: 'Animations créées pour le projet : repos, marche, coucou, révérence et danse. Version rev_1_0. Dimensions en posture neutre. Maillages sous licence BSD-3-Clause.',
+});
+
+INVENTORY.push({
+  id: 'unitree-go2',
+  name: 'Unitree Go2 — quadrupède bionique',
+  brand: 'Unitree Robotics',
+  category: 'characters',
+  qty: 1,
+  dims: { w: 32.4, d: 73.21, h: 38.83 },
+  glbPath: 'items/unitree-go2/unitree-go2.glb',
+  url: 'https://github.com/unitreerobotics/unitree_mujoco/tree/main/unitree_robots/go2',
+  description: 'Quadrupède bionique Go2 rouge à 12 degrés de liberté. Maillages et articulations officiels Unitree.',
+  notes: 'Animations créées pour le projet : repos, trot, patte, étirement et danse. Posture de référence home du modèle MuJoCo officiel. Maillages sous licence BSD-3-Clause.',
+});
+
+INVENTORY.push({
+  id: 'jumper-robot',
+  name: 'Jumper — robot crabe',
+  brand: 'KingKong Robotics',
+  category: 'characters',
+  qty: 1,
+  dims: { w: 41.53, d: 36.85, h: 17.84 },
+  glbPath: 'items/jumper/jumper.glb',
+  url: 'https://github.com/KingKongRobotics/jumper',
+  description: 'Robot crabe à 22 degrés de liberté. Assemblage 3D officiel, carrosserie rouge assortie au Unitree Go2.',
+  notes: 'Animations : repos, marche et virages recréés ; salut, révérence, patte, salut militaire et danse officiels. Dimensions mesurées en position debout. Modèle sous licence Apache-2.0.',
 });
 
 export interface WigItem {
