@@ -214,6 +214,7 @@ export function SkeletonHierarchyPanel({
         display: 'flex',
         flexDirection: 'column',
         background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(10px)',
         border: '1px solid rgba(255, 255, 255, 0.18)',
         borderRadius: 8,
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.65)',

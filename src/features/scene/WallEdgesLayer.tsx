@@ -226,6 +226,7 @@ export function EdgeHoverOverlay() {
       top:            state.y - 20,
       zIndex:         400,
       background:     'rgba(10,5,0,0.80)',
+      backdropFilter: 'blur(8px)',
       border:         '1px solid rgba(255,80,0,0.55)',
       borderRadius:   5,
       padding:        '3px 10px',

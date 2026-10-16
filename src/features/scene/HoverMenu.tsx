@@ -575,6 +575,7 @@ export function HoverOverlay() {
           style={{
             position: 'fixed', left: modalLeft, top: modalTop, zIndex: 300,
             background: 'rgba(10,10,20,0.45)',
+            backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255,255,255,0.10)',
             pointerEvents: 'all',
           }}

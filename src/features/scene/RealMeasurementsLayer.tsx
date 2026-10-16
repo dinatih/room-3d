@@ -140,6 +140,7 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
             fontSize: '11px',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             boxShadow: `0 4px 14px rgba(0, 0, 0, 0.5), 0 0 12px ${color}33`,
+            backdropFilter: 'blur(6px)',
             display: 'flex',
             alignItems: 'center',
             gap: 6,

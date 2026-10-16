@@ -234,6 +234,7 @@ function ZoneAiDebugOverlayContent() {
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'rgba(15, 23, 42, 0.92)',
+        backdropFilter: 'blur(10px)',
         border: '1px solid rgba(0, 229, 255, 0.4)',
         borderRadius: 12,
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',

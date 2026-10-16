@@ -832,6 +832,8 @@ export function Minimap({ embedded = false, showGroup = true }: MinimapProps = {
               maxHeight: '94vh',
               pointerEvents: 'auto',
               background: 'rgba(255, 255, 255, 0.32)',
+              backdropFilter: 'blur(5px)',
+              WebkitBackdropFilter: 'blur(5px)',
               border: '1px solid rgba(255, 255, 255, 0.55)',
               boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
               display: 'flex',
