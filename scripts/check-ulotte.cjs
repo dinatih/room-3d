@@ -17,8 +17,15 @@ const launchBrowser = require('./browser-test-options.cjs');
       const { createRoot } = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
       const { Canvas, useThree } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
       const THREE = await import('/node_modules/.vite/deps/three.js');
+      (await import('/node_modules/.vite/deps/@react-three_drei.js')).useGLTF.setDecoderPath('/draco/');
       const { SCENE_REGISTRY } = await import('/src/features/inventory/previewRegistry.tsx');
       const { Dachshund } = await import('/src/features/scene/items/Dachshund.tsx');
+      const { ShibaInu } = await import('/src/features/scene/items/ShibaInu.tsx');
+      const { DogBowl } = await import('/src/features/scene/items/DogBowl.tsx');
+      const { NavigationObstacle } = await import('/src/features/scene/ai/navigation/NavigationObstacle.tsx');
+      const dogBehavior = await import('/src/features/scene/items/dogBehavior.ts');
+      const bowlData = await import('/src/features/scene/items/dogBowlData.ts');
+      const { getObjectActionIds } = await import('/src/features/scene/objectActions.ts');
       const { cameraState } = await import('/src/features/scene/cameraState.ts');
       const { useAnimPreviewStore } = await import('/src/features/inventory/useAnimPreviewStore.ts');
       const { NavigationEnabledContext } = await import('/src/features/scene/ai/navigation/NavigationContext.ts');
@@ -30,16 +37,22 @@ const launchBrowser = require('./browser-test-options.cjs');
       document.body.innerHTML = '<div id="fixture" style="height:100vh"></div>';
       document.body.style.margin = '0';
       const e = React.createElement;
-      function Capture() { window.f = { ...useThree(), THREE, cameraState, useAnimPreviewStore, getActionDef, navigation, obstacles, geometry, walkableSurfaces }; return null; }
+      function Capture() { window.f = { ...useThree(), THREE, cameraState, useAnimPreviewStore, getActionDef, navigation, obstacles, geometry, walkableSurfaces, dogBehavior, bowlData, getObjectActionIds }; return null; }
       const root = createRoot(document.getElementById('fixture'));
       function Fixture() {
         const [mode, setMode] = React.useState('preview');
         const [anim, setAnim] = React.useState('idle-1');
+        const [bowlPreview, setBowlPreview] = React.useState(false);
+        window.setBowlPreview = setBowlPreview;
         window.setMode = setMode; window.setAnim = setAnim;
         return e(Canvas, { camera: { position: [65, 38, 60], fov: 35, near: 0.1, far: 2000 }, gl: { preserveDrawingBuffer: true } },
           e(Capture), e('color', { attach: 'background', args: ['#e4e5e9'] }),
           e('ambientLight', { intensity: 2 }), e('directionalLight', { position: [50, 100, 80], intensity: 3 }),
-          e(React.Suspense, { fallback: null }, mode === 'preview'
+          e(React.Suspense, { fallback: null }, mode === 'dogs' ? e(React.Fragment, null,
+            e(ShibaInu),
+            e('group', { position: [210, 0, -200], rotation: [0, -Math.PI / 4, 0] }, e(Dachshund)),
+            e('group', { position: bowlData.ULOTTE_BOWL_POSITION }, e(NavigationObstacle, { id: 'ulotte-bowl' }, e(DogBowl, { feedingStation: true, onSize: () => { window.bowlReady = true; } }))),
+            bowlPreview && e('group', { position: [-100, 0, 0] }, e(DogBowl, { isPreview: true, feedingStation: true, onSize: () => { window.bowlPreviewReady = true; } }))) : mode === 'preview'
             ? e(SCENE_REGISTRY.ulotte, { actionState: { characterAnim: anim }, onSize: size => { window.size = size.toArray(); } })
             : e(NavigationEnabledContext.Provider, { value: mode !== 'zone' }, e('group', { position: [210, 0, -200], rotation: [0, -Math.PI / 4, 0] }, e(Dachshund, { key: mode, onSize: size => { window.size = size.toArray(); } })))));
       }
@@ -110,7 +123,10 @@ const launchBrowser = require('./browser-test-options.cjs');
       const originalRandom = Math.random;
       let sample = 0;
       Math.random = () => samples[sample++ % 2];
-      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'ulotte-replay' } }));
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'ulotte-motion', value: 'walk' } }));
+      const life = f.scene.getObjectByName('ulotte').userData.dogBehavior;
+      life.autonomous = true; life.mode = 'move'; life.gait = 'walk';
+      life.target.set(target.x, 0, target.z);
       const length = path.reduce((sum, point, index) => sum + f.geometry.distance(index ? path[index-1] : start, point), 0);
       const seconds = length / 50 + f.useAnimPreviewStore.getState().duration * 2;
       let closest = Infinity;
@@ -153,7 +169,100 @@ const launchBrowser = require('./browser-test-options.cjs');
       if (f.cameraState.positions.ulotte || f.cameraState.animalViews.ulotte) throw new Error('Zone preview publishes an animal');
       return 'isolated';
     }));
+    await page.evaluate(() => window.setMode('dogs'));
+    await page.waitForFunction(() => window.bowlReady && window.f.scene.getObjectByName('shiba-inu')?.userData.dogBehavior && window.f.scene.getObjectByName('ulotte')?.userData.dogBehavior, { timeout: 60000 });
+    await page.evaluate(() => window.setBowlPreview(true));
+    await page.waitForFunction(() => window.bowlPreviewReady);
+    await page.evaluate(() => {
+      const f = window.f;
+      if (f.bowlData.dogFeedingStation.position.distanceTo(new f.THREE.Vector3(...f.bowlData.ULOTTE_BOWL_POSITION)) > 0) throw new Error('Bowl preview overwrites main feeding station');
+      const preview = f.scene.getObjectByName('ulotte-bowl');
+      const size = new f.THREE.Box3().setFromObject(preview, true).getSize(new f.THREE.Vector3());
+      if (Math.abs(size.x - 20) > 0.01 || Math.abs(size.y - 6) > 0.01) throw new Error(`Incorrect bowl dimensions ${size.toArray()}`);
+    });
+    await page.evaluate(() => window.setBowlPreview(false));
+    console.log('activities', await page.evaluate(() => {
+      const f = window.f; f.setFrameloop('never');
+      const { createDogBehavior, updateDogBehavior, startDogPause, releaseDogRoute, DOG_ACTIVITY, mealInterval } = f.dogBehavior;
+      const root = f.scene.getObjectByName('shiba-inu');
+      const state = createDogBehavior();
+      state.position.set(180, 0, -120);
+      const played = [];
+      const context = { id: 'shiba', root, play: (action, once) => { played.push({ action, once }); return 2; } };
+      const points = f.walkableSurfaces.flat(2);
+      const xs = points.map(p => p.x), zs = points.map(p => p.z);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs);
+      const target = { x: 110, z: -180 };
+      const counts = { walk: 0, run: 0 };
+      const random = Math.random;
+      try {
+        for (let i = 0; i < 100; i++) {
+          const draws = [1, (target.x - minX) / (maxX - minX), (target.z - minZ) / (maxZ - minZ), (i + 0.5) / 100];
+          Math.random = () => { if (!draws.length) throw new Error('Unexpected behavior draw'); return draws.shift(); };
+          state.mode = 'rest'; state.action = 'idle'; state.remaining = 0;
+          updateDogBehavior(state, context, 1 / 60);
+          if (state.mode !== 'move') throw new Error('Expected a reachable walk/run target');
+          counts[state.gait]++;
+        }
+        if (counts.walk !== 80 || counts.run !== 20) throw new Error(`Wrong gait balance: ${JSON.stringify(counts)}`);
+        Math.random = () => 0.99;
+        startDogPause(state, context);
+        if (state.action !== 'jump' || played.at(-1).once !== true || state.remaining !== 2) throw new Error('Jump must play exactly once');
+        updateDogBehavior(state, context, state.remaining);
+        if (state.action === 'jump') throw new Error('Jump must be followed by a calm pause');
+        const previous = state.action;
+        startDogPause(state, context);
+        if (state.action === previous) throw new Error('Pause repeats immediately');
+        Math.random = () => 0;
+        if (mealInterval() !== 120) throw new Error('Minimum meal interval');
+        Math.random = () => 1;
+        if (mealInterval() !== 240) throw new Error('Maximum meal interval');
+      } finally { Math.random = random; releaseDogRoute(state, 'shiba'); }
+      if (f.getActionDef('shiba-dance') || f.getActionDef('dance-with-dog:::native')) throw new Error('Obsolete dance commands remain');
+      if (f.getObjectActionIds('ushiro').some(id => id.includes('dance'))) throw new Error('Ushiro menu still offers dance');
+      return { counts, pauses: played.slice(-4), bowl: f.bowlData.dogFeedingStation.position.toArray() };
+    }));
+    console.log('meal', await page.evaluate(() => {
+      const f = window.f; f.setFrameloop('never');
+      const root = f.scene.getObjectByName('ulotte');
+      const life = root.userData.dogBehavior;
+      life.mode = 'rest'; life.action = 'idle'; life.remaining = 0; life.mealRemaining = 0;
+      f.advance(f.clock.elapsedTime + 1 / 60);
+      if (life.mode !== 'meal-approach') throw new Error(`Meal approach failed: ${life.mode}, target ${life.target.toArray()}`);
+      const target = life.target.clone();
+      const route = f.navigation.getNavigationGraph(f.obstacles.getAgentProfile('ulotte')).find(life.position, target);
+      const length = route.reduce((total, point, index) => total + f.geometry.distance(index ? route[index-1] : life.position, point), 0);
+      const maxSeconds = length / f.dogBehavior.DOG_ACTIVITY.walkSpeed + Math.PI / f.dogBehavior.DOG_ACTIVITY.turnSpeed + 1;
+      for (let i = 0; i < Math.ceil(maxSeconds * 60) && life.mode !== 'eat'; i++) f.advance(f.clock.elapsedTime + 1 / 60);
+      if (life.mode !== 'eat') throw new Error(`Ulotte did not reach the East garden bowl: ${JSON.stringify({ mode:life.mode, pos:life.position, target:life.target, route:life.route.error })}`);
+      // At the measured midpoint, the animated muzzle must sit over the bowl.
+      const duration = 2.0416667461395264;
+      f.advance(f.clock.elapsedTime + duration / 2 - 1 / 60);
+      f.scene.updateMatrixWorld(true);
+      const muzzle = root.getObjectByName('Muzzle').getWorldPosition(new f.THREE.Vector3());
+      const bowl = f.bowlData.dogFeedingStation.position;
+      const horizontalError = Math.hypot(muzzle.x - bowl.x, muzzle.z - bowl.z);
+      if (horizontalError > f.bowlData.DOG_BOWL.radius) throw new Error(`Muzzle misses food: ${horizontalError}`);
+      const cameraTarget = new f.THREE.Vector3(bowl.x, 12, bowl.z);
+      f.camera.position.copy(cameraTarget).add(new f.THREE.Vector3(65, 40, 65)); f.camera.lookAt(cameraTarget); f.camera.updateMatrixWorld(true);
+      const remaining = life.remaining;
+      for (let i = 0; i <= Math.ceil(remaining * 60); i++) f.advance(f.clock.elapsedTime + 1 / 60);
+      if (life.mode === 'eat' || life.mealRemaining < 120 || life.mealRemaining > 240) throw new Error('Meal must finish and schedule its next interval');
+      const originalPosition = life.position.clone();
+      const blocker = 'meal-blocker';
+      f.obstacles.setAgentProfile(blocker, { radius: 28, height: 170 });
+      f.cameraState.positions[blocker] = { x:target.x, y:0, z:target.z, yaw:0 };
+      life.mode = 'rest'; life.action = 'idle'; life.remaining = 0; life.mealRemaining = 0;
+      try {
+        f.advance(f.clock.elapsedTime + 1 / 60);
+        if (life.mode === 'meal-approach' || life.mode === 'eat') throw new Error('Occupied feeding spot was accepted');
+        if (life.mealRemaining !== f.dogBehavior.DOG_ACTIVITY.mealRetrySeconds) throw new Error('Meal not postponed');
+        if (life.position.distanceTo(originalPosition) > 0) throw new Error('Blocked meal teleports dog');
+      } finally { delete f.cameraState.positions[blocker]; f.obstacles.removeAgentProfile(blocker); }
+      return { target:target.toArray(), muzzle:muzzle.toArray(), horizontalError, postponed:true };
+    }));
+    await page.screenshot({ path: '/tmp/room-dogs-meal.png' });
     assert.deepEqual(errors, []);
-    console.log('Ulotte: autonomous navigation, native clips, texture, scale, floor, timeline, camera, placement and preview isolation passed');
+    console.log('Dogs: 80/20 gaits, varied pauses, East garden feeding, removed dance commands, autonomous navigation, native clips, texture, scale, floor, timeline, camera, placement and preview isolation passed');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

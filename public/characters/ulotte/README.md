@@ -21,3 +21,11 @@ ROOM_TEST_URL=http://127.0.0.1:5191 node scripts/check-ulotte.cjs
 ```
 
 Ajouter `--thumbnail` au test pour régénérer la miniature de l’inventaire. Sans cette option, les captures restent dans `/tmp`.
+
+## Vie autonome des chiens
+
+Les deux chiens utilisent les règles communes de `dogBehavior.ts` : 80 % des trajets en marche à 50 cm/s et 20 % en course à 120 cm/s. Les destinations privilégient leur zone actuelle. Les repos alternent sans répétition immédiate ; les sauts sont occasionnels et joués une seule fois. Ushiro peut aussi s’asseoir, Ulotte dispose de deux repos. Les changements autonomes utilisent un fondu de 0,25 seconde ; les aperçus conservent leur timeline exacte.
+
+Une seule gamelle est placée dans le jardin du voisin Est, en `(516, 0, -259,76)` cm. Ulotte vient y manger toutes les deux à quatre minutes, à pied. Le point d’approche est mesuré au bout de son museau dans le clip de repas. Elle joue trois cycles puis reprend ses activités. Un accès occupé ou impraticable reporte le repas de trente secondes, sans téléportation.
+
+Les raccourcis de danse des menus du chien et des personnages sont supprimés. L’animation humaine « Dance With Dog », son aperçu et la réaction synchronisée d’Ushiro restent disponibles dans le système d’animations.

@@ -2,9 +2,9 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'unitree-g1': ['unitree-g1-motion', 'unitree-g1-replay', 'unitree-g1-autonomous'],
   'unitree-go2': ['unitree-go2-motion', 'unitree-go2-replay', 'unitree-go2-autonomous'],
   'jumper-robot': ['jumper-motion', 'jumper-replay', 'jumper-robot-autonomous'],
-  'shiba-inu': ['shiba-dance', 'shiba-replay', 'animal-shiba-fpv', 'animal-shiba-follow'],
+  'shiba-inu': ['shiba-replay', 'animal-shiba-fpv', 'animal-shiba-follow'],
   'ulotte': ['ulotte-motion', 'ulotte-replay', 'animal-ulotte-fpv', 'animal-ulotte-follow'],
-  'ushiro': ['shiba-dance', 'shiba-replay', 'animal-shiba-fpv', 'animal-shiba-follow'],
+  'ushiro': ['shiba-replay', 'animal-shiba-fpv', 'animal-shiba-follow'],
   'black-hornet-drone': [
     'drone-patrol-all',
     'drone-goto-garden',

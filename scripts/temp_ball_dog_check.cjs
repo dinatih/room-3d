@@ -145,27 +145,14 @@ if (process.argv.includes('--inspect-model')) {
       return { x: rect.left + (p.x + 1) * rect.width / 2, y: rect.top + (1 - p.y) * rect.height / 2 };
     });
     await page.mouse.click(menu.x, menu.y);
-    await page.waitForFunction(() => [...document.querySelectorAll('button')].some(b => b.textContent.includes('Danser avec le personnage actif')));
+    await page.waitForFunction(() => [...document.querySelectorAll('button')].some(b => b.textContent.includes('Rejouer')));
     await page.evaluate(() => {
-      window.actorEnabled = true;
-      window.f.useSceneStore.getState().setActiveCharacterId('xbot');
-      document.addEventListener('dog-dance', e => { window.lastDogEvent = { key: e.detail.key, active: window.f.useSceneStore.getState().activeCharacterId, dog: window.f.cameraState.positions.shiba }; }, { once: true });
-      [...document.querySelectorAll('button')].find(b => b.textContent.includes('Danser avec le personnage actif')).click();
-      window.pendingAfterClick = window.agent.hasPendingDynamicTask();
+      if ([...document.querySelectorAll('button')].some(button => button.textContent.includes('Danser'))) throw new Error('Dog menu must not offer manual dancing');
+      // NPC selection remains available after removing the obsolete dance shortcut.
       const f = window.f;
-      for (let i = 0; i < 120; i++) f.advance(f.clock.elapsedTime + 1 / 60);
-      if (f.cameraState.positions.xbot.anim !== 'ff-dancewithdog') throw new Error(`Dog menu must make active character dance: ${JSON.stringify({ actor: f.cameraState.positions.xbot, event: window.lastDogEvent, pendingAfterClick: window.pendingAfterClick, pending: window.agent.hasPendingDynamicTask(), status: window.agent.getStatus(), frame: f.get().frameloop, elapsed: f.clock.elapsedTime })}`);
-      for (let i = 0; i < 360; i++) f.advance(f.clock.elapsedTime + 1 / 60);
-      if (f.cameraState.positions.xbot.anim === 'ff-dancewithdog') throw new Error('Requested dance must finish');
-      Object.assign(f.hoverState, { locked: true, lockedLabel: 'Xbot', lockedActionIds: ['select-character-xbot', 'dance-with-dog:::xbot'], lockedX: 100, lockedY: 100 });
+      f.cameraState.positions.xbot = { x: 0, y: 0, z: -200, yaw: 0, anim: 'idle' };
+      Object.assign(f.hoverState, { locked: false });
       f.hoverState.onUpdate();
-    });
-    await page.waitForFunction(() => [...document.querySelectorAll('button')].some(b => b.textContent.includes('Danser avec le Shiba')));
-    await page.evaluate(() => {
-      [...document.querySelectorAll('button')].find(b => b.textContent.includes('Danser avec le Shiba')).click();
-      const f = window.f;
-      f.advance(f.clock.elapsedTime + 1 / 60);
-      if (f.cameraState.positions.xbot.anim !== 'ff-dancewithdog') throw new Error('NPC menu must request the dance on that NPC');
     });
     await page.waitForFunction(() => window.ballSize && window.dogReady);
     const results = await page.evaluate(() => {
@@ -309,6 +296,6 @@ if (process.argv.includes('--inspect-model')) {
     }
     if (errors.length) throw new Error(errors.join('\n'));
     console.log(JSON.stringify(results));
-    console.log('Chrome: dog menu, NPC action, muzzle direction, stationary jumps, inventory timeline and isolation validated');
+    console.log('Chrome: dog menu without dance shortcuts, muzzle direction, stationary jumps, inventory timeline and isolation validated');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

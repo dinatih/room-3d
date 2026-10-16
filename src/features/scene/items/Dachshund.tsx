@@ -12,14 +12,10 @@ import { cameraState } from '../cameraState';
 import { useAnimalCamera } from '../camera/useAnimalCamera';
 import { isAppIdle } from '../idleState';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
-import { createRouteState, followRoute, randomReachableTarget, resetRoute } from '../ai/navigation/service';
+import { createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, transitionDogAction, type DogAction } from './dogBehavior';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
-import { computeRotYStep, computeSteeringVector, reserveAgentDestination } from '../ai/agent/agentAvoidance';
-import { appLog } from '@features/ui/AppConsole';
 
 const HEIGHT = 30; // cm, hauteur totale du teckel (tête comprise).
-const WALK_SPEED = 50; // cm/s, comme Ushiro.
-const RUN_SPEED = 120;
 
 export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }: {
   isPreview?: boolean;
@@ -33,29 +29,34 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
   const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene]);
   const clips = useMemo(() => Object.fromEntries(animations.map(clip => [clip.name, clip])), [animations]);
   const active = useRef<THREE.AnimationAction | null>(null);
-  const worldPosition = useMemo(() => new THREE.Vector3(), []);
-  const localPosition = useMemo(() => new THREE.Vector3(), []);
-  const worldRotation = useMemo(() => new THREE.Quaternion(), []);
-  const worldEuler = useMemo(() => new THREE.Euler(0, 0, 0, 'YXZ'), []);
-  const route = useRef(createRouteState());
-  const life = useRef({ autonomous: true, moving: false, target: new THREE.Vector3(), timer: 0, speed: WALK_SPEED });
+  const life = useMemo(createDogBehavior, []);
+  const eatingMuzzle = useMemo(() => new THREE.Vector3(), []);
   const [bounds, setBounds] = useState<{ size: THREE.Vector3; center: THREE.Vector3 } | null>(null);
   const showSkeleton = useSceneStore(s => s.layers.skeleton);
   useHelper(!isPreview && showSkeleton ? root as any : null, THREE.SkeletonHelper);
 
-  function play(name: string) {
+  function play(name: string, once = false) {
     const clip = clips[name];
     if (!clip || clip.duration <= 0) throw new Error(`Ulotte : animation invalide ${name}`);
-    mixer.stopAllAction();
-    const action = mixer.clipAction(clip).reset().setLoop(THREE.LoopRepeat, Infinity).play();
-    active.current = action;
+    if (isPreview) {
+      mixer.stopAllAction();
+      active.current = mixer.clipAction(clip).reset().setLoop(THREE.LoopRepeat, Infinity).play();
+    } else active.current = transitionDogAction(mixer, clip, active.current, once);
     return clip;
+  }
+  function context() {
+    return { id: 'ulotte' as const, root: root.current!, eatingMuzzle,
+      play: (action: DogAction, once = false) => play(DOG_CLIPS.ulotte[action], once).duration };
   }
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
+    for (const name of Object.values(DOG_CLIPS.ulotte)) {
+      if (!clips[name]) throw new Error(`Ulotte : animation manquante ${name}`);
+    }
+    active.current = null;
     play('idle-1');
     mixer.update(0);
     const box = glbLocalBBox(scene, true);
@@ -76,8 +77,35 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
     if (!isPreview && navigationEnabled) {
       setAgentProfile('ulotte', { radius: Math.min(size.x, size.z) / 2, height: HEIGHT });
     }
-    if (!isPreview) root.current!.getWorldPosition(worldPosition);
-    life.current.timer = clips['idle-1'].duration * 2;
+    if (!isPreview) {
+      root.current!.getWorldPosition(life.position);
+      // Measure the actual animated muzzle rather than inventing an approach offset.
+      mixer.stopAllAction(); active.current = null;
+      play('eating');
+      mixer.setTime(clips.eating.duration / 2);
+      scene.updateWorldMatrix(true, false);
+      scene.updateMatrixWorld(true);
+      // The Head bone tip lies inside the long snout. Measure the foremost
+      // posed skin vertex so the nose, rather than the skull, reaches the food.
+      const inverseRoot = root.current!.matrixWorld.clone().invert();
+      const point = new THREE.Vector3();
+      eatingMuzzle.set(0, 0, -Infinity);
+      scene.traverse(object => {
+        const mesh = object as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        const transform = new THREE.Matrix4().multiplyMatrices(inverseRoot, mesh.matrixWorld);
+        const count = mesh.geometry.getAttribute('position').count;
+        for (let vertex = 0; vertex < count; vertex++) {
+          mesh.getVertexPosition(vertex, point).applyMatrix4(transform);
+          if (point.z > eatingMuzzle.z) eatingMuzzle.copy(point);
+        }
+      });
+      if (!Number.isFinite(eatingMuzzle.z)) throw new Error('Ulotte : museau introuvable');
+      mixer.stopAllAction(); active.current = null;
+      resumeDogBehavior(life, context());
+      mixer.update(0);
+      scene.updateMatrixWorld(true);
+    }
     invalidate();
     onSize?.(size);
     return () => {
@@ -85,12 +113,11 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
       mixer.uncacheRoot(scene);
       if (!isPreview && navigationEnabled) {
         removeAgentProfile('ulotte');
-        resetRoute(route.current, 'ulotte');
-        reserveAgentDestination('ulotte', null);
+        releaseDogRoute(life, 'ulotte');
       }
       if (!isPreview && navigationEnabled) delete cameraState.positions.ulotte;
     };
-  }, [scene, mixer, clips, isPreview, navigationEnabled, invalidate, onSize, worldPosition]);
+  }, [scene, mixer, clips, isPreview, navigationEnabled, invalidate, onSize, life, eatingMuzzle]);
 
   useEffect(() => {
     if (!isPreview) return;
@@ -104,12 +131,12 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
     const handler = (event: Event) => {
       const { key, value } = (event as CustomEvent<{ key: string; value?: string }>).detail;
       if (key !== 'ulotte-replay' && key !== 'ulotte-motion') return;
-      resetRoute(route.current, 'ulotte');
-      reserveAgentDestination('ulotte', null);
-      life.current.autonomous = key === 'ulotte-replay';
-      life.current.moving = false;
-      const clip = play(key === 'ulotte-replay' ? 'idle-1' : value!);
-      life.current.timer = clip.duration * 2;
+      if (key === 'ulotte-replay') resumeDogBehavior(life, context());
+      else {
+        releaseDogRoute(life, 'ulotte');
+        life.autonomous = false;
+        play(value!);
+      }
       invalidate();
     };
     document.addEventListener('furniture-toggle', handler);
@@ -129,52 +156,11 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
     }
     // Les previews de zones ne doivent pas publier d'agents dans la scène principale.
     if (!navigationEnabled) return;
-    const body = root.current;
-    const ai = life.current;
-    // Keep the planner’s exact coordinates: a round trip through the rotated
-    // placement would perturb reached vertices and prevent advancing the route.
-    body.getWorldQuaternion(worldRotation);
-    const worldYaw = worldEuler.setFromQuaternion(worldRotation).y;
-    if (ai.autonomous) {
-      if (!ai.moving) {
-        ai.timer -= delta;
-        if (ai.timer <= 0) {
-          const target = randomReachableTarget('ulotte', worldPosition);
-          if (target) {
-            ai.target.set(target.x, worldPosition.y, target.z);
-            resetRoute(route.current, 'ulotte');
-            reserveAgentDestination('ulotte', target);
-            // Même choix d'allure qu'Ushiro selon la distance à parcourir.
-            ai.speed = worldPosition.distanceTo(ai.target) > 150 ? RUN_SPEED : WALK_SPEED;
-            play(ai.speed === RUN_SPEED ? 'run' : 'walk');
-            ai.moving = true;
-          }
-        }
-      } else {
-        const before = { x: worldPosition.x, z: worldPosition.z };
-        const next = followRoute(route.current, 'ulotte', before, ai.target, ai.speed * delta, (direction, remaining) => {
-          const steer = computeSteeringVector('ulotte', before.x, before.z, direction.x, direction.z, remaining);
-          return { x: steer.steerX, z: steer.steerZ };
-        });
-        worldPosition.set(next.x, worldPosition.y, next.z);
-        body.position.copy(body.parent!.worldToLocal(localPosition.copy(worldPosition)));
-        if (next.x !== before.x || next.z !== before.z) {
-          body.rotation.y = body.rotation.y + computeRotYStep(worldYaw, Math.atan2(next.x - before.x, next.z - before.z), Math.PI, delta) - worldYaw;
-        }
-        if (route.current.error) appLog('ulotte', `⚠️ Navigation : ${route.current.error}`);
-        if (route.current.error || Math.hypot(next.x - ai.target.x, next.z - ai.target.z) < 1e-6) {
-          reserveAgentDestination('ulotte', null);
-          resetRoute(route.current, 'ulotte');
-          ai.moving = false;
-          const clip = play(Math.random() < 0.5 ? 'idle-1' : 'idle-2');
-          ai.timer = clip.duration * 2;
-        }
-      }
-    }
+    updateDogBehavior(life, context(), delta);
     mixer.update(delta);
-    const position = worldPosition;
-    body.getWorldQuaternion(worldRotation);
-    cameraState.positions.ulotte = { x: position.x, y: position.y, z: position.z, yaw: worldEuler.setFromQuaternion(worldRotation).y };
+    root.current.getWorldQuaternion(life.rotation);
+    const position = life.position;
+    cameraState.positions.ulotte = { x: position.x, y: position.y, z: position.z, yaw: life.euler.setFromQuaternion(life.rotation).y };
     invalidate();
   });
 
@@ -182,7 +168,7 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
 
   return (
     <group ref={root} name="ulotte" userData={isPreview ? {} : {
-      itemName: 'Ulotte (Teckel)',
+      dogBehavior: life, itemName: 'Ulotte (Teckel)',
       hoverAction: { label: 'Ulotte (Teckel)', actions: getObjectActionIds('ulotte') },
     }}>
       {!isPreview && bounds && <mesh position={bounds.center} userData={{ isHoverProxy: true }}>

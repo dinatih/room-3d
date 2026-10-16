@@ -217,7 +217,7 @@ function isAllowedInventoryItem(item: InventoryItem): boolean {
   if (
     id.includes('shiba') ||
     id.includes('ushiro') ||
-    id.includes('ulotte') ||
+    id === 'ulotte' ||
     id.includes('robin') ||
     name.includes('shiba') ||
     name.includes('robin')

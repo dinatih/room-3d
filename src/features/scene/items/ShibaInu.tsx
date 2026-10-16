@@ -1,9 +1,9 @@
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
-import { createRouteState, followRoute, resetRoute, randomReachableTarget } from '../ai/navigation/service';
+import { createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, transitionDogAction, type DogAction } from './dogBehavior';
+import { createRouteState, followRoute, resetRoute } from '../ai/navigation/service';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 import { computeSteeringVector, computeRotYStep, reserveAgentDestination } from '../ai/agent/agentAvoidance';
-import { appLog } from '@features/ui/AppConsole';
-import { useRef, useLayoutEffect, useEffect, useState } from 'react';
+import { useRef, useLayoutEffect, useEffect, useState, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
@@ -34,21 +34,18 @@ function dogDanceTarget(x: number, y: number, z: number, yaw: number) {
   };
 }
 
-type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
-
 function findDogClip(animations: THREE.AnimationClip[], keyword: string): THREE.AnimationClip {
-  const kw = keyword.toLowerCase();
-  return (
-    animations.find(a => a.name.toLowerCase().includes(kw)) ||
-    animations.find(a => a.name.toLowerCase().includes('idle')) ||
-    animations[0]
-  );
+  const name = keyword.includes('|') ? keyword : Object.values(DOG_CLIPS.shiba).find(name => name.toLowerCase().endsWith(`|${keyword.toLowerCase()}`));
+  const clip = animations.find(clip => clip.name === name);
+  if (!clip || clip.duration <= 0) throw new Error(`Ushiro : animation invalide ${keyword}`);
+  return clip;
 }
 
 export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = false, showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, dancePreview?: boolean, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
   const navigationEnabled = useNavigationEnabled();
   const routeRef = useRef(createRouteState());
-  const lastError = useRef<string | null>(null);
+  const life = useMemo(createDogBehavior, []);
+  const activeAction = useRef<THREE.AnimationAction | null>(null);
   const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
@@ -61,12 +58,14 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
   const [bounds, setBounds] = useState<{ size: THREE.Vector3; center: THREE.Vector3 } | null>(null);
   useHelper(showSkeleton ? modelRef as any : null, THREE.SkeletonHelper);
 
-  const aiStateRef = useRef<AIState>({
-    mode: 'autonomous',
-    state: 'idle',
-    targetPos: new THREE.Vector3(180, 0, -120),
-    timer: 2.0
-  });
+  function context() {
+    return { id: 'shiba' as const, root: modelRef.current!, play: (action: DogAction, once = false) => {
+      if (action === 'eat') throw new Error('Ushiro has no eating clip');
+      const clip = findDogClip(animations, DOG_CLIPS.shiba[action]);
+      activeAction.current = transitionDogAction(mixerRef.current!, clip, activeAction.current, once);
+      return clip.duration;
+    } };
+  }
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -114,6 +113,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       }
     });
 
+    for (const name of Object.values(DOG_CLIPS.shiba)) findDogClip(animations, name);
     if (animations.length > 0) {
       const mixer = new THREE.AnimationMixer(scene);
       mixerRef.current = mixer;
@@ -121,12 +121,15 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopRepeat, Infinity);
       action.reset().play();
+      activeAction.current = action;
       playingRef.current = true;
     }
 
     if (modelRef.current && !isPreview) {
       modelRef.current.position.set(180, 0, -120);
       modelRef.current.rotation.y = -Math.PI / 4;
+      modelRef.current.getWorldPosition(life.position);
+      resumeDogBehavior(life, context());
     }
     if (modelRef.current && isPreview && dancePreview) {
       const target = dogDanceTarget(0, 0, 0, 0);
@@ -138,7 +141,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     onSize?.(finalSize);
 
     return () => {
-      if (!isPreview && navigationEnabled) { removeAgentProfile('shiba'); resetRoute(routeRef.current, 'shiba'); reserveAgentDestination('shiba', null); }
+      if (!isPreview && navigationEnabled) { removeAgentProfile('shiba'); resetRoute(routeRef.current, 'shiba'); releaseDogRoute(life, 'shiba'); }
       mixerRef.current?.stopAllAction();
       mixerRef.current?.uncacheRoot(scene);
     };
@@ -150,12 +153,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       const { key } = (e as CustomEvent).detail as { key: string };
       
       if (key === 'shiba-replay') {
-        reserveAgentDestination('shiba', null);
-        // Return to autonomous mode
-        resetRoute(routeRef.current, 'shiba');
-        aiStateRef.current.mode = 'autonomous';
-        aiStateRef.current.state = 'idle';
-        aiStateRef.current.timer = 1.0;
+        resumeDogBehavior(life, context());
         
       } else if (key.startsWith('shiba-play-') && mixerRef.current) {
         reserveAgentDestination('shiba', null);
@@ -163,12 +161,14 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
         const idx = parseInt(key.split('-')[2], 10);
         if (!isNaN(idx) && animations[idx]) {
           resetRoute(routeRef.current, 'shiba');
-          aiStateRef.current.mode = 'forced';
+          releaseDogRoute(life, 'shiba');
+          life.autonomous = false;
           mixerRef.current.stopAllAction();
           const action = mixerRef.current.clipAction(animations[idx]);
           action.setLoop(THREE.LoopRepeat, Infinity);
           action.clampWhenFinished = false;
           action.reset().play();
+          activeAction.current = action;
           playingRef.current = true;
           invalidate();
         }
@@ -258,6 +258,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
         // Mode danse synchronisée : le chien vient danser juste devant son maître
         const dance = danceRef.current;
         if (dance.owner !== dancingId) {
+          releaseDogRoute(life, 'shiba');
           resetRoute(routeRef.current, 'shiba');
           dance.owner = dancingId;
           dance.jumping = false;
@@ -298,80 +299,17 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
         }
 
       } else {
-        const ai = aiStateRef.current;
         if (danceRef.current.owner !== null) {
           reserveAgentDestination('shiba', null);
           resetRoute(routeRef.current, 'shiba');
           danceRef.current.owner = null;
-          ai.mode = 'autonomous';
-          ai.state = 'idle';
-          ai.timer = 1;
-          mixerRef.current.stopAllAction();
-          mixerRef.current.clipAction(findDogClip(animations, 'idle')).setLoop(THREE.LoopRepeat, Infinity).reset().play();
+          modelRef.current.getWorldPosition(life.position);
+          activeAction.current = null;
+          resumeDogBehavior(life, context());
         }
-        if (ai.mode === 'autonomous') {
-          if (ai.state === 'idle') {
-            ai.timer -= delta;
-            if (ai.timer <= 0) {
-              const destination = randomReachableTarget('shiba', modelRef.current.position);
-              if (!destination) return;
-              resetRoute(routeRef.current, 'shiba');
-              ai.targetPos.set(destination.x, 0, destination.z);
-              reserveAgentDestination('shiba', destination);
-            const dist = modelRef.current.position.distanceTo(ai.targetPos);
-            ai.state = dist > 150 ? 'running' : 'walking';
-            
-            mixerRef.current.stopAllAction();
-            const clip = findDogClip(animations, ai.state === 'running' ? 'run' : 'walk');
-            const action = mixerRef.current.clipAction(clip);
-            action.setLoop(THREE.LoopRepeat, Infinity);
-            action.reset().play();
-          }
-        } else {
-          // Moving
-          const speed = ai.state === 'running' ? 120 : 50;
-          const dist = modelRef.current.position.distanceTo(ai.targetPos);
-          if (dist < 5) {
-            reserveAgentDestination('shiba', null);
-            resetRoute(routeRef.current, 'shiba');
-            ai.state = 'idle';
-            ai.timer = 3 + Math.random() * 8; // wait 3 to 11 seconds
-            
-            mixerRef.current.stopAllAction();
-            const clip = findDogClip(animations, Math.random() > 0.5 ? 'idle' : 'sitdown');
-            const action = mixerRef.current.clipAction(clip);
-            action.setLoop(THREE.LoopRepeat, Infinity);
-            action.reset().play();
-          } else {
-            const position = modelRef.current.position;
-            const previous = { x: position.x, z: position.z };
-            const next = followRoute(routeRef.current, 'shiba', previous, ai.targetPos, speed * delta, (direction, remaining) => {
-              const result = computeSteeringVector('shiba', previous.x, previous.z, direction.x, direction.z, remaining);
-              return { x: result.steerX, z: result.steerZ };
-            });
-            if (routeRef.current.error && routeRef.current.error !== lastError.current) {
-              lastError.current = routeRef.current.error;
-              appLog('shiba', `⚠️ Navigation : ${routeRef.current.error}`);
-            }
-            if (routeRef.current.error) {
-              resetRoute(routeRef.current, 'shiba');
-              reserveAgentDestination('shiba', null);
-              ai.state = 'idle';
-              ai.timer = 1;
-              mixerRef.current.stopAllAction();
-              mixerRef.current.clipAction(findDogClip(animations, 'idle')).setLoop(THREE.LoopRepeat, Infinity).reset().play();
-            }
-            position.x = next.x; position.z = next.z;
-            if (next.x !== previous.x || next.z !== previous.z) {
-              modelRef.current.rotation.y = computeRotYStep(modelRef.current.rotation.y, Math.atan2(next.x - previous.x, next.z - previous.z), Math.PI, delta);
-            }
-
-          }
-        }
+        updateDogBehavior(life, context(), delta);
       }
     }
-  }
-    
     
     if (!isPreview) {
       cameraState.positions['shiba'] = {
@@ -387,7 +325,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
 
   return (
     <group name="shiba-inu" ref={modelRef as any} position={isPreview ? undefined : [180, 0, -120]} rotation={isPreview ? undefined : [0, -Math.PI / 4, 0]}
-      userData={isPreview ? {} : { hoverAction: { label: 'Shiba Inu', actions: getObjectActionIds('shiba-inu') } }}>
+      userData={isPreview ? {} : { dogBehavior: life, hoverAction: { label: 'Shiba Inu', actions: getObjectActionIds('shiba-inu') } }}>
       {!isPreview && bounds && <mesh position={bounds.center} userData={{ isHoverProxy: true }}>
         <boxGeometry args={bounds.size.toArray()} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />

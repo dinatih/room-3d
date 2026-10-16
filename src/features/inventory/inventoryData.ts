@@ -429,6 +429,12 @@ INVENTORY.push({
 });
 
 INVENTORY.push({
+  id: 'ulotte-bowl', name: 'Gamelle d’Ulotte', brand: 'Animal', category: 'decor', qty: 1,
+  dims: { w: 20, d: 20, h: 6 },
+  notes: 'Gamelle de repas d’Ulotte, dans le jardin du voisin Est.'
+});
+
+INVENTORY.push({
   id: 'ulotte',
   name: 'Chienne Ulotte (Teckel)',
   brand: 'Animal',

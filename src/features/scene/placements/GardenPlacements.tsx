@@ -19,6 +19,8 @@ import { BathtubStarfish } from '../items/Starfish';
 import { Goldfish } from '../items/Goldfish';
 import { RobinBird } from '../items/RobinBird';
 import { BlackHornetDrone } from '../items/BlackHornetDrone';
+import { DogBowl } from '../items/DogBowl';
+import { ULOTTE_BOWL_POSITION } from '../items/dogBowlData';
 import { Dachshund } from '../items/Dachshund';
 import { ShibaInu } from '../items/ShibaInu';
 import { FemaleAnatomyBones } from '../items/FemaleAnatomyBones';
@@ -76,6 +78,9 @@ export function GardenFurnishings() {
 export function GardenDecor() {
   return (
     <MergedStaticGroup name="merged-garden-decor">
+      <group position={ULOTTE_BOWL_POSITION} userData={{ skipMerge: true, itemName: 'Gamelle d’Ulotte — jardin voisin Est' }}>
+        <NavigationObstacle id="ulotte-bowl"><DogBowl item={stub('ulotte-bowl')} actionState={NOOP_STATE} onSize={NOOP_SIZE} feedingStation /></NavigationObstacle>
+      </group>
       {/* Mangeoire / nid à oiseaux sous le balcon */}
       <group position={[95, 214, -165]} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'feeder', kind: 'feeder' }, itemName: 'Mangeoire à Oiseaux' }}>
         <BirdFeeder item={stub('bird-feeder')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />

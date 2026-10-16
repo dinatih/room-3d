@@ -9,7 +9,7 @@ export interface ActionDef {
   label: string | [string, string] | ((value: any) => string);
   icon?: string;
   sceneOnly?: boolean;
-  event?: 'door-push' | 'dog-dance';
+  event?: 'door-push';
   values?: readonly (string | number)[];
   initialValue?: string | number;
   type?: 'select';
@@ -146,7 +146,6 @@ const ACTIONS: Record<string, ActionConfig> = {
     ],
   },
   'shiba-replay': { label: 'Rejouer', sceneOnly: true },
-  'shiba-dance': { label: '🐕 Danser avec le personnage actif', sceneOnly: true, event: 'dog-dance' },
   'robin-bird-replay': { label: 'Rejouer' },
   'drone-patrol-all': { label: '🛸 Patrouille tout le studio & jardin' },
   'drone-goto-garden': { label: '🌿 Aller au Jardin' },
@@ -180,7 +179,6 @@ export function getActionDef(id: string): ActionDef | undefined {
     return { id, label: fpv ? 'Vue FPV' : 'Suivre', icon: fpv ? 'bi-eye' : 'bi-camera-video', sceneOnly: true };
   }
   if (id.startsWith('select-character-')) return { id, label: '🎯 Définir comme personnage actif' };
-  if (id.startsWith('dance-with-dog:::')) return { id, label: '🐕 Danser avec le Shiba', sceneOnly: true, event: 'dog-dance' };
   if (id.startsWith('smart-object:::')) {
     const [, objectId, slotId] = id.split(':::');
     const slot = getSmartObject(objectId)?.slots.find(s => s.slotId === slotId);
