@@ -284,10 +284,21 @@ export function resolveSlotAnimationInfo(slot: {
     };
   }
 
-  // ── animationsRandom (tag pool) ──────────────────────────────────────────
+  // ── animationsRandom (tag pool ou liste d'animations) ─────────────────────
   if (slot.animationsRandom) {
-    const searchTags = parseSlotTags(slot.animationsRandom);
-    const matchingDefs = getAnimationsByTags(searchTags, 'any');
+    const rawList = Array.isArray(slot.animationsRandom) ? slot.animationsRandom : parseSlotTags(slot.animationsRandom);
+    const defSet = new Set<AnimationDefinition>();
+    for (const item of rawList) {
+      const byDef = getAnimationDef(item);
+      if (byDef) {
+        defSet.add(byDef);
+      } else {
+        for (const d of getAnimationsByTags(item, 'any')) {
+          defSet.add(d);
+        }
+      }
+    }
+    const matchingDefs = Array.from(defSet);
     const first = matchingDefs[0];
     const fallbackLabel = Array.isArray(slot.animationsRandom) ? slot.animationsRandom.join(', ') : slot.animationsRandom;
 
@@ -296,7 +307,7 @@ export function resolveSlotAnimationInfo(slot: {
       : (slot.availableAnims ?? []).map((a) => getAnimationDef(a)).filter((d): d is AnimationDefinition => d !== undefined);
 
     return {
-      ...buildMeta(first, fallbackLabel, first?.aliases?.[0], searchTags),
+      ...buildMeta(first, fallbackLabel, first?.aliases?.[0], rawList),
       canonicalId: first?.id ?? fallbackLabel,
       duration: slot.duration ?? first?.duration,
       variants: pool.length > 0 ? buildAnimVariants(pool) : undefined,

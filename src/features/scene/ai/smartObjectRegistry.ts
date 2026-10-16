@@ -252,8 +252,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre une douche (Droite)',
         offset: [8, 15, 650],
         rotY: Math.PI / 2,
-        animation: 'take-off-tshirt',
-        animationsRandom: ['take-off-tshirt'],
+        animationsRandom: ['take-off-tshirt', 'fab-daily-life-wash-hands'],
         duration: 24,
       },
       {
@@ -261,7 +260,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre une douche (Gauche)',
         offset: [42, 15, 660],
         rotY: -Math.PI / 2,
-        animation: 'take-off-tshirt',
+        animationsRandom: ['take-off-tshirt', 'fab-daily-life-wash-hands'],
         duration: 24,
       }
     ]
@@ -1007,7 +1006,7 @@ export function buildSmartObjectInstructionSequence(
     type: 'USE_OBJECT',
     smartObjectId: obj.id,
     slotId: slot.slotId,
-    animation: slot.animation,
+    animation: slot.animationsRandom ? undefined : slot.animation,
     duration: slot.duration,
     repeatCount: slot.repeatCount,
     repeatVariation: slot.repeatVariation,

@@ -117,8 +117,16 @@ export function ShowerEffects({ origin, humidity, condensation, isPreview }: {
   useFrame((state, delta) => {
     const running = !isPreview && SMART_OBJECTS.shower.slots.some(slot => {
       const occupant = OccupancyManager.getOccupant('shower', slot.slotId);
-      // La réservation commence pendant la marche ; l'eau attend l'animation de douche.
-      return occupant && cameraState.positions[occupant]?.anim === resolveAnimationId(slot.animation!);
+      if (!occupant) return false;
+      const occupantAnim = cameraState.positions[occupant]?.anim;
+      if (!occupantAnim) return false;
+      const slotAnims: string[] = [];
+      if (slot.animation) slotAnims.push(resolveAnimationId(slot.animation));
+      if (slot.animationsRandom) {
+        const pool = Array.isArray(slot.animationsRandom) ? slot.animationsRandom : [slot.animationsRandom];
+        slotAnims.push(...pool.map(resolveAnimationId));
+      }
+      return slotAnims.includes(occupantAnim) || slotAnims.includes(resolveAnimationId(occupantAnim));
     });
     const s = session.current;
     if (running !== s.running) {
