@@ -1211,20 +1211,17 @@ export function InventoryPreview({
         >
           <i className="bi bi-rulers" aria-hidden="true" />
         </button>
+        {isHumanCharacter && (
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} ${showPnjPanel ? 'btn-danger' : 'btn-outline-secondary'}`}
+            onClick={() => setShowPnjPanel(v => !v)}
+            title={showPnjPanel ? 'Masquer la section PNJ' : 'Afficher la section PNJ (Physique buste, tenues, perruques...)'}
+            aria-pressed={showPnjPanel}
+          >💃 <span className="fw-semibold">Section PNJ</span></button>
+        )}
         </>
-      )} afterToolbarActions={
-        <>
-          {isHumanCharacter && (
-            <button
-              type="button"
-              className={`${TOOLBAR_BUTTON_CLASS} ${showPnjPanel ? 'btn-danger' : 'btn-outline-secondary'}`}
-              onClick={() => setShowPnjPanel(v => !v)}
-              title={showPnjPanel ? 'Masquer la section PNJ' : 'Afficher la section PNJ (Physique buste, tenues, perruques...)'}
-              aria-pressed={showPnjPanel}
-            >💃 <span className="fw-semibold">Section PNJ</span></button>
-          )}
-        </>
-      }>
+      )}>
         {showing3D && isCharacterItem && !hideAnimFrameController && (
           <AnimFrameController
             compact
