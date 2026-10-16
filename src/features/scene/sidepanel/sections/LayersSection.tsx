@@ -2,6 +2,7 @@ import { useSceneStore, getRandomGrassType } from '../../store/useSceneStore';
 import { HDRI_LIST, type HdriResolution } from '@features/scene/hdriConfig';
 import type { ScreenVideoQuality } from '../../screenVideoConfig';
 import { dispatchKey, type LayerState, type LidarMode, type GroundType } from '../types';
+import { NAVIGATION_COMFORT_CM, NAVIGATION_COMFORT_COLOR } from '../../ai/navigation/comfort';
 
 export interface LayersSectionProps {
   layers: LayerState;
@@ -319,6 +320,10 @@ export function LayersSection({
       {layerBtn('blue',   iconLabel('bi-people', 'Collisions inter-PNJ'), 'npcCollisions')}
       {layers.npcCollisions && layerBtn('cyan', iconLabel('bi-circle', 'Debug gabarits PNJ'), 'debugNpcCollisions')}
       {layerBtn('cyan', iconLabel('bi-rulers', 'Debug trajets et obstacles'), 'debugFurnitureCollisions')}
+      {layers.debugFurnitureCollisions && <div className="small px-3 py-1" title="Préférence de trajet, franchissable dans les passages étroits">
+        <svg width="24" height="8" className="me-1" aria-hidden="true"><path d="M0 4H24" stroke={NAVIGATION_COMFORT_COLOR} strokeWidth="2" /></svg>
+        Confort Native : +{NAVIGATION_COMFORT_CM} cm (préférence)
+      </div>}
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('gray',   iconLabel('bi-person-fill', 'Ombres personnage'), 'characterShadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}

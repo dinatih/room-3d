@@ -5,9 +5,10 @@ import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
 import { architectureObstacles } from './navigation/architecture';
 import { furnitureObstacles, getObstacleRevision, navigationDebug, getAgentProfile, hasAgentProfile } from './navigation/obstacles';
-import { doorKeys, doorPolygon } from './navigation/service';
+import { doorKeys, doorPolygon, getNavigationGraph } from './navigation/service';
 import { doorCollisionState } from '../doorObstacles';
 import { inflate, type Point } from './navigation/geometry';
+import { NAVIGATION_COMFORT_COLOR } from './navigation/comfort';
 
 /** The debug view uses the exact same footprints and routes as the navigation engine. */
 export function CollisionDebugHelper() {
@@ -15,6 +16,7 @@ export function CollisionDebugHelper() {
   const furniture = useSceneStore(s => s.layers.debugFurnitureCollisions);
   const ref = useRef<THREE.Group>(null!);
   const signature = useRef('');
+  const lastNativeGraph = useRef<ReturnType<typeof getNavigationGraph> | null>(null);
   useEffect(() => {
     const group = ref.current;
     return () => {
@@ -27,10 +29,12 @@ export function CollisionDebugHelper() {
   }, []);
   useFrame(() => {
     const routes = [...navigationDebug.entries()];
-    const nativeRadius = furniture && hasAgentProfile('native') ? getAgentProfile('native').radius : null;
-    const key = JSON.stringify([npc, furniture, nativeRadius, getObstacleRevision(), routes, doorKeys.map(k => doorCollisionState[k].angle), npc ? cameraState.positions : null]);
-    if (signature.current === key) return;
+    const nativeProfile = furniture && hasAgentProfile('native') ? getAgentProfile('native') : null;
+    const nativeGraph = nativeProfile ? getNavigationGraph(nativeProfile) : null;
+    const key = JSON.stringify([npc, furniture, nativeProfile, getObstacleRevision(), routes, doorKeys.map(k => doorCollisionState[k].angle), npc ? cameraState.positions : null]);
+    if (signature.current === key && lastNativeGraph.current === nativeGraph) return;
     signature.current = key;
+    lastNativeGraph.current = nativeGraph;
     for (const child of [...ref.current.children]) {
       const line = child as THREE.Line;
       line.geometry.dispose();
@@ -49,7 +53,8 @@ export function CollisionDebugHelper() {
       for (const obstacle of [...architectureObstacles, ...furnitureObstacles.values()]) addLine(obstacle.polygon, '#ff9100', true);
       for (const key of doorKeys) addLine(doorPolygon(key, doorCollisionState[key].angle), '#e040fb', true);
       // Keep the reference clearance fixed to Native, independently of active routes.
-      if (nativeRadius !== null) for (const obstacle of furnitureObstacles.values()) addLine(inflate(obstacle.polygon, nativeRadius), '#ff3d00', true);
+      if (nativeProfile) for (const obstacle of furnitureObstacles.values()) addLine(inflate(obstacle.polygon, nativeProfile.radius), '#ff3d00', true);
+      if (nativeGraph?.comfort) for (const ring of nativeGraph.comfort.obstacles.flat()) addLine(ring, NAVIGATION_COMFORT_COLOR, true);
     }
     if (npc) {
       for (const [id, position] of Object.entries(cameraState.positions)) {

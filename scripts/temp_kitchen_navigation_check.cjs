@@ -399,6 +399,16 @@ if (process.argv.includes('--browser')) (async () => {
   const browser = await launchBrowser({ headless: true, args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   try {
     const page = await browser.newPage();
+    if (process.argv.includes('--physical-baseline')) {
+      await page.setRequestInterception(true);
+      page.on('request', async request => {
+        if (!request.url().includes('/navigation/service.ts')) { await request.continue(); return; }
+        const response = await fetch(request.url()), body = await response.text();
+        const graph = /new VisibilityGraph\(union\(obstacles\),[^;]+\);/;
+        assert.ok(graph.test(body), 'Physical baseline interception no longer matches');
+        await request.respond({ status: 200, contentType: 'application/javascript', body: body.replace(graph, 'new VisibilityGraph(union(obstacles));') });
+      });
+    }
     if (process.argv.includes('--shower-only')) {
       await page.setRequestInterception(true);
       page.on('request',async request => {
@@ -901,6 +911,7 @@ if (process.argv.includes('--browser')) (async () => {
     if (process.argv.includes('--profile')) {
       fs.writeFileSync('/tmp/room-navigation-benchmark.json', JSON.stringify(await page.evaluate(() => ({
         obstacles: window.nav.getNavigationGraph(window.nav.getAgentProfile('native')).obstacles,
+        comfort: window.nav.getNavigationGraph(window.nav.getAgentProfile('native')).comfort,
         queries: [
           [{x:80,z:380}, {x:140,z:560}], [{x:160,z:300}, {x:200,z:-50}],
           [{x:500,z:-100}, {x:169,z:535}], [{x:-100,z:-170}, {x:14.13891,z:535}],
@@ -1082,7 +1093,7 @@ if (process.argv.includes('--browser')) (async () => {
             window.cameraState.positions[a.id] = { ...a.position, y: 0, yaw: 0 };
             for (const key of nav.doorKeys) {
               const leaf = [[g.inflate(nav.doorPolygon(key, nav.doorCollisionState[key].angle), profile.radius + nav.DOOR_CONFIGS[key].margin)]];
-              if (g.distance(before, a.position) > 0 && !g.segmentFree(before, a.position, leaf)) throw new Error(`Crowd crossed ${key}`);
+              if (g.distance(before, a.position) > 0 && !g.segmentFree(before, a.position, leaf)) throw new Error(`Crowd crossed ${key}: ${JSON.stringify({ id:a.id,before,after:a.position,angle:nav.doorCollisionState[key].angle,startInside:g.insideObstacle(before,leaf),endInside:g.insideObstacle(a.position,leaf),next:a.route.path[a.route.index],wait:a.route.waitReason })}`);
             }
           }
           if (performance.now() > nextLog) {

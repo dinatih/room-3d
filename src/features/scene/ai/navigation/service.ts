@@ -6,6 +6,7 @@ import { inflate, union, mergeObstacles, VisibilityGraph, rectangle, pointInRing
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, type DoorKey } from './doorRequests';
 import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from '../agent/agentAvoidance';
+import { NAVIGATION_COMFORT_CM } from './comfort';
 
 export { architectureObstacles };
 export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
@@ -51,15 +52,20 @@ export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string,
   const old = caches.get(key);
   if (old && (movingFurniture.size || (old.revision === revision && old.doorAngles === doorAngles))) return old.graph;
   const solid = [...architectureObstacles, ...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0 && (!excludeOwner || o.owner !== excludeOwner));
-  const obstacles = solid.map(o => inflate(o.polygon, profile.radius));
-  doorKeys.forEach((k, i) => obstacles.push(inflate(doorPolygon(k, angles[i]), profile.radius + DOOR_CONFIGS[k].margin)));
-  if (shutterBlocked) for (const key of ['glassLeft', 'glassRight'] as const) obstacles.push(inflate(doorPolygon(key, 0), profile.radius));
+  const obstacles: Polygon[] = [], comfortObstacles: Polygon[] = [];
+  const addObstacle = (polygon: Polygon, radius = profile.radius) => {
+    obstacles.push(inflate(polygon, radius));
+    if (!excludeOwner) comfortObstacles.push(inflate(polygon, radius + NAVIGATION_COMFORT_CM));
+  };
+  solid.forEach(o => addObstacle(o.polygon));
+  doorKeys.forEach((k, i) => addObstacle(doorPolygon(k, angles[i]), profile.radius + DOOR_CONFIGS[k].margin));
+  if (shutterBlocked) for (const key of ['glassLeft', 'glassRight'] as const) addObstacle(doorPolygon(key, 0));
   // Surface boundaries are barriers, with the same body clearance as walls.
   for (const rings of walkableSurfaces) for (const ring of rings) for (let i = 0; i < ring.length; i++) {
     const a = ring[i], b = ring[(i + 1) % ring.length];
-    obstacles.push(inflate(rectangle((a.x + b.x) / 2, (a.z + b.z) / 2, distance(a, b), 0, Math.atan2(a.z - b.z, b.x - a.x)), profile.radius));
+    addObstacle(rectangle((a.x + b.x) / 2, (a.z + b.z) / 2, distance(a, b), 0, Math.atan2(a.z - b.z, b.x - a.x)));
   }
-  const graph = new VisibilityGraph(union(obstacles));
+  const graph = new VisibilityGraph(union(obstacles), excludeOwner ? undefined : { distance: NAVIGATION_COMFORT_CM, obstacles: union(comfortObstacles) });
   caches.set(key, { revision, doorAngles, graph });
   return graph;
 }
@@ -258,7 +264,10 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     const obstacles = getAgentObstacles(agentId, start);
     const signature = JSON.stringify(obstacles);
     if (obstacles.length && (route.crowd?.base !== base || route.crowd.signature !== signature)) {
-      const graph = new VisibilityGraph(mergeObstacles([...base.obstacles, ...obstacles.map(polygon => [polygon])]));
+      const graph = new VisibilityGraph(mergeObstacles([...base.obstacles, ...obstacles.map(polygon => [polygon])]), base.comfort && {
+        distance: base.comfort.distance,
+        obstacles: mergeObstacles([...base.comfort.obstacles, ...obstacles.map(polygon => [inflate(polygon, base.comfort!.distance)])]),
+      });
       const goal = route.target ?? target;
       const path = graph.find(start, goal);
       route.crowd = { base, graph: path ? graph : null, signature,

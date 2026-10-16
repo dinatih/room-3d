@@ -1,4 +1,5 @@
 import polygonClipping from 'polygon-clipping';
+import { ComfortField, type NavigationComfort } from './comfort';
 
 export interface Point { x: number; z: number }
 export type Polygon = Point[];
@@ -127,12 +128,151 @@ export class VisibilityGraph {
   readonly vertices: Point[];
   private corners: { previous: Point; next: Point; convex: boolean }[];
   private edges = new Map<number, { to: number; cost: number }[]>();
-  constructor(readonly obstacles: Polygon[][]) {
+  private comfortField?: ComfortField;
+  private physicalGraph?: VisibilityGraph;
+  private clearances: number[] = [];
+  private comfortEdges = new Map<number, Map<number, number>>();
+  constructor(readonly obstacles: Polygon[][], readonly comfort?: NavigationComfort) {
     this.vertices = obstacles.flat(2);
     this.corners = obstacles.flatMap(rings => rings.flatMap(ring => ring.map((point, i) => {
       const previous = ring[(i + ring.length - 1) % ring.length], next = ring[(i + 1) % ring.length];
       return { previous, next, convex: cross(previous, point, next) > GEOMETRY_EPSILON };
     })));
+    if (comfort) {
+      this.comfortField = new ComfortField(obstacles, comfort.distance);
+      this.physicalGraph = new VisibilityGraph(obstacles);
+      this.vertices.push(...comfort.obstacles.flat(2).filter(p => !insideObstacle(p, obstacles)));
+      this.clearances = this.vertices.map(p => this.comfortField!.clearance(p));
+    }
+  }
+
+  /** Length plus the integrated cost of travelling within the comfort band. */
+  segmentCost(a: Point, b: Point): number {
+    return this.comfortField ? this.comfortField.cost(a, b) : distance(a, b);
+  }
+
+  /** Exact physical distance is a stronger admissible heuristic in a furnished
+   * apartment than a straight line through several walls. Reuse sparse edges. */
+  private distanceEstimator(target: Point): (p: Point) => number {
+    const remaining = new Map<number, number>();
+    const open = new Set<number>();
+    for (let i = 0; i < this.vertices.length; i++) {
+      if (this.tangent(i, target) && segmentFree(this.vertices[i], target, this.obstacles, true)) {
+        remaining.set(i, distance(this.vertices[i], target)); open.add(i);
+      }
+    }
+    while (open.size) {
+      const current = [...open].reduce((a, b) => remaining.get(a)! <= remaining.get(b)! ? a : b);
+      open.delete(current);
+      for (const edge of this.neighbors(current)) {
+        const candidate = remaining.get(current)! + edge.cost;
+        if (candidate < (remaining.get(edge.to) ?? Infinity)) { remaining.set(edge.to, candidate); open.add(edge.to); }
+      }
+    }
+    return p => {
+      if (segmentFree(p, target, this.obstacles, true)) return distance(p, target);
+      let best = Infinity;
+      for (const [i, rest] of remaining) {
+        const candidate = distance(p, this.vertices[i]) + rest;
+        if (candidate < best && this.tangent(i, p) && segmentFree(p, this.vertices[i], this.obstacles, true)) best = candidate;
+      }
+      return best;
+    };
+  }
+
+  private findComfort(start: Point, target: Point): Point[] | null {
+    // Reject disconnected destinations with the sparse physical graph first.
+    // Its feasible route also supplies an upper bound for the weighted search.
+    const physicalPath = this.physicalGraph!.find(start, target);
+    if (!physicalPath) return null;
+    let bestPath = physicalPath;
+    let bestCost = physicalPath.reduce((sum, p, i) => sum + this.segmentCost(i ? physicalPath[i - 1] : start, p), 0);
+    const direct = segmentFree(start, target, this.obstacles, true) ? this.segmentCost(start, target) : Infinity;
+    if (direct === distance(start, target)) return [target];
+    if (direct <= bestCost) { bestPath = [target]; bestCost = direct; }
+    // A long wall may have no corner near either endpoint. Project onto its
+    // comfort contour so a small parallel detour remains available there too.
+    const projections: Point[] = [];
+    for (const ring of this.comfort!.obstacles.flat()) for (let i = 0; i < ring.length; i++) for (const endpoint of [start, target]) {
+      const p = projectToSegment(endpoint, ring[i], ring[(i + 1) % ring.length]);
+      if (distance(p, endpoint) <= this.comfort!.distance && !insideObstacle(p, this.obstacles)) projections.push(p);
+    }
+    const nodes = [...this.vertices, ...projections, start, target];
+    const clearances = [...this.clearances, ...[...projections, start, target].map(p => this.comfortField!.clearance(p))];
+    const startIndex = nodes.length - 2, targetIndex = nodes.length - 1;
+    const physicalDistance = this.physicalGraph!.distanceEstimator(target);
+    const estimates = new Map<number, number>([[targetIndex, 0]]);
+    const estimate = (index: number) => {
+      if (!estimates.has(index)) estimates.set(index, physicalDistance(nodes[index]));
+      return estimates.get(index)!;
+    };
+    // Lazy edge A*: first queue the analytic lower bound, then evaluate
+    // visibility and proximity only when that edge can improve the route.
+    // Exact edges return to the queue before their destination is settled.
+    type Edge = { from: number; to: number; cost: number; priority: number; exact: boolean };
+    const open: Edge[] = [];
+    const push = (edge: Edge) => {
+      let i = open.length;
+      open.push(edge);
+      while (i > 0) {
+        const parent = (i - 1) >> 1;
+        if (open[parent].priority <= edge.priority) break;
+        open[i] = open[parent]; i = parent;
+      }
+      open[i] = edge;
+    };
+    const pop = (): Edge => {
+      const result = open[0], last = open.pop()!;
+      if (open.length) {
+        let i = 0;
+        while (2 * i + 1 < open.length) {
+          let child = 2 * i + 1;
+          if (child + 1 < open.length && open[child + 1].priority < open[child].priority) child++;
+          if (last.priority <= open[child].priority) break;
+          open[i] = open[child]; i = child;
+        }
+        open[i] = last;
+      }
+      return result;
+    };
+    const costs = new Map([[startIndex, 0]]), parents = new Map<number, number>();
+    const expand = (current: number) => {
+      for (let to = 0; to < nodes.length; to++) {
+        if (costs.has(to)) continue;
+        const cost = costs.get(current)! + this.comfortField!.minimumCost(distance(nodes[current], nodes[to]), clearances[current], clearances[to]);
+        if (cost + distance(nodes[to], target) >= bestCost) continue;
+        const priority = cost + estimate(to);
+        if (priority < bestCost) push({ from: current, to, cost, priority, exact: false });
+      }
+    };
+    expand(startIndex);
+    while (open.length) {
+      const edge = pop();
+      if (edge.priority >= bestCost) return bestPath;
+      const { from: current, to } = edge;
+      if (costs.has(to)) continue;
+      if (edge.exact) {
+        costs.set(to, edge.cost); parents.set(to, current);
+        if (to !== targetIndex) { expand(to); continue; }
+        const result: Point[] = [target];
+        let index = to;
+        while (parents.get(index) !== startIndex) { index = parents.get(index)!; result.unshift(nodes[index]); }
+        return result;
+      }
+      let cost: number;
+      if (current < this.vertices.length && to < this.vertices.length) {
+        const first = Math.min(current, to), second = Math.max(current, to);
+        let connections = this.comfortEdges.get(first);
+        if (!connections) { connections = new Map(); this.comfortEdges.set(first, connections); }
+        const cached = connections.get(second);
+        cost = cached ?? (segmentFree(nodes[current], nodes[to], this.obstacles, true) ? this.segmentCost(nodes[current], nodes[to]) : Infinity);
+        if (cached === undefined) connections.set(second, cost);
+      } else cost = segmentFree(nodes[current], nodes[to], this.obstacles, true) ? this.segmentCost(nodes[current], nodes[to]) : Infinity;
+      const candidate = costs.get(current)! + cost;
+      const priority = candidate + estimate(to);
+      if (priority < bestCost) push({ from: current, to, cost: candidate, priority, exact: true });
+    }
+    return bestPath;
   }
   private tangent(index: number, target: Point): boolean {
     const { previous, next, convex } = this.corners[index];
@@ -156,6 +296,7 @@ export class VisibilityGraph {
   find(start: Point, target: Point): Point[] | null {
     if (![start.x, start.z, target.x, target.z].every(Number.isFinite)) throw new Error('Non-finite navigation coordinates');
     if (insideObstacle(start, this.obstacles) || insideObstacle(target, this.obstacles)) return null;
+    if (this.comfort) return this.findComfort(start, target);
     if (segmentFree(start, target, this.obstacles, true)) return [target];
     const nodes = [...this.vertices, start, target];
     const startIndex = nodes.length - 2, targetIndex = nodes.length - 1;

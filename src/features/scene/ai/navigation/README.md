@@ -4,6 +4,22 @@ Les instructions désignent une destination ou une interaction. Aucun point de
 passage entre pièces n'est déclaré : `VisibilityGraph` calcule le plus court
 chemin avec A* sur les contours des obstacles réunis par `polygon-clipping`.
 
+Les déplacements préfèrent 20 cm supplémentaires autour du gabarit physique.
+Cette bande est un coût souple : chaque centimètre parcouru coûte
+`1 + max(0, 1 - distanceLibre / 20)`. Un passage étroit reste praticable et un
+grand détour n'est pas obligatoire. Le graphe propose les sommets des contours
+physiques et de confort, ainsi que les projections proches du départ et de la
+destination sur les contours de confort. Les connexions physiques et leurs coûts
+sont conservés avec le graphe. Les transitions locales d'interaction conservent
+le calcul physique pour atteindre leurs coordonnées exactes.
+La recherche pondérée évalue les connexions à la demande. Les distances du graphe
+physique servent d'estimation admissible pour éviter d'explorer les pièces
+séparées par des murs comme si elles étaient accessibles en ligne droite.
+
+Le debug représente la préférence de confort de Native en bleu ; les contours
+orange conservent leur signification physique. Validation ciblée :
+`node scripts/temp_navigation_comfort.cjs`.
+
 - `architecture.ts` dérive les murs, piliers et clôtures de `wallData.ts`, et les
   limites du sol des dimensions également utilisées par le rendu.
 - `NavigationObstacle` mesure les meubles rendus et suit leur matrice monde.
