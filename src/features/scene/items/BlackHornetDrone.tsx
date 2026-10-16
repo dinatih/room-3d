@@ -22,38 +22,38 @@ export interface DroneWaypoint {
 
 const FLIGHT_WAYPOINTS: DroneWaypoint[] = [
   // 1. Jardin & Terrasse
-  { room: 'garden', label: 'Pelouse Jardin', pos: new THREE.Vector3(120, 140, -250), hoverTime: 3 },
-  { room: 'garden', label: 'Terrasse Extérieure', pos: new THREE.Vector3(220, 145, -120), hoverTime: 2.5 },
-  { room: 'garden', label: 'Abords Mangeoire Oiseaux', pos: new THREE.Vector3(60, 155, -320), hoverTime: 3 },
+  { room: 'garden', label: 'Pelouse Jardin', pos: new THREE.Vector3(120, 140, -250), hoverTime: 15 },
+  { room: 'garden', label: 'Terrasse Extérieure', pos: new THREE.Vector3(220, 145, -120), hoverTime: 12.5 },
+  { room: 'garden', label: 'Abords Mangeoire Oiseaux', pos: new THREE.Vector3(60, 155, -320), hoverTime: 15 },
   
   // Transit Baie vitrée
-  { room: 'living', label: 'Seuil Baie Vitrée', pos: new THREE.Vector3(150, 140, -10), hoverTime: 1 },
+  { room: 'living', label: 'Seuil Baie Vitrée', pos: new THREE.Vector3(150, 140, -10), hoverTime: 5 },
   
   // 2. Salon / Séjour
-  { room: 'living', label: 'Centre Salon', pos: new THREE.Vector3(160, 150, 150), hoverTime: 3 },
-  { room: 'living', label: 'Espace Bureau & Écrans', pos: new THREE.Vector3(260, 135, 90), hoverTime: 3.5 },
-  { room: 'living', label: 'Zone Canapé', pos: new THREE.Vector3(90, 140, 110), hoverTime: 2.5 },
-  { room: 'living', label: 'Alcôve & Espace Lit', pos: new THREE.Vector3(70, 145, 290), hoverTime: 3 },
+  { room: 'living', label: 'Centre Salon', pos: new THREE.Vector3(160, 150, 150), hoverTime: 15 },
+  { room: 'living', label: 'Espace Bureau & Écrans', pos: new THREE.Vector3(260, 135, 90), hoverTime: 17.5 },
+  { room: 'living', label: 'Zone Canapé', pos: new THREE.Vector3(90, 140, 110), hoverTime: 12.5 },
+  { room: 'living', label: 'Alcôve & Espace Lit', pos: new THREE.Vector3(70, 145, 290), hoverTime: 15 },
 
   // 3. Cuisine
-  { room: 'kitchen', label: 'Plan de travail Cuisine', pos: new THREE.Vector3(65, 140, 420), hoverTime: 3.5 },
-  { room: 'kitchen', label: 'Évier & Table de cuisson', pos: new THREE.Vector3(110, 145, 410), hoverTime: 2.5 },
+  { room: 'kitchen', label: 'Plan de travail Cuisine', pos: new THREE.Vector3(65, 140, 420), hoverTime: 17.5 },
+  { room: 'kitchen', label: 'Évier & Table de cuisson', pos: new THREE.Vector3(110, 145, 410), hoverTime: 12.5 },
 
   // Transit Couloir
-  { room: 'corridor', label: 'Porte Couloir', pos: new THREE.Vector3(235, 150, 410), hoverTime: 1.5 },
+  { room: 'corridor', label: 'Porte Couloir', pos: new THREE.Vector3(235, 150, 410), hoverTime: 7.5 },
   
   // 4. Couloir d'entrée
-  { room: 'corridor', label: 'Couloir Entrée', pos: new THREE.Vector3(245, 150, 500), hoverTime: 2.5 },
-  { room: 'corridor', label: 'Entrée Principale', pos: new THREE.Vector3(240, 145, 590), hoverTime: 3 },
+  { room: 'corridor', label: 'Couloir Entrée', pos: new THREE.Vector3(245, 150, 500), hoverTime: 12.5 },
+  { room: 'corridor', label: 'Entrée Principale', pos: new THREE.Vector3(240, 145, 590), hoverTime: 15 },
 
   // 5. Salle de bain
-  { room: 'bathroom', label: 'Entrée Salle de bain', pos: new THREE.Vector3(155, 145, 490), hoverTime: 2 },
-  { room: 'bathroom', label: 'Miroir & Vasque', pos: new THREE.Vector3(95, 140, 530), hoverTime: 3.5 },
-  { room: 'bathroom', label: 'Zone Douche', pos: new THREE.Vector3(60, 150, 620), hoverTime: 3 },
+  { room: 'bathroom', label: 'Entrée Salle de bain', pos: new THREE.Vector3(155, 145, 490), hoverTime: 10 },
+  { room: 'bathroom', label: 'Miroir & Vasque', pos: new THREE.Vector3(95, 140, 530), hoverTime: 17.5 },
+  { room: 'bathroom', label: 'Zone Douche', pos: new THREE.Vector3(60, 150, 620), hoverTime: 15 },
   
   // Retour Salon via couloir
-  { room: 'corridor', label: 'Retour Couloir', pos: new THREE.Vector3(235, 150, 450), hoverTime: 1 },
-  { room: 'living', label: 'Survol Séjour', pos: new THREE.Vector3(170, 155, 230), hoverTime: 2 },
+  { room: 'corridor', label: 'Retour Couloir', pos: new THREE.Vector3(235, 150, 450), hoverTime: 5 },
+  { room: 'living', label: 'Survol Séjour', pos: new THREE.Vector3(170, 155, 230), hoverTime: 10 },
 ];
 
 export function BlackHornetDrone({
