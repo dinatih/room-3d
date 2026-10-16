@@ -27,7 +27,8 @@ export function CollisionDebugHelper() {
   }, []);
   useFrame(() => {
     const routes = [...navigationDebug.entries()];
-    const key = JSON.stringify([npc, furniture, getObstacleRevision(), routes, doorKeys.map(k => doorCollisionState[k].angle), npc ? cameraState.positions : null]);
+    const nativeRadius = furniture && hasAgentProfile('native') ? getAgentProfile('native').radius : null;
+    const key = JSON.stringify([npc, furniture, nativeRadius, getObstacleRevision(), routes, doorKeys.map(k => doorCollisionState[k].angle), npc ? cameraState.positions : null]);
     if (signature.current === key) return;
     signature.current = key;
     for (const child of [...ref.current.children]) {
@@ -47,8 +48,8 @@ export function CollisionDebugHelper() {
     if (furniture) {
       for (const obstacle of [...architectureObstacles, ...furnitureObstacles.values()]) addLine(obstacle.polygon, '#ff9100', true);
       for (const key of doorKeys) addLine(doorPolygon(key, doorCollisionState[key].angle), '#e040fb', true);
-      const actor = routes.find(([id]) => hasAgentProfile(id));
-      if (actor) for (const obstacle of furnitureObstacles.values()) addLine(inflate(obstacle.polygon, getAgentProfile(actor[0]).radius), '#ff3d00', true);
+      // Keep the reference clearance fixed to Native, independently of active routes.
+      if (nativeRadius !== null) for (const obstacle of furnitureObstacles.values()) addLine(inflate(obstacle.polygon, nativeRadius), '#ff3d00', true);
     }
     if (npc) {
       for (const [id, position] of Object.entries(cameraState.positions)) {
