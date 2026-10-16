@@ -309,9 +309,9 @@ blender -noaudio --background --python-exit-code 1 \
 
 ## Manifest généré
 
-`public/animations/npz/interx/animations_manifest.json` est l'index public des
+`public/animations/npz/interx/interx_manifest.json` est l'index public des
 paires disponibles. Une copie identique est générée dans
-`src/features/scene/animations/animations_manifest.json` pour l'import JSON
+`src/features/scene/animations/interx_manifest.json` pour l'import JSON
 compilé par Vite. Ne pas modifier ces deux copies séparément.
 
 L'interface `InterXManifest` définit le schéma dans `interxManifest.ts` :

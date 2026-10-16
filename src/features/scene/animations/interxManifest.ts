@@ -1,4 +1,4 @@
-import data from './animations_manifest.json';
+import data from './interx_manifest.json';
 import type { AnimationCategory, AnimationDefinition } from './animationRegistry';
 import type { DuoAnimationDef } from './duoAnimations';
 
