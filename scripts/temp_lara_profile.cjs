@@ -6,6 +6,8 @@ const isolate = process.argv.includes('--isolate-blur');
 const out = verify ? '/tmp/room-lara-inventory' : isolate ? '/tmp/room-lara-blur-isolation' : '/tmp/room-lara-profile';
 const delay = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
+  if (process.argv.includes('--lara-skeletons')) return await profileLaraSkeletons();
+  if (process.argv.includes('--inspect-lara-asset')) return inspectLaraAsset();
   if (process.argv.includes('--navigation-live')) return await traceNavigation();
   if (process.argv.includes('--worker-check')) return await checkNavigationWorker();
   if (process.argv.includes('--checks')) return checkBoundsReuse();
@@ -129,7 +131,7 @@ async function profileScene() {
     for (const [run, version] of versions.entries()) {
       const historical = new Map();
       if (version === 'baseline') {
-        const files = execFileSync('git', ['diff', '--name-only', reference, '--', 'src'], { encoding: 'utf8' }).trim().split('\n').filter(Boolean);
+        const files = execFileSync('git', ['diff', '--diff-filter=M', '--name-only', reference, '--', ...(option('baseline-files')?.split(',') || ['src'])], { encoding: 'utf8' }).trim().split('\n').filter(Boolean);
         for (const file of files) historical.set(path.resolve(file), execFileSync('git', ['show', `${reference}:${file}`], { encoding: 'utf8' }));
       }
       server = await createServer({ server: { host: '127.0.0.1', port: 5185, strictPort: true }, plugins: [{ name: 'profile-baseline', enforce: 'pre', load(id) { return historical.get(id.split('?')[0]); } }] });
@@ -182,6 +184,10 @@ async function profileScene() {
           const originalRender = gl.render, originalShadow = gl.shadowMap.render;
           const frames = [], cpu = [], gpu = [], draws = [], triangles = [], passes = new Map(), pending = [];
           let depth = 0, shadowMs = 0, shadowCalls = 0, cameraPose;
+          let laraRaycastMs=0,laraRaycastCalls=0;
+          const laraRaycasts=new Map();
+          scene.traverse(mesh=>{if(!mesh.isSkinnedMesh)return;let root=mesh;while(root&&!root.userData.gltfPath)root=root.parent;if(!root?.userData.gltfPath?.includes('/lara/'))return;const original=mesh.raycast;laraRaycasts.set(mesh,original);mesh.raycast=function(...args){const start=performance.now();try{return original.apply(this,args);}finally{laraRaycastMs+=performance.now()-start;laraRaycastCalls++;}};});
+
           gl.shadowMap.render = function(...args) { const start = performance.now(); try { return originalShadow.apply(this,args); } finally { shadowMs += performance.now()-start; shadowCalls++; } };
           gl.render = function(s, camera) {
             const target = this.getRenderTarget(); const main = s === scene && target === null && depth === 0;
@@ -200,11 +206,11 @@ async function profileScene() {
           const collect = () => { while(pending.length && ctx.getQueryParameter(pending[0],ctx.QUERY_RESULT_AVAILABLE)) { const q=pending.shift(); if(!ctx.getParameter(extension.GPU_DISJOINT_EXT)) gpu.push(ctx.getQueryParameter(q,ctx.QUERY_RESULT)/1e6);ctx.deleteQuery(q); } };
           const start = performance.now();
           try { await new Promise(resolve => { const tick=now=> { collect(); if(now-start<10000) requestAnimationFrame(tick); else resolve(); };requestAnimationFrame(tick); }); }
-          finally { gl.render=originalRender;gl.shadowMap.render=originalShadow;collect();for(const q of pending)ctx.deleteQuery(q); }
+          finally { for(const [mesh,original] of laraRaycasts)mesh.raycast=original;gl.render=originalRender;gl.shadowMap.render=originalShadow;collect();for(const q of pending)ctx.deleteQuery(q); }
           const summary = values => { if(!values.length)return null;const sorted=[...values].sort((a,b)=>a-b);return {mean:values.reduce((a,b)=>a+b,0)/values.length,p50:sorted[Math.floor(sorted.length*.5)],p95:sorted[Math.floor(sorted.length*.95)],p99:sorted[Math.floor(sorted.length*.99)]}; };
           const intervals=frames.slice(1).map((t,i)=>t-frames[i]);
           const debug=ctx.getExtension('WEBGL_debug_renderer_info');
-          return {frames:frames.length,fps:intervals.length*1000/intervals.reduce((a,b)=>a+b,0),frameMs:summary(intervals),renderCpuMs:summary(cpu),gpuMs:summary(gpu),drawCalls:summary(draws),triangles:summary(triangles),passes:Object.fromEntries(passes),shadowMs,shadowCalls,cameraPose,renderer:debug?ctx.getParameter(debug.UNMASKED_RENDERER_WEBGL):null,drawingBuffer:[ctx.drawingBufferWidth,ctx.drawingBufferHeight], layers:{...(await import('/src/features/scene/store/useSceneStore.ts')).useSceneStore.getState().layers}};
+          return {laraRaycastMsPerFrame:laraRaycastMs/frames.length,laraRaycastCallsPerFrame:laraRaycastCalls/frames.length,frames:frames.length,fps:intervals.length*1000/intervals.reduce((a,b)=>a+b,0),frameMs:summary(intervals),renderCpuMs:summary(cpu),gpuMs:summary(gpu),drawCalls:summary(draws),triangles:summary(triangles),passes:Object.fromEntries(passes),shadowMs,shadowCalls,cameraPose,renderer:debug?ctx.getParameter(debug.UNMASKED_RENDERER_WEBGL):null,drawingBuffer:[ctx.drawingBufferWidth,ctx.drawingBufferHeight], layers:{...(await import('/src/features/scene/store/useSceneStore.ts')).useSceneStore.getState().layers}};
         });
         const {profile}=await client.send('Profiler.stop');
         fs.writeFileSync(`${directory}/${run+1}-${conditionIndex}-${version}-${condition}.cpuprofile`,JSON.stringify(profile));
@@ -247,6 +253,18 @@ function checkBoundsReuse() {
   const ts = require('typescript');
   require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, filename);
   const THREE = require('three');
+  const { shareSkeletons } = require('../src/features/scene/utils/shareSkeletons.ts');
+  const skinRoot = new THREE.Group(), skinBoneA = new THREE.Bone(), skinBoneB = new THREE.Bone();
+  const skin = (bones, inverses) => { const mesh = new THREE.SkinnedMesh(); mesh.skeleton = new THREE.Skeleton(bones, inverses); skinRoot.add(mesh); return mesh; };
+  const skinA = skin([skinBoneA,skinBoneB],[new THREE.Matrix4(),new THREE.Matrix4()]);
+  const skinSame = skin([skinBoneA,skinBoneB],[new THREE.Matrix4(),new THREE.Matrix4()]);
+  const skinOrder = skin([skinBoneB,skinBoneA],[new THREE.Matrix4(),new THREE.Matrix4()]);
+  const skinInverse = skin([skinBoneA,skinBoneB],[new THREE.Matrix4().makeTranslation(1,0,0),new THREE.Matrix4()]);
+  const skinOther = skin([new THREE.Bone(),new THREE.Bone()],[new THREE.Matrix4(),new THREE.Matrix4()]);
+  shareSkeletons(skinRoot);
+  assert.equal(skinSame.skeleton,skinA.skeleton,'Identical bones and inverses share their palette');
+  for(const mesh of [skinOrder,skinInverse,skinOther]) assert.notEqual(mesh.skeleton,skinA.skeleton,'Different bone order, inverses or bones must stay separate');
+  console.log('Skeleton sharing checks passed: equivalent bindings only, independent bones preserved.');
   const { enableAnimatedFrustumCulling, meshWorldBounds } = require('../src/features/scene/utils/animatedFrustumCulling.ts');
   const { getUnusedShadows } = require('../src/features/scene/utils/visibleShadowReceivers.ts');
   const geometry = new THREE.BufferGeometry();
@@ -394,5 +412,90 @@ async function traceNavigation() {
     if(trace.worst)fs.writeFileSync(`${directory}/worst-query.json`,JSON.stringify({obstacles:trace.worst.obstacles,comfort:trace.worst.comfort,queries:[[trace.worst.from,trace.worst.target]]},null,2));
     const summary={queries:trace.queries.length,weighted:trace.queries.filter(q=>q.weighted).length,worstQuery:trace.worst?{milliseconds:trace.worst.milliseconds,weighted:trace.worst.weighted,vertices:trace.worst.vertices,stack:trace.worst.stack}:null,worstFrame:Math.max(...trace.intervals),over500ms:trace.intervals.filter(t=>t>=500).length,over1000ms:trace.intervals.filter(t=>t>=1000).length,longTasks:trace.tasks.length,worstTask:Math.max(0,...trace.tasks.map(t=>t.milliseconds)),worker:trace.worker,errors};
     fs.writeFileSync(`${directory}/summary.json`,JSON.stringify(summary,null,2));console.log(JSON.stringify(summary,null,2));if(errors.length)throw Error(errors.join('\n'));
+  }finally{await browser?.close();await server.close();}
+}
+
+
+function inspectLaraAsset() {
+  const bytes=fs.readFileSync('public/characters/lara/lara_native.glb');
+  const gltf=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());
+  console.log(JSON.stringify({skins:gltf.skins.map(s=>({joints:s.joints.length,inverseBindMatrices:s.inverseBindMatrices})),meshes:gltf.meshes.length,primitives:gltf.meshes.reduce((s,m)=>s+m.primitives.length,0),meshNodes:gltf.nodes.filter(n=>n.mesh!==undefined).map(n=>({name:n.name,skin:n.skin,mesh:n.mesh})),triangles:gltf.meshes.reduce((s,m)=>s+m.primitives.reduce((sum,p)=>sum+(gltf.accessors[p.indices??p.attributes.POSITION].count/3),0),0)},null,2));
+}
+
+
+async function profileLaraSkeletons() {
+  const assert=require('node:assert/strict');
+  const {createServer}=await import('vite');
+  const label=process.argv.find(arg=>arg.startsWith('--label='))?.slice('--label='.length)||'lara-skeletons';
+  const directory='/tmp/room-'+label;fs.mkdirSync(directory,{recursive:true});
+  const server=await createServer({server:{host:'127.0.0.1',port:5194,strictPort:true}});
+  let browser;
+  try {
+    await server.listen();
+    browser=await launch({args:['--no-sandbox','--enable-gpu','--use-angle=vulkan','--enable-features=Vulkan,VulkanFromANGLE','--disable-vulkan-surface']});
+    const system=await browser.target().createCDPSession();
+    fs.writeFileSync(directory+'/gpu.json',JSON.stringify(await system.send('SystemInfo.getInfo'),null,2));
+    const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+    await page.setViewport({width:1362,height:810,deviceScaleFactor:1});
+    await page.goto('http://127.0.0.1:5194/?skipIntro=1',{waitUntil:'domcontentloaded',timeout:120000});
+    await page.waitForFunction(async()=>{const {cameraState}=await import('/src/features/scene/cameraState.ts');return cameraState.isSceneLaunched&&!cameraState.isIntroRunning&&!!window.__THREE_GL__;},{timeout:180000});
+    await page.evaluate(async()=>{
+      const {resetAppIdle}=await import('/src/features/scene/idleState.ts');setInterval(resetAppIdle,1000);
+      const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');useSceneStore.getState().setCameraMovement('fix');useSceneStore.setState(s=>({layers:{...s.layers,groundType:'bermuda'}}));
+      const {cameraState}=await import('/src/features/scene/cameraState.ts');
+      window.laraRecords=[];
+      window.__THREE_SCENE__.traverse(o=>{if(o.isSkinnedMesh){let root=o;while(root&&!root.userData.gltfPath)root=root.parent;if(root?.userData.gltfPath?.includes('/lara/'))window.laraRecords.push({mesh:o,root,shared:o.skeleton,duplicate:o.skeleton.clone()});}});
+      const roots=new Set(window.laraRecords.map(r=>r.root));if(!roots.size)throw Error('No Lara instances found');
+      window.laraRoots=[...roots];
+      const tick=()=>{cameraState.invalidate?.();requestAnimationFrame(tick);};tick();
+    });
+    await delay(12000);
+    const structural=await page.evaluate(async()=>{
+      const {clone}=await import('/node_modules/three/examples/jsm/utils/SkeletonUtils.js');
+      const {shareSkeletons}=await import('/src/features/scene/utils/shareSkeletons.ts');
+      const meshes=root=>{const result=[];root.traverse(o=>{if(o.isSkinnedMesh)result.push(o);});return result;};
+      const source=window.laraRoots[0],copy=clone(source),other=clone(source);
+      const before=meshes(copy),old=before.map(m=>m.skeleton);
+      shareSkeletons(copy);shareSkeletons(other);
+      if(before.some((m,i)=>m.skeleton.bones.some((b,j)=>b!==old[i].bones[j])||m.skeleton.boneInverses.some((b,j)=>!b.equals(old[i].boneInverses[j]))))throw Error('Skin binding changed');
+      if(before.some(m=>meshes(other).some(n=>n.skeleton===m.skeleton||n.skeleton.bones[0]===m.skeleton.bones[0])))throw Error('Independent characters share bones');
+      const Vector3=source.position.constructor;
+      let checked=0,maxError=0;const a=new Vector3(),b=new Vector3();
+      for(const angle of [0,.35,-.7]){
+        const bone=before[0].skeleton.bones.find(b=>b.children.some(c=>c.isBone));bone.rotation.y=angle;copy.updateMatrixWorld(true);
+        for(let i=0;i<before.length;i++){const mesh=before[i],shared=mesh.skeleton;
+          for(let vertex=0;vertex<mesh.geometry.attributes.position.count;vertex++){
+            mesh.getVertexPosition(vertex,a);mesh.skeleton=old[i];mesh.getVertexPosition(vertex,b);mesh.skeleton=shared;maxError=Math.max(maxError,a.distanceTo(b));checked++;
+          }
+        }
+      }
+      if(maxError!==0)throw Error('Skeleton sharing changed posed vertices');
+      const counts=root=>{const m=meshes(root);return {meshes:m.length,skeletons:new Set(m.map(o=>o.skeleton)).size};};
+      return {characters:window.laraRoots.length,sceneSkinnedMeshes:window.laraRecords.length,perCharacter:window.laraRoots.map(counts),cloneBefore:new Set(old).size,cloneAfter:counts(copy).skeletons,checkedVertices:checked,maxVertexError:maxError,independent:true};
+    });
+    console.log('STRUCTURE',JSON.stringify(structural));const results=[];
+    for(const mode of ['duplicate','shared','shared','duplicate']){
+      await page.evaluate(mode=>{for(const r of window.laraRecords)r.mesh.skeleton=r[mode];},mode);
+      await delay(4000);
+      const metrics=await page.evaluate(async()=>{
+        const Skeleton=window.laraRecords[0].shared.constructor;
+        const originals={update:Skeleton.prototype.update,render:window.__THREE_GL__.render};
+        const scene=window.__THREE_SCENE__,gl=window.__THREE_GL__,frames=[],cpu=[],draws=[],triangles=[];
+        let updates=0,skinMs=0,uploads=0,uploadMs=0;
+        const ctx=gl.getContext(),upload=ctx.texSubImage2D;
+        ctx.texSubImage2D=function(...args){const start=performance.now();try{return upload.apply(this,args);}finally{uploads++;uploadMs+=performance.now()-start;}};
+
+        Skeleton.prototype.update=function(){const start=performance.now();try{return originals.update.call(this);}finally{skinMs+=performance.now()-start;updates++;}};
+        gl.render=function(s,c){const main=s===scene&&this.getRenderTarget()===null,start=performance.now(),calls=this.info.render.calls,tris=this.info.render.triangles;if(main)frames.push(start);const result=originals.render.call(this,s,c);if(main){cpu.push(performance.now()-start);draws.push(this.info.render.calls-calls);triangles.push(this.info.render.triangles-tris);}return result;};
+        try{await new Promise(r=>setTimeout(r,10000));}finally{gl.render=originals.render;Skeleton.prototype.update=originals.update;ctx.texSubImage2D=upload;}
+        const summary=values=>{const sorted=[...values].sort((a,b)=>a-b);return {mean:values.reduce((s,v)=>s+v,0)/values.length,median:sorted[Math.floor(sorted.length*.5)],p95:sorted[Math.floor(sorted.length*.95)]};};
+        const intervals=frames.slice(1).map((t,i)=>t-frames[i]);
+        return {textureUploadsPerFrame:uploads/frames.length,textureUploadCpuMsPerFrame:uploadMs/frames.length,frames:frames.length,fps:1000*intervals.length/intervals.reduce((s,t)=>s+t,0),frameMs:summary(intervals),renderCpuMs:summary(cpu),drawCalls:summary(draws),triangles:summary(triangles),skeletonUpdatesPerFrame:updates/frames.length,skeletonMsPerFrame:skinMs/frames.length};
+      });
+      results.push({mode,...metrics});console.log(JSON.stringify(results.at(-1)));
+      fs.writeFileSync(directory+'/summary.json',JSON.stringify({structural,results,errors},null,2));
+    }
+    assert.deepEqual(errors,[]);
+    await page.screenshot({path:directory+'/scene.png'});
   }finally{await browser?.close();await server.close();}
 }

@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { CategoryLayerContext } from './sceneLayer';
 import { LAYER_WALKER_DETAIL } from '@config';
 import { enableAnimatedFrustumCulling } from './utils/animatedFrustumCulling';
+import { shareSkeletons } from './utils/shareSkeletons';
 
 const mountedClones = new Map<string, number>();
 export function hasMountedGLTFClones(path: string): boolean {
@@ -36,6 +37,7 @@ export function useGLTFClone(path: string, ownMaterials = false): { scene: THREE
 
   const scene = useMemo(() => {
     const cloned = SkeletonUtils.clone(gltf.scene) as THREE.Group;
+    shareSkeletons(cloned);
     const baseName = path.split('/').pop()?.replace(/\.glb$/i, '') || 'Model3D';
     if (!cloned.name || cloned.name === 'Scene' || cloned.name === 'Group') {
       cloned.name = baseName;

@@ -121,7 +121,6 @@ export const CharacterPendant = forwardRef<CharacterPendantHandle, Props>(functi
         for (const mesh of torso) {
           if (mesh.visible) {
             mesh.updateWorldMatrix(true, false);
-            (mesh as THREE.SkinnedMesh).skeleton?.update();
             mesh.raycast(ray, hits);
           }
         }
