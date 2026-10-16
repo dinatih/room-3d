@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import type { AgentProfile } from './obstacles';
 
+const COLLISION_RADIUS_REDUCTION_CM = 2;
+
 /** Torso vertices measured during model setup; arms, hair and equipment do not widen the collider. */
 export function measureHumanProfile(root: THREE.Object3D, height: number): AgentProfile {
   root.updateWorldMatrix(true, true);
@@ -29,5 +31,5 @@ export function measureHumanProfile(root: THREE.Object3D, height: number): Agent
   if (box.isEmpty()) throw new Error(`No bind-pose body vertices for ${root.name}`);
   const size = box.getSize(new THREE.Vector3());
   // Root scale is excluded by the inverse above; apply it once to convert to scene centimetres.
-  return { radius: Math.max(size.x * root.scale.x, size.z * root.scale.z) / 2, height };
+  return { radius: Math.max(size.x * root.scale.x, size.z * root.scale.z) / 2 - COLLISION_RADIUS_REDUCTION_CM, height };
 }
