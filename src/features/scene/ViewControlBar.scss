@@ -248,11 +248,18 @@ $control-colors: (
   flex-direction: row !important;
   align-items: center;
   width: 100%;
+  min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
   touch-action: pan-x;
   overscroll-behavior-x: contain;
+}
+
+.view-control-bar--inventory-single-row > .view-control-bar__row {
+  width: max-content;
+  max-width: none;
+  justify-content: flex-start;
 }
 
 .view-control-bar--inline .btn {
