@@ -4,7 +4,7 @@ import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from '.
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { createRouteState, followRoute, resetRoute, getInteractionOwner, NavigationBlockedError, getNavigationGraph } from './navigation/service';
+import { createRouteState, followRoute, resetRoute, getInteractionOwner, NavigationBlockedError, getNavigationGraph, describeNavigationBlock } from './navigation/service';
 import { movingFurniture } from '../furniturePositions';
 import { hasAgentProfile, getObstacleRevision, getAgentProfile, navigationDebug } from './navigation/obstacles';
 import { distance } from './navigation/geometry';
@@ -113,6 +113,12 @@ export function useAgentController(
   const routeRef = useRef(createRouteState());
   const routeInstructionRef = useRef<AgentInstruction | null>(null);
   const navigationErrorRef = useRef<string | null>(null);
+  const reportNavigationStop = (reason: string, label: string, target: { x: number; z: number }, actorBlockers?: ActorBlockers) => {
+    const key = `${label}:${reason}`;
+    if (navigationErrorRef.current === key) return;
+    navigationErrorRef.current = key;
+    appLog(_characterId, `🚧 Navigation bloquée vers ${label} : ${reason} — ${describeNavigationBlock(_characterId, stateRef.current, target, routeRef.current, actorBlockers)}`);
+  };
   const initialProfileResolvedRef = useRef(false);
   const spawnObstacleRevisionRef = useRef(-1);
   const blockedCoordsRef = useRef<{ instruction: AgentInstruction; graph: ReturnType<typeof getNavigationGraph>; x: number; z: number; owner?: string; status: AgentStatus; actorBlockers: ActorBlockers } | null>(null);
@@ -831,11 +837,14 @@ export function useAgentController(
       if (routeRef.current.error) {
         stateRef.current.animation = BLOCKED_ANIMATION;
         statusRef.current = 'BLOCKED';
-        if (navigationErrorRef.current !== routeRef.current.error) {
-          navigationErrorRef.current = routeRef.current.error;
-          appLog(_characterId, `⚠️ Navigation vers ${target.label} : ${routeRef.current.error}`);
-        }
+        reportNavigationStop(routeRef.current.error, target.label, { x: target.tx, z: target.tz });
         return stateRef.current;
+      }
+      if (moved === 0 && dt > 0 && distance(position, { x: target.tx, z: target.tz }) >= 1e-6) {
+        reportNavigationStop(routeRef.current.waitReason ?? 'Aucun déplacement produit par le suivi du trajet (cause non identifiée)', target.label, { x: target.tx, z: target.tz });
+      } else if (moved > 0 && navigationErrorRef.current) {
+        appLog(_characterId, `✅ Navigation reprise vers ${target.label}`);
+        navigationErrorRef.current = null;
       }
       statusRef.current = 'MOVING';
       if (distance(position, { x: target.tx, z: target.tz }) < 1e-6) {
@@ -1114,12 +1123,12 @@ export function useAgentController(
       blockedCoordsRef.current = { instruction, graph: getNavigationGraph(getAgentProfile(_characterId), undefined, instruction.closedDoor), x:stateRef.current.x, z:stateRef.current.z, owner:routeRef.current.owner, status, actorBlockers:error.actorBlockers };
       stateRef.current.animation = BLOCKED_ANIMATION;
       statusRef.current = 'BLOCKED';
+      const label = instruction.smartObjectId ? (SMART_OBJECTS[instruction.smartObjectId]?.name ?? instruction.smartObjectId) : instruction.targetZoneId ?? instruction.type;
+      reportNavigationStop(error.message, label, error.target, error.actorBlockers);
       resetRoute(routeRef.current, _characterId);
       cachedCoordsRef.current = null;
       cachedCoordsInstructionRef.current = null;
       navigationDebug.set(_characterId, { path:[], target:error.target, error:error.message });
-      if (navigationErrorRef.current !== error.message) appLog(_characterId, `⚠️ Navigation : ${error.message}`);
-      navigationErrorRef.current = error.message;
       return stateRef.current;
     }
   };

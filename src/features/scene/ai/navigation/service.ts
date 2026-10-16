@@ -110,6 +110,7 @@ export interface RouteState {
   graph: VisibilityGraph | null;
   crowd?: { base: VisibilityGraph; graph: VisibilityGraph | null; signature: string; resume: { start: Point; next: Point } };
   error: string | null;
+  waitReason?: string;
   doors: Set<DoorKey>;
   closedDoor?: DoorKey;
   owner?: string;
@@ -128,6 +129,7 @@ export function resetRoute(route: RouteState, agentId: string, keepClosedDoor?: 
   route.exit = undefined;
   route.failure = undefined;
   route.crowd = undefined;
+  route.waitReason = undefined;
   route.closedDoor = keepClosedDoor;
   if (keepClosedDoor) route.doors.add(doorOpeningKey(keepClosedDoor));
   navigationDebug.delete(agentId);
@@ -190,11 +192,11 @@ function passDoors(route: RouteState, agentId: string, profile: AgentProfile, st
     const actual = [[inflate(doorPolygon(key, doorCollisionState[key].angle), profile.radius + d.margin)]];
     const blocked = !segmentFree(start, proposed, actual);
     if (route.doors.has(opening) || blocked || (crossing && (distance(start, d.pivot) <= d.length + clearance + travel || !segmentFree(start, proposed, closed)))) {
-      if (route.closedDoor && opening === doorOpeningKey(route.closedDoor)) { if (blocked) return start; continue; }
-      if (!requestDoor(opening, agentId)) return start;
+      if (route.closedDoor && opening === doorOpeningKey(route.closedDoor)) { if (blocked) { route.waitReason = `Porte ${key} maintenue fermée pour l'interaction`; return start; } continue; }
+      if (!requestDoor(opening, agentId)) { route.waitReason = `Passage ${key} réservé par un autre PNJ`; return start; }
       route.doors.add(opening);
     }
-    if (blocked) return start;
+    if (blocked) { route.waitReason = `Battant ${key} sur le trajet, attente d'ouverture`; return start; }
   }
   releaseClearedDoors(route, agentId, profile, proposed);
   return proposed;
@@ -202,6 +204,7 @@ function passDoors(route: RouteState, agentId: string, profile: AgentProfile, st
 
 /** Returns a safe movement, or the current point while waiting for a door / another agent. */
 export function followRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, closedDoor?: DoorKey): Point {
+  route.waitReason = undefined;
   owner = owner ? getInteractionOwner(owner) : undefined;
   const crowd = route.crowd;
   if (crowd?.graph) {
@@ -248,6 +251,7 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
   }
   const limited = limitAgentMovement(agentId, start, position);
   if (limited.x !== position.x || limited.z !== position.z) {
+    route.waitReason = 'Déplacement limité par le corps d’un autre PNJ';
     // A stop at contact is insufficient: keep a real path around the other bodies.
     const base = route.crowd?.graph === route.graph ? route.crowd.base
       : route.graph ?? getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor);
@@ -263,6 +267,7 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
         route.path = path; route.index = 0; route.graph = graph; route.target = { ...goal };
         navigationDebug.set(agentId, { path: [start, ...path], target: goal });
         // Stay outside the conservative detour boundary until its first step.
+        route.waitReason = 'Contournement d’un autre PNJ calculé';
         return start;
       }
       if (insideObstacle(goal, obstacles.map(polygon => [polygon]))) {
@@ -280,16 +285,16 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   const profile = getAgentProfile(agentId);
   route.closedDoor = closedDoor;
   if (closedDoor) {
-    if (!requestDoor(closedDoor, agentId, 'closed')) return start;
+    if (!requestDoor(closedDoor, agentId, 'closed')) { route.waitReason = `Attente de réservation de la porte ${closedDoor} pour l'interaction`; return start; }
     route.doors.add(doorOpeningKey(closedDoor));
   }
   // Furniture transitions change continuously. Keep the existing route if safe, and wait
   // for the final geometry before computing a replacement; never rebuild per frame.
   if (movingFurniture.size) {
     const next = route.path[route.index];
-    if (!next) return start;
+    if (!next) { route.waitReason = `Meubles en mouvement : ${[...movingFurniture].join(', ')}`; return start; }
     const changed = [...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0).map(o => [inflate(o.polygon, profile.radius)]);
-    if (!segmentFree(start, next, changed)) return start;
+    if (!segmentFree(start, next, changed)) { route.waitReason = `Trajet coupé par un meuble en mouvement : ${[...movingFurniture].join(', ')}`; return start; }
   }
   const base = getNavigationGraph(profile, undefined, closedDoor);
   let graph = movingFurniture.size && route.graph ? route.graph : route.crowd?.base === base && route.crowd.graph ? route.crowd.graph : base;
@@ -379,8 +384,32 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
     straight = true;
   }
   if (step === remaining && straight) proposed = { ...next };
-  if (!segmentFree(start, proposed, graph.obstacles)) return start;
+  if (!segmentFree(start, proposed, graph.obstacles)) { route.waitReason = 'Pas refusé par la géométrie de navigation'; return start; }
   return passDoors(route, agentId, profile, start, next, proposed, travel);
+}
+
+/** Computed only when reporting a stop, never on every walking frame. */
+export function describeNavigationBlock(agentId: string, start: Point, target: Point, route: RouteState, actorBlockers?: ActorBlockers): string {
+  const profile = getAgentProfile(agentId);
+  const at = (point: Point) => `(${point.x.toFixed(1)}, ${point.z.toFixed(1)})`;
+  const details = [`position ${at(start)} → cible ${at(target)}`, `rayon ${profile.radius.toFixed(1)} cm`];
+  if (route.owner) details.push(`sortie de ${route.owner}`);
+  const next = route.path[route.index];
+  if (next) details.push(`prochain point ${at(next)}`);
+  const doors = new Set([...route.doors, ...(route.closedDoor ? [route.closedDoor] : [])]);
+  if (doors.size) details.push(`portes : ${[...doors].map(key => `${key} (${doorCollisionState[key].angle.toFixed(2)} rad)`).join(', ')}`);
+  for (const [label, point] of [['départ', start], ['cible', target]] as const) {
+    const obstacles = [...architectureObstacles, ...furnitureObstacles.values()]
+      .filter(o => o.yMin < profile.height && o.yMax > 0 && pointInRing(point, inflate(o.polygon, profile.radius)))
+      .map(o => o.owner ?? o.id);
+    if (obstacles.length) details.push(`${label} dans : ${[...new Set(obstacles)].join(', ')}`);
+  }
+  beginActorBlockCheck(agentId);
+  isAgentDestinationFree(agentId, start);
+  isAgentDestinationFree(agentId, route.occupiedTarget?.point ?? target);
+  const actors = new Set([...(actorBlockers?.keys() ?? []), ...(route.failure?.actorBlockers.keys() ?? []), ...endActorBlockCheck(agentId).keys()]);
+  if (actors.size) details.push(`PNJ en collision au départ / à la cible ou ayant refusé une approche : ${[...actors].join(', ')}`);
+  return details.join(' ; ');
 }
 
 /** Pick free destinations by area, rather than sampling arbitrary room rectangles. */
