@@ -17,7 +17,10 @@ def main():
     parser.add_argument('--publish', action='store_true')
     parser.add_argument('--inventory', type=Path, help='Write source/session coverage for all 40 actions as Markdown')
     parser.add_argument('--estimate-segments', type=Path, help='Estimate additional R segments for currently selected G/T/A recordings without exporting')
+    parser.add_argument('--include-other-shoots', action='store_true', help='Also include other T recordings for the same selected binomes and action')
     args = parser.parse_args()
+    if args.include_other_shoots and not args.estimate_segments:
+        raise ValueError('--include-other-shoots requires --estimate-segments')
     if args.estimate_segments:
         published = json.loads(MANIFEST.read_text())['duos']
         representatives = {}
@@ -40,11 +43,14 @@ def main():
             if not RECORDING.fullmatch(folder.name):
                 raise ValueError(f'Invalid recording: {folder}')
             folders.setdefault(folder.name[:12], []).append(folder)
-        estimates = []
+        estimates, seen = [], set()
         for entry in representatives.values():
-            for folder in sorted(folders[entry['source']['recording'][:12]]):
-                if folder.name in existing:
+            candidates = [folder for prefix, items in folders.items() for folder in items
+                          if prefix[:4] == entry['source']['group'] and prefix[8:12] == entry['actionCode']] if args.include_other_shoots else folders[entry['source']['recording'][:12]]
+            for folder in sorted(candidates):
+                if folder.name in existing or folder.name in seen:
                     continue
+                seen.add(folder.name)
                 counts = []
                 for person in ('P1', 'P2'):
                     with np.load(folder / f'{person}.npz', allow_pickle=False) as data:
@@ -55,11 +61,11 @@ def main():
                 if counts[0] != counts[1]:
                     raise ValueError(f'Unsynchronized participants: {folder}')
                 frames = math.ceil(counts[0] / (SOURCE_FPS // TARGET_FPS))
-                estimates.append({'recording': folder.name, 'actionCode': entry['actionCode'], 'variation': entry['variation'],
+                estimates.append({'recording': folder.name, 'actionCode': entry['actionCode'], 'variation': RECORDING.fullmatch(folder.name)[2],
                                   'group': entry['source']['group'], 'frameCount': frames,
                                   'estimatedBytes': round(2 * (model['baseBytes'] + model['bytesPerFrame'] * frames))})
         lines = ['# Estimation des segments R supplémentaires', '',
-                 'Périmètre : binôme actuellement sélectionné pour chaque action/session G/T/A ; tous les R encore absents.',
+                 'Périmètre : tous les T/R des binômes G déjà retenus pour chaque action.' if args.include_other_shoots else 'Périmètre : binôme actuellement sélectionné pour chaque action/session G/T/A ; tous les R encore absents.',
                  'Les anciennes comparaisons G001/G053 retiennent G053. Aucun autre binôme G n’est ajouté.',
                  'Poids estimés à partir des GLB avec doigts déjà exportés, hors métadonnées JSON. Aucune conversion lancée.', '',
                  '| Action | Duos supplémentaires | GLB supplémentaires | Poids estimé (Mo) |', '| --- | ---: | ---: | ---: |']
@@ -71,7 +77,7 @@ def main():
         total = sum(item['estimatedBytes'] for item in estimates)
         lines.extend([f'| Total | {len(estimates)} | {2 * len(estimates)} | {total / 1e6:.2f} |', ''])
         args.estimate_segments.write_text('\n'.join(lines))
-        atomic_json(args.estimate_segments.with_suffix('.json'), {'scope': 'all-missing-R-for-current-G-T-A-representatives',
+        atomic_json(args.estimate_segments.with_suffix('.json'), {'scope': 'all-missing-T-R-for-current-G-A-representatives' if args.include_other_shoots else 'all-missing-R-for-current-G-T-A-representatives',
                                                                 'sizeEstimate': model, 'duos': estimates})
         g053 = [item for item in estimates if item['group'] == 'G053' and item['actionCode'] == 'A000']
         print(f"G053 hugs only: +{len(g053)} duos / +{2 * len(g053)} GLB / ~{sum(item['estimatedBytes'] for item in g053) / 1e6:.2f} Mo")
