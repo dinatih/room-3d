@@ -6,6 +6,7 @@ import { glbLocalBBox } from '../glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { createUnitreeMotion } from './unitreeMotion';
 import { isAppIdle } from '../idleState';
+import { useRigidMeshBatches } from '../utils/useRigidMeshBatches';
 
 function UnitreeModel({ model, onSize, actionState }: SceneItemProps & { model: 'g1' | 'go2' }) {
   const { scene } = useGLTFClone(`items/unitree-${model}/unitree-${model}.glb`);
@@ -33,7 +34,8 @@ function UnitreeModel({ model, onSize, actionState }: SceneItemProps & { model: 
     animate(motion, time.current);
     if (motion !== 'idle') state.invalidate();
   });
-  return <primitive object={scene} />;
+  const batches = useRigidMeshBatches(scene);
+  return <group><primitive object={scene} /><primitive object={batches} /></group>;
 }
 
 export function UnitreeG1(props: SceneItemProps) {

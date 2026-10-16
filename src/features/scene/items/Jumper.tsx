@@ -5,6 +5,7 @@ import { useGLTFClone } from '../useGLTFClone';
 import { glbLocalBBox } from '../glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { isAppIdle } from '../idleState';
+import { useRigidMeshBatches } from '../utils/useRigidMeshBatches';
 
 /** Rigid articulated robot: each GLB link rotates about its original URDF pivot. */
 export function Jumper({ actionState, onSize }: SceneItemProps) {
@@ -51,5 +52,6 @@ export function Jumper({ actionState, onSize }: SceneItemProps) {
     mixer.update(delta);
     if (motion !== 'idle') state.invalidate();
   });
-  return <primitive object={scene} />;
+  const batches = useRigidMeshBatches(scene);
+  return <group><primitive object={scene} /><primitive object={batches} /></group>;
 }

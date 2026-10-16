@@ -6,6 +6,9 @@ const isolate = process.argv.includes('--isolate-blur');
 const out = verify ? '/tmp/room-lara-inventory' : isolate ? '/tmp/room-lara-blur-isolation' : '/tmp/room-lara-profile';
 const delay = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
+  if (process.argv.includes('--stop-profile')) {const logfile=process.argv.find(a=>a.startsWith('--log='))?.slice(6);const endpoint=fs.readFileSync(logfile,'utf8').match(/DevTools listening on (ws:\/\/\S+)/)[1];const browser=await require('puppeteer').connect({browserWSEndpoint:endpoint});await browser.close();return;}
+  if (process.argv.includes('--robot-paired')) return await profileRobotPairs();
+  if (process.argv.includes('--robot-check')) return await checkRobotBatches();
   if (process.argv.includes('--lara-skeletons')) return await profileLaraSkeletons();
   if (process.argv.includes('--inspect-lara-asset')) return inspectLaraAsset();
   if (process.argv.includes('--navigation-live')) return await traceNavigation();
@@ -136,7 +139,7 @@ async function profileScene() {
       }
       server = await createServer({ server: { host: '127.0.0.1', port: 5185, strictPort: true }, plugins: [{ name: 'profile-baseline', enforce: 'pre', load(id) { return historical.get(id.split('?')[0]); } }] });
       await server.listen();
-      await page.goto('http://127.0.0.1:5185/?skipIntro=1', { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await page.goto('http://127.0.0.1:5185/?skipIntro=1&preset=mid&mode=orbit', { waitUntil: 'domcontentloaded', timeout: 120000 });
       await page.waitForFunction(async () => {
         const { cameraState } = await import('/src/features/scene/cameraState.ts');
         return cameraState.isSceneLaunched && !cameraState.isIntroRunning && !!window.__THREE_GL__;
@@ -178,40 +181,8 @@ async function profileScene() {
         console.log('START', run+1, version, condition);
         const before = await client.send('Performance.getMetrics');
         await client.send('Profiler.start');
-        const metrics = await page.evaluate(async () => {
-          const gl = window.__THREE_GL__, scene = window.__THREE_SCENE__, ctx = gl.getContext();
-          const extension = ctx.getExtension('EXT_disjoint_timer_query_webgl2');
-          const originalRender = gl.render, originalShadow = gl.shadowMap.render;
-          const frames = [], cpu = [], gpu = [], draws = [], triangles = [], passes = new Map(), pending = [];
-          let depth = 0, shadowMs = 0, shadowCalls = 0, cameraPose;
-          let laraRaycastMs=0,laraRaycastCalls=0;
-          const laraRaycasts=new Map();
-          scene.traverse(mesh=>{if(!mesh.isSkinnedMesh)return;let root=mesh;while(root&&!root.userData.gltfPath)root=root.parent;if(!root?.userData.gltfPath?.includes('/lara/'))return;const original=mesh.raycast;laraRaycasts.set(mesh,original);mesh.raycast=function(...args){const start=performance.now();try{return original.apply(this,args);}finally{laraRaycastMs+=performance.now()-start;laraRaycastCalls++;}};});
-
-          gl.shadowMap.render = function(...args) { const start = performance.now(); try { return originalShadow.apply(this,args); } finally { shadowMs += performance.now()-start; shadowCalls++; } };
-          gl.render = function(s, camera) {
-            const target = this.getRenderTarget(); const main = s === scene && target === null && depth === 0;
-            const name = main ? 'main-inclusive' : target ? `target-${target.width}x${target.height}` : 'other';
-            const start = performance.now(), calls = this.info.render.calls, tris = this.info.render.triangles;
-            let query;
-            if (main) { frames.push(start); cameraPose = { position: camera.position.toArray(), quaternion: camera.quaternion.toArray() }; if(extension) { query=ctx.createQuery(); ctx.beginQuery(extension.TIME_ELAPSED_EXT,query); } }
-            depth++;
-            try { return originalRender.call(this,s,camera); } finally {
-              depth--; const ms = performance.now()-start;
-              const pass = passes.get(name) || { count:0, cpuMs:0, calls:0, triangles:0 };
-              pass.count++;pass.cpuMs+=ms;pass.calls+=this.info.render.calls-calls;pass.triangles+=this.info.render.triangles-tris;passes.set(name,pass);
-              if(main) { cpu.push(ms); draws.push(this.info.render.calls-calls);triangles.push(this.info.render.triangles-tris); if(query) {ctx.endQuery(extension.TIME_ELAPSED_EXT);pending.push(query);} }
-            }
-          };
-          const collect = () => { while(pending.length && ctx.getQueryParameter(pending[0],ctx.QUERY_RESULT_AVAILABLE)) { const q=pending.shift(); if(!ctx.getParameter(extension.GPU_DISJOINT_EXT)) gpu.push(ctx.getQueryParameter(q,ctx.QUERY_RESULT)/1e6);ctx.deleteQuery(q); } };
-          const start = performance.now();
-          try { await new Promise(resolve => { const tick=now=> { collect(); if(now-start<10000) requestAnimationFrame(tick); else resolve(); };requestAnimationFrame(tick); }); }
-          finally { for(const [mesh,original] of laraRaycasts)mesh.raycast=original;gl.render=originalRender;gl.shadowMap.render=originalShadow;collect();for(const q of pending)ctx.deleteQuery(q); }
-          const summary = values => { if(!values.length)return null;const sorted=[...values].sort((a,b)=>a-b);return {mean:values.reduce((a,b)=>a+b,0)/values.length,p50:sorted[Math.floor(sorted.length*.5)],p95:sorted[Math.floor(sorted.length*.95)],p99:sorted[Math.floor(sorted.length*.99)]}; };
-          const intervals=frames.slice(1).map((t,i)=>t-frames[i]);
-          const debug=ctx.getExtension('WEBGL_debug_renderer_info');
-          return {laraRaycastMsPerFrame:laraRaycastMs/frames.length,laraRaycastCallsPerFrame:laraRaycastCalls/frames.length,frames:frames.length,fps:intervals.length*1000/intervals.reduce((a,b)=>a+b,0),frameMs:summary(intervals),renderCpuMs:summary(cpu),gpuMs:summary(gpu),drawCalls:summary(draws),triangles:summary(triangles),passes:Object.fromEntries(passes),shadowMs,shadowCalls,cameraPose,renderer:debug?ctx.getParameter(debug.UNMASKED_RENDERER_WEBGL):null,drawingBuffer:[ctx.drawingBufferWidth,ctx.drawingBufferHeight], layers:{...(await import('/src/features/scene/store/useSceneStore.ts')).useSceneStore.getState().layers}};
-        });
+        const metrics = await page.evaluate(measureSceneFrames);
+        if(version==='current' && metrics.robotBatchCount && metrics.robotVisibleOriginals)throw Error('Robot originals rendered alongside batches');
         const {profile}=await client.send('Profiler.stop');
         fs.writeFileSync(`${directory}/${run+1}-${conditionIndex}-${version}-${condition}.cpuprofile`,JSON.stringify(profile));
         const after=await client.send('Performance.getMetrics');
@@ -497,5 +468,167 @@ async function profileLaraSkeletons() {
     }
     assert.deepEqual(errors,[]);
     await page.screenshot({path:directory+'/scene.png'});
+  }finally{await browser?.close();await server.close();}
+}
+
+
+async function checkRobotBatches() {
+  const assert=require('node:assert/strict');const {createServer}=await import('vite');
+  const directory='/tmp/room-robot-batches';fs.mkdirSync(directory,{recursive:true});
+  const server=await createServer({server:{host:'127.0.0.1',port:5195,strictPort:true},plugins:[{name:'robot-test',resolveId(id){if(id==='/__robot_modules.js')return id;},load(id){if(id==='/__robot_modules.js')return "export {default as React} from 'react';export {createRoot} from 'react-dom/client';export {Canvas,useThree,useFrame} from '@react-three/fiber';export {useGLTF} from '@react-three/drei';export {UnitreeG1,UnitreeGo2} from '/src/features/scene/items/Unitree.tsx';export {Jumper} from '/src/features/scene/items/Jumper.tsx';export {CategoryLayerGroup} from '/src/features/scene/sceneLayer.tsx';";},configureServer(server){server.middlewares.use('/__robot-check',async(_,res,next)=>{try{res.setHeader('Content-Type','text/html');res.end(await server.transformIndexHtml('/__robot-check','<!doctype html><html><body></body></html>'));}catch(error){next(error);}});}}]});let browser;
+  try{
+    await server.listen();browser=await launch({args:['--no-sandbox','--enable-gpu','--use-angle=vulkan','--enable-features=Vulkan,VulkanFromANGLE','--disable-vulkan-surface']});
+    const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)));
+    await page.goto('http://127.0.0.1:5195/__robot-check',{waitUntil:'networkidle0'});
+    const results=await page.evaluate(async()=>{
+      const THREE=await import('/node_modules/three/build/three.module.js');
+      const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
+      const {DRACOLoader}=await import('/node_modules/three/examples/jsm/loaders/DRACOLoader.js');
+      const {createRigidMeshBatches}=await import('/src/features/scene/utils/rigidMeshBatches.ts');
+      const {createUnitreeMotion}=await import('/src/features/scene/items/unitreeMotion.ts');
+      const {glbLocalBBox}=await import('/src/features/scene/glbUtils.ts');
+      const {meshWorldBounds}=await import('/src/features/scene/utils/animatedFrustumCulling.ts');
+      const loader=new GLTFLoader();loader.setDRACOLoader(new DRACOLoader().setDecoderPath('/draco/'));
+      const renderer=new THREE.WebGLRenderer({antialias:false,preserveDrawingBuffer:true});renderer.setSize(512,512);renderer.shadowMap.enabled=true;document.body.append(renderer.domElement);
+      const multi=renderer.getContext().getExtension('WEBGL_multi_draw');const output=[];
+      for(const name of ['unitree-g1','unitree-go2','jumper']){
+        const gltf=await loader.loadAsync('/items/'+name+'/'+name+'.glb');
+        const root=gltf.scene,world=new THREE.Scene(),parent=new THREE.Group(),target=new THREE.Group();world.background=new THREE.Color('#444444');world.add(parent);parent.add(root,target);
+        root.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true;});
+        const size=glbLocalBBox(root).getSize(new THREE.Vector3());
+        const light=new THREE.DirectionalLight(0xffffff,3);light.position.set(150,200,100);light.castShadow=true;Object.assign(light.shadow.camera,{left:-size.length(),right:size.length(),top:size.length(),bottom:-size.length(),near:1,far:1000});light.shadow.camera.updateProjectionMatrix();world.add(light,light.target,new THREE.HemisphereLight(0xffffff,0x333333,2));const floor=new THREE.Mesh(new THREE.PlaneGeometry(size.length()*4,size.length()*4),new THREE.MeshStandardMaterial({color:0x777777}));floor.rotation.x=-Math.PI/2;floor.position.y=-.1;floor.receiveShadow=true;world.add(floor);
+        const camera=new THREE.PerspectiveCamera(40,1,1,2000);camera.position.set(size.length()*1.4,size.y*.8,size.length()*1.5);camera.lookAt(0,size.y/2,0);camera.updateMatrixWorld();
+        const mixer=new THREE.AnimationMixer(root);const animate=name==='jumper'?null:createUnitreeMotion(root,name==='unitree-g1'?'g1':'go2');
+        const controller=createRigidMeshBatches(root,target);
+        const motions=name==='jumper'?gltf.animations.map(clip=>clip.name):name==='unitree-g1'?['idle','walk','wave','bow','dance']:['idle','trot','paw','bow','dance'];
+        let maxMatrixError=0,poses=0,maxPixelError=0,changedPixels=0,squaredPixelError=0;const drawCounts=[];
+        for(const motion of motions){
+          let action;if(name==='jumper'){mixer.stopAllAction();action=mixer.clipAction(gltf.animations.find(c=>c.name===motion));action.play();}
+          for(const time of [0,.3,1.1]){
+            if(animate)animate(motion,time);else mixer.setTime(time);
+            parent.position.set(100,-30,50);parent.rotation.y=.4;parent.scale.setScalar(1.2);controller.update();world.updateMatrixWorld(true);
+            for(const r of controller.records){const actual=new THREE.Matrix4();if(r.batch.isInstancedMesh)r.batch.getMatrixAt(r.instance,actual);else actual.identity();actual.premultiply(r.batch.matrixWorld);for(let i=0;i<16;i++)maxMatrixError=Math.max(maxMatrixError,Math.abs(actual.elements[i]-r.mesh.matrixWorld.elements[i]));}
+            if(maxMatrixError>1e-4)throw Error(name+': transformed geometry differs');const coverage=new THREE.Box3();for(const batch of controller.batches)coverage.union(meshWorldBounds(batch,new THREE.Box3()));coverage.expandByScalar(1e-4);const vertex=new THREE.Vector3();for(const r of controller.records){const positions=r.mesh.geometry.attributes.position;for(let i=0;i<positions.count;i++){vertex.fromBufferAttribute(positions,i).applyMatrix4(r.mesh.matrixWorld);if(!coverage.containsPoint(vertex))throw Error(name+': batch bounds miss '+r.mesh.name+' in '+motion+' '+time+' '+JSON.stringify({vertex,coverage}));}}poses++;
+          }
+        }
+        parent.position.set(0,0,0);parent.rotation.set(0,0,0);parent.scale.setScalar(1);if(animate)animate('idle',0);else{mixer.stopAllAction();mixer.clipAction(gltf.animations.find(c=>c.name==='idle')).play();mixer.setTime(0);}controller.update();world.updateMatrixWorld(true);
+        const gl=renderer.getContext(),pixels=()=>{const data=new Uint8Array(512*512*4);gl.readPixels(0,0,512,512,gl.RGBA,gl.UNSIGNED_BYTE,data);return data;};
+        const measure=()=>{let submissions=0,subdraws=0;const restore=[];for(const method of ['drawElements','drawArrays','drawElementsInstanced','drawArraysInstanced']){const original=gl[method];gl[method]=function(...args){submissions++;subdraws++;return original.apply(this,args);};restore.push(()=>gl[method]=original);}if(multi){for(const method of ['multiDrawElementsWEBGL','multiDrawArraysWEBGL']){const original=multi[method];multi[method]=function(...args){submissions++;subdraws+=args.at(-1);return original.apply(this,args);};restore.push(()=>multi[method]=original);}}try{renderer.info.autoReset=false;renderer.info.reset();renderer.render(world,camera);return {submissions,subdraws,calls:renderer.info.render.calls,triangles:renderer.info.render.triangles};}finally{for(const reset of restore)reset();}};
+        for(const mode of ['original','batched']){
+          target.visible=mode==='batched';for(const r of controller.records){r.mesh.layers.mask=r.mask;r.mesh.visible=mode==='original'&&r.originalVisible;r.mesh.raycast=mode==='original'?r.raycast:()=>{};}
+          renderer.render(world,camera);renderer.render(world,camera);
+          drawCounts.push({mode,...measure()});
+          if(mode==='original')window.robotPixels=pixels();else{const image=pixels();for(let i=0;i<image.length;i++){const delta=Math.abs(image[i]-window.robotPixels[i]);maxPixelError=Math.max(maxPixelError,delta);squaredPixelError+=delta*delta;if(delta)changedPixels++;}}
+        }
+        const batchedBounds=new THREE.Box3();for(const batch of controller.batches){batchedBounds.union(meshWorldBounds(batch,new THREE.Box3()));}
+        const ray=new THREE.Raycaster();ray.layers.enableAll();let rayHits=0;for(const r of controller.records){r.mesh.geometry.computeBoundingSphere();const point=r.mesh.geometry.boundingSphere.center.clone().applyMatrix4(r.mesh.matrixWorld);ray.set(camera.position,new THREE.Vector3().subVectors(point,camera.position).normalize());rayHits+=ray.intersectObject(target,true).length;}
+        let sourceDisposals=0;for(const geometry of new Set(controller.records.map(r=>r.mesh.geometry)))geometry.addEventListener('dispose',()=>sourceDisposals++);for(const material of new Set(controller.records.map(r=>r.mesh.material)))material.addEventListener('dispose',()=>sourceDisposals++);controller.dispose();if(sourceDisposals)throw Error('Batch disposed shared source resources');if(controller.records.some(r=>r.mesh.layers.mask!==r.mask||r.mesh.visible!==r.originalVisible))throw Error('Dispose failed to restore originals');
+        const again=createRigidMeshBatches(root,target);again.dispose();
+        output.push({name,motions,renderMaterials:new Set(controller.batches.map(batch=>batch.material)).size,meshes:controller.records.length,batches:controller.batches.length,poses,maxMatrixError,maxPixelError,changedPixelChannels:changedPixels,pixelRms:Math.sqrt(squaredPixelError/(512*512*4)),rayHits,multiDraw:!!multi,drawCounts});
+        mixer.stopAllAction();mixer.uncacheRoot(root);
+      }
+      renderer.dispose();return output;
+    });
+    const previews=await page.evaluate(async fixtures=>{
+      const {React,createRoot,Canvas,useThree,useGLTF,CategoryLayerGroup}=await import('/__robot_modules.js');
+      const components=await import('/__robot_modules.js');useGLTF.setDecoderPath('/draco/');
+      const element=document.createElement('div');element.style.width='512px';element.style.height='512px';document.body.append(element);
+      const root=createRoot(element),result=[];let scene,lastSize,committed;
+      const onSize=size=>lastSize=size.toArray();
+      function Probe({token}){scene=useThree(s=>s.scene);React.useLayoutEffect(()=>{committed=token;},[token]);return null;}
+      const wait=async check=>{const start=performance.now();while(!check()){if(performance.now()-start>30000)throw Error('React robot preview timeout');await new Promise(r=>setTimeout(r,30));}};
+      for(const fixture of fixtures){
+        const Component=components[fixture.name==='unitree-g1'?'UnitreeG1':fixture.name==='unitree-go2'?'UnitreeGo2':'Jumper'];
+        const motionKey=fixture.name==='jumper'?'jumper-motion':fixture.name+'-motion',replayKey=fixture.name==='jumper'?'jumper-replay':fixture.name+'-replay';
+        let replay=0;lastSize=undefined;
+        for(const motion of fixture.motions.flatMap(motion=>[motion,motion])){
+          const token=fixture.name+motion+(++replay);
+          root.render(React.createElement(React.StrictMode,null,React.createElement(Canvas,{dpr:1,onCreated:({camera})=>camera.layers.enableAll(),camera:{position:[200,200,200],near:1,far:2000}},React.createElement('ambientLight',{intensity:2}),React.createElement(Probe,{token}),React.createElement(CategoryLayerGroup,{layer:1,register:false},React.createElement(React.Suspense,{fallback:null},React.createElement(Component,{key:fixture.name,item:{},isPreview:true,onSize,actionState:{[motionKey]:motion,[replayKey]:replay}}))))));
+          await wait(()=>{let count=0;scene?.traverse(o=>{if(o.userData.rigidRobotGroup&&o.parent?.userData.gltfPath==='items/'+fixture.name+'/'+fixture.name+'.glb')count++;});return committed===token&&count===fixture.batches;});
+          await new Promise(r=>setTimeout(r,100));
+          if(!lastSize||lastSize.some(n=>!Number.isFinite(n)||n<=0))throw Error('Invalid preview dimensions');
+        }
+        result.push({name:fixture.name,actions:fixture.motions.length,replayed:true,batches:fixture.batches});
+      }
+      root.unmount();await new Promise(r=>setTimeout(r,500));return result;
+    },results);
+    console.log(JSON.stringify({results,previews,errors},null,2));fs.writeFileSync(directory+'/checks.json',JSON.stringify({results,previews,errors},null,2));assert.deepEqual(errors,[]);
+    for(const result of results){assert.ok(result.drawCounts[1].submissions<=result.drawCounts[0].submissions);assert.equal(result.drawCounts[1].triangles,result.drawCounts[0].triangles);assert.ok(result.rayHits>0);assert.ok(result.changedPixelChannels/(512*512*4)<.001 && result.pixelRms<.5,'Render differs beyond raster edge tolerance: '+result.name);}
+  }finally{await browser?.close();await server.close();}
+}
+
+
+async function measureSceneFrames() {
+          const gl = window.__THREE_GL__, scene = window.__THREE_SCENE__, ctx = gl.getContext();
+          const extension = ctx.getExtension('EXT_disjoint_timer_query_webgl2');
+          const originalRender = gl.render, originalShadow = gl.shadowMap.render;
+          const frames = [], cpu = [], gpu = [], draws = [], triangles = [], passes = new Map(), pending = [];
+          let depth = 0, shadowMs = 0, shadowCalls = 0, cameraPose;
+          let activePass='outside';let submissions=0,subdraws=0;const nativeFrames=[],subdrawFrames=[],restoreNative=[];
+          const multi=ctx.getExtension('WEBGL_multi_draw');
+          for(const method of ['drawElements','drawArrays','drawElementsInstanced','drawArraysInstanced']){const original=ctx[method];ctx[method]=function(...args){submissions++;subdraws++;return original.apply(this,args);};restoreNative.push(()=>ctx[method]=original);}
+          if(multi)for(const method of ['multiDrawElementsWEBGL','multiDrawArraysWEBGL']){const original=multi[method];multi[method]=function(...args){submissions++;subdraws+=args.at(-1);return original.apply(this,args);};restoreNative.push(()=>multi[method]=original);}
+          const originalDirect=gl.renderBufferDirect,robotPasses=new Map(),robotNames=new WeakMap();
+          gl.renderBufferDirect=function(camera,s,geometry,material,object,group){
+            let robot=robotNames.get(object);if(robot===undefined){robot='';for(let p=object;p;p=p.parent){const match=p.userData?.gltfPath?.match(/items\/(unitree-g1|unitree-go2|jumper)\//);if(match){robot=match[1];break;}}robotNames.set(object,robot);}
+            const before=submissions,beforeSubs=subdraws,beforeTris=this.info.render.triangles;
+            const result=originalDirect.call(this,camera,s,geometry,material,object,group);
+            if(robot){const pass=material.isMeshDepthMaterial||material.isMeshDistanceMaterial?'shadow':activePass;const key=robot+' | '+pass;const record=robotPasses.get(key)||{submissions:0,subdraws:0,triangles:0};record.submissions+=submissions-before;record.subdraws+=subdraws-beforeSubs;record.triangles+=this.info.render.triangles-beforeTris;robotPasses.set(key,record);}
+            return result;
+          };
+
+          let laraRaycastMs=0,laraRaycastCalls=0;
+          const laraRaycasts=new Map();
+          scene.traverse(mesh=>{if(!mesh.isSkinnedMesh)return;let root=mesh;while(root&&!root.userData.gltfPath)root=root.parent;if(!root?.userData.gltfPath?.includes('/lara/'))return;const original=mesh.raycast;laraRaycasts.set(mesh,original);mesh.raycast=function(...args){const start=performance.now();try{return original.apply(this,args);}finally{laraRaycastMs+=performance.now()-start;laraRaycastCalls++;}};});
+
+          gl.shadowMap.render = function(...args) { const start = performance.now(); try { return originalShadow.apply(this,args); } finally { shadowMs += performance.now()-start; shadowCalls++; } };
+          gl.render = function(s, camera) {
+            const target = this.getRenderTarget(); const main = s === scene && target === null && depth === 0;
+            const name = main ? 'main-inclusive' : target ? `target-${target.width}x${target.height}` : 'other';
+            const previousPass=activePass;activePass=name;
+            const start = performance.now(), calls = this.info.render.calls, tris = this.info.render.triangles, nativeStart=submissions,subdrawStart=subdraws;
+            let query;
+            if (main) { frames.push(start); cameraPose = { position: camera.position.toArray(), quaternion: camera.quaternion.toArray() }; if(extension) { query=ctx.createQuery(); ctx.beginQuery(extension.TIME_ELAPSED_EXT,query); } }
+            depth++;
+            try { return originalRender.call(this,s,camera); } finally {
+              depth--;activePass=previousPass; const ms = performance.now()-start;
+              const pass = passes.get(name) || { count:0, cpuMs:0, calls:0, triangles:0 };
+              pass.count++;pass.cpuMs+=ms;pass.calls+=this.info.render.calls-calls;pass.triangles+=this.info.render.triangles-tris;passes.set(name,pass);
+              if(main) { nativeFrames.push(submissions-nativeStart);subdrawFrames.push(subdraws-subdrawStart);cpu.push(ms); draws.push(this.info.render.calls-calls);triangles.push(this.info.render.triangles-tris); if(query) {ctx.endQuery(extension.TIME_ELAPSED_EXT);pending.push(query);} }
+            }
+          };
+          const collect = () => { while(pending.length && ctx.getQueryParameter(pending[0],ctx.QUERY_RESULT_AVAILABLE)) { const q=pending.shift(); if(!ctx.getParameter(extension.GPU_DISJOINT_EXT)) gpu.push(ctx.getQueryParameter(q,ctx.QUERY_RESULT)/1e6);ctx.deleteQuery(q); } };
+          const start = performance.now();
+          try { await new Promise(resolve => { const tick=now=> { collect(); if(now-start<10000) requestAnimationFrame(tick); else resolve(); };requestAnimationFrame(tick); }); }
+          finally {gl.renderBufferDirect=originalDirect;for(const restore of restoreNative)restore();for(const [mesh,original] of laraRaycasts)mesh.raycast=original;gl.render=originalRender;gl.shadowMap.render=originalShadow;collect();for(const q of pending)ctx.deleteQuery(q); }
+          const summary = values => { if(!values.length)return null;const sorted=[...values].sort((a,b)=>a-b);return {mean:values.reduce((a,b)=>a+b,0)/values.length,p50:sorted[Math.floor(sorted.length*.5)],p95:sorted[Math.floor(sorted.length*.95)],p99:sorted[Math.floor(sorted.length*.99)]}; };
+          const intervals=frames.slice(1).map((t,i)=>t-frames[i]);
+          const debug=ctx.getExtension('WEBGL_debug_renderer_info');
+          let robotVisibleOriginals=0,robotBatchCount=0;scene.traverse(o=>{if(!o.isMesh)return;for(let p=o;p;p=p.parent){if(/items\/(unitree-g1|unitree-go2|jumper)\//.test(p.userData?.gltfPath||'')){if(o.userData.rigidRobotGroup)robotBatchCount++;else if(o.visible)robotVisibleOriginals++;break;}}});
+          return {robotVisibleOriginals,robotBatchCount,multiDraw:!!multi,nativeSubmissions:summary(nativeFrames),subdraws:summary(subdrawFrames),robotPassesPerFrame:Object.fromEntries([...robotPasses].map(([key,value])=>[key,Object.fromEntries(Object.entries(value).map(([k,v])=>[k,v/frames.length]))])),laraRaycastMsPerFrame:laraRaycastMs/frames.length,laraRaycastCallsPerFrame:laraRaycastCalls/frames.length,frames:frames.length,fps:intervals.length*1000/intervals.reduce((a,b)=>a+b,0),frameMs:summary(intervals),renderCpuMs:summary(cpu),gpuMs:summary(gpu),drawCalls:summary(draws),triangles:summary(triangles),passes:Object.fromEntries(passes),shadowMs,shadowCalls,cameraPose,renderer:debug?ctx.getParameter(debug.UNMASKED_RENDERER_WEBGL):null,drawingBuffer:[ctx.drawingBufferWidth,ctx.drawingBufferHeight], layers:{...(await import('/src/features/scene/store/useSceneStore.ts')).useSceneStore.getState().layers}};
+}
+
+
+async function profileRobotPairs() {
+  const {createServer}=await import('vite');const directory='/tmp/room-robot-paired';fs.mkdirSync(directory,{recursive:true});
+  const server=await createServer({server:{host:'127.0.0.1',port:5196,strictPort:true}});let browser;
+  try {
+    await server.listen();browser=await launch({args:['--no-sandbox','--enable-gpu','--use-angle=vulkan','--enable-features=Vulkan,VulkanFromANGLE','--disable-vulkan-surface']});
+    const system=await browser.target().createCDPSession();fs.writeFileSync(directory+'/gpu.json',JSON.stringify(await system.send('SystemInfo.getInfo'),null,2));
+    const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.setViewport({width:1362,height:810,deviceScaleFactor:1});
+    await page.goto('http://127.0.0.1:5196/?skipIntro=1&preset=mid&mode=orbit',{waitUntil:'domcontentloaded',timeout:120000});
+    await page.waitForFunction(async()=>{const {cameraState}=await import('/src/features/scene/cameraState.ts');return cameraState.isSceneLaunched&&!cameraState.isIntroRunning&&!!window.__THREE_GL__;},{timeout:180000});
+    await page.evaluate(async()=>{
+      const {cameraState}=await import('/src/features/scene/cameraState.ts');const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');const {resetAppIdle}=await import('/src/features/scene/idleState.ts');setInterval(resetAppIdle,1000);useSceneStore.getState().setCameraMovement('fix');useSceneStore.setState(s=>({layers:{...s.layers,groundType:'bermuda'}}));
+      const models=[];window.__THREE_SCENE__.traverse(o=>{if(o.children.some(child=>child.userData.rigidRobotGroup))models.push(o);});if(models.length!==3)throw Error('Expected three robot render roots');
+      window.robotPairs=models.map(target=>{const parent=target.parent,source=parent.children.find(o=>o!==target&&o.userData.gltfPath===target.userData.gltfPath);if(!source)throw Error('Missing original robot');const originals=[];source.traverse(o=>{if(o.isMesh)originals.push(o);});const name=target.userData.gltfPath.split('/')[1];let placement=parent;while(placement&&!placement.userData.hoverAction)placement=placement.parent;if(!placement)throw Error('Missing robot placement');const config={'unitree-g1':{position:[50,0,-450],motion:'walk'},'unitree-go2':{position:[220,0,-620],motion:'trot'},jumper:{position:[430,0,-450],motion:'walk'}}[name];const key=name==='jumper'?'jumper':name;document.dispatchEvent(new CustomEvent('furniture-toggle',{detail:{key:key+'-motion',value:config.motion}}));document.dispatchEvent(new CustomEvent('furniture-toggle',{detail:{key:key+'-replay'}}));placement.position.set(...config.position);placement.rotation.set(0,0,0);return {target,parent,source,originals};});
+      const tick=()=>{cameraState.invalidate?.();requestAnimationFrame(tick);};tick();
+    });
+    await delay(12000);const results=[];
+    for(const mode of ['original','instanced','instanced','original']){
+      await page.evaluate(mode=>{for(const pair of window.robotPairs){if(mode==='original')pair.parent.remove(pair.target);else pair.parent.add(pair.target);for(const mesh of pair.originals)mesh.visible=mode==='original';}},mode);
+      await delay(3000);console.log('PAIR',mode);const metrics=await page.evaluate(measureSceneFrames);results.push({mode,...metrics});fs.writeFileSync(directory+'/summary.json',JSON.stringify({protocol:'Same page, robots walking in place at fixed initial positions; human activities unchanged',results,errors},null,2));console.log(JSON.stringify(results.at(-1)));
+    }
+    if(errors.length)throw Error(errors.join('\n'));
   }finally{await browser?.close();await server.close();}
 }
