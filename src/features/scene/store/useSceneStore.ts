@@ -460,8 +460,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
     cameraState.invalidate?.();
   },
   bnfAzimuth: 154.3,
-  bnfElevation: -2.2,
-  bnfRadius: 45,
+  bnfElevation: -1.5,
+  bnfRadius: 30,
   measurementActive: false,
   cameraMode: parseUrlCameraMode(),
   arrowControl: parseUrlArrowControl(),

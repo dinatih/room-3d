@@ -45,8 +45,8 @@ export function LayersSection({
   const setScreenVideoQuality = useSceneStore(state => state.setScreenVideoQuality);
   const setGroundType = useSceneStore(state => state.setGroundType);
   const bnfAzimuth = useSceneStore(state => state.bnfAzimuth ?? 154.3);
-  const bnfElevation = useSceneStore(state => state.bnfElevation ?? -2.2);
-  const bnfRadius = useSceneStore(state => state.bnfRadius ?? 45);
+  const bnfElevation = useSceneStore(state => state.bnfElevation ?? -1.5);
+  const bnfRadius = useSceneStore(state => state.bnfRadius ?? 30);
   const setBnfCoords = useSceneStore(state => state.setBnfCoords);
   const currentGroundType = layers.groundType ?? (layers.bermudaGrass ? 'bermuda' : 'none');
 
@@ -267,7 +267,7 @@ export function LayersSection({
             <button
               type="button"
               className="btn btn-sm btn-link text-muted p-0 text-decoration-none small"
-              onClick={() => setBnfCoords({ azimuth: 154.3, elevation: -2.2, radius: 45 })}
+              onClick={() => setBnfCoords({ azimuth: 154.3, elevation: -1.5, radius: 30 })}
             >
               <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true" />Réinitialiser
             </button>
