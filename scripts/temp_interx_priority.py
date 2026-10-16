@@ -5,14 +5,43 @@ import json
 import subprocess
 from pathlib import Path
 
-from interx_catalog import ROOT, MANIFEST, atomic_json, publish_manifest
+from interx_catalog import ROOT, MANIFEST, DEFAULT_SOURCE, RECORDING, actions, atomic_json, publish_manifest
 from convert_interx_duos import GROUND_STANDING_ACTIONS, verified
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--publish', action='store_true')
+    parser.add_argument('--inventory', type=Path, help='Write source/session coverage for all 40 actions as Markdown')
     args = parser.parse_args()
+    if args.inventory:
+        available = {action['code']: set() for action in actions()}
+        for folder in DEFAULT_SOURCE.iterdir():
+            if not folder.is_dir():
+                continue
+            match = RECORDING.fullmatch(folder.name)
+            if not match or match[3] not in available:
+                raise ValueError(f'Invalid source recording: {folder}')
+            available[match[3]].add(match[2])
+        published = json.loads(MANIFEST.read_text())['duos']
+        lines = ['# Catalogue Inter-X : couverture des variantes T', '',
+                 'Un binôme de taille adaptée par session T, première prise disponible ; les répétitions G/R sont exclues.', '',
+                 '| Code | Thème | Variantes disponibles | Publiées | Restantes |',
+                 '| --- | --- | ---: | ---: | ---: |']
+        totals = [0, 0, 0]
+        for action in actions():
+            code = action['code']
+            covered = {entry['variation'] for entry in published if entry['actionCode'] == code}
+            if not covered.issubset(available[code]):
+                raise ValueError(f'Published session missing from source: {code}')
+            counts = [len(available[code]), len(covered), len(available[code] - covered)]
+            totals = [a + b for a, b in zip(totals, counts)]
+            lines.append(f"| {code} | {action['label']} | {counts[0]} | {counts[1]} | {counts[2]} |")
+            print(f"{code} {action['label']}: {counts[1]}/{counts[0]} published; {counts[2]} remaining")
+        lines.extend([f'| Total | | {totals[0]} | {totals[1]} | {totals[2]} |', '',
+                      f"Le catalogue contient {len(published)} duos, comparaisons de binômes conservées comprises.", ''])
+        args.inventory.write_text('\n'.join(lines))
+        return
     selection = json.loads((ROOT / 'scripts/interx_priority_selection.json').read_text())
     draft_path = ROOT / 'scripts/interx_priority_draft_manifest.json'
     draft = json.loads(draft_path.read_text())

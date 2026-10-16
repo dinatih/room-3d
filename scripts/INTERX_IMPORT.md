@@ -360,6 +360,36 @@ uniquement les deux pilotes publiés ; les futures actions au sol doivent être
 vérifiées selon leur posture attendue.
 # Export des thèmes prioritaires en une passe
 
+## Second complément du 16 octobre 2026
+
+Les onze actions suivantes couvrent désormais toutes leurs sessions T :
+
+| Action | Variantes T |
+| --- | ---: |
+| Épaule contre épaule | 5 |
+| Porter sur le dos | 7 |
+| Masser les épaules | 6 |
+| Masser les jambes | 6 |
+| Discuter | 7 |
+| Caresser la joue | 6 |
+| Toucher la tête | 6 |
+| Imiter | 6 |
+| Baiser sur la joue | 6 |
+| Aider à se relever | 7 |
+| Envoyer un baiser | 6 |
+
+Dix étaient déjà complètes. Cinq variantes de Discuter ont été ajoutées
+(dix GLB), selon la sélection `scripts/interx_expanded_second_selection.json`.
+Les paramètres restent ceux validés : doigts, calage debout, déplacements
+métriques et offset initial exact entre P1 et P2.
+
+Le bilan complet par action, incluant les thèmes encore absents et les
+catégories partielles, est généré dans `docs/INTERX_CATALOG.md` :
+
+```bash
+python3 scripts/temp_interx_priority.py --inventory docs/INTERX_CATALOG.md
+```
+
 ## Complément du 16 octobre 2026 : toutes les variantes T demandées
 
 Les sept actions demandées couvrent désormais toutes leurs sessions T source,
