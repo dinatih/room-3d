@@ -618,6 +618,8 @@ export const STORAGE_SPACES: StorageSpace[] = [
 
 export const CATEGORIES: Category[] = [
   { id: 'all',          label: 'Tout' },
+  { id: 'characters',   label: '👥 Personnages' },
+  { id: 'animations',   label: '🎬 Animations' },
   { id: 'spaces',       label: '🏠 Espaces & Pièces' },
   { id: 'actionnable',  label: '⚡ Actionnable' },
   { id: 'doors',        label: '🚪 Portes' },
@@ -629,8 +631,6 @@ export const CATEGORIES: Category[] = [
   { id: 'clothing',     label: 'Vêtements' },
   { id: 'decor',        label: 'Déco' },
   { id: 'consumable',   label: '🛒 Consomables' },
-  { id: 'characters',      label: '👥 Personnages' },
-  { id: 'animations',      label: '🎬 Animations' },
   { id: 'wigs',         label: '💇 Perruques' },
   { id: 'glbs',         label: 'GLBs', icon: 'bi-shuffle' },
 ];
