@@ -195,7 +195,7 @@ export function CorridorFurnishings() {
       angle = (lower + upper) / 2;
     }
     const northContact = Math.min(...front.map(p => -p.x * Math.sin(angle) + p.z * Math.cos(angle)));
-    setParking({ x:ROOM_EAST_WALL - eastContact(front, angle), z:CORRIDOR_NORTH_WALL - northContact, angle });
+    setParking({ x:ROOM_EAST_WALL - eastContact(front, angle) - 10, z:CORRIDOR_NORTH_WALL - northContact, angle });
   }, []);
   return (
     <MergedStaticGroup name="merged-corridor-furnishings">

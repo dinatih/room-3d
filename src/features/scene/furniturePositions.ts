@@ -31,7 +31,7 @@ export const DESK2_POSITIONS: readonly FurnitureTransform[] = [
 ];
 
 export const SMORKULL_POSITIONS: readonly FurnitureTransform[] = [
-  { x: 85,  z: 272, ry: Math.PI / 2  }, // entre le lit Ouest et le Mackapar
+  { x: 96,  z: 314, ry: Math.PI / 2  }, // entre le lit Ouest et le Mackapar
   { x: 150, z: 100, ry: Math.PI      },
   { x: 150, z: 300, ry: Math.PI      },
   { x: 240, z: 38,  ry: -Math.PI / 2 }, // devant KallaxNE
@@ -49,7 +49,7 @@ export interface DoubleBedConfig {
 }
 
 export const DOUBLE_BED_POSITIONS: readonly DoubleBedConfig[] = [
-  { label: 'Mur Ouest', west: { x: 74, z: 151.5 },               east: { x: 157, z: 151.5 } },
+  { label: 'Mur Ouest', west: { x: 74, z: 170 },               east: { x: 157, z: 170 } },
   { label: 'Mur Est',   west: { x: ROOM_W - 128.5, z: 190 },     east: { x: ROOM_W - 45.5, z: 190 } },
   { label: 'Centré',    west: { x: ROOM_W / 2 - 41.5, z: 190 }, east: { x: ROOM_W / 2 + 41.5, z: 190 } },
 ];
