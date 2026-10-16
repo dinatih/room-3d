@@ -69,10 +69,15 @@ export function isHeadMesh(mesh: THREE.Object3D): boolean {
   const matNames: string[] = [];
   if (mat) {
     const mats = Array.isArray(mat) ? mat : [mat];
-    mats.forEach(m => { if (m?.name) matNames.push(m.name.toLowerCase()); });
+    mats.forEach(m => { if (m?.name) matNames.push(m.name); });
   }
-  const matStr = matNames.join(' ');
-  return HEAD_KEYWORDS.some(kw => meshName.includes(kw) || matStr.includes(kw));
+  const matStr = matNames.join(' ').toLowerCase();
+  // Match face as a name segment: Beta_Surface is the Xbot's full body.
+  const names = [mesh.name, ...matNames].map(name =>
+    (name || '').replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase());
+  return HEAD_KEYWORDS.some(kw => kw === 'face'
+    ? names.some(name => /(?:^|[^a-z])face(?:[^a-z]|$)/.test(name))
+    : meshName.includes(kw) || matStr.includes(kw));
 }
 
 const INTERNAL_INVISIBLE_KEYWORDS = [
