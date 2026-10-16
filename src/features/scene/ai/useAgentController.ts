@@ -824,6 +824,11 @@ export function useAgentController(
         reportNavigationStop(routeRef.current.error, target.label, { x: target.tx, z: target.tz });
         return stateRef.current;
       }
+      if (moved === 0 && routeRef.current.search?.job.status === 'pending') {
+        stateRef.current.animation = 'idle';
+        statusRef.current = 'MOVING';
+        return stateRef.current;
+      }
       if (moved === 0 && dt > 0 && distance(position, { x: target.tx, z: target.tz }) >= 1e-6) {
         reportNavigationStop(routeRef.current.waitReason ?? 'Aucun déplacement produit par le suivi du trajet (cause non identifiée)', target.label, { x: target.tx, z: target.tz });
       } else if (moved > 0 && navigationErrorRef.current) {

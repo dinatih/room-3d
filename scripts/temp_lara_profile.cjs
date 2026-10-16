@@ -6,6 +6,8 @@ const isolate = process.argv.includes('--isolate-blur');
 const out = verify ? '/tmp/room-lara-inventory' : isolate ? '/tmp/room-lara-blur-isolation' : '/tmp/room-lara-profile';
 const delay = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
+  if (process.argv.includes('--navigation-live')) return await traceNavigation();
+  if (process.argv.includes('--worker-check')) return await checkNavigationWorker();
   if (process.argv.includes('--checks')) return checkBoundsReuse();
   if (process.argv.includes('--scene-profile')) return await profileScene();
   fs.mkdirSync(out, { recursive: true });
@@ -279,4 +281,118 @@ function checkBoundsReuse() {
   light.intensity=0;assert.ok(getUnusedShadows(scene,camera).shadows.includes(light.shadow),'Mirror does not retain extinguished shadows');
   light.shadow.map.dispose();
   console.log('Bounds checks passed: reuse, direct bone edits, morphs, nonuniform scale, mirror short circuit and extinguished lights.');
+}
+
+async function checkNavigationWorker() {
+  const assert = require('node:assert/strict');
+  const { createServer } = await import('vite');
+  const fixturePath=process.argv.find(arg=>arg.startsWith('--fixture='))?.slice('--fixture='.length)||'/tmp/room-navigation-benchmark.json';
+  const fixture = JSON.parse(fs.readFileSync(fixturePath,'utf8'));
+  const directory='/tmp/room-navigation-worker-check';fs.mkdirSync(directory,{recursive:true});
+  const server=await createServer({server:{host:'127.0.0.1',port:5192,strictPort:true},plugins:[{name:'worker-check-page',configureServer(server){server.middlewares.use('/__worker-check',async(_,res,next)=>{try{res.setHeader('Content-Type','text/html');res.end(await server.transformIndexHtml('/__worker-check','<!doctype html><html><body>Navigation worker check</body></html>'));}catch(error){next(error);}});}}]});
+  let browser;
+  try {
+    await server.listen();browser=await launch({args:['--no-sandbox','--enable-gpu','--use-angle=vulkan','--enable-features=Vulkan,VulkanFromANGLE','--disable-vulkan-surface']});
+    const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+    await page.goto('http://127.0.0.1:5192/__worker-check',{waitUntil:'networkidle0'});
+    const report=await page.evaluate(async fixture=>{
+      const {VisibilityGraph}=await import('/src/features/scene/ai/navigation/geometry.ts');
+      const {requestPath,pathfindingStats}=await import('/src/features/scene/ai/navigation/pathfindingClient.ts');
+      const delay=ms=>new Promise(r=>setTimeout(r,ms));
+      async function measure(operation){
+        const gaps=[];let previous=performance.now();
+        const timer=setInterval(()=>{const now=performance.now();gaps.push(now-previous);previous=now;},10);
+        await delay(30);gaps.length=0;previous=performance.now();
+        const start=performance.now();const value=await operation();const milliseconds=performance.now()-start;
+        await delay(30);clearInterval(timer);
+        return {milliseconds,ticks:gaps.length,worstHeartbeatGap:Math.max(...gaps),value};
+      }
+      const syncGraph=new VisibilityGraph(fixture.obstacles,fixture.comfort);
+      const synchronous=await measure(()=>fixture.queries.map(([start,target])=>syncGraph.find(start,target)));
+      const graph=new VisibilityGraph(fixture.obstacles,fixture.comfort);
+      const get=async(g,start,target)=>{let done;const completed=new Promise(resolve=>done=resolve);const job=requestPath(g,start,target,done);await completed;if(job.status==='error')throw job.error;return job.path;};
+      const background=await measure(async()=>{const paths=[];for(const [start,target] of fixture.queries)paths.push(await get(graph,start,target));return paths;});
+      const validations=fixture.queries.map(([start],i)=>{
+        const a=synchronous.value[i],b=background.value[i];
+        const cost=path=>path?.reduce((sum,p,j)=>sum+syncGraph.segmentCost(j?path[j-1]:start,p),0);
+        return {sameReachability:!!a===!!b,costBefore:cost(a),costWorker:cost(b),identicalPath:JSON.stringify(a)===JSON.stringify(b)};
+      });
+      let cancelledCallback=0;
+      const [start,target]=fixture.queries[0];
+      const first=requestPath(graph,start,target,()=>{});
+      const cancelled=requestPath(graph,start,target,()=>cancelledCallback++);cancelled.cancel();
+      await get(graph,start,target);
+      const invalid=requestPath(graph,{x:NaN,z:0},target,()=>{});
+      while(invalid.status==='pending')await delay(10);
+      const service=await import('/src/features/scene/ai/navigation/service.ts');
+      const obstacles=await import('/src/features/scene/ai/navigation/obstacles.ts');
+      const {walkableSurfaces}=await import('/src/features/scene/ai/navigation/architecture.ts');
+      const {pointInRing,insideObstacle,distance,rectangle}=await import('/src/features/scene/ai/navigation/geometry.ts');
+      const id='worker-integration';obstacles.setAgentProfile(id,{radius:10,height:173});
+      const base=service.getNavigationGraph(obstacles.getAgentProfile(id));
+      const valid=p=>walkableSurfaces.some(r=>pointInRing(p,r[0])&&!r.slice(1).some(h=>pointInRing(p,h)))&&!insideObstacle(p,base.obstacles);
+      const from=base.vertices.find(valid);
+      const to=base.vertices.find(p=>valid(p)&&distance(from,p)>20&&base.canReach(from,p));
+      if(!from||!to)throw Error('No reachable integration fixture');
+      const route=service.createRouteState();
+      const firstPosition=service.followRoute(route,id,from,to,1);
+      if(distance(firstPosition,from)!==0||route.error||route.search?.job.status!=='pending')throw Error('Pending route must wait without failing');
+      const wait=async job=>{while(job.status==='pending')await delay(10);if(job.status==='error')throw job.error;};
+      await wait(route.search.job);
+      const moved=service.followRoute(route,id,from,to,1);
+      if(distance(moved,from)===0||distance(moved,from)>1.000001||route.error)throw Error('Completed route must resume without teleporting');
+      service.resetRoute(route,id);
+      service.planRoute(route,id,from,to);
+      const abandoned=route.search.job;
+      service.resetRoute(route,id);
+      await delay(30);
+      if(abandoned.status!=='cancelled'||route.path.length||route.search)throw Error('Reset must discard old answers');
+      service.planRoute(route,id,from,to);
+      const obsolete=route.search.job;
+      obstacles.registerObstacle({id:'worker-test-blocker',polygon:rectangle(to.x,to.z,4,4,0),yMin:0,yMax:200});
+      service.planRoute(route,id,from,to);
+      if(obsolete.status!=='cancelled'||route.search.job.graph===obsolete.graph)throw Error('Changed geometry must replace pending search');
+      await wait(route.search.job);
+      if(service.planRoute(route,id,from,to)||!route.error)throw Error('Newly obstructed target must be rejected');
+      obstacles.unregisterObstacle('worker-test-blocker');service.resetRoute(route,id);obstacles.removeAgentProfile(id);
+      const integration={waits:true,resumes:true,noTeleport:true,resetCancels:true,geometryChangeCancels:true,obstructedTargetRejected:true};
+      const result={integration,synchronous:{...synchronous,value:undefined},background:{...background,value:undefined},validations,cancellation:{status:cancelled.status,callbacks:cancelledCallback,first:first.status},invalidInput:{status:invalid.status,message:invalid.error?.message},stats:{...pathfindingStats}};
+      return result;
+    },fixture);
+    assert.deepEqual(errors,[]);
+    for(const result of report.validations){assert.ok(result.sameReachability);assert.ok(result.identicalPath);if(result.costBefore!==undefined)assert.ok(Math.abs(result.costBefore-result.costWorker)<1e-7);}
+    assert.equal(report.cancellation.status,'cancelled');assert.equal(report.cancellation.callbacks,0);assert.equal(report.cancellation.first,'ready');
+    assert.equal(report.invalidInput.status,'error');assert.match(report.invalidInput.message,/Non-finite/);
+    fs.writeFileSync(`${directory}/summary.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+  }finally{await browser?.close();await server.close();}
+}
+
+async function traceNavigation() {
+  const {createServer}=await import('vite');const path=require('node:path');const {execFileSync}=require('node:child_process');
+  const option=name=>process.argv.find(arg=>arg.startsWith(`--${name}=`))?.split('=').slice(1).join('=');
+  const label=option('label')||'navigation-live',reference=option('baseline-ref');const directory=`/tmp/room-${label}`;fs.mkdirSync(directory,{recursive:true});
+  const old=new Map();if(reference){for(const file of execFileSync('git',['diff','--diff-filter=M','--name-only',reference,'--','src'],{encoding:'utf8'}).trim().split('\n').filter(Boolean))old.set(path.resolve(file),execFileSync('git',['show',`${reference}:${file}`],{encoding:'utf8'}));}
+  const server=await createServer({server:{host:'127.0.0.1',port:5193,strictPort:true},plugins:[{name:'navigation-reference',enforce:'pre',load(id){return old.get(id.split('?')[0]);}}]});let browser;
+  try{
+    await server.listen();browser=await launch({args:['--no-sandbox','--enable-gpu','--use-angle=vulkan','--enable-features=Vulkan,VulkanFromANGLE','--disable-vulkan-surface']});
+    const page=await browser.newPage();await page.setViewport({width:1362,height:810,deviceScaleFactor:1});const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+    await page.goto('http://127.0.0.1:5193/?skipIntro=1',{waitUntil:'domcontentloaded',timeout:120000});
+    await page.waitForFunction(async()=>{const {cameraState}=await import('/src/features/scene/cameraState.ts');return cameraState.isSceneLaunched&&!cameraState.isIntroRunning&&!!window.__THREE_GL__;},{timeout:180000});
+    await page.evaluate(async()=>{const {resetAppIdle}=await import('/src/features/scene/idleState.ts');setInterval(resetAppIdle,1000);const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');useSceneStore.getState().setCameraMovement('fix');useSceneStore.setState(s=>({layers:{...s.layers,groundType:'bermuda'}}));});
+    await delay(12000);
+    await page.evaluate(async()=>{
+      const {VisibilityGraph}=await import('/src/features/scene/ai/navigation/geometry.ts');const original=VisibilityGraph.prototype.find;let depth=0;
+      window.navTrace={queries:[],tasks:[],frames:[],worst:null};
+      VisibilityGraph.prototype.find=function(start,target){const outer=depth++===0,began=performance.now();let result;try{return result=original.call(this,start,target);}finally{depth--;if(outer){const record={start:began,milliseconds:performance.now()-began,weighted:!!this.comfort,vertices:this.vertices.length,from:{...start},target:{...target},reachable:!!result};window.navTrace.queries.push(record);if(!window.navTrace.worst||record.milliseconds>window.navTrace.worst.milliseconds)window.navTrace.worst={...record,obstacles:this.obstacles,comfort:this.comfort,stack:new Error().stack};}}};
+      new PerformanceObserver(list=>window.navTrace.tasks.push(...list.getEntries().map(t=>({start:t.startTime,milliseconds:t.duration})))).observe({type:'longtask'});
+      const gl=window.__THREE_GL__,scene=window.__THREE_SCENE__,render=gl.render;
+      gl.render=function(s,camera){if(s===scene&&this.getRenderTarget()===null)window.navTrace.frames.push(performance.now());return render.call(this,s,camera);};
+    });
+    console.log('Navigation capture started');await delay(60000);
+    const trace=await page.evaluate(async()=>{const trace=window.navTrace;const {pathfindingStats}=await import('/src/features/scene/ai/navigation/pathfindingClient.ts');return {...trace,worker:{...pathfindingStats},intervals:trace.frames.slice(1).map((t,i)=>t-trace.frames[i])};});
+    fs.writeFileSync(`${directory}/trace.json`,JSON.stringify({...trace,errors},null,2));
+    if(trace.worst)fs.writeFileSync(`${directory}/worst-query.json`,JSON.stringify({obstacles:trace.worst.obstacles,comfort:trace.worst.comfort,queries:[[trace.worst.from,trace.worst.target]]},null,2));
+    const summary={queries:trace.queries.length,weighted:trace.queries.filter(q=>q.weighted).length,worstQuery:trace.worst?{milliseconds:trace.worst.milliseconds,weighted:trace.worst.weighted,vertices:trace.worst.vertices,stack:trace.worst.stack}:null,worstFrame:Math.max(...trace.intervals),over500ms:trace.intervals.filter(t=>t>=500).length,over1000ms:trace.intervals.filter(t=>t>=1000).length,longTasks:trace.tasks.length,worstTask:Math.max(0,...trace.tasks.map(t=>t.milliseconds)),worker:trace.worker,errors};
+    fs.writeFileSync(`${directory}/summary.json`,JSON.stringify(summary,null,2));console.log(JSON.stringify(summary,null,2));if(errors.length)throw Error(errors.join('\n'));
+  }finally{await browser?.close();await server.close();}
 }

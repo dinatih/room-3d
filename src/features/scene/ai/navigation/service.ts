@@ -7,6 +7,8 @@ import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutter
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, type DoorKey } from './doorRequests';
 import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from '../agent/agentAvoidance';
 import { NAVIGATION_COMFORT_CM } from './comfort';
+import { requestPath, type PathSearch } from './pathfindingClient';
+import { cameraState } from '../../cameraState';
 
 export { architectureObstacles };
 export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
@@ -143,10 +145,11 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
 
 export interface RouteState {
   path: Point[];
+  search?: { kind: 'route' | 'local' | 'crowd'; job: PathSearch };
   index: number;
   target: Point | null;
   graph: VisibilityGraph | null;
-  crowd?: { base: VisibilityGraph; graph: VisibilityGraph | null; signature: string; resume: { start: Point; next: Point } };
+  crowd?: { base: VisibilityGraph; graph: VisibilityGraph | null; planning?: VisibilityGraph; signature: string; resume: { start: Point; next: Point } };
   error: string | null;
   waitReason?: string;
   doors: Set<DoorKey>;
@@ -160,6 +163,8 @@ export interface RouteState {
 }
 export const createRouteState = (): RouteState => ({ path: [], index: 0, target: null, graph: null, error: null, doors: new Set() });
 export function resetRoute(route: RouteState, agentId: string, keepClosedDoor?: DoorKey): void {
+  route.search?.job.cancel();
+  route.search = undefined;
   releaseAgentDoors(agentId, keepClosedDoor);
   route.path = []; route.index = 0; route.target = null; route.graph = null; route.error = null; route.doors.clear();
   route.approach = undefined; route.interactionTarget = undefined;
@@ -173,17 +178,39 @@ export function resetRoute(route: RouteState, agentId: string, keepClosedDoor?: 
   navigationDebug.delete(agentId);
 }
 
+/** Undefined means an explicit pending search, not an unreachable target. */
+function searchPath(route: RouteState, graph: VisibilityGraph, start: Point, target: Point, kind: 'route' | 'local' | 'crowd'): Point[] | null | undefined {
+  let search = route.search;
+  if (!search || search.kind !== kind || search.job.graph !== graph ||
+      search.job.start.x !== start.x || search.job.start.z !== start.z ||
+      search.job.target.x !== target.x || search.job.target.z !== target.z) {
+    search?.job.cancel();
+    search = { kind, job: requestPath(graph, start, target, () => cameraState.invalidate?.()) };
+    route.search = search;
+  }
+  if (search.job.status === 'pending') {
+    route.waitReason = 'Calcul du trajet en cours';
+    return undefined;
+  }
+  if (search.job.status === 'error') throw search.job.error!;
+  if (search.job.status === 'cancelled') throw new Error('Cancelled navigation search still attached to a route');
+  route.search = undefined;
+  return search.job.path;
+}
+
 export function planRoute(route: RouteState, agentId: string, start: Point, target: Point): boolean {
   const base = getNavigationGraph(getAgentProfile(agentId), undefined, route.closedDoor);
   let graph = route.crowd?.base === base && route.crowd.graph ? route.crowd.graph : base;
   if (!inSurface(start) || !inSurface(target)) {
     route.error = 'Destination ou départ hors du sol praticable';
   } else {
-    let path = graph.find(start, target);
+    let path = searchPath(route, graph, start, target, 'route');
+    if (path === undefined) return false;
     if (!path && graph !== base) {
       route.crowd = undefined;
       graph = base;
-      path = graph.find(start, target);
+      path = searchPath(route, graph, start, target, 'route');
+      if (path === undefined) return false;
     }
     if (path) {
       route.path = path; route.index = 0; route.target = { ...target }; route.graph = graph; route.error = null;
@@ -245,11 +272,12 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
   route.waitReason = undefined;
   owner = owner ? getInteractionOwner(owner) : undefined;
   const crowd = route.crowd;
-  if (crowd?.graph) {
+  if (crowd?.graph || crowd?.planning) {
     const reachable = limitAgentMovement(agentId, crowd.resume.start, crowd.resume.next);
     if (reachable.x === crowd.resume.next.x && reachable.z === crowd.resume.next.z) {
       // The obstruction has cleared: recover the shorter static route without
       // rebuilding a crowd graph every time a distant actor moves.
+      if (route.search?.kind === 'crowd') { route.search.job.cancel(); route.search = undefined; }
       route.crowd = undefined;
       route.graph = null;
     }
@@ -295,15 +323,22 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
       : route.graph ?? getNavigationGraph(getAgentProfile(agentId), undefined, closedDoor);
     const obstacles = getAgentObstacles(agentId, start);
     const signature = JSON.stringify(obstacles);
-    if (obstacles.length && (route.crowd?.base !== base || route.crowd.signature !== signature)) {
-      // Bodies move continuously: use a physical detour, rather than building
-      // a complete weighted comfort graph for every crowd snapshot. Restore
-      // the static comfort route as soon as the obstructed segment clears.
-      const graph = new VisibilityGraph(mergeObstacles([...base.obstacles, ...obstacles.map(polygon => [polygon])]));
+    if (obstacles.length && (route.crowd?.planning || route.crowd?.base !== base || route.crowd.signature !== signature)) {
+      // Finish the current crowd snapshot instead of restarting for every
+      // moving actor. Live movement collision checks still protect every step.
+      let crowd = route.crowd;
+      if (!crowd?.planning || crowd.base !== base) {
+        const graph = new VisibilityGraph(mergeObstacles([...base.obstacles, ...obstacles.map(polygon => [polygon])]));
+        crowd = { base, graph: null, planning: graph, signature,
+          resume: crowd?.resume ?? { start: { ...start }, next: route.path[route.index] ?? target } };
+        route.crowd = crowd;
+      }
+      const graph = crowd.planning!;
       const goal = route.target ?? target;
-      const path = graph.find(start, goal);
-      route.crowd = { base, graph: path ? graph : null, signature,
-        resume: route.crowd?.resume ?? { start: { ...start }, next: route.path[route.index] ?? goal } };
+      const path = searchPath(route, graph, start, goal, 'crowd');
+      if (path === undefined) return limited;
+      crowd.planning = undefined;
+      crowd.graph = path ? graph : null;
       if (path) {
         route.path = path; route.index = 0; route.graph = graph; route.target = { ...goal };
         navigationDebug.set(agentId, { path: [start, ...path], target: goal });
@@ -345,7 +380,8 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
     const baseLocal = getNavigationGraph(profile, id, closedDoor);
     const localGraph = route.crowd?.base === baseLocal && route.crowd.graph ? route.crowd.graph : baseLocal;
     if (route.graph !== localGraph || route.target?.x !== goal.x || route.target?.z !== goal.z) {
-      const path = localGraph.find(start, goal);
+      const path = searchPath(route, localGraph, start, goal, 'local');
+      if (path === undefined) return start;
       if (!path) {
         route.error = `Transition d'interaction bloquée (${id})`;
         navigationDebug.set(agentId, { path: [], target: goal, error: route.error });
