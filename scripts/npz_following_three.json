@@ -2674,7 +2674,7 @@
           }
         }
       ],
-      "acceptance": "pending visual review"
+      "acceptance": "accepted visually by user; promoted to canonical ID; uncorrected GLB deleted"
     },
     {
       "id": "bellydance2-anna-cortesi-c3d",
@@ -5354,7 +5354,7 @@
           }
         }
       ],
-      "acceptance": "pending visual review"
+      "acceptance": "accepted visually by user; promoted to canonical ID; uncorrected GLB deleted"
     },
     {
       "id": "salsa-stefanos-c3d",
@@ -7101,7 +7101,7 @@
           }
         }
       ],
-      "acceptance": "pending visual review"
+      "acceptance": "accepted visually by user; promoted to canonical ID; uncorrected GLB deleted"
     }
   ]
 }

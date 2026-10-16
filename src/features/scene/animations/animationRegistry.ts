@@ -2004,7 +2004,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'zumba-fanie-c3d',
-    path: 'animations/npz/dances/anim_zumba_fanie_c3d.glb',
+    path: 'animations/npz/repair-candidates/anim_zumba_fanie_c3d.glb',
     category: 'dances',
     label: 'Zumba Fanie C3D (6750f / 225s, 2924KB)',
     aliases: ['dance-zumba-fanie', 'zumba-fanie'],
@@ -2013,7 +2013,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'bellydance2-anna-cortesi-c3d',
-    path: 'animations/npz/dances/anim_bellydance2_anna_cortesi_c3d.glb',
+    path: 'animations/npz/repair-candidates/anim_bellydance2_anna_cortesi_c3d.glb',
     category: 'dances',
     label: 'Belly Dance 2 Anna Cortesi C3D (8423f / 280.8s, 2919KB)',
     aliases: ['dance-bellydance2-anna-cortesi', 'bellydance2-anna-cortesi'],
@@ -2031,7 +2031,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'salsa-stefanos-c3d',
-    path: 'animations/npz/dances/anim_salsa_stefanos_c3d.glb',
+    path: 'animations/npz/repair-candidates/anim_salsa_stefanos_c3d.glb',
     category: 'dances',
     label: 'Salsa Stefanos C3D (5894f / 196.5s, 2550KB)',
     aliases: ['dance-salsa-stefanos', 'salsa-stefanos'],
@@ -9604,30 +9604,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: '[ESSAI correction] Bachata Vaso 01',
     tags: ['npz-repair-candidate'],
     duration: 133.6,
-  },
-  {
-    id: 'zumba-fanie-c3d-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_zumba_fanie_c3d.glb',
-    category: 'dances',
-    label: '[ESSAI correction] Zumba Fanie C3D (6750f / 225s, 2924KB)',
-    tags: ['npz-repair-candidate'],
-    duration: 225,
-  },
-  {
-    id: 'bellydance2-anna-cortesi-c3d-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_bellydance2_anna_cortesi_c3d.glb',
-    category: 'dances',
-    label: '[ESSAI correction] Belly Dance 2 Anna Cortesi C3D (8423f / 280.8s, 2919KB)',
-    tags: ['npz-repair-candidate'],
-    duration: 280.8,
-  },
-  {
-    id: 'salsa-stefanos-c3d-repair-preview',
-    path: 'animations/npz/repair-candidates/anim_salsa_stefanos_c3d.glb',
-    category: 'dances',
-    label: '[ESSAI correction] Salsa Stefanos C3D (5894f / 196.5s, 2550KB)',
-    tags: ['npz-repair-candidate'],
-    duration: 196.5,
   },
   {
     id: 'happy-dance-olivia-repair-preview',

@@ -197,7 +197,7 @@ function audit(g) {
 function main() {
   const mode = process.argv[2] || 'audit';
   if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser','next-three','following-three','promote-three','frame-check'].includes(mode)) throw Error('Unknown mode '+mode);
-  if(mode==='promote-three') return promoteThree();
+  if(mode==='promote-three') return promoteThree(process.argv.includes('--following'));
   if(mode==='following-three') return nextThree(true);
   if(mode==='frame-check') return checkFrameCounter();
   if(mode==='next-three') return nextThree();
@@ -1090,10 +1090,13 @@ async function reviewRefinement() {
   }
   return reviewRepairs(rows,'npz_refinement_browser.json',{'/__npz_accepted_bachata.glb':base.buf},'/tmp/room-npz-refinement-review');
 }
-function promoteThree() {
+function promoteThree(following=false) {
   const assert=require('node:assert/strict');
-  const report=JSON.parse(fs.readFileSync(path.join(root,'scripts/npz_next_three.json'),'utf8'));
+  const reportName=following?'npz_following_three':'npz_next_three';
+  const docName=following?'npz-following-three':'npz-next-three';
+  const report=JSON.parse(fs.readFileSync(path.join(root,`scripts/${reportName}.json`),'utf8'));
   const file=path.join(root,registryPath);let text=fs.readFileSync(file,'utf8');
+  const before=text;
   const metaFile=path.join(root,'public/animations/npz/dances/dancedb_meta.json');
   const metadata=JSON.parse(fs.readFileSync(metaFile,'utf8'));
   for(const r of report.results) {
@@ -1113,8 +1116,16 @@ function promoteThree() {
     assert(text.includes(`path: '${r.file.replace(/^public\//,'')}'`));
   }
   fs.writeFileSync(file,text);fs.writeFileSync(metaFile,JSON.stringify(metadata,null,2)+'\n');
-  fs.writeFileSync(path.join(root,'scripts/npz_next_three.json'),JSON.stringify(report,null,2)+'\n');
-  fs.appendFileSync(path.join(root,'docs/npz-next-three.md'),'\n## Validation utilisateur\n\nLes trois essais sont validés et remplacent désormais les versions non corrigées sous leurs identifiants habituels. Les GLB non corrigés et les entrées doublons `[ESSAI correction]` sont supprimés. Les fichiers corrigés restent dans `repair-candidates`, avec le même SHA-256 que les versions validées. Les métadonnées pointent sur ces fichiers. Ne pas relancer `next-three` : ce lot est finalisé.\n');
+  fs.writeFileSync(path.join(root,`scripts/${reportName}.json`),JSON.stringify(report,null,2)+'\n');
+  fs.appendFileSync(path.join(root,`docs/${docName}.md`),'\n## Validation utilisateur\n\nLes trois essais sont validés et remplacent désormais les versions non corrigées sous leurs identifiants habituels. Les GLB non corrigés et les entrées doublons `[ESSAI correction]` sont supprimés. Les fichiers corrigés restent dans `repair-candidates`, avec le même SHA-256 que les versions validées. Les métadonnées pointent sur ces fichiers. Ce lot est finalisé : ne pas relancer sa génération.\n');
+  // Isoler le patch du registre des ajouts simultanés d’autres agents.
+  fs.writeFileSync('/tmp/room-npz-promotion-before.ts',before);
+  fs.writeFileSync('/tmp/room-npz-promotion-after.ts',text);
+  let patch;
+  try { patch=git('diff','--no-index','--src-prefix=a/','--dst-prefix=b/','--','/tmp/room-npz-promotion-before.ts','/tmp/room-npz-promotion-after.ts').toString(); }
+  catch(error) { if(error.status!==1) throw error;patch=error.stdout.toString(); }
+  patch=patch.replaceAll('a/tmp/room-npz-promotion-before.ts','a/'+registryPath).replaceAll('b/tmp/room-npz-promotion-after.ts','b/'+registryPath);
+  fs.writeFileSync('/tmp/room-npz-promotion.patch',patch);
   console.log('Three accepted candidates promoted; uncorrected GLBs and duplicate preview entries removed.');
 }
 async function nextThree(following=false) {

@@ -29,14 +29,14 @@
   },
   {
     "name": "Zumba Fanie C3D",
-    "glb": "animations/npz/dances/anim_zumba_fanie_c3d.glb",
+    "glb": "animations/npz/repair-candidates/anim_zumba_fanie_c3d.glb",
     "frames": 6750,
     "duration": 225,
     "size_kb": 2924
   },
   {
     "name": "Belly Dance 2 Anna Cortesi C3D",
-    "glb": "animations/npz/dances/anim_bellydance2_anna_cortesi_c3d.glb",
+    "glb": "animations/npz/repair-candidates/anim_bellydance2_anna_cortesi_c3d.glb",
     "frames": 8423,
     "duration": 280.8,
     "size_kb": 2919
@@ -50,7 +50,7 @@
   },
   {
     "name": "Salsa Stefanos C3D",
-    "glb": "animations/npz/dances/anim_salsa_stefanos_c3d.glb",
+    "glb": "animations/npz/repair-candidates/anim_salsa_stefanos_c3d.glb",
     "frames": 5894,
     "duration": 196.5,
     "size_kb": 2550

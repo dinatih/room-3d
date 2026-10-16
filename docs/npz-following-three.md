@@ -13,3 +13,7 @@ Les sauts locaux rapides et les retours des mains en espace monde sont deux mesu
 Les dates et articulations adoucies figurent dans `scripts/npz_following_three.json` (`wrists[].changed`, `history`). Les originaux sont conservés. Aucun extrait supplémentaire ni animation supprimée n’est régénéré.
 
 Tests : invariants binaires hors rotations des mains, dates et translations identiques, positions des poignets/pieds/bassin identiques sur toutes les frames, références originales inchangées par SHA-256. Commande reproductible : `node scripts/temp_npz_resume.cjs following-three`. Avec Vite sur 5193 : ajouter `--browser` pour vérifier chargement et mixeur dans Chromium headless.
+
+## Validation utilisateur
+
+Les trois essais sont validés et remplacent désormais les versions non corrigées sous leurs identifiants habituels. Les GLB non corrigés et les entrées doublons `[ESSAI correction]` sont supprimés. Les fichiers corrigés restent dans `repair-candidates`, avec le même SHA-256 que les versions validées. Les métadonnées pointent sur ces fichiers. Ce lot est finalisé : ne pas relancer sa génération.
