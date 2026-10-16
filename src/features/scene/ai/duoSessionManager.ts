@@ -7,6 +7,9 @@ import { AUTONOMOUS_NPC_IDS, isCharacterVisibleInMode } from '../characterConfig
 import { getSmartObject } from './smartObjectRegistry';
 import { INITIAL_SMART_OBJECT_BY_CHAR } from './autonomousActivities';
 import { useSceneStore } from '../store/useSceneStore';
+import { findDuoAnchor } from './navigation/duoPlacement';
+import { getNavigationGraph } from './navigation/service';
+import { getAgentProfile } from './navigation/obstacles';
 
 export type DuoRole = 'roleA' | 'roleB';
 
@@ -435,7 +438,7 @@ class DuoSessionManager {
       || obj.slots[0];
     const actualSlotId = slotId || slot?.slotId || 'duo';
 
-    const anchorPos: [number, number, number] = slot?.offset ?? [0, 0, 0];
+    let anchorPos: [number, number, number] = [...(slot?.offset ?? [0, 0, 0])];
     const anchorRotY: number = slot?.rotY ?? obj.rotationY ?? 0;
     const [bx, , bz] = anchorPos;
 
@@ -447,7 +450,7 @@ class DuoSessionManager {
     }
     if (existing && !existing.isSessionComplete) {
       const curDef = existing.playlist[existing.currentAnimIndex] || def;
-      const { posA, posB, rotA, rotB } = computeWorldTransform(anchorPos, anchorRotY, curDef.offsetB, curDef.rotB);
+      const { posA, posB, rotA, rotB } = computeWorldTransform(existing.location.anchorPos, existing.location.anchorRotY, curDef.offsetB, curDef.rotB);
       if (leaderId && !existing.playlist.every(anim => canCharacterPerformDuo(leaderId!, anim))) {
         if (!existing.participantA || !existing.participantB) return null;
         return { targetA: existing.participantA.characterId, targetB: existing.participantB.characterId, posA, posB, rotA, rotB, actualSlotId };
@@ -508,6 +511,15 @@ class DuoSessionManager {
     if (!targetA || !targetB || targetA === targetB) return null;
 
 
+    if (objectId === 'duo-zone') {
+      const safeAnchor = findDuoAnchor(anchorPos, anchorRotY, playlist,
+        getNavigationGraph(getAgentProfile(targetA)), getNavigationGraph(getAgentProfile(targetB)));
+      if (!safeAnchor) {
+        appLog(`${targetA}+${targetB}`, `🚧 Impossible de placer le duo ${obj.name} sur un sol praticable pour toute la séquence`);
+        return null;
+      }
+      anchorPos = safeAnchor;
+    }
     const location: DuoLocation = { objectId, slotId: actualSlotId, anchorPos, anchorRotY };
 
     // Réservations d'occupation
@@ -597,6 +609,14 @@ class DuoSessionManager {
 
     if (!targetA || !targetB || targetA === targetB) return null;
 
+    const safeAnchor = findDuoAnchor(this.basePos, this.defaultLocation.anchorRotY, [def],
+      getNavigationGraph(getAgentProfile(targetA)), getNavigationGraph(getAgentProfile(targetB)));
+    if (!safeAnchor) {
+      appLog(`${targetA}+${targetB}`, `🚧 Impossible de placer le duo "${def.label}" sur un sol praticable`);
+      return null;
+    }
+    session.location = { ...this.defaultLocation, anchorPos: safeAnchor };
+
     // Libérer les anciens occupants si changement de PNJ
     if (session.participantA && session.participantA.characterId !== targetA) {
       this.charToSession.delete(session.participantA.characterId);
@@ -617,7 +637,7 @@ class DuoSessionManager {
     session.cachedAnimState = null;
 
     // Calculer les positions cibles monde pour A et B
-    const { posA, posB, rotA, rotB } = computeWorldTransform(this.basePos, this.defaultLocation.anchorRotY, def.offsetB, def.rotB);
+    const { posA, posB, rotA, rotB } = computeWorldTransform(session.location.anchorPos, session.location.anchorRotY, def.offsetB, def.rotB);
 
     // Présence physique (< 80 cm de chaque spot respectif)
     const isNearby = (id: string, targetPos: [number, number, number]) => {
