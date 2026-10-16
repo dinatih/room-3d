@@ -1,7 +1,8 @@
 const fs = require('node:fs');
 const { spawn } = require('node:child_process');
 const launch = require('./browser-test-options.cjs');
-const out = '/tmp/room-lara-profile';
+const isolate = process.argv.includes('--isolate-blur');
+const out = isolate ? '/tmp/room-lara-blur-isolation' : '/tmp/room-lara-profile';
 const delay = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   fs.mkdirSync(out, { recursive: true });
@@ -33,7 +34,26 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
     const client = await page.createCDPSession();
     await client.send('Profiler.enable');
     const results = [];
-    for (const condition of ['animated', 'paused', 'paused-no-blur', 'animated-no-blur', 'animated-blur-restored']) {
+    let conditions;
+    if (isolate) {
+      const elements = await page.evaluate(() => [...document.querySelectorAll('*')].filter(el => {
+        const css = getComputedStyle(el), rect = el.getBoundingClientRect();
+        return css.backdropFilter !== 'none' && rect.width > 0 && rect.height > 0 && css.visibility !== 'hidden';
+      }).map((el, index) => {
+        el.dataset.profileBlur = String(index);
+        const css = getComputedStyle(el), rect = el.getBoundingClientRect();
+        return { index, tag: el.tagName, classes: el.className, blur: css.backdropFilter, width: rect.width, height: rect.height };
+      }));
+      fs.writeFileSync(`${out}/elements.json`, JSON.stringify(elements, null, 2));
+      console.log('BLUR ELEMENTS', JSON.stringify(elements));
+      conditions = ['baseline', ...elements.map(el => `disable-${el.index}`), 'disable-overlay-modal', 'disable-all', 'baseline-restored'];
+    }
+    for (const condition of conditions || ['animated', 'paused', 'paused-no-blur', 'animated-no-blur', 'animated-blur-restored']) {
+      if (isolate) {
+        await page.evaluate(() => document.getElementById('profile-isolate-blur')?.remove());
+        const selector = condition.startsWith('disable-') && /^disable-\d+$/.test(condition) ? `[data-profile-blur="${condition.slice(8)}"]` : condition === 'disable-overlay-modal' ? '.inventory-overlay, .inventory-modal' : condition === 'disable-all' ? '*' : null;
+        if (selector) await page.addStyleTag({ content: `${selector} { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }` }).then(handle => handle.evaluate(el => el.id = 'profile-isolate-blur'));
+      }
       if (condition === 'paused') await page.evaluate(async () => { const { useAnimPreviewStore } = await import('/src/features/inventory/useAnimPreviewStore.ts'); useAnimPreviewStore.getState().pause(); });
       if (condition === 'paused-no-blur') await page.addStyleTag({ content: '* { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }', id: 'profile-disable-blur' }).then(handle => handle.evaluate(el => el.id = 'profile-disable-blur'));
       if (condition === 'animated-no-blur') await page.evaluate(async () => { const { useAnimPreviewStore } = await import('/src/features/inventory/useAnimPreviewStore.ts'); useAnimPreviewStore.getState().play(); });
