@@ -196,7 +196,8 @@ function audit(g) {
 }
 function main() {
   const mode = process.argv[2] || 'audit';
-  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser','next-three','following-three','olivia-three','promote-three','frame-check'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser','next-three','following-three','olivia-three','distal','promote-three','frame-check'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(mode==='distal') return refineDistal();
   if(mode==='olivia-three') return nextThree(false,true);
   if(mode==='promote-three') return promoteThree(process.argv.includes('--following'));
   if(mode==='following-three') return nextThree(true);
@@ -1241,5 +1242,175 @@ async function checkFrameCounter() {
     console.log(JSON.stringify({widths,clips},null,2));
     console.log('Frame counter and both Bachata mixers cross frame 999 at unchanged speed: PASS');
   } finally {await browser.close();}
+}
+// Correction d’aller-retour uniquement. Les rotations rapides monotones restent intactes.
+function reduceReturns(input,project=(q,i)=>q) {
+  let out=input.map(q=>q.slice()),metrics=rotationNoise(out),passes=0;
+  const history=[metrics];
+  while(metrics.returns) {
+    const next=out.map(q=>q.slice());let changed=false;
+    for(let i=1;i<out.length-1;i++) {
+      const excess=angle(out[i-1],out[i])+angle(out[i],out[i+1])-angle(out[i-1],out[i+1]);
+      if(excess>jumpThreshold) {next[i]=project(slerp(out[i],slerp(out[i-1],out[i+1],0.5),0.5),i);changed=true;}
+    }
+    if(!changed) break;
+    const trial=rotationNoise(next);
+    if(trial.returns>metrics.returns || metrics.returnEnergy-trial.returnEnergy<=Number.EPSILON*Math.max(1,metrics.returnEnergy)) break;
+    out=next;metrics=trial;passes++;history.push(metrics);
+  }
+  // Une mise à jour simultanée peut créer un retour chez un voisin. Essayer
+  // ensuite chaque clé isolément, avec contrôle de son voisinage complet.
+  while(metrics.returns) {
+    let progress=false;
+    for(let i=1;i<out.length-1;i++) {
+      const excess=angle(out[i-1],out[i])+angle(out[i],out[i+1])-angle(out[i-1],out[i+1]);
+      if(excess<=jumpThreshold) continue;
+      const start=Math.max(0,i-2),end=Math.min(out.length,i+3),old=out[i];
+      const before=rotationNoise(out.slice(start,end)),mid=slerp(out[i-1],out[i+1],0.5);
+      for(const blend of [0.5,1]) {
+        out[i]=project(slerp(old,mid,blend),i);
+        const trial=rotationNoise(out.slice(start,end));
+        if(trial.returns<=before.returns && before.returnEnergy-trial.returnEnergy>Number.EPSILON*Math.max(1,before.returnEnergy)) {progress=true;break;}
+        out[i]=old;
+      }
+    }
+    if(!progress) break;
+    metrics=rotationNoise(out);passes++;history.push(metrics);
+  }
+  return {quats:out,passes,history};
+}
+function splitLevels(values) {
+  let low=Math.min(...values),high=Math.max(...values);
+  while(high>low) {
+    const mid=(low+high)/2,a=values.filter(v=>v<=mid),b=values.filter(v=>v>mid);
+    if(!a.length||!b.length) break;
+    const nextLow=a.reduce((s,v)=>s+v,0)/a.length,nextHigh=b.reduce((s,v)=>s+v,0)/b.length;
+    if(Math.abs(nextLow-low)+Math.abs(nextHigh-high)<=Number.EPSILON*Math.max(1,high)) {low=nextLow;high=nextHigh;break;}
+    low=nextLow;high=nextHigh;
+  }
+  return {low,high};
+}
+function supportWeight(value,levels) {
+  if(levels.high===levels.low) return 0;
+  const t=Math.max(0,Math.min(1,(value-levels.low)/(levels.high-levels.low)));
+  return 1-t*t*(3-2*t);
+}
+function correctFootPosture(h,times) {
+  const localAxis=h.restAxis.clone().applyQuaternion(h.rest.clone().invert());
+  const speeds=h.positions.map((p,i)=>{
+    const a=Math.max(0,i-1),b=Math.min(times.length-1,i+1);
+    return h.positions[b].clone().sub(h.positions[a]).setY(0).length()/(times[b]-times[a]);
+  });
+  const heightLevels=splitLevels(h.heights),speedLevels=splitLevels(speeds);
+  const weights=h.heights.map((height,i)=>i===0||i===times.length-1?0:supportWeight(height,heightLevels)*supportWeight(speeds[i],speedLevels));
+  const restHeading=Math.atan2(h.restAxis.x,h.restAxis.z);
+  const neutral=h.axes.map(axis=>new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(axis.x,axis.z)-restHeading).multiply(h.rest).toArray());
+  // Les orteils peuvent descendre pour corriger le pied levé, sans nouvelle
+  // pénétration sous Y=0 (ou sous leur hauteur originale si déjà négative).
+  const floorProject=(q,i)=>{
+    const axis=localAxis.clone().applyQuaternion(qObj(q));
+    const minY=(Math.min(0,h.toeHeights[i])-h.heights[i])/h.length;
+    if(axis.y>=minY || minY<=-1) return q;
+    const target=axis.clone();target.y=Math.min(1,minY);
+    const horizontal=Math.hypot(axis.x,axis.z),length=Math.sqrt(Math.max(0,1-target.y*target.y));
+    if(horizontal<=Number.EPSILON) throw Error('Undefined foot heading');
+    target.x=axis.x/horizontal*length;target.z=axis.z/horizontal*length;
+    return new THREE.Quaternion().setFromUnitVectors(axis,target).multiply(qObj(q)).normalize().toArray();
+  };
+  const clean=reduceReturns(h.world,floorProject);
+  let strength=1,quats;
+  while(true) {
+    quats=clean.quats.map((q,i)=>weights[i]?floorProject(slerp(q,neutral[i],weights[i]*strength),i):q);
+    if(rotationNoise(quats).returns<=rotationNoise(h.world).returns) break;
+    strength/=2;
+    if(strength<=Number.EPSILON) throw Error('No stable foot posture correction found');
+  }
+  const changed=quats.map((q,i)=>angle(q,h.world[i])).filter(a=>a>1e-5);
+  const weightSum=weights.reduce((a,b)=>a+b,0);
+  const supportError=q=>weightSum?q.reduce((sum,v,i)=>sum+weights[i]*angle(v,neutral[i]),0)/weightSum:0;
+  return {quats,passes:clean.passes,history:clean.history,posture:{heightLevels,speedLevels,strength,modifiedFrames:changed.length,maxCorrectionDegrees:Math.max(0,...changed),weightedNeutralErrorBefore:supportError(h.world),weightedNeutralErrorAfter:supportError(quats)},floorProject};
+}
+async function refineDistal() {
+  const assert=require('node:assert/strict'),reference='27f81eed';
+  const identity=[0,0,0,1],quarterTurn=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/2).toArray();
+  assert.equal(rotationNoise(reduceReturns([identity,identity,quarterTurn,identity,identity]).quats).returns,0,'Isolated spike not repaired');
+  const turn=Array.from({length:5},(_,i)=>new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),i*Math.PI/4).toArray());
+  assert.deepEqual(reduceReturns(turn).quats,turn,'Intentional fast turn changed');
+  const sourceRows=JSON.parse(fs.readFileSync(path.join(root,'scripts/npz_repair_candidates.json'),'utf8')).rows;
+  const ids=['happy-dance-olivia','excited-dance-olivia','pleased-dance-olivia'];
+  const results=[],browserRows=[];
+  for(const id of ids) {
+    const row=sourceRows.find(r=>r.id===id),bytes=git('show',`${reference}:${row.candidateFile}`),base=parse(bytes),g=parse(Buffer.from(bytes));
+    const rig=poseRig(base),times=clipTimeline(base);
+    rig.scene.updateMatrixWorld(true);
+    const targets=['LeftHand','RightHand','LeftFoot','RightFoot'].map(name=>{
+      const node=rig.nodes.find(n=>n.name==='mixamorig:'+name);
+      const toe=rig.nodes.find(n=>n.name==='mixamorig:'+name.replace('Foot','ToeBase'));
+      const restVector=name.endsWith('Foot')?toe.getWorldPosition(new THREE.Vector3()).sub(node.getWorldPosition(new THREE.Vector3())):null;
+      return {bone:'mixamorig:'+name,node,world:[],parent:[],axes:[],heights:[],positions:[],toeHeights:[],length:restVector?.length(),rest:node.getWorldQuaternion(new THREE.Quaternion()),restAxis:restVector?.normalize()};
+    });
+    for(const t of times) {
+      rig.setTime(t);
+      for(const h of targets) {
+        h.world.push(h.node.getWorldQuaternion(new THREE.Quaternion()).toArray());
+        h.parent.push(h.node.parent.getWorldQuaternion(new THREE.Quaternion()).toArray());
+        if(h.bone.endsWith('Foot')) {
+          const toe=rig.nodes.find(n=>n.name===h.bone.replace('Foot','ToeBase'));
+          const axis=toe.getWorldPosition(new THREE.Vector3()).sub(h.node.getWorldPosition(new THREE.Vector3()));
+          assert(axis.lengthSq()>0,'Degenerate foot/toe axis');h.axes.push(axis.normalize());
+          const position=h.node.getWorldPosition(new THREE.Vector3());h.heights.push(position.y);h.positions.push(position);
+          h.toeHeights.push(toe.getWorldPosition(new THREE.Vector3()).y);
+        }
+      }
+    }
+    if(process.argv.includes('--feet-scan')) {
+      console.log(id,JSON.stringify(targets.filter(h=>h.axes.length).map(h=>({bone:h.bone,restAxis:h.restAxis.toArray(),minHeight:Math.min(...h.heights),maxHeight:Math.max(...h.heights),sample:h.axes.slice(0,3).map(v=>v.toArray())}))));continue;
+    }
+    const details=[];
+    for(const h of targets) {
+      const result=h.axes.length?correctFootPosture(h,times):reduceReturns(h.world),tr=g.tracks.find(t=>t.type==='rotation'&&t.bone===h.bone),changed=new Set();
+      assert.deepEqual(tr.times,times);
+      for(let i=1;i<times.length-1;i++) {
+        if(angle(result.quats[i],h.world[i])<1e-5) continue;
+        const local=qObj(h.parent[i]).invert().multiply(qObj(result.quats[i])).normalize().toArray();
+        if(dot(local,tr.output.values[i])<0) local.forEach((v,k)=>local[k]=-v);
+        local.forEach((v,k)=>g.buf.writeFloatLE(v,tr.output.offset+i*tr.output.stride+k*4));changed.add(i);
+      }
+      details.push({bone:h.bone,before:rotationNoise(h.world),passes:result.passes,changed:changedIntervals(changed,times),history:result.history,posture:result.posture});
+    }
+    const final=parse(g.buf);assertPreserved(base,final);
+    const allowed=new Uint8Array(bytes.length);
+    for(const tr of base.tracks.filter(t=>t.type==='rotation'&&targets.some(h=>h.bone===t.bone)))
+      tr.output.values.forEach((_,i)=>allowed.fill(1,tr.output.offset+i*tr.output.stride,tr.output.offset+i*tr.output.stride+16));
+    for(let i=0;i<bytes.length;i++) assert(bytes[i]===g.buf[i]||allowed[i],'Unrelated bytes changed');
+    const nextRig=poseRig(final),checkRig=poseRig(base),actual=targets.map(()=>[]);
+    let maxAnchorDisplacement=0,maxToeDisplacement=0;
+    for(const t of times) {
+      checkRig.setTime(t);nextRig.setTime(t);
+      targets.forEach((h,i)=>actual[i].push(nextRig.nodes.find(n=>n.name===h.bone).getWorldQuaternion(new THREE.Quaternion()).toArray()));
+      for(const name of ['Hips','LeftHand','RightHand','LeftFoot','RightFoot']) {
+        const points=[checkRig,nextRig].map(r=>r.nodes.find(n=>n.name==='mixamorig:'+name).getWorldPosition(new THREE.Vector3()));
+        const distance=points[0].distanceTo(points[1]);maxAnchorDisplacement=Math.max(maxAnchorDisplacement,distance);
+        assert(distance<=2**-18*Math.max(1,points[0].length()),'Contact pivot displaced: '+name);
+      }
+      for(const name of ['LeftToeBase','RightToeBase']) {
+        const points=[checkRig,nextRig].map(r=>r.nodes.find(n=>n.name==='mixamorig:'+name).getWorldPosition(new THREE.Vector3()));
+        maxToeDisplacement=Math.max(maxToeDisplacement,points[0].distanceTo(points[1]));
+        assert(points[1].y>=Math.min(0,points[0].y)-2**-18,'New toe penetration: '+name);
+      }
+    }
+    details.forEach((d,i)=>{d.after=rotationNoise(actual[i]);assert(d.after.returns<=d.before.returns,'Return alerts increased');});
+    fs.writeFileSync(path.join(root,row.candidateFile),g.buf);
+    const result={id,file:row.candidateFile,reference,sourceSHA256:hashBytes(bytes),resultSHA256:hashBytes(g.buf),before:audit(base),after:audit(final),maxAnchorDisplacement,maxToeDisplacement,details};
+    results.push(result);browserRows.push({...row,capture:true});
+    console.log(id,JSON.stringify(details.map(d=>({bone:d.bone,before:d.before.returns,after:d.after.returns,passes:d.passes}))));
+  }
+  if(process.argv.includes('--feet-scan')) return;
+  fs.writeFileSync(path.join(root,'scripts/npz_olivia_distal.json'),JSON.stringify({reference,results},null,2)+'\n');
+  let md='# Olivia : seconde passe poignets et chevilles\n\nRéférence immuable : `27f81eed`. Modification des quatre rotations terminales seulement. Détection des retours angulaires >25° sur trois frames à 30 Hz, moyenne géodésique symétrique locale, arrêt à disparition des retours ou convergence. Les poignets rapides sans aller-retour restent intacts.\n\nPieds : orientation neutre tirée du squelette de référence, cap horizontal conservé. Poids d’appui obtenu par séparation en deux groupes des hauteurs de cheville et des vitesses horizontales de chaque prise ; transition continue entre centres des groupes. Les pieds bas et lents sont redressés en priorité, les pieds hauts/rapides sont préservés hors correction de vibration. Les orteils changent donc intentionnellement de position pour corriger la flexion. Leur pivot ne descend pas sous Y=0, ou sous sa hauteur originale si elle était déjà négative. La force est réduite si le redressement augmente les alertes de retour. Ces heuristiques d’appui restent à valider visuellement et ne constituent pas une détection de contact de la semelle du personnage retargeté.\n\n| Animation | Articulation | Retours avant → après |\n|---|---|---:|\n';
+  for(const r of results) for(const d of r.details) md+=`| ${r.id} | ${d.bone} | ${d.before.returns} → ${d.after.returns} |\n`;
+  md+='\nCadence, temps, translations XYZ, autres rotations et extrémités du clip préservés. Contrôle binaire et vérification des pivots bassin/poignets/chevilles sur chaque frame, et de la limite de hauteur des orteils. Dates exactes, amplitudes, poids d’appui et mesures dans `scripts/npz_olivia_distal.json`. Commande : `node scripts/temp_npz_resume.cjs distal` ; ajouter `--browser` pour contrôler le chargement et le mixeur avec Vite sur 5193. Les versions `[ESSAI correction]` sont mises à jour ; les originaux restent disponibles. Validation visuelle requise.\n';
+  fs.writeFileSync(path.join(root,'docs/npz-olivia-distal.md'),md);
+  if(process.argv.includes('--browser')) await reviewRepairs(browserRows,'npz_olivia_distal_browser.json',{},'/tmp/room-npz-olivia-distal-review');
 }
 Promise.resolve(main()).catch(err=>{console.error(err);process.exitCode=1;});

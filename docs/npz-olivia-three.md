@@ -1,5 +1,7 @@
 # Dernier lot initial : Happy, Excited et Pleased Dance Olivia
 
+Une seconde passe ciblant poignets, chevilles et flexion des pieds en appui a depuis mis à jour les trois essais. Voir `docs/npz-olivia-distal.md` et `scripts/npz_olivia_distal.json` pour les mesures actuelles. Le tableau ci-dessous décrit la première passe.
+
 Versions `[ESSAI correction]` à comparer aux originaux. Référence non cumulative : candidats du commit `c6c5468f`. Seules les deux rotations des mains changent par rapport à ces candidats. Méthode Bachata : moyenne géodésique symétrique [1,2,1] dans les zones d’alerte des poignets en espace monde, puis retour dans la base locale. Arrêt dès disparition des retours >25° ou convergence numérique. Aucun changement des temps, vitesses, translations XYZ, hauteurs, rotations du bassin, bras ou jambes.
 
 | Animation | Sauts locaux original → premier essai → nouvel essai | Retours main gauche | Retours main droite |

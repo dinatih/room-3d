@@ -1,0 +1,3049 @@
+{
+  "reference": "27f81eed",
+  "results": [
+    {
+      "id": "happy-dance-olivia",
+      "file": "public/animations/npz/repair-candidates/anim_happy_dance.glb",
+      "reference": "27f81eed",
+      "sourceSHA256": "bb60986541513451d5cf9aa60230e5a2bb063cc0f5b7a077bd641ae5287e40c5",
+      "resultSHA256": "10b69cf490eb219ffb595cc79fe82e5c1f507a3aff61d64df8ed9274509cfc8d",
+      "before": {
+        "jumps": 328,
+        "maxJump": 178.78,
+        "duration": 87.43333435058594,
+        "hipsRange": [
+          2.2352479053605805,
+          0.4678877204614035,
+          2.276762405457351
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": [
+          {
+            "bone": "mixamorig:LeftLeg",
+            "jumps": 8,
+            "max": 35.46
+          },
+          {
+            "bone": "mixamorig:LeftFoot",
+            "jumps": 41,
+            "max": 60.8
+          },
+          {
+            "bone": "mixamorig:LeftToeBase",
+            "jumps": 1,
+            "max": 33.73
+          },
+          {
+            "bone": "mixamorig:RightLeg",
+            "jumps": 3,
+            "max": 33.5
+          },
+          {
+            "bone": "mixamorig:RightFoot",
+            "jumps": 18,
+            "max": 63.76
+          },
+          {
+            "bone": "mixamorig:RightToeBase",
+            "jumps": 3,
+            "max": 37.41
+          },
+          {
+            "bone": "mixamorig:LeftArm",
+            "jumps": 3,
+            "max": 36.26
+          },
+          {
+            "bone": "mixamorig:LeftForeArm",
+            "jumps": 51,
+            "max": 115.23
+          },
+          {
+            "bone": "mixamorig:LeftHand",
+            "jumps": 76,
+            "max": 178.78
+          },
+          {
+            "bone": "mixamorig:RightArm",
+            "jumps": 3,
+            "max": 31.91
+          },
+          {
+            "bone": "mixamorig:RightForeArm",
+            "jumps": 47,
+            "max": 58.99
+          },
+          {
+            "bone": "mixamorig:RightHand",
+            "jumps": 74,
+            "max": 140.3
+          }
+        ]
+      },
+      "after": {
+        "jumps": 349,
+        "maxJump": 178.78,
+        "duration": 87.43333435058594,
+        "hipsRange": [
+          2.2352479053605805,
+          0.4678877204614035,
+          2.276762405457351
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": [
+          {
+            "bone": "mixamorig:LeftLeg",
+            "jumps": 8,
+            "max": 35.46
+          },
+          {
+            "bone": "mixamorig:LeftFoot",
+            "jumps": 60,
+            "max": 119.37
+          },
+          {
+            "bone": "mixamorig:LeftToeBase",
+            "jumps": 1,
+            "max": 33.73
+          },
+          {
+            "bone": "mixamorig:RightLeg",
+            "jumps": 3,
+            "max": 33.5
+          },
+          {
+            "bone": "mixamorig:RightFoot",
+            "jumps": 22,
+            "max": 87.52
+          },
+          {
+            "bone": "mixamorig:RightToeBase",
+            "jumps": 3,
+            "max": 37.41
+          },
+          {
+            "bone": "mixamorig:LeftArm",
+            "jumps": 3,
+            "max": 36.26
+          },
+          {
+            "bone": "mixamorig:LeftForeArm",
+            "jumps": 51,
+            "max": 115.23
+          },
+          {
+            "bone": "mixamorig:LeftHand",
+            "jumps": 75,
+            "max": 178.78
+          },
+          {
+            "bone": "mixamorig:RightArm",
+            "jumps": 3,
+            "max": 31.91
+          },
+          {
+            "bone": "mixamorig:RightForeArm",
+            "jumps": 47,
+            "max": 58.99
+          },
+          {
+            "bone": "mixamorig:RightHand",
+            "jumps": 73,
+            "max": 93.19
+          }
+        ]
+      },
+      "maxAnchorDisplacement": 0,
+      "maxToeDisplacement": 0.09826578644871407,
+      "details": [
+        {
+          "bone": "mixamorig:LeftHand",
+          "before": {
+            "jumps": 193,
+            "returns": 1,
+            "maxStep": 173.68379194351775,
+            "returnEnergy": 25030.400058025985
+          },
+          "passes": 1,
+          "changed": [
+            {
+              "firstKey": 1730,
+              "lastKey": 1730,
+              "start": 57.70000076293945,
+              "end": 57.70000076293945
+            }
+          ],
+          "history": [
+            {
+              "jumps": 193,
+              "returns": 1,
+              "maxStep": 173.68379194351775,
+              "returnEnergy": 25030.400058025985
+            },
+            {
+              "jumps": 192,
+              "returns": 0,
+              "maxStep": 122.84582795913722,
+              "returnEnergy": 20706.90544174598
+            }
+          ],
+          "after": {
+            "jumps": 192,
+            "returns": 0,
+            "maxStep": 122.84583495937349,
+            "returnEnergy": 20706.905356321364
+          }
+        },
+        {
+          "bone": "mixamorig:RightHand",
+          "before": {
+            "jumps": 184,
+            "returns": 4,
+            "maxStep": 175.16882934214343,
+            "returnEnergy": 24318.475317417644
+          },
+          "passes": 1,
+          "changed": [
+            {
+              "firstKey": 619,
+              "lastKey": 619,
+              "start": 20.66666603088379,
+              "end": 20.66666603088379
+            },
+            {
+              "firstKey": 1728,
+              "lastKey": 1728,
+              "start": 57.63333511352539,
+              "end": 57.63333511352539
+            },
+            {
+              "firstKey": 1730,
+              "lastKey": 1730,
+              "start": 57.70000076293945,
+              "end": 57.70000076293945
+            }
+          ],
+          "history": [
+            {
+              "jumps": 184,
+              "returns": 4,
+              "maxStep": 175.16882934214343,
+              "returnEnergy": 24318.475317417644
+            },
+            {
+              "jumps": 182,
+              "returns": 0,
+              "maxStep": 124.28100663404003,
+              "returnEnergy": 18294.27150677811
+            }
+          ],
+          "after": {
+            "jumps": 182,
+            "returns": 0,
+            "maxStep": 124.28100502641915,
+            "returnEnergy": 18294.27139405115
+          }
+        },
+        {
+          "bone": "mixamorig:LeftFoot",
+          "before": {
+            "jumps": 133,
+            "returns": 16,
+            "maxStep": 67.46017068642465,
+            "returnEnergy": 57133.35703464839
+          },
+          "passes": 2,
+          "changed": [
+            {
+              "firstKey": 1,
+              "lastKey": 26,
+              "start": 0.06666667014360428,
+              "end": 0.8999999761581421
+            },
+            {
+              "firstKey": 31,
+              "lastKey": 31,
+              "start": 1.0666667222976685,
+              "end": 1.0666667222976685
+            },
+            {
+              "firstKey": 33,
+              "lastKey": 49,
+              "start": 1.1333333253860474,
+              "end": 1.6666666269302368
+            },
+            {
+              "firstKey": 55,
+              "lastKey": 85,
+              "start": 1.8666666746139526,
+              "end": 2.866666555404663
+            },
+            {
+              "firstKey": 89,
+              "lastKey": 107,
+              "start": 3,
+              "end": 3.5999999046325684
+            },
+            {
+              "firstKey": 111,
+              "lastKey": 133,
+              "start": 3.7333333492279053,
+              "end": 4.4666666984558105
+            },
+            {
+              "firstKey": 138,
+              "lastKey": 146,
+              "start": 4.633333206176758,
+              "end": 4.900000095367432
+            },
+            {
+              "firstKey": 152,
+              "lastKey": 207,
+              "start": 5.099999904632568,
+              "end": 6.933333396911621
+            },
+            {
+              "firstKey": 209,
+              "lastKey": 209,
+              "start": 7,
+              "end": 7
+            },
+            {
+              "firstKey": 213,
+              "lastKey": 235,
+              "start": 7.133333206176758,
+              "end": 7.866666793823242
+            },
+            {
+              "firstKey": 237,
+              "lastKey": 263,
+              "start": 7.933333396911621,
+              "end": 8.800000190734863
+            },
+            {
+              "firstKey": 278,
+              "lastKey": 288,
+              "start": 9.300000190734863,
+              "end": 9.633333206176758
+            },
+            {
+              "firstKey": 296,
+              "lastKey": 407,
+              "start": 9.899999618530273,
+              "end": 13.600000381469727
+            },
+            {
+              "firstKey": 410,
+              "lastKey": 410,
+              "start": 13.699999809265137,
+              "end": 13.699999809265137
+            },
+            {
+              "firstKey": 414,
+              "lastKey": 427,
+              "start": 13.833333015441895,
+              "end": 14.266666412353516
+            },
+            {
+              "firstKey": 431,
+              "lastKey": 465,
+              "start": 14.399999618530273,
+              "end": 15.533333778381348
+            },
+            {
+              "firstKey": 470,
+              "lastKey": 484,
+              "start": 15.699999809265137,
+              "end": 16.16666603088379
+            },
+            {
+              "firstKey": 488,
+              "lastKey": 514,
+              "start": 16.299999237060547,
+              "end": 17.16666603088379
+            },
+            {
+              "firstKey": 520,
+              "lastKey": 530,
+              "start": 17.366666793823242,
+              "end": 17.700000762939453
+            },
+            {
+              "firstKey": 538,
+              "lastKey": 593,
+              "start": 17.96666717529297,
+              "end": 19.799999237060547
+            },
+            {
+              "firstKey": 598,
+              "lastKey": 640,
+              "start": 19.96666717529297,
+              "end": 21.366666793823242
+            },
+            {
+              "firstKey": 645,
+              "lastKey": 645,
+              "start": 21.53333282470703,
+              "end": 21.53333282470703
+            },
+            {
+              "firstKey": 650,
+              "lastKey": 705,
+              "start": 21.700000762939453,
+              "end": 23.53333282470703
+            },
+            {
+              "firstKey": 710,
+              "lastKey": 740,
+              "start": 23.700000762939453,
+              "end": 24.700000762939453
+            },
+            {
+              "firstKey": 744,
+              "lastKey": 769,
+              "start": 24.83333396911621,
+              "end": 25.66666603088379
+            },
+            {
+              "firstKey": 774,
+              "lastKey": 878,
+              "start": 25.83333396911621,
+              "end": 29.299999237060547
+            },
+            {
+              "firstKey": 883,
+              "lastKey": 903,
+              "start": 29.46666717529297,
+              "end": 30.133333206176758
+            },
+            {
+              "firstKey": 908,
+              "lastKey": 938,
+              "start": 30.299999237060547,
+              "end": 31.299999237060547
+            },
+            {
+              "firstKey": 943,
+              "lastKey": 1002,
+              "start": 31.46666717529297,
+              "end": 33.43333435058594
+            },
+            {
+              "firstKey": 1008,
+              "lastKey": 1016,
+              "start": 33.63333511352539,
+              "end": 33.900001525878906
+            },
+            {
+              "firstKey": 1022,
+              "lastKey": 1036,
+              "start": 34.099998474121094,
+              "end": 34.56666564941406
+            },
+            {
+              "firstKey": 1041,
+              "lastKey": 1068,
+              "start": 34.733333587646484,
+              "end": 35.63333511352539
+            },
+            {
+              "firstKey": 1073,
+              "lastKey": 1157,
+              "start": 35.79999923706055,
+              "end": 38.599998474121094
+            },
+            {
+              "firstKey": 1161,
+              "lastKey": 1180,
+              "start": 38.733333587646484,
+              "end": 39.36666488647461
+            },
+            {
+              "firstKey": 1185,
+              "lastKey": 1347,
+              "start": 39.53333282470703,
+              "end": 44.93333435058594
+            },
+            {
+              "firstKey": 1355,
+              "lastKey": 1371,
+              "start": 45.20000076293945,
+              "end": 45.733333587646484
+            },
+            {
+              "firstKey": 1378,
+              "lastKey": 1446,
+              "start": 45.96666717529297,
+              "end": 48.233333587646484
+            },
+            {
+              "firstKey": 1451,
+              "lastKey": 1459,
+              "start": 48.400001525878906,
+              "end": 48.66666793823242
+            },
+            {
+              "firstKey": 1464,
+              "lastKey": 1495,
+              "start": 48.83333206176758,
+              "end": 49.86666488647461
+            },
+            {
+              "firstKey": 1501,
+              "lastKey": 1516,
+              "start": 50.06666564941406,
+              "end": 50.56666564941406
+            },
+            {
+              "firstKey": 1524,
+              "lastKey": 1604,
+              "start": 50.83333206176758,
+              "end": 53.5
+            },
+            {
+              "firstKey": 1613,
+              "lastKey": 1628,
+              "start": 53.79999923706055,
+              "end": 54.29999923706055
+            },
+            {
+              "firstKey": 1632,
+              "lastKey": 1664,
+              "start": 54.43333435058594,
+              "end": 55.5
+            },
+            {
+              "firstKey": 1667,
+              "lastKey": 1682,
+              "start": 55.599998474121094,
+              "end": 56.099998474121094
+            },
+            {
+              "firstKey": 1689,
+              "lastKey": 1699,
+              "start": 56.33333206176758,
+              "end": 56.66666793823242
+            },
+            {
+              "firstKey": 1704,
+              "lastKey": 1740,
+              "start": 56.83333206176758,
+              "end": 58.03333282470703
+            },
+            {
+              "firstKey": 1748,
+              "lastKey": 1769,
+              "start": 58.29999923706055,
+              "end": 59
+            },
+            {
+              "firstKey": 1775,
+              "lastKey": 1848,
+              "start": 59.20000076293945,
+              "end": 61.63333511352539
+            },
+            {
+              "firstKey": 1858,
+              "lastKey": 2208,
+              "start": 61.96666717529297,
+              "end": 73.63333129882812
+            },
+            {
+              "firstKey": 2211,
+              "lastKey": 2211,
+              "start": 73.73332977294922,
+              "end": 73.73332977294922
+            },
+            {
+              "firstKey": 2213,
+              "lastKey": 2261,
+              "start": 73.80000305175781,
+              "end": 75.4000015258789
+            },
+            {
+              "firstKey": 2267,
+              "lastKey": 2274,
+              "start": 75.5999984741211,
+              "end": 75.83333587646484
+            },
+            {
+              "firstKey": 2280,
+              "lastKey": 2300,
+              "start": 76.03333282470703,
+              "end": 76.69999694824219
+            },
+            {
+              "firstKey": 2305,
+              "lastKey": 2329,
+              "start": 76.86666870117188,
+              "end": 77.66666412353516
+            },
+            {
+              "firstKey": 2334,
+              "lastKey": 2621,
+              "start": 77.83333587646484,
+              "end": 87.4000015258789
+            }
+          ],
+          "history": [
+            {
+              "jumps": 133,
+              "returns": 16,
+              "maxStep": 67.46017068642465,
+              "returnEnergy": 57133.35703464839
+            },
+            {
+              "jumps": 118,
+              "returns": 1,
+              "maxStep": 51.167656990847256,
+              "returnEnergy": 25600.314605885236
+            },
+            {
+              "jumps": 118,
+              "returns": 0,
+              "maxStep": 51.167656990847256,
+              "returnEnergy": 24905.482232796254
+            }
+          ],
+          "posture": {
+            "heightLevels": {
+              "low": 0.14632215602928744,
+              "high": 0.6906711418170107
+            },
+            "speedLevels": {
+              "low": 0.5165112228918757,
+              "high": 3.112097434706893
+            },
+            "strength": 1,
+            "modifiedFrames": 2385,
+            "maxCorrectionDegrees": 88.21419751808209,
+            "weightedNeutralErrorBefore": 25.453835197167255,
+            "weightedNeutralErrorAfter": 3.697362432715135
+          },
+          "after": {
+            "jumps": 163,
+            "returns": 15,
+            "maxStep": 128.21060669683342,
+            "returnEnergy": 75972.52674163107
+          }
+        },
+        {
+          "bone": "mixamorig:RightFoot",
+          "before": {
+            "jumps": 92,
+            "returns": 3,
+            "maxStep": 65.64600839978638,
+            "returnEnergy": 27589.208801995992
+          },
+          "passes": 1,
+          "changed": [
+            {
+              "firstKey": 1,
+              "lastKey": 17,
+              "start": 0.06666667014360428,
+              "end": 0.6000000238418579
+            },
+            {
+              "firstKey": 20,
+              "lastKey": 21,
+              "start": 0.699999988079071,
+              "end": 0.7333333492279053
+            },
+            {
+              "firstKey": 25,
+              "lastKey": 38,
+              "start": 0.8666666746139526,
+              "end": 1.2999999523162842
+            },
+            {
+              "firstKey": 47,
+              "lastKey": 58,
+              "start": 1.600000023841858,
+              "end": 1.9666666984558105
+            },
+            {
+              "firstKey": 64,
+              "lastKey": 120,
+              "start": 2.1666667461395264,
+              "end": 4.0333333015441895
+            },
+            {
+              "firstKey": 128,
+              "lastKey": 137,
+              "start": 4.300000190734863,
+              "end": 4.599999904632568
+            },
+            {
+              "firstKey": 143,
+              "lastKey": 193,
+              "start": 4.800000190734863,
+              "end": 6.4666666984558105
+            },
+            {
+              "firstKey": 203,
+              "lastKey": 213,
+              "start": 6.800000190734863,
+              "end": 7.133333206176758
+            },
+            {
+              "firstKey": 220,
+              "lastKey": 220,
+              "start": 7.366666793823242,
+              "end": 7.366666793823242
+            },
+            {
+              "firstKey": 223,
+              "lastKey": 242,
+              "start": 7.4666666984558105,
+              "end": 8.100000381469727
+            },
+            {
+              "firstKey": 248,
+              "lastKey": 262,
+              "start": 8.300000190734863,
+              "end": 8.766666412353516
+            },
+            {
+              "firstKey": 266,
+              "lastKey": 302,
+              "start": 8.899999618530273,
+              "end": 10.100000381469727
+            },
+            {
+              "firstKey": 311,
+              "lastKey": 336,
+              "start": 10.399999618530273,
+              "end": 11.233333587646484
+            },
+            {
+              "firstKey": 339,
+              "lastKey": 350,
+              "start": 11.333333015441895,
+              "end": 11.699999809265137
+            },
+            {
+              "firstKey": 354,
+              "lastKey": 396,
+              "start": 11.833333015441895,
+              "end": 13.233333587646484
+            },
+            {
+              "firstKey": 401,
+              "lastKey": 436,
+              "start": 13.399999618530273,
+              "end": 14.566666603088379
+            },
+            {
+              "firstKey": 443,
+              "lastKey": 478,
+              "start": 14.800000190734863,
+              "end": 15.966666221618652
+            },
+            {
+              "firstKey": 484,
+              "lastKey": 492,
+              "start": 16.16666603088379,
+              "end": 16.433332443237305
+            },
+            {
+              "firstKey": 495,
+              "lastKey": 498,
+              "start": 16.53333282470703,
+              "end": 16.633333206176758
+            },
+            {
+              "firstKey": 502,
+              "lastKey": 503,
+              "start": 16.766666412353516,
+              "end": 16.799999237060547
+            },
+            {
+              "firstKey": 505,
+              "lastKey": 519,
+              "start": 16.866666793823242,
+              "end": 17.33333396911621
+            },
+            {
+              "firstKey": 526,
+              "lastKey": 538,
+              "start": 17.566667556762695,
+              "end": 17.96666717529297
+            },
+            {
+              "firstKey": 545,
+              "lastKey": 562,
+              "start": 18.200000762939453,
+              "end": 18.766666412353516
+            },
+            {
+              "firstKey": 575,
+              "lastKey": 608,
+              "start": 19.200000762939453,
+              "end": 20.299999237060547
+            },
+            {
+              "firstKey": 631,
+              "lastKey": 653,
+              "start": 21.066667556762695,
+              "end": 21.799999237060547
+            },
+            {
+              "firstKey": 662,
+              "lastKey": 662,
+              "start": 22.100000381469727,
+              "end": 22.100000381469727
+            },
+            {
+              "firstKey": 664,
+              "lastKey": 710,
+              "start": 22.16666603088379,
+              "end": 23.700000762939453
+            },
+            {
+              "firstKey": 714,
+              "lastKey": 780,
+              "start": 23.83333396911621,
+              "end": 26.03333282470703
+            },
+            {
+              "firstKey": 785,
+              "lastKey": 873,
+              "start": 26.200000762939453,
+              "end": 29.133333206176758
+            },
+            {
+              "firstKey": 878,
+              "lastKey": 890,
+              "start": 29.299999237060547,
+              "end": 29.700000762939453
+            },
+            {
+              "firstKey": 899,
+              "lastKey": 914,
+              "start": 30,
+              "end": 30.5
+            },
+            {
+              "firstKey": 920,
+              "lastKey": 948,
+              "start": 30.700000762939453,
+              "end": 31.633333206176758
+            },
+            {
+              "firstKey": 956,
+              "lastKey": 1007,
+              "start": 31.899999618530273,
+              "end": 33.599998474121094
+            },
+            {
+              "firstKey": 1012,
+              "lastKey": 1031,
+              "start": 33.766666412353516,
+              "end": 34.400001525878906
+            },
+            {
+              "firstKey": 1035,
+              "lastKey": 1049,
+              "start": 34.53333282470703,
+              "end": 35
+            },
+            {
+              "firstKey": 1057,
+              "lastKey": 1075,
+              "start": 35.266666412353516,
+              "end": 35.86666488647461
+            },
+            {
+              "firstKey": 1083,
+              "lastKey": 1152,
+              "start": 36.13333511352539,
+              "end": 38.43333435058594
+            },
+            {
+              "firstKey": 1157,
+              "lastKey": 1166,
+              "start": 38.599998474121094,
+              "end": 38.900001525878906
+            },
+            {
+              "firstKey": 1175,
+              "lastKey": 1189,
+              "start": 39.20000076293945,
+              "end": 39.66666793823242
+            },
+            {
+              "firstKey": 1193,
+              "lastKey": 1337,
+              "start": 39.79999923706055,
+              "end": 44.599998474121094
+            },
+            {
+              "firstKey": 1343,
+              "lastKey": 1389,
+              "start": 44.79999923706055,
+              "end": 46.33333206176758
+            },
+            {
+              "firstKey": 1398,
+              "lastKey": 1451,
+              "start": 46.63333511352539,
+              "end": 48.400001525878906
+            },
+            {
+              "firstKey": 1455,
+              "lastKey": 1472,
+              "start": 48.53333282470703,
+              "end": 49.099998474121094
+            },
+            {
+              "firstKey": 1479,
+              "lastKey": 1503,
+              "start": 49.33333206176758,
+              "end": 50.13333511352539
+            },
+            {
+              "firstKey": 1511,
+              "lastKey": 1524,
+              "start": 50.400001525878906,
+              "end": 50.83333206176758
+            },
+            {
+              "firstKey": 1532,
+              "lastKey": 1593,
+              "start": 51.099998474121094,
+              "end": 53.13333511352539
+            },
+            {
+              "firstKey": 1602,
+              "lastKey": 1643,
+              "start": 53.43333435058594,
+              "end": 54.79999923706055
+            },
+            {
+              "firstKey": 1652,
+              "lastKey": 1670,
+              "start": 55.099998474121094,
+              "end": 55.70000076293945
+            },
+            {
+              "firstKey": 1677,
+              "lastKey": 1692,
+              "start": 55.93333435058594,
+              "end": 56.43333435058594
+            },
+            {
+              "firstKey": 1696,
+              "lastKey": 1756,
+              "start": 56.56666564941406,
+              "end": 58.56666564941406
+            },
+            {
+              "firstKey": 1765,
+              "lastKey": 1829,
+              "start": 58.86666488647461,
+              "end": 61
+            },
+            {
+              "firstKey": 1835,
+              "lastKey": 1876,
+              "start": 61.20000076293945,
+              "end": 62.56666564941406
+            },
+            {
+              "firstKey": 1883,
+              "lastKey": 1915,
+              "start": 62.79999923706055,
+              "end": 63.86666488647461
+            },
+            {
+              "firstKey": 1922,
+              "lastKey": 1948,
+              "start": 64.0999984741211,
+              "end": 64.96666717529297
+            },
+            {
+              "firstKey": 1951,
+              "lastKey": 1979,
+              "start": 65.06666564941406,
+              "end": 66
+            },
+            {
+              "firstKey": 1982,
+              "lastKey": 2026,
+              "start": 66.0999984741211,
+              "end": 67.56666564941406
+            },
+            {
+              "firstKey": 2031,
+              "lastKey": 2082,
+              "start": 67.73332977294922,
+              "end": 69.43333435058594
+            },
+            {
+              "firstKey": 2088,
+              "lastKey": 2175,
+              "start": 69.63333129882812,
+              "end": 72.53333282470703
+            },
+            {
+              "firstKey": 2181,
+              "lastKey": 2223,
+              "start": 72.73332977294922,
+              "end": 74.13333129882812
+            },
+            {
+              "firstKey": 2230,
+              "lastKey": 2248,
+              "start": 74.36666870117188,
+              "end": 74.96666717529297
+            },
+            {
+              "firstKey": 2254,
+              "lastKey": 2266,
+              "start": 75.16666412353516,
+              "end": 75.56666564941406
+            },
+            {
+              "firstKey": 2272,
+              "lastKey": 2313,
+              "start": 75.76667022705078,
+              "end": 77.13333129882812
+            },
+            {
+              "firstKey": 2323,
+              "lastKey": 2339,
+              "start": 77.46666717529297,
+              "end": 78
+            },
+            {
+              "firstKey": 2343,
+              "lastKey": 2413,
+              "start": 78.13333129882812,
+              "end": 80.46666717529297
+            },
+            {
+              "firstKey": 2419,
+              "lastKey": 2541,
+              "start": 80.66666412353516,
+              "end": 84.73332977294922
+            },
+            {
+              "firstKey": 2547,
+              "lastKey": 2583,
+              "start": 84.93333435058594,
+              "end": 86.13333129882812
+            },
+            {
+              "firstKey": 2589,
+              "lastKey": 2621,
+              "start": 86.33333587646484,
+              "end": 87.4000015258789
+            }
+          ],
+          "history": [
+            {
+              "jumps": 92,
+              "returns": 3,
+              "maxStep": 65.64600839978638,
+              "returnEnergy": 27589.208801995992
+            },
+            {
+              "jumps": 91,
+              "returns": 0,
+              "maxStep": 65.64600839978638,
+              "returnEnergy": 24143.26179584616
+            }
+          ],
+          "posture": {
+            "heightLevels": {
+              "low": 0.14730921947311465,
+              "high": 0.6652613165893486
+            },
+            "speedLevels": {
+              "low": 0.5229596298184362,
+              "high": 3.144661553249945
+            },
+            "strength": 0.25,
+            "modifiedFrames": 2263,
+            "maxCorrectionDegrees": 40.714393531360166,
+            "weightedNeutralErrorBefore": 26.544144032212067,
+            "weightedNeutralErrorAfter": 20.71229388022783
+          },
+          "after": {
+            "jumps": 103,
+            "returns": 3,
+            "maxStep": 95.45469125683027,
+            "returnEnergy": 80586.4450769565
+          }
+        }
+      ]
+    },
+    {
+      "id": "excited-dance-olivia",
+      "file": "public/animations/npz/repair-candidates/anim_excited_dance.glb",
+      "reference": "27f81eed",
+      "sourceSHA256": "44d3383f51087eff7f62672dfa149b8673d4c206cfbdc792b814da569e4b3192",
+      "resultSHA256": "ac549797af0f87495ac357ec928b9cd71fb8440b245f6f50c6ec45bef89dfce3",
+      "before": {
+        "jumps": 239,
+        "maxJump": 158.7,
+        "duration": 93.19999694824219,
+        "hipsRange": [
+          2.431098807355042,
+          0.5327704712489895,
+          1.8423556395029816
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": [
+          {
+            "bone": "mixamorig:LeftLeg",
+            "jumps": 5,
+            "max": 34.75
+          },
+          {
+            "bone": "mixamorig:LeftFoot",
+            "jumps": 15,
+            "max": 45.43
+          },
+          {
+            "bone": "mixamorig:RightLeg",
+            "jumps": 1,
+            "max": 25.76
+          },
+          {
+            "bone": "mixamorig:RightFoot",
+            "jumps": 24,
+            "max": 63.47
+          },
+          {
+            "bone": "mixamorig:LeftArm",
+            "jumps": 1,
+            "max": 28.31
+          },
+          {
+            "bone": "mixamorig:LeftForeArm",
+            "jumps": 32,
+            "max": 93.59
+          },
+          {
+            "bone": "mixamorig:LeftHand",
+            "jumps": 41,
+            "max": 87.9
+          },
+          {
+            "bone": "mixamorig:RightForeArm",
+            "jumps": 44,
+            "max": 93.45
+          },
+          {
+            "bone": "mixamorig:RightHand",
+            "jumps": 76,
+            "max": 158.7
+          }
+        ]
+      },
+      "after": {
+        "jumps": 232,
+        "maxJump": 178.42,
+        "duration": 93.19999694824219,
+        "hipsRange": [
+          2.431098807355042,
+          0.5327704712489895,
+          1.8423556395029816
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": [
+          {
+            "bone": "mixamorig:LeftLeg",
+            "jumps": 5,
+            "max": 34.75
+          },
+          {
+            "bone": "mixamorig:LeftFoot",
+            "jumps": 18,
+            "max": 53.15
+          },
+          {
+            "bone": "mixamorig:RightLeg",
+            "jumps": 1,
+            "max": 25.76
+          },
+          {
+            "bone": "mixamorig:RightFoot",
+            "jumps": 20,
+            "max": 40.63
+          },
+          {
+            "bone": "mixamorig:LeftArm",
+            "jumps": 1,
+            "max": 28.31
+          },
+          {
+            "bone": "mixamorig:LeftForeArm",
+            "jumps": 32,
+            "max": 93.59
+          },
+          {
+            "bone": "mixamorig:LeftHand",
+            "jumps": 41,
+            "max": 87.9
+          },
+          {
+            "bone": "mixamorig:RightForeArm",
+            "jumps": 44,
+            "max": 93.45
+          },
+          {
+            "bone": "mixamorig:RightHand",
+            "jumps": 70,
+            "max": 178.42
+          }
+        ]
+      },
+      "maxAnchorDisplacement": 0,
+      "maxToeDisplacement": 0.09002294711454384,
+      "details": [
+        {
+          "bone": "mixamorig:LeftHand",
+          "before": {
+            "jumps": 108,
+            "returns": 0,
+            "maxStep": 44.435648865444385,
+            "returnEnergy": 21312.56949543174
+          },
+          "passes": 0,
+          "changed": [],
+          "history": [
+            {
+              "jumps": 108,
+              "returns": 0,
+              "maxStep": 44.435648865444385,
+              "returnEnergy": 21312.56949543174
+            }
+          ],
+          "after": {
+            "jumps": 108,
+            "returns": 0,
+            "maxStep": 44.435648865444385,
+            "returnEnergy": 21312.56949543174
+          }
+        },
+        {
+          "bone": "mixamorig:RightHand",
+          "before": {
+            "jumps": 159,
+            "returns": 8,
+            "maxStep": 178.21257034767163,
+            "returnEnergy": 53111.732482129366
+          },
+          "passes": 3,
+          "changed": [
+            {
+              "firstKey": 448,
+              "lastKey": 450,
+              "start": 14.966666221618652,
+              "end": 15.033333778381348
+            },
+            {
+              "firstKey": 452,
+              "lastKey": 452,
+              "start": 15.100000381469727,
+              "end": 15.100000381469727
+            },
+            {
+              "firstKey": 1234,
+              "lastKey": 1236,
+              "start": 41.16666793823242,
+              "end": 41.233333587646484
+            },
+            {
+              "firstKey": 2104,
+              "lastKey": 2104,
+              "start": 70.16666412353516,
+              "end": 70.16666412353516
+            },
+            {
+              "firstKey": 2111,
+              "lastKey": 2112,
+              "start": 70.4000015258789,
+              "end": 70.43333435058594
+            }
+          ],
+          "history": [
+            {
+              "jumps": 159,
+              "returns": 8,
+              "maxStep": 178.21257034767163,
+              "returnEnergy": 53111.732482129366
+            },
+            {
+              "jumps": 156,
+              "returns": 7,
+              "maxStep": 179.57380387785668,
+              "returnEnergy": 34059.16640667782
+            },
+            {
+              "jumps": 157,
+              "returns": 1,
+              "maxStep": 130.3725389746593,
+              "returnEnergy": 18460.96841407396
+            },
+            {
+              "jumps": 155,
+              "returns": 0,
+              "maxStep": 130.3725389746593,
+              "returnEnergy": 17661.73264736135
+            }
+          ],
+          "after": {
+            "jumps": 155,
+            "returns": 0,
+            "maxStep": 130.3725451702944,
+            "returnEnergy": 17661.733093433624
+          }
+        },
+        {
+          "bone": "mixamorig:LeftFoot",
+          "before": {
+            "jumps": 161,
+            "returns": 13,
+            "maxStep": 52.22554344763295,
+            "returnEnergy": 46196.0021064522
+          },
+          "passes": 1,
+          "changed": [
+            {
+              "firstKey": 1,
+              "lastKey": 216,
+              "start": 0.06666667014360428,
+              "end": 7.233333110809326
+            },
+            {
+              "firstKey": 226,
+              "lastKey": 240,
+              "start": 7.566666603088379,
+              "end": 8.033333778381348
+            },
+            {
+              "firstKey": 250,
+              "lastKey": 320,
+              "start": 8.366666793823242,
+              "end": 10.699999809265137
+            },
+            {
+              "firstKey": 331,
+              "lastKey": 336,
+              "start": 11.066666603088379,
+              "end": 11.233333587646484
+            },
+            {
+              "firstKey": 340,
+              "lastKey": 345,
+              "start": 11.366666793823242,
+              "end": 11.533333778381348
+            },
+            {
+              "firstKey": 348,
+              "lastKey": 393,
+              "start": 11.633333206176758,
+              "end": 13.133333206176758
+            },
+            {
+              "firstKey": 412,
+              "lastKey": 425,
+              "start": 13.766666412353516,
+              "end": 14.199999809265137
+            },
+            {
+              "firstKey": 436,
+              "lastKey": 500,
+              "start": 14.566666603088379,
+              "end": 16.700000762939453
+            },
+            {
+              "firstKey": 507,
+              "lastKey": 556,
+              "start": 16.933332443237305,
+              "end": 18.566667556762695
+            },
+            {
+              "firstKey": 561,
+              "lastKey": 678,
+              "start": 18.733333587646484,
+              "end": 22.633333206176758
+            },
+            {
+              "firstKey": 685,
+              "lastKey": 694,
+              "start": 22.866666793823242,
+              "end": 23.16666603088379
+            },
+            {
+              "firstKey": 698,
+              "lastKey": 730,
+              "start": 23.299999237060547,
+              "end": 24.366666793823242
+            },
+            {
+              "firstKey": 736,
+              "lastKey": 774,
+              "start": 24.566667556762695,
+              "end": 25.83333396911621
+            },
+            {
+              "firstKey": 777,
+              "lastKey": 827,
+              "start": 25.933332443237305,
+              "end": 27.600000381469727
+            },
+            {
+              "firstKey": 832,
+              "lastKey": 946,
+              "start": 27.766666412353516,
+              "end": 31.566667556762695
+            },
+            {
+              "firstKey": 953,
+              "lastKey": 1138,
+              "start": 31.799999237060547,
+              "end": 37.96666717529297
+            },
+            {
+              "firstKey": 1145,
+              "lastKey": 1247,
+              "start": 38.20000076293945,
+              "end": 41.599998474121094
+            },
+            {
+              "firstKey": 1251,
+              "lastKey": 1260,
+              "start": 41.733333587646484,
+              "end": 42.03333282470703
+            },
+            {
+              "firstKey": 1267,
+              "lastKey": 1290,
+              "start": 42.266666412353516,
+              "end": 43.03333282470703
+            },
+            {
+              "firstKey": 1296,
+              "lastKey": 1431,
+              "start": 43.233333587646484,
+              "end": 47.733333587646484
+            },
+            {
+              "firstKey": 1435,
+              "lastKey": 1531,
+              "start": 47.86666488647461,
+              "end": 51.06666564941406
+            },
+            {
+              "firstKey": 1538,
+              "lastKey": 1558,
+              "start": 51.29999923706055,
+              "end": 51.96666717529297
+            },
+            {
+              "firstKey": 1564,
+              "lastKey": 1653,
+              "start": 52.16666793823242,
+              "end": 55.13333511352539
+            },
+            {
+              "firstKey": 1657,
+              "lastKey": 1787,
+              "start": 55.266666412353516,
+              "end": 59.599998474121094
+            },
+            {
+              "firstKey": 1793,
+              "lastKey": 1807,
+              "start": 59.79999923706055,
+              "end": 60.266666412353516
+            },
+            {
+              "firstKey": 1816,
+              "lastKey": 1886,
+              "start": 60.56666564941406,
+              "end": 62.900001525878906
+            },
+            {
+              "firstKey": 1889,
+              "lastKey": 1907,
+              "start": 63,
+              "end": 63.599998474121094
+            },
+            {
+              "firstKey": 1912,
+              "lastKey": 2004,
+              "start": 63.766666412353516,
+              "end": 66.83333587646484
+            },
+            {
+              "firstKey": 2008,
+              "lastKey": 2093,
+              "start": 66.96666717529297,
+              "end": 69.80000305175781
+            },
+            {
+              "firstKey": 2100,
+              "lastKey": 2148,
+              "start": 70.03333282470703,
+              "end": 71.63333129882812
+            },
+            {
+              "firstKey": 2151,
+              "lastKey": 2176,
+              "start": 71.73332977294922,
+              "end": 72.56666564941406
+            },
+            {
+              "firstKey": 2180,
+              "lastKey": 2278,
+              "start": 72.69999694824219,
+              "end": 75.96666717529297
+            },
+            {
+              "firstKey": 2287,
+              "lastKey": 2308,
+              "start": 76.26667022705078,
+              "end": 76.96666717529297
+            },
+            {
+              "firstKey": 2313,
+              "lastKey": 2337,
+              "start": 77.13333129882812,
+              "end": 77.93333435058594
+            },
+            {
+              "firstKey": 2342,
+              "lastKey": 2450,
+              "start": 78.0999984741211,
+              "end": 81.69999694824219
+            },
+            {
+              "firstKey": 2455,
+              "lastKey": 2481,
+              "start": 81.86666870117188,
+              "end": 82.73332977294922
+            },
+            {
+              "firstKey": 2485,
+              "lastKey": 2519,
+              "start": 82.86666870117188,
+              "end": 84
+            },
+            {
+              "firstKey": 2524,
+              "lastKey": 2627,
+              "start": 84.16666412353516,
+              "end": 87.5999984741211
+            },
+            {
+              "firstKey": 2633,
+              "lastKey": 2668,
+              "start": 87.80000305175781,
+              "end": 88.96666717529297
+            },
+            {
+              "firstKey": 2670,
+              "lastKey": 2794,
+              "start": 89.03333282470703,
+              "end": 93.16666412353516
+            }
+          ],
+          "history": [
+            {
+              "jumps": 161,
+              "returns": 13,
+              "maxStep": 52.22554344763295,
+              "returnEnergy": 46196.0021064522
+            },
+            {
+              "jumps": 150,
+              "returns": 0,
+              "maxStep": 51.11164172314761,
+              "returnEnergy": 28901.345898841875
+            }
+          ],
+          "posture": {
+            "heightLevels": {
+              "low": 0.12769856699314167,
+              "high": 0.46134065752284104
+            },
+            "speedLevels": {
+              "low": 0.47314070762465643,
+              "high": 2.9909968971733463
+            },
+            "strength": 1,
+            "modifiedFrames": 2594,
+            "maxCorrectionDegrees": 72.87242521775302,
+            "weightedNeutralErrorBefore": 24.41053238124985,
+            "weightedNeutralErrorAfter": 4.3989938107473145
+          },
+          "after": {
+            "jumps": 161,
+            "returns": 6,
+            "maxStep": 58.860733990116906,
+            "returnEnergy": 35694.246453123895
+          }
+        },
+        {
+          "bone": "mixamorig:RightFoot",
+          "before": {
+            "jumps": 97,
+            "returns": 8,
+            "maxStep": 66.13108702367957,
+            "returnEnergy": 55322.327775563026
+          },
+          "passes": 2,
+          "changed": [
+            {
+              "firstKey": 1,
+              "lastKey": 250,
+              "start": 0.06666667014360428,
+              "end": 8.366666793823242
+            },
+            {
+              "firstKey": 259,
+              "lastKey": 308,
+              "start": 8.666666984558105,
+              "end": 10.300000190734863
+            },
+            {
+              "firstKey": 315,
+              "lastKey": 317,
+              "start": 10.533333778381348,
+              "end": 10.600000381469727
+            },
+            {
+              "firstKey": 322,
+              "lastKey": 343,
+              "start": 10.766666412353516,
+              "end": 11.466666221618652
+            },
+            {
+              "firstKey": 354,
+              "lastKey": 369,
+              "start": 11.833333015441895,
+              "end": 12.333333015441895
+            },
+            {
+              "firstKey": 377,
+              "lastKey": 394,
+              "start": 12.600000381469727,
+              "end": 13.166666984558105
+            },
+            {
+              "firstKey": 399,
+              "lastKey": 414,
+              "start": 13.333333015441895,
+              "end": 13.833333015441895
+            },
+            {
+              "firstKey": 419,
+              "lastKey": 436,
+              "start": 14,
+              "end": 14.566666603088379
+            },
+            {
+              "firstKey": 440,
+              "lastKey": 441,
+              "start": 14.699999809265137,
+              "end": 14.733333587646484
+            },
+            {
+              "firstKey": 443,
+              "lastKey": 490,
+              "start": 14.800000190734863,
+              "end": 16.366666793823242
+            },
+            {
+              "firstKey": 498,
+              "lastKey": 511,
+              "start": 16.633333206176758,
+              "end": 17.066667556762695
+            },
+            {
+              "firstKey": 519,
+              "lastKey": 520,
+              "start": 17.33333396911621,
+              "end": 17.366666793823242
+            },
+            {
+              "firstKey": 536,
+              "lastKey": 536,
+              "start": 17.899999618530273,
+              "end": 17.899999618530273
+            },
+            {
+              "firstKey": 539,
+              "lastKey": 560,
+              "start": 18,
+              "end": 18.700000762939453
+            },
+            {
+              "firstKey": 567,
+              "lastKey": 602,
+              "start": 18.933332443237305,
+              "end": 20.100000381469727
+            },
+            {
+              "firstKey": 606,
+              "lastKey": 628,
+              "start": 20.233333587646484,
+              "end": 20.96666717529297
+            },
+            {
+              "firstKey": 635,
+              "lastKey": 659,
+              "start": 21.200000762939453,
+              "end": 22
+            },
+            {
+              "firstKey": 661,
+              "lastKey": 683,
+              "start": 22.066667556762695,
+              "end": 22.799999237060547
+            },
+            {
+              "firstKey": 689,
+              "lastKey": 740,
+              "start": 23,
+              "end": 24.700000762939453
+            },
+            {
+              "firstKey": 748,
+              "lastKey": 787,
+              "start": 24.96666717529297,
+              "end": 26.266666412353516
+            },
+            {
+              "firstKey": 796,
+              "lastKey": 797,
+              "start": 26.566667556762695,
+              "end": 26.600000381469727
+            },
+            {
+              "firstKey": 808,
+              "lastKey": 841,
+              "start": 26.96666717529297,
+              "end": 28.066667556762695
+            },
+            {
+              "firstKey": 849,
+              "lastKey": 849,
+              "start": 28.33333396911621,
+              "end": 28.33333396911621
+            },
+            {
+              "firstKey": 866,
+              "lastKey": 902,
+              "start": 28.899999618530273,
+              "end": 30.100000381469727
+            },
+            {
+              "firstKey": 910,
+              "lastKey": 913,
+              "start": 30.366666793823242,
+              "end": 30.46666717529297
+            },
+            {
+              "firstKey": 918,
+              "lastKey": 936,
+              "start": 30.633333206176758,
+              "end": 31.233333587646484
+            },
+            {
+              "firstKey": 940,
+              "lastKey": 953,
+              "start": 31.366666793823242,
+              "end": 31.799999237060547
+            },
+            {
+              "firstKey": 963,
+              "lastKey": 977,
+              "start": 32.13333511352539,
+              "end": 32.599998474121094
+            },
+            {
+              "firstKey": 985,
+              "lastKey": 1011,
+              "start": 32.86666488647461,
+              "end": 33.733333587646484
+            },
+            {
+              "firstKey": 1019,
+              "lastKey": 1019,
+              "start": 34,
+              "end": 34
+            },
+            {
+              "firstKey": 1036,
+              "lastKey": 1066,
+              "start": 34.56666564941406,
+              "end": 35.56666564941406
+            },
+            {
+              "firstKey": 1075,
+              "lastKey": 1164,
+              "start": 35.86666488647461,
+              "end": 38.83333206176758
+            },
+            {
+              "firstKey": 1169,
+              "lastKey": 1179,
+              "start": 39,
+              "end": 39.33333206176758
+            },
+            {
+              "firstKey": 1181,
+              "lastKey": 1196,
+              "start": 39.400001525878906,
+              "end": 39.900001525878906
+            },
+            {
+              "firstKey": 1198,
+              "lastKey": 1251,
+              "start": 39.96666717529297,
+              "end": 41.733333587646484
+            },
+            {
+              "firstKey": 1257,
+              "lastKey": 1298,
+              "start": 41.93333435058594,
+              "end": 43.29999923706055
+            },
+            {
+              "firstKey": 1302,
+              "lastKey": 1348,
+              "start": 43.43333435058594,
+              "end": 44.96666717529297
+            },
+            {
+              "firstKey": 1353,
+              "lastKey": 1439,
+              "start": 45.13333511352539,
+              "end": 48
+            },
+            {
+              "firstKey": 1444,
+              "lastKey": 1468,
+              "start": 48.16666793823242,
+              "end": 48.96666717529297
+            },
+            {
+              "firstKey": 1476,
+              "lastKey": 1610,
+              "start": 49.233333587646484,
+              "end": 53.70000076293945
+            },
+            {
+              "firstKey": 1612,
+              "lastKey": 1638,
+              "start": 53.766666412353516,
+              "end": 54.63333511352539
+            },
+            {
+              "firstKey": 1643,
+              "lastKey": 1657,
+              "start": 54.79999923706055,
+              "end": 55.266666412353516
+            },
+            {
+              "firstKey": 1663,
+              "lastKey": 1705,
+              "start": 55.46666717529297,
+              "end": 56.86666488647461
+            },
+            {
+              "firstKey": 1711,
+              "lastKey": 1721,
+              "start": 57.06666564941406,
+              "end": 57.400001525878906
+            },
+            {
+              "firstKey": 1726,
+              "lastKey": 1736,
+              "start": 57.56666564941406,
+              "end": 57.900001525878906
+            },
+            {
+              "firstKey": 1740,
+              "lastKey": 1752,
+              "start": 58.03333282470703,
+              "end": 58.43333435058594
+            },
+            {
+              "firstKey": 1756,
+              "lastKey": 1777,
+              "start": 58.56666564941406,
+              "end": 59.266666412353516
+            },
+            {
+              "firstKey": 1783,
+              "lastKey": 1822,
+              "start": 59.46666717529297,
+              "end": 60.766666412353516
+            },
+            {
+              "firstKey": 1836,
+              "lastKey": 1836,
+              "start": 61.233333587646484,
+              "end": 61.233333587646484
+            },
+            {
+              "firstKey": 1844,
+              "lastKey": 1879,
+              "start": 61.5,
+              "end": 62.66666793823242
+            },
+            {
+              "firstKey": 1885,
+              "lastKey": 1912,
+              "start": 62.86666488647461,
+              "end": 63.766666412353516
+            },
+            {
+              "firstKey": 1915,
+              "lastKey": 1935,
+              "start": 63.86666488647461,
+              "end": 64.53333282470703
+            },
+            {
+              "firstKey": 1941,
+              "lastKey": 1965,
+              "start": 64.73332977294922,
+              "end": 65.53333282470703
+            },
+            {
+              "firstKey": 1968,
+              "lastKey": 1980,
+              "start": 65.63333129882812,
+              "end": 66.03333282470703
+            },
+            {
+              "firstKey": 1984,
+              "lastKey": 1996,
+              "start": 66.16666412353516,
+              "end": 66.56666564941406
+            },
+            {
+              "firstKey": 2000,
+              "lastKey": 2129,
+              "start": 66.69999694824219,
+              "end": 71
+            },
+            {
+              "firstKey": 2135,
+              "lastKey": 2181,
+              "start": 71.19999694824219,
+              "end": 72.73332977294922
+            },
+            {
+              "firstKey": 2187,
+              "lastKey": 2266,
+              "start": 72.93333435058594,
+              "end": 75.56666564941406
+            },
+            {
+              "firstKey": 2273,
+              "lastKey": 2291,
+              "start": 75.80000305175781,
+              "end": 76.4000015258789
+            },
+            {
+              "firstKey": 2293,
+              "lastKey": 2326,
+              "start": 76.46666717529297,
+              "end": 77.56666564941406
+            },
+            {
+              "firstKey": 2329,
+              "lastKey": 2364,
+              "start": 77.66666412353516,
+              "end": 78.83333587646484
+            },
+            {
+              "firstKey": 2368,
+              "lastKey": 2377,
+              "start": 78.96666717529297,
+              "end": 79.26667022705078
+            },
+            {
+              "firstKey": 2380,
+              "lastKey": 2393,
+              "start": 79.36666870117188,
+              "end": 79.80000305175781
+            },
+            {
+              "firstKey": 2396,
+              "lastKey": 2469,
+              "start": 79.9000015258789,
+              "end": 82.33333587646484
+            },
+            {
+              "firstKey": 2474,
+              "lastKey": 2524,
+              "start": 82.5,
+              "end": 84.16666412353516
+            },
+            {
+              "firstKey": 2529,
+              "lastKey": 2552,
+              "start": 84.33333587646484,
+              "end": 85.0999984741211
+            },
+            {
+              "firstKey": 2558,
+              "lastKey": 2602,
+              "start": 85.30000305175781,
+              "end": 86.76667022705078
+            },
+            {
+              "firstKey": 2608,
+              "lastKey": 2641,
+              "start": 86.96666717529297,
+              "end": 88.06666564941406
+            },
+            {
+              "firstKey": 2647,
+              "lastKey": 2659,
+              "start": 88.26667022705078,
+              "end": 88.66666412353516
+            },
+            {
+              "firstKey": 2663,
+              "lastKey": 2707,
+              "start": 88.80000305175781,
+              "end": 90.26667022705078
+            },
+            {
+              "firstKey": 2713,
+              "lastKey": 2723,
+              "start": 90.46666717529297,
+              "end": 90.80000305175781
+            },
+            {
+              "firstKey": 2727,
+              "lastKey": 2738,
+              "start": 90.93333435058594,
+              "end": 91.30000305175781
+            },
+            {
+              "firstKey": 2741,
+              "lastKey": 2754,
+              "start": 91.4000015258789,
+              "end": 91.83333587646484
+            },
+            {
+              "firstKey": 2757,
+              "lastKey": 2794,
+              "start": 91.93333435058594,
+              "end": 93.16666412353516
+            }
+          ],
+          "history": [
+            {
+              "jumps": 97,
+              "returns": 8,
+              "maxStep": 66.13108702367957,
+              "returnEnergy": 55322.327775563026
+            },
+            {
+              "jumps": 90,
+              "returns": 2,
+              "maxStep": 45.91324473391509,
+              "returnEnergy": 25362.566583878823
+            },
+            {
+              "jumps": 88,
+              "returns": 0,
+              "maxStep": 45.91324473391509,
+              "returnEnergy": 23327.969567733435
+            }
+          ],
+          "posture": {
+            "heightLevels": {
+              "low": 0.1536687529979794,
+              "high": 0.8233108388146119
+            },
+            "speedLevels": {
+              "low": 0.47162569616109556,
+              "high": 2.924010170311013
+            },
+            "strength": 0.125,
+            "modifiedFrames": 2423,
+            "maxCorrectionDegrees": 37.31865281780748,
+            "weightedNeutralErrorBefore": 27.93345758328911,
+            "weightedNeutralErrorAfter": 24.91861189117824
+          },
+          "after": {
+            "jumps": 111,
+            "returns": 5,
+            "maxStep": 47.52445158126173,
+            "returnEnergy": 32924.50528679685
+          }
+        }
+      ]
+    },
+    {
+      "id": "pleased-dance-olivia",
+      "file": "public/animations/npz/repair-candidates/anim_pleased_dance.glb",
+      "reference": "27f81eed",
+      "sourceSHA256": "c5610f6078677ab224c2b32f2a89ba61d17132b7662a80078eb3dbe1d14049da",
+      "resultSHA256": "218244d09b80b73b3b35109f602e68aa620ceb080f35f1c650755b6b05bc07dd",
+      "before": {
+        "jumps": 239,
+        "maxJump": 177.1,
+        "duration": 96.83333587646484,
+        "hipsRange": [
+          3.0013379761277577,
+          0.4222876058156505,
+          2.455200023664373
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": [
+          {
+            "bone": "mixamorig:LeftLeg",
+            "jumps": 3,
+            "max": 34.05
+          },
+          {
+            "bone": "mixamorig:LeftFoot",
+            "jumps": 14,
+            "max": 34.75
+          },
+          {
+            "bone": "mixamorig:LeftToeBase",
+            "jumps": 2,
+            "max": 27.74
+          },
+          {
+            "bone": "mixamorig:RightFoot",
+            "jumps": 8,
+            "max": 37.87
+          },
+          {
+            "bone": "mixamorig:RightToeBase",
+            "jumps": 2,
+            "max": 28.83
+          },
+          {
+            "bone": "mixamorig:LeftArm",
+            "jumps": 5,
+            "max": 35.66
+          },
+          {
+            "bone": "mixamorig:LeftForeArm",
+            "jumps": 40,
+            "max": 106.62
+          },
+          {
+            "bone": "mixamorig:LeftHand",
+            "jumps": 71,
+            "max": 177.1
+          },
+          {
+            "bone": "mixamorig:RightArm",
+            "jumps": 3,
+            "max": 38.18
+          },
+          {
+            "bone": "mixamorig:RightForeArm",
+            "jumps": 34,
+            "max": 92.7
+          },
+          {
+            "bone": "mixamorig:RightHand",
+            "jumps": 57,
+            "max": 121.08
+          }
+        ]
+      },
+      "after": {
+        "jumps": 292,
+        "maxJump": 177.1,
+        "duration": 96.83333587646484,
+        "hipsRange": [
+          3.0013379761277577,
+          0.4222876058156505,
+          2.455200023664373
+        ],
+        "interpolations": [
+          "LINEAR",
+          "STEP"
+        ],
+        "bones": [
+          {
+            "bone": "mixamorig:LeftLeg",
+            "jumps": 3,
+            "max": 34.05
+          },
+          {
+            "bone": "mixamorig:LeftFoot",
+            "jumps": 13,
+            "max": 152.71
+          },
+          {
+            "bone": "mixamorig:LeftToeBase",
+            "jumps": 2,
+            "max": 27.74
+          },
+          {
+            "bone": "mixamorig:RightFoot",
+            "jumps": 62,
+            "max": 164.51
+          },
+          {
+            "bone": "mixamorig:RightToeBase",
+            "jumps": 2,
+            "max": 28.83
+          },
+          {
+            "bone": "mixamorig:LeftArm",
+            "jumps": 5,
+            "max": 35.66
+          },
+          {
+            "bone": "mixamorig:LeftForeArm",
+            "jumps": 40,
+            "max": 106.62
+          },
+          {
+            "bone": "mixamorig:LeftHand",
+            "jumps": 71,
+            "max": 177.1
+          },
+          {
+            "bone": "mixamorig:RightArm",
+            "jumps": 3,
+            "max": 38.18
+          },
+          {
+            "bone": "mixamorig:RightForeArm",
+            "jumps": 34,
+            "max": 92.7
+          },
+          {
+            "bone": "mixamorig:RightHand",
+            "jumps": 57,
+            "max": 121.08
+          }
+        ]
+      },
+      "maxAnchorDisplacement": 0,
+      "maxToeDisplacement": 0.10810363926977264,
+      "details": [
+        {
+          "bone": "mixamorig:LeftHand",
+          "before": {
+            "jumps": 114,
+            "returns": 0,
+            "maxStep": 63.65732052715036,
+            "returnEnergy": 18638.751364513617
+          },
+          "passes": 0,
+          "changed": [],
+          "history": [
+            {
+              "jumps": 114,
+              "returns": 0,
+              "maxStep": 63.65732052715036,
+              "returnEnergy": 18638.751364513617
+            }
+          ],
+          "after": {
+            "jumps": 114,
+            "returns": 0,
+            "maxStep": 63.65732052715036,
+            "returnEnergy": 18638.751364513617
+          }
+        },
+        {
+          "bone": "mixamorig:RightHand",
+          "before": {
+            "jumps": 100,
+            "returns": 0,
+            "maxStep": 58.47375594049598,
+            "returnEnergy": 18873.15901731525
+          },
+          "passes": 0,
+          "changed": [],
+          "history": [
+            {
+              "jumps": 100,
+              "returns": 0,
+              "maxStep": 58.47375594049598,
+              "returnEnergy": 18873.15901731525
+            }
+          ],
+          "after": {
+            "jumps": 100,
+            "returns": 0,
+            "maxStep": 58.47375594049598,
+            "returnEnergy": 18873.15901731525
+          }
+        },
+        {
+          "bone": "mixamorig:LeftFoot",
+          "before": {
+            "jumps": 81,
+            "returns": 7,
+            "maxStep": 59.115938638642504,
+            "returnEnergy": 31590.73482907984
+          },
+          "passes": 2,
+          "changed": [
+            {
+              "firstKey": 1,
+              "lastKey": 301,
+              "start": 0.06666667014360428,
+              "end": 10.066666603088379
+            },
+            {
+              "firstKey": 306,
+              "lastKey": 331,
+              "start": 10.233333587646484,
+              "end": 11.066666603088379
+            },
+            {
+              "firstKey": 337,
+              "lastKey": 420,
+              "start": 11.266666412353516,
+              "end": 14.033333778381348
+            },
+            {
+              "firstKey": 423,
+              "lastKey": 451,
+              "start": 14.133333206176758,
+              "end": 15.066666603088379
+            },
+            {
+              "firstKey": 458,
+              "lastKey": 475,
+              "start": 15.300000190734863,
+              "end": 15.866666793823242
+            },
+            {
+              "firstKey": 484,
+              "lastKey": 598,
+              "start": 16.16666603088379,
+              "end": 19.96666717529297
+            },
+            {
+              "firstKey": 605,
+              "lastKey": 675,
+              "start": 20.200000762939453,
+              "end": 22.53333282470703
+            },
+            {
+              "firstKey": 682,
+              "lastKey": 711,
+              "start": 22.766666412353516,
+              "end": 23.733333587646484
+            },
+            {
+              "firstKey": 717,
+              "lastKey": 760,
+              "start": 23.933332443237305,
+              "end": 25.366666793823242
+            },
+            {
+              "firstKey": 769,
+              "lastKey": 855,
+              "start": 25.66666603088379,
+              "end": 28.53333282470703
+            },
+            {
+              "firstKey": 858,
+              "lastKey": 858,
+              "start": 28.633333206176758,
+              "end": 28.633333206176758
+            },
+            {
+              "firstKey": 862,
+              "lastKey": 864,
+              "start": 28.766666412353516,
+              "end": 28.83333396911621
+            },
+            {
+              "firstKey": 866,
+              "lastKey": 916,
+              "start": 28.899999618530273,
+              "end": 30.566667556762695
+            },
+            {
+              "firstKey": 926,
+              "lastKey": 969,
+              "start": 30.899999618530273,
+              "end": 32.33333206176758
+            },
+            {
+              "firstKey": 976,
+              "lastKey": 992,
+              "start": 32.56666564941406,
+              "end": 33.099998474121094
+            },
+            {
+              "firstKey": 999,
+              "lastKey": 1027,
+              "start": 33.33333206176758,
+              "end": 34.266666412353516
+            },
+            {
+              "firstKey": 1039,
+              "lastKey": 1053,
+              "start": 34.66666793823242,
+              "end": 35.13333511352539
+            },
+            {
+              "firstKey": 1057,
+              "lastKey": 1071,
+              "start": 35.266666412353516,
+              "end": 35.733333587646484
+            },
+            {
+              "firstKey": 1076,
+              "lastKey": 1076,
+              "start": 35.900001525878906,
+              "end": 35.900001525878906
+            },
+            {
+              "firstKey": 1079,
+              "lastKey": 1090,
+              "start": 36,
+              "end": 36.36666488647461
+            },
+            {
+              "firstKey": 1093,
+              "lastKey": 1093,
+              "start": 36.46666717529297,
+              "end": 36.46666717529297
+            },
+            {
+              "firstKey": 1096,
+              "lastKey": 1128,
+              "start": 36.56666564941406,
+              "end": 37.63333511352539
+            },
+            {
+              "firstKey": 1133,
+              "lastKey": 1145,
+              "start": 37.79999923706055,
+              "end": 38.20000076293945
+            },
+            {
+              "firstKey": 1150,
+              "lastKey": 1172,
+              "start": 38.36666488647461,
+              "end": 39.099998474121094
+            },
+            {
+              "firstKey": 1183,
+              "lastKey": 1197,
+              "start": 39.46666717529297,
+              "end": 39.93333435058594
+            },
+            {
+              "firstKey": 1203,
+              "lastKey": 1254,
+              "start": 40.13333511352539,
+              "end": 41.83333206176758
+            },
+            {
+              "firstKey": 1259,
+              "lastKey": 1309,
+              "start": 42,
+              "end": 43.66666793823242
+            },
+            {
+              "firstKey": 1324,
+              "lastKey": 1341,
+              "start": 44.16666793823242,
+              "end": 44.733333587646484
+            },
+            {
+              "firstKey": 1350,
+              "lastKey": 1565,
+              "start": 45.03333282470703,
+              "end": 52.20000076293945
+            },
+            {
+              "firstKey": 1575,
+              "lastKey": 1622,
+              "start": 52.53333282470703,
+              "end": 54.099998474121094
+            },
+            {
+              "firstKey": 1624,
+              "lastKey": 1705,
+              "start": 54.16666793823242,
+              "end": 56.86666488647461
+            },
+            {
+              "firstKey": 1709,
+              "lastKey": 1730,
+              "start": 57,
+              "end": 57.70000076293945
+            },
+            {
+              "firstKey": 1743,
+              "lastKey": 1756,
+              "start": 58.13333511352539,
+              "end": 58.56666564941406
+            },
+            {
+              "firstKey": 1762,
+              "lastKey": 1778,
+              "start": 58.766666412353516,
+              "end": 59.29999923706055
+            },
+            {
+              "firstKey": 1783,
+              "lastKey": 1794,
+              "start": 59.46666717529297,
+              "end": 59.83333206176758
+            },
+            {
+              "firstKey": 1800,
+              "lastKey": 1816,
+              "start": 60.03333282470703,
+              "end": 60.56666564941406
+            },
+            {
+              "firstKey": 1821,
+              "lastKey": 1844,
+              "start": 60.733333587646484,
+              "end": 61.5
+            },
+            {
+              "firstKey": 1849,
+              "lastKey": 1939,
+              "start": 61.66666793823242,
+              "end": 64.66666412353516
+            },
+            {
+              "firstKey": 1943,
+              "lastKey": 1989,
+              "start": 64.80000305175781,
+              "end": 66.33333587646484
+            },
+            {
+              "firstKey": 2006,
+              "lastKey": 2039,
+              "start": 66.9000015258789,
+              "end": 68
+            },
+            {
+              "firstKey": 2046,
+              "lastKey": 2072,
+              "start": 68.23332977294922,
+              "end": 69.0999984741211
+            },
+            {
+              "firstKey": 2078,
+              "lastKey": 2106,
+              "start": 69.30000305175781,
+              "end": 70.23332977294922
+            },
+            {
+              "firstKey": 2113,
+              "lastKey": 2274,
+              "start": 70.46666717529297,
+              "end": 75.83333587646484
+            },
+            {
+              "firstKey": 2277,
+              "lastKey": 2343,
+              "start": 75.93333435058594,
+              "end": 78.13333129882812
+            },
+            {
+              "firstKey": 2352,
+              "lastKey": 2392,
+              "start": 78.43333435058594,
+              "end": 79.76667022705078
+            },
+            {
+              "firstKey": 2399,
+              "lastKey": 2605,
+              "start": 80,
+              "end": 86.86666870117188
+            },
+            {
+              "firstKey": 2620,
+              "lastKey": 2640,
+              "start": 87.36666870117188,
+              "end": 88.03333282470703
+            },
+            {
+              "firstKey": 2650,
+              "lastKey": 2708,
+              "start": 88.36666870117188,
+              "end": 90.30000305175781
+            },
+            {
+              "firstKey": 2710,
+              "lastKey": 2725,
+              "start": 90.36666870117188,
+              "end": 90.86666870117188
+            },
+            {
+              "firstKey": 2728,
+              "lastKey": 2737,
+              "start": 90.96666717529297,
+              "end": 91.26667022705078
+            },
+            {
+              "firstKey": 2740,
+              "lastKey": 2740,
+              "start": 91.36666870117188,
+              "end": 91.36666870117188
+            },
+            {
+              "firstKey": 2743,
+              "lastKey": 2783,
+              "start": 91.46666717529297,
+              "end": 92.80000305175781
+            },
+            {
+              "firstKey": 2791,
+              "lastKey": 2886,
+              "start": 93.06666564941406,
+              "end": 96.23332977294922
+            },
+            {
+              "firstKey": 2888,
+              "lastKey": 2903,
+              "start": 96.30000305175781,
+              "end": 96.80000305175781
+            }
+          ],
+          "history": [
+            {
+              "jumps": 81,
+              "returns": 7,
+              "maxStep": 59.115938638642504,
+              "returnEnergy": 31590.73482907984
+            },
+            {
+              "jumps": 74,
+              "returns": 2,
+              "maxStep": 59.115938638642504,
+              "returnEnergy": 19578.141979504795
+            },
+            {
+              "jumps": 73,
+              "returns": 0,
+              "maxStep": 59.115938638642504,
+              "returnEnergy": 18326.76608006283
+            }
+          ],
+          "posture": {
+            "heightLevels": {
+              "low": 0.1363558748446192,
+              "high": 0.28440838939596863
+            },
+            "speedLevels": {
+              "low": 0.33747543011399117,
+              "high": 2.8926362690258616
+            },
+            "strength": 0.5,
+            "modifiedFrames": 2616,
+            "maxCorrectionDegrees": 87.92342569527888,
+            "weightedNeutralErrorBefore": 26.301940053756283,
+            "weightedNeutralErrorAfter": 14.71741083294334
+          },
+          "after": {
+            "jumps": 82,
+            "returns": 2,
+            "maxStep": 160.54127942450376,
+            "returnEnergy": 19852.32157672608
+          }
+        },
+        {
+          "bone": "mixamorig:RightFoot",
+          "before": {
+            "jumps": 51,
+            "returns": 4,
+            "maxStep": 45.287852291081514,
+            "returnEnergy": 17856.103137835715
+          },
+          "passes": 1,
+          "changed": [
+            {
+              "firstKey": 1,
+              "lastKey": 283,
+              "start": 0.06666667014360428,
+              "end": 9.466666221618652
+            },
+            {
+              "firstKey": 291,
+              "lastKey": 311,
+              "start": 9.733333587646484,
+              "end": 10.399999618530273
+            },
+            {
+              "firstKey": 319,
+              "lastKey": 319,
+              "start": 10.666666984558105,
+              "end": 10.666666984558105
+            },
+            {
+              "firstKey": 324,
+              "lastKey": 340,
+              "start": 10.833333015441895,
+              "end": 11.366666793823242
+            },
+            {
+              "firstKey": 354,
+              "lastKey": 404,
+              "start": 11.833333015441895,
+              "end": 13.5
+            },
+            {
+              "firstKey": 409,
+              "lastKey": 412,
+              "start": 13.666666984558105,
+              "end": 13.766666412353516
+            },
+            {
+              "firstKey": 416,
+              "lastKey": 427,
+              "start": 13.899999618530273,
+              "end": 14.266666412353516
+            },
+            {
+              "firstKey": 434,
+              "lastKey": 470,
+              "start": 14.5,
+              "end": 15.699999809265137
+            },
+            {
+              "firstKey": 475,
+              "lastKey": 493,
+              "start": 15.866666793823242,
+              "end": 16.46666717529297
+            },
+            {
+              "firstKey": 499,
+              "lastKey": 534,
+              "start": 16.66666603088379,
+              "end": 17.83333396911621
+            },
+            {
+              "firstKey": 545,
+              "lastKey": 617,
+              "start": 18.200000762939453,
+              "end": 20.600000381469727
+            },
+            {
+              "firstKey": 623,
+              "lastKey": 667,
+              "start": 20.799999237060547,
+              "end": 22.266666412353516
+            },
+            {
+              "firstKey": 669,
+              "lastKey": 684,
+              "start": 22.33333396911621,
+              "end": 22.83333396911621
+            },
+            {
+              "firstKey": 692,
+              "lastKey": 803,
+              "start": 23.100000381469727,
+              "end": 26.799999237060547
+            },
+            {
+              "firstKey": 809,
+              "lastKey": 833,
+              "start": 27,
+              "end": 27.799999237060547
+            },
+            {
+              "firstKey": 841,
+              "lastKey": 937,
+              "start": 28.066667556762695,
+              "end": 31.266666412353516
+            },
+            {
+              "firstKey": 944,
+              "lastKey": 962,
+              "start": 31.5,
+              "end": 32.099998474121094
+            },
+            {
+              "firstKey": 964,
+              "lastKey": 982,
+              "start": 32.16666793823242,
+              "end": 32.766666412353516
+            },
+            {
+              "firstKey": 991,
+              "lastKey": 1058,
+              "start": 33.06666564941406,
+              "end": 35.29999923706055
+            },
+            {
+              "firstKey": 1069,
+              "lastKey": 1086,
+              "start": 35.66666793823242,
+              "end": 36.233333587646484
+            },
+            {
+              "firstKey": 1089,
+              "lastKey": 1100,
+              "start": 36.33333206176758,
+              "end": 36.70000076293945
+            },
+            {
+              "firstKey": 1103,
+              "lastKey": 1109,
+              "start": 36.79999923706055,
+              "end": 37
+            },
+            {
+              "firstKey": 1111,
+              "lastKey": 1111,
+              "start": 37.06666564941406,
+              "end": 37.06666564941406
+            },
+            {
+              "firstKey": 1113,
+              "lastKey": 1114,
+              "start": 37.13333511352539,
+              "end": 37.16666793823242
+            },
+            {
+              "firstKey": 1116,
+              "lastKey": 1158,
+              "start": 37.233333587646484,
+              "end": 38.63333511352539
+            },
+            {
+              "firstKey": 1169,
+              "lastKey": 1216,
+              "start": 39,
+              "end": 40.56666564941406
+            },
+            {
+              "firstKey": 1219,
+              "lastKey": 1269,
+              "start": 40.66666793823242,
+              "end": 42.33333206176758
+            },
+            {
+              "firstKey": 1275,
+              "lastKey": 1289,
+              "start": 42.53333282470703,
+              "end": 43
+            },
+            {
+              "firstKey": 1298,
+              "lastKey": 1331,
+              "start": 43.29999923706055,
+              "end": 44.400001525878906
+            },
+            {
+              "firstKey": 1337,
+              "lastKey": 1357,
+              "start": 44.599998474121094,
+              "end": 45.266666412353516
+            },
+            {
+              "firstKey": 1364,
+              "lastKey": 1383,
+              "start": 45.5,
+              "end": 46.13333511352539
+            },
+            {
+              "firstKey": 1386,
+              "lastKey": 1427,
+              "start": 46.233333587646484,
+              "end": 47.599998474121094
+            },
+            {
+              "firstKey": 1430,
+              "lastKey": 1478,
+              "start": 47.70000076293945,
+              "end": 49.29999923706055
+            },
+            {
+              "firstKey": 1482,
+              "lastKey": 1581,
+              "start": 49.43333435058594,
+              "end": 52.733333587646484
+            },
+            {
+              "firstKey": 1589,
+              "lastKey": 1657,
+              "start": 53,
+              "end": 55.266666412353516
+            },
+            {
+              "firstKey": 1665,
+              "lastKey": 1665,
+              "start": 55.53333282470703,
+              "end": 55.53333282470703
+            },
+            {
+              "firstKey": 1686,
+              "lastKey": 1751,
+              "start": 56.233333587646484,
+              "end": 58.400001525878906
+            },
+            {
+              "firstKey": 1756,
+              "lastKey": 1771,
+              "start": 58.56666564941406,
+              "end": 59.06666564941406
+            },
+            {
+              "firstKey": 1776,
+              "lastKey": 1791,
+              "start": 59.233333587646484,
+              "end": 59.733333587646484
+            },
+            {
+              "firstKey": 1793,
+              "lastKey": 1803,
+              "start": 59.79999923706055,
+              "end": 60.13333511352539
+            },
+            {
+              "firstKey": 1813,
+              "lastKey": 1826,
+              "start": 60.46666717529297,
+              "end": 60.900001525878906
+            },
+            {
+              "firstKey": 1834,
+              "lastKey": 1945,
+              "start": 61.16666793823242,
+              "end": 64.86666870117188
+            },
+            {
+              "firstKey": 1950,
+              "lastKey": 2080,
+              "start": 65.03333282470703,
+              "end": 69.36666870117188
+            },
+            {
+              "firstKey": 2086,
+              "lastKey": 2125,
+              "start": 69.56666564941406,
+              "end": 70.86666870117188
+            },
+            {
+              "firstKey": 2129,
+              "lastKey": 2407,
+              "start": 71,
+              "end": 80.26667022705078
+            },
+            {
+              "firstKey": 2413,
+              "lastKey": 2453,
+              "start": 80.46666717529297,
+              "end": 81.80000305175781
+            },
+            {
+              "firstKey": 2460,
+              "lastKey": 2516,
+              "start": 82.03333282470703,
+              "end": 83.9000015258789
+            },
+            {
+              "firstKey": 2523,
+              "lastKey": 2555,
+              "start": 84.13333129882812,
+              "end": 85.19999694824219
+            },
+            {
+              "firstKey": 2563,
+              "lastKey": 2565,
+              "start": 85.46666717529297,
+              "end": 85.53333282470703
+            },
+            {
+              "firstKey": 2569,
+              "lastKey": 2628,
+              "start": 85.66666412353516,
+              "end": 87.63333129882812
+            },
+            {
+              "firstKey": 2635,
+              "lastKey": 2660,
+              "start": 87.86666870117188,
+              "end": 88.69999694824219
+            },
+            {
+              "firstKey": 2663,
+              "lastKey": 2770,
+              "start": 88.80000305175781,
+              "end": 92.36666870117188
+            },
+            {
+              "firstKey": 2779,
+              "lastKey": 2903,
+              "start": 92.66666412353516,
+              "end": 96.80000305175781
+            }
+          ],
+          "history": [
+            {
+              "jumps": 51,
+              "returns": 4,
+              "maxStep": 45.287852291081514,
+              "returnEnergy": 17856.103137835715
+            },
+            {
+              "jumps": 48,
+              "returns": 0,
+              "maxStep": 40.58898090514915,
+              "returnEnergy": 14002.50208729687
+            }
+          ],
+          "posture": {
+            "heightLevels": {
+              "low": 0.14458954029069906,
+              "high": 0.8334651242943771
+            },
+            "speedLevels": {
+              "low": 0.3855130009664421,
+              "high": 2.9492261779685625
+            },
+            "strength": 1,
+            "modifiedFrames": 2626,
+            "maxCorrectionDegrees": 159.83879179176282,
+            "weightedNeutralErrorBefore": 30.2906615298667,
+            "weightedNeutralErrorAfter": 5.266236980786149
+          },
+          "after": {
+            "jumps": 147,
+            "returns": 4,
+            "maxStep": 169.68147903820835,
+            "returnEnergy": 70460.73365906888
+          }
+        }
+      ]
+    }
+  ]
+}
