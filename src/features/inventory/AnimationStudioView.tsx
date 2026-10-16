@@ -196,6 +196,10 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
           </div>}
           <div className="d-flex justify-content-between align-items-center mt-2 small text-muted">
             <span aria-live="polite">{results.length} / {catalog.length} animations</span>
+            <button type="button" className="btn btn-sm btn-outline-primary text-nowrap" aria-label="Lancer une animation aléatoire parmi les résultats filtrés"
+              title="Lancer une animation au hasard parmi les résultats filtrés" disabled={!results.length} onClick={random}>
+              <i className="bi bi-shuffle me-1" aria-hidden="true" />Au hasard
+            </button>
             <button type="button" className="btn btn-link btn-sm p-0" onClick={exportAnnotations} title="Exporter toutes les annotations locales en JSON">Exporter</button>
             <button type="button" className="btn btn-link btn-sm p-0" disabled={!isFiltered} onClick={() => updateFilters(EMPTY_STUDIO_FILTERS)}>Réinitialiser</button>
           </div>
