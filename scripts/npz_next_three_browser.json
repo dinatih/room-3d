@@ -1,0 +1,165 @@
+{
+  "headless": true,
+  "notes": "Skeleton loader/render checks; not a visual acceptance of character retargeting or contacts.",
+  "results": [
+    {
+      "id": "reggaeton-vaso-01",
+      "duration": 128.3000030517578,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        13.100000381469727,
+        64.1500015258789,
+        128.3000030517578
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 13.100000381469727,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0.00198992871588388,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 64.1500015258789,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 128.3000030517578,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-next-three-review/reggaeton-vaso-01.png"
+    },
+    {
+      "id": "hiphop-fanie-c3d",
+      "duration": 129.89999389648438,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        9.366666793823242,
+        64.94999694824219,
+        129.89999389648438
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 9.366666793823242,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 64.94999694824219,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 129.89999389648438,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-next-three-review/hiphop-fanie-c3d.png"
+    },
+    {
+      "id": "musical-theater-fanie-c3d",
+      "duration": 127.43333435058594,
+      "bones": [
+        65,
+        65
+      ],
+      "evaluatedTimes": [
+        0.03333333507180214,
+        3.5999999046325684,
+        63.71666717529297,
+        127.43333435058594
+      ],
+      "endpointDeltas": [
+        {
+          "time": 0.03333333507180214,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 3.5999999046325684,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 63.71666717529297,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        },
+        {
+          "time": 127.43333435058594,
+          "deltas": {
+            "mixamorigLeftFoot": 0,
+            "mixamorigRightFoot": 0,
+            "mixamorigLeftHand": 0,
+            "mixamorigRightHand": 0
+          }
+        }
+      ],
+      "screenshot": "/tmp/room-npz-next-three-review/musical-theater-fanie-c3d.png"
+    }
+  ]
+}

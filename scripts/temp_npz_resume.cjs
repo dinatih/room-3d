@@ -196,7 +196,8 @@ function audit(g) {
 }
 function main() {
   const mode = process.argv[2] || 'audit';
-  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(!['audit','restore','smooth','retime-combat-b','olivia','inspect','metadata','verify','repair','repair-test','repair-browser','refine-scan','refine','refine-test','refine-browser','next-three'].includes(mode)) throw Error('Unknown mode '+mode);
+  if(mode==='next-three') return nextThree();
   if(mode==='refine-scan') return scanRefinement();
   if(mode==='refine') return refineAndExtract();
   if(mode==='refine-test') return testRefinement();
@@ -1081,5 +1082,53 @@ async function reviewRefinement() {
     rows.push({id:c.id,candidateId:c.id,originalRegistryId:parent.candidateId,originalFile:parent.candidateFile,candidateFile:c.file,sourceStart:c.start,before:{duration:c.duration},alignment:{outputStart:0},details:[],capture:true});
   }
   return reviewRepairs(rows,'npz_refinement_browser.json',{'/__npz_accepted_bachata.glb':base.buf},'/tmp/room-npz-refinement-review');
+}
+async function nextThree() {
+  const assert=require('node:assert/strict');
+  const ids=['reggaeton-vaso-01','hiphop-fanie-c3d','musical-theater-fanie-c3d'];
+  const results=[],browserRows=[];
+  for(const id of ids) {
+    const {row,g:base}=acceptedClip(id),g=parse(Buffer.from(base.buf));
+    const original=fs.readFileSync(path.join(root,row.originalFile)),series=wristSeries(base),wrists=[];
+    for(const h of series.hands) {
+      const tr=g.tracks.find(t=>t.type==='rotation' && t.bone===h.bone);
+      assert.deepEqual(tr.times,series.times,'Wrist timeline mismatch');
+      const result=smoothWorldWrist(h.world),changed=new Set();
+      for(const i of result.hot) {
+        const local=qObj(h.parent[i]).invert().multiply(qObj(result.quats[i])).normalize().toArray();
+        if(dot(local,tr.output.values[i])<0) local.forEach((v,k)=>local[k]=-v);
+        local.forEach((v,k)=>g.buf.writeFloatLE(v,tr.output.offset+i*tr.output.stride+k*4));
+        changed.add(i);
+      }
+      wrists.push({bone:h.bone,before:rotationNoise(h.world),passes:result.passes,history:result.history,changed:changedIntervals(changed,tr.times)});
+    }
+    const final=parse(g.buf),actual=wristSeries(final);
+    assertWristsOnly(base,final);
+    for(const wrist of wrists) {
+      wrist.after=rotationNoise(actual.hands.find(h=>h.bone===wrist.bone).world);
+      assert(wrist.after.returns<=wrist.before.returns,'Wrist returns increased');
+    }
+    const rigs=[poseRig(base),poseRig(final)];
+    const anchorNames=['mixamorig:Hips','mixamorig:LeftFoot','mixamorig:RightFoot','mixamorig:LeftHand','mixamorig:RightHand'];
+    for(const t of series.times) {
+      rigs.forEach(r=>r.setTime(t));
+      for(const name of anchorNames) {
+        const points=rigs.map(r=>r.nodes.find(n=>n.name===name).getWorldPosition(new THREE.Vector3()));
+        assert(points[0].distanceTo(points[1])<1e-6,'Body/contact anchor moved: '+name);
+      }
+    }
+    assert.equal(hashBytes(fs.readFileSync(path.join(root,row.originalFile))),hashBytes(original),'Original modified');
+    fs.writeFileSync(path.join(root,row.candidateFile),g.buf);
+    const result={id,candidateId:row.candidateId,file:row.candidateFile,baseCommit:acceptedRepairCommit,baseSHA256:hashBytes(base.buf),originalSHA256:hashBytes(original),resultSHA256:hashBytes(g.buf),raw:audit(parse(original)),before:audit(base),after:audit(final),wrists,acceptance:'pending visual review'};
+    results.push(result);browserRows.push({...row,after:result.after,capture:true});
+    console.log(id,JSON.stringify({jumps:result.after.jumps,wrists:wrists.map(w=>({bone:w.bone,before:w.before.returns,after:w.after.returns,passes:w.passes}))}));
+  }
+  fs.writeFileSync(path.join(root,'scripts/npz_next_three.json'),JSON.stringify({ids,results},null,2)+'\n');
+  let md='# Deuxième lot : Reggaeton Vaso, Hip-hop Fanie, Musical Theater Fanie\n\nVersions `[ESSAI correction]` à comparer aux originaux. Référence non cumulative : candidats du commit `c6c5468f`. Seules les deux rotations des mains changent par rapport à ces candidats. Méthode Bachata : moyenne géodésique symétrique [1,2,1] dans les zones d’alerte des poignets en espace monde, puis retour dans la base locale. Arrêt dès disparition des retours >25° ou convergence numérique. Aucun changement des temps, vitesses, translations XYZ, hauteurs, rotations du bassin, bras ou jambes.\n\n| Animation | Sauts locaux original → premier essai → nouvel essai | Retours main gauche | Retours main droite |\n|---|---:|---:|---:|\n';
+  for(const r of results) md+=`| ${r.id} | ${r.raw.jumps} → ${r.before.jumps} → ${r.after.jumps} | ${r.wrists[0].before.returns} → ${r.wrists[0].after.returns} | ${r.wrists[1].before.returns} → ${r.wrists[1].after.returns} |\n`;
+  md+='\nLes sauts locaux rapides et les retours des mains en espace monde sont deux mesures différentes. Leur diminution ne garantit ni les appuis ni la qualité visuelle. Les longs mouvements suspects du premier essai restent signalés dans le rapport historique ; aucun autre lissage du corps n’est ajouté.\n\nLes dates et articulations adoucies figurent dans `scripts/npz_next_three.json` (`wrists[].changed`, `history`). Les originaux sont conservés. Aucun extrait supplémentaire ni animation supprimée n’est régénéré.\n\nTests : invariants binaires hors rotations des mains, dates et translations identiques, positions des poignets/pieds/bassin identiques sur toutes les frames, références originales inchangées par SHA-256. Commande reproductible : `node scripts/temp_npz_resume.cjs next-three`. Avec Vite sur 5193 : ajouter `--browser` pour vérifier chargement et mixeur dans Chromium headless.\n';
+  fs.writeFileSync(path.join(root,'docs/npz-next-three.md'),md);
+  if(process.argv.includes('--browser')) await reviewRepairs(browserRows,'npz_next_three_browser.json',{},'/tmp/room-npz-next-three-review');
+  console.log('Next three: invariant checks passed; visual acceptance pending.');
 }
 Promise.resolve(main()).catch(err=>{console.error(err);process.exitCode=1;});

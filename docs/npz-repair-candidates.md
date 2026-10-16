@@ -15,6 +15,8 @@ Les originaux restent actifs et inchangés. Les versions candidates sont accessi
 
 > Mise à jour Bachata : stabilisation supplémentaire des poignets en espace monde, sans modifier le reste de la version validée. Voir `npz-refinement-and-extracts.md` pour la méthode et les mesures des mains.
 
+> Deuxième lot : Reggaeton Vaso, Hip-hop Fanie et Musical Theater Fanie ont reçu le traitement des poignets en espace monde. Les mesures actualisées et les intervalles supplémentaires sont dans `docs/npz-next-three.md` et `scripts/npz_next_three.json` ; le tableau historique ci-dessous décrit leur premier essai. Ces trois versions restent à valider visuellement. Six autres candidats restent à examiner : Zumba Fanie, Belly Dance Anna, Salsa Stefanos et les trois danses Olivia.
+
 ## Méthode et limites
 
 Alignement temporel NPZ/GLB par comparaison de la vitesse angulaire du bassin sur tous les instants exportés. Estimation du changement de base à partir des rotations relatives, puis vérification sur toutes les orientations de chaque articulation. Les discordances dépassant le budget numérique Float32 sont signalées et laissées intactes : elles ne sont pas attribuées automatiquement au capteur.
