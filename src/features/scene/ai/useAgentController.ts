@@ -1118,6 +1118,7 @@ export function useAgentController(
   };
 
   const update = (dt: number): AgentState => {
+    if (!enabled) return stateRef.current;
     const instruction = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length
       ? dynamicNavQueueRef.current[dynamicNavIndexRef.current] : scenario?.[stepIndexRef.current];
     const blocked = blockedCoordsRef.current;

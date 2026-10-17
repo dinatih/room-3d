@@ -341,8 +341,9 @@ export function Character({
     return null;
   }, [activeActionKey, activeCharacterId, id, isPreview]);
 
-  const isAutonomous = !isPreview && AUTONOMOUS_NPC_IDS.has(id);
-  const isGuidedTour = !isPreview && Boolean(activeActionKey && id === activeCharacterId);
+  const agentEnabled = !isPreview && !isGridPartner && navigationEnabled && laraCount > 0 && !characterGrid;
+  const isAutonomous = agentEnabled && AUTONOMOUS_NPC_IDS.has(id);
+  const isGuidedTour = agentEnabled && Boolean(activeActionKey && id === activeCharacterId);
 
   const autonomousScenario = useMemo(() => {
     if (!isAutonomous) return null;
@@ -394,7 +395,7 @@ export function Character({
     spawnDelay,
     hasSkyDrop,
     'pistol-kneel-to-stand',
-    !isGridPartner && navigationEnabled
+    agentEnabled
   );
 
   // Synchronisation initiale des coordonnées caméra/character actif dès le montage
@@ -672,7 +673,7 @@ export function Character({
       hasLoggedIdleRef.current = false;
     }
 
-    const hasDynamicTask = hasPendingDynamicTask();
+    const hasDynamicTask = agentEnabled && hasPendingDynamicTask();
     const hasCharacterControl = cameraState.isXR || (!cameraState.animalTarget && (
       cameraState.mode === 'fpv' || useSceneStore.getState().arrowControl === 'character'
     ));
