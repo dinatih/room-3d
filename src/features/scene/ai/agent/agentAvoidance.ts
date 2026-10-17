@@ -7,9 +7,11 @@ import { duoSessionManager } from '../duoSessionManager';
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
-// Zero disables mutual avoidance for the crowd-blockage diagnostic.
+// Actors steer around each other but never impose a hard stop on one another.
 // Furniture and door clearance still use the full measured body radius.
 export const ACTOR_AVOIDANCE_SCALE = 0;
+// Prefer half-body separation when space permits; overlap remains allowed.
+const ACTOR_STEERING_SCALE = 0.5;
 export const actorClearance = (profile: { radius: number }, body: { radius: number }): number =>
   (profile.radius + body.radius) * ACTOR_AVOIDANCE_SCALE;
 const destinations = new Map<string, Point>();
@@ -71,7 +73,7 @@ export function isAgentDestinationFree(id: string, target: Point): boolean {
 /** Anticipate contact using measured bodies; keep the passing side for the encounter. */
 export function computeSteeringVector(characterId: string, currentX: number, currentZ: number, dirX: number, dirZ: number, _distToTarget: number): SteeringResult {
   let steerX = dirX, steerZ = dirZ;
-  if (ACTOR_AVOIDANCE_SCALE > 0 && useSceneStore.getState().layers.npcCollisions) {
+  if (useSceneStore.getState().layers.npcCollisions) {
     const profile = getAgentProfile(characterId);
     const y = cameraState.positions[characterId]?.y ?? 0;
     let sides = passingSides.get(characterId);
@@ -82,7 +84,7 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
       if (other.y >= y + profile.height || other.y + body.height <= y) continue;
       const dx = other.x - currentX, dz = other.z - currentZ;
       const distance = Math.hypot(dx, dz);
-      const clearance = actorClearance(profile, body);
+      const clearance = (profile.radius + body.radius) * ACTOR_STEERING_SCALE;
       const lookahead = clearance * 2;
       if (distance >= lookahead) { sides.delete(otherId); continue; }
       const forward = dx * dirX + dz * dirZ;
@@ -95,20 +97,9 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
         steerX -= dirZ * side * proximity * lateral;
         steerZ += dirX * side * proximity * lateral;
       }
-      if (distance > 0 && distance < clearance) {
-        const penetration = (clearance - distance) / clearance;
-        steerX -= dx / distance * penetration;
-        steerZ -= dz / distance * penetration;
-      }
-      // At contact, remove inward velocity so an actor can slide and separate.
-      if (distance > 0 && distance <= clearance + CLEARANCE_ERROR) {
-        const inward = (steerX * dx + steerZ * dz) / distance;
-        if (inward >= 0) {
-          const correction = inward + CLEARANCE_ERROR / clearance;
-          steerX -= dx / distance * correction;
-          steerZ -= dz / distance * correction;
-        }
-      }
+      // Only add lateral steering: contact must never cancel forward progress.
+      // followRoute falls back to its straight, furniture-safe step when this
+      // sidestep would hit geometry, allowing passage through the other actor.
     }
   }
   const length = Math.hypot(steerX, steerZ);
