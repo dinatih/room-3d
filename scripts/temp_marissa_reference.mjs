@@ -86,7 +86,27 @@ try {
       const {scene}=await loader.loadAsync('/characters/lara/lara_native.glb');
       const bases=new Map();
       scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) bases.set(mat.map,mat.map?.image);});
+      if(style==='marissa') {
+        // Character.tsx scales Lara from metres to centimetres before styling.
+        scene.scale.setScalar(100); scene.updateMatrixWorld(true);
+        // Character.tsx recentres the hips after updating the world matrices.
+        scene.position.set(30,0,-100);
+      }
       variants.applyLaraVariantStyles(scene,style);
+      if(style==='marissa') {
+        const {scene:reference}=await loader.loadAsync('/characters/lara/lara_native.glb');
+        variants.applyLaraVariantStyles(reference,style);
+        for(const name of ['body_legs','body_legs_barefoot','body_nude_legs001','body_nude_feet001']) {
+          const sample=m=>{
+            const c=document.createElement('canvas'); const image=m.material.map.image;
+            c.width=image.width;c.height=image.height;const ctx=c.getContext('2d');ctx.drawImage(image,0,0);
+            return ctx.getImageData(0,0,c.width,c.height).data;
+          };
+          const actual=sample(scene.getObjectByName(name)), expected=sample(reference.getObjectByName(name));
+          if(actual.some((v,i)=>v!==expected[i]))throw Error(`Marissa tattoos changed after scaling/recentring: ${name}`);
+        }
+        scene.scale.setScalar(1);scene.position.set(0,0,0);scene.updateMatrixWorld(true);
+      }
       const materials=[];
       scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) {
         if (!mat.map || !mat.userData.__ownedCharacterMaterial) continue;

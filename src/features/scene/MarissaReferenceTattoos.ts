@@ -58,7 +58,10 @@ function reference() {
 
 /** Rasterize the same frontal design into each skin's own UVs, including bare feet. */
 export function applyMarissaReferenceTattoos(model: THREE.Object3D) {
-  model.updateWorldMatrix(true,true);
+  // Character setup recentres the hips immediately before styling. Unlike
+  // updateWorldMatrix, updateMatrixWorld also refreshes SkinnedMesh.bindMatrixInverse.
+  model.updateWorldMatrix(true, false);
+  model.updateMatrixWorld(true);
   model.traverse(n=>{if((n as THREE.SkinnedMesh).isSkinnedMesh)(n as THREE.SkinnedMesh).skeleton.update();});
   const inverse = model.matrixWorld.clone().invert();
   const bounds = new THREE.Box3();
