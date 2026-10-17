@@ -174,6 +174,9 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
 }
 
 export function CharacterGroup(props: CharacterGroupProps) {
+  const enabled = useSceneStore(state => state.layers.character && state.layers.laraCount !== 0);
+  if (!props.isPreview && !enabled) return null;
+
   return (
     <Suspense fallback={null}>
       <InternalCharacterGroup {...props} />
