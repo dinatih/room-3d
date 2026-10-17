@@ -15,6 +15,7 @@ import { CorridorEquipment, CorridorFurniture, CorridorFurnishings } from './pla
 import { LivingRoomFurniture, LivingRoomFurnishings, LivingRoomDecor } from './placements/LivingRoomPlacements';
 import { GardenFurniture, GardenFurnishings, GardenDecor, GardenAnimals } from './placements/GardenPlacements';
 import { RobotPlacements } from './placements/RobotPlacements';
+import { useSceneStore } from './store/useSceneStore';
 
 // Layer 1 — Équipements sanitaires, cuisine et technique
 export function Equipment() {
@@ -67,6 +68,10 @@ export function Decor() {
 
 // Pass 4 — Animals : Animaux autonomes (Robin Bird, Shiba Inu, poissons, étoiles de mer) et robots (G1, Go2, Jumper, Drone)
 export function Animals() {
+  const enabled = useSceneStore(state => state.layers.animals ?? true);
+  // Unmount autonomous actors so hidden layers have no frame updates or listeners.
+  if (!enabled) return null;
+
   return (
     <>
       <GardenAnimals />
