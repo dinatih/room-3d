@@ -20,6 +20,7 @@ import { PresetButton } from '@features/scene/PresetButton';
 const TAG_COLORS: Record<string, string> = {
   system: '#4b5563',
   perf:   '#d97706',
+  download: '#0284c7',
   error:  '#dc2626',
   robin:  '#ea580c',
   ...Object.fromEntries(CHARACTERS.map(c => [c.id, c.color])),
@@ -122,7 +123,7 @@ export function AppConsole({
   const activeChar = findCharacter(activeCharacterId);
   const isIdle = useAppIdle();
 
-  const [logs, setLogs] = useState<AppLogEntry[]>([]);
+  const [logs, setLogs] = useState<AppLogEntry[]>(() => [...APP_LOG_HISTORY]);
   const [open, setOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
@@ -156,6 +157,7 @@ export function AppConsole({
       });
     };
     document.addEventListener('app-log', handler);
+    setLogs([...APP_LOG_HISTORY]);
     return () => document.removeEventListener('app-log', handler);
   }, []);
 

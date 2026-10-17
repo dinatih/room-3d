@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client';
+import './features/ui/resourceDownloadLogs';
 import { useGLTF } from '@react-three/drei';
 import { Studio } from '@features/scene/Studio';
 import '../scss/app.scss';
