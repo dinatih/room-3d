@@ -541,11 +541,10 @@ avec conservation des poignets. Pour les autres actions, le placement
 semelles reconstruites avec SMPL-X et leur plan commun (la plus basse des deux
 semelles à la première frame). Les pieds du participant porté conservent ainsi
 leur élévation initiale. Cette correction constante conserve le déplacement
-vertical de l'animation. Pour les portages, massages, bras de fer et scènes
-d'aide à se relever, `wristTargetsMeters` contient les positions des deux
-poignets SMPL-X à 30 FPS dans le repère commun, relativement à la base de
-chaque participant. L'IK utilise ces cibles source au lieu de conserver les
-poignets d'un retargeting dont la morphologie peut décaler les contacts.
+vertical de l'animation. L'IK conserve les positions des poignets de
+l'animation retargetée avant cette correction de hauteur. Les trajectoires
+des poignets SMPL-X ne sont ni enregistrées dans les manifests ni utilisées
+pour le calage.
 
 Cette mesure décrit un repère d'appui initial, pas une détection automatique
 de chaise ou de table. Les accessoires absents du dataset restent à placer pour

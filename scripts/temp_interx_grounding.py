@@ -147,25 +147,17 @@ def main():
     if args.placement_selection:
         result = {}
         for duo in json.loads(args.placement_selection.read_text())['duos']:
-            soles, wrists, starts = [], [], []
-            contacts = duo['actionCode'] in {'A009', 'A025', 'A026', 'A027', 'A028', 'A035'}
+            soles = []
             for person in ('p1', 'p2'):
                 with np.load(args.source / duo['source'][person], allow_pickle=False) as data:
                     motion = {key: data[key].copy() for key in data.files}
                 for key in ('trans', 'root_orient', 'pose_body', 'pose_lhand', 'pose_rhand'):
-                    motion[key] = motion[key][::4] if contacts else motion[key][:1]
-                starts.append(motion['trans'][0].astype(np.float64))
-                _, _, joints, feet = reconstruct(models[str(motion['gender'].item())], motion, measure_all_soles=False)
+                    motion[key] = motion[key][:1]
+                _, _, _, feet = reconstruct(models[str(motion['gender'].item())], motion, measure_all_soles=False)
                 soles.append(float(feet[0]))
-                wrists.append(joints[:, [20, 21]])
             floor = min(soles)
             result[duo['id']] = {'sourceInitialSolesMeters': soles, 'sourceReferencePlaneMeters': floor,
                                  'initialSoleHeightMeters': [value - floor for value in soles]}
-            if contacts:
-                origin = np.array([starts[0][0], floor, starts[0][2]])
-                result[duo['id']]['wristTargetsMeters'] = {
-                    person: (positions - origin - (start - starts[0])).tolist()
-                    for person, positions, start in zip(('p1', 'p2'), wrists, starts)}
         selection = json.loads(args.placement_selection.read_text())
         args.report.write_text(json.dumps({'models': hashes,
                                           'sourceSha256': {entry['id']: entry['source']['sha256'] for entry in selection['duos']},

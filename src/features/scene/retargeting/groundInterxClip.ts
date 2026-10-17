@@ -81,7 +81,7 @@ function solveArm(upper: THREE.Object3D, lower: THREE.Object3D, hand: THREE.Obje
  * desired source sole elevation for seated/carried participants; it must not
  * force their feet onto the other participant's support plane.
  */
-export function groundInterxClip(clip: THREE.AnimationClip, model: THREE.Object3D, baseHeightMeters: number, wristTargetsMeters?: number[][][]): THREE.AnimationClip {
+export function groundInterxClip(clip: THREE.AnimationClip, model: THREE.Object3D, baseHeightMeters: number): THREE.AnimationClip {
   const saved: Array<{ object: THREE.Object3D; position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }> = [];
   model.traverse(object => saved.push({ object, position: object.position.clone(), quaternion: object.quaternion.clone(), scale: object.scale.clone() }));
   const bone = (name: string): THREE.Object3D => {
@@ -95,9 +95,6 @@ export function groundInterxClip(clip: THREE.AnimationClip, model: THREE.Object3
   const hipsTrack = clip.tracks.find(track => track.name === `${hips.name}.position`);
   if (!hipsTrack) throw new Error('Inter-X : piste de bassin manquante');
   const times = hipsTrack.times;
-  if (wristTargetsMeters && (wristTargetsMeters.length !== times.length || wristTargetsMeters.some(frame => frame.length !== 2 || frame.some(point => point.length !== 3 || !point.every(Number.isFinite))))) {
-    throw new Error('Inter-X : trajectoires des poignets SMPL-X invalides');
-  }
   const correctedJoints = arms.flatMap(arm => [arm.upper, arm.lower, arm.hand]);
   const correctedNames = [hips.name + '.position', ...arms.map(arm => arm.upper.name + '.position'), ...correctedJoints.map(bone => bone.name + '.quaternion')];
   const values = correctedNames.map(() => [] as number[]);
@@ -119,15 +116,11 @@ export function groundInterxClip(clip: THREE.AnimationClip, model: THREE.Object3
     const correctionY = -(baseHeightMeters * 100 + interxSoleHeight(model));
     const correction = new THREE.Vector3(0, correctionY, 0)
       .applyMatrix3(new THREE.Matrix3().setFromMatrix4(hips.parent!.matrixWorld).invert());
-    const origin = model.getWorldPosition(new THREE.Vector3());
-    const orientation = model.getWorldQuaternion(new THREE.Quaternion());
     for (let frame = 0; frame < times.length; frame++) {
       arms.forEach((arm, index) => arm.upper.position.copy(originalShoulders[index]));
       mixer.setTime(times[frame]);
       model.updateMatrixWorld(true);
-      const targets = wristTargetsMeters
-        ? wristTargetsMeters[frame].map(point => new THREE.Vector3(...point).multiplyScalar(100).applyQuaternion(orientation).add(origin))
-        : arms.map(arm => arm.hand.getWorldPosition(new THREE.Vector3()));
+      const targets = arms.map(arm => arm.hand.getWorldPosition(new THREE.Vector3()));
       hips.position.add(correction);
       model.updateMatrixWorld(true);
       arms.forEach((arm, index) => solveArm(arm.upper, arm.lower, arm.hand, targets[index]));

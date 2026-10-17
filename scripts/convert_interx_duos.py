@@ -174,11 +174,6 @@ def main():
                     raise ValueError(f"Invalid support heights: {entry['id']}/{key}")
             if not math.isfinite(placement['sourceReferencePlaneMeters']) or min(placement['initialSoleHeightMeters']) < 0:
                 raise ValueError(f"Invalid source support plane: {entry['id']}")
-            if 'wristTargetsMeters' in placement:
-                for person in ('p1', 'p2'):
-                    values = np.asarray(placement['wristTargetsMeters'][person])
-                    if values.shape != (entry['expectedFrameCount'], 2, 3) or not np.isfinite(values).all():
-                        raise ValueError(f"Invalid wrist targets: {entry['id']}/{person}")
     if args.recordings:
         unknown = set(args.recordings) - {entry['source']['recording'] for entry in entries}
         if unknown:

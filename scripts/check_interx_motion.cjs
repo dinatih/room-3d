@@ -173,9 +173,7 @@ async function main() {
           for (let frame = 0; frame < entry.clips[person].frameCount; frame++) {
             originalMixer.setTime(frame / 30);
             target.scene.updateMatrixWorld(true);
-            originalHands.push(hands.map((hand, side) => ({ position: clipDef.interxGrounding.wristTargetsMeters
-              ? new THREE.Vector3(...clipDef.interxGrounding.wristTargetsMeters[frame][side]).multiplyScalar(100)
-              : hand.getWorldPosition(new THREE.Vector3()), quaternion: hand.getWorldQuaternion(new THREE.Quaternion()) })));
+            originalHands.push(hands.map(hand => ({ position: hand.getWorldPosition(new THREE.Vector3()), quaternion: hand.getWorldQuaternion(new THREE.Quaternion()) })));
             originalFingers.push(fingers.map(joint => joint.getWorldQuaternion(new THREE.Quaternion()).normalize()));
           }
           originalMixer.stopAllAction();
@@ -185,7 +183,7 @@ async function main() {
           shoulders[0].position.x += 0.01;
           const liveTransforms = [];
           target.scene.traverse(object => liveTransforms.push({ object, position: object.position.clone(), quaternion: object.quaternion.clone(), scale: object.scale.clone() }));
-          clip = groundInterxClip(clip, target.scene, clipDef.interxGrounding.baseHeightMeters, clipDef.interxGrounding.wristTargetsMeters);
+          clip = groundInterxClip(clip, target.scene, clipDef.interxGrounding.baseHeightMeters);
           liveTransforms.forEach(saved => {
             assert(saved.object.position.equals(saved.position) && saved.object.quaternion.equals(saved.quaternion) && saved.object.scale.equals(saved.scale), 'Baking must restore the live pose');
           });
@@ -282,7 +280,7 @@ async function main() {
       // scale before loading the next pair instead of retaining parser graphs.
       if (global.gc) global.gc();
     }
-    console.log(`${entry.id}: declared support heights retained, ${entry.placement?.wristTargetsMeters ? 'SMPL-X wrist targets matched' : 'original wrists preserved'} at every frame; metric motion and headings retained; scales 75/100/150, anchors 0°/90°.`);
+    console.log(`${entry.id}: declared support heights retained, original wrists preserved at every frame; metric motion and headings retained; scales 75/100/150, anchors 0°/90°.`);
   }
   console.log(`Maximum root displacement error: ${worstError.toFixed(8)} cm`);
   console.log(`Maximum wrist error: ${worstWristError.toFixed(8)} cm; maximum shoulder adjustment at native height: ${largestShoulderMove.toFixed(4)} cm`);
