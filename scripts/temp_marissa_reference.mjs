@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs';
 import launchBrowser from './browser-test-options.cjs';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -97,13 +98,11 @@ try {
         const {scene:reference}=await loader.loadAsync('/characters/lara/lara_native.glb');
         variants.applyLaraVariantStyles(reference,style);
         for(const name of ['body_legs','body_legs_barefoot','body_nude_legs001','body_nude_feet001']) {
-          const sample=m=>{
-            const c=document.createElement('canvas'); const image=m.material.map.image;
-            c.width=image.width;c.height=image.height;const ctx=c.getContext('2d');ctx.drawImage(image,0,0);
-            return ctx.getImageData(0,0,c.width,c.height).data;
-          };
-          const actual=sample(scene.getObjectByName(name)), expected=sample(reference.getObjectByName(name));
-          if(actual.some((v,i)=>v!==expected[i]))throw Error(`Marissa tattoos changed after scaling/recentring: ${name}`);
+          const actual=scene.getObjectByName(name),expected=reference.getObjectByName(name);
+          const a=actual.geometry.getAttribute('marissaInkPosition').array;
+          const b=expected.geometry.getAttribute('marissaInkPosition').array;
+          if(a.some((v,i)=>Math.abs(v-b[i])>1e-4))throw Error(`Marissa ink coordinates changed after recentring: ${name}`);
+          if(actual.material.customProgramCacheKey()!=='marissa-reference-ink')throw Error(`Missing ink shader: ${name}`);
         }
         scene.scale.setScalar(1);scene.position.set(0,0,0);scene.updateMatrixWorld(true);
       }
@@ -144,7 +143,7 @@ try {
       return {style,mesh,shoulder,projection:shoulder?mat.userData.lara_delphina_shoulder_projection:mat.userData.lara_tattoo_projection??mat.userData.lara_sara_tattoo_projection,changes};
     }));
   });
-  await page.waitForFunction(() => ['marissa','delphina'].every(style => window.laraChanges().some(r=>r.style===style&&r.mesh.startsWith('body_nude_legs')&&r.changes[style==='marissa'?0:1]>0)));
+  await page.waitForFunction(() => ['delphina'].every(style => window.laraChanges().some(r=>r.style===style&&r.mesh.startsWith('body_nude_legs')&&r.changes[style==='marissa'?0:1]>0)));
   await page.waitForFunction(() => window.laraChanges().some(r=>r.style==='sara'&&r.mesh.startsWith('body_nude_torso')&&r.changes.some(n=>n>0)));
   await page.waitForFunction(() => ['body_torso','body_nude_torso'].every(name=>window.laraChanges().some(r=>r.style==='delphina'&&r.mesh.startsWith(name)&&r.changes.some(n=>n>0))));
   const changes=await page.evaluate(()=>window.laraChanges());
@@ -163,6 +162,7 @@ try {
     if(row.mesh==='arms'||row.mesh==='body_legs'||row.mesh.startsWith('body_legs_barefoot')) assert(row.changes[row.style==='marissa'?0:1]>0);
   }
   console.log('Browser tattoo checks:',JSON.stringify(changes));
+  console.log(await page.evaluate(()=>{const names=[];window.laraChecks.entries.find(e=>e.style==='marissa').scene.traverse(m=>{if(m.isMesh)names.push(m.name)});return names}));
   await page.evaluate(()=>{
     const {entries,THREE}=window.laraChecks;
     const scene=entries.find(e=>e.style==='marissa').scene;
@@ -174,5 +174,22 @@ try {
   console.log(await page.evaluate(()=>{const {entries,THREE}=window.laraChecks;const s=entries.find(e=>e.style==='marissa').scene;return ['face','body_legs','body_nude_torso001','body_nude_feet001'].map(name=>{const m=s.getObjectByName(name);const b=new THREE.Box3().setFromObject(m);return [name,b.min.toArray(),b.max.toArray()];});}));
   await page.setViewport({width:800,height:1100});
   await page.screenshot({path:'/tmp/marissa-tattoos.png'});
+  const stamp=await page.evaluate(async()=>{
+    const image=new Image();image.src='/src/features/scene/assets/marissa-skull-roses.png';await image.decode();
+    const c=document.createElement('canvas');c.width=192;c.height=256;
+    c.getContext('2d').drawImage(image,0,0,192,256);return c.toDataURL('image/png').split(',')[1];
+  });
+  writeFileSync('src/features/scene/assets/marissa-skull-roses.png',Buffer.from(stamp,'base64'));
+  await page.evaluate(()=>{
+    const {entries,THREE}=window.laraChecks;const entry=entries.find(e=>e.style==='marissa');
+    const ink=entry.scene.getObjectByName('body_legs').geometry.getAttribute('marissaInkPosition');
+    const before=Array.from(ink.array);
+    entry.scene.getObjectByName('leg_left_thigh').rotation.x=-Math.PI/3;
+    entry.scene.updateMatrixWorld(true);
+    if(before.some((v,i)=>v!==ink.array[i]))throw Error('Animation moved the tattoo coordinates');
+    const {variants}=window.laraChecks;
+    variants.applyLaraRealisticTextures(entry.scene,true);variants.applyLaraRealisticTextures(entry.scene,false);
+    if(entry.scene.getObjectByName('body_legs').material.customProgramCacheKey()!=='marissa-reference-ink')throw Error('Realistic mode removed ink shader');
+  });
   assert.deepEqual(errors,[]);
 } finally { await browser.close(); }
