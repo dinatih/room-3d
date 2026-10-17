@@ -7,7 +7,9 @@ import { duoSessionManager } from '../duoSessionManager';
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
-export const ACTOR_AVOIDANCE_SCALE = 0.5;
+// Keep only the central quarter of each body's radius solid against other actors.
+// Partial body overlap is intentional in crowded rooms; furniture keeps full clearance.
+export const ACTOR_AVOIDANCE_SCALE = 0.25;
 export const actorClearance = (profile: { radius: number }, body: { radius: number }): number =>
   (profile.radius + body.radius) * ACTOR_AVOIDANCE_SCALE;
 const destinations = new Map<string, Point>();
@@ -47,7 +49,7 @@ export function reserveAgentDestination(id: string, target: Point | null): void 
   }
 }
 
-/** A stopping place must fit both bodies, even when another actor is resting. */
+/** Stopping places use the same reduced actor footprint as movement and detours. */
 export function isAgentDestinationFree(id: string, target: Point): boolean {
   if (!useSceneStore.getState().layers.npcCollisions) return true;
   const profile = getAgentProfile(id);
