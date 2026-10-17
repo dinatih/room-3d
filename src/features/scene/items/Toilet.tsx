@@ -138,7 +138,9 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
       const targetLidAngle = lidHingeRef.current.userData.initialRotation + (isLidOpenRef.current ? -TOILET_HINGE_ANGLE : 0);
       const diff = targetLidAngle - lidHingeRef.current.rotation.x;
       if (Math.abs(diff) > TOILET_HINGE_TOLERANCE) {
-        lidHingeRef.current.rotation.x += diff * TOILET_HINGE_SPEED * delta;
+        lidHingeRef.current.rotation.x = THREE.MathUtils.damp(
+          lidHingeRef.current.rotation.x, targetLidAngle, TOILET_HINGE_SPEED, delta,
+        );
         active = true;
       }
     }
@@ -147,7 +149,9 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
       const targetSeatAngle = seatHingeRef.current.userData.initialRotation + (isSeatOpenRef.current ? -TOILET_HINGE_ANGLE : 0);
       const diff = targetSeatAngle - seatHingeRef.current.rotation.x;
       if (Math.abs(diff) > TOILET_HINGE_TOLERANCE) {
-        seatHingeRef.current.rotation.x += diff * TOILET_HINGE_SPEED * delta;
+        seatHingeRef.current.rotation.x = THREE.MathUtils.damp(
+          seatHingeRef.current.rotation.x, targetSeatAngle, TOILET_HINGE_SPEED, delta,
+        );
         active = true;
       }
     }
