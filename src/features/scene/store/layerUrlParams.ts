@@ -74,9 +74,9 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   // Divers
   inventoryGrid: false,
   smokeTransition: true,
-  animOriginLerp: false,
-  animCrossfade: false,
-  exitTransitions: false,
+  animOriginLerp: true,
+  animCrossfade: true,
+  exitTransitions: true,
 };
 
 export interface LayerUrlMapping {
