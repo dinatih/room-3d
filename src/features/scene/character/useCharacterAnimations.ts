@@ -11,8 +11,8 @@ const silentManager = new THREE.LoadingManager();
 
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
-const MAX_DYNAMIC_GLTF_CACHE = 32;
-const MAX_RETARGETED_CLIPS = 128;
+const MAX_DYNAMIC_GLTF_CACHE = 16;
+const MAX_RETARGETED_CLIPS = 64;
 const globalGLTFCache = new Map<string, Promise<AnimationSource>>();
 
 export function cacheDynamicGLTF(path: string): Promise<AnimationSource> {
