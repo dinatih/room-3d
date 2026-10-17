@@ -6905,6 +6905,8 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `Sit To Stand (69f / 2.3s, 122KB)`,
     tags: ['poses-idles', 'sitting'],
     duration: 2.3,
+    // Même origine que sitting-idle : conserver le déplacement naturel du relèvement.
+    defaultOffset: [0, 0, -42],
   },
   {
     id: 'sitting',
