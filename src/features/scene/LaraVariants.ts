@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { applyMarissaReferenceTattoos } from './MarissaReferenceTattoos';
 import { getLaraLimbTattooTexture } from './LaraLimbTattoos';
 import { getDelphinaShoulderTattooTexture } from './LaraShoulderTattoo';
 
@@ -86,9 +87,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       const meshName = mesh.name.toLowerCase();
       const isNudeLimb = meshName.startsWith('body_nude_legs') || meshName.startsWith('body_nude_feet');
       const isSaraNudeTorso = isSara && meshName.startsWith('body_nude_torso');
+      const isMarissaNudeTorso = isMarissa && (meshName.startsWith('body_nude_torso') || meshName.startsWith('body_nude_panties'));
       const isDelphinaNudeTorso = isDelphina && meshName.startsWith('body_nude_torso');
       if (meshName.includes('body_nude') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) {
-        if (!isSaraNudeTorso && !isDelphinaNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
+        if (!isMarissaNudeTorso && !isSaraNudeTorso && !isDelphinaNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
       }
 
       // Variants need independent materials, but this function can run again
@@ -123,7 +125,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           return;
         }
         if (isNudeLimb) {
-          if (mat.userData.lara_tattoo_projection) {
+          if (!isMarissa && mat.userData.lara_tattoo_projection) {
             mat.map = getLaraLimbTattooTexture(mat, isMarissa ? 'marissa' : 'delphina',
               isMarissa ? drawMarissaTattoosOnCanvas : drawDelphinaFloralTattoosOnCanvas);
             mat.needsUpdate = true;
@@ -496,7 +498,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
         // Independent anatomical sides: Marissa left, Delphina right.
         if (meshName === 'arms' || meshName === 'body_legs' || meshName.startsWith('body_legs_barefoot')) {
-          if (isMarissa) applyMarissaTattoos(mat);
+          if (isMarissa && meshName === 'arms') applyMarissaTattoos(mat);
           if (isDelphina) applyDelphinaTattoos(mat);
         }
 
@@ -511,6 +513,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       });
     }
   });
+
+  if (isMarissa) applyMarissaReferenceTattoos(model);
 
   // MARISSA 3D PIERCINGS (Cupid's bow stud & Left nostril ring attached to main head bone)
   if (isMarissa && !model.userData.hasMarissaPiercings) {
@@ -624,25 +628,6 @@ function drawMarissaTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
   ctx.fillText('🦁 LION', 0, 24);
   ctx.restore();
 
-  // ── 2. TATOUAGE TEXTE "BEAUTY IS AS BEAUTY DOES" (Face avant, haut de cuisse gauche, sous la sangle du holster) ──
-  ctx.save();
-  ctx.translate(122, 408);
-  // Horizontal in front view; vertical lines run down the thigh.
-  ctx.transform(-0.35476, -0.97120, 0.90327, -0.38318, 0, 0);
-  ctx.fillStyle = 'rgba(15, 15, 20, 0.95)';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = '900 16px "Cinzel", "Times New Roman", serif';
-
-  const lines = ['BEAUTY', 'IS AS', 'BEAUTY', 'DOES'];
-  const lineHeight = 19;
-  const startY = -((lines.length - 1) * lineHeight) / 2;
-
-  lines.forEach((line, idx) => {
-    ctx.fillText(line, 0, startY + idx * lineHeight);
-  });
-
-  ctx.restore();
 }
 
 // ── DELPHINA FLORAL TATTOO CANVAS GENERATOR ──────────────────────────────────
