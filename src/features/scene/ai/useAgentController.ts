@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { AgentInstruction } from './aiTypes';
-import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
+import { SMART_OBJECTS, buildSmartObjectInstructionSequence, getAllSmartObjectIds, isDuoSlot } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
@@ -291,9 +291,15 @@ export function useAgentController(
       }
     };
 
+    const onRetrySmartAction = (event: Event) => {
+      const { targetId, objectId } = (event as CustomEvent<{ targetId: string; objectId: string }>).detail;
+      if (targetId === _characterId) retrySmartAction(objectId);
+    };
+    document.addEventListener('npc-retry-smartaction', onRetrySmartAction);
     document.addEventListener('npc-invite-duo', onInvite);
     document.addEventListener('agent-force-smartobject', onForceSmartObject);
     return () => {
+      document.removeEventListener('npc-retry-smartaction', onRetrySmartAction);
       document.removeEventListener('npc-invite-duo', onInvite);
       document.removeEventListener('agent-force-smartobject', onForceSmartObject);
       if (claimedSlotRef.current?.objectId === 'cuisine-group' && claimedSlotRef.current?.slotId === 'cook-oven') {
@@ -434,6 +440,36 @@ export function useAgentController(
     cachedCoordsInstructionRef.current = null;
     cachedCoordsRef.current = null;
     statusRef.current = 'IDLE';
+  };
+
+  const retrySmartAction = (objectId: string) => {
+    const departureOwner = routeRef.current.owner;
+    const session = duoSessionManager.getSessionFor(_characterId);
+    const partners = [session?.participantA?.characterId, session?.participantB?.characterId]
+      .filter((id): id is string => !!id && id !== _characterId);
+    // Leaving as the leader closes the whole session, even before either arrival.
+    duoSessionManager.leaveDuoZone(session?.participantA?.characterId ?? _characterId);
+    resetDuoState();
+    OccupancyManager.releaseAllForCharacter(_characterId);
+    routeRef.current.owner = departureOwner;
+    routeInstructionRef.current = null;
+    blockedCoordsRef.current = null;
+    navigationErrorRef.current = null;
+    timerRef.current = 0;
+    duoWaitTimerRef.current = 0;
+    repeatIndexRef.current = 0;
+    targetRepeatsRef.current = 1;
+    stateRef.current.animation = 'idle';
+    // Skip the remaining steps of the failed action, including its exit steps.
+    while (scenario?.[stepIndexRef.current]?.smartObjectId === objectId) stepIndexRef.current++;
+    const candidates = getAllSmartObjectIds().filter(id => id !== objectId)
+      .map(id => buildSmartObjectInstructionSequence(id, undefined, _characterId))
+      .filter(sequence => sequence.length > 0);
+    dynamicNavQueueRef.current = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : [];
+    appLog(_characterId, `🎲 Action abandonnée (${objectId}), nouveau tirage d'une smartaction${candidates.length ? '' : ' : aucune disponible'}`);
+    for (const targetId of partners) {
+      document.dispatchEvent(new CustomEvent('npc-retry-smartaction', { detail: { targetId, objectId } }));
+    }
   };
 
   // Process instruction changes on the next frame. Recursive retries can loop
@@ -822,6 +858,7 @@ export function useAgentController(
         stateRef.current.animation = BLOCKED_ANIMATION;
         statusRef.current = 'BLOCKED';
         reportNavigationStop(routeRef.current.error, target.label, { x: target.tx, z: target.tz });
+        if (currentInstruction.smartObjectId) retrySmartAction(currentInstruction.smartObjectId);
         return stateRef.current;
       }
       if (moved === 0 && routeRef.current.search?.job.status === 'pending') {
@@ -1136,6 +1173,10 @@ export function useAgentController(
       statusRef.current = 'BLOCKED';
       const label = instruction.smartObjectId ? (SMART_OBJECTS[instruction.smartObjectId]?.name ?? instruction.smartObjectId) : instruction.targetZoneId ?? instruction.type;
       reportNavigationStop(error.message, label, error.target, error.actorBlockers);
+      if (instruction.smartObjectId) {
+        retrySmartAction(instruction.smartObjectId);
+        return stateRef.current;
+      }
       resetRoute(routeRef.current, _characterId);
       cachedCoordsRef.current = null;
       cachedCoordsInstructionRef.current = null;

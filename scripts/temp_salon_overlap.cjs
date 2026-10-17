@@ -56,3 +56,48 @@ assert.equal(a.isAgentDestinationFree('walker', { x: 50, z: 0 }), true);
 const walls = [[geometry.rectangle(0, 0, 10, 100)]];
 assert.equal(geometry.segmentFree({ x: -30, z: 10 }, target, walls), false, 'Walls continue to block the same crossing');
 console.log('PASS: soft sidesteps, forward progress in crowds, forced narrow passage, shared destinations and solid walls');
+
+// Exercise the controller's actual recovery function with deterministic state.
+const controllerSource = fs.readFileSync('src/features/scene/ai/useAgentController.ts', 'utf8');
+const parsed = ts.createSourceFile('controller.ts', controllerSource, ts.ScriptTarget.Latest, true);
+let recovery;
+function visit(node) {
+  if (ts.isVariableDeclaration(node) && node.name.getText(parsed) === 'retrySmartAction') recovery = node.initializer.getText(parsed);
+  ts.forEachChild(node, visit);
+}
+visit(parsed);
+assert.ok(recovery);
+const ref = current => ({ current });
+const notices = [], leaves = [], releases = [];
+const context = {
+  _characterId: 'partner',
+  scenario: [{ smartObjectId: 'blocked' }, { smartObjectId: 'blocked' }, { smartObjectId: 'later' }],
+  stepIndexRef: ref(0), routeRef: ref({ owner: 'previous-chair' }),
+  routeInstructionRef: ref({}), blockedCoordsRef: ref({}), navigationErrorRef: ref('blocked'),
+  timerRef: ref(5), duoWaitTimerRef: ref(10), repeatIndexRef: ref(2), targetRepeatsRef: ref(3),
+  stateRef: ref({ animation: 'sad-idle' }), dynamicNavQueueRef: ref([]),
+  duoSessionManager: {
+    getSessionFor: () => ({ participantA: { characterId: 'leader' }, participantB: { characterId: 'partner' } }),
+    leaveDuoZone: id => leaves.push(id),
+  },
+  resetDuoState() { context.dynamicNavQueueRef.current = []; context.routeRef.current.owner = undefined; },
+  OccupancyManager: { releaseAllForCharacter: id => releases.push(id) },
+  getAllSmartObjectIds: () => ['blocked', 'busy', 'available'],
+  buildSmartObjectInstructionSequence: id => id === 'busy' ? [] : [{ smartObjectId: id }],
+  appLog() {},
+  document: { dispatchEvent: event => notices.push(event.detail) },
+  CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options.detail; } },
+};
+const recover = vm.runInNewContext(ts.transpileModule(`const recover = ${recovery}; recover;`, {
+  compilerOptions: { target: ts.ScriptTarget.ES2020 },
+}).outputText, context);
+recover('blocked');
+assert.deepEqual(leaves, ['leader'], 'A blocked role B must close the session via the leader');
+assert.deepEqual(releases, ['partner']);
+assert.equal(context.stepIndexRef.current, 2, 'Failed action exit steps must be skipped');
+assert.equal(context.dynamicNavQueueRef.current[0].smartObjectId, 'available', 'Choose another available object');
+assert.equal(context.routeRef.current.owner, 'previous-chair', 'Preserve the departure owner for a safe exit');
+assert.equal(context.blockedCoordsRef.current, null);
+assert.equal(notices.length, 1);
+assert.equal(notices[0].targetId, 'leader', 'The other participant must also resume activities');
+console.log('PASS: failed smartaction recovery, role B cancellation, reservations, alternate draw, exit steps and partner notification');
