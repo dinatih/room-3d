@@ -175,17 +175,21 @@ function CameraViewMarker({ view, positionOffset }: { view: ShortcutView; positi
 }
 
 export function CameraViewMarkers() {
+  const { camera } = useThree();
   const [inventoryGridTarget, setInventoryGridTarget] = useState(() => getInventoryGridCameraTarget());
   const enabled = useSceneStore(s => s.layers.cameraViewMarkers);
   const inventoryGridActive = useSceneStore(s => s.layers.inventoryGrid);
   const activeView = useSceneStore(s => s.activeCameraPos);
   const photoOpen = useSceneStore(s => s.isPhotoModeOpen);
+  const cameraProjection = useSceneStore(s => s.cameraProjection);
+  const cameraMode = useSceneStore(s => s.cameraMode);
   useEffect(() => {
     const syncTarget = () => setInventoryGridTarget(getInventoryGridCameraTarget());
     window.addEventListener('inventory-grid-camera-target', syncTarget);
     return () => window.removeEventListener('inventory-grid-camera-target', syncTarget);
   }, []);
-  if (!enabled || photoOpen) return null;
+  const isOrtho = cameraProjection === 'ortho' || cameraMode === 'ortho' || (camera as THREE.OrthographicCamera).isOrthographicCamera;
+  if (!enabled || photoOpen || isOrtho) return null;
 
   const markerOffset: [number, number, number] = inventoryGridActive && inventoryGridTarget
     ? inventoryGridTarget.map((value, index) => value - VIEWS.front.target[index]) as [number, number, number]
