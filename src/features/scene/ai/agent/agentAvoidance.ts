@@ -7,9 +7,9 @@ import { duoSessionManager } from '../duoSessionManager';
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
-// Keep only the central quarter of each body's radius solid against other actors.
-// Partial body overlap is intentional in crowded rooms; furniture keeps full clearance.
-export const ACTOR_AVOIDANCE_SCALE = 0.25;
+// Zero disables mutual avoidance for the crowd-blockage diagnostic.
+// Furniture and door clearance still use the full measured body radius.
+export const ACTOR_AVOIDANCE_SCALE = 0;
 export const actorClearance = (profile: { radius: number }, body: { radius: number }): number =>
   (profile.radius + body.radius) * ACTOR_AVOIDANCE_SCALE;
 const destinations = new Map<string, Point>();
@@ -30,7 +30,7 @@ export function endActorBlockCheck(id: string): ActorBlockers {
 }
 export function actorBlocksUnchanged(blockers: ActorBlockers): boolean {
   if (!blockers.size) return true;
-  return useSceneStore.getState().layers.npcCollisions && [...blockers].every(([id, state]) => actorState(id) === state);
+  return ACTOR_AVOIDANCE_SCALE > 0 && useSceneStore.getState().layers.npcCollisions && [...blockers].every(([id, state]) => actorState(id) === state);
 }
 const areDuoPartners = (id: string, otherId: string) => {
   const session = duoSessionManager.getSessionFor(id);
@@ -51,7 +51,7 @@ export function reserveAgentDestination(id: string, target: Point | null): void 
 
 /** Stopping places use the same reduced actor footprint as movement and detours. */
 export function isAgentDestinationFree(id: string, target: Point): boolean {
-  if (!useSceneStore.getState().layers.npcCollisions) return true;
+  if (ACTOR_AVOIDANCE_SCALE === 0 || !useSceneStore.getState().layers.npcCollisions) return true;
   const profile = getAgentProfile(id);
   for (const otherId in cameraState.positions) {
     if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
@@ -71,7 +71,7 @@ export function isAgentDestinationFree(id: string, target: Point): boolean {
 /** Anticipate contact using measured bodies; keep the passing side for the encounter. */
 export function computeSteeringVector(characterId: string, currentX: number, currentZ: number, dirX: number, dirZ: number, _distToTarget: number): SteeringResult {
   let steerX = dirX, steerZ = dirZ;
-  if (useSceneStore.getState().layers.npcCollisions) {
+  if (ACTOR_AVOIDANCE_SCALE > 0 && useSceneStore.getState().layers.npcCollisions) {
     const profile = getAgentProfile(characterId);
     const y = cameraState.positions[characterId]?.y ?? 0;
     let sides = passingSides.get(characterId);
@@ -119,7 +119,7 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
 
 /** Sweep every actor body, without teleporting or tunnelling. */
 export function limitAgentMovement(id: string, start: Point, proposed: Point): Point {
-  if (!useSceneStore.getState().layers.npcCollisions) return proposed;
+  if (ACTOR_AVOIDANCE_SCALE === 0 || !useSceneStore.getState().layers.npcCollisions) return proposed;
   const profile = getAgentProfile(id);
   const vx = proposed.x - start.x, vz = proposed.z - start.z;
   const lengthSquared = vx * vx + vz * vz;
@@ -163,7 +163,7 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
 
 /** Obstacles for a route around actors, using the same footprint as movement clearance. */
 export function getAgentObstacles(id: string, start: Point): Polygon[] {
-  if (!useSceneStore.getState().layers.npcCollisions) return [];
+  if (ACTOR_AVOIDANCE_SCALE === 0 || !useSceneStore.getState().layers.npcCollisions) return [];
   const profile = getAgentProfile(id);
   const y = cameraState.positions[id]?.y ?? 0;
   const obstacles: Polygon[] = [];
