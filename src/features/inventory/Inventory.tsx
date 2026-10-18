@@ -80,7 +80,7 @@ const WIG_COLOR_OPTIONS = [
   { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
 ];
 
-function ItemDetailContent({ item, wigColor }: { item: PreviewTarget; wigColor?: string }) {
+function ItemDetailContent({ item, wigColor, wigBustVariant }: { item: PreviewTarget; wigColor?: string; wigBustVariant?: string }) {
   if (!item) return null;
 
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
@@ -224,6 +224,7 @@ function ItemDetailContent({ item, wigColor }: { item: PreviewTarget; wigColor?:
           initialDuoAnim={selectedDuoAnim}
           initialDuoPartner={selectedDuoPartner}
           externalHairColor={!isStorage && (item as InventoryItem).category === 'wigs' ? (wigColor || undefined) : undefined}
+          externalLaraVariant={!isStorage && (item as InventoryItem).category === 'wigs' ? (wigBustVariant || 'native') : undefined}
           onGlbStats={handleGlbStats}
         />
       </div>
@@ -506,6 +507,8 @@ export function Inventory({
   const [wigSearch, setWigSearch]         = useState('');
   const [wigSource, setWigSource]         = useState<string>('');
   const [wigColor, setWigColor]           = useState<string>('');
+  const [wigBustVariant, setWigBustVariant] = useState<string>('native');
+  const laraBustOptions = useMemo(() => CHARACTERS.filter(c => !!c.variant), []);
   const [selected, setSelected]           = useState<PreviewTarget>(null);
   const [focusedIndex, setFocusedIndex]   = useState(-1);
   const [showMobileModal, setShowMobileModal] = useState(false);
@@ -909,7 +912,7 @@ function normalizeSearchStr(str: string): string {
                     </button>
                   )}
                 </div>
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-1">
                   <select
                     aria-label="Source de perruque"
                     className="form-select form-select-sm"
@@ -929,6 +932,18 @@ function normalizeSearchStr(str: string): string {
                   >
                     {WIG_COLOR_OPTIONS.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label="Modèle de buste Lara"
+                    className="form-select form-select-sm"
+                    value={wigBustVariant}
+                    onChange={e => setWigBustVariant(e.target.value)}
+                  >
+                    {laraBustOptions.map(c => (
+                      <option key={c.id} value={c.variant}>
+                        {c.variant === 'native' ? 'Native' : c.name} {c.emoji}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -1112,7 +1127,7 @@ function normalizeSearchStr(str: string): string {
                 <p className="small mb-0">Sélectionnez un item<br />pour afficher son détail</p>
               </div>
             ) : (
-              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} />
+              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} />
             )}
           </div>
         </div>
@@ -1129,7 +1144,7 @@ function normalizeSearchStr(str: string): string {
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowMobileModal(false)}></button>
               </div>
               <div className="modal-body p-0 pb-5" style={{ overflowY: 'auto' }}>
-                <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} />
+                <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} />
               </div>
               <div className="modal-footer glass-card position-absolute bottom-0 start-0 end-0 p-2">
                 <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowMobileModal(false)}>Fermer</button>

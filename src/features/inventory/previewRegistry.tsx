@@ -297,6 +297,7 @@ SCENE_REGISTRY['tosakin-goldfish'] = function TosakinPreview({ actionState, onSi
 WIGS_ITEMS.forEach(wig => {
   SCENE_REGISTRY[wig.id] = function WigPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
     const hairColor = actionState?.previewHairColor;
+    const laraVariant = actionState?.previewLaraVariant || 'native';
     return (
       <group>
         <group position={[-18, 0, 0]}>
@@ -314,6 +315,7 @@ WIGS_ITEMS.forEach(wig => {
           <LaraWigBust
             wigId={wig.id}
             hairColor={hairColor}
+            laraVariant={laraVariant}
             windEnabled={false}
           />
         </group>

@@ -21,7 +21,7 @@ import type { SceneItemProps } from '@shared/types';
 import { LAYER_DECOR } from '@config';
 import { Wig, HAIR_COLORS } from './Wig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
-import { applyLaraVariantStyles, disposeLaraVariantMaterials } from '@features/scene/LaraVariants';
+import { applyLaraVariantStyles, disposeLaraVariantMaterials, type LaraVariant } from '@features/scene/LaraVariants';
 import { extractCharacterParts, isHeadMesh } from '@features/scene/characterParts';
 
 interface MannequinHeadProps extends SceneItemProps {
@@ -165,10 +165,12 @@ export function MannequinHead({
 export function LaraWigBust({
   wigId,
   hairColor,
+  laraVariant = 'native',
   windEnabled = false,
 }: {
   wigId: string;
   hairColor?: string;
+  laraVariant?: LaraVariant;
   windEnabled?: boolean;
 }) {
   const { scene: laraScene } = useGLTFClone('characters/lara/lara_native.glb');
@@ -180,7 +182,15 @@ export function LaraWigBust({
     laraScene.position.set(0, 0, 0);
     laraScene.rotation.set(0, 0, 0);
 
-    applyLaraVariantStyles(laraScene, 'native');
+    if (laraVariant !== 'marissa' && laraScene.userData.hasMarissaPiercings) {
+      const hb = laraScene.getObjectByName('head_neck_upper') || laraScene.getObjectByName('head') || laraScene.getObjectByName('Head');
+      if (hb) {
+        hb.children = hb.children.filter(c => c.name !== 'MarissaCupidPiercing' && c.name !== 'MarissaNostrilPiercing');
+      }
+      laraScene.userData.hasMarissaPiercings = false;
+    }
+
+    applyLaraVariantStyles(laraScene, laraVariant);
     const parts = extractCharacterParts(laraScene);
     const nativeHairSet = new Set(parts.nativeHairMeshes.map(item => item.mesh));
     const torsoClothedSet = new Set(parts.torsoClothed.map(item => item.mesh));
@@ -191,10 +201,11 @@ export function LaraWigBust({
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
       mesh.layers.set(LAYER_DECOR);
-      const keepVisible = (isHeadMesh(mesh) && !nativeHairSet.has(mesh)) || torsoClothedSet.has(mesh);
+      const isPiercing = mesh.name === 'MarissaCupidPiercing' || mesh.name === 'MarissaNostrilPiercing';
+      const keepVisible = isPiercing || (isHeadMesh(mesh) && !nativeHairSet.has(mesh)) || torsoClothedSet.has(mesh);
       mesh.visible = keepVisible;
 
-      if (keepVisible && mesh.geometry) {
+      if (keepVisible && !isPiercing && mesh.geometry) {
         const posAttr = mesh.geometry.attributes.position;
         if (posAttr) {
           let hasLowVertex = false;
@@ -276,7 +287,7 @@ export function LaraWigBust({
       disposeLaraVariantMaterials(laraScene);
       ownedGeometries.forEach(g => g.dispose());
     };
-  }, [laraScene]);
+  }, [laraScene, laraVariant]);
 
   return (
     <group userData={{ animUnit: true, itemName: 'Buste Lara' }}>
