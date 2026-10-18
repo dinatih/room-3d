@@ -16,7 +16,8 @@ export interface InteractionSlot {
   relative?: boolean;         // Si true, offset et approachOffset sont exprimés dans le repère local de l'objet parent
   offset?: [number, number, number]; // Position relative ou absolue d'interaction [x, y, z] (hérite de obj.position si absent)
   approachOffset?: [number, number, number]; // Position d'arrivée avant d'interagir
-  arrival?: 'approach';       // Interaction debout : trouver un appui au sol libre près de l'objet
+  arrival?: 'approach' | 'front'; // 'front' reste dans la largeur de la face accessible
+  approachWidth?: number;     // Largeur physique de la face accessible, requise pour arrival='front'
   navigationOwner?: string;   // Volume physique utilisé par ce slot d'un objet composé
   excludes?: string[];       // Actions du même meuble qui utilisent le même espace physique
   rotY?: number;              // Orientation (radians relative si relative=true ou absolue) ; hérite de obj.rotationY si non spécifié

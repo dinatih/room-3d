@@ -3,7 +3,7 @@ import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
 import { HUMAN_BODY_RADIUS } from '../doorObstacles';
-import { BATH_WEST_WALL, ROOM_D } from '../wallData';
+import { BATH_WEST_WALL, ROOM_D, ROOM_W } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { TOILET_BOWL_CENTER } from '../items/Toilet';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
@@ -300,9 +300,11 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   ...Object.fromEntries(Object.entries(KITCHEN_DRONA_ITEMS).map(([id, item]) => [id, {
     id, name: item.label, itemId: id, category: 'storage' as const,
     slots: [{
-      slotId: 'pick-item', name: item.interaction, relative: true, arrival: 'approach' as const,
+      slotId: 'pick-item', name: item.interaction, relative: true,
+      arrival: id === 'drona-kitchen-diy' ? 'front' as const : 'approach' as const,
+      approachWidth: id === 'drona-kitchen-diy' ? 33 : undefined,
       navigationOwner: 'kallax-cuisine',
-      offset: [0, -KALLAX_CUISINE_DRONA_POSITIONS[item.index][1], -50] as [number, number, number],
+      offset: [0, -KALLAX_CUISINE_DRONA_POSITIONS[item.index][1], id === 'drona-kitchen-diy' ? -65 : -50] as [number, number, number],
       rotY: 0, animation: `${item.animationPrefix}-search`,
     }],
   }])),
@@ -1117,6 +1119,8 @@ export function buildSmartObjectInstructionSequence(
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
       gesture('pull'), { ...baseInstruction, waitForAnimation: true }, gesture('push'),
       { type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY },
+      // Leave the chair's original footprint before restoring it.
+      ...(objectId === 'drona-kitchen-diy' ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, targetPos: [ROOM_W * 2 / 3, 0, slot.offset![2]] as [number, number, number] }] : []),
     ];
   }
 

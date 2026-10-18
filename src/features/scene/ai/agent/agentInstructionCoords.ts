@@ -74,7 +74,17 @@ export function resolveInstructionCoords(
     const flexible = slot?.arrival === 'approach' || Boolean(obj.approachDoor) || obj.category === 'storage' || obj.category === 'outdoor';
     const usesApproach = isMoveOnly || flexible;
     const owner = slot?.navigationOwner ?? obj.id;
-    const approach = usesApproach && profileId && !(isMoveOnly && obj.approachDoor) ? getObjectApproach(owner, desired, profileId, currentPosition, false, departureOwner, instr.closedDoor, flexible) : desired;
+    let accepts: ((point: { x: number; z: number }) => boolean) | undefined;
+    if (slot?.arrival === 'front') {
+      const width = slot.approachWidth;
+      if (!width || width <= 0) throw new Error(`Missing front approach width for ${obj.id}`);
+      const c = Math.cos(obj.rotationY), s = Math.sin(obj.rotationY);
+      accepts = point => {
+        const dx = point.x - obj.position[0], dz = point.z - obj.position[2];
+        return -(dx * s + dz * c) >= 0 && Math.abs(dx * c - dz * s) <= width / 2;
+      };
+    }
+    const approach = usesApproach && profileId && !(isMoveOnly && obj.approachDoor) ? getObjectApproach(owner, desired, profileId, currentPosition, false, departureOwner, instr.closedDoor, flexible, accepts) : desired;
     if (!approach) throw new NavigationBlockedError(`No approach for ${obj.id}`, desired);
     return {
       owner,

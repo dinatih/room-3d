@@ -103,12 +103,12 @@ export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string 
 }
 
 /** Reach an object's inflated boundary without ignoring unrelated obstacles. */
-export function getObjectApproach(owner: string, goal: Point, agentId: string, start?: Point, exiting = false, departureOwner?: string, closedDoor?: DoorKey, flexible = false): Point | null {
+export function getObjectApproach(owner: string, goal: Point, agentId: string, start?: Point, exiting = false, departureOwner?: string, closedDoor?: DoorKey, flexible = false, accepts?: (point: Point) => boolean): Point | null {
   owner = getInteractionOwner(owner);
   const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile, undefined, closedDoor);
   if (start && departureOwner && !exiting && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true, undefined, closedDoor) ?? start;
   const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
-  if (!exiting && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles) && (!start || graph.canReach(start, goal)) && isAgentDestinationFree(agentId, goal)) return goal;
+  if (!exiting && (!accepts || accepts(goal)) && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles) && (!start || graph.canReach(start, goal)) && isAgentDestinationFree(agentId, goal)) return goal;
   exiting = exiting || Boolean(start && owned.some(p => pointInRing(start, p)));
   // Leave furniture by the nearest free edge, independently of the next destination.
   const preferred = exiting && start ? start : goal;
@@ -137,6 +137,7 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
   const escapeGraph = exiting ? getNavigationGraph(profile, containingOwners, closedDoor) : getNavigationGraph(profile, owner, closedDoor);
 
   for (const p of candidates) {
+    if (accepts && !accepts(p)) continue;
     // Only actors rejecting a physically reachable candidate are dependencies
     // of a failed approach. Actors near a point inside furniture (or behind a
     // wall) must not restart the same impossible search whenever they move.

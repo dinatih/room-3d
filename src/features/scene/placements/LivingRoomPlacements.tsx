@@ -1,4 +1,5 @@
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
+import { getDiyChairParking } from '../ai/diyChairClearance';
 import { getObjectActionIds } from '../objectActions';
 import { useState, useEffect } from 'react';
 import * as THREE from 'three';
@@ -325,8 +326,14 @@ export function DeskDecor() {
   );
 }
 
-function Smorkull_() {
+export function OfficeChair() {
   const [posIdx, setPosIdx] = useState(0);
+  const [parking, setParking] = useState(getDiyChairParking);
+  useEffect(() => {
+    const update = () => setParking(getDiyChairParking());
+    document.addEventListener('diy-chair-clearance', update);
+    return () => document.removeEventListener('diy-chair-clearance', update);
+  }, []);
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
@@ -342,7 +349,7 @@ function Smorkull_() {
     return () => document.removeEventListener('furniture-toggle', handler);
   }, []);
   useEffect(() => { positionState['smorkull-position'] = { idx: posIdx, total: SMORKULL_POSITIONS.length }; }, [posIdx]);
-  const p = SMORKULL_POSITIONS[posIdx];
+  const p = parking ?? SMORKULL_POSITIONS[posIdx];
   return (
     <PositionTransition furnitureKey="smorkull-position" x={p.x} z={p.z} ry={p.ry}>
       <group userData={{
@@ -465,7 +472,7 @@ export function LivingRoomFurniture() {
       <Desks />
 
       {/* Fauteuil Smörkull */}
-      <Smorkull_ />
+      <OfficeChair />
 
       {/* Purificateur Air Performer */}
       <AirPerformer_ />

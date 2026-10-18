@@ -13,7 +13,7 @@ export const KALLAX_CUISINE_DRONA_POSITIONS: [number, number, number][] = [
 
 // Viewed from the opening (-Z local), right is -X and left is +X.
 export const KITCHEN_DRONA_ITEMS = {
-  'drona-kitchen-diy': { index: 1, label: 'Dröna Bricolage', action: 'drona-kitchen-diy-slide', animationPrefix: 'drona-catchall2', interaction: 'Prendre du matériel de bricolage' },
+  'drona-kitchen-diy': { index: 1, label: 'Dröna Bricolage', action: 'drona-kitchen-diy-slide', animationPrefix: 'drona-kitchen-diy', interaction: 'Prendre du matériel de bricolage' },
   'drona-kitchen-old-it': { index: 3, label: 'Dröna Old IT', action: 'drona-kitchen-old-it-slide', animationPrefix: 'drona-catchall2', interaction: 'Prendre du matériel Old IT' },
   'drona-kitchen-main': { index: 2, label: 'Dröna Cuisine Principale', action: 'drona-kitchen-main-slide', animationPrefix: 'drona-kitchen-upper', interaction: 'Prendre un objet de cuisine' },
   'drona-kitchen-electronics': { index: 0, label: 'Dröna Électronique, Câbles', action: 'drona-kitchen-electronics-slide', animationPrefix: 'drona-kitchen-upper', interaction: 'Prendre du matériel électronique ou des câbles' },

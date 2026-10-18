@@ -22,6 +22,7 @@ if(process.argv.includes('--build-storage')){
      {id:'bath-cabinet-west',source:'looking_through_files_low',time:3.6,height:54,lean:0,cabinet:'west'},
      {id:'bath-cabinet-east',source:'looking_through_files_low',time:3.6,height:54,lean:0,cabinet:'east'},
      {id:'kitchen-upper',source:'looking_through_files_low',time:10.8,height:56,lean:0,lift:.2},
+     {id:'kitchen-diy',source:'looking_through_files_low',time:10.8,height:20.5+33/2-3,lean:0,approach:.65},
    ];
    // Geometry measurements from the actual DroneCell GLB (centred in X/Z).
    const bytes=fs.readFileSync('public/items/dröna/DRÖNA_high.glb');
@@ -78,7 +79,7 @@ if(process.argv.includes('--build-storage')){
          const fraction=Math.max(0,Math.min(1,(t-.25)/.5));
          hands.forEach((arm,index)=>{
            if(item.cabinet&&index!==(item.cabinet==='west'?0:1))return;
-           const target=new THREE.Vector3(index===0?.1:-.1,item.height/100,approach-depth/2-travel*(phase==='search'?1:fraction));
+           const target=new THREE.Vector3(index===0?.1:-.1,item.height/100,(item.approach??approach)-depth/2-travel*(phase==='search'?1:fraction));
            if(item.cabinet){
              // One hand follows the 40 cm door around its mirrored hinge.
              const swing=(phase==='search'?1:fraction)*Math.PI/2,sign=item.cabinet==='west'?1:-1;
@@ -216,7 +217,10 @@ if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-dr
  const {BATHROOM_STORAGE_ITEMS}=await import('/src/features/scene/items/bathroomStorage.ts');
  const {SlidingDrona}=await import('/src/features/scene/items/SlidingDrona.tsx');
  const {NavigationObstacle}=await import('/src/features/scene/ai/navigation/NavigationObstacle.tsx');
- const {Beds,Desks,DeskDecor}=await import('/src/features/scene/placements/LivingRoomPlacements.tsx');
+ const {Beds,Desks,DeskDecor,OfficeChair}=await import('/src/features/scene/placements/LivingRoomPlacements.tsx');
+ const {MackaparGroup}=await import('/src/features/scene/items/MackaparGroup.tsx');
+ const {TrashBin}=await import('/src/features/scene/items/TrashBin.tsx');
+ const {ROOM_D,BATH_WEST_WALL}=await import('/src/features/scene/wallData.ts');
  const {Smorkull}=await import('/src/features/scene/items/Smorkull.tsx');
  const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
  const chairTransform=getObjectTransform('chair-office');
@@ -237,6 +241,10 @@ if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-dr
  return h(Canvas,{frameloop:'never',shadows:true,camera:{position:[125,80,-95],near:.1,far:1500,fov:45}},
  h(Capture),h('ambientLight',{intensity:.85}),h('directionalLight',{position:[100,120,-80],intensity:2}),
  h(React.Suspense,{fallback:null},props.kitchenStorage?h(KitchenFixture,props):props.bathroom?h(BathroomFixture,props):props.layout?h(React.Fragment,null,h(Beds),h(Desks),h(DeskDecor)):h(props.dronaKitchen?KallaxCuisine:props.dronaNW?KallaxNW:props.dronaSE?KallaxSE:props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
+ props.diyObstacles&&h(React.Suspense,{fallback:null},h(React.Fragment,null,
+   h(Beds),h(OfficeChair),
+   h('group',{position:[32,0,ROOM_D-75.5-16],rotation:[0,Math.PI/2,0]},h(NavigationObstacle,{id:'mackapar'},h(MackaparGroup,{item:{},actionState:{},onSize:()=>{},noDrona:true,noHangers:true}))),
+   h('group',{position:[BATH_WEST_WALL+39+18,0,ROOM_D-75.5/2-22],rotation:[0,Math.PI/2,0]},h(NavigationObstacle,{id:'trash-bin'},h(TrashBin,{item:{},actionState:{},onSize:()=>{f.diyObstaclesReady=true;}}))))),
  props.chair&&h(React.Suspense,{fallback:null},h('group',{ref:g=>{f.chair=g;},position:chairTransform.position,rotation:[0,chairTransform.rotationY,0]},h(Smorkull,{item:{},actionState:{},onSize:()=>{f.chairReady=true;}}))),
  h('mesh',{rotation:[-Math.PI/2,0,0],position:[0,-.1,0]},h('planeGeometry',{args:[400,400]}),h('meshStandardMaterial',{color:'#777777'})) );}
  createRoot(container).render(h(App));
@@ -246,6 +254,74 @@ if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-dr
  });
  await page.waitForFunction(()=>window.fixture.scene?.getObjectByName('motor_casing'),{timeout:60000});
  await page.evaluate(()=>{const f=window.fixture;f.camera.lookAt(0,25,0);f.tick(.01);});
+
+ if(process.argv.includes('--diy-chair')){
+   await page.evaluate(()=>window.fixture.setProps({kitchenStorage:true,diyObstacles:true,isPreview:false,actionState:{}}));
+   await page.waitForFunction(()=>window.fixture.diyObstaclesReady&&window.fixture.scene.getObjectByName('drona-kitchen-diy'),{timeout:60000});
+   await new Promise(r=>setTimeout(r,80));await page.evaluate(()=>window.fixture.tick(.1));
+   const results=await page.evaluate(async()=>{
+     const f=window.fixture,{default:React}=await import('/node_modules/.vite/deps/react.js'),{default:ReactDOM}=await import('/node_modules/.vite/deps/react-dom_client.js');
+     const {useAgentController}=await import('/src/features/scene/ai/useAgentController.ts');
+     const {buildSmartObjectInstructionSequence,getSmartObject}=await import('/src/features/scene/ai/smartObjectRegistry.ts');
+     const {currentFurnitureTransforms,movingFurniture,SMORKULL_POSITIONS}=await import('/src/features/scene/furniturePositions.ts');
+     const {OccupancyManager}=await import('/src/features/scene/ai/occupancyManager.ts');
+     const {getDiyChairParking}=await import('/src/features/scene/ai/diyChairClearance.ts');
+     const {getAnimationDef}=await import('/src/features/scene/animations/animationResolver.ts');
+     const {setAgentProfile,furnitureObstacles}=await import('/src/features/scene/ai/navigation/obstacles.ts');
+     const {pointInRing,inflate}=await import('/src/features/scene/ai/navigation/geometry.ts');
+     const {resolveInstructionCoords}=await import('/src/features/scene/ai/agent/agentInstructionCoords.ts');
+     const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
+     const object=getSmartObject('drona-kitchen-diy'),[gx,,gz]=object.slots[0].offset;
+     const chair=[...furnitureObstacles.values()].find(o=>o.owner==='chair-office');
+     if(!chair||!pointInRing({x:gx,z:gz},inflate(chair.polygon,15)))throw new Error('The real chair must reproduce the blocked Bricolage access');
+     const clips={};let rig;
+     for(const phase of ['pull','search','push']){
+       const def=getAnimationDef('drona-kitchen-diy-'+phase),gltf=await new GLTFLoader().loadAsync('/'+def.path);clips[def.id]=gltf.animations[0];rig??=gltf.scene;
+     }
+     const render=f.gl.render;f.gl.render=()=>{};const results=[];
+     try{for(const doubleBed of [false,true]){
+       f.store.getState().triggerAction('bed-double',doubleBed);await new Promise(r=>setTimeout(r,80));f.tick(3);
+       for(const interruptAt of ['occupied','approach','pull','search',null]){
+         const id='diy-chair-'+doubleBed+'-'+interruptAt;setAgentProfile(id,{radius:15,height:170});
+         if(interruptAt==='occupied')OccupancyManager.claimSlot('chair-office','sit','chair-occupant');
+         const routine=buildSmartObjectInstructionSequence(object.id,'pick-item'),host=document.createElement('div');document.body.append(host);const root=ReactDOM.createRoot(host);
+         let agent,complete=false,playing='',playback,parked=false,aligned=false,movingSeen=false;
+         const mixer=new f.THREE.AnimationMixer(rig.clone(true));
+         function Probe(){agent=useAgentController(id,routine,false,()=>({x:220,y:0,z:350,rotY:0}),()=>{complete=true;});return null;}
+         f.flushSync(()=>root.render(React.createElement(Probe)));
+         for(let time=0;time<80&&!complete;time+=.05){
+           const state=agent.update(.05),parking=getDiyChairParking();
+           if(clips[state.animation]){
+             if(movingFurniture.has('smorkull-position'))throw new Error('Actor used Bricolage before chair clearance finished');
+             if(!parking)throw new Error('Chair clearance released before the interaction finished');
+             if(Math.abs(state.z-object.position[2])>33/2||state.x<object.position[0])throw new Error('Actor went behind Mackapar instead of facing Bricolage');
+             const resolved=resolveInstructionCoords(routine.find(s=>s.animation===state.animation),null,id,state);
+             if(Math.hypot(state.x-resolved.tx,state.z-resolved.tz)>1e-6)throw new Error('Actor did not use the reachable front point');
+             for(const obstacle of furnitureObstacles.values())if(obstacle.owner!=='kallax-cuisine'&&pointInRing(state,inflate(obstacle.polygon,15)))throw new Error('Bricolage use overlaps '+obstacle.owner);
+             parked=true;aligned=true;
+             if(playing!==state.animation){playback?.stop();playing=state.animation;playback=mixer.clipAction(clips[playing]).reset().setLoop(f.THREE.LoopOnce,1);playback.clampWhenFinished=true;playback.play();}
+             mixer.update(.05);const progress=Math.min(1,playback.time/playback.getClip().duration);agent.reportAnimationPlayback(playing,progress,progress>=1);
+           }
+           await new Promise(r=>setTimeout(r,0));f.tick(.05);
+           movingSeen||=movingFurniture.has('smorkull-position');
+           if(interruptAt==='occupied'&&time>.5){if(parking||movingSeen||f.store.getState().extraStates['drona-kitchen-diy-slide'])throw new Error('An occupied chair was moved');break;}
+           if(interruptAt==='approach'&&movingSeen)break;
+           if((interruptAt==='pull'||interruptAt==='search')&&playing==='drona-kitchen-diy-'+interruptAt&&playback.time>playback.getClip().duration/2)break;
+         }
+         root.unmount();host.remove();await new Promise(r=>setTimeout(r,80));f.tick(3);
+         if(interruptAt==='occupied')OccupancyManager.releaseSlot('chair-office','sit','chair-occupant');
+         if(getDiyChairParking())throw new Error('Chair clearance leaked after unmount');
+         const restored=currentFurnitureTransforms['smorkull-position'];
+         if(Math.hypot(restored.x-SMORKULL_POSITIONS[0].x,restored.z-SMORKULL_POSITIONS[0].z)>1e-6)throw new Error('Chair did not return to its original position');
+         if(f.store.getState().extraStates['drona-kitchen-diy-slide'])throw new Error('Bricolage remained open');
+         if(!interruptAt&&(!complete||!parked||!aligned))throw new Error('Full Bricolage routine did not finish in front of the box: '+JSON.stringify({complete,parked,aligned,status:agent.getStatus()}));
+         results.push({doubleBed,interruptAt,complete,movingSeen,parked,aligned});
+       }
+     }}finally{f.gl.render=render;}
+     return results;
+   });
+   console.log('Actual chair, trash bin, Mackapar, separate/double beds, front approach, restoration and interruption: PASS',results);assert.deepEqual(errors,[]);return;
+ }
 
  if(process.argv.includes('--bathroom')||process.argv.includes('--kitchen')){
    const kitchen=process.argv.includes('--kitchen'),fixtureProps=kitchen?{kitchenStorage:true}:{bathroom:true};
