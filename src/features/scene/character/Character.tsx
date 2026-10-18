@@ -38,7 +38,8 @@ import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles'
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform, getAnimationDef } from '../animations/animationResolver';
-import { getCrossfadeDuration } from '../animations/animationTransitions';
+import { getCrossfadeDuration, isPostureTransition } from '../animations/animationTransitions';
+import { fitPostureTransition } from '../animations/postureTransition';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 
 import type { CharacterProps } from './characterTypes';
@@ -72,6 +73,7 @@ const _tmpRightEyeWorldPos = new THREE.Vector3();
 const _tmpEyesWorldPos = new THREE.Vector3();
 const _tmpHeadForward = new THREE.Vector3();
 const _tmpHeadUp = new THREE.Vector3();
+const _tmpAnimOrigin = new THREE.Vector3();
 
 const LGBTA_HAIRCUTS = [
   'original',
@@ -217,6 +219,9 @@ export function Character({
   const animOriginRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
   const baseScenePosRef = useRef<THREE.Vector3>(new THREE.Vector3());
+  const postureOriginRef = useRef({ position: new THREE.Vector3(), rotY: 0 });
+  const postureClipsRef = useRef(new Map<string, { original: THREE.AnimationClip; fitted: THREE.AnimationClip }>());
+  useEffect(() => () => postureClipsRef.current.clear(), [scene]);
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const hasLoggedIdleRef = useRef<boolean>(false);
   const lastLoggedAnimRef = useRef<string>('');
@@ -360,6 +365,7 @@ export function Character({
     setPosition: setAgentPosition,
     setRotation: setAgentRotation,
     hasPendingDynamicTask,
+    reportAnimationPlayback,
     initialPos,
   } = useAgentController(
     renderId,
@@ -798,22 +804,6 @@ export function Character({
 
     let target = resolveAnimationId(rawTarget);
 
-    const { offset: targetOffset, rotY: targetRotY } = getAnimationOriginTransform(target);
-    if (animOriginRef.current) {
-      if (isPreview || characterGrid || !animOriginLerp) {
-        // En mode Preview 3D, CharacterGrid ou sans lissage, calage spatial instantané exact
-        animOriginRef.current.position.set(targetOffset[0], targetOffset[1], targetOffset[2]);
-        animOriginRef.current.rotation.y = targetRotY;
-      } else {
-        // En scène principale interactive avec lissage activé, interpolation fluide
-        const offsetLerpFactor = Math.min(1.0, delta * 8.0);
-        animOriginRef.current.position.x = THREE.MathUtils.lerp(animOriginRef.current.position.x, targetOffset[0], offsetLerpFactor);
-        animOriginRef.current.position.y = THREE.MathUtils.lerp(animOriginRef.current.position.y, targetOffset[1], offsetLerpFactor);
-        animOriginRef.current.position.z = THREE.MathUtils.lerp(animOriginRef.current.position.z, targetOffset[2], offsetLerpFactor);
-        animOriginRef.current.rotation.y = THREE.MathUtils.lerp(animOriginRef.current.rotation.y, targetRotY, offsetLerpFactor);
-      }
-    }
-
     const isTPose = target === 't-pose';
 
     let isTemporaryLoadingFallback = false;
@@ -827,6 +817,20 @@ export function Character({
         target = idleId;
       }
       isTemporaryLoadingFallback = true;
+    }
+
+    const postureTransition = !isPreview && !characterGrid && isPostureTransition(target);
+    const idleId = resolveAnimationId('idle');
+    if (postureTransition && !actions[idleId]) {
+      loadAndPlayClip(idleId);
+      return;
+    }
+    // A pending clip must not move the origin of the pose still on screen.
+    if (animOriginRef.current && !postureTransition && !isTemporaryLoadingFallback) {
+      const { offset, rotY } = getAnimationOriginTransform(target);
+      const factor = isPreview || characterGrid || !animOriginLerp ? 1 : Math.min(1, delta * 8);
+      animOriginRef.current.position.lerp(_tmpAnimOrigin.set(...offset), factor);
+      animOriginRef.current.rotation.y = THREE.MathUtils.lerp(animOriginRef.current.rotation.y, rotY, factor);
     }
 
     const animationEquipment = isTPose ? undefined : getAnimationDef(target)?.equipment;
@@ -852,8 +856,19 @@ export function Character({
       });
       scene.updateMatrixWorld(true);
     } else {
-      const to = actions[target];
+      let to = actions[target];
       if (to && activeActionName.current !== target) {
+        if (postureTransition) {
+          if (!hipsBone) throw new Error(`Missing pelvis for ${renderId}`);
+          const previous = postureClipsRef.current.get(target);
+          const original = previous?.original ?? to.getClip();
+          if (previous) mixer.uncacheAction(previous.fitted);
+          const fitted = fitPostureTransition(original, hipsBone, actions[idleId].getClip());
+          postureClipsRef.current.set(target, { original, fitted });
+          to = actions[target] = mixer.clipAction(fitted);
+          postureOriginRef.current.position.copy(animOriginRef.current.position);
+          postureOriginRef.current.rotY = animOriginRef.current.rotation.y;
+        }
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
         const blendDuration = getCrossfadeDuration(activeActionName.current, target);
 
@@ -891,7 +906,7 @@ export function Character({
             to.setEffectiveWeight(1);
             if (animCrossfade) {
               const crossDuration = isPreview ? Math.min(blendDuration, 0.15) : blendDuration;
-              to.crossFadeFrom(from, crossDuration, true);
+              to.crossFadeFrom(from, crossDuration, !postureTransition && !isPostureTransition(activeActionName.current));
             } else {
               from.stop();
             }
@@ -1098,6 +1113,21 @@ export function Character({
           characterAnim,
           clockElapsedTime: state.clock.elapsedTime
         }, scene);
+      }
+    }
+
+    if (!isPreview && !characterGrid && activeActionName.current) {
+      const action = actions[activeActionName.current];
+      if (action) {
+        const duration = action.getClip().duration;
+        const progress = duration > 0 ? Math.min(1, action.time / duration) : 1;
+        reportAnimationPlayback(activeActionName.current, progress, action.loop === THREE.LoopOnce && action.time >= duration);
+        if (postureTransition && animOriginRef.current) {
+          const idleOrigin = getAnimationOriginTransform(idleId);
+          animOriginRef.current.position.copy(postureOriginRef.current.position)
+            .lerp(_tmpAnimOrigin.set(...idleOrigin.offset), progress);
+          animOriginRef.current.rotation.y = THREE.MathUtils.lerp(postureOriginRef.current.rotY, idleOrigin.rotY, progress);
+        }
       }
     }
 

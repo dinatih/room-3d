@@ -133,3 +133,10 @@ et les croisements, avec l'évitement des autres personnages activé.
 simulées ; `--browser --cases-only` vérifie huit interactions qui provoquaient
 des blocages. Ces tests désactivent le lissage d'origine, le crossfade et les
 transitions de posture.
+
+Pour vérifier les transitions avec fondu et lissage activés :
+`ROOM_TEST_URL=http://localhost:5173 node scripts/temp_posture_transitions.cjs`.
+Ce test headless vérifie les clips réels sur Lara et Alex, la continuité du
+bassin, l'attente de lecture effective et le remplacement d'un scénario pendant
+un relèvement. Il exerce également le composant `Character` sur une assise du
+jardin et enregistre ses captures dans `/tmp/room-posture-*.png`.

@@ -102,6 +102,18 @@ export function useAgentController(
   const stepIndexRef = useRef(0);
   const timerRef = useRef(deployment.timer);
   const statusRef = useRef<AgentStatus>(deployment.status);
+  const playbackRef = useRef<{ animation: string; progress: number; finished: boolean } | null>(null);
+  const transitionRef = useRef<{ animation: string; y: number; advanceStep: boolean } | null>(null);
+  const beginExitTransition = (advanceStep: boolean) => {
+    if (!(useSceneStore.getState().layers.exitTransitions ?? false)) return false;
+    const exit = getExitTransition(stateRef.current.animation);
+    if (!exit) return false;
+    transitionRef.current = { animation: exit.anim, y: stateRef.current.y, advanceStep };
+    playbackRef.current = null;
+    statusRef.current = 'TRANSITIONING';
+    stateRef.current.animation = exit.anim;
+    return true;
+  };
   const delayTimerRef = useRef(deployment.delayTimer);
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
   const startPosRef = useRef<{ x: number; y: number; z: number; rotY: number; owner?: string }>(initialPos);
@@ -237,6 +249,7 @@ export function useAgentController(
             }
           } else {
             statusRef.current = 'IDLE';
+            beginExitTransition(false);
             const locName = targetObjId ? (SMART_OBJECTS[targetObjId]?.name || targetObjId) : 'le point duo';
             appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} (${role === 'roleA' ? 'Meneur' : 'Partenaire'}) et rejoint ${locName} !`);
           }
@@ -283,7 +296,10 @@ export function useAgentController(
           dynamicNavIndexRef.current = 0;
           resetRoute(routeRef.current, _characterId);
           routeInstructionRef.current = null;
-          if (deployment.hasCompleted) statusRef.current = 'IDLE';
+          if (deployment.hasCompleted) {
+            statusRef.current = 'IDLE';
+            beginExitTransition(false);
+          }
           cachedCoordsInstructionRef.current = null;
           cachedCoordsRef.current = null;
           appLog(_characterId, `⚡ Ordre direct reçu : ${objectId}${slotId ? ` (${slotId})` : ''}${animation ? ` [${animation}]` : ''}`);
@@ -319,6 +335,8 @@ export function useAgentController(
   }, [_characterId, enabled]);
 
   if (scenario !== prevScenarioRef.current) {
+    const previousAnimation = stateRef.current.animation;
+    const previousTransition = transitionRef.current;
     const departureOwner = routeRef.current.owner ?? claimedSlotRef.current?.objectId
       ?? (hasAgentProfile(_characterId) ? getContainingObjectOwner(_characterId, getRealPosition()) : undefined);
     if (claimedSlotRef.current) {
@@ -390,6 +408,15 @@ export function useAgentController(
         ? (deployment.timer <= 3.0 ? 'falling-idle' : 'falling')
         : (deployment.status === 'WAITING' ? 'idle' : (stepCoords?.anim ? resolveAnimationId(stepCoords.anim) : 'idle'));
       startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY, owner: departureOwner };
+    }
+    if (!firstScenario && deployment.hasCompleted) {
+      stateRef.current.animation = previousAnimation;
+      if (previousTransition) {
+        previousTransition.advanceStep = false;
+        statusRef.current = 'TRANSITIONING';
+      } else {
+        beginExitTransition(false);
+      }
     }
   }
 
@@ -497,7 +524,7 @@ export function useAgentController(
       spawnObstacleRevisionRef.current = getObstacleRevision();
     }
     const hasNavStepInUpdate = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length;
-    if (!scenario && !hasNavStepInUpdate) {
+    if (!scenario && !hasNavStepInUpdate && !transitionRef.current) {
       stateRef.current.animation = 'idle';
       return stateRef.current;
     }
@@ -565,12 +592,25 @@ export function useAgentController(
       }
     }
 
+    // A replacement order must finish the rise without consuming its first step.
+    if (transitionRef.current && statusRef.current !== 'TRANSITIONING') {
+      transitionRef.current.advanceStep = false;
+      statusRef.current = 'TRANSITIONING';
+      stateRef.current.animation = transitionRef.current.animation;
+    }
     // ── 1.5 Gestion des transitions in-between (ex: sit-to-stand, crouch-to-stand, stand-up) ──
     if (statusRef.current === 'TRANSITIONING') {
-      timerRef.current -= dt;
-      if (timerRef.current <= 0) {
+      const transition = transitionRef.current;
+      if (!transition) throw new Error('Missing active posture transition');
+      const playback = playbackRef.current;
+      if (playback?.animation === transition.animation) {
+        stateRef.current.y = transition.y * (1 - playback.progress);
+      }
+      if (playback?.animation === transition.animation && playback.finished) {
+        transitionRef.current = null;
         statusRef.current = 'IDLE';
-        advanceToNextStep(hasNavStepInUpdate);
+        stateRef.current.animation = resolveAnimationId('idle');
+        if (transition.advanceStep) advanceToNextStep(hasNavStepInUpdate);
       }
       return stateRef.current;
     }
@@ -1129,12 +1169,7 @@ export function useAgentController(
         repeatIndexRef.current = 0;
         targetRepeatsRef.current = 1;
 
-        const exitTransitionsEnabled = useSceneStore.getState().layers.exitTransitions ?? false;
-        const exit = exitTransitionsEnabled ? getExitTransition(stateRef.current.animation) : null;
-        if (exit) {
-          statusRef.current = 'TRANSITIONING';
-          timerRef.current = exit.duration;
-          stateRef.current.animation = exit.anim;
+        if (beginExitTransition(true)) {
           if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
             setDesk2SmartActionState(_characterId, false);
           }
@@ -1186,6 +1221,12 @@ export function useAgentController(
   };
 
   const setPosition = (x: number, y: number, z: number) => {
+    if (transitionRef.current) {
+      statusRef.current = 'IDLE';
+      stateRef.current.animation = resolveAnimationId('idle');
+    }
+    transitionRef.current = null;
+    playbackRef.current = null;
     initialProfileResolvedRef.current = true;
     resetRoute(routeRef.current, _characterId);
     routeRef.current.owner = undefined;
@@ -1205,5 +1246,9 @@ export function useAgentController(
 
   const getStatus = () => statusRef.current;
 
-  return { update, setPosition, setRotation, hasPendingDynamicTask, getStatus, initialPos: startPosRef.current };
+  const reportAnimationPlayback = (animation: string, progress: number, finished: boolean) => {
+    playbackRef.current = { animation, progress, finished };
+  };
+
+  return { update, setPosition, setRotation, hasPendingDynamicTask, getStatus, reportAnimationPlayback, initialPos: startPosRef.current };
 }

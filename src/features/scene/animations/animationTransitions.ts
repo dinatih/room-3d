@@ -7,21 +7,6 @@
 
 import { getAnimationDef } from './animationResolver';
 
-interface ExitTransitionConfig {
-  anim: string;
-  duration?: number;
-}
-
-const LAYING_EXIT_TRANSITIONS: ExitTransitionConfig[] = [
-  { anim: 'sit-to-stand', duration: 2.3 },
-  { anim: 'getting-up-from-backside', duration: 2.7 },
-  { anim: 'kip-up', duration: 2.0 },
-  { anim: 'getting-up', duration: 5.0 },
-  { anim: 'standing-up-from-bed', duration: 1.7 },
-  { anim: 'stand-up', duration: 6.2 },
-  { anim: 'standing-up', duration: 8.5 },
-];
-
 const TRANSITION_CLIP_IDS = new Set([
   'sit-to-stand',
   'crouch-to-stand',
@@ -35,15 +20,17 @@ const TRANSITION_CLIP_IDS = new Set([
   'stand-up-1',
 ]);
 
-const EXIT_TRANSITIONS: Record<string, ExitTransitionConfig | ExitTransitionConfig[]> = {
-  sitting: { anim: 'sit-to-stand', duration: 2.3 },
-  laying: LAYING_EXIT_TRANSITIONS,
-  'laying-front': LAYING_EXIT_TRANSITIONS,
-  'laying-front-static': LAYING_EXIT_TRANSITIONS,
-  'laying-side-static': LAYING_EXIT_TRANSITIONS,
-  sleep: LAYING_EXIT_TRANSITIONS,
-  crouch: { anim: 'crouch-to-stand', duration: 2.5 },
+const EXIT_TRANSITIONS: Record<string, string> = {
+  sitting: 'sit-to-stand',
+  laying: 'getting-up',
+  'laying-front': 'getting-up',
+  'laying-front-static': 'getting-up',
+  'laying-side-static': 'getting-up-from-backside',
+  sleep: 'getting-up',
+  crouch: 'crouch-to-stand',
 };
+
+export const isPostureTransition = (key: string) => TRANSITION_CLIP_IDS.has(getAnimationDef(key)?.id ?? key);
 
 /**
  * Retourne l'animation de sortie (in-between) et sa durée dynamique lue depuis le registre.
@@ -58,15 +45,14 @@ export function getExitTransition(animKey: string | null | undefined): { anim: s
     return null;
   }
 
-  for (const tag of def.tags) {
-    const rawConfig = EXIT_TRANSITIONS[tag];
-    if (rawConfig) {
-      const config = Array.isArray(rawConfig)
-        ? rawConfig[Math.floor(Math.random() * rawConfig.length)]
-        : rawConfig;
-      const exitDef = getAnimationDef(config.anim);
-      const duration = config.duration ?? exitDef?.duration ?? 2.0;
-      return { anim: config.anim, duration };
+  // Specific posture tags take precedence over the general laying tag.
+  for (const tag of ['laying-side-static', 'laying-front-static', 'laying-front', ...def.tags]) {
+    if (!def.tags.includes(tag)) continue;
+    const anim = EXIT_TRANSITIONS[tag];
+    if (anim) {
+      const exitDef = getAnimationDef(anim);
+      if (!exitDef?.duration) throw new Error(`Missing posture transition: ${anim}`);
+      return { anim, duration: exitDef.duration };
     }
   }
 

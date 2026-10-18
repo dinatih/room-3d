@@ -4298,7 +4298,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/mixamo/anim_crouch_idle.glb',
     category: 'poses_idles',
     label: `crouch idle (51f / 1.7s, 95KB)`,
-    tags: ['poses-idles'],
+    tags: ['poses-idles', 'crouch'],
     duration: 1.7,
   },
   {
@@ -4306,7 +4306,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/mixamo/anim_crouch_look_around_corner.glb',
     category: 'poses_idles',
     label: `Crouch Look Around Corner (91f / 3.0s, 124KB)`,
-    tags: ['poses-idles'],
+    tags: ['poses-idles', 'crouch'],
     duration: 3,
   },
   {
