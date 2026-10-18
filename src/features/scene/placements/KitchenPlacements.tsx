@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import { PositionTransition } from '../utils/PositionTransition';
+import { getKitchenTrashParking, KITCHEN_TRASH_POSITION } from '../ai/diyChairClearance';
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { MergedStaticGroup } from '../Building';
@@ -13,7 +16,6 @@ import { Ikea36590066708 } from '../items/Ikea36590066708';
 
 import {
   ROOM_D,
-  BATH_WEST_WALL,
   KITCHEN_WEST_WALL,
   KITCHEN_SOUTH_WALL,
 } from '../wallData';
@@ -23,7 +25,6 @@ const stub = (id: string): Item =>
 
 const w2 = 75.5;
 const KALLAX_DEPTH = 39;
-const MACK_Z = ROOM_D - w2 - 16;
 const KALLAX_FRAME = 3.5;
 const KALLAX_DIVIDER = 1.5;
 const KALLAX_CELL_WIDTH = (w2 - 2 * KALLAX_FRAME - KALLAX_DIVIDER) / 2;
@@ -46,7 +47,6 @@ export function KitchenEquipment() {
 export function KitchenFurniture() {
   const as = useFurnitureToggles([
     'ninja',
-    'bin-toggle',
   ]);
 
   return (
@@ -57,11 +57,25 @@ export function KitchenFurniture() {
       </group>
 
       {/* Poubelle TATAY — angle KallaxCuisine × Mackapar */}
-      <group position={[BATH_WEST_WALL + KALLAX_DEPTH + 18, 0, MACK_Z + w2 / 2 - 6]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Poubelle Tatay' }}>
-        <NavigationObstacle id="trash-bin"><TrashBin item={stub('trash-bin')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
-      </group>
+      <KitchenTrashBin />
     </MergedStaticGroup>
   );
+}
+
+export function KitchenTrashBin() {
+  const actionState = useFurnitureToggles(['bin-toggle']);
+  const [parking, setParking] = useState(getKitchenTrashParking);
+  useEffect(() => {
+    const update = () => setParking(getKitchenTrashParking());
+    document.addEventListener('kitchen-trash-clearance', update);
+    return () => document.removeEventListener('kitchen-trash-clearance', update);
+  }, []);
+  const p = parking ?? KITCHEN_TRASH_POSITION;
+  return <PositionTransition furnitureKey="trash-bin-position" x={p.x} z={p.z} ry={p.ry}>
+    <group userData={{ animUnit: true, itemName: 'Poubelle Tatay' }}>
+      <NavigationObstacle id="trash-bin"><TrashBin item={stub('trash-bin')} actionState={actionState} onSize={NOOP_SIZE} /></NavigationObstacle>
+    </group>
+  </PositionTransition>;
 }
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)

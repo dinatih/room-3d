@@ -1,4 +1,6 @@
 import { currentFurnitureTransforms, movingFurniture, type FurnitureTransform } from '../furniturePositions';
+import { BATH_WEST_WALL, ROOM_D, FURNITURE_WALL_CLEARANCE } from '../wallData';
+import { KALLAX_CUISINE_POSITION } from '../items/kallaxCuisineDrona';
 import { OccupancyManager } from './occupancyManager';
 import { furnitureObstacles, getAgentProfile } from './navigation/obstacles';
 import { inflate, pointInRing } from './navigation/geometry';
@@ -38,4 +40,36 @@ export function releaseDiyChair(actorId: string): void {
   owner = null;
   OccupancyManager.releaseSlot('chair-office', 'sit', actorId);
   document.dispatchEvent(new Event('diy-chair-clearance'));
+}
+
+// TATAY 26 × 36 cm. Park in front of the left column, clear of the Kallax face.
+export const KITCHEN_TRASH_POSITION: FurnitureTransform = {
+  x: BATH_WEST_WALL + 39 + 18, z: ROOM_D - 75.5 / 2 - 22, ry: Math.PI / 2,
+};
+const TRASH_PARKING: FurnitureTransform = {
+  x: KALLAX_CUISINE_POSITION[0] + 20.124 + 18 + FURNITURE_WALL_CLEARANCE,
+  z: KITCHEN_TRASH_POSITION.z + 36, ry: Math.PI / 2,
+};
+let trashOwner: string | null = null;
+export function getKitchenTrashParking(): FurnitureTransform | undefined {
+  return trashOwner ? TRASH_PARKING : undefined;
+}
+export function prepareKitchenStorageAccess(actorId: string): boolean {
+  if (trashOwner && trashOwner !== actorId) return false;
+  if (!prepareDiyChair(actorId)) return false;
+  const current = currentFurnitureTransforms['trash-bin-position'];
+  if (!current) return true;
+  if (!trashOwner) {
+    trashOwner = actorId;
+    document.dispatchEvent(new Event('kitchen-trash-clearance'));
+    return false;
+  }
+  return !movingFurniture.has('trash-bin-position')
+    && current.x === TRASH_PARKING.x && current.z === TRASH_PARKING.z;
+}
+export function releaseKitchenStorageAccess(actorId: string): void {
+  releaseDiyChair(actorId);
+  if (trashOwner !== actorId) return;
+  trashOwner = null;
+  document.dispatchEvent(new Event('kitchen-trash-clearance'));
 }

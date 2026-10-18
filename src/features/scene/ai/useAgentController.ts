@@ -6,7 +6,7 @@ import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
 import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, getObjectApproach, movePostureExit, NavigationBlockedError, getNavigationGraph, describeNavigationBlock } from './navigation/service';
 import { movingFurniture } from '../furniturePositions';
-import { prepareDiyChair, releaseDiyChair } from './diyChairClearance';
+import { prepareKitchenStorageAccess, releaseKitchenStorageAccess } from './diyChairClearance';
 import { hasAgentProfile, getObstacleRevision, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
 import { distance, inflate, pointInRing, BOOLEAN_PRECISION } from './navigation/geometry';
 import { useSceneStore } from '../store/useSceneStore';
@@ -204,7 +204,7 @@ export function useAgentController(
   useEffect(() => () => resetRoute(routeRef.current, _characterId), [_characterId]);
 
   const releaseClaimedSlot = () => {
-    releaseDiyChair(_characterId);
+    releaseKitchenStorageAccess(_characterId);
     resetRoute(routeRef.current, _characterId);
     if (claimedSlotRef.current) {
       if (claimedSlotRef.current.objectId === 'desk-bollsidan-2') {
@@ -391,7 +391,7 @@ export function useAgentController(
   }, [_characterId, enabled]);
 
   if (scenario !== prevScenarioRef.current) {
-    releaseDiyChair(_characterId);
+    releaseKitchenStorageAccess(_characterId);
     const previousAnimation = stateRef.current.animation;
     const previousTransition = transitionRef.current;
     const departureOwner = routeRef.current.owner ?? claimedSlotRef.current?.objectId
@@ -825,7 +825,7 @@ export function useAgentController(
       return stateRef.current;
     }
 
-    if (currentInstruction.smartObjectId === 'drona-kitchen-diy' && !prepareDiyChair(_characterId)) {
+    if ((currentInstruction.smartObjectId === 'drona-kitchen-diy' || currentInstruction.smartObjectId === 'drona-kitchen-electronics') && !prepareKitchenStorageAccess(_characterId)) {
       stateRef.current.animation = 'idle';
       return stateRef.current;
     }

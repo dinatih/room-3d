@@ -301,8 +301,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id, name: item.label, itemId: id, category: 'storage' as const,
     slots: [{
       slotId: 'pick-item', name: item.interaction, relative: true,
-      arrival: id === 'drona-kitchen-diy' ? 'front' as const : 'approach' as const,
-      approachWidth: id === 'drona-kitchen-diy' ? 33 : undefined,
+      arrival: (id === 'drona-kitchen-diy' || id === 'drona-kitchen-electronics') ? 'front' as const : 'approach' as const,
+      approachWidth: (id === 'drona-kitchen-diy' || id === 'drona-kitchen-electronics') ? 33 : undefined,
       navigationOwner: 'kallax-cuisine',
       offset: [0, -KALLAX_CUISINE_DRONA_POSITIONS[item.index][1], id === 'drona-kitchen-diy' ? -65 : -50] as [number, number, number],
       rotY: 0, animation: `${item.animationPrefix}-search`,
@@ -1120,7 +1120,7 @@ export function buildSmartObjectInstructionSequence(
       gesture('pull'), { ...baseInstruction, waitForAnimation: true }, gesture('push'),
       { type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY },
       // Leave the chair's original footprint before restoring it.
-      ...(objectId === 'drona-kitchen-diy' ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, targetPos: [ROOM_W * 2 / 3, 0, slot.offset![2]] as [number, number, number] }] : []),
+      ...((objectId === 'drona-kitchen-diy' || objectId === 'drona-kitchen-electronics') ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, targetPos: [ROOM_W * 2 / 3, 0, slot.offset![2]] as [number, number, number] }] : []),
     ];
   }
 

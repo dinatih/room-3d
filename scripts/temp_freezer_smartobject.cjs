@@ -219,7 +219,7 @@ if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-dr
  const {NavigationObstacle}=await import('/src/features/scene/ai/navigation/NavigationObstacle.tsx');
  const {Beds,Desks,DeskDecor,OfficeChair}=await import('/src/features/scene/placements/LivingRoomPlacements.tsx');
  const {MackaparGroup}=await import('/src/features/scene/items/MackaparGroup.tsx');
- const {TrashBin}=await import('/src/features/scene/items/TrashBin.tsx');
+ const {KitchenTrashBin}=await import('/src/features/scene/placements/KitchenPlacements.tsx');
  const {ROOM_D,BATH_WEST_WALL}=await import('/src/features/scene/wallData.ts');
  const {Smorkull}=await import('/src/features/scene/items/Smorkull.tsx');
  const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
@@ -244,7 +244,7 @@ if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-dr
  props.diyObstacles&&h(React.Suspense,{fallback:null},h(React.Fragment,null,
    h(Beds),h(OfficeChair),
    h('group',{position:[32,0,ROOM_D-75.5-16],rotation:[0,Math.PI/2,0]},h(NavigationObstacle,{id:'mackapar'},h(MackaparGroup,{item:{},actionState:{},onSize:()=>{},noDrona:true,noHangers:true}))),
-   h('group',{position:[BATH_WEST_WALL+39+18,0,ROOM_D-75.5/2-22],rotation:[0,Math.PI/2,0]},h(NavigationObstacle,{id:'trash-bin'},h(TrashBin,{item:{},actionState:{},onSize:()=>{f.diyObstaclesReady=true;}}))))),
+   h(KitchenTrashBin),h('group',{ref:node=>{if(node)f.diyObstaclesReady=true;}}))),
  props.chair&&h(React.Suspense,{fallback:null},h('group',{ref:g=>{f.chair=g;},position:chairTransform.position,rotation:[0,chairTransform.rotationY,0]},h(Smorkull,{item:{},actionState:{},onSize:()=>{f.chairReady=true;}}))),
  h('mesh',{rotation:[-Math.PI/2,0,0],position:[0,-.1,0]},h('planeGeometry',{args:[400,400]}),h('meshStandardMaterial',{color:'#777777'})) );}
  createRoot(container).render(h(App));
@@ -265,7 +265,7 @@ if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-dr
      const {buildSmartObjectInstructionSequence,getSmartObject}=await import('/src/features/scene/ai/smartObjectRegistry.ts');
      const {currentFurnitureTransforms,movingFurniture,SMORKULL_POSITIONS}=await import('/src/features/scene/furniturePositions.ts');
      const {OccupancyManager}=await import('/src/features/scene/ai/occupancyManager.ts');
-     const {getDiyChairParking}=await import('/src/features/scene/ai/diyChairClearance.ts');
+     const {getDiyChairParking,getKitchenTrashParking,KITCHEN_TRASH_POSITION}=await import('/src/features/scene/ai/diyChairClearance.ts');
      const {getAnimationDef}=await import('/src/features/scene/animations/animationResolver.ts');
      const {setAgentProfile,furnitureObstacles}=await import('/src/features/scene/ai/navigation/obstacles.ts');
      const {pointInRing,inflate}=await import('/src/features/scene/ai/navigation/geometry.ts');
@@ -275,14 +275,16 @@ if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-dr
      const chair=[...furnitureObstacles.values()].find(o=>o.owner==='chair-office');
      if(!chair||!pointInRing({x:gx,z:gz},inflate(chair.polygon,15)))throw new Error('The real chair must reproduce the blocked Bricolage access');
      const clips={};let rig;
-     for(const phase of ['pull','search','push']){
-       const def=getAnimationDef('drona-kitchen-diy-'+phase),gltf=await new GLTFLoader().loadAsync('/'+def.path);clips[def.id]=gltf.animations[0];rig??=gltf.scene;
+     for(const prefix of ['drona-kitchen-diy','drona-kitchen-upper'])for(const phase of ['pull','search','push']){
+       const def=getAnimationDef(prefix+'-'+phase),gltf=await new GLTFLoader().loadAsync('/'+def.path);clips[def.id]=gltf.animations[0];rig??=gltf.scene;
      }
      const render=f.gl.render;f.gl.render=()=>{};const results=[];
-     try{for(const doubleBed of [false,true]){
+     try{for(const objectId of ['drona-kitchen-diy','drona-kitchen-electronics']){
+     const object=getSmartObject(objectId),prefix=objectId==='drona-kitchen-diy'?'drona-kitchen-diy':'drona-kitchen-upper';
+     for(const doubleBed of [false,true]){
        f.store.getState().triggerAction('bed-double',doubleBed);await new Promise(r=>setTimeout(r,80));f.tick(3);
        for(const interruptAt of ['occupied','approach','pull','search',null]){
-         const id='diy-chair-'+doubleBed+'-'+interruptAt;setAgentProfile(id,{radius:15,height:170});
+         const id=objectId+'-'+doubleBed+'-'+interruptAt;setAgentProfile(id,{radius:15,height:170});
          if(interruptAt==='occupied')OccupancyManager.claimSlot('chair-office','sit','chair-occupant');
          const routine=buildSmartObjectInstructionSequence(object.id,'pick-item'),host=document.createElement('div');document.body.append(host);const root=ReactDOM.createRoot(host);
          let agent,complete=false,playing='',playback,parked=false,aligned=false,movingSeen=false;
@@ -292,6 +294,8 @@ if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-dr
          for(let time=0;time<80&&!complete;time+=.05){
            const state=agent.update(.05),parking=getDiyChairParking();
            if(clips[state.animation]){
+             const bin=currentFurnitureTransforms['trash-bin-position'];
+             if(!getKitchenTrashParking()||movingFurniture.has('trash-bin-position')||bin.z<=KITCHEN_TRASH_POSITION.z)throw new Error('Bin was not cleared left before interaction');
              if(movingFurniture.has('smorkull-position'))throw new Error('Actor used Bricolage before chair clearance finished');
              if(!parking)throw new Error('Chair clearance released before the interaction finished');
              if(Math.abs(state.z-object.position[2])>33/2||state.x<object.position[0])throw new Error('Actor went behind Mackapar instead of facing Bricolage');
@@ -304,20 +308,22 @@ if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-dr
            }
            await new Promise(r=>setTimeout(r,0));f.tick(.05);
            movingSeen||=movingFurniture.has('smorkull-position');
-           if(interruptAt==='occupied'&&time>.5){if(parking||movingSeen||f.store.getState().extraStates['drona-kitchen-diy-slide'])throw new Error('An occupied chair was moved');break;}
+           if(interruptAt==='occupied'&&time>.5){if(parking||movingSeen||f.store.getState().extraStates[objectId+'-slide'])throw new Error('An occupied chair was moved');break;}
            if(interruptAt==='approach'&&movingSeen)break;
-           if((interruptAt==='pull'||interruptAt==='search')&&playing==='drona-kitchen-diy-'+interruptAt&&playback.time>playback.getClip().duration/2)break;
+           if((interruptAt==='pull'||interruptAt==='search')&&playing===prefix+'-'+interruptAt&&playback.time>playback.getClip().duration/2)break;
          }
          root.unmount();host.remove();await new Promise(r=>setTimeout(r,80));f.tick(3);
          if(interruptAt==='occupied')OccupancyManager.releaseSlot('chair-office','sit','chair-occupant');
+         const bin=currentFurnitureTransforms['trash-bin-position'];
+         if(getKitchenTrashParking()||bin.x!==KITCHEN_TRASH_POSITION.x||bin.z!==KITCHEN_TRASH_POSITION.z)throw new Error('Bin did not return after action/interruption');
          if(getDiyChairParking())throw new Error('Chair clearance leaked after unmount');
          const restored=currentFurnitureTransforms['smorkull-position'];
          if(Math.hypot(restored.x-SMORKULL_POSITIONS[0].x,restored.z-SMORKULL_POSITIONS[0].z)>1e-6)throw new Error('Chair did not return to its original position');
-         if(f.store.getState().extraStates['drona-kitchen-diy-slide'])throw new Error('Bricolage remained open');
+         if(f.store.getState().extraStates[objectId+'-slide'])throw new Error('Bricolage remained open');
          if(!interruptAt&&(!complete||!parked||!aligned))throw new Error('Full Bricolage routine did not finish in front of the box: '+JSON.stringify({complete,parked,aligned,status:agent.getStatus()}));
-         results.push({doubleBed,interruptAt,complete,movingSeen,parked,aligned});
+         results.push({objectId,doubleBed,interruptAt,complete,movingSeen,parked,aligned});
        }
-     }}finally{f.gl.render=render;}
+     }}}finally{f.gl.render=render;}
      return results;
    });
    console.log('Actual chair, trash bin, Mackapar, separate/double beds, front approach, restoration and interruption: PASS',results);assert.deepEqual(errors,[]);return;
