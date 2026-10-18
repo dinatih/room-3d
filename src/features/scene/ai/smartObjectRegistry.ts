@@ -438,6 +438,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'open-pick',
         name: 'Prendre un ingrédient',
+        arrival: 'approach',
         relative: true,
         navigationOwner: 'cuisine-group',
         // Door depth (~30 cm), forward knee (~54 cm), and knee clearance.

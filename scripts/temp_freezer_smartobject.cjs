@@ -23,6 +23,9 @@ if(process.argv.includes('--inspect-fridge')){
  const {useGLTF}=await import('/node_modules/.vite/deps/@react-three_drei.js');useGLTF.setDecoderPath('/draco/');
  const {Freezer}=await import('/src/features/scene/items/Freezer.tsx');
  const {Fridge}=await import('/src/features/scene/items/Fridge.tsx');
+ const {Smorkull}=await import('/src/features/scene/items/Smorkull.tsx');
+ const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
+ const chairTransform=getObjectTransform('chair-office');
  const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');
  const f=window.fixture={THREE,store:useSceneStore,flushSync,time:0};
  document.body.innerHTML='';document.body.style.margin='0';
@@ -33,6 +36,7 @@ if(process.argv.includes('--inspect-fridge')){
  return h(Canvas,{frameloop:'never',shadows:true,camera:{position:[125,80,-95],near:.1,far:1500,fov:45}},
  h(Capture),h('ambientLight',{intensity:.85}),h('directionalLight',{position:[100,120,-80],intensity:2}),
  h(React.Suspense,{fallback:null},h(props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
+ props.chair&&h(React.Suspense,{fallback:null},h('group',{ref:g=>{f.chair=g;},position:chairTransform.position,rotation:[0,chairTransform.rotationY,0]},h(Smorkull,{item:{},actionState:{},onSize:()=>{f.chairReady=true;}}))),
  h('mesh',{rotation:[-Math.PI/2,0,0],position:[0,-.1,0]},h('planeGeometry',{args:[400,400]}),h('meshStandardMaterial',{color:'#777777'})) );}
  createRoot(container).render(h(App));
  f.tick=(seconds)=>{const render=f.gl.render;f.gl.render=()=>{};try{for(let t=0;t<seconds;t+=1/60){f.time+=1/60;f.advance(f.time,true);}}finally{f.gl.render=render;}f.scene.updateMatrixWorld(true);f.gl.render(f.scene,f.camera);};
@@ -128,6 +132,7 @@ if(process.argv.includes('--inspect-fridge')){
    const {useAgentController}=await import('/src/features/scene/ai/useAgentController.ts');
    const {setAgentProfile}=await import('/src/features/scene/ai/navigation/obstacles.ts');
    const f=window.fixture, results=[];
+   const render=f.gl.render;f.gl.render=()=>{};
    for(const [index,initiallyOpen] of [false,true,false].entries()){
      f.store.getState().triggerAction('freezer',initiallyOpen);
      const id='freezer-check-'+index;
@@ -153,7 +158,7 @@ if(process.argv.includes('--inspect-fridge')){
      results.push({complete,status:agent.getStatus(),animations:[...animations],open:f.store.getState().furniture.freezerOpen,door:f.read().door});
      root.unmount();container.remove();
    }
-   return results;
+   f.gl.render=render;return results;
  },sequence);
  console.log('Controller results:',controller);
  for(const result of controller){
@@ -225,19 +230,43 @@ if(process.argv.includes('--inspect-fridge')){
  assert.equal(await page.evaluate(()=>window.fixture.store.getState().furniture.fridge),false);
  await page.evaluate(()=>window.fixture.setProps({fridge:true,isPreview:false,actionState:{}}));
  await new Promise(r=>setTimeout(r,80));await tick(fridge.doorDuration);
+ await page.evaluate(()=>window.fixture.setProps({fridge:true,chair:true,isPreview:false,actionState:{}}));
+ await page.waitForFunction(()=>window.fixture.chairReady,{timeout:60000});
  const fridgeRuns=await page.evaluate(async(sequence)=>{
    const {default:React}=await import('/node_modules/.vite/deps/react.js');
    const {default:ReactDOM}=await import('/node_modules/.vite/deps/react-dom_client.js');
    const {useAgentController}=await import('/src/features/scene/ai/useAgentController.ts');
-   const {setAgentProfile}=await import('/src/features/scene/ai/navigation/obstacles.ts');
+   const {setAgentProfile,registerObstacle}=await import('/src/features/scene/ai/navigation/obstacles.ts');
+   const {resolveInstructionCoords}=await import('/src/features/scene/ai/agent/agentInstructionCoords.ts');
+   const {SMART_OBJECTS}=await import('/src/features/scene/ai/smartObjectRegistry.ts');
+   const {pointInRing,inflate}=await import('/src/features/scene/ai/navigation/geometry.ts');
    const f=window.fixture,results=[];
-   for(const [index,initial] of [[false,false],[true,false],[true,true]].entries()){
+   const render=f.gl.render;f.gl.render=()=>{};
+   f.chair.updateWorldMatrix(true,true);
+   const box=new f.THREE.Box3().setFromObject(f.chair);
+   const polygon=[{x:box.min.x,z:box.min.z},{x:box.max.x,z:box.min.z},{x:box.max.x,z:box.max.z},{x:box.min.x,z:box.max.z}];
+   registerObstacle({id:'fridge-chair-test',owner:'chair-office',polygon,yMin:box.min.y,yMax:box.max.y});
+   const [gx,,gz]=f.fridgeObject.slots[0].offset;
+   if(!pointInRing({x:gx,z:gz},inflate(polygon,15)))throw new Error('The actual chair must obstruct the nominal fridge slot in this regression');
+   for(const [index,initial] of [[false,false],[true,false],[true,true],[false,false]].entries()){
      f.store.getState().triggerAction('fridge',initial[0]);
      f.store.getState().triggerAction('fridge-crisper-toggle',initial[1]);
      await new Promise(r=>setTimeout(r,0));f.tick(2);
      const id='fridge-check-'+index;setAgentProfile(id,{radius:15,height:170});
+     const move=resolveInstructionCoords(sequence[0],null,id);
+     const use=resolveInstructionCoords(sequence[3],null,id,{x:move.tx,z:move.tz});
+     if(Math.hypot(move.tx-use.tx,move.tz-use.tz)>1e-6)throw new Error('Arrival and inspection must use the same reachable point');
+     if(pointInRing({x:use.tx,z:use.tz},inflate(polygon,15)))throw new Error('Inspection must stay clear of the chair');
+     if(index===0){
+       const slot=SMART_OBJECTS.fridge.slots[0],arrival=slot.arrival;
+       try{
+         delete slot.arrival;
+         const old=resolveInstructionCoords(sequence[3],null,id,{x:move.tx,z:move.tz});
+         if(!pointInRing({x:old.tx,z:old.tz},inflate(polygon,15)))throw new Error('The previous exact target must reproduce the chair collision');
+       }finally{slot.arrival=arrival;}
+     }
      const container=document.createElement('div');document.body.append(container);
-     const root=ReactDOM.createRoot(container),routine=structuredClone(sequence.slice(1));
+     const root=ReactDOM.createRoot(container),routine=structuredClone(sequence);
      const [x,y,z]=f.fridgeObject.slots[0].offset;
      let agent,complete=false;
      function Probe(){agent=useAgentController(id,routine,false,()=>({x,y,z,rotY:0}),()=>{complete=true;});return null;}
@@ -248,20 +277,22 @@ if(process.argv.includes('--inspect-fridge')){
        await new Promise(r=>setTimeout(r,0));f.tick(0.1);
        if(state.animation==='kneeling-inspecting'&&(!f.store.getState().furniture.fridge||f.store.getState().extraStates['fridge-crisper-toggle']))
          throw new Error('Fridge inspection requires an open door and retracted drawer');
+       if(index===3&&state.animation==='kneeling-inspecting')break;
      }
-     results.push({complete,animations:[...animations],open:f.store.getState().furniture.fridge,drawer:f.store.getState().extraStates['fridge-crisper-toggle'],...f.readFridge()});
      root.unmount();container.remove();
+     await new Promise(r=>setTimeout(r,0));f.tick(2);
+     results.push({complete,interrupted:index===3,animations:[...animations],open:f.store.getState().furniture.fridge,drawer:f.store.getState().extraStates['fridge-crisper-toggle'],...f.readFridge()});
    }
-   return results;
+   f.gl.render=render;return results;
  },fridge.sequence);
  for(const result of fridgeRuns){
-   assert(result.complete,'fridge controller must finish');
+   assert(result.complete||result.interrupted,'fridge controller must finish');
    assert(result.animations.includes('kneeling-inspecting'));
-   assert(result.animations.includes('crouch-to-stand'));
+   if(!result.interrupted)assert(result.animations.includes('crouch-to-stand'));
    assert.equal(result.open,false);assert.equal(result.drawer,false);
    assert.deepEqual(result.door,fridge.closed.door);assert.equal(result.light,0);
  }
  assert.deepEqual(errors,[]);
- console.log('Fridge itemId, hover action, isolated preview, controller and initially open crisper: PASS');
+ console.log('Fridge itemId, hover action, preview, actual chair collision, inspection and interruption cleanup: PASS');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

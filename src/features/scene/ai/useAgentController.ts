@@ -204,6 +204,9 @@ export function useAgentController(
       if (claimedSlotRef.current.objectId === 'cuisine-group' && claimedSlotRef.current.slotId === 'cook-oven') {
         useSceneStore.getState().triggerAction('ninja', false);
       }
+      if (claimedSlotRef.current.objectId === 'fridge' || claimedSlotRef.current.objectId === 'freezer') {
+        useSceneStore.getState().triggerAction(claimedSlotRef.current.objectId, false);
+      }
       if (claimedSlotRef.current.objectId === 'corridor-closet') {
         useSceneStore.getState().triggerAction('corrDoors', false);
       }
@@ -363,16 +366,7 @@ export function useAgentController(
       document.removeEventListener('npc-retry-smartaction', onRetrySmartAction);
       document.removeEventListener('npc-invite-duo', onInvite);
       document.removeEventListener('agent-force-smartobject', onForceSmartObject);
-      if (claimedSlotRef.current?.objectId === 'cuisine-group' && claimedSlotRef.current?.slotId === 'cook-oven') {
-        useSceneStore.getState().triggerAction('ninja', false);
-      }
-      if (claimedSlotRef.current?.objectId === 'corridor-closet') {
-        useSceneStore.getState().triggerAction('corrDoors', false);
-      }
-      if (claimedSlotRef.current?.objectId === 'sdb-closet') {
-        useSceneStore.getState().triggerAction('sdbClosetR', false);
-        useSceneStore.getState().triggerAction('sdbClosetL', false);
-      }
+      releaseClaimedSlot();
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
       setDesk2SmartActionState(_characterId, false);
@@ -385,16 +379,7 @@ export function useAgentController(
     const departureOwner = routeRef.current.owner ?? claimedSlotRef.current?.objectId
       ?? (hasAgentProfile(_characterId) ? getContainingObjectOwner(_characterId, getRealPosition()) : undefined);
     if (claimedSlotRef.current) {
-      if (claimedSlotRef.current.objectId === 'cuisine-group' && claimedSlotRef.current.slotId === 'cook-oven') {
-        useSceneStore.getState().triggerAction('ninja', false);
-      }
-      if (claimedSlotRef.current.objectId === 'corridor-closet') {
-        useSceneStore.getState().triggerAction('corrDoors', false);
-      }
-      if (claimedSlotRef.current.objectId === 'sdb-closet') {
-        useSceneStore.getState().triggerAction('sdbClosetR', false);
-        useSceneStore.getState().triggerAction('sdbClosetL', false);
-      }
+      releaseClaimedSlot();
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
       setDesk2SmartActionState(_characterId, false);
