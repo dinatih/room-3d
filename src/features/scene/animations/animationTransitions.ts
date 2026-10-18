@@ -13,20 +13,22 @@ const TRANSITION_CLIP_IDS = new Set([
   'stand-to-sit',
   'getting-up-from-backside',
   'kip-up',
-  'getting-up',
   'standing-up-from-bed',
+  'get-up-bed',
   'stand-up',
   'standing-up',
   'stand-up-1',
 ]);
 
-const EXIT_TRANSITIONS: Record<string, string> = {
+const BED_GET_UP_CHOICES = ['standing-up-from-bed', 'stand-up-1', 'get-up-bed'];
+
+const EXIT_TRANSITIONS: Record<string, string | string[]> = {
   sitting: 'sit-to-stand',
-  laying: 'getting-up',
-  'laying-front': 'getting-up',
-  'laying-front-static': 'getting-up',
+  laying: BED_GET_UP_CHOICES,
+  'laying-front': BED_GET_UP_CHOICES,
+  'laying-front-static': BED_GET_UP_CHOICES,
   'laying-side-static': 'getting-up-from-backside',
-  sleep: 'getting-up',
+  sleep: BED_GET_UP_CHOICES,
   crouch: 'crouch-to-stand',
 };
 
@@ -48,8 +50,9 @@ export function getExitTransition(animKey: string | null | undefined): { anim: s
   // Specific posture tags take precedence over the general laying tag.
   for (const tag of ['laying-side-static', 'laying-front-static', 'laying-front', ...def.tags]) {
     if (!def.tags.includes(tag)) continue;
-    const anim = EXIT_TRANSITIONS[tag];
-    if (anim) {
+    const target = EXIT_TRANSITIONS[tag];
+    if (target) {
+      const anim = Array.isArray(target) ? target[Math.floor(Math.random() * target.length)] : target;
       const exitDef = getAnimationDef(anim);
       if (!exitDef?.duration) throw new Error(`Missing posture transition: ${anim}`);
       return { anim, duration: exitDef.duration };
