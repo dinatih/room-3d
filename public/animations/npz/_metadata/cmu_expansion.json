@@ -1,0 +1,32 @@
+[
+  {
+    "id": "cmu-drink-bottle",
+    "label": "Déboucher une bouteille et boire",
+    "trial": "13_07",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_07_stageii.npz",
+    "filename": "cmu-drink-bottle.glb",
+    "frames": 363,
+    "duration": 12.1,
+    "size_kb": 184
+  },
+  {
+    "id": "cmu-sit-high-stool",
+    "label": "S’asseoir sur un tabouret haut et se relever",
+    "trial": "13_01",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_01_stageii.npz",
+    "filename": "cmu-sit-high-stool.glb",
+    "frames": 578,
+    "duration": 19.3,
+    "size_kb": 255
+  },
+  {
+    "id": "cmu-sweep-floor-alt",
+    "label": "Balayer le sol — autre prise",
+    "trial": "13_24",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_24_stageii.npz",
+    "filename": "cmu-sweep-floor-alt.glb",
+    "frames": 1008,
+    "duration": 33.6,
+    "size_kb": 408
+  }
+]

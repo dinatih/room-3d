@@ -9223,6 +9223,36 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
 
   // ── ENTRETIEN & ACTIONS DU QUOTIDIEN (AMASS / CMU / KIT / ACCAD) ─────────────
   {
+    id: 'cmu-drink-bottle',
+    path: 'animations/npz/cmu/cmu-drink-bottle.glb',
+    category: 'interactions',
+    label: 'Déboucher une bouteille et boire (CMU)',
+    aliases: ['deboucher-bouteille', 'boire-bouteille'],
+    tags: ['drink', 'bottle', 'standing', 'kitchen', 'interaction'],
+    duration: 12.1,
+    loop: 'once',
+  },
+  {
+    id: 'cmu-sit-high-stool',
+    path: 'animations/npz/cmu/cmu-sit-high-stool.glb',
+    category: 'interactions',
+    label: 'Tabouret haut : s’asseoir et se relever (CMU)',
+    aliases: ['asseoir-tabouret-haut'],
+    tags: ['sit', 'stool', 'stand-up', 'transition', 'interaction'],
+    duration: 19.3,
+    loop: 'once',
+  },
+  {
+    id: 'cmu-sweep-floor-alt',
+    path: 'animations/npz/cmu/cmu-sweep-floor-alt.glb',
+    category: 'interactions',
+    label: 'Balayer le sol : autre prise (CMU)',
+    aliases: ['balayer-variante-cmu'],
+    tags: ['sweep', 'broom', 'cleaning', 'chore', 'interaction'],
+    duration: 33.6,
+    loop: 'once',
+  },
+  {
     id: 'vacuuming',
     path: 'animations/npz/cmu/anim_vacuuming.glb',
     category: 'interactions',

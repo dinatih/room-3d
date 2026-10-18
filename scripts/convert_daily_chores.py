@@ -214,7 +214,10 @@ def convert(npz_path: Path, output_path: Path):
     scene.frame_start = 1
     scene.frame_end = num_frames
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    bpy.ops.export_scene.gltf(filepath=str(output_path), export_format='GLB', export_animations=True)
+    bpy.ops.export_scene.gltf(
+        filepath=str(output_path), export_format='GLB', export_animations=True,
+        export_animation_mode='ACTIVE_ACTIONS',
+    )
 
     data = output_path.read_bytes()
     json_length, = struct.unpack_from('<I', data, 12)
