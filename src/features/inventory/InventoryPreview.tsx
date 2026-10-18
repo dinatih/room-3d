@@ -732,6 +732,7 @@ export function InventoryPreview({
   const [selectedBoneName, setSelectedBoneName] = useState<string | null>(null);
   const [skeletonGroups, setSkeletonGroups] = useState<SkeletonGroup[]>([]);
   const [showBoneTree, setShowBoneTree] = useState<boolean>(false);
+  const [simulateMotion, setSimulateMotion] = useState<boolean>(false);
   const [globalHaircut, setGlobalHaircut] = useState<string>('original');
   const [globalHairColor, setGlobalHairColor] = useState<string>('rose');
   const lastWigRef = useRef<string>('hair_101');
@@ -843,13 +844,12 @@ export function InventoryPreview({
   const duoParticipants = actionStates.duoAnimDef
     ? resolveDuoPreviewParticipants(actionStates.duoAnimDef, item?.id, actionStates.duoPartnerId)
     : undefined;
-  const baseActionStates = (externalHairColor || externalLaraVariant)
-    ? {
-        ...actionStates,
-        ...(externalHairColor ? { previewHairColor: externalHairColor } : {}),
-        ...(externalLaraVariant ? { previewLaraVariant: externalLaraVariant } : {}),
-      }
-    : actionStates;
+  const baseActionStates = {
+    ...actionStates,
+    simulateMotion,
+    ...(externalHairColor ? { previewHairColor: externalHairColor } : {}),
+    ...(externalLaraVariant ? { previewLaraVariant: externalLaraVariant } : {}),
+  };
   const previewActionStates = duoParticipants
     ? { ...baseActionStates, duoPartnerId: duoParticipants.partnerId }
     : baseActionStates;
@@ -858,6 +858,7 @@ export function InventoryPreview({
 
   const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters') && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id);
   const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone'].includes(item.id));
+  const isWigItem = Boolean(showing3D && item && 'category' in item && ((item as any).category === 'wigs'));
 
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
@@ -923,11 +924,14 @@ export function InventoryPreview({
         setShowMiniPerf(v => !v);
         return;
       }
-
+      if (isWigItem && (e.key === 'm' || e.key === 'M')) {
+        setSimulateMotion(v => !v);
+        return;
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [actionStates.showBones]);
+  }, [actionStates.showBones, isWigItem]);
 
   return (
     <div className="inventory-preview-container" style={{ width }}>
@@ -1059,6 +1063,19 @@ export function InventoryPreview({
             </>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
           <div className="position-absolute top-0 end-0 m-2 z-3 d-flex gap-2 align-items-center">
+            {showing3D && isWigItem && (
+              <button
+                type="button"
+                onClick={() => setSimulateMotion(v => !v)}
+                className={`btn btn-sm ${simulateMotion ? 'btn-success text-white fw-bold' : 'btn-dark bg-opacity-50 border-secondary text-white'} py-1 px-2 small d-flex align-items-center gap-1`}
+                style={{ fontSize: 11 }}
+                title={simulateMotion ? "Arrêter la simulation de mouvements (M)" : "Simuler le vent et les mouvements des bustes (M)"}
+                aria-pressed={simulateMotion}
+              >
+                <i className={`bi ${simulateMotion ? 'bi-wind' : 'bi-activity'}`} aria-hidden="true" />
+                <span>{simulateMotion ? 'Mouvements : Actifs' : 'Simuler mouvements'}</span>
+              </button>
+            )}
             {showing3D && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'wigs') && (
               <>
                 {actionStates.showBones && (
@@ -1302,6 +1319,18 @@ export function InventoryPreview({
         >
           <i className="bi bi-rulers" aria-hidden="true" />
         </button>
+        {isWigItem && (
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} ${simulateMotion ? 'btn-success text-white' : 'btn-outline-secondary'}`}
+            onClick={() => setSimulateMotion(v => !v)}
+            title={simulateMotion ? 'Arrêter la simulation de mouvements (M)' : 'Simuler des mouvements (vent & bustes) (M)'}
+            aria-label="Simulation de mouvements"
+            aria-pressed={simulateMotion}
+          >
+            <i className="bi bi-wind" aria-hidden="true" />
+          </button>
+        )}
         {isHumanCharacter && (
           <button
             type="button"

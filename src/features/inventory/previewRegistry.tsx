@@ -38,7 +38,9 @@ import { Ikea36590066708 } from '@features/scene/items/Ikea36590066708';
  * Uniquement pour les items interactifs (open/close) ou procéduraux (pas de glbPath).
  * Les items avec glbPath sont gérés directement par GlbScene dans InventoryPreview.
  */
-import type { ComponentType } from 'react';
+import { useRef, type ComponentType } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { WIGS_ITEMS }                                from './inventoryData';
 import { Freezer }                                    from '@features/scene/items/Freezer';
@@ -294,31 +296,83 @@ SCENE_REGISTRY['tosakin-goldfish'] = function TosakinPreview({ actionState, onSi
   return <Goldfish species="tosakin" isPreview previewAnim={actionState?.characterAnim || 'idle'} onSize={onSize} />;
 };
 
+function AnimatedBustGroup({
+  children,
+  basePosition,
+  enabled,
+  phaseOffset = 0,
+}: {
+  children: React.ReactNode;
+  basePosition: [number, number, number];
+  enabled: boolean;
+  phaseOffset?: number;
+}) {
+  const groupRef = useRef<THREE.Group>(null!);
+
+  useFrame((state, delta) => {
+    if (!groupRef.current) return;
+    if (enabled) {
+      const t = state.clock.elapsedTime * 2.2 + phaseOffset;
+      // Translation sur les 3 axes (X, Y, Z) en cm (simulation de mouvements naturels du torse)
+      const tx = Math.sin(t * 1.1) * 3.5;
+      const ty = Math.sin(t * 2.2) * 1.2;
+      const tz = Math.cos(t * 1.4) * 2.8;
+      groupRef.current.position.set(
+        basePosition[0] + tx,
+        basePosition[1] + ty,
+        basePosition[2] + tz
+      );
+
+      // Rotations sur les 3 axes (Roll, Pitch, Yaw)
+      const rx = Math.sin(t * 1.7) * 0.16; // Hochement / inclinaison avant-arrière
+      const ry = Math.sin(t * 0.9) * 0.32; // Rotation gauche-droite du regard
+      const rz = Math.cos(t * 1.3) * 0.10; // Balancement latéral de la tête
+      groupRef.current.rotation.set(rx, ry, rz);
+    } else {
+      // Retour fluide au repos
+      const step = Math.min(1, delta * 6);
+      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, basePosition[0], step);
+      groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, basePosition[1], step);
+      groupRef.current.position.z = THREE.MathUtils.lerp(groupRef.current.position.z, basePosition[2], step);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0, step);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0, step);
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0, step);
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={basePosition}>
+      {children}
+    </group>
+  );
+}
+
 WIGS_ITEMS.forEach(wig => {
   SCENE_REGISTRY[wig.id] = function WigPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
     const hairColor = actionState?.previewHairColor;
     const laraVariant = actionState?.previewLaraVariant || 'native';
+    const simulateMotion = Boolean(actionState?.simulateMotion);
     return (
       <group>
-        <group position={[-14, 0, 0]}>
+        <AnimatedBustGroup basePosition={[-14, 0, 0]} enabled={simulateMotion} phaseOffset={0}>
           <MannequinHead
             mannequinId={`preview-${wig.id}`}
             wigId={wig.id}
             hairColor={hairColor}
-            windEnabled={false}
+            windEnabled={simulateMotion}
             item={{} as any}
             actionState={actionState || {}}
             onSize={onSize || (() => {})}
           />
-        </group>
-        <group position={[14, 0, 0]}>
+        </AnimatedBustGroup>
+        <AnimatedBustGroup basePosition={[14, 0, 0]} enabled={simulateMotion} phaseOffset={Math.PI * 0.45}>
           <LaraWigBust
             wigId={wig.id}
             hairColor={hairColor}
             laraVariant={laraVariant}
-            windEnabled={false}
+            windEnabled={simulateMotion}
           />
-        </group>
+        </AnimatedBustGroup>
       </group>
     );
   } as any;
