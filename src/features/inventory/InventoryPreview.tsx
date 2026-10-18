@@ -654,6 +654,7 @@ export function InventoryPreview({
   defaultAutoRotate = true,
   defaultShowMiniPerf,
   preserveStateOnItemChange = false,
+  externalHairColor,
   onGlbStats,
 }: {
   item: PreviewTarget;
@@ -670,6 +671,7 @@ export function InventoryPreview({
   defaultAutoRotate?: boolean;
   defaultShowMiniPerf?: boolean;
   preserveStateOnItemChange?: boolean;
+  externalHairColor?: string;
   onGlbStats?: (s: GlbDebugStats | null) => void;
 }) {
   const isMobile = useIsMobile();
@@ -818,9 +820,12 @@ export function InventoryPreview({
   const duoParticipants = actionStates.duoAnimDef
     ? resolveDuoPreviewParticipants(actionStates.duoAnimDef, item?.id, actionStates.duoPartnerId)
     : undefined;
-  const previewActionStates = duoParticipants
-    ? { ...actionStates, duoPartnerId: duoParticipants.partnerId }
+  const baseActionStates = externalHairColor
+    ? { ...actionStates, previewHairColor: externalHairColor }
     : actionStates;
+  const previewActionStates = duoParticipants
+    ? { ...baseActionStates, duoPartnerId: duoParticipants.partnerId }
+    : baseActionStates;
 
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 

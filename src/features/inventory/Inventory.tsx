@@ -4,7 +4,7 @@ import { getObjectActionIds } from '@features/scene/objectActions';
  * Styled using Bootstrap 5.3, custom red theme variables and fully responsive.
  */
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type StorageSpace } from './inventoryData';
+import { INVENTORY, CATEGORIES, STORAGE_SPACES, WIG_SOURCES, getWigSource, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
 import { SpatialZonePreview } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
@@ -63,7 +63,24 @@ function SpatialZonePreviewOnDemand({ zone, onStats }: {
   );
 }
 
-function ItemDetailContent({ item }: { item: PreviewTarget }) {
+const WIG_COLOR_OPTIONS = [
+  { value: '', label: 'Couleur : Par défaut 🎨' },
+  { value: 'naturel', label: 'Naturel 🟫' },
+  { value: 'noir', label: 'Noir ⚫' },
+  { value: 'brun', label: 'Brun 🟫' },
+  { value: 'chatain', label: 'Châtain 🟤' },
+  { value: 'blond', label: 'Blond 🌟' },
+  { value: 'roux', label: 'Roux 🦊' },
+  { value: 'blanc', label: 'Blanc ❄️' },
+  { value: 'bleu', label: 'Bleu 💙' },
+  { value: 'vert', label: 'Vert 💚' },
+  { value: 'rouge', label: 'Rouge ❤️' },
+  { value: 'rose', label: 'Rose 🌸' },
+  { value: 'violet', label: 'Violet 💜' },
+  { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
+];
+
+function ItemDetailContent({ item, wigColor }: { item: PreviewTarget; wigColor?: string }) {
   if (!item) return null;
 
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
@@ -206,6 +223,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           hideFooter={true}
           initialDuoAnim={selectedDuoAnim}
           initialDuoPartner={selectedDuoPartner}
+          externalHairColor={!isStorage && (item as InventoryItem).category === 'wigs' ? (wigColor || undefined) : undefined}
           onGlbStats={handleGlbStats}
         />
       </div>
@@ -485,6 +503,9 @@ export function Inventory({
   const { allAnnotations } = useItemAnnotations();
   const [activeCat, setActiveCat]         = useState(initialCategory);
   const [search, setSearch]               = useState('');
+  const [wigSearch, setWigSearch]         = useState('');
+  const [wigSource, setWigSource]         = useState<string>('');
+  const [wigColor, setWigColor]           = useState<string>('');
   const [selected, setSelected]           = useState<PreviewTarget>(null);
   const [focusedIndex, setFocusedIndex]   = useState(-1);
   const [showMobileModal, setShowMobileModal] = useState(false);
@@ -500,6 +521,7 @@ export function Inventory({
   const tableContainerRef                 = useRef<HTMLDivElement>(null);
   const categoriesContainerRef            = useRef<HTMLDivElement>(null);
   const searchInputRef                    = useRef<HTMLInputElement>(null);
+  const wigSearchInputRef                 = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (visible) searchInputRef.current?.focus();
@@ -657,13 +679,27 @@ function normalizeSearchStr(str: string): string {
   const items = useMemo(() => {
     if (activeCat === 'spaces') return [];
     const q = normalizeSearchStr(search);
+    const wq = activeCat === 'wigs' ? normalizeSearchStr(wigSearch) : '';
     return INVENTORY.filter(i => {
       // Les ExtraCharacters ne sont visibles que si l'option extraCharacters est activée
       if (!extraCharacters && isExtraCharacter(i.id)) return false;
 
       if (activeCat === 'actionnable' && !getObjectActionIds(i.id).length) return false;
       if (activeCat === 'glbs'        && !i.glbPath)         return false;
-      
+
+      if (activeCat === 'wigs') {
+        if (i.category !== 'wigs') return false;
+        if (wigSource && getWigSource(i) !== wigSource) return false;
+        const effectiveQuery = wq || q;
+        if (effectiveQuery) {
+          const itemText = normalizeSearchStr(
+            `${i.id} ${i.name} ${i.brand} ${i.notes ?? ''} ${(i.tags ?? []).join(' ')}`
+          );
+          if (!itemText.includes(effectiveQuery)) return false;
+        }
+        return true;
+      }
+
       // Si une recherche textuelle est saisie, chercher dans tout le catalogue pour ne pas masquer de résultats
       if (!q && activeCat !== 'all' && activeCat !== 'actionnable' && activeCat !== 'glbs') {
         if (i.category !== activeCat) return false;
@@ -678,7 +714,7 @@ function normalizeSearchStr(str: string): string {
       }
       return true;
     });
-  }, [activeCat, search, extraCharacters]);
+  }, [activeCat, search, wigSearch, wigSource, extraCharacters]);
 
   const showSpaces = activeCat === 'storage' || activeCat === 'actionnable';
   const spaces = activeCat === 'actionnable'
@@ -843,6 +879,61 @@ function normalizeSearchStr(str: string): string {
             className="inventory-pane-list d-flex flex-column border-end bg-white bg-opacity-50 overflow-hidden flex-shrink-0"
             style={{ width: isMobile ? '100%' : `${listWidth}px` }}
           >
+            {activeCat === 'wigs' && (
+              <div className="p-2 border-bottom d-flex flex-column gap-2 bg-white flex-shrink-0">
+                <div className="input-group input-group-sm">
+                  <span className="input-group-text bg-white text-muted border-end-0">
+                    <i className="bi bi-search" aria-hidden="true" />
+                  </span>
+                  <input
+                    ref={wigSearchInputRef}
+                    type="text"
+                    className="form-control border-start-0"
+                    aria-label="Rechercher une perruque"
+                    placeholder="Rechercher une perruque…"
+                    value={wigSearch}
+                    onChange={e => setWigSearch(e.target.value)}
+                  />
+                  {wigSearch && (
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary px-2"
+                      aria-label="Effacer la recherche de perruque"
+                      title="Effacer la recherche"
+                      onClick={() => {
+                        setWigSearch('');
+                        wigSearchInputRef.current?.focus();
+                      }}
+                    >
+                      <i className="bi bi-x-lg" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+                <div className="d-flex gap-2">
+                  <select
+                    aria-label="Source de perruque"
+                    className="form-select form-select-sm"
+                    value={wigSource}
+                    onChange={e => setWigSource(e.target.value)}
+                  >
+                    <option value="">Toutes les sources</option>
+                    {WIG_SOURCES.map(src => (
+                      <option key={src.id} value={src.id}>{src.label}</option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label="Couleur des perruques"
+                    className="form-select form-select-sm"
+                    value={wigColor}
+                    onChange={e => setWigColor(e.target.value)}
+                  >
+                    {WIG_COLOR_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
             <div className="p-2 border-bottom d-flex flex-column gap-1 bg-light bg-opacity-25">
               <span className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem', letterSpacing: '0.05em' }}>
                 Items ({navList.length})
@@ -1021,7 +1112,7 @@ function normalizeSearchStr(str: string): string {
                 <p className="small mb-0">Sélectionnez un item<br />pour afficher son détail</p>
               </div>
             ) : (
-              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} />
+              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} />
             )}
           </div>
         </div>
@@ -1038,7 +1129,7 @@ function normalizeSearchStr(str: string): string {
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowMobileModal(false)}></button>
               </div>
               <div className="modal-body p-0 pb-5" style={{ overflowY: 'auto' }}>
-                <ItemDetailContent key={selected.id} item={selected} />
+                <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} />
               </div>
               <div className="modal-footer glass-card position-absolute bottom-0 start-0 end-0 p-2">
                 <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowMobileModal(false)}>Fermer</button>

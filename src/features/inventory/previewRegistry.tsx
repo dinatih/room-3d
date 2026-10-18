@@ -79,7 +79,7 @@ import { KallaxCuisine }                              from '@features/scene/item
 import { MeubleT }                                    from '@features/scene/items/MeubleT';
 import { UtakerStack }                                from '@features/scene/items/UtakerStack';
 import { Bollsidan30574370 }                          from '@features/scene/items/Bollsidan30574370';
-import { MannequinHead }                              from '@features/scene/items/MannequinHead';
+import { MannequinHead, LaraWigBust }                 from '@features/scene/items/MannequinHead';
 import { Backpack }                                   from '@features/scene/items/Backpack';
 import { BaseballCap }                                from '@features/scene/items/BaseballCap';
 import { Kejserlig90511501 }                          from '@features/scene/items/Kejserlig90511501';
@@ -296,16 +296,28 @@ SCENE_REGISTRY['tosakin-goldfish'] = function TosakinPreview({ actionState, onSi
 
 WIGS_ITEMS.forEach(wig => {
   SCENE_REGISTRY[wig.id] = function WigPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+    const hairColor = actionState?.previewHairColor;
     return (
-      <MannequinHead
-        mannequinId={`preview-${wig.id}`}
-        wigId={wig.id}
-        hairColor={actionState?.previewHairColor}
-        windEnabled={false}
-        item={{} as any}
-        actionState={actionState || {}}
-        onSize={onSize || (() => {})}
-      />
+      <group>
+        <group position={[-18, 14, 0]}>
+          <MannequinHead
+            mannequinId={`preview-${wig.id}`}
+            wigId={wig.id}
+            hairColor={hairColor}
+            windEnabled={false}
+            item={{} as any}
+            actionState={actionState || {}}
+            onSize={onSize || (() => {})}
+          />
+        </group>
+        <group position={[18, 0, 0]}>
+          <LaraWigBust
+            wigId={wig.id}
+            hairColor={hairColor}
+            windEnabled={false}
+          />
+        </group>
+      </group>
     );
   } as any;
 });

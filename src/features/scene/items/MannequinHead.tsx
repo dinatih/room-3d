@@ -21,6 +21,8 @@ import type { SceneItemProps } from '@shared/types';
 import { LAYER_DECOR } from '@config';
 import { Wig, HAIR_COLORS } from './Wig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
+import { applyLaraVariantStyles, disposeLaraVariantMaterials } from '@features/scene/LaraVariants';
+import { extractCharacterParts, isHeadMesh } from '@features/scene/characterParts';
 
 interface MannequinHeadProps extends SceneItemProps {
   mannequinId?: string;
@@ -155,6 +157,96 @@ export function MannequinHead({
         windEnabled={windEnabled}
         offset={MANNEQUIN_WIG_OFFSET}
         scale={90}
+      />
+    </group>
+  );
+}
+
+export function LaraWigBust({
+  wigId,
+  hairColor,
+  windEnabled = false,
+}: {
+  wigId: string;
+  hairColor?: string;
+  windEnabled?: boolean;
+}) {
+  const { scene: laraScene } = useGLTFClone('characters/lara/lara_native.glb');
+  const [wigOffset, setWigOffset] = useState<[number, number, number]>([0, 31.0, 0]);
+  const LARA_SCALE = 90;
+
+  useLayoutEffect(() => {
+    removeGlbLines(laraScene);
+    laraScene.scale.set(1, 1, 1);
+    laraScene.position.set(0, 0, 0);
+    laraScene.rotation.set(0, 0, 0);
+
+    applyLaraVariantStyles(laraScene, 'native');
+    const parts = extractCharacterParts(laraScene);
+    const nativeHairSet = new Set(parts.nativeHairMeshes.map(item => item.mesh));
+    const torsoClothedSet = new Set(parts.torsoClothed.map(item => item.mesh));
+
+    laraScene.traverse(o => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.layers.set(LAYER_DECOR);
+      const keepVisible = (isHeadMesh(mesh) && !nativeHairSet.has(mesh)) || torsoClothedSet.has(mesh);
+      mesh.visible = keepVisible;
+    });
+
+    laraScene.scale.setScalar(LARA_SCALE);
+    laraScene.updateMatrixWorld(true);
+
+    const visibleBox = new THREE.Box3();
+    const m = new THREE.Matrix4();
+    const rootRS = laraScene.matrix.clone().setPosition(0, 0, 0);
+    laraScene.traverse(node => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.visible) return;
+      m.identity();
+      let cur: THREE.Object3D | null = node;
+      while (cur && cur !== laraScene) {
+        cur.updateMatrix();
+        m.premultiply(cur.matrix);
+        cur = cur.parent;
+      }
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+      if (mesh.geometry.boundingBox) {
+        visibleBox.union(mesh.geometry.boundingBox.clone().applyMatrix4(m).applyMatrix4(rootRS));
+      }
+    });
+
+    if (!visibleBox.isEmpty()) {
+      laraScene.position.set(
+        -(visibleBox.min.x + visibleBox.max.x) / 2,
+        -visibleBox.min.y,
+        -(visibleBox.min.z + visibleBox.max.z) / 2,
+      );
+    }
+
+    if (parts.bones.head) {
+      laraScene.updateMatrixWorld(true);
+      const headLocal = new THREE.Vector3();
+      parts.bones.head.getWorldPosition(headLocal);
+      laraScene.worldToLocal(headLocal);
+      const headCm = headLocal.multiplyScalar(LARA_SCALE).add(laraScene.position);
+      setWigOffset([headCm.x, headCm.y + 0.07 * LARA_SCALE, headCm.z]);
+    }
+
+    return () => {
+      disposeLaraVariantMaterials(laraScene);
+    };
+  }, [laraScene]);
+
+  return (
+    <group userData={{ animUnit: true, itemName: 'Buste Lara' }}>
+      <primitive object={laraScene} />
+      <Wig
+        id={wigId.replace('hair_', '')}
+        color={hairColor}
+        windEnabled={windEnabled}
+        offset={wigOffset}
+        scale={LARA_SCALE}
       />
     </group>
   );

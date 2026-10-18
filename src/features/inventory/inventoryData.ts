@@ -590,18 +590,31 @@ export const isRiggedWig = (id: string | number): boolean => {
   return !!(RIGGED_WIGS_PATHS[strId] || RIGGED_WIGS_PATHS[cleanId]);
 };
 
+export type WigSourceId = 'hair_pack' | 'zhairezt';
+
+export const WIG_SOURCES: { id: WigSourceId; label: string }[] = [
+  { id: 'hair_pack', label: 'Hair Pack Part 2' },
+  { id: 'zhairezt',  label: 'zHairezt' },
+];
+
+export function getWigSource(wigOrItem: { id: string; name: string }): WigSourceId {
+  return wigOrItem.name.includes('zHairezt') ? 'zhairezt' : 'hair_pack';
+}
+
 WIGS_ITEMS.forEach(wig => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === wig.id)) {
+    const sourceId = getWigSource(wig);
+    const sourceLabel = WIG_SOURCES.find(s => s.id === sourceId)?.label ?? 'Custom';
     INVENTORY.push({
       id: wig.id,
       name: wig.name,
-      brand: 'Custom',
+      brand: sourceLabel,
       category: 'wigs',
       qty: 1,
       dims: { w: 25, d: 25, h: 25 },
       glbPath: wig.glbPath || 'characters/wigs/hair_pack_part_2.glb',
       photos: (wig as any).photos || (wig.glbPath ? [`characters/wigs/previews/${wig.glbPath.split('/').pop()?.replace('.glb', '')}.png`] : ['characters/wigs/previews/hair_pack_part_2.png']),
-      notes: `Perruque 3D: ${wig.name}.`
+      notes: `Perruque 3D (${sourceLabel}): ${wig.name}.`
     });
   }
 });
