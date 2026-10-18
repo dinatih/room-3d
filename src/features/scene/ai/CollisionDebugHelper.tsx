@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useSceneStore } from '../store/useSceneStore';
+import { actorRadius } from './agent/agentAvoidance';
 import { cameraState } from '../cameraState';
 import { architectureObstacles } from './navigation/architecture';
 import { furnitureObstacles, getObstacleRevision, navigationDebug, furnitureClearance, getAgentProfile, hasAgentProfile } from './navigation/obstacles';
@@ -59,7 +60,7 @@ export function CollisionDebugHelper() {
     if (npc) {
       for (const [id, position] of Object.entries(cameraState.positions)) {
         if (!position || !hasAgentProfile(id)) continue;
-        const radius = getAgentProfile(id).radius;
+        const radius = actorRadius(getAgentProfile(id));
         addLine(inflate([{ x: position.x, z: position.z }], radius), '#00e5ff', true);
       }
     }

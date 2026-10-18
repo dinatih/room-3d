@@ -8,12 +8,14 @@ export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
 // Actors steer around each other but never impose a hard stop on one another.
-// Furniture and door clearance still use the full measured body radius.
+// Furniture and door clearances are configured independently.
 export const ACTOR_AVOIDANCE_SCALE = 0;
+// Display and steer with half the measured body radius, as requested.
+export const actorRadius = (profile: { radius: number }): number => profile.radius / 2;
 // Prefer half-body separation when space permits; overlap remains allowed.
 const ACTOR_STEERING_SCALE = 0.5;
 export const actorClearance = (profile: { radius: number }, body: { radius: number }): number =>
-  (profile.radius + body.radius) * ACTOR_AVOIDANCE_SCALE;
+  (actorRadius(profile) + actorRadius(body)) * ACTOR_AVOIDANCE_SCALE;
 const destinations = new Map<string, Point>();
 const passingSides = new Map<string, Map<string, number>>();
 // Only actors which rejected a candidate invalidate a failed approach. Unrelated
@@ -84,7 +86,7 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
       if (other.y >= y + profile.height || other.y + body.height <= y) continue;
       const dx = other.x - currentX, dz = other.z - currentZ;
       const distance = Math.hypot(dx, dz);
-      const clearance = (profile.radius + body.radius) * ACTOR_STEERING_SCALE;
+      const clearance = (actorRadius(profile) + actorRadius(body)) * ACTOR_STEERING_SCALE;
       const lookahead = clearance * 2;
       if (distance >= lookahead) { sides.delete(otherId); continue; }
       const forward = dx * dirX + dz * dirZ;
