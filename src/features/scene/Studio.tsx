@@ -682,6 +682,13 @@ export function Studio() {
           cameraState.invalidate?.();
           return;
         }
+        if (k === 'v' || e.code === 'KeyV') {
+          e.preventDefault();
+          if (e.repeat) return;
+          onToggleLayer('laraShoes');
+          cameraState.invalidate?.();
+          return;
+        }
       }
 
       if (cameraState.mode === 'plane' && ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) return;
