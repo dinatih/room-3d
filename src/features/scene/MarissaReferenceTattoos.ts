@@ -1,8 +1,12 @@
 import * as THREE from 'three';
 import skullUrl from './assets/marissa-skull-roses.png';
+import wingsUrl from './assets/marissa-wings.png';
 
 let design: HTMLCanvasElement | undefined;
 let designTexture: THREE.CanvasTexture | undefined;
+const wings=new Image();
+wings.onerror=()=>{throw new Error('Cannot load Marissa wings tattoo');};
+wings.src=wingsUrl;
 const skull = new Image();
 skull.onerror = () => { throw new Error('Cannot load Marissa skull tattoo'); };
 skull.src = skullUrl;
@@ -34,17 +38,25 @@ function reference() {
   c.save(); c.translate(0,13);
   path([[-3,97],[0,94],[3,97],[1.7,99],[-1.7,99]],true);
   path([[-3,97],[3,97],[0,94],[-1.7,99],[1.7,99],[0,94]]);
-  for(const side of [-1,1]) {
-    c.save();c.scale(side,1);c.lineWidth=.18;
-    for(let feather=0;feather<8;feather++){
-      c.beginPath();c.moveTo(2.8+feather*.34,97-feather*.25);
-      c.quadraticCurveTo(6,100-feather*.45,10.7-feather*.48,104-feather*1.12);
-      c.quadraticCurveTo(10-feather*.48,99-feather*.65,4+feather*.28,94.5-feather*.12);
-      c.quadraticCurveTo(3,95.5,2.8+feather*.34,97-feather*.25);c.stroke();
-    }
-    c.restore();
-  }
   c.restore();
+  const stampWings=()=>{
+    const canvas=document.createElement('canvas');canvas.width=wings.naturalWidth;canvas.height=wings.naturalHeight-2; // Exclude the reference screenshot's bottom border.
+    const ink=canvas.getContext('2d');if(!ink)throw new Error('Cannot prepare wing ink');
+    ink.drawImage(wings,0,0);const pixels=ink.getImageData(0,0,canvas.width,canvas.height);
+    for(let i=0;i<pixels.data.length;i+=4){
+      const grey=(pixels.data[i]+pixels.data[i+1]+pixels.data[i+2])/3;
+      pixels.data[i+3]*=(1-grey/255)*.82;
+      pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=30;
+    }
+    ink.putImageData(pixels,0,0);
+    // Put each wing beside the diamond, preserving the reference proportions.
+    const half=canvas.width/2;
+    c.save();c.translate(0,117);c.scale(1,-1);
+    c.drawImage(canvas,0,0,half,canvas.height,-13,0,10,10);
+    c.drawImage(canvas,half,0,half,canvas.height,3,0,10,10);
+    c.restore();if(designTexture)designTexture.needsUpdate=true;
+  };
+  if(wings.complete&&wings.naturalWidth)stampWings();else wings.onload=stampWings;
   // Preserve the supplied skull and roses; use a 192 x 256 ink stamp.
   const stamp = () => {
     const small = document.createElement('canvas');small.width=192;small.height=256;

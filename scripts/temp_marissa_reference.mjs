@@ -23,7 +23,7 @@ for (const old of oldNodes) {
   }
   if (old.getMesh()) {
     const count = m => m.listPrimitives().reduce((n,p) => n + p.getIndices().getCount(),0);
-    if (old.getName() === 'body_nude_hands' || old.getName() === 'body_bare_feet_clothed') {
+    if (old.getName().startsWith('bikini_') || old.getName() === 'body_nude_hands' || old.getName() === 'body_bare_feet_clothed') {
       assert(count(node.getMesh())>0, 'Bare hands lost all triangles');
     } else if (old.getName() === 'body_nude_torso') {
       assert(count(node.getMesh()) >= count(old.getMesh()), 'Rebuilt torso lost triangles');
@@ -139,6 +139,7 @@ try {
     for(const {style,scene} of entries){
       const parts=extractCharacterParts(scene);
       if(!parts.bikiniTop.length||!parts.bikiniBottom.length)throw Error(`Missing bikini: ${style}`);
+      for(const {mesh} of [...parts.bikiniTop,...parts.bikiniBottom])if(mesh.material.toneMapped)throw Error('Bikini red would be desaturated by tone mapping');
       const options={laraBikini:true,laraNude:false,laraTopOff:false,laraBottomOff:false,laraShoes:false,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}};
       applyClothingAndAccessoriesVisibility(parts,options);
       if(parts.bikiniTop.some(p=>!p.mesh.visible)||parts.bikiniBottom.some(p=>!p.mesh.visible))throw Error('Bikini hidden');
@@ -188,6 +189,25 @@ try {
     const view=new THREE.Scene();view.add(scene,new THREE.HemisphereLight(0xffffff,0x777777,3));
     const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(800,1100);renderer.setClearColor(0xdddddd);document.body.replaceChildren(renderer.domElement);
     const camera=new THREE.OrthographicCamera(-.65,.65,1.8,0,.01,10);camera.position.set(0,0,4);camera.lookAt(0,0,0);renderer.render(view,camera);
+    window.marissaDetail=(part)=>{
+      const target=part==='top'?1.34:.93;
+      camera.left=-.24;camera.right=.24;camera.top=.33;camera.bottom=-.33;camera.updateProjectionMatrix();
+      camera.position.set(.3,target-.38,2);camera.lookAt(0,target,0);renderer.render(view,camera);
+    };
+    window.marissaMiley=async(frame,part)=>{
+      const entry=entries.find(e=>e.style==='marissa');
+      for(const [bone,position,quaternion,scale] of entry.restBones){bone.position.copy(position);bone.quaternion.copy(quaternion);bone.scale.copy(scale);}
+      const source=await window.laraChecks.loader.loadAsync('/animations/miley/miley_armature_idle01_f.glb');
+      scene.updateMatrixWorld(true);source.scene.updateMatrixWorld(true);
+      const {retargetClip}=await import('/src/features/scene/retargeting/index.ts');
+      const clip=retargetClip(source.animations[0],scene,source.scene);
+      const mixer=new THREE.AnimationMixer(scene);mixer.clipAction(clip).play();mixer.setTime(frame/30);
+      scene.updateMatrixWorld(true);window.marissaDetail(part);
+    };
+    window.marissaSpread=()=>{
+      for(const [side,sign] of [['left',1],['right',-1]])scene.getObjectByName(`leg_${side}_thigh`).quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),sign*.35));
+      scene.updateMatrixWorld(true);window.marissaDetail('bottom');
+    };
     window.marissaView=async(angle,bikini)=>{
       const {extractCharacterParts,applyClothingAndAccessoriesVisibility}=await import('/src/features/scene/characterParts.ts');
       const parts=extractCharacterParts(scene);
@@ -206,6 +226,14 @@ try {
   await page.screenshot({path:'/tmp/marissa-bikini-side.png'});
   await page.evaluate(()=>window.marissaView(Math.PI,true));
   await page.screenshot({path:'/tmp/marissa-bikini-back.png'});
+  await page.evaluate(()=>window.marissaDetail('top'));
+  await page.screenshot({path:'/tmp/marissa-bikini-straps.png'});
+  await page.evaluate(()=>window.marissaSpread());
+  await page.screenshot({path:'/tmp/marissa-bikini-crotch.png'});
+  await page.evaluate(()=>window.marissaMiley(303,'top'));
+  await page.screenshot({path:'/tmp/marissa-bikini-idle-straps.png'});
+  await page.evaluate(()=>window.marissaMiley(454,'bottom'));
+  await page.screenshot({path:'/tmp/marissa-bikini-idle-crotch.png'});
   await page.evaluate(()=>{
     const {entries,THREE}=window.laraChecks;const entry=entries.find(e=>e.style==='marissa');
     const ink=entry.scene.getObjectByName('body_legs').geometry.getAttribute('marissaSurfaceInkPosition');

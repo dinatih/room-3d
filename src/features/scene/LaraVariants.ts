@@ -86,7 +86,6 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       if (node.userData?.isCustomHair || node.userData?.isPendant || node.userData?.isNecklaceCord) return; // Preserve hair and silver jewelry
       const mesh = node as THREE.Mesh;
       const meshName = mesh.name.toLowerCase();
-      if(meshName.startsWith('bikini_'))return;
       const isMarissaBareFeet = isMarissa && meshName.startsWith('body_bare_feet');
       const isNudeLimb = meshName.startsWith('body_nude_legs') || meshName.startsWith('body_nude_feet');
       const isSaraNudeTorso = isSara && meshName.startsWith('body_nude_torso');
@@ -115,6 +114,12 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       mesh.material = clonedMats.length === 1 ? clonedMats[0] : clonedMats;
 
       clonedMats.forEach(mat => {
+        if(meshName.startsWith('bikini_')) {
+          // Keep saturated red fabric under the app's AgX lighting.
+          mat.toneMapped=false;
+          mat.needsUpdate=true;
+          return;
+        }
         if (isDelphinaNudeTorso) {
           mat.map = getDelphinaShoulderTattooTexture(mat);
           mat.needsUpdate = true;
