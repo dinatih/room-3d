@@ -107,5 +107,16 @@ npx tsc --noEmit
 
 Le navigateur est headless et utilise le lanceur du projet. Il produit les captures,
 les poses et le rapport runtime sous `/tmp/lara-mixamo-*`. Les modèles et animations
-sont servis localement. Le prototype est servi directement par le test, car Vite
-ignore les nouveaux fichiers de `public/` créés après son démarrage.
+sont servis localement par Vite, sans interception des fichiers GLB. Le dossier
+`public/` est surveillé pour détecter les modèles ajoutés pendant le développement.
+Le mode `node scripts/check-lara-mixamo.cjs --project` vérifie également la signature
+binaire du GLB servi, son montage dans la scène et la disparition de l'écran de
+chargement avant de capturer l'application.
+
+`node scripts/check-lara-mixamo.cjs --component` monte les vrais `CharacterGroup`
+Native et prototype dans une scène légère, en attend la visibilité et produit
+`/tmp/lara-mixamo-component.png`. Ce test et les quatre animations passent avec le
+chargement HTTP réel. Le démarrage de l'appartement complet reste au-delà du délai
+de 120 secondes dans le test headless de cet environnement ; il n'est pas déclaré
+validé. `--hardware-gpu` utilise les options Vulkan des autres tests du projet,
+tout en conservant le mode headless.

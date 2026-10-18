@@ -3,12 +3,15 @@ const fs = require('node:fs');
 const launchBrowser = require('./browser-test-options.cjs');
 
 (async () => {
-  const browser = await launchBrowser({args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader']});
+  const graphicsArgs = process.argv.includes('--hardware-gpu')
+    ? ['--enable-gpu', '--use-angle=vulkan', '--enable-features=Vulkan,VulkanFromANGLE', '--disable-vulkan-surface']
+    : ['--enable-unsafe-swiftshader'];
+  const browser = await launchBrowser({args: ['--no-sandbox', '--disable-dev-shm-usage', ...graphicsArgs]});
   try {
     const page = await browser.newPage();
     const errors = [];
-    page.on('pageerror', error => errors.push(error.message));
-    page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
+    page.on('pageerror', error => { errors.push(error.message); console.error('PAGE ERROR', error.message); });
+    page.on('console', msg => { if (msg.type() === 'error') { errors.push(msg.text()); console.error('CONSOLE ERROR',msg.text()); } });
     page.on('response', response => {
       if (/\.glb(?:\?|$)/.test(response.url())) console.log('GLB', response.status(), response.headers()['content-type'], response.url());
     });
@@ -17,14 +20,45 @@ const launchBrowser = require('./browser-test-options.cjs');
     page.on('request', request => {
       if (new URL(request.url()).pathname === '/__lara_mixamo_test__') {
         request.respond({contentType: 'text/html', body: '<!doctype html><html><head><link rel="icon" href="data:,"></head><body style="margin:0;background:#17212b;color:white;font-family:sans-serif"><h2 style="margin:16px">Lara : originale / prototype Mixamo / Xbot</h2><div id="label" style="margin:16px"></div></body></html>'});
-      } else if (new URL(request.url()).pathname === '/characters/lara/lara_mixamo_prototype.glb') {
-        // Vite ignores public/** changes, including files built after startup.
-        request.respond({contentType:'model/gltf-binary', body:fs.readFileSync(require('node:path').join(__dirname,'../public/characters/lara/lara_mixamo_prototype.glb'))});
       } else request.continue();
     });
+    if(process.argv.includes('--component')) {
+      await page.goto('http://127.0.0.1:5173/scripts/lara-mixamo-fixture.html');
+      await page.waitForFunction(()=>{
+        let original=false,prototype=false;
+        window.threeScene?.traverse(node=>{
+          if(!node.isSkinnedMesh)return;
+          let path;
+          for(let parent=node;parent;parent=parent.parent){
+            if(!parent.visible)return;
+            if(parent.userData.gltfPath)path=parent.userData.gltfPath;
+          }
+          if(path==='characters/lara/lara_native.glb')original=true;
+          if(path==='characters/lara/lara_mixamo_prototype.glb')prototype=true;
+        });
+        return original && prototype;
+      }, {timeout:120000});
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      await page.screenshot({path:'/tmp/lara-mixamo-component.png'});
+      if(errors.length)throw new Error(errors.join('\n'));
+      console.log('Actual CharacterGroup renders both Lara rigs through HTTP.');
+      return;
+    }
     if (process.argv.includes('--project')) {
-      await page.goto('http://127.0.0.1:5173/?character=lara_mixamo&npcNb=1&inventory=characters');
+      await page.goto('http://127.0.0.1:5173/?character=lara_mixamo&npcNb=1&preset=low&skipIntro=1');
+      const asset = await page.evaluate(async () => {
+        const response = await fetch('/characters/lara/lara_mixamo_prototype.glb');
+        const data = await response.arrayBuffer();
+        return {status:response.status,type:response.headers.get('content-type'),magic:new TextDecoder().decode(data.slice(0,4))};
+      });
+      if(asset.magic !== 'glTF')throw new Error('Prototype GLB is not served correctly: '+JSON.stringify(asset));
       await page.waitForFunction(() => document.body.innerText.includes('Lara Mixamo (prototype)'), {timeout:120000});
+      await page.waitForFunction(() => {
+        let found=false;
+        window.threeScene?.traverse(node => { if(node.isBone && /^mixamorig[:_]?LeftShoulder$/.test(node.name))found=true; });
+        const loading=document.getElementById('loading');
+        return found && (!loading || getComputedStyle(loading).display === 'none');
+      }, {timeout:120000});
       const state = await page.evaluate(async () => {
         const {CHARACTERS} = await import('/src/features/scene/characterConfig.ts');
         const {INVENTORY} = await import('/src/features/inventory/inventoryData.ts');
