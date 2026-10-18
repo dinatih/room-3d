@@ -703,7 +703,6 @@ function normalizeSearchStr(str: string): string {
     <div
       className="inventory-overlay"
       onClick={onClose}
-      onKeyDown={(e) => e.stopPropagation()}
       style={{ display: visible ? undefined : 'none' }}
     >
       <div
