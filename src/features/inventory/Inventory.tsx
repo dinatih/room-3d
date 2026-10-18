@@ -553,6 +553,62 @@ export function Inventory({
     }
   }, [initialCategory, visible, extraCharacters]);
 
+  useEffect(() => {
+    const resolveObjectTarget = (rawId: string, label?: string): PreviewTarget => {
+      const cleanId = rawId.replace(/[-_]\d+$/, '');
+      const directItem = INVENTORY.find(i => i.id === rawId || i.id === cleanId)
+        ?? (label ? INVENTORY.find(i => i.name.toLowerCase() === label.toLowerCase()) : undefined);
+      if (directItem) return directItem;
+      const space = STORAGE_SPACES.find(s => s.id === rawId || s.id === cleanId);
+      if (space) return space;
+      const zone = SpatialZoneManager.getAllZones().find(z => z.id === rawId || z.id === cleanId);
+      if (zone) return zone;
+      return null;
+    };
+
+    const applyTarget = (detail: import('@features/ui/AppConsole').OpenInventoryTargetDetail) => {
+      if (detail.type === 'animation') {
+        setActiveCat('animations');
+        return;
+      }
+      if (detail.type === 'object') {
+        import('@features/ui/AppConsole').then(({ consumePendingInventoryTarget }) => consumePendingInventoryTarget());
+        const targetId = detail.object.inventoryId ?? detail.object.id;
+        const found = resolveObjectTarget(targetId, detail.object.label);
+        setSearch('');
+        if (found) {
+          if (found instanceof SpatialZone) {
+            setActiveCat('spaces');
+          } else if (!('category' in found)) {
+            setActiveCat('storage');
+          } else {
+            setActiveCat('all');
+          }
+          setSelected(found);
+          requestAnimationFrame(() => {
+            const rowEl = tableContainerRef.current?.querySelector(`div[data-item-id="${found.id}"]`);
+            rowEl?.scrollIntoView({ block: 'nearest' });
+          });
+        } else {
+          setActiveCat('all');
+          setSearch(targetId);
+        }
+      }
+    };
+
+    import('@features/ui/AppConsole').then(({ peekPendingInventoryTarget }) => {
+      const pending = peekPendingInventoryTarget();
+      if (pending) applyTarget(pending);
+    });
+
+    const onOpenTarget = (e: Event) => {
+      const detail = (e as CustomEvent<import('@features/ui/AppConsole').OpenInventoryTargetDetail>).detail;
+      applyTarget(detail);
+    };
+    document.addEventListener('open-inventory-target', onOpenTarget);
+    return () => document.removeEventListener('open-inventory-target', onOpenTarget);
+  }, []);
+
   // Défilement automatique de la barre des catégories pour centrer le groupe actif (ex. Personnages)
   useEffect(() => {
     if (!visible) return;

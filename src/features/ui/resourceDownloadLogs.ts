@@ -22,7 +22,10 @@ const observer = new PerformanceObserver(list => {
     const source = entry.transferSize > 0 ? 'réseau'
       : entry.decodedBodySize > 0 ? 'cache navigateur' : 'origine indisponible';
     const transferred = entry.transferSize > 0 ? ` · transféré : ${formatBytes(entry.transferSize)}` : '';
-    appLog('download', `📥 Premier chargement : "${name}" · fichier : ${size}${transferred} · ${entry.duration.toFixed(0)} ms (${source})`);
+    appLog('download', `📥 Premier chargement : "${name}" · fichier : ${size}${transferred} · ${entry.duration.toFixed(0)} ms (${source})`, {
+      category: 'download',
+      action: 'asset_load',
+    });
   }
 });
 

@@ -37,19 +37,107 @@ function getTagColor(tag: string): string {
 }
 
 // ── Types & Singleton ──────────────────────────────────────────────────────
+export type AppLogCategory = 'anim' | 'duo' | 'nav' | 'object' | 'system' | 'perf' | 'download';
+
+export interface AppLogAnimationRef {
+  id: string;
+  mode?: 'solo' | 'duo';
+  label?: string;
+  actorId?: string;
+  partnerId?: string;
+}
+
+export interface AppLogObjectRef {
+  id: string;
+  inventoryId?: string;
+  label?: string;
+  slotId?: string;
+}
+
+export interface AppLogMetadata {
+  category?: AppLogCategory;
+  action?: string;
+  actors?: string[];
+  animation?: AppLogAnimationRef;
+  object?: AppLogObjectRef;
+}
+
 export interface AppLogEntry {
   id: number;
   tag: string;
   message: string;
   timestamp: number;
+  category: AppLogCategory;
+  action?: string;
+  actors: string[];
+  animation?: AppLogAnimationRef;
+  object?: AppLogObjectRef;
 }
+
+export type OpenInventoryTargetDetail =
+  | { type: 'animation'; animation: AppLogAnimationRef }
+  | { type: 'object'; object: AppLogObjectRef };
+
+let _pendingInventoryTarget: OpenInventoryTargetDetail | null = null;
+
+export function consumePendingInventoryTarget(): OpenInventoryTargetDetail | null {
+  const target = _pendingInventoryTarget;
+  _pendingInventoryTarget = null;
+  return target;
+}
+
+export function peekPendingInventoryTarget(): OpenInventoryTargetDetail | null {
+  return _pendingInventoryTarget;
+}
+
+export function openInventoryTarget(detail: OpenInventoryTargetDetail): void {
+  _pendingInventoryTarget = detail;
+  document.dispatchEvent(new CustomEvent<OpenInventoryTargetDetail>('open-inventory-target', { detail }));
+}
+
+const LOG_CATEGORY_LABELS: Record<AppLogCategory, string> = {
+  anim: '🎬 Anim',
+  duo: '👯 Duo',
+  nav: '🧭 Nav',
+  object: '🪑 Objet',
+  system: '⚙️ Système',
+  perf: '⚡ Perf',
+  download: '📥 Réseau',
+};
 
 let _logCounter = 0;
 export const APP_LOG_HISTORY: AppLogEntry[] = [];
 const MAX_LOGS = 10_000;
 
-export const appLog = (tag: string, message: string): void => {
-  const entry: AppLogEntry = { id: ++_logCounter, tag, message, timestamp: Date.now() };
+function inferLogCategory(tag: string, meta?: AppLogMetadata): AppLogCategory {
+  if (meta?.category) return meta.category;
+  if (meta?.animation) return meta.animation.mode === 'duo' ? 'duo' : 'anim';
+  if (meta?.object) return 'object';
+  const lower = tag.toLowerCase();
+  if (lower === 'perf') return 'perf';
+  if (lower === 'download') return 'download';
+  if (lower === 'anim') return 'anim';
+  if (lower === 'system') return 'system';
+  if (lower.includes('+')) return 'duo';
+  return 'nav';
+}
+
+export const appLog = (tag: string, message: string, meta?: AppLogMetadata): void => {
+  const actors = meta?.actors ?? tag
+    .split('+')
+    .map(s => s.trim())
+    .filter(s => Boolean(findCharacter(s)));
+  const entry: AppLogEntry = {
+    id: ++_logCounter,
+    tag,
+    message,
+    timestamp: Date.now(),
+    category: inferLogCategory(tag, meta),
+    action: meta?.action,
+    actors,
+    animation: meta?.animation,
+    object: meta?.object,
+  };
   APP_LOG_HISTORY.push(entry);
   if (APP_LOG_HISTORY.length > MAX_LOGS) APP_LOG_HISTORY.shift();
   document.dispatchEvent(new CustomEvent('app-log', { detail: entry }));
@@ -67,18 +155,6 @@ function getContrastTextColor(hexColor: string): string {
   const b = parseInt(hex.substring(4, 6), 16) || 0;
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.6 ? '#1f2937' : '#ffffff';
-}
-
-/** Identifiants techniques (anim, slot, objet…) : snake_case, kebab-case, camelCase ou texte entre guillemets. */
-const IDENTIFIER_REGEX = /("[^"]+"|\b[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+)+\b|\b[a-z]+(?:[A-Z][a-z0-9]+)+\b)/g;
-
-/** Chaque identifiant est sélectionné en entier d'un seul clic (`user-select-all`). */
-function renderMessage(message: string): ReactNode[] {
-  return message.split(IDENTIFIER_REGEX).map((part, i) =>
-    i % 2 === 1
-      ? <span key={i} className="user-select-all font-monospace bg-body-secondary rounded px-1">{part}</span>
-      : part
-  );
 }
 
 /** État des panneaux partageable dans la query string, y compris les URL avec hash. */
@@ -127,6 +203,8 @@ export function AppConsole({
   const [open, setOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<'' | AppLogCategory>('');
+  const [actionFilter, setActionFilter] = useState<string>('');
   const [_cycleStep, setCycleStep] = useState(0); // 0=fermé, 1=ouvert, 2=ouvert+filtré
   const logAreaRef = useRef<HTMLDivElement>(null);
   const [bottomDockHeight, setBottomDockHeight] = useState(0);
@@ -150,9 +228,9 @@ export function AppConsole({
   // Écoute des CustomEvents 'app-log'
   useEffect(() => {
     const handler = (e: Event) => {
-      const { id, tag, message, timestamp } = (e as CustomEvent<AppLogEntry>).detail;
+      const detail = (e as CustomEvent<AppLogEntry>).detail;
       setLogs(prev => {
-        const next = [...prev, { id: id ?? ++_logCounter, tag, message, timestamp }];
+        const next = [...prev, { ...detail, id: detail.id ?? ++_logCounter }];
         return next.length > MAX_LOGS ? next.slice(-MAX_LOGS) : next;
       });
     };
@@ -166,7 +244,7 @@ export function AppConsole({
     if (!isPaused && logAreaRef.current) {
       logAreaRef.current.scrollTop = logAreaRef.current.scrollHeight;
     }
-  }, [logs, isPaused, filterBubbleOnly]);
+  }, [logs, isPaused, filterBubbleOnly, categoryFilter, actionFilter]);
 
   // Raccourci clavier 'B' : cycle ouvert → filtré → fermé
   useEffect(() => {
@@ -188,14 +266,28 @@ export function AppConsole({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const displayedLogs = filterBubbleOnly
-    ? logs.filter(entry => {
-        const activeId = activeCharacterId.toLowerCase();
-        if (entry.tag.toLowerCase() === 'system') return true;
+  const availableActions = Array.from(
+    new Set(
+      logs
+        .filter(e => !categoryFilter || e.category === categoryFilter)
+        .map(e => e.action)
+        .filter((a): a is string => Boolean(a))
+    )
+  ).sort();
+
+  const displayedLogs = logs.filter(entry => {
+    if (filterBubbleOnly) {
+      const activeId = activeCharacterId.toLowerCase();
+      if (entry.tag.toLowerCase() !== 'system') {
         const tagParts = entry.tag.toLowerCase().split('+').map(s => s.trim());
-        return tagParts.some(t => t === activeId);
-      })
-    : logs;
+        const actorMatch = entry.actors.some(a => a.toLowerCase() === activeId) || tagParts.some(t => t === activeId);
+        if (!actorMatch) return false;
+      }
+    }
+    if (categoryFilter && entry.category !== categoryFilter) return false;
+    if (actionFilter && entry.action !== actionFilter) return false;
+    return true;
+  });
 
   // Réserver l'espace et aligner les dimensions/espacements sur le menu principal du bas.
   useLayoutEffect(() => {
@@ -304,9 +396,38 @@ export function AppConsole({
             <span>Console</span>
           </button>
 
-          <div className="d-flex align-items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <div className="d-flex align-items-center gap-1 flex-wrap" onClick={(e) => e.stopPropagation()}>
             {open && (
               <>
+                <select
+                  aria-label="Filtrer par catégorie de log"
+                  className="form-select form-select-sm py-0 ps-1 pe-4 w-auto small"
+                  value={categoryFilter}
+                  onChange={(e) => {
+                    setCategoryFilter(e.target.value as '' | AppLogCategory);
+                    setActionFilter('');
+                  }}
+                  title="Filtrer les logs par catégorie"
+                >
+                  <option value="">Toutes cat.</option>
+                  {(Object.entries(LOG_CATEGORY_LABELS) as [AppLogCategory, string][]).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+
+                <select
+                  aria-label="Filtrer par action de log"
+                  className="form-select form-select-sm py-0 ps-1 pe-4 w-auto small"
+                  value={actionFilter}
+                  onChange={(e) => setActionFilter(e.target.value)}
+                  title="Filtrer les logs par action"
+                >
+                  <option value="">Toutes actions</option>
+                  {availableActions.map(act => (
+                    <option key={act} value={act}>{act}</option>
+                  ))}
+                </select>
+
                 <button
                   type="button"
                   className={`${TOOLBAR_BUTTON_CLASS} ${filterBubbleOnly ? 'shadow-sm' : 'btn-outline-secondary'}`}
@@ -392,7 +513,7 @@ export function AppConsole({
               return (
                 <div
                   key={`${entry.id}_${idx}`}
-                  className="d-flex align-items-baseline gap-2 px-1 py-0.5 text-break lh-sm flex-shrink-0"
+                  className="d-flex align-items-baseline gap-1 px-1 py-0.5 text-break lh-sm flex-shrink-0 flex-wrap"
                 >
                   <span
                     className="font-monospace flex-shrink-0 user-select-none text-muted small"
@@ -426,7 +547,69 @@ export function AppConsole({
                       })}
                     </span>
                   )}
-                  <span className="flex-grow-1 text-dark fw-normal">{renderMessage(entry.message)}</span>
+                  <span className="badge bg-light text-secondary border py-0 px-1 font-monospace flex-shrink-0">
+                    {LOG_CATEGORY_LABELS[entry.category]}
+                  </span>
+                  {entry.action && (
+                    <span className="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle py-0 px-1 font-monospace flex-shrink-0">
+                      {entry.action}
+                    </span>
+                  )}
+                  <span className="text-dark fw-normal">{entry.message}</span>
+                  {entry.object && (
+                    <span className="d-inline-flex align-items-center gap-1 flex-shrink-0">
+                      <span
+                        className="user-select-all font-monospace bg-body-secondary text-dark border rounded px-1"
+                        title={entry.object.label ? `Objet : ${entry.object.label}` : `Objet ID : ${entry.object.id}`}
+                      >
+                        {entry.object.id}{entry.object.slotId ? `:${entry.object.slotId}` : ''}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary py-0 px-1 lh-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openInventoryTarget({
+                            type: 'object',
+                            object: entry.object!,
+                          });
+                        }}
+                        title={`Ouvrir l'objet "${entry.object.label ?? entry.object.id}" dans l'Inventaire`}
+                        aria-label={`Ouvrir l'objet ${entry.object.id} dans l'inventaire`}
+                      >
+                        <i className="bi bi-box-arrow-up-right" aria-hidden="true" />
+                      </button>
+                    </span>
+                  )}
+                  {entry.animation && (
+                    <span className="d-inline-flex align-items-center gap-1 flex-shrink-0">
+                      <span
+                        className="user-select-all font-monospace bg-body-secondary text-dark border rounded px-1"
+                        title={entry.animation.label ? `Animation : ${entry.animation.label}` : `Animation ID : ${entry.animation.id}`}
+                      >
+                        {entry.animation.id}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger py-0 px-1 lh-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openInventoryTarget({
+                            type: 'animation',
+                            animation: {
+                              ...entry.animation!,
+                              actorId: entry.animation!.actorId ?? entry.actors[0],
+                              partnerId: entry.animation!.partnerId ?? entry.actors[1],
+                            },
+                          });
+                        }}
+                        title={`Ouvrir l'animation "${entry.animation.label ?? entry.animation.id}" dans Inventaire > Animations`}
+                        aria-label={`Ouvrir l'animation ${entry.animation.id} dans Inventaire > Animations`}
+                      >
+                        <i className="bi bi-film" aria-hidden="true" />
+                      </button>
+                    </span>
+                  )}
                 </div>
               );
             })}

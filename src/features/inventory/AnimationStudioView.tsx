@@ -15,6 +15,8 @@ import {
   filterStudioAnimations, adjacentStudioAnimation, type StudioFilters, type StudioAnimation,
 } from './animationStudioCatalog';
 
+import { consumePendingInventoryTarget, peekPendingInventoryTarget, type AppLogAnimationRef, type OpenInventoryTargetDetail } from '@features/ui/AppConsole';
+
 export function AnimationStudioView({ isMobile = false, listWidth = 380, onResizeStart }: {
   isMobile?: boolean;
   listWidth?: number;
@@ -50,6 +52,43 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
   const tags = [...new Set(catalog.flatMap(a => allAnnotations[a.annotationId]?.tags ?? []))].sort();
   const advancedCount = [filters.status, filters.tag, filters.minDuration, filters.maxDuration].filter(Boolean).length;
   const isFiltered = Object.entries(filters).some(([key, value]) => value !== EMPTY_STUDIO_FILTERS[key as keyof StudioFilters]);
+
+  function applyExternalAnimationTarget(target: AppLogAnimationRef) {
+    const resolvedMode: 'solo' | 'duo' = target.mode
+      ?? (STUDIO_CATALOG.duo.some(a => a.id === target.id) ? 'duo' : 'solo');
+    const targetCatalog = STUDIO_CATALOG[resolvedMode];
+    const match = targetCatalog.find(a => a.id === target.id);
+    if (!match) return;
+    setMode(resolvedMode);
+    setFiltersByMode(previous => ({ ...previous, [resolvedMode]: { ...EMPTY_STUDIO_FILTERS } }));
+    setSelection(previous => ({ ...previous, [resolvedMode]: match.id }));
+    if (target.actorId && characters.some(c => c.id === target.actorId)) {
+      setActorId(target.actorId);
+    }
+    if (target.partnerId && characters.some(c => c.id === target.partnerId && c.id !== target.actorId)) {
+      setPartnerId(target.partnerId);
+    }
+    const transport = useAnimPreviewStore.getState();
+    transport.seekToTime(0);
+    transport.play();
+  }
+
+  useEffect(() => {
+    const pending = peekPendingInventoryTarget();
+    if (pending?.type === 'animation') {
+      consumePendingInventoryTarget();
+      applyExternalAnimationTarget(pending.animation);
+    }
+    const onOpenTarget = (e: Event) => {
+      const detail = (e as CustomEvent<OpenInventoryTargetDetail>).detail;
+      if (detail.type === 'animation') {
+        consumePendingInventoryTarget();
+        applyExternalAnimationTarget(detail.animation);
+      }
+    };
+    document.addEventListener('open-inventory-target', onOpenTarget);
+    return () => document.removeEventListener('open-inventory-target', onOpenTarget);
+  }, [characters]);
 
   function updateFilters(patch: Partial<StudioFilters>) {
     setFiltersByMode(previous => ({ ...previous, [mode]: { ...previous[mode], ...patch } }));

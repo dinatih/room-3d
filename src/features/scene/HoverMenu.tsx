@@ -617,7 +617,11 @@ export function HoverOverlay() {
                   if (action.id.startsWith('select-character-')) {
                     const targetCharacterId = action.id.replace('select-character-', '');
                     useSceneStore.getState().setActiveCharacterId(targetCharacterId);
-                    appLog(targetCharacterId, `🎯 Personnage actif défini : ${state.lockedLabel}`);
+                    appLog(targetCharacterId, `🎯 Personnage actif défini : ${state.lockedLabel}`, {
+                      category: 'system',
+                      action: 'active_character_set',
+                      actors: [targetCharacterId],
+                    });
                   } else if (action.id.startsWith('smart-object:::')) {
                     const [, objectId, slotId] = action.id.split(':::');
                     const obj = getSmartObject(objectId);
@@ -654,7 +658,11 @@ export function HoverOverlay() {
                       const targetSlot = slotId || obj?.slots[0]?.slotId || 'default';
                       if (OccupancyManager.isSlotOccupied(objectId, targetSlot)) {
                         const occupant = OccupancyManager.getOccupant(objectId, targetSlot);
-                        appLog('system', `⚠️ ${obj?.name ?? objectId} est déjà occupé${occupant ? ` (${occupant})` : ''}`);
+                        appLog('system', `⚠️ ${obj?.name ?? objectId} est déjà occupé${occupant ? ` (${occupant})` : ''}`, {
+                          category: 'object',
+                          action: 'slot_occupied',
+                          object: { id: objectId, label: obj?.name, slotId },
+                        });
                         hoverState.locked = false;
                         hoverState.touchActive = false;
                         hoverState.onUpdate?.();
@@ -691,7 +699,12 @@ export function HoverOverlay() {
                       }
 
                       if (closestCharId) {
-                        appLog(closestCharId, `🤖 Ordre SmartObject: ${closestCharId} assigné à ${obj?.name ?? objectId} (${slot?.name ?? slotId})`);
+                        appLog(closestCharId, `🤖 Ordre SmartObject: ${closestCharId} assigné à ${obj?.name ?? objectId} (${slot?.name ?? slotId})`, {
+                          category: 'object',
+                          action: 'smartobject_assign',
+                          actors: [closestCharId],
+                          object: { id: objectId, label: obj?.name, slotId },
+                        });
                         document.dispatchEvent(
                           new CustomEvent('agent-force-smartobject', {
                             detail: {
@@ -702,7 +715,11 @@ export function HoverOverlay() {
                           })
                         );
                       } else {
-                        appLog('system', `⚠️ Aucun personnage actif trouvé pour interagir avec ${objectId}`);
+                        appLog('system', `⚠️ Aucun personnage actif trouvé pour interagir avec ${objectId}`, {
+                          category: 'object',
+                          action: 'no_actor_available',
+                          object: { id: objectId, label: obj?.name, slotId },
+                        });
                       }
                     }
                   } else {

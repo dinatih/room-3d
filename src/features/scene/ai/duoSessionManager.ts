@@ -153,7 +153,19 @@ class DuoSessionManager {
       const firstAnim = session.playlist[0];
       session.sessionTimer = firstAnim?.duration ?? 5.0;
       if (firstAnim) {
-        appLog(`${session.participantA.characterId}+${session.participantB.characterId}`, `🎭 Duo démarré entre ${session.participantA.characterId} & ${session.participantB.characterId} : "${firstAnim.label}" (x${session.repeatsPerAnim}, ${session.playlist.length} anims, ${session.sessionTimer.toFixed(1)}s/clip)`);
+        const pAId = session.participantA.characterId;
+        const pBId = session.participantB.characterId;
+        appLog(
+          `${pAId}+${pBId}`,
+          `🎭 Duo démarré entre ${pAId} & ${pBId} : "${firstAnim.label}" (x${session.repeatsPerAnim}, ${session.playlist.length} anims, ${session.sessionTimer.toFixed(1)}s/clip)`,
+          {
+            category: 'duo',
+            action: 'duo_start',
+            actors: [pAId, pBId],
+            animation: { id: firstAnim.id, mode: 'duo', label: firstAnim.label, actorId: pAId, partnerId: pBId },
+            object: { id: session.location.objectId, slotId: session.location.slotId },
+          }
+        );
       }
       this.emitChange();
     }
@@ -251,24 +263,51 @@ class DuoSessionManager {
     session.sessionTimer -= dt;
     if (session.sessionTimer <= 0) {
       session.cachedAnimState = null;
+      const pAId = session.participantA.characterId;
       const pBId = session.participantB?.characterId;
-      const duoTag = pBId ? `${session.participantA.characterId}+${pBId}` : session.participantA.characterId;
+      const duoTag = pBId ? `${pAId}+${pBId}` : pAId;
+      const actors = pBId ? [pAId, pBId] : [pAId];
       if (session.currentRepeatIndex + 1 < session.repeatsPerAnim) {
         session.currentRepeatIndex++;
         const currentAnim = session.playlist[session.currentAnimIndex];
         session.sessionTimer = currentAnim?.duration ?? 5.0;
-        appLog(duoTag, `🔄 Répétition Duo (${session.currentRepeatIndex + 1}/${session.repeatsPerAnim}) : "${currentAnim?.label}"`);
+        appLog(
+          duoTag,
+          `🔄 Répétition Duo (${session.currentRepeatIndex + 1}/${session.repeatsPerAnim}) : "${currentAnim?.label}"`,
+          {
+            category: 'duo',
+            action: 'duo_repeat',
+            actors,
+            animation: currentAnim ? { id: currentAnim.id, mode: 'duo', label: currentAnim.label, actorId: pAId, partnerId: pBId } : undefined,
+            object: { id: session.location.objectId, slotId: session.location.slotId },
+          }
+        );
       } else {
         session.currentRepeatIndex = 0;
         session.currentAnimIndex++;
         if (session.currentAnimIndex < session.playlist.length) {
           const nextAnim = session.playlist[session.currentAnimIndex];
           session.sessionTimer = nextAnim?.duration ?? 5.0;
-          appLog(duoTag, `🎬 Nouvelle animation Duo (${session.currentAnimIndex + 1}/${session.playlist.length}) : "${nextAnim?.label}" (x${session.repeatsPerAnim})`);
+          appLog(
+            duoTag,
+            `🎬 Nouvelle animation Duo (${session.currentAnimIndex + 1}/${session.playlist.length}) : "${nextAnim?.label}" (x${session.repeatsPerAnim})`,
+            {
+              category: 'duo',
+              action: 'duo_next',
+              actors,
+              animation: nextAnim ? { id: nextAnim.id, mode: 'duo', label: nextAnim.label, actorId: pAId, partnerId: pBId } : undefined,
+              object: { id: session.location.objectId, slotId: session.location.slotId },
+            }
+          );
         } else {
           session.isSessionPlaying = false;
           session.isSessionComplete = true;
-          appLog(duoTag, `✨ Session Duo terminée ! Les 2 PNJs reprennent leur vie autonome.`);
+          appLog(duoTag, `✨ Session Duo terminée ! Les 2 PNJs reprennent leur vie autonome.`, {
+            category: 'duo',
+            action: 'duo_end',
+            actors,
+            object: { id: session.location.objectId, slotId: session.location.slotId },
+          });
         }
       }
       this.emitChange();
@@ -370,8 +409,18 @@ class DuoSessionManager {
       this.charToSession.set(closestId, session);
       OccupancyManager.claimSlot(session.location.objectId, `${session.location.slotId}:roleB`, closestId);
 
-
-      appLog(`${callerId}+${closestId}`, `📢 ${callerId} invite ${closestId} (${minDistance.toFixed(0)} cm) à rejoindre ${locLabel} !`);
+      const firstAnim = session.playlist[0];
+      appLog(
+        `${callerId}+${closestId}`,
+        `📢 ${callerId} invite ${closestId} (${minDistance.toFixed(0)} cm) à rejoindre ${locLabel} !`,
+        {
+          category: 'duo',
+          action: 'duo_invite',
+          actors: [callerId, closestId],
+          animation: firstAnim ? { id: firstAnim.id, mode: 'duo', label: firstAnim.label, actorId: callerId, partnerId: closestId } : undefined,
+          object: { id: session.location.objectId, label: locLabel, slotId: session.location.slotId },
+        }
+      );
       document.dispatchEvent(new CustomEvent('npc-invite-duo', {
         detail: {
           targetId: closestId,
@@ -469,7 +518,18 @@ class DuoSessionManager {
         }
         existing.participantB = { characterId: leaderId, role: 'roleB', isReady: false };
         this.charToSession.set(leaderId, existing);
-        appLog(`${existing.participantA?.characterId}+${leaderId}`, `🤝 ${leaderId} rejoint la session Duo sur ${obj.name} en Rôle B avec ${existing.participantA?.characterId} !`);
+        const pAId = existing.participantA?.characterId;
+        appLog(
+          `${pAId}+${leaderId}`,
+          `🤝 ${leaderId} rejoint la session Duo sur ${obj.name} en Rôle B avec ${pAId} !`,
+          {
+            category: 'duo',
+            action: 'duo_join',
+            actors: pAId ? [pAId, leaderId] : [leaderId],
+            animation: { id: curDef.id, mode: 'duo', label: curDef.label, actorId: pAId, partnerId: leaderId },
+            object: { id: objectId, label: obj.name, slotId: actualSlotId },
+          }
+        );
         return { targetA: existing.participantA?.characterId ?? '', targetB: leaderId, posA, posB, rotA, rotB, actualSlotId };
       }
       return null;
@@ -515,7 +575,13 @@ class DuoSessionManager {
       const safeAnchor = findDuoAnchor(anchorPos, anchorRotY, playlist,
         getNavigationGraph(getAgentProfile(targetA)), getNavigationGraph(getAgentProfile(targetB)));
       if (!safeAnchor) {
-        appLog(`${targetA}+${targetB}`, `🚧 Impossible de placer le duo ${obj.name} sur un sol praticable pour toute la séquence`);
+        appLog(`${targetA}+${targetB}`, `🚧 Impossible de placer le duo ${obj.name} sur un sol praticable pour toute la séquence`, {
+          category: 'duo',
+          action: 'duo_placement_failed',
+          actors: [targetA, targetB],
+          animation: { id: def.id, mode: 'duo', label: def.label, actorId: targetA, partnerId: targetB },
+          object: { id: objectId, label: obj.name, slotId: actualSlotId },
+        });
         return null;
       }
       anchorPos = safeAnchor;
@@ -547,7 +613,17 @@ class DuoSessionManager {
 
     const { posA, posB, rotA, rotB } = computeWorldTransform(anchorPos, anchorRotY, def.offsetB, def.rotB);
 
-    appLog(`${targetA}+${targetB}`, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur A) et ${targetB} (Partenaire B) !`);
+    appLog(
+      `${targetA}+${targetB}`,
+      `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur A) et ${targetB} (Partenaire B) !`,
+      {
+        category: 'duo',
+        action: 'duo_launch',
+        actors: [targetA, targetB],
+        animation: { id: def.id, mode: 'duo', label: def.label, actorId: targetA, partnerId: targetB },
+        object: { id: objectId, label: obj.name, slotId: actualSlotId },
+      }
+    );
 
     if (requestedLeaderId && requestedLeaderId !== targetA && requestedLeaderId !== targetB) {
       document.dispatchEvent(new CustomEvent('npc-invite-duo', {
@@ -612,7 +688,13 @@ class DuoSessionManager {
     const safeAnchor = findDuoAnchor(this.basePos, this.defaultLocation.anchorRotY, [def],
       getNavigationGraph(getAgentProfile(targetA)), getNavigationGraph(getAgentProfile(targetB)));
     if (!safeAnchor) {
-      appLog(`${targetA}+${targetB}`, `🚧 Impossible de placer le duo "${def.label}" sur un sol praticable`);
+      appLog(`${targetA}+${targetB}`, `🚧 Impossible de placer le duo "${def.label}" sur un sol praticable`, {
+        category: 'duo',
+        action: 'duo_placement_failed',
+        actors: [targetA, targetB],
+        animation: { id: def.id, mode: 'duo', label: def.label, actorId: targetA, partnerId: targetB },
+        object: { id: 'duo-zone', slotId: 'duo-random' },
+      });
       return null;
     }
     session.location = { ...this.defaultLocation, anchorPos: safeAnchor };
@@ -656,9 +738,19 @@ class DuoSessionManager {
 
 
     session.isSessionPlaying = isAlreadyThereA && isAlreadyThereB;
-    appLog(`${targetA}+${targetB}`, session.isSessionPlaying
-      ? `🎭 Duo instantané (2 déjà sur place) : "${def.label}" avec ${targetA} & ${targetB}`
-      : `🎮 Appel Duo (${fromId}) : "${def.label}" assignée à ${targetA} (Meneur) et ${targetB} (Partenaire)`);
+    appLog(
+      `${targetA}+${targetB}`,
+      session.isSessionPlaying
+        ? `🎭 Duo instantané (2 déjà sur place) : "${def.label}" avec ${targetA} & ${targetB}`
+        : `🎮 Appel Duo (${fromId}) : "${def.label}" assignée à ${targetA} (Meneur) et ${targetB} (Partenaire)`,
+      {
+        category: 'duo',
+        action: session.isSessionPlaying ? 'duo_instant' : 'duo_force',
+        actors: [targetA, targetB],
+        animation: { id: def.id, mode: 'duo', label: def.label, actorId: targetA, partnerId: targetB },
+        object: { id: 'duo-zone', slotId: 'duo-random' },
+      }
+    );
 
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
       detail: {

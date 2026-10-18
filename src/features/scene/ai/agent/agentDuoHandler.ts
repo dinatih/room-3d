@@ -43,7 +43,11 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
     setDuoWaitTimer(nextTimer);
 
     if (nextTimer > 20.0) {
-      appLog(characterId, `⏳ Duo timeout : pas de partenaire, reprise du parcours`);
+      appLog(characterId, `⏳ Duo timeout : pas de partenaire, reprise du parcours`, {
+        category: 'duo',
+        action: 'duo_timeout',
+        actors: [characterId],
+      });
       onSessionEnded();
       return true;
     }

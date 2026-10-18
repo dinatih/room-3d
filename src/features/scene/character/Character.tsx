@@ -670,7 +670,10 @@ export function Character({
     if (isIdleTimeout) {
       if (!hasLoggedIdleRef.current && isActive) {
         hasLoggedIdleRef.current = true;
-        appLog('system', `💤 Moteur 3D suspendu (${APP_IDLE_TIMEOUT_SECONDS}s inactif). Bougez pour reprendre.`);
+        appLog('system', `💤 Moteur 3D suspendu (${APP_IDLE_TIMEOUT_SECONDS}s inactif). Bougez pour reprendre.`, {
+          category: 'system',
+          action: 'idle_suspend',
+        });
       }
       return;
     } else if (hasLoggedIdleRef.current) {
@@ -936,9 +939,20 @@ export function Character({
           lastLoggedAnimRef.current = target;
           const isWalkAnim = target === 'walk' || target.includes('/locomotion/') || target.includes('walk') || target.includes('run');
           if (!isWalkAnim) {
-            const cleanName = target.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || target;
+            const animDef = getAnimationDef(target);
+            const cleanName = animDef?.label || target.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || target;
             const emoji = (target === resolveAnimationId('idle') || target === 'idle') ? '🧘' : '💃';
-            appLog(id, `${emoji} Animation : ${cleanName}`);
+            appLog(id, `${emoji} Animation : ${cleanName}`, {
+              category: 'anim',
+              action: 'anim_play',
+              actors: [id],
+              animation: {
+                id: animDef?.id ?? target,
+                mode: 'solo',
+                label: cleanName,
+                actorId: id,
+              },
+            });
           }
         }
       }

@@ -736,6 +736,16 @@ export function Studio() {
     return () => window.removeEventListener('keydown', onKey);
   }, [onToggleLayer, toggleLayer]);
 
+  useEffect(() => {
+    const onOpenInventoryTarget = (e: Event) => {
+      const detail = (e as CustomEvent<import('@features/ui/AppConsole').OpenInventoryTargetDetail>).detail;
+      setInventoryInitialCat(detail?.type === 'animation' ? 'animations' : 'all');
+      setShowInventory(true);
+    };
+    document.addEventListener('open-inventory-target', onOpenInventoryTarget);
+    return () => document.removeEventListener('open-inventory-target', onOpenInventoryTarget);
+  }, []);
+
 
   const [buildAnimMatrix,  setBuildAnimMatrix]  = useState(false);
   const [assetsLoaded,     setAssetsLoaded]     = useState(false);
