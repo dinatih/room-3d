@@ -5,7 +5,7 @@
  * et le système de SmartObjects (smartObjectRegistry / agentInstructionCoords).
  */
 
-import { ROOM_W } from './wallData';
+import { ROOM_D, ROOM_W } from './wallData';
 
 export interface FurnitureTransform {
   x: number;
@@ -17,15 +17,24 @@ export interface FurnitureTransform {
 export const movingFurniture = new Set<string>();
 export const currentFurnitureTransforms: Record<string, FurnitureTransform> = {};
 
+// Configuration lit double au mur Ouest : plateaux Bollsidan 68 × 36 cm,
+// dos au mur Est. Le bureau 2 touche le congélateur sous le Kallax SE
+// (centre à ROOM_D - 60 - 40.5 / 2 ; profondeur du modèle : 47.37 cm).
+const DESK_WIDTH = 68;
+const DESK_DEPTH = 36;
+const EAST_DESK_X = ROOM_W - DESK_DEPTH / 2;
+const FREEZER_NORTH_Z = ROOM_D - 60 - 40.5 / 2 - 47.37 / 2;
+const EAST_DESK2_Z = FREEZER_NORTH_Z - DESK_WIDTH / 2;
+
 export const DESK1_POSITIONS: readonly FurnitureTransform[] = [
   { x: 73.5, z: 18,   ry: 0           },
-  { x: 22,   z: 74.5, ry: Math.PI / 2 },
+  { x: EAST_DESK_X, z: EAST_DESK2_Z - DESK_WIDTH, ry: -Math.PI / 2 },
   { x: 40,   z: 60,   ry: Math.PI     },
 ];
 
 export const DESK2_POSITIONS: readonly FurnitureTransform[] = [
   { x: 240, z: 270, ry: Math.PI     },
-  { x: 200, z: 170, ry: Math.PI     },
+  { x: EAST_DESK_X, z: EAST_DESK2_Z, ry: -Math.PI / 2 },
   { x: 240, z: 120, ry: Math.PI     },
   { x: 73.5, z: 18, ry: Math.PI     },
 ];
