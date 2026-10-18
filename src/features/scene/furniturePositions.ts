@@ -58,6 +58,11 @@ export interface DoubleBedConfig {
   east: { x: number; z: number };
 }
 
+export const SINGLE_BED_POSITIONS = {
+  west: { x: 74, z: 151.5, ry: Math.PI / 2 },
+  east: { x: ROOM_W - 45.5, z: 190, ry: Math.PI / 2 },
+} as const;
+
 export const DOUBLE_BED_POSITIONS: readonly DoubleBedConfig[] = [
   { label: 'Mur Ouest', west: { x: 74, z: 170 },               east: { x: 157, z: 170 } },
   { label: 'Mur Est',   west: { x: ROOM_W - 128.5, z: 190 },     east: { x: ROOM_W - 45.5, z: 190 } },

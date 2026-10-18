@@ -20,7 +20,7 @@ import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from './items/kallaxSeDrona
 import { DRONA_SPECIAL_ITEMS, KALLAX_NW_POSITION, KALLAX_NW_ROTATION } from './items/dronaStorage';
 import { positionState } from './positionState';
 import { BATHROOM_STORAGE_ITEMS } from './items/bathroomStorage';
-import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, FurnitureTransform } from './furniturePositions';
+import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, SINGLE_BED_POSITIONS, FurnitureTransform } from './furniturePositions';
 
 export interface ObjectTransform {
   position: [number, number, number];
@@ -98,9 +98,9 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
         rotationY: Math.PI,
       };
     case 'bed-west':
-      return { position: [74, 0, 151.5], rotationY: Math.PI / 2 };
+      return { position: [SINGLE_BED_POSITIONS.west.x, 0, SINGLE_BED_POSITIONS.west.z], rotationY: SINGLE_BED_POSITIONS.west.ry };
     case 'bed-east':
-      return { position: [ROOM_W - 45.5, 0, 190], rotationY: Math.PI / 2 };
+      return { position: [SINGLE_BED_POSITIONS.east.x, 0, SINGLE_BED_POSITIONS.east.z], rotationY: SINGLE_BED_POSITIONS.east.ry };
     case 'sdb-closet':
       return {
         position: [SDB_CLOSET_X, 0, SDB_CLOSET_Z],

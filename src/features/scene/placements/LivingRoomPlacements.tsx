@@ -60,6 +60,7 @@ import {
   SMORKULL_POSITIONS,
   AIRPERFORMER_POSITIONS,
   DOUBLE_BED_POSITIONS,
+  SINGLE_BED_POSITIONS,
 } from '../furniturePositions';
 
 const stub = (id: string): Item =>
@@ -134,11 +135,11 @@ export function Beds() {
 
   const westPos = isDouble
     ? currentDoublePos.west
-    : { x: 74, z: 151.5 };
+    : SINGLE_BED_POSITIONS.west;
 
   const eastPos = isDouble
     ? currentDoublePos.east
-    : { x: ROOM_W - 45.5, z: 190 };
+    : SINGLE_BED_POSITIONS.east;
 
   const hoverActions = getObjectActionIds('utaker-stack').filter(id => isDouble || id !== 'bed-position');
   const doubleBedActions = isDouble ? SMART_OBJECTS['bed-double'].slots.map(slot => `smart-object:::bed-double:::${slot.slotId}`) : [];

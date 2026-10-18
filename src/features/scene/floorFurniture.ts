@@ -3,7 +3,7 @@ import { BATHTUB } from './bathtubData';
 import { SHOE_HAT_RACK } from './shoeHatRackData';
 import {
   currentFurnitureTransforms, DESK1_POSITIONS, DESK2_POSITIONS,
-  SMORKULL_POSITIONS, AIRPERFORMER_POSITIONS, DOUBLE_BED_POSITIONS, type FurnitureTransform,
+  SMORKULL_POSITIONS, AIRPERFORMER_POSITIONS, DOUBLE_BED_POSITIONS, SINGLE_BED_POSITIONS, type FurnitureTransform,
 } from './furniturePositions';
 import { positionState } from './positionState';
 import { useSceneStore } from './store/useSceneStore';
@@ -30,8 +30,8 @@ export function drawFurniture(ctx: CanvasRenderingContext2D) {
   // UTÅKER : longueur locale X=205, largeur Z=83 ; deux cadres même en lit double.
   const isDouble = useSceneStore.getState().furniture.bedDouble;
   const doublePosition = DOUBLE_BED_POSITIONS[positionState['bed-position']?.idx ?? 0];
-  const west = isDouble ? doublePosition.west : { x: 74, z: 151.5 };
-  const east = isDouble ? doublePosition.east : { x: ROOM_W - 45.5, z: 190 };
+  const west = isDouble ? doublePosition.west : SINGLE_BED_POSITIONS.west;
+  const east = isDouble ? doublePosition.east : SINGLE_BED_POSITIONS.east;
   for (const [key, fallback] of [['bed-west-position', west], ['bed-east-position', east]] as const) {
     at(currentFurnitureTransforms[key] ?? { ...fallback, ry: Math.PI / 2 }, () => {
       rect(0, 0, 205, 83, 2);
