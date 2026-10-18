@@ -1,11 +1,9 @@
 import { useLayoutEffect, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useGLTF } from '@react-three/drei';
-import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { LAYER_WALKER, LAYER_DECOR } from '@config';
 import { RIGGED_WIGS_PATHS } from '@features/inventory/inventoryData';
-import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
   naturel:  new THREE.Color(0.4, 0.25, 0.1),
@@ -77,6 +75,7 @@ export { RIGGED_WIGS_PATHS };
 
 export function disposeOwnedWigResources(root: THREE.Object3D) {
   const disposedMaterials = new Set<THREE.Material>();
+  const disposedSkeletons = new Set<THREE.Skeleton>();
 
   root.traverse((node: any) => {
     if (node.isMesh) {
@@ -92,7 +91,8 @@ export function disposeOwnedWigResources(root: THREE.Object3D) {
           }
         }
       }
-      if (node.userData.__ownedWigSkeleton) {
+      if (node.userData.__ownedWigSkeleton && !disposedSkeletons.has(node.skeleton)) {
+        disposedSkeletons.add(node.skeleton);
         node.skeleton.dispose();
       }
     }
@@ -103,45 +103,21 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   const strId = String(id);
   const cleanId = strId.replace(/^hair_/, '');
   const gltfPath = RIGGED_WIGS_PATHS[strId] || RIGGED_WIGS_PATHS[cleanId] || (typeof id === 'string' && id.endsWith('.glb') ? id : 'characters/wigs/zepeto_hair.glb');
-  const { scene: fullScene } = useGLTF(gltfPath);
+  const { scene: clonedFullScene } = useGLTFClone(gltfPath);
   const clonedHairRef = useRef<THREE.Group>(null!);
   
   const scene = useMemo(() => {
-    // Clone the ENTIRE scene to ensure SkinnedMesh binds perfectly to the bones
-    const clonedFullScene = SkeletonUtils.clone(fullScene) as THREE.Group;
-    
-    // FIX: SkeletonUtils.clone often fails to bind the skeleton correctly when portaling.
-    // We must manually re-bind all SkinnedMeshes to their cloned bones.
-    const clonedBones: { [name: string]: THREE.Bone } = {};
+    // Keep the imported hierarchy and skin bind matrices intact. Apply fitting
+    // transforms to a separate group shared by meshes and their armatures.
+    const sg = new THREE.Group();
+    sg.add(clonedFullScene);
+    let hairHeadBone: THREE.Bone | undefined;
     clonedFullScene.traverse(child => {
-      if ((child as THREE.Bone).isBone) {
-        clonedBones[child.name] = child as THREE.Bone;
-      }
-    });
-
-    clonedFullScene.traverse(child => {
+      if ((child as THREE.Mesh).isMesh) child.userData.itemName = `Perruque (${cleanId})`;
       if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
-        const sm = child as THREE.SkinnedMesh;
-        sm.userData.itemName = `Perruque (${cleanId})`;
-        // Reconstruct the skeleton using the cloned bones instead of the originals
-        const newBones = sm.skeleton.bones.map(b => clonedBones[b.name] || b);
-        const newSkeleton = new THREE.Skeleton(newBones, sm.skeleton.boneInverses);
-        sm.bind(newSkeleton, sm.bindMatrix);
-        enableAnimatedFrustumCulling(sm);
-        sm.userData.__ownedWigSkeleton = true;
-      } else if ((child as THREE.Mesh).isMesh) {
-        child.userData.itemName = `Perruque (${cleanId})`;
-        enableAnimatedFrustumCulling(child as THREE.Mesh);
-      }
-    });
-
-    let sg: THREE.Object3D | null = clonedFullScene;
-    
-    let hairHeadBone: THREE.Object3D | null = null;
-    (sg as THREE.Object3D).traverse((c: any) => {
-      const nLower = c.name.toLowerCase();
-      if ((nLower.startsWith('bip_head') || nLower.startsWith('head')) && !hairHeadBone) {
-        hairHeadBone = c;
+        const mesh = child as THREE.SkinnedMesh;
+        mesh.userData.__ownedWigSkeleton = true;
+        hairHeadBone ??= mesh.skeleton.bones.find(bone => /^(bip_head|head)/i.test(bone.name));
       }
     });
 
@@ -188,46 +164,29 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     const fix = wigFixes[strId] || wigFixes[cleanId] || { scale: 1.0, rotation: [0, 0, 0], offset: [0, 0, 0] };
     const s = fix.scale;
 
+    // Converted FBX assets already store vertices/bones in metres, but retain
+    // the FBX unit scale on their container. Normalize the imported head frame
+    // without removing that container or changing any skin bind matrices.
+    sg.updateMatrixWorld(true);
+    const headScale = hairHeadBone
+      ? hairHeadBone.getWorldScale(new THREE.Vector3())
+      : new THREE.Vector3(1, 1, 1);
+    sg.scale.set(s * scale / headScale.x, s * scale / headScale.y, s * scale / headScale.z);
+    sg.rotation.set(...fix.rotation);
+    sg.updateMatrixWorld(true);
     if (hairHeadBone) {
-      (sg as THREE.Object3D).updateMatrixWorld(true);
-      const headPos = (hairHeadBone as THREE.Object3D).position.clone();
-      (sg as THREE.Object3D).position.set(
-        -headPos.x * s * scale + fix.offset[0] * scale,
-        -headPos.y * s * scale + (attachTo ? 0.07 : 0) + fix.offset[1] * scale,
-        -headPos.z * s * scale + fix.offset[2] * scale
-      );
+      // World position here includes every imported armature transform and the
+      // fitting rotation/scale. The unattached wrapper has no transformed parent.
+      const headPos = hairHeadBone.getWorldPosition(new THREE.Vector3());
+      sg.position.copy(headPos).negate();
+      sg.position.y += attachTo ? 0.07 : 0;
     } else {
-      (sg as THREE.Object3D).position.set(fix.offset[0] * scale, 0.15 * scale + fix.offset[1] * scale, fix.offset[2] * scale);
+      sg.position.y = 0.15 * scale;
     }
-
-    // Apply the user requested scale DIRECTLY to sg instead of the wrapper group
-    (sg as THREE.Object3D).scale.set(s * scale, s * scale, s * scale);
-    (sg as THREE.Object3D).rotation.set(fix.rotation[0], fix.rotation[1], fix.rotation[2]);
-    (sg as THREE.Object3D).userData.isWigRoot = true;
-
-    // Pour le pack de perruques 100 à 112 (issues d'une scène Sketchfab partagée avec décalage horizontal Hair100_ARM),
-    // raccrocher rootBone à sg est nécessaire pour ramener la coupe à l'origine.
-    // Pour les perruques individuelles (zHairezt, Coupe #14 à #52 dont Coupe #21), ne pas reparenter pour préserver l'armature FBX.
-    const isHairPackWig = Number(cleanId) >= 100 && Number(cleanId) <= 112;
-    if (isHairPackWig) {
-      let rootBone: THREE.Bone | null = null;
-      clonedFullScene.traverse(child => {
-        if ((child as THREE.Bone).isBone && !rootBone) {
-          let p = child;
-          while (p.parent && (p.parent as THREE.Bone).isBone) {
-            p = p.parent as THREE.Bone;
-          }
-          rootBone = p as THREE.Bone;
-        }
-      });
-
-      if (rootBone && (rootBone as THREE.Bone).parent !== sg) {
-        (sg as THREE.Object3D).add(rootBone as THREE.Bone);
-      }
-    }
-
-    return (sg as THREE.Object3D);
-  }, [fullScene, id, scale, cleanId, strId, attachTo]);
+    sg.position.add(new THREE.Vector3(...fix.offset).multiplyScalar(scale));
+    sg.userData.isWigRoot = true;
+    return sg;
+  }, [clonedFullScene, scale, cleanId, strId, attachTo]);
 
   const hairBonesRef = useRef<WigBone[]>([]);
   
@@ -235,6 +194,8 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     if (!scene) return;
 
     // 1. Extraire les os pour l'animation/physique et configurer les matériaux
+    hairBonesRef.current.forEach(({ bone, restQ }) => bone.quaternion.copy(restQ));
+    hasResetWindRef.current = false;
     const extractedBones: WigBone[] = [];
     scene.traverse((child: any) => {
       if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
