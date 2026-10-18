@@ -640,8 +640,8 @@ export function Studio() {
         if (k === 'u') { e.preventDefault(); onToggleLayer('equipment'); cameraState.invalidate?.(); return; }
         if (k === 'g') { e.preventDefault(); onToggleLayer('mirrorsHD'); cameraState.invalidate?.(); return; }
         if (k === 'z') { e.preventDefault(); onToggleLayer('aiZones'); cameraState.invalidate?.(); return; }
-        if (k === 'c') { e.preventDefault(); onToggleLayer('laraBottomOff'); cameraState.invalidate?.(); return; }
-        if (k === 'x') { e.preventDefault(); onToggleLayer('laraNude'); cameraState.invalidate?.(); return; }
+        if (k === 'c') { e.preventDefault(); useSceneStore.getState().setLaraClothing('laraBottom', useSceneStore.getState().layers.laraBottom === 'none' ? 'native' : 'none'); cameraState.invalidate?.(); return; }
+        if (k === 'x') { e.preventDefault(); const store = useSceneStore.getState(); const value = store.layers.laraTop === 'none' && store.layers.laraBottom === 'none' ? 'native' : 'none'; store.setLaraClothing('laraTop', value); store.setLaraClothing('laraBottom', value); cameraState.invalidate?.(); return; }
         return;
       }
 

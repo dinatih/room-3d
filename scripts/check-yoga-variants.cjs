@@ -40,7 +40,7 @@ async function main() {
       const parts = extractCharacterParts(target);
       const hipsName = resolveTargetBoneName(target, 'Hips');
       check(hipsName, 'Missing Lara hips');
-      applyClothingAndAccessoriesVisibility(parts, { laraShoes: true, laraNude: false, laraTopOff: false, laraBottomOff: false, showAccessories: false, laraPistols: false, equipment: { holster: false, pistols: false, backpack: false } });
+      applyClothingAndAccessoriesVisibility(parts, { laraShoes: true, laraTop: 'native', laraBottom: 'native', showAccessories: false, laraPistols: false, equipment: { holster: false, pistols: false, backpack: false } });
       const restBones = [];
       target.traverse(o => { if (o.isBone) restBones.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone()]); });
       function resetTarget() {

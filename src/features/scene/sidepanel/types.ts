@@ -1,3 +1,5 @@
+export type LaraClothing = 'native' | 'bikini' | 'none';
+
 import type { PlaneModelKey } from '../PaperPlane';
 import type { LaraCountMode } from '../characterConfig';
 import {
@@ -147,11 +149,8 @@ export interface LayerState {
   animals:      boolean;
   accessories:  boolean;
   laraPistols:  boolean;
-  laraOnePiece?: boolean;
-  laraBikini?: boolean;
-  laraNude?:    boolean;
-  laraTopOff?:  boolean;
-  laraBottomOff?: boolean;
+  laraTop: LaraClothing;
+  laraBottom: LaraClothing;
   laraShoes?:   boolean;
   laraRealisticTextures?: boolean;
   laraCount?:   LaraCountMode;

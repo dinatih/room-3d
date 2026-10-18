@@ -1,6 +1,6 @@
 import { useSceneStore } from '../../store/useSceneStore';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
-import type { LayerState } from '../types';
+import type { LayerState, LaraClothing } from '../types';
 
 export interface CharacterSectionProps {
   layers: LayerState;
@@ -407,11 +407,17 @@ export function CharacterSection({
       {layerBtn('pink',   iconLabel('bi-droplet-half', 'Peau & tissus réalistes (Mat)'), 'laraRealisticTextures')}
       {layerBtn('light',  iconLabel('bi-crosshair', 'Pistolets Lara'), 'laraPistols')}
       {layerBtn('light',  iconLabel('bi-handbag', 'Accessoires Lara'), 'accessories')}
-      {layerBtn('pink', iconLabel('bi-person-standing-dress', 'Enlever le short — maillot 1 pièce'), 'laraOnePiece')}
-      {layerBtn('pink', iconLabel('bi-water', 'Bikini rouge'), 'laraBikini')}
-      {layerBtn('pink',   iconLabel('bi-person-standing', 'Déshabiller Lara (Alt+X)'), 'laraNude')}
-      {layerBtn('pink',   iconLabel('bi-person-standing-dress', 'Enlever le haut (Alt+Z)'), 'laraTopOff')}
-      {layerBtn('pink',   iconLabel('bi-person-standing-dress', 'Enlever le bas (Alt+C)'), 'laraBottomOff')}
+      {(['laraTop', 'laraBottom'] as const).map((key) => (
+        <label key={key} className="d-flex align-items-center justify-content-between gap-2 mb-2">
+          <span>{key === 'laraTop' ? 'Haut' : 'Bas'} :</span>
+          <select className="form-select form-select-sm w-auto" aria-label={key === 'laraTop' ? 'Haut' : 'Bas'}
+            value={layers[key]} onChange={event => useSceneStore.getState().setLaraClothing(key, event.target.value as LaraClothing)}>
+            <option value="native">Native</option>
+            <option value="bikini">Bikini</option>
+            <option value="none">Aucun</option>
+          </select>
+        </label>
+      ))}
       {layerBtn('light',  iconLabel('bi-person-walking', 'Chaussures Lara'), 'laraShoes')}
       {layerBtn('pink',   iconLabel('bi-activity', 'Physique buste'), 'breastPhysics')}
       {layerBtn('pink',   iconLabel('bi-scissors', 'Physique cheveux'), 'hairPhysics')}

@@ -1,3 +1,4 @@
+import type { LaraClothing } from './sidepanel/types';
 import * as THREE from 'three';
 import { ACCESSORIES_MESH_NAMES } from './characterConfig';
 import { resolveTargetBoneName, getDepth } from './retargeting/index';
@@ -34,8 +35,6 @@ export interface CharacterParts {
   feetClothed: CharacterMeshPart[];
   gloves: CharacterMeshPart[];
   hands: CharacterMeshPart[];
-  onePieceTorso: CharacterMeshPart[];
-  onePieceBottom: CharacterMeshPart[];
   bikiniTop: CharacterMeshPart[];
   bikiniBottom: CharacterMeshPart[];
   torsoClothed: CharacterMeshPart[];
@@ -134,8 +133,6 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
   const feetClothed: CharacterMeshPart[] = [];
   const gloves: CharacterMeshPart[] = [];
   const hands: CharacterMeshPart[] = [];
-  const onePieceTorso: CharacterMeshPart[] = [];
-  const onePieceBottom: CharacterMeshPart[] = [];
   const bikiniTop: CharacterMeshPart[] = [];
   const bikiniBottom: CharacterMeshPart[] = [];
   const torsoClothed: CharacterMeshPart[] = [];
@@ -244,11 +241,7 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
       }
 
       // Clothing / Body classification
-      if(name.startsWith('body_onepiece_torso')) {
-        onePieceTorso.push({ mesh });
-      } else if(name.startsWith('shirt_swimsuit_bottom')) {
-        onePieceBottom.push({ mesh });
-      } else if(name.startsWith('bikini_top')) {
+      if(name.startsWith('bikini_top')) {
         bikiniTop.push({ mesh });
       } else if(name.startsWith('bikini_bottom')) {
         bikiniBottom.push({ mesh });
@@ -314,8 +307,6 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
     feetClothed,
     gloves,
     hands,
-    onePieceTorso,
-    onePieceBottom,
     bikiniTop,
     bikiniBottom,
     torsoClothed,
@@ -355,11 +346,8 @@ export function setPartVisibility(partList: CharacterMeshPart[], visible: boolea
 }
 
 export interface ClothingAndAccessoriesOptions {
-  laraOnePiece?: boolean;
-  laraBikini?: boolean;
-  laraNude: boolean;
-  laraTopOff: boolean;
-  laraBottomOff: boolean;
+  laraTop: LaraClothing;
+  laraBottom: LaraClothing;
   laraShoes: boolean;
   showAccessories: boolean;
   laraPistols: boolean;
@@ -374,10 +362,8 @@ export function applyPistolVisibility(parts: CharacterParts, opts: Pick<Clothing
 }
 
 export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opts: ClothingAndAccessoriesOptions) {
-  const bikini=!!opts.laraBikini;
-  const onePiece=!!opts.laraOnePiece && !bikini;
-  const isTopNude = bikini || opts.laraNude || opts.laraTopOff;
-  const isBottomNude = onePiece || bikini || opts.laraNude || opts.laraBottomOff;
+  const isTopNude = opts.laraTop !== 'native';
+  const isBottomNude = opts.laraBottom !== 'native';
 
   // Boots / Feet / Gloves / Hands
   setPartVisibility(parts.boots, opts.laraShoes);
@@ -386,14 +372,11 @@ export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opt
   setPartVisibility(parts.gloves, true);
   setPartVisibility(parts.hands, false);
 
-  setPartVisibility(parts.onePieceBottom,onePiece && !opts.laraNude && !opts.laraTopOff && !opts.laraBottomOff);
-  setPartVisibility(parts.bikiniTop,bikini && !opts.laraNude && !opts.laraTopOff);
-  setPartVisibility(parts.bikiniBottom,bikini && !opts.laraNude && !opts.laraBottomOff);
+  setPartVisibility(parts.bikiniTop,opts.laraTop === 'bikini');
+  setPartVisibility(parts.bikiniBottom,opts.laraBottom === 'bikini');
 
   // Torso / Legs
   setPartVisibility(parts.torsoClothed, !isTopNude);
-  if(onePiece)setPartVisibility(parts.torsoClothed.filter(({mesh})=>mesh.name==='body_torso'),false);
-  setPartVisibility(parts.onePieceTorso,onePiece && !isTopNude);
   setPartVisibility(parts.torsoNude, isTopNude);
   setPartVisibility(parts.legsClothed, !isBottomNude);
   setPartVisibility(parts.legsClothed.filter(({ mesh }) => mesh.name === 'body_legs'), !isBottomNude && opts.laraShoes);

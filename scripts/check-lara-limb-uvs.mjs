@@ -104,7 +104,7 @@ try {
       for(const key of ['boots','feet','feetClothed','legsBarefoot','gloves','hands']) if(!parts[key].length) throw Error(`${style}: missing ${key}`);
       for(const laraShoes of [true,false])
       for(const [laraNude,laraTopOff,laraBottomOff] of [[false,false,false],[false,true,false],[false,false,true],[true,false,false]]) {
-        applyClothingAndAccessoriesVisibility(parts,{laraShoes,laraNude,laraTopOff,laraBottomOff,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
+        applyClothingAndAccessoriesVisibility(parts,{laraShoes,laraTop:laraNude||laraTopOff?'none':'native',laraBottom:laraNude||laraBottomOff?'none':'native',showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
         for(const [key,visible] of [['boots',laraShoes],['feet',!laraShoes&&(laraNude||laraBottomOff)],['feetClothed',!laraShoes&&!laraNude&&!laraBottomOff],['legsBarefoot',!laraShoes&&!laraNude&&!laraBottomOff],['gloves',true],['hands',false],['torsoClothed',!laraNude&&!laraTopOff],['torsoNude',laraNude||laraTopOff],['legsNude',laraNude||laraBottomOff]]) {
           if(parts[key].some(({mesh})=>mesh.visible!==visible)) throw Error(`${style}: incorrect ${key} visibility`);
         }
@@ -322,7 +322,7 @@ try {
     const camera=new THREE.OrthographicCamera(-.275,.275,.2,-.2,.01,10);camera.position.set(-.1,1.4,3);camera.lookAt(-.1,1.4,0);
     const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1100,800);renderer.setClearColor(0xf3f4f6);document.body.replaceChildren(renderer.domElement);
     window.delphinaShoulder=topOff=>{
-      applyClothingAndAccessoriesVisibility(parts,{laraShoes:true,laraNude:false,laraTopOff:topOff,laraBottomOff:false,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
+      applyClothingAndAccessoriesVisibility(parts,{laraShoes:true,laraTop:topOff?'none':'native',laraBottom:'native',showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
       scene.traverse(m=>{if(m.isMesh&&(m.name.includes('hair')||m.name==='braid'))m.visible=false;});
       renderer.render(view,camera);
     };

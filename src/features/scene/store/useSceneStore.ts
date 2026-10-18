@@ -18,6 +18,8 @@ import {
 } from '@features/scene/camera/cameraUrlParams';
 import {
   parseUrlLayerOverrides,
+  parseUrlLaraClothing,
+  updateUrlLaraClothing,
   updateUrlLayer,
   parseUrlGroundType,
   updateUrlGroundType,
@@ -26,7 +28,7 @@ import {
   type GraphicsPreset,
   LAYER_DEFAULTS,
 } from './layerUrlParams';
-import type { FurnitureState, LayerState, GroundType } from '../sidepanel/types';
+import type { FurnitureState, LayerState, GroundType, LaraClothing } from '../sidepanel/types';
 import {
   type LaraCountMode,
   isExtraCharacter,
@@ -147,6 +149,7 @@ interface SceneStore {
   setLaraCount: (count: LaraCountMode | 0) => void;
   setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
+  setLaraClothing: (key: 'laraTop' | 'laraBottom', value: LaraClothing) => void;
   toggleLayer: (key: keyof LayerState) => void;
   setActiveExtraIds: (ids: string[]) => void;
   toggleExtraCharacter: (id: string) => void;
@@ -189,6 +192,7 @@ const initialLayers: LayerState = {
   // Booléens depuis LAYER_DEFAULTS (source unique de vérité)
   ...(LAYER_DEFAULTS as unknown as LayerState),
   // Valeurs non-booléennes (pas dans LAYER_DEFAULTS)
+  ...parseUrlLaraClothing(),
   laraCount: parseUrlCharacterCount(),
   groundType: getRandomGrassType(),
   // Physique poitrine
@@ -628,6 +632,12 @@ export const useSceneStore = create<SceneStore>((set) => ({
     });
   },
 
+  setLaraClothing: (key, value) => {
+    set(state => ({ layers: { ...state.layers, [key]: value } }));
+    updateUrlLaraClothing(key, value);
+    cameraState.invalidate?.();
+  },
+
   toggleLayer: (key) => {
     set((state) => {
       let isActivating = !state.layers[key];
@@ -641,12 +651,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
         }
       }
       const nextLayers = { ...state.layers, [key]: isActivating };
-      if((key==='laraBikini' || key==='laraOnePiece') && isActivating){
-        nextLayers.laraNude=false;nextLayers.laraTopOff=false;nextLayers.laraBottomOff=false;
-        if(key==='laraBikini')nextLayers.laraOnePiece=false;
-        else nextLayers.laraBikini=false;
-        updateUrlLayer(key==='laraBikini'?'laraOnePiece':'laraBikini',false);
-      }
       updateUrlLayer(key, isActivating);
       if (key === 'mirrors') {
         cameraState.invalidate?.();

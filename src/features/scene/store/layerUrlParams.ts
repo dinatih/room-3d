@@ -1,4 +1,4 @@
-import type { LayerState, GroundType } from '../sidepanel/types';
+import type { LayerState, GroundType, LaraClothing } from '../sidepanel/types';
 
 /**
  * Source unique de vérité pour les valeurs par défaut de tous les calques booléens.
@@ -47,11 +47,6 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   showAllLaraStyles: true,
   accessories: true,
   laraPistols: true,
-  laraOnePiece: false,
-  laraBikini: false,
-  laraNude: false,
-  laraTopOff: false,
-  laraBottomOff: false,
   laraShoes: true,
   laraRealisticTextures: false,
   pillarsOnly: false,
@@ -88,8 +83,6 @@ export interface LayerUrlMapping {
 }
 
 export const MONITORED_LAYERS: LayerUrlMapping[] = [
-  {layerKey:'laraOnePiece',canonicalParam:'laraOnePiece',urlParams:['onepiece','maillot']},
-  {layerKey:'laraBikini',canonicalParam:'laraBikini',urlParams:['bikini']},
   {
     layerKey: 'wallStructure',
     canonicalParam: 'wallStructure',
@@ -452,4 +445,21 @@ export function updateUrlLayer(key: keyof LayerState, value: boolean) {
 
     window.history.replaceState(null, '', url.toString());
   } catch {}
+}
+
+export function parseUrlLaraClothing(): { laraTop: LaraClothing; laraBottom: LaraClothing } {
+  const params = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search || window.location.hash.split('?')[1]);
+  const read = (key: string): LaraClothing => {
+    const value = params.get(key);
+    return value === 'bikini' || value === 'none' ? value : 'native';
+  };
+  return { laraTop: read('laraTop'), laraBottom: read('laraBottom') };
+}
+
+export function updateUrlLaraClothing(key: 'laraTop' | 'laraBottom', value: LaraClothing) {
+  if (typeof window === 'undefined') return;
+  const url = new URL(window.location.href);
+  if (value === 'native') url.searchParams.delete(key);
+  else url.searchParams.set(key, value);
+  window.history.replaceState(null, '', url.toString());
 }
