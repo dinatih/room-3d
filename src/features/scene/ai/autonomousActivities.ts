@@ -26,7 +26,6 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   david:    'est-neighbor-flat',
   james:    'est-neighbor-flat',
   lewis:    'est-neighbor-flat',
-  jennifer: 'dance-bed-west-mid',
   skeleton: 'combat-point',
   curious_skeleton: 'combat-point',
 };

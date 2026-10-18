@@ -21,8 +21,6 @@ process() {
 }
 
 # 3 premiers validés
-process "Jennifer" "public/characters/jennifer/jennifer.glb"
-
 # Nouveaux demandés
 process "Hayley"   "public/characters/hayley/hayley.glb"
 process "Gloria"   "public/characters/gloria/gloria.glb"

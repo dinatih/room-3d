@@ -36,12 +36,6 @@ CHARACTERS_TO_CONVERT = [
         "scale_mult": 1.0,
     },
     {
-        "id": "jennifer",
-        "fbx": "Jennifer.fbx",
-        "name": "Jennifer",
-        "scale_mult": 1.0,
-    },
-    {
         "id": "arissa",
         "fbx": "Arissa.fbx",
         "name": "Arissa",

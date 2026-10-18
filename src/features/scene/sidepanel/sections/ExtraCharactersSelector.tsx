@@ -128,8 +128,8 @@ export function ExtraCharactersSelector({
             onClick={() => toggleExtraGroup(ANATOMICAL_EXTRA_IDS)}
             title={
               allAnatomicalSelected
-                ? 'Désélectionner les Anatomiques (Mannequin, Maynard, 2 squelettes)'
-                : 'Sélectionner les Anatomiques (Mannequin, Maynard, 2 squelettes)'
+                ? 'Désélectionner les Anatomiques (Mannequin, 2 squelettes)'
+                : 'Sélectionner les Anatomiques (Mannequin, 2 squelettes)'
             }
           >
             <i className={`bi ${allAnatomicalSelected ? 'bi-check-lg' : 'bi-plus-lg'}`} aria-hidden="true" />
@@ -151,7 +151,7 @@ export function ExtraCharactersSelector({
           <input
             type="text"
             className="form-control form-control-sm bg-transparent border-secondary-subtle text-dark"
-            placeholder="Filtrer (ex: Alex, Maynard, Hayley...)"
+            placeholder="Filtrer (ex: Alex, Hayley, Gloria...)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ fontSize: isMobile ? '12px' : '11px' }}

@@ -47,8 +47,6 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'ivy',               name: 'Ivy',                   emoji: '🌿', color: '#2ecc71', path: 'characters/ivy/ivy.glb',                             pos: [0, 0, 0], rot: 0, variant: 'native', height: 170.5, isLara: false },
   { id: 'valby',             name: 'Valby',     emoji: '🫧', color: '#00d2ff', path: 'characters/valby/valby.glb',                         pos: [0, 0, 0], rot: 0, variant: 'native', height: 168.0, isLara: false },
   { id: 'gloria',   name: 'Gloria', emoji: '👩‍🦰', color: '#e04040', path: 'characters/gloria/gloria.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
-  { id: 'jennifer',  name: 'Jennifer',              emoji: '👩', color: '#f0932b', path: 'characters/jennifer/jennifer.glb',   pos: [0, 0, 0], rot: 0, variant: 'native', height: 178.4, isLara: false },
-  { id: 'maynard',           name: 'Maynard',               emoji: '👽', color: '#636e72', path: 'characters/maynard/maynard.glb',                     pos: [0, 0, 0], rot: 0, variant: 'native', height: 177.2, isLara: false },
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
@@ -236,7 +234,6 @@ export const REDMAN_EXTRA_IDS = ['alex', 'david', 'james', 'lewis'] as const;
 /** Groupe des personnages Anatomiques (modèles anatomiques, mannequins et squelettes) */
 export const ANATOMICAL_EXTRA_IDS = [
   'mannequin',
-  'maynard',
   'skeleton',
   'curious_skeleton'
 ] as const;
@@ -271,5 +268,5 @@ export function isCharacterVisibleInMode(
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
   'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'hayley', 'gloria', 'valby',
-  'alex', 'david', 'mannequin', 'jennifer', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'lewis', 'maynard', 'nurse'
+  'alex', 'david', 'mannequin', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'lewis', 'nurse'
 ]);
