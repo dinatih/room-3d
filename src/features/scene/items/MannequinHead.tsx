@@ -88,10 +88,10 @@ export function MannequinHead({
   }, [wigId, initialWigIndex]);
 
   useEffect(() => {
-    if (initialHairColor !== undefined) {
+    if (initialHairColor !== undefined || wigId) {
       setHairColor(initialHairColor);
     }
-  }, [initialHairColor]);
+  }, [initialHairColor, wigId]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -193,10 +193,11 @@ export function LaraWigBust({
       mesh.visible = keepVisible;
     });
 
-    const headLocal = new THREE.Vector3(0, 1.52, 0);
-    if (parts.bones.head) {
+    const headBone = laraScene.getObjectByName('head_neck_upper') ?? parts.bones.head;
+    const headLocal = new THREE.Vector3(0, 1.505, 0);
+    if (headBone) {
       const m = new THREE.Matrix4();
-      let cur: THREE.Object3D | null = parts.bones.head;
+      let cur: THREE.Object3D | null = headBone;
       while (cur && cur !== laraScene) {
         cur.updateMatrix();
         m.premultiply(cur.matrix);

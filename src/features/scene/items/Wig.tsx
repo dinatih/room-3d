@@ -230,30 +230,46 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         }
         
         const targetColor = color && HAIR_COLORS[color] ? HAIR_COLORS[color] : null;
+        const isLaraNativeWig = cleanId === 'lara_native';
+        const isColored = !!targetColor || color === 'arc-en-ciel';
 
-        if (Array.isArray(m.material)) {
-          m.material = m.material.map((_mat: any) => {
-            if (!_mat) return _mat;
-            const clonedMat = _mat.userData.__ownedWigMaterial ? _mat : _mat.clone();
-            clonedMat.userData.__ownedWigMaterial = true;
-            clonedMat.side = THREE.DoubleSide;
-            clonedMat.transparent = false;
-            clonedMat.opacity = 1;
-            clonedMat.alphaTest = 0.5;
-            clonedMat.depthWrite = true;
-            if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
-            return clonedMat;
-          });
-        } else if (m.material) {
-          const clonedMat = m.material.userData.__ownedWigMaterial ? m.material : (m.material as THREE.Material).clone();
+        const configureWigMat = (baseMat: any, prevMat?: any) => {
+          if (!baseMat) return baseMat;
+          if (prevMat && prevMat !== baseMat && prevMat.userData?.__ownedWigMaterial) {
+            prevMat.dispose();
+          }
+          const clonedMat = baseMat.clone();
           clonedMat.userData.__ownedWigMaterial = true;
           clonedMat.side = THREE.DoubleSide;
           clonedMat.transparent = false;
           clonedMat.opacity = 1;
           clonedMat.alphaTest = 0.5;
           clonedMat.depthWrite = true;
-          if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
-          m.material = clonedMat;
+          if (isLaraNativeWig && isColored) {
+            clonedMat.map = null;
+          }
+          if (targetColor && 'color' in clonedMat) {
+            clonedMat.color.copy(targetColor);
+            if (isLaraNativeWig && 'emissive' in clonedMat) {
+              clonedMat.emissive.copy(targetColor);
+              clonedMat.emissiveIntensity = 0.15;
+            }
+          }
+          clonedMat.needsUpdate = true;
+          return clonedMat;
+        };
+
+        if (!m.userData.__baseWigMaterial) {
+          m.userData.__baseWigMaterial = m.material;
+        }
+
+        if (Array.isArray(m.userData.__baseWigMaterial)) {
+          const prevMats = Array.isArray(m.material) ? m.material : [];
+          m.material = m.userData.__baseWigMaterial.map((baseMat: any, idx: number) =>
+            configureWigMat(baseMat, prevMats[idx])
+          );
+        } else if (m.userData.__baseWigMaterial) {
+          m.material = configureWigMat(m.userData.__baseWigMaterial, m.material);
         }
       }
 
