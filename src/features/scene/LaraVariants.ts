@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { getSaraNapeTattooTexture } from './SaraNapeTattoo';
 import { applyMarissaReferenceTattoos } from './MarissaReferenceTattoos';
+import { getMarissaArmTattooTexture } from './MarissaArmTattoo';
 import { getLaraLimbTattooTexture } from './LaraLimbTattoos';
 import { getDelphinaShoulderTattooTexture } from './LaraShoulderTattoo';
 
@@ -132,8 +133,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         }
         if (isNudeLimb) {
           if (!isMarissa && mat.userData.lara_tattoo_projection) {
-            mat.map = getLaraLimbTattooTexture(mat, isMarissa ? 'marissa' : 'delphina',
-              isMarissa ? drawMarissaTattoosOnCanvas : drawDelphinaFloralTattoosOnCanvas);
+            mat.map = getLaraLimbTattooTexture(mat, 'delphina', drawDelphinaFloralTattoosOnCanvas);
             mat.needsUpdate = true;
           }
           return;
@@ -569,71 +569,8 @@ export function disposeLaraVariantMaterials(model: THREE.Object3D) {
 // ── MARISSA TATTOO CANVAS GENERATOR ──────────────────────────────────────────
 
 function applyMarissaTattoos(mat: THREE.MeshStandardMaterial) {
-  mat.map = getLaraLimbTattooTexture(mat, 'marissa', drawMarissaTattoosOnCanvas);
+  mat.map = getMarissaArmTattooTexture(mat);
   mat.needsUpdate = true;
-}
-
-function drawMarissaTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
-  // ── 1. TATOUAGE TÊTE DE LION (Avant-bras gauche) ──
-  ctx.save();
-  ctx.translate(240, 205);
-  // Across the forearm, then down toward the wrist (measured UV tangent axes).
-  ctx.transform(-0.12435, 1.02124, 0.96822, -0.05235, 0, 0);
-  ctx.fillStyle = 'rgba(18, 18, 22, 0.88)';
-  ctx.strokeStyle = 'rgba(12, 12, 16, 0.95)';
-  ctx.lineWidth = 2;
-
-  // Lion Mane Spikes
-  ctx.beginPath();
-  const numSpikes = 18;
-  for (let i = 0; i < numSpikes; i++) {
-    const angle = (i / numSpikes) * Math.PI * 2;
-    const r = (i % 2 === 0) ? 28 : 20;
-    const x = Math.cos(angle) * r;
-    const y = Math.sin(angle) * r;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.stroke();
-
-  // Lion Head & Ears
-  ctx.beginPath();
-  ctx.arc(0, 0, 16, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(-11, -12, 5, 0, Math.PI * 2);
-  ctx.arc(11, -12, 5, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Eyes, Nose & Muzzle
-  ctx.beginPath();
-  ctx.arc(-6, -4, 2.2, 0, Math.PI * 2);
-  ctx.arc(6, -4, 2.2, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(0, 1);
-  ctx.lineTo(-4, -3);
-  ctx.lineTo(4, -3);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(0, 1); ctx.lineTo(0, 7);
-  ctx.moveTo(-6, 8); ctx.quadraticCurveTo(0, 11, 6, 8);
-  ctx.moveTo(-6, 5); ctx.lineTo(-18, 2);
-  ctx.moveTo(-6, 7); ctx.lineTo(-18, 8);
-  ctx.moveTo(6, 5);  ctx.lineTo(18, 2);
-  ctx.moveTo(6, 7);  ctx.lineTo(18, 8);
-  ctx.stroke();
-
-  ctx.font = 'bold 9px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(12, 12, 16, 0.9)';
-  ctx.fillText('🦁 LION', 0, 24);
-  ctx.restore();
-
 }
 
 // ── DELPHINA FLORAL TATTOO CANVAS GENERATOR ──────────────────────────────────

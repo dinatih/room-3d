@@ -20,20 +20,24 @@ function reference() {
   if (!c) throw new Error('Cannot draw Marissa reference tattoos');
   // Centimetres in the rest pose, with the floor at zero.
   c.translate(512, 2048); c.scale(10, -10);
-  c.strokeStyle = 'rgba(29,31,35,.72)'; c.fillStyle = 'rgba(29,31,35,.72)'; c.lineWidth = .22;
+  c.strokeStyle = 'rgba(9,10,12,.98)'; c.fillStyle = 'rgba(9,10,12,.98)'; c.lineWidth = .34;
   const path = (points: number[][], close = false) => {
     c.beginPath(); points.forEach(([x,y],i)=>i ? c.lineTo(x,y) : c.moveTo(x,y));
     if(close)c.closePath(); c.stroke();
   };
-  const text = (x:number,y:number,lines:string[],size:number) => {
+  const text = (x:number,y:number,lines:string[],size:number,maxWidth?:number) => {
     c.save(); c.translate(x,y); c.scale(1,-1);
     c.font = `bold ${size}px Georgia, serif`; c.textAlign='center';
-    lines.forEach((line,i)=>c.fillText(line,0,i*size*1.15)); c.restore();
+    c.lineWidth = .1; c.lineJoin = 'round';
+    lines.forEach((line,i)=>{
+      c.strokeText(line,0,i*size*1.2,maxWidth);
+      c.fillText(line,0,i*size*1.2,maxWidth);
+    }); c.restore();
   };
   // Right thigh, above the knee band. Preserve the user's four-line wording.
-  text(-9,83,['Beauty','has','beauty','does'],2.3);
+  text(-9,83,['Beauty','has','beauty','does'],2.8);
   // Left shin, the exact wording supplied by the user.
-  text(9,35,['Destroy what','destroy you'],1.55);
+  text(9,35,['Destroy what','destroy you'],1.9,8);
   // Diamond and feathered wings across the lower abdomen.
   c.save(); c.translate(0,13);
   path([[-3,97],[0,94],[3,97],[1.7,99],[-1.7,99]],true);
@@ -65,8 +69,8 @@ function reference() {
     const pixels=ink.getImageData(0,0,192,256);
     for(let i=0;i<pixels.data.length;i+=4){
       const grey=(pixels.data[i]+pixels.data[i+1]+pixels.data[i+2])/3;
-      pixels.data[i+3]*=(1-grey/255)*.88;
-      pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=30;
+      pixels.data[i+3]*=1-grey/255;
+      pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=9;
     }
     ink.putImageData(pixels,0,0);
     c.save();c.translate(2.5,89);c.scale(1,-1);c.drawImage(small,0,0,13,28);c.restore();
@@ -108,6 +112,19 @@ export function applyMarissaReferenceTattoos(model: THREE.Object3D) {
         const point=mesh.getVertexPosition(i,new THREE.Vector3()).applyMatrix4(transform);
         const height=(point.y-bounds.min.y)*scale;
         let x=point.x*scale, front=point.z*scale;
+        // Follow the shin axis and wrap the lettering around its curved skin.
+        if(height>10 && height<55){
+          const side=point.x>0?'left':'right';
+          const knee=model.getObjectByName(`leg_${side}_knee`);
+          const ankle=model.getObjectByName(`leg_${side}_ankle`);
+          if(!knee||!ankle)throw new Error('Missing Marissa shin projection axis');
+          const axis=ankle.getWorldPosition(new THREE.Vector3()).applyMatrix4(inverse);
+          const top=knee.getWorldPosition(new THREE.Vector3()).applyMatrix4(inverse);
+          axis.lerp(top,(point.y-axis.y)/(top.y-axis.y));
+          const dx=(point.x-axis.x)*scale,dz=(point.z-axis.z)*scale;
+          x=(point.x>0?9:-9)+Math.atan2(dx,dz)*Math.hypot(dx,dz);
+          front=dz;
+        }
         // Unwrap arc length around the anatomical axis, so frontal ink does
         // not become an infinitely stretched stripe at a tangent to the skin.
         if(height>55 && height<95 || height>100){
@@ -140,7 +157,7 @@ export function applyMarissaReferenceTattoos(model: THREE.Object3D) {
           }
           // Full circumference for the right thigh band and ankle chains.
           if((vMarissaInk.w<0.0&&vMarissaInk.y>61.0&&vMarissaInk.y<65.0)||
-             (vMarissaInk.y>9.0&&vMarissaInk.y<10.0))ink=0.7;
+             (vMarissaInk.y>9.0&&vMarissaInk.y<10.0))ink=0.95;
           diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.01298),ink);
         `);
       };
