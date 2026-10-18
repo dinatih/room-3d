@@ -8,6 +8,7 @@ import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { TOILET_BOWL_CENTER } from '../items/Toilet';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 import { FREEZER_DOOR_DURATION } from '../items/Freezer';
+import { FRIDGE_DOOR_DURATION, FRIDGE_CRISPER_DURATION } from '../items/Fridge';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
 
@@ -427,6 +428,24 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [80, 0, 400],
       }
     ]
+  },
+  'fridge': {
+    id: 'fridge',
+    name: 'Réfrigérateur LAGAN',
+    category: 'appliance',
+    itemId: 'fridge',
+    slots: [
+      {
+        slotId: 'open-pick',
+        name: 'Prendre un ingrédient',
+        relative: true,
+        navigationOwner: 'cuisine-group',
+        // Door depth (~30 cm), forward knee (~54 cm), and knee clearance.
+        offset: [0, 0, -95],
+        rotY: 0,
+        animation: 'kneeling-inspecting',
+      },
+    ],
   },
   'freezer': {
     id: 'freezer',
@@ -1028,6 +1047,33 @@ export function buildSmartObjectInstructionSequence(
     triggerEventKey: slot.triggerEventKey,
     triggerEventValue: slot.triggerEventValue,
   };
+
+  if (objectId === 'fridge') {
+    return [
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
+      {
+        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
+        animation: 'idle', duration: FRIDGE_CRISPER_DURATION, rotY: slot.rotY,
+        triggerEventKey: 'fridge-crisper-toggle', triggerEventValue: false,
+      },
+      {
+        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
+        animation: 'idle', duration: FRIDGE_DOOR_DURATION, rotY: slot.rotY,
+        triggerEventKey: 'fridge', triggerEventValue: true,
+      },
+      baseInstruction,
+      {
+        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
+        animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration,
+        rotY: slot.rotY,
+      },
+      {
+        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
+        animation: 'idle', duration: FRIDGE_DOOR_DURATION, rotY: slot.rotY,
+        triggerEventKey: 'fridge', triggerEventValue: false,
+      },
+    ];
+  }
 
   if (objectId === 'freezer' || objectId === 'kallax-ne') {
     const doorKey: 'living' | 'glassRight' = objectId === 'freezer' ? 'living' : 'glassRight';

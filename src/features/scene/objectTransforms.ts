@@ -14,6 +14,7 @@ import {
 import { SDB_CLOSET_X, SDB_CLOSET_Z } from './items/SdbCloset';
 import { SHOWER_W, SHOWER_D } from './items/Shower';
 import { TOILET_D } from './items/Toilet';
+import { FRIDGE_LOCAL_POSITION } from './items/Fridge';
 import { positionState } from './positionState';
 import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, FurnitureTransform } from './furniturePositions';
 
@@ -43,6 +44,17 @@ const ITEM_TO_ANCHOR_KEY: Record<string, string> = {
  */
 function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
   switch (itemId) {
+    case 'fridge': {
+      const kitchen = getStaticObjectTransform('cuisine-group')!;
+      return {
+        position: [
+          kitchen.position[0] + FRIDGE_LOCAL_POSITION[0],
+          kitchen.position[1] + FRIDGE_LOCAL_POSITION[1],
+          kitchen.position[2] + FRIDGE_LOCAL_POSITION[2],
+        ],
+        rotationY: kitchen.rotationY,
+      };
+    }
     case 'freezer':
       // The freezer sits at the base of Kallax SE, with an extra quarter turn.
       return {

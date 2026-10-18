@@ -1,4 +1,5 @@
 import { getObjectActionIds } from '../objectActions';
+import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 /** LAGAN: right-hand door, sliding crisper and automatic interior bulb. */
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
@@ -10,6 +11,10 @@ import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/lagan_anim/LAGAN_anim.glb';
+
+export const FRIDGE_LOCAL_POSITION: [number, number, number] = [70, 0, 30];
+export const FRIDGE_DOOR_DURATION = 1;
+export const FRIDGE_CRISPER_DURATION = 1;
 
 export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProps & { isPreview?: boolean }) {
   const { scene, animations } = useGLTFClone(GLB, true);
@@ -50,7 +55,13 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
     const box = glbLocalBBox(scene);
     scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
     scene.userData.skipMerge = true;
-    scene.userData.hoverAction = { label: 'Réfrigérateur LAGAN', actions: getObjectActionIds('fridge') };
+    scene.userData.hoverAction = {
+      label: 'Réfrigérateur LAGAN',
+      actions: [
+        ...getObjectActionIds('fridge'),
+        ...(!isPreview ? SMART_OBJECTS.fridge.slots.map(slot => `smart-object:::fridge:::${slot.slotId}`) : []),
+      ],
+    };
     const anchor = scene.getObjectByName('LampAnchor');
     if (!anchor) throw new Error('LAGAN: missing interior light anchor');
     // 5 W bulb, approximately 45 lm. Convert candela from metres to centimetres.
@@ -82,7 +93,7 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
       anchor.remove(bulb);
       bulb.dispose();
     };
-  }, [scene, animations, invalidate]);
+  }, [scene, animations, invalidate, isPreview]);
 
   useEffect(() => { invalidate(); }, [wantDoor, wantCrisper, invalidate]);
 

@@ -14,7 +14,7 @@ import { Valbildad20467592 } from './Valbildad20467592';
 import { Utdrag10389142 } from './Utdrag10389142';
 import { Metod50205532 }  from './Metod50205532';
 import { KitchenCabinet } from './KitchenCabinet';
-import { Fridge }         from './Fridge';
+import { Fridge, FRIDGE_LOCAL_POSITION } from './Fridge';
 import { DroneCell, DF } from './Drona';
 import { Lillhavet80461276 } from './Lillhavet80461276';
 import { Snitta00287295 } from './Snitta00287295';
@@ -141,7 +141,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
 
       {/* Réfrigérateur */}
       <group userData={{ animUnit: true }}>
-        <group position={[CABINET_W + FRIDGE_W / 2, 0, KIT_D / 2]}>
+        <group position={FRIDGE_LOCAL_POSITION}>
           <Fridge item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
