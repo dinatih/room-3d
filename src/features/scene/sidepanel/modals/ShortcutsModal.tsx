@@ -51,7 +51,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label={<><i className="bi bi-masks-theater me-1" aria-hidden="true" />Personnages Extra (toggle)</>} keys={['Alt+E']} />
               <R label="Sélecteur d'animations (toggle)" keys={['A']} />
               <R label="Sélecteur animations Duo (toggle)" keys={['Z']} />
-              <R label="Zones IA (toggle)"          keys={['Alt+Z']} />
+              <R label="Zones IA (toggle)"          keys={['Shift+A']} />
               <R label="Debug gabarits PNJ + trajets et obstacles (toggle)" keys={['J']} />
               <R label="Basculer Rotation / Translation" keys={['R', 'T']} />
               <R label="Vue Orbit perspective par défaut (Nord-Ouest)" keys={['Alt+O']} />
@@ -71,9 +71,9 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Afficher / masquer la grille" keys={['Alt+B']} />
               <R label="Grille de personnages (toggle)"       keys={['G']} />
               <R label={<><i className="bi bi-grid-3x3 me-1" aria-hidden="true" />Wireframe coloré (toggle)</>} keys={['W']} />
-              {/*<R label="Enlever le haut (toggle)"   keys={['Alt+Z']} />
+              <R label="Enlever le haut (toggle)"   keys={['Alt+Z']} />
               <R label="Enlever le bas (toggle)"    keys={['Alt+C']} />
-              <R label="Déshabiller les Lara (toggle)" keys={['Alt+X']} />*/}
+              <R label="Déshabiller les Lara (toggle)" keys={['Alt+X']} />
               <R label="Squelettes / Bones (toggle)" keys={['K']} />
               <R label="Structure murale (toggle)"  keys={['Alt+W']} />
               <R label="Dalle et plafond (toggle)"  keys={['Alt+Q']} />

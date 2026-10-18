@@ -316,7 +316,7 @@ export function LayersSection({
       {layerBtn('blue',      iconLabel('bi-heart-pulse', 'Animaux et robots'), 'animals')}
       {layerBtn('purple',    'Miroirs MD (Moyenne déf)',       'mirrors')}
       {layerBtn('purple',    'Miroirs HD (Haute déf) (Alt+G)', 'mirrorsHD')}
-      {layerBtn('cyan',      iconLabel('bi-robot', 'Zones IA (Alt+Z)'), 'aiZones')}
+      {layerBtn('cyan',      iconLabel('bi-robot', 'Zones IA (Shift+A)'), 'aiZones')}
       {layerBtn('blue',   iconLabel('bi-people', 'Collisions inter-PNJ'), 'npcCollisions')}
       {layers.npcCollisions && layerBtn('cyan', iconLabel('bi-circle', 'Debug gabarits PNJ'), 'debugNpcCollisions')}
       {layerBtn('cyan', iconLabel('bi-rulers', 'Debug trajets et obstacles'), 'debugFurnitureCollisions')}

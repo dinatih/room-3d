@@ -471,7 +471,7 @@ export function AnimFrameController({
 
       if (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z') {
         if (e.defaultPrevented) return;
-        if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || !isHumanCharacter) return;
+        if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey || !isHumanCharacter) return;
         e.preventDefault();
         e.stopImmediatePropagation();
         if (e.key.toLowerCase() === 'a') {
