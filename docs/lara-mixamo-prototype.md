@@ -2,7 +2,11 @@
 
 Ce prototype conserve les proportions de Lara et ajoute les deux clavicules ainsi
 que le segment de dos manquant. Il sert à comparer le résultat avant une migration
-du personnage utilisé dans l'application. Le GLB actif reste `lara_native.glb`.
+du personnage utilisé dans l'application. Native conserve `lara_native.glb`.
+Le prototype est sélectionnable sous « 🧪 Lara Mixamo (prototype) » dans le sélecteur
+de personnages, l'inventaire et les previews. Les animations et réglages de tenue
+habituels s'appliquent aux deux versions. Pour ouvrir directement le prototype :
+`http://localhost:5173/?character=lara_mixamo&npcNb=1`.
 
 ## Fichiers
 

@@ -22,6 +22,21 @@ const launchBrowser = require('./browser-test-options.cjs');
         request.respond({contentType:'model/gltf-binary', body:fs.readFileSync(require('node:path').join(__dirname,'../public/characters/lara/lara_mixamo_prototype.glb'))});
       } else request.continue();
     });
+    if (process.argv.includes('--project')) {
+      await page.goto('http://127.0.0.1:5173/?character=lara_mixamo&npcNb=1&inventory=characters');
+      await page.waitForFunction(() => document.body.innerText.includes('Lara Mixamo (prototype)'), {timeout:120000});
+      const state = await page.evaluate(async () => {
+        const {CHARACTERS} = await import('/src/features/scene/characterConfig.ts');
+        const {INVENTORY} = await import('/src/features/inventory/inventoryData.ts');
+        const {useSceneStore} = await import('/src/features/scene/store/useSceneStore.ts');
+        return {active:useSceneStore.getState().activeCharacterId, character:CHARACTERS.find(c=>c.id==='lara_mixamo'), item:INVENTORY.find(c=>c.id==='lara_mixamo')};
+      });
+      if(state.active !== 'lara_mixamo' || state.item?.glbPath !== state.character?.path)throw new Error('Prototype registration failed: '+JSON.stringify(state));
+      await page.screenshot({path:'/tmp/lara-mixamo-project.png'});
+      if(errors.length)throw new Error(errors.join('\n'));
+      console.log('Project integration verified:', JSON.stringify(state));
+      return;
+    }
     await page.goto('http://127.0.0.1:5173/__lara_mixamo_test__');
     const result = await page.evaluate(async () => {
       const THREE = await import('/node_modules/three/build/three.module.js');
