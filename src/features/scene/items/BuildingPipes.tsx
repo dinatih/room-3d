@@ -39,11 +39,12 @@ const KITCHEN_WALL_X = KITCHEN_WEST_WALL - 14; // ≈ 19.6 cm (mur Cuisine-Ouest
 const KITCHEN_EXIT_X = KITCHEN_WALL_X + 5.5; // ≈ 25.1 cm (ressort juste de la cloison)
 const KITCHEN_DOUBLE_OUTLET_LEN = 9.0; // demi-longueur des sorties perpendiculaires (parallèles au mur)
 
-// Position de la pipe d'évacuation WC en coordonnées locales
-// Toilette monde : X = 50, Z_dos = 465.1 -> local X = 36, local Z = 25.1
+// Position de l'évacuation WC en coordonnées locales
+// Toilette monde : X = 50, Z_dos = 465.1 -> local X = 36
 const WC_X = 36;
-const WC_BACK_Z = 25.1;
 const WC_AXIS_Y = 18.0; // axe standard évacuation cuvette NF
+const WC_WALL_RUN_Z = SDB_WALL_Z + DRAIN_RADIUS + 0.4; // axe du tuyau longeant le mur dans la SDB (≈ 29.5 cm)
+const WC_ELBOW_Y = 17.3; // hauteur au coude 90°
 const WC_JUNCTION_Y = 16.5; // raccordement sur la colonne générale
 
 export function BuildingPipes({ onSize }: SceneItemProps) {
@@ -51,7 +52,7 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
     const size = new THREE.Vector3(
       Math.max(KITCHEN_EXIT_X, WC_X) + DRAIN_RADIUS,
       Y_FLOOR_ABOVE,
-      SDB_WALL_Z - (DRAIN_OFFSET_Z - DRAIN_RADIUS)
+      WC_WALL_RUN_Z + DRAIN_RADIUS - (DRAIN_OFFSET_Z - DRAIN_RADIUS)
     );
     onSize(size);
   }, [onSize]);
@@ -87,25 +88,15 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
     };
   }, []);
 
-  // Calcul géométrique du tronçon incliné à 45° reliant le coude WC à la colonne générale
-  const wcPipeGeom = useMemo(() => {
-    const pA = new THREE.Vector3(WC_X, WC_AXIS_Y - 0.5, 12);
-    const pB = new THREE.Vector3(0, WC_JUNCTION_Y, DRAIN_OFFSET_Z);
-    const v = new THREE.Vector3().subVectors(pB, pA);
-    const len = v.length();
-    const center = new THREE.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
-    const quat = new THREE.Quaternion().setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      v.clone().normalize()
-    );
-    return { center, quat, len };
-  }, []);
-
   const ventTrunkHeight = Y_FLOOR_ABOVE - Y_VENT_SPLIT; // 40 cm
   const ventTrunkCenterY = Y_VENT_SPLIT + ventTrunkHeight / 2; // 250 cm
 
   const drainHeight = Y_FLOOR_ABOVE - Y_FLOOR + 10; // 280 cm
   const drainCenterY = (Y_FLOOR_ABOVE + Y_FLOOR - 10) / 2; // 130 cm
+
+  // Longueurs des tronçons de la ligne d'évacuation WC
+  const wcRunAlongWallLen = WC_X; // longe le mur de X = 36 à X = 0
+  const wcRunThroughWallLen = WC_WALL_RUN_Z - DRAIN_OFFSET_Z; // traverse du mur SDB vers la colonne générale
 
   return (
     <group userData={{ itemName: 'Colonnes techniques (Aération & Évacuation)' }}>
@@ -231,8 +222,8 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
       ))}
 
       {/* ── Raccordement réglementaire du WC au ras du sol (même diamètre Ø110) ── */}
-      {/* Manchette d'évacuation étanche à joint à lèvres à l'arrière du WC */}
-      <group position={[WC_X, WC_AXIS_Y, WC_BACK_Z]} rotation-x={Math.PI / 2} userData={{ itemName: 'Manchette évacuation WC' }}>
+      {/* 1. Manchette d'évacuation étanche à joint à lèvres à l'arrière de la cuvette */}
+      <group position={[WC_X, WC_AXIS_Y, WC_WALL_RUN_Z]} rotation-y={Math.PI / 2} userData={{ itemName: 'Manchette évacuation WC' }}>
         <mesh material={clampMat}>
           <cylinderGeometry args={[DRAIN_RADIUS + 0.8, DRAIN_RADIUS + 0.8, 3.0, 24]} />
         </mesh>
@@ -241,50 +232,60 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
         </mesh>
       </group>
 
-      {/* Tronçon droit traversant le mur SDB-Nord du dos du WC (Z = 25.1) vers l'intérieur de la gaine (Z = 12) */}
+      {/* 2. Coude de sortie de cuvette à 90° orienté vers l'Ouest (le long du mur SDB-Nord) */}
+      <mesh position={[WC_X, WC_AXIS_Y, WC_WALL_RUN_Z]} material={drainMat}>
+        <sphereGeometry args={[DRAIN_RADIUS * 1.06, 20, 20]} />
+      </mesh>
+
+      {/* 3. Tronçon longeant le mur SDB-Nord (de X = 36 vers X = 0) à Y ≈ 17.6 cm */}
       <mesh
-        position={[WC_X, (WC_AXIS_Y + WC_AXIS_Y - 0.5) / 2, (WC_BACK_Z + 12) / 2]}
+        position={[wcRunAlongWallLen / 2, (WC_AXIS_Y + WC_ELBOW_Y) / 2, WC_WALL_RUN_Z]}
+        rotation-z={Math.PI / 2}
+        material={drainMat}
+        castShadow
+        receiveShadow
+        userData={{ itemName: 'Tuyau évacuation WC longeant mur SDB-Nord' }}
+      >
+        <cylinderGeometry args={[DRAIN_RADIUS, DRAIN_RADIUS, wcRunAlongWallLen, 24]} />
+      </mesh>
+
+      {/* Colliers de fixation du tuyau le long du mur SDB-Nord */}
+      {[10, 26].map((x) => (
+        <group key={`wc-wall-clamp-${x}`} position={[x, (WC_AXIS_Y + WC_ELBOW_Y) / 2, WC_WALL_RUN_Z]}>
+          <mesh material={clampMat}>
+            <cylinderGeometry args={[DRAIN_RADIUS + 0.4, DRAIN_RADIUS + 0.4, 2.0, 24]} />
+          </mesh>
+          <mesh position={[0, 0, -DRAIN_RADIUS - 0.5]} material={clampMat}>
+            <boxGeometry args={[2.0, 2.0, 1.2]} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* 4. Coude à 90° à X = 0 tournant vers le Nord (pour traverser le mur SDB-Nord) */}
+      <mesh position={[0, WC_ELBOW_Y, WC_WALL_RUN_Z]} material={drainMat}>
+        <sphereGeometry args={[DRAIN_RADIUS * 1.08, 20, 20]} />
+      </mesh>
+
+      {/* 5. Tronçon traversant le mur SDB-Nord et rejoignant la colonne de chute générale */}
+      <mesh
+        position={[0, (WC_ELBOW_Y + WC_JUNCTION_Y) / 2, (WC_WALL_RUN_Z + DRAIN_OFFSET_Z) / 2]}
         rotation-x={Math.PI / 2}
         material={drainMat}
         castShadow
         receiveShadow
-        userData={{ itemName: 'Pipe évacuation WC' }}
+        userData={{ itemName: 'Tuyau évacuation traversant mur Nord vers évacuation générale' }}
       >
-        <cylinderGeometry args={[DRAIN_RADIUS, DRAIN_RADIUS, WC_BACK_Z - 12, 24]} />
+        <cylinderGeometry args={[DRAIN_RADIUS, DRAIN_RADIUS, wcRunThroughWallLen, 24]} />
       </mesh>
 
-      {/* Coude sanitaire 45° dans la gaine au changement d'angle vers la colonne */}
-      <mesh position={[WC_X, WC_AXIS_Y - 0.5, 12]} material={drainMat}>
-        <sphereGeometry args={[DRAIN_RADIUS * 1.08, 20, 20]} />
-      </mesh>
-
-      {/* Tronçon oblique à 45° avec pente gravitaire vers la colonne générale */}
-      <mesh
-        position={wcPipeGeom.center}
-        quaternion={wcPipeGeom.quat}
-        material={drainMat}
-        castShadow
-        receiveShadow
-        userData={{ itemName: 'Tuyau évacuation WC Ø110' }}
-      >
-        <cylinderGeometry args={[DRAIN_RADIUS, DRAIN_RADIUS, wcPipeGeom.len, 24]} />
-      </mesh>
-
-      {/* Culotte de branchement à 45° sur la colonne de chute générale (Y = WC_JUNCTION_Y) */}
-      <group position={[0, WC_JUNCTION_Y, DRAIN_OFFSET_Z]} userData={{ itemName: 'Culotte de branchement WC' }}>
+      {/* 6. Culotte / té sanitaire de raccordement sur la colonne de chute générale à Z = DRAIN_OFFSET_Z */}
+      <group position={[0, WC_JUNCTION_Y, DRAIN_OFFSET_Z]} userData={{ itemName: 'Culotte de raccordement colonne générale' }}>
         <mesh material={drainMat}>
           <cylinderGeometry args={[DRAIN_RADIUS + 0.8, DRAIN_RADIUS + 0.8, 12, 32]} />
         </mesh>
-        {/* Renflement du piquage à 45° */}
-        <mesh position={[DRAIN_RADIUS * 0.7, 0, DRAIN_RADIUS * 0.7]} material={drainMat}>
+        {/* Piquage vers +Z accueillant le tuyau venant du mur SDB-Nord */}
+        <mesh position={[0, 0, DRAIN_RADIUS * 0.7]} material={drainMat}>
           <sphereGeometry args={[DRAIN_RADIUS * 1.05, 20, 20]} />
-        </mesh>
-      </group>
-
-      {/* Collier de maintien au sol de la pipe WC */}
-      <group position={[WC_X, (WC_AXIS_Y - 0.5) / 2, 12]}>
-        <mesh material={clampMat}>
-          <boxGeometry args={[2.5, WC_AXIS_Y - 0.5, 2.5]} />
         </mesh>
       </group>
     </group>
