@@ -541,14 +541,14 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       const studGeo = new THREE.SphereGeometry(0.0028, 12, 12);
       const studMesh = new THREE.Mesh(studGeo, piercingMat);
       studMesh.name = 'MarissaCupidPiercing';
-      studMesh.position.set(0.000, 0.036, 0.110);
+      studMesh.position.set(0.000, 0.041, 0.110);
       headBone.add(studMesh);
 
       // 2. Narine Gauche - Boucle / Anneau (Torus ring) sur l'aile de la narine gauche
       const ringGeo = new THREE.TorusGeometry(0.0038, 0.0011, 12, 24);
       const ringMesh = new THREE.Mesh(ringGeo, piercingMat);
       ringMesh.name = 'MarissaNostrilPiercing';
-      ringMesh.position.set(0.015, 0.046, 0.105);
+      ringMesh.position.set(0.015, 0.051, 0.105);
       ringMesh.rotation.y = Math.PI / 2.2;
       headBone.add(ringMesh);
     }
