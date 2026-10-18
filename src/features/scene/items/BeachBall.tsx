@@ -29,6 +29,8 @@ const WATER_DRAG = 0.4; // amortissement par seconde
 const WAVE_SPEED = 65; // cm/s, impulsion d'entrée dans l'eau
 const RESTITUTION = 0.75;
 const WATER_Y = BATHTUB.waterHeight;
+const MAX_BALL_SPEED = 80; // Vitesse maximale en cm/s pour éviter les emballements physiques
+const MAX_PHYSICS_DT = 0.05; // Seuil max de 50ms par frame pour absorber les pauses/inventaire
 
 export function BeachBall({ onSize, isPreview = false }: SceneItemProps) {
   const { invalidate } = useThree();
@@ -79,7 +81,7 @@ export function BeachBall({ onSize, isPreview = false }: SceneItemProps) {
 
   useFrame((state, delta) => {
     if (!groupRef.current || isAppIdle()) return;
-    const dt = delta;
+    const dt = Math.min(delta, MAX_PHYSICS_DT);
     const t = state.clock.elapsedTime;
 
     const pos = posRef.current;
@@ -124,6 +126,9 @@ export function BeachBall({ onSize, isPreview = false }: SceneItemProps) {
     vel.x += Math.sin(t * 1.5 + pos.y * 0.1) * 0.8 * dt;
     vel.y += Math.cos(t * 1.2 + pos.x * 0.1) * 0.8 * dt;
 
+    // Plafonnement de sécurité de la vitesse physique
+    vel.clampLength(0, MAX_BALL_SPEED);
+
     // Capsule intérieure : côtés droits et extrémités arrondies, moins le rayon du ballon.
     const centerZ = THREE.MathUtils.clamp(pos.y, -INNER_SEGMENT, INNER_SEGMENT);
     const normal = directionRef.current.set(pos.x, pos.y - centerZ);
@@ -132,6 +137,7 @@ export function BeachBall({ onSize, isPreview = false }: SceneItemProps) {
       pos.set(normal.x * INNER_RADIUS, centerZ + normal.y * INNER_RADIUS);
       const outwardSpeed = vel.dot(normal);
       if (outwardSpeed > 0) vel.addScaledVector(normal, -(1 + RESTITUTION) * outwardSpeed);
+      vel.clampLength(0, MAX_BALL_SPEED);
     }
 
     // 5. Flottaison et roulis (clapotis sur l'eau)
