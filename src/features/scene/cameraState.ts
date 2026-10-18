@@ -38,12 +38,12 @@ export const cameraState = {
     this._wakeupTimer = setTimeout(() => {
       this._wakeupTimer = null;
       this.invalidate?.();
-    }, 4050);
+    }, 12050);
   },
-  /** Vérifie si l'utilisateur a pris la main manuellement récemment (< 4s) */
+  /** Vérifie si l'utilisateur a pris la main manuellement récemment (< 12s) */
   isUserControlling(): boolean {
     if (this.lastUserControlTime === 0) return false;
-    return (performance.now() - this.lastUserControlTime) < 4000;
+    return (performance.now() - this.lastUserControlTime) < 12000;
   },
   followYaw:   (initialChar?.rot ?? 1.9) as number,
   followPitch: 0     as number,
