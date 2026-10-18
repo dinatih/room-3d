@@ -11,6 +11,9 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/tillreda_anim/TILLREDA_anim.glb';
 
+/** Duration of the source GLB's door_open clip, in seconds. */
+export const FREEZER_DOOR_DURATION = 1;
+
 export function Freezer({ actionState, onSize, isPreview = false }: SceneItemProps & { isPreview?: boolean }) {
   const { scene, animations } = useGLTFClone(GLB);
   const sceneOpen = useSceneStore(s => s.furniture.freezerOpen);

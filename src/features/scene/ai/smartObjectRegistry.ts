@@ -7,6 +7,8 @@ import { BATH_WEST_WALL, ROOM_D } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { TOILET_BOWL_CENTER } from '../items/Toilet';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
+import { FREEZER_DOOR_DURATION } from '../items/Freezer';
+import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
 
 export const CLOSET_DOOR_DURATION = 0.8;
@@ -436,8 +438,11 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'open-pick',
         name: 'Prendre un ingrédient',
+        // The kneeling clip projects its front knee ~54 cm ahead of the root.
+        // Keep it clear of the freezer front at X ≈ 274 cm.
+        offset: [210, 0, 320],
         rotY: Math.PI / 2,
-        animation: 'entering-code',
+        animation: 'kneeling-inspecting',
       }
     ]
   },
@@ -1026,11 +1031,30 @@ export function buildSmartObjectInstructionSequence(
   };
 
   if (objectId === 'freezer' || objectId === 'kallax-ne') {
-    const doorKey = objectId === 'freezer' ? 'living' : 'glassRight';
+    const doorKey: 'living' | 'glassRight' = objectId === 'freezer' ? 'living' : 'glassRight';
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey },
       { type: 'WAIT', doorKey },
+      ...(objectId === 'freezer' ? [
+        {
+          type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId,
+          animation: 'idle', duration: FREEZER_DOOR_DURATION, rotY: slot.rotY,
+          closedDoor: doorKey, triggerEventKey: 'freezer', triggerEventValue: true,
+        },
+      ] : []),
       { ...baseInstruction, closedDoor: doorKey },
+      ...(objectId === 'freezer' ? [
+        {
+          type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId,
+          animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration,
+          rotY: slot.rotY, closedDoor: doorKey,
+        },
+        {
+          type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId,
+          animation: 'idle', duration: FREEZER_DOOR_DURATION, rotY: slot.rotY,
+          closedDoor: doorKey, triggerEventKey: 'freezer', triggerEventValue: false,
+        },
+      ] : []),
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey, closedDoor: doorKey },
     ];
   }
