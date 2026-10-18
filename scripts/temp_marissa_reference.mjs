@@ -12,7 +12,7 @@ const before = await io.readBinary(execFileSync('git', ['show', 'HEAD:public/cha
 const after = await io.read('public/characters/lara/lara_native.glb');
 const oldNodes = before.getRoot().listNodes();
 const newNodes = after.getRoot().listNodes();
-assert.deepEqual(newNodes.filter(n=>!n.getName().startsWith('bikini_')&&!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort(), oldNodes.filter(n=>!n.getName().startsWith('bikini_')&&!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort());
+assert.deepEqual(newNodes.filter(n=>!n.getName().startsWith('body_onepiece_torso')&&!n.getName().startsWith('shirt_swimsuit_bottom')&&!n.getName().startsWith('bikini_')&&!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort(), oldNodes.filter(n=>!n.getName().startsWith('body_onepiece_torso')&&!n.getName().startsWith('shirt_swimsuit_bottom')&&!n.getName().startsWith('bikini_')&&!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort());
 for (const old of oldNodes) {
   const node = newNodes.find(n => n.getName() === old.getName() && Boolean(n.getMesh()) === Boolean(old.getMesh()));
   for (const method of ['getTranslation', 'getRotation', 'getScale']) {
@@ -89,7 +89,7 @@ try {
       if(mat.customProgramCacheKey()==='marissa-reference-ink')throw Error(`Marissa tattoo leaked to native: ${m.name}`);
     }});
     const entries=[];
-    for (const style of ['native','marissa','delphina','sara']) {
+    for (const style of ['native','marissa','delphina','sara','rosanna','cha','sabira','safa','sandra','rajaa','angelina','romana','vivida','lgbta']) {
       const {scene}=await loader.loadAsync('/characters/lara/lara_native.glb');
       const bases=new Map();
       scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) bases.set(mat.map,mat.map?.image);});
@@ -140,6 +140,17 @@ try {
       const parts=extractCharacterParts(scene);
       if(!parts.bikiniTop.length||!parts.bikiniBottom.length)throw Error(`Missing bikini: ${style}`);
       for(const {mesh} of [...parts.bikiniTop,...parts.bikiniBottom])if(mesh.material.toneMapped)throw Error('Bikini red would be desaturated by tone mapping');
+      if(!parts.onePieceBottom.length)throw Error(`Missing one-piece: ${style}`);
+      const onePieceOptions={laraOnePiece:true,laraBikini:false,laraNude:false,laraTopOff:false,laraBottomOff:false,laraShoes:false,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}};
+      applyClothingAndAccessoriesVisibility(parts,onePieceOptions);
+      if(parts.onePieceBottom.some(p=>!p.mesh.visible)||parts.torsoClothed.filter(p=>p.mesh.name!=='body_torso').some(p=>!p.mesh.visible)||parts.onePieceTorso.some(p=>!p.mesh.visible))throw Error(`Incomplete one-piece: ${style}`);
+      if(parts.legsClothed.some(p=>p.mesh.visible)||[...parts.bikiniTop,...parts.bikiniBottom].some(p=>p.mesh.visible))throw Error(`Overlapping outfit: ${style}`);
+      const top=scene.getObjectByName('shirt').material,extension=parts.onePieceBottom[0].mesh.material;
+      if(!top.color.equals(extension.color)||top.roughness!==extension.roughness)throw Error(`One-piece material differs from shirt: ${style}`);
+      applyClothingAndAccessoriesVisibility(parts,{...onePieceOptions,laraOnePiece:false});
+      if(parts.onePieceBottom.some(p=>p.mesh.visible)||parts.legsClothed.filter(p=>p.mesh.name==='shorts').some(p=>!p.mesh.visible))throw Error(`Shorts not restored: ${style}`);
+      applyClothingAndAccessoriesVisibility(parts,{...onePieceOptions,laraNude:true});
+      if(parts.onePieceBottom.some(p=>p.mesh.visible))throw Error(`One-piece remained in nude mode: ${style}`);
       const options={laraBikini:true,laraNude:false,laraTopOff:false,laraBottomOff:false,laraShoes:false,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}};
       applyClothingAndAccessoriesVisibility(parts,options);
       if(parts.bikiniTop.some(p=>!p.mesh.visible)||parts.bikiniBottom.some(p=>!p.mesh.visible))throw Error('Bikini hidden');
@@ -189,6 +200,18 @@ try {
     const view=new THREE.Scene();view.add(scene,new THREE.HemisphereLight(0xffffff,0x777777,3));
     const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(800,1100);renderer.setClearColor(0xdddddd);document.body.replaceChildren(renderer.domElement);
     const camera=new THREE.OrthographicCamera(-.65,.65,1.8,0,.01,10);camera.position.set(0,0,4);camera.lookAt(0,0,0);renderer.render(view,camera);
+    window.onePieceView=async(style,angle=0)=>{
+      const {extractCharacterParts,applyClothingAndAccessoriesVisibility}=await import('/src/features/scene/characterParts.ts');
+      const entry=entries.find(e=>e.style===style);
+      const model=entry.scene;
+      for(const [bone,position,quaternion,scale] of entry.restBones){bone.position.copy(position);bone.quaternion.copy(quaternion);bone.scale.copy(scale);}
+      model.updateMatrixWorld(true);
+      view.clear();view.add(model,new THREE.HemisphereLight(0xffffff,0x777777,3));
+      model.traverse(m=>{if(m.isMesh)m.visible=['face','eyes','arms','hair_base','braid'].includes(m.name);});
+      applyClothingAndAccessoriesVisibility(extractCharacterParts(model),{laraOnePiece:true,laraBikini:false,laraNude:false,laraTopOff:false,laraBottomOff:false,laraShoes:false,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
+      camera.left=-.65;camera.right=.65;camera.top=1.8;camera.bottom=0;camera.updateProjectionMatrix();
+      camera.position.set(Math.sin(angle)*4,0,Math.cos(angle)*4);camera.lookAt(0,0,0);renderer.render(view,camera);
+    };
     window.marissaDetail=(part)=>{
       const target=part==='top'?1.34:.93;
       camera.left=-.24;camera.right=.24;camera.top=.33;camera.bottom=-.33;camera.updateProjectionMatrix();
@@ -245,5 +268,13 @@ try {
     variants.applyLaraRealisticTextures(entry.scene,true);variants.applyLaraRealisticTextures(entry.scene,false);
     if(entry.scene.getObjectByName('body_legs').material.customProgramCacheKey()!=='marissa-reference-ink')throw Error('Realistic mode removed ink shader');
   });
+  for(const style of ['native','rosanna','marissa']){
+    await page.evaluate(style=>window.onePieceView(style),style);
+    await page.screenshot({path:`/tmp/lara-onepiece-${style}.png`});
+  }
+  await page.evaluate(()=>window.onePieceView('marissa',.9));
+  await page.screenshot({path:'/tmp/lara-onepiece-side.png'});
+  await page.evaluate(()=>window.marissaMiley(303,'bottom'));
+  await page.screenshot({path:'/tmp/lara-onepiece-idle.png'});
   assert.deepEqual(errors,[]);
 } finally { await browser.close(); }

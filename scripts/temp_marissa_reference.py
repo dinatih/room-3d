@@ -1,4 +1,4 @@
-"""Author red rigged bikini pieces in Lara's Blender source and export the third outfit."""
+"""Author rigged bikini pieces, or extend the original shirt with --onepiece."""
 from pathlib import Path
 import sys, math, importlib.util
 sys.dont_write_bytecode=True
@@ -38,7 +38,8 @@ material.diffuse_color=(.72,.0003,.001,1)
 collection=bpy.data.collections.get('Lara - Bikini')
 if not collection:
  collection=bpy.data.collections.new('Lara - Bikini');bpy.context.scene.collection.children.link(collection)
-for obj in list(collection.objects):bpy.data.objects.remove(obj,do_unlink=True)
+if '--onepiece' not in sys.argv:
+ for obj in list(collection.objects):bpy.data.objects.remove(obj,do_unlink=True)
 
 def hit(origin,direction):
  p,n,tri,distance=tree.ray_cast(Vector(origin),Vector(direction))
@@ -90,82 +91,146 @@ def theta_for_x(x,z,side):
   else:high=middle
  return (low+high)/2
 
-patches=[]
-cup_tips={}
-for side in [-1,1]:
- tip_left=theta_for_x(.086,1.4,side);tip_right=theta_for_x(.094,1.4,side)
- tip_center=(tip_left+tip_right)/2;tip_half=(tip_right-tip_left)/2
+if '--onepiece' not in sys.argv:
+ patches=[]
+ cup_tips={}
+ for side in [-1,1]:
+  tip_left=theta_for_x(.086,1.4,side);tip_right=theta_for_x(.094,1.4,side)
+  tip_center=(tip_left+tip_right)/2;tip_half=(tip_right-tip_left)/2
+  rows=[]
+  for row in range(25):
+   v=row/24;z=1.235+v*.165;angle=side*(.55*(1-v)+tip_center*v);half=.45*(1-v)+tip_half*v
+   rows.append([radial(angle+(column/24*2-1)*half,z) for column in range(25)])
+  patches.append(rows)
+  cup_tips[side]=[rows[-1][0],rows[-1][12],rows[-1][-1]]
+ # Under-bust band.
+ patches.append([[radial(column/96*2*math.pi,1.236+row/3*.012) for column in range(97)] for row in range(4)])
+ # Two shoulder straps, traced over the shoulder on the real skin.
+ for side in [-1,1]:
+  rows=[]
+  for row in range(57):
+   angle=-2.25+row/56*4.5
+   dy,dz=math.sin(angle),math.cos(angle)
+   rows.append([hit((side*.09+(column/2-.5)*.008,dy*.5,1.34+dz*.5),(0,-dy,-dz)) for column in range(3)])
+  # Start at the actual cup edge, removing the old dangling strap tail.
+  tip=cup_tips[side]
+  join=min(range(len(rows)//2),key=lambda i:(rows[i][1][0]-tip[1][0]).length_squared)
+  connection=[tip]
+  for row in range(1,8):
+   strip=[]
+   for column in range(3):
+    target=tip[column][0].lerp(rows[join][column][0],row/8)
+    strip.append(radial(math.atan2(target.x,-target.y),target.z))
+   connection.append(strip)
+  connection.append(rows[join])
+  patches.extend([connection,rows[join:]])
+  # Continue each back strap to the under-bust band.
+  patches.append([[hit((side*.09+(column/2-.5)*.008,.5,1.24+row/16*.10),(0,-1,0)) for column in range(3)] for row in range(17)])
+ garment('bikini_top',patches)
  rows=[]
- for row in range(25):
-  v=row/24;z=1.235+v*.165;angle=side*(.55*(1-v)+tip_center*v);half=.45*(1-v)+tip_half*v
-  rows.append([radial(angle+(column/24*2-1)*half,z) for column in range(25)])
- patches.append(rows)
- cup_tips[side]=[rows[-1][0],rows[-1][12],rows[-1][-1]]
-# Under-bust band.
-patches.append([[radial(column/96*2*math.pi,1.236+row/3*.012) for column in range(97)] for row in range(4)])
-# Two shoulder straps, traced over the shoulder on the real skin.
-for side in [-1,1]:
- rows=[]
- for row in range(57):
-  angle=-2.25+row/56*4.5
-  dy,dz=math.sin(angle),math.cos(angle)
-  rows.append([hit((side*.09+(column/2-.5)*.008,dy*.5,1.34+dz*.5),(0,-dy,-dz)) for column in range(3)])
- # Start at the actual cup edge, removing the old dangling strap tail.
- tip=cup_tips[side]
- join=min(range(len(rows)//2),key=lambda i:(rows[i][1][0]-tip[1][0]).length_squared)
- connection=[tip]
- for row in range(1,8):
+ for row in range(13):
+  v=row/12;ring=[]
+  for column in range(97):
+   theta=column/96*2*math.pi;side=abs(math.sin(theta))
+   low=.895+.115*side**1.45;high=1.015+.012*side**2
+   ring.append(radial(theta,low+(high-low)*v))
+  rows.append(ring)
+ # A smooth cloth bridge covers the groin without snapping to the separate thighs.
+ # Only the skin weights are sampled from the body; the fabric keeps its lofted shape.
+ front_y=front(0,.93)[2].y;back_y=hit((0,.5,.93),(0,-1,0))[2].y
+ profile=[]
+ for row in range(33):
+  t=row/32;y=front_y+(back_y-front_y)*t
+  centre,normal,tri,distance=tree.ray_cast(Vector((0,y,.6)),Vector((0,0,1)))
+  if centre is None:raise RuntimeError(f'Missing groin surface at {y}')
+  profile.append((centre,tri))
+ # Fit a continuous fabric curve underneath the skin, rather than reproducing
+ # every small anatomical fold in the centre-line ray intersections.
+ times=np.linspace(0,1,len(profile));skin_z=np.array([point.z for point,tri in profile])
+ curve=np.polyval(np.polyfit(times,skin_z,4),times)
+ curve-=np.max(curve-skin_z)+.004
+ assert np.all(curve<=skin_z-.004+1e-9)
+ crotch=[]
+ for row,(centre,tri) in enumerate(profile):
   strip=[]
-  for column in range(3):
-   target=tip[column][0].lerp(rows[join][column][0],row/8)
-   strip.append(radial(math.atan2(target.x,-target.y),target.z))
-  connection.append(strip)
- connection.append(rows[join])
- patches.extend([connection,rows[join:]])
- # Continue each back strap to the under-bust band.
- patches.append([[hit((side*.09+(column/2-.5)*.008,.5,1.24+row/16*.10),(0,-1,0)) for column in range(3)] for row in range(17)])
-garment('bikini_top',patches)
-rows=[]
-for row in range(13):
- v=row/12;ring=[]
- for column in range(97):
-  theta=column/96*2*math.pi;side=abs(math.sin(theta))
-  low=.895+.115*side**1.45;high=1.015+.012*side**2
-  ring.append(radial(theta,low+(high-low)*v))
- rows.append(ring)
-# A smooth cloth bridge covers the groin without snapping to the separate thighs.
-# Only the skin weights are sampled from the body; the fabric keeps its lofted shape.
-front_y=front(0,.93)[2].y;back_y=hit((0,.5,.93),(0,-1,0))[2].y
-profile=[]
-for row in range(33):
- t=row/32;y=front_y+(back_y-front_y)*t
- centre,normal,tri,distance=tree.ray_cast(Vector((0,y,.6)),Vector((0,0,1)))
- if centre is None:raise RuntimeError(f'Missing groin surface at {y}')
- profile.append((centre,tri))
-# Fit a continuous fabric curve underneath the skin, rather than reproducing
-# every small anatomical fold in the centre-line ray intersections.
-times=np.linspace(0,1,len(profile));skin_z=np.array([point.z for point,tri in profile])
-curve=np.polyval(np.polyfit(times,skin_z,4),times)
-curve-=np.max(curve-skin_z)+.004
-assert np.all(curve<=skin_z-.004+1e-9)
-crotch=[]
-for row,(centre,tri) in enumerate(profile):
- strip=[]
- for column in range(17):
-  u=column/16*2-1
-  half_width=.018+.0195*math.sin(math.pi*row/32)**2
-  target=Vector((u*half_width,centre.y,float(curve[row])-.002*u*u))
-  strip.append((target,tri,centre))
- crotch.append(strip)
-bottom=garment('bikini_bottom',[rows,crotch])
-# Keep the central gusset on the pelvis when the thighs move independently.
-gusset=list(range(len(rows)*len(rows[0]),len(bottom.data.vertices)))
-for group in bottom.vertex_groups:group.remove(gusset)
-(bottom.vertex_groups.get('pelvis') or bottom.vertex_groups.new(name='pelvis')).add(gusset,1,'REPLACE')
-bpy.context.scene['lara_outfits']='clothed, bikini, nude'
+  for column in range(17):
+   u=column/16*2-1
+   half_width=.018+.0195*math.sin(math.pi*row/32)**2
+   target=Vector((u*half_width,centre.y,float(curve[row])-.002*u*u))
+   strip.append((target,tri,centre))
+  crotch.append(strip)
+ bottom=garment('bikini_bottom',[rows,crotch])
+ # Keep the central gusset on the pelvis when the thighs move independently.
+ gusset=list(range(len(rows)*len(rows[0]),len(bottom.data.vertices)))
+ for group in bottom.vertex_groups:group.remove(gusset)
+ (bottom.vertex_groups.get('pelvis') or bottom.vertex_groups.new(name='pelvis')).add(gusset,1,'REPLACE')
+if '--onepiece' in sys.argv:
+ import bmesh
+ shirt=bpy.data.objects['shirt'];shirt.data.calc_loop_triangles()
+ shirt_points=[shirt.matrix_world@v.co for v in shirt.data.vertices]
+ shirt_tree=BVHTree.FromPolygons(shirt_points,[tuple(t.vertices) for t in shirt.data.loop_triangles],all_triangles=True)
+ join_height=(arm.data.bones['spine_lower'].head_local.z+arm.data.bones['spine_upper'].head_local.z)/2
+ # Sample plain fabric above the hem, away from the hem's decorative seam.
+ point,normal,tri,distance=shirt_tree.ray_cast(Vector((0,-.5,join_height)),Vector((0,1,0)))
+ if point is None:raise RuntimeError('Missing original shirt fabric')
+ triangle=shirt.data.loop_triangles[tri];a,b,c=[shirt_points[i] for i in triangle.vertices]
+ uv=shirt.data.uv_layers.active.data;uvs=[uv[i].uv for i in triangle.loops]
+ coordinates=barycentric_transform(point,a,b,c,Vector((*uvs[0],0)),Vector((*uvs[1],0)),Vector((*uvs[2],0)))
+ fabric_uv=coordinates.xy.copy()
+ collection=bpy.data.collections.get('Lara - One piece')
+ if not collection:
+  collection=bpy.data.collections.new('Lara - One piece');bpy.context.scene.collection.children.link(collection)
+ for obj in list(collection.objects):bpy.data.objects.remove(obj,do_unlink=True)
+ # Preserve the original neckline skin, but remove the old exposed waist
+ # panels that would otherwise protrude through the fitted one-piece cloth.
+ skin=bpy.data.objects['body_torso'].copy();skin.data=skin.data.copy();skin.name='body_onepiece_torso'
+ collection.objects.link(skin)
+ cut=bmesh.new();cut.from_mesh(skin.data)
+ bmesh.ops.bisect_plane(cut,geom=list(cut.verts)+list(cut.edges)+list(cut.faces),
+  plane_co=skin.matrix_world.inverted()@Vector((0,0,join_height)),
+  plane_no=skin.matrix_world.to_3x3().transposed()@Vector((0,0,1)),
+  clear_inner=True,clear_outer=False,dist=1e-8)
+ cut.to_mesh(skin.data);cut.free();skin.data.update()
+ material=shirt.data.materials[0].copy();material.name='OnePiece_Shirt'
+ source_brief=bpy.data.objects['bikini_bottom']
+ # The brief is authored above as thirteen circumference rings of 97 vertices.
+ # Join to its real upper ring, then weld the common edge: no overlapping belt.
+ circumference_segments=96;brief_rings=13;ring_width=circumference_segments+1
+ top_indices=[(brief_rings-1)*ring_width+i for i in range(ring_width)]
+ lower=[source_brief.matrix_world@source_brief.data.vertices[i].co for i in top_indices]
+ waist=[]
+ for row in range(25):
+  t=row/24;ring=[]
+  for column,bottom_point in enumerate(lower):
+   theta=column/circumference_segments*2*math.pi
+   point,tri,skin=radial(theta,bottom_point.z+(join_height-bottom_point.z)*t)
+   if row==0:point=bottom_point.copy()
+   ring.append((point,tri,skin))
+  waist.append(ring)
+ extension=garment('shirt_swimsuit_bottom',[waist])
+ # The common boundary uses exactly the same original skin weights.
+ for group in extension.vertex_groups:group.remove(list(range(ring_width)))
+ for column,index in enumerate(top_indices):
+  for influence in source_brief.data.vertices[index].groups:
+   name=source_brief.vertex_groups[influence.group].name
+   group=extension.vertex_groups.get(name) or extension.vertex_groups.new(name=name)
+   group.add([column],influence.weight,'REPLACE')
+ brief=source_brief.copy();brief.data=source_brief.data.copy();collection.objects.link(brief)
+ brief.data.materials.clear();brief.data.materials.append(material)
+ for obj in [extension,brief]:
+  layer=obj.data.uv_layers.active or obj.data.uv_layers.new(name='UVMap')
+  for loop in layer.data:loop.uv=fabric_uv
+ bpy.ops.object.select_all(action='DESELECT');extension.select_set(True);brief.select_set(True)
+ bpy.context.view_layer.objects.active=extension;bpy.ops.object.join()
+ mesh=bmesh.new();mesh.from_mesh(extension.data)
+ bmesh.ops.remove_doubles(mesh,verts=list(mesh.verts),dist=1e-7)
+ mesh.to_mesh(extension.data);mesh.free();extension.data.update()
+ extension['lara_outfit']='one-piece';extension['lara_default_color']='match-shirt'
+ print('ONE_PIECE',len(extension.data.vertices),'vertices',flush=True)
+bpy.context.scene['lara_outfits']='clothed, one-piece, bikini, nude'
 bpy.context.preferences.filepaths.save_version=0
 bpy.ops.wm.save_as_mainfile(filepath=str(FOLDER/'lara_perfect.blend'))
 spec=importlib.util.spec_from_file_location('limbs',ROOT/'scripts/separate_lara_limb_uvs.py')
 limbs=importlib.util.module_from_spec(spec);spec.loader.exec_module(limbs)
 limbs.export()
-print('Saved Lara with three outfits',flush=True)
+print('Saved Lara outfits',flush=True)

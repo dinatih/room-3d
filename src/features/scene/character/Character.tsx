@@ -126,6 +126,7 @@ export function Character({
   const showWallhack = useSceneStore(state => state.layers.wallhack);
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
+  const laraOnePiece = useSceneStore(state => state.layers.laraOnePiece ?? false);
   const laraBikini = useSceneStore(state => state.layers.laraBikini ?? false);
   const laraNude = useSceneStore(state => state.layers.laraNude ?? false);
   const laraTopOff = useSceneStore(state => state.layers.laraTopOff ?? false);
@@ -489,6 +490,7 @@ export function Character({
   useLayoutEffect(() => {
     if (!scene || !isLara) return;
     applyClothingAndAccessoriesVisibility(parts, {
+      laraOnePiece,
       laraBikini,
       laraNude,
       laraTopOff,
@@ -500,7 +502,7 @@ export function Character({
       equipment
     });
     invalidate();
-  }, [parts, scene, equipment, laraBikini, laraNude, laraTopOff, laraBottomOff, laraShoes, showAccessories, laraPistols, invalidate, isLara]);
+  }, [parts, scene, equipment, laraOnePiece, laraBikini, laraNude, laraTopOff, laraBottomOff, laraShoes, showAccessories, laraPistols, invalidate, isLara]);
 
   // Propriétés de rendu : ombres, wallhack, fil de fer
   useEffect(() => {

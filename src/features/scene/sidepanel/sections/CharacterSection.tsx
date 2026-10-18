@@ -407,6 +407,7 @@ export function CharacterSection({
       {layerBtn('pink',   iconLabel('bi-droplet-half', 'Peau & tissus réalistes (Mat)'), 'laraRealisticTextures')}
       {layerBtn('light',  iconLabel('bi-crosshair', 'Pistolets Lara'), 'laraPistols')}
       {layerBtn('light',  iconLabel('bi-handbag', 'Accessoires Lara'), 'accessories')}
+      {layerBtn('pink', iconLabel('bi-person-standing-dress', 'Enlever le short — maillot 1 pièce'), 'laraOnePiece')}
       {layerBtn('pink', iconLabel('bi-water', 'Bikini rouge'), 'laraBikini')}
       {layerBtn('pink',   iconLabel('bi-person-standing', 'Déshabiller Lara (Alt+X)'), 'laraNude')}
       {layerBtn('pink',   iconLabel('bi-person-standing-dress', 'Enlever le haut (Alt+Z)'), 'laraTopOff')}

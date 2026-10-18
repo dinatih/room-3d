@@ -641,8 +641,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
         }
       }
       const nextLayers = { ...state.layers, [key]: isActivating };
-      if(key==='laraBikini' && isActivating){
+      if((key==='laraBikini' || key==='laraOnePiece') && isActivating){
         nextLayers.laraNude=false;nextLayers.laraTopOff=false;nextLayers.laraBottomOff=false;
+        if(key==='laraBikini')nextLayers.laraOnePiece=false;
+        else nextLayers.laraBikini=false;
+        updateUrlLayer(key==='laraBikini'?'laraOnePiece':'laraBikini',false);
       }
       updateUrlLayer(key, isActivating);
       if (key === 'mirrors') {

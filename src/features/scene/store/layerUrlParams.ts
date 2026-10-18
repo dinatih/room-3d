@@ -47,6 +47,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   showAllLaraStyles: true,
   accessories: true,
   laraPistols: true,
+  laraOnePiece: false,
   laraBikini: false,
   laraNude: false,
   laraTopOff: false,
@@ -87,6 +88,7 @@ export interface LayerUrlMapping {
 }
 
 export const MONITORED_LAYERS: LayerUrlMapping[] = [
+  {layerKey:'laraOnePiece',canonicalParam:'laraOnePiece',urlParams:['onepiece','maillot']},
   {layerKey:'laraBikini',canonicalParam:'laraBikini',urlParams:['bikini']},
   {
     layerKey: 'wallStructure',
