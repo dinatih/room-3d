@@ -741,7 +741,7 @@ export function Character({
           groupRef.current.visible = !cameraState.characterHidden;
           cameraState.isAIControlled = false;
           currentAnimClip.current = null;
-          cameraState.positions[id] = { x: cameraState.characterX, y: 0, z: cameraState.characterZ, yaw: cameraState.followYaw, anim: currentAnimClip.current || 'idle' };
+          cameraState.positions[id] = { x: cameraState.characterX, y: 0, z: cameraState.characterZ, yaw: cameraState.followYaw, anim: (cameraState.isMoving ? 'walk' : 'idle') };
           
           setAgentPosition(cameraState.characterX, 0, cameraState.characterZ);
           setAgentRotation(cameraState.followYaw);

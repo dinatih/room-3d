@@ -133,6 +133,8 @@ export function useAgentController(
   // Instructions temporaires (actions demandées, rendez-vous et interactions duo).
   const dynamicNavQueueRef = useRef<AgentInstruction[]>([]);
   const dynamicNavIndexRef = useRef(0);
+  const manualOverrideRef = useRef(false);
+  const interruptedSmartObjectIdRef = useRef<string | undefined>(undefined);
   const routeRef = useRef(createRouteState());
   const routeInstructionRef = useRef<AgentInstruction | null>(null);
   const navigationErrorRef = useRef<string | null>(null);
@@ -545,6 +547,61 @@ export function useAgentController(
     for (const targetId of partners) {
       document.dispatchEvent(new CustomEvent('npc-retry-smartaction', { detail: { targetId, objectId } }));
     }
+  };
+
+  const pickNewAutonomousActivity = (excludedObjectId?: string) => {
+    // 1. Smart objects disponibles et utilisables avec au moins un slot libre
+    const candidates = getAllSmartObjectIds()
+      .filter(id => OccupancyManager.canUseObject(id, _characterId))
+      .map(id => ({ id, seq: buildSmartObjectInstructionSequence(id, undefined, _characterId) }))
+      .filter(c => c.seq.length > 0);
+
+    const nonCurrent = excludedObjectId ? candidates.filter(c => c.id !== excludedObjectId) : candidates;
+    const pool = nonCurrent.length > 0 ? nonCurrent : candidates;
+
+    if (pool.length > 0) {
+      const chosen = pool[Math.floor(Math.random() * pool.length)];
+      dynamicNavQueueRef.current = chosen.seq;
+      dynamicNavIndexRef.current = 0;
+      appLog(_characterId, `🎲 Sortie de contrôle manuel : tirage d'une nouvelle activité (${chosen.id})`, {
+        category: 'object',
+        action: 'resume_autonomous_new_activity',
+        actors: [_characterId],
+        object: { id: chosen.id, label: SMART_OBJECTS[chosen.id]?.name },
+      });
+      // Synchroniser stepIndexRef pour continuer logiquement dans le scénario après cette activité
+      if (scenario && scenario.length > 0) {
+        const chosenIdx = scenario.findIndex(s => s.smartObjectId === chosen.id);
+        if (chosenIdx !== -1) {
+          let nextIdx = chosenIdx;
+          while (nextIdx < scenario.length && scenario[nextIdx].smartObjectId === chosen.id) nextIdx++;
+          stepIndexRef.current = nextIdx;
+        } else if (excludedObjectId) {
+          while (stepIndexRef.current < scenario.length && scenario[stepIndexRef.current].smartObjectId === excludedObjectId) {
+            stepIndexRef.current++;
+          }
+        }
+      }
+      return true;
+    }
+
+    // Fallback pour les scénarios non basés sur les smart objects (ex: xbot avec tour de conciergerie)
+    if (scenario && scenario.length > 0) {
+      const moveSteps = scenario
+        .map((s, idx) => ({ s, idx }))
+        .filter(({ s }) => s.type === 'MOVE_TO' && (!excludedObjectId || s.smartObjectId !== excludedObjectId));
+      if (moveSteps.length > 0) {
+        const chosenStep = moveSteps[Math.floor(Math.random() * moveSteps.length)];
+        stepIndexRef.current = chosenStep.idx;
+      } else {
+        stepIndexRef.current = 0;
+      }
+      dynamicNavQueueRef.current = [];
+      dynamicNavIndexRef.current = 0;
+      return true;
+    }
+
+    return false;
   };
 
   // Process instruction changes on the next frame. Recursive retries can loop
@@ -1374,6 +1431,13 @@ export function useAgentController(
 
   const update = (dt: number): AgentState => {
     if (!enabled) return stateRef.current;
+    if (manualOverrideRef.current) {
+      manualOverrideRef.current = false;
+      if (loop) {
+        pickNewAutonomousActivity(interruptedSmartObjectIdRef.current);
+      }
+      interruptedSmartObjectIdRef.current = undefined;
+    }
     const instruction = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length
       ? dynamicNavQueueRef.current[dynamicNavIndexRef.current] : scenario?.[stepIndexRef.current];
     const blocked = blockedCoordsRef.current;
@@ -1404,9 +1468,47 @@ export function useAgentController(
   };
 
   const setPosition = (x: number, y: number, z: number) => {
-    if (transitionRef.current) {
+    if (!manualOverrideRef.current) {
+      manualOverrideRef.current = true;
+      const activeInstruction = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length
+        ? dynamicNavQueueRef.current[dynamicNavIndexRef.current]
+        : (scenario ? scenario[stepIndexRef.current] : null);
+      const currentObjId = activeInstruction?.smartObjectId ?? claimedSlotRef.current?.objectId;
+      interruptedSmartObjectIdRef.current = currentObjId;
+
+      const session = duoSessionManager.getSessionFor(_characterId);
+      const partners = [session?.participantA?.characterId, session?.participantB?.characterId]
+        .filter((id): id is string => !!id && id !== _characterId);
+      duoSessionManager.leaveDuoZone(session?.participantA?.characterId ?? _characterId);
+      resetDuoState();
+
+      releaseClaimedSlot();
+      OccupancyManager.releaseAllForCharacter(_characterId);
+
+      resetRoute(routeRef.current, _characterId);
+      routeRef.current.owner = undefined;
+      routeInstructionRef.current = null;
+      cachedCoordsInstructionRef.current = null;
+      cachedCoordsRef.current = null;
+      blockedCoordsRef.current = null;
+      navigationErrorRef.current = null;
+      transitionRef.current = null;
+      playbackRef.current = null;
+      timerRef.current = 0;
+      duoWaitTimerRef.current = 0;
+      repeatIndexRef.current = 0;
+      targetRepeatsRef.current = 1;
+      dynamicNavQueueRef.current = [];
+      dynamicNavIndexRef.current = 0;
       statusRef.current = 'IDLE';
       stateRef.current.animation = resolveAnimationId('idle');
+      stateRef.current.animationPaused = false;
+
+      if (currentObjId) {
+        for (const targetId of partners) {
+          document.dispatchEvent(new CustomEvent('npc-retry-smartaction', { detail: { targetId, objectId: currentObjId } }));
+        }
+      }
     }
     stateRef.current.animationPaused = false;
     transitionRef.current = null;
@@ -1418,6 +1520,11 @@ export function useAgentController(
     stateRef.current.y = y;
     stateRef.current.z = z;
     deployment.y = y;
+    if (deployment.status === 'FALLING' || deployment.status === 'WAITING') {
+      deployment.hasCompleted = true;
+      deployment.hasStarted = true;
+      statusRef.current = 'IDLE';
+    }
   };
 
   const setRotation = (rotY: number) => {
