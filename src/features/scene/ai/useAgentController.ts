@@ -21,6 +21,7 @@ import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, beginAc
 import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { getExitTransition } from '../animations/animationTransitions';
 import { DRONA_SE_ITEMS } from '../items/kallaxSeDrona';
+import { dronaPlayback } from '../items/dronaPlayback';
 import { doorCollisionState } from '../doorObstacles';
 import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
 
@@ -212,7 +213,10 @@ export function useAgentController(
         useSceneStore.getState().triggerAction('drona-ne-catchall-slide', false);
       }
       const drona = DRONA_SE_ITEMS[claimedSlotRef.current.objectId];
-      if (drona) useSceneStore.getState().triggerAction(drona.action, false);
+      if (drona) {
+        dronaPlayback.delete(drona.action);
+        useSceneStore.getState().triggerAction(drona.action, false);
+      }
       if (claimedSlotRef.current.objectId === 'corridor-closet') {
         useSceneStore.getState().triggerAction('corrDoors', false);
       }
@@ -459,6 +463,8 @@ export function useAgentController(
   const ROT_SPEED = 5;
 
   const triggerInstructionEvent = (instruction: AgentInstruction) => {
+    if (instruction.waitForAnimation) playbackRef.current = null;
+    if (instruction.dronaMotion) dronaPlayback.set(instruction.dronaMotion.action, instruction.dronaMotion.from);
     if (!instruction.triggerEventKey) return;
     useSceneStore.getState().triggerAction(instruction.triggerEventKey, instruction.triggerEventValue);
   };
@@ -1276,6 +1282,11 @@ export function useAgentController(
         stateRef.current.rotY = computeRotYStep(stateRef.current.rotY, targetRotY, ROT_SPEED, dt);
       }
 
+      if (currentInstruction.waitForAnimation) {
+        const playback = playbackRef.current;
+        if (playback?.animation !== stateRef.current.animation || !playback.finished) return stateRef.current;
+        timerRef.current = 0;
+      }
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
         if (repeatIndexRef.current + 1 < targetRepeatsRef.current) {
@@ -1420,6 +1431,12 @@ export function useAgentController(
 
   const reportAnimationPlayback = (animation: string, progress: number, finished: boolean) => {
     playbackRef.current = { animation, progress, finished };
+    const instruction = dynamicNavQueueRef.current[dynamicNavIndexRef.current] ?? scenario?.[stepIndexRef.current];
+    const motion = instruction?.dronaMotion;
+    if (motion && resolveAnimationId(instruction.animation!) === animation) {
+      const fraction = Math.max(0, Math.min(1, (progress - motion.range[0]) / (motion.range[1] - motion.range[0])));
+      dronaPlayback.set(motion.action, motion.from + (motion.to - motion.from) * fraction);
+    }
   };
 
   return { update, setPosition, setRotation, hasPendingDynamicTask, getStatus, reportAnimationPlayback, initialPos: startPosRef.current };

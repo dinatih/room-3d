@@ -9,6 +9,7 @@ import { INTERX_ANIMATION_DEFINITIONS } from './interxManifest';
 import { FAB_ANIMATION_DEFINITIONS } from './fabManifest';
 import { BEHAVE_ANIMATION_DEFINITIONS } from './behaveManifest';
 import { KIT_ANIMATION_DEFINITIONS } from './kitManifest';
+import { DRONA_LINEN_ANIMATIONS } from './dronaLinenManifest';
 
 export type AnimationCategory = 'combat' | 'dances' | 'emotes_gestures' | 'interactions' | 'locomotion' | 'poses_idles' | 'sports_fitness' | 'yoga';
 
@@ -57,6 +58,7 @@ export interface AnimationDefinition {
 }
 
 export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
+  ...DRONA_LINEN_ANIMATIONS,
   ...INTERX_ANIMATION_DEFINITIONS,
   ...FAB_ANIMATION_DEFINITIONS,
   ...BEHAVE_ANIMATION_DEFINITIONS,

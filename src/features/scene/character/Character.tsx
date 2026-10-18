@@ -1086,7 +1086,7 @@ export function Character({
       pendantDelta = delta;
       if (activeActionName.current && actions[activeActionName.current]) {
         const act = actions[activeActionName.current];
-        if (act.paused) act.paused = false;
+        if (act.paused && !(act.loop === THREE.LoopOnce && act.time >= act.getClip().duration)) act.paused = false;
       }
       if (duoSessionManager.isPlaying(id)) {
         const partA = duoSessionManager.getParticipantA(id);

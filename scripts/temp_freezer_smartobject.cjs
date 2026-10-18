@@ -1,6 +1,50 @@
 const launchBrowser = require('./browser-test-options.cjs');
 const puppeteer = require('puppeteer');
 const assert = require('node:assert/strict');
+if(process.argv.includes('--build-linen')){
+ (async()=>{
+   const fs=require('node:fs');const {NodeIO}=await import('@gltf-transform/core');const io=new NodeIO();
+   fs.mkdirSync('public/animations/drona',{recursive:true});const durations={};
+   for(const [name,source,reverse] of [['pull','opening',false],['search','searching_files_high',false],['push','opening',true]]){
+     const doc=await io.read(`public/animations/mixamo/anim_${source}.glb`),animation=doc.getRoot().listAnimations()[0];
+     const duration=Math.max(...animation.listSamplers().map(s=>s.getInput().getMax([])[0]));durations[name]=duration;
+     animation.setName('drona-linen-'+name);
+     if(reverse)for(const sampler of animation.listSamplers()){
+       const input=sampler.getInput(),output=sampler.getOutput(),times=input.getArray(),values=output.getArray(),size=output.getElementSize();
+       if(sampler.getInterpolation()==='STEP'){
+         // A reversed step changes just AFTER the mirrored key. Use the next
+         // representable float so the source's held poses and endpoints survive.
+         const reversedTimes=new Float32Array(times.length+1),reversedValues=new Float32Array((times.length+1)*size);
+         const bits=new DataView(new ArrayBuffer(4));let frame=0;
+         const write=(time,index)=>{reversedTimes[frame]=time;for(let j=0;j<size;j++)reversedValues[frame*size+j]=values[index*size+j];frame++;};
+         write(0,times.length-1);
+         for(let i=times.length-1;i>0;i--){
+           bits.setFloat32(0,duration-times[i],true);bits.setUint32(0,bits.getUint32(0,true)+1,true);
+           write(bits.getFloat32(0,true),i-1);
+         }
+         write(duration,0);
+         sampler.setInput(input.clone().setArray(reversedTimes));sampler.setOutput(output.clone().setArray(reversedValues));
+         continue;
+       }
+       if(sampler.getInterpolation()!=='LINEAR')throw new Error('Unsupported source interpolation: '+sampler.getInterpolation());
+       // Some source tracks start after zero. Keep their held endpoint when
+       // reversing, so the full clip duration and all poses remain identical.
+       const leading=times[times.length-1]<duration?1:0,trailing=times[0]>0?1:0;
+       const count=times.length+leading+trailing;
+       const reversedTimes=new Float32Array(count),reversedValues=new Float32Array(count*size);
+       for(let i=0;i<times.length;i++){
+         reversedTimes[i+leading]=duration-times[times.length-1-i];
+         for(let j=0;j<size;j++)reversedValues[(i+leading)*size+j]=values[(times.length-1-i)*size+j];
+       }
+       if(leading)for(let j=0;j<size;j++)reversedValues[j]=values[(times.length-1)*size+j];
+       if(trailing){reversedTimes[count-1]=duration;for(let j=0;j<size;j++)reversedValues[(count-1)*size+j]=values[j];}
+       sampler.setInput(input.clone().setArray(reversedTimes));sampler.setOutput(output.clone().setArray(reversedValues));
+     }
+     await io.write(`public/animations/drona/linen_${name}.glb`,doc);
+   }
+   console.log(JSON.stringify(durations));
+ })().catch(e=>{console.error(e);process.exitCode=1;});
+}
 if(process.argv.includes('--inspect-drona')){
  (async()=>{
    const THREE=require('three'),fs=require('node:fs');
@@ -24,7 +68,7 @@ if(process.argv.includes('--inspect-fridge')){
  console.log(JSON.stringify(Object.fromEntries(glb.animations.map(a=>[a.name,Math.max(...a.samplers.map(s=>glb.accessors[s.input].max[0]))]))));
  process.exit(0);
 }
-if(!process.argv.includes('--inspect-drona'))(async () => {
+if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-linen'))(async () => {
  const browser = await launchBrowser({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--disable-background-timer-throttling']});
  const errors=[];
  try {
@@ -452,11 +496,35 @@ if(!process.argv.includes('--inspect-drona'))(async () => {
    const {default:ReactDOM}=await import('/node_modules/.vite/deps/react-dom_client.js');
    const {useAgentController}=await import('/src/features/scene/ai/useAgentController.ts');
    const {setAgentProfile}=await import('/src/features/scene/ai/navigation/obstacles.ts');
+   const {getAnimationDef}=await import('/src/features/scene/animations/animationResolver.ts');
+   const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
+   const linenClips={};let linenRig;
+   for(const phase of ['pull','search','push']){
+     const gltf=await new GLTFLoader().loadAsync('/animations/drona/linen_'+phase+'.glb');
+     linenClips['drona-linen-'+phase]=gltf.animations[0];linenRig??=gltf.scene;
+   }
+   const sourceOpening=await new GLTFLoader().loadAsync('/animations/mixamo/anim_opening.glb');
+   const original=sourceOpening.animations[0],pushed=linenClips['drona-linen-push'];
+   for(const track of original.tracks){
+     const reversed=pushed.tracks.find(t=>t.name===track.name);
+     if(!reversed)throw new Error('Push must retain every source track');
+     const a=track.createInterpolant(),b=reversed.createInterpolant();
+     for(const fraction of [0,.25,.5,.75,1]){
+       const source=a.evaluate(original.duration*(1-fraction)),reverse=b.evaluate(pushed.duration*fraction);
+       if(Array.from(source).some((v,i)=>Math.abs(v-reverse[i])>1e-5))throw new Error('Push reversal mismatch: '+JSON.stringify({track:track.name,fraction,source:Array.from(source),reverse:Array.from(reverse)}));
+     }
+   }
    const f=window.fixture,results=[],render=f.gl.render;f.gl.render=()=>{};
    for(const item of items)for(const interrupted of [false,true]){
      const id=item.id+'-check-'+interrupted;setAgentProfile(id,{radius:15,height:170});
      const container=document.createElement('div');document.body.append(container);
      const root=ReactDOM.createRoot(container),routine=structuredClone(item.sequence);
+     const mixer=item.id==='drona-se-linen'?new f.THREE.AnimationMixer(linenRig.clone(true)):null;
+     let playback=null,playing='',loading=0;const finishedCounts={};
+     if(mixer){
+       mixer.addEventListener('loop',()=>{throw new Error('A linen gesture must never loop');});
+       mixer.addEventListener('finished',e=>{const name=e.action.getClip().name;finishedCounts[name]=(finishedCounts[name]??0)+1;});
+     }
      const [x,y,z]=item.slot.offset;
      let agent,complete=false,pulled=false;
      function Probe(){agent=useAgentController(id,routine,false,()=>({x,y,z,rotY:item.slot.rotY}),()=>{complete=true;});return null;}
@@ -464,13 +532,42 @@ if(!process.argv.includes('--inspect-drona'))(async () => {
      const animations=new Set();
      for(let time=0;time<45&&!complete;time+=.1){
        const state=agent.update(.1);animations.add(state.animation);
+       if(mixer&&linenClips[state.animation]){
+         if(playing!==state.animation){
+           if(playback)playback.stop();playing=state.animation;
+           const clip=linenClips[playing];
+           if(getAnimationDef(playing).loop!=='once')throw new Error('Linen clips must be explicitly one-shot');
+           playback=mixer.clipAction(clip).reset().setLoop(f.THREE.LoopOnce,1);playback.clampWhenFinished=true;
+           // Delay the initial clip beyond its nominal duration: the box must
+           // stay still and the controller must wait for real playback.
+           loading=playing==='drona-linen-pull'?clip.duration+.5:0;
+         }
+         if(loading>0){
+           loading-=.1;
+           if(f.readSouth(item.id).z!==0)throw new Error('The drawer moved before its clip was loaded');
+         }else{
+           playback.play();mixer.update(.1);
+           const progress=Math.min(1,playback.time/playback.getClip().duration);
+           agent.reportAnimationPlayback(playing,progress,progress>=1);
+         }
+       }
        await new Promise(r=>setTimeout(r,0));f.tick(.1);
+       if(mixer&&playback&&loading<=0){
+         const motion=routine.find(step=>step.animation===playing)?.dronaMotion;
+         if(motion){
+           const progress=playback.time/playback.getClip().duration;
+           const fraction=Math.max(0,Math.min(1,(progress-motion.range[0])/(motion.range[1]-motion.range[0])));
+           const expected=-item.closed.depth*2/3*(motion.from+(motion.to-motion.from)*fraction);
+           if(Math.abs(f.readSouth(item.id).z-expected)>1e-6)throw new Error('Drawer drifted from the actual hand motion');
+         }
+       }
        if(state.animation===item.animation&&Math.abs(f.readSouth(item.id).z+item.closed.depth*2/3)<1e-6){
          pulled=true;if(interrupted)break;
        }
      }
      root.unmount();container.remove();await new Promise(r=>setTimeout(r,0));f.tick(item.duration);
-     results.push({id:item.id,interrupted,complete,pulled,animations:[...animations],z:f.readSouth(item.id).z,open:f.store.getState().extraStates[item.action]});
+     if(mixer&&!interrupted)for(const phase of ['pull','search','push'])if(finishedCounts['drona-linen-'+phase]!==1)throw new Error('Each linen gesture must finish exactly once');
+     results.push({id:item.id,interrupted,complete,pulled,animations:[...animations],z:f.readSouth(item.id).z,open:f.store.getState().extraStates[item.action],finishedCounts});
    }
    f.gl.render=render;return results;
  },south);

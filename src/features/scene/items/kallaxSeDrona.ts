@@ -14,6 +14,6 @@ export const DRONA_SE_ITEMS: Record<string, { index: number; label: string; acti
   },
   'drona-se-linen': {
     index: 1, label: 'Dröna linge de maison', action: 'drona-se-linen-slide',
-    animation: 'searching-files-high', pullAnimation: 'opening', duration: getAnimationDef('opening')!.duration! / 2,
+    animation: 'drona-linen-search', pullAnimation: 'drona-linen-pull', duration: getAnimationDef('opening')!.duration! / 2,
   },
 };

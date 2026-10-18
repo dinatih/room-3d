@@ -11,6 +11,7 @@ import { FREEZER_DOOR_DURATION } from '../items/Freezer';
 import { FRIDGE_DOOR_DURATION, FRIDGE_CRISPER_DURATION } from '../items/Fridge';
 import { DRONA_CATCHALL_ACTION, DRONA_CATCHALL_POSITION, DRONA_CATCHALL_SLIDE_DURATION } from '../items/kallaxNeDrona';
 import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from '../items/kallaxSeDrona';
+import { LINEN_PULL_RANGE, LINEN_PUSH_RANGE } from '../animations/dronaLinenManifest';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
 
@@ -1109,19 +1110,25 @@ export function buildSmartObjectInstructionSequence(
     const action = item?.action ?? DRONA_CATCHALL_ACTION;
     const animation = item?.pullAnimation ?? 'opening';
     const duration = item?.duration ?? DRONA_CATCHALL_SLIDE_DURATION;
+    const linen = objectId === 'drona-se-linen';
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey },
       { type: 'WAIT', doorKey },
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: doorKey },
       {
         type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: doorKey,
-        animation, duration, rotY: slot.rotY,
+        animation, duration: linen ? getAnimationDef(animation)!.duration : duration, rotY: slot.rotY,
+        waitForAnimation: linen,
+        dronaMotion: linen ? { action, from: 0, to: 1, range: LINEN_PULL_RANGE } : undefined,
         triggerEventKey: action, triggerEventValue: true,
       },
-      { ...baseInstruction, closedDoor: doorKey },
+      { ...baseInstruction, closedDoor: doorKey, waitForAnimation: linen },
       {
         type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: doorKey,
-        animation, duration, rotY: slot.rotY,
+        animation: linen ? 'drona-linen-push' : animation,
+        duration: linen ? getAnimationDef('drona-linen-push')!.duration : duration, rotY: slot.rotY,
+        waitForAnimation: linen,
+        dronaMotion: linen ? { action, from: 1, to: 0, range: LINEN_PUSH_RANGE } : undefined,
         triggerEventKey: action, triggerEventValue: false,
       },
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey, closedDoor: doorKey },

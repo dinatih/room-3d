@@ -113,7 +113,7 @@ export function useCharacterAnimations({
     // Si l'action existe déjà en mémoire, la réactiver immédiatement sans recharger le GLB
     const existingAction = actionsRef.current[animId] || actionsRef.current[path] || (pathOrKey ? actionsRef.current[pathOrKey] : undefined);
     if (existingAction) {
-      if (!loop) {
+      if (!loop || def?.loop === 'once') {
         existingAction.setLoop(THREE.LoopOnce, 1);
         existingAction.clampWhenFinished = true;
       } else {

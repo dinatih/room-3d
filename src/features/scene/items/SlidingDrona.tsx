@@ -6,6 +6,7 @@ import { useSceneStore } from '../store/useSceneStore';
 import { glbLocalBBox } from '../glbUtils';
 import { getObjectActionIds } from '../objectActions';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
+import { dronaPlayback } from './dronaPlayback';
 
 /** One independently controlled box, sliding along the Kallax's local front. */
 export function SlidingDrona({ objectId, label, actionId, duration, isPreview = false, actionState = {} }: {
@@ -27,7 +28,8 @@ export function SlidingDrona({ objectId, label, actionId, duration, isPreview = 
   useEffect(() => { invalidate(); }, [open, invalidate]);
   useFrame((_, delta) => {
     const target = open ? 1 : 0;
-    progress.current = open ? Math.min(target, progress.current + delta / duration) : Math.max(target, progress.current - delta / duration);
+    const synchronized = dronaPlayback.get(actionId);
+    progress.current = synchronized ?? (open ? Math.min(target, progress.current + delta / duration) : Math.max(target, progress.current - delta / duration));
     ref.current.position.z = -travel.current * progress.current;
     if (progress.current !== target) invalidate();
   });
