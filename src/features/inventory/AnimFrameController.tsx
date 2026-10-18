@@ -488,7 +488,7 @@ export function AnimFrameController({
 
       if (e.key.toLowerCase() === 'd' || e.key.toLowerCase() === 'c') {
         if (e.defaultPrevented) return;
-        if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || !isHumanCharacter) return;
+        if (e.repeat || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey || !isHumanCharacter) return;
         if (e.key.toLowerCase() === 'c' && !onSelectDuoAnim) return;
         e.preventDefault();
         e.stopImmediatePropagation();
