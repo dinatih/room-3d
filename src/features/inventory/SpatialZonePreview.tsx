@@ -450,7 +450,7 @@ export function SpatialZonePreview({
       </Canvas>
 
       <div className="position-absolute top-0 start-0 m-2 z-1 d-flex flex-column align-items-start gap-1">
-        {showFpsGraph && (
+        {showFpsGraph ? (
           <div className="inventory-mini-perf glass-card shadow-lg rounded-2 p-1 position-relative" style={{ width: 190 }}>
             <button
               type="button"
@@ -462,6 +462,17 @@ export function SpatialZonePreview({
             />
             <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
           </div>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-sm btn-dark bg-opacity-75 border-secondary text-white shadow-sm p-1 d-flex align-items-center justify-content-center"
+            style={{ width: 28, height: 28, borderRadius: 6 }}
+            onClick={() => setShowFpsGraph(true)}
+            title="Afficher les performances"
+            aria-label="Afficher les performances"
+          >
+            <i className="bi bi-bar-chart-fill" style={{ fontSize: 13 }} aria-hidden="true" />
+          </button>
         )}
         <div style={{
           background: 'rgba(15, 23, 42, 0.85)',
