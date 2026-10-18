@@ -189,6 +189,7 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  const {KallaxNE}=await import('/src/features/scene/items/KallaxNE.tsx');
  const {KallaxSE}=await import('/src/features/scene/items/KallaxSE.tsx');
  const {KallaxNW}=await import('/src/features/scene/items/KallaxNW.tsx');
+ const {KallaxCuisine}=await import('/src/features/scene/items/KallaxCuisine.tsx');
  const {Beds,Desks,DeskDecor}=await import('/src/features/scene/placements/LivingRoomPlacements.tsx');
  const {Smorkull}=await import('/src/features/scene/items/Smorkull.tsx');
  const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
@@ -202,7 +203,7 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  function App(){const [props,setProps]=React.useState({isPreview:false,actionState:{}});f.setProps=setProps;
  return h(Canvas,{frameloop:'never',shadows:true,camera:{position:[125,80,-95],near:.1,far:1500,fov:45}},
  h(Capture),h('ambientLight',{intensity:.85}),h('directionalLight',{position:[100,120,-80],intensity:2}),
- h(React.Suspense,{fallback:null},props.layout?h(React.Fragment,null,h(Beds),h(Desks),h(DeskDecor)):h(props.dronaNW?KallaxNW:props.dronaSE?KallaxSE:props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
+ h(React.Suspense,{fallback:null},props.layout?h(React.Fragment,null,h(Beds),h(Desks),h(DeskDecor)):h(props.dronaKitchen?KallaxCuisine:props.dronaNW?KallaxNW:props.dronaSE?KallaxSE:props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
  props.chair&&h(React.Suspense,{fallback:null},h('group',{ref:g=>{f.chair=g;},position:chairTransform.position,rotation:[0,chairTransform.rotationY,0]},h(Smorkull,{item:{},actionState:{},onSize:()=>{f.chairReady=true;}}))),
  h('mesh',{rotation:[-Math.PI/2,0,0],position:[0,-.1,0]},h('planeGeometry',{args:[400,400]}),h('meshStandardMaterial',{color:'#777777'})) );}
  createRoot(container).render(h(App));
@@ -212,6 +213,37 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  });
  await page.waitForFunction(()=>window.fixture.scene?.getObjectByName('motor_casing'),{timeout:60000});
  await page.evaluate(()=>{const f=window.fixture;f.camera.lookAt(0,25,0);f.tick(.01);});
+
+ if(process.argv.includes('--clearance')){
+   const measurements=[];
+   for(const shelf of ['se','ne','nw','kitchen']){
+     await page.evaluate(shelf=>{
+       const f=window.fixture;f.dimensions=null;
+       f.setProps({dronaSE:shelf==='se',drona:shelf==='ne',dronaNW:shelf==='nw',dronaKitchen:shelf==='kitchen',noCaps:true,noMannequins:true,actionState:{},isPreview:false});
+     },shelf);
+     await page.waitForFunction(()=>!!window.fixture.dimensions,{timeout:60000});
+     const result=await page.evaluate(async(shelf)=>{
+       const f=window.fixture,{ROOM_W,ROOM_D,BATH_WEST_WALL,FURNITURE_WALL_CLEARANCE}=await import('/src/features/scene/wallData.ts');
+       const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
+       const {KALLAX_NE_POSITION,KALLAX_NE_ROTATION}=await import('/src/features/scene/items/kallaxNeDrona.ts');
+       const {KALLAX_NW_POSITION,KALLAX_NW_ROTATION}=await import('/src/features/scene/items/dronaStorage.ts');
+       const {KALLAX_CUISINE_POSITION}=await import('/src/features/scene/placements/KitchenPlacements.tsx');
+       const freezer=getObjectTransform('freezer');
+       const position=shelf==='se'?freezer.position:shelf==='ne'?KALLAX_NE_POSITION:shelf==='nw'?KALLAX_NW_POSITION:KALLAX_CUISINE_POSITION;
+       const ry=shelf==='se'?freezer.rotationY-Math.PI/2:shelf==='ne'?KALLAX_NE_ROTATION:KALLAX_NW_ROTATION;
+       const root=f.scene.children.find(n=>n.isGroup),matrix=new f.THREE.Matrix4().makeRotationY(ry).setPosition(...position);
+       const box=new f.THREE.Box3().setFromObject(root).applyMatrix4(matrix);
+       const gaps=shelf==='se'||shelf==='ne'?{east:ROOM_W-box.max.x}:{west:box.min.x-(shelf==='nw'?0:BATH_WEST_WALL)};
+       if(shelf==='ne'||shelf==='nw')gaps.north=box.min.z;
+       if(shelf==='kitchen'||shelf==='se')gaps.south=ROOM_D-box.max.z;
+       return {shelf,gaps,bounds:{min:box.min.toArray(),max:box.max.toArray()}};
+     },shelf);
+     console.log('Measured model wall clearance:',result);
+     measurements.push(result);
+   }
+   for(const result of measurements)for(const gap of Object.values(result.gaps))assert(gap>=3-.001,`${result.shelf} overlaps the 3 cm skirting zone: ${gap}`);
+   assert.deepEqual(errors,[]);console.log('Actual GLB bounds clear the 3 cm skirting zone: PASS');return;
+ }
 
  if(process.argv.includes('--storage')){
    const items=await page.evaluate(async()=>Object.entries((await import('/src/features/scene/items/dronaStorage.ts')).DRONA_SPECIAL_ITEMS));

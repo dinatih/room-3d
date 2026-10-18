@@ -26,6 +26,10 @@ export interface ObjectTransform {
   rotationY: number;
 }
 
+// Closed TILLREDA GLB measures 44.99 cm across the east-wall axis (45 cm nominal),
+// wider than the 39 cm-deep Kallax above it.
+const FREEZER_WIDTH = 45;
+
 /**
  * Mapping des alias d'itemId vers leur anchorKey dynamique si applicable
  */
@@ -87,7 +91,7 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
     case 'freezer':
       // The freezer sits at the base of Kallax SE, with an extra quarter turn.
       return {
-        position: [ROOM_W - 39 / 2 - FURNITURE_WALL_CLEARANCE, 0, ROOM_D - 60 - 40.5 / 2],
+        position: [ROOM_W - FREEZER_WIDTH / 2 - FURNITURE_WALL_CLEARANCE, 0, ROOM_D - 60 - 40.5 / 2 - FURNITURE_WALL_CLEARANCE],
         rotationY: Math.PI,
       };
     case 'bed-west':

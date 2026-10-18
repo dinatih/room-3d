@@ -24,10 +24,12 @@ const stub = (id: string): Item =>
 
 const w2 = 75.5;
 const KALLAX_DEPTH = 39;
-const KALLAX_CUISINE_POSITION: [number, number, number] = [
-  BATH_WEST_WALL + KALLAX_DEPTH / 2 + FURNITURE_WALL_CLEARANCE,
+// Closed GLB assembly extents towards the two walls, boxes included.
+const KALLAX_CUISINE_WALL_EXTENTS = { west: 20.124, south: 38.251 };
+export const KALLAX_CUISINE_POSITION: [number, number, number] = [
+  BATH_WEST_WALL + KALLAX_CUISINE_WALL_EXTENTS.west + FURNITURE_WALL_CLEARANCE,
   0,
-  ROOM_D - w2 / 2 - FURNITURE_WALL_CLEARANCE,
+  ROOM_D - KALLAX_CUISINE_WALL_EXTENTS.south - FURNITURE_WALL_CLEARANCE,
 ];
 const MACK_Z = ROOM_D - w2 - 16;
 const KALLAX_FRAME = 3.5;
