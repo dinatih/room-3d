@@ -181,8 +181,8 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       'hair_111': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
       '112': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
       'hair_112': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
-      'lara_native': { scale: 1.0, rotation: [0, 0, 0], offset: [0, -0.07, 0] },
-      'hair_lara_native': { scale: 1.0, rotation: [0, 0, 0], offset: [0, -0.07, 0] },
+      'lara_native': { scale: 1.0, rotation: [0, 0, 0], offset: [0, -0.0367, 0] },
+      'hair_lara_native': { scale: 1.0, rotation: [0, 0, 0], offset: [0, -0.0367, 0] },
     };
     
     const fix = wigFixes[strId] || wigFixes[cleanId] || { scale: 1.0, rotation: [0, 0, 0], offset: [0, 0, 0] };

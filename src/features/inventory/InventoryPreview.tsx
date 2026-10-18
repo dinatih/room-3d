@@ -431,19 +431,28 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
 
   const originalWireframes = useRef(new Map<THREE.Material & { wireframe: boolean }, boolean>());
   const applyWireframe = useCallback(() => {
+    if (!innerRef.current) return;
     innerRef.current.traverse(node => {
-      if (!(node instanceof THREE.Mesh)) return;
-      const materials = Array.isArray(node.material) ? node.material : [node.material];
+      if (!(node as THREE.Mesh).isMesh) return;
+      const mesh = node as THREE.Mesh;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       materials.forEach(material => {
-        if (!('wireframe' in material)) return;
+        if (!material || !('wireframe' in material)) return;
         const mat = material as THREE.Material & { wireframe: boolean };
         if (!originalWireframes.current.has(mat)) originalWireframes.current.set(mat, mat.wireframe);
-        mat.wireframe = wireframe || originalWireframes.current.get(mat)!;
+        const targetWireframe = wireframe || originalWireframes.current.get(mat)!;
+        if (mat.wireframe !== targetWireframe) {
+          mat.wireframe = targetWireframe;
+          mat.needsUpdate = true;
+        }
       });
     });
   }, [wireframe]);
 
-  useLayoutEffect(applyWireframe, [applyWireframe]);
+  useLayoutEffect(applyWireframe, [applyWireframe, actionState, item]);
+  useFrame(() => {
+    if (wireframe) applyWireframe();
+  });
   useLayoutEffect(() => () => {
     originalWireframes.current.forEach((value, material) => { material.wireframe = value; });
     originalWireframes.current.clear();

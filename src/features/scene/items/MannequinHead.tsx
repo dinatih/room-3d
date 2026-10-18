@@ -145,9 +145,9 @@ export function MannequinHead({
     onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
-  // Offset d'alignement manuel pour la tête de Mannequin, car son crâne (45 cm) est ~3 cm plus haut que celui de Lara (42.16 cm).
+  // Offset d'alignement manuel pour la tête de Mannequin (45 cm).
   const cleanWigId = activeWigId.replace('hair_', '');
-  const MANNEQUIN_WIG_OFFSET: [number, number, number] = cleanWigId === 'lara_native' ? [0, 34.0, 0] : [0, 31.0, 0];
+  const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 31.0, 0];
 
   return (
     <group ref={ref} userData={{ animUnit: true, isMannequin: true, itemName: 'Tête de mannequin' }}>
@@ -279,7 +279,7 @@ export function LaraWigBust({
     laraScene.scale.setScalar(LARA_SCALE);
     laraScene.position.set(
       -headLocal.x * LARA_SCALE,
-      31.0 - (headLocal.y + 0.07) * LARA_SCALE,
+      31.0 - (headLocal.y + 0.0367) * LARA_SCALE,
       -headLocal.z * LARA_SCALE,
     );
     laraScene.updateMatrixWorld(true);
