@@ -3,13 +3,17 @@
  * 1. Tuyau d'aération / ventilation commun aux étages au-dessus :
  *    - Démarre au sol de l'étage supérieur (Y = 270 cm)
  *    - Descend dans la gaine jusqu'à 20 cm sous le plafond (Y = 230 cm)
- *    - Séparation à Y = 230 cm :
- *      * Côté SDB : s'arrête exactement au nu du mur SDB-Nord, grille extra-plate posée à ras du mur
- *      * Côté Cuisine : ressort juste de la cloison Ouest pour offrir 2 sorties perpendiculaires (parallèles au mur cuisine-ouest)
- * 2. Tube vertical d'évacuation des eaux usées :
- *    - Colonne de chute continue du sol supérieur (Y = 270 cm) au sol (Y = 0 cm)
- *    - Raccordement réglementaire du WC au ras du sol (Y ≈ 17-18 cm)
- *    - Même diamètre que la colonne générale (Ø110 mm) avec coude, pente gravitaire et culotte de branchement
+ *    - Côté SDB : s'arrête au nu du mur SDB-Nord avec grille à ras
+ *    - Côté Cuisine : sortie Nord avec grille VMC, sortie Sud reliée à la gaine flexible de la hotte
+ * 2. Gaine flexible d'évacuation de la hotte aspirante :
+ *    - Part du coude direction Sud de l'aération cuisine
+ *    - Longe le mur Cuisine-Sud en descendant le long du mur
+ *    - Coude à 90° le long du dessus de la hotte
+ *    - Coude à 90° vers le bas pour se connecter au trou supérieur de la hotte UTDRAG
+ * 3. Tube vertical d'évacuation des eaux usées :
+ *    - Colonne de chute continue (Y = 270 cm à Y = 0 cm)
+ *    - Évacuation WC peinte en BLANC dans la partie visible SDB (longeant le mur SDB-Nord)
+ *    - Traversée du mur SDB-Nord à 90° vers la gaine et jonction sur la colonne générale
  *
  * Coordonnées locales :
  *   Base au sol (Y = 0), centré en X/Z sur l'axe du tuyau d'aération.
@@ -32,15 +36,24 @@ const VENT_RADIUS = 6.0; // Ø12 cm — colonne aération VMC collective
 const VENT_BRANCH_RADIUS = 5.0; // Ø10 cm — piquages vers pièces
 const DRAIN_RADIUS = 5.5; // Ø11 cm — colonne de chute eaux usées standard NF
 const DRAIN_OFFSET_Z = -22; // décalage du tube d'eaux usées à côté de l'aération
+const FLEX_RADIUS = 4.8; // Ø9.6 cm (conduit flexible hotte alu accordéon)
 
 // Repères de parois en coordonnées locales (groupe parent à [14, 0, 440])
 const SDB_WALL_Z = BATH_NORTH_WALL - 440; // ≈ 23.6 cm (mur SDB-Nord)
 const KITCHEN_WALL_X = KITCHEN_WEST_WALL - 14; // ≈ 19.6 cm (mur Cuisine-Ouest)
 const KITCHEN_EXIT_X = KITCHEN_WALL_X + 5.5; // ≈ 25.1 cm (ressort juste de la cloison)
-const KITCHEN_DOUBLE_OUTLET_LEN = 9.0; // demi-longueur des sorties perpendiculaires (parallèles au mur)
+const KITCHEN_DOUBLE_OUTLET_LEN = 9.0; // demi-longueur des sorties perpendiculaires
+
+// Repères de la hotte aspirante UTDRAG en coordonnées locales
+// Monde : X = 103.6, Z = 432, Y_top ≈ 170 -> local X = 89.6, local Z = -8.0
+const HOOD_X = 89.6;
+const HOOD_COLLAR_Z = -8.0;
+const HOOD_COLLAR_Y = 170.0;
+const KITCHEN_SOUTH_WALL_Z = 20.0; // Z local correspondant à KITCHEN_SOUTH_WALL (460 - 440)
+const FLEX_WALL_Z = KITCHEN_SOUTH_WALL_Z - FLEX_RADIUS - 0.4; // ≈ 14.8 cm (longe le mur Sud)
 
 // Position de l'évacuation WC en coordonnées locales
-// Toilette monde : X = 50, Z_dos = 465.1 -> local X = 36
+// Toilette monde : X = 50 -> local X = 36
 const WC_X = 36;
 const WC_AXIS_Y = 18.0; // axe standard évacuation cuvette NF
 const WC_WALL_RUN_Z = SDB_WALL_Z + DRAIN_RADIUS + 0.4; // axe du tuyau longeant le mur dans la SDB (≈ 29.5 cm)
@@ -50,7 +63,7 @@ const WC_JUNCTION_Y = 16.5; // raccordement sur la colonne générale
 export function BuildingPipes({ onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     const size = new THREE.Vector3(
-      Math.max(KITCHEN_EXIT_X, WC_X) + DRAIN_RADIUS,
+      Math.max(HOOD_X, WC_X) + DRAIN_RADIUS,
       Y_FLOOR_ABOVE,
       WC_WALL_RUN_Z + DRAIN_RADIUS - (DRAIN_OFFSET_Z - DRAIN_RADIUS)
     );
@@ -58,7 +71,7 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
   }, [onSize]);
 
   // Matériaux PBR réutilisables
-  const { ventMat, ventGrilleMat, drainMat, clampMat, gasketMat } = useMemo(() => {
+  const { ventMat, ventGrilleMat, drainMat, drainWhiteMat, flexMat, clampMat, clampWhiteMat, gasketMat } = useMemo(() => {
     return {
       ventMat: new THREE.MeshStandardMaterial({
         color: 0xb5bec8,
@@ -75,10 +88,27 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
         roughness: 0.45,
         metalness: 0.15,
       }),
+      // Peinture blanche sanitaire pour la partie visible du tuyau WC dans la SDB
+      drainWhiteMat: new THREE.MeshStandardMaterial({
+        color: 0xfafbfc,
+        roughness: 0.35,
+        metalness: 0.05,
+      }),
+      // Aluminium strié pour la gaine flexible de hotte
+      flexMat: new THREE.MeshStandardMaterial({
+        color: 0xd8dde3,
+        roughness: 0.28,
+        metalness: 0.85,
+      }),
       clampMat: new THREE.MeshStandardMaterial({
         color: 0x2b2e33,
         roughness: 0.3,
         metalness: 0.8,
+      }),
+      clampWhiteMat: new THREE.MeshStandardMaterial({
+        color: 0xededed,
+        roughness: 0.4,
+        metalness: 0.1,
       }),
       gasketMat: new THREE.MeshStandardMaterial({
         color: 0x1f2124,
@@ -96,7 +126,30 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
 
   // Longueurs des tronçons de la ligne d'évacuation WC
   const wcRunAlongWallLen = WC_X; // longe le mur de X = 36 à X = 0
-  const wcRunThroughWallLen = WC_WALL_RUN_Z - DRAIN_OFFSET_Z; // traverse du mur SDB vers la colonne générale
+  const wcThroughWallLenSDB = WC_WALL_RUN_Z - SDB_WALL_Z; // partie visible entre axe tuyau et mur SDB
+  const wcThroughWallLenGaine = SDB_WALL_Z - DRAIN_OFFSET_Z; // partie cachée dans la gaine jusqu'à la colonne
+
+  // Trajectoire 3D de la gaine flexible de hotte aspirante
+  const flexTubeGeo = useMemo(() => {
+    // 1. Part du coude direction Sud (KITCHEN_EXIT_X, Y_VENT_SPLIT, +KITCHEN_DOUBLE_OUTLET_LEN)
+    // 2. Longe le mur Cuisine-Sud à Z = FLEX_WALL_Z
+    // 3. Descend le long du mur jusqu'au niveau supérieur de la hotte (Y ≈ 182)
+    // 4. Coude à 90° vers le Nord (-Z) le long du dessus de la hotte
+    // 5. Coude à 90° vers le bas (-Y) pour entrer dans la collerette de la hotte
+    const points = [
+      new THREE.Vector3(KITCHEN_EXIT_X, Y_VENT_SPLIT, KITCHEN_DOUBLE_OUTLET_LEN),
+      new THREE.Vector3(KITCHEN_EXIT_X + 2.0, Y_VENT_SPLIT, FLEX_WALL_Z),
+      new THREE.Vector3(38.0, 226, FLEX_WALL_Z),
+      new THREE.Vector3(60.0, 212, FLEX_WALL_Z),
+      new THREE.Vector3(HOOD_X, 185, FLEX_WALL_Z),
+      new THREE.Vector3(HOOD_X, 180, 6.0),
+      new THREE.Vector3(HOOD_X, 180, -2.0),
+      new THREE.Vector3(HOOD_X, 178, HOOD_COLLAR_Z),
+      new THREE.Vector3(HOOD_X, HOOD_COLLAR_Y, HOOD_COLLAR_Z),
+    ];
+    const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.25);
+    return new THREE.TubeGeometry(curve, 72, FLEX_RADIUS, 18, false);
+  }, []);
 
   return (
     <group userData={{ itemName: 'Colonnes techniques (Aération & Évacuation)' }}>
@@ -133,15 +186,12 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
 
       {/* Grille VMC SDB extra-plate posée à ras du mur SDB-Nord (Z = SDB_WALL_Z) */}
       <group position={[0, Y_VENT_SPLIT, SDB_WALL_Z]} rotation-x={Math.PI / 2} userData={{ itemName: 'Grille aération SDB' }}>
-        {/* Cadre bague extra-plat affleurant le mur */}
         <mesh position={[0, 0.2, 0]} material={ventGrilleMat}>
           <cylinderGeometry args={[VENT_BRANCH_RADIUS + 1.2, VENT_BRANCH_RADIUS + 1.2, 0.4, 32]} />
         </mesh>
-        {/* Disque obturateur réglable blanc au nu du mur */}
         <mesh position={[0, 0.4, 0]} material={ventGrilleMat}>
           <cylinderGeometry args={[VENT_BRANCH_RADIUS - 0.4, VENT_BRANCH_RADIUS - 0.4, 0.3, 32]} />
         </mesh>
-        {/* Fente circulaire d'extraction d'air */}
         <mesh position={[0, 0.25, 0]} material={gasketMat}>
           <cylinderGeometry args={[VENT_BRANCH_RADIUS - 0.2, VENT_BRANCH_RADIUS - 0.2, 0.35, 32]} />
         </mesh>
@@ -155,14 +205,13 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
         </mesh>
       </group>
 
-      {/* Té double perpendiculaire juste à la sortie de la cloison cuisine (parallèle au mur cuisine-ouest) */}
+      {/* Té double perpendiculaire à la sortie de la cloison cuisine (parallèle au mur cuisine-ouest) */}
       <group position={[KITCHEN_EXIT_X, Y_VENT_SPLIT, 0]}>
-        {/* Jonction centrale */}
         <mesh material={ventMat}>
           <sphereGeometry args={[VENT_BRANCH_RADIUS * 1.06, 20, 20]} />
         </mesh>
 
-        {/* Conduit transversal perpendiculaire (axe Z, parallèle au mur cuisine-ouest) */}
+        {/* Conduit transversal (axe Z, parallèle au mur cuisine-ouest) */}
         <mesh rotation-x={Math.PI / 2} material={ventMat} castShadow receiveShadow>
           <cylinderGeometry args={[VENT_BRANCH_RADIUS, VENT_BRANCH_RADIUS, KITCHEN_DOUBLE_OUTLET_LEN * 2, 24]} />
         </mesh>
@@ -177,19 +226,42 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
           </mesh>
         </group>
 
-        {/* Sortie Sud (Z = +KITCHEN_DOUBLE_OUTLET_LEN) avec grille */}
-        <group position={[0, 0, KITCHEN_DOUBLE_OUTLET_LEN]} rotation-x={Math.PI / 2} userData={{ itemName: 'Sortie aération cuisine Sud' }}>
-          <mesh material={ventGrilleMat}>
-            <cylinderGeometry args={[VENT_BRANCH_RADIUS + 0.8, VENT_BRANCH_RADIUS + 0.8, 1.2, 24]} />
+        {/* Sortie Sud (Z = +KITCHEN_DOUBLE_OUTLET_LEN) avec collerette de raccordement flexible */}
+        <group position={[0, 0, KITCHEN_DOUBLE_OUTLET_LEN]} rotation-x={Math.PI / 2} userData={{ itemName: 'Raccord flexible aération Sud' }}>
+          <mesh material={ventMat}>
+            <cylinderGeometry args={[VENT_BRANCH_RADIUS + 0.3, VENT_BRANCH_RADIUS + 0.3, 2.0, 24]} />
           </mesh>
-          <mesh position={[0, 0.7, 0]} material={ventGrilleMat}>
-            <cylinderGeometry args={[VENT_BRANCH_RADIUS - 0.5, VENT_BRANCH_RADIUS - 0.5, 0.5, 24]} />
+          {/* Collier serflex inox de serrage du flexible */}
+          <mesh position={[0, 0.8, 0]} material={clampMat}>
+            <cylinderGeometry args={[VENT_BRANCH_RADIUS + 0.5, VENT_BRANCH_RADIUS + 0.5, 0.8, 24]} />
           </mesh>
         </group>
       </group>
 
       {/* =================================================================== */}
-      {/* 2. TUBE D'ÉVACUATION DES EAUX USÉES (COLONNE DE CHUTE)              */}
+      {/* 2. GAINE FLEXIBLE DE HOTTE ASPIRANTE                                */}
+      {/* =================================================================== */}
+      <mesh
+        geometry={flexTubeGeo}
+        material={flexMat}
+        castShadow
+        receiveShadow
+        userData={{ itemName: 'Gaine flexible hotte aspirante' }}
+      />
+
+      {/* Collerette et collier de serrage sur la buse supérieure de la hotte */}
+      <group position={[HOOD_X, HOOD_COLLAR_Y + 1.0, HOOD_COLLAR_Z]} userData={{ itemName: 'Raccord hotte UTDRAG' }}>
+        <mesh material={ventMat}>
+          <cylinderGeometry args={[FLEX_RADIUS + 0.4, FLEX_RADIUS + 0.4, 2.5, 24]} />
+        </mesh>
+        {/* Collier serflex inox */}
+        <mesh position={[0, 0.5, 0]} material={clampMat}>
+          <cylinderGeometry args={[FLEX_RADIUS + 0.6, FLEX_RADIUS + 0.6, 0.8, 24]} />
+        </mesh>
+      </group>
+
+      {/* =================================================================== */}
+      {/* 3. TUBE D'ÉVACUATION DES EAUX USÉES (COLONNE DE CHUTE)              */}
       {/* =================================================================== */}
       {/* Colonne verticale continue du sol supérieur (270) au sol (0 / -10) */}
       <mesh
@@ -202,14 +274,14 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
         <cylinderGeometry args={[DRAIN_RADIUS, DRAIN_RADIUS, drainHeight, 32]} />
       </mesh>
 
-      {/* Manchons d'emboîtement à lèvres le long de la colonne */}
+      {/* Manchons d'emboîtement le long de la colonne */}
       {[Y_FLOOR + 28, 135, Y_CEILING - 10, Y_FLOOR_ABOVE - 3].map((y) => (
         <mesh key={`sleeve-${y}`} position={[0, y, DRAIN_OFFSET_Z]} material={drainMat}>
           <cylinderGeometry args={[DRAIN_RADIUS + 0.7, DRAIN_RADIUS + 0.4, 7, 32]} />
         </mesh>
       ))}
 
-      {/* Colliers métalliques de fixation murale */}
+      {/* Colliers métalliques de fixation murale de la colonne */}
       {[45, 120, 205].map((y) => (
         <group key={`clamp-${y}`} position={[0, y, DRAIN_OFFSET_Z]}>
           <mesh material={clampMat}>
@@ -221,10 +293,10 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
         </group>
       ))}
 
-      {/* ── Raccordement réglementaire du WC au ras du sol (même diamètre Ø110) ── */}
-      {/* 1. Manchette d'évacuation étanche à joint à lèvres à l'arrière de la cuvette */}
+      {/* ── Évacuation WC peinte en BLANC dans la partie visible SDB ─────────── */}
+      {/* 1. Manchette d'évacuation étanche peinte en blanc à l'arrière de la cuvette */}
       <group position={[WC_X, WC_AXIS_Y, WC_WALL_RUN_Z]} rotation-y={Math.PI / 2} userData={{ itemName: 'Manchette évacuation WC' }}>
-        <mesh material={clampMat}>
+        <mesh material={drainWhiteMat}>
           <cylinderGeometry args={[DRAIN_RADIUS + 0.8, DRAIN_RADIUS + 0.8, 3.0, 24]} />
         </mesh>
         <mesh position={[0, 1.6, 0]} material={gasketMat}>
@@ -232,58 +304,69 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
         </mesh>
       </group>
 
-      {/* 2. Coude de sortie de cuvette à 90° orienté vers l'Ouest (le long du mur SDB-Nord) */}
-      <mesh position={[WC_X, WC_AXIS_Y, WC_WALL_RUN_Z]} material={drainMat}>
+      {/* 2. Coude de sortie de cuvette à 90° en blanc (le long du mur SDB-Nord) */}
+      <mesh position={[WC_X, WC_AXIS_Y, WC_WALL_RUN_Z]} material={drainWhiteMat}>
         <sphereGeometry args={[DRAIN_RADIUS * 1.06, 20, 20]} />
       </mesh>
 
-      {/* 3. Tronçon longeant le mur SDB-Nord (de X = 36 vers X = 0) à Y ≈ 17.6 cm */}
+      {/* 3. Tronçon visible peint en BLANC longeant le mur SDB-Nord (de X = 36 vers X = 0) */}
       <mesh
         position={[wcRunAlongWallLen / 2, (WC_AXIS_Y + WC_ELBOW_Y) / 2, WC_WALL_RUN_Z]}
         rotation-z={Math.PI / 2}
-        material={drainMat}
+        material={drainWhiteMat}
         castShadow
         receiveShadow
-        userData={{ itemName: 'Tuyau évacuation WC longeant mur SDB-Nord' }}
+        userData={{ itemName: 'Tuyau évacuation WC blanc longeant mur SDB-Nord' }}
       >
         <cylinderGeometry args={[DRAIN_RADIUS, DRAIN_RADIUS, wcRunAlongWallLen, 24]} />
       </mesh>
 
-      {/* Colliers de fixation du tuyau le long du mur SDB-Nord */}
+      {/* Colliers de fixation muraux peints en blanc le long du mur SDB-Nord */}
       {[10, 26].map((x) => (
         <group key={`wc-wall-clamp-${x}`} position={[x, (WC_AXIS_Y + WC_ELBOW_Y) / 2, WC_WALL_RUN_Z]}>
-          <mesh material={clampMat}>
+          <mesh material={clampWhiteMat}>
             <cylinderGeometry args={[DRAIN_RADIUS + 0.4, DRAIN_RADIUS + 0.4, 2.0, 24]} />
           </mesh>
-          <mesh position={[0, 0, -DRAIN_RADIUS - 0.5]} material={clampMat}>
+          <mesh position={[0, 0, -DRAIN_RADIUS - 0.5]} material={clampWhiteMat}>
             <boxGeometry args={[2.0, 2.0, 1.2]} />
           </mesh>
         </group>
       ))}
 
-      {/* 4. Coude à 90° à X = 0 tournant vers le Nord (pour traverser le mur SDB-Nord) */}
-      <mesh position={[0, WC_ELBOW_Y, WC_WALL_RUN_Z]} material={drainMat}>
+      {/* 4. Coude à 90° à X = 0 en blanc tournant vers le Nord */}
+      <mesh position={[0, WC_ELBOW_Y, WC_WALL_RUN_Z]} material={drainWhiteMat}>
         <sphereGeometry args={[DRAIN_RADIUS * 1.08, 20, 20]} />
       </mesh>
 
-      {/* 5. Tronçon traversant le mur SDB-Nord et rejoignant la colonne de chute générale */}
+      {/* 5. Partie visible en blanc entre le coude et le mur SDB-Nord (Z = SDB_WALL_Z) */}
       <mesh
-        position={[0, (WC_ELBOW_Y + WC_JUNCTION_Y) / 2, (WC_WALL_RUN_Z + DRAIN_OFFSET_Z) / 2]}
+        position={[0, WC_ELBOW_Y, (WC_WALL_RUN_Z + SDB_WALL_Z) / 2]}
+        rotation-x={Math.PI / 2}
+        material={drainWhiteMat}
+        castShadow
+        receiveShadow
+        userData={{ itemName: 'Raccord évacuation WC blanc traversée mur' }}
+      >
+        <cylinderGeometry args={[DRAIN_RADIUS, DRAIN_RADIUS, wcThroughWallLenSDB, 24]} />
+      </mesh>
+
+      {/* 6. Partie dans la gaine technique (en PVC gris standard) traversant vers la colonne */}
+      <mesh
+        position={[0, (WC_ELBOW_Y + WC_JUNCTION_Y) / 2, (SDB_WALL_Z + DRAIN_OFFSET_Z) / 2]}
         rotation-x={Math.PI / 2}
         material={drainMat}
         castShadow
         receiveShadow
-        userData={{ itemName: 'Tuyau évacuation traversant mur Nord vers évacuation générale' }}
+        userData={{ itemName: 'Tuyau évacuation dans gaine vers colonne générale' }}
       >
-        <cylinderGeometry args={[DRAIN_RADIUS, DRAIN_RADIUS, wcRunThroughWallLen, 24]} />
+        <cylinderGeometry args={[DRAIN_RADIUS, DRAIN_RADIUS, wcThroughWallLenGaine, 24]} />
       </mesh>
 
-      {/* 6. Culotte / té sanitaire de raccordement sur la colonne de chute générale à Z = DRAIN_OFFSET_Z */}
+      {/* 7. Culotte de raccordement sur la colonne de chute générale dans la gaine */}
       <group position={[0, WC_JUNCTION_Y, DRAIN_OFFSET_Z]} userData={{ itemName: 'Culotte de raccordement colonne générale' }}>
         <mesh material={drainMat}>
           <cylinderGeometry args={[DRAIN_RADIUS + 0.8, DRAIN_RADIUS + 0.8, 12, 32]} />
         </mesh>
-        {/* Piquage vers +Z accueillant le tuyau venant du mur SDB-Nord */}
         <mesh position={[0, 0, DRAIN_RADIUS * 0.7]} material={drainMat}>
           <sphereGeometry args={[DRAIN_RADIUS * 1.05, 20, 20]} />
         </mesh>
