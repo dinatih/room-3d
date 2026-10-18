@@ -12,7 +12,8 @@
  * La perruque est ajoutée dans l'espace cm du group wrapper et non dans l'espace
  * GLB scalé de scene — évite l'effet de multiplication de scale.
  */
-import { useLayoutEffect, useRef, useEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useEffect, useState, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
@@ -23,6 +24,7 @@ import { Wig, HAIR_COLORS } from './Wig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, type LaraVariant } from '@features/scene/LaraVariants';
 import { extractCharacterParts, isHeadMesh } from '@features/scene/characterParts';
+import { CharacterPendant, type CharacterPendantHandle } from '@features/scene/character/CharacterPendant';
 
 interface MannequinHeadProps extends SceneItemProps {
   mannequinId?: string;
@@ -196,23 +198,34 @@ export function LaraWigBust({
 }) {
   const { scene: laraScene } = useGLTFClone('characters/lara/lara_native.glb');
   const LARA_SCALE = 90;
+  const pendantRef = useRef<CharacterPendantHandle>(null);
 
-  useLayoutEffect(() => {
+  const parts = useMemo(() => {
     removeGlbLines(laraScene);
     laraScene.scale.set(1, 1, 1);
     laraScene.position.set(0, 0, 0);
     laraScene.rotation.set(0, 0, 0);
+    laraScene.updateMatrixWorld(true);
+    return extractCharacterParts(laraScene);
+  }, [laraScene]);
 
-    if (laraVariant !== 'marissa' && laraScene.userData.hasMarissaPiercings) {
-      const hb = laraScene.getObjectByName('head_neck_upper') || laraScene.getObjectByName('head') || laraScene.getObjectByName('Head');
-      if (hb) {
-        hb.children = hb.children.filter(c => c.name !== 'MarissaCupidPiercing' && c.name !== 'MarissaNostrilPiercing');
-      }
-      laraScene.userData.hasMarissaPiercings = false;
+  const torsoMeshes = useMemo(
+    () => [...parts.torsoClothed, ...parts.torsoNude, ...parts.bikiniTop].map(item => item.mesh),
+    [parts],
+  );
+
+  useLayoutEffect(() => {
+    laraScene.scale.set(1, 1, 1);
+    laraScene.position.set(0, 0, 0);
+    laraScene.rotation.set(0, 0, 0);
+
+    const hb = laraScene.getObjectByName('head_neck_upper') || laraScene.getObjectByName('head') || laraScene.getObjectByName('Head');
+    if (hb) {
+      hb.children = hb.children.filter(c => c.name !== 'MarissaCupidPiercing' && c.name !== 'MarissaNostrilPiercing');
     }
+    laraScene.userData.hasMarissaPiercings = false;
 
     applyLaraVariantStyles(laraScene, laraVariant);
-    const parts = extractCharacterParts(laraScene);
     const nativeHairSet = new Set(parts.nativeHairMeshes.map(item => item.mesh));
     const torsoClothedSet = new Set(parts.torsoClothed.map(item => item.mesh));
 
@@ -224,10 +237,11 @@ export function LaraWigBust({
       if (!mesh.isMesh) return;
       mesh.layers.set(LAYER_DECOR);
       const isPiercing = mesh.name === 'MarissaCupidPiercing' || mesh.name === 'MarissaNostrilPiercing';
-      const keepVisible = isPiercing || (isHeadMesh(mesh) && !nativeHairSet.has(mesh)) || torsoClothedSet.has(mesh);
+      const isNecklace = Boolean(mesh.userData?.isNecklaceCord || mesh.userData?.isPendant);
+      const keepVisible = isPiercing || isNecklace || (isHeadMesh(mesh) && !nativeHairSet.has(mesh)) || torsoClothedSet.has(mesh);
       mesh.visible = keepVisible;
 
-      if (keepVisible && !isPiercing && mesh.geometry) {
+      if (keepVisible && !isPiercing && !isNecklace && mesh.geometry) {
         const posAttr = mesh.geometry.attributes.position;
         if (posAttr) {
           let hasLowVertex = false;
@@ -304,16 +318,34 @@ export function LaraWigBust({
       -headLocal.z * LARA_SCALE,
     );
     laraScene.updateMatrixWorld(true);
+    pendantRef.current?.update(0, true);
 
     return () => {
       disposeLaraVariantMaterials(laraScene);
       ownedGeometries.forEach(g => g.dispose());
     };
-  }, [laraScene, laraVariant]);
+  }, [laraScene, parts, laraVariant]);
+
+  useFrame((_, rawDelta) => {
+    const dt = Math.min(rawDelta, 0.1);
+    pendantRef.current?.update(dt, false);
+  });
 
   return (
     <group userData={{ animUnit: true, itemName: 'Buste Lara' }}>
       <primitive object={laraScene} />
+      {parts.bones.neck && laraVariant !== 'romana' && (
+        <CharacterPendant
+          ref={pendantRef}
+          neck={parts.bones.neck}
+          scene={laraScene}
+          torso={torsoMeshes}
+          visible={true}
+          shadows={false}
+          resetKey={`bust:${laraVariant}`}
+          variant={laraVariant}
+        />
+      )}
       <Wig
         id={wigId.replace('hair_', '')}
         color={hairColor}
