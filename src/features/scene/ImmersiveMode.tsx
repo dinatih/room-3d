@@ -217,7 +217,7 @@ export function ImmersiveMode() {
 
       cameraState.isFollowing = true;
       cameraState.isMoving = true;
-      cameraState.lastUserControlTime = performance.now();
+      cameraState.recordUserControl();
       cameraState.characterX = pos.current.x;
       cameraState.characterZ = pos.current.z;
       cameraState.followYaw = Math.atan2(dir.x, dir.z);

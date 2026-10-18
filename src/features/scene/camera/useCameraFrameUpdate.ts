@@ -113,7 +113,7 @@ export function useCameraFrameUpdate({
       followYaw.current = cameraState.followYaw;
     }
     if (manualMove) {
-      cameraState.lastUserControlTime = performance.now();
+      cameraState.recordUserControl();
       if (k.has('ArrowLeft')) followYaw.current += 0.03 * dt;
       if (k.has('ArrowRight')) followYaw.current -= 0.03 * dt;
       const step = WALK_SPEED * dt * ((k.has('ArrowUp') ? 1 : 0) - (k.has('ArrowDown') ? 1 : 0));
@@ -273,7 +273,7 @@ export function useCameraFrameUpdate({
       if (modeRef.current === 'fpv') {
         const isArrowPress = k.has('ArrowUp') || k.has('ArrowDown') || k.has('ArrowLeft') || k.has('ArrowRight');
         if (isArrowPress) {
-          cameraState.lastUserControlTime = performance.now();
+          cameraState.recordUserControl();
         }
       }
 

@@ -70,9 +70,11 @@ export function getDoorApproach(key: DoorKey, agentId?: string, preferred?: Poin
   if (!candidate) throw new NavigationBlockedError(`No safe approach for door ${key}`, goal);
   return candidate;
 }
-export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string, closedDoor?: DoorKey): VisibilityGraph {
-  if (excludeOwner) excludeOwner = getInteractionOwner(excludeOwner);
-  const key = `${excludeOwner ?? ''}:${closedDoor ?? ''}`;
+export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string | string[] | Set<string>, closedDoor?: DoorKey): VisibilityGraph {
+  const excludeSet = excludeOwner
+    ? (excludeOwner instanceof Set ? excludeOwner : new Set((Array.isArray(excludeOwner) ? excludeOwner : excludeOwner.split('+')).map(getInteractionOwner)))
+    : null;
+  const key = `${excludeSet ? [...excludeSet].sort().join('+') : ''}:${closedDoor ?? ''}`;
   let profileCache = caches.get(profile);
   if (!profileCache) { profileCache = new Map(); caches.set(profile, profileCache); }
   const revision = getObstacleRevision();
@@ -81,11 +83,11 @@ export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string,
   const doorAngles = `${angles.join(':')}:${shutterBlocked}`;
   const old = profileCache.get(key);
   if (old && (movingFurniture.size || (old.revision === revision && old.doorAngles === doorAngles))) return old.graph;
-  const solid = [...architectureObstacles, ...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0 && (!excludeOwner || o.owner !== excludeOwner));
+  const solid = [...architectureObstacles, ...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0 && (!excludeSet || !o.owner || !excludeSet.has(getInteractionOwner(o.owner))));
   const obstacles: Polygon[] = [], comfortObstacles: Polygon[] = [];
   const addObstacle = (polygon: Polygon, radius = profile.radius) => {
     obstacles.push(inflate(polygon, radius));
-    if (!excludeOwner) comfortObstacles.push(inflate(polygon, radius + NAVIGATION_COMFORT_CM));
+    if (!excludeSet || excludeSet.size === 0) comfortObstacles.push(inflate(polygon, radius + NAVIGATION_COMFORT_CM));
   };
   solid.forEach(o => addObstacle(o.polygon));
   doorKeys.forEach((k, i) => addObstacle(doorPolygon(k, angles[i]), profile.radius + DOOR_CONFIGS[k].margin));
@@ -95,7 +97,7 @@ export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string,
     const a = ring[i], b = ring[(i + 1) % ring.length];
     addObstacle(rectangle((a.x + b.x) / 2, (a.z + b.z) / 2, distance(a, b), 0, Math.atan2(a.z - b.z, b.x - a.x)));
   }
-  const graph = new VisibilityGraph(union(obstacles), excludeOwner ? undefined : { distance: NAVIGATION_COMFORT_CM, obstacles: union(comfortObstacles) });
+  const graph = new VisibilityGraph(union(obstacles), (excludeSet && excludeSet.size > 0) ? undefined : { distance: NAVIGATION_COMFORT_CM, obstacles: union(comfortObstacles) });
   profileCache.set(key, { revision, doorAngles, graph });
   return graph;
 }
@@ -125,12 +127,21 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
     }
   }
   candidates.sort((a, b) => distance(a, preferred) - distance(b, preferred));
+
+  const containingOwners = (exiting && start) ? new Set(
+    [...furnitureObstacles.values()]
+      .filter((o): o is typeof o & { owner: string } => Boolean(o.owner) && o.yMin < profile.height && o.yMax > 0 && pointInRing(start, inflate(o.polygon, profile.radius)))
+      .map(o => getInteractionOwner(o.owner))
+  ) : new Set<string>();
+  if (owner) containingOwners.add(owner);
+  const escapeGraph = exiting ? getNavigationGraph(profile, containingOwners, closedDoor) : getNavigationGraph(profile, owner, closedDoor);
+
   for (const p of candidates) {
     // Only actors rejecting a physically reachable candidate are dependencies
     // of a failed approach. Actors near a point inside furniture (or behind a
     // wall) must not restart the same impossible search whenever they move.
     if (!inSurface(p) || insideObstacle(p, graph.obstacles)) continue;
-    if (exiting && start && !segmentFree(start, p, getNavigationGraph(profile, owner, closedDoor).obstacles)) continue;
+    if (exiting && start && !segmentFree(start, p, escapeGraph.obstacles)) continue;
     if (start && !exiting && !graph.canReach(start, p)) continue;
     if (!isAgentDestinationFree(agentId, p)) continue;
     return p;
@@ -138,8 +149,14 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
   if (exiting) {
     for (const p of candidates) {
       if (!inSurface(p) || insideObstacle(p, graph.obstacles)) continue;
-      if (start && !segmentFree(start, p, getNavigationGraph(profile, owner, closedDoor).obstacles)) continue;
+      if (start && !segmentFree(start, p, escapeGraph.obstacles)) continue;
       return p;
+    }
+    // Secours si l'agent est complètement encastré dans plusieurs meubles
+    for (const p of candidates) {
+      if (inSurface(p) && !insideObstacle(p, graph.obstacles)) {
+        return p;
+      }
     }
   }
   return null;

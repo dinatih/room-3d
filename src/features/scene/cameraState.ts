@@ -30,10 +30,20 @@ export const cameraState = {
   isAIControlled: false as boolean,
   /** Timestamp de la dernière action manuelle utilisateur (flèches clavier, clic VR) */
   lastUserControlTime: 0 as number,
-  /** Vérifie si l'utilisateur a pris la main manuellement récemment (< 12s) */
+  _wakeupTimer: null as any,
+  /** Enregistre une interaction utilisateur et planifie le réveil à la fin du délai */
+  recordUserControl(): void {
+    this.lastUserControlTime = performance.now();
+    if (this._wakeupTimer) clearTimeout(this._wakeupTimer);
+    this._wakeupTimer = setTimeout(() => {
+      this._wakeupTimer = null;
+      this.invalidate?.();
+    }, 4050);
+  },
+  /** Vérifie si l'utilisateur a pris la main manuellement récemment (< 4s) */
   isUserControlling(): boolean {
     if (this.lastUserControlTime === 0) return false;
-    return (performance.now() - this.lastUserControlTime) < 12000;
+    return (performance.now() - this.lastUserControlTime) < 4000;
   },
   followYaw:   (initialChar?.rot ?? 1.9) as number,
   followPitch: 0     as number,

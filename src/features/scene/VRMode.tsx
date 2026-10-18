@@ -143,7 +143,7 @@ export function VRMode() {
 
         cameraState.isFollowing = true;
         cameraState.isMoving = true;
-        cameraState.lastUserControlTime = performance.now();
+        cameraState.recordUserControl();
         cameraState.characterX = rigRef.current.position.x;
         cameraState.characterZ = rigRef.current.position.z;
         cameraState.followYaw = Math.atan2(dir.x, dir.z);
