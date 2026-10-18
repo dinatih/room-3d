@@ -21,8 +21,6 @@ process() {
 }
 
 # 3 premiers validés
-process "Zoe"      "public/characters/zoe/zoe.glb"
-process "Sophia"   "public/characters/sophia/sophia.glb"
 process "Jennifer" "public/characters/jennifer/jennifer.glb"
 
 # Nouveaux demandés

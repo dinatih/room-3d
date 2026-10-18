@@ -20,8 +20,6 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   rajaa:    'duo-zone',
   hayley:   'inyeong-cha-hugs-point',
   gloria:   'sofa-garden-east',
-  zoe:      'hugs-point',
-  sophia:   'building-b-corridor',
   valby:    'bathtub-garden',
   alex:     'est-neighbor-flat',
   mannequin:'est-neighbor-flat',

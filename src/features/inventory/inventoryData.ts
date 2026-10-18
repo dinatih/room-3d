@@ -320,11 +320,7 @@ sortedCharacters.forEach(char => {
         ? ['characters/hayley/hayley_3d_preview.png']
         : (char.id === 'gloria'
           ? ['characters/gloria/gloria_3d_preview.png']
-          : (char.id === 'zoe'
-            ? ['characters/zoe/zoe_3d_preview.png']
-            : (char.id === 'sophia'
-              ? ['characters/sophia/sophia_3d_preview.png']
-              : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined)))));
+          : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined)));
     INVENTORY.push({
       id: char.id,
       name: char.name,
@@ -334,19 +330,15 @@ sortedCharacters.forEach(char => {
           ? 'Inyeong'
           : (char.id === 'gloria'
             ? 'NPC002'
-            : (char.id === 'zoe'
-              ? 'Reallusion'
-              : (char.id === 'sophia'
-                ? 'Sophia Doll'
-                : (char.id === 'skeleton'
-                  ? 'Anatomy'
-                  : (char.id === 'curious_skeleton'
-                    ? 'Skeleton'
-                    : (char.id === 'valby'
-                      ? 'The First Descendant'
-                      : (char.id === 'nurse'
-                        ? 'Elf Nurse'
-                        : (!char.isLara ? 'Mixamo' : 'Lara Croft Style'))))))))),
+            : (char.id === 'skeleton'
+              ? 'Anatomy'
+              : (char.id === 'curious_skeleton'
+                ? 'Skeleton'
+                : (char.id === 'valby'
+                  ? 'The First Descendant'
+                  : (char.id === 'nurse'
+                    ? 'Elf Nurse'
+                    : (!char.isLara ? 'Mixamo' : 'Lara Croft Style'))))))),
       category: 'characters',
       qty: 1,
       dims: {
@@ -360,21 +352,17 @@ sortedCharacters.forEach(char => {
         ? 'Personnage animé : Hayley (Inyeong) en tenue stylée avec chapeau, lunettes et bottes.'
           : (char.id === 'gloria'
             ? 'Personnage animé : Gloria aux cheveux roux avec gants et tenue stylée.'
-            : (char.id === 'zoe'
-              ? 'Personnage animé : Zoe élégante en robe rouge et talons hauts.'
-              : (char.id === 'sophia'
-                ? 'Personnage animé : Sophia Doll au style poupée avec cheveux longs et tenue soignée.'
-                : (char.id === 'skeleton'
-                  ? 'Personnage animé : Squelette anatomique complet avec organes internes et cage thoracique.'
-                  : (char.id === 'curious_skeleton'
-                    ? 'Personnage animé : Squelette stylisé Curious Skeleton en T-pose anatomique calibrée.'
-                    : (char.id === 'valby'
-                      ? 'Personnage animé : Valby en combinaison nano body suit avec casque et physique de buste dynamique.'
-                      : (char.id === 'nurse'
-                        ? 'Personnage animé : Infirmière Elfe d’Halloween en tenue médicale stylisée.'
+            : (char.id === 'skeleton'
+              ? 'Personnage animé : Squelette anatomique complet avec organes internes et cage thoracique.'
+              : (char.id === 'curious_skeleton'
+                ? 'Personnage animé : Squelette stylisé Curious Skeleton en T-pose anatomique calibrée.'
+                : (char.id === 'valby'
+                  ? 'Personnage animé : Valby en combinaison nano body suit avec casque et physique de buste dynamique.'
+                  : (char.id === 'nurse'
+                    ? 'Personnage animé : Infirmière Elfe d’Halloween en tenue médicale stylisée.'
                         : (!char.isLara
                           ? `Personnage animé standard Mixamo : ${char.name}.`
-                          : `Personnage : ${char.name}.`))))))))
+                          : `Personnage : ${char.name}.`))))))
     });
   }
 });

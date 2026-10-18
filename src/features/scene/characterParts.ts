@@ -424,8 +424,8 @@ export function applyRenderProperties(parts: CharacterParts, opts: RenderPropert
 }
 
 /**
- * Normalise les matériaux des personnages non-Lara (Sophia, Zoe, Gloria, Inyeong, Hayley, etc.)
- * - Supprime/masque les couches d'occlusion ou de larme opaques/parasites (ex: EyeOcclusion sur Sophia)
+ * Normalise les matériaux des personnages non-Lara (Gloria, Inyeong, Hayley, etc.)
+ * - Supprime/masque les couches d'occlusion ou de larme opaques/parasites (ex: EyeOcclusion)
  * - Rétablit l'opacité et les reflets naturels pour les yeux (pupille + blanc des yeux)
  * - Assure la transparence et le non-blocage Z-buffer pour verres/visières et fards à paupières
  * - Applique alphaTest sur les cils
@@ -444,7 +444,7 @@ export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D, charac
       if (!m) return;
       const matName = (m.name || '').toLowerCase();
 
-      // 1. Masquer les maillages d'occlusion oculaire ou de larmes qui créent un dôme noir/terne sur les yeux (ex: Sophia EyeOcclusion)
+      // 1. Masquer les maillages d'occlusion oculaire ou de larmes qui créent un dôme noir/terne sur les yeux
       if (
         meshName.includes('eyeocclusion') ||
         meshName.includes('eye_occlusion') ||
@@ -458,7 +458,7 @@ export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D, charac
         return;
       }
 
-      // 2. Fards à paupières / maquillage (Zoe eyeshadow) : transparent sans écriture dans le Z-buffer
+      // 2. Fards à paupières / maquillage : transparent sans écriture dans le Z-buffer
       if (matName.includes('eyeshadow') || meshName.includes('eyeshadow')) {
         m.transparent = true;
         m.depthWrite = false;
