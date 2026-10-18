@@ -1,13 +1,30 @@
 const launchBrowser = require('./browser-test-options.cjs');
 const puppeteer = require('puppeteer');
 const assert = require('node:assert/strict');
+if(process.argv.includes('--inspect-drona')){
+ (async()=>{
+   const THREE=require('three'),fs=require('node:fs');
+   const {GLTFLoader}=await import('three/examples/jsm/loaders/GLTFLoader.js');
+   for(const id of ['looking_through_files_low','searching_files_high','opening']){
+     const bytes=fs.readFileSync(`public/animations/mixamo/anim_${id}.glb`);
+     const gltf=await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
+     const clip=gltf.animations[0],mixer=new THREE.AnimationMixer(gltf.scene);
+     mixer.clipAction(clip).play();const samples=[];
+     for(const fraction of [0,.25,.5,.75]){
+       mixer.setTime(clip.duration*fraction);gltf.scene.updateMatrixWorld(true);
+       samples.push({fraction,hands:['mixamorigLeftHand','mixamorigRightHand'].map(name=>gltf.scene.getObjectByName(name).getWorldPosition(new THREE.Vector3()).multiplyScalar(100).toArray().map(v=>Math.round(v)))});
+     }
+     console.log(JSON.stringify({id,duration:clip.duration,samples}));
+   }
+ })().catch(e=>{console.error(e);process.exitCode=1;});
+}
 if(process.argv.includes('--inspect-fridge')){
  const bytes=require('node:fs').readFileSync('public/items/lagan_anim/LAGAN_anim.glb');
  const glb=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());
  console.log(JSON.stringify(Object.fromEntries(glb.animations.map(a=>[a.name,Math.max(...a.samplers.map(s=>glb.accessors[s.input].max[0]))]))));
  process.exit(0);
 }
-(async () => {
+if(!process.argv.includes('--inspect-drona'))(async () => {
  const browser = await launchBrowser({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--disable-background-timer-throttling']});
  const errors=[];
  try {
