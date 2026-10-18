@@ -108,6 +108,8 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
   const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
   if (!exiting && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles) && (!start || graph.canReach(start, goal)) && isAgentDestinationFree(agentId, goal)) return goal;
   exiting = exiting || Boolean(start && owned.some(p => pointInRing(start, p)));
+  // Leave furniture by the nearest free edge, independently of the next destination.
+  const preferred = exiting && start ? start : goal;
   const contours = owned.length && !flexible ? owned : [...graph.obstacles.flat(), ...getAgentObstacles(agentId, start ?? goal)];
   const edges = contours.flatMap(polygon => polygon.map((a, i) => [a, polygon[(i + 1) % polygon.length]] as const));
   const candidates = edges.flatMap(([a, b]) => [a, projectToSegment(goal, a, b), ...(start ? [projectToSegment(start, a, b)] : [])]);
@@ -119,10 +121,10 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
     for (let i = 1; i < cuts.length; i++) {
       const p = cuts[i - 1], q = cuts[i];
       // Test the free portions of an edge, rather than only its covered corners.
-      candidates.push({ x: (p.x + q.x) / 2, z: (p.z + q.z) / 2 }, projectToSegment(goal, p, q));
+      candidates.push({ x: (p.x + q.x) / 2, z: (p.z + q.z) / 2 }, projectToSegment(preferred, p, q));
     }
   }
-  candidates.sort((a, b) => distance(a, goal) - distance(b, goal));
+  candidates.sort((a, b) => distance(a, preferred) - distance(b, preferred));
   for (const p of candidates) {
     // Only actors rejecting a physically reachable candidate are dependencies
     // of a failed approach. Actors near a point inside furniture (or behind a
