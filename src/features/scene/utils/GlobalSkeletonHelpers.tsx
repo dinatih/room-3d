@@ -68,8 +68,7 @@ export function GlobalSkeletonHelpers({
   const { scene, camera, gl } = useThree();
   const helpersRef = useRef<Map<THREE.Bone, THREE.SkeletonHelper>>(new Map());
 
-  // État de survol et de sélection des os
-  const [hoveredBoneInfo, setHoveredBoneInfo] = useState<{ bone: THREE.Bone; pos: THREE.Vector3 } | null>(null);
+  // État de sélection des os
   const [internalSelectedBone, setInternalSelectedBone] = useState<THREE.Bone | null>(null);
 
   const activeSelectedBone = useRef<THREE.Bone | null>(null);
@@ -82,9 +81,6 @@ export function GlobalSkeletonHelpers({
   // Vecteurs temporaires pour les calculs géométriques
   const bonePosRef = useRef(new THREE.Vector3());
   const childPosRef = useRef(new THREE.Vector3());
-  const screenPosRef = useRef(new THREE.Vector3());
-  const screenChildRef = useRef(new THREE.Vector3());
-  const candidatePosRef = useRef(new THREE.Vector3());
 
   // Références 3D pour la mise en évidence de l'os sélectionné
   const selectedJointMeshRef = useRef<THREE.Mesh>(null);
@@ -92,10 +88,6 @@ export function GlobalSkeletonHelpers({
   const selectedLinesRef = useRef<THREE.LineSegments>(null);
   const selectedLinesGeomRef = useRef<THREE.BufferGeometry>(null);
   const selectedBadgeGroupRef = useRef<THREE.Group>(null);
-
-  // Référence 3D pour l'os survolé
-  const hoveredJointMeshRef = useRef<THREE.Mesh>(null);
-  const isPointerInsideRef = useRef(false);
 
   // Signature précédente des groupes pour éviter les re-renders inutiles
   const prevGroupsSigRef = useRef<string>('');
@@ -205,20 +197,17 @@ export function GlobalSkeletonHelpers({
     applyBoneInfluenceHeatmap(targetBone);
   }, [show, activeSelectedName, applyBoneInfluenceHeatmap, restoreOriginalMaterials, scene]);
 
-  // Détection du survol de l'os via useFrame et mise à jour de la mise en évidence 3D
+  // Mise à jour visuelle 3D de l'os sélectionné
   useFrame((state) => {
     if (!show) {
-      if (hoveredBoneInfo) setHoveredBoneInfo(null);
       if (selectedJointMeshRef.current) selectedJointMeshRef.current.visible = false;
       if (selectedRingMeshRef.current) selectedRingMeshRef.current.visible = false;
       if (selectedLinesRef.current) selectedLinesRef.current.visible = false;
-      if (hoveredJointMeshRef.current) hoveredJointMeshRef.current.visible = false;
       return;
     }
 
     const targetBone = activeSelectedBone.current;
 
-    // --- Mise à jour visuelle 3D de l'os sélectionné ---
     if (targetBone) {
       targetBone.getWorldPosition(bonePosRef.current);
       const bPos = bonePosRef.current;
@@ -236,7 +225,6 @@ export function GlobalSkeletonHelpers({
       if (selectedRingMeshRef.current) {
         selectedRingMeshRef.current.position.copy(bPos);
         selectedRingMeshRef.current.quaternion.copy(camera.quaternion);
-        // Légère pulsation subtile de l'anneau
         const pulse = 1.0 + 0.15 * Math.sin(state.clock.getElapsedTime() * 6);
         selectedRingMeshRef.current.scale.set(pulse, pulse, pulse);
         selectedRingMeshRef.current.visible = true;
@@ -246,7 +234,6 @@ export function GlobalSkeletonHelpers({
       if (selectedLinesGeomRef.current) {
         const linePoints: number[] = [];
 
-        // Segment depuis le parent (si parent est un Bone)
         if (targetBone.parent && (targetBone.parent as any).isBone) {
           (targetBone.parent as THREE.Bone).getWorldPosition(childPosRef.current);
           linePoints.push(
@@ -255,7 +242,6 @@ export function GlobalSkeletonHelpers({
           );
         }
 
-        // Segments vers chaque enfant qui est un Bone
         for (let i = 0; i < targetBone.children.length; i++) {
           const child = targetBone.children[i];
           if ((child as any).isBone) {
@@ -282,96 +268,9 @@ export function GlobalSkeletonHelpers({
       if (selectedRingMeshRef.current) selectedRingMeshRef.current.visible = false;
       if (selectedLinesRef.current) selectedLinesRef.current.visible = false;
     }
-
-    // --- Raycast 2D écran pour survoler les os ---
-    if (!isPointerInsideRef.current) {
-      if (hoveredBoneInfo) setHoveredBoneInfo(null);
-      if (hoveredJointMeshRef.current) hoveredJointMeshRef.current.visible = false;
-      return;
-    }
-
-    const canvasW = gl.domElement.clientWidth;
-    const canvasH = gl.domElement.clientHeight;
-    if (canvasW <= 0 || canvasH <= 0) return;
-
-    const mouseX = (state.pointer.x * 0.5 + 0.5) * canvasW;
-    const mouseY = (-state.pointer.y * 0.5 + 0.5) * canvasH;
-
-    let bestDist = 24.0; // Seuil de détection en pixels sur l'écran
-    let candidateBone: THREE.Bone | null = null;
-
-    helpersRef.current.forEach((_helper, topBone) => {
-      topBone.traverse((obj) => {
-        if (!(obj as any).isBone) return;
-        const bone = obj as THREE.Bone;
-
-        bone.getWorldPosition(bonePosRef.current);
-        screenPosRef.current.copy(bonePosRef.current).project(camera);
-
-        if (screenPosRef.current.z > 1.0) return; // Derrière la caméra
-
-        const sx = (screenPosRef.current.x * 0.5 + 0.5) * canvasW;
-        const sy = (-screenPosRef.current.y * 0.5 + 0.5) * canvasH;
-        const dJoint = Math.hypot(sx - mouseX, sy - mouseY);
-
-        if (dJoint < bestDist) {
-          bestDist = dJoint;
-          candidateBone = bone;
-          candidatePosRef.current.copy(bonePosRef.current);
-        }
-
-        // Tester également la ligne vers chaque os enfant
-        for (let i = 0; i < bone.children.length; i++) {
-          const child = bone.children[i];
-          if (!(child as any).isBone) continue;
-
-          child.getWorldPosition(childPosRef.current);
-          screenChildRef.current.copy(childPosRef.current).project(camera);
-          if (screenChildRef.current.z > 1.0) continue;
-
-          const cx = (screenChildRef.current.x * 0.5 + 0.5) * canvasW;
-          const cy = (-screenChildRef.current.y * 0.5 + 0.5) * canvasH;
-
-          const segLenSq = (cx - sx) * (cx - sx) + (cy - sy) * (cy - sy);
-          if (segLenSq > 1e-4) {
-            const t = Math.max(0, Math.min(1, ((mouseX - sx) * (cx - sx) + (mouseY - sy) * (cy - sy)) / segLenSq));
-            const px = sx + t * (cx - sx);
-            const py = sy + t * (cy - sy);
-            const dSeg = Math.hypot(px - mouseX, py - mouseY);
-
-            if (dSeg < bestDist) {
-              bestDist = dSeg;
-              candidateBone = bone;
-              candidatePosRef.current.copy(bonePosRef.current).lerp(childPosRef.current, t);
-            }
-          }
-        }
-      });
-    });
-
-    if (candidateBone) {
-      if (!hoveredBoneInfo || hoveredBoneInfo.bone !== candidateBone) {
-        setHoveredBoneInfo({ bone: candidateBone, pos: candidatePosRef.current.clone() });
-      } else {
-        hoveredBoneInfo.pos.copy(candidatePosRef.current);
-      }
-
-      // Marqueur au survol
-      if (hoveredJointMeshRef.current) {
-        if (candidateBone !== targetBone) {
-          hoveredJointMeshRef.current.position.copy(candidatePosRef.current);
-          hoveredJointMeshRef.current.visible = true;
-        } else {
-          hoveredJointMeshRef.current.visible = false;
-        }
-      }
-    } else {
-      if (hoveredBoneInfo) setHoveredBoneInfo(null);
-      if (hoveredJointMeshRef.current) hoveredJointMeshRef.current.visible = false;
-    }
   });
 
-  // Gestion du clic pour sélectionner un os et afficher son influence
+  // Gestion du clic pour sélectionner un os et afficher son nom / influence
   useEffect(() => {
     if (!show) return;
 
@@ -379,16 +278,6 @@ export function GlobalSkeletonHelpers({
     let downTime = 0;
     let downX = 0;
     let downY = 0;
-
-    const onPointerEnter = () => {
-      isPointerInsideRef.current = true;
-    };
-
-    const onPointerLeave = () => {
-      isPointerInsideRef.current = false;
-      setHoveredBoneInfo(null);
-      if (hoveredJointMeshRef.current) hoveredJointMeshRef.current.visible = false;
-    };
 
     const onPointerDown = (e: PointerEvent) => {
       downTime = Date.now();
@@ -402,16 +291,67 @@ export function GlobalSkeletonHelpers({
         return;
       }
 
-      if (hoveredBoneInfo) {
-        const boneName = hoveredBoneInfo.bone.name;
+      const rect = dom.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const canvasW = rect.width;
+      const canvasH = rect.height;
+      if (canvasW <= 0 || canvasH <= 0) return;
+
+      let bestDist = 24.0;
+      let clickedBone: THREE.Bone | null = null;
+      const tmpV = new THREE.Vector3();
+      const tmpChild = new THREE.Vector3();
+
+      helpersRef.current.forEach((_helper, topBone) => {
+        topBone.traverse((obj) => {
+          if (!(obj as any).isBone) return;
+          const bone = obj as THREE.Bone;
+          bone.getWorldPosition(tmpV);
+          tmpV.project(camera);
+          if (tmpV.z > 1.0) return;
+
+          const sx = (tmpV.x * 0.5 + 0.5) * canvasW;
+          const sy = (-tmpV.y * 0.5 + 0.5) * canvasH;
+          const d = Math.hypot(sx - mouseX, sy - mouseY);
+          if (d < bestDist) {
+            bestDist = d;
+            clickedBone = bone;
+          }
+
+          for (let i = 0; i < bone.children.length; i++) {
+            const child = bone.children[i];
+            if (!(child as any).isBone) continue;
+            child.getWorldPosition(tmpChild);
+            tmpChild.project(camera);
+            if (tmpChild.z > 1.0) continue;
+
+            const cx = (tmpChild.x * 0.5 + 0.5) * canvasW;
+            const cy = (-tmpChild.y * 0.5 + 0.5) * canvasH;
+            const segLenSq = (cx - sx) * (cx - sx) + (cy - sy) * (cy - sy);
+            if (segLenSq > 1e-4) {
+              const t = Math.max(0, Math.min(1, ((mouseX - sx) * (cx - sx) + (mouseY - sy) * (cy - sy)) / segLenSq));
+              const px = sx + t * (cx - sx);
+              const py = sy + t * (cy - sy);
+              const dSeg = Math.hypot(px - mouseX, py - mouseY);
+              if (dSeg < bestDist) {
+                bestDist = dSeg;
+                clickedBone = bone;
+              }
+            }
+          }
+        });
+      });
+
+      if (clickedBone) {
+        const boneName = (clickedBone as THREE.Bone).name;
         const newSelected = activeSelectedName === boneName ? null : boneName;
         if (onSelectBoneName) {
           onSelectBoneName(newSelected);
         } else {
-          setInternalSelectedBone(newSelected ? hoveredBoneInfo.bone : null);
+          setInternalSelectedBone(newSelected ? clickedBone : null);
         }
       } else if (activeSelectedName) {
-        // Clic dans le vide -> désélectionner
         if (onSelectBoneName) {
           onSelectBoneName(null);
         } else {
@@ -420,18 +360,14 @@ export function GlobalSkeletonHelpers({
       }
     };
 
-    dom.addEventListener('pointerenter', onPointerEnter);
-    dom.addEventListener('pointerleave', onPointerLeave);
     dom.addEventListener('pointerdown', onPointerDown);
     dom.addEventListener('pointerup', onPointerUp);
 
     return () => {
-      dom.removeEventListener('pointerenter', onPointerEnter);
-      dom.removeEventListener('pointerleave', onPointerLeave);
       dom.removeEventListener('pointerdown', onPointerDown);
       dom.removeEventListener('pointerup', onPointerUp);
     };
-  }, [show, hoveredBoneInfo, activeSelectedName, onSelectBoneName, gl.domElement]);
+  }, [show, activeSelectedName, onSelectBoneName, gl.domElement, camera]);
 
   // Intervalle de mise à jour des helpers de squelette et extraction de la hiérarchie
   useEffect(() => {
@@ -613,12 +549,6 @@ export function GlobalSkeletonHelpers({
         <bufferGeometry ref={selectedLinesGeomRef} />
         <lineBasicMaterial color="#fffa65" depthTest={false} linewidth={3} />
       </lineSegments>
-
-      {/* Marqueur discret 3D au survol */}
-      <mesh ref={hoveredJointMeshRef} renderOrder={999997} frustumCulled={false} visible={false}>
-        <sphereGeometry args={[0.65, 12, 12]} />
-        <meshBasicMaterial color="#00ffff" depthTest={false} transparent opacity={0.8} />
-      </mesh>
 
       {/* Étiquette avec le nom de l'os affichée UNIQUEMENT au clic (lorsqu'un os est sélectionné) */}
       {activeSelectedName && (

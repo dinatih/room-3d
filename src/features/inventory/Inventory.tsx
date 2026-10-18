@@ -690,13 +690,18 @@ function normalizeSearchStr(str: string): string {
       if (activeCat === 'actionnable' && !getObjectActionIds(i.id).length) return false;
       if (activeCat === 'glbs'        && !i.glbPath)         return false;
 
+      const annot = allAnnotations[`item:${i.id}`];
+      const annotText = annot
+        ? `${annot.status ?? ''} ${annot.status ? ANNOTATION_STATUSES[annot.status]?.label ?? '' : ''} ${(annot.tags ?? []).join(' ')} ${annot.notes ?? ''}`
+        : '';
+
       if (activeCat === 'wigs') {
         if (i.category !== 'wigs') return false;
         if (wigSource && getWigSource(i) !== wigSource) return false;
         const effectiveQuery = wq || q;
         if (effectiveQuery) {
           const itemText = normalizeSearchStr(
-            `${i.id} ${i.name} ${i.brand} ${i.notes ?? ''} ${(i.tags ?? []).join(' ')}`
+            `${i.id} ${i.name} ${i.brand} ${i.notes ?? ''} ${(i.tags ?? []).join(' ')} ${annotText}`
           );
           if (!itemText.includes(effectiveQuery)) return false;
         }
@@ -710,14 +715,14 @@ function normalizeSearchStr(str: string): string {
 
       if (q) {
         const itemText = normalizeSearchStr(
-          `${i.id} ${i.name} ${i.brand} ${i.notes ?? ''} ${(i.tags ?? []).join(' ')}`
+          `${i.id} ${i.name} ${i.brand} ${i.notes ?? ''} ${(i.tags ?? []).join(' ')} ${annotText}`
         );
         const qAlt = q.replace(/pendantif/g, 'pendentif').replace(/pendentif/g, 'pendantif');
         if (!itemText.includes(q) && !itemText.includes(qAlt)) return false;
       }
       return true;
     });
-  }, [activeCat, search, wigSearch, wigSource, extraCharacters]);
+  }, [activeCat, search, wigSearch, wigSource, extraCharacters, allAnnotations]);
 
   const showSpaces = activeCat === 'storage' || activeCat === 'actionnable';
   const spaces = activeCat === 'actionnable'
@@ -1089,13 +1094,24 @@ function normalizeSearchStr(str: string): string {
                             if (!annot) return null;
                             const status = annot.status ? ANNOTATION_STATUSES[annot.status] : undefined;
                             return (
-                              <span className="d-inline-flex align-items-center gap-1">
-                                {status && <span className={`badge bg-${status.color} p-1 rounded-circle`} title={status.label} />}
-                                {annot.tags && annot.tags.length > 0 && (
-                                  <span className="badge bg-light text-secondary border small" style={{ fontSize: '0.65rem' }}>
-                                    #{annot.tags[0]}
+                              <span className="d-inline-flex align-items-center gap-1 flex-wrap">
+                                {status && (
+                                  <span
+                                    className={`badge bg-${status.color}-subtle text-${status.color} border border-${status.color}-subtle small`}
+                                    style={{ fontSize: '0.65rem' }}
+                                  >
+                                    {status.label}
                                   </span>
                                 )}
+                                {annot.tags && annot.tags.map(tag => (
+                                  <span
+                                    key={tag}
+                                    className="badge bg-light text-secondary border small"
+                                    style={{ fontSize: '0.65rem' }}
+                                  >
+                                    #{tag}
+                                  </span>
+                                ))}
                               </span>
                             );
                           })()}
