@@ -28,5 +28,145 @@
     "frames": 1008,
     "duration": 33.6,
     "size_kb": 408
+  },
+  {
+    "id": "cmu-drink-bottle-recap",
+    "label": "Déboucher, boire et reboucher la bouteille",
+    "trial": "13_08",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_08_stageii.npz",
+    "filename": "cmu-drink-bottle-recap.glb",
+    "frames": 401,
+    "duration": 13.4,
+    "size_kb": 197
+  },
+  {
+    "id": "cmu-drink-soda",
+    "label": "Boire un soda",
+    "trial": "13_09",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_09_stageii.npz",
+    "filename": "cmu-drink-soda.glb",
+    "frames": 276,
+    "duration": 9.2,
+    "size_kb": 156
+  },
+  {
+    "id": "cmu-sit-high-stool-02",
+    "label": "Tabouret haut : s’asseoir et se relever — prise 2",
+    "trial": "13_02",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_02_stageii.npz",
+    "filename": "cmu-sit-high-stool-02.glb",
+    "frames": 869,
+    "duration": 29.0,
+    "size_kb": 351
+  },
+  {
+    "id": "cmu-sit-high-stool-03",
+    "label": "Tabouret haut : s’asseoir et se relever — prise 3",
+    "trial": "13_03",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_03_stageii.npz",
+    "filename": "cmu-sit-high-stool-03.glb",
+    "frames": 929,
+    "duration": 31.0,
+    "size_kb": 370
+  },
+  {
+    "id": "cmu-sit-stool-chin-hand",
+    "label": "Tabouret bas : menton dans la main",
+    "trial": "13_04",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_04_stageii.npz",
+    "filename": "cmu-sit-stool-chin-hand.glb",
+    "frames": 1190,
+    "duration": 39.7,
+    "size_kb": 456
+  },
+  {
+    "id": "cmu-sit-stool-fidget",
+    "label": "Tabouret bas : s’agiter et se relever",
+    "trial": "13_05",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_05_stageii.npz",
+    "filename": "cmu-sit-stool-fidget.glb",
+    "frames": 1101,
+    "duration": 36.7,
+    "size_kb": 427
+  },
+  {
+    "id": "cmu-sit-stool-elbow-out",
+    "label": "Tabouret bas : mains au menton, coude écarté, se relever",
+    "trial": "13_06",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_06_stageii.npz",
+    "filename": "cmu-sit-stool-elbow-out.glb",
+    "frames": 1103,
+    "duration": 36.8,
+    "size_kb": 440
+  },
+  {
+    "id": "cmu-clean-windows-21",
+    "label": "Laver les vitres — prise 21",
+    "trial": "13_21",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_21_stageii.npz",
+    "filename": "cmu-clean-windows-21.glb",
+    "frames": 1360,
+    "duration": 45.3,
+    "size_kb": 528
+  },
+  {
+    "id": "cmu-clean-windows-22",
+    "label": "Laver les vitres — prise 22",
+    "trial": "13_22",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_22_stageii.npz",
+    "filename": "cmu-clean-windows-22.glb",
+    "frames": 1240,
+    "duration": 41.3,
+    "size_kb": 516
+  },
+  {
+    "id": "cmu-sweep-floor-25",
+    "label": "Balayer le sol — prise 25",
+    "trial": "13_25",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_25_stageii.npz",
+    "filename": "cmu-sweep-floor-25.glb",
+    "frames": 1002,
+    "duration": 33.4,
+    "size_kb": 406
+  },
+  {
+    "id": "cmu-climb-ladder-33",
+    "label": "Monter une échelle — prise 33",
+    "trial": "13_33",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_33_stageii.npz",
+    "filename": "cmu-climb-ladder-33.glb",
+    "frames": 375,
+    "duration": 12.5,
+    "size_kb": 228
+  },
+  {
+    "id": "cmu-climb-ladder-34",
+    "label": "Monter une échelle — prise 34",
+    "trial": "13_34",
+    "src": "/home/dinatih/3D Resources/animations/CMU/13/13_34_stageii.npz",
+    "filename": "cmu-climb-ladder-34.glb",
+    "frames": 354,
+    "duration": 11.8,
+    "size_kb": 202
+  },
+  {
+    "id": "cmu-everyday-dance-boxing-04",
+    "label": "Séquence mixte : ménage, gestes, danse et boxe — prise 4",
+    "trial": "15_04",
+    "src": "/home/dinatih/3D Resources/animations/CMU/15/15_04_stageii.npz",
+    "filename": "cmu-everyday-dance-boxing-04.glb",
+    "frames": 5637,
+    "duration": 187.9,
+    "size_kb": 2509
+  },
+  {
+    "id": "cmu-everyday-dance-boxing-05",
+    "label": "Séquence mixte : ménage, gestes, danse et boxe — prise 5",
+    "trial": "15_05",
+    "src": "/home/dinatih/3D Resources/animations/CMU/15/15_05_stageii.npz",
+    "filename": "cmu-everyday-dance-boxing-05.glb",
+    "frames": 5737,
+    "duration": 191.2,
+    "size_kb": 2284
   }
 ]
