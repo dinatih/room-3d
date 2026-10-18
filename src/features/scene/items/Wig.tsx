@@ -205,22 +205,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     (sg as THREE.Object3D).rotation.set(fix.rotation[0], fix.rotation[1], fix.rotation[2]);
     (sg as THREE.Object3D).userData.isWigRoot = true;
 
-    // Fix SkeletonHelper by reparenting the root bone to sg so it inherits the correct world transform
-    let rootBone: THREE.Bone | null = null;
-    clonedFullScene.traverse(child => {
-      if ((child as THREE.Bone).isBone && !rootBone) {
-        let p = child;
-        while (p.parent && (p.parent as THREE.Bone).isBone) {
-          p = p.parent as THREE.Bone;
-        }
-        rootBone = p as THREE.Bone;
-      }
-    });
-
-    if (rootBone && (rootBone as THREE.Bone).parent !== sg) {
-      (sg as THREE.Object3D).add(rootBone as THREE.Bone);
-    }
-
     return (sg as THREE.Object3D);
   }, [fullScene, id, scale, cleanId, strId, attachTo]);
 
@@ -236,9 +220,15 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         const sm = child as THREE.SkinnedMesh;
         // Extract bones DIRECTLY from the SkinnedMesh's skeleton!
         if (extractedBones.length === 0) {
-          const isRootOrScalp = (n: string) => n.toLowerCase().includes('root') || n.toLowerCase().includes('spine') || n.toLowerCase().includes('neck') || n.toLowerCase().includes('head');
+          const isFixedBone = (n: string) => {
+            const lower = n.toLowerCase();
+            return lower.includes('root') || lower.includes('spine') || lower.includes('neck') ||
+                   lower.includes('head') || lower.includes('scalp') || lower.includes('all') ||
+                   lower.includes('forehead') || lower.includes('jbone') || lower.includes('base') ||
+                   lower.includes('attach');
+          };
           sm.skeleton.bones.forEach(b => {
-            if (!isRootOrScalp(b.name)) {
+            if (!isFixedBone(b.name)) {
               extractedBones.push({
                 bone: b,
                 restQ: b.quaternion.clone(),
@@ -314,29 +304,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           );
         } else if (m.userData.__baseWigMaterial) {
           m.material = configureWigMat(m.userData.__baseWigMaterial, m.material);
-        }
-      }
-
-      if ((child as any).isBone) {
-        const b = child as THREE.Bone;
-        if (!(b as any).restLocalQuaternion) {
-          (b as any).restLocalQuaternion = b.quaternion.clone();
-        }
-        const nLower = (b.name || '').toLowerCase();
-        // Filtrer les os racines (bip_head, spine...) pour ne garder que les mèches
-        const isRootOrScalp = nLower.includes('bip_head') || nLower.includes('bip_neck') || 
-                              nLower.includes('bip_spine') || nLower.startsWith('head') || 
-                              nLower.includes('root') || nLower.includes('scalp') || 
-                              nLower.startsWith('bone3_') || nLower.startsWith('bone4_') || 
-                              b.parent === scene;
-
-        if (!isRootOrScalp && nLower.startsWith('bone')) {
-          const index = parseInt(nLower.replace(/\D/g, ''), 10) || 1;
-          extractedBones.push({
-            bone: b,
-            restQ: (b as any).restLocalQuaternion,
-            index,
-          });
         }
       }
     });
