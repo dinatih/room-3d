@@ -22,6 +22,7 @@ import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { getExitTransition } from '../animations/animationTransitions';
 import { DRONA_SE_ITEMS } from '../items/kallaxSeDrona';
 import { dronaPlayback } from '../items/dronaPlayback';
+import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
 import { doorCollisionState } from '../doorObstacles';
 import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
 
@@ -212,7 +213,7 @@ export function useAgentController(
       if (claimedSlotRef.current.objectId === 'drona-ne-catchall') {
         useSceneStore.getState().triggerAction('drona-ne-catchall-slide', false);
       }
-      const drona = DRONA_SE_ITEMS[claimedSlotRef.current.objectId];
+      const drona = DRONA_SE_ITEMS[claimedSlotRef.current.objectId] ?? DRONA_SPECIAL_ITEMS[claimedSlotRef.current.objectId as keyof typeof DRONA_SPECIAL_ITEMS];
       if (drona) {
         dronaPlayback.delete(drona.action);
         useSceneStore.getState().triggerAction(drona.action, false);

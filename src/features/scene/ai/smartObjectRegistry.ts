@@ -12,6 +12,7 @@ import { FRIDGE_DOOR_DURATION, FRIDGE_CRISPER_DURATION } from '../items/Fridge';
 import { DRONA_CATCHALL_ACTION, DRONA_CATCHALL_POSITION, DRONA_CATCHALL_SLIDE_DURATION } from '../items/kallaxNeDrona';
 import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from '../items/kallaxSeDrona';
 import { LINEN_PULL_RANGE, LINEN_PUSH_RANGE } from '../animations/dronaLinenManifest';
+import { DRONA_SPECIAL_ITEMS, DRONA_PULL_RANGE, DRONA_PUSH_RANGE } from '../items/dronaStorage';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
 
@@ -476,6 +477,15 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       relative: true, arrival: 'approach' as const, navigationOwner: 'kallax-se',
       offset: [0, -KALLAX_SE_DRONA_POSITIONS[item.index][1], -80] as [number, number, number],
       rotY: 0, animation: item.animation,
+    }],
+  }])),
+  ...Object.fromEntries(Object.entries(DRONA_SPECIAL_ITEMS).map(([id, item]) => [id, {
+    id, name: item.label, category: 'storage' as const, itemId: id,
+    slots: [{
+      slotId: 'pick-item', name: item.interaction, relative: true, arrival: 'approach' as const,
+      navigationOwner: `kallax-${item.shelf}`,
+      offset: [0, -item.position[1], -item.approach] as [number, number, number],
+      rotY: 0, animation: `${item.animationPrefix}-search`,
     }],
   }])),
   'drona-ne-catchall': {
@@ -1100,6 +1110,33 @@ export function buildSmartObjectInstructionSequence(
         animation: 'idle', duration: FRIDGE_DOOR_DURATION, rotY: slot.rotY,
         triggerEventKey: 'fridge', triggerEventValue: false,
       },
+    ];
+  }
+
+  const storage = DRONA_SPECIAL_ITEMS[objectId as keyof typeof DRONA_SPECIAL_ITEMS];
+  if (storage) {
+    const doorKey = storage.shelf === 'se' ? 'living' as const : 'glassRight' as const;
+    const gesture = (phase: 'pull' | 'push'): AgentInstruction => ({
+      type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: storage.shelf === 'nw' ? undefined : doorKey,
+      animation: `${storage.animationPrefix}-${phase}`,
+      duration: getAnimationDef(`${storage.animationPrefix}-${phase}`)!.duration,
+      rotY: slot.rotY, waitForAnimation: true,
+      dronaMotion: { action: storage.action, from: phase === 'pull' ? 0 : 1, to: phase === 'pull' ? 1 : 0, range: phase === 'pull' ? DRONA_PULL_RANGE : DRONA_PUSH_RANGE },
+      triggerEventKey: storage.action, triggerEventValue: phase === 'pull',
+    });
+    return [
+      ...(storage.shelf === 'nw' ? [
+        { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId },
+      ] : [
+        { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey },
+        { type: 'WAIT' as const, doorKey },
+        { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, closedDoor: doorKey },
+      ]),
+      gesture('pull'),
+      { ...baseInstruction, closedDoor: storage.shelf === 'nw' ? undefined : doorKey, waitForAnimation: true },
+      gesture('push'),
+      ...(storage.shelf !== 'nw' ? [{ type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, closedDoor: doorKey, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY }] : []),
+      ...(storage.shelf === 'nw' ? [] : [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey, closedDoor: doorKey }]),
     ];
   }
 

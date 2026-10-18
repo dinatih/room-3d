@@ -17,6 +17,7 @@ import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION } from '../items/kallaxNeDrona';
 import { KallaxSE, KallaxSEDrona } from '../items/KallaxSE';
 import { getObjectTransform } from '../objectTransforms';
 import { KallaxNW, KallaxNWDrona, KallaxNWMannequins } from '../items/KallaxNW';
+import { KALLAX_NW_POSITION, KALLAX_NW_ROTATION } from '../items/dronaStorage';
 import { JblCharge3 } from '../items/JblCharge3';
 import { MackaparGroup, MackaparDrona, MackaparHangers } from '../items/MackaparGroup';
 import { MannequinHead } from '../items/MannequinHead';
@@ -93,7 +94,7 @@ const MIRROR_CX = 160;
 const SIT_H = 70;
 const STAND_H = 103;
 
-function Beds() {
+export function Beds() {
   const toggles = useFurnitureToggles(['bed-double']);
   const isDouble = !!toggles['bed-double'];
   const [doublePosIdx, setDoublePosIdx] = useState(0);
@@ -121,6 +122,13 @@ function Beds() {
     positionState['bed-west-position'] = { idx: isDouble ? doublePosIdx : -1, total: DOUBLE_BED_POSITIONS.length };
     positionState['bed-east-position'] = { idx: isDouble ? doublePosIdx : -1, total: DOUBLE_BED_POSITIONS.length };
   }, [doublePosIdx, isDouble]);
+
+  useEffect(() => {
+    if (!isDouble || doublePosIdx !== 0) return;
+    for (const key of ['desk1-position', 'desk2-position']) {
+      document.dispatchEvent(new CustomEvent('furniture-position-set', { detail: { key, index: 1 } }));
+    }
+  }, [isDouble, doublePosIdx]);
 
   const currentDoublePos = DOUBLE_BED_POSITIONS[doublePosIdx];
 
@@ -182,7 +190,7 @@ function Beds() {
   );
 }
 
-function Desks() {
+export function Desks() {
   const [d1H, setD1H] = useState(SIT_H);
   const [d2H, setD2H] = useState(STAND_H);
   const [d1Pos, setD1Pos] = useState(0);
@@ -190,11 +198,11 @@ function Desks() {
 
   useEffect(() => {
     const handler = (e: Event) => {
-      const { key } = (e as CustomEvent).detail as { key: string };
+      const { key, index } = (e as CustomEvent).detail as { key: string; index?: number };
       if (key === 'desk1-toggle') setD1H(h => h === SIT_H ? STAND_H : SIT_H);
       if (key === 'desk1-position') {
         setD1Pos(i => {
-          const next = (i + 1) % DESK1_POSITIONS.length;
+          const next = index ?? (i + 1) % DESK1_POSITIONS.length;
           positionState['desk1-position'] = { idx: next, total: DESK1_POSITIONS.length };
           return next;
         });
@@ -202,14 +210,18 @@ function Desks() {
       if (key === 'desk2-toggle') setD2H(h => h === SIT_H ? STAND_H : SIT_H);
       if (key === 'desk2-position') {
         setD2Pos(i => {
-          const next = (i + 1) % DESK2_POSITIONS.length;
+          const next = index ?? (i + 1) % DESK2_POSITIONS.length;
           positionState['desk2-position'] = { idx: next, total: DESK2_POSITIONS.length };
           return next;
         });
       }
     };
     document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
+    document.addEventListener('furniture-position-set', handler);
+    return () => {
+      document.removeEventListener('furniture-toggle', handler);
+      document.removeEventListener('furniture-position-set', handler);
+    };
   }, []);
 
   useEffect(() => { positionState['desk1-position'] = { idx: d1Pos, total: DESK1_POSITIONS.length }; }, [d1Pos]);
@@ -246,7 +258,7 @@ function Desks() {
   );
 }
 
-function DeskDecor() {
+export function DeskDecor() {
   const [d1H, setD1H] = useState(SIT_H);
   const [d2H, setD2H] = useState(STAND_H);
   const [d1Pos, setD1Pos] = useState(0);
@@ -254,14 +266,18 @@ function DeskDecor() {
 
   useEffect(() => {
     const handler = (e: Event) => {
-      const { key } = (e as CustomEvent).detail as { key: string };
+      const { key, index } = (e as CustomEvent).detail as { key: string; index?: number };
       if (key === 'desk1-toggle') setD1H(h => h === SIT_H ? STAND_H : SIT_H);
-      if (key === 'desk1-position') setD1Pos(i => (i + 1) % DESK1_POSITIONS.length);
+      if (key === 'desk1-position') setD1Pos(i => index ?? (i + 1) % DESK1_POSITIONS.length);
       if (key === 'desk2-toggle') setD2H(h => h === SIT_H ? STAND_H : SIT_H);
-      if (key === 'desk2-position') setD2Pos(i => (i + 1) % DESK2_POSITIONS.length);
+      if (key === 'desk2-position') setD2Pos(i => index ?? (i + 1) % DESK2_POSITIONS.length);
     };
     document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
+    document.addEventListener('furniture-position-set', handler);
+    return () => {
+      document.removeEventListener('furniture-toggle', handler);
+      document.removeEventListener('furniture-position-set', handler);
+    };
   }, []);
 
   const p1 = DESK1_POSITIONS[d1Pos];
@@ -431,7 +447,7 @@ export function LivingRoomFurniture() {
   return (
     <MergedStaticGroup name="merged-living-room-furniture">
       {/* Meubles Kallax (structure sans Drona ni Mannequins) */}
-      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax NW' }}>
+      <group position={KALLAX_NW_POSITION} rotation={[0, KALLAX_NW_ROTATION, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax NW' }}>
         <NavigationObstacle id="kallax-nw"><KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noMannequins /></NavigationObstacle>
       </group>
 
@@ -500,7 +516,7 @@ export function LivingRoomFurnishings() {
       </group>
 
       {/* Boîtes Drona Kallax NW */}
-      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={KALLAX_NW_POSITION} rotation={[0, KALLAX_NW_ROTATION, 0]}>
         <KallaxNWDrona />
       </group>
 
@@ -568,7 +584,7 @@ export function LivingRoomDecor() {
   return (
     <MergedStaticGroup name="merged-living-room-decor">
       {/* Têtes de mannequin 1 (Kallax NW) et 3 (Meuble T) */}
-      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={KALLAX_NW_POSITION} rotation={[0, KALLAX_NW_ROTATION, 0]}>
         <KallaxNWMannequins />
       </group>
 

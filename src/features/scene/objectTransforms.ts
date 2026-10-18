@@ -17,6 +17,7 @@ import { TOILET_D } from './items/Toilet';
 import { FRIDGE_LOCAL_POSITION } from './items/Fridge';
 import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION, DRONA_CATCHALL_POSITION } from './items/kallaxNeDrona';
 import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from './items/kallaxSeDrona';
+import { DRONA_SPECIAL_ITEMS, KALLAX_NW_POSITION, KALLAX_NW_ROTATION } from './items/dronaStorage';
 import { positionState } from './positionState';
 import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, FurnitureTransform } from './furniturePositions';
 
@@ -45,6 +46,14 @@ const ITEM_TO_ANCHOR_KEY: Record<string, string> = {
  * Positions statiques des objets 3D fidèles à Placements.tsx
  */
 function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
+  const storage = DRONA_SPECIAL_ITEMS[itemId as keyof typeof DRONA_SPECIAL_ITEMS];
+  if (storage) {
+    const freezer = getStaticObjectTransform('freezer')!;
+    const position = storage.shelf === 'se' ? freezer.position : storage.shelf === 'nw' ? KALLAX_NW_POSITION : KALLAX_NE_POSITION;
+    const ry = storage.shelf === 'se' ? freezer.rotationY - Math.PI / 2 : storage.shelf === 'nw' ? KALLAX_NW_ROTATION : KALLAX_NE_ROTATION;
+    const [x, y, z] = storage.position, c = Math.cos(ry), s = Math.sin(ry);
+    return { position: [position[0] + x * c + z * s, position[1] + y, position[2] - x * s + z * c], rotationY: ry };
+  }
   switch (itemId) {
     case 'drona-se-pyjama':
     case 'drona-se-linen': {

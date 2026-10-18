@@ -17,6 +17,8 @@ import { Variera80136622 } from './Variera80136622';
 import { MeubleT }        from './MeubleT';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
+import { SlidingDrona } from './SlidingDrona';
+import { KALLAX_NW_DRONA_POSITIONS, DRONA_SPECIAL_ITEMS, SPECIAL_DRONA_SLIDE_DURATION } from './dronaStorage';
 
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
@@ -33,19 +35,13 @@ const VAR_W = 32, VAR_D = 13; // VARIERA demi-étag dims (L × P)
 // nwB (2×1) cells ±17.5 → Y = w2/2 ∓ 17.5
 // nwM (1×1) centre = w2 + w1/2 = 95.75
 // nwT (1×1) centre = w2 + w1 + w1/2 = 136.25
-const DRONA_POSITIONS: [number, number, number][] = [
-  [0, w2 / 2 - 17.5,       0], // nwB cell 0
-  [0, w2 / 2 + 17.5,       0], // nwB cell 1
-  [0, w2 + w1 / 2,         0], // nwM cell
-  [0, w2 + w1 + w1 / 2,    0], // nwT cell
-];
 
 function k(id: string) { return { id } as any; }
 
-export function KallaxNWDrona() {
+export function KallaxNWDrona({ isPreview = false, actionState = {} }: { isPreview?: boolean; actionState?: Record<string, any> } = {}) {
   const dronaMatrices = useMemo(() => {
     const rot = new THREE.Matrix4(); // Identité
-    return DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x, y, z));
+    return KALLAX_NW_DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x, y, z));
   }, []);
 
   const dronaTransforms = useMemo(() => {
@@ -62,8 +58,10 @@ export function KallaxNWDrona() {
     <>
       {/* DRONA Instances individuelles pour animation */}
       {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
-          <DroneCell />
+        <group key={i} name={`drona-nw-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+          {i === DRONA_SPECIAL_ITEMS['drona-nw-trousers'].index
+            ? <SlidingDrona objectId="drona-nw-trousers" label={DRONA_SPECIAL_ITEMS['drona-nw-trousers'].label} actionId={DRONA_SPECIAL_ITEMS['drona-nw-trousers'].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
+            : <DroneCell />}
         </group>
       ))}
     </>
@@ -95,7 +93,7 @@ export function KallaxNWMannequins() {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxNW({ onSize, noDrona, noMannequins }: SceneItemProps & { noDrona?: boolean; noMannequins?: boolean }) {
+export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean; noMannequins?: boolean; isPreview?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
   const px = -h1 / 2; // -20.5 : center the pivoted Kallax at X=0
 
@@ -120,7 +118,7 @@ export function KallaxNW({ onSize, noDrona, noMannequins }: SceneItemProps & { n
         <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {!noDrona && <KallaxNWDrona />}
+      {!noDrona && <KallaxNWDrona isPreview={isPreview} actionState={actionState} />}
       {!noMannequins && <KallaxNWMannequins />}
 
       {/* VARIERA demi-étagère sur sommet tour, longueur plaquée contre mur Nord.

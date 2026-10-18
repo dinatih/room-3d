@@ -17,6 +17,7 @@ import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 import { SlidingDrona } from './SlidingDrona';
 import { KALLAX_SE_DRONA_POSITIONS, DRONA_SE_ITEMS } from './kallaxSeDrona';
+import { DRONA_SPECIAL_ITEMS, SPECIAL_DRONA_SLIDE_DURATION } from './dronaStorage';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
 const TF = 3.5, TI = 1.5, NH = 34, NW_K = 33.5;
@@ -53,7 +54,7 @@ export function KallaxSEDrona({ isPreview = false, actionState = {} }: { isPrevi
     <>
       {/* DRONA Instances individuelles pour animation */}
       {dronaTransforms.map((t, i) => {
-        const target = Object.entries(DRONA_SE_ITEMS).find(([, item]) => item.index === i);
+        const target = Object.entries({ ...DRONA_SE_ITEMS, 'drona-se-care': { ...DRONA_SPECIAL_ITEMS['drona-se-care'], duration: SPECIAL_DRONA_SLIDE_DURATION } }).find(([, item]) => item.index === i);
         return (
           <group key={i} name={`drona-se-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
             {target ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={target[1].duration} isPreview={isPreview} actionState={actionState} /> : <DroneCell />}

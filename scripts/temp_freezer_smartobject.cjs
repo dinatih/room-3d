@@ -1,6 +1,108 @@
 const launchBrowser = require('./browser-test-options.cjs');
 const puppeteer = require('puppeteer');
 const assert = require('node:assert/strict');
+if(process.argv.includes('--build-storage')){
+ (async()=>{
+   const fs=require('node:fs'),THREE=require('three');
+   const {GLTFLoader}=await import('three/examples/jsm/loaders/GLTFLoader.js');
+   const {NodeIO}=await import('@gltf-transform/core');const io=new NodeIO();
+   const sources=[
+     {id:'care',source:'looking_through_files_low',time:3.6,height:70.25,lean:0},
+     {id:'trousers',source:'opening',time:0,height:95.75,lean:.35},
+     // Floor-level box: grip the upper rim, 3 cm below its 33 cm-high top.
+     {id:'catchall2',source:'looking_through_files_low',time:10.8,height:20.5+33/2-3,lean:0},
+   ];
+   // Geometry measurements from the actual DroneCell GLB (centred in X/Z).
+   const bytes=fs.readFileSync('public/items/dröna/DRÖNA_high.glb');
+   const glb=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());
+   const bounds=glb.accessors[glb.meshes[0].primitives[0].attributes.POSITION];
+   const depth=(bounds.max[0]-bounds.min[0])*.995,travel=depth*2/3,approach=.5;
+   for(const item of sources){
+     const sourcePath=`public/animations/mixamo/anim_${item.source}.glb`,data=fs.readFileSync(sourcePath);
+     const rig=await new GLTFLoader().parseAsync(data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength),'');
+     const mixer=new THREE.AnimationMixer(rig.scene);mixer.clipAction(rig.animations[0]).play();mixer.setTime(item.time);
+     const hips=rig.scene.getObjectByName('mixamorigHips');rig.scene.updateMatrixWorld(true);
+     const hipWorld=hips.getWorldPosition(new THREE.Vector3());hipWorld.x=0;hipWorld.z=0;
+     // The runtime removes initial root-joint translation as locomotion drift.
+     // Bake the crouched root height into Hips so retargeting preserves it.
+     hips.parent.position.set(0,0,0);rig.scene.updateMatrixWorld(true);
+     hips.position.copy(hips.parent.worldToLocal(hipWorld));
+     const spine=rig.scene.getObjectByName('mixamorigSpine');rig.scene.updateMatrixWorld(true);
+     const spineWorld=spine.getWorldQuaternion(new THREE.Quaternion()),spineParent=spine.parent.getWorldQuaternion(new THREE.Quaternion());
+     spine.quaternion.copy(spineParent.invert().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),item.lean)).multiply(spineWorld));
+     rig.scene.updateMatrixWorld(true);
+     const nodes=[];rig.scene.traverse(n=>{if(n.isBone)nodes.push(n);});
+     const bases=new Map(nodes.map(n=>[n.name,{q:n.quaternion.clone(),p:n.position.clone()}]));
+     const hands=['Left','Right'].map(side=>({side,hand:rig.scene.getObjectByName('mixamorig'+side+'Hand'),upper:rig.scene.getObjectByName('mixamorig'+side+'Arm'),lower:rig.scene.getObjectByName('mixamorig'+side+'ForeArm')}));
+     const neutral=hands.map(({hand})=>hand.getWorldPosition(new THREE.Vector3()));
+     function aim(bone,from,to){
+       const world=bone.getWorldQuaternion(new THREE.Quaternion()),parent=bone.parent.getWorldQuaternion(new THREE.Quaternion());
+       bone.quaternion.copy(parent.invert().multiply(new THREE.Quaternion().setFromUnitVectors(from.normalize(),to.normalize())).multiply(world));
+       rig.scene.updateMatrixWorld(true);
+     }
+     function solve({upper,lower,hand},target){
+       const shoulder=upper.getWorldPosition(new THREE.Vector3()),elbow=lower.getWorldPosition(new THREE.Vector3()),wrist=hand.getWorldPosition(new THREE.Vector3());
+       const a=shoulder.distanceTo(elbow),b=elbow.distanceTo(wrist),direction=target.clone().sub(shoulder),distance=direction.length();
+       if(distance>=a+b||distance<=Math.abs(a-b))throw new Error('Unreachable handle: '+JSON.stringify({id:item.id,target:target.toArray(),shoulder:shoulder.toArray(),distance,reach:a+b}));
+       direction.normalize();
+       const along=(a*a-b*b+distance*distance)/(2*distance),height=Math.sqrt(a*a-along*along);
+       const bend=elbow.clone().sub(shoulder);bend.addScaledVector(direction,-bend.dot(direction)).normalize();
+       const desiredElbow=shoulder.clone().addScaledVector(direction,along).addScaledVector(bend,height);
+       aim(upper,elbow.clone().sub(shoulder),desiredElbow.clone().sub(shoulder));
+       const newElbow=lower.getWorldPosition(new THREE.Vector3()),newWrist=hand.getWorldPosition(new THREE.Vector3());
+       aim(lower,newWrist.sub(newElbow),target.clone().sub(newElbow));
+       if(hand.getWorldPosition(new THREE.Vector3()).distanceTo(target)>1e-5)throw new Error('IK did not reach handle');
+     }
+     for(const phase of ['pull','search','push']){
+       const doc=await io.read(sourcePath);doc.getRoot().listAnimations().forEach(a=>{
+         const samplers=a.listSamplers(),accessors=new Set(samplers.flatMap(s=>[s.getInput(),s.getOutput()]));
+         a.dispose();samplers.forEach(s=>s.dispose());accessors.forEach(a=>a.dispose());
+       });
+       const buffer=doc.getRoot().listBuffers()[0],duration=phase==='search'?9.766666412353516/2:4.833333492279053/2;
+       const frames=Math.ceil(duration*30)+1,times=Float32Array.from({length:frames},(_,i)=>duration*i/(frames-1));
+       const rotations=new Map(nodes.map(n=>[n.name,[]])),positions=new Map(nodes.map(n=>[n.name,[]]));
+       for(let frame=0;frame<frames;frame++){
+         nodes.forEach(n=>{n.quaternion.copy(bases.get(n.name).q);n.position.copy(bases.get(n.name).p);});rig.scene.updateMatrixWorld(true);
+         let t=frame/(frames-1);if(phase==='push')t=1-t;
+         const fraction=Math.max(0,Math.min(1,(t-.25)/.5));
+         hands.forEach((arm,index)=>{
+           const target=new THREE.Vector3(index===0?.1:-.1,item.height/100,approach-depth/2-travel*(phase==='search'?1:fraction));
+           if(phase==='search'){
+             // A single rummage, returning both hands to their grip before pushing.
+             const envelope=Math.sin(Math.PI*t)**2;
+             target.y+=.1*envelope;target.z+=.07*envelope;target.x+=.04*Math.sin(2*Math.PI*t)*(index===0?1:-1);
+           }else if(t<.25){
+             const reach=t/.25;target.lerpVectors(neutral[index],target,reach*reach*(3-2*reach));
+           }
+           solve(arm,target);
+         });
+         nodes.forEach(n=>{rotations.get(n.name).push(...n.quaternion.toArray());positions.get(n.name).push(...n.position.toArray());});
+       }
+       const animation=doc.createAnimation(`drona-${item.id}-${phase}`),input=doc.createAccessor().setType('SCALAR').setArray(times).setBuffer(buffer);
+       const heldInput=doc.createAccessor().setType('SCALAR').setArray(new Float32Array([0,duration])).setBuffer(buffer);
+       for(const node of doc.getRoot().listNodes()){
+         const name=node.getName().replace(/:/g,'');if(!rotations.has(name))continue;
+         for(const [path,type,values] of [['rotation','VEC4',rotations.get(name)],['translation','VEC3',positions.get(name)]]){
+           const size=type==='VEC4'?4:3,held=values.every((v,i)=>v===values[i%size]);
+           const output=doc.createAccessor().setType(type).setArray(new Float32Array(held?[...values.slice(0,size),...values.slice(0,size)]:values)).setBuffer(buffer);
+           const sampler=doc.createAnimationSampler().setInput(held?heldInput:input).setOutput(output).setInterpolation('LINEAR');
+           animation.addSampler(sampler).addChannel(doc.createAnimationChannel().setTargetNode(node).setTargetPath(path).setSampler(sampler));
+         }
+       }
+       fs.mkdirSync('public/animations/drona',{recursive:true});await io.write(`public/animations/drona/${item.id}_${phase}.glb`,doc);
+       const written=fs.readFileSync(`public/animations/drona/${item.id}_${phase}.glb`);
+       const check=await new GLTFLoader().parseAsync(written.buffer.slice(written.byteOffset,written.byteOffset+written.byteLength),'');
+       const checkMixer=new THREE.AnimationMixer(check.scene);checkMixer.clipAction(check.animations[0]).play();checkMixer.setTime(duration/2);check.scene.updateMatrixWorld(true);
+       for(const side of ['Left','Right']){
+         const expected=rig.scene.getObjectByName('mixamorig'+side+'Foot').getWorldPosition(new THREE.Vector3());
+         const actual=check.scene.getObjectByName('mixamorig'+side+'Foot').getWorldPosition(new THREE.Vector3());
+         if(actual.distanceTo(expected)>1e-5)throw new Error('Export lost the authored posture: '+item.id);
+       }
+       console.log(`${item.id} ${phase}: ${duration}s, ${frames} frames`);
+     }
+   }
+ })().catch(e=>{console.error(e);process.exitCode=1;});
+}
 if(process.argv.includes('--build-linen')){
  (async()=>{
    const fs=require('node:fs');const {NodeIO}=await import('@gltf-transform/core');const io=new NodeIO();
@@ -49,14 +151,14 @@ if(process.argv.includes('--inspect-drona')){
  (async()=>{
    const THREE=require('three'),fs=require('node:fs');
    const {GLTFLoader}=await import('three/examples/jsm/loaders/GLTFLoader.js');
-   for(const id of ['looking_through_files_low','searching_files_high','opening','pick_fruit']){
+   for(const id of ['kneeling_idle','male_crouch_pose','looking_through_files_low','opening']){
      const bytes=fs.readFileSync(`public/animations/mixamo/anim_${id}.glb`);
      const gltf=await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
      const clip=gltf.animations[0],mixer=new THREE.AnimationMixer(gltf.scene);
      mixer.clipAction(clip).play();const samples=[];
      for(const fraction of [0,.25,.5,.75]){
        mixer.setTime(clip.duration*fraction);gltf.scene.updateMatrixWorld(true);
-       samples.push({fraction,hands:['mixamorigLeftHand','mixamorigRightHand'].map(name=>gltf.scene.getObjectByName(name).getWorldPosition(new THREE.Vector3()).multiplyScalar(100).toArray().map(v=>Math.round(v)))});
+       samples.push({fraction,hands:['mixamorigLeftHand','mixamorigRightHand','mixamorigRightArm','mixamorigHips','mixamorigRightFoot'].map(name=>gltf.scene.getObjectByName(name).getWorldPosition(new THREE.Vector3()).multiplyScalar(100).toArray().map(v=>Math.round(v)))});
      }
      console.log(JSON.stringify({id,duration:clip.duration,samples}));
    }
@@ -68,7 +170,7 @@ if(process.argv.includes('--inspect-fridge')){
  console.log(JSON.stringify(Object.fromEntries(glb.animations.map(a=>[a.name,Math.max(...a.samplers.map(s=>glb.accessors[s.input].max[0]))]))));
  process.exit(0);
 }
-if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-linen'))(async () => {
+if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-linen')&&!process.argv.includes('--build-storage'))(async () => {
  const browser = await launchBrowser({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--disable-background-timer-throttling']});
  const errors=[];
  try {
@@ -86,6 +188,8 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  const {Fridge}=await import('/src/features/scene/items/Fridge.tsx');
  const {KallaxNE}=await import('/src/features/scene/items/KallaxNE.tsx');
  const {KallaxSE}=await import('/src/features/scene/items/KallaxSE.tsx');
+ const {KallaxNW}=await import('/src/features/scene/items/KallaxNW.tsx');
+ const {Beds,Desks,DeskDecor}=await import('/src/features/scene/placements/LivingRoomPlacements.tsx');
  const {Smorkull}=await import('/src/features/scene/items/Smorkull.tsx');
  const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
  const chairTransform=getObjectTransform('chair-office');
@@ -98,7 +202,7 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  function App(){const [props,setProps]=React.useState({isPreview:false,actionState:{}});f.setProps=setProps;
  return h(Canvas,{frameloop:'never',shadows:true,camera:{position:[125,80,-95],near:.1,far:1500,fov:45}},
  h(Capture),h('ambientLight',{intensity:.85}),h('directionalLight',{position:[100,120,-80],intensity:2}),
- h(React.Suspense,{fallback:null},h(props.dronaSE?KallaxSE:props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
+ h(React.Suspense,{fallback:null},props.layout?h(React.Fragment,null,h(Beds),h(Desks),h(DeskDecor)):h(props.dronaNW?KallaxNW:props.dronaSE?KallaxSE:props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
  props.chair&&h(React.Suspense,{fallback:null},h('group',{ref:g=>{f.chair=g;},position:chairTransform.position,rotation:[0,chairTransform.rotationY,0]},h(Smorkull,{item:{},actionState:{},onSize:()=>{f.chairReady=true;}}))),
  h('mesh',{rotation:[-Math.PI/2,0,0],position:[0,-.1,0]},h('planeGeometry',{args:[400,400]}),h('meshStandardMaterial',{color:'#777777'})) );}
  createRoot(container).render(h(App));
@@ -108,6 +212,108 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  });
  await page.waitForFunction(()=>window.fixture.scene?.getObjectByName('motor_casing'),{timeout:60000});
  await page.evaluate(()=>{const f=window.fixture;f.camera.lookAt(0,25,0);f.tick(.01);});
+
+ if(process.argv.includes('--storage')){
+   const items=await page.evaluate(async()=>Object.entries((await import('/src/features/scene/items/dronaStorage.ts')).DRONA_SPECIAL_ITEMS));
+   for(const [id,item] of items){
+     const props={drona:item.shelf==='ne',dronaSE:item.shelf==='se',dronaNW:item.shelf==='nw',noMannequins:true,noCaps:true};
+     await page.evaluate(props=>window.fixture.setProps({...props,isPreview:false}),props);
+     await page.waitForFunction(id=>window.fixture.scene.getObjectByName(id)?.children.length,{timeout:60000},id);
+     const geometry=await page.evaluate(async({id,item})=>{
+       const f=window.fixture,node=f.scene.getObjectByName(id),mesh=node.getObjectByProperty('isMesh',true);mesh.geometry.computeBoundingBox();
+       const {getSmartObject,buildSmartObjectInstructionSequence}=await import('/src/features/scene/ai/smartObjectRegistry.ts');
+       const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
+       const obj=getSmartObject(id),transform=getObjectTransform(id);
+       if(JSON.stringify(obj.position)!==JSON.stringify(transform.position))throw new Error('Storage must follow itemId');
+       if(node.parent.position.distanceTo(new f.THREE.Vector3(...item.position))>1e-6)throw new Error('Wrong cell');
+       const neighbours=()=>node.parent.parent.children.filter(n=>n.name.startsWith('drona-')&&n!==node.parent).map(n=>[n.name,n.children[0].position.toArray()]);
+       f.storageRead=()=>({z:node.position.z,actions:node.userData.hoverAction.actions,neighbours:neighbours()});
+       return {depth:mesh.geometry.boundingBox.max.z-mesh.geometry.boundingBox.min.z,closed:f.storageRead(),slot:obj.slots[0],sequence:buildSmartObjectInstructionSequence(id,'pick-item')};
+     },{id,item});
+     assert.deepEqual(geometry.closed.actions,[item.action,`smart-object:::${id}:::pick-item`]);
+     await page.evaluate(action=>window.fixture.flushSync(()=>window.fixture.store.getState().triggerAction(action,true)),item.action);
+     await new Promise(r=>setTimeout(r,80));
+     await page.evaluate(()=>window.fixture.tick(3));
+     let read=await page.evaluate(()=>window.fixture.storageRead());assert(Math.abs(read.z+geometry.depth*2/3)<1e-6);assert.deepEqual(read.neighbours,geometry.closed.neighbours);
+     await page.evaluate(action=>window.fixture.flushSync(()=>window.fixture.store.getState().triggerAction(action,false)),item.action);await new Promise(r=>setTimeout(r,80));await page.evaluate(()=>window.fixture.tick(3));
+     await page.evaluate(({props,action})=>window.fixture.flushSync(()=>window.fixture.setProps({...props,isPreview:true,actionState:{[action]:true}})),{props,action:item.action});
+     await new Promise(r=>setTimeout(r,80));
+     await page.evaluate(()=>window.fixture.tick(3));read=await page.evaluate(()=>window.fixture.storageRead());
+     assert(Math.abs(read.z+geometry.depth*2/3)<1e-6);assert.deepEqual(read.actions,[item.action]);
+     assert.equal(await page.evaluate(action=>window.fixture.store.getState().extraStates[action],item.action),false);
+     await page.evaluate(props=>window.fixture.flushSync(()=>window.fixture.setProps({...props,isPreview:false})),props);await new Promise(r=>setTimeout(r,80));await page.evaluate(()=>window.fixture.tick(3));
+     const runs=await page.evaluate(async({id,item,geometry})=>{
+       const f=window.fixture,{default:React}=await import('/node_modules/.vite/deps/react.js'),{default:ReactDOM}=await import('/node_modules/.vite/deps/react-dom_client.js');
+       const {useAgentController}=await import('/src/features/scene/ai/useAgentController.ts');
+       const {setAgentProfile}=await import('/src/features/scene/ai/navigation/obstacles.ts');
+       const {getAnimationDef}=await import('/src/features/scene/animations/animationResolver.ts');
+       const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
+       const clips={};let rig;
+       for(const phase of ['pull','search','push']){
+         const def=getAnimationDef(item.animationPrefix+'-'+phase);if(def.loop!=='once')throw new Error('Gesture must be one-shot');
+         const gltf=await new GLTFLoader().loadAsync('/'+def.path);clips[def.id]=gltf.animations[0];rig??=gltf.scene;
+       }
+       const render=f.gl.render;f.gl.render=()=>{};const results=[];
+       try{for(const interrupted of [false,true]){
+         const agentId=id+'-'+interrupted;setAgentProfile(agentId,{radius:15,height:170});
+         const host=document.createElement('div');document.body.append(host);const root=ReactDOM.createRoot(host);
+         // Door physics lives outside this isolated fixture. Exercise the real
+         // cabinet arrival and gestures; door approach/departure is shared with
+         // the existing freezer and linen routines.
+         const routine=structuredClone(item.shelf==='nw'?geometry.sequence:geometry.sequence.slice(2,-1)),[x,y,z]=geometry.slot.offset;
+         let agent,complete=false,playing='',playback=null,lastState;const finished={},seen=new Set(),mixer=new f.THREE.AnimationMixer(rig.clone(true));
+         mixer.addEventListener('loop',()=>{throw new Error('Gesture looped');});
+         mixer.addEventListener('finished',e=>{const name=e.action.getClip().name;finished[name]=(finished[name]??0)+1;});
+         function Probe(){agent=useAgentController(agentId,routine,false,()=>({x,y,z,rotY:geometry.slot.rotY}),()=>{complete=true;});return null;}
+         f.flushSync(()=>root.render(React.createElement(Probe)));
+         for(let time=0;time<45&&!complete;time+=.05){
+           const state=agent.update(.05);lastState=state;seen.add(state.animation);
+           if(clips[state.animation]){
+             if(playing!==state.animation){playback?.stop();playing=state.animation;playback=mixer.clipAction(clips[playing]).reset().setLoop(f.THREE.LoopOnce,1);playback.clampWhenFinished=true;playback.play();}
+             mixer.update(.05);const progress=Math.min(1,playback.time/playback.getClip().duration);agent.reportAnimationPlayback(playing,progress,progress>=1);
+           }
+           await new Promise(r=>setTimeout(r,0));f.tick(.05);
+           const motion=routine.find(step=>step.animation===state.animation)?.dronaMotion;
+           if(motion){
+             const progress=playback.time/playback.getClip().duration,fraction=Math.max(0,Math.min(1,(progress-motion.range[0])/(motion.range[1]-motion.range[0])));
+             if(Math.abs(f.storageRead().z+geometry.depth*2/3*(motion.from+(motion.to-motion.from)*fraction))>1e-6)throw new Error('Drawer motion drifted from clip');
+           }
+           if(state.animation===item.animationPrefix+'-search'){
+             if(Math.abs(f.storageRead().z+geometry.depth*2/3)>1e-6)throw new Error('Search before box is open');
+             if(interrupted)break;
+           }
+         }
+         root.unmount();host.remove();await new Promise(r=>setTimeout(r,0));f.tick(3);
+         if(!interrupted)for(const phase of ['pull','search','push'])if(finished['drona-'+item.animationPrefix.replace('drona-','')+'-'+phase]!==1)throw new Error('Gesture did not finish exactly once: '+JSON.stringify({id,phase,complete,finished,seen:[...seen]}));
+         if(f.storageRead().z!==0||f.store.getState().extraStates[item.action])throw new Error('Storage was not closed on completion/interruption');
+         results.push({complete,interrupted,animations:[...seen],status:agent.getStatus(),lastState});
+       }}finally{f.gl.render=render;}
+       return results;
+     },{id,item,geometry});
+     for(const run of runs)assert(run.complete||run.interrupted);
+     console.log(id,'cell, itemId, two-thirds slide, neighbours, preview, one-shot playback, sync and cleanup: PASS',runs);
+   }
+   await page.evaluate(()=>window.fixture.flushSync(()=>window.fixture.setProps({layout:true})));
+   await page.waitForFunction(async()=>{
+     const {positionState}=await import('/src/features/scene/positionState.ts');return positionState['desk1-position']&&positionState['bed-double'];
+   });
+   const layout=await page.evaluate(async()=>{
+     const f=window.fixture,{positionState}=await import('/src/features/scene/positionState.ts');
+     const toggle=async(key,value)=>{f.flushSync(()=>f.store.getState().triggerAction(key,value));await new Promise(r=>setTimeout(r,80));};
+     const desks=()=>[positionState['desk1-position'].idx,positionState['desk2-position'].idx];
+     const initial=desks();await toggle('bed-double',true);const west=desks();
+     await toggle('bed-position');await toggle('desk1-position');await toggle('desk2-position');const east=desks();
+     await toggle('bed-position');const centred=desks();await toggle('bed-position');const westAgain=desks();
+     await toggle('bed-double',false);await toggle('desk1-position');const separate=desks();
+     await toggle('bed-position');const separateMoved=desks();await toggle('bed-double',true);const eastDouble=desks();
+     return {initial,west,east,centred,westAgain,separate,separateMoved,eastDouble};
+   });
+   console.log('Desk layouts',layout);
+   assert.deepEqual(layout.initial,[0,0]);assert.deepEqual(layout.west,[1,1]);assert.deepEqual(layout.westAgain,[1,1]);
+   assert.deepEqual(layout.centred,layout.east);assert.deepEqual(layout.separateMoved,layout.separate);assert.deepEqual(layout.eastDouble,layout.separate);
+   assert.deepEqual(errors,[]);console.log('Automatic desk position 2 only when entering west double-bed layout: PASS',layout);
+   return;
+ }
 
  const closed=await page.evaluate(()=>window.fixture.read());console.log('closed',closed);
  const readHoverActions=()=>page.evaluate(()=>{

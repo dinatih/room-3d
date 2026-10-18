@@ -16,6 +16,7 @@ import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 import { SlidingDrona } from './SlidingDrona';
 import { DRONA_CATCHALL_POSITION, DRONA_CATCHALL_ACTION, DRONA_CATCHALL_SLIDE_DURATION } from './kallaxNeDrona';
+import { DRONA_SPECIAL_ITEMS, SPECIAL_DRONA_SLIDE_DURATION } from './dronaStorage';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
 const TF = 3.5, TI = 1.5, NH = 34;
@@ -76,7 +77,9 @@ export function KallaxNEDrona({ isPreview = false, actionState = {} }: { isPrevi
         <group key={i} name={`drona-ne-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
           {t.p.x === DRONA_CATCHALL_POSITION[0] && t.p.y === DRONA_CATCHALL_POSITION[1]
             ? <SlidingDrona objectId="drona-ne-catchall" label="Dröna fourre-tout — Nord-Est" actionId={DRONA_CATCHALL_ACTION} duration={DRONA_CATCHALL_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
-            : <DroneCell />}
+            : i === DRONA_SPECIAL_ITEMS['drona-ne-catchall2'].index
+              ? <SlidingDrona objectId="drona-ne-catchall2" label={DRONA_SPECIAL_ITEMS['drona-ne-catchall2'].label} actionId={DRONA_SPECIAL_ITEMS['drona-ne-catchall2'].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
+              : <DroneCell />}
         </group>
       ))}
     </>
