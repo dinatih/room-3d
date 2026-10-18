@@ -12,7 +12,11 @@ const launch = require('./browser-test-options.cjs');
  const rest = await page.evaluate(() => window.inspectWigs());
  console.log('rest', JSON.stringify(rest));
  for (const item of rest) { assert.ok(Math.abs(item.head[0]) < 1e-5); assert.ok(Math.abs(item.head[1]) < 1e-5); assert.ok(Math.abs(item.head[2]) < 1e-5); }
+ await page.evaluate(() => window.setView(false));
  await page.screenshot({path:'/tmp/wig-alignment-rest.png'});
+ await page.evaluate(() => window.setView(true));
+ await page.screenshot({path:'/tmp/wig-alignment-profile.png'});
+ await page.evaluate(() => window.setView(false));
  await page.evaluate(() => window.setWind(true));
  await new Promise(resolve => setTimeout(resolve,2000));
  const wind = await page.evaluate(() => window.inspectWigs());
@@ -30,6 +34,9 @@ const launch = require('./browser-test-options.cjs');
   for (const item of baseline) {
    const offsetY = item.path.endsWith('/lara_native_hair.glb') ? -0.0367 * 90 : item.path.endsWith('/wavy_ponytail.glb') ? -0.05 * 90 : 0;
    item.head.forEach((v, axis) => assert.ok(Math.abs(v - (axis === 1 ? offsetY : 0)) < 1e-5, JSON.stringify(item)));
+   if (/\/wig_1(?:0[0-9]|1[0-2])\.glb$/.test(item.path)) {
+    assert.ok(Math.abs(item.forward[0]) < 1e-3 && Math.abs(item.forward[1]) < 1e-3 && item.forward[2] > 1-1e-3, JSON.stringify(item));
+   }
    item.size.forEach(v => assert.ok(Number.isFinite(v) && v > 0));
   }
   await page.evaluate(() => window.setWind(true));

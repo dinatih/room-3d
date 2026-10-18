@@ -8,6 +8,10 @@ function Inspect() {
  const { scene, camera } = useThree();
  React.useEffect(() => {
   camera.layers.enableAll();
+  (window as any).setView = (side: boolean) => {
+   camera.position.set(side ? 190 : 0, 55, side ? 0 : 210);
+   camera.lookAt(0, 25, 0);
+  };
   (window as any).inspectWigs = () => {
    scene.updateMatrixWorld(true);
    const result: any[] = [];
@@ -17,8 +21,10 @@ function Inspect() {
     o.traverse(c => { if ((c as THREE.SkinnedMesh).isSkinnedMesh) meshes.push(c as THREE.SkinnedMesh); });
     const head = meshes[0].skeleton.bones.find(b => /^(bip_head|head)/i.test(b.name))!;
     const local = o.parent!.worldToLocal(head.getWorldPosition(new THREE.Vector3()));
+    const forward = new THREE.Vector3(0, 0, 1).transformDirection(head.matrixWorld)
+      .transformDirection(o.parent!.matrixWorld.clone().invert());
     const box = new THREE.Box3().setFromObject(o, true);
-    result.push({ path: o.children[0].userData.gltfPath, scale: o.scale.toArray(), pos: o.position.toArray(), parentPos: o.parent!.position.toArray(), head: local.toArray(), size: box.getSize(new THREE.Vector3()).toArray(), fixed: meshes[0].skeleton.bones.filter(b => /^(bip_head|head_00|hairAll)/i.test(b.name)).map(b => b.quaternion.toArray()) });
+    result.push({ forward: forward.toArray(), path: o.children[0].userData.gltfPath, scale: o.scale.toArray(), pos: o.position.toArray(), parentPos: o.parent!.position.toArray(), head: local.toArray(), size: box.getSize(new THREE.Vector3()).toArray(), fixed: meshes[0].skeleton.bones.filter(b => /^(bip_head|head_00|hairAll)/i.test(b.name)).map(b => b.quaternion.toArray()) });
    });
    return result;
   };
