@@ -36,6 +36,11 @@ const assert = require('node:assert/strict');
  await page.evaluate(()=>{const f=window.fixture;f.camera.lookAt(0,25,0);f.tick(.01);});
 
  const closed=await page.evaluate(()=>window.fixture.read());console.log('closed',closed);
+ const readHoverActions=()=>page.evaluate(()=>{
+   let actions;window.fixture.scene.traverse(o=>{if(o.userData.hoverAction?.label==='Congélateur CHIQ')actions=o.userData.hoverAction.actions;});
+   return actions;
+ });
+ assert.deepEqual(await readHoverActions(),['freezer','smart-object:::freezer:::open-pick']);
  await page.screenshot({path:'/tmp/freezer-closed.png'});
  const toggle=async(value)=>{await page.evaluate(v=>window.fixture.flushSync(()=>window.fixture.store.getState().triggerAction('freezer',v)),value);await new Promise(r=>setTimeout(r,80));};
  const tick=async(t)=>page.evaluate(t=>window.fixture.tick(t),t);
@@ -50,6 +55,7 @@ const assert = require('node:assert/strict');
  await page.evaluate(()=>window.fixture.setProps({isPreview:true,actionState:{'freezer':true}}));
  await new Promise(r=>setTimeout(r,80));await tick(1.1);assert(Math.abs((await page.evaluate(()=>window.fixture.read())).door[1])>.8);
  assert.equal(await page.evaluate(()=>window.fixture.store.getState().furniture.freezerOpen),false);
+ assert.deepEqual(await readHoverActions(),['freezer']);
  await toggle(true);await page.evaluate(()=>window.fixture.setProps({isPreview:true,actionState:{'freezer':false}}));
  await new Promise(r=>setTimeout(r,80));await tick(1.1);assert.deepEqual((await page.evaluate(()=>window.fixture.read())).door,closed.door);
 
@@ -95,6 +101,7 @@ const assert = require('node:assert/strict');
  assert(Math.abs(sequence[4].duration-clips.rise)<0.1);
  await page.evaluate(()=>window.fixture.setProps({isPreview:false,actionState:{}}));
  await new Promise(r=>setTimeout(r,80));
+ assert.deepEqual(await readHoverActions(),['freezer','smart-object:::freezer:::open-pick']);
  for(const initiallyOpen of [false,true,false]){
    await toggle(initiallyOpen);await tick(clips.door);
    for(const step of [sequence[2],sequence[5]]){

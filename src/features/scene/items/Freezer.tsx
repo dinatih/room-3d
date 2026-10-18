@@ -7,6 +7,7 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import { getObjectActionIds } from '../objectActions';
+import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/tillreda_anim/TILLREDA_anim.glb';
@@ -41,7 +42,13 @@ export function Freezer({ actionState, onSize, isPreview = false }: SceneItemPro
     const box = glbLocalBBox(scene);
     scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
     scene.userData.skipMerge = true;
-    scene.userData.hoverAction = { label: 'Congélateur CHIQ', actions: getObjectActionIds('freezer') };
+    scene.userData.hoverAction = {
+      label: 'Congélateur CHIQ',
+      actions: [
+        ...getObjectActionIds('freezer'),
+        ...(!isPreview ? SMART_OBJECTS.freezer.slots.map(slot => `smart-object:::freezer:::${slot.slotId}`) : []),
+      ],
+    };
     scene.traverse(obj => {
       if ((obj as THREE.Mesh).isMesh) {
         obj.castShadow = true;
@@ -56,7 +63,7 @@ export function Freezer({ actionState, onSize, isPreview = false }: SceneItemPro
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
     };
-  }, [scene, animations, invalidate]);
+  }, [scene, animations, invalidate, isPreview]);
 
   useEffect(() => { invalidate(); }, [wantOpen, invalidate]);
 
