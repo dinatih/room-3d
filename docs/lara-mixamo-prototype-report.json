@@ -6,6 +6,25 @@
   "max_bind_position_error_m": 3.210672948720342e-07,
   "max_discarded_weight_for_four_influences": 0.011280198723190945,
   "preserved_rigid_upper_arm_vertices": 620,
+  "shoulder_calibration": {
+    "reference": "/animations/miley/miley_armature_idle01_f.glb",
+    "fps": 30,
+    "samples": 994,
+    "corrections": {
+      "arm_left_shoulder": [
+        0.01605298372392335,
+        0.016766607967427988,
+        0.15632824461939115,
+        0.9874323584454004
+      ],
+      "arm_right_shoulder": [
+        -0.07421266351642272,
+        0.009039322516306663,
+        -0.1726459551785682,
+        0.9821426298571527
+      ]
+    }
+  },
   "reweighted_vertices": {
     "arms": 440,
     "backpack": 2660,
@@ -52,6 +71,7 @@
   "runtime_bind_matrix_max_error": 9.313225746154785e-07,
   "baked_pose_matrix_max_error": 2.3245811462402344e-06,
   "baked_mixamo_actions": [
+    "Mixamo · idle",
     "Mixamo · female_walk",
     "Mixamo · overhead_squat",
     "Mixamo · ymca_dance",

@@ -866,7 +866,7 @@ export function Character({
           const previous = postureClipsRef.current.get(target);
           const original = previous?.original ?? to.getClip();
           if (previous) mixer.uncacheAction(previous.fitted);
-          const fitted = fitPostureTransition(original, hipsBone, actions[idleId].getClip());
+          const fitted = fitPostureTransition(original, parts.bones.bodyRoot!, actions[idleId].getClip());
           postureClipsRef.current.set(target, { original, fitted });
           to = actions[target] = mixer.clipAction(fitted);
           postureOriginRef.current.position.copy(animOriginRef.current.position);
@@ -1054,9 +1054,14 @@ export function Character({
       }
 
       // Verrouillage optionnel des hanches sur place (Hips-Lock X/Z) pour tester/comparer
-      if (store.lockHipsXZ && parts.bones.hips) {
-        parts.bones.hips.position.x = 0;
-        parts.bones.hips.position.z = 0;
+      if (store.lockHipsXZ && parts.bones.bodyRoot) {
+        const root = parts.bones.bodyRoot;
+        const rest = root.userData.restPos as THREE.Vector3;
+        const parentRotation = (root.parent as any).restWorldQuaternion as THREE.Quaternion;
+        const delta = root.position.clone().sub(rest).applyQuaternion(parentRotation);
+        delta.x = 0;
+        delta.z = 0;
+        root.position.copy(rest).add(delta.applyQuaternion(parentRotation.clone().invert()));
       }
 
       if (isVisibleInFrustum) {

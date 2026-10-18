@@ -892,6 +892,57 @@ export function InventoryPreview({
         return;
       }
 
+      if (e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'z' || e.code === 'KeyZ') {
+          e.preventDefault();
+          if (e.repeat) return;
+          const store = useSceneStore.getState();
+          store.setLaraClothing('laraTop', store.layers.laraTop === 'bikini' ? 'native' : 'bikini');
+          return;
+        }
+        if (k === 'c' || e.code === 'KeyC') {
+          e.preventDefault();
+          if (e.repeat) return;
+          const store = useSceneStore.getState();
+          store.setLaraClothing('laraBottom', store.layers.laraBottom === 'bikini' ? 'native' : 'bikini');
+          return;
+        }
+        if (k === 'x' || e.code === 'KeyX') {
+          e.preventDefault();
+          if (e.repeat) return;
+          const store = useSceneStore.getState();
+          const value = store.layers.laraTop === 'bikini' && store.layers.laraBottom === 'bikini' ? 'native' : 'bikini';
+          store.setLaraClothing('laraTop', value);
+          store.setLaraClothing('laraBottom', value);
+          return;
+        }
+      }
+
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'z' || e.code === 'KeyZ') {
+          e.preventDefault();
+          const store = useSceneStore.getState();
+          store.setLaraClothing('laraTop', store.layers.laraTop === 'none' ? 'native' : 'none');
+          return;
+        }
+        if (k === 'c' || e.code === 'KeyC') {
+          e.preventDefault();
+          const store = useSceneStore.getState();
+          store.setLaraClothing('laraBottom', store.layers.laraBottom === 'none' ? 'native' : 'none');
+          return;
+        }
+        if (k === 'x' || e.code === 'KeyX') {
+          e.preventDefault();
+          const store = useSceneStore.getState();
+          const value = store.layers.laraTop === 'none' && store.layers.laraBottom === 'none' ? 'native' : 'none';
+          store.setLaraClothing('laraTop', value);
+          store.setLaraClothing('laraBottom', value);
+          return;
+        }
+      }
+
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { resolveTargetBoneName } from './boneResolver';
+import { resolveTargetBoneName, resolveBodyTranslationBone } from './boneResolver';
 
 /** Lowest animated sole vertex, measured relative to the model origin (world units). */
 export function interxSoleHeight(model: THREE.Object3D): number {
@@ -90,7 +90,8 @@ export function groundInterxClip(clip: THREE.AnimationClip, model: THREE.Object3
     if (!result) throw new Error(`Inter-X : os manquant ${name}`);
     return result;
   };
-  const hips = bone('Hips');
+  const hips = resolveBodyTranslationBone(model);
+  if (!hips) throw new Error('Inter-X : racine du corps manquante');
   const arms = ['Left', 'Right'].map(side => ({ upper: bone(`${side}Arm`), lower: bone(`${side}ForeArm`), hand: bone(`${side}Hand`) }));
   const hipsTrack = clip.tracks.find(track => track.name === `${hips.name}.position`);
   if (!hipsTrack) throw new Error('Inter-X : piste de bassin manquante');

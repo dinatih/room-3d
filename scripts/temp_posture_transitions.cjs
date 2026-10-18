@@ -104,7 +104,7 @@ window.runChecks = async () => {
   for (const modelPath of ['characters/lara/lara_native.glb','characters/alex/alex.glb','characters/gloria/gloria.glb']) {
     const model = (await loader.loadAsync('/'+modelPath)).scene;
     model.scale.setScalar(100); model.updateMatrixWorld(true);
-    const parts = extractCharacterParts(model), hips = parts.bones.hips;
+    const parts = extractCharacterParts(model), hips = parts.bones.bodyRoot;
     check(hips,'missing model hips');
     const load = async key => {
       const def = getAnimationDef(key), gltf = await loader.loadAsync('/'+def.path);

@@ -11,7 +11,7 @@ habituels s'appliquent aux deux versions. Pour ouvrir directement le prototype :
 ## Fichiers
 
 - `public/characters/lara/lara_mixamo_prototype.blend` : fichier de travail autonome,
-  textures intégrées, 34 meshes conservés, 92 os, huit actions de revue.
+  textures intégrées, 34 meshes conservés, 92 os, neuf actions de revue.
 - `public/characters/lara/lara_mixamo_prototype.glb` : export avec squelette, toutes
   les variantes et sans animations embarquées, testé avec le retargeting réel.
 - `docs/lara-mixamo-prototype-report.json` : mesures de construction et de validation.
@@ -19,6 +19,9 @@ habituels s'appliquent aux deux versions. Pour ouvrir directement le prototype :
   Xbot à droite, au milieu de l'animation `overhead_squat`.
 - `docs/lara-armpits-comparison.png` : gros plan en idle après correction des poids
   des aisselles, originale à gauche et prototype à droite.
+- `docs/lara-shoulders-comparison.png` : posture corrigée, deux personnages en
+  pause au même instant, originale à gauche et prototype à droite.
+- `docs/lara-shoulder-calibration.json` : calibration de posture des clavicules.
 
 Le `.blend` s'ouvre en pose de repos, avec la tenue native. Les variantes
 mutuellement exclusives sont masquées dans la collection « Lara · variantes
@@ -28,6 +31,7 @@ Dans le workspace Animation, sélectionner `Armature`, passer l'éditeur inféri
 en Action Editor et choisir une action :
 
 - `Mixamo · female_walk`
+- `Mixamo · idle`
 - `Mixamo · overhead_squat`
 - `Mixamo · ymca_dance`
 - `Mixamo · air_squat_bent_arms`
@@ -36,7 +40,7 @@ en Action Editor et choisir une action :
 - `Test · torsion avant-bras`
 - `Test · flexion dos`
 
-Les quatre actions Mixamo sont échantillonnées à 30 Hz depuis le retargeter de
+Les cinq actions de mocap sont échantillonnées à 30 Hz depuis le retargeter de
 l'application, puis reconstruites dans Blender avec interpolation linéaire.
 Les actions `Test` sont des poses synthétiques de contrôle, avec amplitude maximale
 à l'image 31 et retour à la pose de repos à l'image 61.
@@ -75,6 +79,26 @@ Le mode Preserve Volume est désactivé pour correspondre au skinning linéaire 
 Le résolveur d'os donne maintenant priorité aux noms exacts avant les synonymes :
 la recherche de Spine pouvait auparavant choisir Spine1 sur un squelette Mixamo.
 
+## Posture et déplacement
+
+Le déplacement est proportionné à la hauteur réelle du bassin au-dessus de
+l'origine du modèle, exprimée dans les unités du parent. L'ancien calcul utilisait
+son décalage local : environ 6 cm sur Native contre 104 cm sur le prototype.
+Cela produisait jusqu'à 9 cm d'écart pendant l'idle. Les deux bassins reçoivent
+maintenant le même déplacement. Sur Native, la translation anime `root_hips`,
+ancêtre commun du bassin et du dos, afin que le buste suive aussi le mouvement.
+Le placement Inter-X, les transitions de posture et le verrouillage horizontal
+utilisent cette même racine de translation.
+
+La posture des clavicules est calibrée sur les 994 échantillons à 30 Hz de l'idle
+Miley : leur rotation locale moyenne est ramenée à celle des épaules Lara au repos.
+Cette calibration est enregistrée dans le JSON et dans les propriétés des os du
+`.blend` et du GLB (`retargetShoulderCorrection`). Le retargeter multiplie la
+rotation de clavicule par cette correction et prémultiplie celle du bras par son
+inverse. Les mouvements des clavicules restent animés et la direction des bras
+est conservée. En idle, cette correction relève les articulations d'environ 4 cm.
+Les autres personnages, dont Xbot, ne reçoivent pas cette calibration propre à Lara.
+
 ## Validation et limites
 
 - Géométrie au repos comparée à `lara_perfect.blend` : écart maximal inférieur à
@@ -84,6 +108,12 @@ la recherche de Spine pouvait auparavant choisir Spine1 sur un squelette Mixamo.
 - Cinq animations (idle Miley et quatre clips Mixamo) × trois instants × trois
   personnages : 45 échantillons,
   pistes et sommets déformés finis, pistes des clavicules et Spine1 présentes.
+- Bassins Native/prototype coïncidents à moins de 0,01 mm aux instants testés ;
+  directions des bras du prototype conservées à moins de 0,06° par rapport au
+  témoin sans calibration. Posture moyenne des clavicules vérifiée sur l'idle entier.
+- Placement au sol d'un clip Inter-X vérifié avec la racine de translation Native.
+- Transitions de posture vérifiées sur trois rigs et dans les vrais composants
+  canapé/toilettes, avec contrôle des raccords et des interruptions.
 - Actions Blender reconstruites comparées aux matrices des poses du moteur à
   trois instants par animation : écart maximal inférieur à 0,000003 par coefficient.
 - Le fichier sauvegardé est rouvert pour vérifier les meshes, os, actions,
@@ -117,6 +147,11 @@ ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/temp_lara_m
 ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/temp_lara_mixamo.py -- --verify
 npx tsc --noEmit
 ```
+
+Pour recalibrer volontairement la posture à partir de l'idle de référence :
+`node scripts/check-lara-mixamo.cjs --calibrate`, puis reconstruire le prototype
+avec Blender et relancer le test sans cette option avant de cuire les actions.
+La mesure désactive la correction existante pour éviter de la cumuler.
 
 Le navigateur est headless et utilise le lanceur du projet. Il produit les captures,
 les poses et le rapport runtime sous `/tmp/lara-mixamo-*`. Les modèles et animations

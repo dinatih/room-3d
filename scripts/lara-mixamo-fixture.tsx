@@ -4,8 +4,10 @@ import { createRoot } from 'react-dom/client';
 import { Canvas } from '@react-three/fiber';
 import { CharacterGroup } from '../src/features/scene/character/CharacterGroup';
 import { cameraState } from '../src/features/scene/cameraState';
+import { useAnimPreviewStore } from '../src/features/inventory/useAnimPreviewStore';
 
 cameraState.mode = 'orbit';
+useAnimPreviewStore.getState().pause();
 const params = new URLSearchParams(location.search);
 const shoulders = params.get('view') === 'shoulders';
 const animation = params.get('anim') ?? 'overhead-squat';

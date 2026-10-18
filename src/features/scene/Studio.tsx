@@ -647,12 +647,41 @@ export function Studio() {
 
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      if (e.shiftKey && (e.key.toLowerCase() === 'a' || e.code === 'KeyA')) {
-        e.preventDefault();
-        if (e.repeat) return;
-        onToggleLayer('aiZones');
-        cameraState.invalidate?.();
-        return;
+      if (e.shiftKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'z' || e.code === 'KeyZ') {
+          e.preventDefault();
+          if (e.repeat) return;
+          const store = useSceneStore.getState();
+          store.setLaraClothing('laraTop', store.layers.laraTop === 'bikini' ? 'native' : 'bikini');
+          cameraState.invalidate?.();
+          return;
+        }
+        if (k === 'c' || e.code === 'KeyC') {
+          e.preventDefault();
+          if (e.repeat) return;
+          const store = useSceneStore.getState();
+          store.setLaraClothing('laraBottom', store.layers.laraBottom === 'bikini' ? 'native' : 'bikini');
+          cameraState.invalidate?.();
+          return;
+        }
+        if (k === 'x' || e.code === 'KeyX') {
+          e.preventDefault();
+          if (e.repeat) return;
+          const store = useSceneStore.getState();
+          const value = store.layers.laraTop === 'bikini' && store.layers.laraBottom === 'bikini' ? 'native' : 'bikini';
+          store.setLaraClothing('laraTop', value);
+          store.setLaraClothing('laraBottom', value);
+          cameraState.invalidate?.();
+          return;
+        }
+        if (k === 'a' || e.code === 'KeyA') {
+          e.preventDefault();
+          if (e.repeat) return;
+          onToggleLayer('aiZones');
+          cameraState.invalidate?.();
+          return;
+        }
       }
 
       if (cameraState.mode === 'plane' && ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) return;

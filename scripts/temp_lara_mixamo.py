@@ -101,6 +101,12 @@ def main():
         humerus.use_connect = False
         shoulders[side] = (clavicle.head.copy(), humerus.head.copy())
     bpy.ops.object.mode_set(mode='OBJECT')
+    calibration = json.loads((ROOT / 'docs/lara-shoulder-calibration.json').read_text())
+    for name, correction in calibration['corrections'].items():
+        assert name in (BONES['LeftShoulder'], BONES['RightShoulder'])
+        assert len(correction) == 4 and all(math.isfinite(v) for v in correction)
+        assert abs(sum(v*v for v in correction) - 1.) < 1e-5
+        arm.data.bones[name]['retargetShoulderCorrection'] = correction
     for obj in meshes:
         old_group = obj.vertex_groups.get('root_hips')
         hips_group = obj.vertex_groups['pelvis']
@@ -247,6 +253,9 @@ def main():
         export_morph=True, export_animations=False, export_yup=True, export_extras=True,
         export_all_influences=False)
     document = glb_document()
+    for name, correction in calibration['corrections'].items():
+        node = next(node for node in document['nodes'] if node.get('name') == name)
+        assert node['extras']['retargetShoulderCorrection'] == correction, node
     assert len(document['skins']) == 1, 'Prototype export lost its armature'
     assert len(document['skins'][0]['joints']) == len(arm.data.bones)
     report = {'source_sha256': source_hash, 'bone_count': len(arm.data.bones),
@@ -254,6 +263,7 @@ def main():
               'mesh_count': len(meshes), 'max_bind_position_error_m': rest_error,
               'max_discarded_weight_for_four_influences': max_discarded_weight,
               'preserved_rigid_upper_arm_vertices': preserved_arm_vertices,
+              'shoulder_calibration': calibration,
               'reweighted_vertices': changed, 'diagnostic_actions': list(tests),
               'note': 'Prototype: deformation review required; not the active application asset.'}
     (ROOT / 'docs/lara-mixamo-prototype-report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n')
@@ -344,7 +354,9 @@ def verify_saved():
     assert all(image.packed_file for image in bpy.data.images if image.type == 'IMAGE' and image.source == 'FILE'), 'Unpacked texture'
     assert hashlib.sha256((FOLDER / 'lara_perfect.blend').read_bytes()).hexdigest() == report['source_sha256'], 'Source changed'
     assert len(glb_document()['skins'][0]['joints']) == len(arm.data.bones)
-    print('Verified saved prototype: 34 meshes, 92 bones, 8 actions, packed textures, source unchanged.', flush=True)
+    for name, correction in report['shoulder_calibration']['corrections'].items():
+        assert list(arm.data.bones[name]['retargetShoulderCorrection']) == correction
+    print(f'Verified saved prototype: 34 meshes, 92 bones, {len(bpy.data.actions)} actions, packed textures, source unchanged.', flush=True)
 
 
 def inspect_shoulders():
