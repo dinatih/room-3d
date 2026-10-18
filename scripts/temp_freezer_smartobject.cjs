@@ -54,7 +54,16 @@ const assert = require('node:assert/strict');
  await new Promise(r=>setTimeout(r,80));await tick(1.1);assert.deepEqual((await page.evaluate(()=>window.fixture.read())).door,closed.door);
 
  const sequence = await page.evaluate(async () => {
-   const {buildSmartObjectInstructionSequence} = await import('/src/features/scene/ai/smartObjectRegistry.ts');
+   const {buildSmartObjectInstructionSequence,SMART_OBJECTS,getSmartObject} = await import('/src/features/scene/ai/smartObjectRegistry.ts');
+   const {getObjectTransform} = await import('/src/features/scene/objectTransforms.ts');
+   const base=SMART_OBJECTS.freezer, transform=getObjectTransform('freezer'), resolved=getSmartObject('freezer');
+   if(base.itemId!=='freezer'||base.position!==undefined||!base.slots[0].relative)
+     throw new Error('Freezer must use its item transform and a local interaction slot');
+   if(JSON.stringify(resolved.position)!==JSON.stringify(transform.position))throw new Error('Freezer item position mismatch');
+   const [x,y,z]=base.slots[0].offset,c=Math.cos(transform.rotationY),s=Math.sin(transform.rotationY);
+   const expected=[transform.position[0]+x*c+z*s,transform.position[1]+y,transform.position[2]-x*s+z*c];
+   if(resolved.slots[0].offset.some((value,i)=>Math.abs(value-expected[i])>1e-6))throw new Error('Freezer slot must follow the item rotation');
+   window.fixture.freezer=resolved;
    return buildSmartObjectInstructionSequence('freezer', 'open-pick');
  });
  assert.deepEqual(sequence.map(s=>s.type), ['MOVE_TO','WAIT','WAIT','USE_OBJECT','WAIT','WAIT','MOVE_TO']);
@@ -113,8 +122,9 @@ const assert = require('node:assert/strict');
      const root=ReactDOM.createRoot(container);
      let agent,complete=false;
      const routine=structuredClone(sequence.slice(2,-1));
+     const [x,y,z]=f.freezer.slots[0].offset;
      function Probe(){agent=useAgentController(id,routine,false,
-       ()=>({x:210,y:0,z:320,rotY:Math.PI/2}),()=>{complete=true;});return null;}
+       ()=>({x,y,z,rotY:f.freezer.slots[0].rotY}),()=>{complete=true;});return null;}
      f.flushSync(()=>root.render(React.createElement(Probe)));
      if(!agent)throw new Error('Agent hook failed to mount');
      const animations=new Set();

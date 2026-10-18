@@ -284,8 +284,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [-30, 0, -35], // 35 cm devant la porte de droite (collée à la douche)
         rotY: 0,
-        animation: 'take-object-mid',
-        duration: 8,
+        animation: 'kit-1229-take-book-from-shelf-right-arm-01-poses',
         triggerEventKey: 'sdbClosetR',
       }
     ]
@@ -433,15 +432,15 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'freezer',
     name: 'Congélateur CHIQ',
     category: 'appliance',
-    position: [250, 0, 320],
+    itemId: 'freezer',
     slots: [
       {
         slotId: 'open-pick',
         name: 'Prendre un ingrédient',
-        // The kneeling clip projects its front knee ~54 cm ahead of the root.
-        // Keep it clear of the freezer front at X ≈ 274 cm.
-        offset: [210, 0, 320],
-        rotY: Math.PI / 2,
+        // Local clearance for the kneeling clip's front knee (~54 cm).
+        relative: true,
+        offset: [85, 0, 0],
+        rotY: -Math.PI / 2,
         animation: 'kneeling-inspecting',
       }
     ]

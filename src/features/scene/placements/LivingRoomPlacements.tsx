@@ -14,6 +14,7 @@ import type { Item } from '@shared/types';
 
 import { KallaxNE, KallaxNEDrona } from '../items/KallaxNE';
 import { KallaxSE, KallaxSEDrona } from '../items/KallaxSE';
+import { getObjectTransform } from '../objectTransforms';
 import { KallaxNW, KallaxNWDrona, KallaxNWMannequins } from '../items/KallaxNW';
 import { JblCharge3 } from '../items/JblCharge3';
 import { MackaparGroup, MackaparDrona, MackaparHangers } from '../items/MackaparGroup';
@@ -66,7 +67,8 @@ const w1 = 40.5; // 1×Kallax : 33.5 + 2×3.5
 const w2 = 75.5; // 2×Kallax : 2×33.5 + 2×3.5 + 1.5
 
 const KALLAX_DEPTH = 39;
-const KALLAX_SE_Z = ROOM_D - 60 - w1 / 2; // 319.75
+const FREEZER_TRANSFORM = getObjectTransform('freezer')!;
+const KALLAX_SE_Z = FREEZER_TRANSFORM.position[2];
 const KALLAX_SE_TOP = 2 * w2; // 151
 
 const lackY = 187.5;
@@ -436,7 +438,7 @@ export function LivingRoomFurniture() {
         <NavigationObstacle id="kallax-ne"><KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
       </group>
 
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax SE' }}>
+      <group position={FREEZER_TRANSFORM.position} rotation={[0, FREEZER_TRANSFORM.rotationY - Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax SE' }}>
         <NavigationObstacle id="kallax-se" compound><KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noCaps /></NavigationObstacle>
       </group>
 

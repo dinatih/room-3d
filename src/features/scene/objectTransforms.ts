@@ -43,6 +43,12 @@ const ITEM_TO_ANCHOR_KEY: Record<string, string> = {
  */
 function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
   switch (itemId) {
+    case 'freezer':
+      // The freezer sits at the base of Kallax SE, with an extra quarter turn.
+      return {
+        position: [ROOM_W - 39 / 2, 0, ROOM_D - 60 - 40.5 / 2],
+        rotationY: Math.PI,
+      };
     case 'bed-west':
       return { position: [74, 0, 151.5], rotationY: Math.PI / 2 };
     case 'bed-east':
