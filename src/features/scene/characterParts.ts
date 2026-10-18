@@ -1,7 +1,7 @@
 import type { LaraClothing } from './sidepanel/types';
 import * as THREE from 'three';
 import { ACCESSORIES_MESH_NAMES } from './characterConfig';
-import { resolveTargetBoneName, resolveBodyTranslationBone, getDepth } from './retargeting/index';
+import { resolveTargetBoneName, getDepth } from './retargeting/index';
 
 export interface CharacterMeshPart {
   mesh: THREE.Mesh;
@@ -9,7 +9,6 @@ export interface CharacterMeshPart {
 
 export interface CharacterBones {
   hips: THREE.Bone | null;
-  bodyRoot: THREE.Object3D | null;
   spine: THREE.Bone | null;
   spine2: THREE.Bone | null;
   head: THREE.Bone | null;
@@ -188,9 +187,6 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
     if (!o.restWorldPosition) {
       o.restWorldPosition = o.getWorldPosition(new THREE.Vector3());
     }
-    if (!o.restWorldScale) {
-      o.restWorldScale = o.getWorldScale(new THREE.Vector3());
-    }
 
     if (o.isMesh && !o.userData.isCustomHair) {
       const mesh = o as THREE.Mesh;
@@ -294,7 +290,6 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
   return {
     bones: {
       hips,
-      bodyRoot: resolveBodyTranslationBone(scene),
       spine,
       spine2,
       head,

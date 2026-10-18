@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CC3_TO_MIXAMO } from './boneMappings';
 import { getDepth } from './hairChain';
-import { resolveTargetBoneName, resolveBodyTranslationBone } from './boneResolver';
+import { resolveTargetBoneName } from './boneResolver';
 
 function subsampleTrackTo30Fps(track: THREE.KeyframeTrack): THREE.KeyframeTrack {
   const times = track.times;
@@ -343,12 +343,8 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
         srcHipsDefaultY = refSrcY;
 
         let targetHipsHeight = 99.1;
-        if (bone?.restWorldPosition && bone.parent?.restWorldScale) {
-          // Measure from the model's ground origin, in the hip parent's units.
-          // A nested pelvis can sit only 6 cm above its parent while standing
-          // a metre above the floor; its local offset is not character height.
-          const modelOrigin = (targetInstance as any).restWorldPosition as THREE.Vector3;
-          targetHipsHeight = (bone.restWorldPosition.y - modelOrigin.y) / bone.parent.restWorldScale.y;
+        if (bone && bone.defaultPosition) {
+          targetHipsHeight = bone.defaultPosition.length();
         }
         if (Math.abs(refSrcY) > 0) {
           computedHipsRatio = targetHipsHeight / Math.abs(refSrcY);
@@ -386,16 +382,12 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
       isRootJointTranslation = true;
     }
 
-    let targetBoneName = resolveTargetBoneName(targetInstance, baseName, sourceHairMap);
+    const targetBoneName = resolveTargetBoneName(targetInstance, baseName, sourceHairMap);
     if (!targetBoneName) continue;
 
     if (prop === 'scale') continue;
     const isHips = targetBoneName.toLowerCase().endsWith('hips') || targetBoneName.toLowerCase().includes('pelvis');
     if (prop === 'position' && !isHips) continue;
-
-    if (prop === 'position' && isHips) {
-      targetBoneName = resolveBodyTranslationBone(targetInstance)!.name;
-    }
 
     const clone = tr.clone();
     clone.name = `${targetBoneName}.${prop}`;
@@ -739,31 +731,6 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
       }
     }
 
-    if (prop === 'quaternion') {
-      // Calibrate the shoulder's neutral posture without rotating the arm:
-      // (clavicle * correction) * (inverse(correction) * arm) = clavicle * arm.
-      const bone = targetInstance.getObjectByName(targetBoneName)!;
-      const readCorrection = (node: THREE.Object3D | null) => {
-        const values = node?.userData.retargetShoulderCorrection;
-        if (values === undefined) return null;
-        if (!Array.isArray(values) || values.length !== 4 || !values.every(Number.isFinite)) {
-          throw new Error(`Invalid shoulder calibration: ${node!.name}`);
-        }
-        const correction = new THREE.Quaternion().fromArray(values);
-        if (Math.abs(correction.lengthSq() - 1) > 1e-5) throw new Error(`Nonunit shoulder calibration: ${node!.name}`);
-        return correction;
-      };
-      const correction = readCorrection(bone);
-      const parentCorrection = readCorrection(bone.parent)?.invert();
-      if (correction || parentCorrection) {
-        for (let i = 0; i < clone.values.length; i += 4) {
-          const q = new THREE.Quaternion().fromArray(clone.values, i);
-          if (parentCorrection) q.premultiply(parentCorrection);
-          if (correction) q.multiply(correction);
-          q.normalize().toArray(clone.values, i);
-        }
-      }
-    }
     tracks.push(clone);
   }
 

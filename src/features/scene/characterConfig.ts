@@ -19,7 +19,6 @@ export interface CharacterConfig {
 export const CHARACTERS: CharacterConfig[] = [
   // 12 stylized Laras (positions et animations gérées par l'IA sur leur zone d'action)
   { id: 'native',   name: 'Native',   emoji: '🥇', color: '#aaaaaa',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'native',   height: 173.4 },
-  { id: 'lara_mixamo', name: 'Lara Mixamo (prototype)', emoji: '🧪', color: '#aaaaaa', path: 'characters/lara/lara_mixamo_prototype.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 173.4, isLara: true },
   { id: 'rosanna',  name: 'Rosanna',  emoji: '🏀', color: '#ff8844',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'rosanna',  height: 173.4 },
   { id: 'marissa',  name: 'Marissa',  emoji: '💇‍♀️', color: '#ff6b9d',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'marissa',  height: 173.4 },
   { id: 'delphina', name: 'Delphina', emoji: '🐕️', color: '#00ff88',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'delphina', height: 173.4 },

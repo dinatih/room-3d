@@ -56,7 +56,6 @@ export const CC3_TO_MIXAMO: Record<string, string> = {
 export const BONE_SYNONYMS: Record<string, string[]> = {
   'Hips': ['hips', 'pelvis', 'cog', 'roothips', 'rootground', 'hip'],
   'Spine': ['spine01', 'spinelower', 'spine0', 'spine1', 'spine'],
-  'Spine1': ['spinemiddle'],
   'Spine2': ['spine02', 'spineupper', 'spine2', 'spine03', 'spine', 'spine3'],
   'Neck': ['neck', 'headnecklower'],
   'Head': ['head', 'headneckupper'],

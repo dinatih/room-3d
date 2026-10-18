@@ -33,21 +33,6 @@ export function resolveTargetFingerBoneName(targetInstance: THREE.Object3D, side
 
 const _targetBoneNameCache = new WeakMap<THREE.Object3D, Map<string, string | null>>();
 
-/** Body translation must include the spine when it is a sibling of the pelvis. */
-export function resolveBodyTranslationBone(model: THREE.Object3D): THREE.Object3D | null {
-  const hipsName = resolveTargetBoneName(model, 'Hips');
-  const spineName = resolveTargetBoneName(model, 'Spine');
-  const hips = hipsName ? model.getObjectByName(hipsName)! : null;
-  const spine = spineName ? model.getObjectByName(spineName) : null;
-  if (!hips || !spine) return hips;
-  const ancestors = new Set<THREE.Object3D>();
-  for (let node: THREE.Object3D | null = spine; node; node = node.parent) ancestors.add(node);
-  let root = hips;
-  while (!ancestors.has(root) && root.parent) root = root.parent;
-  if (!(root as THREE.Bone).isBone) throw new Error(`No common body bone: ${hips.name}, ${spine.name}`);
-  return root;
-}
-
 export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: string, sourceHairMap: Map<string, string> | null = null): string | null {
   let instanceCache = _targetBoneNameCache.get(targetInstance);
   if (!instanceCache) {
