@@ -205,6 +205,27 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     (sg as THREE.Object3D).rotation.set(fix.rotation[0], fix.rotation[1], fix.rotation[2]);
     (sg as THREE.Object3D).userData.isWigRoot = true;
 
+    // Pour le pack de perruques 100 à 112 (issues d'une scène Sketchfab partagée avec décalage horizontal Hair100_ARM),
+    // raccrocher rootBone à sg est nécessaire pour ramener la coupe à l'origine.
+    // Pour les perruques individuelles (zHairezt, Coupe #14 à #52 dont Coupe #21), ne pas reparenter pour préserver l'armature FBX.
+    const isHairPackWig = Number(cleanId) >= 100 && Number(cleanId) <= 112;
+    if (isHairPackWig) {
+      let rootBone: THREE.Bone | null = null;
+      clonedFullScene.traverse(child => {
+        if ((child as THREE.Bone).isBone && !rootBone) {
+          let p = child;
+          while (p.parent && (p.parent as THREE.Bone).isBone) {
+            p = p.parent as THREE.Bone;
+          }
+          rootBone = p as THREE.Bone;
+        }
+      });
+
+      if (rootBone && (rootBone as THREE.Bone).parent !== sg) {
+        (sg as THREE.Object3D).add(rootBone as THREE.Bone);
+      }
+    }
+
     return (sg as THREE.Object3D);
   }, [fullScene, id, scale, cleanId, strId, attachTo]);
 
