@@ -11,6 +11,16 @@ du rig natif est rétabli. Les améliorations indépendantes du prototype, notam
 les transitions de posture, le maintien de l'état du studio et les raccourcis de
 tenue, sont conservées.
 
+Le résolveur d'os est également revenu à son comportement d'avant l'essai.
+Sur Lara native, `Hips` désigne de nouveau `root_hips`, ancêtre du bassin et du
+dos, et non `pelvis`. La priorité aux noms exacts introduite pendant l'expérience
+avait changé cette association et pouvait faire pivoter les jambes indépendamment
+du buste. Ce changement avait été conservé par erreur lors du premier retrait.
+
+`node scripts/temp_lara_native_retarget.cjs` compare les matrices de tous les os
+avec le résolveur précédant l'expérimentation, à 30 Hz, sur Lara native et Xbot.
+Le contrôle comprend `Against Wall Turn L To Sneakwalk`, l'idle Miley et la marche.
+
 Les fichiers ci-dessous restent disponibles comme archives de l'essai, sans être
 utilisés par les personnages de l'application :
 

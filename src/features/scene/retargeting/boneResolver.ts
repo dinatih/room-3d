@@ -46,23 +46,6 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
   }
 
   const baseNameLower = baseName.toLowerCase();
-  // A canonical Mixamo name must win over broad synonyms (Spine1 vs Spine).
-  const candidates = [
-    'mixamorig:' + baseName,
-    'mixamorig_' + baseName,
-    'mixamorig' + baseName,
-    baseName,
-    'mixamorig:' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
-    'mixamorig_' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
-    'mixamorig' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
-    baseName.charAt(0).toLowerCase() + baseName.slice(1)
-  ];
-  for (const name of candidates) {
-    if (targetInstance.getObjectByName(name)) {
-      instanceCache.set(cacheKey, name);
-      return name;
-    }
-  }
   if (baseNameLower.includes('hair') || baseNameLower.includes('ponytail')) {
     if (sourceHairMap && sourceHairMap.has(baseNameLower)) {
       const targetName = sourceHairMap.get(baseNameLower);
@@ -100,20 +83,6 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
 
   const synonyms = BONE_SYNONYMS[baseName];
   if (synonyms) {
-    // Resolve complete names first: "head" must not capture head_neck_lower
-    // before we try the explicit head_neck_upper synonym.
-    for (const syn of synonyms) {
-      let exactName: string | null = null;
-      targetInstance.traverse(node => {
-        if ((node as any).isBone && !exactName && node.name.toLowerCase().replace(/[:_ .\-]/g, '') === syn) {
-          exactName = node.name;
-        }
-      });
-      if (exactName) {
-        instanceCache.set(cacheKey, exactName);
-        return exactName;
-      }
-    }
     for (const syn of synonyms) {
       let foundName: string | null = null;
       targetInstance.traverse(node => {
@@ -134,6 +103,24 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
         instanceCache.set(cacheKey, foundName);
         return foundName;
       }
+    }
+  }
+
+  const candidates = [
+    'mixamorig:' + baseName,
+    'mixamorig_' + baseName,
+    'mixamorig' + baseName,
+    baseName,
+    'mixamorig:' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
+    'mixamorig_' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
+    'mixamorig' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
+    baseName.charAt(0).toLowerCase() + baseName.slice(1)
+  ];
+
+  for (const cand of candidates) {
+    if (targetInstance.getObjectByName(cand)) {
+      instanceCache.set(cacheKey, cand);
+      return cand;
     }
   }
 
