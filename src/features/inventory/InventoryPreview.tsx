@@ -26,6 +26,7 @@ import { DevToolsCollector } from '@features/scene/DevToolsCollector';
 import { ViewControlBar } from '@features/scene/ViewControlBar';
 import { getOrbitMouseButtons, getOrbitTouches } from '@features/scene/camera/orbitMouseButtons';
 import { TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
+import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 function disposePreviewScene(root: THREE.Object3D) {
   root.traverse((node: any) => {
@@ -651,6 +652,7 @@ export function InventoryPreview({
   showPhotoGallery = true,
   defaultShowGrid = false,
   defaultAutoRotate = true,
+  defaultShowMiniPerf,
   onGlbStats,
 }: {
   item: PreviewTarget;
@@ -665,8 +667,11 @@ export function InventoryPreview({
   showPhotoGallery?: boolean;
   defaultShowGrid?: boolean;
   defaultAutoRotate?: boolean;
+  defaultShowMiniPerf?: boolean;
   onGlbStats?: (s: GlbDebugStats | null) => void;
 }) {
+  const isMobile = useIsMobile();
+  const [showMiniPerf, setShowMiniPerf] = useState(() => defaultShowMiniPerf !== undefined ? defaultShowMiniPerf : !isMobile);
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = showPhotoGallery && !!photos && photos.length > 0;
   const actionKeys = item && (!('category' in item && item.category === 'characters') || ['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id))
@@ -864,6 +869,10 @@ export function InventoryPreview({
         toggleSkeleton();
         return;
       }
+      if (e.key === 'h' || e.key === 'H') {
+        setShowMiniPerf(v => !v);
+        return;
+      }
 
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -877,9 +886,19 @@ export function InventoryPreview({
       {item && (
         <>
           <div className="position-absolute top-0 start-0 m-2 z-3 d-flex flex-column align-items-start gap-1">
-            {showing3D && <div className="inventory-mini-perf glass-card shadow-lg rounded-2 p-1" style={{ width: 190 }}>
-              <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
-            </div>}
+            {showing3D && showMiniPerf && (
+              <div className="inventory-mini-perf glass-card shadow-lg rounded-2 p-1 position-relative" style={{ width: 190 }}>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white position-absolute top-0 end-0 m-1"
+                  style={{ fontSize: '0.6rem', zIndex: 2 }}
+                  onClick={() => setShowMiniPerf(false)}
+                  title="Masquer les performances (H)"
+                  aria-label="Masquer les performances"
+                />
+                <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
+              </div>
+            )}
           {/* Menu Arbre des os & Influence heatmap */}
           {showing3D && actionStates.showBones && (showBoneTree || selectedBoneName) && (
             <div
@@ -1190,6 +1209,16 @@ export function InventoryPreview({
         </>
       )} toolbarActions={showing3D && (
         <>
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${showMiniPerf ? 'btn-primary' : 'btn-outline-secondary'}`}
+          onClick={() => setShowMiniPerf(v => !v)}
+          title={showMiniPerf ? 'Masquer les performances (H)' : 'Afficher les performances (H)'}
+          aria-label={showMiniPerf ? 'Masquer les performances (H)' : 'Afficher les performances (H)'}
+          aria-pressed={showMiniPerf}
+        >
+          <i className="bi bi-bar-chart-fill" aria-hidden="true" />
+        </button>
         <button
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} ${showGrid ? 'btn-primary' : 'btn-outline-secondary'}`}

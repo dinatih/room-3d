@@ -26,6 +26,7 @@ import {
 import { Walls, Floor, MirrorFrames, MirrorReflectors, DoorsPlacement } from '@features/scene/Building';
 import { Equipment, Furniture, Furnishings, Decor } from '@features/scene/Placements';
 import { SkySphere } from '@features/scene/SkySphere';
+import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 const CATEGORY_COLORS: Record<string, string> = {
   bed: '#ff4081',
@@ -404,7 +405,8 @@ export function SpatialZonePreview({
   const maxDim = Math.max(max[0] - min[0], max[2] - min[2]);
   const camDistance = Math.max(220, maxDim * 1.35);
 
-  const [showFpsGraph, setShowFpsGraph] = useState(true);
+  const isMobile = useIsMobile();
+  const [showFpsGraph, setShowFpsGraph] = useState(() => !isMobile);
   const showZoneUi = useSceneStore(state => state.layers.aiZones);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
 
@@ -449,7 +451,15 @@ export function SpatialZonePreview({
 
       <div className="position-absolute top-0 start-0 m-2 z-1 d-flex flex-column align-items-start gap-1">
         {showFpsGraph && (
-          <div className="inventory-mini-perf glass-card shadow-lg rounded-2 p-1" style={{ width: 190 }}>
+          <div className="inventory-mini-perf glass-card shadow-lg rounded-2 p-1 position-relative" style={{ width: 190 }}>
+            <button
+              type="button"
+              className="btn-close btn-close-white position-absolute top-0 end-0 m-1"
+              style={{ fontSize: '0.6rem', zIndex: 2 }}
+              onClick={() => setShowFpsGraph(false)}
+              title="Masquer les performances"
+              aria-label="Masquer les performances"
+            />
             <DevToolsGroups Group={({ children }: any) => <>{children}</>} compact headerless />
           </div>
         )}
