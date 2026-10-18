@@ -22,7 +22,7 @@ Le `.blend` s'ouvre en pose de repos, avec la tenue native. Les variantes
 mutuellement exclusives sont masquées dans la collection « Lara · variantes
 conservées ». Elles restent disponibles dans le fichier et l'export GLB.
 
-Dans le workspace Animation, sélectionner `Lara_Mixamo`, passer l'éditeur inférieur
+Dans le workspace Animation, sélectionner `Armature`, passer l'éditeur inférieur
 en Action Editor et choisir une action :
 
 - `Mixamo · female_walk`
@@ -41,16 +41,19 @@ Les actions `Test` sont des poses synthétiques de contrôle, avec amplitude max
 
 ## Construction
 
-Le corps utilise les noms et la hiérarchie Mixamo : Hips → Spine → Spine1 → Spine2,
-puis Neck/Head et Shoulder → Arm → ForeArm → Hand de chaque côté. Les cuisses sont
-parentées à Hips. Les doigts utilisent les noms Mixamo.
+Le corps conserve les noms Lara : `pelvis` → `spine_lower` → `spine_middle` →
+`spine_upper`, puis `head_neck_lower` / `head_neck_upper`. Les nouvelles clavicules
+`arm_left_shoulder` et `arm_right_shoulder` précèdent les bras existants
+`arm_*_shoulder_2` → `arm_*_elbow` → `arm_*_wrist`. Les doigts gardent
+`arm_*_finger_1a` à `arm_*_finger_5c`. Aucun os ni groupe de poids ne porte de préfixe
+Mixamo. Le retargeter associe ces noms aux rôles du squelette Mixamo.
 
 Les os du visage, de la tresse, de la poitrine et des accessoires sont conservés.
-L'ancien `root_hips` est fusionné avec Hips ; le root au sol devient `lara_root`.
+L'ancien `root_hips` est fusionné avec `pelvis` ; le root au sol reste `root_ground`.
 Le troisième segment du dos est inséré entre les deux segments existants.
 Les clavicules relient le centre du haut du thorax aux articulations des bras.
 
-Il s'agit d'un squelette compatible adapté à Lara, avec ses axes de repos et ses
+Il s'agit d'un squelette compatible adapté à Lara, avec sa nomenclature, ses axes de repos et ses
 proportions, et non d'un passage dans l'auto-rigger en ligne de Mixamo. Une animation
 Xbot brute nécessite toujours du retargeting. Le fichier ne comporte pas de rig de
 contrôle IK pour l'animation manuelle.

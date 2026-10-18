@@ -1,6 +1,7 @@
 {
   "source_sha256": "ed6b6c28c2dc5a889e35be8a89cfc38c7174c72668a8501ee7793a5bded8909e",
   "bone_count": 92,
+  "bone_naming": "lara",
   "mesh_count": 34,
   "max_bind_position_error_m": 3.210672948720342e-07,
   "max_discarded_weight_for_four_influences": 0.011280198723190945,
@@ -48,12 +49,12 @@
   ],
   "note": "Prototype: deformation review required; not the active application asset.",
   "runtime_bind_matrix_max_error": 9.313225746154785e-07,
+  "baked_pose_matrix_max_error": 2.3245811462402344e-06,
   "baked_mixamo_actions": [
     "Mixamo · female_walk",
     "Mixamo · overhead_squat",
     "Mixamo · ymca_dance",
     "Mixamo · air_squat_bent_arms"
   ],
-  "runtime_samples_checked": 36,
-  "baked_pose_matrix_max_error": 2.3245811462402344e-06
+  "runtime_samples_checked": 36
 }

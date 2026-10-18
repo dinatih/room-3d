@@ -55,7 +55,7 @@ const launchBrowser = require('./browser-test-options.cjs');
       await page.waitForFunction(() => document.body.innerText.includes('Lara Mixamo (prototype)'), {timeout:120000});
       await page.waitForFunction(() => {
         let found=false;
-        window.threeScene?.traverse(node => { if(node.isBone && /^mixamorig[:_]?LeftShoulder$/.test(node.name))found=true; });
+        window.threeScene?.traverse(node => { if(node.isBone && node.name === 'arm_left_shoulder')found=true; });
         const loading=document.getElementById('loading');
         return found && (!loading || getComputedStyle(loading).display === 'none');
       }, {timeout:120000});
@@ -108,11 +108,20 @@ const launchBrowser = require('./browser-test-options.cjs');
         return target;
       });
       const prototype = targets[1];
-      const mapping = {};
-      for (const name of ['Hips','Spine','Spine1','Spine2','Neck','Head','LeftShoulder','RightShoulder','LeftArm','RightArm','LeftHandIndex1']) {
-        mapping[name] = resolveTargetBoneName(prototype, name);
-        assert(mapping[name] && mapping[name].replace(/[:_]/g,'') === 'mixamorig'+name, `Incorrect mapping ${name}: ${mapping[name]}`);
+      const expected = {Hips:'pelvis', Spine:'spine_lower', Spine1:'spine_middle', Spine2:'spine_upper', Neck:'head_neck_lower', Head:'head_neck_upper'};
+      for(const [side, role] of [['left','Left'],['right','Right']]) {
+        for(const [name, part] of [['Shoulder','shoulder'],['Arm','shoulder_2'],['ForeArm','elbow'],['Hand','wrist']]) expected[role+name]=`arm_${side}_${part}`;
+        for(const [name, part] of [['UpLeg','thigh'],['Leg','knee'],['Foot','ankle'],['ToeBase','toes']]) expected[role+name]=`leg_${side}_${part}`;
+        ['Thumb','Index','Middle','Ring','Pinky'].forEach((finger,digit)=>{
+          ['a','b','c'].forEach((letter,segment)=>{expected[`${role}Hand${finger}${segment+1}`]=`arm_${side}_finger_${digit+1}${letter}`;});
+        });
       }
+      const mapping = {};
+      for (const name of Object.keys(expected)) {
+        mapping[name] = resolveTargetBoneName(prototype, name);
+        assert(mapping[name] === expected[name], `Incorrect mapping ${name}: ${mapping[name]}`);
+      }
+      prototype.traverse(node=>{if(node.isBone)assert(!/mixamo/i.test(node.name),`Unexpected prefixed bone ${node.name}`);});
       for (const [child, parent] of [['Spine','Hips'],['Spine1','Spine'],['Spine2','Spine1'],['LeftShoulder','Spine2'],['LeftArm','LeftShoulder'],['RightShoulder','Spine2'],['RightArm','RightShoulder'],['LeftUpLeg','Hips'],['RightUpLeg','Hips']]) {
         assert(prototype.getObjectByName(resolveTargetBoneName(prototype, child)).parent.name === resolveTargetBoneName(prototype, parent), `Wrong hierarchy ${child}`);
       }
@@ -126,11 +135,7 @@ const launchBrowser = require('./browser-test-options.cjs');
       const boneMatrices = () => {
         prototype.updateMatrixWorld(true);
         const result = {};
-        prototype.traverse(bone => {
-          if (bone.isBone && /^mixamorig/.test(bone.name)) {
-            result[bone.name.replace(/^mixamorig[:_]?/, 'mixamorig:')] = bone.matrixWorld.toArray();
-          }
-        });
+        for(const name of Object.values(mapping))result[name]=prototype.getObjectByName(name).matrixWorld.toArray();
         return result;
       };
       window.laraBaked = {rest:boneMatrices(), clips:{}};

@@ -1,7 +1,7 @@
 """Build a separate Lara/Mixamo shoulder prototype; source is never overwritten.
 
 ALSOFT_DRIVERS=null blender -b --python-exit-code 1 --python scripts/temp_lara_mixamo.py
-Mixamo names/hierarchy, Lara proportions and bind axes: retargeting is required.
+Lara bone names, Mixamo-compatible hierarchy and Lara bind axes.
 """
 from pathlib import Path
 import hashlib
@@ -14,7 +14,17 @@ from mathutils import Vector, Quaternion, Matrix
 
 ROOT = Path(__file__).resolve().parents[1]
 FOLDER = ROOT / 'public/characters/lara'
-PREFIX = 'mixamorig:'
+BONES = {'Hips': 'pelvis', 'Spine': 'spine_lower', 'Spine1': 'spine_middle',
+         'Spine2': 'spine_upper', 'Neck': 'head_neck_lower', 'Head': 'head_neck_upper'}
+for side, role in [('left', 'Left'), ('right', 'Right')]:
+    for name, part in [('Shoulder', 'shoulder'), ('Arm', 'shoulder_2'),
+                       ('ForeArm', 'elbow'), ('Hand', 'wrist')]:
+        BONES[role + name] = f'arm_{side}_{part}'
+    for name, part in [('UpLeg', 'thigh'), ('Leg', 'knee'), ('Foot', 'ankle'), ('ToeBase', 'toes')]:
+        BONES[role + name] = f'leg_{side}_{part}'
+    for digit, finger in enumerate(('Thumb', 'Index', 'Middle', 'Ring', 'Pinky'), start=1):
+        for segment, letter in enumerate('abc', start=1):
+            BONES[f'{role}Hand{finger}{segment}'] = f'arm_{side}_finger_{digit}{letter}'
 
 
 def smoothstep(t):
@@ -43,7 +53,7 @@ def reset(arm):
 
 
 def rotate_world(arm, name, axis, degrees):
-    bone = arm.pose.bones[PREFIX + name]
+    bone = arm.pose.bones[BONES[name]]
     local_axis = bone.bone.matrix_local.to_quaternion().inverted() @ Vector(axis)
     bone.rotation_mode = 'QUATERNION'
     bone.rotation_quaternion = Quaternion(local_axis, math.radians(degrees))
@@ -59,32 +69,18 @@ def main():
     baseline = {obj.name: evaluated_vertices(obj) for obj in meshes}
     source_meshes = {obj.name: (len(obj.data.vertices), len(obj.data.polygons),
                               [mat.name for mat in obj.data.materials]) for obj in meshes}
-    rename = {'pelvis': 'Hips', 'spine_lower': 'Spine', 'spine_upper': 'Spine2',
-              'head_neck_lower': 'Neck', 'head_neck_upper': 'Head'}
-    for side, target in [('left', 'Left'), ('right', 'Right')]:
-        for old, new in [('shoulder_2', 'Arm'), ('elbow', 'ForeArm'), ('wrist', 'Hand')]:
-            rename[f'arm_{side}_{old}'] = target + new
-        for old, new in [('thigh', 'UpLeg'), ('knee', 'Leg'), ('ankle', 'Foot'), ('toes', 'ToeBase')]:
-            rename[f'leg_{side}_{old}'] = target + new
-        for digit, finger in enumerate(('Thumb', 'Index', 'Middle', 'Ring', 'Pinky'), start=1):
-            for segment, letter in enumerate('abc', start=1):
-                rename[f'arm_{side}_finger_{digit}{letter}'] = f'{target}Hand{finger}{segment}'
-    rename = {old: PREFIX + new for old, new in rename.items()}
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode='EDIT')
     bones = arm.data.edit_bones
-    for old, new in rename.items():
-        bones[old].name = new
-    bones['root_ground'].name = 'lara_root'
-    hips = bones[PREFIX + 'Hips']
-    hips.parent = bones['lara_root']
+    hips = bones['pelvis']
+    hips.parent = bones['root_ground']
     hips.use_connect = False
-    hips.tail = bones[PREFIX + 'Spine'].head
+    hips.tail = bones['spine_lower'].head
     hips.roll = 0.
-    bones[PREFIX + 'Spine'].parent = hips
+    bones['spine_lower'].parent = hips
     bones.remove(bones['root_hips'])
-    lower, upper = bones[PREFIX + 'Spine'], bones[PREFIX + 'Spine2']
-    middle = bones.new(PREFIX + 'Spine1')
+    lower, upper = bones['spine_lower'], bones['spine_upper']
+    middle = bones.new('spine_middle')
     middle.head = (lower.head + upper.head) / 2
     middle.tail = upper.head
     middle.roll = lower.roll
@@ -93,9 +89,9 @@ def main():
     upper.parent = middle
     shoulders = {}
     for side in ('Left', 'Right'):
-        humerus = bones[PREFIX + side + 'Arm']
-        clavicle = bones.new(PREFIX + side + 'Shoulder')
-        neck = bones[PREFIX + 'Neck'].head
+        humerus = bones[BONES[side + 'Arm']]
+        clavicle = bones.new(BONES[side + 'Shoulder'])
+        neck = bones['head_neck_lower'].head
         # Sternoclavicular joint at torso centre, at the arm socket's height.
         clavicle.head = Vector((neck.x, neck.y, humerus.head.z))
         clavicle.tail = humerus.head
@@ -106,10 +102,8 @@ def main():
         shoulders[side] = (clavicle.head.copy(), humerus.head.copy(), humerus.tail.copy())
     bpy.ops.object.mode_set(mode='OBJECT')
     for obj in meshes:
-        # Blender propagates bone renames to bound groups. Verify explicitly.
-        assert all(old not in obj.vertex_groups for old in rename), obj.name
         old_group = obj.vertex_groups.get('root_hips')
-        hips_group = obj.vertex_groups[PREFIX + 'Hips']
+        hips_group = obj.vertex_groups['pelvis']
         for vertex in obj.data.vertices:
             weights = {g.group: g.weight for g in vertex.groups}
             if old_group and old_group.index in weights:
@@ -125,23 +119,23 @@ def main():
     max_discarded_weight = 0.
     for obj in meshes:
         for name in ('Spine1', 'LeftShoulder', 'RightShoulder'):
-            obj.vertex_groups.new(name=PREFIX + name)
+            obj.vertex_groups.new(name=BONES[name])
         names = {g.index: g.name for g in obj.vertex_groups}
         count = 0
         for vertex in obj.data.vertices:
             weights = {names[g.group]: g.weight for g in vertex.groups if g.weight > 0}
             original = dict(weights)
             point = arm.matrix_world.inverted() @ obj.matrix_world @ vertex.co
-            lower_weight = weights.get(PREFIX + 'Spine', 0.)
+            lower_weight = weights.get('spine_lower', 0.)
             if lower_weight:
-                t = smoothstep((point.z - arm.data.bones[PREFIX + 'Spine'].head_local.z) /
-                               (arm.data.bones[PREFIX + 'Spine2'].head_local.z - arm.data.bones[PREFIX + 'Spine'].head_local.z))
-                weights[PREFIX + 'Spine'] = lower_weight * (1. - t)
-                weights[PREFIX + 'Spine1'] = lower_weight * t
+                t = smoothstep((point.z - arm.data.bones['spine_lower'].head_local.z) /
+                               (arm.data.bones['spine_upper'].head_local.z - arm.data.bones['spine_lower'].head_local.z))
+                weights['spine_lower'] = lower_weight * (1. - t)
+                weights['spine_middle'] = lower_weight * t
             # Redistribute existing chest/humerus weights, without automatic rebind.
-            side = 'Left' if point.x > arm.data.bones[PREFIX + 'Neck'].head_local.x else 'Right'
+            side = 'Left' if point.x > arm.data.bones['head_neck_lower'].head_local.x else 'Right'
             inner, socket, elbow = shoulders[side]
-            clavicle, humerus, chest = PREFIX + side + 'Shoulder', PREFIX + side + 'Arm', PREFIX + 'Spine2'
+            clavicle, humerus, chest = BONES[side + 'Shoulder'], BONES[side + 'Arm'], 'spine_upper'
             lateral = smoothstep((point.x - inner.x) / (socket.x - inner.x))
             vertical = smoothstep((point.z - arm.data.bones[chest].head_local.z) /
                                   (socket.z - arm.data.bones[chest].head_local.z))
@@ -193,7 +187,6 @@ def main():
     arm.hide_render = False
     arm.hide_select = False
     arm.data.display_type = 'OCTAHEDRAL'
-    arm.name = 'Lara_Mixamo'
     tests = {
         'Test · bras levés': [('LeftShoulder', (0, 1, 0), -25), ('RightShoulder', (0, 1, 0), 25),
                              ('LeftArm', (0, 1, 0), -55), ('RightArm', (0, 1, 0), 55)],
@@ -213,10 +206,10 @@ def main():
                 for bone_name, axis, angle in rotations:
                     rotate_world(arm, bone_name, axis, angle)
             for bone_name, _, _ in rotations:
-                bone = arm.pose.bones[PREFIX + bone_name]
+                bone = arm.pose.bones[BONES[bone_name]]
                 bone.rotation_mode = 'QUATERNION'
                 arm.animation_data_create().action = action
-                bone.keyframe_insert('rotation_quaternion', frame=frame, group=bone_name)
+                bone.keyframe_insert('rotation_quaternion', frame=frame, group=BONES[bone_name])
     arm.animation_data_clear()
     reset(arm)
     scene = bpy.context.scene
@@ -252,6 +245,7 @@ def main():
     assert len(document['skins']) == 1, 'Prototype export lost its armature'
     assert len(document['skins'][0]['joints']) == len(arm.data.bones)
     report = {'source_sha256': source_hash, 'bone_count': len(arm.data.bones),
+              'bone_naming': 'lara',
               'mesh_count': len(meshes), 'max_bind_position_error_m': rest_error,
               'max_discarded_weight_for_four_influences': max_discarded_weight,
               'reweighted_vertices': changed, 'diagnostic_actions': list(tests),
@@ -264,7 +258,7 @@ def bake_runtime():
     """Bring the real application's retargeted mocap into Blender, in metres."""
     output = FOLDER / 'lara_mixamo_prototype.blend'
     bpy.ops.wm.open_mainfile(filepath=str(output))
-    arm = bpy.data.objects['Lara_Mixamo']
+    arm = bpy.data.objects['Armature']
     data = json.loads(Path('/tmp/lara-mixamo-poses.json').read_text())
     for action in list(bpy.data.actions):
         if action.name.startswith('Mixamo · '):
@@ -332,9 +326,13 @@ def bake_runtime():
 
 def verify_saved():
     bpy.ops.wm.open_mainfile(filepath=str(FOLDER / 'lara_mixamo_prototype.blend'))
-    arm = bpy.data.objects['Lara_Mixamo']
+    arm = bpy.data.objects['Armature']
     report = json.loads((ROOT / 'docs/lara-mixamo-prototype-report.json').read_text())
     assert len(arm.data.bones) == report['bone_count']
+    assert all(name in arm.data.bones for name in BONES.values())
+    assert all('mixamo' not in bone.name.lower() for bone in arm.data.bones)
+    assert all('mixamo' not in group.name.lower() for obj in bpy.data.objects if obj.type == 'MESH' for group in obj.vertex_groups)
+    assert all('mixamo' not in node.get('name', '').lower() for node in glb_document()['nodes'])
     assert len([obj for obj in bpy.data.objects if obj.type == 'MESH']) == report['mesh_count']
     assert all(name in bpy.data.actions for name in report['diagnostic_actions'] + report['baked_mixamo_actions'])
     assert all(image.packed_file for image in bpy.data.images if image.type == 'IMAGE' and image.source == 'FILE'), 'Unpacked texture'

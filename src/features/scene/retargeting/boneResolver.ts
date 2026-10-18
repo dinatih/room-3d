@@ -100,6 +100,20 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
 
   const synonyms = BONE_SYNONYMS[baseName];
   if (synonyms) {
+    // Resolve complete names first: "head" must not capture head_neck_lower
+    // before we try the explicit head_neck_upper synonym.
+    for (const syn of synonyms) {
+      let exactName: string | null = null;
+      targetInstance.traverse(node => {
+        if ((node as any).isBone && !exactName && node.name.toLowerCase().replace(/[:_ .\-]/g, '') === syn) {
+          exactName = node.name;
+        }
+      });
+      if (exactName) {
+        instanceCache.set(cacheKey, exactName);
+        return exactName;
+      }
+    }
     for (const syn of synonyms) {
       let foundName: string | null = null;
       targetInstance.traverse(node => {
