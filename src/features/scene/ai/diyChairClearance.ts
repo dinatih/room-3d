@@ -2,7 +2,7 @@ import { currentFurnitureTransforms, movingFurniture, type FurnitureTransform } 
 import { BATH_WEST_WALL, ROOM_D, FURNITURE_WALL_CLEARANCE } from '../wallData';
 import { KALLAX_CUISINE_POSITION } from '../items/kallaxCuisineDrona';
 import { OccupancyManager } from './occupancyManager';
-import { furnitureObstacles, getAgentProfile } from './navigation/obstacles';
+import { furnitureObstacles, furnitureClearance, getAgentProfile } from './navigation/obstacles';
 import { inflate, pointInRing } from './navigation/geometry';
 import { getSmartObject } from './smartObjectRegistry';
 
@@ -22,7 +22,7 @@ export function prepareDiyChair(actorId: string): boolean {
     if (!current) return true; // The furniture layer may be hidden.
     const [x, , z] = getSmartObject('drona-kitchen-diy')!.slots[0].offset!;
     const target = { x, z };
-    const radius = getAgentProfile(actorId).radius;
+    const radius = furnitureClearance(getAgentProfile(actorId));
     const blocked = [...furnitureObstacles.values()].some(obstacle => obstacle.owner === 'chair-office'
       && pointInRing(target, inflate(obstacle.polygon, radius)));
     if (!blocked) return true;

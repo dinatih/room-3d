@@ -7,7 +7,7 @@ import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/du
 import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, getObjectApproach, movePostureExit, NavigationBlockedError, getNavigationGraph, describeNavigationBlock } from './navigation/service';
 import { movingFurniture } from '../furniturePositions';
 import { prepareKitchenStorageAccess, releaseKitchenStorageAccess } from './diyChairClearance';
-import { hasAgentProfile, getObstacleRevision, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
+import { hasAgentProfile, getObstacleRevision, furnitureClearance, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
 import { distance, inflate, pointInRing, BOOLEAN_PRECISION } from './navigation/geometry';
 import { useSceneStore } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
@@ -727,7 +727,7 @@ export function useAgentController(
         const direction = { x: Math.sin(stateRef.current.rotY), z: Math.cos(stateRef.current.rotY) };
         const owned = [...furnitureObstacles.values()].filter(obstacle => obstacle.owner === transition.owner
           && obstacle.yMin < profile.height && obstacle.yMax > 0);
-        if (owned.some(obstacle => pointInRing(transition.departure, inflate(obstacle.polygon, profile.radius)))) {
+        if (owned.some(obstacle => pointInRing(transition.departure, inflate(obstacle.polygon, furnitureClearance(profile))))) {
           // Aim past the front boundary with the actor's actual body clearance.
           const reach = Math.max(...owned.flatMap(obstacle => obstacle.polygon.map(point =>
             (point.x - transition.departure.x) * direction.x + (point.z - transition.departure.z) * direction.z))) + profile.radius;

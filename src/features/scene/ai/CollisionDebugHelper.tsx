@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
 import { architectureObstacles } from './navigation/architecture';
-import { furnitureObstacles, getObstacleRevision, navigationDebug, getAgentProfile, hasAgentProfile } from './navigation/obstacles';
+import { furnitureObstacles, getObstacleRevision, navigationDebug, furnitureClearance, getAgentProfile, hasAgentProfile } from './navigation/obstacles';
 import { doorKeys, doorPolygon, getNavigationGraph } from './navigation/service';
 import { doorCollisionState } from '../doorObstacles';
 import { inflate, type Point } from './navigation/geometry';
@@ -53,7 +53,7 @@ export function CollisionDebugHelper() {
       for (const obstacle of [...architectureObstacles, ...furnitureObstacles.values()]) addLine(obstacle.polygon, '#ff9100', true);
       for (const key of doorKeys) addLine(doorPolygon(key, doorCollisionState[key].angle), '#e040fb', true);
       // Keep the reference clearance fixed to Native, independently of active routes.
-      if (nativeProfile) for (const obstacle of furnitureObstacles.values()) addLine(inflate(obstacle.polygon, nativeProfile.radius), '#ff3d00', true);
+      if (nativeProfile) for (const obstacle of furnitureObstacles.values()) addLine(inflate(obstacle.polygon, furnitureClearance(nativeProfile)), '#ff3d00', true);
       if (nativeGraph?.comfort) for (const ring of nativeGraph.comfort.obstacles.flat()) addLine(ring, NAVIGATION_COMFORT_COLOR, true);
     }
     if (npc) {

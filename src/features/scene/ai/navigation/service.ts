@@ -1,7 +1,7 @@
 import { positionState } from '../../positionState';
 import { movingFurniture } from '../../furniturePositions';
 import { architectureObstacles, walkableSurfaces } from './architecture';
-import { furnitureObstacles, getObstacleRevision, getAgentProfile, navigationDebug, type AgentProfile } from './obstacles';
+import { furnitureObstacles, getObstacleRevision, furnitureClearance, getAgentProfile, navigationDebug, type AgentProfile } from './obstacles';
 import { inflate, union, mergeObstacles, VisibilityGraph, rectangle, pointInRing, insideObstacle, segmentFree, distance, projectToSegment, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, type DoorKey } from './doorRequests';
@@ -45,7 +45,7 @@ export const getInteractionOwner = (owner: string) => (owner === 'bed-west' || o
 export function getContainingObjectOwner(agentId: string, position: Point): string | undefined {
   const profile = getAgentProfile(agentId);
   const obstacle = [...furnitureObstacles.values()].find(o => o.yMin < profile.height && o.yMax > 0
-    && pointInRing(position, inflate(o.polygon, profile.radius)));
+    && pointInRing(position, inflate(o.polygon, furnitureClearance(profile))));
   return obstacle?.owner ? getInteractionOwner(obstacle.owner) : undefined;
 }
 const caches = new WeakMap<AgentProfile, Map<string, { revision: number; doorAngles: string; graph: VisibilityGraph }>>();
@@ -89,7 +89,7 @@ export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string 
     obstacles.push(inflate(polygon, radius));
     if (!excludeSet || excludeSet.size === 0) comfortObstacles.push(inflate(polygon, radius + NAVIGATION_COMFORT_CM));
   };
-  solid.forEach(o => addObstacle(o.polygon));
+  solid.forEach(o => addObstacle(o.polygon, furnitureObstacles.has(o.id) ? furnitureClearance(profile) : profile.radius));
   doorKeys.forEach((k, i) => addObstacle(doorPolygon(k, angles[i]), profile.radius + DOOR_CONFIGS[k].margin));
   if (shutterBlocked) for (const key of ['glassLeft', 'glassRight'] as const) addObstacle(doorPolygon(key, 0));
   // Surface boundaries are barriers, with the same body clearance as walls.
@@ -107,7 +107,7 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
   owner = getInteractionOwner(owner);
   const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile, undefined, closedDoor);
   if (start && departureOwner && !exiting && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true, undefined, closedDoor) ?? start;
-  const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
+  const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, furnitureClearance(profile)));
   if (!exiting && (!accepts || accepts(goal)) && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles) && (!start || graph.canReach(start, goal)) && isAgentDestinationFree(agentId, goal)) return goal;
   exiting = exiting || Boolean(start && owned.some(p => pointInRing(start, p)));
   // Leave furniture by the nearest free edge, independently of the next destination.
@@ -130,7 +130,7 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
 
   const containingOwners = (exiting && start) ? new Set(
     [...furnitureObstacles.values()]
-      .filter((o): o is typeof o & { owner: string } => Boolean(o.owner) && o.yMin < profile.height && o.yMax > 0 && pointInRing(start, inflate(o.polygon, profile.radius)))
+      .filter((o): o is typeof o & { owner: string } => Boolean(o.owner) && o.yMin < profile.height && o.yMax > 0 && pointInRing(start, inflate(o.polygon, furnitureClearance(profile))))
       .map(o => getInteractionOwner(o.owner))
   ) : new Set<string>();
   if (owner) containingOwners.add(owner);
@@ -409,12 +409,12 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   if (movingFurniture.size) {
     const next = route.path[route.index];
     if (!next) { route.waitReason = `Meubles en mouvement : ${[...movingFurniture].join(', ')}`; return start; }
-    const changed = [...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0).map(o => [inflate(o.polygon, profile.radius)]);
+    const changed = [...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0).map(o => [inflate(o.polygon, furnitureClearance(profile))]);
     if (!segmentFree(start, next, changed)) { route.waitReason = `Trajet coupé par un meuble en mouvement : ${[...movingFurniture].join(', ')}`; return start; }
   }
   const base = getNavigationGraph(profile, undefined, closedDoor);
   let graph = movingFurniture.size && route.graph ? route.graph : route.crowd?.base === base && route.crowd.graph ? route.crowd.graph : base;
-  const owned = (id: string) => [...furnitureObstacles.values()].filter(o => o.owner === id && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, profile.radius));
+  const owned = (id: string) => [...furnitureObstacles.values()].filter(o => o.owner === id && o.yMin < profile.height && o.yMax > 0).map(o => inflate(o.polygon, furnitureClearance(profile)));
   const contained = (id: string, p: Point) => owned(id).some(polygon => pointInRing(p, polygon));
   const localMove = (goal: Point, id: string): Point => {
     const baseLocal = getNavigationGraph(profile, id, closedDoor);
@@ -518,7 +518,7 @@ export function describeNavigationBlock(agentId: string, start: Point, target: P
   if (doors.size) details.push(`portes : ${[...doors].map(key => `${key} (${doorCollisionState[key].angle.toFixed(2)} rad)`).join(', ')}`);
   for (const [label, point] of [['départ', start], ['cible', target]] as const) {
     const obstacles = [...architectureObstacles, ...furnitureObstacles.values()]
-      .filter(o => o.yMin < profile.height && o.yMax > 0 && pointInRing(point, inflate(o.polygon, profile.radius)))
+      .filter(o => o.yMin < profile.height && o.yMax > 0 && pointInRing(point, inflate(o.polygon, furnitureClearance(profile))))
       .map(o => o.owner ?? o.id);
     if (obstacles.length) details.push(`${label} dans : ${[...new Set(obstacles)].join(', ')}`);
   }
