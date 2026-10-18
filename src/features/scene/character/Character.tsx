@@ -38,7 +38,7 @@ import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles'
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform, getAnimationDef } from '../animations/animationResolver';
-import { getCrossfadeDuration, isPostureTransition } from '../animations/animationTransitions';
+import { getCrossfadeDuration, isPostureTransition, getPostureTransitionRotDelta } from '../animations/animationTransitions';
 import { fitPostureTransition } from '../animations/postureTransition';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 
@@ -872,8 +872,10 @@ export function Character({
           const fitted = fitPostureTransition(original, hipsBone, actions[idleId].getClip());
           postureClipsRef.current.set(target, { original, fitted });
           to = actions[target] = mixer.clipAction(fitted);
+          const rotDelta = getPostureTransitionRotDelta(activeActionName.current, target);
           postureOriginRef.current.position.copy(animOriginRef.current.position);
-          postureOriginRef.current.rotY = animOriginRef.current.rotation.y;
+          postureOriginRef.current.rotY = animOriginRef.current.rotation.y + rotDelta;
+          animOriginRef.current.rotation.y = postureOriginRef.current.rotY;
         }
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
         const blendDuration = getCrossfadeDuration(activeActionName.current, target);
@@ -886,6 +888,7 @@ export function Character({
                            target === 'crouch-to-stand' ||
                            target === 'stand-up' ||
                            target === 'stand-up-1' ||
+                           target === 'get-up-bed' ||
                            target === 'standing-up' ||
                            target === 'standing-up-from-bed' ||
                            target === 'getting-up' ||

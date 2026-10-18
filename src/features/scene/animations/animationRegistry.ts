@@ -9639,6 +9639,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['get-up', 'se-relever', 'reveil'],
     tags: ['bed', 'get-up', 'wake', 'rise', 'transition', 'interaction'],
     duration: 5.6,
+    loop: 'once',
   },
 
   // ── NOUVELLES ANIMATIONS INTÉGRÉES (SPORTS, COUPLE, DANCE & VIBE) ────────────────
