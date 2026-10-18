@@ -185,12 +185,70 @@ export function LaraWigBust({
     const nativeHairSet = new Set(parts.nativeHairMeshes.map(item => item.mesh));
     const torsoClothedSet = new Set(parts.torsoClothed.map(item => item.mesh));
 
+    const ownedGeometries: THREE.BufferGeometry[] = [];
+
     laraScene.traverse(o => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
       mesh.layers.set(LAYER_DECOR);
       const keepVisible = (isHeadMesh(mesh) && !nativeHairSet.has(mesh)) || torsoClothedSet.has(mesh);
       mesh.visible = keepVisible;
+
+      if (keepVisible && mesh.geometry) {
+        const posAttr = mesh.geometry.attributes.position;
+        if (posAttr) {
+          let hasLowVertex = false;
+          for (let i = 0; i < posAttr.count; i++) {
+            if (posAttr.getY(i) < 1.0) {
+              hasLowVertex = true;
+              break;
+            }
+          }
+          if (hasLowVertex) {
+            const cleanGeo = mesh.geometry.clone();
+            const cleanPos = cleanGeo.attributes.position.clone();
+            cleanGeo.setAttribute('position', cleanPos);
+
+            if (cleanGeo.index) {
+              const oldIdx = cleanGeo.index;
+              const keptIndices: number[] = [];
+              for (let i = 0; i < oldIdx.count; i += 3) {
+                const i0 = oldIdx.getX(i);
+                const i1 = oldIdx.getX(i + 1);
+                const i2 = oldIdx.getX(i + 2);
+                if (cleanPos.getY(i0) >= 1.0 && cleanPos.getY(i1) >= 1.0 && cleanPos.getY(i2) >= 1.0) {
+                  keptIndices.push(i0, i1, i2);
+                }
+              }
+              cleanGeo.setIndex(keptIndices);
+            }
+
+            // Clamp unreferenced stray low vertices so computeBoundingBox() ignores them
+            let anchorX = 0, anchorY = 1.35, anchorZ = 0;
+            for (let i = 0; i < cleanPos.count; i++) {
+              if (cleanPos.getY(i) >= 1.0) {
+                anchorX = cleanPos.getX(i);
+                anchorY = cleanPos.getY(i);
+                anchorZ = cleanPos.getZ(i);
+                break;
+              }
+            }
+            for (let i = 0; i < cleanPos.count; i++) {
+              if (cleanPos.getY(i) < 1.0) {
+                cleanPos.setXYZ(i, anchorX, anchorY, anchorZ);
+              }
+            }
+            cleanPos.needsUpdate = true;
+            cleanGeo.computeBoundingBox();
+            cleanGeo.computeBoundingSphere();
+            if ((mesh as THREE.SkinnedMesh).boundingBox && cleanGeo.boundingBox) {
+              (mesh as THREE.SkinnedMesh).boundingBox!.copy(cleanGeo.boundingBox);
+            }
+            mesh.geometry = cleanGeo;
+            ownedGeometries.push(cleanGeo);
+          }
+        }
+      }
     });
 
     const headBone = laraScene.getObjectByName('head_neck_upper') ?? parts.bones.head;
@@ -216,6 +274,7 @@ export function LaraWigBust({
 
     return () => {
       disposeLaraVariantMaterials(laraScene);
+      ownedGeometries.forEach(g => g.dispose());
     };
   }, [laraScene]);
 
