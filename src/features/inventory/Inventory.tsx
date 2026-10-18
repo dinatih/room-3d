@@ -777,14 +777,28 @@ function normalizeSearchStr(str: string): string {
         return;
       }
       const targetEl = e.target as HTMLElement | null;
-      const isInsideList = !!targetEl?.closest?.('.inventory-pane-list');
-      if (!isInsideList || isTyping || tag === 'BUTTON' || tag === 'SELECT') return;
-      if (e.key === 'ArrowDown') {
+      const isSearchInput = targetEl === searchInputRef.current || targetEl === wigSearchInputRef.current;
+      const isInsideDetail = !!targetEl?.closest?.('.inventory-pane-detail');
+      if (activeCat !== 'wigs') {
+        const isInsideList = !!targetEl?.closest?.('.inventory-pane-list');
+        if ((!isInsideList && !isSearchInput) || (isTyping && !isSearchInput) || tag === 'BUTTON' || tag === 'SELECT') return;
+      } else {
+        if ((isTyping && !isSearchInput) || tag === 'SELECT' || isInsideDetail) return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (navList.length === 0) return;
         e.preventDefault();
-        setFocusedIndex(i => Math.min(i + 1, navList.length - 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setFocusedIndex(i => Math.max(i - 1, 0));
+        e.stopPropagation();
+        const selectedIdx = selected ? navList.findIndex(item => item && (item as any).id === selected.id) : -1;
+        const baseIdx = selectedIdx >= 0 ? selectedIdx : focusedIndex;
+        const nextIdx = e.key === 'ArrowDown'
+          ? Math.min(baseIdx + 1, navList.length - 1)
+          : Math.max((baseIdx >= 0 ? baseIdx : 1) - 1, 0);
+        setFocusedIndex(nextIdx);
+        const nextTarget = navList[nextIdx];
+        if (nextTarget) {
+          setSelected(nextTarget);
+        }
       } else if (e.key === 'Enter' && focusedIndex >= 0) {
         const target = navList[focusedIndex];
         if (target) {
@@ -797,7 +811,7 @@ function normalizeSearchStr(str: string): string {
     };
     window.addEventListener('keydown', handler, true);
     return () => window.removeEventListener('keydown', handler, true);
-  }, [navList, focusedIndex, isMobile, onClose, visible]);
+  }, [activeCat, navList, focusedIndex, selected, isMobile, onClose, visible]);
 
   return (
     <div
@@ -917,7 +931,7 @@ function normalizeSearchStr(str: string): string {
                     aria-label="Source de perruque"
                     className="form-select form-select-sm"
                     value={wigSource}
-                    onChange={e => setWigSource(e.target.value)}
+                    onChange={e => { setWigSource(e.target.value); e.currentTarget.blur(); }}
                   >
                     <option value="">Toutes les sources</option>
                     {WIG_SOURCES.map(src => (
@@ -928,7 +942,7 @@ function normalizeSearchStr(str: string): string {
                     aria-label="Couleur des perruques"
                     className="form-select form-select-sm"
                     value={wigColor}
-                    onChange={e => setWigColor(e.target.value)}
+                    onChange={e => { setWigColor(e.target.value); e.currentTarget.blur(); }}
                   >
                     {WIG_COLOR_OPTIONS.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -938,7 +952,7 @@ function normalizeSearchStr(str: string): string {
                     aria-label="Modèle de buste Lara"
                     className="form-select form-select-sm"
                     value={wigBustVariant}
-                    onChange={e => setWigBustVariant(e.target.value)}
+                    onChange={e => { setWigBustVariant(e.target.value); e.currentTarget.blur(); }}
                   >
                     {laraBustOptions.map(c => (
                       <option key={c.id} value={c.variant}>
