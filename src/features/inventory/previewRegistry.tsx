@@ -299,7 +299,7 @@ WIGS_ITEMS.forEach(wig => {
     const hairColor = actionState?.previewHairColor;
     return (
       <group>
-        <group position={[-18, 14, 0]}>
+        <group position={[-18, 0, 0]}>
           <MannequinHead
             mannequinId={`preview-${wig.id}`}
             wigId={wig.id}

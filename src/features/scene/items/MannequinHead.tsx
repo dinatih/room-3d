@@ -172,7 +172,6 @@ export function LaraWigBust({
   windEnabled?: boolean;
 }) {
   const { scene: laraScene } = useGLTFClone('characters/lara/lara_native.glb');
-  const [wigOffset, setWigOffset] = useState<[number, number, number]>([0, 31.0, 0]);
   const LARA_SCALE = 90;
 
   useLayoutEffect(() => {
@@ -194,44 +193,25 @@ export function LaraWigBust({
       mesh.visible = keepVisible;
     });
 
-    laraScene.scale.setScalar(LARA_SCALE);
-    laraScene.updateMatrixWorld(true);
-
-    const visibleBox = new THREE.Box3();
-    const m = new THREE.Matrix4();
-    const rootRS = laraScene.matrix.clone().setPosition(0, 0, 0);
-    laraScene.traverse(node => {
-      const mesh = node as THREE.Mesh;
-      if (!mesh.isMesh || !mesh.visible) return;
-      m.identity();
-      let cur: THREE.Object3D | null = node;
+    const headLocal = new THREE.Vector3(0, 1.52, 0);
+    if (parts.bones.head) {
+      const m = new THREE.Matrix4();
+      let cur: THREE.Object3D | null = parts.bones.head;
       while (cur && cur !== laraScene) {
         cur.updateMatrix();
         m.premultiply(cur.matrix);
         cur = cur.parent;
       }
-      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
-      if (mesh.geometry.boundingBox) {
-        visibleBox.union(mesh.geometry.boundingBox.clone().applyMatrix4(m).applyMatrix4(rootRS));
-      }
-    });
-
-    if (!visibleBox.isEmpty()) {
-      laraScene.position.set(
-        -(visibleBox.min.x + visibleBox.max.x) / 2,
-        -visibleBox.min.y,
-        -(visibleBox.min.z + visibleBox.max.z) / 2,
-      );
+      headLocal.setFromMatrixPosition(m);
     }
 
-    if (parts.bones.head) {
-      laraScene.updateMatrixWorld(true);
-      const headLocal = new THREE.Vector3();
-      parts.bones.head.getWorldPosition(headLocal);
-      laraScene.worldToLocal(headLocal);
-      const headCm = headLocal.multiplyScalar(LARA_SCALE).add(laraScene.position);
-      setWigOffset([headCm.x, headCm.y + 0.07 * LARA_SCALE, headCm.z]);
-    }
+    laraScene.scale.setScalar(LARA_SCALE);
+    laraScene.position.set(
+      -headLocal.x * LARA_SCALE,
+      31.0 - (headLocal.y + 0.07) * LARA_SCALE,
+      -headLocal.z * LARA_SCALE,
+    );
+    laraScene.updateMatrixWorld(true);
 
     return () => {
       disposeLaraVariantMaterials(laraScene);
@@ -245,7 +225,7 @@ export function LaraWigBust({
         id={wigId.replace('hair_', '')}
         color={hairColor}
         windEnabled={windEnabled}
-        offset={wigOffset}
+        offset={[0, 31.0, 0]}
         scale={LARA_SCALE}
       />
     </group>
