@@ -228,17 +228,17 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
       {!isMobile && <div className="animation-studio__splitter bg-secondary bg-opacity-25" role="separator" aria-orientation="vertical"
         aria-label="Redimensionner la liste des animations" onMouseDown={onResizeStart} title="Glisser pour redimensionner la liste" />}
       <div className="animation-studio__workspace bg-light">
-        <div className="p-2 border-bottom bg-white d-flex flex-wrap align-items-center gap-2">
-          <label className="d-flex align-items-center gap-2 small">{mode === 'solo' ? 'Personnage' : 'Leader A'}
-            <select aria-label="Personnage testé" className="form-select form-select-sm w-auto" value={leader?.id ?? ''} onChange={e => setActorId(e.target.value)}>
+        <div className="py-1 px-2 border-bottom bg-white d-flex flex-wrap align-items-center gap-2">
+          <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">{mode === 'solo' ? 'Personnage' : 'Leader A'}
+            <select aria-label="Personnage testé" className="form-select form-select-sm py-0.5 ps-2 pe-4 w-auto small" value={leader?.id ?? ''} onChange={e => setActorId(e.target.value)}>
               {leaders.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </label>
           {mode === 'duo' && <>
-            <button type="button" className="btn btn-sm btn-outline-secondary" aria-label="Échanger les personnages" disabled={!partner}
+            <button type="button" className="btn btn-sm py-0.5 px-2 btn-outline-secondary" aria-label="Échanger les personnages" disabled={!partner}
               onClick={() => { setActorId(partner!.id); setPartnerId(leader.id); }}><i className="bi bi-arrow-left-right" /></button>
-            <label className="d-flex align-items-center gap-2 small">Partenaire B
-              <select aria-label="Partenaire du duo" className="form-select form-select-sm w-auto" value={partner?.id ?? ''} onChange={e => setPartnerId(e.target.value)}>
+            <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">Partenaire B
+              <select aria-label="Partenaire du duo" className="form-select form-select-sm py-0.5 ps-2 pe-4 w-auto small" value={partner?.id ?? ''} onChange={e => setPartnerId(e.target.value)}>
                 {partners.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </label>
