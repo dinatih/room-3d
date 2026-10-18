@@ -15,6 +15,8 @@ import { DroneCell } from './Drona';
 import { Freezer }        from './Freezer';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
+import { SlidingDrona } from './SlidingDrona';
+import { KALLAX_SE_DRONA_POSITIONS, DRONA_SE_ITEMS } from './kallaxSeDrona';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
 const TF = 3.5, TI = 1.5, NH = 34, NW_K = 33.5;
@@ -28,19 +30,13 @@ const FREEZER_H = 50; // Hauteur du congélateur CHIQ au sol
 
 // Positions en espace root (rotY=π/2).
 // k1 center Y = FREEZER_H + w2/2 ; k2 center Y = FREEZER_H + w2 + w2/2 ; cells ±17.5
-const DRONA_POSITIONS: [number, number, number][] = [
-  [0, FREEZER_H + w2 / 2 - 17.5,       0], // k1 cell 0
-  [0, FREEZER_H + w2 / 2 + 17.5,       0], // k1 cell 1
-  [0, FREEZER_H + w2 + w2 / 2 - 17.5,  0], // k2 cell 0
-  [0, FREEZER_H + w2 + w2 / 2 + 17.5,  0], // k2 cell 1
-];
 
 function k(id: string) { return { id } as any; }
 
-export function KallaxSEDrona() {
+export function KallaxSEDrona({ isPreview = false, actionState = {} }: { isPreview?: boolean; actionState?: Record<string, any> } = {}) {
   const dronaMatrices = useMemo(() => {
     const rot = new THREE.Matrix4(); // Identité
-    return DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x + 3, y, z));
+    return KALLAX_SE_DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x, y, z));
   }, []);
 
   const dronaTransforms = useMemo(() => {
@@ -56,18 +52,21 @@ export function KallaxSEDrona() {
   return (
     <>
       {/* DRONA Instances individuelles pour animation */}
-      {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
-          <DroneCell />
-        </group>
-      ))}
+      {dronaTransforms.map((t, i) => {
+        const target = Object.entries(DRONA_SE_ITEMS).find(([, item]) => item.index === i);
+        return (
+          <group key={i} name={`drona-se-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+            {target ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={target[1].duration} isPreview={isPreview} actionState={actionState} /> : <DroneCell />}
+          </group>
+        );
+      })}
     </>
   );
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxSE({ onSize, noDrona, noCaps }: SceneItemProps & { noDrona?: boolean; noCaps?: boolean }) {
+export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean; noCaps?: boolean; isPreview?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
   const px = (-h1 / 2) + 3; // -20.5 : center the pivoted Kallax at X=0
 
@@ -93,7 +92,7 @@ export function KallaxSE({ onSize, noDrona, noCaps }: SceneItemProps & { noDrona
         <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {!noDrona && <KallaxSEDrona />}
+      {!noDrona && <KallaxSEDrona isPreview={isPreview} actionState={actionState} />}
 
       {/* ShoeHatRack — au sol, côté mur D, flush mur B */}
       {/* local: x = stack_z − z_world = −w1/2, z = x_world − stack_x = DEP/2 */}

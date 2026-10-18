@@ -6,8 +6,7 @@
  * Placement monde : wrapper group dans Furniture.tsx  → rotY=+π/2
  * Utilisé aussi dans l'inventaire via registry.ts.
  */
-import { useRef, useLayoutEffect, useMemo, useEffect } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
@@ -15,10 +14,7 @@ import { DroneCell, DF } from './Drona';
 import { Variera60136623 } from './Variera60136623';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
-import { useSceneStore } from '../store/useSceneStore';
-import { glbLocalBBox } from '../glbUtils';
-import { getObjectActionIds } from '../objectActions';
-import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
+import { SlidingDrona } from './SlidingDrona';
 import { DRONA_CATCHALL_POSITION, DRONA_CATCHALL_ACTION, DRONA_CATCHALL_SLIDE_DURATION } from './kallaxNeDrona';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
@@ -32,41 +28,6 @@ const VAR2_W = 32, VAR2_D = 28, VAR2_H = 16; // VARIERA 32×28×16 demi-étag
 
 function k(id: string) { return { id } as any; }
 
-
-function CatchallDrona({ isPreview, actionState }: { isPreview: boolean; actionState: Record<string, any> }) {
-  const ref = useRef<THREE.Group>(null!);
-  const progress = useRef(0);
-  const travel = useRef(0);
-  const mode = useSceneStore(s => s.furniture.dronaMode);
-  const sceneOpen = useSceneStore(s => !!s.extraStates[DRONA_CATCHALL_ACTION]);
-  const open = isPreview ? !!actionState[DRONA_CATCHALL_ACTION] : sceneOpen;
-  const { invalidate } = useThree();
-  useLayoutEffect(() => {
-    if (mode === 'hidden') return;
-    travel.current = glbLocalBBox(ref.current).getSize(new THREE.Vector3()).z * 2 / 3;
-    invalidate();
-  }, [mode, invalidate]);
-  useEffect(() => { invalidate(); }, [open, invalidate]);
-  useFrame((_, delta) => {
-    const target = open ? 1 : 0;
-    progress.current = open
-      ? Math.min(target, progress.current + delta / DRONA_CATCHALL_SLIDE_DURATION)
-      : Math.max(target, progress.current - delta / DRONA_CATCHALL_SLIDE_DURATION);
-    ref.current.position.z = -travel.current * progress.current;
-    if (progress.current !== target) invalidate();
-  });
-  return (
-    <group ref={ref} name="drona-ne-catchall" userData={{ animUnit: true, skipMerge: true, hoverAction: {
-      label: 'Dröna fourre-tout — Nord-Est',
-      actions: [
-        ...getObjectActionIds('drona-ne-catchall'),
-        ...(!isPreview ? SMART_OBJECTS['drona-ne-catchall'].slots.map(slot => `smart-object:::drona-ne-catchall:::${slot.slotId}`) : []),
-      ],
-    } }}>
-      <DroneCell />
-    </group>
-  );
-}
 
 export function KallaxNEDrona({ isPreview = false, actionState = {} }: { isPreview?: boolean; actionState?: Record<string, any> } = {}) {
   const dronaMatrices = useMemo(() => {
@@ -114,7 +75,7 @@ export function KallaxNEDrona({ isPreview = false, actionState = {} }: { isPrevi
       {dronaTransforms.map((t, i) => (
         <group key={i} name={`drona-ne-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
           {t.p.x === DRONA_CATCHALL_POSITION[0] && t.p.y === DRONA_CATCHALL_POSITION[1]
-            ? <CatchallDrona isPreview={isPreview} actionState={actionState} />
+            ? <SlidingDrona objectId="drona-ne-catchall" label="Dröna fourre-tout — Nord-Est" actionId={DRONA_CATCHALL_ACTION} duration={DRONA_CATCHALL_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
             : <DroneCell />}
         </group>
       ))}

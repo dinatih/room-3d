@@ -20,6 +20,7 @@ import { resolveInstructionCoords } from './agent/agentInstructionCoords';
 import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { getExitTransition } from '../animations/animationTransitions';
+import { DRONA_SE_ITEMS } from '../items/kallaxSeDrona';
 import { doorCollisionState } from '../doorObstacles';
 import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
 
@@ -210,6 +211,8 @@ export function useAgentController(
       if (claimedSlotRef.current.objectId === 'drona-ne-catchall') {
         useSceneStore.getState().triggerAction('drona-ne-catchall-slide', false);
       }
+      const drona = DRONA_SE_ITEMS[claimedSlotRef.current.objectId];
+      if (drona) useSceneStore.getState().triggerAction(drona.action, false);
       if (claimedSlotRef.current.objectId === 'corridor-closet') {
         useSceneStore.getState().triggerAction('corrDoors', false);
       }

@@ -510,7 +510,7 @@ export function LivingRoomFurnishings() {
       </group>
 
       {/* Boîtes Drona Kallax SE */}
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]}>
+      <group position={FREEZER_TRANSFORM.position} rotation={[0, FREEZER_TRANSFORM.rotationY - Math.PI / 2, 0]}>
         <KallaxSEDrona />
       </group>
 

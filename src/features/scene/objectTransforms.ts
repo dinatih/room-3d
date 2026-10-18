@@ -16,6 +16,7 @@ import { SHOWER_W, SHOWER_D } from './items/Shower';
 import { TOILET_D } from './items/Toilet';
 import { FRIDGE_LOCAL_POSITION } from './items/Fridge';
 import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION, DRONA_CATCHALL_POSITION } from './items/kallaxNeDrona';
+import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from './items/kallaxSeDrona';
 import { positionState } from './positionState';
 import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, FurnitureTransform } from './furniturePositions';
 
@@ -45,6 +46,16 @@ const ITEM_TO_ANCHOR_KEY: Record<string, string> = {
  */
 function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
   switch (itemId) {
+    case 'drona-se-pyjama':
+    case 'drona-se-linen': {
+      const freezer = getStaticObjectTransform('freezer')!;
+      const ry = freezer.rotationY - Math.PI / 2;
+      const [x, y, z] = KALLAX_SE_DRONA_POSITIONS[DRONA_SE_ITEMS[itemId].index];
+      return {
+        position: [freezer.position[0] + x * Math.cos(ry) + z * Math.sin(ry), freezer.position[1] + y, freezer.position[2] - x * Math.sin(ry) + z * Math.cos(ry)],
+        rotationY: ry,
+      };
+    }
     case 'drona-ne-catchall': {
       const [x, y, z] = DRONA_CATCHALL_POSITION;
       const c = Math.cos(KALLAX_NE_ROTATION), s = Math.sin(KALLAX_NE_ROTATION);

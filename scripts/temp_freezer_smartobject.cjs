@@ -5,7 +5,7 @@ if(process.argv.includes('--inspect-drona')){
  (async()=>{
    const THREE=require('three'),fs=require('node:fs');
    const {GLTFLoader}=await import('three/examples/jsm/loaders/GLTFLoader.js');
-   for(const id of ['looking_through_files_low','searching_files_high','opening']){
+   for(const id of ['looking_through_files_low','searching_files_high','opening','pick_fruit']){
      const bytes=fs.readFileSync(`public/animations/mixamo/anim_${id}.glb`);
      const gltf=await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
      const clip=gltf.animations[0],mixer=new THREE.AnimationMixer(gltf.scene);
@@ -41,6 +41,7 @@ if(!process.argv.includes('--inspect-drona'))(async () => {
  const {Freezer}=await import('/src/features/scene/items/Freezer.tsx');
  const {Fridge}=await import('/src/features/scene/items/Fridge.tsx');
  const {KallaxNE}=await import('/src/features/scene/items/KallaxNE.tsx');
+ const {KallaxSE}=await import('/src/features/scene/items/KallaxSE.tsx');
  const {Smorkull}=await import('/src/features/scene/items/Smorkull.tsx');
  const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
  const chairTransform=getObjectTransform('chair-office');
@@ -53,7 +54,7 @@ if(!process.argv.includes('--inspect-drona'))(async () => {
  function App(){const [props,setProps]=React.useState({isPreview:false,actionState:{}});f.setProps=setProps;
  return h(Canvas,{frameloop:'never',shadows:true,camera:{position:[125,80,-95],near:.1,far:1500,fov:45}},
  h(Capture),h('ambientLight',{intensity:.85}),h('directionalLight',{position:[100,120,-80],intensity:2}),
- h(React.Suspense,{fallback:null},h(props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
+ h(React.Suspense,{fallback:null},h(props.dronaSE?KallaxSE:props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
  props.chair&&h(React.Suspense,{fallback:null},h('group',{ref:g=>{f.chair=g;},position:chairTransform.position,rotation:[0,chairTransform.rotationY,0]},h(Smorkull,{item:{},actionState:{},onSize:()=>{f.chairReady=true;}}))),
  h('mesh',{rotation:[-Math.PI/2,0,0],position:[0,-.1,0]},h('planeGeometry',{args:[400,400]}),h('meshStandardMaterial',{color:'#777777'})) );}
  createRoot(container).render(h(App));
@@ -396,5 +397,86 @@ if(!process.argv.includes('--inspect-drona'))(async () => {
  }
  assert.deepEqual(errors,[]);
  console.log('Right upper Drona, exact two-thirds slide, untouched neighbours, hover, preview, NPC and interruption: PASS');
+ await page.evaluate(()=>window.fixture.setProps({dronaSE:true,noCaps:true,isPreview:false,actionState:{}}));
+ await page.waitForFunction(()=>window.fixture.scene.getObjectByName('drona-se-pyjama')?.children.length&&window.fixture.scene.getObjectByName('drona-se-linen')?.children.length,{timeout:60000});
+ const south=await page.evaluate(async()=>{
+   const f=window.fixture;
+   const {DRONA_SE_ITEMS,KALLAX_SE_DRONA_POSITIONS}=await import('/src/features/scene/items/kallaxSeDrona.ts');
+   const {buildSmartObjectInstructionSequence,getSmartObject}=await import('/src/features/scene/ai/smartObjectRegistry.ts');
+   const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
+   const {registerObstacle}=await import('/src/features/scene/ai/navigation/obstacles.ts');
+   f.readSouth=id=>{
+     const node=f.scene.getObjectByName(id),mesh=node.getObjectByProperty('isMesh',true);mesh.geometry.computeBoundingBox();
+     return {z:node.position.z,position:node.parent.position.toArray(),parent:node.parent.name,actions:node.userData.hoverAction.actions,
+       depth:mesh.geometry.boundingBox.max.z-mesh.geometry.boundingBox.min.z,
+       cells:Array.from({length:4},(_,i)=>{const cell=f.scene.getObjectByName('drona-se-cell-'+i);return [cell.position.toArray(),cell.children[0].position.toArray()];})};
+   };
+   const freezer=getObjectTransform('freezer'),ry=freezer.rotationY-Math.PI/2;
+   const matrix=new f.THREE.Matrix4().makeRotationY(ry).setPosition(...freezer.position);
+   const root=f.scene.getObjectByName('drona-se-pyjama').parent.parent;
+   root.children.filter(child=>!child.name.startsWith('drona-se-cell-')).forEach((child,i)=>{
+     const box=new f.THREE.Box3().setFromObject(child).applyMatrix4(matrix);
+     registerObstacle({id:'kallax-se-test-'+i,owner:'kallax-se',yMin:box.min.y,yMax:box.max.y,
+       polygon:[{x:box.min.x,z:box.min.z},{x:box.max.x,z:box.min.z},{x:box.max.x,z:box.max.z},{x:box.min.x,z:box.max.z}]});
+   });
+   return Object.entries(DRONA_SE_ITEMS).map(([id,item])=>{
+     const obj=getSmartObject(id),transform=getObjectTransform(id);
+     if(JSON.stringify(obj.position)!==JSON.stringify(transform.position))throw new Error('SE Drona must follow its item transform');
+     const expected=new f.THREE.Vector3(...KALLAX_SE_DRONA_POSITIONS[item.index]).applyMatrix4(matrix);
+     if(expected.distanceTo(new f.THREE.Vector3(...obj.position))>1e-6)throw new Error('SE Drona world position must match its rendered cell');
+     return {id,...item,position:KALLAX_SE_DRONA_POSITIONS[item.index],closed:f.readSouth(id),slot:obj.slots[0],sequence:buildSmartObjectInstructionSequence(id,'pick-item')};
+   });
+ });
+ assert.equal(south.find(x=>x.id==='drona-se-pyjama').index,2);
+ assert.equal(south.find(x=>x.id==='drona-se-linen').index,1);
+ for(const item of south){
+   assert.deepEqual(item.closed.position,item.position);
+   assert.deepEqual(item.closed.actions,[item.action,'smart-object:::'+item.id+':::pick-item']);
+   await page.evaluate(action=>window.fixture.store.getState().triggerAction(action,true),item.action);
+   await new Promise(r=>setTimeout(r,80));await tick(item.duration);
+   const opened=await page.evaluate(id=>window.fixture.readSouth(id),item.id);
+   assert(Math.abs(opened.z+opened.depth*2/3)<1e-6);
+   for(let i=0;i<4;i++)if(i!==item.index)assert.deepEqual(opened.cells[i],item.closed.cells[i]);
+   await page.evaluate(action=>window.fixture.store.getState().triggerAction(action,false),item.action);
+   await new Promise(r=>setTimeout(r,80));await tick(item.duration);
+   assert.equal((await page.evaluate(id=>window.fixture.readSouth(id),item.id)).z,0);
+   await page.evaluate(action=>window.fixture.setProps({dronaSE:true,noCaps:true,isPreview:true,actionState:{[action]:true}}),item.action);
+   await new Promise(r=>setTimeout(r,80));await tick(item.duration);
+   assert.deepEqual((await page.evaluate(id=>window.fixture.readSouth(id),item.id)).actions,[item.action]);
+   assert.equal(await page.evaluate(action=>window.fixture.store.getState().extraStates[action],item.action),false);
+   await page.evaluate(()=>window.fixture.setProps({dronaSE:true,noCaps:true,isPreview:false,actionState:{}}));
+   await new Promise(r=>setTimeout(r,80));await tick(item.duration);
+ }
+ const southRuns=await page.evaluate(async(items)=>{
+   const {default:React}=await import('/node_modules/.vite/deps/react.js');
+   const {default:ReactDOM}=await import('/node_modules/.vite/deps/react-dom_client.js');
+   const {useAgentController}=await import('/src/features/scene/ai/useAgentController.ts');
+   const {setAgentProfile}=await import('/src/features/scene/ai/navigation/obstacles.ts');
+   const f=window.fixture,results=[],render=f.gl.render;f.gl.render=()=>{};
+   for(const item of items)for(const interrupted of [false,true]){
+     const id=item.id+'-check-'+interrupted;setAgentProfile(id,{radius:15,height:170});
+     const container=document.createElement('div');document.body.append(container);
+     const root=ReactDOM.createRoot(container),routine=structuredClone(item.sequence);
+     const [x,y,z]=item.slot.offset;
+     let agent,complete=false,pulled=false;
+     function Probe(){agent=useAgentController(id,routine,false,()=>({x,y,z,rotY:item.slot.rotY}),()=>{complete=true;});return null;}
+     f.flushSync(()=>root.render(React.createElement(Probe)));
+     const animations=new Set();
+     for(let time=0;time<45&&!complete;time+=.1){
+       const state=agent.update(.1);animations.add(state.animation);
+       await new Promise(r=>setTimeout(r,0));f.tick(.1);
+       if(state.animation===item.animation&&Math.abs(f.readSouth(item.id).z+item.closed.depth*2/3)<1e-6){
+         pulled=true;if(interrupted)break;
+       }
+     }
+     root.unmount();container.remove();await new Promise(r=>setTimeout(r,0));f.tick(item.duration);
+     results.push({id:item.id,interrupted,complete,pulled,animations:[...animations],z:f.readSouth(item.id).z,open:f.store.getState().extraStates[item.action]});
+   }
+   f.gl.render=render;return results;
+ },south);
+ console.log('South-east Drona controller results:',southRuns);
+ for(const result of southRuns){assert(result.complete||result.interrupted);assert(result.pulled);assert.equal(result.z,0);assert.equal(result.open,false);}
+ assert.deepEqual(errors,[]);
+ console.log('SE pyjama second from top and linen third: exact slide, itemId, independent preview, real cabinet navigation, NPC and interruption: PASS');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
