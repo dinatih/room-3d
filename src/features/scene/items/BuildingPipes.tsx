@@ -36,7 +36,7 @@ const VENT_RADIUS = 6.0; // Ø12 cm — colonne aération VMC collective
 const VENT_BRANCH_RADIUS = 5.0; // Ø10 cm — piquages vers pièces
 const DRAIN_RADIUS = 5.5; // Ø11 cm — colonne de chute eaux usées standard NF
 const DRAIN_OFFSET_Z = -22; // décalage du tube d'eaux usées à côté de l'aération
-const FLEX_RADIUS = 4.5; // Ø9 cm (conduit flexible hotte alu accordéon)
+const FLEX_RADIUS = 3.8; // Ø7.6 cm (conduit flexible hotte alu compact)
 
 // Repères de parois en coordonnées locales (groupe parent à [14, 0, 440])
 const SDB_WALL_Z = BATH_NORTH_WALL - 440; // ≈ 23.6 cm (mur SDB-Nord)
@@ -45,12 +45,11 @@ const KITCHEN_EXIT_X = KITCHEN_WALL_X + 5.5; // ≈ 25.1 cm (ressort juste de la
 const KITCHEN_DOUBLE_OUTLET_LEN = 9.0; // demi-longueur des sorties perpendiculaires
 
 // Repères de la hotte aspirante UTDRAG en coordonnées locales
-// Trou d'évacuation centré sur la buse de hotte : X = 89.6, Z = 5.5, Y = 168
-const HOOD_X = 89.6;
-const HOOD_COLLAR_Z = 5.5; // centré exactement sur le trou de la hotte (14.5 cm du mur Sud)
-const HOOD_COLLAR_Y = 168.0;
-const KITCHEN_SOUTH_WALL_Z = 20.0; // Z local correspondant à KITCHEN_SOUTH_WALL (460 - 440)
-const FLEX_WALL_Z = KITCHEN_SOUTH_WALL_Z - 4.2; // 15.8 cm (collé directement contre le mur Sud, évite tout clash avec les Drona)
+// Centre exact du trou d'évacuation mesuré sur la géométrie 3D Utdrag : X = 87.5, Z = 2.17, Y = 170.7
+const HOOD_X = 87.5;
+const HOOD_COLLAR_Z = 2.17; // centre exact du trou de la buse de hotte
+const HOOD_COLLAR_Y = 170.7;
+const FLEX_WALL_Z = 21.0; // collé contre le mur Sud (Z = 25 - rayon 3.8 - 0.2), dégagement total > 4.5 cm derrière les Drona (Z = 12.5)
 
 // Position de l'évacuation WC en coordonnées locales
 // Toilette monde : X = 50 -> local X = 36
@@ -132,23 +131,23 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
   // Trajectoire 3D de la gaine flexible de hotte aspirante
   const flexTubeGeo = useMemo(() => {
     // 1. Part du coude direction Sud (KITCHEN_EXIT_X, Y_VENT_SPLIT, +KITCHEN_DOUBLE_OUTLET_LEN)
-    // 2. Longe le mur Cuisine-Sud à Z = FLEX_WALL_Z
-    // 3. Descend le long du mur jusqu'au niveau supérieur de la hotte (Y ≈ 182)
-    // 4. Coude à 90° vers le Nord (-Z) le long du dessus de la hotte
-    // 5. Coude à 90° vers le bas (-Y) pour entrer dans la collerette de la hotte
+    // 2. Longe le mur Cuisine-Sud à Z = FLEX_WALL_Z (reculé contre le placo)
+    // 3. Descend le long du mur jusqu'au-dessus de la hotte
+    // 4. Coude à 90° vers le Nord (-Z) vers le centre de la buse (Z = HOOD_COLLAR_Z)
+    // 5. Coude à 90° vers le bas (-Y) entrant directement dans le trou de la hotte
     const points = [
       new THREE.Vector3(KITCHEN_EXIT_X, Y_VENT_SPLIT, KITCHEN_DOUBLE_OUTLET_LEN),
-      new THREE.Vector3(KITCHEN_EXIT_X + 1.0, Y_VENT_SPLIT, FLEX_WALL_Z),
-      new THREE.Vector3(38.0, 228, FLEX_WALL_Z),
-      new THREE.Vector3(62.0, 214, FLEX_WALL_Z),
-      new THREE.Vector3(HOOD_X, 190, FLEX_WALL_Z),
-      new THREE.Vector3(HOOD_X, 178, FLEX_WALL_Z),
-      new THREE.Vector3(HOOD_X, 175, (FLEX_WALL_Z + HOOD_COLLAR_Z) / 2),
-      new THREE.Vector3(HOOD_X, 174, HOOD_COLLAR_Z),
+      new THREE.Vector3(KITCHEN_EXIT_X + 2.0, Y_VENT_SPLIT, FLEX_WALL_Z),
+      new THREE.Vector3(45.0, 222, FLEX_WALL_Z),
+      new THREE.Vector3(70.0, 205, FLEX_WALL_Z),
+      new THREE.Vector3(HOOD_X, 186, FLEX_WALL_Z),
+      new THREE.Vector3(HOOD_X, 176, HOOD_COLLAR_Z + 5.0),
+      new THREE.Vector3(HOOD_X, HOOD_COLLAR_Y + 2.5, HOOD_COLLAR_Z),
       new THREE.Vector3(HOOD_X, HOOD_COLLAR_Y, HOOD_COLLAR_Z),
+      new THREE.Vector3(HOOD_X, HOOD_COLLAR_Y - 2.0, HOOD_COLLAR_Z),
     ];
-    const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.25);
-    return new THREE.TubeGeometry(curve, 72, FLEX_RADIUS, 18, false);
+    const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.2);
+    return new THREE.TubeGeometry(curve, 80, FLEX_RADIUS, 18, false);
   }, []);
 
   return (
@@ -294,13 +293,14 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
       ))}
 
       {/* ── Évacuation WC peinte en BLANC dans la partie visible SDB ─────────── */}
-      {/* 1. Manchette d'évacuation étanche peinte en blanc à l'arrière de la cuvette */}
-      <group position={[WC_X, WC_AXIS_Y, WC_WALL_RUN_Z]} rotation-y={Math.PI / 2} userData={{ itemName: 'Manchette évacuation WC' }}>
+      {/* 1. Manchette d'évacuation étanche peinte en blanc à l'arrière de la cuvette avec joint noir vertical */}
+      <group position={[WC_X, WC_AXIS_Y, WC_WALL_RUN_Z + 2.4]} rotation-x={Math.PI / 2} userData={{ itemName: 'Manchette évacuation WC' }}>
         <mesh material={drainWhiteMat}>
-          <cylinderGeometry args={[DRAIN_RADIUS + 0.8, DRAIN_RADIUS + 0.8, 3.0, 24]} />
+          <cylinderGeometry args={[DRAIN_RADIUS + 0.4, DRAIN_RADIUS + 0.4, 4.8, 24]} />
         </mesh>
-        <mesh position={[0, 1.6, 0]} material={gasketMat}>
-          <cylinderGeometry args={[DRAIN_RADIUS + 0.5, DRAIN_RADIUS + 0.5, 0.8, 24]} />
+        {/* Joint noir vertical enserrant la manchette horizontale */}
+        <mesh position={[0, 1.0, 0]} material={gasketMat}>
+          <cylinderGeometry args={[DRAIN_RADIUS + 0.7, DRAIN_RADIUS + 0.7, 0.9, 24]} />
         </mesh>
       </group>
 
