@@ -429,9 +429,9 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   const lastRadiusRef = useRef<number | null>(null);
   const lastStatsRef = useRef<{ sz?: number; tris: number; calls: number } | null>(null);
 
-  const originalWireframes = useRef(new Map<THREE.Material & { wireframe: boolean }, boolean>());
   const applyWireframe = useCallback(() => {
     if (!innerRef.current) return;
+    const targetWireframe = Boolean(wireframe);
     innerRef.current.traverse(node => {
       if (!(node as THREE.Mesh).isMesh) return;
       const mesh = node as THREE.Mesh;
@@ -439,8 +439,6 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
       materials.forEach(material => {
         if (!material || !('wireframe' in material)) return;
         const mat = material as THREE.Material & { wireframe: boolean };
-        if (!originalWireframes.current.has(mat)) originalWireframes.current.set(mat, mat.wireframe);
-        const targetWireframe = wireframe || originalWireframes.current.get(mat)!;
         if (mat.wireframe !== targetWireframe) {
           mat.wireframe = targetWireframe;
           mat.needsUpdate = true;
@@ -450,12 +448,19 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   }, [wireframe]);
 
   useLayoutEffect(applyWireframe, [applyWireframe, actionState, item]);
-  useFrame(() => {
-    if (wireframe) applyWireframe();
-  });
+  useFrame(applyWireframe);
   useLayoutEffect(() => () => {
-    originalWireframes.current.forEach((value, material) => { material.wireframe = value; });
-    originalWireframes.current.clear();
+    if (!innerRef.current) return;
+    innerRef.current.traverse(node => {
+      if (!(node as THREE.Mesh).isMesh) return;
+      const mesh = node as THREE.Mesh;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      materials.forEach(material => {
+        if (material && 'wireframe' in material) {
+          (material as THREE.Material & { wireframe: boolean }).wireframe = false;
+        }
+      });
+    });
   }, []);
 
   const fit = useCallback(() => {
@@ -543,21 +548,22 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
       outerRef.current.position.set(px, -center.y, pz);
     }
 
+    const isWigCategory = Boolean(item && 'category' in item && (item as any).category === 'wigs');
     const sphere = box.getBoundingSphere(new THREE.Sphere());
-    const newRadius = Math.max(15, sphere.radius);
+    const newRadius = Math.max(12, sphere.radius * (isWigCategory ? 0.62 : 1));
     if (lastRadiusRef.current === null || Math.abs(lastRadiusRef.current - newRadius) > 0.5) {
       lastRadiusRef.current = newRadius;
       onBoundsChange?.(newRadius);
     }
 
     if (onTargetChange) {
-      const targetY = grounded ? size.y / 2 : 0;
+      const targetY = grounded ? (isWigCategory ? size.y * 0.58 : size.y / 2) : 0;
       if (lastTargetYRef.current === null || Math.abs(lastTargetYRef.current - targetY) > 0.1) {
         lastTargetYRef.current = targetY;
         onTargetChange([0, targetY, 0]);
       }
     }
-  }, [grounded, preserveOriginXZ, onTargetChange, onBoundsChange, onStats, glbPath, applyWireframe]);
+  }, [grounded, preserveOriginXZ, onTargetChange, onBoundsChange, onStats, glbPath, applyWireframe, item]);
 
   useLayoutEffect(() => {
     lastStatsRef.current = null;
@@ -707,7 +713,6 @@ export function InventoryPreview({
     setBoundsRadius(next);
   }, [preserveStateOnItemChange]);
   const [showGrid, setShowGrid] = useState(defaultShowGrid);
-  const [wireframe, setWireframe] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [previewView, setPreviewView] = useState<PreviewCameraView>('free');
   const cameraProjection = useSceneStore(state => state.cameraProjection);
@@ -715,6 +720,13 @@ export function InventoryPreview({
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const layers = useSceneStore(state => state.layers);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
+  const wireframe = !!layers.wireframe;
+  const setWireframe = useCallback((updater: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof updater === 'function' ? updater(!!useSceneStore.getState().layers.wireframe) : updater;
+    if (next !== !!useSceneStore.getState().layers.wireframe) {
+      toggleLayer('wireframe');
+    }
+  }, [toggleLayer]);
 
   const [showPnjPanel, setShowPnjPanel] = useState<boolean>(false);
   const [selectedBoneName, setSelectedBoneName] = useState<string | null>(null);

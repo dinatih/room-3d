@@ -129,9 +129,26 @@ export function MannequinHead({
     // ── Tête de mannequin ─────────────────────────────────────────────────
     removeGlbLines(scene);
     scene.scale.set(1, 1, 1);
+    const ownedMats: THREE.Material[] = [];
     scene.traverse(o => {
-      if ((o as THREE.Mesh).isMesh) {
-        o.layers.set(LAYER_DECOR);
+      const mesh = o as THREE.Mesh;
+      if (mesh.isMesh) {
+        mesh.layers.set(LAYER_DECOR);
+        if (mesh.material) {
+          if (Array.isArray(mesh.material)) {
+            mesh.material = mesh.material.map(m => {
+              const c = m.clone();
+              if ('wireframe' in c) (c as THREE.MeshStandardMaterial).wireframe = false;
+              ownedMats.push(c);
+              return c;
+            });
+          } else {
+            const c = mesh.material.clone();
+            if ('wireframe' in c) (c as THREE.MeshStandardMaterial).wireframe = false;
+            ownedMats.push(c);
+            mesh.material = c;
+          }
+        }
       }
     });
     const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
@@ -143,6 +160,9 @@ export function MannequinHead({
       -(box.min.z + box.max.z) / 2,
     );
     onSize?.(box.getSize(new THREE.Vector3()));
+    return () => {
+      ownedMats.forEach(m => m.dispose());
+    };
   }, [scene, onSize]);
 
   // Offset d'alignement manuel pour la tête de Mannequin (45 cm).
@@ -197,6 +217,7 @@ export function LaraWigBust({
     const torsoClothedSet = new Set(parts.torsoClothed.map(item => item.mesh));
 
     const ownedGeometries: THREE.BufferGeometry[] = [];
+    const BUST_MIN_Y = 1.22;
 
     laraScene.traverse(o => {
       const mesh = o as THREE.Mesh;
@@ -211,7 +232,7 @@ export function LaraWigBust({
         if (posAttr) {
           let hasLowVertex = false;
           for (let i = 0; i < posAttr.count; i++) {
-            if (posAttr.getY(i) < 1.0) {
+            if (posAttr.getY(i) < BUST_MIN_Y) {
               hasLowVertex = true;
               break;
             }
@@ -228,7 +249,7 @@ export function LaraWigBust({
                 const i0 = oldIdx.getX(i);
                 const i1 = oldIdx.getX(i + 1);
                 const i2 = oldIdx.getX(i + 2);
-                if (cleanPos.getY(i0) >= 1.0 && cleanPos.getY(i1) >= 1.0 && cleanPos.getY(i2) >= 1.0) {
+                if (cleanPos.getY(i0) >= BUST_MIN_Y && cleanPos.getY(i1) >= BUST_MIN_Y && cleanPos.getY(i2) >= BUST_MIN_Y) {
                   keptIndices.push(i0, i1, i2);
                 }
               }
@@ -238,7 +259,7 @@ export function LaraWigBust({
             // Clamp unreferenced stray low vertices so computeBoundingBox() ignores them
             let anchorX = 0, anchorY = 1.35, anchorZ = 0;
             for (let i = 0; i < cleanPos.count; i++) {
-              if (cleanPos.getY(i) >= 1.0) {
+              if (cleanPos.getY(i) >= BUST_MIN_Y) {
                 anchorX = cleanPos.getX(i);
                 anchorY = cleanPos.getY(i);
                 anchorZ = cleanPos.getZ(i);
@@ -246,7 +267,7 @@ export function LaraWigBust({
               }
             }
             for (let i = 0; i < cleanPos.count; i++) {
-              if (cleanPos.getY(i) < 1.0) {
+              if (cleanPos.getY(i) < BUST_MIN_Y) {
                 cleanPos.setXYZ(i, anchorX, anchorY, anchorZ);
               }
             }

@@ -300,7 +300,7 @@ WIGS_ITEMS.forEach(wig => {
     const laraVariant = actionState?.previewLaraVariant || 'native';
     return (
       <group>
-        <group position={[-18, 0, 0]}>
+        <group position={[-14, 0, 0]}>
           <MannequinHead
             mannequinId={`preview-${wig.id}`}
             wigId={wig.id}
@@ -311,7 +311,7 @@ WIGS_ITEMS.forEach(wig => {
             onSize={onSize || (() => {})}
           />
         </group>
-        <group position={[18, 0, 0]}>
+        <group position={[14, 0, 0]}>
           <LaraWigBust
             wigId={wig.id}
             hairColor={hairColor}
