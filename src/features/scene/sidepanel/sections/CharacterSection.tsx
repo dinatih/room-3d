@@ -409,7 +409,7 @@ export function CharacterSection({
       {layerBtn('light',  iconLabel('bi-handbag', 'Accessoires Lara'), 'accessories')}
       {(['laraTop', 'laraBottom'] as const).map((key) => (
         <label key={key} className="character-clothing-row w-100 border-bottom py-1 px-2 d-flex align-items-center justify-content-between gap-1">
-          <span>{key === 'laraTop' ? 'Haut' : 'Bas'} :</span>
+          {iconLabel(key === 'laraTop' ? 'bi-person-standing-dress' : 'bi-person-standing', key === 'laraTop' ? 'Haut' : 'Bas')}
           <select className="form-select form-select-sm w-auto py-0 ps-2 pe-4 bg-transparent text-dark" aria-label={key === 'laraTop' ? 'Haut' : 'Bas'}
             value={layers[key]} onChange={event => useSceneStore.getState().setLaraClothing(key, event.target.value as LaraClothing)}>
             <option value="native">Native</option>
