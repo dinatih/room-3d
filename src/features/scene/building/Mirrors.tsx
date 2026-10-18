@@ -199,6 +199,46 @@ function MergedReflector({ planes, position, rotationY }: {
   return <primitive object={reflector} />;
 }
 
+const silverMirrorMat = new THREE.MeshStandardMaterial({
+  color: 0xd0d8e0,
+  roughness: 0.05,
+  metalness: 0.95,
+  envMapIntensity: 1.5,
+});
+
+function MergedAmbientMirror({ planes, position, rotationY }: {
+  planes: { w: number; h: number; x: number; y: number }[];
+  position: [number, number, number];
+  rotationY: number;
+}) {
+  const geo = useMemo(() => {
+    const geos = planes.map(p => {
+      const g = new THREE.PlaneGeometry(p.w, p.h);
+      g.translate(p.x, p.y, 0);
+      return g;
+    });
+    const merged = mergeGeometries(geos, false);
+    merged.computeBoundingBox();
+    return merged;
+  }, [planes]);
+
+  return (
+    <mesh geometry={geo} material={silverMirrorMat} position={position} rotation-y={rotationY} />
+  );
+}
+
+function AmbientReflectorMirror({ w, h, position, rotationY }: {
+  w: number; h: number;
+  position: [number, number, number];
+  rotationY: number;
+}) {
+  return (
+    <mesh position={position} rotation-y={rotationY} material={silverMirrorMat}>
+      <planeGeometry args={[w, h]} />
+    </mesh>
+  );
+}
+
 export function MirrorsD({ showReflection, reflectorOnly = false }: { showReflection: boolean; reflectorOnly?: boolean }) {
   const W_M = 65, H_M = 65;
   const FT = 1.8;
@@ -209,11 +249,36 @@ export function MirrorsD({ showReflection, reflectorOnly = false }: { showReflec
   const planes = useMemo(() => [0, 1, 2].map(i => {
     const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
     return { w: W_M - FT * 2, h: H_M - FT * 2, x: -cx, y: cy };
-  }), []);
+  }), [cx]);
+
+  const reflectorRef = useRef<THREE.Group | null>(null);
+  const ambientRef = useRef<THREE.Group | null>(null);
+
+  useFrame(({ camera }) => {
+    if (!showReflection) return;
+    const isBath = camera.position.x >= -30 && camera.position.x <= 200 && camera.position.z >= 450;
+    const isVisible = !isBath && camera.position.z < (mirZ + 10) && camera.position.z >= -200 && camera.position.y <= 270;
+
+    if (reflectorRef.current && reflectorRef.current.visible !== isVisible) {
+      reflectorRef.current.visible = isVisible;
+    }
+    if (ambientRef.current && ambientRef.current.visible !== !isVisible) {
+      ambientRef.current.visible = !isVisible;
+    }
+  });
 
   return (
     <>
-      {showReflection && <MergedReflector planes={planes} position={[0, 0, mirZ]} rotationY={Math.PI} />}
+      {showReflection && (
+        <>
+          <group ref={reflectorRef} visible={false}>
+            <MergedReflector planes={planes} position={[0, 0, mirZ]} rotationY={Math.PI} />
+          </group>
+          <group ref={ambientRef} visible={true}>
+            <MergedAmbientMirror planes={planes} position={[0, 0, mirZ]} rotationY={Math.PI} />
+          </group>
+        </>
+      )}
       {!reflectorOnly && ([0, 1, 2] as const).map((i) => {
         const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
         return (
@@ -250,9 +315,34 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
     return p;
   }, []);
 
+  const reflectorRef = useRef<THREE.Group | null>(null);
+  const ambientRef = useRef<THREE.Group | null>(null);
+
+  useFrame(({ camera }) => {
+    if (!showReflection) return;
+    const isBath = camera.position.x >= -30 && camera.position.x <= 200 && camera.position.z >= 450;
+    const isVisible = !isBath && camera.position.x > 0 && camera.position.x <= 500 && camera.position.z >= -100 && camera.position.z <= 420 && camera.position.y <= 270;
+
+    if (reflectorRef.current && reflectorRef.current.visible !== isVisible) {
+      reflectorRef.current.visible = isVisible;
+    }
+    if (ambientRef.current && ambientRef.current.visible !== !isVisible) {
+      ambientRef.current.visible = !isVisible;
+    }
+  });
+
   return (
     <>
-      {showReflection && <MergedReflector planes={planes} position={[mirX, 0, 0]} rotationY={Math.PI / 2} />}
+      {showReflection && (
+        <>
+          <group ref={reflectorRef} visible={false}>
+            <MergedReflector planes={planes} position={[mirX, 0, 0]} rotationY={Math.PI / 2} />
+          </group>
+          <group ref={ambientRef} visible={true}>
+            <MergedAmbientMirror planes={planes} position={[mirX, 0, 0]} rotationY={Math.PI / 2} />
+          </group>
+        </>
+      )}
 
       {!reflectorOnly && ([0, 1, 2] as const).map((i) => {
         const mz = MA_START_Z + MA_W / 2 + i * MA_W;
@@ -278,13 +368,6 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
     </>
   );
 }
-
-const silverMirrorMat = new THREE.MeshStandardMaterial({
-  color: 0xd0d8e0,
-  roughness: 0.05,
-  metalness: 0.95,
-  envMapIntensity: 1.5,
-});
 
 export function MirrorBath({ showReflection }: { showReflection: boolean }) {
   const VANITY_W    = 60, VANITY_D = 47, VANITY_Y0 = 30, VANITY_H = 50;
@@ -337,38 +420,6 @@ export function MirrorBath({ showReflection }: { showReflection: boolean }) {
   );
 }
 
-function MergedAmbientMirror({ planes, position, rotationY }: {
-  planes: { w: number; h: number; x: number; y: number }[];
-  position: [number, number, number];
-  rotationY: number;
-}) {
-  const geo = useMemo(() => {
-    const geos = planes.map(p => {
-      const g = new THREE.PlaneGeometry(p.w, p.h);
-      g.translate(p.x, p.y, 0);
-      return g;
-    });
-    const merged = mergeGeometries(geos, false);
-    merged.computeBoundingBox();
-    return merged;
-  }, [planes]);
-
-  return (
-    <mesh geometry={geo} material={silverMirrorMat} position={position} rotation-y={rotationY} />
-  );
-}
-
-function AmbientReflectorMirror({ w, h, position, rotationY }: {
-  w: number; h: number;
-  position: [number, number, number];
-  rotationY: number;
-}) {
-  return (
-    <mesh position={position} rotation-y={rotationY} material={silverMirrorMat}>
-      <planeGeometry args={[w, h]} />
-    </mesh>
-  );
-}
 
 /** Cadres GLB/procéduraux des miroirs — toujours visibles (LAYER_FURNITURE). */
 export function MirrorFrames() {
