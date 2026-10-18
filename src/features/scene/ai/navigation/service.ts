@@ -393,7 +393,14 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   const profile = getAgentProfile(agentId);
   route.closedDoor = closedDoor;
   if (closedDoor) {
-    if (!requestDoor(closedDoor, agentId, 'closed')) { route.waitReason = `Attente de réservation de la porte ${closedDoor} pour l'interaction`; return start; }
+    if (!requestDoor(closedDoor, agentId, 'closed')) {
+      // Do not retain another passage while waiting for exclusive access:
+      // its users may be the very actors that must clear this opening.
+      releaseAgentDoors(agentId, closedDoor);
+      route.doors.clear();
+      route.waitReason = `Attente de réservation de la porte ${closedDoor} pour l'interaction`;
+      return start;
+    }
     route.doors.add(doorOpeningKey(closedDoor));
   }
   // Furniture transitions change continuously. Keep the existing route if safe, and wait
