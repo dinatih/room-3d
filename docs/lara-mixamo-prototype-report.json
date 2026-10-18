@@ -5,8 +5,9 @@
   "mesh_count": 34,
   "max_bind_position_error_m": 3.210672948720342e-07,
   "max_discarded_weight_for_four_influences": 0.011280198723190945,
+  "preserved_rigid_upper_arm_vertices": 620,
   "reweighted_vertices": {
-    "arms": 918,
+    "arms": 440,
     "backpack": 2660,
     "bikini_bottom": 1256,
     "bikini_top": 2022,
@@ -56,5 +57,5 @@
     "Mixamo · ymca_dance",
     "Mixamo · air_squat_bent_arms"
   ],
-  "runtime_samples_checked": 36
+  "runtime_samples_checked": 45
 }

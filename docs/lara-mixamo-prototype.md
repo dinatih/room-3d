@@ -17,6 +17,8 @@ habituels s'appliquent aux deux versions. Pour ouvrir directement le prototype :
 - `docs/lara-mixamo-prototype-report.json` : mesures de construction et de validation.
 - `docs/lara-mixamo-comparison.png` : originale à gauche, prototype au centre,
   Xbot à droite, au milieu de l'animation `overhead_squat`.
+- `docs/lara-armpits-comparison.png` : gros plan en idle après correction des poids
+  des aisselles, originale à gauche et prototype à droite.
 
 Le `.blend` s'ouvre en pose de repos, avec la tenue native. Les variantes
 mutuellement exclusives sont masquées dans la collection « Lara · variantes
@@ -58,8 +60,12 @@ proportions, et non d'un passage dans l'auto-rigger en ligne de Mixamo. Une anim
 Xbot brute nécessite toujours du retargeting. Le fichier ne comporte pas de rig de
 contrôle IK pour l'animation manuelle.
 
-Les poids initiaux sont redistribués localement autour du dos et des épaules, sans
-recalcul automatique intégral. Le placement des transitions provient des os de
+Les poids initiaux du thorax sont redistribués localement autour du dos et des
+clavicules, sans recalcul automatique intégral. Les poids des bras ne sont pas
+transférés aux clavicules : les bras héritent déjà de leur mouvement par la
+hiérarchie. Ce transfert figeait le haut des bras et ouvrait les aisselles en idle.
+Les régions initialement rigides sur l'humérus sont contrôlées à la construction.
+Le placement des transitions provient des os de
 Lara. Les poids sont normalisés et limités aux quatre influences prises en charge
 par le skinning Three.js utilisé ici. La masse maximale écartée sur un sommet est
 d'environ 1,13 % avant renormalisation. Cette opération peut aussi modifier les
@@ -75,7 +81,8 @@ la recherche de Spine pouvait auparavant choisir Spine1 sur un squelette Mixamo.
   0,0004 mm ; nombres de sommets/faces et affectations des matériaux conservés.
   Les UVs et les images ne sont pas modifiés par le script.
 - Hiérarchie et résolution des os vérifiées sur le GLB chargé par GLTFLoader.
-- Quatre animations × trois instants × trois personnages : 36 échantillons,
+- Cinq animations (idle Miley et quatre clips Mixamo) × trois instants × trois
+  personnages : 45 échantillons,
   pistes et sommets déformés finis, pistes des clavicules et Spine1 présentes.
 - Actions Blender reconstruites comparées aux matrices des poses du moteur à
   trois instants par animation : écart maximal inférieur à 0,000003 par coefficient.
@@ -83,6 +90,9 @@ la recherche de Spine pouvait auparavant choisir Spine1 sur un squelette Mixamo.
   textures intégrées et l'intégrité du fichier source.
 - `npx tsc --noEmit` et `git diff --check`.
 
+La revue frontale rapprochée et orthographique sur l'idle ne montre plus les
+ouvertures sous les bras après conservation des poids de l'humérus. La commande
+`node scripts/check-lara-mixamo.cjs --component --shoulders` reproduit cette vue.
 La revue frontale montre un mouvement cohérent des épaules sur ces essais. Elle
 ne démontre pas l'absence de défaut sur toute la bibliothèque. Des ouvertures du
 vêtement à la taille restent visibles en flexion ; le prototype n'est pas validé

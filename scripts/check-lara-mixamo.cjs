@@ -23,7 +23,7 @@ const launchBrowser = require('./browser-test-options.cjs');
       } else request.continue();
     });
     if(process.argv.includes('--component')) {
-      await page.goto('http://127.0.0.1:5173/scripts/lara-mixamo-fixture.html');
+      await page.goto('http://127.0.0.1:5173/scripts/lara-mixamo-fixture.html'+(process.argv.includes('--shoulders')?'?view=shoulders&anim=idle':''));
       await page.waitForFunction(()=>{
         let original=false,prototype=false;
         window.threeScene?.traverse(node=>{
@@ -144,7 +144,9 @@ const launchBrowser = require('./browser-test-options.cjs');
         if(id !== 'rest') {
           // Load separate source instances because retargetClip adjusts source rest poses.
           for(const target of targets) {
-            const source = await loader.loadAsync('/animations/mixamo/'+id+'.glb');
+            const source = await loader.loadAsync(id === 'idle'
+              ? '/animations/miley/miley_armature_idle01_f.glb'
+              : '/animations/mixamo/'+id+'.glb');
             assert(source.animations.length, `Missing animation ${id}`);
             const clip = retargetClip(source.animations[0], target, source.scene);
             assert(clip.tracks.length, `No retargeted tracks ${id}`);
@@ -156,7 +158,7 @@ const launchBrowser = require('./browser-test-options.cjs');
             }
             const mixer = new THREE.AnimationMixer(target);
             mixer.clipAction(clip).play();
-            if(target === prototype && !window.laraBaked.clips[id]) {
+            if(target === prototype && id !== 'idle' && !window.laraBaked.clips[id]) {
               const frames=[];
               const fps=30;
               for(let frame=0;frame<=Math.ceil(clip.duration*fps);frame++) {
@@ -190,7 +192,7 @@ const launchBrowser = require('./browser-test-options.cjs');
       return {mapping, reports};
     });
     await page.screenshot({path:'/tmp/lara-mixamo-rest.png'});
-    const animations = ['anim_female_walk','anim_overhead_squat','anim_ymca_dance','anim_air_squat_bent_arms'];
+    const animations = ['idle','anim_female_walk','anim_overhead_squat','anim_ymca_dance','anim_air_squat_bent_arms'];
     for (const animation of animations) {
       for (const fraction of [.25, .5, .75]) {
         await page.evaluate((id, t) => window.laraRender(id,t), animation, fraction);

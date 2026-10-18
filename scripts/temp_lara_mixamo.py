@@ -99,7 +99,7 @@ def main():
         clavicle.roll = humerus.roll
         humerus.parent = clavicle
         humerus.use_connect = False
-        shoulders[side] = (clavicle.head.copy(), humerus.head.copy(), humerus.tail.copy())
+        shoulders[side] = (clavicle.head.copy(), humerus.head.copy())
     bpy.ops.object.mode_set(mode='OBJECT')
     for obj in meshes:
         old_group = obj.vertex_groups.get('root_hips')
@@ -117,6 +117,7 @@ def main():
                 'body_nude_torso', 'hair_classic', 'hair_fmv', 'handgun_left', 'handgun_right'}
     changed = {}
     max_discarded_weight = 0.
+    preserved_arm_vertices = 0
     for obj in meshes:
         for name in ('Spine1', 'LeftShoulder', 'RightShoulder'):
             obj.vertex_groups.new(name=BONES[name])
@@ -134,20 +135,19 @@ def main():
                 weights['spine_middle'] = lower_weight * t
             # Redistribute existing chest/humerus weights, without automatic rebind.
             side = 'Left' if point.x > arm.data.bones['head_neck_lower'].head_local.x else 'Right'
-            inner, socket, elbow = shoulders[side]
-            clavicle, humerus, chest = BONES[side + 'Shoulder'], BONES[side + 'Arm'], 'spine_upper'
+            inner, socket = shoulders[side]
+            clavicle, chest = BONES[side + 'Shoulder'], 'spine_upper'
             lateral = smoothstep((point.x - inner.x) / (socket.x - inner.x))
             vertical = smoothstep((point.z - arm.data.bones[chest].head_local.z) /
                                   (socket.z - arm.data.bones[chest].head_local.z))
             chest_transfer = weights.get(chest, 0.) * lateral * vertical
-            direction = elbow - socket
-            # Fade deltoid influence out at the midpoint of the upper arm.
-            along = (point - socket).dot(direction) / direction.length_squared
-            arm_transfer = weights.get(humerus, 0.) * (1. - smoothstep(along * 2.))
-            if chest_transfer or arm_transfer:
+            # The humerus already inherits the clavicle through its parent.
+            # Preserve its authored shoulder-cap weights: moving those weights
+            # to the clavicle freezes the cap when the arm lowers and uncovers
+            # the axilla. Only redistribute the original chest contribution.
+            if chest_transfer:
                 weights[chest] = weights.get(chest, 0.) - chest_transfer
-                weights[humerus] = weights.get(humerus, 0.) - arm_transfer
-                weights[clavicle] = chest_transfer + arm_transfer
+                weights[clavicle] = chest_transfer
             # Three.js GLTFLoader uses JOINTS_0/WEIGHTS_0: four influences.
             ordered = sorted(weights.items(), key=lambda item: item[1], reverse=True)
             max_discarded_weight = max(max_discarded_weight, sum(w for _, w in ordered[4:]))
@@ -155,6 +155,11 @@ def main():
             total = sum(weights.values())
             assert total > 0 and math.isfinite(total), (obj.name, vertex.index, total)
             weights = {name: weight / total for name, weight in weights.items()}
+            # Authored rigid upper-arm regions must still rotate with the arm,
+            # rather than becoming rigid extensions of the clavicle.
+            if len(original) == 1 and next(iter(original)) in (BONES['LeftArm'], BONES['RightArm']):
+                assert weights.keys() == original.keys(), (obj.name, vertex.index, weights)
+                preserved_arm_vertices += 1
             if weights != original:
                 for group in obj.vertex_groups:
                     group.remove([vertex.index])
@@ -248,6 +253,7 @@ def main():
               'bone_naming': 'lara',
               'mesh_count': len(meshes), 'max_bind_position_error_m': rest_error,
               'max_discarded_weight_for_four_influences': max_discarded_weight,
+              'preserved_rigid_upper_arm_vertices': preserved_arm_vertices,
               'reweighted_vertices': changed, 'diagnostic_actions': list(tests),
               'note': 'Prototype: deformation review required; not the active application asset.'}
     (ROOT / 'docs/lara-mixamo-prototype-report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n')
@@ -341,8 +347,68 @@ def verify_saved():
     print('Verified saved prototype: 34 meshes, 92 bones, 8 actions, packed textures, source unchanged.', flush=True)
 
 
+def inspect_shoulders():
+    import bmesh
+    from collections import Counter
+    from mathutils.kdtree import KDTree
+    for filename in ('lara_perfect.blend', 'lara_mixamo_prototype.blend'):
+        bpy.ops.wm.open_mainfile(filepath=str(FOLDER / filename))
+        arm = bpy.data.objects['Armature']
+        chest_z = arm.data.bones['spine_upper'].head_local.z
+        print('FILE', filename, flush=True)
+        selected = {}
+        for name in ('arms', 'body_torso', 'body_nude_torso', 'shirt'):
+            obj = bpy.data.objects[name]
+            edges = Counter(tuple(sorted(edge)) for face in obj.data.polygons for edge in face.edge_keys)
+            boundary = {index for edge, count in edges.items() if count == 1 for index in edge}
+            vertices = [v for v in obj.data.vertices if v.co.z > chest_z and
+                        abs(v.co.x) < abs(arm.data.bones['arm_left_elbow'].head_local.x)]
+            selected[name] = vertices
+            print('MESH', name, 'boundary', len(boundary), 'shoulder vertices', len(vertices),
+                  'materials', [mat.name for mat in obj.data.materials], flush=True)
+            bm = bmesh.new()
+            bm.from_mesh(obj.data)
+            bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=1e-6)
+            remaining = {v for edge in bm.edges if edge.is_boundary for v in edge.verts}
+            while remaining:
+                component, queue = set(), [remaining.pop()]
+                while queue:
+                    vertex = queue.pop()
+                    component.add(vertex)
+                    for edge in vertex.link_edges:
+                        other = edge.other_vert(vertex)
+                        if edge.is_boundary and other in remaining:
+                            remaining.remove(other)
+                            queue.append(other)
+                coords = [v.co.copy() for v in component]
+                if max(p.z for p in coords) > chest_z:
+                    print('LOOP', name, len(coords), 'bounds',
+                          [(min(p[i] for p in coords), max(p[i] for p in coords)) for i in range(3)],
+                          'coords', [tuple(p) for p in sorted(coords, key=lambda p:(p.x,p.z,p.y))], flush=True)
+            bm.free()
+        for target_name in ('body_torso', 'body_nude_torso', 'shirt'):
+            target = bpy.data.objects[target_name]
+            arms = bpy.data.objects['arms']
+            tree = KDTree(len(selected[target_name]))
+            for vertex in selected[target_name]:
+                tree.insert(target.matrix_world @ vertex.co, vertex.index)
+            tree.balance()
+            pairs = []
+            for vertex in selected['arms']:
+                point, index, distance = tree.find(arms.matrix_world @ vertex.co)
+                if distance < 1e-5:
+                    def weights(obj, vertex):
+                        return {obj.vertex_groups[g.group].name:round(g.weight,6) for g in vertex.groups if g.weight > 0}
+                    pairs.append({'arms_index':vertex.index, 'target_index':index, 'distance':distance,
+                                  'point':list(point), 'arms':weights(arms, vertex),
+                                  'target':weights(target, target.data.vertices[index])})
+            print('COINCIDENT', target_name, len(pairs), json.dumps(pairs), flush=True)
+
+
 if __name__ == '__main__':
-    if '--inspect-glb' in sys.argv:
+    if '--inspect-shoulders' in sys.argv:
+        inspect_shoulders()
+    elif '--inspect-glb' in sys.argv:
         doc = glb_document()
         print('SKINS', len(doc.get('skins', [])), 'NODES', [node.get('name') for node in doc['nodes']], flush=True)
     elif '--verify' in sys.argv:
