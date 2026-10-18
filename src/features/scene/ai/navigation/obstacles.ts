@@ -41,5 +41,5 @@ export function getAgentProfile(id: string): AgentProfile {
 export function hasAgentProfile(id: string): boolean { return profiles.has(id); }
 export const navigationDebug = new Map<string, { path: Point[]; target: Point; error?: string }>();
 
-/** Requested clearance around furniture: half the agent body radius. */
-export function furnitureClearance(profile: AgentProfile): number { return profile.radius / 2; }
+/** Requested clearance around furniture: one quarter of the agent body radius. */
+export function furnitureClearance(profile: AgentProfile): number { return profile.radius / 4; }

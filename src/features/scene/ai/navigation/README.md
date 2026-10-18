@@ -25,7 +25,7 @@ englobe une partie du segment, en conservant les trous des contours.
 
 Le debug représente la préférence de confort de Native en bleu ; les contours
 orange conservent leur signification physique. La marge de collision autour des
-meubles vaut la moitié du rayon de chaque agent ; le debug orange foncé utilise
+meubles vaut le quart du rayon de chaque agent ; le debug orange foncé utilise
 la même marge. Validation ciblée :
 `node scripts/temp_navigation_comfort.cjs`.
 
