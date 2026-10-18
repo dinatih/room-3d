@@ -7,7 +7,7 @@ import { registerObstacle, unregisterObstacle } from './obstacles';
 import { convexHull, type Polygon } from './geometry';
 
 /** Capture the rendered item's local bounds once; follow its placement, including animated moves. */
-export function NavigationObstacle({ id, owner = id, compound = false, hull = false, solidOnly = false, children }: { id: string; owner?: string; compound?: boolean; hull?: boolean; solidOnly?: boolean; children: ReactNode }) {
+export function NavigationObstacle({ id, owner = id, compound = false, hull = false, solidOnly = false, footprint, children }: { id: string; owner?: string; compound?: boolean; hull?: boolean; solidOnly?: boolean; footprint?: Polygon; children: ReactNode }) {
   const enabled = useNavigationEnabled();
   const ref = useRef<THREE.Group>(null!);
   const bounds = useRef<THREE.Box3[]>([]);
@@ -71,9 +71,10 @@ export function NavigationObstacle({ id, owner = id, compound = false, hull = fa
       });
       footprints.current = [convexHull(points)];
     }
+    if (footprint) footprints.current = bounds.current.map(() => footprint);
     previousMatrix.current.makeScale(0, 0, 0);
     update();
-  }, [id, owner, compound, hull, solidOnly, children, enabled]);
+  }, [id, owner, compound, hull, solidOnly, footprint, children, enabled]);
   useFrame(update, -1);
   return <group ref={ref}>{children}</group>;
 }

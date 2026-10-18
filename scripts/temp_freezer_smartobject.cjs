@@ -1,3 +1,18 @@
+if(process.argv.includes('--chair-seat')){
+ (async()=>{
+ const {NodeIO}=await import('@gltf-transform/core'),{ALL_EXTENSIONS}=await import('@gltf-transform/extensions');
+ const io=new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'draco3d.decoder':await require('draco3d').createDecoderModule()});
+ const doc=await io.read('public/items/smorkull60503437/Smorkull60503437.glb'),a=doc.getRoot().listMeshes()[0].listPrimitives()[0].getAttribute('POSITION');
+ const primitive=doc.getRoot().listMeshes()[0].listPrimitives()[0],indices=primitive.getIndices(),parents=Array.from({length:a.getCount()},(_,i)=>i);
+ const find=i=>parents[i]===i?i:parents[i]=find(parents[i]);
+ for(let i=0;i<indices.getCount();i+=3){const root=find(indices.getScalar(i));for(let j=1;j<3;j++)parents[find(indices.getScalar(i+j))]=root;}
+ const groups=new Map();for(let i=0;i<a.getCount();i++){const root=find(i);if(!groups.has(root))groups.set(root,[]);groups.get(root).push(a.getElement(i,[]).map(v=>v*100));}
+ const seat=[];
+ for(const pts of groups.values()){const ys=pts.map(p=>p[1]);if(Math.min(...ys)>41&&Math.max(...ys)<52)seat.push(...pts);}
+ console.log('Seat bounds (cm)',[0,1,2].map(k=>[Math.min(...seat.map(p=>p[k])),Math.max(...seat.map(p=>p[k]))]));
+
+ })().then(()=>process.exit(0)).catch(e=>{console.error(e);process.exit(1);});
+}
 const launchBrowser = require('./browser-test-options.cjs');
 const puppeteer = require('puppeteer');
 const assert = require('node:assert/strict');
@@ -192,7 +207,7 @@ if(process.argv.includes('--inspect-fridge')){
  console.log(JSON.stringify(Object.fromEntries(glb.animations.map(a=>[a.name,Math.max(...a.samplers.map(s=>glb.accessors[s.input].max[0]))]))));
  process.exit(0);
 }
-if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-linen')&&!process.argv.includes('--build-storage'))(async () => {
+if(!process.argv.includes('--chair-seat')&&!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-linen')&&!process.argv.includes('--build-storage'))(async () => {
  const browser = await launchBrowser({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--disable-background-timer-throttling']});
  const errors=[];
  try {
