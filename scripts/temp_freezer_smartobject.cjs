@@ -1,6 +1,13 @@
 const launchBrowser = require('./browser-test-options.cjs');
 const puppeteer = require('puppeteer');
 const assert = require('node:assert/strict');
+if(process.argv.includes('--serve-tests')){
+ (async()=>{
+   const {createServer}=await import('vite');
+   const server=await createServer({server:{host:'127.0.0.1',port:5175,strictPort:true,hmr:false}});
+   await server.listen();server.printUrls();
+ })().catch(e=>{console.error(e);process.exitCode=1;});
+}
 if(process.argv.includes('--build-storage')){
  (async()=>{
    const fs=require('node:fs'),THREE=require('three');
@@ -14,6 +21,7 @@ if(process.argv.includes('--build-storage')){
      {id:'bath-box',source:'looking_through_files_low',time:3.6,height:60+33/2+.2,lean:0},
      {id:'bath-cabinet-west',source:'looking_through_files_low',time:3.6,height:54,lean:0,cabinet:'west'},
      {id:'bath-cabinet-east',source:'looking_through_files_low',time:3.6,height:54,lean:0,cabinet:'east'},
+     {id:'kitchen-upper',source:'looking_through_files_low',time:10.8,height:56,lean:0,lift:.2},
    ];
    // Geometry measurements from the actual DroneCell GLB (centred in X/Z).
    const bytes=fs.readFileSync('public/items/dröna/DRÖNA_high.glb');
@@ -82,7 +90,7 @@ if(process.argv.includes('--build-storage')){
            }else if(phase==='search'){
              // A single rummage, returning both hands to their grip before pushing.
              const envelope=Math.sin(Math.PI*t)**2;
-             target.y+=.1*envelope;target.z+=.07*envelope;target.x+=.04*Math.sin(2*Math.PI*t)*(index===0?1:-1);
+             target.y+=(item.lift??.1)*envelope;target.z+=.07*envelope;target.x+=.04*Math.sin(2*Math.PI*t)*(index===0?1:-1);
            }
            if(phase!=='search'&&t<.25){
              const reach=t/.25;target.lerpVectors(neutral[index],target,reach*reach*(3-2*reach));
@@ -183,7 +191,7 @@ if(process.argv.includes('--inspect-fridge')){
  console.log(JSON.stringify(Object.fromEntries(glb.animations.map(a=>[a.name,Math.max(...a.samplers.map(s=>glb.accessors[s.input].max[0]))]))));
  process.exit(0);
 }
-if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-linen')&&!process.argv.includes('--build-storage'))(async () => {
+if(!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-linen')&&!process.argv.includes('--build-storage'))(async () => {
  const browser = await launchBrowser({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--disable-background-timer-throttling']});
  const errors=[];
  try {
@@ -202,7 +210,8 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  const {KallaxNE}=await import('/src/features/scene/items/KallaxNE.tsx');
  const {KallaxSE}=await import('/src/features/scene/items/KallaxSE.tsx');
  const {KallaxNW}=await import('/src/features/scene/items/KallaxNW.tsx');
- const {KallaxCuisine}=await import('/src/features/scene/items/KallaxCuisine.tsx');
+ const {KallaxCuisine,KallaxCuisineDrona}=await import('/src/features/scene/items/KallaxCuisine.tsx');
+ const {KALLAX_CUISINE_POSITION,KALLAX_CUISINE_ROTATION}=await import('/src/features/scene/items/kallaxCuisineDrona.ts');
  const {BathroomCabinetWest,BathroomCabinetEast}=await import('/src/features/scene/items/BathroomCabinet.tsx');
  const {BATHROOM_STORAGE_ITEMS}=await import('/src/features/scene/items/bathroomStorage.ts');
  const {SlidingDrona}=await import('/src/features/scene/items/SlidingDrona.tsx');
@@ -221,10 +230,13 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
    h('group',{key:id,position:item.position,rotation:[0,item.rotationY,0]},item.kind==='cabinet'
      ?h(NavigationObstacle,{id},h(id.endsWith('west')?BathroomCabinetWest:BathroomCabinetEast,{item:{id},onSize:()=>{},...props}))
      :h(SlidingDrona,{objectId:id,label:item.label,actionId:item.action,duration:2.4,...props}))));}
+ function KitchenFixture(props){return h('group',{position:KALLAX_CUISINE_POSITION,rotation:[0,KALLAX_CUISINE_ROTATION,0]},
+   h(NavigationObstacle,{id:'kallax-cuisine'},h(KallaxCuisine,{item:{},onSize:()=>{},...props,noDrona:true})),
+   h(KallaxCuisineDrona,props));}
  function App(){const [props,setProps]=React.useState({isPreview:false,actionState:{}});f.setProps=setProps;
  return h(Canvas,{frameloop:'never',shadows:true,camera:{position:[125,80,-95],near:.1,far:1500,fov:45}},
  h(Capture),h('ambientLight',{intensity:.85}),h('directionalLight',{position:[100,120,-80],intensity:2}),
- h(React.Suspense,{fallback:null},props.bathroom?h(BathroomFixture,props):props.layout?h(React.Fragment,null,h(Beds),h(Desks),h(DeskDecor)):h(props.dronaKitchen?KallaxCuisine:props.dronaNW?KallaxNW:props.dronaSE?KallaxSE:props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
+ h(React.Suspense,{fallback:null},props.kitchenStorage?h(KitchenFixture,props):props.bathroom?h(BathroomFixture,props):props.layout?h(React.Fragment,null,h(Beds),h(Desks),h(DeskDecor)):h(props.dronaKitchen?KallaxCuisine:props.dronaNW?KallaxNW:props.dronaSE?KallaxSE:props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
  props.chair&&h(React.Suspense,{fallback:null},h('group',{ref:g=>{f.chair=g;},position:chairTransform.position,rotation:[0,chairTransform.rotationY,0]},h(Smorkull,{item:{},actionState:{},onSize:()=>{f.chairReady=true;}}))),
  h('mesh',{rotation:[-Math.PI/2,0,0],position:[0,-.1,0]},h('planeGeometry',{args:[400,400]}),h('meshStandardMaterial',{color:'#777777'})) );}
  createRoot(container).render(h(App));
@@ -235,30 +247,39 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  await page.waitForFunction(()=>window.fixture.scene?.getObjectByName('motor_casing'),{timeout:60000});
  await page.evaluate(()=>{const f=window.fixture;f.camera.lookAt(0,25,0);f.tick(.01);});
 
- if(process.argv.includes('--bathroom')){
-   await page.evaluate(()=>window.fixture.setProps({bathroom:true,isPreview:false,actionState:{}}));
-   await page.waitForFunction(()=>['bathroom-cabinet-west','bathroom-cabinet-east','drona-bathroom-west','drona-bathroom-east'].every(id=>window.fixture.scene.getObjectByName(id)),{timeout:60000});
-   const items=await page.evaluate(async()=>{
+ if(process.argv.includes('--bathroom')||process.argv.includes('--kitchen')){
+   const kitchen=process.argv.includes('--kitchen'),fixtureProps=kitchen?{kitchenStorage:true}:{bathroom:true};
+   await page.evaluate(props=>window.fixture.setProps({...props,isPreview:false,actionState:{}}),fixtureProps);
+   await page.waitForFunction(kitchen=>(kitchen?['drona-kitchen-diy','drona-kitchen-old-it','drona-kitchen-main','drona-kitchen-electronics']:['bathroom-cabinet-west','bathroom-cabinet-east','drona-bathroom-west','drona-bathroom-east']).every(id=>window.fixture.scene.getObjectByName(id)),{timeout:60000},kitchen);
+   const items=await page.evaluate(async(kitchen)=>{
      const f=window.fixture,{BATHROOM_STORAGE_ITEMS}=await import('/src/features/scene/items/bathroomStorage.ts');
      const {getSmartObject,buildSmartObjectInstructionSequence}=await import('/src/features/scene/ai/smartObjectRegistry.ts');
      const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
+     const {KITCHEN_DRONA_ITEMS,KALLAX_CUISINE_DRONA_POSITIONS}=await import('/src/features/scene/items/kallaxCuisineDrona.ts');
+     const storageItems=kitchen?Object.fromEntries(Object.entries(KITCHEN_DRONA_ITEMS).map(([id,item])=>[id,{...item,kind:'box'}])):BATHROOM_STORAGE_ITEMS;
      if(getSmartObject('drona-west')||getSmartObject('drona-east'))throw new Error('Legacy storage objects still registered');
      f.readBath=id=>{
-       const item=BATHROOM_STORAGE_ITEMS[id],node=f.scene.getObjectByName(id);let hover;
-       node.traverse(n=>{if(n.userData.hoverAction)hover=n.userData.hoverAction;});
+       const item=storageItems[id],node=f.scene.getObjectByName(id);let hover=node.userData.hoverAction;
+       node.traverse(n=>{if(!hover&&n.userData.hoverAction)hover=n.userData.hoverAction;});
        let extension;
        if(item.kind==='cabinet')extension=f.scene.getObjectByName(id+'-door').rotation.y/(id.endsWith('west')?-Math.PI/2:Math.PI/2);
        else{const mesh=node.getObjectByProperty('isMesh',true);mesh.geometry.computeBoundingBox();extension=-node.position.z/((mesh.geometry.boundingBox.max.z-mesh.geometry.boundingBox.min.z)*2/3);}
-       return {extension,actions:hover.actions};
+       const laser=node.getObjectByName('drona-kitchen-old-it-laser');
+       return {extension,actions:hover.actions,laserOffset:laser?node.worldToLocal(laser.getWorldPosition(new f.THREE.Vector3())).toArray():null};
      };
      f.tick(.1);
-     return Object.entries(BATHROOM_STORAGE_ITEMS).map(([id,item])=>{
+     return Object.entries(storageItems).map(([id,item])=>{
        const obj=getSmartObject(id),transform=getObjectTransform(id),node=f.scene.getObjectByName(id),world=node.getWorldPosition(new f.THREE.Vector3());
        if(world.distanceTo(new f.THREE.Vector3(...transform.position))>1e-6)throw new Error('Rendered storage differs from item transform');
        if(JSON.stringify(obj.position)!==JSON.stringify(transform.position))throw new Error('SmartObject must use itemId');
+       if(kitchen){
+         const expected={'drona-kitchen-diy':[-17.5,20.5,0],'drona-kitchen-old-it':[17.5,20.5,0],'drona-kitchen-main':[17.5,56,0],'drona-kitchen-electronics':[-17.5,56,0]}[id];
+         if(JSON.stringify(node.parent.position.toArray())!==JSON.stringify(expected))throw new Error('Wrong kitchen row/column: '+id);
+         if(JSON.stringify(expected)!==JSON.stringify(KALLAX_CUISINE_DRONA_POSITIONS[item.index]))throw new Error('Kitchen anchors drifted from cell geometry');
+       }
        return {id,...item,slot:obj.slots[0],sequence:buildSmartObjectInstructionSequence(id,'pick-item')};
      });
-   });
+   },kitchen);
    for(const item of items){
      assert.deepEqual((await page.evaluate(id=>window.fixture.readBath(id),item.id)).actions,[item.action,`smart-object:::${item.id}:::pick-item`]);
      for(const value of [true,false]){
@@ -266,12 +287,16 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
        await new Promise(r=>setTimeout(r,80));await page.evaluate(()=>window.fixture.tick(3));
        const states=await page.evaluate(ids=>ids.map(id=>window.fixture.readBath(id).extension),items.map(x=>x.id));
        for(let i=0;i<items.length;i++)assert(Math.abs(states[i]-(items[i].id===item.id&&value?1:0))<1e-6,'Actions must only move the selected storage');
+       if(item.id==='drona-kitchen-old-it'){
+         const read=await page.evaluate(id=>window.fixture.readBath(id),item.id);
+         for(let i=0;i<3;i++)assert(Math.abs(read.laserOffset[i]-[0,6.25-20.5,-5][i])<1e-6,'The laser must stay inside Old IT');
+       }
      }
-     await page.evaluate(action=>window.fixture.setProps({bathroom:true,isPreview:true,actionState:{[action]:true}}),item.action);
+     await page.evaluate(({props,action})=>window.fixture.setProps({...props,isPreview:true,actionState:{[action]:true}}),{props:fixtureProps,action:item.action});
      await new Promise(r=>setTimeout(r,80));await page.evaluate(()=>window.fixture.tick(3));
      assert.equal((await page.evaluate(id=>window.fixture.readBath(id),item.id)).extension,1);
      assert.deepEqual((await page.evaluate(id=>window.fixture.readBath(id),item.id)).actions,[item.action]);
-     await page.evaluate(()=>window.fixture.setProps({bathroom:true,isPreview:false,actionState:{}}));await new Promise(r=>setTimeout(r,80));await page.evaluate(()=>window.fixture.tick(3));
+     await page.evaluate(props=>window.fixture.setProps({...props,isPreview:false,actionState:{}}),fixtureProps);await new Promise(r=>setTimeout(r,80));await page.evaluate(()=>window.fixture.tick(3));
      const runs=await page.evaluate(async(item)=>{
        const f=window.fixture,{default:React}=await import('/node_modules/.vite/deps/react.js'),{default:ReactDOM}=await import('/node_modules/.vite/deps/react-dom_client.js');
        const {useAgentController}=await import('/src/features/scene/ai/useAgentController.ts');
@@ -332,7 +357,7 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
        const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
        const {KALLAX_NE_POSITION,KALLAX_NE_ROTATION}=await import('/src/features/scene/items/kallaxNeDrona.ts');
        const {KALLAX_NW_POSITION,KALLAX_NW_ROTATION}=await import('/src/features/scene/items/dronaStorage.ts');
-       const {KALLAX_CUISINE_POSITION}=await import('/src/features/scene/placements/KitchenPlacements.tsx');
+       const {KALLAX_CUISINE_POSITION}=await import('/src/features/scene/items/kallaxCuisineDrona.ts');
        const freezer=getObjectTransform('freezer');
        const position=shelf==='se'?freezer.position:shelf==='ne'?KALLAX_NE_POSITION:shelf==='nw'?KALLAX_NW_POSITION:KALLAX_CUISINE_POSITION;
        const ry=shelf==='se'?freezer.rotationY-Math.PI/2:shelf==='ne'?KALLAX_NE_ROTATION:KALLAX_NW_ROTATION;

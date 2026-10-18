@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { DroneCell } from './Drona';
@@ -9,9 +9,10 @@ import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { dronaPlayback } from './dronaPlayback';
 
 /** One independently controlled box, sliding along the Kallax's local front. */
-export function SlidingDrona({ objectId, label, actionId, duration, isPreview = false, actionState = {} }: {
+export function SlidingDrona({ objectId, label, actionId, duration, isPreview = false, actionState = {}, children }: {
   objectId: string; label: string; actionId: string; duration: number;
   isPreview?: boolean; actionState?: Record<string, any>;
+  children?: ReactNode;
 }) {
   const ref = useRef<THREE.Group>(null!);
   const progress = useRef(0);
@@ -42,6 +43,7 @@ export function SlidingDrona({ objectId, label, actionId, duration, isPreview = 
       ],
     } }}>
       <DroneCell />
+      {children}
     </group>
   );
 }

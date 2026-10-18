@@ -20,6 +20,7 @@ import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from './items/kallaxSeDrona
 import { DRONA_SPECIAL_ITEMS, KALLAX_NW_POSITION, KALLAX_NW_ROTATION } from './items/dronaStorage';
 import { positionState } from './positionState';
 import { BATHROOM_STORAGE_ITEMS } from './items/bathroomStorage';
+import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION, KALLAX_CUISINE_DRONA_POSITIONS } from './items/kallaxCuisineDrona';
 import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, SINGLE_BED_POSITIONS, FurnitureTransform } from './furniturePositions';
 
 export interface ObjectTransform {
@@ -51,6 +52,11 @@ const ITEM_TO_ANCHOR_KEY: Record<string, string> = {
  * Positions statiques des objets 3D fidèles à Placements.tsx
  */
 function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
+  const kitchenDrona = KITCHEN_DRONA_ITEMS[itemId as keyof typeof KITCHEN_DRONA_ITEMS];
+  if (kitchenDrona) {
+    const [x, y, z] = KALLAX_CUISINE_DRONA_POSITIONS[kitchenDrona.index], c = Math.cos(KALLAX_CUISINE_ROTATION), s = Math.sin(KALLAX_CUISINE_ROTATION);
+    return { position: [KALLAX_CUISINE_POSITION[0] + x * c + z * s, y, KALLAX_CUISINE_POSITION[2] - x * s + z * c], rotationY: KALLAX_CUISINE_ROTATION };
+  }
   const bathroomStorage = BATHROOM_STORAGE_ITEMS[itemId as keyof typeof BATHROOM_STORAGE_ITEMS];
   if (bathroomStorage) return { position: bathroomStorage.position, rotationY: bathroomStorage.rotationY };
   const storage = DRONA_SPECIAL_ITEMS[itemId as keyof typeof DRONA_SPECIAL_ITEMS];

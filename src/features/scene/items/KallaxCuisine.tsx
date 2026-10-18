@@ -12,7 +12,11 @@ import { Kallax2x1 }     from './Kallax2x1';
 import { Kallax2x2 }     from './Kallax2x2';
 import { Kallax2x2Spec } from './Kallax2x2Spec';
 import { NinjaSP101 } from './NinjaSP101';
-import { DroneCell, DF } from './Drona';
+import { DroneCell } from './Drona';
+import { SlidingDrona } from './SlidingDrona';
+import { LaserDistanceMaster } from './LaserDistanceMaster';
+import { KALLAX_CUISINE_DRONA_POSITIONS, KITCHEN_DRONA_ITEMS } from './kallaxCuisineDrona';
+import { SPECIAL_DRONA_SLIDE_DURATION } from './dronaStorage';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -28,7 +32,7 @@ function k(id: string) { return { id } as any; }
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxCuisineDrona() {
+export function KallaxCuisineDrona({ isPreview = false, actionState = {} }: { isPreview?: boolean; actionState?: Record<string, any> } = {}) {
   const dronaMatrices = useMemo(() => {
     const matrices: THREE.Matrix4[] = [];
     const p = new THREE.Vector3();
@@ -36,18 +40,8 @@ export function KallaxCuisineDrona() {
     const s = new THREE.Vector3(1, 1, 1);
     q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0);
     
-    // 4 dans le 2×2 bas (cases [0,0], [0,1], [1,0], [1,1])
-    for (const x of [-17.5, 17.5]) {
-      for (const y of [-20.5, -56]) {
-        p.set(x, h2 + y, 0);
-        matrices.push(new THREE.Matrix4().compose(p, q, s));
-      }
-    }
-    
-    // 2 sur le dessus (2×1 haut Y ∈ [2×h2+h1, 2×h2+h1+DF])
-    const topY = 2 * h2 + h1 + DF / 2 + 0.2;
-    for (const x of [-17.5, 17.5]) {
-      p.set(x, topY, 0);
+    for (const [x, y, z] of KALLAX_CUISINE_DRONA_POSITIONS) {
+      p.set(x, y, z);
       matrices.push(new THREE.Matrix4().compose(p, q, s));
     }
     return matrices;
@@ -66,18 +60,25 @@ export function KallaxCuisineDrona() {
   return (
     <>
       {/* DRONA Instances individuelles pour animation (6 Drona : 4 dans le 2x2 bas + 2 sur le dessus) */}
-      {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
-          <DroneCell />
-        </group>
-      ))}
+      {dronaTransforms.map((t, i) => {
+        const target = Object.entries(KITCHEN_DRONA_ITEMS).find(([, item]) => item.index === i);
+        return (
+          <group key={i} name={`drona-kitchen-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+            {target ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState}>
+              {target[0] === 'drona-kitchen-old-it' && <group name="drona-kitchen-old-it-laser" position={[0, 6.25 - t.p.y, -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Télémètre Laserliner' }}>
+                <LaserDistanceMaster item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+              </group>}
+            </SlidingDrona> : <DroneCell />}
+          </group>
+        );
+      })}
     </>
   );
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxCuisine({ onSize, actionState, noDrona }: SceneItemProps & { noDrona?: boolean }) {
+export function KallaxCuisine({ onSize, actionState, noDrona, isPreview = false }: SceneItemProps & { noDrona?: boolean; isPreview?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
@@ -100,7 +101,7 @@ export function KallaxCuisine({ onSize, actionState, noDrona }: SceneItemProps &
         <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       
-      {!noDrona && <KallaxCuisineDrona />}
+      {!noDrona && <KallaxCuisineDrona isPreview={isPreview} actionState={actionState} />}
 
       {/* Mini four Ninja SP101EU — dans la case basse du 2×2 spec */}
       <group position={[-8, PIZZA_Y, 0]} rotation-y={Math.PI} userData={{ animUnit: true }}>

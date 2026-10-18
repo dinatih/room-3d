@@ -24,6 +24,7 @@ import { DRONA_SE_ITEMS } from '../items/kallaxSeDrona';
 import { dronaPlayback } from '../items/dronaPlayback';
 import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
+import { KITCHEN_DRONA_ITEMS } from '../items/kallaxCuisineDrona';
 import { doorCollisionState } from '../doorObstacles';
 import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
 
@@ -216,7 +217,7 @@ export function useAgentController(
       if (claimedSlotRef.current.objectId === 'drona-ne-catchall') {
         useSceneStore.getState().triggerAction('drona-ne-catchall-slide', false);
       }
-      const drona = DRONA_SE_ITEMS[claimedSlotRef.current.objectId] ?? DRONA_SPECIAL_ITEMS[claimedSlotRef.current.objectId as keyof typeof DRONA_SPECIAL_ITEMS] ?? BATHROOM_STORAGE_ITEMS[claimedSlotRef.current.objectId as keyof typeof BATHROOM_STORAGE_ITEMS];
+      const drona = DRONA_SE_ITEMS[claimedSlotRef.current.objectId] ?? DRONA_SPECIAL_ITEMS[claimedSlotRef.current.objectId as keyof typeof DRONA_SPECIAL_ITEMS] ?? BATHROOM_STORAGE_ITEMS[claimedSlotRef.current.objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[claimedSlotRef.current.objectId as keyof typeof KITCHEN_DRONA_ITEMS];
       if (drona) {
         dronaPlayback.delete(drona.action);
         useSceneStore.getState().triggerAction(drona.action, false);

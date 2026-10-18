@@ -16,6 +16,7 @@ import { DRONA_SPECIAL_ITEMS, DRONA_PULL_RANGE, DRONA_PUSH_RANGE } from '../item
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
+import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
@@ -296,6 +297,15 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     ]
   },
 
+  ...Object.fromEntries(Object.entries(KITCHEN_DRONA_ITEMS).map(([id, item]) => [id, {
+    id, name: item.label, itemId: id, category: 'storage' as const,
+    slots: [{
+      slotId: 'pick-item', name: item.interaction, relative: true, arrival: 'approach' as const,
+      navigationOwner: 'kallax-cuisine',
+      offset: [0, -KALLAX_CUISINE_DRONA_POSITIONS[item.index][1], -50] as [number, number, number],
+      rotY: 0, animation: `${item.animationPrefix}-search`,
+    }],
+  }])),
   ...Object.fromEntries(Object.entries(BATHROOM_STORAGE_ITEMS).map(([id, item]) => [id, {
     id, name: item.label, itemId: id, category: 'storage' as const,
     slots: [{
@@ -1093,15 +1103,15 @@ export function buildSmartObjectInstructionSequence(
     ];
   }
 
-  const bathroomStorage = BATHROOM_STORAGE_ITEMS[objectId as keyof typeof BATHROOM_STORAGE_ITEMS];
-  if (bathroomStorage) {
+  const storageInteraction = BATHROOM_STORAGE_ITEMS[objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[objectId as keyof typeof KITCHEN_DRONA_ITEMS];
+  if (storageInteraction) {
     const gesture = (phase: 'pull' | 'push'): AgentInstruction => ({
       type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
-      animation: `${bathroomStorage.animationPrefix}-${phase}`,
-      duration: getAnimationDef(`${bathroomStorage.animationPrefix}-${phase}`)!.duration,
+      animation: `${storageInteraction.animationPrefix}-${phase}`,
+      duration: getAnimationDef(`${storageInteraction.animationPrefix}-${phase}`)!.duration,
       rotY: slot.rotY, waitForAnimation: true,
-      dronaMotion: { action: bathroomStorage.action, from: phase === 'pull' ? 0 : 1, to: phase === 'pull' ? 1 : 0, range: phase === 'pull' ? DRONA_PULL_RANGE : DRONA_PUSH_RANGE },
-      triggerEventKey: bathroomStorage.action, triggerEventValue: phase === 'pull',
+      dronaMotion: { action: storageInteraction.action, from: phase === 'pull' ? 0 : 1, to: phase === 'pull' ? 1 : 0, range: phase === 'pull' ? DRONA_PULL_RANGE : DRONA_PUSH_RANGE },
+      triggerEventKey: storageInteraction.action, triggerEventValue: phase === 'pull',
     });
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
