@@ -15,6 +15,8 @@ import { CorridorEquipment, CorridorFurniture, CorridorFurnishings } from './pla
 import { LivingRoomFurniture, LivingRoomFurnishings, LivingRoomDecor } from './placements/LivingRoomPlacements';
 import { GardenFurniture, GardenFurnishings, GardenDecor, GardenAnimals } from './placements/GardenPlacements';
 import { RobotPlacements } from './placements/RobotPlacements';
+import { BuildingPipes } from './items/BuildingPipes';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import { useSceneStore } from './store/useSceneStore';
 
 // Layer 1 — Équipements sanitaires, cuisine et technique
@@ -24,6 +26,9 @@ export function Equipment() {
       <BathroomEquipment />
       <KitchenEquipment />
       <CorridorEquipment />
+      <group position={[14, 0, 440]}>
+        <BuildingPipes item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
     </>
   );
 }
