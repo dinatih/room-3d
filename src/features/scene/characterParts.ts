@@ -34,6 +34,8 @@ export interface CharacterParts {
   feetClothed: CharacterMeshPart[];
   gloves: CharacterMeshPart[];
   hands: CharacterMeshPart[];
+  bikiniTop: CharacterMeshPart[];
+  bikiniBottom: CharacterMeshPart[];
   torsoClothed: CharacterMeshPart[];
   torsoNude: CharacterMeshPart[];
   legsClothed: CharacterMeshPart[];
@@ -130,6 +132,8 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
   const feetClothed: CharacterMeshPart[] = [];
   const gloves: CharacterMeshPart[] = [];
   const hands: CharacterMeshPart[] = [];
+  const bikiniTop: CharacterMeshPart[] = [];
+  const bikiniBottom: CharacterMeshPart[] = [];
   const torsoClothed: CharacterMeshPart[] = [];
   const torsoNude: CharacterMeshPart[] = [];
   const legsClothed: CharacterMeshPart[] = [];
@@ -236,7 +240,11 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
       }
 
       // Clothing / Body classification
-      if (name === 'boots' || name.includes('boots')) {
+      if(name.startsWith('bikini_top')) {
+        bikiniTop.push({ mesh });
+      } else if(name.startsWith('bikini_bottom')) {
+        bikiniBottom.push({ mesh });
+      } else if (name === 'boots' || name.includes('boots')) {
         boots.push({ mesh });
       } else if (name.startsWith('body_bare_feet_clothed')) {
         feetClothed.push({ mesh });
@@ -298,6 +306,8 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
     feetClothed,
     gloves,
     hands,
+    bikiniTop,
+    bikiniBottom,
     torsoClothed,
     torsoNude,
     legsClothed,
@@ -335,6 +345,7 @@ export function setPartVisibility(partList: CharacterMeshPart[], visible: boolea
 }
 
 export interface ClothingAndAccessoriesOptions {
+  laraBikini?: boolean;
   laraNude: boolean;
   laraTopOff: boolean;
   laraBottomOff: boolean;
@@ -352,8 +363,9 @@ export function applyPistolVisibility(parts: CharacterParts, opts: Pick<Clothing
 }
 
 export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opts: ClothingAndAccessoriesOptions) {
-  const isTopNude = opts.laraNude || opts.laraTopOff;
-  const isBottomNude = opts.laraNude || opts.laraBottomOff;
+  const bikini=!!opts.laraBikini;
+  const isTopNude = bikini || opts.laraNude || opts.laraTopOff;
+  const isBottomNude = bikini || opts.laraNude || opts.laraBottomOff;
 
   // Boots / Feet / Gloves / Hands
   setPartVisibility(parts.boots, opts.laraShoes);
@@ -361,6 +373,9 @@ export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opt
   setPartVisibility(parts.feetClothed, !opts.laraShoes && !isBottomNude);
   setPartVisibility(parts.gloves, true);
   setPartVisibility(parts.hands, false);
+
+  setPartVisibility(parts.bikiniTop,bikini && !opts.laraNude && !opts.laraTopOff);
+  setPartVisibility(parts.bikiniBottom,bikini && !opts.laraNude && !opts.laraBottomOff);
 
   // Torso / Legs
   setPartVisibility(parts.torsoClothed, !isTopNude);

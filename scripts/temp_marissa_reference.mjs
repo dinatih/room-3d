@@ -1,4 +1,3 @@
-import { writeFileSync } from 'node:fs';
 import launchBrowser from './browser-test-options.cjs';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -13,7 +12,7 @@ const before = await io.readBinary(execFileSync('git', ['show', 'HEAD:public/cha
 const after = await io.read('public/characters/lara/lara_native.glb');
 const oldNodes = before.getRoot().listNodes();
 const newNodes = after.getRoot().listNodes();
-assert.deepEqual(newNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort(), oldNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort());
+assert.deepEqual(newNodes.filter(n=>!n.getName().startsWith('bikini_')&&!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort(), oldNodes.filter(n=>!n.getName().startsWith('bikini_')&&!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort());
 for (const old of oldNodes) {
   const node = newNodes.find(n => n.getName() === old.getName() && Boolean(n.getMesh()) === Boolean(old.getMesh()));
   for (const method of ['getTranslation', 'getRotation', 'getScale']) {
@@ -82,6 +81,13 @@ try {
     const {DRACOLoader}=await import('/node_modules/three/examples/jsm/loaders/DRACOLoader.js');
     const draco=new DRACOLoader().setDecoderPath('/draco/');
     const loader=new GLTFLoader().setDRACOLoader(draco);
+    const {clone}=await import('/node_modules/three/examples/jsm/utils/SkeletonUtils.js');
+    const shared=await loader.loadAsync('/characters/lara/lara_native.glb');
+    const native=clone(shared.scene),marissa=clone(shared.scene);
+    variants.applyLaraVariantStyles(marissa,'marissa');
+    native.traverse(m=>{if(m.isMesh)for(const mat of Array.isArray(m.material)?m.material:[m.material]){
+      if(mat.customProgramCacheKey()==='marissa-reference-ink')throw Error(`Marissa tattoo leaked to native: ${m.name}`);
+    }});
     const entries=[];
     for (const style of ['native','marissa','delphina','sara']) {
       const {scene}=await loader.loadAsync('/characters/lara/lara_native.glb');
@@ -99,8 +105,8 @@ try {
         variants.applyLaraVariantStyles(reference,style);
         for(const name of ['body_legs','body_legs_barefoot','body_nude_legs001','body_nude_feet001']) {
           const actual=scene.getObjectByName(name),expected=reference.getObjectByName(name);
-          const a=actual.geometry.getAttribute('marissaInkPosition').array;
-          const b=expected.geometry.getAttribute('marissaInkPosition').array;
+          const a=actual.geometry.getAttribute('marissaSurfaceInkPosition').array;
+          const b=expected.geometry.getAttribute('marissaSurfaceInkPosition').array;
           if(a.some((v,i)=>Math.abs(v-b[i])>1e-4))throw Error(`Marissa ink coordinates changed after recentring: ${name}`);
           if(actual.material.customProgramCacheKey()!=='marissa-reference-ink')throw Error(`Missing ink shader: ${name}`);
         }
@@ -129,6 +135,18 @@ try {
         }
         if(parts.legsClothed.some(({mesh})=>mesh.visible!==(mesh.name==='body_legs'?!laraNude&&!laraBottomOff&&laraShoes:!laraNude&&!laraBottomOff))) throw Error(`${style}: clothed legs visibility`);
       }
+    }
+    for(const {style,scene} of entries){
+      const parts=extractCharacterParts(scene);
+      if(!parts.bikiniTop.length||!parts.bikiniBottom.length)throw Error(`Missing bikini: ${style}`);
+      const options={laraBikini:true,laraNude:false,laraTopOff:false,laraBottomOff:false,laraShoes:false,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}};
+      applyClothingAndAccessoriesVisibility(parts,options);
+      if(parts.bikiniTop.some(p=>!p.mesh.visible)||parts.bikiniBottom.some(p=>!p.mesh.visible))throw Error('Bikini hidden');
+      if(parts.torsoClothed.some(p=>p.mesh.visible)||parts.legsClothed.some(p=>p.mesh.visible))throw Error('Clothes overlap bikini');
+      applyClothingAndAccessoriesVisibility(parts,{...options,laraTopOff:true});
+      if(parts.bikiniTop.some(p=>p.mesh.visible)||parts.bikiniBottom.some(p=>!p.mesh.visible))throw Error('Bikini top-off failed');
+      applyClothingAndAccessoriesVisibility(parts,{...options,laraNude:true});
+      if([...parts.bikiniTop,...parts.bikiniBottom].some(p=>p.mesh.visible))throw Error('Bikini remained in nude mode');
     }
     window.laraChecks={entries,THREE,variants,loader};
     window.laraChanges=()=>entries.flatMap(({style,materials})=>materials.map(({mesh,mat,base})=>{
@@ -170,19 +188,27 @@ try {
     const view=new THREE.Scene();view.add(scene,new THREE.HemisphereLight(0xffffff,0x777777,3));
     const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(800,1100);renderer.setClearColor(0xdddddd);document.body.replaceChildren(renderer.domElement);
     const camera=new THREE.OrthographicCamera(-.65,.65,1.8,0,.01,10);camera.position.set(0,0,4);camera.lookAt(0,0,0);renderer.render(view,camera);
+    window.marissaView=async(angle,bikini)=>{
+      const {extractCharacterParts,applyClothingAndAccessoriesVisibility}=await import('/src/features/scene/characterParts.ts');
+      const parts=extractCharacterParts(scene);
+      applyClothingAndAccessoriesVisibility(parts,{laraBikini:bikini,laraNude:!bikini,laraTopOff:false,laraBottomOff:false,laraShoes:false,showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
+      camera.position.set(Math.sin(angle)*4,0,Math.cos(angle)*4);camera.lookAt(0,0,0);renderer.render(view,camera);
+    };
   });
   console.log(await page.evaluate(()=>{const {entries,THREE}=window.laraChecks;const s=entries.find(e=>e.style==='marissa').scene;return ['face','body_legs','body_nude_torso001','body_nude_feet001'].map(name=>{const m=s.getObjectByName(name);const b=new THREE.Box3().setFromObject(m);return [name,b.min.toArray(),b.max.toArray()];});}));
   await page.setViewport({width:800,height:1100});
   await page.screenshot({path:'/tmp/marissa-tattoos.png'});
-  const stamp=await page.evaluate(async()=>{
-    const image=new Image();image.src='/src/features/scene/assets/marissa-skull-roses.png';await image.decode();
-    const c=document.createElement('canvas');c.width=192;c.height=256;
-    c.getContext('2d').drawImage(image,0,0,192,256);return c.toDataURL('image/png').split(',')[1];
-  });
-  writeFileSync('src/features/scene/assets/marissa-skull-roses.png',Buffer.from(stamp,'base64'));
+  await page.evaluate(()=>window.marissaView(.9,false));
+  await page.screenshot({path:'/tmp/marissa-tattoos-side.png'});
+  await page.evaluate(()=>window.marissaView(0,true));
+  await page.screenshot({path:'/tmp/marissa-bikini-front.png'});
+  await page.evaluate(()=>window.marissaView(.9,true));
+  await page.screenshot({path:'/tmp/marissa-bikini-side.png'});
+  await page.evaluate(()=>window.marissaView(Math.PI,true));
+  await page.screenshot({path:'/tmp/marissa-bikini-back.png'});
   await page.evaluate(()=>{
     const {entries,THREE}=window.laraChecks;const entry=entries.find(e=>e.style==='marissa');
-    const ink=entry.scene.getObjectByName('body_legs').geometry.getAttribute('marissaInkPosition');
+    const ink=entry.scene.getObjectByName('body_legs').geometry.getAttribute('marissaSurfaceInkPosition');
     const before=Array.from(ink.array);
     entry.scene.getObjectByName('leg_left_thigh').rotation.x=-Math.PI/3;
     entry.scene.updateMatrixWorld(true);

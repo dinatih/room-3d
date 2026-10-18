@@ -85,12 +85,14 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       if (node.userData?.isCustomHair || node.userData?.isPendant || node.userData?.isNecklaceCord) return; // Preserve hair and silver jewelry
       const mesh = node as THREE.Mesh;
       const meshName = mesh.name.toLowerCase();
+      if(meshName.startsWith('bikini_'))return;
+      const isMarissaBareFeet = isMarissa && meshName.startsWith('body_bare_feet');
       const isNudeLimb = meshName.startsWith('body_nude_legs') || meshName.startsWith('body_nude_feet');
       const isSaraNudeTorso = isSara && meshName.startsWith('body_nude_torso');
       const isMarissaNudeTorso = isMarissa && (meshName.startsWith('body_nude_torso') || meshName.startsWith('body_nude_panties'));
       const isDelphinaNudeTorso = isDelphina && meshName.startsWith('body_nude_torso');
       if (meshName.includes('body_nude') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) {
-        if (!isMarissaNudeTorso && !isSaraNudeTorso && !isDelphinaNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
+        if (!isMarissaBareFeet && !isMarissaNudeTorso && !isSaraNudeTorso && !isDelphinaNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
       }
 
       // Variants need independent materials, but this function can run again
@@ -211,8 +213,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
              }
           } else if (isMarissa) {
               mat.map = null;
-              mat.color.setHex(0x9e7344); // Châtain clair
-              mat.emissive.setHex(0x4a321a);
+              mat.color.setHex(0x795b42); // Châtain clair doré, reflets miel
+              mat.emissive.setHex(0x000000);
               mat.emissiveIntensity = 0.05;
            }
         }

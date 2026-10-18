@@ -90,22 +90,36 @@ export function applyMarissaReferenceTattoos(model: THREE.Object3D) {
     if(!uv)throw new Error(`Missing Marissa UVs: ${mesh.name}`);
     const transform=new THREE.Matrix4().multiplyMatrices(inverse,mesh.matrixWorld);
     const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];
-    if(!geometry.hasAttribute('marissaInkPosition')) {
-      const coordinates=new Float32Array(pos.count*3);
+    if(!geometry.hasAttribute('marissaSurfaceInkPosition')) {
+      const coordinates=new Float32Array(pos.count*4);
       for(let i=0;i<pos.count;i++){
         const point=mesh.getVertexPosition(i,new THREE.Vector3()).applyMatrix4(transform);
-        coordinates.set([point.x*scale,(point.y-bounds.min.y)*scale,point.z],i*3);
+        const height=(point.y-bounds.min.y)*scale;
+        let x=point.x*scale, front=point.z*scale;
+        // Unwrap arc length around the anatomical axis, so frontal ink does
+        // not become an infinitely stretched stripe at a tangent to the skin.
+        if(height>55 && height<95 || height>100){
+          const bone=model.getObjectByName(height<95
+            ? (point.x>0 ? 'leg_left_thigh' : 'leg_right_thigh') : 'spine_lower');
+          if(!bone)throw new Error('Missing Marissa tattoo projection axis');
+          const axis=bone.getWorldPosition(new THREE.Vector3()).applyMatrix4(inverse);
+          const dx=(point.x-axis.x)*scale,dz=(point.z-axis.z)*scale;
+          x=axis.x*scale+Math.atan2(dx,dz)*Math.hypot(dx,dz);
+          front=dz;
+        }
+        coordinates.set([x,height,front,point.x*scale],i*4);
       }
-      geometry.setAttribute('marissaInkPosition',new THREE.BufferAttribute(coordinates,3));
+      geometry.setAttribute('marissaSurfaceInkPosition',new THREE.BufferAttribute(coordinates,4));
     }
     if(!designTexture)designTexture=new THREE.CanvasTexture(artwork);
     for(const material of mats){
       const mat=material as THREE.MeshStandardMaterial;
+      if(!mat.userData.__ownedCharacterMaterial)throw new Error(`Unowned Marissa skin material: ${mesh.name}`);
       mat.onBeforeCompile=shader=>{
         shader.uniforms.marissaInk={value:designTexture};
-        shader.vertexShader='attribute vec3 marissaInkPosition; varying vec3 vMarissaInk;\n'+shader.vertexShader;
-        shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMarissaInk=marissaInkPosition;');
-        shader.fragmentShader='uniform sampler2D marissaInk; varying vec3 vMarissaInk;\n'+shader.fragmentShader;
+        shader.vertexShader='attribute vec4 marissaSurfaceInkPosition; varying vec4 vMarissaInk;\n'+shader.vertexShader;
+        shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMarissaInk=marissaSurfaceInkPosition;');
+        shader.fragmentShader='uniform sampler2D marissaInk; varying vec4 vMarissaInk;\n'+shader.fragmentShader;
         shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
           float ink=0.0;
           if(vMarissaInk.z>0.0){
@@ -113,7 +127,7 @@ export function applyMarissaReferenceTattoos(model: THREE.Object3D) {
             ink=texture2D(marissaInk,inkUV).a;
           }
           // Full circumference for the right thigh band and ankle chains.
-          if((vMarissaInk.x<0.0&&vMarissaInk.y>61.0&&vMarissaInk.y<65.0)||
+          if((vMarissaInk.w<0.0&&vMarissaInk.y>61.0&&vMarissaInk.y<65.0)||
              (vMarissaInk.y>9.0&&vMarissaInk.y<10.0))ink=0.7;
           diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.01298),ink);
         `);

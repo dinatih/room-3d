@@ -147,6 +147,7 @@ export interface LayerState {
   animals:      boolean;
   accessories:  boolean;
   laraPistols:  boolean;
+  laraBikini?: boolean;
   laraNude?:    boolean;
   laraTopOff?:  boolean;
   laraBottomOff?: boolean;
