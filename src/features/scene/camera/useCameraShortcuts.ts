@@ -353,7 +353,7 @@ export function useCameraShortcuts({
         return;
       }
 
-      if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'f' || e.key === 'F' || e.key === 'v' || e.key === 'V')) {
+      if (!e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'f' || e.key === 'F' || e.key === 'v' || e.key === 'V')) {
         if (e.repeat) return;
         const curX = cameraState.characterX ?? followPos.current.x;
         const curZ = cameraState.characterZ ?? followPos.current.z;

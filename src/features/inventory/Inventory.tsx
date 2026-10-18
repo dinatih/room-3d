@@ -505,6 +505,11 @@ export function Inventory({
     if (visible) searchInputRef.current?.focus();
   }, [visible]);
 
+  useEffect(() => {
+    const searchInput = searchInputRef.current;
+    if (activeCat === 'animations' && document.activeElement === searchInput) searchInput?.blur();
+  }, [activeCat]);
+
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
