@@ -8,8 +8,7 @@ import type { Item } from '@shared/types';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 
 import { WaterHeater, WH_W, WH_D, WH_H } from '../items/WaterHeater';
-import { Toilet } from '../items/Toilet';
-import { TOILET_D } from '../items/toiletDimensions';
+import { Toilet, TOILET_D } from '../items/Toilet';
 import { Shower, SHOWER_W, SHOWER_D } from '../items/Shower';
 import { Havback49514017, HAVBACK_D } from '../items/Havback49514017';
 import { BathroomCabinetWest, BathroomCabinetEast } from '../items/BathroomCabinet';

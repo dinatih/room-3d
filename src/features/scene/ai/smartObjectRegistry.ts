@@ -5,7 +5,7 @@ import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimatio
 import { HUMAN_BODY_RADIUS } from '../doorObstacles';
 import { BATH_WEST_WALL, ROOM_D } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
-import { TOILET_BOWL_CENTER } from '../items/toiletDimensions';
+import { TOILET_BOWL_CENTER } from '../items/Toilet';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 import { positionState } from '../positionState';
 

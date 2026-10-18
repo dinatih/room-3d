@@ -13,7 +13,7 @@ import {
 } from './wallData';
 import { SDB_CLOSET_X, SDB_CLOSET_Z } from './items/SdbCloset';
 import { SHOWER_W, SHOWER_D } from './items/Shower';
-import { TOILET_D } from './items/toiletDimensions';
+import { TOILET_D } from './items/Toilet';
 import { positionState } from './positionState';
 import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, FurnitureTransform } from './furniturePositions';
 

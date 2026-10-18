@@ -12,9 +12,15 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { TOILET_HINGE_ANGLE, TOILET_HINGE_SPEED, TOILET_HINGE_TOLERANCE } from './toiletAnimation';
-import { TOILET_BOWL_CENTER } from './toiletDimensions';
 
 const GLB = 'items/president-toilet/president-toilet.glb';
+
+export const TOILET_W = 40;
+export const TOILET_D = 70;
+export const TOILET_H = 80;
+
+/** Centre de la cuvette dans le modèle recentré, également utilisé par l'eau. */
+export const TOILET_BOWL_CENTER: [number, number, number] = [0, 17.5, 10];
 
 const waterGeo = new THREE.CircleGeometry(1, 32);
 const waterMat = new THREE.MeshStandardMaterial({

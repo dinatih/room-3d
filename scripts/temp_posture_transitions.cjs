@@ -148,8 +148,7 @@ window.runLiveCheck = async (kind='sofa') => {
   const {ArmrestSofa} = await import('/src/features/scene/items/ArmrestSofa.tsx');
   const {NavigationObstacle} = await import('/src/features/scene/ai/navigation/NavigationObstacle.tsx');
   const {AUTONOMOUS_NPC_IDS} = await import('/src/features/scene/characterConfig.ts');
-  const {Toilet} = await import('/src/features/scene/items/Toilet.tsx');
-  const {TOILET_D} = await import('/src/features/scene/items/toiletDimensions.ts');
+  const {Toilet,TOILET_D} = await import('/src/features/scene/items/Toilet.tsx');
   const {BATH_WEST_WALL,BATH_NORTH_WALL} = await import('/src/features/scene/wallData.ts');
   AUTONOMOUS_NPC_IDS.delete('gloria');
   root.unmount();
