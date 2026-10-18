@@ -732,7 +732,7 @@ export function InventoryPreview({
   const [selectedBoneName, setSelectedBoneName] = useState<string | null>(null);
   const [skeletonGroups, setSkeletonGroups] = useState<SkeletonGroup[]>([]);
   const [showBoneTree, setShowBoneTree] = useState<boolean>(false);
-  const [simulateMotion, setSimulateMotion] = useState<boolean>(false);
+  const [simulateMotion, setSimulateMotion] = useState<boolean>(true);
   const [globalHaircut, setGlobalHaircut] = useState<string>('original');
   const [globalHairColor, setGlobalHairColor] = useState<string>('rose');
   const lastWigRef = useRef<string>('hair_101');

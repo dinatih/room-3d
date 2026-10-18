@@ -351,7 +351,7 @@ WIGS_ITEMS.forEach(wig => {
   SCENE_REGISTRY[wig.id] = function WigPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
     const hairColor = actionState?.previewHairColor;
     const laraVariant = actionState?.previewLaraVariant || 'native';
-    const simulateMotion = Boolean(actionState?.simulateMotion);
+    const simulateMotion = actionState?.simulateMotion !== undefined ? Boolean(actionState.simulateMotion) : true;
     return (
       <group>
         <AnimatedBustGroup basePosition={[-14, 0, 0]} enabled={simulateMotion} phaseOffset={0}>
