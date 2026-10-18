@@ -9,6 +9,7 @@ import { TOILET_BOWL_CENTER } from '../items/Toilet';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 import { FREEZER_DOOR_DURATION } from '../items/Freezer';
 import { FRIDGE_DOOR_DURATION, FRIDGE_CRISPER_DURATION } from '../items/Fridge';
+import { DRONA_CATCHALL_ACTION, DRONA_CATCHALL_POSITION, DRONA_CATCHALL_SLIDE_DURATION } from '../items/kallaxNeDrona';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
 
@@ -467,6 +468,22 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
 
   // ── RANGEMENTS, KALLAX & COULOIR ──────────────────────────────────────────
+  'drona-ne-catchall': {
+    id: 'drona-ne-catchall',
+    name: 'Dröna fourre-tout Nord-Est (droite)',
+    category: 'storage',
+    itemId: 'drona-ne-catchall',
+    slots: [{
+      slotId: 'pick-item',
+      name: 'Prendre un objet dans le fourre-tout',
+      relative: true,
+      arrival: 'approach',
+      navigationOwner: 'kallax-ne',
+      offset: [0, -DRONA_CATCHALL_POSITION[1], -80],
+      rotY: 0,
+      animation: 'searching-files-high',
+    }],
+  },
   'kallax-ne': {
     id: 'kallax-ne',
     name: 'Kallax Nord-Est',
@@ -1073,6 +1090,26 @@ export function buildSmartObjectInstructionSequence(
         animation: 'idle', duration: FRIDGE_DOOR_DURATION, rotY: slot.rotY,
         triggerEventKey: 'fridge', triggerEventValue: false,
       },
+    ];
+  }
+
+  if (objectId === 'drona-ne-catchall') {
+    return [
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey: 'glassRight' },
+      { type: 'WAIT', doorKey: 'glassRight' },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: 'glassRight' },
+      {
+        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: 'glassRight',
+        animation: 'opening', duration: DRONA_CATCHALL_SLIDE_DURATION, rotY: slot.rotY,
+        triggerEventKey: DRONA_CATCHALL_ACTION, triggerEventValue: true,
+      },
+      { ...baseInstruction, closedDoor: 'glassRight' },
+      {
+        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: 'glassRight',
+        animation: 'opening', duration: DRONA_CATCHALL_SLIDE_DURATION, rotY: slot.rotY,
+        triggerEventKey: DRONA_CATCHALL_ACTION, triggerEventValue: false,
+      },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey: 'glassRight', closedDoor: 'glassRight' },
     ];
   }
 

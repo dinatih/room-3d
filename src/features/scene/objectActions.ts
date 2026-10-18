@@ -26,6 +26,8 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'fridge': ['fridge', 'fridge-crisper-toggle'],
   'ninja-sp101': ['ninja'],
   'freezer': ['freezer'],
+  'drona-ne-catchall': ['drona-ne-catchall-slide'],
+  'kallax-ne-stack': ['drona-ne-catchall-slide'],
   'trash-bin': ['bin-toggle'],
   'bathroom-cabinet-west': ['cbnWest'],
   'bathroom-cabinet-east': ['cbnEast'],

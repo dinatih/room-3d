@@ -222,6 +222,7 @@ const initialLayers: LayerState = {
 };
 
 const initialExtraStates: Record<string, boolean> = {
+  'drona-ne-catchall-slide': false,
   'fridge-crisper-toggle': false,
   ninja: false,
   utdrag: false,

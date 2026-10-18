@@ -15,6 +15,7 @@ import { SDB_CLOSET_X, SDB_CLOSET_Z } from './items/SdbCloset';
 import { SHOWER_W, SHOWER_D } from './items/Shower';
 import { TOILET_D } from './items/Toilet';
 import { FRIDGE_LOCAL_POSITION } from './items/Fridge';
+import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION, DRONA_CATCHALL_POSITION } from './items/kallaxNeDrona';
 import { positionState } from './positionState';
 import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, FurnitureTransform } from './furniturePositions';
 
@@ -44,6 +45,14 @@ const ITEM_TO_ANCHOR_KEY: Record<string, string> = {
  */
 function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
   switch (itemId) {
+    case 'drona-ne-catchall': {
+      const [x, y, z] = DRONA_CATCHALL_POSITION;
+      const c = Math.cos(KALLAX_NE_ROTATION), s = Math.sin(KALLAX_NE_ROTATION);
+      return {
+        position: [KALLAX_NE_POSITION[0] + x * c + z * s, KALLAX_NE_POSITION[1] + y, KALLAX_NE_POSITION[2] - x * s + z * c],
+        rotationY: KALLAX_NE_ROTATION,
+      };
+    }
     case 'fridge': {
       const kitchen = getStaticObjectTransform('cuisine-group')!;
       return {

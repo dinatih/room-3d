@@ -13,6 +13,7 @@ import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 
 import { KallaxNE, KallaxNEDrona } from '../items/KallaxNE';
+import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION } from '../items/kallaxNeDrona';
 import { KallaxSE, KallaxSEDrona } from '../items/KallaxSE';
 import { getObjectTransform } from '../objectTransforms';
 import { KallaxNW, KallaxNWDrona, KallaxNWMannequins } from '../items/KallaxNW';
@@ -434,7 +435,7 @@ export function LivingRoomFurniture() {
         <NavigationObstacle id="kallax-nw"><KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noMannequins /></NavigationObstacle>
       </group>
 
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax NE' }}>
+      <group position={KALLAX_NE_POSITION} rotation={[0, KALLAX_NE_ROTATION, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax NE' }}>
         <NavigationObstacle id="kallax-ne"><KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
       </group>
 
@@ -504,7 +505,7 @@ export function LivingRoomFurnishings() {
       </group>
 
       {/* Boîtes Drona Kallax NE */}
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]}>
+      <group position={KALLAX_NE_POSITION} rotation={[0, KALLAX_NE_ROTATION, 0]}>
         <KallaxNEDrona />
       </group>
 

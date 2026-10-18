@@ -207,6 +207,9 @@ export function useAgentController(
       if (claimedSlotRef.current.objectId === 'fridge' || claimedSlotRef.current.objectId === 'freezer') {
         useSceneStore.getState().triggerAction(claimedSlotRef.current.objectId, false);
       }
+      if (claimedSlotRef.current.objectId === 'drona-ne-catchall') {
+        useSceneStore.getState().triggerAction('drona-ne-catchall-slide', false);
+      }
       if (claimedSlotRef.current.objectId === 'corridor-closet') {
         useSceneStore.getState().triggerAction('corrDoors', false);
       }

@@ -40,6 +40,7 @@ if(!process.argv.includes('--inspect-drona'))(async () => {
  const {useGLTF}=await import('/node_modules/.vite/deps/@react-three_drei.js');useGLTF.setDecoderPath('/draco/');
  const {Freezer}=await import('/src/features/scene/items/Freezer.tsx');
  const {Fridge}=await import('/src/features/scene/items/Fridge.tsx');
+ const {KallaxNE}=await import('/src/features/scene/items/KallaxNE.tsx');
  const {Smorkull}=await import('/src/features/scene/items/Smorkull.tsx');
  const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
  const chairTransform=getObjectTransform('chair-office');
@@ -52,7 +53,7 @@ if(!process.argv.includes('--inspect-drona'))(async () => {
  function App(){const [props,setProps]=React.useState({isPreview:false,actionState:{}});f.setProps=setProps;
  return h(Canvas,{frameloop:'never',shadows:true,camera:{position:[125,80,-95],near:.1,far:1500,fov:45}},
  h(Capture),h('ambientLight',{intensity:.85}),h('directionalLight',{position:[100,120,-80],intensity:2}),
- h(React.Suspense,{fallback:null},h(props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
+ h(React.Suspense,{fallback:null},h(props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
  props.chair&&h(React.Suspense,{fallback:null},h('group',{ref:g=>{f.chair=g;},position:chairTransform.position,rotation:[0,chairTransform.rotationY,0]},h(Smorkull,{item:{},actionState:{},onSize:()=>{f.chairReady=true;}}))),
  h('mesh',{rotation:[-Math.PI/2,0,0],position:[0,-.1,0]},h('planeGeometry',{args:[400,400]}),h('meshStandardMaterial',{color:'#777777'})) );}
  createRoot(container).render(h(App));
@@ -311,5 +312,89 @@ if(!process.argv.includes('--inspect-drona'))(async () => {
  }
  assert.deepEqual(errors,[]);
  console.log('Fridge itemId, hover action, preview, actual chair collision, inspection and interruption cleanup: PASS');
+ await page.evaluate(()=>window.fixture.setProps({drona:true,isPreview:false,actionState:{}}));
+ await page.waitForFunction(()=>window.fixture.scene.getObjectByName('drona-ne-catchall')?.children.length,{timeout:60000});
+ const drona=await page.evaluate(async()=>{
+   const f=window.fixture,node=f.scene.getObjectByName('drona-ne-catchall');
+   const mesh=node.getObjectByProperty('isMesh',true);mesh.geometry.computeBoundingBox();
+   f.readDrona=()=>({z:node.position.z,parent:node.parent.name,position:node.parent.position.toArray(),actions:node.userData.hoverAction.actions,
+     cells:Array.from({length:7},(_,i)=>{const cell=f.scene.getObjectByName('drona-ne-cell-'+i);return [cell.position.toArray(),cell.children[0].position.toArray()];})});
+   const {buildSmartObjectInstructionSequence,getSmartObject}=await import('/src/features/scene/ai/smartObjectRegistry.ts');
+   const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
+   const {DRONA_CATCHALL_POSITION,DRONA_CATCHALL_SLIDE_DURATION,KALLAX_NE_POSITION,KALLAX_NE_ROTATION}=await import('/src/features/scene/items/kallaxNeDrona.ts');
+   f.dronaObject=getSmartObject('drona-ne-catchall');
+   const transform=getObjectTransform('drona-ne-catchall');
+   if(JSON.stringify(transform.position)!==JSON.stringify(f.dronaObject.position))throw new Error('Drona must follow its itemId');
+   const {registerObstacle}=await import('/src/features/scene/ai/navigation/obstacles.ts');
+   const matrix=new f.THREE.Matrix4().makeRotationY(KALLAX_NE_ROTATION).setPosition(...KALLAX_NE_POSITION);
+   const box=new f.THREE.Box3().setFromObject(node.parent.parent).applyMatrix4(matrix);
+   registerObstacle({id:'kallax-ne-test',owner:'kallax-ne',yMin:box.min.y,yMax:box.max.y,
+     polygon:[{x:box.min.x,z:box.min.z},{x:box.max.x,z:box.min.z},{x:box.max.x,z:box.max.z},{x:box.min.x,z:box.max.z}]});
+   return {closed:f.readDrona(),position:DRONA_CATCHALL_POSITION,duration:DRONA_CATCHALL_SLIDE_DURATION,
+     depth:mesh.geometry.boundingBox.max.z-mesh.geometry.boundingBox.min.z,sequence:buildSmartObjectInstructionSequence('drona-ne-catchall','pick-item')};
+ });
+ assert.equal(drona.closed.parent,'drona-ne-cell-2');
+ assert.deepEqual(drona.closed.position,drona.position);
+ assert.deepEqual(drona.closed.actions,['drona-ne-catchall-slide','smart-object:::drona-ne-catchall:::pick-item']);
+ const slide=async(value)=>{await page.evaluate(v=>window.fixture.store.getState().triggerAction('drona-ne-catchall-slide',v),value);await new Promise(r=>setTimeout(r,80));};
+ await slide(true);await tick(drona.duration/2);
+ const halfDrona=await page.evaluate(()=>window.fixture.readDrona());
+ assert(Math.abs(halfDrona.z+drona.depth/3)<drona.depth/100);
+ await tick(drona.duration/2);
+ const openDrona=await page.evaluate(()=>window.fixture.readDrona());
+ assert(Math.abs(openDrona.z+drona.depth*2/3)<1e-6);
+ for(const i of [0,1,3,4,5,6])assert.deepEqual(openDrona.cells[i],drona.closed.cells[i]);
+ await page.evaluate(async()=>{
+   const f=window.fixture,{GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
+   const actor=await new GLTFLoader().loadAsync('/animations/mixamo/anim_searching_files_high.glb');
+   actor.scene.scale.setScalar(100);actor.scene.position.set(-17.5,0,-80);f.scene.add(actor.scene);
+   const mixer=new f.THREE.AnimationMixer(actor.scene);mixer.clipAction(actor.animations[0]).play();mixer.update(4.8);
+   f.scene.add(new f.THREE.SkeletonHelper(actor.scene));
+   f.camera.position.set(-150,160,-190);f.camera.lookAt(0,90,0);f.tick(0.01);
+ });
+ await page.screenshot({path:'/tmp/drona-ne-catchall-open.png'});
+ await slide(false);await tick(drona.duration);
+ assert.equal((await page.evaluate(()=>window.fixture.readDrona())).z,0);
+ await page.evaluate(()=>window.fixture.setProps({drona:true,isPreview:true,actionState:{'drona-ne-catchall-slide':true}}));
+ await new Promise(r=>setTimeout(r,80));await tick(drona.duration);
+ assert.deepEqual((await page.evaluate(()=>window.fixture.readDrona())).actions,['drona-ne-catchall-slide']);
+ assert.equal(await page.evaluate(()=>window.fixture.store.getState().extraStates['drona-ne-catchall-slide']),false);
+ await page.evaluate(()=>window.fixture.setProps({drona:true,isPreview:false,actionState:{}}));
+ await new Promise(r=>setTimeout(r,80));await tick(drona.duration);
+ const dronaRuns=await page.evaluate(async(data)=>{
+   const {default:React}=await import('/node_modules/.vite/deps/react.js');
+   const {default:ReactDOM}=await import('/node_modules/.vite/deps/react-dom_client.js');
+   const {useAgentController}=await import('/src/features/scene/ai/useAgentController.ts');
+   const {setAgentProfile}=await import('/src/features/scene/ai/navigation/obstacles.ts');
+   const f=window.fixture,results=[],render=f.gl.render;f.gl.render=()=>{};
+   for(const interrupted of [false,true]){
+     const id='drona-check-'+interrupted;setAgentProfile(id,{radius:15,height:170});
+     const container=document.createElement('div');document.body.append(container);
+     const root=ReactDOM.createRoot(container),routine=structuredClone(data.sequence);
+     const [x,y,z]=f.dronaObject.slots[0].offset;
+     let agent,complete=false;
+     function Probe(){agent=useAgentController(id,routine,false,()=>({x,y,z,rotY:Math.PI/2}),()=>{complete=true;});return null;}
+     f.flushSync(()=>root.render(React.createElement(Probe)));
+     const animations=new Set();
+     for(let time=0;time<40&&!complete;time+=0.1){
+       const state=agent.update(.1);animations.add(state.animation);
+       await new Promise(r=>setTimeout(r,0));f.tick(.1);
+       if(state.animation==='searching-files-high'){
+         if(Math.abs(f.readDrona().z+data.depth*2/3)>1e-6)throw new Error('NPC must finish pulling the Drona before searching');
+         if(interrupted)break;
+       }
+     }
+     root.unmount();container.remove();await new Promise(r=>setTimeout(r,0));f.tick(data.duration);
+     results.push({complete,interrupted,animations:[...animations],z:f.readDrona().z,open:f.store.getState().extraStates['drona-ne-catchall-slide']});
+   }
+   f.gl.render=render;return results;
+ },drona);
+ console.log('Drona controller results:',dronaRuns);
+ for(const result of dronaRuns){
+   assert(result.complete||result.interrupted);assert(result.animations.includes('opening'));
+   assert(result.animations.includes('searching-files-high'));assert.equal(result.z,0);assert.equal(result.open,false);
+ }
+ assert.deepEqual(errors,[]);
+ console.log('Right upper Drona, exact two-thirds slide, untouched neighbours, hover, preview, NPC and interruption: PASS');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

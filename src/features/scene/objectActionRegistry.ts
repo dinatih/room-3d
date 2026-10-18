@@ -114,6 +114,7 @@ const ACTIONS: Record<string, ActionConfig> = {
   cbnWest: { label: ['Ouvrir', 'Fermer'] },
   cbnEast: { label: ['Ouvrir', 'Fermer'] },
   freezer: { label: ['Ouvrir', 'Fermer'] },
+  'drona-ne-catchall-slide': { label: ['Sortir le fourre-tout', 'Ranger le fourre-tout'] },
   fridge: { label: ['Ouvrir', 'Fermer'] },
   'fridge-crisper-toggle': { label: ['Sortir le bac', 'Rentrer le bac'] },
   ninja: { label: ['Ouvrir', 'Fermer'] },
