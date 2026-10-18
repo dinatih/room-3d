@@ -3,6 +3,65 @@ import { CC3_TO_MIXAMO } from './boneMappings';
 import { getDepth } from './hairChain';
 import { resolveTargetBoneName } from './boneResolver';
 
+function subsampleTrackTo30Fps(track: THREE.KeyframeTrack): THREE.KeyframeTrack {
+  const times = track.times;
+  const numFrames = times.length;
+  if (numFrames <= 4) {
+    const cl = track.clone();
+    cl.times = new Float32Array(times);
+    cl.values = new Float32Array(track.values);
+    return cl;
+  }
+
+  const duration = times[numFrames - 1] - times[0];
+  if (duration <= 0) {
+    const cl = track.clone();
+    cl.times = new Float32Array(times);
+    cl.values = new Float32Array(track.values);
+    return cl;
+  }
+
+  const fps = (numFrames - 1) / duration;
+  if (fps <= 40) {
+    const cl = track.clone();
+    cl.times = new Float32Array(times);
+    cl.values = new Float32Array(track.values);
+    return cl;
+  }
+
+  const stride = Math.round(fps / 30);
+  if (stride <= 1) {
+    const cl = track.clone();
+    cl.times = new Float32Array(times);
+    cl.values = new Float32Array(track.values);
+    return cl;
+  }
+
+  const valueSize = track.getValueSize ? track.getValueSize() : (track.values.length / numFrames);
+  const selectedIndices: number[] = [];
+  for (let i = 0; i < numFrames - 1; i += stride) {
+    selectedIndices.push(i);
+  }
+  selectedIndices.push(numFrames - 1);
+
+  const newTimes = new Float32Array(selectedIndices.length);
+  const newValues = new Float32Array(selectedIndices.length * valueSize);
+  for (let k = 0; k < selectedIndices.length; k++) {
+    const idx = selectedIndices[k];
+    newTimes[k] = times[idx];
+    const srcOffset = idx * valueSize;
+    const dstOffset = k * valueSize;
+    for (let s = 0; s < valueSize; s++) {
+      newValues[dstOffset + s] = track.values[srcOffset + s];
+    }
+  }
+
+  const cl = track.clone();
+  cl.times = newTimes;
+  cl.values = newValues;
+  return cl;
+}
+
 export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, animScene: THREE.Object3D | undefined, rootMotionSpace?: 'world-meters' | 'rest-meters'): THREE.AnimationClip {
   const animBones: Record<string, any> = {};
   const sourceHairMap = new Map<string, string>();
@@ -77,13 +136,10 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
     });
   }
 
-  // Deep clone of rawClip tracks to avoid mutating the source clip
+  // Clone and subsample rawClip tracks to 30 fps (if high-framerate) to avoid mutating source and cut retargeting cost
   const clonedTracks: THREE.KeyframeTrack[] = [];
   for (const track of rawClip.tracks) {
-    const cl = track.clone();
-    cl.times = new Float32Array(track.times);
-    cl.values = new Float32Array(track.values);
-    clonedTracks.push(cl);
+    clonedTracks.push(subsampleTrackTo30Fps(track));
   }
   const workingClip = new THREE.AnimationClip(rawClip.name, rawClip.duration, clonedTracks);
 

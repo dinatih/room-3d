@@ -223,7 +223,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'wash-hands',
         name: 'Se laver les mains',
         rotY: Math.PI,
-        animation: 'inspect-mid-height',
+        animation: 'fab-daily-life-wash-hands',
       },
       {
         slotId: 'brush-teeth',

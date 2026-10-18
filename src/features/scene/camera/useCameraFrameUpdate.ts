@@ -104,7 +104,7 @@ export function useCameraFrameUpdate({
     }
     const store = useSceneStore.getState();
     const k = keys.current;
-    const hasPlainArrow = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(key => k.has(key));
+    const hasPlainArrow = k.has('ArrowLeft') || k.has('ArrowRight') || k.has('ArrowUp') || k.has('ArrowDown');
     const movesCharacter = (modeRef.current === 'fpv' || store.arrowControl === 'character') && !store.layers.characterGrid && !cameraState.animalTarget;
     const manualMove = movesCharacter && hasPlainArrow;
     if (cameraState.isAIControlled) {
@@ -144,14 +144,22 @@ export function useCameraFrameUpdate({
     // Sync character yaw for minimap before onUpdate call
     cameraState.characterYaw = cameraState.followYaw;
 
-    // Save active character position
-    cameraState.positions[activeCharacterId] = {
-      ...cameraState.positions[activeCharacterId],
-      x: cameraState.characterX,
-      y: cameraState.positions[activeCharacterId]?.y ?? 0,
-      z: cameraState.characterZ,
-      yaw: cameraState.characterYaw,
-    };
+    // Save active character position (in-place mutation to eliminate per-frame GC allocations)
+    if (activeCharacterId) {
+      const curPos = cameraState.positions[activeCharacterId];
+      if (curPos) {
+        curPos.x = cameraState.characterX;
+        curPos.z = cameraState.characterZ;
+        curPos.yaw = cameraState.characterYaw;
+      } else {
+        cameraState.positions[activeCharacterId] = {
+          x: cameraState.characterX,
+          y: 0,
+          z: cameraState.characterZ,
+          yaw: cameraState.characterYaw,
+        };
+      }
+    }
 
     // Throttle minimap redraw à ~15fps (67ms) — drawFloorPlan est coûteux
     minimapThrottle.current += delta;
