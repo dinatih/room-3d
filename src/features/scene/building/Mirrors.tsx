@@ -1,7 +1,8 @@
 /**
  * Mirrors.tsx — Miroirs Nissedal et plans de réflexion Three.js Reflector.
  */
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -278,6 +279,13 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
   );
 }
 
+const silverMirrorMat = new THREE.MeshStandardMaterial({
+  color: 0xd0d8e0,
+  roughness: 0.05,
+  metalness: 0.95,
+  envMapIntensity: 1.5,
+});
+
 export function MirrorBath({ showReflection }: { showReflection: boolean }) {
   const VANITY_W    = 60, VANITY_D = 47, VANITY_Y0 = 30, VANITY_H = 50;
   const VANITY_CX   = DOOR_START - 84;
@@ -287,24 +295,47 @@ export function MirrorBath({ showReflection }: { showReflection: boolean }) {
   const mirrorH     = 90;
   const mirrorY     = counterTopY + mirrorH / 2;
   const mirrorZ     = -VANITY_D / 2 + 0.5;
+  const pos: [number, number, number] = [VANITY_CX, mirrorY, VANITY_CZ + mirrorZ + 0.3];
+
+  const reflectorRef = useRef<THREE.Group | null>(null);
+  const ambientRef = useRef<THREE.Mesh | null>(null);
+
+  useFrame(({ camera }) => {
+    if (!showReflection) return;
+    // La passe de rendu Reflector n'est active que si la caméra est dans la salle de bain ou devant la porte
+    const isNearBath =
+      camera.position.x >= -30 &&
+      camera.position.x <= 255 &&
+      camera.position.z >= 450 &&
+      camera.position.z <= 750 &&
+      camera.position.y >= 0 &&
+      camera.position.y <= 270;
+
+    if (reflectorRef.current && reflectorRef.current.visible !== isNearBath) {
+      reflectorRef.current.visible = isNearBath;
+    }
+    if (ambientRef.current && ambientRef.current.visible !== !isNearBath) {
+      ambientRef.current.visible = !isNearBath;
+    }
+  });
 
   if (!showReflection) return null;
 
   return (
-    <ReflectorMirror
-      w={mirrorW} h={mirrorH}
-      position={[VANITY_CX, mirrorY, VANITY_CZ + mirrorZ + 0.3]}
-      rotationY={0}
-    />
+    <>
+      <group ref={reflectorRef} visible={false}>
+        <ReflectorMirror
+          w={mirrorW} h={mirrorH}
+          position={pos}
+          rotationY={0}
+        />
+      </group>
+      <mesh ref={ambientRef} position={pos} material={silverMirrorMat} visible={true}>
+        <planeGeometry args={[mirrorW, mirrorH]} />
+      </mesh>
+    </>
   );
 }
-
-const silverMirrorMat = new THREE.MeshStandardMaterial({
-  color: 0xd0d8e0,
-  roughness: 0.05,
-  metalness: 0.95,
-  envMapIntensity: 1.5,
-});
 
 function MergedAmbientMirror({ planes, position, rotationY }: {
   planes: { w: number; h: number; x: number; y: number }[];
