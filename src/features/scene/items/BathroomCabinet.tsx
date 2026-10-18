@@ -2,9 +2,8 @@
  * BathroomCabinet.tsx — Meuble mural SDB METOD + porte RINGHULT + poignée KALLROR.
  * Coordonnées locales : centré X/Z, Y=0 = sol.
  *
- * Porte animée (pivot sur chant) — deux chemins :
- *  - Main scene  : via Placements.tsx useFurnitureToggles → actionState['cbn-west/east-toggle']
- *  - Inventory   : actionState['cbn-west/east-toggle'] (prop)
+ * Porte animée (pivot sur chant) : état cbnWest/cbnEast du store dans la scène,
+ * actionState isolé en preview, suivi de lecture pour les gestes des PNJ.
  *
  * Pivot :
  *  West (mirrorHandle=false) : charnière -X, openAngle = -π/2 (porte vers +Z)
@@ -18,13 +17,16 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { getObjectActionIds } from '../objectActions';
+import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
+import { useSceneStore } from '../store/useSceneStore';
+import { dronaPlayback } from './dronaPlayback';
 
 const GLB        = 'items/metod10205534/Metod10205534.glb';
 const DOOR_GLB   = 'items/ringhult60327137/Ringhult60327137-40x60.glb';
 const HANDLE_GLB = 'items/kallror50357002/Kallror50357002.glb';
 
-function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hoverLabel, hoverObjectId }:
-  SceneItemProps & { mirrorHandle?: boolean; openKey?: string; hoverLabel?: string; hoverObjectId?: string }) {
+function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey, hoverLabel, hoverObjectId, isPreview = false }:
+  SceneItemProps & { mirrorHandle?: boolean; openKey: 'cbnWest' | 'cbnEast'; hoverLabel: string; hoverObjectId: string; isPreview?: boolean }) {
 
   const { scene }         = useGLTFClone(GLB);
   const { scene: door }   = useGLTFClone(DOOR_GLB);
@@ -32,9 +34,12 @@ function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hove
   const pivotRef = useRef<THREE.Group>(null!);
   const openRef  = useRef(false);
   const { invalidate } = useThree();
+  const sceneOpen = useSceneStore(s => s.furniture[openKey]);
+  const wantOpen = isPreview ? !!actionState[openKey] : sceneOpen;
 
   useLayoutEffect(() => {
     // ── Corps du meuble ──────────────────────────────────────────────────────
+    scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
     scene.rotation.x = Math.PI / 2;
@@ -51,6 +56,7 @@ function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hove
     const cabFrontZ = (box.max.z - box.min.z) / 2;
 
     // ── Porte RINGHULT ───────────────────────────────────────────────────────
+    door.scale.set(1, 1, 1);
     removeGlbLines(door);
     door.scale.setScalar(100);
     mergeGlbByMaterial(door);
@@ -60,6 +66,7 @@ function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hove
     const doorOrigZ = cabFrontZ - (dBox.min.z + dBox.max.z) / 2;
 
     // ── Poignée KALLROR ──────────────────────────────────────────────────────
+    handle.scale.set(1, 1, 1);
     removeGlbLines(handle);
     handle.scale.setScalar(100);
     handle.rotation.set(0, Math.PI / 2, Math.PI / 2);
@@ -81,25 +88,33 @@ function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hove
     handle.position.set(handleOrigX - hingeX, handleOrigY, handleOrigZ - cabFrontZ);
 
     if (hoverLabel && hoverObjectId) {
-      const ha = { label: hoverLabel, actions: getObjectActionIds(hoverObjectId) };
+      const ha = { label: hoverLabel, actions: [
+        ...getObjectActionIds(hoverObjectId),
+        ...(!isPreview ? SMART_OBJECTS[hoverObjectId].slots.map(slot => `smart-object:::${hoverObjectId}:::${slot.slotId}`) : []),
+      ] };
       scene.userData.hoverAction  = ha;
       door.userData.hoverAction   = ha;
       handle.userData.hoverAction = ha;
       pivot.userData.hoverAction  = ha;
     }
-  }, [scene, door, handle, mirrorHandle, hoverLabel, hoverObjectId]);
+  }, [scene, door, handle, mirrorHandle, hoverLabel, hoverObjectId, isPreview]);
 
   // Réagit à actionState (inventory + scene via useFurnitureToggles dans Placements)
   useEffect(() => {
-    if (!openKey) return;
-    openRef.current = !!(actionState[openKey]);
+    openRef.current = wantOpen;
     invalidate();
-  }, [actionState, openKey, invalidate]);
+  }, [wantOpen, invalidate]);
 
   useFrame((_, delta) => {
     const pivot = pivotRef.current;
     if (!pivot) return;
     const targetAngle = openRef.current ? (mirrorHandle ? Math.PI / 2 : -Math.PI / 2) : 0;
+    const synchronized = isPreview ? undefined : dronaPlayback.get(openKey);
+    if (synchronized !== undefined) {
+      pivot.rotation.y = (mirrorHandle ? Math.PI / 2 : -Math.PI / 2) * synchronized;
+      if (synchronized !== (openRef.current ? 1 : 0)) invalidate();
+      return;
+    }
     if (pivot.rotation.y === targetAngle) return;
     const diff = targetAngle - pivot.rotation.y;
     if (Math.abs(diff) < 0.001) {
@@ -112,13 +127,13 @@ function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hove
   });
 
   return (
-    <>
+    <group name={hoverObjectId}>
       <primitive object={scene} />
-      <group ref={pivotRef}>
+      <group ref={pivotRef} name={`${hoverObjectId}-door`}>
         <primitive object={door} />
         <primitive object={handle} />
       </group>
-    </>
+    </group>
   );
 }
 
@@ -126,10 +141,10 @@ useGLTF.preload(GLB);
 useGLTF.preload(DOOR_GLB);
 useGLTF.preload(HANDLE_GLB);
 
-export function BathroomCabinetWest(props: SceneItemProps) {
+export function BathroomCabinetWest(props: SceneItemProps & { isPreview?: boolean }) {
   return <MetodCabinet {...props} openKey="cbnWest" hoverLabel="Armoire SDB Ouest" hoverObjectId="bathroom-cabinet-west" />;
 }
 
-export function BathroomCabinetEast(props: SceneItemProps) {
+export function BathroomCabinetEast(props: SceneItemProps & { isPreview?: boolean }) {
   return <MetodCabinet {...props} mirrorHandle openKey="cbnEast" hoverLabel="Armoire SDB Est" hoverObjectId="bathroom-cabinet-east" />;
 }

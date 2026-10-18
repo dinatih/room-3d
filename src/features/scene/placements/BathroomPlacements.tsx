@@ -19,14 +19,14 @@ import { GrassRug } from '../items/GrassRug';
 import { Tackan } from '../items/Tackan';
 import { Tisken40381253 } from '../items/Tisken40381253';
 import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
-import { DroneCell, DF } from '../items/Drona';
+import { SlidingDrona } from '../items/SlidingDrona';
+import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
+import { SPECIAL_DRONA_SLIDE_DURATION } from '../items/dronaStorage';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
-
-const cbZ = BATH_NORTH_WALL + 19.5;
 
 export function BathroomEquipment() {
   const as = useFurnitureToggles([
@@ -120,11 +120,11 @@ export function BathroomFurniture() {
   return (
     <MergedStaticGroup name="merged-bathroom-furniture">
       {/* Meubles SDB Ouest et Est */}
-      <group position={[BATH_WEST_WALL + 20, 0, cbZ]} userData={{ animUnit: true, itemName: 'Meuble SDB Ouest' }}>
-        <NavigationObstacle id="drona-west"><BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+      <group position={BATHROOM_STORAGE_ITEMS['bathroom-cabinet-west'].position} userData={{ animUnit: true, itemName: 'Meuble SDB Ouest' }}>
+        <NavigationObstacle id="bathroom-cabinet-west"><BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
-      <group position={[BATH_EAST_WALL - 23, 0, cbZ]} userData={{ animUnit: true, itemName: 'Meuble SDB Est' }}>
-        <NavigationObstacle id="drona-east"><BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+      <group position={BATHROOM_STORAGE_ITEMS['bathroom-cabinet-east'].position} userData={{ animUnit: true, itemName: 'Meuble SDB Est' }}>
+        <NavigationObstacle id="bathroom-cabinet-east"><BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
 
       {/* Poubelle Fniss SDB */}
@@ -145,12 +145,11 @@ export function BathroomFurnishings() {
       </group>
 
       {/* Boîtes Drona sur meubles hauts SDB */}
-      <group position={[BATH_EAST_WALL - 23, 60 + DF / 2 + 0.2, cbZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona SDB Est' }}>
-        <DroneCell />
-      </group>
-      <group position={[BATH_WEST_WALL + 20, 60 + DF / 2 + 0.2, cbZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona SDB Ouest' }}>
-        <DroneCell />
-      </group>
+      {Object.entries(BATHROOM_STORAGE_ITEMS).filter(([, item]) => item.kind === 'box').map(([id, item]) => (
+        <group key={id} position={item.position} rotation-y={item.rotationY} userData={{ animUnit: true, itemName: item.label }}>
+          <SlidingDrona objectId={id} label={item.label} actionId={item.action} duration={SPECIAL_DRONA_SLIDE_DURATION} />
+        </group>
+      ))}
 
       {/* TACKAN douche */}
       <group position={[BATH_WEST_WALL + 40, 80, BATH_SOUTH_WALL + 69]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Douche' }}>

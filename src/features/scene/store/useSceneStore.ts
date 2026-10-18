@@ -222,6 +222,8 @@ const initialLayers: LayerState = {
 };
 
 const initialExtraStates: Record<string, boolean> = {
+  'drona-bathroom-west-slide': false,
+  'drona-bathroom-east-slide': false,
   'drona-ne-catchall-slide': false,
   'drona-se-pyjama-slide': false,
   'drona-se-linen-slide': false,

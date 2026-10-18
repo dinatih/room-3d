@@ -2,7 +2,7 @@ import type { AnimationDefinition } from './animationRegistry';
 
 // Baked two-handed gestures at each box's handle height, with a crouched pose
 // for the floor-level box. Movement occupies the middle half of pull/push.
-export const DRONA_STORAGE_ANIMATIONS: AnimationDefinition[] = ['care', 'trousers', 'catchall2'].flatMap(item =>
+export const DRONA_STORAGE_ANIMATIONS: AnimationDefinition[] = ['care', 'trousers', 'catchall2', 'bath-box', 'bath-cabinet-west', 'bath-cabinet-east'].flatMap(item =>
   ['pull', 'search', 'push'].map(phase => ({
     id: `drona-${item}-${phase}`, path: `animations/drona/${item}_${phase}.glb`,
     category: 'interactions', label: `Dröna ${item} : ${phase}`, tags: ['interaction'],

@@ -19,6 +19,7 @@ import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION, DRONA_CATCHALL_POSITION } from 
 import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from './items/kallaxSeDrona';
 import { DRONA_SPECIAL_ITEMS, KALLAX_NW_POSITION, KALLAX_NW_ROTATION } from './items/dronaStorage';
 import { positionState } from './positionState';
+import { BATHROOM_STORAGE_ITEMS } from './items/bathroomStorage';
 import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, FurnitureTransform } from './furniturePositions';
 
 export interface ObjectTransform {
@@ -50,6 +51,8 @@ const ITEM_TO_ANCHOR_KEY: Record<string, string> = {
  * Positions statiques des objets 3D fidèles à Placements.tsx
  */
 function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
+  const bathroomStorage = BATHROOM_STORAGE_ITEMS[itemId as keyof typeof BATHROOM_STORAGE_ITEMS];
+  if (bathroomStorage) return { position: bathroomStorage.position, rotationY: bathroomStorage.rotationY };
   const storage = DRONA_SPECIAL_ITEMS[itemId as keyof typeof DRONA_SPECIAL_ITEMS];
   if (storage) {
     const freezer = getStaticObjectTransform('freezer')!;

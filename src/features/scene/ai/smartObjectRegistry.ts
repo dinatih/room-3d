@@ -15,6 +15,7 @@ import { LINEN_PULL_RANGE, LINEN_PUSH_RANGE } from '../animations/dronaLinenMani
 import { DRONA_SPECIAL_ITEMS, DRONA_PULL_RANGE, DRONA_PUSH_RANGE } from '../items/dronaStorage';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
+import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
@@ -295,36 +296,15 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     ]
   },
 
-  'drona-west': {
-    id: 'drona-west',
-    name: 'Meuble bas / Dröna Ouest',
-    category: 'storage',
-    position: [30, 0, 487],
-    slots: [
-      {
-        slotId: 'pick-item',
-        name: 'Prendre un objet',
-        offset: [30, 0, 535],
-        rotY: Math.PI + Math.PI / 8,
-        animation: 'take-object-mid',
-      }
-    ]
-  },
-  'drona-east': {
-    id: 'drona-east',
-    name: 'Meuble bas / Dröna Est',
-    category: 'storage',
-    position: [169, 0, 487],
-    slots: [
-      {
-        slotId: 'pick-item',
-        name: 'Prendre un objet',
-        offset: [169, 0, 535],
-        rotY: Math.PI,
-        animation: 'inspect-mid-height',
-      }
-    ]
-  },
+  ...Object.fromEntries(Object.entries(BATHROOM_STORAGE_ITEMS).map(([id, item]) => [id, {
+    id, name: item.label, itemId: id, category: 'storage' as const,
+    slots: [{
+      slotId: 'pick-item', name: item.kind === 'cabinet' ? 'Prendre un objet dans l’armoire' : 'Prendre un objet dans la Dröna',
+      relative: true, arrival: 'approach' as const, navigationOwner: item.cabinetId,
+      offset: [0, -item.position[1], item.kind === 'cabinet' ? 60 : -50] as [number, number, number],
+      rotY: item.kind === 'cabinet' ? Math.PI : 0, animation: `${item.animationPrefix}-search`,
+    }],
+  }])),
 
   'bathtub-garden': {
     id: 'bathtub-garden',
@@ -1110,6 +1090,23 @@ export function buildSmartObjectInstructionSequence(
         animation: 'idle', duration: FRIDGE_DOOR_DURATION, rotY: slot.rotY,
         triggerEventKey: 'fridge', triggerEventValue: false,
       },
+    ];
+  }
+
+  const bathroomStorage = BATHROOM_STORAGE_ITEMS[objectId as keyof typeof BATHROOM_STORAGE_ITEMS];
+  if (bathroomStorage) {
+    const gesture = (phase: 'pull' | 'push'): AgentInstruction => ({
+      type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
+      animation: `${bathroomStorage.animationPrefix}-${phase}`,
+      duration: getAnimationDef(`${bathroomStorage.animationPrefix}-${phase}`)!.duration,
+      rotY: slot.rotY, waitForAnimation: true,
+      dronaMotion: { action: bathroomStorage.action, from: phase === 'pull' ? 0 : 1, to: phase === 'pull' ? 1 : 0, range: phase === 'pull' ? DRONA_PULL_RANGE : DRONA_PUSH_RANGE },
+      triggerEventKey: bathroomStorage.action, triggerEventValue: phase === 'pull',
+    });
+    return [
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
+      gesture('pull'), { ...baseInstruction, waitForAnimation: true }, gesture('push'),
+      { type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY },
     ];
   }
 

@@ -28,7 +28,7 @@ export function SlidingDrona({ objectId, label, actionId, duration, isPreview = 
   useEffect(() => { invalidate(); }, [open, invalidate]);
   useFrame((_, delta) => {
     const target = open ? 1 : 0;
-    const synchronized = dronaPlayback.get(actionId);
+    const synchronized = isPreview ? undefined : dronaPlayback.get(actionId);
     progress.current = synchronized ?? (open ? Math.min(target, progress.current + delta / duration) : Math.max(target, progress.current - delta / duration));
     ref.current.position.z = -travel.current * progress.current;
     if (progress.current !== target) invalidate();

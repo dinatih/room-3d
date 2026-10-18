@@ -11,6 +11,9 @@ if(process.argv.includes('--build-storage')){
      {id:'trousers',source:'opening',time:0,height:95.75,lean:.35},
      // Floor-level box: grip the upper rim, 3 cm below its 33 cm-high top.
      {id:'catchall2',source:'looking_through_files_low',time:10.8,height:20.5+33/2-3,lean:0},
+     {id:'bath-box',source:'looking_through_files_low',time:3.6,height:60+33/2+.2,lean:0},
+     {id:'bath-cabinet-west',source:'looking_through_files_low',time:3.6,height:54,lean:0,cabinet:'west'},
+     {id:'bath-cabinet-east',source:'looking_through_files_low',time:3.6,height:54,lean:0,cabinet:'east'},
    ];
    // Geometry measurements from the actual DroneCell GLB (centred in X/Z).
    const bytes=fs.readFileSync('public/items/dröna/DRÖNA_high.glb');
@@ -66,12 +69,22 @@ if(process.argv.includes('--build-storage')){
          let t=frame/(frames-1);if(phase==='push')t=1-t;
          const fraction=Math.max(0,Math.min(1,(t-.25)/.5));
          hands.forEach((arm,index)=>{
+           if(item.cabinet&&index!==(item.cabinet==='west'?0:1))return;
            const target=new THREE.Vector3(index===0?.1:-.1,item.height/100,approach-depth/2-travel*(phase==='search'?1:fraction));
-           if(phase==='search'){
+           if(item.cabinet){
+             // One hand follows the 40 cm door around its mirrored hinge.
+             const swing=(phase==='search'?1:fraction)*Math.PI/2,sign=item.cabinet==='west'?1:-1;
+             target.set(sign*(.2-.36*Math.cos(swing)),item.height/100,.6-.2-.36*Math.sin(swing));
+             if(phase==='search'){
+               const envelope=Math.sin(Math.PI*t)**2;
+               target.lerp(new THREE.Vector3(0,.4,.48),envelope);
+             }
+           }else if(phase==='search'){
              // A single rummage, returning both hands to their grip before pushing.
              const envelope=Math.sin(Math.PI*t)**2;
              target.y+=.1*envelope;target.z+=.07*envelope;target.x+=.04*Math.sin(2*Math.PI*t)*(index===0?1:-1);
-           }else if(t<.25){
+           }
+           if(phase!=='search'&&t<.25){
              const reach=t/.25;target.lerpVectors(neutral[index],target,reach*reach*(3-2*reach));
            }
            solve(arm,target);
@@ -190,6 +203,10 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  const {KallaxSE}=await import('/src/features/scene/items/KallaxSE.tsx');
  const {KallaxNW}=await import('/src/features/scene/items/KallaxNW.tsx');
  const {KallaxCuisine}=await import('/src/features/scene/items/KallaxCuisine.tsx');
+ const {BathroomCabinetWest,BathroomCabinetEast}=await import('/src/features/scene/items/BathroomCabinet.tsx');
+ const {BATHROOM_STORAGE_ITEMS}=await import('/src/features/scene/items/bathroomStorage.ts');
+ const {SlidingDrona}=await import('/src/features/scene/items/SlidingDrona.tsx');
+ const {NavigationObstacle}=await import('/src/features/scene/ai/navigation/NavigationObstacle.tsx');
  const {Beds,Desks,DeskDecor}=await import('/src/features/scene/placements/LivingRoomPlacements.tsx');
  const {Smorkull}=await import('/src/features/scene/items/Smorkull.tsx');
  const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
@@ -200,10 +217,14 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  const container=document.createElement('div');container.style.cssText='width:1200px;height:900px';document.body.append(container);
  const h=React.createElement;
  function Capture(){const state=useThree();React.useLayoutEffect(()=>{Object.assign(f,state);},[state]);return null;}
+ function BathroomFixture(props){return h(React.Fragment,null,...Object.entries(BATHROOM_STORAGE_ITEMS).map(([id,item])=>
+   h('group',{key:id,position:item.position,rotation:[0,item.rotationY,0]},item.kind==='cabinet'
+     ?h(NavigationObstacle,{id},h(id.endsWith('west')?BathroomCabinetWest:BathroomCabinetEast,{item:{id},onSize:()=>{},...props}))
+     :h(SlidingDrona,{objectId:id,label:item.label,actionId:item.action,duration:2.4,...props}))));}
  function App(){const [props,setProps]=React.useState({isPreview:false,actionState:{}});f.setProps=setProps;
  return h(Canvas,{frameloop:'never',shadows:true,camera:{position:[125,80,-95],near:.1,far:1500,fov:45}},
  h(Capture),h('ambientLight',{intensity:.85}),h('directionalLight',{position:[100,120,-80],intensity:2}),
- h(React.Suspense,{fallback:null},props.layout?h(React.Fragment,null,h(Beds),h(Desks),h(DeskDecor)):h(props.dronaKitchen?KallaxCuisine:props.dronaNW?KallaxNW:props.dronaSE?KallaxSE:props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
+ h(React.Suspense,{fallback:null},props.bathroom?h(BathroomFixture,props):props.layout?h(React.Fragment,null,h(Beds),h(Desks),h(DeskDecor)):h(props.dronaKitchen?KallaxCuisine:props.dronaNW?KallaxNW:props.dronaSE?KallaxSE:props.drona?KallaxNE:props.fridge?Fridge:Freezer,{item:{},onSize:s=>f.dimensions=s.toArray(),...props})),
  props.chair&&h(React.Suspense,{fallback:null},h('group',{ref:g=>{f.chair=g;},position:chairTransform.position,rotation:[0,chairTransform.rotationY,0]},h(Smorkull,{item:{},actionState:{},onSize:()=>{f.chairReady=true;}}))),
  h('mesh',{rotation:[-Math.PI/2,0,0],position:[0,-.1,0]},h('planeGeometry',{args:[400,400]}),h('meshStandardMaterial',{color:'#777777'})) );}
  createRoot(container).render(h(App));
@@ -213,6 +234,90 @@ if(!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-li
  });
  await page.waitForFunction(()=>window.fixture.scene?.getObjectByName('motor_casing'),{timeout:60000});
  await page.evaluate(()=>{const f=window.fixture;f.camera.lookAt(0,25,0);f.tick(.01);});
+
+ if(process.argv.includes('--bathroom')){
+   await page.evaluate(()=>window.fixture.setProps({bathroom:true,isPreview:false,actionState:{}}));
+   await page.waitForFunction(()=>['bathroom-cabinet-west','bathroom-cabinet-east','drona-bathroom-west','drona-bathroom-east'].every(id=>window.fixture.scene.getObjectByName(id)),{timeout:60000});
+   const items=await page.evaluate(async()=>{
+     const f=window.fixture,{BATHROOM_STORAGE_ITEMS}=await import('/src/features/scene/items/bathroomStorage.ts');
+     const {getSmartObject,buildSmartObjectInstructionSequence}=await import('/src/features/scene/ai/smartObjectRegistry.ts');
+     const {getObjectTransform}=await import('/src/features/scene/objectTransforms.ts');
+     if(getSmartObject('drona-west')||getSmartObject('drona-east'))throw new Error('Legacy storage objects still registered');
+     f.readBath=id=>{
+       const item=BATHROOM_STORAGE_ITEMS[id],node=f.scene.getObjectByName(id);let hover;
+       node.traverse(n=>{if(n.userData.hoverAction)hover=n.userData.hoverAction;});
+       let extension;
+       if(item.kind==='cabinet')extension=f.scene.getObjectByName(id+'-door').rotation.y/(id.endsWith('west')?-Math.PI/2:Math.PI/2);
+       else{const mesh=node.getObjectByProperty('isMesh',true);mesh.geometry.computeBoundingBox();extension=-node.position.z/((mesh.geometry.boundingBox.max.z-mesh.geometry.boundingBox.min.z)*2/3);}
+       return {extension,actions:hover.actions};
+     };
+     f.tick(.1);
+     return Object.entries(BATHROOM_STORAGE_ITEMS).map(([id,item])=>{
+       const obj=getSmartObject(id),transform=getObjectTransform(id),node=f.scene.getObjectByName(id),world=node.getWorldPosition(new f.THREE.Vector3());
+       if(world.distanceTo(new f.THREE.Vector3(...transform.position))>1e-6)throw new Error('Rendered storage differs from item transform');
+       if(JSON.stringify(obj.position)!==JSON.stringify(transform.position))throw new Error('SmartObject must use itemId');
+       return {id,...item,slot:obj.slots[0],sequence:buildSmartObjectInstructionSequence(id,'pick-item')};
+     });
+   });
+   for(const item of items){
+     assert.deepEqual((await page.evaluate(id=>window.fixture.readBath(id),item.id)).actions,[item.action,`smart-object:::${item.id}:::pick-item`]);
+     for(const value of [true,false]){
+       await page.evaluate(({action,value})=>window.fixture.store.getState().triggerAction(action,value),{action:item.action,value});
+       await new Promise(r=>setTimeout(r,80));await page.evaluate(()=>window.fixture.tick(3));
+       const states=await page.evaluate(ids=>ids.map(id=>window.fixture.readBath(id).extension),items.map(x=>x.id));
+       for(let i=0;i<items.length;i++)assert(Math.abs(states[i]-(items[i].id===item.id&&value?1:0))<1e-6,'Actions must only move the selected storage');
+     }
+     await page.evaluate(action=>window.fixture.setProps({bathroom:true,isPreview:true,actionState:{[action]:true}}),item.action);
+     await new Promise(r=>setTimeout(r,80));await page.evaluate(()=>window.fixture.tick(3));
+     assert.equal((await page.evaluate(id=>window.fixture.readBath(id),item.id)).extension,1);
+     assert.deepEqual((await page.evaluate(id=>window.fixture.readBath(id),item.id)).actions,[item.action]);
+     await page.evaluate(()=>window.fixture.setProps({bathroom:true,isPreview:false,actionState:{}}));await new Promise(r=>setTimeout(r,80));await page.evaluate(()=>window.fixture.tick(3));
+     const runs=await page.evaluate(async(item)=>{
+       const f=window.fixture,{default:React}=await import('/node_modules/.vite/deps/react.js'),{default:ReactDOM}=await import('/node_modules/.vite/deps/react-dom_client.js');
+       const {useAgentController}=await import('/src/features/scene/ai/useAgentController.ts');
+       const {setAgentProfile}=await import('/src/features/scene/ai/navigation/obstacles.ts');
+       const {getAnimationDef}=await import('/src/features/scene/animations/animationResolver.ts');
+       const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
+       const clips={};let rig;
+       for(const phase of ['pull','search','push']){
+         const def=getAnimationDef(item.animationPrefix+'-'+phase);if(def.loop!=='once')throw new Error('Storage gestures must be one-shot');
+         const gltf=await new GLTFLoader().loadAsync('/'+def.path);clips[def.id]=gltf.animations[0];rig??=gltf.scene;
+       }
+       const render=f.gl.render;f.gl.render=()=>{};const results=[];
+       try{for(const interruptAt of [null,'pull','search']){
+         const id=item.id+'-'+interruptAt;setAgentProfile(id,{radius:15,height:170});
+         const host=document.createElement('div');document.body.append(host);const root=ReactDOM.createRoot(host);
+         const routine=structuredClone(item.sequence),[x,y,z]=item.slot.offset;let agent,complete=false,playback,playing='';
+         const finished={},mixer=new f.THREE.AnimationMixer(rig.clone(true));
+         mixer.addEventListener('loop',()=>{throw new Error('Bathroom gesture looped');});
+         mixer.addEventListener('finished',e=>{const name=e.action.getClip().name;finished[name]=(finished[name]??0)+1;});
+         function Probe(){agent=useAgentController(id,routine,false,()=>({x,y,z,rotY:item.slot.rotY}),()=>{complete=true;});return null;}
+         f.flushSync(()=>root.render(React.createElement(Probe)));
+         for(let time=0;time<30&&!complete;time+=.05){
+           const state=agent.update(.05);
+           if(clips[state.animation]){
+             if(playing!==state.animation){playback?.stop();playing=state.animation;playback=mixer.clipAction(clips[playing]).reset().setLoop(f.THREE.LoopOnce,1);playback.clampWhenFinished=true;playback.play();}
+             mixer.update(.05);const progress=Math.min(1,playback.time/playback.getClip().duration);agent.reportAnimationPlayback(playing,progress,progress>=1);
+           }
+           await new Promise(r=>setTimeout(r,0));f.tick(.05);
+           const motion=routine.find(step=>step.animation===state.animation)?.dronaMotion;
+           if(motion){
+             const progress=playback.time/playback.getClip().duration,fraction=Math.max(0,Math.min(1,(progress-motion.range[0])/(motion.range[1]-motion.range[0])));
+             if(Math.abs(f.readBath(item.id).extension-(motion.from+(motion.to-motion.from)*fraction))>1e-6)throw new Error('Bathroom storage drifted from playback');
+           }
+           if(interruptAt&&playing===item.animationPrefix+'-'+interruptAt&&playback.time>playback.getClip().duration/2)break;
+         }
+         root.unmount();host.remove();await new Promise(r=>setTimeout(r,0));f.tick(3);
+         if(f.readBath(item.id).extension!==0)throw new Error('Bathroom storage not closed after completion/interruption');
+         if(!interruptAt){if(!complete)throw new Error('Bathroom routine did not finish');for(const phase of ['pull','search','push'])if(finished[item.animationPrefix+'-'+phase]!==1)throw new Error('Incomplete/repeated bathroom gesture');}
+         results.push({interruptAt,complete,finished});
+       }}finally{f.gl.render=render;}
+       return results;
+     },item);
+     console.log(item.id,'itemId, real cabinets, independent actions/preview, one-shot sync and interruption cleanup: PASS',runs);
+   }
+   assert.deepEqual(errors,[]);return;
+ }
 
  if(process.argv.includes('--clearance')){
    const measurements=[];
