@@ -460,11 +460,10 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'open-pick',
         name: 'Prendre un ingrédient',
-        // Local clearance for the kneeling clip's front knee (~54 cm).
         relative: true,
         offset: [85, 0, 0],
         rotY: -Math.PI / 2,
-        animation: 'kneeling-inspecting',
+        animation: 'pick-fruit-3',
       }
     ]
   },
