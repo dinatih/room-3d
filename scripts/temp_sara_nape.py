@@ -1,4 +1,4 @@
-"""Bake the supplied nape design onto the dressed and nude torso UVs.
+"""Bake the supplied design onto the front and back of both torso necks.
 Run node scripts/temp_sara_nape.mjs before this script to extract the GLB UVs.
 """
 import json
@@ -25,8 +25,6 @@ for mesh in json.loads(Path('/tmp/sara-nape-meshes.json').read_text()):
     for ids in np.array(mesh['indices']).reshape(-1, 3):
         p = positions[ids]
         if p[:, 1].max() < upper_y-height or p[:, 1].min() > upper_y:
-            continue
-        if p[:, 2].mean() >= 0:  # The back of the neck faces negative Z.
             continue
         t = uv[ids]
         matrix = (t[1:] - t[0]).T

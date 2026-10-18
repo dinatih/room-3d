@@ -36,7 +36,9 @@ if (process.argv.includes('--preview')) {
  const camera=new THREE.OrthographicCamera(-.1,.1,.08,-.08,.01,10);camera.position.copy(target).add(new THREE.Vector3(0,0,-2));camera.lookAt(target);
  const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1000,800);renderer.setClearColor(0xf3f4f6);
  document.body.replaceChildren(renderer.domElement);
- window.renderSaraNape=(nude)=>{
+ window.renderSaraNape=(nude,front)=>{
+ camera.position.copy(target).add(new THREE.Vector3(0,0,front?2:-2));camera.lookAt(target);
+ light.position.set(0,2,front?3:-3);
  scene.traverse(m=>{if(m.isMesh){if(m.name==='body_torso')m.visible=!nude;if(m.name.startsWith('body_nude_torso'))m.visible=nude;}});
  renderer.render(view,camera);
  };
@@ -51,9 +53,9 @@ if (process.argv.includes('--preview')) {
  };
  });
  await page.waitForFunction(()=>window.saraNapeReady());
- for(const nude of [false,true]){
- await page.evaluate(nude=>window.renderSaraNape(nude),nude);
- await page.screenshot({path:`/tmp/sara-nape-${nude?'nude':'dressed'}.png`});
+ for(const nude of [false,true])for(const front of [false,true]){
+ await page.evaluate((nude,front)=>window.renderSaraNape(nude,front),nude,front);
+ await page.screenshot({path:`/tmp/sara-nape-${front?'front':'back'}-${nude?'nude':'dressed'}.png`});
  }
  console.log('Sara nape overlays loaded on dressed and nude torso; screenshots saved.');
  }finally{await browser.close();}
