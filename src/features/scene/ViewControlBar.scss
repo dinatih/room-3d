@@ -97,29 +97,24 @@
     width: 15.5rem;
   }
 
-  &--actions-menu {
-    width: max-content;
-    max-width: calc(100vw - 1rem);
+  .btn {
+    white-space: nowrap;
+    font-weight: 600;
+  }
 
-    .btn {
-      white-space: nowrap;
-      font-weight: 600;
-    }
+  .btn-outline-secondary {
+    --bs-btn-color: #{palette.$gray-700};
+    --bs-btn-border-color: #{palette.$gray-500};
+    --bs-btn-hover-bg: #{palette.$gray-200};
+    --bs-btn-hover-color: #{palette.$gray-900};
+  }
 
-    .btn-outline-secondary {
-      --bs-btn-color: #{palette.$gray-700};
-      --bs-btn-border-color: #{palette.$gray-500};
-      --bs-btn-hover-bg: #{palette.$gray-200};
-      --bs-btn-hover-color: #{palette.$gray-900};
-    }
-
-    .view-control-bar__outline--red {
-      --bs-btn-color: #{palette.$red};
-      --bs-btn-border-color: #{palette.$red};
-      --bs-btn-hover-color: #{palette.$white};
-      --bs-btn-hover-bg: #{palette.$red};
-      --bs-btn-hover-border-color: #{palette.$red};
-    }
+  .view-control-bar__outline--red {
+    --bs-btn-color: #{palette.$red};
+    --bs-btn-border-color: #{palette.$red};
+    --bs-btn-hover-color: #{palette.$white};
+    --bs-btn-hover-bg: #{palette.$red};
+    --bs-btn-hover-border-color: #{palette.$red};
   }
 
   &--dock-width {

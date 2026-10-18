@@ -1092,7 +1092,6 @@ export function Studio() {
             chevron
             title="Outils & Actions"
             noHeader
-            className="view-control-bar__npc-popover--actions-menu"
             hideUI={hideUI}
           >
             <div className="d-flex flex-column gap-1 p-1">
