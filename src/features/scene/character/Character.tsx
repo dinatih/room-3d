@@ -678,6 +678,7 @@ export function Character({
     }
 
     const hasDynamicTask = agentEnabled && hasPendingDynamicTask();
+    let agentAnimationPaused = false;
     const hasCharacterControl = cameraState.isXR || (!cameraState.animalTarget && (
       cameraState.mode === 'fpv' || useSceneStore.getState().arrowControl === 'character'
     ));
@@ -715,6 +716,7 @@ export function Character({
       if (isActive) {
         if (hasDynamicTask || isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
           const agentState = updateAgent(delta);
+          agentAnimationPaused = agentState.animationPaused ?? false;
 
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
@@ -743,6 +745,7 @@ export function Character({
         }
       } else if (isNPC) {
         const agentState = updateAgent(delta);
+        agentAnimationPaused = agentState.animationPaused ?? false;
 
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
         groupRef.current.rotation.y = agentState.rotY;
@@ -1094,7 +1097,7 @@ export function Character({
           }
         }
       }
-      mixer.update(delta);
+      mixer.update(agentAnimationPaused ? 0 : delta);
 
       // Parachute d'atterrissage réactif
       const falling = currentAnimClip.current === 'falling' ||

@@ -136,7 +136,10 @@ transitions de posture.
 
 Pour vérifier les transitions avec fondu et lissage activés :
 `ROOM_TEST_URL=http://localhost:5173 node scripts/temp_posture_transitions.cjs`.
-Ce test headless vérifie les clips réels sur Lara et Alex, la continuité du
-bassin, l'attente de lecture effective et le remplacement d'un scénario pendant
-un relèvement. Il exerce également le composant `Character` sur une assise du
-jardin et enregistre ses captures dans `/tmp/room-posture-*.png`.
+Ce test headless vérifie les clips réels sur Lara, Alex et Gloria, la continuité
+du bassin, l'attente de lecture effective et le remplacement d'un scénario.
+Il exerce `Character` avec le canapé gris et les toilettes, vérifie que le
+personnage se relève devant le meuble et attend si la sortie est bloquée.
+Les sorties de lit ne doivent pas repasser par le matelas après le relèvement.
+Les captures sont enregistrées dans `/tmp/room-posture-*.png` et
+`/tmp/room-toilet-standing.png`.

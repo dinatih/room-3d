@@ -12,12 +12,9 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { TOILET_HINGE_ANGLE, TOILET_HINGE_SPEED, TOILET_HINGE_TOLERANCE } from './toiletAnimation';
+import { TOILET_BOWL_CENTER } from './toiletDimensions';
 
 const GLB = 'items/president-toilet/president-toilet.glb';
-
-export const TOILET_W = 40;
-export const TOILET_D = 70;
-export const TOILET_H = 80;
 
 const waterGeo = new THREE.CircleGeometry(1, 32);
 const waterMat = new THREE.MeshStandardMaterial({
@@ -174,7 +171,7 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
       <mesh
         geometry={waterGeo}
         material={waterMat}
-        position={[0, 17.5, 10]}
+        position={TOILET_BOWL_CENTER}
         rotation-x={-Math.PI / 2}
         scale={[4.5, 6, 1]}
         receiveShadow

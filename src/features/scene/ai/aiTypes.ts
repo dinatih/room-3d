@@ -90,6 +90,8 @@ export interface SpatialZoneDef {
 export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START' | 'USE_OBJECT' | 'ROTATE_360' | 'OBSERVE_OBJECT';
 
 export interface AgentInstruction {
+  /** Departure step consumed when the rise already reached free standing space. */
+  postureExit?: boolean;
   type: InstructionType;
   /** Déplacement de dégagement ou attente de fermeture avant une action proche d'une porte. */
   doorKey?: 'living' | 'glassRight';

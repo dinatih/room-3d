@@ -5,6 +5,7 @@ import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimatio
 import { HUMAN_BODY_RADIUS } from '../doorObstacles';
 import { BATH_WEST_WALL, ROOM_D } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
+import { TOILET_BOWL_CENTER } from '../items/toiletDimensions';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 import { positionState } from '../positionState';
 
@@ -190,14 +191,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   'toilet': {
     id: 'toilet',
     name: 'Toilettes WC',
+    itemId: 'toilet',
     category: 'hygiene',
     exclusive: true,
-    position: [50, 0, 550],
     slots: [
       {
         slotId: 'use',
         name: 'Faire ses besoins',
-        approachOffset: [50, 0, 550],
+        offset: [TOILET_BOWL_CENTER[0], 0, TOILET_BOWL_CENTER[2]],
         rotY: 0,
         animation: 'sit-idle',
         duration: 6.0,
@@ -205,6 +206,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'flush',
         name: 'Tirer la chasse',
+        relative: false,
+        offset: [50, 0, 550],
         rotY: Math.PI,
         animation: 'button-pushing',
         duration: 2.0,
@@ -1040,7 +1043,7 @@ export function buildSmartObjectInstructionSequence(
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
       { type: 'MOVE_TO', targetLocalPos: localSlot.offset, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
       baseInstruction,
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, postureExit: true },
     ];
   }
   if ((objectId === 'bed-west' || objectId === 'bed-east') && slot.slotId === 'lie-down') {
@@ -1053,8 +1056,8 @@ export function buildSmartObjectInstructionSequence(
       { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id, slotId: slot.slotId },
       { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
       baseInstruction,
-      { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
-      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id, slotId: slot.slotId },
+      { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction', postureExit: true },
+      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id, slotId: slot.slotId, postureExit: true },
     ];
   }
 

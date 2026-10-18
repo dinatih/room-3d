@@ -281,7 +281,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
       {/* ── 2. STATIC SEAT & BACKREST CUSHIONS ──────────────────────────────── */}
       {/* Center Seat Cushion */}
-      <mesh userData={{ birdPerch: true }} geometry={centerCushionGeo} material={fabricMat} position={[0, 44.5, 0]} castShadow receiveShadow />
+      <mesh userData={{ birdPerch: true, seatSurface: true }} geometry={centerCushionGeo} material={fabricMat} position={[0, 44.5, 0]} castShadow receiveShadow />
 
       {/* Tilted Rattan Backrest Panel (Pivot at top back of seat rim) */}
       <group position={[-30.5, 41, 0]} rotation={[0, 0, 0.14]}>

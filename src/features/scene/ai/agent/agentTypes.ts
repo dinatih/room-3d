@@ -4,6 +4,7 @@ export interface AgentState {
   z: number;
   rotY: number;
   animation: string;
+  animationPaused?: boolean;
   isSpawned: boolean;
 }
 

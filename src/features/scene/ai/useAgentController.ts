@@ -4,10 +4,10 @@ import { SMART_OBJECTS, buildSmartObjectInstructionSequence, getAllSmartObjectId
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, NavigationBlockedError, getNavigationGraph, describeNavigationBlock } from './navigation/service';
+import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, getObjectApproach, movePostureExit, NavigationBlockedError, getNavigationGraph, describeNavigationBlock } from './navigation/service';
 import { movingFurniture } from '../furniturePositions';
-import { hasAgentProfile, getObstacleRevision, getAgentProfile, navigationDebug } from './navigation/obstacles';
-import { distance } from './navigation/geometry';
+import { hasAgentProfile, getObstacleRevision, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
+import { distance, inflate, pointInRing, BOOLEAN_PRECISION } from './navigation/geometry';
 import { useSceneStore } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 import { getEstimatedClipDuration } from '../animOptions';
@@ -103,15 +103,23 @@ export function useAgentController(
   const timerRef = useRef(deployment.timer);
   const statusRef = useRef<AgentStatus>(deployment.status);
   const playbackRef = useRef<{ animation: string; progress: number; finished: boolean } | null>(null);
-  const transitionRef = useRef<{ animation: string; y: number; advanceStep: boolean } | null>(null);
+  const transitionRef = useRef<{
+    animation: string; sourceAnimation: string; y: number; advanceStep: boolean;
+    departure: { x: number; z: number }; owner?: string;
+    exit?: { x: number; z: number };
+  } | null>(null);
   const beginExitTransition = (advanceStep: boolean) => {
     if (!(useSceneStore.getState().layers.exitTransitions ?? false)) return false;
     const exit = getExitTransition(stateRef.current.animation);
     if (!exit) return false;
-    transitionRef.current = { animation: exit.anim, y: stateRef.current.y, advanceStep };
+    const owner = routeRef.current.owner ?? claimedSlotRef.current?.objectId;
+    transitionRef.current = {
+      animation: exit.anim, sourceAnimation: stateRef.current.animation, y: stateRef.current.y, advanceStep,
+      departure: { x: stateRef.current.x, z: stateRef.current.z },
+      owner: owner ? getInteractionOwner(owner) : undefined,
+    };
     playbackRef.current = null;
     statusRef.current = 'TRANSITIONING';
-    stateRef.current.animation = exit.anim;
     return true;
   };
   const delayTimerRef = useRef(deployment.delayTimer);
@@ -602,15 +610,65 @@ export function useAgentController(
     if (statusRef.current === 'TRANSITIONING') {
       const transition = transitionRef.current;
       if (!transition) throw new Error('Missing active posture transition');
+      if (transition.owner && !transition.exit && hasAgentProfile(_characterId)) {
+        const profile = getAgentProfile(_characterId);
+        const direction = { x: Math.sin(stateRef.current.rotY), z: Math.cos(stateRef.current.rotY) };
+        const owned = [...furnitureObstacles.values()].filter(obstacle => obstacle.owner === transition.owner
+          && obstacle.yMin < profile.height && obstacle.yMax > 0);
+        if (owned.some(obstacle => pointInRing(transition.departure, inflate(obstacle.polygon, profile.radius)))) {
+          // Aim past the front boundary with the actor's actual body clearance.
+          const reach = Math.max(...owned.flatMap(obstacle => obstacle.polygon.map(point =>
+            (point.x - transition.departure.x) * direction.x + (point.z - transition.departure.z) * direction.z))) + profile.radius;
+          const goal = { x: transition.departure.x + direction.x * reach, z: transition.departure.z + direction.z * reach };
+          const exit = getObjectApproach(transition.owner, goal, _characterId, stateRef.current, true);
+          if (!exit) {
+            stateRef.current.animation = transition.sourceAnimation;
+            stateRef.current.animationPaused = true;
+            reportNavigationStop(`Aucune sortie praticable de ${transition.owner}`, transition.owner, goal);
+            return stateRef.current;
+          }
+          transition.exit = exit;
+          routeRef.current.owner = transition.owner;
+        }
+      }
       const playback = playbackRef.current;
+      stateRef.current.animation = transition.animation;
+      stateRef.current.animationPaused = false;
       if (playback?.animation === transition.animation) {
+        if (transition.exit) {
+          const target = {
+            x: transition.departure.x + (transition.exit.x - transition.departure.x) * playback.progress,
+            z: transition.departure.z + (transition.exit.z - transition.departure.z) * playback.progress,
+          };
+          const previous = { x: stateRef.current.x, z: stateRef.current.z };
+          const next = movePostureExit(routeRef.current, _characterId, previous, target, transition.owner!);
+          stateRef.current.x = next.x;
+          stateRef.current.z = next.z;
+          stateRef.current.animationPaused = distance(next, target) > BOOLEAN_PRECISION;
+          if (stateRef.current.animationPaused && (routeRef.current.error || routeRef.current.waitReason)) {
+            reportNavigationStop(routeRef.current.error ?? routeRef.current.waitReason!, transition.owner ?? 'sortie de posture', transition.exit);
+          }
+        }
         stateRef.current.y = transition.y * (1 - playback.progress);
       }
-      if (playback?.animation === transition.animation && playback.finished) {
+      if (playback?.animation === transition.animation && playback.finished && !stateRef.current.animationPaused) {
         transitionRef.current = null;
         statusRef.current = 'IDLE';
         stateRef.current.animation = resolveAnimationId('idle');
-        if (transition.advanceStep) advanceToNextStep(hasNavStepInUpdate);
+        if (transition.advanceStep) {
+          advanceToNextStep(hasNavStepInUpdate);
+          // Bed routines also describe an explicit edge/floor departure. The
+          // animation-driven exit has already completed those steps.
+          if (transition.exit) {
+            let dynamic = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length;
+            let next = dynamic ? dynamicNavQueueRef.current[dynamicNavIndexRef.current] : scenario?.[stepIndexRef.current];
+            while (next?.postureExit) {
+              advanceToNextStep(dynamic);
+              dynamic = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length;
+              next = dynamic ? dynamicNavQueueRef.current[dynamicNavIndexRef.current] : scenario?.[stepIndexRef.current];
+            }
+          }
+        }
       }
       return stateRef.current;
     }
@@ -1225,6 +1283,7 @@ export function useAgentController(
       statusRef.current = 'IDLE';
       stateRef.current.animation = resolveAnimationId('idle');
     }
+    stateRef.current.animationPaused = false;
     transitionRef.current = null;
     playbackRef.current = null;
     initialProfileResolvedRef.current = true;

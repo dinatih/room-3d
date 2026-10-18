@@ -13,6 +13,7 @@ import {
 } from './wallData';
 import { SDB_CLOSET_X, SDB_CLOSET_Z } from './items/SdbCloset';
 import { SHOWER_W, SHOWER_D } from './items/Shower';
+import { TOILET_D } from './items/toiletDimensions';
 import { positionState } from './positionState';
 import { DYNAMIC_FURNITURE_ANCHORS, currentFurnitureTransforms, FurnitureTransform } from './furniturePositions';
 
@@ -66,7 +67,7 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
     case 'toilet':
       // Placements.tsx: <group position={[BATH_WEST_WALL + 60, 0, BATH_NORTH_WALL + 36.5]} ...>
       return {
-        position: [BATH_WEST_WALL + 60, 0, BATH_NORTH_WALL + 36.5],
+        position: [BATH_WEST_WALL + 60, 0, BATH_NORTH_WALL + TOILET_D / 2 + 1.5],
         rotationY: 0,
       };
 
