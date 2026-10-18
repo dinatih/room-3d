@@ -91,9 +91,11 @@ export function GlobalSkeletonHelpers({
   const selectedRingMeshRef = useRef<THREE.Mesh>(null);
   const selectedLinesRef = useRef<THREE.LineSegments>(null);
   const selectedLinesGeomRef = useRef<THREE.BufferGeometry>(null);
+  const selectedBadgeGroupRef = useRef<THREE.Group>(null);
 
   // Référence 3D pour l'os survolé
   const hoveredJointMeshRef = useRef<THREE.Mesh>(null);
+  const isPointerInsideRef = useRef(false);
 
   // Signature précédente des groupes pour éviter les re-renders inutiles
   const prevGroupsSigRef = useRef<string>('');
@@ -221,6 +223,11 @@ export function GlobalSkeletonHelpers({
       targetBone.getWorldPosition(bonePosRef.current);
       const bPos = bonePosRef.current;
 
+      // Position de l'étiquette HTML de l'os sélectionné
+      if (selectedBadgeGroupRef.current) {
+        selectedBadgeGroupRef.current.position.copy(bPos);
+      }
+
       // Position de la sphère et de l'anneau de sélection
       if (selectedJointMeshRef.current) {
         selectedJointMeshRef.current.position.copy(bPos);
@@ -277,6 +284,12 @@ export function GlobalSkeletonHelpers({
     }
 
     // --- Raycast 2D écran pour survoler les os ---
+    if (!isPointerInsideRef.current) {
+      if (hoveredBoneInfo) setHoveredBoneInfo(null);
+      if (hoveredJointMeshRef.current) hoveredJointMeshRef.current.visible = false;
+      return;
+    }
+
     const canvasW = gl.domElement.clientWidth;
     const canvasH = gl.domElement.clientHeight;
     if (canvasW <= 0 || canvasH <= 0) return;
@@ -367,6 +380,16 @@ export function GlobalSkeletonHelpers({
     let downX = 0;
     let downY = 0;
 
+    const onPointerEnter = () => {
+      isPointerInsideRef.current = true;
+    };
+
+    const onPointerLeave = () => {
+      isPointerInsideRef.current = false;
+      setHoveredBoneInfo(null);
+      if (hoveredJointMeshRef.current) hoveredJointMeshRef.current.visible = false;
+    };
+
     const onPointerDown = (e: PointerEvent) => {
       downTime = Date.now();
       downX = e.clientX;
@@ -397,10 +420,14 @@ export function GlobalSkeletonHelpers({
       }
     };
 
+    dom.addEventListener('pointerenter', onPointerEnter);
+    dom.addEventListener('pointerleave', onPointerLeave);
     dom.addEventListener('pointerdown', onPointerDown);
     dom.addEventListener('pointerup', onPointerUp);
 
     return () => {
+      dom.removeEventListener('pointerenter', onPointerEnter);
+      dom.removeEventListener('pointerleave', onPointerLeave);
       dom.removeEventListener('pointerdown', onPointerDown);
       dom.removeEventListener('pointerup', onPointerUp);
     };
@@ -569,9 +596,6 @@ export function GlobalSkeletonHelpers({
   // Si le squelette n'est pas affiché, ne rien rendre
   if (!show) return null;
 
-  // Afficher une petite infobulle discrète uniquement au survol temporaire d'un os (jamais de bulle permanente sur l'os sélectionné)
-  const showHoverTooltip = Boolean(hoveredBoneInfo && hoveredBoneInfo.bone !== activeSelectedBone.current);
-
   return (
     <>
       {/* Mise en valeur 3D de l'articulation de l'os sélectionné : Sphère + Anneau de ciblage */}
@@ -596,38 +620,39 @@ export function GlobalSkeletonHelpers({
         <meshBasicMaterial color="#00ffff" depthTest={false} transparent opacity={0.8} />
       </mesh>
 
-      {/* Étiquette discrète uniquement lors du survol de la souris */}
-      {showHoverTooltip && hoveredBoneInfo && (
-        <Html
-          position={[hoveredBoneInfo.pos.x, hoveredBoneInfo.pos.y, hoveredBoneInfo.pos.z]}
-          style={{
-            pointerEvents: 'none',
-            transform: 'translate3d(-50%, -120%, 0)',
-            transition: 'transform 0.05s ease-out',
-            zIndex: 10000,
-          }}
-        >
-          <div
+      {/* Étiquette avec le nom de l'os affichée UNIQUEMENT au clic (lorsqu'un os est sélectionné) */}
+      {activeSelectedName && (
+        <group ref={selectedBadgeGroupRef}>
+          <Html
             style={{
-              background: 'rgba(15, 23, 42, 0.85)',
-              color: '#38bdf8',
-              border: '1px solid rgba(56, 189, 248, 0.6)',
-              borderRadius: 4,
-              padding: '2px 6px',
-              fontSize: 10,
-              fontWeight: 600,
-              fontFamily: 'monospace',
-              whiteSpace: 'nowrap',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
+              pointerEvents: 'none',
+              transform: 'translate3d(-50%, -120%, 0)',
+              transition: 'transform 0.05s ease-out',
+              zIndex: 10000,
             }}
           >
-            <span>🦴</span>
-            <span>{hoveredBoneInfo.bone.name}</span>
-          </div>
-        </Html>
+            <div
+              style={{
+                background: 'rgba(15, 23, 42, 0.9)',
+                color: '#fffa65',
+                border: '1px solid rgba(255, 250, 101, 0.8)',
+                borderRadius: 4,
+                padding: '2px 8px',
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: 'monospace',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              <span>🦴</span>
+              <span>{activeSelectedName}</span>
+            </div>
+          </Html>
+        </group>
       )}
     </>
   );

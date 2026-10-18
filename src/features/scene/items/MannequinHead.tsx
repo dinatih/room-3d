@@ -96,6 +96,12 @@ export function MannequinHead({
   }, [initialHairColor, wigId]);
 
   useEffect(() => {
+    if (initialWindEnabled !== undefined) {
+      setWindEnabled(initialWindEnabled);
+    }
+  }, [initialWindEnabled]);
+
+  useEffect(() => {
     const handler = (e: Event) => {
       const { key, value } = (e as CustomEvent).detail;
       if (key === `mannequin-${mannequinId}-random`) {
