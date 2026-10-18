@@ -270,6 +270,47 @@ if(!process.argv.includes('--chair-seat')&&!process.argv.includes('--serve-tests
  await page.waitForFunction(()=>window.fixture.scene?.getObjectByName('motor_casing'),{timeout:60000});
  await page.evaluate(()=>{const f=window.fixture;f.camera.lookAt(0,25,0);f.tick(.01);});
 
+ if(process.argv.includes('--crowd-detour')){
+   const results=await page.evaluate(async()=>{
+     const nav=await import('/src/features/scene/ai/navigation/service.ts'),registry=await import('/src/features/scene/ai/navigation/obstacles.ts'),g=await import('/src/features/scene/ai/navigation/geometry.ts');
+     const avoidance=await import('/src/features/scene/ai/agent/agentAvoidance.ts'),{cameraState}=await import('/src/features/scene/cameraState.ts');
+     const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');
+     useSceneStore.setState(s=>({layers:{...s.layers,npcCollisions:true}}));
+     for(const id of ['walker','hug-a','hug-b'])registry.setAgentProfile(id,{radius:20,height:170});
+     for(const [id,z] of [['north',-650],['south',-550]])registry.registerObstacle({id,polygon:g.rectangle(0,z,260,10),yMin:0,yMax:200});
+     cameraState.positions['hug-a']={x:0,y:0,z:-610,yaw:0};cameraState.positions['hug-b']={x:0,y:0,z:-590,yaw:0};
+     const results=[];
+     for(const sign of [1,-1]){
+       let position={x:-100*sign,z:-600},minimum=Infinity,excursion=0,detour=false;
+       const target={x:100*sign,z:-600},route=nav.createRouteState();
+       for(let frame=0;frame<1000;frame++){
+         cameraState.positions.walker={...position,y:0,yaw:0};const before=position;
+         position=nav.followRoute(route,'walker',position,target,2,(d,remaining)=>{const s=avoidance.computeSteeringVector('walker',position.x,position.z,d.x,d.z,remaining);return{x:s.steerX,z:s.steerZ};});
+         detour||=!!route.crowd?.graph;
+         for(const id of ['hug-a','hug-b']){const p=cameraState.positions[id];minimum=Math.min(minimum,g.distance(p,g.projectToSegment(p,before,position)));}
+         excursion=Math.max(excursion,Math.abs(position.z+600));
+         if(route.error)throw new Error(route.error);
+         if(g.distance(position,target)<1e-6)break;
+         await new Promise(r=>setTimeout(r,0));
+       }
+       if(g.distance(position,target)>1e-6||minimum<20-Math.SQRT2*g.BOOLEAN_PRECISION||!detour||excursion<30)throw new Error('Duo detour failed: '+JSON.stringify({position,minimum,detour,excursion}));
+       results.push({sign,minimum,excursion,detour});nav.resetRoute(route,'walker');
+     }
+     delete cameraState.positions['hug-a'];delete cameraState.positions['hug-b'];
+     registry.setAgentProfile('oncoming',{radius:20,height:170});
+     const agents=[{id:'walker',p:{x:-100,z:-600},target:{x:100,z:-600},route:nav.createRouteState()},{id:'oncoming',p:{x:100,z:-600},target:{x:-100,z:-600},route:nav.createRouteState()}];
+     for(const a of agents)cameraState.positions[a.id]={...a.p,y:0,yaw:0};
+     let separation=Infinity;
+     for(let frame=0;frame<1000;frame++){
+       for(const a of agents){a.p=nav.followRoute(a.route,a.id,a.p,a.target,2,(d,remaining)=>{const s=avoidance.computeSteeringVector(a.id,a.p.x,a.p.z,d.x,d.z,remaining);return{x:s.steerX,z:s.steerZ};});cameraState.positions[a.id]={...a.p,y:0,yaw:0};separation=Math.min(separation,g.distance(agents[0].p,agents[1].p));}
+       if(agents.every(a=>g.distance(a.p,a.target)<1e-6))break;
+       await new Promise(r=>setTimeout(r,0));
+     }
+     if(!agents.every(a=>g.distance(a.p,a.target)<1e-6)||separation<20-Math.SQRT2*g.BOOLEAN_PRECISION)throw new Error('Head-on crossing failed: '+JSON.stringify({agents:agents.map(a=>({id:a.id,p:a.p,wait:a.route.waitReason})),separation}));
+     results.push({headOn:true,separation});return results;
+   });
+   console.log('Duo detours through comfort bands and head-on crossing: PASS',results);assert.deepEqual(errors,[]);return;
+ }
  if(process.argv.includes('--diy-chair')){
    await page.evaluate(()=>window.fixture.setProps({kitchenStorage:true,diyObstacles:true,isPreview:false,actionState:{}}));
    await page.waitForFunction(()=>window.fixture.diyObstaclesReady&&window.fixture.scene.getObjectByName('drona-kitchen-diy'),{timeout:60000});

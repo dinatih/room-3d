@@ -57,6 +57,12 @@ L'évitement d'un autre agent doit conserver la visibilité du prochain virage.
 Si une position déplacée perd cette visibilité, le trajet est recalculé. Une
 réservation reste active tant qu'un franchissement est encore prévu, puis se
 libère dès que le corps est hors de la fermeture et du débattement des battants.
+Les autres PNJ sont pris en compte avec leur rayon réduit de moitié. Le
+contournement commence quand le segment à venir coupe leur empreinte, avant
+le contact. Les bandes bleues restent traversables pour ce détour.
+Validation ciblée : `node scripts/temp_freezer_smartobject.cjs --crowd-detour`
+(serveur de test sur 5175) : duo au milieu d'un passage, dans les deux sens,
+puis deux PNJ venant face à face.
 Le contournement des corps mobiles utilise un trajet physique, sans refaire
 l'optimisation de confort sur chaque instantané des PNJ. Le trajet statique de
 confort reprend dès que le segment initialement occupé redevient libre. Les

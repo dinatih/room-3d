@@ -349,7 +349,11 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     route.doors.clear();
   }
   const limited = limitAgentMovement(agentId, start, position);
-  if (limited.x !== position.x || limited.z !== position.z) {
+  // Plan before contact along the next segment, including free comfort bands.
+  const nextWaypoint = route.path[route.index];
+  const ahead = nextWaypoint ? limitAgentMovement(agentId, start, nextWaypoint) : position;
+  const blockedAhead = !!nextWaypoint && (ahead.x !== nextWaypoint.x || ahead.z !== nextWaypoint.z);
+  if (limited.x !== position.x || limited.z !== position.z || blockedAhead) {
     route.waitReason = 'Déplacement limité par le corps d’un autre PNJ';
     // A stop at contact is insufficient: keep a real path around the other bodies.
     const base = route.crowd && (route.crowd.graph === route.graph || route.crowd.planning) ? route.crowd.base
