@@ -9,7 +9,7 @@ import {
   DOOR_START,
   BATH_WEST_WALL, BATH_NORTH_WALL,
   KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL,
-  ROOM_W, ROOM_D, PARTITION_THICKNESS, CORRIDOR_NORTH_WALL, SHOWER_SOUTH_WALL
+  ROOM_W, ROOM_D, PARTITION_THICKNESS, CORRIDOR_NORTH_WALL, SHOWER_SOUTH_WALL, FURNITURE_WALL_CLEARANCE
 } from './wallData';
 import { SDB_CLOSET_X, SDB_CLOSET_Z } from './items/SdbCloset';
 import { SHOWER_W, SHOWER_D } from './items/Shower';
@@ -87,7 +87,7 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
     case 'freezer':
       // The freezer sits at the base of Kallax SE, with an extra quarter turn.
       return {
-        position: [ROOM_W - 39 / 2, 0, ROOM_D - 60 - 40.5 / 2],
+        position: [ROOM_W - 39 / 2 - FURNITURE_WALL_CLEARANCE, 0, ROOM_D - 60 - 40.5 / 2],
         rotationY: Math.PI,
       };
     case 'bed-west':

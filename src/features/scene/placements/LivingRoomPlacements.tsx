@@ -82,7 +82,7 @@ const mannRot = Math.atan2(150 - lackCX, 200 - lackCZ);
 const MUL_D = 13;
 const mulCZ = pSouth('niche-beam') - 150;
 
-const MEUBLE_T_X = ROOM_W - 13.75;
+const MEUBLE_T_X = FREEZER_TRANSFORM.position[0] + KALLAX_DEPTH / 2 - 13.75;
 const MEUBLE_T_Z = KALLAX_SE_Z;
 const MEUBLE_T_Y = KALLAX_SE_TOP + 50; // dessus kallax SE + freezer
 
@@ -548,7 +548,7 @@ export function LivingRoomFurnishings() {
       <DeskDecor />
 
       {/* Enceinte JBL Charge 3 sur Kallax NE */}
-      <group position={[ROOM_W - KALLAX_DEPTH / 2 - 15, 118, w2 - 11]} userData={{ animUnit: true, itemName: 'Enceinte JBL Charge 3' }}>
+      <group position={[KALLAX_NE_POSITION[0] - 15, 118, KALLAX_NE_POSITION[2] + w2 / 2 - 11]} userData={{ animUnit: true, itemName: 'Enceinte JBL Charge 3' }}>
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -589,7 +589,7 @@ export function LivingRoomDecor() {
       </group>
 
       {/* Tête de mannequin 2 sur Kallax NE */}
-      <group position={[ROOM_W - 14, 118, w2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, itemName: 'Tête de mannequin 2', hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
+      <group position={[KALLAX_NE_POSITION[0] + KALLAX_DEPTH / 2 - 14, 118, KALLAX_NE_POSITION[2] + w2 / 2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, itemName: 'Tête de mannequin 2', hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-ne" />
       </group>
 
@@ -648,7 +648,7 @@ export function LivingRoomDecor() {
       </group>
 
       {/* Casquettes sur ShoeHatRack (flanc Kallax SE) */}
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]}>
+      <group position={FREEZER_TRANSFORM.position} rotation={[0, FREEZER_TRANSFORM.rotationY - Math.PI / 2, 0]}>
         <group position={[-w1 / 2, 0, KALLAX_DEPTH / 2]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
           <ShoeHatRackCaps />
         </group>

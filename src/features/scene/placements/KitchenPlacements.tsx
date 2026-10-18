@@ -16,6 +16,7 @@ import {
   BATH_WEST_WALL,
   KITCHEN_WEST_WALL,
   KITCHEN_SOUTH_WALL,
+  FURNITURE_WALL_CLEARANCE,
 } from '../wallData';
 
 const stub = (id: string): Item =>
@@ -23,6 +24,11 @@ const stub = (id: string): Item =>
 
 const w2 = 75.5;
 const KALLAX_DEPTH = 39;
+const KALLAX_CUISINE_POSITION: [number, number, number] = [
+  BATH_WEST_WALL + KALLAX_DEPTH / 2 + FURNITURE_WALL_CLEARANCE,
+  0,
+  ROOM_D - w2 / 2 - FURNITURE_WALL_CLEARANCE,
+];
 const MACK_Z = ROOM_D - w2 - 16;
 const KALLAX_FRAME = 3.5;
 const KALLAX_DIVIDER = 1.5;
@@ -52,7 +58,7 @@ export function KitchenFurniture() {
   return (
     <MergedStaticGroup name="merged-kitchen-furniture">
       {/* Kallax Cuisine en séparation (structure sans Drona) */}
-      <group position={[BATH_WEST_WALL + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax Cuisine' }}>
+      <group position={KALLAX_CUISINE_POSITION} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax Cuisine' }}>
         <NavigationObstacle id="kallax-cuisine"><KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
       </group>
 
@@ -74,19 +80,19 @@ export function KitchenFurnishings() {
       </group>
 
       {/* Boîtes Drona intégrées au Kallax Cuisine */}
-      <group position={[BATH_WEST_WALL + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={KALLAX_CUISINE_POSITION} rotation={[0, -Math.PI / 2, 0]}>
         <KallaxCuisineDrona />
       </group>
 
       {/* Télémètre Laserliner posé dans la Drona du Kallax Cuisine */}
-      <group position={[BATH_WEST_WALL + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={KALLAX_CUISINE_POSITION} rotation={[0, -Math.PI / 2, 0]}>
         <group position={[17.5, 6.25, -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Télémètre Laserliner' }}>
           <LaserDistanceMaster item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* IKEA 365+ — bord avant de la case supérieure gauche (côté nord). */}
-      <group position={[BATH_WEST_WALL + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={KALLAX_CUISINE_POSITION} rotation={[0, -Math.PI / 2, 0]}>
         {Array.from({ length: IKEA365_COUNT }, (_, i) => (
           <group key={i}
             position={[-w2 / 2 + KALLAX_FRAME + (i + 0.5) * KALLAX_CELL_WIDTH / IKEA365_COUNT, KALLAX_UPPER_CELL_BASE, (KALLAX_DEPTH - IKEA365_LENGTH) / 2]}

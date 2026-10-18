@@ -42,6 +42,8 @@ export const MEASURED_KITCHEN_DEPTH = 60; // 60cm
 // =============================================
 
 export const ROOM_W = MEASURED_DIST_NICHE_BEAM_TO_EAST_WALL; // 3,16m — largeur réelle du séjour
+/** Dégagement des meubles pour les plinthes au ras du sol (cm). */
+export const FURNITURE_WALL_CLEARANCE = 3;
 export const ROOM_D = MEASURED_DIST_CORNER_NE_TO_SE; // 400; // 4m TODO : true value is MEASURED_DIST_CORNER_NE_TO_SE
 export const WALL_H = MEASURED_HEIGHT_FLOOR_TO_CEILING; // 2.5m
 

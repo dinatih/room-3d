@@ -1,7 +1,8 @@
 import { getAnimationDef } from '../animations/animationResolver';
 import { KALLAX_SE_DRONA_POSITIONS } from './kallaxSeDrona';
+import { FURNITURE_WALL_CLEARANCE } from '../wallData';
 
-export const KALLAX_NW_POSITION: [number, number, number] = [39 / 2, 0, 40.5 / 2];
+export const KALLAX_NW_POSITION: [number, number, number] = [39 / 2 + FURNITURE_WALL_CLEARANCE, 0, 40.5 / 2 + FURNITURE_WALL_CLEARANCE];
 export const KALLAX_NW_ROTATION = -Math.PI / 2;
 export const KALLAX_NW_DRONA_POSITIONS: [number, number, number][] = [
   [0, 75.5 / 2 - 17.5, 0], [0, 75.5 / 2 + 17.5, 0],

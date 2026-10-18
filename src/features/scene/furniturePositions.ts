@@ -5,7 +5,7 @@
  * et le système de SmartObjects (smartObjectRegistry / agentInstructionCoords).
  */
 
-import { ROOM_D, ROOM_W } from './wallData';
+import { ROOM_D, ROOM_W, FURNITURE_WALL_CLEARANCE } from './wallData';
 
 export interface FurnitureTransform {
   x: number;
@@ -23,8 +23,7 @@ export const currentFurnitureTransforms: Record<string, FurnitureTransform> = {}
 // (centre à ROOM_D - 60 - 40.5 / 2 ; profondeur du modèle : 47.37 cm).
 const DESK_WIDTH = 68;
 const DESK_DEPTH = 36;
-const EAST_WALL_SKIRTING_CLEARANCE = 3;
-const EAST_DESK_X = ROOM_W - EAST_WALL_SKIRTING_CLEARANCE - DESK_DEPTH / 2;
+const EAST_DESK_X = ROOM_W - FURNITURE_WALL_CLEARANCE - DESK_DEPTH / 2;
 const FREEZER_NORTH_Z = ROOM_D - 60 - 40.5 / 2 - 47.37 / 2;
 const EAST_DESK2_Z = FREEZER_NORTH_Z - DESK_WIDTH / 2;
 
