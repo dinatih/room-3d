@@ -653,6 +653,7 @@ export function InventoryPreview({
   defaultShowGrid = false,
   defaultAutoRotate = true,
   defaultShowMiniPerf,
+  preserveStateOnItemChange = false,
   onGlbStats,
 }: {
   item: PreviewTarget;
@@ -668,6 +669,7 @@ export function InventoryPreview({
   defaultShowGrid?: boolean;
   defaultAutoRotate?: boolean;
   defaultShowMiniPerf?: boolean;
+  preserveStateOnItemChange?: boolean;
   onGlbStats?: (s: GlbDebugStats | null) => void;
 }) {
   const isMobile = useIsMobile();
@@ -680,6 +682,17 @@ export function InventoryPreview({
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(defaultAutoRotate);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
+  const initialFraming = useRef<{ target?: [number, number, number]; radius?: number }>({});
+  const handleTargetChange = useCallback((next: [number, number, number]) => {
+    if (preserveStateOnItemChange && initialFraming.current.target) return;
+    initialFraming.current.target = next;
+    setTarget(next);
+  }, [preserveStateOnItemChange]);
+  const handleBoundsChange = useCallback((next: number) => {
+    if (preserveStateOnItemChange && initialFraming.current.radius !== undefined) return;
+    initialFraming.current.radius = next;
+    setBoundsRadius(next);
+  }, [preserveStateOnItemChange]);
   const [showGrid, setShowGrid] = useState(defaultShowGrid);
   const [wireframe, setWireframe] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
@@ -719,6 +732,7 @@ export function InventoryPreview({
   };
 
   useEffect(() => {
+    if (preserveStateOnItemChange) return;
     setActionStates(initialDuoAnim ? {
       duoAnimDef: initialDuoAnim,
       duoPartnerId: initialDuoPartner || (item?.id === 'native' ? 'rosanna' : 'native'),
@@ -735,7 +749,7 @@ export function InventoryPreview({
     setShowBoneTree(false);
     setPreviewView('free');
     useAnimPreviewStore.getState().reset();
-  }, [item?.id]);
+  }, [item?.id, preserveStateOnItemChange]);
 
   const toggleSkeleton = () => {
     const next = !actionStates.showBones;
@@ -795,7 +809,11 @@ export function InventoryPreview({
       }));
       useAnimPreviewStore.getState().play();
     }
-  }, [initialDuoAnim, initialDuoPartner]);
+  }, [initialDuoAnim]);
+
+  useEffect(() => {
+    if (initialDuoPartner) setActionStates(s => ({ ...s, duoPartnerId: initialDuoPartner }));
+  }, [initialDuoPartner]);
 
   const duoParticipants = actionStates.duoAnimDef
     ? resolveDuoPreviewParticipants(actionStates.duoAnimDef, item?.id, actionStates.duoPartnerId)
@@ -973,7 +991,7 @@ export function InventoryPreview({
           </div>
           {showing3D ? (
             <>
-            <Canvas className="inventory-preview-renderer" key={item.id} shadows={item.id === 'fridge'} frameloop="always" events={() => ({ enabled: false } as any)} camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
+            <Canvas className="inventory-preview-renderer" key={preserveStateOnItemChange ? undefined : item.id} shadows={item.id === 'fridge'} frameloop="always" events={() => ({ enabled: false } as any)} camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
               <PreviewEnvironment showGrid={showGrid} />
               <ambientLight intensity={0.7} />
               <directionalLight position={[150, 250, 150]} intensity={1.0} />
@@ -997,7 +1015,7 @@ export function InventoryPreview({
                 </>
               )}
               {showGrid && <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[5, -0.01, 5]} />}
-              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={previewActionStates} showDims={showDims} wireframe={wireframe} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
+              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={previewActionStates} showDims={showDims} wireframe={wireframe} onTargetChange={handleTargetChange} onBoundsChange={handleBoundsChange} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}
                 selectedBoneName={selectedBoneName}

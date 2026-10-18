@@ -922,7 +922,10 @@ export function Character({
         activeActionName.current = target;
 
         const isControlledByStore = isPreview || characterGrid;
-        if (isControlledByStore) {
+        if (isPreview) {
+          // A replacement preview character joins the shared playback clock.
+          to.time = useAnimPreviewStore.getState().currentTime;
+        } else if (isControlledByStore) {
           const store = useAnimPreviewStore.getState();
           if (store.isPlaying && !store.isScrubbing) {
             store.setCurrentTime(0);
@@ -987,7 +990,7 @@ export function Character({
           const isMaster = !hasActivePreview || isPreview
             ? (isAnimationMaster ?? (isPreview || isActive || characterIndex === 0))
             : false;
-          if (isMaster) {
+          if (isMaster && !isTemporaryLoadingFallback) {
             const cleanName = duoAnimDef
               ? duoAnimDef.label
               : (activeActionName.current.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || activeActionName.current);
@@ -1016,7 +1019,7 @@ export function Character({
               act.clampWhenFinished = false;
             }
 
-            if (isMaster) {
+            if (isMaster && !isTemporaryLoadingFallback) {
               if (store.activeSegments.length > 0) {
                 // Quand des coupes sont actives, le store avance son temps via tick(delta) (qui saute automatiquement les trous)
                 const newTime = store.tick(delta);
