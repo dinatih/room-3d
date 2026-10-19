@@ -17,6 +17,11 @@ const launch = require('./browser-test-options.cjs');
  await page.evaluate(() => window.setView(true));
  await page.screenshot({path:'/tmp/wig-alignment-profile.png'});
  await page.evaluate(() => window.setView(false));
+ for (const item of rest) for (const material of item.materials) {
+  assert.equal(material.alphaHash, false);
+  assert.equal(material.transparent, material.sourceTransparent);
+  assert.equal(material.alphaTest, 0);
+ }
  await page.evaluate(() => window.setWind(true));
  await new Promise(resolve => setTimeout(resolve,2000));
  const wind = await page.evaluate(() => window.inspectWigs());
@@ -25,7 +30,7 @@ const launch = require('./browser-test-options.cjs');
  await page.evaluate(() => window.setWind(false));
  await page.waitForFunction(expected => JSON.stringify(window.inspectWigs()) === expected, {}, JSON.stringify(rest));
  console.log('PASS: anchors and scalp stable, rest pose restored');
- const wigs = await page.evaluate(() => window.wigs);
+ const wigs = await page.evaluate(() => window.wigs.filter(w => /^hair_1(?:0[0-9]|1[0-2])$/.test(w.id) || w.id === 'hair_aespa_short'));
  for (let i = 0; i < wigs.length; i += 2) {
   const batch = wigs.slice(i, i+2);
   await page.evaluate(ids => window.setSelected(ids), batch.map(w => w.id));

@@ -246,10 +246,8 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           const clonedMat = baseMat.clone();
           clonedMat.userData.__ownedWigMaterial = true;
           clonedMat.side = THREE.DoubleSide;
-          clonedMat.transparent = false;
-          clonedMat.opacity = 1;
-          clonedMat.alphaTest = 0.5;
-          clonedMat.depthWrite = true;
+          // Preserve the GLTF alpha mode, opacity and depth-write settings:
+          // hair cards need their continuous transparency, unlike opaque ties.
           if (isLaraNativeWig && isColored) {
             const bwMap = baseMat.map ? getWigGrayscaleTexture(baseMat.map) : null;
             clonedMat.map = bwMap;

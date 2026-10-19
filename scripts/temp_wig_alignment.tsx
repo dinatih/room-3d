@@ -9,7 +9,7 @@ function Inspect() {
  React.useEffect(() => {
   camera.layers.enableAll();
   (window as any).setView = (side: boolean) => {
-   camera.position.set(side ? 190 : 0, 55, side ? 0 : 210);
+   camera.position.set(side ? 190 : 0, 100, side ? 0 : 210);
    camera.lookAt(0, 25, 0);
   };
   (window as any).inspectWigs = () => {
@@ -24,7 +24,8 @@ function Inspect() {
     const forward = new THREE.Vector3(0, 0, 1).transformDirection(head.matrixWorld)
       .transformDirection(o.parent!.matrixWorld.clone().invert());
     const box = new THREE.Box3().setFromObject(o, true);
-    result.push({ forward: forward.toArray(), path: o.children[0].userData.gltfPath, scale: o.scale.toArray(), pos: o.position.toArray(), parentPos: o.parent!.position.toArray(), head: local.toArray(), size: box.getSize(new THREE.Vector3()).toArray(), fixed: meshes[0].skeleton.bones.filter(b => /^(bip_head|head_00|hairAll)/i.test(b.name)).map(b => b.quaternion.toArray()) });
+    const materials = meshes.flatMap(mesh => (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).map((mat: any) => ({ alphaHash: mat.alphaHash, alphaTest: mat.alphaTest, transparent: mat.transparent, sourceTransparent: (Array.isArray(mesh.userData.__baseWigMaterial) ? mesh.userData.__baseWigMaterial : [mesh.userData.__baseWigMaterial]).some((base: any) => base.transparent) })));
+    result.push({ materials, forward: forward.toArray(), path: o.children[0].userData.gltfPath, scale: o.scale.toArray(), pos: o.position.toArray(), parentPos: o.parent!.position.toArray(), head: local.toArray(), size: box.getSize(new THREE.Vector3()).toArray(), fixed: meshes[0].skeleton.bones.filter(b => /^(bip_head|head_00|hairAll)/i.test(b.name)).map(b => b.quaternion.toArray()) });
    });
    return result;
   };
@@ -33,7 +34,7 @@ function Inspect() {
 }
 function App() {
  const [wind, setWind] = React.useState(false);
- const [selected, setSelected] = React.useState(["hair_100", "hair_aespa_short"]);
+ const [selected, setSelected] = React.useState(["hair_104", "hair_105"]);
  (window as any).setSelected = setSelected;
  (window as any).wigs = WIGS_ITEMS.map(w => ({id:w.id, path:w.glbPath}));
  (window as any).setWind = setWind;
