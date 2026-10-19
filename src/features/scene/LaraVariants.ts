@@ -4,7 +4,6 @@ import { applyMarissaReferenceTattoos } from './MarissaReferenceTattoos';
 import { getMarissaArmTattooTexture } from './MarissaArmTattoo';
 import { getLaraLimbTattooTexture } from './LaraLimbTattoos';
 import { getDelphinaShoulderTattooTexture } from './LaraShoulderTattoo';
-import { applyChaBackTattoo } from './ChaBackTattoo';
 
 export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivida' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta';
 
@@ -522,7 +521,6 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
   });
 
   if (isMarissa) applyMarissaReferenceTattoos(model);
-  if (isCha) applyChaBackTattoo(model);
 
   // MARISSA 3D PIERCINGS (Cupid's bow stud & Left nostril ring attached to main head bone)
   if (isMarissa && !model.userData.hasMarissaPiercings) {
