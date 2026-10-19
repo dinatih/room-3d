@@ -4,6 +4,7 @@ import { applyMarissaReferenceTattoos } from './MarissaReferenceTattoos';
 import { getMarissaArmTattooTexture } from './MarissaArmTattoo';
 import { getLaraLimbTattooTexture } from './LaraLimbTattoos';
 import { getDelphinaShoulderTattooTexture } from './LaraShoulderTattoo';
+import { applyChaBackTattoo } from './ChaBackTattoo';
 
 export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivida' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta';
 
@@ -92,8 +93,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       const isSaraNudeTorso = isSara && meshName.startsWith('body_nude_torso');
       const isMarissaNudeTorso = isMarissa && (meshName.startsWith('body_nude_torso') || meshName.startsWith('body_nude_panties'));
       const isDelphinaNudeTorso = isDelphina && meshName.startsWith('body_nude_torso');
+      const isPlainNudeTorso = !isSara && !isDelphina && !isMarissa && meshName.startsWith('body_nude_torso');
       if (meshName.includes('body_nude') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) {
-        if (!isMarissaBareFeet && !isMarissaNudeTorso && !isSaraNudeTorso && !isDelphinaNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
+        if (!isPlainNudeTorso && !isMarissaBareFeet && !isMarissaNudeTorso && !isSaraNudeTorso && !isDelphinaNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
       }
 
       // Variants need independent materials, but this function can run again
@@ -115,6 +117,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       mesh.material = clonedMats.length === 1 ? clonedMats[0] : clonedMats;
 
       clonedMats.forEach(mat => {
+        if (isPlainNudeTorso) return; // Preserve clean skin maps, with independent tattoo materials.
         if(meshName.startsWith('bikini_')) {
           // Keep saturated red fabric under the app's AgX lighting.
           mat.toneMapped=false;
@@ -521,6 +524,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
   });
 
   if (isMarissa) applyMarissaReferenceTattoos(model);
+  if (isCha) applyChaBackTattoo(model);
 
   // MARISSA 3D PIERCINGS (Cupid's bow stud & Left nostril ring attached to main head bone)
   if (isMarissa && !model.userData.hasMarissaPiercings) {
