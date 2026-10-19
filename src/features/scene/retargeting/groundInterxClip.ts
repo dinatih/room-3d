@@ -130,7 +130,17 @@ export function groundInterxClip(clip: THREE.AnimationClip, model: THREE.Object3
       });
       hips.position.toArray(values[0], frame * 3);
       arms.forEach((arm, index) => arm.upper.position.toArray(values[index + 1], frame * 3));
-      correctedJoints.forEach((joint, index) => joint.quaternion.toArray(values[index + 3], frame * 4));
+      correctedJoints.forEach((joint, index) => {
+        const arr = values[index + 3];
+        const q = joint.quaternion;
+        if (frame > 0) {
+          const p = (frame - 1) * 4;
+          if (arr[p] * q.x + arr[p + 1] * q.y + arr[p + 2] * q.z + arr[p + 3] * q.w < 0) {
+            q.x = -q.x; q.y = -q.y; q.z = -q.z; q.w = -q.w;
+          }
+        }
+        q.toArray(arr, frame * 4);
+      });
     }
     const replacements = correctedNames.map((name, index) => name.endsWith('.position')
       ? new THREE.VectorKeyframeTrack(name, times, values[index])
