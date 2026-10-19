@@ -1,5 +1,12 @@
 # Navigation et transparence des perruques — 19 octobre 2026
 
+Suite au défaut observé sur la coupe native, le rendu à deux passes décrit plus
+bas a été supprimé : les perruques utilisent désormais un matériau opaque avec
+écriture de profondeur et découpe alpha à 0,5, sans fondu semi-transparent.
+Le script `--wigs` contrôle maintenant la coupe native et le chignon blanc ; ses
+captures courantes sont dans `/tmp/room-wig-opaque`. Les mesures ci-dessous
+documentent l'étape précédente.
+
 ## Navigation : préparation inutile sur le thread principal
 
 Le commit `c90d5157c` du 16 octobre préparait dans le constructeur de

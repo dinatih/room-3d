@@ -18,7 +18,7 @@ function Inspect() {
    scene.traverse(o => {
     if (!o.userData.isWigRoot || o.parent?.name !== "lara_custom_hair_attachment") return;
     const meshes: THREE.SkinnedMesh[] = [];
-    o.traverse(c => { if ((c as THREE.SkinnedMesh).isSkinnedMesh && !c.userData.wigOpaqueDepth) meshes.push(c as THREE.SkinnedMesh); });
+    o.traverse(c => { if ((c as THREE.SkinnedMesh).isSkinnedMesh) meshes.push(c as THREE.SkinnedMesh); });
     const head = meshes[0].skeleton.bones.find(b => /^(bip_head|head)/i.test(b.name))!;
     const local = o.parent!.worldToLocal(head.getWorldPosition(new THREE.Vector3()));
     const forward = new THREE.Vector3(0, 0, 1).transformDirection(head.matrixWorld)
