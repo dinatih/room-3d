@@ -107,6 +107,20 @@ export async function reachability(fixture) {
         });
         targets.push(...starts);
         const queries = starts.flatMap(start => targets.map(target => ({ start, target })));
+        const construction = [];
+        check(snapshot.clearances.length === 0, 'Main-thread graph eagerly prepared weighted distances');
+        for (let repetition = 0; repetition < 3; repetition++) {
+            for (const implementation of repetition % 2 ? ['after', 'before'] : ['before', 'after']) {
+                const began = performance.now();
+                const graph = new geometry.VisibilityGraph(snapshot.obstacles, snapshot.comfort);
+                // Reproduce the previous constructor's eager preparation exactly.
+                if (implementation === 'before') graph.clearances = graph.vertices.map(point => graph.comfortField.clearance(point));
+                construction.push({ repetition, implementation, ms: performance.now() - began,
+                    vertices: graph.vertices.length, preparedDistances: graph.clearances.length });
+                check(graph.canReach(garden, living), 'Graph construction changed physical connectivity');
+            }
+            await nextTask();
+        }
         const passes = [];
         for (let repetition = 0; repetition < 3; repetition++) {
             const implementations = repetition % 2 ? ['after', 'before'] : ['before', 'after'];
@@ -132,7 +146,7 @@ export async function reachability(fixture) {
             for (const phase of ['cold', 'warm']) check(JSON.stringify(answers['before-' + phase]) === JSON.stringify(answers['after-' + phase]), 'Accessibility changed in actual apartment: ' + phase);
         }
         trace({ test: 'approach-reachability', passes });
-        return { vertices: snapshot.obstacles.flat(2).length, queries: queries.length, passes };
+        return { vertices: snapshot.obstacles.flat(2).length, queries: queries.length, construction, passes };
     }
     finally { release(id); }
 }

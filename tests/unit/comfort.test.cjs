@@ -4,6 +4,28 @@ require('../support/load-ts.cjs');
 const g = require('../../src/features/scene/ai/navigation/geometry.ts');
 const { NAVIGATION_COMFORT_CM: margin } = require('../../src/features/scene/ai/navigation/comfort.ts');
 describe('Chemins confortables', () => {
+    it('ne prépare les distances de confort que pour une recherche pondérée qui en a besoin', () => {
+        const { ComfortField } = require('../../src/features/scene/ai/navigation/comfort.ts');
+        const original = ComfortField.prototype.clearance;
+        let calls = 0;
+        ComfortField.prototype.clearance = function (...args) { calls++; return original.apply(this, args); };
+        try {
+            const obstacles = g.union([g.rectangle(0, 0, 40, 40)]);
+            const graph = new g.VisibilityGraph(obstacles, { distance: margin, obstacles: g.union(obstacles.flat().map(p => g.inflate(p, margin))) });
+            assert.equal(calls, 0, 'Graph creation must not measure every comfort vertex');
+            assert(graph.canReach({ x: -100, z: 0 }, { x: 100, z: 0 }));
+            assert.equal(calls, 0, 'Approaches only need physical reachability');
+            assert.deepEqual(graph.find({ x: -100, z: 100 }, { x: 100, z: 100 }), [{ x: 100, z: 100 }]);
+            assert.equal(calls, 0, 'A free straight route needs no vertex clearances either');
+            const start = { x: -100, z: 0 }, target = { x: 100, z: 0 };
+            const route = graph.find(start, target);
+            assert(route); assert(calls >= graph.vertices.length);
+            const clearances = graph.clearances;
+            graph.find(start, target);
+            assert.equal(graph.clearances, clearances, 'Repeated searches reuse prepared vertex distances');
+        }
+        finally { ComfortField.prototype.clearance = original; }
+    });
     it('préserve les passages étroits et trouve le coût optimal vérifié par Dijkstra', () => {
         const make = polygons => new g.VisibilityGraph(g.union(polygons), { distance: margin, obstacles: g.union(polygons.map(p => g.inflate(p, margin))) });
         const length = (start, path) => path.reduce((sum, p, i) => sum + g.distance(i ? path[i - 1] : start, p), 0);

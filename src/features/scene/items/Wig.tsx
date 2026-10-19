@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { LAYER_WALKER, LAYER_DECOR } from '@config';
 import { RIGGED_WIGS_PATHS } from '@features/inventory/inventoryData';
+import { updateWigDepth } from '../utils/wigDepth';
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
   naturel:  new THREE.Color(0.4, 0.25, 0.1),
@@ -198,6 +199,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     hasResetWindRef.current = false;
     const extractedBones: WigBone[] = [];
     scene.traverse((child: any) => {
+      if (child.userData.wigOpaqueDepth) return;
       if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
         const sm = child as THREE.SkinnedMesh;
         // Extract bones DIRECTLY from the SkinnedMesh's skeleton!
@@ -225,7 +227,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         const m = child as THREE.Mesh;
         m.castShadow = true;
         m.receiveShadow = true;
-        m.renderOrder = 1;
+        m.renderOrder = 0;
         m.userData.isCustomHair = true;
         m.userData.isHeadPart = true;
         if (attachTo) {
@@ -246,6 +248,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           const clonedMat = baseMat.clone();
           clonedMat.userData.__ownedWigMaterial = true;
           clonedMat.side = THREE.DoubleSide;
+          clonedMat.forceSinglePass = true;
           // Preserve the GLTF alpha mode, opacity and depth-write settings:
           // hair cards need their continuous transparency, unlike opaque ties.
           if (isLaraNativeWig && isColored) {
@@ -285,6 +288,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         } else if (m.userData.__baseWigMaterial) {
           m.material = configureWigMat(m.userData.__baseWigMaterial, m.material);
         }
+        updateWigDepth(m);
       }
     });
     
@@ -327,7 +331,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       _tmpRainbowColor.setHSL(hue, 0.8, 0.5);
       scene.traverse((child: any) => {
         const m = child as THREE.Mesh;
-        if (m.isMesh && m.material) {
+        if (m.isMesh && !m.userData.wigOpaqueDepth && m.material) {
           if (Array.isArray(m.material)) {
             m.material.forEach(mat => {
               if (mat && 'color' in mat) (mat as THREE.MeshStandardMaterial).color.copy(_tmpRainbowColor);

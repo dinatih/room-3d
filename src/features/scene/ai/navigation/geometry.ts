@@ -151,7 +151,6 @@ export class VisibilityGraph {
       this.comfortField = new ComfortField(obstacles, comfort.distance);
       this.physicalGraph = new VisibilityGraph(obstacles);
       this.vertices.push(...comfort.obstacles.flat(2).filter(p => !insideObstacle(p, obstacles)));
-      this.clearances = this.vertices.map(p => this.comfortField!.clearance(p));
     }
   }
 
@@ -199,6 +198,10 @@ export class VisibilityGraph {
     const direct = segmentFree(start, target, this.obstacles, true) ? this.segmentCost(start, target) : Infinity;
     if (direct === distance(start, target)) return [target];
     if (direct <= bestCost) { bestPath = [target]; bestCost = direct; }
+    // Main-thread approach checks only need physical reachability. Prepare the
+    // quadratic vertex/contour distances only for a weighted search (in the
+    // navigation worker), and only if a straight zero-penalty route did not win.
+    if (this.clearances.length !== this.vertices.length) this.clearances = this.vertices.map(p => this.comfortField!.clearance(p));
     // A long wall may have no corner near either endpoint. Project onto its
     // comfort contour so a small parallel detour remains available there too.
     const projections: Point[] = [];
