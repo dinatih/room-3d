@@ -13,28 +13,27 @@ const ISO  = 1500;
 export interface CameraViewPreset {
   pos: [number, number, number];
   target: [number, number, number];
-  projection?: 'persp' | 'ortho';
   zoom?: number;
 }
 
 export const VIEWS: Record<string, CameraViewPreset> = {
-  top:         { pos: [CX, DIST, CZ + 0.1],               target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-  front:       { pos: [CX, CY, CZ + DIST],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
-  back:        { pos: [CX, CY, CZ - DIST],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
-  left:        { pos: [CX - DIST, CY, CZ],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
-  right:       { pos: [CX + DIST, CY, CZ],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
-  bottom:      { pos: [CX, -DIST, CZ],                    target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-  'iso-se':    { pos: [CX + ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-  'iso-nw':    { pos: [CX - ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-  'iso-ne':    { pos: [CX + ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-  'iso-sw':    { pos: [CX - ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
+  top:         { pos: [CX, DIST, CZ + 0.1],               target: [CX, 0, CZ],          zoom: 1 },
+  front:       { pos: [CX, CY, CZ + DIST],                target: [CX, CY, CZ],         zoom: 1 },
+  back:        { pos: [CX, CY, CZ - DIST],                target: [CX, CY, CZ],         zoom: 1 },
+  left:        { pos: [CX - DIST, CY, CZ],                target: [CX, CY, CZ],         zoom: 1 },
+  right:       { pos: [CX + DIST, CY, CZ],                target: [CX, CY, CZ],         zoom: 1 },
+  bottom:      { pos: [CX, -DIST, CZ],                    target: [CX, 0, CZ],          zoom: 1 },
+  'iso-se':    { pos: [CX + ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          zoom: 1 },
+  'iso-nw':    { pos: [CX - ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          zoom: 1 },
+  'iso-ne':    { pos: [CX + ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          zoom: 1 },
+  'iso-sw':    { pos: [CX - ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          zoom: 1 },
 };
 
 export const CAMERA_VIEW_HEIGHT = 800;
 export const CAMERA_VIEW_FOV = 50;
 
 /** Preserve direction and target-plane scale between the two projections. */
-export function resolveCameraView(key: string, projection: 'ortho' | 'persp', fov = CAMERA_VIEW_FOV): CameraViewPreset {
+export function resolveCameraView(key: string, projection: 'ortho' | 'persp', fov = CAMERA_VIEW_FOV): CameraViewPreset & { projection: 'ortho' | 'persp' } {
   const view = VIEWS[key];
   if (!view) throw new Error(`Unknown camera view: ${key}`);
   if (projection === 'ortho') return { ...view, projection };
