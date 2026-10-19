@@ -3422,10 +3422,20 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'administering-cpr',
+    aliases: ['administrate-cpr', 'cpr-rescuer'],
     path: 'animations/mixamo/anim_administering_cpr.glb',
     category: 'interactions',
     label: `Administering Cpr (260f / 8.7s, 280KB)`,
-    tags: ['interaction'],
+    tags: ['interaction', 'medical', 'emergency', 'cpr'],
+    duration: 8.7,
+  },
+  {
+    id: 'receiving-cpr',
+    aliases: ['receive-cpr', 'cpr-victim'],
+    path: 'animations/mixamo/anim_receiving_cpr.glb',
+    category: 'interactions',
+    label: `Receiving Cpr (260f / 8.7s, 162KB)`,
+    tags: ['interaction', 'medical', 'emergency', 'cpr', 'ground'],
     duration: 8.7,
   },
   {

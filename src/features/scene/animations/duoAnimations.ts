@@ -31,6 +31,7 @@ const RAW_DUO_ANIMATIONS: RawDuoAnimationDef[] = [
   { id: 'farewell_kiss', isCombat: false, label: 'Farewell Kiss', icon: '👋', animA: 'miley-armature-farewell-kiss-m', animB: 'miley-armature-farewell-kiss-f', offsetB: [-70, 0, 0] },
   { id: 'date_bearhug', isCombat: false, label: 'Date Bearhug', icon: '🐻', animA: 'miley-armature-date-bearhug-m', animB: 'miley-armature-date-bearhug-f', offsetB: [0, 0, 610] },
   { id: 'high_five', isCombat: false, label: 'High Five', icon: '🖐️', animA: 'high-five-a', animB: 'high-five-b', offsetB: [-80, 0, 4], rotB: Math.PI },
+  { id: 'cpr', isCombat: false, label: 'Réanimation cardio-pulmonaire (CPR)', icon: '🫀', animA: 'administering-cpr', animB: 'receiving-cpr' },
   { id: 'greek_folk_duo', isCombat: false, label: 'Duo Danse Folk (Hasaposerviko & Zorba)', icon: '💃', animA: 'hasaposerviko-duo', animB: 'zorbas-dance', offsetB: [-120, 0, 0] },
   { id: 'clap_sync_duo', isCombat: false, label: 'Complices : Applaudir à deux', icon: '👏', animA: 'clap-sync-duo', animB: 'clap-sync-duo', rotB: Math.PI, offsetB: [0, 0, 100] },
   { id: 'duo-martial-arts-combat', isCombat: true, label: "Combat d'arts martiaux en duo", icon: '🥋', animA: 'duo-martial-arts-combat', animB: 'duo-martial-arts-combat-b', offsetB: [120, 0, 0] },
