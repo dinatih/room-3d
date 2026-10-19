@@ -14,7 +14,8 @@
     "visualize": "bash scripts/visualize.sh",
     "test": "node --test --test-isolation=none --test-concurrency=1 tests/unit/*.test.cjs",
     "test:studio": "node tests/run.cjs studio",
-    "test:perf": "node tests/run.cjs perf"
+    "test:perf": "node tests/run.cjs perf",
+    "test:screenshots": "node tests/visual/capture.cjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",

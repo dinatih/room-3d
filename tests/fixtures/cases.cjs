@@ -1,7 +1,7 @@
 const apartment = {
     seed: 20261019, count: 0, preset: 'low', camera: 'top',
     viewport: { width: 1280, height: 720, deviceScaleFactor: 1 },
-    collisions: true, cache: { browser: 'cold-new-profile', vite: 'shared-transform-cache', os: 'uncontrolled-shared' }, readinessTimeoutMs: 180000,
+    collisions: true, cache: { browser: 'cold-new-profile', vite: 'cold-temporary-isolated', os: 'uncontrolled-shared' }, readinessTimeoutMs: 180000,
     heartbeatTimeoutMs: 30000, travelCmPerFrame: 3, dt: 1 / 30, turnSpeed: Math.PI,
     startZone: 'garden', arrivalOffsets: [{ x: 50, z: 0 }, { x: -50, z: 0 }, { x: 0, z: 50 }, { x: 0, z: -50 }],
     doorDistances: { before: 60, after: 100 },

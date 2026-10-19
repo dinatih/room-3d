@@ -16,7 +16,7 @@ npm run test:perf -- --case=7-mid --approve-reference=machine-7-mid
 
 `--hardware-gpu` est accepté pour rendre le choix explicite dans une commande de reproduction. Sous Linux, le lanceur utilise Vulkan/ANGLE en headless ; le rapport indique le GPU **réellement utilisé**, y compris une éventuelle implémentation logicielle. Les tests utilisent toujours `scripts/browser-test-options.cjs`. Aucun lancement visible.
 
-Les cas disponibles et leurs budgets de temps se trouvent dans `fixtures/cases.cjs`. Les cas navigateur passent séquentiellement ; chacun possède un serveur Vite sur port libre, un nouveau processus Chrome et son propre profil/cache navigateur froid. Le cache OS et celui des dépendances Vite ne sont pas purgés : ils sont partagés entre passages. La graine est réinitialisée avant les scripts de l’application. Les activités autonomes gardent leurs contrôleurs et leur timing réel ; une graine ne garantit pas un ordonnancement identique des chargements asynchrones.
+Les cas disponibles et leurs budgets de temps se trouvent dans `fixtures/cases.cjs`. Les cas navigateur passent séquentiellement ; chacun possède un serveur Vite sur port libre, un nouveau processus Chrome et son propre profil/cache navigateur froid. Chaque cas utilise un cache Vite temporaire isolé, supprimé à la fermeture ; le cache OS reste partagé et n’est pas purgé. La graine est réinitialisée avant les scripts de l’application. Les activités autonomes gardent leurs contrôleurs et leur timing réel ; une graine ne garantit pas un ordonnancement identique des chargements asynchrones.
 
 ## Organisation
 
@@ -61,3 +61,7 @@ alternent leur ordre ; chacune mesure une première série avec un nouveau graph
 puis une série avec ses connexions en cache. La construction des graphes est
 exclue de ces durées. Ce test ne mesure pas les FPS, la RAM ou une scène rendue
 avec quinze personnages ; il n'impose aucun seuil de temps arbitraire.
+
+## Captures et historique visuel
+
+`npm run test:screenshots` capture toutes les vues prédéfinies dans les deux projections. La galerie de chaque exécution, son document Markdown et le comparateur entre dates/commits se trouvent dans `test-results/visual/`. Mode d’emploi : `docs/visual-history.md`.

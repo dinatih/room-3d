@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const net = require('node:net');
 const assert = require('node:assert/strict');
 const { instrumentController } = require('./instrument-controller.cjs');
 const launch = require('../../scripts/browser-test-options.cjs');
@@ -38,9 +39,9 @@ exports.withBrowser = async (fixture, exercise) => {
     fs.mkdirSync(directory, { recursive: true });
     const result = { commit: process.env.ROOM_TEST_COMMIT, dirty: process.env.ROOM_TEST_DIRTY === 'true', id: fixture.id, configuration: fixture, status: 'running', errors: [], logs: [],
         environment: { platform: os.platform(), release: os.release(), arch: os.arch(), cpus: os.cpus(), memoryBytes: os.totalmem(), node: process.version },
-        reproduction: `npm run test:${process.env.ROOM_TEST_SUITE === 'perf' ? 'perf' : 'studio'} -- --case=${fixture.configurationId ?? fixture.id}${process.argv.includes('--hardware-gpu') ? ' --hardware-gpu' : ''}` };
+        reproduction: fixture.reproduction ?? `npm run test:${process.env.ROOM_TEST_SUITE === 'perf' ? 'perf' : 'studio'} -- --case=${fixture.configurationId ?? fixture.id}${process.argv.includes('--hardware-gpu') ? ' --hardware-gpu' : ''}` };
     const save = () => fs.writeFileSync(path.join(directory, 'result.json'), JSON.stringify(result, null, 2));
-    let browser, server, heartbeat, closing = false, lastHeartbeat = Date.now();
+    let browser, server, heartbeat, cacheDir, closing = false, lastHeartbeat = Date.now();
     const start = performance.now();
     let rejectBrowser;
     const browserFailure = new Promise((_, reject) => { rejectBrowser = reject; });
@@ -49,8 +50,15 @@ exports.withBrowser = async (fixture, exercise) => {
     save();
     try {
         const { createServer } = await import('vite');
+        // Vite treats port 0 as its default port; ask the OS for a free port first.
+        const probe = net.createServer();
+        await new Promise((resolve, reject) => { probe.once('error', reject); probe.listen(0, '127.0.0.1', resolve); });
+        const port = probe.address().port;
+        await new Promise((resolve, reject) => probe.close(error => error ? reject(error) : resolve()));
+        cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'room-3d-vite-'));
         server = await createServer({
-            server: { host: '127.0.0.1', port: 0, strictPort: true },
+            cacheDir,
+            server: { host: '127.0.0.1', port, strictPort: true, ...(fixture.freezeSource ? { watch: null } : {}) },
             plugins: [{ name: 'test-executed-instructions', enforce: 'pre', transform(source, id) {
                         if (id.split('?')[0].endsWith('/src/features/scene/ai/useAgentController.ts'))
                             return { code: instrumentController(source), map: null };
@@ -108,7 +116,8 @@ exports.withBrowser = async (fixture, exercise) => {
         }, fixture.seed);
         const work = (async () => {
             const startup = performance.now();
-            await page.goto(`http://127.0.0.1:${address.port}/?characterCount=${fixture.count}&skipIntro=1&preset=${fixture.preset}&mode=${fixture.camera}`, { waitUntil: 'domcontentloaded', timeout: fixture.readinessTimeoutMs });
+            const query = new URLSearchParams({ characterCount: String(fixture.count), skipIntro: '1', preset: fixture.preset, mode: fixture.camera, ...fixture.query });
+            await page.goto(`http://127.0.0.1:${address.port}/?${query}`, { waitUntil: 'domcontentloaded', timeout: fixture.readinessTimeoutMs });
             await page.waitForFunction(async (count) => {
                 const { cameraState } = await import('/src/features/scene/cameraState.ts');
                 const { furnitureObstacles } = await import('/src/features/scene/ai/navigation/obstacles.ts');
@@ -183,7 +192,8 @@ exports.withBrowser = async (fixture, exercise) => {
             throw error;
         }
         finally {
-            result.cleanup = { browserClosed: !browser?.connected, serverClosed: !server?.httpServer?.listening };
+            if (cacheDir) fs.rmSync(cacheDir, { recursive: true });
+            result.cleanup = { cacheRemoved: !cacheDir || !fs.existsSync(cacheDir), browserClosed: !browser?.connected, serverClosed: !server?.httpServer?.listening };
             result.durationMs = performance.now() - start;
             save();
         }
