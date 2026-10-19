@@ -467,10 +467,30 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
           const origin = rootMotionSpace === 'rest-meters'
             ? sourceBone.position.clone()
             : new THREE.Vector3().fromArray(originalTrack.values);
+          const groundOffset = new THREE.Vector3();
+          if (rootMotionSpace === 'world-meters' && animScene && !rawClip.name.toLowerCase().includes('a025')) {
+            const mixer = new THREE.AnimationMixer(animScene);
+            mixer.clipAction(rawClip).play();
+            mixer.setTime(0);
+            animScene.updateMatrixWorld(true);
+            let lowestFootY = Infinity;
+            animScene.traverse(obj => {
+              if ((obj as any).isBone && (obj.name.includes('Foot') || obj.name.includes('Toe'))) {
+                const v = new THREE.Vector3();
+                obj.getWorldPosition(v);
+                if (v.y < lowestFootY) lowestFootY = v.y;
+              }
+            });
+            mixer.stopAllAction();
+            mixer.uncacheRoot(animScene);
+            if (lowestFootY > 0.10 && Number.isFinite(lowestFootY)) {
+              groundOffset.set(0, -lowestFootY * 100, 0).applyMatrix3(centimetersToTarget);
+            }
+          }
           for (let index = 0; index < originalTrack.values.length; index += 3) {
             const displacement = new THREE.Vector3().fromArray(originalTrack.values, index)
               .sub(origin).applyMatrix3(sourceToMeters).multiplyScalar(100)
-              .applyMatrix3(centimetersToTarget);
+              .applyMatrix3(centimetersToTarget).add(groundOffset);
             bone.defaultPosition.clone().add(displacement).toArray(clone.values, index);
           }
         } else if (isFlat && isWalk) {
