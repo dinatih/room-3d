@@ -94,9 +94,9 @@ export interface AgentInstruction {
   /** Departure step consumed when the rise already reached free standing space. */
   postureExit?: boolean;
   type: InstructionType;
-  /** Déplacement de dégagement ou attente de fermeture avant une action proche d'une porte. */
+  /** Déplacement de dégagement hors du débattement d'une porte. */
   doorKey?: 'living' | 'glassRight';
-  closedDoor?: 'living' | 'glassRight'; // Garder le battant fermé pendant l'interaction et son dégagement
+  protectedDoor?: 'living' | 'glassRight'; // Limiter le débattement autour de l'interaction jusqu'au dégagement
   smartObjectId?: string; // target smart object ID
   slotId?: string; // specific slot inside the smart object
   targetZoneId?: string; // Destination intentionnelle déduite de la géométrie de zone

@@ -377,22 +377,22 @@ for (const obstacles of fixtures) {
   }
 }
 console.log('Tangent graph matches complete visibility Dijkstra on 45 routes: rounded, rotated, concave, enclosed and disconnected obstacles.');
-requestDoor('bath', 'a'); assert.equal(requestDoor('bath', 'b'), false);
-releaseDoor('bath', 'a'); assert.equal(requestDoor('bath', 'b'), true);
+requestDoor('bath', 'a'); requestDoor('bath', 'b');
+releaseDoor('bath', 'a'); assert.equal(doorRequested('bath'), true);
 releaseAgentDoors('b'); assert.equal(doorRequested('bath'), false);
-assert.equal(requestDoor('glassRight', 'a'), true);
-assert.equal(requestDoor('glassLeft', 'b'), false);
+requestDoor('glassRight', 'a');
+requestDoor('glassLeft', 'b');
 assert.equal(doorRequested('glassLeft'), true);
 releaseAgentDoors('a');
-assert.equal(requestDoor('glassRight', 'b'), true);
+assert.equal(doorRequested('glassRight'), true);
 releaseAgentDoors('b');
-assert.equal(requestDoor('glassRight', 'a', 'closed'), true);
-assert.equal(requestDoor('glassLeft', 'b'), false);
-assert.equal(doorRequested('glassRight'), false);
+requestDoor('glassRight', 'a');
+requestDoor('glassLeft', 'b');
+assert.equal(doorRequested('glassRight'), true);
 releaseAgentDoors('a');
 assert.equal(doorRequested('glassLeft'), true);
 releaseAgentDoors('b');
-console.log('Geometry checks passed: shortest route, direct routes, inflation, rotation, overlaps, holes, invalid targets, FIFO door reservations.');
+console.log('Geometry checks passed: shortest route, direct routes, inflation, rotation, overlaps, holes, invalid targets, shared door passages.');
 
 if (process.argv.includes('--browser')) (async () => {
   const puppeteer = require('puppeteer');
@@ -1410,7 +1410,7 @@ if (process.argv.includes('--browser')) (async () => {
             nav.registerObstacle({ id:`blocked-ring-${i}`, polygon:g.rectangle(x,z,w,d), yMin:0, yMax:200 }));
           const graph = nav.getNavigationGraph(nav.getAgentProfile('blocked-probe'));
           if (g.insideObstacle(start,graph.obstacles) || graph.find(target,start)) throw new Error('Fixture must contain a free but unreachable destination');
-          const approach = nav.getObjectApproach('free-target',start,'blocked-probe',target,false,undefined,undefined,true);
+          const approach = nav.getObjectApproach('free-target',start,'blocked-probe',target,false,undefined,true);
           if (!approach || !graph.find(target,approach)) throw new Error('Approach must be reachable from the actor');
           return { firstSearches, repeatedSearches, repeatedApproachSearches, recoverySearches, moved, approach, actorRecovery, localPosition, error:recoveredError };
         } finally {

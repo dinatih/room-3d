@@ -9,6 +9,7 @@
 import { cameraState } from './cameraState';
 import { furnitureObstacles, getObstacleRevision, getAgentProfile, hasAgentProfile } from './ai/navigation/obstacles';
 import { inflate, pointInRing, type Polygon } from './ai/navigation/geometry';
+import { getDoorProtections, getDoorProtectionRevision, type DoorKey } from './ai/navigation/doorRequests';
 import { pX, pZ, DiagWall, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from './wallData';
 
 export const DOOR_OPEN_RESPONSE = 10;
@@ -181,11 +182,12 @@ export function computeDoorDynamics(
 /**
  * Calcule l'angle maximal autorisé pour une porte donnée compte tenu de tous les obstacles actifs.
  */
-const allowedAngles = new WeakMap<DoorConfig, { revision: number; angle: number }>();
+const allowedAngles = new WeakMap<DoorConfig, { revision: number; protectionRevision: number; angle: number }>();
 export function computeDoorAllowedAngle(door: DoorConfig): number {
   const revision = getObstacleRevision();
+  const protectionRevision = getDoorProtectionRevision();
   const cached = allowedAngles.get(door);
-  if (cached?.revision === revision) return cached.angle;
+  if (cached?.revision === revision && cached.protectionRevision === protectionRevision) return cached.angle;
   let furnitureMaxAngle = door.maxAngle;
   for (const obstacle of furnitureObstacles.values()) {
     if (obstacle.yMax < door.yMin || obstacle.yMin > door.yMax) continue;
@@ -200,7 +202,15 @@ export function computeDoorAllowedAngle(door: DoorConfig): number {
     if (contact !== null) furnitureMaxAngle = Math.min(furnitureMaxAngle, contact);
   }
 
-  allowedAngles.set(door, { revision, angle: furnitureMaxAngle });
+  const key = doorKeysByConfig.get(door);
+  if (key) for (const body of getDoorProtections(key)) {
+    if (body.y + body.height <= door.yMin || body.y >= door.yMax) continue;
+    const polygon = inflate([{ x: body.x, z: body.z }], body.radius);
+    const closedCenter = { x: door.pivot.x + door.closedDir.x * door.length / 2, z: door.pivot.z + door.closedDir.z * door.length / 2 };
+    const contact = pointInRing(closedCenter, polygon) ? 0 : getDoorContactAngle(door, polygon);
+    if (contact !== null) furnitureMaxAngle = Math.min(furnitureMaxAngle, contact);
+  }
+  allowedAngles.set(door, { revision, protectionRevision, angle: furnitureMaxAngle });
   return furnitureMaxAngle;
 }
 
@@ -273,3 +283,4 @@ export const DOOR_CONFIGS = {
     margin: 3.0,
   } satisfies DoorConfig,
 };
+const doorKeysByConfig = new Map<DoorConfig, DoorKey>(Object.entries(DOOR_CONFIGS).map(([key, config]) => [config, key as DoorKey]));

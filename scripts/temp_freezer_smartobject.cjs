@@ -652,11 +652,11 @@ if(!process.argv.includes('--chair-seat')&&!process.argv.includes('--serve-tests
    window.fixture.freezer=resolved;
    return buildSmartObjectInstructionSequence('freezer', 'open-pick');
  });
- assert.deepEqual(sequence.map(s=>s.type), ['MOVE_TO','WAIT','WAIT','USE_OBJECT','WAIT','WAIT','MOVE_TO']);
- assert.equal(sequence[3].animation,'kneeling-inspecting');
- assert.equal(sequence[2].triggerEventValue,true);
- assert.equal(sequence[5].triggerEventValue,false);
- assert(sequence.slice(2).every(s=>s.closedDoor==='living'));
+ assert.deepEqual(sequence.map(s=>s.type), ['MOVE_TO','WAIT','USE_OBJECT','WAIT','WAIT','MOVE_TO']);
+ assert.equal(sequence[2].animation,'kneeling-inspecting');
+ assert.equal(sequence[1].triggerEventValue,true);
+ assert.equal(sequence[4].triggerEventValue,false);
+ assert(sequence.slice(1).every(s=>s.protectedDoor==='living'));
  const clips=await page.evaluate(async()=>{
    const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
    const {DRACOLoader}=await import('/node_modules/three/examples/jsm/loaders/DRACOLoader.js');
@@ -676,15 +676,15 @@ if(!process.argv.includes('--chair-seat')&&!process.argv.includes('--serve-tests
      bones:bones.filter(b=>/Hips$|Head$|Leg$|Foot$|Hand$/.test(b.name))};
  });
  console.log('Source clips and kneeling pose:',JSON.stringify(clips));
- assert.equal(sequence[2].duration,clips.door);
- assert.equal(sequence[5].duration,clips.door);
- assert(Math.abs(sequence[4].duration-clips.rise)<0.1);
+ assert.equal(sequence[1].duration,clips.door);
+ assert.equal(sequence[4].duration,clips.door);
+ assert(Math.abs(sequence[3].duration-clips.rise)<0.1);
  await page.evaluate(()=>window.fixture.setProps({isPreview:false,actionState:{}}));
  await new Promise(r=>setTimeout(r,80));
  assert.deepEqual(await readHoverActions(),['freezer','smart-object:::freezer:::open-pick']);
  for(const initiallyOpen of [false,true,false]){
    await toggle(initiallyOpen);await tick(clips.door);
-   for(const step of [sequence[2],sequence[5]]){
+   for(const step of [sequence[1],sequence[4]]){
      await page.evaluate(s=>window.fixture.store.getState().triggerAction(s.triggerEventKey,s.triggerEventValue),step);
      await new Promise(r=>setTimeout(r,80));await tick(step.duration);
      const current=await page.evaluate(()=>window.fixture.read());

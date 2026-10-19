@@ -26,7 +26,7 @@ import { dronaPlayback } from '../items/dronaPlayback';
 import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS } from '../items/kallaxCuisineDrona';
-import { doorCollisionState } from '../doorObstacles';
+import { releaseAgentDoors } from './navigation/doorRequests';
 import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
 
 export type { AgentState };
@@ -479,7 +479,7 @@ export function useAgentController(
 
   const advanceToNextStep = (hasNavStep: boolean) => {
     const next = hasNavStep ? dynamicNavQueueRef.current[dynamicNavIndexRef.current + 1] ?? scenario?.[stepIndexRef.current] : scenario?.[stepIndexRef.current + 1];
-    resetRoute(routeRef.current, _characterId, next?.closedDoor);
+    resetRoute(routeRef.current, _characterId, next?.protectedDoor);
     routeInstructionRef.current = null;
     cachedCoordsInstructionRef.current = null;
     cachedCoordsRef.current = null;
@@ -830,18 +830,6 @@ export function useAgentController(
       return stateRef.current;
     }
 
-    if (currentInstruction.doorKey) {
-      const closed = doorCollisionState[currentInstruction.doorKey].angle === 0;
-      if (currentInstruction.type === 'WAIT' && closed) {
-        advanceToNextStep(hasNavStep);
-        return stateRef.current;
-      }
-      if (currentInstruction.type === 'WAIT') {
-        stateRef.current.animation = 'idle';
-        return stateRef.current;
-      }
-    }
-
     // ── 3. État IDLE : Initialisation et réservation de l'instruction ──
     if (statusRef.current === 'IDLE') {
       if (currentInstruction.smartObjectId && currentInstruction.type !== 'OBSERVE_OBJECT') {
@@ -1091,7 +1079,7 @@ export function useAgentController(
 
       if (!hasAgentProfile(_characterId)) return stateRef.current;
       if (routeInstructionRef.current !== currentInstruction) {
-        resetRoute(routeRef.current, _characterId, currentInstruction.closedDoor);
+        resetRoute(routeRef.current, _characterId, currentInstruction.protectedDoor);
         routeInstructionRef.current = currentInstruction;
         navigationErrorRef.current = null;
       }
@@ -1103,7 +1091,7 @@ export function useAgentController(
           const steering = computeSteeringVector(_characterId, oldPosition.x, oldPosition.z, direction.x, direction.z, remaining);
           return { x: steering.steerX, z: steering.steerZ };
         }, target.owner ?? currentInstruction.smartObjectId, currentInstruction.type === 'USE_OBJECT' || currentInstruction.navigation === 'interaction'
-          || (currentInstruction.type === 'RETURN_TO_START' && Boolean(target.owner)), currentInstruction.closedDoor);
+          || (currentInstruction.type === 'RETURN_TO_START' && Boolean(target.owner)), currentInstruction.protectedDoor);
       stateRef.current.x = position.x;
       stateRef.current.z = position.z;
       const moved = distance(oldPosition, position);
@@ -1452,7 +1440,7 @@ export function useAgentController(
       ? dynamicNavQueueRef.current[dynamicNavIndexRef.current] : scenario?.[stepIndexRef.current];
     const blocked = blockedCoordsRef.current;
     if (blocked && blocked.instruction === instruction && blocked.x === stateRef.current.x && blocked.z === stateRef.current.z
-      && blocked.owner === routeRef.current.owner && blocked.graph === getNavigationGraph(getAgentProfile(_characterId), undefined, instruction?.closedDoor)
+      && blocked.owner === routeRef.current.owner && blocked.graph === getNavigationGraph(getAgentProfile(_characterId), undefined)
       && actorBlocksUnchanged(blocked.actorBlockers)) return stateRef.current;
     if (blocked && blocked.instruction === instruction) statusRef.current = blocked.status;
     blockedCoordsRef.current = null;
@@ -1460,7 +1448,8 @@ export function useAgentController(
     try { return advance(dt); }
     catch (error) {
       if (!(error instanceof NavigationBlockedError) || !instruction) throw error;
-      blockedCoordsRef.current = { instruction, graph: getNavigationGraph(getAgentProfile(_characterId), undefined, instruction.closedDoor), x:stateRef.current.x, z:stateRef.current.z, owner:routeRef.current.owner, status, actorBlockers:error.actorBlockers };
+      releaseAgentDoors(_characterId);
+      blockedCoordsRef.current = { instruction, graph: getNavigationGraph(getAgentProfile(_characterId), undefined), x:stateRef.current.x, z:stateRef.current.z, owner:routeRef.current.owner, status, actorBlockers:error.actorBlockers };
       stateRef.current.animation = BLOCKED_ANIMATION;
       statusRef.current = 'BLOCKED';
       const label = instruction.smartObjectId ? (SMART_OBJECTS[instruction.smartObjectId]?.name ?? instruction.smartObjectId) : instruction.targetZoneId ?? instruction.type;

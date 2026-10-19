@@ -1128,7 +1128,7 @@ export function buildSmartObjectInstructionSequence(
   if (storage) {
     const doorKey = storage.shelf === 'se' ? 'living' as const : 'glassRight' as const;
     const gesture = (phase: 'pull' | 'push'): AgentInstruction => ({
-      type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: storage.shelf === 'nw' ? undefined : doorKey,
+      type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: storage.shelf === 'nw' ? undefined : doorKey,
       animation: `${storage.animationPrefix}-${phase}`,
       duration: getAnimationDef(`${storage.animationPrefix}-${phase}`)!.duration,
       rotY: slot.rotY, waitForAnimation: true,
@@ -1140,14 +1140,13 @@ export function buildSmartObjectInstructionSequence(
         { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId },
       ] : [
         { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey },
-        { type: 'WAIT' as const, doorKey },
-        { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, closedDoor: doorKey },
+        { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey },
       ]),
       gesture('pull'),
-      { ...baseInstruction, closedDoor: storage.shelf === 'nw' ? undefined : doorKey, waitForAnimation: true },
+      { ...baseInstruction, protectedDoor: storage.shelf === 'nw' ? undefined : doorKey, waitForAnimation: true },
       gesture('push'),
-      ...(storage.shelf !== 'nw' ? [{ type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, closedDoor: doorKey, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY }] : []),
-      ...(storage.shelf === 'nw' ? [] : [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey, closedDoor: doorKey }]),
+      ...(storage.shelf !== 'nw' ? [{ type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY }] : []),
+      ...(storage.shelf === 'nw' ? [] : [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey, protectedDoor: doorKey }]),
     ];
   }
 
@@ -1160,25 +1159,24 @@ export function buildSmartObjectInstructionSequence(
     const linen = objectId === 'drona-se-linen';
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey },
-      { type: 'WAIT', doorKey },
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: doorKey },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey },
       {
-        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: doorKey,
+        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey,
         animation, duration: linen ? getAnimationDef(animation)!.duration : duration, rotY: slot.rotY,
         waitForAnimation: linen,
         dronaMotion: linen ? { action, from: 0, to: 1, range: LINEN_PULL_RANGE } : undefined,
         triggerEventKey: action, triggerEventValue: true,
       },
-      { ...baseInstruction, closedDoor: doorKey, waitForAnimation: linen },
+      { ...baseInstruction, protectedDoor: doorKey, waitForAnimation: linen },
       {
-        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, closedDoor: doorKey,
+        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey,
         animation: linen ? 'drona-linen-push' : animation,
         duration: linen ? getAnimationDef('drona-linen-push')!.duration : duration, rotY: slot.rotY,
         waitForAnimation: linen,
         dronaMotion: linen ? { action, from: 1, to: 0, range: LINEN_PUSH_RANGE } : undefined,
         triggerEventKey: action, triggerEventValue: false,
       },
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey, closedDoor: doorKey },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey, protectedDoor: doorKey },
     ];
   }
 
@@ -1186,28 +1184,27 @@ export function buildSmartObjectInstructionSequence(
     const doorKey: 'living' | 'glassRight' = objectId === 'freezer' ? 'living' : 'glassRight';
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey },
-      { type: 'WAIT', doorKey },
       ...(objectId === 'freezer' ? [
         {
           type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId,
           animation: 'idle', duration: FREEZER_DOOR_DURATION, rotY: slot.rotY,
-          closedDoor: doorKey, triggerEventKey: 'freezer', triggerEventValue: true,
+          protectedDoor: doorKey, triggerEventKey: 'freezer', triggerEventValue: true,
         },
       ] : []),
-      { ...baseInstruction, closedDoor: doorKey },
+      { ...baseInstruction, protectedDoor: doorKey },
       ...(objectId === 'freezer' ? [
         {
           type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId,
           animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration,
-          rotY: slot.rotY, closedDoor: doorKey,
+          rotY: slot.rotY, protectedDoor: doorKey,
         },
         {
           type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId,
           animation: 'idle', duration: FREEZER_DOOR_DURATION, rotY: slot.rotY,
-          closedDoor: doorKey, triggerEventKey: 'freezer', triggerEventValue: false,
+          protectedDoor: doorKey, triggerEventKey: 'freezer', triggerEventValue: false,
         },
       ] : []),
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey, closedDoor: doorKey },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey, protectedDoor: doorKey },
     ];
   }
 

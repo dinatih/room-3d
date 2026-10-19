@@ -7,7 +7,7 @@ import { duoSessionManager } from '../duoSessionManager';
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
-// Actors may sidestep, but must never block each other's movement or goals.
+// A zero footprint disables both collision checks and lateral avoidance.
 // Furniture and door clearances are configured independently.
 export const ACTOR_AVOIDANCE_SCALE = 0;
 // Display and steer with half the measured body radius, as requested.
@@ -73,7 +73,7 @@ export function isAgentDestinationFree(id: string, target: Point): boolean {
 /** Anticipate contact using measured bodies; keep the passing side for the encounter. */
 export function computeSteeringVector(characterId: string, currentX: number, currentZ: number, dirX: number, dirZ: number, _distToTarget: number): SteeringResult {
   let steerX = dirX, steerZ = dirZ;
-  if (useSceneStore.getState().layers.npcCollisions) {
+  if (ACTOR_AVOIDANCE_SCALE > 0 && useSceneStore.getState().layers.npcCollisions) {
     const profile = getAgentProfile(characterId);
     const y = cameraState.positions[characterId]?.y ?? 0;
     let sides = passingSides.get(characterId);
@@ -84,7 +84,7 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
       if (other.y >= y + profile.height || other.y + body.height <= y) continue;
       const dx = other.x - currentX, dz = other.z - currentZ;
       const distance = Math.hypot(dx, dz);
-      const clearance = actorRadius(profile) + actorRadius(body);
+      const clearance = actorClearance(profile, body);
       const lookahead = clearance * 2;
       if (distance >= lookahead) { sides.delete(otherId); continue; }
       const forward = dx * dirX + dz * dirZ;

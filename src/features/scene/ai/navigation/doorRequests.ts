@@ -1,34 +1,45 @@
-/** Open passage requests can coexist; closing an opening requires exclusive access. */
+/** Passage requests coexist; interactions limit the leaf's swing geometrically. */
 export type DoorKey = 'living' | 'bath' | 'entry' | 'glassRight' | 'glassLeft' | 'shower';
-const queues = new Map<DoorKey, { id: string; mode: 'open' | 'closed'; granted: boolean }[]>();
-/** The glass leaves share one opening and cannot grant competing reservations. */
+export interface DoorProtection { x: number; z: number; y: number; radius: number; height: number }
+const passages = new Map<DoorKey, Set<string>>();
+const protections = new Map<DoorKey, Map<string, DoorProtection>>();
+let protectionRevision = 0;
+/** Both glass leaves serve the same opening, with an independent physical limit. */
 export const doorOpeningKey = (key: DoorKey): DoorKey => key === 'glassLeft' ? 'glassRight' : key;
-export function requestDoor(key: DoorKey, agentId: string, mode: 'open' | 'closed' = 'open'): boolean {
-  key = doorOpeningKey(key);
-  const queue = queues.get(key) ?? [];
-  let entry = queue.find(e => e.id === agentId);
-  if (entry) {
-    if (entry.mode !== mode) entry.granted = false;
-    entry.mode = mode;
-  } else {
-    entry = { id: agentId, mode, granted: false };
-    queue.push(entry);
-  }
-  queues.set(key, queue);
-  const index = queue.findIndex(e => e.id === agentId);
-  // An existing passage must finish before an exclusive closure, even when
-  // its owner queued after the actor now upgrading from open to closed.
-  entry.granted = mode === 'closed'
-    ? index === 0 && queue.every(e => e === entry || !e.granted)
-    : (entry.granted || queue.slice(0, index).every(e => e.mode === 'open'));
-  return entry.granted;
+export const getDoorProtectionRevision = () => protectionRevision;
+export function getDoorProtections(key: DoorKey): Iterable<DoorProtection> {
+  return protections.get(doorOpeningKey(key))?.values() ?? [];
 }
-export function doorRequested(key: DoorKey): boolean { return queues.get(doorOpeningKey(key))?.some(e => e.mode === 'open' && e.granted) ?? false; }
+export function getAgentDoorProtection(key: DoorKey, agentId: string): DoorProtection | undefined {
+  return protections.get(doorOpeningKey(key))?.get(agentId);
+}
+export function protectDoor(key: DoorKey, agentId: string, body: DoorProtection): void {
+  if (![body.x, body.z, body.y, body.radius, body.height].every(Number.isFinite) || body.radius <= 0 || body.height <= 0) throw new Error(`Invalid door protection for ${agentId}`);
+  key = doorOpeningKey(key);
+  let entries = protections.get(key);
+  if (!entries) { entries = new Map(); protections.set(key, entries); }
+  const previous = entries.get(agentId);
+  if (previous && previous.x === body.x && previous.z === body.z && previous.y === body.y && previous.radius === body.radius && previous.height === body.height) return;
+  entries.set(agentId, { ...body });
+  protectionRevision++;
+}
+export function requestDoor(key: DoorKey, agentId: string): void {
+  key = doorOpeningKey(key);
+  let entries = passages.get(key);
+  if (!entries) { entries = new Set(); passages.set(key, entries); }
+  entries.add(agentId);
+}
+export function doorRequested(key: DoorKey): boolean { return Boolean(passages.get(doorOpeningKey(key))?.size); }
 export function releaseDoor(key: DoorKey, agentId: string): void {
   key = doorOpeningKey(key);
-  const queue = queues.get(key)?.filter(e => e.id !== agentId);
-  if (queue?.length) queues.set(key, queue); else queues.delete(key);
+  const requests = passages.get(key);
+  requests?.delete(agentId);
+  if (!requests?.size) passages.delete(key);
+  const bodies = protections.get(key);
+  if (bodies?.delete(agentId)) protectionRevision++;
+  if (!bodies?.size) protections.delete(key);
 }
 export function releaseAgentDoors(agentId: string, keep?: DoorKey): void {
-  for (const key of queues.keys()) if (!keep || key !== doorOpeningKey(keep)) releaseDoor(key, agentId);
+  const retained = keep && doorOpeningKey(keep);
+  for (const key of new Set([...passages.keys(), ...protections.keys()])) if (key !== retained) releaseDoor(key, agentId);
 }

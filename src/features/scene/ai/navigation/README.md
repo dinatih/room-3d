@@ -48,8 +48,8 @@ la même marge. Validation ciblée :
   conservées, jamais l'historique des angles.
 - Un objet composé retire ses anciens volumes lorsqu'il rétrécit ou change
   d'identifiant. Désactiver la navigation ou démonter l'objet vide ses entrées.
-- `doorRequests.ts` réserve chaque ouverture dans l'ordre des demandes (les deux
-  battants vitrés partagent une réservation). Le
+- `doorRequests.ts` partage les demandes de passage d'une même ouverture (les deux
+  battants vitrés partagent la demande, avec une butée indépendante par battant). Le
   mouvement vérifie sa position réelle avant chaque pas ; les poussées manuelles
   restent gérées par les composants de porte.
 
@@ -57,7 +57,15 @@ L'évitement d'un autre agent doit conserver la visibilité du prochain virage.
 Si une position déplacée perd cette visibilité, le trajet est recalculé. Une
 réservation reste active tant qu'un franchissement est encore prévu, puis se
 libère dès que le corps est hors de la fermeture et du débattement des battants.
-Les autres PNJ sont pris en compte avec leur rayon réduit de moitié. Le
+Avec `ACTOR_AVOIDANCE_SCALE = 0`, les PNJ ne bloquent ni les trajets ni les
+destinations et ne produisent aucun évitement latéral. Un rayon nul doit
+s'appliquer aux trois mécanismes pour éviter les orbites autour d'une cible
+occupée. Le dernier pas atteint exactement le point de passage, même si un
+évitement latéral est réactivé. Régression en espace libre :
+`node scripts/temp_door_lock_check.cjs` et
+`node scripts/test-partial-door-navigation.cjs` (15 trajets).
+
+Lorsque l'évitement est activé, les PNJ sont pris en compte avec leur rayon réduit de moitié. Le
 contournement commence quand le segment à venir coupe leur empreinte, avant
 le contact. Les bandes bleues restent traversables pour ce détour.
 Validation ciblée : `node scripts/temp_freezer_smartobject.cjs --crowd-detour`
@@ -80,10 +88,19 @@ préféré. Un slot peut désigner son `navigationOwner` physique dans un objet
 composé, comme le four posé sur le Kallax cuisine. Les attentes conservent la
 position atteinte, sans replacer l'agent au point brut de l'interaction.
 
-`closedDoor` réserve une ouverture fermée pendant une action à proximité du
-battant, puis jusqu'au dégagement explicite. Les autres demandes de passage
-attendent dans la même file ; le graphe et le mouvement utilisent alors la pose
-fermée pour cette ouverture et vérifient toujours la pose réelle du battant.
+`protectedDoor` conserve une empreinte corporelle à la position d'interaction,
+jusqu'au dégagement explicite. La butée géométrique de chaque battant tient compte
+de cette empreinte : une interaction Kallax ne condamne plus toute l'ouverture.
+Le graphe utilise l'angle encore autorisé et chaque pas vérifie la pose réelle.
+Une porte partiellement ouverte reste traversable si le gabarit du PNJ passe ;
+un passage réellement fermé ou trop étroit reste bloquant. L'empreinte reste fixe
+pendant l'approche et la sortie, pour éviter de reconstruire les graphes à chaque
+image. Aucune attente de fermeture complète n'est ajoutée aux séquences Kallax.
+
+Validation ciblée : `node scripts/test-partial-door-navigation.cjs` (séjour,
+double battant, empreinte d'interaction, fermeture réelle et invalidation du cache).
+Ajouter `--browser` pour vérifier les positions Kallax dans l'appartement chargé
+et 15 trajets simultanés dans le jardin, avec un PNJ immobile à leur cible.
 
 Une destination inaccessible produit un état `BLOCKED` et une explication dans
 la console et le debug des trajets. Les aperçus d'inventaire désactivent le
