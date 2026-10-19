@@ -87,6 +87,55 @@ export async function arrival(fixture) {
             release(id);
     }
 }
+export async function reachability(fixture) {
+    const id = 'suite-accessibility';
+    register(id, fixture);
+    try {
+        const snapshot = nav.getNavigationGraph(profiles.getAgentProfile(id));
+        const garden = getZoneDestination('garden', id);
+        const living = getZoneDestination('living', id, garden);
+        const corridor = getZoneDestination('corridor', id, living);
+        const starts = [garden, living, corridor];
+        // Use the registered interaction positions and physical corners, not
+        // manually selected easy routes. Some targets must remain inaccessible.
+        const targets = fixture.objects.flatMap(objectId => {
+            const object = registry.getSmartObject(objectId);
+            check(object, 'Missing reachability fixture object: ' + objectId);
+            const point = { x: object.position[0], z: object.position[2] };
+            const corner = snapshot.obstacles.flat(2).reduce((nearest, p) => geometry.distance(p, point) < geometry.distance(nearest, point) ? p : nearest);
+            return [point, corner];
+        });
+        targets.push(...starts);
+        const queries = starts.flatMap(start => targets.map(target => ({ start, target })));
+        const passes = [];
+        for (let repetition = 0; repetition < 3; repetition++) {
+            const implementations = repetition % 2 ? ['after', 'before'] : ['before', 'after'];
+            const answers = {};
+            for (const implementation of implementations) {
+                // Before reproduces the previous canReach implementation exactly;
+                // all geometry, queries and the physical planner are unchanged.
+                const graph = new geometry.VisibilityGraph(snapshot.obstacles);
+                for (const phase of ['cold', 'warm']) {
+                    const durations = [], found = [];
+                    for (const { start, target } of queries) {
+                        const began = performance.now();
+                        found.push(implementation === 'before' ? graph.find(start, target) !== null : graph.canReach(start, target));
+                        durations.push(performance.now() - began);
+                    }
+                    answers[implementation + '-' + phase] = found;
+                    passes.push({ repetition, implementation, phase, queries: queries.length,
+                        totalMs: durations.reduce((sum, value) => sum + value, 0), maxMs: Math.max(...durations),
+                        reachable: found.filter(Boolean).length });
+                }
+                await nextTask();
+            }
+            for (const phase of ['cold', 'warm']) check(JSON.stringify(answers['before-' + phase]) === JSON.stringify(answers['after-' + phase]), 'Accessibility changed in actual apartment: ' + phase);
+        }
+        trace({ test: 'approach-reachability', passes });
+        return { vertices: snapshot.obstacles.flat(2).length, queries: queries.length, passes };
+    }
+    finally { release(id); }
+}
 export async function door(fixture) {
     const holder = 'suite-holder', id = 'suite-passage', route = nav.createRouteState();
     let liveActor;

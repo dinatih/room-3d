@@ -6,6 +6,7 @@ Linux (mesure du RSS via `/proc`), Node ≥ 22.15, dépendances installées et C
 npm test
 npm run test:studio
 npm run test:studio -- --case=garden-fifteen
+npm run test:studio -- --case=approach-reachability
 npm run test:perf -- --case=7-mid
 npm run test:perf -- --case=0-low,7-low,15-mid
 npm run test:perf -- --case=all
@@ -47,3 +48,16 @@ Les métriques séparent les intervalles `requestAnimationFrame` (médiane/p95/p
 Une référence exige trois passages réussis et compatibles. L’approbation crée un nouvel identifiant et refuse d’écraser un fichier existant. Les références absentes ou les sélections incompatibles sont refusées avant de lancer Chromium ; les conditions matérielles sont vérifiées dès que la scène est prête. Les comparaisons vérifient scénario, graine, nombre et modèles, qualité/calques, viewport/DPR/drawing buffer, caméra, navigateur, GPU, matériel et politique de cache. Les médianes, min/max, dispersion et écarts sont informatifs ; aucun seuil FPS/RAM n’est imposé. Les profils CPU détaillés restent une exécution diagnostique distincte (scripts de profilage existants), pour éviter d’altérer la mesure normale.
 
 Les scripts historiques `temp_*` sont conservés. Les régressions utiles de `test-partial-door-navigation.cjs` et `temp_navigation_comfort.cjs` ont été extraites ; leur exécution n’est pas requise par la suite officielle.
+
+### Accessibilité des approches
+
+`approach-reachability` rejoue les mêmes requêtes sur un instantané des obstacles
+réels, depuis le jardin, le séjour et le couloir, vers les positions et les coins
+d'approche des deux Kallax et du canapé extérieur. Les objets sont déclarés dans
+la fixture. Il vérifie les réponses contre le planificateur physique `find`, qui
+était utilisé par `canReach` avant l'optimisation, et conserve les durées des deux
+méthodes dans `measurements.passes` du résultat JSON. Les trois répétitions
+alternent leur ordre ; chacune mesure une première série avec un nouveau graphe
+puis une série avec ses connexions en cache. La construction des graphes est
+exclue de ces durées. Ce test ne mesure pas les FPS, la RAM ou une scène rendue
+avec quinze personnages ; il n'impose aucun seuil de temps arbitraire.

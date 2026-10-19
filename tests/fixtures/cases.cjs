@@ -16,6 +16,8 @@ exports.navigation = [
     { id: 'double-kallax', behavior: 'traverse la double porte pendant une interaction Kallax', activity: 'door', objectId: 'drona-ne-catchall', timeoutMs: 60000 },
     { id: 'closed-door', behavior: 'explique l’attente devant un battant infranchissable puis reprend', activity: 'closed-door', timeoutMs: 30000 },
     { id: 'unreachable', behavior: 'signale une destination inaccessible sans recalcul permanent', activity: 'unreachable', timeoutMs: 30000 },
+    { id: 'approach-reachability', behavior: 'préserve l’accessibilité des approches et mesure leur coût sur la géométrie réelle', activity: 'reachability',
+        objects: ['drona-se-linen', 'drona-ne-catchall', 'sofa-garden-east'], timeoutMs: 60000 },
 ].map(c => ({ ...apartment, ...c }));
 exports.interactions = [
     { id: 'posture-exit', behavior: 'approche, agit, termine son relèvement réel et sort complètement', activity: 'posture', timeoutMs: 60000 },

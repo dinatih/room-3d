@@ -304,7 +304,33 @@ export class VisibilityGraph {
   }
   /** Reachability does not require optimizing the soft comfort cost. */
   canReach(start: Point, target: Point): boolean {
-    return (this.physicalGraph ?? this).find(start, target) !== null;
+    if (this.physicalGraph) return this.physicalGraph.canReach(start, target);
+    if (![start.x, start.z, target.x, target.z].every(Number.isFinite)) throw new Error('Non-finite navigation coordinates');
+    if (insideObstacle(start, this.obstacles) || insideObstacle(target, this.obstacles)) return false;
+    if (segmentFree(start, target, this.obstacles, true)) return true;
+    // Explore the same tangent connections as find(), but stop at the first
+    // feasible route. Approach selection needs no shortest-path costs, parents
+    // or reconstructed path, nor every connection to the destination upfront.
+    const visited = new Uint8Array(this.vertices.length);
+    const open: number[] = [];
+    const enqueue = (index: number) => {
+      if (!visited[index]) { visited[index] = 1; open.push(index); }
+    };
+    for (let i = 0; i < this.vertices.length; i++) {
+      if (this.tangent(i, start) && segmentFree(start, this.vertices[i], this.obstacles, true)) enqueue(i);
+    }
+    while (open.length) {
+      // Distance only orders exploration; it never rejects a connection.
+      let nearest = 0;
+      for (let i = 1; i < open.length; i++) {
+        if (distance(this.vertices[open[i]], target) < distance(this.vertices[open[nearest]], target)) nearest = i;
+      }
+      const current = open[nearest];
+      open[nearest] = open[open.length - 1]; open.pop();
+      if (this.tangent(current, target) && segmentFree(this.vertices[current], target, this.obstacles, true)) return true;
+      for (const edge of this.neighbors(current)) enqueue(edge.to);
+    }
+    return false;
   }
   find(start: Point, target: Point): Point[] | null {
     if (![start.x, start.z, target.x, target.z].every(Number.isFinite)) throw new Error('Non-finite navigation coordinates');
