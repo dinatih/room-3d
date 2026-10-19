@@ -172,9 +172,8 @@ export function resolveBirdPerch(
   rotation.copy(alignUp).multiply(new THREE.Quaternion().setFromAxisAngle(UP, -yaw));
 
   const targets = perchMeshes(perch.support);
-  const box = new THREE.Box3().setFromObject(perch.support);
   const top = perch.descriptor.kind === 'feeder'
-    ? position.y + feet.height : box.max.y + feet.height;
+    ? position.y + feet.height : new THREE.Box3().setFromObject(perch.support).max.y + feet.height;
   const contactHits = () => {
     const hits: THREE.Intersection[] = [];
     for (const foot of [feet.left, feet.right]) {
@@ -399,6 +398,7 @@ export class RobinFootContact {
       const skinIndices = mesh.geometry.getAttribute('skinIndex');
       const skinWeights = mesh.geometry.getAttribute('skinWeight');
       this.transform.multiplyMatrices(this.inverse, mesh.matrixWorld);
+      this.transform.multiply(mesh.bindMatrixInverse);
       for (const [indices, box] of [[left, this.left], [right, this.right]] as const) {
         for (const i of indices) {
           THREE.Mesh.prototype.getVertexPosition.call(mesh, i, this.baseVertex);
@@ -410,7 +410,7 @@ export class RobinFootContact {
             this.weightedVertex.copy(this.baseVertex).applyMatrix4(boneMatrices.get(skinIndices.getComponent(i, channel))!);
             this.vertex.addScaledVector(this.weightedVertex, weight);
           }
-          this.vertex.applyMatrix4(mesh.bindMatrixInverse).applyMatrix4(this.transform);
+          this.vertex.applyMatrix4(this.transform);
           box.expandByPoint(this.vertex);
         }
       }
