@@ -121,7 +121,7 @@ export const INTERX_DUO_ANIMATIONS: DuoAnimationDef[] = INTERX_MANIFEST.duos.map
     animB: `${duo.id}-p2`,
     offsetB: [
       duo.start_offset[0] * 100,
-      duo.start_offset[1] * 100,
+      0,
       duo.start_offset[2] * 100,
     ],
     rotB: 0,
