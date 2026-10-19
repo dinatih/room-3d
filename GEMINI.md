@@ -3,6 +3,17 @@
 Toujours lire intégralement [AGENTS.md](AGENTS.md) avant de commencer une tâche et appliquer toutes ses directives, notamment le commit obligatoire des modifications avant chaque réponse finale.
 
 
+# MINIMISATION STRICTE DES LOC (ÉCONOMIE ABSOLUE DE LIGNES & CHIRURGIE)
+
+> [!CAUTION]
+> **CHERCHER SYSTÉMATIQUEMENT À AJOUTER LE MOINS DE LOC POSSIBLE** :
+> - **Retrait ou modification d'une fonctionnalité = modification ou suppression directe de LOC existantes** :
+>   - **INTERDICTION FORMELLE** d'ajouter un nouveau bloc `if (...) return ...` ou une surcouche qui duplique du code existant alors qu'une simple modification ou suppression de lignes existantes suffit.
+>   - **Si l'utilisateur demande de retirer une fonctionnalité, le diff doit être majoritairement négatif (des suppressions/modifications, PAS des ajouts massifs de nouvelles LOC !)**.
+>   - **Avant chaque commit**, vérifier le `git diff` : **chaque LOC ajoutée doit être strictement indispensable**. Si un diff introduit du code redondant ou une couche de contournement évitable, le refactoriser immédiatement sur place avant de commiter.
+
+
+
 # DIRECTIVES IMPÉRATIVES D'ÉCONOMIE DE TOKENS ET DE QUOTA
 
 > [!CAUTION]
