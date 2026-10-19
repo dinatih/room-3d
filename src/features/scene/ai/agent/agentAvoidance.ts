@@ -7,9 +7,9 @@ import { duoSessionManager } from '../duoSessionManager';
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
-// Plan and sweep against the same reduced actor footprints.
+// Actors may sidestep, but must never block each other's movement or goals.
 // Furniture and door clearances are configured independently.
-export const ACTOR_AVOIDANCE_SCALE = 1;
+export const ACTOR_AVOIDANCE_SCALE = 0;
 // Display and steer with half the measured body radius, as requested.
 export const actorRadius = (profile: { radius: number }): number => profile.radius / 2;
 export const actorClearance = (profile: { radius: number }, body: { radius: number }): number =>
@@ -32,7 +32,7 @@ export function endActorBlockCheck(id: string): ActorBlockers {
 }
 export function actorBlocksUnchanged(blockers: ActorBlockers): boolean {
   if (!blockers.size) return true;
-  return useSceneStore.getState().layers.npcCollisions && [...blockers].every(([id, state]) => actorState(id) === state);
+  return ACTOR_AVOIDANCE_SCALE > 0 && useSceneStore.getState().layers.npcCollisions && [...blockers].every(([id, state]) => actorState(id) === state);
 }
 const areDuoPartners = (id: string, otherId: string) => {
   const session = duoSessionManager.getSessionFor(id);
@@ -53,7 +53,7 @@ export function reserveAgentDestination(id: string, target: Point | null): void 
 
 /** Stopping places use the same reduced actor footprint as movement and detours. */
 export function isAgentDestinationFree(id: string, target: Point): boolean {
-  if (!useSceneStore.getState().layers.npcCollisions) return true;
+  if (ACTOR_AVOIDANCE_SCALE === 0 || !useSceneStore.getState().layers.npcCollisions) return true;
   const profile = getAgentProfile(id);
   for (const otherId in cameraState.positions) {
     if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
@@ -84,7 +84,7 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
       if (other.y >= y + profile.height || other.y + body.height <= y) continue;
       const dx = other.x - currentX, dz = other.z - currentZ;
       const distance = Math.hypot(dx, dz);
-      const clearance = actorClearance(profile, body);
+      const clearance = actorRadius(profile) + actorRadius(body);
       const lookahead = clearance * 2;
       if (distance >= lookahead) { sides.delete(otherId); continue; }
       const forward = dx * dirX + dz * dirZ;
@@ -97,8 +97,8 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
         steerX -= dirZ * side * proximity * lateral;
         steerZ += dirX * side * proximity * lateral;
       }
-      // Keep the chosen side throughout the encounter. Movement is swept
-      // against furniture and actors; blocked steps trigger a planned detour.
+      // Keep forward progress even when a sidestep is impossible. The route
+      // checks furniture and falls back to its straight step in narrow spaces.
     }
   }
   const length = Math.hypot(steerX, steerZ);
@@ -109,7 +109,7 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
 
 /** Sweep every actor body, without teleporting or tunnelling. */
 export function limitAgentMovement(id: string, start: Point, proposed: Point): Point {
-  if (!useSceneStore.getState().layers.npcCollisions) return proposed;
+  if (ACTOR_AVOIDANCE_SCALE === 0 || !useSceneStore.getState().layers.npcCollisions) return proposed;
   const profile = getAgentProfile(id);
   const vx = proposed.x - start.x, vz = proposed.z - start.z;
   const lengthSquared = vx * vx + vz * vz;
@@ -153,7 +153,7 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
 
 /** Obstacles for a route around actors, using the same footprint as movement clearance. */
 export function getAgentObstacles(id: string, start: Point): Polygon[] {
-  if (!useSceneStore.getState().layers.npcCollisions) return [];
+  if (ACTOR_AVOIDANCE_SCALE === 0 || !useSceneStore.getState().layers.npcCollisions) return [];
   const profile = getAgentProfile(id);
   const y = cameraState.positions[id]?.y ?? 0;
   const obstacles: Polygon[] = [];
