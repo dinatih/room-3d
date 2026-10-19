@@ -1107,6 +1107,13 @@ export function buildSmartObjectInstructionSequence(
 
   const storageInteraction = BATHROOM_STORAGE_ITEMS[objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[objectId as keyof typeof KITCHEN_DRONA_ITEMS];
   if (storageInteraction) {
+    if (objectId in BATHROOM_STORAGE_ITEMS && BATHROOM_STORAGE_ITEMS[objectId as keyof typeof BATHROOM_STORAGE_ITEMS].kind === 'box') {
+      return [
+        { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
+        { ...baseInstruction, waitForAnimation: true },
+        { type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY },
+      ];
+    }
     const gesture = (phase: 'pull' | 'push'): AgentInstruction => ({
       type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
       animation: `${storageInteraction.animationPrefix}-${phase}`,
