@@ -188,7 +188,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         arrival: 'approach',
         name: 'Travailler debout',
         relative: true,
-        // offset: [0, 0, -36],
+        offset: [0, 0, -36],
         animationsRandom: 'standing-using-touchscreen-tablet',
         duration: 24,
         triggerEventKey: 'desk2-smart-action',
