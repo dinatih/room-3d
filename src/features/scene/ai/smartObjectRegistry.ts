@@ -1107,13 +1107,7 @@ export function buildSmartObjectInstructionSequence(
 
   const storageInteraction = BATHROOM_STORAGE_ITEMS[objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[objectId as keyof typeof KITCHEN_DRONA_ITEMS];
   if (storageInteraction) {
-    if (objectId in BATHROOM_STORAGE_ITEMS && BATHROOM_STORAGE_ITEMS[objectId as keyof typeof BATHROOM_STORAGE_ITEMS].kind === 'box') {
-      return [
-        { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-        { ...baseInstruction, waitForAnimation: true },
-        { type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY },
-      ];
-    }
+    const slide = (storageInteraction as { kind?: string }).kind !== 'box';
     const gesture = (phase: 'pull' | 'push'): AgentInstruction => ({
       type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
       animation: `${storageInteraction.animationPrefix}-${phase}`,
@@ -1124,7 +1118,9 @@ export function buildSmartObjectInstructionSequence(
     });
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-      gesture('pull'), { ...baseInstruction, waitForAnimation: true }, gesture('push'),
+      ...(slide ? [gesture('pull')] : []),
+      { ...baseInstruction, waitForAnimation: true },
+      ...(slide ? [gesture('push')] : []),
       { type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY },
       // Leave the chair's original footprint before restoring it.
       ...((objectId === 'drona-kitchen-diy' || objectId === 'drona-kitchen-electronics') ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, targetPos: [ROOM_W * 2 / 3, 0, slot.offset![2]] as [number, number, number] }] : []),
