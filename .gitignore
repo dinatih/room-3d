@@ -14,3 +14,6 @@ sources_backup/
 report-plato/
 .mimocode/
 scripts/temp_*
+
+# CLI test reports and browser artifacts
+/test-results/

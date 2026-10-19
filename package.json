@@ -11,7 +11,10 @@
     "optimize:glb": "node scripts/optimize-lara.js",
     "optimize:extras": "node scripts/optimize-extras.mjs",
     "test-bone": "node scratch/run_test.cjs",
-    "visualize": "bash scripts/visualize.sh"
+    "visualize": "bash scripts/visualize.sh",
+    "test": "node --test --test-isolation=none --test-concurrency=1 tests/unit/*.test.cjs",
+    "test:studio": "node tests/run.cjs studio",
+    "test:perf": "node tests/run.cjs perf"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",
@@ -42,5 +45,8 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "vite": "^5"
+  },
+  "engines": {
+    "node": ">=22.15"
   }
 }
