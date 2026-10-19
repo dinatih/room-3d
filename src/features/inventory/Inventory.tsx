@@ -386,9 +386,19 @@ function ItemDetailContent({ item, wigColor, wigBustVariant }: { item: PreviewTa
           )}
         </div>
 
+        {!isStorage && (item as InventoryItem).description && (
+          <>
+            <hr className="my-3 opacity-25" />
+            <div className="text-uppercase text-muted fw-bold small mb-1" style={{ fontSize: '0.7rem' }}>Description</div>
+            <div className="card bg-white bg-opacity-50 border p-2 text-dark small mb-3 text-pre-line">
+              {(item as InventoryItem).description}
+            </div>
+          </>
+        )}
+
         <hr className="my-3 opacity-25" />
         <div className="text-uppercase text-muted fw-bold small mb-1" style={{ fontSize: '0.7rem' }}>Notes</div>
-        <div className="card bg-white bg-opacity-50 border p-2 text-dark small mb-3">
+        <div className="card bg-white bg-opacity-50 border p-2 text-dark small mb-3 text-pre-line">
           {(item as any).notes || "Aucune note descriptive disponible pour cet élément."}
         </div>
 
@@ -701,7 +711,7 @@ function normalizeSearchStr(str: string): string {
         const effectiveQuery = wq || q;
         if (effectiveQuery) {
           const itemText = normalizeSearchStr(
-            `${i.id} ${i.name} ${i.brand} ${i.notes ?? ''} ${(i.tags ?? []).join(' ')} ${annotText}`
+            `${i.id} ${i.name} ${i.brand} ${i.notes ?? ''} ${(i as InventoryItem).description ?? ''} ${(i.tags ?? []).join(' ')} ${annotText}`
           );
           if (!itemText.includes(effectiveQuery)) return false;
         }
@@ -715,7 +725,7 @@ function normalizeSearchStr(str: string): string {
 
       if (q) {
         const itemText = normalizeSearchStr(
-          `${i.id} ${i.name} ${i.brand} ${i.notes ?? ''} ${(i.tags ?? []).join(' ')} ${annotText}`
+          `${i.id} ${i.name} ${i.brand} ${i.notes ?? ''} ${(i as InventoryItem).description ?? ''} ${(i.tags ?? []).join(' ')} ${annotText}`
         );
         const qAlt = q.replace(/pendantif/g, 'pendentif').replace(/pendentif/g, 'pendantif');
         if (!itemText.includes(q) && !itemText.includes(qAlt)) return false;

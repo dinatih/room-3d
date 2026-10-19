@@ -360,3 +360,7 @@ button, input, select, textarea {
 .character-clothing-row .form-select {
   font-size: 11px;
 }
+
+.text-pre-line {
+  white-space: pre-line;
+}

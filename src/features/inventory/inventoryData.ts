@@ -209,7 +209,28 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'baseball-cap',     name: 'Casquette baseball',             brand: '',         category: 'clothing',  qty: 3, dims: { w: 20,  d: 25,  h: 15  }, notes: '3 casquettes rouges sur portant', glbPath: 'characters/accessories/baseball_cap.glb' },
   { id: 'backpack',         name: 'Sac à dos',                      brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 17,  h: 43  }, notes: 'Rouge procédural, mur A' },
   { id: 'sneakers-red',     name: 'Sneakers rouges (full rouge)',   brand: '',         category: 'clothing',  qty: 2, dims: { w: 24.6, d: 28.8, h: 13.5 }, notes: 'Paire de baskets full rouge, range-chaussures mur A', glbPath: 'items/sneakers-red/SneakersRed.glb', photos: ['items/sneakers-red/SneakersRed.jpg', 'items/sneakers-red/SneakersRed_1.jpg', 'items/sneakers-red/SneakersRed_2.jpg'] },
-  { id: 'jordan-hex-mule', name: 'Jordan Hex Mule SP',             brand: 'Nike/Jordan', category: 'clothing', qty: 2, dims: { w: 20.4, d: 28.5, h: 4.8 }, notes: 'Paire, University Red, taille 44.5, FJ0603-600' },
+  {
+    id: 'jordan-hex-mule',
+    name: 'Jordan Hex Mule SP',
+    brand: 'Nike/Jordan',
+    category: 'clothing',
+    qty: 2,
+    dims: { w: 20.4, d: 28.5, h: 4.8 },
+    price: '38,97',
+    description: "Jordan Hex Mule SP — Chaussure pour femme, coloris University Red/University Red, taille 44.5, modèle FJ0603-600. Prix d'origine : 64,99 €, remisé à 38,97 €.",
+    notes: `Paire, University Red, taille 44.5, FJ0603-600.
+
+Commandes & Suivi :
+• Achat en ligne : 15 févr. 2024
+  Commande C01367105643 — 38,97 € (prix initial : 64,99 €)
+  Statut : Prête à être retirée (Expédition : 1 sur 1)
+  Article : Jordan Hex Mule SP, Chaussure pour femme, University Red/University Red, Taille 44.5, Modèle FJ0603-600
+
+• Achat en ligne : 07 févr. 2024
+  Commande C01364151153 — 38,97 € (prix initial : 64,99 €)
+  Statut : Retour terminé
+  Article : Jordan Hex Mule SP, Chaussure pour femme, University Red/University Red, Taille 44.5, Modèle FJ0603-600`
+  },
   { id: 'summer-outdoor-boot', name: "Baskets bottes d'été",       brand: 'Temu',        category: 'clothing', qty: 2, dims: { w: 22,   d: 30,   h: 19  }, notes: "Paire, bottes d'extérieur fermeture à crochets, rouge", url: 'https://www.temu.com/fr/chaussures-d%C3%A9contract%C3%A9es-et-confortables-pour-hommes-bottes-d-ext%C3%A9rieur-fermeture-%C3%A0-crochets-l%C3%A9g%C3%A8res-polyvalentes-et-tendance-g-601102843756024.html', photos: ['items/summer-boot/summer-boot-1.png', 'items/summer-boot/summer-boot-2.png', 'items/summer-boot/summer-boot-3.png'] },
   { id: 'winter-outdoor-boot', name: "Baskets bottes d'hiver (lourde)", brand: 'Temu',        category: 'clothing', qty: 2, dims: { w: 22.5, d: 30.5, h: 20  }, notes: "Paire de bottes d'extérieur lourdes pour l'hiver, semelle crantée isolée et col fourrure, rouge", url: '', photos: ['items/winter-boot/winter-boot-1.png', 'items/winter-boot/winter-boot-2.png', 'items/winter-boot/winter-boot-3.png'] },
   { id: 'tshirt-noir-L',   name: 'T-shirt noir (pack ×6) taille L', brand: 'Temu',       category: 'clothing', qty: 6, dims: { w: 30, d: 20, h: 12 }, notes: 'Pack 6 t-shirts noirs, L — goods_id 601100392589571', photos: ['items/tshirt-noir/tshirt-noir-1.jpg', 'items/tshirt-noir/tshirt-noir-2.jpg', 'items/tshirt-noir/tshirt-noir-3.jpg', 'items/tshirt-noir/tshirt-noir-4.jpg', 'items/tshirt-noir/tshirt-noir-5.jpg', 'items/tshirt-noir/tshirt-noir-6.jpg', 'items/tshirt-noir/tshirt-noir-7.jpg', 'items/tshirt-noir/tshirt-noir-8.jpg', 'items/tshirt-noir/tshirt-noir-9.jpg', 'items/tshirt-noir/tshirt-noir-10.jpg', 'items/tshirt-noir/tshirt-noir-11.jpg', 'items/tshirt-noir/tshirt-noir-12.jpg', 'items/tshirt-noir/tshirt-noir-13.jpg'] },
