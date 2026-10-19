@@ -66,3 +66,44 @@ const steering = avoidance.computeSteeringVector('a', 0, 0, 1, 0, 2);
 assert(steering.steerX > 0, 'Soft steering must preserve forward progress');
 assert.notEqual(steering.steerZ, 0, 'Soft steering remains active');
 console.log('Zero actor clearance: movement, destinations, detours and soft steering passed');
+
+async function checkConcurrentAnimationLoads() {
+  const source = fs.readFileSync('src/features/scene/character/useCharacterAnimations.ts', 'utf8');
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const loads = new Map();
+  class Loader {
+    setDRACOLoader() {}
+    register() {}
+    load(path, resolve, progress, reject) {
+      assert(!loads.has(path), `Duplicate concurrent decode: ${path}`);
+      loads.set(path, { resolve, reject });
+    }
+  }
+  const dependencies = {
+    react: {}, three: { LoadingManager: class {} },
+    'three/examples/jsm/loaders/GLTFLoader.js': { GLTFLoader: Loader },
+    'three/examples/jsm/loaders/DRACOLoader.js': { DRACOLoader: class { setDecoderPath() {} } },
+    '../retargeting/index': {}, '../retargeting/groundInterxClip': {},
+    '../animations/animationResolver': {},
+    './animationSource': { animationSourcePlugin: () => ({}), extractAnimationSource: value => value },
+  };
+  const mod = { exports: {} };
+  new Function('exports', 'module', 'require', compiled)(mod.exports, mod, name => {
+    assert(name in dependencies, `Unexpected dependency: ${name}`);
+    return dependencies[name];
+  });
+  const paths = Array.from({ length: 15 }, (_, i) => `animation-${i}.glb`);
+  const first = paths.map(path => mod.exports.cacheDynamicGLTF(path));
+  // Fifteen characters repeat the same requests before any decode completes.
+  for (let actor = 0; actor < 15; actor++) {
+    paths.forEach((path, i) => assert.equal(mod.exports.cacheDynamicGLTF(path), first[i]));
+  }
+  assert.equal(loads.size, 15);
+  paths.forEach(path => loads.get(path).resolve({ scene: {}, animations: [] }));
+  await Promise.all(first);
+  assert.equal(mod.exports.cacheDynamicGLTF(paths[14]), first[14]);
+  console.log('15 simultaneous animation sources × 15 actors: exactly 15 decodes, completed cache reused');
+}
+checkConcurrentAnimationLoads().catch(error => { console.error(error); process.exitCode = 1; });

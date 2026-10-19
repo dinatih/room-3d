@@ -14,8 +14,13 @@ dracoLoader.setDecoderPath('/draco/');
 const MAX_DYNAMIC_GLTF_CACHE = 8;
 const MAX_RETARGETED_CLIPS = 32;
 const globalGLTFCache = new Map<string, Promise<AnimationSource>>();
+// Pending loads are shared independently of the completed-source LRU. Evicting
+// an unfinished request would let another character decode the same file again.
+const pendingGLTFLoads = new Map<string, Promise<AnimationSource>>();
 
 export function cacheDynamicGLTF(path: string): Promise<AnimationSource> {
+  const loading = pendingGLTFLoads.get(path);
+  if (loading) return loading;
   const cached = globalGLTFCache.get(path);
   if (cached) {
     globalGLTFCache.delete(path);
@@ -32,14 +37,19 @@ export function cacheDynamicGLTF(path: string): Promise<AnimationSource> {
       reject(new Error(msg));
     });
   });
-  globalGLTFCache.set(path, pending);
-  while (globalGLTFCache.size > MAX_DYNAMIC_GLTF_CACHE) {
-    const oldestKey = globalGLTFCache.keys().next().value;
-    if (oldestKey) {
-      globalGLTFCache.delete(oldestKey);
+  const shared = pending.then(source => {
+    pendingGLTFLoads.delete(path);
+    globalGLTFCache.set(path, shared);
+    while (globalGLTFCache.size > MAX_DYNAMIC_GLTF_CACHE) {
+      globalGLTFCache.delete(globalGLTFCache.keys().next().value!);
     }
-  }
-  return pending;
+    return source;
+  }, error => {
+    pendingGLTFLoads.delete(path);
+    throw error;
+  });
+  pendingGLTFLoads.set(path, shared);
+  return shared;
 }
 
 export function cacheRetargetedClip(key: string, clip: THREE.AnimationClip) {
