@@ -101,7 +101,7 @@ if (process.argv.includes('--inspect')) {
     const {createServer}=await import('vite');
     const {execFileSync}=require('node:child_process');const path=require('node:path');
     const historical=new Map();
-    if(baselineRef)for(const file of ['src/features/scene/items/Drona.tsx','src/features/scene/ai/navigation/obstacles.ts','src/features/scene/ai/navigation/service.ts','src/features/scene/birdPerches.ts']){
+    if(baselineRef)for(const file of execFileSync('git',['diff','--name-only','--diff-filter=M',baselineRef,'--','src'],{encoding:'utf8'}).trim().split('\n').filter(Boolean)){
       historical.set(path.resolve(file),execFileSync('git',['show',`${baselineRef}:${file}`],{encoding:'utf8'}));
     }
     server=await createServer({server:{host:'127.0.0.1',port:profilePort,strictPort:true},plugins:[{name:'npc-profile-baseline',enforce:'pre',load(id){return historical.get(id.split('?')[0]);}}]});
