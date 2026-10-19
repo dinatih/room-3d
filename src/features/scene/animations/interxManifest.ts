@@ -107,8 +107,6 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
     tags: duo.tags,
     duration: duo.clips[participant].durationSeconds,
     rootMotionSpace: 'world-meters' as const,
-    interxGrounding: duo.placement ? { baseHeightMeters: (participant === 'p2' ? duo.start_offset[1] : 0)
-      - (duo.placement.verticalOrigin === 'source-support-preserve-hands' ? duo.placement.initialSoleHeightMeters[participant === 'p2' ? 1 : 0] : 0) } : undefined,
   }));
 });
 

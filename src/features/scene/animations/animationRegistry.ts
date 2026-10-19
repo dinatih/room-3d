@@ -49,8 +49,6 @@ export interface AnimationDefinition {
   walkSpeed?: number;
   /** Metric displacement from the first frame (duos) or standing rest pose (solo motions). */
   rootMotionSpace?: 'world-meters' | 'rest-meters';
-  /** Explicit standing Inter-X correction; original wrist trajectories are retained. */
-  interxGrounding?: { baseHeightMeters: number };
   /**
    * Segments de lecture utiles [startSeconds, endSeconds][].
    * Permet de couper le début, la fin et/ou des sections au milieu de l'animation.
