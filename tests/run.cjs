@@ -6,6 +6,7 @@ const { spec } = require('node:test/reporters');
 const { writeReport } = require('./support/report.cjs');
 const { referenceId, assertCompatible, aggregatePerformance } = require('./support/statistics.cjs');
 const fixtures = require('./fixtures/cases.cjs');
+const rendering = require('./fixtures/rendering.cjs');
 async function main() {
     const suite = process.argv[2];
     if (!['studio', 'perf'].includes(suite))
@@ -27,7 +28,7 @@ async function main() {
         throw Error('Select comparison OR explicit approval');
     if (suite === 'perf' && !options.case)
         throw Error('Select configurations explicitly: --case=0-low,7-mid (or --case=all)');
-    const cases = suite === 'perf' ? Object.values(fixtures.performance) : [...fixtures.navigation, ...fixtures.interactions];
+    const cases = suite === 'perf' ? Object.values(fixtures.performance) : [...fixtures.navigation, ...fixtures.interactions, ...rendering];
     const selected = options.case === 'all' ? cases.map(c => c.id) : (options.case?.split(',') ?? cases.map(c => c.id));
     if (new Set(selected).size !== selected.length)
         throw Error('Duplicate case selection');
@@ -61,7 +62,7 @@ async function main() {
     process.env.ROOM_TEST_DIRTY = String(report.dirty);
     const save = () => writeReport(directory, report);
     save();
-    const files = suite === 'perf' ? ['tests/studio/performance/performance.test.cjs'] : ['tests/studio/navigation/navigation.test.cjs', 'tests/studio/interactions/interactions.test.cjs'];
+    const files = suite === 'perf' ? ['tests/studio/performance/performance.test.cjs'] : ['tests/studio/navigation/navigation.test.cjs', 'tests/studio/interactions/interactions.test.cjs', 'tests/studio/rendering/shadows.test.cjs'];
     const logPath = path.join(directory, 'runner.log');
     const stdoutWrite = process.stdout.write, stderrWrite = process.stderr.write;
     const capture = original => function (chunk, ...args) { fs.appendFileSync(logPath, chunk); return original.call(this, chunk, ...args); };
