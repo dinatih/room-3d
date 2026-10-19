@@ -4,7 +4,7 @@
 npm run test:screenshots
 ```
 
-Capture **toutes les vues du registre `VIEWS`**, chacune en orthographique et en perspective : actuellement 12 vues, donc 24 PNG. Le registre est lu dans l’application ; toute nouvelle vue sera incluse automatiquement.
+Capture **toutes les vues du registre `VIEWS`**, chacune en orthographique et en perspective : actuellement 10 vues, donc 20 PNG. Le registre est lu dans l’application ; toute nouvelle vue sera incluse automatiquement.
 
 Ouvrir la page de comparaison locale :
 
@@ -40,3 +40,5 @@ Par défaut : qualité Mid, 1280 × 720, DPR 1, interface masquée, aucun PNJ ni
 Le comparateur signale des conditions différentes : qualité/calques, résolution, navigateur, GPU, graine et animation. La comparaison reste visuelle ; aucun seuil de pixels ne transforme automatiquement une évolution voulue en échec.
 
 Les futurs GIF/vidéos pourront rejoindre ce même manifeste et cet historique. Les premiers scénarios intéressants seraient l’ouverture des portes et rangements, l’approche/relèvement d’un PNJ et un trajet de l’avion, avec caméra fixe et déroulement reproductible. Cette première commande produit des images fixes.
+
+Le registre est `src/features/scene/camera/cameraViews.ts` : dessus, dessous, face, arrière, gauche, droite et les quatre diagonales. `resolveCameraView` fournit les positions selon la projection active, en conservant cible et direction ; la distance perspective correspond à la hauteur du cadre orthographique sur le plan cible. Les volumes en profondeur restent naturellement différents entre projections. Les anciens presets `perspective` (caméra dans le couloir) et `top3d` sont supprimés. Les boutons et raccourcis ne changent plus la projection sélectionnée.

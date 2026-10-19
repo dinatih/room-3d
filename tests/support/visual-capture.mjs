@@ -1,4 +1,4 @@
-import { VIEWS, CAMERA_SHORTCUT_VIEWS } from '/src/features/scene/sidepanel/types.ts';
+import { VIEWS, resolveCameraView, dispatchView, CAMERA_SHORTCUT_VIEWS } from '/src/features/scene/sidepanel/types.ts';
 import { useSceneStore } from '/src/features/scene/store/useSceneStore.ts';
 import { resetAppIdle } from '/src/features/scene/idleState.ts';
 
@@ -23,10 +23,10 @@ export function prepare() {
 }
 
 export async function applyView(key, projection) {
-    const preset = VIEWS[key];
+    const preset = resolveCameraView(key, projection);
     if (!preset) throw Error(`Unknown view: ${key}`);
-    useSceneStore.getState().setActiveCameraPos(key);
-    document.dispatchEvent(new CustomEvent('camera-view', { detail: { ...preset, key, projection } }));
+    useSceneStore.getState().setCameraProjection(projection);
+    dispatchView(key);
     const expectedType = projection === 'ortho' ? 'OrthographicCamera' : 'PerspectiveCamera';
     // Wait for the real active camera and its projection to settle and render,
     // rather than sleeping for an assumed camera transition duration.

@@ -34,9 +34,6 @@ export const CAMERA_POS_ALIASES: Record<string, string> = {
   'bas': 'bottom',
   'dessous': 'bottom',
   'bottom': 'bottom',
-  'persp': 'perspective',
-  'perspective': 'perspective',
-  'top3d': 'top3d',
 };
 
 function getUrlParams(): URLSearchParams {

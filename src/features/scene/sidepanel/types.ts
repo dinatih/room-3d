@@ -2,42 +2,12 @@ export type LaraClothing = 'native' | 'bikini' | 'none';
 
 import type { PlaneModelKey } from '../PaperPlane';
 import type { LaraCountMode } from '../characterConfig';
-import {
-  ROOM_W, ROOM_D, WALL_H,
-} from '../wallData';
-
-// ── Presets caméra ────────────────────────────────────────────────────────────
-
-const CX   = ROOM_W / 2;
-const CY   = WALL_H / 2;
-const CZ   = ROOM_D / 2;
-const DIST = 1500;
-const ISO  = 1500;
-
-export interface CameraViewPreset {
-  pos: [number, number, number];
-  target: [number, number, number];
-  projection?: 'persp' | 'ortho';
-  zoom?: number;
-}
-
-export const VIEWS: Record<string, CameraViewPreset> = {
-  perspective: { pos: [CX + 100, 200, CZ + 300],         target: [CX, WALL_H / 3, CZ], projection: 'persp' },
-  top3d:       { pos: [CX, DIST + 200, CZ],               target: [CX, 0, CZ],          projection: 'persp' },
-  top:         { pos: [CX, DIST, CZ + 0.1],               target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-  front:       { pos: [CX, CY, CZ + DIST],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
-  back:        { pos: [CX, CY, CZ - DIST],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
-  left:        { pos: [CX - DIST, CY, CZ],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
-  right:       { pos: [CX + DIST, CY, CZ],                target: [CX, CY, CZ],         projection: 'ortho', zoom: 1 },
-  bottom:      { pos: [CX, -DIST, CZ],                    target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-  'iso-se':    { pos: [CX + ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-  'iso-nw':    { pos: [CX - ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-  'iso-ne':    { pos: [CX + ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-  'iso-sw':    { pos: [CX - ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          projection: 'ortho', zoom: 1 },
-};
+import { resolveCameraView } from '../camera/cameraViews';
+export { VIEWS, resolveCameraView } from '../camera/cameraViews';
+export type { CameraViewPreset } from '../camera/cameraViews';
 
 // Les dix raccourcis communs à la barre de vues et aux repères 3D.
-export const ORTHO_VIEWS = [
+export const DIRECTIONAL_VIEWS = [
   { key: 'front', label: 'Face', shortcut: 'Alt+1', icon: 'bi-arrow-up' },
   { key: 'back', label: 'Arrière', shortcut: 'Alt+2', icon: 'bi-arrow-down' },
   { key: 'left', label: 'Gauche', shortcut: 'Alt+3', icon: 'bi-arrow-left' },
@@ -50,21 +20,20 @@ export const EXTRA_VIEWS = [
 ] as const;
 
 export const ISO_VIEWS = [
-  { key: 'iso-se', label: 'ISO Sud-Est', shortcut: 'Alt+7', icon: 'bi-arrow-down-right' },
-  { key: 'iso-sw', label: 'ISO Sud-Ouest', shortcut: 'Alt+8', icon: 'bi-arrow-down-left' },
-  { key: 'iso-ne', label: 'ISO Nord-Est', shortcut: 'Alt+9', icon: 'bi-arrow-up-right' },
-  { key: 'iso-nw', label: 'ISO Nord-Ouest', shortcut: 'Alt+0', icon: 'bi-arrow-up-left' },
+  { key: 'iso-se', label: 'Sud-Est', shortcut: 'Alt+7', icon: 'bi-arrow-down-right' },
+  { key: 'iso-sw', label: 'Sud-Ouest', shortcut: 'Alt+8', icon: 'bi-arrow-down-left' },
+  { key: 'iso-ne', label: 'Nord-Est', shortcut: 'Alt+9', icon: 'bi-arrow-up-right' },
+  { key: 'iso-nw', label: 'Nord-Ouest', shortcut: 'Alt+0', icon: 'bi-arrow-up-left' },
 ] as const;
 
-export const CAMERA_SHORTCUT_VIEWS = [...ORTHO_VIEWS, ...EXTRA_VIEWS, ...ISO_VIEWS];
+export const CAMERA_SHORTCUT_VIEWS = [...DIRECTIONAL_VIEWS, ...EXTRA_VIEWS, ...ISO_VIEWS];
 
 import { useSceneStore } from '../store/useSceneStore';
 import { getInventoryGridCameraTarget } from '../inventoryGridCamera';
 
 export function dispatchView(key: string, targetOverride?: [number, number, number], preserveFollow = false) {
+  const v = resolveCameraView(key, useSceneStore.getState().cameraProjection);
   useSceneStore.getState().setActiveCameraPos(key);
-  const v = VIEWS[key];
-  if (!v) return;
   const inventoryGridTarget = useSceneStore.getState().layers.inventoryGrid
     ? getInventoryGridCameraTarget()
     : null;

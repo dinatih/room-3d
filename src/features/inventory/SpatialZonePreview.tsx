@@ -44,7 +44,6 @@ const CAMERA_VIEW_DIRECTIONS: Record<string, [number, number, number]> = {
   top: [0, 1, 0], bottom: [0, -1, 0],
   'iso-se': [1, 1, 1], 'iso-sw': [-1, 1, 1], 'iso-ne': [1, 1, -1], 'iso-nw': [-1, 1, -1],
   's-e': [1, 1, 1], 's-o': [-1, 1, 1], 'n-e': [1, 1, -1], 'n-o': [-1, 1, -1],
-  perspective: [0.3, 0.25, 1],
 };
 
 function PreviewCategoryLayerGroup({

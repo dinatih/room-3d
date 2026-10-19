@@ -3,7 +3,7 @@ import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useSceneStore } from './store/useSceneStore';
-import { dispatchView, ORTHO_VIEWS, EXTRA_VIEWS, ISO_VIEWS } from './sidepanel/types';
+import { CAMERA_SHORTCUT_VIEWS, dispatchView, DIRECTIONAL_VIEWS, EXTRA_VIEWS, ISO_VIEWS } from './sidepanel/types';
 import { getCharacterGridCameraView, frameCharacterGridCamera } from './character/characterGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
@@ -152,11 +152,11 @@ export function ViewControlBar({
           dispatchView(view.key, npcGridActive ? getCharacterGridCameraView().target : undefined);
         }
       }}
-      title={`${view.label} (${view.shortcut})`}
+      title={`${view.label} — ${isOrtho ? 'Orthographique' : 'Perspective'} (${view.shortcut})`}
       onMouseEnter={event => {
         const rect = event.currentTarget.getBoundingClientRect();
         setHoveredView({
-          label: `${view.label} (${view.shortcut})`,
+          label: `${view.label} — ${isOrtho ? 'Orthographique' : 'Perspective'} (${view.shortcut})`,
           ...(rect.top > window.innerHeight / 2
             ? { bottom: window.innerHeight - rect.top }
             : { top: rect.bottom }),
@@ -164,17 +164,17 @@ export function ViewControlBar({
       }}
       onMouseLeave={() => setHoveredView(null)}
       onBlur={() => setHoveredView(null)}
-      aria-label={`${view.label} (${view.shortcut})`}
+      aria-label={`${view.label} — ${isOrtho ? 'Orthographique' : 'Perspective'} (${view.shortcut})`}
       aria-pressed={isActive(view.key)}
     >
       <i className={`bi ${view.icon}`} aria-hidden="true" />
     </button>
   );
 
-  const frontView = ORTHO_VIEWS.find(v => v.key === 'front')!;
-  const backView = ORTHO_VIEWS.find(v => v.key === 'back')!;
-  const leftView = ORTHO_VIEWS.find(v => v.key === 'left')!;
-  const rightView = ORTHO_VIEWS.find(v => v.key === 'right')!;
+  const frontView = DIRECTIONAL_VIEWS.find(v => v.key === 'front')!;
+  const backView = DIRECTIONAL_VIEWS.find(v => v.key === 'back')!;
+  const leftView = DIRECTIONAL_VIEWS.find(v => v.key === 'left')!;
+  const rightView = DIRECTIONAL_VIEWS.find(v => v.key === 'right')!;
   const topView = EXTRA_VIEWS.find(v => v.key === 'top')!;
   const bottomView = EXTRA_VIEWS.find(v => v.key === 'bottom')!;
 
@@ -327,7 +327,7 @@ export function ViewControlBar({
       )}
       <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
         {zoomButton('in')}
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues orthogonales et dessus">
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues de face et dessus">
           {renderViewButton(frontView, 'cyan')}
           {renderViewButton(backView, 'cyan')}
           {renderViewButton(leftView, 'cyan')}
@@ -353,7 +353,7 @@ export function ViewControlBar({
     const inlineRow1 = (
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('in')}
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues orthogonales et dessus">
+        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues de face et dessus">
           {renderViewButton(frontView, 'cyan')}
           {renderViewButton(backView, 'cyan')}
           {renderViewButton(leftView, 'cyan')}
@@ -442,18 +442,8 @@ export function ViewControlBar({
       {directionalControls}
       {activeCameraPos && (
         <span className="badge text-bg-dark bg-opacity-75 view-control-bar-dock__view-label">
-          {activeCameraPos === 'iso-se' || activeCameraPos === 's-e' ? 'ISO Sud-Est'
-            : activeCameraPos === 'iso-sw' || activeCameraPos === 's-o' ? 'ISO Sud-Ouest'
-            : activeCameraPos === 'iso-ne' || activeCameraPos === 'n-e' ? 'ISO Nord-Est'
-            : activeCameraPos === 'iso-nw' || activeCameraPos === 'n-o' ? 'ISO Nord-Ouest'
-            : activeCameraPos === 'front' ? 'Face'
-            : activeCameraPos === 'back' ? 'Arrière'
-            : activeCameraPos === 'left' ? 'Gauche'
-            : activeCameraPos === 'right' ? 'Droite'
-            : activeCameraPos === 'perspective' ? 'Perspective'
-            : activeCameraPos === 'top' ? 'Dessus'
-            : activeCameraPos === 'bottom' ? 'Dessous'
-            : activeCameraPos}
+          {CAMERA_SHORTCUT_VIEWS.find(view => view.key === activeCameraPos)?.label ?? activeCameraPos}
+          {' · '}{isOrtho ? 'Orthographique' : 'Perspective'}
         </span>
       )}
       {bar}

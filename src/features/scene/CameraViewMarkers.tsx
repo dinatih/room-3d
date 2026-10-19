@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useThree, useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Html, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
-import { CAMERA_SHORTCUT_VIEWS, VIEWS, dispatchView } from './sidepanel/types';
+import { CAMERA_SHORTCUT_VIEWS, VIEWS, resolveCameraView, dispatchView } from './sidepanel/types';
 import { useSceneStore } from './store/useSceneStore';
 import { getInventoryGridCameraTarget } from './inventoryGridCamera';
 
@@ -13,7 +13,8 @@ function CameraViewMarker({ view, positionOffset }: { view: ShortcutView; positi
   const aspect = size.width / size.height;
   const [hovered, setHovered] = useState(false);
   useCursor(hovered, 'pointer', '', gl.domElement);
-  const preset = VIEWS[view.key];
+  const projection = useSceneStore(state => state.cameraProjection);
+  const preset = resolveCameraView(view.key, projection);
   const quaternion = useMemo(() => {
     // Object3D.lookAt oriente +Z ; une caméra oriente bien son objectif selon −Z.
     const markerCamera = new THREE.PerspectiveCamera();

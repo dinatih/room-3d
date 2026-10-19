@@ -57,7 +57,7 @@ import {
 } from './camera';
 import type { CameraTarget } from './camera/types';
 import { parseUrlLayerOverrides } from './store/layerUrlParams';
-import { VIEWS } from './sidepanel/types';
+import { resolveCameraView, CAMERA_VIEW_HEIGHT } from './camera/cameraViews';
 import { getOrbitMouseButtons, getOrbitTouches } from './camera/orbitMouseButtons';
 import { getCharacterGridCameraView, getCharacterGridActiveTarget } from './character/characterGridUtils';
 import { getInventoryGridCameraTarget } from './inventoryGridCamera';
@@ -506,7 +506,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
       if ('isOrthographicCamera' in activeCam && (activeCam as THREE.OrthographicCamera).isOrthographicCamera) {
         const ortho = activeCam as THREE.OrthographicCamera;
-        const targetZoom = Math.max(0.1, Math.min(10, 800 / (2 * dist * Math.tan(THREE.MathUtils.degToRad(25)))));
+        const targetZoom = Math.max(0.1, Math.min(10, CAMERA_VIEW_HEIGHT / (2 * dist * Math.tan(THREE.MathUtils.degToRad(25)))));
         ortho.zoom += (targetZoom - ortho.zoom) * lerpFactor;
         ortho.updateProjectionMatrix();
       }
@@ -557,7 +557,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       activeCam.position.set(camX, camY, camZ);
       activeCam.up.set(0, 1, 0);
       if (proj === 'ortho' && orthoCamRef.current) {
-        orthoCamRef.current.zoom = Math.max(0.1, Math.min(10, 800 / (2 * dist * Math.tan(THREE.MathUtils.degToRad(25)))));
+        orthoCamRef.current.zoom = Math.max(0.1, Math.min(10, CAMERA_VIEW_HEIGHT / (2 * dist * Math.tan(THREE.MathUtils.degToRad(25)))));
         orthoCamRef.current.updateProjectionMatrix();
       }
       set({ camera: activeCam });
@@ -698,10 +698,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (options?.pos) {
         orthoCam.position.set(...options.pos);
         const pDist = Math.max(10, orthoCam.position.distanceTo(target));
-        orthoCam.zoom = options.zoom ?? Math.max(0.05, Math.min(30, 800 / (2 * pDist * tanHalfFov)));
+        orthoCam.zoom = options.zoom ?? Math.max(0.05, Math.min(30, CAMERA_VIEW_HEIGHT / (2 * pDist * tanHalfFov)));
       } else {
         orthoCam.position.copy(target).addScaledVector(dir, dist);
-        orthoCam.zoom = options?.zoom ?? Math.max(0.05, Math.min(30, 800 / (2 * dist * tanHalfFov)));
+        orthoCam.zoom = options?.zoom ?? Math.max(0.05, Math.min(30, CAMERA_VIEW_HEIGHT / (2 * dist * tanHalfFov)));
       }
       orthoCam.near = -20000;
       orthoCam.far = 50000;
@@ -710,7 +710,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         perspCam.position.set(...options.pos);
       } else {
         const curOrthoZoom = (fromCam as THREE.OrthographicCamera).zoom || orthoCam.zoom || 1;
-        const equivalentDist = Math.max(20, Math.min(8000, 800 / (2 * curOrthoZoom * tanHalfFov)));
+        const equivalentDist = Math.max(20, Math.min(8000, CAMERA_VIEW_HEIGHT / (2 * curOrthoZoom * tanHalfFov)));
         perspCam.position.copy(target).addScaledVector(dir, equivalentDist);
       }
     }
@@ -754,7 +754,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     const view = posKey === 'front' && store.layers.characterGrid
       ? getCharacterGridCameraView()
-      : posKey ? VIEWS[posKey] : undefined;
+      : posKey ? resolveCameraView(posKey, store.cameraProjection) : undefined;
 
     if (view && ctrlRef.current) {
       const offset = [
@@ -782,7 +782,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           target: PERSP_TARGET,
         });
       } else {
-        const defaultView = VIEWS['iso-se'];
+        const defaultView = resolveCameraView('iso-se', store.cameraProjection);
         const offset: [number, number, number] = [
           defaultView.pos[0] - defaultView.target[0],
           defaultView.pos[1] - defaultView.target[1],
@@ -931,7 +931,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     pos: [CX, 700, 1500],
     target: [CX, 700, CZ],
     up: [0, 1, 0],
-    viewH: 800,
+    viewH: CAMERA_VIEW_HEIGHT,
   });
 
   const enterOrtho = useCallback((config: {
@@ -1234,7 +1234,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // Frustum caméra orthographique (vue dessus)
   const aspect = size.width / size.height;
-  const viewH = 800;
+  const viewH = CAMERA_VIEW_HEIGHT;
   const viewW = viewH * aspect;
 
   // Frustum caméra orthographique (grille de personnages)
