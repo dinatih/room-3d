@@ -62,6 +62,7 @@ const RAW_DUO_ANIMATIONS: RawDuoAnimationDef[] = [
   { id: 'fist_fight', isCombat: true, label: 'Combat de poings (Fist Fight B / A)', icon: '🥊', animA: 'fist-fight-b', animB: 'fist-fight-a', rotB: Math.PI, offsetB: [0, 0, 120] },
   { id: 'taken_hostage', isCombat: true, label: 'Prise d\'otage', icon: '🚨', animA: 'taken-hostage-victim', animB: 'taken-hostage-villain', offsetB: [0, 0, -80] },
   { id: 'shoulder_throw', isCombat: true, label: 'Projection épaule', icon: '🥋', animA: 'shoulder-throw-victim', animB: 'shoulder-throw-aggressor' },
+  { id: 'hell_slammer', isCombat: true, label: 'Hell Slammer (Prise & Projection)', icon: '🤼', animA: 'hell-slammer-a', animB: 'hell-slammer-b' },
   { id: 'brutal_assassination', isCombat: true, label: 'Assassinat brutal', icon: '🗡️', animA: 'brutal-assassination', animB: 'brutal-assassination-1', rotB: 0, offsetB: [0, 0, -190] },
   { id: 'hokey_pokey', isCombat: false, label: 'Hokey Pokey', icon: '👯', animA: 'hokey-pokey', animB: 'hokey-pokey', offsetB: [-100, 0, 0] }
 ];
