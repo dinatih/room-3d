@@ -9,10 +9,11 @@ Deux calculs inutiles ou répétés ont été supprimés :
 - La mesure des pattes compose une fois par mesh les matrices de retour au
   repère du modèle, au lieu d'appliquer deux matrices par sommet de patte.
 
-Les tests comparent les contacts avant/après sur 30 poses avec plusieurs
-influences osseuses, morphs, rotations et échelles non uniformes (écart inférieur
-à 1e-10). Ils contrôlent aussi l'absence de calcul de boîte sur une mangeoire,
-son déplacement et son masquage. Aucun appui ni état animé n'est mis en cache.
+Le test unitaire contrôle l'absence de calcul de boîte sur une mangeoire,
+son déplacement et son masquage. Le test comparatif ajouté initialement (30 poses,
+écart inférieur à 1e-10) a été retiré : `scripts/test-scene-performance.cjs`
+compare déjà le skinning des pattes à Three.js sur 50 poses avec morphs et échelles
+non uniformes. Aucun appui ni état animé n'est mis en cache.
 
-Validation : `npx tsc --noEmit`, `npm test` (38 tests). Le nombre d'opérations
+Validation initiale : `npx tsc --noEmit`, `npm test` (38 tests). Le nombre d'opérations
 diminue ; aucun gain global de FPS ou de durée des freezes n'est mesuré ici.
