@@ -342,19 +342,20 @@ export function birdGroundStep(
 
 /** Read the actual animated toe geometry, rather than the bind-pose body bounding box. */
 export class RobinFootContact {
-  private vertices: { mesh: THREE.SkinnedMesh; left: number[]; right: number[] }[] = [];
+  private vertices: { mesh: THREE.SkinnedMesh; left: number[]; right: number[]; boneMatrices: Map<number, THREE.Matrix4> }[] = [];
   private left = new THREE.Box3();
   private right = new THREE.Box3();
   private vertex = new THREE.Vector3();
+  private baseVertex = new THREE.Vector3();
+  private weightedVertex = new THREE.Vector3();
+  private inverse = new THREE.Matrix4();
+  private transform = new THREE.Matrix4();
   private radius: number;
 
   constructor(model: THREE.Object3D) {
     model.updateWorldMatrix(true, false);
     // SkinnedMesh.updateMatrixWorld also updates bindMatrixInverse after the bird moves.
     model.updateMatrixWorld(true);
-    model.traverse(object => {
-      if ((object as THREE.SkinnedMesh).isSkinnedMesh) (object as THREE.SkinnedMesh).skeleton.update();
-    });
     const size = new THREE.Box3().setFromObject(model, true).getSize(new THREE.Vector3());
     this.radius = Math.hypot(size.x, size.z) / 2;
     model.traverse(object => {
@@ -374,7 +375,13 @@ export class RobinFootContact {
         if (leftWeight > 0.5) left.push(i);
         if (rightWeight > 0.5) right.push(i);
       }
-      if (left.length || right.length) this.vertices.push({ mesh, left, right });
+      if (left.length || right.length) {
+        const boneMatrices = new Map<number, THREE.Matrix4>();
+        for (const vertex of [...left, ...right]) for (let channel = 0; channel < 4; channel++) {
+          if (weights.getComponent(vertex, channel) !== 0) boneMatrices.set(indices.getComponent(vertex, channel), new THREE.Matrix4());
+        }
+        this.vertices.push({ mesh, left, right, boneMatrices });
+      }
     });
     if (!this.vertices.length) throw new Error('Robin : géométrie des pattes introuvable');
   }
@@ -383,14 +390,27 @@ export class RobinFootContact {
     model.updateWorldMatrix(true, false);
     // SkinnedMesh.updateMatrixWorld also updates bindMatrixInverse after the bird moves.
     model.updateMatrixWorld(true);
-    const inverse = model.matrixWorld.clone().invert();
+    this.inverse.copy(model.matrixWorld).invert();
     this.left.makeEmpty(); this.right.makeEmpty();
-    for (const { mesh, left, right } of this.vertices) {
-      mesh.skeleton.update();
-      const transform = inverse.clone().multiply(mesh.matrixWorld);
+    for (const { mesh, left, right, boneMatrices } of this.vertices) {
+      // applyBoneTransform otherwise multiplies the same bone matrices again
+      // for every foot vertex. Keep its exact skinning, including morphs.
+      for (const [bone, matrix] of boneMatrices) matrix.multiplyMatrices(mesh.skeleton.bones[bone].matrixWorld, mesh.skeleton.boneInverses[bone]);
+      const skinIndices = mesh.geometry.getAttribute('skinIndex');
+      const skinWeights = mesh.geometry.getAttribute('skinWeight');
+      this.transform.multiplyMatrices(this.inverse, mesh.matrixWorld);
       for (const [indices, box] of [[left, this.left], [right, this.right]] as const) {
         for (const i of indices) {
-          mesh.getVertexPosition(i, this.vertex).applyMatrix4(transform);
+          THREE.Mesh.prototype.getVertexPosition.call(mesh, i, this.baseVertex);
+          this.baseVertex.applyMatrix4(mesh.bindMatrix);
+          this.vertex.set(0, 0, 0);
+          for (let channel = 0; channel < 4; channel++) {
+            const weight = skinWeights.getComponent(i, channel);
+            if (weight === 0) continue;
+            this.weightedVertex.copy(this.baseVertex).applyMatrix4(boneMatrices.get(skinIndices.getComponent(i, channel))!);
+            this.vertex.addScaledVector(this.weightedVertex, weight);
+          }
+          this.vertex.applyMatrix4(mesh.bindMatrixInverse).applyMatrix4(this.transform);
           box.expandByPoint(this.vertex);
         }
       }

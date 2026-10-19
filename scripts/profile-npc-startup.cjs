@@ -1,7 +1,9 @@
 const fs = require('node:fs');
 const launch = require('./browser-test-options.cjs');
 const directory = process.env.ROOM_PROFILE_OUT || '/tmp/room-npc-profile';
-const base = process.env.ROOM_TEST_URL || 'http://127.0.0.1:5186';
+const baselineRef = process.argv.find(arg => arg.startsWith('--baseline-ref='))?.slice('--baseline-ref='.length);
+const profilePort = Number(process.env.ROOM_PROFILE_PORT || 5197);
+const base = process.env.ROOM_TEST_URL || (process.argv.includes('--serve') ? `http://127.0.0.1:${profilePort}` : 'http://127.0.0.1:5186');
 const hardware = process.argv.includes('--hardware-gpu');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 function processMemory(rootPid) {
@@ -33,7 +35,9 @@ function topCpu(profile) {
     while (id !== undefined) { inclusive.set(id, (inclusive.get(id) || 0) + us); id = parents.get(id); }
   }
   const list = map => [...map].sort((a,b) => b[1]-a[1]).slice(0,40).map(([id,us]) => ({...nodes.get(id).callFrame, ms:us/1000}));
-  return { self:list(self), inclusive:list(inclusive), projectInclusive:[...inclusive].filter(([id])=>nodes.get(id).callFrame.url.includes('/src/')).sort((a,b)=>b[1]-a[1]).slice(0,40).map(([id,us])=>({...nodes.get(id).callFrame,ms:us/1000})) };
+  const targetNames=new Set(['useDronaGeoFromGlb','prepareDronaGeometry','measure','getContainingObjectOwner','inflate','furnitureFootprint','getObjectApproach']);const targets=new Map();
+  for(const [id,us] of inclusive){const frame=nodes.get(id).callFrame;if(!frame.url.includes('/src/')||!targetNames.has(frame.functionName))continue;const key=frame.url.split('?')[0]+' '+frame.functionName;const entry=targets.get(key)||{name:frame.functionName,url:frame.url,inclusiveMs:0,selfMs:0};entry.inclusiveMs+=us/1000;entry.selfMs+=(self.get(id)||0)/1000;targets.set(key,entry);}
+  return { self:list(self), inclusive:list(inclusive), targets:[...targets.values()], projectInclusive:[...inclusive].filter(([id])=>nodes.get(id).callFrame.url.includes('/src/')).sort((a,b)=>b[1]-a[1]).slice(0,40).map(([id,us])=>({...nodes.get(id).callFrame,ms:us/1000})) };
 }
 if (process.argv.includes('--inspect')) {
   (async () => {
@@ -76,6 +80,7 @@ if (process.argv.includes('--inspect')) {
     console.log('RUN',run.count,'GPU',run.system?.gpu.devices,'ERRORS',run.errors);
     for(const s of run.samples)console.log(s.label,s.elapsed,'heapMB',s.heap.usedSize/1e6,'buffersMB',s.heap.backingStorageSize/1e6,'PSSMB',s.processPss/1e6,'swapMB',s.processes.reduce((n,p)=>n+(p.swap||0),0)/1e6,'worstTask',Math.max(0,...s.page.longTasks.map(t=>t.ms)));
     for(const phase of ['startup','steady'])if(run[phase+'Cpu'])for(const kind of ['self','inclusive','projectInclusive'])console.log(phase,kind,JSON.stringify(run[phase+'Cpu'][kind].slice(0,15)));
+    for(const phase of ['startup','steady'])if(run[phase+'Cpu'])console.log(phase,'TARGETS',JSON.stringify(run[phase+'Cpu'].targets));
     const last=run.samples.at(-1);if(last){
       const warm=run.samples.find(s=>s.label==='steady');const since=warm?warm.page.seconds*1000:0;
       const frames=last.page.frames.filter(f=>f.start>=since).map(f=>f.ms).sort((a,b)=>a-b);
@@ -91,8 +96,19 @@ if (process.argv.includes('--inspect')) {
     }
   }
 } else (async () => {
+  let server;
+  if (process.argv.includes('--serve')) {
+    const {createServer}=await import('vite');
+    const {execFileSync}=require('node:child_process');const path=require('node:path');
+    const historical=new Map();
+    if(baselineRef)for(const file of ['src/features/scene/items/Drona.tsx','src/features/scene/ai/navigation/obstacles.ts','src/features/scene/ai/navigation/service.ts','src/features/scene/birdPerches.ts']){
+      historical.set(path.resolve(file),execFileSync('git',['show',`${baselineRef}:${file}`],{encoding:'utf8'}));
+    }
+    server=await createServer({server:{host:'127.0.0.1',port:profilePort,strictPort:true},plugins:[{name:'npc-profile-baseline',enforce:'pre',load(id){return historical.get(id.split('?')[0]);}}]});
+    await server.listen();
+  }
   fs.mkdirSync(directory, { recursive:true });
-  const summary = { date:new Date().toISOString(), headless:true, gpu:hardware?'hardware-requested':'software', viewport:[1362,810], runs:[] };
+  const summary = { date:new Date().toISOString(), baselineRef, headless:true, gpu:hardware?'hardware-requested':'software', viewport:[1362,810], runs:[] };
   const counts = (process.env.ROOM_PROFILE_COUNTS || '0,15').split(',').map(Number);
   for (const count of counts) {
     let browser;
@@ -148,8 +164,50 @@ if (process.argv.includes('--inspect')) {
         const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');const {pathfindingStats}=await import('/src/features/scene/ai/navigation/pathfindingClient.ts');
         return {models,meshes,geometries:geometries.size,geometryBytes,materials:materials.size,skeletons:skeletons.size,textures:textureInfo,layers:useSceneStore.getState().layers,pathfindingStats,resources:performance.getEntriesByType('resource').map(r=>({url:r.name,duration:r.duration,transfer:r.transferSize,decoded:r.decodedBodySize}))};
       });
-      await page.screenshot({path:`${directory}/${count}-scene.png`});save();console.log('RUN COMPLETE',count);
+      await page.screenshot({path:`${directory}/${count}-scene.png`});
+      if(process.argv.includes('--validate-optimizations')){
+        const {execFileSync}=require('node:child_process');const ts=require('typescript');
+        const legacy=execFileSync('git',['show','becb2030:src/features/scene/birdPerches.ts'],{encoding:'utf8'});
+        const code=ts.transpileModule("import * as THREE from 'three';const ROBIN_HEIGHT=15;\n"+legacy.slice(legacy.indexOf('export class RobinFootContact')),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+        const bird=await page.evaluate(async code=>{
+          const THREE=await import('/node_modules/.vite/deps/three.js');const {RobinFootContact}=await import('/src/features/scene/birdPerches.ts');
+          const exports={};new Function('exports','require',code)(exports,name=>{if(name!=='three')throw Error('Unexpected bird dependency');return THREE;});
+          let root;window.__THREE_SCENE__.traverse(o=>{if(o.userData.gltfPath?.includes('/robin/'))root=o;});if(!root)throw Error('Robin not present');
+          const saved=[];root.traverse(o=>{if(o.isBone)saved.push({bone:o,quaternion:o.quaternion.clone()});});
+          const original=new exports.RobinFootContact(root),current=new RobinFootContact(root);let maxError=0;
+          try{for(let pose=0;pose<20;pose++){
+            for(const {bone,quaternion} of saved){bone.quaternion.copy(quaternion);if(/^[LR]_Digit/.test(bone.name))bone.rotateX(.1*Math.sin(pose));}
+            const a=original.measure(root),b=current.measure(root);maxError=Math.max(maxError,a.left.distanceTo(b.left),a.right.distanceTo(b.right),Math.abs(a.thickness-b.thickness));
+          }}finally{for(const {bone,quaternion} of saved)bone.quaternion.copy(quaternion);root.updateMatrixWorld(true);}
+          if(maxError>1e-8)throw Error(`Real Robin feet changed: ${maxError}`);return {poses:20,maxError};
+        },code);
+        const modes=[];let count;
+        for(const mode of ['high','low','procedural','hidden','high','low']){
+          await page.evaluate(async mode=>{
+            window.previousCheckedDronaMode=window.checkedDronaMode;window.checkedDronaMode=mode;
+            window.previousDronaGeometries=new Set();window.__THREE_SCENE__.traverse(o=>{if(o.isMesh&&o.userData.skipMerge&&o.material?.color?.getHex()===0xcc0000&&o.material.roughness===.8)window.previousDronaGeometries.add(o.geometry);});
+            const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');useSceneStore.setState(s=>({furniture:{...s.furniture,dronaMode:mode}}));
+          },mode);
+          await page.waitForFunction(({mode,count})=>{
+            let cells=0,geometry;window.__THREE_SCENE__.traverse(o=>{if(o.isMesh&&o.userData.skipMerge&&o.material?.color?.getHex()===0xcc0000&&o.material.roughness===.8){cells++;geometry=o.geometry;}});
+            if(mode==='hidden')return cells===0;
+            return (count===undefined?cells>0:cells===count)&&(!window.previousCheckedDronaMode||window.previousCheckedDronaMode===mode||!window.previousDronaGeometries.has(geometry));
+          },{timeout:30000},{mode,count});
+          const result=await page.evaluate(mode=>{
+            const geometries=new Set();let cells=0;
+            window.__THREE_SCENE__.traverse(o=>{if(o.isMesh&&o.userData.skipMerge&&o.material?.color?.getHex()===0xcc0000&&o.material.roughness===.8){cells++;geometries.add(o.geometry);}});
+            window.checkedDronaGeometries??=new Map();const previous=window.checkedDronaGeometries.get(mode);const geometry=geometries.values().next().value;
+            if(mode!=='hidden'&&(geometries.size!==1||(previous&&previous!==geometry)))throw Error('Dröna geometry is not shared / reused');
+            if(geometry){window.checkedDronaGeometries.set(mode,geometry);geometry.addEventListener('dispose',()=>{throw Error('Shared Dröna geometry was disposed');});}
+            return {mode,cells,geometries:geometries.size};
+          },mode);count??=result.cells;modes.push(result);
+        }
+        run.validation={bird,modes};console.log('OPTIMIZATION CHECKS',JSON.stringify(run.validation));
+      }
+      if(run.errors.length)throw Error(run.errors.join('\n'));
+      save();console.log('RUN COMPLETE',count);
     } catch(e) {run.errors.push(String(e));save();console.error(e);process.exitCode=1;}
     finally {await browser?.close();save();}
   }
+  await server?.close();
 })().catch(e=>{console.error(e);process.exitCode=1;});

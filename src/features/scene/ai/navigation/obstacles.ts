@@ -1,4 +1,4 @@
-import type { Point, Polygon } from './geometry';
+import { inflate, type Point, type Polygon } from './geometry';
 
 export interface NavigationObstacleDef {
   id: string;
@@ -43,3 +43,19 @@ export const navigationDebug = new Map<string, { path: Point[]; target: Point; e
 
 /** Requested clearance around furniture: one quarter of the agent body radius. */
 export function furnitureClearance(profile: AgentProfile): number { return profile.radius / 4; }
+
+const footprintCaches = new WeakMap<AgentProfile, { revision: number; polygons: WeakMap<NavigationObstacleDef, Polygon> }>();
+/** Reuse exact furniture footprints until registered geometry changes. */
+export function furnitureFootprint(obstacle: NavigationObstacleDef, profile: AgentProfile): Polygon {
+  let cache = footprintCaches.get(profile);
+  if (!cache || cache.revision !== revision) {
+    cache = { revision, polygons: new WeakMap() };
+    footprintCaches.set(profile, cache);
+  }
+  let polygon = cache.polygons.get(obstacle);
+  if (!polygon) {
+    polygon = inflate(obstacle.polygon, furnitureClearance(profile));
+    cache.polygons.set(obstacle, polygon);
+  }
+  return polygon;
+}

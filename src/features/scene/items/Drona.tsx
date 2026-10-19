@@ -16,7 +16,7 @@
  *   DroneCell      — boîte unique pour groupes positionnés
  *   DronaInstances — N boîtes via InstancedMesh, prend un tableau de Matrix4
  */
-import { useLayoutEffect, useMemo } from 'react';
+import { Suspense, useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -28,6 +28,8 @@ export const DF = 33;
 
 const GLB_DRONA_HIGH = 'items/dröna/DRÖNA_high.glb';
 const GLB_DRONA_LOW  = 'items/dröna/DRÖNA_low.glb';
+const preparedGeometries = new WeakMap<THREE.BufferGeometry, THREE.BufferGeometry>();
+let proceduralGeometry: THREE.BufferGeometry | undefined;
 
 const dronaMat = new THREE.MeshStandardMaterial({ 
   color: 0xcc0000, 
@@ -44,35 +46,23 @@ function createProceduralDronaGeo(): THREE.BufferGeometry {
   return geo;
 }
 
-function useDronaGeoFromGlb(glb: string): THREE.BufferGeometry {
-  const { nodes } = useGLTF(glb) as any;
-  
-  return useMemo(() => {
-    const meshNode = Object.values(nodes).find((n: any) => n.isMesh) as THREE.Mesh | undefined;
-    
-    if (!meshNode || !meshNode.geometry) {
-      console.warn('DRONA: No mesh found in GLB, using fallback box.');
-      return createProceduralDronaGeo();
-    }
-    
-    const geo = meshNode.geometry.clone();
-    
-    // Scale by 99.5 (GLB is in meters, scene is in cm)
-    const scale = 99.5;
-    geo.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
-    
-    // Correction de l'orientation : pivoter de +90°
-    geo.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.PI / 2));
-    
-    // Center the geometry so the origin is at the bottom center
-    const box = new THREE.Box3().setFromBufferAttribute(
-      geo.getAttribute('position') as THREE.BufferAttribute
-    );
-    const center = box.getCenter(new THREE.Vector3());
-    geo.applyMatrix4(new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z));
-    
-    return geo;
-  }, [nodes]);
+function prepareDronaGeometry(source: THREE.BufferGeometry): THREE.BufferGeometry {
+  const cached = preparedGeometries.get(source);
+  if (cached) return cached;
+  const geo = source.clone();
+
+  // Preserve the GLB's existing scale, orientation and centering exactly.
+  const scale = 99.5;
+  geo.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
+  geo.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.PI / 2));
+  const box = new THREE.Box3().setFromBufferAttribute(
+    geo.getAttribute('position') as THREE.BufferAttribute
+  );
+  const center = box.getCenter(new THREE.Vector3());
+  geo.applyMatrix4(new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z));
+
+  preparedGeometries.set(source, geo);
+  return geo;
 }
 
 /**
@@ -80,16 +70,20 @@ function useDronaGeoFromGlb(glb: string): THREE.BufferGeometry {
  */
 export function useDronaGeo(): THREE.BufferGeometry {
   const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
-  const highGeo = useDronaGeoFromGlb(GLB_DRONA_HIGH);
-  const lowGeo  = useDronaGeoFromGlb(GLB_DRONA_LOW);
-  const procGeo = useMemo(() => createProceduralDronaGeo(), []);
-
-  if (mode === 'procedural') return procGeo;
-  if (mode === 'low') return lowGeo;
-  return highGeo;
+  // Keep the hook unconditional while loading only the selected GLB. Hidden
+  // inventory items retain the high model's measurement, as before.
+  const models = useGLTF(mode === 'procedural' ? [] : [mode === 'low' ? GLB_DRONA_LOW : GLB_DRONA_HIGH]);
+  if (mode === 'procedural') return proceduralGeometry ??= createProceduralDronaGeo();
+  const mesh = Object.values(models[0].nodes).find((node): node is THREE.Mesh => (node as THREE.Mesh).isMesh);
+  if (!mesh) throw new Error('DRONA: GLB has no mesh');
+  return prepareDronaGeometry(mesh.geometry);
 }
 
 export function Drona({ onSize }: SceneItemProps) {
+  return <Suspense fallback={null}><DronaContent onSize={onSize} /></Suspense>;
+}
+
+function DronaContent({ onSize }: Pick<SceneItemProps, 'onSize'>) {
   const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
   const geo = useDronaGeo();
 
@@ -103,19 +97,27 @@ export function Drona({ onSize }: SceneItemProps) {
   }, [geo, onSize]);
 
   if (mode === 'hidden') return null;
-  return <mesh key={mode} geometry={geo} material={dronaMat} castShadow receiveShadow />;
+  return <mesh key={mode} geometry={geo} material={dronaMat} dispose={null} castShadow receiveShadow />;
 }
 
 /** Boîte Drona unique — à placer dans un <group position rotation>. */
 export function DroneCell() {
+  return <Suspense fallback={null}><DroneCellContent /></Suspense>;
+}
+
+function DroneCellContent() {
   const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
   const geo = useDronaGeo();
   if (mode === 'hidden') return null;
-  return <mesh key={mode} geometry={geo} material={dronaMat} castShadow receiveShadow userData={{ skipMerge: true }} />;
+  return <mesh key={mode} geometry={geo} material={dronaMat} dispose={null} castShadow receiveShadow userData={{ skipMerge: true }} />;
 }
 
 /** N boîtes Drona via InstancedMesh. Chaque Matrix4 encode position + rotation. */
 export function DronaInstances({ matrices }: { matrices: THREE.Matrix4[] }) {
+  return <Suspense fallback={null}><DronaInstancesContent matrices={matrices} /></Suspense>;
+}
+
+function DronaInstancesContent({ matrices }: { matrices: THREE.Matrix4[] }) {
   const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
   const geo = useDronaGeo();
   const N = matrices.length;
@@ -126,7 +128,4 @@ export function DronaInstances({ matrices }: { matrices: THREE.Matrix4[] }) {
   if (mode === 'hidden') return null;
   return <instancedMesh key={mode} args={[geo, dronaMat, N]} castShadow receiveShadow onUpdate={apply} />;
 }
-
-useGLTF.preload(GLB_DRONA_HIGH);
-useGLTF.preload(GLB_DRONA_LOW);
 

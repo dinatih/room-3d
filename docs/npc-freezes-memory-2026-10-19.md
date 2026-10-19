@@ -111,3 +111,54 @@ Artefacts retenus : `/tmp/room-npc-clean/summary.json`, `15-startup.cpuprofile`,
 Les premiers passages dans `/tmp/room-npc-profile` et `/tmp/room-npc-hardware` sont exclus des conclusions : rendu logiciel pour le premier ; reliquat de navigateur et interception des modules perturbant le démarrage pour le second. L'interception a été retirée du protocole final. Les fenêtres valides ont été exécutées successivement après arrêt du reliquat de notre test ; les autres applications restent une source de pression mémoire.
 
 Validation : TypeScript, syntaxe Node du profileur, tests des palettes/bornes animées, tests des réservations et collisions à 0 cm, et test du partage des chargements concurrents passants. Aucun test graphique visible n'a été lancé.
+
+## Optimisations implémentées après le profilage
+
+L'utilisateur a fermé sa fenêtre Chrome exécutant l'application avant la nouvelle comparaison. Une nouvelle référence a donc été mesurée ; les chiffres ci-dessous ne sont pas comparés aux passages précédents soumis à une forte pression de swap.
+
+Changements conservés :
+
+- Dröna : une géométrie transformée partagée par géométrie source, préparation de la seule variante affichée, géométrie procédurale partagée et suppression du préchargement systématique des deux variantes. Les sommets, normales, UV, indices et le centrage restent identiques à l'ancien calcul. Le chargement est isolé dans des frontières Suspense locales aux Dröna : sélectionner un GLB non encore chargé ne suspend plus les autres meubles.
+- Navigation : réutilisation des polygones de meubles gonflés par profil, invalidation lors des changements enregistrés de géométrie et suppression de la copie du tableau des meubles dans la détection du meuble contenant un personnage. Les dimensions et règles de passage restent identiques.
+- Rouge-gorge : les matrices des seuls os influençant les pattes sont calculées une fois par mesure, au lieu de répéter leur produit pour chaque sommet. Le skinning, le morphing et les transformations restent exacts. Les appels redondants de mise à jour des palettes GPU ont été retirés de cette mesure.
+
+Une première validation a détecté que le chargement à la demande d'un mode Dröna pouvait suspendre la scène parente et déclencher une erreur d'attache du coussin cœur lors de son remontage. Ce passage (`/tmp/room-npc-after-optimizations`) n'est pas retenu comme validation finale. Les frontières Suspense locales corrigent cette propagation ; le passage final traverse les six changements de mode sans erreur.
+
+### Comparaison finale à 15 PNJ
+
+Même GPU AMD/Vulkan, viewport, preset Low et caméra dessus. Un navigateur neuf à la fois ; référence au commit `becb2030` injectée côté serveur Vite dans les quatre fichiers applicatifs concernés, puis version finale. Environ 63 secondes de capture après lancement, collecte forcée et inventaire avant les tests de modes. Les activités restent autonomes et non déterministes : il s'agit d'une paire exploratoire, pas d'une garantie de gain global stable.
+
+| Mesure | Nouvelle référence avant | Version finale après |
+| --- | ---: | ---: |
+| Buffers CDP après collecte | 731,2 Mo | 678,9 Mo |
+| Buffers de géométries présents dans la scène | 289,3 Mo | 239,5 Mo |
+| Tas JavaScript après collecte | 158,1 Mo | 159,2 Mo |
+| PSS de l'ensemble des processus de test après collecte | 3 438,5 Mo | 3 341,3 Mo |
+| VmSwap cumulé au même instant | 14,7 Mo | 0 Mo |
+| Intervalle médian stable entre images | 83,3 ms | 66,7 ms |
+| Intervalle p95 | 100 ms | 83,4 ms |
+| Plus longue tâche principale depuis la navigation | 1 935 ms | 1 665 ms |
+| Préparation Dröna au lancement, CPU inclusif échantillonné | 1 918,6 ms | 4,2 ms |
+| Recherche du meuble contenant un acteur, CPU inclusif après lancement | 1 669,6 ms | 34,7 ms |
+| Mesure des pattes, CPU inclusif après lancement | 2 439,2 ms | 684,1 ms |
+
+Les deux fenêtres stables ne contiennent pas d'intervalle d'image supérieur à une seconde ; leurs maxima sont respectivement 267 et 217 ms. Les tâches et intervalles du lancement restent importants. Les gains ciblés sont confirmés par les calculs supprimés et les tests numériques ; l'amélioration de la médiane et du p95 de cette paire reste à ne pas généraliser à toutes les activités.
+
+L'économie de buffers après collecte est d'environ **52 Mo**, celle de géométrie d'environ **50 Mo**. La mémoire native globale reste élevée et le tas retenu est stable : ne pas annoncer une réduction de plusieurs Go ni la suppression de tous les freezes. Les textures et les nombreuses passes de rendu n'ont pas été dégradées pour obtenir ces chiffres.
+
+### Validation finale
+
+- `node scripts/test-scene-performance.cjs` : géométrie Dröna strictement identique au calcul d'origine, 100 utilisations partageant l'objet, source GLB inchangée, variantes à la demande et réutilisation après changement de mode ; empreintes identiques, 10 000 accès réutilisés, séparation des profils et invalidation après déplacement/suppression ; 100 000 sommets de pattes comparés dans 50 poses avec morphs et parent de scale non uniforme, erreur maximale nulle.
+- Microbenchmark synthétique des pattes : environ 75 ms avant contre 24 ms après pour la même série. Ce n'est pas une mesure du FPS de l'application.
+- Navigateur réel : 20 poses du GLB Robin comparées à l'ancienne implémentation, erreur maximale nulle. Les 29 Dröna ont une seule géométrie en High, Low et Procédural ; aucun mesh en Masqué. High et Low réutilisent leur géométrie après retour, sans événement de destruction de la ressource partagée. Aucune erreur de page pendant le passage final.
+- Tests de partage des squelettes/bornes animées, réservations de portes, collisions entre PNJ à 0 cm et chargements d'animations concurrents passants. TypeScript et build de production passants.
+
+Reproduction :
+
+```bash
+ROOM_PROFILE_OUT=/tmp/room-npc-before-optimizations ROOM_PROFILE_COUNTS=15 node scripts/profile-npc-startup.cjs --hardware-gpu --serve --baseline-ref=becb2030
+ROOM_PROFILE_OUT=/tmp/room-npc-after-final ROOM_PROFILE_COUNTS=15 node scripts/profile-npc-startup.cjs --hardware-gpu --serve --validate-optimizations
+node scripts/test-scene-performance.cjs
+```
+
+Les deux commandes de profilage sont séquentielles et lancent/ferment leur propre serveur sur le port 5197. L'option de référence remplace les sources côté serveur, sans modifier le checkout ni intercepter les modules côté navigateur. Chaque répertoire contient summary.json, les profils CPU et allocations, le GPU et une capture de scène. Les contrôles numériques réels et les modes Dröna sont enregistrés dans le champ validation du summary.json final.
