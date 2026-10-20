@@ -262,7 +262,7 @@ export function ViewControlBar({
     <>
     {hoverTooltip}
     <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--multi-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
-      <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {showCharacterModes && (
           <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Sélection des personnages">
             <CharacterCountSelect />
@@ -281,7 +281,7 @@ export function ViewControlBar({
         )}
       </div>
       {showCharacterModes && (
-        <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
+        <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
           <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Suivi caméra du personnage">
             <button
               type="button"
@@ -345,12 +345,12 @@ export function ViewControlBar({
           )}
         </div>
       )}
-      <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('in')}
         {cardinalGroup}
         {perspButton}
       </div>
-      <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
+      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('out')}
         {elevationGroup}
         {rotButton}
