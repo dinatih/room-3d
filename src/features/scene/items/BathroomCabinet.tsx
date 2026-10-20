@@ -109,7 +109,7 @@ function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey,
     const pivot = pivotRef.current;
     if (!pivot) return;
     const targetAngle = openRef.current ? (mirrorHandle ? Math.PI / 2 : -Math.PI / 2) : 0;
-    const synchronized = isPreview ? undefined : dronaPlayback.get(openKey);
+    const synchronized = isPreview ? actionState.previewMotion?.[openKey] : dronaPlayback.get(openKey);
     if (synchronized !== undefined) {
       pivot.rotation.y = (mirrorHandle ? Math.PI / 2 : -Math.PI / 2) * synchronized;
       if (synchronized !== (openRef.current ? 1 : 0)) invalidate();

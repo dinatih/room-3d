@@ -1,9 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { DroneCell } from './Drona';
+import { DroneCell, useDronaGeo } from './Drona';
 import { useSceneStore } from '../store/useSceneStore';
-import { glbLocalBBox } from '../glbUtils';
 import { getObjectActionIds } from '../objectActions';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { dronaPlayback } from './dronaPlayback';
@@ -17,19 +16,19 @@ export function SlidingDrona({ objectId, label, actionId, duration, isPreview = 
   const ref = useRef<THREE.Group>(null!);
   const progress = useRef(0);
   const travel = useRef(0);
-  const mode = useSceneStore(s => s.furniture.dronaMode);
+  const geometry = useDronaGeo();
   const sceneOpen = useSceneStore(s => !!s.extraStates[actionId]);
   const open = isPreview ? !!actionState[actionId] : sceneOpen;
   const { invalidate } = useThree();
   useLayoutEffect(() => {
-    if (mode === 'hidden') return;
-    travel.current = glbLocalBBox(ref.current).getSize(new THREE.Vector3()).z * 2 / 3;
+    geometry.computeBoundingBox();
+    travel.current = geometry.boundingBox!.getSize(new THREE.Vector3()).z * 2 / 3;
     invalidate();
-  }, [mode, invalidate]);
+  }, [geometry, invalidate]);
   useEffect(() => { invalidate(); }, [open, invalidate]);
   useFrame((_, delta) => {
     const target = open ? 1 : 0;
-    const synchronized = isPreview ? undefined : dronaPlayback.get(actionId);
+    const synchronized = isPreview ? actionState.previewMotion?.[actionId] : dronaPlayback.get(actionId);
     progress.current = synchronized ?? (open ? Math.min(target, progress.current + delta / duration) : Math.max(target, progress.current - delta / duration));
     ref.current.position.z = -travel.current * progress.current;
     if (progress.current !== target) invalidate();

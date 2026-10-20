@@ -1,3 +1,4 @@
+import { CustomAnimationFurniture } from './CustomAnimationFurniture';
 import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { Html, Line, Grid, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
@@ -609,6 +610,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
       <group ref={outerRef}>
         <group ref={innerRef}>
           {Component ? <Component item={item ?? {} as any} isPreview actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
+          {preserveOriginXZ && !actionState.duoAnimDef && <CustomAnimationFurniture key={actionState.characterAnim} animationId={actionState.characterAnim} onSize={fit} />}
         </group>
       </group>
       {showDims && item?.dims && worldSize && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}

@@ -249,6 +249,51 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
  const page=await browser.newPage();await page.setViewport({width:1200,height:900});
  page.on('pageerror',e=>{errors.push(e.message);console.error(e.message);});
  await page.goto((process.env.ROOM_TEST_URL || 'http://127.0.0.1:5175')+'/AGENTS.md');
+ if(process.argv.includes('--custom-furniture')){
+   await page.evaluate(async()=>{
+     window.$RefreshReg$=()=>{};window.$RefreshSig$=()=>type=>type;window.__vite_plugin_react_preamble_installed__=true;
+     const {default:React}=await import('/node_modules/.vite/deps/react.js'),{default:ReactDOM}=await import('/node_modules/.vite/deps/react-dom_client.js'),{Canvas,useThree}=await import('/node_modules/.vite/deps/@react-three_fiber.js');
+     const {useGLTF}=await import('/node_modules/.vite/deps/@react-three_drei.js');useGLTF.setDecoderPath('/draco/');
+     const {CustomAnimationFurniture}=await import('/src/features/inventory/CustomAnimationFurniture.tsx');
+     const {useAnimPreviewStore}=await import('/src/features/inventory/useAnimPreviewStore.ts');
+     const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');
+     const {getAnimationDef}=await import('/src/features/scene/animations/animationResolver.ts');
+     const {glbLocalBBox}=await import('/src/features/scene/glbUtils.ts');
+     const f=window.customFixture={store:useAnimPreviewStore,sceneStore:useSceneStore,getAnimationDef,glbLocalBBox,time:0};
+     f.before=JSON.stringify(useSceneStore.getState().furniture);const h=React.createElement;
+     function Probe(){const state=useThree();f.scene=state.scene;f.camera=state.camera;f.gl=state.gl;f.tick=()=>{f.time+=1/60;state.advance(f.time,true);state.scene.updateMatrixWorld(true);};return null;}
+     function App(){const [id,setId]=React.useState('drona-bath-box-pull');f.setId=setId;return h(Canvas,{frameloop:'never',camera:{position:[160,150,-220],near:.1,far:2000}},h(Probe),h('ambientLight',{intensity:2}),h(React.Suspense,{fallback:null},h(CustomAnimationFurniture,{key:id,animationId:id,onSize:()=>{}})));}
+     const container=document.createElement('div');container.style.width='1000px';container.style.height='800px';document.body.replaceChildren(container);ReactDOM.createRoot(container).render(h(App));
+   });
+   const cases=[['bath-box','drona-bathroom-east'],['bath-cabinet-west','bathroom-cabinet-west-door'],['bath-cabinet-east','bathroom-cabinet-east-door'],['care','drona-se-care'],['trousers','drona-nw-trousers'],['catchall2','drona-kitchen-old-it'],['kitchen-upper','drona-kitchen-electronics'],['kitchen-diy','drona-kitchen-diy'],['linen','drona-se-linen']];
+   await page.waitForFunction(()=>window.customFixture?.scene?.getObjectByName('drona-bathroom-east'),{timeout:60000});
+   for(const [family,node] of cases)for(const phase of ['pull','search','push']){
+     const id='drona-'+family+'-'+phase;
+     await page.evaluate(id=>window.customFixture.setId(id),id);
+     await page.waitForFunction(({id,node})=>window.customFixture.scene.getObjectByName('custom-animation-furniture')?.userData.animationId===id&&!!window.customFixture.scene.getObjectByName(node),{timeout:60000},{id,node});
+     await page.waitForFunction(({id,node})=>{
+       const f=window.customFixture;f.store.getState().setCurrentTime(f.getAnimationDef(id).duration/2);f.tick();
+       const object=f.scene.getObjectByName(node);return object&&(node.endsWith('-door')?object.rotation.y!==0:object.position.z<0);
+     },{timeout:60000},{id,node});
+     await page.evaluate(({id,node,family,phase})=>{
+       const f=window.customFixture,def=f.getAnimationDef(id),object=f.scene.getObjectByName(node);
+       for(const fraction of [0,.5,1,.25,.75,0]){
+         f.store.getState().setCurrentTime(def.duration*fraction);f.tick();
+         const duration=4.833333492279053,range=family==='linen'?(phase==='push'?[(duration-3.6)/duration,(duration-1.2)/duration]:[1.2/duration,3.6/duration]):[.25,.75];
+         const progress=phase==='search'?1:Math.max(0,Math.min(1,(fraction-range[0])/(range[1]-range[0]))),expected=phase==='push'?1-progress:progress;
+         const actual=node.endsWith('-door')?Math.abs(object.rotation.y)/(Math.PI/2):-object.position.z/(f.glbLocalBBox(object).getSize(f.camera.position.clone()).z*2/3);
+         if(Math.abs(actual-expected)>1e-6)throw new Error('Furniture not synchronized: '+JSON.stringify({id,fraction,actual,expected}));
+       }
+       if(JSON.stringify(f.sceneStore.getState().furniture)!==f.before)throw new Error('Preview changed apartment state');
+     },{id,node,family,phase});
+     console.log('Validated custom furniture:',id);
+   }
+   await page.evaluate(()=>{const f=window.customFixture;f.camera.lookAt(0,85,35);f.gl.render(f.scene,f.camera);});
+   await page.screenshot({path:'/tmp/custom-animation-furniture.png'});
+   await page.evaluate(()=>window.customFixture.setId('idle'));
+   await page.waitForFunction(()=>!window.customFixture.scene.getObjectByName('custom-animation-furniture'));
+   console.log('27 custom clips: furniture, box/door seeks, pause-independent synchronization, scene isolation and non-custom cleanup PASS');assert.deepEqual(errors,[]);return;
+ }
  await page.evaluate(async()=>{
  window.$RefreshReg$=()=>{};window.$RefreshSig$=()=>type=>type;window.__vite_plugin_react_preamble_installed__=true;
  const THREE=await import('/node_modules/.vite/deps/three.js');
