@@ -78,22 +78,6 @@ export function DiagBox({ d1, d2, yBase = 0, h = WALL_H, mat = southMats, userDa
   );
 }
 
-export function SplitDiagBox(props: {
-  d1: number; d2: number; yBase?: number; h?: number; mat?: THREE.Material | THREE.Material[]; userData?: any;
-}) {
-  const MAX_LEN = 100;
-  const len = props.d2 - props.d1;
-  if (len <= MAX_LEN) return <DiagBox {...props} />;
-  const count = Math.ceil(len / MAX_LEN);
-  const step = len / count;
-  const boxes = [];
-  for (let i = 0; i < count; i++) {
-    const d1 = props.d1 + i * step - (i > 0 ? 0.1 : 0);
-    const d2 = props.d1 + (i + 1) * step + (i < count - 1 ? 0.1 : 0);
-    boxes.push(<DiagBox key={i} {...props} d1={d1} d2={d2} />);
-  }
-  return <>{boxes}</>;
-}
 
 function makeSprite(text: string, color: string, worldSize: number): THREE.Sprite {
   const PX = 64;
@@ -219,7 +203,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
               })}
               {/* Mur diagonal (partie pleine après la porte d'entrée) */}
-              <SplitDiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />
+              <DiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />
 
               {/* Panneaux bois occultants jardin */}
               {GARDEN_PANEL_DEFS.map((p, i) => (

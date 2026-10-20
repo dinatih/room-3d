@@ -299,79 +299,60 @@ export const SEG_DIAG_CONCRETE_WALLS: [number, number, number, number][] = [
 export const SEG_DIAG_ENTRY_DOOR: [number, number, number, number] =
   seg(pInt(dDoor.start), pInt(dDoor.end));
 
-// ── Générateurs de tranches de murs 3D ────────────────────────────────────────
-function splitSpan(min: number, max: number, maxLen = 100): [number, number][] {
-  const len = max - min;
-  if (len <= maxLen) return [[min, max]];
-  const count = Math.ceil(len / maxLen);
-  const step = len / count;
-  return Array.from({ length: count }, (_, i) => [
-    min + i * step - (i > 0 ? 0.1 : 0),
-    min + (i + 1) * step + (i < count - 1 ? 0.1 : 0),
-  ]);
-}
-
-function wallZ(xc: number, z1: number, z2: number, mat: WallMat = 'default', t = WT): WallDef[] {
-  return splitSpan(z1, z2).map(([a, b]) => ({ axis: 'z', xc, z1: a, z2: b, mat, t }));
+// ── Définitions des pans de murs 3D ──────────────────────────────────────────
+function wallZ(xc: number, z1: number, z2: number, mat: WallMat = 'default', t = WT): WallDef {
+  return { axis: 'z', xc, z1, z2, mat, t };
 }
 
 function wallX(zc: number, x1: number, x2: number, mat: WallMat = 'default', t = WT,
   extra?: { h?: number; yBase?: number; segKind?: SegKind | 'none' },
-): WallDef[] {
-  return splitSpan(x1, x2).map(([a, b]) => ({
-    axis: 'x' as const,
-    zc,
-    x1: a,
-    x2: b,
-    mat,
-    t,
-    ...extra,
-  }));
+): WallDef {
+  return { axis: 'x', zc, x1, x2, mat, t, ...extra };
 }
 
 // ── WALL_DEFS : Spans de murs 3D entre piliers ────────────────────────────────
 export const WALL_DEFS: WallDef[] = [
   // ── Mur Ouest ───────────────────────────────────────────────────────────────
   // Face arrière continue niche (extérieur) & face avant séjour
-  ...wallZ(pEast('corner-nw') - 1.5 * WT, pNorth('corner-nw-ext'), pNorth('corner-sw'),   'west'),
-  ...wallZ(pEast('corner-nw') - WT / 2,   pSouth('corner-nw'),     pNorth('niche-beam'),  'west'),
+  wallZ(pEast('corner-nw') - 1.5 * WT, pNorth('corner-nw-ext'), pNorth('corner-sw'),   'west'),
+  wallZ(pEast('corner-nw') - WT / 2,   pSouth('corner-nw'),     pNorth('niche-beam'),  'west'),
   // Mur béton Ouest SDB & Couloir (saute les poteaux)
-  ...wallZ(pX('corner-sw'), pSouth('corner-sw'),  pNorth('bath-nw'),   'west'),
-  ...wallZ(pX('corner-sw'), pSouth('bath-nw'),    pNorth('shower-nw'), 'west'),
-  ...wallZ(pX('corner-sw'), pSouth('shower-nw'),  pNorth('shower-sw'), 'west'),
-  ...wallZ(pX('corner-sw'), pSouth('shower-sw'),  pNorth('diag-sw'),   'west'),
+  wallZ(pX('corner-sw'), pSouth('corner-sw'),  pNorth('bath-nw'),   'west'),
+  wallZ(pX('corner-sw'), pSouth('bath-nw'),    pNorth('shower-nw'), 'west'),
+  wallZ(pX('corner-sw'), pSouth('shower-nw'),  pNorth('shower-sw'), 'west'),
+  wallZ(pX('corner-sw'), pSouth('shower-sw'),  pNorth('diag-sw'),   'west'),
 
   // ── Mur Est ─────────────────────────────────────────────────────────────────
-  ...wallZ(pX('corner-ne'), pSouth('corner-ne'),  pNorth('corner-se'), 'east'), // Séjour
-  ...wallZ(pX('corner-ne'), pSouth('garden-e'),   pNorth('corner-ne'), 'east'), // Jardin (brique)
-  ...wallZ(pX('corner-ne'), pSouth('corner-se'),  pNorth('diag-ne'),   'east'), // Couloir droit
+  wallZ(pX('corner-ne'), pSouth('corner-ne'),  pNorth('corner-se'), 'east'), // Séjour
+  wallZ(pX('corner-ne'), pSouth('garden-e'),   pNorth('corner-ne'), 'east'), // Jardin (brique)
+  wallZ(pX('corner-ne'), pSouth('corner-se'),  pNorth('diag-ne'),   'east'), // Couloir droit
 
   // ── Mur Sud Séjour (Z=400) ──────────────────────────────────────────────────
-  ...wallX(pZ('corner-sw'), pEast('corner-sw'),   pWest('kitchen-nw'),   'default', PT),
-  ...wallX(pZ('corner-sw'), pEast('kitchen-ne'),  pWest('door-living-w'), 'default', PT),
-  ...wallX(pZ('corner-sw'), pEast('door-living-e'), pWest('corner-se'),  'default', PT),
+  wallX(pZ('corner-sw'), pEast('corner-sw'),   pWest('kitchen-nw'),   'default', PT),
+  wallX(pZ('corner-sw'), pEast('kitchen-ne'),  pWest('door-living-w'), 'default', PT),
+  wallX(pZ('corner-sw'), pEast('door-living-e'), pWest('corner-se'),  'default', PT),
   { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: pEast('corner-ne'), segKind: 'door', t: PT },
 
   // ── Cuisine ─────────────────────────────────────────────────────────────────
-  ...wallZ(pX('kitchen-nw'), pSouth('kitchen-nw'), pNorth('kitchen-sw'), 'default', PT),
-  ...wallZ(pX('kitchen-ne'), pSouth('kitchen-ne'), pNorth('kitchen-se'), 'default', PT),
-  ...wallX(pZ('bath-nw'),    pEast('bath-nw'),     pWest('kitchen-sw'),  'default', PT),
-  ...wallX(pZ('bath-nw'),    pEast('kitchen-sw'),  pWest('kitchen-se'),  'default', PT),
-  ...wallX(pZ('bath-nw'),    pEast('kitchen-se'),  pWest('bath-ne'),     'default', PT),
+  wallZ(pX('kitchen-nw'), pSouth('kitchen-nw'), pNorth('kitchen-sw'), 'default', PT),
+  wallZ(pX('kitchen-ne'), pSouth('kitchen-ne'), pNorth('kitchen-se'), 'default', PT),
+  wallX(pZ('bath-nw'),    pEast('bath-nw'),     pWest('kitchen-sw'),  'default', PT),
+  wallX(pZ('bath-nw'),    pEast('kitchen-sw'),  pWest('kitchen-se'),  'default', PT),
+  wallX(pZ('bath-nw'),    pEast('kitchen-se'),  pWest('bath-ne'),     'default', PT),
 
   // ── Cloison Couloir / SDB ───────────────────────────────────────────────────
-  ...wallZ(pX('bath-ne'), pSouth('bath-ne'), pNorth('door-bath-n'), 'default', PT),
+  wallZ(pX('bath-ne'), pSouth('bath-ne'), pNorth('door-bath-n'), 'default', PT),
   { axis: 'z', xc: pX('bath-ne'), z1: pSouth('door-bath-n'), z2: pNorth('door-bath-s'), segKind: 'door', t: PT },
 
   // ── Mur Nord (Façade baie vitrée) ───────────────────────────────────────────
-  ...wallX(pZ('corner-nw'),     pEast('corner-nw'),     pWest('glass-west'),     'north'),
-  ...wallX(pZ('corner-nw-ext'), pEast('corner-nw-ext'), pWest('glass-west-ext'), 'north', 20, { h: WALL_H - 0.1 }),
-  ...wallX(pZ('corner-ne'),     pEast('glass-east'),     pWest('corner-ne'),      'north'),
-  ...wallX(pZ('corner-ne-ext'), pEast('glass-east-ext'), pWest('corner-ne-ext'),  'north', 20, { h: WALL_H - 0.1 }),
+  wallX(pZ('corner-nw'),     pEast('corner-nw'),     pWest('glass-west'),     'north'),
+  wallX(pZ('corner-nw-ext'), pEast('corner-nw-ext'), pWest('glass-west-ext'), 'north', 20, { h: WALL_H - 0.1 }),
+  wallX(pZ('corner-ne'),     pEast('glass-east'),     pWest('corner-ne'),      'north'),
+  wallX(pZ('corner-ne-ext'), pEast('glass-east-ext'), pWest('corner-ne-ext'),  'north', 20, { h: WALL_H - 0.1 }),
 
   // ── Douche ──────────────────────────────────────────────────────────────────
-  ...wallZ(pX('shower-ne'), pSouth('shower-ne'), pNorth('shower-se'), 'default', PT),
-  ...wallX(pZ('shower-sw'), pEast('shower-sw'),  pWest('shower-se'),  'south', PT),
+  wallZ(pX('shower-ne'), pSouth('shower-ne'), pNorth('shower-se'), 'default', PT),
+  wallX(pZ('shower-sw'), pEast('shower-sw'),  pWest('shower-se'),  'south', PT),
 ];
 
 // ── Panneaux occultants bois jardin (côté Est) ────────────────────────────────
