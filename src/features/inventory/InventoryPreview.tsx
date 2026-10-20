@@ -24,6 +24,7 @@ import { CharacterSection } from '@features/scene/sidepanel/sections/CharacterSe
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { DevToolsCollector } from '@features/scene/DevToolsCollector';
 import { ViewControlBar } from '@features/scene/ViewControlBar';
+import { resolveCameraView } from '@features/scene/camera/cameraViews';
 import { getOrbitMouseButtons, getOrbitTouches } from '@features/scene/camera/orbitMouseButtons';
 import { TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -50,25 +51,33 @@ export interface GlbDebugStats {
 }
 
 const glbSizeCache = new Map<string, number>();
-type PreviewOrthoView = 'front' | 'back' | 'side' | 'right' | 'top' | 'bottom';
-type PreviewIsoView = 'iso-se' | 'iso-sw' | 'iso-ne' | 'iso-nw';
-type PreviewPresetView = PreviewOrthoView | PreviewIsoView;
-type PreviewCameraView = 'free' | PreviewPresetView;
-type ViewDirection = [number, number, number];
+type PreviewCameraView = 'free' | string;
 
-const PREVIEW_VIEW_DIRECTIONS: Record<PreviewPresetView, ViewDirection> = {
-  front: [0, 0, 1], back: [0, 0, -1], side: [-1, 0, 0], right: [1, 0, 0],
-  top: [0, 1, 0], bottom: [0, -1, 0],
-  'iso-se': [1, 1, 1], 'iso-sw': [-1, 1, 1], 'iso-ne': [1, 1, -1], 'iso-nw': [-1, 1, -1],
-};
-const PREVIEW_VIEW_LABELS: Record<PreviewPresetView, string> = {
-  front: 'Face', back: 'Arrière', side: 'Profil Gauche', right: 'Profil Droit',
-  top: 'Dessus', bottom: 'Dessous',
-  'iso-se': 'ISO Sud-Est', 'iso-sw': 'ISO Sud-Ouest', 'iso-ne': 'ISO Nord-Est', 'iso-nw': 'ISO Nord-Ouest',
+const PREVIEW_VIEW_LABELS: Record<string, string> = {
+  north: 'Nord (Arrière)',
+  'north-east': 'Nord-Est',
+  east: 'Est (Profil Droit)',
+  'south-east': 'Sud-Est',
+  south: 'Sud (Face)',
+  'south-west': 'Sud-Ouest',
+  west: 'Ouest (Profil Gauche)',
+  'north-west': 'Nord-Ouest',
+  top: 'Dessus',
+  bottom: 'Dessous',
 };
 
-function getPreviewViewDirection(mode: PreviewPresetView): THREE.Vector3 {
-  return new THREE.Vector3(...PREVIEW_VIEW_DIRECTIONS[mode]).normalize();
+function getPreviewViewConfig(key: string, elevation = 45): { direction: THREE.Vector3; up: [number, number, number] } {
+  try {
+    const view = resolveCameraView(key, 'persp', undefined, elevation);
+    const direction = new THREE.Vector3(
+      view.pos[0] - view.target[0],
+      view.pos[1] - view.target[1],
+      view.pos[2] - view.target[2]
+    ).normalize();
+    return { direction, up: view.up ?? [0, 1, 0] };
+  } catch {
+    return { direction: new THREE.Vector3(1, 1, 1).normalize(), up: [0, 1, 0] };
+  }
 }
 
 function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () => void; onStats?: (s: GlbDebugStats) => void }) {
@@ -244,6 +253,7 @@ function OrthoCameraControls({
 }) {
   const { size, camera } = useThree();
   const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
+  const cameraElevation = useSceneStore(state => state.cameraElevation ?? 45);
   const aspect = size.width / Math.max(1, size.height);
   const ctrlRef = useRef<any>(null);
   const camRef = useRef<THREE.OrthographicCamera>(null);
@@ -262,18 +272,22 @@ function OrthoCameraControls({
     return [0, target[1] || 85, 0];
   }, [mode, target]);
 
+  const { direction, up } = useMemo(() => {
+    if (mode === 'free') return { direction: new THREE.Vector3(0.75, 0.45, 0.95).normalize(), up: [0, 1, 0] as [number, number, number] };
+    return getPreviewViewConfig(mode, cameraElevation);
+  }, [mode, cameraElevation]);
+
   const camPos: [number, number, number] = useMemo(() => {
     if (mode === 'free') {
       const distance = Math.max(100, boundsRadius * 3.2);
       return [target[0] + distance * 0.75, target[1] + distance * 0.45, target[2] + distance * 0.95];
     }
-    const direction = getPreviewViewDirection(mode);
     return [
       camTarget[0] + direction.x * 1000,
       camTarget[1] + direction.y * 1000,
       camTarget[2] + direction.z * 1000,
     ];
-  }, [mode, camTarget, boundsRadius, target]);
+  }, [mode, camTarget, boundsRadius, target, direction]);
 
   useLayoutEffect(() => {
     camera.layers.enableAll();
@@ -283,18 +297,12 @@ function OrthoCameraControls({
       camRef.current.right = viewW / 2;
       camRef.current.top = viewH / 2;
       camRef.current.bottom = -viewH / 2;
-      if (mode === 'top') {
-        camRef.current.up.set(0, 0, -1);
-      } else if (mode === 'bottom') {
-        camRef.current.up.set(0, 0, 1);
-      } else {
-        camRef.current.up.set(0, 1, 0);
-      }
+      camRef.current.up.set(...up);
       camRef.current.position.set(camPos[0], camPos[1], camPos[2]);
       camRef.current.lookAt(camTarget[0], camTarget[1], camTarget[2]);
       camRef.current.updateProjectionMatrix();
     }
-  }, [camera, mode, camPos, camTarget, viewW, viewH]);
+  }, [camera, mode, camPos, camTarget, viewW, viewH, up]);
 
   useEffect(() => {
     if (ctrlRef.current) {
@@ -338,21 +346,19 @@ function PerspectivePresetControls({
   target = [0, 0, 0],
   boundsRadius = 50,
 }: {
-  mode: PreviewPresetView;
+  mode: PreviewCameraView;
   target?: [number, number, number];
   boundsRadius?: number;
 }) {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
   const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
+  const cameraElevation = useSceneStore(state => state.cameraElevation ?? 45);
   const ctrlRef = useRef<any>(null);
   const camTarget = useMemo<[number, number, number]>(() => (
     mode === 'top' || mode === 'bottom' ? [0, 0, 0] : [0, target[1] || 85, 0]
   ), [mode, target]);
   const distance = Math.max(100, (boundsRadius || 50) * 3.2);
-  const direction = useMemo(() => getPreviewViewDirection(mode), [mode]);
-  const up = useMemo<[number, number, number]>(() => (
-    mode === 'top' ? [0, 0, -1] : mode === 'bottom' ? [0, 0, 1] : [0, 1, 0]
-  ), [mode]);
+  const { direction, up } = useMemo(() => getPreviewViewConfig(mode, cameraElevation), [mode, cameraElevation]);
   const position = useMemo<[number, number, number]>(() => [
     camTarget[0] + direction.x * distance,
     camTarget[1] + direction.y * distance,
@@ -381,7 +387,7 @@ function PerspectivePresetControls({
   );
 }
 
-function GroundDatumLines({ mode }: { mode: PreviewOrthoView }) {
+function GroundDatumLines({ mode }: { mode: string }) {
   const span = 150;
 
   if (mode === 'top') {
@@ -398,7 +404,7 @@ function GroundDatumLines({ mode }: { mode: PreviewOrthoView }) {
     );
   }
 
-  const isSide = mode === 'side' || mode === 'right';
+  const isSide = mode === 'west' || mode === 'east';
 
   const linePoints = (y: number): [[number, number, number], [number, number, number]] => {
     if (isSide) {
@@ -791,21 +797,12 @@ export function InventoryPreview({
     const onView = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (!detail) return;
-      const key = detail.key as string;
       if (detail.projection === 'ortho' || detail.projection === 'persp') {
         useSceneStore.getState().setCameraProjection(detail.projection);
       }
-      if (key === 'front' || key === 'back' || key === 'left' || key === 'right' ||
-          key === 'top' || key === 'bottom') {
-        // Map left→side, right→right, rest stays the same
-        const mapped = key === 'left' ? 'side' : key;
-        setPreviewView(mapped as PreviewOrthoView);
+      if (detail.key) {
+        setPreviewView(detail.key);
         setAutoRotate(false);
-      } else if (key === 'iso-se' || key === 'iso-sw' || key === 'iso-ne' || key === 'iso-nw') {
-        setPreviewView(key);
-        setAutoRotate(false);
-      } else {
-        setPreviewView('free');
       }
     };
     document.addEventListener('camera-view', onView);
@@ -1035,8 +1032,8 @@ export function InventoryPreview({
               {cameraProjection === 'ortho' ? (
                 <>
                   <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
-              {showGrid && previewView !== 'free' && !previewView.startsWith('iso-') &&
-                <GroundDatumLines mode={previewView as PreviewOrthoView} />}
+              {showGrid && previewView !== 'free' && (previewView === 'north' || previewView === 'south' || previewView === 'east' || previewView === 'west' || previewView === 'top') &&
+                <GroundDatumLines mode={previewView} />}
                 </>
               ) : (
                 <>
@@ -1118,7 +1115,7 @@ export function InventoryPreview({
                 whiteSpace: 'nowrap'
               }}
             >
-              <span>📐 Vue {cameraProjection === 'ortho' ? 'Ortho' : 'Perspective'} : <strong>{PREVIEW_VIEW_LABELS[previewView as PreviewPresetView]}</strong></span>
+              <span>📐 Vue {cameraProjection === 'ortho' ? 'Ortho' : 'Perspective'} : <strong>{PREVIEW_VIEW_LABELS[previewView] ?? previewView}</strong></span>
               {previewView === 'top' ? (
                 <>
                   <span style={{ color: '#00ff66', fontWeight: 'bold' }}>— Axe X (Bras)</span>
@@ -1264,7 +1261,7 @@ export function InventoryPreview({
       )}
     </div>
     {item && !hideViewControlBar && (
-      <ViewControlBar inline inventoryLayout activeCameraPos={showing3D && previewView !== 'free' ? (previewView === 'side' ? 'left' : previewView) : null} showOrbitControls={showing3D} beforeAmbianceActions={showing3D && (
+      <ViewControlBar inline inventoryLayout activeCameraPos={showing3D && previewView !== 'free' ? previewView : null} showOrbitControls={showing3D} beforeAmbianceActions={showing3D && (
         <>
         <button
           type="button"
