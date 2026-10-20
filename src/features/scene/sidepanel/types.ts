@@ -25,9 +25,6 @@ export const ELEVATION_VIEWS = [
   { angle: -90, label: '-90° Bas', shortcut: 'Alt+=', icon: 'bi-chevron-compact-down' },
 ] as const;
 
-export const DIRECTIONAL_VIEWS = CARDINAL_VIEWS.filter((_, i) => i % 2 === 0);
-export const ISO_VIEWS = CARDINAL_VIEWS.filter((_, i) => i % 2 !== 0);
-export const EXTRA_VIEWS = ELEVATION_VIEWS;
 export const CAMERA_SHORTCUT_VIEWS = CARDINAL_VIEWS;
 
 import { useSceneStore } from '../store/useSceneStore';

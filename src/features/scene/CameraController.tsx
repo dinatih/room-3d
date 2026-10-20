@@ -787,7 +787,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           target: PERSP_TARGET,
         });
       } else {
-        const defaultView = resolveCameraView('iso-se', store.cameraProjection);
+        const defaultView = resolveCameraView('north-east', store.cameraProjection);
         const offset: [number, number, number] = [
           defaultView.pos[0] - defaultView.target[0],
           defaultView.pos[1] - defaultView.target[1],

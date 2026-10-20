@@ -20,13 +20,6 @@ export const CARDINAL_ANGLES: Record<string, number> = {
   north: Math.PI, 'north-east': 3 * Math.PI / 4, east: Math.PI / 2, 'south-east': Math.PI / 4,
   south: 0, 'south-west': -Math.PI / 4, west: -Math.PI / 2, 'north-west': -3 * Math.PI / 4,
   top: Math.PI, bottom: Math.PI,
-  front: 0, back: Math.PI, left: -Math.PI / 2, right: Math.PI / 2,
-  'iso-se': Math.PI / 4, 'iso-sw': -Math.PI / 4, 'iso-ne': 3 * Math.PI / 4, 'iso-nw': -3 * Math.PI / 4,
-};
-
-export const CARDINAL_ALIASES: Record<string, string> = {
-  front: 'south', back: 'north', left: 'west', right: 'east',
-  'iso-se': 'south-east', 'iso-sw': 'south-west', 'iso-ne': 'north-east', 'iso-nw': 'north-west',
 };
 
 export function computeCameraPreset(azimuth: number, elevation = 45): CameraViewPreset {
@@ -69,11 +62,10 @@ export const CAMERA_VIEW_FOV = 50;
 
 /** Preserve direction and target-plane scale between the two projections. */
 export function resolveCameraView(key: string, projection: 'ortho' | 'persp', fov = CAMERA_VIEW_FOV, elevation?: number): CameraViewPreset & { projection: 'ortho' | 'persp' } {
-  const normKey = CARDINAL_ALIASES[key] ?? key;
-  const azimuth = CARDINAL_ANGLES[normKey];
+  const azimuth = CARDINAL_ANGLES[key];
   const activeView = elevation !== undefined && azimuth !== undefined
     ? computeCameraPreset(azimuth, elevation)
-    : (VIEWS[normKey] ?? (azimuth !== undefined ? computeCameraPreset(azimuth, 45) : undefined));
+    : (VIEWS[key] ?? (azimuth !== undefined ? computeCameraPreset(azimuth, 45) : undefined));
 
   if (!activeView) throw new Error(`Unknown camera view: ${key}`);
   if (projection === 'ortho') return { ...activeView, projection };

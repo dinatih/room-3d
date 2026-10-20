@@ -256,9 +256,8 @@ export function useCameraShortcuts({
           return;
         }
         const viewByCode: Record<string, string> = {
-          Digit1: 'front', Digit2: 'back', Digit3: 'left', Digit4: 'right',
-          Digit5: 'top', Digit6: 'bottom', Digit7: 'iso-se', Digit8: 'iso-sw',
-          Digit9: 'iso-ne', Digit0: 'iso-nw',
+          Digit1: 'north', Digit2: 'north-east', Digit3: 'east', Digit4: 'south-east',
+          Digit5: 'south', Digit6: 'south-west', Digit7: 'west', Digit8: 'north-west',
         };
         const view = viewByCode[e.code];
         if (view) {
