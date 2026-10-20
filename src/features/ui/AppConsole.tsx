@@ -8,6 +8,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { CHARACTERS, findCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
+import { getDebugPreset } from '@features/scene/store/debugPresets';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 import { Minimap } from '@features/scene/Minimap';
@@ -162,7 +163,8 @@ function useUrlPanelToggle(key: 'minimap' | 'perfGraph') {
   const [visible, setVisible] = useState(() => {
     const { search, hash } = window.location;
     const query = search || (hash.includes('?') ? hash.slice(hash.indexOf('?')) : '');
-    const value = new URLSearchParams(query).get(key);
+    const params = new URLSearchParams(query);
+    const value = params.get(key) ?? (key === 'perfGraph' && getDebugPreset(params)?.perfGraph ? '1' : null);
     return value === '1' || value === 'true';
   });
 

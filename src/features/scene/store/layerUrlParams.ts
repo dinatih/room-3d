@@ -1,4 +1,5 @@
 import type { LayerState, GroundType, LaraClothing } from '../sidepanel/types';
+import { getDebugPreset } from './debugPresets';
 
 /**
  * Source unique de vérité pour les valeurs par défaut de tous les calques booléens.
@@ -323,7 +324,7 @@ export function parseUrlLayerOverrides(): Partial<Record<keyof LayerState, boole
       search = window.location.hash.substring(window.location.hash.indexOf('?'));
     }
     const params = new URLSearchParams(search);
-    const overrides: Partial<Record<keyof LayerState, boolean>> = {};
+    const overrides: Partial<Record<keyof LayerState, boolean>> = { ...getDebugPreset(params)?.layers };
 
     // Normalisation en minuscules de toutes les clés d'URL présentes
     const lowerParams = new Map<string, string>();
@@ -435,8 +436,9 @@ export function updateUrlLayer(key: keyof LayerState, value: boolean) {
       url.searchParams.delete(k);
     }
 
-    // Ne pas écrire dans l'URL si la valeur correspond au défaut (depuis LAYER_DEFAULTS)
-    const isDefault = value === (LAYER_DEFAULTS[key as string] ?? true);
+    // Le preset debug définit les valeurs par défaut, les paramètres explicites les remplacent.
+    const query = url.search || url.hash.split('?')[1] || '';
+    const isDefault = value === (getDebugPreset(new URLSearchParams(query))?.layers[key] ?? LAYER_DEFAULTS[key as string] ?? true);
     if (!isDefault) {
       url.searchParams.set(mapping.canonicalParam, value ? '1' : '0');
     } else if (allKeysToDelete.length === 0) {
