@@ -806,7 +806,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const ctrl = ctrlRef.current;
     if (!ctrl) return;
     const onStart = () => {
-      if (modeRef.current === 'orbit') {
+      if (modeRef.current === 'orbit' && !cameraState.isIntroRunning) {
         const store = useSceneStore.getState();
         if (store.activeCameraPos) store.setActiveCameraPos(null);
         if (store.cameraMovement === 'orbit') store.setCameraMovement('fix');
