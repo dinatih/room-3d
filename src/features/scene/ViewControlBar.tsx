@@ -81,7 +81,6 @@ export function ViewControlBar({
   const setHdri = useSceneStore(s => s.setHdri);
   const cameraTarget = useSceneStore(s => s.cameraTarget);
   const setCameraTarget = useSceneStore(s => s.setCameraTarget);
-  const setCameraMovement = useSceneStore(s => s.setCameraMovement);
   const currentElevation = useSceneStore(s => s.cameraElevation ?? 45);
 
   const [isVRActive, setIsVRActive] = useState(false);
@@ -330,7 +329,6 @@ export function ViewControlBar({
             className={`${TOOLBAR_BUTTON_CLASS} ${cameraTarget === 'studio' && cameraMode === 'orbit' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
             onClick={() => {
               setCameraTarget('studio');
-              setCameraMovement('orbit');
               dispatchCameraMode('reset-orbit');
             }}
             title="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"

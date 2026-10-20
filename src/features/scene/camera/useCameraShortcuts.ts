@@ -186,7 +186,7 @@ export function useCameraShortcuts({
         const view = getCharacterGridCameraView();
         toggleOrbitType?.('persp', { pos: view.pos, target: view.target });
       } else {
-        store.setActiveCameraPos(null);
+        store.setActiveCameraPos('north-west');
         toggleOrbitType?.('persp', { pos: PERSP_POS, target: PERSP_TARGET });
       }
     };
