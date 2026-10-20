@@ -40,7 +40,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
   const mountedCharacters = useMemo(() => {
     if (props.isPreview) {
       if (props.duoAnimDef) {
-        const { leaderId, partnerId } = resolveDuoPreviewParticipants(props.duoAnimDef, props.previewCharacterId, props.duoPartnerId);
+        const { leaderId, partnerId } = resolveDuoPreviewParticipants(props.previewCharacterId, props.duoPartnerId);
         const leader = characters.find(char => char.id === leaderId);
         const partner = characters.find(char => char.id === partnerId);
         if (!leader || !partner) throw new Error(`Participants duo inconnus : ${leaderId}, ${partnerId}`);

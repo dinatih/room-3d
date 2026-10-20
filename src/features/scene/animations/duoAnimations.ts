@@ -127,18 +127,15 @@ export function getDuoAnimationForClip(clipOrPath?: string): DuoAnimationDef | u
   return duoDefByClipOrPath.get(clipOrPath.trim().toLowerCase());
 }
 
-/** Xbot participe uniquement aux duos de combat. */
+/** Dans l'appartement, Xbot participe uniquement aux duos de combat. */
 export function canCharacterPerformDuo(characterId: string, def: DuoAnimationDef): boolean {
   return characterId !== 'xbot' || def.isCombat;
 }
 
 /** Participants réellement affichés dans un aperçu, sans modifier la fiche ouverte. */
-export function resolveDuoPreviewParticipants(def: DuoAnimationDef, leaderId = 'native', partnerId?: string): { leaderId: string; partnerId: string } {
-  const leader = canCharacterPerformDuo(leaderId, def)
-    ? leaderId
-    : partnerId === 'native' ? 'rosanna' : 'native';
-  const partner = partnerId && partnerId !== leader && canCharacterPerformDuo(partnerId, def)
+export function resolveDuoPreviewParticipants(leaderId = 'native', partnerId?: string): { leaderId: string; partnerId: string } {
+  const partner = partnerId && partnerId !== leaderId
     ? partnerId
-    : leader === 'native' ? 'rosanna' : 'native';
-  return { leaderId: leader, partnerId: partner };
+    : leaderId === 'native' ? 'rosanna' : 'native';
+  return { leaderId, partnerId: partner };
 }

@@ -14,7 +14,7 @@ import { SkeletonHierarchyPanel } from '@features/scene/utils/SkeletonHierarchyP
 import type { SkeletonGroup } from '@features/scene/utils/skeletonTypes';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 import { resolveAnimationId } from '@features/scene/animations/animationResolver';
-import { canCharacterPerformDuo, resolveDuoPreviewParticipants, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
+import { resolveDuoPreviewParticipants, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { SkySphere } from '@features/scene/SkySphere';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
@@ -842,7 +842,7 @@ export function InventoryPreview({
   }, [initialDuoPartner]);
 
   const duoParticipants = actionStates.duoAnimDef
-    ? resolveDuoPreviewParticipants(actionStates.duoAnimDef, item?.id, actionStates.duoPartnerId)
+    ? resolveDuoPreviewParticipants(item?.id, actionStates.duoPartnerId)
     : undefined;
   const baseActionStates = {
     ...actionStates,
@@ -1359,7 +1359,7 @@ export function InventoryPreview({
             }}
             onSelectDuoAnim={(def) => {
               if (!actionStates.duoAnimDef) lastSoloAnimRef.current = actionStates.characterAnim || 'idle';
-              const otherChars = CHARACTERS.filter(c => c.id !== (def ? resolveDuoPreviewParticipants(def, item.id, actionStates.duoPartnerId).leaderId : item.id) && (!def || canCharacterPerformDuo(c.id, def)) && (extraCharacters || !isExtraCharacter(c.id)));
+              const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
               const defaultPartner = otherChars.find(c => c.id === actionStates.duoPartnerId)?.id || otherChars[0]?.id;
               setActionStates(s => ({
                 ...s,

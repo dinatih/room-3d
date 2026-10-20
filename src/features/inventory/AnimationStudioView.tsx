@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
 import { CHARACTERS } from '@features/scene/characterConfig';
-import { canCharacterPerformDuo } from '@features/scene/animations/duoAnimations';
 import { ANIM_CATEGORIES } from '@features/scene/CharacterAnimSelector';
 import { InventoryPreview } from './InventoryPreview';
 import { AnimFrameController } from './AnimFrameController';
@@ -40,9 +39,8 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
     INVENTORY.some(item => item.id === c.id && item.category === 'characters') &&
     !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone', 'unitree-g1', 'unitree-go2', 'jumper-robot'].includes(c.id)
   ), []);
-  const leaders = characters.filter(c => !active?.duo || canCharacterPerformDuo(c.id, active.duo));
-  const leader = leaders.find(c => c.id === actorId) ?? leaders[0];
-  const partners = leaders.filter(c => c.id !== leader?.id);
+  const leader = characters.find(c => c.id === actorId) ?? characters[0];
+  const partners = characters.filter(c => c.id !== leader?.id);
   const partner = partners.find(c => c.id === partnerId) ?? partners[0];
   const currentItem = INVENTORY.find(i => i.id === leader?.id);
   const sources = [...new Set(catalog.flatMap(a => a.sources))].sort();
@@ -270,7 +268,7 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
         <div className="py-1 px-2 border-bottom bg-white d-flex flex-wrap align-items-center gap-2">
           <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">{mode === 'solo' ? 'Personnage' : 'Leader A'}
             <select aria-label="Personnage testé" className="form-select form-select-sm py-0.5 ps-2 pe-4 w-auto small" value={leader?.id ?? ''} onChange={e => setActorId(e.target.value)}>
-              {leaders.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {characters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </label>
           {mode === 'duo' && <>

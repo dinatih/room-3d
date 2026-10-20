@@ -15,7 +15,7 @@ import { ANIMATION_DEFINITIONS, type AnimationDefinition } from '@features/scene
 import { CharacterAnimSelector, ANIM_CATEGORIES, getAnimCategory, getFilteredAnimOptions } from '@features/scene/CharacterAnimSelector';
 import { DuoAnimSelector } from '@features/scene/DuoAnimSelector';
 import { DuoPartnerSelector } from '@features/scene/DuoPartnerSelector';
-import { DUO_ANIMATIONS, canCharacterPerformDuo, resolveDuoPreviewParticipants, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
+import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 
@@ -134,19 +134,9 @@ export function AnimFrameController({
   const catObj = catKey ? ANIM_CATEGORIES.find(c => c.key === catKey) : undefined;
 
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
-  const effectiveLeaderId = duoAnimDef && characterId
-    ? resolveDuoPreviewParticipants(duoAnimDef, characterId, duoPartnerId).leaderId
-    : characterId;
   const availablePartners = useMemo(() => {
-    return CHARACTERS.filter(c => (allowSamePartner || c.id !== effectiveLeaderId) && (!duoAnimDef || canCharacterPerformDuo(c.id, duoAnimDef)) && (extraCharacters || !isExtraCharacter(c.id)));
-  }, [effectiveLeaderId, extraCharacters, allowSamePartner, duoAnimDef]);
-
-  useEffect(() => {
-    if (duoAnimDef && duoPartnerId && !canCharacterPerformDuo(duoPartnerId, duoAnimDef)) {
-      const replacement = availablePartners[0];
-      if (replacement) onSelectDuoPartner?.(replacement.id);
-    }
-  }, [duoAnimDef, duoPartnerId, availablePartners, onSelectDuoPartner]);
+    return CHARACTERS.filter(c => (allowSamePartner || c.id !== characterId) && (extraCharacters || !isExtraCharacter(c.id)));
+  }, [characterId, extraCharacters, allowSamePartner]);
 
   const defA = useMemo(() => {
     if (!duoAnimDef) return undefined;
@@ -159,8 +149,8 @@ export function AnimFrameController({
   }, [duoAnimDef]);
 
   const charAName = useMemo(() => {
-    return CHARACTERS.find(c => c.id === effectiveLeaderId)?.name || effectiveLeaderId || 'Personnage A';
-  }, [effectiveLeaderId]);
+    return CHARACTERS.find(c => c.id === characterId)?.name || characterId || 'Personnage A';
+  }, [characterId]);
 
   const charBName = useMemo(() => {
     const pId = duoPartnerId || availablePartners[0]?.id;
@@ -382,11 +372,7 @@ export function AnimFrameController({
     const randomAnim = choices[Math.floor(Math.random() * choices.length)];
     if (!randomAnim) return;
     onSelectDuoAnim(randomAnim);
-    const leaderId = characterId
-      ? resolveDuoPreviewParticipants(randomAnim, characterId, duoPartnerId).leaderId
-      : undefined;
-    const partners = CHARACTERS.filter(c => (allowSamePartner || c.id !== leaderId) && canCharacterPerformDuo(c.id, randomAnim) && (extraCharacters || !isExtraCharacter(c.id)));
-    const partner = partners[Math.floor(Math.random() * partners.length)];
+    const partner = availablePartners[Math.floor(Math.random() * availablePartners.length)];
     if (partner) onSelectDuoPartner?.(partner.id);
     useAnimPreviewStore.getState().seekToTime(0);
     useAnimPreviewStore.getState().play();
@@ -431,15 +417,11 @@ export function AnimFrameController({
     const nextAnim = DUO_ANIMATIONS[nextIdx];
     handleSelectDuoAnim(nextAnim, showDuoSelector);
     if (nextAnim && characterId) {
-      const leaderId = resolveDuoPreviewParticipants(nextAnim, characterId, duoPartnerId).leaderId;
-      const validPartners = CHARACTERS.filter(
-        c => (allowSamePartner || c.id !== leaderId) && canCharacterPerformDuo(c.id, nextAnim) && (extraCharacters || !isExtraCharacter(c.id))
-      );
-      if (validPartners.length > 0 && (!duoPartnerId || !canCharacterPerformDuo(duoPartnerId, nextAnim))) {
-        onSelectDuoPartner?.(validPartners[0].id);
+      if (availablePartners.length > 0 && !duoPartnerId) {
+        onSelectDuoPartner?.(availablePartners[0].id);
       }
     }
-  }, [onSelectDuoAnim, duoAnimDef, showDuoSelector, characterId, duoPartnerId, allowSamePartner, extraCharacters, handleSelectDuoAnim, onSelectDuoPartner]);
+  }, [onSelectDuoAnim, duoAnimDef, showDuoSelector, characterId, duoPartnerId, availablePartners, handleSelectDuoAnim, onSelectDuoPartner]);
 
   // Sélection aléatoire d'une animation parmi la liste filtrée
   const handleRandomAnim = useCallback(() => {
