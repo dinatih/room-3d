@@ -30,7 +30,7 @@ interface UseCameraShortcutsParams {
   exitTop: () => void;
   toggleOrbitType?: (
     target?: 'persp' | 'ortho',
-    options?: { pos?: [number, number, number]; target?: [number, number, number]; zoom?: number }
+    options?: { pos?: [number, number, number]; target?: [number, number, number]; zoom?: number; up?: [number, number, number] }
   ) => void;
   enterOrtho?: (config: {
     pos: [number, number, number];
@@ -486,11 +486,12 @@ export function useCameraShortcuts({
 
     // Panel camera preset → move orbit camera
     const onView = (e: Event) => {
-      const { pos, target, projection, zoom, preserveFollow } = (e as CustomEvent).detail as {
+      const { pos, target, projection, zoom, up, preserveFollow } = (e as CustomEvent).detail as {
         pos: [number, number, number];
         target: [number, number, number];
         projection?: 'persp' | 'ortho';
         zoom?: number;
+        up?: [number, number, number];
         preserveFollow?: boolean;
       };
       const keepFollow = preserveFollow && modeRef.current === 'follow';
@@ -515,7 +516,7 @@ export function useCameraShortcuts({
         }
       } else {
         changeMode('orbit');
-        toggleOrbitType?.(targetProj, { pos, target, zoom });
+        toggleOrbitType?.(targetProj, { pos, target, zoom, up });
         savedPerspPos.current.set(...pos);
         savedPerspTarget.current.set(...target);
       }

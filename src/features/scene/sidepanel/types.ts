@@ -7,34 +7,39 @@ export { VIEWS, resolveCameraView } from '../camera/cameraViews';
 export type { CameraViewPreset } from '../camera/cameraViews';
 
 // Les dix raccourcis communs à la barre de vues et aux repères 3D.
-export const DIRECTIONAL_VIEWS = [
-  { key: 'front', label: 'Face', shortcut: 'Alt+1', icon: 'bi-arrow-up' },
-  { key: 'back', label: 'Arrière', shortcut: 'Alt+2', icon: 'bi-arrow-down' },
-  { key: 'left', label: 'Gauche', shortcut: 'Alt+3', icon: 'bi-arrow-left' },
-  { key: 'right', label: 'Droite', shortcut: 'Alt+4', icon: 'bi-arrow-right' },
+export const CARDINAL_VIEWS = [
+  { key: 'north', label: 'Nord', shortcut: 'Alt+1', icon: 'bi-arrow-up' },
+  { key: 'north-east', label: 'Nord-Est', shortcut: 'Alt+2', icon: 'bi-arrow-up-right' },
+  { key: 'east', label: 'Est', shortcut: 'Alt+3', icon: 'bi-arrow-right' },
+  { key: 'south-east', label: 'Sud-Est', shortcut: 'Alt+4', icon: 'bi-arrow-down-right' },
+  { key: 'south', label: 'Sud', shortcut: 'Alt+5', icon: 'bi-arrow-down' },
+  { key: 'south-west', label: 'Sud-Ouest', shortcut: 'Alt+6', icon: 'bi-arrow-down-left' },
+  { key: 'west', label: 'Ouest', shortcut: 'Alt+7', icon: 'bi-arrow-left' },
+  { key: 'north-west', label: 'Nord-Ouest', shortcut: 'Alt+8', icon: 'bi-arrow-up-left' },
 ] as const;
 
-export const EXTRA_VIEWS = [
-  { key: 'top', label: 'Dessus', shortcut: 'Alt+5', icon: 'bi-chevron-compact-up' },
-  { key: 'bottom', label: 'Dessous', shortcut: 'Alt+6', icon: 'bi-chevron-compact-down' },
+export const ELEVATION_VIEWS = [
+  { angle: 90, label: '90° Haut', shortcut: 'Alt+9', icon: 'bi-chevron-compact-up' },
+  { angle: 45, label: '45° Plongée', shortcut: 'Alt+0', icon: 'bi-box' },
+  { angle: 0, label: '0° Face', shortcut: 'Alt+-', icon: 'bi-dash-lg' },
+  { angle: -90, label: '-90° Bas', shortcut: 'Alt+=', icon: 'bi-chevron-compact-down' },
 ] as const;
 
-export const ISO_VIEWS = [
-  { key: 'iso-se', label: 'Sud-Est', shortcut: 'Alt+7', icon: 'bi-arrow-down-right' },
-  { key: 'iso-sw', label: 'Sud-Ouest', shortcut: 'Alt+8', icon: 'bi-arrow-down-left' },
-  { key: 'iso-ne', label: 'Nord-Est', shortcut: 'Alt+9', icon: 'bi-arrow-up-right' },
-  { key: 'iso-nw', label: 'Nord-Ouest', shortcut: 'Alt+0', icon: 'bi-arrow-up-left' },
-] as const;
-
-export const CAMERA_SHORTCUT_VIEWS = [...DIRECTIONAL_VIEWS, ...EXTRA_VIEWS, ...ISO_VIEWS];
+export const DIRECTIONAL_VIEWS = CARDINAL_VIEWS.filter((_, i) => i % 2 === 0);
+export const ISO_VIEWS = CARDINAL_VIEWS.filter((_, i) => i % 2 !== 0);
+export const EXTRA_VIEWS = ELEVATION_VIEWS;
+export const CAMERA_SHORTCUT_VIEWS = CARDINAL_VIEWS;
 
 import { useSceneStore } from '../store/useSceneStore';
 import { getInventoryGridCameraTarget } from '../inventoryGridCamera';
 
-export function dispatchView(key: string, targetOverride?: [number, number, number], preserveFollow = false) {
-  const v = resolveCameraView(key, useSceneStore.getState().cameraProjection);
-  useSceneStore.getState().setActiveCameraPos(key);
-  const inventoryGridTarget = useSceneStore.getState().layers.inventoryGrid
+export function dispatchView(key: string, targetOverride?: [number, number, number], preserveFollow = false, elevationOverride?: number) {
+  const store = useSceneStore.getState();
+  const elev = elevationOverride ?? store.cameraElevation;
+  const v = resolveCameraView(key, store.cameraProjection, undefined, elev);
+  store.setActiveCameraPos(key);
+  store.setCameraElevation?.(elev);
+  const inventoryGridTarget = store.layers.inventoryGrid
     ? getInventoryGridCameraTarget()
     : null;
   const target = targetOverride ?? inventoryGridTarget ?? undefined;

@@ -136,6 +136,8 @@ interface SceneStore {
   setOrbitMouseMode: (mode: OrbitMouseMode) => void;
   activeCameraPos: string | null;
   setActiveCameraPos: (pos: string | null) => void;
+  cameraElevation: number;
+  setCameraElevation: (elev: number) => void;
   isCvModalOpen: boolean;
   isPhotoModeOpen: boolean;
   setCvModalOpen: (open: boolean) => void;
@@ -526,6 +528,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
     set({ activeCameraPos: pos });
     updateUrlCameraPos(pos);
   },
+  cameraElevation: 45,
+  setCameraElevation: (elev) => set({ cameraElevation: elev }),
   isCvModalOpen: false,
   isPhotoModeOpen: false,
   desk2ScreenActive: false,

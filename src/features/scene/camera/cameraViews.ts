@@ -8,38 +8,78 @@ const CX   = ROOM_W / 2;
 const CY   = WALL_H / 2;
 const CZ   = ROOM_D / 2;
 const DIST = 1500;
-const ISO  = 1500;
 
 export interface CameraViewPreset {
   pos: [number, number, number];
   target: [number, number, number];
   zoom?: number;
+  up?: [number, number, number];
+}
+
+export const CARDINAL_ANGLES: Record<string, number> = {
+  north: Math.PI, 'north-east': 3 * Math.PI / 4, east: Math.PI / 2, 'south-east': Math.PI / 4,
+  south: 0, 'south-west': -Math.PI / 4, west: -Math.PI / 2, 'north-west': -3 * Math.PI / 4,
+  top: Math.PI, bottom: Math.PI,
+  front: 0, back: Math.PI, left: -Math.PI / 2, right: Math.PI / 2,
+  'iso-se': Math.PI / 4, 'iso-sw': -Math.PI / 4, 'iso-ne': 3 * Math.PI / 4, 'iso-nw': -3 * Math.PI / 4,
+};
+
+export const CARDINAL_ALIASES: Record<string, string> = {
+  front: 'south', back: 'north', left: 'west', right: 'east',
+  'iso-se': 'south-east', 'iso-sw': 'south-west', 'iso-ne': 'north-east', 'iso-nw': 'north-west',
+};
+
+export function computeCameraPreset(azimuth: number, elevation = 45): CameraViewPreset {
+  const rad = elevation * Math.PI / 180;
+  const isHorizontal = elevation === 0;
+  const isZenith = elevation === 90;
+  const isNadir = elevation === -90;
+
+  const target: [number, number, number] = isHorizontal ? [CX, CY, CZ] : [CX, 0, CZ];
+  const r = (isZenith || isNadir) ? 0.001 : DIST * Math.cos(rad);
+  const y = DIST * Math.sin(rad);
+  const dx = r * Math.sin(azimuth);
+  const dz = r * Math.cos(azimuth);
+  const pos: [number, number, number] = [target[0] + dx, target[1] + y, target[2] + dz];
+
+  const up: [number, number, number] = isZenith
+    ? [-Math.sin(azimuth), 0, -Math.cos(azimuth)]
+    : isNadir
+      ? [Math.sin(azimuth), 0, Math.cos(azimuth)]
+      : [0, 1, 0];
+
+  return { pos, target, zoom: 1, up };
 }
 
 export const VIEWS: Record<string, CameraViewPreset> = {
-  top:         { pos: [CX, DIST, CZ + 0.1],               target: [CX, 0, CZ],          zoom: 1 },
-  front:       { pos: [CX, CY, CZ + DIST],                target: [CX, CY, CZ],         zoom: 1 },
-  back:        { pos: [CX, CY, CZ - DIST],                target: [CX, CY, CZ],         zoom: 1 },
-  left:        { pos: [CX - DIST, CY, CZ],                target: [CX, CY, CZ],         zoom: 1 },
-  right:       { pos: [CX + DIST, CY, CZ],                target: [CX, CY, CZ],         zoom: 1 },
-  bottom:      { pos: [CX, -DIST, CZ],                    target: [CX, 0, CZ],          zoom: 1 },
-  'iso-se':    { pos: [CX + ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          zoom: 1 },
-  'iso-nw':    { pos: [CX - ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          zoom: 1 },
-  'iso-ne':    { pos: [CX + ISO, ISO, CZ - ISO],          target: [CX, 0, CZ],          zoom: 1 },
-  'iso-sw':    { pos: [CX - ISO, ISO, CZ + ISO],          target: [CX, 0, CZ],          zoom: 1 },
+  north:        computeCameraPreset(Math.PI, 45),
+  'north-east': computeCameraPreset(3 * Math.PI / 4, 45),
+  east:         computeCameraPreset(Math.PI / 2, 45),
+  'south-east': computeCameraPreset(Math.PI / 4, 45),
+  south:        computeCameraPreset(0, 45),
+  'south-west': computeCameraPreset(-Math.PI / 4, 45),
+  west:         computeCameraPreset(-Math.PI / 2, 45),
+  'north-west': computeCameraPreset(-3 * Math.PI / 4, 45),
+  top:          computeCameraPreset(Math.PI, 90),
+  bottom:       computeCameraPreset(Math.PI, -90),
 };
 
 export const CAMERA_VIEW_HEIGHT = 800;
 export const CAMERA_VIEW_FOV = 50;
 
 /** Preserve direction and target-plane scale between the two projections. */
-export function resolveCameraView(key: string, projection: 'ortho' | 'persp', fov = CAMERA_VIEW_FOV): CameraViewPreset & { projection: 'ortho' | 'persp' } {
-  const view = VIEWS[key];
-  if (!view) throw new Error(`Unknown camera view: ${key}`);
-  if (projection === 'ortho') return { ...view, projection };
-  const offset = view.pos.map((value, index) => value - view.target[index]);
-  const distance = CAMERA_VIEW_HEIGHT / (2 * (view.zoom ?? 1) * Math.tan(fov * Math.PI / 360));
+export function resolveCameraView(key: string, projection: 'ortho' | 'persp', fov = CAMERA_VIEW_FOV, elevation?: number): CameraViewPreset & { projection: 'ortho' | 'persp' } {
+  const normKey = CARDINAL_ALIASES[key] ?? key;
+  const azimuth = CARDINAL_ANGLES[normKey];
+  const activeView = elevation !== undefined && azimuth !== undefined
+    ? computeCameraPreset(azimuth, elevation)
+    : (VIEWS[normKey] ?? (azimuth !== undefined ? computeCameraPreset(azimuth, 45) : undefined));
+
+  if (!activeView) throw new Error(`Unknown camera view: ${key}`);
+  if (projection === 'ortho') return { ...activeView, projection };
+  const offset = activeView.pos.map((value, index) => value - activeView.target[index]);
+  const distance = CAMERA_VIEW_HEIGHT / (2 * (activeView.zoom ?? 1) * Math.tan(fov * Math.PI / 360));
   const length = Math.hypot(...offset);
-  const pos = offset.map((value, index) => view.target[index] + value * distance / length) as [number, number, number];
-  return { pos, target: [...view.target], projection, zoom: 1 };
+  const pos = offset.map((value, index) => activeView.target[index] + value * distance / length) as [number, number, number];
+  return { pos, target: [...activeView.target], projection, zoom: 1, up: activeView.up };
 }

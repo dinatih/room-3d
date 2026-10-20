@@ -3,7 +3,7 @@ import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useSceneStore } from './store/useSceneStore';
-import { CAMERA_SHORTCUT_VIEWS, dispatchView, DIRECTIONAL_VIEWS, EXTRA_VIEWS, ISO_VIEWS } from './sidepanel/types';
+import { CAMERA_SHORTCUT_VIEWS, CARDINAL_VIEWS, dispatchView, ELEVATION_VIEWS } from './sidepanel/types';
 import { getCharacterGridCameraView, frameCharacterGridCamera } from './character/characterGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
@@ -171,14 +171,25 @@ export function ViewControlBar({
     </button>
   );
 
-  const frontView = DIRECTIONAL_VIEWS.find(v => v.key === 'front')!;
-  const backView = DIRECTIONAL_VIEWS.find(v => v.key === 'back')!;
-  const leftView = DIRECTIONAL_VIEWS.find(v => v.key === 'left')!;
-  const rightView = DIRECTIONAL_VIEWS.find(v => v.key === 'right')!;
-  const topView = EXTRA_VIEWS.find(v => v.key === 'top')!;
-  const bottomView = EXTRA_VIEWS.find(v => v.key === 'bottom')!;
+  const currentElevation = useSceneStore(s => s.cameraElevation ?? 45);
 
-
+  const renderElevationButton = (elev: { angle: number; label: string; shortcut: string; icon: string }) => (
+    <button
+      key={elev.angle}
+      type="button"
+      className={`${TOOLBAR_BUTTON_CLASS} ${currentElevation === elev.angle ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
+      onClick={() => {
+        const currentPos = activeCameraPos ?? 'north';
+        dispatchView(currentPos, npcGridActive ? getCharacterGridCameraView().target : undefined, false, elev.angle);
+      }}
+      title={`${elev.label} (${elev.shortcut})`}
+      aria-label={`${elev.label} (${elev.shortcut})`}
+      aria-pressed={currentElevation === elev.angle}
+    >
+      <i className={`bi ${elev.icon}`} aria-hidden="true" />
+      <span className="small fw-semibold">{elev.angle}°</span>
+    </button>
+  );
 
   const zoomButton = (direction: 'in' | 'out') => (
     <button
@@ -235,6 +246,18 @@ export function ViewControlBar({
       </div>
     </div>,
     document.body,
+  );
+
+  const cardinalGroup = (
+    <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Directions cardinales">
+      {CARDINAL_VIEWS.map((v, i) => renderViewButton(v, i % 2 === 0 ? 'cyan' : 'purple'))}
+    </div>
+  );
+
+  const elevationGroup = (
+    <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Élévation caméra">
+      {ELEVATION_VIEWS.map(renderElevationButton)}
+    </div>
   );
 
   const bar = (
@@ -327,21 +350,12 @@ export function ViewControlBar({
       )}
       <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
         {zoomButton('in')}
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues de face et dessus">
-          {renderViewButton(frontView, 'cyan')}
-          {renderViewButton(backView, 'cyan')}
-          {renderViewButton(leftView, 'cyan')}
-          {renderViewButton(rightView, 'cyan')}
-          {renderViewButton(topView, 'green')}
-        </div>
+        {cardinalGroup}
         {perspButton}
       </div>
       <div className="d-flex flex-nowrap align-items-center justify-content-end gap-1 view-control-bar__row">
         {zoomButton('out')}
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales et dessous">
-          {ISO_VIEWS.map(v => renderViewButton(v, 'purple'))}
-          {renderViewButton(bottomView, 'green')}
-        </div>
+        {elevationGroup}
         {rotButton}
       </div>
     </div>
@@ -353,13 +367,7 @@ export function ViewControlBar({
     const inlineRow1 = (
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('in')}
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues de face et dessus">
-          {renderViewButton(frontView, 'cyan')}
-          {renderViewButton(backView, 'cyan')}
-          {renderViewButton(leftView, 'cyan')}
-          {renderViewButton(rightView, 'cyan')}
-          {renderViewButton(topView, 'green')}
-        </div>
+        {cardinalGroup}
         {perspButton}
         {showMirrorsHD && <PresetButton hideUI={hideUI} />}
         {beforeAmbianceActions}
@@ -369,10 +377,7 @@ export function ViewControlBar({
     const inlineRow2 = (
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('out')}
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales et dessous">
-          {ISO_VIEWS.map(v => renderViewButton(v, 'purple'))}
-          {renderViewButton(bottomView, 'green')}
-        </div>
+        {elevationGroup}
         {rotButton}
         {toolbarActions}
         <select
@@ -394,19 +399,8 @@ export function ViewControlBar({
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('out')}
         {zoomButton('in')}
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues de face">
-          {renderViewButton(frontView, 'cyan')}
-          {renderViewButton(backView, 'cyan')}
-          {renderViewButton(leftView, 'cyan')}
-          {renderViewButton(rightView, 'cyan')}
-        </div>
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues diagonales">
-          {ISO_VIEWS.map(v => renderViewButton(v, 'purple'))}
-        </div>
-        <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Vues de dessus et dessous">
-          {renderViewButton(topView, 'green')}
-          {renderViewButton(bottomView, 'green')}
-        </div>
+        {cardinalGroup}
+        {elevationGroup}
         {rotButton}
         {perspButton}
         {showMirrorsHD && <PresetButton hideUI={hideUI} />}
