@@ -10,16 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from interx_catalog import DEFAULT_SOURCE, MANIFEST, RECORDING
-
-
-def rotations(vectors):
-    angles = np.linalg.norm(vectors, axis=-1)
-    axes = np.divide(vectors, angles[..., None], out=np.zeros_like(vectors), where=angles[..., None] != 0)
-    cross = np.zeros((*angles.shape, 3, 3))
-    cross[..., 0, 1], cross[..., 0, 2] = -axes[..., 2], axes[..., 1]
-    cross[..., 1, 0], cross[..., 1, 2] = axes[..., 2], -axes[..., 0]
-    cross[..., 2, 0], cross[..., 2, 1] = -axes[..., 1], axes[..., 0]
-    return np.eye(3) + np.sin(angles)[..., None, None] * cross + (1 - np.cos(angles))[..., None, None] * (cross @ cross)
+from interx_foot_support import rotations
 
 
 def reconstruct(model, motion, measure_all_soles=True):

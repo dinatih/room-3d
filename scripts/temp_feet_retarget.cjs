@@ -36,7 +36,7 @@ const { spawn } = require('node:child_process');
       await page.screenshot({path:process.argv.includes('--actorcore')?'/tmp/room-feet-actorcore-native.png':'/tmp/room-feet-native.png'});
       return;
     }
-    const result = await page.evaluate(async ({xbot,gaits}) => {
+    const result = await page.evaluate(async ({xbot,gaits,interx}) => {
       const THREE = await import('/node_modules/three/build/three.module.js');
       const {GLTFLoader} = await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
       const {DRACOLoader} = await import('/node_modules/three/examples/jsm/loaders/DRACOLoader.js');
@@ -62,7 +62,9 @@ const { spawn } = require('node:child_process');
       const scene=new THREE.Scene();scene.add(target,new THREE.HemisphereLight(0xffffff,0x777777,3));const light=new THREE.DirectionalLight(0xffffff,3);light.position.set(200,300,300);scene.add(light);
       const floor=new THREE.GridHelper(1000,100);scene.add(floor);
       const camera=new THREE.PerspectiveCamera(35,800/500,0.1,10000);
-      const clips=[['fab/actorcore/dual-gun-muzdn-mov-cool-shoot-279383.glb',[27,92],'rest-meters'],['npz/interx/g019t006a000r024-p1.glb',[25,174],'world-meters'],['mixamo/anim_female_walk.glb',[],undefined],['mixamo/anim_running.glb',[],undefined]];
+      const clips=interx
+        ? [['npz/interx/g019t006a000r024-p1.glb',[25,174],'world-meters'],['npz/interx/g019t000a000r003-p1.glb',[138],'world-meters'],['npz/interx/g019t000a000r003-p2.glb',[138],'world-meters']]
+        : [['fab/actorcore/dual-gun-muzdn-mov-cool-shoot-279383.glb',[27,92],'rest-meters'],['npz/interx/g019t006a000r024-p1.glb',[25,174],'world-meters'],['mixamo/anim_female_walk.glb',[],undefined],['mixamo/anim_running.glb',[],undefined]];
       let cell=0;
       for(const [path,frames,space] of clips.filter(([path])=>!gaits||path.startsWith('mixamo/'))){
         reset();const source=await loader.loadAsync('/animations/'+path);result.sources.push({path,rest:describe(source.scene)});
@@ -83,8 +85,8 @@ const { spawn } = require('node:child_process');
       result.pitch=result.poses.map(p=>({path:p.path,frame:p.frame,feet:['Left','Right'].map(side=>({side,source:solePitch(p.source,result.sources.find(s=>s.path===p.path).rest,side),target:solePitch(p.bones,result.rest,side)}))}));
       if(!result.gaits.every(g=>g.samples.every(frame=>frame.every(b=>b.q.every(Number.isFinite)))))throw Error('Nonfinite gait rotation');
       return result;
-    },{xbot:process.argv.includes('--xbot'),gaits:process.argv.includes('--gaits')});
-    const name=(process.argv.includes('--baseline')?'before':'after')+(process.argv.includes('--xbot')?'-xbot':'')+(process.argv.includes('--gaits')?'-gaits':'');
+    },{xbot:process.argv.includes('--xbot'),gaits:process.argv.includes('--gaits'),interx:process.argv.includes('--interx')});
+    const name=(process.argv.includes('--baseline')?'before':'after')+(process.argv.includes('--xbot')?'-xbot':'')+(process.argv.includes('--gaits')?'-gaits':'')+(process.argv.includes('--interx')?'-interx':'');
     fs.writeFileSync('/tmp/room-feet-'+name+'.json',JSON.stringify(result,null,2));
     await page.screenshot({path:'/tmp/room-feet-'+name+'.png'});
     console.log(JSON.stringify(result.pitch,null,2));

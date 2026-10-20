@@ -15,6 +15,18 @@ if '--rebuild-fab' in sys.argv:
     api['convert'](api['inventory']())
     sys.stdout.flush();sys.stderr.flush();os._exit(0)
 
+if '--export-interx-pilot' in sys.argv:
+    from convert_interx_duos import convert
+    from interx_catalog import DEFAULT_SOURCE
+    from interx_foot_support import load_model
+    import os
+    for person in ['P1','P2']:
+        with np.load(DEFAULT_SOURCE/'G019T006A000R024'/(person+'.npz')) as data:
+            motion={key:data[key] for key in data.files}
+        model=load_model(DEFAULT_SOURCE.parent.parent/f"SMPLX_{str(motion['gender'].item()).upper()}.npz")
+        print(convert(motion,Path(f'/tmp/interx-support-roundtrip-{person.lower()}.glb'),model),flush=True)
+    sys.stdout.flush();sys.stderr.flush();os._exit(0)
+
 if '--actorcore' in sys.argv:
     import bpy
     import runpy
@@ -114,6 +126,43 @@ def xyzw(m):
     a,b,c=m[0];d,e,f=m[1];g,h,i=m[2]
     symmetric=np.array([[a-e-i,b+d,c+g,h-f],[b+d,e-a-i,f+h,c-g],[c+g,f+h,i-a-e,d-b],[h-f,c-g,d-b,a+e+i]])
     return np.linalg.eigh(symmetric)[1][:,-1]
+
+if '--analyze-interx' in sys.argv:
+    from interx_foot_support import correct_foot_support
+    reports=[]
+    for recording in ['G019T006A000R024','G019T000A000R003']:
+        for person in ['P1','P2']:
+            data=np.load(SOURCE/recording/(person+'.npz'));motion={k:data[k] for k in data.files}
+            model=np.load(SOURCE.parent.parent/f"SMPLX_{str(motion['gender'].item()).upper()}.npz")
+            corrected,feet=correct_foot_support(motion,model)
+            for foot in feet:
+                print(recording,person,foot['ankle'],'pitch range',foot['pitch'].min(),foot['pitch'].max(),'correction range',foot['correction'].min(),foot['correction'].max())
+                for frame in ([25,174] if 'T006' in recording else [138]):
+                    print('frame',frame,'pitch',foot['pitch'][frame*4],'correction',foot['correction'][frame*4],'support',foot['support'][frame*4])
+            reports.append({'recording':recording,'person':person,'feet':[{k:v.tolist() if isinstance(v,np.ndarray) else v for k,v in f.items()} for f in feet]})
+            # Check the exact local-space correspondence used by the converter.
+            clip=glb(ROOT/'public/animations/npz/interx'/f'{recording.lower()}-{person.lower()}.glb');rest=clip()
+            for side,ankle in [('Left',7),('Right',8)]:
+                key='mixamorig:'+side+'Foot';parent='mixamorig:'+side+'Leg'
+                expected=rest[parent].T@rotations(motion['pose_body'][25*4,ankle-1])@rest[key]
+                actual=quaternion(clip.tracks[key+'.rotation'][1][25])
+                print('local space error',float(abs(expected-actual).max()))
+    Path('/tmp/room-interx-support-analysis.json').write_text(json.dumps(reports))
+    sys.exit(0)
+
+if '--verify-interx-roundtrip' in sys.argv:
+    maximum=0.
+    for person in ['p1','p2']:
+        repaired=glb(ROOT/f'public/animations/npz/interx/g019t006a000r024-{person}.glb')
+        fresh=glb(Path(f'/tmp/interx-support-roundtrip-{person}.glb'))
+        for frame in range(184):
+            actual=repaired(frame);expected=fresh(frame)
+            for name in actual:
+                if name.endswith(('LeftFoot','RightFoot','LeftToeBase','RightToeBase')):
+                    maximum=max(maximum,float(abs(actual[name]-expected[name]).max()))
+                    np.testing.assert_allclose(actual[name],expected[name],rtol=0,atol=1e-5,err_msg=f'{person} frame {frame} {name}')
+    print('Fresh Blender conversion agrees with repaired clips over both complete timelines; max matrix error',maximum)
+    sys.exit(0)
 
 if '--verify' in sys.argv or '--finalize' in sys.argv:
     import subprocess

@@ -51,6 +51,7 @@ export interface InterXManifest {
       sourceReferencePlaneMeters: number;
     };
     handMotion?: 'full-axis-angle';
+    footSupport?: 'heel-support-envelope-v1';
     tags: string[];
   }>;
 }
@@ -72,6 +73,7 @@ for (const duo of INTERX_MANIFEST.duos) {
     || (duo.placement?.verticalOrigin === 'source-support-preserve-hands' &&
       (duo.placement.initialSoleHeightMeters.length !== 2 || !duo.placement.initialSoleHeightMeters.every(value => Number.isFinite(value) && value >= 0)))
     || (duo.handMotion !== undefined && duo.handMotion !== 'full-axis-angle')
+    || (duo.footSupport !== undefined && duo.footSupport !== 'heel-support-envelope-v1')
     || duo.rootMotion.mode !== 'relative-to-first-frame'
     || duo.rootMotion.translationUnit !== 'meters' || duo.rootMotion.upAxis !== 'Y') {
     throw new Error(`Métadonnées Inter-X invalides : ${duo.id}`);

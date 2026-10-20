@@ -15,6 +15,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from interx_foot_support import FOOT_SUPPORT_METHOD, correct_foot_support, load_model
 from interx_catalog import (
     ROOT, DEFAULT_SOURCE, MANIFEST, CONVERSION, TARGET_FPS, SOURCE_FPS,
     RECORDING, publish_manifest, atomic_json, entry_for, glb_info, read_pair, report,
@@ -32,9 +33,12 @@ BONE_NAMES = [
 ]
 
 
-def convert(motion, output_path):
+def convert(motion, output_path, foot_model=None):
     import bpy
     from mathutils import Quaternion, Vector
+
+    if foot_model is not None:
+        motion, _ = correct_foot_support(motion, foot_model)
 
     def rotation(vector):
         angle = float(np.linalg.norm(vector))
@@ -146,6 +150,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--selection', type=Path, required=True)
     parser.add_argument('--source', type=Path, default=DEFAULT_SOURCE)
+    parser.add_argument('--models', type=Path, default=DEFAULT_SOURCE.parent.parent)
     parser.add_argument('--recordings', nargs='+', help='An explicit subset of the selection (e.g. the pilot pair)')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--rebuild', action='store_true', help='Re-export explicitly requested pairs instead of resuming verified outputs')
@@ -203,10 +208,11 @@ def main():
         manifest['supportModels'] = support['models']
     ready = {entry['id']: entry for entry in manifest['duos']}
     for entry in entries:
+        foot_support = entry['actionCode'] in GROUND_STANDING_ACTIONS
         placement = ({'verticalOrigin': 'soles-preserve-hands'} if entry['actionCode'] in GROUND_STANDING_ACTIONS else {
             'verticalOrigin': 'source-support-preserve-hands', **support['duos'][entry['id']]}) if support else None
         old = ready.get(entry['id'])
-        if not args.rebuild and old and (not args.hand_motion or old.get('handMotion') == 'full-axis-angle') and all(old[key] == entry[key] for key in ('id', 'actionCode', 'variation', 'source', 'rootMotion', 'start_offset', 'tags')) and verified(old):
+        if not args.rebuild and old and (not foot_support or old.get('footSupport') == FOOT_SUPPORT_METHOD) and (not args.hand_motion or old.get('handMotion') == 'full-axis-angle') and all(old[key] == entry[key] for key in ('id', 'actionCode', 'variation', 'source', 'rootMotion', 'start_offset', 'tags')) and verified(old):
             if args.ground_standing:
                 old['placement'] = {'verticalOrigin': 'soles-preserve-hands'}
             if placement:
@@ -223,12 +229,19 @@ def main():
             exported['placement'] = placement
         if args.hand_motion:
             exported['handMotion'] = 'full-axis-angle'
+        if foot_support:
+            exported['footSupport'] = FOOT_SUPPORT_METHOD
         exported['clips'] = {}
         with tempfile.TemporaryDirectory(prefix='interx-export-', dir=MANIFEST.parent) as temporary:
             paths = []
             for person, motion in zip(('p1', 'p2'), pair):
                 path = Path(temporary) / Path(entry['clips'][person]['path']).name
-                info = convert(motion, path)
+                foot_model = None
+                if foot_support:
+                    with np.load(args.source / entry['source'][person], allow_pickle=False) as data:
+                        motion['betas'] = data['betas'].copy()
+                        foot_model = load_model(args.models / f"SMPLX_{str(data['gender'].item()).upper()}.npz")
+                info = convert(motion, path, foot_model)
                 if info['frameCount'] != entry['expectedFrameCount'] or not math.isclose(info['durationSeconds'], entry['expectedDurationSeconds'], abs_tol=1e-5):
                     raise ValueError(f'Unexpected exported timing: {path}: {info}')
                 exported['clips'][person] = {**entry['clips'][person], **info}

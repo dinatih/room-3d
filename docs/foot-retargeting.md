@@ -28,6 +28,46 @@ Inclinaison relativement au repos pour `dual-gun-muzdn-mov-cool-shoot-279383` :
 | 27 | +41,3° / +18,8° | +16,7° / −5,8° |
 | 92 | +24,6° / +24,8° | −0,2° / 0,0° |
 
+## Nettoyage des appuis Inter-X
+
+`interx_foot_support.py` nettoie maintenant les appuis à la conversion pour les
+catégories déjà déclarées debout dans `GROUND_STANDING_ACTIONS`. Les NPZ bruts
+restent la référence originale. Les GLB publiés et les futurs exports utilisent
+la même correction, identifiée par `footSupport: heel-support-envelope-v1`.
+
+Le modèle SMPL-X, le genre et les coefficients de forme du participant donnent
+la géométrie des semelles. Le plan de support est ajusté à leur enveloppe basse.
+La hauteur du talon détermine un poids d'appui, qui devient nul au-delà de la
+hauteur anatomique cheville–semelle. L'enveloppe des minima de pitch fournit le
+biais positif persistant à retirer : les pics d'attaque du talon entre deux
+appuis neutres restent libres. La correction décroît avec l'appui et ne peut
+jamais ajouter de flexion plantaire. Aucun angle fixe ni fenêtre temporelle
+arbitraire n'est nécessaire.
+
+248 duos / 496 clips ont été évalués ; 447 clips ont changé. Seules les pistes
+de rotation des chevilles changent. Les pistes locales des orteils, les bras,
+les mains, le bassin, les trajectoires et les durées sont conservés à l'identique.
+Les autres catégories, notamment la marche et la poursuite, restent intactes.
+
+Sur Lara, `G019T006A000R024/P1` passe de 16–21° de cabrage à moins de 0,5° aux
+frames 25 et 174. Les captures comprennent aussi les deux participants de
+`G019T000A000R003`, frame 138, sur Lara et Xbot.
+
+```bash
+python scripts/correct_interx_feet.py
+python scripts/check_interx_foot_support.py
+python scripts/check_interx_foot_support.py --assets
+node scripts/temp_feet_retarget.cjs --interx
+node scripts/temp_feet_retarget.cjs --interx --xbot
+blender --background --factory-startup -noaudio --python-exit-code 1 --python scripts/temp_feet_retarget.py -- --export-interx-pilot
+python scripts/temp_feet_retarget.py --verify-interx-roundtrip
+```
+
+Les tests vérifient les attaques du talon, le déroulé vers les orteils, les pieds
+levés, l'absence de flexion plantaire forcée, les quaternions et la conservation
+exacte des échantillons hors correction. Le nouvel export Blender des deux
+participants pilotes correspond aux GLB réparés sur leurs 184 frames.
+
 ## Validation et reproduction
 
 Les 321 GLB Fab publiés ont été corrigés. Seuls leurs échantillons de rotation
