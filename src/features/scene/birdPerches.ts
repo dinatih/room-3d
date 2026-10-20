@@ -89,8 +89,8 @@ function perchMeshes(support: THREE.Object3D): THREE.Mesh[] {
 
 function supportsOf(world: THREE.Scene): THREE.Object3D[] {
   const supports: THREE.Object3D[] = [];
-  world.traverse(object => {
-    if (object.userData.birdSupport && supportIsAvailable(object, world)) supports.push(object);
+  world.traverseVisible(object => {
+    if (object.userData.birdSupport) supports.push(object);
   });
   return supports;
 }
@@ -102,10 +102,10 @@ function castAt(x: number, z: number, top: number, meshes: THREE.Mesh[]): THREE.
 
 function groundObstacles(world: THREE.Scene, ground: THREE.Object3D): THREE.Object3D[] {
   const obstacles: THREE.Object3D[] = [];
-  world.traverse(object => {
+  world.traverseVisible(object => {
     const data = object.userData;
     const support = data.birdSupport as BirdSupport | undefined;
-    if (object !== ground && supportIsAvailable(object, world) &&
+    if (object !== ground &&
         ((support && support.kind !== 'ground') ||
          (data.animUnit && data.itemName && !data.noAnim && !support))) obstacles.push(object);
   });

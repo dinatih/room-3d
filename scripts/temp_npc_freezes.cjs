@@ -5,12 +5,13 @@ const ts = require('typescript');
 const THREE = require('three');
 
 const filename = 'src/features/scene/utils/animatedFrustumCulling.ts';
-function load(source) {
+function load(source, dependencies = {}) {
   const output = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
   const exports = {};
   new Function('exports', 'require', output)(exports, name => {
-    assert.equal(name, 'three');
-    return THREE;
+    if (name === 'three') return THREE;
+    assert(name in dependencies, `Unexpected dependency: ${name}`);
+    return dependencies[name];
   });
   return exports;
 }
@@ -67,3 +68,57 @@ if (fs.existsSync(report)) {
   console.log('Profile renderer:', run.samples.at(-1).page.renderer);
   console.log('Profile errors:', run.errors);
 }
+
+// Compare actual perch resolution and obstacle discovery against the previous
+// implementation, including visibility changes, reparenting and moving furniture.
+const birdFile = 'src/features/scene/birdPerches.ts';
+const birdDependencies = { './wallData': {} };
+const previousBird = load(execFileSync('git', ['show', `4015bce4:${birdFile}`], { encoding: 'utf8' }) + '\nexport { groundObstacles, supportsOf };', birdDependencies);
+const currentBird = load(fs.readFileSync(birdFile, 'utf8') + '\nexport { groundObstacles, supportsOf };', birdDependencies);
+const world = new THREE.Scene();
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial());
+ground.userData.birdSupport = { id: 'ground', kind: 'ground' };
+world.add(ground);
+const furniture = [];
+for (let i = 0; i < 500; i++) {
+  const root = new THREE.Group();
+  root.visible = i % 2 === 0;
+  root.position.set(2000 + i, 0, 0);
+  root.userData = i % 3 === 0
+    ? { birdSupport: { id: `furniture-${i}`, kind: 'furniture' } }
+    : { animUnit: true, itemName: `furniture-${i}` };
+  let parent = root;
+  for (let depth = 0; depth < 20; depth++) {
+    const child = new THREE.Group(); parent.add(child); parent = child;
+  }
+  parent.add(new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), new THREE.MeshBasicMaterial()));
+  world.add(root); furniture.push(root);
+}
+const feet = { left: new THREE.Vector3(-1, 0, 0), right: new THREE.Vector3(1, 0, 0), height: 15, radius: 3, thickness: 1 };
+const perch = { support: ground, mesh: ground, descriptor: ground.userData.birdSupport,
+  point: new THREE.Vector3(), normal: new THREE.Vector3(0, 1, 0), tangent: new THREE.Vector3(1, 0, 0), id: 'test' };
+for (const state of ['clear', 'moved', 'hidden', 'removed', 'reparented', 'hidden-ground']) {
+  const obstacle = furniture[0];
+  if (state === 'moved') obstacle.position.set(0, 0, 0);
+  if (state === 'hidden') obstacle.visible = false;
+  if (state === 'removed') world.remove(obstacle);
+  if (state === 'reparented') { furniture[1].add(obstacle); obstacle.visible = true; }
+  if (state === 'hidden-ground') ground.visible = false;
+  world.updateMatrixWorld(true);
+  assert.deepEqual(currentBird.groundObstacles(world, ground), previousBird.groundObstacles(world, ground), state);
+  assert.deepEqual(currentBird.supportsOf(world), previousBird.supportsOf(world), state);
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
+  const oldResult = previousBird.resolveBirdPerch(perch, world, feet, a, qa);
+  assert.equal(currentBird.resolveBirdPerch(perch, world, feet, b, qb), oldResult, state);
+  if (state === 'clear') assert.equal(oldResult, true);
+  if (state === 'moved') assert.equal(oldResult, false);
+  assert.deepEqual(a, b); assert.deepEqual(qa, qb);
+}
+function obstacleBenchmark(api) {
+  const start = performance.now();
+  for (let i = 0; i < 200; i++) api.groundObstacles(world, ground);
+  return performance.now() - start;
+}
+obstacleBenchmark(previousBird); obstacleBenchmark(currentBird);
+console.log('Perches: identical supports, obstacles, contact positions and rotations after moving, hiding, removing and reparenting.');
+console.log('200 obstacle scans, 11,000 scene nodes (ms):', { before: obstacleBenchmark(previousBird), after: obstacleBenchmark(currentBird) });

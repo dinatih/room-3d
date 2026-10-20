@@ -51,6 +51,8 @@ vm.runInNewContext(code, { exports: exported, Math: fixedMath, document: new Eve
   if (name === '@react-three/fiber') return { useFrame(fn) { frame = fn; }, useThree: () => ({ invalidate() {}, scene: new THREE.Scene() }) };
   if (name === '@react-three/drei') return { useGLTF: { preload() {} }, useHelper() {} };
   if (name.endsWith('/useGLTFClone')) return { useGLTFClone: () => ({ scene, animations }) };
+  if (name.endsWith('/animatedFrustumCulling')) return { enableAnimatedFrustumCulling() {} };
+  if (name.endsWith('/useAnimalCamera')) return { useAnimalCamera() {} };
   if (name.endsWith('/useSceneStore')) return { useSceneStore: fn => fn({ layers: { skeleton: false } }) };
   if (name.endsWith('/idleState')) return { isAppIdle: () => false };
   if (name.endsWith('/glbUtils')) return { glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(-5, 0, -5), new THREE.Vector3(5, 15, 5)) };
