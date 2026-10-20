@@ -10,7 +10,7 @@ import type { AnimationCategory } from './animations/animationRegistry';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
-type AnimationSource = 'miley' | 'mixamo' | 'npz' | 'others' | 'fab' | 'interx' | 'behave' | 'kit' | 'accad' | 'cmu' | 'dancedb' | 'moyo' | 'ssm';
+type AnimationSource = 'custom' | 'miley' | 'mixamo' | 'npz' | 'others' | 'fab' | 'interx' | 'behave' | 'kit' | 'accad' | 'cmu' | 'dancedb' | 'moyo' | 'ssm';
 
 export const ANIM_CATEGORIES = [
   { key: 'combat', label: 'Combat', icon: 'bi-shield-shaded' },
@@ -21,6 +21,7 @@ export const ANIM_CATEGORIES = [
   { key: 'poses_idles', label: 'Poses & Idles', icon: 'bi-person-standing' },
   { key: 'sports_fitness', label: 'Sports & Fitness', icon: 'bi-dribbble' },
   { key: 'yoga', label: 'Yoga & Mocap', icon: 'bi-person-arms-up' },
+  { key: 'custom', label: 'Créations maison', icon: 'bi-folder' },
   { key: 'miley', label: 'Miley', icon: 'bi-folder' },
   { key: 'mixamo', label: 'Mixamo', icon: 'bi-folder' },
   { key: 'npz', label: 'NPZ', icon: 'bi-folder' },
@@ -54,7 +55,7 @@ export function normalizeSearchStr(str: string): string {
 export function getAnimSources(path?: string): string[] {
   if (!path) return [];
   const [, family, dataset] = path.split('/');
-  return family === 'npz' && dataset ? ['npz', dataset] : family ? [family] : [];
+  return family === 'npz' && dataset ? ['npz', dataset] : family ? [family === 'drona' ? 'custom' : family] : [];
 }
 
 /** Métadonnées pré-calculées une seule fois pour éviter les regex et lookups sur chaque render */

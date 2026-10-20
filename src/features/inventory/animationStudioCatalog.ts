@@ -32,7 +32,7 @@ export const STUDIO_CATALOG: Record<'solo' | 'duo', StudioAnimation[]> = {
 
 export const SOURCE_LABELS: Record<string, string> = {
   interx: 'Inter-X', behave: 'BEHAVE', miley: 'Miley', mixamo: 'Mixamo',
-  npz: 'NPZ', others: 'Autres', fab: 'Fab / ActorCore',
+  custom: 'Créations maison', npz: 'NPZ', others: 'Autres', fab: 'Fab / ActorCore',
 };
 
 export interface StudioFilters {
