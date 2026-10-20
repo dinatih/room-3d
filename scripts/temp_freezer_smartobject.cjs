@@ -23,6 +23,35 @@ if(process.argv.includes('--serve-tests')){
    await server.listen();server.printUrls();
  })().catch(e=>{console.error(e);process.exitCode=1;});
 }
+if(process.argv.includes('--audit-storage')){
+ (async()=>{
+ const fs=require('node:fs'),THREE=await import('three'),{GLTFLoader}=await import('three/examples/jsm/loaders/GLTFLoader.js');
+ await require('esbuild').build({stdin:{contents:"export {retargetClip} from './src/features/scene/retargeting/retargetClip'; export {resolveTargetBoneName} from './src/features/scene/retargeting/boneResolver';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',outfile:'/tmp/drona-retarget.mjs'});
+ const {retargetClip,resolveTargetBoneName}=await import('file:///tmp/drona-retarget.mjs');
+ global.ProgressEvent=class{};
+ async function load(path){const b=process.argv.includes('--baseline-storage')&&path.startsWith('animations/drona/')?fs.readFileSync('/tmp/drona-bath-box-before.glb'):fs.readFileSync('public/'+path),length=b.readUInt32LE(12),json=JSON.parse(b.subarray(20,20+length)),start=20+length;json.buffers[0].uri='data:application/octet-stream;base64,'+b.subarray(start+8,start+8+b.readUInt32LE(start)).toString('base64');for(const n of json.nodes){delete n.mesh;delete n.skin;}for(const k of ['meshes','textures','images','materials','extensionsRequired','extensionsUsed'])delete json[k];return new GLTFLoader().parseAsync(JSON.stringify(json),'');}
+ for(const file of fs.readdirSync('public/animations/drona').filter(f=>process.argv.includes('--baseline-storage')?f==='bath-box_search.glb':f.endsWith('.glb'))){
+   for(const model of ['characters/lara/lara_native.glb','characters/xbot/Xbot_official.glb']){
+     const source=await load('animations/drona/'+file),target=(await load(model)).scene;
+     target.updateMatrixWorld(true);target.traverse(n=>{n.defaultPosition=n.position.clone();n.restLocalQuaternion=n.quaternion.clone();n.restWorldPosition=n.getWorldPosition(new THREE.Vector3());n.restWorldQuaternion=n.getWorldQuaternion(new THREE.Quaternion());});
+     const clip=retargetClip(source.animations[0],target,source.scene),mixer=new THREE.AnimationMixer(target);const action=mixer.clipAction(clip).setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();
+     let minimum=Infinity;
+     for(let frame=0;frame<=Math.ceil(clip.duration*30);frame++){
+       const time=Math.min(clip.duration,frame/30);mixer.setTime(time);target.updateMatrixWorld(true);
+       if(file.includes('_pull')&&time<clip.duration*.25||file.includes('_push')&&time>clip.duration*.75)continue;
+       for(const side of ['Left','Right']){
+         const hand=target.getObjectByName(resolveTargetBoneName(target,side+'Hand')).getWorldPosition(new THREE.Vector3());
+         const head=target.getObjectByName(resolveTargetBoneName(target,'Head')).getWorldPosition(new THREE.Vector3());
+         minimum=Math.min(minimum,Math.max(head.y-hand.y,hand.z-head.z));
+       }
+     }
+     if(minimum<0)throw new Error('Hand goes above and behind the head: '+JSON.stringify({file,model,minimum}));
+     console.log(file,model,'no hands folded behind the head, minimum clearance',minimum);
+
+   }
+ }
+ })().then(()=>process.exit(0)).catch(e=>{console.error(e);process.exit(1);});
+}
 if(process.argv.includes('--build-storage')){
  (async()=>{
    const fs=require('node:fs'),THREE=require('three');
@@ -56,7 +85,13 @@ if(process.argv.includes('--build-storage')){
      hips.position.copy(hips.parent.worldToLocal(hipWorld));
      const spine=rig.scene.getObjectByName('mixamorigSpine');rig.scene.updateMatrixWorld(true);
      const spineWorld=spine.getWorldQuaternion(new THREE.Quaternion()),spineParent=spine.parent.getWorldQuaternion(new THREE.Quaternion());
-     spine.quaternion.copy(spineParent.invert().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),item.lean)).multiply(spineWorld));
+     // The source crouch leans over the closed box. Keep the torso upright so
+     // the extended box does not pull the hands up behind the shoulders.
+     const torso=rig.scene.getObjectByName('mixamorigNeck').getWorldPosition(new THREE.Vector3()).sub(spine.getWorldPosition(new THREE.Vector3())).normalize();
+     const shoulderHeight=rig.scene.getObjectByName('mixamorigLeftArm').getWorldPosition(new THREE.Vector3()).y;
+     const upright=item.height/100+(item.lift??.1)>shoulderHeight
+       ? new THREE.Quaternion().setFromUnitVectors(torso,new THREE.Vector3(0,1,0)) : new THREE.Quaternion();
+     spine.quaternion.copy(spineParent.invert().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),item.lean)).multiply(upright).multiply(spineWorld));
      rig.scene.updateMatrixWorld(true);
      const nodes=[];rig.scene.traverse(n=>{if(n.isBone)nodes.push(n);});
      const bases=new Map(nodes.map(n=>[n.name,{q:n.quaternion.clone(),p:n.position.clone()}]));
@@ -207,7 +242,7 @@ if(process.argv.includes('--inspect-fridge')){
  console.log(JSON.stringify(Object.fromEntries(glb.animations.map(a=>[a.name,Math.max(...a.samplers.map(s=>glb.accessors[s.input].max[0]))]))));
  process.exit(0);
 }
-if(!process.argv.includes('--chair-seat')&&!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-linen')&&!process.argv.includes('--build-storage'))(async () => {
+if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-seat')&&!process.argv.includes('--serve-tests')&&!process.argv.includes('--inspect-drona')&&!process.argv.includes('--build-linen')&&!process.argv.includes('--build-storage'))(async () => {
  const browser = await launchBrowser({headless:true,args:['--no-sandbox','--enable-unsafe-swiftshader','--disable-background-timer-throttling']});
  const errors=[];
  try {
