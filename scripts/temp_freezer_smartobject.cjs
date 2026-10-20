@@ -29,10 +29,10 @@ if(process.argv.includes('--audit-storage')){
  await require('esbuild').build({stdin:{contents:"export {retargetClip} from './src/features/scene/retargeting/retargetClip'; export {resolveTargetBoneName} from './src/features/scene/retargeting/boneResolver';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',outfile:'/tmp/drona-retarget.mjs'});
  const {retargetClip,resolveTargetBoneName}=await import('file:///tmp/drona-retarget.mjs');
  global.ProgressEvent=class{};
- async function load(path){const b=process.argv.includes('--baseline-storage')&&path.startsWith('animations/drona/')?fs.readFileSync('/tmp/drona-bath-box-before.glb'):fs.readFileSync('public/'+path),length=b.readUInt32LE(12),json=JSON.parse(b.subarray(20,20+length)),start=20+length;json.buffers[0].uri='data:application/octet-stream;base64,'+b.subarray(start+8,start+8+b.readUInt32LE(start)).toString('base64');for(const n of json.nodes){delete n.mesh;delete n.skin;}for(const k of ['meshes','textures','images','materials','extensionsRequired','extensionsUsed'])delete json[k];return new GLTFLoader().parseAsync(JSON.stringify(json),'');}
- for(const file of fs.readdirSync('public/animations/drona').filter(f=>process.argv.includes('--baseline-storage')?f==='bath-box_search.glb':f.endsWith('.glb'))){
+ async function load(path){const b=process.argv.includes('--baseline-storage')&&path.startsWith('animations/custom/')?fs.readFileSync('/tmp/drona-bath-box-before.glb'):fs.readFileSync('public/'+path),length=b.readUInt32LE(12),json=JSON.parse(b.subarray(20,20+length)),start=20+length;json.buffers[0].uri='data:application/octet-stream;base64,'+b.subarray(start+8,start+8+b.readUInt32LE(start)).toString('base64');for(const n of json.nodes){delete n.mesh;delete n.skin;}for(const k of ['meshes','textures','images','materials','extensionsRequired','extensionsUsed'])delete json[k];return new GLTFLoader().parseAsync(JSON.stringify(json),'');}
+ for(const file of fs.readdirSync('public/animations/custom').filter(f=>process.argv.includes('--baseline-storage')?f==='bath-box_search.glb':f.endsWith('.glb'))){
    for(const model of ['characters/lara/lara_native.glb','characters/xbot/Xbot_official.glb']){
-     const source=await load('animations/drona/'+file),target=(await load(model)).scene;
+     const source=await load('animations/custom/'+file),target=(await load(model)).scene;
      target.updateMatrixWorld(true);target.traverse(n=>{n.defaultPosition=n.position.clone();n.restLocalQuaternion=n.quaternion.clone();n.restWorldPosition=n.getWorldPosition(new THREE.Vector3());n.restWorldQuaternion=n.getWorldQuaternion(new THREE.Quaternion());});
      const clip=retargetClip(source.animations[0],target,source.scene),mixer=new THREE.AnimationMixer(target);const action=mixer.clipAction(clip).setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();
      let minimum=Infinity;
@@ -161,8 +161,8 @@ if(process.argv.includes('--build-storage')){
            animation.addSampler(sampler).addChannel(doc.createAnimationChannel().setTargetNode(node).setTargetPath(path).setSampler(sampler));
          }
        }
-       fs.mkdirSync('public/animations/drona',{recursive:true});await io.write(`public/animations/drona/${item.id}_${phase}.glb`,doc);
-       const written=fs.readFileSync(`public/animations/drona/${item.id}_${phase}.glb`);
+       fs.mkdirSync('public/animations/custom',{recursive:true});await io.write(`public/animations/custom/${item.id}_${phase}.glb`,doc);
+       const written=fs.readFileSync(`public/animations/custom/${item.id}_${phase}.glb`);
        const check=await new GLTFLoader().parseAsync(written.buffer.slice(written.byteOffset,written.byteOffset+written.byteLength),'');
        const checkMixer=new THREE.AnimationMixer(check.scene);checkMixer.clipAction(check.animations[0]).play();checkMixer.setTime(duration/2);check.scene.updateMatrixWorld(true);
        for(const side of ['Left','Right']){
@@ -178,7 +178,7 @@ if(process.argv.includes('--build-storage')){
 if(process.argv.includes('--build-linen')){
  (async()=>{
    const fs=require('node:fs');const {NodeIO}=await import('@gltf-transform/core');const io=new NodeIO();
-   fs.mkdirSync('public/animations/drona',{recursive:true});const durations={};
+   fs.mkdirSync('public/animations/custom',{recursive:true});const durations={};
    for(const [name,source,reverse] of [['pull','opening',false],['search','searching_files_high',false],['push','opening',true]]){
      const doc=await io.read(`public/animations/mixamo/anim_${source}.glb`),animation=doc.getRoot().listAnimations()[0];
      const duration=Math.max(...animation.listSamplers().map(s=>s.getInput().getMax([])[0]));durations[name]=duration;
@@ -214,7 +214,7 @@ if(process.argv.includes('--build-linen')){
        if(trailing){reversedTimes[count-1]=duration;for(let j=0;j<size;j++)reversedValues[(count-1)*size+j]=values[j];}
        sampler.setInput(input.clone().setArray(reversedTimes));sampler.setOutput(output.clone().setArray(reversedValues));
      }
-     await io.write(`public/animations/drona/linen_${name}.glb`,doc);
+     await io.write(`public/animations/custom/linen_${name}.glb`,doc);
    }
    console.log(JSON.stringify(durations));
  })().catch(e=>{console.error(e);process.exitCode=1;});
@@ -1041,7 +1041,7 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
    const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
    const linenClips={};let linenRig;
    for(const phase of ['pull','search','push']){
-     const gltf=await new GLTFLoader().loadAsync('/animations/drona/linen_'+phase+'.glb');
+     const gltf=await new GLTFLoader().loadAsync('/animations/custom/linen_'+phase+'.glb');
      linenClips['drona-linen-'+phase]=gltf.animations[0];linenRig??=gltf.scene;
    }
    const sourceOpening=await new GLTFLoader().loadAsync('/animations/mixamo/anim_opening.glb');

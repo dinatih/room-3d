@@ -55,7 +55,7 @@ export function normalizeSearchStr(str: string): string {
 export function getAnimSources(path?: string): string[] {
   if (!path) return [];
   const [, family, dataset] = path.split('/');
-  return family === 'npz' && dataset ? ['npz', dataset] : family ? [family === 'drona' ? 'custom' : family] : [];
+  return family === 'npz' && dataset ? ['npz', dataset] : family ? [family] : [];
 }
 
 /** Métadonnées pré-calculées une seule fois pour éviter les regex et lookups sur chaque render */
