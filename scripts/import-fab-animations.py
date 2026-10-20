@@ -327,7 +327,7 @@ def motion(path, rig, armature_name=None, loaded_arm=None):
     # for A-pose upper arms/forearms without changing any sampled source pose.
     children = {'Hips': 'Spine', 'Spine': 'Spine1' if 'Spine1' in mapping else 'Spine2', 'Spine1': 'Spine2', 'Spine2': 'Neck', 'Neck': 'Head'}
     for side in ['Left', 'Right']:
-        children.update({side + a: side + b for a, b in [('Shoulder', 'Arm'), ('Arm', 'ForeArm'), ('ForeArm', 'Hand'), ('Hand', 'HandMiddle1'), ('UpLeg', 'Leg'), ('Leg', 'Foot'), ('Foot', 'ToeBase')]})
+        children.update({side + a: side + b for a, b in [('Shoulder', 'Arm'), ('Arm', 'ForeArm'), ('ForeArm', 'Hand'), ('Hand', 'HandMiddle1'), ('UpLeg', 'Leg'), ('Leg', 'Foot')]})
         for finger in ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']:
             for segment in [1, 2]:
                 children[f'{side}Hand{finger}{segment}'] = f'{side}Hand{finger}{segment + 1}'
@@ -337,9 +337,11 @@ def motion(path, rig, armature_name=None, loaded_arm=None):
         source_direction = (source_points[child] - source_points[name]).normalized()
         target_direction = (target_points[child] - target_points[name]).normalized()
         source_rest[name] = source_direction.rotation_difference(target_direction) @ source_rest[name]
-    # Leaf joints have no reliable FBX tail. Use their incoming anatomical
-    # segment to align heads, toes and terminal finger phalanges as well.
-    incoming = {'Head': 'Neck', 'LeftToeBase': 'LeftFoot', 'RightToeBase': 'RightFoot'}
+    # Keep foot/toe bind frames: ankle-to-toe slope varies with joint placement,
+    # independently of the sole. Aligning it would add a spurious foot pitch.
+    # Leaf joints have no reliable FBX tail; use the incoming segment for heads
+    # and terminal finger phalanges.
+    incoming = {'Head': 'Neck'}
     for side in ['Left', 'Right']:
         for finger in ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']:
             incoming[f'{side}Hand{finger}3'] = f'{side}Hand{finger}2'

@@ -155,15 +155,16 @@ async function checkMotions() {
           const targetHips = target.getObjectByName(hipsName);
           const targetRestWorld = targetHips.getWorldPosition(new THREE.Vector3());
           const targetTrack = retargeted.tracks.find(t => t.name === hipsName + '.position');
-          check(targetTrack && targetTrack.times.length === hipsTrack.times.length, `Lost hips samples ${entry.id}`);
+          check(targetTrack && targetTrack.times[0] === hipsTrack.times[0] && targetTrack.times.at(-1) === hipsTrack.times.at(-1), `Lost hips endpoints ${entry.id}`);
           const mixer = new THREE.AnimationMixer(target);
           mixer.clipAction(retargeted).setLoop(THREE.LoopOnce, 1).play();
           for (const fraction of [0, 0.25, 0.5, 0.75, 0.999]) {
-            mixer.setTime(clip.duration * fraction);
+            const time = targetTrack.times[Math.floor((targetTrack.times.length - 1) * fraction)];
+            mixer.setTime(time);
             target.updateMatrixWorld(true);
             target.traverse(o => check(o.matrixWorld.elements.every(Number.isFinite), `Invalid transform ${entry.id} ${path}`));
             for (const [bone, pos] of rest) if (bone.name !== hipsName) check(bone.position.distanceTo(pos) < 1e-5, `Changed limb length ${entry.id} ${bone.name}`);
-            const expected = new THREE.Vector3().fromArray(hipsTrack.createInterpolant().evaluate(clip.duration * fraction)).sub(origin).multiplyScalar(100);
+            const expected = new THREE.Vector3().fromArray(hipsTrack.createInterpolant().evaluate(time)).sub(origin).multiplyScalar(100);
             const actual = targetHips.getWorldPosition(new THREE.Vector3()).sub(targetRestWorld);
             check(actual.distanceTo(expected) < 0.001, `Changed metric root trajectory ${entry.id} ${path}: ${actual.distanceTo(expected)}`);
           }
@@ -178,7 +179,7 @@ async function checkMotions() {
       }
       window.fabChecks = { THREE, lara, gallery };
       return { played, retargets: played * 2, ranges, exclusions: report.excluded.length };
-    }, { report, sample: process.argv.includes('--sample') });
+    }, { report, sample: process.argv.includes('--sample') || process.argv.includes('--motions-only') });
     assert.equal(result.played, report.imported.length);
     console.log('FAB_CHECK', JSON.stringify(result));
     await page.setViewport({ width: 1600, height: 1000, deviceScaleFactor: 1 });
@@ -211,7 +212,7 @@ async function checkMotions() {
       }
     });
     await page.screenshot({ path: '/tmp/room-fab-animation-review.png' });
-    if (!process.argv.includes('--sample')) {
+    if (!process.argv.includes('--sample') && !process.argv.includes('--motions-only')) {
       await page.evaluate(async () => {
         const { Character } = await import('/src/features/scene/character/Character.tsx');
         const { default: React } = await import('/node_modules/.vite/deps/react.js');

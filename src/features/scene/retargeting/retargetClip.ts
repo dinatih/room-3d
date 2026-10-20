@@ -487,11 +487,12 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               groundOffset.set(0, -lowestFootY * 100, 0).applyMatrix3(centimetersToTarget);
             }
           }
-          for (let index = 0; index < originalTrack.values.length; index += 3) {
-            const displacement = new THREE.Vector3().fromArray(originalTrack.values, index)
+          const positions = new THREE.LinearInterpolant(originalTrack.times, originalTrack.values, 3);
+          for (let index = 0; index < clone.times.length; index++) {
+            const displacement = new THREE.Vector3().fromArray(positions.evaluate(clone.times[index]))
               .sub(origin).applyMatrix3(sourceToMeters).multiplyScalar(100)
               .applyMatrix3(centimetersToTarget).add(groundOffset);
-            bone.defaultPosition.clone().add(displacement).toArray(clone.values, index);
+            bone.defaultPosition.clone().add(displacement).toArray(clone.values, index * 3);
           }
         } else if (isFlat && isWalk) {
           const duration = workingClip.duration;
