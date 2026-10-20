@@ -44,7 +44,7 @@ async function main() {
             assert(canvas, 'Missing scene canvas');
             for (const view of views.filter(v => selected.includes(v.key))) {
                 for (const projection of ['ortho', 'persp']) {
-                    const camera = await deadline(page.evaluate(async (key, projection) => (await import('/tests/support/visual-capture.mjs')).applyView(key, projection), view.key, projection), fixture.heartbeatTimeoutMs, `Camera did not settle: ${view.key}/${projection}`);
+                    const camera = await deadline(page.evaluate(async (view, projection) => (await import('/tests/support/visual-capture.mjs')).applyView(view, projection), view, projection), fixture.heartbeatTimeoutMs, `Camera did not settle: ${view.key}/${projection}`);
                     const file = `${view.key}-${projection}.png`;
                     await canvas.screenshot({ path: path.join(directory, file) });
                     manifest.captures.push({ kind: 'image', view: view.key, label: view.label, projection, file, camera });

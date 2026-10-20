@@ -1,4 +1,4 @@
-import { VIEWS, resolveCameraView, dispatchView, CAMERA_SHORTCUT_VIEWS } from '/src/features/scene/sidepanel/types.ts';
+import { resolveCameraView, dispatchView, CARDINAL_VIEWS, ELEVATION_VIEWS } from '/src/features/scene/sidepanel/types.ts';
 import { useSceneStore } from '/src/features/scene/store/useSceneStore.ts';
 import { resetAppIdle } from '/src/features/scene/idleState.ts';
 
@@ -18,15 +18,16 @@ export function prepare() {
     };
     useSceneStore.getState().setCameraTarget('studio');
     useSceneStore.getState().setCameraMovement('fix');
-    const labels = Object.fromEntries(CAMERA_SHORTCUT_VIEWS.map(v => [v.key, v.label]));
-    return Object.entries(VIEWS).map(([key, preset]) => ({ key, label: labels[key] ?? key, preset }));
+    return CARDINAL_VIEWS.flatMap(({ key: direction, label }) => ELEVATION_VIEWS.map(({ angle: elevation, label: elevationLabel }) => ({
+        key: `${direction}-${elevation}`, direction, elevation, label: `${label} · ${elevationLabel}`,
+        preset: resolveCameraView(direction, 'ortho', undefined, elevation),
+    })));
 }
 
-export async function applyView(key, projection) {
-    const preset = resolveCameraView(key, projection);
-    if (!preset) throw Error(`Unknown view: ${key}`);
+export async function applyView({ direction, elevation }, projection) {
+    const preset = resolveCameraView(direction, projection, undefined, elevation);
     useSceneStore.getState().setCameraProjection(projection);
-    dispatchView(key);
+    dispatchView(direction, undefined, false, elevation);
     const expectedType = projection === 'ortho' ? 'OrthographicCamera' : 'PerspectiveCamera';
     // Wait for the real active camera and its projection to settle and render,
     // rather than sleeping for an assumed camera transition duration.
@@ -38,8 +39,9 @@ export async function applyView(key, projection) {
             state.invalidate();
             const camera = window.__visualCamera;
             if (camera?.type === expectedType && state.camera === camera && useSceneStore.getState().cameraProjection === projection) {
-                const signature = JSON.stringify([camera.matrixWorld.elements, camera.projectionMatrix.elements]);
-                if (signature === previous) { resolve(); return; }
+                const signature = [...camera.matrixWorld.elements, ...camera.projectionMatrix.elements];
+                // OrbitControls can retain floating-point jitter at the poles.
+                if (previous && signature.every((value, index) => Math.abs(value - previous[index]) <= Math.sqrt(Number.EPSILON) * Math.max(1, Math.abs(value)))) { resolve(); return; }
                 previous = signature;
             } else previous = undefined;
             requestAnimationFrame(tick);

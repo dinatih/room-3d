@@ -4,7 +4,7 @@
 npm run test:screenshots
 ```
 
-Capture **toutes les vues du registre `VIEWS`**, chacune en orthographique et en perspective : actuellement 10 vues, donc 20 PNG. Le registre est lu dans l’application ; toute nouvelle vue sera incluse automatiquement.
+Capture **les 8 directions × les 4 élévations** (90°, 45°, 0°, −90°), chacune en orthographique et en perspective : 32 vues, donc 64 PNG. Les listes `CARDINAL_VIEWS` et `ELEVATION_VIEWS` sont lues dans l’application ; toute nouvelle direction ou élévation sera incluse automatiquement. Les positions sont calculées par `resolveCameraView` dans `cameraViews.ts`, comme dans l’interface.
 
 Ouvrir la page de comparaison locale :
 
@@ -31,7 +31,7 @@ Tout fonctionne hors ligne, sans serveur ni dépendance externe pour consulter l
 Pour cibler une vue ou annoter une étape :
 
 ```bash
-npm run test:screenshots -- --view=front,iso-se --label=avant-cuisine
+npm run test:screenshots -- --view=north-45,south-east-0,north--90 --label=avant-cuisine
 npm run test:screenshots -- --preset=low
 ```
 
@@ -41,4 +41,4 @@ Le comparateur signale des conditions différentes : qualité/calques, résoluti
 
 Les futurs GIF/vidéos pourront rejoindre ce même manifeste et cet historique. Les premiers scénarios intéressants seraient l’ouverture des portes et rangements, l’approche/relèvement d’un PNJ et un trajet de l’avion, avec caméra fixe et déroulement reproductible. Cette première commande produit des images fixes.
 
-Le registre est `src/features/scene/camera/cameraViews.ts` : dessus, dessous, face, arrière, gauche, droite et les quatre diagonales. `resolveCameraView` fournit les positions selon la projection active, en conservant cible et direction ; la distance perspective correspond à la hauteur du cadre orthographique sur le plan cible. Les volumes en profondeur restent naturellement différents entre projections. Les anciens presets `perspective` (caméra dans le couloir) et `top3d` sont supprimés. Les boutons et raccourcis ne changent plus la projection sélectionnée.
+`resolveCameraView` dans `src/features/scene/camera/cameraViews.ts` fournit les positions selon la direction, l’élévation et la projection active, en conservant cible et direction entre projections ; la distance perspective correspond à la hauteur du cadre orthographique sur le plan cible. Les volumes en profondeur restent naturellement différents entre projections. À 90° et −90°, les huit directions conservent des orientations d’image différentes. Le manifeste enregistre la direction, l’élévation et le preset demandé pour chaque vue. Les boutons et raccourcis ne changent plus la projection sélectionnée.
