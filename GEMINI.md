@@ -38,3 +38,13 @@ Toujours lire intégralement [AGENTS.md](AGENTS.md) avant de commencer une tâch
 > - **Un seul script par conversation** : Utiliser un nom de fichier réutilisable basé sur l'identifiant court de la conversation active, par exemple `scripts/temp_<convId>.cjs` ou `scripts/temp_<convId>.py`.
 > - **Éditer le script au lieu d'en créer de nouveaux** : Modifier le contenu de ce même fichier via `write_to_file` ou `replace_file_content`, puis ré-exécuter la commande identique (`node scripts/temp_<convId>.cjs`).
 > - **Ne JAMAIS supprimer les fichiers `scripts/temp_*`** : Les laisser en place pour conserver l'autorisation de commande accordée par l'utilisateur.
+
+
+# INTERDICTION ABSOLUE DE `git checkout` / `git restore` (PROTECTION DES MODIFICATIONS LOCALES)
+
+> [!CAUTION]
+> **Ne JAMAIS exécuter `git checkout -- <file>`, `git restore <file>` ou `git reset` sur un fichier modifié** :
+> - Des modifications locales peuvent avoir été réalisées par l'utilisateur en direct dans son éditeur.
+> - Si un fichier présente un diff qui ne concerne pas la tâche active, **ne JAMAIS l'écraser ni le restaurer** !
+> - Se contenter de `git add <fichier>` uniquement sur les fichiers modifiés par la tâche en cours lors du commit, en laissant les modifications externes intactes dans le working tree.
+
