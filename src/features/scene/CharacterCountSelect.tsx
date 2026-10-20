@@ -38,7 +38,6 @@ export function CharacterCountSelect() {
           const popover = popoverRef.current!;
           popover.style.left = `${rect.left}px`;
           popover.style.bottom = `${window.innerHeight - rect.top}px`;
-          popover.style.maxWidth = `${window.innerWidth - rect.left}px`;
         }}
       >
         <i className="bi bi-people-fill" aria-hidden="true" />
