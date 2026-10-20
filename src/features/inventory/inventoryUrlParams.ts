@@ -5,12 +5,16 @@
  *  - ?inventory ou ?inventaire (ouvre l'inventaire)
  *  - ?inventory=characters ou ?inventaire=personnages (ouvre l'inventaire sur une catégorie spécifique)
  *  - ?inv=animations ou ?category=animations ou ?cat=animations
+ *  - &item=<id> pour une fiche, &animation=<id>&animationMode=solo|duo pour le studio
  */
 import { CATEGORIES } from './inventoryData';
+
+export type InventoryUrlTarget = { type: 'item'; id: string } | { type: 'animation'; id: string; mode: 'solo' | 'duo' };
 
 export interface InventoryUrlState {
   open: boolean;
   category: string;
+  target?: InventoryUrlTarget;
 }
 
 // Normalise les alias français / raccourcis vers les id de catégories officiels
@@ -152,39 +156,41 @@ export function parseUrlInventory(): InventoryUrlState {
     return {
       open: isOpen,
       category: resolvedCat,
+      target: params.has('animation')
+        ? { type: 'animation', id: params.get('animation')!, mode: params.get('animationMode') === 'duo' ? 'duo' : 'solo' }
+        : params.has('item') ? { type: 'item', id: params.get('item')! } : undefined,
     };
   } catch {
     return { open: false, category: 'all' };
   }
 }
 
-export function updateUrlInventory(open: boolean, category?: string) {
-  if (typeof window === 'undefined') return;
-  try {
-    const url = new URL(window.location.href);
-    const params = url.searchParams;
-
-    if (!open) {
-      params.delete('inventory');
-      params.delete('inventaire');
-      params.delete('inv');
-      params.delete('category');
-      params.delete('cat');
-    } else {
-      const cat = category ? resolveCategoryId(category) ?? category : 'all';
-      if (cat && cat !== 'all') {
-        params.set('inventory', cat);
-      } else {
-        params.set('inventory', '1');
-      }
-      params.delete('inventaire');
-      params.delete('inv');
-      params.delete('category');
-      params.delete('cat');
-    }
-
-    window.history.replaceState({}, '', url.toString());
-  } catch (e) {
-    console.warn('[updateUrlInventory] Failed to update URL params', e);
+export function inventoryUrl(state: InventoryUrlState, href = window.location.href): string {
+  const url = new URL(href);
+  const keys = ['inventory', 'inventaire', 'inv', 'category', 'cat', 'item', 'animation', 'animationMode'];
+  const clean = (params: URLSearchParams) => {
+    keys.forEach(key => params.delete(key));
+    if (resolveCategoryId(params.get('page'))) params.delete('page');
+  };
+  clean(url.searchParams);
+  const hashQuery = url.hash.indexOf('?');
+  if (hashQuery >= 0) {
+    const params = new URLSearchParams(url.hash.slice(hashQuery + 1));
+    clean(params);
+    url.hash = url.hash.slice(0, hashQuery) + (params.size ? `?${params}` : '');
   }
+  if (state.open) {
+    url.searchParams.set('inventory', state.category === 'all' ? '1' : state.category);
+    if (state.target?.type === 'item') url.searchParams.set('item', state.target.id);
+    if (state.target?.type === 'animation') {
+      url.searchParams.set('animation', state.target.id);
+      url.searchParams.set('animationMode', state.target.mode);
+    }
+  }
+  return url.toString();
+}
+
+export function updateUrlInventory(open: boolean, category = 'all', target?: InventoryUrlTarget, history: 'push' | 'replace' = 'push') {
+  const href = inventoryUrl({ open, category, target });
+  if (href !== window.location.href) window.history[history === 'push' ? 'pushState' : 'replaceState'](window.history.state, '', href);
 }

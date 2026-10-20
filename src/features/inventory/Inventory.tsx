@@ -3,7 +3,7 @@ import { getObjectActionIds } from '@features/scene/objectActions';
  * Inventory.tsx — port de js/ui/inventory.js
  * Styled using Bootstrap 5.3, custom red theme variables and fully responsive.
  */
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, WIG_SOURCES, getWigSource, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
 import { SpatialZonePreview } from './SpatialZonePreview';
@@ -16,7 +16,8 @@ import { ViewControlBar } from '@features/scene/ViewControlBar';
 import { AnimationStudioView } from './AnimationStudioView';
 import { DevAnnotationPanel } from './DevAnnotationPanel';
 import { useItemAnnotations, ANNOTATION_STATUSES } from './useItemAnnotations';
-import { updateUrlInventory } from './inventoryUrlParams';
+import { InventoryLinkButton } from './InventoryLinkButton';
+import { parseUrlInventory, updateUrlInventory } from './inventoryUrlParams';
 
 type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
 
@@ -512,16 +513,47 @@ export function Inventory({
   const isMobile = useIsMobile();
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const { allAnnotations } = useItemAnnotations();
-  const [activeCat, setActiveCat]         = useState(initialCategory);
+  const initialUrl = useRef(parseUrlInventory()).current;
+  const [activeCat, setActiveCatState] = useState(initialCategory);
+
+  const setActiveCat = (category: string) => {
+    if (category === activeCat && !missingTarget) return;
+    setSelectedState(null);
+    setShowMobileModal(false);
+    setMissingTarget(false);
+    setActiveCatState(category);
+    updateUrlInventory(true, category);
+  };
   const [search, setSearch]               = useState('');
   const [wigSearch, setWigSearch]         = useState('');
   const [wigSource, setWigSource]         = useState<string>('');
   const [wigColor, setWigColor]           = useState<string>('');
   const [wigBustVariant, setWigBustVariant] = useState<string>('native');
   const laraBustOptions = useMemo(() => CHARACTERS.filter(c => !!c.variant), []);
-  const [selected, setSelected]           = useState<PreviewTarget>(null);
+  const resolveInitialTarget = (): PreviewTarget => {
+    if (initialUrl.target?.type !== 'item') return null;
+    const id = initialUrl.target.id;
+    if (initialCategory === 'spaces') return SpatialZoneManager.getAllZones().find(z => z.id === id) ?? null;
+    if (initialCategory === 'all') {
+      const zone = SpatialZoneManager.getAllZones().find(z => z.id === id);
+      if (zone) return zone;
+    }
+    return INVENTORY.find(i => i.id === id && (initialCategory === 'all' || initialCategory === 'actionnable' || initialCategory === 'glbs' || i.category === initialCategory))
+      ?? (['all', 'storage', 'actionnable'].includes(initialCategory) ? STORAGE_SPACES.find(i => i.id === id) : null) ?? null;
+  };
+  const [selected, setSelectedState] = useState<PreviewTarget>(resolveInitialTarget);
+  const [missingTarget, setMissingTarget] = useState(() => initialUrl.target?.type === 'item' && !resolveInitialTarget());
+  const setSelected = (target: PreviewTarget, category = activeCat) => {
+    if (target && 'category' in target && !['all', 'actionnable', 'glbs'].includes(category)) {
+      category = target.category;
+      setActiveCatState(category);
+    }
+    setMissingTarget(false);
+    setSelectedState(target);
+    updateUrlInventory(true, category, target ? { type: 'item', id: target.id } : undefined);
+  };
   const [focusedIndex, setFocusedIndex]   = useState(-1);
-  const [showMobileModal, setShowMobileModal] = useState(false);
+  const [showMobileModal, setShowMobileModal] = useState(isMobile && initialUrl.target?.type === 'item');
   const [listWidth, setListWidth]         = useState(() => {
     try {
       const saved = localStorage.getItem('inventory_list_width');
@@ -573,20 +605,13 @@ export function Inventory({
   };
 
   useEffect(() => {
-    if (visible) {
-      updateUrlInventory(true, activeCat);
-    }
-  }, [visible, activeCat]);
+    if (!visible || activeCat === 'animations' || missingTarget) return;
+    updateUrlInventory(true, activeCat, selected ? { type: 'item', id: selected.id } : undefined, 'replace');
+  }, [visible, activeCat, selected, missingTarget]);
 
-  useEffect(() => {
-    if (initialCategory) {
-      setActiveCat(initialCategory);
-      if (initialCategory === 'characters') {
-        const firstCharacter = INVENTORY.find(i => i.category === 'characters' && i.id !== 'ushiro' && i.id !== 'ulotte' && i.id !== 'robin-bird' && i.id !== 'jikin-goldfish' && i.id !== 'tosakin-goldfish' && i.id !== 'black-hornet-drone' && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(i.id) && (extraCharacters || !isExtraCharacter(i.id)));
-        if (firstCharacter) setSelected(firstCharacter);
-      }
-    }
-  }, [initialCategory, visible, extraCharacters]);
+  useLayoutEffect(() => {
+    if (!initialUrl.open) updateUrlInventory(true, initialCategory);
+  }, []);
 
   useEffect(() => {
     const resolveObjectTarget = (rawId: string, label?: string): PreviewTarget => {
@@ -603,7 +628,8 @@ export function Inventory({
 
     const applyTarget = (detail: import('@features/ui/AppConsole').OpenInventoryTargetDetail) => {
       if (detail.type === 'animation') {
-        setActiveCat('animations');
+        setMissingTarget(false);
+        setActiveCatState('animations');
         return;
       }
       if (detail.type === 'object') {
@@ -612,14 +638,10 @@ export function Inventory({
         const found = resolveObjectTarget(targetId, detail.object.label);
         setSearch('');
         if (found) {
-          if (found instanceof SpatialZone) {
-            setActiveCat('spaces');
-          } else if (!('category' in found)) {
-            setActiveCat('storage');
-          } else {
-            setActiveCat('all');
-          }
-          setSelected(found);
+          const category = found instanceof SpatialZone ? 'spaces' : !('category' in found) ? 'storage' : 'all';
+          setActiveCatState(category);
+          setSelected(found, category);
+          setShowMobileModal(isMobile);
           requestAnimationFrame(() => {
             const rowEl = tableContainerRef.current?.querySelector(`div[data-item-id="${found.id}"]`);
             rowEl?.scrollIntoView({ block: 'nearest' });
@@ -695,7 +717,7 @@ function normalizeSearchStr(str: string): string {
     const wq = activeCat === 'wigs' ? normalizeSearchStr(wigSearch) : '';
     return INVENTORY.filter(i => {
       // Les ExtraCharacters ne sont visibles que si l'option extraCharacters est activée
-      if (!extraCharacters && isExtraCharacter(i.id)) return false;
+      if (!extraCharacters && isExtraCharacter(i.id) && selected?.id !== i.id) return false;
 
       if (activeCat === 'actionnable' && !getObjectActionIds(i.id).length) return false;
       if (activeCat === 'glbs'        && !i.glbPath)         return false;
@@ -732,7 +754,7 @@ function normalizeSearchStr(str: string): string {
       }
       return true;
     });
-  }, [activeCat, search, wigSearch, wigSource, extraCharacters, allAnnotations]);
+  }, [activeCat, search, wigSearch, wigSource, extraCharacters, allAnnotations, selected?.id]);
 
   const showSpaces = activeCat === 'storage' || activeCat === 'actionnable';
   const spaces = activeCat === 'actionnable'
@@ -757,12 +779,13 @@ function normalizeSearchStr(str: string): string {
 
   // Auto-select first item on desktop startup or if currently selected item is hidden
   useEffect(() => {
+    if (missingTarget || activeCat === 'animations') return;
     if (!isMobile && (!selected || !navList.some(item => (item as any).id === selected.id)) && navList.length > 0) {
-      setSelected(navList[0]);
+      setSelectedState(navList[0]);
     } else if (selected && !navList.some(item => (item as any).id === selected.id)) {
-      setSelected(null);
+      setSelectedState(null);
     }
-  }, [isMobile, navList, selected]);
+  }, [isMobile, navList, selected, missingTarget]);
 
   // Scroll focused row into view
   const focusedId = focusedIndex >= 0 ? (navList[focusedIndex] as any)?.id ?? null : null;
@@ -872,6 +895,7 @@ function normalizeSearchStr(str: string): string {
             )}
           </div>
           <div className="d-flex align-items-center gap-2 ms-auto">
+            {selected && activeCat !== 'animations' && !missingTarget && <InventoryLinkButton key={selected.id} state={{ open: true, category: activeCat, target: { type: 'item', id: selected.id } }} />}
             <span className="text-muted small text-nowrap">
               {activeCat === 'animations' ? 'Studio animations' : `${navList.length} item${navList.length > 1 ? 's' : ''}`}
             </span>
@@ -900,9 +924,9 @@ function normalizeSearchStr(str: string): string {
         </div>
 
         {/* CONTENU PRINCIPAL */}
-        {activeCat === 'animations' ? (
+        {missingTarget ? <div className="p-4" role="alert">Fiche introuvable. <button className="btn btn-sm btn-outline-secondary" onClick={() => setActiveCat(activeCat)}>Revenir à la catégorie</button></div> : activeCat === 'animations' ? (
           <div className="d-flex flex-grow-1 overflow-hidden" style={{ userSelect: isResizing ? 'none' : undefined }}>
-            <AnimationStudioView isMobile={isMobile} listWidth={listWidth} onResizeStart={handleResizeStart} />
+            <AnimationStudioView initialTarget={parseUrlInventory().target} isMobile={isMobile} listWidth={listWidth} onResizeStart={handleResizeStart} />
           </div>
         ) : (
           <div className="d-flex flex-grow-1 overflow-hidden" style={{ userSelect: isResizing ? 'none' : undefined }}>
@@ -1175,12 +1199,13 @@ function normalizeSearchStr(str: string): string {
       </div>
 
       {/* MODAL DETAIL (mobile) */}
-      {visible && showMobileModal && selected && (
+      {visible && !missingTarget && showMobileModal && selected && (
         <div className="modal fade show d-block" tabIndex={-1} role="dialog" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }} onClick={(e) => { e.stopPropagation(); setShowMobileModal(false); }}>
           <div className="modal-dialog modal-fullscreen-sm-down modal-dialog-scrollable" role="document">
             <div className="modal-content" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
                 <h5 className="modal-title">{selected.name}</h5>
+                <InventoryLinkButton key={selected.id} state={{ open: true, category: activeCat, target: { type: 'item', id: selected.id } }} />
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowMobileModal(false)}></button>
               </div>
               <div className="modal-body p-0 pb-5" style={{ overflowY: 'auto' }}>

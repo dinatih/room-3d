@@ -465,6 +465,21 @@ export function Studio() {
   const initialInvUrl = useRef(parseUrlInventory()).current;
   const [showInventory, setShowInventory] = useState(initialInvUrl.open);
   const [inventoryInitialCat, setInventoryInitialCat] = useState<string>(initialInvUrl.category);
+  const [inventoryNavigation, setInventoryNavigation] = useState(0);
+  useEffect(() => {
+    if (!showInventory && parseUrlInventory().open) updateUrlInventory(false);
+  }, [showInventory]);
+  useEffect(() => {
+    const restore = () => {
+      const state = parseUrlInventory();
+      setShowInventory(state.open);
+      setInventoryInitialCat(state.category);
+      setInventoryNavigation(value => value + 1);
+    };
+    window.addEventListener('popstate', restore);
+    return () => window.removeEventListener('popstate', restore);
+  }, []);
+
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   useEffect(() => {
@@ -1083,6 +1098,7 @@ export function Studio() {
       {showInventory && (
         <Suspense fallback={null}>
           <Inventory
+            key={inventoryNavigation}
             visible
             onClose={() => {
               setShowInventory(false);

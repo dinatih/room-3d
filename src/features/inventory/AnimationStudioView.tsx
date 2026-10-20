@@ -1,3 +1,5 @@
+import { InventoryLinkButton } from './InventoryLinkButton';
+import { updateUrlInventory, type InventoryUrlTarget } from './inventoryUrlParams';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
 import { CHARACTERS } from '@features/scene/characterConfig';
@@ -16,14 +18,15 @@ import {
 
 import { consumePendingInventoryTarget, peekPendingInventoryTarget, type AppLogAnimationRef, type OpenInventoryTargetDetail } from '@features/ui/AppConsole';
 
-export function AnimationStudioView({ isMobile = false, listWidth = 380, onResizeStart }: {
+export function AnimationStudioView({ initialTarget, isMobile = false, listWidth = 380, onResizeStart }: {
+  initialTarget?: InventoryUrlTarget;
   isMobile?: boolean;
   listWidth?: number;
   onResizeStart?: (event: MouseEvent) => void;
 }) {
-  const [mode, setMode] = useState<'solo' | 'duo'>('solo');
+  const [mode, setMode] = useState<'solo' | 'duo'>(initialTarget?.type === 'animation' ? initialTarget.mode : 'solo');
   const [filtersByMode, setFiltersByMode] = useState({ solo: { ...EMPTY_STUDIO_FILTERS }, duo: { ...EMPTY_STUDIO_FILTERS } });
-  const [selection, setSelection] = useState({ solo: 'idle', duo: STUDIO_CATALOG.duo[0].id });
+  const [selection, setSelection] = useState({ solo: initialTarget?.type === 'animation' && initialTarget.mode === 'solo' ? initialTarget.id : 'idle', duo: initialTarget?.type === 'animation' && initialTarget.mode === 'duo' ? initialTarget.id : STUDIO_CATALOG.duo[0].id });
   const [actorId, setActorId] = useState('native');
   const [partnerId, setPartnerId] = useState('rosanna');
   const [moreFilters, setMoreFilters] = useState(false);
@@ -33,7 +36,8 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
   const filters = filtersByMode[mode];
   const catalog = STUDIO_CATALOG[mode];
   const results = useMemo(() => filterStudioAnimations(catalog, filters, allAnnotations), [catalog, filters, allAnnotations]);
-  const active = results.find(a => a.id === selection[mode]) ?? results[0];
+  const [missingTarget, setMissingTarget] = useState(initialTarget?.type === 'animation' && !STUDIO_CATALOG[initialTarget.mode].some(a => a.id === initialTarget.id));
+  const active = missingTarget ? undefined : results.find(a => a.id === selection[mode]) ?? results[0];
   const activeIndex = active ? results.indexOf(active) : -1;
   const characters = useMemo(() => CHARACTERS.filter(c =>
     INVENTORY.some(item => item.id === c.id && item.category === 'characters') &&
@@ -57,7 +61,9 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
     const targetCatalog = STUDIO_CATALOG[resolvedMode];
     const match = targetCatalog.find(a => a.id === target.id);
     if (!match) return;
+    setMissingTarget(false);
     setMode(resolvedMode);
+    updateUrlInventory(true, 'animations', { type: 'animation', id: match.id, mode: resolvedMode });
     setFiltersByMode(previous => ({ ...previous, [resolvedMode]: { ...EMPTY_STUDIO_FILTERS } }));
     setSelection(previous => ({ ...previous, [resolvedMode]: match.id }));
     if (target.actorId && characters.some(c => c.id === target.actorId)) {
@@ -88,12 +94,17 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
     return () => document.removeEventListener('open-inventory-target', onOpenTarget);
   }, [characters]);
 
+  useEffect(() => {
+    if (!missingTarget) updateUrlInventory(true, 'animations', active ? { type: 'animation', id: active.id, mode } : undefined, 'replace');
+  }, [active?.id, mode, missingTarget]);
+
   function updateFilters(patch: Partial<StudioFilters>) {
     setFiltersByMode(previous => ({ ...previous, [mode]: { ...previous[mode], ...patch } }));
   }
   function selectAnimation(animation: StudioAnimation | undefined) {
     if (!animation) return;
     setSelection(previous => ({ ...previous, [mode]: animation.id }));
+    updateUrlInventory(true, 'animations', { type: 'animation', id: animation.id, mode });
     const transport = useAnimPreviewStore.getState();
     transport.seekToTime(0);
     transport.play();
@@ -175,6 +186,8 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
     else if (rowBox.bottom > listBox.bottom) list.scrollTop += rowBox.bottom - listBox.bottom;
   }, [active?.id, results]);
 
+  if (missingTarget) return <div className="p-4" role="alert">Fiche introuvable. <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { updateUrlInventory(true, 'animations'); setMissingTarget(false); setSelection({ solo: 'idle', duo: STUDIO_CATALOG.duo[0].id }); }}>Revenir à la catégorie</button></div>;
+
   return (
     <div className={`animation-studio w-100 h-100 overflow-hidden ${isMobile ? 'animation-studio--mobile' : ''}`}
       style={isMobile ? undefined : { gridTemplateColumns: `${listWidth}px 5px minmax(0, 1fr)` }}
@@ -183,7 +196,7 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
         <div className="p-2 border-bottom flex-shrink-0">
           <div className="btn-group btn-group-sm w-100 mb-2" role="group" aria-label="Type d’animation">
             {(['solo', 'duo'] as const).map(value => <button key={value} type="button" aria-pressed={mode === value}
-              className={`btn ${mode === value ? 'btn-danger' : 'btn-outline-secondary'}`} onClick={() => setMode(value)}>
+              className={`btn ${mode === value ? 'btn-danger' : 'btn-outline-secondary'}`} onClick={() => { setMissingTarget(false); setMode(value); updateUrlInventory(true, 'animations', { type: 'animation', id: selection[value], mode: value }); }}>
               {value === 'solo' ? 'Solo' : 'Duo'} ({STUDIO_CATALOG[value].length})
             </button>)}
           </div>
@@ -266,6 +279,7 @@ export function AnimationStudioView({ isMobile = false, listWidth = 380, onResiz
         aria-label="Redimensionner la liste des animations" onMouseDown={onResizeStart} title="Glisser pour redimensionner la liste" />}
       <div className="animation-studio__workspace bg-light">
         <div className="py-1 px-2 border-bottom bg-white d-flex flex-wrap align-items-center gap-2">
+          {active && <InventoryLinkButton key={`${mode}:${active.id}`} state={{ open: true, category: 'animations', target: { type: 'animation', id: active.id, mode } }} />}
           <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">{mode === 'solo' ? 'Personnage' : 'Leader A'}
             <select aria-label="Personnage testé" className="form-select form-select-sm py-0.5 ps-2 pe-4 w-auto small" value={leader?.id ?? ''} onChange={e => setActorId(e.target.value)}>
               {characters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
