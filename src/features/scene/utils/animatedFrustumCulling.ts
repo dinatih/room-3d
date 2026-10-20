@@ -12,8 +12,8 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
   const positions = geometry.getAttribute('position');
   const indices = geometry.getAttribute('skinIndex');
   const weights = geometry.getAttribute('skinWeight');
-  const boneBoxes = skeleton.bones.map(() => new THREE.Box3());
-  const bindTransforms = skeleton.boneInverses.map(inverse => new THREE.Matrix4().multiplyMatrices(inverse, bindMatrix));
+  const boneBoxes: THREE.Box3[] = [];
+  const bindTransforms: THREE.Matrix4[] = [];
   const point = new THREE.Vector3();
   const bonePoint = new THREE.Vector3();
   const transformedBox = new THREE.Box3();
@@ -21,12 +21,13 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
   const transform = new THREE.Matrix4();
   const sphere = new THREE.Sphere();
   let morphWeights: number[] = [];
-  const boneMatrices = skeleton.bones.map(() => new THREE.Matrix4());
+  const boneMatrices: THREE.Matrix4[] = [];
   const lastBindInverse = new THREE.Matrix4();
   let hasBounds = false;
+  let activeBones: number[] = [];
 
   const rebuildBoneBoxes = () => {
-    for (const box of boneBoxes) box.makeEmpty();
+    for (const bone of activeBones) boneBoxes[bone].makeEmpty();
     for (let vertex = 0; vertex < positions.count; vertex++) {
       // Mesh's implementation applies morph targets, before SkinnedMesh's skinning.
       THREE.Mesh.prototype.getVertexPosition.call(skinned, vertex, point);
@@ -35,11 +36,15 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
         if (weight === 0) continue;
         if (weight < 0) throw new Error(`Negative skin weight in ${mesh.name}`);
         const bone = indices.getComponent(vertex, influence);
+        bindTransforms[bone] ??= new THREE.Matrix4().multiplyMatrices(skeleton.boneInverses[bone], bindMatrix);
+        boneBoxes[bone] ??= new THREE.Box3();
         bonePoint.copy(point).applyMatrix4(bindTransforms[bone]);
         boneBoxes[bone].expandByPoint(bonePoint);
       }
     }
     morphWeights = [...(skinned.morphTargetInfluences ?? [])];
+    activeBones = boneBoxes.flatMap((bounds, bone) => bounds.isEmpty() ? [] : [bone]);
+    for (const bone of activeBones) boneMatrices[bone] ??= new THREE.Matrix4();
   };
   rebuildBoneBoxes();
 
@@ -52,10 +57,9 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
     // one render. Reuse bounds only while every contributing bone matrix and
     // the bind transform are identical; explicit bone edits invalidate it too.
     if (hasBounds && skinned.bindMatrixInverse.equals(lastBindInverse) &&
-        boneBoxes.every((bounds, bone) => bounds.isEmpty() || skeleton.bones[bone].matrixWorld.equals(boneMatrices[bone]))) return;
+        activeBones.every(bone => skeleton.bones[bone].matrixWorld.equals(boneMatrices[bone]))) return;
     posedBox.makeEmpty();
-    for (let bone = 0; bone < boneBoxes.length; bone++) {
-      if (boneBoxes[bone].isEmpty()) continue;
+    for (const bone of activeBones) {
       transform.multiplyMatrices(skinned.bindMatrixInverse, skeleton.bones[bone].matrixWorld);
       boneMatrices[bone].copy(skeleton.bones[bone].matrixWorld);
       transformedBox.copy(boneBoxes[bone]).applyMatrix4(transform);
