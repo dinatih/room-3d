@@ -22,7 +22,7 @@
 import { useRef, useLayoutEffect, createContext, useContext } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
-import { LAYER_WALKER_DETAIL } from '@config';
+import { LAYER_ENVIRONMENT, LAYER_WALKER_DETAIL } from '@config';
 import { cameraState } from './cameraState';
 import {
   categoryLayerRegistry,
@@ -158,12 +158,18 @@ export function CategoryLayerGroup({
  * avec les toggles UI de LayerState et orchestre les transitions de fumée Cartoon "Poof!".
  */
 export function SceneLayerController({ layers }: { layers: SceneLayers }) {
-  const { camera } = useThree();
+  const { camera, invalidate } = useThree();
 
   useLayoutEffect(() => {
     camera.layers.enableAll();
     camera.layers.disable(LAYER_WALKER_DETAIL);
   }, [camera]);
+
+  useLayoutEffect(() => {
+    if (layers.environment) camera.layers.enable(LAYER_ENVIRONMENT);
+    else camera.layers.disable(LAYER_ENVIRONMENT);
+    invalidate();
+  }, [camera, layers.environment, invalidate]);
 
   return <LayerSmokeTransition layers={layers as any} />;
 }
