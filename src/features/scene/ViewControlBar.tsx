@@ -82,6 +82,7 @@ export function ViewControlBar({
   const cameraTarget = useSceneStore(s => s.cameraTarget);
   const setCameraTarget = useSceneStore(s => s.setCameraTarget);
   const setCameraMovement = useSceneStore(s => s.setCameraMovement);
+  const currentElevation = useSceneStore(s => s.cameraElevation ?? 45);
 
   const [isVRActive, setIsVRActive] = useState(false);
   const [isVRSupported, setIsVRSupported] = useState(false);
@@ -170,8 +171,6 @@ export function ViewControlBar({
       <i className={`bi ${view.icon}`} aria-hidden="true" />
     </button>
   );
-
-  const currentElevation = useSceneStore(s => s.cameraElevation ?? 45);
 
   const renderElevationButton = (elev: { angle: number; label: string; shortcut: string; icon: string }) => (
     <button
