@@ -232,7 +232,7 @@ export function Character({
     pistols: true,
     backpack: true,
   });
-  const animationEquipmentRef = useRef<'dual-pistols' | undefined>(undefined);
+  const animationEquipmentRef = useRef<'dual-pistols' | 'holstered' | undefined>(undefined);
 
   const { invalidate } = useThree();
 

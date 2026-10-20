@@ -42,7 +42,7 @@ export interface AnimationDefinition {
   defaultOffset?: [number, number, number]; // Décalage natif de position [x, y, z] (cm) pour corriger les animations hors norme
   duration: number;            // Durée en secondes (obligatoire)
   /** Equipment displayed only while this animation is active. */
-  equipment?: 'dual-pistols';
+  equipment?: 'dual-pistols' | 'holstered';
   /** Explicit one-shot playback for imported transitions. */
   loop?: 'once';
   /** Natural forward speed measured from the source motion, in cm/s. */

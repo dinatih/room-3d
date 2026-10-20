@@ -15,7 +15,7 @@ import { LINEN_PULL_RANGE, LINEN_PUSH_RANGE } from '../animations/dronaLinenMani
 import { DRONA_SPECIAL_ITEMS, DRONA_PULL_RANGE, DRONA_PUSH_RANGE } from '../items/dronaStorage';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
-import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
+import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
 
 export const CLOSET_DOOR_DURATION = 0.8;
@@ -313,7 +313,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [{
       slotId: 'pick-item', name: item.kind === 'cabinet' ? 'Prendre un objet dans l’armoire' : 'Prendre un objet dans la Dröna',
       relative: true, arrival: 'approach' as const, navigationOwner: item.cabinetId,
-      offset: [0, -item.position[1], item.kind === 'cabinet' ? 60 : -50] as [number, number, number],
+      offset: [0, -item.position[1], item.kind === 'cabinet' ? 60 : -BATHROOM_BOX_APPROACH] as [number, number, number],
       rotY: item.kind === 'cabinet' ? Math.PI : 0, animation: `${item.animationPrefix}-search`,
     }],
   }])),

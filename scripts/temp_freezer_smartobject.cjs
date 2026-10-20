@@ -30,6 +30,12 @@ if(process.argv.includes('--audit-storage')){
  const {retargetClip,resolveTargetBoneName}=await import('file:///tmp/drona-retarget.mjs');
  global.ProgressEvent=class{};
  async function load(path){const b=process.argv.includes('--baseline-storage')&&path.startsWith('animations/custom/')?fs.readFileSync('/tmp/drona-bath-box-before.glb'):fs.readFileSync('public/'+path),length=b.readUInt32LE(12),json=JSON.parse(b.subarray(20,20+length)),start=20+length;json.buffers[0].uri='data:application/octet-stream;base64,'+b.subarray(start+8,start+8+b.readUInt32LE(start)).toString('base64');for(const n of json.nodes){delete n.mesh;delete n.skin;}for(const k of ['meshes','textures','images','materials','extensionsRequired','extensionsUsed'])delete json[k];return new GLTFLoader().parseAsync(JSON.stringify(json),'');}
+ if(process.argv.includes('--inspect-bath-pose')){
+   for(const name of ['crouch_idle','male_crouch_pose','kneeling_idle','opening','looking_through_files_low']){
+     const source=await load('animations/mixamo/anim_'+name+'.glb'),mixer=new THREE.AnimationMixer(source.scene);mixer.clipAction(source.animations[0]).play();mixer.setTime(name==='looking_through_files_low'?3.6:0);source.scene.updateMatrixWorld(true);
+     console.log(name,JSON.stringify(['Hips','LeftArm','Head','LeftFoot','RightFoot','LeftToeBase','RightToeBase'].map(role=>({role,p:source.scene.getObjectByName('mixamorig'+role)?.getWorldPosition(new THREE.Vector3()).toArray()}))));
+   }return;
+ }
  for(const file of fs.readdirSync('public/animations/custom').filter(f=>process.argv.includes('--baseline-storage')?f==='bath-box_search.glb':f.endsWith('.glb'))){
    for(const model of ['characters/lara/lara_native.glb','characters/xbot/Xbot_official.glb']){
      const source=await load('animations/custom/'+file),target=(await load(model)).scene;
@@ -57,12 +63,14 @@ if(process.argv.includes('--build-storage')){
    const fs=require('node:fs'),THREE=require('three');
    const {GLTFLoader}=await import('three/examples/jsm/loaders/GLTFLoader.js');
    const {NodeIO}=await import('@gltf-transform/core');const io=new NodeIO();
+   const layout=await require('esbuild').build({stdin:{contents:"export {BATHROOM_BOX_APPROACH} from './src/features/scene/items/bathroomStorage';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',write:false});
+   const {BATHROOM_BOX_APPROACH}=await import('data:text/javascript;base64,'+Buffer.from(layout.outputFiles[0].text).toString('base64'));
    const sources=[
      {id:'care',source:'looking_through_files_low',time:3.6,height:70.25,lean:0},
      {id:'trousers',source:'opening',time:0,height:95.75,lean:.35},
      // Floor-level box: grip the upper rim, 3 cm below its 33 cm-high top.
      {id:'catchall2',source:'looking_through_files_low',time:10.8,height:20.5+33/2-3,lean:0},
-     {id:'bath-box',source:'looking_through_files_low',time:3.6,height:60+33/2+.2,lean:0},
+     {id:'bath-box',source:'crouch_idle',time:0,height:60+33/2+.2,lean:0,approach:BATHROOM_BOX_APPROACH/100,grip:true},
      {id:'bath-cabinet-west',source:'looking_through_files_low',time:3.6,height:54,lean:0,cabinet:'west'},
      {id:'bath-cabinet-east',source:'looking_through_files_low',time:3.6,height:54,lean:0,cabinet:'east'},
      {id:'kitchen-upper',source:'looking_through_files_low',time:10.8,height:56,lean:0,lift:.2},
@@ -73,7 +81,7 @@ if(process.argv.includes('--build-storage')){
    const glb=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());
    const bounds=glb.accessors[glb.meshes[0].primitives[0].attributes.POSITION];
    const depth=(bounds.max[0]-bounds.min[0])*.995,travel=depth*2/3,approach=.5;
-   for(const item of sources){
+   for(const item of sources.filter(item=>!process.argv.includes('--bath-box-only')||item.id==='bath-box')){
      const sourcePath=`public/animations/mixamo/anim_${item.source}.glb`,data=fs.readFileSync(sourcePath);
      const rig=await new GLTFLoader().parseAsync(data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength),'');
      const mixer=new THREE.AnimationMixer(rig.scene);mixer.clipAction(rig.animations[0]).play();mixer.setTime(item.time);
@@ -130,6 +138,8 @@ if(process.argv.includes('--build-storage')){
          hands.forEach((arm,index)=>{
            if(item.cabinet&&index!==(item.cabinet==='west'?0:1))return;
            const target=new THREE.Vector3(index===0?.1:-.1,item.height/100,(item.approach??approach)-depth/2-travel*(phase==='search'?1:fraction));
+           // Place the palm centre, rather than the wrist joint, against the box face.
+           if(item.grip)target.z-=arm.hand.getWorldPosition(new THREE.Vector3()).distanceTo(rig.scene.getObjectByName('mixamorig'+arm.side+'HandMiddle1').getWorldPosition(new THREE.Vector3()))/2;
            if(item.cabinet){
              // One hand follows the 40 cm door around its mirrored hinge.
              const swing=(phase==='search'?1:fraction)*Math.PI/2,sign=item.cabinet==='west'?1:-1;
@@ -249,6 +259,35 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
  const page=await browser.newPage();await page.setViewport({width:1200,height:900});
  page.on('pageerror',e=>{errors.push(e.message);console.error(e.message);});
  await page.goto((process.env.ROOM_TEST_URL || 'http://127.0.0.1:5175')+'/AGENTS.md');
+ if(process.argv.includes('--bath-preview')){
+   await page.evaluate(async()=>{
+     await import('/scss/app.scss');await import('/src/index.css');
+     const {useGLTF}=await import('/node_modules/.vite/deps/@react-three_drei.js');useGLTF.setDecoderPath('/draco/');
+     window.$RefreshReg$=()=>{};window.$RefreshSig$=()=>type=>type;window.__vite_plugin_react_preamble_installed__=true;
+     const {default:R}=await import('/node_modules/.vite/deps/react.js'),{default:DOM}=await import('/node_modules/.vite/deps/react-dom_client.js');
+     const {InventoryPreview}=await import('/src/features/inventory/InventoryPreview.tsx'),{INVENTORY}=await import('/src/features/inventory/inventoryData.ts'),{AnimationStudioView}=await import('/src/features/inventory/AnimationStudioView.tsx');
+     const {useAnimPreviewStore}=await import('/src/features/inventory/useAnimPreviewStore.ts');window.bathStore=useAnimPreviewStore;
+     const container=document.createElement('div');container.style.height='850px';document.body.replaceChildren(container);
+     DOM.createRoot(container).render(R.createElement(AnimationStudioView,{initialTarget:{type:'animation',id:'drona-bath-box-pull',mode:'solo'}}));
+   });
+   await page.waitForFunction(()=>Math.abs(window.bathStore.getState().duration-2.4166667)<.001,{timeout:90000});
+   const cadence=process.argv.includes('--pose-only')?null:await page.evaluate(async()=>{const samples=[];await new Promise(resolve=>{let previous=performance.now();const tick=now=>{samples.push(now-previous);previous=now;if(samples.length<60)requestAnimationFrame(tick);else resolve();};requestAnimationFrame(tick);});return{fps:1000/(samples.reduce((a,b)=>a+b)/samples.length),maxFrameMs:Math.max(...samples)};});console.log('Studio playback cadence',cadence);
+   const result=await page.evaluate(async()=>{
+     const {_roots}=await import('/node_modules/.vite/deps/@react-three_fiber.js'),state=[..._roots.values()][0].store.getState(),store=window.bathStore;
+     state.setFrameloop('never');store.getState().play();store.getState().seekToTime(.78);
+     const timings=state.internal.subscribers.map(()=>0);
+     for(let frame=0;frame<60;frame++)for(const [i,sub] of state.internal.subscribers.entries()){const start=performance.now();sub.ref.current(state,1/60);timings[i]+=performance.now()-start;}
+     store.getState().pause();store.getState().seekToTime(.78);for(const sub of state.internal.subscribers)sub.ref.current(state,1/60);
+     state.scene.updateMatrixWorld(true);state.camera.position.set(250,110,0);state.camera.lookAt(0,70,20);state.gl.render(state.scene,state.camera);
+     const bones=[];state.scene.traverse(o=>{if(o.isSkinnedMesh&&bones.length===0)for(const bone of o.skeleton.bones)if(/hand|wrist|foot|toe|hip/i.test(bone.name))bones.push({name:bone.name,p:bone.getWorldPosition(bone.position.clone()).toArray()});});
+     const toes=bones.filter(b=>/leg_(left|right)_toes$/.test(b.name));
+     if(toes.length!==2||toes.some(b=>Math.abs(b.p[1])>2)||Math.abs(toes[0].p[1]-toes[1].p[1])>1)throw new Error('Unstable floor contacts: '+JSON.stringify(toes));
+     state.scene.traverse(o=>{if(o.isMesh&&/handgun/i.test(o.name)&&!/holster/i.test(o.name)&&o.visible)throw new Error('Pistol still in hand during storage gesture');});
+     if(state.scene.environment!==null)throw new Error('Animation studio still uses the apartment HDR environment');
+     return{callbacks:timings.map((ms,i)=>({msPerFrame:ms/60,code:state.internal.subscribers[i].ref.current.toString().slice(0,110)})),bones,render:state.gl.info.render};
+   });
+   console.log(JSON.stringify(result,null,2));await page.screenshot({path:'/tmp/bath-box-preview.png'});assert.deepEqual(errors,[]);return;
+ }
  if(process.argv.includes('--custom-furniture')){
    await page.evaluate(async()=>{
      window.$RefreshReg$=()=>{};window.$RefreshSig$=()=>type=>type;window.__vite_plugin_react_preamble_installed__=true;

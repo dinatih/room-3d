@@ -9,7 +9,7 @@ import { SlidingDrona } from '@features/scene/items/SlidingDrona';
 import { DRONA_SPECIAL_ITEMS, DRONA_PULL_RANGE, DRONA_PUSH_RANGE } from '@features/scene/items/dronaStorage';
 import { KALLAX_SE_DRONA_POSITIONS, DRONA_SE_ITEMS } from '@features/scene/items/kallaxSeDrona';
 import { KALLAX_CUISINE_DRONA_POSITIONS, KITCHEN_DRONA_ITEMS } from '@features/scene/items/kallaxCuisineDrona';
-import { BATHROOM_STORAGE_ITEMS } from '@features/scene/items/bathroomStorage';
+import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '@features/scene/items/bathroomStorage';
 import { LINEN_PULL_RANGE, LINEN_PUSH_RANGE } from '@features/scene/animations/dronaLinenManifest';
 import { getAnimationDef } from '@features/scene/animations/animationResolver';
 import { NOOP_ITEM } from '@features/scene/sceneItem';
@@ -32,7 +32,7 @@ const CONTEXTS: Record<string, FurnitureContext> = {
     shelf: 'kitchen', cell: KALLAX_CUISINE_DRONA_POSITIONS[item.index], approach: item.animationPrefix === 'drona-kitchen-diy' ? 65 : 50, action: item.action,
   }])),
   ...Object.fromEntries(Object.entries(BATHROOM_STORAGE_ITEMS).map(([id, item]) => [item.animationPrefix, {
-    shelf: item.cabinetId, cell: [0, item.position[1], 0], approach: item.kind === 'cabinet' ? 60 : 50,
+    shelf: item.cabinetId, cell: [0, item.position[1], 0], approach: item.kind === 'cabinet' ? 60 : BATHROOM_BOX_APPROACH,
     action: item.action, rotation: Math.PI, box: item.kind === 'box' ? id : undefined,
   }])),
 };

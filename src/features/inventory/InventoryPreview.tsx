@@ -214,14 +214,16 @@ function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, 
   );
 }
 
-function PreviewEnvironment({ showGrid }: { showGrid: boolean }) {
+function PreviewEnvironment({ showGrid, neutralLighting }: { showGrid: boolean; neutralLighting: boolean }) {
   const neutralBackground = useMemo(() => new THREE.Color('#d2d2d2'), []);
+  const { scene } = useThree();
+  useLayoutEffect(() => { if (neutralLighting) scene.environment = null; }, [scene, neutralLighting]);
 
   useFrame(({ scene }) => {
     scene.background = neutralBackground;
   });
 
-  return <SkySphere envOnly={showGrid} showSpaceBackdrop={false} />;
+  return neutralLighting ? null : <SkySphere envOnly={showGrid} showSpaceBackdrop={false} />;
 }
 
 function FitCamera({ target = [0, 0, 0], boundsRadius }: { target?: [number, number, number]; boundsRadius?: number }) {
@@ -674,6 +676,7 @@ export function InventoryPreview({
   hideViewControlBar = false,
   showPhotoGallery = true,
   defaultShowGrid = false,
+  neutralLighting = false,
   defaultAutoRotate = true,
   defaultShowMiniPerf,
   preserveStateOnItemChange = false,
@@ -692,6 +695,7 @@ export function InventoryPreview({
   hideViewControlBar?: boolean;
   showPhotoGallery?: boolean;
   defaultShowGrid?: boolean;
+  neutralLighting?: boolean;
   defaultAutoRotate?: boolean;
   defaultShowMiniPerf?: boolean;
   preserveStateOnItemChange?: boolean;
@@ -1027,7 +1031,7 @@ export function InventoryPreview({
           {showing3D ? (
             <>
             <Canvas className="inventory-preview-renderer" key={preserveStateOnItemChange ? undefined : item.id} shadows={item.id === 'fridge'} frameloop="always" events={() => ({ enabled: false } as any)} camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
-              <PreviewEnvironment showGrid={showGrid} />
+              <PreviewEnvironment showGrid={showGrid} neutralLighting={neutralLighting} />
               <ambientLight intensity={0.7} />
               <directionalLight position={[150, 250, 150]} intensity={1.0} />
               <directionalLight position={[-100, 50, -100]} intensity={0.4} color="#aabbff" />

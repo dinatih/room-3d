@@ -1,5 +1,6 @@
 import { BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL } from '../wallData';
 
+export const BATHROOM_BOX_APPROACH = 75;
 const CABINET_HEIGHT = 60;
 const DRONA_HEIGHT = 33;
 export const BATHROOM_STORAGE_ITEMS = {

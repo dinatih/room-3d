@@ -7,6 +7,6 @@ export const DRONA_STORAGE_ANIMATIONS: AnimationDefinition[] = ['care', 'trouser
     id: `drona-${item}-${phase}`, path: `animations/custom/${item}_${phase}.glb`,
     category: 'interactions', label: `Dröna ${item} : ${phase}`, tags: ['interaction'],
     duration: phase === 'search' ? 9.766666412353516 / 2 : 4.833333492279053 / 2,
-    loop: 'once',
+    loop: 'once', equipment: 'holstered',
   })),
 );
