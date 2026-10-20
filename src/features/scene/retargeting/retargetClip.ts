@@ -692,11 +692,6 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               const deltaQ = animWorldQ.clone().multiply(B_src_inv);
               const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
               const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
-              if (baseName === 'LeftToeBase' || baseName === 'RightToeBase') {
-                tgtLocalQ.copy(bone.restLocalQuaternion);
-              } else if ((baseName === 'LeftFoot' || baseName === 'RightFoot') && bone.name.toLowerCase().includes('ankle')) {
-                tgtLocalQ.multiply(new THREE.Quaternion(-0.1564, 0, 0, 0.9877));
-              }
 
               // Enforce quaternion continuity with previous frame to prevent 360° hemisphere flips
               if (j > 0) {
