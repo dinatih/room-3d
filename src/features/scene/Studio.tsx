@@ -1010,7 +1010,7 @@ export function Studio() {
           </CategoryLayerGroup>
 
           {/* LAYER_MIRRORS (17) — plans de réflexion Reflector (MD/HD) ou glaces ambiantes PBR (SD) */}
-          <CategoryLayerGroup layer={LAYER_MIRRORS} visible={true}>
+          <CategoryLayerGroup layer={LAYER_MIRRORS} visible={layers.mirrorSurfaces}>
             <MirrorReflectors showReflection={layers.mirrors} />
           </CategoryLayerGroup>
 

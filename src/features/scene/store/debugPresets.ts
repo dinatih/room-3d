@@ -9,6 +9,7 @@ const DEBUG_PRESETS: Record<string, { layers: Partial<Record<keyof LayerState, b
       furniture: false,
       furnishings: false,
       decor: false,
+      mirrorSurfaces: false,
       mirrors: false,
       animals: false,
     },

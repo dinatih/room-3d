@@ -19,6 +19,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   furniture: true,
   furnishings: true,
   decor: true,
+  mirrorSurfaces: true,
   mirrors: true,
   mirrorsHD: false,
   neighbors: false,
@@ -118,6 +119,11 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: 'decor',
     canonicalParam: 'decor',
     urlParams: ['decor', 'decoration', 'decorations', 'deco'],
+  },
+  {
+    layerKey: 'mirrorSurfaces',
+    canonicalParam: 'mirrorSurfaces',
+    urlParams: ['mirrorsurfaces'],
   },
   {
     layerKey: 'mirrors',
