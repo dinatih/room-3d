@@ -406,7 +406,7 @@ export function useCameraShortcuts({
         if (e.repeat) return;
         e.preventDefault();
         dispatchView('west', undefined, false, 90);
-        appLog('system', '🎥 Vue Ouest — élévation 90°');
+        appLog('system', '🎥 Vue du dessus');
         return;
       }
 
