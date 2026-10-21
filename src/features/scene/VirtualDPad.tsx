@@ -24,6 +24,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   const control = useSceneStore(state => state.arrowControl);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const selectControl = useSceneStore(state => state.selectArrowControl);
+  const setArrowControl = useSceneStore(state => state.setArrowControl);
   const [animal, setAnimal] = useState(cameraState.animalTarget);
   const activeKeys = useRef(new Set<ArrowKey>());
   const zoomFrame = useRef<number | null>(null);
@@ -111,9 +112,6 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   if (!visible) return null;
   const moving = !animal && (mode === 'fpv' || control === 'character');
   const orbiting = mode === 'orbit' || mode === 'follow';
-  const studioActive = mode === 'orbit' && target === 'studio' && !moving;
-  const characterActive = !animal && !moving && (mode === 'follow' || (mode === 'orbit' && target === 'character'));
-  const moveActive = (mode === 'follow' || mode === 'fpv') && moving;
   const caption = animal
     ? mode === 'fpv' ? `Vue embarquée · ${animal}` : `Caméra · ${animal}`
     : mode === 'fpv' ? 'Déplacer · PNJ — FPV'
@@ -121,16 +119,41 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
     : mode === 'top' || mode === 'iso' ? `Caméra · ${mode === 'top' ? 'Dessus' : 'Vue fixe'}`
     : mode === 'follow' || target === 'character' ? 'Caméra · PNJ'
     : target === 'studio' ? 'Caméra · Studio' : `Caméra · ${target}`;
-  const choices = [
-    { target: 'studio', control: 'camera', label: 'Caméra · Studio', icon: 'bi-building', active: studioActive },
-    { target: 'character', control: 'camera', label: 'Caméra · PNJ', icon: 'bi-camera-video', active: characterActive },
-    { target: 'character', control: 'character', label: 'Déplacer · PNJ', icon: 'bi-person-walking', active: moveActive },
+  const targets = [
+    { target: 'studio', label: 'Appartement', icon: 'bi-building' },
+    { target: 'character', label: 'Personnage', icon: 'bi-person' },
+  ] as const;
+  const controls = [
+    { control: 'camera', label: 'Déplacer la caméra', icon: 'bi-camera-video', active: !moving },
+    { control: 'character', label: 'Déplacer le personnage', icon: 'bi-person-walking', active: moving },
   ] as const;
 
   return (
     <div className="virtual-controls d-flex flex-column align-items-center gap-1">
+      <div className="glass-card d-flex align-items-center gap-1 p-1 rounded-2" role="group" aria-label="Cible de la caméra">
+        <span className="small px-1" title="Cible de la caméra"><i className="bi bi-bullseye" aria-hidden="true" /><span className="visually-hidden">Cible caméra</span></span>
+        <div className="btn-group btn-group-sm">
+          {targets.map(choice => (
+            <button
+              key={choice.target}
+              type="button"
+              className={`btn btn-sm py-0 px-1 ${!animal && target === choice.target ? 'btn-primary' : 'btn-outline-secondary'}`}
+              aria-label={`Cibler : ${choice.label}`}
+              title={`Cibler : ${choice.label}`}
+              aria-pressed={!animal && target === choice.target}
+              onClick={() => {
+                releaseAll();
+                selectControl(choice.target, control);
+              }}
+            >
+              <i className={`bi ${choice.icon}`} aria-hidden="true" />
+              <span className="small ms-1">{choice.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="virtual-controls__modes glass-card btn-group btn-group-sm p-1 rounded-2" role="group" aria-label="Contrôle des flèches et zoom caméra">
-        {choices.map(choice => (
+        {controls.map(choice => (
           <button
             key={choice.label}
             type="button"
@@ -140,7 +163,8 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
             aria-pressed={choice.active}
             onClick={() => {
               releaseAll();
-              selectControl(choice.target, choice.control);
+              if (mode === 'fpv' && choice.control === 'camera') selectControl('character', 'camera');
+              else setArrowControl(choice.control);
             }}
           >
             <i className={`bi ${choice.icon}`} aria-hidden="true" />
