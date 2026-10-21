@@ -323,6 +323,7 @@ if (initialActiveChar && isExtraCharacter(initialActiveChar.id) && initialActive
 
 const layerOverrides = parseUrlLayerOverrides();
 Object.assign(initialLayers, layerOverrides);
+initialFurniture.lampOn = initialLayers.lightsHD;
 
 const urlGround = parseUrlGroundType();
 if (urlGround.groundType) {
@@ -680,7 +681,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
         }
       }
       cameraState.invalidate?.();
-      return { layers: nextLayers, activeExtraIds: nextActiveExtraIds, graphicsQualityPreset: nextPreset };
+      return {
+        layers: nextLayers, activeExtraIds: nextActiveExtraIds, graphicsQualityPreset: nextPreset,
+        furniture: key === 'lightsHD' && isActivating ? { ...state.furniture, lampOn: true } : state.furniture,
+      };
     });
   },
 
@@ -850,7 +854,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
         updateUrlLayer(lKey, nextVal);
         const nextLayers = { ...state.layers, [lKey]: nextVal };
         cameraState.invalidate?.();
-        return { layers: nextLayers };
+        return {
+          layers: nextLayers,
+          furniture: lKey === 'lightsHD' && nextVal ? { ...state.furniture, lampOn: true } : state.furniture,
+        };
       });
     } else if (resolved.type === 'extra') {
       set((state) => {
