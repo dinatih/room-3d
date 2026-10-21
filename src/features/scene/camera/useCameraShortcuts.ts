@@ -75,8 +75,7 @@ export function useCameraShortcuts({
 
   useEffect(() => {
     const publishArrowKeys = () => {
-      const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].filter(arrow =>
-        [...keys.current].some(key => key.endsWith(arrow)));
+      const arrows = [...keys.current].map(key => key.replace(/^(ShiftCtrl|Shift|Ctrl|Alt)/, ''));
       document.dispatchEvent(new CustomEvent('camera-arrow-keys', { detail: arrows }));
     };
     const chooseFollow = (x: number, z: number, mode: 'follow' | 'fpv' = 'follow') => {
@@ -463,6 +462,21 @@ export function useCameraShortcuts({
       if (keys.current.size > 0) invalidate();
     };
 
+    const onDirectionInput = (event: Event) => {
+      const { key, pressed } = (event as CustomEvent<{ key: string; pressed: boolean }>).detail;
+      if (pressed) {
+        if (planeModeRef.current || cameraState.isIntroRunning) return;
+        keys.current.add(key);
+        if (key.startsWith('camera:')) {
+          const store = useSceneStore.getState();
+          if (store.activeCameraPos) store.setActiveCameraPos(null);
+          if (store.cameraMovement === 'orbit') store.setCameraMovement('fix');
+        }
+      } else keys.current.delete(key);
+      publishArrowKeys();
+      invalidate();
+    };
+
     const onUp = (e: KeyboardEvent) => {
       const k = e.key;
       keys.current.delete(k);
@@ -583,6 +597,7 @@ export function useCameraShortcuts({
     document.addEventListener('visibilitychange', onVisibility);
     document.addEventListener('focusin', onFocus);
     document.addEventListener('camera-controls-release', releaseControls);
+    document.addEventListener('camera-direction-input', onDirectionInput);
     document.addEventListener('camera-arrow-control', onArrowControl);
     document.addEventListener('minimap-pov', onPov);
     document.addEventListener('camera-pov', onPov);
@@ -597,6 +612,7 @@ export function useCameraShortcuts({
       document.removeEventListener('visibilitychange', onVisibility);
       document.removeEventListener('focusin', onFocus);
       document.removeEventListener('camera-controls-release', releaseControls);
+      document.removeEventListener('camera-direction-input', onDirectionInput);
       document.removeEventListener('camera-arrow-control', onArrowControl);
       unsubscribe();
       document.removeEventListener('minimap-pov', onPov);

@@ -14,8 +14,8 @@ const DIRECTIONS: Array<{ key: ArrowKey; icon: string; label: string; position: 
   { key: 'ArrowDown', icon: 'bi-arrow-down', label: 'Reculer', position: 'down' },
 ];
 
-function fire(type: 'keydown' | 'keyup', key: ArrowKey) {
-  window.dispatchEvent(new KeyboardEvent(type, { key, code: key, bubbles: true }));
+function fire(key: string, pressed: boolean) {
+  document.dispatchEvent(new CustomEvent('camera-direction-input', { detail: { key, pressed } }));
 }
 
 export function VirtualDPad({ visible = false }: { visible?: boolean }) {
@@ -24,16 +24,15 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   const control = useSceneStore(state => state.arrowControl);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const selectControl = useSceneStore(state => state.selectArrowControl);
-  const setArrowControl = useSceneStore(state => state.setArrowControl);
   const [animal, setAnimal] = useState(cameraState.animalTarget);
-  const activeKeys = useRef(new Set<ArrowKey>());
+  const activeKeys = useRef(new Set<string>());
   const zoomFrame = useRef<number | null>(null);
   const zoomRemaining = useRef(0);
-  const [pressedKeys, setPressedKeys] = useState<Set<ArrowKey>>(new Set());
+  const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
 
-  const releaseKey = useCallback((key: ArrowKey) => {
+  const releaseKey = useCallback((key: string) => {
     if (!activeKeys.current.delete(key)) return;
-    fire('keyup', key);
+    fire(key, false);
   }, []);
 
   const cancelZoom = useCallback(() => {
@@ -63,7 +62,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
 
   const releaseAll = useCallback(() => {
     cancelZoom();
-    activeKeys.current.forEach(key => fire('keyup', key));
+    activeKeys.current.forEach(key => fire(key, false));
     activeKeys.current.clear();
     setPressedKeys(new Set());
     document.dispatchEvent(new Event('camera-controls-release'));
@@ -83,7 +82,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   }, [cancelZoom]);
 
   useEffect(() => {
-    const onArrowKeys = (event: Event) => setPressedKeys(new Set((event as CustomEvent<ArrowKey[]>).detail));
+    const onArrowKeys = (event: Event) => setPressedKeys(new Set((event as CustomEvent<string[]>).detail));
     document.addEventListener('camera-arrow-keys', onArrowKeys);
     return () => document.removeEventListener('camera-arrow-keys', onArrowKeys);
   }, []);
@@ -112,21 +111,11 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   if (!visible) return null;
   const moving = !animal && (mode === 'fpv' || control === 'character');
   const orbiting = mode === 'orbit' || mode === 'follow';
-  const caption = animal
-    ? mode === 'fpv' ? `Vue embarquée · ${animal}` : `Caméra · ${animal}`
-    : mode === 'fpv' ? 'Déplacer · PNJ — FPV'
-    : moving ? 'Déplacer · PNJ'
-    : mode === 'top' || mode === 'iso' ? `Caméra · ${mode === 'top' ? 'Dessus' : 'Vue fixe'}`
-    : mode === 'follow' || target === 'character' ? 'Caméra · PNJ'
-    : target === 'studio' ? 'Caméra · Studio' : `Caméra · ${target}`;
   const targets = [
     { target: 'studio', label: 'Appartement', icon: 'bi-building' },
     { target: 'character', label: 'Personnage', icon: 'bi-person' },
   ] as const;
-  const controls = [
-    { control: 'camera', label: 'Déplacer la caméra', icon: 'bi-camera-video', active: !moving },
-    { control: 'character', label: 'Déplacer le personnage', icon: 'bi-person-walking', active: moving },
-  ] as const;
+
 
   return (
     <div className="virtual-controls d-flex flex-column align-items-center gap-1">
@@ -151,24 +140,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
           ))}
         </div>
       </div>
-      <div className="virtual-controls__modes glass-card btn-group btn-group-sm p-1 rounded-2" role="group" aria-label="Contrôle des flèches et zoom caméra">
-        {controls.map(choice => (
-          <button
-            key={choice.label}
-            type="button"
-            className={`btn btn-sm py-0 px-1 ${choice.active ? 'btn-primary' : 'btn-outline-secondary'}`}
-            aria-label={choice.label}
-            title={choice.label}
-            aria-pressed={choice.active}
-            onClick={() => {
-              releaseAll();
-              if (mode === 'fpv' && choice.control === 'camera') selectControl('character', 'camera');
-              else setArrowControl(choice.control);
-            }}
-          >
-            <i className={`bi ${choice.icon}`} aria-hidden="true" />
-          </button>
-        ))}
+      <div className="virtual-controls__modes glass-card btn-group btn-group-sm p-1 rounded-2" role="group" aria-label="Zoom caméra">
         {(['in', 'out'] as const).map(direction => (
           <button
             key={direction}
@@ -182,39 +154,47 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
           </button>
         ))}
       </div>
-      <div className="d-flex flex-column align-items-center gap-1">
-        <span className="visually-hidden" role="status">{caption}</span>
-        <div className="virtual-dpad" role="group" aria-label={`Flèches : ${caption}`}>
-          {DIRECTIONS.map(({ key, icon, label: movementLabel, position }) => {
-            const label = moving ? movementLabel : orbiting
-              ? ({ ArrowUp: 'Incliner vers le haut', ArrowDown: 'Incliner vers le bas', ArrowLeft: 'Tourner à gauche', ArrowRight: 'Tourner à droite' })[key]
-              : ({ ArrowUp: 'Déplacer la vue vers le haut', ArrowDown: 'Déplacer la vue vers le bas', ArrowLeft: 'Déplacer la vue à gauche', ArrowRight: 'Déplacer la vue à droite' })[key];
-            return (
-              <button
-                key={key}
-                type="button"
-                className={`btn btn-sm rounded-3 virtual-dpad__button virtual-dpad__button--${position} ${pressedKeys.has(key) ? 'is-pressed' : ''}`}
-                aria-label={label}
-                aria-pressed={pressedKeys.has(key)}
-                title={label}
-                disabled={Boolean(animal && mode === 'fpv')}
-                onPointerDown={event => {
-                  event.preventDefault();
-                  event.currentTarget.setPointerCapture(event.pointerId);
-                  if (activeKeys.current.has(key)) return;
-                  activeKeys.current.add(key);
-                  fire('keydown', key);
-                }}
-                onPointerUp={() => releaseKey(key)}
-                onPointerCancel={() => releaseKey(key)}
-                onLostPointerCapture={() => releaseKey(key)}
-                onContextMenu={event => event.preventDefault()}
-              >
-                <i className={`bi ${icon}`} aria-hidden="true" />
-              </button>
-            );
-          })}
-        </div>
+      <div className="d-flex align-items-start gap-3">
+        {(['character', 'camera'] as const).map(inputControl => (
+          <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
+            <span className="glass-card rounded-2 px-2 small" title={inputControl === 'character' ? 'Déplacer le PNJ' : 'Déplacer la caméra'}>
+              <i className={`bi ${inputControl === 'character' ? 'bi-person-walking' : 'bi-camera-video'}`} aria-hidden="true" />
+            </span>
+            <div className="virtual-dpad" role="group" aria-label={inputControl === 'character' ? 'Déplacement du PNJ' : 'Déplacement de la caméra'}>
+              {DIRECTIONS.map(({ key, icon, label: movementLabel, position }) => {
+                const inputKey = `${inputControl}:${key}`;
+                const pressed = pressedKeys.has(inputKey) || (pressedKeys.has(key) && (moving ? inputControl === 'character' : inputControl === 'camera'));
+                const label = inputControl === 'character' ? movementLabel : orbiting
+                  ? ({ ArrowUp: 'Incliner vers le haut', ArrowDown: 'Incliner vers le bas', ArrowLeft: 'Tourner à gauche', ArrowRight: 'Tourner à droite' })[key]
+                  : ({ ArrowUp: 'Déplacer la vue vers le haut', ArrowDown: 'Déplacer la vue vers le bas', ArrowLeft: 'Déplacer la vue à gauche', ArrowRight: 'Déplacer la vue à droite' })[key];
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`btn btn-sm rounded-3 virtual-dpad__button virtual-dpad__button--${position} ${pressed ? 'is-pressed' : ''}`}
+                    aria-label={label}
+                    aria-pressed={pressed}
+                    title={label}
+                    disabled={Boolean(animal && (inputControl === 'character' || mode === 'fpv'))}
+                    onPointerDown={event => {
+                      event.preventDefault();
+                      event.currentTarget.setPointerCapture(event.pointerId);
+                      if (activeKeys.current.has(inputKey)) return;
+                      activeKeys.current.add(inputKey);
+                      fire(inputKey, true);
+                    }}
+                    onPointerUp={() => releaseKey(inputKey)}
+                    onPointerCancel={() => releaseKey(inputKey)}
+                    onLostPointerCapture={() => releaseKey(inputKey)}
+                    onContextMenu={event => event.preventDefault()}
+                  >
+                    <i className={`bi ${icon}`} aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -92,10 +92,10 @@ export function useCameraFrameUpdate({
         const radius = cameraState.animalViews[cameraState.animalTarget]?.radius;
         if (radius && keys.current.has('CtrlArrowUp')) orbitDistance.current = Math.max(radius, orbitDistance.current - 4 * dt);
         if (keys.current.has('CtrlArrowDown')) orbitDistance.current += 4 * dt;
-        if (keys.current.has('ArrowLeft')) orbitYaw.current -= 0.03 * dt;
-        if (keys.current.has('ArrowRight')) orbitYaw.current += 0.03 * dt;
-        if (keys.current.has('ArrowUp')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
-        if (keys.current.has('ArrowDown')) orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
+        if (keys.current.has('ArrowLeft') || keys.current.has('camera:ArrowLeft')) orbitYaw.current -= 0.03 * dt;
+        if (keys.current.has('ArrowRight') || keys.current.has('camera:ArrowRight')) orbitYaw.current += 0.03 * dt;
+        if (keys.current.has('ArrowUp') || keys.current.has('camera:ArrowUp')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
+        if (keys.current.has('ArrowDown') || keys.current.has('camera:ArrowDown')) orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
       }
       updateFollowLook();
       cameraState.onUpdate?.();
@@ -104,9 +104,11 @@ export function useCameraFrameUpdate({
     }
     const store = useSceneStore.getState();
     const k = keys.current;
-    const hasPlainArrow = k.has('ArrowLeft') || k.has('ArrowRight') || k.has('ArrowUp') || k.has('ArrowDown');
     const movesCharacter = (modeRef.current === 'fpv' || store.arrowControl === 'character') && !store.layers.characterGrid && !cameraState.animalTarget;
-    const manualMove = movesCharacter && hasPlainArrow;
+    const characterArrow = (key: string) => !store.layers.characterGrid && !cameraState.animalTarget && (k.has('character:' + key) || (movesCharacter && k.has(key)));
+    const cameraArrow = (key: string) => k.has('camera:' + key) || (!movesCharacter && k.has(key));
+    const hasCameraArrow = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(cameraArrow);
+    const manualMove = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(characterArrow);
     if (cameraState.isAIControlled) {
       followPos.current.x = cameraState.characterX;
       followPos.current.z = cameraState.characterZ;
@@ -114,9 +116,9 @@ export function useCameraFrameUpdate({
     }
     if (manualMove) {
       cameraState.recordUserControl();
-      if (k.has('ArrowLeft')) followYaw.current += 0.03 * dt;
-      if (k.has('ArrowRight')) followYaw.current -= 0.03 * dt;
-      const step = WALK_SPEED * dt * ((k.has('ArrowUp') ? 1 : 0) - (k.has('ArrowDown') ? 1 : 0));
+      if (characterArrow('ArrowLeft')) followYaw.current += 0.03 * dt;
+      if (characterArrow('ArrowRight')) followYaw.current -= 0.03 * dt;
+      const step = WALK_SPEED * dt * ((characterArrow('ArrowUp') ? 1 : 0) - (characterArrow('ArrowDown') ? 1 : 0));
       followPos.current.x += Math.sin(followYaw.current) * step;
       followPos.current.z += Math.cos(followYaw.current) * step;
       cameraState.followYaw = followYaw.current;
@@ -125,7 +127,7 @@ export function useCameraFrameUpdate({
       invalidate();
     }
     cameraState.isFollowing = modeRef.current === 'follow' || modeRef.current === 'fpv';
-    cameraState.isMoving = movesCharacter && (k.has('ArrowUp') || k.has('ArrowDown'));
+    cameraState.isMoving = characterArrow('ArrowUp') || characterArrow('ArrowDown');
 
     if (cameraState.isFollowing) {
       if (!cameraState.isAIControlled) {
@@ -176,11 +178,11 @@ export function useCameraFrameUpdate({
 
       if (ctrl) {
         const activeCamera = ctrl.object;
-        const plainCamera = !movesCharacter && modeRef.current === 'orbit';
-        const plainPan = !movesCharacter && (modeRef.current === 'top' || modeRef.current === 'iso');
+        const plainCamera = modeRef.current === 'orbit';
+        const plainPan = modeRef.current === 'top' || modeRef.current === 'iso';
         // Shift+arrows — orbit (rotate camera around target)
-        if ((plainCamera && hasPlainArrow) || k.has('ShiftArrowLeft') || k.has('ShiftArrowRight') || k.has('ShiftArrowUp') || k.has('ShiftArrowDown')) {
-          const rotates = (key: string) => k.has('Shift' + key) || (plainCamera && k.has(key));
+        if ((plainCamera && hasCameraArrow) || k.has('ShiftArrowLeft') || k.has('ShiftArrowRight') || k.has('ShiftArrowUp') || k.has('ShiftArrowDown')) {
+          const rotates = (key: string) => k.has('Shift' + key) || (plainCamera && cameraArrow(key));
           if (!keyboardOrbit.current) keyboardOrbit.current = activeCamera.position.clone().sub(ctrl.target);
           _tmpOffset.copy(keyboardOrbit.current);
           _tmpSph.setFromVector3(_tmpOffset);
@@ -193,18 +195,18 @@ export function useCameraFrameUpdate({
         }
 
         // Ctrl, Alt ou Shift+Ctrl+arrows — pan rapide (translate camera + target ensemble)
-        const hasPan = (plainPan && hasPlainArrow) || ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(
+        const hasPan = (plainPan && hasCameraArrow) || ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(
           a => k.has('Ctrl' + a) || k.has('Alt' + a) || k.has('ShiftCtrl' + a)
         );
         if (hasPan) {
           keyboardOrbit.current = null;
-          if (plainPan && hasPlainArrow) topFollowRef.current = false;
+          if (plainPan && hasCameraArrow) topFollowRef.current = false;
           activeCamera.getWorldDirection(_tmpCamDir);
           if (plainPan) _tmpCamRight.setFromMatrixColumn(activeCamera.matrixWorld, 0);
           else _tmpCamRight.set(-_tmpCamDir.z, 0, _tmpCamDir.x).normalize();
           const panStep = Math.max(3, ctrl.target.distanceTo(activeCamera.position) * 0.015) * dt;
           _tmpPanDelta.set(0, 0, 0);
-          const isPan = (a: string) => (plainPan && k.has(a)) || k.has('Ctrl' + a) || k.has('Alt' + a) || k.has('ShiftCtrl' + a);
+          const isPan = (a: string) => (plainPan && cameraArrow(a)) || k.has('Ctrl' + a) || k.has('Alt' + a) || k.has('ShiftCtrl' + a);
 
           if (plainPan) _tmpCamForward.setFromMatrixColumn(activeCamera.matrixWorld, 1);
           else {
@@ -281,21 +283,25 @@ export function useCameraFrameUpdate({
 
       if (modeRef.current === 'follow') {
         // 3rd Person : Les touches fléchées orbitent la caméra autour du personnage
-        if (!movesCharacter && k.has('ArrowLeft')) orbitYaw.current -= 0.03 * dt;
-        if (!movesCharacter && k.has('ArrowRight')) orbitYaw.current += 0.03 * dt;
+        if (cameraArrow('ArrowLeft')) orbitYaw.current -= 0.03 * dt;
+        if (cameraArrow('ArrowRight')) orbitYaw.current += 0.03 * dt;
 
         // Ctrl+Haut / Bas : Zoom (rapprocher / éloigner la caméra)
         if (k.has('CtrlArrowUp')) orbitDistance.current = Math.max(30, orbitDistance.current - 4 * dt);
         if (k.has('CtrlArrowDown')) orbitDistance.current = orbitDistance.current + 4 * dt;
 
         // Haut / Bas simples : Inclinaison verticale (pitch)
-        if (!movesCharacter && k.has('ArrowUp')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
-        if (!movesCharacter && k.has('ArrowDown')) orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
+        if (cameraArrow('ArrowUp')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
+        if (cameraArrow('ArrowDown')) orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
 
         if (k.has('AltArrowUp')) followPos.current.y += sp;
         if (k.has('AltArrowDown')) followPos.current.y -= sp;
       } else {
         // Mode FPV (1ère personne)
+        if (k.has('camera:ArrowLeft')) followYaw.current += 0.03 * dt;
+        if (k.has('camera:ArrowRight')) followYaw.current -= 0.03 * dt;
+        if (k.has('camera:ArrowUp')) followPitch.current = Math.min(1.4, followPitch.current + 0.02 * dt);
+        if (k.has('camera:ArrowDown')) followPitch.current = Math.max(-1.4, followPitch.current - 0.02 * dt);
         if (k.has('CtrlArrowUp')) followPitch.current = Math.min(1.4, followPitch.current + 0.02 * dt);
         if (k.has('CtrlArrowDown')) followPitch.current = Math.max(-1.4, followPitch.current - 0.02 * dt);
 
