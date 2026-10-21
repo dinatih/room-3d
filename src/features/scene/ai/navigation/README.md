@@ -19,7 +19,15 @@ Le cache des coûts de confort utilise des lignes triangulaires de doubles,
 allouées à la demande : au maximum `8 × N × (N - 1) / 2` octets de coûts pour
 `N` sommets, sans entrées `Map` ni nombres encapsulés par paire.
 Les vérifications oui/non d'une approche utilisent `canReach` sur le graphe
-physique ; seule la construction d'un trajet optimise le coût de confort.
+physique dans le worker ; seule la construction d'un trajet optimise le coût de confort.
+Depuis la refonte du 21 octobre, les constructions de graphes, les unions,
+les approches et les ancres de duo sont également calculées dans le worker.
+Un appelant par image conserve un `NavigationScope` ; une commande asynchrone
+attend `resolveNavigation`. Les détails et les commandes de validation actuelles
+sont dans `docs/character-runtime-2026-10-21.md` ; les scripts ponctuels cités plus
+bas documentent les vérifications historiques. Masquer le décor ne retire pas
+ses obstacles et ne suspend pas les personnages.
+
 Les tests de segment limitent leurs vérifications aux obstacles dont la boîte
 englobe une partie du segment, en conservant les trous des contours.
 

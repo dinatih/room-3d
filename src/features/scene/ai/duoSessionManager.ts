@@ -8,6 +8,7 @@ import { getSmartObject } from './smartObjectRegistry';
 import { INITIAL_SMART_OBJECT_BY_CHAR } from './autonomousActivities';
 import { useSceneStore } from '../store/useSceneStore';
 import { findDuoAnchor } from './navigation/duoPlacement';
+import { navigationValue, resolveNavigation } from './navigation/navigationScope';
 import { getNavigationGraph } from './navigation/service';
 import { getAgentProfile } from './navigation/obstacles';
 
@@ -476,7 +477,7 @@ class DuoSessionManager {
     if (!obj || (leaderId && !OccupancyManager.canUseObject(objectId, leaderId))
       || (partnerId && !OccupancyManager.canUseObject(objectId, partnerId))) return null;
 
-    const playlist = this.resolveSlotPlaylist(objectId, slotId, forcedAnimId);
+    const playlist = navigationValue(`duo:${objectId}:${slotId}:${forcedAnimId}`, () => this.resolveSlotPlaylist(objectId, slotId, forcedAnimId));
     if (playlist.length === 0) return null;
     const def = playlist[0];
     const canParticipate = (id: string) => playlist.every(anim => canCharacterPerformDuo(id, anim));
@@ -656,7 +657,8 @@ class DuoSessionManager {
     leaderId?: string,
     partnerId?: string,
     fromId = 'Toolbar'
-  ): { targetA: string; targetB: string } | null {
+  ): Promise<{ targetA: string; targetB: string } | null> {
+    return resolveNavigation(() => {
     const [bx, , bz] = this.basePos;
     let session = this.sessions.get('duo-zone');
     if (!session) {
@@ -779,14 +781,9 @@ class DuoSessionManager {
 
     this.emitChange();
     return { targetA, targetB };
+    });
   }
 
-  /**
-   * Alias de rétrocompatibilité pour forcer un duo avec un meneur spécifique.
-   */
-  public forceDuoAnimationWithLeader(leaderId: string, def: DuoAnimationDef, partnerId?: string): { targetA: string; targetB: string } | null {
-    return this.forceDuoAnimation(def, leaderId, partnerId, 'Inventory');
-  }
 }
 
 export const duoSessionManager = new DuoSessionManager();

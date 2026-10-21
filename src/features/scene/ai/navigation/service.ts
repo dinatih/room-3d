@@ -1,13 +1,15 @@
 import { positionState } from '../../positionState';
 import { movingFurniture } from '../../furniturePositions';
 import { architectureObstacles, walkableSurfaces } from './architecture';
-import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, navigationDebug, type AgentProfile } from './obstacles';
-import { inflate, union, mergeObstacles, VisibilityGraph, rectangle, pointInRing, insideObstacle, segmentFree, distance, projectToSegment, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
+import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, navigationDebug, agentProfileLifecycle, type AgentProfile } from './obstacles';
+import { inflate, rectangle, pointInRing, insideObstacle, segmentFree, distance, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, getAgentDoorProtection, protectDoor, type DoorKey, type DoorProtection } from './doorRequests';
 import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from '../agent/agentAvoidance';
 import { NAVIGATION_COMFORT_CM } from './comfort';
-import { requestPath, type PathSearch } from './pathfindingClient';
+import type { GraphDefinition, ApproachRegion } from './queries';
+import { NavigationScope, NavigationPending, navigationValue } from './navigationScope';
+import { requestPath, prepareNavigationGraph, readObjectApproach, type NavigationGraph, type PathSearch } from './pathfindingClient';
 import { cameraState } from '../../cameraState';
 
 export { architectureObstacles };
@@ -51,7 +53,12 @@ export function getContainingObjectOwner(agentId: string, position: Point): stri
   }
   return undefined;
 }
-const caches = new WeakMap<AgentProfile, Map<string, { revision: number; doorAngles: string; graph: VisibilityGraph }>>();
+const caches = new WeakMap<AgentProfile, Map<string, { revision: number; doorAngles: string; preparation: ReturnType<typeof prepareNavigationGraph> }>>();
+const releaseProfile = (profile: AgentProfile) => {
+  for (const entry of caches.get(profile)?.values() ?? []) entry.preparation.cancel();
+  caches.delete(profile);
+};
+agentProfileLifecycle.onUnused = releaseProfile;
 const inSurface = (p: Point) => walkableSurfaces.some(rings => pointInRing(p, rings[0]) && !rings.slice(1).some(h => pointInRing(p, h)));
 export function getDoorApproach(key: DoorKey, agentId?: string, preferred?: Point, start?: Point, departureOwner?: string): Point {
   const door = DOOR_CONFIGS[key];
@@ -73,7 +80,7 @@ export function getDoorApproach(key: DoorKey, agentId?: string, preferred?: Poin
   if (!candidate) throw new NavigationBlockedError(`No safe approach for door ${key}`, goal);
   return candidate;
 }
-export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string | string[] | Set<string>): VisibilityGraph {
+function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string | string[] | Set<string>) {
   const excludeSet = excludeOwner
     ? (excludeOwner instanceof Set ? excludeOwner : new Set((Array.isArray(excludeOwner) ? excludeOwner : excludeOwner.split('+')).map(getInteractionOwner)))
     : null;
@@ -85,12 +92,16 @@ export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string 
   const shutterBlocked = glassShutterState.clearHeight < profile.height;
   const doorAngles = `${angles.join(':')}:${shutterBlocked}`;
   const old = profileCache.get(key);
-  if (old && (movingFurniture.size || (old.revision === revision && old.doorAngles === doorAngles))) return old.graph;
+  if (old && (movingFurniture.size || (old.revision === revision && old.doorAngles === doorAngles))) return old.preparation;
+  if (!movingFurniture.size) for (const [cachedKey, entry] of profileCache) {
+    if (entry.revision !== revision || entry.doorAngles !== doorAngles) {
+      entry.preparation.cancel(); profileCache.delete(cachedKey);
+    }
+  }
   const solid = [...architectureObstacles, ...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0 && (!excludeSet || !o.owner || !excludeSet.has(getInteractionOwner(o.owner))));
-  const obstacles: Polygon[] = [], comfortObstacles: Polygon[] = [];
+  const definition: GraphDefinition = { solids: [], comfortDistance: excludeSet?.size ? undefined : NAVIGATION_COMFORT_CM };
   const addObstacle = (polygon: Polygon, radius = profile.radius) => {
-    obstacles.push(inflate(polygon, radius));
-    if (!excludeSet || excludeSet.size === 0) comfortObstacles.push(inflate(polygon, radius + NAVIGATION_COMFORT_CM));
+    definition.solids.push({ polygon, radius, comfort: !excludeSet?.size });
   };
   solid.forEach(o => addObstacle(o.polygon, furnitureObstacles.has(o.id) ? furnitureClearance(profile) : profile.radius));
   doorKeys.forEach((k, i) => addObstacle(doorPolygon(k, angles[i]), profile.radius + DOOR_CONFIGS[k].margin));
@@ -100,70 +111,34 @@ export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string 
     const a = ring[i], b = ring[(i + 1) % ring.length];
     addObstacle(rectangle((a.x + b.x) / 2, (a.z + b.z) / 2, distance(a, b), 0, Math.atan2(a.z - b.z, b.x - a.x)));
   }
-  const graph = new VisibilityGraph(union(obstacles), (excludeSet && excludeSet.size > 0) ? undefined : { distance: NAVIGATION_COMFORT_CM, obstacles: union(comfortObstacles) });
-  profileCache.set(key, { revision, doorAngles, graph });
-  return graph;
+  const preparation = prepareNavigationGraph(definition);
+  profileCache.set(key, { revision, doorAngles, preparation });
+  return preparation;
 }
 
-/** Reach an object's inflated boundary without ignoring unrelated obstacles. */
-export function getObjectApproach(owner: string, goal: Point, agentId: string, start?: Point, exiting = false, departureOwner?: string, flexible = false, accepts?: (point: Point) => boolean): Point | null {
+export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string | string[] | Set<string>): NavigationGraph {
+  return getNavigationPreparation(profile, excludeOwner).read();
+}
+
+/** Geometry preparation and candidate reachability execute entirely in the worker. */
+export function getObjectApproach(owner: string, goal: Point, agentId: string, start?: Point, exiting = false, departureOwner?: string, flexible = false, region?: ApproachRegion): Point | null {
   owner = getInteractionOwner(owner);
-  const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile, undefined);
-  if (start && departureOwner && !exiting && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true, undefined) ?? start;
-  const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0).map(o => furnitureFootprint(o, profile));
-  if (!exiting && (!accepts || accepts(goal)) && inSurface(goal) && !owned.some(p => pointInRing(goal, p)) && !insideObstacle(goal, graph.obstacles) && (!start || graph.canReach(start, goal)) && isAgentDestinationFree(agentId, goal)) return goal;
-  exiting = exiting || Boolean(start && owned.some(p => pointInRing(start, p)));
-  // Leave furniture by the nearest free edge, independently of the next destination.
-  const preferred = exiting && start ? start : goal;
-  const contours = owned.length && !flexible ? owned : [...graph.obstacles.flat(), ...getAgentObstacles(agentId, start ?? goal)];
-  const edges = contours.flatMap(polygon => polygon.map((a, i) => [a, polygon[(i + 1) % polygon.length]] as const));
-  const candidates = edges.flatMap(([a, b]) => [a, projectToSegment(goal, a, b), ...(start ? [projectToSegment(start, a, b)] : [])]);
-  // Other obstacles can cover an entire corner: include their intersections with the owner's boundary.
-  if (owned.length && !flexible) for (const [a, b] of edges) {
-    const cuts = [a, b, ...graph.vertices.filter(p => distance(p, projectToSegment(p, a, b)) <= Math.SQRT2 * BOOLEAN_PRECISION).map(p => projectToSegment(p, a, b))];
-    cuts.sort((p, q) => distance(a, p) - distance(a, q));
-    candidates.push(...cuts);
-    for (let i = 1; i < cuts.length; i++) {
-      const p = cuts[i - 1], q = cuts[i];
-      // Test the free portions of an edge, rather than only its covered corners.
-      candidates.push({ x: (p.x + q.x) / 2, z: (p.z + q.z) / 2 }, projectToSegment(preferred, p, q));
-    }
-  }
-  candidates.sort((a, b) => distance(a, preferred) - distance(b, preferred));
-
-  const containingOwners = (exiting && start) ? new Set(
-    [...furnitureObstacles.values()]
-      .filter((o): o is typeof o & { owner: string } => Boolean(o.owner) && o.yMin < profile.height && o.yMax > 0 && pointInRing(start, furnitureFootprint(o, profile)))
-      .map(o => getInteractionOwner(o.owner))
-  ) : new Set<string>();
-  if (owner) containingOwners.add(owner);
-  const escapeGraph = exiting ? getNavigationGraph(profile, containingOwners) : getNavigationGraph(profile, owner);
-
-  for (const p of candidates) {
-    if (accepts && !accepts(p)) continue;
-    // Only actors rejecting a physically reachable candidate are dependencies
-    // of a failed approach. Actors near a point inside furniture (or behind a
-    // wall) must not restart the same impossible search whenever they move.
-    if (!inSurface(p) || insideObstacle(p, graph.obstacles)) continue;
-    if (exiting && start && !segmentFree(start, p, escapeGraph.obstacles)) continue;
-    if (start && !exiting && !graph.canReach(start, p)) continue;
-    if (!isAgentDestinationFree(agentId, p)) continue;
-    return p;
-  }
-  if (exiting) {
-    for (const p of candidates) {
-      if (!inSurface(p) || insideObstacle(p, graph.obstacles)) continue;
-      if (start && !segmentFree(start, p, escapeGraph.obstacles)) continue;
-      return p;
-    }
-    // Secours si l'agent est complètement encastré dans plusieurs meubles
-    for (const p of candidates) {
-      if (inSurface(p) && !insideObstacle(p, graph.obstacles)) {
-        return p;
-      }
-    }
-  }
-  return null;
+  const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile);
+  if (start && departureOwner && !exiting && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true) ?? start;
+  const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0);
+  const needsExit = exiting || !!start && owned.some(o => pointInRing(start!, furnitureFootprint(o, profile)));
+  const containingOwners = needsExit && start ? new Set([...furnitureObstacles.values()]
+    .filter(o => o.owner && o.yMin < profile.height && o.yMax > 0 && pointInRing(start!, furnitureFootprint(o, profile)))
+    .map(o => getInteractionOwner(o.owner!))) : new Set<string>();
+  containingOwners.add(owner);
+  const escape = (needsExit ? getNavigationGraph(profile, containingOwners) : graph).definition as GraphDefinition;
+  const candidates = readObjectApproach(graph, {
+    owner,
+    goal: { x: goal.x, z: goal.z }, start: start ? { x: start.x, z: start.z } : undefined, owned: owned.map(o => ({ polygon: o.polygon, radius: furnitureClearance(profile) })),
+    surfaces: walkableSurfaces, actors: getAgentObstacles(agentId, start ?? goal), exiting, flexible, region, escape,
+  });
+  const free = candidates.find(p => isAgentDestinationFree(agentId, p));
+  return free ?? (exiting ? candidates[0] : undefined) ?? null;
 }
 
 export interface RouteState {
@@ -171,8 +146,8 @@ export interface RouteState {
   search?: { kind: 'route' | 'local' | 'crowd'; job: PathSearch };
   index: number;
   target: Point | null;
-  graph: VisibilityGraph | null;
-  crowd?: { base: VisibilityGraph; graph: VisibilityGraph | null; planning?: VisibilityGraph; signature: string; resume: { start: Point; next: Point } };
+  graph: NavigationGraph | null;
+  crowd?: { base: NavigationGraph; graph: NavigationGraph | null; planning?: NavigationGraph; preparation?: ReturnType<typeof prepareNavigationGraph>; preparing?: boolean; signature: string; resume: { start: Point; next: Point } };
   error: string | null;
   waitReason?: string;
   doors: Set<DoorKey>;
@@ -181,8 +156,12 @@ export interface RouteState {
   approach?: Point;
   interactionTarget?: Point;
   occupiedTarget?: { point: Point; destination: Point };
-  exit?: { owner: string; graph: VisibilityGraph; point: Point };
-  failure?: { graph: VisibilityGraph; start: Point; target: Point; owner?: string; interaction: boolean; protectedDoor?: DoorKey; doorProtection?: DoorProtection; actorBlockers: ActorBlockers };
+  exit?: { owner: string; graph: NavigationGraph; point: Point };
+  failure?: { graph: NavigationGraph; start: Point; target: Point; owner?: string; interaction: boolean; protectedDoor?: DoorKey; doorProtection?: DoorProtection; actorBlockers: ActorBlockers };
+}
+function clearCrowd(route: RouteState): void {
+  route.crowd?.preparation?.cancel();
+  route.crowd = undefined;
 }
 export const createRouteState = (): RouteState => ({ path: [], index: 0, target: null, graph: null, error: null, doors: new Set() });
 
@@ -199,6 +178,7 @@ export function movePostureExit(route: RouteState, agentId: string, start: Point
   return next;
 }
 export function resetRoute(route: RouteState, agentId: string, keepProtectedDoor?: DoorKey): void {
+  routeScopes.get(route)?.clear();
   route.search?.job.cancel();
   route.search = undefined;
   releaseAgentDoors(agentId, keepProtectedDoor);
@@ -207,7 +187,7 @@ export function resetRoute(route: RouteState, agentId: string, keepProtectedDoor
   route.occupiedTarget = undefined;
   route.exit = undefined;
   route.failure = undefined;
-  route.crowd = undefined;
+  clearCrowd(route);
   route.waitReason = undefined;
   route.protectedDoor = keepProtectedDoor;
   if (keepProtectedDoor) route.doors.add(doorOpeningKey(keepProtectedDoor));
@@ -215,7 +195,7 @@ export function resetRoute(route: RouteState, agentId: string, keepProtectedDoor
 }
 
 /** Undefined means an explicit pending search, not an unreachable target. */
-function searchPath(route: RouteState, graph: VisibilityGraph, start: Point, target: Point, kind: 'route' | 'local' | 'crowd'): Point[] | null | undefined {
+function searchPath(route: RouteState, graph: NavigationGraph, start: Point, target: Point, kind: 'route' | 'local' | 'crowd'): Point[] | null | undefined {
   let search = route.search;
   if (!search || search.kind !== kind || search.job.graph !== graph ||
       search.job.start.x !== start.x || search.job.start.z !== start.z ||
@@ -243,7 +223,7 @@ export function planRoute(route: RouteState, agentId: string, start: Point, targ
     let path = searchPath(route, graph, start, target, 'route');
     if (path === undefined) return false;
     if (!path && graph !== base) {
-      route.crowd = undefined;
+      clearCrowd(route);
       graph = base;
       path = searchPath(route, graph, start, target, 'route');
       if (path === undefined) return false;
@@ -303,17 +283,17 @@ function passDoors(route: RouteState, agentId: string, profile: AgentProfile, st
 }
 
 /** Returns a safe movement, or the current point while waiting for a door / another agent. */
-export function followRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, protectedDoor?: DoorKey): Point {
+function advanceWithNavigation(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, protectedDoor?: DoorKey): Point {
   route.waitReason = undefined;
   owner = owner ? getInteractionOwner(owner) : undefined;
   const crowd = route.crowd;
-  if (crowd?.graph || crowd?.planning) {
+  if (crowd?.graph || crowd?.planning || crowd?.preparing) {
     const reachable = limitAgentMovement(agentId, crowd.resume.start, crowd.resume.next);
     if (reachable.x === crowd.resume.next.x && reachable.z === crowd.resume.next.z) {
       // The obstruction has cleared: recover the shorter static route without
       // rebuilding a crowd graph every time a distant actor moves.
       if (route.search?.kind === 'crowd') { route.search.job.cancel(); route.search = undefined; }
-      route.crowd = undefined;
+      clearCrowd(route);
       route.graph = null;
     }
   }
@@ -324,7 +304,7 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     route.occupiedTarget = undefined;
     route.error = null;
     route.graph = null;
-    route.crowd = undefined;
+    clearCrowd(route);
   }
   const failed = route.failure;
   if (failed) {
@@ -366,17 +346,19 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
       : route.graph ?? getNavigationGraph(getAgentProfile(agentId), undefined);
     const obstacles = getAgentObstacles(agentId, start);
     const signature = JSON.stringify(obstacles);
-    if (obstacles.length && (route.crowd?.planning || route.crowd?.base !== base || route.crowd.signature !== signature)) {
+    if (obstacles.length && (route.crowd?.planning || route.crowd?.preparing || route.crowd?.base !== base || route.crowd.signature !== signature)) {
       // Finish the current crowd snapshot instead of restarting for every
       // moving actor. Live movement collision checks still protect every step.
       let crowd = route.crowd;
-      if (!crowd?.planning || crowd.base !== base) {
-        const graph = new VisibilityGraph(mergeObstacles([...base.obstacles, ...obstacles.map(polygon => [polygon])]));
-        crowd = { base, graph: null, planning: graph, signature,
+      if ((!crowd?.planning && !crowd?.preparation) || crowd.base !== base) {
+        crowd?.preparation?.cancel();
+        const preparation = prepareNavigationGraph({ obstacles: [...base.obstacles, ...obstacles.map(polygon => [polygon])] });
+        crowd = { base, graph: null, preparation, preparing: true, signature,
           resume: crowd?.resume ?? { start: { ...start }, next: route.path[route.index] ?? target } };
         route.crowd = crowd;
       }
-      const graph = crowd.planning!;
+      const graph = crowd.planning ??= crowd.preparation!.read();
+      crowd.preparing = false;
       const goal = route.target ?? target;
       const path = searchPath(route, graph, start, goal, 'crowd');
       if (path === undefined) return limited;
@@ -398,6 +380,19 @@ export function followRoute(route: RouteState, agentId: string, start: Point, ta
     }
   }
   return limited;
+}
+
+const routeScopes = new WeakMap<RouteState, NavigationScope>();
+export function followRoute(...args: Parameters<typeof advanceWithNavigation>): Point {
+  const route = args[0];
+  let scope = routeScopes.get(route);
+  if (!scope) { scope = new NavigationScope(); routeScopes.set(route, scope); }
+  try { return scope.run(() => advanceWithNavigation(...args)); }
+  catch (error) {
+    if (!(error instanceof NavigationPending)) throw error;
+    route.waitReason = 'Calcul de navigation en cours';
+    return args[2];
+  }
 }
 
 function advanceRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, protectedDoor?: DoorKey): Point {
@@ -538,6 +533,6 @@ export function randomReachableTarget(agentId: string, start: Point): Point | nu
   const rings = walkableSurfaces.flat();
   const xs = rings.flat().map(p => p.x), zs = rings.flat().map(p => p.z);
   const xMin = Math.min(...xs), xMax = Math.max(...xs), zMin = Math.min(...zs), zMax = Math.max(...zs);
-  const candidate = { x: xMin + Math.random() * (xMax - xMin), z: zMin + Math.random() * (zMax - zMin) };
+  const candidate = navigationValue('random-navigation-target', () => ({ x: xMin + Math.random() * (xMax - xMin), z: zMin + Math.random() * (zMax - zMin) }));
   return inSurface(candidate) && isAgentDestinationFree(agentId, candidate) && graph.canReach(start, candidate) ? candidate : null;
 }

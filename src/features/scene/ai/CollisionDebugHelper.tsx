@@ -10,6 +10,7 @@ import { doorKeys, doorPolygon, getNavigationGraph } from './navigation/service'
 import { doorCollisionState } from '../doorObstacles';
 import { inflate, type Point } from './navigation/geometry';
 import { NAVIGATION_COMFORT_COLOR } from './navigation/comfort';
+import { NavigationScope } from './navigation/navigationScope';
 
 /** The debug view uses the exact same footprints and routes as the navigation engine. */
 export function CollisionDebugHelper() {
@@ -17,10 +18,12 @@ export function CollisionDebugHelper() {
   const furniture = useSceneStore(s => s.layers.debugFurnitureCollisions);
   const ref = useRef<THREE.Group>(null!);
   const signature = useRef('');
+  const navigation = useRef(new NavigationScope());
   const lastNativeGraph = useRef<ReturnType<typeof getNavigationGraph> | null>(null);
   useEffect(() => {
     const group = ref.current;
     return () => {
+      navigation.current.clear();
       for (const child of group.children) {
         const line = child as THREE.Line;
         line.geometry.dispose();
@@ -29,6 +32,7 @@ export function CollisionDebugHelper() {
     };
   }, []);
   useFrame(() => {
+    navigation.current.poll(() => {
     const routes = [...navigationDebug.entries()];
     const nativeProfile = furniture && hasAgentProfile('native') ? getAgentProfile('native') : null;
     const nativeGraph = nativeProfile ? getNavigationGraph(nativeProfile) : null;
@@ -68,6 +72,7 @@ export function CollisionDebugHelper() {
       if (route.path.length) addLine(route.path, '#00e676');
       if (route.error) addLine(inflate([route.target], 1), '#ff1744', true);
     }
+    });
   });
   return <group ref={ref} />;
 }

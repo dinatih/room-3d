@@ -21,7 +21,7 @@ describe('Garde-fous de la suite', () => {
     });
     it('observe les instructions du contrôleur réel sans modifier les sources sur disque', () => {
         const { instrumentController } = require('../support/instrument-controller.cjs');
-        const source = fs.readFileSync('src/features/scene/ai/useAgentController.ts', 'utf8');
+        const source = fs.readFileSync('src/features/scene/ai/agentController.ts', 'utf8');
         const result = instrumentController(source);
         assert.match(result, /__testRecordInstruction\(_characterId, instruction\)/);
         assert.equal(result.replace('    window.__testRecordInstruction(_characterId, instruction);\n', ''), source);

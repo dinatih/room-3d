@@ -3,7 +3,7 @@
  * Version modulaire intégrant animations, physique Verlet, styles/accessoires et agent IA.
  */
 import { useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone, hasMountedGLTFClones } from '@features/scene/useGLTFClone';
@@ -16,7 +16,6 @@ import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../characterConfig';
 import { disposeCharacterResources } from './characterDisposal';
-import { clearCharacterRetargetCache } from './useCharacterAnimations';
 import { buildHairChain } from '../retargeting/index';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import {
@@ -46,10 +45,17 @@ import type { CharacterProps } from './characterTypes';
 import { updateCharacterLayers } from './characterLayers';
 import { GroundPoint } from './GroundPoint';
 import { HeartParachute, type HeartParachuteHandle } from './HeartParachute';
+import { useCharacterFrame } from './CharacterRuntimeProvider';
+import { characterRuntimeStats } from './characterRuntime';
 import { useCharacterAnimations } from './useCharacterAnimations';
 import { useCharacterPhysics } from './useCharacterPhysics';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { getCharacterGridPosition } from './characterGridUtils';
+
+function recordMixer(ms: number) {
+  const metric = characterRuntimeStats.mixer;
+  metric.calls++; metric.totalMs += ms; metric.maxMs = Math.max(metric.maxMs, ms);
+}
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 const _tmpLgbtaColorA = new THREE.Color();
@@ -141,7 +147,7 @@ export function Character({
   const aiFullTour = useSceneStore(state => state.extraStates.aiFullTour);
 
   const navigationEnabled = useNavigationEnabled();
-  const renderId = instanceId ?? (isPreview ? `${id}:preview` : id);
+  const renderId = instanceId ?? (isPreview ? `${id}:preview` : !navigationEnabled ? `${id}:zone-preview` : id);
   const { scene } = useGLTFClone(modelPath, isGridPartner);
   const charLabel = name || (isNPC ? `PNJ (${id})` : `Personnage (${id})`);
 
@@ -170,7 +176,6 @@ export function Character({
   useEffect(() => {
     return () => {
       disposeLaraVariantMaterials(scene);
-      clearCharacterRetargetCache(renderId);
       if (isGridPartner) {
         scene.traverse(child => {
           const mesh = child as THREE.Mesh;
@@ -205,7 +210,7 @@ export function Character({
   // Nettoyage de la référence de tête et d'yeux caméra quand le personnage n'est plus actif
   useEffect(() => {
     return () => {
-      if (isActive) {
+      if (navigationEnabled && isActive && !isPreview) {
         cameraState.activeHeadPos = null;
         cameraState.activeHipsPos = null;
         cameraState.activeEyesPos = null;
@@ -213,7 +218,7 @@ export function Character({
         cameraState.activeHeadUp = null;
       }
     };
-  }, [isActive]);
+  }, [isActive, isPreview, navigationEnabled]);
 
   const groupRef = useRef<THREE.Group>(null!);
   const animOriginRef = useRef<THREE.Group>(null!);
@@ -242,11 +247,12 @@ export function Character({
     actionsRef,
     activeActionName,
     currentAnimClip,
-    loadAndPlayClip
+    loadAndPlayClip, retireAction, collectActions
   } = useCharacterAnimations({
     id: renderId,
     scene,
-    invalidate
+    invalidate,
+    onRelease: animationId => postureClipsRef.current.delete(animationId),
   });
 
   const {
@@ -405,21 +411,21 @@ export function Character({
 
   // Synchronisation initiale des coordonnées caméra/character actif dès le montage
   useLayoutEffect(() => {
-    if (isActive && !isPreview && initialPos) {
+    if (navigationEnabled && isActive && !isPreview && initialPos) {
       cameraState.characterX = initialPos.x;
       cameraState.characterZ = initialPos.z;
       cameraState.followYaw = initialPos.rotY;
     }
-  }, [isActive, isPreview, initialPos]);
+  }, [isActive, isPreview, initialPos, navigationEnabled]);
 
   // Nettoyage de la position enregistrée dans cameraState lors du démontage
   useEffect(() => {
-    if (isPreview) return;
+    if (isPreview || !navigationEnabled) return;
     return () => {
       delete cameraState.positions[id];
       delete cameraState.headPositions[id];
     };
-  }, [id, isPreview]);
+  }, [id, isPreview, navigationEnabled]);
 
   // Setup échelle, offsets hanches, physiques et matériaux
   useLayoutEffect(() => {
@@ -517,17 +523,18 @@ export function Character({
 
   // Événement signalant que le character est prêt
   useEffect(() => {
+    if (isPreview || !navigationEnabled) return;
     const timeout = setTimeout(() => {
       document.dispatchEvent(new CustomEvent('character-ready', { detail: { id } }));
     }, 0);
     return () => clearTimeout(timeout);
-  }, [id]);
+  }, [id, isPreview, navigationEnabled]);
 
   // Réinitialisation complète lors du basculement en mode Grille de personnages
   useEffect(() => {
     if (characterGrid) {
       currentAnimClip.current = null;
-      if (!isPreview) duoSessionManager.leaveDuoZone(id);
+      if (navigationEnabled && !isPreview) duoSessionManager.leaveDuoZone(id);
       if (groupRef.current) groupRef.current.rotation.set(0, 0, 0);
       if (animOriginRef.current) {
         animOriginRef.current.position.set(0, 0, 0);
@@ -547,7 +554,7 @@ export function Character({
       activeActionName.current = '';
     }
     invalidate();
-  }, [characterGrid, scene, id, isPreview, invalidate]);
+  }, [characterGrid, scene, id, isPreview, navigationEnabled, invalidate]);
 
   // Synchronisation characterAnim en mode preview ou grille de personnages
   useEffect(() => {
@@ -578,6 +585,7 @@ export function Character({
 
     const onToggle = (e: any) => {
       if (e.detail?.key === `character-pos-${id}`) {
+        if (isPreview || !navigationEnabled) return;
         if (Array.isArray(e.detail.value) && e.detail.value.length === 3) {
           setAgentPosition(e.detail.value[0], e.detail.value[1], e.detail.value[2]);
           invalidate();
@@ -586,6 +594,7 @@ export function Character({
       }
 
       if (e.detail?.key === `character-rot-${id}`) {
+        if (isPreview || !navigationEnabled) return;
         if (typeof e.detail.value === 'number') {
           setAgentRotation(e.detail.value);
           invalidate();
@@ -601,7 +610,7 @@ export function Character({
     return () => {
       document.removeEventListener('furniture-toggle', onToggle);
     };
-  }, [isActive, id, invalidate]);
+  }, [isActive, id, invalidate, isPreview, navigationEnabled]);
 
   // Dynamic Haircut Swap system
   useEffect(() => {
@@ -662,8 +671,8 @@ export function Character({
   }, [scene, parts, haircut, hairColor, variant, isActive, invalidate]);
 
   // Boucle frame principale : positionnement, mix d'animations & physiques
-  useFrame((state, rawDelta) => {
-    const delta = Math.min(rawDelta, 0.1);
+  const frameControl = useRef({ agentAnimationPaused: false, isUserManuallyMoving: false, hasDynamicTask: false });
+  useCharacterFrame(renderId, { simulate: (_state, delta) => {
     if (!groupRef.current || !mixerRef.current) return;
 
     const isIdleTimeout = isAppIdle();
@@ -687,7 +696,15 @@ export function Character({
     ));
     const isUserManuallyMoving = hasCharacterControl && cameraState.isUserControlling();
 
-    if (isPreview) {
+    if (!navigationEnabled && !isPreview) {
+      const pose = cameraState.positions[id];
+      groupRef.current.visible = !!pose && !cameraState.characterHidden;
+      if (pose) {
+        groupRef.current.position.set(pose.x, pose.y, pose.z);
+        groupRef.current.rotation.y = pose.yaw;
+        currentAnimClip.current = pose.anim ?? null;
+      }
+    } else if (isPreview) {
       if (previewPosition) {
         groupRef.current.position.set(previewPosition[0], previewPosition[1], previewPosition[2]);
       } else {
@@ -774,8 +791,14 @@ export function Character({
       }
     }
 
+    frameControl.current.agentAnimationPaused = agentAnimationPaused;
+    frameControl.current.isUserManuallyMoving = isUserManuallyMoving;
+    frameControl.current.hasDynamicTask = hasDynamicTask;
+  }, animate: (state, delta) => {
+    if (!groupRef.current || !mixerRef.current) return;
+    const { agentAnimationPaused, isUserManuallyMoving, hasDynamicTask } = frameControl.current;
     if (!groupRef.current.visible) {
-      delete cameraState.headPositions[id];
+      if (navigationEnabled && !isPreview) delete cameraState.headPositions[id];
       return;
     }
 
@@ -804,7 +827,7 @@ export function Character({
       ? (characterAnim || 'idle')
       : (currentAnimClip.current || (isMoving ? 'walk' : 'idle'));
 
-    if (isActive && !characterGrid && !isGuidedTour && !hasDynamicTask && (cameraState.isXR || isUserManuallyMoving) && currentAnimClip.current) {
+    if (navigationEnabled && isActive && !characterGrid && !isGuidedTour && !hasDynamicTask && (cameraState.isXR || isUserManuallyMoving) && currentAnimClip.current) {
       currentAnimClip.current = null;
     }
 
@@ -871,7 +894,10 @@ export function Character({
           if (previous) mixer.uncacheAction(previous.fitted);
           const fitted = fitPostureTransition(original, hipsBone, actions[idleId].getClip());
           postureClipsRef.current.set(target, { original, fitted });
-          to = actions[target] = mixer.clipAction(fitted);
+          const originalAction = to;
+          to = mixer.clipAction(fitted);
+          for (const key in actions) if (actions[key] === originalAction) actions[key] = to;
+          mixer.uncacheAction(originalAction.getClip());
           const rotDelta = getPostureTransitionRotDelta(activeActionName.current, target);
           postureOriginRef.current.position.copy(animOriginRef.current.position);
           postureOriginRef.current.rotY = animOriginRef.current.rotation.y + rotDelta;
@@ -879,6 +905,7 @@ export function Character({
         }
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
         const blendDuration = getCrossfadeDuration(activeActionName.current, target);
+        if (from) retireAction(from, characterGrid || !animCrossfade ? 0 : (isPreview ? Math.min(blendDuration, 0.15) : blendDuration));
 
         const isOnceAnim = getAnimationDef(target)?.loop === 'once' ||
                            target === 'pistol-kneel-to-stand' ||
@@ -1043,7 +1070,9 @@ export function Character({
                 act.time = newTime;
                 mixer.setTime(newTime);
               } else {
+                const mixerStarted = performance.now();
                 mixer.update(animDelta);
+                recordMixer(performance.now() - mixerStarted);
                 if (!store.isLooping && act.time >= clip.duration) {
                   act.time = clip.duration;
                   act.paused = true;
@@ -1117,7 +1146,9 @@ export function Character({
           }
         }
       }
+      const mixerStarted = performance.now();
       mixer.update(agentAnimationPaused ? 0 : delta);
+      recordMixer(performance.now() - mixerStarted);
 
       // Parachute d'atterrissage réactif
       const falling = currentAnimClip.current === 'falling' ||
@@ -1139,7 +1170,7 @@ export function Character({
       }
     }
 
-    if (!isPreview && !characterGrid && activeActionName.current) {
+    if (navigationEnabled && !isPreview && !characterGrid && activeActionName.current) {
       const action = actions[activeActionName.current];
       if (action) {
         const duration = action.getClip().duration;
@@ -1154,11 +1185,12 @@ export function Character({
       }
     }
 
+    collectActions();
     pendantRef.current?.update(pendantDelta, resetPendant);
     parachuteRef.current?.update(delta);
 
     // Position XZ réelle de la tête (minimap) — actif ET PNJ. Sans os de tête : non publié → non dessiné
-    if (!isPreview) {
+    if (navigationEnabled && !isPreview) {
       if (headRefBone) {
         // Actif : matrice à jour ; PNJ : matrixWorld du dernier rendu (1 frame de retard, sans coût de remontée de hiérarchie)
         if (isActive) headRefBone.updateWorldMatrix(true, false);
@@ -1172,7 +1204,7 @@ export function Character({
     }
 
     // Suivi dynamique de la tête, du torse et des yeux (3ème personne et FPV réaliste)
-    if (isActive && !isPreview) {
+    if (navigationEnabled && isActive && !isPreview) {
       if (headBone) {
         if (headBone.scale.x < 0.5) {
           headBone.scale.set(1, 1, 1);
@@ -1244,7 +1276,7 @@ export function Character({
         }
       }
     }
-  });
+  }});
 
   return (
     <group

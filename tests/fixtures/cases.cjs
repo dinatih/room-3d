@@ -13,6 +13,7 @@ exports.navigation = [
     { id: 'garden-fifteen', behavior: 'termine quinze trajets simultanés dans le jardin sans rotation en boucle', activity: 'arrival', actors: 15, occupied: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
     { id: 'open-crossing', behavior: 'croise un autre trajet en espace libre', activity: 'arrival', actors: 2, crossing: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
     { id: 'living-kallax', behavior: 'traverse la porte du séjour pendant une interaction Kallax', activity: 'door', objectId: 'drona-se-linen', timeoutMs: 60000 },
+    { id: 'living-kallax-hidden', behavior: 'continue la navigation et ouvre la porte du séjour avec tout le décor masqué', activity: 'door', objectId: 'drona-se-linen', query: { debug: 'characters-only' }, timeoutMs: 60000 },
     { id: 'double-kallax', behavior: 'traverse la double porte pendant une interaction Kallax', activity: 'door', objectId: 'drona-ne-catchall', timeoutMs: 60000 },
     { id: 'closed-door', behavior: 'explique l’attente devant un battant infranchissable puis reprend', activity: 'closed-door', timeoutMs: 30000 },
     { id: 'unreachable', behavior: 'signale une destination inaccessible sans recalcul permanent', activity: 'unreachable', timeoutMs: 30000 },

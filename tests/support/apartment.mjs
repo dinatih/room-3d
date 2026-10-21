@@ -1,4 +1,5 @@
 // Imported by Vite inside the loaded apartment; these are the production modules.
+import { resolveNavigation } from '/src/features/scene/ai/navigation/navigationScope.ts';
 import * as nav from '/src/features/scene/ai/navigation/service.ts';
 import * as profiles from '/src/features/scene/ai/navigation/obstacles.ts';
 import * as requests from '/src/features/scene/ai/navigation/doorRequests.ts';
@@ -67,8 +68,8 @@ export async function arrival(fixture) {
     try {
         for (const id of [...ids, blocker])
             register(id, fixture);
-        const start = getZoneDestination(fixture.startZone, ids[0]);
-        const graph = nav.getNavigationGraph(profiles.getAgentProfile(ids[0]));
+        const start = await resolveNavigation(() => getZoneDestination(fixture.startZone, ids[0]));
+        const graph = await resolveNavigation(() => nav.getNavigationGraph(profiles.getAgentProfile(ids[0])));
         const target = fixture.arrivalOffsets
             .map(d => ({ x: start.x + d.x, z: start.z + d.z })).find(p => geometry.segmentFree(start, p, graph.obstacles));
         check(target, 'No clear garden segment');
@@ -91,10 +92,10 @@ export async function reachability(fixture) {
     const id = 'suite-accessibility';
     register(id, fixture);
     try {
-        const snapshot = nav.getNavigationGraph(profiles.getAgentProfile(id));
-        const garden = getZoneDestination('garden', id);
-        const living = getZoneDestination('living', id, garden);
-        const corridor = getZoneDestination('corridor', id, living);
+        const snapshot = await resolveNavigation(() => nav.getNavigationGraph(profiles.getAgentProfile(id)));
+        const garden = await resolveNavigation(() => getZoneDestination('garden', id));
+        const living = await resolveNavigation(() => getZoneDestination('living', id, garden));
+        const corridor = await resolveNavigation(() => getZoneDestination('corridor', id, living));
         const starts = [garden, living, corridor];
         // Use the registered interaction positions and physical corners, not
         // manually selected easy routes. Some targets must remain inaccessible.
@@ -108,7 +109,7 @@ export async function reachability(fixture) {
         targets.push(...starts);
         const queries = starts.flatMap(start => targets.map(target => ({ start, target })));
         const construction = [];
-        check(snapshot.clearances.length === 0, 'Main-thread graph eagerly prepared weighted distances');
+        check(Number.isInteger(snapshot.id) && !(snapshot instanceof geometry.VisibilityGraph), 'Expected a worker snapshot without main-thread search caches');
         for (let repetition = 0; repetition < 3; repetition++) {
             for (const implementation of repetition % 2 ? ['after', 'before'] : ['before', 'after']) {
                 const began = performance.now();
@@ -166,7 +167,7 @@ export async function door(fixture) {
         check(!sequence.some(i => i.type === 'WAIT' && i.doorKey), 'Interaction must permit a partial opening');
         const key = approach.protectedDoor;
         const { mountKallaxActor } = await import('./interactions.mjs');
-        liveActor = await mountKallaxActor(holder, fixture, getZoneDestination('living', holder));
+        liveActor = await mountKallaxActor(holder, fixture, await resolveNavigation(() => getZoneDestination('living', holder)));
         const deadline = performance.now() + fixture.timeoutMs;
         let pose;
         while (true) {
@@ -180,8 +181,8 @@ export async function door(fixture) {
         const limit = doors.computeDoorAllowedAngle(doors.DOOR_CONFIGS[key]);
         check(limit > 0 && limit < Math.PI / 2, 'Expected a partially protected leaf');
         trace({ actor: holder, status: pose.status, animation: pose.animation, protectedDoor: key, model: liveActor.model });
-        const start = getZoneDestination(key === 'living' ? 'corridor' : 'garden', id);
-        const target = getZoneDestination('living', id, start);
+        const start = await resolveNavigation(() => getZoneDestination(key === 'living' ? 'corridor' : 'garden', id));
+        const target = await resolveNavigation(() => getZoneDestination('living', id, start));
         const actors = await walk([{ id, route, position: start, target }], fixture, undefined, async () => {
             const state = await liveActor.tick();
             cameraState.positions[holder] = { x: state.x, y: state.y, z: state.z, yaw: state.rotY };
@@ -203,7 +204,7 @@ export async function unreachable(fixture) {
     const obstacleId = 'suite-sealed-target';
     try {
         register(id, fixture);
-        const start = getZoneDestination('garden', id), target = { x: start.x + 100, z: start.z };
+        const start = await resolveNavigation(() => getZoneDestination('garden', id)), target = { x: start.x + 100, z: start.z };
         profiles.registerObstacle({ id: obstacleId, polygon: geometry.rectangle(target.x, target.z, 40, 40), yMin: 0, yMax: 250 });
         requests.requestDoor('living', id);
         trace({ actor: id, instructions: [{ type: 'MOVE_TO', start, target }], expected: 'explicit-error' });

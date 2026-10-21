@@ -10,10 +10,16 @@ const doors = load('src/features/scene/doorObstacles.ts', {
     './wallData': { pX: () => 0, pZ: () => 0, BATH_WEST_WALL: 0, SHOWER_SOUTH_WALL: 0, DiagWall: { p: () => ({ x: 1000, z: 1000 }), door: { start: 0, width: 90 }, rotY: 0 } },
 });
 const architecture = { architectureObstacles: [], walkableSurfaces: [[g.rectangle(0, 0, 600, 600)]] };
+const queries = require('../../src/features/scene/ai/navigation/queries.ts');
 const navigationDependencies = {
+    './navigationScope': require('../../src/features/scene/ai/navigation/navigationScope.ts'),
     '../../positionState': { positionState: {} }, '../../furniturePositions': { movingFurniture: new Set() }, './architecture': architecture, './obstacles': obstacles, './geometry': g,
     '../../doorObstacles': doors, './doorRequests': requests, '../agent/agentAvoidance': { limitAgentMovement: (id, start, proposed) => proposed, isAgentDestinationFree: () => true, getAgentObstacles: () => [], beginActorBlockCheck: () => { }, endActorBlockCheck: () => new Map(), actorBlocksUnchanged: () => true },
-    './comfort': require('../../src/features/scene/ai/navigation/comfort.ts'), './pathfindingClient': { requestPath: (graph, start, target) => ({ graph, start, target, status: 'ready', path: graph.find(start, target), cancel: () => { } }) }, '../../cameraState': { cameraState },
+    './comfort': require('../../src/features/scene/ai/navigation/comfort.ts'), './pathfindingClient': {
+      prepareNavigationGraph: definition => { const graph = 'solids' in definition ? queries.buildNavigationGraph(definition) : new g.VisibilityGraph(g.mergeObstacles(definition.obstacles)); graph.definition = definition; return { read: () => graph, cancel() {} }; },
+      readObjectApproach: (graph, query) => queries.objectApproachCandidates(query, graph),
+      requestPath: (graph, start, target) => ({ graph, start, target, status: 'ready', path: graph.find(start, target), cancel: () => { } }),
+    }, '../../cameraState': { cameraState },
 };
 const nav = load('src/features/scene/ai/navigation/service.ts', navigationDependencies);
 function setup(active, gap) {

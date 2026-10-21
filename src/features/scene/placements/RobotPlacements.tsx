@@ -14,6 +14,7 @@ import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, reserve
 import type { Point } from '../ai/navigation/geometry';
 import { cameraState } from '../cameraState';
 import { isAppIdle } from '../idleState';
+import { NavigationScope, navigationValue } from '../ai/navigation/navigationScope';
 import { appLog } from '@features/ui/AppConsole';
 import { WALL_DEFS, WALL_THICKNESS } from '../wallData';
 
@@ -35,6 +36,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const group = useRef<Group>(null);
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const route = useRef(createRouteState());
+  const navigation = useRef(new NavigationScope());
   const life = useRef({ automatic: true, target: null as Point | null, wait: config.pause, searching: false });
   const [actions, setActions] = useState<Record<string, any>>({});
   const motionKey = id === 'jumper-robot' ? 'jumper-motion' : `${id}-motion`;
@@ -60,6 +62,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     const root = group.current!;
     cameraState.positions[id] = { x: root.position.x, y: root.position.y, z: root.position.z, yaw: root.rotation.y };
     return () => {
+      navigation.current.clear();
       resetRoute(route.current, id);
       removeAgentProfile(id);
       reserveAgentDestination(id, null);
@@ -98,6 +101,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
 
   // Run before each model's animation callback so placement and animation agree.
   useFrame((state, delta) => {
+    navigation.current.poll(() => {
     const root = group.current;
     if (!root || !profile || !navigationEnabled || isAppIdle()) return;
     const ai = life.current;
@@ -129,12 +133,12 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
         ai.wait -= delta;
         if (ai.wait <= 0) {
           selectMotion('idle');
-          if (ai.searching || Math.random() < 2 / 3) {
+          if (ai.searching || navigationValue('robot-trip', () => Math.random()) < 2 / 3) {
             ai.searching = true;
-            const target = {
+            const target = navigationValue('robot-target', () => ({
               x: PATROL.minX + Math.random() * (PATROL.maxX - PATROL.minX),
               z: PATROL.minZ + Math.random() * (PATROL.maxZ - PATROL.minZ),
-            };
+            }));
             const start = { x: root.position.x, z: root.position.z };
             if (Math.hypot(start.x - target.x, start.z - target.z) >= profile.radius * 2
               && isAgentDestinationFree(id, target) && getNavigationGraph(getAgentProfile(id)).canReach(start, target)) {
@@ -153,6 +157,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     }
     cameraState.positions[id] = { x: root.position.x, y: root.position.y, z: root.position.z, yaw: root.rotation.y };
     state.invalidate();
+    });
   }, -1);
 
   return (

@@ -44,6 +44,7 @@ export const HeartParachute = forwardRef<HeartParachuteHandle, HeartParachutePro
       attachmentSurface.updateMatrixWorld(true);
       // Intersection avec le tissu réel : la boîte seule inclurait les vides du cœur.
       const ray = new THREE.Raycaster();
+      ray.layers.enableAll();
       anchors.forEach((anchor, index) => {
         ray.set(
           new THREE.Vector3(0, 0, size.z),

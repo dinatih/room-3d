@@ -1,8 +1,17 @@
-import type { Point, VisibilityGraph } from './geometry';
-import type { PathRequest, PathResponse } from './pathfinding.worker';
+import type { Point } from './geometry';
+import type { GraphSnapshot, ApproachQuery, DuoQuery } from './queries';
+import type { PathRequest, PathResponse, NavigationQuery, NavigationResult, WorkerDefinition } from './pathfinding.worker';
+import { navigationQuery, readNavigationJob, type NavigationJob } from './navigationScope';
+import { cameraState } from '../../cameraState';
+
+export interface NavigationGraph extends GraphSnapshot {
+  readonly id: number;
+  readonly definition: WorkerDefinition;
+  canReach(start: Point, target: Point): boolean;
+}
 
 export interface PathSearch {
-  readonly graph: VisibilityGraph;
+  readonly graph: NavigationGraph;
   readonly start: Point;
   readonly target: Point;
   status: 'pending' | 'ready' | 'error' | 'cancelled';
@@ -10,17 +19,20 @@ export interface PathSearch {
   error?: Error;
   cancel: () => void;
 }
-interface Job extends PathSearch {
+interface Job extends NavigationJob<NavigationResult> {
   id: number;
   graphId: number;
+  definition: WorkerDefinition;
+  query: NavigationQuery;
+  path: Point[] | null;
   onComplete: () => void;
+  settle: () => void;
 }
-const graphIds = new WeakMap<VisibilityGraph, number>();
 const queue = new Map<number, Job>();
 let nextGraphId = 0, nextJobId = 0;
 let worker: Worker | undefined;
 let running: Job | undefined;
-let workerGraphId: number | undefined;
+const workerGraphIds = new Set<number>();
 let failure: Error | undefined;
 
 export const pathfindingStats = { submitted: 0, completed: 0, cancelled: 0, running: false, queued: 0, lastWorkerMs: 0, maxWorkerMs: 0 };
@@ -36,6 +48,7 @@ function fail(error: Error) {
     if (job.status === 'cancelled') continue;
     job.error = error;
     job.status = 'error';
+    job.settle();
     job.onComplete();
   }
 }
@@ -57,10 +70,12 @@ function dispatch() {
       pathfindingStats.completed++;
       pathfindingStats.lastWorkerMs = response.milliseconds;
       pathfindingStats.maxWorkerMs = Math.max(pathfindingStats.maxWorkerMs, response.milliseconds);
-      workerGraphId = response.ok ? job.graphId : undefined;
+      if (response.ok && job.status !== 'cancelled') workerGraphIds.add(job.graphId);
+      else workerGraphIds.delete(job.graphId);
       if (job.status !== 'cancelled') {
-        if (response.ok) { job.path = response.path; job.status = 'ready'; }
+        if (response.ok) { job.result = response.result; if (job.query.kind === 'path') job.path = response.result as Point[] | null; job.status = 'ready'; }
         else { job.error = new Error(response.error); job.status = 'error'; }
+        job.settle();
         job.onComplete();
       } else if (!response.ok) {
         // Cancellation never hides invalid geometry or an algorithm failure.
@@ -74,20 +89,21 @@ function dispatch() {
   running = job;
   pathfindingStats.running = true;
   pathfindingStats.queued = queue.size;
-  const request: PathRequest = { id: job.id, graphId: job.graphId, start: job.start, target: job.target };
-  if (workerGraphId !== job.graphId) request.definition = { obstacles: job.graph.obstacles, comfort: job.graph.comfort };
+  const request: PathRequest = { id: job.id, graphId: job.graphId, query: job.query };
+  if (!workerGraphIds.has(job.graphId)) request.definition = job.definition;
   try { worker.postMessage(request); }
   catch (error) { fail(error instanceof Error ? error : new Error(String(error))); }
 }
 
-export function requestPath(graph: VisibilityGraph, start: Point, target: Point, onComplete: () => void): PathSearch {
+function request(graphId: number, definition: WorkerDefinition, query: NavigationQuery, onComplete = () => cameraState.invalidate?.()): Job {
   if (failure) throw failure;
-  let graphId = graphIds.get(graph);
-  if (graphId === undefined) { graphId = ++nextGraphId; graphIds.set(graph, graphId); }
-  const job: Job = { id: ++nextJobId, graphId, graph, start: { ...start }, target: { ...target }, status: 'pending', path: null, onComplete,
+  let settle!: () => void;
+  const settled = new Promise<void>(resolve => { settle = resolve; });
+  const job: Job = { id: ++nextJobId, graphId, definition, query, status: 'pending', path: null, onComplete, settled, settle,
     cancel() {
       if (job.status !== 'pending') return;
       job.status = 'cancelled';
+      job.settle();
       queue.delete(job.id);
       pathfindingStats.queued = queue.size;
       pathfindingStats.cancelled++;
@@ -98,6 +114,45 @@ export function requestPath(graph: VisibilityGraph, start: Point, target: Point,
   pathfindingStats.queued = queue.size;
   dispatch();
   return job;
+}
+
+export function requestPath(graph: NavigationGraph, start: Point, target: Point, onComplete: () => void): PathSearch {
+  return Object.assign(request(graph.id, graph.definition, { kind: 'path', start: { ...start }, target: { ...target } }, onComplete), { graph, start: { ...start }, target: { ...target } });
+}
+
+function releaseGraph(id: number): void {
+  for (const job of queue.values()) if (job.graphId === id) job.cancel();
+  if (running?.graphId === id) running.cancel();
+  workerGraphIds.delete(id);
+  worker?.postMessage({ release: id });
+}
+
+export function prepareNavigationGraph(definition: WorkerDefinition): { read(): NavigationGraph; cancel(): void } {
+  const id = ++nextGraphId;
+  const job = request(id, definition, { kind: 'build' });
+  let graph: NavigationGraph | undefined;
+  return {
+    cancel: () => { job.cancel(); releaseGraph(id); },
+    read() {
+      if (!graph) {
+        const snapshot = readNavigationJob(job) as GraphSnapshot;
+        graph = { ...snapshot, id, definition,
+          canReach(start, target) {
+            return navigationQuery(`${id}:reach:${start.x}:${start.z}:${target.x}:${target.z}`, () => request(id, definition, { kind: 'reach', start: { ...start }, target: { ...target } })) as boolean;
+          },
+        };
+      }
+      return graph;
+    },
+  };
+}
+
+export function readObjectApproach(graph: NavigationGraph, approach: ApproachQuery): Point[] {
+  const { owner, goal, start, exiting, flexible, region, actors } = approach;
+  return navigationQuery(`${graph.id}:approach:${JSON.stringify([owner, goal, start, exiting, flexible, region, actors])}`, () => request(graph.id, graph.definition, { kind: 'approach', approach })) as Point[];
+}
+export function readDuoAnchor(graph: NavigationGraph, duo: DuoQuery): Point | null {
+  return navigationQuery(`${graph.id}:duo:${JSON.stringify(duo)}`, () => request(graph.id, graph.definition, { kind: 'duo', duo })) as Point | null;
 }
 
 if (import.meta.hot) import.meta.hot.dispose(() => {

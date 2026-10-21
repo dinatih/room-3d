@@ -14,6 +14,7 @@ import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
+import { resolveNavigation } from './ai/navigation/navigationScope';
 import { OccupancyManager } from './ai/occupancyManager';
 import { isCharacterVisibleInMode } from './characterConfig';
 
@@ -613,7 +614,7 @@ export function HoverOverlay() {
               <button
                 key={i}
                 className="btn btn-sm btn-outline-warning py-0 px-2 fw-semibold"
-                onClick={() => {
+                onClick={async () => {
                   if (action.id.startsWith('select-character-')) {
                     const targetCharacterId = action.id.replace('select-character-', '');
                     useSceneStore.getState().setActiveCharacterId(targetCharacterId);
@@ -634,11 +635,11 @@ export function HoverOverlay() {
                         ? activeId
                         : undefined;
 
-                      const duoResult = duoSessionManager.startDuoSession(
+                      const duoResult = await resolveNavigation(() => duoSessionManager.startDuoSession(
                         objectId,
                         slotId,
                         leaderId
-                      );
+                      ));
                       // Le leader (Rôle A) doit être invité explicitement depuis le HoverMenu
                       // (startDuoOnSmartObject ne dispatche plus d'event vers lui)
                       if (duoResult) {

@@ -1,9 +1,9 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
-import { retargetClip, _retargetCache } from '../retargeting/index';
-import { resolveAnimationPath, getAnimationDef } from '../animations/animationResolver';
+import { acquireAnimationLibrary } from './animationLibrary';
+import { resolveAnimationPath, resolveAnimationId, getAnimationDef } from '../animations/animationResolver';
 import { animationSourcePlugin, extractAnimationSource, type AnimationSource } from './animationSource';
 
 const silentManager = new THREE.LoadingManager();
@@ -11,7 +11,6 @@ const silentManager = new THREE.LoadingManager();
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
 const MAX_DYNAMIC_GLTF_CACHE = 8;
-const MAX_RETARGETED_CLIPS = 32;
 const globalGLTFCache = new Map<string, Promise<AnimationSource>>();
 // Pending loads are shared independently of the completed-source LRU. Evicting
 // an unfinished request would let another character decode the same file again.
@@ -51,47 +50,22 @@ export function cacheDynamicGLTF(path: string): Promise<AnimationSource> {
   return shared;
 }
 
-export function cacheRetargetedClip(key: string, clip: THREE.AnimationClip) {
-  if (!_retargetCache[key] && Object.keys(_retargetCache).length >= MAX_RETARGETED_CLIPS) {
-    const oldestKey = Object.keys(_retargetCache)[0];
-    if (oldestKey) {
-      _retargetCache[oldestKey]?.tracks?.forEach(t => (t as any).dispose?.());
-      delete _retargetCache[oldestKey];
-    }
-  }
-  _retargetCache[key] = clip;
-}
-
-export function clearRetargetCache() {
-  for (const key of Object.keys(_retargetCache)) {
-    _retargetCache[key]?.tracks?.forEach(t => (t as any).dispose?.());
-    delete _retargetCache[key];
-  }
-}
-
-export function clearCharacterRetargetCache(characterId: string) {
-  const prefix = characterId + '_';
-  for (const key of Object.keys(_retargetCache)) {
-    if (key.startsWith(prefix)) {
-      _retargetCache[key]?.tracks?.forEach(t => (t as any).dispose?.());
-      delete _retargetCache[key];
-    }
-  }
-}
-
 export interface UseCharacterAnimationsProps {
   id: string;
   scene: THREE.Group;
   animations?: THREE.AnimationClip[];
   sittingScene?: THREE.Group;
   invalidate: () => void;
+  onRelease: (animationId: string) => void;
 }
 
 export function useCharacterAnimations({
   id,
   scene,
-  invalidate
+  invalidate, onRelease
 }: UseCharacterAnimationsProps) {
+  const libraryRef = useRef<ReturnType<typeof acquireAnimationLibrary> | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const actionsRef = useRef<Record<string, THREE.AnimationAction>>({});
   const activeActionName = useRef<string>('');
@@ -99,6 +73,28 @@ export function useCharacterAnimations({
   const userAnimOverrideRef = useRef<boolean>(false);
   const pendingLoadsRef = useRef<Set<string>>(new Set());
   const failedLoadsRef = useRef<Set<string>>(new Set());
+  const retired = useRef(new Map<THREE.AnimationAction, number>());
+  const baseClips = useMemo(() => new Set(['idle', 'falling', 'falling-idle'].map(resolveAnimationId)), []);
+
+  function retireAction(action: THREE.AnimationAction, duration: number) {
+    retired.current.set(action, mixerRef.current!.time + duration);
+  }
+  function collectActions() {
+    const mixer = mixerRef.current!;
+    for (const [action, end] of retired.current) {
+      if (actionsRef.current[activeActionName.current] === action) { retired.current.delete(action); continue; }
+      if (mixer.time < end) continue;
+      action.stop(); retired.current.delete(action);
+      const id = action.getClip().name;
+      if (baseClips.has(id)) continue;
+      mixer.uncacheAction(action.getClip());
+      if (actionsRef.current[id] && actionsRef.current[id] !== action) continue;
+      for (const key in actionsRef.current) if (actionsRef.current[key] === action) delete actionsRef.current[key];
+      onRelease(id);
+      const def = getAnimationDef(id);
+      libraryRef.current!.discard(def?.path ?? resolveAnimationPath(id), id, def?.rootMotionSpace);
+    }
+  }
 
   const loadAndPlayClip = useCallback((pathOrKey: string, loop = true, isUserOverride = false) => {
     if (!scene || !mixerRef.current) return;
@@ -147,28 +143,17 @@ export function useCharacterAnimations({
     }
     pendingLoadsRef.current.add(loadKey);
 
-    const handleClip = (clip: THREE.AnimationClip, sourceScene: THREE.Object3D | undefined) => {
+    const requestedMixer = mixerRef.current;
+    const library = libraryRef.current!;
+    const handleClip = (finalClip: THREE.AnimationClip) => {
+      if (mixerRef.current !== requestedMixer) return;
       pendingLoadsRef.current.delete(loadKey);
-      if (!clip) {
-        failedLoadsRef.current.add(loadKey);
-        return;
-      }
       const mixer = mixerRef.current;
       if (!mixer) return;
 
       // Déjà instancié entre temps
       let action = actionsRef.current[animId] || actionsRef.current[path];
       if (action) return;
-
-      clip.name = animId;
-      const cacheKey = id + '_' + animId;
-      let finalClip = _retargetCache[cacheKey];
-      if (!finalClip) {
-        if (sourceScene) sourceScene.updateMatrixWorld(true);
-        finalClip = retargetClip(clip, scene, sourceScene, def?.rootMotionSpace);
-        cacheRetargetedClip(cacheKey, finalClip);
-      }
-      finalClip.name = animId;
 
       action = mixer.clipAction(finalClip);
       action.enabled = true;
@@ -204,18 +189,16 @@ export function useCharacterAnimations({
       invalidate();
     };
 
-    const loadCallback = (gltf: any) => {
-      const sourceScene = gltf.scene;
-      if (sourceScene) sourceScene.updateMatrixWorld(true);
-      handleClip(gltf.animations[0], sourceScene);
-    };
-
     cacheDynamicGLTF(path)
-      .then(loadCallback)
+      .then(source => {
+        if (mixerRef.current !== requestedMixer) return;
+        return library.prepare(path, animId, source, def?.rootMotionSpace);
+      })
+      .then(clip => { if (clip) handleClip(clip); })
       .catch((err) => {
         pendingLoadsRef.current.delete(loadKey);
         failedLoadsRef.current.add(loadKey);
-        console.error(err);
+        if (mixerRef.current === requestedMixer) { setError(err instanceof Error ? err : new Error(String(err))); invalidate(); }
       });
   }, [id, scene, invalidate]);
 
@@ -224,6 +207,8 @@ export function useCharacterAnimations({
     if (!scene) return;
     const mixer = new THREE.AnimationMixer(scene);
     mixerRef.current = mixer;
+    const library = acquireAnimationLibrary(scene);
+    libraryRef.current = library;
 
     mixer.addEventListener('finished', (e) => {
       const currentAction = currentAnimClip.current ? actionsRef.current[currentAnimClip.current] : null;
@@ -243,10 +228,13 @@ export function useCharacterAnimations({
     loadAndPlayClip('falling-idle');
 
     return () => {
+      library.release();
+      libraryRef.current = null;
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
       mixerRef.current = null;
       actionsRef.current = {};
+      retired.current.clear();
       pendingLoadsRef.current.clear();
       failedLoadsRef.current.clear();
     };
@@ -263,12 +251,13 @@ export function useCharacterAnimations({
     return () => mixer.removeEventListener('finished', onFinished);
   }, [id]);
 
+  if (error) throw error;
   return {
     mixerRef,
     actionsRef,
     activeActionName,
     currentAnimClip,
     userAnimOverrideRef,
-    loadAndPlayClip
+    loadAndPlayClip, retireAction, collectActions
   };
 }

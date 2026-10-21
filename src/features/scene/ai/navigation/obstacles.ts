@@ -25,14 +25,24 @@ export interface AgentProfile {
   height: number;
 }
 const profiles = new Map<string, AgentProfile>();
+export const agentProfileLifecycle = { onUnused: (_profile: AgentProfile): void => {} };
+function releaseUnusedProfile(profile: AgentProfile | undefined): void {
+  if (profile && ![...profiles.values()].includes(profile)) agentProfileLifecycle.onUnused(profile);
+}
 export function setAgentProfile(id: string, profile: AgentProfile): void {
   if (!Number.isFinite(profile.radius) || !Number.isFinite(profile.height) || !(profile.radius > 0) || !(profile.height > 0)) throw new Error(`Invalid navigation profile ${id}`);
   // Equal bodies share graph caches, while removed/replaced bodies must not
   // keep every historical graph alive in a global string-keyed cache.
+  const previous = profiles.get(id);
   const shared = [...profiles.values()].find(p => p.radius === profile.radius && p.height === profile.height);
   profiles.set(id, shared ?? { ...profile });
+  releaseUnusedProfile(previous);
 }
-export function removeAgentProfile(id: string): void { profiles.delete(id); }
+export function removeAgentProfile(id: string): void {
+  const previous = profiles.get(id);
+  profiles.delete(id);
+  releaseUnusedProfile(previous);
+}
 export function getAgentProfile(id: string): AgentProfile {
   const profile = profiles.get(id);
   if (!profile) throw new Error(`Missing navigation profile ${id}`);

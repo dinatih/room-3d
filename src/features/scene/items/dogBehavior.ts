@@ -5,6 +5,7 @@ import { getAgentProfile } from '../ai/navigation/obstacles';
 import { computeSteeringVector, computeRotYStep, reserveAgentDestination, isAgentDestinationFree } from '../ai/agent/agentAvoidance';
 import { appLog } from '@features/ui/AppConsole';
 import { dogFeedingStation } from './dogBowlData';
+import { NavigationScope, navigationValue } from '../ai/navigation/navigationScope';
 
 export const DOG_ACTIVITY = {
   walkChance: 0.8, localTripChance: 0.8,
@@ -22,6 +23,7 @@ export const mealInterval = () => THREE.MathUtils.lerp(DOG_ACTIVITY.minMealInter
 export function createDogBehavior() {
   return {
     position: new THREE.Vector3(), target: new THREE.Vector3(), local: new THREE.Vector3(),
+    navigation: new NavigationScope(),
     rotation: new THREE.Quaternion(), euler: new THREE.Euler(0, 0, 0, 'YXZ'), route: createRouteState(),
     autonomous: true, mode: 'rest' as 'rest' | 'move' | 'meal-approach' | 'meal-align' | 'eat',
     action: 'idle' as DogAction, lastPause: 'idle' as DogAction,
@@ -37,6 +39,7 @@ export interface DogContext {
   eatingMuzzle?: THREE.Vector3;
 }
 export function releaseDogRoute(state: DogBehavior, id: string) {
+  state.navigation.clear();
   resetRoute(state.route, id);
   reserveAgentDestination(id, null);
 }
@@ -75,11 +78,11 @@ export function startDogTrip(state: DogBehavior, context: DogContext, target: { 
 }
 function pickDestination(state: DogBehavior, id: string) {
   const zone = SpatialZoneManager.getZoneAt(state.position);
-  if (!zone || Math.random() >= DOG_ACTIVITY.localTripChance) return randomReachableTarget(id, state.position);
-  const target = {
+  if (!zone || navigationValue('dog-local-trip', () => Math.random()) >= DOG_ACTIVITY.localTripChance) return randomReachableTarget(id, state.position);
+  const target = navigationValue('dog-target', () => ({
     x: THREE.MathUtils.lerp(zone.bounds.min[0], zone.bounds.max[0], Math.random()),
     z: THREE.MathUtils.lerp(zone.bounds.min[2], zone.bounds.max[2], Math.random()),
-  };
+  }));
   return isAgentDestinationFree(id, target) && getNavigationGraph(getAgentProfile(id)).canReach(state.position, target) ? target : null;
 }
 function postponeMeal(state: DogBehavior, context: DogContext) {
@@ -87,6 +90,9 @@ function postponeMeal(state: DogBehavior, context: DogContext) {
   startDogPause(state, context);
 }
 export function updateDogBehavior(state: DogBehavior, context: DogContext, delta: number) {
+  state.navigation.poll(() => advanceDogBehavior(state, context, delta));
+}
+function advanceDogBehavior(state: DogBehavior, context: DogContext, delta: number) {
   if (!state.autonomous) return;
   const { root, id } = context;
   if (context.eatingMuzzle) state.mealRemaining -= delta;

@@ -14,6 +14,7 @@ import type { CharacterGroupProps } from './characterTypes';
 import { canCharacterPerformDuo, resolveDuoPreviewParticipants } from '../animations/duoAnimations';
 import { getDuoAnimationTransformOverride, subscribeAnimationOverrides } from '../animations/animationResolver';
 import { getCharacterGridPosition, getCharacterGridCenterIndex } from './characterGridUtils';
+import { CharacterRuntimeProvider } from './CharacterRuntimeProvider';
 
 function InternalCharacterGroup(props: CharacterGroupProps) {
   const [, setOverrideTick] = useState(0);
@@ -179,7 +180,9 @@ export function CharacterGroup(props: CharacterGroupProps) {
 
   return (
     <Suspense fallback={null}>
-      <InternalCharacterGroup {...props} />
+      <CharacterRuntimeProvider isPreview={props.isPreview}>
+        <InternalCharacterGroup {...props} />
+      </CharacterRuntimeProvider>
     </Suspense>
   );
 }

@@ -1,3 +1,4 @@
+import type { ApproachRegion } from '../navigation/queries';
 import { AgentInstruction } from '../aiTypes';
 import { getObjectApproach, getDoorApproach, NavigationBlockedError } from '../navigation/service';
 import { getAgentProfile, hasAgentProfile } from '../navigation/obstacles';
@@ -82,17 +83,13 @@ export function resolveInstructionCoords(
     const flexible = slot?.arrival === 'approach' || Boolean(obj.approachDoor) || obj.category === 'storage' || obj.category === 'outdoor';
     const usesApproach = isMoveOnly || flexible;
     const owner = slot?.navigationOwner ?? obj.id;
-    let accepts: ((point: { x: number; z: number }) => boolean) | undefined;
+    let region: ApproachRegion | undefined;
     if (slot?.arrival === 'front') {
       const width = slot.approachWidth;
       if (!width || width <= 0) throw new Error(`Missing front approach width for ${obj.id}`);
-      const c = Math.cos(obj.rotationY), s = Math.sin(obj.rotationY);
-      accepts = point => {
-        const dx = point.x - obj.position[0], dz = point.z - obj.position[2];
-        return -(dx * s + dz * c) >= 0 && Math.abs(dx * c - dz * s) <= width / 2;
-      };
+      region = { x: obj.position[0], z: obj.position[2], rotation: obj.rotationY, width };
     }
-    const approach = usesApproach && profileId && !(isMoveOnly && obj.approachDoor) ? getObjectApproach(owner, desired, profileId, currentPosition, false, departureOwner, flexible, accepts) : desired;
+    const approach = usesApproach && profileId && !(isMoveOnly && obj.approachDoor) ? getObjectApproach(owner, desired, profileId, currentPosition, false, departureOwner, flexible, region) : desired;
     if (!approach) throw new NavigationBlockedError(`No approach for ${obj.id}`, desired);
     return {
       owner,

@@ -3,6 +3,7 @@ import { useSceneStore } from '../store/useSceneStore';
 import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager } from './duoSessionManager';
+import { resolveNavigation } from './navigation/navigationScope';
 import { cameraState } from '../cameraState';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import { useZoneAiDebugStore } from './zoneAiDebugStore';
@@ -103,7 +104,7 @@ function ZoneAiDebugOverlayContent() {
     currentObj && currentSlot ? OccupancyManager.isSlotOccupied(currentObj.id, currentSlot.slotId) : false;
 
   // Exécution de l'ordre d'action vers le PNJ choisi
-  const handleExecuteAction = (targetObjId?: string, targetSlotId?: string, targetAnimId?: string) => {
+  const handleExecuteAction = async (targetObjId?: string, targetSlotId?: string, targetAnimId?: string) => {
     const objId = targetObjId ?? selectedSlot?.objectId;
     const sId = targetSlotId ?? selectedSlot?.slotId;
     if (!objId || !sId) return;
@@ -153,7 +154,7 @@ function ZoneAiDebugOverlayContent() {
     const charName = charConfig?.name ?? targetChar;
 
     if (slot.isDuo) {
-      const duoResult = duoSessionManager.startDuoSession(objId, sId, targetChar, undefined, chosenAnim);
+      const duoResult = await resolveNavigation(() => duoSessionManager.startDuoSession(objId, sId, targetChar!, undefined, chosenAnim));
       if (duoResult) {
         document.dispatchEvent(
           new CustomEvent('npc-invite-duo', {

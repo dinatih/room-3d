@@ -58,13 +58,14 @@ exports.withBrowser = async (fixture, exercise) => {
         cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'room-3d-vite-'));
         server = await createServer({
             cacheDir,
-            server: { host: '127.0.0.1', port, strictPort: true, ...(fixture.freezeSource ? { watch: null } : {}) },
+            server: { host: '127.0.0.1', port, strictPort: true, hmr: false },
             plugins: [{ name: 'test-executed-instructions', enforce: 'pre', transform(source, id) {
-                        if (id.split('?')[0].endsWith('/src/features/scene/ai/useAgentController.ts'))
+                        if (id.split('?')[0].endsWith('/src/features/scene/ai/agentController.ts'))
                             return { code: instrumentController(source), map: null };
                     } }],
         });
         await server.listen();
+        await server.watcher.close();
         const address = server.httpServer.address();
         const gpuArgs = process.platform === 'linux' || process.argv.includes('--hardware-gpu')
             ? ['--enable-gpu', '--use-angle=vulkan', '--enable-features=Vulkan,VulkanFromANGLE', '--disable-vulkan-surface']
