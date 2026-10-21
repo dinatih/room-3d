@@ -338,6 +338,8 @@ export function ViewControlBar({
             <i className="bi bi-building" aria-hidden="true" />
             <span className="fw-semibold">Apt</span>
           </button>
+          {perspButton}
+          {rotButton}
           {animalCameraActive && (
             <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la caméra de l’animal" aria-label="Quitter la caméra de l’animal">
               <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>
@@ -348,12 +350,12 @@ export function ViewControlBar({
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('in')}
         {cardinalGroup}
-        {perspButton}
+        {!showCharacterModes && perspButton}
       </div>
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('out')}
         {elevationGroup}
-        {rotButton}
+        {!showCharacterModes && rotButton}
       </div>
     </div>
     </>
