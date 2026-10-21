@@ -119,27 +119,6 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
 
   return (
     <div className="virtual-controls d-flex flex-column align-items-center gap-1">
-      <div className="glass-card d-flex align-items-center gap-1 p-1 rounded-2" role="group" aria-label="Cible de la caméra">
-        <span className="small px-1" title="Cible de la caméra"><i className="bi bi-bullseye" aria-hidden="true" /><span className="visually-hidden">Cible caméra</span></span>
-        <div className="btn-group btn-group-sm">
-          {targets.map(choice => (
-            <button
-              key={choice.target}
-              type="button"
-              className={`btn btn-sm py-0 px-1 ${!animal && target === choice.target ? 'btn-primary' : 'btn-outline-secondary'}`}
-              aria-label={`Cibler : ${choice.label}`}
-              title={`Cibler : ${choice.label}`}
-              aria-pressed={!animal && target === choice.target}
-              onClick={() => {
-                releaseAll();
-                selectControl(choice.target, control);
-              }}
-            >
-              <i className={`bi ${choice.icon}`} aria-hidden="true" />
-            </button>
-          ))}
-        </div>
-      </div>
       <div className="virtual-controls__modes glass-card btn-group btn-group-sm p-1 rounded-2" role="group" aria-label="Zoom caméra">
         {(['in', 'out'] as const).map(direction => (
           <button
@@ -154,7 +133,28 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
           </button>
         ))}
       </div>
-      <div className="d-flex align-items-start gap-3">
+      <div className="position-relative d-flex align-items-start gap-3">
+        <div className="position-absolute bottom-0 start-50 translate-middle-x glass-card d-flex align-items-center gap-1 p-1 rounded-2" role="group" aria-label="Cible de la caméra">
+          <span className="small px-1" title="Cible de la caméra"><i className="bi bi-bullseye" aria-hidden="true" /><span className="visually-hidden">Cible caméra</span></span>
+          <div className="btn-group btn-group-sm">
+            {targets.map(choice => (
+              <button
+                key={choice.target}
+                type="button"
+                className={`btn btn-sm py-0 px-1 ${!animal && target === choice.target ? 'btn-primary' : 'btn-outline-secondary'}`}
+                aria-label={`Cibler : ${choice.label}`}
+                title={`Cibler : ${choice.label}`}
+                aria-pressed={!animal && target === choice.target}
+                onClick={() => {
+                  releaseAll();
+                  selectControl(choice.target, control);
+                }}
+              >
+                <i className={`bi ${choice.icon}`} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </div>
         {(['character', 'camera'] as const).map(inputControl => (
           <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
             <div className="virtual-dpad" role="group" aria-label={inputControl === 'character' ? 'Déplacement du PNJ' : 'Déplacement de la caméra'}>
