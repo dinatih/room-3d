@@ -5,6 +5,7 @@
 import { useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { getWalkCycleSpeed, walkTimeScale } from './walkCadence';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone, hasMountedGLTFClones } from '@features/scene/useGLTFClone';
 import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
@@ -669,9 +670,11 @@ export function Character({
   }, [scene, parts, haircut, hairColor, variant, isActive, invalidate]);
 
   // Boucle frame principale : positionnement, mix d'animations & physiques
-  const frameControl = useRef({ agentAnimationPaused: false, isUserManuallyMoving: false, hasDynamicTask: false });
+  const frameControl = useRef({ agentAnimationPaused: false, isUserManuallyMoving: false, hasDynamicTask: false, distance: 0 });
   useCharacterFrame(renderId, { simulate: (_state, delta) => {
     if (!groupRef.current || !mixerRef.current) return;
+    const oldX = groupRef.current.position.x, oldZ = groupRef.current.position.z;
+    const wasVisible = groupRef.current.visible;
 
     const hasDynamicTask = agentEnabled && hasPendingDynamicTask();
     let agentAnimationPaused = false;
@@ -776,6 +779,8 @@ export function Character({
     }
 
     frameControl.current.agentAnimationPaused = agentAnimationPaused;
+    frameControl.current.distance = wasVisible && groupRef.current.visible
+      ? Math.hypot(groupRef.current.position.x - oldX, groupRef.current.position.z - oldZ) : 0;
     frameControl.current.isUserManuallyMoving = isUserManuallyMoving;
     frameControl.current.hasDynamicTask = hasDynamicTask;
   }, animate: (state, delta) => {
@@ -985,6 +990,7 @@ export function Character({
     let pendantDelta = 0;
     let resetPendant = isTPose;
     if (isControlledByStore) {
+      actions[activeActionName.current]?.setEffectiveTimeScale(1);
       const store = useAnimPreviewStore.getState();
       const animDelta = delta * (store.speed || 1);
       pendantDelta = store.isPlaying && !store.isScrubbing && !isTPose ? delta * store.speed : 0;
@@ -1131,6 +1137,11 @@ export function Character({
         }
       }
       const mixerStarted = performance.now();
+      const walkingAction = actions[activeActionName.current];
+      if (walkingAction) {
+        const speed = getWalkCycleSpeed(walkingAction.getClip(), scene);
+        if (speed !== null) walkingAction.setEffectiveTimeScale(walkTimeScale(frameControl.current.distance, delta, speed));
+      }
       mixer.update(agentAnimationPaused ? 0 : delta);
       recordMixer(performance.now() - mixerStarted);
 
