@@ -179,7 +179,7 @@ function AiZonesHelperContent() {
               <group key={`approach-${point.join(',')}`} position={[point[0], baseHeight + 0.4, point[2]]}>
                 <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} raycast={() => {}}>
                   <ringGeometry args={[6, 9, 4]} />
-                  <meshBasicMaterial color="#ffab00" depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+                  <meshBasicMaterial color="#ffab00" transparent depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
                 </mesh>
               </group>
             ))}
@@ -288,7 +288,7 @@ function AiZonesHelperContent() {
                     <Line
                       points={[[slot.approachOffset[0] - pos[0], 0.4, slot.approachOffset[2] - pos[2]], [0, 0.4, 0]]}
                       color="#ffab00" dashed dashSize={4} gapSize={3}
-                      depthTest={false} depthWrite={false} raycast={() => {}}
+                      transparent depthTest={false} depthWrite={false} raycast={() => {}}
                     />
                   )}
                   {/* Volume de collision 3D invisible (facilite grandement le clic en perspective) */}
