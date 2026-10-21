@@ -2,7 +2,7 @@ import { SmartObjectDef, SmartObjectCategory, AgentInstruction, ResolvedSmartObj
 import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
-import { HUMAN_BODY_RADIUS } from '../doorObstacles';
+import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
 import { BATH_WEST_WALL, ROOM_D, ROOM_W } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { TOILET_BOWL_CENTER } from '../items/Toilet';
@@ -19,6 +19,14 @@ import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroom
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
 
 export const CLOSET_DOOR_DURATION = 0.8;
+
+// Face the shower opening from outside the leaf's sweep, away from the adjacent closet.
+const showerDoor = DOOR_CONFIGS.shower;
+const SHOWER_APPROACH: [number, number, number] = [
+  showerDoor.pivot.x + showerDoor.closedDir.x * showerDoor.length / 2,
+  0,
+  showerDoor.pivot.z + showerDoor.openNormal.z * (showerDoor.length + HUMAN_BODY_RADIUS + showerDoor.margin),
+];
 
 // At 90°, p2 starts in the chest-bench; date_bearhug's walk crosses the fence and garden furniture.
 const INYEONG_CHA_DUO_IDS = ['slow_dance', 'eye_to_eye', 'farewell_kiss', 'kiss_man_woman', 'kiss', 'pop_dance', 'energetic_dance'];
@@ -262,6 +270,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'take-shower-1',
         name: 'Prendre une douche (Droite)',
+        approachOffset: SHOWER_APPROACH,
         offset: [8, 15, 650],
         rotY: Math.PI / 2,
         animationsRandom: ['take-off-tshirt', 'fab-daily-life-wash-hands'],
@@ -271,6 +280,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'take-shower-2',
         name: 'Prendre une douche (Gauche)',
+        approachOffset: SHOWER_APPROACH,
         offset: [42, 15, 660],
         rotY: -Math.PI / 2,
         animationsRandom: ['take-off-tshirt', 'fab-daily-life-wash-hands'],

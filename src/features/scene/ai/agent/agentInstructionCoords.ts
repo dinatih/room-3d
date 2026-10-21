@@ -75,7 +75,7 @@ export function resolveInstructionCoords(
     const profileId = agentId && hasAgentProfile(agentId) ? agentId : undefined;
     const desired = isMoveOnly && instr.doorKey
       ? getDoorApproach(instr.doorKey, profileId, { x: pos[0], z: pos[2] }, currentPosition, departureOwner)
-      : isMoveOnly && obj.approachDoor ? getDoorApproach(obj.approachDoor, profileId, undefined, currentPosition, departureOwner) : { x: pos[0], z: pos[2] };
+      : isMoveOnly && obj.approachDoor && !slot?.approachOffset ? getDoorApproach(obj.approachDoor, profileId, undefined, currentPosition, departureOwner) : { x: pos[0], z: pos[2] };
     // Keep the interaction footprint stable through its exit step. A moving
     // reservation would rebuild the shared door graph on every walking frame.
     if (instr.protectedDoor && profileId && !instr.doorKey) {
@@ -91,7 +91,7 @@ export function resolveInstructionCoords(
       if (!width || width <= 0) throw new Error(`Missing front approach width for ${obj.id}`);
       region = { x: obj.position[0], z: obj.position[2], rotation: obj.rotationY, width };
     }
-    const approach = usesApproach && profileId && !(isMoveOnly && obj.approachDoor) ? getObjectApproach(owner, desired, profileId, currentPosition, false, departureOwner, flexible, region) : desired;
+    const approach = usesApproach && profileId && !(isMoveOnly && obj.approachDoor && !slot?.approachOffset) ? getObjectApproach(owner, desired, profileId, currentPosition, false, departureOwner, flexible, region) : desired;
     if (!approach) throw new NavigationBlockedError(`No approach for ${obj.id}`, desired);
     return {
       owner,
