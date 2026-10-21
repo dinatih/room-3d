@@ -163,7 +163,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   return (
     <group ref={group} position={config.position} userData={{ animUnit: true, noAnim: true, skipMerge: true,
       itemName: item.name, hoverAction: { label: item.name, actions: getObjectActionIds(id) } }}>
-      <Component item={item} actionState={actions} onSize={onSize} />
+      <Component item={item} actionState={{ ...actions, robotAutonomous: life.current.automatic }} onSize={onSize} />
     </group>
   );
 }

@@ -36,11 +36,11 @@ export function createUnitreeMotion(scene: Object3D, model: 'g1' | 'go2') {
     if (!joint) throw new Error(`Unitree ${model}: missing joint ${name}`);
     joint.node.quaternion.copy(joint.rest).multiply(rotation.setFromAxisAngle(joint.axis, angle - joint.home));
   }
-  return (motion: string, seconds: number) => {
+  return (motion: string, seconds: number, entrySeconds = seconds) => {
     for (const joint of joints.values()) joint.node.quaternion.copy(joint.rest);
     const phase = seconds * Math.PI * 2;
     // Ease into every gesture from the model's resting posture.
-    const entry = 1 - Math.exp(-seconds * 4);
+    const entry = 1 - Math.exp(-entrySeconds * 4);
     const slow = Math.sin(phase / 3);
     if (model === 'g1') {
       for (const [side, offset] of [['left', 0], ['right', Math.PI]] as const) {
@@ -81,7 +81,8 @@ export function createUnitreeMotion(scene: Object3D, model: 'g1' | 'go2') {
           // Two-link sagittal IK. Link lengths and home angles are from go2.xml.
           const gait = phase * 1.4 + diagonal;
           // +X points forward: swing travels back to front; stance pushes backward.
-          const x = -0.045 * Math.cos(gait) * entry;
+          const cycle = ((gait / (2 * Math.PI)) % 1 + 1) % 1;
+          const x = (cycle < 0.5 ? -0.045 * Math.cos(cycle * 2 * Math.PI) : 0.045 - 0.18 * (cycle - 0.5)) * entry;
           const down = 2 * 0.213 * Math.cos(0.9) - 0.04 * Math.max(0, Math.sin(gait)) * entry;
           calf = -Math.acos((x * x + down * down - 2 * 0.213 ** 2) / (2 * 0.213 ** 2));
           thigh = Math.atan2(-x, down) - calf / 2;
@@ -115,4 +116,31 @@ export function createUnitreeMotion(scene: Object3D, model: 'g1' | 'go2') {
     }
     scene.position.y = -box.min.y;
   };
+}
+
+/** Natural support-foot speed in scene units, measured on the actual articulated model. */
+export function measureUnitreeWalkSpeed(scene: Object3D, model: 'g1' | 'go2'): number {
+  const rig = scene.clone(true);
+  const animate = createUnitreeMotion(rig, model);
+  const feet: Object3D[] = [];
+  rig.traverse(node => {
+    if ((node as Mesh).isMesh && (model === 'g1' ? node.name.endsWith('ankle_roll_link_visual') : node.name.endsWith('calf_foot'))) feet.push(node);
+  });
+  const duration = 1 / (model === 'g1' ? 0.8 : 1.4);
+  // Sample at the same 30 Hz as the character animation pipeline.
+  const frames = Math.ceil(duration * 30);
+  let previous: Vector3[] | undefined, distance = 0;
+  for (let frame = 0; frame <= frames; frame++) {
+    animate(model === 'g1' ? 'walk' : 'trot', duration * frame / frames, Infinity);
+    rig.updateMatrixWorld(true);
+    const points = feet.map(foot => foot.getWorldPosition(new Vector3()));
+    if (previous) {
+      const support = points.reduce((best, point, index) => point.y + previous![index].y < points[best].y + previous![best].y ? index : best, 0);
+      distance += Math.hypot(points[support].x - previous[support].x, points[support].z - previous[support].z);
+    }
+    previous = points;
+  }
+  const speed = distance / duration;
+  if (!Number.isFinite(speed) || speed <= 0) throw new Error(`Unitree ${model}: invalid stride`);
+  return speed;
 }
