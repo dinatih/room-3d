@@ -6,6 +6,7 @@ import { getObjectActionIds } from '@features/scene/objectActions';
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, WIG_SOURCES, getWigSource, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
+import { InventorySmartActions, getInventorySmartObjects } from './InventorySmartActions';
 import { SpatialZonePreview } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
 import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
@@ -18,6 +19,8 @@ import { DevAnnotationPanel } from './DevAnnotationPanel';
 import { useItemAnnotations, ANNOTATION_STATUSES } from './useItemAnnotations';
 import { InventoryLinkButton } from './InventoryLinkButton';
 import { parseUrlInventory, updateUrlInventory } from './inventoryUrlParams';
+
+const isActionable = (id: string) => getObjectActionIds(id).length > 0 || getInventorySmartObjects(id).some(object => object.slots.length > 0);
 
 type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
 
@@ -81,7 +84,7 @@ const WIG_COLOR_OPTIONS = [
   { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
 ];
 
-function ItemDetailContent({ item, wigColor, wigBustVariant }: { item: PreviewTarget; wigColor?: string; wigBustVariant?: string }) {
+function ItemDetailContent({ item, wigColor, wigBustVariant, onInvite }: { item: PreviewTarget; wigColor?: string; wigBustVariant?: string; onInvite: () => void }) {
   if (!item) return null;
 
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
@@ -252,7 +255,7 @@ function ItemDetailContent({ item, wigColor, wigBustVariant }: { item: PreviewTa
             </span>
           )}
 
-          {!isStorage && getObjectActionIds(item.id).length > 0 && (
+          {!isStorage && isActionable(item.id) && (
             <span className="badge bg-warning-subtle text-dark border border-warning-subtle">
               ⚡ Actionnable
             </span>
@@ -270,6 +273,8 @@ function ItemDetailContent({ item, wigColor, wigBustVariant }: { item: PreviewTa
             </span>
           )}
         </div>
+
+        <InventorySmartActions itemId={item.id} onInvite={onInvite} />
 
         <div className="row g-2 mb-3">
           <div className="col-6">
@@ -719,7 +724,7 @@ function normalizeSearchStr(str: string): string {
       // Les ExtraCharacters ne sont visibles que si l'option extraCharacters est activée
       if (!extraCharacters && isExtraCharacter(i.id) && selected?.id !== i.id) return false;
 
-      if (activeCat === 'actionnable' && !getObjectActionIds(i.id).length) return false;
+      if (activeCat === 'actionnable' && !isActionable(i.id)) return false;
       if (activeCat === 'glbs'        && !i.glbPath)         return false;
 
       const annot = allAnnotations[`item:${i.id}`];
@@ -758,7 +763,7 @@ function normalizeSearchStr(str: string): string {
 
   const showSpaces = activeCat === 'storage' || activeCat === 'actionnable';
   const spaces = activeCat === 'actionnable'
-    ? STORAGE_SPACES.filter(sp => getObjectActionIds(sp.id).length)
+    ? STORAGE_SPACES.filter(sp => isActionable(sp.id))
     : STORAGE_SPACES;
 
   // Unified list: Native Lara first in 'all', then spatial zones, storage spaces and items
@@ -1120,7 +1125,7 @@ function normalizeSearchStr(str: string): string {
                           ) : (
                             <span className="badge bg-danger-subtle text-danger border border-danger-subtle">{catLabel}</span>
                           )}
-                          {!isStorage && getObjectActionIds(target.id).length > 0 && (
+                          {!isStorage && isActionable(target.id) && (
                             <span className="badge bg-warning-subtle text-dark border border-warning-subtle">⚡ Action</span>
                           )}
                           {(() => {
@@ -1191,7 +1196,7 @@ function normalizeSearchStr(str: string): string {
                 <p className="small mb-0">Sélectionnez un item<br />pour afficher son détail</p>
               </div>
             ) : (
-              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} />
+              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} onInvite={onClose} />
             )}
           </div>
         </div>
@@ -1209,7 +1214,7 @@ function normalizeSearchStr(str: string): string {
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowMobileModal(false)}></button>
               </div>
               <div className="modal-body p-0 pb-5" style={{ overflowY: 'auto' }}>
-                <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} />
+                <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} onInvite={onClose} />
               </div>
               <div className="modal-footer glass-card position-absolute bottom-0 start-0 end-0 p-2">
                 <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowMobileModal(false)}>Fermer</button>
