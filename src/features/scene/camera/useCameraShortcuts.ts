@@ -109,7 +109,7 @@ export function useCameraShortcuts({
         const wasAnimal = Boolean(cameraState.animalTarget);
         cameraState.animalTarget = null;
         if (modeRef.current === 'top') exitTop();
-        if (modeRef.current === 'ortho') exitOrtho?.();
+        if (modeRef.current === 'iso') exitOrtho?.();
         if (modeRef.current !== 'follow' || wasAnimal) {
           enterFollow(cameraState.characterX, cameraState.characterZ, 'follow');
         }
@@ -120,7 +120,7 @@ export function useCameraShortcuts({
       const prev = savedConfig.current;
       savedConfig.current = null;
 
-      if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+      if (modeRef.current === 'iso' && exitOrtho) exitOrtho();
       if (modeRef.current === 'top') exitTop();
 
       if (prev) {
@@ -177,7 +177,7 @@ export function useCameraShortcuts({
       current.setCameraMovement('fix');
       if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
       else if (modeRef.current === 'top') exitTop();
-      else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+      else if (modeRef.current === 'iso' && exitOrtho) exitOrtho();
       const store = useSceneStore.getState();
       if (store.layers.characterGrid) {
         store.setActiveCameraPos('front');
@@ -232,14 +232,14 @@ export function useCameraShortcuts({
       if (e.key === 'Escape') {
         if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
         else if (modeRef.current === 'top') exitTop();
-        else if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+        else if (modeRef.current === 'iso' && exitOrtho) exitOrtho();
         return;
       }
 
       if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'o' || e.key === 'O' || e.key === 'p' || e.key === 'P')) {
         if (e.repeat) return;
         e.preventDefault();
-        if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+        if (modeRef.current === 'iso' && exitOrtho) exitOrtho();
         const store = useSceneStore.getState();
         const requestedProjection = e.key.toLowerCase() === 'o' ? 'ortho' : 'persp';
         const projection = store.cameraProjection === requestedProjection
@@ -322,7 +322,7 @@ export function useCameraShortcuts({
         }
         if (isNum5) {
           e.preventDefault();
-          if (modeRef.current === 'ortho' && exitOrtho) {
+          if (modeRef.current === 'iso' && exitOrtho) {
             exitOrtho();
             frameCharacterGridCamera();
           } else {
@@ -429,7 +429,7 @@ export function useCameraShortcuts({
       }
 
       // Orbit and Top mode arrow keys (Google Earth style)
-      if ((modeRef.current === 'orbit' || modeRef.current === 'top' || modeRef.current === 'ortho') && isArrow) {
+      if ((modeRef.current === 'orbit' || modeRef.current === 'top' || modeRef.current === 'iso') && isArrow) {
         if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
           keys.current.add(k);                      // plain → selected control
         } else if (e.shiftKey && e.ctrlKey) {
@@ -503,7 +503,7 @@ export function useCameraShortcuts({
           ctrlRef.current.enableZoom = true;
         }
       }
-      if (modeRef.current === 'ortho' && exitOrtho) exitOrtho();
+      if (modeRef.current === 'iso' && exitOrtho) exitOrtho();
       const targetProj = projection ?? 'persp';
       if (keepFollow) {
         setFollowCameraView(pos, target);

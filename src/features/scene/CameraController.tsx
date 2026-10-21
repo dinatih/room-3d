@@ -153,7 +153,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // Synchronisation dynamique du mode d'interaction (rotation / translation) pour souris et tactile
   useEffect(() => {
     if (!ctrlRef.current) return;
-    const effectiveMode = mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'translate' : 'rotate';
+    const effectiveMode = mode === 'orbit' ? orbitMouseMode : mode === 'iso' || cameraProjection === 'ortho' ? 'translate' : 'rotate';
     ctrlRef.current.mouseButtons = getOrbitMouseButtons(effectiveMode);
     ctrlRef.current.touches = getOrbitTouches(effectiveMode);
   }, [mode, orbitMouseMode, cameraProjection]);
@@ -245,9 +245,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       keys.current.clear();
       useSceneStore.getState().setArrowControl(m === 'fpv' ? 'character' : 'camera');
     }
-    if (m === 'ortho' || (m === 'orbit' && prev !== 'orbit')) {
+    if (m === 'iso' || (m === 'orbit' && prev !== 'orbit')) {
       const store = useSceneStore.getState();
-      store.setOrbitMouseMode(m === 'ortho' || store.cameraProjection === 'ortho' ? 'translate' : 'rotate');
+      store.setOrbitMouseMode(m === 'iso' || store.cameraProjection === 'ortho' ? 'translate' : 'rotate');
     }
     modeRef.current = m;
     cameraState.mode = m;
@@ -844,7 +844,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     } else if (defaultPerspCamRef.current) {
       defaultPerspCamRef.current.position.set(targetX, 850, targetZ);
     }
-    activeCam.up.set(0, 0, -1);
+    activeCam.up.set(1, 0, 0);
     activeCam.lookAt(targetX, 0, targetZ);
     activeCam.updateProjectionMatrix();
 
@@ -895,8 +895,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     topFollowRef.current = follow;
     const targetX = follow ? cameraState.characterX : CX;
     const targetZ = follow ? cameraState.characterZ : CZ;
-    applyTopCamera(targetX, targetZ, useSceneStore.getState().cameraProjection);
-    useSceneStore.getState().setActiveCameraPos('top');
+    const store = useSceneStore.getState();
+    store.setCameraProjection('ortho');
+    store.setCameraElevation(90);
+    store.setActiveCameraPos('west');
+    applyTopCamera(targetX, targetZ, 'ortho');
     changeMode('top');
     invalidate();
   }, [applyTopCamera, camera.position, changeMode, exitFollow, invalidate]);
@@ -934,8 +937,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     up: [number, number, number];
     viewH: number;
   }>({
-    pos: [CX, 700, 1500],
-    target: [CX, 700, CZ],
+    pos: resolveCameraView('north-west', 'ortho', undefined, 45).pos,
+    target: resolveCameraView('north-west', 'ortho', undefined, 45).target,
     up: [0, 1, 0],
     viewH: CAMERA_VIEW_HEIGHT,
   });
@@ -948,12 +951,16 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   }) => {
     if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
     if (modeRef.current === 'top') exitTop();
-    if (modeRef.current !== 'ortho') {
+    if (modeRef.current !== 'iso') {
       savedPerspPos.current.copy(camera.position);
       if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
     }
+    const store = useSceneStore.getState();
+    store.setCameraProjection('ortho');
+    store.setCameraElevation(45);
+    store.setActiveCameraPos('north-west');
     setOrthoConfig(config);
-    changeMode('ortho');
+    changeMode('iso');
 
     requestAnimationFrame(() => {
       const activeCam = ctrlRef.current?.object || camera;
@@ -978,7 +985,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // Synchronisation de la caméra orthographique et du target OrbitControls dès l'activation
   useEffect(() => {
-    if (mode === 'ortho' && ctrlRef.current) {
+    if (mode === 'iso' && ctrlRef.current) {
       const activeCam = ctrlRef.current.object || camera;
       activeCam.position.set(...orthoConfig.pos);
       activeCam.up.set(...orthoConfig.up);
@@ -1068,6 +1075,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         const curZ = cameraState.characterZ ?? followPos.current.z;
         enterFollow(curX, curZ, 'follow');
         appLog('system', '🎥 Mode Follow (3ème personne) initialisé via URL');
+      } else if (startMode === 'iso') {
+        enterOrtho(orthoConfig);
       } else if (startMode === 'top') {
         enterTop(false);
         appLog('system', '🎥 Mode 2D Top initialisé via URL');
@@ -1077,7 +1086,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         changeMode(startMode);
       }
     }
-  }, [enterTop, enterFollow, changeMode, applyInitialCameraView]);
+  }, [enterTop, enterFollow, enterOrtho, orthoConfig, changeMode, applyInitialCameraView]);
 
   // Écoute de l'événement de lancement pour démarrer l'animation d'intro
   useEffect(() => {
@@ -1110,7 +1119,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         } else if (targetMode === 'top') {
           enterTop(false);
           appLog('system', '🎥 Mode 2D Top initialisé');
-        } else if (targetMode === 'ortho') {
+        } else if (targetMode === 'iso') {
           enterOrtho(orthoConfig);
         } else if (targetMode === 'orbit') {
           ctrlRef.current.enabled = !planeModeRef.current;
@@ -1254,7 +1263,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       <OrthographicCamera
         ref={orthoCamRef}
         position={mode === 'top' ? (topFollowRef.current ? [cameraState.characterX, 2000, cameraState.characterZ] : TOP_POS) : undefined}
-        up={mode === 'top' ? [0, 0, -1] : [0, 1, 0]}
+        up={mode === 'top' ? [1, 0, 0] : [0, 1, 0]}
         left={-viewW / 2}
         right={viewW / 2}
         top={viewH / 2}
@@ -1263,7 +1272,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         far={50000}
       />
 
-      {mode === 'ortho' && (
+      {mode === 'iso' && (
         <OrthographicCamera
           makeDefault
           position={orthoConfig.pos}
@@ -1288,7 +1297,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         zoomScope="scene"
         showTargetMarker={!characterGridActive}
         target={
-          mode === 'ortho'
+          mode === 'iso'
             ? orthoConfig.target
             : mode === 'top'
               ? (topFollowRef.current ? undefined : TOP_TARGET)
@@ -1304,8 +1313,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enablePan={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         enableZoom={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'follow'}
-        mouseButtons={getOrbitMouseButtons(mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'translate' : 'rotate')}
-        touches={getOrbitTouches(mode === 'orbit' ? orbitMouseMode : mode === 'ortho' || cameraProjection === 'ortho' ? 'translate' : 'rotate')}
+        mouseButtons={getOrbitMouseButtons(mode === 'orbit' ? orbitMouseMode : mode === 'iso' || cameraProjection === 'ortho' ? 'translate' : 'rotate')}
+        touches={getOrbitTouches(mode === 'orbit' ? orbitMouseMode : mode === 'iso' || cameraProjection === 'ortho' ? 'translate' : 'rotate')}
       />
     </>
   );

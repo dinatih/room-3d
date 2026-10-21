@@ -169,7 +169,7 @@ export function useCameraFrameUpdate({
     }
 
     // ── Orbit and Top mode keyboard navigation (Google Earth style) ─────────────
-    if ((modeRef.current === 'orbit' || modeRef.current === 'top' || modeRef.current === 'ortho') && keys.current.size > 0) {
+    if ((modeRef.current === 'orbit' || modeRef.current === 'top' || modeRef.current === 'iso') && keys.current.size > 0) {
       const k = keys.current;
       const ctrl = ctrlRef.current;
       invalidate();
@@ -177,7 +177,7 @@ export function useCameraFrameUpdate({
       if (ctrl) {
         const activeCamera = ctrl.object;
         const plainCamera = !movesCharacter && modeRef.current === 'orbit';
-        const plainPan = !movesCharacter && (modeRef.current === 'top' || modeRef.current === 'ortho');
+        const plainPan = !movesCharacter && (modeRef.current === 'top' || modeRef.current === 'iso');
         // Shift+arrows — orbit (rotate camera around target)
         if ((plainCamera && hasPlainArrow) || k.has('ShiftArrowLeft') || k.has('ShiftArrowRight') || k.has('ShiftArrowUp') || k.has('ShiftArrowDown')) {
           const rotates = (key: string) => k.has('Shift' + key) || (plainCamera && k.has(key));

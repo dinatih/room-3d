@@ -118,7 +118,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
     ? mode === 'fpv' ? `Vue embarquée · ${animal}` : `Caméra · ${animal}`
     : mode === 'fpv' ? 'Déplacer · PNJ — FPV'
     : moving ? 'Déplacer · PNJ'
-    : mode === 'top' || mode === 'ortho' ? `Caméra · ${mode === 'top' ? 'Dessus' : 'Vue fixe'}`
+    : mode === 'top' || mode === 'iso' ? `Caméra · ${mode === 'top' ? 'Dessus' : 'Vue fixe'}`
     : mode === 'follow' || target === 'character' ? 'Caméra · PNJ'
     : target === 'studio' ? 'Caméra · Studio' : `Caméra · ${target}`;
   const choices = [

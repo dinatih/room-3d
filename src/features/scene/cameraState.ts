@@ -6,7 +6,7 @@
 import { CHARACTERS, parseUrlActiveCharacter } from './characterConfig';
 import { parseUrlCameraMode } from './camera/cameraUrlParams';
 
-type CameraMode = 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'ortho';
+type CameraMode = 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'iso';
 
 const initialChar = parseUrlActiveCharacter() || CHARACTERS[0];
 

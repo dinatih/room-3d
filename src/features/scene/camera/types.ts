@@ -1,4 +1,4 @@
-export type CameraMode = 'orbit' | 'follow' | 'fpv' | 'top' | 'ortho';
+export type CameraMode = 'orbit' | 'follow' | 'fpv' | 'top' | 'iso';
 
 export type ArrowControl = 'camera' | 'character';
 

@@ -189,7 +189,7 @@ export function CameraViewMarkers() {
     window.addEventListener('inventory-grid-camera-target', syncTarget);
     return () => window.removeEventListener('inventory-grid-camera-target', syncTarget);
   }, []);
-  const isOrtho = cameraProjection === 'ortho' || cameraMode === 'ortho' || (camera as THREE.OrthographicCamera).isOrthographicCamera;
+  const isOrtho = cameraProjection === 'ortho' || cameraMode === 'iso' || (camera as THREE.OrthographicCamera).isOrthographicCamera;
   if (!enabled || photoOpen || isOrtho) return null;
 
   const markerOffset: [number, number, number] = inventoryGridActive && inventoryGridTarget
