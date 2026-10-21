@@ -1,7 +1,6 @@
 import { SmartObjectDef, ResolvedSmartObject, SpatialZoneDef, InteractionType } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 import { OccupancyManager, isInRoom } from './occupancyManager';
-import { DiagWall } from '../wallData';
 
 /**
  * Boîte englobante 3D [minX, minY, minZ, maxX, maxY, maxZ] (en cm)
@@ -280,9 +279,5 @@ export function isAgentInBathroom(pos: [number, number, number] | { x: number; y
  * Détecte si un agent se trouve dans le volume intérieur du couloir d'entrée.
  */
 export function isAgentInCorridor(pos: [number, number, number] | { x: number; y?: number; z: number }): boolean {
-  const x = Array.isArray(pos) ? pos[0] : pos.x;
-  const z = Array.isArray(pos) ? pos[2] : pos.z;
-  const zDiag = DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
-  const minX = z < 465 ? 185 : 195;
-  return x >= minX && x <= 325 && z >= 408 && z <= (zDiag + 5);
+  return isInRoom('corridor', Array.isArray(pos) ? { x: pos[0], y: pos[1], z: pos[2] } : pos);
 }

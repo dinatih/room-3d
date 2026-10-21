@@ -15,7 +15,7 @@ let pathRequests = 0;
 let roomFull = false, checkedRoom;
 const navigationDependencies = {
     './navigationScope': require('../../src/features/scene/ai/navigation/navigationScope.ts'),
-    '../occupancyManager': { OccupancyManager: { hasRoomCapacity: () => !roomFull }, isInRoom: (room, point) => room === checkedRoom && point.x > 0, LIMITED_ROOMS: ['living', 'bathroom'], ROOM_CAPACITIES: { living: 8, bathroom: 3 } },
+    '../occupancyManager': { OccupancyManager: { hasRoomCapacity: () => !roomFull }, isInRoom: (room, point) => room === checkedRoom && point.x > 0, LIMITED_ROOMS: ['living', 'bathroom', 'corridor'], ROOM_CAPACITIES: { living: 8, bathroom: 3, corridor: 2 } },
     '../../positionState': { positionState: {} }, '../../furniturePositions': { movingFurniture: new Set() }, './architecture': architecture, './obstacles': obstacles, './geometry': g,
     '../../doorObstacles': doors, './doorRequests': requests, '../agent/agentAvoidance': { limitAgentMovement: (id, start, proposed) => proposed, isAgentDestinationFree: () => true, getAgentObstacles: () => [], beginActorBlockCheck: () => { }, endActorBlockCheck: () => new Map(), actorBlocksUnchanged: () => true },
     './comfort': require('../../src/features/scene/ai/navigation/comfort.ts'), './pathfindingClient': {
@@ -58,7 +58,7 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
-    for (const room of ['living', 'bathroom']) it(`attend hors de la pièce pleine (${room}) puis reprend sans bloquer les sorties`, () => {
+    for (const room of ['living', 'bathroom', 'corridor']) it(`attend hors de la pièce pleine (${room}) puis reprend sans bloquer les sorties`, () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
         const route = nav.createRouteState(), target = { x: 9, z: -100 };
@@ -69,7 +69,7 @@ describe('Navigation et portes — géométrie isolée', () => {
             const planned = pathRequests;
             position = nav.followRoute(route, 'walker', position, target, 3);
             assert.equal(position.x, 0);
-            assert.match(route.waitReason, room === 'living' ? /Séjour complet \(8 PNJ\)/ : /Salle de bains complète \(3 personnages\)/);
+            assert.match(route.waitReason, { living: /Séjour complet \(8 PNJ\)/, bathroom: /Salle de bains complète \(3 personnages\)/, corridor: /Couloir complet \(2 personnages\)/ }[room]);
             assert.equal(route.error, null);
             roomFull = false;
             position = nav.followRoute(route, 'walker', position, target, 3);

@@ -2,7 +2,7 @@ import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 import { cameraState } from '../cameraState';
 import { CHARACTERS } from '../characterConfig';
 import { useSceneStore } from '../store/useSceneStore';
-import { BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, ROOM_NORTH_WALL, ROOM_SOUTH_WALL, ROOM_EAST_WALL, WALL_H, DiagWall } from '../wallData';
+import { BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, ROOM_NORTH_WALL, ROOM_SOUTH_WALL, ROOM_EAST_WALL, CORRIDOR_WEST_WALL, CORRIDOR_EAST_WALL, CORRIDOR_NORTH_WALL, WALL_H, DiagWall } from '../wallData';
 
 /**
  * OccupancyManager — Système central de réservation et d'occupation des places assises et objets 3D.
@@ -14,7 +14,7 @@ interface SlotReservation {
   claimedAt: number;
 }
 
-export const ROOM_CAPACITIES = { living: 8, bathroom: 3 } as const;
+export const ROOM_CAPACITIES = { living: 8, bathroom: 3, corridor: 2 } as const;
 export type LimitedRoom = keyof typeof ROOM_CAPACITIES;
 export const LIMITED_ROOMS = Object.keys(ROOM_CAPACITIES) as LimitedRoom[];
 const humanIds = new Set(CHARACTERS.map(character => character.id));
@@ -22,6 +22,8 @@ const humanIds = new Set(CHARACTERS.map(character => character.id));
 /** Room interiors, independent of the visibility of their geometry. */
 export function isInRoom(room: LimitedRoom, { x, y = 0, z }: { x: number; y?: number; z: number }): boolean {
   if (y < 0 || y > WALL_H || x < BATH_WEST_WALL) return false;
+  if (room === 'corridor') return x >= CORRIDOR_WEST_WALL && x <= CORRIDOR_EAST_WALL && z >= CORRIDOR_NORTH_WALL
+    && z <= DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
   if (room === 'bathroom') return x <= BATH_EAST_WALL && z > BATH_NORTH_WALL
     && z <= DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
   return x <= ROOM_EAST_WALL && z >= ROOM_NORTH_WALL

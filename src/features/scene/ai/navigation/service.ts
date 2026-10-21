@@ -338,7 +338,7 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
   const limited = limitAgentMovement(agentId, start, position);
   for (const room of LIMITED_ROOMS) {
     if (!isInRoom(room, start) && isInRoom(room, limited) && !OccupancyManager.hasRoomCapacity(room, agentId)) {
-      route.waitReason = room === 'living' ? `Séjour complet (${ROOM_CAPACITIES.living} PNJ)` : `Salle de bains complète (${ROOM_CAPACITIES.bathroom} personnages)`;
+      route.waitReason = `${{ living: 'Séjour complet', bathroom: 'Salle de bains complète', corridor: 'Couloir complet' }[room]} (${ROOM_CAPACITIES[room]} ${room === 'living' ? 'PNJ' : 'personnages'})`;
       return start;
     }
   }

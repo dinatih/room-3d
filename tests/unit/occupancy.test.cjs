@@ -6,18 +6,43 @@ function fixture() {
     const ids = Array.from({ length: 10 }, (_, i) => `npc-${i}`);
     const slots = Array.from({ length: 12 }, (_, i) => ({ slotId: `seat-${i}`, offset: [100, 0, 100] }));
     const objects = { living: { id: 'living', position: [100, 0, 100], slots }, outside: { id: 'outside', position: [100, 0, -100], slots: [{ slotId: 'use', offset: [100, 0, -100] }] } };
+    objects.corridor = { id: 'corridor', position: [250, 0, 550], slots: slots.map(slot => ({ ...slot, offset: [250, 0, 550] })) };
     for (const id of ['toilet', 'vasque-sdb', 'sdb-closet', 'shower', 'storage-box']) objects[id] = { id, position: [100, 0, 550], slots: [{ slotId: 'use', offset: [100, 0, 550], approachOffset: [250, 0, 550] }] };
     const camera = { positions: {} }, store = { activeCharacterId: 'player' };
     const module = load('src/features/scene/ai/occupancyManager.ts', {
         './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: id => objects[id] },
         '../cameraState': { cameraState: camera }, '../characterConfig': { CHARACTERS: [...ids, 'player', 'ybot'].map(id => ({ id })) },
         '../store/useSceneStore': { useSceneStore: { getState: () => store } },
-        '../wallData': { BATH_WEST_WALL: -10, BATH_EAST_WALL: 195, BATH_NORTH_WALL: 465, ROOM_NORTH_WALL: 0, ROOM_SOUTH_WALL: 400, ROOM_EAST_WALL: 316, WALL_H: 250, DiagWall: { A: { x: 0, z: 700 }, slope: -0.2 } },
+        '../wallData': { BATH_WEST_WALL: -10, BATH_EAST_WALL: 195, BATH_NORTH_WALL: 465, ROOM_NORTH_WALL: 0, ROOM_SOUTH_WALL: 400, ROOM_EAST_WALL: 316, CORRIDOR_WEST_WALL: 200, CORRIDOR_EAST_WALL: 316, CORRIDOR_NORTH_WALL: 410, WALL_H: 250, DiagWall: { A: { x: 0, z: 700 }, slope: -0.2 } },
     });
     return { ids, camera, store, ...module, manager: module.OccupancyManager };
 }
 
 describe('Capacité des pièces', () => {
+    it('limite le couloir à deux présences ou arrivées, joueur et Ybot inclus', () => {
+        const { ids, camera, manager, ROOM_CAPACITIES } = fixture();
+        assert.equal(ROOM_CAPACITIES.corridor, 2);
+        camera.positions.player = camera.positions.robin = { x: 250, y: 0, z: 550 };
+        assert(manager.claimSlot('corridor', 'seat-0', 'ybot'));
+        assert.equal(manager.hasRoomCapacity('corridor', ids[0]), false);
+        assert.equal(manager.getAvailableSlot('corridor', ids[0]), null);
+        assert.equal(manager.isObjectFullyOccupied('corridor', ids[0]), true);
+        assert.equal(manager.claimSlot('corridor', 'seat-1', ids[0]), false);
+        camera.positions.ybot = { x: 250, y: 0, z: 550 };
+        assert.equal(manager.getRoomOccupants('corridor').size, 2, 'An arrival and its reservation count once; animals are excluded');
+        manager.releaseAllForCharacter('ybot');
+        assert.equal(manager.hasRoomCapacity('corridor', ids[0]), false, 'The place remains occupied until departure');
+        camera.positions.ybot.z = 350;
+        assert.equal(manager.hasRoomCapacity('corridor', ids[0], ids[1]), false, 'A duo needs two available places');
+        assert(manager.claimSlot('corridor', 'seat-1', ids[0]));
+    });
+
+    it('délimite le couloir intérieur sans compter séjour, salle de bains ni passage extérieur', () => {
+        const { isInRoom } = fixture();
+        for (const point of [{ x: 250, z: 430 }, { x: 250, z: 550 }]) assert(isInRoom('corridor', point));
+        for (const point of [{ x: 250, z: 350 }, { x: 100, z: 550 }, { x: 330, z: 550 }, { x: 250, z: 660 }, { x: 250, y: 2500, z: 550 }]) assert.equal(isInRoom('corridor', point), false);
+    });
+
     it('réserve huit places au séjour et refuse une neuvième arrivée', () => {
         const { ids, manager, ROOM_CAPACITIES } = fixture();
         assert.equal(ROOM_CAPACITIES.living, 8);
