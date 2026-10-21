@@ -3,7 +3,7 @@ import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
 import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
-import { BATH_WEST_WALL, ROOM_D, ROOM_W } from '../wallData';
+import { BATH_WEST_WALL, ROOM_D, ROOM_W, pNorth } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { TOILET_BOWL_CENTER } from '../items/Toilet';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
@@ -20,12 +20,12 @@ import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/ka
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
-// Approach from the bathroom centre, clear of the toilet and the shower leaf's sweep.
+// Align Z with pick-laundry: closet centre (7 cm rail depth), then 35 cm in front.
 const showerDoor = DOOR_CONFIGS.shower;
 const SHOWER_APPROACH: [number, number, number] = [
   showerDoor.pivot.x + showerDoor.closedDir.x * (showerDoor.length + HUMAN_BODY_RADIUS + showerDoor.margin),
   0,
-  showerDoor.pivot.z + showerDoor.openNormal.z * (showerDoor.length + HUMAN_BODY_RADIUS + showerDoor.margin),
+  pNorth('shower-ne') + 7 / 2 - 35,
 ];
 
 // At 90°, p2 starts in the chest-bench; date_bearhug's walk crosses the fence and garden furniture.
