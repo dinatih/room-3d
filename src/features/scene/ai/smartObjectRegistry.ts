@@ -20,10 +20,10 @@ import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/ka
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
-// Face the shower opening from outside the leaf's sweep, away from the adjacent closet.
+// Approach from the bathroom centre, clear of the toilet and the shower leaf's sweep.
 const showerDoor = DOOR_CONFIGS.shower;
 const SHOWER_APPROACH: [number, number, number] = [
-  showerDoor.pivot.x + showerDoor.closedDir.x * showerDoor.length / 2,
+  showerDoor.pivot.x + showerDoor.closedDir.x * (showerDoor.length + HUMAN_BODY_RADIUS + showerDoor.margin),
   0,
   showerDoor.pivot.z + showerDoor.openNormal.z * (showerDoor.length + HUMAN_BODY_RADIUS + showerDoor.margin),
 ];
