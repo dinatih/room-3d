@@ -252,7 +252,9 @@ export function updateUrlCameraMode(mode: CameraMode) {
     if (mode !== 'fpv' && parseUrlCameraPos()?.type === 'fpv') {
       for (const p of ['cameraPos', 'cameraPosition', 'camPos', 'pos', 'cameraView']) url.searchParams.delete(p);
     }
-    if (mode !== 'fpv' || parseUrlCameraTarget() || parseUrlCameraPos()?.type === 'angle' || parseUrlCameraMovement() !== 'fix') {
+    const inferredOrbit = (parseUrlCameraTarget() || parseUrlCameraPos()?.type === 'angle' || parseUrlCameraMovement() === 'orbit')
+      && parseUrlCameraMovement() !== 'follow';
+    if (mode === 'orbit' ? !inferredOrbit : mode !== 'fpv' || parseUrlCameraTarget() || parseUrlCameraPos()?.type === 'angle' || parseUrlCameraMovement() !== 'fix') {
       url.searchParams.set('mode', mode);
     }
     window.history.replaceState(null, '', url.toString());
