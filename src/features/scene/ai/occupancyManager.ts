@@ -2,7 +2,7 @@ import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 import { cameraState } from '../cameraState';
 import { CHARACTERS } from '../characterConfig';
 import { useSceneStore } from '../store/useSceneStore';
-import { BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, ROOM_NORTH_WALL, ROOM_SOUTH_WALL, ROOM_EAST_WALL, WALL_H } from '../wallData';
+import { BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, ROOM_NORTH_WALL, ROOM_SOUTH_WALL, ROOM_EAST_WALL, WALL_H, DiagWall } from '../wallData';
 
 /**
  * OccupancyManager — Système central de réservation et d'occupation des places assises et objets 3D.
@@ -14,14 +14,17 @@ interface SlotReservation {
   claimedAt: number;
 }
 
-export const BATHROOM_OBJECTS = new Set(['toilet', 'vasque-sdb', 'sdb-closet', 'shower']);
-export const BATHROOM_CAPACITY = 3;
-export const LIVING_ROOM_NPC_CAPACITY = 8;
+export const ROOM_CAPACITIES = { living: 8, bathroom: 3 } as const;
+export type LimitedRoom = keyof typeof ROOM_CAPACITIES;
+export const LIMITED_ROOMS = Object.keys(ROOM_CAPACITIES) as LimitedRoom[];
 const humanIds = new Set(CHARACTERS.map(character => character.id));
 
-/** Main room and its kitchen extension, excluding the entrance corridor. */
-export function isInLivingRoom({ x, y = 0, z }: { x: number; y?: number; z: number }): boolean {
-  return y >= 0 && y <= WALL_H && x >= BATH_WEST_WALL && x <= ROOM_EAST_WALL && z >= ROOM_NORTH_WALL
+/** Room interiors, independent of the visibility of their geometry. */
+export function isInRoom(room: LimitedRoom, { x, y = 0, z }: { x: number; y?: number; z: number }): boolean {
+  if (y < 0 || y > WALL_H || x < BATH_WEST_WALL) return false;
+  if (room === 'bathroom') return x <= BATH_EAST_WALL && z > BATH_NORTH_WALL
+    && z <= DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
+  return x <= ROOM_EAST_WALL && z >= ROOM_NORTH_WALL
     && (z <= ROOM_SOUTH_WALL || (x <= BATH_EAST_WALL && z <= BATH_NORTH_WALL));
 }
 
@@ -38,46 +41,35 @@ class SmartObjectOccupancyManager {
     return !owner || owner === characterId;
   }
 
-  getBathroomOccupants(forCharacterId?: string): Set<string> {
-    const occupants = new Set<string>();
-    for (const [key, reservation] of this.occupiedSlots) {
-      if (forCharacterId && reservation.characterId === forCharacterId) continue;
-      const separator = key.indexOf(':');
-      const occupiedObject = key.slice(0, separator);
-      if (BATHROOM_OBJECTS.has(occupiedObject)) occupants.add(reservation.characterId);
-    }
-    return occupants;
-  }
-
-  isLivingRoomObject(objectId: string, slotId?: string): boolean {
+  isRoomObject(room: LimitedRoom, objectId: string, slotId?: string): boolean {
     const object = getSmartObject(objectId);
     if (!object) return false;
     const slot = object.slots.find(candidate => candidate.slotId === slotId?.split(':')[0]);
-    const point = slot?.approachOffset ?? slot?.offset ?? object.position;
-    return isInLivingRoom({ x: point[0], y: point[1], z: point[2] });
+    const point = slot?.offset ?? object.position;
+    return isInRoom(room, { x: point[0], y: point[1], z: point[2] });
   }
 
-  /** Present NPCs and incoming reservations each occupy one place; the player is excluded. */
-  getLivingRoomOccupants(forCharacterId?: string): Set<string> {
-    const activeId = useSceneStore.getState().activeCharacterId;
+  /** Presence and incoming activities count once per character. Only the living room excludes the player. */
+  getRoomOccupants(room: LimitedRoom, forCharacterId?: string): Set<string> {
+    const activeId = room === 'living' ? useSceneStore.getState().activeCharacterId : undefined;
     const occupants = new Set<string>();
     for (const [id, position] of Object.entries(cameraState.positions)) {
-      if (id !== activeId && id !== forCharacterId && humanIds.has(id) && isInLivingRoom(position)) occupants.add(id);
+      if (id !== activeId && id !== forCharacterId && humanIds.has(id) && isInRoom(room, position)) occupants.add(id);
     }
     for (const [key, reservation] of this.occupiedSlots) {
       if (reservation.characterId === activeId || reservation.characterId === forCharacterId || !humanIds.has(reservation.characterId)) continue;
       const separator = key.indexOf(':');
-      if (this.isLivingRoomObject(key.slice(0, separator), key.slice(separator + 1))) occupants.add(reservation.characterId);
+      if (this.isRoomObject(room, key.slice(0, separator), key.slice(separator + 1))) occupants.add(reservation.characterId);
     }
     return occupants;
   }
 
-  hasLivingRoomCapacity(...characterIds: string[]): boolean {
-    const activeId = useSceneStore.getState().activeCharacterId;
+  hasRoomCapacity(room: LimitedRoom, ...characterIds: string[]): boolean {
+    const activeId = room === 'living' ? useSceneStore.getState().activeCharacterId : undefined;
     if (characterIds.every(id => id === activeId || !humanIds.has(id))) return true;
-    const occupants = this.getLivingRoomOccupants();
+    const occupants = this.getRoomOccupants(room);
     for (const id of characterIds) if (id !== activeId && humanIds.has(id)) occupants.add(id);
-    return occupants.size <= LIVING_ROOM_NPC_CAPACITY;
+    return occupants.size <= ROOM_CAPACITIES[room];
   }
 
   /**
@@ -100,14 +92,12 @@ class SmartObjectOccupancyManager {
   getOccupant(objectId: string, slotId: string, forCharacterId?: string): string | null {
     const slots = SMART_OBJECTS[objectId]?.slots;
     const requested = slots?.find(slot => slot.slotId === slotId);
-    if (this.isLivingRoomObject(objectId, slotId) && (forCharacterId
-      ? !this.hasLivingRoomCapacity(forCharacterId)
-      : this.getLivingRoomOccupants().size >= LIVING_ROOM_NPC_CAPACITY)) {
-      return this.getLivingRoomOccupants(forCharacterId).values().next().value!;
-    }
-    if (BATHROOM_OBJECTS.has(objectId)) {
-      const occupants = this.getBathroomOccupants(forCharacterId);
-      if (occupants.size >= BATHROOM_CAPACITY) return [...occupants][0];
+    for (const room of LIMITED_ROOMS) {
+      if (this.isRoomObject(room, objectId, slotId) && (forCharacterId
+        ? !this.hasRoomCapacity(room, forCharacterId)
+        : this.getRoomOccupants(room).size >= ROOM_CAPACITIES[room])) {
+        return this.getRoomOccupants(room, forCharacterId).values().next().value!;
+      }
     }
     for (const [key, reservation] of this.occupiedSlots) {
       if (reservation.characterId === forCharacterId) continue;
@@ -167,14 +157,6 @@ class SmartObjectOccupancyManager {
   getAvailableSlot(objectId: string, characterId: string, preferredSlotId?: string): string | null {
     const obj = SMART_OBJECTS[objectId];
     if (!obj || !obj.slots.length || !this.canUseObject(objectId, characterId)) return null;
-    if (this.isLivingRoomObject(objectId, preferredSlotId) && !this.hasLivingRoomCapacity(characterId)) return null;
-
-    if (BATHROOM_OBJECTS.has(objectId)) {
-      if (this.getBathroomOccupants(characterId).size >= BATHROOM_CAPACITY) {
-        return null;
-      }
-    }
-
     if (this.isExclusiveObject(objectId) && this.isObjectFullyOccupied(objectId, characterId)) {
       return null;
     }
@@ -205,14 +187,12 @@ class SmartObjectOccupancyManager {
   isObjectFullyOccupied(objectId: string, characterId?: string): boolean {
     const obj = SMART_OBJECTS[objectId];
     if (!obj || !obj.slots.length) return false;
-    if (this.isLivingRoomObject(objectId) && (characterId ? !this.hasLivingRoomCapacity(characterId) : this.getLivingRoomOccupants().size >= LIVING_ROOM_NPC_CAPACITY)) return true;
     if (this.isExclusiveObject(objectId)) {
       for (const [k, r] of this.occupiedSlots.entries()) {
         if (k.startsWith(`${objectId}:`) && (!characterId || r.characterId !== characterId)) {
           return true;
         }
       }
-      return false;
     }
     return obj.slots.every(slot => this.isSlotOccupied(objectId, slot.slotId, characterId));
   }

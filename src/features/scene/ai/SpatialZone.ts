@@ -1,6 +1,6 @@
 import { SmartObjectDef, ResolvedSmartObject, SpatialZoneDef, InteractionType } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
-import { OccupancyManager } from './occupancyManager';
+import { OccupancyManager, isInRoom } from './occupancyManager';
 import { DiagWall } from '../wallData';
 
 /**
@@ -273,10 +273,7 @@ export const ZoneManager = SpatialZoneManager;
  * Détecte si un agent se trouve dans le volume intérieur de la salle de bain.
  */
 export function isAgentInBathroom(pos: [number, number, number] | { x: number; y?: number; z: number }): boolean {
-  const x = Array.isArray(pos) ? pos[0] : pos.x;
-  const z = Array.isArray(pos) ? pos[2] : pos.z;
-  const zDiag = DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
-  return x >= -15 && x < 195 && z >= 465 && z <= (zDiag + 5);
+  return isInRoom('bathroom', Array.isArray(pos) ? { x: pos[0], y: pos[1], z: pos[2] } : pos);
 }
 
 /**

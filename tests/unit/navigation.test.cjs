@@ -12,10 +12,10 @@ const doors = load('src/features/scene/doorObstacles.ts', {
 const architecture = { architectureObstacles: [], walkableSurfaces: [[g.rectangle(0, 0, 600, 600)]] };
 const queries = require('../../src/features/scene/ai/navigation/queries.ts');
 let pathRequests = 0;
-let livingRoomFull = false, checkRoomEntry = false;
+let roomFull = false, checkedRoom;
 const navigationDependencies = {
     './navigationScope': require('../../src/features/scene/ai/navigation/navigationScope.ts'),
-    '../occupancyManager': { OccupancyManager: { hasLivingRoomCapacity: () => !livingRoomFull }, isInLivingRoom: point => checkRoomEntry && point.x > 0, LIVING_ROOM_NPC_CAPACITY: 8 },
+    '../occupancyManager': { OccupancyManager: { hasRoomCapacity: () => !roomFull }, isInRoom: (room, point) => room === checkedRoom && point.x > 0, LIMITED_ROOMS: ['living', 'bathroom'], ROOM_CAPACITIES: { living: 8, bathroom: 3 } },
     '../../positionState': { positionState: {} }, '../../furniturePositions': { movingFurniture: new Set() }, './architecture': architecture, './obstacles': obstacles, './geometry': g,
     '../../doorObstacles': doors, './doorRequests': requests, '../agent/agentAvoidance': { limitAgentMovement: (id, start, proposed) => proposed, isAgentDestinationFree: () => true, getAgentObstacles: () => [], beginActorBlockCheck: () => { }, endActorBlockCheck: () => new Map(), actorBlocksUnchanged: () => true },
     './comfort': require('../../src/features/scene/ai/navigation/comfort.ts'), './pathfindingClient': {
@@ -58,27 +58,27 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
-    it('attend hors du séjour plein puis reprend sans bloquer les sorties', () => {
+    for (const room of ['living', 'bathroom']) it(`attend hors de la pièce pleine (${room}) puis reprend sans bloquer les sorties`, () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
         const route = nav.createRouteState(), target = { x: 9, z: -100 };
-        checkRoomEntry = true; livingRoomFull = true;
+        checkedRoom = room; roomFull = true;
         try {
             let position = nav.followRoute(route, 'walker', { x: -3, z: -100 }, target, 3);
             assert.equal(position.x, 0);
             const planned = pathRequests;
             position = nav.followRoute(route, 'walker', position, target, 3);
             assert.equal(position.x, 0);
-            assert.match(route.waitReason, /Séjour complet \(8 PNJ\)/);
+            assert.match(route.waitReason, room === 'living' ? /Séjour complet \(8 PNJ\)/ : /Salle de bains complète \(3 personnages\)/);
             assert.equal(route.error, null);
-            livingRoomFull = false;
+            roomFull = false;
             position = nav.followRoute(route, 'walker', position, target, 3);
             assert.equal(position.x, 3);
             assert.equal(pathRequests, planned, 'Admission must resume the existing path');
-            livingRoomFull = true;
+            roomFull = true;
             position = nav.followRoute(route, 'walker', position, { x: -3, z: -100 }, 6);
             assert.equal(position.x, -3, 'Leaving a full room must remain possible');
-        } finally { checkRoomEntry = false; livingRoomFull = false; nav.resetRoute(route, 'walker'); }
+        } finally { checkedRoom = undefined; roomFull = false; nav.resetRoute(route, 'walker'); }
     });
     it('conserve un trajet encore libre après modification et recalcule si un obstacle le coupe', () => {
         setup({}, 83);

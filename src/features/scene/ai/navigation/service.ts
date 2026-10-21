@@ -11,7 +11,7 @@ import type { GraphDefinition, ApproachRegion } from './queries';
 import { NavigationScope, NavigationPending, navigationValue } from './navigationScope';
 import { requestPath, prepareNavigationGraph, readObjectApproach, type NavigationGraph, type PathSearch } from './pathfindingClient';
 import { cameraState } from '../../cameraState';
-import { OccupancyManager, isInLivingRoom, LIVING_ROOM_NPC_CAPACITY } from '../occupancyManager';
+import { OccupancyManager, isInRoom, LIMITED_ROOMS, ROOM_CAPACITIES } from '../occupancyManager';
 
 export { architectureObstacles };
 export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
@@ -336,9 +336,11 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
     route.failure = { graph: getNavigationGraph(getAgentProfile(agentId), undefined), start: { ...start }, target: { ...target }, owner, interaction, protectedDoor, doorProtection, actorBlockers };
   }
   const limited = limitAgentMovement(agentId, start, position);
-  if (!isInLivingRoom(start) && isInLivingRoom(limited) && !OccupancyManager.hasLivingRoomCapacity(agentId)) {
-    route.waitReason = `Séjour complet (${LIVING_ROOM_NPC_CAPACITY} PNJ)`;
-    return start;
+  for (const room of LIMITED_ROOMS) {
+    if (!isInRoom(room, start) && isInRoom(room, limited) && !OccupancyManager.hasRoomCapacity(room, agentId)) {
+      route.waitReason = room === 'living' ? `Séjour complet (${ROOM_CAPACITIES.living} PNJ)` : `Salle de bains complète (${ROOM_CAPACITIES.bathroom} personnages)`;
+      return start;
+    }
   }
   // Plan before contact along the next segment, including free comfort bands.
   const nextWaypoint = route.path[route.index];

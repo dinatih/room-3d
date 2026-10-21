@@ -1,6 +1,6 @@
 import { DUO_ANIMATIONS, DuoAnimationDef, canCharacterPerformDuo } from '../animations/duoAnimations';
 import { computeWorldTransform } from '../animations/duoWorldTransform';
-import { OccupancyManager } from './occupancyManager';
+import { OccupancyManager, LIMITED_ROOMS } from './occupancyManager';
 import { appLog } from '@features/ui/AppConsole';
 import { cameraState } from '../cameraState';
 import { AUTONOMOUS_NPC_IDS, isCharacterVisibleInMode } from '../characterConfig';
@@ -513,7 +513,7 @@ class DuoSessionManager {
         return { targetA: existing.participantA?.characterId ?? '', targetB: leaderId, posA, posB, rotA, rotB, actualSlotId };
       }
       if (!existing.participantB?.isReady && leaderId) {
-        if (OccupancyManager.isLivingRoomObject(objectId, actualSlotId) && !OccupancyManager.hasLivingRoomCapacity(leaderId)) return null;
+        if (LIMITED_ROOMS.some(room => OccupancyManager.isRoomObject(room, objectId, actualSlotId) && !OccupancyManager.hasRoomCapacity(room, leaderId!))) return null;
         if (existing.participantB && existing.participantB.characterId !== leaderId) {
           this.charToSession.delete(existing.participantB.characterId);
           OccupancyManager.releaseSlot(objectId, `${actualSlotId}:roleB`, existing.participantB.characterId);
@@ -589,7 +589,7 @@ class DuoSessionManager {
       anchorPos = safeAnchor;
     }
     const location: DuoLocation = { objectId, slotId: actualSlotId, anchorPos, anchorRotY };
-    if (OccupancyManager.isLivingRoomObject(objectId, actualSlotId) && !OccupancyManager.hasLivingRoomCapacity(targetA, targetB)) return null;
+    if (LIMITED_ROOMS.some(room => OccupancyManager.isRoomObject(room, objectId, actualSlotId) && !OccupancyManager.hasRoomCapacity(room, targetA, targetB))) return null;
 
     // Réservations d'occupation
     OccupancyManager.claimSlot(objectId, `${actualSlotId}:roleA`, targetA);
