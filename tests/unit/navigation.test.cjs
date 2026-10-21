@@ -58,7 +58,7 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
-    it('demande la prochaine porte dès le trajet connu, avant de toucher son battant', () => {
+    it('ouvre la prochaine porte seulement à proximité et libère la demande si le PNJ recule', () => {
         setup({ living: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
         const route = nav.createRouteState(), start = { x: 20, z: -200 }, target = { x: 20, z: 100 };
         try {
@@ -66,7 +66,14 @@ describe('Navigation et portes — géométrie isolée', () => {
             route.path.unshift({ x: 20, z: -100 });
             const next = nav.followRoute(route, 'walker', start, target, 3);
             assert(g.distance(next, start) > 0);
-            assert.equal(requests.doorRequested('living'), true, 'The route crosses this door; opening must start while the actor is still approaching');
+            assert.equal(requests.doorRequested('living'), false, 'A known path must not open a distant door');
+            const nearby = { x: 20, z: -50 };
+            route.path.shift();
+            const approaching = nav.followRoute(route, 'walker', nearby, target, 3);
+            assert(g.distance(approaching, nearby) > 0, 'Opening anticipation must still allow movement before contact');
+            assert.equal(requests.doorRequested('living'), true, 'A nearby actor must request the next opening');
+            nav.followRoute(route, 'walker', start, target, 3);
+            assert.equal(requests.doorRequested('living'), false, 'Moving away must release the opening even when the route still crosses it');
             assert.equal(route.waitReason, undefined);
         } finally { nav.resetRoute(route, 'walker'); }
     });
