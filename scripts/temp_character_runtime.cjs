@@ -189,6 +189,23 @@ if (process.argv.includes('--snapshot')) {
       const debug = process.argv.includes('--full-scene') ? '' : 'debug=characters-only&';
       await page.goto(`http://127.0.0.1:5198/?${debug}perfGraph=1&characterCount=${count}&skipIntro=1&mode=top`, { waitUntil: 'domcontentloaded', timeout: 180000 });
       await page.waitForFunction(() => window.__THREE_SCENE__ && window.__THREE_GL__, { timeout: 180000 });
+      if (process.argv.includes('--verify-capacity')) await page.evaluate(async () => {
+        const { OccupancyManager, isInLivingRoom, LIVING_ROOM_NPC_CAPACITY } = await import('/src/features/scene/ai/occupancyManager.ts');
+        const { cameraState } = await import('/src/features/scene/cameraState.ts');
+        const { CHARACTERS } = await import('/src/features/scene/characterConfig.ts');
+        const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
+        const humans = new Set(CHARACTERS.map(character => character.id));
+        const monitor = window.__LIVING_CAPACITY__ = { capacity: LIVING_ROOM_NPC_CAPACITY, samples: 0, maxPhysical: 0, maxCommitted: 0 };
+        function sample() {
+          const player = useSceneStore.getState().activeCharacterId;
+          const physical = Object.entries(cameraState.positions).filter(([id, position]) => id !== player && humans.has(id) && isInLivingRoom(position)).length;
+          monitor.samples++;
+          monitor.maxPhysical = Math.max(monitor.maxPhysical, physical);
+          monitor.maxCommitted = Math.max(monitor.maxCommitted, OccupancyManager.getLivingRoomOccupants().size);
+          requestAnimationFrame(sample);
+        }
+        requestAnimationFrame(sample);
+      });
       await page.waitForFunction(count => {
         let loaded = 0;
         window.__THREE_SCENE__.traverse(node => {
@@ -328,6 +345,12 @@ if (process.argv.includes('--snapshot')) {
         const frames = [...data.frames].sort((a, b) => a - b);
         data.summary = { count: frames.length, p50: frames[Math.floor(frames.length * .5)], p95: frames[Math.floor(frames.length * .95)], p99: frames[Math.floor(frames.length * .99)], max: frames.at(-1), over50: frames.filter(ms => ms > 50).length, over100: frames.filter(ms => ms > 100).length };
         run.captures.push(data); save(); console.log(label, count, capture, JSON.stringify(data.summary));
+        if (process.argv.includes('--verify-capacity')) {
+          run.capacityVerification = await page.evaluate(() => window.__LIVING_CAPACITY__);
+          save(); console.log('CAPACITY VERIFICATION', JSON.stringify(run.capacityVerification));
+          const { capacity, samples, maxPhysical, maxCommitted } = run.capacityVerification;
+          if (!samples || maxPhysical > capacity || maxCommitted > capacity) throw Error('Living room capacity exceeded: ' + JSON.stringify(run.capacityVerification));
+        }
         if (process.argv.includes('--verify-locomotion') && !process.argv.includes('--without-pending-idle')) {
           const stalls = Object.entries(memory.at(-1).locomotion ?? {}).filter(([, actor]) => actor.walkWithoutMotionSeconds > 0);
           if (stalls.length) throw Error('Walking without translation: ' + JSON.stringify(stalls));

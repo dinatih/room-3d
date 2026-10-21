@@ -513,6 +513,7 @@ class DuoSessionManager {
         return { targetA: existing.participantA?.characterId ?? '', targetB: leaderId, posA, posB, rotA, rotB, actualSlotId };
       }
       if (!existing.participantB?.isReady && leaderId) {
+        if (OccupancyManager.isLivingRoomObject(objectId, actualSlotId) && !OccupancyManager.hasLivingRoomCapacity(leaderId)) return null;
         if (existing.participantB && existing.participantB.characterId !== leaderId) {
           this.charToSession.delete(existing.participantB.characterId);
           OccupancyManager.releaseSlot(objectId, `${actualSlotId}:roleB`, existing.participantB.characterId);
@@ -588,6 +589,7 @@ class DuoSessionManager {
       anchorPos = safeAnchor;
     }
     const location: DuoLocation = { objectId, slotId: actualSlotId, anchorPos, anchorRotY };
+    if (OccupancyManager.isLivingRoomObject(objectId, actualSlotId) && !OccupancyManager.hasLivingRoomCapacity(targetA, targetB)) return null;
 
     // Réservations d'occupation
     OccupancyManager.claimSlot(objectId, `${actualSlotId}:roleA`, targetA);
