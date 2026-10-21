@@ -335,7 +335,7 @@ export function useCameraShortcuts({
       if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'r' || e.key === 'R' || e.key === 't' || e.key === 'T')) {
         if (e.repeat) return;
         e.preventDefault();
-        if (modeRef.current === 'orbit') {
+        if (modeRef.current === 'orbit' || modeRef.current === 'top' || modeRef.current === 'iso') {
           toggleOrbitMouseMode(e.key.toLowerCase() === 'r' ? 'rotate' : 'translate');
         }
         return;

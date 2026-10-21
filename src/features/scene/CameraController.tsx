@@ -153,10 +153,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // Synchronisation dynamique du mode d'interaction (rotation / translation) pour souris et tactile
   useEffect(() => {
     if (!ctrlRef.current) return;
-    const effectiveMode = mode === 'orbit' ? orbitMouseMode : mode === 'iso' || cameraProjection === 'ortho' ? 'translate' : 'rotate';
-    ctrlRef.current.mouseButtons = getOrbitMouseButtons(effectiveMode);
-    ctrlRef.current.touches = getOrbitTouches(effectiveMode);
-  }, [mode, orbitMouseMode, cameraProjection]);
+    ctrlRef.current.mouseButtons = getOrbitMouseButtons(orbitMouseMode);
+    ctrlRef.current.touches = getOrbitTouches(orbitMouseMode);
+  }, [mode, orbitMouseMode]);
 
   const resolveTargetPosition = useCallback((targetKey: CameraTarget): [number, number, number] => {
     switch (targetKey) {
@@ -1313,8 +1312,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enablePan={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         enableZoom={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}
         screenSpacePanning={mode !== 'follow'}
-        mouseButtons={getOrbitMouseButtons(mode === 'orbit' ? orbitMouseMode : mode === 'iso' || cameraProjection === 'ortho' ? 'translate' : 'rotate')}
-        touches={getOrbitTouches(mode === 'orbit' ? orbitMouseMode : mode === 'iso' || cameraProjection === 'ortho' ? 'translate' : 'rotate')}
+        mouseButtons={getOrbitMouseButtons(orbitMouseMode)}
+        touches={getOrbitTouches(orbitMouseMode)}
       />
     </>
   );
