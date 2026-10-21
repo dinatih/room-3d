@@ -1105,8 +1105,8 @@ export function Character({
         parts.bones.hips.position.z = 0;
       }
 
-      if (isVisibleInFrustum) {
-        updatePhysics(store.isPlaying && !isTPose ? delta * store.speed : 0, {
+      if (isVisibleInFrustum && store.isPlaying && !isTPose) {
+        updatePhysics(delta * store.speed, {
           haircut,
           isMoving,
           targetAnim: target,

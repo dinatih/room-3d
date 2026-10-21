@@ -117,6 +117,10 @@ export function useCharacterPhysics() {
       return;
     }
 
+    if (delta <= 0) {
+      return;
+    }
+
     if (hipsBoneRef.current) {
       hipsBoneRef.current.updateWorldMatrix(true, true);
     } else {
