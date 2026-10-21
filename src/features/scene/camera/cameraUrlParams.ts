@@ -21,12 +21,22 @@ function getUrlParams(): URLSearchParams {
   if (!search && window.location.hash.includes('?')) {
     search = window.location.hash.substring(window.location.hash.indexOf('?'));
   }
-  return new URLSearchParams(search);
+  const params = new URLSearchParams(search);
+  const mode = params.get('mode')?.trim().toLowerCase();
+  if (mode === 'iso' || mode === 'top') {
+    params.set('projection', 'ortho');
+    params.set('cameraElevation', mode === 'iso' ? '45' : '90');
+    params.set('cameraPos', mode === 'iso' ? 'north-west' : 'west');
+    params.delete('cameraPosition');
+    params.delete('mode');
+  }
+  return params;
 }
 
 function writeUrl(update: (params: URLSearchParams) => void) {
   if (typeof window === 'undefined') return;
   const url = new URL(window.location.href);
+  url.search = getUrlParams().toString();
   update(url.searchParams);
   window.history.replaceState(null, '', url.toString());
 }
@@ -224,7 +234,6 @@ export function parseUrlCameraMode(): CameraMode {
       if (m === 'fpv' || m === 'firstperson' || m === '1p' || m === 'fps') return 'fpv';
       if (m === 'follow' || m === '3p' || m === 'thirdperson') return 'follow';
       if (m === 'top' || m === 'topdown' || m === '2d' || m === 'plan') return 'top';
-      if (m === 'ortho') return 'ortho';
     }
 
     const movement = parseUrlCameraMovement();
@@ -255,7 +264,7 @@ export function updateUrlCameraMode(mode: CameraMode) {
     const inferredOrbit = (parseUrlCameraTarget() || parseUrlCameraPos()?.type === 'angle' || parseUrlCameraMovement() === 'orbit')
       && parseUrlCameraMovement() !== 'follow';
     if (mode === 'orbit' ? !inferredOrbit : mode !== 'fpv' || parseUrlCameraTarget() || parseUrlCameraPos()?.type === 'angle' || parseUrlCameraMovement() !== 'fix') {
-      url.searchParams.set('mode', mode);
+      url.searchParams.set('mode', mode === 'ortho' ? 'iso' : mode);
     }
     window.history.replaceState(null, '', url.toString());
   } catch {}

@@ -57,7 +57,7 @@ import {
 } from './camera';
 import type { CameraTarget } from './camera/types';
 import { parseUrlLayerOverrides } from './store/layerUrlParams';
-import { resolveCameraView, CAMERA_VIEW_HEIGHT } from './camera/cameraViews';
+import { resolveCameraView, CAMERA_VIEW_HEIGHT, type CameraViewPreset } from './camera/cameraViews';
 import { getOrbitMouseButtons, getOrbitTouches } from './camera/orbitMouseButtons';
 import { getCharacterGridCameraView, getCharacterGridActiveTarget } from './character/characterGridUtils';
 import { getInventoryGridCameraTarget } from './inventoryGridCamera';
@@ -757,7 +757,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const targetKey = store.cameraTarget;
     const target = resolveTargetPosition(targetKey);
 
-    const view = posKey === 'front' && store.layers.characterGrid
+    const view: CameraViewPreset | undefined = posKey === 'front' && store.layers.characterGrid
       ? getCharacterGridCameraView()
       : posKey ? resolveCameraView(posKey, store.cameraProjection, undefined, store.cameraElevation) : undefined;
 
@@ -776,6 +776,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         pos: newPos,
         target,
         zoom: view.zoom,
+        up: view.up,
       });
       return;
     }
