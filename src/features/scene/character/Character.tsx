@@ -1106,7 +1106,7 @@ export function Character({
       }
 
       if (isVisibleInFrustum) {
-        updatePhysics(store.isPlaying && !isTPose ? delta * store.speed : 0, {
+        updatePhysics(animDelta, {
           haircut,
           isMoving,
           targetAnim: target,
