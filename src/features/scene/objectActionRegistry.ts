@@ -113,8 +113,6 @@ const ACTIONS: Record<string, ActionConfig> = {
   sdbClosetR: { label: ['Ouvrir Droite', 'Fermer Droite'] },
   cbnWest: { label: ['Ouvrir', 'Fermer'] },
   cbnEast: { label: ['Ouvrir', 'Fermer'] },
-  'drona-bathroom-west-slide': { label: ['Sortir la Dröna SDB Ouest', 'Ranger la Dröna SDB Ouest'] },
-  'drona-bathroom-east-slide': { label: ['Sortir la Dröna SDB Est', 'Ranger la Dröna SDB Est'] },
   'drona-kitchen-diy-slide': { label: ['Sortir Bricolage', 'Ranger Bricolage'] },
   'drona-kitchen-old-it-slide': { label: ['Sortir Old IT', 'Ranger Old IT'] },
   'drona-kitchen-main-slide': { label: ['Sortir Cuisine Principale', 'Ranger Cuisine Principale'] },

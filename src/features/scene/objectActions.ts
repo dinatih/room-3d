@@ -38,8 +38,6 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'trash-bin': ['bin-toggle'],
   'bathroom-cabinet-west': ['cbnWest'],
   'bathroom-cabinet-east': ['cbnEast'],
-  'drona-bathroom-west': ['drona-bathroom-west-slide'],
-  'drona-bathroom-east': ['drona-bathroom-east-slide'],
   'drona-kitchen-diy': ['drona-kitchen-diy-slide'],
   'drona-kitchen-old-it': ['drona-kitchen-old-it-slide'],
   'drona-kitchen-main': ['drona-kitchen-main-slide'],

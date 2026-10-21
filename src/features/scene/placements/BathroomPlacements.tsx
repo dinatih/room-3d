@@ -19,9 +19,8 @@ import { GrassRug } from '../items/GrassRug';
 import { Tackan } from '../items/Tackan';
 import { Tisken40381253 } from '../items/Tisken40381253';
 import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
-import { SlidingDrona } from '../items/SlidingDrona';
+import { DroneCell } from '../items/Drona';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
-import { SPECIAL_DRONA_SLIDE_DURATION } from '../items/dronaStorage';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
 
@@ -146,8 +145,8 @@ export function BathroomFurnishings() {
 
       {/* Boîtes Drona sur meubles hauts SDB */}
       {Object.entries(BATHROOM_STORAGE_ITEMS).filter(([, item]) => item.kind === 'box').map(([id, item]) => (
-        <group key={id} position={item.position} rotation-y={item.rotationY} userData={{ animUnit: true, itemName: item.label }}>
-          <SlidingDrona objectId={id} label={item.label} actionId={item.action} duration={SPECIAL_DRONA_SLIDE_DURATION} />
+        <group key={id} name={id} position={item.position} rotation-y={item.rotationY} userData={{ skipMerge: true, animUnit: true, itemName: item.label, hoverAction: { label: item.label, actions: SMART_OBJECTS[id].slots.map(slot => `smart-object:::${id}:::${slot.slotId}`) } }}>
+          <DroneCell />
         </group>
       ))}
 

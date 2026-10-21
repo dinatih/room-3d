@@ -1107,21 +1107,19 @@ export function buildSmartObjectInstructionSequence(
 
   const storageInteraction = BATHROOM_STORAGE_ITEMS[objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[objectId as keyof typeof KITCHEN_DRONA_ITEMS];
   if (storageInteraction) {
-    const slide = (storageInteraction as { kind?: string }).kind !== 'box';
-    const gesture = (phase: 'pull' | 'push'): AgentInstruction => ({
+    const gesture = 'action' in storageInteraction ? (phase: 'pull' | 'push'): AgentInstruction => ({
       type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
       animation: `${storageInteraction.animationPrefix}-${phase}`,
       duration: getAnimationDef(`${storageInteraction.animationPrefix}-${phase}`)!.duration,
       rotY: slot.rotY, waitForAnimation: true,
       dronaMotion: { action: storageInteraction.action, from: phase === 'pull' ? 0 : 1, to: phase === 'pull' ? 1 : 0, range: phase === 'pull' ? DRONA_PULL_RANGE : DRONA_PUSH_RANGE },
       triggerEventKey: storageInteraction.action, triggerEventValue: phase === 'pull',
-    });
+    }) : undefined;
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-      ...(slide ? [gesture('pull')] : []),
+      ...(gesture ? [gesture('pull')] : []),
       { ...baseInstruction, waitForAnimation: true },
-      ...(slide ? [gesture('push')] : []),
-      { type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY },
+      ...(gesture ? [gesture('push'), { type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY }] : []),
       // Leave the chair's original footprint before restoring it.
       ...((objectId === 'drona-kitchen-diy' || objectId === 'drona-kitchen-electronics') ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, targetPos: [ROOM_W * 2 / 3, 0, slot.offset![2]] as [number, number, number] }] : []),
     ];

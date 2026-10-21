@@ -220,7 +220,7 @@ export function useAgentController(
         useSceneStore.getState().triggerAction('drona-ne-catchall-slide', false);
       }
       const drona = DRONA_SE_ITEMS[claimedSlotRef.current.objectId] ?? DRONA_SPECIAL_ITEMS[claimedSlotRef.current.objectId as keyof typeof DRONA_SPECIAL_ITEMS] ?? BATHROOM_STORAGE_ITEMS[claimedSlotRef.current.objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[claimedSlotRef.current.objectId as keyof typeof KITCHEN_DRONA_ITEMS];
-      if (drona) {
+      if (drona && 'action' in drona) {
         dronaPlayback.delete(drona.action);
         useSceneStore.getState().triggerAction(drona.action, false);
       }

@@ -228,8 +228,6 @@ const initialExtraStates: Record<string, boolean> = {
   'drona-kitchen-old-it-slide': false,
   'drona-kitchen-main-slide': false,
   'drona-kitchen-electronics-slide': false,
-  'drona-bathroom-west-slide': false,
-  'drona-bathroom-east-slide': false,
   'drona-ne-catchall-slide': false,
   'drona-se-pyjama-slide': false,
   'drona-se-linen-slide': false,

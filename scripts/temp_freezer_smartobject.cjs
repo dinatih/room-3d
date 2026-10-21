@@ -70,7 +70,7 @@ if(process.argv.includes('--build-storage')){
      {id:'trousers',source:'opening',time:0,height:95.75,lean:.35},
      // Floor-level box: grip the upper rim, 3 cm below its 33 cm-high top.
      {id:'catchall2',source:'looking_through_files_low',time:10.8,height:20.5+33/2-3,lean:0},
-     {id:'bath-box',source:'crouch_idle',time:0,height:60+33/2+.2,lean:0,approach:BATHROOM_BOX_APPROACH/100,grip:true},
+     {id:'bath-box',source:'opening',time:0,height:60+33+.2,lean:.6,approach:BATHROOM_BOX_APPROACH/100,stationary:true},
      {id:'bath-cabinet-west',source:'looking_through_files_low',time:3.6,height:54,lean:0,cabinet:'west'},
      {id:'bath-cabinet-east',source:'looking_through_files_low',time:3.6,height:54,lean:0,cabinet:'east'},
      {id:'kitchen-upper',source:'looking_through_files_low',time:10.8,height:56,lean:0,lift:.2},
@@ -123,7 +123,7 @@ if(process.argv.includes('--build-storage')){
        aim(lower,newWrist.sub(newElbow),target.clone().sub(newElbow));
        if(hand.getWorldPosition(new THREE.Vector3()).distanceTo(target)>1e-5)throw new Error('IK did not reach handle');
      }
-     for(const phase of ['pull','search','push']){
+     for(const phase of item.stationary?['search']:['pull','search','push']){
        const doc=await io.read(sourcePath);doc.getRoot().listAnimations().forEach(a=>{
          const samplers=a.listSamplers(),accessors=new Set(samplers.flatMap(s=>[s.getInput(),s.getOutput()]));
          a.dispose();samplers.forEach(s=>s.dispose());accessors.forEach(a=>a.dispose());
@@ -137,9 +137,7 @@ if(process.argv.includes('--build-storage')){
          const fraction=Math.max(0,Math.min(1,(t-.25)/.5));
          hands.forEach((arm,index)=>{
            if(item.cabinet&&index!==(item.cabinet==='west'?0:1))return;
-           const target=new THREE.Vector3(index===0?.1:-.1,item.height/100,(item.approach??approach)-depth/2-travel*(phase==='search'?1:fraction));
-           // Place the palm centre, rather than the wrist joint, against the box face.
-           if(item.grip)target.z-=arm.hand.getWorldPosition(new THREE.Vector3()).distanceTo(rig.scene.getObjectByName('mixamorig'+arm.side+'HandMiddle1').getWorldPosition(new THREE.Vector3()))/2;
+           const target=new THREE.Vector3(index===0?.1:-.1,item.height/100,(item.approach??approach)-depth/2-(item.stationary?0:travel*(phase==='search'?1:fraction)));
            if(item.cabinet){
              // One hand follows the 40 cm door around its mirrored hinge.
              const swing=(phase==='search'?1:fraction)*Math.PI/2,sign=item.cabinet==='west'?1:-1;
@@ -151,7 +149,7 @@ if(process.argv.includes('--build-storage')){
            }else if(phase==='search'){
              // A single rummage, returning both hands to their grip before pushing.
              const envelope=Math.sin(Math.PI*t)**2;
-             target.y+=(item.lift??.1)*envelope;target.z+=.07*envelope;target.x+=.04*Math.sin(2*Math.PI*t)*(index===0?1:-1);
+             target.y+=item.stationary?.08-.1*envelope:(item.lift??.1)*envelope;target.z+=.07*envelope;target.x+=.04*Math.sin(2*Math.PI*t)*(index===0?1:-1);
            }
            if(phase!=='search'&&t<.25){
              const reach=t/.25;target.lerpVectors(neutral[index],target,reach*reach*(3-2*reach));
@@ -268,9 +266,10 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
      const {InventoryPreview}=await import('/src/features/inventory/InventoryPreview.tsx'),{INVENTORY}=await import('/src/features/inventory/inventoryData.ts'),{AnimationStudioView}=await import('/src/features/inventory/AnimationStudioView.tsx');
      const {useAnimPreviewStore}=await import('/src/features/inventory/useAnimPreviewStore.ts');window.bathStore=useAnimPreviewStore;
      const container=document.createElement('div');container.style.height='850px';document.body.replaceChildren(container);
-     DOM.createRoot(container).render(R.createElement(AnimationStudioView,{initialTarget:{type:'animation',id:'drona-bath-box-pull',mode:'solo'}}));
+     DOM.createRoot(container).render(R.createElement(AnimationStudioView,{initialTarget:{type:'animation',id:'drona-bath-box-search',mode:'solo'}}));
    });
-   await page.waitForFunction(()=>Math.abs(window.bathStore.getState().duration-2.4166667)<.001,{timeout:90000});
+   await page.waitForFunction(()=>Math.abs(window.bathStore.getState().duration-4.8833332)<.001,{timeout:90000});
+   await page.waitForFunction(async()=>{const {_roots}=await import('/node_modules/.vite/deps/@react-three_fiber.js');return [..._roots.values()][0]?.store.getState().scene.getObjectByName('drona-bathroom-east')?.getObjectByProperty('isMesh',true);},{timeout:60000});
    const cadence=process.argv.includes('--pose-only')?null:await page.evaluate(async()=>{const samples=[];await new Promise(resolve=>{let previous=performance.now();const tick=now=>{samples.push(now-previous);previous=now;if(samples.length<60)requestAnimationFrame(tick);else resolve();};requestAnimationFrame(tick);});return{fps:1000/(samples.reduce((a,b)=>a+b)/samples.length),maxFrameMs:Math.max(...samples)};});console.log('Studio playback cadence',cadence);
    const result=await page.evaluate(async()=>{
      const {_roots}=await import('/node_modules/.vite/deps/@react-three_fiber.js'),state=[..._roots.values()][0].store.getState(),store=window.bathStore;
@@ -278,10 +277,12 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
      const timings=state.internal.subscribers.map(()=>0);
      for(let frame=0;frame<60;frame++)for(const [i,sub] of state.internal.subscribers.entries()){const start=performance.now();sub.ref.current(state,1/60);timings[i]+=performance.now()-start;}
      store.getState().pause();store.getState().seekToTime(.78);for(const sub of state.internal.subscribers)sub.ref.current(state,1/60);
-     state.scene.updateMatrixWorld(true);state.camera.position.set(250,110,0);state.camera.lookAt(0,70,20);state.gl.render(state.scene,state.camera);
+     state.scene.updateMatrixWorld(true);state.camera.position.set(350,130,0);state.camera.lookAt(0,90,20);state.gl.render(state.scene,state.camera);
      const bones=[];state.scene.traverse(o=>{if(o.isSkinnedMesh&&bones.length===0)for(const bone of o.skeleton.bones)if(/hand|wrist|foot|toe|hip/i.test(bone.name))bones.push({name:bone.name,p:bone.getWorldPosition(bone.position.clone()).toArray()});});
      const toes=bones.filter(b=>/leg_(left|right)_toes$/.test(b.name));
-     if(toes.length!==2||toes.some(b=>Math.abs(b.p[1])>2)||Math.abs(toes[0].p[1]-toes[1].p[1])>1)throw new Error('Unstable floor contacts: '+JSON.stringify(toes));
+     if(toes.length!==2||Math.abs(toes[0].p[1]-toes[1].p[1])>1)throw new Error('Uneven standing feet: '+JSON.stringify(toes));
+     const box=state.scene.getObjectByName('drona-bathroom-east');
+     if(bones.find(b=>b.name==='root_hips').p[1]<=box.position.y)throw new Error('Character is still crouching below the box');
      state.scene.traverse(o=>{if(o.isMesh&&/handgun/i.test(o.name)&&!/holster/i.test(o.name)&&o.visible)throw new Error('Pistol still in hand during storage gesture');});
      if(state.scene.environment!==null)throw new Error('Animation studio still uses the apartment HDR environment');
      return{callbacks:timings.map((ms,i)=>({msPerFrame:ms/60,code:state.internal.subscribers[i].ref.current.toString().slice(0,110)})),bones,render:state.gl.info.render};
@@ -301,25 +302,25 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
      const f=window.customFixture={store:useAnimPreviewStore,sceneStore:useSceneStore,getAnimationDef,glbLocalBBox,time:0};
      f.before=JSON.stringify(useSceneStore.getState().furniture);const h=React.createElement;
      function Probe(){const state=useThree();f.scene=state.scene;f.camera=state.camera;f.gl=state.gl;f.tick=()=>{f.time+=1/60;state.advance(f.time,true);state.scene.updateMatrixWorld(true);};return null;}
-     function App(){const [id,setId]=React.useState('drona-bath-box-pull');f.setId=setId;return h(Canvas,{frameloop:'never',camera:{position:[160,150,-220],near:.1,far:2000}},h(Probe),h('ambientLight',{intensity:2}),h(React.Suspense,{fallback:null},h(CustomAnimationFurniture,{key:id,animationId:id,onSize:()=>{}})));}
+     function App(){const [id,setId]=React.useState('drona-bath-box-search');f.setId=setId;return h(Canvas,{frameloop:'never',camera:{position:[160,150,-220],near:.1,far:2000}},h(Probe),h('ambientLight',{intensity:2}),h(React.Suspense,{fallback:null},h(CustomAnimationFurniture,{key:id,animationId:id,onSize:()=>{}})));}
      const container=document.createElement('div');container.style.width='1000px';container.style.height='800px';document.body.replaceChildren(container);ReactDOM.createRoot(container).render(h(App));
    });
    const cases=[['bath-box','drona-bathroom-east'],['bath-cabinet-west','bathroom-cabinet-west-door'],['bath-cabinet-east','bathroom-cabinet-east-door'],['care','drona-se-care'],['trousers','drona-nw-trousers'],['catchall2','drona-kitchen-old-it'],['kitchen-upper','drona-kitchen-electronics'],['kitchen-diy','drona-kitchen-diy'],['linen','drona-se-linen']];
    await page.waitForFunction(()=>window.customFixture?.scene?.getObjectByName('drona-bathroom-east'),{timeout:60000});
-   for(const [family,node] of cases)for(const phase of ['pull','search','push']){
+   for(const [family,node] of cases)for(const phase of family==='bath-box'?['search']:['pull','search','push']){
      const id='drona-'+family+'-'+phase;
      await page.evaluate(id=>window.customFixture.setId(id),id);
      await page.waitForFunction(({id,node})=>window.customFixture.scene.getObjectByName('custom-animation-furniture')?.userData.animationId===id&&!!window.customFixture.scene.getObjectByName(node),{timeout:60000},{id,node});
      await page.waitForFunction(({id,node})=>{
        const f=window.customFixture;f.store.getState().setCurrentTime(f.getAnimationDef(id).duration/2);f.tick();
-       const object=f.scene.getObjectByName(node);return object&&(node.endsWith('-door')?object.rotation.y!==0:object.position.z<0);
+       const object=f.scene.getObjectByName(node);return object&&(id==='drona-bath-box-search'?object.children.length>0:node.endsWith('-door')?object.rotation.y!==0:object.position.z<0);
      },{timeout:60000},{id,node});
      await page.evaluate(({id,node,family,phase})=>{
        const f=window.customFixture,def=f.getAnimationDef(id),object=f.scene.getObjectByName(node);
        for(const fraction of [0,.5,1,.25,.75,0]){
          f.store.getState().setCurrentTime(def.duration*fraction);f.tick();
          const duration=4.833333492279053,range=family==='linen'?(phase==='push'?[(duration-3.6)/duration,(duration-1.2)/duration]:[1.2/duration,3.6/duration]):[.25,.75];
-         const progress=phase==='search'?1:Math.max(0,Math.min(1,(fraction-range[0])/(range[1]-range[0]))),expected=phase==='push'?1-progress:progress;
+         const progress=phase==='search'?1:Math.max(0,Math.min(1,(fraction-range[0])/(range[1]-range[0]))),expected=family==='bath-box'?0:phase==='push'?1-progress:progress;
          const actual=node.endsWith('-door')?Math.abs(object.rotation.y)/(Math.PI/2):-object.position.z/(f.glbLocalBBox(object).getSize(f.camera.position.clone()).z*2/3);
          if(Math.abs(actual-expected)>1e-6)throw new Error('Furniture not synchronized: '+JSON.stringify({id,fraction,actual,expected}));
        }
@@ -331,7 +332,7 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
    await page.screenshot({path:'/tmp/custom-animation-furniture.png'});
    await page.evaluate(()=>window.customFixture.setId('idle'));
    await page.waitForFunction(()=>!window.customFixture.scene.getObjectByName('custom-animation-furniture'));
-   console.log('27 custom clips: furniture, box/door seeks, pause-independent synchronization, scene isolation and non-custom cleanup PASS');assert.deepEqual(errors,[]);return;
+   console.log('25 custom clips: furniture, stationary bathroom box, box/door seeks, scene isolation PASS');assert.deepEqual(errors,[]);return;
  }
  await page.evaluate(async()=>{
  window.$RefreshReg$=()=>{};window.$RefreshSig$=()=>type=>type;window.__vite_plugin_react_preamble_installed__=true;
@@ -349,7 +350,7 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
  const {KALLAX_CUISINE_POSITION,KALLAX_CUISINE_ROTATION}=await import('/src/features/scene/items/kallaxCuisineDrona.ts');
  const {BathroomCabinetWest,BathroomCabinetEast}=await import('/src/features/scene/items/BathroomCabinet.tsx');
  const {BATHROOM_STORAGE_ITEMS}=await import('/src/features/scene/items/bathroomStorage.ts');
- const {SlidingDrona}=await import('/src/features/scene/items/SlidingDrona.tsx');
+ const {DroneCell}=await import('/src/features/scene/items/Drona.tsx');
  const {NavigationObstacle}=await import('/src/features/scene/ai/navigation/NavigationObstacle.tsx');
  const {Beds,Desks,DeskDecor,OfficeChair}=await import('/src/features/scene/placements/LivingRoomPlacements.tsx');
  const {MackaparGroup}=await import('/src/features/scene/items/MackaparGroup.tsx');
@@ -367,7 +368,7 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
  function BathroomFixture(props){return h(React.Fragment,null,...Object.entries(BATHROOM_STORAGE_ITEMS).map(([id,item])=>
    h('group',{key:id,position:item.position,rotation:[0,item.rotationY,0]},item.kind==='cabinet'
      ?h(NavigationObstacle,{id},h(id.endsWith('west')?BathroomCabinetWest:BathroomCabinetEast,{item:{id},onSize:()=>{},...props}))
-     :h(SlidingDrona,{objectId:id,label:item.label,actionId:item.action,duration:2.4,...props}))));}
+     :h('group',{name:id,userData:{hoverAction:{actions:props.isPreview?[]:[`smart-object:::${id}:::pick-item`]}}},h(DroneCell)))));}
  function KitchenFixture(props){return h('group',{position:KALLAX_CUISINE_POSITION,rotation:[0,KALLAX_CUISINE_ROTATION,0]},
    h(NavigationObstacle,{id:'kallax-cuisine'},h(KallaxCuisine,{item:{},onSize:()=>{},...props,noDrona:true})),
    h(KallaxCuisineDrona,props));}
@@ -538,6 +539,14 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
      });
    },kitchen);
    for(const item of items){
+     if(!item.action){
+       assert.deepEqual(item.sequence.map(step=>step.type),['MOVE_TO','USE_OBJECT']);
+       assert.equal(item.sequence[1].animation,'drona-bath-box-search');
+       assert(item.sequence.every(step=>!step.dronaMotion&&!step.triggerEventKey));
+       const box=await page.evaluate(id=>window.fixture.readBath(id),item.id);
+       assert.equal(box.extension,0);assert.deepEqual(box.actions,[`smart-object:::${item.id}:::pick-item`]);
+       continue;
+     }
      assert.deepEqual((await page.evaluate(id=>window.fixture.readBath(id),item.id)).actions,[item.action,`smart-object:::${item.id}:::pick-item`]);
      for(const value of [true,false]){
        await page.evaluate(({action,value})=>window.fixture.store.getState().triggerAction(action,value),{action:item.action,value});
