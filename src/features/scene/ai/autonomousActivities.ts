@@ -1,5 +1,5 @@
 import { AgentInstruction } from './aiTypes';
-import { buildSmartObjectInstructionSequence, getAllSmartObjectIds } from './smartObjectRegistry';
+import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)
@@ -31,15 +31,21 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
 };
 
 
+/** Each available slot is one candidate, including coordinated duo activities. */
+export function getAvailableAutonomousActivities(characterId: string) {
+  return getAllSmartObjects().filter(obj => OccupancyManager.canUseObject(obj.id, characterId))
+    .flatMap(obj => obj.slots.filter(slot => !OccupancyManager.isSlotOccupied(obj.id, slot.slotId, characterId))
+      .map(slot => ({ id: obj.id, slotId: slot.slotId })));
+}
+
 /** Free activities remain independent from the two scripted tours. */
 export function buildAutonomousActivities(characterId: string): AgentInstruction[] {
-  const ids = getAllSmartObjectIds().filter(id => OccupancyManager.canUseObject(id, characterId));
-  const preferred = INITIAL_SMART_OBJECT_BY_CHAR[characterId];
-  const others = ids.filter(id => id !== preferred);
-  for (let i = others.length - 1; i > 0; i--) {
+  const activities = getAvailableAutonomousActivities(characterId);
+  for (let i = activities.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [others[i], others[j]] = [others[j], others[i]];
+    [activities[i], activities[j]] = [activities[j], activities[i]];
   }
-  const ordered = ids.includes(preferred) ? [preferred, ...others] : others;
-  return ordered.flatMap(id => buildSmartObjectInstructionSequence(id, undefined, characterId));
+  const preferred = activities.findIndex(activity => activity.id === INITIAL_SMART_OBJECT_BY_CHAR[characterId]);
+  if (preferred > 0) [activities[0], activities[preferred]] = [activities[preferred], activities[0]];
+  return activities.flatMap(({ id, slotId }) => buildSmartObjectInstructionSequence(id, slotId, characterId));
 }

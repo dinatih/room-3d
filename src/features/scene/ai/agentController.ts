@@ -1,5 +1,6 @@
 import { AgentInstruction } from './aiTypes';
-import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, getAllSmartObjectIds, isDuoSlot } from './smartObjectRegistry';
+import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
+import { getAvailableAutonomousActivities } from './autonomousActivities';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
@@ -558,10 +559,9 @@ export function createAgentController(
     state.animation = 'idle';
     // Skip the remaining steps of the failed action, including its exit steps.
     while (scenario?.[stepIndex]?.smartObjectId === objectId) stepIndex++;
-    const candidates = getAllSmartObjectIds().filter(id => id !== objectId)
-      .map(id => buildSmartObjectInstructionSequence(id, undefined, _characterId))
-      .filter(sequence => sequence.length > 0);
-    dynamicNavQueue = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : [];
+    const candidates = getAvailableAutonomousActivities(_characterId).filter(activity => activity.id !== objectId);
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    dynamicNavQueue = chosen ? buildSmartObjectInstructionSequence(chosen.id, chosen.slotId, _characterId) : [];
     appLog(_characterId, `🎲 Action abandonnée (${objectId}), nouveau tirage d'une smartaction${candidates.length ? '' : ' : aucune disponible'}`, {
       category: 'object',
       action: 'retry_smartaction',
@@ -574,18 +574,14 @@ export function createAgentController(
   };
 
   const pickNewAutonomousActivity = (excludedObjectId?: string) => {
-    // 1. Smart objects disponibles et utilisables avec au moins un slot libre
-    const candidates = getAllSmartObjectIds()
-      .filter(id => OccupancyManager.canUseObject(id, _characterId))
-      .map(id => ({ id, seq: buildSmartObjectInstructionSequence(id, undefined, _characterId) }))
-      .filter(c => c.seq.length > 0);
+    const candidates = getAvailableAutonomousActivities(_characterId);
 
     const nonCurrent = excludedObjectId ? candidates.filter(c => c.id !== excludedObjectId) : candidates;
     const pool = nonCurrent.length > 0 ? nonCurrent : candidates;
 
     if (pool.length > 0) {
       const chosen = pool[Math.floor(Math.random() * pool.length)];
-      dynamicNavQueue = chosen.seq;
+      dynamicNavQueue = buildSmartObjectInstructionSequence(chosen.id, chosen.slotId, _characterId);
       dynamicNavIndex = 0;
       appLog(_characterId, `🎲 Sortie de contrôle manuel : tirage d'une nouvelle activité (${chosen.id})`, {
         category: 'object',
