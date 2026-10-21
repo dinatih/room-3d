@@ -395,6 +395,16 @@ export function followRoute(...args: Parameters<typeof advanceWithNavigation>): 
   }
 }
 
+/** Geometry revisions elsewhere must not stop a route whose remaining segments are still safe. */
+function retainValidRoute(route: RouteState, graph: NavigationGraph, start: Point, target: Point): void {
+  if (route.graph === graph || route.error || route.target?.x !== target.x || route.target?.z !== target.z || route.index >= route.path.length) return;
+  const remaining = [start, ...route.path.slice(route.index)];
+  if (remaining.every((point, index) => index === 0 || segmentFree(remaining[index - 1], point, graph.obstacles))) {
+    route.search?.job.cancel(); route.search = undefined;
+    route.graph = graph;
+  }
+}
+
 function advanceRoute(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, protectedDoor?: DoorKey): Point {
   const profile = getAgentProfile(agentId);
   route.protectedDoor = protectedDoor;
@@ -414,6 +424,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   const localMove = (goal: Point, id: string): Point => {
     const baseLocal = getNavigationGraph(profile, id);
     const localGraph = route.crowd?.base === baseLocal && route.crowd.graph ? route.crowd.graph : baseLocal;
+    retainValidRoute(route, localGraph, start, goal);
     if (route.graph !== localGraph || route.target?.x !== goal.x || route.target?.z !== goal.z) {
       const path = searchPath(route, localGraph, start, goal, 'local');
       if (path === undefined) return start;
@@ -464,6 +475,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
     }
     target = route.approach;
   }
+  retainValidRoute(route, graph, start, target);
   if (!route.target || route.target.x !== target.x || route.target.z !== target.z || route.graph !== graph) {
     if (!planRoute(route, agentId, start, target)) return start;
     graph = route.graph!;

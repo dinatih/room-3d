@@ -5,6 +5,21 @@ const root = process.cwd();
 const baseline = '/tmp/room-character-runtime-baseline';
 const option = (key, fallback) => process.argv.find(arg => arg.startsWith(`--${key}=`))?.split('=').slice(1).join('=') ?? fallback;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+if (process.argv.includes('--locomotion-report')) {
+  const report = JSON.parse(fs.readFileSync(`/tmp/room-character-runtime-${option('label', 'current')}/report.json`));
+  for (const run of report.runs) for (const capture of run.captures) {
+    if (option('actor', '')) {
+      console.log(JSON.stringify(capture.memory.map(sample => ({ atMs: sample.atMs, actor: sample.locomotion?.[option('actor', '')] })), null, 2));
+      continue;
+    }
+    console.log('Navigation', capture.timings.navigation);
+    console.table(Object.entries(capture.memory.at(-1).locomotion ?? {}).map(([id, actor]) => ({ id,
+      status: actor.status, animation: actor.animation, travelled: Math.round(actor.travelled),
+      maxWait: actor.maxStationarySeconds.toFixed(1), walkWhileStopped: actor.walkWithoutMotionSeconds.toFixed(1),
+      waitReason: actor.waitReason, error: actor.error, object: actor.instruction?.smartObjectId })));
+  }
+  process.exit(0);
+}
 if (process.argv.includes('--compare')) {
   for (const label of ['production-before-valid', 'production-after']) {
     const report = JSON.parse(fs.readFileSync(`/tmp/room-character-runtime-${label}/report.json`));
@@ -28,7 +43,7 @@ if (process.argv.includes('--test-report')) {
   for (const result of report.results) console.log(result.id, result.status, result.error ?? '', result.errors?.slice(0, 2));
   process.exit(0);
 }
-if (process.argv.includes('--report')) {
+if (process.argv.includes('--report') || process.argv.includes('--worker-report')) {
   const directory = `/tmp/room-character-runtime-${option('label', 'before')}`;
   const report = JSON.parse(fs.readFileSync(`${directory}/report.json`));
   for (const run of report.runs) for (const [index, capture] of run.captures.entries()) {
@@ -37,7 +52,7 @@ if (process.argv.includes('--report')) {
     for (const sample of samples.slice(1)) for (const [id, pose] of Object.entries(sample.agents)) if (JSON.stringify(pose) !== JSON.stringify(samples[0].agents[id])) changed.add(id);
     const rss = (capture.memory ?? []).map(m=>m.rssBytes);
     console.log(report.label, run.count, index, capture.summary, 'timings', timings, 'tasks', capture.tasks.length, 'maxTask', Math.max(0,...capture.tasks.map(t=>t.ms)), 'heap', capture.heap, 'RSS', rss.length ? [Math.min(...rss),Math.max(...rss),rss.at(-1)] : [], 'actorsChanged', [...changed]);
-    const file = `${directory}/${run.count}-${index}.cpuprofile`;
+    const file = `${directory}/${run.count}-${index}${process.argv.includes('--worker-report') ? '-worker' : ''}.cpuprofile`;
     if (!fs.existsSync(file)) continue;
     const profile = JSON.parse(fs.readFileSync(file)), nodes = new Map(profile.nodes.map(n=>[n.id,n])), parent = new Map(), totals = new Map();
     for (const node of profile.nodes) for (const child of node.children ?? []) parent.set(child,node.id);
@@ -66,7 +81,7 @@ if (process.argv.includes('--inspect')) {
           return { models: models.filter(model=>!/characters\/(accessories|wigs)\//.test(model.path)), camera: camera ? { mode: camera.mode, launched: camera.isSceneLaunched, intro: camera.isIntroRunning, skip: camera.skipIntro } : null, text: document.body.innerText.slice(0,1500), stats: window.__CHARACTER_RUNTIME_STATS__ };
         }
         const { cameraState } = await import('/src/features/scene/cameraState.ts');
-        return { positions: cameraState.positions, launched: cameraState.isSceneLaunched, text: document.body.innerText.slice(0,1500), stats: window.__CHARACTER_RUNTIME_STATS__ };
+        return { positions: cameraState.positions, launched: cameraState.isSceneLaunched, locomotion: window.__LOCOMOTION__, text: document.body.innerText.slice(0,1500), stats: window.__CHARACTER_RUNTIME_STATS__ };
       }, process.argv.includes('--production')));
     } finally { browser.disconnect(); }
   })().catch(e => { console.error(e); process.exitCode = 1; });
@@ -97,6 +112,32 @@ if (process.argv.includes('--snapshot')) {
       name: 'runtime-baseline', enforce: 'pre',
       transform(source, id) {
         if (id.endsWith('/src/features/scene/cameraState.ts')) return source + '\nObject.assign(window, { __PROFILE_CAMERA__: cameraState });';
+        if (process.argv.includes('--verify-locomotion') && id.endsWith('/src/features/scene/ai/agentController.ts')) {
+          if (process.argv.includes('--without-pending-idle')) {
+            const idle = "      if ((agentStatus === 'MOVING' || agentStatus === 'IDLE') && state.x === x && state.z === z) state.animation = 'idle';";
+            if (!source.includes(idle)) throw Error('Stationary animation mutation no longer matches the controller');
+            source = source.replace(idle, '');
+          }
+          return source.replace('  const update = (dt: number): AgentState => {', '  const updateUnobserved = (dt: number): AgentState => {').replace('  const hasPendingDynamicTask = () => {', `
+  let stationarySeconds = 0;
+  const update = (dt: number): AgentState => {
+    const x = state.x, z = state.z;
+    const result = updateUnobserved(dt);
+    const stationary = state.x === x && state.z === z && (agentStatus === 'MOVING' || agentStatus === 'IDLE');
+    const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
+    stationarySeconds = stationary ? stationarySeconds + dt : 0;
+    const observations = (window as any).__LOCOMOTION__ ??= {};
+    const observation = observations[_characterId] ??= { walkWithoutMotionSeconds: 0, maxStationarySeconds: 0, travelled: 0 };
+    if (state.x === x && state.z === z && state.animation === currentWalkAnim && resolveAnimationId(instruction?.animation ?? 'idle') !== resolveAnimationId(currentWalkAnim)) observation.walkWithoutMotionSeconds += dt;
+    observation.maxStationarySeconds = Math.max(observation.maxStationarySeconds, stationarySeconds);
+    observation.travelled += Math.hypot(state.x - x, state.z - z);
+    Object.assign(observation, { status: agentStatus, animation: state.animation, x: state.x, z: state.z, stationarySeconds,
+      waitReason: route.waitReason, error: route.error, search: route.search?.job.status,
+      instruction });
+    return result;
+  };
+  const hasPendingDynamicTask = () => {`);
+        }
       },
       load(id) {
         if (!process.argv.includes('--baseline') || !id.startsWith(`${root}/src/`) || !/\.[cm]?[jt]sx?$/.test(id)) return;
@@ -169,6 +210,14 @@ if (process.argv.includes('--snapshot')) {
         return loaded >= count;
       }, { timeout: 180000 }, count);
       await sleep(Number(option('warmup', '45000')));
+      if (process.argv.includes('--locomotion-case')) {
+        const fixture = require('../tests/fixtures/cases.cjs').navigation.find(c => c.id === 'locomotion-twenty-seven');
+        run.locomotionVerification = await page.evaluate(async fixture => {
+          window.__testTrace = [];
+          return (await import('/tests/support/apartment.mjs')).locomotion(fixture);
+        }, fixture);
+        save(); console.log('LOCOMOTION VERIFICATION', JSON.stringify(run.locomotionVerification));
+      }
       if (process.argv.includes('--verify-navigation')) {
         run.visibilityVerification = await page.evaluate(async () => {
           const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
@@ -241,8 +290,11 @@ if (process.argv.includes('--snapshot')) {
         save(); console.log('PREVIEW VERIFICATION', JSON.stringify(run.previewVerification));
       }
       const client = await page.createCDPSession();
+      const navigationTarget = browser.targets().find(target => target.url().includes('navigation/pathfinding.worker.ts'));
+      const navigationClient = process.argv.includes('--verify-locomotion') && navigationTarget ? await navigationTarget.createCDPSession() : null;
       for (let capture = 0; capture < Number(option('captures', '3')); capture++) {
         await client.send('Profiler.enable'); await client.send('Profiler.start');
+        if (navigationClient) { await navigationClient.send('Profiler.enable'); await navigationClient.send('Profiler.start'); }
         const start = await page.evaluate(() => {
           const stats = window.__CHARACTER_RUNTIME_STATS__;
           if (stats) {
@@ -261,17 +313,25 @@ if (process.argv.includes('--snapshot')) {
             try { return Number(fs.readFileSync(`/proc/${process.id}/status`, 'utf8').match(/^VmRSS:\s+(\d+)/m)?.[1] ?? 0) * 1024; }
             catch (error) { if (error.code !== 'ENOENT') throw error; return 0; }
           });
-          const agents = await page.evaluate(() => window.__CHARACTER_RUNTIME_STATS__?.agents ?? null);
-          memory.push({ atMs: performance.now()-started, rssBytes: rss.reduce((n,v)=>n+v,0), agents });
+          const observation = await page.evaluate(() => ({ agents: window.__CHARACTER_RUNTIME_STATS__?.agents ?? null, locomotion: window.__LOCOMOTION__ }));
+          memory.push({ atMs: performance.now()-started, rssBytes: rss.reduce((n,v)=>n+v,0), ...observation });
           await sleep(Math.min(10000,Math.max(0,duration-(performance.now()-started))));
         }
         const data = await page.evaluate(start => ({ frames: window.runtimeFrames.filter(f => f.at >= start).map(f => f.ms), tasks: window.runtimeTasks.filter(t => t.at >= start), heap: performance.memory?.usedJSHeapSize, render: window.__THREE_GL__.info.render, timings: window.__CHARACTER_RUNTIME_STATS__, text: document.body.innerText.slice(-500) }), start);
         const { profile } = await client.send('Profiler.stop');
+        if (navigationClient) {
+          const { profile } = await navigationClient.send('Profiler.stop');
+          fs.writeFileSync(`${output}/${count}-${capture}-worker.cpuprofile`, JSON.stringify(profile));
+        }
         data.memory = memory;
         fs.writeFileSync(`${output}/${count}-${capture}.cpuprofile`, JSON.stringify(profile));
         const frames = [...data.frames].sort((a, b) => a - b);
         data.summary = { count: frames.length, p50: frames[Math.floor(frames.length * .5)], p95: frames[Math.floor(frames.length * .95)], p99: frames[Math.floor(frames.length * .99)], max: frames.at(-1), over50: frames.filter(ms => ms > 50).length, over100: frames.filter(ms => ms > 100).length };
         run.captures.push(data); save(); console.log(label, count, capture, JSON.stringify(data.summary));
+        if (process.argv.includes('--verify-locomotion') && !process.argv.includes('--without-pending-idle')) {
+          const stalls = Object.entries(memory.at(-1).locomotion ?? {}).filter(([, actor]) => actor.walkWithoutMotionSeconds > 0);
+          if (stalls.length) throw Error('Walking without translation: ' + JSON.stringify(stalls));
+        }
       }
       await browser.close(); browser = undefined;
       if (run.errors.length) throw new Error(run.errors.join('\n'));

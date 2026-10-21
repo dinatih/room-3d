@@ -1025,6 +1025,7 @@ export function createAgentController(
           });
         }
       } else if (currentInstruction.type === 'INTERACT' || currentInstruction.type === 'WAIT') {
+        const target = getResolvedCoords(currentInstruction);
         if (currentInstruction.triggerEventKey) {
           triggerInstructionEvent(currentInstruction);
         }
@@ -1033,7 +1034,6 @@ export function createAgentController(
         if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
           setDesk2SmartActionState(_characterId, true);
         }
-        const target = getResolvedCoords(currentInstruction);
         if (!currentInstruction.animation && target.anim) currentInstruction.animation = target.anim;
         if (currentInstruction.rotY === undefined && target.rotY !== undefined) currentInstruction.rotY = target.rotY;
         if (!currentInstruction.duration && target.duration) currentInstruction.duration = target.duration;
@@ -1174,7 +1174,6 @@ export function createAgentController(
             claimedSlot = { objectId: objId, slotId };
           }
 
-          agentStatus = 'INTERACTING';
           if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
             setDesk2SmartActionState(_characterId, true);
           }
@@ -1237,6 +1236,7 @@ export function createAgentController(
             }
           }
 
+          agentStatus = 'INTERACTING';
           state.y = target.ty ?? 0;
           if (currentInstruction.rotY !== undefined) state.rotY = currentInstruction.rotY;
 
@@ -1540,11 +1540,14 @@ export function createAgentController(
   };
 
   const update = (dt: number): AgentState => {
+    const { x, z } = state;
     try { return navigationScope.run(() => updateCurrent(dt)); }
     catch (error) {
       if (!(error instanceof NavigationPending)) throw error;
       if (agentStatus === 'TRANSITIONING') state.animationPaused = true;
       return state;
+    } finally {
+      if ((agentStatus === 'MOVING' || agentStatus === 'IDLE') && state.x === x && state.z === z) state.animation = 'idle';
     }
   };
 

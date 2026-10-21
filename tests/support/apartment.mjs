@@ -88,6 +88,68 @@ export async function arrival(fixture) {
             release(id);
     }
 }
+export async function locomotion(fixture) {
+    const { createAgentController, resetAgentDeployment } = await import('/src/features/scene/ai/agentController.ts');
+    const { resolveAnimationId } = await import('/src/features/scene/animations/animationResolver.ts');
+    const actors = Array.from({ length: fixture.actors }, (_, i) => ({ id: `suite-locomotion-${i}` }));
+    const marker = 'suite-locomotion-revision';
+    let invalidated = false, waits = 0, resumed = 0;
+    try {
+        for (const actor of actors) register(actor.id, fixture);
+        const start = await resolveNavigation(() => getZoneDestination('garden', actors[0].id));
+        const graph = await resolveNavigation(() => nav.getNavigationGraph(profiles.getAgentProfile(actors[0].id)));
+        const target = fixture.arrivalOffsets.map(d => ({ x: start.x + d.x, z: start.z + d.z }))
+            .find(p => geometry.segmentFree(start, p, graph.obstacles));
+        check(target, 'No clear locomotion test segment');
+        for (const actor of actors) {
+            const scenario = [
+                { type: 'WAIT', duration: fixture.dt, animation: 'idle', targetPos: [start.x, 0, start.z] },
+                { type: 'MOVE_TO', targetPos: [target.x, 0, target.z] },
+                { type: 'MOVE_TO', targetZoneId: 'garden' },
+                { type: 'WAIT', targetZoneId: 'garden', animation: 'sad-idle', duration: fixture.dt * 4 },
+            ];
+            actor.controller = createAgentController(actor.id, scenario, false, () => ({ ...start, y: 0, rotY: 0 }));
+            actor.controller.configure({ scenario, loop: false, landingAnim: 'pistol-kneel-to-stand' });
+            actor.close = actor.controller.connect();
+        }
+        const deadline = performance.now() + fixture.timeoutMs;
+        while (actors.some(a => a.controller.getStatus() !== 'FINISHED')) {
+            check(performance.now() < deadline, '27 locomotion controllers did not finish');
+            for (const actor of actors) {
+                const before = { ...actor.controller.state };
+                const state = actor.controller.update(fixture.dt);
+                const moved = state.x !== before.x || state.z !== before.z;
+                if (actor.controller.getStatus() === 'INTERACTING') {
+                    check(resolveAnimationId(state.animation) === resolveAnimationId('sad-idle'), `${actor.id} entered interaction before its animation was initialized`);
+                    actor.interactionFrames = (actor.interactionFrames ?? 0) + 1;
+                }
+                if (['MOVING', 'IDLE'].includes(actor.controller.getStatus()) && !moved) {
+                    check(resolveAnimationId(state.animation) === resolveAnimationId('idle'), `${actor.id} walks without moving: ${state.animation}`);
+                    waits++;
+                    if (invalidated) actor.waitedAfterInvalidation = true;
+                }
+                if (moved) {
+                    actor.moved = true;
+                    if (actor.controller.getStatus() === 'MOVING')
+                        check(resolveAnimationId(state.animation) !== resolveAnimationId('idle'), `${actor.id} did not resume its walk while moving`);
+                    if (actor.waitedAfterInvalidation && !actor.resumed) { actor.resumed = true; resumed++; }
+                }
+            }
+            if (!invalidated && actors.every(a => a.moved)) {
+                profiles.registerObstacle({ id: marker, polygon: geometry.rectangle(10000, 10000, 1, 1), yMin: 0, yMax: 1 });
+                invalidated = true;
+            }
+            await nextTask();
+        }
+        check(invalidated && waits > 0 && resumed === fixture.actors, `Missing stop/resume lifecycle: ${resumed}/${fixture.actors}`);
+        check(actors.every(a => a.interactionFrames >= 3), 'An asynchronous interaction skipped its duration');
+        return { count: actors.length, waits, resumed, invalidated };
+    }
+    finally {
+        profiles.unregisterObstacle(marker);
+        for (const actor of actors) { actor.close?.(); release(actor.id); resetAgentDeployment(actor.id); }
+    }
+}
 export async function reachability(fixture) {
     const id = 'suite-accessibility';
     register(id, fixture);

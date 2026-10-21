@@ -11,6 +11,7 @@ const apartment = {
 exports.navigation = [
     { id: 'occupied-target', behavior: 'atteint une destination occupée avec une empreinte PNJ à zéro', activity: 'arrival', actors: 1, occupied: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
     { id: 'garden-fifteen', behavior: 'termine quinze trajets simultanés dans le jardin sans rotation en boucle', activity: 'arrival', actors: 15, occupied: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
+    { id: 'locomotion-twenty-seven', behavior: 'arrête la marche des 27 contrôleurs pendant un recalcul puis reprend leurs trajets', activity: 'locomotion', actors: 27, timeoutMs: 60000 },
     { id: 'open-crossing', behavior: 'croise un autre trajet en espace libre', activity: 'arrival', actors: 2, crossing: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
     { id: 'living-kallax', behavior: 'traverse la porte du séjour pendant une interaction Kallax', activity: 'door', objectId: 'drona-se-linen', timeoutMs: 60000 },
     { id: 'living-kallax-hidden', behavior: 'continue la navigation et ouvre la porte du séjour avec tout le décor masqué', activity: 'door', objectId: 'drona-se-linen', query: { debug: 'characters-only' }, timeoutMs: 60000 },

@@ -11,6 +11,7 @@ const doors = load('src/features/scene/doorObstacles.ts', {
 });
 const architecture = { architectureObstacles: [], walkableSurfaces: [[g.rectangle(0, 0, 600, 600)]] };
 const queries = require('../../src/features/scene/ai/navigation/queries.ts');
+let pathRequests = 0;
 const navigationDependencies = {
     './navigationScope': require('../../src/features/scene/ai/navigation/navigationScope.ts'),
     '../../positionState': { positionState: {} }, '../../furniturePositions': { movingFurniture: new Set() }, './architecture': architecture, './obstacles': obstacles, './geometry': g,
@@ -18,7 +19,7 @@ const navigationDependencies = {
     './comfort': require('../../src/features/scene/ai/navigation/comfort.ts'), './pathfindingClient': {
       prepareNavigationGraph: definition => { const graph = 'solids' in definition ? queries.buildNavigationGraph(definition) : new g.VisibilityGraph(g.mergeObstacles(definition.obstacles)); graph.definition = definition; return { read: () => graph, cancel() {} }; },
       readObjectApproach: (graph, query) => queries.objectApproachCandidates(query, graph),
-      requestPath: (graph, start, target) => ({ graph, start, target, status: 'ready', path: graph.find(start, target), cancel: () => { } }),
+      requestPath: (graph, start, target) => { pathRequests++; return { graph, start, target, status: 'ready', path: graph.find(start, target), cancel: () => { } }; },
     }, '../../cameraState': { cameraState },
 };
 const nav = load('src/features/scene/ai/navigation/service.ts', navigationDependencies);
@@ -55,6 +56,31 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('conserve un trajet encore libre après modification et recalcule si un obstacle le coupe', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const route = nav.createRouteState(), target = { x: 100, z: -50 };
+        let position = nav.followRoute(route, 'walker', { x: -100, z: -50 }, target, 3);
+        const planned = pathRequests, originalPath = route.path;
+        try {
+            obstacles.registerObstacle({ id: 'unrelated-change', polygon: g.rectangle(0, 100, 40, 40), yMin: 0, yMax: 250 });
+            const before = position;
+            position = nav.followRoute(route, 'walker', position, target, 3);
+            assert.equal(pathRequests, planned, 'An unrelated obstacle must not restart the path search');
+            assert.equal(route.path, originalPath);
+            assert(g.distance(before, position) > 0, 'Safe movement must continue');
+            obstacles.registerObstacle({ id: 'blocking-change', polygon: g.rectangle(0, -50, 40, 40), yMin: 0, yMax: 250 });
+            position = nav.followRoute(route, 'walker', position, target, 3);
+            assert.equal(pathRequests, planned + 1, 'A blocked segment must trigger a new search');
+            assert.notEqual(route.path, originalPath);
+            const remaining = [position, ...route.path.slice(route.index)];
+            assert(remaining.every((p, i) => !i || g.segmentFree(remaining[i - 1], p, route.graph.obstacles)), 'Replanned path must avoid the new obstacle');
+        } finally {
+            nav.resetRoute(route, 'walker');
+            obstacles.unregisterObstacle('unrelated-change');
+            obstacles.unregisterObstacle('blocking-change');
+        }
+    });
     it("attend devant le battant fermé puis traverse son ouverture partielle", () => {
         setup({ living: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
         const storage = { x: -1.5, z: 60, y: 0, radius: 13.3, height: 170 };

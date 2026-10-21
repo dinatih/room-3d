@@ -44,6 +44,19 @@ Une commande d'interface qui utilise la navigation doit attendre
 un scope persistant ; `followRoute` possède son scope par route. Une erreur
 du worker remonte explicitement, sans repli vers une recherche synchrone.
 
+Un contrôleur en déplacement ou entre deux instructions choisit une pose
+immobile lorsqu'il ne produit aucune translation. Cette vérification couvre
+aussi les retours anticipés pendant un calcul asynchrone : l'ancienne animation
+de marche ne doit pas continuer sur place. Le trajet et ses requêtes restent
+actifs ; la marche reprend avec le déplacement réel.
+L'état d'interaction n'est validé qu'après la résolution de ses coordonnées et
+l'initialisation de l'action. Une attente du worker ne peut donc plus laisser
+une interaction avec l'ancienne marche et un minuteur non initialisé.
+Après une révision de géométrie, les segments restants sont vérifiés dans le
+nouveau graphe. Un trajet encore libre est conservé ; un trajet coupé est
+recalculé. Les battants réels restent contrôlés à chaque pas. Le confort du
+trajet conservé n'est réoptimisé qu'au prochain calcul nécessaire.
+
 Le chargement des sources GLB reste asynchrone via le loader existant. Le
 retargeting quitte le fil principal ; les mixers, les transitions ajustées à la
 pose réelle et les physiques secondaires restent sur ce fil. La fréquence des
@@ -51,17 +64,19 @@ animations, les modèles et la qualité visuelle ne sont pas réduits.
 
 ## Contrôles
 
-Validation finale : 49 tests unitaires et 9 scénarios navigateur réussis,
-dont l'ouverture et la traversée de la porte du séjour avec le décor masqué.
+Validation du correctif de locomotion : 50 tests unitaires et 5 scénarios
+navigateur réussis (27 contrôleurs, séjour masqué, double porte, porte fermée,
+sortie de posture).
 TypeScript et le build de production passent également.
 
 ```bash
 npx tsc --noEmit
 npm test
 npm run build
-npm run test:studio -- --case=garden-fifteen,living-kallax,living-kallax-hidden,double-kallax,posture-exit,interruption,unreachable,failed-action,approach-reachability --hardware-gpu
+npm run test:studio -- --case=garden-fifteen,locomotion-twenty-seven,living-kallax,living-kallax-hidden,double-kallax,posture-exit,interruption,unreachable,failed-action,approach-reachability --hardware-gpu
 node scripts/temp_character_runtime.cjs --label=verify --verify-animation --captures=0 --warmup=5000 --hardware-gpu
 node scripts/temp_character_runtime.cjs --label=visibility --counts=0 --verify-navigation --captures=0 --warmup=15000 --hardware-gpu
+node scripts/temp_character_runtime.cjs --label=locomotion-after --verify-locomotion --full-scene --locomotion-case --warmup=30000 --duration=60000 --captures=1 --hardware-gpu
 ```
 
 Les comparaisons de pistes portent sur idle, marche, assise, relèvement et un
@@ -70,6 +85,21 @@ vérifient aussi l'isolation d'une preview réelle. Le contrôle de visibilité
 retrouve les mêmes obstacles avant affichage, après affichage et après masquage
 du décor (44 obstacles de meubles enregistrés, 2 111 sommets pour le profil du
 test). Il ne désactive aucune activité pour obtenir ce résultat.
+
+La régression `locomotion-twenty-seven` avance 27 contrôleurs sur le vrai worker,
+invalide leur graphe pendant la marche et enchaîne une destination de zone.
+Elle vérifie les poses d'attente, la reprise effective des 27 trajets et la
+durée d'une interaction dont les coordonnées sont résolues après attente. En
+retirant la sélection de pose immobile dans le serveur de test, elle détecte
+la réapparition de `walking` sans translation.
+Un test unitaire vérifie également qu'un obstacle ajouté loin du trajet ne
+déclenche aucune nouvelle recherche, tandis qu'un obstacle qui coupe le trajet
+impose un nouveau chemin physiquement libre.
+Le relevé final avec les 27 modèles et le décor affichés ne détecte aucune
+marche de navigation sans translation. Les clips explicitement choisis comme
+activité sont distingués de la locomotion. Des attentes de calcul et d'accès
+aux objets restent possibles ; ce contrôle ne garantit pas des trajets
+instantanés. Artefact : `/tmp/room-character-runtime-locomotion-retain/`.
 
 ## Protocole de performance
 
