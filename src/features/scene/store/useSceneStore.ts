@@ -145,8 +145,6 @@ interface SceneStore {
   setCvModalOpen: (open: boolean) => void;
   setPhotoModeOpen: (open: boolean) => void;
   setMeasurementActive: (active: boolean) => void;
-  setBnfCoords: (coords: { azimuth?: number; elevation?: number; radius?: number }) => void;
-  resetBnfCoords: () => void;
   setCameraMode: (mode: 'orbit' | 'follow' | 'fpv' | 'top' | 'plane' | 'iso') => void;
   setCameraProjection: (proj: 'persp' | 'ortho') => void;
   toggleCameraProjection: () => void;
@@ -542,22 +540,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
       cameraState.invalidate?.();
       return { desk2ScreenActive: active };
     });
-  },
-  setBnfCoords: (coords) => {
-    set((state) => ({
-      bnfAzimuth: coords.azimuth !== undefined ? coords.azimuth : state.bnfAzimuth,
-      bnfElevation: coords.elevation !== undefined ? coords.elevation : state.bnfElevation,
-      bnfRadius: coords.radius !== undefined ? coords.radius : state.bnfRadius,
-    }));
-    cameraState.invalidate?.();
-  },
-  resetBnfCoords: () => {
-    set({
-      bnfAzimuth: DEFAULT_BNF_COORDS.azimuth,
-      bnfElevation: DEFAULT_BNF_COORDS.elevation,
-      bnfRadius: DEFAULT_BNF_COORDS.radius,
-    });
-    cameraState.invalidate?.();
   },
   setCvModalOpen: (open: boolean) => {
     set({ isCvModalOpen: open });
