@@ -11,7 +11,7 @@ const doors = load('src/features/scene/doorObstacles.ts', {
 });
 const architecture = { architectureObstacles: [], walkableSurfaces: [[g.rectangle(0, 0, 600, 600)]] };
 const queries = require('../../src/features/scene/ai/navigation/queries.ts');
-let pathRequests = 0;
+let pathRequests = 0, cancelledGraphs = 0, holdBuilds = false;
 let roomFull = false, checkedRoom;
 const navigationDependencies = {
     './navigationScope': require('../../src/features/scene/ai/navigation/navigationScope.ts'),
@@ -19,7 +19,7 @@ const navigationDependencies = {
     '../../positionState': { positionState: {} }, '../../furniturePositions': { movingFurniture: new Set() }, './architecture': architecture, './obstacles': obstacles, './geometry': g,
     '../../doorObstacles': doors, './doorRequests': requests, '../agent/agentAvoidance': { limitAgentMovement: (id, start, proposed) => proposed, isAgentDestinationFree: () => true, getAgentObstacles: () => [], beginActorBlockCheck: () => { }, endActorBlockCheck: () => new Map(), actorBlocksUnchanged: () => true },
     './comfort': require('../../src/features/scene/ai/navigation/comfort.ts'), './pathfindingClient': {
-      prepareNavigationGraph: definition => { const graph = 'solids' in definition ? queries.buildNavigationGraph(definition) : new g.VisibilityGraph(g.mergeObstacles(definition.obstacles)); graph.definition = definition; return { read: () => graph, cancel() {} }; },
+      prepareNavigationGraph: definition => { const graph = 'solids' in definition ? queries.buildNavigationGraph(definition) : new g.VisibilityGraph(g.mergeObstacles(definition.obstacles)); graph.definition = definition; return { read: () => { if (holdBuilds) throw new navigationDependencies['./navigationScope'].NavigationPending({ status: 'pending', settled: Promise.resolve(), cancel() {} }); return graph; }, cancel() { cancelledGraphs++; } }; },
       readObjectApproach: (graph, query) => queries.objectApproachCandidates(query, graph),
       requestPath: (graph, start, target) => { pathRequests++; return { graph, start, target, status: 'ready', path: graph.find(start, target), cancel: () => { } }; },
     }, '../../cameraState': { cameraState },
@@ -58,6 +58,65 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('continue un trajet libre pendant une reconstruction partagée et l’attente d’un autre acteur', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        obstacles.setAgentProfile('waiting', obstacles.getAgentProfile('walker'));
+        const route = nav.createRouteState(), waiting = nav.createRouteState();
+        const target = { x: 100, z: -50 }, blockedStart = { x: -100, z: 100 }, blockedTarget = { x: 0, z: 100 };
+        try {
+            obstacles.registerObstacle({ id: 'remote-obstacle', polygon: g.rectangle(0, 100, 40, 40), yMin: 0, yMax: 250 });
+            nav.followRoute(waiting, 'waiting', blockedStart, blockedTarget, 3);
+            assert(waiting.error, 'The remote actor must really be blocked');
+            let position = nav.followRoute(route, 'walker', { x: -100, z: -50 }, target, 3);
+            const path = route.path, cancelled = cancelledGraphs;
+            holdBuilds = true;
+            obstacles.registerObstacle({ id: 'unrelated-rebuild', polygon: g.rectangle(0, 200, 40, 40), yMin: 0, yMax: 250 });
+            for (let frame = 0; frame < 3; frame++) {
+                assert.deepEqual(nav.followRoute(waiting, 'waiting', blockedStart, blockedTarget, 3), blockedStart);
+                const before = position;
+                position = nav.followRoute(route, 'walker', position, target, 3);
+                assert(g.distance(before, position) > 0, 'An unrelated pending graph must not stop this actor');
+                assert.equal(route.path, path);
+                assert.equal(cancelledGraphs, cancelled, 'The graph still serving existing paths must stay alive until its replacement is ready');
+            }
+            const barrier = g.rectangle(position.x + 8, position.z, 4, 40);
+            obstacles.registerObstacle({ id: 'live-barrier', polygon: barrier, yMin: 0, yMax: 250 });
+            assert.deepEqual(nav.followRoute(route, 'walker', position, target, 3), position, 'Live geometry must stop an unsafe step before the worker replies');
+            assert.match(route.waitReason, /géométrie actuelle/);
+            holdBuilds = false;
+            const next = nav.followRoute(route, 'walker', position, target, 3);
+            assert(g.distance(position, next) > 0, 'A blocked route must replan once its graph is ready');
+            assert(g.segmentFree(position, next, [[g.inflate(barrier, obstacles.furnitureClearance(obstacles.getAgentProfile('walker')))]]));
+        } finally {
+            holdBuilds = false;
+            nav.resetRoute(route, 'walker'); nav.resetRoute(waiting, 'waiting');
+            obstacles.removeAgentProfile('waiting');
+            for (const id of ['remote-obstacle', 'unrelated-rebuild', 'live-barrier']) obstacles.unregisterObstacle(id);
+        }
+    });
+
+    it('peut démarrer et finir une approche d’objet pendant le mouvement d’un meuble éloigné', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const moving = navigationDependencies['../../furniturePositions'].movingFurniture;
+        const route = nav.createRouteState(), target = { x: 0, z: -50 };
+        obstacles.registerObstacle({ id: 'interaction-object', owner: 'interaction-object', polygon: g.rectangle(0, -50, 40, 40), yMin: 0, yMax: 250 });
+        moving.add('distant-furniture');
+        try {
+            let position = { x: -80, z: -50 };
+            for (let frame = 0; frame < 100 && g.distance(position, target) > 0; frame++) {
+                const before = position;
+                position = nav.followRoute(route, 'walker', position, target, 3, undefined, 'interaction-object', true);
+                assert.equal(route.error, null);
+                assert(g.distance(before, position) > 0, route.waitReason);
+            }
+            assert.deepEqual(position, target, 'A remote furniture animation must not hold an actor in front of their object');
+        } finally {
+            moving.delete('distant-furniture'); nav.resetRoute(route, 'walker'); obstacles.unregisterObstacle('interaction-object');
+        }
+    });
+
     for (const room of ['living', 'bathroom', 'corridor']) it(`attend hors de la pièce pleine (${room}) puis reprend sans bloquer les sorties`, () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;

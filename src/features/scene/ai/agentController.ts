@@ -1,10 +1,9 @@
 import { AgentInstruction } from './aiTypes';
-import { SMART_OBJECTS, buildSmartObjectInstructionSequence, getAllSmartObjectIds, isDuoSlot } from './smartObjectRegistry';
+import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, getAllSmartObjectIds, isDuoSlot } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
 import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, getObjectApproach, movePostureExit, NavigationBlockedError, getNavigationGraph, describeNavigationBlock } from './navigation/service';
-import { movingFurniture } from '../furniturePositions';
 import { prepareKitchenStorageAccess, releaseKitchenStorageAccess } from './diyChairClearance';
 import { hasAgentProfile, getObstacleRevision, furnitureClearance, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
 import { distance, inflate, pointInRing, BOOLEAN_PRECISION } from './navigation/geometry';
@@ -183,24 +182,32 @@ export function createAgentController(
   let cachedCoords: ReturnType<typeof resolveInstructionCoords> | null = null;
   let cachedCoordsInstruction: AgentInstruction | null = null;
   let cachedCoordsRevision = -1;
+  let cachedTargetKey: string | undefined;
 
   const getResolvedCoords = (instr: AgentInstruction) => {
     const revision = getObstacleRevision();
-    const followsInteraction = agentStatus === 'INTERACTING' && !!instr.smartObjectId && movingFurniture.size > 0;
+    const object = instr.smartObjectId && !instr.targetPos ? getSmartObject(instr.smartObjectId) : undefined;
+    const slot = object ? object.slots.find(slot => slot.slotId === instr.slotId) ?? object.slots[0] : undefined;
+    const targetKey = object ? JSON.stringify([object.position, object.rotationY, slot?.offset, slot?.approachOffset, slot?.rotY]) : undefined;
     const occupiedApproach = (agentStatus !== 'INTERACTING' || instr.type === 'OBSERVE_OBJECT') && cachedCoords && hasAgentProfile(_characterId)
       && !isAgentDestinationFree(_characterId, { x: cachedCoords.tx, z: cachedCoords.tz });
-    if (followsInteraction || occupiedApproach || (!movingFurniture.size && cachedCoordsRevision !== revision) || cachedCoordsInstruction !== instr || !cachedCoords) {
+    const coords = cachedCoords;
+    const obstructedTarget = coords && cachedCoordsRevision !== revision && hasAgentProfile(_characterId) && [...furnitureObstacles.values()]
+      .some(o => (!coords.owner || !o.owner || getInteractionOwner(o.owner) !== getInteractionOwner(coords.owner)) && o.yMin < getAgentProfile(_characterId).height && o.yMax > 0
+        && pointInRing({ x: coords.tx, z: coords.tz }, inflate(o.polygon, furnitureClearance(getAgentProfile(_characterId)))));
+    if (occupiedApproach || obstructedTarget || cachedTargetKey !== targetKey || cachedCoordsInstruction !== instr || !cachedCoords) {
       beginActorBlockCheck(_characterId);
       try {
         cachedCoords = resolveInstructionCoords(instr, startPos, _characterId, state, route.owner);
         cachedCoordsInstruction = instr;
-        cachedCoordsRevision = revision;
+        cachedTargetKey = targetKey;
       }
       catch (error) {
         if (error instanceof NavigationBlockedError) error.actorBlockers = endActorBlockCheck(_characterId);
         throw error;
       } finally { endActorBlockCheck(_characterId); }
     }
+    cachedCoordsRevision = revision;
     return cachedCoords;
   };
 

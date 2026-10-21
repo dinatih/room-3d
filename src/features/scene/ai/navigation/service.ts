@@ -54,9 +54,9 @@ export function getContainingObjectOwner(agentId: string, position: Point): stri
   }
   return undefined;
 }
-const caches = new WeakMap<AgentProfile, Map<string, { revision: number; doorAngles: string; preparation: ReturnType<typeof prepareNavigationGraph> }>>();
+const caches = new WeakMap<AgentProfile, Map<string, { revision: number; doorAngles: string; preparation: ReturnType<typeof prepareNavigationGraph>; previous?: ReturnType<typeof prepareNavigationGraph>; graph?: NavigationGraph }>>();
 const releaseProfile = (profile: AgentProfile) => {
-  for (const entry of caches.get(profile)?.values() ?? []) entry.preparation.cancel();
+  for (const entry of caches.get(profile)?.values() ?? []) { entry.preparation.cancel(); entry.previous?.cancel(); }
   caches.delete(profile);
 };
 agentProfileLifecycle.onUnused = releaseProfile;
@@ -93,12 +93,9 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
   const shutterBlocked = glassShutterState.clearHeight < profile.height;
   const doorAngles = `${angles.join(':')}:${shutterBlocked}`;
   const old = profileCache.get(key);
-  if (old && (movingFurniture.size || (old.revision === revision && old.doorAngles === doorAngles))) return old.preparation;
-  if (!movingFurniture.size) for (const [cachedKey, entry] of profileCache) {
-    if (entry.revision !== revision || entry.doorAngles !== doorAngles) {
-      entry.preparation.cancel(); profileCache.delete(cachedKey);
-    }
-  }
+  if (old && (movingFurniture.size || (old.revision === revision && old.doorAngles === doorAngles))) return old;
+  const previous = old?.previous ?? (old?.graph ? old.preparation : undefined);
+  if (old && old.preparation !== previous) old.preparation.cancel();
   const solid = [...architectureObstacles, ...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0 && (!excludeSet || !o.owner || !excludeSet.has(getInteractionOwner(o.owner))));
   const definition: GraphDefinition = { solids: [], comfortDistance: excludeSet?.size ? undefined : NAVIGATION_COMFORT_CM };
   const addObstacle = (polygon: Polygon, radius = profile.radius) => {
@@ -113,12 +110,24 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
     addObstacle(rectangle((a.x + b.x) / 2, (a.z + b.z) / 2, distance(a, b), 0, Math.atan2(a.z - b.z, b.x - a.x)));
   }
   const preparation = prepareNavigationGraph(definition);
-  profileCache.set(key, { revision, doorAngles, preparation });
-  return preparation;
+  const entry = { revision, doorAngles, preparation, previous, graph: old?.graph };
+  profileCache.set(key, entry);
+  return entry;
 }
 
-export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string | string[] | Set<string>): NavigationGraph {
-  return getNavigationPreparation(profile, excludeOwner).read();
+export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string | string[] | Set<string>, continuingRoute = false): NavigationGraph {
+  const entry = getNavigationPreparation(profile, excludeOwner);
+  try {
+    const graph = entry.preparation.read();
+    entry.previous?.cancel(); entry.previous = undefined;
+    return entry.graph = graph;
+  }
+  catch (error) {
+    // Existing paths may advance while their replacement builds. Every proposed
+    // step is checked against live furniture and doors before being applied.
+    if (error instanceof NavigationPending && continuingRoute && entry.graph) return entry.graph;
+    throw error;
+  }
 }
 
 /** Geometry preparation and candidate reachability execute entirely in the worker. */
@@ -147,6 +156,7 @@ export interface RouteState {
   search?: { kind: 'route' | 'local' | 'crowd'; job: PathSearch };
   index: number;
   target: Point | null;
+  destination?: Point;
   graph: NavigationGraph | null;
   crowd?: { base: NavigationGraph; graph: NavigationGraph | null; planning?: NavigationGraph; preparation?: ReturnType<typeof prepareNavigationGraph>; preparing?: boolean; signature: string; resume: { start: Point; next: Point } };
   error: string | null;
@@ -184,6 +194,7 @@ export function resetRoute(route: RouteState, agentId: string, keepProtectedDoor
   route.search = undefined;
   releaseAgentDoors(agentId, keepProtectedDoor);
   route.path = []; route.index = 0; route.target = null; route.graph = null; route.error = null; route.doors.clear();
+  route.destination = undefined;
   route.approach = undefined; route.interactionTarget = undefined;
   route.occupiedTarget = undefined;
   route.exit = undefined;
@@ -335,6 +346,15 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
     // released geometry, and restore the footprint only when retrying the route.
     route.failure = { graph: getNavigationGraph(getAgentProfile(agentId), undefined), start: { ...start }, target: { ...target }, owner, interaction, protectedDoor, doorProtection, actorBlockers };
   }
+  const profile = getAgentProfile(agentId);
+  const liveFurniture = [...furnitureObstacles.values()]
+    .filter(o => o.yMin < profile.height && o.yMax > 0 && (!route.owner || !o.owner || getInteractionOwner(o.owner) !== route.owner))
+    .map(o => [furnitureFootprint(o, profile)]);
+  if (!segmentFree(start, position, liveFurniture)
+    || (glassShutterState.clearHeight < profile.height && (['glassLeft', 'glassRight'] as const).some(key => !segmentFree(start, position, doorFootprint(profile, key))))) {
+    route.waitReason = 'Trajet coupé par la géométrie actuelle';
+    return start;
+  }
   const limited = limitAgentMovement(agentId, start, position);
   for (const room of LIMITED_ROOMS) {
     if (!isInRoom(room, start) && isInRoom(room, limited) && !OccupancyManager.hasRoomCapacity(room, agentId)) {
@@ -416,20 +436,15 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   const profile = getAgentProfile(agentId);
   route.protectedDoor = protectedDoor;
   if (protectedDoor) route.doors.add(doorOpeningKey(protectedDoor));
-  // Furniture transitions change continuously. Keep the existing route if safe, and wait
-  // for the final geometry before computing a replacement; never rebuild per frame.
-  if (movingFurniture.size) {
-    const next = route.path[route.index];
-    if (!next) { route.waitReason = `Meubles en mouvement : ${[...movingFurniture].join(', ')}`; return start; }
-    const changed = [...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0).map(o => [furnitureFootprint(o, profile)]);
-    if (!segmentFree(start, next, changed)) { route.waitReason = `Trajet coupé par un meuble en mouvement : ${[...movingFurniture].join(', ')}`; return start; }
-  }
-  const base = getNavigationGraph(profile, undefined);
-  let graph = movingFurniture.size && route.graph ? route.graph : route.crowd?.base === base && route.crowd.graph ? route.crowd.graph : base;
+  if (distance(start, target) === 0) return target;
+  const continuing = !route.error && route.index < route.path.length && route.destination?.x === target.x && route.destination?.z === target.z;
+  route.destination = { ...target };
+  const base = getNavigationGraph(profile, undefined, continuing);
+  let graph = route.crowd?.base === base && route.crowd.graph ? route.crowd.graph : base;
   const owned = (id: string) => [...furnitureObstacles.values()].filter(o => o.owner === id && o.yMin < profile.height && o.yMax > 0).map(o => furnitureFootprint(o, profile));
   const contained = (id: string, p: Point) => owned(id).some(polygon => pointInRing(p, polygon));
   const localMove = (goal: Point, id: string): Point => {
-    const baseLocal = getNavigationGraph(profile, id);
+    const baseLocal = getNavigationGraph(profile, id, continuing);
     const localGraph = route.crowd?.base === baseLocal && route.crowd.graph ? route.crowd.graph : baseLocal;
     retainValidRoute(route, localGraph, start, goal);
     if (route.graph !== localGraph || route.target?.x !== goal.x || route.target?.z !== goal.z) {
