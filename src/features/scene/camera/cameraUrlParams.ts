@@ -11,7 +11,6 @@ export const CAMERA_POS_ALIASES: Record<string, string> = {
   south: 'south',
   'south-west': 'south-west',
   west: 'west',
-  ouest: 'west',
   'north-west': 'north-west',
   top: 'top',
   bottom: 'bottom',
