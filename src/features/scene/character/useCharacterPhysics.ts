@@ -117,10 +117,6 @@ export function useCharacterPhysics() {
       return;
     }
 
-    if (delta <= 0) {
-      return;
-    }
-
     if (hipsBoneRef.current) {
       hipsBoneRef.current.updateWorldMatrix(true, true);
     } else {
@@ -129,7 +125,7 @@ export function useCharacterPhysics() {
 
     let simDt = delta;
     if (simDt > 0.05) simDt = 0.05;
-    const dtRatio = physicsPrevDt.current > 0 ? (simDt / physicsPrevDt.current) : 1;
+    const dtRatio = (physicsPrevDt.current > 0 && simDt > 0) ? (simDt / physicsPrevDt.current) : (simDt > 0 ? 1 : 0);
 
     // Ponytail & Wig physics simulation (Verlet)
     const activeHairChain = (ctx.haircut !== 'original' && customHairChainRef.current.length > 0)
@@ -248,13 +244,14 @@ export function useCharacterPhysics() {
           const effectiveStiffness = isWig
             ? Math.min(1.0, lerpStiffness * (1.0 + tipAnchorStrength * 0.5))
             : lerpStiffness;
-          next.lerp(restTip, effectiveStiffness);
+          const springFactor = Math.min(1.0, effectiveStiffness * Math.min(1.0, simDt * 60));
+          next.lerp(restTip, springFactor);
 
           // Anti-vibration sleep filter when velocity is low
           const sleepThreshold = isWig ? (0.25 + pChain * 0.35) : 0.1;
-          if (!isHeadMoving && vel.lengthSq() < sleepThreshold) {
-            vel.multiplyScalar(0.2);
-            next.lerp(restTip, isWig ? 0.90 : 0.80);
+          const isNodeSleeping = !isHeadMoving && vel.lengthSq() < sleepThreshold;
+          if (isNodeSleeping) {
+            vel.set(0, 0, 0);
           }
 
           // Constraints pass (2 passes)
@@ -324,8 +321,13 @@ export function useCharacterPhysics() {
             }
           }
 
-          node.tipPrev.copy(node.tipWorld);
-          node.tipWorld.copy(jointWorld).add(finalDir);
+          if (isNodeSleeping) {
+            node.tipWorld.copy(jointWorld).add(finalDir);
+            node.tipPrev.copy(node.tipWorld);
+          } else {
+            node.tipPrev.copy(node.tipWorld);
+            node.tipWorld.copy(jointWorld).add(finalDir);
+          }
 
           const parentWQuat = parent.getWorldQuaternion(_parentWQuat);
           const boneRestWorldQuat = _boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat);
@@ -533,7 +535,7 @@ export function useCharacterPhysics() {
       }
     }
 
-    physicsPrevDt.current = simDt;
+    if (simDt > 0) physicsPrevDt.current = simDt;
   };
 
   return {
