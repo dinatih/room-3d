@@ -284,18 +284,26 @@ function releaseClearedDoors(route: RouteState, agentId: string, profile: AgentP
   }
 }
 
-function passDoors(route: RouteState, agentId: string, profile: AgentProfile, start: Point, next: Point, proposed: Point, travel: number): Point {
+function passDoors(route: RouteState, agentId: string, profile: AgentProfile, start: Point, proposed: Point): Point {
   releaseClearedDoors(route, agentId, profile, start);
+  // Request the first opening on the remaining path while approaching it,
+  // including when a waypoint before the doorway hides it from the next step.
+  const points = [start, ...route.path.slice(route.index)];
+  const crossings = doorKeys.filter(key => DOOR_CONFIGS[key].yMin < profile.height && DOOR_CONFIGS[key].yMax > 0)
+    .map(key => ({ key, index: points.findIndex((point, i) => i > 0 && !segmentFree(points[i - 1], point, doorFootprint(profile, key))) }))
+    .filter(crossing => crossing.index > 0);
+  const first = Math.min(...crossings.map(crossing => crossing.index));
+  for (const { key, index } of crossings) if (index === first) {
+    requestDoor(key, agentId);
+    route.doors.add(doorOpeningKey(key));
+  }
   for (const key of doorKeys) {
     const d = DOOR_CONFIGS[key];
     const opening = doorOpeningKey(key);
     if (d.yMin >= profile.height || d.yMax <= 0) continue;
-    const clearance = profile.radius + d.thickness / 2 + d.margin;
-    const closed = doorFootprint(profile, key);
-    const crossing = !segmentFree(start, next, closed);
     const actual = doorFootprint(profile, key, doorCollisionState[key].angle);
     const blocked = !segmentFree(start, proposed, actual);
-    if (route.doors.has(opening) || blocked || (crossing && (distance(start, d.pivot) <= d.length + clearance + travel || !segmentFree(start, proposed, closed)))) {
+    if (route.doors.has(opening) || blocked) {
       requestDoor(opening, agentId);
       route.doors.add(opening);
     }
@@ -476,7 +484,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
     const length = distance(start, next);
     const step = Math.min(travel, length);
     const proposed = step === length ? { ...next } : { x: start.x + (next.x - start.x) * step / length, z: start.z + (next.z - start.z) * step / length };
-    return passDoors(route, agentId, profile, start, next, proposed, travel);
+    return passDoors(route, agentId, profile, start, proposed);
   };
   const approachFor = (id: string, goal: Point, exiting: boolean) => getObjectApproach(id, goal, agentId, start, exiting, undefined);
   // A previous interaction may leave us inside a different object's clearance.
@@ -545,7 +553,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   }
   if (step === remaining && straight) proposed = { ...next };
   if (!segmentFree(start, proposed, graph.obstacles)) { route.waitReason = 'Pas refusé par la géométrie de navigation'; return start; }
-  return passDoors(route, agentId, profile, start, next, proposed, travel);
+  return passDoors(route, agentId, profile, start, proposed);
 }
 
 /** Computed only when reporting a stop, never on every walking frame. */

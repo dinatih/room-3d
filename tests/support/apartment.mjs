@@ -88,6 +88,30 @@ export async function arrival(fixture) {
             release(id);
     }
 }
+export async function soloDoors(fixture) {
+    const id = 'suite-solo-xbot', route = nav.createRouteState();
+    register(id, fixture);
+    try {
+        let position = await resolveNavigation(() => getZoneDestination('living', id));
+        const legs = [];
+        for (const zone of ['entrance-outside', 'building-b-corridor-end', 'living']) {
+            const target = await resolveNavigation(() => {
+                if (zone !== 'building-b-corridor-end') return getZoneDestination(zone, id, position);
+                const object = registry.getSmartObject(zone);
+                check(object, 'Missing building corridor activity');
+                const [x, , z] = object.slots[0].offset;
+                const point = nav.getObjectApproach(zone, { x, z }, id, position, false, undefined, true);
+                check(point, 'The building corridor must be accessible from outside the entrance');
+                return point;
+            });
+            const [actor] = await walk([{ id, route, position, target }], fixture);
+            legs.push({ zone, ...actor });
+            position = actor.position;
+        }
+        check(legs.every(leg => leg.arrived), 'The solitary actor must complete both passages');
+        return { legs };
+    } finally { nav.resetRoute(route, id); release(id); }
+}
 export async function snapshotChurn(fixture) {
     const id = 'suite-snapshot-reader', marker = 'suite-snapshot-churn', scope = new NavigationScope(), phases = [];
     register(id, fixture);
