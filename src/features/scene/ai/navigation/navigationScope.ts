@@ -1,4 +1,5 @@
 export interface NavigationJob<T> {
+  readonly description: string;
   status: 'pending' | 'ready' | 'error' | 'cancelled';
   result?: T; error?: Error; settled: Promise<void>; cancel(): void;
 }

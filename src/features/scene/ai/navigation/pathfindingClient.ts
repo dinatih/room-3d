@@ -99,7 +99,8 @@ function request(graphId: number, definition: WorkerDefinition, query: Navigatio
   if (failure) throw failure;
   let settle!: () => void;
   const settled = new Promise<void>(resolve => { settle = resolve; });
-  const job: Job = { id: ++nextJobId, graphId, definition, query, status: 'pending', path: null, onComplete, settled, settle,
+  const description = { build: 'Construction du graphe de navigation', path: 'Calcul du trajet', reach: 'Vérification de l’accessibilité', approach: 'Calcul de l’approche de l’objet', duo: 'Calcul du placement du duo' }[query.kind];
+  const job: Job = { id: ++nextJobId, graphId, definition, query, description, status: 'pending', path: null, onComplete, settled, settle,
     cancel() {
       if (job.status !== 'pending') return;
       job.status = 'cancelled';

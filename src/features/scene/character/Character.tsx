@@ -39,7 +39,6 @@ import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform, getAnimationDef } from '../animations/animationResolver';
 import { getCrossfadeDuration, isPostureTransition, getPostureTransitionRotDelta } from '../animations/animationTransitions';
 import { fitPostureTransition } from '../animations/postureTransition';
-import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 
 import type { CharacterProps } from './characterTypes';
 import { updateCharacterLayers } from './characterLayers';
@@ -228,7 +227,6 @@ export function Character({
   const postureClipsRef = useRef(new Map<string, { original: THREE.AnimationClip; fitted: THREE.AnimationClip }>());
   useEffect(() => () => postureClipsRef.current.clear(), [scene]);
   const prevFirstPersonRef = useRef<boolean | null>(null);
-  const hasLoggedIdleRef = useRef<boolean>(false);
   const lastLoggedAnimRef = useRef<string>('');
   const [isFalling, setIsFalling] = useState<boolean>(false);
 
@@ -674,20 +672,6 @@ export function Character({
   const frameControl = useRef({ agentAnimationPaused: false, isUserManuallyMoving: false, hasDynamicTask: false });
   useCharacterFrame(renderId, { simulate: (_state, delta) => {
     if (!groupRef.current || !mixerRef.current) return;
-
-    const isIdleTimeout = isAppIdle();
-    if (isIdleTimeout) {
-      if (!hasLoggedIdleRef.current && isActive) {
-        hasLoggedIdleRef.current = true;
-        appLog('system', `💤 Moteur 3D suspendu (${APP_IDLE_TIMEOUT_SECONDS}s inactif). Bougez pour reprendre.`, {
-          category: 'system',
-          action: 'idle_suspend',
-        });
-      }
-      return;
-    } else if (hasLoggedIdleRef.current) {
-      hasLoggedIdleRef.current = false;
-    }
 
     const hasDynamicTask = agentEnabled && hasPendingDynamicTask();
     let agentAnimationPaused = false;

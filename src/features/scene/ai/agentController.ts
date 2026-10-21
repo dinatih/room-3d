@@ -141,19 +141,23 @@ export function createAgentController(
   let route = createRouteState();
   let routeInstruction: AgentInstruction | null = null;
   let navigationError: string | null = null;
-  const reportNavigationStop = (reason: string, label: string, target: { x: number; z: number }, actorBlockers?: ActorBlockers) => {
+  const reportNavigationStop = (reason: string, label: string, target: { x: number; z: number }, actorBlockers?: ActorBlockers, pending = false) => {
     const key = `${label}:${reason}`;
     if (navigationError === key) return;
     navigationError = key;
-    const objId = routeInstruction?.smartObjectId ?? claimedSlot?.objectId;
+    const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex] ?? routeInstruction;
+    const objId = instruction?.smartObjectId ?? claimedSlot?.objectId;
     appLog(
       _characterId,
-      `🚧 Navigation bloquée vers ${label} : ${reason} — ${describeNavigationBlock(_characterId, state, target, route, actorBlockers)}`,
+      pending
+        ? `⏳ Navigation en attente vers ${label} : ${reason} — position (${state.x.toFixed(1)}, ${state.z.toFixed(1)}), animation ${state.animation}`
+        : `🚧 Navigation bloquée vers ${label} : ${reason} — ${describeNavigationBlock(_characterId, state, target, route, actorBlockers)}`,
       {
         category: 'nav',
-        action: 'nav_blocked',
+        action: pending ? 'nav_waiting' : 'nav_blocked',
         actors: [_characterId],
-        object: objId ? { id: objId, label, slotId: claimedSlot?.slotId } : undefined,
+        animation: pending ? { id: state.animation, mode: 'solo', actorId: _characterId } : undefined,
+        object: objId ? { id: objId, label, slotId: instruction?.slotId ?? claimedSlot?.slotId } : undefined,
       }
     );
   };
@@ -1096,7 +1100,6 @@ export function createAgentController(
       if (routeInstruction !== currentInstruction) {
         resetRoute(route, _characterId, currentInstruction.protectedDoor);
         routeInstruction = currentInstruction;
-        navigationError = null;
       }
       const isDuoAction = isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId) || !!duoRole;
       const speed = getWalkSpeedForAnimation(currentWalkAnim);
@@ -1125,6 +1128,7 @@ export function createAgentController(
       if (moved === 0 && route.search?.job.status === 'pending') {
         state.animation = NAVIGATION_WAIT_ANIMATION;
         agentStatus = 'MOVING';
+        reportNavigationStop(route.waitReason!, target.label, { x: target.tx, z: target.tz }, undefined, true);
         return state;
       }
       if (moved === 0 && dt > 0 && distance(position, { x: target.tx, z: target.tz }) >= 1e-6) {
@@ -1549,14 +1553,22 @@ export function createAgentController(
   const update = (dt: number): AgentState => {
     const { x, z } = state;
     let waitingForNavigation = false;
+    let pendingReason: string | undefined;
     try { return navigationScope.run(() => updateCurrent(dt)); }
     catch (error) {
       if (!(error instanceof NavigationPending)) throw error;
       waitingForNavigation = true;
+      pendingReason = error.job.description;
       if (agentStatus === 'TRANSITIONING') state.animationPaused = true;
       return state;
     } finally {
       if ((agentStatus === 'MOVING' || agentStatus === 'IDLE') && state.x === x && state.z === z) state.animation = agentStatus === 'MOVING' || waitingForNavigation ? NAVIGATION_WAIT_ANIMATION : 'idle';
+      if (pendingReason) {
+        const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
+        const objId = instruction?.smartObjectId;
+        const label = objId ? SMART_OBJECTS[objId]?.name ?? objId : instruction?.targetZoneId ?? instruction?.type ?? 'navigation';
+        reportNavigationStop(pendingReason, label, state, undefined, true);
+      }
     }
   };
 

@@ -1,7 +1,8 @@
 import { createContext, useContext, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame, type RootState } from '@react-three/fiber';
 import { CharacterRuntime, characterRuntimeStats, type RuntimeParticipant } from './characterRuntime';
-import { isAppIdle } from '../idleState';
+import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle, useAppIdle } from '../idleState';
+import { appLog } from '@features/ui/AppConsole';
 import { animationLibraryStats } from './animationLibrary';
 import { cameraState } from '../cameraState';
 import { pathfindingStats } from '../ai/navigation/pathfindingClient';
@@ -12,6 +13,17 @@ const RuntimeContext = createContext<CharacterRuntime<RootState> | null>(null);
 export function CharacterRuntimeProvider({ children, isPreview }: { children: ReactNode; isPreview?: boolean }) {
   const navigationEnabled = useNavigationEnabled();
   const secondary = isPreview || !navigationEnabled;
+  const idle = useAppIdle();
+  const previousIdle = useRef(false);
+  useLayoutEffect(() => {
+    if (secondary || previousIdle.current === idle) return;
+    previousIdle.current = idle;
+    appLog('system', idle
+      ? `💤 Moteur 3D suspendu (${APP_IDLE_TIMEOUT_SECONDS}s sans interaction) : tous les personnages sont en pause. Bougez pour reprendre.`
+      : '▶️ Moteur 3D repris après la veille.', {
+      category: 'system', action: idle ? 'idle_suspend' : 'idle_resume', actors: Object.keys(cameraState.positions),
+    });
+  }, [idle, secondary]);
   const [runtime] = useState(() => new CharacterRuntime<RootState>(secondary ? structuredClone(characterRuntimeStats) : characterRuntimeStats));
   useLayoutEffect(() => {
     if (!secondary) {

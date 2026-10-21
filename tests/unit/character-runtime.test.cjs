@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-require('../support/load-ts.cjs');
+const { load } = require('../support/load-ts.cjs');
 const { CharacterRuntime, characterRuntimeStats } = require('../../src/features/scene/character/characterRuntime.ts');
 const { NavigationScope, NavigationPending, navigationQuery, navigationValue, resolveNavigation } = require('../../src/features/scene/ai/navigation/navigationScope.ts');
 const THREE = require('three');
@@ -8,6 +8,36 @@ const serialization = require('../../src/features/scene/character/animationSeria
 const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
 
 describe('Moteur commun des personnages', () => {
+  it('journalise la veille globale une seule fois, même quand les personnages ne sont plus mis à jour', () => {
+    let idle = false, cursor = 0, frame;
+    const hooks = [], effects = [], logs = [], stats = structuredClone(characterRuntimeStats);
+    const previousWindow = global.window;
+    global.window = {};
+    try {
+      const { CharacterRuntimeProvider } = load('src/features/scene/character/CharacterRuntimeProvider.tsx', {
+        react: { createContext: () => ({}), useContext: () => null,
+          useRef: value => hooks[cursor++] ??= { current: value },
+          useState: create => [hooks[cursor++] ??= create()], useLayoutEffect: effect => effects.push(effect) },
+        '@react-three/fiber': { useFrame: callback => { frame = callback; } },
+        './characterRuntime': { CharacterRuntime, characterRuntimeStats: stats },
+        '../idleState': { APP_IDLE_TIMEOUT_SECONDS: 120, isAppIdle: () => idle, useAppIdle: () => idle },
+        '@features/ui/AppConsole': { appLog: (tag, message, meta) => logs.push({ tag, message, ...meta }) },
+        './animationLibrary': { animationLibraryStats: () => ({}) },
+        '../cameraState': { cameraState: { positions: { lewis: { x: 0, z: 0 } } } },
+        '../ai/navigation/pathfindingClient': { pathfindingStats: {} },
+        '../ai/navigation/NavigationContext': { useNavigationEnabled: () => true },
+      }, source => source.replace('return <RuntimeContext.Provider value={runtime}>{children}</RuntimeContext.Provider>;', 'return null;'));
+      const render = () => { cursor = 0; CharacterRuntimeProvider({ children: null }); effects.splice(0).forEach(effect => effect()); };
+      render(); assert.equal(logs.length, 0);
+      idle = true; render(); frame(null, 1 / 60); render();
+      assert.equal(stats.frames, 0, 'The character loop remains suspended');
+      assert.equal(logs.length, 1); assert.equal(logs[0].action, 'idle_suspend');
+      assert.deepEqual(logs[0].actors, ['lewis'], 'The global pause must remain visible when filtering the console for Lewis');
+      idle = false; render(); frame(null, 1 / 60);
+      assert.equal(stats.frames, 1); assert.equal(logs.length, 2); assert.equal(logs[1].action, 'idle_resume');
+    } finally { if (previousWindow === undefined) delete global.window; else global.window = previousWindow; }
+  });
+
   it('avance tous les acteurs avant les poses, refuse les doublons et retire les instances démontées', () => {
     const runtime = new CharacterRuntime(structuredClone(characterRuntimeStats)), calls = [];
     const participant = id => ({ simulate: (_, dt) => calls.push(`${id}:simulate:${dt}`), animate: () => calls.push(`${id}:animate`) });

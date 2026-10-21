@@ -91,6 +91,7 @@ export async function arrival(fixture) {
 export async function locomotion(fixture) {
     const { createAgentController, resetAgentDeployment, NAVIGATION_WAIT_ANIMATION } = await import('/src/features/scene/ai/agentController.ts');
     const { resolveAnimationId } = await import('/src/features/scene/animations/animationResolver.ts');
+    const { APP_LOG_HISTORY } = await import('/src/features/ui/AppConsole.tsx');
     const actors = Array.from({ length: fixture.actors }, (_, i) => ({ id: `suite-locomotion-${i}` }));
     const marker = 'suite-locomotion-revision', objectId = 'suite-locomotion-object';
     let invalidated = false, waits = 0, continued = 0;
@@ -134,6 +135,8 @@ export async function locomotion(fixture) {
                 if (['MOVING', 'IDLE'].includes(actor.controller.getStatus()) && !moved) {
                     const expected = actor.controller.getStatus() === 'MOVING' ? [NAVIGATION_WAIT_ANIMATION] : [resolveAnimationId('idle'), NAVIGATION_WAIT_ANIMATION];
                     check(expected.includes(resolveAnimationId(state.animation)), `${actor.id} walks without moving: ${state.animation}`);
+                    if (resolveAnimationId(state.animation) === NAVIGATION_WAIT_ANIMATION)
+                        check(APP_LOG_HISTORY.some(entry => entry.actors.includes(actor.id) && ['nav_waiting', 'nav_blocked'].includes(entry.action)), `${actor.id} entered navigation idle without a reason in the console`);
                     waits++;
                 }
                 if (moved) {
