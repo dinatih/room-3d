@@ -139,7 +139,7 @@ exports.withBrowser = async (fixture, exercise) => {
                 const { CHARACTERS, getDefaultSceneCharacterIds } = await import('/src/features/scene/characterConfig.ts');
                 const { cameraState } = await import('/src/features/scene/cameraState.ts');
                 useSceneStore.getState().setCameraMovement('fix');
-                useSceneStore.setState(s => ({ layers: { ...s.layers, npcCollisions: fixture.collisions } }));
+                useSceneStore.setState(s => ({ layers: { ...s.layers, npcCollisions: fixture.collisions, ...fixture.layers } }));
                 const ctx = window.__THREE_GL__.getContext(), extension = ctx.getExtension('WEBGL_debug_renderer_info');
                 const models = getDefaultSceneCharacterIds(fixture.count, useSceneStore.getState().activeCharacterId).map(id => {
                     const config = CHARACTERS.find(c => c.id === id), root = window.__THREE_SCENE__.getObjectByName(config.name);

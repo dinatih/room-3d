@@ -2,6 +2,7 @@ export interface NavigationJob<T> {
   readonly description: string;
   status: 'pending' | 'ready' | 'error' | 'cancelled';
   result?: T; error?: Error; settled: Promise<void>; cancel(): void;
+  onRead?: () => void;
 }
 /** A pending computation is an explicit wait, never an inaccessible destination. */
 export class NavigationPending {
@@ -11,6 +12,7 @@ export function readNavigationJob<T>(job: NavigationJob<T>): T {
   if (job.status === 'pending') throw new NavigationPending(job);
   if (job.status === 'error') throw job.error;
   if (job.status === 'cancelled') throw new Error('Cancelled navigation computation still in use');
+  job.onRead?.();
   return job.result!;
 }
 let activeScope: NavigationScope | undefined;

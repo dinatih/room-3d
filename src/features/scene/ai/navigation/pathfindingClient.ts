@@ -8,6 +8,7 @@ export interface NavigationGraph extends GraphSnapshot {
   readonly id: number;
   readonly definition: WorkerDefinition;
   canReach(start: Point, target: Point): boolean;
+  findReachable(start: Point, targets: Point[]): Point | null;
 }
 
 export interface PathSearch {
@@ -18,6 +19,7 @@ export interface PathSearch {
   path: Point[] | null;
   error?: Error;
   cancel: () => void;
+  onRead?: () => void;
 }
 interface Job extends NavigationJob<NavigationResult> {
   id: number;
@@ -27,6 +29,9 @@ interface Job extends NavigationJob<NavigationResult> {
   path: Point[] | null;
   onComplete: () => void;
   settle: () => void;
+  submittedAt: number;
+  dispatchedAt: number;
+  receivedAt?: number;
 }
 const queue = new Map<number, Job>();
 let nextGraphId = 0, nextJobId = 0;
@@ -35,7 +40,11 @@ let running: Job | undefined;
 const workerGraphIds = new Set<number>();
 let failure: Error | undefined;
 
-export const pathfindingStats = { submitted: 0, completed: 0, cancelled: 0, running: false, queued: 0, lastWorkerMs: 0, maxWorkerMs: 0 };
+export const pathfindingStats = { submitted: 0, completed: 0, cancelled: 0, running: false, queued: 0, lastWorkerMs: 0, maxWorkerMs: 0,
+  timings: Object.fromEntries(['build', 'path', 'reach', 'reach-first', 'approach', 'duo'].map(kind => [kind, {
+    completed: 0, consumed: 0, queueMs: 0, workerMs: 0, deliveryMs: 0, resumeMs: 0, maxTotalMs: 0,
+  }])),
+};
 
 function fail(error: Error) {
   failure = error;
@@ -70,6 +79,12 @@ function dispatch() {
       pathfindingStats.completed++;
       pathfindingStats.lastWorkerMs = response.milliseconds;
       pathfindingStats.maxWorkerMs = Math.max(pathfindingStats.maxWorkerMs, response.milliseconds);
+      job.receivedAt = performance.now();
+      const timing = pathfindingStats.timings[job.query.kind];
+      timing.completed++;
+      timing.queueMs += job.dispatchedAt - job.submittedAt;
+      timing.workerMs += response.milliseconds;
+      timing.deliveryMs += job.receivedAt - job.dispatchedAt - response.milliseconds;
       if (response.ok && job.status !== 'cancelled') workerGraphIds.add(job.graphId);
       else workerGraphIds.delete(job.graphId);
       if (job.status !== 'cancelled') {
@@ -91,6 +106,7 @@ function dispatch() {
   pathfindingStats.queued = queue.size;
   const request: PathRequest = { id: job.id, graphId: job.graphId, query: job.query };
   if (!workerGraphIds.has(job.graphId)) request.definition = job.definition;
+  job.dispatchedAt = performance.now();
   try { worker.postMessage(request); }
   catch (error) { fail(error instanceof Error ? error : new Error(String(error))); }
 }
@@ -99,8 +115,18 @@ function request(graphId: number, definition: WorkerDefinition, query: Navigatio
   if (failure) throw failure;
   let settle!: () => void;
   const settled = new Promise<void>(resolve => { settle = resolve; });
-  const description = { build: 'Construction du graphe de navigation', path: 'Calcul du trajet', reach: 'Vérification de l’accessibilité', approach: 'Calcul de l’approche de l’objet', duo: 'Calcul du placement du duo' }[query.kind];
+  const description = { build: 'Construction du graphe de navigation', path: 'Calcul du trajet', reach: 'Vérification de l’accessibilité', 'reach-first': 'Vérification groupée de l’accessibilité', approach: 'Calcul de l’approche de l’objet', duo: 'Calcul du placement du duo' }[query.kind];
+  let consumed = false;
   const job: Job = { id: ++nextJobId, graphId, definition, query, description, status: 'pending', path: null, onComplete, settled, settle,
+    submittedAt: performance.now(), dispatchedAt: 0,
+    onRead() {
+      if (consumed || job.receivedAt === undefined) return;
+      consumed = true;
+      const now = performance.now(), timing = pathfindingStats.timings[query.kind];
+      timing.consumed++;
+      timing.resumeMs += now - job.receivedAt;
+      timing.maxTotalMs = Math.max(timing.maxTotalMs, now - job.submittedAt);
+    },
     cancel() {
       if (job.status !== 'pending') return;
       job.status = 'cancelled';
@@ -150,6 +176,10 @@ export function prepareNavigationGraph(definition: WorkerDefinition): { read(): 
         graph = { ...snapshot, id, definition,
           canReach(start, target) {
             return navigationQuery(`${id}:reach:${start.x}:${start.z}:${target.x}:${target.z}`, () => request(id, definition, { kind: 'reach', start: { ...start }, target: { ...target } })) as boolean;
+          },
+          findReachable(start, targets) {
+            if (!targets.length) return null;
+            return navigationQuery(`${id}:reach-first:${JSON.stringify([start, targets])}`, () => request(id, definition, { kind: 'reach-first', start: { ...start }, targets })) as Point | null;
           },
         };
       }

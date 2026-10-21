@@ -92,6 +92,13 @@ export async function soloDoors(fixture) {
     const id = 'suite-solo-xbot', route = nav.createRouteState();
     register(id, fixture);
     try {
+        const deadline = performance.now() + fixture.timeoutMs;
+        while (Object.keys(cameraState.positions).some(actor => actor !== id && profiles.hasAgentProfile(actor)) || pathfindingStats.running || pathfindingStats.queued) {
+            check(performance.now() < deadline, 'Background actors or navigation jobs still active in the solitary test');
+            await nextTask();
+        }
+        for (const timing of Object.values(pathfindingStats.timings)) timing.maxTotalMs = 0;
+        const before = structuredClone(pathfindingStats.timings);
         let position = await resolveNavigation(() => getZoneDestination('living', id));
         const legs = [];
         for (const zone of ['entrance-outside', 'building-b-corridor-end', 'living']) {
@@ -109,7 +116,8 @@ export async function soloDoors(fixture) {
             position = actor.position;
         }
         check(legs.every(leg => leg.arrived), 'The solitary actor must complete both passages');
-        return { legs };
+        return { legs, navigation: { ...structuredClone(pathfindingStats), timings: Object.fromEntries(Object.entries(pathfindingStats.timings)
+            .map(([kind, timing]) => [kind, Object.fromEntries(Object.entries(timing).map(([key, value]) => [key, key === 'maxTotalMs' ? value : value - before[kind][key]]))])) } };
     } finally { nav.resetRoute(route, id); release(id); }
 }
 export async function snapshotChurn(fixture) {

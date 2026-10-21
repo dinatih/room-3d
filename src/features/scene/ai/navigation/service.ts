@@ -73,11 +73,11 @@ export function getDoorApproach(key: DoorKey, agentId?: string, preferred?: Poin
   const graph = getNavigationGraph(getAgentProfile(agentId), undefined);
   const goal = preferred ?? desired;
   if (start && departureOwner && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true, undefined) ?? start;
-  if (!preferred && !insideObstacle(desired, graph.obstacles) && (!start || graph.canReach(start, desired))) return desired;
   const candidates = [desired, ...graph.vertices].filter(p => inSurface(p) && !insideObstacle(p, graph.obstacles) && distance(p, door.pivot) >= door.length + clearance
     && (p.x - door.pivot.x) * door.openNormal.x + (p.z - door.pivot.z) * door.openNormal.z > 0);
   candidates.sort((a, b) => distance(a, goal) - distance(b, goal));
-  const candidate = candidates.find(p => !start || graph.canReach(start, p));
+  if (!preferred && !insideObstacle(desired, graph.obstacles)) candidates.unshift(desired);
+  const candidate = start ? graph.findReachable(start, candidates) : candidates[0];
   if (!candidate) throw new NavigationBlockedError(`No safe approach for door ${key}`, goal);
   return candidate;
 }
@@ -233,6 +233,7 @@ function searchPath(route: RouteState, graph: NavigationGraph, start: Point, tar
   }
   if (search.job.status === 'error') throw search.job.error!;
   if (search.job.status === 'cancelled') throw new Error('Cancelled navigation search still attached to a route');
+  search.job.onRead?.();
   route.search = undefined;
   return search.job.path;
 }

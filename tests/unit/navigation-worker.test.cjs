@@ -21,6 +21,38 @@ function withWorker(exercise) {
 }
 
 describe('Protocole réel du worker de navigation', () => {
+  it('sépare calcul, file, messages et reprise sans compter deux fois une lecture', () => {
+    const previousWorker = globalThis.Worker, previousClock = globalThis.performance, sent = [];
+    let worker, now = 10;
+    globalThis.performance = { now: () => now };
+    globalThis.Worker = class { constructor() { worker = this; } postMessage(message) { sent.push(message); } };
+    try {
+      const scopeModule = require('../../src/features/scene/ai/navigation/navigationScope.ts');
+      const client = load('src/features/scene/ai/navigation/pathfindingClient.ts', {
+        './navigationScope': scopeModule, '../../cameraState': { cameraState: {} },
+      }, source => source.replaceAll('import.meta.url', "'file:///navigation.ts'").replace(/if \(import\.meta\.hot\)[\s\S]*$/, ''));
+      const answer = (request, milliseconds, result) => worker.onmessage({ data: { id: request.id, graphId: request.graphId, ok: true, milliseconds, result } });
+      const preparation = client.prepareNavigationGraph({ solids: [] }), build = sent.shift();
+      now = 30; answer(build, 7, { vertices: [], obstacles: [] });
+      now = 42; const graph = preparation.read(); preparation.read();
+      const scope = new scopeModule.NavigationScope();
+      const operation = () => graph.canReach({ x: 0, z: 0 }, { x: 20, z: 0 });
+      assert.throws(() => scope.run(operation), scopeModule.NavigationPending);
+      const reach = sent.shift();
+      now = 50; const path = client.requestPath(graph, { x: 0, z: 0 }, { x: 30, z: 0 }, () => {});
+      assert.equal(sent.length, 0, 'The path waits behind the running accessibility query');
+      now = 70; answer(reach, 20, true);
+      const search = sent.shift();
+      now = 90; answer(search, 5, [{ x: 30, z: 0 }]);
+      now = 95; assert.equal(scope.run(operation), true);
+      now = 100; path.onRead(); path.onRead();
+      assert.deepEqual(client.pathfindingStats.timings.build, { completed: 1, consumed: 1, queueMs: 0, workerMs: 7, deliveryMs: 13, resumeMs: 12, maxTotalMs: 32 });
+      assert.deepEqual(client.pathfindingStats.timings.reach, { completed: 1, consumed: 1, queueMs: 0, workerMs: 20, deliveryMs: 8, resumeMs: 25, maxTotalMs: 53 });
+      assert.deepEqual(client.pathfindingStats.timings.path, { completed: 1, consumed: 1, queueMs: 20, workerMs: 5, deliveryMs: 15, resumeMs: 10, maxTotalMs: 50 });
+      preparation.cancel();
+    } finally { globalThis.performance = previousClock; if (previousWorker === undefined) delete globalThis.Worker; else globalThis.Worker = previousWorker; }
+  });
+
   it('garde un graphe vivant pour ses lecteurs après son remplacement dans le cache', () => {
     const previous = globalThis.Worker, sent = [];
     let worker;
@@ -42,6 +74,14 @@ describe('Protocole réel du worker de navigation', () => {
       assert.equal(sent.length, 0, 'Cache replacement must not cancel a reader’s accessibility query');
       worker.onmessage({ data: { id: reach.id, graphId: reach.graphId, ok: true, milliseconds: 0, result: true } });
       assert.equal(scope.run(operation), true);
+      const targets = [{ x: 0, z: 0 }, { x: 20, z: 0 }, { x: 40, z: 0 }];
+      const batch = () => graph.findReachable({ x: -20, z: 0 }, targets);
+      assert.throws(() => scope.run(batch), NavigationPending);
+      assert.equal(sent.length, 1, 'All candidates must share a single worker round trip');
+      const selection = sent.shift();
+      assert.deepEqual(selection.query, { kind: 'reach-first', start: { x: -20, z: 0 }, targets });
+      worker.onmessage({ data: { id: selection.id, graphId: selection.graphId, ok: true, milliseconds: 0, result: targets[1] } });
+      assert.deepEqual(scope.run(batch), targets[1]);
       release();
       assert.deepEqual(sent, [{ release: graph.id }]);
       preparation.cancel(); assert.equal(sent.length, 1, 'Cache disposal is idempotent');
@@ -73,6 +113,19 @@ describe('Protocole réel du worker de navigation', () => {
     assert(!released.ok); assert.match(released.error, /unknown graph/);
     assert(send({ graphId: 2, query: { kind: 'path', start, target } }).ok);
     const invalid = send({ graphId: 2, query: { kind: 'reach', start: { x: NaN, z: 0 }, target } });
+    assert(!invalid.ok); assert.match(invalid.error, /Non-finite/);
+  }));
+
+  it('vérifie tous les candidats en une demande en conservant la première destination accessible', () => withWorker(send => {
+    const definition = { solids: [{ polygon: geometry.rectangle(0, 0, 40, 40), radius: 4, comfort: false }] };
+    const start = { x: -80, z: 0 }, reference = queries.buildNavigationGraph(definition);
+    assert(send({ graphId: 1, definition, query: { kind: 'build' } }).ok);
+    for (const targets of [[], [{ x: 0, z: 0 }], [{ x: 0, z: 0 }, { x: 80, z: 0 }, { x: -70, z: 0 }]]) {
+      const response = send({ graphId: 1, query: { kind: 'reach-first', start, targets } });
+      assert(response.ok);
+      assert.deepEqual(response.result, targets.find(target => reference.canReach(start, target)) ?? null);
+    }
+    const invalid = send({ graphId: 1, query: { kind: 'reach-first', start, targets: [{ x: NaN, z: 0 }] } });
     assert(!invalid.ok); assert.match(invalid.error, /Non-finite/);
   }));
 

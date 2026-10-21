@@ -4,6 +4,19 @@ require('../support/load-ts.cjs');
 const g = require('../../src/features/scene/ai/navigation/geometry.ts');
 const { NAVIGATION_COMFORT_CM: margin } = require('../../src/features/scene/ai/navigation/comfort.ts');
 describe('Chemins confortables', () => {
+    it('conserve une estimation physique exacte aux sommets réutilisés et aux points intermédiaires', () => {
+        const graph = new g.VisibilityGraph(g.union([g.rectangle(0, 0, 40, 40), g.rectangle(60, 40, 20, 60)]));
+        const target = { x: 120, z: 0 }, estimate = graph.distanceEstimator(target);
+        for (const point of [...graph.vertices, { x: -100, z: 0 }, { x: 0, z: -60 }]) {
+            const path = graph.find(point, target);
+            const expected = path ? path.reduce((sum, p, i) => sum + g.distance(i ? path[i - 1] : point, p), 0) : Infinity;
+            for (const candidate of [point, { ...point }]) {
+                const actual = estimate(candidate);
+                assert(actual === expected || Math.abs(actual - expected) <= g.CLEARANCE_ERROR, `${JSON.stringify(candidate)}: estimate ${actual}, shortest path ${expected}`);
+            }
+        }
+    });
+
     it('ne prépare les distances de confort que pour une recherche pondérée qui en a besoin', () => {
         const { ComfortField } = require('../../src/features/scene/ai/navigation/comfort.ts');
         const original = ComfortField.prototype.clearance;

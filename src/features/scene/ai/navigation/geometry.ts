@@ -177,9 +177,10 @@ export class VisibilityGraph {
         if (candidate < (remaining.get(edge.to) ?? Infinity)) { remaining.set(edge.to, candidate); open.add(edge.to); }
       }
     }
+    const atVertex = new Map([...remaining].map(([index, value]) => [this.vertices[index], value]));
     return p => {
       if (segmentFree(p, target, this.obstacles, true)) return distance(p, target);
-      let best = Infinity;
+      let best = atVertex.get(p) ?? Infinity;
       for (const [i, rest] of remaining) {
         const candidate = distance(p, this.vertices[i]) + rest;
         if (candidate < best && this.tangent(i, p) && segmentFree(p, this.vertices[i], this.obstacles, true)) best = candidate;
@@ -214,10 +215,9 @@ export class VisibilityGraph {
     const startIndex = nodes.length - 2, targetIndex = nodes.length - 1;
     const physicalDistance = this.physicalGraph!.distanceEstimator(target);
     const estimates = new Map<number, number>([[targetIndex, 0]]);
-    const estimate = (index: number) => {
-      if (!estimates.has(index)) estimates.set(index, physicalDistance(nodes[index]));
-      return estimates.get(index)!;
-    };
+    // Start with a cheap admissible bound; refine it only when a queued edge
+    // could improve the route, rather than testing every candidate's visibility.
+    const estimate = (index: number) => estimates.get(index) ?? distance(nodes[index], target);
     // Lazy edge A*: first queue the analytic lower bound, then evaluate
     // visibility and proximity only when that edge can improve the route.
     // Exact edges return to the queue before their destination is settled.
@@ -263,6 +263,12 @@ export class VisibilityGraph {
       if (edge.priority >= bestCost) return bestPath;
       const { from: current, to } = edge;
       if (costs.has(to)) continue;
+      if (!estimates.has(to)) {
+        estimates.set(to, physicalDistance(nodes[to]));
+      }
+      const refinedPriority = edge.cost + estimate(to);
+      if (refinedPriority >= bestCost) continue;
+      if (refinedPriority > edge.priority) { push({ ...edge, priority: refinedPriority }); continue; }
       if (edge.exact) {
         costs.set(to, edge.cost); parents.set(to, current);
         if (to !== targetIndex) { expand(to); continue; }

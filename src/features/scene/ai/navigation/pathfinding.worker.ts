@@ -2,7 +2,7 @@ import { VisibilityGraph, mergeObstacles, type Point, type Polygon } from './geo
 import { buildNavigationGraph, objectApproachCandidates, findDuoPoint, type GraphDefinition, type GraphSnapshot, type ApproachQuery, type DuoQuery } from './queries';
 
 export type WorkerDefinition = GraphDefinition | { obstacles: Polygon[][] };
-export type NavigationQuery = { kind: 'build' } | { kind: 'path' | 'reach'; start: Point; target: Point } | { kind: 'approach'; approach: ApproachQuery } | { kind: 'duo'; duo: DuoQuery };
+export type NavigationQuery = { kind: 'build' } | { kind: 'path' | 'reach'; start: Point; target: Point } | { kind: 'reach-first'; start: Point; targets: Point[] } | { kind: 'approach'; approach: ApproachQuery } | { kind: 'duo'; duo: DuoQuery };
 
 export interface PathRequest {
   id: number;
@@ -35,6 +35,7 @@ self.onmessage = (event: MessageEvent<PathRequest | { release: number }>) => {
     const value = query.kind === 'build' ? { obstacles: graph.obstacles, comfort: graph.comfort, vertices: graph.vertices }
       : query.kind === 'approach' ? objectApproachCandidates(query.approach, graph)
       : query.kind === 'duo' ? findDuoPoint(query.duo, graph)
+      : query.kind === 'reach-first' ? query.targets.find(target => graph!.canReach(query.start, target)) ?? null
       : query.kind === 'reach' ? graph.canReach(query.start, query.target) : graph.find(query.start, query.target);
     result = { id: request.id, graphId: request.graphId, ok: true, result: value, milliseconds: performance.now() - started };
   } catch (error) {
