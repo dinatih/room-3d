@@ -759,7 +759,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     const view = posKey === 'front' && store.layers.characterGrid
       ? getCharacterGridCameraView()
-      : posKey ? resolveCameraView(posKey, store.cameraProjection) : undefined;
+      : posKey ? resolveCameraView(posKey, store.cameraProjection, undefined, store.cameraElevation) : undefined;
 
     if (view && ctrlRef.current) {
       const offset = [

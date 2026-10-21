@@ -65,7 +65,8 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Performances & Stats (toggle)" keys={['H']} />
               <R label="Masquer toute l'UI (Vue clean)" keys={['0']} />
               <R label="Console de logs (toggle)"   keys={['B']} />
-              <R label="Vue top-down (toggle)"      keys={['Alt+T']} />
+              <R label="Vue Ouest à 90°"             keys={['Alt+T']} />
+              <R label="Élévation caméra à 60°"      keys={['Alt+M']} />
               <R label="Vue top-down suivi perso (toggle)" keys={['Y']} />
               <R label="Avion en papier (toggle)"   keys={['Alt+V']} />
               <R label="Afficher / masquer la grille" keys={['Alt+B']} />

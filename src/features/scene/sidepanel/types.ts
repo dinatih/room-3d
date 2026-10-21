@@ -20,6 +20,7 @@ export const CARDINAL_VIEWS = [
 
 export const ELEVATION_VIEWS = [
   { angle: 90, label: '90° Haut', shortcut: 'Alt+9', icon: 'bi-chevron-compact-up' },
+  { angle: 60, label: '60° Plongée', shortcut: 'Alt+M', icon: 'bi-box' },
   { angle: 45, label: '45° Plongée', shortcut: 'Alt+0', icon: 'bi-box' },
   { angle: 0, label: '0° Face', shortcut: 'Alt+-', icon: 'bi-dash-lg' },
   { angle: -90, label: '-90° Bas', shortcut: 'Alt+=', icon: 'bi-chevron-compact-down' },

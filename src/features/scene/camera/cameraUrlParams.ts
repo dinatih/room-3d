@@ -11,6 +11,7 @@ export const CAMERA_POS_ALIASES: Record<string, string> = {
   south: 'south',
   'south-west': 'south-west',
   west: 'west',
+  ouest: 'west',
   'north-west': 'north-west',
   top: 'top',
   bottom: 'bottom',
@@ -35,6 +36,20 @@ export function parseUrlCameraProjection(): CameraProjection {
   if (typeof window === 'undefined') return 'persp';
   const params = getUrlParams();
   return params.get('projection')?.toLowerCase() === 'ortho' ? 'ortho' : 'persp';
+}
+
+export function parseUrlCameraElevation(): number {
+  const raw = typeof window === 'undefined' ? null : getUrlParams().get('cameraElevation');
+  if (raw === null) return 45;
+  const elevation = Number(raw);
+  if (!raw.trim() || !Number.isFinite(elevation) || elevation < -90 || elevation > 90) {
+    throw new Error(`Élévation de caméra invalide : ${raw}`);
+  }
+  return elevation;
+}
+
+export function updateUrlCameraElevation(elevation: number) {
+  writeUrl(params => params.set('cameraElevation', String(elevation)));
 }
 
 /** ?skipIntro=1 skips the launch countdown and camera flight after loading. */

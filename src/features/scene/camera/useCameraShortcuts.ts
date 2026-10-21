@@ -250,6 +250,11 @@ export function useCameraShortcuts({
       }
 
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (e.code === 'KeyM') {
+          e.preventDefault();
+          if (!e.repeat) dispatchView(useSceneStore.getState().activeCameraPos ?? 'north', undefined, false, 60);
+          return;
+        }
         if (e.key === 'o' || e.key === 'O') {
           e.preventDefault();
           if (!e.repeat) goToDefaultOrbit();
@@ -399,14 +404,9 @@ export function useCameraShortcuts({
 
       if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 't' || e.key === 'T')) {
         if (e.repeat) return;
-        const characterGridActive = useSceneStore.getState().layers.characterGrid;
-        if (characterGridActive) {
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-lara', value: 't-pose' } }));
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'character-anim-xbot', value: 't-pose' } }));
-        } else {
-          dispatchView('top');
-          appLog('system', '🎥 Mode Vue du Dessus (Top)');
-        }
+        e.preventDefault();
+        dispatchView('west', undefined, false, 90);
+        appLog('system', '🎥 Vue Ouest — élévation 90°');
         return;
       }
 

@@ -5,6 +5,8 @@ import type { ArrowControl, CameraMovement, CameraTarget, OrbitMouseMode } from 
 import {
   parseUrlCameraMode,
   parseUrlCameraProjection,
+  parseUrlCameraElevation,
+  updateUrlCameraElevation,
   parseUrlActiveCameraPosKey,
   parseUrlCameraTarget,
   parseUrlCameraMovement,
@@ -526,8 +528,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
     set({ activeCameraPos: pos });
     updateUrlCameraPos(pos);
   },
-  cameraElevation: 45,
-  setCameraElevation: (elev) => set({ cameraElevation: elev }),
+  cameraElevation: parseUrlCameraElevation(),
+  setCameraElevation: (elev) => {
+    set({ cameraElevation: elev });
+    updateUrlCameraElevation(elev);
+  },
   isCvModalOpen: false,
   isPhotoModeOpen: false,
   desk2ScreenActive: false,
