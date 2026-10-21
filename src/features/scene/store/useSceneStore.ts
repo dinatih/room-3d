@@ -523,7 +523,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   orbitMouseMode: parseUrlMouseMode() ?? (parseUrlCameraProjection() === 'ortho' ? 'translate' : 'rotate'),
   setOrbitMouseMode: (mode) => set({ orbitMouseMode: mode }),
-  activeCameraPos: parseUrlActiveCameraPosKey() ?? 'north-west',
+  activeCameraPos: parseUrlActiveCameraPosKey() ?? (parseUrlCameraElevation() === 90 ? 'west' : 'north-west'),
   setActiveCameraPos: (pos) => {
     set({ activeCameraPos: pos });
     updateUrlCameraPos(pos);
