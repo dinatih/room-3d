@@ -74,7 +74,7 @@ export function useCharacterAnimations({
   const pendingLoadsRef = useRef<Set<string>>(new Set());
   const failedLoadsRef = useRef<Set<string>>(new Set());
   const retired = useRef(new Map<THREE.AnimationAction, number>());
-  const baseClips = useMemo(() => new Set(['idle', 'falling', 'falling-idle'].map(resolveAnimationId)), []);
+  const baseClips = useMemo(() => new Set(['idle', 'sad-idle', 'falling', 'falling-idle'].map(resolveAnimationId)), []);
 
   function retireAction(action: THREE.AnimationAction, duration: number) {
     retired.current.set(action, mixerRef.current!.time + duration);
@@ -224,6 +224,7 @@ export function useCharacterAnimations({
 
     // Pré-chargement automatique de la pose idle et des animations de chute
     loadAndPlayClip('idle');
+    loadAndPlayClip('sad-idle');
     loadAndPlayClip('falling');
     loadAndPlayClip('falling-idle');
 

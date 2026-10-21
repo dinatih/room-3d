@@ -114,7 +114,7 @@ if (process.argv.includes('--snapshot')) {
         if (id.endsWith('/src/features/scene/cameraState.ts')) return source + '\nObject.assign(window, { __PROFILE_CAMERA__: cameraState });';
         if (process.argv.includes('--verify-locomotion') && id.endsWith('/src/features/scene/ai/agentController.ts')) {
           if (process.argv.includes('--without-pending-idle')) {
-            const idle = "      if ((agentStatus === 'MOVING' || agentStatus === 'IDLE') && state.x === x && state.z === z) state.animation = 'idle';";
+            const idle = "      if ((agentStatus === 'MOVING' || agentStatus === 'IDLE') && state.x === x && state.z === z) state.animation = agentStatus === 'MOVING' || waitingForNavigation ? NAVIGATION_WAIT_ANIMATION : 'idle';";
             if (!source.includes(idle)) throw Error('Stationary animation mutation no longer matches the controller');
             source = source.replace(idle, '');
           }
