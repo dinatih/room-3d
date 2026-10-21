@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Line } from '@react-three/drei';
 import { useMemo, useState, useEffect } from 'react';
 import { useSceneStore } from '../store/useSceneStore';
 import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
@@ -169,8 +170,19 @@ function AiZonesHelperContent() {
     <group renderOrder={99999}>
       {/* ── Smart Objects et leurs Slots d'affordance (cercles 10cm au sol, détails au survol) ── */}
       {resolvedSmartObjects.map(obj => {
+        const approaches = [...new Map(obj.slots
+          .filter(slot => slot.approachOffset && (!hoveredSlotKey || hoveredSlotKey === `${obj.id}:::${slot.slotId}`))
+          .map(slot => [slot.approachOffset!.join(','), slot.approachOffset!] as const)).values()];
         return (
           <group key={`smart-${obj.id}`}>
+            {approaches.map(point => (
+              <group key={`approach-${point.join(',')}`} position={[point[0], baseHeight + 0.4, point[2]]}>
+                <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} raycast={() => {}}>
+                  <ringGeometry args={[6, 9, 4]} />
+                  <meshBasicMaterial color="#ffab00" depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+                </mesh>
+              </group>
+            ))}
 
             {/* Cibles au sol + flèches d'orientation pour chaque slot */}
             {obj.slots.map(slot => {
@@ -272,6 +284,13 @@ function AiZonesHelperContent() {
                     document.body.style.cursor = '';
                   }}
                 >
+                  {slot.approachOffset && (
+                    <Line
+                      points={[[slot.approachOffset[0] - pos[0], 0.4, slot.approachOffset[2] - pos[2]], [0, 0.4, 0]]}
+                      color="#ffab00" dashed dashSize={4} gapSize={3}
+                      depthTest={false} depthWrite={false} raycast={() => {}}
+                    />
+                  )}
                   {/* Volume de collision 3D invisible (facilite grandement le clic en perspective) */}
                   <mesh position={[0, 15, 0]}>
                     <cylinderGeometry args={[18, 18, 30, 16]} />
