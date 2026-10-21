@@ -8,7 +8,7 @@ import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, getAgentDo
 import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from '../agent/agentAvoidance';
 import { NAVIGATION_COMFORT_CM } from './comfort';
 import type { GraphDefinition, ApproachRegion } from './queries';
-import { NavigationScope, NavigationPending, navigationValue } from './navigationScope';
+import { NavigationScope, NavigationPending, navigationValue, getNavigationScope } from './navigationScope';
 import { requestPath, prepareNavigationGraph, readObjectApproach, type NavigationGraph, type PathSearch } from './pathfindingClient';
 import { cameraState } from '../../cameraState';
 import { OccupancyManager, isInRoom, LIMITED_ROOMS, ROOM_CAPACITIES } from '../occupancyManager';
@@ -116,7 +116,18 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
 }
 
 export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string | string[] | Set<string>, continuingRoute = false): NavigationGraph {
-  const entry = getNavigationPreparation(profile, excludeOwner);
+  const owners = excludeOwner instanceof Set ? [...excludeOwner] : Array.isArray(excludeOwner) ? excludeOwner : excludeOwner?.split('+') ?? [];
+  const scope = getNavigationScope();
+  // One asynchronous operation must finish against one immutable snapshot.
+  // Other actors may replace the shared cache without cancelling this reader.
+  const entry = scope ? scope.value(`graph:${profile.radius}:${profile.height}:${owners.map(getInteractionOwner).sort().join('+')}`, () => {
+    const entry = getNavigationPreparation(profile, excludeOwner);
+    return { entry, release: entry.preparation.retain() };
+  }, snapshot => snapshot.release()).entry : getNavigationPreparation(profile, excludeOwner);
+  return readPreparedGraph(entry, continuingRoute);
+}
+
+function readPreparedGraph(entry: ReturnType<typeof getNavigationPreparation>, continuingRoute: boolean): NavigationGraph {
   try {
     const graph = entry.preparation.read();
     entry.previous?.cancel(); entry.previous = undefined;
@@ -344,7 +355,7 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
     route.doors.clear();
     // Releasing the interaction footprint changes the graph too. Cache the
     // released geometry, and restore the footprint only when retrying the route.
-    route.failure = { graph: getNavigationGraph(getAgentProfile(agentId), undefined), start: { ...start }, target: { ...target }, owner, interaction, protectedDoor, doorProtection, actorBlockers };
+    route.failure = { graph: readPreparedGraph(getNavigationPreparation(getAgentProfile(agentId)), false), start: { ...start }, target: { ...target }, owner, interaction, protectedDoor, doorProtection, actorBlockers };
   }
   const profile = getAgentProfile(agentId);
   const liveFurniture = [...furnitureObstacles.values()]

@@ -21,6 +21,34 @@ function withWorker(exercise) {
 }
 
 describe('Protocole réel du worker de navigation', () => {
+  it('garde un graphe vivant pour ses lecteurs après son remplacement dans le cache', () => {
+    const previous = globalThis.Worker, sent = [];
+    let worker;
+    globalThis.Worker = class { constructor() { worker = this; } postMessage(message) { sent.push(message); } };
+    try {
+      const { NavigationScope, NavigationPending } = require('../../src/features/scene/ai/navigation/navigationScope.ts');
+      const client = load('src/features/scene/ai/navigation/pathfindingClient.ts', {
+        './navigationScope': require('../../src/features/scene/ai/navigation/navigationScope.ts'), '../../cameraState': { cameraState: {} },
+      }, source => source.replaceAll('import.meta.url', "'file:///navigation.ts'").replace(/if \(import\.meta\.hot\)[\s\S]*$/, ''));
+      const preparation = client.prepareNavigationGraph({ solids: [] });
+      const release = preparation.retain();
+      const build = sent.shift();
+      worker.onmessage({ data: { id: build.id, graphId: build.graphId, ok: true, milliseconds: 0, result: { vertices: [], obstacles: [], comfort: [] } } });
+      const graph = preparation.read(), scope = new NavigationScope();
+      const operation = () => graph.canReach({ x: 0, z: 0 }, { x: 20, z: 0 });
+      assert.throws(() => scope.run(operation), NavigationPending);
+      const reach = sent.shift();
+      preparation.cancel();
+      assert.equal(sent.length, 0, 'Cache replacement must not cancel a reader’s accessibility query');
+      worker.onmessage({ data: { id: reach.id, graphId: reach.graphId, ok: true, milliseconds: 0, result: true } });
+      assert.equal(scope.run(operation), true);
+      release();
+      assert.deepEqual(sent, [{ release: graph.id }]);
+      preparation.cancel(); assert.equal(sent.length, 1, 'Cache disposal is idempotent');
+      assert.throws(() => preparation.retain(), /released navigation graph/);
+    } finally { if (previous === undefined) delete globalThis.Worker; else globalThis.Worker = previous; }
+  });
+
   it('prépare les obstacles et conserve exactement les chemins et accessibilités physiques', () => withWorker(send => {
     const definition = { solids: [{ polygon: geometry.rectangle(0, 0, 40, 80), radius: 4, comfort: true }], comfortDistance: 15 };
     const reference = queries.buildNavigationGraph(definition);

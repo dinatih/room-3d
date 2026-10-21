@@ -128,12 +128,22 @@ function releaseGraph(id: number): void {
   worker?.postMessage({ release: id });
 }
 
-export function prepareNavigationGraph(definition: WorkerDefinition): { read(): NavigationGraph; cancel(): void } {
+export function prepareNavigationGraph(definition: WorkerDefinition): { read(): NavigationGraph; retain(): () => void; cancel(): void } {
   const id = ++nextGraphId;
   const job = request(id, definition, { kind: 'build' });
   let graph: NavigationGraph | undefined;
+  let users = 1, cancelled = false;
+  const release = () => {
+    if (users <= 0) throw new Error('Navigation graph released without an owner');
+    if (--users === 0) { job.cancel(); releaseGraph(id); }
+  };
   return {
-    cancel: () => { job.cancel(); releaseGraph(id); },
+    retain: () => {
+      if (users === 0) throw new Error('Cannot retain a released navigation graph');
+      users++;
+      return release;
+    },
+    cancel: () => { if (!cancelled) { cancelled = true; release(); } },
     read() {
       if (!graph) {
         const snapshot = readNavigationJob(job) as GraphSnapshot;

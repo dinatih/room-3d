@@ -229,6 +229,11 @@ if (process.argv.includes('--snapshot')) {
         return loaded >= count;
       }, { timeout: 180000 }, count);
       await sleep(Number(option('warmup', '45000')));
+      if (process.argv.includes('--verify-snapshot-churn')) {
+        const fixture = require('../tests/fixtures/cases.cjs').navigation.find(c => c.id === 'locomotion-twenty-seven');
+        run.snapshotVerification = await page.evaluate(async fixture => (await import('/tests/support/apartment.mjs')).snapshotChurn(fixture), fixture);
+        save(); console.log('SNAPSHOT VERIFICATION', JSON.stringify(run.snapshotVerification));
+      }
       if (process.argv.includes('--locomotion-case')) {
         const fixture = require('../tests/fixtures/cases.cjs').navigation.find(c => c.id === 'locomotion-twenty-seven');
         run.locomotionVerification = await page.evaluate(async fixture => {

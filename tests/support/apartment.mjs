@@ -1,5 +1,5 @@
 // Imported by Vite inside the loaded apartment; these are the production modules.
-import { resolveNavigation } from '/src/features/scene/ai/navigation/navigationScope.ts';
+import { resolveNavigation, NavigationScope, NavigationPending } from '/src/features/scene/ai/navigation/navigationScope.ts';
 import * as nav from '/src/features/scene/ai/navigation/service.ts';
 import * as profiles from '/src/features/scene/ai/navigation/obstacles.ts';
 import * as requests from '/src/features/scene/ai/navigation/doorRequests.ts';
@@ -88,6 +88,38 @@ export async function arrival(fixture) {
             release(id);
     }
 }
+export async function snapshotChurn(fixture) {
+    const id = 'suite-snapshot-reader', marker = 'suite-snapshot-churn', scope = new NavigationScope(), phases = [];
+    register(id, fixture);
+    try {
+        const start = await resolveNavigation(() => getZoneDestination('garden', id));
+        const graph = await resolveNavigation(() => nav.getNavigationGraph(profiles.getAgentProfile(id)));
+        const target = fixture.arrivalOffsets.map(d => ({ x: start.x + d.x, z: start.z + d.z }))
+            .find(p => geometry.segmentFree(start, p, graph.obstacles));
+        check(target, 'No clear snapshot test segment');
+        const changeGeometry = () => profiles.registerObstacle({ id: marker, polygon: geometry.rectangle(10000 + phases.length, 10000, 1, 1), yMin: 0, yMax: 1 });
+        changeGeometry();
+        const deadline = performance.now() + fixture.timeoutMs;
+        for (;;) {
+            check(performance.now() < deadline, 'Accessibility restarted indefinitely during geometry changes');
+            try {
+                check(scope.run(() => nav.getNavigationGraph(profiles.getAgentProfile(id)).canReach(start, target)), 'Clear target became inaccessible');
+                break;
+            } catch (error) {
+                if (!(error instanceof NavigationPending)) throw error;
+                phases.push(error.job.description);
+                changeGeometry();
+                // A different operation replaces the shared graph before this reader resumes.
+                await resolveNavigation(() => nav.getNavigationGraph(profiles.getAgentProfile(id)));
+                await error.job.settled;
+            }
+        }
+        check(phases.length <= 2 && phases.filter(phase => phase === 'Vérification de l’accessibilité').length === 1,
+            `Expected at most one graph build and exactly one accessibility query, got: ${phases.join(', ')}`);
+        return { phases, geometryChanges: phases.length + 1, reachable: true };
+    } finally { scope.clear(); profiles.unregisterObstacle(marker); release(id); }
+}
+
 export async function locomotion(fixture) {
     const { createAgentController, resetAgentDeployment, NAVIGATION_WAIT_ANIMATION } = await import('/src/features/scene/ai/agentController.ts');
     const { resolveAnimationId } = await import('/src/features/scene/animations/animationResolver.ts');

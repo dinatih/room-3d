@@ -19,7 +19,7 @@ const navigationDependencies = {
     '../../positionState': { positionState: {} }, '../../furniturePositions': { movingFurniture: new Set() }, './architecture': architecture, './obstacles': obstacles, './geometry': g,
     '../../doorObstacles': doors, './doorRequests': requests, '../agent/agentAvoidance': { limitAgentMovement: (id, start, proposed) => proposed, isAgentDestinationFree: () => true, getAgentObstacles: () => [], beginActorBlockCheck: () => { }, endActorBlockCheck: () => new Map(), actorBlocksUnchanged: () => true },
     './comfort': require('../../src/features/scene/ai/navigation/comfort.ts'), './pathfindingClient': {
-      prepareNavigationGraph: definition => { const graph = 'solids' in definition ? queries.buildNavigationGraph(definition) : new g.VisibilityGraph(g.mergeObstacles(definition.obstacles)); graph.definition = definition; return { read: () => { if (holdBuilds) throw new navigationDependencies['./navigationScope'].NavigationPending({ status: 'pending', settled: Promise.resolve(), cancel() {} }); return graph; }, cancel() { cancelledGraphs++; } }; },
+      prepareNavigationGraph: definition => { const graph = 'solids' in definition ? queries.buildNavigationGraph(definition) : new g.VisibilityGraph(g.mergeObstacles(definition.obstacles)); graph.definition = definition; return { retain: () => () => {}, read: () => { if (holdBuilds) throw new navigationDependencies['./navigationScope'].NavigationPending({ status: 'pending', settled: Promise.resolve(), cancel() {} }); return graph; }, cancel() { cancelledGraphs++; } }; },
       readObjectApproach: (graph, query) => queries.objectApproachCandidates(query, graph),
       requestPath: (graph, start, target) => { pathRequests++; return { graph, start, target, status: 'ready', path: graph.find(start, target), cancel: () => { } }; },
     }, '../../cameraState': { cameraState },
@@ -58,6 +58,43 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('termine une accessibilité sur le même graphe malgré des reconstructions par d’autres acteurs', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const { NavigationScope, NavigationPending, navigationQuery } = navigationDependencies['./navigationScope'];
+        const scope = new NavigationScope(), released = [], jobs = [];
+        let built = 0;
+        const stable = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, './pathfindingClient': {
+            ...navigationDependencies['./pathfindingClient'],
+            prepareNavigationGraph(definition) {
+                const id = ++built, graph = queries.buildNavigationGraph(definition);
+                let users = 1;
+                graph.definition = definition;
+                graph.canReach = () => navigationQuery(`reach:${id}`, () => {
+                    const job = { description: 'reach', status: 'pending', settled: Promise.resolve(), cancel() {} };
+                    jobs.push(job); return job;
+                });
+                const release = () => { if (--users === 0) released.push(id); };
+                return { read: () => graph, retain: () => { users++; return release; }, cancel: release };
+            },
+        } });
+        const profile = obstacles.getAgentProfile('walker');
+        const operation = () => stable.getNavigationGraph(profile).canReach({ x: -100, z: 0 }, { x: 100, z: 0 });
+        try {
+            assert.throws(() => scope.run(operation), NavigationPending);
+            for (let change = 0; change < 3; change++) {
+                obstacles.registerObstacle({ id: 'remote-snapshot-change', polygon: g.rectangle(change * 10, 200, 4, 4), yMin: 0, yMax: 250 });
+                stable.getNavigationGraph(profile);
+                assert.throws(() => scope.run(operation), NavigationPending);
+            }
+            assert.equal(jobs.length, 1, 'The same accessibility query must not restart for each global revision');
+            assert(!released.includes(1), 'An active operation still owns its original graph');
+            jobs[0].status = 'ready'; jobs[0].result = true;
+            assert.equal(scope.run(operation), true);
+            assert(released.includes(1), 'Completion releases the obsolete graph');
+        } finally { scope.clear(); obstacles.unregisterObstacle('remote-snapshot-change'); }
+    });
+
     it('continue un trajet libre pendant une reconstruction partagée et l’attente d’un autre acteur', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;

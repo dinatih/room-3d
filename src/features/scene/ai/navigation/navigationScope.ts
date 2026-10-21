@@ -17,8 +17,13 @@ let activeScope: NavigationScope | undefined;
 export class NavigationScope {
   private jobs = new Map<string, NavigationJob<unknown>>();
   private values = new Map<string, unknown>();
-  value<T>(key: string, create: () => T): T {
-    if (!this.values.has(key)) this.values.set(key, create());
+  private disposers = new Map<string, () => void>();
+  value<T>(key: string, create: () => T, dispose?: (value: T) => void): T {
+    if (!this.values.has(key)) {
+      const value = create();
+      this.values.set(key, value);
+      if (dispose) this.disposers.set(key, () => dispose(value));
+    }
     return this.values.get(key) as T;
   }
   read<T>(key: string, create: () => NavigationJob<T>): T {
@@ -29,6 +34,8 @@ export class NavigationScope {
   clear(): void {
     for (const job of this.jobs.values()) job.cancel();
     this.jobs.clear();
+    for (const dispose of this.disposers.values()) dispose();
+    this.disposers.clear();
     this.values.clear();
   }
   run<T>(operation: () => T): T {
@@ -42,6 +49,7 @@ export class NavigationScope {
     catch (error) { if (!(error instanceof NavigationPending)) throw error; return false; }
   }
 }
+export const getNavigationScope = (): NavigationScope | undefined => activeScope;
 export function navigationValue<T>(key: string, create: () => T): T {
   if (!activeScope) throw new Error('Navigation value requires a NavigationScope');
   return activeScope.value(key, create);
