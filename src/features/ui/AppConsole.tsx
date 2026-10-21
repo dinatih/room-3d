@@ -704,7 +704,7 @@ export function AppConsole({
           className="glass-card shadow-lg rounded-2 p-1 align-self-end overflow-hidden"
           style={{
             pointerEvents: 'auto',
-            width: isMobile ? 'fit-content' : `${panelWidth}px`,
+            width: 190,
             maxWidth: 'calc(100vw - 16px)',
           }}
         >
