@@ -6290,7 +6290,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'pick-fruit',
     path: 'animations/mixamo/anim_pick_fruit.glb',
     category: 'interactions',
-    label: `Pick Fruit (241f / 8.0s, 263KB)`,
+    label: `Pick Fruit (241f / 8.0s, 261KB)`,
     tags: ['interaction'],
     duration: 8,
   },
