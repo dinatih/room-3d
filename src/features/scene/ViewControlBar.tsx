@@ -264,7 +264,7 @@ export function ViewControlBar({
     <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--multi-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {showCharacterModes && (
-          <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Sélection des personnages">
+          <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Sélection et suivi des personnages">
             <CharacterCountSelect />
             <button
               type="button"
@@ -277,12 +277,6 @@ export function ViewControlBar({
               <i className="bi bi-shuffle" aria-hidden="true" />
             </button>
             <CharacterSelect hideUI={hideUI} />
-          </div>
-        )}
-      </div>
-      {showCharacterModes && (
-        <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-          <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Suivi caméra du personnage">
             <button
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'follow' ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
@@ -324,6 +318,10 @@ export function ViewControlBar({
               aria-pressed={cameraMode === 'fpv'}
             ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
           </div>
+        )}
+      </div>
+      {showCharacterModes && (
+        <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
           <button
             type="button"
             className={`${TOOLBAR_BUTTON_CLASS} ${cameraTarget === 'studio' && cameraMode === 'orbit' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
