@@ -8,6 +8,36 @@ const serialization = require('../../src/features/scene/character/animationSeria
 const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
 
 describe('Moteur commun des personnages', () => {
+  it('distingue le chargement d’un clip de l’attente de navigation sans répéter les logs', () => {
+    const { select } = load('src/features/scene/character/Character.tsx', {}, source => {
+      const start = source.indexOf('    let isTemporaryLoadingFallback = false;');
+      const end = source.indexOf('    const postureTransition =', start);
+      assert(start >= 0 && end > start);
+      return `export function select(target, actions, loadingAnimationRef, appLog, isPreview = false) {
+        const id = 'james', characterGrid = false, isTPose = target === 't-pose';
+        const activeActionName = { current: 'sad-idle' }, ANIMATION_LOADING_IDLE = 'thinking';
+        const resolveAnimationId = id => id, getAnimationDef = () => undefined, loadAndPlayClip = () => {};
+        ${source.slice(start, end)}
+        return { target, isTemporaryLoadingFallback };
+      }`;
+    });
+    const actions = { idle: {}, 'sad-idle': {}, thinking: {} }, pending = { current: null }, logs = [];
+    const log = (id, message, meta) => logs.push({ id, message, ...meta });
+    for (let frame = 0; frame < 3; frame++) {
+      assert.deepEqual(select('climb-bed', actions, pending, log), { target: 'thinking', isTemporaryLoadingFallback: true });
+    }
+    assert.deepEqual(logs.map(log => log.action), ['anim_loading']);
+    actions['climb-bed'] = {};
+    assert.deepEqual(select('climb-bed', actions, pending, log), { target: 'climb-bed', isTemporaryLoadingFallback: false });
+    assert.deepEqual(logs.map(log => log.action), ['anim_loading', 'anim_ready']);
+    assert.equal(select('sad-idle', actions, pending, log).target, 'sad-idle', 'Ready navigation idle must remain distinct');
+    select('new-clip', actions, pending, log);
+    select('idle', actions, pending, log);
+    assert.equal(logs.at(-1).action, 'anim_loading_cancelled', 'Changing activity must not claim an unfinished clip is ready');
+    assert.equal(select('preview-clip', actions, pending, log, true).target, 'sad-idle', 'Previews keep their previous pose');
+    assert.equal(logs.length, 4);
+  });
+
   it('journalise la veille globale une seule fois, même quand les personnages ne sont plus mis à jour', () => {
     let idle = false, cursor = 0, frame;
     const hooks = [], effects = [], logs = [], stats = structuredClone(characterRuntimeStats);

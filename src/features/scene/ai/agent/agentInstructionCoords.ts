@@ -1,6 +1,6 @@
 import type { ApproachRegion } from '../navigation/queries';
 import { AgentInstruction } from '../aiTypes';
-import { getObjectApproach, getDoorApproach, NavigationBlockedError } from '../navigation/service';
+import { getObjectApproach, getDoorApproach, getContainingObjectOwner, NavigationBlockedError } from '../navigation/service';
 import { getAgentProfile, hasAgentProfile } from '../navigation/obstacles';
 import { protectDoor } from '../navigation/doorRequests';
 import { cameraState } from '../../cameraState';
@@ -16,6 +16,8 @@ export function resolveInstructionCoords(
   currentPosition?: { x: number; z: number },
   departureOwner?: string
 ): ResolvedInstructionCoords {
+  // Resolve accessibility from the actual furniture exit, before planning the next activity.
+  if (agentId && currentPosition && hasAgentProfile(agentId)) departureOwner = getContainingObjectOwner(agentId, currentPosition) ?? departureOwner;
   if (instr.type === 'RETURN_TO_START' && startPos) {
     return { tx: startPos.x, ty: startPos.y, tz: startPos.z, rotY: startPos.rotY, owner: startPos.owner, label: 'point de départ' };
   }

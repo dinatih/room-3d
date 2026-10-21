@@ -7,6 +7,7 @@ import { resolveAnimationPath, resolveAnimationId, getAnimationDef } from '../an
 import { animationSourcePlugin, extractAnimationSource, type AnimationSource } from './animationSource';
 
 const silentManager = new THREE.LoadingManager();
+export const ANIMATION_LOADING_IDLE = resolveAnimationId('thinking');
 
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
@@ -74,7 +75,7 @@ export function useCharacterAnimations({
   const pendingLoadsRef = useRef<Set<string>>(new Set());
   const failedLoadsRef = useRef<Set<string>>(new Set());
   const retired = useRef(new Map<THREE.AnimationAction, number>());
-  const baseClips = useMemo(() => new Set(['idle', 'sad-idle', 'falling', 'falling-idle'].map(resolveAnimationId)), []);
+  const baseClips = useMemo(() => new Set(['idle', 'sad-idle', ANIMATION_LOADING_IDLE, 'falling', 'falling-idle'].map(resolveAnimationId)), []);
 
   function retireAction(action: THREE.AnimationAction, duration: number) {
     retired.current.set(action, mixerRef.current!.time + duration);
@@ -225,6 +226,7 @@ export function useCharacterAnimations({
     // Pré-chargement automatique de la pose idle et des animations de chute
     loadAndPlayClip('idle');
     loadAndPlayClip('sad-idle');
+    loadAndPlayClip(ANIMATION_LOADING_IDLE);
     loadAndPlayClip('falling');
     loadAndPlayClip('falling-idle');
 

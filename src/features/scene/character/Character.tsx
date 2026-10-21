@@ -47,7 +47,7 @@ import { GroundPoint } from './GroundPoint';
 import { HeartParachute, type HeartParachuteHandle } from './HeartParachute';
 import { useCharacterFrame } from './CharacterRuntimeProvider';
 import { characterRuntimeStats } from './characterRuntime';
-import { useCharacterAnimations } from './useCharacterAnimations';
+import { useCharacterAnimations, ANIMATION_LOADING_IDLE } from './useCharacterAnimations';
 import { useCharacterPhysics } from './useCharacterPhysics';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { getCharacterGridPosition } from './characterGridUtils';
@@ -229,6 +229,7 @@ export function Character({
   useEffect(() => () => postureClipsRef.current.clear(), [scene]);
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const lastLoggedAnimRef = useRef<string>('');
+  const loadingAnimationRef = useRef<string | null>(null);
   const [isFalling, setIsFalling] = useState<boolean>(false);
 
   const [equipment, _setEquipment] = useState<{ holster: boolean; pistols: boolean; backpack: boolean }>({
@@ -827,14 +828,29 @@ export function Character({
     let isTemporaryLoadingFallback = false;
     if (!isTPose && !actions[target]) {
       loadAndPlayClip(target);
+      if (!isPreview && !characterGrid && loadingAnimationRef.current !== target) {
+        loadingAnimationRef.current = target;
+        appLog(id, `📥 Chargement et préparation de l’animation : ${getAnimationDef(target)?.label ?? target}`, {
+          category: 'anim', action: 'anim_loading', actors: [id], animation: { id: target, actorId: id },
+        });
+      }
       const idleId = resolveAnimationId('idle');
-      if (activeActionName.current && actions[activeActionName.current]) {
+      if (!isPreview && !characterGrid && actions[ANIMATION_LOADING_IDLE]) {
+        target = ANIMATION_LOADING_IDLE;
+      } else if (activeActionName.current && actions[activeActionName.current]) {
         const prevIsLocomotion = activeActionName.current.includes('walk') || activeActionName.current.includes('run');
         target = (prevIsLocomotion && actions[idleId]) ? idleId : activeActionName.current;
       } else if (actions[idleId]) {
         target = idleId;
       }
       isTemporaryLoadingFallback = true;
+    } else if (loadingAnimationRef.current) {
+      const loaded = loadingAnimationRef.current;
+      const ready = loaded === target;
+      appLog(id, `${ready ? '✅ Animation prête' : '↪️ Attente d’animation interrompue'} : ${getAnimationDef(loaded)?.label ?? loaded}`, {
+        category: 'anim', action: ready ? 'anim_ready' : 'anim_loading_cancelled', actors: [id], animation: { id: loaded, actorId: id },
+      });
+      loadingAnimationRef.current = null;
     }
 
     const postureTransition = !isPreview && !characterGrid && isPostureTransition(target);
@@ -1142,7 +1158,7 @@ export function Character({
         const speed = getWalkCycleSpeed(walkingAction.getClip(), scene);
         if (speed !== null) walkingAction.setEffectiveTimeScale(walkTimeScale(frameControl.current.distance, delta, speed));
       }
-      mixer.update(agentAnimationPaused ? 0 : delta);
+      mixer.update(agentAnimationPaused && !isTemporaryLoadingFallback ? 0 : delta);
       recordMixer(performance.now() - mixerStarted);
 
       // Parachute d'atterrissage réactif

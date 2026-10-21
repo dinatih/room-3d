@@ -58,6 +58,40 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('résout une nouvelle activité et quitte un canapé sans propriétaire de départ mémorisé', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const start = { x: -100, z: -50 }, goal = { x: 100, z: -50 };
+        const route = nav.createRouteState();
+        const coords = load('src/features/scene/ai/agent/agentInstructionCoords.ts', {
+            '../aiTypes': {}, '../navigation/service': nav, '../navigation/obstacles': obstacles,
+            '../navigation/doorRequests': requests, '../../cameraState': { cameraState },
+            '../navigation/destinations': {}, '../smartObjectRegistry': { getSmartObject: () => ({
+                id: 'next-activity', name: 'Next activity', category: 'storage', position: [goal.x, 0, goal.z], rotationY: 0,
+                slots: [{ slotId: 'use', offset: [goal.x, 0, goal.z] }],
+            }) }, '../../animations/animationResolver': { resolveSlotAnimation: () => null }, './agentTypes': {},
+        });
+        obstacles.registerObstacle({ id: 'departure-sofa', owner: 'departure-sofa', polygon: g.rectangle(start.x, start.z, 60, 60), yMin: 0, yMax: 90 });
+        obstacles.registerObstacle({ id: 'next-activity', owner: 'next-activity', polygon: g.rectangle(goal.x, goal.z, 40, 40), yMin: 0, yMax: 90 });
+        try {
+            for (const rememberedOwner of [undefined, 'old-unrelated-object']) {
+                const target = coords.resolveInstructionCoords({ type: 'MOVE_TO', smartObjectId: 'next-activity', slotId: 'use' }, null, 'walker', start, rememberedOwner);
+                const destination = { x: target.tx, z: target.tz };
+                assert(!g.insideObstacle(destination, nav.getNavigationGraph(obstacles.getAgentProfile('walker')).obstacles));
+                let position = start;
+                for (let frame = 0; frame < 1000 && g.distance(position, destination) > 0; frame++) {
+                    position = nav.followRoute(route, 'walker', position, destination, 3, undefined, target.owner);
+                    assert.equal(route.error, null);
+                }
+                assert.deepEqual(position, destination, 'The actor must actually exit the sofa and reach the next activity');
+                nav.resetRoute(route, 'walker');
+            }
+        } finally {
+            nav.resetRoute(route, 'walker');
+            obstacles.unregisterObstacle('departure-sofa'); obstacles.unregisterObstacle('next-activity');
+        }
+    });
+
     it('termine une accessibilité sur le même graphe malgré des reconstructions par d’autres acteurs', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
