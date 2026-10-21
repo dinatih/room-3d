@@ -414,9 +414,10 @@ function LampOla_() {
           position={[0, 100, 0]}
           angle={Math.PI / 3.2}
           penumbra={0.7}
-          intensity={lampOn && lightsHD ? 350 : 0}
+          // Inverse-square attenuation uses scene centimeters: cd × (100 cm/m)².
+          intensity={lampOn && lightsHD ? 350 * 100 ** 2 : 0}
           distance={0}
-          decay={1.0}
+          decay={2}
           color={0xfff2dc}
           castShadow={lightsHD}
           shadow-mapSize={[1024, 1024]}
@@ -427,9 +428,9 @@ function LampOla_() {
       )}
       <pointLight
         position={[0, 96, 0]}
-        intensity={lampOn ? (lightsHD ? 35 : 3.5) : 0}
-        distance={lightsHD ? 180 : 350}
-        decay={lightsHD ? 1.5 : 2.0}
+        intensity={lampOn ? (lightsHD ? 35 : 3.5) * 100 ** 2 : 0}
+        distance={lightsHD ? 0 : 350}
+        decay={2}
         color={0xfff2dc}
       />
     </group>

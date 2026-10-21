@@ -86,6 +86,11 @@ export interface LayerUrlMapping {
 
 export const MONITORED_LAYERS: LayerUrlMapping[] = [
   {
+    layerKey: 'lightsHD',
+    canonicalParam: 'lightsHD',
+    urlParams: ['lightshd'],
+  },
+  {
     layerKey: 'wallStructure',
     canonicalParam: 'wallStructure',
     urlParams: ['wallstructure', 'structuremural', 'structure-mural', 'structure-murale', 'structuremurale', 'murs', 'mur'],
