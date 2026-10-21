@@ -33,6 +33,6 @@ export const DRONA_SPECIAL_ITEMS = {
   label: string; interaction: string; action: string; animationPrefix: string; approach: number;
 }>;
 
-export const SPECIAL_DRONA_SLIDE_DURATION = getAnimationDef('opening')!.duration! / 2;
+export const SPECIAL_DRONA_SLIDE_DURATION = getAnimationDef('drona-care-pull')!.duration!;
 export const DRONA_PULL_RANGE: [number, number] = [0.25, 0.75];
 export const DRONA_PUSH_RANGE: [number, number] = [0.25, 0.75];

@@ -128,7 +128,7 @@ if(process.argv.includes('--build-storage')){
          const samplers=a.listSamplers(),accessors=new Set(samplers.flatMap(s=>[s.getInput(),s.getOutput()]));
          a.dispose();samplers.forEach(s=>s.dispose());accessors.forEach(a=>a.dispose());
        });
-       const buffer=doc.getRoot().listBuffers()[0],duration=phase==='search'?9.766666412353516/2:4.833333492279053/2;
+       const buffer=doc.getRoot().listBuffers()[0],duration=phase==='search'?9.766666412353516/4:4.833333492279053/4;
        const frames=Math.ceil(duration*30)+1,times=Float32Array.from({length:frames},(_,i)=>duration*i/(frames-1));
        const rotations=new Map(nodes.map(n=>[n.name,[]])),positions=new Map(nodes.map(n=>[n.name,[]]));
        for(let frame=0;frame<frames;frame++){
@@ -222,6 +222,7 @@ if(process.argv.includes('--build-linen')){
        if(trailing){reversedTimes[count-1]=duration;for(let j=0;j<size;j++)reversedValues[(count-1)*size+j]=values[j];}
        sampler.setInput(input.clone().setArray(reversedTimes));sampler.setOutput(output.clone().setArray(reversedValues));
      }
+     for(const input of new Set(animation.listSamplers().map(s=>s.getInput())))input.setArray(input.getArray().map(time=>time/2));
      await io.write(`public/animations/custom/linen_${name}.glb`,doc);
    }
    console.log(JSON.stringify(durations));
@@ -268,7 +269,7 @@ if(!process.argv.includes('--audit-storage')&&!process.argv.includes('--chair-se
      const container=document.createElement('div');container.style.height='850px';document.body.replaceChildren(container);
      DOM.createRoot(container).render(R.createElement(AnimationStudioView,{initialTarget:{type:'animation',id:'drona-bath-box-search',mode:'solo'}}));
    });
-   await page.waitForFunction(()=>Math.abs(window.bathStore.getState().duration-4.8833332)<.001,{timeout:90000});
+   await page.waitForFunction(()=>Math.abs(window.bathStore.getState().duration-2.4416666)<.001,{timeout:90000});
    await page.waitForFunction(async()=>{const {_roots}=await import('/node_modules/.vite/deps/@react-three_fiber.js');return [..._roots.values()][0]?.store.getState().scene.getObjectByName('drona-bathroom-east')?.getObjectByProperty('isMesh',true);},{timeout:60000});
    const cadence=process.argv.includes('--pose-only')?null:await page.evaluate(async()=>{const samples=[];await new Promise(resolve=>{let previous=performance.now();const tick=now=>{samples.push(now-previous);previous=now;if(samples.length<60)requestAnimationFrame(tick);else resolve();};requestAnimationFrame(tick);});return{fps:1000/(samples.reduce((a,b)=>a+b)/samples.length),maxFrameMs:Math.max(...samples)};});console.log('Studio playback cadence',cadence);
    const result=await page.evaluate(async()=>{

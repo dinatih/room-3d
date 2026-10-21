@@ -6,7 +6,7 @@ export const DRONA_STORAGE_ANIMATIONS: AnimationDefinition[] = ['care', 'trouser
   (item === 'bath-box' ? ['search'] : ['pull', 'search', 'push']).map(phase => ({
     id: `drona-${item}-${phase}`, path: `animations/custom/${item}_${phase}.glb`,
     category: 'interactions', label: `Dröna ${item} : ${phase}`, tags: ['interaction'],
-    duration: phase === 'search' ? 9.766666412353516 / 2 : 4.833333492279053 / 2,
+    duration: phase === 'search' ? 9.766666412353516 / 4 : 4.833333492279053 / 4,
     loop: 'once', equipment: 'holstered',
   })),
 );
