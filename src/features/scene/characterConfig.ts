@@ -35,6 +35,7 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'sandra',   name: 'Sandra',   emoji: '🥊', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sandra', height: 173.4 },
   { id: 'rajaa',    name: 'Rajaa',    emoji: '🚗', color: '#aacc44',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'rajaa',  height: 173.4 },
   { id: 'xbot',     name: 'Xbot',     emoji: '🤖', color: '#aaaaaa',  path: 'characters/xbot/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
+  { id: 'ybot', name: 'Y Bot', emoji: '🤖', color: '#f1c40f', path: 'characters/ybot/ybot.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 180.5, isLara: false },
   { id: 'curious_skeleton',  name: 'Skeleton bis',      emoji: '🦴', color: '#dcdde1', path: 'characters/curious_skeleton/curious_skeleton.glb',   pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.0, isLara: false },
   { id: 'skeleton',          name: 'Skeleton',              emoji: '💀', color: '#e0e0e0', path: 'characters/skeleton/skeleton.glb',                   pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.0, isLara: false },
   { id: 'hayley (Inyeong)',   name: 'Hayley', emoji: '👒', color: '#ff66aa', path: 'characters/hayley/hayley.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
@@ -267,6 +268,6 @@ export function isCharacterVisibleInMode(
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'hayley', 'gloria', 'valby',
+  'ybot', 'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'hayley', 'gloria', 'valby',
   'alex', 'david', 'mannequin', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'lewis', 'nurse'
 ]);
