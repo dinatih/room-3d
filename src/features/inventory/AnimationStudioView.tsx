@@ -1,6 +1,6 @@
 import { InventoryLinkButton } from './InventoryLinkButton';
 import { updateUrlInventory, type InventoryUrlTarget } from './inventoryUrlParams';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
 import { CHARACTERS } from '@features/scene/characterConfig';
 import { ANIM_CATEGORIES } from '@features/scene/CharacterAnimSelector';
@@ -31,6 +31,7 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
   const [partnerId, setPartnerId] = useState('rosanna');
   const [moreFilters, setMoreFilters] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+  const [listViewport, setListViewport] = useState({ top: 0, height: 0, rowHeight: 0 });
   const searchRef = useRef<HTMLInputElement>(null);
   const { allAnnotations } = useItemAnnotations();
   const filters = filtersByMode[mode];
@@ -39,6 +40,20 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
   const [missingTarget, setMissingTarget] = useState(initialTarget?.type === 'animation' && !STUDIO_CATALOG[initialTarget.mode].some(a => a.id === initialTarget.id));
   const active = missingTarget ? undefined : results.find(a => a.id === selection[mode]) ?? results[0];
   const activeIndex = active ? results.indexOf(active) : -1;
+  // Keep one viewport on either side mounted so scrolling stays continuous.
+  const { top, height: viewportHeight, rowHeight } = listViewport;
+  const firstRow = rowHeight ? Math.min(results.length, Math.max(0, Math.floor((top - viewportHeight) / rowHeight))) : 0;
+  const lastRow = rowHeight ? Math.min(results.length, Math.ceil((top + viewportHeight * 2) / rowHeight)) : 0;
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const measure = () => setListViewport({ top: list.scrollTop, height: list.clientHeight,
+      rowHeight: parseFloat(getComputedStyle(list).getPropertyValue('--animation-row-height')) * parseFloat(getComputedStyle(document.documentElement).fontSize) });
+    const observer = new ResizeObserver(measure);
+    observer.observe(list);
+    measure();
+    return () => observer.disconnect();
+  }, [missingTarget]);
   const characters = useMemo(() => CHARACTERS.filter(c =>
     INVENTORY.some(item => item.id === c.id && item.category === 'characters') &&
     !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone', 'unitree-g1', 'unitree-go2', 'jumper-robot'].includes(c.id)
@@ -178,13 +193,12 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
   useEffect(() => {
     // Only scroll the list, never the surrounding tool panel or modal.
     const list = listRef.current;
-    const row = list?.querySelector<HTMLElement>('[aria-selected="true"]');
-    if (!list || !row) return;
-    const listBox = list.getBoundingClientRect();
-    const rowBox = row.getBoundingClientRect();
-    if (rowBox.top < listBox.top) list.scrollTop += rowBox.top - listBox.top;
-    else if (rowBox.bottom > listBox.bottom) list.scrollTop += rowBox.bottom - listBox.bottom;
-  }, [active?.id, results]);
+    if (!list || activeIndex < 0 || !rowHeight) return;
+    const rowTop = activeIndex * rowHeight;
+    if (rowTop < list.scrollTop) list.scrollTop = rowTop;
+    else if (rowTop + rowHeight > list.scrollTop + list.clientHeight) list.scrollTop = rowTop + rowHeight - list.clientHeight;
+    setListViewport(previous => ({ ...previous, top: list.scrollTop }));
+  }, [active?.id, results, rowHeight]);
 
   if (missingTarget) return <div className="p-4" role="alert">Fiche introuvable. <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { updateUrlInventory(true, 'animations'); setMissingTarget(false); setSelection({ solo: 'idle', duo: STUDIO_CATALOG.duo[0].id }); }}>Revenir à la catégorie</button></div>;
 
@@ -254,18 +268,20 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
             <button type="button" className="btn btn-link btn-sm p-0" disabled={!isFiltered} onClick={() => updateFilters(EMPTY_STUDIO_FILTERS)}>Réinitialiser</button>
           </div>
         </div>
-        <div ref={listRef} className="animation-studio__results overflow-auto flex-grow-1" role="listbox" aria-label="Animations filtrées">
+        <div ref={listRef} className="animation-studio__results overflow-auto flex-grow-1" role="listbox" aria-label="Animations filtrées"
+          onScroll={e => { const top = e.currentTarget.scrollTop; setListViewport(previous => ({ ...previous, top })); }}>
           {!results.length && <p className="p-3 small text-muted">Aucune animation ne correspond aux filtres.</p>}
-          {results.map(a => {
+          <div aria-hidden="true" style={{ height: firstRow * rowHeight }} />
+          {results.slice(firstRow, lastRow).map((a, index) => {
             const annotation = allAnnotations[a.annotationId];
-            return <button key={a.id} type="button" role="option" aria-selected={a.id === active?.id} tabIndex={a.id === active?.id ? 0 : -1} data-animation-id={a.id}
+            return <button key={a.id} type="button" role="option" aria-selected={a.id === active?.id} tabIndex={a.id === active?.id ? 0 : -1} data-animation-id={a.id} aria-setsize={results.length} aria-posinset={firstRow + index + 1} title={a.label}
               className={`animation-studio__row w-100 text-start border-0 border-bottom p-2 ${a.id === active?.id ? 'bg-danger-subtle fw-semibold' : 'bg-transparent'}`}
               onClick={() => selectAnimation(a)}>
               <span className="d-flex gap-2 align-items-start justify-content-between">
-                <span className="text-break small">{a.label}</span>
+                <span className="text-truncate small">{a.label}</span>
                 {a.duration !== undefined && <span className="badge bg-light text-secondary border flex-shrink-0">{a.duration.toFixed(1)}s</span>}
               </span>
-              <span className="d-flex flex-wrap align-items-center gap-1 mt-1 small text-muted">
+              <span className="d-flex align-items-center gap-1 mt-1 small text-muted overflow-hidden">
                 {a.sources.map(source => <span key={source}>{SOURCE_LABELS[source] ?? source}</span>)}
                 {annotation?.status && <span className={`badge text-bg-${ANNOTATION_STATUSES[annotation.status].color}`}>{ANNOTATION_STATUSES[annotation.status].label}</span>}
                 {annotation?.tags.map(tag => <span key={tag} className="badge bg-secondary-subtle text-dark">#{tag}</span>)}
@@ -273,6 +289,7 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
               </span>
             </button>;
           })}
+          <div aria-hidden="true" style={{ height: (results.length - lastRow) * rowHeight }} />
         </div>
       </div>
       {!isMobile && <div className="animation-studio__splitter bg-secondary bg-opacity-25" role="separator" aria-orientation="vertical"
