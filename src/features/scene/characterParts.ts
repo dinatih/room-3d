@@ -424,7 +424,7 @@ export function applyRenderProperties(parts: CharacterParts, opts: RenderPropert
 }
 
 /**
- * Normalise les matériaux des personnages non-Lara (Gloria, Inyeong, Hayley, etc.)
+ * Normalise les matériaux des personnages non-Lara (Inyeong, etc.)
  * - Supprime/masque les couches d'occlusion ou de larme opaques/parasites (ex: EyeOcclusion)
  * - Rétablit l'opacité et les reflets naturels pour les yeux (pupille + blanc des yeux)
  * - Assure la transparence et le non-blocage Z-buffer pour verres/visières et fards à paupières
@@ -466,7 +466,7 @@ export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D, charac
         return;
       }
 
-      // 4. Verres de lunettes et visières de casque (ex: Hayley, Inyeong)
+      // 4. Verres de lunettes et visières de casque (ex: Inyeong)
       if (matName.includes('glass') || meshName.includes('glass') || matName.includes('lens')) {
         m.transparent = true;
         m.depthWrite = false;

@@ -22,8 +22,6 @@ process() {
 
 # 3 premiers validés
 # Nouveaux demandés
-process "Hayley"   "public/characters/hayley/hayley.glb"
-process "Gloria"   "public/characters/gloria/gloria.glb"
 process "Arissa"   "public/characters/arissa/arissa.glb"
 process "Astra"    "public/characters/astra/astra.glb"
 process "Kachujin" "public/characters/kachujin/kachujin.glb"

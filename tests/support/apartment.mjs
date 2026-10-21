@@ -20,7 +20,7 @@ export async function autonomous(fixture) {
     const { getDefaultSceneCharacterIds } = await import('/src/features/scene/characterConfig.ts');
     const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
     const ids = getDefaultSceneCharacterIds(fixture.count, useSceneStore.getState().activeCharacterId);
-    const spawns = Object.fromEntries(['hayley (Inyeong)', 'gloria'].map(id => {
+    const spawns = Object.fromEntries(['ybot', 'xbot'].map(id => {
         const position = cameraState.positions[id];
         check(position && (position.x !== 0 || position.z !== 0), `Character remained at the origin: ${id}`);
         check(profiles.hasAgentProfile(id), `Missing autonomous character profile: ${id}`);

@@ -151,7 +151,7 @@ export function ExtraCharactersSelector({
           <input
             type="text"
             className="form-control form-control-sm bg-transparent border-secondary-subtle text-dark"
-            placeholder="Filtrer (ex: Alex, Hayley, Gloria...)"
+            placeholder="Filtrer (ex: Alex, David, Ivy...)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ fontSize: isMobile ? '12px' : '11px' }}

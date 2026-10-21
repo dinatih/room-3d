@@ -74,24 +74,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 6.0,
   },
   {
-    id: 'hayley-intro',
-    path: 'animations/others/anim_hayley_intro.glb',
-    category: 'emotes_gestures',
-    label: 'Hayley Signature Intro',
-    aliases: ['hayley-signature'],
-    tags: ['signature', 'hayley', 'intro', 'emotes'],
-    duration: 7.7,
-  },
-  {
-    id: 'gloria-intro',
-    path: 'animations/others/anim_gloria_intro.glb',
-    category: 'emotes_gestures',
-    label: 'Gloria Signature Intro',
-    aliases: ['gloria-signature'],
-    tags: ['signature', 'gloria', 'intro', 'emotes'],
-    duration: 13.3,
-  },
-  {
     id: 'zoe-intro',
     path: 'animations/others/anim_zoe_intro.glb',
     category: 'emotes_gestures',
@@ -1557,15 +1539,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['ff-male-wiggle-walk'],
     tags: ['free-fire', 'emotes'],
     duration: 2.8,
-  },
-  {
-    id: 'nurse-intro',
-    path: 'animations/others/anim_nurse_intro.glb',
-    category: 'emotes_gestures',
-    label: 'Elf Nurse Signature Intro',
-    aliases: ['nurse-signature', 'nurse-special', 'elf-nurse-intro'],
-    tags: ['signature', 'nurse', 'elf', 'intro', 'emotes', 'halloween'],
-    duration: 32.4,
   },
 
   // ── POSES DE BASE & REPOS ──────────────────────────────────────────────────

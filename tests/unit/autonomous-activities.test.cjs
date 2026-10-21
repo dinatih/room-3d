@@ -26,14 +26,14 @@ function fixture(characterId = 'rosanna') {
 }
 
 describe('Tirage autonome par slot', () => {
-  it('fait démarrer Hayley et Gloria par le même tirage aléatoire que Ybot', () => {
+  it('fait démarrer Xbot et Ivy par le même tirage aléatoire que Ybot', () => {
     const random = Math.random;
     try {
       Math.random = () => 0.5;
-      const sequences = ['ybot', 'hayley (Inyeong)', 'gloria'].map(id => fixture(id).buildAutonomousActivities(id));
+      const sequences = ['ybot', 'xbot', 'ivy'].map(id => fixture(id).buildAutonomousActivities(id));
       assert.deepEqual(sequences[1], sequences[0]);
       assert.deepEqual(sequences[2], sequences[0]);
-      assert.equal(fixture().INITIAL_SMART_OBJECT_BY_CHAR.gloria, undefined);
+      assert.equal(fixture().INITIAL_SMART_OBJECT_BY_CHAR.ivy, undefined);
     } finally { Math.random = random; }
   });
   it('donne quatre candidats au lit et un à la chaise, en conservant les activités duo', () => {

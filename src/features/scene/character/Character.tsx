@@ -436,7 +436,7 @@ export function Character({
 
     const baseHeight = isLara
       ? 173.4
-      : (id === 'hayley' || id === 'gloria' || id === 'valby'
+      : (id === 'valby'
         ? 168.0
         : (findCharacter(id)?.height || 181.0));
 
@@ -463,7 +463,7 @@ export function Character({
     }
 
     // Auto-élévation au niveau du sol (Y = 0) pour les modèles ayant leurs pieds modélisés sous Y=0
-    const hasFeetAtGround = id === 'hayley' || id === 'gloria' || id === 'valby' || id === 'nurse';
+    const hasFeetAtGround = id === 'valby';
     if (!isLara && !hasFeetAtGround) {
       const localBox = glbLocalBBox(scene);
       if (localBox.min.y < -1.0) {

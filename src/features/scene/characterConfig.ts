@@ -38,8 +38,6 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'ybot', name: 'Y Bot', emoji: '🤖', color: '#f1c40f', path: 'characters/ybot/ybot.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 180.5, isLara: false },
   { id: 'curious_skeleton',  name: 'Skeleton bis',      emoji: '🦴', color: '#dcdde1', path: 'characters/curious_skeleton/curious_skeleton.glb',   pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.0, isLara: false },
   { id: 'skeleton',          name: 'Skeleton',              emoji: '💀', color: '#e0e0e0', path: 'characters/skeleton/skeleton.glb',                   pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.0, isLara: false },
-  { id: 'hayley (Inyeong)',   name: 'Hayley', emoji: '👒', color: '#ff66aa', path: 'characters/hayley/hayley.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
-  { id: 'nurse (Inyeong)',             name: 'Nurse',           emoji: '🩺', color: '#fd79a8', path: 'characters/nurse/nurse.glb',                         pos: [0, 0, 0], rot: 0, variant: 'native', height: 172.0, isLara: false },
   { id: 'mannequin', name: 'Mannequin',             emoji: '🧍', color: '#888888', path: 'characters/mannequin/mannequin.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 176.9, isLara: false },
   { id: 'alex',      name: 'Alex',                  emoji: '🧢', color: '#4a90e2', path: 'characters/alex/alex.glb',           pos: [0, 0, 0], rot: 0, variant: 'native', height: 177.7, isLara: false },
   { id: 'david',     name: 'David',                 emoji: '👔', color: '#357abd', path: 'characters/david/david.glb',         pos: [0, 0, 0], rot: 0, variant: 'native', height: 176.7, isLara: false },
@@ -47,7 +45,6 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'lewis',             name: 'Lewis',                 emoji: '🧑🏾‍🦲', color: '#d63031', path: 'characters/lewis/lewis.glb',                         pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.6, isLara: false },
   { id: 'ivy',               name: 'Ivy',                   emoji: '🌿', color: '#2ecc71', path: 'characters/ivy/ivy.glb',                             pos: [0, 0, 0], rot: 0, variant: 'native', height: 170.5, isLara: false },
   { id: 'valby',             name: 'Valby',     emoji: '🫧', color: '#00d2ff', path: 'characters/valby/valby.glb',                         pos: [0, 0, 0], rot: 0, variant: 'native', height: 168.0, isLara: false },
-  { id: 'gloria',   name: 'Gloria', emoji: '👩‍🦰', color: '#e04040', path: 'characters/gloria/gloria.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
@@ -86,7 +83,7 @@ export function findCharacterByIdOrName(query: string): CharacterConfig | undefi
     const bySimpleName = CHARACTERS.find(c => simplify(c.name) === simpleQ);
     if (bySimpleName) return bySimpleName;
 
-    // Début du nom (ex: "gloria" correspond à "Gloria (Red Hair)", "hayley" à "Hayley (Inyeong)")
+    // Début du nom (ex: "alex" correspond à "Alex", "curious" à "Skeleton bis")
     const byPrefix = CHARACTERS.find(c => simplify(c.name).startsWith(simpleQ) || simplify(c.id).startsWith(simpleQ));
     if (byPrefix) return byPrefix;
 
@@ -268,6 +265,6 @@ export function isCharacterVisibleInMode(
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'ybot', 'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'hayley (Inyeong)', 'gloria', 'valby',
-  'alex', 'david', 'mannequin', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'lewis', 'nurse (Inyeong)'
+  'ybot', 'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'valby',
+  'alex', 'david', 'mannequin', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'lewis'
 ]);

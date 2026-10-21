@@ -337,29 +337,19 @@ sortedCharacters.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
     const photos = char.path.includes('xbot')
       ? ['characters/xbot/Xbot_official_3d_preview.png']
-      : (char.id === 'hayley'
-        ? ['characters/hayley/hayley_3d_preview.png']
-        : (char.id === 'gloria'
-          ? ['characters/gloria/gloria_3d_preview.png']
-          : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined)));
+      : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined);
     INVENTORY.push({
       id: char.id,
       name: char.name,
       brand: char.id === 'xbot' || char.id === 'xbot_studio'
         ? 'Mixamo'
-        : (char.id === 'hayley'
-          ? 'Inyeong'
-          : (char.id === 'gloria'
-            ? 'NPC002'
-            : (char.id === 'skeleton'
-              ? 'Anatomy'
-              : (char.id === 'curious_skeleton'
-                ? 'Skeleton'
-                : (char.id === 'valby'
-                  ? 'The First Descendant'
-                  : (char.id === 'nurse'
-                    ? 'Elf Nurse'
-                    : (!char.isLara ? 'Mixamo' : 'Lara Croft Style'))))))),
+        : (char.id === 'skeleton'
+          ? 'Anatomy'
+          : (char.id === 'curious_skeleton'
+            ? 'Skeleton'
+            : (char.id === 'valby'
+              ? 'The First Descendant'
+              : (!char.isLara ? 'Mixamo' : 'Lara Croft Style')))),
       category: 'characters',
       qty: 1,
       dims: {
@@ -369,21 +359,15 @@ sortedCharacters.forEach(char => {
       },
       glbPath: char.path,
       ...(photos ? { photos } : {}),
-      notes: char.id === 'hayley'
-        ? 'Personnage animé : Hayley (Inyeong) en tenue stylée avec chapeau, lunettes et bottes.'
-          : (char.id === 'gloria'
-            ? 'Personnage animé : Gloria aux cheveux roux avec gants et tenue stylée.'
-            : (char.id === 'skeleton'
-              ? 'Personnage animé : Squelette anatomique complet avec organes internes et cage thoracique.'
-              : (char.id === 'curious_skeleton'
-                ? 'Personnage animé : Squelette stylisé Curious Skeleton en T-pose anatomique calibrée.'
-                : (char.id === 'valby'
-                  ? 'Personnage animé : Valby en combinaison nano body suit avec casque et physique de buste dynamique.'
-                  : (char.id === 'nurse'
-                    ? 'Personnage animé : Infirmière Elfe d’Halloween en tenue médicale stylisée.'
-                        : (!char.isLara
-                          ? `Personnage animé standard Mixamo : ${char.name}.`
-                          : `Personnage : ${char.name}.`))))))
+      notes: char.id === 'skeleton'
+        ? 'Personnage animé : Squelette anatomique complet avec organes internes et cage thoracique.'
+        : (char.id === 'curious_skeleton'
+          ? 'Personnage animé : Squelette stylisé Curious Skeleton en T-pose anatomique calibrée.'
+          : (char.id === 'valby'
+            ? 'Personnage animé : Valby en combinaison nano body suit avec casque et physique de buste dynamique.'
+            : (!char.isLara
+              ? `Personnage animé standard Mixamo : ${char.name}.`
+              : `Personnage : ${char.name}.`)))
     });
   }
 });
