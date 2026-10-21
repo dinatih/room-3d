@@ -157,10 +157,10 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
       <div className="d-flex align-items-start gap-3">
         {(['character', 'camera'] as const).map(inputControl => (
           <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
-            <span className="glass-card rounded-2 px-2 small" title={inputControl === 'character' ? 'Déplacer le PNJ' : 'Déplacer la caméra'}>
-              <i className={`bi ${inputControl === 'character' ? 'bi-person-walking' : 'bi-camera-video'}`} aria-hidden="true" />
-            </span>
             <div className="virtual-dpad" role="group" aria-label={inputControl === 'character' ? 'Déplacement du PNJ' : 'Déplacement de la caméra'}>
+              <span className="virtual-dpad__center d-flex align-items-center justify-content-center" title={inputControl === 'character' ? 'Déplacer le PNJ' : 'Déplacer la caméra'}>
+                <i className={`bi ${inputControl === 'character' ? 'bi-person-walking' : 'bi-camera-video'}`} aria-hidden="true" />
+              </span>
               {DIRECTIONS.map(({ key, icon, label: movementLabel, position }) => {
                 const inputKey = `${inputControl}:${key}`;
                 const pressed = pressedKeys.has(inputKey) || (pressedKeys.has(key) && (moving ? inputControl === 'character' : inputControl === 'camera'));
