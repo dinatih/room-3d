@@ -3,13 +3,14 @@ export interface NavigationJob<T> {
   status: 'pending' | 'ready' | 'error' | 'cancelled';
   result?: T; error?: Error; settled: Promise<void>; cancel(): void;
   onRead?: () => void;
+  onWait?: () => void;
 }
 /** A pending computation is an explicit wait, never an inaccessible destination. */
 export class NavigationPending {
   constructor(readonly job: NavigationJob<unknown>) {}
 }
 export function readNavigationJob<T>(job: NavigationJob<T>): T {
-  if (job.status === 'pending') throw new NavigationPending(job);
+  if (job.status === 'pending') { job.onWait?.(); throw new NavigationPending(job); }
   if (job.status === 'error') throw job.error;
   if (job.status === 'cancelled') throw new Error('Cancelled navigation computation still in use');
   job.onRead?.();

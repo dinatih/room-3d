@@ -18,8 +18,6 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   lgbta:    'hugs-point',
   sandra:   'duo-zone',
   rajaa:    'duo-zone',
-  hayley:   'inyeong-cha-hugs-point',
-  gloria:   'sofa-garden-east',
   valby:    'bathtub-garden',
   alex:     'est-neighbor-flat',
   mannequin:'est-neighbor-flat',

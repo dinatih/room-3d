@@ -21,7 +21,7 @@ const navigationDependencies = {
     './comfort': require('../../src/features/scene/ai/navigation/comfort.ts'), './pathfindingClient': {
       prepareNavigationGraph: definition => { const graph = 'solids' in definition ? queries.buildNavigationGraph(definition) : new g.VisibilityGraph(g.mergeObstacles(definition.obstacles)); graph.definition = definition; graph.findReachable = (start, targets) => targets.find(target => graph.canReach(start, target)) ?? null; return { retain: () => () => {}, read: () => { if (holdBuilds) throw new navigationDependencies['./navigationScope'].NavigationPending({ status: 'pending', settled: Promise.resolve(), cancel() {} }); return graph; }, cancel() { cancelledGraphs++; } }; },
       readObjectApproach: (graph, query) => queries.objectApproachCandidates(query, graph),
-      requestPath: (graph, start, target) => { pathRequests++; return { graph, start, target, status: 'ready', path: graph.find(start, target), cancel: () => { } }; },
+      findPath: (graph, start, target) => { pathRequests++; return graph.find(start, target); },
     }, '../../cameraState': { cameraState },
 };
 const nav = load('src/features/scene/ai/navigation/service.ts', navigationDependencies);

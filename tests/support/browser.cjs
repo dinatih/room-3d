@@ -87,8 +87,13 @@ exports.withBrowser = async (fixture, exercise) => {
         page.on('error', fail);
         page.on('response', response => { if (response.status() >= 400)
             fail(`HTTP ${response.status()}: ${response.url()}`); });
-        page.on('requestfailed', request => { if (!closing)
-            fail(`${request.url()}: ${request.failure()?.errorText}`); });
+        page.on('requestfailed', request => {
+            if (closing) return;
+            const message = `${request.url()}: ${request.failure()?.errorText}`;
+            if (request.resourceType() === 'media' && request.failure()?.errorText === 'net::ERR_ABORTED') {
+                result.logs.push({ type: 'media-cancelled', text: message });
+            } else fail(message);
+        });
         await page.exposeFunction('__testHeartbeat', state => { lastHeartbeat = Date.now(); result.partial = state; save(); });
         await page.evaluateOnNewDocument(seed => {
             let state = seed;
@@ -113,7 +118,10 @@ exports.withBrowser = async (fixture, exercise) => {
                 requestAnimationFrame(tick);
             };
             requestAnimationFrame(tick);
-            setInterval(() => window.__testHeartbeat({ at: performance.now(), frames: window.__testFrames.length, trace: window.__testTrace }), 1000);
+            setInterval(() => {
+                window.dispatchEvent(new MouseEvent('mousemove'));
+                window.__testHeartbeat({ at: performance.now(), frames: window.__testFrames.length, trace: window.__testTrace, readiness: window.__testReadiness });
+            }, 1000);
         }, fixture.seed);
         const work = (async () => {
             const startup = performance.now();
@@ -125,13 +133,15 @@ exports.withBrowser = async (fixture, exercise) => {
                 const { CHARACTERS, getDefaultSceneCharacterIds } = await import('/src/features/scene/characterConfig.ts');
                 const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
                 const ids = getDefaultSceneCharacterIds(count, useSceneStore.getState().activeCharacterId);
-                return cameraState.isSceneLaunched && !cameraState.isIntroRunning && window.__THREE_GL__ && furnitureObstacles.size > 0 && ids.every(id => {
-                    const model = window.__THREE_SCENE__.getObjectByName(CHARACTERS.find(c => c.id === id).name);
+                window.__testReadiness = ids.map(id => {
+                    const model = window.__THREE_SCENE__?.getObjectByName(CHARACTERS.find(c => c.id === id).name);
                     let skin = false;
                     model?.traverse(o => { if (o.isSkinnedMesh)
                         skin = true; });
-                    return skin && model.visible && cameraState.positions[id] && !['falling', 'falling-idle', 'pistol-kneel-to-stand'].includes(cameraState.positions[id].anim);
+                    const position = cameraState.positions[id];
+                    return { id, ready: !!(skin && model.visible && position && !['falling', 'falling-idle', 'pistol-kneel-to-stand'].includes(position.anim)), position };
                 });
+                return cameraState.isSceneLaunched && !cameraState.isIntroRunning && window.__THREE_GL__ && furnitureObstacles.size > 0 && window.__testReadiness.every(character => character.ready);
             }, { timeout: fixture.readinessTimeoutMs }, fixture.count);
             result.startupMs = performance.now() - startup;
             result.loaded = await page.evaluate(async (fixture) => {

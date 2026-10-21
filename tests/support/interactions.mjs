@@ -17,6 +17,54 @@ import { setAgentProfile, removeAgentProfile, navigationDebug, furnitureObstacle
 import { releaseAgentDoors, getAgentDoorProtection, protectDoor } from '/src/features/scene/ai/navigation/doorRequests.ts';
 import { getZoneDestination } from '/src/features/scene/ai/navigation/destinations.ts';
 import { check, trace } from './apartment.mjs';
+import { cameraState } from '/src/features/scene/cameraState.ts';
+import { resolveNavigation } from '/src/features/scene/ai/navigation/navigationScope.ts';
+import { getKitchenTrashParking, KITCHEN_TRASH_POSITION } from '/src/features/scene/ai/diyChairClearance.ts';
+import { currentFurnitureTransforms, movingFurniture } from '/src/features/scene/furniturePositions.ts';
+
+export async function kitchenAccess(fixture) {
+    const id = 'suite-kitchen-access', events = [];
+    let actor, previous, completedApproach = false, usedObject = false, prepared = false;
+    const instruction = () => window.__testTrace.filter(entry => entry.actor === id && 'executedInstruction' in entry).at(-1)?.executedInstruction;
+    const onClearance = () => {
+        const parking = getKitchenTrashParking();
+        events.push({ parking: Boolean(parking), completedApproach, instruction: instruction(), position: { ...cameraState.positions[id] } });
+        if (parking) prepared = true;
+    };
+    setAgentProfile(id, fixture.profile);
+    document.addEventListener('kitchen-trash-clearance', onClearance);
+    try {
+        const start = await resolveNavigation(() => getZoneDestination('living', id));
+        actor = await mountKallaxActor(id, fixture, start);
+        const deadline = performance.now() + fixture.timeoutMs;
+        while (!prepared || getKitchenTrashParking()) {
+            check(performance.now() < deadline, `Kitchen activity did not complete: ${JSON.stringify({ previous, events })}`);
+            const state = await actor.tick();
+            cameraState.positions[id] = { x: state.x, y: state.y, z: state.z, yaw: state.rotY };
+            if (previous?.status === 'MOVING' && state.status === 'IDLE') completedApproach = true;
+            if (state.status === 'INTERACTING' && instruction()?.type === 'USE_OBJECT') usedObject = true;
+            previous = state;
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        const moves = events.filter(event => event.parking);
+        check(moves.length === 1 && moves[0].completedApproach && moves[0].instruction?.type === 'PREPARE_OBJECT',
+            `Furniture moved before completing its approach: ${JSON.stringify(events)}`);
+        check(usedObject, 'The actor must use the storage after the furniture finishes moving');
+        while (movingFurniture.has('trash-bin-position') || currentFurnitureTransforms['trash-bin-position']?.x !== KITCHEN_TRASH_POSITION.x
+            || currentFurnitureTransforms['trash-bin-position']?.z !== KITCHEN_TRASH_POSITION.z) {
+            check(performance.now() < deadline, 'The trash bin did not return');
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        const current = currentFurnitureTransforms['trash-bin-position'];
+        check(current?.x === KITCHEN_TRASH_POSITION.x && current.z === KITCHEN_TRASH_POSITION.z, 'Trash bin not restored to its original position');
+        return { startedAfterApproach: true, usedObject, restored: true, events };
+    } finally {
+        document.removeEventListener('kitchen-trash-clearance', onClearance);
+        actor?.close();
+        OccupancyManager.releaseAllForCharacter(id);
+        releaseAgentDoors(id); removeAgentProfile(id); delete cameraState.positions[id];
+    }
+}
 export async function exercise(fixture) {
     const id = 'suite-controller';
     const { objectId, slotId, exit } = fixture.interaction;

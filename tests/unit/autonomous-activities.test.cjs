@@ -2,7 +2,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 
-function fixture() {
+function fixture(characterId = 'rosanna') {
   const objects = [
     { id: 'bed-east', slots: ['seat-1', 'seat-2', 'seat-3', 'lie-down'].map(slotId => ({ slotId })) },
     { id: 'chair', slots: [{ slotId: 'sit' }] },
@@ -14,7 +14,7 @@ function fixture() {
     './aiTypes': {}, './smartObjectRegistry': {
       getAllSmartObjects: () => objects,
       buildSmartObjectInstructionSequence: (id, slotId, actor) => {
-        assert.equal(actor, 'rosanna');
+        assert.equal(actor, characterId);
         assert(objects.find(obj => obj.id === id).slots.some(slot => slot.slotId === slotId), 'The selected slot must be passed explicitly');
         return [{ type: 'MOVE_TO', smartObjectId: id, slotId }, { type: 'USE_OBJECT', smartObjectId: id, slotId }];
       },
@@ -26,6 +26,16 @@ function fixture() {
 }
 
 describe('Tirage autonome par slot', () => {
+  it('fait démarrer Hayley et Gloria par le même tirage aléatoire que Ybot', () => {
+    const random = Math.random;
+    try {
+      Math.random = () => 0.5;
+      const sequences = ['ybot', 'hayley (Inyeong)', 'gloria'].map(id => fixture(id).buildAutonomousActivities(id));
+      assert.deepEqual(sequences[1], sequences[0]);
+      assert.deepEqual(sequences[2], sequences[0]);
+      assert.equal(fixture().INITIAL_SMART_OBJECT_BY_CHAR.gloria, undefined);
+    } finally { Math.random = random; }
+  });
   it('donne quatre candidats au lit et un à la chaise, en conservant les activités duo', () => {
     const { getAvailableAutonomousActivities } = fixture();
     const candidates = getAvailableAutonomousActivities('rosanna');

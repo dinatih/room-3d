@@ -9,6 +9,7 @@ const apartment = {
     profile: { radius: 13.3, height: 170 },
 };
 exports.navigation = [
+    { id: 'autonomous-28', behavior: 'fait vivre 28 personnages rendus et respecte les capacités des pièces', activity: 'autonomous', count: 28, preset: 'mid', sessionMs: 15000, timeoutMs: 60000 },
     { id: 'solo-xbot-doors', behavior: 'termine seul le trajet séjour, entrée et couloir bâtiment avec le gabarit du Xbot', activity: 'soloDoors', layers: { animals: false }, profile: { radius: 15, height: 170 }, timeoutMs: 60000 },
     { id: 'occupied-target', behavior: 'atteint une destination occupée avec une empreinte PNJ à zéro', activity: 'arrival', actors: 1, occupied: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
     { id: 'garden-fifteen', behavior: 'termine quinze trajets simultanés dans le jardin sans rotation en boucle', activity: 'arrival', actors: 15, occupied: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
@@ -23,6 +24,7 @@ exports.navigation = [
         objects: ['drona-se-linen', 'drona-ne-catchall', 'sofa-garden-east'], timeoutMs: 60000 },
 ].map(c => ({ ...apartment, ...c }));
 exports.interactions = [
+    { id: 'kitchen-access', behavior: 'approche le rangement avant de déplacer la poubelle, agit puis restitue le mobilier', activity: 'kitchen-access', objectId: 'drona-kitchen-diy', layers: { animals: false }, timeoutMs: 60000 },
     { id: 'posture-exit', behavior: 'approche, agit, termine son relèvement réel et sort complètement', activity: 'posture', timeoutMs: 60000 },
     { id: 'failed-action', behavior: 'libère les réservations d’une action devenue inaccessible', activity: 'failed-action', objectId: 'sofa-garden-east', timeoutMs: 60000 },
     { id: 'interruption', behavior: 'libère ses réservations après interruption et échec', activity: 'interruption', timeoutMs: 60000 },

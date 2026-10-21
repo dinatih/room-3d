@@ -20,6 +20,7 @@ export function prepareDiyChair(actorId: string): boolean {
   const current = currentFurnitureTransforms['smorkull-position'];
   if (!owner) {
     if (!current) return true; // The furniture layer may be hidden.
+    if (movingFurniture.has('smorkull-position')) return false;
     const [x, , z] = getSmartObject('drona-kitchen-diy')!.slots[0].offset!;
     const target = { x, z };
     const radius = furnitureClearance(getAgentProfile(actorId));

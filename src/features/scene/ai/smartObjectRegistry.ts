@@ -1127,6 +1127,10 @@ export function buildSmartObjectInstructionSequence(
     }) : undefined;
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
+      ...((objectId === 'drona-kitchen-diy' || objectId === 'drona-kitchen-electronics') ? [
+        { type: 'PREPARE_OBJECT' as const, smartObjectId: obj.id, slotId: slot.slotId },
+        { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId },
+      ] : []),
       ...(gesture ? [gesture('pull')] : []),
       { ...baseInstruction, waitForAnimation: true },
       ...(gesture ? [gesture('push'), { type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY }] : []),

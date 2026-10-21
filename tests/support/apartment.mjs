@@ -10,11 +10,43 @@ import * as geometry from '/src/features/scene/ai/navigation/geometry.ts';
 import { getZoneDestination } from '/src/features/scene/ai/navigation/destinations.ts';
 import { cameraState } from '/src/features/scene/cameraState.ts';
 import { pathfindingStats } from '/src/features/scene/ai/navigation/pathfindingClient.ts';
+import { OccupancyManager, LIMITED_ROOMS, ROOM_CAPACITIES } from '/src/features/scene/ai/occupancyManager.ts';
 export const check = (condition, message) => { if (!condition)
     throw Error(message); };
 export const trace = entry => window.__testTrace.push({ at: performance.now(), ...entry });
 const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
 const register = (id, fixture) => profiles.setAgentProfile(id, fixture.profile);
+export async function autonomous(fixture) {
+    const { getDefaultSceneCharacterIds } = await import('/src/features/scene/characterConfig.ts');
+    const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
+    const ids = getDefaultSceneCharacterIds(fixture.count, useSceneStore.getState().activeCharacterId);
+    const spawns = Object.fromEntries(['hayley (Inyeong)', 'gloria'].map(id => {
+        const position = cameraState.positions[id];
+        check(position && (position.x !== 0 || position.z !== 0), `Character remained at the origin: ${id}`);
+        check(profiles.hasAgentProfile(id), `Missing autonomous character profile: ${id}`);
+        return [id, { ...position }];
+    }));
+    const positions = new Map(), moved = new Set(), roomMax = Object.fromEntries(LIMITED_ROOMS.map(room => [room, 0]));
+    const began = performance.now();
+    let frames = 0;
+    while (performance.now() - began < fixture.sessionMs) {
+        for (const id of ids) {
+            const position = cameraState.positions[id], previous = positions.get(id);
+            check(position && [position.x, position.y, position.z].every(Number.isFinite), `Invalid real character position: ${id}`);
+            if (previous && (previous.x !== position.x || previous.z !== position.z)) moved.add(id);
+            positions.set(id, { ...position });
+        }
+        for (const room of LIMITED_ROOMS) {
+            const count = OccupancyManager.getRoomOccupants(room).size;
+            roomMax[room] = Math.max(roomMax[room], count);
+            check(count <= ROOM_CAPACITIES[room], `Room overflow ${room}: ${count}`);
+        }
+        frames++;
+        await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+    check(ids.length === 28 && moved.size > 0, 'The real 28-character simulation did not advance');
+    return { count: ids.length, spawns, moved: [...moved], frames, roomMax, navigation: structuredClone(pathfindingStats) };
+}
 const release = id => {
     requests.releaseAgentDoors(id);
     avoidance.reserveAgentDestination(id, null);
@@ -116,6 +148,8 @@ export async function soloDoors(fixture) {
             position = actor.position;
         }
         check(legs.every(leg => leg.arrived), 'The solitary actor must complete both passages');
+        const calculationWaits = window.__testTrace.filter(entry => entry.actor === id && entry.wait?.startsWith('Calcul'));
+        check(calculationWaits.length === 0, `A prepared network must not pause a free route for computation: ${JSON.stringify(calculationWaits)}`);
         return { legs, navigation: { ...structuredClone(pathfindingStats), timings: Object.fromEntries(Object.entries(pathfindingStats.timings)
             .map(([kind, timing]) => [kind, Object.fromEntries(Object.entries(timing).map(([key, value]) => [key, key === 'maxTotalMs' ? value : value - before[kind][key]]))])) } };
     } finally { nav.resetRoute(route, id); release(id); }
@@ -146,8 +180,8 @@ export async function snapshotChurn(fixture) {
                 await error.job.settled;
             }
         }
-        check(phases.length <= 2 && phases.filter(phase => phase === 'Vérification de l’accessibilité').length === 1,
-            `Expected at most one graph build and exactly one accessibility query, got: ${phases.join(', ')}`);
+        check(phases.length <= 1 && phases.every(phase => phase === 'Construction du réseau de navigation'),
+            `Only network construction may wait; accessibility is local: ${phases.join(', ')}`);
         return { phases, geometryChanges: phases.length + 1, reachable: true };
     } finally { scope.clear(); profiles.unregisterObstacle(marker); release(id); }
 }

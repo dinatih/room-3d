@@ -1,178 +1,80 @@
 # Navigation au sol
 
-Les instructions désignent une destination ou une interaction. Aucun point de
-passage entre pièces n'est déclaré : `VisibilityGraph` calcule le plus court
-chemin avec A* sur les contours des obstacles réunis par `polygon-clipping`.
+## Réseau permanent
 
-Les déplacements préfèrent 20 cm supplémentaires autour du gabarit physique.
-Cette bande est un coût souple : chaque centimètre parcouru coûte
-`1 + max(0, 1 - distanceLibre / 20)`. Un passage étroit reste praticable et un
-grand détour n'est pas obligatoire. Le graphe propose les sommets des contours
-physiques et de confort, ainsi que les projections proches du départ et de la
-destination sur les contours de confort. Les connexions physiques et leurs coûts
-sont conservés avec le graphe. Les transitions locales d'interaction conservent
-le calcul physique pour atteindre leurs coordonnées exactes.
-La recherche pondérée évalue les connexions à la demande. Les distances du graphe
-physique servent d'estimation admissible pour éviter d'explorer les pièces
-séparées par des murs comme si elles étaient accessibles en ligne droite.
-Le cache des coûts de confort utilise des lignes triangulaires de doubles,
-allouées à la demande : au maximum `8 × N × (N - 1) / 2` octets de coûts pour
-`N` sommets, sans entrées `Map` ni nombres encapsulés par paire.
-Les vérifications oui/non d'une approche utilisent `canReach` sur le graphe
-physique dans le worker ; seule la construction d'un trajet optimise le coût de confort.
-Depuis la refonte du 21 octobre, les constructions de graphes, les unions,
-les approches et les ancres de duo sont également calculées dans le worker.
-Un appelant par image conserve un `NavigationScope` ; une commande asynchrone
-attend `resolveNavigation`. Les détails et les commandes de validation actuelles
-sont dans `docs/character-runtime-2026-10-21.md` ; les scripts ponctuels cités plus
-bas documentent les vérifications historiques. Masquer le décor ne retire pas
-ses obstacles et ne suspend pas les personnages.
+`NavigationMesh` soustrait les obstacles au sol praticable, triangule l'espace
+libre et relie les cellules par leurs arêtes communes. Les composantes connexes
+sont calculées une fois. L'accessibilité consulte ces composantes ; un trajet
+cherche uniquement parmi les cellules voisines, puis le funnel réduit le
+corridor de passages en points de marche.
 
-Les tests de segment limitent leurs vérifications aux obstacles dont la boîte
-englobe une partie du segment, en conservant les trous des contours.
+La construction et les opérations booléennes restent dans le worker. Le réseau
+sérialisé est ensuite partagé avec le moteur des personnages : les trajets et
+les vérifications d'accessibilité ordinaires sont immédiats et ne demandent
+aucun aller-retour au worker. Les approches et les dégagements consultent aussi
+ce réseau et ses empreintes déjà préparées. Seuls la construction des réseaux
+et les placements de duo restent des requêtes géométriques asynchrones.
 
-Le debug représente la préférence de confort de Native en bleu ; les contours
-orange conservent leur signification physique. La marge de collision autour des
-meubles vaut le quart du rayon de chaque agent ; le debug orange foncé utilise
-la même marge. Validation ciblée :
-`node scripts/temp_navigation_comfort.cjs`.
+Un gabarit prépare son réseau dès son enregistrement, avant son premier trajet.
+Une approche prépare aussi le réseau d'entrée dans son meuble pendant la marche.
+Les gabarits identiques partagent leurs instantanés. Le dernier agent qui quitte
+un gabarit libère ses ressources. Un `NavigationScope` conserve l'instantané
+pendant une requête asynchrone, même si d'autres acteurs remplacent le cache.
 
-- `architecture.ts` dérive les murs, piliers et clôtures de `wallData.ts`, et les
-  limites du sol des dimensions également utilisées par le rendu.
-- `NavigationObstacle` mesure les meubles rendus et suit leur matrice monde.
-  `compound` conserve les espaces entre plusieurs volumes ; `hull` utilise
-  l'enveloppe des sommets pour les objets obliques comme la trottinette.
-  `solidOnly` utilise les maillages marqués `navigationSolid`, par exemple le
-  pot du palmier, pour que son feuillage flexible ne forme pas un mur.
-- `profiles.ts` mesure le corps humain en pose de référence. Les obstacles sont
-  dilatés selon le rayon de chaque agent ; leurs hauteurs permettent au chien
-  de passer sous les obstacles qui ne touchent pas son gabarit.
-- `service.ts` conserve les graphes tant que la géométrie est inchangée. Pendant
-  une transition de meuble, l'agent attend si son segment devient dangereux,
-  puis recalcule avec la géométrie finale.
-- Les gabarits identiques partagent leur identité et leurs caches. Ces caches
-  sont faibles : retirer le dernier agent d'un gabarit permet de libérer ses
-  graphes. Pour une porte, seules la pose fermée et la dernière pose animée sont
-  conservées, jamais l'historique des angles.
-- Un objet composé retire ses anciens volumes lorsqu'il rétrécit ou change
-  d'identifiant. Désactiver la navigation ou démonter l'objet vide ses entrées.
-- `doorRequests.ts` partage les demandes de passage d'une même ouverture (les deux
-  battants vitrés partagent la demande, avec une butée indépendante par battant). Le
-  mouvement vérifie sa position réelle avant chaque pas ; les poussées manuelles
-  restent gérées par les composants de porte.
+## Collisions et confort
 
-L'évitement d'un autre agent doit conserver la visibilité du prochain virage.
-Si une position déplacée perd cette visibilité, le trajet est recalculé. Une
-réservation reste active tant qu'un franchissement est encore prévu, puis se
-libère dès que le corps est hors de la fermeture et du débattement des battants.
-Avec `ACTOR_AVOIDANCE_SCALE = 0`, les PNJ ne bloquent ni les trajets ni les
-destinations et ne produisent aucun évitement latéral. Un rayon nul doit
-s'appliquer aux trois mécanismes pour éviter les orbites autour d'une cible
-occupée. Le dernier pas atteint exactement le point de passage, même si un
-évitement latéral est réactivé. Régression en espace libre :
-`node scripts/temp_door_lock_check.cjs` et
-`node scripts/test-partial-door-navigation.cjs` (15 trajets).
+Les obstacles conservent leurs trous et les passages étroits. Les dilatations
+physiques utilisent le rayon du corps pour les murs et son quart pour les
+meubles, comme les empreintes représentées par le debug. Les hauteurs excluent
+les volumes qui ne rencontrent pas le corps. Les limites du sol sont des
+barrières ; un trajet ne peut pas traverser un vide entre deux surfaces.
 
-Lorsque l'évitement est activé, les PNJ sont pris en compte avec leur rayon réduit de moitié. Le
-contournement commence quand le segment à venir coupe leur empreinte, avant
-le contact. Les bandes bleues restent traversables pour ce détour.
-Validation ciblée : `node scripts/temp_freezer_smartobject.cjs --crowd-detour`
-(serveur de test sur 5175) : duo au milieu d'un passage, dans les deux sens,
-puis deux PNJ venant face à face.
-Le contournement des corps mobiles utilise un trajet physique, sans refaire
-l'optimisation de confort sur chaque instantané des PNJ. Le trajet statique de
-confort reprend dès que le segment initialement occupé redevient libre. Les
-collisions physiques sont conservées pendant les deux phases.
+La préférence de confort est de 20 cm : les extrémités des passages sont
+resserrées dans leur espace libre, sans dépasser la moitié de leur largeur.
+Un passage étroit reste donc ouvert. Ce choix remplace l'ancienne optimisation
+globale du coût de proximité ; le trajet ne prétend plus minimiser cette
+intégrale sur tous les contours de l'appartement.
 
-Une approche reste dans l'espace libre accessible depuis l'agent. Seule la
-transition d'interaction peut ignorer le meuble utilisé, en conservant les
-collisions avec les murs, les portes et les autres meubles. Les deux moitiés du
-lit double ont un propriétaire commun. Les coordonnées locales des interactions
-suivent les transformations des meubles.
+Chaque pas reste contrôlé avec la géométrie réelle, les battants et les autres
+acteurs. Les portes sont demandées dès qu'elles apparaissent dans le corridor
+à venir et restent réservées jusqu'au dégagement du corps. Une porte fermée
+n'est jamais traversée avant son ouverture effective.
 
-Les actions debout (`arrival: 'approach'`), les rangements et les destinations
-extérieures trouvent la position libre accessible la plus proche de leur point
-préféré. Un slot peut désigner son `navigationOwner` physique dans un objet
-composé, comme le four posé sur le Kallax cuisine. Les attentes conservent la
-position atteinte, sans replacer l'agent au point brut de l'interaction.
+## Mobilier et actions
 
-`protectedDoor` conserve une empreinte corporelle à la position d'interaction,
-jusqu'au dégagement explicite. La butée géométrique de chaque battant tient compte
-de cette empreinte : une interaction Kallax ne condamne plus toute l'ouverture.
-Le graphe utilise l'angle encore autorisé et chaque pas vérifie la pose réelle.
-Une porte partiellement ouverte reste traversable si le gabarit du PNJ passe ;
-un passage réellement fermé ou trop étroit reste bloquant. L'empreinte reste fixe
-pendant l'approche et la sortie, pour éviter de reconstruire les graphes à chaque
-image. Aucune attente de fermeture complète n'est ajoutée aux séquences Kallax.
+Les transformations animées restent des obstacles actifs, même avec le décor
+masqué. Pendant un déplacement de meuble, un trajet libre continue ; un segment
+réellement coupé s'arrête. La pose stabilisée prépare un nouvel instantané. Les
+trajets existants sont conservés si leurs segments restent sûrs.
 
-Validation ciblée : `node scripts/test-partial-door-navigation.cjs` (séjour,
-double battant, empreinte d'interaction, fermeture réelle et invalidation du cache).
-Ajouter `--browser` pour vérifier les positions Kallax dans l'appartement chargé
-et 15 trajets simultanés dans le jardin, avec un PNJ immobile à leur cible.
+Les interactions peuvent entrer dans leur propre meuble en conservant les autres
+collisions. Une instruction retrouve le meuble à quitter depuis sa position
+réelle avant de résoudre l'activité suivante. Les sorties de posture suivent la
+lecture effective de l'animation et attendent si leur dégagement est obstrué.
 
-Une destination inaccessible produit un état `BLOCKED` et une explication dans
-la console et le debug des trajets. Les aperçus d'inventaire désactivent le
-registre de navigation via `NavigationContext`.
-Une instruction ignorée ou remplacée reprend à l'image suivante, sans rappel
-récursif du contrôleur : un scénario en boucle dont tous les objets sont occupés
-doit toujours rendre la main au navigateur.
+Pour les rangements cuisine concernés : approche avec le mobilier en place,
+`PREPARE_OBJECT`, attente de la fin du dégagement de la poubelle et de la chaise,
+approche finale, gestes, puis départ avant restitution du mobilier. Réserver un
+slot ou commencer un trajet ne déclenche pas ce dégagement. Les autres gestes
+d'ouverture restent associés à leurs instructions d'interaction.
 
-Régressions mémoire et CPU (comparaison avec le commit précédant ces corrections) :
+## Validation et mesures
+
+`pathfindingStats.timings` distingue calcul local, file du worker, calcul du
+worker, échanges et reprise du contrôleur. Une préparation terminée avant sa
+première utilisation n'est pas comptée comme une attente du personnage.
+Ces métriques n'incluent pas de seuil
+qui masquerait une attente. `Sad Idle` indique une attente de navigation ;
+`Thinking` indique un clip encore en préparation.
 
 ```bash
-git show 9339258d:src/features/scene/ai/navigation/geometry.ts > /tmp/room-navigation-baseline-geometry.ts
-git show 9339258d:src/features/scene/ai/navigation/service.ts > /tmp/room-navigation-baseline-service.ts
-node --expose-gc scripts/temp_navigation_memory_audit.cjs
+npm test
+npx tsc --noEmit
+npm run test:studio -- --case=solo-xbot-doors,locomotion-twenty-seven,living-kallax,closed-door,kitchen-access --hardware-gpu
 ```
 
-Le test vérifie le partage des graphes, leur collecte après retrait des gabarits,
-les empreintes des portes, les échecs mémorisés, leur reprise et le cycle de vie
-des obstacles composés. Avec Vite sur le port 5186 :
-
-```bash
-node scripts/temp_kitchen_navigation_check.cjs --browser --occupied-loop
-node scripts/temp_kitchen_navigation_check.cjs --browser --occupied-loop --occupied-loop-baseline
-node scripts/temp_kitchen_navigation_check.cjs --browser --idle-only --profile
-```
-
-Le deuxième test réintroduit uniquement le rappel récursif d'origine dans la
-réponse HTTP du contrôleur pour confirmer le débordement de pile initial.
-L'audit autonome observe toute la durée prévue ; une attente temporaire ne
-constitue pas à elle seule un blocage permanent. Après capture par `--profile`,
-`node scripts/temp_navigation_memory_audit.cjs --scene-benchmark` compare les
-trajets pondérés et les collisions à l'ancienne version.
-
-Mesures ponctuelles de l'audit du 16 octobre 2026 : cinq vérifications
-d'accessibilité passent d'environ 588 ms à 20 ms, avec les mêmes réponses.
-La simulation de 15 contrôleurs sur six minutes simulées termine sans blocage
-ni exception lors du dernier passage. Après collecte, son tas JavaScript mesure
-environ 71 / 77 / 79 / 78 Mo ; les buffers mesurent 543 / 578 / 592 / 582 Mo.
-Ces relevés concernent la fixture de navigation, pas la RAM totale de l'app.
-Les scénarios étant aléatoires, ils ne constituent pas une comparaison globale
-avant/après. Certains trajets statiques de confort prennent encore jusqu'à
-environ 1,9 seconde dans ce test ; les captures antérieures ont aussi révélé des
-destinations inaccessibles et un placement dans une clôture, signalés `BLOCKED`.
-
-Les contours arrondis sont approximés conservativement avec une erreur maximale
-de 1 mm. Les coordonnées des opérations booléennes sont quantifiées pour éviter
-les ambiguïtés numériques sur les arêtes CAD coïncidentes.
-
-Validation : `node scripts/temp_kitchen_navigation_check.cjs` ; ajouter
-`--browser` avec un serveur Vite et éventuellement `ROOM_TEST_URL` pour vérifier
-la scène réelle, les portes, la cuisine, la douche et les lits déplacés.
-`--browser --doors-only` vérifie les files à la porte-fenêtre dans les deux sens
-et les croisements, avec l'évitement des autres personnages activé.
-`--browser --idle-only` suit 15 contrôleurs autonomes pendant deux minutes
-simulées ; `--browser --cases-only` vérifie huit interactions qui provoquaient
-des blocages. Ces tests désactivent le lissage d'origine, le crossfade et les
-transitions de posture.
-
-Pour vérifier les transitions avec fondu et lissage activés :
-`ROOM_TEST_URL=http://localhost:5173 node scripts/temp_posture_transitions.cjs`.
-Ce test headless vérifie les clips réels sur Lara, Alex et Gloria, la continuité
-du bassin, l'attente de lecture effective et le remplacement d'un scénario.
-Il exerce `Character` avec le canapé gris et les toilettes, vérifie que le
-personnage se relève devant le meuble et attend si la sortie est bloquée.
-Les sorties de lit ne doivent pas repasser par le matelas après le relèvement.
-Les captures sont enregistrées dans `/tmp/room-posture-*.png` et
-`/tmp/room-toilet-standing.png`.
+Le cas solitaire désactive animaux et robots, attend la fin des travaux de
+fond, vérifie chaque destination et refuse une pause de calcul sur le réseau
+préparé. Le cas cuisine utilise un contrôleur, les clips et les meubles réels.
+Les tests unitaires couvrent les sols concaves, les trous, les composantes
+déconnectées, le funnel, la sérialisation et l'accessibilité physique.

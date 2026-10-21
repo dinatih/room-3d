@@ -1,37 +1,28 @@
 import type { Point } from './geometry';
-import type { GraphSnapshot, ApproachQuery, DuoQuery } from './queries';
+import { directObjectApproach, objectApproachCandidates, type GraphSnapshot, type ApproachQuery, type DuoQuery } from './queries';
 import type { PathRequest, PathResponse, NavigationQuery, NavigationResult, WorkerDefinition } from './pathfinding.worker';
 import { navigationQuery, readNavigationJob, type NavigationJob } from './navigationScope';
 import { cameraState } from '../../cameraState';
+import { NavigationMesh } from './mesh';
 
 export interface NavigationGraph extends GraphSnapshot {
   readonly id: number;
   readonly definition: WorkerDefinition;
   canReach(start: Point, target: Point): boolean;
   findReachable(start: Point, targets: Point[]): Point | null;
-}
-
-export interface PathSearch {
-  readonly graph: NavigationGraph;
-  readonly start: Point;
-  readonly target: Point;
-  status: 'pending' | 'ready' | 'error' | 'cancelled';
-  path: Point[] | null;
-  error?: Error;
-  cancel: () => void;
-  onRead?: () => void;
+  find(start: Point, target: Point): Point[] | null;
 }
 interface Job extends NavigationJob<NavigationResult> {
   id: number;
   graphId: number;
   definition: WorkerDefinition;
   query: NavigationQuery;
-  path: Point[] | null;
   onComplete: () => void;
   settle: () => void;
   submittedAt: number;
   dispatchedAt: number;
   receivedAt?: number;
+  waitStartedAt?: number;
 }
 const queue = new Map<number, Job>();
 let nextGraphId = 0, nextJobId = 0;
@@ -41,8 +32,8 @@ const workerGraphIds = new Set<number>();
 let failure: Error | undefined;
 
 export const pathfindingStats = { submitted: 0, completed: 0, cancelled: 0, running: false, queued: 0, lastWorkerMs: 0, maxWorkerMs: 0,
-  timings: Object.fromEntries(['build', 'path', 'reach', 'reach-first', 'approach', 'duo'].map(kind => [kind, {
-    completed: 0, consumed: 0, queueMs: 0, workerMs: 0, deliveryMs: 0, resumeMs: 0, maxTotalMs: 0,
+  timings: Object.fromEntries(['build', 'path', 'approach', 'duo'].map(kind => [kind, {
+    completed: 0, consumed: 0, queueMs: 0, workerMs: 0, localMs: 0, deliveryMs: 0, resumeMs: 0, maxTotalMs: 0,
   }])),
 };
 
@@ -88,7 +79,7 @@ function dispatch() {
       if (response.ok && job.status !== 'cancelled') workerGraphIds.add(job.graphId);
       else workerGraphIds.delete(job.graphId);
       if (job.status !== 'cancelled') {
-        if (response.ok) { job.result = response.result; if (job.query.kind === 'path') job.path = response.result as Point[] | null; job.status = 'ready'; }
+        if (response.ok) { job.result = response.result; job.status = 'ready'; }
         else { job.error = new Error(response.error); job.status = 'error'; }
         job.settle();
         job.onComplete();
@@ -115,17 +106,20 @@ function request(graphId: number, definition: WorkerDefinition, query: Navigatio
   if (failure) throw failure;
   let settle!: () => void;
   const settled = new Promise<void>(resolve => { settle = resolve; });
-  const description = { build: 'Construction du graphe de navigation', path: 'Calcul du trajet', reach: 'Vérification de l’accessibilité', 'reach-first': 'Vérification groupée de l’accessibilité', approach: 'Calcul de l’approche de l’objet', duo: 'Calcul du placement du duo' }[query.kind];
+  const description = { build: 'Construction du réseau de navigation', duo: 'Calcul du placement du duo' }[query.kind];
   let consumed = false;
-  const job: Job = { id: ++nextJobId, graphId, definition, query, description, status: 'pending', path: null, onComplete, settled, settle,
+  const job: Job = { id: ++nextJobId, graphId, definition, query, description, status: 'pending', onComplete, settled, settle,
     submittedAt: performance.now(), dispatchedAt: 0,
+    onWait() { job.waitStartedAt ??= performance.now(); },
     onRead() {
       if (consumed || job.receivedAt === undefined) return;
       consumed = true;
       const now = performance.now(), timing = pathfindingStats.timings[query.kind];
       timing.consumed++;
-      timing.resumeMs += now - job.receivedAt;
-      timing.maxTotalMs = Math.max(timing.maxTotalMs, now - job.submittedAt);
+      if (job.waitStartedAt !== undefined) {
+        timing.resumeMs += now - Math.max(job.receivedAt, job.waitStartedAt);
+        timing.maxTotalMs = Math.max(timing.maxTotalMs, now - job.waitStartedAt);
+      }
     },
     cancel() {
       if (job.status !== 'pending') return;
@@ -143,8 +137,12 @@ function request(graphId: number, definition: WorkerDefinition, query: Navigatio
   return job;
 }
 
-export function requestPath(graph: NavigationGraph, start: Point, target: Point, onComplete: () => void): PathSearch {
-  return Object.assign(request(graph.id, graph.definition, { kind: 'path', start: { ...start }, target: { ...target } }, onComplete), { graph, start: { ...start }, target: { ...target } });
+export function findPath(graph: NavigationGraph, start: Point, target: Point): Point[] | null {
+  const began = performance.now(), path = graph.find(start, target), elapsed = performance.now() - began;
+  const timing = pathfindingStats.timings.path;
+  timing.completed++; timing.consumed++; timing.localMs += elapsed;
+  timing.maxTotalMs = Math.max(timing.maxTotalMs, elapsed);
+  return path;
 }
 
 function releaseGraph(id: number): void {
@@ -173,13 +171,12 @@ export function prepareNavigationGraph(definition: WorkerDefinition): { read(): 
     read() {
       if (!graph) {
         const snapshot = readNavigationJob(job) as GraphSnapshot;
+        const mesh = NavigationMesh.restore(snapshot);
         graph = { ...snapshot, id, definition,
-          canReach(start, target) {
-            return navigationQuery(`${id}:reach:${start.x}:${start.z}:${target.x}:${target.z}`, () => request(id, definition, { kind: 'reach', start: { ...start }, target: { ...target } })) as boolean;
-          },
+          canReach: (start, target) => mesh.canReach(start, target),
+          find: (start, target) => mesh.find(start, target),
           findReachable(start, targets) {
-            if (!targets.length) return null;
-            return navigationQuery(`${id}:reach-first:${JSON.stringify([start, targets])}`, () => request(id, definition, { kind: 'reach-first', start: { ...start }, targets })) as Point | null;
+            return targets.find(target => mesh.canReach(start, target)) ?? null;
           },
         };
       }
@@ -189,8 +186,12 @@ export function prepareNavigationGraph(definition: WorkerDefinition): { read(): 
 }
 
 export function readObjectApproach(graph: NavigationGraph, approach: ApproachQuery): Point[] {
-  const { owner, goal, start, exiting, flexible, region, actors } = approach;
-  return navigationQuery(`${graph.id}:approach:${JSON.stringify([owner, goal, start, exiting, flexible, region, actors])}`, () => request(graph.id, graph.definition, { kind: 'approach', approach })) as Point[];
+  const began = performance.now(), direct = directObjectApproach(approach, graph);
+  const candidates = direct ? [direct] : objectApproachCandidates(approach, graph);
+  const elapsed = performance.now() - began, timing = pathfindingStats.timings.approach;
+  timing.completed++; timing.consumed++; timing.localMs += elapsed;
+  timing.maxTotalMs = Math.max(timing.maxTotalMs, elapsed);
+  return candidates;
 }
 export function readDuoAnchor(graph: NavigationGraph, duo: DuoQuery): Point | null {
   return navigationQuery(`${graph.id}:duo:${JSON.stringify(duo)}`, () => request(graph.id, graph.definition, { kind: 'duo', duo })) as Point | null;

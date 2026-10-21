@@ -4,7 +4,7 @@ import { getAvailableAutonomousActivities } from './autonomousActivities';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, getObjectApproach, movePostureExit, NavigationBlockedError, getNavigationGraph, describeNavigationBlock } from './navigation/service';
+import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, getObjectApproach, movePostureExit, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation } from './navigation/service';
 import { prepareKitchenStorageAccess, releaseKitchenStorageAccess } from './diyChairClearance';
 import { hasAgentProfile, getObstacleRevision, furnitureClearance, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
 import { distance, inflate, pointInRing, BOOLEAN_PRECISION } from './navigation/geometry';
@@ -840,11 +840,6 @@ export function createAgentController(
       return state;
     }
 
-    if ((currentInstruction.smartObjectId === 'drona-kitchen-diy' || currentInstruction.smartObjectId === 'drona-kitchen-electronics') && !prepareKitchenStorageAccess(_characterId)) {
-      state.animation = 'idle';
-      return state;
-    }
-
     // ── 3. État IDLE : Initialisation et réservation de l'instruction ──
     if (agentStatus === 'IDLE') {
       if (currentInstruction.smartObjectId && currentInstruction.type !== 'OBSERVE_OBJECT') {
@@ -1010,8 +1005,29 @@ export function createAgentController(
         }
       }
 
+      if (currentInstruction.type === 'PREPARE_OBJECT') {
+        const objectId = currentInstruction.smartObjectId;
+        if (objectId !== 'drona-kitchen-diy' && objectId !== 'drona-kitchen-electronics') throw new Error(`Unknown object preparation ${objectId}`);
+        state.animation = 'idle';
+        const logKey = `prepare-${stepIndex}-${dynamicNavIndex}`;
+        if (lastLog !== logKey) {
+          lastLog = logKey;
+          appLog(_characterId, '🪑 Arrivé devant le rangement : dégagement du mobilier avant utilisation', {
+            category: 'object', action: 'object_prepare', actors: [_characterId], object: { id: objectId, slotId: currentInstruction.slotId },
+          });
+        }
+        if (!prepareKitchenStorageAccess(_characterId)) return state;
+        advanceToNextStep(hasNavStep);
+        return state;
+      }
       if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START' || currentInstruction.type === 'USE_OBJECT' || currentInstruction.type === 'OBSERVE_OBJECT') {
         const target = getResolvedCoords(currentInstruction);
+        const next = hasNavStep ? dynamicNavQueue[dynamicNavIndex + 1] : scenario?.[stepIndex + 1];
+        if (currentInstruction.type === 'MOVE_TO' && next?.smartObjectId && next.smartObjectId === currentInstruction.smartObjectId
+          && (next.navigation === 'interaction' || next.type === 'USE_OBJECT') && hasAgentProfile(_characterId)) {
+          const object = getSmartObject(next.smartObjectId), slot = object?.slots.find(slot => slot.slotId === next.slotId);
+          if (object && slot?.offset) prepareInteractionNavigation(_characterId, slot.navigationOwner ?? object.id, { x: slot.offset[0], z: slot.offset[2] });
+        }
 
         agentStatus = 'MOVING';
         state.animation = currentWalkAnim;
@@ -1119,12 +1135,6 @@ export function createAgentController(
         agentStatus = 'BLOCKED';
         reportNavigationStop(route.error, target.label, { x: target.tx, z: target.tz });
         if (currentInstruction.smartObjectId) retrySmartAction(currentInstruction.smartObjectId);
-        return state;
-      }
-      if (moved === 0 && route.search?.job.status === 'pending') {
-        state.animation = NAVIGATION_WAIT_ANIMATION;
-        agentStatus = 'MOVING';
-        reportNavigationStop(route.waitReason!, target.label, { x: target.tx, z: target.tz }, undefined, true);
         return state;
       }
       if (moved === 0 && dt > 0 && distance(position, { x: target.tx, z: target.tz }) >= 1e-6) {

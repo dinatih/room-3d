@@ -25,7 +25,7 @@ export interface AgentProfile {
   height: number;
 }
 const profiles = new Map<string, AgentProfile>();
-export const agentProfileLifecycle = { onUnused: (_profile: AgentProfile): void => {} };
+export const agentProfileLifecycle = { onUsed: (_profile: AgentProfile): void => {}, onUnused: (_profile: AgentProfile): void => {} };
 function releaseUnusedProfile(profile: AgentProfile | undefined): void {
   if (profile && ![...profiles.values()].includes(profile)) agentProfileLifecycle.onUnused(profile);
 }
@@ -36,6 +36,7 @@ export function setAgentProfile(id: string, profile: AgentProfile): void {
   const previous = profiles.get(id);
   const shared = [...profiles.values()].find(p => p.radius === profile.radius && p.height === profile.height);
   profiles.set(id, shared ?? { ...profile });
+  if (profiles.get(id) !== previous) agentProfileLifecycle.onUsed(profiles.get(id)!);
   releaseUnusedProfile(previous);
 }
 export function removeAgentProfile(id: string): void {

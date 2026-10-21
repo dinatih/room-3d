@@ -9,8 +9,7 @@ import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginAct
 import { NAVIGATION_COMFORT_CM } from './comfort';
 import type { GraphDefinition, ApproachRegion } from './queries';
 import { NavigationScope, NavigationPending, navigationValue, getNavigationScope } from './navigationScope';
-import { requestPath, prepareNavigationGraph, readObjectApproach, type NavigationGraph, type PathSearch } from './pathfindingClient';
-import { cameraState } from '../../cameraState';
+import { findPath, prepareNavigationGraph, readObjectApproach, type NavigationGraph } from './pathfindingClient';
 import { OccupancyManager, isInRoom, LIMITED_ROOMS, ROOM_CAPACITIES } from '../occupancyManager';
 
 export { architectureObstacles };
@@ -44,6 +43,13 @@ function doorFootprint(profile: AgentProfile, key: DoorKey, angle = 0): Polygon[
   return footprint.actual;
 }
 export const getInteractionOwner = (owner: string) => (owner === 'bed-west' || owner === 'bed-east') && positionState['bed-double']?.idx === 1 ? 'bed-double' : owner;
+/** Prepare the local entry network while the actor is still walking to its approach. */
+export function prepareInteractionNavigation(agentId: string, owner: string, goal: Point): void {
+  const profile = getAgentProfile(agentId);
+  owner = getInteractionOwner(owner);
+  if ([...furnitureObstacles.values()].some(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0
+    && pointInRing(goal, furnitureFootprint(o, profile)))) getNavigationPreparation(profile, owner);
+}
 /** Recover the furniture to exit when a scenario starts from a seated character. */
 export function getContainingObjectOwner(agentId: string, position: Point): string | undefined {
   const profile = getAgentProfile(agentId);
@@ -60,6 +66,7 @@ const releaseProfile = (profile: AgentProfile) => {
   caches.delete(profile);
 };
 agentProfileLifecycle.onUnused = releaseProfile;
+agentProfileLifecycle.onUsed = profile => { getNavigationPreparation(profile); };
 const inSurface = (p: Point) => walkableSurfaces.some(rings => pointInRing(p, rings[0]) && !rings.slice(1).some(h => pointInRing(p, h)));
 export function getDoorApproach(key: DoorKey, agentId?: string, preferred?: Point, start?: Point, departureOwner?: string): Point {
   const door = DOOR_CONFIGS[key];
@@ -97,7 +104,7 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
   const previous = old?.previous ?? (old?.graph ? old.preparation : undefined);
   if (old && old.preparation !== previous) old.preparation.cancel();
   const solid = [...architectureObstacles, ...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0 && (!excludeSet || !o.owner || !excludeSet.has(getInteractionOwner(o.owner))));
-  const definition: GraphDefinition = { solids: [], comfortDistance: excludeSet?.size ? undefined : NAVIGATION_COMFORT_CM };
+  const definition: GraphDefinition = { solids: [], surfaces: walkableSurfaces, comfortDistance: excludeSet?.size ? undefined : NAVIGATION_COMFORT_CM };
   const addObstacle = (polygon: Polygon, radius = profile.radius) => {
     definition.solids.push({ polygon, radius, comfort: !excludeSet?.size });
   };
@@ -152,7 +159,7 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
     .filter(o => o.owner && o.yMin < profile.height && o.yMax > 0 && pointInRing(start!, furnitureFootprint(o, profile)))
     .map(o => getInteractionOwner(o.owner!))) : new Set<string>();
   containingOwners.add(owner);
-  const escape = (needsExit ? getNavigationGraph(profile, containingOwners) : graph).definition as GraphDefinition;
+  const escape = (needsExit ? getNavigationGraph(profile, containingOwners) : graph).obstacles;
   const candidates = readObjectApproach(graph, {
     owner,
     goal: { x: goal.x, z: goal.z }, start: start ? { x: start.x, z: start.z } : undefined, owned: owned.map(o => ({ polygon: o.polygon, radius: furnitureClearance(profile) })),
@@ -164,7 +171,6 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
 
 export interface RouteState {
   path: Point[];
-  search?: { kind: 'route' | 'local' | 'crowd'; job: PathSearch };
   index: number;
   target: Point | null;
   destination?: Point;
@@ -201,8 +207,6 @@ export function movePostureExit(route: RouteState, agentId: string, start: Point
 }
 export function resetRoute(route: RouteState, agentId: string, keepProtectedDoor?: DoorKey): void {
   routeScopes.get(route)?.clear();
-  route.search?.job.cancel();
-  route.search = undefined;
   releaseAgentDoors(agentId, keepProtectedDoor);
   route.path = []; route.index = 0; route.target = null; route.graph = null; route.error = null; route.doors.clear();
   route.destination = undefined;
@@ -217,40 +221,17 @@ export function resetRoute(route: RouteState, agentId: string, keepProtectedDoor
   navigationDebug.delete(agentId);
 }
 
-/** Undefined means an explicit pending search, not an unreachable target. */
-function searchPath(route: RouteState, graph: NavigationGraph, start: Point, target: Point, kind: 'route' | 'local' | 'crowd'): Point[] | null | undefined {
-  let search = route.search;
-  if (!search || search.kind !== kind || search.job.graph !== graph ||
-      search.job.start.x !== start.x || search.job.start.z !== start.z ||
-      search.job.target.x !== target.x || search.job.target.z !== target.z) {
-    search?.job.cancel();
-    search = { kind, job: requestPath(graph, start, target, () => cameraState.invalidate?.()) };
-    route.search = search;
-  }
-  if (search.job.status === 'pending') {
-    route.waitReason = 'Calcul du trajet en cours';
-    return undefined;
-  }
-  if (search.job.status === 'error') throw search.job.error!;
-  if (search.job.status === 'cancelled') throw new Error('Cancelled navigation search still attached to a route');
-  search.job.onRead?.();
-  route.search = undefined;
-  return search.job.path;
-}
-
 export function planRoute(route: RouteState, agentId: string, start: Point, target: Point): boolean {
   const base = getNavigationGraph(getAgentProfile(agentId), undefined);
   let graph = route.crowd?.base === base && route.crowd.graph ? route.crowd.graph : base;
   if (!inSurface(start) || !inSurface(target)) {
     route.error = 'Destination ou départ hors du sol praticable';
   } else {
-    let path = searchPath(route, graph, start, target, 'route');
-    if (path === undefined) return false;
+    let path = findPath(graph, start, target);
     if (!path && graph !== base) {
       clearCrowd(route);
       graph = base;
-      path = searchPath(route, graph, start, target, 'route');
-      if (path === undefined) return false;
+      path = findPath(graph, start, target);
     }
     if (path) {
       route.path = path; route.index = 0; route.target = { ...target }; route.graph = graph; route.error = null;
@@ -324,7 +305,6 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
     if (reachable.x === crowd.resume.next.x && reachable.z === crowd.resume.next.z) {
       // The obstruction has cleared: recover the shorter static route without
       // rebuilding a crowd graph every time a distant actor moves.
-      if (route.search?.kind === 'crowd') { route.search.job.cancel(); route.search = undefined; }
       clearCrowd(route);
       route.graph = null;
     }
@@ -399,7 +379,7 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
       let crowd = route.crowd;
       if ((!crowd?.planning && !crowd?.preparation) || crowd.base !== base) {
         crowd?.preparation?.cancel();
-        const preparation = prepareNavigationGraph({ obstacles: [...base.obstacles, ...obstacles.map(polygon => [polygon])] });
+        const preparation = prepareNavigationGraph({ obstacles: [...base.obstacles, ...obstacles.map(polygon => [polygon])], surfaces: walkableSurfaces });
         crowd = { base, graph: null, preparation, preparing: true, signature,
           resume: crowd?.resume ?? { start: { ...start }, next: route.path[route.index] ?? target } };
         route.crowd = crowd;
@@ -407,8 +387,7 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
       const graph = crowd.planning ??= crowd.preparation!.read();
       crowd.preparing = false;
       const goal = route.target ?? target;
-      const path = searchPath(route, graph, start, goal, 'crowd');
-      if (path === undefined) return limited;
+      const path = findPath(graph, start, goal);
       crowd.planning = undefined;
       crowd.graph = path ? graph : null;
       if (path) {
@@ -447,7 +426,6 @@ function retainValidRoute(route: RouteState, graph: NavigationGraph, start: Poin
   if (route.graph === graph || route.error || route.target?.x !== target.x || route.target?.z !== target.z || route.index >= route.path.length) return;
   const remaining = [start, ...route.path.slice(route.index)];
   if (remaining.every((point, index) => index === 0 || segmentFree(remaining[index - 1], point, graph.obstacles))) {
-    route.search?.job.cancel(); route.search = undefined;
     route.graph = graph;
   }
 }
@@ -468,8 +446,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
     const localGraph = route.crowd?.base === baseLocal && route.crowd.graph ? route.crowd.graph : baseLocal;
     retainValidRoute(route, localGraph, start, goal);
     if (route.graph !== localGraph || route.target?.x !== goal.x || route.target?.z !== goal.z) {
-      const path = searchPath(route, localGraph, start, goal, 'local');
-      if (path === undefined) return start;
+      const path = findPath(localGraph, start, goal);
       if (!path) {
         route.error = `Transition d'interaction bloquée (${id})`;
         navigationDebug.set(agentId, { path: [], target: goal, error: route.error });
