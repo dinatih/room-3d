@@ -147,7 +147,6 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
               }}
             >
               <i className={`bi ${choice.icon}`} aria-hidden="true" />
-              <span className="small ms-1">{choice.label}</span>
             </button>
           ))}
         </div>
