@@ -12,18 +12,22 @@ export const ANIMATION_LOADING_IDLE = resolveAnimationId('thinking');
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
 const MAX_DYNAMIC_GLTF_CACHE = 8;
+const RESERVED_WALK_ANIMATIONS = ['walking', 'female-walk'];
+const reservedWalkPaths = new Set(RESERVED_WALK_ANIMATIONS.map(resolveAnimationPath));
+const reservedWalkGLTFCache = new Map<string, Promise<AnimationSource>>();
 const globalGLTFCache = new Map<string, Promise<AnimationSource>>();
 // Pending loads are shared independently of the completed-source LRU. Evicting
 // an unfinished request would let another character decode the same file again.
 const pendingGLTFLoads = new Map<string, Promise<AnimationSource>>();
 
 export function cacheDynamicGLTF(path: string): Promise<AnimationSource> {
+  const cache = reservedWalkPaths.has(path) ? reservedWalkGLTFCache : globalGLTFCache;
   const loading = pendingGLTFLoads.get(path);
   if (loading) return loading;
-  const cached = globalGLTFCache.get(path);
+  const cached = cache.get(path);
   if (cached) {
-    globalGLTFCache.delete(path);
-    globalGLTFCache.set(path, cached);
+    cache.delete(path);
+    cache.set(path, cached);
     return cached;
   }
   const pending = new Promise<AnimationSource>((resolve, reject) => {
@@ -38,7 +42,7 @@ export function cacheDynamicGLTF(path: string): Promise<AnimationSource> {
   });
   const shared = pending.then(source => {
     pendingGLTFLoads.delete(path);
-    globalGLTFCache.set(path, shared);
+    cache.set(path, shared);
     while (globalGLTFCache.size > MAX_DYNAMIC_GLTF_CACHE) {
       globalGLTFCache.delete(globalGLTFCache.keys().next().value!);
     }
@@ -75,7 +79,7 @@ export function useCharacterAnimations({
   const pendingLoadsRef = useRef<Set<string>>(new Set());
   const failedLoadsRef = useRef<Set<string>>(new Set());
   const retired = useRef(new Map<THREE.AnimationAction, number>());
-  const baseClips = useMemo(() => new Set(['idle', 'sad-idle', ANIMATION_LOADING_IDLE, 'falling', 'falling-idle'].map(resolveAnimationId)), []);
+  const baseClips = useMemo(() => new Set(['idle', 'sad-idle', ANIMATION_LOADING_IDLE, 'falling', 'falling-idle', ...RESERVED_WALK_ANIMATIONS].map(resolveAnimationId)), []);
 
   function retireAction(action: THREE.AnimationAction, duration: number) {
     retired.current.set(action, mixerRef.current!.time + duration);
