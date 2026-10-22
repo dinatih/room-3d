@@ -11,6 +11,8 @@ npm run build        # Compiler pour la production
 npx tsc --noEmit     # Vérifier la validité des types TypeScript
 ```
 
+En développement, tous les événements `appLog` du navigateur sont transmis par la connexion Vite et ajoutés à `/tmp/room-3d-app.jsonl` (JSON par ligne, session, URL, navigateur et métadonnées complètes). Lecture en direct : `tail -f /tmp/room-3d-app.jsonl`. Les filtres et la fermeture de la console UI n'affectent pas cet enregistrement. Recharger les onglets déjà ouverts après installation ; les événements antérieurs ne sont pas récupérés. Le fichier reste présent après redémarrage de Vite, jusqu'au nettoyage de `/tmp`.
+
 ## Repères et Échelle 3D
 
 - **Échelle** : 1 unité = 1 cm.

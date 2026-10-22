@@ -109,6 +109,7 @@ const LOG_CATEGORY_LABELS: Record<AppLogCategory, string> = {
 let _logCounter = 0;
 export const APP_LOG_HISTORY: AppLogEntry[] = [];
 const MAX_LOGS = 10_000;
+const logSession = import.meta.hot ? crypto.randomUUID() : undefined;
 
 function inferLogCategory(tag: string, meta?: AppLogMetadata): AppLogCategory {
   if (meta?.category) return meta.category;
@@ -140,6 +141,12 @@ export const appLog = (tag: string, message: string, meta?: AppLogMetadata): voi
     object: meta?.object,
   };
   APP_LOG_HISTORY.push(entry);
+  import.meta.hot?.send('room:app-log', {
+    session: logSession,
+    url: window.location.href,
+    userAgent: navigator.userAgent,
+    entry,
+  });
   if (APP_LOG_HISTORY.length > MAX_LOGS) APP_LOG_HISTORY.shift();
   document.dispatchEvent(new CustomEvent('app-log', { detail: entry }));
 };
