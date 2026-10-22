@@ -1012,12 +1012,11 @@ export function Character({
         previewPlayback.ready = true;
         previewPlayback.duration = action.getClip().duration;
         action.enabled = true;
-        action.setEffectiveWeight(1).setEffectiveTimeScale(1);
         action.setLoop(THREE.LoopOnce, 0);
         action.clampWhenFinished = true;
-        action.paused = false;
-        mixer.setTime(Math.min(previewPlayback.time, previewPlayback.duration));
+        action.time = Math.min(previewPlayback.time, previewPlayback.duration);
         action.paused = true;
+        mixer.update(previewPlayback.playing ? delta : 0);
         pendantDelta = previewPlayback.playing ? delta : 0;
         updatePhysics(pendantDelta, { haircut, isMoving: false, targetAnim: target, characterAnim, clockElapsedTime: previewPlayback.time }, scene);
       }

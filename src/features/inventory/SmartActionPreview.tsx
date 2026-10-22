@@ -70,7 +70,7 @@ export function SmartActionPreview({ Component, item, actionState, onSize, reque
   });
   return <group name="SmartActionPreview" userData={{ step: index, animation, characterId: request.characterId, playback }}>
     <Component item={item} isPreview actionState={{ ...actionState, ...objectState, previewPaused: !request.playing }} onSize={onSize} />
-    <CharacterGroup key={index} isPreview previewCharacterId={request.characterId} characterAnim={animation}
+    <CharacterGroup isPreview previewCharacterId={request.characterId} characterAnim={animation}
       previewPosition={position} previewRotationY={(step.rotY ?? slot.rotY ?? 0) - (origin.rotationY ?? 0)} previewPlayback={playback} />
   </group>;
 }
