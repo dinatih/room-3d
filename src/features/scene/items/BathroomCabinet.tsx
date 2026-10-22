@@ -19,7 +19,6 @@ import type { SceneItemProps } from '@shared/types';
 import { getObjectActionIds } from '../objectActions';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { useSceneStore } from '../store/useSceneStore';
-import { dronaPlayback } from './dronaPlayback';
 
 const GLB        = 'items/metod10205534/Metod10205534.glb';
 const DOOR_GLB   = 'items/ringhult60327137/Ringhult60327137-40x60.glb';
@@ -109,12 +108,6 @@ function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey,
     const pivot = pivotRef.current;
     if (!pivot) return;
     const targetAngle = openRef.current ? (mirrorHandle ? Math.PI / 2 : -Math.PI / 2) : 0;
-    const synchronized = isPreview ? actionState.previewMotion?.[openKey] : dronaPlayback.get(openKey);
-    if (synchronized !== undefined) {
-      pivot.rotation.y = (mirrorHandle ? Math.PI / 2 : -Math.PI / 2) * synchronized;
-      if (synchronized !== (openRef.current ? 1 : 0)) invalidate();
-      return;
-    }
     if (pivot.rotation.y === targetAngle) return;
     const diff = targetAngle - pivot.rotation.y;
     if (Math.abs(diff) < 0.001) {

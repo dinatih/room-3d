@@ -107,8 +107,6 @@ export interface AgentInstruction {
   actionId?: string; // for INTERACT
   /** Wait for real one-shot playback, including asynchronous clip loading. */
   waitForAnimation?: boolean;
-  /** Actor playback interval during which a box follows the hand. */
-  dronaMotion?: { action: string; from: number; to: number; range: [number, number] };
   animation?: string; // animation to play
   duration?: number; // for WAIT, INTERACT, ROTATE_360 or OBSERVE_OBJECT
   repeatCount?: number; // number of repetitions if duration is not set (default 1)

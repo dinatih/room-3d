@@ -1,7 +1,6 @@
 import { SmartActionPreview } from './SmartActionPreview';
 import type { SmartActionPreviewRequest } from './InventorySmartActions';
 import type { SceneItemProps } from '@shared/types';
-import { CustomAnimationFurniture } from './CustomAnimationFurniture';
 import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { Html, Line, Grid, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
@@ -620,7 +619,6 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
           {actionState.smartAction
             ? <SmartActionPreview key={actionState.smartAction.runId} Component={PreviewComponent} item={item ?? {} as any} isPreview actionState={actionState} onSize={fit} request={actionState.smartAction} />
             : <PreviewComponent item={item ?? {} as any} isPreview actionState={actionState} onSize={fit} />}
-          {preserveOriginXZ && !actionState.duoAnimDef && <CustomAnimationFurniture key={actionState.characterAnim} animationId={actionState.characterAnim} onSize={fit} />}
         </group>
       </group>
       {showDims && item?.dims && worldSize && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}

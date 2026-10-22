@@ -31,8 +31,6 @@ const registry = load('src/features/scene/animations/animationRegistry.ts', {
   './fabManifest': load('src/features/scene/animations/fabManifest.ts', {}),
   './behaveManifest': load('src/features/scene/animations/behaveManifest.ts', {}),
   './kitManifest': load('src/features/scene/animations/kitManifest.ts', {}),
-  './dronaLinenManifest': load('src/features/scene/animations/dronaLinenManifest.ts', {}),
-  './dronaStorageManifest': load('src/features/scene/animations/dronaStorageManifest.ts', {}),
 });
 const duo = load('src/features/scene/animations/duoAnimations.ts', { './animationRegistry': registry, './interxManifest': interx });
 const combatIds = new Set([

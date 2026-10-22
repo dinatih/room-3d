@@ -11,34 +11,31 @@ export const KALLAX_NW_DRONA_POSITIONS: [number, number, number][] = [
   [0, 75.5 + 40.5 / 2, 0], [0, 75.5 + 40.5 + 40.5 / 2, 0],
 ];
 
-// Each set has complete one-shot pull/search/push clips, authored at its handle height.
 export const DRONA_SPECIAL_ITEMS = {
   'drona-se-care': {
     shelf: 'se', index: 0, position: KALLAX_SE_DRONA_POSITIONS[0],
     label: 'Dröna Parfum/Crème', interaction: 'Prendre un parfum ou une crème',
-    action: 'drona-se-care-slide', animationPrefix: 'drona-care', approach: 50 + 38 * 2 / 3 - 10,
+    action: 'drona-se-care-slide', approach: 50 + 38 * 2 / 3 - 10,
   },
   'drona-nw-upper': {
     shelf: 'nw', index: 3, position: KALLAX_NW_DRONA_POSITIONS[3],
     label: 'Dröna supérieur NW', interaction: 'Prendre un objet dans le Dröna supérieur',
-    action: 'drona-nw-upper-slide', animation: 'pick-fruit', approach: 80,
+    action: 'drona-nw-upper-slide', approach: 80,
   },
   'drona-nw-trousers': {
     shelf: 'nw', index: 2, position: KALLAX_NW_DRONA_POSITIONS[2],
     label: 'Dröna Pantalons', interaction: 'Prendre un pantalon',
     // Box extension clearance, adjusted 10 cm closer for the reach gesture.
-    action: 'drona-nw-trousers-slide', animationPrefix: 'drona-trousers', approach: 50 + 38 * 2 / 3 - 10,
+    action: 'drona-nw-trousers-slide', approach: 50 + 38 * 2 / 3 - 10,
   },
   'drona-ne-catchall2': {
     shelf: 'ne', index: 0, position: [-17.5, 41 - 20.5, 0],
     label: 'Dröna Fourre-tout 2', interaction: 'Prendre un objet dans le fourre-tout 2',
-    action: 'drona-ne-catchall2-slide', animationPrefix: 'drona-catchall2', approach: 50 + 38 * 2 / 3 - 10,
+    action: 'drona-ne-catchall2-slide', approach: 50 + 38 * 2 / 3 - 10,
   },
 } satisfies Record<string, {
   shelf: string; index: number; position: [number, number, number];
-  label: string; interaction: string; action: string; animationPrefix?: string; animation?: string; approach: number;
+  label: string; interaction: string; action: string; approach: number;
 }>;
 
-export const SPECIAL_DRONA_SLIDE_DURATION = getAnimationDef('drona-care-pull')!.duration!;
-export const DRONA_PULL_RANGE: [number, number] = [0.25, 0.75];
-export const DRONA_PUSH_RANGE: [number, number] = [0.25, 0.75];
+export const SPECIAL_DRONA_SLIDE_DURATION = getAnimationDef('opening')!.duration! / 4;

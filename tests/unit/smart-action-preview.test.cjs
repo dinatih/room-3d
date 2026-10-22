@@ -33,6 +33,7 @@ it('joue Pick Fruit une seule fois pour le pyjama et le Dröna supérieur NW', (
     assert(start > 0 && end > start);
     return `export function sequence(id) {
       const SMART_OBJECTS = {}, BATHROOM_STORAGE_ITEMS = {}, KITCHEN_DRONA_ITEMS = {};
+      const DRONA_SE_ITEMS = { 'drona-se-pyjama': {} }, DRONA_SPECIAL_ITEMS = { 'drona-nw-upper': { shelf: 'nw' } };
       const OccupancyManager = { canUseObject: () => true };
       const getSmartObject = objectId => ({ id: objectId, slots: [{ slotId: 'pick-item', animation: 'pick-fruit' }] });
       ${source.slice(start, end).replace('export function', 'function')}

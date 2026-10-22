@@ -21,7 +21,6 @@ import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, beginAc
 import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { getExitTransition } from '../animations/animationTransitions';
 import { DRONA_SE_ITEMS } from '../items/kallaxSeDrona';
-import { dronaPlayback } from '../items/dronaPlayback';
 import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS } from '../items/kallaxCuisineDrona';
@@ -236,7 +235,6 @@ export function createAgentController(
       }
       const drona = DRONA_SE_ITEMS[claimedSlot.objectId] ?? DRONA_SPECIAL_ITEMS[claimedSlot.objectId as keyof typeof DRONA_SPECIAL_ITEMS] ?? BATHROOM_STORAGE_ITEMS[claimedSlot.objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[claimedSlot.objectId as keyof typeof KITCHEN_DRONA_ITEMS];
       if (drona && 'action' in drona) {
-        dronaPlayback.delete(drona.action);
         useSceneStore.getState().triggerAction(drona.action, false);
       }
       if (claimedSlot.objectId === 'corridor-closet') {
@@ -493,7 +491,6 @@ export function createAgentController(
 
   const triggerInstructionEvent = (instruction: AgentInstruction) => {
     if (instruction.waitForAnimation) animationPlayback = null;
-    if (instruction.dronaMotion) dronaPlayback.set(instruction.dronaMotion.action, instruction.dronaMotion.from);
     if (!instruction.triggerEventKey) return;
     useSceneStore.getState().triggerAction(instruction.triggerEventKey, instruction.triggerEventValue);
   };
@@ -1619,12 +1616,6 @@ export function createAgentController(
   const reportAnimationPlayback = (animation: string, progress: number, finished: boolean) => {
     animationPlayback ??= { animation, progress, finished };
     animationPlayback.animation = animation; animationPlayback.progress = progress; animationPlayback.finished = finished;
-    const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
-    const motion = instruction?.dronaMotion;
-    if (motion && resolveAnimationId(instruction.animation!) === animation) {
-      const fraction = Math.max(0, Math.min(1, (progress - motion.range[0]) / (motion.range[1] - motion.range[0])));
-      dronaPlayback.set(motion.action, motion.from + (motion.to - motion.from) * fraction);
-    }
   };
 
   return {

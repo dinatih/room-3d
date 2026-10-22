@@ -9,15 +9,13 @@ import { TOILET_BOWL_CENTER, TOILET_D } from '../items/Toilet';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 import { FREEZER_DOOR_DURATION } from '../items/Freezer';
 import { FRIDGE_DOOR_DURATION, FRIDGE_CRISPER_DURATION } from '../items/Fridge';
-import { DRONA_CATCHALL_ACTION, DRONA_CATCHALL_POSITION, DRONA_CATCHALL_SLIDE_DURATION } from '../items/kallaxNeDrona';
+import { DRONA_CATCHALL_POSITION } from '../items/kallaxNeDrona';
 import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from '../items/kallaxSeDrona';
-import { LINEN_PULL_RANGE, LINEN_PUSH_RANGE } from '../animations/dronaLinenManifest';
-import { DRONA_SPECIAL_ITEMS, DRONA_PULL_RANGE, DRONA_PUSH_RANGE } from '../items/dronaStorage';
+import { DRONA_SPECIAL_ITEMS, SPECIAL_DRONA_SLIDE_DURATION } from '../items/dronaStorage';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
 import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
-import { useSceneStore } from '../store/useSceneStore';
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
@@ -318,7 +316,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       approachWidth: (id === 'drona-kitchen-diy' || id === 'drona-kitchen-electronics') ? 33 : undefined,
       navigationOwner: 'kallax-cuisine',
       offset: [0, -KALLAX_CUISINE_DRONA_POSITIONS[item.index][1], id === 'drona-kitchen-diy' ? -65 : -50] as [number, number, number],
-      rotY: 0, animation: `${item.animationPrefix}-search`,
+      rotY: 0, animation: 'pick-fruit',
     }],
   }])),
   ...Object.fromEntries(Object.entries(BATHROOM_STORAGE_ITEMS).map(([id, item]) => [id, {
@@ -327,7 +325,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       slotId: 'pick-item', name: item.kind === 'cabinet' ? 'Prendre un objet dans l’armoire' : 'Prendre un objet dans la Dröna',
       relative: true, arrival: 'approach' as const, navigationOwner: item.cabinetId,
       offset: [0, -item.position[1], item.kind === 'cabinet' ? 60 : -BATHROOM_BOX_APPROACH] as [number, number, number],
-      rotY: item.kind === 'cabinet' ? Math.PI : 0, animation: `${item.animationPrefix}-search`,
+      rotY: item.kind === 'cabinet' ? Math.PI : 0, animation: 'pick-fruit',
     }],
   }])),
 
@@ -482,7 +480,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       slotId: 'pick-item', name: id === 'drona-se-pyjama' ? 'Prendre un pyjama' : 'Prendre du linge de maison',
       relative: true, arrival: 'approach' as const, navigationOwner: 'kallax-se',
       offset: [0, -KALLAX_SE_DRONA_POSITIONS[item.index][1], -80] as [number, number, number],
-      rotY: 0, animation: item.animation,
+      rotY: 0, animation: 'pick-fruit',
     }],
   }])),
   ...Object.fromEntries(Object.entries(DRONA_SPECIAL_ITEMS).map(([id, item]) => [id, {
@@ -491,7 +489,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       slotId: 'pick-item', name: item.interaction, relative: true, arrival: 'approach' as const,
       navigationOwner: `kallax-${item.shelf}`,
       offset: [0, -item.position[1], -item.approach] as [number, number, number],
-      rotY: 0, animation: 'animation' in item ? item.animation : `${item.animationPrefix}-search`,
+      rotY: 0, animation: 'pick-fruit',
     }],
   }])),
   'drona-ne-catchall': {
@@ -1121,13 +1119,10 @@ export function buildSmartObjectInstructionSequence(
 
   const storageInteraction = BATHROOM_STORAGE_ITEMS[objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[objectId as keyof typeof KITCHEN_DRONA_ITEMS];
   if (storageInteraction) {
-    const gesture = 'action' in storageInteraction ? (phase: 'pull' | 'push'): AgentInstruction => ({
+    const gesture = 'action' in storageInteraction ? (open: boolean): AgentInstruction => ({
       type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
-      animation: `${storageInteraction.animationPrefix}-${phase}`,
-      duration: getAnimationDef(`${storageInteraction.animationPrefix}-${phase}`)!.duration,
-      rotY: slot.rotY, waitForAnimation: true,
-      dronaMotion: { action: storageInteraction.action, from: phase === 'pull' ? 0 : 1, to: phase === 'pull' ? 1 : 0, range: phase === 'pull' ? DRONA_PULL_RANGE : DRONA_PUSH_RANGE },
-      triggerEventKey: storageInteraction.action, triggerEventValue: phase === 'pull',
+      animation: 'idle', duration: SPECIAL_DRONA_SLIDE_DURATION, rotY: slot.rotY,
+      triggerEventKey: storageInteraction.action, triggerEventValue: open,
     }) : undefined;
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
@@ -1135,78 +1130,23 @@ export function buildSmartObjectInstructionSequence(
         { type: 'PREPARE_OBJECT' as const, smartObjectId: obj.id, slotId: slot.slotId },
         { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId },
       ] : []),
-      ...(gesture ? [gesture('pull')] : []),
-      { ...baseInstruction, type: 'kind' in storageInteraction ? 'WAIT' : baseInstruction.type, waitForAnimation: true },
-      ...(gesture ? [gesture('push')] : []),
-      ...(gesture && (!('kind' in storageInteraction) || useSceneStore.getState().layers.exitTransitions) ? [{ type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY, waitForAnimation: true }] : []),
+      ...(gesture ? [gesture(true)] : []),
+      { ...baseInstruction, type: 'kind' in storageInteraction ? 'WAIT' : baseInstruction.type, repeatCount: 1, waitForAnimation: true },
+      ...(gesture ? [gesture(false)] : []),
       // Leave the chair's original footprint before restoring it.
       ...((objectId === 'drona-kitchen-diy' || objectId === 'drona-kitchen-electronics') ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, targetPos: [ROOM_W * 2 / 3, 0, slot.offset![2]] as [number, number, number] }] : []),
     ];
   }
 
-  if (objectId === 'drona-se-pyjama' || objectId === 'drona-nw-upper') {
-    const protectedDoor = objectId === 'drona-se-pyjama' ? 'living' as const : undefined;
+  const storage = DRONA_SPECIAL_ITEMS[objectId as keyof typeof DRONA_SPECIAL_ITEMS];
+  if (storage || DRONA_SE_ITEMS[objectId] || objectId === 'drona-ne-catchall') {
+    const protectedDoor = storage?.shelf === 'nw' ? undefined
+      : DRONA_SE_ITEMS[objectId] || storage?.shelf === 'se' ? 'living' as const : 'glassRight' as const;
     return [
       ...(protectedDoor ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey: protectedDoor }] : []),
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor },
-      { ...baseInstruction, animation: 'pick-fruit', repeatCount: 1, waitForAnimation: true, protectedDoor },
+      { ...baseInstruction, repeatCount: 1, waitForAnimation: true, protectedDoor },
       ...(protectedDoor ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey: protectedDoor, protectedDoor }] : []),
-    ];
-  }
-
-  const storage = DRONA_SPECIAL_ITEMS[objectId as keyof typeof DRONA_SPECIAL_ITEMS];
-  if (storage && 'animationPrefix' in storage) {
-    const doorKey = storage.shelf === 'se' ? 'living' as const : 'glassRight' as const;
-    const gesture = (phase: 'pull' | 'push'): AgentInstruction => ({
-      type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: storage.shelf === 'nw' ? undefined : doorKey,
-      animation: `${storage.animationPrefix}-${phase}`,
-      duration: getAnimationDef(`${storage.animationPrefix}-${phase}`)!.duration,
-      rotY: slot.rotY, waitForAnimation: true,
-      dronaMotion: { action: storage.action, from: phase === 'pull' ? 0 : 1, to: phase === 'pull' ? 1 : 0, range: phase === 'pull' ? DRONA_PULL_RANGE : DRONA_PUSH_RANGE },
-      triggerEventKey: storage.action, triggerEventValue: phase === 'pull',
-    });
-    return [
-      ...(storage.shelf === 'nw' ? [
-        { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId },
-      ] : [
-        { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey },
-        { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey },
-      ]),
-      gesture('pull'),
-      { ...baseInstruction, type: 'WAIT', protectedDoor: storage.shelf === 'nw' ? undefined : doorKey, waitForAnimation: true },
-      gesture('push'),
-      ...(storage.shelf !== 'nw' ? [{ type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY, waitForAnimation: true }] : []),
-      ...(storage.shelf === 'nw' ? [] : [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey, protectedDoor: doorKey }]),
-    ];
-  }
-
-  if (objectId === 'drona-ne-catchall' || DRONA_SE_ITEMS[objectId]) {
-    const item = DRONA_SE_ITEMS[objectId];
-    const doorKey = item ? 'living' as const : 'glassRight' as const;
-    const action = item?.action ?? DRONA_CATCHALL_ACTION;
-    const animation = item?.pullAnimation ?? 'opening';
-    const duration = item?.duration ?? DRONA_CATCHALL_SLIDE_DURATION;
-    const linen = objectId === 'drona-se-linen';
-    return [
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey },
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey },
-      {
-        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey,
-        animation, duration: linen ? getAnimationDef(animation)!.duration : duration, rotY: slot.rotY,
-        waitForAnimation: linen,
-        dronaMotion: linen ? { action, from: 0, to: 1, range: LINEN_PULL_RANGE } : undefined,
-        triggerEventKey: action, triggerEventValue: true,
-      },
-      { ...baseInstruction, protectedDoor: doorKey, waitForAnimation: linen },
-      {
-        type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey,
-        animation: linen ? 'drona-linen-push' : animation,
-        duration: linen ? getAnimationDef('drona-linen-push')!.duration : duration, rotY: slot.rotY,
-        waitForAnimation: linen,
-        dronaMotion: linen ? { action, from: 1, to: 0, range: LINEN_PUSH_RANGE } : undefined,
-        triggerEventKey: action, triggerEventValue: false,
-      },
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey, protectedDoor: doorKey },
     ];
   }
 
