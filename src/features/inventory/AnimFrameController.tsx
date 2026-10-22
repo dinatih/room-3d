@@ -486,17 +486,11 @@ export function AnimFrameController({
         return;
       }
 
-      if (e.key === 'ArrowLeft') {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        if (targetEl?.tagName === 'CANVAS' || targetEl?.closest('canvas')) return;
         e.preventDefault();
         e.stopPropagation();
-        stepFrame(e.shiftKey ? -5 : -1);
-        return;
-      }
-
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        e.stopPropagation();
-        stepFrame(e.shiftKey ? 5 : 1);
+        stepFrame((e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 5 : 1));
         return;
       }
 
@@ -506,33 +500,11 @@ export function AnimFrameController({
         seekToFrame(0);
         return;
       }
-
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        e.stopPropagation();
-        if (duoAnimDef || showDuoSelector) {
-          cycleFilteredDuoAnim('prev');
-        } else {
-          cycleFilteredAnim('prev');
-        }
-        return;
-      }
-
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        e.stopPropagation();
-        if (duoAnimDef || showDuoSelector) {
-          cycleFilteredDuoAnim('next');
-        } else {
-          cycleFilteredAnim('next');
-        }
-        return;
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [keyboardEnabled, isHumanCharacter, onSelectDuoAnim, duoAnimDef, showDuoSelector, togglePlay, stepFrame, seekToFrame, cycleFilteredAnim, cycleFilteredDuoAnim, handleRandomAnim, handleRandomDuoAnim]);
+  }, [keyboardEnabled, isHumanCharacter, onSelectDuoAnim, togglePlay, stepFrame, seekToFrame, handleRandomAnim, handleRandomDuoAnim]);
 
   const handleFrameCommit = () => {
     setIsEditingFrame(false);
@@ -913,7 +885,17 @@ export function AnimFrameController({
               ))}
             </select>
           ) : (
-            <div className="btn-group btn-group-sm" role="group">
+            <div
+              className="btn-group btn-group-sm"
+              role="group"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  cycleFilteredAnim(e.key === 'ArrowUp' ? 'prev' : 'next');
+                }
+              }}
+            >
               <button
                 type="button"
                 className="btn py-0 px-2 btn-outline-secondary text-dark"
@@ -939,6 +921,13 @@ export function AnimFrameController({
                   setShowAnimSelector(v => !v);
                   setShowDuoSelector(false);
                   setShowPartnerSelector(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cycleFilteredAnim(e.key === 'ArrowUp' ? 'prev' : 'next');
+                  }
                 }}
                 title={
                   duoAnimDef
@@ -979,7 +968,17 @@ export function AnimFrameController({
           {isHumanCharacter && (
             <div className="d-flex align-items-center flex-wrap gap-1">
               {/* Sélecteur Duo + Précédent / Suivant + Dé */}
-              <div className="btn-group btn-group-sm" role="group">
+              <div
+                className="btn-group btn-group-sm"
+                role="group"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cycleFilteredDuoAnim(e.key === 'ArrowUp' ? 'prev' : 'next');
+                  }
+                }}
+              >
                 <button
                   type="button"
                   className="btn py-0 px-2 btn-outline-secondary text-dark"
@@ -1005,6 +1004,13 @@ export function AnimFrameController({
                     setShowDuoSelector(v => !v);
                     setShowAnimSelector(false);
                     setShowPartnerSelector(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      cycleFilteredDuoAnim(e.key === 'ArrowUp' ? 'prev' : 'next');
+                    }
                   }}
                   title={
                     duoAnimDef
