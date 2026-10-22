@@ -373,6 +373,7 @@ export function Character({
     setRotation: setAgentRotation,
     hasPendingDynamicTask,
     reportAnimationPlayback,
+    getStatus: getAgentStatus,
     initialPos,
   } = useAgentController(
     renderId,
@@ -856,7 +857,7 @@ export function Character({
       loadingAnimationRef.current = null;
     }
 
-    const postureTransition = !isPreview && !characterGrid && isPostureTransition(target);
+    const postureTransition = !isPreview && !characterGrid && getAgentStatus() === 'TRANSITIONING' && isPostureTransition(target);
     const idleId = resolveAnimationId('idle');
     const postureTargetId = target === resolveAnimationId('stand-to-sit') ? resolveAnimationId('sit-idle') : idleId;
     if (postureTransition && !actions[postureTargetId]) {
