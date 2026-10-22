@@ -1203,7 +1203,7 @@ export function buildSmartObjectInstructionSequence(
   if (objectId === 'freezer' || objectId === 'kallax-ne') {
     const doorKey: 'living' | 'glassRight' = objectId === 'freezer' ? 'living' : 'glassRight';
     return [
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, ...(objectId === 'freezer' ? { protectedDoor: doorKey } : { doorKey }) },
       ...(objectId === 'freezer' ? [
         {
           type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId,
