@@ -26,22 +26,26 @@ it('resolves each step from its own object and preserves explicit overrides', ()
   assert.equal(resolvePreviewInstruction(wait), wait);
   assert.throws(() => resolvePreviewInstruction({ type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'missing' }), /Slot preview introuvable/);
 });
-it('joue Pick Fruit une seule fois pour le pyjama et le Dröna supérieur NW', () => {
+it('rejoint directement les Dröna et joue une seule prise sans détour par la porte', () => {
   const { sequence } = load('src/features/scene/ai/smartObjectRegistry.ts', {}, source => {
     const start = source.indexOf('export function buildSmartObjectInstructionSequence(');
     const end = source.indexOf('/**\n * Résout un SmartObject', start);
     assert(start > 0 && end > start);
     return `export function sequence(id) {
       const SMART_OBJECTS = {}, BATHROOM_STORAGE_ITEMS = {}, KITCHEN_DRONA_ITEMS = {};
-      const DRONA_SE_ITEMS = { 'drona-se-pyjama': {} }, DRONA_SPECIAL_ITEMS = { 'drona-nw-upper': { shelf: 'nw' } };
+      const DRONA_SE_ITEMS = { 'drona-se-pyjama': {}, 'drona-se-linen': {} }, DRONA_SPECIAL_ITEMS = { 'drona-nw-upper': { shelf: 'nw' }, 'drona-se-care': { shelf: 'se' }, 'drona-ne-catchall2': { shelf: 'ne' } };
       const OccupancyManager = { canUseObject: () => true };
       const getSmartObject = objectId => ({ id: objectId, slots: [{ slotId: 'pick-item', animation: 'pick-fruit' }] });
       ${source.slice(start, end).replace('export function', 'function')}
       return buildSmartObjectInstructionSequence(id, 'pick-item');
     }`;
   });
-  for (const id of ['drona-se-pyjama', 'drona-nw-upper']) {
+  for (const id of ['drona-se-pyjama', 'drona-se-linen', 'drona-nw-upper', 'drona-se-care', 'drona-ne-catchall2']) {
     const steps = sequence(id), actions = steps.filter(step => step.type !== 'MOVE_TO');
+    const moves = steps.filter(step => step.type === 'MOVE_TO');
+    assert.equal(moves.length, 1, `${id}: une seule approche du bac`);
+    assert.equal(moves[0].doorKey, undefined, 'Aucun détour de dégagement de porte');
+    assert.equal(moves[0].protectedDoor, id === 'drona-nw-upper' ? undefined : id === 'drona-ne-catchall2' ? 'glassRight' : 'living');
     assert.equal(actions.length, 1);
     assert.equal(actions[0].animation, 'pick-fruit');
     assert.equal(actions[0].repeatCount, 1);

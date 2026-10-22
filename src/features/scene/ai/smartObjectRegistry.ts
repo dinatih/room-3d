@@ -1143,10 +1143,8 @@ export function buildSmartObjectInstructionSequence(
     const protectedDoor = storage?.shelf === 'nw' ? undefined
       : DRONA_SE_ITEMS[objectId] || storage?.shelf === 'se' ? 'living' as const : 'glassRight' as const;
     return [
-      ...(protectedDoor ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey: protectedDoor }] : []),
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor },
       { ...baseInstruction, repeatCount: 1, waitForAnimation: true, protectedDoor },
-      ...(protectedDoor ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey: protectedDoor, protectedDoor }] : []),
     ];
   }
 
