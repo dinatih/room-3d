@@ -14,8 +14,9 @@ describe('Moteur commun des personnages', () => {
       const end = source.indexOf('    const postureTransition =', start);
       assert(start >= 0 && end > start);
       return `import * as THREE from 'three';
-      export function select(target, actions, loadingAnimationRef, appLog, isPreview = false, current = 'sad-idle') {
+      export function select(target, actions, loadingAnimationRef, appLog, isPreview = false, current = 'sad-idle', status = 'IDLE') {
         const id = 'james', characterGrid = false, isTPose = target === 't-pose';
+        const getAgentStatus = () => status;
         const activeActionName = { current }, ANIMATION_LOADING_IDLE = 'thinking';
         const resolveAnimationId = id => id, getAnimationDef = () => undefined, loadAndPlayClip = () => {};
         ${source.slice(start, end)}
@@ -40,6 +41,14 @@ describe('Moteur commun des personnages', () => {
     actions['drona-pull'] = { loop: require('three').LoopOnce };
     assert.deepEqual(select('drona-search', actions, pending, log, false, 'drona-pull'),
       { target: 'drona-pull', isTemporaryLoadingFallback: true }, 'Keep the crouched gesture while the next phase loads');
+    actions['sitting-idle'] = { loop: THREE.LoopRepeat };
+    for (let frame = 0; frame < 3; frame++) {
+      assert.deepEqual(select('sit-to-stand', actions, pending, log, false, 'sitting-idle', 'TRANSITIONING'),
+        { target: 'sitting-idle', isTemporaryLoadingFallback: true }, 'Remain seated while the rise loads');
+    }
+    actions['sit-to-stand'] = {};
+    assert.deepEqual(select('sit-to-stand', actions, pending, log, false, 'sitting-idle', 'TRANSITIONING'),
+      { target: 'sit-to-stand', isTemporaryLoadingFallback: false });
   });
 
   it('journalise la veille globale une seule fois, même quand les personnages ne sont plus mis à jour', () => {

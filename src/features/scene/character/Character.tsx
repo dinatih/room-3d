@@ -837,7 +837,8 @@ export function Character({
         });
       }
       const idleId = resolveAnimationId('idle');
-      if (actions[activeActionName.current]?.loop === THREE.LoopOnce) {
+      if (actions[activeActionName.current] && (actions[activeActionName.current].loop === THREE.LoopOnce
+        || (!isPreview && !characterGrid && getAgentStatus() === 'TRANSITIONING'))) {
         target = activeActionName.current;
       } else if (!isPreview && !characterGrid && actions[ANIMATION_LOADING_IDLE]) {
         target = ANIMATION_LOADING_IDLE;
