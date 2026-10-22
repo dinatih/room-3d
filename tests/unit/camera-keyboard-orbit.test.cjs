@@ -14,7 +14,7 @@ for (const projection of ['ortho', 'persp']) {
             const preset = computeCameraPreset(-3 * Math.PI / 4, elevation);
             const camera = projection === 'ortho' ? new THREE.OrthographicCamera() : new THREE.PerspectiveCamera();
             camera.position.set(...preset.pos);
-            camera.up.set(...preset.up);
+            if (preset.up) camera.up.set(...preset.up);
             const controls = new OrbitControls(camera);
             controls.target.set(...preset.target);
             controls.update();
