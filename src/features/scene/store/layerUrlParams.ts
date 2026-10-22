@@ -9,6 +9,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   // Structure & architecture
   structure: false,
   wallStructure: false,
+  iceCastle: false,
   floorCoverings: true,
   environment: true,
   bnfMarker: true,
@@ -85,6 +86,7 @@ export interface LayerUrlMapping {
 }
 
 export const MONITORED_LAYERS: LayerUrlMapping[] = [
+  { layerKey: 'iceCastle', canonicalParam: 'iceCastle', urlParams: ['icecastle'] },
   {
     layerKey: 'lightsHD',
     canonicalParam: 'lightsHD',

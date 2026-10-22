@@ -23,11 +23,12 @@ export const wallMatHorizontal = new THREE.MeshStandardMaterial({
   side: THREE.DoubleSide,
 });
 export const noCapMat = new THREE.MeshBasicMaterial({ visible: false, transparent: true, opacity: 0 });
-// Faces extérieures : verre glacier, sans masquer le mobilier derrière.
+// Mode château de glace : parois translucides visibles des deux côtés.
 export const architecturalGlassMat = new THREE.MeshPhysicalMaterial({
   color: 0xbce8f4,
   transparent: true,
-  opacity: 0.16,
+  opacity: 0.22,
+  side: THREE.DoubleSide,
   depthWrite: false,
   roughness: 0.12,
   metalness: 0,
@@ -67,10 +68,10 @@ export const groundExteriorMat = new THREE.MeshStandardMaterial({
 });
 
 // Matériaux murs par orientation
-export const westMats  = boxFaceMats({ '+x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '+z': wallMat, '-z': wallMat }, architecturalGlassMat);
-export const eastMats  = boxFaceMats({ '-x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '+z': wallMat, '-z': wallMat }, architecturalGlassMat);
-export const northMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '+z': wallMat }, architecturalGlassMat);
-export const southMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '-z': wallMat }, architecturalGlassMat);
+export const westMats  = boxFaceMats({ '+x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '+z': wallMat, '-z': wallMat });
+export const eastMats  = boxFaceMats({ '-x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '+z': wallMat, '-z': wallMat });
+export const northMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '+z': wallMat });
+export const southMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMatHorizontal, '-y': wallMatHorizontal, '-z': wallMat });
 
 export const MAT_MAP: Record<string, THREE.Material | THREE.Material[]> = {
   west:    westMats,

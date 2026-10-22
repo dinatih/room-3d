@@ -85,6 +85,7 @@ export interface LayerState {
   cameraViewMarkers: boolean;
   structure: boolean;
   wallStructure: boolean;
+  iceCastle?: boolean;
   floorCoverings: boolean;
   environment: boolean;
   bnfMarker?: boolean;

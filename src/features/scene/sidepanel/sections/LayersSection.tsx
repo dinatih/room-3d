@@ -217,6 +217,7 @@ export function LayersSection({
       </div>
       {layerBtn('red',       iconLabel('bi-camera-video', 'Points de vue caméra rouges'), 'cameraViewMarkers')}
       {layerBtn('green',     iconLabel('bi-bricks', 'Structure murale (Alt+W)'), 'wallStructure', 'wireframeWallStructure')}
+      {layerBtn('cyan', iconLabel('bi-snow', 'Château de glace (murs et plafond)'), 'iceCastle')}
       {layerBtn('orange',    iconLabel('bi-layers', 'Revêtements sol (+ plinthes)'), 'floorCoverings')}
       {layerBtn('secondary', iconLabel('bi-building', 'Dalle et plafond (Alt+Q)'), 'structure', 'wireframeStructure')}
       {layerBtn('peach',     iconLabel('bi-door-open', 'Portes'), 'doors', 'wireframeDoors')}

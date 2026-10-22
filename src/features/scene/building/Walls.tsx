@@ -13,7 +13,7 @@ import {
 import { WoodenFencePanel } from '../items/WoodenFencePanel';
 import { GardenFrontWallScan } from './GardenFrontWallScan';
 import {
-  wallMat, southMats, MAT_MAP, caplessX, caplessZ, makeExtrudeGeo
+  architecturalGlassMat, wallMat, southMats, MAT_MAP, caplessX, caplessZ, makeExtrudeGeo
 } from './buildingCommon';
 import { MergedStaticGroup } from './MergedStaticGroup';
 
@@ -146,6 +146,8 @@ export function PillarLabels() {
 export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
   const wallEdges = useSceneStore(state => state.layers.wallEdges);
   const showLabels = pillarsOnly || wallEdges;
+  const iceCastle = useSceneStore(state => state.layers.iceCastle);
+  const materialOverride = iceCastle ? architecturalGlassMat : undefined;
 
   const diagGeos = useMemo(() => ({
     diagPillar: makeExtrudeGeo(PILLAR_KITE_NE, WALL_H),
@@ -158,7 +160,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
         {showLabels && <PillarLabels />}
 
         {/* ── Piliers ────────────────────────────────────────────────────────── */}
-        <MergedStaticGroup name="merged-pillars">
+        <MergedStaticGroup name="merged-pillars" materialOverride={materialOverride}>
           <group name="pillars">
             {PILLAR_DEFS.map((p) => {
               const pp = p as any;
@@ -188,7 +190,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
 
         {/* ── Murs ─────────────────────────────────────────────────────────────── */}
         {!pillarsOnly && (
-          <MergedStaticGroup name="merged-walls">
+          <MergedStaticGroup name="merged-walls" materialOverride={materialOverride}>
             <group name="walls">
               {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
                 const mat = MAT_MAP[d.mat ?? 'default'];

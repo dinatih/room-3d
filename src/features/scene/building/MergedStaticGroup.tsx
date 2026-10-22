@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { CategoryLayerContext } from '../sceneLayer';
 
-export function MergedStaticGroup({ children, name = 'merged-static', userData }: { children: React.ReactNode; name?: string; userData?: Record<string, any> }) {
+export function MergedStaticGroup({ children, name = 'merged-static', userData, materialOverride }: { children: React.ReactNode; name?: string; userData?: Record<string, any>; materialOverride?: THREE.Material }) {
   const categoryLayer = useContext(CategoryLayerContext);
   const sourceRef = useRef<THREE.Group>(null!);
   const mergedRef = useRef<THREE.Group>(null!);
@@ -51,7 +51,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
       processedMeshes.add(mesh);
 
       const geom = mesh.geometry;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const mats = materialOverride ? [materialOverride] : Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 
       // Transformation RELATIVE au groupe source (évite le double transform)
       const relMat = mesh.matrixWorld.clone().premultiply(invWorldMat);
@@ -109,7 +109,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
       const m = new THREE.Mesh(merged, mat);
       m.name = name;
       m.renderOrder = renderOrder;
-      m.castShadow = true;
+      m.castShadow = !mat.transparent;
       m.receiveShadow = true;
       m.userData = { ...userData, isMergedStatic: true };
       if (name !== 'merged-walls') {
@@ -142,9 +142,10 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
         m.visible = true;
         delete m.userData.wasMerged;
       });
+      dst.traverse(obj => { if (obj instanceof THREE.Mesh) obj.geometry.dispose(); });
       dst.clear();
     };
-  }, [categoryLayer]);
+  }, [categoryLayer, materialOverride]);
 
   return (
     <group userData={userData}>

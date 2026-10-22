@@ -655,6 +655,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
       }
       const nextLayers = { ...state.layers, [key]: isActivating };
       updateUrlLayer(key, isActivating);
+      if (key === 'iceCastle' && isActivating) {
+        nextLayers.wallStructure = true;
+        nextLayers.structure = true;
+        nextLayers.pillarsOnly = false;
+        updateUrlLayer('wallStructure', true);
+        updateUrlLayer('structure', true);
+        updateUrlLayer('pillarsOnly', false);
+      }
       if (key === 'mirrors') {
         cameraState.invalidate?.();
         if (!isActivating) {
