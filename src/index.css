@@ -150,7 +150,7 @@ button, input, select, textarea {
 .inventory-preview-canvas-wrap {
   width: 100%;
   aspect-ratio: 1 / 1;
-  max-height: 65vh;
+  max-height: 48vh;
   background: #d2d2d2;
   overflow: hidden;
   position: relative;

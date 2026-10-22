@@ -235,9 +235,9 @@ function FitCamera({ target = [0, 0, 0], boundsRadius }: { target?: [number, num
     if ((camera as any).isPerspectiveCamera && boundsRadius && boundsRadius > 0) {
       const perspCam = camera as THREE.PerspectiveCamera;
       const fovRad = (perspCam.fov * Math.PI) / 180;
-      // Distance idéale pour englober l'objet avec une marge de respiration de 30%
-      const dist = (boundsRadius / Math.sin(fovRad / 2)) * 1.15;
-      camera.position.set(dist * 0.75, target[1] + dist * 0.45, dist * 0.95);
+      const dist = (boundsRadius / Math.sin(fovRad / 2)) * 0.98;
+      const dir = new THREE.Vector3(0.75, 0.45, 0.95).normalize();
+      camera.position.set(target[0] + dir.x * dist, target[1] + dir.y * dist, target[2] + dir.z * dist);
       camera.near = Math.max(0.5, dist / 100);
       camera.far = Math.max(10000, dist * 20);
       camera.updateProjectionMatrix();
@@ -264,7 +264,7 @@ function OrthoCameraControls({
   const camRef = useRef<THREE.OrthographicCamera>(null);
 
   const viewH = useMemo(() => {
-    return Math.max(80, (boundsRadius || 50) * 2.2);
+    return Math.max(25, (boundsRadius || 50) * 2.0);
   }, [boundsRadius]);
 
   const viewW = viewH * aspect;
@@ -284,8 +284,9 @@ function OrthoCameraControls({
 
   const camPos: [number, number, number] = useMemo(() => {
     if (mode === 'free') {
-      const distance = Math.max(100, boundsRadius * 3.2);
-      return [target[0] + distance * 0.75, target[1] + distance * 0.45, target[2] + distance * 0.95];
+      const distance = Math.max(25, boundsRadius * 2.5);
+      const dir = new THREE.Vector3(0.75, 0.45, 0.95).normalize();
+      return [target[0] + distance * dir.x, target[1] + distance * dir.y, target[2] + distance * dir.z];
     }
     return [
       camTarget[0] + direction.x * 1000,
@@ -362,7 +363,7 @@ function PerspectivePresetControls({
   const camTarget = useMemo<[number, number, number]>(() => (
     mode === 'top' || mode === 'bottom' ? [0, 0, 0] : [0, target[1] || 85, 0]
   ), [mode, target]);
-  const distance = Math.max(100, (boundsRadius || 50) * 3.2);
+  const distance = Math.max(25, (boundsRadius || 50) * 2.5);
   const { direction, up } = useMemo(() => getPreviewViewConfig(mode, cameraElevation), [mode, cameraElevation]);
   const position = useMemo<[number, number, number]>(() => [
     camTarget[0] + direction.x * distance,
