@@ -312,7 +312,7 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
             </label>
           </>}
         </div>
-        <div className="animation-studio__preview w-100 position-relative">
+        <div className="w-100 position-relative">
           {active && currentItem ? <InventoryPreview key={mode} item={currentItem} height="100%" hideFooter showPhotoGallery={false} defaultShowGrid neutralLighting defaultAutoRotate={false} hideAnimFrameController preserveStateOnItemChange
             initialAnim={mode === 'solo' ? active.id : undefined} initialDuoAnim={active.duo} initialDuoPartner={partner?.id} />
             : <div className="h-100 d-flex align-items-center justify-content-center text-muted p-3">Modifiez les filtres pour sélectionner une animation.</div>}

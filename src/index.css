@@ -159,7 +159,7 @@ button, input, select, textarea {
   -webkit-user-select: none;
 }
 
-/* The catalog stays beside a scrolling workspace with a 16:9 analysis canvas. */
+/* The catalog stays beside a scrolling workspace. */
 .animation-studio {
   display: grid;
   grid-template-columns: minmax(0, 30%) 5px minmax(0, 1fr);
@@ -170,24 +170,6 @@ button, input, select, textarea {
   overflow-y: auto;
   min-width: 0;
   min-height: 0;
-}
-.animation-studio__preview {
-  min-height: 0;
-  min-width: 0;
-}
-.animation-studio__preview > .inventory-preview-container {
-  height: auto;
-  min-height: 0;
-}
-.animation-studio__preview .inventory-preview-canvas-wrap {
-  flex: 0 0 auto;
-  min-height: 0;
-  max-height: none;
-  aspect-ratio: 16 / 9;
-}
-.animation-studio__preview .view-control-bar-inline {
-  flex-shrink: 0;
-  max-width: 100%;
 }
 .animation-studio__tools {
   min-height: 0;
