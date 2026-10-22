@@ -29,16 +29,8 @@ export function SlidingDrona({ objectId, label, actionId, duration, isPreview = 
   useFrame((_, delta) => {
     const target = open ? 1 : 0;
     const synchronized = isPreview ? actionState.previewMotion?.[actionId] : dronaPlayback.get(actionId);
-    if (synchronized && typeof synchronized === 'object') {
-      ref.current.position.fromArray(synchronized.position);
-      ref.current.quaternion.fromArray(synchronized.quaternion);
-      progress.current = 0;
-      invalidate();
-      return;
-    }
     progress.current = synchronized ?? (open ? Math.min(target, progress.current + delta / duration) : Math.max(target, progress.current - delta / duration));
-    ref.current.position.set(0, 0, -travel.current * progress.current);
-    ref.current.quaternion.identity();
+    ref.current.position.z = -travel.current * progress.current;
     if (progress.current !== target) invalidate();
   });
   return (

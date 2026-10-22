@@ -1,4 +1,3 @@
-import { DRONA_CARRY_APPROACH } from '../animations/dronaCarryManifest';
 import { getAnimationDef } from '../animations/animationResolver';
 import { KALLAX_SE_DRONA_POSITIONS } from './kallaxSeDrona';
 import { FURNITURE_WALL_CLEARANCE } from '../wallData';
@@ -22,7 +21,7 @@ export const DRONA_SPECIAL_ITEMS = {
   'drona-nw-upper': {
     shelf: 'nw', index: 3, position: KALLAX_NW_DRONA_POSITIONS[3],
     label: 'Dröna supérieur NW', interaction: 'Prendre un objet dans le Dröna supérieur',
-    action: 'drona-nw-upper-slide', animationPrefix: 'drona-upper', approach: DRONA_CARRY_APPROACH,
+    action: 'drona-nw-upper-slide', animation: 'pick-fruit', approach: 80,
   },
   'drona-nw-trousers': {
     shelf: 'nw', index: 2, position: KALLAX_NW_DRONA_POSITIONS[2],
@@ -37,7 +36,7 @@ export const DRONA_SPECIAL_ITEMS = {
   },
 } satisfies Record<string, {
   shelf: string; index: number; position: [number, number, number];
-  label: string; interaction: string; action: string; animationPrefix: string; approach: number;
+  label: string; interaction: string; action: string; animationPrefix?: string; animation?: string; approach: number;
 }>;
 
 export const SPECIAL_DRONA_SLIDE_DURATION = getAnimationDef('drona-care-pull')!.duration!;

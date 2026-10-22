@@ -21,7 +21,7 @@ import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, beginAc
 import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { getExitTransition } from '../animations/animationTransitions';
 import { DRONA_SE_ITEMS } from '../items/kallaxSeDrona';
-import { dronaPlayback, sampleDronaMotion } from '../items/dronaPlayback';
+import { dronaPlayback } from '../items/dronaPlayback';
 import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS } from '../items/kallaxCuisineDrona';
@@ -493,7 +493,7 @@ export function createAgentController(
 
   const triggerInstructionEvent = (instruction: AgentInstruction) => {
     if (instruction.waitForAnimation) animationPlayback = null;
-    if (instruction.dronaMotion) dronaPlayback.set(instruction.dronaMotion.action, sampleDronaMotion(instruction.dronaMotion, 0));
+    if (instruction.dronaMotion) dronaPlayback.set(instruction.dronaMotion.action, instruction.dronaMotion.from);
     if (!instruction.triggerEventKey) return;
     useSceneStore.getState().triggerAction(instruction.triggerEventKey, instruction.triggerEventValue);
   };
@@ -1615,7 +1615,8 @@ export function createAgentController(
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     const motion = instruction?.dronaMotion;
     if (motion && resolveAnimationId(instruction.animation!) === animation) {
-      dronaPlayback.set(motion.action, sampleDronaMotion(motion, progress));
+      const fraction = Math.max(0, Math.min(1, (progress - motion.range[0]) / (motion.range[1] - motion.range[0])));
+      dronaPlayback.set(motion.action, motion.from + (motion.to - motion.from) * fraction);
     }
   };
 
