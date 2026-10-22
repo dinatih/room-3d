@@ -32,15 +32,44 @@ it('aligne les quatre rangements SDB devant leur façade avant l’arrivée fina
   });
   for (const [id, item] of Object.entries(BATHROOM_STORAGE_ITEMS)) {
     const steps = sequence(id), moves = steps.filter(step => step.type === 'MOVE_TO');
-    assert.equal(moves.length, 2, id);
-    const local = moves[0].targetLocalPos;
-    assert.equal(local[0], 0, 'Approche alignée avec le centre du rangement');
-    assert.equal(local[1] + item.position[1], 0, 'Approche au sol, y compris pour les bacs surélevés');
-    const finalDistance = item.kind === 'cabinet' ? 60 : BATHROOM_BOX_APPROACH;
-    assert.equal(Math.abs(local[2]) - finalDistance, BATHROOM_BOX_APPROACH);
-    assert.equal(Math.sign(local[2]), item.kind === 'cabinet' ? 1 : -1, 'Respecte la rotation des Dröna');
-    assert.equal(moves[1].targetLocalPos, undefined, 'Le dernier trajet utilise le point d’interaction validé');
+    assert.equal(moves.length, 1, id);
+    assert.equal(moves[0].targetLocalPos, undefined, 'Utilise l’approche déclarée dans le slot');
+    assert.equal(steps.find(step => step.waitForAnimation).type, 'USE_OBJECT', 'Rejoint le point d’utilisation après l’approche');
     assert.equal(steps.filter(step => step.waitForAnimation).length, 1);
+  }
+});
+it('déclare des approachOffset SDB visibles et résout deux destinations distinctes', () => {
+  const storage = require('../../src/features/scene/items/bathroomStorage.ts');
+  const walls = require('../../src/features/scene/wallData.ts');
+  const { objects } = load('src/features/scene/ai/smartObjectRegistry.ts', { fixtures: { ...storage, ...walls } }, source => {
+    const start = source.indexOf('  ...Object.fromEntries(Object.entries(BATHROOM_STORAGE_ITEMS)');
+    const end = source.indexOf("\n  'bathtub-garden':", start);
+    return `import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH, BATH_WEST_WALL, BATH_EAST_WALL } from 'fixtures';
+      const HUMAN_BODY_RADIUS = 28;
+      export const objects = { ${source.slice(start, end)} };`;
+  });
+  const { resolveInstructionCoords } = load('src/features/scene/ai/agent/agentInstructionCoords.ts', {
+    '../navigation/service': { getContainingObjectOwner: () => undefined, getObjectApproach: (owner, point) => point },
+    '../navigation/obstacles': { hasAgentProfile: () => true },
+    '../navigation/doorRequests': {}, '../../cameraState': {}, '../navigation/destinations': {},
+    '../smartObjectRegistry': { getSmartObject: id => objects[id] },
+    '../../animations/animationResolver': { resolveSlotAnimation: () => null },
+  });
+  for (const [id, item] of Object.entries(storage.BATHROOM_STORAGE_ITEMS)) {
+    const obj = objects[id], slot = obj.slots[0], c = Math.cos(item.rotationY), s = Math.sin(item.rotationY);
+    for (const key of ['offset', 'approachOffset']) {
+      const [x, y, z] = slot[key];
+      slot[key] = [item.position[0] + x * c + z * s, item.position[1] + y, item.position[2] - x * s + z * c];
+    }
+    obj.position = item.position;
+    assert(Math.abs(slot.approachOffset[0] - (walls.BATH_WEST_WALL + walls.BATH_EAST_WALL) / 2) < 1e-9);
+    const move = resolveInstructionCoords({ type: 'MOVE_TO', smartObjectId: id }, null, 'walker');
+    const use = resolveInstructionCoords({ type: 'USE_OBJECT', smartObjectId: id }, null, 'walker');
+    assert.deepEqual([move.tx, move.ty, move.tz], slot.approachOffset);
+    assert.deepEqual([use.tx, use.ty, use.tz], slot.offset);
+    assert.notEqual(move.tx, use.tx, 'Le premier trajet reste dans le passage central');
+    assert(move.tz > use.tz, 'Le point d’approche reste devant la façade');
+    assert.equal(move.ty, 0);
   }
 });
 it('resolves each step from its own object and preserves explicit overrides', () => {
