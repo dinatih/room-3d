@@ -7,6 +7,9 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'ulotte': ['ulotte-motion', 'ulotte-replay', 'animal-ulotte-fpv', 'animal-ulotte-follow'],
   'ushiro': ['shiba-replay', 'animal-shiba-fpv', 'animal-shiba-follow'],
   'black-hornet-drone': [
+    'animal-drone-fpv',
+    'animal-drone-follow',
+    'drone-pilot',
     'drone-patrol-all',
     'drone-goto-garden',
     'drone-goto-living',

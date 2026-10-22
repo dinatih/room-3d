@@ -167,13 +167,15 @@ const ACTIONS: Record<string, ActionConfig> = {
   },
   'shiba-replay': { label: 'Rejouer', sceneOnly: true },
   'robin-bird-replay': { label: 'Rejouer' },
-  'drone-patrol-all': { label: '🛸 Patrouille tout le studio & jardin' },
-  'drone-goto-garden': { label: '🌿 Aller au Jardin' },
-  'drone-goto-living': { label: '🛋️ Aller au Salon' },
-  'drone-goto-kitchen': { label: '🍳 Aller à la Cuisine' },
-  'drone-goto-bathroom': { label: '🚿 Aller à la Salle de bain' },
-  'drone-goto-corridor': { label: '🚪 Aller au Couloir' },
-  'drone-toggle-land': { label: ['🛬 Atterrir', '🛫 Décoller'] },
+  'drone-pilot': { label: 'Piloter le Hornet', icon: 'bi-controller', sceneOnly: true },
+  'animal-drone-fpv': { label: 'Vue Hornet', icon: 'bi-eye', sceneOnly: true },
+  'drone-patrol-all': { label: '🛸 Patrouille tout le studio & jardin', sceneOnly: true },
+  'drone-goto-garden': { label: '🌿 Aller au Jardin', sceneOnly: true },
+  'drone-goto-living': { label: '🛋️ Aller au Salon', sceneOnly: true },
+  'drone-goto-kitchen': { label: '🍳 Aller à la Cuisine', sceneOnly: true },
+  'drone-goto-bathroom': { label: '🚿 Aller à la Salle de bain', sceneOnly: true },
+  'drone-goto-corridor': { label: '🚪 Aller au Couloir', sceneOnly: true },
+  'drone-toggle-land': { label: ['🛬 Atterrir', '🛫 Décoller'], sceneOnly: true },
   nestMini: { label: 'Ok Google 🎙️' },
   'tv-toggle': { label: ['Allumer', 'Éteindre'] },
   'bin-toggle': { label: ['Ouvrir', 'Fermer'] },
@@ -194,7 +196,7 @@ const ACTIONS: Record<string, ActionConfig> = {
 
 export function getActionDef(id: string): ActionDef | undefined {
   if (ACTIONS[id]) return { id, ...ACTIONS[id] };
-  if (/^animal-(robin|shiba|ulotte|jikin|tosakin)-(fpv|follow)$/.test(id)) {
+  if (/^animal-(robin|shiba|ulotte|jikin|tosakin|drone)-(fpv|follow)$/.test(id)) {
     const fpv = id.endsWith('-fpv');
     return { id, label: fpv ? 'Vue FPV' : 'Suivre', icon: fpv ? 'bi-eye' : 'bi-camera-video', sceneOnly: true };
   }

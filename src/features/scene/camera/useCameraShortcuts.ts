@@ -6,6 +6,7 @@ import type { ArrowControl, CameraMode, FollowPosition } from './types';
 import { chooseRandomCharacter } from '../store/randomCharacter';
 import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
+import { useDroneControlStore } from '../droneControls';
 import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import { frameCharacterGridOrtho, frameCharacterGridCamera, getCharacterGridCameraView } from '../character/characterGridUtils';
@@ -79,6 +80,7 @@ export function useCameraShortcuts({
       document.dispatchEvent(new CustomEvent('camera-arrow-keys', { detail: arrows }));
     };
     const chooseFollow = (x: number, z: number, mode: 'follow' | 'fpv' = 'follow') => {
+      if (cameraState.animalTarget === 'drone') cameraState.animalTarget = null;
       useSceneStore.getState().setArrowControl(mode === 'fpv' ? 'character' : 'camera');
       enterFollow(x, z, mode);
     };
@@ -202,6 +204,7 @@ export function useCameraShortcuts({
     const onDown = (e: KeyboardEvent) => {
       // Plane mode owns input — bail out so arrow/WASD don't move character or camera.
       if (planeModeRef.current || cameraState.isIntroRunning) return;
+      if (useDroneControlStore.getState().piloting && e.key !== 'Escape') return;
 
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {

@@ -26,6 +26,7 @@ import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 import { cameraState } from './cameraState';
+import { droneInput, useDroneControlStore } from './droneControls';
 import { useSceneStore } from './store/useSceneStore';
 import { CHARACTERS } from './characterConfig';
 import { appLog } from '@features/ui/AppConsole';
@@ -100,6 +101,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const planeModeRef = useRef(planeMode);
   useEffect(() => {
     planeModeRef.current = planeMode;
+    if (planeMode) {
+      useDroneControlStore.getState().setPiloting(false);
+      if (cameraState.animalTarget === 'drone') cameraState.animalTarget = null;
+    }
   }, [planeMode]);
 
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
@@ -250,6 +255,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
     modeRef.current = m;
     cameraState.mode = m;
+    if (m !== 'fpv' || cameraState.animalTarget !== 'drone') useDroneControlStore.getState().setPiloting(false);
     if (m !== 'fpv' && m !== 'follow') cameraState.animalTarget = null;
     document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: Boolean(cameraState.animalTarget) }));
     setMode(m);
@@ -602,17 +608,26 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   useEffect(() => {
     const handler = (event: Event) => {
-      const match = /^animal-(robin|shiba|ulotte|jikin|tosakin)-(fpv|follow)$/.exec((event as CustomEvent<{ key: string }>).detail.key);
+      const key = (event as CustomEvent<{ key: string }>).detail.key;
+      const pilot = key === 'drone-pilot';
+      const match = /^animal-(robin|shiba|ulotte|jikin|tosakin|drone)-(fpv|follow)$/.exec(pilot ? 'animal-drone-fpv' : key);
       if (!match) return;
+      if (planeModeRef.current || cameraState.isXR || cameraState.isIntroRunning) return;
       const [, id, requestedMode] = match;
       const view = cameraState.animalViews[id];
-      if (!view) throw new Error(`Animal non disponible pour la caméra : ${id}`);
+      if (!view) throw new Error(`Cible non disponible pour la caméra : ${id}`);
       cameraState.animalTarget = id;
+      if (pilot && !useDroneControlStore.getState().piloting) {
+        droneInput.yaw = Math.atan2(view.forward.x, view.forward.z);
+        droneInput.pitch = Math.asin(view.forward.y);
+      }
+      useDroneControlStore.getState().setPiloting(pilot);
       animalFollowYaw.current = Math.atan2(view.forward.x, view.forward.z);
       hasAnimalFollowPose.current = false;
       document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: true }));
       keys.current.clear();
       enterFollow(view.eyes.x, view.eyes.z, requestedMode as 'fpv' | 'follow');
+      useSceneStore.getState().setActiveCameraPos(null);
       orbitYaw.current = 0;
       orbitPitch.current = DEFAULT_ORBIT_PITCH;
       orbitDistance.current = view.radius * 3;

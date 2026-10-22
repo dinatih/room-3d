@@ -8,6 +8,8 @@ import { glbLocalBBox } from '@features/scene/glbUtils';
 import { appLog } from '@features/ui/AppConsole';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { cameraState } from '@features/scene/cameraState';
+import { droneInput, droneMovement, useDroneControlStore } from '../droneControls';
+import { useDroneControls } from '../camera/useDroneControls';
 
 const GLB_PATH = '/items/black-hornet/black-hornet.glb';
 const TARGET_LENGTH_CM = 16.8; // Longueur réelle du nano-drone Black Hornet (environ 16,8 cm)
@@ -70,15 +72,17 @@ export function BlackHornetDrone({
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const modelRef = useRef<THREE.Group>(null);
   const currentAction = useRef<THREE.AnimationAction | null>(null);
-
-  // Bones du rotor pour animation manuelle / lissage additionnel si désiré
-  const mainRotorBone = useRef<THREE.Object3D | null>(null);
-  const tailRotorBone = useRef<THREE.Object3D | null>(null);
+  const piloting = useDroneControlStore(state => state.piloting);
+  useDroneControls(isPreview);
+  const cameraMount = useRef(new THREE.Vector3());
+  const cameraPosition = useRef(new THREE.Vector3());
+  const cameraForward = useRef(new THREE.Vector3());
+  const cameraRadius = useRef(0);
 
   // État de vol autonome
   const currentWaypointIdx = useRef(0);
   const hoverTimer = useRef(0);
-  const flightState = useRef<'hovering' | 'flying' | 'landed'>('flying');
+  const flightState = useRef<'hovering' | 'flying' | 'landed' | 'manual' | 'holding'>('flying');
   const targetRoomFilter = useRef<string | null>(null);
 
   // Vecteurs temporaires de vol pour zéro garbage collection
@@ -111,9 +115,6 @@ export function BlackHornetDrone({
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
 
-    mainRotorBone.current = scene.getObjectByName('Bone') ?? null;
-    tailRotorBone.current = scene.getObjectByName('Bone.002') ?? null;
-
     const box = glbLocalBBox(scene);
     const size = box.getSize(new THREE.Vector3());
     const length = Math.max(size.x, size.y, size.z);
@@ -124,6 +125,9 @@ export function BlackHornetDrone({
       const scaledBox = glbLocalBBox(scene);
       // Centrer en X/Z et poser à Y=0 si posé au sol
       scene.position.set(-scaledBox.getCenter(new THREE.Vector3()).x, -scaledBox.min.y, -scaledBox.getCenter(new THREE.Vector3()).z);
+      const dimensions = scaledBox.getSize(new THREE.Vector3());
+      cameraMount.current.set(0, dimensions.y / 2, dimensions.z / 2);
+      cameraRadius.current = dimensions.length() / 2;
       onSize?.(scaledBox.getSize(new THREE.Vector3()));
     }
 
@@ -162,12 +166,30 @@ export function BlackHornetDrone({
     return () => {
       if (!isPreview) {
         delete cameraState.positions['drone'];
+        delete cameraState.animalViews.drone;
+        if (cameraState.animalTarget === 'drone') {
+          cameraState.animalTarget = null;
+          document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: false }));
+        }
+        useDroneControlStore.setState({ available: false });
+        useDroneControlStore.getState().setPiloting(false);
       }
       mixerRef.current?.stopAllAction();
       mixerRef.current?.uncacheRoot(scene);
       currentAction.current = null;
     };
   }, [scene, animations, isPreview, previewAnim, invalidate, onSize]);
+
+  useEffect(() => {
+    if (isPreview) return;
+    if (piloting) {
+      flightState.current = 'manual';
+      playAnimation('Drone_Hover');
+    } else if (flightState.current === 'manual') {
+      flightState.current = 'holding';
+    }
+    invalidate();
+  }, [piloting, isPreview, invalidate]);
 
   // Commandes via les actions UI (HoverMenu ou événements)
   useEffect(() => {
@@ -177,11 +199,14 @@ export function BlackHornetDrone({
       if (!key) return;
 
       if (key === 'drone-patrol-all') {
+        useDroneControlStore.getState().setPiloting(false);
         targetRoomFilter.current = null;
         flightState.current = 'flying';
+        targetPos.current.copy(FLIGHT_WAYPOINTS[currentWaypointIdx.current].pos);
         playAnimation('Drone_Fly');
         appLog('drone', 'Mode patrouille générale activé : visite de tout le studio et du jardin.');
       } else if (key.startsWith('drone-goto-')) {
+        useDroneControlStore.getState().setPiloting(false);
         const room = key.replace('drone-goto-', '');
         targetRoomFilter.current = room;
         const candidateIdx = FLIGHT_WAYPOINTS.findIndex(w => w.room === room);
@@ -193,6 +218,7 @@ export function BlackHornetDrone({
           appLog('drone', `En route vers la pièce : ${FLIGHT_WAYPOINTS[candidateIdx].label}`);
         }
       } else if (key === 'drone-toggle-land') {
+        useDroneControlStore.getState().setPiloting(false);
         if (flightState.current === 'landed') {
           flightState.current = 'flying';
           playAnimation('Drone_Fly');
@@ -242,18 +268,21 @@ export function BlackHornetDrone({
 
     const model = modelRef.current;
 
+    if (flightState.current === 'manual') {
+      const speed = useDroneControlStore.getState().speed * (droneInput.keys.has('Shift') ? 3 : 1);
+      droneMovement(droneInput.keys, droneInput.yaw, droneInput.pitch, moveDirection.current);
+      model.position.addScaledVector(moveDirection.current, speed * delta);
+      model.rotation.set(0, droneInput.yaw, 0);
+      return;
+    }
+    if (flightState.current === 'holding') return;
+
     // Si le drone est posé
     if (flightState.current === 'landed') {
       // Descendre doucement vers le sol le plus proche (par ex. Y=12 cm ou sur une table)
       if (model.position.y > 10) {
         model.position.y = THREE.MathUtils.lerp(model.position.y, 8, delta * 2);
       }
-      cameraState.positions['drone'] = {
-        x: model.position.x,
-        y: model.position.y,
-        z: model.position.z,
-        yaw: model.rotation.y,
-      };
       return;
     }
 
@@ -326,13 +355,28 @@ export function BlackHornetDrone({
       }
     }
 
-    // Publication de la position pour la Minimap et la caméra FPV
-    cameraState.positions['drone'] = {
-      x: model.position.x,
-      y: model.position.y,
-      z: model.position.z,
-      yaw: model.rotation.y,
-    };
+  });
+
+  // Pose stabilisée de la caméra, indépendante des oscillations du squelette animé.
+  useFrame(() => {
+    const model = modelRef.current;
+    if (isPreview || !model) return;
+    model.updateWorldMatrix(true, false);
+    cameraPosition.current.copy(cameraMount.current);
+    model.localToWorld(cameraPosition.current);
+    if (flightState.current === 'manual' || flightState.current === 'holding') {
+      cameraForward.current.set(Math.sin(droneInput.yaw) * Math.cos(droneInput.pitch), Math.sin(droneInput.pitch), Math.cos(droneInput.yaw) * Math.cos(droneInput.pitch));
+    } else {
+      model.getWorldDirection(cameraForward.current);
+    }
+    const view = cameraState.animalViews.drone ??= { eyes: { x: 0, y: 0, z: 0 }, forward: { x: 0, y: 0, z: 1 }, radius: cameraRadius.current };
+    Object.assign(view.eyes, cameraPosition.current);
+    Object.assign(view.forward, cameraForward.current);
+    const position = cameraState.positions.drone ??= { x: 0, y: 0, z: 0, yaw: 0 };
+    model.getWorldPosition(cameraPosition.current);
+    Object.assign(position, cameraPosition.current);
+    position.yaw = model.rotation.y;
+    if (!useDroneControlStore.getState().available) useDroneControlStore.setState({ available: true });
   });
 
   return (
