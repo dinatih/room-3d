@@ -8,7 +8,7 @@ import { getDebugPreset } from './debugPresets';
 export const LAYER_DEFAULTS: Record<string, boolean> = {
   // Structure & architecture
   structure: false,
-  wallStructure: true,
+  wallStructure: false,
   floorCoverings: true,
   environment: true,
   bnfMarker: true,
