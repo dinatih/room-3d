@@ -11,7 +11,7 @@ import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }      from './Kallax2x1';
 import { ShoeHatRack }    from './ShoeHatRack';
-import { SHOE_HAT_RACK_WALL_RECESS, FREEZER_SHOE_RACK_OFFSET } from '../shoeHatRackData';
+import { SHOE_HAT_RACK_WALL_RECESS } from '../shoeHatRackData';
 import { DroneCell } from './Drona';
 import { Freezer }        from './Freezer';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -80,7 +80,7 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
   return (
     <group ref={ref}>
       {/* Congélateur CHIQ au sol sous la tour Kallax (Y = 0, pivoté de +90°) */}
-      <group position={[0, 0, -FREEZER_SHOE_RACK_OFFSET]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
+      <group position={[2, 0, 0]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
         <Freezer item={k('freezer')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
