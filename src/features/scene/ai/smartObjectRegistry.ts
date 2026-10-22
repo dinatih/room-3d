@@ -1214,11 +1214,6 @@ export function buildSmartObjectInstructionSequence(
       ...(objectId === 'freezer' ? [
         {
           type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId,
-          animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration,
-          rotY: slot.rotY, protectedDoor: doorKey,
-        },
-        {
-          type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId,
           animation: 'idle', duration: FREEZER_DOOR_DURATION, rotY: slot.rotY,
           protectedDoor: doorKey, triggerEventKey: 'freezer', triggerEventValue: false,
         },
