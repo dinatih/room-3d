@@ -6,7 +6,7 @@ import { getObjectActionIds } from '@features/scene/objectActions';
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, WIG_SOURCES, getWigSource, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
-import { InventorySmartActions, getInventorySmartObjects } from './InventorySmartActions';
+import { InventorySmartActions, getInventorySmartObjects, type SmartActionPreviewRequest } from './InventorySmartActions';
 import { SpatialZonePreview } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
 import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
@@ -84,10 +84,11 @@ const WIG_COLOR_OPTIONS = [
   { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
 ];
 
-function ItemDetailContent({ item, wigColor, wigBustVariant, onInvite }: { item: PreviewTarget; wigColor?: string; wigBustVariant?: string; onInvite: () => void }) {
+function ItemDetailContent({ item, wigColor, wigBustVariant }: { item: PreviewTarget; wigColor?: string; wigBustVariant?: string }) {
   if (!item) return null;
 
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
+  const [smartAction, setSmartAction] = useState<SmartActionPreviewRequest>();
   const [selectedDuoAnim, setSelectedDuoAnim] = useState<DuoAnimationDef | undefined>(undefined);
   const [selectedDuoPartner, setSelectedDuoPartner] = useState<string | undefined>(undefined);
   const [glbStats, setGlbStats] = useState<{ fileSize?: number; triangles: number; drawCalls: number } | null>(null);
@@ -225,6 +226,7 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, onInvite }: { item:
           item={item as any}
           height="100%"
           hideFooter={true}
+          smartAction={smartAction}
           initialDuoAnim={selectedDuoAnim}
           initialDuoPartner={selectedDuoPartner}
           externalHairColor={!isStorage && (item as InventoryItem).category === 'wigs' ? (wigColor || undefined) : undefined}
@@ -274,7 +276,7 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, onInvite }: { item:
           )}
         </div>
 
-        <InventorySmartActions itemId={item.id} onInvite={onInvite} />
+        <InventorySmartActions itemId={item.id} request={smartAction} onPreview={setSmartAction} />
 
         <div className="row g-2 mb-3">
           <div className="col-6">
@@ -1196,7 +1198,7 @@ function normalizeSearchStr(str: string): string {
                 <p className="small mb-0">Sélectionnez un item<br />pour afficher son détail</p>
               </div>
             ) : (
-              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} onInvite={onClose} />
+              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} />
             )}
           </div>
         </div>
@@ -1214,7 +1216,7 @@ function normalizeSearchStr(str: string): string {
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowMobileModal(false)}></button>
               </div>
               <div className="modal-body p-0 pb-5" style={{ overflowY: 'auto' }}>
-                <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} onInvite={onClose} />
+                <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} />
               </div>
               <div className="modal-footer glass-card position-absolute bottom-0 start-0 end-0 p-2">
                 <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowMobileModal(false)}>Fermer</button>

@@ -1,3 +1,6 @@
+import { SmartActionPreview } from './SmartActionPreview';
+import type { SmartActionPreviewRequest } from './InventorySmartActions';
+import type { SceneItemProps } from '@shared/types';
 import { CustomAnimationFurniture } from './CustomAnimationFurniture';
 import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
@@ -432,6 +435,9 @@ function GroundDatumLines({ mode }: { mode: string }) {
 }
 
 function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, wireframe = false, glbPath, onTargetChange, onBoundsChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; wireframe?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (radius: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
+  const PreviewComponent = useMemo(() => Component ?? function GlbPreview({ onSize }: SceneItemProps) {
+    return <GlbScene glbPath={glbPath!} onSize={() => onSize(new THREE.Vector3())} onStats={onStats} />;
+  }, [Component, glbPath, onStats]);
   const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!);
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
   const lastTargetYRef = useRef<number | null>(null);
@@ -611,7 +617,9 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     <group>
       <group ref={outerRef}>
         <group ref={innerRef}>
-          {Component ? <Component item={item ?? {} as any} isPreview actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
+          {actionState.smartAction
+            ? <SmartActionPreview key={actionState.smartAction.runId} Component={PreviewComponent} item={item ?? {} as any} isPreview actionState={actionState} onSize={fit} request={actionState.smartAction} />
+            : <PreviewComponent item={item ?? {} as any} isPreview actionState={actionState} onSize={fit} />}
           {preserveOriginXZ && !actionState.duoAnimDef && <CustomAnimationFurniture key={actionState.characterAnim} animationId={actionState.characterAnim} onSize={fit} />}
         </group>
       </group>
@@ -683,8 +691,10 @@ export function InventoryPreview({
   externalHairColor,
   externalLaraVariant,
   onGlbStats,
+  smartAction,
 }: {
   item: PreviewTarget;
+  smartAction?: SmartActionPreviewRequest;
   width?: string | number;
   height?: string | number;
   hideFooter?: boolean;
@@ -849,6 +859,7 @@ export function InventoryPreview({
     : undefined;
   const baseActionStates = {
     ...actionStates,
+    smartAction,
     simulateMotion,
     ...(externalHairColor ? { previewHairColor: externalHairColor } : {}),
     ...(externalLaraVariant ? { previewLaraVariant: externalLaraVariant } : {}),
@@ -857,7 +868,7 @@ export function InventoryPreview({
     ? { ...baseActionStates, duoPartnerId: duoParticipants.partnerId }
     : baseActionStates;
 
-  const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
+  const showing3D = has3D && (Boolean(smartAction) || !hasPhotos || viewMode === '3d'), showingPhotos = !smartAction && hasPhotos && (!has3D || viewMode === 'photos');
 
   const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters') && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id);
   const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone'].includes(item.id));
@@ -1031,7 +1042,7 @@ export function InventoryPreview({
           {showing3D ? (
             <>
             <Canvas className="inventory-preview-renderer" key={preserveStateOnItemChange ? undefined : item.id} shadows={item.id === 'fridge'} frameloop="always" events={() => ({ enabled: false } as any)} camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
-              <PreviewEnvironment showGrid={showGrid} neutralLighting={neutralLighting} />
+              <PreviewEnvironment showGrid={showGrid} neutralLighting={neutralLighting || Boolean(smartAction)} />
               <ambientLight intensity={0.7} />
               <directionalLight position={[150, 250, 150]} intensity={1.0} />
               <directionalLight position={[-100, 50, -100]} intensity={0.4} color="#aabbff" />
@@ -1046,7 +1057,7 @@ export function InventoryPreview({
                   {previewView === 'free' ? (
                     <>
                       <FitCamera target={target} boundsRadius={boundsRadius} />
-                      <OrbitControls mouseButtons={getOrbitMouseButtons(orbitMouseMode)} touches={getOrbitTouches(orbitMouseMode)} autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan enableZoom target={target} onStart={() => setAutoRotate(false)} />
+                      <OrbitControls mouseButtons={getOrbitMouseButtons(orbitMouseMode)} touches={getOrbitTouches(orbitMouseMode)} autoRotate={autoRotate && !smartAction} autoRotateSpeed={1.2} enablePan enableZoom target={target} onStart={() => setAutoRotate(false)} />
                     </>
                   ) : (
                     <PerspectivePresetControls mode={previewView} target={target} boundsRadius={boundsRadius} />

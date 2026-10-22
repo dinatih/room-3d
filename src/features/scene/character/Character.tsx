@@ -101,6 +101,7 @@ export function Character({
   targetHeight,
   isActive,
   isPreview = false,
+  previewPlayback,
   characterIndex = 0,
   totalCharacters = 1,
   characterAnim = 'idle',
@@ -962,7 +963,7 @@ export function Character({
         const isControlledByStore = isPreview || characterGrid;
         if (isPreview) {
           // A replacement preview character joins the shared playback clock.
-          to.time = useAnimPreviewStore.getState().currentTime;
+          to.time = previewPlayback?.time ?? useAnimPreviewStore.getState().currentTime;
         } else if (isControlledByStore) {
           const store = useAnimPreviewStore.getState();
           if (store.isPlaying && !store.isScrubbing) {
@@ -1005,7 +1006,22 @@ export function Character({
 
     let pendantDelta = 0;
     let resetPendant = isTPose;
-    if (isControlledByStore) {
+    if (isPreview && previewPlayback) {
+      const action = actions[activeActionName.current];
+      if (action && !isTemporaryLoadingFallback && target === resolveAnimationId(characterAnim)) {
+        previewPlayback.ready = true;
+        previewPlayback.duration = action.getClip().duration;
+        action.enabled = true;
+        action.setEffectiveWeight(1).setEffectiveTimeScale(1);
+        action.setLoop(THREE.LoopOnce, 0);
+        action.clampWhenFinished = true;
+        action.paused = false;
+        mixer.setTime(Math.min(previewPlayback.time, previewPlayback.duration));
+        action.paused = true;
+        pendantDelta = previewPlayback.playing ? delta : 0;
+        updatePhysics(pendantDelta, { haircut, isMoving: false, targetAnim: target, characterAnim, clockElapsedTime: previewPlayback.time }, scene);
+      }
+    } else if (isControlledByStore) {
       actions[activeActionName.current]?.setEffectiveTimeScale(1);
       const store = useAnimPreviewStore.getState();
       const animDelta = delta * (store.speed || 1);

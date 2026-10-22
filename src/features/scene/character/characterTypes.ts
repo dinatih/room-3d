@@ -3,7 +3,10 @@ import type { LaraVariant } from '../LaraVariants';
 import type { CharacterConfig } from '../characterConfig';
 import type { DuoAnimationDef } from '../animations/duoAnimations';
 
+export interface PreviewPlayback { time: number; duration: number; ready: boolean; playing: boolean; }
+
 export interface CharacterGroupProps {
+  previewPlayback?: PreviewPlayback;
   isPreview?: boolean;
   previewCharacterId?: string;
   previewHaircut?: string;

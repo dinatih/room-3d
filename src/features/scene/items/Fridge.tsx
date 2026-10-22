@@ -99,7 +99,7 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
 
   useFrame((_, delta) => {
     const r = runtime.current;
-    if (!r) return;
+    if (!r || (isPreview && actionState.previewPaused)) return;
     const desired = target.current;
     const doorEnd = desired.door ? r.door.getClip().duration : 0;
     const drawerEnd = desired.crisper ? r.crisper.getClip().duration : 0;
