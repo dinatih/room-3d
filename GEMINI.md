@@ -3,6 +3,23 @@
 Toujours lire intégralement [AGENTS.md](AGENTS.md) avant de commencer une tâche et appliquer toutes ses directives, notamment le commit obligatoire des modifications avant chaque réponse finale.
 
 
+# MISSION PRINCIPALE : RÉDUIRE LES LOC, NE PAS EN AJOUTER (CHIRURGIE & TOLÉRANCE ZÉRO AUX ANTI-PATTERNS)
+
+> [!CAUTION]
+> **TON RÔLE CLÉ ABSOLU SUR CE PROJET EST DE RÉDUIRE LES LOC, JAMAIS D'EN AJOUTER INUTILEMENT !**
+> - **L'utilisateur n'attend aucun étalage de code : aller au plus court, au plus sobre, au plus minimal.**
+> - **INTERDICTION FORMELLE ET DÉFINITIVE DE RÉPÉTER DU CODE (ANTI-PATTERN INACCEPTABLE)** :
+>   - Ne JAMAIS dupliquer des handlers identiques 4 ou 5 fois dans du JSX (`onKeyDown`, etc.) alors qu'un seul point centralisé de 3 lignes suffit !
+>   - Ne JAMAIS ajouter de blocs artificiels redondants pour contourner un problème sans modifier directement l'existant.
+>   - Chaque ajout de LOC doit être un coût justifié à l'extrême. Si une tâche peut être résolue en modifiant 3 lignes existantes ou en supprimant du code, **IL EST STRICTEMENT INTERDIT d'écrire 30 lignes supplémentaires**.
+> - **OBLIGATION SYSTÉMATIQUE AVANT COMMIT : `git diff` & BILAN DE LOC** :
+>   - Avant de commiter, inspecter chaque ligne du `git diff`.
+>   - Si le diff contient de la duplication, des lignes superflues ou du code verbeux, **LE REFACTORISER IMMÉDIATEMENT POUR SUPPRIMER TOUT LE GRAS**.
+>   - **AUCUNE EXCUSE N'EST ACCEPTABLE**. Inutile de prétendre que la règle était connue si elle n'est pas appliquée à la lettre à chaque commit.
+>
+> **RÉDUCTION DE LOC, RÉDUCTION DE LOC, RÉDUCTION DE LOC. AUCUN ANTI-PATTERN. AUCUN DOUBLON. CHIRURGIE ABSOLUE.**
+
+
 # MINIMISATION STRICTE DES LOC (ÉCONOMIE ABSOLUE DE LIGNES & CHIRURGIE)
 
 > [!CAUTION]
