@@ -203,8 +203,8 @@ export function useCameraShortcuts({
     };
 
     const onDown = (e: KeyboardEvent) => {
-      // Plane mode owns input — bail out so arrow/WASD don't move character or camera.
-      if (planeModeRef.current || cameraState.isIntroRunning) return;
+      // Plane mode or inventory owns input — bail out so arrow/WASD don't move character or camera.
+      if (planeModeRef.current || cameraState.isIntroRunning || cameraState.isInventoryOpen) return;
       if (useDroneControlStore.getState().piloting && e.key !== 'Escape') return;
 
       const target = e.target as HTMLElement;

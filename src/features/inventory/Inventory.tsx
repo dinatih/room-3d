@@ -831,7 +831,7 @@ function normalizeSearchStr(str: string): string {
       } else {
         if ((isTyping && !isSearchInput) || tag === 'SELECT' || isInsideDetail) return;
       }
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (!e.ctrlKey && !e.altKey && !e.shiftKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
         if (navList.length === 0) return;
         e.preventDefault();
         e.stopPropagation();

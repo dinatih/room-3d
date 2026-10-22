@@ -26,6 +26,7 @@ export const cameraState = {
   /** Follow mode : état partagé avec CharacterGroup.tsx */
   isFollowing: false as boolean,
   isMoving:  false as boolean,
+  isInventoryOpen: false as boolean,
   isDragging: false as boolean,
   isAIControlled: false as boolean,
   /** Timestamp de la dernière action manuelle utilisateur (flèches clavier, clic VR) */

@@ -467,6 +467,10 @@ export function Studio() {
   const [inventoryInitialCat, setInventoryInitialCat] = useState<string>(initialInvUrl.category);
   const [inventoryNavigation, setInventoryNavigation] = useState(0);
   useEffect(() => {
+    cameraState.isInventoryOpen = showInventory;
+    return () => { cameraState.isInventoryOpen = false; };
+  }, [showInventory]);
+  useEffect(() => {
     if (!showInventory && parseUrlInventory().open) updateUrlInventory(false);
   }, [showInventory]);
   useEffect(() => {
