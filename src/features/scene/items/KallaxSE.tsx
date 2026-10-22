@@ -11,6 +11,7 @@ import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }      from './Kallax2x1';
 import { ShoeHatRack }    from './ShoeHatRack';
+import { SHOE_HAT_RACK_WALL_RECESS } from '../shoeHatRackData';
 import { DroneCell } from './Drona';
 import { Freezer }        from './Freezer';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -95,9 +96,8 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
 
       {!noDrona && <KallaxSEDrona isPreview={isPreview} actionState={actionState} />}
 
-      {/* ShoeHatRack — au sol, côté mur D, flush mur B */}
-      {/* local: x = stack_z − z_world = −w1/2, z = x_world − stack_x = DEP/2 */}
-      <group position={[-w1 / 2, 0, DEP / 2]} rotation-y={-Math.PI} userData={{ animUnit: true }}>
+      {/* Porte-chaussures côté mur D, reculé vers le mur est. */}
+      <group position={[-w1 / 2, 0, DEP / 2 + SHOE_HAT_RACK_WALL_RECESS]} rotation-y={-Math.PI} userData={{ animUnit: true }}>
         <ShoeHatRack item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noCaps={noCaps} />
       </group>
     </group>

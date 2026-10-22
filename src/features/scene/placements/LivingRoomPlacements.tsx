@@ -25,6 +25,7 @@ import { MannequinHead } from '../items/MannequinHead';
 import { GoogleNestMini } from '../items/GoogleNestMini';
 import { Mulig30179435, MuligHangers } from '../items/Mulig30179435';
 import { ShoeHatRackCaps } from '../items/ShoeHatRack';
+import { SHOE_HAT_RACK_WALL_RECESS } from '../shoeHatRackData';
 import { Smorkull, SMORKULL_SEAT_FOOTPRINT } from '../items/Smorkull';
 import { SneakersRed } from '../items/SneakersRed';
 import { Grejig40329868 } from '../items/Grejig40329868';
@@ -658,7 +659,7 @@ export function LivingRoomDecor() {
 
       {/* Casquettes sur ShoeHatRack (flanc Kallax SE) */}
       <group position={FREEZER_TRANSFORM.position} rotation={[0, FREEZER_TRANSFORM.rotationY - Math.PI / 2, 0]}>
-        <group position={[-w1 / 2, 0, KALLAX_DEPTH / 2]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
+        <group position={[-w1 / 2, 0, KALLAX_DEPTH / 2 + SHOE_HAT_RACK_WALL_RECESS]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
           <ShoeHatRackCaps />
         </group>
       </group>
