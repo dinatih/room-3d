@@ -423,7 +423,40 @@ INVENTORY.push({
   dims: { w: 12, d: 17, h: 4 },
   glbPath: 'items/black-hornet/black-hornet.glb',
   photos: [],
-  notes: `Nano-drone Black Hornet autonome capable de survoler le jardin et toutes les pièces du studio.`
+  notes: `Nano-drone Black Hornet autonome capable de survoler le jardin et toutes les pièces du studio.
+
+Le Black Hornet (de type nano-drone à voilure tournante ressemblant à un mini-hélicoptère) présente plusieurs avantages tactiques majeurs par rapport à un quadcopter (drone multirotor classique).
+Sources : https://www.ouest-france.fr/europe/ukraine/que-sont-les-black-hornet-ces-mini-drones-qui-tiennent-dans-la-main-et-que-lukraine-va-utiliser-4c994d4a-2df7-11ed-9660-f2bdd620667f ; https://defense-zone.com/blogs/news/systemes-drones-armee-de-terre
+
+1. Discrétion et silence
+
+• Signature sonore minimale : Contrairement aux quadcopters dont les multiples rotors génèrent un bourdonnement audible à distance, le Black Hornet est extrêmement silencieux et quasi indétectable en opération.
+Source : https://defense-zone.com/blogs/news/systemes-drones-armee-de-terre
+• Taille minuscule : Il mesure environ 16 cm de long et pèse à peine 33 grammes, ce qui le rend presque invisible dans le ciel ou en milieu urbain.
+Sources : https://fr.finance.yahoo.com/actualites/d%C3%A9fense-qu-black-hornet-nano-151513678.html ; https://defense-zone.com/blogs/news/systemes-drones-armee-de-terre
+
+2. Portabilité et déploiement rapide
+
+• Format de poche : Il tient entièrement dans le creux de la main ou dans une petite sacoche ventrale d'unité de combat avec sa télécommande et son écran.
+Sources : https://www.ouest-france.fr/europe/ukraine/que-sont-les-black-hornet-ces-mini-drones-qui-tiennent-dans-la-main-et-que-lukraine-va-utiliser-4c994d4a-2df7-11ed-9660-f2bdd620667f ; https://defense-zone.com/blogs/news/systemes-drones-armee-de-terre
+• Mise en œuvre immédiate : Il est prêt à voler et lancé en moins de 20 à 30 secondes, un délai souvent plus court ou plus simple que la sortie, le déploiement et l'allumage d'un quadcopter standard.
+Source : https://www.avianews.ch/post/nano-drones-black-hornet-pour-les-forces-terrestres
+
+3. Résistance et environnement difficile
+
+• Architecture aérodynamique d'hélicoptère : Sa conception avec rotor principal et rotor anticouple lui permet de tenir tête à des conditions de vent ou de turbulence particulières parfois complexes pour de très petits multirotors.
+• Fonctionnement sans GPS : Il intègre des capacités avancées pour opérer même dans des environnements où le signal GNSS/GPS est brouillé ou refusé (souvent critique sur les théâtres militaires).
+Source : https://www.avianews.ch/post/nano-drones-black-hornet-pour-les-forces-terrestres
+
+4. Conçu pour le combat rapproché
+
+• Imagerie thermique et de jour : Il embarque des micro-caméras performantes (jour et infrarouge/thermique) pour les levées de doute immédiates au niveau de la section ou du groupe de combat.
+Sources : https://www.defense.gouv.fr/terre/nos-materiels/nos-equipements-terre/nos-drones-nos-robots-terrestres/black-hornet-3-bh3-drone-operationnel ; https://www.youtube.com/watch?v=gj6tXqaUw2Y ; https://defense-zone.com/blogs/news/systemes-drones-armee-de-terre
+• Liaison cryptée sécurisée : Les flux vidéo et photo sont transmis directement à un petit écran porté par le soldat via une liaison radio résistante et chiffrée.
+Source : https://defense-zone.com/blogs/news/systemes-drones-armee-de-terre
+
+À l'inverse, un quadcopter classique offre généralement une plus grande modularité de charge utile (emport de plus gros capteurs ou de petits objets), des coûts d'acquisition sans comparaison (le Black Hornet se compte en dizaines de milliers d'euros) et une plus grande facilité de réparation ou de remplacement de pièces.
+Source : https://www.capital.fr/economie-politique/defense-quest-ce-que-le-black-hornet-le-nano-drone-utilise-par-larmee-francaise-1514034`
 });
 
 INVENTORY.push({
