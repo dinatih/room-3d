@@ -180,6 +180,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, 0],
         approachOffset: [0, 0, 66 / 2 + HUMAN_BODY_RADIUS], // Devant la chaise (profondeur 66 cm).
+        entryAnimation: 'stand-to-sit',
         rotY: 0,
         animationsRandom: 'seated-front',
       }
