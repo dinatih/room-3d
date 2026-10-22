@@ -637,6 +637,13 @@ export function createAgentController(
         if (first.tx !== 0 || first.tz !== 0) {
           state.x = first.tx;
           state.z = first.tz;
+          if (_characterId === 'native' && hasSkyDrop && !deployment.hasCompleted && scenario[0].smartObjectId === 'desk-bollsidan-2') {
+            const desk = getSmartObject('desk-bollsidan-2')!;
+            const away = Math.atan2(first.tx - desk.position[0], first.tz - desk.position[2]);
+            // Un pas de 60 cm pour dégager les genoux à l'atterrissage.
+            state.x += Math.sin(away) * 60;
+            state.z += Math.cos(away) * 60;
+          }
           if (agentStatus !== 'WAITING' && agentStatus !== 'FALLING') {
             state.y = first.ty ?? 0;
             deployment.y = state.y;
