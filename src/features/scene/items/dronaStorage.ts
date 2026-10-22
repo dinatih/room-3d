@@ -27,7 +27,7 @@ export const DRONA_SPECIAL_ITEMS = {
   'drona-ne-catchall2': {
     shelf: 'ne', index: 0, position: [-17.5, 41 - 20.5, 0],
     label: 'Dröna Fourre-tout 2', interaction: 'Prendre un objet dans le fourre-tout 2',
-    action: 'drona-ne-catchall2-slide', animationPrefix: 'drona-catchall2', approach: 50,
+    action: 'drona-ne-catchall2-slide', animationPrefix: 'drona-catchall2', approach: 50 + 38 * 2 / 3 - 10,
   },
 } satisfies Record<string, {
   shelf: string; index: number; position: [number, number, number];
