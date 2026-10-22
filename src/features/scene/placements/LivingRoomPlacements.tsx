@@ -25,7 +25,6 @@ import { MannequinHead } from '../items/MannequinHead';
 import { GoogleNestMini } from '../items/GoogleNestMini';
 import { Mulig30179435, MuligHangers } from '../items/Mulig30179435';
 import { ShoeHatRackCaps } from '../items/ShoeHatRack';
-import { SHOE_HAT_RACK_WALL_RECESS } from '../shoeHatRackData';
 import { Smorkull, SMORKULL_SEAT_FOOTPRINT } from '../items/Smorkull';
 import { SneakersRed } from '../items/SneakersRed';
 import { Grejig40329868 } from '../items/Grejig40329868';
@@ -68,7 +67,6 @@ import {
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
-const w1 = 40.5; // 1×Kallax : 33.5 + 2×3.5
 const w2 = 75.5; // 2×Kallax : 2×33.5 + 2×3.5 + 1.5
 
 const KALLAX_DEPTH = 39;
@@ -659,7 +657,7 @@ export function LivingRoomDecor() {
 
       {/* Casquettes sur ShoeHatRack (flanc Kallax SE) */}
       <group position={KALLAX_SE_TRANSFORM.position} rotation={[0, KALLAX_SE_TRANSFORM.rotationY - Math.PI / 2, 0]}>
-        <group position={[-w1 / 2 - 2, 0, KALLAX_DEPTH / 2 + SHOE_HAT_RACK_WALL_RECESS]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
+        <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
           <ShoeHatRackCaps />
         </group>
       </group>

@@ -1,5 +1,5 @@
 /**
- * KallaxSE.tsx — Tour Kallax sud-est (mur B, 62 cm avant mur D).
+ * KallaxSE.tsx — Tour Kallax sud-est avec congélateur et porte-chaussures accolés.
  * Composant auto-contenu : 2× Kallax 2×1 posés sur le côté + 4 boîtes Drona.
  *
  * Les Kallax sont pivotés rotZ=π/2 (largeur devient hauteur).
@@ -11,7 +11,6 @@ import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }      from './Kallax2x1';
 import { ShoeHatRack }    from './ShoeHatRack';
-import { SHOE_HAT_RACK_WALL_RECESS } from '../shoeHatRackData';
 import { DroneCell } from './Drona';
 import { Freezer }        from './Freezer';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -24,10 +23,8 @@ import { DRONA_SPECIAL_ITEMS, SPECIAL_DRONA_SLIDE_DURATION } from './dronaStorag
 const TF = 3.5, TI = 1.5, NH = 34, NW_K = 33.5;
 const th = (rows: number) => rows * NH + 2 * TF + (rows - 1) * TI;
 const tw = (cols: number) => cols * NW_K + 2 * TF + (cols - 1) * TI;
-const w1 = tw(1); // 40.5
 const w2 = tw(2); // 75.5
 const h1 = th(1); // 41  ← devient la profondeur visuelle une fois pivoté
-const DEP = 39;   // Kallax depth (KALLAX_DEPTH)
 const FREEZER_H = 50; // Hauteur du congélateur CHIQ au sol
 
 // Positions en espace root (rotY=π/2).
@@ -96,8 +93,8 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
 
       {!noDrona && <KallaxSEDrona isPreview={isPreview} actionState={actionState} />}
 
-      {/* Porte-chaussures côté mur D, reculé vers le mur est. */}
-      <group position={[-w1 / 2 - 2, 0, DEP / 2 + SHOE_HAT_RACK_WALL_RECESS]} rotation-y={-Math.PI} userData={{ animUnit: true }}>
+      {/* Porte-chaussures bord à bord avec le congélateur (profondeur 47,37 cm). */}
+      <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ animUnit: true }}>
         <ShoeHatRack item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noCaps={noCaps} />
       </group>
     </group>

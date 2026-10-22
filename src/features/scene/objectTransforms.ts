@@ -18,6 +18,7 @@ import { FRIDGE_LOCAL_POSITION } from './items/Fridge';
 import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION, DRONA_CATCHALL_POSITION } from './items/kallaxNeDrona';
 import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from './items/kallaxSeDrona';
 import { DRONA_SPECIAL_ITEMS, KALLAX_NW_POSITION, KALLAX_NW_ROTATION } from './items/dronaStorage';
+import { SHOE_HAT_RACK } from './shoeHatRackData';
 import { positionState } from './positionState';
 import { BATHROOM_STORAGE_ITEMS } from './items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION, KALLAX_CUISINE_DRONA_POSITIONS } from './items/kallaxCuisineDrona';
@@ -101,7 +102,7 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
     case 'kallax-se':
       // The freezer sits at the base of Kallax SE, with an extra quarter turn.
       return {
-        position: [ROOM_W - FREEZER_WIDTH / 2 - FURNITURE_WALL_CLEARANCE, 0, ROOM_D - 62 - 40.5 / 2 - FURNITURE_WALL_CLEARANCE],
+        position: [ROOM_W - FREEZER_WIDTH / 2 - FURNITURE_WALL_CLEARANCE, 0, ROOM_D - SHOE_HAT_RACK.width - 47.37 / 2 - FURNITURE_WALL_CLEARANCE],
         rotationY: Math.PI,
       };
     case 'bed-west':

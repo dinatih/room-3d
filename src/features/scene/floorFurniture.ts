@@ -1,6 +1,6 @@
-import { ROOM_W, ROOM_D, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL } from './wallData';
+import { ROOM_W, ROOM_D, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, FURNITURE_WALL_CLEARANCE } from './wallData';
 import { BATHTUB } from './bathtubData';
-import { SHOE_HAT_RACK, SHOE_HAT_RACK_WALL_RECESS } from './shoeHatRackData';
+import { SHOE_HAT_RACK } from './shoeHatRackData';
 import {
   currentFurnitureTransforms, DESK1_POSITIONS, DESK2_POSITIONS,
   SMORKULL_POSITIONS, AIRPERFORMER_POSITIONS, DOUBLE_BED_POSITIONS, SINGLE_BED_POSITIONS, type FurnitureTransform,
@@ -60,10 +60,10 @@ export function drawFurniture(ctx: CanvasRenderingContext2D) {
   // KALLAX, MACKAPÄR et rangement chaussures (empilements projetés une seule fois).
   rect(39 / 2, 40.5 / 2, 39, 41);
   rect(ROOM_W - 39 / 2, 75.5 / 2, 39, 75.5);
-  const seZ = ROOM_D - 60 - 40.5 / 2;
-  rect(ROOM_W - 39 / 2, seZ, 39, 41);
-  // Portant sous les huit casquettes, reculé vers le mur est.
-  rect(ROOM_W - SHOE_HAT_RACK.depth / 2 + SHOE_HAT_RACK_WALL_RECESS, ROOM_D - 60 + SHOE_HAT_RACK.width / 2,
+  const seZ = ROOM_D - SHOE_HAT_RACK.width - 47.37 / 2 - FURNITURE_WALL_CLEARANCE;
+  rect(ROOM_W - 45 / 2 - FURNITURE_WALL_CLEARANCE, seZ, 45, 47.37);
+  // Portant accolé au congélateur ; dégagement commun des plinthes.
+  rect(ROOM_W - SHOE_HAT_RACK.depth / 2 - FURNITURE_WALL_CLEARANCE, ROOM_D - SHOE_HAT_RACK.width / 2 - FURNITURE_WALL_CLEARANCE,
     SHOE_HAT_RACK.depth, SHOE_HAT_RACK.width);
   // Meuble T intégré au KALLAX NW, déport local de 59.5 cm.
   rect(39 / 2 - 0.75, 40.5 / 2 + 59.5, 27.5, 22.5);

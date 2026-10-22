@@ -5,6 +5,7 @@
  * et le système de SmartObjects (smartObjectRegistry / agentInstructionCoords).
  */
 
+import { SHOE_HAT_RACK } from './shoeHatRackData';
 import { ROOM_D, ROOM_W, FURNITURE_WALL_CLEARANCE } from './wallData';
 
 export interface FurnitureTransform {
@@ -20,11 +21,11 @@ export const currentFurnitureTransforms: Record<string, FurnitureTransform> = {}
 // Configuration lit double au mur Ouest : plateaux Bollsidan 68 × 36 cm,
 // dos au mur Est, avec 3 cm de dégagement pour les plinthes au sol.
 // Le bureau 2 touche le congélateur sous le Kallax SE
-// (centre à ROOM_D - 60 - 40.5 / 2 - dégagement Sud ; profondeur : 47.37 cm).
+// (centre à ROOM_D - largeur porte-chaussures - demi-profondeur congélateur - dégagement Sud ; profondeur : 47.37 cm).
 const DESK_WIDTH = 68;
 const DESK_DEPTH = 36;
 const EAST_DESK_X = ROOM_W - FURNITURE_WALL_CLEARANCE - DESK_DEPTH / 2;
-const FREEZER_NORTH_Z = ROOM_D - 60 - 40.5 / 2 - FURNITURE_WALL_CLEARANCE - 47.37 / 2;
+const FREEZER_NORTH_Z = ROOM_D - SHOE_HAT_RACK.width - 47.37 - FURNITURE_WALL_CLEARANCE;
 const EAST_DESK2_Z = FREEZER_NORTH_Z - DESK_WIDTH / 2;
 
 export const DESK1_POSITIONS: readonly FurnitureTransform[] = [
