@@ -194,9 +194,9 @@ export function useCameraFrameUpdate({
           keyboardOrbit.current.setFromSpherical(_tmpSph);
         }
 
-        // Ctrl, Alt ou Shift+Ctrl+arrows — pan rapide (translate camera + target ensemble)
-        const hasPan = (plainPan && hasCameraArrow) || ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(
-          a => k.has('Ctrl' + a) || k.has('Alt' + a) || k.has('ShiftCtrl' + a)
+        // Alt, Shift+Ctrl ou Ctrl+gauche/droite — pan rapide (translate camera + target ensemble)
+        const hasPan = (plainPan && hasCameraArrow) || ['ArrowLeft', 'ArrowRight'].some(a => k.has('Ctrl' + a)) || ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(
+          a => k.has('Alt' + a) || k.has('ShiftCtrl' + a)
         );
         if (hasPan) {
           keyboardOrbit.current = null;
@@ -206,7 +206,7 @@ export function useCameraFrameUpdate({
           else _tmpCamRight.set(-_tmpCamDir.z, 0, _tmpCamDir.x).normalize();
           const panStep = Math.max(3, ctrl.target.distanceTo(activeCamera.position) * 0.015) * dt;
           _tmpPanDelta.set(0, 0, 0);
-          const isPan = (a: string) => (plainPan && cameraArrow(a)) || k.has('Ctrl' + a) || k.has('Alt' + a) || k.has('ShiftCtrl' + a);
+          const isPan = (a: string) => (plainPan && cameraArrow(a)) || k.has('Alt' + a) || k.has('ShiftCtrl' + a) || ((a === 'ArrowLeft' || a === 'ArrowRight') && k.has('Ctrl' + a));
 
           if (plainPan) _tmpCamForward.setFromMatrixColumn(activeCamera.matrixWorld, 1);
           else {
@@ -225,15 +225,25 @@ export function useCameraFrameUpdate({
           ctrl.update();
         }
 
-        // PageUp/PageDown — zoom (dolly le long de l'axe caméra→cible)
-        if (k.has('PageUp') || k.has('PageDown')) {
+        // PageUp/PageDown ou Ctrl+Haut/Bas — zoom (dolly ou zoom orthographique)
+        const hasZoomIn = k.has('PageUp') || k.has('CtrlArrowUp');
+        const hasZoomOut = k.has('PageDown') || k.has('CtrlArrowDown');
+        if (hasZoomIn || hasZoomOut) {
           keyboardOrbit.current = null;
-          _tmpDollyDir.subVectors(ctrl.target, camera.position);
-          const dist = _tmpDollyDir.length();
-          _tmpDollyDir.normalize();
-          const step = dist * 0.01 * dt;
-          if (k.has('PageUp')) camera.position.addScaledVector(_tmpDollyDir, step);
-          if (k.has('PageDown')) camera.position.addScaledVector(_tmpDollyDir, -step);
+          if ((activeCamera as THREE.OrthographicCamera).isOrthographicCamera) {
+            const factor = Math.pow(0.95, dt);
+            const ortho = activeCamera as THREE.OrthographicCamera;
+            if (hasZoomIn) ortho.zoom = Math.min(30, ortho.zoom / factor);
+            if (hasZoomOut) ortho.zoom = Math.max(0.05, ortho.zoom * factor);
+            ortho.updateProjectionMatrix();
+          } else {
+            _tmpDollyDir.subVectors(ctrl.target, activeCamera.position);
+            const dist = _tmpDollyDir.length();
+            _tmpDollyDir.normalize();
+            const step = Math.min(dist * 0.015 * dt, Math.max(0, dist - 10));
+            if (hasZoomIn) activeCamera.position.addScaledVector(_tmpDollyDir, step);
+            if (hasZoomOut) activeCamera.position.addScaledVector(_tmpDollyDir, -dist * 0.015 * dt);
+          }
           ctrl.update();
         }
       }
@@ -304,8 +314,14 @@ export function useCameraFrameUpdate({
         if (k.has('camera:ArrowRight')) followYaw.current -= 0.03 * dt;
         if (k.has('camera:ArrowUp')) followPitch.current = Math.min(1.4, followPitch.current + 0.02 * dt);
         if (k.has('camera:ArrowDown')) followPitch.current = Math.max(-1.4, followPitch.current - 0.02 * dt);
-        if (k.has('CtrlArrowUp')) followPitch.current = Math.min(1.4, followPitch.current + 0.02 * dt);
-        if (k.has('CtrlArrowDown')) followPitch.current = Math.max(-1.4, followPitch.current - 0.02 * dt);
+        if (k.has('CtrlArrowUp') || k.has('CtrlArrowDown')) {
+          const cam = camera as THREE.PerspectiveCamera;
+          if (cam.isPerspectiveCamera && !cameraState.isXR) {
+            const step = (k.has('CtrlArrowUp') ? -0.5 : 0.5) * dt;
+            cam.fov = Math.max(30, Math.min(120, cam.fov + step));
+            cam.updateProjectionMatrix();
+          }
+        }
 
         if (k.has('AltArrowUp')) followPos.current.y += sp;
         if (k.has('AltArrowDown')) followPos.current.y -= sp;

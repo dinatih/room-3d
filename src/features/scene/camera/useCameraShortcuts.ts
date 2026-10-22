@@ -422,8 +422,8 @@ export function useCameraShortcuts({
         }
       }
 
-      // Orbit-mode zoom (PageUp/PageDown)
-      if (modeRef.current === 'orbit' && (k === 'PageUp' || k === 'PageDown')) {
+      // Zoom (PageUp/PageDown)
+      if ((modeRef.current === 'orbit' || modeRef.current === 'top' || modeRef.current === 'iso') && (k === 'PageUp' || k === 'PageDown')) {
         keys.current.add(k);
         e.preventDefault();
         invalidate();

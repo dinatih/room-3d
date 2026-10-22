@@ -128,15 +128,15 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Déplacer · PNJ : tourner le personnage" keys={['←', '→']} />
               <Section title="Vue libre — commandes supplémentaires" />
               <R label="Orbiter autour"             keys={['Shift + ↑↓←→']} />
-              <R label="Translation"                keys={['Ctrl + ↑↓←→']} />
-              <R label="Translation"                keys={['Alt + ↑↓←→']} />
+              <R label="Zoomer / dézoomer"          keys={['Ctrl + ↑↓', 'PageUp/Down']} />
+              <R label="Translation"                keys={['Alt + ↑↓←→', 'Ctrl + ←→']} />
               <R label="Translation diagonale"       keys={['Shift+Ctrl + ↑↓←→']} />
             </div>
 
             <div>
               <Section title="Suivi PNJ / FPV" />
-              <R label="Suivi : zoomer / dézoomer" keys={['Ctrl + ↑↓']} />
-              <R label="FPV : incliner le regard" keys={['Ctrl + ↑↓']} />
+              <R label="Zoomer / dézoomer"          keys={['Ctrl + ↑↓']} />
+              <R label="FPV : incliner le regard"   keys={['↑↓']} />
               <R label="Monter / descendre"         keys={['Alt + ↑↓']} />
               <R label="Regarder librement"         keys={['Clic + glisser']} />
             </div>
