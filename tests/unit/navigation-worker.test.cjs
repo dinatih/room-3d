@@ -26,6 +26,16 @@ function withWorker(exercise) {
 }
 
 describe('Construction du réseau et requêtes géométriques dans le worker', () => {
+  it('quitte un meuble du côté connecté à la prochaine destination', () => {
+    const furniture = geometry.rectangle(0, 0, 40, 400);
+    const graph = queries.buildNavigationGraph({ ...definition, solids: [{ polygon: furniture, radius: 0, comfort: false }] });
+    const goal = { x: 100, z: 0 };
+    const candidates = queries.objectApproachCandidates({ ...approach, goal, start: { x: -15, z: 0 },
+      owned: [{ polygon: furniture, radius: 0 }], exiting: true }, graph);
+    assert(candidates.length > 0);
+    assert(candidates.every(point => graph.canReach(point, goal)), 'La sortie la plus proche à gauche est une impasse');
+    assert(candidates[0].x > 0);
+  });
   it('sépare calcul, file, messages et reprise sans compter deux fois une lecture', () => {
     const previousWorker = globalThis.Worker, previousClock = globalThis.performance, sent = [];
     let worker, now = 10;

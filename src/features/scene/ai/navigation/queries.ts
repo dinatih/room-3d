@@ -72,6 +72,7 @@ export function objectApproachCandidates(query: ApproachQuery, graph: Pick<Navig
   const actors = query.actors.map(p => [p]);
   if (validGoal && !insideObstacle(goal, actors)) return [goal];
   const exiting = query.exiting || Boolean(start && owned.some(p => pointInRing(start, p)));
+  const reachesGoal = (p: Point) => !exiting || insideObstacle(goal, graph.obstacles) || graph.canReach(p, goal);
   const preferred = exiting && start ? start : goal;
   const contours = owned.length && !flexible ? owned : [...graph.obstacles.flat(), ...query.actors];
   const edges = contours.flatMap(polygon => polygon.map((a, i) => [a, polygon[(i + 1) % polygon.length]] as const));
@@ -88,14 +89,14 @@ export function objectApproachCandidates(query: ApproachQuery, graph: Pick<Navig
   candidates.sort((a, b) => distance(a, preferred) - distance(b, preferred));
   const reachable: Point[] = validGoal ? [goal] : [];
   for (const p of candidates) {
-    if (!accepts(p) || !onGround(p) || insideObstacle(p, graph.obstacles)) continue;
+    if (!accepts(p) || !onGround(p) || insideObstacle(p, graph.obstacles) || !reachesGoal(p)) continue;
     if (start && (exiting ? !segmentFree(start, p, query.escape) : !graph.canReach(start, p))) continue;
     reachable.push(p);
     if (!insideObstacle(p, actors)) return reachable;
   }
   if (exiting) {
-    reachable.push(...candidates.filter(p => onGround(p) && !insideObstacle(p, graph.obstacles) && (!start || segmentFree(start, p, query.escape))));
-    reachable.push(...candidates.filter(p => onGround(p) && !insideObstacle(p, graph.obstacles)));
+    reachable.push(...candidates.filter(p => onGround(p) && !insideObstacle(p, graph.obstacles) && reachesGoal(p) && (!start || segmentFree(start, p, query.escape))));
+    reachable.push(...candidates.filter(p => onGround(p) && !insideObstacle(p, graph.obstacles) && reachesGoal(p)));
   }
   return reachable;
 }

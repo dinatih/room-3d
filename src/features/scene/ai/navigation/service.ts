@@ -152,7 +152,11 @@ function readPreparedGraph(entry: ReturnType<typeof getNavigationPreparation>, c
 export function getObjectApproach(owner: string, goal: Point, agentId: string, start?: Point, exiting = false, departureOwner?: string, flexible = false, region?: ApproachRegion): Point | null {
   owner = getInteractionOwner(owner);
   const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile);
-  if (start && departureOwner && !exiting && insideObstacle(start, graph.obstacles)) start = getObjectApproach(departureOwner, goal, agentId, start, true) ?? start;
+  if (start && departureOwner && !exiting && insideObstacle(start, graph.obstacles)) {
+    const destination = getObjectApproach(owner, goal, agentId, undefined, false, undefined, flexible, region);
+    if (!destination) return null;
+    start = getObjectApproach(departureOwner, destination, agentId, start, true) ?? start;
+  }
   const owned = [...furnitureObstacles.values()].filter(o => o.owner === owner && o.yMin < profile.height && o.yMax > 0);
   const needsExit = exiting || !!start && owned.some(o => pointInRing(start!, furnitureFootprint(o, profile)));
   const containingOwners = needsExit && start ? new Set([...furnitureObstacles.values()]
