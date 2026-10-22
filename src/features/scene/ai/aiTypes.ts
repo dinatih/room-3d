@@ -93,7 +93,6 @@ export type InstructionType = 'MOVE_TO' | 'PREPARE_OBJECT' | 'INTERACT' | 'WAIT'
 
 export interface AgentInstruction {
   /** Departure step consumed when the rise already reached free standing space. */
-  postureExit?: boolean;
   type: InstructionType;
   /** Déplacement de dégagement hors du débattement d'une porte. */
   doorKey?: 'living' | 'glassRight';

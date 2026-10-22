@@ -168,7 +168,6 @@ export interface LayerState {
   smokeTransition?: boolean;
   animOriginLerp?: boolean;
   animCrossfade?: boolean;
-  exitTransitions?: boolean;
 }
 
 export type LidarMode = 0 | 1 | 2 | 3;

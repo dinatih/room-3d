@@ -24,14 +24,13 @@ it('interpole les orientations par le quart de tour le plus court dans les deux 
   }
 });
 
-it('reconnaît l’alias canonique d’assise comme transition et ne déclenche pas un relèvement supplémentaire', () => {
+it('reconnaît l’alias canonique d’assise comme transition', () => {
   const entry = { id: 'miley-armature-stand-to-sit', tags: ['sitting'], duration: 5.1 };
-  const { isPostureTransition, getExitTransition } = load('src/features/scene/animations/animationTransitions.ts', {
+  const { isPostureTransition } = load('src/features/scene/animations/animationTransitions.ts', {
     './animationResolver': { getAnimationDef: key => ['stand-to-sit', entry.id].includes(key) ? entry : undefined },
   });
   assert.equal(isPostureTransition('stand-to-sit'), true);
   assert.equal(isPostureTransition(entry.id), true);
-  assert.equal(getExitTransition('stand-to-sit'), null);
 });
 it('ajuste la descente du bassin de la pose debout actuelle à la pose assise sans modifier le clip partagé', () => {
   const hips = new THREE.Object3D();

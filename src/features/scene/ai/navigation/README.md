@@ -49,8 +49,9 @@ trajets existants sont conservés si leurs segments restent sûrs.
 
 Les interactions peuvent entrer dans leur propre meuble en conservant les autres
 collisions. Une instruction retrouve le meuble à quitter depuis sa position
-réelle avant de résoudre l'activité suivante. Les sorties de posture suivent la
-lecture effective de l'animation et attendent si leur dégagement est obstrué.
+réelle avant de résoudre l'activité suivante. Les entrées animées sont déclarées
+explicitement sur les slots via `entryAnimation` et suivent la lecture effective
+de l'animation en conservant les collisions.
 
 Pour les rangements cuisine concernés : approche avec le mobilier en place,
 `PREPARE_OBJECT`, attente de la fin du dégagement de la poubelle et de la chaise,

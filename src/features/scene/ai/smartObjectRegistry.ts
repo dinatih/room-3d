@@ -1186,7 +1186,7 @@ export function buildSmartObjectInstructionSequence(
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
       { type: 'MOVE_TO', targetLocalPos: localSlot.offset, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
       baseInstruction,
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, postureExit: true },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
     ];
   }
   if ((objectId === 'bed-west' || objectId === 'bed-east') && slot.slotId === 'lie-down') {
@@ -1199,8 +1199,8 @@ export function buildSmartObjectInstructionSequence(
       { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id, slotId: slot.slotId },
       { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
       baseInstruction,
-      { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction', postureExit: true },
-      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id, slotId: slot.slotId, postureExit: true },
+      { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
+      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id, slotId: slot.slotId },
     ];
   }
 

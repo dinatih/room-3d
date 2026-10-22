@@ -4,7 +4,7 @@ import { getAvailableAutonomousActivities } from './autonomousActivities';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, getObjectApproach, movePostureTransition, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation } from './navigation/service';
+import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, movePostureTransition, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation } from './navigation/service';
 import { prepareKitchenStorageAccess, releaseKitchenStorageAccess } from './diyChairClearance';
 import { hasAgentProfile, getObstacleRevision, furnitureClearance, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
 import { distance, inflate, pointInRing, BOOLEAN_PRECISION } from './navigation/geometry';
@@ -19,7 +19,6 @@ import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation, getWalkSpeedForAnimatio
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
 import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
-import { getExitTransition } from '../animations/animationTransitions';
 import { DRONA_SE_ITEMS } from '../items/kallaxSeDrona';
 import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
@@ -110,25 +109,10 @@ export function createAgentController(
   let agentStatus: AgentStatus = deployment.status;
   let animationPlayback: { animation: string; progress: number; finished: boolean } | null = null;
   let postureTransition: {
-    animation: string; sourceAnimation: string; targetAnimation?: string; y: number; advanceStep: boolean;
+    animation: string; targetAnimation: string; y: number;
     departure: { x: number; z: number }; owner?: string;
     destination?: { x: number; z: number };
   } | null = null;
-  const beginExitTransition = (advanceStep: boolean) => {
-    if (!(useSceneStore.getState().layers.exitTransitions ?? false)) return false;
-    const exit = getExitTransition(state.animation);
-    if (!exit) return false;
-    const owner = route.owner ?? claimedSlot?.objectId;
-    postureTransition = {
-      animation: exit.anim, sourceAnimation: state.animation, y: state.y, advanceStep,
-      departure: { x: state.x, z: state.z },
-      destination: cachedCoords?.owner === owner ? cachedCoords?.approach : undefined,
-      owner: owner ? getInteractionOwner(owner) : undefined,
-    };
-    animationPlayback = null;
-    agentStatus = 'TRANSITIONING';
-    return true;
-  };
   let delayTimer = deployment.delayTimer;
   let prevScenario: AgentInstruction[] | null | undefined = undefined;
   let startPos: { x: number; y: number; z: number; rotY: number; owner?: string } = initialPos;
@@ -306,7 +290,6 @@ export function createAgentController(
             }
           } else {
             agentStatus = 'IDLE';
-            beginExitTransition(false);
             const locName = targetObjId ? (SMART_OBJECTS[targetObjId]?.name || targetObjId) : 'le point duo';
             appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} (${role === 'roleA' ? 'Meneur' : 'Partenaire'}) et rejoint ${locName} !`, {
               category: 'duo',
@@ -371,7 +354,6 @@ export function createAgentController(
           routeInstruction = null;
           if (deployment.hasCompleted) {
             agentStatus = 'IDLE';
-            beginExitTransition(false);
           }
           cachedCoordsInstruction = null;
           cachedCoords = null;
@@ -411,7 +393,6 @@ export function createAgentController(
       navigationScope.clear();
       releaseKitchenStorageAccess(_characterId);
       const previousAnimation = state.animation;
-      const previousTransition = postureTransition;
       const departureOwner = route.owner ?? claimedSlot?.objectId
         ?? (hasAgentProfile(_characterId) ? getContainingObjectOwner(_characterId, getRealPosition()) : undefined);
       if (claimedSlot) {
@@ -477,12 +458,6 @@ export function createAgentController(
       }
       if (!firstScenario && deployment.hasCompleted) {
         state.animation = previousAnimation;
-        if (previousTransition) {
-          previousTransition.advanceStep = false;
-          agentStatus = 'TRANSITIONING';
-        } else {
-          beginExitTransition(false);
-        }
       }
     }
 
@@ -732,37 +707,15 @@ export function createAgentController(
       }
     }
 
-    // A replacement order must finish the rise without consuming its first step.
+    // Finish an explicitly configured entry before handling a replacement order.
     if (postureTransition && agentStatus !== 'TRANSITIONING') {
-      postureTransition.advanceStep = false;
       agentStatus = 'TRANSITIONING';
       state.animation = postureTransition.animation;
     }
-    // ── 1.5 Gestion des transitions in-between (ex: sit-to-stand, crouch-to-stand, stand-up) ──
+    // ── 1.5 Entrée animée déclarée sur le slot ──
     if (agentStatus === 'TRANSITIONING') {
       const transition = postureTransition;
       if (!transition) throw new Error('Missing active posture transition');
-      if (transition.owner && !transition.destination && hasAgentProfile(_characterId)) {
-        const profile = getAgentProfile(_characterId);
-        const direction = { x: Math.sin(state.rotY), z: Math.cos(state.rotY) };
-        const owned = [...furnitureObstacles.values()].filter(obstacle => obstacle.owner === transition.owner
-          && obstacle.yMin < profile.height && obstacle.yMax > 0);
-        if (owned.some(obstacle => pointInRing(transition.departure, inflate(obstacle.polygon, furnitureClearance(profile))))) {
-          // Aim past the front boundary with the actor's actual body clearance.
-          const reach = Math.max(...owned.flatMap(obstacle => obstacle.polygon.map(point =>
-            (point.x - transition.departure.x) * direction.x + (point.z - transition.departure.z) * direction.z))) + profile.radius;
-          const goal = { x: transition.departure.x + direction.x * reach, z: transition.departure.z + direction.z * reach };
-          const exit = getObjectApproach(transition.owner, goal, _characterId, state, true);
-          if (!exit) {
-            state.animation = transition.sourceAnimation;
-            state.animationPaused = true;
-            reportNavigationStop(`Aucune sortie praticable de ${transition.owner}`, transition.owner, goal);
-            return state;
-          }
-          transition.destination = exit;
-          route.owner = transition.owner;
-        }
-      }
       const playback = animationPlayback;
       state.animation = transition.animation;
       state.animationPaused = false;
@@ -786,21 +739,7 @@ export function createAgentController(
       if (playback?.animation === transition.animation && playback.finished && !state.animationPaused) {
         postureTransition = null;
         agentStatus = 'IDLE';
-        state.animation = transition.targetAnimation ?? resolveAnimationId('idle');
-        if (transition.advanceStep) {
-          advanceToNextStep(hasNavStepInUpdate);
-          // Bed routines also describe an explicit edge/floor departure. The
-          // animation-driven exit has already completed those steps.
-          if (transition.destination) {
-            let dynamic = dynamicNavIndex < dynamicNavQueue.length;
-            let next = dynamic ? dynamicNavQueue[dynamicNavIndex] : scenario?.[stepIndex];
-            while (next?.postureExit) {
-              advanceToNextStep(dynamic);
-              dynamic = dynamicNavIndex < dynamicNavQueue.length;
-              next = dynamic ? dynamicNavQueue[dynamicNavIndex] : scenario?.[stepIndex];
-            }
-          }
-        }
+        state.animation = transition.targetAnimation;
       }
       return state;
     }
@@ -1164,9 +1103,9 @@ export function createAgentController(
       if (distance(position, goal) < 1e-6) {
         if (entering) {
           postureTransition = {
-            animation: resolveAnimationId(target.entryAnimation!), sourceAnimation: state.animation,
+            animation: resolveAnimationId(target.entryAnimation!),
             targetAnimation: resolveAnimationId(currentInstruction.animation ?? target.anim ?? 'idle'),
-            y: state.y, advanceStep: false, departure: { ...position },
+            y: state.y, departure: { ...position },
             destination: { x: target.tx, z: target.tz }, owner: target.owner ?? currentInstruction.smartObjectId,
           };
           animationPlayback = null;
@@ -1455,13 +1394,6 @@ export function createAgentController(
 
         repeatIndex = 0;
         targetRepeats = 1;
-
-        if (beginExitTransition(true)) {
-          if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
-            setDesk2SmartActionState(_characterId, false);
-          }
-          return state;
-        }
 
         agentStatus = 'IDLE';
         if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {

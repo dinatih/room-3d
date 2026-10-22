@@ -6,9 +6,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { useAgentController, resetAgentDeployment } from '/src/features/scene/ai/useAgentController.ts';
 import { OccupancyManager } from '/src/features/scene/ai/occupancyManager.ts';
-import { useSceneStore } from '/src/features/scene/store/useSceneStore.ts';
 import { getAnimationDef } from '/src/features/scene/animations/animationResolver.ts';
-import { getExitTransition } from '/src/features/scene/animations/animationTransitions.ts';
 import { retargetClip } from '/src/features/scene/retargeting/retargetClip.ts';
 import { fitPostureTransition } from '/src/features/scene/animations/postureTransition.ts';
 import { extractCharacterParts } from '/src/features/scene/characterParts.ts';
@@ -92,7 +90,6 @@ export async function exercise(fixture) {
     loader.setDRACOLoader(draco);
     let model, mixer;
     setAgentProfile(id, fixture.profile);
-    useSceneStore.setState(s => ({ layers: { ...s.layers, exitTransitions: true } }));
     try {
         flushSync(() => root.render(React.createElement(Harness)));
         await ready;
@@ -114,9 +111,9 @@ export async function exercise(fixture) {
             }
             return clips.get(key);
         }
-        const idle = await clip('idle');
+        const seated = await clip('sitting-idle');
         const states = [], animations = [], began = performance.now();
-        let action, previousAnimation, previousStatus, didInterrupt = false, completedRise = false, delayedPlaybackChecked = false;
+        let action, previousAnimation, previousStatus, didInterrupt = false, completedEntry = false, delayedPlaybackChecked = false;
         while (controller.getStatus() !== 'FINISHED') {
             check(performance.now() - began < fixture.timeoutMs, `Controller timeout (${controller.getStatus()}, ${JSON.stringify(controller.update(0))})`);
             const state = controller.update(fixture.dt), status = controller.getStatus();
@@ -131,13 +128,13 @@ export async function exercise(fixture) {
                 // Elapsed controller time cannot pretend a not-yet-loaded clip has finished.
                 for (let i = 0; i < fixture.interaction.delayedPlaybackFrames; i++)
                     controller.update(fixture.dt);
-                check(controller.getStatus() === 'TRANSITIONING', 'Rise finished before animation playback');
+                check(controller.getStatus() === 'TRANSITIONING', 'Entry finished before animation playback');
                 delayedPlaybackChecked = true;
             }
             if (state.animation !== previousAnimation) {
                 let next = await clip(state.animation);
                 if (status === 'TRANSITIONING')
-                    next = fitPostureTransition(next, hips, idle);
+                    next = fitPostureTransition(next, hips, seated);
                 action?.stop();
                 action = mixer.clipAction(next).reset().play();
                 action.setLoop(status === 'TRANSITIONING' ? THREE.LoopOnce : THREE.LoopRepeat, status === 'TRANSITIONING' ? 1 : Infinity);
@@ -155,7 +152,7 @@ export async function exercise(fixture) {
                 const finished = action.loop === THREE.LoopOnce && !action.isRunning() && progress >= 1;
                 controller.reportAnimationPlayback(state.animation, progress, finished);
                 if (status === 'TRANSITIONING' && finished)
-                    completedRise = true;
+                    completedEntry = true;
             }
             if (fixture.activity === 'interruption' && status === 'INTERACTING' && state.animation === 'sitting-idle' && !didInterrupt) {
                 // Exercise the event path which really claims reservations, then interrupt it.
@@ -172,13 +169,14 @@ export async function exercise(fixture) {
             await new Promise(resolve => setTimeout(resolve, 0));
         }
         const final = { ...controller.update(0) };
-        check(states.includes('MOVING') && states.includes('INTERACTING') && states.includes('TRANSITIONING'), `Incomplete lifecycle: ${states}`);
-        check(completedRise && delayedPlaybackChecked, 'Missing real completed rise');
+        check(states.includes('MOVING') && states.includes('INTERACTING'), `Incomplete lifecycle: ${states}`);
+        const entry = getSmartObject(objectId)?.slots.find(slot => slot.slotId === slotId)?.entryAnimation;
+        check(entry ? completedEntry && delayedPlaybackChecked : !states.includes('TRANSITIONING'), 'Only explicitly configured entries may transition');
         check(Math.hypot(final.x - exit.x, final.z - exit.z) <= 1e-6 && final.y === 0, 'Did not completely leave its interaction');
-        check(getSmartObject(objectId) && getExitTransition('sitting-idle'), 'Missing production object/exit');
+        check(getSmartObject(objectId), 'Missing production object');
         if (fixture.activity === 'interruption')
             check(didInterrupt, 'Interruption not executed');
-        return { states, animations, final, completedRise, delayedPlaybackChecked, didInterrupt, model: 'characters/lara/lara_native.glb' };
+        return { states, animations, final, completedEntry, delayedPlaybackChecked, didInterrupt, model: 'characters/lara/lara_native.glb' };
     }
     finally {
         flushSync(() => root.unmount());

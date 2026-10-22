@@ -38,7 +38,7 @@ import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles'
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform, getAnimationDef } from '../animations/animationResolver';
-import { getCrossfadeDuration, isPostureTransition, getPostureTransitionRotDelta, lerpAngle } from '../animations/animationTransitions';
+import { getCrossfadeDuration, isPostureTransition, lerpAngle } from '../animations/animationTransitions';
 import { fitPostureTransition } from '../animations/postureTransition';
 
 import type { CharacterProps } from './characterTypes';
@@ -909,9 +909,8 @@ export function Character({
           to = mixer.clipAction(fitted);
           for (const key in actions) if (actions[key] === originalAction) actions[key] = to;
           mixer.uncacheAction(originalAction.getClip());
-          const rotDelta = getPostureTransitionRotDelta(activeActionName.current, target);
           postureOriginRef.current.position.copy(animOriginRef.current.position);
-          postureOriginRef.current.rotY = animOriginRef.current.rotation.y + rotDelta;
+          postureOriginRef.current.rotY = animOriginRef.current.rotation.y;
           animOriginRef.current.rotation.y = postureOriginRef.current.rotY;
         }
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;

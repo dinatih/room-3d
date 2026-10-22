@@ -257,7 +257,6 @@ export function LayersSection({
       {layerBtn('light',     iconLabel('bi-people-fill', 'Personnages 3D'), 'character', 'characterWireframe')}
       {layerBtn('light',     iconLabel('bi-arrows-move', 'Lissage origine (anti-téléportation)'), 'animOriginLerp')}
       {layerBtn('light',     iconLabel('bi-bezier2', 'Fondu squelettique (Crossfade)'), 'animCrossfade')}
-      {layerBtn('light',     iconLabel('bi-person-walking', 'Transitions de posture (assis/debout)'), 'exitTransitions')}
       {layerBtn('blue',      iconLabel('bi-heart-pulse', 'Animaux et robots'), 'animals')}
       {layerBtn('purple',    'Surfaces des miroirs',           'mirrorSurfaces')}
       {layerBtn('purple',    'Miroirs MD (Moyenne déf)',       'mirrors')}
