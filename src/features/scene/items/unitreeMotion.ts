@@ -31,6 +31,22 @@ export function createUnitreeMotion(scene: Object3D, model: 'g1' | 'go2') {
   const relative = new Matrix4();
   const box = new Box3();
   const footBox = new Box3();
+  // Measure the sagittal chains in model space, including the intervening hip pivots.
+  scene.updateWorldMatrix(true, true);
+  inverse.copy(scene.matrixWorld).invert();
+  const legs = new Map<string, { thigh: number; shin: number; thighRest: number; shinRest: number }>();
+  if (model === 'g1') {
+    for (const side of ['left', 'right']) {
+      const points = ['hip_pitch', 'knee', 'ankle_pitch'].map(name =>
+        joints.get(`${side}_${name}_joint`)!.node.getWorldPosition(new Vector3()).applyMatrix4(inverse));
+      const thigh = points[1].sub(points[0]);
+      const shin = points[2].sub(points[0]).sub(thigh);
+      legs.set(side, {
+        thigh: Math.hypot(thigh.y, thigh.z), shin: Math.hypot(shin.y, shin.z),
+        thighRest: Math.atan2(-thigh.z, -thigh.y), shinRest: Math.atan2(-shin.z, -shin.y),
+      });
+    }
+  }
   function set(name: string, angle: number) {
     const joint = joints.get(name);
     if (!joint) throw new Error(`Unitree ${model}: missing joint ${name}`);
@@ -50,10 +66,21 @@ export function createUnitreeMotion(scene: Object3D, model: 'g1' | 'go2') {
         // In the source URDF, the forearm points forward at zero; +90° lowers it.
         set(`${side}_elbow_joint`, motion === 'idle' ? Math.PI / 2 : 0.3 * entry);
         if (motion === 'walk') {
-          hip = -0.28 * stride * entry;
-          knee = (0.1 + 0.45 * Math.max(0, stride)) * entry;
+          const leg = legs.get(side)!;
+          const length = leg.thigh + leg.shin;
+          const cycle = ((seconds * 0.8 + offset / (2 * Math.PI)) % 1 + 1) % 1;
+          const swing = cycle < 0.5;
+          const progress = swing ? cycle * 2 : (cycle - 0.5) * 2;
+          // Swing eases from back to front. Support travels backwards at constant speed.
+          const step = length * 0.45;
+          const forward = step * (swing ? -0.5 * Math.cos(Math.PI * progress) : 0.5 - progress);
+          const down = length * (0.96 - (swing ? 0.08 * Math.sin(Math.PI * progress) ** 2 : 0));
+          const reach = Math.hypot(forward, down);
+          const bend = Math.acos((reach ** 2 - leg.thigh ** 2 - leg.shin ** 2) / (2 * leg.thigh * leg.shin));
+          hip = Math.atan2(-forward, down) - Math.atan2(leg.shin * Math.sin(bend), leg.thigh + leg.shin * Math.cos(bend)) - leg.thighRest;
+          knee = bend + leg.thighRest - leg.shinRest;
           set(`${side}_shoulder_pitch_joint`, 0.25 * stride * entry);
-          set(`${side}_elbow_joint`, 0.45 * entry);
+          set(`${side}_elbow_joint`, Math.PI / 2 - 0.2 * entry);
         } else if (motion === 'dance') {
           hip = (-0.1 + 0.06 * slow) * entry;
           knee = (0.2 - 0.12 * slow) * entry;

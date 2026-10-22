@@ -20,6 +20,31 @@ it('calibre les deux robots sur leurs vrais pieds et préserve le modèle visibl
     const scaled = scene.clone(true); scaled.scale.multiplyScalar(2);
     assert(Math.abs(measureUnitreeWalkSpeed(scaled, model) / speed - 2) < 1e-9);
     t.diagnostic(`${model}: ${speed.toFixed(2)} cm/s`);
+    if (model === 'g1') {
+      const animate = createUnitreeMotion(scene, model);
+      for (const [side, start] of [['left', 0.5], ['right', 0]]) {
+        const foot = scene.getObjectByName(`${side}_ankle_roll_link_visual`);
+        const samples = [];
+        for (let frame = 0; frame <= 30; frame++) {
+          const seconds = (start + frame / 60) / 0.8;
+          animate('walk', seconds, Infinity);
+          scene.updateMatrixWorld(true);
+          const point = foot.getWorldPosition(new THREE.Vector3());
+          point.z += speed * seconds;
+          samples.push(point);
+          const sole = new THREE.Vector3(0, 1, 0).transformDirection(foot.matrixWorld);
+          assert(sole.y > 0.999999, 'semelle horizontale pendant l’appui');
+        }
+        for (const point of samples) {
+          assert(point.distanceTo(samples[0]) < 0.001, `${side}: pied d’appui ancré au sol`);
+        }
+      }
+      animate('walk', 0.25 / 0.8, Infinity);
+      scene.updateMatrixWorld(true);
+      const left = scene.getObjectByName('left_ankle_roll_link_visual').getWorldPosition(new THREE.Vector3());
+      const right = scene.getObjectByName('right_ankle_roll_link_visual').getWorldPosition(new THREE.Vector3());
+      assert(left.y - right.y > 4, 'le pied libre se lève réellement');
+    }
     if (model === 'go2') {
       const animate = createUnitreeMotion(scene, model);
       const foot = scene.getObjectByName('FL_calf_foot');
