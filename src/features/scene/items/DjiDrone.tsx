@@ -62,11 +62,56 @@ function createDroneClips(nodeName = 'DronePivot'): THREE.AnimationClip[] {
   return [hoverClip, flyClip, scanClip, landedClip];
 }
 
+const FPV_PROP_AXIS = new THREE.Vector3(-0.685935, 0.367274, -0.628174).normalize();
+const FPV_PROP_NODES = ['polySurface2_1_7', 'polySurface8_1_10', 'polySurface13_1_13', 'polySurface17_1_16'];
+
+export interface DronePropellerDef {
+  x: number;
+  y: number;
+  z: number;
+  radius: number;
+  blades?: number;
+}
+
+function DronePropeller({ radius, blades = 3, isSpinning }: { radius: number; blades?: number; isSpinning: boolean }) {
+  const bladeAngles = useMemo(() => Array.from({ length: blades }, (_, i) => (i * Math.PI * 2) / blades), [blades]);
+  return (
+    <group>
+      <mesh position={[0, 0, 0]}>
+        <cylinderGeometry args={[0.22, 0.28, 0.22, 8]} />
+        <meshStandardMaterial color="#1c1c1c" roughness={0.3} metalness={0.4} />
+      </mesh>
+      {blades === 2 ? (
+        <mesh position={[0, 0.04, 0]}>
+          <boxGeometry args={[radius * 1.85, 0.03, radius * 0.22]} />
+          <meshStandardMaterial color="#111111" roughness={0.4} metalness={0.2} />
+        </mesh>
+      ) : (
+        bladeAngles.map((angle, i) => (
+          <group key={i} rotation={[0, angle, 0]}>
+            <mesh position={[radius * 0.45, 0.04, 0]}>
+              <boxGeometry args={[radius * 0.85, 0.03, radius * 0.22]} />
+              <meshStandardMaterial color="#111111" roughness={0.4} metalness={0.2} />
+            </mesh>
+          </group>
+        ))
+      )}
+      {isSpinning && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+          <circleGeometry args={[radius, 24]} />
+          <meshStandardMaterial color="#222222" transparent opacity={0.32} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
 interface DjiDroneProps {
   glbPath: string;
   targetMaxDimCm: number;
   itemName: string;
   rotationY?: number;
+  propellers?: DronePropellerDef[];
   isPreview?: boolean;
   previewAnim?: string;
   onSize?: (size: THREE.Vector3) => void;
@@ -77,6 +122,7 @@ export function DjiDrone({
   targetMaxDimCm,
   itemName,
   rotationY = 0,
+  propellers,
   isPreview = false,
   previewAnim = 'Drone_Hover',
   onSize,
@@ -87,6 +133,9 @@ export function DjiDrone({
   const pivotRef = useRef<THREE.Group>(null);
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const currentAction = useRef<THREE.AnimationAction | null>(null);
+  const fpvPropsRef = useRef<THREE.Object3D[]>([]);
+  const propRefs = useRef<(THREE.Group | null)[]>([]);
+  const propAngleRef = useRef(0);
 
   const clips = useMemo(() => createDroneClips('DronePivot'), []);
 
@@ -113,7 +162,9 @@ export function DjiDrone({
       onSize?.(effectiveSize);
     }
 
+    const fpvNodes: THREE.Object3D[] = [];
     scene.traverse(c => {
+      if (FPV_PROP_NODES.includes(c.name)) fpvNodes.push(c);
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
       m.castShadow = true;
@@ -124,6 +175,7 @@ export function DjiDrone({
         mat.roughness = mat.roughness ?? 0.55;
       }
     });
+    fpvPropsRef.current = fpvNodes;
 
     if (rootRef.current) {
       mixerRef.current = new THREE.AnimationMixer(rootRef.current);
@@ -141,6 +193,24 @@ export function DjiDrone({
     if (isAppIdle() || !mixerRef.current) return;
 
     const targetAnimName = previewAnim || 'Drone_Hover';
+    const isLanded = targetAnimName === 'Drone_Landed';
+    const store = isPreview ? useAnimPreviewStore.getState() : null;
+    const isPlaying = !store || (store.isPlaying && !store.isScrubbing);
+
+    if (!isLanded && isPlaying) {
+      const playSpeed = store?.speed || 1;
+      const spinStep = delta * playSpeed * 55;
+      propAngleRef.current = (propAngleRef.current + spinStep) % (Math.PI * 2);
+
+      fpvPropsRef.current.forEach((node, i) => {
+        node.rotateOnAxis(FPV_PROP_AXIS, (i % 2 === 0 ? 1 : -1) * spinStep);
+      });
+
+      propRefs.current.forEach((ref, i) => {
+        if (ref) ref.rotation.y = (i % 2 === 0 ? 1 : -1) * propAngleRef.current;
+      });
+    }
+
     const clip = clips.find(a => a.name === targetAnimName) || clips[0];
     if (clip && clip.duration > 0) {
       let action = currentAction.current;
@@ -156,8 +226,7 @@ export function DjiDrone({
         currentAction.current = action;
       }
 
-      if (isPreview) {
-        const store = useAnimPreviewStore.getState();
+      if (isPreview && store) {
         store.setClipInfo(`${itemName} ${clip.name}`, clip.duration, false);
         const animDelta = delta * (store.speed || 1);
         if (store.isPlaying && !store.isScrubbing) {
@@ -177,23 +246,52 @@ export function DjiDrone({
     invalidate();
   });
 
+  const isSpinning = (previewAnim || 'Drone_Hover') !== 'Drone_Landed';
+
   return (
     <group ref={rootRef} userData={{ itemName }}>
       <group ref={pivotRef} name="DronePivot">
         <group rotation={[0, rotationY, 0]}>
           <primitive object={scene} />
+          {propellers && (
+            <group>
+              {propellers.map((p, idx) => (
+                <group
+                  key={idx}
+                  position={[p.x, p.y, p.z]}
+                  ref={el => { propRefs.current[idx] = el; }}
+                >
+                  <DronePropeller radius={p.radius} blades={p.blades ?? 3} isSpinning={isSpinning} />
+                </group>
+              ))}
+            </group>
+          )}
         </group>
       </group>
     </group>
   );
 }
 
+const NEO_PROPS: DronePropellerDef[] = [
+  { x: 2.7, y: 2.6, z: 2.7, radius: 2.4, blades: 2 },
+  { x: 2.7, y: 2.6, z: -2.7, radius: 2.4, blades: 2 },
+  { x: -2.7, y: 2.6, z: 2.7, radius: 2.4, blades: 2 },
+  { x: -2.7, y: 2.6, z: -2.7, radius: 2.4, blades: 2 },
+];
+
+const AVATA2_PROPS: DronePropellerDef[] = [
+  { x: -4.55, y: 2.32, z: 4.75, radius: 3.3, blades: 3 },
+  { x: 4.56, y: 2.32, z: 4.75, radius: 3.3, blades: 3 },
+  { x: -4.83, y: 2.02, z: -4.58, radius: 3.3, blades: 3 },
+  { x: 4.84, y: 2.02, z: -4.58, radius: 3.3, blades: 3 },
+];
+
 export function DjiNeoDrone(props: { isPreview?: boolean; previewAnim?: string; onSize?: (size: THREE.Vector3) => void }) {
-  return <DjiDrone glbPath="/items/dji-neo/dji-neo.glb" targetMaxDimCm={15.7} itemName="Drone DJI Neo" rotationY={Math.PI / 2} {...props} />;
+  return <DjiDrone glbPath="/items/dji-neo/dji-neo.glb" targetMaxDimCm={15.7} itemName="Drone DJI Neo" rotationY={Math.PI / 2} propellers={NEO_PROPS} {...props} />;
 }
 
 export function DjiAvata2Drone(props: { isPreview?: boolean; previewAnim?: string; onSize?: (size: THREE.Vector3) => void }) {
-  return <DjiDrone glbPath="/items/dji-avata-2/dji-avata-2.glb" targetMaxDimCm={21.2} itemName="Drone DJI Avata 2" rotationY={Math.PI} {...props} />;
+  return <DjiDrone glbPath="/items/dji-avata-2/dji-avata-2.glb" targetMaxDimCm={21.2} itemName="Drone DJI Avata 2" rotationY={Math.PI} propellers={AVATA2_PROPS} {...props} />;
 }
 
 export function DjiFpvDrone(props: { isPreview?: boolean; previewAnim?: string; onSize?: (size: THREE.Vector3) => void }) {
