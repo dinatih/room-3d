@@ -16,7 +16,7 @@ export const DRONA_SPECIAL_ITEMS = {
   'drona-se-care': {
     shelf: 'se', index: 0, position: KALLAX_SE_DRONA_POSITIONS[0],
     label: 'Dröna Parfum/Crème', interaction: 'Prendre un parfum ou une crème',
-    action: 'drona-se-care-slide', animationPrefix: 'drona-care', approach: 50,
+    action: 'drona-se-care-slide', animationPrefix: 'drona-care', approach: 50 + 38 * 2 / 3 - 10,
   },
   'drona-nw-trousers': {
     shelf: 'nw', index: 2, position: KALLAX_NW_DRONA_POSITIONS[2],
