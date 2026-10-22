@@ -95,6 +95,9 @@ export function BlackHornetDrone({
     const action = mixerRef.current.clipAction(clip);
     if (currentAction.current === action) return;
     action.reset();
+    if (currentAction.current && name !== 'Drone_Landed' && currentAction.current.getClip().name !== 'Drone_Landed') {
+      action.time = currentAction.current.time % clip.duration;
+    }
     action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
     action.play();
     if (currentAction.current) {
