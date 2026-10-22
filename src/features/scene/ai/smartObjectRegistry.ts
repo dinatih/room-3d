@@ -1219,7 +1219,7 @@ export function buildSmartObjectInstructionSequence(
           protectedDoor: doorKey, triggerEventKey: 'freezer', triggerEventValue: false,
         },
       ] : []),
-      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, doorKey, protectedDoor: doorKey },
+      ...(objectId === 'kallax-ne' ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey, protectedDoor: doorKey }] : []),
     ];
   }
 
