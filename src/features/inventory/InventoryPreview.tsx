@@ -874,6 +874,12 @@ export function InventoryPreview({
 
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
+    if (item.id === 'black-hornet-drone') return [
+      { value: 'Drone_Hover', label: 'Vol stationnaire' },
+      { value: 'Drone_Fly', label: 'Vol' },
+      { value: 'Drone_Scan', label: 'Observation' },
+      { value: 'Drone_Landed', label: 'Au sol' },
+    ];
     if (item.id === 'ulotte') return getActionDef('ulotte-motion')!.options;
     if (['ushiro', 'shiba-inu'].includes(item.id)) {
       return [
@@ -1358,7 +1364,7 @@ export function InventoryPreview({
           <AnimFrameController
             compact
             animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
-            animKey={actionStates.characterAnim}
+            animKey={actionStates.characterAnim || (item.id === 'black-hornet-drone' ? 'Drone_Hover' : undefined)}
             isHumanCharacter={isHumanCharacter}
             characterId={item.id}
             duoAnimDef={actionStates.duoAnimDef}
