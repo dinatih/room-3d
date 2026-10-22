@@ -1112,6 +1112,10 @@ export function createAgentController(
       if (routeInstruction !== currentInstruction) {
         resetRoute(route, _characterId, currentInstruction.protectedDoor);
         routeInstruction = currentInstruction;
+        if (target.approach) {
+          route.approach = target.approach;
+          route.interactionTarget = { x: target.tx, z: target.tz };
+        }
       }
       const isDuoAction = isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId) || !!duoRole;
       const speed = getWalkSpeedForAnimation(currentWalkAnim);

@@ -466,8 +466,8 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   };
   const approachFor = (id: string, goal: Point, exiting: boolean) => getObjectApproach(id, goal, agentId, start, exiting, undefined);
   // A previous interaction may leave us inside a different object's clearance.
-  // Discard its owner before detecting the obstacle we actually need to exit.
-  if (route.owner && !contained(route.owner, start)) route.owner = undefined;
+  // Keep an ongoing local entry from its explicit approach; otherwise detect the actual owner.
+  if (route.owner && !contained(route.owner, start) && !(interaction && owner === route.owner && continuing)) route.owner = undefined;
   if (!route.owner && owner && contained(owner, start)) route.owner = owner;
   if (!route.owner) {
     route.owner = getContainingObjectOwner(agentId, start);

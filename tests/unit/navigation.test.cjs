@@ -208,6 +208,26 @@ describe('Navigation et portes — géométrie isolée', () => {
         }
     });
 
+    it('entre dans le WC depuis son approche explicite sans détour latéral', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        obstacles.registerObstacle({ id: 'test-toilet', owner: 'test-toilet', polygon: g.rectangle(0, 0, 40, 70), yMin: 0, yMax: 85 });
+        const target = { x: 0, z: 10 }, approach = { x: 0, z: 63 };
+        const route = nav.createRouteState();
+        route.approach = approach;
+        route.interactionTarget = target;
+        try {
+            let position = approach;
+            while (g.distance(position, target) > 0) {
+                const previous = position;
+                position = nav.followRoute(route, 'walker', position, target, 3, undefined, 'test-toilet', true);
+                assert.equal(route.error, null);
+                assert.equal(position.x, 0, 'L’approche frontale ne doit pas être recalculée sur le côté du WC');
+                assert(g.distance(position, target) < g.distance(previous, target), 'Chaque pas progresse vers la cuvette');
+            }
+        } finally { nav.resetRoute(route, 'walker'); obstacles.unregisterObstacle('test-toilet'); }
+    });
+
     for (const room of ['living', 'bathroom', 'corridor']) it(`attend hors de la pièce pleine (${room}) puis reprend sans bloquer les sorties`, () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;

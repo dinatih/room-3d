@@ -11,6 +11,7 @@ export interface AgentState {
 export type AgentStatus = 'WAITING' | 'FALLING' | 'LANDING' | 'TRANSITIONING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED' | 'BLOCKED';
 
 export interface ResolvedInstructionCoords {
+  approach?: { x: number; z: number };
   owner?: string;
   tx: number;
   ty?: number;

@@ -5,7 +5,7 @@ import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimatio
 import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
 import { BATH_WEST_WALL, ROOM_D, ROOM_W, pNorth } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
-import { TOILET_BOWL_CENTER } from '../items/Toilet';
+import { TOILET_BOWL_CENTER, TOILET_D } from '../items/Toilet';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
 import { FREEZER_DOOR_DURATION } from '../items/Freezer';
 import { FRIDGE_DOOR_DURATION, FRIDGE_CRISPER_DURATION } from '../items/Fridge';
@@ -216,6 +216,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'use',
         name: 'Faire ses besoins',
         offset: [TOILET_BOWL_CENTER[0], 0, TOILET_BOWL_CENTER[2]],
+        approachOffset: [TOILET_BOWL_CENTER[0], 0, TOILET_D / 2 + HUMAN_BODY_RADIUS],
         rotY: 0,
         animation: 'sit-idle',
         duration: 6.0,
@@ -1288,7 +1289,7 @@ export function buildSmartObjectInstructionSequence(
 
   if (objectId === 'toilet') {
     return [
-      { type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'flush' },
+      { type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'use' },
       {
         type: 'WAIT', smartObjectId: 'toilet', slotId: 'flush',
         animation: 'idle', duration: TOILET_HINGE_DURATION, rotY: Math.PI,
