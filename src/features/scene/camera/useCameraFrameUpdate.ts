@@ -243,6 +243,8 @@ export function useCameraFrameUpdate({
       const ctrl = ctrlRef.current;
       _tmpOffset.copy(keyboardOrbit.current).add(ctrl.target);
       ctrl.object.position.lerp(_tmpOffset, ORBIT_CAMERA_LERP);
+      // L'orbite clavier utilise Y comme verticale, même après un preset zénith/nadir.
+      ctrl.object.up.set(0, 1, 0);
       ctrl.update();
       // Arrêter la boucle à la précision numérique de la position monde.
       if (ctrl.object.position.distanceToSquared(_tmpOffset) <= Number.EPSILON * Math.max(1, _tmpOffset.lengthSq())) {
