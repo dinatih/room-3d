@@ -13,7 +13,6 @@ export interface CameraViewPreset {
   pos: [number, number, number];
   target: [number, number, number];
   zoom?: number;
-  up?: [number, number, number];
 }
 
 export const CARDINAL_ANGLES: Record<string, number> = {
@@ -35,13 +34,7 @@ export function computeCameraPreset(azimuth: number, elevation = 45): CameraView
   const dz = r * Math.cos(azimuth);
   const pos: [number, number, number] = [target[0] + dx, target[1] + y, target[2] + dz];
 
-  const up: [number, number, number] = isZenith
-    ? [-Math.sin(azimuth), 0, -Math.cos(azimuth)]
-    : isNadir
-      ? [Math.sin(azimuth), 0, Math.cos(azimuth)]
-      : [0, 1, 0];
-
-  return { pos, target, zoom: 1, up };
+  return { pos, target, zoom: 1 };
 }
 
 export const VIEWS: Record<string, CameraViewPreset> = {
@@ -73,5 +66,5 @@ export function resolveCameraView(key: string, projection: 'ortho' | 'persp', fo
   const distance = CAMERA_VIEW_HEIGHT / (2 * (activeView.zoom ?? 1) * Math.tan(fov * Math.PI / 360));
   const length = Math.hypot(...offset);
   const pos = offset.map((value, index) => activeView.target[index] + value * distance / length) as [number, number, number];
-  return { pos, target: [...activeView.target], projection, zoom: 1, up: activeView.up };
+  return { pos, target: [...activeView.target], projection, zoom: 1 };
 }

@@ -665,7 +665,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       pos?: [number, number, number];
       target?: [number, number, number];
       zoom?: number;
-      up?: [number, number, number];
     }
   ) => {
     const ctrl = ctrlRef.current;
@@ -715,11 +714,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
     }
 
-    if (options?.up) {
-      activeCam.up.set(...options.up);
-    } else {
-      activeCam.up.set(0, 1, 0);
-    }
+    activeCam.up.set(0, 1, 0);
     activeCam.lookAt(target);
     activeCam.updateProjectionMatrix();
 
@@ -775,7 +770,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         pos: newPos,
         target,
         zoom: view.zoom,
-        up: view.up,
       });
       return;
     }

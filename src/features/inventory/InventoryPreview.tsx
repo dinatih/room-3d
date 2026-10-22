@@ -77,7 +77,7 @@ function getPreviewViewConfig(key: string, elevation = 45): { direction: THREE.V
       view.pos[1] - view.target[1],
       view.pos[2] - view.target[2]
     ).normalize();
-    return { direction, up: view.up ?? [0, 1, 0] };
+    return { direction, up: [0, 1, 0] };
   } catch {
     return { direction: new THREE.Vector3(1, 1, 1).normalize(), up: [0, 1, 0] };
   }
