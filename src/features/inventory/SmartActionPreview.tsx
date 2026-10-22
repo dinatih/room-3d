@@ -6,8 +6,21 @@ import type { PreviewPlayback } from '@features/scene/character/characterTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence } from '@features/scene/ai/smartObjectRegistry';
 import { getAnimationDef, getAnimationsByTags } from '@features/scene/animations/animationResolver';
 import { toggleObjectAction } from '@features/scene/objectActionRegistry';
+import type { AgentInstruction } from '@features/scene/ai/aiTypes';
 import type { SceneItemProps } from '@shared/types';
 import type { SmartActionPreviewRequest } from './InventorySmartActions';
+
+/** USE_OBJECT instructions inherit defaults from their target slot, like the scene controller. */
+export function resolvePreviewInstruction(step: AgentInstruction): AgentInstruction {
+  if (step.type !== 'USE_OBJECT') return step;
+  const slot = getSmartObject(step.smartObjectId!)?.slots.find(slot => slot.slotId === step.slotId);
+  if (!slot) throw new Error(`Slot preview introuvable : ${step.smartObjectId}:${step.slotId}`);
+  return {
+    animation: slot.animation, duration: slot.duration, repeatCount: slot.repeatCount,
+    triggerEventKey: slot.triggerEventKey, triggerEventValue: slot.triggerEventValue,
+    ...step,
+  };
+}
 
 /** Plays interaction steps at the object's local slot, without apartment navigation or events. */
 export function SmartActionPreview({ Component, item, actionState, onSize, request }: SceneItemProps & {
@@ -16,7 +29,8 @@ export function SmartActionPreview({ Component, item, actionState, onSize, reque
 }) {
   const sequence = useMemo(() => {
     const steps = buildSmartObjectInstructionSequence(request.objectId, request.slotId, SMART_OBJECTS[request.objectId].ownerCharacterId ?? request.characterId)
-      .filter(step => step.type !== 'MOVE_TO' && step.type !== 'PREPARE_OBJECT');
+      .filter(step => step.type !== 'MOVE_TO' && step.type !== 'PREPARE_OBJECT')
+      .map(resolvePreviewInstruction);
     if (!steps.length) throw new Error(`Aucune séquence preview : ${request.objectId}:${request.slotId}`);
     return steps;
   }, [request.objectId, request.slotId, request.characterId, request.runId]);
