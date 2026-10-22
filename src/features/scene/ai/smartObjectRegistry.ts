@@ -1323,7 +1323,7 @@ export function buildSmartObjectInstructionSequence(
         triggerEventKey: doorKey,
         triggerEventValue: true,
       },
-      { ...baseInstruction, triggerEventKey: undefined, triggerEventValue: undefined },
+      { ...baseInstruction, waitForAnimation: true, triggerEventKey: undefined, triggerEventValue: undefined },
       {
         type: 'WAIT',
         smartObjectId: obj.id,
