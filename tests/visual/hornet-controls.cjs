@@ -59,7 +59,11 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     await page.waitForFunction(() => window.hornetStore?.getState().available, { timeout: 60000 });
     const pose = () => page.evaluate(() => ({ ...window.hornetCamera.positions.drone }));
     const character = await page.evaluate(() => [window.hornetCamera.characterX, window.hornetCamera.characterZ, window.sceneStore.getState().activeCharacterId]);
-    const click = title => page.click(`button[title="${title}"]`);
+    const click = async title => {
+      const selector = `button[title="${title}"]`;
+      await page.waitForSelector(`${selector}:not([disabled])`);
+      await page.click(selector);
+    };
     const settle = () => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     const hold = async (key, ms = 250) => {
       await page.keyboard.down(key);
@@ -135,9 +139,13 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     await hold('ArrowUp');
     assert(await page.evaluate(() => window.hornetCamera.animalViews.drone.forward.y) > beforePitch, 'Alt + up must pitch upwards');
     await page.keyboard.up('Alt');
+    // Reproduire un relâchement d'Alt perdu : la flèche suivante porte altKey=false.
+    await page.evaluate(async () => (await import('/src/features/scene/droneControls.ts')).droneInput.keys.add('Alt'));
     const afterAlt = await pose();
     await hold('ArrowUp');
-    assert.notDeepEqual(await pose(), afterAlt, 'Plain arrows must move again after releasing Alt');
+    const afterPlainArrow = await pose();
+    assert(Math.hypot(afterPlainArrow.x - afterAlt.x, afterPlainArrow.y - afterAlt.y, afterPlainArrow.z - afterAlt.z) > 10, 'Plain arrows must translate after releasing Alt, even if keyup was lost');
+    assert.equal(afterPlainArrow.yaw, afterAlt.yaw, 'Plain arrows must not keep rotating');
     await page.screenshot({ path: '/tmp/room-hornet-pilot.png' });
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => window.hornetCamera.mode === 'orbit' && !window.hornetStore.getState().piloting);

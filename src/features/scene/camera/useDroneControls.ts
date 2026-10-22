@@ -29,7 +29,7 @@ export function useDroneControls(preview: boolean) {
       event.preventDefault();
       event.stopImmediatePropagation();
       droneInput.keys.add(key);
-      if (event.altKey) droneInput.keys.add('Alt');
+      droneInput.keys[event.altKey ? 'add' : 'delete']('Alt');
       invalidate();
     };
     const keyUp = (event: KeyboardEvent) => {
@@ -57,7 +57,7 @@ export function useDroneControls(preview: boolean) {
       if ((event.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"]')) release();
     };
     window.addEventListener('keydown', keyDown, true);
-    window.addEventListener('keyup', keyUp);
+    window.addEventListener('keyup', keyUp, true);
     window.addEventListener('blur', release);
     document.addEventListener('visibilitychange', release);
     document.addEventListener('focusin', focus);
@@ -70,7 +70,7 @@ export function useDroneControls(preview: boolean) {
     return () => {
       release();
       window.removeEventListener('keydown', keyDown, true);
-      window.removeEventListener('keyup', keyUp);
+      window.removeEventListener('keyup', keyUp, true);
       window.removeEventListener('blur', release);
       document.removeEventListener('visibilitychange', release);
       document.removeEventListener('focusin', focus);
