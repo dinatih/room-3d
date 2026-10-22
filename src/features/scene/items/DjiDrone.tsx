@@ -27,10 +27,10 @@ function createDroneClips(nodeName = 'DronePivot'): THREE.AnimationClip[] {
   ]);
 
   const flyTimes = [0, 0.75, 1.5];
-  const flyPitch = -0.22;
+  const flyPitch = -0.20;
   const qFly0 = new THREE.Quaternion().setFromEuler(new THREE.Euler(flyPitch, 0, -0.03));
   const qFly1 = new THREE.Quaternion().setFromEuler(new THREE.Euler(flyPitch, 0, 0.03));
-  const flyPos = [0, 0, -0.8, 0, 0.3, 0.8, 0, 0, -0.8];
+  const flyPos = [0, 0, 0.6, 0, 0.3, -0.6, 0, 0, 0.6];
   const flyRots = [
     qFly0.x, qFly0.y, qFly0.z, qFly0.w,
     qFly1.x, qFly1.y, qFly1.z, qFly1.w,
@@ -66,6 +66,7 @@ interface DjiDroneProps {
   glbPath: string;
   targetMaxDimCm: number;
   itemName: string;
+  rotationY?: number;
   isPreview?: boolean;
   previewAnim?: string;
   onSize?: (size: THREE.Vector3) => void;
@@ -75,6 +76,7 @@ export function DjiDrone({
   glbPath,
   targetMaxDimCm,
   itemName,
+  rotationY = 0,
   isPreview = false,
   previewAnim = 'Drone_Hover',
   onSize,
@@ -106,7 +108,9 @@ export function DjiDrone({
         -scaledBox.min.y,
         -scaledBox.getCenter(new THREE.Vector3()).z
       );
-      onSize?.(scaledBox.getSize(new THREE.Vector3()));
+      const rawSize = scaledBox.getSize(new THREE.Vector3());
+      const effectiveSize = Math.abs(Math.sin(rotationY)) > 0.5 ? new THREE.Vector3(rawSize.z, rawSize.y, rawSize.x) : rawSize;
+      onSize?.(effectiveSize);
     }
 
     scene.traverse(c => {
@@ -131,7 +135,7 @@ export function DjiDrone({
       mixerRef.current?.stopAllAction();
       currentAction.current = null;
     };
-  }, [scene, targetMaxDimCm, onSize, invalidate]);
+  }, [scene, targetMaxDimCm, rotationY, onSize, invalidate]);
 
   useFrame((_, delta) => {
     if (isAppIdle() || !mixerRef.current) return;
@@ -176,18 +180,20 @@ export function DjiDrone({
   return (
     <group ref={rootRef} userData={{ itemName }}>
       <group ref={pivotRef} name="DronePivot">
-        <primitive object={scene} />
+        <group rotation={[0, rotationY, 0]}>
+          <primitive object={scene} />
+        </group>
       </group>
     </group>
   );
 }
 
 export function DjiNeoDrone(props: { isPreview?: boolean; previewAnim?: string; onSize?: (size: THREE.Vector3) => void }) {
-  return <DjiDrone glbPath="/items/dji-neo/dji-neo.glb" targetMaxDimCm={15.7} itemName="Drone DJI Neo" {...props} />;
+  return <DjiDrone glbPath="/items/dji-neo/dji-neo.glb" targetMaxDimCm={15.7} itemName="Drone DJI Neo" rotationY={Math.PI / 2} {...props} />;
 }
 
 export function DjiAvata2Drone(props: { isPreview?: boolean; previewAnim?: string; onSize?: (size: THREE.Vector3) => void }) {
-  return <DjiDrone glbPath="/items/dji-avata-2/dji-avata-2.glb" targetMaxDimCm={21.2} itemName="Drone DJI Avata 2" {...props} />;
+  return <DjiDrone glbPath="/items/dji-avata-2/dji-avata-2.glb" targetMaxDimCm={21.2} itemName="Drone DJI Avata 2" rotationY={Math.PI} {...props} />;
 }
 
 useGLTF.preload('/items/dji-neo/dji-neo.glb');
