@@ -75,6 +75,13 @@ def character_rig(rig, joints):
 
     skeleton, data = new_armature()
     for node, world in original.items():
+        world = world.copy()
+        # Moving a pivot along its own shaft leaves the axis line and all rotations unchanged.
+        link = next(link for link, candidate in rig.items() if candidate == node)
+        joint = joints.get(link)
+        if mapping.get(link) in ('Spine2', 'Neck'):
+            axis = world.to_quaternion() @ Vector(tuple(map(float, joint.find('axis').get('xyz').split())))
+            world.translation -= axis * (world.translation.y / axis.y)
         bone = data.edit_bones.new(node.name)
         bone.head = (north @ world).translation
         bone.tail = (north @ world) @ Vector((0, 1, 0))

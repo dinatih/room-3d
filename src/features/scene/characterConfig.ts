@@ -14,7 +14,10 @@ export interface CharacterConfig {
   height: number;
   sittingScenePath?: string;
   isLara?: boolean;
+  isRobot?: boolean;
 }
+
+export const UNITREE_H2: CharacterConfig = { id: 'unitree-h2', name: 'Unitree H2', emoji: '🤖', color: '#ef4444', path: 'items/unitree-h2/unitree-h2.glb', pos: [-140, 0, -450], rot: 0, height: 183.23, isLara: false, isRobot: true };
 
 export const CHARACTERS: CharacterConfig[] = [
   // 12 stylized Laras (positions et animations gérées par l'IA sur leur zone d'action)
@@ -30,8 +33,6 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'romana',   name: 'Romana',   emoji: '👶', color: '#ffaacc',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'romana',   height: 173.4 },
   { id: 'angelina', name: 'Angelina', emoji: '🧑‍🏫', color: '#00aaff',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'angelina', height: 173.4 },
   { id: 'lgbta',    name: 'Lgbta',    emoji: '🌈', color: '#cc88ff',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'lgbta',    height: 173.4 },
-
-  { id: 'unitree-h2', name: 'Unitree H2', emoji: '🤖', color: '#ef4444', path: 'items/unitree-h2/unitree-h2.glb', pos: [-140, 0, -450], rot: 0, height: 183.23, isLara: false },
 
   // Exception : Xbot
   { id: 'sandra',   name: 'Sandra',   emoji: '🥊', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sandra', height: 173.4 },
@@ -56,7 +57,7 @@ export function npcLabel(char: CharacterConfig): string {
 
 /** Retourne un NPC par son id, ou undefined si introuvable */
 export function findCharacter(id: string): CharacterConfig | undefined {
-  return CHARACTERS.find(c => c.id === id);
+  return id === UNITREE_H2.id ? UNITREE_H2 : CHARACTERS.find(c => c.id === id);
 }
 
 /**
@@ -267,6 +268,6 @@ export function isCharacterVisibleInMode(
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'unitree-h2', 'ybot', 'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'valby',
+  'ybot', 'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'valby',
   'alex', 'david', 'mannequin', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'lewis'
 ]);

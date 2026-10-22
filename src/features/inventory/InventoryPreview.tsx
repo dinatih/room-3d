@@ -868,7 +868,7 @@ export function InventoryPreview({
 
   const showing3D = has3D && (Boolean(smartAction) || !hasPhotos || viewMode === '3d'), showingPhotos = !smartAction && hasPhotos && (!has3D || viewMode === 'photos');
 
-  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters') && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id);
+  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters' || item.id === 'unitree-h2') && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id);
   const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone'].includes(item.id));
   const isWigItem = Boolean(showing3D && item && 'category' in item && ((item as any).category === 'wigs'));
 
@@ -1156,7 +1156,7 @@ export function InventoryPreview({
           {/* Panneau latéral Section PNJ (Persistant en DOM pour préserver le scroll) */}
           <div
               style={{
-                display: isHumanCharacter && showPnjPanel ? 'flex' : 'none',
+                display: isHumanCharacter && item?.id !== 'unitree-h2' && showPnjPanel ? 'flex' : 'none',
                 position: 'absolute',
                 top: 40,
                 right: 8,
@@ -1349,7 +1349,7 @@ export function InventoryPreview({
             <i className="bi bi-wind" aria-hidden="true" />
           </button>
         )}
-        {isHumanCharacter && (
+        {isHumanCharacter && item?.id !== 'unitree-h2' && (
           <button
             type="button"
             className={`${TOOLBAR_BUTTON_CLASS} ${showPnjPanel ? 'btn-danger' : 'btn-outline-secondary'}`}

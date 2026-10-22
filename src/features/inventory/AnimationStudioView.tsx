@@ -2,7 +2,7 @@ import { InventoryLinkButton } from './InventoryLinkButton';
 import { updateUrlInventory, type InventoryUrlTarget } from './inventoryUrlParams';
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
-import { CHARACTERS } from '@features/scene/characterConfig';
+import { CHARACTERS, UNITREE_H2 } from '@features/scene/characterConfig';
 import { ANIM_CATEGORIES } from '@features/scene/CharacterAnimSelector';
 import { InventoryPreview } from './InventoryPreview';
 import { AnimFrameController } from './AnimFrameController';
@@ -54,8 +54,8 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
     measure();
     return () => observer.disconnect();
   }, [missingTarget]);
-  const characters = useMemo(() => CHARACTERS.filter(c =>
-    INVENTORY.some(item => item.id === c.id && item.category === 'characters') &&
+  const characters = useMemo(() => [...CHARACTERS, UNITREE_H2].filter(c =>
+    INVENTORY.some(item => item.id === c.id && (item.category === 'characters' || c.isRobot)) &&
     !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone', 'unitree-g1', 'unitree-go2', 'jumper-robot'].includes(c.id)
   ), []);
   const leader = characters.find(c => c.id === actorId) ?? characters[0];

@@ -154,8 +154,14 @@ Light panels are repainted red. Model units are meters (the Character runtime
 scales to centimeters), glTF Y up, forward -Z (north), centered on X/Z and grounded
 at Y=0. dimensions.json records centimeters in the original URDF neutral pose.
 
-Uses the project's standard Character, retargeting and navigation systems, with
-the existing walking animation as its NPC gait. No Unitree motion policy is used.
+Uses the standard Character animation pipeline, including walking, while listed
+and placed with the robots. It is stationary by default and has no autonomous
+human NPC activities. Each source clip's initial heading is normalized so Miley
+idle and Mixamo walking face the same direction. No Unitree motion policy is used.
+
+The neck pitch pivot is centered along its motor shaft for a readable axial
+skeleton. Moving a point along that same shaft leaves the rotation axis and the
+rigid link motion unchanged; the downstream bind transforms are compensated.
 
 Regenerate:
 ```sh

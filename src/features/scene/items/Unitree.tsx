@@ -7,6 +7,8 @@ import type { SceneItemProps } from '@shared/types';
 import { createUnitreeMotion, measureUnitreeWalkSpeed } from './unitreeMotion';
 import { isAppIdle } from '../idleState';
 import { useRigidMeshBatches } from '../utils/useRigidMeshBatches';
+import { Character } from '../character/Character';
+import { CharacterRuntimeProvider } from '../character/CharacterRuntimeProvider';
 
 function UnitreeModel({ model, onSize, actionState, isPreview }: SceneItemProps & { model: 'g1' | 'go2' }) {
   const { scene } = useGLTFClone(`items/unitree-${model}/unitree-${model}.glb`);
@@ -56,4 +58,23 @@ export function UnitreeG1(props: SceneItemProps) {
 
 export function UnitreeGo2(props: SceneItemProps) {
   return <UnitreeModel {...props} model="go2" />;
+}
+
+/** Character animation and mechanical retargeting, placed and controlled as a robot. */
+export function UnitreeH2({ item, onSize, actionState, isPreview }: SceneItemProps) {
+  const motion = actionState.characterAnim ?? actionState['unitree-h2-motion'] ?? 'idle';
+  const replay = actionState['unitree-h2-replay'] ?? 0;
+  const playback = useRef({ time: 0, duration: 0, ready: true, playing: true });
+  useLayoutEffect(() => { playback.current.time = 0; }, [motion, replay]);
+  useFrame((_, delta) => { if (!isPreview && !isAppIdle()) playback.current.time += delta; });
+  useLayoutEffect(() => {
+    onSize(new Vector3(item.dims.w, item.dims.h, item.dims.d));
+  }, [item, onSize]);
+  return <CharacterRuntimeProvider isPreview>
+    <Character key={replay}
+      id="unitree-h2" name="Unitree H2" modelPath="items/unitree-h2/unitree-h2.glb"
+      isLara={false} targetHeight={183.23} isActive={false} isPreview isAnimationMaster={isPreview}
+      characterAnim={motion} previewPlayback={isPreview ? undefined : playback.current}
+      isPaused={actionState.isPaused} />
+  </CharacterRuntimeProvider>;
 }

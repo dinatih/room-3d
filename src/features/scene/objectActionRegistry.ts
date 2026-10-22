@@ -51,6 +51,15 @@ function positionAction(key: string): Record<string, ActionConfig> {
 }
 
 const ACTIONS: Record<string, ActionConfig> = {
+  'unitree-h2-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat', sceneOnly: true },
+  'unitree-h2-motion': {
+    label: 'Animation du H2', type: 'select', initialValue: 'idle', sceneOnly: true,
+    options: [
+      { value: 'idle', label: 'Repos' },
+      { value: 'walking', label: 'Marche classique' },
+      { value: 'thinking', label: 'Réflexion' },
+    ],
+  },
   'unitree-g1-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
   'unitree-go2-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
   'unitree-g1-autonomous': { label: 'Vie autonome', icon: 'bi-play-circle', sceneOnly: true },

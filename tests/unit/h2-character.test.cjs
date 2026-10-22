@@ -8,8 +8,12 @@ const { measureHumanProfile } = require('../../src/features/scene/ai/navigation/
 const { getWalkCycleSpeed } = require('../../src/features/scene/character/walkCadence.ts');
 const { resolveTargetBoneName } = require('../../src/features/scene/retargeting/boneResolver.ts');
 const { captureAnimationRig, restoreAnimationRig } = require('../../src/features/scene/character/animationSerialization.ts');
+const { CHARACTERS, AUTONOMOUS_NPC_IDS, UNITREE_H2 } = require('../../src/features/scene/characterConfig.ts');
 
 it('anime le H2 avec ses 31 moteurs URDF, face au nord, sans déplacer ni déformer ses pièces', async t => {
+  assert(UNITREE_H2.isRobot);
+  assert(!CHARACTERS.some(character => character.id === UNITREE_H2.id));
+  assert(!AUTONOMOUS_NPC_IDS.has(UNITREE_H2.id));
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
   const { NodeIO } = await import('@gltf-transform/core');
   const { KHRDracoMeshCompression } = await import('@gltf-transform/extensions');
@@ -44,6 +48,18 @@ it('anime le H2 avec ses 31 moteurs URDF, face au nord, sans déplacer ni défor
   assert.equal(meshes, 34);
   assert.equal(motors.length, 31);
   const urdf = fs.readFileSync('public/items/unitree-h2/H2.urdf', 'utf8');
+  const originalFrames = new Map();
+  const urdfWorld = node => {
+    if (node.name === 'pelvis') return node.matrixWorld.clone();
+    if (originalFrames.has(node)) return originalFrames.get(node);
+    const xml = urdf.match(new RegExp(`<joint name="${node.name}"[^>]*>([\\s\\S]*?)</joint>`))[1];
+    const origin = xml.match(/<origin xyz="([^"]+)" rpy="([^"]+)"/);
+    const matrix = new THREE.Matrix4().compose(new THREE.Vector3(...origin[1].split(' ').map(Number)),
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(...origin[2].split(' ').map(Number), 'XYZ')), new THREE.Vector3(1, 1, 1));
+    const world = urdfWorld(node.parent).clone().multiply(matrix);
+    originalFrames.set(node, world);
+    return world;
+  };
   for (const motor of motors) {
     const xml = urdf.match(new RegExp(`<joint name="${motor.name}"[^>]*>([\\s\\S]*?)</joint>`))[1];
     const axis = xml.match(/<axis xyz="([^"]+)"/)[1].split(' ').map(Number);
@@ -52,13 +68,21 @@ it('anime le H2 avec ses 31 moteurs URDF, face au nord, sans déplacer ni défor
     assert.equal(motor.userData.robotJoint.lower, Number(limits[1]));
     assert.equal(motor.userData.robotJoint.upper, Number(limits[2]));
     const origin = xml.match(/<origin xyz="([^"]+)" rpy="([^"]+)"/);
-    assert(motor.defaultPosition.distanceTo(new THREE.Vector3(...origin[1].split(' ').map(Number))) < 1e-6, `${motor.name}: origine URDF`);
+    const originalWorld = urdfWorld(motor);
+    const originalAxis = new THREE.Vector3(...axis).transformDirection(originalWorld);
+    const displacement = motor.getWorldPosition(new THREE.Vector3()).sub(new THREE.Vector3().setFromMatrixPosition(originalWorld));
+    assert(displacement.cross(originalAxis).length() < 1e-4, `${motor.name}: droite de rotation URDF conservée (${displacement.length()} cm)`);
     const rest = new THREE.Quaternion().setFromEuler(new THREE.Euler(...origin[2].split(' ').map(Number), 'XYZ'));
     assert(motor.restLocalQuaternion.clone().normalize().angleTo(rest) < 1e-6, `${motor.name}: repère URDF`);
   }
   const head = scene.getObjectByName(resolveTargetBoneName(scene, 'Head'));
   const forward = new THREE.Vector3().fromArray(head.userData.lookForward).transformDirection(head.matrixWorld);
   assert(forward.z < -0.999, 'avant du robot orienté nord (-Z)');
+  const pelvis = scene.getObjectByName('pelvis');
+  for (const semantic of ['Spine', 'Spine1', 'Spine2', 'Neck', 'Head']) {
+    const bone = scene.getObjectByName(resolveTargetBoneName(scene, semantic));
+    assert(Math.abs(bone.getWorldPosition(new THREE.Vector3()).x - pelvis.getWorldPosition(new THREE.Vector3()).x) < 1e-4, `${semantic}: axe central du buste et de la tête`);
+  }
   const profile = measureHumanProfile(scene, 183.23);
   assert(profile.radius > 0 && Number.isFinite(profile.radius));
   const height = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3()).y;
@@ -96,6 +120,18 @@ it('anime le H2 avec ses 31 moteurs URDF, face au nord, sans déplacer ni défor
       const { lower, upper } = motor.userData.robotJoint;
       assert([-1, 0, 1].some(turn => angle + turn * 2 * Math.PI >= lower - 1e-6 && angle + turn * 2 * Math.PI <= upper + 1e-6), `${motor.name}: limites respectées`);
     }
+  }
+  const idleBytes = fs.readFileSync('public/animations/miley/miley_armature_idle01_f.glb');
+  const idleSource = await sourceLoader.parseAsync(idleBytes.buffer.slice(idleBytes.byteOffset, idleBytes.byteOffset + idleBytes.byteLength), '');
+  idleSource.animations[0].name = 'miley-armature-idle01-f';
+  mixer.stopAllAction();
+  const idle = retargetClip(idleSource.animations[0], scene, idleSource.scene);
+  mixer.clipAction(idle).setLoop(THREE.LoopOnce, 1).play().clampWhenFinished = true;
+  for (const seconds of [0, idle.duration / 2, idle.duration]) {
+    mixer.setTime(seconds);
+    scene.updateMatrixWorld(true);
+    const direction = new THREE.Vector3().fromArray(head.userData.lookForward).transformDirection(head.matrixWorld);
+    assert(direction.z < -0.8, 'le repos Miley conserve le même avant que la marche Mixamo');
   }
   t.diagnostic(`H2 : ${height.toFixed(2)} cm, rayon ${profile.radius.toFixed(2)} cm, marche ${speed.toFixed(2)} cm/s`);
 });

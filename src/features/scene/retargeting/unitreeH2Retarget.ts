@@ -5,7 +5,6 @@ type Retarget = (clip: THREE.AnimationClip, target: THREE.Object3D, source: THRE
 type Motor = { node: THREE.Object3D; axis: THREE.Vector3; rest: THREE.Quaternion; angle: number; lower: number; upper: number; values: number[] };
 // Angular convergence for orientation fitting; unreachable orientations stop at the constrained minimum.
 const ANGULAR_PRECISION = 1e-5;
-const ERROR_PRECISION = 1 - Math.cos(ANGULAR_PRECISION / 2);
 
 /** Bake human poses onto the original single-axis motor chains, without moving any link pivot. */
 export function retargetH2Clip(raw: THREE.AnimationClip, target: THREE.Object3D, source: THREE.Object3D | undefined, space: Parameters<Retarget>[3], retarget: Retarget) {
@@ -50,6 +49,15 @@ export function retargetH2Clip(raw: THREE.AnimationClip, target: THREE.Object3D,
   });
   if (motors.size !== 31 || !pelvis || feet.length !== 2) throw new Error('Incomplete official H2 motor rig');
   const north = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+  // Source clips have different authored headings (Miley idle is opposite to Mixamo walking).
+  // Keep their relative turns, but start every clip facing the robot's forward direction.
+  mixer.setTime(0);
+  driver.updateMatrixWorld(true);
+  const hipsReference = endpoints.find(endpoint => endpoint.node === pelvis)!;
+  const sourceHeading = hipsReference.reference.getWorldQuaternion(new THREE.Quaternion())
+    .multiply((hipsReference.reference as THREE.Object3D & { restWorldQuaternion: THREE.Quaternion }).restWorldQuaternion.clone().invert());
+  const sourceForward = new THREE.Vector3(0, 0, 1).applyQuaternion(sourceHeading);
+  north.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.atan2(sourceForward.x, sourceForward.z)));
   const current = new THREE.Quaternion(), desired = new THREE.Quaternion(), error = new THREE.Quaternion();
   const rotation = new THREE.Quaternion(), axis = new THREE.Vector3(), point = new THREE.Vector3();
   const rootPositions: number[] = [], rootRotations: number[] = [], times: number[] = [];
@@ -95,8 +103,9 @@ export function retargetH2Clip(raw: THREE.AnimationClip, target: THREE.Object3D,
           }
           setAngle(motor, bestAngle);
         }
-        improvement = before - residual();
-      } while (improvement > ERROR_PRECISION);
+        improvement = 2 * (Math.acos(THREE.MathUtils.clamp(1 - before, -1, 1))
+          - Math.acos(THREE.MathUtils.clamp(1 - residual(), -1, 1)));
+      } while (improvement > ANGULAR_PRECISION);
     }
     // Sole bounds come from the official foot meshes; only whole-body height may change.
     let floor = Infinity;

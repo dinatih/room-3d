@@ -9,7 +9,7 @@ import { useGLTF } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Character } from './Character';
 import { cacheDynamicGLTF } from './useCharacterAnimations';
-import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
+import { CHARACTERS, UNITREE_H2, isCharacterVisibleInMode } from '../characterConfig';
 import type { CharacterGroupProps } from './characterTypes';
 import { canCharacterPerformDuo, resolveDuoPreviewParticipants } from '../animations/duoAnimations';
 import { getDuoAnimationTransformOverride, subscribeAnimationOverrides } from '../animations/animationResolver';
@@ -32,7 +32,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
   const activeMainIds = useSceneStore(state => state.activeMainIds);
 
   const characters = useMemo(() => {
-    return CHARACTERS.map(char => ({
+    return [...CHARACTERS, UNITREE_H2].map(char => ({
       ...char,
       isLara: char.isLara !== false,
     }));
@@ -53,7 +53,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
       return characters.filter(char => char.id === props.previewCharacterId);
     }
     const list = characters.filter(char =>
-      showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)
+      !char.isRobot && showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)
     );
     if (characterGrid && list.length > 0) {
       const activeIdx = list.findIndex(char => char.id === activeCharacterId);

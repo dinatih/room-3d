@@ -7,6 +7,63 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1200, height: 720 });
+    if (process.argv.includes('--inventory')) {
+      page.on('pageerror', error => console.error(error));
+      await page.setRequestInterception(true);
+      page.on('request', request => request.isNavigationRequest()
+        ? request.respond({ contentType: 'text/html', body: '<body><div id="root"></div></body>' })
+        : request.continue());
+      await page.goto(`${process.env.H2_TEST_URL || 'http://127.0.0.1:5173'}/?inventory=robots&item=unitree-h2`);
+      await page.evaluate(async () => {
+        const RefreshRuntime = (await import('/@react-refresh')).default;
+        RefreshRuntime.injectIntoGlobalHook(window);
+        window.$RefreshReg$ = () => {};
+        window.$RefreshSig$ = () => type => type;
+        window.__vite_plugin_react_preamble_installed__ = true;
+        await import('/scss/app.scss');
+        await import('/src/index.css');
+        const React = (await import('/node_modules/.vite/deps/react.js')).default;
+        const { createRoot } = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
+        const { Inventory } = await import('/src/features/inventory/Inventory.tsx');
+        const previewSource = await fetch('/src/features/inventory/InventoryPreview.tsx').then(response => response.text());
+        window.h2Fiber = await import(previewSource.match(/from "([^"]+@react-three_fiber[^"]+)"/)[1]);
+        createRoot(document.getElementById('root')).render(React.createElement(Inventory, { initialCategory: 'robots', onClose() {} }));
+      });
+      await page.waitForSelector('.inventory-preview-renderer', { timeout: 60000 });
+      await page.waitForFunction(() => !document.body.textContent.includes('Chargement du modèle'), { timeout: 60000 });
+      await page.evaluate(() => {
+        document.dispatchEvent(new CustomEvent('camera-view', { detail: { key: 'north', projection: 'persp' } }));
+        document.querySelector('button[title="Afficher le squelette (K)"]')?.click();
+      });
+      await page.screenshot({ path: '/tmp/room-h2-inventory-before-bones.png' });
+      await page.waitForFunction(() => {
+        const triangles = document.body.textContent.match(/Tris:\s*([\d.]+)k/);
+        return triangles && Number(triangles[1]) > 0;
+      }, { timeout: 60000 }).catch(async error => {
+        await page.screenshot({ path: '/tmp/room-h2-inventory-error.png' });
+        throw error;
+      });
+      await page.evaluate(() => {
+        [...document.querySelectorAll('button')].find(button => button.textContent.trim() === '0°')?.click();
+        document.dispatchEvent(new CustomEvent('camera-view', { detail: { key: 'north', projection: 'persp' } }));
+      });
+      console.log(JSON.stringify(await page.evaluate(async () => {
+        const { _roots } = window.h2Fiber;
+        const data = [];
+        for (const root of _roots.values()) {
+          root.store.getState().scene.traverse(node => {
+            if (node.name !== 'head_yaw_joint') return;
+            const ancestors = [];
+            for (let parent = node; parent; parent = parent.parent) ancestors.push({ name: parent.name, rotation: parent.rotation.toArray() });
+            data.push({ camera: root.store.getState().camera.position.toArray(), matrix: node.matrixWorld.toArray(), ancestors });
+          });
+        }
+        return data;
+      })));
+      console.log(await page.evaluate(() => [...document.querySelectorAll('button')].filter(button => /Nord|nord|squelette|Squelette/.test(button.title + button.textContent)).map(button => ({ title: button.title, text: button.textContent }))));
+      await page.screenshot({ path: '/tmp/room-h2-inventory.png' });
+      return;
+    }
     await page.setRequestInterception(true);
     page.on('request', request => request.isNavigationRequest()
       ? request.respond({ contentType: 'text/html', body: '<body style="margin:0;background:#e7e9ed"><div id="label" style="position:absolute;top:16px;left:16px;font:20px sans-serif"></div></body>' })

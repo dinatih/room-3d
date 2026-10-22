@@ -325,12 +325,13 @@ Commandes & Suivi :
 
 ];
 
-import { CHARACTERS } from '@features/scene/characterConfig';
+import { CHARACTERS, UNITREE_H2 } from '@features/scene/characterConfig';
 
 const sortedCharacters = [
   ...CHARACTERS.filter(char => char.isLara !== false),
   ...CHARACTERS.filter(char => char.id === 'xbot'),
   ...CHARACTERS.filter(char => char.isLara === false && char.id !== 'xbot'),
+  UNITREE_H2,
 ];
 
 sortedCharacters.forEach(char => {
@@ -350,7 +351,7 @@ sortedCharacters.forEach(char => {
             : (char.id === 'valby'
               ? 'The First Descendant'
               : (!char.isLara ? 'Mixamo' : 'Lara Croft Style')))),
-      category: 'characters',
+      category: char.isRobot ? 'robots' : 'characters',
       qty: 1,
       dims: {
         w: !char.isLara ? 50 : 45,
@@ -491,7 +492,7 @@ INVENTORY.push({
   id: 'unitree-g1',
   name: 'Unitree G1 — robot humanoïde',
   brand: 'Unitree Robotics',
-  category: 'characters',
+  category: 'robots',
   qty: 1,
   dims: { w: 37.14, d: 45.22, h: 132.28 },
   glbPath: 'items/unitree-g1/unitree-g1.glb',
@@ -504,7 +505,7 @@ INVENTORY.push({
   id: 'unitree-go2',
   name: 'Unitree Go2 — quadrupède bionique',
   brand: 'Unitree Robotics',
-  category: 'characters',
+  category: 'robots',
   qty: 1,
   dims: { w: 32.4, d: 73.21, h: 38.83 },
   glbPath: 'items/unitree-go2/unitree-go2.glb',
@@ -517,7 +518,7 @@ INVENTORY.push({
   id: 'jumper-robot',
   name: 'Jumper — robot crabe',
   brand: 'KingKong Robotics',
-  category: 'characters',
+  category: 'robots',
   qty: 1,
   dims: { w: 41.53, d: 36.85, h: 17.84 },
   glbPath: 'items/jumper/jumper.glb',
@@ -666,6 +667,7 @@ export const STORAGE_SPACES: StorageSpace[] = [
 export const CATEGORIES: Category[] = [
   { id: 'all',          label: 'Tout' },
   { id: 'characters',   label: '👥 Personnages' },
+  { id: 'robots',       label: '🤖 Robots' },
   { id: 'animations',   label: '🎬 Animations' },
   { id: 'spaces',       label: '🏠 Espaces & Pièces' },
   { id: 'actionnable',  label: '⚡ Actionnable' },

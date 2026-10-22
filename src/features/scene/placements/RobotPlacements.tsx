@@ -4,7 +4,7 @@ import { Group, Vector3 } from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { INVENTORY } from '@features/inventory/inventoryData';
 import { Jumper } from '../items/Jumper';
-import { UnitreeG1, UnitreeGo2 } from '../items/Unitree';
+import { UnitreeG1, UnitreeGo2, UnitreeH2 } from '../items/Unitree';
 import { getObjectActionIds } from '../objectActions';
 import { getActionDef } from '../objectActionRegistry';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
@@ -25,10 +25,11 @@ const PATROL = {
   minZ: -620, maxZ: -420,
 };
 const ROBOTS = [
+  { id: 'unitree-h2', Component: UnitreeH2, position: [-140, 0, -450], walk: 'walking', speed: 147.4, pause: 2, radiusScale: 1 / 2, automatic: false },
   { id: 'unitree-g1', Component: UnitreeG1, position: [50, 0, -450], walk: 'walk', speed: 30, pause: 2, radiusScale: 1 / 2 },
   { id: 'unitree-go2', Component: UnitreeGo2, position: [220, 0, -620], walk: 'trot', speed: 25.2, pause: 4, radiusScale: 2 / 3 },
   { id: 'jumper-robot', Component: Jumper, position: [430, 0, -450], walk: 'walk', speed: 28.8, pause: 6, radiusScale: 2 / 3 },
-] satisfies { id: string; Component: ComponentType<SceneItemProps>; position: [number, number, number]; walk: string; speed: number; pause: number; radiusScale: number }[];
+] satisfies { id: string; Component: ComponentType<SceneItemProps>; position: [number, number, number]; walk: string; speed: number; pause: number; radiusScale: number; automatic?: boolean }[];
 
 function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const { id, Component } = config;
@@ -37,7 +38,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const route = useRef(createRouteState());
   const navigation = useRef(new NavigationScope());
-  const life = useRef({ automatic: true, target: null as Point | null, wait: config.pause, searching: false });
+  const life = useRef({ automatic: ('automatic' in config ? config.automatic : true), target: null as Point | null, wait: config.pause, searching: false });
   const [actions, setActions] = useState<Record<string, any>>({});
   const motionKey = id === 'jumper-robot' ? 'jumper-motion' : `${id}-motion`;
   const currentMotion = useRef('idle');
