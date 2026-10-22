@@ -627,7 +627,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
 }
 
 function RegistryScene({ item, actionState, showDims, wireframe, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; wireframe: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
-  const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters';
+  const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters' || (item.category === 'robots' && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id));
   return (
     <>
       <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} wireframe={wireframe} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />
@@ -868,7 +868,7 @@ export function InventoryPreview({
 
   const showing3D = has3D && (Boolean(smartAction) || !hasPhotos || viewMode === '3d'), showingPhotos = !smartAction && hasPhotos && (!has3D || viewMode === 'photos');
 
-  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters' || item.id === 'unitree-h2') && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id);
+  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'robots') && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id);
   const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone'].includes(item.id));
   const isWigItem = Boolean(showing3D && item && 'category' in item && ((item as any).category === 'wigs'));
 
@@ -1094,7 +1094,7 @@ export function InventoryPreview({
                 <span>{simulateMotion ? 'Mouvements : Actifs' : 'Simuler mouvements'}</span>
               </button>
             )}
-            {showing3D && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'wigs') && (
+            {showing3D && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'robots' || (item as any).category === 'wigs') && (
               <>
                 {actionStates.showBones && (
                   <button

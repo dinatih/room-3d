@@ -25,7 +25,7 @@ const PATROL = {
   minZ: -620, maxZ: -420,
 };
 const ROBOTS = [
-  { id: 'unitree-h2', Component: UnitreeH2, position: [-140, 0, -450], walk: 'walking', speed: 147.4, pause: 2, radiusScale: 1 / 2, automatic: false },
+  { id: 'unitree-h2', Component: UnitreeH2, position: [120, 0, -520], walk: 'walking', speed: 147.4, pause: 2, radiusScale: 1 / 2 },
   { id: 'unitree-g1', Component: UnitreeG1, position: [50, 0, -450], walk: 'walk', speed: 30, pause: 2, radiusScale: 1 / 2 },
   { id: 'unitree-go2', Component: UnitreeGo2, position: [220, 0, -620], walk: 'trot', speed: 25.2, pause: 4, radiusScale: 2 / 3 },
   { id: 'jumper-robot', Component: Jumper, position: [430, 0, -450], walk: 'walk', speed: 28.8, pause: 6, radiusScale: 2 / 3 },
@@ -40,6 +40,8 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const navigation = useRef(new NavigationScope());
   const life = useRef({ automatic: ('automatic' in config ? config.automatic : true), target: null as Point | null, wait: config.pause, searching: false });
   const [actions, setActions] = useState<Record<string, any>>({});
+  const soloActive = useRef(false);
+  const onH2SoloActive = useCallback((active: boolean) => { soloActive.current = active; }, []);
   const motionKey = id === 'jumper-robot' ? 'jumper-motion' : `${id}-motion`;
   const currentMotion = useRef('idle');
   const replayKey = id === 'jumper-robot' ? 'jumper-replay' : `${id}-replay`;
@@ -105,6 +107,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     navigation.current.poll(() => {
     const root = group.current;
     if (!root || !profile || !navigationEnabled || isAppIdle()) return;
+    if (soloActive.current) { state.invalidate(); return; }
     const ai = life.current;
     if (ai.automatic) {
       if (ai.target) {
@@ -134,7 +137,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
         ai.wait -= delta;
         if (ai.wait <= 0) {
           selectMotion('idle');
-          if (ai.searching || navigationValue('robot-trip', () => Math.random()) < 2 / 3) {
+          if (id === 'unitree-h2' || ai.searching || navigationValue('robot-trip', () => Math.random()) < 2 / 3) {
             ai.searching = true;
             const target = navigationValue('robot-target', () => ({
               x: PATROL.minX + Math.random() * (PATROL.maxX - PATROL.minX),
@@ -164,7 +167,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   return (
     <group ref={group} position={config.position} userData={{ animUnit: true, noAnim: true, skipMerge: true,
       itemName: item.name, hoverAction: { label: item.name, actions: getObjectActionIds(id) } }}>
-      <Component item={item} actionState={{ ...actions, robotAutonomous: life.current.automatic }} onSize={onSize} />
+      <Component item={item} actionState={{ ...actions, robotAutonomous: life.current.automatic, onH2SoloActive }} onSize={onSize} />
     </group>
   );
 }

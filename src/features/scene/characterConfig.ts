@@ -17,7 +17,7 @@ export interface CharacterConfig {
   isRobot?: boolean;
 }
 
-export const UNITREE_H2: CharacterConfig = { id: 'unitree-h2', name: 'Unitree H2', emoji: '🤖', color: '#ef4444', path: 'items/unitree-h2/unitree-h2.glb', pos: [-140, 0, -450], rot: 0, height: 183.23, isLara: false, isRobot: true };
+export const UNITREE_H2: CharacterConfig = { id: 'unitree-h2', name: 'Unitree H2', emoji: '🤖', color: '#ef4444', path: 'items/unitree-h2/unitree-h2.glb', pos: [120, 0, -520], rot: 0, height: 183.23, isLara: false, isRobot: true };
 
 export const CHARACTERS: CharacterConfig[] = [
   // 12 stylized Laras (positions et animations gérées par l'IA sur leur zone d'action)

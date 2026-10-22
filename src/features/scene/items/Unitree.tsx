@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3 } from 'three';
 import { useGLTFClone } from '../useGLTFClone';
@@ -9,6 +9,10 @@ import { isAppIdle } from '../idleState';
 import { useRigidMeshBatches } from '../utils/useRigidMeshBatches';
 import { Character } from '../character/Character';
 import { CharacterRuntimeProvider } from '../character/CharacterRuntimeProvider';
+import { WALKER_ANIM_OPTIONS } from '../animOptions';
+import { advanceH2SoloCycle, createH2SoloCycle } from './h2SoloCycle';
+
+const H2_SOLO_ANIMATIONS = WALKER_ANIM_OPTIONS.filter(animation => animation.value !== 't-pose' && animation.value !== 'idle');
 
 function UnitreeModel({ model, onSize, actionState, isPreview }: SceneItemProps & { model: 'g1' | 'go2' }) {
   const { scene } = useGLTFClone(`items/unitree-${model}/unitree-${model}.glb`);
@@ -62,11 +66,36 @@ export function UnitreeGo2(props: SceneItemProps) {
 
 /** Character animation and mechanical retargeting, placed and controlled as a robot. */
 export function UnitreeH2({ item, onSize, actionState, isPreview }: SceneItemProps) {
-  const motion = actionState.characterAnim ?? actionState['unitree-h2-motion'] ?? 'idle';
+  const cycle = useRef(createH2SoloCycle());
+  const [automaticMotion, setAutomaticMotion] = useState('idle');
+  const manualMotion = actionState.characterAnim ?? actionState['unitree-h2-motion'];
+  const automatic = !isPreview && actionState.robotAutonomous !== false;
+  const motion = automatic && automaticMotion !== 'idle' ? automaticMotion : manualMotion ?? 'idle';
+  useLayoutEffect(() => {
+    actionState.onH2SoloActive?.(automatic && automaticMotion !== 'idle');
+  }, [automatic, automaticMotion, actionState.onH2SoloActive]);
   const replay = actionState['unitree-h2-replay'] ?? 0;
-  const playback = useRef({ time: 0, duration: 0, ready: true, playing: true });
-  useLayoutEffect(() => { playback.current.time = 0; }, [motion, replay]);
-  useFrame((_, delta) => { if (!isPreview && !isAppIdle()) playback.current.time += delta; });
+  const playback = useRef({ time: 0, duration: 0, ready: false, playing: true });
+  useLayoutEffect(() => {
+    playback.current.time = 0;
+    playback.current.ready = false;
+    cycle.current.time = 0;
+  }, [motion, replay]);
+  useFrame((_, delta) => {
+    if (isPreview || isAppIdle() || actionState.isPaused) return;
+    const clock = playback.current;
+    if (!automatic) {
+      if (clock.ready) clock.time = (clock.time + delta) % clock.duration;
+      return;
+    }
+    const changed = advanceH2SoloCycle(cycle.current, delta, clock.duration, clock.ready,
+      () => H2_SOLO_ANIMATIONS[Math.floor(Math.random() * H2_SOLO_ANIMATIONS.length)].value);
+    clock.time = cycle.current.time;
+    if (changed) {
+      clock.ready = false;
+      setAutomaticMotion(cycle.current.motion);
+    }
+  });
   useLayoutEffect(() => {
     onSize(new Vector3(item.dims.w, item.dims.h, item.dims.d));
   }, [item, onSize]);
