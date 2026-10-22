@@ -38,7 +38,7 @@ import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles'
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform, getAnimationDef } from '../animations/animationResolver';
-import { getCrossfadeDuration, isPostureTransition, getPostureTransitionRotDelta } from '../animations/animationTransitions';
+import { getCrossfadeDuration, isPostureTransition, getPostureTransitionRotDelta, lerpAngle } from '../animations/animationTransitions';
 import { fitPostureTransition } from '../animations/postureTransition';
 
 import type { CharacterProps } from './characterTypes';
@@ -868,7 +868,7 @@ export function Character({
       const { offset, rotY } = getAnimationOriginTransform(target);
       const factor = isPreview || characterGrid || !animOriginLerp ? 1 : Math.min(1, delta * 8);
       animOriginRef.current.position.lerp(_tmpAnimOrigin.set(...offset), factor);
-      animOriginRef.current.rotation.y = THREE.MathUtils.lerp(animOriginRef.current.rotation.y, rotY, factor);
+      animOriginRef.current.rotation.y = lerpAngle(animOriginRef.current.rotation.y, rotY, factor);
     }
 
     const animationEquipment = isTPose ? undefined : getAnimationDef(target)?.equipment;
@@ -1209,7 +1209,7 @@ export function Character({
           const idleOrigin = getAnimationOriginTransform(postureTargetId);
           animOriginRef.current.position.copy(postureOriginRef.current.position)
             .lerp(_tmpAnimOrigin.set(...idleOrigin.offset), progress);
-          animOriginRef.current.rotation.y = THREE.MathUtils.lerp(postureOriginRef.current.rotY, idleOrigin.rotY, progress);
+          animOriginRef.current.rotation.y = lerpAngle(postureOriginRef.current.rotY, idleOrigin.rotY, progress);
         }
       }
     }

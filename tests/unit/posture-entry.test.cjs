@@ -4,6 +4,26 @@ const { load } = require('../support/load-ts.cjs');
 const THREE = require('three');
 const { fitPostureTransition } = require('../../src/features/scene/animations/postureTransition.ts');
 
+it('interpole les orientations par le quart de tour le plus court dans les deux sens', () => {
+  const { lerpAngle } = load('src/features/scene/animations/animationTransitions.ts', {
+    './animationResolver': {},
+  });
+  const quarter = Math.PI / 2;
+  for (const [from, to, turn] of [[3 * quarter, 0, quarter], [0, 3 * quarter, -quarter],
+    [-3 * quarter, 0, -quarter], [0, -3 * quarter, quarter], [7 * quarter, 0, quarter]]) {
+    let previous = from, travelled = 0;
+    for (const progress of [0, 0.25, 0.5, 0.75, 1]) {
+      const angle = lerpAngle(from, to, progress);
+      assert(Math.abs(angle - (from + turn * progress)) < 1e-12);
+      travelled += Math.abs(angle - previous);
+      previous = angle;
+    }
+    assert(Math.abs(travelled - quarter) < 1e-12);
+    assert(Math.abs(Math.sin(previous - to)) < 1e-12);
+    assert(Math.cos(previous - to) > 0);
+  }
+});
+
 it('reconnaît l’alias canonique d’assise comme transition et ne déclenche pas un relèvement supplémentaire', () => {
   const entry = { id: 'miley-armature-stand-to-sit', tags: ['sitting'], duration: 5.1 };
   const { isPostureTransition, getExitTransition } = load('src/features/scene/animations/animationTransitions.ts', {

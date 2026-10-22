@@ -7,6 +7,12 @@
 
 import { getAnimationDef } from './animationResolver';
 
+/** Interpolate equivalent orientations along the shortest arc. */
+export function lerpAngle(from: number, to: number, progress: number): number {
+  const delta = to - from;
+  return from + Math.atan2(Math.sin(delta), Math.cos(delta)) * progress;
+}
+
 const TRANSITION_CLIP_IDS = new Set([
   'sit-to-stand',
   'crouch-to-stand',
