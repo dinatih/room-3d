@@ -434,7 +434,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Cuisiner Plaques',
         animation: 'cooking-stir-pan',
         duration: 9.3,
-        offset: [80, 0, 400],
+        offset: [80, 0, ROOM_D - HUMAN_BODY_RADIUS],
+        rotY: 0,
       }
     ]
   },
