@@ -49,6 +49,7 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
   // occurs in LeftHandRing1 and must not steal the right wrist on Xbot.
   let exact: string | null = null;
   targetInstance.traverse(node => {
+    if (node.userData.humanoidBone === baseName) exact = node.name;
     if ((node as THREE.Bone).isBone && node.name.replace(/^mixamorig[:_]?/i, '').toLowerCase() === baseName.toLowerCase()) exact = node.name;
   });
   if (exact) { instanceCache.set(cacheKey, exact); return exact; }

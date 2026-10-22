@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { CC3_TO_MIXAMO } from './boneMappings';
 import { getDepth } from './hairChain';
 import { resolveTargetBoneName } from './boneResolver';
+import { retargetH2Clip } from './unitreeH2Retarget';
 
 function subsampleTrackTo30Fps(track: THREE.KeyframeTrack): THREE.KeyframeTrack {
   const times = track.times;
@@ -63,6 +64,9 @@ function subsampleTrackTo30Fps(track: THREE.KeyframeTrack): THREE.KeyframeTrack 
 }
 
 export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, animScene: THREE.Object3D | undefined, rootMotionSpace?: 'world-meters' | 'rest-meters'): THREE.AnimationClip {
+  if (targetInstance.getObjectByName('H2')?.userData.h2MotionDriver) {
+    return retargetH2Clip(rawClip, targetInstance, animScene, rootMotionSpace, retargetClip);
+  }
   const animBones: Record<string, any> = {};
   const sourceHairMap = new Map<string, string>();
 

@@ -370,9 +370,9 @@ sortedCharacters.forEach(char => {
               : `Personnage : ${char.name}.`))),
       ...(char.id === 'unitree-h2' ? {
         brand: 'Unitree Robotics',
-        dims: { w: 166.44, d: 28, h: char.height },
+        dims: { w: 44.66, d: 56.07, h: char.height },
         url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/h2_description',
-        notes: 'Maillages officiels BSD-3-Clause. Squelette humanoïde ajouté au projet, pièces rigides. Utilise les animations classiques des personnages, dont walking. Dimensions en T-pose.',
+        notes: 'Maillages et 31 articulations officiels BSD-3-Clause. Pièces rigides entraînées autour des axes moteurs, dans leurs limites URDF. Marche classique adaptée aux moteurs. Dimensions en posture neutre.',
       } : {}),
     });
   }

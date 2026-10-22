@@ -5,6 +5,7 @@ export interface RigNode {
   position: number[]; quaternion: number[]; scale: number[];
   defaultPosition?: number[]; restLocalQuaternion?: number[];
   restWorldQuaternion?: number[]; restWorldPosition?: number[];
+  userData?: Record<string, unknown>;
   children: RigNode[];
 }
 type RestObject = THREE.Object3D & {
@@ -18,7 +19,9 @@ export function captureAnimationRig(root: THREE.Object3D): RigNode {
     const children = node.children.map(child => capture(child)).filter((child): child is RigNode => !!child);
     const bone = !!(node as THREE.Bone).isBone;
     if (!bone && !children.length && node !== root) return;
+    const { robotJoint, humanoidBone, motionRestWorld, h2MotionDriver, footBounds } = node.userData;
     return { name: node === root ? '' : node.name, bone,
+      userData: robotJoint || humanoidBone || h2MotionDriver ? { robotJoint, humanoidBone, motionRestWorld, h2MotionDriver, footBounds } : undefined,
       position: (node.defaultPosition ?? node.position).toArray(),
       quaternion: (node.restLocalQuaternion ?? node.quaternion).toArray(), scale: node.scale.toArray(),
       defaultPosition: node.defaultPosition?.toArray(), restLocalQuaternion: node.restLocalQuaternion?.toArray(),
@@ -31,6 +34,7 @@ export function captureAnimationRig(root: THREE.Object3D): RigNode {
 export function restoreAnimationRig(node: RigNode): THREE.Object3D {
   const root: RestObject = node.bone ? new THREE.Bone() : new THREE.Group();
   root.name = node.name;
+  if (node.userData) root.userData = structuredClone(node.userData);
   root.position.fromArray(node.position); root.quaternion.fromArray(node.quaternion); root.scale.fromArray(node.scale);
   if (node.defaultPosition) root.defaultPosition = new THREE.Vector3().fromArray(node.defaultPosition);
   if (node.restLocalQuaternion) root.restLocalQuaternion = new THREE.Quaternion().fromArray(node.restLocalQuaternion);

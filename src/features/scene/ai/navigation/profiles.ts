@@ -21,7 +21,7 @@ export function measureHumanProfile(root: THREE.Object3D, height: number): Agent
       let dominant = 0;
       for (let j = 1; j < 4; j++) if (weights.getComponent(i, j) > weights.getComponent(i, dominant)) dominant = j;
       const bone = mesh.skeleton.bones[indices.getComponent(i, dominant)];
-      if (!/spine|chest|pelvis|hip|torso/i.test(bone.name)) continue;
+      if (!/spine|chest|pelvis|hip|torso/i.test(bone.userData.humanoidBone ?? bone.name)) continue;
       // Skinning includes the armature's scale, which can differ from the mesh's
       // scale (Xbot embeds a 0.01 mesh transform under a centimetre armature).
       mesh.getVertexPosition(i, vertex).applyMatrix4(matrix);

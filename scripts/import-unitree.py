@@ -41,6 +41,8 @@ def download(url, target):
 if '--download' in sys.argv:
     if SELECTED == 'h2':
         download(ROS + 'robots/h2_description/H2.urdf', CACHE / 'h2.urdf')
+        (ROOT / 'public/items/unitree-h2').mkdir(parents=True, exist_ok=True)
+        (ROOT / 'public/items/unitree-h2/H2.urdf').write_text((CACHE / 'h2.urdf').read_text())
         h2 = ET.parse(CACHE / 'h2.urdf').getroot()
         for filename in sorted({m.attrib['filename'] for m in h2.findall('.//visual/geometry/mesh')}):
             download(ROS + 'robots/h2_description/' + filename, CACHE / 'h2' / filename)
@@ -120,14 +122,14 @@ def export(robot, source):
     hi = Vector(tuple(max(p[i] for p in points) for i in range(3)))
     # Blender Z up becomes glTF Y up; Unitree X forward becomes glTF +Z.
     from math import pi
-    transform = Matrix.Scale(1 if robot == 'h2' else 100, 4) @ Matrix.Rotation(-pi / 2, 4, 'Z') @ Matrix.Translation((-(lo.x+hi.x)/2, -(lo.y+hi.y)/2, -lo.z))
+    transform = Matrix.Identity(4) if robot == 'h2' else Matrix.Scale(100, 4) @ Matrix.Rotation(-pi / 2, 4, 'Z') @ Matrix.Translation((-(lo.x+hi.x)/2, -(lo.y+hi.y)/2, -lo.z))
     for obj in list(bpy.context.scene.objects):
         if obj.parent is None:
             obj.matrix_world = transform @ obj.matrix_world
     target = ROOT / f'public/items/unitree-{robot}'
     bpy.ops.export_scene.gltf(filepath=str(target / f'unitree-{robot}.glb'), export_format='GLB', export_animations=False, export_extras=True, export_draco_mesh_compression_enable=robot == 'h2')
     size = (hi - lo) * 100
-    dims = {'w': round(size.y, 2), 'd': round(size.x, 2), 'h': round(size.z, 2)}
+    dims = {'w': round(size.x if robot == 'h2' else size.y, 2), 'd': round(size.y if robot == 'h2' else size.x, 2), 'h': round(size.z, 2)}
     (target / 'dimensions.json').write_text(json.dumps(dims, indent=2) + '\n')
     (target / 'README.md').write_text(f'# Unitree {robot.upper()}\n\nSource: {source}\n\nOfficial visual meshes assembled in Blender with the original joint hierarchy and axes. Light body panels repainted red; dark sensors and rubber preserved. Centimeters, glTF Y up, centered on X/Z and grounded at Y=0.\n\nProcedural visual animations authored for this project in src/features/scene/items/unitreeMotion.ts: idle, locomotion, greeting, bow and dance. These are not recordings or control policies from Unitree. Go2 resting joint angles come from the official MuJoCo home keyframe. No physics or autonomous navigation.\n\nSee LICENSE for upstream redistribution terms. Regenerate using scripts/import-unitree.py.\n')
     if robot == 'h2':
@@ -137,15 +139,20 @@ Official source: {source}
 Repository: https://github.com/unitreerobotics/unitree_ros/tree/master/robots/h2_description
 Redistribution: BSD-3-Clause, see LICENSE.
 
-The official 34 visual meshes are assembled from the URDF, then converted to a
-humanoid character by scripts/unitree-h2-character.py. Each rigid piece has one
-bone influence, with no flexible skin deformation. Arms are aligned in T-pose;
-the mechanical 31-DOF control rig is replaced by an 18-bone Mixamo-compatible rig.
-This visual adaptation does not enforce the real robot's joint limits.
+The 34 official visual meshes retain the URDF motor hierarchy, pivots, axes and
+31 angular limits. scripts/unitree-h2-character.py exports one bone per original
+link and one rigid influence per piece. Intermediate motor housings follow their
+own joints. No mesh bends, stretches or slides along the skeleton.
+
+A separate humanoid reference is stored as metadata, solely for converting the
+project's human animation clips into constrained motor rotations. It is not the
+visible robot's rig. The resulting motion approximates the source where the
+robot cannot reproduce it. This is a visual adaptation, not a balance controller,
+collision solver or executable policy for a physical H2.
 
 Light panels are repainted red. Model units are meters (the Character runtime
-scales to centimeters), glTF Y up, centered on X/Z and grounded at Y=0.
-dimensions.json records centimeters in T-pose.
+scales to centimeters), glTF Y up, forward -Z (north), centered on X/Z and grounded
+at Y=0. dimensions.json records centimeters in the original URDF neutral pose.
 
 Uses the project's standard Character, retargeting and navigation systems, with
 the existing walking animation as its NPC gait. No Unitree motion policy is used.
@@ -189,7 +196,7 @@ if robot == 'h2':
     sys.dont_write_bytecode = True
     sys.path.insert(0, str(ROOT / 'scripts'))
     import importlib
-    importlib.import_module('unitree-h2-character').character_rig(rig)
+    importlib.import_module('unitree-h2-character').character_rig(rig, joints)
 export(robot, ROS + ('robots/h2_description/H2.urdf' if robot == 'h2' else 'robots/g1_description/g1_29dof_rev_1_0.urdf'))
 if SELECTED == 'h2':
     sys.exit(0)

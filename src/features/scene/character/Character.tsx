@@ -1250,8 +1250,8 @@ export function Character({
         }
 
         // Direction du regard (forward Z) et axe haut (up Y) de la tête
-        _tmpHeadForward.set(0, 0, 1).transformDirection(headBone.matrixWorld);
-        _tmpHeadUp.set(0, 1, 0).transformDirection(headBone.matrixWorld);
+        _tmpHeadForward.fromArray(headBone.userData.lookForward ?? [0, 0, 1]).transformDirection(headBone.matrixWorld);
+        _tmpHeadUp.fromArray(headBone.userData.lookUp ?? [0, 1, 0]).transformDirection(headBone.matrixWorld);
 
         if (!cameraState.activeHeadForward) {
           cameraState.activeHeadForward = { x: _tmpHeadForward.x, y: _tmpHeadForward.y, z: _tmpHeadForward.z };
