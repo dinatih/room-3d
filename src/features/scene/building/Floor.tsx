@@ -22,7 +22,7 @@ import {
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
 import {
   COLORS, skirtingMat, noCapMat, slabConcreteTop, slabConcreteSide,
-  boxFaceMats, qrGeo
+  boxFaceMats, qrGeo, architecturalGlassMat
 } from './buildingCommon';
 import { P } from './Walls';
 
@@ -604,6 +604,8 @@ export function Floor() {
         <group name="ceiling-group" userData={{ itemName: 'Plafonds' }}>
           <MergedStaticGroup name="merged-ceiling">
             <group position={[0, WALL_H - 1, 0]}>
+              <mesh geometry={ceilBottomGeo} material={architecturalGlassMat}
+                userData={{ brickType: 'ceiling' }} />
               <mesh
                 geometry={ceilBottomGeo}
                 material={ceilBottomBack}
