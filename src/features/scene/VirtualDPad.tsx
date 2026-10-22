@@ -29,6 +29,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   const zoomFrame = useRef<number | null>(null);
   const zoomRemaining = useRef(0);
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
+  const [pointerZoom, setPointerZoom] = useState<'in' | 'out' | null>(null);
 
   const releaseKey = useCallback((key: string) => {
     if (!activeKeys.current.delete(key)) return;
@@ -62,6 +63,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
 
   const releaseAll = useCallback(() => {
     cancelZoom();
+    setPointerZoom(null);
     activeKeys.current.forEach(key => fire(key, false));
     activeKeys.current.clear();
     setPressedKeys(new Set());
@@ -121,18 +123,27 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
     <div className="virtual-controls d-flex flex-column align-items-center gap-1">
       <div className="position-relative d-flex align-items-start gap-3">
         <div className="position-absolute top-0 start-50 translate-middle-x virtual-controls__modes glass-card btn-group btn-group-sm p-1 rounded-2" role="group" aria-label="Zoom caméra">
-          {(['in', 'out'] as const).map(direction => (
-            <button
-              key={direction}
-              type="button"
-              className="btn btn-sm btn-outline-secondary py-0 px-1"
-              aria-label={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
-              title={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
-              onClick={() => zoom(direction)}
-            >
-              <i className={`bi bi-zoom-${direction}`} aria-hidden="true" />
-            </button>
-          ))}
+          {(['in', 'out'] as const).map(direction => {
+            const isPressed = (direction === 'in'
+              ? pressedKeys.has('CtrlArrowUp') || pressedKeys.has('PageUp')
+              : pressedKeys.has('CtrlArrowDown') || pressedKeys.has('PageDown')) || pointerZoom === direction;
+            return (
+              <button
+                key={direction}
+                type="button"
+                className={`btn btn-sm btn-outline-secondary py-0 px-1 ${isPressed ? 'is-pressed' : ''}`}
+                aria-pressed={isPressed}
+                aria-label={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
+                title={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
+                onPointerDown={() => setPointerZoom(direction)}
+                onPointerUp={() => setPointerZoom(null)}
+                onPointerCancel={() => setPointerZoom(null)}
+                onClick={() => zoom(direction)}
+              >
+                <i className={`bi bi-zoom-${direction}`} aria-hidden="true" />
+              </button>
+            );
+          })}
         </div>
         <div className="position-absolute bottom-0 start-50 translate-middle-x glass-card d-flex align-items-center gap-1 p-1 rounded-2" role="group" aria-label="Cible de la caméra">
           <span className="small px-1" title="Cible de la caméra"><i className="bi bi-bullseye" aria-hidden="true" /><span className="visually-hidden">Cible caméra</span></span>

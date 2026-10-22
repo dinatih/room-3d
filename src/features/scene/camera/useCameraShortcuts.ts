@@ -76,8 +76,9 @@ export function useCameraShortcuts({
 
   useEffect(() => {
     const publishArrowKeys = () => {
-      const arrows = [...keys.current].map(key => key.replace(/^(ShiftCtrl|Shift|Ctrl|Alt)/, ''));
-      document.dispatchEvent(new CustomEvent('camera-arrow-keys', { detail: arrows }));
+      const baseArrows = [...keys.current].map(key => key.replace(/^(ShiftCtrl|Shift|Ctrl|Alt)/, ''));
+      const allKeys = Array.from(new Set([...keys.current, ...baseArrows]));
+      document.dispatchEvent(new CustomEvent('camera-arrow-keys', { detail: allKeys }));
     };
     const chooseFollow = (x: number, z: number, mode: 'follow' | 'fpv' = 'follow') => {
       if (cameraState.animalTarget === 'drone') cameraState.animalTarget = null;
