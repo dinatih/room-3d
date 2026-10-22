@@ -10,7 +10,7 @@ import { getAnimationDef } from './animationResolver';
 const TRANSITION_CLIP_IDS = new Set([
   'sit-to-stand',
   'crouch-to-stand',
-  'stand-to-sit',
+  'miley-armature-stand-to-sit',
   'getting-up-from-backside',
   'kip-up',
   'standing-up-from-bed',

@@ -217,6 +217,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Faire ses besoins',
         offset: [TOILET_BOWL_CENTER[0], 0, TOILET_BOWL_CENTER[2]],
         approachOffset: [TOILET_BOWL_CENTER[0], 0, TOILET_D / 2 + HUMAN_BODY_RADIUS],
+        entryAnimation: 'stand-to-sit',
         rotY: 0,
         animation: 'sit-idle',
         duration: 6.0,

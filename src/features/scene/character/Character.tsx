@@ -856,8 +856,9 @@ export function Character({
 
     const postureTransition = !isPreview && !characterGrid && isPostureTransition(target);
     const idleId = resolveAnimationId('idle');
-    if (postureTransition && !actions[idleId]) {
-      loadAndPlayClip(idleId);
+    const postureTargetId = target === resolveAnimationId('stand-to-sit') ? resolveAnimationId('sit-idle') : idleId;
+    if (postureTransition && !actions[postureTargetId]) {
+      loadAndPlayClip(postureTargetId);
       return;
     }
     // A pending clip must not move the origin of the pose still on screen.
@@ -898,7 +899,7 @@ export function Character({
           const previous = postureClipsRef.current.get(target);
           const original = previous?.original ?? to.getClip();
           if (previous) mixer.uncacheAction(previous.fitted);
-          const fitted = fitPostureTransition(original, hipsBone, actions[idleId].getClip());
+          const fitted = fitPostureTransition(original, hipsBone, actions[postureTargetId].getClip());
           postureClipsRef.current.set(target, { original, fitted });
           const originalAction = to;
           to = mixer.clipAction(fitted);
@@ -913,7 +914,7 @@ export function Character({
         const blendDuration = getCrossfadeDuration(activeActionName.current, target);
         if (from) retireAction(from, characterGrid || !animCrossfade ? 0 : (isPreview ? Math.min(blendDuration, 0.15) : blendDuration));
 
-        const isOnceAnim = getAnimationDef(target)?.loop === 'once' ||
+        const isOnceAnim = isPostureTransition(target) || getAnimationDef(target)?.loop === 'once' ||
                            target === 'pistol-kneel-to-stand' ||
                            target === 'anim-pistol-kneel-to-stand' ||
                            target === 'sit-to-stand' ||
@@ -1203,7 +1204,7 @@ export function Character({
         const progress = duration > 0 ? Math.min(1, action.time / duration) : 1;
         reportAnimationPlayback(activeActionName.current, progress, action.loop === THREE.LoopOnce && action.time >= duration);
         if (postureTransition && animOriginRef.current) {
-          const idleOrigin = getAnimationOriginTransform(idleId);
+          const idleOrigin = getAnimationOriginTransform(postureTargetId);
           animOriginRef.current.position.copy(postureOriginRef.current.position)
             .lerp(_tmpAnimOrigin.set(...idleOrigin.offset), progress);
           animOriginRef.current.rotation.y = THREE.MathUtils.lerp(postureOriginRef.current.rotY, idleOrigin.rotY, progress);

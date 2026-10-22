@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-/** Fit a rise to the actual pelvis pose and the standing idle endpoint.
+/** Fit a posture change to the actual pelvis pose and the target idle endpoint.
  * Corrections vary over the clip; its intermediate motion is preserved.
  * The cached retargeted clip must remain reusable by other interactions.
  */

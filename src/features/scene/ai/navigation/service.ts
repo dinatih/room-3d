@@ -193,8 +193,8 @@ function clearCrowd(route: RouteState): void {
 }
 export const createRouteState = (): RouteState => ({ path: [], index: 0, target: null, graph: null, error: null, doors: new Set() });
 
-/** Animation-driven furniture exit: keep its trajectory, wait if it becomes blocked. */
-export function movePostureExit(route: RouteState, agentId: string, start: Point, target: Point, owner: string): Point {
+/** Animation-driven furniture transition: keep its trajectory, wait if it becomes blocked. */
+export function movePostureTransition(route: RouteState, agentId: string, start: Point, target: Point, owner: string): Point {
   const graph = getNavigationGraph(getAgentProfile(agentId), owner);
   route.waitReason = undefined;
   if (!segmentFree(start, target, graph.obstacles)) {

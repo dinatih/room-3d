@@ -4,7 +4,7 @@ import { getAvailableAutonomousActivities } from './autonomousActivities';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, getObjectApproach, movePostureExit, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation } from './navigation/service';
+import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, getObjectApproach, movePostureTransition, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation } from './navigation/service';
 import { prepareKitchenStorageAccess, releaseKitchenStorageAccess } from './diyChairClearance';
 import { hasAgentProfile, getObstacleRevision, furnitureClearance, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
 import { distance, inflate, pointInRing, BOOLEAN_PRECISION } from './navigation/geometry';
@@ -110,20 +110,20 @@ export function createAgentController(
   let timer = deployment.timer;
   let agentStatus: AgentStatus = deployment.status;
   let animationPlayback: { animation: string; progress: number; finished: boolean } | null = null;
-  let exitTransition: {
-    animation: string; sourceAnimation: string; y: number; advanceStep: boolean;
+  let postureTransition: {
+    animation: string; sourceAnimation: string; targetAnimation?: string; y: number; advanceStep: boolean;
     departure: { x: number; z: number }; owner?: string;
-    exit?: { x: number; z: number };
+    destination?: { x: number; z: number };
   } | null = null;
   const beginExitTransition = (advanceStep: boolean) => {
     if (!(useSceneStore.getState().layers.exitTransitions ?? false)) return false;
     const exit = getExitTransition(state.animation);
     if (!exit) return false;
     const owner = route.owner ?? claimedSlot?.objectId;
-    exitTransition = {
+    postureTransition = {
       animation: exit.anim, sourceAnimation: state.animation, y: state.y, advanceStep,
       departure: { x: state.x, z: state.z },
-      exit: cachedCoords?.owner === owner ? cachedCoords?.approach : undefined,
+      destination: cachedCoords?.owner === owner ? cachedCoords?.approach : undefined,
       owner: owner ? getInteractionOwner(owner) : undefined,
     };
     animationPlayback = null;
@@ -413,7 +413,7 @@ export function createAgentController(
       navigationScope.clear();
       releaseKitchenStorageAccess(_characterId);
       const previousAnimation = state.animation;
-      const previousTransition = exitTransition;
+      const previousTransition = postureTransition;
       const departureOwner = route.owner ?? claimedSlot?.objectId
         ?? (hasAgentProfile(_characterId) ? getContainingObjectOwner(_characterId, getRealPosition()) : undefined);
       if (claimedSlot) {
@@ -650,7 +650,7 @@ export function createAgentController(
       spawnObstacleRevision = getObstacleRevision();
     }
     const hasNavStepInUpdate = dynamicNavIndex < dynamicNavQueue.length;
-    if (!scenario && !hasNavStepInUpdate && !exitTransition) {
+    if (!scenario && !hasNavStepInUpdate && !postureTransition) {
       state.animation = 'idle';
       return state;
     }
@@ -729,16 +729,16 @@ export function createAgentController(
     }
 
     // A replacement order must finish the rise without consuming its first step.
-    if (exitTransition && agentStatus !== 'TRANSITIONING') {
-      exitTransition.advanceStep = false;
+    if (postureTransition && agentStatus !== 'TRANSITIONING') {
+      postureTransition.advanceStep = false;
       agentStatus = 'TRANSITIONING';
-      state.animation = exitTransition.animation;
+      state.animation = postureTransition.animation;
     }
     // ── 1.5 Gestion des transitions in-between (ex: sit-to-stand, crouch-to-stand, stand-up) ──
     if (agentStatus === 'TRANSITIONING') {
-      const transition = exitTransition;
+      const transition = postureTransition;
       if (!transition) throw new Error('Missing active posture transition');
-      if (transition.owner && !transition.exit && hasAgentProfile(_characterId)) {
+      if (transition.owner && !transition.destination && hasAgentProfile(_characterId)) {
         const profile = getAgentProfile(_characterId);
         const direction = { x: Math.sin(state.rotY), z: Math.cos(state.rotY) };
         const owned = [...furnitureObstacles.values()].filter(obstacle => obstacle.owner === transition.owner
@@ -755,7 +755,7 @@ export function createAgentController(
             reportNavigationStop(`Aucune sortie praticable de ${transition.owner}`, transition.owner, goal);
             return state;
           }
-          transition.exit = exit;
+          transition.destination = exit;
           route.owner = transition.owner;
         }
       }
@@ -763,31 +763,31 @@ export function createAgentController(
       state.animation = transition.animation;
       state.animationPaused = false;
       if (playback?.animation === transition.animation) {
-        if (transition.exit) {
+        if (transition.destination) {
           const target = {
-            x: transition.departure.x + (transition.exit.x - transition.departure.x) * playback.progress,
-            z: transition.departure.z + (transition.exit.z - transition.departure.z) * playback.progress,
+            x: transition.departure.x + (transition.destination.x - transition.departure.x) * playback.progress,
+            z: transition.departure.z + (transition.destination.z - transition.departure.z) * playback.progress,
           };
           const previous = { x: state.x, z: state.z };
-          const next = movePostureExit(route, _characterId, previous, target, transition.owner!);
+          const next = movePostureTransition(route, _characterId, previous, target, transition.owner!);
           state.x = next.x;
           state.z = next.z;
           state.animationPaused = distance(next, target) > BOOLEAN_PRECISION;
           if (state.animationPaused && (route.error || route.waitReason)) {
-            reportNavigationStop(route.error ?? route.waitReason!, transition.owner ?? 'sortie de posture', transition.exit);
+            reportNavigationStop(route.error ?? route.waitReason!, transition.owner ?? 'sortie de posture', transition.destination);
           }
         }
         state.y = transition.y * (1 - playback.progress);
       }
       if (playback?.animation === transition.animation && playback.finished && !state.animationPaused) {
-        exitTransition = null;
+        postureTransition = null;
         agentStatus = 'IDLE';
-        state.animation = resolveAnimationId('idle');
+        state.animation = transition.targetAnimation ?? resolveAnimationId('idle');
         if (transition.advanceStep) {
           advanceToNextStep(hasNavStepInUpdate);
           // Bed routines also describe an explicit edge/floor departure. The
           // animation-driven exit has already completed those steps.
-          if (transition.exit) {
+          if (transition.destination) {
             let dynamic = dynamicNavIndex < dynamicNavQueue.length;
             let next = dynamic ? dynamicNavQueue[dynamicNavIndex] : scenario?.[stepIndex];
             while (next?.postureExit) {
@@ -1108,6 +1108,9 @@ export function createAgentController(
     // ── 4. Déplacement (MOVING) ──
     if (agentStatus === 'MOVING' || agentStatus === 'BLOCKED') {
       const target = getResolvedCoords(currentInstruction);
+      const entering = currentInstruction.type === 'USE_OBJECT' && target.entryAnimation && target.approach
+        && distance(state, { x: target.tx, z: target.tz }) > BOOLEAN_PRECISION;
+      const goal = entering ? target.approach! : { x: target.tx, z: target.tz };
 
       if (!hasAgentProfile(_characterId)) return state;
       if (routeInstruction !== currentInstruction) {
@@ -1121,7 +1124,7 @@ export function createAgentController(
       const isDuoAction = isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId) || !!duoRole;
       const speed = getWalkSpeedForAnimation(currentWalkAnim);
       const oldPosition = { x: state.x, z: state.z };
-      const position = followRoute(route, _characterId, oldPosition, { x: target.tx, z: target.tz }, speed * dt,
+      const position = followRoute(route, _characterId, oldPosition, goal, speed * dt,
         (direction, remaining) => {
           const steering = computeSteeringVector(_characterId, oldPosition.x, oldPosition.z, direction.x, direction.z, remaining);
           return { x: steering.steerX, z: steering.steerZ };
@@ -1155,7 +1158,20 @@ export function createAgentController(
         navigationError = null;
       }
       agentStatus = 'MOVING';
-      if (distance(position, { x: target.tx, z: target.tz }) < 1e-6) {
+      if (distance(position, goal) < 1e-6) {
+        if (entering) {
+          postureTransition = {
+            animation: resolveAnimationId(target.entryAnimation!), sourceAnimation: state.animation,
+            targetAnimation: resolveAnimationId(currentInstruction.animation ?? target.anim ?? 'idle'),
+            y: state.y, advanceStep: false, departure: { ...position },
+            destination: { x: target.tx, z: target.tz }, owner: target.owner ?? currentInstruction.smartObjectId,
+          };
+          animationPlayback = null;
+          state.rotY = currentInstruction.rotY ?? target.rotY ?? state.rotY;
+          state.animation = postureTransition.animation;
+          agentStatus = 'TRANSITIONING';
+          return state;
+        }
         if (currentInstruction.smartObjectId) { state.x = target.tx; state.z = target.tz; }
         if (target.ty !== undefined) state.y = target.ty;
 
@@ -1522,7 +1538,7 @@ export function createAgentController(
       cachedCoords = null;
       blockedCoords = null;
       navigationError = null;
-      exitTransition = null;
+      postureTransition = null;
       animationPlayback = null;
       timer = 0;
       duoWaitTimer = 0;
@@ -1541,7 +1557,7 @@ export function createAgentController(
       }
     }
     state.animationPaused = false;
-    exitTransition = null;
+    postureTransition = null;
     animationPlayback = null;
     initialProfileResolved = true;
     resetRoute(route, _characterId);

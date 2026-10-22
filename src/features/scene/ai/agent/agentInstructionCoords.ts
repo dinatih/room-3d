@@ -95,6 +95,7 @@ export function resolveInstructionCoords(
     if (!approach) throw new NavigationBlockedError(`No approach for ${obj.id}`, desired);
     return {
       owner,
+      entryAnimation: slot?.entryAnimation,
       approach: !usesApproach && slot?.approachOffset ? { x: slot.approachOffset[0], z: slot.approachOffset[2] } : undefined,
       tx: approach.x,
       ty: isMoveOnly ? 0 : pos[1],

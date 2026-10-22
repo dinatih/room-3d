@@ -12,6 +12,7 @@ export type AgentStatus = 'WAITING' | 'FALLING' | 'LANDING' | 'TRANSITIONING' | 
 
 export interface ResolvedInstructionCoords {
   approach?: { x: number; z: number };
+  entryAnimation?: string;
   owner?: string;
   tx: number;
   ty?: number;
