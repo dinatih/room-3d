@@ -3,6 +3,8 @@
 python3 scripts/import-unitree.py --download
 blender --background --python scripts/import-unitree.py
 python3 scripts/import-unitree.py --inspect
+
+H2 only: append --robot h2 (after -- when invoking Blender).
 """
 import json
 import sys
@@ -13,19 +15,21 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CACHE = Path('/tmp/room-unitree')
 ROS = 'https://raw.githubusercontent.com/unitreerobotics/unitree_ros/master/'
+SELECTED = sys.argv[sys.argv.index('--robot') + 1] if '--robot' in sys.argv else None
 MUJOCO = 'https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main/'
 
 if '--inspect' in sys.argv:
     import struct
-    for robot in ('g1', 'go2'):
+    for robot in ([SELECTED] if SELECTED else ('g1', 'go2', 'h2')):
         path = ROOT / f'public/items/unitree-{robot}/unitree-{robot}.glb'
         data = path.read_bytes()
         length = struct.unpack_from('<I', data, 12)[0]
         gltf = json.loads(data[20:20 + length])
         nodes = gltf['nodes']
         joints = [n for n in nodes if 'jointAxis' in n.get('extras', {})]
-        feet = [n['name'] for n in nodes if n.get('name', '').endswith(('ankle_roll_link_visual', 'calf_foot'))]
+        feet = [n['name'] for n in nodes if n.get('name', '').endswith('ankle_pitch_link_visual' if robot == 'h2' else ('ankle_roll_link_visual', 'calf_foot'))]
         print(robot, json.dumps({'joints': len(joints), 'feet': feet,
+            'humanoidBones': [n['name'] for n in nodes if n.get('name', '').startswith('mixamorig')],
             'axes': {n['name']: n['extras']['jointAxis'] for n in joints},
             'colors': [m['pbrMetallicRoughness']['baseColorFactor'] for m in gltf['materials']]}))
     sys.exit(0)
@@ -35,6 +39,13 @@ def download(url, target):
     urllib.request.urlretrieve(url, target)
 
 if '--download' in sys.argv:
+    if SELECTED == 'h2':
+        download(ROS + 'robots/h2_description/H2.urdf', CACHE / 'h2.urdf')
+        h2 = ET.parse(CACHE / 'h2.urdf').getroot()
+        for filename in sorted({m.attrib['filename'] for m in h2.findall('.//visual/geometry/mesh')}):
+            download(ROS + 'robots/h2_description/' + filename, CACHE / 'h2' / filename)
+        download(ROS + 'LICENSE', ROOT / 'public/items/unitree-h2/LICENSE')
+        sys.exit(0)
     download(ROS + 'robots/g1_description/g1_29dof_rev_1_0.urdf', CACHE / 'g1.urdf')
     download(MUJOCO + 'unitree_robots/go2/go2.xml', CACHE / 'go2.xml')
     g1 = ET.parse(CACHE / 'g1.urdf').getroot()
@@ -109,21 +120,48 @@ def export(robot, source):
     hi = Vector(tuple(max(p[i] for p in points) for i in range(3)))
     # Blender Z up becomes glTF Y up; Unitree X forward becomes glTF +Z.
     from math import pi
-    transform = Matrix.Scale(100, 4) @ Matrix.Rotation(-pi / 2, 4, 'Z') @ Matrix.Translation((-(lo.x+hi.x)/2, -(lo.y+hi.y)/2, -lo.z))
+    transform = Matrix.Scale(1 if robot == 'h2' else 100, 4) @ Matrix.Rotation(-pi / 2, 4, 'Z') @ Matrix.Translation((-(lo.x+hi.x)/2, -(lo.y+hi.y)/2, -lo.z))
     for obj in list(bpy.context.scene.objects):
         if obj.parent is None:
             obj.matrix_world = transform @ obj.matrix_world
     target = ROOT / f'public/items/unitree-{robot}'
-    bpy.ops.export_scene.gltf(filepath=str(target / f'unitree-{robot}.glb'), export_format='GLB', export_animations=False, export_extras=True)
+    bpy.ops.export_scene.gltf(filepath=str(target / f'unitree-{robot}.glb'), export_format='GLB', export_animations=False, export_extras=True, export_draco_mesh_compression_enable=robot == 'h2')
     size = (hi - lo) * 100
     dims = {'w': round(size.y, 2), 'd': round(size.x, 2), 'h': round(size.z, 2)}
     (target / 'dimensions.json').write_text(json.dumps(dims, indent=2) + '\n')
     (target / 'README.md').write_text(f'# Unitree {robot.upper()}\n\nSource: {source}\n\nOfficial visual meshes assembled in Blender with the original joint hierarchy and axes. Light body panels repainted red; dark sensors and rubber preserved. Centimeters, glTF Y up, centered on X/Z and grounded at Y=0.\n\nProcedural visual animations authored for this project in src/features/scene/items/unitreeMotion.ts: idle, locomotion, greeting, bow and dance. These are not recordings or control policies from Unitree. Go2 resting joint angles come from the official MuJoCo home keyframe. No physics or autonomous navigation.\n\nSee LICENSE for upstream redistribution terms. Regenerate using scripts/import-unitree.py.\n')
+    if robot == 'h2':
+        (target / 'README.md').write_text(f'''# Unitree H2
+
+Official source: {source}
+Repository: https://github.com/unitreerobotics/unitree_ros/tree/master/robots/h2_description
+Redistribution: BSD-3-Clause, see LICENSE.
+
+The official 34 visual meshes are assembled from the URDF, then converted to a
+humanoid character by scripts/unitree-h2-character.py. Each rigid piece has one
+bone influence, with no flexible skin deformation. Arms are aligned in T-pose;
+the mechanical 31-DOF control rig is replaced by an 18-bone Mixamo-compatible rig.
+This visual adaptation does not enforce the real robot's joint limits.
+
+Light panels are repainted red. Model units are meters (the Character runtime
+scales to centimeters), glTF Y up, centered on X/Z and grounded at Y=0.
+dimensions.json records centimeters in T-pose.
+
+Uses the project's standard Character, retargeting and navigation systems, with
+the existing walking animation as its NPC gait. No Unitree motion policy is used.
+
+Regenerate:
+```sh
+python3 scripts/import-unitree.py --download --robot h2
+blender -noaudio --background --python scripts/import-unitree.py -- --robot h2
+```
+''')
     print(robot, dims)
 
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
-g1 = ET.parse(CACHE / 'g1.urdf').getroot()
+robot = SELECTED or 'g1'
+g1 = ET.parse(CACHE / f'{robot}.urdf').getroot()
 links = {e.attrib['name']: e for e in g1.findall('link')}
 joints = {j.find('child').attrib['link']: j for j in g1.findall('joint')}
 rig = {}
@@ -146,8 +184,15 @@ for name, link in links.items():
         color = m.find('color')
         rgba = numbers(color.attrib['rgba']) if color is not None else materials[m.attrib['name']]
         scale = Matrix.Diagonal((*numbers(mesh.get('scale', '1 1 1')), 1))
-        mesh_object(mesh.attrib['filename'], name + '_visual', origin(visual.find('origin')) @ scale, material(name, rgba), link_pivot(name))
-export('g1', ROS + 'robots/g1_description/g1_29dof_rev_1_0.urdf')
+        mesh_object(('h2/' if robot == 'h2' else '') + mesh.attrib['filename'], name + '_visual', origin(visual.find('origin')) @ scale, material(name, rgba), link_pivot(name))
+if robot == 'h2':
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, str(ROOT / 'scripts'))
+    import importlib
+    importlib.import_module('unitree-h2-character').character_rig(rig)
+export(robot, ROS + ('robots/h2_description/H2.urdf' if robot == 'h2' else 'robots/g1_description/g1_29dof_rev_1_0.urdf'))
+if SELECTED == 'h2':
+    sys.exit(0)
 
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)

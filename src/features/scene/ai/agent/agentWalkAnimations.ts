@@ -60,7 +60,7 @@ export function getWalkSpeedForAnimation(animNameOrId?: string | null): number {
 }
 
 export function getRandomNpcWalkAnimation(characterId?: string): string {
-  if (characterId === 'xbot') {
+  if (characterId === 'xbot' || characterId === 'unitree-h2') {
     return 'walking';
   }
   return NPC_WALK_ANIMATIONS[Math.floor(Math.random() * NPC_WALK_ANIMATIONS.length)];

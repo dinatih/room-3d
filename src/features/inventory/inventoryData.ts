@@ -335,7 +335,7 @@ const sortedCharacters = [
 
 sortedCharacters.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
-    const photos = char.path.includes('xbot')
+    const photos = char.id === 'unitree-h2' ? undefined : char.path.includes('xbot')
       ? ['characters/xbot/Xbot_official_3d_preview.png']
       : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined);
     INVENTORY.push({
@@ -367,7 +367,13 @@ sortedCharacters.forEach(char => {
             ? 'Personnage animé : Valby en combinaison nano body suit avec casque et physique de buste dynamique.'
             : (!char.isLara
               ? `Personnage animé standard Mixamo : ${char.name}.`
-              : `Personnage : ${char.name}.`)))
+              : `Personnage : ${char.name}.`))),
+      ...(char.id === 'unitree-h2' ? {
+        brand: 'Unitree Robotics',
+        dims: { w: 166.44, d: 28, h: char.height },
+        url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/h2_description',
+        notes: 'Maillages officiels BSD-3-Clause. Squelette humanoïde ajouté au projet, pièces rigides. Utilise les animations classiques des personnages, dont walking. Dimensions en T-pose.',
+      } : {}),
     });
   }
 });
