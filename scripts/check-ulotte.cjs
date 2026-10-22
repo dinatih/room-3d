@@ -128,7 +128,7 @@ const launchBrowser = require('./browser-test-options.cjs');
       life.autonomous = true; life.mode = 'move'; life.gait = 'walk';
       life.target.set(target.x, 0, target.z);
       const length = path.reduce((sum, point, index) => sum + f.geometry.distance(index ? path[index-1] : start, point), 0);
-      const seconds = length / 50 + f.useAnimPreviewStore.getState().duration * 2;
+      const seconds = length / f.dogBehavior.DOG_WALK_SPEED.ulotte + f.useAnimPreviewStore.getState().duration * 2;
       let closest = Infinity;
       try {
         for (let i = 0; i < Math.ceil(seconds * 60); i++) {
@@ -232,7 +232,7 @@ const launchBrowser = require('./browser-test-options.cjs');
       const target = life.target.clone();
       const route = f.navigation.getNavigationGraph(f.obstacles.getAgentProfile('ulotte')).find(life.position, target);
       const length = route.reduce((total, point, index) => total + f.geometry.distance(index ? route[index-1] : life.position, point), 0);
-      const maxSeconds = length / f.dogBehavior.DOG_ACTIVITY.walkSpeed + Math.PI / f.dogBehavior.DOG_ACTIVITY.turnSpeed + 1;
+      const maxSeconds = length / f.dogBehavior.DOG_WALK_SPEED.ulotte + Math.PI / f.dogBehavior.DOG_ACTIVITY.turnSpeed + 1;
       for (let i = 0; i < Math.ceil(maxSeconds * 60) && life.mode !== 'eat'; i++) f.advance(f.clock.elapsedTime + 1 / 60);
       if (life.mode !== 'eat') throw new Error(`Ulotte did not reach the East garden bowl: ${JSON.stringify({ mode:life.mode, pos:life.position, target:life.target, route:life.route.error })}`);
       // At the measured midpoint, the animated muzzle must sit over the bowl.

@@ -9,11 +9,13 @@ import { NavigationScope, navigationValue } from '../ai/navigation/navigationSco
 
 export const DOG_ACTIVITY = {
   walkChance: 0.8, localTripChance: 0.8,
-  walkSpeed: 50, runSpeed: 120, turnSpeed: Math.PI,
+  runSpeed: 120, turnSpeed: Math.PI,
   fadeSeconds: 0.25, minRestCycles: 2, maxRestCycles: 4,
   restWeight: 4, jumpWeight: 1,
   minMealInterval: 120, maxMealInterval: 240, mealRetrySeconds: 30, mealCycles: 3,
 } as const;
+// Ulotte: rear planted paw travels 9.25 cm backwards over frames 7–19 at 24 fps.
+export const DOG_WALK_SPEED = { shiba: 50, ulotte: 18.5 } as const;
 export const DOG_CLIPS = {
   shiba: { idle: 'Dog|Idle', rest: 'Dog|SitDown', walk: 'Dog|Walk', run: 'Dog|Run', jump: 'Dog|Jump' },
   ulotte: { idle: 'idle-1', rest: 'idle-2', walk: 'walk', run: 'run', jump: 'jump', eat: 'eating' },
@@ -137,7 +139,7 @@ function advanceDogBehavior(state: DogBehavior, context: DogContext, delta: numb
   const meal = state.mode === 'meal-approach';
   if (meal && (!dogFeedingStation.position || !isAgentDestinationFree(id, state.target))) { postponeMeal(state, context); return; }
   const before = { x: state.position.x, z: state.position.z };
-  const speed = state.gait === 'walk' ? DOG_ACTIVITY.walkSpeed : DOG_ACTIVITY.runSpeed;
+  const speed = state.gait === 'walk' ? DOG_WALK_SPEED[id] : DOG_ACTIVITY.runSpeed;
   const next = followRoute(state.route, id, before, state.target, speed * delta, (direction, remaining) => {
     const steer = computeSteeringVector(id, before.x, before.z, direction.x, direction.z, remaining);
     return { x: steer.steerX, z: steer.steerZ };
