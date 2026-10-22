@@ -1162,9 +1162,9 @@ export function buildSmartObjectInstructionSequence(
         { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey },
       ]),
       gesture('pull'),
-      { ...baseInstruction, protectedDoor: storage.shelf === 'nw' ? undefined : doorKey, waitForAnimation: true },
+      { ...baseInstruction, type: 'WAIT', protectedDoor: storage.shelf === 'nw' ? undefined : doorKey, waitForAnimation: true },
       gesture('push'),
-      ...(storage.shelf !== 'nw' ? [{ type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY }] : []),
+      ...(storage.shelf !== 'nw' ? [{ type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, protectedDoor: doorKey, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY, waitForAnimation: true }] : []),
       ...(storage.shelf === 'nw' ? [] : [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey, protectedDoor: doorKey }]),
     ];
   }
