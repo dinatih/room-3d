@@ -201,7 +201,22 @@ export function createAgentController(
   };
 
 
+  const beginSlotExit = () => {
+    if (agentStatus !== 'INTERACTING' || !cachedCoords?.exitAnimation) return false;
+    if (!cachedCoords.approach) throw new Error('An exit animation requires an approachOffset');
+    postureTransition = {
+      animation: resolveAnimationId(cachedCoords.exitAnimation), targetAnimation: resolveAnimationId('idle'),
+      y: state.y, departure: { x: state.x, z: state.z },
+      destination: cachedCoords.approach, owner: cachedCoords.owner,
+    };
+    animationPlayback = null;
+    state.animation = postureTransition.animation;
+    agentStatus = 'TRANSITIONING';
+    return true;
+  };
+
   const releaseClaimedSlot = () => {
+    beginSlotExit();
     releaseKitchenStorageAccess(_characterId);
     resetRoute(route, _characterId);
     if (claimedSlot) {
@@ -707,12 +722,12 @@ export function createAgentController(
       }
     }
 
-    // Finish an explicitly configured entry before handling a replacement order.
+    // Finish an explicitly configured transition before handling a replacement order.
     if (postureTransition && agentStatus !== 'TRANSITIONING') {
       agentStatus = 'TRANSITIONING';
       state.animation = postureTransition.animation;
     }
-    // ── 1.5 Entrée animée déclarée sur le slot ──
+    // ── 1.5 Entrée ou sortie animée déclarée sur le slot ──
     if (agentStatus === 'TRANSITIONING') {
       const transition = postureTransition;
       if (!transition) throw new Error('Missing active posture transition');
@@ -1395,7 +1410,7 @@ export function createAgentController(
         repeatIndex = 0;
         targetRepeats = 1;
 
-        agentStatus = 'IDLE';
+        if (!beginSlotExit()) agentStatus = 'IDLE';
         if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
           setDesk2SmartActionState(_characterId, false);
         }

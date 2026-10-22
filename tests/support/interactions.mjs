@@ -134,7 +134,7 @@ export async function exercise(fixture) {
             if (state.animation !== previousAnimation) {
                 let next = await clip(state.animation);
                 if (status === 'TRANSITIONING')
-                    next = fitPostureTransition(next, hips, seated);
+                    next = fitPostureTransition(next, hips, state.animation === 'sit-to-stand' ? await clip('idle') : seated);
                 action?.stop();
                 action = mixer.clipAction(next).reset().play();
                 action.setLoop(status === 'TRANSITIONING' ? THREE.LoopOnce : THREE.LoopRepeat, status === 'TRANSITIONING' ? 1 : Infinity);

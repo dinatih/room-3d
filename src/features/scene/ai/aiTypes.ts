@@ -21,6 +21,7 @@ export interface InteractionSlot {
   navigationOwner?: string;   // Volume physique utilisé par ce slot d'un objet composé
   excludes?: string[];       // Actions du même meuble qui utilisent le même espace physique
   rotY?: number;              // Orientation (radians relative si relative=true ou absolue) ; hérite de obj.rotationY si non spécifié
+  exitAnimation?: string;     // Sortie explicite vers approachOffset avant le déplacement suivant
   entryAnimation?: string;    // Transition animée entre l’approche et la pose d’interaction
   animation?: string;         // Chemin vers le clip d'animation GLB
   duration?: number;          // Durée par défaut en secondes (si vide/non fourni, l'animation est jouée repeatCount fois)

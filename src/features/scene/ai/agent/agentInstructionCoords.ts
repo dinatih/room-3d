@@ -96,6 +96,7 @@ export function resolveInstructionCoords(
     return {
       owner,
       entryAnimation: slot?.entryAnimation,
+      exitAnimation: slot?.exitAnimation,
       approach: !usesApproach && slot?.approachOffset ? { x: slot.approachOffset[0], z: slot.approachOffset[2] } : undefined,
       tx: approach.x,
       ty: isMoveOnly ? 0 : pos[1],

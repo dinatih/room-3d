@@ -181,6 +181,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [0, 0, 0],
         approachOffset: [0, 0, 66 / 2 + HUMAN_BODY_RADIUS], // Devant la chaise (profondeur 66 cm).
         entryAnimation: 'stand-to-sit',
+        exitAnimation: 'sit-to-stand',
         rotY: 0,
         animationsRandom: 'seated-front',
       }
@@ -381,6 +382,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [270, 0, -80],
         approachOffset: [270 - 61 / 2 - HUMAN_BODY_RADIUS, 0, -80],
         entryAnimation: 'stand-to-sit',
+        exitAnimation: 'sit-to-stand',
         rotY: - Math.PI / 2,
         animationsRandom: 'seated-front',
       },
@@ -390,6 +392,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [270, 0, -140],
         approachOffset: [270 - 61 / 2 - HUMAN_BODY_RADIUS, 0, -140],
         entryAnimation: 'stand-to-sit',
+        exitAnimation: 'sit-to-stand',
         rotY: - Math.PI / 2,
         animationsRandom: 'seated-front',
       }
@@ -407,6 +410,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [100, 0, -60],
         approachOffset: [100 + 60 / 2 + HUMAN_BODY_RADIUS, 0, -60],
         entryAnimation: 'stand-to-sit',
+        exitAnimation: 'sit-to-stand',
         rotY: Math.PI / 2,
         animationsRandom: 'seated-front',
       },
@@ -416,6 +420,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [100, 0, -100],
         approachOffset: [100 + 60 / 2 + HUMAN_BODY_RADIUS, 0, -100],
         entryAnimation: 'stand-to-sit',
+        exitAnimation: 'sit-to-stand',
         rotY: Math.PI / 2,
         animationsRandom: 'seated-front',
       }

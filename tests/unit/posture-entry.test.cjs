@@ -43,3 +43,49 @@ it('ajuste la descente du bassin de la pose debout actuelle à la pose assise sa
   assert.ok(fitted.values[4] < 100 && fitted.values[4] > 45);
   assert.deepEqual([...source.tracks[0].values.slice(-3)], [0, 50, -20]);
 });
+
+it('sort uniquement des assises configurées et attend la fin réelle du relèvement devant le siège', () => {
+  const { harness } = load('src/features/scene/ai/agentController.ts', {}, source => {
+    const begin = source.indexOf('  const beginSlotExit =');
+    const end = source.indexOf('  const releaseClaimedSlot =', begin);
+    const update = source.indexOf("    if (agentStatus === 'TRANSITIONING') {");
+    const updateEnd = source.indexOf('    const scenarioLength =', update);
+    assert(begin > 0 && end > begin && update > end && updateEnd > update);
+    return `export function harness(exitAnimation) {
+      const state = { x: 270, y: 0, z: -80, animation: 'sitting-idle' };
+      const cachedCoords = { exitAnimation, approach: { x: 225, z: -80 }, owner: 'sofa-garden-east' };
+      let agentStatus = 'INTERACTING', postureTransition = null, animationPlayback = null;
+      const resolveAnimationId = id => id;
+      const route = {}, _characterId = 'test', BOOLEAN_PRECISION = 1e-6;
+      const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+      const movePostureTransition = (route, id, previous, target, owner) => {
+        if (owner !== cachedCoords.owner) throw Error('Lost furniture collision owner');
+        return target;
+      };
+      const reportNavigationStop = () => { throw Error('Unexpected block'); };
+      ${source.slice(begin, end)}
+      return { begin: beginSlotExit, state, status: () => agentStatus,
+        tick(progress, finished = false) {
+          animationPlayback = { animation: exitAnimation, progress, finished };
+          ${source.slice(update, updateEnd)}
+        }
+      };
+    }`;
+  });
+  const plain = harness(undefined);
+  assert.equal(plain.begin(), false);
+  assert.equal(plain.status(), 'INTERACTING');
+  const seat = harness('sit-to-stand');
+  assert.equal(seat.begin(), true);
+  assert.equal(seat.begin(), false, 'Do not restart a running exit');
+  seat.tick(0.5);
+  assert.equal(seat.state.x, 247.5);
+  assert.equal(seat.status(), 'TRANSITIONING');
+  seat.tick(1);
+  assert.equal(seat.status(), 'TRANSITIONING', 'Elapsed progress alone cannot complete playback');
+  seat.tick(1, true);
+  assert.equal(seat.state.x, 225);
+  assert.equal(seat.state.z, -80);
+  assert.equal(seat.state.animation, 'idle');
+  assert.equal(seat.status(), 'IDLE');
+});
