@@ -109,7 +109,7 @@ import { resolveAnimationId } from '@features/scene/animations/animationResolver
 import { Goldfish } from '@features/scene/items/Goldfish';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
 import { BlackHornetDrone }                            from '@features/scene/items/BlackHornetDrone';
-import { DjiNeoDrone }                                 from '@features/scene/items/DjiNeoDrone';
+import { DjiNeoDrone, DjiAvata2Drone }                 from '@features/scene/items/DjiDrone';
 import { BirdFeeder }                                 from '@features/scene/items/BirdFeeder';
 import { GoogleNestMini }                             from '@features/scene/items/GoogleNestMini';
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
@@ -294,6 +294,10 @@ SCENE_REGISTRY['black-hornet-drone'] = function BlackHornetDronePreview({ action
 
 SCENE_REGISTRY['dji-neo'] = function DjiNeoDronePreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
   return <DjiNeoDrone isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
+} as any;
+
+SCENE_REGISTRY['dji-avata-2'] = function DjiAvata2DronePreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+  return <DjiAvata2Drone isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
 } as any;
 
 SCENE_REGISTRY['jikin-goldfish'] = function GoldfishPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {

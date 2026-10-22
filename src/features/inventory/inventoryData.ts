@@ -480,6 +480,19 @@ INVENTORY.push({
 });
 
 INVENTORY.push({
+  id: 'dji-avata-2',
+  name: 'Drone DJI Avata 2',
+  brand: 'DJI',
+  category: 'robots',
+  qty: 1,
+  dims: { w: 21.2, d: 18.5, h: 6.4 },
+  glbPath: 'items/dji-avata-2/dji-avata-2.glb',
+  photos: [],
+  url: 'https://www.dji.com/fr/avata-2',
+  notes: `Drone FPV immersif et agile (377 g) avec protections d'hélices intégrées, capteurs visuels binoculaires fisheye, caméra 4K/60fps HDR ultra grand-angle 155° et mode Tortue (Turtle mode).`
+});
+
+INVENTORY.push({
   id: 'jikin-goldfish',
   name: 'Poisson rouge Jikin',
   brand: 'Animal',
