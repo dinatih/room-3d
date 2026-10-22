@@ -27,7 +27,7 @@ export const noCapMat = new THREE.MeshBasicMaterial({ visible: false, transparen
 export const architecturalGlassMat = new THREE.MeshPhysicalMaterial({
   color: 0xbce8f4,
   transparent: true,
-  opacity: 0.22,
+  opacity: 0.03,
   side: THREE.DoubleSide,
   depthWrite: false,
   roughness: 0.12,
