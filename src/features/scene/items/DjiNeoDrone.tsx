@@ -1,1 +1,1 @@
-export { DjiNeoDrone, DjiAvata2Drone, DjiDrone } from './DjiDrone';
+export { DjiNeoDrone, DjiAvata2Drone, DjiFpvDrone, DjiDrone } from './DjiDrone';

@@ -55,7 +55,7 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
   }, [missingTarget]);
   const characters = useMemo(() => [...CHARACTERS, UNITREE_H2].filter(c =>
     INVENTORY.some(item => item.id === c.id && (item.category === 'characters' || c.isRobot)) &&
-    !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone', 'dji-neo', 'dji-avata-2', 'unitree-g1', 'unitree-go2', 'jumper-robot'].includes(c.id)
+    !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone', 'dji-neo', 'dji-avata-2', 'dji-fpv', 'unitree-g1', 'unitree-go2', 'jumper-robot'].includes(c.id)
   ), []);
   const leader = characters.find(c => c.id === actorId) ?? characters[0];
   const partners = characters.filter(c => c.id !== leader?.id);

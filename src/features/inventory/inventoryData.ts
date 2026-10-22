@@ -493,6 +493,19 @@ INVENTORY.push({
 });
 
 INVENTORY.push({
+  id: 'dji-fpv',
+  name: 'Drone DJI FPV',
+  brand: 'DJI',
+  category: 'robots',
+  qty: 1,
+  dims: { w: 25.5, d: 31.2, h: 12.7 },
+  glbPath: 'items/dji-fpv/dji-fpv.glb',
+  photos: [],
+  url: 'https://www.dji.com/fr/dji-fpv',
+  notes: `Drone hybride FPV haute vitesse (jusqu'à 140 km/h, 795 g) avec caméra 4K/60fps 150°, transmission vidéo DJI O3 HD à faible latence et freinage d'urgence avec vol stationnaire.`
+});
+
+INVENTORY.push({
   id: 'jikin-goldfish',
   name: 'Poisson rouge Jikin',
   brand: 'Animal',

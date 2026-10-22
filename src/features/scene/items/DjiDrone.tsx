@@ -196,5 +196,10 @@ export function DjiAvata2Drone(props: { isPreview?: boolean; previewAnim?: strin
   return <DjiDrone glbPath="/items/dji-avata-2/dji-avata-2.glb" targetMaxDimCm={21.2} itemName="Drone DJI Avata 2" rotationY={Math.PI} {...props} />;
 }
 
+export function DjiFpvDrone(props: { isPreview?: boolean; previewAnim?: string; onSize?: (size: THREE.Vector3) => void }) {
+  return <DjiDrone glbPath="/items/dji-fpv/dji-fpv.glb" targetMaxDimCm={31.2} itemName="Drone DJI FPV" rotationY={Math.PI} {...props} />;
+}
+
 useGLTF.preload('/items/dji-neo/dji-neo.glb');
 useGLTF.preload('/items/dji-avata-2/dji-avata-2.glb');
+useGLTF.preload('/items/dji-fpv/dji-fpv.glb');
