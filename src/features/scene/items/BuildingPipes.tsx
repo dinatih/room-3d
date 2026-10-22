@@ -49,7 +49,7 @@ const KITCHEN_DOUBLE_OUTLET_LEN = 9.0; // demi-longueur des sorties perpendicula
 const HOOD_X = 87.5;
 const HOOD_COLLAR_Z = 2.17; // centre exact du trou de la buse de hotte
 const HOOD_COLLAR_Y = 170.7;
-const FLEX_WALL_Z = 21.0; // collé contre le mur Sud (Z = 25 - rayon 3.8 - 0.2), dégagement total > 4.5 cm derrière les Drona (Z = 12.5)
+const FLEX_WALL_Z = 19.0; // décalé de 2 cm vers le Nord pour ne pas couper le mur Cuisine-Sud (surface locale Z = 25.0)
 
 // Position de l'évacuation WC en coordonnées locales
 // Toilette monde : X = 50 -> local X = 36
