@@ -122,6 +122,7 @@ const ACTIONS: Record<string, ActionConfig> = {
   'drona-se-pyjama-slide': { label: ['Sortir les pyjamas', 'Ranger les pyjamas'] },
   'drona-se-linen-slide': { label: ['Sortir le linge de maison', 'Ranger le linge de maison'] },
   'drona-se-care-slide': { label: ['Sortir les parfums/crèmes', 'Ranger les parfums/crèmes'] },
+  'drona-nw-upper-slide': { label: ['Sortir le Dröna supérieur NW', 'Ranger le Dröna supérieur NW'] },
   'drona-nw-trousers-slide': { label: ['Sortir les pantalons', 'Ranger les pantalons'] },
   'drona-ne-catchall2-slide': { label: ['Sortir le fourre-tout 2', 'Ranger le fourre-tout 2'] },
   fridge: { label: ['Ouvrir', 'Fermer'] },

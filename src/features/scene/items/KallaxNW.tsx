@@ -57,13 +57,16 @@ export function KallaxNWDrona({ isPreview = false, actionState = {} }: { isPrevi
   return (
     <>
       {/* DRONA Instances individuelles pour animation */}
-      {dronaTransforms.map((t, i) => (
-        <group key={i} name={`drona-nw-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
-          {i === DRONA_SPECIAL_ITEMS['drona-nw-trousers'].index
-            ? <SlidingDrona objectId="drona-nw-trousers" label={DRONA_SPECIAL_ITEMS['drona-nw-trousers'].label} actionId={DRONA_SPECIAL_ITEMS['drona-nw-trousers'].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
+      {dronaTransforms.map((t, i) => {
+        const target = Object.entries(DRONA_SPECIAL_ITEMS).find(([, item]) => item.shelf === 'nw' && item.index === i);
+        return (
+          <group key={i} name={`drona-nw-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+          {target
+            ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
             : <DroneCell />}
-        </group>
-      ))}
+          </group>
+        );
+      })}
     </>
   );
 }

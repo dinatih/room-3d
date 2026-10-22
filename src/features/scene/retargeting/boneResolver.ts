@@ -45,6 +45,14 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
     return instanceCache.get(cacheKey)!;
   }
 
+  // Prefer the exact Mixamo joint before fuzzy synonyms: "handr" also
+  // occurs in LeftHandRing1 and must not steal the right wrist on Xbot.
+  let exact: string | null = null;
+  targetInstance.traverse(node => {
+    if ((node as THREE.Bone).isBone && node.name.replace(/^mixamorig[:_]?/i, '').toLowerCase() === baseName.toLowerCase()) exact = node.name;
+  });
+  if (exact) { instanceCache.set(cacheKey, exact); return exact; }
+
   const baseNameLower = baseName.toLowerCase();
   if (baseNameLower.includes('hair') || baseNameLower.includes('ponytail')) {
     if (sourceHairMap && sourceHairMap.has(baseNameLower)) {

@@ -1,3 +1,4 @@
+import { fitDronaCarry } from '../animations/fitDronaCarry';
 import { retargetClip } from '../retargeting/retargetClip';
 import { captureAnimationClip, restoreAnimationClip, restoreAnimationRig, type ClipData, type RigNode } from './animationSerialization';
 
@@ -11,7 +12,10 @@ self.onmessage = ({ data }: MessageEvent<AnimationRequest>) => {
   const start = performance.now();
   let response: AnimationResponse;
   try {
-    const clip = retargetClip(restoreAnimationClip(data.clip), restoreAnimationRig(data.target), restoreAnimationRig(data.source), data.rootMotionSpace);
+    const target = restoreAnimationRig(data.target);
+    const retargeted = retargetClip(restoreAnimationClip(data.clip), target, restoreAnimationRig(data.source), data.rootMotionSpace);
+    retargeted.name = data.clip.name;
+    const clip = fitDronaCarry(retargeted, target);
     response = { id: data.id, ok: true, clip: captureAnimationClip(clip), milliseconds: performance.now() - start };
   } catch (error) {
     response = { id: data.id, ok: false, error: error instanceof Error ? error.stack ?? error.message : String(error), milliseconds: performance.now() - start };

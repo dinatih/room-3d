@@ -1,3 +1,4 @@
+import { DRONA_CARRY_APPROACH } from '../animations/dronaCarryManifest';
 import { getAnimationDef } from '../animations/animationResolver';
 import { KALLAX_SE_DRONA_POSITIONS } from './kallaxSeDrona';
 import { FURNITURE_WALL_CLEARANCE } from '../wallData';
@@ -17,6 +18,11 @@ export const DRONA_SPECIAL_ITEMS = {
     shelf: 'se', index: 0, position: KALLAX_SE_DRONA_POSITIONS[0],
     label: 'Dröna Parfum/Crème', interaction: 'Prendre un parfum ou une crème',
     action: 'drona-se-care-slide', animationPrefix: 'drona-care', approach: 50 + 38 * 2 / 3 - 10,
+  },
+  'drona-nw-upper': {
+    shelf: 'nw', index: 3, position: KALLAX_NW_DRONA_POSITIONS[3],
+    label: 'Dröna supérieur NW', interaction: 'Prendre un objet dans le Dröna supérieur',
+    action: 'drona-nw-upper-slide', animationPrefix: 'drona-upper', approach: DRONA_CARRY_APPROACH,
   },
   'drona-nw-trousers': {
     shelf: 'nw', index: 2, position: KALLAX_NW_DRONA_POSITIONS[2],

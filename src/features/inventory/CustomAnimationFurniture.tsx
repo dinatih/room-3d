@@ -10,6 +10,8 @@ import { DRONA_SPECIAL_ITEMS, DRONA_PULL_RANGE, DRONA_PUSH_RANGE } from '@featur
 import { KALLAX_SE_DRONA_POSITIONS, DRONA_SE_ITEMS } from '@features/scene/items/kallaxSeDrona';
 import { KALLAX_CUISINE_DRONA_POSITIONS, KITCHEN_DRONA_ITEMS } from '@features/scene/items/kallaxCuisineDrona';
 import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '@features/scene/items/bathroomStorage';
+import { DRONA_CARRY_APPROACH, type DronaCarryAnimation } from '@features/scene/animations/dronaCarryManifest';
+import { sampleDronaMotion } from '@features/scene/items/dronaPlayback';
 import { LINEN_PULL_RANGE, LINEN_PUSH_RANGE } from '@features/scene/animations/dronaLinenManifest';
 import { getAnimationDef } from '@features/scene/animations/animationResolver';
 import { NOOP_ITEM } from '@features/scene/sceneItem';
@@ -27,6 +29,7 @@ const CONTEXTS: Record<string, FurnitureContext> = {
   ...Object.fromEntries(Object.values(DRONA_SPECIAL_ITEMS).map(item => [item.animationPrefix, {
     shelf: item.shelf, cell: item.position, approach: item.approach, action: item.action,
   }])),
+  'drona-pyjama': { shelf: 'se', cell: KALLAX_SE_DRONA_POSITIONS[DRONA_SE_ITEMS['drona-se-pyjama'].index], approach: DRONA_CARRY_APPROACH, action: DRONA_SE_ITEMS['drona-se-pyjama'].action },
   'drona-linen': { shelf: 'se', cell: KALLAX_SE_DRONA_POSITIONS[DRONA_SE_ITEMS['drona-se-linen'].index], approach: 50, action: DRONA_SE_ITEMS['drona-se-linen'].action },
   ...Object.fromEntries(Object.values(KITCHEN_DRONA_ITEMS).map(item => [item.animationPrefix, {
     shelf: 'kitchen', cell: KALLAX_CUISINE_DRONA_POSITIONS[item.index], approach: item.animationPrefix === 'drona-kitchen-diy' ? 65 : 50, action: item.action,
@@ -45,6 +48,9 @@ export function CustomAnimationFurniture({ animationId, onSize }: { animationId?
   const actionState = useMemo(() => ({ previewMotion: context?.action && definition ? {
     get [context.action!]() {
       const phase = match![2];
+      if (match![1] === 'drona-pyjama' || match![1] === 'drona-upper') {
+        return sampleDronaMotion({ action: context.action!, animation: animationId as DronaCarryAnimation }, useAnimPreviewStore.getState().currentTime / definition.duration!);
+      }
       const range = match![1] === 'drona-linen'
         ? phase === 'push' ? LINEN_PUSH_RANGE : LINEN_PULL_RANGE
         : phase === 'push' ? DRONA_PUSH_RANGE : DRONA_PULL_RANGE;

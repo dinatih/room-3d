@@ -6,6 +6,7 @@ import type { PreviewPlayback } from '@features/scene/character/characterTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence } from '@features/scene/ai/smartObjectRegistry';
 import { getAnimationDef, getAnimationsByTags } from '@features/scene/animations/animationResolver';
 import { toggleObjectAction } from '@features/scene/objectActionRegistry';
+import { sampleDronaMotion } from '@features/scene/items/dronaPlayback';
 import type { AgentInstruction } from '@features/scene/ai/aiTypes';
 import type { SceneItemProps } from '@shared/types';
 import type { SmartActionPreviewRequest } from './InventorySmartActions';
@@ -63,13 +64,17 @@ export function SmartActionPreview({ Component, item, actionState, onSize, reque
     if (readyIndex !== index) { setReadyIndex(index); return; }
     if (!framed.current) { framed.current = true; onSize(new Vector3()); }
     if (!request.playing) return;
-    const duration = step.duration ?? playback.duration * (step.repeatCount ?? 1);
+    const duration = step.waitForAnimation ? playback.duration : step.duration ?? playback.duration * (step.repeatCount ?? 1);
     elapsed.current = Math.min(duration, elapsed.current + delta);
     playback.time = elapsed.current >= duration ? Math.min(duration, playback.duration) : elapsed.current % playback.duration;
     if (elapsed.current >= duration && index < sequence.length - 1) setIndex(index + 1);
   });
+  const motion = step.dronaMotion;
+  const previewMotion = motion ? {
+    get [motion.action]() { return sampleDronaMotion(motion, playback.duration ? playback.time / playback.duration : 0); },
+  } : undefined;
   return <group name="SmartActionPreview" userData={{ step: index, animation, characterId: request.characterId, playback }}>
-    <Component item={item} isPreview actionState={{ ...actionState, ...objectState, previewPaused: !request.playing }} onSize={onSize} />
+    <Component item={item} isPreview actionState={{ ...actionState, ...objectState, previewMotion, previewPaused: !request.playing }} onSize={onSize} />
     <CharacterGroup isPreview previewCharacterId={request.characterId} characterAnim={animation}
       previewPosition={position} previewRotationY={(step.rotY ?? slot.rotY ?? 0) - (origin.rotationY ?? 0)} previewPlayback={playback} />
   </group>;

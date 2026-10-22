@@ -9,6 +9,7 @@ import { INTERX_ANIMATION_DEFINITIONS } from './interxManifest';
 import { FAB_ANIMATION_DEFINITIONS } from './fabManifest';
 import { BEHAVE_ANIMATION_DEFINITIONS } from './behaveManifest';
 import { KIT_ANIMATION_DEFINITIONS } from './kitManifest';
+import { DRONA_CARRY_ANIMATIONS } from './dronaCarryManifest';
 import { DRONA_LINEN_ANIMATIONS } from './dronaLinenManifest';
 import { DRONA_STORAGE_ANIMATIONS } from './dronaStorageManifest';
 
@@ -58,6 +59,7 @@ export interface AnimationDefinition {
 
 export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   ...DRONA_LINEN_ANIMATIONS,
+  ...DRONA_CARRY_ANIMATIONS,
   ...DRONA_STORAGE_ANIMATIONS,
   ...INTERX_ANIMATION_DEFINITIONS,
   ...FAB_ANIMATION_DEFINITIONS,

@@ -11,6 +11,7 @@ import { FREEZER_DOOR_DURATION } from '../items/Freezer';
 import { FRIDGE_DOOR_DURATION, FRIDGE_CRISPER_DURATION } from '../items/Fridge';
 import { DRONA_CATCHALL_ACTION, DRONA_CATCHALL_POSITION, DRONA_CATCHALL_SLIDE_DURATION } from '../items/kallaxNeDrona';
 import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from '../items/kallaxSeDrona';
+import { DRONA_CARRY_APPROACH, DRONA_CARRY_PHASES } from '../animations/dronaCarryManifest';
 import { LINEN_PULL_RANGE, LINEN_PUSH_RANGE } from '../animations/dronaLinenManifest';
 import { DRONA_SPECIAL_ITEMS, DRONA_PULL_RANGE, DRONA_PUSH_RANGE } from '../items/dronaStorage';
 import { getAnimationDef } from '../animations/animationResolver';
@@ -481,7 +482,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [{
       slotId: 'pick-item', name: id === 'drona-se-pyjama' ? 'Prendre un pyjama' : 'Prendre du linge de maison',
       relative: true, arrival: 'approach' as const, navigationOwner: 'kallax-se',
-      offset: [0, -KALLAX_SE_DRONA_POSITIONS[item.index][1], -80] as [number, number, number],
+      offset: [0, -KALLAX_SE_DRONA_POSITIONS[item.index][1], id === 'drona-se-pyjama' ? -DRONA_CARRY_APPROACH : -80] as [number, number, number],
       rotY: 0, animation: item.animation,
     }],
   }])),
@@ -1141,6 +1142,25 @@ export function buildSmartObjectInstructionSequence(
       ...(gesture && (!('kind' in storageInteraction) || useSceneStore.getState().layers.exitTransitions) ? [{ type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY, waitForAnimation: true }] : []),
       // Leave the chair's original footprint before restoring it.
       ...((objectId === 'drona-kitchen-diy' || objectId === 'drona-kitchen-electronics') ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, targetPos: [ROOM_W * 2 / 3, 0, slot.offset![2]] as [number, number, number] }] : []),
+    ];
+  }
+
+  if (objectId === 'drona-se-pyjama' || objectId === 'drona-nw-upper') {
+    const pyjama = objectId === 'drona-se-pyjama';
+    const action = pyjama ? DRONA_SE_ITEMS[objectId].action : DRONA_SPECIAL_ITEMS['drona-nw-upper'].action;
+    const protectedDoor = pyjama ? 'living' as const : undefined;
+    return [
+      ...(pyjama ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey: protectedDoor }] : []),
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor, targetPos: slot.offset },
+      ...DRONA_CARRY_PHASES.map(phase => {
+        const animation = `drona-${pyjama ? 'pyjama' : 'upper'}-${phase}` as const;
+        return {
+          type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, protectedDoor,
+          animation, duration: getAnimationDef(animation)!.duration, rotY: slot.rotY, waitForAnimation: true,
+          dronaMotion: { action, animation }, triggerEventKey: action, triggerEventValue: phase !== 'push',
+        };
+      }),
+      ...(pyjama ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, doorKey: protectedDoor, protectedDoor }] : []),
     ];
   }
 
