@@ -3,7 +3,11 @@ import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smart
 import { OccupancyManager } from './occupancyManager';
 
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)
-export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
+const randomSpawn = typeof window !== 'undefined' && new URLSearchParams(
+  window.location.search || window.location.hash.split('?')[1]
+).get('randomSpawn') === '1';
+
+export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = randomSpawn ? {} : {
   native:   'desk-bollsidan-2',
   rosanna:  'bed-east',
   marissa:  'sofa-garden-east',

@@ -578,6 +578,9 @@ Pour démarrer directement dans la scène après chargement :
 `mode` choisit la vue initiale : `orbit`, `fpv`, `follow`, `top` ou `ortho`.
 Sans ces paramètres, le lancement conserve l'introduction et la vue FPV par défaut.
 
+`randomSpawn=1` fait démarrer tous les PNJ présents sur des emplacements d'activité aléatoires disponibles, comme Ybot, au lieu de leurs emplacements prioritaires.
+Exemple avec tous les personnages : `http://localhost:5173/?characterCount=all&randomSpawn=1`.
+
 Le panneau **🛠 Dev Tools** dans le side-panel affiche en temps réel :
 
 - **Graph FPS** (80 échantillons, seuils 30/60 FPS)
