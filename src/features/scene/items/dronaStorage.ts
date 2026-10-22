@@ -21,7 +21,8 @@ export const DRONA_SPECIAL_ITEMS = {
   'drona-nw-trousers': {
     shelf: 'nw', index: 2, position: KALLAX_NW_DRONA_POSITIONS[2],
     label: 'Dröna Pantalons', interaction: 'Prendre un pantalon',
-    action: 'drona-nw-trousers-slide', animationPrefix: 'drona-trousers', approach: 50,
+    // Preserve the standing clearance when the 38 cm box slides out by two thirds.
+    action: 'drona-nw-trousers-slide', animationPrefix: 'drona-trousers', approach: 50 + 38 * 2 / 3,
   },
   'drona-ne-catchall2': {
     shelf: 'ne', index: 0, position: [-17.5, 41 - 20.5, 0],
