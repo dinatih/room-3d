@@ -1062,6 +1062,7 @@ export function createAgentController(
         if (currentInstruction.rotY === undefined && target.rotY !== undefined) currentInstruction.rotY = target.rotY;
         if (!currentInstruction.duration && target.duration) currentInstruction.duration = target.duration;
         timer = currentInstruction.duration || target.duration || 1.0;
+        if (currentInstruction.waitForAnimation && currentInstruction.rotY !== undefined) state.rotY = currentInstruction.rotY;
         const resolvedAnimId = resolveAnimationId(currentInstruction.animation || target.anim || 'idle');
         state.animation = resolvedAnimId;
 
@@ -1579,6 +1580,7 @@ export function createAgentController(
 
   const update = (dt: number): AgentState => {
     const { x, z } = state;
+    const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     let waitingForNavigation = false;
     let pendingReason: string | undefined;
     try { return navigationScope.run(() => updateCurrent(dt)); }
@@ -1589,7 +1591,9 @@ export function createAgentController(
       if (agentStatus === 'TRANSITIONING') state.animationPaused = true;
       return state;
     } finally {
-      if ((agentStatus === 'MOVING' || agentStatus === 'IDLE') && state.x === x && state.z === z) state.animation = agentStatus === 'MOVING' || waitingForNavigation ? NAVIGATION_WAIT_ANIMATION : 'idle';
+      const next = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
+      const continuingInteraction = instruction?.waitForAnimation && instruction.smartObjectId && next?.smartObjectId === instruction.smartObjectId && next.slotId === instruction.slotId;
+      if ((agentStatus === 'MOVING' || (agentStatus === 'IDLE' && !continuingInteraction)) && state.x === x && state.z === z) state.animation = agentStatus === 'MOVING' || waitingForNavigation ? NAVIGATION_WAIT_ANIMATION : 'idle';
       if (pendingReason) {
         const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
         const objId = instruction?.smartObjectId;

@@ -9,13 +9,14 @@ const { retargetClip } = require('../../src/features/scene/retargeting/retargetC
 
 describe('Moteur commun des personnages', () => {
   it('distingue le chargement d’un clip de l’attente de navigation sans répéter les logs', () => {
-    const { select } = load('src/features/scene/character/Character.tsx', {}, source => {
+    const { select } = load('src/features/scene/character/Character.tsx', { three: require('three') }, source => {
       const start = source.indexOf('    let isTemporaryLoadingFallback = false;');
       const end = source.indexOf('    const postureTransition =', start);
       assert(start >= 0 && end > start);
-      return `export function select(target, actions, loadingAnimationRef, appLog, isPreview = false) {
+      return `import * as THREE from 'three';
+      export function select(target, actions, loadingAnimationRef, appLog, isPreview = false, current = 'sad-idle') {
         const id = 'james', characterGrid = false, isTPose = target === 't-pose';
-        const activeActionName = { current: 'sad-idle' }, ANIMATION_LOADING_IDLE = 'thinking';
+        const activeActionName = { current }, ANIMATION_LOADING_IDLE = 'thinking';
         const resolveAnimationId = id => id, getAnimationDef = () => undefined, loadAndPlayClip = () => {};
         ${source.slice(start, end)}
         return { target, isTemporaryLoadingFallback };
@@ -36,6 +37,9 @@ describe('Moteur commun des personnages', () => {
     assert.equal(logs.at(-1).action, 'anim_loading_cancelled', 'Changing activity must not claim an unfinished clip is ready');
     assert.equal(select('preview-clip', actions, pending, log, true).target, 'sad-idle', 'Previews keep their previous pose');
     assert.equal(logs.length, 4);
+    actions['drona-pull'] = { loop: require('three').LoopOnce };
+    assert.deepEqual(select('drona-search', actions, pending, log, false, 'drona-pull'),
+      { target: 'drona-pull', isTemporaryLoadingFallback: true }, 'Keep the crouched gesture while the next phase loads');
   });
 
   it('journalise la veille globale une seule fois, même quand les personnages ne sont plus mis à jour', () => {

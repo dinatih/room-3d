@@ -836,7 +836,9 @@ export function Character({
         });
       }
       const idleId = resolveAnimationId('idle');
-      if (!isPreview && !characterGrid && actions[ANIMATION_LOADING_IDLE]) {
+      if (actions[activeActionName.current]?.loop === THREE.LoopOnce) {
+        target = activeActionName.current;
+      } else if (!isPreview && !characterGrid && actions[ANIMATION_LOADING_IDLE]) {
         target = ANIMATION_LOADING_IDLE;
       } else if (activeActionName.current && actions[activeActionName.current]) {
         const prevIsLocomotion = activeActionName.current.includes('walk') || activeActionName.current.includes('run');

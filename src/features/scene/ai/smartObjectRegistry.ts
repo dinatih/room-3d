@@ -17,6 +17,7 @@ import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
 import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
+import { useSceneStore } from '../store/useSceneStore';
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
@@ -1134,8 +1135,9 @@ export function buildSmartObjectInstructionSequence(
         { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId },
       ] : []),
       ...(gesture ? [gesture('pull')] : []),
-      { ...baseInstruction, waitForAnimation: true },
-      ...(gesture ? [gesture('push'), { type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY }] : []),
+      { ...baseInstruction, type: 'kind' in storageInteraction ? 'WAIT' : baseInstruction.type, waitForAnimation: true },
+      ...(gesture ? [gesture('push')] : []),
+      ...(gesture && (!('kind' in storageInteraction) || useSceneStore.getState().layers.exitTransitions) ? [{ type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId, animation: 'crouch-to-stand', duration: getAnimationDef('crouch-to-stand')!.duration, rotY: slot.rotY, waitForAnimation: true }] : []),
       // Leave the chair's original footprint before restoring it.
       ...((objectId === 'drona-kitchen-diy' || objectId === 'drona-kitchen-electronics') ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, targetPos: [ROOM_W * 2 / 3, 0, slot.offset![2]] as [number, number, number] }] : []),
     ];
