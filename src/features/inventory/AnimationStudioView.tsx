@@ -1,4 +1,3 @@
-import { InventoryLinkButton } from './InventoryLinkButton';
 import { updateUrlInventory, type InventoryUrlTarget } from './inventoryUrlParams';
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
@@ -296,26 +295,27 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
       {!isMobile && <div className="animation-studio__splitter bg-secondary bg-opacity-25" role="separator" aria-orientation="vertical"
         aria-label="Redimensionner la liste des animations" onMouseDown={onResizeStart} title="Glisser pour redimensionner la liste" />}
       <div className="animation-studio__workspace bg-light">
-        <div className="py-1 px-2 border-bottom bg-white d-flex flex-wrap align-items-center gap-2">
-          {active && <InventoryLinkButton key={`${mode}:${active.id}`} state={{ open: true, category: 'animations', target: { type: 'animation', id: active.id, mode } }} />}
-          <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">{mode === 'solo' ? 'Personnage' : 'Leader A'}
-            <select aria-label="Personnage testé" className="form-select form-select-sm py-0.5 ps-2 pe-4 w-auto small" value={leader?.id ?? ''} onChange={e => setActorId(e.target.value)}>
-              {characters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </label>
-          {mode === 'duo' && <>
-            <button type="button" className="btn btn-sm py-0.5 px-2 btn-outline-secondary" aria-label="Échanger les personnages" disabled={!partner}
-              onClick={() => { setActorId(partner!.id); setPartnerId(leader.id); }}><i className="bi bi-arrow-left-right" /></button>
-            <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">Partenaire B
-              <select aria-label="Partenaire du duo" className="form-select form-select-sm py-0.5 ps-2 pe-4 w-auto small" value={partner?.id ?? ''} onChange={e => setPartnerId(e.target.value)}>
-                {partners.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </label>
-          </>}
-        </div>
         <div className="w-100 position-relative">
           {active && currentItem ? <InventoryPreview key={mode} item={currentItem} height="100%" hideFooter showPhotoGallery={false} defaultShowGrid neutralLighting defaultAutoRotate={false} hideAnimFrameController preserveStateOnItemChange
-            initialAnim={mode === 'solo' ? active.id : undefined} initialDuoAnim={active.duo} initialDuoPartner={partner?.id} />
+            initialAnim={mode === 'solo' ? active.id : undefined} initialDuoAnim={active.duo} initialDuoPartner={partner?.id}
+            afterToolbarActions={
+              <div className="d-flex align-items-center gap-1 flex-shrink-0">
+                <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">{mode === 'solo' ? 'Personnage' : 'Leader A'}
+                  <select aria-label="Personnage testé" className="form-select form-select-sm py-0 ps-2 pe-4 w-auto small bg-transparent text-body border-secondary" value={leader?.id ?? ''} onChange={e => setActorId(e.target.value)}>
+                    {characters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </label>
+                {mode === 'duo' && <>
+                  <button type="button" className="btn btn-sm py-0 px-2 btn-outline-secondary" aria-label="Échanger les personnages" disabled={!partner}
+                    onClick={() => { setActorId(partner!.id); setPartnerId(leader.id); }}><i className="bi bi-arrow-left-right" /></button>
+                  <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">Partenaire B
+                    <select aria-label="Partenaire du duo" className="form-select form-select-sm py-0 ps-2 pe-4 w-auto small bg-transparent text-body border-secondary" value={partner?.id ?? ''} onChange={e => setPartnerId(e.target.value)}>
+                      {partners.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </label>
+                </>}
+              </div>
+            } />
             : <div className="h-100 d-flex align-items-center justify-content-center text-muted p-3">Modifiez les filtres pour sélectionner une animation.</div>}
         </div>
         <div className="animation-studio__tools">

@@ -1,7 +1,7 @@
 import { SmartActionPreview } from './SmartActionPreview';
 import type { SmartActionPreviewRequest } from './InventorySmartActions';
 import type { SceneItemProps } from '@shared/types';
-import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo } from 'react';
+import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo, type ReactNode } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { Html, Line, Grid, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
 import { OrbitControls } from '@features/scene/camera/OrbitControls';
@@ -912,6 +912,7 @@ export function InventoryPreview({
   externalLaraVariant,
   onGlbStats,
   smartAction,
+  afterToolbarActions,
 }: {
   item: PreviewTarget;
   smartAction?: SmartActionPreviewRequest;
@@ -932,6 +933,7 @@ export function InventoryPreview({
   externalHairColor?: string;
   externalLaraVariant?: string;
   onGlbStats?: (s: GlbDebugStats | null) => void;
+  afterToolbarActions?: ReactNode;
 }) {
   const isMobile = useIsMobile();
   const [showMiniPerf, setShowMiniPerf] = useState(() => defaultShowMiniPerf !== undefined ? defaultShowMiniPerf : !isMobile);
@@ -1511,7 +1513,7 @@ export function InventoryPreview({
       )}
     </div>
     {item && !hideViewControlBar && (
-      <ViewControlBar inline inventoryLayout activeCameraPos={showing3D && previewView !== 'free' ? previewView : null} showOrbitControls={showing3D} beforeAmbianceActions={showing3D && (
+      <ViewControlBar inline inventoryLayout activeCameraPos={showing3D && previewView !== 'free' ? previewView : null} showOrbitControls={showing3D} afterToolbarActions={afterToolbarActions} beforeAmbianceActions={showing3D && (
         <>
         <button
           type="button"
