@@ -18,6 +18,7 @@ import { FRIDGE_LOCAL_POSITION } from './items/Fridge';
 import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION, DRONA_CATCHALL_POSITION } from './items/kallaxNeDrona';
 import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from './items/kallaxSeDrona';
 import { DRONA_SPECIAL_ITEMS, KALLAX_NW_POSITION, KALLAX_NW_ROTATION } from './items/dronaStorage';
+import { FREEZER_SHOE_RACK_OFFSET } from './shoeHatRackData';
 import { positionState } from './positionState';
 import { BATHROOM_STORAGE_ITEMS } from './items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION, KALLAX_CUISINE_DRONA_POSITIONS } from './items/kallaxCuisineDrona';
@@ -61,7 +62,7 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
   if (bathroomStorage) return { position: bathroomStorage.position, rotationY: bathroomStorage.rotationY };
   const storage = DRONA_SPECIAL_ITEMS[itemId as keyof typeof DRONA_SPECIAL_ITEMS];
   if (storage) {
-    const freezer = getStaticObjectTransform('freezer')!;
+    const freezer = getStaticObjectTransform('kallax-se')!;
     const position = storage.shelf === 'se' ? freezer.position : storage.shelf === 'nw' ? KALLAX_NW_POSITION : KALLAX_NE_POSITION;
     const ry = storage.shelf === 'se' ? freezer.rotationY - Math.PI / 2 : storage.shelf === 'nw' ? KALLAX_NW_ROTATION : KALLAX_NE_ROTATION;
     const [x, y, z] = storage.position, c = Math.cos(ry), s = Math.sin(ry);
@@ -70,7 +71,7 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
   switch (itemId) {
     case 'drona-se-pyjama':
     case 'drona-se-linen': {
-      const freezer = getStaticObjectTransform('freezer')!;
+      const freezer = getStaticObjectTransform('kallax-se')!;
       const ry = freezer.rotationY - Math.PI / 2;
       const [x, y, z] = KALLAX_SE_DRONA_POSITIONS[DRONA_SE_ITEMS[itemId].index];
       return {
@@ -97,7 +98,11 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
         rotationY: kitchen.rotationY,
       };
     }
-    case 'freezer':
+    case 'freezer': {
+      const tower = getStaticObjectTransform('kallax-se')!;
+      return { position: [tower.position[0] - FREEZER_SHOE_RACK_OFFSET, 0, tower.position[2]], rotationY: Math.PI };
+    }
+    case 'kallax-se':
       // The freezer sits at the base of Kallax SE, with an extra quarter turn.
       return {
         position: [ROOM_W - FREEZER_WIDTH / 2 - FURNITURE_WALL_CLEARANCE, 0, ROOM_D - 60 - 40.5 / 2 - FURNITURE_WALL_CLEARANCE],

@@ -72,8 +72,8 @@ const w1 = 40.5; // 1×Kallax : 33.5 + 2×3.5
 const w2 = 75.5; // 2×Kallax : 2×33.5 + 2×3.5 + 1.5
 
 const KALLAX_DEPTH = 39;
-const FREEZER_TRANSFORM = getObjectTransform('freezer')!;
-const KALLAX_SE_Z = FREEZER_TRANSFORM.position[2];
+const KALLAX_SE_TRANSFORM = getObjectTransform('kallax-se')!;
+const KALLAX_SE_Z = KALLAX_SE_TRANSFORM.position[2];
 const KALLAX_SE_TOP = 2 * w2; // 151
 
 const lackY = 187.5;
@@ -85,7 +85,7 @@ const mannRot = Math.atan2(150 - lackCX, 200 - lackCZ);
 const MUL_D = 13;
 const mulCZ = pSouth('niche-beam') - 150;
 
-const MEUBLE_T_X = FREEZER_TRANSFORM.position[0] + KALLAX_DEPTH / 2 - 13.75;
+const MEUBLE_T_X = KALLAX_SE_TRANSFORM.position[0] + KALLAX_DEPTH / 2 - 13.75;
 const MEUBLE_T_Z = KALLAX_SE_Z;
 const MEUBLE_T_Y = KALLAX_SE_TOP + 50; // dessus kallax SE + freezer
 
@@ -465,7 +465,7 @@ export function LivingRoomFurniture() {
         <NavigationObstacle id="kallax-ne"><KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
       </group>
 
-      <group position={FREEZER_TRANSFORM.position} rotation={[0, FREEZER_TRANSFORM.rotationY - Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax SE' }}>
+      <group position={KALLAX_SE_TRANSFORM.position} rotation={[0, KALLAX_SE_TRANSFORM.rotationY - Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax SE' }}>
         <NavigationObstacle id="kallax-se" compound><KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noCaps /></NavigationObstacle>
       </group>
 
@@ -536,7 +536,7 @@ export function LivingRoomFurnishings() {
       </group>
 
       {/* Boîtes Drona Kallax SE */}
-      <group position={FREEZER_TRANSFORM.position} rotation={[0, FREEZER_TRANSFORM.rotationY - Math.PI / 2, 0]}>
+      <group position={KALLAX_SE_TRANSFORM.position} rotation={[0, KALLAX_SE_TRANSFORM.rotationY - Math.PI / 2, 0]}>
         <KallaxSEDrona />
       </group>
 
@@ -658,7 +658,7 @@ export function LivingRoomDecor() {
       </group>
 
       {/* Casquettes sur ShoeHatRack (flanc Kallax SE) */}
-      <group position={FREEZER_TRANSFORM.position} rotation={[0, FREEZER_TRANSFORM.rotationY - Math.PI / 2, 0]}>
+      <group position={KALLAX_SE_TRANSFORM.position} rotation={[0, KALLAX_SE_TRANSFORM.rotationY - Math.PI / 2, 0]}>
         <group position={[-w1 / 2, 0, KALLAX_DEPTH / 2 + SHOE_HAT_RACK_WALL_RECESS]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
           <ShoeHatRackCaps />
         </group>
