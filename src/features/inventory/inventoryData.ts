@@ -467,6 +467,19 @@ Source : https://www.capital.fr/economie-politique/defense-quest-ce-que-le-black
 });
 
 INVENTORY.push({
+  id: 'dji-neo',
+  name: 'Drone DJI Neo',
+  brand: 'DJI',
+  category: 'robots',
+  qty: 1,
+  dims: { w: 13.0, d: 15.7, h: 4.85 },
+  glbPath: 'items/dji-neo/dji-neo.glb',
+  photos: [],
+  url: 'https://www.dji.com/fr/neo',
+  notes: `Drone compact et ultraléger (135 g) à décollage et atterrissage palmaires. Équipé d'un suivi de sujet assisté par IA, de modes QuickShots, d'une caméra 4K ultra-stabilisée et de protections d'hélices intégrales.`
+});
+
+INVENTORY.push({
   id: 'jikin-goldfish',
   name: 'Poisson rouge Jikin',
   brand: 'Animal',
