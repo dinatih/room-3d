@@ -47,3 +47,28 @@ une pose A corrigée, le retargeting sur Lara et la conservation des longueurs
 des membres. Il produit également un aperçu de six postures dans
 `/tmp/room-yoga-variants-corrected.png`. Une lecture sans erreur ou des matrices
 finies seules ne prouvent pas que les repères du squelette sont corrects.
+
+## Hauteur du bassin et noms des postures
+
+Le retargeting reçoit l'identifiant canonique de l'animation. La détection de la
+T-pose doit comparer cet identifiant à `t-pose` exactement : chercher cette
+sous-chaîne reconnaissait aussi `twist-pose`, `boat-pose`, `locust-pose`,
+`leg-lift-pose` et `split-pose`, et supprimait toutes les translations du bassin.
+Les trois Bharadvaja flottaient ainsi entre 65 et 83 cm aux instants mesurés sur
+Y Bot et Lara. Les translations étaient déjà présentes dans les GLB ; cette
+correction du retargeting commun ne nécessite aucune reconversion des sources.
+
+Régression sur les 128 fichiers YOGA et la vraie T-pose :
+
+```bash
+node --test --test-isolation=none tests/unit/yoga-retargeting.test.cjs
+ROOM_TEST_URL=http://127.0.0.1:5176 node scripts/check-yoga-grounding.cjs
+```
+
+Le contrôle navigateur utilise les identifiants réels, compare les translations
+à celles du même clip sous un nom neutre et mesure les maillages déformés de
+Y Bot et Lara à cinq instants. Il écrit `/tmp/yoga-grounding.json` et un aperçu
+des trois Bharadvaja dans `/tmp/yoga-grounding.png`. Ces mesures ne constituent
+pas un solveur de contacts : les différences de proportions peuvent encore
+produire des pénétrations, notamment aux mains. Aucun recalage image par image
+n'est appliqué, afin de conserver les translations et sauts des sources.
