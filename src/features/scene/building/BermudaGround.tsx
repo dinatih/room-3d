@@ -3,9 +3,8 @@ import * as THREE from 'three';
 import { EXTERIOR_GROUND } from '../environmentData';
 import { useTexture } from '@react-three/drei';
 import type { GroundType } from '../sidepanel/types';
-import { groundExteriorMat } from './buildingCommon';
 import { CategoryLayerGroup } from '../sceneLayer';
-import { LAYER_GRASS, LAYER_FLOOR_COVERINGS } from '@config';
+import { LAYER_GRASS } from '@config';
 import { useSceneStore } from '../store/useSceneStore';
 
 export interface GroundConfig {
@@ -17,7 +16,7 @@ export interface GroundConfig {
   tileSize: number;
 }
 
-export const GROUND_CONFIGS: Record<Exclude<GroundType, 'none'>, GroundConfig> = {
+export const GROUND_CONFIGS: Record<GroundType, GroundConfig> = {
   bermuda: {
     id: 'bermuda',
     label: 'Gazon Bermuda 🌱',
@@ -50,14 +49,6 @@ export const GROUND_CONFIGS: Record<Exclude<GroundType, 'none'>, GroundConfig> =
     roughness: 'textures/celandine_01/roughness.jpg',
     tileSize: 140,
   },
-  mud_leaves: {
-    id: 'mud_leaves',
-    label: 'Terre & Feuilles 🍂',
-    diffuse: 'textures/brown_mud_leaves_01/diffuse.jpg',
-    normal: 'textures/brown_mud_leaves_01/normal.jpg',
-    roughness: 'textures/brown_mud_leaves_01/roughness.jpg',
-    tileSize: 200,
-  },
 };
 
 interface BermudaGroundProps {
@@ -69,40 +60,19 @@ interface BermudaGroundProps {
 export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.6 }: BermudaGroundProps) {
   const storeBermudaGrass = useSceneStore(state => state.layers.bermudaGrass ?? true);
   const isGrassActive = active ?? storeBermudaGrass;
-  const showTexturedGrass = isGrassActive && groundType !== 'none' && (groundType in GROUND_CONFIGS);
+
+  if (!isGrassActive) return null;
+
+  const config = GROUND_CONFIGS[groundType] ?? GROUND_CONFIGS.bermuda;
 
   return (
-    <>
-      {/* Rectangle vert uni : affiché uniquement en mode 'none' ou si l'herbe PBR est désactivée */}
-      {!showTexturedGrass && (
-        <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
-          <mesh
-            material={groundExteriorMat}
-            rotation={[-Math.PI / 2, 0, 0]}
-            position={[EXTERIOR_GROUND.x, yPos, EXTERIOR_GROUND.z]}
-            receiveShadow
-            userData={{
-              birdSupport: { id: 'garden-ground', kind: 'ground' },
-              brickType: 'ground',
-              itemName: 'Terrain Extérieur',
-            }}
-          >
-            <planeGeometry args={[EXTERIOR_GROUND.width, EXTERIOR_GROUND.depth]} />
-          </mesh>
-        </CategoryLayerGroup>
-      )}
-
-      {/* Herbe texturée PBR : rattachée au calque Herbe (LAYER_GRASS) */}
-      {showTexturedGrass && (
-        <CategoryLayerGroup layer={LAYER_GRASS}>
-          <TexturedGroundMesh
-            key={GROUND_CONFIGS[groundType as Exclude<GroundType, 'none'>].id}
-            config={GROUND_CONFIGS[groundType as Exclude<GroundType, 'none'>]}
-            yPos={yPos}
-          />
-        </CategoryLayerGroup>
-      )}
-    </>
+    <CategoryLayerGroup layer={LAYER_GRASS}>
+      <TexturedGroundMesh
+        key={config.id}
+        config={config}
+        yPos={yPos}
+      />
+    </CategoryLayerGroup>
   );
 }
 
@@ -162,7 +132,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
   );
 }
 
-// Pré-chargement des 5 textures PBR
+// Pré-chargement des 4 textures PBR
 Object.values(GROUND_CONFIGS).forEach((c) => {
   useTexture.preload([c.diffuse, c.normal, c.roughness]);
 });

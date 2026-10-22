@@ -295,7 +295,7 @@ export function parseUrlGroundType(): { groundType?: GroundType; active?: boolea
     if (raw !== null) {
       const lower = raw.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
       if (lower === 'none' || lower === '0' || lower === 'false' || lower === 'aucun' || lower === 'sans') {
-        return { groundType: 'none', active: false };
+        return { active: false };
       }
       if (lower.includes('bermuda') || lower === 'gazon') {
         return { groundType: 'bermuda', active: true };
@@ -308,9 +308,6 @@ export function parseUrlGroundType(): { groundType?: GroundType; active?: boolea
       }
       if (lower.includes('celandine') || lower.includes('chelidoine') || lower.includes('prairie') || lower.includes('fleur')) {
         return { groundType: 'celandine', active: true };
-      }
-      if (lower.includes('mud') || lower.includes('leaves') || lower.includes('terre') || lower.includes('feuille')) {
-        return { groundType: 'mud_leaves', active: true };
       }
     }
   } catch {}

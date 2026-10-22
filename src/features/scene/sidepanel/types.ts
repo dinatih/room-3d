@@ -79,7 +79,7 @@ export interface FurnitureState {
   dronaMode: 'high' | 'low' | 'procedural' | 'hidden';
 }
 
-export type GroundType = 'bermuda' | 'medium_01' | 'medium_02' | 'celandine' | 'mud_leaves' | 'none';
+export type GroundType = 'bermuda' | 'medium_01' | 'medium_02' | 'celandine';
 
 export interface LayerState {
   cameraViewMarkers: boolean;

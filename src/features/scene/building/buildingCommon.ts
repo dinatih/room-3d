@@ -3,15 +3,12 @@
  */
 import * as THREE from 'three';
 
-export const GROUND_COLOR = 0x3a7d44;
-
 export const COLORS = {
   wall:    0xeeeeee,
   floor:   0xd4a437,
   parquet: 0xC19A6B,
   accent:  0xcc0000,
   accentS: 0xaa0000,
-  ground:  GROUND_COLOR,
   tile:    0xe8e8e8,
 };
 
@@ -58,13 +55,6 @@ export const slabConcreteSide = new THREE.MeshStandardMaterial({
   color: COLORS.floor,
   roughness: 0.6,
   side: THREE.FrontSide,
-});
-export const groundExteriorMat = new THREE.MeshStandardMaterial({
-  color: COLORS.ground,
-  roughness: 0.9,
-  polygonOffset: true,
-  polygonOffsetFactor: 2,
-  polygonOffsetUnits: 2,
 });
 
 // Matériaux murs par orientation

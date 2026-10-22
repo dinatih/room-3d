@@ -93,11 +93,11 @@ import { isMobileViewport } from '../../../hooks/useIsMobile';
 import type { ScreenVideoQuality } from '../screenVideoConfig';
 import { DEFAULT_BNF_COORDS } from '../bnfMarkerConfig';
 
-export const GRASS_TYPES: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves'];
+export const GRASS_TYPES: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine'];
 
 export function getRandomGrassType(): GroundType {
   const urlGround = parseUrlGroundType();
-  if (urlGround.groundType && urlGround.groundType !== 'none') {
+  if (urlGround.groundType) {
     return urlGround.groundType;
   }
   return GRASS_TYPES[Math.floor(Math.random() * GRASS_TYPES.length)];
@@ -329,11 +329,9 @@ initialFurniture.lampOn = initialLayers.lightsHD;
 const urlGround = parseUrlGroundType();
 if (urlGround.groundType) {
   initialLayers.groundType = urlGround.groundType;
-  if (urlGround.active !== undefined) {
-    initialLayers.bermudaGrass = urlGround.active;
-  } else {
-    initialLayers.bermudaGrass = urlGround.groundType !== 'none';
-  }
+}
+if (urlGround.active !== undefined) {
+  initialLayers.bermudaGrass = urlGround.active;
 }
 
 if (layerOverrides.extraCharacters) {
@@ -794,7 +792,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         layers: {
           ...state.layers,
           groundType: type,
-          bermudaGrass: type !== 'none',
+          bermudaGrass: true,
         },
       };
     });
@@ -821,7 +819,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       return;
     }
     if (key === 'bermuda-grass-toggle' || key === 'ground-type-cycle') {
-      const order: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves', 'none'];
+      const order: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine'];
       set((state) => {
         const cur = state.layers.groundType ?? 'bermuda';
         const nextIdx = (order.indexOf(cur) + 1) % order.length;
@@ -832,7 +830,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
           layers: {
             ...state.layers,
             groundType: next,
-            bermudaGrass: next !== 'none',
+            bermudaGrass: true,
           },
         };
       });

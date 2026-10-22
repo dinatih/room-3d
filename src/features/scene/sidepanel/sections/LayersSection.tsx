@@ -21,8 +21,6 @@ const GROUND_OPTIONS: { id: GroundType; label: string }[] = [
   { id: 'medium_01',  label: 'Gazon Moyen 1' },
   { id: 'medium_02',  label: 'Gazon Moyen 2' },
   { id: 'celandine',  label: 'Prairie Fleurie' },
-  { id: 'mud_leaves', label: 'Terre & Feuilles' },
-  { id: 'none',       label: 'Vert uni' },
 ];
 
 export function LayersSection({
@@ -45,7 +43,7 @@ export function LayersSection({
   const setScreenVideosEnabled = useSceneStore(state => state.setScreenVideosEnabled);
   const setScreenVideoQuality = useSceneStore(state => state.setScreenVideoQuality);
   const setGroundType = useSceneStore(state => state.setGroundType);
-  const currentGroundType = layers.groundType ?? (layers.bermudaGrass ? 'bermuda' : 'none');
+  const currentGroundType = layers.groundType ?? 'bermuda';
 
   const iconLabel = (icon: string, label: string) => (
     <span className="d-inline-flex align-items-center gap-1"><i className={`bi ${icon}`} aria-hidden="true" />{label}</span>
