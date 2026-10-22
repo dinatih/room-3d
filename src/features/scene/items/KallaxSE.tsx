@@ -1,5 +1,5 @@
 /**
- * KallaxSE.tsx — Tour Kallax sud-est (mur B, 60 cm avant mur D).
+ * KallaxSE.tsx — Tour Kallax sud-est (mur B, 62 cm avant mur D).
  * Composant auto-contenu : 2× Kallax 2×1 posés sur le côté + 4 boîtes Drona.
  *
  * Les Kallax sont pivotés rotZ=π/2 (largeur devient hauteur).
@@ -80,7 +80,7 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
   return (
     <group ref={ref}>
       {/* Congélateur CHIQ au sol sous la tour Kallax (Y = 0, pivoté de +90°) */}
-      <group position={[2, 0, 0]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
+      <group position={[0, 0, 0]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
         <Freezer item={k('freezer')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -97,7 +97,7 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
       {!noDrona && <KallaxSEDrona isPreview={isPreview} actionState={actionState} />}
 
       {/* Porte-chaussures côté mur D, reculé vers le mur est. */}
-      <group position={[-w1 / 2, 0, DEP / 2 + SHOE_HAT_RACK_WALL_RECESS]} rotation-y={-Math.PI} userData={{ animUnit: true }}>
+      <group position={[-w1 / 2 - 2, 0, DEP / 2 + SHOE_HAT_RACK_WALL_RECESS]} rotation-y={-Math.PI} userData={{ animUnit: true }}>
         <ShoeHatRack item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noCaps={noCaps} />
       </group>
     </group>

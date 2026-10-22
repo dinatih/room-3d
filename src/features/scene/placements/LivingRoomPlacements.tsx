@@ -659,7 +659,7 @@ export function LivingRoomDecor() {
 
       {/* Casquettes sur ShoeHatRack (flanc Kallax SE) */}
       <group position={KALLAX_SE_TRANSFORM.position} rotation={[0, KALLAX_SE_TRANSFORM.rotationY - Math.PI / 2, 0]}>
-        <group position={[-w1 / 2, 0, KALLAX_DEPTH / 2 + SHOE_HAT_RACK_WALL_RECESS]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
+        <group position={[-w1 / 2 - 2, 0, KALLAX_DEPTH / 2 + SHOE_HAT_RACK_WALL_RECESS]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
           <ShoeHatRackCaps />
         </group>
       </group>

@@ -97,14 +97,11 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
         rotationY: kitchen.rotationY,
       };
     }
-    case 'freezer': {
-      const tower = getStaticObjectTransform('kallax-se')!;
-      return { position: [tower.position[0], 0, tower.position[2] - 2], rotationY: Math.PI };
-    }
+    case 'freezer':
     case 'kallax-se':
       // The freezer sits at the base of Kallax SE, with an extra quarter turn.
       return {
-        position: [ROOM_W - FREEZER_WIDTH / 2 - FURNITURE_WALL_CLEARANCE, 0, ROOM_D - 60 - 40.5 / 2 - FURNITURE_WALL_CLEARANCE],
+        position: [ROOM_W - FREEZER_WIDTH / 2 - FURNITURE_WALL_CLEARANCE, 0, ROOM_D - 62 - 40.5 / 2 - FURNITURE_WALL_CLEARANCE],
         rotationY: Math.PI,
       };
     case 'bed-west':
