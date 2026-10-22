@@ -14,6 +14,35 @@ it('inherits the toilet sitting animation and six-second duration for bare USE_O
   assert.equal(resolved.animation, 'sit-idle');
   assert.equal(resolved.duration, 6);
 });
+it('aligne les quatre rangements SDB devant leur façade avant l’arrivée finale', () => {
+  const { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } = require('../../src/features/scene/items/bathroomStorage.ts');
+  const { sequence } = load('src/features/scene/ai/smartObjectRegistry.ts', {
+    fixtures: { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH },
+  }, source => {
+    const start = source.indexOf('export function buildSmartObjectInstructionSequence(');
+    const end = source.indexOf('export function getSmartObject(', start);
+    return `import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from 'fixtures';
+      export function sequence(id) {
+        const SMART_OBJECTS = {}, KITCHEN_DRONA_ITEMS = {}, SPECIAL_DRONA_SLIDE_DURATION = 1;
+        const OccupancyManager = { canUseObject: () => true };
+        const getSmartObject = objectId => ({ id: objectId, slots: [{ slotId: 'pick-item', animation: 'pick-fruit' }] });
+        ${source.slice(start, end).replace('export function', 'function')}
+        return buildSmartObjectInstructionSequence(id, 'pick-item');
+      }`;
+  });
+  for (const [id, item] of Object.entries(BATHROOM_STORAGE_ITEMS)) {
+    const steps = sequence(id), moves = steps.filter(step => step.type === 'MOVE_TO');
+    assert.equal(moves.length, 2, id);
+    const local = moves[0].targetLocalPos;
+    assert.equal(local[0], 0, 'Approche alignée avec le centre du rangement');
+    assert.equal(local[1] + item.position[1], 0, 'Approche au sol, y compris pour les bacs surélevés');
+    const finalDistance = item.kind === 'cabinet' ? 60 : BATHROOM_BOX_APPROACH;
+    assert.equal(Math.abs(local[2]) - finalDistance, BATHROOM_BOX_APPROACH);
+    assert.equal(Math.sign(local[2]), item.kind === 'cabinet' ? 1 : -1, 'Respecte la rotation des Dröna');
+    assert.equal(moves[1].targetLocalPos, undefined, 'Le dernier trajet utilise le point d’interaction validé');
+    assert.equal(steps.filter(step => step.waitForAnimation).length, 1);
+  }
+});
 it('resolves each step from its own object and preserves explicit overrides', () => {
   const step = { type: 'USE_OBJECT', smartObjectId: 'vasque-sdb', slotId: 'wash-hands', duration: 2 };
   const resolved = resolvePreviewInstruction(step);

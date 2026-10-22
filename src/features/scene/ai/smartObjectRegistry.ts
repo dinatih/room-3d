@@ -1126,6 +1126,11 @@ export function buildSmartObjectInstructionSequence(
       triggerEventKey: storageInteraction.action, triggerEventValue: open,
     }) : undefined;
     return [
+      ...('kind' in storageInteraction ? [{
+        type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId,
+        targetLocalPos: [0, -storageInteraction.position[1],
+          storageInteraction.kind === 'cabinet' ? 60 + BATHROOM_BOX_APPROACH : -2 * BATHROOM_BOX_APPROACH] as [number, number, number],
+      }] : []),
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
       ...((objectId === 'drona-kitchen-diy' || objectId === 'drona-kitchen-electronics') ? [
         { type: 'PREPARE_OBJECT' as const, smartObjectId: obj.id, slotId: slot.slotId },
