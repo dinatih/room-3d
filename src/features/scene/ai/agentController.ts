@@ -1035,7 +1035,7 @@ export function createAgentController(
             ? animation.replace('animations/', '').replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ')
             : currentInstruction.type);
           const objPrefix = objName ? `[${objName}${slotInfo}] ` : '';
-          appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${timer.toFixed(1)}s)`, {
+          appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${timer.toFixed(1)}s) · position monde (${state.x.toFixed(1)}, ${state.y.toFixed(1)}, ${state.z.toFixed(1)})`, {
             category: objId ? 'object' : 'anim',
             action: 'interact',
             actors: [_characterId],
@@ -1253,7 +1253,7 @@ export function createAgentController(
               const repeatsInfo = targetRepeats > 1 ? ` x${targetRepeats}` : '';
               const resolvedUseAnimId = resolveAnimationId(animation || 'idle');
               const useAnimDef = getAnimationDef(resolvedUseAnimId);
-              appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${timer.toFixed(1)}s${repeatsInfo})`, {
+              appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${timer.toFixed(1)}s${repeatsInfo}) · position monde (${state.x.toFixed(1)}, ${state.y.toFixed(1)}, ${state.z.toFixed(1)})`, {
                 category: objId ? 'object' : 'anim',
                 action: 'use_object',
                 actors: [_characterId],
