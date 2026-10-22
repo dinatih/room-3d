@@ -515,6 +515,19 @@ INVENTORY.push({
 });
 
 INVENTORY.push({
+  id: 'unitree-as2w',
+  name: 'Unitree As2-W — quadrupède à roues',
+  brand: 'Unitree Robotics',
+  category: 'robots',
+  qty: 1,
+  dims: { w: 49.18, d: 76.24, h: 51.94 },
+  glbPath: 'items/unitree-as2w/unitree-as2w.glb',
+  url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/as2w_description',
+  description: 'As2-W rouge : 12 articulations de jambes et quatre roues motorisées. Maillages, pivots et axes du modèle officiel Unitree.',
+  notes: 'Animations visuelles créées pour le projet : repos, roulage, accroupissement, révérence et danse. Roues synchronisées avec la distance parcourue et les virages. Licence BSD-3-Clause.',
+});
+
+INVENTORY.push({
   id: 'jumper-robot',
   name: 'Jumper — robot crabe',
   brand: 'KingKong Robotics',

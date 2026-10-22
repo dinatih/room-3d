@@ -627,7 +627,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
 }
 
 function RegistryScene({ item, actionState, showDims, wireframe, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; wireframe: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
-  const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters' || (item.category === 'robots' && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id));
+  const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters' || (item.category === 'robots' && !['unitree-g1', 'unitree-go2', 'unitree-as2w', 'jumper-robot'].includes(item.id));
   return (
     <>
       <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} wireframe={wireframe} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />
@@ -715,7 +715,7 @@ export function InventoryPreview({
   const [showMiniPerf, setShowMiniPerf] = useState(() => defaultShowMiniPerf !== undefined ? defaultShowMiniPerf : !isMobile);
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = showPhotoGallery && !!photos && photos.length > 0;
-  const actionKeys = item && (!('category' in item && item.category === 'characters') || ['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id))
+  const actionKeys = item && (!('category' in item && item.category === 'characters') || ['unitree-g1', 'unitree-go2', 'unitree-as2w', 'jumper-robot'].includes(item.id))
     ? getPreviewActionIds(item.id)
     : [];
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(defaultAutoRotate);
@@ -868,7 +868,7 @@ export function InventoryPreview({
 
   const showing3D = has3D && (Boolean(smartAction) || !hasPhotos || viewMode === '3d'), showingPhotos = !smartAction && hasPhotos && (!has3D || viewMode === 'photos');
 
-  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'robots') && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id);
+  const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'robots') && !['unitree-g1', 'unitree-go2', 'unitree-as2w', 'jumper-robot'].includes(item.id);
   const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone'].includes(item.id));
   const isWigItem = Boolean(showing3D && item && 'category' in item && ((item as any).category === 'wigs'));
 

@@ -5,6 +5,8 @@ import type { SceneItemProps } from '@shared/types';
 import { INVENTORY } from '@features/inventory/inventoryData';
 import { Jumper } from '../items/Jumper';
 import { UnitreeG1, UnitreeGo2, UnitreeH2 } from '../items/Unitree';
+import { UnitreeAs2w } from '../items/UnitreeAs2w';
+import { AS2W_DRIVE_SPEED } from '../items/as2wMotion';
 import { getObjectActionIds } from '../objectActions';
 import { getActionDef } from '../objectActionRegistry';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
@@ -28,6 +30,7 @@ const ROBOTS = [
   { id: 'unitree-h2', Component: UnitreeH2, position: [120, 0, -520], walk: 'walking', speed: 147.4, pause: 2, radiusScale: 1 / 2 },
   { id: 'unitree-g1', Component: UnitreeG1, position: [50, 0, -450], walk: 'walk', speed: 30, pause: 2, radiusScale: 1 / 2 },
   { id: 'unitree-go2', Component: UnitreeGo2, position: [220, 0, -620], walk: 'trot', speed: 25.2, pause: 4, radiusScale: 2 / 3 },
+  { id: 'unitree-as2w', Component: UnitreeAs2w, position: [320, 0, -520], walk: 'roll', speed: AS2W_DRIVE_SPEED, pause: 4, radiusScale: 2 / 3 },
   { id: 'jumper-robot', Component: Jumper, position: [430, 0, -450], walk: 'walk', speed: 28.8, pause: 6, radiusScale: 2 / 3 },
 ] satisfies { id: string; Component: ComponentType<SceneItemProps>; position: [number, number, number]; walk: string; speed: number; pause: number; radiusScale: number; automatic?: boolean }[];
 

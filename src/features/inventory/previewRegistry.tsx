@@ -1,5 +1,6 @@
 import { Jumper } from '@features/scene/items/Jumper';
 import { UnitreeG1, UnitreeGo2, UnitreeH2 } from '@features/scene/items/Unitree';
+import { UnitreeAs2w } from '@features/scene/items/UnitreeAs2w';
 import { Raskog30586783 } from '@features/scene/items/Raskog30586783';
 import { Boholmen99157501 } from '@features/scene/items/Boholmen99157501';
 import { Utdrag10389142 } from '@features/scene/items/Utdrag10389142';
@@ -138,6 +139,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'unitree-h2': UnitreeH2,
   'unitree-g1': UnitreeG1,
   'unitree-go2': UnitreeGo2,
+  'unitree-as2w': UnitreeAs2w,
   'ikea36590066708':        Ikea36590066708,
   'shoe-hat-rack':          ShoeHatRackPreview,
   'scooter':                ScooterPreview,

@@ -4,7 +4,7 @@ python3 scripts/import-unitree.py --download
 blender --background --python scripts/import-unitree.py
 python3 scripts/import-unitree.py --inspect
 
-H2 only: append --robot h2 (after -- when invoking Blender).
+Single robot: append --robot h2 or --robot as2w (after -- when invoking Blender).
 """
 import json
 import sys
@@ -39,6 +39,17 @@ def download(url, target):
     urllib.request.urlretrieve(url, target)
 
 if '--download' in sys.argv:
+    if SELECTED == 'as2w':
+        target = ROOT / 'public/items/unitree-as2w'
+        source = ROS + 'robots/as2w_description/'
+        download(source + 'as2w.urdf', CACHE / 'as2w.urdf')
+        target.mkdir(parents=True, exist_ok=True)
+        (target / 'as2w.urdf').write_text('\n'.join(line.rstrip() for line in (CACHE / 'as2w.urdf').read_text().splitlines()) + '\n')
+        robot = ET.parse(CACHE / 'as2w.urdf').getroot()
+        for filename in sorted({m.attrib['filename'] for m in robot.findall('.//visual/geometry/mesh')}):
+            download(source + filename, CACHE / 'as2w' / filename)
+        download(ROS + 'LICENSE', target / 'LICENSE')
+        sys.exit(0)
     if SELECTED == 'h2':
         download(ROS + 'robots/h2_description/H2.urdf', CACHE / 'h2.urdf')
         (ROOT / 'public/items/unitree-h2').mkdir(parents=True, exist_ok=True)
@@ -127,7 +138,7 @@ def export(robot, source):
         if obj.parent is None:
             obj.matrix_world = transform @ obj.matrix_world
     target = ROOT / f'public/items/unitree-{robot}'
-    bpy.ops.export_scene.gltf(filepath=str(target / f'unitree-{robot}.glb'), export_format='GLB', export_animations=False, export_extras=True, export_draco_mesh_compression_enable=robot == 'h2')
+    bpy.ops.export_scene.gltf(filepath=str(target / f'unitree-{robot}.glb'), export_format='GLB', export_animations=False, export_extras=True, export_draco_mesh_compression_enable=robot in ('h2', 'as2w'))
     size = (hi - lo) * 100
     dims = {'w': round(size.x if robot == 'h2' else size.y, 2), 'd': round(size.y if robot == 'h2' else size.x, 2), 'h': round(size.z, 2)}
     (target / 'dimensions.json').write_text(json.dumps(dims, indent=2) + '\n')
@@ -170,6 +181,30 @@ blender -noaudio --background --python scripts/import-unitree.py -- --robot h2
 ```
 ''')
     print(robot, dims)
+    if robot == 'as2w':
+        (target / 'README.md').write_text('''# Unitree As2-W
+
+Source: https://github.com/unitreerobotics/unitree_ros/tree/master/robots/as2w_description
+License: BSD-3-Clause (see LICENSE). Original description: as2w.urdf.
+
+Official rigid meshes and motor pivots: 12 leg joints and four continuous wheel
+joints, plus the fixed JT128 sensor. Leg limits are retained in glTF extras.
+The project's reference stance uses thigh=0.9 and calf=-1.8 radians, within the
+URDF limits. This is an authored stance, not an official Unitree control policy.
+Light panels are red; wheels and sensor are dark. Units: centimeters, Y up,
+forward +Z, centered on X/Z, tires grounded at Y=0. Draco-compressed meshes.
+
+Visual animations: idle, rolling, crouching, bowing and dance. Rolling uses the
+actual wheel radii and traveled distance, including differential wheel travel
+when turning. Legs and wheels rotate as rigid pieces; no mesh deformation.
+The shared robot controller provides garden navigation. No physical simulation.
+
+Regenerate:
+```sh
+python3 scripts/import-unitree.py --download --robot as2w
+blender -noaudio --background --python scripts/import-unitree.py -- --robot as2w
+```
+''')
 
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
@@ -184,8 +219,17 @@ def link_pivot(name):
         if joint is None:
             rig[name] = pivot(name, None, Matrix.Identity(4))
         else:
-            axis = numbers(joint.find('axis').attrib['xyz']) if joint.get('type') == 'revolute' else None
-            rig[name] = pivot(joint.attrib['name'], link_pivot(joint.find('parent').attrib['link']), origin(joint.find('origin')), axis)
+            axis = numbers(joint.find('axis').attrib['xyz']) if joint.get('type') in ('revolute', 'continuous') else None
+            home = (0.9 if name.endswith('_thigh') else -1.8 if name.endswith('_calf') else 0) if robot == 'as2w' else 0
+            matrix = origin(joint.find('origin'))
+            if home:
+                matrix = matrix @ Matrix.Rotation(home, 4, Vector(axis))
+            rig[name] = pivot(joint.attrib['name'], link_pivot(joint.find('parent').attrib['link']), matrix, axis, home)
+            if robot == 'as2w' and axis is not None:
+                rig[name]['jointType'] = joint.get('type')
+                limit = joint.find('limit')
+                if joint.get('type') == 'revolute':
+                    rig[name]['jointLimits'] = [float(limit.get('lower')), float(limit.get('upper'))]
     return rig[name]
 materials = {m.attrib['name']: numbers(m.find('color').attrib['rgba']) for m in g1.findall('material')}
 for name, link in links.items():
@@ -197,14 +241,19 @@ for name, link in links.items():
         color = m.find('color')
         rgba = numbers(color.attrib['rgba']) if color is not None else materials[m.attrib['name']]
         scale = Matrix.Diagonal((*numbers(mesh.get('scale', '1 1 1')), 1))
-        mesh_object(('h2/' if robot == 'h2' else '') + mesh.attrib['filename'], name + '_visual', origin(visual.find('origin')) @ scale, material(name, rgba), link_pivot(name))
+        if robot == 'as2w' and (name.endswith('_foot') or name == 'JT128'):
+            rgba = (0.025, 0.025, 0.03, 1)
+        mesh_object((robot + '/' if robot in ('h2', 'as2w') else '') + mesh.attrib['filename'], name + '_visual', origin(visual.find('origin')) @ scale, material(name, rgba), link_pivot(name))
+        if robot == 'as2w' and name.endswith('_foot'):
+            wheel = next(o for o in rig[name].children if o.type == 'MESH')
+            rig[name]['wheelRadius'] = 100 * max((v.co.x ** 2 + v.co.z ** 2) ** 0.5 for v in wheel.data.vertices)
 if robot == 'h2':
     sys.dont_write_bytecode = True
     sys.path.insert(0, str(ROOT / 'scripts'))
     import importlib
     importlib.import_module('unitree-h2-character').character_rig(rig, joints)
-export(robot, ROS + ('robots/h2_description/H2.urdf' if robot == 'h2' else 'robots/g1_description/g1_29dof_rev_1_0.urdf'))
-if SELECTED == 'h2':
+export(robot, ROS + ('robots/as2w_description/as2w.urdf' if robot == 'as2w' else 'robots/h2_description/H2.urdf' if robot == 'h2' else 'robots/g1_description/g1_29dof_rev_1_0.urdf'))
+if SELECTED in ('h2', 'as2w'):
     sys.exit(0)
 
 bpy.ops.object.select_all(action='SELECT')
