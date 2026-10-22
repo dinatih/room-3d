@@ -123,6 +123,7 @@ export function createAgentController(
     exitTransition = {
       animation: exit.anim, sourceAnimation: state.animation, y: state.y, advanceStep,
       departure: { x: state.x, z: state.z },
+      exit: cachedCoords?.owner === owner ? cachedCoords?.approach : undefined,
       owner: owner ? getInteractionOwner(owner) : undefined,
     };
     animationPlayback = null;
