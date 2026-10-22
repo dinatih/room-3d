@@ -7,7 +7,9 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
   try {
     const page = await browser.newPage();
     const errors = [];
-    page.on('pageerror', error => errors.push(String(error)));
+    page.on('pageerror', error => { errors.push(String(error)); console.error(error); });
+    page.on('console', message => { if (message.type() === 'error') console.error(message.text()); });
+    page.on('requestfailed', request => console.error(`${request.url()}: ${request.failure()?.errorText}`));
     await page.setViewport({ width: 1280, height: 800 });
     await page.setRequestInterception(true);
     page.on('request', request => request.isNavigationRequest()
@@ -33,11 +35,23 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
       window.sceneStore = (await import('/src/features/scene/store/useSceneStore.ts')).useSceneStore;
       window.hornetCamera.isSceneLaunched = true;
       window.hornetRoots = fiber._roots;
+      window.hornetCameraErrors = [];
+      function CheckCameraMount() {
+        fiber.useFrame(({ camera }) => {
+          if (window.hornetCamera.animalTarget !== 'drone' || window.hornetCamera.mode !== 'fpv') return;
+          const { eyes, forward } = window.hornetCamera.animalViews.drone;
+          const error = Math.hypot(camera.position.x - eyes.x, camera.position.y - eyes.y, camera.position.z - eyes.z);
+          const direction = camera.getWorldDirection(camera.position.clone());
+          const lookError = Math.hypot(direction.x - forward.x, direction.y - forward.y, direction.z - forward.z);
+          if (error > 1e-8 || lookError > 1e-8) window.hornetCameraErrors.push({ error, lookError });
+        });
+        return null;
+      }
       const h = React.createElement;
       window.hornetApp = createRoot(document.getElementById('root'));
       window.hornetApp.render(h(React.Fragment, null,
         h('div', { style: { height: '100vh' } }, h(fiber.Canvas, { camera: { position: [150, 200, 400], near: 0.1, far: 50000 }, frameloop: 'demand' },
-          h(React.Suspense, { fallback: null }, h(CameraController), h(BlackHornetDrone)),
+          h(React.Suspense, { fallback: null }, h(CameraController), h(BlackHornetDrone), h(CheckCameraMount)),
           h('ambientLight', { intensity: 2 }),
           h('gridHelper', { args: [2000, 20] }))),
         h(ViewControlBar, { showCharacterModes: true })));
@@ -111,6 +125,19 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     await new Promise(resolve => setTimeout(resolve, 150));
     assert.notDeepEqual(await pose(), afterDrag, 'Releasing mouse must not release held movement keys');
     await page.keyboard.up('z');
+    const beforeTurn = await pose();
+    await page.keyboard.down('Alt');
+    await hold('ArrowRight');
+    const rightTurn = await pose();
+    assert(rightTurn.yaw < beforeTurn.yaw, 'Alt + right must rotate around Y');
+    assert.deepEqual([rightTurn.x, rightTurn.y, rightTurn.z], [beforeTurn.x, beforeTurn.y, beforeTurn.z], 'Alt + arrows must rotate in place');
+    const beforePitch = await page.evaluate(() => window.hornetCamera.animalViews.drone.forward.y);
+    await hold('ArrowUp');
+    assert(await page.evaluate(() => window.hornetCamera.animalViews.drone.forward.y) > beforePitch, 'Alt + up must pitch upwards');
+    await page.keyboard.up('Alt');
+    const afterAlt = await pose();
+    await hold('ArrowUp');
+    assert.notDeepEqual(await pose(), afterAlt, 'Plain arrows must move again after releasing Alt');
     await page.screenshot({ path: '/tmp/room-hornet-pilot.png' });
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => window.hornetCamera.mode === 'orbit' && !window.hornetStore.getState().piloting);
@@ -127,6 +154,7 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     await page.waitForFunction(() => !window.hornetStore.getState().piloting);
     await new Promise(resolve => setTimeout(resolve, 150));
     assert.notDeepEqual(await pose(), parked, 'Patrol must resume after manual flight');
+    assert.deepEqual(await page.evaluate(() => window.hornetCameraErrors), [], 'Camera must stay exactly at the published nose pose every frame, without damping or lag');
     await page.evaluate(() => window.hornetApp.unmount());
     assert.equal(await page.evaluate(() => window.hornetCamera.animalTarget), null);
     assert.equal(await page.evaluate(() => window.hornetStore.getState().available), false);

@@ -316,6 +316,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (isFPV) {
         activeCam.position.set(eyes.x, eyes.y, eyes.z);
         ctrl.target.set(eyes.x + forward.x, eyes.y + forward.y, eyes.z + forward.z);
+        if (cameraState.animalTarget === 'drone') {
+          activeCam.lookAt(ctrl.target);
+          activeCam.updateMatrixWorld();
+          return;
+        }
       } else {
         const distance = orbitDistance.current;
         const heading = Math.atan2(forward.x, forward.z);
@@ -1313,7 +1318,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         }
         autoRotate={mode === 'orbit' && cameraMovement === 'orbit'}
         autoRotateSpeed={1.8}
-        enableDamping={mode !== 'follow' && cameraMovement !== 'orbit'}
+        enableDamping={mode !== 'follow' && mode !== 'fpv' && cameraMovement !== 'orbit'}
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
         enabled={!planeMode && !isIntroRunningState && mode !== 'follow' && mode !== 'fpv'}

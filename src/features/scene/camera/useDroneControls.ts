@@ -22,12 +22,14 @@ export function useDroneControls(preview: boolean) {
     };
     const release = () => { droneInput.keys.clear(); releasePointer(); };
     const keyDown = (event: KeyboardEvent) => {
-      if ((event.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"]') || event.ctrlKey || event.metaKey || event.altKey) return;
+      if ((event.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"]') || event.ctrlKey || event.metaKey) return;
       const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
-      if (!['z', 'w', 'q', 'a', 's', 'd', ' ', 'c', 'Shift', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) return;
+      if (event.altKey && !key.startsWith('Arrow') && key !== 'Alt' && key !== 'Shift') return;
+      if (!['z', 'w', 'q', 'a', 's', 'd', ' ', 'c', 'Shift', 'Alt', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       droneInput.keys.add(key);
+      if (event.altKey) droneInput.keys.add('Alt');
       invalidate();
     };
     const keyUp = (event: KeyboardEvent) => {

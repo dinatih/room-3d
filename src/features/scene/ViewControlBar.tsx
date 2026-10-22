@@ -365,7 +365,7 @@ export function ViewControlBar({
       )}
       {showCharacterModes && droneView && (
         <div className="d-flex flex-wrap align-items-center gap-2 small p-1" role="status" aria-label="Commandes du Hornet">
-          <span>{pilotingDrone ? 'Pilotage libre · ZQSD / WASD / flèches · Espace ↑ · C ↓ · Glisser : regarder · Maj : accélérer · Échap : quitter' : 'Vue embarquée du Hornet'}</span>
+          <span>{pilotingDrone ? 'Pilotage libre · ZQSD / WASD / flèches : déplacer · Alt + flèches / glisser : regarder · Espace ↑ · C ↓ · Maj + déplacement : vitesse ×3 · Échap : quitter' : 'Vue embarquée du Hornet'}</span>
           <label className="d-flex align-items-center gap-1">Vitesse
             <select className="form-select form-select-sm w-auto" value={droneSpeed} onChange={event => useDroneControlStore.getState().setSpeed(Number(event.target.value))}>
               <option value={40}>Précise · 0,4 m/s</option>

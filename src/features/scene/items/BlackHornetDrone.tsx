@@ -75,6 +75,7 @@ export function BlackHornetDrone({
   const piloting = useDroneControlStore(state => state.piloting);
   useDroneControls(isPreview);
   const cameraMount = useRef(new THREE.Vector3());
+  const cameraBone = useRef<THREE.Bone | null>(null);
   const cameraPosition = useRef(new THREE.Vector3());
   const cameraForward = useRef(new THREE.Vector3());
   const cameraRadius = useRef(0);
@@ -126,10 +127,22 @@ export function BlackHornetDrone({
       // Centrer en X/Z et poser à Y=0 si posé au sol
       scene.position.set(-scaledBox.getCenter(new THREE.Vector3()).x, -scaledBox.min.y, -scaledBox.getCenter(new THREE.Vector3()).z);
       const dimensions = scaledBox.getSize(new THREE.Vector3());
-      cameraMount.current.set(0, dimensions.y / 2, dimensions.z / 2);
       cameraRadius.current = dimensions.length() / 2;
       onSize?.(scaledBox.getSize(new THREE.Vector3()));
     }
+
+    const nose = scene.getObjectByName('Hornet002_low001') as THREE.SkinnedMesh;
+    const hull = scene.getObjectByName('Hornet001_low001') as THREE.SkinnedMesh;
+    const body = scene.getObjectByName('Bone001') as THREE.Bone;
+    if (!nose?.isSkinnedMesh || !hull?.isSkinnedMesh || !body?.isBone) throw new Error('Hornet : nez ou os de fuselage absent');
+    const joint = nose.skeleton.bones.indexOf(body);
+    if (joint < 0) throw new Error('Hornet : fuselage absent du squelette du nez');
+    nose.geometry.computeBoundingBox();
+    hull.geometry.computeBoundingBox();
+    nose.geometry.boundingBox!.getCenter(cameraMount.current);
+    cameraMount.current.z = hull.geometry.boundingBox!.max.z;
+    cameraMount.current.applyMatrix4(nose.bindMatrix).applyMatrix4(nose.skeleton.boneInverses[joint]);
+    cameraBone.current = body;
 
     scene.traverse(c => {
       const m = c as THREE.Mesh;
@@ -269,6 +282,12 @@ export function BlackHornetDrone({
     const model = modelRef.current;
 
     if (flightState.current === 'manual') {
+      const keys = droneInput.keys;
+      if (keys.has('Alt')) {
+        const turn = Math.PI / 2 * delta; // 90°/s, indépendamment de la répétition clavier.
+        droneInput.yaw += (Number(keys.has('ArrowLeft')) - Number(keys.has('ArrowRight'))) * turn;
+        droneInput.pitch = THREE.MathUtils.clamp(droneInput.pitch + (Number(keys.has('ArrowUp')) - Number(keys.has('ArrowDown'))) * turn, -Math.PI / 2, Math.PI / 2);
+      }
       const speed = useDroneControlStore.getState().speed * (droneInput.keys.has('Shift') ? 3 : 1);
       droneMovement(droneInput.keys, droneInput.yaw, droneInput.pitch, moveDirection.current);
       model.position.addScaledVector(moveDirection.current, speed * delta);
@@ -355,15 +374,14 @@ export function BlackHornetDrone({
       }
     }
 
-  });
+  }, -2);
 
-  // Pose stabilisée de la caméra, indépendante des oscillations du squelette animé.
+  // Le nez animé est publié avant le calcul caméra, sans retard d'une frame.
   useFrame(() => {
     const model = modelRef.current;
-    if (isPreview || !model) return;
-    model.updateWorldMatrix(true, false);
+    if (isPreview || !model || !cameraBone.current) return;
     cameraPosition.current.copy(cameraMount.current);
-    model.localToWorld(cameraPosition.current);
+    cameraBone.current.localToWorld(cameraPosition.current);
     if (flightState.current === 'manual' || flightState.current === 'holding') {
       cameraForward.current.set(Math.sin(droneInput.yaw) * Math.cos(droneInput.pitch), Math.sin(droneInput.pitch), Math.cos(droneInput.yaw) * Math.cos(droneInput.pitch));
     } else {
@@ -377,7 +395,7 @@ export function BlackHornetDrone({
     Object.assign(position, cameraPosition.current);
     position.yaw = model.rotation.y;
     if (!useDroneControlStore.getState().available) useDroneControlStore.setState({ available: true });
-  });
+  }, -1);
 
   return (
     <group ref={modelRef} userData={{ itemName: 'Drone Black Hornet Nano' }}>

@@ -25,6 +25,10 @@ it('monte et descend verticalement quelle que soit l’inclinaison de la caméra
   assert(movement([' '], 2, 1).equals(new Vector3(0, 1, 0)));
   assert(movement(['c'], 2, 1).equals(new Vector3(0, -1, 0)));
 });
+it('réserve Alt + flèches au regard tout en permettant le déplacement avec ZQSD', () => {
+  assert(movement(['Alt', 'ArrowUp', 'ArrowRight']).equals(new Vector3()));
+  assert(movement(['Alt', 'ArrowRight', 'z']).equals(movement(['z'])));
+});
 it('libère les entrées lors de la prise ou de la fin du pilotage', () => {
   for (const piloting of [true, false]) {
     droneInput.keys.add('z');
