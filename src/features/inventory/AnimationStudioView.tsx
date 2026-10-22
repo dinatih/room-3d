@@ -56,7 +56,7 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
   }, [missingTarget]);
   const characters = useMemo(() => [...CHARACTERS, UNITREE_H2].filter(c =>
     INVENTORY.some(item => item.id === c.id && (item.category === 'characters' || c.isRobot)) &&
-    !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone', 'unitree-g1', 'unitree-go2', 'jumper-robot'].includes(c.id)
+    !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone', 'dji-neo', 'unitree-g1', 'unitree-go2', 'jumper-robot'].includes(c.id)
   ), []);
   const leader = characters.find(c => c.id === actorId) ?? characters[0];
   const partners = characters.filter(c => c.id !== leader?.id);
@@ -164,6 +164,7 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
   function handleKeys(event: KeyboardEvent) {
     if (event.altKey || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
     const element = event.target as HTMLElement;
+    if (element?.tagName === 'CANVAS' || element?.closest('canvas')) return;
     const typing = element.matches('input, textarea, select') || element.isContentEditable;
     // Search remains editable; up/down browses its results without losing focus.
     if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && (!typing || element === searchRef.current)) {

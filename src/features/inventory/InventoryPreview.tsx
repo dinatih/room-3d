@@ -1097,12 +1097,12 @@ export function InventoryPreview({
   const showing3D = has3D && (Boolean(smartAction) || !hasPhotos || viewMode === '3d'), showingPhotos = !smartAction && hasPhotos && (!has3D || viewMode === 'photos');
 
   const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'robots') && !['unitree-g1', 'unitree-go2', 'unitree-as2w', 'jumper-robot'].includes(item.id);
-  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone'].includes(item.id));
+  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone', 'dji-neo'].includes(item.id));
   const isWigItem = Boolean(showing3D && item && 'category' in item && ((item as any).category === 'wigs'));
 
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
-    if (item.id === 'black-hornet-drone') return [
+    if (item.id === 'black-hornet-drone' || item.id === 'dji-neo') return [
       { value: 'Drone_Hover', label: 'Vol stationnaire' },
       { value: 'Drone_Fly', label: 'Vol' },
       { value: 'Drone_Scan', label: 'Observation' },
@@ -1593,7 +1593,7 @@ export function InventoryPreview({
           <AnimFrameController
             compact
             animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
-            animKey={actionStates.characterAnim || (item.id === 'black-hornet-drone' ? 'Drone_Hover' : undefined)}
+            animKey={actionStates.characterAnim || (['black-hornet-drone', 'dji-neo'].includes(item.id) ? 'Drone_Hover' : undefined)}
             isHumanCharacter={isHumanCharacter}
             characterId={item.id}
             duoAnimDef={actionStates.duoAnimDef}
