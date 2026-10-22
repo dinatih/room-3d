@@ -1054,9 +1054,7 @@ export function createAgentController(
         }
       } else if (currentInstruction.type === 'INTERACT' || currentInstruction.type === 'WAIT') {
         const target = getResolvedCoords(currentInstruction);
-        if (currentInstruction.triggerEventKey) {
-          triggerInstructionEvent(currentInstruction);
-        }
+        triggerInstructionEvent(currentInstruction);
 
         agentStatus = 'INTERACTING';
         if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {

@@ -63,7 +63,7 @@ export function SmartActionPreview({ Component, item, actionState, onSize, reque
     if (readyIndex !== index) { setReadyIndex(index); return; }
     if (!framed.current) { framed.current = true; onSize(new Vector3()); }
     if (!request.playing) return;
-    const duration = step.duration ?? playback.duration * (step.repeatCount ?? 1);
+    const duration = step.waitForAnimation ? playback.duration : step.duration ?? playback.duration * (step.repeatCount ?? 1);
     elapsed.current = Math.min(duration, elapsed.current + delta);
     playback.time = elapsed.current >= duration ? Math.min(duration, playback.duration) : elapsed.current % playback.duration;
     if (elapsed.current >= duration && index < sequence.length - 1) setIndex(index + 1);

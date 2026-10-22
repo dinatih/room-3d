@@ -6259,9 +6259,11 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'pick-fruit',
     path: 'animations/mixamo/anim_pick_fruit.glb',
     category: 'interactions',
-    label: `Pick Fruit (241f / 8.0s, 261KB)`,
+    label: `Pick Fruit — une prise (2.3s)`,
     tags: ['interaction'],
-    duration: 8,
+    // Original GLB shortened to the first reach and return (frame 69).
+    duration: 2.3,
+    loop: 'once',
   },
   {
     id: 'pick-fruit-2',
