@@ -677,9 +677,7 @@ export function Character({
 
     const hasDynamicTask = agentEnabled && hasPendingDynamicTask();
     let agentAnimationPaused = false;
-    const hasCharacterControl = cameraState.isXR || (!cameraState.animalTarget && (
-      cameraState.mode === 'fpv' || useSceneStore.getState().arrowControl === 'character'
-    ));
+    const hasCharacterControl = cameraState.isXR || !cameraState.animalTarget;
     const isUserManuallyMoving = hasCharacterControl && cameraState.isUserControlling();
 
     if (!navigationEnabled && !isPreview) {
