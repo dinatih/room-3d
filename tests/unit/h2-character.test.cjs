@@ -10,7 +10,7 @@ const { resolveTargetBoneName } = require('../../src/features/scene/retargeting/
 const { captureAnimationRig, restoreAnimationRig } = require('../../src/features/scene/character/animationSerialization.ts');
 const { CHARACTERS, AUTONOMOUS_NPC_IDS, UNITREE_H2 } = require('../../src/features/scene/characterConfig.ts');
 
-it('anime le H2 avec ses 31 moteurs URDF, face au nord, sans déplacer ni déformer ses pièces', async t => {
+it('anime le H2 avec ses 31 moteurs URDF, face au déplacement (+Z), sans déplacer ni déformer ses pièces', async t => {
   assert(UNITREE_H2.isRobot);
   assert(!CHARACTERS.some(character => character.id === UNITREE_H2.id));
   assert(!AUTONOMOUS_NPC_IDS.has(UNITREE_H2.id));
@@ -77,7 +77,7 @@ it('anime le H2 avec ses 31 moteurs URDF, face au nord, sans déplacer ni défor
   }
   const head = scene.getObjectByName(resolveTargetBoneName(scene, 'Head'));
   const forward = new THREE.Vector3().fromArray(head.userData.lookForward).transformDirection(head.matrixWorld);
-  assert(forward.z < -0.999, 'avant du robot orienté nord (-Z)');
+  assert(forward.z < -0.999, 'avant du GLB brut orienté nord (-Z), avant conversion des animations');
   const pelvis = scene.getObjectByName('pelvis');
   for (const semantic of ['Spine', 'Spine1', 'Spine2', 'Neck', 'Head']) {
     const bone = scene.getObjectByName(resolveTargetBoneName(scene, semantic));
@@ -111,6 +111,7 @@ it('anime le H2 avec ses 31 moteurs URDF, face au nord, sans déplacer ni défor
     scene.updateMatrixWorld(true);
     scene.traverse(node => assert(node.matrixWorld.elements.every(Number.isFinite)));
     assert(new THREE.Vector3().fromArray(head.userData.lookUp).transformDirection(head.matrixWorld).y > 0.8, 'la marche reste debout');
+    assert(new THREE.Vector3().fromArray(head.userData.lookForward).transformDirection(head.matrixWorld).z > 0.8, 'la marche Mixamo fait face au déplacement (+Z)');
     for (const motor of motors) {
       assert(motor.position.equals(motor.defaultPosition), `${motor.name}: pivot URDF fixe`);
       const delta = motor.restLocalQuaternion.clone().invert().multiply(motor.quaternion);
@@ -131,7 +132,7 @@ it('anime le H2 avec ses 31 moteurs URDF, face au nord, sans déplacer ni défor
     mixer.setTime(seconds);
     scene.updateMatrixWorld(true);
     const direction = new THREE.Vector3().fromArray(head.userData.lookForward).transformDirection(head.matrixWorld);
-    assert(direction.z < -0.8, 'le repos Miley conserve le même avant que la marche Mixamo');
+    assert(direction.z > 0.8, 'le repos Miley conserve le même avant (+Z) que la marche Mixamo');
   }
   t.diagnostic(`H2 : ${height.toFixed(2)} cm, rayon ${profile.radius.toFixed(2)} cm, marche ${speed.toFixed(2)} cm/s`);
 });
