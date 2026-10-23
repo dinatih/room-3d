@@ -212,7 +212,9 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           if (prevMat && prevMat !== baseMat && prevMat.userData?.__ownedWigMaterial) {
             prevMat.dispose();
           }
-          const clonedMat = baseMat.clone();
+          const isNativeRed = isLaraNativeWig && color === 'rouge';
+          const clonedMat = isNativeRed ? new THREE.MeshPhysicalMaterial({ specularIntensity: 0 }) : baseMat.clone();
+          if (isNativeRed) THREE.MeshStandardMaterial.prototype.copy.call(clonedMat, baseMat);
           clonedMat.userData.__ownedWigMaterial = true;
           clonedMat.side = THREE.DoubleSide;
           // Binary texture coverage keeps gaps between hair cards without blending.
