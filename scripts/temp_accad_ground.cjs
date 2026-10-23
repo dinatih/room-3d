@@ -11,6 +11,10 @@ const T = require('three');
   const mixer=new T.AnimationMixer(scene);const action=mixer.clipAction(clip).setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();
   const floor=time=>{action.reset().play();mixer.setTime(time);scene.updateMatrixWorld(true);return Math.min(...feet.flatMap(({foot,toe,heel})=>[foot.localToWorld(heel.clone()).y,toe.getWorldPosition(new T.Vector3()).y]))*100;};
   const times=clip.tracks.find(t=>t.name==='mixamorigHips.position').times,values=Array.from(times,floor);
-  console.log(JSON.stringify({file,firstCm:floor(0),frame61Cm:floor(61/30),minCm:Math.min(...values),maxCm:Math.max(...values)}));
+  const between=Array.from(times).slice(1).map((time,i)=>floor((time+times[i])/2));
+  const maxSupportErrorCm=Math.max(...values.map(Math.abs),...between.map(Math.abs));
+  // Require sub-millimetre support accuracy, including interpolation.
+  if(file!=='anim_lie_down_bed.glb' && maxSupportErrorCm>0.1) throw Error(`Support drift between samples: ${file}: ${maxSupportErrorCm} cm`);
+  console.log(JSON.stringify({file,maxSupportErrorCm,firstCm:floor(0),frame61Cm:floor(61/30),minCm:Math.min(...values),maxCm:Math.max(...values)}));
  }
 })().catch(e=>{console.error(e);process.exitCode=1});

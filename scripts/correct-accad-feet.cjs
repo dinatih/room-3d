@@ -24,10 +24,13 @@ async function main() {
       return { ankle, toe, heel, height: a.y - t.y, samples: [], support: [] };
     });
     const hipTrack = clip.tracks.find(t => t.name === `${hips.name}.position`);
-    const times = hipTrack.times;
-    const mixer = new T.AnimationMixer(scene), action = mixer.clipAction(clip).setLoop(T.LoopOnce, 1);
-    action.clampWhenFinished = true; action.play();
-    const sample = time => { mixer.setTime(time); scene.updateMatrixWorld(true); };
+    const times = process.argv.includes('--check') ? hipTrack.times : new Float32Array(Array.from(hipTrack.times).flatMap((time, i, source) => i === source.length - 1 ? [time] : Array.from({ length: 4 }, (_, step) => time + (source[i + 1] - time) * step / 4)));
+    const evaluators = animation => animation.tracks.filter(t => /\.(position|quaternion)$/.test(t.name)).map(track => ({ node: scene.getObjectByName(track.name.split('.')[0]), property: track.name.split('.')[1], interpolant: track.createInterpolant() }));
+    let bindings = evaluators(clip);
+    const sample = time => {
+      for (const { node, property, interpolant } of bindings) node[property].fromArray(interpolant.evaluate(time));
+      scene.updateMatrixWorld(true);
+    };
     const points = foot => [foot.ankle.localToWorld(foot.heel.clone()), foot.toe.getWorldPosition(new T.Vector3())];
     for (const time of times) {
       sample(time);
@@ -43,6 +46,7 @@ async function main() {
     const floor = file === 'anim_lie_down_bed.glb' ? floors[0] : median(floors);
     if (process.argv.includes('--check')) {
       if (!doc.asset.extras?.accadFootSupport || Math.abs(floor) > 1e-6) throw Error(`Invalid nominal floor: ${file}: ${floor}`);
+      if (file !== 'anim_lie_down_bed.glb' && Math.max(...floors.map(Math.abs)) > 1e-6) throw Error(`Foot support drifts: ${file}`);
       const originalBytes = fs.readFileSync(path.join(process.env.ACCAD_ORIGINAL_DIR || directory, file));
       const original = await loader.parseAsync(originalBytes.buffer.slice(originalBytes.byteOffset, originalBytes.byteOffset + originalBytes.byteLength), '');
       if (original.animations[0].duration !== clip.duration) throw Error(`Changed duration: ${file}`);
@@ -96,14 +100,21 @@ async function main() {
     // Evaluate both corrected ankles together before measuring nominal support.
     const corrected = clip.clone();
     for (const out of outputs) corrected.tracks[clip.tracks.indexOf(out.track)] = new T.QuaternionKeyframeTrack(out.track.name, times, out.values);
-    mixer.stopAllAction(); mixer.uncacheRoot(scene);
-    const correctedAction = mixer.clipAction(corrected).setLoop(T.LoopOnce, 1); correctedAction.clampWhenFinished = true; correctedAction.play();
+    bindings = evaluators(corrected);
     const correctedFloors = Array.from(times, time => { sample(time); return Math.min(...feet.flatMap(f => points(f).map(p => p.y))); });
     const offset = file === 'anim_lie_down_bed.glb' ? correctedFloors[0] : median(correctedFloors);
     sample(0);
-    const localOffset = new T.Vector3(0, offset, 0).applyMatrix3(new T.Matrix3().setFromMatrix4(hips.parent.matrixWorld).invert());
-    const positions = hipTrack.values.slice();
-    for (let i = 0; i < positions.length; i += 3) for (let axis = 0; axis < 3; axis++) positions[i + axis] -= localOffset.getComponent(axis);
+    const worldToHips = new T.Matrix3().setFromMatrix4(hips.parent.matrixWorld).invert();
+    const positions = new Float32Array(times.length * 3), originalPosition = hipTrack.createInterpolant();
+    for (let i = 0; i < times.length; i++) {
+      // These six standing/stepping clips always retain a supporting foot.
+      // During the lying transition, release the foot constraint as the legs
+      // become horizontal, retaining the nominal offset after release.
+      const support = file === 'anim_lie_down_bed.glb' ? Math.max(...feet.map(f => f.support[i])) : 1;
+      const height = offset + (correctedFloors[i] - offset) * support;
+      const delta = new T.Vector3(0, height, 0).applyMatrix3(worldToHips);
+      new T.Vector3().fromArray(originalPosition.evaluate(times[i])).sub(delta).toArray(positions, i * 3);
+    }
     outputs.push({ track: hipTrack, values: positions, type: 'VEC3' });
     if (!process.argv.includes('--write')) { console.log(`  nominal floor ${floor.toFixed(5)} m; corrected offset ${offset.toFixed(5)} m`); continue; }
     let binary = Buffer.from(bytes.subarray(28 + size));
@@ -124,7 +135,7 @@ async function main() {
       const channel = doc.animations[0].channels.find(c => `${doc.nodes[c.target.node].name.replace(/:/g, '')}.${c.target.path === 'rotation' ? 'quaternion' : c.target.path === 'translation' ? 'position' : c.target.path}` === out.track.name);
       doc.animations[0].samplers[channel.sampler] = { input, output: accessor(out.values, out.type), interpolation: 'LINEAR' };
     }
-    doc.asset.extras = { ...doc.asset.extras, accadFootSupport: { method: 'nominal-sole-v2', floorOffsetMeters: offset, maxCorrections: outputs.filter(o => o.type === 'VEC4').map(o => o.maxCorrection) } };
+    doc.asset.extras = { ...doc.asset.extras, accadFootSupport: { method: 'supported-sole-v3', floorOffsetMeters: offset, maxCorrections: outputs.filter(o => o.type === 'VEC4').map(o => o.maxCorrection) } };
     doc.buffers[0].byteLength = binary.length;
     let json = Buffer.from(JSON.stringify(doc)); json = Buffer.concat([json, Buffer.alloc((4 - json.length % 4) % 4, 32)]);
     const header = Buffer.alloc(20); header.writeUInt32LE(0x46546c67); header.writeUInt32LE(2, 4); header.writeUInt32LE(28 + json.length + binary.length, 8); header.writeUInt32LE(json.length, 12); header.writeUInt32LE(0x4e4f534a, 16);
