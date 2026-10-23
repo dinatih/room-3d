@@ -8,7 +8,7 @@
 
 import { cameraState } from './cameraState';
 import { furnitureObstacles, getObstacleRevision, getAgentProfile, hasAgentProfile } from './ai/navigation/obstacles';
-import { inflate, pointInRing, type Polygon } from './ai/navigation/geometry';
+import { inflate, pointInRing, rectangle, type Polygon } from './ai/navigation/geometry';
 import { getDoorProtections, getDoorProtectionRevision, type DoorKey } from './ai/navigation/doorRequests';
 import { pX, pZ, DiagWall, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from './wallData';
 
@@ -42,6 +42,12 @@ export interface DoorConfig {
   yMin: number;
   yMax: number;
   margin: number;                        // Marge de sécurité (cm)
+}
+
+export function doorPolygon(key: DoorKey, angle: number): Polygon {
+  const d = DOOR_CONFIGS[key], c = Math.cos(Math.abs(angle)), s = Math.sin(Math.abs(angle));
+  const dx = c * d.closedDir.x + s * d.openNormal.x, dz = c * d.closedDir.z + s * d.openNormal.z;
+  return rectangle(d.pivot.x + dx * d.length / 2, d.pivot.z + dz * d.length / 2, d.length, d.thickness, Math.atan2(-dz, dx));
 }
 
 /**

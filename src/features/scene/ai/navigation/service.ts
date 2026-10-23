@@ -3,7 +3,7 @@ import { movingFurniture } from '../../furniturePositions';
 import { architectureObstacles, walkableSurfaces } from './architecture';
 import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, navigationDebug, agentProfileLifecycle, type AgentProfile } from './obstacles';
 import { inflate, rectangle, pointInRing, insideObstacle, segmentFree, distance, type Point, type Polygon } from './geometry';
-import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState } from '../../doorObstacles';
+import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState, doorPolygon } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, getAgentDoorProtection, protectDoor, type DoorKey, type DoorProtection } from './doorRequests';
 import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from '../agent/agentAvoidance';
 import { NAVIGATION_COMFORT_CM } from './comfort';
@@ -17,11 +17,6 @@ export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
 export class NavigationBlockedError extends Error {
   actorBlockers: ActorBlockers = new Map();
   constructor(message: string, readonly target: Point) { super(message); this.name = 'NavigationBlockedError'; }
-}
-export function doorPolygon(key: DoorKey, angle: number): Polygon {
-  const d = DOOR_CONFIGS[key], c = Math.cos(Math.abs(angle)), s = Math.sin(Math.abs(angle));
-  const dx = c * d.closedDir.x + s * d.openNormal.x, dz = c * d.closedDir.z + s * d.openNormal.z;
-  return rectangle(d.pivot.x + dx * d.length / 2, d.pivot.z + dz * d.length / 2, d.length, d.thickness, Math.atan2(-dz, dx));
 }
 // Keep only the closed pose and the latest moving pose, never every angle
 // visited during an animation. Equal agent profiles share these footprints.

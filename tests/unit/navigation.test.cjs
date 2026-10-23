@@ -51,7 +51,7 @@ function walk(start, target, keys, steer) {
         position = nav.followRoute(route, 'walker', position, target, 3, steer);
         assert.equal(route.error, null, route.error || '');
         for (const key of keys)
-            assert(g.segmentFree(before, position, [[g.inflate(nav.doorPolygon(key, doors.doorCollisionState[key].angle), 13.3 + doors.DOOR_CONFIGS[key].margin)]]), `Crossed ${key} leaf`);
+            assert(g.segmentFree(before, position, [[g.inflate(doors.doorPolygon(key, doors.doorCollisionState[key].angle), 13.3 + doors.DOOR_CONFIGS[key].margin)]]), `Crossed ${key} leaf`);
     }
     assert(g.distance(position, target) === 0, `Stopped at ${JSON.stringify(position)}: ${route.waitReason}`);
     nav.resetRoute(route, 'walker');
@@ -287,7 +287,7 @@ describe('Navigation et portes — géométrie isolée', () => {
         assert(limit > 0 && limit < Math.PI / 2, `Expected partial opening, got ${limit}`);
         requests.requestDoor('living', 'walker');
         assert(requests.doorRequested('living'));
-        assert(!g.pointInRing(storage, g.inflate(nav.doorPolygon('living', limit), storage.radius + leaf.margin)), 'Door entered protected body');
+        assert(!g.pointInRing(storage, g.inflate(doors.doorPolygon('living', limit), storage.radius + leaf.margin)), 'Door entered protected body');
         doors.doorCollisionState.living.angle = limit;
         walk({ x: 20, z: -50 }, { x: 20, z: 100 }, ['living']);
         const blockedRoute = nav.createRouteState();

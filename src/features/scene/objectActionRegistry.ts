@@ -185,7 +185,7 @@ const ACTIONS: Record<string, ActionConfig> = {
   'drone-pilot': { label: 'Piloter le Hornet', icon: 'bi-controller', sceneOnly: true },
   'drone-level': { label: 'Remettre à plat (0°)', icon: 'bi-horizon', sceneOnly: true },
   'animal-drone-fpv': { label: 'Vue Hornet', icon: 'bi-eye', sceneOnly: true },
-  'drone-patrol-all': { label: '🛸 Patrouille tout le studio & jardin', sceneOnly: true },
+  'drone-patrol-all': { label: '🛸 Visite guidée du studio et du jardin', sceneOnly: true },
   'drone-goto-garden': { label: '🌿 Aller au Jardin', sceneOnly: true },
   'drone-goto-living': { label: '🛋️ Aller au Salon', sceneOnly: true },
   'drone-goto-kitchen': { label: '🍳 Aller à la Cuisine', sceneOnly: true },

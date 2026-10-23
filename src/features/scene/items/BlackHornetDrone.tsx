@@ -10,53 +10,11 @@ import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { cameraState } from '@features/scene/cameraState';
 import { droneInput, droneMovement, useDroneControlStore } from '../droneControls';
 import { useDroneControls } from '../camera/useDroneControls';
+import { HornetTour, type TourRoom } from '../hornetTour';
+import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 
 const GLB_PATH = '/items/black-hornet/black-hornet.glb';
 const TARGET_LENGTH_CM = 16.8; // Longueur réelle du nano-drone Black Hornet (environ 16,8 cm)
-
-// Waypoints 3D (X, Y, Z en cm) pour le vol dans le studio et le jardin
-export interface DroneWaypoint {
-  room: 'garden' | 'living' | 'kitchen' | 'bathroom' | 'corridor';
-  label: string;
-  pos: THREE.Vector3;
-  hoverTime: number; // temps d'observation stationnaire en secondes
-}
-
-const FLIGHT_WAYPOINTS: DroneWaypoint[] = [
-  // 1. Jardin & Terrasse
-  { room: 'garden', label: 'Pelouse Jardin', pos: new THREE.Vector3(120, 140, -250), hoverTime: 15 },
-  { room: 'garden', label: 'Terrasse Extérieure', pos: new THREE.Vector3(220, 145, -120), hoverTime: 12.5 },
-  { room: 'garden', label: 'Abords Mangeoire Oiseaux', pos: new THREE.Vector3(60, 155, -320), hoverTime: 15 },
-  
-  // Transit Baie vitrée
-  { room: 'living', label: 'Seuil Baie Vitrée', pos: new THREE.Vector3(150, 140, -10), hoverTime: 5 },
-  
-  // 2. Salon / Séjour
-  { room: 'living', label: 'Centre Salon', pos: new THREE.Vector3(160, 150, 150), hoverTime: 15 },
-  { room: 'living', label: 'Espace Bureau & Écrans', pos: new THREE.Vector3(260, 135, 90), hoverTime: 17.5 },
-  { room: 'living', label: 'Zone Canapé', pos: new THREE.Vector3(90, 140, 110), hoverTime: 12.5 },
-  { room: 'living', label: 'Alcôve & Espace Lit', pos: new THREE.Vector3(70, 145, 290), hoverTime: 15 },
-
-  // 3. Cuisine
-  { room: 'kitchen', label: 'Plan de travail Cuisine', pos: new THREE.Vector3(65, 140, 420), hoverTime: 17.5 },
-  { room: 'kitchen', label: 'Évier & Table de cuisson', pos: new THREE.Vector3(110, 145, 410), hoverTime: 12.5 },
-
-  // Transit Couloir
-  { room: 'corridor', label: 'Porte Couloir', pos: new THREE.Vector3(235, 150, 410), hoverTime: 7.5 },
-  
-  // 4. Couloir d'entrée
-  { room: 'corridor', label: 'Couloir Entrée', pos: new THREE.Vector3(245, 150, 500), hoverTime: 12.5 },
-  { room: 'corridor', label: 'Entrée Principale', pos: new THREE.Vector3(240, 145, 590), hoverTime: 15 },
-
-  // 5. Salle de bain
-  { room: 'bathroom', label: 'Entrée Salle de bain', pos: new THREE.Vector3(155, 145, 490), hoverTime: 10 },
-  { room: 'bathroom', label: 'Miroir & Vasque', pos: new THREE.Vector3(95, 140, 530), hoverTime: 17.5 },
-  { room: 'bathroom', label: 'Zone Douche', pos: new THREE.Vector3(60, 150, 620), hoverTime: 15 },
-  
-  // Retour Salon via couloir
-  { room: 'corridor', label: 'Retour Couloir', pos: new THREE.Vector3(235, 150, 450), hoverTime: 5 },
-  { room: 'living', label: 'Survol Séjour', pos: new THREE.Vector3(170, 155, 230), hoverTime: 10 },
-];
 
 export function BlackHornetDrone({
   isPreview = false,
@@ -80,18 +38,9 @@ export function BlackHornetDrone({
   const cameraForward = useRef(new THREE.Vector3());
   const cameraRadius = useRef(0);
 
-  // État de vol autonome
-  const currentWaypointIdx = useRef(0);
-  const hoverTimer = useRef(0);
-  const flightState = useRef<'hovering' | 'flying' | 'landed' | 'manual' | 'holding'>('flying');
-  const targetRoomFilter = useRef<string | null>(null);
-
-  // Vecteurs temporaires de vol pour zéro garbage collection
-  const currentPos = useRef(new THREE.Vector3(120, 140, -250));
-  const targetPos = useRef(new THREE.Vector3(120, 140, -250));
+  const tourRef = useRef<HornetTour | null>(null);
+  const flightState = useRef<'tour' | 'landed' | 'manual' | 'holding'>('tour');
   const moveDirection = useRef(new THREE.Vector3());
-  const lookQuaternion = useRef(new THREE.Quaternion());
-  const targetQuaternion = useRef(new THREE.Quaternion());
 
   function playAnimation(name: string, loop = true) {
     if (!mixerRef.current) return;
@@ -165,12 +114,15 @@ export function BlackHornetDrone({
     }
 
     if (modelRef.current && !isPreview) {
-      const startWp = FLIGHT_WAYPOINTS[0];
-      currentPos.current.copy(startWp.pos);
-      targetPos.current.copy(startWp.pos);
-      modelRef.current.position.copy(startWp.pos);
-      hoverTimer.current = startWp.hoverTime;
-      flightState.current = 'hovering';
+      // Sphere about the model origin remains conservative even in a vertical view.
+      const dimensions = glbLocalBBox(scene).getSize(new THREE.Vector3());
+      const radius = Math.hypot(dimensions.x / 2, dimensions.y, dimensions.z / 2);
+      setAgentProfile('drone', { radius, height: radius * 2 });
+      const tour = new HornetTour(radius, message => appLog('drone', message));
+      tourRef.current = tour;
+      modelRef.current.userData.hornetTour = tour;
+      modelRef.current.position.copy(tour.observations.find(o => o.id === 'garden')!.position);
+      flightState.current = 'tour';
       playAnimation('Drone_Hover');
     }
 
@@ -178,6 +130,9 @@ export function BlackHornetDrone({
 
     return () => {
       if (!isPreview) {
+        tourRef.current?.release();
+        tourRef.current = null;
+        removeAgentProfile('drone');
         delete cameraState.positions['drone'];
         delete cameraState.animalViews.drone;
         if (cameraState.animalTarget === 'drone') {
@@ -196,6 +151,7 @@ export function BlackHornetDrone({
   useEffect(() => {
     if (isPreview) return;
     if (piloting) {
+      tourRef.current?.release();
       flightState.current = 'manual';
       playAnimation('Drone_Hover');
     } else if (flightState.current === 'manual') {
@@ -211,32 +167,22 @@ export function BlackHornetDrone({
       const { key } = (e as CustomEvent).detail as { key: string };
       if (!key) return;
 
-      if (key === 'drone-patrol-all') {
+      if (key === 'drone-patrol-all' || key.startsWith('drone-goto-')) {
+        const room = key === 'drone-patrol-all' ? null : key.replace('drone-goto-', '') as TourRoom;
+        if (room && !tourRef.current?.observations.some(o => o.room === room)) throw new Error(`Hornet : pièce inconnue ${room}`);
         useDroneControlStore.getState().setPiloting(false);
-        targetRoomFilter.current = null;
-        flightState.current = 'flying';
-        targetPos.current.copy(FLIGHT_WAYPOINTS[currentWaypointIdx.current].pos);
+        tourRef.current?.reset(room);
+        flightState.current = 'tour';
         playAnimation('Drone_Fly');
-        appLog('drone', 'Mode patrouille générale activé : visite de tout le studio et du jardin.');
-      } else if (key.startsWith('drone-goto-')) {
-        useDroneControlStore.getState().setPiloting(false);
-        const room = key.replace('drone-goto-', '');
-        targetRoomFilter.current = room;
-        const candidateIdx = FLIGHT_WAYPOINTS.findIndex(w => w.room === room);
-        if (candidateIdx >= 0) {
-          currentWaypointIdx.current = candidateIdx;
-          targetPos.current.copy(FLIGHT_WAYPOINTS[candidateIdx].pos);
-          flightState.current = 'flying';
-          playAnimation('Drone_Fly');
-          appLog('drone', `En route vers la pièce : ${FLIGHT_WAYPOINTS[candidateIdx].label}`);
-        }
       } else if (key === 'drone-toggle-land') {
         useDroneControlStore.getState().setPiloting(false);
         if (flightState.current === 'landed') {
-          flightState.current = 'flying';
+          tourRef.current?.reset(tourRef.current.roomFilter);
+          flightState.current = 'tour';
           playAnimation('Drone_Fly');
           appLog('drone', 'Décollage du Black Hornet.');
         } else {
+          tourRef.current?.release();
           flightState.current = 'landed';
           playAnimation('Drone_Landed');
           appLog('drone', 'Atterrissage du Black Hornet.');
@@ -304,73 +250,10 @@ export function BlackHornetDrone({
       return;
     }
 
-    // Gestion du vol et waypoints
-    const wp = FLIGHT_WAYPOINTS[currentWaypointIdx.current];
-
-    if (flightState.current === 'hovering') {
-      hoverTimer.current -= delta;
-      
-      // Micro-oscillations aérodynamiques stationnaires
-      const time = performance.now() * 0.003;
-      model.position.x = wp.pos.x + Math.sin(time * 1.5) * 1.2;
-      model.position.y = wp.pos.y + Math.cos(time * 2.0) * 1.5;
-      model.position.z = wp.pos.z + Math.sin(time * 1.2) * 1.2;
-
-      if (hoverTimer.current <= 0) {
-        // Sélectionner le prochain waypoint
-        let nextIdx = (currentWaypointIdx.current + 1) % FLIGHT_WAYPOINTS.length;
-        if (targetRoomFilter.current) {
-          const roomIndices = FLIGHT_WAYPOINTS
-            .map((w, i) => (w.room === targetRoomFilter.current ? i : -1))
-            .filter(i => i !== -1);
-          if (roomIndices.length > 0) {
-            const curInRoom = roomIndices.indexOf(currentWaypointIdx.current);
-            nextIdx = roomIndices[(curInRoom + 1) % roomIndices.length];
-          }
-        }
-        currentWaypointIdx.current = nextIdx;
-        targetPos.current.copy(FLIGHT_WAYPOINTS[nextIdx].pos);
-        flightState.current = 'flying';
-        playAnimation('Drone_Fly');
-      }
-    } else if (flightState.current === 'flying') {
-      const flightSpeed = 160 * delta; // vitesse de vol ~1,60 m/s
-      moveDirection.current.subVectors(targetPos.current, model.position);
-      const dist = moveDirection.current.length();
-
-      if (dist <= flightSpeed) {
-        model.position.copy(targetPos.current);
-        flightState.current = 'hovering';
-        hoverTimer.current = wp.hoverTime;
-        playAnimation(wp.room === 'bathroom' || wp.room === 'kitchen' ? 'Drone_Scan' : 'Drone_Hover');
-        appLog('drone', `Arrivé à : ${wp.label} (${wp.room})`);
-      } else {
-        moveDirection.current.normalize();
-        model.position.addScaledVector(moveDirection.current, flightSpeed);
-
-        // Rotation et inclinaison dynamique vers la trajectoire
-        const forwardVector = moveDirection.current.clone();
-        forwardVector.y = 0;
-        if (forwardVector.lengthSq() > 0.001) {
-          forwardVector.normalize();
-          // Orientation principale
-          lookQuaternion.current.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forwardVector);
-
-          // Inclinaison (Pitch) vers l'avant selon la vitesse verticale et horizontale
-          const pitchAngle = 0.12; // légère inclinaison vers le bas en avançant
-          // Roulis (Bank / Roll) lors des virages
-          const currentYaw = model.rotation.y;
-          const targetYaw = Math.atan2(forwardVector.x, forwardVector.z);
-          let yawDiff = targetYaw - currentYaw;
-          while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
-          while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
-          const bankAngle = THREE.MathUtils.clamp(-yawDiff * 1.5, -0.35, 0.35);
-
-          const tiltEuler = new THREE.Euler(pitchAngle, 0, bankAngle, 'YXZ');
-          targetQuaternion.current.copy(lookQuaternion.current).multiply(new THREE.Quaternion().setFromEuler(tiltEuler));
-          model.quaternion.slerp(targetQuaternion.current, delta * 6);
-        }
-      }
+    const tour = tourRef.current;
+    if (tour) {
+      tour.tick(model.position, model.quaternion, delta);
+      playAnimation(tour.state === 'travelling' ? 'Drone_Fly' : tour.observation?.sweep ? 'Drone_Scan' : 'Drone_Hover');
     }
 
   }, -2);
@@ -395,7 +278,7 @@ export function BlackHornetDrone({
   }, -1);
 
   return (
-    <group ref={modelRef} userData={{ itemName: 'Drone Black Hornet Nano' }}>
+    <group ref={modelRef} userData={{ itemName: 'Drone Black Hornet Nano', hornetTour: tourRef.current }}>
       <primitive object={scene} />
     </group>
   );

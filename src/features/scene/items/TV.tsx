@@ -9,9 +9,7 @@ import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { useDeskScreenVideo } from '@features/scene/utils/deskScreenVideo';
 import { getObjectActionIds } from '../objectActions';
-
-export const TV_W = 73;
-export const TV_H = 41;
+import { TV_W, TV_H } from '../tvData';
 
 const ACTION_KEY = 'tv-toggle';
 

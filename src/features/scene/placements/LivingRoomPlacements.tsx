@@ -45,7 +45,8 @@ import { Nasfjallet10558045 } from '../items/Nasfjallet10558045';
 import { Bollsidan30574370 } from '../items/Bollsidan30574370';
 import { AirPerformer } from '../items/AirPerformer';
 import { Fniss40295439 } from '../items/Fniss40295439';
-import { TV, TV_H } from '../items/TV';
+import { TV } from '../items/TV';
+import { TV_POSITION } from '../tvData';
 import { MllseG2Pro } from '../items/MllseG2Pro';
 
 import {
@@ -508,7 +509,6 @@ export function LivingRoomFurniture() {
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function LivingRoomFurnishings() {
-  const TV_Y = WALL_H - 10 - TV_H / 2;
   const as = useFurnitureToggles(['tv-toggle']);
 
   return (
@@ -561,7 +561,7 @@ export function LivingRoomFurnishings() {
       </group>
 
       {/* TV */}
-      <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
+      <group position={TV_POSITION} rotation-order="YXZ"
         rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{
           animUnit: true,
           skipMerge: true,
@@ -571,7 +571,7 @@ export function LivingRoomFurnishings() {
             actions: getObjectActionIds('tv')
           }
         }}>
-        <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+        <NavigationObstacle id="tv"><TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
 
       {/* Mini PC */}
