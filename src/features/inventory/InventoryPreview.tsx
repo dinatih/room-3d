@@ -912,6 +912,7 @@ export function InventoryPreview({
   externalLaraVariant,
   onGlbStats,
   smartAction,
+  toolbarPrefix,
   afterToolbarActions,
 }: {
   item: PreviewTarget;
@@ -933,6 +934,7 @@ export function InventoryPreview({
   externalHairColor?: string;
   externalLaraVariant?: string;
   onGlbStats?: (s: GlbDebugStats | null) => void;
+  toolbarPrefix?: ReactNode;
   afterToolbarActions?: ReactNode;
 }) {
   const isMobile = useIsMobile();
@@ -1513,7 +1515,7 @@ export function InventoryPreview({
       )}
     </div>
     {item && !hideViewControlBar && (
-      <ViewControlBar inline inventoryLayout activeCameraPos={showing3D && previewView !== 'free' ? previewView : null} showOrbitControls={showing3D} afterToolbarActions={afterToolbarActions} beforeAmbianceActions={showing3D && (
+      <ViewControlBar inline inventoryLayout activeCameraPos={showing3D && previewView !== 'free' ? previewView : null} showOrbitControls={showing3D} toolbarPrefix={toolbarPrefix} afterToolbarActions={afterToolbarActions} beforeAmbianceActions={showing3D && (
         <>
         <button
           type="button"

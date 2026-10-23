@@ -34,6 +34,7 @@ export interface ViewControlBarProps {
   hideUI?: boolean;
   onToggleHideUI?: () => void;
   onEnterFlight?: () => void;
+  toolbarPrefix?: ReactNode;
   toolbarActions?: ReactNode;
   afterToolbarActions?: ReactNode;
   beforeAmbianceActions?: ReactNode;
@@ -55,6 +56,7 @@ export function ViewControlBar({
   hideUI = false,
   onToggleHideUI: _onToggleHideUI,
   onEnterFlight: _onEnterFlight,
+  toolbarPrefix,
   toolbarActions,
   afterToolbarActions,
   beforeAmbianceActions,
@@ -395,6 +397,7 @@ export function ViewControlBar({
 
     const inlineRow1 = (
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        {toolbarPrefix}
         {zoomButton('in')}
         {cardinalGroup}
         {perspButton}
@@ -426,6 +429,7 @@ export function ViewControlBar({
 
     const inventoryRow = (
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
+        {toolbarPrefix}
         {zoomButton('out')}
         {zoomButton('in')}
         {cardinalGroup}
@@ -446,6 +450,7 @@ export function ViewControlBar({
             <option key={hdri.id} value={hdri.id}>{hdri.name}</option>
           ))}
         </select>
+        {afterToolbarActions}
       </div>
     );
 

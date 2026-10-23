@@ -298,7 +298,7 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
         <div className="w-100 position-relative">
           {active && currentItem ? <InventoryPreview key={mode} item={currentItem} height="100%" hideFooter showPhotoGallery={false} defaultShowGrid neutralLighting defaultAutoRotate={false} hideAnimFrameController preserveStateOnItemChange
             initialAnim={mode === 'solo' ? active.id : undefined} initialDuoAnim={active.duo} initialDuoPartner={partner?.id}
-            afterToolbarActions={
+            toolbarPrefix={
               <div className="d-flex align-items-center gap-1 flex-shrink-0">
                 <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">{mode === 'solo' ? 'Personnage' : 'Leader A'}
                   <select aria-label="Personnage testé" className="form-select form-select-sm py-0 ps-2 pe-4 w-auto small bg-transparent text-body border-secondary" value={leader?.id ?? ''} onChange={e => setActorId(e.target.value)}>
