@@ -30,6 +30,10 @@ const SHOWER_APPROACH: [number, number, number] = [
 
 // At 90°, p2 starts in the chest-bench; date_bearhug's walk crosses the fence and garden furniture.
 const INYEONG_CHA_DUO_IDS = ['slow_dance', 'eye_to_eye', 'farewell_kiss', 'kiss_man_woman', 'kiss', 'pop_dance', 'energetic_dance'];
+const INTERX_AFFECTION_DUO_IDS = INTERX_DUO_ANIMATIONS.filter(duo => duo.tags?.some(tag => [
+  'hug', 'kiss-on-cheek', 'pat-on-cheek', 'touch-head', 'imitate',
+  'massage-shoulder', 'carry-back', 'posing', 'pat-on-back',
+].includes(tag))).map(duo => duo.id);
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -880,11 +884,21 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       slotId: 'interx-random',
       name: 'Jouer un duo Inter-X aléatoire',
       isDuo: true,
-      duoPool: INTERX_DUO_ANIMATIONS.filter(duo => duo.tags?.some(tag => [
-        'hug', 'kiss-on-cheek', 'pat-on-cheek', 'touch-head', 'imitate',
-        'massage-shoulder', 'carry-back', 'posing', 'pat-on-back',
-      ].includes(tag))).map(duo => duo.id),
+      duoPool: INTERX_AFFECTION_DUO_IDS,
       duoCount: 1,
+    }],
+  },
+  'interx-affection-sequence-point': {
+    id: 'interx-affection-sequence-point',
+    name: '🫂 Point Duo Inter-X ×10',
+    category: 'outdoor',
+    position: [0, 0, -250],
+    slots: [{
+      slotId: 'interx-random-10',
+      name: 'Enchaîner 10 duos Inter-X aléatoires',
+      isDuo: true,
+      duoPool: INTERX_AFFECTION_DUO_IDS,
+      duoCount: 10,
     }],
   },
   'inyeong-cha-hugs-point': {
