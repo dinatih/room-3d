@@ -33,8 +33,10 @@ export function bakeFootContacts(rig: THREE.Object3D, clip: THREE.AnimationClip,
       if (!spans.length || spans[0].start !== times[0] || spans[spans.length - 1].end !== times[times.length - 1]) throw new Error(`Incomplete ${side} contacts`);
       const [hip, knee, foot, toe] = ['UpLeg', 'Leg', 'Foot', 'ToeBase'].map(part => rig.getObjectByName(resolveTargetBoneName(rig, side + part)!)!);
       const frames = Array.from(times, time => { sample(time); return { toe: world(toe), foot: world(foot), rotation: foot.getWorldQuaternion(new THREE.Quaternion()) }; });
-      const anchors = spans.map(({ start, end }, index) => index === 0 || index === spans.length - 1
-        ? frames[0] : frames[times.findIndex(time => time >= (start + end) / 2)]);
+      const anchors = spans.map(({ start, end }, index) => {
+        const frame = index === 0 || index === spans.length - 1 ? frames[0] : frames[times.findIndex(time => time >= (start + end) / 2)];
+        return { ...frame, toe: frame.toe.clone().setY(frames[0].toe.y) };
+      });
       const targets = frames.map((frame, index) => {
         const time = times[index];
         let span = spans.findIndex(({ start, end }) => time >= start && time <= end);
@@ -49,7 +51,6 @@ export function bakeFootContacts(rig: THREE.Object3D, clip: THREE.AnimationClip,
           delta = anchors[span - 1].toe.clone().sub(frames[before].toe).lerp(anchors[span].toe.clone().sub(frames[after].toe), blend);
           rotation = anchors[span - 1].rotation.clone().slerp(anchors[span].rotation, blend);
         }
-        delta.y = 0;
         const offset = frame.toe.clone().sub(frame.foot).applyQuaternion(frame.rotation.clone().invert()).applyQuaternion(rotation);
         return { point: frame.toe.clone().add(delta).sub(offset), rotation };
       });

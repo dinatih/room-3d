@@ -54,16 +54,20 @@ it('Snake conserve les appuis du GLB après retargeting sur Lara, Ybot et Xbot, 
     }
     if (path === 'lara/lara_native') assert.ok(originalDrift > 1, 'Fixture must reproduce the visible retargeting slide');
     const sample = evaluate(corrected);
-    let maximum = 0;
+    let maximum = 0, vertical = 0;
+    const floorHeights = new Map();
     for (const { side, start, end } of contacts) {
       const bones = ['Foot', 'ToeBase'].map(part => target.getObjectByName(resolveTargetBoneName(target, side + part)));
       sample(start);
       const anchors = bones.map(bone => bone.getWorldPosition(new THREE.Vector3()));
+      if (!floorHeights.has(side)) floorHeights.set(side, anchors[1].y);
+      assert.ok(Math.abs(anchors[1].y - floorHeights.get(side)) < 0.0001, 'All toe supports use the same ground height');
       for (let time = start; time <= end; time += 1 / 240) {
         sample(time);
         bones.forEach((bone, index) => {
           const point = bone.getWorldPosition(new THREE.Vector3());
-          maximum = Math.max(maximum, Math.hypot(point.x - anchors[index].x, point.z - anchors[index].z));
+          maximum = Math.max(maximum, point.distanceTo(anchors[index]));
+          vertical = Math.max(vertical, Math.abs(point.y - anchors[index].y));
         });
       }
     }
@@ -80,6 +84,6 @@ it('Snake conserve les appuis du GLB après retargeting sur Lara, Ybot et Xbot, 
         .sub(new THREE.Vector3().fromArray(originalPosition.evaluate(time))).applyMatrix3(parent);
       assert.ok(Math.hypot(delta.x, delta.z) < 0.0001, 'Pelvis sway retained in world space');
     });
-    t.diagnostic(`${path}: maximum foot/toe drift at 240 FPS = ${maximum.toFixed(5)} cm`);
+    t.diagnostic(`${path}: maximum 3D foot/toe drift at 240 FPS = ${maximum.toFixed(5)} cm; vertical = ${vertical.toFixed(5)} cm`);
   }
 });
