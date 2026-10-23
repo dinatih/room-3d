@@ -141,10 +141,11 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
     });
   }
 
-  // Clone and subsample rawClip tracks to 30 fps (if high-framerate) to avoid mutating source and cut retargeting cost
+  // Clone tracks and reduce high frame rates, except authored support bakes
+  // whose interpolation accuracy depends on retaining the source sampling.
   const clonedTracks: THREE.KeyframeTrack[] = [];
   for (const track of rawClip.tracks) {
-    clonedTracks.push(subsampleTrackTo30Fps(track));
+    clonedTracks.push(animScene?.userData.animationSampling === 'source' ? track.clone() : subsampleTrackTo30Fps(track));
   }
   const workingClip = new THREE.AnimationClip(rawClip.name, rawClip.duration, clonedTracks);
 

@@ -138,3 +138,9 @@ précédant les corrections ACCAD sont accessibles dans Git avant `a324b3c8`.
   explicitement annotés ; ne pas l'appliquer à des contacts non vérifiés.
 - `src/features/scene/retargeting/retargetClip.ts` : transfert des rotations,
   translation des hanches, réduction de fréquence et application des contacts.
+
+## Nouveaux imports ACCAD hors combat
+
+Voir [le lot des 26 actions](accad-actions.md) pour les nouvelles variantes H/F,
+les boîtes H2, les appuis sur le corps et la conservation de leur échantillonnage
+à travers le retargeting et le worker.

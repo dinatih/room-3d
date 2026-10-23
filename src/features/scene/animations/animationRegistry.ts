@@ -9,6 +9,7 @@ import { INTERX_ANIMATION_DEFINITIONS } from './interxManifest';
 import { FAB_ANIMATION_DEFINITIONS } from './fabManifest';
 import { BEHAVE_ANIMATION_DEFINITIONS } from './behaveManifest';
 import { KIT_ANIMATION_DEFINITIONS } from './kitManifest';
+import { ACCAD_ANIMATION_DEFINITIONS } from './accadManifest';
 
 export type AnimationCategory = 'combat' | 'dances' | 'emotes_gestures' | 'interactions' | 'locomotion' | 'poses_idles' | 'sports_fitness' | 'yoga';
 
@@ -59,6 +60,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   ...FAB_ANIMATION_DEFINITIONS,
   ...BEHAVE_ANIMATION_DEFINITIONS,
   ...KIT_ANIMATION_DEFINITIONS,
+  ...ACCAD_ANIMATION_DEFINITIONS,
   // ── ANIMATIONS SIGNATURES DES PERSONNAGES ───────────────────────────────────
   {
     id: 'inyeong-nitro-intro',

@@ -5,11 +5,14 @@ const T = require('three');
 const median = a => { const s = [...a].sort((x, y) => x - y); return (s[Math.floor((s.length - 1) / 2)] + s[Math.floor(s.length / 2)]) / 2; };
 async function main() {
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+  const imported = process.argv.includes('--new-actions') ? JSON.parse(fs.readFileSync(path.resolve(__dirname, '../public/animations/npz/_metadata/accad_actions.json'))) : [];
   const loader = new GLTFLoader();
   loader.setDRACOLoader({ preload() {} });
   loader.register(() => ({ name: 'SkeletonOnly', loadMesh: () => Promise.resolve(new T.Group()) }));
   const directory = path.resolve(__dirname, '../public/animations/npz/accad');
-  for (const file of fs.readdirSync(directory).filter(f => f.endsWith('.glb'))) {
+  for (const file of imported.length ? imported.map(item => path.basename(item.path)) : fs.readdirSync(directory).filter(f => f.endsWith('.glb') && !f.startsWith('accad-'))) {
+    const item = imported.find(item => path.basename(item.path) === file);
+    const bodySupport = item && (item.support !== 'standing' || item.id.startsWith('accad-crouch-'));
     const filename = path.join(directory, file), bytes = fs.readFileSync(path.join(process.argv.includes('--write') && process.env.ACCAD_ORIGINAL_DIR ? process.env.ACCAD_ORIGINAL_DIR : directory, file));
     const size = bytes.readUInt32LE(12), doc = JSON.parse(bytes.subarray(20, 20 + size));
     if (doc.asset.extras?.accadFootSupport && !process.argv.includes('--check')) { console.log(`${file}: already corrected`); continue; }
@@ -31,6 +34,42 @@ async function main() {
       for (const { node, property, interpolant } of bindings) node[property].fromArray(interpolant.evaluate(time));
       scene.updateMatrixWorld(true);
     };
+    let bodyFloor;
+    if (bodySupport) {
+      // Animation GLBs contain bones only. Measure body contacts on the Xbot
+      // reference mesh after the same retargeting used by the application.
+      require('../tests/support/load-ts.cjs');
+      const { retargetClip } = require('../src/features/scene/retargeting/retargetClip.ts');
+      const referenceLoader = new GLTFLoader();
+      referenceLoader.register(() => ({ name: 'NoTextures', loadMaterial: () => Promise.resolve(new T.MeshBasicMaterial()) }));
+      const referenceBytes = fs.readFileSync(path.resolve(__dirname, '../public/characters/xbot/Xbot_official.glb'));
+      const { scene: reference } = await referenceLoader.parseAsync(referenceBytes.buffer.slice(referenceBytes.byteOffset, referenceBytes.byteOffset + referenceBytes.byteLength), '');
+      reference.updateMatrixWorld(true);
+      reference.traverse(node => {
+        node.defaultPosition = node.position.clone(); node.restLocalQuaternion = node.quaternion.clone();
+        node.restWorldQuaternion = node.getWorldQuaternion(new T.Quaternion());
+      });
+      const referenceHips = reference.getObjectByName('mixamorigHips');
+      const ratio = referenceHips.getWorldPosition(new T.Vector3()).length() / hips.getWorldPosition(new T.Vector3()).length();
+      const referenceClip = retargetClip(clip, reference, scene);
+      const referenceBindings = referenceClip.tracks.map(track => ({ node: reference.getObjectByName(track.name.split('.')[0]), property: track.name.split('.')[1], interpolant: track.createInterpolant() }));
+      bodyFloor = time => {
+        for (const { node, property, interpolant } of referenceBindings) node[property].fromArray(interpolant.evaluate(time));
+        reference.updateMatrixWorld(true);
+        let lowest = Infinity;
+        const point = new T.Vector3();
+        reference.traverse(node => {
+          if (!node.isSkinnedMesh) return;
+          node.skeleton.update();
+          for (let i = 0; i < node.geometry.attributes.position.count; i++) {
+            node.getVertexPosition(i, point).applyMatrix4(node.matrixWorld);
+            lowest = Math.min(lowest, point.y);
+          }
+        });
+        if (!Number.isFinite(lowest)) throw Error(`Missing support mesh: ${file}`);
+        return lowest / ratio;
+      };
+    }
     const points = foot => [foot.ankle.localToWorld(foot.heel.clone()), foot.toe.getWorldPosition(new T.Vector3())];
     for (const time of times) {
       sample(time);
@@ -45,8 +84,8 @@ async function main() {
     // double support defines the floor instead of its later airborne feet.
     const floor = file === 'anim_lie_down_bed.glb' ? floors[0] : median(floors);
     if (process.argv.includes('--check')) {
-      if (!doc.asset.extras?.accadFootSupport || Math.abs(floor) > 1e-6) throw Error(`Invalid nominal floor: ${file}: ${floor}`);
-      if (file !== 'anim_lie_down_bed.glb' && Math.max(...floors.map(Math.abs)) > 1e-6) throw Error(`Foot support drifts: ${file}`);
+      if (!doc.asset.extras?.accadFootSupport || (!bodySupport && Math.abs(floor) > 1e-6)) throw Error(`Invalid nominal floor: ${file}: ${floor}`);
+      if (!bodySupport && file !== 'anim_lie_down_bed.glb' && Math.max(...floors.map(Math.abs)) > 1e-6) throw Error(`Foot support drifts: ${file}`);
       const originalBytes = fs.readFileSync(path.join(process.env.ACCAD_ORIGINAL_DIR || directory, file));
       const original = await loader.parseAsync(originalBytes.buffer.slice(originalBytes.byteOffset, originalBytes.byteOffset + originalBytes.byteLength), '');
       if (original.animations[0].duration !== clip.duration) throw Error(`Changed duration: ${file}`);
@@ -67,7 +106,7 @@ async function main() {
         const current = clip.tracks.find(t => t.name === track.name);
         if (!current || !Buffer.from(track.values.buffer).equals(Buffer.from(current.values.buffer)) || !Buffer.from(track.times.buffer).equals(Buffer.from(current.times.buffer))) throw Error(`Unrelated track changed: ${file}: ${track.name}`);
       }
-      console.log(`${file}: nominal support at Y=0 verified (${times.length} frames)`);
+      console.log(`${file}: ${bodySupport ? 'body-support tracks' : 'nominal support at Y=0'} verified (${times.length} frames)`);
       continue;
     }
     const outputs = [];
@@ -84,7 +123,7 @@ async function main() {
         const [heel, toe] = foot.samples[i], direction = toe.clone().sub(heel);
         const weight = T.MathUtils.clamp(1 - Math.max(heel.y - floor, 0) / foot.height, 0, 1);
         const pitch = Math.atan2(direction.y, Math.hypot(direction.x, direction.z));
-        const angle = Math.max(pitch, 0) * weight * foot.support[i];
+        const angle = bodySupport ? 0 : Math.max(pitch, 0) * weight * foot.support[i];
         if (angle > 0) {
           const axis = new T.Vector3(0, 1, 0).cross(direction).normalize();
           const parent = foot.ankle.parent.getWorldQuaternion(new T.Quaternion());
@@ -101,7 +140,7 @@ async function main() {
     const corrected = clip.clone();
     for (const out of outputs) corrected.tracks[clip.tracks.indexOf(out.track)] = new T.QuaternionKeyframeTrack(out.track.name, times, out.values);
     bindings = evaluators(corrected);
-    const correctedFloors = Array.from(times, time => { sample(time); return Math.min(...feet.flatMap(f => points(f).map(p => p.y))); });
+    const correctedFloors = Array.from(times, time => { sample(time); return bodySupport ? bodyFloor(time) : Math.min(...feet.flatMap(f => points(f).map(p => p.y))); });
     const offset = file === 'anim_lie_down_bed.glb' ? correctedFloors[0] : median(correctedFloors);
     sample(0);
     const worldToHips = new T.Matrix3().setFromMatrix4(hips.parent.matrixWorld).invert();
@@ -135,11 +174,16 @@ async function main() {
       const channel = doc.animations[0].channels.find(c => `${doc.nodes[c.target.node].name.replace(/:/g, '')}.${c.target.path === 'rotation' ? 'quaternion' : c.target.path === 'translation' ? 'position' : c.target.path}` === out.track.name);
       doc.animations[0].samplers[channel.sampler] = { input, output: accessor(out.values, out.type), interpolation: 'LINEAR' };
     }
-    if (/^anim_(pickup_box_floor_(male|female)|lift_box_(male|female)|putdown_box_floor)\.glb$/.test(file)) {
-      // The five box interactions retain double support throughout (no step).
+    if (/^anim_(pickup_box_floor_(male|female)|lift_box_(male|female)|putdown_box_floor)\.glb$/.test(file) || (item && /accad-(pickup-box-floor|lift-box)-male2/.test(item.id))) {
+      // The annotated box interactions retain double support (no step).
       const scene = doc.scenes[doc.scene || 0];
       scene.extras = { ...scene.extras, footContacts: ['Left', 'Right'].map(side => ({ side, start: times[0], end: times[times.length - 1] })) };
     }
+    if (bodySupport) {
+      const scene = doc.scenes[doc.scene || 0];
+      scene.extras = { ...scene.extras, animationSampling: 'source' };
+    }
+    if (item) doc.asset.extras = { ...doc.asset.extras, accadSource: item.source, support: item.support };
     doc.asset.extras = { ...doc.asset.extras, accadFootSupport: { method: 'supported-sole-v3', floorOffsetMeters: offset, maxCorrections: outputs.filter(o => o.type === 'VEC4').map(o => o.maxCorrection) } };
     doc.buffers[0].byteLength = binary.length;
     let json = Buffer.from(JSON.stringify(doc)); json = Buffer.concat([json, Buffer.alloc((4 - json.length % 4) % 4, 32)]);

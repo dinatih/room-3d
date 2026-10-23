@@ -15,6 +15,7 @@ for (const fixture of [
     ['lift_box_male', 'lift-box-male', 132],
     ['lift_box_female', 'lift-box-female', 251],
   ].map(([file, id, frames]) => ({ name: `ACCAD ${id}`, path: `npz/accad/anim_${file}.glb`, id, contacts: 2, frames })),
+  ...JSON.parse(fs.readFileSync('public/animations/npz/_metadata/accad_actions.json')).filter(item => /accad-(pickup-box-floor|lift-box)-male2/.test(item.id)).map(item => ({ ...item, path: item.path.replace(/^animations\//, ''), name: item.label, contacts: 2 })),
   { name: 'ACCAD poser la boîte', path: 'npz/accad/anim_putdown_box_floor.glb', id: 'putdown-box-floor', contacts: 2, frames: 72 },
 ]) it(`${fixture.name} conserve les appuis sur Lara, Ybot et Xbot, y compris dans le worker`, async t => {
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
