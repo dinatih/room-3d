@@ -57,7 +57,7 @@ interface BermudaGroundProps {
   yPos?: number;
 }
 
-export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.6 }: BermudaGroundProps) {
+export function BermudaGround({ active, groundType = 'bermuda', yPos = 0 }: BermudaGroundProps) {
   const storeBermudaGrass = useSceneStore(state => state.layers.bermudaGrass ?? true);
   const isGrassActive = active ?? storeBermudaGrass;
 

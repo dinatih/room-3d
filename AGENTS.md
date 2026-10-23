@@ -20,6 +20,9 @@ En développement, tous les événements `appLog` du navigateur sont transmis pa
   - **X** (rouge)
   - **Y** (vert)
   - **Z** (bleu)
+- **Norme Sol Jardin / Extérieur** :
+  - Le sol du jardin (herbe `BermudaGround`, dalles/terrasse extérieure) est aligné au niveau fini **Y = 0** (plain-pied avec le studio).
+  - Tout le mobilier de jardin (baignoire balnéo, canapés, banc coffre, pots, statues, gamelles) et les personnages (PNJ, animaux) reposent et se déplacent au sol à **Y = 0**, éliminant tout décalage vertical ou flottement.
 
 ## Stack & Architecture
 
