@@ -34,6 +34,7 @@ it('reconnaît l’alias canonique d’assise comme transition', () => {
 });
 it('ajuste la descente du bassin de la pose debout actuelle à la pose assise sans modifier le clip partagé', () => {
   const hips = new THREE.Object3D();
+  new THREE.Group().add(hips);
   hips.name = 'Hips'; hips.position.set(0, 100, 0);
   const source = new THREE.AnimationClip('entry', 2, [new THREE.VectorKeyframeTrack('Hips.position', [0, 1, 2], [0, 90, 0, 0, 70, -10, 0, 50, -20])]);
   const seated = new THREE.AnimationClip('seated', 1, [new THREE.VectorKeyframeTrack('Hips.position', [0, 1], [0, 45, 0, 0, 45, 0])]);
@@ -42,6 +43,20 @@ it('ajuste la descente du bassin de la pose debout actuelle à la pose assise sa
   assert.deepEqual([...fitted.values.slice(-3)], [0, 45, 0]);
   assert.ok(fitted.values[4] < 100 && fitted.values[4] > 45);
   assert.deepEqual([...source.tracks[0].values.slice(-3)], [0, 50, -20]);
+});
+
+it('laisse le déplacement au sol à la navigation même avec un bassin dans un repère tourné', () => {
+  const parent = new THREE.Group(), hips = new THREE.Object3D();
+  parent.rotation.x = -Math.PI / 2;
+  parent.add(hips); parent.updateMatrixWorld(true);
+  hips.name = 'Hips'; hips.position.set(0, 0, 100);
+  const source = new THREE.AnimationClip('entry', 2, [new THREE.VectorKeyframeTrack('Hips.position', [0, 1, 2], [0, 0, 100, 12, -30, 70, 5, -60, 50])]);
+  const seated = new THREE.AnimationClip('seated', 1, [new THREE.VectorKeyframeTrack('Hips.position', [0, 1], [0, 0, 45, 0, 0, 45])]);
+  const fitted = fitPostureTransition(source, hips, seated).tracks[0];
+  assert(Math.abs(fitted.values[3]) < 1e-6, 'Aucun déport latéral du bassin');
+  assert(Math.abs(fitted.values[4]) < 1e-6, 'Aucun recul ajouté au trajet');
+  assert.equal(fitted.values[5], 67.5, 'La descente verticale originale est conservée');
+  assert.deepEqual([...source.tracks[0].values.slice(3, 6)], [12, -30, 70]);
 });
 
 it('sort uniquement des assises configurées et attend la fin réelle du relèvement devant le siège', () => {
