@@ -72,3 +72,18 @@ it('les deux croix peuvent être maintenues et relâchées séparément', () => 
   assert.equal(state.characterZ, 2 * constants.WALK_SPEED);
   assert.equal(params.orbitYaw.current, yaw);
 });
+
+it('FPV : les virages IA conservent le décalage de vue relatif au regard', () => {
+  const { params, state, tick } = setup('fpv');
+  state.isAIControlled = true;
+  params.keys.current.add('AltArrowLeft');
+  tick();
+  params.keys.current.clear();
+  const offset = params.orbitYaw.current - params.followYaw.current;
+  assert(offset > 0);
+  for (const yaw of [Math.PI / 2, Math.PI, -Math.PI, 0]) {
+    state.followYaw = yaw;
+    tick();
+    assert(Math.abs(params.orbitYaw.current - params.followYaw.current - offset) < 1e-12);
+  }
+});

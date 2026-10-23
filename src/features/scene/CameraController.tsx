@@ -64,11 +64,12 @@ import { getCharacterGridCameraView, getCharacterGridActiveTarget } from './char
 import { getInventoryGridCameraTarget } from './inventoryGridCamera';
 
 const FPV_DEFAULT_FOV = 100;
-const FPV_DEFAULT_PITCH = -0.55; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
+const FPV_DEFAULT_PITCH = 0;
 
 const _tmpEyeTargetVec = new THREE.Vector3();
 const _tmpEyeLookVec = new THREE.Vector3();
 const _tmpEyeUpVec = new THREE.Vector3();
+const _tmpEyeRightVec = new THREE.Vector3();
 const _tmpAnimalCamera = new THREE.Vector3();
 const _tmpAnimalTarget = new THREE.Vector3();
 
@@ -392,17 +393,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         const lookDist = 200;
         const targetEyeVec = _tmpEyeTargetVec.set(eyeX, eyeY, eyeZ);
         const targetLookVec = _tmpEyeLookVec;
-        const cosP = Math.cos(followPitch.current);
-        const sinP = Math.sin(followPitch.current);
-        const dirX = Math.sin(orbitYaw.current);
-        const dirZ = Math.cos(orbitYaw.current);
-        targetLookVec.set(
-          eyeX + dirX * cosP * lookDist,
-          eyeY + (fwd.y * cosP + sinP) * lookDist,
-          eyeZ + dirZ * cosP * lookDist
-        );
-
         const targetUpVec = _tmpEyeUpVec.set(up?.x ?? 0, up?.y ?? 1, up?.z ?? 0);
+        // Les contrôles ajoutent un décalage au regard animé, dans le repère de la tête.
+        targetLookVec.copy(fwd).applyAxisAngle(targetUpVec, orbitYaw.current - followYaw.current);
+        _tmpEyeRightVec.crossVectors(targetLookVec, targetUpVec).normalize();
+        targetLookVec.applyAxisAngle(_tmpEyeRightVec, followPitch.current).multiplyScalar(lookDist).add(targetEyeVec);
 
         // Détection de premier placement ou de téléportation brusque (> 100 cm)
         const distFromCurrent = smoothedEyePos.current.distanceTo(targetEyeVec);

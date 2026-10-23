@@ -112,6 +112,7 @@ export function useCameraFrameUpdate({
     if (cameraState.isAIControlled) {
       followPos.current.x = cameraState.characterX;
       followPos.current.z = cameraState.characterZ;
+      if (modeRef.current === 'fpv') orbitYaw.current += cameraState.followYaw - followYaw.current;
       followYaw.current = cameraState.followYaw;
     }
     if (manualMove) {
