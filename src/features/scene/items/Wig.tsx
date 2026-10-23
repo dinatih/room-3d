@@ -20,37 +20,6 @@ export const HAIR_COLORS: Record<string, THREE.Color> = {
   violet:   new THREE.Color(0.5,  0.05, 0.9),
 };
 
-const wigGrayscaleTextureCache = new Map<string, THREE.Texture>();
-
-function getWigGrayscaleTexture(originalTex: THREE.Texture): THREE.Texture | null {
-  if (!originalTex || !originalTex.image) return null;
-  const cacheKey = (originalTex.uuid || originalTex.name || 'wig_tex') + '_vivida';
-  const cached = wigGrayscaleTextureCache.get(cacheKey);
-  if (cached) return cached;
-
-  const img = originalTex.image as HTMLImageElement | HTMLCanvasElement;
-  const width = img.width || 1024;
-  const height = img.height || 1024;
-  if (!width || !height) return null;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-
-  ctx.filter = 'grayscale(100%) brightness(140%) contrast(210%)';
-  ctx.drawImage(img, 0, 0, width, height);
-  ctx.filter = 'none';
-
-  const newTex = new THREE.CanvasTexture(canvas);
-  newTex.flipY = originalTex.flipY;
-  newTex.colorSpace = THREE.SRGBColorSpace;
-  newTex.needsUpdate = true;
-  wigGrayscaleTextureCache.set(cacheKey, newTex);
-  return newTex;
-}
-
 const _tmpWindEuler = new THREE.Euler();
 const _tmpWindQ = new THREE.Quaternion();
 const _tmpRainbowColor = new THREE.Color();
@@ -251,10 +220,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           clonedMat.opacity = 1;
           clonedMat.depthWrite = true;
           clonedMat.alphaTest = 0.5;
-          if (isLaraNativeWig && isColored) {
-            const bwMap = baseMat.map ? getWigGrayscaleTexture(baseMat.map) : null;
-            clonedMat.map = bwMap;
-          }
           if (isColored) {
             clonedMat.roughness = 0.4;
             clonedMat.metalness = 0.0;
@@ -270,9 +235,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
                 clonedMat.emissive.copy(targetColor);
                 clonedMat.emissiveIntensity = 0.18;
                 clonedMat.toneMapped = false;
-              } else if (isLaraNativeWig) {
-                clonedMat.emissive.copy(targetColor);
-                clonedMat.emissiveIntensity = 0.12;
               }
             }
           }
