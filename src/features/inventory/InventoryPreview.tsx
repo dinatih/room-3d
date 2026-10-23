@@ -721,6 +721,8 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
         }
         if (isVis) {
           const mesh = o as THREE.Mesh;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
           totalMeshes++;
           if (mesh.geometry) {
             if (mesh.geometry.index) {
@@ -1280,11 +1282,17 @@ export function InventoryPreview({
           </div>
           {showing3D ? (
             <>
-            <Canvas className="inventory-preview-renderer" key={preserveStateOnItemChange ? undefined : item.id} shadows={item.id === 'fridge'} frameloop="always" events={() => ({ enabled: false } as any)} camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
+            <Canvas className="inventory-preview-renderer" key={preserveStateOnItemChange ? undefined : item.id} shadows frameloop="always" events={() => ({ enabled: false } as any)} camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
               <PreviewEnvironment showGrid={showGrid} neutralLighting={neutralLighting || Boolean(smartAction)} />
               <ambientLight intensity={0.7} />
-              <directionalLight position={[150, 250, 150]} intensity={1.0} />
+              <directionalLight position={[boundsRadius * 2, boundsRadius * 3, boundsRadius * 2]} intensity={1.0} castShadow
+                shadow-mapSize={[2048, 2048]} shadow-camera-left={-boundsRadius * 2} shadow-camera-right={boundsRadius * 2}
+                shadow-camera-top={boundsRadius * 2} shadow-camera-bottom={-boundsRadius * 2} shadow-camera-far={boundsRadius * 8} shadow-normalBias={0.05} />
               <directionalLight position={[-100, 50, -100]} intensity={0.4} color="#aabbff" />
+              <mesh rotation-x={-Math.PI / 2} position={[0, -0.02, 0]} receiveShadow>
+                <planeGeometry args={[boundsRadius * 8, boundsRadius * 8]} />
+                <shadowMaterial transparent opacity={0.35} />
+              </mesh>
               {cameraProjection === 'ortho' ? (
                 <>
                   <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
