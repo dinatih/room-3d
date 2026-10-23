@@ -630,9 +630,13 @@ export function Character({
           if (targetColor && 'color' in m) {
             (m as any).map = null;
             (m as any).color.copy(targetColor);
+            if (hairColor === 'rouge') {
+              (m as any).color.setHex(0xcc0000);
+              (m as any).roughness = 0.85;
+            }
             if ('emissive' in m) {
               (m as any).emissive.copy(targetColor);
-              (m as any).emissiveIntensity = 0.15;
+              (m as any).emissiveIntensity = hairColor === 'rouge' ? 0 : 0.15;
             }
             m.needsUpdate = true;
           }

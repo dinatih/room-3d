@@ -224,19 +224,20 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           clonedMat.alphaTest = 0.5;
           if (isColored) {
             if (isLaraNativeWig) clonedMat.map = null;
-            clonedMat.roughness = 0.4;
+            clonedMat.roughness = isNativeRed ? 0.85 : 0.4;
             clonedMat.metalness = 0.0;
           }
           if (targetColor && 'color' in clonedMat) {
             clonedMat.color.copy(targetColor);
+            if (isNativeRed) clonedMat.color.setHex(0xcc0000);
             if ('emissive' in clonedMat) {
               if (color === 'rouge') {
                 if (isLaraNativeWig) {
                   clonedMat.emissiveMap = null;
                 }
                 clonedMat.emissive.copy(targetColor);
-                clonedMat.emissiveIntensity = 0.18;
-                clonedMat.toneMapped = false;
+                clonedMat.emissiveIntensity = isNativeRed ? 0 : 0.18;
+                clonedMat.toneMapped = isNativeRed;
               }
             }
           }

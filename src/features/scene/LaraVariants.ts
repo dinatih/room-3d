@@ -191,9 +191,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
              mat.emissive.setHex(0xaa00aa);
              mat.emissiveIntensity = 0.15;
           } else if (isVivida) {
-             mat.color.setHex(0xff0000);
-             mat.emissive.setHex(0xff0000);
-             mat.emissiveIntensity = 0.1;
+             mat.color.setHex(0xcc0000);
+             mat.emissiveIntensity = 0;
+             mat.roughness = 0.85;
           } else if (isSara) {
              if (matName.includes('hair.classic')) {
                 mat.map = null; // Kill dark texture to see red
