@@ -345,6 +345,14 @@ Commandes & Suivi :
   { id: 'cons-cappuccino-choco', name: 'Cappuccino goût chocolat',     brand: 'Bellarom',  category: 'consumable', qty: 1, dims: { w: 14, d: 7,  h: 19 }, frequency: 'mensuel',    stock: 1,  location: 'Placard cuisine', notes: 'Lidl — sachets instantanés' },
   { id: 'cons-okoia-k04017',    name: 'Nettoyant têtes de rasoirs K04017', brand: 'Okoia', category: 'consumable', qty: 2, dims: { w: 6,  d: 6,  h: 10 }, frequency: 'mensuel',    stock: 2,  location: 'SDB vasque',      notes: 'Spray nettoyant têtes rasoir électrique — Acheté le 14/02/2026' },
   { id: 'cons-w5-spray-javel-3en1', name: 'Spray nettoyant Javel 3 en 1, 1 L', brand: 'W5', category: 'consumable', qty: 1, dims: { w: 11, d: 8, h: 29 }, frequency: 'trimestriel', stock: 1, location: 'Placard cuisine', price: '1,16', notes: 'Lidl — Cuisine & salle de bain, nettoie en profondeur, anti-taches, action blanchissante' },
+  {
+    id: 'cons-bobines-essuie-mains', name: 'Bobines essuie-mains blanches pure ouate — 6 × 450 feuilles',
+    brand: '', category: 'consumable', qty: 1, dims: { w: 0, d: 0, h: 0 },
+    price: '19,99', url: 'https://www.amazon.fr/dp/B08962D4Z9',
+    photos: ['items/cons-bobines-essuie-mains/bobines-essuie-mains.png'],
+    description: 'Papier d’essuyage et essuie-mains blanc en pure ouate. Paquet de six bobines de 450 feuilles, soit 2 700 feuilles au total. Fabriqué en France et emballé en carton. Prix communiqué : 19,99 € le paquet ; prix unitaire affiché : 0,01 € par feuille (arrondi).',
+    notes: 'Quantité comptée en paquets de 6 bobines. Dimensions non renseignées. ASIN : B08962D4Z9.',
+  },
 
   // ── SACS / BAGAGERIE ──────────────────────────────────────────────────────────
   { id: 'sac-banane-kalenji', name: 'Sac banane Kalenji Activ Mblty noir', brand: 'Kalenji', category: 'clothing', qty: 2, dims: { w: 28, d: 8, h: 14 }, notes: '5 L — 3 poches — porte-bouteille 75 cl — sangle stabilisatrice amovible — imperméable — Decathlon', photos: ['items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-1.jpg', 'items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-2.jpg', 'items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-3.jpg', 'items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-4.jpg', 'items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-5.jpg', 'items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-6.jpg'] },
