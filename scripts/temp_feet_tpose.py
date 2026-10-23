@@ -124,6 +124,13 @@ for character in CHARACTERS:
         # Allow 0.01 mm of Blender transform roundoff, expressed in armature units.
         assert math.isclose(bone.length, original_lengths[bone.name], abs_tol=1e-5 / arm.matrix_world.to_scale().x), bone.name
     bpy.context.view_layer.update()
+    # Bringing the feet together changes the lowest sole vertex: ground the new rest pose.
+    floor = min((mesh.matrix_world @ vertex.co).z for mesh in meshes for vertex in mesh.data.vertices)
+    shift = Vector((0, 0, -floor))
+    arm.data.transform(Matrix.Translation(arm.matrix_world.to_3x3().inverted() @ shift))
+    for mesh in meshes:
+        mesh.data.transform(mesh.matrix_world.inverted() @ Matrix.Translation(shift) @ mesh.matrix_world, shape_keys=True)
+    bpy.context.view_layer.update()
     bpy.ops.object.select_all(action='DESELECT')
     for obj in [arm, *meshes]:
         obj.select_set(True)
@@ -131,7 +138,7 @@ for character in CHARACTERS:
     bpy.ops.wm.save_as_mainfile(filepath=str(folder / filename), compress=True)
     if character == 'valby':
         bpy.ops.wm.save_as_mainfile(filepath=str(source), compress=True)
-    bpy.ops.export_scene.gltf(filepath=str(folder / f'{character}.glb'), export_format='GLB', use_selection=True, export_animations=False, export_skins=True, export_cameras=False, export_lights=False, export_draco_mesh_compression_enable=True, export_draco_position_quantization=16, export_image_format='WEBP')
+    bpy.ops.export_scene.gltf(filepath=str(folder / f'{character}.glb'), export_format='GLB', use_selection=True, export_animations=False, export_skins=True, export_cameras=False, export_lights=False, export_draco_mesh_compression_enable=True, export_draco_position_quantization=20, export_image_format='WEBP')
     render(folder / f'{character}_3d_preview.png', meshes)
     render(Path('/tmp') / f'{character}_tpose_after.png', meshes)
     # Reimport the exported asset to check the bind pose and skin survived export.

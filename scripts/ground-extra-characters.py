@@ -1,13 +1,15 @@
 """Align editable rigs with grounded GLBs: run ground-extra-characters.cjs first."""
 import json
+import os
 import struct
+import sys
 from pathlib import Path
 
 import bpy
 from mathutils import Matrix, Vector
 
 ROOT = Path(__file__).resolve().parents[1]
-for character in ['lewis', 'david', 'alex', 'mannequin']:
+for character in ['james', 'lewis', 'david', 'alex', 'mannequin']:
     folder = ROOT / 'public/characters' / character
     data = (folder / f'{character}.glb').read_bytes()
     length, = struct.unpack_from('<I', data, 12)
@@ -22,8 +24,13 @@ for character in ['lewis', 'david', 'alex', 'mannequin']:
         bone.matrix_basis.identity()
     armature.data.transform(Matrix.Translation(armature.matrix_world.to_3x3().inverted() @ shift))
     for mesh in meshes:
-        mesh.data.transform(mesh.matrix_world.inverted() @ Matrix.Translation(shift) @ mesh.matrix_world)
+        mesh.data.transform(mesh.matrix_world.inverted() @ Matrix.Translation(shift) @ mesh.matrix_world, shape_keys=True)
     bpy.context.view_layer.update()
+    floor = min((mesh.matrix_world @ vertex.co).z for mesh in meshes for vertex in mesh.data.vertices)
+    assert abs(floor) < 1e-5, f'{character}: source floor {floor} m'
     bpy.context.preferences.filepaths.save_version = 0
     bpy.ops.wm.save_as_mainfile(filepath=str(folder / f'{character}.blend'), compress=True)
     print(f'{character}: editable rest pose moved {shift.z * 100:.3f} cm', flush=True)
+
+sys.stdout.flush()
+os._exit(0)

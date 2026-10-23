@@ -6,7 +6,7 @@ const THREE = require('three');
 const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
 const { captureAnimationRig, restoreAnimationRig } = require('../../src/features/scene/character/animationSerialization.ts');
 
-it('les quatre modèles ont le sol et la bind pose normalisés sans compensation JS', async t => {
+it('les cinq modèles ont le sol et la bind pose normalisés sans compensation JS', async t => {
   const { NodeIO } = await import('@gltf-transform/core');
   const { ALL_EXTENSIONS } = await import('@gltf-transform/extensions');
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
@@ -27,7 +27,7 @@ it('les quatre modèles ont le sol et la bind pose normalisés sans compensation
     const { scene } = await loader.parseAsync(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength), '');
     scene.updateMatrixWorld(true);
     const floor = new THREE.Box3().setFromObject(scene, true).min.y;
-    assert(Math.abs(floor) < 1e-5, `${id}: sol natif`);
+    assert(Math.abs(floor) < 1e-5, `${id}: sol natif à ${(floor * 100).toFixed(5)} cm au lieu de 0`);
     scene.traverse(node => {
       if (node.isSkinnedMesh) node.skeleton.bones.forEach((bone, i) => {
         const matrix = bone.matrixWorld.clone().multiply(node.skeleton.boneInverses[i]);

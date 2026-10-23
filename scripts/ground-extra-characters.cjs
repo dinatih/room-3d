@@ -9,7 +9,7 @@ const THREE = require('three');
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({
     'draco3d.decoder': await draco3d.createDecoderModule(), 'draco3d.encoder': await draco3d.createEncoderModule(),
   });
-  for (const id of ['lewis', 'david', 'alex', 'mannequin']) {
+  for (const id of ['james', 'lewis', 'david', 'alex', 'mannequin']) {
     const filename = `public/characters/${id}/${id}.glb`, doc = await io.read(filename);
     const nodes = doc.getRoot().listNodes(), positions = new Set();
     for (const node of nodes.filter(node => node.getMesh())) {
