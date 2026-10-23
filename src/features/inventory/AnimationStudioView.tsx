@@ -313,11 +313,11 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
         </div>
         <div className="animation-studio__tools">
           <div className="animation-studio__transport p-2 border-top bg-white">
-            <div className="d-flex gap-2 align-items-center mb-2">
+            <div className="d-flex gap-1 align-items-center mb-1">
               <div className="btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Parcourir les résultats filtrés">
-                <button type="button" className="btn btn-outline-secondary" aria-label="Animation précédente" title="Précédente (↑)" disabled={!active} onClick={() => navigate(-1)}><i className="bi bi-chevron-up" /></button>
-                <button type="button" className="btn btn-outline-secondary" aria-label="Animation suivante" title="Suivante (↓)" disabled={!active} onClick={() => navigate(1)}><i className="bi bi-chevron-down" /></button>
-                <button type="button" className="btn btn-outline-secondary" aria-label="Animation aléatoire filtrée" title="Aléatoire dans les résultats (D)" disabled={!active} onClick={random}><i className="bi bi-shuffle" /></button>
+                <button type="button" className="btn btn-outline-secondary py-0 px-1" aria-label="Animation précédente" title="Précédente (↑)" disabled={!active} onClick={() => navigate(-1)}><i className="bi bi-chevron-up" /></button>
+                <button type="button" className="btn btn-outline-secondary py-0 px-1" aria-label="Animation suivante" title="Suivante (↓)" disabled={!active} onClick={() => navigate(1)}><i className="bi bi-chevron-down" /></button>
+                <button type="button" className="btn btn-outline-secondary py-0 px-1" aria-label="Animation aléatoire filtrée" title="Aléatoire dans les résultats (D)" disabled={!active} onClick={random}><i className="bi bi-shuffle" /></button>
               </div>
               <span className="small text-muted text-nowrap">{activeIndex + 1} / {results.length}</span>
               <span className="small text-truncate" title={active?.label}>{active?.label ?? 'Aucune sélection'}</span>

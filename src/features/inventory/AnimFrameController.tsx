@@ -784,15 +784,15 @@ export function AnimFrameController({
             </button>
             <button
               type="button"
-              className={`btn py-0 px-2 fw-bold d-inline-flex align-items-center gap-1 ${
+              className={`btn py-0 px-2 d-inline-flex align-items-center ${
                 isPlaying ? 'btn-danger text-white shadow-sm' : 'btn-warning text-dark shadow-sm'
               }`}
               onClick={togglePlay}
               disabled={isTPose}
+              aria-label={isPlaying ? 'Pause' : 'Play'}
               title={isPlaying ? 'Pause (Espace)' : 'Play (Espace)'}
             >
               <i className={isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill'} />
-              <span>{isPlaying ? 'Pause' : 'Play'}</span>
             </button>
             <button
               type="button"
@@ -838,7 +838,7 @@ export function AnimFrameController({
             }
           >
             <i className={`bi ${lockHipsXZ ? 'bi-pin-fill' : 'bi-arrows-move'}`} aria-hidden="true" />
-            <span className="small">{lockHipsXZ ? 'Hips-Lock (Fixe)' : 'Trajectoire libre'}</span>
+            <span className="small">{lockHipsXZ ? 'Hips-Lock (Fixe)' : 'Traj libre'}</span>
           </button>
 
           {/* Compteur précis de Frame & Temps */}
