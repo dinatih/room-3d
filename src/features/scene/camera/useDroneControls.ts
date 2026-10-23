@@ -20,7 +20,18 @@ export function useDroneControls(preview: boolean) {
       cameraState.isDragging = false;
       invalidate();
     };
-    const release = () => { droneInput.keys.clear(); releasePointer(); };
+    const publishKeys = () => {
+      const aliases: Record<string, string> = { z: 'ArrowUp', w: 'ArrowUp', s: 'ArrowDown', q: 'ArrowLeft', a: 'ArrowLeft', d: 'ArrowRight', ' ': 'character:Elevate', c: 'character:Descend' };
+      document.dispatchEvent(new CustomEvent('camera-arrow-keys', { detail: [...droneInput.keys].map(key => aliases[key] ?? (key.startsWith('Arrow') && droneInput.keys.has('Alt') ? 'Alt' + key : key)) }));
+    };
+    const release = () => { droneInput.keys.clear(); releasePointer(); publishKeys(); };
+    const directionInput = (event: Event) => {
+      event.stopImmediatePropagation();
+      const { key, pressed } = (event as CustomEvent<{ key: string; pressed: boolean }>).detail;
+      droneInput.keys[pressed ? 'add' : 'delete'](key);
+      publishKeys();
+      invalidate();
+    };
     const keyDown = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"]') || event.ctrlKey || event.metaKey) return;
       const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
@@ -30,10 +41,13 @@ export function useDroneControls(preview: boolean) {
       event.stopImmediatePropagation();
       droneInput.keys.add(key);
       droneInput.keys[event.altKey ? 'add' : 'delete']('Alt');
+      publishKeys();
       invalidate();
     };
     const keyUp = (event: KeyboardEvent) => {
-      droneInput.keys.delete(event.key.length === 1 ? event.key.toLowerCase() : event.key);
+      if (!droneInput.keys.delete(event.key.length === 1 ? event.key.toLowerCase() : event.key)) return;
+      event.stopImmediatePropagation();
+      publishKeys();
     };
     const pointerDown = (event: PointerEvent) => {
       if (event.button !== 0) return;
@@ -62,6 +76,7 @@ export function useDroneControls(preview: boolean) {
     document.addEventListener('visibilitychange', release);
     document.addEventListener('focusin', focus);
     document.addEventListener('camera-controls-release', release);
+    document.addEventListener('camera-direction-input', directionInput, true);
     canvas.addEventListener('pointerdown', pointerDown);
     canvas.addEventListener('pointermove', pointerMove);
     canvas.addEventListener('pointerup', releasePointer);
@@ -75,6 +90,7 @@ export function useDroneControls(preview: boolean) {
       document.removeEventListener('visibilitychange', release);
       document.removeEventListener('focusin', focus);
       document.removeEventListener('camera-controls-release', release);
+      document.removeEventListener('camera-direction-input', directionInput, true);
       canvas.removeEventListener('pointerdown', pointerDown);
       canvas.removeEventListener('pointermove', pointerMove);
       canvas.removeEventListener('pointerup', releasePointer);

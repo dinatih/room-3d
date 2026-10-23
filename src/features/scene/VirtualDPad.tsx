@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { cameraState } from './cameraState';
+import { useDroneControlStore } from './droneControls';
 import { ORBIT_CAMERA_LERP } from './camera/cameraConstants';
 import './VirtualDPad.scss';
 
@@ -24,6 +25,7 @@ function fire(key: string, pressed: boolean) {
 }
 
 export function VirtualDPad({ visible = false }: { visible?: boolean }) {
+  const piloting = useDroneControlStore(state => state.piloting);
   const mode = useSceneStore(state => state.cameraMode);
   const target = useSceneStore(state => state.cameraTarget);
   const control = useSceneStore(state => state.arrowControl);
@@ -102,7 +104,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
 
   useEffect(() => {
     releaseAll();
-  }, [visible, mode, target, control, activeCharacterId, animal, releaseAll]);
+  }, [visible, mode, target, control, activeCharacterId, animal, piloting, releaseAll]);
 
   useEffect(() => {
     const onVisibility = () => { if (document.hidden) releaseAll(); };
@@ -116,7 +118,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   }, [releaseAll]);
 
   if (!visible) return null;
-  const moving = !animal && (mode === 'fpv' || control === 'character');
+  const moving = piloting || !animal && (mode === 'fpv' || control === 'character');
   const orbiting = mode === 'orbit' || mode === 'follow';
   const targets = [
     { target: 'studio', label: 'Appartement', icon: 'bi-building' },
@@ -173,19 +175,23 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
         </div>
         {(['character', 'camera'] as const).map(inputControl => {
           const isCamera = inputControl === 'camera';
-          const buttons = isCamera ? [...DIRECTIONS, ...EXTRA_CAMERA_CONTROLS] : DIRECTIONS;
+          const extras = piloting
+            ? EXTRA_CAMERA_CONTROLS.map(button => ({ ...button, label: button.key === 'Elevate' ? 'Monter le Hornet (Espace)' : 'Descendre le Hornet (C)', position: 'hornet-' + button.position }))
+            : EXTRA_CAMERA_CONTROLS;
+          const buttons = isCamera !== piloting ? [...DIRECTIONS, ...extras] : DIRECTIONS;
           return (
             <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
-              <div className="virtual-dpad" role="group" aria-label={inputControl === 'character' ? 'Déplacement du PNJ' : 'Déplacement de la caméra'}>
-                <span className="virtual-dpad__center d-flex align-items-center justify-content-center" title={inputControl === 'character' ? 'Déplacer le PNJ' : 'Déplacer la caméra'}>
-                  <i className={`bi ${inputControl === 'character' ? 'bi-person-walking' : 'bi-camera-video'}`} aria-hidden="true" />
+              <div className="virtual-dpad" role="group" aria-label={piloting ? isCamera ? 'Rotation du Hornet' : 'Déplacement du Hornet' : inputControl === 'character' ? 'Déplacement du PNJ' : 'Déplacement de la caméra'}>
+                <span className="virtual-dpad__center d-flex align-items-center justify-content-center" title={piloting ? isCamera ? 'Orienter le Hornet' : 'Déplacer le Hornet' : inputControl === 'character' ? 'Déplacer le PNJ' : 'Déplacer la caméra'}>
+                  <i className={`bi ${inputControl === 'character' ? (piloting ? 'bi-controller' : 'bi-person-walking') : 'bi-camera-video'}`} aria-hidden="true" />
                 </span>
                 {buttons.map(({ key, icon, label: defaultLabel, position }) => {
                   const inputKey = `${inputControl}:${key}`;
                   const isAlt = pressedKeys.has('Alt' + key);
                   const pressed = pressedKeys.has(inputKey) ||
                     (isAlt ? isCamera : (pressedKeys.has(key) && (moving ? inputControl === 'character' : isCamera)));
-                  const label = key === 'Elevate' || key === 'Descend' ? defaultLabel : inputControl === 'character' ? defaultLabel : orbiting
+                  const movementLabel = piloting && (key === 'ArrowLeft' || key === 'ArrowRight') ? key === 'ArrowLeft' ? 'Déplacer le Hornet à gauche' : 'Déplacer le Hornet à droite' : defaultLabel;
+                  const label = key === 'Elevate' || key === 'Descend' ? defaultLabel : inputControl === 'character' ? movementLabel : (piloting || orbiting)
                     ? ({ ArrowUp: 'Incliner vers le haut', ArrowDown: 'Incliner vers le bas', ArrowLeft: 'Tourner à gauche', ArrowRight: 'Tourner à droite' } as Record<string, string>)[key]
                     : ({ ArrowUp: 'Déplacer la vue vers le haut', ArrowDown: 'Déplacer la vue vers le bas', ArrowLeft: 'Déplacer la vue à gauche', ArrowRight: 'Déplacer la vue à droite' } as Record<string, string>)[key];
                   return (
@@ -196,7 +202,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
                       aria-label={label}
                       aria-pressed={pressed}
                       title={label}
-                      disabled={Boolean(animal && (inputControl === 'character' || mode === 'fpv'))}
+                      disabled={!piloting && Boolean(animal && (inputControl === 'character' || mode === 'fpv'))}
                       onPointerDown={event => {
                         event.preventDefault();
                         event.currentTarget.setPointerCapture(event.pointerId);

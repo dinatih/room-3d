@@ -37,3 +37,12 @@ it('libère les entrées lors de la prise ou de la fin du pilotage', () => {
     assert.equal(useDroneControlStore.getState().piloting, piloting);
   }
 });
+it('pilote avec la croix gauche et réserve la croix droite aux rotations', () => {
+  for (const key of ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']) {
+    assert(movement(['character:' + key]).equals(movement([key])));
+    assert(movement(['camera:' + key]).equals(new Vector3()));
+  }
+  assert(movement(['character:Elevate'], 2, 1).equals(movement([' '], 2, 1)));
+  assert(movement(['character:Descend'], 2, 1).equals(movement(['c'], 2, 1)));
+  assert(movement(['Alt', 'ArrowLeft', 'character:ArrowUp']).equals(movement(['z'])));
+});

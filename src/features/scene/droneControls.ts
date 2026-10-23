@@ -24,9 +24,9 @@ export const useDroneControlStore = create<{
 /** Déplacement relatif au regard, normalisé pour conserver la vitesse en diagonale. */
 export function droneMovement(keys: Set<string>, yaw: number, pitch: number, target: Vector3): Vector3 {
   const held = (...names: string[]) => names.some(name => keys.has(name) && !(keys.has('Alt') && name.startsWith('Arrow')));
-  const forward = Number(held('z', 'w', 'ArrowUp')) - Number(held('s', 'ArrowDown'));
-  const right = Number(held('d', 'ArrowRight')) - Number(held('q', 'a', 'ArrowLeft'));
-  const up = Number(held(' ')) - Number(held('c'));
+  const forward = Number(held('z', 'w', 'ArrowUp', 'character:ArrowUp')) - Number(held('s', 'ArrowDown', 'character:ArrowDown'));
+  const right = Number(held('d', 'ArrowRight', 'character:ArrowRight')) - Number(held('q', 'a', 'ArrowLeft', 'character:ArrowLeft'));
+  const up = Number(held(' ', 'character:Elevate')) - Number(held('c', 'character:Descend'));
   target.set(
     Math.sin(yaw) * Math.cos(pitch) * forward - Math.cos(yaw) * right,
     Math.sin(pitch) * forward + up,

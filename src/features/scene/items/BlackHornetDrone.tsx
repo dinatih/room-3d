@@ -283,11 +283,10 @@ export function BlackHornetDrone({
 
     if (flightState.current === 'manual') {
       const keys = droneInput.keys;
-      if (keys.has('Alt')) {
-        const turn = Math.PI / 2 * delta; // 90°/s, indépendamment de la répétition clavier.
-        droneInput.yaw += (Number(keys.has('ArrowLeft')) - Number(keys.has('ArrowRight'))) * turn;
-        droneInput.pitch = THREE.MathUtils.clamp(droneInput.pitch + (Number(keys.has('ArrowUp')) - Number(keys.has('ArrowDown'))) * turn, -Math.PI / 2, Math.PI / 2);
-      }
+      const turn = Math.PI / 2 * delta; // 90°/s, indépendamment de la répétition clavier.
+      const rotating = (key: string) => keys.has('camera:' + key) || keys.has('Alt') && keys.has(key);
+      droneInput.yaw += (Number(rotating('ArrowLeft')) - Number(rotating('ArrowRight'))) * turn;
+      droneInput.pitch = THREE.MathUtils.clamp(droneInput.pitch + (Number(rotating('ArrowUp')) - Number(rotating('ArrowDown'))) * turn, -Math.PI / 2, Math.PI / 2);
       const speed = useDroneControlStore.getState().speed * (droneInput.keys.has('Shift') ? 3 : 1);
       droneMovement(droneInput.keys, droneInput.yaw, droneInput.pitch, moveDirection.current);
       model.position.addScaledVector(moveDirection.current, speed * delta);
