@@ -325,13 +325,13 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
             {active && currentItem && <AnimFrameController key={mode} compact keyboardEnabled={false} showAnimationSelectors={false}
               animName={active.label} animKey={mode === 'solo' ? active.id : undefined} isHumanCharacter characterId={currentItem.id}
               duoAnimDef={active.duo} duoPartnerId={partner?.id}
+              alignmentActions={<div className="d-flex flex-wrap gap-2 mt-2">
+                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={saveAlignment}>Mémoriser le calage{active.duo ? ' B' : ''}</button>
+                <button type="button" className="btn btn-sm btn-outline-secondary" disabled={!allAnnotations[active.annotationId]?.customOffsets} onClick={applyAlignment}>Appliquer le calage mémorisé</button>
+              </div>}
               style={{ position: 'relative', zIndex: 'auto', inset: 'auto', width: '100%', margin: 0 }} />}
           </div>
           {active && <div className="animation-studio__annotations p-2 border-top bg-light">
-            <div className="d-flex flex-wrap gap-2 mb-2">
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={saveAlignment}>Mémoriser le calage{active.duo ? ' B' : ''}</button>
-              <button type="button" className="btn btn-sm btn-outline-secondary" disabled={!allAnnotations[active.annotationId]?.customOffsets} onClick={applyAlignment}>Appliquer le calage mémorisé</button>
-            </div>
             <DevAnnotationPanel key={active.annotationId} targetId={active.annotationId} targetName={active.label} />
           </div>}
         </div>

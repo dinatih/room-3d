@@ -41,6 +41,7 @@ export interface AnimFrameControllerProps {
   onSelectDuoAnim?: (def: DuoAnimationDef | undefined) => void;
   onSelectDuoPartner?: (partnerId: string) => void;
   showAnimationSelectors?: boolean;
+  alignmentActions?: React.ReactNode;
   animalAnimOptions?: { value: string; label: string }[];
 }
 
@@ -63,6 +64,7 @@ export function AnimFrameController({
   onSelectDuoPartner,
   animalAnimOptions,
   showAnimationSelectors = true,
+  alignmentActions,
 }: AnimFrameControllerProps) {
   const {
     isPlaying,
@@ -1298,6 +1300,7 @@ export function AnimFrameController({
                     </div>
                   </div>
                 </div>
+                {alignmentActions}
               </div>
             </div>
           ) : (
@@ -1448,6 +1451,7 @@ export function AnimFrameController({
                       </div>
                     </div>
                   </div>
+                  {alignmentActions}
                 </div>
               )}
             </div>
