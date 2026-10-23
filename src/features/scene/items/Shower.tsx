@@ -18,8 +18,9 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { createCondensationMaterial, ShowerEffects } from './ShowerEffects';
-import { DOOR_CONFIGS, DOOR_OPEN_RESPONSE, DOOR_CLOSE_RESPONSE, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
+import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
 import { useDoorImpulse } from './useDoorImpulse';
+import { useDoorSpring } from './useDoorSpring';
 
 
 const GLB_TRAY   = 'items/shower/shower.glb';
@@ -187,6 +188,7 @@ function ShowerDoor({ isPreview, condensation }: { isPreview: boolean; condensat
   const pivotRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
 
+  const spring = useDoorSpring();
   const impulse = useDoorImpulse('showerDoor', DOOR_CONFIGS.shower.maxAngle);
 
   useFrame((_, delta) => {
@@ -196,18 +198,10 @@ function ShowerDoor({ isPreview, condensation }: { isPreview: boolean; condensat
       : computeDoorDynamics(DOOR_CONFIGS.shower);
     const targetAngle = Math.min(allowed, Math.max(push, impulse(delta), navigationEnabled && doorRequested('shower') ? allowed : 0));
     const current = pivotRef.current.rotation.y;
-    if (navigationEnabled) doorCollisionState.shower.angle = current;
-    if (current === targetAngle) return;
-    if (Math.abs(targetAngle - current) < 0.001) {
-      pivotRef.current.rotation.y = targetAngle;
-      if (navigationEnabled) doorCollisionState.shower.angle = targetAngle;
-      invalidate();
-      return;
-    }
-    const response = targetAngle < current ? DOOR_CLOSE_RESPONSE : DOOR_OPEN_RESPONSE;
-    pivotRef.current.rotation.y += (targetAngle - current) * Math.min(1, response * delta);
+    const next = spring(current, targetAngle, delta, 0, allowed);
+    pivotRef.current.rotation.y = next;
+    if (next !== current) invalidate();
     if (navigationEnabled) doorCollisionState.shower.angle = pivotRef.current.rotation.y;
-    invalidate();
   });
 
   // Repère local centré en X dans [−SHOWER_W/2, +SHOWER_W/2] :

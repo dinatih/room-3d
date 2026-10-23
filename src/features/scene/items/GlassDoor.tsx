@@ -11,8 +11,9 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
-import { computeDoorDynamics, DOOR_CONFIGS, DOOR_OPEN_RESPONSE, DOOR_CLOSE_RESPONSE, doorCollisionState, glassShutterState } from '../doorObstacles';
+import { computeDoorDynamics, DOOR_CONFIGS, doorCollisionState, glassShutterState } from '../doorObstacles';
 import { useDoorImpulse } from './useDoorImpulse';
+import { useDoorSpring } from './useDoorSpring';
 
 const W_TOTAL   = 160;
 const SILL_H    = 20;
@@ -129,6 +130,8 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
   const handleRef = useRef<THREE.Group>(null!);
   const instancedShutterRef = useRef<THREE.InstancedMesh>(null!);
   const shutterPercentRef = useRef(0);
+  const rightSpring = useDoorSpring();
+  const leftSpring = useDoorSpring();
   const rightRotRef = useRef(0);
   const leftRotRef = useRef(0);
   const rightImpulse = useDoorImpulse('eastGlassDoor', DOOR_CONFIGS.glassRight.maxAngle);
@@ -162,31 +165,11 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
     if (navigationEnabled) doorCollisionState.glassRight.angle = rightRotRef.current;
     if (navigationEnabled) doorCollisionState.glassLeft.angle = leftRotRef.current;
 
-    if (leftRotRef.current === leftTarget && rightRotRef.current === rightTarget && shutterPercentRef.current === targetShutter) {
-      return;
-    }
-
-    let moved = false;
-
-    const dLeft = leftTarget - leftRotRef.current;
-    if (Math.abs(dLeft) > 0.001) {
-      const response = Math.abs(leftTarget) < Math.abs(leftRotRef.current) ? DOOR_CLOSE_RESPONSE : DOOR_OPEN_RESPONSE;
-      leftRotRef.current += dLeft * Math.min(1, response * delta);
-      moved = true;
-    } else if (leftRotRef.current !== leftTarget) {
-      leftRotRef.current = leftTarget;
-      moved = true;
-    }
-
-    const dRight = rightTarget - rightRotRef.current;
-    if (Math.abs(dRight) > 0.001) {
-      const response = Math.abs(rightTarget) < Math.abs(rightRotRef.current) ? DOOR_CLOSE_RESPONSE : DOOR_OPEN_RESPONSE;
-      rightRotRef.current += dRight * Math.min(1, response * delta);
-      moved = true;
-    } else if (rightRotRef.current !== rightTarget) {
-      rightRotRef.current = rightTarget;
-      moved = true;
-    }
+    const leftNext = leftSpring(leftRotRef.current, leftTarget, delta, -dynLeft.allowed, 0);
+    const rightNext = rightSpring(rightRotRef.current, rightTarget, delta, 0, dynRight.allowed);
+    let moved = leftNext !== leftRotRef.current || rightNext !== rightRotRef.current;
+    leftRotRef.current = leftNext;
+    rightRotRef.current = rightNext;
 
     if (navigationEnabled) doorCollisionState.glassRight.angle = rightRotRef.current;
     if (navigationEnabled) doorCollisionState.glassLeft.angle = leftRotRef.current;

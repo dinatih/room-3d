@@ -12,8 +12,6 @@ import { inflate, pointInRing, type Polygon } from './ai/navigation/geometry';
 import { getDoorProtections, getDoorProtectionRevision, type DoorKey } from './ai/navigation/doorRequests';
 import { pX, pZ, DiagWall, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from './wallData';
 
-export const DOOR_OPEN_RESPONSE = 10;
-export const DOOR_CLOSE_RESPONSE = 4;
 export const HUMAN_BODY_RADIUS = 28;
 export const HUMAN_BODY_HEIGHT = 173.4;
 

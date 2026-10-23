@@ -9,8 +9,9 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
-import { DOOR_CONFIGS, DOOR_OPEN_RESPONSE, DOOR_CLOSE_RESPONSE, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
+import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
 import { useDoorImpulse } from './useDoorImpulse';
+import { useDoorSpring } from './useDoorSpring';
 
 export const ENTRY_W = 90;
 const W  = ENTRY_W;
@@ -87,6 +88,7 @@ export function DoorEntry({ onSize, isPreview = false }: SceneItemProps) {
   const navigationEnabled = useNavigationEnabled() && !isPreview;
   const doorRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
+  const spring = useDoorSpring();
   const impulse = useDoorImpulse('entryDoor', DOOR_CONFIGS.entry.maxAngle);
 
   const frames = useEntryFrameGeo();
@@ -100,17 +102,9 @@ export function DoorEntry({ onSize, isPreview = false }: SceneItemProps) {
     const { allowed, push } = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.entry) : { allowed: DOOR_CONFIGS.entry.maxAngle, push: 0 };
     const target = -Math.min(allowed, Math.max(push, impulse(delta), navigationEnabled && doorRequested('entry') ? allowed : 0));
     const current = doorRef.current.rotation.y;
-    if (navigationEnabled) doorCollisionState.entry.angle = current;
-    if (current === target) return;
-    const difference = target - current;
-    if (Math.abs(difference) > 0.001) {
-      const response = Math.abs(target) < Math.abs(current) ? DOOR_CLOSE_RESPONSE : DOOR_OPEN_RESPONSE;
-      doorRef.current.rotation.y += difference * Math.min(1, response * delta);
-      invalidate();
-    } else {
-      doorRef.current.rotation.y = target;
-      invalidate();
-    }
+    const next = spring(current, target, delta, -allowed, 0);
+    doorRef.current.rotation.y = next;
+    if (next !== current) invalidate();
     if (navigationEnabled) doorCollisionState.entry.angle = doorRef.current.rotation.y;
   });
 

@@ -10,8 +10,9 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 import { WALL_THICKNESS, PARTITION_THICKNESS } from '../wallData';
-import { DOOR_CONFIGS, DOOR_OPEN_RESPONSE, DOOR_CLOSE_RESPONSE, computeDoorDynamics, doorCollisionState, type DoorConfig } from '../doorObstacles';
+import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState, type DoorConfig } from '../doorObstacles';
 import { useDoorImpulse } from './useDoorImpulse';
+import { useDoorSpring } from './useDoorSpring';
 
 const W  = 83;     // Largeur panneau (ouvrant de 83 cm)
 const H  = 204;    // Hauteur standard
@@ -163,6 +164,7 @@ function DoorImpl({
   const navigationEnabled = useNavigationEnabled() && !isPreview;
   const doorRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
+  const spring = useDoorSpring();
   const impulse = useDoorImpulse(actionKey, doorConfig.maxAngle);
 
   const frameGeo  = useDoorFrameGeo(wallThickness);
@@ -176,17 +178,10 @@ function DoorImpl({
     const currentSigned = doorRef.current.rotation.y;
     const { allowed, push } = navigationEnabled ? computeDoorDynamics(doorConfig) : { allowed: doorConfig.maxAngle, push: 0 };
     const target = Math.sign(openAngle) * Math.min(allowed, Math.max(push, impulse(delta), navigationEnabled && doorRequested(doorStateKey) ? allowed : 0));
-    if (navigationEnabled) doorCollisionState[doorStateKey].angle = currentSigned;
-    if (currentSigned === target) return;
-    const difference = target - currentSigned;
-    if (Math.abs(difference) > 0.001) {
-      const response = Math.abs(target) < Math.abs(currentSigned) ? DOOR_CLOSE_RESPONSE : DOOR_OPEN_RESPONSE;
-      doorRef.current.rotation.y += difference * Math.min(1, response * delta);
-      invalidate();
-    } else {
-      doorRef.current.rotation.y = target;
-      invalidate();
-    }
+    const limit = Math.sign(openAngle) * allowed;
+    const next = spring(currentSigned, target, delta, Math.min(0, limit), Math.max(0, limit));
+    doorRef.current.rotation.y = next;
+    if (next !== currentSigned) invalidate();
     if (navigationEnabled) doorCollisionState[doorStateKey].angle = doorRef.current.rotation.y;
   });
 
