@@ -92,9 +92,10 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
 
   useEffect(() => {
     const onArrowKeys = (event: Event) => setPressedKeys(new Set((event as CustomEvent<string[]>).detail));
-    document.addEventListener('camera-arrow-keys', onArrowKeys);
-    return () => document.removeEventListener('camera-arrow-keys', onArrowKeys);
-  }, []);
+    const eventName = piloting ? 'drone-arrow-keys' : 'camera-arrow-keys';
+    document.addEventListener(eventName, onArrowKeys);
+    return () => document.removeEventListener(eventName, onArrowKeys);
+  }, [piloting]);
 
   useEffect(() => {
     const onAnimal = () => setAnimal(cameraState.animalTarget);
