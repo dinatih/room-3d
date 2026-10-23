@@ -74,9 +74,9 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   const cleanId = strId.replace(/^hair_/, '');
   const gltfPath = RIGGED_WIGS_PATHS[strId] || RIGGED_WIGS_PATHS[cleanId] || (typeof id === 'string' && id.endsWith('.glb') ? id : 'characters/wigs/zepeto_hair.glb');
   const { scene: clonedFullScene } = useGLTFClone(gltfPath);
-  const nativeRedMap = useTexture('/characters/wigs/lara_native_red_shading.png');
-  nativeRedMap.flipY = false;
-  nativeRedMap.colorSpace = THREE.SRGBColorSpace;
+  const nativeColorMap = useTexture('/characters/wigs/lara_native_shading.png');
+  nativeColorMap.flipY = false;
+  nativeColorMap.colorSpace = THREE.SRGBColorSpace;
   const clonedHairRef = useRef<THREE.Group>(null!);
   
   const scene = useMemo(() => {
@@ -216,9 +216,9 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           if (prevMat && prevMat !== baseMat && prevMat.userData?.__ownedWigMaterial) {
             prevMat.dispose();
           }
-          const isNativeRed = isLaraNativeWig && color === 'rouge';
-          const clonedMat = isNativeRed ? new THREE.MeshPhysicalMaterial({ specularIntensity: 0 }) : baseMat.clone();
-          if (isNativeRed) THREE.MeshStandardMaterial.prototype.copy.call(clonedMat, baseMat);
+          const isNativeColored = isLaraNativeWig && isColored;
+          const clonedMat = isNativeColored ? new THREE.MeshPhysicalMaterial({ specularIntensity: 0 }) : baseMat.clone();
+          if (isNativeColored) THREE.MeshStandardMaterial.prototype.copy.call(clonedMat, baseMat);
           clonedMat.userData.__ownedWigMaterial = true;
           clonedMat.side = THREE.DoubleSide;
           // Binary texture coverage keeps gaps between hair cards without blending.
@@ -227,14 +227,14 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           clonedMat.depthWrite = true;
           clonedMat.alphaTest = 0.5;
           if (isColored) {
-            if (isLaraNativeWig) clonedMat.map = isNativeRed ? nativeRedMap : null;
+            if (isNativeColored) clonedMat.map = nativeColorMap;
             clonedMat.roughness = 0.4;
             clonedMat.metalness = 0.0;
           }
           if (targetColor && 'color' in clonedMat) {
             clonedMat.color.copy(targetColor);
             if ('emissive' in clonedMat) {
-              if (color === 'rouge') {
+              if (color === 'rouge' || isNativeColored) {
                 if (isLaraNativeWig) {
                   clonedMat.emissiveMap = null;
                 }
@@ -267,7 +267,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     if (onBonesExtracted) {
       onBonesExtracted(hairBonesRef.current);
     }
-  }, [scene, color, scale, id, nativeRedMap]);
+  }, [scene, color, scale, id, nativeColorMap]);
 
   useLayoutEffect(() => {
     if (attachTo && scene) {

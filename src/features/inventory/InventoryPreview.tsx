@@ -22,6 +22,7 @@ import { resolveDuoPreviewParticipants, type DuoAnimationDef } from '@features/s
 import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { SkySphere } from '@features/scene/SkySphere';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
+import { WigFitPanel } from './WigFitPanel';
 import { AnimFrameController } from './AnimFrameController';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { CharacterSection } from '@features/scene/sidepanel/sections/CharacterSection';
@@ -1637,6 +1638,7 @@ export function InventoryPreview({
         )}
       </ViewControlBar>
     )}
+    {isWigItem && item && <WigFitPanel key={item.id} wigId={item.id} />}
     {item && hasPhotos && showPhotoGallery && (
       <div style={{ display: 'flex', overflowX: 'auto', gap: 6, padding: '8px', width: '100%', background: '#eaeaea' }}>
         {has3D && (

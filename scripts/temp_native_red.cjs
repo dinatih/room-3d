@@ -8,6 +8,39 @@ const launchBrowser = require('./browser-test-options.cjs');
     await page.setViewport({width:1496, height:872});
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
+    if (process.argv.includes('--fit')) {
+      await page.goto('http://localhost:5173/characters/wigs/lara_native_shading.png');
+      await page.evaluate(async () => {
+        const { default: RefreshRuntime } = await import('/@react-refresh');
+        RefreshRuntime.injectIntoGlobalHook(window);
+        window.$RefreshReg$ = () => {};
+        window.$RefreshSig$ = () => type => type;
+        window.__vite_plugin_react_preamble_installed__ = true;
+        const { default: React } = await import('/node_modules/.vite/deps/react.js');
+        const { default: ReactDOM } = await import('/node_modules/.vite/deps/react-dom_client.js');
+        const { WigFitPanel } = await import('/src/features/inventory/WigFitPanel.tsx');
+        document.body.innerHTML = '<div id="fit-test"></div>';
+        ReactDOM.createRoot(document.getElementById('fit-test')).render(React.createElement(WigFitPanel, {wigId:'hair_100'}));
+      });
+      await page.waitForSelector('input[aria-label="Taille (%)"]');
+      const input = await page.$('input[aria-label="Taille (%)"]');
+      await input.click();
+      await page.keyboard.down('Control');
+      await page.keyboard.press('KeyA');
+      await page.keyboard.up('Control');
+      await input.type('85');
+      const result = await page.evaluate(async () => {
+        const { useWigFitStore } = await import('/src/features/inventory/useWigFitStore.ts');
+        return {fit:useWigFitStore.getState().fits.hair_100, saved:JSON.parse(localStorage.getItem('room-3d-wig-fitting'))};
+      });
+      assert.equal(result.fit.scale, 0.85);
+      assert.equal(result.saved.state.fits.hair_100.scale, 0.85);
+      await page.click('button');
+      assert.equal(await input.evaluate(el => el.value), '100');
+      assert.deepEqual(errors, []);
+      console.log('Fitting panel: size input, persistence and reset passed');
+      return;
+    }
     await page.goto('http://localhost:5173/?inventory=wigs&item=hair_lara_native', {waitUntil: 'domcontentloaded'});
     if (process.argv.includes('--verify')) {
       await page.waitForSelector('canvas');
@@ -60,7 +93,7 @@ const launchBrowser = require('./browser-test-options.cjs');
       return {png:native.canvas.toDataURL('image/png').split(',')[1], mean:sum/count};
     });
     assert(result.mean > 150 && result.mean < 190, 'Matched texture must have Bob reference brightness');
-    fs.writeFileSync('public/characters/wigs/lara_native_red_shading.png', Buffer.from(result.png, 'base64'));
+    fs.writeFileSync('public/characters/wigs/lara_native_shading.png', Buffer.from(result.png, 'base64'));
     console.log('Native red shading mean:', result.mean, '(Bob reference: 166.62)');
   } finally { await browser.close(); }
 })();

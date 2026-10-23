@@ -22,6 +22,7 @@ import type { SceneItemProps } from '@shared/types';
 import { LAYER_DECOR } from '@config';
 import { Wig, HAIR_COLORS } from './Wig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
+import { DEFAULT_WIG_FIT, useWigFitStore } from '@features/inventory/useWigFitStore';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, type LaraVariant } from '@features/scene/LaraVariants';
 import { extractCharacterParts, isHeadMesh } from '@features/scene/characterParts';
 import { CharacterPendant, type CharacterPendantHandle } from '@features/scene/character/CharacterPendant';
@@ -203,6 +204,7 @@ export function LaraWigBust({
   windEnabled?: boolean;
 }) {
   const { scene: laraScene } = useGLTFClone('characters/lara/lara_native.glb');
+  const fit = useWigFitStore(state => state.fits[wigId] ?? DEFAULT_WIG_FIT);
   const LARA_SCALE = 90;
   const pendantRef = useRef<CharacterPendantHandle>(null);
 
@@ -352,13 +354,10 @@ export function LaraWigBust({
           variant={laraVariant}
         />
       )}
-      <Wig
-        id={wigId.replace('hair_', '')}
-        color={hairColor}
-        windEnabled={windEnabled}
-        offset={[0, 31.0, 0]}
-        scale={LARA_SCALE}
-      />
+      <group position={[fit.x, 31 + fit.y, fit.z]} scale={fit.scale}
+        rotation={[fit.rx, fit.ry, fit.rz].map(THREE.MathUtils.degToRad) as [number, number, number]}>
+        <Wig id={wigId.replace('hair_', '')} color={hairColor} windEnabled={windEnabled} scale={LARA_SCALE} />
+      </group>
     </group>
   );
 }
