@@ -177,9 +177,9 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
         {(['character', 'camera'] as const).map(inputControl => {
           const isCamera = inputControl === 'camera';
           const extras = piloting
-            ? EXTRA_CAMERA_CONTROLS.map(button => ({ ...button, label: button.key === 'Elevate' ? 'Monter le Hornet (Espace)' : 'Descendre le Hornet (C)', position: 'hornet-' + button.position }))
+            ? EXTRA_CAMERA_CONTROLS.map(button => ({ ...button, label: button.key === 'Elevate' ? 'Monter le Hornet (Espace)' : 'Descendre le Hornet (C)' }))
             : EXTRA_CAMERA_CONTROLS;
-          const buttons = isCamera !== piloting ? [...DIRECTIONS, ...extras] : DIRECTIONS;
+          const buttons = isCamera ? [...DIRECTIONS, ...extras] : DIRECTIONS;
           return (
             <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
               <div className="virtual-dpad" role="group" aria-label={piloting ? isCamera ? 'Rotation du Hornet' : 'Déplacement du Hornet' : inputControl === 'character' ? 'Déplacement du PNJ' : 'Déplacement de la caméra'}>

@@ -50,6 +50,3 @@
 .virtual-dpad__button--down { grid-area: 3 / 2; }
 .virtual-dpad__button--elevate { grid-area: 1 / 3; }
 .virtual-dpad__button--descend { grid-area: 3 / 3; }
-
-.virtual-dpad__button--hornet-elevate { grid-area: 1 / 1; align-self: start; height: calc((2.75rem - 0.125rem) / 2); }
-.virtual-dpad__button--hornet-descend { grid-area: 1 / 1; align-self: end; height: calc((2.75rem - 0.125rem) / 2); }

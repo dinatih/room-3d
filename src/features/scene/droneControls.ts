@@ -26,7 +26,7 @@ export function droneMovement(keys: Set<string>, yaw: number, pitch: number, tar
   const held = (...names: string[]) => names.some(name => keys.has(name) && !(keys.has('Alt') && name.startsWith('Arrow')));
   const forward = Number(held('z', 'w', 'ArrowUp', 'character:ArrowUp')) - Number(held('s', 'ArrowDown', 'character:ArrowDown'));
   const right = Number(held('d', 'ArrowRight', 'character:ArrowRight')) - Number(held('q', 'a', 'ArrowLeft', 'character:ArrowLeft'));
-  const up = Number(held(' ', 'character:Elevate')) - Number(held('c', 'character:Descend'));
+  const up = Number(held(' ', 'camera:Elevate')) - Number(held('c', 'camera:Descend'));
   target.set(
     Math.sin(yaw) * Math.cos(pitch) * forward - Math.cos(yaw) * right,
     Math.sin(pitch) * forward + up,

@@ -42,7 +42,7 @@ it('pilote avec la croix gauche et réserve la croix droite aux rotations', () =
     assert(movement(['character:' + key]).equals(movement([key])));
     assert(movement(['camera:' + key]).equals(new Vector3()));
   }
-  assert(movement(['character:Elevate'], 2, 1).equals(movement([' '], 2, 1)));
-  assert(movement(['character:Descend'], 2, 1).equals(movement(['c'], 2, 1)));
+  assert(movement(['camera:Elevate'], 2, 1).equals(movement([' '], 2, 1)));
+  assert(movement(['camera:Descend'], 2, 1).equals(movement(['c'], 2, 1)));
   assert(movement(['Alt', 'ArrowLeft', 'character:ArrowUp']).equals(movement(['z'])));
 });
