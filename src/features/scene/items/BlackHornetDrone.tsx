@@ -290,7 +290,7 @@ export function BlackHornetDrone({
       const speed = useDroneControlStore.getState().speed * (droneInput.keys.has('Shift') ? 3 : 1);
       droneMovement(droneInput.keys, droneInput.yaw, droneInput.pitch, moveDirection.current);
       model.position.addScaledVector(moveDirection.current, speed * delta);
-      model.rotation.set(0, droneInput.yaw, 0);
+      model.rotation.set(-droneInput.pitch, droneInput.yaw, 0, 'YXZ');
       return;
     }
     if (flightState.current === 'holding') return;
@@ -381,11 +381,7 @@ export function BlackHornetDrone({
     if (isPreview || !model || !cameraBone.current) return;
     cameraPosition.current.copy(cameraMount.current);
     cameraBone.current.localToWorld(cameraPosition.current);
-    if (flightState.current === 'manual' || flightState.current === 'holding') {
-      cameraForward.current.set(Math.sin(droneInput.yaw) * Math.cos(droneInput.pitch), Math.sin(droneInput.pitch), Math.cos(droneInput.yaw) * Math.cos(droneInput.pitch));
-    } else {
-      model.getWorldDirection(cameraForward.current);
-    }
+    model.getWorldDirection(cameraForward.current);
     const view = cameraState.animalViews.drone ??= { eyes: { x: 0, y: 0, z: 0 }, forward: { x: 0, y: 0, z: 1 }, radius: cameraRadius.current };
     Object.assign(view.eyes, cameraPosition.current);
     Object.assign(view.forward, cameraForward.current);
