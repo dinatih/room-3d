@@ -33,6 +33,7 @@ import { removeGlbLines, glbLocalBBox } from './glbUtils';
 import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import { useSceneStore } from './store/useSceneStore';
 import { cameraState } from './cameraState';
+import { findCharacter } from './characterConfig';
 import { setInventoryGridCameraTarget } from './inventoryGridCamera';
 
 // Composants procéduraux
@@ -463,6 +464,10 @@ function GridItem({ item, position }: { item: UnifiedGridItem; position: [number
 
 export function InventoryObjectsGrid({ wigs = false }: { wigs?: boolean }) {
   const { size } = useThree();
+  const hairColor = useSceneStore(state => state.wigGridHairColor);
+  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const character = findCharacter(activeCharacterId);
+  const laraVariant = character?.isLara !== false ? character?.variant : 'native';
   // Liste complète : objets GLB filtrés + objets procéduraux demandés
   const allItems = useMemo<UnifiedGridItem[]>(() => {
     const glbItems: UnifiedGridItem[] = INVENTORY.filter(isAllowedInventoryItem).map((i) => ({
@@ -691,7 +696,7 @@ export function InventoryObjectsGrid({ wigs = false }: { wigs?: boolean }) {
                   {wigs ? (
                     <Suspense fallback={null}>
                       <group position={[0, -18, 15]}>
-                        <LaraWigBust wigId={item.id} />
+                        <LaraWigBust wigId={item.id} hairColor={hairColor || undefined} laraVariant={laraVariant} />
                       </group>
                     </Suspense>
                   ) : <GridItem item={item} position={[0, 8, 15]} />}

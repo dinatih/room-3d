@@ -106,6 +106,7 @@ export function getRandomGrassType(): GroundType {
 export type GraphicsQualityPreset = GraphicsPreset;
 
 interface SceneStore {
+  wigGridHairColor: string;
   furniture: FurnitureState;
   layers: LayerState;
   extraStates: Record<string, boolean>;
@@ -382,6 +383,7 @@ if (!initialLayers.character) {
 }
 
 export const useSceneStore = create<SceneStore>((set) => ({
+  wigGridHairColor: '',
   furniture: initialFurniture,
   layers: initialLayers,
   extraStates: initialExtraStates,

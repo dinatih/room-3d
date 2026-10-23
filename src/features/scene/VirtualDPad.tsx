@@ -4,6 +4,7 @@ import { useSceneStore } from './store/useSceneStore';
 import { cameraState } from './cameraState';
 import { useDroneControlStore } from './droneControls';
 import { ORBIT_CAMERA_LERP } from './camera/cameraConstants';
+import { ALL_HAIR_COLORS } from './sidepanel/types';
 import './VirtualDPad.scss';
 
 type ArrowKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight';
@@ -30,6 +31,8 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   const target = useSceneStore(state => state.cameraTarget);
   const control = useSceneStore(state => state.arrowControl);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const wigGrid = useSceneStore(state => state.layers.wigGrid);
+  const wigGridHairColor = useSceneStore(state => state.wigGridHairColor);
   const selectControl = useSceneStore(state => state.selectArrowControl);
   const [animal, setAnimal] = useState(cameraState.animalTarget);
   const activeKeys = useRef(new Set<string>());
@@ -129,6 +132,23 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
 
   return (
     <div className="virtual-controls d-flex flex-column align-items-center gap-1">
+      {wigGrid && (
+        <div className="glass-card d-flex align-items-center gap-2 p-2 mb-4 rounded-2" role="toolbar" aria-label="Perruques">
+          <label htmlFor="wig-grid-color" className="small text-nowrap">Couleur</label>
+          <select
+            id="wig-grid-color"
+            className="form-select form-select-sm w-auto"
+            value={wigGridHairColor}
+            onChange={event => {
+              useSceneStore.setState({ wigGridHairColor: event.target.value });
+              cameraState.invalidate?.();
+            }}
+          >
+            <option value="">Couleur d’origine</option>
+            {ALL_HAIR_COLORS.map(color => <option key={color} value={color}>{color}</option>)}
+          </select>
+        </div>
+      )}
       <div className="position-relative d-flex align-items-start gap-3">
         <div className="position-absolute top-0 start-50 translate-middle-x virtual-controls__modes glass-card btn-group btn-group-sm p-1 rounded-2" role="group" aria-label="Zoom caméra">
           {(['in', 'out'] as const).map(direction => {

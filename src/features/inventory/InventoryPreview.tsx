@@ -58,19 +58,6 @@ export interface GlbDebugStats {
 const glbSizeCache = new Map<string, number>();
 type PreviewCameraView = 'free' | string;
 
-const PREVIEW_VIEW_LABELS: Record<string, string> = {
-  north: 'Nord (Arrière)',
-  'north-east': 'Nord-Est',
-  east: 'Est (Profil Droit)',
-  'south-east': 'Sud-Est',
-  south: 'Sud (Face)',
-  'south-west': 'Sud-Ouest',
-  west: 'Ouest (Profil Gauche)',
-  'north-west': 'Nord-Ouest',
-  top: 'Dessus',
-  bottom: 'Dessous',
-};
-
 function getPreviewViewConfig(key: string, elevation = 45): { direction: THREE.Vector3; up: [number, number, number] } {
   try {
     const view = resolveCameraView(key, 'persp', undefined, elevation);
@@ -1360,44 +1347,6 @@ export function InventoryPreview({
             )}
 
           </div>
-          {showing3D && previewView !== 'free' && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: datumBannerBottom,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 1,
-                background: 'rgba(0, 0, 0, 0.8)',
-                color: '#fff',
-                padding: '3px 12px',
-                borderRadius: 12,
-                fontSize: 10,
-                display: 'flex',
-                gap: 10,
-                alignItems: 'center',
-                pointerEvents: 'none',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <span>📐 Vue {cameraProjection === 'ortho' ? 'Ortho' : 'Perspective'} : <strong>{PREVIEW_VIEW_LABELS[previewView] ?? previewView}</strong></span>
-              {previewView === 'top' ? (
-                <>
-                  <span style={{ color: '#00ff66', fontWeight: 'bold' }}>— Axe X (Bras)</span>
-                  <span style={{ color: '#0088ff', fontWeight: 'bold' }}>— Axe Z (Regard)</span>
-                  <span style={{ color: '#ffbb00' }}>┄ ±10 cm</span>
-                </>
-              ) : (
-                <>
-                  <span style={{ color: '#00ff66', fontWeight: 'bold' }}>— 0 cm (Sol)</span>
-                  <span style={{ color: '#ffbb00' }}>┄ +2 cm</span>
-                  <span style={{ color: '#ff4444' }}>┄ -2 cm</span>
-                </>
-              )}
-              <span style={{ color: '#aaa', fontSize: 9 }}>↕ Molette: Zoom | Glisser: Pan</span>
-            </div>
-          )}
           {/* Panneau latéral Section PNJ (Persistant en DOM pour préserver le scroll) */}
           <div
               style={{
