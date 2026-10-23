@@ -135,8 +135,8 @@ async function main() {
       const channel = doc.animations[0].channels.find(c => `${doc.nodes[c.target.node].name.replace(/:/g, '')}.${c.target.path === 'rotation' ? 'quaternion' : c.target.path === 'translation' ? 'position' : c.target.path}` === out.track.name);
       doc.animations[0].samplers[channel.sampler] = { input, output: accessor(out.values, out.type), interpolation: 'LINEAR' };
     }
-    if (file === 'anim_putdown_box_floor.glb') {
-      // The trimmed box placement retains double support throughout (no step).
+    if (/^anim_(pickup_box_floor_(male|female)|lift_box_(male|female)|putdown_box_floor)\.glb$/.test(file)) {
+      // The five box interactions retain double support throughout (no step).
       const scene = doc.scenes[doc.scene || 0];
       scene.extras = { ...scene.extras, footContacts: ['Left', 'Right'].map(side => ({ side, start: times[0], end: times[times.length - 1] })) };
     }

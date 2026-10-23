@@ -52,7 +52,7 @@ sont évaluées directement pour éviter aussi les états résiduels d'une actio
 arrêtée en fin de clip. Le contrôle compare chaque quaternion corrigé à sa
 référence originale et vérifie la borne angulaire de la correction.
 
-### Patinage vers l'avant : correction ciblée de « Reposer la boîte »
+### Patinage vers l'avant : les cinq interactions de boîte ACCAD
 
 Observation utilisateur : **« Reposer la boîte au sol »**, personnage **Native
 (Lara)**, vers l'image **63 / 72**, à environ **2,12 s**, en vue orthographique.
@@ -69,18 +69,33 @@ et orteils sont ancrés à leur position initiale par résolution des jambes, en
 conservant le balancement horizontal du bassin. Le bassin peut être abaissé
 uniquement si un appui dépasserait la portée de la jambe.
 
-Cette correction est ciblée sur `anim_putdown_box_floor.glb`. Les pistes brutes
+La correction couvre maintenant `anim_putdown_box_floor.glb`, les deux
+`anim_pickup_box_floor_{male,female}.glb` et les deux
+`anim_lift_box_{male,female}.glb`. Ces cinq segments gardent leurs deux pieds
+en appui ; la gestuelle de conversation et la transition couchée ne reçoivent
+pas ce verrouillage intégral, car leurs appuis changent. Les pistes brutes
 du GLB ne sont pas modifiées par cette étape : ses métadonnées demandent au lecteur
 de l'application de résoudre les contacts après retargeting. Un lecteur GLB externe
 qui ignore ces métadonnées conservera le glissement source. La génération dans
 `scripts/correct-accad-feet.cjs` réinscrit les annotations lors des prochains exports.
 
-Le test `tests/unit/snake-foot-contacts.test.cjs` couvre maintenant aussi ce clip
+Le test `tests/unit/snake-foot-contacts.test.cjs` couvre les cinq clips de boîte
 sur Lara, Xbot et Ybot, avec mesures à 240 Hz, conservation de la trajectoire
 horizontale des hanches et équivalence après sérialisation vers le worker.
-La dérive initiale mesurée est de 3,075 cm sur Lara et 3,740 cm sur Xbot ;
-l’écart maximal corrigé des chevilles/orteils reste inférieur à 0,017 mm sur les
-trois personnages, y compris entre les clés.
+Mesures sur Lara à 240 Hz (écart corrigé en 3D des chevilles et orteils,
+y compris entre les clés) :
+
+| Clip | Dérive horizontale initiale | Écart maximal corrigé |
+| --- | --- | --- |
+| Ramasser H | 4,425 cm | 0,481 mm |
+| Ramasser F | 6,931 cm | 0,112 mm |
+| Soulever H | 1,517 cm | 0,020 mm |
+| Soulever F | 6,654 cm | 0,827 mm |
+| Reposer | 3,075 cm | 0,017 mm |
+
+Les 15 combinaisons des cinq clips avec Lara, Ybot et Xbot passent le contrôle
+de dérive inférieur à 1 mm, ainsi que la conservation du mouvement horizontal
+du bassin et l'équivalence avec le worker.
 Les autres clips doivent faire l'objet de leurs propres annotations : ne pas
 verrouiller une marche, un pivot ou un pied levé pour masquer un glissement.
 

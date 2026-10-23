@@ -9,6 +9,12 @@ const { captureAnimationRig, restoreAnimationRig } = require('../../src/features
 
 for (const fixture of [
   { name: 'Snake', path: 'mixamo/anim_snake_hip_hop_dance.glb', id: 'snake-hip-hop-dance', contacts: 12, frames: 459 },
+  ...[
+    ['pickup_box_floor_male', 'pickup-box-floor-male', 134],
+    ['pickup_box_floor_female', 'pickup-box-floor-female', 179],
+    ['lift_box_male', 'lift-box-male', 132],
+    ['lift_box_female', 'lift-box-female', 251],
+  ].map(([file, id, frames]) => ({ name: `ACCAD ${id}`, path: `npz/accad/anim_${file}.glb`, id, contacts: 2, frames })),
   { name: 'ACCAD poser la boîte', path: 'npz/accad/anim_putdown_box_floor.glb', id: 'putdown-box-floor', contacts: 2, frames: 72 },
 ]) it(`${fixture.name} conserve les appuis sur Lara, Ybot et Xbot, y compris dans le worker`, async t => {
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
