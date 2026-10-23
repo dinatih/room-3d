@@ -232,6 +232,13 @@ export function useCameraFrameUpdate({
         }
 
         // PageUp/PageDown ou Ctrl+Haut/Bas — zoom (dolly ou zoom orthographique)
+        if (k.has('camera:Elevate') || k.has('camera:Descend')) {
+          const panStep = Math.max(3, ctrl.target.distanceTo(activeCamera.position) * 0.015) * dt;
+          const dy = (k.has('camera:Elevate') ? 1 : -1) * panStep;
+          activeCamera.position.y += dy;
+          ctrl.target.y += dy;
+          ctrl.update();
+        }
         const hasZoomIn = k.has('PageUp') || k.has('CtrlArrowUp');
         const hasZoomOut = k.has('PageDown') || k.has('CtrlArrowDown');
         if (hasZoomIn || hasZoomOut) {
@@ -330,6 +337,9 @@ export function useCameraFrameUpdate({
           }
         }
       }
+
+      if (k.has('camera:Elevate')) followPos.current.y += sp;
+      if (k.has('camera:Descend')) followPos.current.y -= sp;
     }
 
     updateFollowLook();

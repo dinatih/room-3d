@@ -382,7 +382,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
         // Petite avance de 2 cm dans la direction du regard pour éliminer tout risque de clipping avec les cils/nez
         const eyeX = eyes.x + fwd.x * 2.0;
-        const eyeY = eyes.y + fwd.y * 2.0;
+        const eyeY = eyes.y + fwd.y * 2.0 + (followPos.current.y - activeFollowH());
         const eyeZ = eyes.z + fwd.z * 2.0;
 
         const storeLayers = useSceneStore.getState().layers;
