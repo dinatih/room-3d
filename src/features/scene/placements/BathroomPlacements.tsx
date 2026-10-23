@@ -8,7 +8,7 @@ import type { Item } from '@shared/types';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 
 import { WaterHeater, WH_W, WH_D, WH_H } from '../items/WaterHeater';
-import { Toilet, TOILET_D } from '../items/Toilet';
+import { Toilet, TOILET_W, TOILET_D } from '../items/Toilet';
 import { Shower, SHOWER_W, SHOWER_D } from '../items/Shower';
 import { Havback49514017, HAVBACK_D } from '../items/Havback49514017';
 import { BathroomCabinetWest, BathroomCabinetEast } from '../items/BathroomCabinet';
@@ -26,6 +26,15 @@ import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WAL
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
+
+// Retrait de 5 cm sur chaque bord pour dégager l'accès aux meubles et boîtes DRÖNA.
+const TOILET_OBSTACLE_INSET = 5;
+const TOILET_FOOTPRINT = [
+  { x: -TOILET_W / 2 + TOILET_OBSTACLE_INSET, z: -TOILET_D / 2 + TOILET_OBSTACLE_INSET },
+  { x: TOILET_W / 2 - TOILET_OBSTACLE_INSET, z: -TOILET_D / 2 + TOILET_OBSTACLE_INSET },
+  { x: TOILET_W / 2 - TOILET_OBSTACLE_INSET, z: TOILET_D / 2 - TOILET_OBSTACLE_INSET },
+  { x: -TOILET_W / 2 + TOILET_OBSTACLE_INSET, z: TOILET_D / 2 - TOILET_OBSTACLE_INSET },
+];
 
 export function BathroomEquipment() {
   const as = useFurnitureToggles([
@@ -53,7 +62,7 @@ export function BathroomEquipment() {
 
       {/* WC President */}
       <group position={[BATH_WEST_WALL + 60, 1, BATH_NORTH_WALL + TOILET_D / 2 + 1.5]} userData={{ skipMerge: true, animUnit: true, itemName: 'WC President', hoverAction: { label: 'WC President', actions: [...getObjectActionIds('toilet'), 'smart-object:::toilet:::use'] } }}>
-        <NavigationObstacle id="toilet"><Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="toilet" footprint={TOILET_FOOTPRINT}><Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
 
       {/* Ampoule SDB (TRÅDFRI) */}
