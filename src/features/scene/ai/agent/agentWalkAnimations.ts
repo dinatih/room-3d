@@ -34,24 +34,25 @@ export const NPC_WALK_ANIMATIONS = [
  */
 export const ANIMATION_WALK_SPEEDS: Record<string, number> = {
   ...Object.fromEntries(fabWalks.map(def => [def.id, def.walkSpeed!])),
-  'walking': 162.0,
-  'walk': 162.0,
-  'female-walk': 124.0,
+  'walking': 140.0,
+  'walk': 140.0,
+  'female-walk': 113.0,
   'walking-backward': 116.0,
-  'walking-slow': 28.5,
-  'happy-walk': 140.0,
-  'happy-walk-not-in-place': 162.0,
-  'swagger-walk': 92.0,
-  'catwalk-walking-not-in-place': 103.0,
-  'running': 360.0,
-  'miley-armature-walk-f': 110.0,
-  'miley-armature-elegant-walk-2l': 120.0,
-  'miley-armature-catwalk-loop': 115.0,
-  'miley-armature-walk-relaxed-loop': 100.0,
-  'miley-armature-41-provocative-walk': 95.0,
+  'walking-slow': 27.2,
+  'happy-walk': 147.0,
+  'happy-walk-not-in-place': 141.0,
+  'swagger-walk': 82.0,
+  'catwalk-walking-not-in-place': 91.0,
+  'goofy-running': 154.0,
+  'running': 250.0,
+  'miley-armature-walk-f': 68.0,
+  'miley-armature-elegant-walk-2l': 56.0,
+  'miley-armature-catwalk-loop': 88.0,
+  'miley-armature-walk-relaxed-loop': 37.0,
+  'miley-armature-41-provocative-walk': 88.0,
 };
 
-export const DEFAULT_WALK_SPEED = 162.0;
+export const DEFAULT_WALK_SPEED = 140.0;
 
 export function getWalkSpeedForAnimation(animNameOrId?: string | null): number {
   if (!animNameOrId) return DEFAULT_WALK_SPEED;
