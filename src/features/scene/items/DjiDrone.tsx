@@ -189,15 +189,15 @@ export function DjiDrone({
 }
 
 export function DjiNeoDrone(props: { isPreview?: boolean; previewAnim?: string; onSize?: (size: THREE.Vector3) => void }) {
-  return <DjiDrone glbPath="/items/dji-neo/dji-neo.glb" targetMaxDimCm={15.7} itemName="Drone DJI Neo" rotationY={Math.PI / 2} {...props} />;
+  return <DjiDrone glbPath="/items/dji-neo/dji-neo.glb" targetMaxDimCm={15.7} itemName="Drone DJI Neo" rotationY={-Math.PI / 2} {...props} />;
 }
 
 export function DjiAvata2Drone(props: { isPreview?: boolean; previewAnim?: string; onSize?: (size: THREE.Vector3) => void }) {
-  return <DjiDrone glbPath="/items/dji-avata-2/dji-avata-2.glb" targetMaxDimCm={21.2} itemName="Drone DJI Avata 2" rotationY={Math.PI} {...props} />;
+  return <DjiDrone glbPath="/items/dji-avata-2/dji-avata-2.glb" targetMaxDimCm={21.2} itemName="Drone DJI Avata 2" {...props} />;
 }
 
 export function DjiFpvDrone(props: { isPreview?: boolean; previewAnim?: string; onSize?: (size: THREE.Vector3) => void }) {
-  return <DjiDrone glbPath="/items/dji-fpv/dji-fpv.glb" targetMaxDimCm={31.2} itemName="Drone DJI FPV" rotationY={Math.PI} {...props} />;
+  return <DjiDrone glbPath="/items/dji-fpv/dji-fpv.glb" targetMaxDimCm={31.2} itemName="Drone DJI FPV" {...props} />;
 }
 
 useGLTF.preload('/items/dji-neo/dji-neo.glb');
