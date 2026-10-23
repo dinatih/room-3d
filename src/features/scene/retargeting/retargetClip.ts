@@ -458,7 +458,9 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
 
         const animNameLower = rawClip.name.toLowerCase();
         const isYoga = animNameLower.includes('yoga');
-        const isWalk = !isYoga && (animNameLower.includes('walk') ||
+        // CC clips already carry authored root + pelvis motion. Their names
+        // (including combat sidesteps) must not replace it with in-place motion.
+        const isWalk = !ccRoot && !isYoga && (animNameLower.includes('walk') ||
                         animNameLower.includes('run') ||
                         animNameLower.includes('step') ||
                         animNameLower.includes('stairs')) &&

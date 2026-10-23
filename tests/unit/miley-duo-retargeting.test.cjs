@@ -8,16 +8,20 @@ const { ANIMATION_DEFINITIONS } = require('../../src/features/scene/animations/a
 const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
 const { captureAnimationRig, restoreAnimationRig } = require('../../src/features/scene/character/animationSerialization.ts');
 
-it('les 58 clips des 29 duos Miley respectent les unités et la hauteur de repos CC, y compris dans le worker', async t => {
+it('les 172 clips Miley (duos et solos) respectent la source CC, y compris dans le worker', async t => {
  const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
  const loader = new GLTFLoader(); loader.setDRACOLoader({preload(){}}); loader.register(()=>({name:'SkeletonOnly',loadMesh:()=>Promise.resolve(new T.Group())}));
  const read = async path => {const b=fs.readFileSync('public/'+path);return loader.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');};
  const duos=DUO_ANIMATIONS.filter(d=>d.animA.startsWith('miley-')&&d.animB.startsWith('miley-'));
  assert.equal(duos.length,29);
+ const paired=new Set(DUO_ANIMATIONS.flatMap(d=>[d.animA,d.animB]));
+ const solos=ANIMATION_DEFINITIONS.filter(d=>d.path.startsWith('animations/miley/')&&!paired.has(d.id));
+ assert.equal(solos.length,114);
+ const entries=[...duos,...solos.map(def=>({id:def.id,animA:def.id}))];
  let maximum=0;
- for(const duo of duos) {
+ for(const duo of entries) {
   const durations=[];
-  for(const id of [duo.animA,duo.animB]) {
+  for(const id of [duo.animA,...(duo.animB?[duo.animB]:[])]) {
    const def=ANIMATION_DEFINITIONS.find(d=>d.id===id), source=await read(def.path), raw=source.animations[0];raw.name=id;durations.push(raw.duration);
    const target=(await read('characters/xbot/Xbot_official.glb')).scene;target.scale.multiplyScalar(100);target.updateMatrixWorld(true);
    target.traverse(n=>{n.defaultPosition=n.position.clone();n.restLocalQuaternion=n.quaternion.clone();n.restWorldQuaternion=n.getWorldQuaternion(new T.Quaternion());});
@@ -41,7 +45,7 @@ it('les 58 clips des 29 duos Miley respectent les unités et la hauteur de repos
    assert.ok(result.tracks.every(tr=>[...tr.values].every(Number.isFinite)),id);
    assert.equal(result.duration,raw.duration);
   }
-  assert.ok(Math.abs(durations[0]-durations[1]) <= 2 ** -23 * Math.max(...durations), duo.id+' source sync (Float32 precision)');
+  if(duo.animB) assert.ok(Math.abs(durations[0]-durations[1]) <= 2 ** -23 * Math.max(...durations), duo.id+' source sync (Float32 precision)');
  }
  t.diagnostic(`Maximum pelvis trajectory error against source FK: ${maximum.toFixed(6)} cm`);
 });

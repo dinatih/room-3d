@@ -166,3 +166,10 @@ appuis après retargeting.
 Le [premier passage sur les 29 duos Miley](miley-duos.md) traite les unités CC,
 la référence de hauteur des hanches et l'attente finale de KO3. Il distingue
 ces corrections des contacts et placements qui restent à contrôler en paire.
+
+## Solos Miley : trajectoire supprimée par le nom
+
+Le [contrôle des 114 solos](miley-solos.md) a révélé que la détection de marche
+par les mots `step`, `walk` ou `run` pouvait annuler le mouvement de hanches
+d'une esquive. Les clips CC utilisent désormais leur trajectoire native ;
+le mode sur place relève du verrouillage explicite, pas du nom du fichier.

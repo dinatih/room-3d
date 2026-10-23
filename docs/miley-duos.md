@@ -92,3 +92,10 @@ catalogue restent à contrôler duo par duo ; ils n'ont pas été recalibrés ic
 
 Voir [les défauts récurrents d'animation](animation-defects.md) pour les règles
 sur les biais de cheville, la hauteur et le patinage.
+
+## Extension aux solos
+
+Le [contrôle des 114 solos](miley-solos.md) utilise les mêmes scripts avec
+`--solo`. Le test de coordonnées couvre désormais les 172 clips Miley et empêche
+également la suppression du mouvement natif CC par une détection de marche
+fondée sur le nom.

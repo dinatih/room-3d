@@ -11,10 +11,14 @@ const { resolveTargetBoneName } = require('../src/features/scene/retargeting/bon
  const loader = new GLTFLoader(); loader.setDRACOLoader({preload(){}}); loader.register(()=>({name:'SkeletonOnly',loadMesh:()=>Promise.resolve(new T.Group())}));
  const read = async file => { const b=fs.readFileSync('public/'+file); return loader.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),''); };
  const duos=DUO_ANIMATIONS.filter(d=>d.animA.startsWith('miley-')&&d.animB.startsWith('miley-'));
+ const paired=new Set(DUO_ANIMATIONS.flatMap(d=>[d.animA,d.animB]));
+ const solo=process.argv.includes('--solo');
+ const entries=solo ? ANIMATION_DEFINITIONS.filter(d=>d.path.startsWith('animations/miley/')&&!paired.has(d.id)).map(d=>({id:d.id,label:d.label,animA:d.id})) : duos;
+ const output=solo ? '/tmp/miley-solos-audit.json' : '/tmp/miley-duos-audit.json';
  const report=[];
- for(const duo of duos){
+ for(const duo of entries){
   const actors=[];
-  for(const id of [duo.animA,duo.animB]){
+  for(const id of [duo.animA,...(duo.animB?[duo.animB]:[])]){
    const def=ANIMATION_DEFINITIONS.find(d=>d.id===id), source=await read(def.path), raw=source.animations[0];raw.name=id;
    const target=(await read('characters/xbot/Xbot_official.glb')).scene;target.scale.multiplyScalar(100);target.updateMatrixWorld(true);
    target.traverse(n=>{n.defaultPosition=n.position.clone();n.restLocalQuaternion=n.quaternion.clone();n.restWorldQuaternion=n.getWorldQuaternion(new T.Quaternion());});
@@ -30,12 +34,12 @@ const { resolveTargetBoneName } = require('../src/features/scene/retargeting/bon
     const deviations = raw.tracks.map(tr=>{const at=[...tr.createInterpolant().evaluate(end)],width=tr.getValueSize();let maximum=0;for(let i=0;i<tr.times.length;i++){if(tr.times[i]<=end)continue;const values=tr.values.slice(i*width,(i+1)*width);const error=tr.name.endsWith('.quaternion')?new T.Quaternion().fromArray(at).normalize().angleTo(new T.Quaternion().fromArray(values).normalize())*180/Math.PI:Math.hypot(...values.map((v,j)=>v-at[j]));maximum=Math.max(maximum,error);}return {name:tr.name,maximum};}).sort((a,b)=>b.maximum-a.maximum);
     console.log('KO3 tail deviations after '+end+' s: '+JSON.stringify(deviations.slice(0,8)));
    }
-   actors.push({id,path:def.path,duration:raw.duration,registeredDuration:def.duration,rootMotionSpace:def.rootMotionSpace,sourceRest,translations:raw.tracks.filter(t=>t.name.endsWith('.position')).map(t=>({name:t.name,count:t.times.length,maxAbs:t.values.reduce((m,v)=>Math.max(m,Math.abs(v)),0),first:[...t.values.slice(0,3)],last:[...t.values.slice(-3)]})),samples});
+   actors.push({id,path:def.path,category:def.category,duration:raw.duration,registeredDuration:def.duration,rootMotionSpace:def.rootMotionSpace,sourceRest,translations:raw.tracks.filter(t=>t.name.endsWith('.position')).map(t=>({name:t.name,count:t.times.length,maxAbs:t.values.reduce((m,v)=>Math.max(m,Math.abs(v)),0),first:[...t.values.slice(0,3)],last:[...t.values.slice(-3)]})),samples});
   }
   report.push({id:duo.id,label:duo.label,offsetB:duo.offsetB,rotB:duo.rotB,actors});
  }
- fs.writeFileSync('/tmp/miley-duos-audit.json',JSON.stringify(report,null,2));
- for (const duo of report) { const [a,b]=duo.actors.map(a=>a.duration); if(Math.abs(a-b)>2**-23*Math.max(a,b)) console.log(`UNRESOLVED TIMING ${duo.id}: ${a.toFixed(3)} / ${b.toFixed(3)} s`); }
- console.log(`${report.length} duos / ${report.length*2} clips: /tmp/miley-duos-audit.json`);
+ fs.writeFileSync(output,JSON.stringify(report,null,2));
+ for (const duo of report) { const [a,b]=duo.actors.map(a=>a.duration); if(b!==undefined && Math.abs(a-b)>2**-23*Math.max(a,b)) console.log(`UNRESOLVED TIMING ${duo.id}: ${a.toFixed(3)} / ${b.toFixed(3)} s`); }
+ console.log(`${report.length} ${solo?'solos':'duos'} / ${report.reduce((n,d)=>n+d.actors.length,0)} clips: ${output}`);
  for(const d of report) console.log(JSON.stringify({id:d.id,offset:d.offsetB,durations:d.actors.map(a=>a.duration),hips:d.actors.map(a=>a.samples.map(s=>s.target[0].position.map(v=>+v.toFixed(1))))}));
 })().catch(e=>{console.error(e);process.exitCode=1});
