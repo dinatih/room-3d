@@ -4,8 +4,15 @@ import { CHARACTERS, findCharacter, npcLabel, isCharacterVisibleInMode } from '.
 import { useSceneStore } from './store/useSceneStore';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 
-export function CharacterSelect({ hideUI = false }: { hideUI?: boolean }) {
-  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+export function CharacterSelect({ hideUI = false, value, onChange, characters = CHARACTERS, label = 'Changer le PNJ sélectionné' }: {
+  hideUI?: boolean;
+  value?: string;
+  onChange?: (id: string) => void;
+  characters?: typeof CHARACTERS;
+  label?: string;
+}) {
+  const sceneCharacterId = useSceneStore(state => state.activeCharacterId);
+  const activeCharacterId = value ?? sceneCharacterId;
   const activeChar = findCharacter(activeCharacterId);
   const layers = useSceneStore(state => state.layers);
   const activeMainIds = useSceneStore(state => state.activeMainIds);
@@ -67,7 +74,8 @@ export function CharacterSelect({ hideUI = false }: { hideUI?: boolean }) {
           popover.style.maxHeight = `${(above ? rect.top : window.innerHeight - rect.bottom) - 16}px`;
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        title="Changer le PNJ sélectionné"
+        title={label}
+        aria-label={label}
       >
         <span>{activeChar ? npcLabel(activeChar) : activeCharacterId}</span>
         <i className="bi bi-chevron-down" aria-hidden="true" />
@@ -94,7 +102,7 @@ export function CharacterSelect({ hideUI = false }: { hideUI?: boolean }) {
               Affiché dans la scène
             </div>
             <div className="row row-cols-2 g-1">
-              {CHARACTERS.map(c => (
+              {characters.map(c => (
                 <div key={c.id} className="col">
                   <button
                     type="button"
@@ -102,7 +110,7 @@ export function CharacterSelect({ hideUI = false }: { hideUI?: boolean }) {
                     aria-pressed={c.id === activeCharacterId}
                     title={visibleCharacterIds.has(c.id) ? 'Affiché dans la scène' : 'Non affiché dans la scène'}
                     onClick={() => {
-                      useSceneStore.getState().setActiveCharacterId(c.id);
+                      (onChange ?? useSceneStore.getState().setActiveCharacterId)(c.id);
                       characterPopoverRef.current!.hidePopover();
                     }}
                   >

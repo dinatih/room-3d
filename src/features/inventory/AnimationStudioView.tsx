@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
 import { CHARACTERS, UNITREE_H2 } from '@features/scene/characterConfig';
 import { ANIM_CATEGORIES } from '@features/scene/CharacterAnimSelector';
+import { CharacterSelect } from '@features/scene/CharacterSelect';
 import { InventoryPreview } from './InventoryPreview';
 import { AnimFrameController } from './AnimFrameController';
 import { DevAnnotationPanel } from './DevAnnotationPanel';
@@ -300,19 +301,11 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
             initialAnim={mode === 'solo' ? active.id : undefined} initialDuoAnim={active.duo} initialDuoPartner={partner?.id}
             toolbarPrefix={
               <div className="d-flex align-items-center gap-1 flex-shrink-0">
-                <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">{mode === 'solo' ? 'Personnage' : 'Leader A'}
-                  <select aria-label="Personnage testé" className="form-select form-select-sm py-0 ps-2 pe-4 w-auto small bg-transparent text-body border-secondary" value={leader?.id ?? ''} onChange={e => setActorId(e.target.value)}>
-                    {characters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </label>
+                <CharacterSelect value={leader?.id} onChange={setActorId} characters={characters} label={mode === 'solo' ? 'Personnage testé' : 'Leader A'} />
                 {mode === 'duo' && <>
                   <button type="button" className="btn btn-sm py-0 px-2 btn-outline-secondary" aria-label="Échanger les personnages" disabled={!partner}
                     onClick={() => { setActorId(partner!.id); setPartnerId(leader.id); }}><i className="bi bi-arrow-left-right" /></button>
-                  <label className="d-flex align-items-center gap-1 small text-muted text-nowrap mb-0">Partenaire B
-                    <select aria-label="Partenaire du duo" className="form-select form-select-sm py-0 ps-2 pe-4 w-auto small bg-transparent text-body border-secondary" value={partner?.id ?? ''} onChange={e => setPartnerId(e.target.value)}>
-                      {partners.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  </label>
+                  <CharacterSelect value={partner?.id} onChange={setPartnerId} characters={partners} label="Partenaire du duo" />
                 </>}
               </div>
             } />
