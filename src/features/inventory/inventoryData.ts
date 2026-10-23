@@ -354,6 +354,15 @@ Commandes & Suivi :
     notes: 'Quantité comptée en paquets de 6 bobines. Dimensions non renseignées. ASIN : B08962D4Z9.',
   },
 
+  {
+    id: 'cons-fil-dentaire-500', name: 'Bâtonnets de fil dentaire — lot de 500',
+    brand: '', category: 'consumable', qty: 1, dims: { w: 0, d: 0, h: 0 },
+    url: 'https://www.temu.com/fr/g-606633241486900.html',
+    photos: ['items/cons-fil-dentaire-500/fil-dentaire-500.jpg'],
+    description: 'Lot de 500 bâtonnets porte-fil dentaire pour le nettoyage interdentaire et l’hygiène bucco-dentaire. Format portable.',
+    notes: 'Quantité comptée en lots de 500. Dimensions et prix non renseignés. Référence Temu : 606633241486900.',
+  },
+
   // ── SACS / BAGAGERIE ──────────────────────────────────────────────────────────
   { id: 'sac-banane-kalenji', name: 'Sac banane Kalenji Activ Mblty noir', brand: 'Kalenji', category: 'clothing', qty: 2, dims: { w: 28, d: 8, h: 14 }, notes: '5 L — 3 poches — porte-bouteille 75 cl — sangle stabilisatrice amovible — imperméable — Decathlon', photos: ['items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-1.jpg', 'items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-2.jpg', 'items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-3.jpg', 'items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-4.jpg', 'items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-5.jpg', 'items/sac-banane-kalenji-activ-mblty-noir/sac-banane-kalenji-activ-mblty-noir-6.jpg'] },
 
