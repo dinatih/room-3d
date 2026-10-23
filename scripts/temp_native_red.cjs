@@ -29,7 +29,7 @@ if (process.argv.includes('--inspect-head')) {
     const errors = [];
     page.on('pageerror', error => { errors.push(error.message); console.error(error.message); });
     page.on('console', message => { if (message.type() === 'error') console.error(message.text()); });
-    if (process.argv.includes('--fit') || process.argv.includes('--alignment')) {
+    if (process.argv.includes('--fit') || process.argv.includes('--alignment') || process.argv.includes('--cap')) {
       await page.goto('http://localhost:5173/characters/wigs/lara_native_shading.png');
       await page.evaluate(async () => {
         const base = document.createElement('base');
@@ -74,6 +74,23 @@ if (process.argv.includes('--inspect-head')) {
       assert.equal(await input.evaluate(el => el.value), '100');
       assert.deepEqual(errors, []);
       console.log('Fitting panel: one-time scale reset, preserved alignment, new saved edits and reset passed');
+      if (process.argv.includes('--cap')) {
+        const result = await page.evaluate(async () => {
+          const THREE = await import('/node_modules/.vite/deps/three.js');
+          const { createBaseballCapMaterial } = await import('/src/features/scene/items/BaseballCap.tsx');
+          const { applyLaraVariantStyles, applyLaraRealisticTextures } = await import('/src/features/scene/LaraVariants.ts');
+          const material = createBaseballCapMaterial();
+          const cap = new THREE.Mesh(new THREE.BoxGeometry(), material);
+          cap.userData.isBaseballCap = true;
+          for (const realistic of [true, false, true]) {
+            applyLaraVariantStyles(cap, 'vivida');
+            applyLaraRealisticTextures(cap, realistic);
+          }
+          return {sameMaterial:cap.material === material, color:cap.material.color.getHex(), specular:cap.material.specularIntensity, roughness:cap.material.roughness, toneMapped:cap.material.toneMapped};
+        });
+        assert.deepEqual(result, {sameMaterial:true, color:0xff0000, specular:0, roughness:1, toneMapped:false});
+        console.log('Cap material survives Lara styling and realistic texture toggles:', result);
+      }
       if (process.argv.includes('--alignment')) {
         await page.evaluate(async () => {
           const { default: React } = await import('/node_modules/.vite/deps/react.js');

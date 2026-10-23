@@ -85,7 +85,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
   model.traverse(node => {
     if ((node as THREE.Mesh).isMesh) {
-      if (node.userData?.isCustomHair || node.userData?.isPendant || node.userData?.isNecklaceCord) return; // Preserve hair and silver jewelry
+      if (node.userData?.isCustomHair || node.userData?.isBaseballCap || node.userData?.isPendant || node.userData?.isNecklaceCord) return; // Preserve independently styled hair and accessories.
       const mesh = node as THREE.Mesh;
       const meshName = mesh.name.toLowerCase();
       const isMarissaBareFeet = isMarissa && meshName.startsWith('body_bare_feet');
@@ -848,7 +848,7 @@ export function applyLaraRealisticTextures(model: THREE.Object3D, realistic: boo
   model.traverse(node => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh) return;
-    if (mesh.userData?.isCustomHair || mesh.userData?.isWigRoot || mesh.userData?.isPendant || mesh.userData?.isNecklaceCord) return;
+    if (mesh.userData?.isCustomHair || mesh.userData?.isBaseballCap || mesh.userData?.isWigRoot || mesh.userData?.isPendant || mesh.userData?.isNecklaceCord) return;
 
     const meshName = (mesh.name || '').toLowerCase();
     const mat = mesh.material;

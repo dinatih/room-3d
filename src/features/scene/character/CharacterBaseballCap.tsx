@@ -57,6 +57,7 @@ export function CharacterBaseballCap({ attachTo, color = 0xff0000 }: CharacterBa
         mesh.castShadow = true;
         mesh.receiveShadow = true;
         mesh.userData.isHeadPart = true;
+        mesh.userData.isBaseballCap = true;
         mesh.userData.itemName = 'Casquette baseball';
         mesh.layers.set(LAYER_WALKER);
       }
