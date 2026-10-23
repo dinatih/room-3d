@@ -2,6 +2,7 @@ import { SmartObjectDef, SmartObjectCategory, AgentInstruction, ResolvedSmartObj
 import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
+import { INTERX_DUO_ANIMATIONS } from '../animations/interxManifest';
 import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
 import { BATH_WEST_WALL, ROOM_D, ROOM_W, pNorth } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
@@ -869,6 +870,22 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         duoCount: 3,
       }
     ]
+  },
+  'interx-affection-point': {
+    id: 'interx-affection-point',
+    name: '🫂 Point Duo Inter-X',
+    category: 'decor',
+    position: [180, 0, 100],
+    slots: [{
+      slotId: 'interx-random',
+      name: 'Jouer un duo Inter-X aléatoire',
+      isDuo: true,
+      duoPool: INTERX_DUO_ANIMATIONS.filter(duo => duo.tags?.some(tag => [
+        'hug', 'kiss-on-cheek', 'pat-on-cheek', 'touch-head', 'imitate',
+        'massage-shoulder', 'carry-back', 'posing', 'pat-on-back',
+      ].includes(tag))).map(duo => duo.id),
+      duoCount: 1,
+    }],
   },
   'inyeong-cha-hugs-point': {
     id: 'inyeong-cha-hugs-point',
