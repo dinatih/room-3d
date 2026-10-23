@@ -12,8 +12,8 @@ export function getWalkCycleSpeed(clip: THREE.AnimationClip, scene: THREE.Object
   const cached = speeds.get(clip);
   if (cached !== undefined) return cached;
   const rig = restoreAnimationRig(captureAnimationRig(scene));
-  const feet = ['LeftFoot', 'RightFoot'].map(side => {
-    const name = resolveTargetBoneName(rig, side);
+  const feet = ['Left', 'Right'].map(side => {
+    const name = resolveTargetBoneName(rig, `${side}ToeBase`) ?? resolveTargetBoneName(rig, `${side}Foot`);
     return name ? rig.getObjectByName(name) : null;
   });
   if (!feet[0] || !feet[1]) {
@@ -28,21 +28,26 @@ export function getWalkCycleSpeed(clip: THREE.AnimationClip, scene: THREE.Object
   const mixer = new THREE.AnimationMixer(rig);
   mixer.clipAction(clip).setLoop(THREE.LoopOnce, 1).play().clampWhenFinished = true;
   let previous: THREE.Vector3[] | undefined;
-  let distance = 0;
+  let previousTime = times[0], distance = 0, supportDuration = 0;
   for (const time of times) {
     mixer.setTime(time);
     rig.updateMatrixWorld(true);
     const points = feet.map(foot => foot!.getWorldPosition(new THREE.Vector3()));
     if (previous) {
-      // The lower ankle is the support foot. Measure that same foot across the interval.
+      // Measure longitudinal travel of the lower forefoot, excluding its forward swing.
       const support = points[0].y + previous[0].y <= points[1].y + previous[1].y ? 0 : 1;
-      distance += Math.hypot(points[support].x - previous[support].x, points[support].z - previous[support].z);
+      const travel = (previous[support].z - points[support].z) * (clip.name === 'walking-backward' ? -1 : 1);
+      if (travel > 0) {
+        distance += travel;
+        supportDuration += time - previousTime;
+      }
     }
     previous = points;
+    previousTime = time;
   }
   mixer.stopAllAction();
   mixer.uncacheRoot(rig);
-  const speed = distance / (times[times.length - 1] - times[0]);
+  const speed = distance / supportDuration;
   if (!Number.isFinite(speed) || speed <= 0) {
     ignoredClips.add(clip);
     return null;

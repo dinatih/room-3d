@@ -4,6 +4,8 @@ const fs = require('node:fs');
 require('../support/load-ts.cjs');
 const THREE = require('three');
 const { getWalkCycleSpeed, walkTimeScale } = require('../../src/features/scene/character/walkCadence.ts');
+const { NPC_WALK_ANIMATIONS, ANIMATION_WALK_SPEEDS } = require('../../src/features/scene/ai/agent/agentWalkAnimations.ts');
+const { ANIMATION_DEFINITIONS } = require('../../src/features/scene/animations/animationRegistry.ts');
 
 function fixture(scale = 1) {
   const rig = new THREE.Group();
@@ -38,6 +40,26 @@ it('synchronise la phase avec la distance, quels que soient le FPS et les ralent
   assert.equal(walkTimeScale(0, 1 / 60, 100), 0);
   assert.equal(walkTimeScale(0, 0, 100), 0);
 });
+it('mesure les avant-pieds plutôt que les chevilles pendant le déroulé du pied', () => {
+  const { rig, clip } = fixture();
+  for (const side of ['Left', 'Right']) {
+    const toe = new THREE.Bone();
+    toe.name = `${side}ToeBase`;
+    rig.add(toe);
+    clip.tracks.push(new THREE.VectorKeyframeTrack(`${toe.name}.position`, [0, 1], [0, 0, 0, 0, 0, -200]));
+  }
+  assert.equal(getWalkCycleSpeed(clip, rig), 200);
+});
+it('ignore le déplacement latéral et le retour aérien, et respecte la marche arrière', () => {
+  for (const backwards of [false, true]) {
+    const { rig, clip } = fixture();
+    if (backwards) clip.name = 'walking-backward';
+    const direction = backwards ? -1 : 1;
+    clip.tracks[0] = new THREE.VectorKeyframeTrack('LeftFoot.position', [0, 0.25, 0.5, 1],
+      [0, 0, 0, 25, 0, -25 * direction, 50, 0, 50 * direction, 100, 0, 0]);
+    assert.equal(getWalkCycleSpeed(clip, rig), 100);
+  }
+});
 it('exclut les animations solo même lorsque leurs pieds bougent', () => {
   for (const name of ['bureau-2', 'idle', 'dancing']) {
     const { rig, clip } = fixture();
@@ -45,7 +67,7 @@ it('exclut les animations solo même lorsque leurs pieds bougent', () => {
     assert.equal(getWalkCycleSpeed(clip, rig), null);
   }
 });
-it('calibre les deux vrais clips sur Lara et Xbot après retargeting', async t => {
+it('vérifie toutes les vitesses PNJ sur Lara et Xbot après retargeting', async t => {
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
   const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
   const read = async path => {
@@ -66,12 +88,14 @@ it('calibre les deux vrais clips sur Lara et Xbot après retargeting', async t =
       node.restWorldQuaternion = node.getWorldQuaternion(new THREE.Quaternion());
       node.restWorldPosition = node.getWorldPosition(new THREE.Vector3());
     });
-    for (const id of ['walking', 'female-walk']) {
-      const source = await read(`public/animations/mixamo/anim_${id.replace('-', '_')}.glb`);
+    for (const id of [...NPC_WALK_ANIMATIONS, 'walking-backward']) {
+      const definition = ANIMATION_DEFINITIONS.find(def => def.id === id);
+      const source = await read(`public/${definition.path}`);
       source.animations[0].name = id; // The worker receives the canonical animation ID.
       const clip = retargetClip(source.animations[0], scene, source.scene); clip.name = id;
       const speed = getWalkCycleSpeed(clip, scene);
       assert(Number.isFinite(speed) && speed > 0);
+      if (model.startsWith('lara/')) assert.equal(Number(speed.toFixed(1)), ANIMATION_WALK_SPEEDS[id], id);
       t.diagnostic(`${model} / ${id}: ${speed.toFixed(2)} cm/s`);
     }
   }

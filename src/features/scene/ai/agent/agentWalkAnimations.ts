@@ -29,30 +29,31 @@ export const NPC_WALK_ANIMATIONS = [
 ];
 
 /**
- * Vitesses de translation naturelle (en cm/s) calibrées sur la foulée réelle de chaque animation.
+ * Vitesses naturelles (cm/s) mesurées sur les avant-pieds en appui de Lara Native.
+ * La cadence est ensuite adaptée à la foulée et au déplacement réels de chaque personnage.
  * 1 unité 3D = 1 cm.
  */
 export const ANIMATION_WALK_SPEEDS: Record<string, number> = {
   ...Object.fromEntries(fabWalks.map(def => [def.id, def.walkSpeed!])),
-  'walking': 140.0,
-  'walk': 140.0,
-  'female-walk': 113.0,
-  'walking-backward': 116.0,
-  'walking-slow': 27.2,
-  'happy-walk': 147.0,
-  'happy-walk-not-in-place': 141.0,
-  'swagger-walk': 82.0,
-  'catwalk-walking-not-in-place': 91.0,
-  'goofy-running': 154.0,
-  'running': 250.0,
-  'miley-armature-walk-f': 68.0,
-  'miley-armature-elegant-walk-2l': 56.0,
-  'miley-armature-catwalk-loop': 88.0,
-  'miley-armature-walk-relaxed-loop': 37.0,
-  'miley-armature-41-provocative-walk': 88.0,
+  'walking': 157.1,
+  'walk': 157.1,
+  'female-walk': 123.3,
+  'walking-backward': 110.5,
+  'walking-slow': 27.0,
+  'happy-walk': 143.0,
+  'happy-walk-not-in-place': 158.6,
+  'swagger-walk': 88.2,
+  'catwalk-walking-not-in-place': 95.3,
+  'goofy-running': 175.3,
+  'running': 301.9,
+  'miley-armature-walk-f': 76.4,
+  'miley-armature-elegant-walk-2l': 59.6,
+  'miley-armature-catwalk-loop': 93.7,
+  'miley-armature-walk-relaxed-loop': 38.8,
+  'miley-armature-41-provocative-walk': 100.0,
 };
 
-export const DEFAULT_WALK_SPEED = 140.0;
+export const DEFAULT_WALK_SPEED = ANIMATION_WALK_SPEEDS.walking;
 
 export function getWalkSpeedForAnimation(animNameOrId?: string | null): number {
   if (!animNameOrId) return DEFAULT_WALK_SPEED;
