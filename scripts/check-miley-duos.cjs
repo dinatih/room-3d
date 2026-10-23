@@ -2,13 +2,15 @@
 const fs = require('node:fs');
 const launchBrowser = require('./browser-test-options.cjs');
 (async () => {
- const solo=process.argv.includes('--solo'), stem=solo?'miley-solos':'miley-duos';
+ const solo=process.argv.includes('--solo'), batchIndex=process.argv.indexOf('--interx-batch');
+ const batch=batchIndex<0?null:JSON.parse(fs.readFileSync(`scripts/interx-review-batch-${String(Number(process.argv[batchIndex+1])).padStart(3,'0')}.json`));
+ const stem=batch?`interx-review-batch-${String(batch.batch).padStart(3,'0')}`:solo?'miley-solos':'miley-duos';
  const browser = await launchBrowser({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  try {
   const page = await browser.newPage(); await page.setViewport({width:1800,height:1500});
   page.on('pageerror',e=>console.error(e));
   await page.goto(`${process.env.ROOM_TEST_URL || 'http://127.0.0.1:5173'}/AGENTS.md`);
-  const report = await page.evaluate(async solo => {
+  const report = await page.evaluate(async ({solo,batch}) => {
    const T=await import('/node_modules/three/build/three.module.js');
    const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
    const {DUO_ANIMATIONS}=await import('/src/features/scene/animations/duoAnimations.ts');
@@ -16,7 +18,7 @@ const launchBrowser = require('./browser-test-options.cjs');
    const {retargetClip}=await import('/src/features/scene/retargeting/retargetClip.ts');
    const duos=DUO_ANIMATIONS.filter(d=>d.animA.startsWith('miley-')&&d.animB.startsWith('miley-'));
    const paired=new Set(DUO_ANIMATIONS.flatMap(d=>[d.animA,d.animB]));
-   const entries=solo?ANIMATION_DEFINITIONS.filter(d=>d.path.startsWith('animations/miley/')&&!paired.has(d.id)).map(d=>({id:d.id,label:d.label,animA:d.id})):duos;
+   const entries=batch?batch.ids.map(id=>{const duo=DUO_ANIMATIONS.find(d=>d.id===id);if(!duo)throw Error(`Missing duo ${id}`);return duo;}):solo?ANIMATION_DEFINITIONS.filter(d=>d.path.startsWith('animations/miley/')&&!paired.has(d.id)).map(d=>({id:d.id,label:d.label,animA:d.id})):duos;
    const height=Math.ceil(entries.length/6)*300;
    const loader=new GLTFLoader(), sourceLoader=new GLTFLoader(); sourceLoader.register(()=>({name:'SkeletonOnly',loadMesh:()=>Promise.resolve(new T.Group())}));
    const renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1800,height);renderer.setScissorTest(true);
@@ -50,7 +52,7 @@ const launchBrowser = require('./browser-test-options.cjs');
     rows.push({id:duo.id,durations:actors.map(a=>a.clip.duration),boundsCm:size.toArray()});
    }
    return rows;
-  }, solo);
+  }, {solo,batch});
   fs.writeFileSync(`/tmp/${stem}-browser.json`,JSON.stringify(report,null,2));
   await page.screenshot({path:`/tmp/${stem}-contact-sheet.png`,fullPage:true});
   console.log(`${report.length} ${solo?'solo':'paired'} playbacks: /tmp/${stem}-contact-sheet.png`);
