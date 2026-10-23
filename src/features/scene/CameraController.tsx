@@ -468,7 +468,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         }
       }
 
-      if (cameraState.isDragging || (useSceneStore.getState().arrowControl === 'camera' && (keys.current.has('ArrowLeft') || keys.current.has('ArrowRight')))) {
+      if (cameraState.isDragging || keys.current.has('camera:ArrowLeft') || keys.current.has('camera:ArrowRight') || (useSceneStore.getState().arrowControl === 'camera' && (keys.current.has('ArrowLeft') || keys.current.has('ArrowRight')))) {
         let diff = orbitYaw.current - followYaw.current;
         while (diff > Math.PI) diff -= 2 * Math.PI;
         while (diff < -Math.PI) diff += 2 * Math.PI;
