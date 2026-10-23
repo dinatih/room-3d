@@ -21,6 +21,7 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
     'drone-toggle-land',
   ],
   'utdrag10389142': ['utdrag'],
+  'kolvatten00594176': ['kolvatten-toggle'],
   'bollsidan30574370': ['desk-toggle'],
   'utaker-stack': ['bed-double', 'bed-position'],
   'armrest-sofa': ['sofa-arm-left', 'sofa-arm-right'],

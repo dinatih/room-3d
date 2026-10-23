@@ -13,6 +13,8 @@ import { KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION } from '../items/kalla
 import { TrashBin } from '../items/TrashBin';
 import { Tackan } from '../items/Tackan';
 import { Ikea36590066708 } from '../items/Ikea36590066708';
+import { Kolvatten00594176 } from '../items/Kolvatten00594176';
+import { useSceneStore } from '../store/useSceneStore';
 
 import {
   ROOM_D,
@@ -80,6 +82,10 @@ export function KitchenTrashBin() {
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function KitchenFurnishings() {
+  const as = useFurnitureToggles(['lamp-kitchen-toggle']);
+  const lightsHD = useSceneStore(state => state.layers.lightsHD);
+  const isKitchenLampOn = Boolean(as['lamp-kitchen-toggle']);
+
   return (
     <MergedStaticGroup name="merged-kitchen-furnishings">
       {/* Boîtes Drona intégrées à la cuisine */}
@@ -112,6 +118,32 @@ export function KitchenFurnishings() {
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
       <group position={[KITCHEN_WEST_WALL + 5, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Cuisine' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* KÖLVATTEN éclairage LED avec capteur — angle bas meuble haut METOD / mur ouest */}
+      <group
+        position={[KITCHEN_WEST_WALL + 1.8, 153, ROOM_D + 41.5]}
+        rotation={[Math.PI, Math.PI / 2, 0]}
+        userData={{
+          skipMerge: true,
+          animUnit: true,
+          itemName: 'KÖLVATTEN éclairage LED avec capteur',
+          hoverAction: { label: 'Éclairage Cuisine (KÖLVATTEN)', actions: ['kolvatten-toggle'] },
+        }}
+      >
+        <Kolvatten00594176 item={stub('kolvatten00594176')} actionState={{ on: isKitchenLampOn }} onSize={NOOP_SIZE} />
+        <pointLight
+          position={[0, 5, 0]}
+          intensity={isKitchenLampOn ? (lightsHD ? 80 : 2.5) : 0}
+          distance={lightsHD ? 0 : 200}
+          decay={lightsHD ? 1.0 : 2.0}
+          color={0xfff5e6}
+          castShadow={lightsHD}
+          shadow-mapSize={[1024, 1024]}
+          shadow-bias={-0.001}
+          shadow-camera-near={1}
+          shadow-camera-far={400}
+        />
       </group>
     </MergedStaticGroup>
   );

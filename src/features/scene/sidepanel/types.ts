@@ -69,6 +69,7 @@ export interface FurnitureState {
   lampOn:       boolean;
   lampBath:     boolean;
   lampCorridor: boolean;
+  lampKitchen:  boolean;
   freezerOpen:    boolean;
   fridge:         boolean;
   tvOn:           boolean;

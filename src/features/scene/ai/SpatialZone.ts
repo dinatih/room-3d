@@ -281,3 +281,13 @@ export function isAgentInBathroom(pos: [number, number, number] | { x: number; y
 export function isAgentInCorridor(pos: [number, number, number] | { x: number; y?: number; z: number }): boolean {
   return isInRoom('corridor', Array.isArray(pos) ? { x: pos[0], y: pos[1], z: pos[2] } : pos);
 }
+
+/**
+ * Détecte si un agent se trouve dans le coin cuisine.
+ */
+export function isAgentInKitchen(pos: [number, number, number] | { x: number; y?: number; z: number }): boolean {
+  const x = Array.isArray(pos) ? pos[0] : pos.x;
+  const y = Array.isArray(pos) ? pos[1] : (pos.y ?? 0);
+  const z = Array.isArray(pos) ? pos[2] : pos.z;
+  return y >= 0 && y <= 250 && x >= 0 && x <= 145 && z >= 320 && z <= 462;
+}

@@ -181,6 +181,7 @@ const initialFurniture: FurnitureState = {
   lampOn: false,
   lampBath: false,
   lampCorridor: false,
+  lampKitchen: false,
   freezerOpen: false,
   fridge: false,
   tvOn: false,
@@ -277,6 +278,8 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
     'lamp-toggle': 'lampOn',
     'lamp-bath-toggle': 'lampBath',
     'lamp-corridor-toggle': 'lampCorridor',
+    'lamp-kitchen-toggle': 'lampKitchen',
+    'kolvatten-toggle': 'lampKitchen',
     'lamp-sdb-toggle': 'lampBath',
     'lamp-couloir-toggle': 'lampCorridor',
     'bed-double': 'bedDouble',
@@ -626,6 +629,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lamp-bath-toggle' } }));
       } else if (key === 'lampCorridor') {
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lamp-corridor-toggle' } }));
+      } else if (key === 'lampKitchen') {
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lamp-kitchen-toggle' } }));
       } else if (key === 'bedDouble') {
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-double', value: nextFurniture.bedDouble } }));
       }

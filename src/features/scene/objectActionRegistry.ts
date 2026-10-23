@@ -159,6 +159,8 @@ const ACTIONS: Record<string, ActionConfig> = {
   'lamp-toggle': { label: ['Allumer', 'Éteindre'] },
   lampBath: { label: ['Allumer SDB', 'Éteindre SDB'] },
   lampCorridor: { label: ['Allumer Couloir', 'Éteindre Couloir'] },
+  lampKitchen: { label: ['Allumer Cuisine', 'Éteindre Cuisine'] },
+  'kolvatten-toggle': { label: ['Allumer Cuisine', 'Éteindre Cuisine'] },
   'bed-double': { label: ['Mettre en lit double', 'Séparer en lits simples'] },
   'bed-position': { sceneOnly: true, label: () => {
     const p = positionState['bed-position'];

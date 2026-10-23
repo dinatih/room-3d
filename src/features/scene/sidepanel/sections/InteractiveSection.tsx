@@ -199,6 +199,7 @@ export function InteractiveSection({
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">LUMIÈRES</div>
       {furnitureBtn('Lampe SDB', 'lampBath')}
       {furnitureBtn('Lampe Couloir', 'lampCorridor')}
+      {furnitureBtn('Éclairage Cuisine', 'lampKitchen')}
       {furnitureBtn('Lampe Ola', 'lampOn')}
 
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">DÉMO & ASSEMBLAGE 3D</div>
