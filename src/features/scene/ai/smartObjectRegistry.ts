@@ -3,7 +3,7 @@ import { OccupancyManager } from './occupancyManager';
 import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
 import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
-import { BATH_WEST_WALL, BATH_EAST_WALL, ROOM_D, ROOM_W, pNorth } from '../wallData';
+import { BATH_WEST_WALL, ROOM_D, ROOM_W, pNorth } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { TOILET_BOWL_CENTER, TOILET_D } from '../items/Toilet';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
@@ -329,11 +329,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       slotId: 'pick-item', name: item.kind === 'cabinet' ? 'Prendre un objet dans l’armoire' : 'Prendre un objet dans la Dröna',
       relative: true, arrival: 'approach' as const, navigationOwner: item.cabinetId,
       offset: [0, -item.position[1], item.kind === 'cabinet' ? 60 : -BATHROOM_BOX_APPROACH] as [number, number, number],
-      approachOffset: [
-        ((BATH_WEST_WALL + BATH_EAST_WALL) / 2 - item.position[0]) * (item.kind === 'cabinet' ? 1 : -1),
-        -item.position[1],
-        (item.kind === 'cabinet' ? 1 : -1) * (60 + HUMAN_BODY_RADIUS),
-      ] as [number, number, number],
       rotY: item.kind === 'cabinet' ? Math.PI : 0, animation: 'pick-fruit',
     }],
   }])),

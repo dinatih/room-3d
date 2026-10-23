@@ -33,19 +33,17 @@ it('aligne les quatre rangements SDB devant leur façade avant l’arrivée fina
   for (const [id, item] of Object.entries(BATHROOM_STORAGE_ITEMS)) {
     const steps = sequence(id), moves = steps.filter(step => step.type === 'MOVE_TO');
     assert.equal(moves.length, 1, id);
-    assert.equal(moves[0].targetLocalPos, undefined, 'Utilise l’approche déclarée dans le slot');
+    assert.equal(moves[0].targetLocalPos, undefined, 'Approche directement le rangement');
     assert.equal(steps.find(step => step.waitForAnimation).type, 'USE_OBJECT', 'Rejoint le point d’utilisation après l’approche');
     assert.equal(steps.filter(step => step.waitForAnimation).length, 1);
   }
 });
-it('déclare des approachOffset SDB visibles et résout deux destinations distinctes', () => {
+it('approche les rangements SDB devant leur façade sans détour dans le passage central', () => {
   const storage = require('../../src/features/scene/items/bathroomStorage.ts');
-  const walls = require('../../src/features/scene/wallData.ts');
-  const { objects } = load('src/features/scene/ai/smartObjectRegistry.ts', { fixtures: { ...storage, ...walls } }, source => {
+  const { objects } = load('src/features/scene/ai/smartObjectRegistry.ts', { fixtures: storage }, source => {
     const start = source.indexOf('  ...Object.fromEntries(Object.entries(BATHROOM_STORAGE_ITEMS)');
     const end = source.indexOf("\n  'bathtub-garden':", start);
-    return `import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH, BATH_WEST_WALL, BATH_EAST_WALL } from 'fixtures';
-      const HUMAN_BODY_RADIUS = 28;
+    return `import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from 'fixtures';
       export const objects = { ${source.slice(start, end)} };`;
   });
   const { resolveInstructionCoords } = load('src/features/scene/ai/agent/agentInstructionCoords.ts', {
@@ -57,18 +55,16 @@ it('déclare des approachOffset SDB visibles et résout deux destinations distin
   });
   for (const [id, item] of Object.entries(storage.BATHROOM_STORAGE_ITEMS)) {
     const obj = objects[id], slot = obj.slots[0], c = Math.cos(item.rotationY), s = Math.sin(item.rotationY);
-    for (const key of ['offset', 'approachOffset']) {
-      const [x, y, z] = slot[key];
-      slot[key] = [item.position[0] + x * c + z * s, item.position[1] + y, item.position[2] - x * s + z * c];
-    }
+    const [x, y, z] = slot.offset;
+    slot.offset = [item.position[0] + x * c + z * s, item.position[1] + y, item.position[2] - x * s + z * c];
     obj.position = item.position;
-    assert(Math.abs(slot.approachOffset[0] - (walls.BATH_WEST_WALL + walls.BATH_EAST_WALL) / 2) < 1e-9);
+    assert.equal(slot.approachOffset, undefined, 'Aucun détour imposé avant le point d’interaction');
+    assert(Math.abs(slot.offset[0] - item.position[0]) < 1e-9, 'Approche centrée devant chaque rangement');
     const move = resolveInstructionCoords({ type: 'MOVE_TO', smartObjectId: id }, null, 'walker');
     const use = resolveInstructionCoords({ type: 'USE_OBJECT', smartObjectId: id }, null, 'walker');
-    assert.deepEqual([move.tx, move.ty, move.tz], slot.approachOffset);
+    assert.deepEqual([move.tx, move.ty, move.tz], slot.offset);
     assert.deepEqual([use.tx, use.ty, use.tz], slot.offset);
-    assert.notEqual(move.tx, use.tx, 'Le premier trajet reste dans le passage central');
-    assert(move.tz > use.tz, 'Le point d’approche reste devant la façade');
+    assert(Math.abs(move.tz - item.position[2] - (item.kind === 'cabinet' ? 60 : storage.BATHROOM_BOX_APPROACH)) < 1e-9);
     assert.equal(move.ty, 0);
   }
 });
