@@ -848,12 +848,14 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   );
 }
 
+const NON_HUMAN_CHARACTER_IDS = ['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone', 'dji-neo', 'dji-avata-2', 'dji-fpv'];
+
 function RegistryScene({ item, actionState, showDims, wireframe, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; wireframe: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters' || (item.category === 'robots' && !['unitree-g1', 'unitree-go2', 'unitree-as2w', 'jumper-robot'].includes(item.id));
   return (
     <>
       <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} wireframe={wireframe} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />
-      {!isCharacter && <GroundPoint />}
+      {(!isCharacter || NON_HUMAN_CHARACTER_IDS.includes(item.id)) && <GroundPoint />}
     </>
   );
 }
@@ -1101,7 +1103,7 @@ export function InventoryPreview({
   const showing3D = has3D && (Boolean(smartAction) || !hasPhotos || viewMode === '3d'), showingPhotos = !smartAction && hasPhotos && (!has3D || viewMode === 'photos');
 
   const isCharacterItem = showing3D && item && 'category' in item && ((item as any).category === 'characters' || (item as any).category === 'robots') && !['unitree-g1', 'unitree-go2', 'unitree-as2w', 'jumper-robot'].includes(item.id);
-  const isHumanCharacter = Boolean(isCharacterItem && !['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'black-hornet-drone', 'dji-neo', 'dji-avata-2', 'dji-fpv'].includes(item.id));
+  const isHumanCharacter = Boolean(isCharacterItem && !NON_HUMAN_CHARACTER_IDS.includes(item.id));
   const isWigItem = Boolean(showing3D && item && 'category' in item && ((item as any).category === 'wigs'));
 
   const animalAnimOptions = useMemo(() => {
