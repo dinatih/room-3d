@@ -27,7 +27,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 import { cameraState } from './cameraState';
 import { droneInput, useDroneControlStore } from './droneControls';
-import { CAMERA_SUBJECTS } from './camera/cameraSubjects';
+import { resolveCameraSubject } from './camera/cameraSubjects';
 import { useSceneStore } from './store/useSceneStore';
 import { CHARACTERS } from './characterConfig';
 import { appLog } from '@features/ui/AppConsole';
@@ -49,7 +49,7 @@ import {
   updateUrlCameraMode,
   updateUrlCameraTarget,
   updateUrlArrowControl,
-  parseUrlCameraPos,
+  parseUrlCameraSubject,
   useCameraPointerEvents,
   useCameraShortcuts,
   useCameraFrameUpdate,
@@ -88,6 +88,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const initialMode = parseUrlCameraMode();
   const [mode, setMode] = useState<CameraMode>(() => initialMode);
   const modeRef = useRef<CameraMode>(initialMode);
+  const initialSubject = parseUrlCameraSubject();
+  const pendingInitialSubject = useRef(initialSubject === 'character' ? null : initialSubject);
 
   const cameraProjection = useSceneStore(state => state.cameraProjection);
   const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
@@ -165,6 +167,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   }, [mode, orbitMouseMode]);
 
   const resolveTargetPosition = useCallback((targetKey: CameraTarget): [number, number, number] => {
+    const subjectView = cameraState.animalViews[targetKey];
+    if (subjectView) return [subjectView.eyes.x, subjectView.eyes.y, subjectView.eyes.z];
     switch (targetKey) {
       case 'studio':
         return PERSP_TARGET;
@@ -516,10 +520,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const enterFollow = useCallback((x: number, z: number, followMode: 'follow' | 'fpv' = 'follow') => {
     const store = useSceneStore.getState();
-    if (!cameraState.animalTarget) {
-      useSceneStore.setState({ cameraTarget: 'character' });
-      updateUrlCameraTarget(followMode === 'fpv' ? null : 'character');
-    }
+    const subject = resolveCameraSubject(cameraState.animalTarget ?? pendingInitialSubject.current ?? 'character');
+    if (!subject) throw new Error(`Objet caméra inconnu : ${cameraState.animalTarget}`);
+    useSceneStore.setState({ cameraTarget: subject });
+    updateUrlCameraTarget(subject);
     if (followMode === 'fpv' && modeRef.current !== 'fpv') {
       projectionBeforeFpv.current = store.cameraProjection;
     }
@@ -612,8 +616,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       const match = /^animal-(robin|shiba|ulotte|jikin|tosakin|drone)-(fpv|follow)$/.exec(pilot ? 'animal-drone-fpv' : key);
       if (!subject && !match) return;
       if (planeModeRef.current || cameraState.isXR || cameraState.isIntroRunning) return;
-      if (subject && !CAMERA_SUBJECTS.some(choice => choice.id === subject)) throw new Error(`Objet caméra inconnu : ${subject}`);
-      const id = subject ?? match![1];
+      if (subject && !resolveCameraSubject(subject)) throw new Error(`Objet caméra inconnu : ${subject}`);
+      pendingInitialSubject.current = null;
+      const id = subject ? resolveCameraSubject(subject)! : match![1];
       const requestedMode = subject ? modeRef.current === 'fpv' ? 'fpv' : 'follow' : match![2] as 'fpv' | 'follow';
       if (id === 'character') {
         cameraState.animalTarget = null;
@@ -1067,23 +1072,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (planeModeRef.current) return;
     initialModeLaunchedRef.current = true;
 
-    const posParsed = parseUrlCameraPos();
-    if (posParsed?.type === 'fpv') {
-      if (posParsed.entity === 'shiba' || posParsed.entity === 'ulotte' || posParsed.entity === 'robin' || posParsed.entity === 'cat') {
-        const view = cameraState.animalViews[posParsed.entity];
-        cameraState.animalTarget = posParsed.entity;
-        document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: true }));
-        if (view) {
-          animalFollowYaw.current = Math.atan2(view.forward.x, view.forward.z);
-          enterFollow(view.eyes.x, view.eyes.z, 'fpv');
-        } else {
-          enterFollow(180, -120, 'fpv');
-        }
-        appLog('system', `🎥 Mode FPV animal (${posParsed.entity}) initialisé via URL`);
-        return;
-      }
-    }
-
     const startMode = parseUrlCameraMode();
     if (cameraState.isSceneLaunched) {
       if (startMode === 'orbit') applyInitialCameraView();
@@ -1160,6 +1148,17 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       introCtrlRef.current?.destroy();
     };
   }, [camera, enterTop, enterFollow, enterOrtho, orthoConfig, invalidate, applyInitialCameraView]);
+
+  // Actors publish their camera mounts after loading; never initialize an actor at a fake position.
+  useFrame(() => {
+    const subject = pendingInitialSubject.current;
+    if (!subject || !cameraState.isSceneLaunched || cameraState.isIntroRunning || planeModeRef.current) return;
+    if (!cameraState.animalViews[subject]) { invalidate(); return; }
+    pendingInitialSubject.current = null;
+    if (modeRef.current === 'follow' || modeRef.current === 'fpv') {
+      document.dispatchEvent(new CustomEvent('camera-subject', { detail: subject }));
+    } else if (modeRef.current === 'orbit') applyInitialCameraView();
+  });
 
   // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif et suivi dynamique du target orbit
   useFrame(() => {

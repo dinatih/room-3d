@@ -81,7 +81,7 @@ export function useCameraShortcuts({
       document.dispatchEvent(new CustomEvent('camera-arrow-keys', { detail: allKeys }));
     };
     const chooseFollow = (x: number, z: number, mode: 'follow' | 'fpv' = 'follow') => {
-      if (cameraState.animalTarget === 'drone') cameraState.animalTarget = null;
+      useDroneControlStore.getState().setPiloting(false);
       useSceneStore.getState().setArrowControl(mode === 'fpv' ? 'character' : 'camera');
       enterFollow(x, z, mode);
     };

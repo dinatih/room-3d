@@ -101,7 +101,6 @@ export function findCharacterByIdOrName(query: string): CharacterConfig | undefi
 /**
  * Analyse l'URL pour détecter si un personnage actif spécifique est demandé par son id ou son nom.
  * Supporte : ?character=..., ?char=..., ?perso=..., ?player=..., ?joueur=..., ?npc=..., ?pnj=...
- * Supporte également la déduction automatique si cameraTarget ou cameraPos désigne un personnage.
  */
 export function parseUrlActiveCharacter(): CharacterConfig | undefined {
   if (typeof window === 'undefined') return undefined;
@@ -123,20 +122,6 @@ export function parseUrlActiveCharacter(): CharacterConfig | undefined {
     if (raw) {
       const found = findCharacterByIdOrName(raw);
       if (found) return found;
-    }
-
-    // Déduction depuis cameraTarget (ex: ?cameraTarget=rosanna)
-    const targetRaw = params.get('cameraTarget') ?? params.get('target');
-    if (targetRaw) {
-      const match = findCharacterByIdOrName(targetRaw);
-      if (match) return match;
-    }
-
-    // Déduction depuis cameraPos (ex: ?cameraPos=rosanna pour FPV)
-    const posRaw = params.get('cameraPos') ?? params.get('cameraPosition') ?? params.get('camPos') ?? params.get('pos');
-    if (posRaw) {
-      const match = findCharacterByIdOrName(posRaw);
-      if (match) return match;
     }
   } catch {}
   return undefined;

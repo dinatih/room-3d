@@ -1,12 +1,21 @@
 /** IDs match the poses published by animals and RobotPlacements. */
 export const CAMERA_SUBJECTS = [
-  { id: 'character', label: 'Personnage actif', icon: 'bi-person-bounding-box' },
-  { id: 'drone', label: 'Hornet', icon: 'bi-airplane' },
-  { id: 'shiba', label: 'Chien', icon: 'bi-heart' },
-  { id: 'robin', label: 'Oiseau', icon: 'bi-twitter' },
-  { id: 'unitree-g1', label: 'G1', icon: 'bi-robot' },
-  { id: 'unitree-go2', label: 'Go2', icon: 'bi-robot' },
-  { id: 'unitree-as2w', label: 'As2', icon: 'bi-robot' },
-  { id: 'unitree-h2', label: 'H2', icon: 'bi-robot' },
-  { id: 'jumper-robot', label: 'Jumper', icon: 'bi-robot' },
+  { id: 'character', target: 'character', label: 'Personnage actif', icon: 'bi-person-bounding-box' },
+  { id: 'drone', target: 'hornet', label: 'Hornet', icon: 'bi-airplane' },
+  { id: 'shiba', target: 'ushiro', label: 'Chien', icon: 'bi-heart' },
+  { id: 'robin', target: 'bird', label: 'Oiseau', icon: 'bi-twitter' },
+  { id: 'unitree-g1', target: 'g1', label: 'G1', icon: 'bi-robot' },
+  { id: 'unitree-go2', target: 'go2', label: 'Go2', icon: 'bi-robot' },
+  { id: 'unitree-as2w', target: 'as2', label: 'As2', icon: 'bi-robot' },
+  { id: 'unitree-h2', target: 'h2', label: 'H2', icon: 'bi-robot' },
+  { id: 'jumper-robot', target: 'jumper', label: 'Jumper', icon: 'bi-robot' },
 ] as const;
+
+export type CameraSubjectId = typeof CAMERA_SUBJECTS[number]['id'] | 'ulotte' | 'jikin' | 'tosakin' | 'cat';
+
+export function resolveCameraSubject(value: string): CameraSubjectId | undefined {
+  const choice = CAMERA_SUBJECTS.find(subject => subject.id === value || subject.target === value);
+  if (choice) return choice.id;
+  if (value === 'dog') return 'shiba';
+  if (value === 'ulotte' || value === 'jikin' || value === 'tosakin' || value === 'cat') return value;
+}

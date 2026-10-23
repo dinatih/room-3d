@@ -1,3 +1,5 @@
+import type { CameraSubjectId } from './cameraSubjects';
+
 export type CameraMode = 'orbit' | 'follow' | 'fpv' | 'top' | 'iso';
 
 export type ArrowControl = 'camera' | 'character';
@@ -10,12 +12,11 @@ export interface CameraZoomDetail {
 }
 
 export type CameraTarget =
+  | CameraSubjectId
   | 'studio'
-  | 'character'
   | 'charactersGrid'
   | 'inventoryObjectGrid'
   | 'dog'
-  | 'cat'
   | 'plane'
   | 'bird';
 

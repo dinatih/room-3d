@@ -1,5 +1,5 @@
 import type { ArrowControl, CameraMode, CameraMovement, CameraTarget, OrbitMouseMode } from './types';
-import { findCharacterByIdOrName } from '@features/scene/characterConfig';
+import { CAMERA_SUBJECTS, resolveCameraSubject } from './cameraSubjects';
 
 export type CameraProjection = 'persp' | 'ortho';
 
@@ -59,36 +59,11 @@ export function parseUrlSkipIntro(): boolean {
   return value === '' || value === '1' || value === 'true' || value === 'on';
 }
 
-/**
- * Analyse l'URL pour la position de caméra demandée :
- *  - Soit un point de vue subjectif FPV sur une entité (ex: cameraPos=rosanna ou cameraPos=shiba)
- *  - Soit un angle orbital relatif au pivot (ex: cameraPos=n-o, cameraPos=front, etc.)
- */
-export function parseUrlCameraPos(): { type: 'fpv'; entity: string } | { type: 'angle'; posKey: string } | null {
+/** cameraPos describes the viewing angle; target identifies the observed subject. */
+export function parseUrlCameraPos(): { type: 'angle'; posKey: string } | null {
   if (typeof window === 'undefined') return null;
-  const params = getUrlParams();
-  const raw = params.get('cameraPos') ??
-              params.get('cameraPosition') ??
-              params.get('camPos') ??
-              params.get('pos') ??
-              params.get('cameraView');
-  if (!raw) return null;
-  const val = raw.trim().toLowerCase();
-
-  // 1. Détection FPV entité (personnage humain ou animal)
-  const char = findCharacterByIdOrName(val);
-  if (char) return { type: 'fpv', entity: char.id };
-
-  if (val === 'ulotte') return { type: 'fpv', entity: 'ulotte' };
-  if (val === 'shiba' || val === 'chien' || val === 'dog') return { type: 'fpv', entity: 'shiba' };
-  if (val === 'robin' || val === 'oiseau' || val === 'bird') return { type: 'fpv', entity: 'robin' };
-  if (val === 'cat' || val === 'chat') return { type: 'fpv', entity: 'cat' };
-
-  // 2. Détection angle relatif
-  if (CAMERA_POS_ALIASES[val]) {
-    return { type: 'angle', posKey: CAMERA_POS_ALIASES[val] };
-  }
-  return null;
+  const value = getUrlParams().get('cameraPos')?.trim().toLowerCase();
+  return value && CAMERA_POS_ALIASES[value] ? { type: 'angle', posKey: CAMERA_POS_ALIASES[value] } : null;
 }
 
 export function parseUrlActiveCameraPosKey(): string | null {
@@ -110,33 +85,34 @@ export function updateUrlCameraPos(posKey: string | null) {
   });
 }
 
-/**
- * Analyse l'URL pour la cible de la caméra (point de focus / pivot 3D).
- */
+/** target is independent of mode and of the active human's character parameter. */
 export function parseUrlCameraTarget(): CameraTarget | null {
   if (typeof window === 'undefined') return null;
-  const raw = getUrlParams().get('cameraTarget')?.trim().toLowerCase();
+  const params = getUrlParams();
+  const shorthand = ['fpv', 'follow'].map(key => params.get(key)?.trim().toLowerCase())
+    .find(value => value && !['0', '1', 'true', 'false', 'yes', 'no', 'on', 'off'].includes(value));
+  const raw = (params.get('target') ?? params.get('cameraTarget') ?? shorthand)?.trim().toLowerCase();
   if (!raw) return null;
+  const subject = resolveCameraSubject(raw);
+  if (subject) return subject;
+  if (raw === 'studio' || raw === 'plane') return raw;
+  if (raw === 'charactersgrid') return 'charactersGrid';
+  if (raw === 'inventoryobjectgrid') return 'inventoryObjectGrid';
+  throw new Error(`Cible caméra inconnue : ${raw}`);
+}
 
-  const TARGETS: Record<string, CameraTarget> = {
-    studio: 'studio',
-    character: 'character',
-    charactersgrid: 'charactersGrid',
-    inventoryobjectgrid: 'inventoryObjectGrid',
-    dog: 'dog',
-    cat: 'cat',
-    plane: 'plane',
-    bird: 'bird',
-  };
-  if (TARGETS[raw]) return TARGETS[raw];
-  if (findCharacterByIdOrName(raw)) return 'character';
-  return null;
+export function parseUrlCameraSubject() {
+  const target = parseUrlCameraTarget();
+  return target ? resolveCameraSubject(target) ?? null : null;
 }
 
 export function updateUrlCameraTarget(target: CameraTarget | null) {
   writeUrl(params => {
-    if (target) params.set('cameraTarget', target);
-    else params.delete('cameraTarget');
+    params.delete('cameraTarget');
+    const subject = target && resolveCameraSubject(target);
+    const value = CAMERA_SUBJECTS.find(choice => choice.id === subject)?.target ?? target;
+    if (value) params.set('target', value);
+    else params.delete('target');
   });
 }
 
@@ -193,47 +169,40 @@ export function updateUrlCameraProjection(projection: CameraProjection) {
 /**
  * Analyse l'URL pour détecter le mode caméra initial :
  *  - FPV par défaut
- *  - FPV explicite si cameraPos est une entité
- *  - Orbit si une cible ou un angle de position est spécifié
+ *  - fpv=subject et follow=subject sélectionnent aussi la cible
+ *  - Orbit pour une cible statique ou un angle de position
  */
 export function parseUrlCameraMode(): CameraMode {
   if (typeof window === 'undefined') return 'fpv';
-  try {
-    const posParsed = parseUrlCameraPos();
-    if (posParsed?.type === 'fpv') return 'fpv';
+  const posParsed = parseUrlCameraPos();
 
-    const params = getUrlParams();
+  const params = getUrlParams();
 
-    if (params.has('fpv')) {
-      const val = params.get('fpv')?.trim().toLowerCase();
-      if (val === null || val === '' || val === '1' || val === 'true' || val === 'yes' || val === 'on') {
-        return 'fpv';
-      }
-    }
+  if (params.has('fpv')) {
+    const val = params.get('fpv')?.trim().toLowerCase();
+    if (!['0', 'false', 'no', 'off'].includes(val ?? '')) return 'fpv';
+  }
 
-    if (params.has('follow')) {
-      const val = params.get('follow')?.trim().toLowerCase();
-      if (val === null || val === '' || val === '1' || val === 'true' || val === 'yes' || val === 'on') {
-        return 'follow';
-      }
-    }
+  if (params.has('follow')) {
+    const val = params.get('follow')?.trim().toLowerCase();
+    if (!['0', 'false', 'no', 'off'].includes(val ?? '')) return 'follow';
+  }
 
-    const raw = params.get('mode') ?? params.get('camera') ?? params.get('cam');
-    if (raw) {
-      const m = raw.trim().toLowerCase();
-      if (m === 'orbit' || m === 'iso') return m;
-      if (m === 'fpv' || m === 'firstperson' || m === '1p' || m === 'fps') return 'fpv';
-      if (m === 'follow' || m === '3p' || m === 'thirdperson') return 'follow';
-      if (m === 'top' || m === 'topdown' || m === '2d' || m === 'plan') return 'top';
-    }
+  const raw = params.get('mode') ?? params.get('camera') ?? params.get('cam');
+  if (raw) {
+    const m = raw.trim().toLowerCase();
+    if (m === 'orbit' || m === 'iso') return m;
+    if (m === 'fpv' || m === 'firstperson' || m === '1p' || m === 'fps') return 'fpv';
+    if (m === 'follow' || m === '3p' || m === 'thirdperson') return 'follow';
+    if (m === 'top' || m === 'topdown' || m === '2d' || m === 'plan') return 'top';
+  }
 
-    const movement = parseUrlCameraMovement();
-    if (movement === 'follow') return 'follow';
-    if (movement === 'orbit') return 'orbit';
+  const movement = parseUrlCameraMovement();
+  if (movement === 'follow') return 'follow';
+  if (movement === 'orbit') return 'orbit';
 
-    const target = parseUrlCameraTarget();
-    if (target || posParsed?.type === 'angle') return 'orbit';
-  } catch {}
+  const target = parseUrlCameraTarget();
+  if (target && !resolveCameraSubject(target) || posParsed?.type === 'angle') return 'orbit';
   return 'fpv';
 }
 
@@ -241,24 +210,12 @@ export function parseUrlCameraMode(): CameraMode {
  * Met à jour l'URL avec le mode caméra actif sans recharger la page
  */
 export function updateUrlCameraMode(mode: CameraMode) {
-  if (typeof window === 'undefined') return;
-  try {
-    const url = new URL(window.location.href);
-    url.search = getUrlParams().toString();
-    const cameraParams = ['mode', 'camera', 'cam', 'orbit', 'fpv', 'follow'];
-    for (const p of cameraParams) {
-      url.searchParams.delete(p);
-    }
-    if (mode !== 'fpv' && parseUrlCameraPos()?.type === 'fpv') {
-      for (const p of ['cameraPos', 'cameraPosition', 'camPos', 'pos', 'cameraView']) url.searchParams.delete(p);
-    }
-    const inferredOrbit = (parseUrlCameraTarget() || parseUrlCameraPos()?.type === 'angle' || parseUrlCameraMovement() === 'orbit')
-      && parseUrlCameraMovement() !== 'follow';
-    if (mode === 'orbit' ? !inferredOrbit : mode !== 'fpv' || parseUrlCameraTarget() || parseUrlCameraPos()?.type === 'angle' || parseUrlCameraMovement() !== 'fix') {
-      url.searchParams.set('mode', mode);
-    }
-    window.history.replaceState(null, '', url.toString());
-  } catch {}
+  const target = parseUrlCameraTarget();
+  updateUrlCameraTarget(target);
+  writeUrl(params => {
+    for (const key of ['camera', 'cam', 'orbit', 'fpv', 'follow']) params.delete(key);
+    params.set('mode', mode);
+  });
 }
 
 /**

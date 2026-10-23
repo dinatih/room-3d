@@ -85,6 +85,12 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     assert.equal(await page.evaluate(() => window.hornetStore.getState().piloting), false);
     await click('Piloter le Hornet');
     await page.waitForFunction(() => window.hornetStore.getState().piloting);
+    // The autonomous tour may have turned toward any viewpoint before manual input starts.
+    await page.evaluate(async () => {
+      const { droneInput } = await import('/src/features/scene/droneControls.ts');
+      droneInput.yaw = 0;
+      droneInput.pitch = 0;
+    });
     await settle();
     await page.evaluate(() => {
       window.hornetLeakedKeys = [];
@@ -175,7 +181,7 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     await click('Piloter le Hornet');
     await page.waitForFunction(() => window.hornetStore.getState().piloting);
     await page.evaluate(() => document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'fpv' })));
-    await page.waitForFunction(() => !window.hornetStore.getState().piloting && window.hornetCamera.animalTarget === null);
+    await page.waitForFunction(() => !window.hornetStore.getState().piloting && window.hornetCamera.animalTarget === 'drone');
     await click('Piloter le Hornet');
     await page.waitForFunction(() => window.hornetStore.getState().piloting);
     await page.evaluate(() => document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'drone-patrol-all' } })));
