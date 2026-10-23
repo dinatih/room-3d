@@ -1,6 +1,7 @@
-"""Bake feet-together rest poses. Run: blender -b --python scripts/temp_feet_tpose.py"""
+"""Bake rest poses with a 3 cm foot gap. Run: blender -b --python scripts/temp_feet_tpose.py"""
 from pathlib import Path
 import math
+import os
 import sys
 import bpy
 from mathutils import Matrix, Vector
@@ -8,14 +9,7 @@ from mathutils import Matrix, Vector
 ROOT = Path(__file__).resolve().parents[1]
 bpy.context.preferences.filepaths.save_version = 0
 
-if '--compress' in sys.argv:
-    for character in ['skeleton', 'mannequin']:
-        path = ROOT / f'public/characters/{character}/{character}.glb'
-        bpy.ops.wm.read_factory_settings(use_empty=True)
-        bpy.ops.import_scene.gltf(filepath=str(path))
-        bpy.ops.export_scene.gltf(filepath=str(path), export_format='GLB', export_animations=False,
-                                  export_draco_mesh_compression_enable=True)
-    sys.exit(0)
+FOOT_GAP_METERS = 0.03  # Blender sources are in meters; each foot stays 1.5 cm from center.
 
 
 def foot_vertices(mesh, side):
@@ -84,9 +78,10 @@ for character, filename, backup in [
             for mesh, ids in indices:
                 evaluated = mesh.evaluated_get(graph)
                 medial.extend(sign * (evaluated.matrix_world @ evaluated.data.vertices[i].co).x for i in ids)
-            return min(medial)
+            return min(medial) - FOOT_GAP_METERS / 2
 
-        low, high = 0.0, math.atan2(abs(thigh.head.x), thigh.head.z - foot.head.z) * 2
+        high = math.atan2(abs(thigh.head.x), thigh.head.z - foot.head.z) * 2
+        low = -high
         assert pose(low) > 0 and pose(high) < 0, 'Contact must be bracketed'
         while high - low > 1e-8:
             middle = (low + high) / 2
@@ -117,13 +112,23 @@ for character, filename, backup in [
     arm.show_in_front = True
     bpy.ops.wm.save_as_mainfile(filepath=str(folder / filename))
     bpy.ops.wm.save_as_mainfile(filepath=str(ROOT / 'sources_backup' / backup))
-    bpy.ops.export_scene.gltf(filepath=str(folder / f'{character}.glb'), export_format='GLB', use_selection=True, export_animations=False, export_skins=True, export_cameras=False, export_lights=False)
+    bpy.ops.export_scene.gltf(filepath=str(folder / f'{character}.glb'), export_format='GLB', use_selection=True, export_animations=False, export_skins=True, export_cameras=False, export_lights=False, export_draco_mesh_compression_enable=True)
     render(folder / f'{character}_3d_preview.png', meshes)
     render(Path('/tmp') / f'{character}_tpose_after.png', meshes)
     # Reimport the exported asset to check the bind pose and skin survived export.
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=str(folder / f'{character}.glb'))
     imported_arm, = [o for o in bpy.context.scene.objects if o.type == 'ARMATURE']
+    edges = []
     for side in ['Left', 'Right']:
         foot = imported_arm.data.bones[f'mixamorig:{side}Foot']
         print('EXPORT VERIFIED', character, side, tuple(imported_arm.matrix_world @ foot.head_local), flush=True)
+        sign = 1 if side == 'Left' else -1
+        edges.append(min(sign * (o.matrix_world @ o.data.vertices[i].co).x
+                         for o in bpy.context.scene.objects if o.type == 'MESH'
+                         for i in foot_vertices(o, side)))
+    assert abs(sum(edges) - FOOT_GAP_METERS) < 1e-4, edges
+    print('EXPORTED FOOT GAP (cm)', character, sum(edges) * 100, flush=True)
+
+sys.stdout.flush()
+os._exit(0)
