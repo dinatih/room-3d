@@ -195,7 +195,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Free Fire Cobra Entrance',
     aliases: ['ff-cobra-entrance'],
     tags: ['free-fire', 'emotes'],
-    duration: 7.3,
+    duration: 6.3,
   },
   {
     id: 'ff-cobra-hitfloor',
