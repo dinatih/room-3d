@@ -100,7 +100,6 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Face / Dos / Gauche / Droite" keys={['Alt+1', 'Alt+2', 'Alt+3', 'Alt+4']} />
               <R label="Dessus / Dessous"         keys={['Alt+5', 'Alt+6']} />
               <R label="ISO Sud-Est / Sud-Ouest"  keys={['Alt+7', 'Alt+8']} />
-              <R label="ISO Nord-Est / Nord-Ouest" keys={['Alt+9', 'Alt+0']} />
               <Section title="Grille de personnages (pavé numérique)" />
               <R label="Vue Ortho Face / Dos"      keys={['Num 1', 'Ctrl+Num 1']} />
               <R label="Vue Ortho Gauche / Droite" keys={['Ctrl+Num 3', 'Num 3']} />
