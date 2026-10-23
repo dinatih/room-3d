@@ -11,6 +11,7 @@ import math
 import struct
 import json
 import re
+import subprocess
 from pathlib import Path
 import bpy
 import numpy as np
@@ -201,6 +202,8 @@ def main():
             continue
         print(f"[{idx}/{len(yoga_meta)}] Trimming {item['filename']}...")
         res = convert_trimmed(src_path, dst_path)
+        if item['filename'] == 'anim_yoga_bharadvajas_twist_pose_or_bharadvajasana_i_a.glb':
+            subprocess.run(['node', str(ROOT / 'scripts/correct-yoga-foot-support.cjs'), str(dst_path)], check=True)
         print(f"   Trimmed: cut start {res['cut_start_s']}s, cut end {res['cut_end_s']}s -> {res['frames']}f / {res['duration']}s ({res['size_kb']}KB)")
         updated_yoga.append({**item, **res})
 

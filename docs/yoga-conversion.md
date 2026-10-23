@@ -72,3 +72,29 @@ des trois Bharadvaja dans `/tmp/yoga-grounding.png`. Ces mesures ne constituent
 pas un solveur de contacts : les différences de proportions peuvent encore
 produire des pénétrations, notamment aux mains. Aucun recalage image par image
 n'est appliqué, afin de conserver les translations et sauts des sources.
+
+## Premier appui de Bharadvaja A
+
+Le premier appui droit dérivait déjà dans le GLB : 1,16 cm entre 0 et 1,3 s,
+contre 1,50 cm sur Lara et 1,19 cm sur Y Bot après retargeting.
+`scripts/correct-yoga-foot-support.cjs` stabilise horizontalement l'orteil droit
+jusqu'à l'image 42 (1,4 s), puis relâche cette correction progressivement
+jusqu'à l'image 52 (1,733 s), au premier sommet de sa levée. Ces repères
+sont annotés sur cette capture découpée, et ne s'appliquent pas aux autres poses.
+
+La correction est intégrée à la réexportation découpée et peut être réappliquée :
+
+```bash
+node scripts/correct-yoga-foot-support.cjs
+node scripts/check-yoga-foot-slip.cjs
+node --test --test-isolation=none tests/unit/yoga-foot-support.test.cjs tests/unit/yoga-retargeting.test.cjs
+```
+
+Elle ne modifie que la translation horizontale initiale du bassin dans le GLB :
+les rotations, la hauteur, les temps, la durée, la taille du fichier et toutes
+les images à partir de 1,733 s restent inchangés. La dérive mesurée sur le même
+intervalle devient inférieure au micromètre dans le squelette source,
+0,66 cm sur Lara et 0,30 cm sur Y Bot. Le reliquat vient du retargeting
+entre proportions différentes ; ce premier essai ne verrouille pas les autres
+appuis et ne résout pas les contacts par IK. Le diagnostic écrit les trajectoires
+à 30 FPS des variantes A/B/C dans `/tmp/yoga-foot-slip.json`.
