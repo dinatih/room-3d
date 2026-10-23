@@ -11,7 +11,6 @@ import * as THREE from 'three';
 import { MergedStaticGroup } from '../Building';
 import type { SceneItemProps } from '@shared/types';
 
-const ACTION_KEY = 'ninja';
 export const NINJA_DOOR_DURATION = 0.8;
 
 const W = 51;     // largeur
@@ -42,7 +41,7 @@ const glassMat = new THREE.MeshPhysicalMaterial({
   transmission: 0.5, ior: 1.45, thickness: 0.2,
 });
 const quartzTube = new THREE.MeshStandardMaterial({
-  color: 0xfff0c8, emissive: 0xffb060, emissiveIntensity: 0.25,
+  color: 0xddd9cd,
   metalness: 0.1, roughness: 0.3,
 });
 const rackMat = new THREE.MeshStandardMaterial({
@@ -71,44 +70,27 @@ function ventGeometry(): THREE.BufferGeometry {
 
 export function NinjaSP101({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
-  const isOpen  = actionState[ACTION_KEY] ?? false;
+  const rackRef = useRef<THREE.Group>(null!);
+  const isOpen = actionState.ninja ?? false;
+  const rackOut = actionState['ninja-rack'] ?? false;
+  const lightOn = actionState['ninja-light'] ?? false;
   const { invalidate } = useThree();
 
-  useFrame(() => {
-    const target = isOpen ? Math.PI / 2 : 0;
-    const current = doorRef.current.rotation.x;
-    if (current === target) return;
-    const delta = target - current;
-    if (Math.abs(delta) > 0.001) {
-      doorRef.current.rotation.x += delta * 0.15;
-      invalidate();
-    } else {
-      doorRef.current.rotation.x = target;
-      invalidate();
-    }
+  useFrame((_, dt) => {
+    const door = doorRef.current;
+    const rack = rackRef.current;
+    const angle = isOpen ? Math.PI / 2 : 0;
+    // Rentrer la grille avant de refermer ; attendre la porte avant de la sortir.
+    const extension = isOpen && rackOut && door.rotation.x > Math.PI / 2 - 0.05 ? D - 7 : 0;
+    const rotation = !isOpen && rack.position.z > 0.01 ? door.rotation.x : angle;
+    door.rotation.x = THREE.MathUtils.damp(door.rotation.x, rotation, 8, dt);
+    rack.position.z = THREE.MathUtils.damp(rack.position.z, extension, 8, dt);
+    if (Math.abs(door.rotation.x - angle) > 0.001 || Math.abs(rack.position.z - extension) > 0.001) invalidate();
   });
-
-  const shellGeo = useMemo(() => {
-    const shape = new THREE.Shape();
-    const r = 1.2;
-    const hw = W / 2, hd = D / 2;
-    shape.moveTo(-hw + r, -hd);
-    shape.lineTo( hw - r, -hd);
-    shape.quadraticCurveTo( hw, -hd,  hw, -hd + r);
-    shape.lineTo( hw,  hd - r);
-    shape.quadraticCurveTo( hw,  hd,  hw - r,  hd);
-    shape.lineTo(-hw + r,  hd);
-    shape.quadraticCurveTo(-hw,  hd, -hw,  hd - r);
-    shape.lineTo(-hw, -hd + r);
-    shape.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
-    const g = new THREE.ExtrudeGeometry(shape, { depth: H, bevelEnabled: false });
-    g.rotateX(-Math.PI / 2);
-    return g;
-  }, []);
 
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(W, H, D));
-  }, []);
+  }, [onSize]);
 
   const ventOffsets = useMemo(() => {
     const arr: number[] = [];
@@ -119,42 +101,41 @@ export function NinjaSP101({ actionState, onSize }: SceneItemProps) {
   return (
     <group userData={{ animUnit: true, hoverAction: { label: 'Mini four Ninja SP101EU', actions: [...getObjectActionIds('ninja-sp101'), 'smart-object:::cuisine-group:::cook-oven'] } }}>
       <MergedStaticGroup name="merged-ninja">
-        {/* Coque inox brossée (côtés + dessus + arrière) */}
-        <mesh geometry={shellGeo} material={stainless} castShadow receiveShadow />
-
-        {/* Intérieur sombre (cavité visible via vitre) */}
-        <mesh position={[DOOR_X, H / 2, 0]}>
-          <boxGeometry args={[DOOR_W - 2, H - 3, D - 3]} />
-          <meshStandardMaterial color={0x1c1c1e} metalness={0.3} roughness={0.7} side={THREE.BackSide} />
-        </mesh>
-
-        {/* Tube quartz chauffant haut (visible via vitre) */}
-        <mesh position={[DOOR_X, H - 2.2, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.45, 0.45, DOOR_W - 4, 16]} />
-          <primitive object={quartzTube} attach="material" />
-        </mesh>
-        {/* Reflecteur sous tube */}
-        <mesh position={[DOOR_X, H - 1.4, 0]}>
-          <boxGeometry args={[DOOR_W - 3, 0.1, D - 6]} />
-          <primitive object={stainlessDark} attach="material" />
-        </mesh>
-
-        {/* Grille porte-aliments (mi-hauteur) */}
-        {[-D / 2 + 5, 0, D / 2 - 5].map((z, i) => (
-          <mesh key={`rack-${i}`} position={[DOOR_X, H / 2 - 1, z]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.18, 0.18, DOOR_W - 4, 8]} />
-            <primitive object={rackMat} attach="material" />
+        {/* Parois distinctes : la façade reste réellement ouverte. */}
+        {[
+          { p: [0, H - 0.4, 0], size: [W, 0.8, D] },
+          { p: [0, 0.6, 0], size: [W, 1.2, D] },
+          { p: [-W / 2 + 0.4, H / 2, 0], size: [0.8, H, D] },
+          { p: [W / 2 - 0.4, H / 2, 0], size: [0.8, H, D] },
+          { p: [0, H / 2, -D / 2 + 0.4], size: [W, H, 0.8] },
+          { p: [DOOR_X + DOOR_W / 2 - 0.8, H / 2, 0], size: [0.8, H, D] },
+        ].map(({ p, size }, i) => (
+          <mesh key={`shell-${i}`} position={p as [number, number, number]} material={stainless} castShadow receiveShadow>
+            <boxGeometry args={size as [number, number, number]} />
           </mesh>
         ))}
-        {Array.from({ length: 7 }, (_, i) => i).map(i => {
-          const z = -D / 2 + 5 + (i * (D - 10)) / 6;
-          return (
-            <mesh key={`rack-x-${i}`} position={[DOOR_X, H / 2 - 1, z]}>
-              <boxGeometry args={[DOOR_W - 4, 0.3, 0.3]} />
-              <primitive object={rackMat} attach="material" />
+        {/* Plateau ramasse-miettes et glissières latérales. */}
+        <mesh position={[DOOR_X, 1.4, 0]} material={stainlessDark} receiveShadow>
+          <boxGeometry args={[DOOR_W - 2, 0.3, D - 2]} />
+        </mesh>
+        {[-1, 1].flatMap(side => [6, H / 2 - 1, 13].map(y => (
+          <mesh key={`rail-${side}-${y}`} position={[DOOR_X + side * (DOOR_W / 2 - 1.5), y, 0]} material={stainlessDark}>
+            <boxGeometry args={[1.2, 0.4, D - 3]} />
+          </mesh>
+        )))}
+        {/* Résistances quartz et supports en céramique, haut et bas. */}
+        {[3, H - 2.2].flatMap(y => [-9, 9].map(z => (
+          <group key={`heater-${y}-${z}`} position={[DOOR_X, y, z]}>
+            <mesh rotation={[0, 0, Math.PI / 2]} material={quartzTube}>
+              <cylinderGeometry args={[0.3, 0.3, DOOR_W - 4, 16]} />
             </mesh>
-          );
-        })}
+            {[-1, 1].map(side => (
+              <mesh key={side} position={[side * (DOOR_W / 2 - 2), 0, 0]} material={blackMatte}>
+                <boxGeometry args={[1, 1.2, 1.2]} />
+              </mesh>
+            ))}
+          </group>
+        )))}
 
         {/* Panneau de commande (droite) */}
         <group position={[PANEL_X, H / 2, FRONT_Z + 0.05]}>
@@ -231,6 +212,32 @@ export function NinjaSP101({ actionState, onSize }: SceneItemProps) {
           </mesh>
         ))}
       </MergedStaticGroup>
+
+      {/* Grille indépendante de la coque fusionnée, entièrement extractible. */}
+      <group ref={rackRef} name="ninja-rack">
+        <MergedStaticGroup name="merged-ninja-rack">
+          {[-1, 1].map(side => (
+            <mesh key={`edge-${side}`} position={[DOOR_X + side * (DOOR_W / 2 - 2.5), H / 2 - 0.6, 0]} material={rackMat}>
+              <boxGeometry args={[0.4, 0.4, D - 4]} />
+            </mesh>
+          ))}
+          {[-D / 2 + 2, 0, D / 2 - 2].map(z => (
+            <mesh key={`cross-${z}`} position={[DOOR_X, H / 2 - 0.6, z]} rotation={[0, 0, Math.PI / 2]} material={rackMat}>
+              <cylinderGeometry args={[0.2, 0.2, DOOR_W - 5, 8]} />
+            </mesh>
+          ))}
+          {Array.from({ length: 19 }, (_, i) => (
+            <mesh key={`wire-${i}`} position={[DOOR_X + (i / 18 - 0.5) * (DOOR_W - 5), H / 2 - 0.35, 0]} rotation={[Math.PI / 2, 0, 0]} material={rackMat}>
+              <cylinderGeometry args={[0.1, 0.1, D - 4, 8]} />
+            </mesh>
+          ))}
+        </MergedStaticGroup>
+      </group>
+      <mesh position={[DOOR_X + DOOR_W / 2 - 1.3, H - 4, -5]} rotation={[0, 0, Math.PI / 2]}>
+        <sphereGeometry args={[0.65, 16, 8]} />
+        <meshStandardMaterial color="#fff1cf" emissive="#ffd391" emissiveIntensity={lightOn ? 3 : 0} />
+      </mesh>
+      {lightOn && <pointLight position={[DOOR_X, H - 4, -5]} color="#ffe0a6" intensity={180} distance={D * 2} decay={2} />}
 
       {/* Cadre de porte (inox) — pivot bas-avant pour ouverture flip-down */}
       <group ref={doorRef} position={[DOOR_X, 0.6, FRONT_Z + 0.45]}>

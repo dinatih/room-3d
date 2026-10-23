@@ -149,6 +149,8 @@ const ACTIONS: Record<string, ActionConfig> = {
   fridge: { label: ['Ouvrir', 'Fermer'] },
   'fridge-crisper-toggle': { label: ['Sortir le bac', 'Rentrer le bac'] },
   ninja: { label: ['Ouvrir', 'Fermer'] },
+  'ninja-rack': { label: ['Sortir la grille', 'Rentrer la grille'] },
+  'ninja-light': { label: ['Allumer la lumière', 'Éteindre la lumière'], icon: 'bi-lightbulb' },
   cabinet: { label: ['Ouvrir', 'Fermer'] },
   'wc-lid-toggle': { label: ['Ouvrir Couvercle', 'Fermer Couvercle'] },
   'wc-seat-toggle': { label: ['Ouvrir Siège', 'Fermer Siège'] },
@@ -238,6 +240,8 @@ export function toggleObjectAction(id: string, state: Record<string, any>, value
   const next = { ...state, [id]: value };
   if (id === 'fridge' && !value) next['fridge-crisper-toggle'] = false;
   if (id === 'fridge-crisper-toggle' && value) next.fridge = true;
+  if (id === 'ninja' && !value) next['ninja-rack'] = false;
+  if (id === 'ninja-rack' && value) next.ninja = true;
   return next;
 }
 
