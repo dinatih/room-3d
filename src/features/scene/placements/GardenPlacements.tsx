@@ -34,7 +34,7 @@ const stub = (id: string): Item =>
 
 // Pass 1 — Furniture (Structure & gros volumes)
 export function GardenFurniture() {
-  const as = useFurnitureToggles(['sofa-arm-left', 'sofa-arm-right']);
+  const as = useFurnitureToggles(['sofa-arm-left', 'sofa-arm-right', ...getObjectActionIds('chest-bench')]);
 
   return (
     <MergedStaticGroup name="merged-garden-furniture">
@@ -51,7 +51,7 @@ export function GardenFurniture() {
 
       {/* Banc Coffre */}
       <group position={[40, 0, -90]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, skipMerge: true, birdSupport: { id: 'chest', kind: 'furniture' }, itemName: 'Banc Coffre Jardin' }}>
-        <NavigationObstacle id="chest-bench"><ChestBench item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="chest-bench"><ChestBench item={stub('chest-bench')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
 
       {/* Baignoire Balnéo */}

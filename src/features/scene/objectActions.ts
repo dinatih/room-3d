@@ -29,6 +29,7 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'scooter': ['scooter-steering-toggle'],
   'google-nest-mini': ['nestMini'],
   'cabinet-wood': ['cabinet'],
+  'chest-bench': ['chest-bench-open'],
   'fridge': ['fridge', 'fridge-crisper-toggle'],
   'ninja-sp101': ['ninja', 'ninja-rack', 'ninja-light'],
   'freezer': ['freezer'],
