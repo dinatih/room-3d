@@ -7,7 +7,10 @@ const { retargetClip } = require('../../src/features/scene/retargeting/retargetC
 const { resolveTargetBoneName } = require('../../src/features/scene/retargeting/boneResolver.ts');
 const { captureAnimationRig, restoreAnimationRig } = require('../../src/features/scene/character/animationSerialization.ts');
 
-it('Snake conserve les appuis du GLB après retargeting sur Lara, Ybot et Xbot, y compris dans le worker', async t => {
+for (const fixture of [
+  { name: 'Snake', path: 'mixamo/anim_snake_hip_hop_dance.glb', id: 'snake-hip-hop-dance', contacts: 12, frames: 459 },
+  { name: 'ACCAD poser la boîte', path: 'npz/accad/anim_putdown_box_floor.glb', id: 'putdown-box-floor', contacts: 2, frames: 72 },
+]) it(`${fixture.name} conserve les appuis sur Lara, Ybot et Xbot, y compris dans le worker`, async t => {
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
   const loader = new GLTFLoader(); loader.setDRACOLoader({ preload() {} });
   loader.register(() => ({ name: 'SkeletonOnly', loadMesh: () => Promise.resolve(new THREE.Group()) }));
@@ -16,16 +19,16 @@ it('Snake conserve les appuis du GLB après retargeting sur Lara, Ybot et Xbot, 
     return loader.parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
   }
   for (const path of ['lara/lara_native', 'ybot/ybot', 'xbot/Xbot_official']) {
-    const source = await read('public/animations/mixamo/anim_snake_hip_hop_dance.glb');
+    const source = await read(`public/animations/${fixture.path}`);
     const target = (await read(`public/characters/${path}.glb`)).scene;
     target.scale.multiplyScalar(100); target.updateMatrixWorld(true);
     target.traverse(node => {
       node.defaultPosition = node.position.clone(); node.restLocalQuaternion = node.quaternion.clone();
       node.restWorldQuaternion = node.getWorldQuaternion(new THREE.Quaternion());
     });
-    const raw = source.animations[0]; raw.name = 'snake-hip-hop-dance';
+    const raw = source.animations[0]; raw.name = fixture.id;
     const contacts = source.scene.userData.footContacts;
-    assert.equal(contacts.length, 12);
+    assert.equal(contacts.length, fixture.contacts);
     const snapshot = () => JSON.stringify(captureAnimationRig(target));
     const before = snapshot();
     delete source.scene.userData.footContacts;
@@ -75,7 +78,7 @@ it('Snake conserve les appuis du GLB après retargeting sur Lara, Ybot et Xbot, 
     assert.ok(maximum < 0.1, `${path}: contact drift ${maximum} cm`);
     assert.equal(corrected.duration, raw.duration);
     const position = corrected.tracks.find(track => track.name.endsWith('.position'));
-    assert.equal(position.times.length, (459 - 1) * 4 + 1);
+    assert.equal(position.times.length, (fixture.frames - 1) * 4 + 1);
     const originalPosition = baseline.tracks.find(track => track.name === position.name).createInterpolant();
     const hips = target.getObjectByName(resolveTargetBoneName(target, 'Hips'));
     const parent = new THREE.Matrix3().setFromMatrix4(hips.parent.matrixWorld);
@@ -84,6 +87,6 @@ it('Snake conserve les appuis du GLB après retargeting sur Lara, Ybot et Xbot, 
         .sub(new THREE.Vector3().fromArray(originalPosition.evaluate(time))).applyMatrix3(parent);
       assert.ok(Math.hypot(delta.x, delta.z) < 0.0001, 'Pelvis sway retained in world space');
     });
-    t.diagnostic(`${path}: maximum 3D foot/toe drift at 240 FPS = ${maximum.toFixed(5)} cm; vertical = ${vertical.toFixed(5)} cm`);
+    t.diagnostic(`${path}: initial horizontal drift = ${originalDrift.toFixed(3)} cm; maximum 3D foot/toe drift at 240 FPS = ${maximum.toFixed(5)} cm; vertical = ${vertical.toFixed(5)} cm`);
   }
 });

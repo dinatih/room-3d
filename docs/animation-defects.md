@@ -38,7 +38,7 @@ Les rotations des autres articulations et la durée restent conservées.
 Le contrôle source mesure moins de **0,34 mm** de dérive verticale sur les six
 clips debout, en incluant les milieux des intervalles. Il utilise un talon nominal
 sous la cheville et le repère des orteils, et non les vertices réels des chaussures.
-Ce résultat ne garantit ni l'absence de patinage horizontal, ni le même écart sur
+Ce résultat de hauteur seul ne garantit ni l'absence de patinage horizontal, ni le même écart sur
 tous les personnages après retargeting et réduction des pistes à 30 Hz.
 
 ### Tours complets introduits par le script de correction
@@ -52,28 +52,37 @@ sont évaluées directement pour éviter aussi les états résiduels d'une actio
 arrêtée en fin de clip. Le contrôle compare chaque quaternion corrigé à sa
 référence originale et vérifie la borne angulaire de la correction.
 
-### Patinage vers l'avant : encore à corriger
+### Patinage vers l'avant : correction ciblée de « Reposer la boîte »
 
 Observation utilisateur : **« Reposer la boîte au sol »**, personnage **Native
 (Lara)**, vers l'image **63 / 72**, à environ **2,12 s**, en vue orthographique.
 Les pieds semblent avancer pendant la flexion.
 
-La correction verticale actuelle laisse la trajectoire horizontale intacte :
-elle garantit une hauteur d'appui, pas un point de contact X/Z fixe. La chaîne
-cinématique peut donc déplacer les pieds horizontalement malgré Y = 0.
+La correction verticale seule laissait la trajectoire horizontale intacte.
+La mesure du GLB confirme une dérive avant des orteils de l'ordre de 3 à 4 cm,
+sans phase de lever de pied sur ce segment tronqué de pose de boîte.
 
-C'est l'explication mécanique à vérifier pour ce clip. La part exacte provenant
-du mocap, de la conversion et des proportions du personnage n'a pas encore été
-mesurée. Une capture seule ne permet pas de les départager ni de distinguer un
-pas voulu d'un glissement parasite. **Le patinage n'est pas corrigé à ce stade.**
+Les deux appuis sont désormais annotés de début à fin dans
+`scene.extras.footContacts` du GLB. `retargetClip.ts` applique le solveur existant
+`bakeFootContacts` après adaptation aux proportions du personnage : les chevilles
+et orteils sont ancrés à leur position initiale par résolution des jambes, en
+conservant le balancement horizontal du bassin. Le bassin peut être abaissé
+uniquement si un appui dépasserait la portée de la jambe.
 
-Pour le traiter, relever séparément les phases de contact gauche/droite, puis
-comparer les positions monde des talons/orteils sur le GLB source, Xbot et Lara.
-Ancrer chaque pied pendant son appui, avec relâchement au lever du pied ; conserver
-les pas réels, les pivots et le déplacement voulu du bassin. Deux pieds en appui
-peuvent nécessiter une résolution des jambes et du bassin, plutôt qu'une simple
-translation globale. Ne pas supprimer toute la trajectoire X/Z pour masquer le
-problème.
+Cette correction est ciblée sur `anim_putdown_box_floor.glb`. Les pistes brutes
+du GLB ne sont pas modifiées par cette étape : ses métadonnées demandent au lecteur
+de l'application de résoudre les contacts après retargeting. Un lecteur GLB externe
+qui ignore ces métadonnées conservera le glissement source. La génération dans
+`scripts/correct-accad-feet.cjs` réinscrit les annotations lors des prochains exports.
+
+Le test `tests/unit/snake-foot-contacts.test.cjs` couvre maintenant aussi ce clip
+sur Lara, Xbot et Ybot, avec mesures à 240 Hz, conservation de la trajectoire
+horizontale des hanches et équivalence après sérialisation vers le worker.
+La dérive initiale mesurée est de 3,075 cm sur Lara et 3,740 cm sur Xbot ;
+l’écart maximal corrigé des chevilles/orteils reste inférieur à 0,017 mm sur les
+trois personnages, y compris entre les clés.
+Les autres clips doivent faire l'objet de leurs propres annotations : ne pas
+verrouiller une marche, un pivot ou un pied levé pour masquer un glissement.
 
 ## Procédure de diagnostic à réutiliser
 

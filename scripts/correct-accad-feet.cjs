@@ -135,6 +135,11 @@ async function main() {
       const channel = doc.animations[0].channels.find(c => `${doc.nodes[c.target.node].name.replace(/:/g, '')}.${c.target.path === 'rotation' ? 'quaternion' : c.target.path === 'translation' ? 'position' : c.target.path}` === out.track.name);
       doc.animations[0].samplers[channel.sampler] = { input, output: accessor(out.values, out.type), interpolation: 'LINEAR' };
     }
+    if (file === 'anim_putdown_box_floor.glb') {
+      // The trimmed box placement retains double support throughout (no step).
+      const scene = doc.scenes[doc.scene || 0];
+      scene.extras = { ...scene.extras, footContacts: ['Left', 'Right'].map(side => ({ side, start: times[0], end: times[times.length - 1] })) };
+    }
     doc.asset.extras = { ...doc.asset.extras, accadFootSupport: { method: 'supported-sole-v3', floorOffsetMeters: offset, maxCorrections: outputs.filter(o => o.type === 'VEC4').map(o => o.maxCorrection) } };
     doc.buffers[0].byteLength = binary.length;
     let json = Buffer.from(JSON.stringify(doc)); json = Buffer.concat([json, Buffer.alloc((4 - json.length % 4) % 4, 32)]);
