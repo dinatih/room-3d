@@ -27,6 +27,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 import { cameraState } from './cameraState';
 import { droneInput, useDroneControlStore } from './droneControls';
+import { CAMERA_SUBJECTS } from './camera/cameraSubjects';
 import { useSceneStore } from './store/useSceneStore';
 import { CHARACTERS } from './characterConfig';
 import { appLog } from '@features/ui/AppConsole';
@@ -605,12 +606,23 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   useEffect(() => {
     const handler = (event: Event) => {
-      const key = (event as CustomEvent<{ key: string }>).detail.key;
+      const subject = event.type === 'camera-subject' ? (event as CustomEvent<string>).detail : null;
+      const key = subject ? '' : (event as CustomEvent<{ key: string }>).detail.key;
       const pilot = key === 'drone-pilot' || key === 'drone-level';
       const match = /^animal-(robin|shiba|ulotte|jikin|tosakin|drone)-(fpv|follow)$/.exec(pilot ? 'animal-drone-fpv' : key);
-      if (!match) return;
+      if (!subject && !match) return;
       if (planeModeRef.current || cameraState.isXR || cameraState.isIntroRunning) return;
-      const [, id, requestedMode] = match;
+      if (subject && !CAMERA_SUBJECTS.some(choice => choice.id === subject)) throw new Error(`Objet caméra inconnu : ${subject}`);
+      const id = subject ?? match![1];
+      const requestedMode = subject ? modeRef.current === 'fpv' ? 'fpv' : 'follow' : match![2] as 'fpv' | 'follow';
+      if (id === 'character') {
+        cameraState.animalTarget = null;
+        useDroneControlStore.getState().setPiloting(false);
+        keys.current.clear();
+        enterFollow(cameraState.characterX, cameraState.characterZ, requestedMode);
+        useSceneStore.getState().setActiveCameraPos(null);
+        return;
+      }
       const view = cameraState.animalViews[id];
       if (!view) throw new Error(`Cible non disponible pour la caméra : ${id}`);
       cameraState.animalTarget = id;
@@ -632,7 +644,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     };
     document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
+    document.addEventListener('camera-subject', handler);
+    return () => {
+      document.removeEventListener('furniture-toggle', handler);
+      document.removeEventListener('camera-subject', handler);
+    };
   }, [enterFollow]);
 
   const exitFollow = useCallback(() => {

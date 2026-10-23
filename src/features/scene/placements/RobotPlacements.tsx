@@ -38,6 +38,10 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const { id, Component } = config;
   const navigationEnabled = useNavigationEnabled();
   const group = useRef<Group>(null);
+  const cameraMount = useRef(new Vector3());
+  const cameraEyes = useRef(new Vector3());
+  const cameraForward = useRef(new Vector3());
+  const cameraRadius = useRef(0);
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const route = useRef(createRouteState());
   const navigation = useRef(new NavigationScope());
@@ -57,6 +61,9 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     setActions(previous => ({ ...previous, [motionKey]: motion }));
   }, [motionKey]);
   const onSize = useCallback((size: Vector3) => {
+    // Camera on the upper front edge of the measured body, clear of its own meshes.
+    cameraMount.current.set(0, size.y, size.z / 2);
+    cameraRadius.current = size.length() / 2;
     const measured = { radius: Math.hypot(size.x, size.z) / 2 * config.radiusScale, height: size.y };
     setProfile(previous => previous?.radius === measured.radius && previous.height === measured.height ? previous : measured);
   }, [config.radiusScale]);
@@ -73,6 +80,12 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
       removeAgentProfile(id);
       reserveAgentDestination(id, null);
       delete cameraState.positions[id];
+      delete cameraState.animalViews[id];
+      if (cameraState.animalTarget === id) {
+        cameraState.animalTarget = null;
+        document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: false }));
+        document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'reset-orbit' }));
+      }
     };
   }, [id, navigationEnabled, profile]);
 
@@ -166,6 +179,17 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     state.invalidate();
     });
   }, -1);
+
+  useFrame(() => {
+    const root = group.current;
+    if (!root || !profile || !navigationEnabled) return;
+    cameraEyes.current.copy(cameraMount.current);
+    root.localToWorld(cameraEyes.current);
+    root.getWorldDirection(cameraForward.current);
+    const view = cameraState.animalViews[id] ??= { eyes: { x: 0, y: 0, z: 0 }, forward: { x: 0, y: 0, z: 1 }, radius: cameraRadius.current };
+    Object.assign(view.eyes, cameraEyes.current);
+    Object.assign(view.forward, cameraForward.current);
+  }, -0.5);
 
   return (
     <group ref={group} position={config.position} userData={{ animUnit: true, noAnim: true, skipMerge: true,

@@ -5,6 +5,7 @@ import { cameraState } from './cameraState';
 import { useDroneControlStore } from './droneControls';
 import { ORBIT_CAMERA_LERP } from './camera/cameraConstants';
 import { ALL_HAIR_COLORS } from './sidepanel/types';
+import { CAMERA_SUBJECTS } from './camera/cameraSubjects';
 import './VirtualDPad.scss';
 
 type ArrowKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight';
@@ -35,6 +36,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   const wigGridHairColor = useSceneStore(state => state.wigGridHairColor);
   const selectControl = useSceneStore(state => state.selectArrowControl);
   const [animal, setAnimal] = useState(cameraState.animalTarget);
+  const [availableSubjects, setAvailableSubjects] = useState(() => Object.keys(cameraState.animalViews));
   const activeKeys = useRef(new Set<string>());
   const zoomFrame = useRef<number | null>(null);
   const zoomRemaining = useRef(0);
@@ -128,7 +130,9 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
     { target: 'studio', label: 'Appartement', icon: 'bi-building' },
     { target: 'character', label: 'Personnage', icon: 'bi-person' },
   ] as const;
-
+  const subjectId = animal ?? (mode === 'follow' || mode === 'fpv' ? 'character' : '');
+  const subject = CAMERA_SUBJECTS.find(choice => choice.id === subjectId) ?? CAMERA_SUBJECTS[0];
+  const refreshSubjects = () => setAvailableSubjects(Object.keys(cameraState.animalViews));
 
   return (
     <div className="virtual-controls d-flex flex-column align-items-center gap-1">
@@ -203,6 +207,24 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
           return (
             <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
               <div className="virtual-dpad" role="group" aria-label={piloting ? isCamera ? 'Rotation du Hornet' : 'Déplacement du Hornet' : inputControl === 'character' ? 'Déplacement du PNJ' : 'Déplacement de la caméra'}>
+                {!isCamera && <label className="virtual-dpad__button virtual-dpad__subject rounded-3" title={subjectId ? `Position de la caméra : ${subject.label}` : 'Choisir l’objet de position de la caméra'}>
+                  <i className={`bi ${subject.icon}`} aria-hidden="true" />
+                  <select
+                    className="form-select position-absolute top-0 start-0 w-100 h-100 opacity-0"
+                    aria-label="Objet de position de la caméra"
+                    value={subjectId}
+                    onFocus={refreshSubjects}
+                    onPointerDown={refreshSubjects}
+                    disabled={cameraState.isXR}
+                    onChange={event => {
+                      releaseAll();
+                      document.dispatchEvent(new CustomEvent('camera-subject', { detail: event.target.value }));
+                    }}
+                  >
+                    <option value="" hidden>Choisir un objet caméra</option>
+                    {CAMERA_SUBJECTS.map(choice => <option key={choice.id} value={choice.id} disabled={choice.id !== 'character' && !availableSubjects.includes(choice.id)}>{choice.label}</option>)}
+                  </select>
+                </label>}
                 <span className="virtual-dpad__center d-flex align-items-center justify-content-center" title={piloting ? isCamera ? 'Orienter le Hornet' : 'Déplacer le Hornet' : inputControl === 'character' ? 'Déplacer le PNJ' : 'Déplacer la caméra'}>
                   <i className={`bi ${inputControl === 'character' ? (piloting ? 'bi-controller' : 'bi-person-walking') : 'bi-camera-video'}`} aria-hidden="true" />
                 </span>
