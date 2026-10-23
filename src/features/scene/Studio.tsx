@@ -49,6 +49,7 @@ import { SkySphere } from './SkySphere';
 import { BuildAnimationMatrix } from '@features/scene/BuildAnimations';
 import { AIRCRAFT_MODELS, DEFAULT_PLANE_MODEL } from './aircraftModels';
 import { PlaneControls } from './PlaneControls';
+import { HornetControls } from './HornetControls';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
@@ -1056,6 +1057,7 @@ export function Studio() {
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}
+        <HornetControls hidden={planeMode || showInventory} />
         <ViewControlBar
           hidden={planeMode || showInventory}
           showCharacterModes

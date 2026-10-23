@@ -614,7 +614,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   useEffect(() => {
     const handler = (event: Event) => {
       const key = (event as CustomEvent<{ key: string }>).detail.key;
-      const pilot = key === 'drone-pilot';
+      const pilot = key === 'drone-pilot' || key === 'drone-level';
       const match = /^animal-(robin|shiba|ulotte|jikin|tosakin|drone)-(fpv|follow)$/.exec(pilot ? 'animal-drone-fpv' : key);
       if (!match) return;
       if (planeModeRef.current || cameraState.isXR || cameraState.isIntroRunning) return;
@@ -626,6 +626,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         droneInput.yaw = Math.atan2(view.forward.x, view.forward.z);
         droneInput.pitch = Math.asin(view.forward.y);
       }
+      if (key === 'drone-level') droneInput.pitch = 0;
       useDroneControlStore.getState().setPiloting(pilot);
       animalFollowYaw.current = Math.atan2(view.forward.x, view.forward.z);
       hasAnimalFollowPose.current = false;

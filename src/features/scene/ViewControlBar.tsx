@@ -12,8 +12,6 @@ import { CharacterCountSelect } from './CharacterCountSelect';
 import { CharacterSelect } from './CharacterSelect';
 import { cameraState } from './cameraState';
 import { PresetButton } from './PresetButton';
-import { useDroneControlStore } from './droneControls';
-import { getActionLabel } from './objectActionRegistry';
 
 export interface ViewControlBarProps {
   /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-right' */
@@ -68,7 +66,7 @@ export function ViewControlBar({
     label: string; top?: number; bottom?: number;
   } | null>(null);
   const [animalCameraTarget, setAnimalCameraTarget] = useState(cameraState.animalTarget);
-  const animalCameraActive = Boolean(animalCameraTarget);
+  const animalCameraActive = Boolean(animalCameraTarget && animalCameraTarget !== 'drone');
   useEffect(() => {
     const onAnimalCameraMode = () => setAnimalCameraTarget(cameraState.animalTarget);
     document.addEventListener('animal-camera-mode', onAnimalCameraMode);
@@ -77,9 +75,6 @@ export function ViewControlBar({
   const isMobile = useIsMobile();
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);
-  const droneAvailable = useDroneControlStore(s => s.available);
-  const pilotingDrone = useDroneControlStore(s => s.piloting);
-  const droneSpeed = useDroneControlStore(s => s.speed);
   const orbitMouseMode = useSceneStore(s => s.orbitMouseMode);
   const npcGridActive = useSceneStore(s => s.layers.characterGrid);
   const sceneCameraPos = useSceneStore(s => s.activeCameraPos);
@@ -123,8 +118,6 @@ export function ViewControlBar({
   if (hidden) return null;
 
   const isOrtho = cameraProjection === 'ortho';
-  const droneView = animalCameraTarget === 'drone';
-  const droneAction = (key: string) => document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, userInitiated: true } }));
   const isTranslate = orbitMouseMode === 'translate';
   const mouseTitle = isTranslate
     ? 'Translation (clic gauche : déplacer, clic droit : tourner) — Passer en Rotation (R / T)'
@@ -348,34 +341,11 @@ export function ViewControlBar({
           </button>
           {perspButton}
           {rotButton}
-          <button type="button" className={`${TOOLBAR_BUTTON_CLASS} ${droneView ? 'btn-primary' : 'btn-outline-secondary'}`}
-            disabled={!droneAvailable || isVRActive} aria-pressed={Boolean(droneView)}
-            onClick={() => droneAction('animal-drone-fpv')} title="Observer la scène depuis la caméra du Hornet">
-            <i className="bi bi-camera-video" aria-hidden="true" />{getActionLabel('animal-drone-fpv')}
-          </button>
-          <button type="button" className={`${TOOLBAR_BUTTON_CLASS} ${pilotingDrone ? 'btn-success' : 'btn-outline-secondary'}`}
-            disabled={!droneAvailable || isVRActive} aria-pressed={pilotingDrone}
-            onClick={() => pilotingDrone ? useDroneControlStore.getState().setPiloting(false) : droneAction('drone-pilot')} title={getActionLabel('drone-pilot')}>
-            <i className="bi bi-controller" aria-hidden="true" />Piloter
-          </button>
           {animalCameraActive && (
             <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la vue embarquée" aria-label="Quitter la vue embarquée">
               <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>
             </button>
           )}
-        </div>
-      )}
-      {showCharacterModes && droneView && (
-        <div className="d-flex flex-wrap align-items-center gap-2 small p-1" role="status" aria-label="Commandes du Hornet">
-          <span>{pilotingDrone ? 'Pilotage libre · ZQSD / WASD / flèches : déplacer · Alt + flèches / glisser : regarder · Espace ↑ · C ↓ · Maj + déplacement : vitesse ×3 · Échap : quitter' : 'Vue embarquée du Hornet'}</span>
-          <label className="d-flex align-items-center gap-1">Vitesse
-            <select className="form-select form-select-sm w-auto" value={droneSpeed} onChange={event => useDroneControlStore.getState().setSpeed(Number(event.target.value))}>
-              <option value={40}>Précise · 0,4 m/s</option>
-              <option value={160}>Normale · 1,6 m/s</option>
-              <option value={480}>Rapide · 4,8 m/s</option>
-            </select>
-          </label>
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => droneAction('drone-patrol-all')}>Reprendre la patrouille</button>
         </div>
       )}
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">

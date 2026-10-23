@@ -7,12 +7,14 @@ export const useDroneControlStore = create<{
   available: boolean;
   piloting: boolean;
   speed: number;
+  pitch: number;
   setPiloting: (piloting: boolean) => void;
   setSpeed: (speed: number) => void;
 }>(set => ({
   available: false,
   piloting: false,
   speed: 160, // cm/s, comme le vol autonome.
+  pitch: 0,
   setPiloting: piloting => { droneInput.keys.clear(); set({ piloting }); },
   setSpeed: speed => set({ speed }),
 }));

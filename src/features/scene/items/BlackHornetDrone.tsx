@@ -394,7 +394,9 @@ export function BlackHornetDrone({
     model.getWorldPosition(cameraPosition.current);
     Object.assign(position, cameraPosition.current);
     position.yaw = model.rotation.y;
-    if (!useDroneControlStore.getState().available) useDroneControlStore.setState({ available: true });
+    const pitch = Math.asin(cameraForward.current.y);
+    const store = useDroneControlStore.getState();
+    if (!store.available || store.pitch !== pitch) useDroneControlStore.setState({ available: true, pitch });
   }, -1);
 
   return (

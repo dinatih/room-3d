@@ -180,6 +180,7 @@ const ACTIONS: Record<string, ActionConfig> = {
   'shiba-replay': { label: 'Rejouer', sceneOnly: true },
   'robin-bird-replay': { label: 'Rejouer' },
   'drone-pilot': { label: 'Piloter le Hornet', icon: 'bi-controller', sceneOnly: true },
+  'drone-level': { label: 'Remettre à plat (0°)', icon: 'bi-horizon', sceneOnly: true },
   'animal-drone-fpv': { label: 'Vue Hornet', icon: 'bi-eye', sceneOnly: true },
   'drone-patrol-all': { label: '🛸 Patrouille tout le studio & jardin', sceneOnly: true },
   'drone-goto-garden': { label: '🌿 Aller au Jardin', sceneOnly: true },

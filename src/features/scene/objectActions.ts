@@ -11,6 +11,7 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
     'animal-drone-fpv',
     'animal-drone-follow',
     'drone-pilot',
+    'drone-level',
     'drone-patrol-all',
     'drone-goto-garden',
     'drone-goto-living',
