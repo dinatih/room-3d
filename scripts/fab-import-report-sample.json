@@ -1,0 +1,459 @@
+{
+  "sources": [
+    {
+      "source": "Actorcore-Blender-1014-533367.zip",
+      "sha256": "978f942d355e89a3232a85db8f4e4fd16ae2de61dcdb1398994ae1731331df73"
+    },
+    {
+      "source": "Actorcore-Blender-1014-530746.zip",
+      "sha256": "6da17d9da7f587f95e87e1fd6876b10ad7c29bd77532576ee437e2a3b2130897"
+    },
+    {
+      "source": "Actorcore-Blender-1014-522994.zip",
+      "sha256": "689ebf39a18ad556c0f154028f0924287b801b08b8542fe1d177625701b00b5b"
+    },
+    {
+      "source": "bboombboom_momoland_quinn_edit.fbx",
+      "sha256": "30903e0f75ebab56a48b1f0bc0817fa6ee4c5f7116f87aba3744af822ab2a312"
+    },
+    {
+      "source": "trendy-dances-2025-source.zip",
+      "sha256": "483933e3be4f5b3f27deadd6e7aaf749ec5a4bd216ebb492bd9a7c1099a13970"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "sha256": "e7ce18dec00847b8ebd399983186d3ab09cee6c5e02bb712fcd519ffa0f54a65"
+    },
+    {
+      "source": "lookwindow01_fbx.zip",
+      "sha256": "3d4c4975b35df2e2d998658ef270c9b3916ba85b8489cdee749d496814e9208e"
+    },
+    {
+      "source": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files.zip",
+      "sha256": "930a638bcd1e7502c3b1d691c59256bee60fbd553d028fc094bdf271f065e4e4"
+    },
+    {
+      "source": "free_motionset_1_60fps.zip",
+      "sha256": "2650315c948651f2f2abb7b3c3ec27cf3a53170f87cf1a5d5bcde1d3aa915ac0"
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "sha256": "aa42a11024072502e0331215a6d493946420d8d830e144bd2b561e8abfa5102a"
+    },
+    {
+      "source": "doing_something_strange_v1.fbx",
+      "sha256": "a3e3bfe01b376b0140e426986e8ed36a402906e2dc6957dc35d0cd7ff36aa2af"
+    },
+    {
+      "source": "shaking_hip_v1.fbx",
+      "sha256": "bc1d8fb8d08c99e3ae767421b9732442317c43ca0896136b4cb0ca6236388cb0"
+    },
+    {
+      "source": "joyfull_jump_v1.fbx",
+      "sha256": "b371585a84c1d6ea3566d4bb6e73d676323010018349562e0dbc5970cea5630a"
+    },
+    {
+      "source": "crockscrew.fbx",
+      "sha256": "86ca8b7ab273e5d0472791d931fa6d80c30bd1abf7e16260a0729325ad1b0258"
+    },
+    {
+      "source": "dougiedance_quinn_edit.fbx",
+      "sha256": "a58bccbe0d1fd4d187a75ebf4f413374a06ea5a59b7a019ae213afcf560589f4"
+    },
+    {
+      "source": "multiple_backflip_v2.fbx",
+      "sha256": "e4bf7bcd44508884e76cb1eed46cfafae64f42047d2eb1eb780f8e0f6d2301a9"
+    },
+    {
+      "source": "dancing_8_v1.fbx",
+      "sha256": "ade540d751a40b0fe429d4ca469b6fd825fa910e3f21a7263b005b93ee422ec2"
+    },
+    {
+      "source": "combat.zip",
+      "sha256": "340266d8dc28a1630136984dd8fd65242cf6ad5e05cc1c724aa5053a1dac84cd"
+    },
+    {
+      "source": "injured.zip",
+      "sha256": "4aca667e9f0d5da09cbbaec6e2301f01f05fb896463e3fb937184e13a239faf8"
+    },
+    {
+      "source": "martial_arts.zip",
+      "sha256": "5872c2c5b9863659c8f3fd7efc919218e74a5543ed46af7e6a8a87d29b43d370"
+    },
+    {
+      "source": "locomotion.zip",
+      "sha256": "917fa48f2a1ec11f3bcc178220f4f246f2d6e2f3880504c9cb3a6932e223adba"
+    },
+    {
+      "source": "emotes.zip",
+      "sha256": "c590d67982e29c3ea470f5c4bcbd103f00680b93709c76dc861fe40e39d22f81"
+    },
+    {
+      "source": "daily_life.zip",
+      "sha256": "150b2803a3ce1b5107399eb637ba43b42dfe1b82c9f660bbe4133fb3f86c2291"
+    },
+    {
+      "source": "anim-ue4--gettingup-up.zip",
+      "sha256": "a6060cbc016362212c1be3380521679e430f6a4ef365cb5fcb61f0562def29c8"
+    },
+    {
+      "source": "going_somewhere_in_vehicle_v1.fbx",
+      "sha256": "682e9dfed19c1f922e0b0f45f860fa040f14a759876d60f3c139db1ec72d9b6d"
+    }
+  ],
+  "imported": [
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteBurlesqueBumpA_T1_K.fbx",
+      "frames": 672,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "83fef4c44ab7c0e72df6e6958ac64a44536a0f1016d067bc9ec2ea442006ced6",
+      "fbxHash": "8e540ec189e3c2e3f7d3a32815cfe9747e743007fb432791cb3e24bc2b70a273",
+      "id": "fab-lit-moves-emote-burlesque-bump-a-t1-k",
+      "path": "animations/fab/lit-moves/emote-burlesque-bump-a-t1-k.glb",
+      "bytes": 598064
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteCountryGirlGrapevine_T1_K.fbx",
+      "frames": 3940,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "2d63c5c64487d27f9fc50745e6bf47303219da8c12e810b0b8370158a1645a65",
+      "fbxHash": "f7583078f54856e20de4e4ae72a18b6afff9a0a9488bd08ea003a19fc5e522ea",
+      "id": "fab-lit-moves-emote-country-girl-grapevine-t1-k",
+      "path": "animations/fab/lit-moves/emote-country-girl-grapevine-t1-k.glb",
+      "bytes": 3369428
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteCountryGirl_ShakeItA_T1_K.fbx",
+      "frames": 2595,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "491fe838e61da131865d84876be6cb8e20cef1549f0d78d2d74949fc21f6cbdb",
+      "fbxHash": "ada9554b618bac3d92034342145cc1a35d523dac90d6746fd0dfa627025aded6",
+      "id": "fab-lit-moves-emote-country-girl-shake-it-a-t1-k",
+      "path": "animations/fab/lit-moves/emote-country-girl-shake-it-a-t1-k.glb",
+      "bytes": 2228872
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteCountryGirl_ShakeItB_T1_K.fbx",
+      "frames": 2312,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "e8003e7ad1f1328684d052e199ac8d8ef82b41769b4feb322477d162c497e918",
+      "fbxHash": "a0564bc35e3bcf0f648a068922dd7ec68de76db86b193dad377fc428c6fba585",
+      "id": "fab-lit-moves-emote-country-girl-shake-it-b-t1-k",
+      "path": "animations/fab/lit-moves/emote-country-girl-shake-it-b-t1-k.glb",
+      "bytes": 1988880
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteCountryGirl_ShakeItC_T1_K.fbx",
+      "frames": 3734,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "0b43ba4e4b732122261c5a28eb6fee2a4e77f405ec35357bf68d7161ce8578a9",
+      "fbxHash": "f809ff713e2afe6343d3e7a99445832b17e75915d9fb9448055c86cfc7df1592",
+      "id": "fab-lit-moves-emote-country-girl-shake-it-c-t1-k",
+      "path": "animations/fab/lit-moves/emote-country-girl-shake-it-c-t1-k.glb",
+      "bytes": 3194752
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteHeels10_T1_O.fbx",
+      "frames": 414,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "f51a32e121ce41f09ef49db10e0b97cc7012e75392134676214b070fc0a404de",
+      "fbxHash": "59598cebea7f8dcae8755e4234853846f0d211426049fe6725dfb345f94b61cc",
+      "id": "fab-lit-moves-emote-heels10-t1-o",
+      "path": "animations/fab/lit-moves/emote-heels10-t1-o.glb",
+      "bytes": 379212
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteHeels11_T1_O.fbx",
+      "frames": 488,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "bb6b28ed9e4cee315deb25e16aa1429290abf471fbf7d695db428188cf8c75a5",
+      "fbxHash": "6ea967cb99ee44deb6c84039a083383bcc1b218a1364299883c9140376fa2b4a",
+      "id": "fab-lit-moves-emote-heels11-t1-o",
+      "path": "animations/fab/lit-moves/emote-heels11-t1-o.glb",
+      "bytes": 441968
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteHeels12_T1_O.fbx",
+      "frames": 992,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "7c620dc5bec3a8d0b70572c22ca68eaf7e671c42fc0eba9d4748976ed5ddfd06",
+      "fbxHash": "9f9ea0d8aaa33df5822e8ee181f34a2d8b15c385ce0f776b28b28ad6c212ca71",
+      "id": "fab-lit-moves-emote-heels12-t1-o",
+      "path": "animations/fab/lit-moves/emote-heels12-t1-o.glb",
+      "bytes": 869420
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteHeels13_T1_O.fbx",
+      "frames": 813,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "3014ecee1252ba1b18133be27603fcef26d50579cd3b3286ebbfbeedf60683a1",
+      "fbxHash": "076cb9a5bdc0420b825048477df6f1d19735a4f4a9a4f83fd9dcdea1a0e38132",
+      "id": "fab-lit-moves-emote-heels13-t1-o",
+      "path": "animations/fab/lit-moves/emote-heels13-t1-o.glb",
+      "bytes": 717628
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteHeels14_T1_O.fbx",
+      "frames": 886,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "12b3ccae697ec85a939c022d7eb1b0cfe5cf9ca8b682e464606002360e5ca8ce",
+      "fbxHash": "ef114d7d83501a07e991443af0bb18b9e44941653ada2856c30931ecd013228a",
+      "id": "fab-lit-moves-emote-heels14-t1-o",
+      "path": "animations/fab/lit-moves/emote-heels14-t1-o.glb",
+      "bytes": 779520
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteHeels9_T1_O.fbx",
+      "frames": 580,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "28b118cf1c161d1526091c220247b452c8805a6fe14e7e2b7a74365b6fff2059",
+      "fbxHash": "ec417e86420de23412eee42849107c2562da85c2d7a556a8bb3dd57716fdacca",
+      "id": "fab-lit-moves-emote-heels9-t1-o",
+      "path": "animations/fab/lit-moves/emote-heels9-t1-o.glb",
+      "bytes": 519972
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/EmoteSquatHeels_T1_O.fbx",
+      "frames": 705,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 88,
+      "mappedBones": 52,
+      "motionHash": "6a0f954629627afd864a07e6839154ef865ebc9e90b7b32c1b7c5d4ec0f6d7f4",
+      "fbxHash": "4014d350c67e3ab4a67f5739c3eaf5d8bda58d16951d00fd1f4c84dc2bde215e",
+      "id": "fab-lit-moves-emote-squat-heels-t1-o",
+      "path": "animations/fab/lit-moves/emote-squat-heels-t1-o.glb",
+      "bytes": 626044
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/VapesEdit_T2_KL.fbx",
+      "frames": 569,
+      "fps": 60.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 160,
+      "mappedBones": 52,
+      "motionHash": "f01200a8cdfa382483b6a43682ac2accbed2c61282a0c4dde57b46df6c9e2a97",
+      "fbxHash": "37cc99613ec3edfdbbef46fffb2be73141e79368e6806824cb47840514120ac3",
+      "id": "fab-lit-moves-vapes-edit-t2-kl",
+      "path": "animations/fab/lit-moves/vapes-edit-t2-kl.glb",
+      "bytes": 510656
+    },
+    {
+      "source": "litmovesemotesmocap_fbx_motions.zip",
+      "file": "litmovesemotesmocap_fbx_motions/LitMovesEmotesMocap_FBX Motions/Vapes_T2_KL.fbx",
+      "frames": 3688,
+      "fps": 120.0,
+      "sourceAction": "root|Unreal Take|Base Layer",
+      "sourceBones": 88,
+      "mappedBones": 52,
+      "motionHash": "8e37ff742509d04dbab853ca7733834479432896ef48d62c6d95e6cf62bc39a6",
+      "fbxHash": "c2b34815d86ffdf6339e429b206f9297670c94ace45ce8ff4eeabc733a6d8aa8",
+      "id": "fab-lit-moves-vapes-t2-kl",
+      "path": "animations/fab/lit-moves/vapes-t2-kl.glb",
+      "bytes": 3155708
+    }
+  ],
+  "excluded": [
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/AWESOME DOG FBX 60fps/!Android_TPose.fbx",
+      "reason": "Calibration rig, not a motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Air Horse Gallop.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Baby Shark.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Casual Dance 1.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Casual Dance 2.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Casual Dance 3.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Casual Dance 4.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Casual Dance 5.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Casual Dance 6.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Casual Dance 7.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Casual Dance 8.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/General Dance 1.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/General Dance 2.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/General Dance 3.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/General Dance 4.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/General Dance 5.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/General Dance 6.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/General Dance 7.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Second Line 1.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Second Line 2.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Second Line 3.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Second Line 4.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/Second Line 5.fbx",
+      "reason": "Equivalent rig/cadence export; retained original 60fps motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/UEMannyPose/SK_Mannequin_APose.FBX",
+      "reason": "Calibration rig, not a motion"
+    },
+    {
+      "source": "sample_dances_fbx.zip",
+      "file": "sample_dances_fbx/UE FBX 30fps/UEMannyPose/SK_Mannequin_TPose.FBX",
+      "reason": "Calibration rig, not a motion"
+    },
+    {
+      "source": "lookwindow01_fbx.zip",
+      "file": "lookwindow01_fbx/Rigs/MC_Motionbuilder_FBIK_Rig.fbx",
+      "reason": "Calibration rig, not a motion"
+    },
+    {
+      "source": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files.zip",
+      "file": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files/(importing sources (fbx - UE5-Manny and UE4-mannequin))/Mesh version/Shy Dancing 1 - UE4 (mannequin) + MESH.fbx",
+      "reason": "Equivalent Unreal rig export; retained original 60fps motion"
+    },
+    {
+      "source": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files.zip",
+      "file": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files/(importing sources (fbx - UE5-Manny and UE4-mannequin))/Mesh version/Shy Dancing 1 - UE5 Manny + MESH.fbx",
+      "reason": "Equivalent Unreal rig export; retained original 60fps motion"
+    },
+    {
+      "source": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files.zip",
+      "file": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files/(importing sources (fbx - UE5-Manny and UE4-mannequin))/Shy Dancing 1 - EXPORT - UE4 Mannequin.fbx",
+      "reason": "Equivalent Unreal rig export; retained original 60fps motion"
+    },
+    {
+      "source": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files.zip",
+      "file": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files/(importing sources (fbx - UE5-Manny and UE4-mannequin))/Shy Dancing 1 - EXPORT - UE5 Manny.fbx",
+      "reason": "Equivalent Unreal rig export; retained original 60fps motion"
+    },
+    {
+      "source": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files.zip",
+      "file": "shy_dancing_1_mocapdancer_animation_132bpm_ue_files/T-pose - female (MocapDancer mannequin).fbx",
+      "reason": "Calibration rig, not a motion"
+    }
+  ]
+}
