@@ -901,6 +901,19 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       duoCount: 10,
     }],
   },
+  'interx-affection-garden-point': {
+    id: 'interx-affection-garden-point',
+    name: '🫂 Point Duo Inter-X Jardin',
+    category: 'outdoor',
+    position: [150, 0, -250],
+    slots: [{
+      slotId: 'interx-random',
+      name: 'Jouer un duo Inter-X aléatoire',
+      isDuo: true,
+      duoPool: INTERX_AFFECTION_DUO_IDS,
+      duoCount: 1,
+    }],
+  },
   'inyeong-cha-hugs-point': {
     id: 'inyeong-cha-hugs-point',
     name: '💖 Point Câlins Inyeong-Cha',
