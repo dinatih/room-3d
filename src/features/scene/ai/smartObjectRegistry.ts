@@ -638,6 +638,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'building-b-corridor',
     name: 'Entrée Bâtiment B (Couloir)',
     category: 'outdoor',
+    exclusive: true,
     position: [-350, 0, 1002],
     slots: [
       {
