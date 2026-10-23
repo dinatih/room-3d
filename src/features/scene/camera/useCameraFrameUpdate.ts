@@ -285,7 +285,8 @@ export function useCameraFrameUpdate({
       invalidate();
       const k = keys.current;
       if (modeRef.current === 'fpv') {
-        const isArrowPress = k.has('ArrowUp') || k.has('ArrowDown') || k.has('ArrowLeft') || k.has('ArrowRight');
+        const isArrowPress = k.has('ArrowUp') || k.has('ArrowDown') || k.has('ArrowLeft') || k.has('ArrowRight') ||
+          k.has('AltArrowUp') || k.has('AltArrowDown') || k.has('AltArrowLeft') || k.has('AltArrowRight');
         if (isArrowPress) {
           cameraState.recordUserControl();
         }
@@ -310,10 +311,10 @@ export function useCameraFrameUpdate({
         if (k.has('AltArrowDown')) followPos.current.y -= sp;
       } else {
         // Mode FPV (1ère personne)
-        if (k.has('camera:ArrowLeft')) followYaw.current += 0.03 * dt;
-        if (k.has('camera:ArrowRight')) followYaw.current -= 0.03 * dt;
-        if (k.has('camera:ArrowUp')) followPitch.current = Math.min(1.4, followPitch.current + 0.02 * dt);
-        if (k.has('camera:ArrowDown')) followPitch.current = Math.max(-1.4, followPitch.current - 0.02 * dt);
+        if (k.has('camera:ArrowLeft') || k.has('AltArrowLeft')) followYaw.current += 0.03 * dt;
+        if (k.has('camera:ArrowRight') || k.has('AltArrowRight')) followYaw.current -= 0.03 * dt;
+        if (k.has('camera:ArrowUp') || k.has('AltArrowUp')) followPitch.current = Math.min(1.4, followPitch.current + 0.02 * dt);
+        if (k.has('camera:ArrowDown') || k.has('AltArrowDown')) followPitch.current = Math.max(-1.4, followPitch.current - 0.02 * dt);
         if (k.has('CtrlArrowUp') || k.has('CtrlArrowDown')) {
           const cam = camera as THREE.PerspectiveCamera;
           if (cam.isPerspectiveCamera && !cameraState.isXR) {
@@ -322,9 +323,6 @@ export function useCameraFrameUpdate({
             cam.updateProjectionMatrix();
           }
         }
-
-        if (k.has('AltArrowUp')) followPos.current.y += sp;
-        if (k.has('AltArrowDown')) followPos.current.y -= sp;
       }
     }
 

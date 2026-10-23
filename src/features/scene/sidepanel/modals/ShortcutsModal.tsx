@@ -136,8 +136,8 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
             <div>
               <Section title="Suivi PNJ / FPV" />
               <R label="Zoomer / dézoomer"          keys={['Ctrl + ↑↓']} />
-              <R label="FPV : incliner le regard"   keys={['↑↓']} />
-              <R label="Monter / descendre"         keys={['Alt + ↑↓']} />
+              <R label="FPV : incliner le regard"   keys={['Alt + ↑↓']} />
+              <R label="Follow : monter / descendre" keys={['Alt + ↑↓']} />
               <R label="Regarder librement"         keys={['Clic + glisser']} />
             </div>
           </div>
