@@ -67,6 +67,16 @@ it('exclut les animations solo même lorsque leurs pieds bougent', () => {
     assert.equal(getWalkCycleSpeed(clip, rig), null);
   }
 });
+it('signale les marches invalides et permet de recalibrer un clip corrigé', () => {
+  const { rig, clip } = fixture();
+  assert.throws(() => getWalkCycleSpeed(clip, new THREE.Group()), /Pied manquant.*walking/);
+  assert.equal(getWalkCycleSpeed(clip, rig), 100);
+  assert.throws(() => getWalkCycleSpeed(new THREE.AnimationClip('walking'), rig), /Échantillons insuffisants.*walking/);
+  const stationary = new THREE.AnimationClip('walking', 1, [
+    new THREE.VectorKeyframeTrack('LeftFoot.position', [0, 1], [0, 0, 0, 0, 0, 0]),
+  ]);
+  assert.throws(() => getWalkCycleSpeed(stationary, rig), /Foulée invalide.*walking/);
+});
 it('vérifie toutes les vitesses PNJ sur Lara et Xbot après retargeting', async t => {
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
   const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
