@@ -381,12 +381,11 @@ const sortedCharacters = [
   ...CHARACTERS.filter(char => char.isLara !== false),
   ...CHARACTERS.filter(char => char.id === 'xbot'),
   ...CHARACTERS.filter(char => char.isLara === false && char.id !== 'xbot'),
-  UNITREE_H2,
 ];
 
 sortedCharacters.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
-    const photos = char.id === 'unitree-h2' ? undefined : char.path.includes('xbot')
+    const photos = char.path.includes('xbot')
       ? ['characters/xbot/Xbot_official_3d_preview.png']
       : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined);
     INVENTORY.push({
@@ -419,12 +418,6 @@ sortedCharacters.forEach(char => {
             : (!char.isLara
               ? `Personnage animé standard Mixamo : ${char.name}.`
               : `Personnage : ${char.name}.`))),
-      ...(char.id === 'unitree-h2' ? {
-        brand: 'Unitree Robotics',
-        dims: { w: 44.66, d: 56.07, h: char.height },
-        url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/h2_description',
-        notes: 'Maillages et 31 articulations officiels BSD-3-Clause. Pièces rigides entraînées autour des axes moteurs, dans leurs limites URDF. Marche classique adaptée aux moteurs. Dimensions en posture neutre.',
-      } : {}),
     });
   }
 });
@@ -575,6 +568,18 @@ INVENTORY.push({
   dims: { w: 18.0, d: 16.37, h: 11.42 },
   glbPath: 'characters/tosakin-goldfish/tosakin-goldfish.glb',
   notes: 'Poisson rouge à queue en éventail : repos, nage, repas et virages gauche/droite. Vit avec le Jikin dans la baignoire.',
+});
+
+INVENTORY.push({
+  id: UNITREE_H2.id,
+  name: UNITREE_H2.name,
+  brand: 'Unitree Robotics',
+  category: 'robots',
+  qty: 1,
+  dims: { w: 44.66, d: 56.07, h: UNITREE_H2.height },
+  glbPath: UNITREE_H2.path,
+  url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/h2_description',
+  notes: 'Maillages et 31 articulations officiels BSD-3-Clause. Pièces rigides entraînées autour des axes moteurs, dans leurs limites URDF. Marche classique adaptée aux moteurs. Dimensions en posture neutre.',
 });
 
 INVENTORY.push({
