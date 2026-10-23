@@ -178,7 +178,21 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'ringhult-door',    name: 'RINGHULT Porte, brillant gris clair, 40x80 cm', brand: 'IKEA', category: 'kitchen', qty: 1, dims: { w: 40, d: 1.7, h: 80 }, notes: 'Porte placard cuisine sous évier', glbPath: 'items/ringhult60327137/Ringhult60327137.glb', url: 'https://www.ikea.com/fr/fr/p/ringhult-porte-brillant-gris-clair-60327137/', price: '25', photos: ['items/ringhult60327137/Ringhult60327137.jpg', 'items/ringhult60327137/Ringhult60327137_1.jpg', 'items/ringhult60327137/Ringhult60327137_2.jpg', 'items/ringhult60327137/Ringhult60327137_3.jpg'] },
   { id: 'kallror',          name: 'KALLRÖR poignée, acier inoxydable, 213 mm', brand: 'IKEA', category: 'decor', qty: 3, dims: { w: 21.3, d: 3.8, h: 1.3 }, notes: 'Acier inoxydable, meubles cuisine + SDB (×3)', glbPath: 'items/kallror50357002/Kallror50357002.glb', url: 'https://www.ikea.com/fr/fr/p/kallroer-poignee-acier-inoxydable-50357002/', price: '10', photos: ['items/kallror50357002/Kallror50357002.jpg', 'items/kallror50357002/Kallror50357002_1.jpg', 'items/kallror50357002/Kallror50357002_2.jpg', 'items/kallror50357002/Kallror50357002_3.jpg'] },
   { id: 'fridge',           name: 'LAGAN Réfrigérateur 113 l',      brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 60,   d: 63,   h: 172  }, notes: 'Blanc, comp. congélateur', glbPath: 'items/lagan réfrigérateur av comp congélateur indépendant-blanc 97-16 l/LAGAN Réfrigérateur av comp congélateur indépendant-blanc 97-16 l.glb', photos: ['items/fridge/fridge-1.jpg', 'items/fridge/fridge-2.jpg', 'items/fridge/fridge-3.jpg', 'items/lagan réfrigérateur av comp congélateur indépendant-blanc 97-16 l/LAGAN Réfrigérateur av comp congélateur indépendant-blanc 97-16 l_3d_preview.png'] },
-  { id: 'ninja-sp101',      name: 'Mini four Foodi Flip SP101EU',   brand: 'Ninja',    category: 'kitchen',   qty: 1, dims: { w: 51,   d: 37,   h: 19.5 }, notes: '8-en-1, inox brossé, porte vitrée + flip-back' },
+  {
+    id: 'ninja-sp101', name: 'Mini four Ninja Foodi 8-en-1 SP101EU', brand: 'Ninja', category: 'kitchen', qty: 1,
+    dims: { w: 51, d: 37, h: 19.5 }, notes: 'Inox brossé, porte vitrée et rangement vertical.',
+    url: 'https://www.sharkninja.fr/mini-four-ninja-foodi-8-en-1-avec-air-fry-pizza-et-gratin-sp101eu/SP101EU.html',
+    price: '229,99',
+    description: 'Four de comptoir à huit modes : Air Fry, rôtissage, cuisson au four, grill, déshydratation, toast, bagel et maintien au chaud. Préchauffage annoncé en 60 secondes. La technologie Crisp Control associe six résistances infrarouges à une ventilation variable. Peut accueillir une pizza de 33 cm, 1 kg de frites ou six tranches de pain. Se relève pour libérer le plan de travail. Écran numérique, minuterie, lumière intérieure, ramasse-miettes amovible et accès arrière pour le nettoyage. Livré avec une plaque à pâtisserie, un panier Air Fry, une grille et un guide de recettes. Garantie limitée de deux ans. Prix relevé sur SharkNinja France le 23/10/2026 : 229,99 €, dont 1,25 € d’éco-participation.',
+    photos: [
+      'items/ninja-sp101/Ninja-Foodi-SP101UK-8IN1-Mini-Oven-Product-Door-Closed-1200x1600.jpg',
+      'items/ninja-sp101/SP101EU_FR_04.jpg',
+      'items/ninja-sp101/SP101EU_FR_10.jpg',
+      'items/ninja-sp101/SP101EU_FR_02.jpg',
+      'items/ninja-sp101/SP101UK_M.jpg',
+      'items/ninja-sp101/SP101UK_25.jpg',
+    ],
+  },
   { id: 'moules-airfryer',  name: 'Moules jetables papier air fryer ×120', brand: 'Kitchen Cook', category: 'kitchen', qty: 120, dims: { w: 20, d: 20, h: 15 }, notes: 'Papier cuisson pour air fryer | Acheté le 14/02/2026' },
   { id: 'freezer',          name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1, dims: { w: 45,   d: 47,   h: 50   }, notes: 'Noir, niche séjour', glbPath: 'items/tillreda réfrigérateur indépendant-blanc 43 l/TILLREDA Réfrigérateur indépendant-blanc 43 l.glb', photos: ['items/tillreda réfrigérateur indépendant-blanc 43 l/TILLREDA Réfrigérateur indépendant-blanc 43 l_3d_preview.png'] },
 
