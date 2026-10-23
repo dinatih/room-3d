@@ -251,6 +251,25 @@ def convert(npz_path: Path, output_path: Path):
         hips.location = world_hips * (100 * MIXAMO_TRANSLATION_SCALE) - hips.bone.head
         hips.keyframe_insert(data_path='location', frame=frame)
 
+    # Align lowest foot contact to ground level (Z = 0)
+    foot_names = ('mixamorig:LeftFoot', 'mixamorig:RightFoot', 'mixamorig:LeftToeBase', 'mixamorig:RightToeBase')
+    min_foot_z = min(
+        (armature.matrix_world @ bone.matrix.translation).z
+        for frame in range(1, num_frames + 1, 2)
+        if scene.frame_set(frame) is None
+        for name in foot_names
+        if (bone := armature.pose.bones.get(name))
+    )
+    ground_offset = min_foot_z * 100
+    act = armature.animation_data.action
+    fcurves = act.fcurves if hasattr(act, 'fcurves') else [
+        fc for layer in act.layers for strip in layer.strips for cb in strip.channelbags for fc in cb.fcurves
+    ]
+    for fc in fcurves:
+        if 'Hips' in fc.data_path and fc.data_path.endswith('.location') and fc.array_index == 1:
+            for kp in fc.keyframe_points:
+                kp.co[1] -= ground_offset
+
     scene.frame_start = 1
     scene.frame_end = num_frames
     output_path.parent.mkdir(parents=True, exist_ok=True)
