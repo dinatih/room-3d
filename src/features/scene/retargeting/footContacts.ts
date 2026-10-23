@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { resolveTargetBoneName } from './boneResolver';
 
-export interface FootContact { side: 'Left' | 'Right'; start: number; end: number }
+export interface FootContact { side: 'Left' | 'Right'; start: number; end: number; level?: boolean }
 
 /** Bake the GLB's authored supports after adapting limb lengths to the target rig. */
 export function bakeFootContacts(rig: THREE.Object3D, clip: THREE.AnimationClip, contacts: FootContact[]): THREE.AnimationClip {
+  if (!contacts.length) throw new Error('Empty foot contacts');
   const hips = rig.getObjectByName(resolveTargetBoneName(rig, 'Hips')!)!;
   const position = clip.tracks.find(track => track.name === `${hips.name}.position`)!;
   // Bake four samples per source interval (120 Hz for this 30 FPS motion)
@@ -28,14 +29,35 @@ export function bakeFootContacts(rig: THREE.Object3D, clip: THREE.AnimationClip,
   };
   const output = new Map<string, Float32Array>([[position.name, new Float32Array(times.length * 3)]]);
   try {
-    const legs = (['Left', 'Right'] as const).map(side => {
+    // The character may already be playing another clip when this bake starts.
+    for (const { node, property } of evaluators) {
+      const bone = node as THREE.Object3D & { defaultPosition: THREE.Vector3; restLocalQuaternion: THREE.Quaternion };
+      if (property === 'position') node.position.copy(bone.defaultPosition);
+      else node.quaternion.copy(bone.restLocalQuaternion);
+    }
+    rig.updateMatrixWorld(true);
+    const soleReferences = new Map((['Left', 'Right'] as const).map(side => {
+      const foot = rig.getObjectByName(resolveTargetBoneName(rig, side + 'Foot')!)!;
+      const toe = rig.getObjectByName(resolveTargetBoneName(rig, side + 'ToeBase')!)!;
+      const a = world(foot), t = world(toe);
+      return [side, { height: t.y, heel: new THREE.Vector3(0, t.y - a.y, 0).applyQuaternion(foot.getWorldQuaternion(new THREE.Quaternion()).invert()) }];
+    }));
+    const legs = (['Left', 'Right'] as const).flatMap(side => {
       const spans = contacts.filter(contact => contact.side === side);
-      if (!spans.length || spans[0].start !== times[0] || spans[spans.length - 1].end !== times[times.length - 1]) throw new Error(`Incomplete ${side} contacts`);
+      if (!spans.length) return [];
+      if (spans[0].start !== times[0] || spans[spans.length - 1].end !== times[times.length - 1]) throw new Error(`Incomplete ${side} contacts`);
       const [hip, knee, foot, toe] = ['UpLeg', 'Leg', 'Foot', 'ToeBase'].map(part => rig.getObjectByName(resolveTargetBoneName(rig, side + part)!)!);
       const frames = Array.from(times, time => { sample(time); return { toe: world(toe), foot: world(foot), rotation: foot.getWorldQuaternion(new THREE.Quaternion()) }; });
-      const anchors = spans.map(({ start, end }, index) => {
+      const anchors = spans.map(({ start, end, level }, index) => {
         const frame = index === 0 || index === spans.length - 1 ? frames[0] : frames[times.findIndex(time => time >= (start + end) / 2)];
-        return { ...frame, toe: frame.toe.clone().setY(frames[0].toe.y) };
+        const rotation = frame.rotation.clone(), sole = soleReferences.get(side)!;
+        if (level) {
+          const heel = frame.foot.clone().add(sole.heel.clone().applyQuaternion(rotation));
+          const direction = frame.toe.clone().sub(heel).normalize();
+          const horizontal = direction.clone().setY(0).normalize();
+          rotation.premultiply(new THREE.Quaternion().setFromUnitVectors(direction, horizontal));
+        }
+        return { ...frame, rotation, toe: frame.toe.clone().setY(level ? sole.height : frames[0].toe.y) };
       });
       const targets = frames.map((frame, index) => {
         const time = times[index];
@@ -55,7 +77,7 @@ export function bakeFootContacts(rig: THREE.Object3D, clip: THREE.AnimationClip,
         return { point: frame.toe.clone().add(delta).sub(offset), rotation };
       });
       for (const bone of [hip, knee, foot]) output.set(`${bone.name}.quaternion`, new Float32Array(times.length * 4));
-      return { hip, knee, foot, targets };
+      return [{ hip, knee, foot, targets }];
     });
     const aim = (bone: THREE.Object3D, child: THREE.Object3D, target: THREE.Vector3) => {
       const origin = world(bone), rotation = bone.getWorldQuaternion(new THREE.Quaternion());

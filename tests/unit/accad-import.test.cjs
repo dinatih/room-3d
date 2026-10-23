@@ -40,7 +40,8 @@ it('les 26 imports ACCAD sont traçables, hors combat et conservent leur échant
   const worker = retargetClip(gltf.animations[0], restoreAnimationRig(captureAnimationRig(target)), restoreAnimationRig(captureAnimationRig(gltf.scene)));
   const sourcePosition = gltf.animations[0].tracks.find(track => track.name.endsWith('.position'));
   const position = clip.tracks.find(track => track.name.endsWith('.position'));
-  assert.deepEqual(position.times, sourcePosition.times, 'Authored support sampling must survive retargeting');
+  if (gltf.scene.userData.footContacts) assert.equal(position.times.length, (sourcePosition.times.length - 1) * 4 + 1);
+  else assert.deepEqual(position.times, sourcePosition.times, 'Authored support sampling must survive retargeting');
   for (let i = 0; i < clip.tracks.length; i++) {
    assert.deepEqual(worker.tracks[i].times, clip.tracks[i].times);
    assert.deepEqual(worker.tracks[i].values, clip.tracks[i].values);

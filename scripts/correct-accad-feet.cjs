@@ -11,6 +11,7 @@ async function main() {
   loader.register(() => ({ name: 'SkeletonOnly', loadMesh: () => Promise.resolve(new T.Group()) }));
   const directory = path.resolve(__dirname, '../public/animations/npz/accad');
   for (const file of imported.length ? imported.map(item => path.basename(item.path)) : fs.readdirSync(directory).filter(f => f.endsWith('.glb') && !f.startsWith('accad-'))) {
+    if (process.argv.includes('--crouches') && !file.startsWith('accad-crouch-')) continue;
     const item = imported.find(item => path.basename(item.path) === file);
     const bodySupport = item && (item.support !== 'standing' || item.id.startsWith('accad-crouch-'));
     const filename = path.join(directory, file), bytes = fs.readFileSync(path.join(process.argv.includes('--write') && process.env.ACCAD_ORIGINAL_DIR ? process.env.ACCAD_ORIGINAL_DIR : directory, file));
@@ -123,7 +124,7 @@ async function main() {
         const [heel, toe] = foot.samples[i], direction = toe.clone().sub(heel);
         const weight = T.MathUtils.clamp(1 - Math.max(heel.y - floor, 0) / foot.height, 0, 1);
         const pitch = Math.atan2(direction.y, Math.hypot(direction.x, direction.z));
-        const angle = bodySupport ? 0 : Math.max(pitch, 0) * weight * foot.support[i];
+        const angle = bodySupport && item.support !== 'standing' ? 0 : Math.max(pitch, 0) * weight * foot.support[i];
         if (angle > 0) {
           const axis = new T.Vector3(0, 1, 0).cross(direction).normalize();
           const parent = foot.ankle.parent.getWorldQuaternion(new T.Quaternion());
@@ -178,6 +179,12 @@ async function main() {
       // The annotated box interactions retain double support (no step).
       const scene = doc.scenes[doc.scene || 0];
       scene.extras = { ...scene.extras, footContacts: ['Left', 'Right'].map(side => ({ side, start: times[0], end: times[times.length - 1] })) };
+    }
+    if (item?.id.startsWith('accad-crouch-')) {
+      const scene = doc.scenes[doc.scene || 0];
+      // H2 moves the left leg back into kneeling; only the right foot stays planted.
+      const sides = item.id.endsWith('male2') ? ['Right'] : ['Left', 'Right'];
+      scene.extras = { ...scene.extras, footContacts: sides.map(side => ({ side, start: times[0], end: times[times.length - 1], level: true })) };
     }
     if (bodySupport) {
       const scene = doc.scenes[doc.scene || 0];

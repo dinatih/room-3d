@@ -47,10 +47,10 @@ const launchBrowser = require('./browser-test-options.cjs');
       if (!Number.isFinite(lowest)) throw Error(`Invalid mesh: ${definition.id}`); heights.push(lowest);
      }
      const item = metadata.find(item => item.id === definition.id);
-     if (model.startsWith('xbot') && (item.support !== 'standing' || definition.id.startsWith('accad-crouch-')) && Math.max(...heights.map(Math.abs)) > .1) throw Error(`Reference body contact exceeds 1 mm: ${definition.id}: ${heights}`);
+     if (model.startsWith('xbot') && item.support !== 'standing' && Math.max(...heights.map(Math.abs)) > .1) throw Error(`Reference body contact exceeds 1 mm: ${definition.id}: ${heights}`);
      rows.push({ id: definition.id, model, heightsCm: heights });
      if (model.startsWith(previewModel)) {
-      sample(clip.duration / 2); scene.add(target);
+      sample(definition.id === 'accad-crouch-female' ? 106 / 30 : definition.id === 'accad-crouch-male2' ? 15 / 30 : clip.duration / 2); scene.add(target);
       const index = snapshots.length, x = index % 6 * 300, y = 1500 - 300 - Math.floor(index / 6) * 300;
       const box = new T.Box3().setFromObject(target, true), center = box.getCenter(new T.Vector3()); center.y = 70;
       camera.position.copy(center).add(new T.Vector3(350, 100, 350)); camera.lookAt(center);

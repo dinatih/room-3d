@@ -53,9 +53,14 @@ Les séquences qui utilisent les contacts du corps portent
 worker et testée sur tous les imports concernés.
 
 Les boîtes H2 possèdent les annotations de double appui utilisées par le
-solveur après retargeting, comme les boîtes H1/F. Les autres nouvelles actions
-ne reçoivent pas de verrouillage intégral des pieds : plusieurs ont des appuis
-sur les mains, les genoux ou des repositionnements volontaires.
+solveur après retargeting, comme les boîtes H1/F. Les accroupissements H1/F ancrent les deux pieds après retargeting ; H2 ancre
+uniquement le pied droit, sa jambe gauche reculant vers une position à genou.
+Leurs contacts portent `level: true` : l'inclinaison talon–orteils est ramenée
+à plat et la hauteur d'appui vient de la pose de repos du personnage cible,
+pas de la première image animée ni du maillage Xbot. Le biais de cheville est
+aussi corrigé dans les GLB, y compris pour la jambe libre de H2 avant son lever.
+Les autres nouvelles actions ne reçoivent pas de verrouillage intégral des pieds :
+plusieurs ont des appuis sur les mains, les genoux ou des repositionnements volontaires.
 
 ## Contrôles
 
@@ -66,6 +71,9 @@ node scripts/check-accad-actions.cjs
 npx tsc --noEmit
 npm run build
 ```
+
+La planche contrôle notamment F à l'image 106 et H2 à l'image 15, les deux
+poses signalées pour flottement et orteils relevés.
 
 Le contrôle des sources compare les pistes non corrigées et les quaternions aux
 exports de référence. Le test des appuis inclut les deux nouvelles boîtes H2 sur

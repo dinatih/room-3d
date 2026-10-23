@@ -144,3 +144,19 @@ précédant les corrections ACCAD sont accessibles dans Git avant `a324b3c8`.
 Voir [le lot des 26 actions](accad-actions.md) pour les nouvelles variantes H/F,
 les boîtes H2, les appuis sur le corps et la conservation de leur échantillonnage
 à travers le retargeting et le worker.
+
+### Accroupissements : flottement et cabrage après l'import
+
+Sur F à l'image 106 et H2 à l'image 15, deux défauts subsistaient : la correction
+de cheville était désactivée pour les clips classés comme appuis du corps, et
+le recalage sur Xbot pouvait relever les pieds d'un personnage aux proportions
+différentes. Un ancrage à la première image seule aurait aussi conservé son
+flottement ou son inclinaison initiale.
+
+Les contacts `level: true` utilisent désormais le plan de repos du personnage
+cible et mettent à niveau talon et orteils en conservant l'orientation
+horizontale du pied. H1/F ancrent les deux pieds ; H2 ancre seulement le pied
+droit et conserve les rotations de la jambe gauche. Les tests couvrent le
+maintien des appuis, leur inclinaison, les temps intermédiaires et le worker.
+Le recalage source sur un corps de référence ne suffit donc pas à valider les
+appuis après retargeting.
