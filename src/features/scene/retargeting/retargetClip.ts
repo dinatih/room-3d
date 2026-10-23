@@ -3,6 +3,7 @@ import { CC3_TO_MIXAMO } from './boneMappings';
 import { getDepth } from './hairChain';
 import { resolveTargetBoneName } from './boneResolver';
 import { retargetH2Clip } from './unitreeH2Retarget';
+import { bakeFootContacts } from './footContacts';
 
 function subsampleTrackTo30Fps(track: THREE.KeyframeTrack): THREE.KeyframeTrack {
   const times = track.times;
@@ -753,5 +754,6 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
     tracks.push(clone);
   }
 
-  return new THREE.AnimationClip(`${workingClip.name}_retargeted`, workingClip.duration, tracks);
+  const result = new THREE.AnimationClip(`${workingClip.name}_retargeted`, workingClip.duration, tracks);
+  return animScene?.userData.footContacts ? bakeFootContacts(targetInstance, result, animScene.userData.footContacts) : result;
 }

@@ -97,4 +97,65 @@ async function main() {
  if(process.argv.includes('--write'))fs.writeFileSync(file,Buffer.concat([header,padded,bytes.subarray(20+jsonLength)]));
  console.log(JSON.stringify({written:process.argv.includes('--write'),frames:track.times.length,duration:clip.duration,bytes:bytes.length,maxOriginalContactDriftCm:before*100,maxBakeErrorCm:maxError*100}));
 }
-main().catch(e=>{console.error(e);process.exitCode=1;});
+function annotate() {
+ const bytes=fs.readFileSync(file),length=bytes.readUInt32LE(12),gltf=JSON.parse(bytes.subarray(20,20+length));
+ const channel=gltf.animations[0].channels.find(c=>c.target.path==='translation'&&gltf.nodes[c.target.node].name.replace(/[:_]/g,'')==='mixamorigHips');
+ const accessor=gltf.accessors[gltf.animations[0].samplers[channel.sampler].input],view=gltf.bufferViews[accessor.bufferView];
+ const time=i=>bytes.readFloatLE(28+length+(view.byteOffset||0)+(accessor.byteOffset||0)+i*4);
+ gltf.scenes[gltf.scene||0].extras={...gltf.scenes[gltf.scene||0].extras,footContacts:Object.entries(contacts).flatMap(([side,spans])=>spans.map(([a,b])=>({side,start:time(a),end:time(b)})))};
+ const json=Buffer.from(JSON.stringify(gltf)),padded=Buffer.alloc(Math.ceil(json.length/4)*4,0x20);json.copy(padded);
+ const header=Buffer.from(bytes.subarray(0,20));header.writeUInt32LE(padded.length,12);header.writeUInt32LE(20+padded.length+bytes.length-20-length,8);
+ fs.writeFileSync(file,Buffer.concat([header,padded,bytes.subarray(20+length)]));
+ console.log('Authored foot contacts saved in GLB scene extras');
+}
+async function visual() {
+ const {createServer}=await import('vite');
+ const server=await createServer({server:{host:'127.0.0.1',port:5173,strictPort:true},plugins:[{name:'snake-visual',configureServer(server){
+  server.middlewares.use('/__snake_test',(_req,res)=>{res.setHeader('Content-Type','text/html');res.end('<html><body style="margin:0"><script type="module" src="/@vite/client"></script></body></html>');});
+ }}]});
+ let browser;
+ try {
+  await server.listen();
+  browser=await require('./browser-test-options.cjs')({args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+  const page=await browser.newPage();await page.setViewport({width:1000,height:620});
+  page.on('pageerror',error=>console.error('PAGE',error));
+  await page.goto('http://127.0.0.1:5173/__snake_test');
+  await page.evaluate(async()=>{
+   const THREE=await import('/node_modules/three/build/three.module.js');
+   const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
+   const {DRACOLoader}=await import('/node_modules/three/examples/jsm/loaders/DRACOLoader.js');
+   const {retargetClip}=await import('/src/features/scene/retargeting/retargetClip.ts');
+   const {extractCharacterParts,applyClothingAndAccessoriesVisibility}=await import('/src/features/scene/characterParts.ts');
+   const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1000,620);document.body.append(renderer.domElement);
+   const scene=new THREE.Scene();scene.background=new THREE.Color('#dddddd');
+   scene.add(new THREE.HemisphereLight(0xffffff,0x555555,3));const sun=new THREE.DirectionalLight(0xffffff,3);sun.position.set(100,250,200);scene.add(sun);
+   const grid=new THREE.GridHelper(1000,100,0x555555,0x999999);scene.add(grid);
+   const camera=new THREE.PerspectiveCamera(35,1000/620,1,2000);camera.position.set(80,220,650);camera.lookAt(0,85,0);
+   const loader=new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('/draco/'));
+   const sourceLoader=new GLTFLoader();sourceLoader.register(()=>({name:'SkeletonOnly',loadMesh:()=>Promise.resolve(new THREE.Group())}));
+   const actors=[];
+   for(const [index,label]of ['Avant : GLB seul','Après : appuis respectés sur Lara'].entries()) {
+    const source=await sourceLoader.loadAsync('/animations/mixamo/anim_snake_hip_hop_dance.glb');source.animations[0].name='snake-hip-hop-dance';
+    if(!index)delete source.scene.userData.footContacts;
+    const model=(await loader.loadAsync('/characters/lara/lara_native.glb')).scene;
+    model.scale.multiplyScalar(100);model.updateMatrixWorld(true);
+    model.traverse(node=>{node.defaultPosition=node.position.clone();node.restLocalQuaternion=node.quaternion.clone();node.restWorldQuaternion=node.getWorldQuaternion(new THREE.Quaternion());});
+    const clip=retargetClip(source.animations[0],model,source.scene);
+    const parts=extractCharacterParts(model);
+    applyClothingAndAccessoriesVisibility(parts,{laraTop:'native',laraBottom:'native',laraShoes:true,showAccessories:true,laraPistols:true,equipment:{holster:true,pistols:true,backpack:true}});
+    model.position.x=index?110:-110;scene.add(model);
+    const mixer=new THREE.AnimationMixer(model),action=mixer.clipAction(clip).setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();actors.push(mixer);
+    const caption=document.createElement('div');caption.textContent=label;caption.style.cssText=`position:absolute;top:10px;left:${index?55:8}%;font:18px sans-serif`;document.body.append(caption);
+   }
+   window.renderSnake=time=>{for(const mixer of actors)mixer.setTime(time);scene.updateMatrixWorld(true);renderer.render(scene,camera);};
+   window.renderSnake(0);
+  });
+  fs.mkdirSync('/tmp/snake-before-after',{recursive:true});
+  for(let frame=0;frame<=Math.ceil(15.3*4);frame++) {
+   await page.evaluate(time=>window.renderSnake(time),Math.min(frame/4,15.3));
+   await page.screenshot({path:`/tmp/snake-before-after/${String(frame).padStart(3,'0')}.png`});
+  }
+  console.log('Visual comparison frames: /tmp/snake-before-after');
+ } finally {if(browser)await browser.close();await server.close();}
+}
+Promise.resolve().then(()=>process.argv.includes('--visual')?visual():process.argv.includes('--annotate')?annotate():main()).catch(e=>{console.error(e);process.exitCode=1;});

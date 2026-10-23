@@ -19,9 +19,9 @@ export function captureAnimationRig(root: THREE.Object3D): RigNode {
     const children = node.children.map(child => capture(child)).filter((child): child is RigNode => !!child);
     const bone = !!(node as THREE.Bone).isBone;
     if (!bone && !children.length && node !== root) return;
-    const { robotJoint, humanoidBone, motionRestWorld, h2MotionDriver, footBounds } = node.userData;
+    const { robotJoint, humanoidBone, motionRestWorld, h2MotionDriver, footBounds, footContacts } = node.userData;
     return { name: node === root ? '' : node.name, bone,
-      userData: robotJoint || humanoidBone || h2MotionDriver ? { robotJoint, humanoidBone, motionRestWorld, h2MotionDriver, footBounds } : undefined,
+      userData: robotJoint || humanoidBone || h2MotionDriver || footContacts ? { robotJoint, humanoidBone, motionRestWorld, h2MotionDriver, footBounds, footContacts } : undefined,
       position: (node.defaultPosition ?? node.position).toArray(),
       quaternion: (node.restLocalQuaternion ?? node.quaternion).toArray(), scale: node.scale.toArray(),
       defaultPosition: node.defaultPosition?.toArray(), restLocalQuaternion: node.restLocalQuaternion?.toArray(),
