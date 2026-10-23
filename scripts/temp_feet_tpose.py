@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 bpy.context.preferences.filepaths.save_version = 0
 
 FOOT_GAP_METERS = 0.03  # Blender sources are in meters; each foot stays 1.5 cm from center.
+CHARACTERS = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else ['alex', 'james', 'david', 'lewis', 'valby']
 
 
 def foot_vertices(mesh, side):
@@ -42,12 +43,11 @@ def render(path, meshes):
     bpy.data.objects.remove(camera, do_unlink=True)
 
 
-for character, filename, backup in [
-    ('skeleton', 'skeleton_tpose.blend', 'skeleton/skeleton_tpose.blend'),
-    ('mannequin', 'mannequin.blend', 'mannequin.blend'),
-]:
+for character in CHARACTERS:
     folder = ROOT / 'public/characters' / character
-    bpy.ops.wm.open_mainfile(filepath=str(folder / filename))
+    filename = f'{character}.blend'
+    source = ROOT / 'sources_backup/valby/valby_tpose.blend' if character == 'valby' else folder / filename
+    bpy.ops.wm.open_mainfile(filepath=str(source))
     arm, = [o for o in bpy.context.scene.objects if o.type == 'ARMATURE']
     meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH' and any(m.type == 'ARMATURE' and m.object == arm for m in o.modifiers)]
     assert arm.animation_data is None, 'Expected unanimated source rest pose'
@@ -97,22 +97,41 @@ for character, filename, backup in [
     for mesh in meshes:
         bpy.context.view_layer.objects.active = mesh
         modifier, = [m for m in mesh.modifiers if m.type == 'ARMATURE']
-        bpy.ops.object.modifier_copy(modifier=modifier.name)
-        bpy.ops.object.modifier_apply(modifier=modifier.name)
+        if mesh.data.shape_keys:
+            # Linear skinning must deform every shape key, preserving facial expressions.
+            assert not modifier.use_deform_preserve_volume
+            to_arm = arm.matrix_world.inverted() @ mesh.matrix_world
+            transforms = {g.index: to_arm.inverted() @ arm.pose.bones[g.name].matrix
+                          @ arm.data.bones[g.name].matrix_local.inverted() @ to_arm
+                          for g in mesh.vertex_groups if g.name in arm.data.bones and arm.data.bones[g.name].use_deform}
+            for vertex in mesh.data.vertices:
+                weights = [(transforms[g.group], g.weight) for g in vertex.groups if g.group in transforms]
+                total = sum(weight for _, weight in weights)
+                if not total:
+                    continue
+                for key in mesh.data.shape_keys.key_blocks:
+                    point = key.data[vertex.index].co.copy()
+                    key.data[vertex.index].co = sum((matrix @ point * weight for matrix, weight in weights), Vector()) / total
+                vertex.co = mesh.data.shape_keys.key_blocks[0].data[vertex.index].co
+        else:
+            bpy.ops.object.modifier_copy(modifier=modifier.name)
+            bpy.ops.object.modifier_apply(modifier=modifier.name)
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode='POSE')
     bpy.ops.pose.armature_apply(selected=False)
     bpy.ops.object.mode_set(mode='OBJECT')
     for bone in arm.data.bones:
-        assert math.isclose(bone.length, original_lengths[bone.name], rel_tol=1e-5, abs_tol=1e-6), bone.name
+        # Allow 0.01 mm of Blender transform roundoff, expressed in armature units.
+        assert math.isclose(bone.length, original_lengths[bone.name], abs_tol=1e-5 / arm.matrix_world.to_scale().x), bone.name
     bpy.context.view_layer.update()
     bpy.ops.object.select_all(action='DESELECT')
     for obj in [arm, *meshes]:
         obj.select_set(True)
     arm.show_in_front = True
-    bpy.ops.wm.save_as_mainfile(filepath=str(folder / filename))
-    bpy.ops.wm.save_as_mainfile(filepath=str(ROOT / 'sources_backup' / backup))
-    bpy.ops.export_scene.gltf(filepath=str(folder / f'{character}.glb'), export_format='GLB', use_selection=True, export_animations=False, export_skins=True, export_cameras=False, export_lights=False, export_draco_mesh_compression_enable=True)
+    bpy.ops.wm.save_as_mainfile(filepath=str(folder / filename), compress=True)
+    if character == 'valby':
+        bpy.ops.wm.save_as_mainfile(filepath=str(source), compress=True)
+    bpy.ops.export_scene.gltf(filepath=str(folder / f'{character}.glb'), export_format='GLB', use_selection=True, export_animations=False, export_skins=True, export_cameras=False, export_lights=False, export_draco_mesh_compression_enable=True, export_draco_position_quantization=16, export_image_format='WEBP')
     render(folder / f'{character}_3d_preview.png', meshes)
     render(Path('/tmp') / f'{character}_tpose_after.png', meshes)
     # Reimport the exported asset to check the bind pose and skin survived export.
