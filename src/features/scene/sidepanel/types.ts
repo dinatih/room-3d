@@ -19,11 +19,11 @@ export const CARDINAL_VIEWS = [
 ] as const;
 
 export const ELEVATION_VIEWS = [
-  { angle: 90, label: '90° Haut', shortcut: '', icon: 'bi-chevron-compact-up' },
-  { angle: 60, label: '60° Plongée', shortcut: 'Alt+M', icon: 'bi-box' },
-  { angle: 45, label: '45° Plongée', shortcut: '', icon: 'bi-box' },
-  { angle: 0, label: '0° Face', shortcut: '', icon: 'bi-dash-lg' },
-  { angle: -90, label: '-90° Bas', shortcut: '', icon: 'bi-chevron-compact-down' },
+  { angle: 90, label: '90° Haut', icon: 'bi-chevron-compact-up' },
+  { angle: 60, label: '60° Plongée', icon: 'bi-box' },
+  { angle: 45, label: '45° Plongée', icon: 'bi-box' },
+  { angle: 0, label: '0° Face', icon: 'bi-dash-lg' },
+  { angle: -90, label: '-90° Bas', icon: 'bi-chevron-compact-down' },
 ] as const;
 
 export const CAMERA_SHORTCUT_VIEWS = CARDINAL_VIEWS;

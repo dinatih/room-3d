@@ -253,11 +253,6 @@ export function useCameraShortcuts({
       }
 
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
-        if (e.code === 'KeyM') {
-          e.preventDefault();
-          if (!e.repeat) dispatchView(useSceneStore.getState().activeCameraPos ?? 'north', undefined, false, 60);
-          return;
-        }
         if (e.key === 'o' || e.key === 'O') {
           e.preventDefault();
           if (!e.repeat) goToDefaultOrbit();

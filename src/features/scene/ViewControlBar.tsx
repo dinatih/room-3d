@@ -289,7 +289,6 @@ export function ViewControlBar({
               >
                 <i className={`bi ${elev.icon}`} aria-hidden="true" />
                 <span className="fw-semibold">{elev.angle}°</span>
-                {elev.shortcut && <span className="ms-auto small opacity-75">{elev.shortcut}</span>}
                 {currentElevation === elev.angle && <i className="bi bi-check-lg" aria-hidden="true" />}
               </button>
             ))}
