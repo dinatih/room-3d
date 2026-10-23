@@ -135,7 +135,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     };
     
     const fix = wigFixes[strId] || wigFixes[cleanId] || { scale: 1.0, rotation: [0, 0, 0], offset: [0, 0, 0] };
-    const s = fix.scale * 0.9;
+    const s = fix.scale * (cleanId === 'lara_native' ? 1 : 0.9);
 
     // Converted FBX assets already store vertices/bones in metres, but retain
     // the FBX unit scale on their container. Normalize the imported head frame

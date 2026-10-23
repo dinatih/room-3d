@@ -19,7 +19,7 @@ export function WigFitPanel({ wigId }: { wigId: string }) {
   return (
     <details open className="border rounded bg-light p-2 m-2" onKeyDown={event => event.stopPropagation()}>
       <summary className="fw-semibold small">Ajustement temporaire de la perruque sur Lara</summary>
-      <div className="small text-muted my-2">Réglages par coupe, conservés dans ce navigateur. 100 % = taille actuelle.</div>
+      <div className="small text-muted my-2">Réglages par coupe, conservés dans ce navigateur. 100 % = taille de base{wigId === 'hair_lara_native' ? ' native inchangée' : ', déjà réduite de 10 %'}.</div>
       <div className="row g-2">
         {FIELDS.map(({ key, label, step }) => (
           <label key={key} className="col-6 col-lg-3 small">

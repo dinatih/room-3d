@@ -16,4 +16,11 @@ export const useWigFitStore = create(persist<{
     delete fits[id];
     return { fits };
   }),
-}), { name: 'room-3d-wig-fitting' }));
+}), {
+  name: 'room-3d-wig-fitting',
+  version: 1,
+  migrate: (state: any) => ({
+    ...state,
+    fits: Object.fromEntries(Object.entries(state.fits as Record<string, WigFit>).map(([id, fit]) => [id, { ...fit, scale: 1 }])),
+  }),
+}));
