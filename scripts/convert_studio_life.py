@@ -251,16 +251,39 @@ def convert(npz_path: Path, output_path: Path):
         hips.location = world_hips * (100 * MIXAMO_TRANSLATION_SCALE) - hips.bone.head
         hips.keyframe_insert(data_path='location', frame=frame)
 
+    HEEL_VEC = Vector((0.0, 5.5148, -6.7670))
+    def get_foot_pts(side):
+        pb_f = armature.pose.bones[f'mixamorig:{side}Foot']
+        pb_t = armature.pose.bones[f'mixamorig:{side}ToeBase']
+        return (armature.matrix_world @ (pb_f.head + pb_f.matrix.to_3x3() @ HEEL_VEC),
+                armature.matrix_world @ pb_t.head)
+
+    # Level supporting feet (remove persistent mocap dorsiflexion / heel-only support)
+    for side in ('Left', 'Right'):
+        pb_f = armature.pose.bones[f'mixamorig:{side}Foot']
+        min_z = min(min(h.z, t.z) for f in range(1, num_frames + 1, 2) if scene.frame_set(f) is None for h, t in [get_foot_pts(side)])
+        for f in range(1, num_frames + 1):
+            scene.frame_set(f)
+            h, t = get_foot_pts(side)
+            tilt = t.z - h.z
+            lift = min(h.z, t.z) - min_z
+            weight = max(0.0, min(1.0, 1.0 - (lift - 0.02) / 0.02)) if lift > 0.02 else 1.0
+            if tilt > 0.002 and weight > 0:
+                orig_q = pb_f.rotation_quaternion.copy()
+                low, high = 0.0, 25.0
+                for _ in range(15):
+                    mid = (low + high) / 2
+                    pb_f.rotation_quaternion = orig_q @ Quaternion(Vector((1, 0, 0)), -math.radians(mid))
+                    bpy.context.view_layer.update()
+                    cur_h, cur_t = get_foot_pts(side)
+                    if cur_t.z > cur_h.z: low = mid
+                    else: high = mid
+                pb_f.rotation_quaternion = orig_q @ Quaternion(Vector((1, 0, 0)), -math.radians(mid * weight))
+                pb_f.keyframe_insert(data_path='rotation_quaternion', frame=f)
+
     # Align lowest foot contact to ground level (Z = 0)
-    foot_names = ('mixamorig:LeftFoot', 'mixamorig:RightFoot', 'mixamorig:LeftToeBase', 'mixamorig:RightToeBase')
-    min_foot_z = min(
-        (armature.matrix_world @ bone.matrix.translation).z
-        for frame in range(1, num_frames + 1, 2)
-        if scene.frame_set(frame) is None
-        for name in foot_names
-        if (bone := armature.pose.bones.get(name))
-    )
-    ground_offset = min_foot_z * 100
+    min_floor_z = min(min(h.z, t.z) for f in range(1, num_frames + 1, 2) if scene.frame_set(f) is None for side in ('Left', 'Right') for h, t in [get_foot_pts(side)])
+    ground_offset = min_floor_z * 100
     act = armature.animation_data.action
     fcurves = act.fcurves if hasattr(act, 'fcurves') else [
         fc for layer in act.layers for strip in layer.strips for cb in strip.channelbags for fc in cb.fcurves
