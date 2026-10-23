@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { LAYER_WALKER, LAYER_DECOR } from '@config';
@@ -73,6 +74,9 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   const cleanId = strId.replace(/^hair_/, '');
   const gltfPath = RIGGED_WIGS_PATHS[strId] || RIGGED_WIGS_PATHS[cleanId] || (typeof id === 'string' && id.endsWith('.glb') ? id : 'characters/wigs/zepeto_hair.glb');
   const { scene: clonedFullScene } = useGLTFClone(gltfPath);
+  const nativeRedMap = useTexture('/characters/wigs/lara_native_red_shading.png');
+  nativeRedMap.flipY = false;
+  nativeRedMap.colorSpace = THREE.SRGBColorSpace;
   const clonedHairRef = useRef<THREE.Group>(null!);
   
   const scene = useMemo(() => {
@@ -215,16 +219,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           const isNativeRed = isLaraNativeWig && color === 'rouge';
           const clonedMat = isNativeRed ? new THREE.MeshPhysicalMaterial({ specularIntensity: 0 }) : baseMat.clone();
           if (isNativeRed) THREE.MeshStandardMaterial.prototype.copy.call(clonedMat, baseMat);
-          if (isNativeRed) {
-            // Keep the brightest texture channel as neutral shading, preserving hair strands and alpha.
-            clonedMat.onBeforeCompile = (shader: THREE.WebGLProgramParametersWithUniforms) => {
-              shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment.replace(
-                'diffuseColor *= sampledDiffuseColor;',
-                'sampledDiffuseColor.rgb = vec3(max(max(sampledDiffuseColor.r, sampledDiffuseColor.g), sampledDiffuseColor.b));\ndiffuseColor *= sampledDiffuseColor;'
-              ));
-            };
-            clonedMat.customProgramCacheKey = () => 'native-red-hair';
-          }
           clonedMat.userData.__ownedWigMaterial = true;
           clonedMat.side = THREE.DoubleSide;
           // Binary texture coverage keeps gaps between hair cards without blending.
@@ -233,7 +227,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           clonedMat.depthWrite = true;
           clonedMat.alphaTest = 0.5;
           if (isColored) {
-            if (isLaraNativeWig && !isNativeRed) clonedMat.map = null;
+            if (isLaraNativeWig) clonedMat.map = isNativeRed ? nativeRedMap : null;
             clonedMat.roughness = 0.4;
             clonedMat.metalness = 0.0;
           }
@@ -273,7 +267,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     if (onBonesExtracted) {
       onBonesExtracted(hairBonesRef.current);
     }
-  }, [scene, color, scale, id]);
+  }, [scene, color, scale, id, nativeRedMap]);
 
   useLayoutEffect(() => {
     if (attachTo && scene) {
