@@ -18,7 +18,6 @@ import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealistic
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../characterConfig';
 import { disposeCharacterResources } from './characterDisposal';
 import { buildHairChain } from '../retargeting/index';
-import { glbLocalBBox } from '@features/scene/glbUtils';
 import {
   extractCharacterParts,
   applyClothingAndAccessoriesVisibility,
@@ -464,15 +463,6 @@ export function Character({
       const hipsLocal = parent.worldToLocal(hipsWorld);
       scene.position.x -= hipsLocal.x;
       scene.position.z -= hipsLocal.z;
-    }
-
-    // Auto-élévation au niveau du sol (Y = 0) pour les modèles ayant leurs pieds modélisés sous Y=0
-    const hasFeetAtGround = id === 'valby';
-    if (!isLara && !hasFeetAtGround) {
-      const localBox = glbLocalBBox(scene);
-      if (localBox.min.y < -1.0) {
-        scene.position.y -= localBox.min.y;
-      }
     }
 
     if (isLara) {
