@@ -98,3 +98,9 @@ node scripts/temp_fab_check.cjs --motions-only
 Les fichiers sources sont lus dans `/home/dinatih/3D Resources` ; les mesures,
 maillages de diagnostic et captures restent dans `/tmp/room-feet-*`.
 Le test navigateur utilise le lanceur headless commun du projet.
+
+## Défauts récurrents et suivi ACCAD
+
+Voir [Défauts récurrents des animations](animation-defects.md) pour distinguer
+cabrage, enfoncement pendant la flexion, patinage horizontal et rotations cumulées,
+avec les mesures ACCAD, les limites des corrections et les problèmes encore ouverts.
