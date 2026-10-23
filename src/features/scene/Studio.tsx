@@ -49,7 +49,7 @@ import { SkySphere } from './SkySphere';
 import { BuildAnimationMatrix } from '@features/scene/BuildAnimations';
 import { AIRCRAFT_MODELS, DEFAULT_PLANE_MODEL } from './aircraftModels';
 import { PlaneControls } from './PlaneControls';
-import { HornetControls } from './HornetControls';
+import { HornetControls, HornetMenuButton } from './HornetControls';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
@@ -1141,6 +1141,7 @@ export function Studio() {
                 <i className="bi bi-airplane-fill" aria-hidden="true" />
                 <span className="fw-semibold">Avion</span>
               </button>
+              <HornetMenuButton />
               <ToolbarPanelsRow
                 layers={layers} onToggleLayer={toggleLayer}
                 lidarMode={lidarMode} onCycleLidar={onCycleLidar}

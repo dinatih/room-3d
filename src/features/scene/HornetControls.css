@@ -1,4 +1,5 @@
 .hornet-controls {
   z-index: 1000;
   max-width: calc(100vw - 1rem);
+  text-shadow: 0 1px 2px #fff;
 }

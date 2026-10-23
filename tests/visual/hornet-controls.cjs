@@ -23,10 +23,13 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
       window.$RefreshSig$ = () => type => type;
       window.__vite_plugin_react_preamble_installed__ = true;
       await import('/scss/app.scss');
+      await import('/node_modules/bootstrap-icons/font/bootstrap-icons.css');
       const { CameraController } = await import('/src/features/scene/CameraController.tsx');
       const { BlackHornetDrone } = await import('/src/features/scene/items/BlackHornetDrone.tsx');
       const { ViewControlBar } = await import('/src/features/scene/ViewControlBar.tsx');
-      const { HornetControls } = await import('/src/features/scene/HornetControls.tsx');
+      const { HornetControls, HornetMenuButton } = await import('/src/features/scene/HornetControls.tsx');
+      const { AppConsole } = await import('/src/features/ui/AppConsole.tsx');
+      const { PanelPopover } = await import('/src/features/scene/sidepanel/PanelPopover.tsx');
       const React = (await import('/node_modules/.vite/deps/react.js')).default;
       const { createRoot } = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
       const fiberUrl = performance.getEntriesByType('resource').find(entry => entry.name.includes('/@react-three_fiber.js?v=')).name;
@@ -55,7 +58,8 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
           h(React.Suspense, { fallback: null }, h(CameraController), h(BlackHornetDrone), h(CheckCameraMount)),
           h('ambientLight', { intensity: 2 }),
           h('gridHelper', { args: [2000, 20] }))),
-        h(ViewControlBar, { showCharacterModes: true }), h(HornetControls)));
+        h(ViewControlBar, { showCharacterModes: true }), h(HornetControls),
+        h(AppConsole, { actionsMenu: h(PanelPopover, { icon: 'bi-plus-lg', title: 'Outils & Actions', noHeader: true }, h(HornetMenuButton)) })));
     });
     await page.waitForFunction(() => window.hornetStore?.getState().available, { timeout: 60000 });
     const pose = () => page.evaluate(() => ({ ...window.hornetCamera.positions.drone }));
@@ -73,6 +77,8 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
       await settle();
     };
     assert.equal(await page.$('[aria-label="Contrôle des vues"] button[title="Observer la scène depuis la caméra du Hornet"]'), null, 'Hornet controls must be outside the main toolbar');
+    assert.equal(await page.$('[aria-label="Commandes du Hornet"]'), null, 'Hornet panel must be hidden until requested');
+    await click('Outils & Actions');
     await click('Afficher les commandes du Hornet');
     await click('Observer la scène depuis la caméra du Hornet');
     await page.waitForFunction(() => window.hornetCamera.animalTarget === 'drone' && window.hornetCamera.mode === 'fpv');
@@ -159,6 +165,7 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     const levelEnd = await pose();
     assert.equal(levelEnd.y, levelStart.y, 'Forward flight must keep altitude after leveling');
     assert(Math.hypot(levelEnd.x - levelStart.x, levelEnd.z - levelStart.z) > 10);
+    assert(await page.$eval('[aria-label="Commandes du Hornet"]', element => getComputedStyle(element).backgroundColor === 'rgba(0, 0, 0, 0)' && element.getBoundingClientRect().height <= 32 && !element.textContent.includes('Avancer fait')), 'Hornet controls must be transparent and fit on one compact row');
     await page.screenshot({ path: '/tmp/room-hornet-pilot.png' });
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => window.hornetCamera.mode === 'orbit' && !window.hornetStore.getState().piloting);
