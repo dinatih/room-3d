@@ -28,9 +28,13 @@ it('respecte une approche de douche explicite sans déplacer les poses de douche
 });
 
 it('conserve l’approche frontale du WC lors du passage à la pose assise', () => {
-  const object = { id: 'toilet', name: 'WC', category: 'hygiene', position: [50, 0, 508.7], slots: [
-    { slotId: 'use', offset: [50, 0, 518.7], approachOffset: [50, 0, 571.7], entryAnimation: 'stand-to-sit', animation: 'sit-idle' },
-  ] };
+  const { object } = load('src/features/scene/ai/smartObjectRegistry.ts', {}, source => {
+    const begin = source.indexOf("  'toilet': {");
+    const end = source.indexOf("  'vasque-sdb': {", begin);
+    assert(begin > 0 && end > begin);
+    return `const TOILET_BOWL_CENTER = [0, 17.5, 10], TOILET_D = 70, HUMAN_BODY_RADIUS = 28;
+      export const object = ({${source.slice(begin, end)}}).toilet;`;
+  });
   const { resolveInstructionCoords } = load('src/features/scene/ai/agent/agentInstructionCoords.ts', {
     '../navigation/service': { getContainingObjectOwner: () => undefined, getObjectApproach: (owner, goal) => goal },
     '../navigation/obstacles': { hasAgentProfile: () => true },
@@ -40,8 +44,9 @@ it('conserve l’approche frontale du WC lors du passage à la pose assise', () 
   });
   const move = resolveInstructionCoords({ type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'use' }, null, 'walker');
   const use = resolveInstructionCoords({ type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'use' }, null, 'walker');
-  assert.deepEqual([move.tx, move.tz], [50, 571.7]);
-  assert.deepEqual([use.tx, use.tz], [50, 518.7]);
+  assert.deepEqual([move.tx, move.tz], [0, 63]);
+  assert.deepEqual([use.tx, use.tz], [0, 10]);
   assert.equal(use.entryAnimation, 'stand-to-sit');
-  assert.deepEqual(use.approach, { x: 50, z: 571.7 }, 'L’entrée reste devant la cuvette plutôt que sur le bord latéral le plus proche');
+  assert.equal(use.exitAnimation, 'sit-to-stand', 'Le WC doit déclarer sa sortie depuis la suppression des relèvements automatiques');
+  assert.deepEqual(use.approach, { x: 0, z: 63 }, 'L’entrée et la sortie restent devant la cuvette plutôt que sur le bord latéral le plus proche');
 });
