@@ -2936,9 +2936,9 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'miley-armature-ko3-attack-hammer-fist',
     path: 'animations/miley/miley_armature_ko3_attack_hammer_fist.glb',
     category: 'interactions',
-    label: `[MILEY] Ko3 Attack Hammer Fist (742f / 12.4s, 1805KB)`,
+    label: `[MILEY] Ko3 Attack Hammer Fist (398f / 6.6s, 1307KB)`,
     tags: ['interaction'],
-    duration: 12.4,
+    duration: 6.633333206176758,
   },
   {
     id: 'miley-armature-ko3-fall-to-ground-side-up02',

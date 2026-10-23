@@ -160,3 +160,9 @@ droit et conserve les rotations de la jambe gauche. Les tests couvrent le
 maintien des appuis, leur inclinaison, les temps intermédiaires et le worker.
 Le recalage source sur un corps de référence ne suffit donc pas à valider les
 appuis après retargeting.
+
+## Duos Miley
+
+Le [premier passage sur les 29 duos Miley](miley-duos.md) traite les unités CC,
+la référence de hauteur des hanches et l'attente finale de KO3. Il distingue
+ces corrections des contacts et placements qui restent à contrôler en paire.

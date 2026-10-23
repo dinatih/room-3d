@@ -149,9 +149,17 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
   }
   const workingClip = new THREE.AnimationClip(rawClip.name, rawClip.duration, clonedTracks);
 
-  // Detect and fix centimeter positions (scale to meters)
+  const ccRoot = animScene?.getObjectByName('CC_Base_BoneRoot');
+  const ccPositionScale = ccRoot?.parent?.getWorldScale(new THREE.Vector3()).x;
+
+  // Character Creator units come from the GLB transform, including tiny
+  // root movements that cannot be identified by their numerical magnitude.
   for (const track of workingClip.tracks) {
     if (track.name.endsWith('.position')) {
+      if (ccPositionScale !== undefined) {
+        for (let i = 0; i < track.values.length; i++) track.values[i] *= ccPositionScale;
+        continue;
+      }
       // Find the maximum absolute value in the track to determine if it's in cm
       let maxVal = 0;
       for (let i = 0; i < track.values.length; i++) {
@@ -338,7 +346,10 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
         const resolvedHipsName = resolveTargetBoneName(targetInstance, 'Hips', sourceHairMap);
         const bone = resolvedHipsName ? targetInstance.getObjectByName(resolvedHipsName) as any : null;
         let refSrcY = 0.991;
-        if (animBones[baseName] && animBones[baseName].defaultPosition) {
+        const ccHips = ccRoot?.getObjectByName('CC_Base_Hip');
+        if (ccHips) {
+          refSrcY = ccHips.getWorldPosition(new THREE.Vector3()).length();
+        } else if (animBones[baseName] && animBones[baseName].defaultPosition) {
           refSrcY = animBones[baseName].defaultPosition.length();
         } else {
           refSrcY = 0.991;
