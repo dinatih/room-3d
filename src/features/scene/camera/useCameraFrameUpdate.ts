@@ -116,8 +116,14 @@ export function useCameraFrameUpdate({
     }
     if (manualMove) {
       cameraState.recordUserControl();
-      if (characterArrow('ArrowLeft')) followYaw.current += 0.03 * dt;
-      if (characterArrow('ArrowRight')) followYaw.current -= 0.03 * dt;
+      if (characterArrow('ArrowLeft')) {
+        followYaw.current += 0.03 * dt;
+        if (modeRef.current === 'fpv') orbitYaw.current += 0.03 * dt;
+      }
+      if (characterArrow('ArrowRight')) {
+        followYaw.current -= 0.03 * dt;
+        if (modeRef.current === 'fpv') orbitYaw.current -= 0.03 * dt;
+      }
       const step = WALK_SPEED * dt * ((characterArrow('ArrowUp') ? 1 : 0) - (characterArrow('ArrowDown') ? 1 : 0));
       followPos.current.x += Math.sin(followYaw.current) * step;
       followPos.current.z += Math.cos(followYaw.current) * step;
@@ -311,8 +317,8 @@ export function useCameraFrameUpdate({
         if (k.has('AltArrowDown')) followPos.current.y -= sp;
       } else {
         // Mode FPV (1ère personne)
-        if (k.has('camera:ArrowLeft') || k.has('AltArrowLeft')) followYaw.current += 0.03 * dt;
-        if (k.has('camera:ArrowRight') || k.has('AltArrowRight')) followYaw.current -= 0.03 * dt;
+        if (k.has('camera:ArrowLeft') || k.has('AltArrowLeft')) orbitYaw.current += 0.03 * dt;
+        if (k.has('camera:ArrowRight') || k.has('AltArrowRight')) orbitYaw.current -= 0.03 * dt;
         if (k.has('camera:ArrowUp') || k.has('AltArrowUp')) followPitch.current = Math.min(1.4, followPitch.current + 0.02 * dt);
         if (k.has('camera:ArrowDown') || k.has('AltArrowDown')) followPitch.current = Math.max(-1.4, followPitch.current - 0.02 * dt);
         if (k.has('CtrlArrowUp') || k.has('CtrlArrowDown')) {

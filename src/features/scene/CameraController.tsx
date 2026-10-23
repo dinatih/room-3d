@@ -392,21 +392,15 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         const lookDist = 200;
         const targetEyeVec = _tmpEyeTargetVec.set(eyeX, eyeY, eyeZ);
         const targetLookVec = _tmpEyeLookVec;
-        if (Math.abs(followPitch.current) > 0.001) {
-          const cosP = Math.cos(followPitch.current);
-          const sinP = Math.sin(followPitch.current);
-          targetLookVec.set(
-            eyeX + fwd.x * cosP * lookDist,
-            eyeY + (fwd.y * cosP + sinP) * lookDist,
-            eyeZ + fwd.z * cosP * lookDist
-          );
-        } else {
-          targetLookVec.set(
-            eyeX + fwd.x * lookDist,
-            eyeY + fwd.y * lookDist,
-            eyeZ + fwd.z * lookDist
-          );
-        }
+        const cosP = Math.cos(followPitch.current);
+        const sinP = Math.sin(followPitch.current);
+        const dirX = Math.sin(orbitYaw.current);
+        const dirZ = Math.cos(orbitYaw.current);
+        targetLookVec.set(
+          eyeX + dirX * cosP * lookDist,
+          eyeY + (fwd.y * cosP + sinP) * lookDist,
+          eyeZ + dirZ * cosP * lookDist
+        );
 
         const targetUpVec = _tmpEyeUpVec.set(up?.x ?? 0, up?.y ?? 1, up?.z ?? 0);
 
@@ -446,9 +440,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
         const lookDist = 200;
         ctrl.target.set(
-          targetX + Math.sin(followYaw.current) * cosP * lookDist,
+          targetX + Math.sin(orbitYaw.current) * cosP * lookDist,
           targetY + Math.sin(followPitch.current) * lookDist,
-          targetZ + Math.cos(followYaw.current) * cosP * lookDist
+          targetZ + Math.cos(orbitYaw.current) * cosP * lookDist
         );
         camera.position.set(targetX, targetY, targetZ);
         camera.up.set(0, 1, 0);
@@ -577,7 +571,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         ctrlRef.current.update();
       }
     } else {
-      if (!cameraState.animalTarget) followPitch.current = FPV_DEFAULT_PITCH;
+      if (!cameraState.animalTarget) {
+        followPitch.current = FPV_DEFAULT_PITCH;
+        orbitYaw.current = followYaw.current;
+      }
       const perspCam = defaultPerspCamRef.current;
       set({ camera: perspCam });
       if (ctrlRef.current) ctrlRef.current.object = perspCam;

@@ -65,6 +65,7 @@ export function useCameraPointerEvents({
         orbitPitch.current = Math.max(-0.6, Math.min(1.45, orbitPitch.current - e.movementY * MOUSE_SENS));
       } else {
         followYaw.current -= e.movementX * MOUSE_SENS;
+        orbitYaw.current -= e.movementX * MOUSE_SENS;
         followPitch.current = Math.max(-1.4, Math.min(1.4, followPitch.current - e.movementY * MOUSE_SENS));
       }
       updateFollowLook();
@@ -124,6 +125,7 @@ export function useCameraPointerEvents({
         orbitPitch.current = Math.max(-0.6, Math.min(1.45, orbitPitch.current - dy * TOUCH_SENS));
       } else {
         followYaw.current -= dx * TOUCH_SENS;
+        orbitYaw.current -= dx * TOUCH_SENS;
         followPitch.current = Math.max(-1.4, Math.min(1.4, followPitch.current - dy * TOUCH_SENS));
       }
       updateFollowLook();
