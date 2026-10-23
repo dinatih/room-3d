@@ -28,6 +28,15 @@ it('conserve le dégagement de sortie du KALLAX nord-est', () => {
   assert.equal(sequence.at(-1).doorKey, 'glassRight');
 });
 
+it('attend une seule lecture réelle pour le livre KALLAX et la prise au congélateur', () => {
+  for (const id of ['kallax-ne', 'freezer']) {
+    const actions = buildSmartObjectInstructionSequence(id, 'use').filter(step => step.type === 'USE_OBJECT');
+    assert.equal(actions.length, 1);
+    assert.equal(actions[0].repeatCount, 1);
+    assert.equal(actions[0].waitForAnimation, true);
+  }
+});
+
 it('arrive au point de l’animation avant ouverture, sans étape de dégagement intermédiaire', () => {
   const protections = [];
   const { resolveInstructionCoords } = load('src/features/scene/ai/agent/agentInstructionCoords.ts', {

@@ -179,7 +179,7 @@ export function useCharacterAnimations({
         }
       }
 
-      if (!loop) {
+      if (!loop || def?.loop === 'once') {
         action.setLoop(THREE.LoopOnce, 1);
         action.clampWhenFinished = true;
       } else {

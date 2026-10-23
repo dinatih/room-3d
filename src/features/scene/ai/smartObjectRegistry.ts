@@ -535,7 +535,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un livre sur étagère',
         rotY: Math.PI / 2,
         animation: 'take-book-shelf',
-        duration: 3.3,
       }
     ]
   },
@@ -1190,7 +1189,7 @@ export function buildSmartObjectInstructionSequence(
           protectedDoor: doorKey, triggerEventKey: 'freezer', triggerEventValue: true,
         },
       ] : []),
-      { ...baseInstruction, protectedDoor: doorKey },
+      { ...baseInstruction, repeatCount: 1, waitForAnimation: true, protectedDoor: doorKey },
       ...(objectId === 'freezer' ? [
         {
           type: 'WAIT' as const, smartObjectId: obj.id, slotId: slot.slotId,

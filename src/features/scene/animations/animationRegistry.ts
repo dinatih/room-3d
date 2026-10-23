@@ -6279,6 +6279,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `pick fruit (214f / 7.1s, 238KB)`,
     tags: ['interaction'],
     duration: 7.1,
+    loop: 'once',
   },
   {
     id: 'picking-at-shirt',
@@ -9580,6 +9581,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['take-book', 'prendre-livre-etagere', 'livre'],
     tags: ['book', 'shelf', 'kallax', 'living-room', 'reading', 'interaction'],
     duration: 3.2,
+    loop: 'once',
   },
   {
     id: 'playing-guitar',
