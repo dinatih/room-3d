@@ -2,9 +2,38 @@
 
 ## Avancement
 
-Premier passage effectué sur **400 / 763 duos** (800 clips), lots 001 à 004.
-Il reste **363 duos**, à partir du lot 005. Les contrôles de trajectoire ne
-valident pas encore tous les contacts au sol ou entre personnages.
+Premier passage effectué sur **763 / 763 duos** (1 526 clips), lots 001 à 008.
+Tous les enregistrements importés sont couverts, dans l'ordre source : sept
+lots de 100 duos et un dernier de 63. Les contrôles de trajectoire ne valident
+pas encore tous les contacts au sol ou entre personnages. BEHAVE reste hors
+du périmètre de cette revue.
+
+## Lots 005 à 008 — 23 octobre 2026
+
+Les 363 derniers duos ont été contrôlés avec la correction commune du lot 001,
+sans nouvelle modification du retargeting ni des GLB.
+
+| Lot | Premier enregistrement | Dernier enregistrement | Duos / clips | Erreur maximale du bassin (cm) |
+| --- | --- | --- | --- | --- |
+| 005 | G043T006A029R024 | G053T002A013R022 | 100 / 200 | 0,000067485 |
+| 006 | G053T002A013R023 | G053T008A035R005 | 100 / 200 | 0,000102274 |
+| 007 | G053T008A036R006 | G059T001A011R005 | 100 / 200 | 0,000112393 |
+| 008 | G059T001A011R006 | G059T005A039R029 | 63 / 126 | 0,000065342 |
+
+Pour les 726 clips : empreintes NPZ/GLB conformes, durée et nombre d'images
+conformes, translations et orientations de toutes les images vérifiées
+aux échelles 75/100/150, aucun abaissement initial ajouté, valeurs finies
+et résultat identique dans le worker. Aucun nouveau défaut de trajectoire
+n'a été détecté. 109 duos conservent la correction de cheville exportée et
+254 leurs pieds libres, soit respectivement 248 et 515 sur le catalogue complet.
+
+Les 363 duos ont été échantillonnés dans le navigateur sur Xbot à cinq
+instants, avec quatre planches à mi-parcours sous
+`/tmp/interx-review-batch-005-contact-sheet.png` à `008-contact-sheet.png`.
+Les écarts de contact des poses assises et des portés restent ouverts.
+Sur les huit lots, l'erreur maximale de trajectoire mesurée est inférieure
+à 0,000126 cm ; cela ne mesure ni le patinage des pieds ni les distances
+entre mains et corps.
 
 ## Lots 002 à 004 — 23 octobre 2026
 
@@ -82,4 +111,5 @@ ROOM_TEST_URL=http://127.0.0.1:5173 node scripts/check-miley-duos.cjs --interx-b
 Les références NPZ et rapports sont écrits dans `/tmp/interx-review-batch-001-*`.
 Le navigateur utilise le lanceur headless commun au projet. La planche est
 `/tmp/interx-review-batch-001-contact-sheet.png`.
-Pour le prochain lot, remplacer `--batch 1` / `--interx-batch 1` par `5`.
+Pour reproduire un autre lot, remplacer `--batch 1` / `--interx-batch 1`
+par son numéro (1 à 8). Les huit lots couvrent la totalité du catalogue actuel.
