@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { captureAnimationRig, restoreAnimationRig } from './animationSerialization';
 import { resolveTargetBoneName } from '../retargeting/boneResolver';
+import { ANIMATION_WALK_SPEEDS } from '../ai/agent/agentWalkAnimations';
 
 const speeds = new WeakMap<THREE.AnimationClip, number>();
 const ignoredClips = new WeakSet<THREE.AnimationClip>();
 
 /** Measure the retargeted, scaled rig, rather than assuming every actor has the same stride. */
 export function getWalkCycleSpeed(clip: THREE.AnimationClip, scene: THREE.Object3D): number | null {
-  if (ignoredClips.has(clip)) return null;
+  if (!Object.prototype.hasOwnProperty.call(ANIMATION_WALK_SPEEDS, clip.name) || ignoredClips.has(clip)) return null;
   const cached = speeds.get(clip);
   if (cached !== undefined) return cached;
   const rig = restoreAnimationRig(captureAnimationRig(scene));

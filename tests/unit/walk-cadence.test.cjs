@@ -38,6 +38,13 @@ it('synchronise la phase avec la distance, quels que soient le FPS et les ralent
   assert.equal(walkTimeScale(0, 1 / 60, 100), 0);
   assert.equal(walkTimeScale(0, 0, 100), 0);
 });
+it('exclut les animations solo même lorsque leurs pieds bougent', () => {
+  for (const name of ['bureau-2', 'idle', 'dancing']) {
+    const { rig, clip } = fixture();
+    clip.name = name;
+    assert.equal(getWalkCycleSpeed(clip, rig), null);
+  }
+});
 it('calibre les deux vrais clips sur Lara et Xbot après retargeting', async t => {
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
   const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
