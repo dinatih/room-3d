@@ -710,7 +710,8 @@ export const WIGS_ITEMS: WigItem[] = [
   { id: 'hair_vcha_long_white_hair', name: "Coupe #70 (VCHA Longue Blanche, zHairezt)", glbPath: 'characters/wigs/vcha_long_white_hair.glb', photos: ['characters/wigs/previews/vcha_long_white_hair.png'] },
   { id: 'hair_wavy_hair_arranged_to_one_side', name: "Coupe #71 (Ondulés sur un Côté, zHairezt)", glbPath: 'characters/wigs/wavy_hair_arranged_to_one_side.glb', photos: ['characters/wigs/previews/wavy_hair_arranged_to_one_side.png'] },
   { id: 'hair_wavy_hair_with_bangs_02', name: "Coupe #72 (Ondulés Frange V2, zHairezt)", glbPath: 'characters/wigs/wavy_hair_with_bangs_02.glb', photos: ['characters/wigs/previews/wavy_hair_with_bangs_02.png'] },
-  { id: 'hair_white_long_wavy_hair', name: "Coupe #73 (Longs Blancs Ondulés, zHairezt)", glbPath: 'characters/wigs/white_long_wavy_hair.glb', photos: ['characters/wigs/previews/white_long_wavy_hair.png'] }
+  { id: 'hair_white_long_wavy_hair', name: "Coupe #73 (Longs Blancs Ondulés, zHairezt)", glbPath: 'characters/wigs/white_long_wavy_hair.glb', photos: ['characters/wigs/previews/white_long_wavy_hair.png'] },
+  { id: 'hair_side_swept_bob_haircut', name: "Coupe #74 (Carré Bob Balayé, zHairezt)", glbPath: 'characters/wigs/side_swept_bob_haircut.glb', photos: ['characters/wigs/previews/side_swept_bob_haircut.png'] }
 ];
 
 export const RIGGED_WIGS_PATHS: Record<string, string> = {};
