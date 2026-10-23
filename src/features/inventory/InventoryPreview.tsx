@@ -655,7 +655,7 @@ function GroundDatumLines({ mode }: { mode: string }) {
   );
 }
 
-function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, wireframe = false, glbPath, onTargetChange, onBoundsChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; wireframe?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (radius: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
+function CenteredItem({ Component, actionState, item, grounded = false, preserveOrigin = false, showDims = false, wireframe = false, glbPath, onTargetChange, onBoundsChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOrigin?: boolean; showDims?: boolean; wireframe?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (radius: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const PreviewComponent = useMemo(() => Component ?? function GlbPreview({ onSize }: SceneItemProps) {
     return <GlbScene glbPath={glbPath!} onSize={() => onSize(new THREE.Vector3())} onStats={onStats} />;
   }, [Component, glbPath, onStats]);
@@ -773,12 +773,12 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     });
 
     // Offset outer group to center the item in X/Z
-    const px = preserveOriginXZ ? 0 : -center.x;
-    const pz = preserveOriginXZ ? 0 : -center.z;
+    const px = preserveOrigin ? 0 : -center.x;
+    const pz = preserveOrigin ? 0 : -center.z;
 
     if (grounded) {
-      // Positionne le root pour que le point le plus bas du modèle (les semelles) soit exactement à Y=0
-      outerRef.current.position.set(px, -box.min.y, pz);
+      // Les personnages conservent leur origine au sol, quelle que soit la pose.
+      outerRef.current.position.set(px, preserveOrigin ? 0 : -box.min.y, pz);
     } else {
       // Center vertically in view
       outerRef.current.position.set(px, -center.y, pz);
@@ -793,13 +793,13 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     }
 
     if (onTargetChange) {
-      const targetY = grounded ? (isWigCategory ? size.y * 0.58 : size.y / 2) : 0;
+      const targetY = grounded ? (isWigCategory ? size.y * 0.58 : preserveOrigin ? center.y : size.y / 2) : 0;
       if (lastTargetYRef.current === null || Math.abs(lastTargetYRef.current - targetY) > 0.1) {
         lastTargetYRef.current = targetY;
         onTargetChange([0, targetY, 0]);
       }
     }
-  }, [grounded, preserveOriginXZ, onTargetChange, onBoundsChange, onStats, glbPath, applyWireframe, item]);
+  }, [grounded, preserveOrigin, onTargetChange, onBoundsChange, onStats, glbPath, applyWireframe, item]);
 
   useLayoutEffect(() => {
     lastStatsRef.current = null;
@@ -854,7 +854,7 @@ function RegistryScene({ item, actionState, showDims, wireframe, onTargetChange,
   const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters' || (item.category === 'robots' && !['unitree-g1', 'unitree-go2', 'unitree-as2w', 'jumper-robot'].includes(item.id));
   return (
     <>
-      <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isCharacter} showDims={showDims} wireframe={wireframe} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />
+      <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOrigin={isCharacter} showDims={showDims} wireframe={wireframe} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />
       {(!isCharacter || NON_HUMAN_CHARACTER_IDS.includes(item.id)) && <GroundPoint />}
     </>
   );
