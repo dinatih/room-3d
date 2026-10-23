@@ -303,8 +303,11 @@ def motion(path, rig, armature_name=None, loaded_arm=None):
     # Blender evaluates every imported animation in Z-up world space. Some
     # FBXs have a sideways bind skeleton but a correctly oriented animated
     # skeleton: deriving the animated UP axis from that bind would lay down
-    # dances and invert get-ups. Convert Blender WORLD axes directly instead.
-    alignment = Quaternion((1, 0, 0), -math.pi / 2)
+    # dances and invert get-ups. Convert Blender WORLD axes directly instead,
+    # compensating for any 90-degree yaw offsets authored into the FBX root.
+    yaw_step = round(arm_rest.to_euler().z / (math.pi / 2))
+    alignment = Quaternion((1, 0, 0), -math.pi / 2) @ Quaternion((0, 0, 1), -yaw_step * (math.pi / 2))
+
     source_rest = {name: alignment @ (arm_rest @ arm.data.bones[bone].matrix_local).to_quaternion()
                    if bone else alignment @ arm_rest.to_quaternion() for name, bone in mapping.items()}
     source_points = {name: alignment @ rest_point(name) for name in mapping}
