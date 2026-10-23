@@ -174,24 +174,6 @@ export function ViewControlBar({
     </button>
   );
 
-  const renderElevationButton = (elev: { angle: number; label: string; shortcut: string; icon: string }) => (
-    <button
-      key={elev.angle}
-      type="button"
-      className={`${TOOLBAR_BUTTON_CLASS} ${currentElevation === elev.angle ? 'view-control-bar__btn--green' : 'btn-outline-secondary'}`}
-      onClick={() => {
-        const currentPos = activeCameraPos ?? 'north';
-        dispatchView(currentPos, npcGridActive ? getCharacterGridCameraView().target : undefined, false, elev.angle);
-      }}
-      title={`${elev.label} (${elev.shortcut})`}
-      aria-label={`${elev.label} (${elev.shortcut})`}
-      aria-pressed={currentElevation === elev.angle}
-    >
-      <i className={`bi ${elev.icon}`} aria-hidden="true" />
-      <span className="small fw-semibold">{elev.angle}°</span>
-    </button>
-  );
-
   const zoomButton = (direction: 'in' | 'out') => (
     <button
       key={direction}
@@ -256,9 +238,17 @@ export function ViewControlBar({
   );
 
   const elevationGroup = (
-    <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Élévation caméra">
-      {ELEVATION_VIEWS.map(renderElevationButton)}
-    </div>
+    <select
+      className="form-select form-select-sm w-auto flex-shrink-0 rounded-pill border-success text-success fw-semibold shadow-sm"
+      value={currentElevation}
+      onChange={event => dispatchView(activeCameraPos ?? 'north', npcGridActive ? getCharacterGridCameraView().target : undefined, false, Number(event.target.value))}
+      aria-label="Angle d’élévation de la caméra"
+      title="Angle d’élévation de la caméra"
+    >
+      {ELEVATION_VIEWS.map(elev => (
+        <option key={elev.angle} value={elev.angle}>{elev.angle}° — {elev.label} ({elev.shortcut})</option>
+      ))}
+    </select>
   );
 
   const bar = (
@@ -341,6 +331,7 @@ export function ViewControlBar({
           </button>
           {perspButton}
           {rotButton}
+          {elevationGroup}
           {animalCameraActive && (
             <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la vue embarquée" aria-label="Quitter la vue embarquée">
               <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>
@@ -356,8 +347,8 @@ export function ViewControlBar({
       </div>
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {!showCharacterModes && zoomButton('out')}
-        {elevationGroup}
         {!showCharacterModes && rotButton}
+        {!showCharacterModes && elevationGroup}
       </div>
     </div>
     </>
@@ -379,8 +370,8 @@ export function ViewControlBar({
     const inlineRow2 = (
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {zoomButton('out')}
-        {elevationGroup}
         {rotButton}
+        {elevationGroup}
         {toolbarActions}
         <select
           className="form-select form-select-sm py-0 ps-2 mw-100 flex-shrink-0 bg-transparent text-body border-secondary small text-truncate view-control-bar__ambiance"
@@ -403,8 +394,8 @@ export function ViewControlBar({
         {zoomButton('out')}
         {zoomButton('in')}
         {cardinalGroup}
-        {elevationGroup}
         {rotButton}
+        {elevationGroup}
         {perspButton}
         {showMirrorsHD && <PresetButton hideUI={hideUI} />}
         {beforeAmbianceActions}
