@@ -173,6 +173,7 @@ export function createAgentController(
   let cachedCoordsInstruction: AgentInstruction | null = null;
   let cachedCoordsRevision = -1;
   let cachedTargetKey: string | undefined;
+  const postureDistances = new Map<string, number>();
 
   const getResolvedCoords = (instr: AgentInstruction) => {
     const revision = getObstacleRevision();
@@ -188,7 +189,8 @@ export function createAgentController(
     if (occupiedApproach || obstructedTarget || cachedTargetKey !== targetKey || cachedCoordsInstruction !== instr || !cachedCoords) {
       beginActorBlockCheck(_characterId);
       try {
-        cachedCoords = resolveInstructionCoords(instr, startPos, _characterId, state, route.owner);
+        const travel = slot?.entryAnimation ? postureDistances.get(resolveAnimationId(slot.entryAnimation)) : undefined;
+        cachedCoords = resolveInstructionCoords(instr, startPos, _characterId, state, route.owner, travel);
         cachedCoordsInstruction = instr;
         cachedTargetKey = targetKey;
       }
@@ -205,11 +207,13 @@ export function createAgentController(
   const beginSlotExit = () => {
     if (agentStatus !== 'INTERACTING' || !cachedCoords?.exitAnimation) return false;
     if (!cachedCoords.approach) throw new Error('An exit animation requires an approachOffset');
+    const travel = postureDistances.get(resolveAnimationId(cachedCoords.exitAnimation));
+    if (travel === undefined) throw new Error('Exit motion must be prepared before interaction');
     postureTransition = {
       animation: resolveAnimationId(cachedCoords.exitAnimation), targetAnimation: resolveAnimationId('idle'),
       nextStatus: 'IDLE',
       y: state.y, departure: { x: state.x, z: state.z },
-      destination: cachedCoords.approach, owner: cachedCoords.owner,
+      destination: { x: state.x + Math.sin(state.rotY) * travel, z: state.z + Math.cos(state.rotY) * travel }, owner: cachedCoords.owner,
     };
     animationPlayback = null;
     state.animation = postureTransition.animation;
@@ -1070,6 +1074,10 @@ export function createAgentController(
       const entering = currentInstruction.type === 'USE_OBJECT' && target.entryAnimation && target.approach
         && distance(state, { x: target.tx, z: target.tz }) > BOOLEAN_PRECISION;
       const goal = entering ? target.approach! : { x: target.tx, z: target.tz };
+      if ([target.entryAnimation, target.exitAnimation].some(animation => animation && !postureDistances.has(resolveAnimationId(animation)))) {
+        state.animation = NAVIGATION_WAIT_ANIMATION;
+        return state;
+      }
 
       if (!hasAgentProfile(_characterId)) return state;
       if (routeInstruction !== currentInstruction) {
@@ -1560,6 +1568,18 @@ export function createAgentController(
   };
 
   const getStatus = () => agentStatus;
+  const getPostureAnimations = () => {
+    const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
+    const object = instruction?.smartObjectId ? getSmartObject(instruction.smartObjectId) : undefined;
+    const slot = object?.slots.find(slot => slot.slotId === instruction?.slotId) ?? object?.slots[0];
+    return [{ animation: slot?.entryAnimation, entering: true }, { animation: slot?.exitAnimation, entering: false }]
+      .filter((entry): entry is { animation: string; entering: boolean } => Boolean(entry.animation));
+  };
+  const setPostureDistance = (animation: string, distance: number) => {
+    if (!Number.isFinite(distance) || distance === 0) throw new Error(`Invalid posture travel for ${animation}`);
+    const id = resolveAnimationId(animation);
+    if (postureDistances.get(id) !== distance) { postureDistances.set(id, distance); cachedCoordsInstruction = null; }
+  };
 
   const reportAnimationPlayback = (animation: string, progress: number, finished: boolean) => {
     animationPlayback ??= { animation, progress, finished };
@@ -1567,7 +1587,7 @@ export function createAgentController(
   };
 
   return {
-    update, setPosition, setRotation, hasPendingDynamicTask, getStatus, reportAnimationPlayback, connect,
+    update, setPosition, setRotation, hasPendingDynamicTask, getStatus, getPostureAnimations, setPostureDistance, reportAnimationPlayback, connect,
     get state() { return state; },
     get initialPos() { return startPos; },
     configure(next: { scenario: AgentInstruction[] | null; loop: boolean; onComplete?: () => void; landingAnim: string }) {

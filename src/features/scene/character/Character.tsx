@@ -38,7 +38,7 @@ import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform, getAnimationDef } from '../animations/animationResolver';
 import { getCrossfadeDuration, isPostureTransition, lerpAngle } from '../animations/animationTransitions';
-import { createPostureProgress, fitPostureTransition } from '../animations/postureTransition';
+import { createPostureMotion, fitPostureTransition } from '../animations/postureTransition';
 
 import type { CharacterProps } from './characterTypes';
 import { updateCharacterLayers } from './characterLayers';
@@ -227,7 +227,7 @@ export function Character({
   const modelRef = useRef<THREE.Object3D>(null!);
   const baseScenePosRef = useRef<THREE.Vector3>(new THREE.Vector3());
   const postureOriginRef = useRef({ position: new THREE.Vector3(), rotY: 0 });
-  const postureClipsRef = useRef(new Map<string, { original: THREE.AnimationClip; fitted: THREE.AnimationClip; progress: THREE.LinearInterpolant }>());
+  const postureClipsRef = useRef(new Map<string, { fitted: THREE.AnimationClip; progress: THREE.LinearInterpolant }>());
   useEffect(() => () => postureClipsRef.current.clear(), [scene]);
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const lastLoggedAnimRef = useRef<string>('');
@@ -374,6 +374,8 @@ export function Character({
     setRotation: setAgentRotation,
     hasPendingDynamicTask,
     reportAnimationPlayback,
+    getPostureAnimations,
+    setPostureDistance,
     getStatus: getAgentStatus,
     initialPos,
   } = useAgentController(
@@ -854,6 +856,19 @@ export function Character({
 
     const postureTransition = !isPreview && !characterGrid && getAgentStatus() === 'TRANSITIONING' && isPostureTransition(target);
     const idleId = resolveAnimationId('idle');
+    if (!isPreview && !characterGrid && navigationEnabled) for (const request of getPostureAnimations()) {
+      const animation = resolveAnimationId(request.animation), seatedId = resolveAnimationId('sit-idle');
+      for (const key of [animation, idleId, seatedId]) if (!actions[key]) loadAndPlayClip(key);
+      if (actions[animation] && actions[idleId] && actions[seatedId] && !postureClipsRef.current.has(animation)) {
+        if (!hipsBone) throw new Error(`Missing pelvis for ${renderId}`);
+        const original = actions[animation].getClip();
+        const start = actions[request.entering ? idleId : seatedId].getClip().tracks.find(track => track.name === `${hipsBone.name}.position`)!;
+        const fitted = fitPostureTransition(original, hipsBone, actions[request.entering ? seatedId : idleId].getClip(), new THREE.Vector3().fromArray(start.values));
+        const motion = createPostureMotion(original, fitted, hipsBone, groupRef.current);
+        postureClipsRef.current.set(animation, { fitted, progress: motion.progress });
+        setPostureDistance(animation, motion.distance);
+      }
+    }
     const postureTargetId = target === resolveAnimationId('stand-to-sit') ? resolveAnimationId('sit-idle') : idleId;
     if (postureTransition && !actions[postureTargetId]) {
       loadAndPlayClip(postureTargetId);
@@ -894,15 +909,11 @@ export function Character({
       if (to && activeActionName.current !== target) {
         if (postureTransition) {
           if (!hipsBone) throw new Error(`Missing pelvis for ${renderId}`);
-          const previous = postureClipsRef.current.get(target);
-          const original = previous?.original ?? to.getClip();
-          if (previous) mixer.uncacheAction(previous.fitted);
-          const fitted = fitPostureTransition(original, hipsBone, actions[postureTargetId].getClip());
-          postureClipsRef.current.set(target, { original, fitted, progress: createPostureProgress(fitted, hipsBone) });
+          const { fitted } = postureClipsRef.current.get(target)!;
           const originalAction = to;
           to = mixer.clipAction(fitted);
           for (const key in actions) if (actions[key] === originalAction) actions[key] = to;
-          mixer.uncacheAction(originalAction.getClip());
+          if (originalAction.getClip() !== fitted) mixer.uncacheAction(originalAction.getClip());
           postureOriginRef.current.position.copy(animOriginRef.current.position);
           postureOriginRef.current.rotY = animOriginRef.current.rotation.y;
           animOriginRef.current.rotation.y = postureOriginRef.current.rotY;

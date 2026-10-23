@@ -49,4 +49,8 @@ it('conserve l’approche frontale du WC lors du passage à la pose assise', () 
   assert.equal(use.entryAnimation, 'stand-to-sit');
   assert.equal(use.exitAnimation, 'sit-to-stand', 'Le WC doit déclarer sa sortie depuis la suppression des relèvements automatiques');
   assert.deepEqual(use.approach, { x: 0, z: 63 }, 'L’entrée et la sortie restent devant la cuvette plutôt que sur le bord latéral le plus proche');
+  const measuredMove = resolveInstructionCoords({ type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'use' }, null, 'walker', undefined, undefined, -40);
+  const measuredUse = resolveInstructionCoords({ type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'use' }, null, 'walker', undefined, undefined, -40);
+  assert.deepEqual([measuredMove.tx, measuredMove.tz], [0, 50], 'La marche rejoint l’approche mesurée avant de plier les jambes');
+  assert.deepEqual(measuredUse.approach, { x: 0, z: 50 }, 'L’assise commence au même point, sans reprendre l’ancien dégagement');
 });

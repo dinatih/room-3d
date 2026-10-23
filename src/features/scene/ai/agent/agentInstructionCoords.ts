@@ -14,7 +14,8 @@ export function resolveInstructionCoords(
   startPos: { x: number; y?: number; z: number; rotY?: number; owner?: string } | null,
   agentId?: string,
   currentPosition?: { x: number; z: number },
-  departureOwner?: string
+  departureOwner?: string,
+  postureDistance?: number,
 ): ResolvedInstructionCoords {
   // Resolve accessibility from the actual furniture exit, before planning the next activity.
   if (agentId && currentPosition && hasAgentProfile(agentId)) departureOwner = getContainingObjectOwner(agentId, currentPosition) ?? departureOwner;
@@ -66,11 +67,14 @@ export function resolveInstructionCoords(
       ? (obj.slots.find(s => s.slotId === instr.slotId) ?? obj.slots[0])
       : obj.slots[0];
     const isMoveOnly = instr.type === 'MOVE_TO';
-    const pos = isMoveOnly
-      ? (slot?.approachOffset ?? slot?.offset ?? obj.position ?? [0, 0, 0])
-      : (slot?.offset ?? slot?.approachOffset ?? obj.position ?? [0, 0, 0]);
     const resolved = slot ? resolveSlotAnimation(slot) : null;
     const finalRotY = resolved?.rotY ?? slot?.rotY;
+    const approachOffset = postureDistance !== undefined && slot?.offset
+      ? [slot.offset[0] - Math.sin(finalRotY ?? 0) * postureDistance, 0, slot.offset[2] - Math.cos(finalRotY ?? 0) * postureDistance]
+      : slot?.approachOffset;
+    const pos = isMoveOnly
+      ? (approachOffset ?? slot?.offset ?? obj.position ?? [0, 0, 0])
+      : (slot?.offset ?? approachOffset ?? obj.position ?? [0, 0, 0]);
 
     const profileId = agentId && hasAgentProfile(agentId) ? agentId : undefined;
     const desired = isMoveOnly && instr.doorKey
@@ -97,7 +101,7 @@ export function resolveInstructionCoords(
       owner,
       entryAnimation: slot?.entryAnimation,
       exitAnimation: slot?.exitAnimation,
-      approach: !usesApproach && slot?.approachOffset ? { x: slot.approachOffset[0], z: slot.approachOffset[2] } : undefined,
+      approach: !usesApproach && approachOffset ? { x: approachOffset[0], z: approachOffset[2] } : undefined,
       tx: approach.x,
       ty: isMoveOnly ? 0 : pos[1],
       tz: approach.z,

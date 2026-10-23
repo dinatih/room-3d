@@ -12,6 +12,7 @@ export function lerpAngle(from: number, to: number, progress: number): number {
 
 const TRANSITION_CLIP_IDS = new Set([
   'sit-to-stand',
+  'stand-to-sit',
   'crouch-to-stand',
   'miley-armature-stand-to-sit',
   'getting-up-from-backside',

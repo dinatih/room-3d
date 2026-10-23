@@ -8,7 +8,7 @@ import { useAgentController, resetAgentDeployment } from '/src/features/scene/ai
 import { OccupancyManager } from '/src/features/scene/ai/occupancyManager.ts';
 import { getAnimationDef } from '/src/features/scene/animations/animationResolver.ts';
 import { retargetClip } from '/src/features/scene/retargeting/retargetClip.ts';
-import { createPostureProgress, fitPostureTransition } from '/src/features/scene/animations/postureTransition.ts';
+import { createPostureMotion, fitPostureTransition } from '/src/features/scene/animations/postureTransition.ts';
 import { extractCharacterParts } from '/src/features/scene/characterParts.ts';
 import { getSmartObject } from '/src/features/scene/ai/smartObjectRegistry.ts';
 import { setAgentProfile, removeAgentProfile, navigationDebug, furnitureObstacles, registerObstacle, unregisterObstacle } from '/src/features/scene/ai/navigation/obstacles.ts';
@@ -112,10 +112,19 @@ export async function exercise(fixture) {
             return clips.get(key);
         }
         const seated = await clip('sitting-idle');
+        const prepared = new Map();
         const states = [], animations = [], began = performance.now();
         let action, postureProgress, previousAnimation, previousStatus, didInterrupt = false, completedEntry = false, delayedPlaybackChecked = false;
         while (controller.getStatus() !== 'FINISHED') {
             check(performance.now() - began < fixture.timeoutMs, `Controller timeout (${controller.getStatus()}, ${JSON.stringify(controller.update(0))})`);
+            for (const { animation, entering } of controller.getPostureAnimations()) {
+                if (prepared.has(animation)) continue;
+                const original = await clip(animation), target = entering ? seated : await clip('idle');
+                const start = (entering ? await clip('idle') : seated).tracks.find(track => track.name === `${hips.name}.position`);
+                const fitted = fitPostureTransition(original, hips, target, new THREE.Vector3().fromArray(start.values));
+                const motion = createPostureMotion(original, fitted, hips, model);
+                prepared.set(animation, { fitted, ...motion }); controller.setPostureDistance(animation, motion.distance);
+            }
             const state = controller.update(fixture.dt), status = controller.getStatus();
             realPosition = { x: state.x, y: state.y, z: state.z, rotY: state.rotY };
             check(status !== 'BLOCKED', `Unexpected controller block: ${JSON.stringify(navigationDebug.get(id))}`);
@@ -133,9 +142,8 @@ export async function exercise(fixture) {
             }
             if (state.animation !== previousAnimation) {
                 let next = await clip(state.animation);
-                if (status === 'TRANSITIONING')
-                    next = fitPostureTransition(next, hips, state.animation === 'sit-to-stand' ? await clip('idle') : seated);
-                postureProgress = status === 'TRANSITIONING' ? createPostureProgress(next, hips) : null;
+                if (status === 'TRANSITIONING') next = prepared.get(state.animation).fitted;
+                postureProgress = status === 'TRANSITIONING' ? prepared.get(state.animation).progress : null;
                 action?.stop();
                 action = mixer.clipAction(next).reset().play();
                 action.setLoop(status === 'TRANSITIONING' ? THREE.LoopOnce : THREE.LoopRepeat, status === 'TRANSITIONING' ? 1 : Infinity);

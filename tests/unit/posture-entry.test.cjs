@@ -2,23 +2,17 @@ const { it } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 const THREE = require('three');
-const { createPostureProgress, fitPostureTransition } = require('../../src/features/scene/animations/postureTransition.ts');
+const { createPostureMotion, fitPostureTransition } = require('../../src/features/scene/animations/postureTransition.ts');
 
-it('atteint la cuvette dès la fin de la descente et ne recule plus pendant la pose assise finale', () => {
-  for (const rotation of [0, -Math.PI / 2]) {
-    const parent = new THREE.Group(), hips = new THREE.Object3D();
-    parent.rotation.x = rotation; parent.add(hips); parent.updateMatrixWorld(true);
-    hips.name = 'Hips';
-    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(parent.quaternion.clone().invert());
-    for (const heights of [[100, 45, 47, 45], [45, 100, 98, 100]]) {
-      const values = heights.flatMap(height => up.clone().multiplyScalar(height).toArray());
-      const clip = new THREE.AnimationClip('posture', 5, [new THREE.VectorKeyframeTrack('Hips.position', [0, 2, 3, 5], values)]);
-      const progress = createPostureProgress(clip, hips);
-      assert.equal(progress.evaluate(0)[0], 0);
-      assert.equal(progress.evaluate(1)[0], 0.5);
-      for (const time of [2, 3, 4, 5]) assert.equal(progress.evaluate(time)[0], 1);
-    }
-  }
+it('suit le recul réel du clip et non la flexion des jambes', () => {
+  const root = new THREE.Group(), hips = new THREE.Object3D(); root.add(hips); hips.name = 'Hips';
+  const original = new THREE.AnimationClip('sit', 4, [new THREE.VectorKeyframeTrack('Hips.position', [0, 1, 2, 4], [0, 100, 0, 0, 50, 0, 0, 45, -30, 0, 45, -40])]);
+  const fitted = original.clone(); fitted.tracks[0].values = new Float32Array([0, 100, 0, 0, 50, 0, 0, 45, 0, 0, 45, 0]);
+  const motion = createPostureMotion(original, fitted, hips, root);
+  assert.equal(motion.distance, -40);
+  assert.equal(motion.progress.evaluate(1)[0], 0, 'La flexion seule ne doit pas faire glisser les pieds');
+  assert.equal(motion.progress.evaluate(2)[0], .75);
+  assert.equal(motion.progress.evaluate(4)[0], 1);
 });
 
 it('interpole les orientations par le quart de tour le plus court dans les deux sens', () => {
@@ -41,8 +35,8 @@ it('interpole les orientations par le quart de tour le plus court dans les deux 
   }
 });
 
-it('reconnaît l’alias canonique d’assise comme transition', () => {
-  const entry = { id: 'miley-armature-stand-to-sit', tags: ['sitting'], duration: 5.1 };
+it('reconnaît l’assise canonique comme transition', () => {
+  const entry = { id: 'stand-to-sit', tags: ['sitting'], duration: 2.3 };
   const { isPostureTransition } = load('src/features/scene/animations/animationTransitions.ts', {
     './animationResolver': { getAnimationDef: key => ['stand-to-sit', entry.id].includes(key) ? entry : undefined },
   });
@@ -86,7 +80,8 @@ it('sort uniquement des assises configurées et attend la fin réelle du relève
     const entryEnd = source.indexOf('          return state;', entry);
     assert(begin > 0 && end > begin && update > end && updateEnd > update);
     return `export function harness(exitAnimation) {
-      const state = { x: 270, y: 0, z: -80, animation: 'sitting-idle' };
+      const state = { x: 270, y: 0, z: -80, rotY: -Math.PI / 2, animation: 'sitting-idle' };
+      const postureDistances = new Map([['sit-to-stand', 45]]);
       const cachedCoords = { exitAnimation, approach: { x: 225, z: -80 }, owner: 'sofa-garden-east' };
       let agentStatus = 'INTERACTING', postureTransition = null, animationPlayback = null;
       const resolveAnimationId = id => id;
