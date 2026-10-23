@@ -8,7 +8,7 @@ import { useAgentController, resetAgentDeployment } from '/src/features/scene/ai
 import { OccupancyManager } from '/src/features/scene/ai/occupancyManager.ts';
 import { getAnimationDef } from '/src/features/scene/animations/animationResolver.ts';
 import { retargetClip } from '/src/features/scene/retargeting/retargetClip.ts';
-import { fitPostureTransition } from '/src/features/scene/animations/postureTransition.ts';
+import { createPostureProgress, fitPostureTransition } from '/src/features/scene/animations/postureTransition.ts';
 import { extractCharacterParts } from '/src/features/scene/characterParts.ts';
 import { getSmartObject } from '/src/features/scene/ai/smartObjectRegistry.ts';
 import { setAgentProfile, removeAgentProfile, navigationDebug, furnitureObstacles, registerObstacle, unregisterObstacle } from '/src/features/scene/ai/navigation/obstacles.ts';
@@ -113,7 +113,7 @@ export async function exercise(fixture) {
         }
         const seated = await clip('sitting-idle');
         const states = [], animations = [], began = performance.now();
-        let action, previousAnimation, previousStatus, didInterrupt = false, completedEntry = false, delayedPlaybackChecked = false;
+        let action, postureProgress, previousAnimation, previousStatus, didInterrupt = false, completedEntry = false, delayedPlaybackChecked = false;
         while (controller.getStatus() !== 'FINISHED') {
             check(performance.now() - began < fixture.timeoutMs, `Controller timeout (${controller.getStatus()}, ${JSON.stringify(controller.update(0))})`);
             const state = controller.update(fixture.dt), status = controller.getStatus();
@@ -135,6 +135,7 @@ export async function exercise(fixture) {
                 let next = await clip(state.animation);
                 if (status === 'TRANSITIONING')
                     next = fitPostureTransition(next, hips, state.animation === 'sit-to-stand' ? await clip('idle') : seated);
+                postureProgress = status === 'TRANSITIONING' ? createPostureProgress(next, hips) : null;
                 action?.stop();
                 action = mixer.clipAction(next).reset().play();
                 action.setLoop(status === 'TRANSITIONING' ? THREE.LoopOnce : THREE.LoopRepeat, status === 'TRANSITIONING' ? 1 : Infinity);
@@ -150,7 +151,7 @@ export async function exercise(fixture) {
             if (action) {
                 const progress = action.time / action.getClip().duration;
                 const finished = action.loop === THREE.LoopOnce && !action.isRunning() && progress >= 1;
-                controller.reportAnimationPlayback(state.animation, progress, finished);
+                controller.reportAnimationPlayback(state.animation, postureProgress ? postureProgress.evaluate(action.time)[0] : progress, finished);
                 if (status === 'TRANSITIONING' && finished)
                     completedEntry = true;
             }

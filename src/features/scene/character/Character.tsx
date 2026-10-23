@@ -38,7 +38,7 @@ import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform, getAnimationDef } from '../animations/animationResolver';
 import { getCrossfadeDuration, isPostureTransition, lerpAngle } from '../animations/animationTransitions';
-import { fitPostureTransition } from '../animations/postureTransition';
+import { createPostureProgress, fitPostureTransition } from '../animations/postureTransition';
 
 import type { CharacterProps } from './characterTypes';
 import { updateCharacterLayers } from './characterLayers';
@@ -227,7 +227,7 @@ export function Character({
   const modelRef = useRef<THREE.Object3D>(null!);
   const baseScenePosRef = useRef<THREE.Vector3>(new THREE.Vector3());
   const postureOriginRef = useRef({ position: new THREE.Vector3(), rotY: 0 });
-  const postureClipsRef = useRef(new Map<string, { original: THREE.AnimationClip; fitted: THREE.AnimationClip }>());
+  const postureClipsRef = useRef(new Map<string, { original: THREE.AnimationClip; fitted: THREE.AnimationClip; progress: THREE.LinearInterpolant }>());
   useEffect(() => () => postureClipsRef.current.clear(), [scene]);
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const lastLoggedAnimRef = useRef<string>('');
@@ -898,7 +898,7 @@ export function Character({
           const original = previous?.original ?? to.getClip();
           if (previous) mixer.uncacheAction(previous.fitted);
           const fitted = fitPostureTransition(original, hipsBone, actions[postureTargetId].getClip());
-          postureClipsRef.current.set(target, { original, fitted });
+          postureClipsRef.current.set(target, { original, fitted, progress: createPostureProgress(fitted, hipsBone) });
           const originalAction = to;
           to = mixer.clipAction(fitted);
           for (const key in actions) if (actions[key] === originalAction) actions[key] = to;
@@ -1199,7 +1199,9 @@ export function Character({
       if (action) {
         const duration = action.getClip().duration;
         const progress = duration > 0 ? Math.min(1, action.time / duration) : 1;
-        reportAnimationPlayback(activeActionName.current, progress, action.loop === THREE.LoopOnce && action.time >= duration);
+        const travelProgress = postureTransition
+          ? postureClipsRef.current.get(activeActionName.current)!.progress.evaluate(action.time)[0] : progress;
+        reportAnimationPlayback(activeActionName.current, travelProgress, action.loop === THREE.LoopOnce && action.time >= duration);
         if (postureTransition && animOriginRef.current) {
           const idleOrigin = getAnimationOriginTransform(postureTargetId);
           animOriginRef.current.position.copy(postureOriginRef.current.position)

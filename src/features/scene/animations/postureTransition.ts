@@ -1,5 +1,21 @@
 import * as THREE from 'three';
 
+/** Follow the actual change of height, including clips with a seated/standing tail. */
+export function createPostureProgress(clip: THREE.AnimationClip, hips: THREE.Object3D) {
+  const track = clip.tracks.find(track => track.name === `${hips.name}.position`)!;
+  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(hips.parent!.getWorldQuaternion(new THREE.Quaternion()).invert());
+  const position = new THREE.Vector3();
+  const start = position.fromArray(track.values).dot(up);
+  const height = position.fromArray(track.values, track.values.length - 3).dot(up) - start;
+  if (!height) throw new Error(`Posture transition ${clip.name}: unchanged pelvis height`);
+  let progress = 0;
+  const values = Array.from(track.times, (_, frame) => {
+    const phase = (position.fromArray(track.values, frame * 3).dot(up) - start) / height;
+    return progress = Math.max(progress, THREE.MathUtils.clamp(phase, 0, 1));
+  });
+  return new THREE.LinearInterpolant(track.times, new Float32Array(values), 1);
+}
+
 /** Fit a posture change to the actual pelvis pose and the target idle endpoint.
  * Navigation owns ground motion; preserve only the clip's vertical deviation.
  * The cached retargeted clip must remain reusable by other interactions.

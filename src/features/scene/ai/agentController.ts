@@ -110,6 +110,7 @@ export function createAgentController(
   let animationPlayback: { animation: string; progress: number; finished: boolean } | null = null;
   let postureTransition: {
     animation: string; targetAnimation: string; y: number;
+    nextStatus: 'MOVING' | 'IDLE';
     departure: { x: number; z: number }; owner?: string;
     destination?: { x: number; z: number };
   } | null = null;
@@ -206,6 +207,7 @@ export function createAgentController(
     if (!cachedCoords.approach) throw new Error('An exit animation requires an approachOffset');
     postureTransition = {
       animation: resolveAnimationId(cachedCoords.exitAnimation), targetAnimation: resolveAnimationId('idle'),
+      nextStatus: 'IDLE',
       y: state.y, departure: { x: state.x, z: state.z },
       destination: cachedCoords.approach, owner: cachedCoords.owner,
     };
@@ -753,10 +755,10 @@ export function createAgentController(
       }
       if (playback?.animation === transition.animation && playback.finished && !state.animationPaused) {
         postureTransition = null;
-        agentStatus = 'IDLE';
+        agentStatus = transition.nextStatus;
         state.animation = transition.targetAnimation;
       }
-      return state;
+      if (agentStatus !== 'MOVING') return state;
     }
 
     const scenarioLength = scenario ? scenario.length : 0;
@@ -1119,6 +1121,7 @@ export function createAgentController(
         if (entering) {
           postureTransition = {
             animation: resolveAnimationId(target.entryAnimation!),
+            nextStatus: 'MOVING',
             targetAnimation: resolveAnimationId(currentInstruction.animation ?? target.anim ?? 'idle'),
             y: state.y, departure: { ...position },
             destination: { x: target.tx, z: target.tz }, owner: target.owner ?? currentInstruction.smartObjectId,

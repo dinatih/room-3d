@@ -2,7 +2,24 @@ const { it } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 const THREE = require('three');
-const { fitPostureTransition } = require('../../src/features/scene/animations/postureTransition.ts');
+const { createPostureProgress, fitPostureTransition } = require('../../src/features/scene/animations/postureTransition.ts');
+
+it('atteint la cuvette dès la fin de la descente et ne recule plus pendant la pose assise finale', () => {
+  for (const rotation of [0, -Math.PI / 2]) {
+    const parent = new THREE.Group(), hips = new THREE.Object3D();
+    parent.rotation.x = rotation; parent.add(hips); parent.updateMatrixWorld(true);
+    hips.name = 'Hips';
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(parent.quaternion.clone().invert());
+    for (const heights of [[100, 45, 47, 45], [45, 100, 98, 100]]) {
+      const values = heights.flatMap(height => up.clone().multiplyScalar(height).toArray());
+      const clip = new THREE.AnimationClip('posture', 5, [new THREE.VectorKeyframeTrack('Hips.position', [0, 2, 3, 5], values)]);
+      const progress = createPostureProgress(clip, hips);
+      assert.equal(progress.evaluate(0)[0], 0);
+      assert.equal(progress.evaluate(1)[0], 0.5);
+      for (const time of [2, 3, 4, 5]) assert.equal(progress.evaluate(time)[0], 1);
+    }
+  }
+});
 
 it('interpole les orientations par le quart de tour le plus court dans les deux sens', () => {
   const { lerpAngle } = load('src/features/scene/animations/animationTransitions.ts', {
@@ -65,6 +82,8 @@ it('sort uniquement des assises configurées et attend la fin réelle du relève
     const end = source.indexOf('  const releaseClaimedSlot =', begin);
     const update = source.indexOf("    if (agentStatus === 'TRANSITIONING') {");
     const updateEnd = source.indexOf('    const scenarioLength =', update);
+    const entry = source.indexOf('          postureTransition = {', source.indexOf('        if (entering) {'));
+    const entryEnd = source.indexOf('          return state;', entry);
     assert(begin > 0 && end > begin && update > end && updateEnd > update);
     return `export function harness(exitAnimation) {
       const state = { x: 270, y: 0, z: -80, animation: 'sitting-idle' };
@@ -80,8 +99,13 @@ it('sort uniquement des assises configurées et attend la fin réelle du relève
       const reportNavigationStop = () => { throw Error('Unexpected block'); };
       ${source.slice(begin, end)}
       return { begin: beginSlotExit, state, status: () => agentStatus,
+        enter() {
+          const position = { x: state.x, z: state.z }, currentInstruction = {};
+          const target = { entryAnimation: 'stand-to-sit', anim: 'sitting-idle', tx: 270, tz: -80, owner: cachedCoords.owner };
+          ${source.slice(entry, entryEnd)}
+        },
         tick(progress, finished = false) {
-          animationPlayback = { animation: exitAnimation, progress, finished };
+          animationPlayback = { animation: postureTransition.animation, progress, finished };
           ${source.slice(update, updateEnd)}
         }
       };
@@ -103,4 +127,8 @@ it('sort uniquement des assises configurées et attend la fin réelle du relève
   assert.equal(seat.state.z, -80);
   assert.equal(seat.state.animation, 'idle');
   assert.equal(seat.status(), 'IDLE');
+  const entry = harness(undefined);
+  entry.enter(); entry.tick(1, true);
+  assert.equal(entry.status(), 'MOVING', 'L’arrivée doit poursuivre USE_OBJECT sans repasser par l’attente debout');
+  assert.equal(entry.state.animation, 'sitting-idle');
 });
