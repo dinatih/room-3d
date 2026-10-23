@@ -80,6 +80,8 @@ const _tmpEyesWorldPos = new THREE.Vector3();
 const _tmpHeadForward = new THREE.Vector3();
 const _tmpHeadUp = new THREE.Vector3();
 const _tmpAnimOrigin = new THREE.Vector3();
+const syncVec = (target: { x: number; y: number; z: number } | null, v: THREE.Vector3) =>
+  target ? (target.x = v.x, target.y = v.y, target.z = v.z, target) : { x: v.x, y: v.y, z: v.z };
 
 const LGBTA_HAIRCUTS = [
   'original',
@@ -1241,33 +1243,13 @@ export function Character({
         }
         headBone.updateWorldMatrix(true, false);
         headBone.getWorldPosition(_tmpHeadWorldPos);
-        if (!cameraState.activeHeadPos) {
-          cameraState.activeHeadPos = { x: _tmpHeadWorldPos.x, y: _tmpHeadWorldPos.y, z: _tmpHeadWorldPos.z };
-        } else {
-          cameraState.activeHeadPos.x = _tmpHeadWorldPos.x;
-          cameraState.activeHeadPos.y = _tmpHeadWorldPos.y;
-          cameraState.activeHeadPos.z = _tmpHeadWorldPos.z;
-        }
+        cameraState.activeHeadPos = syncVec(cameraState.activeHeadPos, _tmpHeadWorldPos);
 
         // Direction du regard (forward Z) et axe haut (up Y) de la tête
         _tmpHeadForward.fromArray(headBone.userData.lookForward ?? [0, 0, 1]).transformDirection(headBone.matrixWorld);
         _tmpHeadUp.fromArray(headBone.userData.lookUp ?? [0, 1, 0]).transformDirection(headBone.matrixWorld);
-
-        if (!cameraState.activeHeadForward) {
-          cameraState.activeHeadForward = { x: _tmpHeadForward.x, y: _tmpHeadForward.y, z: _tmpHeadForward.z };
-        } else {
-          cameraState.activeHeadForward.x = _tmpHeadForward.x;
-          cameraState.activeHeadForward.y = _tmpHeadForward.y;
-          cameraState.activeHeadForward.z = _tmpHeadForward.z;
-        }
-
-        if (!cameraState.activeHeadUp) {
-          cameraState.activeHeadUp = { x: _tmpHeadUp.x, y: _tmpHeadUp.y, z: _tmpHeadUp.z };
-        } else {
-          cameraState.activeHeadUp.x = _tmpHeadUp.x;
-          cameraState.activeHeadUp.y = _tmpHeadUp.y;
-          cameraState.activeHeadUp.z = _tmpHeadUp.z;
-        }
+        cameraState.activeHeadForward = syncVec(cameraState.activeHeadForward, _tmpHeadForward);
+        cameraState.activeHeadUp = syncVec(cameraState.activeHeadUp, _tmpHeadUp);
 
         // Calcul précis du milieu des deux yeux
         if (leftEyeBone && rightEyeBone) {
@@ -1286,24 +1268,12 @@ export function Character({
             .addScaledVector(_tmpHeadForward, forwardOffset);
         }
 
-        if (!cameraState.activeEyesPos) {
-          cameraState.activeEyesPos = { x: _tmpEyesWorldPos.x, y: _tmpEyesWorldPos.y, z: _tmpEyesWorldPos.z };
-        } else {
-          cameraState.activeEyesPos.x = _tmpEyesWorldPos.x;
-          cameraState.activeEyesPos.y = _tmpEyesWorldPos.y;
-          cameraState.activeEyesPos.z = _tmpEyesWorldPos.z;
-        }
+        cameraState.activeEyesPos = syncVec(cameraState.activeEyesPos, _tmpEyesWorldPos);
       }
       if (hipsBone) {
         hipsBone.updateWorldMatrix(true, false);
         hipsBone.getWorldPosition(_tmpHipsWorldPos);
-        if (!cameraState.activeHipsPos) {
-          cameraState.activeHipsPos = { x: _tmpHipsWorldPos.x, y: _tmpHipsWorldPos.y, z: _tmpHipsWorldPos.z };
-        } else {
-          cameraState.activeHipsPos.x = _tmpHipsWorldPos.x;
-          cameraState.activeHipsPos.y = _tmpHipsWorldPos.y;
-          cameraState.activeHipsPos.z = _tmpHipsWorldPos.z;
-        }
+        cameraState.activeHipsPos = syncVec(cameraState.activeHipsPos, _tmpHipsWorldPos);
       }
     }
   }});
