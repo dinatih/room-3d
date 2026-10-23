@@ -6,9 +6,10 @@ const T = require('three');
 const { DUO_ANIMATIONS } = require('../../src/features/scene/animations/duoAnimations.ts');
 const { ANIMATION_DEFINITIONS } = require('../../src/features/scene/animations/animationRegistry.ts');
 const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
+const { ANIMATION_WALK_SPEEDS } = require('../../src/features/scene/ai/agent/agentWalkAnimations.ts');
 const { captureAnimationRig, restoreAnimationRig } = require('../../src/features/scene/character/animationSerialization.ts');
 
-it('les 172 clips Miley (duos et solos) respectent la source CC, y compris dans le worker', async t => {
+it('les clips Miley préservent la source CC, avec les marches PNJ sur place, y compris dans le worker', async t => {
  const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
  const loader = new GLTFLoader(); loader.setDRACOLoader({preload(){}}); loader.register(()=>({name:'SkeletonOnly',loadMesh:()=>Promise.resolve(new T.Group())}));
  const read = async path => {const b=fs.readFileSync('public/'+path);return loader.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');};
@@ -37,7 +38,8 @@ it('les 172 clips Miley (duos et solos) respectent la source CC, y compris dans 
    sample(0);const rootStart=root.position.clone().applyMatrix4(root.parent.matrixWorld);
    for(const index of [0,Math.floor(position.times.length/4),Math.floor(position.times.length/2),position.times.length-1]) {
     sample(position.times[index]);
-    const expected=hips.getWorldPosition(new T.Vector3()).sub(rootStart).sub(sourceRest).multiplyScalar(ratio).add(targetRest);
+    const expected=Object.hasOwn(ANIMATION_WALK_SPEEDS,id) ? targetRest
+      : hips.getWorldPosition(new T.Vector3()).sub(rootStart).sub(sourceRest).multiplyScalar(ratio).add(targetRest);
     targetHip.position.fromArray(position.values,index*3);target.updateMatrixWorld(true);
     const error=targetHip.getWorldPosition(new T.Vector3()).distanceTo(expected);maximum=Math.max(maximum,error);
     assert.ok(error<.001,`${id}: root error ${error} cm`);

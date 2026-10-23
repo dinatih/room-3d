@@ -4,6 +4,7 @@ import { getDepth } from './hairChain';
 import { resolveTargetBoneName } from './boneResolver';
 import { retargetH2Clip } from './unitreeH2Retarget';
 import { bakeFootContacts } from './footContacts';
+import { ANIMATION_WALK_SPEEDS } from '../ai/agent/agentWalkAnimations';
 
 function subsampleTrackTo30Fps(track: THREE.KeyframeTrack): THREE.KeyframeTrack {
   const times = track.times;
@@ -458,9 +459,10 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
 
         const animNameLower = rawClip.name.toLowerCase();
         const isYoga = animNameLower.includes('yoga');
-        // CC clips already carry authored root + pelvis motion. Their names
-        // (including combat sidesteps) must not replace it with in-place motion.
-        const isWalk = !ccRoot && !isYoga && (animNameLower.includes('walk') ||
+        // Registered locomotion is driven by navigation, including CC walks.
+        // Other CC clips keep their authored motion (e.g. combat sidesteps).
+        const isWalk = Object.prototype.hasOwnProperty.call(ANIMATION_WALK_SPEEDS, animNameLower) ||
+                       !ccRoot && !isYoga && (animNameLower.includes('walk') ||
                         animNameLower.includes('run') ||
                         animNameLower.includes('step') ||
                         animNameLower.includes('stairs')) &&
