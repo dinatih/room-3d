@@ -19,13 +19,13 @@ habituel reprend. Elle ne boucle jamais.
 ## Concierge Xbot
 
 La ronde automatique en boucle suit : entrée extérieure → couloir → salle de bain
-→ séjour → jardin → entrée extérieure → repos dans le couloir du bâtiment B.
+→ séjour → jardin → repos 2 mètres devant les 5 mannequins / squelettes du jardin.
 Chaque zone reçoit une inspection visuelle à 360° de 3 secondes. Aucun équipement
 n'est utilisé et aucune tâche ménagère n'est exécutée.
 
-Au repos, Xbot consulte son téléphone pendant 90 secondes avant la ronde suivante.
-Le Smart Object `building-b-corridor-end` conserve son emplacement et porte
-`ownerCharacterId: 'xbot'`. Cette restriction permanente s'applique même lorsque
+Au repos, Xbot observe les mannequins (`looking`) pendant 90 secondes avant la ronde suivante.
+Le Smart Object `xbot-garden-rest` est positionné à `[410, 0, -500]` orienté face au nord (`rotY: Math.PI`)
+et porte `ownerCharacterId: 'xbot'`. Cette restriction permanente s'applique même lorsque
 Xbot est absent ou a libéré ses réservations ; elle n'interdit pas le passage.
 
 ## Activités libres

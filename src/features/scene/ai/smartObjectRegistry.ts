@@ -351,7 +351,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Bain Côté Ouest',
         offset: [80, 0, -330],
         rotY: Math.PI / 4,
-        animationsRandom: 'seated-front',
+        animationsRandom: ['seated-front', 'interx-g056t005a026r007-p1', 'interx-g039t002a006r007-p1'],
         duration: 30.0,
       },
       {
@@ -595,10 +595,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
   'building-b-corridor-end': {
     id: 'building-b-corridor-end',
-    name: 'Repos du concierge (Couloir Bâtiment B)',
-    ownerCharacterId: 'xbot',
+    name: 'Couloir Bâtiment B (Bout)',
     category: 'outdoor',
-    exclusive: true,
     position: [650, 0, 400],
     slots: [
       {
@@ -612,6 +610,23 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Attente couloir',
         rotY: Math.PI / 2,
         animation: 'texting-while-standing',
+      },
+    ]
+  },
+  'xbot-garden-rest': {
+    id: 'xbot-garden-rest',
+    name: 'Repos de Xbot (Jardin - Observation Mannequins)',
+    ownerCharacterId: 'xbot',
+    category: 'outdoor',
+    exclusive: true,
+    position: [410, 0, -500],
+    slots: [
+      {
+        slotId: 'visit',
+        name: 'Observation des mannequins',
+        rotY: Math.PI,
+        animation: 'looking',
+        animationsRandom: ['looking', 'looking-around', 'standing-idle-looking-ver-1'],
       },
     ]
   },
@@ -860,7 +875,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'inyeong-cha-hugs-point',
     name: '💖 Point Câlins Inyeong-Cha',
     category: 'decor',
-    position: [0, 0, -400],
+    position: [200, 0, -400],
     rotationY: Math.PI / 2,
     slots: [
       {

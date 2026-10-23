@@ -11,7 +11,7 @@ module.exports = async function checkScenarios(page) {
     const { flushSync } = (await import('/node_modules/.vite/deps/react-dom.js')).default;
     const { SMART_OBJECTS, getAllSmartObjects, buildSmartObjectInstructionSequence, getSmartObject } = window.smartObjects;
     const nav = window.nav, occupancy = window.occupancy, camera = window.cameraState;
-    const privateId = 'building-b-corridor-end';
+    const privateId = 'xbot-garden-rest';
     const origin = { x: 160, y: 0, z: 300, rotY: 0 };
     const profile = nav.getAgentProfile('native');
     camera.isSceneLaunched = true;

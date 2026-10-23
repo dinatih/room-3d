@@ -25,8 +25,7 @@ export function buildConciergeTour(): AgentInstruction[] {
       { type: 'MOVE_TO', targetZoneId },
       { type: 'ROTATE_360', duration: 3 },
     ]),
-    { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
-    { type: 'MOVE_TO', smartObjectId: 'building-b-corridor-end', slotId: 'visit' },
-    { type: 'WAIT', smartObjectId: 'building-b-corridor-end', slotId: 'visit', duration: 90, animation: 'texting-while-standing' },
+    { type: 'MOVE_TO', smartObjectId: 'xbot-garden-rest', slotId: 'visit' },
+    { type: 'WAIT', smartObjectId: 'xbot-garden-rest', slotId: 'visit', duration: 90, animation: 'looking' },
   ];
 }
