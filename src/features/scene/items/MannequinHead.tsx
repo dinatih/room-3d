@@ -20,9 +20,8 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { LAYER_DECOR } from '@config';
-import { Wig, HAIR_COLORS } from './Wig';
+import { Wig, HAIR_COLORS, LARA_WIG_PREVIEW_SCALE, LARA_WIG_HEAD_OFFSET } from './Wig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
-import { DEFAULT_WIG_FIT, useWigFitStore } from '@features/inventory/useWigFitStore';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, type LaraVariant } from '@features/scene/LaraVariants';
 import { extractCharacterParts, isHeadMesh } from '@features/scene/characterParts';
 import { CharacterPendant, type CharacterPendantHandle } from '@features/scene/character/CharacterPendant';
@@ -204,8 +203,7 @@ export function LaraWigBust({
   windEnabled?: boolean;
 }) {
   const { scene: laraScene } = useGLTFClone('characters/lara/lara_native.glb');
-  const fit = useWigFitStore(state => state.fits[wigId] ?? DEFAULT_WIG_FIT);
-  const LARA_SCALE = 90;
+  const LARA_SCALE = LARA_WIG_PREVIEW_SCALE;
   const pendantRef = useRef<CharacterPendantHandle>(null);
 
   const parts = useMemo(() => {
@@ -322,7 +320,7 @@ export function LaraWigBust({
     laraScene.scale.setScalar(LARA_SCALE);
     laraScene.position.set(
       -headLocal.x * LARA_SCALE,
-      31.0 - (headLocal.y + 0.0367) * LARA_SCALE,
+      31.0 - (headLocal.y + LARA_WIG_HEAD_OFFSET) * LARA_SCALE,
       -headLocal.z * LARA_SCALE,
     );
     laraScene.updateMatrixWorld(true);
@@ -354,10 +352,7 @@ export function LaraWigBust({
           variant={laraVariant}
         />
       )}
-      <group position={[fit.x, 31 + fit.y, fit.z]} scale={fit.scale}
-        rotation={[fit.rx, fit.ry, fit.rz].map(THREE.MathUtils.degToRad) as [number, number, number]}>
-        <Wig id={wigId.replace('hair_', '')} color={hairColor} windEnabled={windEnabled} scale={LARA_SCALE} />
-      </group>
+      <Wig id={wigId} color={hairColor} windEnabled={windEnabled} scale={LARA_SCALE} offset={[0, 31, 0]} fitToLara />
     </group>
   );
 }

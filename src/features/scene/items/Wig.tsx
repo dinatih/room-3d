@@ -1,10 +1,14 @@
 import { useLayoutEffect, useRef, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { LAYER_WALKER, LAYER_DECOR } from '@config';
 import { RIGGED_WIGS_PATHS } from '@features/inventory/inventoryData';
+import { DEFAULT_WIG_FIT, useWigFitStore } from '@features/inventory/useWigFitStore';
+
+export const LARA_WIG_PREVIEW_SCALE = 90;
+export const LARA_WIG_HEAD_OFFSET = 0.0367;
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
   naturel:  new THREE.Color(0.4, 0.25, 0.1),
@@ -39,6 +43,7 @@ export interface WigProps {
   windEnabled?: boolean;
   onBonesExtracted?: (bones: { bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]) => void;
   attachTo?: THREE.Object3D | null;
+  fitToLara?: boolean;
 }
 
 export { RIGGED_WIGS_PATHS };
@@ -69,9 +74,11 @@ export function disposeOwnedWigResources(root: THREE.Object3D) {
   });
 }
 
-export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
+export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo, fitToLara = false }: WigProps) {
   const strId = String(id);
   const cleanId = strId.replace(/^hair_/, '');
+  const fit = useWigFitStore(state => fitToLara ? state.fits[`hair_${cleanId}`] ?? DEFAULT_WIG_FIT : DEFAULT_WIG_FIT);
+  const invalidate = useThree(state => state.invalidate);
   const gltfPath = RIGGED_WIGS_PATHS[strId] || RIGGED_WIGS_PATHS[cleanId] || (typeof id === 'string' && id.endsWith('.glb') ? id : 'characters/wigs/zepeto_hair.glb');
   const { scene: clonedFullScene } = useGLTFClone(gltfPath);
   const nativeColorMap = useTexture('/characters/wigs/lara_native_shading.png');
@@ -152,14 +159,29 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       // fitting rotation/scale. The unattached wrapper has no transformed parent.
       const headPos = hairHeadBone.getWorldPosition(new THREE.Vector3());
       sg.position.copy(headPos).negate();
-      sg.position.y += attachTo ? 0.07 : 0;
     } else {
       sg.position.y = 0.15 * scale;
     }
     sg.position.add(new THREE.Vector3(...fix.offset).multiplyScalar(scale));
     sg.userData.isWigRoot = true;
     return sg;
-  }, [clonedFullScene, scale, cleanId, strId, attachTo]);
+  }, [clonedFullScene, scale, cleanId, strId]);
+
+  const fittedScene = useMemo(() => {
+    const group = new THREE.Group();
+    group.userData.isWigRoot = true;
+    group.add(scene);
+    return group;
+  }, [scene]);
+
+  useLayoutEffect(() => {
+    // Panel offsets are measured in the preview's centimetres; attachment space is in metres.
+    const units = scale / LARA_WIG_PREVIEW_SCALE;
+    fittedScene.position.set(fit.x * units, fit.y * units + (attachTo ? LARA_WIG_HEAD_OFFSET : 0), fit.z * units);
+    fittedScene.rotation.set(...[fit.rx, fit.ry, fit.rz].map(THREE.MathUtils.degToRad) as [number, number, number]);
+    fittedScene.scale.setScalar(fit.scale);
+    invalidate();
+  }, [fittedScene, fit, scale, attachTo, invalidate]);
 
   const hairBonesRef = useRef<WigBone[]>([]);
   
@@ -281,15 +303,15 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         });
       }
 
-      attachTo.add(scene);
+      attachTo.add(fittedScene);
     }
     return () => {
       if (scene) {
-        attachTo?.remove(scene);
+        attachTo?.remove(fittedScene);
         disposeOwnedWigResources(scene);
       }
     };
-  }, [attachTo, scene]);
+  }, [attachTo, scene, fittedScene]);
 
   const hasResetWindRef = useRef(false);
 
@@ -337,7 +359,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
 
   return attachTo ? null : (
     <group ref={clonedHairRef} position={offset} name="lara_custom_hair_attachment">
-      <primitive object={scene} dispose={null} />
+      <primitive object={fittedScene} dispose={null} />
     </group>
   );
 }

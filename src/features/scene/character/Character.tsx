@@ -1322,14 +1322,15 @@ export function Character({
         <CharacterBaseballCap attachTo={headBone} />
       )}
 
-      {headBone && id !== 'native' && variant !== 'native' && haircut !== 'original' && (
+      {headRefBone && id !== 'native' && variant !== 'native' && haircut !== 'original' && (
         <Wig
           id={haircut.replace('hair_', '')}
           color={hairColor}
           onBonesExtracted={(bones) => {
             customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
           }}
-          attachTo={headBone}
+          attachTo={headRefBone}
+          fitToLara
         />
       )}
       {!isPreview && <HeartParachute

@@ -1,16 +1,40 @@
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
 const launchBrowser = require('./browser-test-options.cjs');
+if (process.argv.includes('--inspect-head')) {
+  const THREE = require('three');
+  const data = fs.readFileSync('public/characters/lara/lara_native.glb');
+  const doc = JSON.parse(data.subarray(20, 20 + data.readUInt32LE(12)).toString());
+  const nodes = doc.nodes.map(node => {
+    const object = new THREE.Object3D();
+    object.name = node.name;
+    if (node.translation) object.position.fromArray(node.translation);
+    if (node.rotation) object.quaternion.fromArray(node.rotation);
+    if (node.scale) object.scale.fromArray(node.scale);
+    if (node.matrix) new THREE.Matrix4().fromArray(node.matrix).decompose(object.position, object.quaternion, object.scale);
+    return object;
+  });
+  doc.nodes.forEach((node, index) => node.children?.forEach(child => nodes[index].add(nodes[child])));
+  nodes.filter(node => !node.parent).forEach(node => node.updateMatrixWorld(true));
+  for (const node of nodes.filter(node => /^head_neck_(upper|lower)$/.test(node.name))) {
+    console.log(node.name, 'position', node.getWorldPosition(new THREE.Vector3()).toArray(), 'rotation', node.getWorldQuaternion(new THREE.Quaternion()).toArray(), 'scale', node.getWorldScale(new THREE.Vector3()).toArray());
+  }
+  process.exit(0);
+}
 (async () => {
   const browser = await launchBrowser({args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']});
   try {
     const page = await browser.newPage();
     await page.setViewport({width:1496, height:872});
     const errors = [];
-    page.on('pageerror', error => errors.push(error.message));
-    if (process.argv.includes('--fit')) {
+    page.on('pageerror', error => { errors.push(error.message); console.error(error.message); });
+    page.on('console', message => { if (message.type() === 'error') console.error(message.text()); });
+    if (process.argv.includes('--fit') || process.argv.includes('--alignment')) {
       await page.goto('http://localhost:5173/characters/wigs/lara_native_shading.png');
       await page.evaluate(async () => {
+        const base = document.createElement('base');
+        base.href = '/';
+        document.head.appendChild(base);
         const { default: RefreshRuntime } = await import('/@react-refresh');
         RefreshRuntime.injectIntoGlobalHook(window);
         window.$RefreshReg$ = () => {};
@@ -50,6 +74,57 @@ const launchBrowser = require('./browser-test-options.cjs');
       assert.equal(await input.evaluate(el => el.value), '100');
       assert.deepEqual(errors, []);
       console.log('Fitting panel: one-time scale reset, preserved alignment, new saved edits and reset passed');
+      if (process.argv.includes('--alignment')) {
+        await page.evaluate(async () => {
+          const { default: React } = await import('/node_modules/.vite/deps/react.js');
+          const { default: ReactDOM } = await import('/node_modules/.vite/deps/react-dom_client.js');
+          const { Canvas } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
+          const { useGLTF } = await import('/node_modules/.vite/deps/@react-three_drei.js');
+          const THREE = await import('/node_modules/.vite/deps/three.js');
+          const { Wig, LARA_WIG_PREVIEW_SCALE: scale, LARA_WIG_HEAD_OFFSET: offset } = await import('/src/features/scene/items/Wig.tsx');
+          const { useWigFitStore } = await import('/src/features/inventory/useWigFitStore.ts');
+          useGLTF.setDecoderPath('/draco/');
+          useWigFitStore.getState().update('hair_110', {scale:0.85, x:2, y:-1, z:3, rx:5, ry:10, rz:-4});
+          const head = new THREE.Group();
+          head.name = 'alignment-attached';
+          head.position.y = 31 - offset * scale;
+          head.scale.setScalar(scale);
+          const container = document.createElement('div');
+          container.style.cssText = 'width:400px;height:400px';
+          document.body.appendChild(container);
+          ReactDOM.createRoot(container).render(React.createElement(Canvas, {
+            onCreated: ({scene}) => { window.wigTestScene = scene; },
+          }, React.createElement(React.Suspense, {fallback:null},
+            React.createElement('group', {name:'alignment-preview'}, React.createElement(Wig, {id:'hair_110', scale, offset:[0,31,0], fitToLara:true})),
+            React.createElement('primitive', {object:head}),
+            React.createElement(Wig, {id:'hair_110', attachTo:head, fitToLara:true})
+          )));
+        });
+        await page.waitForFunction(() => ['alignment-preview', 'alignment-attached'].every(name =>
+          window.wigTestScene?.getObjectByName(name)?.getObjectsByProperty('isMesh', true).length > 0
+        ));
+        const comparison = await page.evaluate(async () => {
+          const THREE = await import('/node_modules/.vite/deps/three.js');
+          const scene = window.wigTestScene;
+          scene.updateMatrixWorld(true);
+          const meshes = name => scene.getObjectByName(name).getObjectsByProperty('isMesh', true);
+          const preview = meshes('alignment-preview'), attached = meshes('alignment-attached');
+          const a = new THREE.Vector3(), b = new THREE.Vector3();
+          let maxDistance = 0, vertices = 0;
+          preview.forEach((mesh, index) => {
+            mesh.skeleton?.update(); attached[index].skeleton?.update();
+            for (let i = 0; i < mesh.geometry.attributes.position.count; i++) {
+              mesh.getVertexPosition(i, a).applyMatrix4(mesh.matrixWorld);
+              attached[index].getVertexPosition(i, b).applyMatrix4(attached[index].matrixWorld);
+              maxDistance = Math.max(maxDistance, a.distanceTo(b)); vertices++;
+            }
+          });
+          return {maxDistance, vertices};
+        });
+        assert(comparison.vertices > 0);
+        assert(comparison.maxDistance < 1e-5, `Attached and preview vertices differ: ${JSON.stringify(comparison)}`);
+        console.log('Preview/attachment vertex comparison:', comparison);
+      }
       return;
     }
     await page.goto('http://localhost:5173/?inventory=wigs&item=hair_lara_native', {waitUntil: 'domcontentloaded'});
