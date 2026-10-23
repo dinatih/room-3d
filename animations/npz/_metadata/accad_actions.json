@@ -1,0 +1,470 @@
+[
+  {
+    "id": "accad-look-around-male1",
+    "label": "Regarder autour de soi (H1)",
+    "source": "Male1General_c3d/General A4 - Look Around_poses.npz",
+    "support": "standing",
+    "category": "emotes_gestures",
+    "path": "animations/npz/accad/accad-look-around-male1.glb",
+    "frames": 435,
+    "duration": 14.5,
+    "size_kb": 298,
+    "cut_start_s": 0.0,
+    "cut_end_s": 1.44,
+    "tags": [
+      "accad",
+      "standing",
+      "look-around-male1"
+    ]
+  },
+  {
+    "id": "accad-look-around-male2",
+    "label": "Regarder autour de soi (H2)",
+    "source": "Male2General_c3d/A4- Look Around_poses.npz",
+    "support": "standing",
+    "category": "emotes_gestures",
+    "path": "animations/npz/accad/accad-look-around-male2.glb",
+    "frames": 458,
+    "duration": 15.3,
+    "size_kb": 311,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.78,
+    "tags": [
+      "accad",
+      "standing",
+      "look-around-male2"
+    ]
+  },
+  {
+    "id": "accad-look-around-female",
+    "label": "Regarder autour de soi (F)",
+    "source": "Female1General_c3d/A4 - look_poses.npz",
+    "support": "standing",
+    "category": "emotes_gestures",
+    "path": "animations/npz/accad/accad-look-around-female.glb",
+    "frames": 636,
+    "duration": 21.2,
+    "size_kb": 371,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.06,
+    "tags": [
+      "accad",
+      "standing",
+      "look-around-female"
+    ]
+  },
+  {
+    "id": "accad-crouch-male1",
+    "label": "S'accroupir (H1)",
+    "source": "Male1General_c3d/General A7 - Crouch_poses.npz",
+    "support": "standing",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-crouch-male1.glb",
+    "frames": 161,
+    "duration": 5.4,
+    "size_kb": 208,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.62,
+    "tags": [
+      "accad",
+      "standing",
+      "crouch-male1"
+    ]
+  },
+  {
+    "id": "accad-crouch-male2",
+    "label": "S'accroupir (H2)",
+    "source": "Male2General_c3d/A7- Crouch_poses.npz",
+    "support": "standing",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-crouch-male2.glb",
+    "frames": 113,
+    "duration": 3.8,
+    "size_kb": 192,
+    "cut_start_s": 0.05,
+    "cut_end_s": 0.6,
+    "tags": [
+      "accad",
+      "standing",
+      "crouch-male2"
+    ]
+  },
+  {
+    "id": "accad-crouch-female",
+    "label": "S'accroupir (F)",
+    "source": "Female1General_c3d/A7 - crouch_poses.npz",
+    "support": "standing",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-crouch-female.glb",
+    "frames": 152,
+    "duration": 5.1,
+    "size_kb": 205,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.01,
+    "tags": [
+      "accad",
+      "standing",
+      "crouch-female"
+    ]
+  },
+  {
+    "id": "accad-lie-to-crouch-male1",
+    "label": "Se relever du sol en position accroupie (H1)",
+    "source": "Male1General_c3d/General A10 -  Lie Down to Crouch_poses.npz",
+    "support": "transition",
+    "category": "interactions",
+    "path": "animations/npz/accad/accad-lie-to-crouch-male1.glb",
+    "frames": 224,
+    "duration": 7.5,
+    "size_kb": 228,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.04,
+    "tags": [
+      "accad",
+      "transition",
+      "lie-to-crouch-male1"
+    ]
+  },
+  {
+    "id": "accad-lie-to-crouch-male2",
+    "label": "Se relever du sol en position accroupie (H2)",
+    "source": "Male2General_c3d/A10- Lie to crouch_poses.npz",
+    "support": "transition",
+    "category": "interactions",
+    "path": "animations/npz/accad/accad-lie-to-crouch-male2.glb",
+    "frames": 124,
+    "duration": 4.1,
+    "size_kb": 195,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.6,
+    "tags": [
+      "accad",
+      "transition",
+      "lie-to-crouch-male2"
+    ]
+  },
+  {
+    "id": "accad-lie-to-crouch-female",
+    "label": "Se relever du sol en position accroupie (F)",
+    "source": "Female1General_c3d/A10 - lie to crouch_poses.npz",
+    "support": "transition",
+    "category": "interactions",
+    "path": "animations/npz/accad/accad-lie-to-crouch-female.glb",
+    "frames": 119,
+    "duration": 4.0,
+    "size_kb": 193,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.41,
+    "tags": [
+      "accad",
+      "transition",
+      "lie-to-crouch-female"
+    ]
+  },
+  {
+    "id": "accad-lie-male1",
+    "label": "Rester allongé (H1)",
+    "source": "Male1General_c3d/General A9 -  Lie Down_poses.npz",
+    "support": "lying",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-lie-male1.glb",
+    "frames": 347,
+    "duration": 11.6,
+    "size_kb": 269,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.06,
+    "tags": [
+      "accad",
+      "lying",
+      "lie-male1"
+    ]
+  },
+  {
+    "id": "accad-lie-male2",
+    "label": "Rester allongé (H2)",
+    "source": "Male2General_c3d/A9- Lie_poses.npz",
+    "support": "lying",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-lie-male2.glb",
+    "frames": 92,
+    "duration": 3.1,
+    "size_kb": 185,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.05,
+    "tags": [
+      "accad",
+      "lying",
+      "lie-male2"
+    ]
+  },
+  {
+    "id": "accad-lie-female",
+    "label": "Rester allongé (F)",
+    "source": "Female1General_c3d/A9 - lie t2_poses.npz",
+    "support": "lying",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-lie-female.glb",
+    "frames": 236,
+    "duration": 7.9,
+    "size_kb": 232,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.01,
+    "tags": [
+      "accad",
+      "lying",
+      "lie-female"
+    ]
+  },
+  {
+    "id": "accad-sway-male1",
+    "label": "Se balancer sur place (H1)",
+    "source": "Male1General_c3d/General A2 - Sway_poses.npz",
+    "support": "standing",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-sway-male1.glb",
+    "frames": 228,
+    "duration": 7.6,
+    "size_kb": 229,
+    "cut_start_s": 1.03,
+    "cut_end_s": 0.38,
+    "tags": [
+      "accad",
+      "standing",
+      "sway-male1"
+    ]
+  },
+  {
+    "id": "accad-sway-male2",
+    "label": "Se balancer sur place (H2)",
+    "source": "Male2General_c3d/A2- Sway_poses.npz",
+    "support": "standing",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-sway-male2.glb",
+    "frames": 310,
+    "duration": 10.3,
+    "size_kb": 257,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.33,
+    "tags": [
+      "accad",
+      "standing",
+      "sway-male2"
+    ]
+  },
+  {
+    "id": "accad-sway-female",
+    "label": "Se balancer sur place (F)",
+    "source": "Female1General_c3d/A2 - Sway_poses.npz",
+    "support": "standing",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-sway-female.glb",
+    "frames": 358,
+    "duration": 11.9,
+    "size_kb": 272,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.07,
+    "tags": [
+      "accad",
+      "standing",
+      "sway-female"
+    ]
+  },
+  {
+    "id": "accad-swing-arms-male1",
+    "label": "Balancer les bras debout (H1)",
+    "source": "Male1General_c3d/General A3 - Swing Arms While Stand_poses.npz",
+    "support": "standing",
+    "category": "emotes_gestures",
+    "path": "animations/npz/accad/accad-swing-arms-male1.glb",
+    "frames": 167,
+    "duration": 5.6,
+    "size_kb": 211,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.17,
+    "tags": [
+      "accad",
+      "standing",
+      "swing-arms-male1"
+    ]
+  },
+  {
+    "id": "accad-swing-arms-male2",
+    "label": "Balancer les bras debout (H2)",
+    "source": "Male2General_c3d/A3- Swing arms_poses.npz",
+    "support": "standing",
+    "category": "emotes_gestures",
+    "path": "animations/npz/accad/accad-swing-arms-male2.glb",
+    "frames": 318,
+    "duration": 10.6,
+    "size_kb": 263,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.07,
+    "tags": [
+      "accad",
+      "standing",
+      "swing-arms-male2"
+    ]
+  },
+  {
+    "id": "accad-swing-arms-female",
+    "label": "Balancer les bras debout (F)",
+    "source": "Female1General_c3d/A3 - Swing_poses.npz",
+    "support": "standing",
+    "category": "emotes_gestures",
+    "path": "animations/npz/accad/accad-swing-arms-female.glb",
+    "frames": 435,
+    "duration": 14.5,
+    "size_kb": 298,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.01,
+    "tags": [
+      "accad",
+      "standing",
+      "swing-arms-female"
+    ]
+  },
+  {
+    "id": "accad-lie-prone-male1",
+    "label": "Rester allongé sur le ventre (H1)",
+    "source": "Male1General_c3d/General A9 -   Lie (forward)_poses.npz",
+    "support": "lying",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-lie-prone-male1.glb",
+    "frames": 70,
+    "duration": 2.3,
+    "size_kb": 178,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.02,
+    "tags": [
+      "accad",
+      "lying",
+      "lie-prone-male1"
+    ]
+  },
+  {
+    "id": "accad-lie-down-forward-male1",
+    "label": "S'allonger vers l'avant (H1)",
+    "source": "Male1General_c3d/General A8 -  Crourch to Lie (forward)_poses.npz",
+    "support": "transition",
+    "category": "interactions",
+    "path": "animations/npz/accad/accad-lie-down-forward-male1.glb",
+    "frames": 190,
+    "duration": 6.3,
+    "size_kb": 217,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.27,
+    "tags": [
+      "accad",
+      "transition",
+      "lie-down-forward-male1"
+    ]
+  },
+  {
+    "id": "accad-wait-female",
+    "label": "Attendre naturellement (F)",
+    "source": "Female1Gestures_c3d/D2 - Wait 1_poses.npz",
+    "support": "standing",
+    "category": "poses_idles",
+    "path": "animations/npz/accad/accad-wait-female.glb",
+    "frames": 1133,
+    "duration": 37.8,
+    "size_kb": 540,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.77,
+    "tags": [
+      "accad",
+      "standing",
+      "wait-female"
+    ]
+  },
+  {
+    "id": "accad-urban-female",
+    "label": "Gestuelle Urban 1 (F)",
+    "source": "Female1Gestures_c3d/D1 - Urban 1_poses.npz",
+    "support": "free",
+    "category": "emotes_gestures",
+    "path": "animations/npz/accad/accad-urban-female.glb",
+    "frames": 400,
+    "duration": 13.3,
+    "size_kb": 286,
+    "cut_start_s": 0.72,
+    "cut_end_s": 1.28,
+    "tags": [
+      "accad",
+      "free",
+      "urban-female"
+    ]
+  },
+  {
+    "id": "accad-random-gestures-female",
+    "label": "Gestes variés (F)",
+    "source": "Female1Gestures_c3d/D5 - Random Stuff 2_poses.npz",
+    "support": "free",
+    "category": "emotes_gestures",
+    "path": "animations/npz/accad/accad-random-gestures-female.glb",
+    "frames": 493,
+    "duration": 16.4,
+    "size_kb": 685,
+    "cut_start_s": 0.19,
+    "cut_end_s": 0.01,
+    "tags": [
+      "accad",
+      "free",
+      "random-gestures-female"
+    ]
+  },
+  {
+    "id": "accad-cartwheel-female",
+    "label": "Faire la roue (F)",
+    "source": "Female1Gestures_c3d/D6- CartWheel_poses.npz",
+    "support": "free",
+    "category": "sports_fitness",
+    "path": "animations/npz/accad/accad-cartwheel-female.glb",
+    "frames": 114,
+    "duration": 3.8,
+    "size_kb": 274,
+    "cut_start_s": 0.42,
+    "cut_end_s": 0.55,
+    "tags": [
+      "accad",
+      "free",
+      "cartwheel-female"
+    ]
+  },
+  {
+    "id": "accad-pickup-box-floor-male2",
+    "label": "Ramasser une boîte au sol (H2)",
+    "source": "Male2General_c3d/A5- Pick up box_poses.npz",
+    "support": "standing",
+    "category": "interactions",
+    "path": "animations/npz/accad/accad-pickup-box-floor-male2.glb",
+    "frames": 162,
+    "duration": 5.4,
+    "size_kb": 208,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.6,
+    "tags": [
+      "accad",
+      "standing",
+      "pickup-box-floor-male2"
+    ]
+  },
+  {
+    "id": "accad-lift-box-male2",
+    "label": "Soulever une boîte (H2)",
+    "source": "Male2General_c3d/A6- Box lift_poses.npz",
+    "support": "standing",
+    "category": "interactions",
+    "path": "animations/npz/accad/accad-lift-box-male2.glb",
+    "frames": 307,
+    "duration": 10.2,
+    "size_kb": 256,
+    "cut_start_s": 0.0,
+    "cut_end_s": 0.86,
+    "tags": [
+      "accad",
+      "standing",
+      "lift-box-male2"
+    ]
+  }
+]
