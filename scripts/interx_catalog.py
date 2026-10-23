@@ -10,8 +10,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCE = Path('/home/dinatih/3D Resources/animations/Inter-X_Dataset-motions/motions')
-MANIFEST = ROOT / 'public/animations/npz/interx/interx_manifest.json'
-RUNTIME_MANIFEST = ROOT / 'src/features/scene/animations/interx_manifest.json'
+MANIFEST = ROOT / 'src/features/scene/animations/interx_manifest.json'
 SOURCE_FPS = 120
 TARGET_FPS = 30
 CONVERSION = {
@@ -68,10 +67,7 @@ def atomic_json(path, value):
 
 
 def publish_manifest(value):
-    # Vite cannot import JSON from public. Both copies are generated from the
-    # same verified entries: the public index and its bundled runtime data.
     atomic_json(MANIFEST, value)
-    atomic_json(RUNTIME_MANIFEST, value)
 
 
 def read_pair(source, recording, include_hands=False):

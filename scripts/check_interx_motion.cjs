@@ -34,13 +34,13 @@ async function main() {
   }
   if (process.argv.includes('--browser-only')) {
     const index = process.argv.indexOf('--manifest');
-    const manifest = JSON.parse(fs.readFileSync(index === -1 ? path.join(root, 'public/animations/npz/interx/interx_manifest.json') : process.argv[index + 1]));
+    const manifest = JSON.parse(fs.readFileSync(index === -1 ? path.join(root, 'src/features/scene/animations/interx_manifest.json') : process.argv[index + 1]));
     await visualCheck(manifest.duos);
     return;
   }
   if (!process.argv.includes('--duo')) {
     const index = process.argv.indexOf('--manifest');
-    const manifest = JSON.parse(fs.readFileSync(index === -1 ? path.join(root, 'public/animations/npz/interx/interx_manifest.json') : process.argv[index + 1]));
+    const manifest = JSON.parse(fs.readFileSync(index === -1 ? path.join(root, 'src/features/scene/animations/interx_manifest.json') : process.argv[index + 1]));
     const args = process.argv.slice(2).filter(argument => argument !== '--browser');
     const comparisons = [];
     // Release the GLTF parser, skin geometry and animation graphs completely
@@ -59,7 +59,7 @@ async function main() {
   global.ProgressEvent = class { constructor(type, details) { Object.assign(this, { type }, details); } };
   const bundle = '/tmp/interx-motion-check-module.mjs';
   const manifestIndex = process.argv.indexOf('--manifest');
-  const manifestPath = manifestIndex === -1 ? path.join(root, 'public/animations/npz/interx/interx_manifest.json') : path.resolve(process.argv[manifestIndex + 1]);
+  const manifestPath = manifestIndex === -1 ? path.join(root, 'src/features/scene/animations/interx_manifest.json') : path.resolve(process.argv[manifestIndex + 1]);
   await esbuild.build({
     stdin: { contents: `
       export {retargetClip} from './src/features/scene/retargeting/retargetClip';
@@ -368,7 +368,7 @@ async function visualCheck(duos) {
     await page.close();
     }
     const index = process.argv.indexOf('--manifest');
-    const manifestPath = index === -1 ? path.join(root, 'public/animations/npz/interx/interx_manifest.json') : process.argv[index + 1];
+    const manifestPath = index === -1 ? path.join(root, 'src/features/scene/animations/interx_manifest.json') : process.argv[index + 1];
     fs.writeFileSync('/tmp/interx-browser-validation.json', JSON.stringify({
       manifestSha256: crypto.createHash('sha256').update(fs.readFileSync(manifestPath)).digest('hex'),
       ids: selected.map(entry => entry.id),

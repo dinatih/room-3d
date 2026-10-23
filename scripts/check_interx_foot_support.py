@@ -66,17 +66,16 @@ class SupportTests(unittest.TestCase):
 
 def verify_assets():
     manifest = json.loads(MANIFEST.read_text())
-    assert MANIFEST.read_bytes() == (ROOT / 'src/features/scene/animations/interx_manifest.json').read_bytes()
-    for relative in ['public/animations/npz/interx/interx_manifest.json', 'src/features/scene/animations/interx_manifest.json']:
-        before = json.loads(subprocess.check_output(['git', 'show', 'HEAD:' + relative], cwd=ROOT))
-        comparison = json.loads(json.dumps(manifest))
-        for old_duo, new_duo in zip(before['duos'], comparison['duos']):
-            old_duo.pop('footSupport', None)
-            new_duo.pop('footSupport', None)
-            for person in ['p1', 'p2']:
-                for field in ['sha256', 'sizeBytes']:
-                    new_duo['clips'][person][field] = old_duo['clips'][person][field]
-        assert before == comparison, relative + ' changed unrelated metadata'
+    relative = 'src/features/scene/animations/interx_manifest.json'
+    before = json.loads(subprocess.check_output(['git', 'show', 'HEAD:' + relative], cwd=ROOT))
+    comparison = json.loads(json.dumps(manifest))
+    for old_duo, new_duo in zip(before['duos'], comparison['duos']):
+        old_duo.pop('footSupport', None)
+        new_duo.pop('footSupport', None)
+        for person in ['p1', 'p2']:
+            for field in ['sha256', 'sizeBytes']:
+                new_duo['clips'][person][field] = old_duo['clips'][person][field]
+    assert before == comparison, relative + ' changed unrelated metadata'
     checked = changed = 0
     def tracks(doc, data):
         import struct
