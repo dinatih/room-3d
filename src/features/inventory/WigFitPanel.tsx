@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DEFAULT_WIG_FIT, useWigFitStore, type WigFit } from './useWigFitStore';
+import { DEFAULT_WIG_FIT, INITIAL_WIG_FITS, useWigFitStore, type WigFit } from './useWigFitStore';
 
 const FIELDS: { key: keyof WigFit; label: string; step: number }[] = [
   { key: 'scale', label: 'Taille (%)', step: 1 },
@@ -12,7 +12,7 @@ const FIELDS: { key: keyof WigFit; label: string; step: number }[] = [
 ];
 
 export function WigFitPanel({ wigId }: { wigId: string }) {
-  const fit = useWigFitStore(state => state.fits[wigId] ?? DEFAULT_WIG_FIT);
+  const fit = useWigFitStore(state => state.fits[wigId] ?? INITIAL_WIG_FITS[wigId] ?? DEFAULT_WIG_FIT);
   const update = useWigFitStore(state => state.update);
   const reset = useWigFitStore(state => state.reset);
   const [message, setMessage] = useState('');

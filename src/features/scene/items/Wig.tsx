@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { LAYER_WALKER, LAYER_DECOR } from '@config';
 import { RIGGED_WIGS_PATHS } from '@features/inventory/inventoryData';
-import { DEFAULT_WIG_FIT, useWigFitStore } from '@features/inventory/useWigFitStore';
+import { DEFAULT_WIG_FIT, INITIAL_WIG_FITS, useWigFitStore } from '@features/inventory/useWigFitStore';
 
 export const LARA_WIG_PREVIEW_SCALE = 90;
 export const LARA_WIG_HEAD_OFFSET = 0.0367;
@@ -77,7 +77,7 @@ export function disposeOwnedWigResources(root: THREE.Object3D) {
 export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo, fitToLara = false }: WigProps) {
   const strId = String(id);
   const cleanId = strId.replace(/^hair_/, '');
-  const fit = useWigFitStore(state => fitToLara ? state.fits[`hair_${cleanId}`] ?? DEFAULT_WIG_FIT : DEFAULT_WIG_FIT);
+  const fit = useWigFitStore(state => fitToLara ? state.fits[`hair_${cleanId}`] ?? INITIAL_WIG_FITS[`hair_${cleanId}`] ?? DEFAULT_WIG_FIT : DEFAULT_WIG_FIT);
   const invalidate = useThree(state => state.invalidate);
   const gltfPath = RIGGED_WIGS_PATHS[strId] || RIGGED_WIGS_PATHS[cleanId] || (typeof id === 'string' && id.endsWith('.glb') ? id : 'characters/wigs/zepeto_hair.glb');
   const { scene: clonedFullScene } = useGLTFClone(gltfPath);
