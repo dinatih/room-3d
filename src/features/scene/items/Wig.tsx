@@ -221,6 +221,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           clonedMat.depthWrite = true;
           clonedMat.alphaTest = 0.5;
           if (isColored) {
+            if (isLaraNativeWig) clonedMat.map = null;
             clonedMat.roughness = 0.4;
             clonedMat.metalness = 0.0;
           }
@@ -229,7 +230,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
             if ('emissive' in clonedMat) {
               if (color === 'rouge') {
                 if (isLaraNativeWig) {
-                  clonedMat.map = null;
                   clonedMat.emissiveMap = null;
                 }
                 clonedMat.emissive.copy(targetColor);
