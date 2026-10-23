@@ -263,6 +263,8 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
             clonedMat.color.copy(targetColor);
             if ('emissive' in clonedMat) {
               if (color === 'rouge') {
+                clonedMat.map = null;
+                clonedMat.emissiveMap = null;
                 clonedMat.emissive.copy(targetColor);
                 clonedMat.emissiveIntensity = 0.18;
                 clonedMat.toneMapped = false;
