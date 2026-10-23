@@ -1,6 +1,6 @@
 import './ViewControlBar.scss';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useSceneStore } from './store/useSceneStore';
 import { CAMERA_SHORTCUT_VIEWS, CARDINAL_VIEWS, dispatchView, ELEVATION_VIEWS } from './sidepanel/types';
@@ -85,6 +85,8 @@ export function ViewControlBar({
   const cameraTarget = useSceneStore(s => s.cameraTarget);
   const setCameraTarget = useSceneStore(s => s.setCameraTarget);
   const currentElevation = useSceneStore(s => s.cameraElevation ?? 45);
+  const elevationPopoverId = useId();
+  const elevationPopoverRef = useRef<HTMLDivElement>(null);
 
   const [isVRActive, setIsVRActive] = useState(false);
   const [isVRSupported, setIsVRSupported] = useState(false);
@@ -238,17 +240,64 @@ export function ViewControlBar({
   );
 
   const elevationGroup = (
-    <select
-      className="form-select form-select-sm w-auto flex-shrink-0 rounded-pill border-success text-success fw-semibold shadow-sm"
-      value={currentElevation}
-      onChange={event => dispatchView(activeCameraPos ?? 'north', npcGridActive ? getCharacterGridCameraView().target : undefined, false, Number(event.target.value))}
-      aria-label="Angle d’élévation de la caméra"
-      title="Angle d’élévation de la caméra"
-    >
-      {ELEVATION_VIEWS.map(elev => (
-        <option key={elev.angle} value={elev.angle}>{elev.angle}° — {elev.label} ({elev.shortcut})</option>
-      ))}
-    </select>
+    <>
+      <button
+        type="button"
+        className={`${TOOLBAR_BUTTON_CLASS} view-control-bar__btn--green`}
+        {...{ popovertarget: elevationPopoverId }}
+        aria-haspopup="dialog"
+        aria-label={`Angle d’élévation de la caméra : ${currentElevation}°`}
+        title="Choisir l’angle d’élévation"
+        onClick={event => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const popover = elevationPopoverRef.current!;
+          const width = parseFloat(getComputedStyle(popover).width);
+          const above = rect.top > window.innerHeight / 2;
+          popover.style.top = above ? 'auto' : `${rect.bottom + 8}px`;
+          popover.style.bottom = above ? `${window.innerHeight - rect.top + 8}px` : 'auto';
+          popover.style.right = `${Math.min(Math.max(8, window.innerWidth - rect.right), window.innerWidth - width - 8)}px`;
+          popover.style.maxHeight = `${(above ? rect.top : window.innerHeight - rect.bottom) - 16}px`;
+        }}
+      >
+        <i className={`bi ${ELEVATION_VIEWS.find(elev => elev.angle === currentElevation)?.icon ?? 'bi-camera'}`} aria-hidden="true" />
+        <span>{currentElevation}°</span>
+        <i className="bi bi-chevron-down" aria-hidden="true" />
+      </button>
+      {createPortal(
+        <div
+          ref={elevationPopoverRef}
+          id={elevationPopoverId}
+          {...{ popover: 'auto' }}
+          role="dialog"
+          aria-label="Angle d’élévation de la caméra"
+          className="popover view-control-bar__npc-popover view-control-bar__npc-popover--compact glass-card shadow-lg"
+          onKeyDown={event => event.stopPropagation()}
+        >
+          <h2 className="popover-header bg-transparent small fw-semibold">Élévation caméra</h2>
+          <div className="popover-body p-2 d-flex flex-column gap-1">
+            {ELEVATION_VIEWS.map(elev => (
+              <button
+                key={elev.angle}
+                type="button"
+                className={`btn btn-sm d-flex align-items-center gap-2 text-start ${currentElevation === elev.angle ? 'btn-success' : 'btn-outline-secondary'}`}
+                aria-pressed={currentElevation === elev.angle}
+                title={elev.label}
+                onClick={() => {
+                  dispatchView(activeCameraPos ?? 'north', npcGridActive ? getCharacterGridCameraView().target : undefined, false, elev.angle);
+                  elevationPopoverRef.current!.hidePopover();
+                }}
+              >
+                <i className={`bi ${elev.icon}`} aria-hidden="true" />
+                <span className="fw-semibold">{elev.angle}°</span>
+                <span className="ms-auto small opacity-75">{elev.shortcut}</span>
+                {currentElevation === elev.angle && <i className="bi bi-check-lg" aria-hidden="true" />}
+              </button>
+            ))}
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
   );
 
   const bar = (
