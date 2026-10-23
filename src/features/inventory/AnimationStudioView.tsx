@@ -297,7 +297,7 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
         aria-label="Redimensionner la liste des animations" onMouseDown={onResizeStart} title="Glisser pour redimensionner la liste" />}
       <div className="animation-studio__workspace bg-light">
         <div className="w-100 position-relative">
-          {active && currentItem ? <InventoryPreview key={mode} item={currentItem} height="100%" hideFooter showPhotoGallery={false} defaultShowGrid neutralLighting defaultAutoRotate={false} hideAnimFrameController preserveStateOnItemChange
+          {active && currentItem ? <InventoryPreview key={mode} item={currentItem} height="100%" hideFooter showPhotoGallery={false} defaultAutoRotate={false} hideAnimFrameController preserveStateOnItemChange
             initialAnim={mode === 'solo' ? active.id : undefined} initialDuoAnim={active.duo} initialDuoPartner={partner?.id}
             toolbarPrefix={
               <div className="d-flex align-items-center gap-1 flex-shrink-0">
