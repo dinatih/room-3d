@@ -37,7 +37,7 @@ export function dispatchView(key: string, targetOverride?: [number, number, numb
   const v = resolveCameraView(key, store.cameraProjection, undefined, elev);
   store.setActiveCameraPos(key);
   store.setCameraElevation?.(elev);
-  const inventoryGridTarget = store.layers.inventoryGrid
+  const inventoryGridTarget = (store.layers.inventoryGrid || store.layers.wigGrid)
     ? getInventoryGridCameraTarget()
     : null;
   const target = targetOverride ?? inventoryGridTarget ?? undefined;
@@ -165,6 +165,7 @@ export interface LayerState {
   fpvStabilization?: boolean;
   fpvStabilizationFactor?: number;
   inventoryGrid?: boolean;
+  wigGrid?: boolean;
   smokeTransition?: boolean;
   animOriginLerp?: boolean;
   animCrossfade?: boolean;

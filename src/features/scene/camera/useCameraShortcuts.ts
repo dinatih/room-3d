@@ -566,7 +566,7 @@ export function useCameraShortcuts({
         toggleNpcGrid();
       } else if (requestedMode === 'toggle-inventory-grid') {
         const store = useSceneStore.getState();
-        if (store.layers.inventoryGrid) {
+        if (store.layers.inventoryGrid || store.layers.wigGrid) {
           store.setActiveCameraPos(null);
           exitGridAndRestore(savedInventoryGridPrevConfig);
         } else {

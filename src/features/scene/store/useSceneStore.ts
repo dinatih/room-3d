@@ -653,6 +653,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
       }
       const nextLayers = { ...state.layers, [key]: isActivating };
       updateUrlLayer(key, isActivating);
+      if ((key === 'inventoryGrid' || key === 'wigGrid') && isActivating) {
+        const other = key === 'inventoryGrid' ? 'wigGrid' : 'inventoryGrid';
+        nextLayers[other] = false;
+        updateUrlLayer(other, false);
+      }
       if (key === 'iceCastle' && isActivating) {
         nextLayers.wallStructure = true;
         nextLayers.structure = true;

@@ -457,7 +457,8 @@ export function Studio() {
   const cameraMode = useSceneStore(state => state.cameraMode);
   const onToggleLayer = useSceneStore(state => state.toggleLayer);
   const toggleLayer = useCallback((key: keyof LayerState) => {
-    if (key === 'inventoryGrid') {
+    const current = useSceneStore.getState().layers;
+    if ((key === 'inventoryGrid' || key === 'wigGrid') && (current[key] || !(current.inventoryGrid || current.wigGrid))) {
       document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-inventory-grid' }));
     }
     onToggleLayer(key);
@@ -957,9 +958,9 @@ export function Studio() {
 
         {layers.wallEdges   && <EdgeHoverRaycaster />}
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}
-        {layers.inventoryGrid && (
+        {(layers.inventoryGrid || layers.wigGrid) && (
           <Suspense fallback={null}>
-            <InventoryObjectsGrid />
+            <InventoryObjectsGrid key={layers.wigGrid ? 'wigs' : 'inventory'} wigs={layers.wigGrid} />
           </Suspense>
         )}
         {layers.lights      && <LightHelpers />}

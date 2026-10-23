@@ -73,6 +73,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   bermudaGrass: true,
   // Divers
   inventoryGrid: false,
+  wigGrid: false,
   smokeTransition: true,
   animOriginLerp: true,
   animCrossfade: true,

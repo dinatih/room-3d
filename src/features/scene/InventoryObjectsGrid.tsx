@@ -27,7 +27,7 @@ import { useThree } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
-import { INVENTORY, type InventoryItem } from '@features/inventory/inventoryData';
+import { INVENTORY, WIGS_ITEMS, type InventoryItem } from '@features/inventory/inventoryData';
 import { useGLTFClone } from './useGLTFClone';
 import { removeGlbLines, glbLocalBBox } from './glbUtils';
 import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -61,7 +61,7 @@ import { SummerOutdoorBoot } from './items/SummerOutdoorBoot';
 import { WinterOutdoorBoot } from './items/WinterOutdoorBoot';
 import { TShirt } from './items/TShirt';
 import { MaillotInyeong } from './items/MaillotInyeong';
-import { MannequinHead } from './items/MannequinHead';
+import { MannequinHead, LaraWigBust } from './items/MannequinHead';
 import { DoorEntry } from './items/DoorEntry';
 import { DoorLiving, DoorBath } from './items/DoorWhite';
 import { GlassDoor } from './items/GlassDoor';
@@ -461,7 +461,7 @@ function GridItem({ item, position }: { item: UnifiedGridItem; position: [number
 
 // ── Composant Principal : InventoryObjectsGrid ─────────────────────────────────
 
-export function InventoryObjectsGrid() {
+export function InventoryObjectsGrid({ wigs = false }: { wigs?: boolean }) {
   const { size } = useThree();
   // Liste complète : objets GLB filtrés + objets procéduraux demandés
   const allItems = useMemo<UnifiedGridItem[]>(() => {
@@ -518,6 +518,16 @@ export function InventoryObjectsGrid() {
   // Col 1 (Centre)  : Salon & Séjour
   // Col 2 (Droite)  : Jardin (en haut) / Cuisine (en bas)
   const sections = useMemo(() => {
+    if (wigs) {
+      const cols = Math.ceil(Math.sqrt(WIGS_ITEMS.length * CELL_H / CELL_W * size.width / size.height));
+      return [{
+        zone: { id: 'wigs', label: 'Perruques — Bustes de Lara', emoji: '', color: '#7d9eac', cols },
+        items: WIGS_ITEMS,
+        baseX: 0,
+        baseY: 0,
+        cols,
+      }];
+    }
     const couloirItems = grouped.get('couloir') ?? [];
     const sdbItems = grouped.get('sdb') ?? [];
     const salonItems = grouped.get('salon') ?? [];
@@ -586,7 +596,7 @@ export function InventoryObjectsGrid() {
         cols: 3,
       },
     ];
-  }, [grouped]);
+  }, [grouped, wigs, size.width, size.height]);
 
   // Largeur totale de la disposition 3 colonnes
   const totalWidth = 3 * CELL_W + 70 + 4 * CELL_W + 70 + 3 * CELL_W;
@@ -642,7 +652,7 @@ export function InventoryObjectsGrid() {
   }, [sections, size.width, size.height, offsetX, rootY, rootZ]);
 
   return (
-    <group name="inventory-objects-grid" position={[offsetX, rootY, rootZ]}>
+    <group name={wigs ? 'wigs-grid' : 'inventory-objects-grid'} position={[offsetX, rootY, rootZ]}>
       {sections.map(({ zone, items, baseX, baseY, cols }) => {
         const rows = Math.max(1, Math.ceil(items.length / cols));
         const width = cols * CELL_W;
@@ -678,7 +688,13 @@ export function InventoryObjectsGrid() {
                   </mesh>
 
                   {/* Modèle, avec une zone réservée au nom sous la carte */}
-                  <GridItem item={item} position={[0, 8, 15]} />
+                  {wigs ? (
+                    <Suspense fallback={null}>
+                      <group position={[0, -18, 15]}>
+                        <LaraWigBust wigId={item.id} />
+                      </group>
+                    </Suspense>
+                  ) : <GridItem item={item} position={[0, 8, 15]} />}
 
                   <Text
                     position={[0, -CELL_H / 2 + 19, 30]}

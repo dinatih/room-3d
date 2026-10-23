@@ -179,7 +179,7 @@ export function CameraViewMarkers() {
   const { camera } = useThree();
   const [inventoryGridTarget, setInventoryGridTarget] = useState(() => getInventoryGridCameraTarget());
   const enabled = useSceneStore(s => s.layers.cameraViewMarkers);
-  const inventoryGridActive = useSceneStore(s => s.layers.inventoryGrid);
+  const inventoryGridActive = useSceneStore(s => s.layers.inventoryGrid || s.layers.wigGrid);
   const activeView = useSceneStore(s => s.activeCameraPos);
   const photoOpen = useSceneStore(s => s.isPhotoModeOpen);
   const cameraProjection = useSceneStore(s => s.cameraProjection);

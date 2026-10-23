@@ -308,6 +308,17 @@ export function ToolbarPanelsRow({
         <i className="bi bi-box-seam" aria-hidden="true" />
         <span className="fw-semibold">Grille Inventaire</span>
       </button>
+      <button
+        type="button"
+        className={`${TOOLBAR_BUTTON_CLASS} ${layers.wigGrid ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+        onClick={() => (onToggleLayer ?? useSceneStore.getState().toggleLayer)('wigGrid')}
+        title="Afficher ou masquer toutes les perruques sur les bustes de Lara"
+        aria-label="Grille perruques"
+        aria-pressed={Boolean(layers.wigGrid)}
+      >
+        <i className="bi bi-person-bust" aria-hidden="true" />
+        <span className="fw-semibold">Grille Perruques</span>
+      </button>
     </div>
   );
 }
