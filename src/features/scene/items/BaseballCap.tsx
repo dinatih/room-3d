@@ -9,7 +9,19 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
+export function createBaseballCapMaterial(color: THREE.ColorRepresentation = 0xff0000) {
+  return new THREE.MeshPhysicalMaterial({
+    color,
+    emissive: color,
+    emissiveIntensity: 0.18,
+    roughness: 1,
+    metalness: 0,
+    specularIntensity: 0,
+    toneMapped: false,
+  });
+}
+
+const redMat = createBaseballCapMaterial();
 
 export function BaseballCap({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone('characters/accessories/baseball_cap.glb');

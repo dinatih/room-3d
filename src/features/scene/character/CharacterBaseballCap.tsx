@@ -7,13 +7,14 @@ import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import { LAYER_WALKER } from '@config';
+import { createBaseballCapMaterial } from '../items/BaseballCap';
 
 interface CharacterBaseballCapProps {
   attachTo: THREE.Object3D;
   color?: number | string;
 }
 
-export function CharacterBaseballCap({ attachTo, color = 0xcc0000 }: CharacterBaseballCapProps) {
+export function CharacterBaseballCap({ attachTo, color = 0xff0000 }: CharacterBaseballCapProps) {
   const { scene } = useGLTFClone('characters/accessories/baseball_cap.glb');
 
   const capGroup = useMemo(() => {
@@ -47,11 +48,7 @@ export function CharacterBaseballCap({ attachTo, color = 0xcc0000 }: CharacterBa
     capGroup.position.set(-0.01, 0.20, 0.03);
     capGroup.rotation.set(-0.28, 0, 0);
 
-    const redMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(color),
-      roughness: 0.65,
-      metalness: 0.05,
-    });
+    const redMat = createBaseballCapMaterial(color);
 
     scene.traverse(obj => {
       if ((obj as THREE.Mesh).isMesh) {
