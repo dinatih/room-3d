@@ -215,6 +215,16 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           const isNativeRed = isLaraNativeWig && color === 'rouge';
           const clonedMat = isNativeRed ? new THREE.MeshPhysicalMaterial({ specularIntensity: 0 }) : baseMat.clone();
           if (isNativeRed) THREE.MeshStandardMaterial.prototype.copy.call(clonedMat, baseMat);
+          if (isNativeRed) {
+            // Keep the brightest texture channel as neutral shading, preserving hair strands and alpha.
+            clonedMat.onBeforeCompile = (shader: THREE.WebGLProgramParametersWithUniforms) => {
+              shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment.replace(
+                'diffuseColor *= sampledDiffuseColor;',
+                'sampledDiffuseColor.rgb = vec3(max(max(sampledDiffuseColor.r, sampledDiffuseColor.g), sampledDiffuseColor.b));\ndiffuseColor *= sampledDiffuseColor;'
+              ));
+            };
+            clonedMat.customProgramCacheKey = () => 'native-red-hair';
+          }
           clonedMat.userData.__ownedWigMaterial = true;
           clonedMat.side = THREE.DoubleSide;
           // Binary texture coverage keeps gaps between hair cards without blending.
@@ -223,21 +233,20 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           clonedMat.depthWrite = true;
           clonedMat.alphaTest = 0.5;
           if (isColored) {
-            if (isLaraNativeWig) clonedMat.map = null;
-            clonedMat.roughness = isNativeRed ? 0.85 : 0.4;
+            if (isLaraNativeWig && !isNativeRed) clonedMat.map = null;
+            clonedMat.roughness = 0.4;
             clonedMat.metalness = 0.0;
           }
           if (targetColor && 'color' in clonedMat) {
             clonedMat.color.copy(targetColor);
-            if (isNativeRed) clonedMat.color.setHex(0xcc0000);
             if ('emissive' in clonedMat) {
               if (color === 'rouge') {
                 if (isLaraNativeWig) {
                   clonedMat.emissiveMap = null;
                 }
                 clonedMat.emissive.copy(targetColor);
-                clonedMat.emissiveIntensity = isNativeRed ? 0 : 0.18;
-                clonedMat.toneMapped = isNativeRed;
+                clonedMat.emissiveIntensity = 0.18;
+                clonedMat.toneMapped = false;
               }
             }
           }
