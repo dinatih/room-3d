@@ -1286,12 +1286,13 @@ export function InventoryPreview({
               <PreviewEnvironment showGrid={showGrid} neutralLighting={neutralLighting || Boolean(smartAction)} />
               <ambientLight intensity={0.7} />
               <directionalLight position={[boundsRadius * 2, boundsRadius * 3, boundsRadius * 2]} intensity={1.0} castShadow
+                onUpdate={light => { light.layers.enableAll(); light.shadow.camera.layers.enableAll(); light.shadow.camera.updateProjectionMatrix(); }}
                 shadow-mapSize={[2048, 2048]} shadow-camera-left={-boundsRadius * 2} shadow-camera-right={boundsRadius * 2}
                 shadow-camera-top={boundsRadius * 2} shadow-camera-bottom={-boundsRadius * 2} shadow-camera-far={boundsRadius * 8} shadow-normalBias={0.05} />
               <directionalLight position={[-100, 50, -100]} intensity={0.4} color="#aabbff" />
-              <mesh rotation-x={-Math.PI / 2} position={[0, -0.02, 0]} receiveShadow>
+              <mesh rotation-x={-Math.PI / 2} receiveShadow>
                 <planeGeometry args={[boundsRadius * 8, boundsRadius * 8]} />
-                <shadowMaterial transparent opacity={0.35} />
+                <shadowMaterial transparent opacity={0.35} depthWrite={false} />
               </mesh>
               {cameraProjection === 'ortho' ? (
                 <>
