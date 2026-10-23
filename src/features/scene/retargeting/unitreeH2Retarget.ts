@@ -48,7 +48,7 @@ export function retargetH2Clip(raw: THREE.AnimationClip, target: THREE.Object3D,
     endpoints.push({ node, reference, correction, chain });
   });
   if (motors.size !== 31 || !pelvis || feet.length !== 2) throw new Error('Incomplete official H2 motor rig');
-  const north = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+  const north = new THREE.Quaternion();
   // Source clips have different authored headings (Miley idle is opposite to Mixamo walking).
   // Keep their relative turns, but start every clip facing the robot's forward direction.
   mixer.setTime(0);
