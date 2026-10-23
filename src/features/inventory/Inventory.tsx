@@ -535,7 +535,7 @@ export function Inventory({
   const [search, setSearch]               = useState('');
   const [wigSearch, setWigSearch]         = useState('');
   const [wigSource, setWigSource]         = useState<string>('');
-  const [wigColor, setWigColor]           = useState<string>('');
+  const [wigColor, setWigColor]           = useState<string>('rouge');
   const [wigBustVariant, setWigBustVariant] = useState<string>('native');
   const laraBustOptions = useMemo(() => CHARACTERS.filter(c => !!c.variant), []);
   const resolveInitialTarget = (): PreviewTarget => {
