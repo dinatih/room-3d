@@ -159,9 +159,20 @@ export function getAgentObstacles(id: string, start: Point): Polygon[] {
     const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
     if (other.y >= y + profile.height || other.y + body.height <= y) continue;
     const radius = actorClearance(profile, body);
-    // Already intersecting actors must remain able to leave their shared space.
-    const polygon = inflate([{ x: other.x, z: other.z }], radius);
-    if (pointInRing(start, polygon)) continue;
+    let polygon = inflate([{ x: other.x, z: other.z }], radius);
+    if (pointInRing(start, polygon)) {
+      // Keep the occupied half-plane blocked, while allowing a tangential exit.
+      // Dropping this obstacle plans straight through a body that movement rejects.
+      const dx = other.x - start.x, dz = other.z - start.z;
+      const nx = dx || dz ? dx : id < otherId ? 1 : -1;
+      const side = (p: Point) => (p.x - start.x) * nx + (p.z - start.z) * dz;
+      polygon = polygon.flatMap((a, i) => {
+        const b = polygon[(i + 1) % polygon.length], sa = side(a), sb = side(b);
+        const points = sa >= 0 ? [a] : [];
+        if ((sa > 0 && sb < 0) || (sa < 0 && sb > 0)) points.push({ x: a.x + (b.x - a.x) * sa / (sa - sb), z: a.z + (b.z - a.z) * sa / (sa - sb) });
+        return points;
+      });
+    }
     obstacles.push(polygon);
   }
   return obstacles;
