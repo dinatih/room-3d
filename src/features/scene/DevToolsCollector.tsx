@@ -141,7 +141,7 @@ export function DevToolsCollector() {
         instances: s.instances,
       }));
 
-      devState.topObjects = [...topObjectsList].sort((a, b) => b.tris - a.tris);
+      devState.topObjects = topObjectsList.sort((a, b) => b.tris - a.tris);
       devState.topMeshes  = [...topObjectsList]
         .sort((a, b) => (b.meshes + b.instances) - (a.meshes + a.instances))
         .map(o => [o.name, o.meshes + o.instances]);
@@ -150,23 +150,18 @@ export function DevToolsCollector() {
     };
     devState.refreshScene = refreshScene;
 
-    const runDiagnostics = (autoReason?: string) => {
-      if (!devState.refreshScene) return;
-      devState.refreshScene();
+    const logDiagnostics = () => {
+      refreshScene();
 
       const samples = devState.fpsSamples;
       const curFps = samples.length ? samples[samples.length - 1] : 0;
       const dc = devState.drawCalls;
       const trisK = (devState.triangles / 1000).toFixed(1);
 
-      const topTris = [...devState.topObjects].sort((a, b) => b.tris - a.tris).slice(0, 3);
+      const topTris = devState.topObjects.slice(0, 3);
       const topSummary = topTris.map(t => `${t.name}: ${(t.tris / 1000).toFixed(1)}k`).join(', ');
 
-      if (autoReason) {
-        appLog('perf', `⚠️ Chute FPS (${curFps} FPS) — ${autoReason} [${topSummary}]`);
-      } else {
-        appLog('perf', `🔍 Perf : ${curFps} FPS | ${dc} DC | ${trisK}k tris [${topSummary}]`);
-      }
+      appLog('perf', `🔍 Perf : ${curFps} FPS | ${dc} DC | ${trisK}k tris [${topSummary}]`);
 
       // Affichage détaillé dans la console développeur du navigateur
       console.group('%c[PERF DIAGNOSTIC] Analyse de la scène 3D', 'color: #ffaa00; font-weight: bold; font-size: 12px;');
@@ -175,7 +170,6 @@ export function DevToolsCollector() {
       console.groupEnd();
     };
 
-    const logDiagnostics = () => runDiagnostics();
     devState.logDiagnostics = logDiagnostics;
     refreshScene();
 
@@ -196,6 +190,7 @@ export function DevToolsCollector() {
 
   useFrame(() => {
     if (isAppIdle()) {
+      lastFrameTime.current = performance.now();
       gl.info.reset();
       devState.drawCalls = 0;
       devState.triangles = 0;
@@ -215,22 +210,19 @@ export function DevToolsCollector() {
     const now = performance.now();
     const dt  = now - lastFrameTime.current;
     lastFrameTime.current = now;
-    let fps = 0;
-    if (dt > 0 && dt < 2000) {
-      fps = Math.round(1000 / dt);
-      devState.fpsSamples.push(fps);
-      if (devState.fpsSamples.length > FPS_SAMPLES) devState.fpsSamples.shift();
-    }
+    const fps = Math.round(1000 / dt);
+    devState.fpsSamples.push(fps);
+    if (devState.fpsSamples.length > FPS_SAMPLES) devState.fpsSamples.shift();
 
-    // Détection de chute de FPS (< 20 FPS persistant sur plusieurs frames)
-    if (fps > 0 && fps < 20) {
+    // Détection de chute de FPS (< 12 FPS persistant sur plusieurs frames)
+    if (fps < 12) {
       lowFpsCount.current += 1;
       if (lowFpsCount.current > 40 && now - lastAutoDiagTime.current > 15000) {
         lastAutoDiagTime.current = now;
         lowFpsCount.current = 0;
         devState.logDiagnostics?.();
       }
-    } else if (fps >= 25) {
+    } else {
       lowFpsCount.current = Math.max(0, lowFpsCount.current - 1);
     }
 
