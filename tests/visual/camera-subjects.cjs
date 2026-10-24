@@ -27,17 +27,18 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     const selector = '[aria-label="Objet de position de la caméra"]';
     await page.waitForSelector(selector);
     const layout = await page.$eval(selector, select => {
-      const box = select.parentElement.getBoundingClientRect();
+      const box = select.getBoundingClientRect();
       const down = select.closest('.virtual-dpad').querySelector('.virtual-dpad__button--down').getBoundingClientRect();
-      return { left: box.left, right: box.right, top: box.top, downLeft: down.left, downTop: down.top, opacity: getComputedStyle(select).opacity };
+      return { left: box.left, right: box.right, top: box.top, downLeft: down.left, downTop: down.top, text: select.textContent.trim() };
     });
     assert(layout.right <= layout.downLeft && Math.abs(layout.top - layout.downTop) < 1, 'Selector must sit immediately left of the left D-pad down arrow');
-    assert.equal(layout.opacity, '0', 'Only the icon should be visible when closed');
-    assert.equal(await page.$eval(selector, select => select.value), '', 'An orbit view must allow selecting the active human as the first choice');
-    assert.deepEqual(await page.$$eval(`${selector} option`, options => options.filter(o => !o.hidden).map(o => o.textContent)), ['Personnage actif', 'Hornet', 'Chien', 'Oiseau', 'G1', 'Go2', 'As2', 'H2', 'Jumper']);
+    assert.equal(layout.text, '', 'Only the icon should be visible when closed');
+    assert.deepEqual(await page.$$eval('[role="listbox"][aria-label="Position caméra"] [role="option"]', options => options.map(o => o.textContent)), ['Personnage actif', 'Hornet', 'Chien', 'Oiseau', 'G1', 'Go2', 'As2', 'H2', 'Jumper']);
     const select = async (id, mode) => {
-      await page.focus(selector);
-      await page.select(selector, id);
+      await page.click(selector);
+      await page.waitForSelector('[role="listbox"][aria-label="Position caméra"]', { visible: true });
+      const index = initial.choices.findIndex(choice => choice.id === id);
+      await page.click(`[role="listbox"][aria-label="Position caméra"] button:nth-child(${index + 1})`);
       await page.waitForFunction((id, mode) => window.cameraSubjectsState.animalTarget === (id === 'character' ? null : id) && window.cameraSubjectsState.mode === mode, {}, id, mode);
       assert.equal(await page.evaluate(() => window.cameraSubjectsStore.getState().activeCharacterId), initial.character, 'Camera selection must not change the active human');
       assert.equal(new URL(page.url()).searchParams.get('target'), initial.choices.find(choice => choice.id === id).target);
@@ -60,6 +61,48 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     await page.evaluate(() => document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'fpv' })));
     await page.waitForFunction(() => window.cameraSubjectsState.mode === 'fpv');
     for (const choice of initial.choices) await select(choice.id, 'fpv');
+    const manualIds = initial.choices.filter(choice => choice.id !== 'character').map(choice => choice.id);
+    const pose = id => page.evaluate(id => ({ ...window.cameraSubjectsState.positions[id] }), id);
+    const hold = async (button, ms, padIndex = 0) => {
+      const pads = await page.$$('.virtual-dpad');
+      const box = await (await pads[padIndex].$(button)).boundingBox();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      await new Promise(resolve => setTimeout(resolve, ms));
+      await page.mouse.up();
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    };
+    for (const id of manualIds) {
+      await select(id, 'fpv');
+      const before = await pose(id);
+      await hold('.virtual-dpad__button--left', 350);
+      const turned = await pose(id);
+      assert(Math.abs(turned.yaw - before.yaw) > .1, `${id}: left cross must turn the selected body`);
+      await hold('.virtual-dpad__button--up', 450);
+      let moved = await pose(id);
+      if (Math.hypot(moved.x - turned.x, moved.z - turned.z) < .1) {
+        await hold('.virtual-dpad__button--down', 450);
+        moved = await pose(id);
+      }
+      assert(Math.hypot(moved.x - turned.x, moved.z - turned.z) > .1, `${id}: left cross must move the selected body`);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      assert.deepEqual(await pose(id), moved, `${id}: AI must stay paused after releasing controls`);
+      await hold('.virtual-dpad__button--left', 200, 1);
+      assert.deepEqual(await pose(id), moved, `${id}: right cross must only turn the camera`);
+      console.log(`Manual body control passed: ${id}`);
+    }
+    await new Promise(resolve => setTimeout(resolve, 12500));
+    const resumed = await page.evaluate(async ids => {
+      const { readSubjectInput } = await import('/src/features/scene/camera/subjectControls.ts');
+      return ids.every(id => readSubjectInput(id) === null) && window.__THREE_SCENE__.getObjectByName('shiba-inu').userData.dogBehavior.autonomous;
+    }, manualIds);
+    assert(resumed, 'Every actor must automatically resume after 12 seconds');
+    await select('shiba', 'fpv');
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await page.screenshot({ path: '/tmp/room-ushiro-fpv-forward.png' });
+    await page.click(selector);
+    await page.screenshot({ path: '/tmp/room-camera-subject-popover.png' });
+    await page.keyboard.press('Escape');
     await select('drone', 'fpv');
     await page.evaluate(() => document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'drone-pilot' } })));
     await page.waitForFunction(() => window.cameraSubjectsPilot.getState().piloting);

@@ -6,6 +6,7 @@ import { useDroneControlStore } from './droneControls';
 import { ORBIT_CAMERA_LERP } from './camera/cameraConstants';
 import { ALL_HAIR_COLORS } from './sidepanel/types';
 import { CAMERA_SUBJECTS } from './camera/cameraSubjects';
+import { PanelPopover } from './sidepanel/PanelPopover';
 import './VirtualDPad.scss';
 
 type ArrowKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight';
@@ -125,7 +126,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
 
   if (!visible) return null;
   const moving = piloting || !animal && (mode === 'fpv' || control === 'character');
-  const orbiting = mode === 'orbit' || mode === 'follow';
+  const orbiting = mode === 'orbit' || mode === 'follow' || Boolean(animal);
   const targets = [
     { target: 'studio', label: 'Appartement', icon: 'bi-building' },
     { target: 'character', label: 'Personnage', icon: 'bi-person' },
@@ -207,24 +208,33 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
           return (
             <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
               <div className="virtual-dpad" role="group" aria-label={piloting ? isCamera ? 'Rotation du Hornet' : 'Déplacement du Hornet' : inputControl === 'character' ? 'Déplacement du PNJ' : 'Déplacement de la caméra'}>
-                {!isCamera && <label className="virtual-dpad__button virtual-dpad__subject rounded-3" title={subjectId ? `Position de la caméra : ${subject.label}` : 'Choisir l’objet de position de la caméra'}>
-                  <i className={`bi ${subject.icon}`} aria-hidden="true" />
-                  <select
-                    className="form-select position-absolute top-0 start-0 w-100 h-100 opacity-0"
-                    aria-label="Objet de position de la caméra"
-                    value={subjectId}
-                    onFocus={refreshSubjects}
-                    onPointerDown={refreshSubjects}
-                    disabled={cameraState.isXR}
-                    onChange={event => {
-                      releaseAll();
-                      document.dispatchEvent(new CustomEvent('camera-subject', { detail: event.target.value }));
-                    }}
-                  >
-                    <option value="" hidden>Choisir un objet caméra</option>
-                    {CAMERA_SUBJECTS.map(choice => <option key={choice.id} value={choice.id} disabled={choice.id !== 'character' && !availableSubjects.includes(choice.id)}>{choice.label}</option>)}
-                  </select>
-                </label>}
+                {!isCamera && <div className="virtual-dpad__subject">
+                  <PanelPopover icon={subject.icon} title="Objet de position de la caméra" compactMode triggerClassName="virtual-dpad__button rounded-3" onOpen={popover => {
+                    refreshSubjects();
+                    requestAnimationFrame(() => (popover.querySelector<HTMLButtonElement>('[aria-selected="true"]:not(:disabled)') ?? popover.querySelector<HTMLButtonElement>('[role="option"]:not(:disabled)'))?.focus());
+                  }}>
+                    <div role="listbox" aria-label="Position caméra" className="d-flex flex-column gap-1" onKeyDown={event => {
+                      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+                      event.preventDefault();
+                      const options = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+                      const index = options.indexOf(document.activeElement as HTMLButtonElement);
+                      const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : index < 0 ? (event.key === 'ArrowDown' ? 0 : options.length - 1) : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
+                      options[next].focus();
+                    }}>
+                      {CAMERA_SUBJECTS.map(choice => <button key={choice.id} type="button" role="option" aria-selected={choice.id === subjectId}
+                        className={`btn btn-sm d-flex align-items-center gap-2 text-start ${choice.id === subjectId ? 'btn-primary' : 'btn-outline-secondary border-0'}`}
+                        disabled={choice.id !== 'character' && !availableSubjects.includes(choice.id)}
+                        onClick={event => {
+                          releaseAll();
+                          document.dispatchEvent(new CustomEvent('camera-subject', { detail: choice.id }));
+                          (event.currentTarget.closest('[popover]') as HTMLDivElement).hidePopover();
+                        }}>
+                        <i className={`bi ${choice.icon}`} aria-hidden="true" /><span>{choice.label}</span>
+                        {choice.id === subjectId && <i className="bi bi-check2 ms-auto" aria-hidden="true" />}
+                      </button>)}
+                    </div>
+                  </PanelPopover>
+                </div>}
                 <span className="virtual-dpad__center d-flex align-items-center justify-content-center" title={piloting ? isCamera ? 'Orienter le Hornet' : 'Déplacer le Hornet' : inputControl === 'character' ? 'Déplacer le PNJ' : 'Déplacer la caméra'}>
                   <i className={`bi ${inputControl === 'character' ? (piloting ? 'bi-controller' : 'bi-person-walking') : 'bi-camera-video'}`} aria-hidden="true" />
                 </span>
@@ -245,7 +255,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
                       aria-label={label}
                       aria-pressed={pressed}
                       title={label}
-                      disabled={!piloting && Boolean(animal && (inputControl === 'character' || mode === 'fpv'))}
+                      disabled={!isCamera && Boolean(animal && !CAMERA_SUBJECTS.some(choice => choice.id === animal))}
                       onPointerDown={event => {
                         event.preventDefault();
                         event.currentTarget.setPointerCapture(event.pointerId);

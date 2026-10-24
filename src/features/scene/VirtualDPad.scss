@@ -36,6 +36,7 @@
 }
 
 .virtual-dpad__button.is-pressed,
+.virtual-dpad__button[aria-expanded="true"],
 .virtual-controls__modes .btn.is-pressed {
   color: #fff;
   background-color: #d32f2f !important;

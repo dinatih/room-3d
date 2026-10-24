@@ -34,6 +34,9 @@ export function useAnimalCamera(
       rig.current.head.updateWorldMatrix(true, false);
       const crownUp = new THREE.Vector3(0, 1, 0).transformDirection(rig.current.head.matrixWorld.clone().invert());
       let crownHeight = -Infinity;
+      const muzzleForward = rig.current.head.worldToLocal(rig.current.mouth.getWorldPosition(new THREE.Vector3()));
+      muzzleForward.addScaledVector(crownUp, -muzzleForward.dot(crownUp)).normalize();
+      let muzzleFront = -Infinity;
       scene.traverse(object => {
         const mesh = object as THREE.SkinnedMesh;
         if (!mesh.isSkinnedMesh) return;
@@ -48,13 +51,14 @@ export function useAnimalCamera(
               vertex.fromBufferAttribute(position, i).applyMatrix4(mesh.bindMatrix).applyMatrix4(mesh.skeleton.boneInverses[headIndex]);
               skull.expandByPoint(vertex);
               crownHeight = Math.max(crownHeight, vertex.dot(crownUp));
+              muzzleFront = Math.max(muzzleFront, vertex.dot(muzzleForward));
               break;
             }
           }
         }
       });
       if (skull.isEmpty()) throw new Error(`Caméra ${id} : peau de tête introuvable`);
-      if (id === 'shiba') crownOffset.current.set(rig.current.mouth.position.x, skull.max.y, 0);
+      if (id === 'shiba') crownOffset.current.copy(muzzleForward).multiplyScalar(muzzleFront).addScaledVector(crownUp, crownHeight - muzzleFront * muzzleForward.dot(crownUp));
       else crownOffset.current.copy(crownUp).multiplyScalar(crownHeight);
     }
     return () => {

@@ -12,6 +12,7 @@ import { droneInput, droneMovement, useDroneControlStore } from '../droneControl
 import { useDroneControls } from '../camera/useDroneControls';
 import { HornetTour, type TourRoom } from '../hornetTour';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
+import { SubjectDriver, readSubjectInput, recordSubjectCommand } from '../camera/subjectControls';
 
 const GLB_PATH = '/items/black-hornet/black-hornet.glb';
 const TARGET_LENGTH_CM = 16.8; // Longueur réelle du nano-drone Black Hornet (environ 16,8 cm)
@@ -40,6 +41,7 @@ export function BlackHornetDrone({
 
   const tourRef = useRef<HornetTour | null>(null);
   const flightState = useRef<'tour' | 'landed' | 'manual' | 'holding'>('tour');
+  const driver = useRef(new SubjectDriver('drone'));
   const moveDirection = useRef(new THREE.Vector3());
 
   function playAnimation(name: string, loop = true) {
@@ -130,6 +132,7 @@ export function BlackHornetDrone({
 
     return () => {
       if (!isPreview) {
+        driver.current.dispose();
         tourRef.current?.release();
         tourRef.current = null;
         removeAgentProfile('drone');
@@ -151,6 +154,7 @@ export function BlackHornetDrone({
   useEffect(() => {
     if (isPreview) return;
     if (piloting) {
+      recordSubjectCommand('drone');
       tourRef.current?.release();
       flightState.current = 'manual';
       playAnimation('Drone_Hover');
@@ -170,11 +174,13 @@ export function BlackHornetDrone({
       if (key === 'drone-patrol-all' || key.startsWith('drone-goto-')) {
         const room = key === 'drone-patrol-all' ? null : key.replace('drone-goto-', '') as TourRoom;
         if (room && !tourRef.current?.observations.some(o => o.room === room)) throw new Error(`Hornet : pièce inconnue ${room}`);
+        driver.current.dispose();
         useDroneControlStore.getState().setPiloting(false);
         tourRef.current?.reset(room);
         flightState.current = 'tour';
         playAnimation('Drone_Fly');
       } else if (key === 'drone-toggle-land') {
+        driver.current.dispose();
         useDroneControlStore.getState().setPiloting(false);
         if (flightState.current === 'landed') {
           tourRef.current?.reset(tourRef.current.roomFilter);
@@ -229,6 +235,13 @@ export function BlackHornetDrone({
 
     if (flightState.current === 'manual') {
       const keys = droneInput.keys;
+      if (keys.size) recordSubjectCommand('drone');
+      if (!readSubjectInput('drone')) {
+        useDroneControlStore.getState().setPiloting(false);
+        tourRef.current?.reset(tourRef.current.roomFilter);
+        flightState.current = 'tour';
+        return;
+      }
       const turn = Math.PI / 2 * delta; // 90°/s, indépendamment de la répétition clavier.
       const rotating = (key: string) => keys.has('camera:' + key) || keys.has('Alt') && keys.has(key);
       droneInput.yaw += (Number(rotating('ArrowLeft')) - Number(rotating('ArrowRight'))) * turn;
@@ -239,6 +252,10 @@ export function BlackHornetDrone({
       model.rotation.set(-droneInput.pitch, droneInput.yaw, 0, 'YXZ');
       return;
     }
+    driver.current.step(model, delta, useDroneControlStore.getState().speed, tourRef.current!.radius);
+    if (driver.current.started) tourRef.current?.release();
+    if (driver.current.active) { playAnimation('Drone_Hover'); return; }
+    if (driver.current.resumed) { tourRef.current?.reset(tourRef.current.roomFilter); flightState.current = 'tour'; }
     if (flightState.current === 'holding') return;
 
     // Si le drone est posé

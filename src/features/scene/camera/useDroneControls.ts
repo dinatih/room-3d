@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber';
 import { cameraState } from '../cameraState';
 import { droneInput, useDroneControlStore } from '../droneControls';
 import { MOUSE_SENS } from './cameraConstants';
+import { recordSubjectCommand } from './subjectControls';
 
 /** Entrées exclusives au pilotage, sans verrouillage du pointeur. */
 export function useDroneControls(preview: boolean) {
@@ -24,21 +25,23 @@ export function useDroneControls(preview: boolean) {
       const aliases: Record<string, string> = { z: 'ArrowUp', w: 'ArrowUp', s: 'ArrowDown', q: 'ArrowLeft', a: 'ArrowLeft', d: 'ArrowRight', ' ': 'camera:Elevate', c: 'camera:Descend' };
       document.dispatchEvent(new CustomEvent('drone-arrow-keys', { detail: [...droneInput.keys].map(key => aliases[key] ?? (key.startsWith('Arrow') && droneInput.keys.has('Alt') ? 'Alt' + key : key)) }));
     };
-    const release = () => { droneInput.keys.clear(); releasePointer(); publishKeys(); };
+    const release = () => { if (droneInput.keys.size) recordSubjectCommand('drone'); droneInput.keys.clear(); releasePointer(); publishKeys(); };
     const directionInput = (event: Event) => {
       event.stopImmediatePropagation();
       const { key, pressed } = (event as CustomEvent<{ key: string; pressed: boolean }>).detail;
+      recordSubjectCommand('drone');
       droneInput.keys[pressed ? 'add' : 'delete'](key);
       publishKeys();
       invalidate();
     };
     const keyDown = (event: KeyboardEvent) => {
-      if ((event.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"]') || event.ctrlKey || event.metaKey) return;
+      if ((event.target as HTMLElement).closest('input, textarea, select, [popover], [contenteditable="true"]') || event.ctrlKey || event.metaKey) return;
       const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
       if (event.altKey && !key.startsWith('Arrow') && key !== 'Alt' && key !== 'Shift') return;
       if (!['z', 'w', 'q', 'a', 's', 'd', ' ', 'c', 'Shift', 'Alt', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) return;
       event.preventDefault();
       event.stopImmediatePropagation();
+      recordSubjectCommand('drone');
       droneInput.keys.add(key);
       droneInput.keys[event.altKey ? 'add' : 'delete']('Alt');
       publishKeys();
@@ -46,6 +49,7 @@ export function useDroneControls(preview: boolean) {
     };
     const keyUp = (event: KeyboardEvent) => {
       if (!droneInput.keys.delete(event.key.length === 1 ? event.key.toLowerCase() : event.key)) return;
+      recordSubjectCommand('drone');
       event.stopImmediatePropagation();
       publishKeys();
     };
@@ -61,6 +65,7 @@ export function useDroneControls(preview: boolean) {
     };
     const pointerMove = (event: PointerEvent) => {
       if (event.pointerId !== pointer) return;
+      recordSubjectCommand('drone');
       droneInput.yaw -= (event.clientX - lastX) * MOUSE_SENS;
       droneInput.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, droneInput.pitch - (event.clientY - lastY) * MOUSE_SENS));
       lastX = event.clientX;

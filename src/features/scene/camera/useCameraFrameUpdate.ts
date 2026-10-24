@@ -96,6 +96,11 @@ export function useCameraFrameUpdate({
         if (keys.current.has('ArrowRight') || keys.current.has('camera:ArrowRight')) orbitYaw.current += 0.03 * dt;
         if (keys.current.has('ArrowUp') || keys.current.has('camera:ArrowUp')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
         if (keys.current.has('ArrowDown') || keys.current.has('camera:ArrowDown')) orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
+      } else {
+        if (keys.current.has('camera:ArrowLeft')) orbitYaw.current += 0.03 * dt;
+        if (keys.current.has('camera:ArrowRight')) orbitYaw.current -= 0.03 * dt;
+        if (keys.current.has('camera:ArrowUp')) followPitch.current = Math.min(1.4, followPitch.current + 0.02 * dt);
+        if (keys.current.has('camera:ArrowDown')) followPitch.current = Math.max(-1.4, followPitch.current - 0.02 * dt);
       }
       updateFollowLook();
       cameraState.onUpdate?.();

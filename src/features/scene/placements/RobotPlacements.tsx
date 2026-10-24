@@ -19,6 +19,7 @@ import { isAppIdle } from '../idleState';
 import { NavigationScope, navigationValue } from '../ai/navigation/navigationScope';
 import { appLog } from '@features/ui/AppConsole';
 import { WALL_DEFS, WALL_THICKNESS } from '../wallData';
+import { SubjectDriver } from '../camera/subjectControls';
 
 // Extend patrols 2 metres beyond the studio's actual west/east exterior walls.
 const PATROL = {
@@ -38,6 +39,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const { id, Component } = config;
   const navigationEnabled = useNavigationEnabled();
   const group = useRef<Group>(null);
+  const driver = useRef(new SubjectDriver(id));
   const cameraMount = useRef(new Vector3());
   const cameraEyes = useRef(new Vector3());
   const cameraForward = useRef(new Vector3());
@@ -75,6 +77,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     const root = group.current!;
     cameraState.positions[id] = { x: root.position.x, y: root.position.y, z: root.position.z, yaw: root.rotation.y };
     return () => {
+      driver.current.dispose();
       navigation.current.clear();
       resetRoute(route.current, id);
       removeAgentProfile(id);
@@ -123,6 +126,14 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     navigation.current.poll(() => {
     const root = group.current;
     if (!root || !profile || !navigationEnabled || isAppIdle()) return;
+    driver.current.step(root, delta, config.speed);
+    if (driver.current.started) {
+      resetRoute(route.current, id); reserveAgentDestination(id, null);
+      life.current.target = null; life.current.searching = false;
+      life.current.automatic = false;
+    }
+    if (driver.current.active) { selectMotion(driver.current.moving ? config.walk : 'idle'); state.invalidate(); return; }
+    if (driver.current.resumed) { life.current.automatic = true; life.current.wait = 0; }
     if (soloActive.current) { state.invalidate(); return; }
     const ai = life.current;
     if (ai.automatic) {

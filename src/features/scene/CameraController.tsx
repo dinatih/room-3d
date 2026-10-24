@@ -321,7 +321,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       activeCam.up.set(0, 1, 0);
       if (isFPV) {
         activeCam.position.set(eyes.x, eyes.y, eyes.z);
-        ctrl.target.set(eyes.x + forward.x, eyes.y + forward.y, eyes.z + forward.z);
+        const look = _tmpAnimalTarget.set(forward.x, forward.y, forward.z);
+        if (!useDroneControlStore.getState().piloting) {
+          look.applyAxisAngle(activeCam.up, orbitYaw.current);
+          const heading = Math.hypot(look.x, look.z) > Number.EPSILON ? Math.atan2(look.x, look.z) : (cameraState.positions[cameraState.animalTarget!]?.yaw ?? 0);
+          _tmpEyeRightVec.set(-Math.cos(heading), 0, Math.sin(heading));
+          look.applyAxisAngle(_tmpEyeRightVec, followPitch.current);
+        }
+        ctrl.target.set(eyes.x + look.x, eyes.y + look.y, eyes.z + look.z);
         if (cameraState.animalTarget === 'drone') {
           activeCam.lookAt(ctrl.target);
           activeCam.updateMatrixWorld();
@@ -524,6 +531,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (!subject) throw new Error(`Objet caméra inconnu : ${cameraState.animalTarget}`);
     useSceneStore.setState({ cameraTarget: subject });
     updateUrlCameraTarget(subject);
+    if (cameraState.animalTarget && followMode === 'fpv') { orbitYaw.current = 0; followPitch.current = 0; }
     if (followMode === 'fpv' && modeRef.current !== 'fpv') {
       projectionBeforeFpv.current = store.cameraProjection;
     }
@@ -539,7 +547,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       followYaw.current = cameraState.followYaw;
     }
     if (followMode === 'follow') {
-      orbitYaw.current = followYaw.current + DEFAULT_FOLLOW_YAW_OFFSET;
+      orbitYaw.current = cameraState.animalTarget ? 0 : followYaw.current + DEFAULT_FOLLOW_YAW_OFFSET;
       orbitYawOffset.current = DEFAULT_FOLLOW_YAW_OFFSET;
       orbitPitch.current = DEFAULT_ORBIT_PITCH;
       orbitDistance.current = DEFAULT_ORBIT_DISTANCE;

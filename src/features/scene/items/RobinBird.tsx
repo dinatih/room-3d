@@ -11,6 +11,7 @@ import { appLog } from '@features/ui/AppConsole';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { cameraState } from '@features/scene/cameraState';
 import { useAnimalCamera } from '../camera/useAnimalCamera';
+import { SubjectDriver } from '../camera/subjectControls';
 import { chooseBirdPerch, chooseBirdForagePerch, birdGroundStep, resolveBirdPerch, RobinFootContact, ROBIN_HEIGHT, type BirdPerch, type BirdFootPose } from '../birdPerches';
 
 const GLB_PATH = '/characters/robin/robin.glb';
@@ -40,6 +41,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
   const { invalidate, scene: world } = useThree();
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const modelRef = useRef<THREE.Group>(null);
+  const driver = useRef(new SubjectDriver('robin'));
   const footContact = useRef<RobinFootContact | null>(null);
   const strideRef = useRef(0);
   const cameraWasNear = useRef(false);
@@ -221,6 +223,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
 
     return () => {
       if (!isPreview) {
+        driver.current.dispose();
         delete cameraState.positions['robin'];
       }
       mixerRef.current?.stopAllAction();
@@ -299,6 +302,13 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     const ai = aiStateRef.current;
     const model = modelRef.current;
     const feet = ai.groundedFeet!;
+    driver.current.step(model, delta, 150, cameraState.animalViews.robin?.radius);
+    if (driver.current.active) {
+      ai.perch = null; ai.forage = null; ai.state = 'flying';
+      playAnimation('Robin_Bird_Fly');
+      return;
+    }
+    if (driver.current.resumed) takeOff();
 
     if (ai.state === 'waiting') {
       ai.perch = chooseBirdPerch(world, feet, null, 'feeder');

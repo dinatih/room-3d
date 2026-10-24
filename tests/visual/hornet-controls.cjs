@@ -186,7 +186,10 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     await page.waitForFunction(() => window.hornetStore.getState().piloting);
     await page.evaluate(() => document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'drone-patrol-all' } })));
     await page.waitForFunction(() => !window.hornetStore.getState().piloting);
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await page.waitForFunction(parked => {
+      const current = window.hornetCamera.positions.drone;
+      return current.x !== parked.x || current.y !== parked.y || current.z !== parked.z;
+    }, {}, parked);
     assert.notDeepEqual(await pose(), parked, 'Patrol must resume after manual flight');
     assert.deepEqual(await page.evaluate(() => window.hornetCameraErrors), [], 'Camera must stay exactly at the published nose pose every frame, without damping or lag');
     await page.evaluate(() => window.hornetApp.unmount());

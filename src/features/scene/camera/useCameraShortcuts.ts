@@ -12,6 +12,7 @@ import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import { frameCharacterGridOrtho, frameCharacterGridCamera, getCharacterGridCameraView } from '../character/characterGridUtils';
 import { dispatchView } from '../sidepanel/types';
 import { PERSP_POS, PERSP_TARGET } from './cameraConstants';
+import { releaseSubjectInputs, setSubjectInput } from './subjectControls';
 
 interface UseCameraShortcutsParams {
   camera: THREE.Camera;
@@ -86,6 +87,7 @@ export function useCameraShortcuts({
       enterFollow(x, z, mode);
     };
     const releaseControls = () => {
+      releaseSubjectInputs();
       keys.current.clear();
       publishArrowKeys();
       cameraState.isMoving = false;
@@ -463,6 +465,9 @@ export function useCameraShortcuts({
 
     const onDirectionInput = (event: Event) => {
       const { key, pressed } = (event as CustomEvent<{ key: string; pressed: boolean }>).detail;
+      if (cameraState.animalTarget && key.startsWith('character:') && !planeModeRef.current && !cameraState.isIntroRunning) {
+        setSubjectInput(cameraState.animalTarget, key, pressed);
+      }
       if (pressed) {
         if (planeModeRef.current || cameraState.isIntroRunning) return;
         keys.current.add(key);
