@@ -1538,14 +1538,23 @@ export function createAgentController(
     state.rotY = rotY;
   };
 
+  let failed = false;
   const update = (dt: number): AgentState => {
+    if (failed) return state;
     const { x, z } = state;
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     let waitingForNavigation = false;
     let pendingReason: string | undefined;
     try { return navigationScope.run(() => updateCurrent(dt)); }
     catch (error) {
-      if (!(error instanceof NavigationPending)) throw error;
+      if (!(error instanceof NavigationPending)) {
+        failed = true;
+        agentStatus = 'BLOCKED';
+        state.animationPaused = true;
+        releaseAgentDoors(_characterId);
+        appLog(_characterId, `❌ Agent arrêté après une erreur fatale : ${String(error)}`, { category: 'nav', action: 'nav_fatal', actors: [_characterId] });
+        throw error;
+      }
       waitingForNavigation = true;
       pendingReason = error.job.description;
       if (agentStatus === 'TRANSITIONING') state.animationPaused = true;
