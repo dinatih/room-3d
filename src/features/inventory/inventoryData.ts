@@ -634,6 +634,19 @@ INVENTORY.push({
   notes: 'Animations : repos, marche et virages recréés ; salut, révérence, patte, salut militaire et danse officiels. Dimensions mesurées en position debout. Modèle sous licence Apache-2.0.',
 });
 
+INVENTORY.push({
+  id: 'raph-rover',
+  name: 'Raph Rover — robot mobile',
+  brand: 'Fictionlab',
+  category: 'robots',
+  qty: 1,
+  dims: { w: 47.61, d: 61.46, h: 42.79 },
+  glbPath: 'items/raph-rover/raph-rover.glb',
+  url: 'https://fictionlab.pl/raph-rover/',
+  description: 'Plateforme robotique mobile à quatre roues et direction arrière indépendante.',
+  notes: 'Modèle statique issu des maillages officiels raph_common (MIT), assemblés selon les repères ROS. Dimensions mesurées sur le modèle de simulation, antennes comprises ; elles diffèrent de la fiche commerciale.',
+});
+
 export interface WigItem {
   id: string;
   name: string;
