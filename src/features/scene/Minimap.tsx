@@ -314,12 +314,13 @@ function drawMinimap(
   }
 
   // ── Robots autonomes ────────────────────────────────────────────────────
-  const ROBOT_CONFIGS: Array<{ id: string; name: string; color: string; accent: string; type: 'humanoid' | 'dog' | 'jumper' }> = [
+  const ROBOT_CONFIGS: Array<{ id: string; name: string; color: string; accent: string; type: 'humanoid' | 'dog' | 'jumper' | 'rover' }> = [
     { id: 'unitree-h2', name: 'H2', color: '#991b1b', accent: '#ef4444', type: 'humanoid' },
     { id: 'unitree-g1', name: 'G1', color: '#1e293b', accent: '#3b82f6', type: 'humanoid' },
     { id: 'unitree-go2', name: 'Go2', color: '#0f172a', accent: '#0284c7', type: 'dog' },
     { id: 'unitree-as2w', name: 'As2-W', color: '#991b1b', accent: '#ef4444', type: 'dog' },
     { id: 'jumper-robot', name: 'Jumper', color: '#14532d', accent: '#22c55e', type: 'jumper' },
+    { id: 'raph-rover', name: 'Raph', color: '#991b1b', accent: '#ef4444', type: 'rover' },
   ];
 
   for (const bot of ROBOT_CONFIGS) {
@@ -357,10 +358,11 @@ function drawMinimap(
       ctx.beginPath();
       ctx.arc(0, rBot * 0.5, rBot * 0.4, 0, Math.PI * 2);
       ctx.fill();
-    } else if (bot.type === 'dog') {
+    } else if (bot.type === 'dog' || bot.type === 'rover') {
       // Châssis chien robot quadrupède
       ctx.beginPath();
-      ctx.ellipse(0, 0, rBot * 0.8, rBot * 1.1, 0, 0, Math.PI * 2);
+      if (bot.type === 'rover') ctx.rect(-rBot * 0.65, -rBot, rBot * 1.3, rBot * 2);
+      else ctx.ellipse(0, 0, rBot * 0.8, rBot * 1.1, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 

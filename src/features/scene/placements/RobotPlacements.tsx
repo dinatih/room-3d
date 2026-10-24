@@ -7,6 +7,8 @@ import { Jumper } from '../items/Jumper';
 import { UnitreeG1, UnitreeGo2, UnitreeH2 } from '../items/Unitree';
 import { UnitreeAs2w } from '../items/UnitreeAs2w';
 import { AS2W_DRIVE_SPEED } from '../items/as2wMotion';
+import { RaphRover } from '../items/RaphRover';
+import { RAPH_DRIVE_SPEED } from '../items/raphMotion';
 import { getObjectActionIds } from '../objectActions';
 import { getActionDef } from '../objectActionRegistry';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
@@ -33,6 +35,7 @@ const ROBOTS = [
   { id: 'unitree-go2', Component: UnitreeGo2, position: [220, 0, -620], walk: 'trot', speed: 25.2, pause: 4, radiusScale: 2 / 3 },
   { id: 'unitree-as2w', Component: UnitreeAs2w, position: [320, 0, -520], walk: 'roll', speed: AS2W_DRIVE_SPEED, pause: 4, radiusScale: 2 / 3 },
   { id: 'jumper-robot', Component: Jumper, position: [430, 0, -450], walk: 'walk', speed: 28.8, pause: 6, radiusScale: 2 / 3 },
+  { id: 'raph-rover', Component: RaphRover, position: [430, 0, -620], walk: 'roll', speed: RAPH_DRIVE_SPEED, pause: 4, radiusScale: 2 / 3 },
 ] satisfies { id: string; Component: ComponentType<SceneItemProps>; position: [number, number, number]; walk: string; speed: number; pause: number; radiusScale: number; automatic?: boolean }[];
 
 function Robot({ config }: { config: typeof ROBOTS[number] }) {
@@ -205,7 +208,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   return (
     <group ref={group} position={config.position} userData={{ animUnit: true, noAnim: true, skipMerge: true,
       itemName: item.name, hoverAction: { label: item.name, actions: getObjectActionIds(id) } }}>
-      <Component item={item} actionState={{ ...actions, robotAutonomous: life.current.automatic, onH2SoloActive }} onSize={onSize} />
+      <Component item={item} actionState={{ ...actions, robotAutonomous: life.current.automatic, robotManualDriving: driver.current.active, onH2SoloActive }} onSize={onSize} />
     </group>
   );
 }

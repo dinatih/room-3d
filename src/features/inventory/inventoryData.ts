@@ -651,7 +651,7 @@ INVENTORY.push({
   photos: ['items/raph-rover/presentation-1.webp', 'items/raph-rover/presentation-2.webp'],
   url: 'https://fictionlab.pl/raph-rover/',
   description: 'Plateforme robotique mobile à quatre roues et direction arrière indépendante. Carrosserie personnalisée en rouge.',
-  notes: 'Modèle statique issu des maillages officiels raph_common (MIT), assemblés selon les repères ROS. Dimensions mesurées sur le modèle de simulation, antennes comprises ; elles diffèrent de la fiche commerciale.',
+  notes: 'Maillages officiels raph_common (MIT), carrosserie rouge. Animations visuelles : repos, roulage, virages, balayage de direction et danse des roues. Quatre roues synchronisées avec les déplacements et deux articulations de direction arrière. Patrouille autonome dans le jardin. Dimensions du modèle de simulation, antennes comprises.',
 });
 
 export interface WigItem {

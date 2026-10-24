@@ -51,6 +51,19 @@ function positionAction(key: string): Record<string, ActionConfig> {
 }
 
 const ACTIONS: Record<string, ActionConfig> = {
+  'raph-rover-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
+  'raph-rover-autonomous': { label: 'Vie autonome', icon: 'bi-play-circle', sceneOnly: true },
+  'raph-rover-motion': {
+    label: 'Animation du Raph', type: 'select', initialValue: 'idle',
+    options: [
+      { value: 'idle', label: 'Repos' },
+      { value: 'roll', label: 'Rouler' },
+      { value: 'turn-left', label: 'Virage à gauche' },
+      { value: 'turn-right', label: 'Virage à droite' },
+      { value: 'scan', label: 'Balayage de direction' },
+      { value: 'dance', label: 'Danse des roues' },
+    ],
+  },
   'unitree-as2w-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
   'unitree-as2w-autonomous': { label: 'Vie autonome', icon: 'bi-play-circle', sceneOnly: true },
   'unitree-as2w-motion': {

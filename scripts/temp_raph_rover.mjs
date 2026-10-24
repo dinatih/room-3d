@@ -5,6 +5,62 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { execFileSync } from 'node:child_process';
 
+if (process.argv.includes('--scene')) {
+  const { default: launch } = await import('./browser-test-options.cjs');
+  const browser = await launch({ args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
+  try {
+    const page = await browser.newPage();
+    const errors = [];
+    page.on('pageerror', error => { errors.push(error.message); console.error(error.message); });
+    page.on('console', message => { if (message.type() === 'error') console.error(message.text()); });
+    await page.goto('http://127.0.0.1:5173/AGENTS.md');
+    await page.evaluate(async () => {
+      window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => type => type;
+      window.__vite_plugin_react_preamble_installed__ = true;
+      const { default: React } = await import('/node_modules/.vite/deps/react.js');
+      const { default: { createRoot } } = await import('/node_modules/.vite/deps/react-dom_client.js');
+      const { Canvas } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
+      const { useGLTF } = await import('/node_modules/.vite/deps/@react-three_drei.js');
+      useGLTF.setDecoderPath('/draco/');
+      const { RobotPlacements } = await import('/src/features/scene/placements/RobotPlacements.tsx');
+      // Use the same Vite HMR URLs as placements to avoid duplicate state modules.
+      const source = await (await fetch('/src/features/scene/placements/RobotPlacements.tsx')).text();
+      const { cameraState } = await import(source.match(/from "([^"]*\/cameraState\.ts[^"]*)"/)[1]);
+      window.raphObstaclesModulePath = source.match(/from "([^"]*\/obstacles\.ts[^"]*)"/)[1];
+      window.raphCameraState = cameraState;
+      document.body.innerHTML = '<div id="test-root" style="width:400px;height:300px"></div>';
+      createRoot(document.getElementById('test-root')).render(React.createElement(Canvas, {
+        onCreated: state => { window.raphSceneState = state; state.gl.render = () => {}; },
+      }, React.createElement(RobotPlacements)));
+    });
+    await page.waitForFunction(() => window.raphCameraState?.positions['raph-rover'], { timeout: 60000 });
+    const result = await page.evaluate(async () => {
+      const state = window.raphSceneState, camera = window.raphCameraState;
+      state.setFrameloop('never');
+      const { getAgentProfile } = await import(window.raphObstaclesModulePath);
+      const { resolveCameraSubject } = await import('/src/features/scene/camera/cameraSubjects.ts');
+      const before = { ...camera.positions['raph-rover'] };
+      for (let frame = 1; frame <= 600; frame++) {
+        state.advance(frame / 60, true);
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+      const after = { ...camera.positions['raph-rover'] };
+      if (before.x === after.x && before.z === after.z) throw new Error('Raph patrol did not move');
+      if (after.y !== 0) throw new Error('Raph left ground level');
+      if (resolveCameraSubject('raph') !== 'raph-rover' || !camera.animalViews['raph-rover']) throw new Error('Missing Raph camera');
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'raph-rover-motion', value: 'scan' } }));
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const stopped = { ...camera.positions['raph-rover'] };
+      for (let frame = 601; frame <= 660; frame++) state.advance(frame / 60, true);
+      if (stopped.x !== camera.positions['raph-rover'].x || stopped.z !== camera.positions['raph-rover'].z) throw new Error('Manual gesture did not stop patrol');
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'raph-rover-autonomous' } }));
+      return { before, after, profile: getAgentProfile('raph-rover'), camera: camera.animalViews['raph-rover'] };
+    });
+    if (errors.length) throw new Error(errors.join('\n'));
+    console.log('PASS Raph scene patrol, grounding, manual animation and camera:', result);
+  } finally { await browser.close(); }
+  process.exit(0);
+}
 if (process.argv.includes('--download')) {
   const images = {
     'raph-rover': ['https://fictionlab.pl/wp-content/uploads/shop/raph-rover-1-0-1.webp', 'https://fictionlab.pl/wp-content/uploads/shop/raph-rover-1-0-2.webp'],
@@ -35,7 +91,7 @@ if (process.argv.includes('--render')) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1000, height: 750 });
     await page.goto('http://127.0.0.1:5173/AGENTS.md');
-    for (const id of ['raph-rover', 'dji-fpv']) {
+    for (const id of [process.argv.includes('--fpv') ? 'dji-fpv' : 'raph-rover']) {
       await page.evaluate(async id => {
         const THREE = await import('/node_modules/.vite/deps/three.js');
         const { GLTFLoader } = await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
@@ -45,6 +101,11 @@ if (process.argv.includes('--render')) {
         const draco = new DRACOLoader().setDecoderPath('/draco/');
         const { scene: model } = await new GLTFLoader().setDRACOLoader(draco).loadAsync(`/items/${id}/${id}.glb`);
         scene.add(model);
+        if (id === 'raph-rover') {
+          const { createRaphMotion } = await import('/src/features/scene/items/raphMotion.ts');
+          const animate = createRaphMotion(model);
+          animate('roll', 1, 20, 0.3);
+        }
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const radius = box.getSize(new THREE.Vector3()).length() / 2;
@@ -139,6 +200,8 @@ for (const name of ['base', 'wheel', 'servo']) {
 function part(model, name, position, yaw = 0, parent = root) {
   const joint = new Group();
   joint.name = name;
+  if (model === 'wheel') joint.userData = { jointAxis: [0, name === 'wheel_fr_joint' || name === 'wheel_rr_joint' ? -1 : 1, 0], wheelRadius: 9.1 };
+  if (model === 'servo') joint.userData = { jointAxis: [0, 0, -1], jointLimits: [-Math.PI / 2, Math.PI / 2] };
   joint.position.set(...position);
   joint.rotation.z = yaw;
   const visual = new Group();
