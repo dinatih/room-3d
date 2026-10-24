@@ -81,6 +81,10 @@ it('resolves each step from its own object and preserves explicit overrides', ()
   assert.throws(() => resolvePreviewInstruction({ type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'missing' }), /Slot preview introuvable/);
 });
 it('rejoint directement les Dröna et joue une seule prise sans détour par la porte', () => {
+  const { ANIMATION_DEFINITIONS } = require('../../src/features/scene/animations/animationRegistry.ts');
+  const search = ANIMATION_DEFINITIONS.find(anim => anim.id === 'searching-files-high');
+  assert.equal(search.path, 'animations/mixamo/anim_searching_files_high.glb');
+  assert.equal(search.loop, 'once');
   const { sequence } = load('src/features/scene/ai/smartObjectRegistry.ts', {}, source => {
     const start = source.indexOf('export function buildSmartObjectInstructionSequence(');
     const end = source.indexOf('/**\n * Résout un SmartObject', start);
@@ -94,12 +98,12 @@ it('rejoint directement les Dröna et joue une seule prise sans détour par la p
       return buildSmartObjectInstructionSequence(id, 'pick-item');
     }`;
   });
-  for (const id of ['drona-se-pyjama', 'drona-se-linen', 'drona-nw-upper', 'drona-se-care', 'drona-ne-catchall2']) {
+  for (const id of ['drona-se-pyjama', 'drona-se-linen', 'drona-nw-upper', 'drona-se-care', 'drona-ne-catchall2', 'drona-ne-catchall']) {
     const steps = sequence(id), actions = steps.filter(step => step.type !== 'MOVE_TO');
     const moves = steps.filter(step => step.type === 'MOVE_TO');
     assert.equal(moves.length, 1, `${id}: une seule approche du bac`);
     assert.equal(moves[0].doorKey, undefined, 'Aucun détour de dégagement de porte');
-    assert.equal(moves[0].protectedDoor, id === 'drona-nw-upper' ? undefined : id === 'drona-ne-catchall2' ? 'glassRight' : 'living');
+    assert.equal(moves[0].protectedDoor, id === 'drona-nw-upper' ? undefined : id.startsWith('drona-ne-') ? 'glassRight' : 'living');
     assert.equal(actions.length, 1);
     assert.equal(actions[0].animation, 'pick-fruit');
     assert.equal(actions[0].repeatCount, 1);

@@ -527,7 +527,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       offset: [0, -DRONA_CATCHALL_POSITION[1], -80],
       rotY: 0,
       animation: 'searching-files-high',
-      repeatCount: 3,
     }],
   },
   'kallax-ne': {
@@ -1220,7 +1219,7 @@ export function buildSmartObjectInstructionSequence(
       : DRONA_SE_ITEMS[objectId] || storage?.shelf === 'se' ? 'living' as const : 'glassRight' as const;
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, protectedDoor },
-      { ...baseInstruction, repeatCount: slot.repeatCount ?? 1, waitForAnimation: !slot.repeatCount, protectedDoor },
+      { ...baseInstruction, repeatCount: 1, waitForAnimation: true, protectedDoor },
     ];
   }
 

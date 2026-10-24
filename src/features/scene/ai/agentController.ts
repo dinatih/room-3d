@@ -235,9 +235,6 @@ export function createAgentController(
       if (claimedSlot.objectId === 'fridge' || claimedSlot.objectId === 'freezer') {
         useSceneStore.getState().triggerAction(claimedSlot.objectId, false);
       }
-      if (claimedSlot.objectId === 'drona-ne-catchall') {
-        useSceneStore.getState().triggerAction('drona-ne-catchall-slide', false);
-      }
       const drona = DRONA_SE_ITEMS[claimedSlot.objectId] ?? DRONA_SPECIAL_ITEMS[claimedSlot.objectId as keyof typeof DRONA_SPECIAL_ITEMS] ?? BATHROOM_STORAGE_ITEMS[claimedSlot.objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[claimedSlot.objectId as keyof typeof KITCHEN_DRONA_ITEMS];
       if (drona && 'action' in drona) {
         useSceneStore.getState().triggerAction(drona.action, false);

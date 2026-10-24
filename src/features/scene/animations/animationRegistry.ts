@@ -6791,6 +6791,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   {
     id: 'searching-files-high',
     path: 'animations/mixamo/anim_searching_files_high.glb',
+    loop: 'once',
     category: 'interactions',
     label: `Searching Files High (293f / 9.8s, 308KB)`,
     tags: ['interaction'],
