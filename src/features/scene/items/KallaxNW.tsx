@@ -106,7 +106,7 @@ export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, act
   }, []);
 
   return (
-    <group ref={ref}>
+    <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
       {/* Sous-groupe GLB — masqué par le toggle GLB, visible par défaut */}
       {/* nwB 2×1 pivoté, Y ∈ [0, w2] */}
       <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true }}>

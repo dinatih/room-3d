@@ -97,7 +97,7 @@ export function KallaxNE({ onSize, noDrona, isPreview = false, actionState }: Sc
   }, []);
 
   return (
-    <group ref={ref}>
+    <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
       {/* 2×1 bas — spans Y ∈ [0, h1] */}
       <group position={[0, h1, 0]} userData={{ animUnit: true }}>
         <Kallax2x1 item={k('kallax-ne-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />

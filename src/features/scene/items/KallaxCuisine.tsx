@@ -87,7 +87,7 @@ export function KallaxCuisine({ onSize, actionState, noDrona, isPreview = false 
   }, []);
 
   return (
-    <group ref={ref}>
+    <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
       {/* 2×2 bas — PY = h2 */}
       <group position={[0, h2, 0]} userData={{ animUnit: true }}>
         <Kallax2x2 item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
