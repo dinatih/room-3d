@@ -116,9 +116,10 @@ export function segmentFree(a: Point, b: Point, obstacles: Polygon[][], endpoint
     const u = ((c.x - a.x) * dz - (c.z - a.z) * dx) / denominator;
     if (t > endpointTolerance && t < 1 - endpointTolerance && u >= 0 && u <= 1) {
       const vertexTolerance = GEOMETRY_EPSILON / Math.max(GEOMETRY_EPSILON, distance(c, d));
-      // A transverse crossing of an edge's interior necessarily enters solid space.
-      // Vertex touches need the interval test below to distinguish a tangent.
-      if (u > vertexTolerance && u < 1 - vertexTolerance) return false;
+      // Near-parallel intersections amplify rounding at boundary endpoints.
+      // Use the same boundary classification as pointInRing before rejecting.
+      if (u > vertexTolerance && u < 1 - vertexTolerance
+        && Math.abs(cross(c, d, a)) > GEOMETRY_EPSILON && Math.abs(cross(c, d, b)) > GEOMETRY_EPSILON) return false;
       ts.push(t);
     }
     }

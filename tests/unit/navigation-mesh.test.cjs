@@ -5,6 +5,14 @@ const g = require('../../src/features/scene/ai/navigation/geometry.ts');
 const { NavigationMesh } = require('../../src/features/scene/ai/navigation/mesh.ts');
 
 describe('Réseau permanent de passages au sol', () => {
+  it('accepte une arrivée presque tangente au mur sans accepter une traversée', () => {
+    const a = { x: 210.76416853392325, z: 601.9216815870601 }, b = { x: 205.21539176697746, z: 605.125271151847 };
+    const obstacles = [[[{ x: 202.7420370678465, z: 606.5532631741202 }, { x: 218.786261296332, z: 597.2901258611054 }, { x: 220, z: 620 }]]];
+    assert.equal(g.insideObstacle(b, obstacles), false);
+    assert.equal(g.segmentFree(a, b, obstacles), true);
+    assert.equal(g.segmentFree(b, a, obstacles), true);
+    assert.equal(g.segmentFree(a, { x: b.x, z: b.z + 1 }, obstacles), false);
+  });
   it('calcule les patrouilles des robots autour de l’architecture réelle', () => {
     const { architectureObstacles, walkableSurfaces } = require('../../src/features/scene/ai/navigation/architecture.ts');
     const { buildNavigationGraph } = require('../../src/features/scene/ai/navigation/queries.ts');
@@ -13,7 +21,12 @@ describe('Réseau permanent de passages au sol', () => {
     for (const radius of [5, 10, 20, 40]) {
       const mesh = buildNavigationGraph({ surfaces: walkableSurfaces, solids: architectureObstacles.map(obstacle => ({ polygon: obstacle.polygon, radius, comfort: true })), comfortDistance: 20 });
       for (let trip = 0; trip < 1000; trip++) {
-        const start = { x: random() * 1000 - 400, z: -620 + random() * 200 }, target = { x: random() * 1000 - 400, z: -620 + random() * 200 };
+        const point = () => {
+          const cell = mesh.cells[Math.floor(random() * mesh.cells.length)], index = Math.floor(random() * 3), t = random();
+          const a = cell.points[index], b = cell.points[(index + 1) % 3];
+          return trip % 3 === 0 ? cell.center : trip % 3 === 1 ? a : { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t };
+        };
+        const start = point(), target = point();
         try { mesh.find(start, target); }
         catch (error) { throw new Error(JSON.stringify({ radius, trip, start, target }), { cause: error }); }
       }
