@@ -46,13 +46,15 @@ export function CollisionDebugHelper() {
       (line.material as THREE.Material).dispose();
       ref.current.remove(line);
     }
+    const segments = new Map<string, Map<string, [Point, Point]>>();
     const addLine = (points: Point[], color: string, loop = false) => {
-      const vertices = (loop ? [...points, points[0]] : points).map(p => new THREE.Vector3(p.x, 1, p.z));
-      const geometry = new THREE.BufferGeometry().setFromPoints(vertices);
-      const material = new THREE.LineBasicMaterial({ color, depthTest: false, transparent: true, opacity: 0.8 });
-      const line = new THREE.Line(geometry, material);
-      line.renderOrder = 99990;
-      ref.current.add(line);
+      if (!segments.has(color)) segments.set(color, new Map());
+      const edges = segments.get(color)!;
+      for (let i = 0; i < points.length - (loop ? 0 : 1); i++) {
+        const a = points[i], b = points[(i + 1) % points.length];
+        const key = [`${a.x}:${a.z}`, `${b.x}:${b.z}`].sort().join('/');
+        edges.set(key, [a, b]);
+      }
     };
     if (furniture) {
       if (nativeGraph) for (const cell of nativeGraph.cells) addLine(cell.points, '#00b8d4', true);
@@ -72,6 +74,14 @@ export function CollisionDebugHelper() {
     if (furniture || npc) for (const [, route] of routes) {
       if (route.path.length) addLine(route.path, '#00e676');
       if (route.error) addLine(inflate([route.target], 1), '#ff1744', true);
+    }
+    for (const [color, edges] of segments) {
+      const vertices = [...edges.values()].flat().map(p => new THREE.Vector3(p.x, 1, p.z));
+      const geometry = new THREE.BufferGeometry().setFromPoints(vertices);
+      const material = new THREE.LineBasicMaterial({ color, depthTest: false, depthWrite: false, transparent: true, opacity: 0.8 });
+      const line = new THREE.LineSegments(geometry, material);
+      line.renderOrder = 99990;
+      ref.current.add(line);
     }
     });
   });
