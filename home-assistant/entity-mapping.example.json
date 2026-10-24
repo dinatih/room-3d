@@ -1,0 +1,41 @@
+{
+  "lights": [
+    {
+      "threeId": "light_ceiling_main",
+      "entityId": "light.salon_plafonnier",
+      "type": "pointLight",
+      "defaultIntensity": 2.5,
+      "colorSync": true
+    },
+    {
+      "threeId": "light_desk_lamp",
+      "entityId": "light.lampe_bureau",
+      "type": "spotLight",
+      "defaultIntensity": 1.8,
+      "colorSync": false
+    }
+  ],
+  "switches": [
+    {
+      "threeMeshName": "Screen_Monitor",
+      "entityId": "switch.prise_pc",
+      "action": "toggle",
+      "emissiveOnState": true
+    }
+  ],
+  "sensors": [
+    {
+      "entityId": "sensor.temperature_piece",
+      "displayType": "floatingLabel",
+      "position": [0, 2.2, 0],
+      "unit": "°C"
+    }
+  ],
+  "cameras": [
+    {
+      "entityId": "binary_sensor.frigate_fisheye_person",
+      "detectionZoneMesh": "Floor_LivingRoom",
+      "highlightColorOnDetect": "#ff4444"
+    }
+  ]
+}

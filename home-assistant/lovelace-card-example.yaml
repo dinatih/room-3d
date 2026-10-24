@@ -1,0 +1,15 @@
+# Exemple de configuration de tableau de bord (Lovelace) dans Home Assistant
+# À ajouter dans votre dashboard (mode Panel / Panneau pour plein écran sans marges)
+
+type: iframe
+url: /local/room-3d/index.html
+aspect_ratio: 100%
+title: Room 3D Floorplan
+
+# Optionnel : si vous souhaitez intégrer la carte dans une vue en mode "Panneau" (Panel Mode) :
+# Dans l'éditeur de vue du tableau de bord :
+# - Titre : Vue 3D
+# - Type de vue : Panneau (1 seule carte prend tout l'écran)
+# - Carte :
+#     type: iframe
+#     url: /local/room-3d/index.html
