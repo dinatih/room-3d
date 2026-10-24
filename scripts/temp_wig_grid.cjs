@@ -1,12 +1,14 @@
 const assert = require('node:assert/strict');
 const launch = require('./browser-test-options.cjs');
 (async () => {
-  if (process.argv.includes('--walk')) {
+  if (process.argv.includes('--walk') || process.argv.includes('--audit-walks')) {
     require('../tests/support/load-ts.cjs');
     const THREE = require('three');
     const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
     const { retargetClip } = require('../src/features/scene/retargeting/retargetClip.ts');
     const { getWalkCycleSpeed } = require('../src/features/scene/character/walkCadence.ts');
+    const { ANIMATION_DEFINITIONS } = require('../src/features/scene/animations/animationRegistry.ts');
+    const { ANIMATION_WALK_SPEEDS, NPC_WALK_ANIMATIONS } = require('../src/features/scene/ai/agent/agentWalkAnimations.ts');
     const read = async path => {
       const loader = new GLTFLoader();
       loader.setDRACOLoader({ preload() {} });
@@ -23,6 +25,27 @@ const launch = require('./browser-test-options.cjs');
       node.restWorldQuaternion = node.getWorldQuaternion(new THREE.Quaternion());
       node.restWorldPosition = node.getWorldPosition(new THREE.Vector3());
     });
+    if (process.argv.includes('--audit-walks')) {
+      const results = [];
+      const definitions = ANIMATION_DEFINITIONS.filter(def => Object.hasOwn(ANIMATION_WALK_SPEEDS, def.id) || /(?:^|[-_ ])(?:walk\w*|run\w*|jog\w*)(?:$|[-_ ])/i.test(def.id));
+      for (const definition of definitions) {
+        const row = { id: definition.id, npc: NPC_WALK_ANIMATIONS.includes(definition.id), calibrated: Object.hasOwn(ANIMATION_WALK_SPEEDS, definition.id), reference: definition.walkSpeed !== undefined ? 'authored-root' : 'retargeted-forefoot', rootMotionSpace: definition.rootMotionSpace };
+        try {
+          const source = await read(`public/${definition.path}`);
+          source.animations[0].name = definition.id;
+          const clip = retargetClip(source.animations[0], scene, source.scene, definition.rootMotionSpace);
+          clip.name = definition.id;
+          row.speed = getWalkCycleSpeed(clip, scene);
+          row.expected = ANIMATION_WALK_SPEEDS[definition.id];
+          row.duration = clip.duration;
+          row.translation = clip.tracks.filter(track => track.name.endsWith('.position')).map(track => ({ name: track.name, first: [...track.values.slice(0, 3)], last: [...track.values.slice(-3)] }));
+        } catch (error) { row.error = error.message; }
+        results.push(row);
+      }
+      require('node:fs').writeFileSync('/tmp/room-walk-audit.json', JSON.stringify(results, null, 2));
+      console.log(JSON.stringify({ count: results.length, npc: results.filter(row => row.npc).length, calibrated: results.filter(row => row.calibrated).length, issues: results.filter(row => row.error || row.calibrated && row.reference === 'retargeted-forefoot' && Number(row.speed?.toFixed(1)) !== Number(row.expected.toFixed(1))) }, null, 2));
+      return;
+    }
     const source = await read('public/animations/miley/miley_armature_41_provocative_walk.glb');
     source.animations[0].name = 'miley-armature-41-provocative-walk';
     const clip = retargetClip(source.animations[0], scene, source.scene);

@@ -6,6 +6,7 @@ const THREE = require('three');
 const { getWalkCycleSpeed, walkTimeScale } = require('../../src/features/scene/character/walkCadence.ts');
 const { NPC_WALK_ANIMATIONS, ANIMATION_WALK_SPEEDS } = require('../../src/features/scene/ai/agent/agentWalkAnimations.ts');
 const { ANIMATION_DEFINITIONS } = require('../../src/features/scene/animations/animationRegistry.ts');
+const { CHARACTERS } = require('../../src/features/scene/characterConfig.ts');
 
 function fixture(scale = 1) {
   const rig = new THREE.Group();
@@ -77,9 +78,10 @@ it('signale les marches invalides et permet de recalibrer un clip corrigé', () 
   ]);
   assert.throws(() => getWalkCycleSpeed(stationary, rig), /Foulée invalide.*walking/);
 });
-it('vérifie toutes les vitesses PNJ sur Lara et Xbot après retargeting', async t => {
+it('vérifie toutes les marches calibrées sur chaque squelette humanoïde, sans retour horizontal de boucle', async t => {
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
   const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
+  const { resolveTargetBoneName } = require('../../src/features/scene/retargeting/boneResolver.ts');
   const read = async path => {
     const loader = new GLTFLoader();
     loader.setDRACOLoader({ preload() {} }); // Mesh decoding is skipped by SkeletonOnly.
@@ -87,8 +89,26 @@ it('vérifie toutes les vitesses PNJ sur Lara et Xbot après retargeting', async
     const data = fs.readFileSync(path);
     return loader.parseAsync(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength), '');
   };
-  for (const model of ['lara/lara_native', 'xbot/Xbot_official']) {
-    const { scene } = await read(`public/characters/${model}.glb`);
+  const definitions = ANIMATION_DEFINITIONS.filter(def => Object.hasOwn(ANIMATION_WALK_SPEEDS, def.id));
+  assert.equal(definitions.length, Object.keys(ANIMATION_WALK_SPEEDS).length - 1, 'Seul walk est un alias sans GLB');
+  assert(NPC_WALK_ANIMATIONS.every(id => definitions.some(def => def.id === id)), 'Chaque marche PNJ doit être calibrée et testée');
+  for (const definition of definitions.filter(def => def.walkSpeed !== undefined)) {
+    // FAB metadata measures authored root travel, not the retargeted forefoot.
+    const original = ANIMATION_DEFINITIONS.find(def => def.id === definition.id.replace(/-in-place$/, ''));
+    const source = await read(`public/${original.path}`);
+    const hips = source.scene.getObjectByName(resolveTargetBoneName(source.scene, 'Hips'));
+    const clip = source.animations[0], mixer = new THREE.AnimationMixer(source.scene);
+    mixer.clipAction(clip).setLoop(THREE.LoopOnce, 1).play().clampWhenFinished = true;
+    mixer.setTime(0); source.scene.updateMatrixWorld(true);
+    const start = hips.getWorldPosition(new THREE.Vector3());
+    mixer.setTime(clip.duration); source.scene.updateMatrixWorld(true);
+    const end = hips.getWorldPosition(new THREE.Vector3());
+    const speed = Math.hypot(end.x - start.x, end.z - start.z) * 100 / clip.duration;
+    assert.equal(Number(speed.toFixed(1)), Number(definition.walkSpeed.toFixed(1)), definition.id + ' source speed');
+    mixer.stopAllAction(); mixer.uncacheRoot(source.scene);
+  }
+  for (const path of new Set(CHARACTERS.filter(character => !character.isRobot).map(character => character.path))) {
+    const { scene } = await read(`public/${path}`);
     // Match Character's world scale (1 unit = 1 cm) and captured rest transforms.
     scene.scale.multiplyScalar(100);
     scene.updateMatrixWorld(true);
@@ -98,15 +118,21 @@ it('vérifie toutes les vitesses PNJ sur Lara et Xbot après retargeting', async
       node.restWorldQuaternion = node.getWorldQuaternion(new THREE.Quaternion());
       node.restWorldPosition = node.getWorldPosition(new THREE.Vector3());
     });
-    for (const id of [...NPC_WALK_ANIMATIONS, 'walking-backward']) {
-      const definition = ANIMATION_DEFINITIONS.find(def => def.id === id);
+    for (const definition of definitions) {
+      const { id } = definition;
       const source = await read(`public/${definition.path}`);
       source.animations[0].name = id; // The worker receives the canonical animation ID.
-      const clip = retargetClip(source.animations[0], scene, source.scene); clip.name = id;
+      const clip = retargetClip(source.animations[0], scene, source.scene, definition.rootMotionSpace); clip.name = id;
       const speed = getWalkCycleSpeed(clip, scene);
       assert(Number.isFinite(speed) && speed > 0);
-      if (model.startsWith('lara/')) assert.equal(Number(speed.toFixed(1)), ANIMATION_WALK_SPEEDS[id], id);
-      t.diagnostic(`${model} / ${id}: ${speed.toFixed(2)} cm/s`);
+      if (path.includes('/lara/') && definition.walkSpeed === undefined) assert.equal(Number(speed.toFixed(1)), Number(ANIMATION_WALK_SPEEDS[id].toFixed(1)), id);
+      for (const track of clip.tracks.filter(track => track.name.endsWith('.position'))) {
+        const bone = scene.getObjectByName(track.name.slice(0, -'.position'.length));
+        const start = new THREE.Vector3().fromArray(track.values).applyMatrix4(bone.parent.matrixWorld);
+        const end = new THREE.Vector3().fromArray(track.values, track.values.length - 3).applyMatrix4(bone.parent.matrixWorld);
+        assert(Math.hypot(end.x - start.x, end.z - start.z) < 0.001, `${path} / ${id}: retour horizontal de boucle`);
+      }
+      t.diagnostic(`${path} / ${id}: ${speed.toFixed(2)} cm/s`);
     }
   }
 });
