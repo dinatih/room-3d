@@ -13,7 +13,7 @@ if (process.argv.includes('--download')) {
     'unitree-h2': ['https://www.unitree.com/images/cab91f8a6c024197a4641d342ec44895_3840x2160.jpg', 'https://www.unitree.com/images/32686742408341c5af3b5dc2f4c85b0e_3840x2160.jpg'],
     'unitree-as2w': ['https://www.unitree.com/images/5b5179f7c4b94252bd7af8aff533b5a5_1920x1080.jpg', 'https://www.unitree.com/images/db4fcc4a213f429ba4959a7d719379ef_1920x1080.jpg'],
     jumper: ['https://kingkong.tech/assets/products/robot/20261021/hero-desktop-real.webp', 'https://kingkong.tech/assets/products/robot/0929/look-01.webp'],
-    'dji-neo': ['https://www-cdn.djiits.com/dps/1a92ff5d07cb3a58cbc421c9d4e39ce9@origin.jpg', 'https://www-cdn.djiits.com/dps/3927484361e1d04c3c71005fa2cdde83@origin.jpg'],
+    'dji-neo': ['https://www-cdn.djiits.com/dps/3927484361e1d04c3c71005fa2cdde83@origin.jpg'],
     'dji-avata-2': ['https://www-cdn.djiits.com/dps/2f14c30392c1285e13e1ab166807ba6f.jpg', 'https://se-cdn.djiits.com/tpc/uploads/spu/cover/1e1ced1c9fc557b237068f683a067feb@retina_small.png'],
     'black-hornet': ['https://defense.flir.com/globalassets/defense/images/product-lync-images/black-hornet-32.jpg', 'https://defense.flir.com/globalassets/news/news-center/government--defense/flir---black-hornet---12.jpg'],
   };
@@ -96,11 +96,12 @@ if (process.argv.includes('--preview')) {
       createRoot(document.getElementById('test-root')).render(React.createElement(Inventory, { initialCategory: 'robots', onClose: () => {} }));
     });
     await page.waitForSelector('canvas', { timeout: 60000 });
+    await page.waitForSelector('[data-item-id="unitree-h2"]');
     const verified = await page.evaluate(async () => {
       const { INVENTORY } = await import('/src/features/inventory/inventoryData.ts');
       const robots = INVENTORY.filter(item => item.photos?.some(path => path.includes('/presentation-')));
       for (const item of robots) {
-        if (!item.url || item.photos.length !== 2) throw new Error(`Incomplete presentation: ${item.id}`);
+        if (!item.url || !item.photos.length) throw new Error(`Incomplete presentation: ${item.id}`);
         await Promise.all(item.photos.map(async src => {
           const image = new Image();
           image.src = src;
@@ -157,6 +158,14 @@ for (const [side, y, yaw] of [['l', 0.1899, 0], ['r', -0.1899, Math.PI]]) {
   part('wheel', `wheel_r${side}_joint`, [0, 0, -0.12392], 0, servo);
 }
 const box = new Box3().setFromObject(root);
+root.traverse(node => {
+  if (!node.isMesh) return;
+  for (const material of Array.isArray(node.material) ? node.material : [node.material]) {
+    if (['Plastic White', '3D PLA gray, Z', 'Led_silicone_strip'].includes(material.name)) {
+      material.color.setRGB(0.65, 0.012, 0.02);
+    }
+  }
+});
 const center = box.getCenter(new Vector3());
 root.position.set(-center.x, -box.min.y, -center.z);
 const output = 'public/items/raph-rover';

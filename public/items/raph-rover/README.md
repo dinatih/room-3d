@@ -6,7 +6,8 @@ Official simulation meshes (`raph_base_link.dae`, `servo.dae`, `wheel.dae`),
 assembled using the visual origins and neutral joint transforms in
 `urdf/raph_macros.xacro`. MIT license reproduced in LICENSE.
 
-Static model with original materials and separate steering/wheel groups.
+Static model with separate steering/wheel groups. White/gray body panels and LED
+strips repainted red to match the other robots; tires, frame and sensors preserved.
 No invented sensor geometry: the upstream camera and lidar frames have no visual mesh.
 Centimeters, Y up, forward +Z, centered on X/Z, grounded at Y=0.
 Assimp's COLLADA-to-glTF axis conversion is undone before applying the ROS visual transforms.

@@ -518,7 +518,7 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 13.0, d: 15.7, h: 4.85 },
   glbPath: 'items/dji-neo/dji-neo.glb',
-  photos: ['items/dji-neo/presentation-1.jpg', 'items/dji-neo/presentation-2.jpg'],
+  photos: ['items/dji-neo/presentation-1.jpg'],
   url: 'https://www.dji.com/fr/neo',
   notes: `Drone compact et ultraléger (135 g) à décollage et atterrissage palmaires. Équipé d'un suivi de sujet assisté par IA, de modes QuickShots, d'une caméra 4K ultra-stabilisée et de protections d'hélices intégrales.`
 });
@@ -634,7 +634,7 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 41.53, d: 36.85, h: 17.84 },
   glbPath: 'items/jumper/jumper.glb',
-  photos: ['items/jumper/presentation-1.webp', 'items/jumper/presentation-2.webp'],
+  photos: ['items/jumper/presentation-2.webp', 'items/jumper/presentation-1.webp'],
   url: 'https://kingkong.tech/jumper',
   description: 'Robot crabe à 22 degrés de liberté. Assemblage 3D officiel, carrosserie rouge assortie au Unitree Go2.',
   notes: 'Animations : repos, marche et virages recréés ; salut, révérence, patte, salut militaire et danse officiels. Dimensions mesurées en position debout. Modèle sous licence Apache-2.0.',
@@ -650,7 +650,7 @@ INVENTORY.push({
   glbPath: 'items/raph-rover/raph-rover.glb',
   photos: ['items/raph-rover/presentation-1.webp', 'items/raph-rover/presentation-2.webp'],
   url: 'https://fictionlab.pl/raph-rover/',
-  description: 'Plateforme robotique mobile à quatre roues et direction arrière indépendante.',
+  description: 'Plateforme robotique mobile à quatre roues et direction arrière indépendante. Carrosserie personnalisée en rouge.',
   notes: 'Modèle statique issu des maillages officiels raph_common (MIT), assemblés selon les repères ROS. Dimensions mesurées sur le modèle de simulation, antennes comprises ; elles diffèrent de la fiche commerciale.',
 });
 

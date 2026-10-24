@@ -8,7 +8,13 @@ const { measureHumanProfile } = require('../../src/features/scene/ai/navigation/
 const { getWalkCycleSpeed } = require('../../src/features/scene/character/walkCadence.ts');
 const { resolveTargetBoneName } = require('../../src/features/scene/retargeting/boneResolver.ts');
 const { captureAnimationRig, restoreAnimationRig } = require('../../src/features/scene/character/animationSerialization.ts');
-const { CHARACTERS, AUTONOMOUS_NPC_IDS, UNITREE_H2 } = require('../../src/features/scene/characterConfig.ts');
+const { CHARACTERS, AUTONOMOUS_NPC_IDS, UNITREE_H2, isExtraCharacter } = require('../../src/features/scene/characterConfig.ts');
+
+it('garde le H2 parmi les robots lorsque les personnages supplémentaires sont désactivés', () => {
+  assert.equal(isExtraCharacter(UNITREE_H2.id), false);
+  assert.equal(isExtraCharacter(UNITREE_H2), false);
+  assert.equal(isExtraCharacter('ybot'), true);
+});
 
 it('anime le H2 avec ses 31 moteurs URDF, face au déplacement (+Z), sans déplacer ni déformer ses pièces', async t => {
   assert(UNITREE_H2.isRobot);

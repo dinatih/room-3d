@@ -178,11 +178,11 @@ export const TEN_PLAYERS_LARA_IDS = new Set([
   'sara', 'sabira', 'cha', 'vivida', 'safa',
 ]);
 
-/** Détermine si un personnage fait partie des extras (tous ceux qui ne sont ni Lara ni Xbot) */
+/** Personnages supplémentaires : hors Laras, Xbot et robots. */
 export function isExtraCharacter(c: CharacterConfig | string): boolean {
   const char = typeof c === 'string' ? findCharacter(c) : c;
   if (!char) return false;
-  return char.id !== 'xbot' && char.isLara === false;
+  return !char.isRobot && char.id !== 'xbot' && char.isLara === false;
 }
 
 /** Liste des personnages extras (ni Lara ni Xbot) */
