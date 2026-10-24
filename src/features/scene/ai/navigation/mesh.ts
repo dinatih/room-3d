@@ -152,7 +152,9 @@ export class NavigationMesh {
       }
     }
     if (!path.length || !same(path[path.length - 1], target)) path.push(target);
-    if (!path.every((point, i) => segmentFree(i ? path[i - 1] : start, point, this.obstacles))) throw new Error('Navigation funnel produced a segment outside free space');
+    if (!path.every((point, i) => segmentFree(i ? path[i - 1] : start, point, this.obstacles))) {
+      throw Object.assign(new Error('Navigation funnel produced a segment outside free space'), { cause: { start, target, path, snapshot: this.snapshot() } });
+    }
     return path;
   }
 }

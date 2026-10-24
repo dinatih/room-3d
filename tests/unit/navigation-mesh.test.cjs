@@ -5,6 +5,44 @@ const g = require('../../src/features/scene/ai/navigation/geometry.ts');
 const { NavigationMesh } = require('../../src/features/scene/ai/navigation/mesh.ts');
 
 describe('Réseau permanent de passages au sol', () => {
+  it('calcule les patrouilles des robots autour de l’architecture réelle', () => {
+    const { architectureObstacles, walkableSurfaces } = require('../../src/features/scene/ai/navigation/architecture.ts');
+    const { buildNavigationGraph } = require('../../src/features/scene/ai/navigation/queries.ts');
+    let seed = 20261024;
+    const random = () => { seed = (Math.imul(1664525, seed) + 1013904223) >>> 0; return seed / 2 ** 32; };
+    for (const radius of [5, 10, 20, 40]) {
+      const mesh = buildNavigationGraph({ surfaces: walkableSurfaces, solids: architectureObstacles.map(obstacle => ({ polygon: obstacle.polygon, radius, comfort: true })), comfortDistance: 20 });
+      for (let trip = 0; trip < 1000; trip++) {
+        const start = { x: random() * 1000 - 400, z: -620 + random() * 200 }, target = { x: random() * 1000 - 400, z: -620 + random() * 200 };
+        try { mesh.find(start, target); }
+        catch (error) { throw new Error(JSON.stringify({ radius, trip, start, target }), { cause: error }); }
+      }
+    }
+  });
+  it('garde les chemins dans l’espace libre autour de plusieurs obstacles orientés', () => {
+    let seed = 20261024;
+    const random = () => { seed = (Math.imul(1664525, seed) + 1013904223) >>> 0; return seed / 2 ** 32; };
+    for (let fixture = 0; fixture < 1000; fixture++) {
+      const polygons = Array.from({ length: 30 }, () => g.inflate(g.rectangle(random() * 400 - 200, random() * 400 - 200, 10 + random() * 100, 10 + random() * 100, random() * Math.PI), 4));
+      const obstacles = g.union(polygons);
+      const mesh = new NavigationMesh(obstacles, [[g.rectangle(0, 0, 400, 400)]], fixture % 2 ? undefined : { distance: 20, obstacles });
+      for (let trip = 0; trip < 100; trip++) {
+        const point = () => {
+          if (trip % 3 === 0) return { x: random() * 360 - 180, z: random() * 360 - 180 };
+          const cell = mesh.cells[Math.floor(random() * mesh.cells.length)], index = Math.floor(random() * 3);
+          if (trip % 3 === 1) return cell.points[index];
+          const a = cell.points[index], b = cell.points[(index + 1) % 3], t = random();
+          return { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t };
+        };
+        const start = point(), target = point();
+        let path;
+        try { path = mesh.find(start, target); }
+        catch (error) { throw new Error(JSON.stringify({ fixture, trip, seed, start, target, polygons }), { cause: error }); }
+        assert.equal(Boolean(path), mesh.canReach(start, target));
+        if (path) assert(path.every((point, i) => g.segmentFree(i ? path[i - 1] : start, point, obstacles)));
+      }
+    }
+  });
   it('contourne les obstacles, conserve les passages étroits et les coordonnées finales', () => {
     for (const polygons of [[], [g.rectangle(0, 0, 40, 80)], [g.rectangle(-80, 0, 140, 20), g.rectangle(80, 0, 140, 20)]]) {
       const obstacles = g.union(polygons), surfaces = [[g.rectangle(0, 0, 400, 400)]];

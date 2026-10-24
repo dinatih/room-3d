@@ -1,6 +1,40 @@
 const assert = require('node:assert/strict');
 const launch = require('./browser-test-options.cjs');
 (async () => {
+  if (process.argv.includes('--stop-navigation')) {
+    const log = require('node:fs').readFileSync('/tmp/room-navigation-browser.log', 'utf8');
+    const browser = await require('puppeteer').connect({ browserWSEndpoint: log.match(/ws:\/\/\S+/)[0] });
+    await browser.close();
+    return;
+  }
+  if (process.argv.includes('--navigation')) {
+    const browser = await launch({ args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+    const deadline = setTimeout(() => browser.process()?.kill('SIGKILL'), 180000);
+    try {
+      const page = await browser.newPage();
+      await page.setRequestInterception(true);
+      page.on('request', async request => {
+        if (new URL(request.url()).pathname === '/src/features/scene/Studio.tsx') {
+          const response = await fetch(request.url());
+          const body = (await response.text()).replace('window.threeGl = gl;', 'window.threeGl = gl; gl.render = () => {}; gl.compileAsync = async () => {};');
+          return request.respond({ status: 200, contentType: 'application/javascript', body });
+        }
+        return request.continue();
+      });
+      await page.evaluateOnNewDocument(() => {
+        window.addEventListener('error', event => { window.navigationFailure = { message: event.message, cause: event.error?.cause }; });
+        setInterval(() => window.dispatchEvent(new MouseEvent('mousemove')), 1000);
+      });
+      page.on('console', message => { if (message.type() === 'error') console.log(message.text()); });
+      await page.goto('http://127.0.0.1:5173/?mode=follow&target=character&skipIntro=1', { waitUntil: 'domcontentloaded' });
+      console.log('Scene document loaded');
+      await page.waitForFunction(() => window.navigationFailure, { timeout: 120000 });
+      const failure = await page.evaluate(() => window.navigationFailure);
+      require('node:fs').writeFileSync('/tmp/room-navigation-failure.json', JSON.stringify(failure));
+      console.log(failure.message);
+    } finally { clearTimeout(deadline); await browser.close(); }
+    return;
+  }
   if (process.argv.includes('--walk') || process.argv.includes('--audit-walks')) {
     require('../tests/support/load-ts.cjs');
     const THREE = require('three');
