@@ -20,13 +20,13 @@ function fixture() {
 
 it('exclut réciproquement les objets et slots d’un groupe, puis les libère', () => {
     const { manager, objects } = fixture();
-    for (const group of ['kallax-ne', 'kallax-se', 'kallax-cuisine']) {
+    for (const group of ['kallax-ne', 'kallax-se', 'kallax-nw', 'kallax-cuisine']) {
         for (const suffix of ['a', 'b']) objects[`${group}-${suffix}`] = {
             id: `${group}-${suffix}`, exclusiveGroup: group, position: [100, 0, -100],
             slots: [{ slotId: 'first' }, { slotId: 'second' }],
         };
     }
-    for (const group of ['kallax-ne', 'kallax-se', 'kallax-cuisine']) {
+    for (const group of ['kallax-ne', 'kallax-se', 'kallax-nw', 'kallax-cuisine']) {
         for (const suffix of ['a', 'b']) {
             const owner = `${group}-${suffix}`, other = `${group}-${suffix === 'a' ? 'b' : 'a'}`;
             assert(manager.claimSlot(owner, 'first', 'npc-0'));

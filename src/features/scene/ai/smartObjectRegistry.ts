@@ -510,7 +510,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   }])),
   ...Object.fromEntries(Object.entries(DRONA_SPECIAL_ITEMS).map(([id, item]) => [id, {
     id, name: item.label, category: 'storage' as const, itemId: id,
-    exclusiveGroup: item.shelf === 'nw' ? undefined : `kallax-${item.shelf}`,
+    exclusiveGroup: `kallax-${item.shelf}`,
     slots: [{
       slotId: 'pick-item', name: item.interaction, relative: true, arrival: 'approach' as const,
       navigationOwner: `kallax-${item.shelf}`,
