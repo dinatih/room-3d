@@ -55,6 +55,7 @@ export function CollisionDebugHelper() {
       ref.current.add(line);
     };
     if (furniture) {
+      if (nativeGraph) for (const cell of nativeGraph.cells) addLine(cell.points, '#00b8d4', true);
       for (const obstacle of [...architectureObstacles, ...furnitureObstacles.values()]) addLine(obstacle.polygon, '#ff9100', true);
       for (const key of doorKeys) addLine(doorPolygon(key, doorCollisionState[key].angle), '#e040fb', true);
       // Keep the reference clearance fixed to Native, independently of active routes.
