@@ -615,7 +615,13 @@ export function createAgentController(
     if ((!initialProfileResolved || changedLanding) && enabled && hasAgentProfile(_characterId)) {
       cachedCoords = null;
       if (scenario?.length && scenario[0].type !== 'OBSERVE_OBJECT') {
-        const first = resolveInstructionCoords(scenario[0], null, _characterId);
+        beginActorBlockCheck(_characterId);
+        let first: ReturnType<typeof resolveInstructionCoords>;
+        try { first = resolveInstructionCoords(scenario[0], null, _characterId); }
+        catch (error) {
+          if (error instanceof NavigationBlockedError) error.actorBlockers = endActorBlockCheck(_characterId);
+          throw error;
+        } finally { endActorBlockCheck(_characterId); }
         if (first.tx !== 0 || first.tz !== 0) {
           state.x = first.tx;
           state.z = first.tz;
@@ -1450,6 +1456,8 @@ export function createAgentController(
       agentStatus = 'BLOCKED';
       const label = instruction.smartObjectId ? (SMART_OBJECTS[instruction.smartObjectId]?.name ?? instruction.smartObjectId) : instruction.targetZoneId ?? instruction.type;
       reportNavigationStop(error.message, label, error.target, error.actorBlockers);
+      // An unavailable landing point must not cancel the deployment phase.
+      if (!deployment.hasCompleted) { agentStatus = status; return state; }
       if (instruction.smartObjectId) {
         retrySmartAction(instruction.smartObjectId);
         return state;
