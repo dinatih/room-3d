@@ -472,7 +472,8 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 12, d: 17, h: 4 },
   glbPath: 'items/black-hornet/black-hornet.glb',
-  photos: [],
+  photos: ['items/black-hornet/presentation-1.jpg', 'items/black-hornet/presentation-2.jpg'],
+  url: 'https://defense.flir.com/defense-products/black-hornet-3-prs/',
   notes: `Nano-drone Black Hornet autonome capable de survoler le jardin et toutes les pièces du studio.
 
 Le Black Hornet (de type nano-drone à voilure tournante ressemblant à un mini-hélicoptère) présente plusieurs avantages tactiques majeurs par rapport à un quadcopter (drone multirotor classique).
@@ -517,7 +518,7 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 13.0, d: 15.7, h: 4.85 },
   glbPath: 'items/dji-neo/dji-neo.glb',
-  photos: [],
+  photos: ['items/dji-neo/presentation-1.jpg', 'items/dji-neo/presentation-2.jpg'],
   url: 'https://www.dji.com/fr/neo',
   notes: `Drone compact et ultraléger (135 g) à décollage et atterrissage palmaires. Équipé d'un suivi de sujet assisté par IA, de modes QuickShots, d'une caméra 4K ultra-stabilisée et de protections d'hélices intégrales.`
 });
@@ -530,7 +531,7 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 21.2, d: 18.5, h: 6.4 },
   glbPath: 'items/dji-avata-2/dji-avata-2.glb',
-  photos: [],
+  photos: ['items/dji-avata-2/presentation-1.jpg', 'items/dji-avata-2/presentation-2.png'],
   url: 'https://www.dji.com/fr/avata-2',
   notes: `Drone FPV immersif et agile (377 g) avec protections d'hélices intégrées, capteurs visuels binoculaires fisheye, caméra 4K/60fps HDR ultra grand-angle 155° et mode Tortue (Turtle mode).`
 });
@@ -543,7 +544,7 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 25.5, d: 31.2, h: 12.7 },
   glbPath: 'items/dji-fpv/dji-fpv.glb',
-  photos: [],
+  photos: ['items/dji-fpv/presentation-1.png', 'items/dji-fpv/presentation-2.png'],
   url: 'https://www.dji.com/fr/dji-fpv',
   notes: `Drone hybride FPV haute vitesse (jusqu'à 140 km/h, 795 g) avec caméra 4K/60fps 150°, transmission vidéo DJI O3 HD à faible latence et freinage d'urgence avec vol stationnaire.`
 });
@@ -578,7 +579,8 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 44.66, d: 56.07, h: UNITREE_H2.height },
   glbPath: UNITREE_H2.path,
-  url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/h2_description',
+  photos: ['items/unitree-h2/presentation-1.jpg', 'items/unitree-h2/presentation-2.jpg'],
+  url: 'https://www.unitree.com/H2/',
   notes: 'Maillages et 31 articulations officiels BSD-3-Clause. Pièces rigides entraînées autour des axes moteurs, dans leurs limites URDF. Marche classique adaptée aux moteurs. Dimensions en posture neutre.',
 });
 
@@ -590,7 +592,8 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 37.14, d: 45.22, h: 132.28 },
   glbPath: 'items/unitree-g1/unitree-g1.glb',
-  url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/g1_description',
+  photos: ['items/unitree-g1/presentation-1.jpg', 'items/unitree-g1/presentation-2.jpg'],
+  url: 'https://www.unitree.com/g1',
   description: 'Humanoïde G1 rouge à 29 degrés de liberté. Maillages et articulations officiels Unitree.',
   notes: 'Animations créées pour le projet : repos, marche, coucou, révérence et danse. Version rev_1_0. Dimensions en posture neutre. Maillages sous licence BSD-3-Clause.',
 });
@@ -603,7 +606,8 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 32.4, d: 73.21, h: 38.83 },
   glbPath: 'items/unitree-go2/unitree-go2.glb',
-  url: 'https://github.com/unitreerobotics/unitree_mujoco/tree/main/unitree_robots/go2',
+  photos: ['items/unitree-go2/presentation-1.jpg', 'items/unitree-go2/presentation-2.jpg'],
+  url: 'https://www.unitree.com/go2',
   description: 'Quadrupède bionique Go2 rouge à 12 degrés de liberté. Maillages et articulations officiels Unitree.',
   notes: 'Animations créées pour le projet : repos, trot, patte, étirement et danse. Posture de référence home du modèle MuJoCo officiel. Maillages sous licence BSD-3-Clause.',
 });
@@ -616,7 +620,8 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 49.18, d: 76.24, h: 51.94 },
   glbPath: 'items/unitree-as2w/unitree-as2w.glb',
-  url: 'https://github.com/unitreerobotics/unitree_ros/tree/master/robots/as2w_description',
+  photos: ['items/unitree-as2w/presentation-1.jpg', 'items/unitree-as2w/presentation-2.jpg'],
+  url: 'https://www.unitree.com/As2-W/',
   description: 'As2-W rouge : 12 articulations de jambes et quatre roues motorisées. Maillages, pivots et axes du modèle officiel Unitree.',
   notes: 'Animations visuelles créées pour le projet : repos, roulage, accroupissement, révérence et danse. Roues synchronisées avec la distance parcourue et les virages. Licence BSD-3-Clause.',
 });
@@ -629,7 +634,8 @@ INVENTORY.push({
   qty: 1,
   dims: { w: 41.53, d: 36.85, h: 17.84 },
   glbPath: 'items/jumper/jumper.glb',
-  url: 'https://github.com/KingKongRobotics/jumper',
+  photos: ['items/jumper/presentation-1.webp', 'items/jumper/presentation-2.webp'],
+  url: 'https://kingkong.tech/jumper',
   description: 'Robot crabe à 22 degrés de liberté. Assemblage 3D officiel, carrosserie rouge assortie au Unitree Go2.',
   notes: 'Animations : repos, marche et virages recréés ; salut, révérence, patte, salut militaire et danse officiels. Dimensions mesurées en position debout. Modèle sous licence Apache-2.0.',
 });
@@ -640,8 +646,9 @@ INVENTORY.push({
   brand: 'Fictionlab',
   category: 'robots',
   qty: 1,
-  dims: { w: 47.61, d: 61.46, h: 42.79 },
+  dims: { w: 47.61, d: 56.8, h: 28.84 },
   glbPath: 'items/raph-rover/raph-rover.glb',
+  photos: ['items/raph-rover/presentation-1.webp', 'items/raph-rover/presentation-2.webp'],
   url: 'https://fictionlab.pl/raph-rover/',
   description: 'Plateforme robotique mobile à quatre roues et direction arrière indépendante.',
   notes: 'Modèle statique issu des maillages officiels raph_common (MIT), assemblés selon les repères ROS. Dimensions mesurées sur le modèle de simulation, antennes comprises ; elles diffèrent de la fiche commerciale.',

@@ -9,6 +9,7 @@ assembled using the visual origins and neutral joint transforms in
 Static model with original materials and separate steering/wheel groups.
 No invented sensor geometry: the upstream camera and lidar frames have no visual mesh.
 Centimeters, Y up, forward +Z, centered on X/Z, grounded at Y=0.
+Assimp's COLLADA-to-glTF axis conversion is undone before applying the ROS visual transforms.
 Measured bounds include antennas and differ from the commercial specification.
 
 Rebuild: download and extract the upstream repository to `/tmp/raph_common-main`,
