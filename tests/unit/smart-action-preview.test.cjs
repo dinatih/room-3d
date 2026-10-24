@@ -36,6 +36,7 @@ it('aligne les quatre rangements SDB devant leur façade avant l’arrivée fina
     assert.equal(moves[0].targetLocalPos, undefined, 'Approche directement le rangement');
     assert.equal(steps.find(step => step.waitForAnimation).type, 'USE_OBJECT', 'Rejoint le point d’utilisation après l’approche');
     assert.equal(steps.filter(step => step.waitForAnimation).length, 1);
+    assert(steps.every(step => !step.triggerEventKey), `${id}: aucune ouverture ou fermeture automatique`);
   }
 });
 it('approche les rangements SDB devant leur façade sans détour dans le passage central', () => {

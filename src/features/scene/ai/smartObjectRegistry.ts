@@ -12,7 +12,7 @@ import { FREEZER_DOOR_DURATION } from '../items/Freezer';
 import { FRIDGE_DOOR_DURATION, FRIDGE_CRISPER_DURATION } from '../items/Fridge';
 import { DRONA_CATCHALL_POSITION } from '../items/kallaxNeDrona';
 import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from '../items/kallaxSeDrona';
-import { DRONA_SPECIAL_ITEMS, SPECIAL_DRONA_SLIDE_DURATION } from '../items/dronaStorage';
+import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
 import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroomStorage';
@@ -1194,20 +1194,13 @@ export function buildSmartObjectInstructionSequence(
 
   const storageInteraction = BATHROOM_STORAGE_ITEMS[objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[objectId as keyof typeof KITCHEN_DRONA_ITEMS];
   if (storageInteraction) {
-    const gesture = 'action' in storageInteraction ? (open: boolean): AgentInstruction => ({
-      type: 'WAIT', smartObjectId: obj.id, slotId: slot.slotId,
-      animation: 'idle', duration: SPECIAL_DRONA_SLIDE_DURATION, rotY: slot.rotY,
-      triggerEventKey: storageInteraction.action, triggerEventValue: open,
-    }) : undefined;
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
       ...((objectId === 'drona-kitchen-diy' || objectId === 'drona-kitchen-electronics') ? [
         { type: 'PREPARE_OBJECT' as const, smartObjectId: obj.id, slotId: slot.slotId },
         { type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId },
       ] : []),
-      ...(gesture ? [gesture(true)] : []),
       { ...baseInstruction, repeatCount: 1, waitForAnimation: true },
-      ...(gesture ? [gesture(false)] : []),
       // Leave the chair's original footprint before restoring it.
       ...((objectId === 'drona-kitchen-diy' || objectId === 'drona-kitchen-electronics') ? [{ type: 'MOVE_TO' as const, smartObjectId: obj.id, slotId: slot.slotId, targetPos: [ROOM_W * 2 / 3, 0, slot.offset![2]] as [number, number, number] }] : []),
     ];

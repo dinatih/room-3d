@@ -19,10 +19,6 @@ import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation, getWalkSpeedForAnimatio
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
 import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
-import { DRONA_SE_ITEMS } from '../items/kallaxSeDrona';
-import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
-import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
-import { KITCHEN_DRONA_ITEMS } from '../items/kallaxCuisineDrona';
 import { releaseAgentDoors } from './navigation/doorRequests';
 import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
 import { NavigationScope, NavigationPending } from './navigation/navigationScope';
@@ -234,10 +230,6 @@ export function createAgentController(
       }
       if (claimedSlot.objectId === 'fridge' || claimedSlot.objectId === 'freezer') {
         useSceneStore.getState().triggerAction(claimedSlot.objectId, false);
-      }
-      const drona = DRONA_SE_ITEMS[claimedSlot.objectId] ?? DRONA_SPECIAL_ITEMS[claimedSlot.objectId as keyof typeof DRONA_SPECIAL_ITEMS] ?? BATHROOM_STORAGE_ITEMS[claimedSlot.objectId as keyof typeof BATHROOM_STORAGE_ITEMS] ?? KITCHEN_DRONA_ITEMS[claimedSlot.objectId as keyof typeof KITCHEN_DRONA_ITEMS];
-      if (drona && 'action' in drona) {
-        useSceneStore.getState().triggerAction(drona.action, false);
       }
       if (claimedSlot.objectId === 'corridor-closet') {
         useSceneStore.getState().triggerAction('corrDoors', false);
