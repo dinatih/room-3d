@@ -15,8 +15,38 @@ function fixture() {
         '../store/useSceneStore': { useSceneStore: { getState: () => store } },
         '../wallData': { BATH_WEST_WALL: -10, BATH_EAST_WALL: 195, BATH_NORTH_WALL: 465, ROOM_NORTH_WALL: 0, ROOM_SOUTH_WALL: 400, ROOM_EAST_WALL: 316, CORRIDOR_WEST_WALL: 200, CORRIDOR_EAST_WALL: 316, CORRIDOR_NORTH_WALL: 410, WALL_H: 250, DiagWall: { A: { x: 0, z: 700 }, slope: -0.2 } },
     });
-    return { ids, camera, store, ...module, manager: module.OccupancyManager };
+    return { ids, camera, store, objects, ...module, manager: module.OccupancyManager };
 }
+
+it('exclut réciproquement les objets et slots d’un groupe, puis les libère', () => {
+    const { manager, objects } = fixture();
+    for (const group of ['kallax-ne', 'kallax-se', 'kallax-cuisine']) {
+        for (const suffix of ['a', 'b']) objects[`${group}-${suffix}`] = {
+            id: `${group}-${suffix}`, exclusiveGroup: group, position: [100, 0, -100],
+            slots: [{ slotId: 'first' }, { slotId: 'second' }],
+        };
+    }
+    for (const group of ['kallax-ne', 'kallax-se', 'kallax-cuisine']) {
+        for (const suffix of ['a', 'b']) {
+            const owner = `${group}-${suffix}`, other = `${group}-${suffix === 'a' ? 'b' : 'a'}`;
+            assert(manager.claimSlot(owner, 'first', 'npc-0'));
+            for (const id of [owner, other]) {
+                assert.equal(manager.getOccupant(id, 'second', 'npc-1'), 'npc-0');
+                assert.equal(manager.claimSlot(id, 'second', 'npc-1'), false);
+                assert.equal(manager.getAvailableSlot(id, 'npc-1'), null);
+                assert(manager.isObjectFullyOccupied(id, 'npc-1'));
+                assert.equal(manager.isSlotOccupied(id, 'second', 'npc-0'), false);
+            }
+            assert(manager.claimSlot('outside', 'use', 'npc-1'), 'Les autres groupes restent accessibles');
+            manager.releaseAllForCharacter('npc-1');
+            manager.releaseSlot(owner, 'first', 'npc-0');
+            assert(manager.claimSlot(other, 'second', 'npc-1'));
+            manager.releaseAllForCharacter('npc-1');
+            assert(manager.claimSlot(owner, 'first', 'npc-0'));
+            manager.releaseAllForCharacter('npc-0');
+        }
+    }
+});
 
 describe('Capacité des pièces', () => {
     it('limite le couloir à deux présences ou arrivées, joueur et Ybot inclus', () => {

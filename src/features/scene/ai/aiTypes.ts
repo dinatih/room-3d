@@ -49,6 +49,7 @@ export interface SmartObjectDef {
   slots: InteractionSlot[];   // Slots d'interaction disponibles
   ownerCharacterId?: string;  // Permanent access restriction, independent of occupancy
   exclusive?: boolean;        // Si true, un seul personnage à la fois peut utiliser cet objet (exclusivité partagée par tous ses slots)
+  exclusiveGroup?: string;    // Un seul personnage parmi tous les objets et slots du groupe
   approachDoor?: import('./navigation/doorRequests').DoorKey;
 }
 

@@ -92,6 +92,7 @@ class SmartObjectOccupancyManager {
 
   /** The same conflict rules serve availability checks and their diagnostic. */
   getOccupant(objectId: string, slotId: string, forCharacterId?: string): string | null {
+    const group = SMART_OBJECTS[objectId]?.exclusiveGroup;
     const slots = SMART_OBJECTS[objectId]?.slots;
     const requested = slots?.find(slot => slot.slotId === slotId);
     for (const room of LIMITED_ROOMS) {
@@ -105,6 +106,7 @@ class SmartObjectOccupancyManager {
       if (reservation.characterId === forCharacterId) continue;
       const separator = key.indexOf(':');
       const occupiedObject = key.slice(0, separator), occupiedSlot = key.slice(separator + 1);
+      if (group && SMART_OBJECTS[occupiedObject]?.exclusiveGroup === group) return reservation.characterId;
       if (occupiedObject !== objectId) continue;
       const occupied = slots?.find(slot => slot.slotId === occupiedSlot);
       if (occupiedSlot === slotId || this.isExclusiveObject(objectId)

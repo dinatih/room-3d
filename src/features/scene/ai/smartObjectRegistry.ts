@@ -319,6 +319,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
 
   ...Object.fromEntries(Object.entries(KITCHEN_DRONA_ITEMS).map(([id, item]) => [id, {
     id, name: item.label, itemId: id, category: 'storage' as const,
+    exclusiveGroup: 'kallax-cuisine',
     slots: [{
       slotId: 'pick-item', name: item.interaction, relative: true,
       arrival: (id === 'drona-kitchen-diy' || id === 'drona-kitchen-electronics') ? 'front' as const : 'approach' as const,
@@ -431,6 +432,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   // ── CUISINE & APPAREILS ───────────────────────────────────────────────────
   'cuisine-group': {
     id: 'cuisine-group',
+    exclusiveGroup: 'kallax-cuisine',
     name: 'Meuble Cuisine',
     category: 'surface',
     position: [80, 0, 370],
@@ -479,6 +481,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
   'freezer': {
     id: 'freezer',
+    exclusiveGroup: 'kallax-se',
     name: 'Congélateur CHIQ',
     category: 'appliance',
     itemId: 'freezer',
@@ -497,6 +500,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   // ── RANGEMENTS, KALLAX & COULOIR ──────────────────────────────────────────
   ...Object.fromEntries(Object.entries(DRONA_SE_ITEMS).map(([id, item]) => [id, {
     id, name: item.label, category: 'storage' as const, itemId: id,
+    exclusiveGroup: 'kallax-se',
     slots: [{
       slotId: 'pick-item', name: id === 'drona-se-pyjama' ? 'Prendre un pyjama' : 'Prendre du linge de maison',
       relative: true, arrival: 'approach' as const, navigationOwner: 'kallax-se',
@@ -506,6 +510,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   }])),
   ...Object.fromEntries(Object.entries(DRONA_SPECIAL_ITEMS).map(([id, item]) => [id, {
     id, name: item.label, category: 'storage' as const, itemId: id,
+    exclusiveGroup: item.shelf === 'nw' ? undefined : `kallax-${item.shelf}`,
     slots: [{
       slotId: 'pick-item', name: item.interaction, relative: true, arrival: 'approach' as const,
       navigationOwner: `kallax-${item.shelf}`,
@@ -515,6 +520,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   }])),
   'drona-ne-catchall': {
     id: 'drona-ne-catchall',
+    exclusiveGroup: 'kallax-ne',
     name: 'Dröna fourre-tout Nord-Est (droite)',
     category: 'storage',
     itemId: 'drona-ne-catchall',
@@ -531,6 +537,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
   'kallax-ne': {
     id: 'kallax-ne',
+    exclusiveGroup: 'kallax-ne',
     name: 'Kallax Nord-Est',
     category: 'storage',
     position: [240, 0, 38],
