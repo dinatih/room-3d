@@ -82,8 +82,9 @@ export function DoorEntry({ onSize, isPreview = false, ...props }: SceneItemProp
 
       <group ref={doorRef} position={[-W / 2, 0, 0]}>
         {/* Panneau rouge */}
-        <mesh position={[W / 2, H / 2, 0]} material={redPanelMaterial} castShadow receiveShadow>
-          <boxGeometry args={[W, H, T]} />
+        <mesh position={[W / 2, (H - 1) / 2, 0]} material={redPanelMaterial} castShadow receiveShadow>
+          {/* La feuillure du dormant occupe 1 cm de chaque côté et sous la traverse. */}
+          <boxGeometry args={[W - 2, H - 1, T]} />
         </mesh>
 
         {/* Poignée intérieure */}

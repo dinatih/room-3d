@@ -5,9 +5,10 @@ import type { SceneItemProps } from '@shared/types';
 
 const H = 204; // Hauteur passage libre (cm)
 
-export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone = false }: SceneItemProps & { width?: number; wallThickness?: number; twoTone?: boolean }) {
+export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone = false, stopDepth = -2 }: SceneItemProps & { width?: number; wallThickness?: number; twoTone?: boolean; stopDepth?: number }) {
   const innerDepth = wallThickness / 2;
   const outerDepth = innerDepth + 1;
+  const stopEnd = stopDepth + 1.8;
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(W + 5, H + 1, wallThickness + 2));
   }, [onSize, W, wallThickness]);
@@ -24,14 +25,14 @@ export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone 
     shape.lineTo(innerDepth, 3.0);    // Intérieur lip droite (recouvrement 3cm)
     shape.lineTo(outerDepth, 3.0);    // Pointe recouvrement droite (épaisseur lip 1cm)
     shape.lineTo(outerDepth, -1.0);   // Face inférieure droite (dormant épaisseur 1cm)
-    shape.lineTo(-0.2, -1.0);  // Début de la butée
-    shape.lineTo(-0.2, -2.8);  // Fond de butée (profondeur 1.8cm, largeur 1.8cm)
-    shape.lineTo(-2.0, -2.8);  // Fond de butée
-    shape.lineTo(-2.0, -1.0);  // Début de la butée
+    shape.lineTo(stopEnd, -1.0);  // Début de la butée
+    shape.lineTo(stopEnd, -2.8);  // Fond de butée (profondeur 1.8cm, largeur 1.8cm)
+    shape.lineTo(stopDepth, -2.8);  // Fond de butée
+    shape.lineTo(stopDepth, -1.0);  // Début de la butée
     shape.lineTo(-outerDepth, -1.0);  // Face inférieure gauche
     shape.closePath();
     return shape;
-  }, [innerDepth, outerDepth]);
+  }, [innerDepth, outerDepth, stopDepth, stopEnd]);
 
   // Profil du dormant droit (miroité par rapport à l'axe Z)
   const rightFrameShape = useMemo(() => {
@@ -39,10 +40,10 @@ export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone 
     // Coordonnées de section en centimètres, avec u (X) miroité (u -> -u)
     shape.moveTo(outerDepth, 3.0);    // Miroir de (-outerDepth, 3.0)
     shape.lineTo(outerDepth, -1.0);   // Miroir de (-outerDepth, -1.0)
-    shape.lineTo(2.0, -1.0);   // Miroir de (-2.0, -1.0)
-    shape.lineTo(2.0, -2.8);   // Miroir de (-2.0, -2.8)
-    shape.lineTo(0.2, -2.8);   // Miroir de (-0.2, -2.8)
-    shape.lineTo(0.2, -1.0);   // Miroir de (-0.2, -1.0)
+    shape.lineTo(-stopDepth, -1.0);   // Début de la butée
+    shape.lineTo(-stopDepth, -2.8);   // Fond de butée
+    shape.lineTo(-stopEnd, -2.8);   // Fond de butée
+    shape.lineTo(-stopEnd, -1.0);   // Fin de la butée
     shape.lineTo(-outerDepth, -1.0);  // Miroir de (outerDepth, -1.0)
     shape.lineTo(-outerDepth, 3.0);   // Miroir de (outerDepth, 3.0)
     shape.lineTo(-innerDepth, 3.0);   // Miroir de (innerDepth, 3.0)
@@ -51,7 +52,7 @@ export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone 
     shape.lineTo(innerDepth, 3.0);    // Miroir de (-innerDepth, 3.0)
     shape.closePath();
     return shape;
-  }, [innerDepth, outerDepth]);
+  }, [innerDepth, outerDepth, stopDepth, stopEnd]);
 
   const [leftJambGeo, rightJambGeo, headerGeo] = useMemo(() => {
     const extrude = (shape: THREE.Shape, depth: number, side: number) => {
@@ -121,5 +122,5 @@ export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone 
 }
 
 export function DoorEntryFrame(props: SceneItemProps) {
-  return <DoorFrame {...props} width={90} wallThickness={10} twoTone />;
+  return <DoorFrame {...props} width={90} wallThickness={10} stopDepth={2} twoTone />;
 }
