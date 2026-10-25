@@ -53,7 +53,7 @@ const metalHandleMaterial = new THREE.MeshStandardMaterial({ color: '#999999', m
 const knobMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', metalness: 0.3, roughness: 0.4 });
 const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.85, metalness: 0.05 });
 
-export function DoorEntry({ onSize, isPreview = false, ...props }: SceneItemProps) {
+export function DoorEntry({ onSize, isPreview = false, showFrame = true, ...props }: SceneItemProps & { showFrame?: boolean }) {
   const navigationEnabled = useNavigationEnabled() && !isPreview;
   const doorRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
@@ -78,7 +78,7 @@ export function DoorEntry({ onSize, isPreview = false, ...props }: SceneItemProp
 
   return (
     <group position={[0, 0, 0]}>
-      <DoorEntryFrame {...props} isPreview={isPreview} onSize={NOOP_SIZE} />
+      {showFrame && <DoorEntryFrame {...props} isPreview={isPreview} onSize={NOOP_SIZE} />}
 
       <group ref={doorRef} position={[-W / 2, 0, 0]}>
         {/* Panneau rouge */}

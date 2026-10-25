@@ -85,7 +85,7 @@ const RaytracingPhotoModal = lazy(() => import('./photo/RaytracingPhotoModal').t
 import {
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_NEIGHBORS, LAYER_LIDAR,
   LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_ENVIRONMENT,
-  LAYER_WALL_STRUCTURE, LAYER_DOORS, LAYER_ANIMALS,
+  LAYER_WALL_STRUCTURE, LAYER_DOORS, LAYER_FLOOR_COVERINGS, LAYER_ANIMALS,
 } from '@config';
 
 
@@ -988,6 +988,9 @@ export function Studio() {
             {!layers.pillarsOnly && <DoorsPlacement />}
           </CategoryLayerGroup>
 
+          <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS} visible={layers.floorCoverings} register={false}>
+            {!layers.pillarsOnly && <DoorsPlacement framesOnly />}
+          </CategoryLayerGroup>
           <Floor />
           {/* LAYER_WALKER (18) — Personnages 3D */}
           <CategoryLayerGroup layer={LAYER_WALKER} visible={layers.character}>

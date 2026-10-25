@@ -142,6 +142,7 @@ interface DoorImplProps {
   doorConfig: DoorConfig;
   doorStateKey: 'living' | 'bath';
   isPreview?: boolean;
+  showFrame?: boolean;
 }
 
 const frameMaterial = new THREE.MeshStandardMaterial({ color: '#f0ede8', roughness: 0.35 });
@@ -162,6 +163,7 @@ function DoorImpl({
   doorConfig,
   doorStateKey,
   isPreview = false,
+  showFrame = true,
 }: DoorImplProps) {
   const navigationEnabled = useNavigationEnabled() && !isPreview;
   const doorRef = useRef<THREE.Group>(null!);
@@ -169,7 +171,6 @@ function DoorImpl({
   const spring = useDoorSpring();
   const open = useDoorOpen(actionKey, isPreview, actionState);
 
-  const frameGeo  = useDoorFrameGeo(wallThickness);
   const handleGeo = useHandleGeo(mancheDir);
 
   useLayoutEffect(() => {
@@ -190,7 +191,7 @@ function DoorImpl({
 
   return (
     <group position={[0, 0, 0]}>
-      <mesh geometry={frameGeo} material={frameMaterial} castShadow receiveShadow />
+      {showFrame && <DoorWhiteFrame wallThickness={wallThickness} />}
 
       <group ref={doorRef} position={[pivotX, 0, 0]}>
         {/* Panneau mobile */}
@@ -210,7 +211,7 @@ function DoorImpl({
   );
 }
 
-export function DoorLiving({ onSize, isPreview = false, actionState }: SceneItemProps) {
+export function DoorLiving({ onSize, isPreview = false, actionState, showFrame = true }: SceneItemProps & { showFrame?: boolean }) {
   return (
     <DoorImpl
       actionKey="livingDoor"
@@ -218,6 +219,7 @@ export function DoorLiving({ onSize, isPreview = false, actionState }: SceneItem
       openAngle={-Math.PI / 2}
       doorConfig={DOOR_CONFIGS.living}
       doorStateKey="living"
+      showFrame={showFrame}
       actionState={actionState}
       onSize={onSize}
       isPreview={isPreview}
@@ -226,7 +228,7 @@ export function DoorLiving({ onSize, isPreview = false, actionState }: SceneItem
   );
 }
 
-export function DoorBath({ onSize, isPreview = false, actionState }: SceneItemProps) {
+export function DoorBath({ onSize, isPreview = false, actionState, showFrame = true }: SceneItemProps & { showFrame?: boolean }) {
   return (
     <DoorImpl
       actionKey="bathroomDoor"
@@ -234,10 +236,16 @@ export function DoorBath({ onSize, isPreview = false, actionState }: SceneItemPr
       openAngle={Math.PI / 2}
       doorConfig={DOOR_CONFIGS.bath}
       doorStateKey="bath"
+      showFrame={showFrame}
       actionState={actionState}
       onSize={onSize}
       isPreview={isPreview}
       wallThickness={PARTITION_THICKNESS}
     />
   );
+}
+
+export function DoorWhiteFrame({ wallThickness = PARTITION_THICKNESS }: { wallThickness?: number }) {
+  const geometry = useDoorFrameGeo(wallThickness);
+  return <mesh geometry={geometry} material={frameMaterial} castShadow receiveShadow />;
 }
