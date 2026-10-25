@@ -193,12 +193,12 @@ function ShowerDoor({ isPreview, condensation }: { isPreview: boolean; condensat
 
   useFrame((_, delta) => {
     if (!pivotRef.current) return;
-    const { allowed, push } = !navigationEnabled
-      ? { allowed: DOOR_CONFIGS.shower.maxAngle, push: 0 }
-      : computeDoorDynamics(DOOR_CONFIGS.shower);
-    const targetAngle = Math.min(allowed, Math.max(push, impulse(delta), navigationEnabled && doorRequested('shower') ? allowed : 0));
     const current = pivotRef.current.rotation.y;
-    const next = spring(current, targetAngle, delta, 0, allowed);
+    const { allowed, push, minimum } = !navigationEnabled
+      ? { allowed: DOOR_CONFIGS.shower.maxAngle, push: 0, minimum: 0 }
+      : computeDoorDynamics(DOOR_CONFIGS.shower, current);
+    const targetAngle = Math.min(allowed, Math.max(minimum, push, impulse(delta), navigationEnabled && doorRequested('shower') ? allowed : 0));
+    const next = spring(current, targetAngle, delta, minimum, allowed);
     pivotRef.current.rotation.y = next;
     if (next !== current) invalidate();
     if (navigationEnabled) doorCollisionState.shower.angle = pivotRef.current.rotation.y;

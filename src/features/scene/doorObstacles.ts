@@ -8,7 +8,7 @@
 
 import { cameraState } from './cameraState';
 import { furnitureObstacles, getObstacleRevision, getAgentProfile, hasAgentProfile } from './ai/navigation/obstacles';
-import { inflate, pointInRing, rectangle, type Polygon } from './ai/navigation/geometry';
+import { inflate, pointInRing, rectangle, CLEARANCE_ERROR, type Polygon } from './ai/navigation/geometry';
 import { getDoorProtections, getDoorProtectionRevision, type DoorKey } from './ai/navigation/doorRequests';
 import { pX, pZ, DiagWall, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from './wallData';
 
@@ -139,6 +139,7 @@ export function getDoorContactAngle(door: DoorConfig, polygon: Polygon): number 
 export interface DoorDynamicsResult {
   allowed: number;
   push: number;
+  minimum: number;
 }
 
 /**
@@ -146,10 +147,11 @@ export interface DoorDynamicsResult {
  */
 export function computeDoorDynamics(
   door: DoorConfig,
+  currentAngle: number,
 ): DoorDynamicsResult {
   const furnitureMaxAngle = computeDoorAllowedAngle(door);
 
-  let push = 0;
+  let push = 0, minimum = 0;
   for (const id in cameraState.positions) {
     const p = cameraState.positions[id];
     const bodyRadius = hasAgentProfile(id) ? getAgentProfile(id).radius : (id === 'robin' ? 7.5 : HUMAN_BODY_RADIUS);
@@ -162,6 +164,13 @@ export function computeDoorDynamics(
     const across = vx * door.openNormal.x + vz * door.openNormal.z;
     const clearance = bodyRadius + door.thickness / 2 + door.margin;
     const distance = Math.hypot(along, across);
+    // A leaf already beyond a body must stop on its opening-side tangent.
+    // The spring needs a hard limit: its closing momentum can overshoot a target.
+    if (across >= 0 && distance <= door.length + clearance) {
+      const bearing = Math.atan2(across, along);
+      const tangent = Math.asin(Math.min(1, (clearance + CLEARANCE_ERROR) / distance));
+      if (Math.abs(currentAngle) >= bearing - tangent) minimum = Math.max(minimum, Math.min(door.maxAngle, bearing + tangent));
+    }
     // Les deux battants vitrés se partagent la même ouverture : une présence
     // devant le droit ne doit pas aussi pousser le gauche au-delà de leur jonction.
     const isGlassLeaf = door === DOOR_CONFIGS.glassLeft || door === DOOR_CONFIGS.glassRight;
@@ -180,7 +189,7 @@ export function computeDoorDynamics(
     push = Math.max(push, Math.min(door.maxAngle, Math.max(0, angle)));
   }
 
-  return { allowed: furnitureMaxAngle, push: Math.min(furnitureMaxAngle, push) };
+  return { allowed: furnitureMaxAngle, push: Math.min(furnitureMaxAngle, push), minimum: Math.min(furnitureMaxAngle, minimum) };
 }
 
 /**

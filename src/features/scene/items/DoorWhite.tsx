@@ -176,10 +176,11 @@ function DoorImpl({
 
   useFrame((_, delta) => {
     const currentSigned = doorRef.current.rotation.y;
-    const { allowed, push } = navigationEnabled ? computeDoorDynamics(doorConfig) : { allowed: doorConfig.maxAngle, push: 0 };
-    const target = Math.sign(openAngle) * Math.min(allowed, Math.max(push, impulse(delta), navigationEnabled && doorRequested(doorStateKey) ? allowed : 0));
+    const { allowed, push, minimum } = navigationEnabled ? computeDoorDynamics(doorConfig, currentSigned) : { allowed: doorConfig.maxAngle, push: 0, minimum: 0 };
+    const target = Math.sign(openAngle) * Math.min(allowed, Math.max(minimum, push, impulse(delta), navigationEnabled && doorRequested(doorStateKey) ? allowed : 0));
     const limit = Math.sign(openAngle) * allowed;
-    const next = spring(currentSigned, target, delta, Math.min(0, limit), Math.max(0, limit));
+    const contact = Math.sign(openAngle) * minimum;
+    const next = spring(currentSigned, target, delta, Math.min(contact, limit), Math.max(contact, limit));
     doorRef.current.rotation.y = next;
     if (next !== currentSigned) invalidate();
     if (navigationEnabled) doorCollisionState[doorStateKey].angle = doorRef.current.rotation.y;

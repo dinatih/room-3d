@@ -151,22 +151,22 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
   useFrame((_, delta) => {
     const s = stateRef.current;
     if (navigationEnabled) glassShutterState.clearHeight = SILL_H + GLASS_H * (1 - shutterPercentRef.current / 100);
-    const dynRight = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassRight) : { allowed: DOOR_CONFIGS.glassRight.maxAngle, push: 0 };
-    const dynLeft = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassLeft) : { allowed: DOOR_CONFIGS.glassLeft.maxAngle, push: 0 };
-    const leftPush = Math.max(dynLeft.push, leftImpulse(delta), navigationEnabled && doorRequested('glassLeft') ? dynLeft.allowed : 0);
+    const dynRight = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassRight, rightRotRef.current) : { allowed: DOOR_CONFIGS.glassRight.maxAngle, push: 0, minimum: 0 };
+    const dynLeft = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassLeft, leftRotRef.current) : { allowed: DOOR_CONFIGS.glassLeft.maxAngle, push: 0, minimum: 0 };
+    const leftPush = Math.max(dynLeft.minimum, dynLeft.push, leftImpulse(delta), navigationEnabled && doorRequested('glassLeft') ? dynLeft.allowed : 0);
     const rightTarget = Math.min(
       dynRight.allowed,
-      Math.max(dynRight.push, rightImpulse(delta), leftPush, Math.abs(leftRotRef.current), navigationEnabled && doorRequested('glassRight') ? dynRight.allowed : 0)
+      Math.max(dynRight.minimum, dynRight.push, rightImpulse(delta), leftPush, Math.abs(leftRotRef.current), navigationEnabled && doorRequested('glassRight') ? dynRight.allowed : 0)
     );
     const rightClearsLeft = rightRotRef.current >= Math.atan2(FRAME_D_V2, PANEL_W);
-    const leftTarget = -Math.min(dynLeft.allowed, rightClearsLeft ? leftPush : 0);
+    const leftTarget = -Math.min(dynLeft.allowed, Math.max(dynLeft.minimum, rightClearsLeft ? leftPush : 0));
     const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
 
     if (navigationEnabled) doorCollisionState.glassRight.angle = rightRotRef.current;
     if (navigationEnabled) doorCollisionState.glassLeft.angle = leftRotRef.current;
 
-    const leftNext = leftSpring(leftRotRef.current, leftTarget, delta, -dynLeft.allowed, 0);
-    const rightNext = rightSpring(rightRotRef.current, rightTarget, delta, 0, dynRight.allowed);
+    const leftNext = leftSpring(leftRotRef.current, leftTarget, delta, -dynLeft.allowed, -dynLeft.minimum);
+    const rightNext = rightSpring(rightRotRef.current, rightTarget, delta, dynRight.minimum, dynRight.allowed);
     let moved = leftNext !== leftRotRef.current || rightNext !== rightRotRef.current;
     leftRotRef.current = leftNext;
     rightRotRef.current = rightNext;

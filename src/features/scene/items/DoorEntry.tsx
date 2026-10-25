@@ -99,10 +99,10 @@ export function DoorEntry({ onSize, isPreview = false }: SceneItemProps) {
   }, []);
 
   useFrame((_, delta) => {
-    const { allowed, push } = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.entry) : { allowed: DOOR_CONFIGS.entry.maxAngle, push: 0 };
-    const target = -Math.min(allowed, Math.max(push, impulse(delta), navigationEnabled && doorRequested('entry') ? allowed : 0));
     const current = doorRef.current.rotation.y;
-    const next = spring(current, target, delta, -allowed, 0);
+    const { allowed, push, minimum } = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.entry, current) : { allowed: DOOR_CONFIGS.entry.maxAngle, push: 0, minimum: 0 };
+    const target = -Math.min(allowed, Math.max(minimum, push, impulse(delta), navigationEnabled && doorRequested('entry') ? allowed : 0));
+    const next = spring(current, target, delta, -allowed, -minimum);
     doorRef.current.rotation.y = next;
     if (next !== current) invalidate();
     if (navigationEnabled) doorCollisionState.entry.angle = doorRef.current.rotation.y;
