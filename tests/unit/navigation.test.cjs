@@ -59,6 +59,41 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('quitte le contact de Sandra aux coordonnées du blocage de David', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const avoidance = load('src/features/scene/ai/agent/agentAvoidance.ts', {
+            '@/devLog': { devLog() {} }, '../../cameraState': { cameraState },
+            '../../store/useSceneStore': { useSceneStore: { getState: () => ({ layers: { npcCollisions: true } }) } },
+            '../navigation/obstacles': obstacles, '../navigation/geometry': g,
+            '../duoSessionManager': { duoSessionManager: { getSessionFor: () => undefined } },
+        });
+        const start = { x: 498.3174969946046, z: -298.91871689634644 }, target = { x: 500, z: -100 };
+        cameraState.positions.walker = { ...start, y: 0 };
+        cameraState.positions.sandra = { x: 500, z: -300, y: 0 };
+        obstacles.setAgentProfile('sandra', obstacles.getAgentProfile('walker'));
+        const surfaces = architecture.walkableSurfaces.splice(0, architecture.walkableSurfaces.length, [g.rectangle(0, 0, 2000, 2000)]);
+        const crowded = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, '../agent/agentAvoidance': avoidance });
+        const route = crowded.createRouteState();
+        try {
+            assert.deepEqual(avoidance.limitAgentMovement('walker', start, target), target, 'Separating from contact must remain possible');
+            assert.deepEqual(avoidance.limitAgentMovement('walker', start, cameraState.positions.sandra), start, 'Entering the same body must still be blocked');
+            let position = start;
+            for (let frame = 0; frame < Math.ceil(g.distance(start, target) / 3); frame++) {
+                const next = crowded.followRoute(route, 'walker', position, target, 3);
+                assert(g.distance(next, target) < g.distance(position, target), 'Every step must progress without another detour');
+                position = next;
+                cameraState.positions.walker = { ...position, y: 0 };
+            }
+            assert.deepEqual(position, target);
+            assert.equal(route.crowd, undefined);
+        } finally {
+            crowded.resetRoute(route, 'walker');
+            architecture.walkableSurfaces.splice(0, architecture.walkableSurfaces.length, ...surfaces);
+            delete cameraState.positions.walker; delete cameraState.positions.sandra;
+            obstacles.removeAgentProfile('sandra');
+        }
+    });
     it('choisit une place libre au sol pour atterrir près d’un PNJ ou de sa destination réservée', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;

@@ -141,7 +141,9 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
       if (Math.abs(slope) <= GEOMETRY_EPSILON) {
         if (side <= GEOMETRY_EPSILON) { leave = 0; break; }
       } else {
-        const contact = -side / slope;
+        // Match pointInRing: contact within the geometry tolerance is on the
+        // boundary, so an outward step exits immediately instead of re-entering.
+        const contact = Math.abs(side) <= GEOMETRY_EPSILON ? 0 : -side / slope;
         if (slope > 0) enter = Math.max(enter, contact);
         else leave = Math.min(leave, contact);
       }
