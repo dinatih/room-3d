@@ -390,13 +390,13 @@ export function AppConsole({
         aria-label="Console applicative"
       >
         <div
-          className={`d-flex ${open ? 'flex-wrap' : 'flex-nowrap'} align-items-center justify-content-between gap-1 flex-shrink-0 user-select-none`}
+          className={`d-flex ${open ? 'flex-wrap flex-shrink-0' : 'flex-nowrap flex-grow-1 flex-shrink-1'} align-items-center justify-content-between gap-1 mw-100 user-select-none`}
           style={{ cursor: 'pointer', minWidth: 0 }}
           onClick={handleToggle}
           title={open ? 'Fermer la console (B)' : 'Ouvrir la console (B)'}
         >
           {!open && latestLog && (
-            <span className="small font-monospace text-truncate" title={`[${latestLogTag}] ${latestLog.message}`}>
+            <span className="small font-monospace text-truncate flex-grow-1" title={`[${latestLogTag}] ${latestLog.message}`}>
               <small>[{latestLogTag}] {latestLog.message}</small>
             </span>
           )}
@@ -414,7 +414,7 @@ export function AppConsole({
             <span>Console</span>
           </button>
 
-          <div className="d-flex align-items-center gap-1 flex-wrap flex-shrink-1 mw-100" onClick={(e) => e.stopPropagation()}>
+          <div className={`d-flex align-items-center gap-1 flex-wrap ${open ? 'flex-shrink-1' : 'flex-shrink-0'} mw-100`} onClick={(e) => e.stopPropagation()}>
             {open && (
               <>
                 <select

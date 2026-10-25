@@ -30,7 +30,7 @@ const checkConsole = process.argv.includes('--console');
               window.__vite_plugin_react_preamble_installed__ = true;
               const React = await import('react'), { createRoot } = await import('react-dom/client');
               const { AppConsole, appLog } = await import('/src/features/ui/AppConsole.tsx');
-              for (let i = 0; i < 100; i++) appLog('system', 'Message de vérification de la console agrandie ' + i, { action: 'verification_console' });
+              for (let i = 0; i < 100; i++) appLog('system', 'Message de navigation très long, position et cible détaillées. '.repeat(30) + i, { action: 'verification_console' });
               createRoot(document.getElementById('root')).render(React.createElement(AppConsole));
             </script></body></html>`));
             return;
@@ -59,6 +59,11 @@ const checkConsole = process.argv.includes('--console');
       for (const viewport of [{ width: 1400, height: 900 }, { width: 390, height: 844 }]) {
         await page.setViewport(viewport);
         await page.waitForSelector('button[title="Ouvrir la console (B)"]');
+        const arrowVisible = await page.$eval('button[aria-label="Ouvrir la console"]', el => {
+          const r = el.getBoundingClientRect();
+          return r.left >= 0 && r.right <= innerWidth && r.height > 0 && el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
+        });
+        assert(arrowVisible, `Flèche de console masquée avec un long message : ${viewport.width}px`);
         await page.click('button[title="Ouvrir la console (B)"]');
         await page.waitForSelector('button[title="Fermer la console (B)"]');
         const controls = await page.$$eval('[aria-label="Console applicative"] button, [aria-label="Console applicative"] select', elements => elements.map(el => {
