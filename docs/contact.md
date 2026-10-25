@@ -43,9 +43,31 @@ L’image Mailer est figée par son digest. La passerelle Nginx écoute uniqueme
 est limitée à 16 Kio pour couvrir le message UTF-8 de 1000 caractères et ses métadonnées.
 Le champ Cloudflare d’IP client est accepté parce que le port reste limité à loopback.
 
-Ajouter au tunnel Cloudflare existant un hostname public, par exemple
-`contact.dinatih.org`, pointant vers `http://localhost:5080`. Le tunnel actuel publie
-uniquement Home Assistant (`ha.dinatih.org`) ; conserver cette route.
-L’URL finale sera alors `https://contact.dinatih.org/api/mail`.
+La route `contact.dinatih.org` a été créée sur le tunnel `dinatih-homelab` vers
+`http://localhost:5080`, ainsi que son CNAME. DNS et certificat HTTPS vérifiés ;
+Home Assistant (`ha.dinatih.org`) répond toujours normalement.
+L’URL du formulaire sera `https://contact.dinatih.org/api/mail`.
 Ne configurer `VITE_CONTACT_ENDPOINT` qu’après vérification de SMTP et de cette route.
 Pour le build GitHub Pages, ajouter la variable à l’étape de build du workflow de déploiement.
+
+## Gmail
+
+L’adresse d’expédition, de réception et l’identifiant Gmail sont renseignés dans
+le `.env` privé du serveur. SMTP utilise `smtp.gmail.com:587` avec STARTTLS ;
+la connexion TLS a été vérifiée depuis le mini-PC.
+
+Créer un [mot de passe d’application Google](https://myaccount.google.com/apppasswords)
+avec la validation en deux étapes activée, puis le saisir directement sur le serveur :
+
+```bash
+ssh -t -F ~/.ssh/config homeserver 'python ~/stacks/room-contact/set-gmail-password.py'
+```
+
+Le script masque la saisie et conserve les permissions `600` du fichier `.env`.
+Ne pas utiliser le mot de passe principal Google et ne pas transmettre le secret dans
+la conversation. [Documentation Google](https://support.google.com/mail/answer/185833?hl=fr).
+
+État après préparation : mot de passe d’application manquant, conteneurs non démarrés.
+Le domaine renvoie donc actuellement HTTP 502 et le formulaire reste désactivé.
+Après saisie du secret, démarrer le service, vérifier l’authentification SMTP, puis
+raccorder le formulaire. La réception d’un message devra ensuite être confirmée.
