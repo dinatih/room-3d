@@ -67,6 +67,7 @@ export type PillarDef = {
 };
 
 export type WallDef = {
+  construction: 'concrete' | 'partition';
   segKind?: SegKind | 'none'; // Défaut 'wall'
   mat?:     WallMat;          // Défaut 'default'
   h?:       number;           // Défaut WALL_H
@@ -255,8 +256,7 @@ export const CORRIDOR_WEST_WALL  = pEast('bath-ne');           // X ≈ 199.2  (
 // CORRIDOR_SOUTH_WALL : mur diagonal, exclu volontairement
 
 // ── Mur diagonal : repères et segments 2D ─────────────────────────────────────
-const { door: dDoor, len: dLen, p: dP } = DiagWall;
-const pExt = (d: number) => dP(d, WT);
+const { door: dDoor, p: dP } = DiagWall;
 const pInt = (d: number) => dP(d, 0);
 const seg  = (p1: { x: number; z: number }, p2: { x: number; z: number }): [number, number, number, number] =>
   [p1.x, p1.z, p2.x, p2.z];
@@ -268,11 +268,9 @@ const eP0 = dP(0, WT);
 const tC = (WT - (eP0.x - DiagWall.A.x)) / DiagWall.sin;
 export const CORNER_NE_APEX = { x: DiagWall.A.x + WT, z: eP0.z + tC * DiagWall.cos };
 
-const ePLen = dP(dLen, WT);
+const ePLen = dP(DiagWall.len, WT);
 const tC_sw = ((DiagWall.C.x - WT) - ePLen.x) / DiagWall.sin;
 export const CORNER_SW_APEX = { x: DiagWall.C.x - WT, z: ePLen.z + tC_sw * DiagWall.cos };
-
-export const DIAG_EXT_Z_END = CORNER_SW_APEX.z;
 
 // Piliers d'angle biseautés (kites) correspondant à diag-ne-kite et diag-sw-kite
 export const PILLAR_KITE_NE: [number, number][] = [
@@ -289,27 +287,20 @@ export const PILLAR_KITE_SW: [number, number][] = [
   [ePLen.x, ePLen.z],
 ];
 
-export const SEG_DIAG_CONCRETE_WALLS: [number, number, number, number][] = [
-  seg(pExt(0),           pExt(dDoor.start)),
-  seg(pExt(dDoor.end),   pExt(dLen)),
-  seg(pInt(0),           pInt(dDoor.start)),
-  seg(pInt(dDoor.end),   pInt(dLen)),
-  seg(pInt(dDoor.start), pExt(dDoor.start)),
-  seg(pInt(dDoor.end),   pExt(dDoor.end)),
-];
-
 export const SEG_DIAG_ENTRY_DOOR: [number, number, number, number] =
   seg(pInt(dDoor.start), pInt(dDoor.end));
 
 // ── Définitions des pans de murs 3D ──────────────────────────────────────────
-function wallZ(xc: number, z1: number, z2: number, mat: WallMat = 'default', t = WT): WallDef {
-  return { axis: 'z', xc, z1, z2, mat, t };
+function wallZ(xc: number, z1: number, z2: number, mat: WallMat = 'default', t = WT,
+  construction: WallDef['construction'] = t === PT ? 'partition' : 'concrete',
+): WallDef {
+  return { axis: 'z', xc, z1, z2, mat, t, construction };
 }
 
 function wallX(zc: number, x1: number, x2: number, mat: WallMat = 'default', t = WT,
-  extra?: { h?: number; yBase?: number; segKind?: SegKind | 'none' },
+  extra?: { h?: number; yBase?: number; segKind?: SegKind | 'none'; construction?: WallDef['construction'] },
 ): WallDef {
-  return { axis: 'x', zc, x1, x2, mat, t, ...extra };
+  return { axis: 'x', zc, x1, x2, mat, t, construction: t === PT ? 'partition' : 'concrete', ...extra };
 }
 
 // ── WALL_DEFS : Spans de murs 3D entre piliers ────────────────────────────────
@@ -317,7 +308,7 @@ export const WALL_DEFS: WallDef[] = [
   // ── Mur Ouest ───────────────────────────────────────────────────────────────
   // Face arrière continue niche (extérieur) & face avant séjour
   wallZ(pEast('corner-nw') - 1.5 * WT, pNorth('corner-nw-ext'), pNorth('corner-sw'),   'west'),
-  wallZ(pEast('corner-nw') - WT / 2,   pSouth('corner-nw'),     pNorth('niche-beam'),  'west'),
+  wallZ(pEast('corner-nw') - WT / 2,   pSouth('corner-nw'),     pNorth('niche-beam'),  'west', WT, 'partition'),
   // Mur béton Ouest SDB & Couloir (saute les poteaux)
   wallZ(pX('corner-sw'), pSouth('corner-sw'),  pNorth('bath-nw'),   'west'),
   wallZ(pX('corner-sw'), pSouth('bath-nw'),    pNorth('shower-nw'), 'west'),
@@ -333,7 +324,7 @@ export const WALL_DEFS: WallDef[] = [
   wallX(pZ('corner-sw'), pEast('corner-sw'),   pWest('kitchen-nw'),   'default', PT),
   wallX(pZ('corner-sw'), pEast('kitchen-ne'),  pWest('door-living-w'), 'default', PT),
   wallX(pZ('corner-sw'), pEast('door-living-e'), pWest('corner-se'),  'default', PT),
-  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: pEast('corner-ne'), segKind: 'door', t: PT },
+  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: pEast('corner-ne'), segKind: 'door', t: PT, construction: 'partition' },
 
   // ── Cuisine ─────────────────────────────────────────────────────────────────
   wallZ(pX('kitchen-nw'), pSouth('kitchen-nw'), pNorth('kitchen-sw'), 'default', PT),
@@ -344,18 +335,29 @@ export const WALL_DEFS: WallDef[] = [
 
   // ── Cloison Couloir / SDB ───────────────────────────────────────────────────
   wallZ(pX('bath-ne'), pSouth('bath-ne'), pNorth('door-bath-n'), 'default', PT),
-  { axis: 'z', xc: pX('bath-ne'), z1: pSouth('door-bath-n'), z2: pNorth('door-bath-s'), segKind: 'door', t: PT },
+  { axis: 'z', xc: pX('bath-ne'), z1: pSouth('door-bath-n'), z2: pNorth('door-bath-s'), segKind: 'door', t: PT, construction: 'partition' },
 
   // ── Mur Nord (Façade baie vitrée) ───────────────────────────────────────────
-  wallX(pZ('corner-nw'),     pEast('corner-nw'),     pWest('glass-west'),     'north'),
+  wallX(pZ('corner-nw'),     pEast('corner-nw'),     pWest('glass-west'),     'north', WT, { construction: 'partition' }),
   wallX(pZ('corner-nw-ext'), pEast('corner-nw-ext'), pWest('glass-west-ext'), 'north', 20, { h: WALL_H - 0.1 }),
-  wallX(pZ('corner-ne'),     pEast('glass-east'),     pWest('corner-ne'),      'north'),
+  wallX(pZ('corner-ne'),     pEast('glass-east'),     pWest('corner-ne'),      'north', WT, { construction: 'partition' }),
   wallX(pZ('corner-ne-ext'), pEast('glass-east-ext'), pWest('corner-ne-ext'),  'north', 20, { h: WALL_H - 0.1 }),
 
   // ── Douche ──────────────────────────────────────────────────────────────────
   wallZ(pX('shower-ne'), pSouth('shower-ne'), pNorth('shower-se'), 'default', PT),
   wallX(pZ('shower-sw'), pEast('shower-sw'),  pWest('shower-se'),  'south', PT),
 ];
+
+// Même intervalle pour le mur diagonal 3D et ses contours en plan.
+export const DIAG_WALL_DEFS = [{ d1: DiagWall.door.end, d2: DiagWall.len - WT }];
+
+/** Deux faces longitudinales, les abouts étant raccordés aux piliers (comme WZ/WX). */
+export function wallPlanSegments(d: WallDef): [number, number, number, number][] {
+  const half = (d.t ?? WT) / 2;
+  return d.axis === 'z'
+    ? [[d.xc - half, d.z1, d.xc - half, d.z2], [d.xc + half, d.z1, d.xc + half, d.z2]]
+    : [[d.x1, d.zc - half, d.x2, d.zc - half], [d.x1, d.zc + half, d.x2, d.zc + half]];
+}
 
 // ── Panneaux occultants bois jardin (côté Est) ────────────────────────────────
 export type GardenPanelDef = { cx: number; cy: number; cz: number; w: number; h: number; d: number };
@@ -369,12 +371,6 @@ export const GARDEN_PANEL_DEFS: readonly GardenPanelDef[] = Array.from({ length:
 }));
 
 // ── Utilitaires géométriques ──────────────────────────────────────────────────
-export function wallSeg(d: WallDef): [number, number, number, number] {
-  return d.axis === 'z'
-    ? [d.xc, d.z1, d.xc, d.z2]
-    : [d.x1, d.zc, d.x2, d.zc];
-}
-
 export function wallDefToBoxGeo(d: WallDef): THREE.BufferGeometry {
   const h     = d.h     ?? WALL_H;
   const yBase = d.yBase ?? 0;

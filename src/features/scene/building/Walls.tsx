@@ -6,7 +6,7 @@ import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSceneStore } from '../store/useSceneStore';
 import {
-  WALL_DEFS, PILLAR_DEFS, WALL_THICKNESS, GARDEN_PANEL_DEFS,
+  WALL_DEFS, DIAG_WALL_DEFS, PILLAR_DEFS, WALL_THICKNESS, GARDEN_PANEL_DEFS,
   PILLAR_KITE_NE, PILLAR_KITE_SW,
   WALL_H, DiagWall,
 } from '../wallData';
@@ -205,7 +205,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
               })}
               {/* Mur diagonal (partie pleine après la porte d'entrée) */}
-              <DiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />
+              {DIAG_WALL_DEFS.map((d, i) => <DiagBox key={i} {...d} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />)}
 
               {/* Panneaux bois occultants jardin */}
               {GARDEN_PANEL_DEFS.map((p, i) => (
