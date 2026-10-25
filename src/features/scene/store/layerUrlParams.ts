@@ -329,7 +329,11 @@ export function parseUrlLayerOverrides(): Partial<Record<keyof LayerState, boole
       search = window.location.hash.substring(window.location.hash.indexOf('?'));
     }
     const params = new URLSearchParams(search);
-    const overrides: Partial<Record<keyof LayerState, boolean>> = { ...getDebugPreset(params)?.layers };
+    const isHa = params.has('ha') || params.get('preset') === 'ha' || params.get('mode') === 'ha';
+    const overrides: Partial<Record<keyof LayerState, boolean>> = {
+      ...(isHa ? { character: false, extraCharacters: false, animals: false } : {}),
+      ...getDebugPreset(params)?.layers,
+    };
 
     // Normalisation en minuscules de toutes les clés d'URL présentes
     const lowerParams = new Map<string, string>();

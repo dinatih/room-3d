@@ -55,14 +55,17 @@ export function updateUrlCameraElevation(elevation: number) {
 /** ?skipIntro=1 skips the launch countdown and camera flight after loading. */
 export function parseUrlSkipIntro(): boolean {
   if (typeof window === 'undefined') return false;
-  const value = getUrlParams().get('skipIntro')?.trim().toLowerCase();
+  const params = getUrlParams();
+  if (params.has('ha') || params.get('preset') === 'ha' || params.get('mode') === 'ha') return true;
+  const value = params.get('skipIntro')?.trim().toLowerCase();
   return value === '' || value === '1' || value === 'true' || value === 'on';
 }
 
 /** cameraPos describes the viewing angle; target identifies the observed subject. */
 export function parseUrlCameraPos(): { type: 'angle'; posKey: string } | null {
   if (typeof window === 'undefined') return null;
-  const value = getUrlParams().get('cameraPos')?.trim().toLowerCase();
+  const params = getUrlParams();
+  const value = (params.get('cameraPos') ?? ((params.has('ha') || params.get('preset') === 'ha' || params.get('mode') === 'ha') ? 'north-west' : null))?.trim().toLowerCase();
   return value && CAMERA_POS_ALIASES[value] ? { type: 'angle', posKey: CAMERA_POS_ALIASES[value] } : null;
 }
 
@@ -189,6 +192,7 @@ export function parseUrlCameraMode(): CameraMode {
   }
 
   const raw = params.get('mode') ?? params.get('camera') ?? params.get('cam');
+  if (params.has('ha') || params.get('preset') === 'ha' || raw === 'ha') return 'iso';
   if (raw) {
     const m = raw.trim().toLowerCase();
     if (m === 'orbit' || m === 'iso') return m;

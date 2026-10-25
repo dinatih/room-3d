@@ -51,6 +51,7 @@ function parseUrlCharacterCount(): LaraCountMode {
       search = window.location.hash.substring(window.location.hash.indexOf('?'));
     }
     const params = new URLSearchParams(search);
+    if (params.has('ha') || params.get('preset') === 'ha' || params.get('mode') === 'ha') return 0;
     const raw = params.get('characterCount') ?? params.get('characters') ?? params.get('count') ?? params.get('npcNb') ?? params.get('npcs') ?? params.get('laraCount') ?? params.get('npcCount');
     if (raw !== null) {
       const lower = raw.trim().toLowerCase();
