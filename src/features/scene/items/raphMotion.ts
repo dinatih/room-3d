@@ -40,8 +40,8 @@ export function createRaphMotion(scene: Object3D) {
         const servo = joints.get(wheel.node.name === 'wheel_rl_joint' ? 'servo_l_joint' : 'servo_r_joint')!;
         servo.node.quaternion.copy(servo.rest).multiply(rotation.setFromAxisAngle(servo.axis, -steering));
       }
-      // ROS wheel axes become -X; positive forward travel needs a negative angle.
-      wheel.angle -= (forward * Math.cos(steering) + lateral * Math.sin(steering)) / wheel.node.userData.wheelRadius;
+      // Imported wheel axes point along +X: positive rotation rolls toward +Z.
+      wheel.angle += (forward * Math.cos(steering) + lateral * Math.sin(steering)) / wheel.node.userData.wheelRadius;
       wheel.node.quaternion.copy(wheel.rest).multiply(rotation.setFromAxisAngle(wheel.axis, wheel.angle));
     }
   };

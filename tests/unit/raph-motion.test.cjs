@@ -21,9 +21,23 @@ it('Raph : six articulations rigides, distance/rayon, direction arrière et remi
   const rest = new Map(joints.map(node => [node, node.quaternion.clone()]));
   const heights = new Map(wheels.map(node => [node, node.getWorldPosition(new THREE.Vector3()).y]));
   const animate = createRaphMotion(scene);
+  const contacts = wheels.map(wheel => {
+    const world = wheel.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, -wheel.userData.wheelRadius, 0));
+    return { wheel, world, local: wheel.worldToLocal(world.clone()) };
+  });
+  for (const direction of [1, -1]) {
+    animate('idle', 0, 0, 0);
+    animate('roll', 0.01, direction * 9.1 * 0.001, 0);
+    scene.updateMatrixWorld(true);
+    for (const { wheel, world, local } of contacts) {
+      const moved = wheel.localToWorld(local.clone()).sub(world);
+      assert(moved.z * direction < 0, 'le bas du pneu tourne à l’opposé du déplacement, en marche avant comme arrière');
+    }
+  }
+  animate('idle', 0, 0, 0);
   animate('roll', 1, 9.1 * Math.PI / 2, 0);
   for (const wheel of wheels) {
-    const expected = rest.get(wheel).clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...wheel.userData.jointAxis), -Math.PI / 2));
+    const expected = rest.get(wheel).clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...wheel.userData.jointAxis), Math.PI / 2));
     assert(wheel.quaternion.angleTo(expected) < 1e-7, 'roues synchronisées à la distance parcourue');
   }
   animate('roll', 2, 10, 0.2);
