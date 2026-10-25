@@ -10,7 +10,6 @@ export const NPC_WALK_ANIMATIONS = [
   'happy-walk-not-in-place',
   // 'unarmed-walk-forward',
   'walking',
-  'walking-slow',
   // 'wheelbarrow-walk-2',
   'miley-armature-walk-relaxed-loop',
   // 'miley-armature-08-angry-walk',

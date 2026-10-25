@@ -262,6 +262,7 @@ export function AppConsole({
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
       if (e.key === 'b' || e.key === 'B') {
+        setIsPaused(true);
         setCycleStep(prev => {
           const next = (prev + 1) % 3;
           setOpen(next === 1 || next === 2);
@@ -334,6 +335,7 @@ export function AppConsole({
   const pnjColor = activeChar?.color ?? '#6c757d';
 
   const handleToggle = () => {
+    setIsPaused(true);
     setOpen(prev => {
       const next = !prev;
       if (!next) {
@@ -351,6 +353,7 @@ export function AppConsole({
   const handleResizeCycle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!open) {
+      setIsPaused(true);
       setOpen(true);
       setIsMaximized(true);
       setCycleStep(1);
@@ -381,13 +384,13 @@ export function AppConsole({
         className={`${TOOLBAR_CLASS} mw-100 overflow-hidden ${open ? 'w-100 flex-column align-items-stretch' : ''}`}
         style={{
           pointerEvents: 'auto',
-          ...(open ? { height: isMaximized ? availableHeight : '140px', flexShrink: 0 } : {}),
+          ...(open ? { height: isMaximized ? availableHeight : '140px', minHeight: 0 } : {}),
         }}
         role="region"
         aria-label="Console applicative"
       >
         <div
-          className="d-flex flex-nowrap align-items-center justify-content-between gap-1 flex-shrink-1 overflow-hidden user-select-none"
+          className={`d-flex ${open ? 'flex-wrap' : 'flex-nowrap'} align-items-center justify-content-between gap-1 flex-shrink-0 user-select-none`}
           style={{ cursor: 'pointer', minWidth: 0 }}
           onClick={handleToggle}
           title={open ? 'Fermer la console (B)' : 'Ouvrir la console (B)'}
@@ -411,12 +414,12 @@ export function AppConsole({
             <span>Console</span>
           </button>
 
-          <div className="d-flex align-items-center gap-1 flex-wrap flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <div className="d-flex align-items-center gap-1 flex-wrap flex-shrink-1 mw-100" onClick={(e) => e.stopPropagation()}>
             {open && (
               <>
                 <select
                   aria-label="Filtrer par catégorie de log"
-                  className="form-select form-select-sm py-0 ps-1 pe-4 w-auto small"
+                  className="form-select form-select-sm py-0 ps-1 pe-4 w-auto mw-100 small"
                   value={categoryFilter}
                   onChange={(e) => {
                     setCategoryFilter(e.target.value as '' | AppLogCategory);
@@ -432,7 +435,7 @@ export function AppConsole({
 
                 <select
                   aria-label="Filtrer par action de log"
-                  className="form-select form-select-sm py-0 ps-1 pe-4 w-auto small"
+                  className="form-select form-select-sm py-0 ps-1 pe-4 w-auto mw-100 small"
                   value={actionFilter}
                   onChange={(e) => setActionFilter(e.target.value)}
                   title="Filtrer les logs par action"
