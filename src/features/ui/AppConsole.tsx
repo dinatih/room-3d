@@ -205,6 +205,10 @@ export function AppConsole({
 
   const [logs, setLogs] = useState<AppLogEntry[]>(() => [...APP_LOG_HISTORY]);
   const latestLog = logs[logs.length - 1];
+  const latestLogTag = latestLog?.tag.split('+').map(part => {
+    const character = findCharacter(part.trim());
+    return character ? `${character.emoji} ${character.name}` : part.trim();
+  }).join(' + ');
   const [open, setOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
@@ -389,8 +393,8 @@ export function AppConsole({
           title={open ? 'Fermer la console (B)' : 'Ouvrir la console (B)'}
         >
           {!open && latestLog && (
-            <span className="small font-monospace text-truncate" title={`[${latestLog.tag}] ${latestLog.message}`}>
-              [{latestLog.tag}] {latestLog.message}
+            <span className="small font-monospace text-truncate" title={`[${latestLogTag}] ${latestLog.message}`}>
+              [{latestLogTag}] {latestLog.message}
             </span>
           )}
           <button
