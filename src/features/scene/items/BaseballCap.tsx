@@ -9,15 +9,14 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-export function createBaseballCapMaterial(color: THREE.ColorRepresentation = 0xff0000) {
+export function createBaseballCapMaterial(color: THREE.ColorRepresentation = 0x991111) {
   return new THREE.MeshPhysicalMaterial({
     color,
-    emissive: color,
-    emissiveIntensity: 0.18,
-    roughness: 1,
+    roughness: 0.9,
     metalness: 0,
-    specularIntensity: 0,
-    toneMapped: false,
+    sheen: 1,
+    sheenColor: new THREE.Color(0xff5555),
+    sheenRoughness: 0.6,
   });
 }
 
