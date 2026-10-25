@@ -24,7 +24,6 @@ export interface InterXManifest {
   }>;
   duos: Array<{
     id: string;
-    seatedParticipant?: 'p1' | 'p2';
     actionCode: string;
     variation: string;
     source: {
@@ -107,7 +106,8 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
     category: action.category,
     path: duo.clips[participant].path,
     label: `Inter-X · ${action.label} (${duo.source.group}, ${duo.variation}, ${duo.source.take}, ${participant.toUpperCase()})`,
-    tags: participant === duo.seatedParticipant ? [...duo.tags, 'sitting', 'seated-front'] : duo.tags,
+    tags: participant === 'p1' && duo.tags.includes('seated-front')
+      ? [...duo.tags, 'sitting'] : duo.tags.filter(tag => tag !== 'seated-front'),
     duration: duo.clips[participant].durationSeconds,
     rootMotionSpace: 'world-meters' as const,
   }));
@@ -115,18 +115,17 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
 
 export const INTERX_DUO_ANIMATIONS: DuoAnimationDef[] = INTERX_MANIFEST.duos.map(duo => {
   const action = actionByCode.get(duo.actionCode)!;
-  const swapped = duo.seatedParticipant === 'p2';
   return {
     id: duo.id,
     label: `Inter-X · ${action.label} (${duo.source.group}, ${duo.variation}, ${duo.source.take})`,
     icon: action.icon,
     isCombat: action.isCombat,
-    animA: `${duo.id}-${swapped ? 'p2' : 'p1'}`,
-    animB: `${duo.id}-${swapped ? 'p1' : 'p2'}`,
+    animA: `${duo.id}-p1`,
+    animB: `${duo.id}-p2`,
     offsetB: [
-      duo.start_offset[0] * 100 * (swapped ? -1 : 1),
+      duo.start_offset[0] * 100,
       0,
-      duo.start_offset[2] * 100 * (swapped ? -1 : 1),
+      duo.start_offset[2] * 100,
     ],
     rotB: 0,
     duration: duo.clips.p1.durationSeconds,

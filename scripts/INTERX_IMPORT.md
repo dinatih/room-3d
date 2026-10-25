@@ -28,6 +28,11 @@ GLB disponibles ; il reste une estimation, notamment pour les actions longues.
 
 ## Placement et unités
 
+Pour les duos sur la jambe vérifiés (`seated-front`), le GLB P1 contient
+toujours la personne assise sur le siège, et P2 son partenaire. Les fichiers
+sont permutés à l'import ; `source.p1/p2` conserve les chemins NPZ correspondants
+pour reproduire cet ordre au réexport. Les offsets et mesures d'appui suivent cet ordre.
+
 P1 et P2 partagent les axes mondiaux des NPZ, en mètres, avec Y vertical.
 Les clips conservent les orientations `root_orient` et les déplacements
 `trans[t] - trans[0]`. Chaque duo stocke :

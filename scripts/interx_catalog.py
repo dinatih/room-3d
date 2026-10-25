@@ -11,6 +11,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCE = Path('/home/dinatih/3D Resources/animations/Inter-X_Dataset-motions/motions')
 MANIFEST = ROOT / 'src/features/scene/animations/interx_manifest.json'
+PUBLISHED = {entry['source']['recording']: entry for entry in json.loads(MANIFEST.read_text())['duos']} if MANIFEST.exists() else {}
 SOURCE_FPS = 120
 TARGET_FPS = 30
 CONVERSION = {
@@ -76,7 +77,7 @@ def read_pair(source, recording, include_hands=False):
         raise ValueError(f'Invalid recording: {recording}')
     result = []
     for person in ('P1', 'P2'):
-        path = source / recording / f'{person}.npz'
+        path = source / PUBLISHED.get(recording, {}).get('source', {}).get(person.lower(), f'{recording}/{person}.npz')
         with np.load(path, allow_pickle=False) as data:
             keys = ('pose_body', 'root_orient', 'trans', 'pose_lhand', 'pose_rhand') if include_hands else ('pose_body', 'root_orient', 'trans')
             arrays = {key: data[key].copy() for key in keys}
@@ -144,7 +145,7 @@ def entry_for(source, recording, model):
     count = len(pair[0]['trans'])
     samples = math.ceil(count / (SOURCE_FPS // TARGET_FPS))
     action_def = actions()[int(action[1:])]
-    source_files = {person.lower(): f'{recording}/{person}.npz' for person in ('P1', 'P2')}
+    source_files = {person: PUBLISHED.get(recording, {}).get('source', {}).get(person, f'{recording}/{person.upper()}.npz') for person in ('p1', 'p2')}
     return {
         'id': f'interx-{recording.lower()}', 'actionCode': action, 'variation': variation,
         'source': {'recording': recording, 'group': group, 'take': take, **source_files,
@@ -152,7 +153,7 @@ def entry_for(source, recording, model):
         'clips': {person: {'path': f'animations/npz/interx/{recording.lower()}-{person}.glb'} for person in ('p1', 'p2')},
         'rootMotion': {'mode': 'relative-to-first-frame', 'translationUnit': 'meters', 'upAxis': 'Y'},
         'start_offset': (pair[1]['trans'][0].astype(np.float64) - pair[0]['trans'][0].astype(np.float64)).tolist(),
-        'tags': ['inter-x', 'duo', *action_def['tags']],
+        'tags': PUBLISHED.get(recording, {}).get('tags', ['inter-x', 'duo', *action_def['tags']]),
         'expectedFrameCount': samples, 'expectedDurationSeconds': (samples - 1) / TARGET_FPS,
         'estimatedBytes': round(2 * (model['baseBytes'] + model['bytesPerFrame'] * samples)),
     }

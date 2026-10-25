@@ -43,8 +43,8 @@
       "p2": "4494e73ea9c0b51cf3c3e54362df3cd607c7f5fa13e8276fc3b9a06671a6ff9d"
     },
     "interx-g053t001a009r022": {
-      "p1": "3bae640bf6490aa6ab5450489a06f28cba6e0bf4f080c41512e3e9e8a847ea7e",
-      "p2": "b35603fb05955288521dce20fe7eddc5254d4e37983dd8df99ee61eacc35acfc"
+      "p1": "b35603fb05955288521dce20fe7eddc5254d4e37983dd8df99ee61eacc35acfc",
+      "p2": "3bae640bf6490aa6ab5450489a06f28cba6e0bf4f080c41512e3e9e8a847ea7e"
     },
     "interx-g053t002a010r000": {
       "p1": "b1a969fc4b6e7ea25d6940bbb435b722a3d8ed4d251345d508766f85512befc7",
@@ -203,8 +203,8 @@
       "p2": "509111022fe67a554b409b21c4f3ac8e1e229362df397254ba62d13fb83bab8c"
     },
     "interx-g030t004a009r010": {
-      "p1": "3fbcf587514118071f9aa25f242a6598c341ec66a5288f2a3563516282e28796",
-      "p2": "633ce57c24de469e32179affb7e22ed48cd83e8050904ceec4dd4bd11c1589c4"
+      "p1": "633ce57c24de469e32179affb7e22ed48cd83e8050904ceec4dd4bd11c1589c4",
+      "p2": "3fbcf587514118071f9aa25f242a6598c341ec66a5288f2a3563516282e28796"
     },
     "interx-g030t005a010r000": {
       "p1": "559e0e60a33a8aca1bf20622b0de24a79865b77c6af3dc71ae3843829a21efe7",
@@ -271,8 +271,8 @@
       "p2": "b92288c8b429e8554285e068960a6278382077d70e8eb8968ca4b68841e9ccbe"
     },
     "interx-g059t000a009r030": {
-      "p1": "c06fb10b53d6bcb93f171fd93aca72ef93b36087930437abddaac54399e53254",
-      "p2": "0bec3c2b9a31478572a5a5287b862c49fd055e339c76876871e200211b92653d"
+      "p1": "0bec3c2b9a31478572a5a5287b862c49fd055e339c76876871e200211b92653d",
+      "p2": "c06fb10b53d6bcb93f171fd93aca72ef93b36087930437abddaac54399e53254"
     },
     "interx-g059t001a010r000": {
       "p1": "2e7022ef32b4ba40909db76796381048c7d7f7ddccbb1bf830f94934b7894bc2",
@@ -483,13 +483,13 @@
     },
     "interx-g053t001a009r022": {
       "sourceInitialSolesMeters": [
-        -0.03525694392087697,
-        -0.03684669231830018
+        -0.03684669231830018,
+        -0.03525694392087697
       ],
       "sourceReferencePlaneMeters": -0.03684669231830018,
       "initialSoleHeightMeters": [
-        0.0015897483974232074,
-        0.0
+        0.0,
+        0.0015897483974232074
       ]
     },
     "interx-g053t002a010r000": {
@@ -923,13 +923,13 @@
     },
     "interx-g030t004a009r010": {
       "sourceInitialSolesMeters": [
-        -0.036613196429928996,
-        -0.01868541190440376
+        -0.01868541190440376,
+        -0.036613196429928996
       ],
       "sourceReferencePlaneMeters": -0.036613196429928996,
       "initialSoleHeightMeters": [
-        0.0,
-        0.017927784525525237
+        0.017927784525525237,
+        0.0
       ]
     },
     "interx-g030t005a010r000": {
@@ -1110,13 +1110,13 @@
     },
     "interx-g059t000a009r030": {
       "sourceInitialSolesMeters": [
-        -0.047612928232468876,
-        -0.07005427877976511
+        -0.07005427877976511,
+        -0.047612928232468876
       ],
       "sourceReferencePlaneMeters": -0.07005427877976511,
       "initialSoleHeightMeters": [
-        0.022441350547296235,
-        0.0
+        0.0,
+        0.022441350547296235
       ]
     },
     "interx-g059t001a010r000": {

@@ -500,12 +500,12 @@
         "recording": "G059T000A009R031",
         "group": "G059",
         "take": "R031",
-        "p1": "G059T000A009R031/P1.npz",
-        "p2": "G059T000A009R031/P2.npz",
+        "p1": "G059T000A009R031/P2.npz",
+        "p2": "G059T000A009R031/P1.npz",
         "frameCount": 1404,
         "sha256": {
-          "p1": "2d3664691367189432c0623cc4eaaf56f9ce1ef4d836a98e4612a7b7c2193ad3",
-          "p2": "43999bacb33dd17511407ef4fa52d069c2988171397d1ab3999e3d9754414319"
+          "p1": "43999bacb33dd17511407ef4fa52d069c2988171397d1ab3999e3d9754414319",
+          "p2": "2d3664691367189432c0623cc4eaaf56f9ce1ef4d836a98e4612a7b7c2193ad3"
         }
       },
       "clips": {
@@ -513,15 +513,15 @@
           "path": "animations/npz/interx/g059t000a009r031-p1.glb",
           "frameCount": 351,
           "durationSeconds": 11.666666666666666,
-          "sizeBytes": 363312,
-          "sha256": "b46d88cf97b5e06da9d9682fff516dd0fe88c2cfe2a45b86dc2574a9f1a51f07"
+          "sizeBytes": 363036,
+          "sha256": "f24bc62dc3dc6ba8a4321b0e44a7a2bf502dc742ea68ba2cbf855f5cf092f152"
         },
         "p2": {
           "path": "animations/npz/interx/g059t000a009r031-p2.glb",
           "frameCount": 351,
           "durationSeconds": 11.666666666666666,
-          "sizeBytes": 363036,
-          "sha256": "f24bc62dc3dc6ba8a4321b0e44a7a2bf502dc742ea68ba2cbf855f5cf092f152"
+          "sizeBytes": 363312,
+          "sha256": "b46d88cf97b5e06da9d9682fff516dd0fe88c2cfe2a45b86dc2574a9f1a51f07"
         }
       },
       "rootMotion": {
@@ -530,26 +530,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.6606707312166691,
-        -0.24846279621124268,
-        -0.4424223992973566
+        -0.6606707312166691,
+        0.24846279621124268,
+        0.4424223992973566
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.0383468954945525,
-          -0.06739474123277667
+          -0.06739474123277667,
+          -0.0383468954945525
         ],
         "sourceReferencePlaneMeters": -0.06739474123277667,
         "initialSoleHeightMeters": [
-          0.029047845738224165,
-          0.0
+          0,
+          0.029047845738224165
         ]
       },
       "handMotion": "full-axis-angle"
@@ -562,12 +563,12 @@
         "recording": "G059T000A009R032",
         "group": "G059",
         "take": "R032",
-        "p1": "G059T000A009R032/P1.npz",
-        "p2": "G059T000A009R032/P2.npz",
+        "p1": "G059T000A009R032/P2.npz",
+        "p2": "G059T000A009R032/P1.npz",
         "frameCount": 1144,
         "sha256": {
-          "p1": "2f486ba2bf9aa2d518ed88459828b92401300f5150bd837bde1e4c9f5d7226f6",
-          "p2": "d3156d72a3ee9f22a96cf2f892a386b7163a60b0b6be50520f5736d285d2a29d"
+          "p1": "d3156d72a3ee9f22a96cf2f892a386b7163a60b0b6be50520f5736d285d2a29d",
+          "p2": "2f486ba2bf9aa2d518ed88459828b92401300f5150bd837bde1e4c9f5d7226f6"
         }
       },
       "clips": {
@@ -576,14 +577,14 @@
           "frameCount": 286,
           "durationSeconds": 9.5,
           "sizeBytes": 308004,
-          "sha256": "38709437c2a296909bc530b7ff343c913ba47839d9281a36999c9ae6dc881201"
+          "sha256": "c25a33decaf7b1864f5e2322569c0022a643622969c85d70433f23113a7be531"
         },
         "p2": {
           "path": "animations/npz/interx/g059t000a009r032-p2.glb",
           "frameCount": 286,
           "durationSeconds": 9.5,
           "sizeBytes": 308004,
-          "sha256": "c25a33decaf7b1864f5e2322569c0022a643622969c85d70433f23113a7be531"
+          "sha256": "38709437c2a296909bc530b7ff343c913ba47839d9281a36999c9ae6dc881201"
         }
       },
       "rootMotion": {
@@ -592,26 +593,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.24825432151556015,
-        -0.24648994207382202,
-        -0.7549017369747162
+        -0.24825432151556015,
+        0.24648994207382202,
+        0.7549017369747162
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.0516967658198948,
-          -0.0638457899851409
+          -0.0638457899851409,
+          -0.0516967658198948
         ],
         "sourceReferencePlaneMeters": -0.0638457899851409,
         "initialSoleHeightMeters": [
-          0.012149024165246103,
-          0.0
+          0,
+          0.012149024165246103
         ]
       },
       "handMotion": "full-axis-angle"
@@ -624,12 +626,12 @@
         "recording": "G053T001A009R023",
         "group": "G053",
         "take": "R023",
-        "p1": "G053T001A009R023/P1.npz",
-        "p2": "G053T001A009R023/P2.npz",
+        "p1": "G053T001A009R023/P2.npz",
+        "p2": "G053T001A009R023/P1.npz",
         "frameCount": 1332,
         "sha256": {
-          "p1": "5ffab9a6e4a59779ca40c22db470f936d143120bce98940f60cfebb3be81fd74",
-          "p2": "48e0aec7caccda971bb2ca9cea2f4d23ecc56dcc717fddccc5452ab1605a9bc7"
+          "p1": "48e0aec7caccda971bb2ca9cea2f4d23ecc56dcc717fddccc5452ab1605a9bc7",
+          "p2": "5ffab9a6e4a59779ca40c22db470f936d143120bce98940f60cfebb3be81fd74"
         }
       },
       "clips": {
@@ -637,15 +639,15 @@
           "path": "animations/npz/interx/g053t001a009r023-p1.glb",
           "frameCount": 333,
           "durationSeconds": 11.066666666666666,
-          "sizeBytes": 348460,
-          "sha256": "72b887d526216b412a407a1db32171ffb5486ba7368c2feaff22c425d94fcc82"
+          "sizeBytes": 348184,
+          "sha256": "98f93c79fd02a39d385b6eba2f78a8ebeb63452af73ba27f2ff210b75b7ed00c"
         },
         "p2": {
           "path": "animations/npz/interx/g053t001a009r023-p2.glb",
           "frameCount": 333,
           "durationSeconds": 11.066666666666666,
-          "sizeBytes": 348184,
-          "sha256": "98f93c79fd02a39d385b6eba2f78a8ebeb63452af73ba27f2ff210b75b7ed00c"
+          "sizeBytes": 348460,
+          "sha256": "72b887d526216b412a407a1db32171ffb5486ba7368c2feaff22c425d94fcc82"
         }
       },
       "rootMotion": {
@@ -654,26 +656,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.8938562273979187,
-        -0.29919296503067017,
-        -0.8366000354290009
+        0.8938562273979187,
+        0.29919296503067017,
+        0.8366000354290009
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.04922829991439115,
-          -0.036278751082472915
+          -0.036278751082472915,
+          -0.04922829991439115
         ],
         "sourceReferencePlaneMeters": -0.04922829991439115,
         "initialSoleHeightMeters": [
-          0.0,
-          0.012949548831918234
+          0.012949548831918234,
+          0
         ]
       },
       "handMotion": "full-axis-angle"
@@ -786,7 +789,8 @@
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
@@ -796,7 +800,7 @@
         ],
         "sourceReferencePlaneMeters": -0.06280893503943652,
         "initialSoleHeightMeters": [
-          0.0,
+          0,
           0.022929984366749645
         ]
       },
@@ -848,7 +852,8 @@
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
@@ -858,7 +863,7 @@
         ],
         "sourceReferencePlaneMeters": -0.06459161259534851,
         "initialSoleHeightMeters": [
-          0.0,
+          0,
           0.026319498182694634
         ]
       },
@@ -910,7 +915,8 @@
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
@@ -920,7 +926,7 @@
         ],
         "sourceReferencePlaneMeters": -0.06507266864314709,
         "initialSoleHeightMeters": [
-          0.0,
+          0,
           0.035646696995087934
         ]
       },
@@ -934,12 +940,12 @@
         "recording": "G053T001A009R028",
         "group": "G053",
         "take": "R028",
-        "p1": "G053T001A009R028/P1.npz",
-        "p2": "G053T001A009R028/P2.npz",
+        "p1": "G053T001A009R028/P2.npz",
+        "p2": "G053T001A009R028/P1.npz",
         "frameCount": 536,
         "sha256": {
-          "p1": "ae872b6d64f636bcc5bc40acd6cf8f9b049e2222a0afacf231062526a775348f",
-          "p2": "97eaa3c2378b451930a7fefd84172c8c6ae54ef72d4e27ea8c2b2fb88662aed6"
+          "p1": "97eaa3c2378b451930a7fefd84172c8c6ae54ef72d4e27ea8c2b2fb88662aed6",
+          "p2": "ae872b6d64f636bcc5bc40acd6cf8f9b049e2222a0afacf231062526a775348f"
         }
       },
       "clips": {
@@ -947,15 +953,15 @@
           "path": "animations/npz/interx/g053t001a009r028-p1.glb",
           "frameCount": 134,
           "durationSeconds": 4.433333333333334,
-          "sizeBytes": 179312,
-          "sha256": "a4a4cfbced5f903bfe1f1c9480ed52368366d261b417f5948751a202449c98c3"
+          "sizeBytes": 179036,
+          "sha256": "7fda3449ca77f9ec712a18be91609b9742548a94b602d7e56b35b1486512eeae"
         },
         "p2": {
           "path": "animations/npz/interx/g053t001a009r028-p2.glb",
           "frameCount": 134,
           "durationSeconds": 4.433333333333334,
-          "sizeBytes": 179036,
-          "sha256": "7fda3449ca77f9ec712a18be91609b9742548a94b602d7e56b35b1486512eeae"
+          "sizeBytes": 179312,
+          "sha256": "a4a4cfbced5f903bfe1f1c9480ed52368366d261b417f5948751a202449c98c3"
         }
       },
       "rootMotion": {
@@ -964,26 +970,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.7430184707045555,
-        -0.2855336666107178,
-        -0.6305527091026306
+        0.7430184707045555,
+        0.2855336666107178,
+        0.6305527091026306
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.04137676960435255,
-          -0.03469230738119955
+          -0.03469230738119955,
+          -0.04137676960435255
         ],
         "sourceReferencePlaneMeters": -0.04137676960435255,
         "initialSoleHeightMeters": [
-          0.0,
-          0.006684462223152998
+          0.006684462223152998,
+          0
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1034,7 +1041,8 @@
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
@@ -1045,7 +1053,7 @@
         "sourceReferencePlaneMeters": -0.045335840118359005,
         "initialSoleHeightMeters": [
           0.004872488688139054,
-          0.0
+          0
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1058,12 +1066,12 @@
         "recording": "G049T002A009R013",
         "group": "G049",
         "take": "R013",
-        "p1": "G049T002A009R013/P1.npz",
-        "p2": "G049T002A009R013/P2.npz",
+        "p1": "G049T002A009R013/P2.npz",
+        "p2": "G049T002A009R013/P1.npz",
         "frameCount": 580,
         "sha256": {
-          "p1": "1ab13895fa23c5e2d83550b75984d06a8e4d969cbe204942613b9ee7721af116",
-          "p2": "f17fdade6a78eb8aec6b9b63f9723029566e65aaa1f3c3fad2e80a659a6620a6"
+          "p1": "f17fdade6a78eb8aec6b9b63f9723029566e65aaa1f3c3fad2e80a659a6620a6",
+          "p2": "1ab13895fa23c5e2d83550b75984d06a8e4d969cbe204942613b9ee7721af116"
         }
       },
       "clips": {
@@ -1072,14 +1080,14 @@
           "frameCount": 145,
           "durationSeconds": 4.8,
           "sizeBytes": 188628,
-          "sha256": "1297bc21e8011a90930440e14f3c799f812f1f50a891d1fa7cb15cd3a388283d"
+          "sha256": "fcf9bb158442c8b651641fe79eebf6c6b57a6a037470ff194845b491bd0376a0"
         },
         "p2": {
           "path": "animations/npz/interx/g049t002a009r013-p2.glb",
           "frameCount": 145,
           "durationSeconds": 4.8,
           "sizeBytes": 188628,
-          "sha256": "fcf9bb158442c8b651641fe79eebf6c6b57a6a037470ff194845b491bd0376a0"
+          "sha256": "1297bc21e8011a90930440e14f3c799f812f1f50a891d1fa7cb15cd3a388283d"
         }
       },
       "rootMotion": {
@@ -1088,26 +1096,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.550369493663311,
-        -0.340110719203949,
-        -0.4228919968008995
+        -0.550369493663311,
+        0.340110719203949,
+        0.4228919968008995
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.02934650396713301,
-          -0.06311100015214666
+          -0.06311100015214666,
+          -0.02934650396713301
         ],
         "sourceReferencePlaneMeters": -0.06311100015214666,
         "initialSoleHeightMeters": [
-          0.03376449618501365,
-          0.0
+          0,
+          0.03376449618501365
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1120,12 +1129,12 @@
         "recording": "G049T002A009R014",
         "group": "G049",
         "take": "R014",
-        "p1": "G049T002A009R014/P1.npz",
-        "p2": "G049T002A009R014/P2.npz",
+        "p1": "G049T002A009R014/P2.npz",
+        "p2": "G049T002A009R014/P1.npz",
         "frameCount": 1076,
         "sha256": {
-          "p1": "1c5b62d33bc5c9b93e304778cd7f175c3c5bb6e0a831ba8eeba3bcdbad71d521",
-          "p2": "bd5a0e74d2b3a93d26dd0c88a759aebff1dbb32bea9f61fc989c45c1962cf712"
+          "p1": "bd5a0e74d2b3a93d26dd0c88a759aebff1dbb32bea9f61fc989c45c1962cf712",
+          "p2": "1c5b62d33bc5c9b93e304778cd7f175c3c5bb6e0a831ba8eeba3bcdbad71d521"
         }
       },
       "clips": {
@@ -1133,15 +1142,15 @@
           "path": "animations/npz/interx/g049t002a009r014-p1.glb",
           "frameCount": 269,
           "durationSeconds": 8.933333333333334,
-          "sizeBytes": 293480,
-          "sha256": "691d278a1a16a6228abdae40ddecd957695174d485ef1a42f76795d46af8921b"
+          "sizeBytes": 294164,
+          "sha256": "bca2b07d355ab82db7afb9f787caa4857ac36cd696fb33329e0ab0bbf0c17b1e"
         },
         "p2": {
           "path": "animations/npz/interx/g049t002a009r014-p2.glb",
           "frameCount": 269,
           "durationSeconds": 8.933333333333334,
-          "sizeBytes": 294164,
-          "sha256": "bca2b07d355ab82db7afb9f787caa4857ac36cd696fb33329e0ab0bbf0c17b1e"
+          "sizeBytes": 293480,
+          "sha256": "691d278a1a16a6228abdae40ddecd957695174d485ef1a42f76795d46af8921b"
         }
       },
       "rootMotion": {
@@ -1150,26 +1159,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.34271737933158875,
-        -0.3658451437950134,
-        -0.5977929383516312
+        -0.34271737933158875,
+        0.3658451437950134,
+        0.5977929383516312
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.010374923735763986,
-          -0.06334509331726212
+          -0.06334509331726212,
+          -0.010374923735763986
         ],
         "sourceReferencePlaneMeters": -0.06334509331726212,
         "initialSoleHeightMeters": [
-          0.05297016958149814,
-          0.0
+          0,
+          0.05297016958149814
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1182,12 +1192,12 @@
         "recording": "G049T002A009R015",
         "group": "G049",
         "take": "R015",
-        "p1": "G049T002A009R015/P1.npz",
-        "p2": "G049T002A009R015/P2.npz",
+        "p1": "G049T002A009R015/P2.npz",
+        "p2": "G049T002A009R015/P1.npz",
         "frameCount": 936,
         "sha256": {
-          "p1": "0df8e3370df235ba1f2537af42daa47676091799b7a1a1e9fa598e83ffc22633",
-          "p2": "3ba547a8153565c62a88ceca250556a9c2b6861d97d69d85afaaf1ca092f5668"
+          "p1": "3ba547a8153565c62a88ceca250556a9c2b6861d97d69d85afaaf1ca092f5668",
+          "p2": "0df8e3370df235ba1f2537af42daa47676091799b7a1a1e9fa598e83ffc22633"
         }
       },
       "clips": {
@@ -1195,15 +1205,15 @@
           "path": "animations/npz/interx/g049t002a009r015-p1.glb",
           "frameCount": 234,
           "durationSeconds": 7.766666666666667,
-          "sizeBytes": 264192,
-          "sha256": "5c914958af259ac0f60b0345cd1caf5e963198628c5714ea6086b4affde7c01d"
+          "sizeBytes": 263780,
+          "sha256": "b5f217a304906aa3b112673313b96b08645c490ef03eb35c2aca91e140899bc1"
         },
         "p2": {
           "path": "animations/npz/interx/g049t002a009r015-p2.glb",
           "frameCount": 234,
           "durationSeconds": 7.766666666666667,
-          "sizeBytes": 263780,
-          "sha256": "b5f217a304906aa3b112673313b96b08645c490ef03eb35c2aca91e140899bc1"
+          "sizeBytes": 264192,
+          "sha256": "5c914958af259ac0f60b0345cd1caf5e963198628c5714ea6086b4affde7c01d"
         }
       },
       "rootMotion": {
@@ -1212,26 +1222,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.5811130851507187,
-        -0.3687366247177124,
-        -0.6978345215320587
+        -0.5811130851507187,
+        0.3687366247177124,
+        0.6978345215320587
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.021254337421802383,
-          -0.06017318281812667
+          -0.06017318281812667,
+          -0.021254337421802383
         ],
         "sourceReferencePlaneMeters": -0.06017318281812667,
         "initialSoleHeightMeters": [
-          0.038918845396324286,
-          0.0
+          0,
+          0.038918845396324286
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1244,12 +1255,12 @@
         "recording": "G049T002A009R016",
         "group": "G049",
         "take": "R016",
-        "p1": "G049T002A009R016/P1.npz",
-        "p2": "G049T002A009R016/P2.npz",
+        "p1": "G049T002A009R016/P2.npz",
+        "p2": "G049T002A009R016/P1.npz",
         "frameCount": 892,
         "sha256": {
-          "p1": "c1a4e391151e4d693d51f2fa5b5d79664692da76b23692e3b3116b04da6c734d",
-          "p2": "2a469ccf6e7f3537e86a86043f9532066fc289efa00e36f48d6b0c4c00c1b10f"
+          "p1": "2a469ccf6e7f3537e86a86043f9532066fc289efa00e36f48d6b0c4c00c1b10f",
+          "p2": "c1a4e391151e4d693d51f2fa5b5d79664692da76b23692e3b3116b04da6c734d"
         }
       },
       "clips": {
@@ -1257,15 +1268,15 @@
           "path": "animations/npz/interx/g049t002a009r016-p1.glb",
           "frameCount": 223,
           "durationSeconds": 7.4,
-          "sizeBytes": 254420,
-          "sha256": "3a93aa703e994ec29e9d1174a917765b41bdda711793d4eb110094f4fd3d552b"
+          "sizeBytes": 254284,
+          "sha256": "7389bb2da65ea08177ef0a7f7e82d3644c1553ba473fc7f2fcec997659d5e567"
         },
         "p2": {
           "path": "animations/npz/interx/g049t002a009r016-p2.glb",
           "frameCount": 223,
           "durationSeconds": 7.4,
-          "sizeBytes": 254284,
-          "sha256": "7389bb2da65ea08177ef0a7f7e82d3644c1553ba473fc7f2fcec997659d5e567"
+          "sizeBytes": 254420,
+          "sha256": "3a93aa703e994ec29e9d1174a917765b41bdda711793d4eb110094f4fd3d552b"
         }
       },
       "rootMotion": {
@@ -1274,26 +1285,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.12482139468193054,
-        -0.3631547689437866,
-        -0.7478734105825424
+        -0.12482139468193054,
+        0.3631547689437866,
+        0.7478734105825424
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.016712082487144952,
-          -0.061198382071893764
+          -0.061198382071893764,
+          -0.016712082487144952
         ],
         "sourceReferencePlaneMeters": -0.061198382071893764,
         "initialSoleHeightMeters": [
-          0.04448629958474881,
-          0.0
+          0,
+          0.04448629958474881
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1344,7 +1356,8 @@
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
@@ -1355,7 +1368,7 @@
         "sourceReferencePlaneMeters": -0.011418194287961425,
         "initialSoleHeightMeters": [
           0.009419127079541179,
-          0.0
+          0
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1368,12 +1381,12 @@
         "recording": "G030T004A009R012",
         "group": "G030",
         "take": "R012",
-        "p1": "G030T004A009R012/P1.npz",
-        "p2": "G030T004A009R012/P2.npz",
+        "p1": "G030T004A009R012/P2.npz",
+        "p2": "G030T004A009R012/P1.npz",
         "frameCount": 996,
         "sha256": {
-          "p1": "469a8804799ace3a71ca191aa6aaee0ed24cf5a3cd9f0662acd61ded910f98ad",
-          "p2": "4531d2a6fa291e8cc912549363547513a98c6de85874e9ef7245a8a3e6b95825"
+          "p1": "4531d2a6fa291e8cc912549363547513a98c6de85874e9ef7245a8a3e6b95825",
+          "p2": "469a8804799ace3a71ca191aa6aaee0ed24cf5a3cd9f0662acd61ded910f98ad"
         }
       },
       "clips": {
@@ -1381,15 +1394,15 @@
           "path": "animations/npz/interx/g030t004a009r012-p1.glb",
           "frameCount": 249,
           "durationSeconds": 8.266666666666667,
-          "sizeBytes": 277056,
-          "sha256": "29edbf0e6681f8c8d1c887175e9f6211d74b56822266857a3781543ec3dcbde2"
+          "sizeBytes": 276920,
+          "sha256": "a3501313a69dbde7799da08bbf7467448953d2025108057164f79734684553fa"
         },
         "p2": {
           "path": "animations/npz/interx/g030t004a009r012-p2.glb",
           "frameCount": 249,
           "durationSeconds": 8.266666666666667,
-          "sizeBytes": 276920,
-          "sha256": "a3501313a69dbde7799da08bbf7467448953d2025108057164f79734684553fa"
+          "sizeBytes": 277056,
+          "sha256": "29edbf0e6681f8c8d1c887175e9f6211d74b56822266857a3781543ec3dcbde2"
         }
       },
       "rootMotion": {
@@ -1398,26 +1411,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.5614274740219116,
-        -0.3083733320236206,
-        -0.6554717123508453
+        0.5614274740219116,
+        0.3083733320236206,
+        0.6554717123508453
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          0.00306832402071211,
-          -0.010802144969312533
+          -0.010802144969312533,
+          0.00306832402071211
         ],
         "sourceReferencePlaneMeters": -0.010802144969312533,
         "initialSoleHeightMeters": [
-          0.013870468990024643,
-          0.0
+          0,
+          0.013870468990024643
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1468,7 +1482,8 @@
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
@@ -1478,7 +1493,7 @@
         ],
         "sourceReferencePlaneMeters": -0.0032870901504331584,
         "initialSoleHeightMeters": [
-          0.0,
+          0,
           0.0015927395042301118
         ]
       },
@@ -1492,12 +1507,12 @@
         "recording": "G030T004A009R014",
         "group": "G030",
         "take": "R014",
-        "p1": "G030T004A009R014/P1.npz",
-        "p2": "G030T004A009R014/P2.npz",
+        "p1": "G030T004A009R014/P2.npz",
+        "p2": "G030T004A009R014/P1.npz",
         "frameCount": 708,
         "sha256": {
-          "p1": "6baf59310a18e03701de4aad45399e7b75535daad48257be2eb5a5ce4ac98238",
-          "p2": "4dcc8f7c64c1c628c0d610d4134d93d15b2d500cafe2402d38bb8a50a998ed68"
+          "p1": "4dcc8f7c64c1c628c0d610d4134d93d15b2d500cafe2402d38bb8a50a998ed68",
+          "p2": "6baf59310a18e03701de4aad45399e7b75535daad48257be2eb5a5ce4ac98238"
         }
       },
       "clips": {
@@ -1505,15 +1520,15 @@
           "path": "animations/npz/interx/g030t004a009r014-p1.glb",
           "frameCount": 177,
           "durationSeconds": 5.866666666666666,
-          "sizeBytes": 215544,
-          "sha256": "08281ae0182edaa9da4432529c96b4eeabbedb0f6234241d110a02baf8f3bc6c"
+          "sizeBytes": 215408,
+          "sha256": "14623eda2d5e99409eaa2d4c4e830b8f792a3bca56774328798dc869cf212277"
         },
         "p2": {
           "path": "animations/npz/interx/g030t004a009r014-p2.glb",
           "frameCount": 177,
           "durationSeconds": 5.866666666666666,
-          "sizeBytes": 215408,
-          "sha256": "14623eda2d5e99409eaa2d4c4e830b8f792a3bca56774328798dc869cf212277"
+          "sizeBytes": 215544,
+          "sha256": "08281ae0182edaa9da4432529c96b4eeabbedb0f6234241d110a02baf8f3bc6c"
         }
       },
       "rootMotion": {
@@ -1522,26 +1537,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.7792498469352722,
-        -0.3162214756011963,
-        -0.36956099793314934
+        0.7792498469352722,
+        0.3162214756011963,
+        0.36956099793314934
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.02003178099845937,
-          -0.01492324461987904
+          -0.01492324461987904,
+          -0.02003178099845937
         ],
         "sourceReferencePlaneMeters": -0.02003178099845937,
         "initialSoleHeightMeters": [
-          0.0,
-          0.005108536378580331
+          0.005108536378580331,
+          0
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1592,7 +1608,8 @@
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
@@ -1602,7 +1619,7 @@
         ],
         "sourceReferencePlaneMeters": -0.061207720784255404,
         "initialSoleHeightMeters": [
-          0.0,
+          0,
           0.03681875753226027
         ]
       },
@@ -1616,12 +1633,12 @@
         "recording": "G004T005A009R025",
         "group": "G004",
         "take": "R025",
-        "p1": "G004T005A009R025/P1.npz",
-        "p2": "G004T005A009R025/P2.npz",
+        "p1": "G004T005A009R025/P2.npz",
+        "p2": "G004T005A009R025/P1.npz",
         "frameCount": 984,
         "sha256": {
-          "p1": "185eac44bbaee1e77f29964460dbfdd7ac0b0c7ac3879a23d68112b152272264",
-          "p2": "cbefba3df07f5953b748860c9d4039f54309320e9274352f271d375cb3a34243"
+          "p1": "cbefba3df07f5953b748860c9d4039f54309320e9274352f271d375cb3a34243",
+          "p2": "185eac44bbaee1e77f29964460dbfdd7ac0b0c7ac3879a23d68112b152272264"
         }
       },
       "clips": {
@@ -1629,15 +1646,15 @@
           "path": "animations/npz/interx/g004t005a009r025-p1.glb",
           "frameCount": 246,
           "durationSeconds": 8.166666666666666,
-          "sizeBytes": 274372,
-          "sha256": "cc2e15d4f277d6ae2d6cba6172e69731fcabbfbda6e8d4b0bc84bd97949d0339"
+          "sizeBytes": 274512,
+          "sha256": "d5503afdd9705a786ad03f77a78f1a911d7ed43217a869270a49fb43ab3e7469"
         },
         "p2": {
           "path": "animations/npz/interx/g004t005a009r025-p2.glb",
           "frameCount": 246,
           "durationSeconds": 8.166666666666666,
-          "sizeBytes": 274512,
-          "sha256": "d5503afdd9705a786ad03f77a78f1a911d7ed43217a869270a49fb43ab3e7469"
+          "sizeBytes": 274372,
+          "sha256": "cc2e15d4f277d6ae2d6cba6172e69731fcabbfbda6e8d4b0bc84bd97949d0339"
         }
       },
       "rootMotion": {
@@ -1646,26 +1663,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -1.0637730360031128,
-        -0.34140628576278687,
-        -0.001129448413848877
+        1.0637730360031128,
+        0.34140628576278687,
+        0.001129448413848877
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.07651188669711106,
-          -0.04257856785908587
+          -0.04257856785908587,
+          -0.07651188669711106
         ],
         "sourceReferencePlaneMeters": -0.07651188669711106,
         "initialSoleHeightMeters": [
-          0.0,
-          0.033933318838025195
+          0.033933318838025195,
+          0
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1678,12 +1696,12 @@
         "recording": "G004T005A009R026",
         "group": "G004",
         "take": "R026",
-        "p1": "G004T005A009R026/P1.npz",
-        "p2": "G004T005A009R026/P2.npz",
+        "p1": "G004T005A009R026/P2.npz",
+        "p2": "G004T005A009R026/P1.npz",
         "frameCount": 840,
         "sha256": {
-          "p1": "47ee3dc675a18900502e63f0747b49cf036eb57780fb9281ee48c58047336d3c",
-          "p2": "bf45b8e8df7ac05d1550e852feb3e06a37304157cbf2bdae263bb0419c19c973"
+          "p1": "bf45b8e8df7ac05d1550e852feb3e06a37304157cbf2bdae263bb0419c19c973",
+          "p2": "47ee3dc675a18900502e63f0747b49cf036eb57780fb9281ee48c58047336d3c"
         }
       },
       "clips": {
@@ -1691,15 +1709,15 @@
           "path": "animations/npz/interx/g004t005a009r026-p1.glb",
           "frameCount": 210,
           "durationSeconds": 6.966666666666667,
-          "sizeBytes": 243688,
-          "sha256": "7e58a40532440bd87e3686bad4a0c33bf851ccc931bae1897a886f8aa554e6e2"
+          "sizeBytes": 243416,
+          "sha256": "bb628db692047192776ec401dd0348f94944a27f432823b4a29662a7cedc3fab"
         },
         "p2": {
           "path": "animations/npz/interx/g004t005a009r026-p2.glb",
           "frameCount": 210,
           "durationSeconds": 6.966666666666667,
-          "sizeBytes": 243416,
-          "sha256": "bb628db692047192776ec401dd0348f94944a27f432823b4a29662a7cedc3fab"
+          "sizeBytes": 243688,
+          "sha256": "7e58a40532440bd87e3686bad4a0c33bf851ccc931bae1897a886f8aa554e6e2"
         }
       },
       "rootMotion": {
@@ -1708,26 +1726,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.004415065050125122,
-        -0.33890247344970703,
-        -1.5797708630561829
+        -0.004415065050125122,
+        0.33890247344970703,
+        1.5797708630561829
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.0632950991919996,
-          -0.05160798882116158
+          -0.05160798882116158,
+          -0.0632950991919996
         ],
         "sourceReferencePlaneMeters": -0.0632950991919996,
         "initialSoleHeightMeters": [
-          0.0,
-          0.011687110370838028
+          0.011687110370838028,
+          0
         ]
       },
       "handMotion": "full-axis-angle"
@@ -1740,12 +1759,12 @@
         "recording": "G004T005A009R027",
         "group": "G004",
         "take": "R027",
-        "p1": "G004T005A009R027/P1.npz",
-        "p2": "G004T005A009R027/P2.npz",
+        "p1": "G004T005A009R027/P2.npz",
+        "p2": "G004T005A009R027/P1.npz",
         "frameCount": 860,
         "sha256": {
-          "p1": "1b2fca695a1f993d76597d1f302213edf46e01b7ca732b1be5eddb1fd3e7ca89",
-          "p2": "be6dcc51bc8d43c0981ab4d5190a01c2b2be8d227318d2f1df414007e30d0b09"
+          "p1": "be6dcc51bc8d43c0981ab4d5190a01c2b2be8d227318d2f1df414007e30d0b09",
+          "p2": "1b2fca695a1f993d76597d1f302213edf46e01b7ca732b1be5eddb1fd3e7ca89"
         }
       },
       "clips": {
@@ -1753,15 +1772,15 @@
           "path": "animations/npz/interx/g004t005a009r027-p1.glb",
           "frameCount": 215,
           "durationSeconds": 7.133333333333334,
-          "sizeBytes": 247936,
-          "sha256": "d8bde34207fa90e83fb17c77dcf563dfe609104343f2dcfb62d6a14088f334f6"
+          "sizeBytes": 247796,
+          "sha256": "de98cf1208ede718bb52451dd434d8af229e523ea80014b46f45c20015b34601"
         },
         "p2": {
           "path": "animations/npz/interx/g004t005a009r027-p2.glb",
           "frameCount": 215,
           "durationSeconds": 7.133333333333334,
-          "sizeBytes": 247796,
-          "sha256": "de98cf1208ede718bb52451dd434d8af229e523ea80014b46f45c20015b34601"
+          "sizeBytes": 247936,
+          "sha256": "d8bde34207fa90e83fb17c77dcf563dfe609104343f2dcfb62d6a14088f334f6"
         }
       },
       "rootMotion": {
@@ -1770,26 +1789,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -1.292839914560318,
-        -0.3099784851074219,
-        -0.8449082970619202
+        1.292839914560318,
+        0.3099784851074219,
+        0.8449082970619202
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.09100484529896269,
-          -0.05076999202517418
+          -0.05076999202517418,
+          -0.09100484529896269
         ],
         "sourceReferencePlaneMeters": -0.09100484529896269,
         "initialSoleHeightMeters": [
-          0.0,
-          0.04023485327378851
+          0.04023485327378851,
+          0
         ]
       },
       "handMotion": "full-axis-angle"

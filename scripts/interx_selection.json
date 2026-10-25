@@ -2269,12 +2269,12 @@
         "recording": "G059T000A009R030",
         "group": "G059",
         "take": "R030",
-        "p1": "G059T000A009R030/P1.npz",
-        "p2": "G059T000A009R030/P2.npz",
+        "p1": "G059T000A009R030/P2.npz",
+        "p2": "G059T000A009R030/P1.npz",
         "frameCount": 756,
         "sha256": {
-          "p1": "c06fb10b53d6bcb93f171fd93aca72ef93b36087930437abddaac54399e53254",
-          "p2": "0bec3c2b9a31478572a5a5287b862c49fd055e339c76876871e200211b92653d"
+          "p1": "0bec3c2b9a31478572a5a5287b862c49fd055e339c76876871e200211b92653d",
+          "p2": "c06fb10b53d6bcb93f171fd93aca72ef93b36087930437abddaac54399e53254"
         }
       },
       "clips": {
@@ -2291,15 +2291,16 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.5363792385905981,
-        -0.2409130334854126,
-        -0.4045958463102579
+        -0.5363792385905981,
+        0.2409130334854126,
+        0.4045958463102579
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "expectedFrameCount": 189,
       "expectedDurationSeconds": 6.266666666666667,
@@ -2401,12 +2402,12 @@
         "recording": "G030T004A009R010",
         "group": "G030",
         "take": "R010",
-        "p1": "G030T004A009R010/P1.npz",
-        "p2": "G030T004A009R010/P2.npz",
+        "p1": "G030T004A009R010/P2.npz",
+        "p2": "G030T004A009R010/P1.npz",
         "frameCount": 820,
         "sha256": {
-          "p1": "3fbcf587514118071f9aa25f242a6598c341ec66a5288f2a3563516282e28796",
-          "p2": "633ce57c24de469e32179affb7e22ed48cd83e8050904ceec4dd4bd11c1589c4"
+          "p1": "633ce57c24de469e32179affb7e22ed48cd83e8050904ceec4dd4bd11c1589c4",
+          "p2": "3fbcf587514118071f9aa25f242a6598c341ec66a5288f2a3563516282e28796"
         }
       },
       "clips": {
@@ -2423,15 +2424,16 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -1.4557820297777653,
-        -0.2541952133178711,
-        -0.49133190512657166
+        1.4557820297777653,
+        0.2541952133178711,
+        0.49133190512657166
       ],
       "tags": [
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "expectedFrameCount": 205,
       "expectedDurationSeconds": 6.8,
@@ -2475,7 +2477,8 @@
         "inter-x",
         "duo",
         "sit-on-leg",
-        "social"
+        "social",
+        "seated-front"
       ],
       "expectedFrameCount": 210,
       "expectedDurationSeconds": 6.966666666666667,

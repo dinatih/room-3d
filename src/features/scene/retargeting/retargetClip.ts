@@ -752,7 +752,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
   }
 
   const result = new THREE.AnimationClip(`${workingClip.name}_retargeted`, workingClip.duration, tracks);
-  if (INTERX_MANIFEST.duos.some(duo => duo.seatedParticipant && ['p1', 'p2'].some(person => rawClip.name === `${duo.id}-${person}`))) {
+  if (INTERX_MANIFEST.duos.some(duo => duo.tags.includes('seated-front') && ['p1', 'p2'].some(person => rawClip.name === `${duo.id}-${person}`))) {
     const hips = targetInstance.getObjectByName(resolveTargetBoneName(targetInstance, 'Hips')!)!;
     const toes = ['Left', 'Right'].map(side => targetInstance.getObjectByName(resolveTargetBoneName(targetInstance, `${side}ToeBase`)!)!);
     const saved: Array<{ node: THREE.Object3D; position: THREE.Vector3; quaternion: THREE.Quaternion }> = [];

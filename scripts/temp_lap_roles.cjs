@@ -13,14 +13,15 @@ const { captureAnimationRig, restoreAnimationRig } = require('../src/features/sc
  const loader = new GLTFLoader(); loader.setDRACOLoader({preload(){}});
  loader.register(() => ({name:'SkeletonOnly',loadMesh:()=>Promise.resolve(new THREE.Group())}));
  const read = async path => { const b = fs.readFileSync('public/'+path); return loader.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),''); };
- for (const entry of manifest.duos.filter(duo => duo.seatedParticipant)) {
+ for (const entry of manifest.duos.filter(duo => duo.tags.includes('seated-front'))) {
   const duo = INTERX_DUO_ANIMATIONS.find(duo => duo.id === entry.id);
-  assert.equal(duo.animA, `${entry.id}-${entry.seatedParticipant}`);
-  assert.equal(duo.animB, `${entry.id}-${entry.seatedParticipant === 'p2' ? 'p1' : 'p2'}`);
-  const sign = entry.seatedParticipant === 'p2' ? -100 : 100;
-  assert.equal(duo.offsetB[0], entry.start_offset[0] * sign);
-  assert.equal(duo.offsetB[2], entry.start_offset[2] * sign);
+  assert.equal(duo.animA, `${entry.id}-p1`);
+  assert.equal(duo.animB, `${entry.id}-p2`);
+  assert.equal(duo.offsetB[0], entry.start_offset[0] * 100);
+  assert.equal(duo.offsetB[2], entry.start_offset[2] * 100);
   for (const person of ['p1','p2']) {
+  assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync('public/' + entry.clips[person].path)).digest('hex'), entry.clips[person].sha256);
+  assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync('/home/dinatih/3D Resources/animations/Inter-X_Dataset-motions/motions/' + entry.source[person])).digest('hex'), entry.source.sha256[person]);
   const source = await read(entry.clips[person].path);
   const target = (await read('characters/lara/lara_native.glb')).scene;
   target.scale.setScalar(100); target.updateMatrixWorld(true);

@@ -13,7 +13,7 @@ it('le tirage seated-front sélectionne le participant assis vérifié et lance 
       for (const person of ['p1', 'p2']) {
         const clip = interx.INTERX_ANIMATION_DEFINITIONS.find(clip => clip.id === `${duo.id}-${person}`);
         const index = pool.findIndex(candidate => candidate.id === clip.id);
-        assert.equal(index >= 0, person === duo.seatedParticipant, clip.id);
+        assert.equal(index >= 0, person === 'p1' && duo.tags.includes('seated-front'), clip.id);
         if (index < 0) continue;
         Math.random = () => (index + 0.5) / pool.length;
         const selected = resolveSlotAnimation({ animationsRandom: 'seated-front' });
