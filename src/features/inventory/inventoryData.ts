@@ -198,7 +198,8 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'fridge',           name: 'LAGAN Réfrigérateur 113 l',      brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 60,   d: 63,   h: 172  }, notes: 'Blanc, comp. congélateur', glbPath: 'items/lagan réfrigérateur av comp congélateur indépendant-blanc 97-16 l/LAGAN Réfrigérateur av comp congélateur indépendant-blanc 97-16 l.glb', photos: ['items/fridge/fridge-1.jpg', 'items/fridge/fridge-2.jpg', 'items/fridge/fridge-3.jpg', 'items/lagan réfrigérateur av comp congélateur indépendant-blanc 97-16 l/LAGAN Réfrigérateur av comp congélateur indépendant-blanc 97-16 l_3d_preview.png'] },
   {
     id: 'ninja-sp101', name: 'Mini four Ninja Foodi 8-en-1 SP101EU', brand: 'Ninja', category: 'kitchen', qty: 1,
-    dims: { w: 51, d: 37, h: 19.5 }, notes: 'Inox brossé, porte vitrée et rangement vertical.',
+    dims: { w: 52.41, d: 37.69, h: 19.08 }, notes: 'Inox brossé, porte vitrée et rangement vertical.',
+    glbPath: 'items/ninja-sp101/ninja-sp101-animated.glb',
     url: 'https://www.sharkninja.fr/mini-four-ninja-foodi-8-en-1-avec-air-fry-pizza-et-gratin-sp101eu/SP101EU.html',
     price: '229,99',
     description: 'Four de comptoir à huit modes : Air Fry, rôtissage, cuisson au four, grill, déshydratation, toast, bagel et maintien au chaud. Préchauffage annoncé en 60 secondes. La technologie Crisp Control associe six résistances infrarouges à une ventilation variable. Peut accueillir une pizza de 33 cm, 1 kg de frites ou six tranches de pain. Se relève pour libérer le plan de travail. Écran numérique, minuterie, lumière intérieure, ramasse-miettes amovible et accès arrière pour le nettoyage. Livré avec une plaque à pâtisserie, un panier Air Fry, une grille et un guide de recettes. Garantie limitée de deux ans. Prix relevé sur SharkNinja France le 23/10/2026 : 229,99 €, dont 1,25 € d’éco-participation.',

@@ -10,6 +10,16 @@ const actions = load('src/features/scene/objectActionRegistry.ts', {
   '@features/inventory/inventoryData': { WIGS_ITEMS: [] },
 });
 const scene = {};
+
+it('Ninja : sortir la grille ouvre la porte ; fermer rentre la grille sans éteindre la lumière', () => {
+  const extended = actions.toggleObjectAction('ninja-rack', { 'ninja-light': true });
+  assert.equal(extended.ninja, true);
+  assert.equal(extended['ninja-rack'], true);
+  const closed = actions.toggleObjectAction('ninja', extended);
+  assert.equal(closed.ninja, false);
+  assert.equal(closed['ninja-rack'], false);
+  assert.equal(closed['ninja-light'], true);
+});
 const { useDoorOpen } = load('src/features/scene/items/useDoorOpen.ts', {
   '../utils/useFurnitureToggles': { useFurnitureToggles: () => scene },
 });

@@ -105,7 +105,7 @@ export function KallaxCuisine({ onSize, actionState, noDrona, isPreview = false 
 
       {/* Mini four Ninja SP101EU — dans la case basse du 2×2 spec */}
       <group position={[-8, PIZZA_Y, 0]} rotation-y={Math.PI} userData={{ animUnit: true }}>
-        <NinjaSP101 item={NOOP_ITEM} actionState={actionState} onSize={NOOP_SIZE} />
+        <NinjaSP101 item={NOOP_ITEM} actionState={actionState} onSize={NOOP_SIZE} isPreview={isPreview} />
       </group>
     </group>
   );

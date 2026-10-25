@@ -15,6 +15,7 @@ import { Tackan } from '../items/Tackan';
 import { Ikea36590066708 } from '../items/Ikea36590066708';
 import { Kolvatten00594176 } from '../items/Kolvatten00594176';
 import { useSceneStore } from '../store/useSceneStore';
+import { getObjectActionIds } from '../objectActions';
 
 import {
   ROOM_D,
@@ -47,9 +48,7 @@ export function KitchenEquipment() {
 
 // Pass 1 — Furniture (Structure & gros volumes)
 export function KitchenFurniture() {
-  const as = useFurnitureToggles([
-    'ninja',
-  ]);
+  const as = useFurnitureToggles([...getObjectActionIds('ninja-sp101')]);
 
   return (
     <MergedStaticGroup name="merged-kitchen-furniture">

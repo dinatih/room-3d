@@ -9,4 +9,4 @@
 - Vérification : import Blender réussi, 76 434 triangles, quatre textures de 2 048 × 2 048 pixels. Aperçu : `preview.png`.
 - Validation Khronos : aucune erreur ; trois avertissements sur les tangentes calculées au chargement, déjà absentes du modèle source.
 
-Ce fichier est un artefact indépendant ; aucun placement ni composant de l’appartement n’a été ajouté.
+L’original reste inchangé. La variante articulée utilisée par la scène et l’inventaire est `public/items/ninja-sp101/ninja-sp101-animated.glb`, générée par `blender -b -noaudio --python scripts/articulate_ninja_sp101.py` : porte à charnière basse (0,8 s), grille coulissante (0,8 s), ancrage de lampe intérieure. Les pièces existantes sont séparées par îlots complets, sans découpe de faces ; un petit diffuseur de lampe est ajouté.

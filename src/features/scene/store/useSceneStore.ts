@@ -246,6 +246,8 @@ const initialExtraStates: Record<string, boolean> = {
   'drona-ne-catchall2-slide': false,
   'fridge-crisper-toggle': false,
   ninja: false,
+  'ninja-rack': false,
+  'ninja-light': false,
   utdrag: false,
   'bin-toggle': false,
   wcLid: false,
@@ -881,7 +883,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
     } else if (resolved.type === 'extra') {
       set((state) => {
         const nextVal = targetState !== undefined ? targetState : !state.extraStates[resolved.name];
-        const nextExtra = { ...state.extraStates, [resolved.name]: nextVal };
+        const nextExtra = toggleObjectAction(resolved.name, state.extraStates, nextVal);
         cameraState.invalidate?.();
         return { extraStates: nextExtra };
       });
