@@ -16,8 +16,10 @@ const { captureAnimationRig, restoreAnimationRig } = require('../src/features/sc
  for (const entry of manifest.duos.filter(duo => duo.seatedParticipant)) {
   const duo = INTERX_DUO_ANIMATIONS.find(duo => duo.id === entry.id);
   assert.equal(duo.animA, `${entry.id}-${entry.seatedParticipant}`);
-  assert.equal(duo.offsetB[0], entry.start_offset[0] * -100);
-  assert.equal(duo.offsetB[2], entry.start_offset[2] * -100);
+  assert.equal(duo.animB, `${entry.id}-${entry.seatedParticipant === 'p2' ? 'p1' : 'p2'}`);
+  const sign = entry.seatedParticipant === 'p2' ? -100 : 100;
+  assert.equal(duo.offsetB[0], entry.start_offset[0] * sign);
+  assert.equal(duo.offsetB[2], entry.start_offset[2] * sign);
   for (const person of ['p1','p2']) {
   const source = await read(entry.clips[person].path);
   const target = (await read('characters/lara/lara_native.glb')).scene;
