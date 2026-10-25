@@ -55,8 +55,20 @@ export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone 
   }, [innerDepth, outerDepth, stopDepth, stopEnd]);
 
   const [leftJambGeo, rightJambGeo, headerGeo] = useMemo(() => {
-    const extrude = (shape: THREE.Shape, depth: number, side: number) => {
-      if (!twoTone) return new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
+    const extrude = (shape: THREE.Shape, depth: number, side: number, header = false) => {
+      const miter = (profile: THREE.Shape) => {
+        const geometry = new THREE.ExtrudeGeometry(profile, { depth, bevelEnabled: false });
+        const positions = geometry.getAttribute('position');
+        // Coupe à 45° : les lèvres et la butée se rejoignent sans trou ni chevauchement.
+        for (let i = 0; i < positions.count; i++) {
+          const y = positions.getY(i);
+          const t = positions.getZ(i) / depth;
+          positions.setZ(i, header ? -y + t * (depth + 2 * y) : t * (depth + y));
+        }
+        geometry.computeVertexNormals();
+        return geometry;
+      };
+      if (!twoTone) return miter(shape);
       // Coupe réelle du profil à mi-épaisseur pour une séparation nette des peintures.
       const points = shape.getPoints();
       const halves = [side, -side].map(sign => {
@@ -67,13 +79,13 @@ export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone 
           if (point.x * next.x < 0) clipped.push(new THREE.Vector2(0,
             point.y + (next.y - point.y) * -point.x / (next.x - point.x)));
         });
-        return new THREE.ExtrudeGeometry(new THREE.Shape(clipped), { depth, bevelEnabled: false });
+        return miter(new THREE.Shape(clipped));
       });
       const geometry = mergeGeometries(halves, true)!;
       halves.forEach(half => half.dispose());
       return geometry;
     };
-    return [extrude(leftFrameShape, H, 1), extrude(rightFrameShape, H, -1), extrude(leftFrameShape, W, 1)];
+    return [extrude(leftFrameShape, H, 1), extrude(rightFrameShape, H, -1), extrude(leftFrameShape, W, 1, true)];
   }, [leftFrameShape, rightFrameShape, W, twoTone]);
 
   const material = twoTone ? <>
