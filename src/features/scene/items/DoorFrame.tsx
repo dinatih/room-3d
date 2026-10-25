@@ -1,10 +1,11 @@
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 
 const H = 204; // Hauteur passage libre (cm)
 
-export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2 }: SceneItemProps & { width?: number; wallThickness?: number }) {
+export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone = false }: SceneItemProps & { width?: number; wallThickness?: number; twoTone?: boolean }) {
   const innerDepth = wallThickness / 2;
   const outerDepth = innerDepth + 1;
   useLayoutEffect(() => {
@@ -52,28 +53,32 @@ export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2 }: SceneI
     return shape;
   }, [innerDepth, outerDepth]);
 
-  const leftJambGeo = useMemo(() => {
-    return new THREE.ExtrudeGeometry(leftFrameShape, {
-      depth: H,
-      bevelEnabled: false,
-    });
-  }, [leftFrameShape]);
+  const [leftJambGeo, rightJambGeo, headerGeo] = useMemo(() => {
+    const extrude = (shape: THREE.Shape, depth: number, side: number) => {
+      if (!twoTone) return new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
+      // Coupe réelle du profil à mi-épaisseur pour une séparation nette des peintures.
+      const points = shape.getPoints();
+      const halves = [side, -side].map(sign => {
+        const clipped: THREE.Vector2[] = [];
+        points.forEach((point, index) => {
+          const next = points[(index + 1) % points.length];
+          if (point.x * sign >= 0) clipped.push(point);
+          if (point.x * next.x < 0) clipped.push(new THREE.Vector2(0,
+            point.y + (next.y - point.y) * -point.x / (next.x - point.x)));
+        });
+        return new THREE.ExtrudeGeometry(new THREE.Shape(clipped), { depth, bevelEnabled: false });
+      });
+      const geometry = mergeGeometries(halves, true)!;
+      halves.forEach(half => half.dispose());
+      return geometry;
+    };
+    return [extrude(leftFrameShape, H, 1), extrude(rightFrameShape, H, -1), extrude(leftFrameShape, W, 1)];
+  }, [leftFrameShape, rightFrameShape, W, twoTone]);
 
-  const rightJambGeo = useMemo(() => {
-    return new THREE.ExtrudeGeometry(rightFrameShape, {
-      depth: H,
-      bevelEnabled: false,
-    });
-  }, [rightFrameShape]);
-
-  const headerGeo = useMemo(() => {
-    return new THREE.ExtrudeGeometry(leftFrameShape, {
-      depth: W,
-      bevelEnabled: false,
-    });
-  }, [leftFrameShape, W]);
-
-  const material = <meshStandardMaterial color="#f5f4f0" roughness={0.4} envMapIntensity={0.5} />;
+  const material = twoTone ? <>
+    <meshStandardMaterial attach="material-0" color="#cc0000" roughness={0.4} envMapIntensity={0.5} />
+    <meshStandardMaterial attach="material-1" color="#f5f4f0" roughness={0.4} envMapIntensity={0.5} />
+  </> : <meshStandardMaterial color="#f5f4f0" roughness={0.4} envMapIntensity={0.5} />;
 
   return (
     <group position={[0, H / 2, 0]}>
@@ -116,5 +121,5 @@ export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2 }: SceneI
 }
 
 export function DoorEntryFrame(props: SceneItemProps) {
-  return <DoorFrame {...props} width={90} wallThickness={10} />;
+  return <DoorFrame {...props} width={90} wallThickness={10} twoTone />;
 }

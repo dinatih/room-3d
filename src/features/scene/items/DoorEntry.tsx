@@ -12,6 +12,8 @@ import type { SceneItemProps } from '@shared/types';
 import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
 import { useDoorImpulse } from './useDoorImpulse';
 import { useDoorSpring } from './useDoorSpring';
+import { DoorEntryFrame } from './DoorFrame';
+import { NOOP_SIZE } from '../sceneItem';
 
 export const ENTRY_W = 90;
 const W  = ENTRY_W;
@@ -19,38 +21,7 @@ const H  = 204;   // DOOR_H
 const T  = 4;     // épaisseur panneau
 const R  = 1.3;
 
-const FW = 3;     // largeur encadrement (chambranle)
-const WW = 10;    // épaisseur du panneau (profondeur Z)
-
-function useEntryFrameGeo() {
-  return useMemo(() => {
-    const redGeos: THREE.BufferGeometry[] = [];
-    const whtGeos: THREE.BufferGeometry[] = [];
-    const addBox = (geos: THREE.BufferGeometry[], w: number, h: number, d: number, x: number, y: number, z: number) => {
-      const geo = new THREE.BoxGeometry(w, h, d);
-      geo.translate(x, y, z);
-      geos.push(geo);
-    };
-
-    // Encadrement extérieur rouge (face -Z)
-    const zRed = -(WW / 2 + 0.5);
-    addBox(redGeos, FW, H, 1, -(W / 2 + FW / 2), H / 2, zRed);
-    addBox(redGeos, FW, H, 1,  (W / 2 + FW / 2), H / 2, zRed);
-    addBox(redGeos, W + FW * 2, FW, 1, 0, H + FW / 2, zRed);
-
-    // Encadrement intérieur blanc (face +Z)
-    const zWht = WW / 2 + 0.5;
-    addBox(whtGeos, FW, H, 1, -(W / 2 + FW / 2), H / 2, zWht);
-    addBox(whtGeos, FW, H, 1,  (W / 2 + FW / 2), H / 2, zWht);
-    addBox(whtGeos, W + FW * 2, FW, 1, 0, H + FW / 2, zWht);
-
-    const red = mergeGeometries(redGeos, false);
-    const wht = mergeGeometries(whtGeos, false);
-    redGeos.forEach(g => g.dispose());
-    whtGeos.forEach(g => g.dispose());
-    return { red, wht };
-  }, []);
-}
+const WW = 10;    // épaisseur du mur (profondeur Z)
 
 function useHandleGeo() {
   return useMemo(() => {
@@ -77,26 +48,23 @@ function useHandleGeo() {
   }, []);
 }
 
-const redFrameMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', roughness: 0.5 });
-const whiteFrameMaterial = new THREE.MeshStandardMaterial({ color: '#f5f5f0', roughness: 0.3 });
 const redPanelMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', roughness: 0.5, metalness: 0.1 });
 const metalHandleMaterial = new THREE.MeshStandardMaterial({ color: '#999999', metalness: 0.85, roughness: 0.15 });
 const knobMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', metalness: 0.3, roughness: 0.4 });
 const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.85, metalness: 0.05 });
 
-export function DoorEntry({ onSize, isPreview = false }: SceneItemProps) {
+export function DoorEntry({ onSize, isPreview = false, ...props }: SceneItemProps) {
   const navigationEnabled = useNavigationEnabled() && !isPreview;
   const doorRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
   const spring = useDoorSpring();
   const impulse = useDoorImpulse('entryDoor', DOOR_CONFIGS.entry.maxAngle);
 
-  const frames = useEntryFrameGeo();
   const handle = useHandleGeo();
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W + FW * 2, H + FW, WW));
-  }, []);
+    onSize(new THREE.Vector3(W + 5, H + 1, WW + 2));
+  }, [onSize]);
 
   useFrame((_, delta) => {
     const current = doorRef.current.rotation.y;
@@ -110,8 +78,7 @@ export function DoorEntry({ onSize, isPreview = false }: SceneItemProps) {
 
   return (
     <group position={[0, 0, 0]}>
-      <mesh geometry={frames.red} material={redFrameMaterial} castShadow />
-      <mesh geometry={frames.wht} material={whiteFrameMaterial} castShadow />
+      <DoorEntryFrame {...props} isPreview={isPreview} onSize={NOOP_SIZE} />
 
       <group ref={doorRef} position={[-W / 2, 0, 0]}>
         {/* Panneau rouge */}
