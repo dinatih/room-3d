@@ -14,7 +14,7 @@ interface CharacterBaseballCapProps {
   color?: number | string;
 }
 
-export function CharacterBaseballCap({ attachTo, color = 0xff0000 }: CharacterBaseballCapProps) {
+export function CharacterBaseballCap({ attachTo, color }: CharacterBaseballCapProps) {
   const { scene } = useGLTFClone('characters/accessories/baseball_cap.glb');
 
   const capGroup = useMemo(() => {
