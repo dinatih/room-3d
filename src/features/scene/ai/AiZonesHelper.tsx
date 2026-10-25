@@ -176,7 +176,7 @@ function AiZonesHelperContent() {
         return (
           <group key={`smart-${obj.id}`}>
             {approaches.map(point => (
-              <group key={`approach-${point.join(',')}`} position={[point[0], baseHeight + 0.4, point[2]]}>
+              <group key={`approach-${point.join(',')}`} position={[point[0], baseHeight + 0.4, point[2]]} renderOrder={99999}>
                 <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} raycast={() => {}}>
                   <ringGeometry args={[6, 9, 4]} />
                   <meshBasicMaterial color="#ffab00" transparent depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
@@ -262,6 +262,7 @@ function AiZonesHelperContent() {
               return (
                 <group
                   key={`slot-${obj.id}-${slot.slotId}`}
+                  renderOrder={99999}
                   position={[pos[0], baseHeight, pos[2]]}
                   userData={{
                     hoverAction: {
@@ -319,6 +320,7 @@ function AiZonesHelperContent() {
                     <ringGeometry args={[isHovered || isSelected ? 11 : 8, isHovered || isSelected ? 13 : 10, 32]} />
                     <meshBasicMaterial
                       color={isHovered ? '#00ffcc' : isSelected ? '#ffffff' : slotColor}
+                      transparent
                       depthTest={false}
                       depthWrite={false}
                     />
@@ -333,6 +335,7 @@ function AiZonesHelperContent() {
                   >
                     <meshBasicMaterial
                       color={isHovered ? '#00ffcc' : isSelected ? '#38bdf8' : '#ffffff'}
+                      transparent
                       depthTest={false}
                       depthWrite={false}
                       side={THREE.DoubleSide}
