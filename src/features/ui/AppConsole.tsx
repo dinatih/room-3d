@@ -204,6 +204,7 @@ export function AppConsole({
   const isIdle = useAppIdle();
 
   const [logs, setLogs] = useState<AppLogEntry[]>(() => [...APP_LOG_HISTORY]);
+  const latestLog = logs[logs.length - 1];
   const [open, setOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
@@ -367,12 +368,13 @@ export function AppConsole({
         right: dockRightOffset,
         left: open ? (isMobile ? 8 : 288) : 'auto',
         maxHeight: availableHeight,
+        maxWidth: `calc(100vw - ${dockRightOffset}px - 8px)`,
         zIndex: 100,
         pointerEvents: 'none',
       }}
     >
       <div
-        className={`${TOOLBAR_CLASS} ${open ? 'w-100 flex-column align-items-stretch overflow-hidden' : ''}`}
+        className={`${TOOLBAR_CLASS} mw-100 overflow-hidden ${open ? 'w-100 flex-column align-items-stretch' : ''}`}
         style={{
           pointerEvents: 'auto',
           ...(open ? { height: isMaximized ? availableHeight : '140px', flexShrink: 0 } : {}),
@@ -381,14 +383,14 @@ export function AppConsole({
         aria-label="Console applicative"
       >
         <div
-          className="d-flex flex-nowrap align-items-center justify-content-between gap-1 flex-shrink-0 user-select-none"
+          className="d-flex flex-nowrap align-items-center justify-content-between gap-1 flex-shrink-0 overflow-hidden user-select-none"
           style={{ cursor: 'pointer' }}
           onClick={handleToggle}
           title={open ? 'Fermer la console (B)' : 'Ouvrir la console (B)'}
         >
           <button
             type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${open ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+            className={`${TOOLBAR_BUTTON_CLASS} flex-shrink-0 ${open ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
             onClick={(e) => {
               e.stopPropagation();
               handleToggle();
@@ -399,6 +401,11 @@ export function AppConsole({
             <i className="bi bi-terminal" aria-hidden="true" />
             <span>Console</span>
           </button>
+          {!open && latestLog && (
+            <span className="small font-monospace text-truncate" title={`${formatTime(latestLog.timestamp)} [${latestLog.tag}] ${latestLog.message}`}>
+              {formatTime(latestLog.timestamp)} [{latestLog.tag}] {latestLog.message}
+            </span>
+          )}
 
           <div className="d-flex align-items-center gap-1 flex-wrap" onClick={(e) => e.stopPropagation()}>
             {open && (
