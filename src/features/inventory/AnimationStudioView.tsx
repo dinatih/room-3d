@@ -169,6 +169,8 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
     // Search remains editable; up/down browses its results without losing focus.
     if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && (!typing || element === searchRef.current)) {
       event.preventDefault(); event.stopPropagation();
+      // Virtualized rows unmount while scrolling; keep keyboard focus on the stable list.
+      if (listRef.current?.contains(element)) listRef.current.focus({ preventScroll: true });
       navigate(event.key === 'ArrowDown' ? 1 : -1);
       return;
     }
@@ -269,7 +271,7 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
             <button type="button" className="btn btn-link btn-sm p-0" disabled={!isFiltered} onClick={() => updateFilters(EMPTY_STUDIO_FILTERS)}>Réinitialiser</button>
           </div>
         </div>
-        <div ref={listRef} className="animation-studio__results overflow-auto flex-grow-1" role="listbox" aria-label="Animations filtrées"
+        <div ref={listRef} tabIndex={-1} className="animation-studio__results overflow-auto flex-grow-1" role="listbox" aria-label="Animations filtrées"
           onScroll={e => { const top = e.currentTarget.scrollTop; setListViewport(previous => ({ ...previous, top })); }}>
           {!results.length && <p className="p-3 small text-muted">Aucune animation ne correspond aux filtres.</p>}
           <div aria-hidden="true" style={{ height: firstRow * rowHeight }} />
