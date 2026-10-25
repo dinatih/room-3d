@@ -51,10 +51,8 @@ export const SEG_CONCRETE_WALLS: Seg[] = [
 // ── 2. CLOISONS & DOUBLAGES PLACO (Compartimentage intérieur) ────────────────
 export const SEG_PARTITIONS: Seg[] = [
   // ── Doublage placo séjour Mur Ouest (corner-nw -> niche-beam) ─────────────
-  // Face intérieure séjour (s'arrête à la niche)
-  [pEast('corner-nw'), pSouth('corner-nw'), pEast('niche-beam'), pZ('niche-beam')],
-  // Retour placo à la niche
-  [pEast('niche-beam'), pZ('niche-beam'), pWest('niche-beam'), pZ('niche-beam')],
+  // Face intérieure séjour : raccord sur la face du pilier, comme le mur 3D.
+  [pEast('corner-nw'), pSouth('corner-nw'), pEast('niche-beam'), pNorth('niche-beam')],
   // Retour placo au Nord
   [pEast('corner-nw'), pSouth('corner-nw'), pWest('corner-nw'), pSouth('corner-nw')],
 
