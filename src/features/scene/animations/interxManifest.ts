@@ -24,6 +24,7 @@ export interface InterXManifest {
   }>;
   duos: Array<{
     id: string;
+    seatedParticipant?: 'p1' | 'p2';
     actionCode: string;
     variation: string;
     source: {
@@ -114,17 +115,18 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
 
 export const INTERX_DUO_ANIMATIONS: DuoAnimationDef[] = INTERX_MANIFEST.duos.map(duo => {
   const action = actionByCode.get(duo.actionCode)!;
+  const swapped = duo.seatedParticipant === 'p2';
   return {
     id: duo.id,
     label: `Inter-X · ${action.label} (${duo.source.group}, ${duo.variation}, ${duo.source.take})`,
     icon: action.icon,
     isCombat: action.isCombat,
-    animA: `${duo.id}-p1`,
-    animB: `${duo.id}-p2`,
+    animA: `${duo.id}-${swapped ? 'p2' : 'p1'}`,
+    animB: `${duo.id}-${swapped ? 'p1' : 'p2'}`,
     offsetB: [
-      duo.start_offset[0] * 100,
+      duo.start_offset[0] * 100 * (swapped ? -1 : 1),
       0,
-      duo.start_offset[2] * 100,
+      duo.start_offset[2] * 100 * (swapped ? -1 : 1),
     ],
     rotB: 0,
     duration: duo.clips.p1.durationSeconds,

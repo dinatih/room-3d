@@ -6132,6 +6132,7 @@
     },
     {
       "id": "interx-g059t000a009r030",
+      "seatedParticipant": "p2",
       "actionCode": "A009",
       "variation": "T000",
       "source": {
