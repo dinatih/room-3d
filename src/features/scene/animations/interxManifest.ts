@@ -106,8 +106,7 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
     category: action.category,
     path: duo.clips[participant].path,
     label: `Inter-X · ${action.label} (${duo.source.group}, ${duo.variation}, ${duo.source.take}, ${participant.toUpperCase()})`,
-    tags: action.key === 'sit-on-leg' && participant === 'p2'
-      ? [...duo.tags, 'sitting', 'seated-front'] : duo.tags,
+    tags: duo.tags,
     duration: duo.clips[participant].durationSeconds,
     rootMotionSpace: 'world-meters' as const,
   }));
@@ -115,20 +114,17 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
 
 export const INTERX_DUO_ANIMATIONS: DuoAnimationDef[] = INTERX_MANIFEST.duos.map(duo => {
   const action = actionByCode.get(duo.actionCode)!;
-  // The seated source participant leads so the existing seat remains the duo anchor.
-  const seatedB = action.key === 'sit-on-leg';
-  const offsetSign = seatedB ? -1 : 1;
   return {
     id: duo.id,
     label: `Inter-X · ${action.label} (${duo.source.group}, ${duo.variation}, ${duo.source.take})`,
     icon: action.icon,
     isCombat: action.isCombat,
-    animA: `${duo.id}-${seatedB ? 'p2' : 'p1'}`,
-    animB: `${duo.id}-${seatedB ? 'p1' : 'p2'}`,
+    animA: `${duo.id}-p1`,
+    animB: `${duo.id}-p2`,
     offsetB: [
-      duo.start_offset[0] * 100 * offsetSign,
-      seatedB ? duo.start_offset[1] * 100 * offsetSign : 0,
-      duo.start_offset[2] * 100 * offsetSign,
+      duo.start_offset[0] * 100,
+      0,
+      duo.start_offset[2] * 100,
     ],
     rotB: 0,
     duration: duo.clips.p1.durationSeconds,
