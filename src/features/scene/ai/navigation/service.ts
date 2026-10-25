@@ -162,7 +162,7 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
   const candidates = readObjectApproach(graph, {
     owner,
     goal: { x: goal.x, z: goal.z }, start: start ? { x: start.x, z: start.z } : undefined, owned: owned.map(o => ({ polygon: o.polygon, radius: furnitureClearance(profile) })),
-    surfaces: walkableSurfaces, actors: getAgentObstacles(agentId, start ?? goal), exiting, flexible, region, escape,
+    surfaces: walkableSurfaces, actors: getAgentObstacles(agentId), exiting, flexible, region, escape,
   });
   const free = candidates.find(p => isAgentDestinationFree(agentId, p));
   return free ?? (exiting ? candidates[0] : undefined) ?? null;

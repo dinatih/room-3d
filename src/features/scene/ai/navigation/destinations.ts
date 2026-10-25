@@ -28,7 +28,7 @@ export function getZoneDestination(id: string, agentId?: string, start?: Point, 
   const belongs = (p: Point) => id === 'living' ? p.x >= BATH_WEST_WALL && p.x <= ROOM_EAST_WALL && p.z >= ROOM_NORTH_WALL && p.z <= ROOM_SOUTH_WALL
     : id === 'bathroom' ? p.x >= BATH_WEST_WALL && p.x < BATH_EAST_WALL && p.z >= BATH_NORTH_WALL && p.z <= diagonal(p.x)
     : id === 'corridor' ? p.x >= BATH_EAST_WALL && p.x <= ROOM_EAST_WALL && p.z >= CORRIDOR_NORTH_WALL && p.z <= diagonal(p.x) : id === 'garden' ? p.x >= garden.min[0] && p.x <= garden.max[0] && p.z >= garden.min[2] && p.z <= garden.max[2] : true;
-  let candidates = [...graph.vertices, ...getAgentObstacles(agentId, start ?? center).flat()].filter(p => belongs(p) && !insideObstacle(p, graph.obstacles));
+  let candidates = [...graph.vertices, ...getAgentObstacles(agentId).flat()].filter(p => belongs(p) && !insideObstacle(p, graph.obstacles));
   candidates.sort((a, b) => distance(a, center) - distance(b, center));
   if (!insideObstacle(center, graph.obstacles) && isAgentDestinationFree(agentId, center)) candidates.unshift(center);
   while (candidates.length) {

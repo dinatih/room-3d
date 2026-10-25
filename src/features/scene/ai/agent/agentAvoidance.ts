@@ -148,11 +148,11 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
   return fraction === 1 ? proposed : { x: start.x + vx * fraction, z: start.z + vz * fraction };
 }
 
-/** Obstacles for a route around actors, using the same footprint as movement clearance. */
-export function getAgentObstacles(id: string, start: Point): Polygon[] {
+/** With a start, plan movement; without one, find a ground destination including reservations. */
+export function getAgentObstacles(id: string, start?: Point): Polygon[] {
   if (!useSceneStore.getState().layers.npcCollisions) return [];
   const profile = getAgentProfile(id);
-  const y = cameraState.positions[id]?.y ?? 0;
+  const y = start ? cameraState.positions[id]?.y ?? 0 : 0;
   const obstacles: Polygon[] = [];
   for (const otherId in cameraState.positions) {
     if (otherId === id || !hasAgentProfile(otherId) || areDuoPartners(id, otherId)) continue;
@@ -160,7 +160,7 @@ export function getAgentObstacles(id: string, start: Point): Polygon[] {
     if (other.y >= y + profile.height || other.y + body.height <= y) continue;
     const radius = actorClearance(profile, body);
     let polygon = inflate([{ x: other.x, z: other.z }], radius);
-    if (pointInRing(start, polygon)) {
+    if (start && pointInRing(start, polygon)) {
       // Keep the occupied half-plane blocked, while allowing a tangential exit.
       // Dropping this obstacle plans straight through a body that movement rejects.
       const dx = other.x - start.x, dz = other.z - start.z;
@@ -174,6 +174,8 @@ export function getAgentObstacles(id: string, start: Point): Polygon[] {
       });
     }
     obstacles.push(polygon);
+    const destination = !start && destinations.get(otherId);
+    if (destination) obstacles.push(inflate([destination], radius));
   }
   return obstacles;
 }

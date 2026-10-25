@@ -58,6 +58,34 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('choisit une place libre au sol pour atterrir près d’un PNJ ou de sa destination réservée', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const avoidance = load('src/features/scene/ai/agent/agentAvoidance.ts', {
+            '../../cameraState': { cameraState }, '../../store/useSceneStore': { useSceneStore: { getState: () => ({ layers: { npcCollisions: true } }) } },
+            '../navigation/obstacles': obstacles, '../navigation/geometry': g, '../duoSessionManager': { duoSessionManager: { getSessionFor: () => undefined } },
+        });
+        const crowded = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, '../agent/agentAvoidance': avoidance });
+        const goal = { x: -100, z: -200 };
+        obstacles.setAgentProfile('sandra', obstacles.getAgentProfile('walker'));
+        cameraState.positions.walker = { ...goal, y: 2500 };
+        try {
+            for (const reserved of [false, true]) {
+                cameraState.positions.sandra = { x: reserved ? 100 : goal.x, z: goal.z, y: 0 };
+                avoidance.reserveAgentDestination('sandra', reserved ? goal : null);
+                assert.equal(avoidance.isAgentDestinationFree('walker', goal), false);
+                const target = crowded.getObjectApproach('duo-zone', goal, 'walker');
+                assert(target, reserved ? 'A reservation must offer a neighbouring landing point' : 'Landing must consider actors on the ground');
+                assert(avoidance.isAgentDestinationFree('walker', target));
+                assert(g.distance(target, goal) <= avoidance.actorClearance({}, {}) + g.CLEARANCE_ERROR);
+                if (reserved) assert.equal(avoidance.getAgentObstacles('walker', { x: -150, z: -200 }).length, 0, 'Ground reservations must not become bodies at the flying actor’s altitude');
+            }
+        } finally {
+            avoidance.reserveAgentDestination('sandra', null);
+            delete cameraState.positions.sandra; delete cameraState.positions.walker;
+            obstacles.removeAgentProfile('sandra');
+        }
+    });
     it('ouvre la prochaine porte seulement à proximité et libère la demande si le PNJ recule', () => {
         setup({ living: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
         const route = nav.createRouteState(), start = { x: 20, z: -200 }, target = { x: 20, z: 100 };
