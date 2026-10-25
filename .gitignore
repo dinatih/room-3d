@@ -2,6 +2,8 @@ tries/*
 *.pem
 nohup.out
 node_modules/
+__pycache__/
+*.pyc
 screenshots/
 dist/
 draft.md
