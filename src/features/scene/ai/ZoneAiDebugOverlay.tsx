@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSceneStore } from '../store/useSceneStore';
-import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
+import { getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager } from './duoSessionManager';
 import { resolveNavigation } from './navigation/navigationScope';
@@ -69,12 +69,7 @@ function ZoneAiDebugOverlayContent() {
   }, [layers.laraCount, layers.extraCharacters, activeCharacterId, activeExtraIds, activeMainIds]);
 
   // Tous les SmartObjects avec leurs slots résolus
-  const allObjects = useMemo(() => {
-    return Object.keys(SMART_OBJECTS).map((id) => {
-      const obj = getSmartObject(id) || SMART_OBJECTS[id];
-      return obj;
-    });
-  }, [tick]);
+  const allObjects = useMemo(() => getAllSmartObjects(), [tick]);
 
   // Statistiques globales de slots
   const stats = useMemo(() => {
@@ -95,7 +90,7 @@ function ZoneAiDebugOverlayContent() {
   }, [allObjects, tick]);
 
   // Récupérer l'objet et slot actuellement sélectionnés
-  const currentObj = selectedSlot ? getSmartObject(selectedSlot.objectId) || SMART_OBJECTS[selectedSlot.objectId] : null;
+  const currentObj = allObjects.find(obj => obj.id === selectedSlot?.objectId);
   const currentSlot = currentObj?.slots.find((s) => s.slotId === selectedSlot?.slotId) ?? null;
 
   const currentOccupant =
@@ -109,7 +104,7 @@ function ZoneAiDebugOverlayContent() {
     const sId = targetSlotId ?? selectedSlot?.slotId;
     if (!objId || !sId) return;
 
-    const obj = getSmartObject(objId) || SMART_OBJECTS[objId];
+    const obj = getAllSmartObjects().find(obj => obj.id === objId);
     const slot = obj?.slots.find((s) => s.slotId === sId);
     if (!obj || !slot) return;
 

@@ -1127,7 +1127,8 @@ export function getAllSmartObjects(): ResolvedSmartObject[] {
 }
 
 export function getAllSmartObjectIds(): string[] {
-  return Object.keys(SMART_OBJECTS).filter(id => id !== 'bed-double' || positionState['bed-double']?.idx === 1);
+  const isDouble = positionState['bed-double']?.idx === 1;
+  return Object.keys(SMART_OBJECTS).filter(id => id === 'bed-double' ? isDouble : (id !== 'bed-west' && id !== 'bed-east') || !isDouble);
 }
 
 export function getSmartObjectsByCategory(category: SmartObjectCategory): ResolvedSmartObject[] {

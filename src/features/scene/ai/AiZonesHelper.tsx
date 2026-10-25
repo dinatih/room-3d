@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Line } from '@react-three/drei';
 import { useMemo, useState, useEffect } from 'react';
 import { useSceneStore } from '../store/useSceneStore';
-import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
+import { getAllSmartObjects } from './smartObjectRegistry';
 
 const CATEGORY_COLORS: Record<string, string> = {
   bed: '#ff4081',
@@ -143,11 +143,14 @@ function AiZonesHelperContent() {
   }, []);
 
   // Liste résolue des SmartObjects (monde / dynamique)
-  const resolvedSmartObjects = useMemo(() => {
-    return Object.keys(SMART_OBJECTS)
-      .map(id => getSmartObject(id))
-      .filter((obj): obj is NonNullable<typeof obj> => Boolean(obj && obj.position));
-  }, [toggleVersion]);
+  const resolvedSmartObjects = useMemo(() => getAllSmartObjects(), [toggleVersion]);
+
+  useEffect(() => {
+    if (hoveredSlotKey && !resolvedSmartObjects.some(obj => obj.slots.some(slot => `${obj.id}:::${slot.slotId}` === hoveredSlotKey))) {
+      setHoveredSlotKey(null);
+      document.body.style.cursor = '';
+    }
+  }, [resolvedSmartObjects, hoveredSlotKey]);
 
   // Génération mémoïsée des sprites de labels
 
