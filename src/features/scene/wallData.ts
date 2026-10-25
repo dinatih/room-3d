@@ -109,6 +109,8 @@ const _SHOWER_EAST_WALL_X = _BATH_WEST_WALL + MEASURED_DIST_SHOWER_NW_TO_NE + PT
 // Porte : 80cm d'ouverture, alignée après mur couloir (X=200)
 export const DOOR_START = 200; // cm 200
 export const DOOR_END = 286; // cm 286
+export const DOOR_WHITE_WIDTH = 83; // largeur des portes séjour et SDB (cm)
+export const DOOR_FRAME_OVERLAP = 3; // recouvrement du dormant sur le mur (cm)
 export const DOOR_H = 204;      // hauteur standard française (panneaux de porte)
 
 const GLASS_START = 95;   // Début baie vitrée mur C (Nord)

@@ -12,12 +12,12 @@ import {
   WALL_H,
   ROOM_WEST_WALL, ROOM_NORTH_WALL, ROOM_EAST_WALL, ROOM_SOUTH_WALL,
   DOOR_START, DOOR_END,
-  DOOR_BATH_START, DOOR_BATH_END,
+  DOOR_BATH_START, DOOR_BATH_END, DOOR_WHITE_WIDTH, DOOR_FRAME_OVERLAP,
   KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL,
   BATH_WEST_WALL, BATH_NORTH_WALL, BATH_EAST_WALL,
   CORRIDOR_WEST_WALL, CORRIDOR_NORTH_WALL,
   PARTITION_THICKNESS, DiagWall,
-  pSouth, pNorth, pEast, pWest,
+  pSouth, pNorth, pEast, pWest, pZ,
 } from '../wallData';
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
 import {
@@ -30,6 +30,9 @@ const BLDG_Z_MIN = -30;
 const CEIL_THICK = 20;
 
 const INT_X_DOOR_S = DOOR_START;
+const BATH_DOOR_CENTER_Z = (pZ('door-bath-n') + pZ('door-bath-s')) / 2;
+const BATH_FRAME_NORTH = BATH_DOOR_CENTER_Z - DOOR_WHITE_WIDTH / 2 - DOOR_FRAME_OVERLAP;
+const BATH_FRAME_SOUTH = BATH_DOOR_CENTER_Z + DOOR_WHITE_WIDTH / 2 + DOOR_FRAME_OVERLAP;
 
 const ceilBottomBack = new THREE.MeshStandardMaterial({
   color: COLORS.wall, roughness: 0.35, envMapIntensity: 0.15,
@@ -390,8 +393,8 @@ export function Baseboards() {
       {/* ── Couloir ────────────────────────────────────────────────────────────── */}
       <BaseboardZ z1={CORRIDOR_NORTH_WALL} z2={DiagWall.A.z} x={ROOM_EAST_WALL} dir="-X" />
       <BaseboardX x1={DOOR_END + DOOR_CLEARANCE} x2={ROOM_EAST_WALL} z={CORRIDOR_NORTH_WALL} dir="+Z" />
-      <BaseboardZ z1={KITCHEN_SOUTH_WALL} z2={DOOR_BATH_START - DOOR_CLEARANCE} x={CORRIDOR_WEST_WALL} dir="+X" />
-      <BaseboardZ z1={DOOR_BATH_END + DOOR_CLEARANCE} z2={corridorZEnd} x={CORRIDOR_WEST_WALL} dir="+X" />
+      <BaseboardZ z1={KITCHEN_SOUTH_WALL} z2={BATH_FRAME_NORTH} x={CORRIDOR_WEST_WALL} dir="+X" />
+      <BaseboardZ z1={BATH_FRAME_SOUTH} z2={corridorZEnd} x={CORRIDOR_WEST_WALL} dir="+X" />
 
       {/* ── Placard couloir ────────────────────────────────────────────────────── */}
       <BaseboardX x1={KITCHEN_EAST_WALL + PARTITION_THICKNESS} x2={CORRIDOR_WEST_WALL} z={CORRIDOR_NORTH_WALL} dir="+Z" />
@@ -410,7 +413,6 @@ export function BathSkirting() {
   const SH_T = 10;
   const SD_T = 1;
   const y = SH_T / 2;
-  const DOOR_CLEARANCE = 1.5;
 
   const tileMat = useMemo(() => {
     const tex = makeTileTex();
@@ -452,8 +454,8 @@ export function BathSkirting() {
       <SkirtZ z1={BATH_NORTH_WALL} z2={Bz} x={BATH_WEST_WALL} dir="+X" />
 
       {/* Cloison Est SDB (autour de la porte) */}
-      <SkirtZ z1={BATH_NORTH_WALL} z2={DOOR_BATH_START - DOOR_CLEARANCE} x={BATH_EAST_WALL} dir="-X" />
-      <SkirtZ z1={DOOR_BATH_END + DOOR_CLEARANCE} z2={Cz} x={BATH_EAST_WALL} dir="-X" />
+      <SkirtZ z1={BATH_NORTH_WALL} z2={BATH_FRAME_NORTH} x={BATH_EAST_WALL} dir="-X" />
+      <SkirtZ z1={BATH_FRAME_SOUTH} z2={Cz} x={BATH_EAST_WALL} dir="-X" />
 
       {/* Douche (retour Nord et paroi Est) */}
       <SkirtX x1={pWest('shower-ne')} x2={pEast('shower-ne')} z={pNorth('shower-ne')} dir="-Z" />

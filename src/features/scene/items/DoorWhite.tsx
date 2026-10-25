@@ -9,12 +9,12 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
-import { WALL_THICKNESS, PARTITION_THICKNESS } from '../wallData';
+import { WALL_THICKNESS, PARTITION_THICKNESS, DOOR_WHITE_WIDTH, DOOR_FRAME_OVERLAP } from '../wallData';
 import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState, type DoorConfig } from '../doorObstacles';
 import { useDoorOpen } from './useDoorOpen';
 import { useDoorSpring } from './useDoorSpring';
 
-const W  = 83;     // Largeur panneau (ouvrant de 83 cm)
+const W  = DOOR_WHITE_WIDTH;     // Largeur panneau (ouvrant de 83 cm)
 const H  = 204;    // Hauteur standard
 const T  = 4;      // Épaisseur panneau
 const R  = 1.3;    // Rayon poignée
@@ -24,12 +24,12 @@ const R  = 1.3;    // Rayon poignée
 function makeLeftFrameShape(wallThickness: number) {
   const halfWT = wallThickness / 2;
   const shape = new THREE.Shape();
-  shape.moveTo(-(halfWT + 1.0), 3.0);
-  shape.lineTo(-halfWT, 3.0);
+  shape.moveTo(-(halfWT + 1.0), DOOR_FRAME_OVERLAP);
+  shape.lineTo(-halfWT, DOOR_FRAME_OVERLAP);
   shape.lineTo(-halfWT, 0);
   shape.lineTo(halfWT, 0);
-  shape.lineTo(halfWT, 3.0);
-  shape.lineTo(halfWT + 1.0, 3.0);
+  shape.lineTo(halfWT, DOOR_FRAME_OVERLAP);
+  shape.lineTo(halfWT + 1.0, DOOR_FRAME_OVERLAP);
   shape.lineTo(halfWT + 1.0, -1.0);
   shape.lineTo(-0.2, -1.0);
   shape.lineTo(-0.2, -2.8);
@@ -43,18 +43,18 @@ function makeLeftFrameShape(wallThickness: number) {
 function makeRightFrameShape(wallThickness: number) {
   const halfWT = wallThickness / 2;
   const shape = new THREE.Shape();
-  shape.moveTo(halfWT + 1.0, 3.0);
+  shape.moveTo(halfWT + 1.0, DOOR_FRAME_OVERLAP);
   shape.lineTo(halfWT + 1.0, -1.0);
   shape.lineTo(2.0, -1.0);
   shape.lineTo(2.0, -2.8);
   shape.lineTo(0.2, -2.8);
   shape.lineTo(0.2, -1.0);
   shape.lineTo(-(halfWT + 1.0), -1.0);
-  shape.lineTo(-(halfWT + 1.0), 3.0);
-  shape.lineTo(-halfWT, 3.0);
+  shape.lineTo(-(halfWT + 1.0), DOOR_FRAME_OVERLAP);
+  shape.lineTo(-halfWT, DOOR_FRAME_OVERLAP);
   shape.lineTo(-halfWT, 0);
   shape.lineTo(halfWT, 0);
-  shape.lineTo(halfWT, 3.0);
+  shape.lineTo(halfWT, DOOR_FRAME_OVERLAP);
   shape.closePath();
   return shape;
 }
