@@ -21,3 +21,31 @@ L’URL est publique ; aucun identifiant SMTP ne doit figurer dans une variable 
 Sans URL configurée, le formulaire indique son indisponibilité et désactive l’envoi.
 Le client respecte les limites Mailer : nom de 50 caractères, message de 1000 caractères.
 Tester un envoi réel après déploiement et vérifier sa réception dans la boîte destinataire.
+
+## Installation homelab
+
+Connexion vérifiée : `ssh -F ~/.ssh/config homeserver` (hôte `dinatih-homelab`).
+L’alias `homelab` n’est pas défini dans la configuration SSH locale.
+
+Les fichiers de `deploy/contact/` sont destinés à `~/stacks/room-contact/` sur le serveur.
+Copier `.env.example` vers `.env`, renseigner les adresses et le compte SMTP dans ce
+fichier privé (`chmod 600 .env`), puis lancer depuis ce dossier :
+
+```bash
+docker compose config -q
+docker compose up -d
+docker compose logs --tail=30
+```
+
+L’image Mailer est figée par son digest. La passerelle Nginx écoute uniquement sur
+`127.0.0.1:5080` et expose seulement `/api/mail`. Sa politique anti-spam autorise
+5 requêtes par minute par IP, avec une marge de 2 requêtes immédiates ; une requête
+est limitée à 16 Kio pour couvrir le message UTF-8 de 1000 caractères et ses métadonnées.
+Le champ Cloudflare d’IP client est accepté parce que le port reste limité à loopback.
+
+Ajouter au tunnel Cloudflare existant un hostname public, par exemple
+`contact.dinatih.org`, pointant vers `http://localhost:5080`. Le tunnel actuel publie
+uniquement Home Assistant (`ha.dinatih.org`) ; conserver cette route.
+L’URL finale sera alors `https://contact.dinatih.org/api/mail`.
+Ne configurer `VITE_CONTACT_ENDPOINT` qu’après vérification de SMTP et de cette route.
+Pour le build GitHub Pages, ajouter la variable à l’étape de build du workflow de déploiement.
