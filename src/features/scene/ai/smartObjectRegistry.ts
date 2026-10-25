@@ -52,6 +52,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Gauche)',
         relative: true,
         offset: [0, 0, -50],
+        approachOffset: [0, 0, -80 - HUMAN_BODY_RADIUS],
         animationsRandom: 'seated-front',
       },
       {
@@ -59,6 +60,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Droite)',
         relative: true,
         offset: [0, 0, 50],
+        approachOffset: [0, 0, 80 + HUMAN_BODY_RADIUS],
         animationsRandom: 'seated-front',
       },
       {
@@ -67,6 +69,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Dormir couché (Gauche)',
         relative: true,
         offset: [-35, 45, 0],
+        approachOffset: [-35, 0, -80 - HUMAN_BODY_RADIUS],
         animationsRandom: 'laying',
       },
       {
@@ -75,6 +78,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Dormir couché (Droite)',
         relative: true,
         offset: [35, 45, 0],
+        approachOffset: [35, 0, 80 + HUMAN_BODY_RADIUS],
         animationsRandom: 'laying',
       }
     ]
@@ -91,18 +95,21 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'seat-north',
         name: 'S\'asseoir (Nord)',
         offset: [71.5, 0, 16],
+        approachOffset: [71.5, 0, 40 + HUMAN_BODY_RADIUS],
         animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
         offset: [1.5, 0, 16],
+        approachOffset: [1.5, 0, 40 + HUMAN_BODY_RADIUS],
         animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-south',
         name: 'S\'asseoir (Sud)',
         offset: [-68.5, 0, 16],
+        approachOffset: [-68.5, 0, 40 + HUMAN_BODY_RADIUS],
         animationsRandom: 'seated-front',
       },
       {
@@ -110,6 +117,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         excludes: ['seat-north', 'seat-middle', 'seat-south'],
         name: 'Dormir couché',
         offset: [1.5, 45, 0],
+        approachOffset: [1.5, 0, 40 + HUMAN_BODY_RADIUS],
         animationsRandom: 'laying-front',
         rotY: Math.PI / 2,
       }
@@ -127,6 +135,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'seat-north',
         name: 'S\'asseoir (Nord)',
         offset: [70, 0, -15],
+        approachOffset: [70, 0, -40 - HUMAN_BODY_RADIUS],
         rotY: Math.PI,
         animationsRandom: 'seated-front',
       },
@@ -134,6 +143,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
         offset: [0, 0, -15],
+        approachOffset: [0, 0, -40 - HUMAN_BODY_RADIUS],
         rotY: Math.PI,
         animationsRandom: 'seated-front',
       },
@@ -149,6 +159,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         excludes: ['seat-north', 'seat-middle'],
         name: 'Dormir couché',
         offset: [0, 45, 0],
+        approachOffset: [0, 0, -40 - HUMAN_BODY_RADIUS],
         animationsRandom: 'laying-front',
         rotY: Math.PI / 2,
       }
@@ -1262,13 +1273,12 @@ export function buildSmartObjectInstructionSequence(
     // Utåker is rotated by PI/2: local +Z faces the room for west, -Z for east.
     const side = isWest ? 1 : -1;
     const edge: [number, number, number] = [0, 45, side * 28];
-    const floor: [number, number, number] = [0, 0, side * 52];
     return [
-      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id, slotId: slot.slotId },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
       { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
       baseInstruction,
       { type: 'MOVE_TO', targetLocalPos: edge, smartObjectId: obj.id, slotId: slot.slotId, navigation: 'interaction' },
-      { type: 'MOVE_TO', targetLocalPos: floor, smartObjectId: obj.id, slotId: slot.slotId },
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
     ];
   }
 

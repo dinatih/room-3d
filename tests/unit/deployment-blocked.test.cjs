@@ -2,6 +2,23 @@ const { it } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 
+it('déploie le PNJ à l’approche de sa première interaction', () => {
+  const { spawn } = load('src/features/scene/ai/agentController.ts', {}, source => {
+    const begin = source.indexOf('  const spawnInstruction =');
+    const end = source.indexOf('  let deployment =', begin);
+    return `export function spawn(scenario) {
+      const getRealPosition = () => { throw Error('Unexpected fallback'); };
+      const resolveInstructionCoords = instruction => instruction.type === 'MOVE_TO'
+        ? { tx:200, ty:0, tz:-80 } : { tx:270, ty:45, tz:-80 };
+      ${source.slice(begin, end)}
+      return initialPos;
+    }`;
+  });
+  const instruction = { type: 'USE_OBJECT', smartObjectId: 'sofa-garden-east', slotId: 'seat-1' };
+  assert.deepEqual(spawn([instruction]), { x:200, y:0, z:-80, rotY:0 });
+  assert.equal(instruction.type, 'USE_OBJECT', 'Le scénario conserve son interaction après l’atterrissage');
+});
+
 it('attend le départ du PNJ bloquant puis termine le déploiement avant de choisir une autre action', () => {
   const { harness } = load('src/features/scene/ai/agentController.ts', {}, source => {
     const begin = source.indexOf('    const landingThisFrame =');
@@ -13,6 +30,7 @@ it('attend le départ du PNJ bloquant puis termine le déploiement avant de choi
       class NavigationBlockedError extends Error { actorBlockers = new Map(); }
       const state = { x:500, y:20, z:100, animation:'falling' }, route = {};
       const scenario = [{ type:'MOVE_TO', smartObjectId:'est-neighbor-flat' }], dynamicNavQueue = [];
+      const spawnInstruction = scenario[0];
       const dynamicNavIndex = 0, stepIndex = 0, _characterId = 'lewis', enabled = true, loop = true;
       const deployment = { hasCompleted:false, hasLoggedFalling:true };
       let agentStatus = 'FALLING', timer = .1, delayTimer = 0, spawnObstacleRevision = -1, initialProfileResolved = true;

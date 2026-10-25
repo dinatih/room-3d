@@ -67,7 +67,8 @@ export function createAgentController(
   // Déduire le fondu croisé (0.2s) pour que l'enchaînement vers l'étape suivante s'opère pile à la fin du clip sans rejeu
   let landingPhaseDuration = Math.max(0.1, landingDuration - 0.2);
 
-  const firstCoords = (scenario && scenario.length > 0 && scenario[0].type !== 'OBSERVE_OBJECT') ? resolveInstructionCoords(scenario[0], null) : null;
+  const spawnInstruction = scenario?.[0]?.type === 'USE_OBJECT' ? { ...scenario[0], type: 'MOVE_TO' as const } : scenario?.[0];
+  const firstCoords = spawnInstruction && spawnInstruction.type !== 'OBSERVE_OBJECT' ? resolveInstructionCoords(spawnInstruction, null) : null;
   const initialPos = (firstCoords && (firstCoords.tx !== 0 || firstCoords.tz !== 0))
     ? { x: firstCoords.tx, y: firstCoords.ty ?? 0, z: firstCoords.tz, rotY: firstCoords.rotY ?? 0 }
     : getRealPosition();
@@ -631,7 +632,7 @@ export function createAgentController(
       if (scenario?.length && scenario[0].type !== 'OBSERVE_OBJECT') {
         beginActorBlockCheck(_characterId);
         let first: ReturnType<typeof resolveInstructionCoords>;
-        try { first = resolveInstructionCoords(scenario[0], null, _characterId); }
+        try { first = resolveInstructionCoords(spawnInstruction!, null, _characterId); }
         catch (error) {
           if (error instanceof NavigationBlockedError) error.actorBlockers = endActorBlockCheck(_characterId);
           throw error;
