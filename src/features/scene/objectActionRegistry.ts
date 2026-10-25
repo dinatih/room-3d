@@ -9,7 +9,6 @@ export interface ActionDef {
   label: string | [string, string] | ((value: any) => string);
   icon?: string;
   sceneOnly?: boolean;
-  event?: 'door-push';
   values?: readonly (string | number)[];
   initialValue?: string | number;
   type?: 'select';
@@ -135,13 +134,13 @@ const ACTIONS: Record<string, ActionConfig> = {
   ...positionAction('smorkull-position'),
   ...positionAction('airperformer-position'),
   ...positionAction('raskog-large-position'),
-  eastGlassDoor: { label: 'Pousser battant droit', event: 'door-push' },
-  glassDoorV2LeftOpen: { label: 'Pousser battant gauche', event: 'door-push' },
+  eastGlassDoor: { label: ['Ouvrir battant droit', 'Fermer battant droit'] },
+  glassDoorV2LeftOpen: { label: ['Ouvrir battant gauche', 'Fermer battant gauche'] },
   glassDoorV2ShutterPos: { label: value => `Volet : ${value ? `${value}% fermé` : 'ouvert'}`, values: [0, 70, 90, 100], initialValue: 0 },
-  entryDoor: { label: 'Pousser', event: 'door-push' },
-  livingDoor: { label: 'Pousser', event: 'door-push' },
-  bathroomDoor: { label: 'Pousser', event: 'door-push' },
-  showerDoor: { label: 'Pousser', event: 'door-push' },
+  entryDoor: { label: ['Ouvrir', 'Fermer'] },
+  livingDoor: { label: ['Ouvrir', 'Fermer'] },
+  bathroomDoor: { label: ['Ouvrir', 'Fermer'] },
+  showerDoor: { label: ['Ouvrir', 'Fermer'] },
   corrDoors: { label: ['Ouvrir', 'Fermer'] },
   sdbClosetL: { label: ['Ouvrir Gauche', 'Fermer Gauche'] },
   sdbClosetR: { label: ['Ouvrir Droite', 'Fermer Droite'] },

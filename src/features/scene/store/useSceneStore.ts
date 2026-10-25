@@ -1,4 +1,4 @@
-import { getActionDef, getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
+import { getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import type { ArrowControl, CameraMovement, CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
@@ -226,6 +226,12 @@ const initialLayers: LayerState = {
 };
 
 const initialExtraStates: Record<string, boolean> = {
+  entryDoor: false,
+  livingDoor: false,
+  bathroomDoor: false,
+  showerDoor: false,
+  eastGlassDoor: false,
+  glassDoorV2LeftOpen: false,
   'drona-kitchen-diy-slide': false,
   'drona-kitchen-old-it-slide': false,
   'drona-kitchen-main-slide': false,
@@ -821,13 +827,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
       });
       cameraState.invalidate?.();
       document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: targetState } }));
-      return;
-    }
-    const action = getActionDef(key);
-    if (action?.event) {
-      if (targetState === false) return;
-      document.dispatchEvent(new CustomEvent(action.event, { detail: { key } }));
-      cameraState.invalidate?.();
       return;
     }
     if (key === 'bermuda-grass-toggle' || key === 'ground-type-cycle') {

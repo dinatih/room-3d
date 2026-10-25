@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
-import { useDoorImpulse } from './useDoorImpulse';
+import { useDoorOpen } from './useDoorOpen';
 import { useDoorSpring } from './useDoorSpring';
 import { DoorEntryFrame } from './DoorFrame';
 import { NOOP_SIZE } from '../sceneItem';
@@ -58,7 +58,7 @@ export function DoorEntry({ onSize, isPreview = false, ...props }: SceneItemProp
   const doorRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
   const spring = useDoorSpring();
-  const impulse = useDoorImpulse('entryDoor', DOOR_CONFIGS.entry.maxAngle);
+  const open = useDoorOpen('entryDoor', isPreview, props.actionState);
 
   const handle = useHandleGeo();
 
@@ -69,7 +69,7 @@ export function DoorEntry({ onSize, isPreview = false, ...props }: SceneItemProp
   useFrame((_, delta) => {
     const current = doorRef.current.rotation.y;
     const { allowed, push, minimum } = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.entry, current) : { allowed: DOOR_CONFIGS.entry.maxAngle, push: 0, minimum: 0 };
-    const target = -Math.min(allowed, Math.max(minimum, push, impulse(delta), navigationEnabled && doorRequested('entry') ? allowed : 0));
+    const target = -Math.min(allowed, Math.max(minimum, push, open ? allowed : 0, navigationEnabled && doorRequested('entry') ? allowed : 0));
     const next = spring(current, target, delta, -allowed, -minimum);
     doorRef.current.rotation.y = next;
     if (next !== current) invalidate();

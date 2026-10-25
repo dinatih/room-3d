@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 import { computeDoorDynamics, DOOR_CONFIGS, doorCollisionState, glassShutterState } from '../doorObstacles';
-import { useDoorImpulse } from './useDoorImpulse';
+import { useDoorOpen } from './useDoorOpen';
 import { useDoorSpring } from './useDoorSpring';
 
 const W_TOTAL   = 160;
@@ -134,8 +134,8 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
   const leftSpring = useDoorSpring();
   const rightRotRef = useRef(0);
   const leftRotRef = useRef(0);
-  const rightImpulse = useDoorImpulse('eastGlassDoor', DOOR_CONFIGS.glassRight.maxAngle);
-  const leftImpulse = useDoorImpulse('glassDoorV2LeftOpen', DOOR_CONFIGS.glassLeft.maxAngle);
+  const rightOpen = useDoorOpen('eastGlassDoor', isPreview, actionState);
+  const leftOpen = useDoorOpen('glassDoorV2LeftOpen', isPreview, actionState);
 
   const staticFrames = useStaticFrameGeo();
   const panelFrameGeo = usePanelFrameGeo(W_TOTAL / 2 - FRAME, 190);
@@ -153,10 +153,10 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
     if (navigationEnabled) glassShutterState.clearHeight = SILL_H + GLASS_H * (1 - shutterPercentRef.current / 100);
     const dynRight = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassRight, rightRotRef.current) : { allowed: DOOR_CONFIGS.glassRight.maxAngle, push: 0, minimum: 0 };
     const dynLeft = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassLeft, leftRotRef.current) : { allowed: DOOR_CONFIGS.glassLeft.maxAngle, push: 0, minimum: 0 };
-    const leftPush = Math.max(dynLeft.minimum, dynLeft.push, leftImpulse(delta), navigationEnabled && doorRequested('glassLeft') ? dynLeft.allowed : 0);
+    const leftPush = Math.max(dynLeft.minimum, dynLeft.push, leftOpen ? dynLeft.allowed : 0, navigationEnabled && doorRequested('glassLeft') ? dynLeft.allowed : 0);
     const rightTarget = Math.min(
       dynRight.allowed,
-      Math.max(dynRight.minimum, dynRight.push, rightImpulse(delta), leftPush, Math.abs(leftRotRef.current), navigationEnabled && doorRequested('glassRight') ? dynRight.allowed : 0)
+      Math.max(dynRight.minimum, dynRight.push, rightOpen ? dynRight.allowed : 0, leftPush, Math.abs(leftRotRef.current), navigationEnabled && doorRequested('glassRight') ? dynRight.allowed : 0)
     );
     const rightClearsLeft = rightRotRef.current >= Math.atan2(FRAME_D_V2, PANEL_W);
     const leftTarget = -Math.min(dynLeft.allowed, Math.max(dynLeft.minimum, rightClearsLeft ? leftPush : 0));

@@ -19,7 +19,7 @@ import type { SceneItemProps } from '@shared/types';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { createCondensationMaterial, ShowerEffects } from './ShowerEffects';
 import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
-import { useDoorImpulse } from './useDoorImpulse';
+import { useDoorOpen } from './useDoorOpen';
 import { useDoorSpring } from './useDoorSpring';
 
 
@@ -182,14 +182,14 @@ const coffrageMat = new THREE.MeshStandardMaterial({
 });
 
 /** Porte de douche procédurale : paroi fixe 20 cm + battant 51 cm avec pivot d'ouverture. */
-function ShowerDoor({ isPreview, condensation }: { isPreview: boolean; condensation: THREE.ShaderMaterial }) {
+function ShowerDoor({ isPreview, condensation, actionState }: { isPreview: boolean; condensation: THREE.ShaderMaterial; actionState: SceneItemProps['actionState'] }) {
   const navigationEnabled = useNavigationEnabled() && !isPreview;
   const hf = FRAME / 2;
   const pivotRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
 
   const spring = useDoorSpring();
-  const impulse = useDoorImpulse('showerDoor', DOOR_CONFIGS.shower.maxAngle);
+  const open = useDoorOpen('showerDoor', isPreview, actionState);
 
   useFrame((_, delta) => {
     if (!pivotRef.current) return;
@@ -197,7 +197,7 @@ function ShowerDoor({ isPreview, condensation }: { isPreview: boolean; condensat
     const { allowed, push, minimum } = !navigationEnabled
       ? { allowed: DOOR_CONFIGS.shower.maxAngle, push: 0, minimum: 0 }
       : computeDoorDynamics(DOOR_CONFIGS.shower, current);
-    const targetAngle = Math.min(allowed, Math.max(minimum, push, impulse(delta), navigationEnabled && doorRequested('shower') ? allowed : 0));
+    const targetAngle = Math.min(allowed, Math.max(minimum, push, open ? allowed : 0, navigationEnabled && doorRequested('shower') ? allowed : 0));
     const next = spring(current, targetAngle, delta, minimum, allowed);
     pivotRef.current.rotation.y = next;
     if (next !== current) invalidate();
@@ -280,7 +280,7 @@ function ShowerDoor({ isPreview, condensation }: { isPreview: boolean; condensat
   );
 }
 
-export function Shower({ onSize, isPreview = false }: SceneItemProps) {
+export function Shower({ onSize, isPreview = false, actionState }: SceneItemProps) {
   const { scene: tray   } = useGLTFClone(GLB_TRAY);
   const { scene: bar    } = useGLTFClone(GLB_BAR);
   const { scene: faucet } = useGLTFClone(GLB_FAUCET);
@@ -349,7 +349,7 @@ export function Shower({ onSize, isPreview = false }: SceneItemProps) {
 
       {/* Porte — centrée en X, au niveau du nez nord du bac (local Z=−TRAY_HALF) */}
       <group position={[0, 20, -TRAY_HALF]}>
-        <ShowerDoor isPreview={isPreview} condensation={condensation} />
+        <ShowerDoor actionState={actionState} isPreview={isPreview} condensation={condensation} />
       </group>
       <ShowerEffects origin={waterOrigin} humidity={humidity} condensation={condensation} isPreview={isPreview} />
     </group>

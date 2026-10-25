@@ -11,7 +11,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 import { WALL_THICKNESS, PARTITION_THICKNESS } from '../wallData';
 import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState, type DoorConfig } from '../doorObstacles';
-import { useDoorImpulse } from './useDoorImpulse';
+import { useDoorOpen } from './useDoorOpen';
 import { useDoorSpring } from './useDoorSpring';
 
 const W  = 83;     // Largeur panneau (ouvrant de 83 cm)
@@ -131,6 +131,7 @@ function useHandleGeo(mancheDir: number = 1) {
 
 interface DoorImplProps {
   actionKey: string;
+  actionState: SceneItemProps['actionState'];
   pivotX: number;
   panelX: number;
   handleX: number;
@@ -150,6 +151,7 @@ const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.
 
 function DoorImpl({
   actionKey,
+  actionState,
   pivotX,
   panelX,
   handleX,
@@ -165,7 +167,7 @@ function DoorImpl({
   const doorRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
   const spring = useDoorSpring();
-  const impulse = useDoorImpulse(actionKey, doorConfig.maxAngle);
+  const open = useDoorOpen(actionKey, isPreview, actionState);
 
   const frameGeo  = useDoorFrameGeo(wallThickness);
   const handleGeo = useHandleGeo(mancheDir);
@@ -177,7 +179,7 @@ function DoorImpl({
   useFrame((_, delta) => {
     const currentSigned = doorRef.current.rotation.y;
     const { allowed, push, minimum } = navigationEnabled ? computeDoorDynamics(doorConfig, currentSigned) : { allowed: doorConfig.maxAngle, push: 0, minimum: 0 };
-    const target = Math.sign(openAngle) * Math.min(allowed, Math.max(minimum, push, impulse(delta), navigationEnabled && doorRequested(doorStateKey) ? allowed : 0));
+    const target = Math.sign(openAngle) * Math.min(allowed, Math.max(minimum, push, open ? allowed : 0, navigationEnabled && doorRequested(doorStateKey) ? allowed : 0));
     const limit = Math.sign(openAngle) * allowed;
     const contact = Math.sign(openAngle) * minimum;
     const next = spring(currentSigned, target, delta, Math.min(contact, limit), Math.max(contact, limit));
@@ -208,7 +210,7 @@ function DoorImpl({
   );
 }
 
-export function DoorLiving({ onSize, isPreview = false }: SceneItemProps) {
+export function DoorLiving({ onSize, isPreview = false, actionState }: SceneItemProps) {
   return (
     <DoorImpl
       actionKey="livingDoor"
@@ -216,6 +218,7 @@ export function DoorLiving({ onSize, isPreview = false }: SceneItemProps) {
       openAngle={-Math.PI / 2}
       doorConfig={DOOR_CONFIGS.living}
       doorStateKey="living"
+      actionState={actionState}
       onSize={onSize}
       isPreview={isPreview}
       wallThickness={PARTITION_THICKNESS}
@@ -223,7 +226,7 @@ export function DoorLiving({ onSize, isPreview = false }: SceneItemProps) {
   );
 }
 
-export function DoorBath({ onSize, isPreview = false }: SceneItemProps) {
+export function DoorBath({ onSize, isPreview = false, actionState }: SceneItemProps) {
   return (
     <DoorImpl
       actionKey="bathroomDoor"
@@ -231,6 +234,7 @@ export function DoorBath({ onSize, isPreview = false }: SceneItemProps) {
       openAngle={Math.PI / 2}
       doorConfig={DOOR_CONFIGS.bath}
       doorStateKey="bath"
+      actionState={actionState}
       onSize={onSize}
       isPreview={isPreview}
       wallThickness={PARTITION_THICKNESS}

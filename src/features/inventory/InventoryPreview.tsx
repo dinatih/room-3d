@@ -1446,11 +1446,9 @@ export function InventoryPreview({
                   <button
                     key={key}
                     type="button"
-                    onClick={() => action.event
-                      ? document.dispatchEvent(new CustomEvent(action.event, { detail: { key } }))
-                      : setActionStates(s => toggleObjectAction(key, s))}
-                    className={`btn btn-sm ${on && !action.event ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
-                    aria-pressed={action.event ? undefined : on}
+                    onClick={() => setActionStates(s => toggleObjectAction(key, s))}
+                    className={`btn btn-sm ${on ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
+                    aria-pressed={on}
                     data-object-action={key}
                   >
                     {getActionLabel(key, actionStates[key] ?? action.initialValue ?? false)}
