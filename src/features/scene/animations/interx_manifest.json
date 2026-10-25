@@ -6195,6 +6195,7 @@
     },
     {
       "id": "interx-g059t000a009r031",
+      "seatedParticipant": "p2",
       "actionCode": "A009",
       "variation": "T000",
       "source": {
@@ -6257,6 +6258,7 @@
     },
     {
       "id": "interx-g059t000a009r032",
+      "seatedParticipant": "p2",
       "actionCode": "A009",
       "variation": "T000",
       "source": {
@@ -6319,6 +6321,7 @@
     },
     {
       "id": "interx-g053t001a009r022",
+      "seatedParticipant": "p2",
       "actionCode": "A009",
       "variation": "T001",
       "source": {
@@ -6381,6 +6384,7 @@
     },
     {
       "id": "interx-g053t001a009r023",
+      "seatedParticipant": "p2",
       "actionCode": "A009",
       "variation": "T001",
       "source": {
