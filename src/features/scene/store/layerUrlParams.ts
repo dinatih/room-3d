@@ -1,5 +1,6 @@
 import type { LayerState, GroundType, LaraClothing } from '../sidepanel/types';
 import { getDebugPreset } from './debugPresets';
+import { getUrlParams } from '../camera/cameraUrlParams';
 
 /**
  * Source unique de vérité pour les valeurs par défaut de tous les calques booléens.
@@ -324,16 +325,8 @@ export function updateUrlGroundType(type: GroundType) {
 export function parseUrlLayerOverrides(): Partial<Record<keyof LayerState, boolean>> {
   if (typeof window === 'undefined') return {};
   try {
-    let search = window.location.search;
-    if (!search && window.location.hash.includes('?')) {
-      search = window.location.hash.substring(window.location.hash.indexOf('?'));
-    }
-    const params = new URLSearchParams(search);
-    const isHa = params.has('ha') || params.get('preset') === 'ha' || params.get('mode') === 'ha';
-    const overrides: Partial<Record<keyof LayerState, boolean>> = {
-      ...(isHa ? { character: false, extraCharacters: false, animals: false } : {}),
-      ...getDebugPreset(params)?.layers,
-    };
+    const params = getUrlParams();
+    const overrides: Partial<Record<keyof LayerState, boolean>> = { ...getDebugPreset(params)?.layers };
 
     // Normalisation en minuscules de toutes les clés d'URL présentes
     const lowerParams = new Map<string, string>();

@@ -17,6 +17,7 @@ import {
   updateUrlCameraPos,
   updateUrlCameraTarget,
   updateUrlCameraMovement,
+  getUrlParams,
 } from '@features/scene/camera/cameraUrlParams';
 import {
   parseUrlLayerOverrides,
@@ -46,12 +47,7 @@ import {
 function parseUrlCharacterCount(): LaraCountMode {
   if (typeof window === 'undefined') return DEFAULT_LARA_COUNT;
   try {
-    let search = window.location.search;
-    if (!search && window.location.hash.includes('?')) {
-      search = window.location.hash.substring(window.location.hash.indexOf('?'));
-    }
-    const params = new URLSearchParams(search);
-    if (params.has('ha') || params.get('preset') === 'ha' || params.get('mode') === 'ha') return 0;
+    const params = getUrlParams();
     const raw = params.get('characterCount') ?? params.get('characters') ?? params.get('count') ?? params.get('npcNb') ?? params.get('npcs') ?? params.get('laraCount') ?? params.get('npcCount');
     if (raw !== null) {
       const lower = raw.trim().toLowerCase();
