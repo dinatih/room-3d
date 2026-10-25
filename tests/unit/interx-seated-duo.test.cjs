@@ -7,6 +7,7 @@ const { getDuoAnimationForClip } = require('../../src/features/scene/animations/
 
 it('le tirage seated-front sélectionne le participant assis vérifié et lance son duo en rôle A', () => {
   const pool = getAnimationsByTags('seated-front');
+  const seatedActions = getAnimationsByTags('with-seated-action');
   const random = Math.random;
   try {
     for (const duo of interx.INTERX_MANIFEST.duos) {
@@ -14,6 +15,7 @@ it('le tirage seated-front sélectionne le participant assis vérifié et lance 
         const clip = interx.INTERX_ANIMATION_DEFINITIONS.find(clip => clip.id === `${duo.id}-${person}`);
         const index = pool.findIndex(candidate => candidate.id === clip.id);
         assert.equal(index >= 0, person === 'p1' && duo.tags.includes('seated-front'), clip.id);
+        assert.equal(seatedActions.some(candidate => candidate.id === clip.id), person === 'p1' && duo.tags.includes('with-seated-action'), clip.id);
         if (index < 0) continue;
         Math.random = () => (index + 0.5) / pool.length;
         const selected = resolveSlotAnimation({ animationsRandom: 'seated-front' });

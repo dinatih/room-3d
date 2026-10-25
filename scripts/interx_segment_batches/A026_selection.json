@@ -651,12 +651,12 @@
         "recording": "G056T005A026R006",
         "group": "G056",
         "take": "R006",
-        "p1": "G056T005A026R006/P1.npz",
-        "p2": "G056T005A026R006/P2.npz",
+        "p1": "G056T005A026R006/P2.npz",
+        "p2": "G056T005A026R006/P1.npz",
         "frameCount": 768,
         "sha256": {
-          "p1": "aab74727e6862f039fb13a4109df4e2a0ca9277ffb2ab20573849c06813a88fe",
-          "p2": "0a3c9f730599adf356bcaa90433be35fe046844cf7451dbb7b1739057f226619"
+          "p1": "0a3c9f730599adf356bcaa90433be35fe046844cf7451dbb7b1739057f226619",
+          "p2": "aab74727e6862f039fb13a4109df4e2a0ca9277ffb2ab20573849c06813a88fe"
         }
       },
       "clips": {
@@ -673,15 +673,16 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.6021665036678314,
-        -0.3065494894981384,
-        0.0380437970161438
+        0.6021665036678314,
+        0.3065494894981384,
+        -0.0380437970161438
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "expectedFrameCount": 192,
       "expectedDurationSeconds": 6.366666666666666,
@@ -769,7 +770,8 @@
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "expectedFrameCount": 293,
       "expectedDurationSeconds": 9.733333333333333,
@@ -871,12 +873,12 @@
         "recording": "G053T006A026R011",
         "group": "G053",
         "take": "R011",
-        "p1": "G053T006A026R011/P1.npz",
-        "p2": "G053T006A026R011/P2.npz",
+        "p1": "G053T006A026R011/P2.npz",
+        "p2": "G053T006A026R011/P1.npz",
         "frameCount": 2800,
         "sha256": {
-          "p1": "27372c12f0d614865b321fed4ae240e9e6f9f05cf2892e99509ba1092c7672be",
-          "p2": "464361cdbc0b18456d52e59253396d057de619f56b1bf3bb679653a7da067446"
+          "p1": "464361cdbc0b18456d52e59253396d057de619f56b1bf3bb679653a7da067446",
+          "p2": "27372c12f0d614865b321fed4ae240e9e6f9f05cf2892e99509ba1092c7672be"
         }
       },
       "clips": {
@@ -893,15 +895,16 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.19827156513929367,
-        0.3406814932823181,
-        -0.5633876994252205
+        0.19827156513929367,
+        -0.3406814932823181,
+        0.5633876994252205
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "expectedFrameCount": 700,
       "expectedDurationSeconds": 23.3,
@@ -989,7 +992,8 @@
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "expectedFrameCount": 150,
       "expectedDurationSeconds": 4.966666666666667,
@@ -1077,7 +1081,8 @@
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "expectedFrameCount": 353,
       "expectedDurationSeconds": 11.733333333333333,
@@ -1091,12 +1096,12 @@
         "recording": "G039T007A026R008",
         "group": "G039",
         "take": "R008",
-        "p1": "G039T007A026R008/P1.npz",
-        "p2": "G039T007A026R008/P2.npz",
+        "p1": "G039T007A026R008/P2.npz",
+        "p2": "G039T007A026R008/P1.npz",
         "frameCount": 832,
         "sha256": {
-          "p1": "decec6364535dafed45790f53bef1e273eff6eeb2db3ac9125500bacbbec0b1d",
-          "p2": "29a39f573bf16116fc35025c72442a40cc31cb6b5f18f0dec66639ae49ca69ae"
+          "p1": "29a39f573bf16116fc35025c72442a40cc31cb6b5f18f0dec66639ae49ca69ae",
+          "p2": "decec6364535dafed45790f53bef1e273eff6eeb2db3ac9125500bacbbec0b1d"
         }
       },
       "clips": {
@@ -1113,15 +1118,16 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.22458909451961517,
-        -0.20175904035568237,
-        0.36100261844694614
+        0.22458909451961517,
+        0.20175904035568237,
+        -0.36100261844694614
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "expectedFrameCount": 208,
       "expectedDurationSeconds": 6.9,
@@ -1135,12 +1141,12 @@
         "recording": "G039T007A026R009",
         "group": "G039",
         "take": "R009",
-        "p1": "G039T007A026R009/P1.npz",
-        "p2": "G039T007A026R009/P2.npz",
+        "p1": "G039T007A026R009/P2.npz",
+        "p2": "G039T007A026R009/P1.npz",
         "frameCount": 832,
         "sha256": {
-          "p1": "c96401e654b9cebd97bf525ca8d4061b7c76a532576866f557cb1710fa38e1fa",
-          "p2": "26098e9e9db31ed82bca621d4f71d9087bb004658e05ba26b7af9a6966452f6d"
+          "p1": "26098e9e9db31ed82bca621d4f71d9087bb004658e05ba26b7af9a6966452f6d",
+          "p2": "c96401e654b9cebd97bf525ca8d4061b7c76a532576866f557cb1710fa38e1fa"
         }
       },
       "clips": {
@@ -1157,15 +1163,16 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.209293894469738,
-        -0.19204705953598022,
-        0.40759725496172905
+        0.209293894469738,
+        0.19204705953598022,
+        -0.40759725496172905
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "expectedFrameCount": 208,
       "expectedDurationSeconds": 6.9,
@@ -1179,12 +1186,12 @@
         "recording": "G022T008A026R001",
         "group": "G022",
         "take": "R001",
-        "p1": "G022T008A026R001/P1.npz",
-        "p2": "G022T008A026R001/P2.npz",
+        "p1": "G022T008A026R001/P2.npz",
+        "p2": "G022T008A026R001/P1.npz",
         "frameCount": 968,
         "sha256": {
-          "p1": "a2658d8a9b2dd751c0d34a413d5e373efc761ec9f3d293f93286578217028b69",
-          "p2": "4a341926c93195f521ac9e3248c28f9c32cda9264843acd2bf96cf2feec10108"
+          "p1": "4a341926c93195f521ac9e3248c28f9c32cda9264843acd2bf96cf2feec10108",
+          "p2": "a2658d8a9b2dd751c0d34a413d5e373efc761ec9f3d293f93286578217028b69"
         }
       },
       "clips": {
@@ -1201,15 +1208,16 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.46974608302116394,
-        -0.23080062866210938,
-        0.5595790445804596
+        -0.46974608302116394,
+        0.23080062866210938,
+        -0.5595790445804596
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "expectedFrameCount": 242,
       "expectedDurationSeconds": 8.033333333333333,

@@ -23531,12 +23531,12 @@
         "recording": "G056T005A026R006",
         "group": "G056",
         "take": "R006",
-        "p1": "G056T005A026R006/P1.npz",
-        "p2": "G056T005A026R006/P2.npz",
+        "p1": "G056T005A026R006/P2.npz",
+        "p2": "G056T005A026R006/P1.npz",
         "frameCount": 768,
         "sha256": {
-          "p1": "aab74727e6862f039fb13a4109df4e2a0ca9277ffb2ab20573849c06813a88fe",
-          "p2": "0a3c9f730599adf356bcaa90433be35fe046844cf7451dbb7b1739057f226619"
+          "p1": "0a3c9f730599adf356bcaa90433be35fe046844cf7451dbb7b1739057f226619",
+          "p2": "aab74727e6862f039fb13a4109df4e2a0ca9277ffb2ab20573849c06813a88fe"
         }
       },
       "clips": {
@@ -23544,15 +23544,15 @@
           "path": "animations/npz/interx/g056t005a026r006-p1.glb",
           "frameCount": 192,
           "durationSeconds": 6.366666666666666,
-          "sizeBytes": 228416,
-          "sha256": "241d56f132758567d38f7bc8bf54481d35d62960e1cb1c655c5b82fbc6862670"
+          "sizeBytes": 228556,
+          "sha256": "3d67c5750b398baca194f37de2ef6e62e91f5506ad73bb62ba94aad71627faae"
         },
         "p2": {
           "path": "animations/npz/interx/g056t005a026r006-p2.glb",
           "frameCount": 192,
           "durationSeconds": 6.366666666666666,
-          "sizeBytes": 228556,
-          "sha256": "3d67c5750b398baca194f37de2ef6e62e91f5506ad73bb62ba94aad71627faae"
+          "sizeBytes": 228416,
+          "sha256": "241d56f132758567d38f7bc8bf54481d35d62960e1cb1c655c5b82fbc6862670"
         }
       },
       "rootMotion": {
@@ -23561,26 +23561,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.6021665036678314,
-        -0.3065494894981384,
-        0.0380437970161438
+        0.6021665036678314,
+        0.3065494894981384,
+        -0.0380437970161438
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.012015982936896652,
-          -0.050274285362586824
+          -0.050274285362586824,
+          -0.012015982936896652
         ],
         "sourceReferencePlaneMeters": -0.050274285362586824,
         "initialSoleHeightMeters": [
-          0.03825830242569017,
-          0.0
+          0,
+          0.03825830242569017
         ]
       },
       "handMotion": "full-axis-angle"
@@ -23693,7 +23694,8 @@
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
@@ -23703,7 +23705,7 @@
         ],
         "sourceReferencePlaneMeters": -0.05360470190941857,
         "initialSoleHeightMeters": [
-          0.0,
+          0,
           0.02388181791114352
         ]
       },
@@ -23903,12 +23905,12 @@
         "recording": "G053T006A026R011",
         "group": "G053",
         "take": "R011",
-        "p1": "G053T006A026R011/P1.npz",
-        "p2": "G053T006A026R011/P2.npz",
+        "p1": "G053T006A026R011/P2.npz",
+        "p2": "G053T006A026R011/P1.npz",
         "frameCount": 2800,
         "sha256": {
-          "p1": "27372c12f0d614865b321fed4ae240e9e6f9f05cf2892e99509ba1092c7672be",
-          "p2": "464361cdbc0b18456d52e59253396d057de619f56b1bf3bb679653a7da067446"
+          "p1": "464361cdbc0b18456d52e59253396d057de619f56b1bf3bb679653a7da067446",
+          "p2": "27372c12f0d614865b321fed4ae240e9e6f9f05cf2892e99509ba1092c7672be"
         }
       },
       "clips": {
@@ -23916,15 +23918,15 @@
           "path": "animations/npz/interx/g053t006a026r011-p1.glb",
           "frameCount": 700,
           "durationSeconds": 23.3,
-          "sizeBytes": 667840,
-          "sha256": "a890614279e3d9addec4117403b6f2c289967373bf011e474d763f88636a46f2"
+          "sizeBytes": 659456,
+          "sha256": "a0818d6d99a035ba217c1162923304fd315a3eb2cdcf79bcfd209215d9ebf0a3"
         },
         "p2": {
           "path": "animations/npz/interx/g053t006a026r011-p2.glb",
           "frameCount": 700,
           "durationSeconds": 23.3,
-          "sizeBytes": 659456,
-          "sha256": "a0818d6d99a035ba217c1162923304fd315a3eb2cdcf79bcfd209215d9ebf0a3"
+          "sizeBytes": 667840,
+          "sha256": "a890614279e3d9addec4117403b6f2c289967373bf011e474d763f88636a46f2"
         }
       },
       "rootMotion": {
@@ -23933,26 +23935,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.19827156513929367,
-        0.3406814932823181,
-        -0.5633876994252205
+        0.19827156513929367,
+        -0.3406814932823181,
+        0.5633876994252205
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.039520169979375686,
-          -0.002255194736418664
+          -0.002255194736418664,
+          -0.039520169979375686
         ],
         "sourceReferencePlaneMeters": -0.039520169979375686,
         "initialSoleHeightMeters": [
-          0.0,
-          0.03726497524295702
+          0.03726497524295702,
+          0
         ]
       },
       "handMotion": "full-axis-angle"
@@ -24065,7 +24068,8 @@
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
@@ -24075,7 +24079,7 @@
         ],
         "sourceReferencePlaneMeters": -0.021867665012324844,
         "initialSoleHeightMeters": [
-          0.0,
+          0,
           0.008730215876803893
         ]
       },
@@ -24251,7 +24255,8 @@
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
@@ -24261,7 +24266,7 @@
         ],
         "sourceReferencePlaneMeters": -0.0430279054098196,
         "initialSoleHeightMeters": [
-          0.0,
+          0,
           0.017659391335456465
         ]
       },
@@ -24275,12 +24280,12 @@
         "recording": "G039T007A026R008",
         "group": "G039",
         "take": "R008",
-        "p1": "G039T007A026R008/P1.npz",
-        "p2": "G039T007A026R008/P2.npz",
+        "p1": "G039T007A026R008/P2.npz",
+        "p2": "G039T007A026R008/P1.npz",
         "frameCount": 832,
         "sha256": {
-          "p1": "decec6364535dafed45790f53bef1e273eff6eeb2db3ac9125500bacbbec0b1d",
-          "p2": "29a39f573bf16116fc35025c72442a40cc31cb6b5f18f0dec66639ae49ca69ae"
+          "p1": "29a39f573bf16116fc35025c72442a40cc31cb6b5f18f0dec66639ae49ca69ae",
+          "p2": "decec6364535dafed45790f53bef1e273eff6eeb2db3ac9125500bacbbec0b1d"
         }
       },
       "clips": {
@@ -24288,15 +24293,15 @@
           "path": "animations/npz/interx/g039t007a026r008-p1.glb",
           "frameCount": 208,
           "durationSeconds": 6.9,
-          "sizeBytes": 241692,
-          "sha256": "3d53bf4e23afe339c0a9bfdfb6d2fe594a81f63270eda1e4df54dcc1736672d9"
+          "sizeBytes": 241688,
+          "sha256": "6121087a0450f34c72fd75666aa19ea6fcfff4b552ac521e90c062c27398f868"
         },
         "p2": {
           "path": "animations/npz/interx/g039t007a026r008-p2.glb",
           "frameCount": 208,
           "durationSeconds": 6.9,
-          "sizeBytes": 241688,
-          "sha256": "6121087a0450f34c72fd75666aa19ea6fcfff4b552ac521e90c062c27398f868"
+          "sizeBytes": 241692,
+          "sha256": "3d53bf4e23afe339c0a9bfdfb6d2fe594a81f63270eda1e4df54dcc1736672d9"
         }
       },
       "rootMotion": {
@@ -24305,26 +24310,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.22458909451961517,
-        -0.20175904035568237,
-        0.36100261844694614
+        0.22458909451961517,
+        0.20175904035568237,
+        -0.36100261844694614
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.08239253402883162,
-          0.012104049282164242
+          0.012104049282164242,
+          -0.08239253402883162
         ],
         "sourceReferencePlaneMeters": -0.08239253402883162,
         "initialSoleHeightMeters": [
-          0.0,
-          0.09449658331099586
+          0.09449658331099586,
+          0
         ]
       },
       "handMotion": "full-axis-angle"
@@ -24337,12 +24343,12 @@
         "recording": "G039T007A026R009",
         "group": "G039",
         "take": "R009",
-        "p1": "G039T007A026R009/P1.npz",
-        "p2": "G039T007A026R009/P2.npz",
+        "p1": "G039T007A026R009/P2.npz",
+        "p2": "G039T007A026R009/P1.npz",
         "frameCount": 832,
         "sha256": {
-          "p1": "c96401e654b9cebd97bf525ca8d4061b7c76a532576866f557cb1710fa38e1fa",
-          "p2": "26098e9e9db31ed82bca621d4f71d9087bb004658e05ba26b7af9a6966452f6d"
+          "p1": "26098e9e9db31ed82bca621d4f71d9087bb004658e05ba26b7af9a6966452f6d",
+          "p2": "c96401e654b9cebd97bf525ca8d4061b7c76a532576866f557cb1710fa38e1fa"
         }
       },
       "clips": {
@@ -24350,15 +24356,15 @@
           "path": "animations/npz/interx/g039t007a026r009-p1.glb",
           "frameCount": 208,
           "durationSeconds": 6.9,
-          "sizeBytes": 242104,
-          "sha256": "9f39a6ea542674a5de88e49487502ae7d33c9042de108d07eb453d1cca3ec473"
+          "sizeBytes": 241964,
+          "sha256": "fd20fcb2545d7172f2c55197cdfafa1121d0b694d6bcb7ed3114e3ce2abd2ec6"
         },
         "p2": {
           "path": "animations/npz/interx/g039t007a026r009-p2.glb",
           "frameCount": 208,
           "durationSeconds": 6.9,
-          "sizeBytes": 241964,
-          "sha256": "fd20fcb2545d7172f2c55197cdfafa1121d0b694d6bcb7ed3114e3ce2abd2ec6"
+          "sizeBytes": 242104,
+          "sha256": "9f39a6ea542674a5de88e49487502ae7d33c9042de108d07eb453d1cca3ec473"
         }
       },
       "rootMotion": {
@@ -24367,26 +24373,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        -0.209293894469738,
-        -0.19204705953598022,
-        0.40759725496172905
+        0.209293894469738,
+        0.19204705953598022,
+        -0.40759725496172905
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.07650977014409666,
-          -0.004542355973575329
+          -0.004542355973575329,
+          -0.07650977014409666
         ],
         "sourceReferencePlaneMeters": -0.07650977014409666,
         "initialSoleHeightMeters": [
-          0.0,
-          0.07196741417052133
+          0.07196741417052133,
+          0
         ]
       },
       "handMotion": "full-axis-angle"
@@ -24399,12 +24406,12 @@
         "recording": "G022T008A026R000",
         "group": "G022",
         "take": "R000",
-        "p1": "G022T008A026R000/P1.npz",
-        "p2": "G022T008A026R000/P2.npz",
+        "p1": "G022T008A026R000/P2.npz",
+        "p2": "G022T008A026R000/P1.npz",
         "frameCount": 1328,
         "sha256": {
-          "p1": "60525e6608d94b8b8540853be1326d1a0e286cbffde986804b5734937e41f15d",
-          "p2": "6b4186ffdbf50e187385493533e763400c6b21c9ee09e1a56a24b3e8c325c3c6"
+          "p1": "6b4186ffdbf50e187385493533e763400c6b21c9ee09e1a56a24b3e8c325c3c6",
+          "p2": "60525e6608d94b8b8540853be1326d1a0e286cbffde986804b5734937e41f15d"
         }
       },
       "clips": {
@@ -24412,15 +24419,15 @@
           "path": "animations/npz/interx/g022t008a026r000-p1.glb",
           "frameCount": 332,
           "durationSeconds": 11.033333333333333,
-          "sizeBytes": 346924,
-          "sha256": "9db40239e4e63cc24fab9bda71f0e378b5e782095e53db03c371a8e5d8afeaca"
+          "sizeBytes": 346784,
+          "sha256": "304516e81aba3ca5482333463c5239ef69b0bd793dc2750b741e7cf83329c37e"
         },
         "p2": {
           "path": "animations/npz/interx/g022t008a026r000-p2.glb",
           "frameCount": 332,
           "durationSeconds": 11.033333333333333,
-          "sizeBytes": 346784,
-          "sha256": "304516e81aba3ca5482333463c5239ef69b0bd793dc2750b741e7cf83329c37e"
+          "sizeBytes": 346924,
+          "sha256": "9db40239e4e63cc24fab9bda71f0e378b5e782095e53db03c371a8e5d8afeaca"
         }
       },
       "rootMotion": {
@@ -24429,27 +24436,28 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.1268932819366455,
-        -0.23730796575546265,
-        0.6411652266979218
+        -0.1268932819366455,
+        0.23730796575546265,
+        -0.6411652266979218
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "handMotion": "full-axis-angle",
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.011867563185293806,
-          -0.04808136145587505
+          -0.04808136145587505,
+          -0.011867563185293806
         ],
         "sourceReferencePlaneMeters": -0.04808136145587505,
         "initialSoleHeightMeters": [
-          0.03621379827058124,
-          0.0
+          0,
+          0.03621379827058124
         ]
       }
     },
@@ -24461,12 +24469,12 @@
         "recording": "G022T008A026R001",
         "group": "G022",
         "take": "R001",
-        "p1": "G022T008A026R001/P1.npz",
-        "p2": "G022T008A026R001/P2.npz",
+        "p1": "G022T008A026R001/P2.npz",
+        "p2": "G022T008A026R001/P1.npz",
         "frameCount": 968,
         "sha256": {
-          "p1": "a2658d8a9b2dd751c0d34a413d5e373efc761ec9f3d293f93286578217028b69",
-          "p2": "4a341926c93195f521ac9e3248c28f9c32cda9264843acd2bf96cf2feec10108"
+          "p1": "4a341926c93195f521ac9e3248c28f9c32cda9264843acd2bf96cf2feec10108",
+          "p2": "a2658d8a9b2dd751c0d34a413d5e373efc761ec9f3d293f93286578217028b69"
         }
       },
       "clips": {
@@ -24474,15 +24482,15 @@
           "path": "animations/npz/interx/g022t008a026r001-p1.glb",
           "frameCount": 242,
           "durationSeconds": 8.033333333333333,
-          "sizeBytes": 271116,
-          "sha256": "a91017c75ce85feaa89dae8a3ec65e946796cc0caac7aca9abb06c78769df334"
+          "sizeBytes": 271256,
+          "sha256": "c28fb2807aea655d266f65efe548e8cef59b29bb7685ac2ce20fcd0dddcc62b1"
         },
         "p2": {
           "path": "animations/npz/interx/g022t008a026r001-p2.glb",
           "frameCount": 242,
           "durationSeconds": 8.033333333333333,
-          "sizeBytes": 271256,
-          "sha256": "c28fb2807aea655d266f65efe548e8cef59b29bb7685ac2ce20fcd0dddcc62b1"
+          "sizeBytes": 271116,
+          "sha256": "a91017c75ce85feaa89dae8a3ec65e946796cc0caac7aca9abb06c78769df334"
         }
       },
       "rootMotion": {
@@ -24491,26 +24499,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.46974608302116394,
-        -0.23080062866210938,
-        0.5595790445804596
+        -0.46974608302116394,
+        0.23080062866210938,
+        -0.5595790445804596
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          0.008521103412351128,
-          -0.04995247450451634
+          -0.04995247450451634,
+          0.008521103412351128
         ],
         "sourceReferencePlaneMeters": -0.04995247450451634,
         "initialSoleHeightMeters": [
-          0.05847357791686747,
-          0.0
+          0,
+          0.05847357791686747
         ]
       },
       "handMotion": "full-axis-angle"
@@ -24709,12 +24718,12 @@
         "recording": "G004T011A026R003",
         "group": "G004",
         "take": "R003",
-        "p1": "G004T011A026R003/P1.npz",
-        "p2": "G004T011A026R003/P2.npz",
+        "p1": "G004T011A026R003/P2.npz",
+        "p2": "G004T011A026R003/P1.npz",
         "frameCount": 1276,
         "sha256": {
-          "p1": "43f2459d1ab293410dc5dc65d1f3a99565a51589dddd14ac3090923e49cc190b",
-          "p2": "dd1590378c696e845fe1efb8547fab83d30d96c18caa1364f6f3ba829f6b25d4"
+          "p1": "dd1590378c696e845fe1efb8547fab83d30d96c18caa1364f6f3ba829f6b25d4",
+          "p2": "43f2459d1ab293410dc5dc65d1f3a99565a51589dddd14ac3090923e49cc190b"
         }
       },
       "clips": {
@@ -24722,15 +24731,15 @@
           "path": "animations/npz/interx/g004t011a026r003-p1.glb",
           "frameCount": 319,
           "durationSeconds": 10.6,
-          "sizeBytes": 335592,
-          "sha256": "e51b61fc5e19874f0be3cea3eba63052d07dd15f17f6bfedf8ee8bb46bee4ddd"
+          "sizeBytes": 336004,
+          "sha256": "6a4622eb8a2562974eb077f03ff224abd083e90678f84d26d6e4d8a37338e5ee"
         },
         "p2": {
           "path": "animations/npz/interx/g004t011a026r003-p2.glb",
           "frameCount": 319,
           "durationSeconds": 10.6,
-          "sizeBytes": 336004,
-          "sha256": "6a4622eb8a2562974eb077f03ff224abd083e90678f84d26d6e4d8a37338e5ee"
+          "sizeBytes": 335592,
+          "sha256": "e51b61fc5e19874f0be3cea3eba63052d07dd15f17f6bfedf8ee8bb46bee4ddd"
         }
       },
       "rootMotion": {
@@ -24739,27 +24748,28 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.0140761137008667,
-        -0.3126303553581238,
-        0.49722404405474663
+        -0.0140761137008667,
+        0.3126303553581238,
+        -0.49722404405474663
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "handMotion": "full-axis-angle",
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.049491221572180555,
-          -0.05102062723483636
+          -0.05102062723483636,
+          -0.049491221572180555
         ],
         "sourceReferencePlaneMeters": -0.05102062723483636,
         "initialSoleHeightMeters": [
-          0.0015294056626558028,
-          0.0
+          0,
+          0.0015294056626558028
         ]
       }
     },

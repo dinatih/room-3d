@@ -107,7 +107,7 @@ export const INTERX_ANIMATION_DEFINITIONS: AnimationDefinition[] = INTERX_MANIFE
     path: duo.clips[participant].path,
     label: `Inter-X · ${action.label} (${duo.source.group}, ${duo.variation}, ${duo.source.take}, ${participant.toUpperCase()})`,
     tags: participant === 'p1' && duo.tags.includes('seated-front')
-      ? [...duo.tags, 'sitting'] : duo.tags.filter(tag => tag !== 'seated-front'),
+      ? [...duo.tags, 'sitting'] : duo.tags.filter(tag => participant === 'p1' || !['seated-front', 'with-seated-action'].includes(tag)),
     duration: duo.clips[participant].durationSeconds,
     rootMotionSpace: 'world-meters' as const,
   }));

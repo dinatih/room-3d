@@ -13,7 +13,7 @@ const { captureAnimationRig, restoreAnimationRig } = require('../src/features/sc
  const loader = new GLTFLoader(); loader.setDRACOLoader({preload(){}});
  loader.register(() => ({name:'SkeletonOnly',loadMesh:()=>Promise.resolve(new THREE.Group())}));
  const read = async path => { const b = fs.readFileSync('public/'+path); return loader.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),''); };
- for (const entry of manifest.duos.filter(duo => duo.tags.includes('seated-front'))) {
+ for (const entry of manifest.duos.filter(duo => duo.tags.some(tag => ['seated-front', 'with-seated-action'].includes(tag)))) {
   const duo = INTERX_DUO_ANIMATIONS.find(duo => duo.id === entry.id);
   assert.equal(duo.animA, `${entry.id}-p1`);
   assert.equal(duo.animB, `${entry.id}-p2`);
