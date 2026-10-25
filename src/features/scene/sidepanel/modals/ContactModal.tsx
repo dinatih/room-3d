@@ -27,14 +27,14 @@ export function ContactModal({ onClose }: { onClose: () => void }) {
   }
 
   return createPortal(
-    <dialog ref={dialog} className="col-11 col-sm-8 col-md-6 col-lg-4 p-0 border-0 rounded shadow bg-body text-body"
+    <dialog ref={dialog} className="contact-modal glass-card col-11 col-sm-8 col-md-6 col-lg-4 m-auto p-0 rounded-4 text-dark"
       aria-labelledby="contact-title" onClose={onClose}
       onKeyDown={event => event.stopPropagation()} onWheel={event => event.stopPropagation()}>
-      <div className="modal-header p-3 border-bottom">
-        <h5 id="contact-title" className="modal-title fs-6">Me contacter</h5>
-        <button type="button" className="btn-close" aria-label="Fermer" onClick={onClose} />
+      <div className="modal-header d-flex align-items-center justify-content-between gap-3 p-4 border-bottom border-white border-opacity-50">
+        <h5 id="contact-title" className="modal-title fs-5 fw-semibold mb-0"><i className="bi bi-envelope text-danger me-2" aria-hidden="true" />Me contacter</h5>
+        <button type="button" className="btn-close flex-shrink-0" aria-label="Fermer" onClick={onClose} />
       </div>
-      <form onSubmit={submit} className="p-3">
+      <form onSubmit={submit} className="p-4">
         {status === 'sent' ? <p role="status" className="alert alert-success mb-0">Votre message a été envoyé. Merci !</p> : <>
           <fieldset disabled={status === 'sending'} className="d-flex flex-column gap-2">
             <label htmlFor="contact-name" className="form-label mb-0">Nom</label>
@@ -48,7 +48,7 @@ export function ContactModal({ onClose }: { onClose: () => void }) {
               <input id="contact-honeypot" name="honeypot" tabIndex={-1} autoComplete="off" />
             </div>
             <p className="small text-body-secondary mb-0">Votre adresse e-mail servira uniquement à vous répondre.</p>
-            <button type="submit" className="btn btn-primary btn-sm">{status === 'sending' ? 'Envoi en cours…' : 'Envoyer'}</button>
+            <button type="submit" className="btn btn-danger btn-sm mt-2 py-2"><i className="bi bi-send me-2" aria-hidden="true" />{status === 'sending' ? 'Envoi en cours…' : 'Envoyer'}</button>
           </fieldset>
           {status === 'error' && <p role="alert" className="alert alert-danger small mt-3 mb-0">L’envoi a échoué. Veuillez réessayer.</p>}
         </>}

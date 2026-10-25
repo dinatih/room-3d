@@ -50,6 +50,27 @@ button, input, select, textarea {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.85) !important;
 }
 
+/* Formulaire de contact en verre dépoli */
+.contact-modal {
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+
+.contact-modal::backdrop {
+  background: rgba(14, 14, 24, 0.3);
+}
+
+.contact-modal .form-control {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.contact-modal .form-control:focus {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: var(--red);
+  box-shadow: 0 0 0 0.2rem rgba(211, 47, 47, 0.15);
+}
+
 /* Titres et en-têtes avec effet gravé 3D dans le verre */
 .glass-card .card-header button {
   color: #1f2937 !important;
