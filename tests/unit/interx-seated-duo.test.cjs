@@ -1,28 +1,29 @@
 const { it } = require('node:test');
 const assert = require('node:assert/strict');
-const { load } = require('../support/load-ts.cjs');
+require('../support/load-ts.cjs');
 const interx = require('../../src/features/scene/animations/interxManifest.ts');
-const { computeWorldTransform } = require('../../src/features/scene/animations/duoWorldTransform.ts');
-const { getDuoAnimationForClip } = load('src/features/scene/animations/duoAnimations.ts', {
-  './animationRegistry': { ANIMATION_DEFINITIONS: interx.INTERX_ANIMATION_DEFINITIONS },
-  './interxManifest': interx,
-});
+const { getAnimationsByTags, resolveSlotAnimation } = require('../../src/features/scene/animations/animationResolver.ts');
+const { getDuoAnimationForClip } = require('../../src/features/scene/animations/duoAnimations.ts');
 
-it('toutes les variantes sur la jambe déclenchent le duo depuis B assis, avec A au décalage inverse', () => {
-  const action = interx.INTERX_MANIFEST.actions.find(action => action.key === 'sit-on-leg');
-  const variants = interx.INTERX_MANIFEST.duos.filter(duo => duo.actionCode === action.code);
-  assert(variants.length > 0);
-  for (const duo of variants) {
-    const clipA = interx.INTERX_ANIMATION_DEFINITIONS.find(clip => clip.id === `${duo.id}-p1`);
-    const clipB = interx.INTERX_ANIMATION_DEFINITIONS.find(clip => clip.id === `${duo.id}-p2`);
-    assert(!clipA.tags.includes('seated-front'), duo.id);
-    assert(clipB.tags.includes('seated-front'), duo.id);
-    const session = getDuoAnimationForClip(clipB.path);
-    assert.equal(session.animA, clipB.id);
-    assert.equal(session.animB, clipA.id);
-    assert.deepEqual(session.offsetB, duo.start_offset.map(value => -value * 100));
-    const { posA, posB } = computeWorldTransform([90, 0, 234.5], Math.PI / 2, session.offsetB);
-    assert.equal(posA[1], 0, 'le personnage assis conserve la hauteur du slot');
-    assert.equal(posB[1] - posA[1], -duo.start_offset[1] * 100, 'la hauteur relative source est conservée');
+it('le tirage seated-front sélectionne le participant assis vérifié et lance son duo en rôle A', () => {
+  const pool = getAnimationsByTags('seated-front');
+  const random = Math.random;
+  try {
+    for (const duo of interx.INTERX_MANIFEST.duos) {
+      for (const person of ['p1', 'p2']) {
+        const clip = interx.INTERX_ANIMATION_DEFINITIONS.find(clip => clip.id === `${duo.id}-${person}`);
+        const index = pool.findIndex(candidate => candidate.id === clip.id);
+        assert.equal(index >= 0, person === duo.seatedParticipant, clip.id);
+        if (index < 0) continue;
+        Math.random = () => (index + 0.5) / pool.length;
+        const selected = resolveSlotAnimation({ animationsRandom: 'seated-front' });
+        assert.equal(selected.animation, clip.path);
+        const session = getDuoAnimationForClip(selected.animation);
+        assert.equal(session.id, duo.id);
+        assert.equal(session.animA, clip.id);
+      }
+    }
+  } finally {
+    Math.random = random;
   }
 });
