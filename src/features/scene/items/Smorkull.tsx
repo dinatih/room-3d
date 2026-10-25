@@ -11,6 +11,12 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
+// Largeur mesurée de l'assise (~52 cm), profondeur complète de la chaise (66 cm).
+export const SMORKULL_FOOTPRINT = [
+  { x: -25.894, z: -33 }, { x: 25.848, z: -33 },
+  { x: 25.848, z: 33 }, { x: -25.894, z: 33 },
+];
+
 const GLB = 'items/smorkull60503437/Smorkull60503437.glb';
 
 export function Smorkull({ onSize }: SceneItemProps) {
