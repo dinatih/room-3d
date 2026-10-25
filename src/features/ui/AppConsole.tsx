@@ -394,7 +394,7 @@ export function AppConsole({
         >
           {!open && latestLog && (
             <span className="small font-monospace text-truncate" title={`[${latestLogTag}] ${latestLog.message}`}>
-              [{latestLogTag}] {latestLog.message}
+              <small>[{latestLogTag}] {latestLog.message}</small>
             </span>
           )}
           <button
