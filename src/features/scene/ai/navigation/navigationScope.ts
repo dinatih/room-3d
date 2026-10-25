@@ -1,4 +1,6 @@
 export interface NavigationJob<T> {
+  readonly id?: number;
+  readonly graphId?: number;
   readonly description: string;
   status: 'pending' | 'ready' | 'error' | 'cancelled';
   result?: T; error?: Error; settled: Promise<void>; cancel(): void;

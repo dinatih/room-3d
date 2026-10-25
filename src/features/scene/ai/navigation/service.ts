@@ -1,16 +1,17 @@
 import { positionState } from '../../positionState';
 import { movingFurniture } from '../../furniturePositions';
 import { architectureObstacles, walkableSurfaces } from './architecture';
-import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, navigationDebug, agentProfileLifecycle, type AgentProfile } from './obstacles';
+import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, hasAgentProfile, navigationDebug, agentProfileLifecycle, type AgentProfile } from './obstacles';
 import { inflate, rectangle, pointInRing, insideObstacle, segmentFree, distance, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState, doorPolygon } from '../../doorObstacles';
-import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, getAgentDoorProtection, protectDoor, type DoorKey, type DoorProtection } from './doorRequests';
-import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from '../agent/agentAvoidance';
+import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, getAgentDoorProtection, protectDoor, getDoorRequestDiagnostics, type DoorKey, type DoorProtection } from './doorRequests';
+import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, getActorNavigationDiagnostics, type ActorBlockers } from '../agent/agentAvoidance';
 import { NAVIGATION_COMFORT_CM } from './comfort';
 import type { GraphDefinition, ApproachRegion } from './queries';
 import { NavigationScope, NavigationPending, navigationValue, getNavigationScope } from './navigationScope';
-import { findPath, prepareNavigationGraph, readObjectApproach, type NavigationGraph } from './pathfindingClient';
+import { findPath, prepareNavigationGraph, readObjectApproach, getNavigationJobDiagnostics, type NavigationGraph } from './pathfindingClient';
 import { OccupancyManager, isInRoom, LIMITED_ROOMS, ROOM_CAPACITIES } from '../occupancyManager';
+import { devLog, DEV_LOG_ENABLED } from '@/devLog';
 
 export { architectureObstacles };
 export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
@@ -112,6 +113,10 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
     addObstacle(rectangle((a.x + b.x) / 2, (a.z + b.z) / 2, distance(a, b), 0, Math.atan2(a.z - b.z, b.x - a.x)));
   }
   const preparation = prepareNavigationGraph(definition);
+  if (DEV_LOG_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_geometry', data: {
+    epoch: preparation.epoch, graphId: preparation.id, revision, excludeOwners: excludeSet, doorAngles: angles, shutterBlocked,
+    movingFurniture: [...movingFurniture], definition, sources: solid,
+  } });
   const entry = { revision, doorAngles, preparation, previous, graph: old?.graph };
   profileCache.set(key, entry);
   return entry;
@@ -165,6 +170,7 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
     surfaces: walkableSurfaces, actors: getAgentObstacles(agentId), exiting, flexible, region, escape,
   });
   const free = candidates.find(p => isAgentDestinationFree(agentId, p));
+  devLog({ tag: agentId, category: 'nav', action: 'nav_approach_selected', data: { owner, goal, start, exiting, flexible, region, epoch: graph.epoch, graphId: graph.id, candidates, selected: free ?? null, containingOwners } });
   return free ?? (exiting ? candidates[0] : undefined) ?? null;
 }
 
@@ -185,6 +191,35 @@ export interface RouteState {
   occupiedTarget?: { point: Point; destination: Point };
   exit?: { owner: string; graph: NavigationGraph; point: Point };
   failure?: { graph: NavigationGraph; start: Point; target: Point; owner?: string; interaction: boolean; protectedDoor?: DoorKey; doorProtection?: DoorProtection; actorBlockers: ActorBlockers };
+}
+
+let lastWorldDiagnosticAt = -Infinity;
+/** Called at stop transitions and once per second, never for every collision check. */
+export function navigationDiagnostics(route: RouteState, agentId: string, start: Point) {
+  const next = route.path[route.index];
+  let limited: Point | undefined, blockers: ActorBlockers | undefined;
+  if (next && hasAgentProfile(agentId)) {
+    beginActorBlockCheck(agentId);
+    try { limited = limitAgentMovement(agentId, start, next); }
+    finally { blockers = endActorBlockCheck(agentId); }
+  }
+  if (DEV_LOG_ENABLED && performance.now() - lastWorldDiagnosticAt >= 1000) {
+    lastWorldDiagnosticAt = performance.now();
+    devLog({ tag: 'navigation', category: 'nav', action: 'nav_world', data: {
+      revision: getObstacleRevision(), actors: getActorNavigationDiagnostics(), furniture: [...furnitureObstacles.values()], movingFurniture: [...movingFurniture],
+      doors: doorKeys.map(key => ({ key, actualAngle: doorCollisionState[key].angle, allowedAngle: computeDoorAllowedAngle(DOOR_CONFIGS[key]), config: DOOR_CONFIGS[key] })),
+      doorRequests: getDoorRequestDiagnostics(), shutter: glassShutterState,
+      slots: OccupancyManager.getReservations(), rooms: LIMITED_ROOMS.map(room => ({ room, capacity: ROOM_CAPACITIES[room], occupants: [...OccupancyManager.getRoomOccupants(room)] })),
+      jobs: getNavigationJobDiagnostics(),
+    } });
+  }
+  return { path: route.path, index: route.index, next, limited, blockers, target: route.target, destination: route.destination,
+    epoch: route.graph?.epoch, graphId: route.graph?.id, owner: route.owner, approach: route.approach, exit: route.exit && { ...route.exit, graph: route.exit.graph.id },
+    doors: [...route.doors], protectedDoor: route.protectedDoor, waitReason: route.waitReason, error: route.error, occupiedTarget: route.occupiedTarget,
+    failure: route.failure && { ...route.failure, graph: route.failure.graph.id },
+    crowd: route.crowd && { baseId: route.crowd.base.id, graphId: route.crowd.graph?.id, planningId: route.crowd.planning?.id,
+      preparationId: route.crowd.preparation?.id, preparing: route.crowd.preparing, resume: route.crowd.resume, signature: route.crowd.signature },
+  };
 }
 function clearCrowd(route: RouteState): void {
   route.crowd?.preparation?.cancel();

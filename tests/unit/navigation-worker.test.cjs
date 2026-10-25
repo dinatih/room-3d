@@ -11,7 +11,8 @@ const snapshot = () => queries.buildNavigationGraph(definition).snapshot();
 const approach = { owner: 'fixture', goal: { x: 0, z: 0 }, start: { x: -80, z: 0 }, owned: [], surfaces,
   actors: [], exiting: false, flexible: false, escape: [] };
 const duo = { anchor: { x: 0, z: 0 }, offsets: [{ x: 20, z: 0 }], partner: definition, surfaces };
-const clientModule = () => load('src/features/scene/ai/navigation/pathfindingClient.ts', {
+const clientModule = (journal = []) => load('src/features/scene/ai/navigation/pathfindingClient.ts', {
+  '@/devLog': { devLog: entry => journal.push(entry), DEV_LOG_ENABLED: true },
   './navigationScope': scopes, './mesh': meshModule, './queries': queries, '../../cameraState': { cameraState: {} },
 }, source => source.replaceAll('import.meta.url', "'file:///navigation.ts'").replace(/if \(import\.meta\.hot\)[\s\S]*$/, ''));
 
@@ -42,7 +43,7 @@ describe('Construction du réseau et requêtes géométriques dans le worker', (
     globalThis.performance = { now: () => now };
     globalThis.Worker = class { constructor() { worker = this; } postMessage(message) { sent.push(message); } };
     try {
-      const client = clientModule();
+      const journal = [], client = clientModule(journal);
       const answer = (request, milliseconds, result) => worker.onmessage({ data: { id: request.id, graphId: request.graphId, ok: true, milliseconds, result } });
       const preparation = client.prepareNavigationGraph(definition), build = sent.shift();
       assert.throws(() => preparation.read(), scopes.NavigationPending);
@@ -59,12 +60,19 @@ describe('Construction du réseau et requêtes géométriques dans le worker', (
       now = 90; answer(pendingDuo, 5, duo.anchor);
       now = 95; assert.deepEqual(first.run(readFirst), duo.anchor);
       now = 100; assert.deepEqual(second.run(readDuo), duo.anchor);
+      const completed = journal.find(entry => entry.action === 'nav_job_completed' && entry.data.jobId === pendingApproach.id);
+      assert.equal(completed.data.graphId, graph.id);
+      assert.equal(completed.data.workerMs, 20);
+      assert(journal.some(entry => entry.action === 'nav_job_consumed' && entry.data.jobId === pendingApproach.id));
       const timing = (workerMs, deliveryMs, resumeMs, maxTotalMs, queueMs = 0) => ({ completed: 1, consumed: 1, queueMs, workerMs, localMs: 0, deliveryMs, resumeMs, maxTotalMs });
       assert.deepEqual(client.pathfindingStats.timings.build, timing(7, 13, 12, 32));
       assert.deepEqual(client.pathfindingStats.timings.duo, { completed: 2, consumed: 2, queueMs: 20, workerMs: 25, localMs: 0, deliveryMs: 23, resumeMs: 35, maxTotalMs: 53 });
       assert.deepEqual(client.findPath(graph, { x: 0, z: 0 }, { x: 30, z: 0 }), [{ x: 30, z: 0 }]);
       assert.equal(sent.length, 0, 'A route on the prepared network must not wait for the worker');
       assert.equal(client.pathfindingStats.timings.path.completed, 1);
+      const error = Object.assign(new Error('invalid funnel'), { cause: { start: { x: 1, z: 2 } } });
+      assert.throws(() => client.findPath({ ...graph, find() { throw error; } }, { x: 0, z: 0 }, { x: 30, z: 0 }), caught => caught === error);
+      assert.equal(journal.at(-1).action, 'nav_path_error'); assert.equal(journal.at(-1).data.error, error);
       preparation.cancel();
     } finally { globalThis.performance = previousClock; if (previousWorker === undefined) delete globalThis.Worker; else globalThis.Worker = previousWorker; }
   });

@@ -1,23 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { appendFileSync } from 'node:fs';
+import { devLogPlugin } from './scripts/dev-log-plugin';
 
 export default defineConfig({
-  plugins: [react(), {
-    name: 'app-log-file',
-    configureServer(server) {
-      const logFile = '/tmp/room-3d-app.jsonl';
-      server.config.logger.info(`Logs applicatifs Chrome : ${logFile}`);
-      server.ws.on('room:app-log', (payload) => {
-        try {
-          appendFileSync(logFile, JSON.stringify({ receivedAt: new Date().toISOString(), ...payload }) + '\n');
-        } catch (error) {
-          server.config.logger.error(`Échec écriture ${logFile} : ${error}`);
-        }
-      });
-    },
-  }],
+  plugins: [react(), devLogPlugin()],
   base: '/',
   resolve: {
     alias: {

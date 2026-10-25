@@ -68,6 +68,40 @@ Ces métriques n'incluent pas de seuil
 qui masquerait une attente. `Sad Idle` indique une attente de navigation ;
 `Thinking` indique un clip encore en préparation.
 
+## Journaux de diagnostic en développement
+
+Chaque document reçoit une session UUID, conservée pendant HMR. Un rechargement
+crée un nouveau fichier `/tmp/room-3d-logs/<date>_<session>.jsonl` ; `latest.jsonl`
+pointe vers le dernier chargement, sans effacer les sessions précédentes.
+Chaque ligne conserve l'URL, le navigateur, la séquence d'émission et le temps
+écoulé depuis le début du document. L'en-tête indique le commit et les fichiers
+modifiés. Les exceptions, rejets de promesses et messages console warn/error
+sont conservés avec stack et cause, y compris la reproduction du funnel.
+
+Les événements `nav_graph_created` et `nav_graph_geometry` contiennent la
+géométrie et ses propriétaires. `nav_path` conserve les chemins et distingue un
+départ invalide d'une cible invalide. Les événements `nav_job_*` relient le job
+et le graphe aux temps de file, calcul, livraison et consommation. Les approches
+enregistrent leurs candidats, empreintes d'acteurs et résultat de sélection.
+Une époque UUID distingue aussi les numéros de graphes réinitialisés par HMR.
+
+`nav_stop` et `nav_stop_end` encadrent chaque arrêt et sa durée. Une fois par
+seconde, `nav_agent_snapshot` conserve instruction, position, animation, absence
+de progression, déploiement, trajet, attente et état du contournement. `nav_world`
+enregistre positions et réservations des autres acteurs, gabarits, rayons réels
+d'évitement, mobilier, angles et demandes de portes, capacités des pièces et
+file du worker. `page_heartbeat` continue même lorsque le rendu est arrêté :
+son rapprochement avec les traces des agents permet de repérer un moteur figé
+ou suspendu. Ces détails sont écrits dans les fichiers, sans remplir la console UI.
+
+```bash
+tail -F /tmp/room-3d-logs/latest.jsonl
+node scripts/analyze-navigation-logs.cjs
+node scripts/analyze-navigation-logs.cjs /tmp/room-3d-logs/<session>.jsonl
+```
+
+## Tests
+
 ```bash
 npm test
 npx tsc --noEmit

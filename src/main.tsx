@@ -1,3 +1,4 @@
+import './devLog';
 import { createRoot } from 'react-dom/client';
 import './features/ui/resourceDownloadLogs';
 import { useGLTF } from '@react-three/drei';

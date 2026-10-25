@@ -14,6 +14,7 @@ const queries = require('../../src/features/scene/ai/navigation/queries.ts');
 let pathRequests = 0, cancelledGraphs = 0, holdBuilds = false;
 let roomFull = false, checkedRoom;
 const navigationDependencies = {
+    '@/devLog': { devLog() {}, DEV_LOG_ENABLED: false },
     './navigationScope': require('../../src/features/scene/ai/navigation/navigationScope.ts'),
     '../occupancyManager': { OccupancyManager: { hasRoomCapacity: () => !roomFull }, isInRoom: (room, point) => room === checkedRoom && point.x > 0, LIMITED_ROOMS: ['living', 'bathroom', 'corridor'], ROOM_CAPACITIES: { living: 8, bathroom: 3, corridor: 2 } },
     '../../positionState': { positionState: {} }, '../../furniturePositions': { movingFurniture: new Set() }, './architecture': architecture, './obstacles': obstacles, './geometry': g,
@@ -62,6 +63,7 @@ describe('Navigation et portes — géométrie isolée', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
         const avoidance = load('src/features/scene/ai/agent/agentAvoidance.ts', {
+            '@/devLog': { devLog() {} },
             '../../cameraState': { cameraState }, '../../store/useSceneStore': { useSceneStore: { getState: () => ({ layers: { npcCollisions: true } }) } },
             '../navigation/obstacles': obstacles, '../navigation/geometry': g, '../duoSessionManager': { duoSessionManager: { getSessionFor: () => undefined } },
         });

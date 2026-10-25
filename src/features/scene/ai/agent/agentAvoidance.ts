@@ -3,6 +3,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { getAgentProfile, hasAgentProfile } from '../navigation/obstacles';
 import { inflate, CLEARANCE_ERROR, BOOLEAN_PRECISION, GEOMETRY_EPSILON, pointInRing, projectToSegment, distance, type Point, type Polygon } from '../navigation/geometry';
 import { duoSessionManager } from '../duoSessionManager';
+import { devLog } from '@/devLog';
 
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
@@ -40,6 +41,8 @@ const actorOverlap = (point: Point, center: Point, radius: number) =>
   && pointInRing(point, inflate([{ x:center.x, z:center.z }], radius));
 
 export function reserveAgentDestination(id: string, target: Point | null): void {
+  const previous = destinations.get(id);
+  if (previous?.x !== target?.x || previous?.z !== target?.z) devLog({ tag: id, category: 'nav', action: 'nav_reservation', data: { previous, target } });
   if (target) destinations.set(id, { ...target });
   else {
     destinations.delete(id);
@@ -124,7 +127,7 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
     const polygon = inflate([{ x: other.x, z: other.z }], radius);
     // Existing overlaps may separate, but must not deepen.
     if (pointInRing(start, polygon)) {
-      if (dx * vx + dz * vz < 0) fraction = 0;
+      if (dx * vx + dz * vz < 0) { fraction = 0; observedBlockers.get(id)?.set(otherId, actorState(otherId)); }
       continue;
     }
     // Clip the step against the very same convex footprint as the planner.
@@ -143,7 +146,10 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
         else leave = Math.min(leave, contact);
       }
     }
-    if (enter < leave && leave > 0 && enter < fraction) fraction = Math.max(0, enter);
+    if (enter < leave && leave > 0 && enter < fraction) {
+      fraction = Math.max(0, enter);
+      observedBlockers.get(id)?.set(otherId, actorState(otherId));
+    }
   }
   return fraction === 1 ? proposed : { x: start.x + vx * fraction, z: start.z + vz * fraction };
 }
@@ -188,4 +194,13 @@ export function computeRotYStep(currentRotY: number, targetRotY: number, rotSpee
   const eased = diff * (1 - Math.exp(-rotSpeed * dt));
   const limit = rotSpeed * dt;
   return currentRotY + Math.max(-limit, Math.min(limit, eased));
+}
+
+export function getActorNavigationDiagnostics() {
+  return Object.entries(cameraState.positions).map(([id, position]) => ({
+    id, position, destination: destinations.get(id),
+    profile: hasAgentProfile(id) ? getAgentProfile(id) : undefined,
+    avoidanceRadius: hasAgentProfile(id) ? actorRadius(getAgentProfile(id)) : undefined,
+    passingSides: [...(passingSides.get(id) ?? [])], sessionId: duoSessionManager.getSessionFor(id)?.sessionId,
+  }));
 }

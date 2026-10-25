@@ -34,6 +34,8 @@ class SmartObjectOccupancyManager {
   // Clef: `${objectId}:${slotId}` -> { characterId, claimedAt }
   private occupiedSlots = new Map<string, SlotReservation>();
 
+  getReservations() { return [...this.occupiedSlots].map(([slot, reservation]) => ({ slot, ...reservation })); }
+
   private slotKey(objectId: string, slotId: string): string {
     return `${objectId}:${slotId}`;
   }

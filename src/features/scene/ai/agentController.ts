@@ -4,7 +4,7 @@ import { getAvailableAutonomousActivities } from './autonomousActivities';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, movePostureTransition, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation } from './navigation/service';
+import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, movePostureTransition, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation, navigationDiagnostics } from './navigation/service';
 import { prepareKitchenStorageAccess, releaseKitchenStorageAccess } from './diyChairClearance';
 import { hasAgentProfile, getObstacleRevision, furnitureClearance, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
 import { distance, inflate, pointInRing, BOOLEAN_PRECISION } from './navigation/geometry';
@@ -21,7 +21,9 @@ import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, beginAc
 import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { releaseAgentDoors } from './navigation/doorRequests';
 import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
-import { NavigationScope, NavigationPending } from './navigation/navigationScope';
+import { NavigationScope, NavigationPending, type NavigationJob } from './navigation/navigationScope';
+import { devLog, DEV_LOG_ENABLED } from '@/devLog';
+import { isAppIdle } from '../idleState';
 
 export type { AgentState };
 export { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation };
@@ -123,12 +125,24 @@ export function createAgentController(
   let route = createRouteState();
   let routeInstruction: AgentInstruction | null = null;
   let navigationError: string | null = null;
+  let diagnosticStop: { reason: string; startedAt: number } | undefined;
+  let lastDiagnosticAt = -Infinity, lastProgressAt = performance.now();
+  let lastDiagnosticUpdateAt = performance.now();
+  let diagnosticX = state.x, diagnosticZ = state.z;
+  let diagnosticInstruction: AgentInstruction | undefined;
   const reportNavigationStop = (reason: string, label: string, target: { x: number; z: number }, actorBlockers?: ActorBlockers, pending = false) => {
     const key = `${label}:${reason}`;
     if (navigationError === key) return;
     navigationError = key;
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex] ?? routeInstruction;
     const objId = instruction?.smartObjectId ?? claimedSlot?.objectId;
+    if (DEV_LOG_ENABLED) {
+      diagnosticStop ??= { reason, startedAt: performance.now() };
+      devLog({ tag: _characterId, category: 'nav', action: 'nav_stop', data: {
+        reason, label, target, pending, instruction, state, status: agentStatus, deployment,
+        blockers: actorBlockers, stoppedForMs: performance.now() - diagnosticStop.startedAt, route: navigationDiagnostics(route, _characterId, state),
+      } });
+    }
     appLog(
       _characterId,
       pending
@@ -1540,11 +1554,16 @@ export function createAgentController(
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     let waitingForNavigation = false;
     let pendingReason: string | undefined;
+    let pendingJob: NavigationJob<unknown> | undefined;
     try { return navigationScope.run(() => updateCurrent(dt)); }
     catch (error) {
-      if (!(error instanceof NavigationPending)) throw error;
+      if (!(error instanceof NavigationPending)) {
+        devLog({ tag: _characterId, category: 'nav', action: 'nav_exception', data: { error, state, instruction, status: agentStatus } });
+        throw error;
+      }
       waitingForNavigation = true;
       pendingReason = error.job.description;
+      pendingJob = error.job;
       if (agentStatus === 'TRANSITIONING') state.animationPaused = true;
       return state;
     } finally {
@@ -1556,6 +1575,32 @@ export function createAgentController(
         const objId = instruction?.smartObjectId;
         const label = objId ? SMART_OBJECTS[objId]?.name ?? objId : instruction?.targetZoneId ?? instruction?.type ?? 'navigation';
         reportNavigationStop(pendingReason, label, state, undefined, true);
+      }
+      if (DEV_LOG_ENABLED) {
+        const now = performance.now();
+        if (state.x !== diagnosticX || state.z !== diagnosticZ) { lastProgressAt = now; diagnosticX = state.x; diagnosticZ = state.z; }
+        if (next !== diagnosticInstruction) {
+          devLog({ tag: _characterId, category: 'nav', action: 'nav_instruction', data: { previous: diagnosticInstruction, instruction: next, stepIndex, dynamicNavIndex, state } });
+          diagnosticInstruction = next;
+        }
+        if (diagnosticStop && !navigationError) {
+          devLog({ tag: _characterId, category: 'nav', action: 'nav_stop_end', data: { ...diagnosticStop, durationMs: now - diagnosticStop.startedAt,
+            movedThisFrame: state.x !== x || state.z !== z, state, status: agentStatus, instruction: next } });
+          diagnosticStop = undefined;
+        }
+        if (now - lastDiagnosticAt >= 1000) {
+          lastDiagnosticAt = now;
+          devLog({ tag: _characterId, category: 'nav', action: 'nav_agent_snapshot', data: {
+            state, status: agentStatus, instruction: next, stepIndex, dynamicNavIndex, dynamicNavQueue,
+            noProgressMs: now - lastProgressAt, stop: diagnosticStop, navigationError, waitingForNavigation, pendingReason,
+            pendingJob: pendingJob && { jobId: pendingJob.id, graphId: pendingJob.graphId, description: pendingJob.description, status: pendingJob.status },
+            frameDeltaSeconds: dt, sincePreviousUpdateMs: now - lastDiagnosticUpdateAt,
+            deployment, initialProfileResolved, claimedSlot, manualOverride, postureTransition, blockedCoords: blockedCoords && { ...blockedCoords, graph: blockedCoords.graph.id },
+            route: navigationDiagnostics(route, _characterId, state), idle: isAppIdle(), layers: useSceneStore.getState().layers,
+            activeCharacterId: useSceneStore.getState().activeCharacterId, cameraMode: cameraState.mode,
+          } });
+        }
+        lastDiagnosticUpdateAt = now;
       }
     }
   };

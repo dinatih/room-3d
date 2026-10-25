@@ -43,3 +43,8 @@ export function releaseAgentDoors(agentId: string, keep?: DoorKey): void {
   const retained = keep && doorOpeningKey(keep);
   for (const key of new Set([...passages.keys(), ...protections.keys()])) if (key !== retained) releaseDoor(key, agentId);
 }
+
+export function getDoorRequestDiagnostics() {
+  return { revision: protectionRevision, passages: [...passages].map(([door, actors]) => ({ door, actors: [...actors] })),
+    protections: [...protections].map(([door, actors]) => ({ door, actors: [...actors] })) };
+}

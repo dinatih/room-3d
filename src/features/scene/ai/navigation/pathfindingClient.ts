@@ -4,9 +4,11 @@ import type { PathRequest, PathResponse, NavigationQuery, NavigationResult, Work
 import { navigationQuery, readNavigationJob, type NavigationJob } from './navigationScope';
 import { cameraState } from '../../cameraState';
 import { NavigationMesh } from './mesh';
+import { devLog, DEV_LOG_ENABLED } from '@/devLog';
 
 export interface NavigationGraph extends GraphSnapshot {
   readonly id: number;
+  readonly epoch: string;
   readonly definition: WorkerDefinition;
   canReach(start: Point, target: Point): boolean;
   findReachable(start: Point, targets: Point[]): Point | null;
@@ -25,11 +27,23 @@ interface Job extends NavigationJob<NavigationResult> {
   waitStartedAt?: number;
 }
 const queue = new Map<number, Job>();
+const navigationEpoch = DEV_LOG_ENABLED ? crypto.randomUUID() : '';
 let nextGraphId = 0, nextJobId = 0;
 let worker: Worker | undefined;
 let running: Job | undefined;
 const workerGraphIds = new Set<number>();
 let failure: Error | undefined;
+
+function traceJob(action: string, job: Job, data: object = {}) {
+  devLog({ tag: 'navigation', category: 'nav', action, data: { epoch: navigationEpoch, jobId: job.id, graphId: job.graphId, kind: job.query.kind,
+    status: job.status, queued: queue.size, runningJobId: running?.id, ...data } });
+}
+
+export function getNavigationJobDiagnostics() {
+  const describe = (job: Job) => ({ jobId: job.id, graphId: job.graphId, kind: job.query.kind, status: job.status,
+    ageMs: performance.now() - job.submittedAt, submittedAt: job.submittedAt, dispatchedAt: job.dispatchedAt, waitStartedAt: job.waitStartedAt });
+  return { epoch: navigationEpoch, running: running && describe(running), queued: [...queue.values()].map(describe), failure, stats: pathfindingStats };
+}
 
 export const pathfindingStats = { submitted: 0, completed: 0, cancelled: 0, running: false, queued: 0, lastWorkerMs: 0, maxWorkerMs: 0,
   timings: Object.fromEntries(['build', 'path', 'approach', 'duo'].map(kind => [kind, {
@@ -38,6 +52,7 @@ export const pathfindingStats = { submitted: 0, completed: 0, cancelled: 0, runn
 };
 
 function fail(error: Error) {
+  devLog({ tag: 'error', category: 'nav', action: 'nav_worker_failure', data: { error, jobs: getNavigationJobDiagnostics() } });
   failure = error;
   const jobs = [...(running ? [running] : []), ...queue.values()];
   running = undefined;
@@ -76,6 +91,9 @@ function dispatch() {
       timing.queueMs += job.dispatchedAt - job.submittedAt;
       timing.workerMs += response.milliseconds;
       timing.deliveryMs += job.receivedAt - job.dispatchedAt - response.milliseconds;
+      traceJob('nav_job_completed', job, { ok: response.ok, workerMs: response.milliseconds,
+        queueMs: job.dispatchedAt - job.submittedAt, deliveryMs: job.receivedAt - job.dispatchedAt - response.milliseconds,
+        result: response.ok ? job.query.kind === 'build' ? { cells: (response.result as GraphSnapshot).cells.length, vertices: (response.result as GraphSnapshot).vertices.length } : response.result : response.error });
       if (response.ok && job.status !== 'cancelled') workerGraphIds.add(job.graphId);
       else workerGraphIds.delete(job.graphId);
       if (job.status !== 'cancelled') {
@@ -98,6 +116,7 @@ function dispatch() {
   const request: PathRequest = { id: job.id, graphId: job.graphId, query: job.query };
   if (!workerGraphIds.has(job.graphId)) request.definition = job.definition;
   job.dispatchedAt = performance.now();
+  traceJob('nav_job_dispatched', job, { queueMs: job.dispatchedAt - job.submittedAt });
   try { worker.postMessage(request); }
   catch (error) { fail(error instanceof Error ? error : new Error(String(error))); }
 }
@@ -110,11 +129,12 @@ function request(graphId: number, definition: WorkerDefinition, query: Navigatio
   let consumed = false;
   const job: Job = { id: ++nextJobId, graphId, definition, query, description, status: 'pending', onComplete, settled, settle,
     submittedAt: performance.now(), dispatchedAt: 0,
-    onWait() { job.waitStartedAt ??= performance.now(); },
+    onWait() { if (job.waitStartedAt === undefined) { job.waitStartedAt = performance.now(); traceJob('nav_job_wait', job); } },
     onRead() {
       if (consumed || job.receivedAt === undefined) return;
       consumed = true;
       const now = performance.now(), timing = pathfindingStats.timings[query.kind];
+      traceJob('nav_job_consumed', job, { resumeMs: now - job.receivedAt, totalMs: now - job.submittedAt });
       timing.consumed++;
       if (job.waitStartedAt !== undefined) {
         timing.resumeMs += now - Math.max(job.receivedAt, job.waitStartedAt);
@@ -128,17 +148,25 @@ function request(graphId: number, definition: WorkerDefinition, query: Navigatio
       queue.delete(job.id);
       pathfindingStats.queued = queue.size;
       pathfindingStats.cancelled++;
+      traceJob('nav_job_cancelled', job, { ageMs: performance.now() - job.submittedAt });
     },
   };
   pathfindingStats.submitted++;
   queue.set(job.id, job);
   pathfindingStats.queued = queue.size;
+  traceJob('nav_job_queued', job, { query });
   dispatch();
   return job;
 }
 
 export function findPath(graph: NavigationGraph, start: Point, target: Point): Point[] | null {
-  const began = performance.now(), path = graph.find(start, target), elapsed = performance.now() - began;
+  const began = performance.now();
+  let path: Point[] | null;
+  try { path = graph.find(start, target); }
+  catch (error) { devLog({ tag: 'error', category: 'nav', action: 'nav_path_error', data: { epoch: graph.epoch, graphId: graph.id, start, target, error, definition: graph.definition } }); throw error; }
+  const elapsed = performance.now() - began;
+  devLog({ tag: 'navigation', category: 'nav', action: 'nav_path', data: { epoch: graph.epoch, graphId: graph.id, start, target, path, elapsedMs: elapsed,
+    startAccessible: path ? true : graph.canReach(start, start), targetAccessible: path ? true : graph.canReach(target, target) } });
   const timing = pathfindingStats.timings.path;
   timing.completed++; timing.consumed++; timing.localMs += elapsed;
   timing.maxTotalMs = Math.max(timing.maxTotalMs, elapsed);
@@ -150,10 +178,12 @@ function releaseGraph(id: number): void {
   if (running?.graphId === id) running.cancel();
   workerGraphIds.delete(id);
   worker?.postMessage({ release: id });
+  devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_released', data: { epoch: navigationEpoch, graphId: id } });
 }
 
-export function prepareNavigationGraph(definition: WorkerDefinition): { read(): NavigationGraph; retain(): () => void; cancel(): void } {
+export function prepareNavigationGraph(definition: WorkerDefinition): { id: number; epoch: string; read(): NavigationGraph; retain(): () => void; cancel(): void } {
   const id = ++nextGraphId;
+  devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_created', data: { epoch: navigationEpoch, graphId: id, definition } });
   const job = request(id, definition, { kind: 'build' });
   let graph: NavigationGraph | undefined;
   let users = 1, cancelled = false;
@@ -162,6 +192,8 @@ export function prepareNavigationGraph(definition: WorkerDefinition): { read(): 
     if (--users === 0) { job.cancel(); releaseGraph(id); }
   };
   return {
+    id,
+    epoch: navigationEpoch,
     retain: () => {
       if (users === 0) throw new Error('Cannot retain a released navigation graph');
       users++;
@@ -172,7 +204,7 @@ export function prepareNavigationGraph(definition: WorkerDefinition): { read(): 
       if (!graph) {
         const snapshot = readNavigationJob(job) as GraphSnapshot;
         const mesh = NavigationMesh.restore(snapshot);
-        graph = { ...snapshot, id, definition,
+        graph = { ...snapshot, id, epoch: navigationEpoch, definition,
           canReach: (start, target) => mesh.canReach(start, target),
           find: (start, target) => mesh.find(start, target),
           findReachable(start, targets) {
@@ -189,6 +221,9 @@ export function readObjectApproach(graph: NavigationGraph, approach: ApproachQue
   const began = performance.now(), direct = directObjectApproach(approach, graph);
   const candidates = direct ? [direct] : objectApproachCandidates(approach, graph);
   const elapsed = performance.now() - began, timing = pathfindingStats.timings.approach;
+  devLog({ tag: 'navigation', category: 'nav', action: 'nav_approach_candidates', data: { epoch: graph.epoch, graphId: graph.id,
+    owner: approach.owner, goal: approach.goal, start: approach.start, owned: approach.owned, actors: approach.actors,
+    exiting: approach.exiting, flexible: approach.flexible, region: approach.region, candidates, direct: Boolean(direct), elapsedMs: elapsed } });
   timing.completed++; timing.consumed++; timing.localMs += elapsed;
   timing.maxTotalMs = Math.max(timing.maxTotalMs, elapsed);
   return candidates;
