@@ -2,58 +2,55 @@ import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 
-const W = 83;  // Largeur passage libre (cm)
 const H = 204; // Hauteur passage libre (cm)
 
-export function DoorFrame({ onSize }: SceneItemProps) {
+export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2 }: SceneItemProps & { width?: number; wallThickness?: number }) {
+  const innerDepth = wallThickness / 2;
+  const outerDepth = innerDepth + 1;
   useLayoutEffect(() => {
-    // Dimensions hors-tout pour l'inventaire :
-    // Largeur = 83 + 2.5 * 2 = 88 cm
-    // Hauteur = 204 + 1.0 (traverse haute) = 205 cm
-    // Profondeur = 9.2 cm (total dormant)
-    onSize(new THREE.Vector3(88, 205, 9.2));
-  }, [onSize]);
+    onSize(new THREE.Vector3(W + 5, H + 1, wallThickness + 2));
+  }, [onSize, W, wallThickness]);
 
   // Profil du dormant gauche d'après le schéma de conception
   const leftFrameShape = useMemo(() => {
     const shape = new THREE.Shape();
     // Coordonnées de section en centimètres, centrées sur l'épaisseur du mur (Z)
     // u (X du profil) = épaisseur, v (Y du profil) = butée/feuillure
-    shape.moveTo(-4.6, 3.0);  // Pointe recouvrement gauche (lip 3cm)
-    shape.lineTo(-3.6, 3.0);  // Intérieur lip gauche (épaisseur lip 1cm)
-    shape.lineTo(-3.6, 0);    // Assise mur (Z = -3.6)
-    shape.lineTo(3.6, 0);     // Assise mur (Z = 3.6) (mur épaisseur = 7.2cm)
-    shape.lineTo(3.6, 3.0);    // Intérieur lip droite (recouvrement 3cm)
-    shape.lineTo(4.6, 3.0);    // Pointe recouvrement droite (épaisseur lip 1cm)
-    shape.lineTo(4.6, -1.0);   // Face inférieure droite (dormant épaisseur 1cm)
+    shape.moveTo(-outerDepth, 3.0);  // Pointe recouvrement gauche (lip 3cm)
+    shape.lineTo(-innerDepth, 3.0);  // Intérieur lip gauche (épaisseur lip 1cm)
+    shape.lineTo(-innerDepth, 0);    // Assise mur, face arrière
+    shape.lineTo(innerDepth, 0);     // Assise mur, face avant
+    shape.lineTo(innerDepth, 3.0);    // Intérieur lip droite (recouvrement 3cm)
+    shape.lineTo(outerDepth, 3.0);    // Pointe recouvrement droite (épaisseur lip 1cm)
+    shape.lineTo(outerDepth, -1.0);   // Face inférieure droite (dormant épaisseur 1cm)
     shape.lineTo(-0.2, -1.0);  // Début de la butée
     shape.lineTo(-0.2, -2.8);  // Fond de butée (profondeur 1.8cm, largeur 1.8cm)
     shape.lineTo(-2.0, -2.8);  // Fond de butée
     shape.lineTo(-2.0, -1.0);  // Début de la butée
-    shape.lineTo(-4.6, -1.0);  // Face inférieure gauche
+    shape.lineTo(-outerDepth, -1.0);  // Face inférieure gauche
     shape.closePath();
     return shape;
-  }, []);
+  }, [innerDepth, outerDepth]);
 
   // Profil du dormant droit (miroité par rapport à l'axe Z)
   const rightFrameShape = useMemo(() => {
     const shape = new THREE.Shape();
     // Coordonnées de section en centimètres, avec u (X) miroité (u -> -u)
-    shape.moveTo(4.6, 3.0);    // Miroir de (-4.6, 3.0)
-    shape.lineTo(4.6, -1.0);   // Miroir de (-4.6, -1.0)
+    shape.moveTo(outerDepth, 3.0);    // Miroir de (-outerDepth, 3.0)
+    shape.lineTo(outerDepth, -1.0);   // Miroir de (-outerDepth, -1.0)
     shape.lineTo(2.0, -1.0);   // Miroir de (-2.0, -1.0)
     shape.lineTo(2.0, -2.8);   // Miroir de (-2.0, -2.8)
     shape.lineTo(0.2, -2.8);   // Miroir de (-0.2, -2.8)
     shape.lineTo(0.2, -1.0);   // Miroir de (-0.2, -1.0)
-    shape.lineTo(-4.6, -1.0);  // Miroir de (4.6, -1.0)
-    shape.lineTo(-4.6, 3.0);   // Miroir de (4.6, 3.0)
-    shape.lineTo(-3.6, 3.0);   // Miroir de (3.6, 3.0)
-    shape.lineTo(-3.6, 0);     // Miroir de (3.6, 0)
-    shape.lineTo(3.6, 0);      // Miroir de (-3.6, 0)
-    shape.lineTo(3.6, 3.0);    // Miroir de (-3.6, 3.0)
+    shape.lineTo(-outerDepth, -1.0);  // Miroir de (outerDepth, -1.0)
+    shape.lineTo(-outerDepth, 3.0);   // Miroir de (outerDepth, 3.0)
+    shape.lineTo(-innerDepth, 3.0);   // Miroir de (innerDepth, 3.0)
+    shape.lineTo(-innerDepth, 0);     // Miroir de (innerDepth, 0)
+    shape.lineTo(innerDepth, 0);      // Miroir de (-innerDepth, 0)
+    shape.lineTo(innerDepth, 3.0);    // Miroir de (-innerDepth, 3.0)
     shape.closePath();
     return shape;
-  }, []);
+  }, [innerDepth, outerDepth]);
 
   const leftJambGeo = useMemo(() => {
     return new THREE.ExtrudeGeometry(leftFrameShape, {
@@ -74,7 +71,7 @@ export function DoorFrame({ onSize }: SceneItemProps) {
       depth: W,
       bevelEnabled: false,
     });
-  }, [leftFrameShape]);
+  }, [leftFrameShape, W]);
 
   const material = <meshStandardMaterial color="#f5f4f0" roughness={0.4} envMapIntensity={0.5} />;
 
@@ -116,4 +113,8 @@ export function DoorFrame({ onSize }: SceneItemProps) {
       </mesh>
     </group>
   );
+}
+
+export function DoorEntryFrame(props: SceneItemProps) {
+  return <DoorFrame {...props} width={90} wallThickness={10} />;
 }

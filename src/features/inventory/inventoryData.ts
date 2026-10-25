@@ -372,6 +372,7 @@ Commandes & Suivi :
   { id: 'door-sdb',         name: 'Porte SDB',                      brand: '',         category: 'doors',     qty: 1, dims: { w: 4,   d: 83,  h: 204 }, notes: 'Blanche, mur couloir, poignée L double face' },
   { id: 'door-glass',       name: 'Porte-fenêtre',                  brand: '',         category: 'doors',     qty: 1, dims: { w: 160, d: 5,   h: 190 }, notes: 'Double battant PVC blanc, vitrage, volet roulant, seuil 20cm' },
   { id: 'door-frame',       name: 'Dormant de porte',               brand: 'Standard', category: 'doors',     qty: 1, dims: { w: 88,  d: 9.2, h: 205 }, notes: 'Dormant/huisserie standard pour mur de 7.2 cm d\'épaisseur. Largeur totale 9.2 cm, recouvrement de 1 cm des deux côtés avec lèvres symétriques (3 cm de hauteur). Passage utile de 83 cm avec butée de 1.8 cm.' },
+  { id: 'door-entry-frame', name: "Dormant de porte d'entrée", brand: 'Sur mesure', category: 'doors', qty: 1, dims: { w: 95, d: 12, h: 205 }, notes: 'Même profil que le dormant standard, adapté au mur de 10 cm. Passage de 90 × 204 cm, lèvres symétriques et butée de 1.8 cm.' },
 
 ];
 

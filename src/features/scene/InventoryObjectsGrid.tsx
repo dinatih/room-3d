@@ -66,7 +66,7 @@ import { MannequinHead, LaraWigBust } from './items/MannequinHead';
 import { DoorEntry } from './items/DoorEntry';
 import { DoorLiving, DoorBath } from './items/DoorWhite';
 import { GlassDoor } from './items/GlassDoor';
-import { DoorFrame } from './items/DoorFrame';
+import { DoorFrame, DoorEntryFrame } from './items/DoorFrame';
 
 interface ErrorBoundaryProps {
   fallback?: React.ReactNode;
@@ -155,6 +155,7 @@ const PROCEDURAL_GRID_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'door-sdb': DoorBath,
   'door-glass': GlassDoor,
   'door-frame': DoorFrame,
+  'door-entry-frame': DoorEntryFrame,
   'armrest-sofa': ArmrestSofa,
   'armless-sofa': ArmlessSofa,
   'chest-bench': ChestBench,
