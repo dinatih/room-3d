@@ -383,11 +383,16 @@ export function AppConsole({
         aria-label="Console applicative"
       >
         <div
-          className="d-flex flex-nowrap align-items-center justify-content-between gap-1 flex-shrink-0 overflow-hidden user-select-none"
-          style={{ cursor: 'pointer' }}
+          className="d-flex flex-nowrap align-items-center justify-content-between gap-1 flex-shrink-1 overflow-hidden user-select-none"
+          style={{ cursor: 'pointer', minWidth: 0 }}
           onClick={handleToggle}
           title={open ? 'Fermer la console (B)' : 'Ouvrir la console (B)'}
         >
+          {!open && latestLog && (
+            <span className="small font-monospace text-truncate" title={`[${latestLog.tag}] ${latestLog.message}`}>
+              [{latestLog.tag}] {latestLog.message}
+            </span>
+          )}
           <button
             type="button"
             className={`${TOOLBAR_BUTTON_CLASS} flex-shrink-0 ${open ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
@@ -401,13 +406,8 @@ export function AppConsole({
             <i className="bi bi-terminal" aria-hidden="true" />
             <span>Console</span>
           </button>
-          {!open && latestLog && (
-            <span className="small font-monospace text-truncate" title={`${formatTime(latestLog.timestamp)} [${latestLog.tag}] ${latestLog.message}`}>
-              {formatTime(latestLog.timestamp)} [{latestLog.tag}] {latestLog.message}
-            </span>
-          )}
 
-          <div className="d-flex align-items-center gap-1 flex-wrap" onClick={(e) => e.stopPropagation()}>
+          <div className="d-flex align-items-center gap-1 flex-wrap flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             {open && (
               <>
                 <select
