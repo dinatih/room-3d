@@ -13,7 +13,6 @@
  * GLB scalé de scene — évite l'effet de multiplication de scale.
  */
 import { useLayoutEffect, useRef, useEffect, useState, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
@@ -259,8 +258,7 @@ export function LaraWigBust({
           }
           if (hasLowVertex) {
             const cleanGeo = mesh.geometry.clone();
-            const cleanPos = cleanGeo.attributes.position.clone();
-            cleanGeo.setAttribute('position', cleanPos);
+            const cleanPos = cleanGeo.attributes.position;
 
             if (cleanGeo.index) {
               const oldIdx = cleanGeo.index;
@@ -324,7 +322,6 @@ export function LaraWigBust({
       -headLocal.z * LARA_SCALE,
     );
     laraScene.updateMatrixWorld(true);
-    pendantRef.current?.update(0, true);
 
     return () => {
       disposeLaraVariantMaterials(laraScene);
@@ -332,10 +329,10 @@ export function LaraWigBust({
     };
   }, [laraScene, parts, laraVariant]);
 
-  useFrame((_, rawDelta) => {
-    const dt = Math.min(rawDelta, 0.1);
-    pendantRef.current?.update(dt, false);
-  });
+  // The bust never animates: solve necklace contact once, after its layout effects.
+  useEffect(() => {
+    pendantRef.current?.update(0, true);
+  }, [laraScene, laraVariant]);
 
   return (
     <group userData={{ animUnit: true, itemName: 'Buste Lara' }}>
