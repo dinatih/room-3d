@@ -11,12 +11,6 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-// Seat footprint measured from the GLB in centimetres; excludes arms, back and castors.
-export const SMORKULL_SEAT_FOOTPRINT = [
-  { x: -25.894, z: -14.441 }, { x: 25.848, z: -14.441 },
-  { x: 25.848, z: 32.444 }, { x: -25.894, z: 32.444 },
-];
-
 const GLB = 'items/smorkull60503437/Smorkull60503437.glb';
 
 export function Smorkull({ onSize }: SceneItemProps) {

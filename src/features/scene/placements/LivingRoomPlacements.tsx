@@ -25,7 +25,7 @@ import { MannequinHead } from '../items/MannequinHead';
 import { GoogleNestMini } from '../items/GoogleNestMini';
 import { Mulig30179435, MuligHangers } from '../items/Mulig30179435';
 import { ShoeHatRackCaps } from '../items/ShoeHatRack';
-import { Smorkull, SMORKULL_SEAT_FOOTPRINT } from '../items/Smorkull';
+import { Smorkull } from '../items/Smorkull';
 import { SneakersRed } from '../items/SneakersRed';
 import { Grejig40329868 } from '../items/Grejig40329868';
 import { Stackstod60620144 } from '../items/Stackstod60620144';
@@ -364,7 +364,7 @@ export function OfficeChair() {
           ]
         }
       }}>
-        <NavigationObstacle id="chair-office" footprint={SMORKULL_SEAT_FOOTPRINT}><Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="chair-office"><Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
     </PositionTransition>
   );
