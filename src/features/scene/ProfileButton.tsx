@@ -4,10 +4,12 @@ import { useSceneStore } from './store/useSceneStore';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import { CvModal, type CvType } from './sidepanel/modals/CvModal';
 import { ProfileSection } from './sidepanel/sections/ProfileSection';
+import { ContactModal } from './sidepanel/modals/ContactModal';
 
 export function ProfileButton({ hideUI = false }: { hideUI?: boolean }) {
   const isMobile = useIsMobile();
   const [showCvModal, setShowCvModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   const [selectedCvType, setSelectedCvType] = useState<CvType>('devops');
   const setCvModalOpen = useSceneStore(state => state.setCvModalOpen);
 
@@ -88,6 +90,7 @@ export function ProfileButton({ hideUI = false }: { hideUI?: boolean }) {
       <ProfileSection
         isMobile={isMobile}
         onOpenCv={handleOpenCv}
+        onOpenContact={() => { setShowContactModal(true); setCvModalOpen(true); }}
       />
       {visitorCounter}
     </>
@@ -106,6 +109,7 @@ export function ProfileButton({ hideUI = false }: { hideUI?: boolean }) {
       </PanelPopover>
 
       {showCvModal && <CvModal initialCv={selectedCvType} onClose={handleCloseCv} />}
+      {showContactModal && <ContactModal onClose={() => { setShowContactModal(false); setCvModalOpen(false); }} />}
     </>
   );
 }

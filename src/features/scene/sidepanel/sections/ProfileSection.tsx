@@ -3,9 +3,10 @@ import type { CvType } from '../modals/CvModal';
 export interface ProfileSectionProps {
   isMobile: boolean;
   onOpenCv: (type: CvType) => void;
+  onOpenContact: () => void;
 }
 
-export function ProfileSection({ isMobile: _isMobile, onOpenCv }: ProfileSectionProps) {
+export function ProfileSection({ isMobile: _isMobile, onOpenCv, onOpenContact }: ProfileSectionProps) {
   return (
     <div className="d-flex flex-column bg-transparent p-2 gap-2 small">
       {/* Intro rapide */}
@@ -24,6 +25,9 @@ export function ProfileSection({ isMobile: _isMobile, onOpenCv }: ProfileSection
       </div>
 
       {/* Boutons d'accès aux CVs */}
+      <button type="button" className="btn btn-primary btn-sm w-100" onClick={onOpenContact}>
+        <i className="bi bi-envelope me-2" aria-hidden="true" />Me contacter
+      </button>
       <div className="d-flex flex-column gap-1">
         <div className="text-muted fw-bold text-uppercase px-1 small" style={{ letterSpacing: '0.05em' }}>
           <i className="bi bi-file-earmark-person me-1" aria-hidden="true" />Consulter mes CVs (Modal 2D)
