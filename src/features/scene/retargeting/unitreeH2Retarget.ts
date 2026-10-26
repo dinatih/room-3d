@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { captureAnimationRig, restoreAnimationRig, type RigNode } from '../character/animationSerialization';
 
-type Retarget = (clip: THREE.AnimationClip, target: THREE.Object3D, source: THREE.Object3D | undefined, space?: 'world-meters' | 'rest-meters', supportBone?: 'ToeBase' | 'Foot') => THREE.AnimationClip;
+type Retarget = (clip: THREE.AnimationClip, target: THREE.Object3D, source: THREE.Object3D | undefined, space?: 'world-meters' | 'rest-meters') => THREE.AnimationClip;
 type Motor = { node: THREE.Object3D; axis: THREE.Vector3; rest: THREE.Quaternion; angle: number; lower: number; upper: number; values: number[] };
 // Angular convergence for orientation fitting; unreachable orientations stop at the constrained minimum.
 const ANGULAR_PRECISION = 1e-5;
@@ -17,7 +17,7 @@ export function retargetH2Clip(raw: THREE.AnimationClip, target: THREE.Object3D,
     restWorldQuaternion: node.getWorldQuaternion(new THREE.Quaternion()),
     restWorldPosition: node.getWorldPosition(new THREE.Vector3()),
   }));
-  const clip = retarget(raw, driver, source, space, 'Foot');
+  const clip = retarget(raw, driver, source, space);
   const mixer = new THREE.AnimationMixer(driver);
   mixer.clipAction(clip).setLoop(THREE.LoopOnce, 1).play().clampWhenFinished = true;
   const motors = new Map<THREE.Object3D, Motor>();
