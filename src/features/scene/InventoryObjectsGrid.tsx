@@ -123,6 +123,7 @@ function createRoundedCardGeometry() {
 }
 
 const CARD_BACKGROUND_GEOMETRY = createRoundedCardGeometry();
+const GRID_ACTION_STATE = { ...NOOP_STATE, 'bed-double': true };
 
 const ShoeHatRackGrid: React.ComponentType<any> = props => <ShoeHatRack {...props} noCaps />;
 
@@ -358,28 +359,31 @@ function classifyItem(item: UnifiedGridItem): string {
 
 // ── Composant d'affichage d'un modèle 3D ou procédural ────────────────────────
 
+function fitGridObject(object: THREE.Object3D) {
+  object.scale.set(1, 1, 1);
+  const box = glbLocalBBox(object);
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  if (!Number.isFinite(maxDim) || maxDim <= 0) throw new Error(`Invalid grid dimensions: ${object.name}`);
+  const scale = TARGET_DISPLAY_SIZE / maxDim;
+  object.scale.setScalar(scale);
+  object.position.copy(box.getCenter(new THREE.Vector3())).multiplyScalar(-scale);
+}
+
 function ProceduralItemInner({ item }: { item: UnifiedGridItem }) {
   const Comp = item.proceduralComponent!;
   const groupRef = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
-    if (!groupRef.current) return;
-    groupRef.current.scale.set(1, 1, 1);
-    const box = glbLocalBBox(groupRef.current);
-    const size = box.getSize(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const s = maxDim > 0 ? TARGET_DISPLAY_SIZE / maxDim : 1;
-    groupRef.current.scale.setScalar(s);
-
-    const center = box.getCenter(new THREE.Vector3());
-    groupRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
+    fitGridObject(groupRef.current);
   }, []);
 
   return (
     <group ref={groupRef}>
       <Comp
         item={{ id: item.id } as any}
-        actionState={{ ...NOOP_STATE, 'bed-double': true }}
+        actionState={GRID_ACTION_STATE}
+        isPreview
         onSize={NOOP_SIZE}
       />
     </group>
@@ -388,36 +392,13 @@ function ProceduralItemInner({ item }: { item: UnifiedGridItem }) {
 
 function GlbItemInner({ item }: { item: UnifiedGridItem }) {
   const cleanPath = item.glbPath!.startsWith('/') ? item.glbPath!.slice(1) : item.glbPath!;
-  const { scene } = useGLTFClone(cleanPath);
-  const rootRef = useRef<THREE.Group>(null!);
+  const { scene } = useGLTFClone(cleanPath, true);
 
   useLayoutEffect(() => {
-    if (!scene) return;
-
     removeGlbLines(scene);
-    scene.scale.set(1, 1, 1);
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
-
-    const box = glbLocalBBox(scene);
-    const size = box.getSize(new THREE.Vector3());
-    const rawMax = Math.max(size.x, size.y, size.z);
-
-    if (rawMax > 0 && rawMax < 5) {
-      scene.scale.setScalar(100);
-      const scaledBox = glbLocalBBox(scene);
-      scaledBox.getSize(size);
-    }
-
-    const curBox = glbLocalBBox(scene);
-    const curSize = curBox.getSize(new THREE.Vector3());
-    const maxDim = Math.max(curSize.x, curSize.y, curSize.z);
-    const finalFactor = maxDim > 0 ? TARGET_DISPLAY_SIZE / maxDim : 1;
-    scene.scale.multiplyScalar(finalFactor);
-
-    const finalBox = glbLocalBBox(scene);
-    const center = finalBox.getCenter(new THREE.Vector3());
-    scene.position.set(-center.x, -center.y, -center.z);
+    fitGridObject(scene);
 
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
@@ -438,16 +419,22 @@ function GlbItemInner({ item }: { item: UnifiedGridItem }) {
     });
   }, [scene]);
 
-  return (
-    <group ref={rootRef}>
-      <primitive object={scene} />
-    </group>
-  );
+  useEffect(() => () => {
+    scene.traverse(node => {
+      const mesh = node as THREE.Mesh;
+      if (mesh.isMesh) {
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        materials.forEach(material => material.dispose());
+      }
+    });
+  }, [scene]);
+
+  return <primitive object={scene} />;
 }
 
 function GridItem({ item, position }: { item: UnifiedGridItem; position: [number, number, number] }) {
   return (
-    <group position={position}>
+    <group name={`inventory-grid-item:${item.id}`} position={position}>
       <GridItemErrorBoundary fallback={null}>
         <Suspense fallback={null}>
           {item.proceduralComponent ? (
@@ -464,9 +451,9 @@ function GridItem({ item, position }: { item: UnifiedGridItem; position: [number
 // ── Composant Principal : InventoryObjectsGrid ─────────────────────────────────
 
 export function InventoryObjectsGrid({ wigs = false }: { wigs?: boolean }) {
-  const { size } = useThree();
-  const hairColor = useSceneStore(state => state.wigGridHairColor);
-  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const size = useThree(state => state.size);
+  const hairColor = useSceneStore(state => wigs ? state.wigGridHairColor : '');
+  const activeCharacterId = useSceneStore(state => wigs ? state.activeCharacterId : 'native');
   const character = findCharacter(activeCharacterId);
   const laraVariant = character?.isLara !== false ? character?.variant : 'native';
   // Liste complète : objets GLB filtrés + objets procéduraux demandés

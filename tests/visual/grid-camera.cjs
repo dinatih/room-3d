@@ -75,6 +75,38 @@ const launch = require('../../scripts/browser-test-options.cjs');
       return;
     }
     const switchOnly = process.argv.includes('--switch-only');
+    if (process.argv.includes('--inventory')) {
+      page.on('console', message => {
+        if (message.text().includes('[InventoryObjectsGrid] Error')) errors.push(message.text());
+      });
+      await page.goto(`${base}/?preset=low&characterCount=0&animals=0&skipIntro=1&target=inventoryObjectGrid`, { waitUntil: 'domcontentloaded' });
+      await ready();
+      await page.waitForFunction(() => {
+        const grid = window.__THREE_SCENE__?.getObjectByName('inventory-objects-grid');
+        const items = [];
+        grid?.traverse(node => { if (node.name.startsWith('inventory-grid-item:')) items.push(node); });
+        return items.length && items.every(item => item.children.length);
+      }, { timeout: 180000 });
+      await settle();
+      const dimensions = await page.evaluate(async () => {
+        const { glbLocalBBox } = await import('/src/features/scene/glbUtils.ts');
+        const grid = window.__THREE_SCENE__.getObjectByName('inventory-objects-grid');
+        const items = [];
+        grid.traverse(node => {
+          if (!node.name.startsWith('inventory-grid-item:')) return;
+          const box = glbLocalBBox(node);
+          items.push({ name: node.name, size: Math.max(...box.getSize(node.position.clone()).toArray()) });
+        });
+        return items;
+      });
+      assert(dimensions.length > 0);
+      assert(dimensions.every(item => Math.abs(item.size - 50) < .001), JSON.stringify(dimensions.filter(item => Math.abs(item.size - 50) >= .001)));
+      assert.deepEqual(errors, []);
+      require('node:fs').mkdirSync('test-results/visual', { recursive: true });
+      await page.screenshot({ path: 'test-results/visual/inventory-grid.png' });
+      console.log(`PASS: ${dimensions.length} inventory objects loaded and normalized without errors`);
+      return;
+    }
     for (const view of switchOnly ? [''] : ['', '&follow=1', '&target=studio&projection=ortho&cameraPos=north-east']) {
       await page.goto(`${base}/?preset=low&characterCount=1&animals=0&skipIntro=1${view}`, { waitUntil: 'domcontentloaded' });
       await ready();
