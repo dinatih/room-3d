@@ -281,7 +281,7 @@ export function ToolbarPanelsRow({
       {/* 5. Grille / Vitrine Personnages */}
       <button
         type="button"
-        className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'}`}
+        className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
         onClick={() => {
           document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
         }}

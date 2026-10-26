@@ -59,13 +59,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
       const activeIdx = list.findIndex(char => char.id === activeCharacterId);
       if (activeIdx !== -1) {
         const centerIdx = getCharacterGridCenterIndex(list.length);
-        if (activeIdx !== centerIdx) {
-          const reordered = [...list];
-          const temp = reordered[centerIdx];
-          reordered[centerIdx] = reordered[activeIdx];
-          reordered[activeIdx] = temp;
-          return reordered;
-        }
+        [list[centerIdx], list[activeIdx]] = [list[activeIdx], list[centerIdx]];
       }
     }
     return list;
@@ -90,7 +84,8 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
           id={leader.id} name={leader.name} modelPath={leader.path}
           isLara={leader.isLara} targetHeight={leader.height} variant={leader.variant}
           isActive={leader.id === activeCharacterId} isNPC={leader.id !== activeCharacterId}
-          characterIndex={index} totalCharacters={mountedCharacters.length}
+          characterIndex={index}
+          gridPosition={pos}
           duoAnimDef={eligible ? duo : undefined}
           characterAnim={eligible ? duo.animA : 'idle'} isAnimationMaster={leader.id === animationMasterId}
         />
@@ -102,7 +97,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
           instanceId={`grid:${leader.id}:partner:${partner.id}`}
           isPreview isGridPartner isDuoRoleB isActive={false} isNPC={false}
           isAnimationMaster={false}
-          characterIndex={index} totalCharacters={mountedCharacters.length}
+          characterIndex={index}
           characterAnim={duo.animB}
           previewPosition={[pos.x + offset[0], pos.y + offset[1], pos.z + offset[2]]}
           previewRotationY={rotB}
@@ -165,7 +160,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
               previewHairColor={props.previewHairColor}
               characterIndex={props.characterIndex !== undefined ? props.characterIndex : index}
               isAnimationMaster={props.isPreview ? !isDuoRoleB : (characterGrid ? char.id === activeCharacterId : index === 0)}
-              totalCharacters={mountedCharacters.length}
+              gridPosition={characterGrid ? getCharacterGridPosition(index, mountedCharacters.length) : undefined}
             />
           </Suspense>
         );

@@ -49,7 +49,6 @@ import { characterRuntimeStats } from './characterRuntime';
 import { useCharacterAnimations, ANIMATION_LOADING_IDLE } from './useCharacterAnimations';
 import { useCharacterPhysics } from './useCharacterPhysics';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
-import { getCharacterGridPosition } from './characterGridUtils';
 
 function recordMixer(ms: number) {
   const metric = characterRuntimeStats.mixer;
@@ -104,7 +103,7 @@ export function Character({
   isPreview = false,
   previewPlayback,
   characterIndex = 0,
-  totalCharacters = 1,
+  gridPosition,
   characterAnim = 'idle',
   isPaused = false,
   previewHaircut,
@@ -703,13 +702,13 @@ export function Character({
       }
       groupRef.current.visible = true;
     } else if (characterGrid) {
-      const { x: targetX, y: targetY, z: targetZ } = getCharacterGridPosition(characterIndex, totalCharacters);
+      if (!gridPosition) throw new Error(`Missing grid position for ${id}`);
+      const { x: targetX, y: targetY, z: targetZ } = gridPosition;
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
-      const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds);
-      groupRef.current.visible = !cameraState.characterHidden && showAllLaraStyles && isVisibleInCountMode;
+      groupRef.current.visible = !cameraState.characterHidden;
       currentAnimClip.current = characterAnim || null;
-      if (isVisibleInCountMode && !cameraState.characterHidden && showAllLaraStyles) {
+      if (groupRef.current.visible) {
         cameraState.positions[id] = { x: targetX, y: targetY, z: targetZ, yaw: 0 };
         if (isActive) {
           cameraState.characterX = targetX;

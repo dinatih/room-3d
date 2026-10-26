@@ -52,17 +52,7 @@ export function getCharacterGridPosition(index: number, total: number = 1): { x:
   const row = Math.floor(index / cols);
   const col = index % cols;
 
-  // Calcul X : centré horizontalement
-  let targetX: number;
-  if (totalRows === 1) {
-    // Si une seule rangée (1 à 5 personnages), on centre exactement cette rangée sur centerX
-    const activeCols = Math.min(cols, safeTotal);
-    const colOffset = (activeCols - 1) / 2;
-    targetX = centerX + (col - colOffset) * colSpacing;
-  } else {
-    // Si plusieurs rangées, alignement strict sur 5 colonnes (colonne 2 = centre X)
-    targetX = centerX + (col - 2) * colSpacing;
-  }
+  const targetX = centerX + (col - (Math.min(cols, safeTotal) - 1) / 2) * colSpacing;
 
   // Calcul Y : la rangée 0 est en haut, la dernière rangée est posée à baseY (400 cm)
   const rowFromBottom = (totalRows - 1) - row;
@@ -76,19 +66,9 @@ export function getCharacterGridPosition(index: number, total: number = 1): { x:
  * Rangée du milieu et colonne du milieu (colonne 2 pour 5 colonnes).
  */
 export function getCharacterGridCenterIndex(total: number): number {
-  if (total <= 1) return 0;
-  const cols = CHARACTER_GRID_CONFIG.cols;
-  const totalRows = Math.ceil(total / cols);
-  if (totalRows === 1) {
-    return Math.floor((total - 1) / 2);
-  }
-  const midRow = Math.floor(totalRows / 2);
-  const midCol = Math.floor(cols / 2);
-  const candidate = midRow * cols + midCol;
-  if (candidate < total) {
-    return candidate;
-  }
-  return Math.floor((total - 1) / 2);
+  const cols = Math.min(CHARACTER_GRID_CONFIG.cols, Math.max(1, total));
+  const rows = Math.ceil(Math.max(1, total) / cols);
+  return Math.floor((rows - 1) / 2) * cols + Math.floor((cols - 1) / 2);
 }
 
 /**
@@ -124,9 +104,11 @@ export function getCharacterGridCameraView(total?: number): {
   zoom?: number;
 } {
   const count = total ?? getActiveSceneCharactersCount();
-  const { width: gridWidth, height: gridHeight, depth, centerZ } = getGridLayout(count);
+  const { width, height, depth, centerX, centerY, centerZ } = getGridLayout(count);
   const { fov } = CHARACTER_GRID_CONFIG;
   const target = getCharacterGridActiveTarget(count);
+  const gridWidth = width + 2 * Math.abs(centerX - target[0]);
+  const gridHeight = height + 2 * Math.abs(centerY - target[1]);
 
   // Ratio d'aspect de la fenêtre
   const aspect = typeof window !== 'undefined' && window.innerHeight > 0
@@ -201,9 +183,12 @@ export interface CharacterGridOrthoView {
  */
 export function getCharacterGridOrthoViews(total?: number): Record<CharacterGridOrthoViewKey, CharacterGridOrthoView> {
   const count = total ?? getActiveSceneCharactersCount();
-  const { width: gridWidth, height: gridHeight, depth: gridDepth } = getGridLayout(count);
+  const layout = getGridLayout(count);
   const target = getCharacterGridActiveTarget(count);
   const [centerX, centerY, baseZ] = target;
+  const gridWidth = layout.width + 2 * Math.abs(layout.centerX - centerX);
+  const gridHeight = layout.height + 2 * Math.abs(layout.centerY - centerY);
+  const gridDepth = layout.depth;
 
   const aspect = typeof window !== 'undefined' && window.innerHeight > 0
     ? window.innerWidth / window.innerHeight

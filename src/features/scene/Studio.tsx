@@ -566,6 +566,7 @@ export function Studio() {
 
   // Recadrage dynamique de la caméra sur la grille de comparaison (centrée sur tous les PNJ de la scène)
   const characterGridActive = useSceneStore(state => state.layers.characterGrid);
+  const gridActiveCharacterId = useSceneStore(state => state.activeCharacterId);
   const laraCount = useSceneStore(state => state.layers.laraCount);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
@@ -597,7 +598,7 @@ export function Studio() {
     if (characterGridActive && !showInventory) {
       frameCharacterGridCamera(undefined, useSceneStore.getState().cameraProjection === 'ortho' ? 'ortho' : 'persp');
     }
-  }, [characterGridActive, laraCount, extraCharacters, activeExtraIds, activeMainIds, characterGridDuo, characterGridPartner, showInventory]);
+  }, [characterGridActive, gridActiveCharacterId, laraCount, extraCharacters, activeExtraIds, activeMainIds, characterGridDuo, characterGridPartner, showInventory]);
 
   useEffect(() => {
     if (!extraCharacters && isExtraCharacter(characterGridPartner)) {

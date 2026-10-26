@@ -12,7 +12,6 @@ export interface CharacterGroupProps {
   previewHaircut?: string;
   previewHairColor?: string;
   characterIndex?: number;
-  totalCharacters?: number;
   characterAnim?: string;
   isPaused?: boolean;
   previewPosition?: [number, number, number];
@@ -26,6 +25,7 @@ export interface CharacterGroupProps {
 }
 
 export interface CharacterProps extends CharacterGroupProps {
+  gridPosition?: { x: number; y: number; z: number };
   id: string;
   name: string;
   modelPath: string;

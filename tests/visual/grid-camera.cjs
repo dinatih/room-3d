@@ -43,6 +43,37 @@ const launch = require('../../scripts/browser-test-options.cjs');
       }
       await settle();
     };
+    if (process.argv.includes('--centering')) {
+      await page.goto(`${base}/?preset=low&characterCount=7&animals=0&skipIntro=1&target=charactersGrid`, { waitUntil: 'domcontentloaded' });
+      await ready();
+      const check = async id => {
+        await page.waitForFunction(id => {
+          const pose = window.gridState.positions[id];
+          return pose && pose.x === 150 && pose.y > 400;
+        }, { timeout: 180000 }, id);
+        await settle();
+        const framing = await page.evaluate(() => {
+          const camera = window.gridRoot.getState().camera;
+          const active = window.gridState.positions[window.gridStore.getState().activeCharacterId];
+          const project = (x, y, z) => camera.position.clone().set(x, y, z).project(camera).toArray();
+          return {
+            active: project(active.x, active.y + 173.4 / 2, active.z),
+            points: Object.values(window.gridState.positions).flatMap(pose => [0, 175].map(h => project(pose.x, pose.y + h, pose.z))),
+          };
+        });
+        assert(Math.hypot(...framing.active.slice(0, 2)) < .01, `${id}: active character must be centered`);
+        assert(framing.points.every(([x, y]) => Math.abs(x) < 1 && Math.abs(y) < 1), 'All rows must fit in the viewport');
+        console.log('Centered active character and complete grid:', id);
+      };
+      await check('native');
+      await page.evaluate(() => window.gridStore.getState().setActiveCharacterId('rosanna'));
+      await check('rosanna');
+      require('node:fs').mkdirSync('test-results/visual', { recursive: true });
+      await page.screenshot({ path: 'test-results/visual/lara-grid-centered.png' });
+      assert.deepEqual(errors, []);
+      console.log('PASS: seven-character grid centered on active character, including selection changes');
+      return;
+    }
     const switchOnly = process.argv.includes('--switch-only');
     for (const view of switchOnly ? [''] : ['', '&follow=1', '&target=studio&projection=ortho&cameraPos=north-east']) {
       await page.goto(`${base}/?preset=low&characterCount=1&animals=0&skipIntro=1${view}`, { waitUntil: 'domcontentloaded' });
