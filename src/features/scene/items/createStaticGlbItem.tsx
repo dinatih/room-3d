@@ -5,7 +5,7 @@ import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '../glbUtils';
 import { useGLTFClone } from '../useGLTFClone';
 import type { SceneItemProps } from '@shared/types';
 
-/** Static models exported in metres, centred horizontally with their base at Y=0. */
+/** Official IKEA GLB exports in metres: convert to centimetres, centre horizontally and place the base at Y=0. */
 export function createStaticGlbItem(path: string) {
   useGLTF.preload(path);
   return function StaticGlbItem({ onSize, ...props }: SceneItemProps) {
