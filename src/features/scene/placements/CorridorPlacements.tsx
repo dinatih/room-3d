@@ -14,6 +14,7 @@ import { Linky } from '../items/Linky';
 import { Scooter, SCOOTER_STEERING_ANGLE } from '../items/Scooter';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { getObjectActionIds } from '../objectActions';
+import { useHomeAssistant } from '../../home-assistant/connection';
 
 import {
   ROOM_W,
@@ -71,6 +72,9 @@ const TOTAL_CYCLE_DURATION = CORRIDOR_LIGHT_COLORS.length * DURATION_PER_COLOR; 
 const _tempColor = new THREE.Color();
 
 function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) {
+  const remote = useHomeAssistant(state => state.enabled);
+  const lamp = useHomeAssistant(state => state.lamp);
+  const brightness = remote ? lamp?.brightness ?? 1 : 1;
   const lightRef = useRef<THREE.PointLight>(null);
   const bulbGroupRef = useRef<THREE.Group>(null);
   const emissiveMatsRef = useRef<THREE.MeshStandardMaterial[]>([]);
@@ -98,23 +102,29 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
       emissiveMatsRef.current = mats;
     }
 
-    elapsedRef.current += delta;
-    const t = (elapsedRef.current % TOTAL_CYCLE_DURATION + TOTAL_CYCLE_DURATION) % TOTAL_CYCLE_DURATION;
-    const segment = t / DURATION_PER_COLOR;
-    const idx = Math.floor(segment);
-    const nextIdx = (idx + 1) % CORRIDOR_LIGHT_COLORS.length;
-    const alpha = segment - idx;
+    if (remote) {
+      if (lamp?.rgb) _tempColor.setRGB(lamp.rgb[0] / 255, lamp.rgb[1] / 255, lamp.rgb[2] / 255, THREE.SRGBColorSpace);
+      else _tempColor.setHex(0xfff2d6);
+    } else {
+      elapsedRef.current += delta;
+      const t = (elapsedRef.current % TOTAL_CYCLE_DURATION + TOTAL_CYCLE_DURATION) % TOTAL_CYCLE_DURATION;
+      const segment = t / DURATION_PER_COLOR;
+      const idx = Math.floor(segment);
+      const nextIdx = (idx + 1) % CORRIDOR_LIGHT_COLORS.length;
+      const alpha = segment - idx;
 
-    _tempColor.lerpColors(CORRIDOR_LIGHT_COLORS[idx], CORRIDOR_LIGHT_COLORS[nextIdx], alpha);
+      _tempColor.lerpColors(CORRIDOR_LIGHT_COLORS[idx], CORRIDOR_LIGHT_COLORS[nextIdx], alpha);
+    }
 
     if (lightRef.current) {
       lightRef.current.color.copy(_tempColor);
     }
     for (let i = 0; i < emissiveMatsRef.current.length; i++) {
       emissiveMatsRef.current[i].emissive.copy(_tempColor);
+      emissiveMatsRef.current[i].emissiveIntensity = 2 * brightness;
     }
 
-    state.invalidate();
+    if (!remote) state.invalidate();
   });
 
   return (
@@ -125,15 +135,15 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
       userData={{
         skipMerge: true,
         animUnit: true,
-        itemName: 'Ampoule Couloir (TRÅDFRI)',
-        hoverAction: { label: 'Ampoule Couloir (TRÅDFRI)', actions: ['lampCorridor'] },
+        itemName: 'Lampe du couloir',
+        hoverAction: { label: 'Lampe du couloir', actions: getObjectActionIds('tradfri-bulb-couloir') },
       }}
     >
       <TradfriBulb item={stub('tradfri-bulb-couloir')} actionState={{ on: isOn }} onSize={NOOP_SIZE} />
       <pointLight
         ref={lightRef}
         position={[0, 20, 0]}
-        intensity={isOn ? (lightsHD ? 120 : 2.5) : 0}
+        intensity={isOn ? (lightsHD ? 120 : 2.5) * brightness : 0}
         distance={lightsHD ? 0 : 280}
         decay={lightsHD ? 1.0 : 2.0}
         color={0xff2222}

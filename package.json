@@ -15,7 +15,8 @@
     "test": "node --test --test-isolation=none --test-concurrency=1 tests/unit/*.test.cjs",
     "test:studio": "node tests/run.cjs studio",
     "test:perf": "node tests/run.cjs perf",
-    "test:screenshots": "node tests/visual/capture.cjs"
+    "test:screenshots": "node tests/visual/capture.cjs",
+    "test:home-assistant": "node tests/integration/home-assistant.cjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",
@@ -24,6 +25,7 @@
     "3d-tiles-renderer": "^0.4.24",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.13.1",
+    "home-assistant-js-websocket": "^9.7.1",
     "polygon-clipping": "^0.15.7",
     "r3f-perf": "^7.2.3",
     "react": "^18",

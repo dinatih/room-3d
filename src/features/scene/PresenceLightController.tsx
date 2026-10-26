@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { cameraState } from './cameraState';
 import { useSceneStore } from './store/useSceneStore';
+import { ENTRY_LIGHT, useHomeAssistant } from '../home-assistant/connection';
 import { isAgentInBathroom, isAgentInCorridor, isAgentInKitchen } from './ai/SpatialZone';
 
 const SHUTOFF_DELAY_MS = 4000;
@@ -44,6 +45,11 @@ export function PresenceLightController() {
     const { furniture } = useSceneStore.getState();
 
     for (const { key, check } of LIGHT_ZONES) {
+      if (key === ENTRY_LIGHT.action && useHomeAssistant.getState().enabled) {
+        if (timersRef.current[key]) clearTimeout(timersRef.current[key]!);
+        timersRef.current[key] = null;
+        continue;
+      }
       const occupied = positions.some(check);
 
       if (occupied) {
@@ -64,7 +70,7 @@ export function PresenceLightController() {
         } else if (furniture[key] && !timersRef.current[key]) {
           timersRef.current[key] = setTimeout(() => {
             timersRef.current[key] = null;
-            if (!getActivePositions().some(check) && useSceneStore.getState().furniture[key]) {
+            if (!(key === ENTRY_LIGHT.action && useHomeAssistant.getState().enabled) && !getActivePositions().some(check) && useSceneStore.getState().furniture[key]) {
               useSceneStore.setState(s => ({
                 furniture: { ...s.furniture, [key]: false },
               }));

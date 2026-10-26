@@ -19,6 +19,7 @@ import { OccupancyManager } from './ai/occupancyManager';
 import { isCharacterVisibleInMode } from './characterConfig';
 
 import { getActionDef, getActionLabel, type ActionDef } from './objectActionRegistry';
+import { ENTRY_LIGHT, useHomeAssistant } from '../home-assistant/connection';
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
   let cur: THREE.Object3D | null = obj;
@@ -470,6 +471,7 @@ function injectPulse() {
 }
 
 export function HoverOverlay() {
+  const ha = useHomeAssistant();
   const dotRef = React.useRef<HTMLDivElement>(null);
   
   // S'abonne aux changements d'états du mobilier pour re-rendre les labels réactifs (ex: Ouvrir/Fermer)
@@ -613,6 +615,7 @@ export function HoverOverlay() {
             return (
               <button
                 key={i}
+                disabled={action.id === ENTRY_LIGHT.action && ha.enabled && (!ha.available || ha.status !== 'connected' || ha.pending)}
                 className="btn btn-sm btn-outline-warning py-0 px-2 fw-semibold"
                 onClick={async () => {
                   if (action.id.startsWith('select-character-')) {
@@ -724,7 +727,7 @@ export function HoverOverlay() {
                       }
                     }
                   } else {
-                    useSceneStore.getState().triggerAction(action.id);
+                    useSceneStore.getState().triggerAction(action.id, undefined, 'user');
                   }
                   hoverState.locked      = false;
                   hoverState.touchActive = false;

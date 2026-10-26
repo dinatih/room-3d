@@ -5,6 +5,8 @@ import { DOUBLE_BED_POSITIONS } from '../../furniturePositions';
 import { dispatchKey, type FurnitureState } from '../types';
 import type { PlaneModelKey } from '@features/scene/PaperPlane';
 import { getActionLabel } from '../../objectActionRegistry';
+import { HomeAssistantPanel } from '../../../home-assistant/HomeAssistant';
+import { ENTRY_LIGHT, useHomeAssistant } from '../../../home-assistant/connection';
 
 export interface InteractiveSectionProps {
   isMobile: boolean;
@@ -34,6 +36,7 @@ export function InteractiveSection({
   animDurations = {},
 }: InteractiveSectionProps) {
   const furniture = useSceneStore(state => state.furniture);
+  const ha = useHomeAssistant();
   const toggleFurniture = useSceneStore(state => state.toggleFurniture);
   const triggerAction = useSceneStore(state => state.triggerAction);
   useSceneStore(state => state.extraStates);
@@ -76,6 +79,7 @@ export function InteractiveSection({
     return (
       <button 
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
+        disabled={key === ENTRY_LIGHT.action && ha.enabled && (!ha.available || ha.status !== 'connected' || ha.pending)}
         onClick={() => toggleFurniture(key)}
         style={{ 
           opacity: isOn ? 1 : 0.55,
@@ -91,6 +95,7 @@ export function InteractiveSection({
 
   return (
     <div className="d-flex flex-column bg-transparent">
+      <HomeAssistantPanel />
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">PORTES & FENÊTRES</div>
       {doorBtn('Porte Entrée', 'entryDoor')}
       {doorBtn('Porte Séjour', 'livingDoor')}

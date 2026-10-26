@@ -1,172 +1,126 @@
 # Room-3D et Home Assistant
 
-Objectif : afficher les équipements réels dans l’appartement 3D et les commander
-par les interactions existantes. Room-3D reste utilisable sans Home Assistant.
-Ce document décrit la cible et les étapes à réaliser ; il ne constitue pas une
-intégration déjà fonctionnelle.
+La première intégration relie la lampe 3D du couloir à l’ampoule réelle
+`light.entree_entree` (Philips Hue LCT001). Son emplacement a été confirmé
+visuellement par l’utilisateur. Le groupe `light.entree_entree_2` n’est pas utilisé.
 
-## État vérifié le 26 octobre 2026
+## Essayer en local
 
-| Élément | Constat |
-| --- | --- |
-| Serveur | Accessible par `ssh -F ~/.ssh/config homeserver` |
-| Home Assistant | Conteneur `homeassistant`, réponse HTTP locale sur le port 8123 |
-| Configuration HA | `/opt/homeassistant/config` monté sur `/config` |
-| Copie de Room-3D | Présente dans `/config/www/room-3d`, environ 3,4 Go |
-| Build déployé | Références `/assets/...` incompatibles avec le sous-chemin `/local/room-3d/` |
-| Connexion dans l’application | Absente ; dépendance `home-assistant-js-websocket` non installée |
-| Entités réelles | Inventaire et correspondances avec les objets 3D à établir |
-
-Ces vérifications portent sur l’infrastructure et les fichiers, pas sur le
-fonctionnement du rendu déployé, des appareils ou de l’accès distant.
-Les anciens exemples de client et de mapping ont été retirés : ils n’étaient
-pas utilisés et ne décrivaient pas les équipements réels.
-
-## Architecture retenue
-
-```text
-Interaction utilisateur dans Room-3D
-    → action existante → adaptateur Home Assistant → appel de service HA
-État reçu de Home Assistant
-    → adaptateur → store Zustand existant → affichage 3D
-```
-
-Un seul module gère la connexion et son cycle de vie. Les composants de meubles
-ne créent pas de WebSocket et ne connaissent pas les identifiants des entités HA.
-La bibliothèque officielle `home-assistant-js-websocket` fournit la connexion,
-les abonnements aux entités et les appels de service ; ne pas réimplémenter le
-protocole ou sa reconnexion.
-
-Les points d’intégration existants sont :
-
-- `src/features/scene/objectActions.ts` : actions proposées par objet ;
-- `src/features/scene/objectActionRegistry.ts` : identifiants, libellés et comportements ;
-- `src/features/scene/store/useSceneStore.ts` : états et interactions de la scène.
-
-Le mapping à créer associera une instance d’objet placée, son action et sa clé
-d’état à une entité HA réellement découverte. Utiliser les identifiants stables
-du projet, pas des noms de meshes supposés. Les clés `lampBath`, `lampCorridor`
-et `lampKitchen` existent déjà ; leur présence ne prouve pas qu’un équipement
-réel leur correspond. Toutes les positions 3D sont en centimètres.
-
-## États et commandes
-
-Pour un équipement associé, Home Assistant fait autorité sur l’état affiché.
-Un clic envoie une commande ; l’événement reçu met à jour le store sans envoyer
-de nouvelle commande. Une réponse de service réussie ne prouve pas à elle seule
-que l’équipement a atteint l’état demandé.
-
-- Privilégier les commandes explicites `turn_on` et `turn_off` pour une intention
-  connue. Vérifier les capacités de l’entité avant luminosité ou couleur.
-- Distinguer connecté, connexion en cours, déconnecté et échec d’authentification.
-- Traiter une entité absente, `unknown` ou `unavailable` comme indisponible,
-  jamais comme éteinte. Signaler l’erreur et empêcher une commande inadaptée.
-- En cas de perte de connexion, indiquer que le dernier état est périmé et
-  désactiver les commandes réelles. Ne pas conserver de file à rejouer plus tard.
-- Après reconnexion, récupérer l’état courant avant de réactiver les commandes.
-- À la déconnexion volontaire ou au démontage, désabonner, retirer les écouteurs
-  et fermer la connexion. Éviter les connexions multiples lors des remontages React.
-
-Les objets sans association gardent leurs interactions locales. Les previews
-et les PNJ ne doivent jamais commander les appareils réels : seul un geste
-explicite de l’utilisateur dans la scène connectée peut le faire.
-Ne pas abonner toute la scène React à chaque changement de toutes les entités :
-l’adaptateur ne met à jour que les données associées qui ont changé.
-
-## Authentification
-
-Prévoir une action explicite « Connecter Home Assistant », utilisant le parcours
-`getAuth()` de la bibliothèque officielle. Aucun compte ni jeton partagé ne doit
-être embarqué dans le dépôt, le build, une URL ou une variable `VITE_*`.
-Les jetons ne doivent pas apparaître dans les journaux de développement.
-
-Le premier parcours sera validé en ouvrant Room-3D directement dans un onglet.
-L’intégration iframe vient ensuite : elle n’authentifie pas automatiquement
-Room-3D et les redirections ou le stockage peuvent dépendre du navigateur.
-Définir et tester la conservation éventuelle des jetons ainsi que leur effacement
-à la déconnexion avant de proposer une session persistante.
-
-Utiliser HTTPS et WSS pour l’accès distant. Une page HTTPS ne doit pas tenter
-de joindre une instance HTTP. L’URL HA doit être accessible depuis le navigateur
-utilisé, y compris hors du réseau local.
-
-## Hébergement et tableau de bord
-
-L’hébergement statique et la connexion HA sont deux sujets distincts. Une iframe
-ne fait qu’afficher Room-3D ; elle ne réalise aucune synchronisation.
-
-Conserver pour commencer la cible existante `/local/room-3d/`, sans redéploiement
-avant correction et validation des chemins. Pour préparer un build à cet emplacement :
+Aucun push ou déploiement n’est nécessaire. Sur le réseau de la maison :
 
 ```bash
-npm run build -- --base=/local/room-3d/
+npm run dev
 ```
 
-Cette option corrige les références traitées par Vite. Il faut aussi auditer les
-URL construites à l’exécution : modèles GLB, textures, environnement, vidéos et
-autres fichiers publics. Préfixer les URL concernées par `import.meta.env.BASE_URL`
-lorsque nécessaire, sans modifier les URL externes. Un changement de `base` seul
-ne garantit pas que toute la scène charge correctement.
+1. Ouvrir `http://localhost:5173` et le panneau **Interactions**.
+2. Dans **Home Assistant**, conserver `http://192.168.1.68:8123`, puis cliquer
+   sur **Connecter Home Assistant**.
+3. Terminer l’autorisation sur Home Assistant. Le navigateur revient à Room-3D
+   et affiche **Entrée · Allumée** ou **Entrée · Éteinte**.
+4. Utiliser **Lampe Couloir** dans les interactions, ou le menu de la lampe dans
+   la scène. Le clic commande réellement l’ampoule, y compris en développement.
+5. Modifier la lampe depuis HA ou son interrupteur : la scène doit suivre.
+6. Terminer avec **Déconnecter Home Assistant** pour revenir à la simulation.
 
-Avant toute copie sur le serveur :
+La connexion utilise le parcours officiel `getAuth()`, avec des jetons OAuth
+propres au navigateur. Ils restent dans `sessionStorage`, uniquement dans cet
+onglet, pour permettre le retour d’autorisation et le rechargement de page.
+La déconnexion les efface localement. Pour révoquer également l’autorisation
+côté serveur, utiliser les sessions / jetons du profil Home Assistant.
+Aucun secret administrateur, jeton HA-MCP ou identifiant partagé n’est intégré
+au site, au dépôt ou à une variable `VITE_*`.
 
-1. Valider le build sous son sous-chemin réel et vérifier l’absence de ressources
-   manquantes, de réponses HTML à la place des assets et d’erreurs navigateur.
-2. Vérifier que le build normal à la racine continue de fonctionner.
-3. Examiner le contenu à publier et conserver une version déployée récupérable.
-4. Déployer uniquement dans le répertoire Room-3D, puis tester la scène complète.
+Le réseau du navigateur doit permettre de joindre HA. Sur une version HTTPS,
+utiliser une adresse HA HTTPS (préremplie : `https://ha.dinatih.org`). La validation
+de l’authentification en iframe et de l’accès distant reste à faire ; commencer
+par un onglet normal. Une iframe n’authentifie pas automatiquement l’application.
 
-Les fichiers de `/config/www` sont servis sous `/local` sans authentification HA :
-ils ne doivent contenir aucun secret ni donnée domotique privée. La présence
-publique de la scène ne doit jamais donner accès aux commandes de la maison.
+## Comportement
 
-Après validation en accès direct, utiliser la carte de
-[`lovelace-card-example.yaml`](./lovelace-card-example.yaml) dans une vue Panneau.
-Vérifier le parcours de connexion, le redimensionnement et les interactions sur
-le navigateur et le téléphone réellement utilisés. Ne pas désactiver le sandbox
-pour contourner un problème non diagnostiqué.
+- Sans connexion explicite, la scène et ses interactions restent simulées.
+- En mode connecté, HA fournit l’état marche/arrêt, la luminosité et la couleur
+  de la lampe. Le cycle de couleurs simulé est suspendu. La puissance d’éclairage
+  3D reste celle du rendu existant, modulée par la luminosité HA.
+- Seuls les clics utilisateur dans les interactions ou le menu de la scène
+  envoient `light.turn_on` ou `light.turn_off` sur l’ampoule associée.
+- La réponse de service ne modifie pas l’état 3D par anticipation : le retour
+  d’état HA confirme l’affichage. Les événements reçus n’envoient pas de commande.
+- Les PNJ et les capteurs de présence virtuels ne pilotent pas la lampe réelle
+  et ne remplacent pas son état affiché. Les previews gardent leurs états locaux.
+- Une entité absente, `unknown` ou `unavailable` désactive les commandes et produit
+  une indication explicite. Le dernier état connu reste visible, sans être
+  interprété comme un nouvel état confirmé.
+- En cas de coupure, le panneau signale un état périmé et les commandes sont
+  désactivées. La bibliothèque gère la reconnexion ; une nouvelle lecture des
+  états est nécessaire avant de réactiver les commandes. Aucune commande hors
+  connexion n’est mise en file ou rejouée.
+- La fermeture du WebSocket annule les abonnements côté HA. Le démontage React
+  et HMR ferment la connexion tout en conservant les jetons de l’onglet ; une
+  déconnexion volontaire les efface.
 
-## Première livraison : une lampe
+Le modèle géométrique de l’ampoule reste le GLB déjà présent dans le projet ;
+son libellé de scène est désormais « Lampe du couloir ». Les autres appareils
+ne sont pas encore associés à Home Assistant.
 
-1. Relever la version HA, choisir une véritable entité `light` et un objet 3D
-   correspondant, puis confirmer ses capacités et permissions.
-2. Ajouter la dépendance officielle et la connexion explicite dans l’application.
-3. Associer cette seule lampe aux actions et au store existants.
-4. Synchroniser marche/arrêt, puis ajouter luminosité et couleur si disponibles.
-5. Valider les critères ci-dessous avant d’étendre à d’autres équipements.
+## Points d’intégration
 
-| Vérification | Résultat attendu |
+| Fichier | Rôle |
 | --- | --- |
-| Sans connexion HA | Application et interactions locales utilisables |
-| Connexion initiale | État réel affiché sans commande envoyée |
-| Changement depuis HA ou interrupteur physique | Objet 3D actualisé |
-| Clic volontaire dans la scène | Une seule commande, puis affichage de l’état reçu |
-| Preview ou activité d’un PNJ | Aucune commande réelle |
-| Entité absente ou indisponible | Indication explicite, commande désactivée |
-| Réseau coupé puis rétabli | État périmé signalé, resynchronisation sans commande rejouée |
-| Authentification refusée ou expirée | Erreur visible et possibilité de se reconnecter |
-| Déconnexion ou remontage React | Aucun abonnement ou socket abandonné |
-| Build sous `/local/room-3d/` | Scène et ressources chargées sans erreur de chemin |
+| `src/features/home-assistant/connection.ts` | Association à l’entité, OAuth, WebSocket, états et commandes |
+| `src/features/home-assistant/HomeAssistant.tsx` | Panneau de connexion et synchronisation vers le store de scène |
+| `src/main.tsx` | Cycle de vie de la connexion, indépendant des panneaux |
+| `src/features/scene/store/useSceneStore.ts` | Routage des clics vers HA et exclusion des actions IA |
+| `src/features/scene/PresenceLightController.tsx` | Suspension de la présence simulée pour la lampe associée |
+| `src/features/scene/placements/CorridorPlacements.tsx` | Rendu de la luminosité et de la couleur reçues |
 
-Après modification de code, lancer `npx tsc --noEmit` et `npm run build`.
-Les tests navigateur suivent `scripts/browser-test-options.cjs` et restent
-headless. Un essai sur la lampe réelle complète les tests simulés ; il ne peut
-pas être remplacé par une simple compilation.
+L’action commune est `lampCorridor`, associée à l’instance
+`tradfri-bulb-couloir` dans `objectActions.ts`. Le registre des libellés reste
+`objectActionRegistry.ts`. L’identifiant d’entité HA existant est conservé.
+La connexion et les commandes résident hors des composants de meubles.
 
-Les capteurs, volets, prises et éventuelles détections Frigate viendront après
-cette première validation. Aucun nouveau backend, MQTT ou composant HA personnalisé
-n’est nécessaire pour cette première étape avec l’API WebSocket existante.
+## Validation
+
+Avec Vite en cours d’exécution sur le port 5173 :
+
+```bash
+npx tsc --noEmit
+npm test
+npm run test:home-assistant
+npm run build
+```
+
+Le test spécifique utilise Chromium headless via
+`scripts/browser-test-options.cjs`, la bibliothèque HA réelle et un serveur
+WebSocket HA simulé. Il monte le panneau d’interactions et le store réels sans
+charger la scène complète. Il couvre la synchronisation initiale, un clic
+utilisateur sans mise à jour anticipée, l’exclusion d’un ordre PNJ, les retours
+marche/arrêt/couleur/luminosité, une entité indisponible, la coupure réseau, la
+reconnexion sans commande rejouée, la déconnexion et le retour à la simulation.
+Aucun appareil réel n’est commandé par ce test automatique.
+
+L’essai de bout en bout depuis Room-3D sur la vraie ampoule nécessite encore
+la connexion du navigateur de l’utilisateur et sa vérification visuelle.
+Les appels HA-MCP antérieurs ont permis d’identifier et tester l’ampoule ; ils
+ne remplacent pas cet essai de l’interface Room-3D.
+
+## Déploiement et administration
+
+Le build normal reste destiné à la racine du site. L’ancienne copie sous
+`/config/www/room-3d` n’a pas été redéployée : elle utilisait des chemins
+`/assets/...` incompatibles avec `/local/room-3d/`. Pour choisir cet hébergement,
+il faudra adapter la base Vite **et** les URL des ressources construites à
+l’exécution, puis vérifier la scène complète avant déploiement.
+Le fichier `lovelace-card-example.yaml` est réservé à cette cible une fois validée.
+Les fichiers `/config/www` sont publics et ne doivent contenir aucun secret.
+
+L’accès d’administration HA-MCP, distinct de la connexion du navigateur, est
+décrit dans [`deploy/ha-mcp/README.md`](../deploy/ha-mcp/README.md).
+L’[inventaire](./inventory.md) détaille les appareils et entités enregistrés.
 
 ## Références officielles
 
-- [Client JavaScript Home Assistant : authentification, états et services](https://github.com/home-assistant/home-assistant-js-websocket)
+- [Client JavaScript Home Assistant](https://github.com/home-assistant/home-assistant-js-websocket)
 - [Authentification Home Assistant](https://developers.home-assistant.io/docs/auth_api/)
-- [Serveur HTTP et fichiers publics HA](https://www.home-assistant.io/integrations/http/)
+- [Fichiers publics HA](https://www.home-assistant.io/integrations/http/)
 - [Carte Webpage / iframe](https://www.home-assistant.io/dashboards/iframe/)
-- [Vite : déploiement sous un chemin public](https://vite.dev/guide/build.html#public-base-path)
-
-## Administration de Home Assistant
-
-La préparation de HA-MCP pour organiser les pièces et appareils est décrite dans
-[`deploy/ha-mcp/README.md`](../deploy/ha-mcp/README.md). Cet accès d’administration
-est distinct de la connexion temps réel à implémenter dans Room-3D.
+- [Base publique Vite](https://vite.dev/guide/build.html#public-base-path)

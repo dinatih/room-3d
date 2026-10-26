@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './features/ui/resourceDownloadLogs';
 import { useGLTF } from '@react-three/drei';
 import { Studio } from '@features/scene/Studio';
+import { HomeAssistantSync } from './features/home-assistant/HomeAssistant';
 import '../scss/app.scss';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './index.css';
@@ -19,4 +20,4 @@ console.warn = (...args: any[]) => {
 
 useGLTF.setDecoderPath('/draco/');
 
-createRoot(document.getElementById('root')!).render(<Studio />);
+createRoot(document.getElementById('root')!).render(<><HomeAssistantSync /><Studio /></>);

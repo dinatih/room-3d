@@ -1,5 +1,6 @@
 import { getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
+import { ENTRY_LIGHT, setEntryLight, useHomeAssistant } from '../../home-assistant/connection';
 import { cameraState } from '@features/scene/cameraState';
 import type { ArrowControl, CameraMovement, CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
 import {
@@ -161,7 +162,7 @@ interface SceneStore {
   selectAllMainCharacters: () => void;
   clearMainCharacters: () => void;
   setGroundType: (type: GroundType) => void;
-  triggerAction: (key: string, targetState?: boolean) => void;
+  triggerAction: (key: string, targetState?: boolean, source?: 'user') => void;
   setActiveCharacterId: (id: string) => void;
   desk2ScreenActive: boolean;
   setDesk2SmartActionActive: (active: boolean) => void;
@@ -609,6 +610,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   toggleFurniture: (key) => {
+    if (key === ENTRY_LIGHT.action && useHomeAssistant.getState().enabled) {
+      void setEntryLight();
+      return;
+    }
     if (key === 'fridge') {
       useSceneStore.getState().triggerAction(key);
       return;
@@ -820,7 +825,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
     });
   },
 
-  triggerAction: (key, targetState) => {
+  triggerAction: (key, targetState, source) => {
+    if (resolveStoreKey(key).name === ENTRY_LIGHT.action && useHomeAssistant.getState().enabled) {
+      if (source === 'user') void setEntryLight(targetState);
+      return;
+    }
     if (key === 'fridge' || key === 'fridge-crisper-toggle') {
       set(state => {
         const next = toggleObjectAction(key, { fridge: state.furniture.fridge, 'fridge-crisper-toggle': state.extraStates['fridge-crisper-toggle'] }, targetState);

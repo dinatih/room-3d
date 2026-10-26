@@ -60,6 +60,7 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'door-sdb': ['bathroomDoor'],
   'door-glass': ['eastGlassDoor', 'glassDoorV2LeftOpen', 'glassDoorV2ShutterPos'],
   'corridor-closet': ['corrDoors'],
+  'tradfri-bulb-couloir': ['lampCorridor'],
   'sdb-closet': ['sdbClosetL', 'sdbClosetR'],
   'laptop': ['desk2-screen-toggle'],
   'desk-bollsidan-1': ['desk1-toggle', 'desk1-position'],
