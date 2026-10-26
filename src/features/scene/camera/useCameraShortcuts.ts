@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { MutableRefObject } from 'react';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import type { ArrowControl, CameraMode, FollowPosition } from './types';
+import type { ArrowControl, CameraMode, CameraTarget, CameraMovement, OrbitMouseMode, FollowPosition } from './types';
 import { chooseRandomCharacter } from '../store/randomCharacter';
 import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
@@ -13,6 +13,7 @@ import { frameCharacterGridOrtho, frameCharacterGridCamera, getCharacterGridCame
 import { dispatchView } from '../sidepanel/types';
 import { PERSP_POS, PERSP_TARGET } from './cameraConstants';
 import { releaseSubjectInputs, setSubjectInput } from './subjectControls';
+import { updateUrlCameraMode, updateUrlCameraPos, updateUrlCameraElevation } from './cameraUrlParams';
 
 interface UseCameraShortcutsParams {
   camera: THREE.Camera;
@@ -27,6 +28,7 @@ interface UseCameraShortcutsParams {
   changeMode: (mode: CameraMode) => void;
   enterFollow: (x: number, z: number, mode?: 'follow' | 'fpv') => void;
   setFollowCameraView: (pos: [number, number, number], target: [number, number, number]) => void;
+  saveFollowCamera: () => () => void;
   exitFollow: () => void;
   enterTop: (follow?: boolean) => void;
   exitTop: () => void;
@@ -57,6 +59,7 @@ export function useCameraShortcuts({
   changeMode,
   enterFollow,
   setFollowCameraView,
+  saveFollowCamera,
   exitFollow,
   enterTop,
   exitTop,
@@ -72,10 +75,41 @@ export function useCameraShortcuts({
     proj: 'persp' | 'ortho';
     charX: number;
     charZ: number;
+    subject: CameraTarget;
+    zoom: number;
+    up: [number, number, number];
+    activePos: string | null;
+    elevation: number;
+    arrowControl: ArrowControl;
+    movement: CameraMovement;
+    mouseMode: OrbitMouseMode;
+    animalTarget: typeof cameraState.animalTarget;
+    topFollow: boolean;
+    viewH: number;
+    restoreFollowCamera: () => void;
   } | null>(null);
   const savedInventoryGridPrevConfig = useRef<typeof savedGridPrevConfig.current>(null);
 
   useEffect(() => {
+    const captureGridView = () => {
+      const store = useSceneStore.getState();
+      const activeCamera = ctrlRef.current?.object ?? camera;
+      const target = ctrlRef.current?.target ?? savedPerspTarget.current;
+      return {
+        pos: activeCamera.position.toArray() as [number, number, number],
+        target: target.toArray() as [number, number, number],
+        mode: modeRef.current, proj: store.cameraProjection,
+        charX: cameraState.characterX, charZ: cameraState.characterZ,
+        subject: store.cameraTarget, zoom: (activeCamera as THREE.OrthographicCamera).zoom,
+        up: activeCamera.up.toArray() as [number, number, number],
+        activePos: store.activeCameraPos, elevation: store.cameraElevation,
+        arrowControl: store.arrowControl, movement: store.cameraMovement,
+        mouseMode: store.orbitMouseMode, animalTarget: cameraState.animalTarget,
+        topFollow: topFollowRef.current,
+        viewH: (activeCamera as THREE.OrthographicCamera).top - (activeCamera as THREE.OrthographicCamera).bottom,
+        restoreFollowCamera: saveFollowCamera(),
+      };
+    };
     const publishArrowKeys = () => {
       const baseArrows = [...keys.current].map(key => key.replace(/^(ShiftCtrl|Shift|Ctrl|Alt)/, ''));
       const allKeys = Array.from(new Set([...keys.current, ...baseArrows]));
@@ -128,21 +162,39 @@ export function useCameraShortcuts({
       if (modeRef.current === 'top') exitTop();
 
       if (prev) {
+        const store = useSceneStore.getState();
+        store.setCameraTarget(prev.subject);
+        store.setCameraProjection(prev.proj);
+        store.setActiveCameraPos(prev.activePos);
+        store.setCameraElevation(prev.elevation);
+        store.setCameraMovement(prev.movement);
+        cameraState.animalTarget = prev.animalTarget;
         if (prev.mode === 'follow' || prev.mode === 'fpv') {
           cameraState.characterX = prev.charX;
           cameraState.characterZ = prev.charZ;
           enterFollow(prev.charX, prev.charZ, prev.mode);
-          return;
+          prev.restoreFollowCamera();
+        } else if (prev.mode === 'top') {
+          enterTop(prev.topFollow);
+        } else if (prev.mode === 'iso') {
+          enterOrtho?.({ pos: prev.pos, target: prev.target, up: prev.up, viewH: prev.viewH / prev.zoom });
+        } else {
+          if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
+          changeMode('orbit');
+          savedPerspPos.current.set(...prev.pos);
+          savedPerspTarget.current.set(...prev.target);
         }
-        if (prev.mode === 'top') {
-          enterTop(false);
-          return;
+        if (prev.mode === 'orbit' || prev.mode === 'top') requestAnimationFrame(() => {
+          toggleOrbitType?.(prev.proj, { pos: prev.pos, target: prev.target, zoom: prev.zoom, up: prev.up });
+          store.setOrbitMouseMode(prev.mouseMode);
+        });
+        store.setOrbitMouseMode(prev.mouseMode);
+        updateUrlCameraMode(prev.mode, prev.subject);
+        store.setArrowControl(prev.arrowControl);
+        if (prev.mode !== 'fpv') {
+          updateUrlCameraPos(prev.activePos);
+          updateUrlCameraElevation(prev.elevation);
         }
-        if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
-        changeMode('orbit');
-        toggleOrbitType?.(prev.proj, { pos: prev.pos, target: prev.target });
-        savedPerspPos.current.set(...prev.pos);
-        savedPerspTarget.current.set(...prev.target);
         invalidate();
       } else {
         goToDefaultOrbit();
@@ -154,16 +206,11 @@ export function useCameraShortcuts({
       const wasActive = store.layers.characterGrid;
       if (!wasActive) {
         // Enregistre la configuration caméra avant d'entrer dans la grille
-        const curTarget = ctrlRef.current?.target ?? savedPerspTarget.current;
-        savedGridPrevConfig.current = {
-          pos: [camera.position.x, camera.position.y, camera.position.z],
-          target: [curTarget.x, curTarget.y, curTarget.z],
-          mode: modeRef.current,
-          proj: store.cameraProjection,
-          charX: cameraState.characterX,
-          charZ: cameraState.characterZ,
-        };
+        savedGridPrevConfig.current = captureGridView();
         store.toggleLayer('characterGrid');
+        if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
+        store.setCameraTarget('charactersGrid');
+        changeMode('orbit');
         store.setActiveCameraPos('front');
         store.setCameraProjection('persp');
         store.setOrbitMouseMode('rotate');
@@ -523,6 +570,9 @@ export function useCameraShortcuts({
       }
       if (modeRef.current === 'iso' && exitOrtho) exitOrtho();
       const targetProj = projection ?? 'persp';
+      const store = useSceneStore.getState();
+      if (store.layers.inventoryGrid || store.layers.wigGrid) store.setCameraTarget('inventoryObjectGrid');
+      else if (store.layers.characterGrid) store.setCameraTarget('charactersGrid');
       if (keepFollow) {
         setFollowCameraView(pos, target);
         toggleOrbitType?.(targetProj);
@@ -575,15 +625,9 @@ export function useCameraShortcuts({
           store.setActiveCameraPos(null);
           exitGridAndRestore(savedInventoryGridPrevConfig);
         } else {
-          const curTarget = ctrlRef.current?.target ?? savedPerspTarget.current;
-          savedInventoryGridPrevConfig.current = {
-            pos: [camera.position.x, camera.position.y, camera.position.z],
-            target: [curTarget.x, curTarget.y, curTarget.z],
-            mode: modeRef.current,
-            proj: store.cameraProjection,
-            charX: cameraState.characterX,
-            charZ: cameraState.characterZ,
-          };
+          savedInventoryGridPrevConfig.current = captureGridView();
+          if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
+          changeMode('orbit');
           store.setActiveCameraPos('front');
           store.setCameraProjection('ortho');
           store.setOrbitMouseMode('translate');
@@ -626,5 +670,5 @@ export function useCameraShortcuts({
       document.removeEventListener('camera-ortho-view', onOrthoView);
       document.removeEventListener('camera-enter-top', onEnterTop);
     };
-  }, [camera, changeMode, ctrlRef, enterOrtho, enterTop, enterFollow, setFollowCameraView, exitOrtho, exitTop, exitFollow, invalidate, keys, modeRef, planeModeRef, savedPerspPos, savedPerspTarget, toggleOrbitType, topFollowRef, followPos]);
+  }, [camera, changeMode, ctrlRef, enterOrtho, enterTop, enterFollow, setFollowCameraView, saveFollowCamera, exitOrtho, exitTop, exitFollow, invalidate, keys, modeRef, planeModeRef, savedPerspPos, savedPerspTarget, toggleOrbitType, topFollowRef, followPos]);
 }

@@ -9,7 +9,7 @@ const launch = require('../../scripts/browser-test-options.cjs');
     await page.setViewport({ width: 1400, height: 1000 });
     const errors = [];
     page.on('pageerror', error => { errors.push(error.message); console.error(error); });
-    await page.goto('http://127.0.0.1:5173/?characterCount=0&preset=low&skipIntro=1&animals=0&mode=orbit', { waitUntil: 'domcontentloaded' });
+    await page.goto('http://127.0.0.1:5173/?characterCount=0&preset=low&skipIntro=1&animals=0&target=studio', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(async () => (await import('/src/features/scene/cameraState.ts')).cameraState.isSceneLaunched, { timeout: 180000 });
     await page.waitForSelector('[aria-label="Outils & Actions"]', { visible: true });
     await page.click('[aria-label="Outils & Actions"]');

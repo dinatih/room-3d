@@ -701,12 +701,18 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     orbitPitch.current = Math.asin(dy / distance);
   }, []);
 
+  const saveFollowCamera = useCallback(() => {
+    const angles = [followPitch, orbitYaw, orbitYawOffset, orbitPitch, orbitDistance].map(ref => [ref, ref.current] as const);
+    return () => { for (const [ref, value] of angles) ref.current = value; };
+  }, []);
+
   const switchOrbitProjection = useCallback((
     targetProj: 'persp' | 'ortho',
     options?: {
       pos?: [number, number, number];
       target?: [number, number, number];
       zoom?: number;
+      up?: [number, number, number];
     }
   ) => {
     const ctrl = ctrlRef.current;
@@ -756,7 +762,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
     }
 
-    activeCam.up.set(0, 1, 0);
+    activeCam.up.fromArray(options?.up ?? [0, 1, 0]);
     activeCam.lookAt(target);
     activeCam.updateProjectionMatrix();
 
@@ -789,6 +795,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const applyInitialCameraView = useCallback(() => {
     const store = useSceneStore.getState();
+    // La grille d'objets publie son cadrage lorsque ses dimensions sont disponibles.
+    if (store.layers.inventoryGrid || store.layers.wigGrid) return;
     const posKey = store.activeCameraPos;
     const targetKey = store.cameraTarget;
     const target = resolveTargetPosition(targetKey);
@@ -860,6 +868,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       pos?: [number, number, number];
       target?: [number, number, number];
       zoom?: number;
+      up?: [number, number, number];
     }
   ) => {
     const nextType = targetType ?? (useSceneStore.getState().cameraProjection === 'persp' ? 'ortho' : 'persp');
@@ -1038,12 +1047,12 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // Synchronisation du mode avec le store et l'URL (une seule fois au changement d'état)
   useEffect(() => {
     useSceneStore.setState({ cameraMode: mode });
-    updateUrlCameraMode(mode);
+    updateUrlCameraMode(mode, useSceneStore.getState().cameraTarget);
     updateUrlArrowControl(useSceneStore.getState().arrowControl);
     if (mode !== 'top') {
       useSceneStore.getState().setMeasurementActive(false);
     }
-  }, [mode]);
+  }, [mode, cameraTarget]);
 
   // Initialisation follow look et ajustement du near plane selon le mode
   useEffect(() => {
@@ -1073,7 +1082,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
   }, [camera]);
 
-  // Lancement automatique du mode initial depuis les paramètres d'URL (ex: ?fpv ou ?mode=fpv)
+  // Lancement automatique de la vue initiale depuis les paramètres explicites d'URL.
   const initialModeLaunchedRef = useRef(false);
   useEffect(() => {
     if (initialModeLaunchedRef.current) return;
@@ -1247,6 +1256,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     changeMode,
     enterFollow,
     setFollowCameraView,
+    saveFollowCamera,
     exitFollow,
     enterTop,
     exitTop,

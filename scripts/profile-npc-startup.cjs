@@ -134,7 +134,7 @@ if (process.argv.includes('--inspect')) {
       await client.send('Profiler.enable'); await client.send('Profiler.start');
       await client.send('HeapProfiler.enable'); await client.send('HeapProfiler.startSampling',{samplingInterval:32768});
       const started = Date.now();
-      await page.goto(`${base}/?characterCount=${count}&skipIntro=1&preset=low&mode=top&perfGraph=1`,{waitUntil:'domcontentloaded',timeout:180000});
+      await page.goto(`${base}/?characterCount=${count}&skipIntro=1&preset=low&target=studio&projection=ortho&cameraPos=west&cameraElevation=90&perfGraph=1`,{waitUntil:'domcontentloaded',timeout:180000});
       async function sample(label) {
         const heap = await client.send('Runtime.getHeapUsage');
         const pageData = await page.evaluate(async () => {

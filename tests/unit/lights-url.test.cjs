@@ -1,10 +1,14 @@
 const { it, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
+const camera = load('src/features/scene/camera/cameraUrlParams.ts', {
+  './cameraSubjects': require('../../src/features/scene/camera/cameraSubjects.ts'),
+});
 const previousWindow = global.window;
 after(() => { if (previousWindow === undefined) delete global.window; else global.window = previousWindow; });
 const { parseUrlLayerOverrides, updateUrlLayer } = load('src/features/scene/store/layerUrlParams.ts', {
   './debugPresets': { getDebugPreset: () => undefined },
+  '../camera/cameraUrlParams': camera,
 });
 function browser(href) {
   global.window = { location: new URL(href), history: {
@@ -25,4 +29,11 @@ it('persists the lighting toggle and preserves unrelated URL parameters', () => 
   updateUrlLayer('lightsHD', false);
   assert.equal(window.location.searchParams.has('lightsHD'), false);
   assert.equal(window.location.searchParams.get('perfGraph'), '1');
+});
+it('restaure la grille perruques depuis son paramètre et le retire à la fermeture', () => {
+  browser('https://room.test/?target=inventoryObjectGrid&wigGrid=1');
+  assert.equal(parseUrlLayerOverrides().wigGrid, true);
+  updateUrlLayer('wigGrid', false);
+  assert.equal(window.location.searchParams.has('wigGrid'), false);
+  assert.equal(window.location.searchParams.get('target'), 'inventoryObjectGrid');
 });

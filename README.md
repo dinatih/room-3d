@@ -573,9 +573,12 @@ mesh fusionné. Utilisé par `drona.js` et `casquettes.js`.
 ## Dev Tools (panneau UI)
 
 Pour démarrer directement dans la scène après chargement :
-`http://localhost:5173/?skipIntro=1&mode=orbit&cameraPos=iso-ne`.
+`http://localhost:5173/?skipIntro=1&target=studio&cameraPos=north-east`.
 `skipIntro=1` supprime le compte à rebours et les animations d'introduction.
-`mode` choisit la vue initiale : `orbit`, `fpv`, `follow`, `top` ou `ortho`.
+`target=studio` ouvre l'orbite ; `follow=1` active le suivi et `fpv=1` la première personne.
+`target` choisit le sujet, `projection=ortho` la projection orthographique,
+`cameraPos` l'orientation et `cameraElevation=90` la vue du dessus.
+`target=charactersGrid` ouvre la grille Lara ; `target=inventoryObjectGrid&wigGrid=1` ouvre les perruques.
 Sans ces paramètres, le lancement conserve l'introduction et la vue FPV par défaut.
 
 `randomSpawn=1` fait démarrer tous les PNJ présents sur des emplacements d'activité aléatoires disponibles, comme Ybot, au lieu de leurs emplacements prioritaires.

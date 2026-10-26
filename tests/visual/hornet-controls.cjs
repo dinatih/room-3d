@@ -15,7 +15,7 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     page.on('request', request => request.isNavigationRequest()
       ? request.respond({ contentType: 'text/html', body: '<body class="m-0"><div id="root"></div></body>' })
       : request.continue());
-    await page.goto(`${process.env.HORNET_TEST_URL || 'http://127.0.0.1:5173'}/?mode=orbit&cameraTarget=studio`);
+    await page.goto(`${process.env.HORNET_TEST_URL || 'http://127.0.0.1:5173'}/?target=studio`);
     await page.evaluate(async () => {
       const RefreshRuntime = (await import('/@react-refresh')).default;
       RefreshRuntime.injectIntoGlobalHook(window);

@@ -23,7 +23,7 @@ export function getUrlParams(): URLSearchParams {
   }
   const params = new URLSearchParams(search);
   if (params.get('ha') === '1') {
-    if (!params.has('mode')) params.set('mode', 'iso');
+    if (!params.has('projection')) params.set('projection', 'ortho');
     if (!params.has('cameraPos')) params.set('cameraPos', 'north-west');
     if (!params.has('skipIntro')) params.set('skipIntro', '1');
     if (!params.has('characters')) params.set('characters', '0');
@@ -35,7 +35,16 @@ export function getUrlParams(): URLSearchParams {
 function writeUrl(update: (params: URLSearchParams) => void) {
   if (typeof window === 'undefined') return;
   const url = new URL(window.location.href);
+  const hashOnly = !url.search;
   url.search = getUrlParams().toString();
+  for (const key of ['mode', 'camera', 'cam']) url.searchParams.delete(key);
+  const separator = url.hash.indexOf('?');
+  if (separator >= 0) {
+    const hashParams = new URLSearchParams(url.hash.slice(separator + 1));
+    for (const key of ['mode', 'camera', 'cam']) hashParams.delete(key);
+    const query = hashOnly ? '' : hashParams.toString();
+    url.hash = url.hash.slice(0, separator) + (query ? `?${query}` : '');
+  }
   update(url.searchParams);
   window.history.replaceState(null, '', url.toString());
 }
@@ -82,7 +91,7 @@ export function parseUrlActiveCameraPosKey(): string | null {
 export function updateUrlCameraPos(posKey: string | null) {
   writeUrl(params => {
     params.delete('cameraView');
-    if (posKey) {
+    if (posKey && posKey !== 'front') {
       params.set('cameraPos', posKey);
     } else {
       params.delete('cameraPos');
@@ -119,7 +128,7 @@ export function updateUrlCameraTarget(target: CameraTarget | null) {
     params.delete('cameraTarget');
     const subject = target && resolveCameraSubject(target);
     const value = CAMERA_SUBJECTS.find(choice => choice.id === subject)?.target ?? target;
-    if (value) params.set('target', value);
+    if (value && !(value === 'character' && parseUrlCameraMode() === 'fpv')) params.set('target', value);
     else params.delete('target');
   });
 }
@@ -196,33 +205,34 @@ export function parseUrlCameraMode(): CameraMode {
     if (!['0', 'false', 'no', 'off'].includes(val ?? '')) return 'follow';
   }
 
-  const raw = params.get('mode') ?? params.get('camera') ?? params.get('cam');
-  if (raw) {
-    const m = raw.trim().toLowerCase();
-    if (m === 'orbit' || m === 'iso') return m;
-    if (m === 'fpv' || m === 'firstperson' || m === '1p' || m === 'fps') return 'fpv';
-    if (m === 'follow' || m === '3p' || m === 'thirdperson') return 'follow';
-    if (m === 'top' || m === 'topdown' || m === '2d' || m === 'plan') return 'top';
-  }
-
-  const movement = parseUrlCameraMovement();
-  if (movement === 'follow') return 'follow';
-  if (movement === 'orbit') return 'orbit';
-
   const target = parseUrlCameraTarget();
-  if (target && !resolveCameraSubject(target) || posParsed?.type === 'angle') return 'orbit';
+  if ((target && !resolveCameraSubject(target)) || posParsed?.type === 'angle' || parseUrlCameraProjection() === 'ortho' || parseUrlCameraMovement() === 'orbit') return 'orbit';
   return 'fpv';
 }
 
 /**
  * Met à jour l'URL avec le mode caméra actif sans recharger la page
  */
-export function updateUrlCameraMode(mode: CameraMode) {
-  const target = parseUrlCameraTarget();
-  updateUrlCameraTarget(target);
+export function updateUrlCameraMode(mode: CameraMode, target: CameraTarget | null = parseUrlCameraTarget()) {
   writeUrl(params => {
-    for (const key of ['camera', 'cam', 'orbit', 'fpv', 'follow']) params.delete(key);
-    params.set('mode', mode);
+    for (const key of ['cameraTarget', 'orbit', 'fpv', 'follow']) params.delete(key);
+    const subject = target && resolveCameraSubject(target);
+    const value = CAMERA_SUBJECTS.find(choice => choice.id === subject)?.target ?? target;
+    if (value && !(value === 'character' && mode === 'fpv')) params.set('target', value);
+    else params.delete('target');
+    if (mode === 'fpv') {
+      for (const key of ['cameraPos', 'cameraElevation', 'projection', 'cameraMovement']) params.delete(key);
+      if (value && !subject) params.set('fpv', '1');
+    } else if (mode === 'follow') params.set('follow', '1');
+    else {
+      if (!value) params.set('target', 'studio');
+      if (subject && !params.has('cameraPos')) params.set('cameraPos', 'north-west');
+      if (mode === 'iso' || mode === 'top') params.set('projection', 'ortho');
+      if (mode === 'top') {
+        params.set('cameraPos', 'west');
+        params.set('cameraElevation', '90');
+      }
+    }
   });
 }
 

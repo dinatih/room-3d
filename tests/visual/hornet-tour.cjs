@@ -9,7 +9,7 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     const page = await browser.newPage(), errors = [];
     page.on('pageerror', error => { errors.push(String(error)); console.error(error); });
     await page.setViewport({ width: 1280, height: 800 });
-    await page.goto(`${process.env.HORNET_TEST_URL || 'http://127.0.0.1:5173'}/?preset=low&characterCount=0&skipIntro=1&mode=orbit`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${process.env.HORNET_TEST_URL || 'http://127.0.0.1:5173'}/?preset=low&characterCount=0&skipIntro=1&target=studio`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(async () => {
       const { cameraState } = await import('/src/features/scene/cameraState.ts');
       const { furnitureObstacles } = await import('/src/features/scene/ai/navigation/obstacles.ts');

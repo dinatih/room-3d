@@ -114,7 +114,7 @@ if(process.argv.includes('--browser'))(async()=>{
   try{
     await server.listen();browser=await launch({args:['--no-sandbox','--enable-gpu','--use-angle=vulkan','--enable-features=Vulkan,VulkanFromANGLE','--disable-vulkan-surface']});
     const page=await browser.newPage();const errors=[];page.on('pageerror',error=>errors.push(String(error)));
-    await page.goto('http://127.0.0.1:5198/?characterCount=0&skipIntro=1&preset=low&mode=top',{waitUntil:'domcontentloaded',timeout:120000});
+    await page.goto('http://127.0.0.1:5198/?characterCount=0&skipIntro=1&preset=low&target=studio&projection=ortho&cameraPos=west&cameraElevation=90',{waitUntil:'domcontentloaded',timeout:120000});
     await page.waitForFunction(async()=>{const {cameraState}=await import('/src/features/scene/cameraState.ts');return cameraState.isSceneLaunched;},{timeout:180000});
     const result=await page.evaluate(async()=>{
       const nav=await import('/src/features/scene/ai/navigation/service.ts');

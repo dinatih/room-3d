@@ -26,7 +26,7 @@ const launch = require('./browser-test-options.cjs');
         setInterval(() => window.dispatchEvent(new MouseEvent('mousemove')), 1000);
       });
       page.on('console', message => { if (message.type() === 'error') console.log(message.text()); });
-      await page.goto('http://127.0.0.1:5173/?mode=follow&target=character&skipIntro=1', { waitUntil: 'domcontentloaded' });
+      await page.goto('http://127.0.0.1:5173/?follow=1&target=character&skipIntro=1', { waitUntil: 'domcontentloaded' });
       console.log('Scene document loaded');
       await page.waitForFunction(() => window.navigationFailure, { timeout: 120000 });
       const failure = await page.evaluate(() => window.navigationFailure);

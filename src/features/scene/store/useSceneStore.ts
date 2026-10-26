@@ -358,7 +358,7 @@ const initialTarget = parseUrlCameraTarget();
 if (initialTarget === 'charactersGrid') {
   initialLayers.characterGrid = true;
 } else if (initialTarget === 'inventoryObjectGrid') {
-  initialLayers.inventoryGrid = true;
+  initialLayers.inventoryGrid = !initialLayers.wigGrid;
 }
 
 const urlPreset = parseUrlPreset();
@@ -507,14 +507,15 @@ export const useSceneStore = create<SceneStore>((set) => ({
     cameraState.invalidate?.();
   },
   cameraProjection: parseUrlCameraProjection(),
-  cameraTarget: initialTarget ?? 'studio',
+  cameraTarget: initialTarget ?? (parseUrlCameraMode() === 'fpv' || parseUrlCameraMode() === 'follow' ? 'character' : 'studio'),
   setCameraTarget: (target) => {
     updateUrlCameraTarget(target);
     const updates: Partial<SceneStore> = { cameraTarget: target };
     if (target === 'charactersGrid') {
       updates.layers = { ...useSceneStore.getState().layers, characterGrid: true };
     } else if (target === 'inventoryObjectGrid') {
-      updates.layers = { ...useSceneStore.getState().layers, inventoryGrid: true };
+      const layers = useSceneStore.getState().layers;
+      updates.layers = { ...layers, inventoryGrid: !layers.wigGrid };
     }
     const currentMode = useSceneStore.getState().cameraMode;
     if (currentMode !== 'orbit') {
@@ -531,7 +532,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   orbitMouseMode: parseUrlMouseMode() ?? (parseUrlCameraProjection() === 'ortho' ? 'translate' : 'rotate'),
   setOrbitMouseMode: (mode) => set({ orbitMouseMode: mode }),
-  activeCameraPos: parseUrlActiveCameraPosKey() ?? (parseUrlCameraElevation() === 90 ? 'west' : 'north-west'),
+  activeCameraPos: parseUrlActiveCameraPosKey() ?? (initialTarget === 'charactersGrid' ? 'front' : parseUrlCameraElevation() === 90 ? 'west' : 'north-west'),
   setActiveCameraPos: (pos) => {
     set({ activeCameraPos: pos });
     updateUrlCameraPos(pos);

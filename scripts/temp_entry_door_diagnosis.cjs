@@ -7,7 +7,7 @@ const launch = require('./browser-test-options.cjs');
     await server.listen();
     browser = await launch({ args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
     const page = await browser.newPage();
-    await page.goto('http://127.0.0.1:5197/?characterCount=0&skipIntro=1&preset=low&mode=top');
+    await page.goto('http://127.0.0.1:5197/?characterCount=0&skipIntro=1&preset=low&target=studio&projection=ortho&cameraPos=west&cameraElevation=90');
     await page.waitForFunction(async () => {
       const { furnitureObstacles } = await import('/src/features/scene/ai/navigation/obstacles.ts');
       return furnitureObstacles.size > 30;

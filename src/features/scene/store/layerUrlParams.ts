@@ -87,6 +87,7 @@ export interface LayerUrlMapping {
 }
 
 export const MONITORED_LAYERS: LayerUrlMapping[] = [
+  { layerKey: 'wigGrid', canonicalParam: 'wigGrid', urlParams: ['wiggrid'] },
   { layerKey: 'iceCastle', canonicalParam: 'iceCastle', urlParams: ['icecastle'] },
   {
     layerKey: 'lightsHD',
