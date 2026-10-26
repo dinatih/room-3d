@@ -86,7 +86,7 @@ export function mergeGlbByMaterial(root: THREE.Object3D): void {
  * Supprime les faces orientées vers l'arrière (+Z dans le repère local normalisé)
  * pour permettre la vue à travers (see-through) depuis le dos de l'objet (ex: miroirs).
  */
-export function removeGlbBackFaces(root: THREE.Object3D) {
+export function removeGlbBackFaces(root: THREE.Object3D, frameWidth: number) {
   root.traverse(node => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh) return;
@@ -94,6 +94,8 @@ export function removeGlbBackFaces(root: THREE.Object3D) {
     const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
     materials.forEach(material => { material.side = THREE.FrontSide; });
     const positions = geo.getAttribute('position');
+    geo.computeBoundingBox();
+    const bounds = geo.boundingBox!;
     const index = geo.getIndex();
     const indices: number[] = [];
     const a = new THREE.Vector3();
@@ -106,10 +108,15 @@ export function removeGlbBackFaces(root: THREE.Object3D) {
       a.fromBufferAttribute(positions, vertices[0]);
       b.fromBufferAttribute(positions, vertices[1]);
       c.fromBufferAttribute(positions, vertices[2]);
+      const isFrame = Math.max(a.x, b.x, c.x) <= bounds.min.x + frameWidth
+        || Math.min(a.x, b.x, c.x) >= bounds.max.x - frameWidth
+        || Math.max(a.y, b.y, c.y) <= bounds.min.y + frameWidth
+        || Math.min(a.y, b.y, c.y) >= bounds.max.y - frameWidth;
       normal.crossVectors(b.sub(a), c.sub(a));
       // La direction dominante du triangle distingue le dos du dessus du cadre.
       // Les normales lissées des sommets servent à l'éclairage, pas à la découpe.
-      if (normal.z > Math.max(Math.abs(normal.x), Math.abs(normal.y))) continue;
+      // Conserver les traverses étroites du cadre, y compris leur face arrière.
+      if (normal.z > Math.max(Math.abs(normal.x), Math.abs(normal.y)) && !isFrame) continue;
       indices.push(...vertices);
     }
     geo.setIndex(indices);

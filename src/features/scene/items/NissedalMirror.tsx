@@ -91,7 +91,7 @@ export function NissedalGlbFrame({ glb, targetH }: { glb: string; targetH?: numb
     }
 
     mergeGlbByMaterial(scene);
-    removeGlbBackFaces(scene);
+    removeGlbBackFaces(scene, 2.2); // bordure GLB mesurée : environ 2.1 cm
 
     const box = glbLocalBBox(scene);
     scene.position.set(
@@ -113,7 +113,7 @@ function NissedalMirrorGlb({ glb, onSize }: { glb: string; onSize: SceneItemProp
     scene.scale.setScalar(100);
     scene.rotation.x = -Math.PI / 2; // Z(hauteur)→Y, Y(épaisseur)→-Z
     mergeGlbByMaterial(scene);
-    removeGlbBackFaces(scene);
+    removeGlbBackFaces(scene, 2.2); // bordure GLB mesurée : environ 2.1 cm
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
