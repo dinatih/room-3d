@@ -248,6 +248,11 @@ export function AppConsole({
     return () => document.removeEventListener('app-log', handler);
   }, []);
 
+  // À l'ouverture, montrer les derniers messages même si le défilement est en pause.
+  useLayoutEffect(() => {
+    if (logAreaRef.current) logAreaRef.current.scrollTop = logAreaRef.current.scrollHeight;
+  }, [open, hidden]);
+
   // Auto-scroll du panneau de logs si non en pause
   useEffect(() => {
     if (!isPaused && logAreaRef.current) {
