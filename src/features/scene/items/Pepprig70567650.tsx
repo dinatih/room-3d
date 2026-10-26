@@ -6,7 +6,7 @@ import { SceneItemProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
 /**
- * PEPPRIG éponge à récurer, vert bleu/jaune
+ * PEPPRIG éponge à récurer, rouge foncé (une éponge).
  * Price: 
  * URL: https://www.ikea.com/fr/fr/p/pepprig-eponge-a-recurer-vert-bleu-jaune-70567650/
  */

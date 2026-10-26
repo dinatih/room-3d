@@ -17,6 +17,7 @@ import { Annons80298474 } from '../items/Annons80298474';
 import { Middagsmat60463714 } from '../items/Middagsmat60463714';
 import { Rinnig30407814 } from '../items/Rinnig30407814';
 import { Lillviken20317852 } from '../items/Lillviken20317852';
+import { Pepprig70567650 } from '../items/Pepprig70567650';
 import { Ikea36590066708 } from '../items/Ikea36590066708';
 import { Kolvatten00594176 } from '../items/Kolvatten00594176';
 import { useSceneStore } from '../store/useSceneStore';
@@ -142,6 +143,13 @@ export function KitchenFurnishings() {
       <group position={[KITCHEN_WEST_WALL + 20, 78, ROOM_D + 26]} userData={{ animUnit: true, itemName: 'Bouchon LILLVIKEN' }}>
         <Lillviken20317852 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
+
+      {/* PEPPRIG : deux éponges verticales contre la paroi intérieure côté robinet. */}
+      {[14, 26].map(x => (
+        <group key={x} position={[KITCHEN_WEST_WALL + x, 86, ROOM_D + 45.5]} rotation={[-Math.PI / 2 + Math.atan(0.055), 0, 0]} userData={{ animUnit: true, itemName: 'Éponge PEPPRIG rouge foncé' }}>
+          <Pepprig70567650 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
 
       {/* KÖLVATTEN éclairage LED avec capteur — angle bas meuble haut METOD / mur ouest */}
       <group
