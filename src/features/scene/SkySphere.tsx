@@ -228,8 +228,10 @@ function SpaceBackdrop() {
 
   return (
     <>
-      <points geometry={distantStarsGeometry} renderOrder={-1200}>
+      {/* Après le panorama transparent, mais derrière les objets opaques via depthTest. */}
+      <points geometry={distantStarsGeometry} renderOrder={-990}>
         <pointsMaterial
+          transparent
           color={0x7f9fff}
           size={14}
           sizeAttenuation
@@ -238,8 +240,9 @@ function SpaceBackdrop() {
           fog={false}
         />
       </points>
-      <points geometry={starsGeometry} renderOrder={-1190}>
+      <points geometry={starsGeometry} renderOrder={-980}>
         <pointsMaterial
+          transparent
           color={0xffffff}
           size={8}
           sizeAttenuation
