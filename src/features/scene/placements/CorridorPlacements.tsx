@@ -206,7 +206,3 @@ export function CorridorFurnishings() {
     </MergedStaticGroup>
   );
 }
-
-export function CorridorFurniture() {
-  return null;
-}

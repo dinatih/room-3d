@@ -171,13 +171,8 @@ export function BathroomFurnishings() {
 
       {/* TISKEN sur miroir vasque */}
       <group position={[BATH_EAST_WALL - 98, 129, BATH_NORTH_WALL + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Crochet Tisken' }}>
-        <Tisken40381253 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Tisken40381253 />
       </group>
     </MergedStaticGroup>
   );
-}
-
-// Pass 3 — Decor (Détails & habillage de surface)
-export function BathroomDecor() {
-  return null;
 }

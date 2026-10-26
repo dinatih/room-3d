@@ -118,7 +118,7 @@ export function UtakerFrame({ item, onSize, hasTopper: explicitTopper }: UtakerF
       {isUpper ? (
         <>
           <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
-            <Anneland70481722 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+            <Anneland70481722 />
           </group>
           <RealisticDuvet topY={topY} drop={drop} />
           <RealisticBolsters topY={topY} />
@@ -126,7 +126,7 @@ export function UtakerFrame({ item, onSize, hasTopper: explicitTopper }: UtakerF
       ) : (
         <>
           <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
-            <Vestmarka90470195 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+            <Vestmarka90470195 />
           </group>
           <RealisticDuvet topY={topY} drop={drop} />
           <RealisticBolsters topY={topY} zOffset={26} />

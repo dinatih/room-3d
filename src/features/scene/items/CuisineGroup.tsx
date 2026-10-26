@@ -77,18 +77,18 @@ export function CuisineDrona() {
 export function CuisineLillhavet() {
   return (
     <group position={[18, 155, 34]} rotation={[0, Math.PI - Math.PI / 4 - Math.PI / 8, 0]}>
-      <Lillhavet80461276 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <Lillhavet80461276 />
       <group position={[0, 4, -2]}>
-        <group position={[1, 0, 1]} rotation={[0.2, 0, 0.1]}><Snitta00287295 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
-        <group position={[-1, 0, -1]} rotation={[-0.2, 0.5, 0.1]}><Snitta00287295 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
-        <group position={[2, 0, -2]} rotation={[0.1, 0, 0.2]}><Fornuft40428482 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
-        <group position={[-2, 0, 2]} rotation={[-0.1, -0.5, -0.2]}><Fornuft40428482 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
-        <group position={[0, 0, 2]} rotation={[0.3, 0.2, 0]}><Fornuft10428488 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
-        <group position={[0, 0, -2]} rotation={[-0.3, 0.1, 0.1]}><Fornuft10428488 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
-        <group position={[2, 0, 0]} rotation={[0.1, -0.2, 0.3]}><Fornuft90428489 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
-        <group position={[-2, 0, 0]} rotation={[0.2, 0.3, -0.1]}><Fornuft90428489 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
-        <group position={[1.5, 0, 1.5]} rotation={[0.1, 0, 0.1]}><Fornuft80428475 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
-        <group position={[-1.5, 0, -1.5]} rotation={[-0.1, 0.1, -0.1]}><Fornuft80428475 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+        <group position={[1, 0, 1]} rotation={[0.2, 0, 0.1]}><Snitta00287295 /></group>
+        <group position={[-1, 0, -1]} rotation={[-0.2, 0.5, 0.1]}><Snitta00287295 /></group>
+        <group position={[2, 0, -2]} rotation={[0.1, 0, 0.2]}><Fornuft40428482 /></group>
+        <group position={[-2, 0, 2]} rotation={[-0.1, -0.5, -0.2]}><Fornuft40428482 /></group>
+        <group position={[0, 0, 2]} rotation={[0.3, 0.2, 0]}><Fornuft10428488 /></group>
+        <group position={[0, 0, -2]} rotation={[-0.3, 0.1, 0.1]}><Fornuft10428488 /></group>
+        <group position={[2, 0, 0]} rotation={[0.1, -0.2, 0.3]}><Fornuft90428489 /></group>
+        <group position={[-2, 0, 0]} rotation={[0.2, 0.3, -0.1]}><Fornuft90428489 /></group>
+        <group position={[1.5, 0, 1.5]} rotation={[0.1, 0, 0.1]}><Fornuft80428475 /></group>
+        <group position={[-1.5, 0, -1.5]} rotation={[-0.1, 0.1, -0.1]}><Fornuft80428475 /></group>
       </group>
     </group>
   );
@@ -128,7 +128,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
       {/* Plaques */}
       <group userData={{ animUnit: true, hoverAction: { label: 'Plaques de cuisine', actions: ['smart-object:::cuisine-group:::cook-stove'] } }}>
         <group position={[CABINET_W + FRIDGE_W / 2, COUNTER_H + COUNTER_SLAB - 4.5, KIT_D / 2]} rotation={[0, -Math.PI, 0]}>
-          <Valbildad20467592 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Valbildad20467592 />
         </group>
       </group>
 

@@ -131,7 +131,7 @@ export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, act
         position={[-h1 / 2 + VAR_D / 2, w2 + 2 * w1 + .5, DEP / 2 - VAR_W / 2]}
         rotation-y={-Math.PI / 2}
       >
-        <Variera80136622 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Variera80136622 />
       </group>
 
       {/* MeubleT — au sol (Y = 0) à gauche des meubles Kallax, plaqué contre la glace des miroirs */}

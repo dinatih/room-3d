@@ -26,7 +26,7 @@ export function RaskogLargeGroup({ onSize }: SceneItemProps) {
 
   return (
     <group ref={ref}>
-      <Raskog30586783 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <Raskog30586783 />
       <group position={[5, top + HEAD_HEIGHT - 9, -2]} rotation={[0.15, Math.PI / 2, 0]}>
         <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>

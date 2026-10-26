@@ -8,7 +8,7 @@ import type { SceneItemProps } from '@shared/types';
 /** Official IKEA GLB exports in metres: convert to centimetres, centre horizontally and place the base at Y=0. */
 export function createStaticGlbItem(path: string) {
   useGLTF.preload(path);
-  return function StaticGlbItem({ onSize, ...props }: SceneItemProps) {
+  return function StaticGlbItem({ onSize }: { onSize?: SceneItemProps['onSize'] }) {
     const { scene } = useGLTFClone(path);
     useLayoutEffect(() => {
       scene.scale.set(1, 1, 1);
@@ -17,8 +17,8 @@ export function createStaticGlbItem(path: string) {
       mergeGlbByMaterial(scene);
       const box = glbLocalBBox(scene);
       scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
-      onSize(box.getSize(new THREE.Vector3()));
+      onSize?.(box.getSize(new THREE.Vector3()));
     }, [scene, onSize]);
-    return <group {...props}><primitive object={scene} /></group>;
+    return <group><primitive object={scene} /></group>;
   };
 }

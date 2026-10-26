@@ -14,7 +14,6 @@ import type { SceneItemProps } from '@shared/types';
 import { DiagWall, pEast, pWest, pNorth, WALL_H } from '../wallData';
 import { boxFaceMats, noCapMat } from '../building/buildingCommon';
 import { Grejig40329868 } from './Grejig40329868';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { getObjectActionIds } from '../objectActions';
 
@@ -168,7 +167,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
 
       {/* Étagère à chaussures GREJIG le long de la porte droite du placard (côté Ouest) */}
       <group position={[X_CLOSED_L, 0, 20]} rotation={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Étagère chaussures Grejig SDB' }}>
-        <Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Grejig40329868 />
       </group>
     </group>
   );

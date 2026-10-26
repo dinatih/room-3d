@@ -107,6 +107,7 @@ it('mesure et recentre un GLB de façon stable après remontage sous un parent t
     Item({ onSize: size => sizes.push(size.toArray()) }); effects.pop()();
     assert(scene.position.equals(new THREE.Vector3(0, 200, 0)));
   }
+  Item({}); effects.pop()();
   assert.deepEqual(preloads, ['/example.glb']);
   assert.deepEqual(sizes, [[200, 400, 600], [200, 400, 600]]);
 });

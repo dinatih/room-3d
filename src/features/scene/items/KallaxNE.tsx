@@ -12,7 +12,7 @@ import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
 import { DroneCell, DF } from './Drona';
 import { Variera60136623 } from './Variera60136623';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 import { SlidingDrona } from './SlidingDrona';
 import { DRONA_CATCHALL_POSITION, DRONA_CATCHALL_ACTION, DRONA_CATCHALL_SLIDE_DURATION } from './kallaxNeDrona';
@@ -114,7 +114,7 @@ export function KallaxNE({ onSize, noDrona, isPreview = false, actionState }: Sc
           rotY=0 : grand axe (32) le long X (= world Z, parallèle mur Est).
           Back panel (local +Z) contre mur Est. Opening face pièce (world -X). */}
       <group position={[W2_HALF - VAR2_W / 2 - 4, h1 + h2, DEP_HALF - VAR2_D / 2 - 10]} userData={{ animUnit: true }}>
-        <Variera60136623 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Variera60136623 />
       </group>
     </group>
   );

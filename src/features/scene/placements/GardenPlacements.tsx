@@ -63,16 +63,12 @@ export function GardenFurniture() {
 
       {/* Boîte de rangement Vättersö */}
       <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, birdSupport: { id: 'storage', kind: 'lid' }, itemName: 'Boîte de Rangement Vättersö' }}>
-        <NavigationObstacle id="garden-storage"><Vatterso20562909 item={stub('vatterso-20562909')} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="garden-storage"><Vatterso20562909 /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );
 }
 
-// Pass 2 — Furnishings (Habillage & confort fonctionnel)
-export function GardenFurnishings() {
-  return null;
-}
 
 // Pass 3 — Decor (Détails & habillage de surface)
 export function GardenDecor() {
@@ -141,17 +137,6 @@ export function GardenAnimals() {
       <group position={[210, 0, -200]} rotation={[0, -Math.PI / 4, 0]} userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Ulotte (Teckel)' }}>
         <Dachshund />
       </group>
-    </>
-  );
-}
-
-export function GardenPlacements() {
-  return (
-    <>
-      <GardenFurniture />
-      <GardenFurnishings />
-      <GardenDecor />
-      <GardenAnimals />
     </>
   );
 }

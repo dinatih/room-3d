@@ -1,29 +1,15 @@
 /**
  * sceneLayer.tsx — Système de layers Three.js pour la scène.
  *
- * Layers (définis dans @config) :
- *   0 LAYER_STRUCTURE  — murs, sol, plafond, character (reflétés dans les miroirs)
- *   1 LAYER_EQUIPMENT  — WC, douche, évier, chauffe-eau…
- *   2 LAYER_FURNITURE  — lit, tables, chaises, étagères, miroirs…
- *   3 LAYER_NETWORKS   — tuyauterie, électricité (optionnel)
- *   4 LAYER_GLB        — sous-filtre transversal : items GLB à l'intérieur d'une catégorie
- *   5 LAYER_NEIGHBORS  — appartements voisins
- *   6 LAYER_LIDAR      — scan LiDAR
- *
- * Règle fondamentale : tout objet appartient à exactement un layer de catégorie
- * (0-3, 5, 6) ET éventuellement au bit LAYER_GLB en supplément.
- *
- * Pourquoi disable(0)+enable(N) et non set(N) ?
- *   set(N) écrase tout le bitmask → impossible d'accumuler des layers.
- *   Avec disable(0)+enable(N), le parent CategoryLayerGroup retire le layer
- *   par défaut (0) et assigne la catégorie, sans toucher au bit GLB déjà posé
- *   par un GlbLayerGroup enfant (dont useLayoutEffect s'exécute avant).
+ * Les catégories définies dans @config remplacent le layer 0 par défaut,
+ * tout en préservant les autres bits du masque des objets.
  */
 import { useRef, useLayoutEffect, createContext, useContext } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { LAYER_ENVIRONMENT, LAYER_WALKER_DETAIL } from '@config';
 import { cameraState } from './cameraState';
+import type { LayerState } from './sidepanel/types';
 import {
   categoryLayerRegistry,
   LayerSmokeTransition,
@@ -35,29 +21,6 @@ import {
 export const CategoryLayerContext = createContext<number | null>(null);
 /** Keeps secondary canvases out of the main scene's layer transition registry. */
 export const LayerRegistryContext = createContext(true);
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-/** Sous-ensemble de LayerState pertinent pour les layers Three.js. */
-interface SceneLayers {
-  structure:       boolean;
-  wallStructure?:  boolean;
-  floorCoverings?: boolean;
-  doors?:          boolean;
-  aiZones?:        boolean;
-  environment?:    boolean;
-  bermudaGrass?:   boolean;
-  equipment:       boolean;
-  furniture:       boolean;
-  furnishings:     boolean;
-  decor:           boolean;
-  neighbors:       boolean;
-  lidar:           boolean;
-  mirrors:         boolean;
-  character:       boolean;
-  animals?:        boolean;
-  smokeTransition?: boolean;
-}
 
 // ── CategoryLayerGroup ────────────────────────────────────────────────────────
 
@@ -78,7 +41,7 @@ export function CategoryLayerGroup({
   const assignLayers = (root: THREE.Object3D) => {
     root.traverse(obj => {
       // Ne pas écraser les masques isolés spécifiquement sur LAYER_WALKER_DETAIL (tête walker en FPV)
-      if ((obj.layers.mask & (1 << 16)) !== 0) return;
+      if ((obj.layers.mask & (1 << LAYER_WALKER_DETAIL)) !== 0) return;
 
       const isDefault = (obj.layers.mask & 1) !== 0;
       const isTarget = (obj.layers.mask & (1 << layer)) !== 0;
@@ -157,7 +120,7 @@ export function CategoryLayerGroup({
  * Composant R3F (enfant de Canvas) qui synchronise camera.layers
  * avec les toggles UI de LayerState et orchestre les transitions de fumée Cartoon "Poof!".
  */
-export function SceneLayerController({ layers }: { layers: SceneLayers }) {
+export function SceneLayerController({ layers }: { layers: LayerState }) {
   const { camera, invalidate } = useThree();
 
   useLayoutEffect(() => {
@@ -171,5 +134,5 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
     invalidate();
   }, [camera, layers.environment, invalidate]);
 
-  return <LayerSmokeTransition layers={layers as any} />;
+  return <LayerSmokeTransition layers={layers} />;
 }

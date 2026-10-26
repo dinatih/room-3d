@@ -9,11 +9,11 @@
  *   - GardenPlacements.tsx    (canapés, baignoire balnéo, mangeoire, animaux Robin & Shiba...)
  */
 
-import { BathroomEquipment, BathroomFurniture, BathroomFurnishings, BathroomDecor } from './placements/BathroomPlacements';
-import { KitchenEquipment, KitchenFurniture, KitchenFurnishings, KitchenDecor } from './placements/KitchenPlacements';
-import { CorridorEquipment, CorridorFurniture, CorridorFurnishings } from './placements/CorridorPlacements';
+import { BathroomEquipment, BathroomFurniture, BathroomFurnishings } from './placements/BathroomPlacements';
+import { KitchenEquipment, KitchenFurniture, KitchenFurnishings } from './placements/KitchenPlacements';
+import { CorridorEquipment, CorridorFurnishings } from './placements/CorridorPlacements';
 import { LivingRoomFurniture, LivingRoomFurnishings, LivingRoomDecor } from './placements/LivingRoomPlacements';
-import { GardenFurniture, GardenFurnishings, GardenDecor, GardenAnimals } from './placements/GardenPlacements';
+import { GardenFurniture, GardenDecor, GardenAnimals } from './placements/GardenPlacements';
 import { RobotPlacements } from './placements/RobotPlacements';
 import { BuildingPipes } from './items/BuildingPipes';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -39,7 +39,6 @@ export function Furniture() {
     <>
       <BathroomFurniture />
       <KitchenFurniture />
-      <CorridorFurniture />
       <LivingRoomFurniture />
       <GardenFurniture />
     </>
@@ -54,7 +53,6 @@ export function Furnishings() {
       <KitchenFurnishings />
       <CorridorFurnishings />
       <LivingRoomFurnishings />
-      <GardenFurnishings />
     </>
   );
 }
@@ -63,8 +61,6 @@ export function Furnishings() {
 export function Decor() {
   return (
     <>
-      <BathroomDecor />
-      <KitchenDecor />
       <LivingRoomDecor />
       <GardenDecor />
     </>

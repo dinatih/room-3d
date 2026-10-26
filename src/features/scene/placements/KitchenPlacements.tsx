@@ -127,23 +127,23 @@ export function KitchenFurnishings() {
 
       {/* Casseroles sur la tablette existante du meuble METOD couché. */}
       <group position={[KITCHEN_WEST_WALL + 50, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={-Math.PI / 2} userData={{ animUnit: true, itemName: 'Casserole MIDDAGSMAT' }}>
-        <Middagsmat60463714 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Middagsmat60463714 />
       </group>
       <group position={[KITCHEN_WEST_WALL + 86.5, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Faitout ANNONS' }}>
-        <Annons80298474 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Annons80298474 />
       </group>
       <group position={[KITCHEN_WEST_WALL + 14, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ animUnit: true, itemName: 'Brosse RINNIG' }}>
-        <Rinnig30407814 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Rinnig30407814 />
       </group>
       {/* BOHOLMEN : fond de cuve et centre de bonde à [20, 78, 26] dans la cuisine. */}
       <group position={[KITCHEN_WEST_WALL + 20, 78, ROOM_D + 26]} userData={{ animUnit: true, itemName: 'Bouchon LILLVIKEN' }}>
-        <Lillviken20317852 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Lillviken20317852 />
       </group>
 
       {/* PEPPRIG : deux éponges verticales contre la paroi intérieure côté robinet. */}
       {[14, 26].map(x => (
         <group key={x} position={[KITCHEN_WEST_WALL + x, 86, ROOM_D + 45.5]} rotation={[-Math.PI / 2 + Math.atan(0.055), 0, 0]} userData={{ animUnit: true, itemName: 'Éponge PEPPRIG rouge foncé' }}>
-          <Pepprig70567650 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Pepprig70567650 />
         </group>
       ))}
 
@@ -174,9 +174,4 @@ export function KitchenFurnishings() {
       </group>
     </MergedStaticGroup>
   );
-}
-
-// Pass 3 — Decor (Détails & habillage de surface)
-export function KitchenDecor() {
-  return null;
 }

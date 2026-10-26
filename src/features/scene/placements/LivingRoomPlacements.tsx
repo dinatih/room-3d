@@ -290,7 +290,7 @@ export function DeskDecor() {
       <PositionTransition x={p1.x} z={p1.z} ry={p1.ry}>
         <group position={[0, d1H, 0]} rotation={[0, Math.PI, 0]} userData={{ skipMerge: true }}>
           <group position={[0, 0, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Organiseur STACKSTOD Bureau 1' }}>
-            <Stackstod60620144 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+            <Stackstod60620144 />
           </group>
         </group>
       </PositionTransition>
@@ -317,7 +317,7 @@ export function DeskDecor() {
           </group>
           <group userData={{ animUnit: true, skipMerge: true, itemName: 'Mug KEJSERLIG' }}>
             <group position={[-22, 0, -7]}>
-              <Kejserlig90511501 item={{} as any} actionState={{}} onSize={() => {}} />
+              <Kejserlig90511501 />
             </group>
           </group>
         </group>
@@ -486,7 +486,7 @@ export function LivingRoomFurniture() {
       {/* Rangement chaussures Grejig */}
       {[0, 18, 36].map(y => (
         <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true, itemName: `Range-chaussures Grejig ${y / 18 + 1}` }}>
-          <NavigationObstacle id={`grejig-${y}`} owner="grejig"><Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+          <NavigationObstacle id={`grejig-${y}`} owner="grejig"><Grejig40329868 /></NavigationObstacle>
         </group>
       ))}
 
@@ -497,10 +497,10 @@ export function LivingRoomFurniture() {
 
       {/* Sacs Dimpa mur Ouest (posés au sol, utilisés comme poufs) */}
       <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Sac Dimpa Ouest 1' }}>
-        <NavigationObstacle id="dimpa-1"><Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="dimpa-1"><Dimpa10056770 /></NavigationObstacle>
       </group>
       <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Sac Dimpa Ouest 2' }}>
-        <NavigationObstacle id="dimpa-2"><Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="dimpa-2"><Dimpa10056770 /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );
@@ -662,15 +662,5 @@ export function LivingRoomDecor() {
         </group>
       </group>
     </MergedStaticGroup>
-  );
-}
-
-export function LivingRoomPlacements() {
-  return (
-    <>
-      <LivingRoomFurniture />
-      <LivingRoomFurnishings />
-      <LivingRoomDecor />
-    </>
   );
 }
