@@ -12,7 +12,6 @@ import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
 import { KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION } from '../items/kallaxCuisineDrona';
 import { TrashBin } from '../items/TrashBin';
 import { Tackan } from '../items/Tackan';
-import { HoodShelf, HOOD_SHELF_THICKNESS } from '../items/HoodShelf';
 import { Annons80298474 } from '../items/Annons80298474';
 import { Middagsmat60463714 } from '../items/Middagsmat60463714';
 import { Rinnig30407814 } from '../items/Rinnig30407814';
@@ -40,7 +39,7 @@ const KALLAX_CELL_WIDTH = (w2 - 2 * KALLAX_FRAME - KALLAX_DIVIDER) / 2;
 const KALLAX_UPPER_CELL_BASE = 2 * 76.5 + KALLAX_FRAME;
 const IKEA365_COUNT = 3;
 const IKEA365_LENGTH = 17;
-const HOOD_SHELF_TOP = 170.7; // même niveau que le cercle de raccordement UTDRAG
+const HOOD_SHELF_TOP = 166.9; // face supérieure du montant METOD couché : 173 - 7 + 0.9
 
 export function KitchenEquipment() {
   return (
@@ -126,10 +125,7 @@ export function KitchenFurnishings() {
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {/* Planche percée au niveau de la buse, casseroles vues face à la cuisine. */}
-      <group position={[KITCHEN_WEST_WALL + 70, HOOD_SHELF_TOP - HOOD_SHELF_THICKNESS, ROOM_D + 41.5]} userData={{ animUnit: true, itemName: 'Étagère percée hotte' }}>
-        <HoodShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
+      {/* Casseroles sur la tablette existante du meuble METOD couché. */}
       <group position={[KITCHEN_WEST_WALL + 50, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={-Math.PI / 2} userData={{ animUnit: true, itemName: 'Casserole MIDDAGSMAT' }}>
         <Middagsmat60463714 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>

@@ -67,7 +67,13 @@ export function NinjaSP101({ actionState, onSize, isPreview = false }: SceneItem
     light.shadow.normalBias = 0.05;
     anchor.add(light);
     scene.traverse(object => {
-      if ((object as THREE.Mesh).isMesh) object.castShadow = object.receiveShadow = true;
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.castShadow = mesh !== bulb;
+      mesh.receiveShadow = true;
+      for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        material.shadowSide = THREE.DoubleSide;
+      }
     });
     runtime.current = { mixer, door, rack, light, material, intensity: anchor.userData.lumens / (4 * Math.PI) * 100 ** 2, lightTime: 0 };
     invalidate();

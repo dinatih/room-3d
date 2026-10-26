@@ -24,4 +24,24 @@ const { Box3, Matrix4, Vector3 } = require('three');
       console.log('Sink bottom bounds',new Box3().setFromPoints(bottom));
     }
   }
+  const THREE = require('three');
+  const doc = await io.read('public/items/ninja-sp101/ninja-sp101-animated.glb');
+  let anchor;
+  const meshes = [];
+  doc.getRoot().getDefaultScene().traverse(node => {
+    if (node.getName().includes('Lamp')) console.log(node.getName(), node.getWorldTranslation(),node.getExtras());
+    if (node.getName() === 'NinjaLampAnchor') anchor = new Vector3().fromArray(node.getWorldTranslation());
+    for (const primitive of node.getMesh()?.listPrimitives() ?? []) {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(primitive.getAttribute('POSITION').getArray(), 3));
+      if (primitive.getIndices()) geo.setIndex(new THREE.BufferAttribute(primitive.getIndices().getArray(), 1));
+      const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+      mesh.name = node.getName(); mesh.applyMatrix4(new Matrix4().fromArray(node.getWorldMatrix())); mesh.updateMatrixWorld(); meshes.push(mesh);
+      console.log('Ninja mesh',mesh.name,new Box3().setFromObject(mesh));
+    }
+  });
+  for (const axis of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]) {
+    const hits = new THREE.Raycaster(anchor, new Vector3(...axis)).intersectObjects(meshes.filter(mesh => mesh.name !== 'NinjaLampBulb'));
+    console.log('lamp ray', axis, hits[0] && [hits[0].object.name, hits[0].distance, hits[0].point.toArray()]);
+  }
 })();
