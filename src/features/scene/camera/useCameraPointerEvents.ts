@@ -173,13 +173,13 @@ export function useCameraPointerEvents({
       if (scope !== 'scene') return;
 
       if (modeRef.current === 'follow') {
-        const step = (direction === 'in' ? -25 : 25) * amount;
+        const step = (direction === 'in' ? -250 : 250) * amount;
         orbitDistance.current = Math.max(30, orbitDistance.current + step);
         updateFollowLook();
       } else {
         const cam = camera as THREE.PerspectiveCamera;
         if (!cam.isPerspectiveCamera || cameraState.isXR) return;
-        const step = (direction === 'in' ? -5 : 5) * amount;
+        const step = (direction === 'in' ? -50 : 50) * amount;
         cam.fov = Math.max(30, Math.min(120, cam.fov + step));
         cam.updateProjectionMatrix();
       }

@@ -55,8 +55,8 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
       const onZoom = (event: Event) => {
         const { direction, scope, amount } = (event as CustomEvent<CameraZoomDetail>).detail;
         if (scope !== zoomScope || !controls.enabled || !controls.enableZoom) return;
-        // Même facteur que le pas natif OrbitControls, fractionné pour l'amorti.
-        const scale = amount === undefined ? undefined : Math.pow(0.95, controls.zoomSpeed * amount);
+        // Dix pas natifs par clic, fractionnés pour conserver l'amorti.
+        const scale = Math.pow(0.95, controls.zoomSpeed * (amount ?? 1) * 10);
         if (direction === 'in') controls.dollyIn(scale);
         else controls.dollyOut(scale);
       };
