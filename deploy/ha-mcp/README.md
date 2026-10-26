@@ -97,8 +97,9 @@ regroupements de lumières ne sont pas des ampoules supplémentaires.
 L’API HA-MCP a accepté un test `light.turn_on` avec `flash: short` sur l’ampoule,
 puis `light.turn_off` ; l’état final `off` a été vérifié. Ce résultat confirme
 l’appel et l’état retourné, pas l’emplacement physique ni un clignotement observé.
-La confirmation visuelle de l’utilisateur reste nécessaire avant de renommer
-cet objet ou de le raccorder à la lampe du couloir dans Room-3D.
+L’utilisateur a ensuite confirmé avoir vu la lampe du couloir réagir : cette
+ampoule est donc identifiée. Son nom et son identifiant restent inchangés à ce
+stade ; son raccordement à Room-3D reste à réaliser.
 
 ### Accès et sauvegardes
 
@@ -131,3 +132,6 @@ Le tunnel reste à relancer après un redémarrage ou une rupture SSH.
 
 Sources : [HA-MCP](https://github.com/homeassistant-ai/ha-mcp),
 [configuration MCP Codex](https://developers.openai.com/learn/docs-mcp).
+
+Le détail des 52 fiches appareils et 330 entités, avec les entités désactivées,
+figure dans [l’inventaire](../../home-assistant/inventory.md).
