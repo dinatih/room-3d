@@ -10,6 +10,8 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     { key: 'lampKitchen', entity: 'light.cuisine_barre', button: 'Barre · Cuisine', action: 'kolvatten-toggle' },
   ];
   let accepting = true;
+  let authorizationExchanges = 0;
+  let refreshExchanges = 0;
   const entities = Object.fromEntries(lights.map(light => [light.entity, {
     entity_id: light.entity, state: light.key === 'lampOn' ? 'unavailable' : 'off', attributes: {},
     context: {}, last_changed: new Date().toISOString(), last_updated: new Date().toISOString(),
@@ -55,17 +57,53 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     page.on('requestfailed', request => console.error('Failed resource:', request.url().split('?')[0], request.failure()?.errorText));
     await page.setRequestInterception(true);
     page.on('request', request => {
+      if (request.url() === `${url}/auth/token`) {
+        const authorization = request.postData().includes('authorization_code');
+        if (authorization) authorizationExchanges++; else refreshExchanges++;
+        const invalid = authorization && authorizationExchanges > 1;
+        return request.respond({ status: invalid ? 400 : 200, contentType: 'application/json',
+          headers: { 'Access-Control-Allow-Origin': 'http://localhost:5173' },
+          body: JSON.stringify(invalid ? { error: 'invalid_grant' } : {
+            access_token: 'integration-test', ...(authorization ? { refresh_token: 'integration-refresh' } : {}), expires_in: 3600,
+          }),
+        });
+      }
       if (new URL(request.url()).pathname === '/src/main.tsx') return request.respond({ contentType: 'application/javascript', body: '' });
       if (request.url().startsWith('https://gc.zgo.at/')) return request.respond({ contentType: 'application/javascript', body: '' });
       return request.continue();
     });
-    await page.goto('http://localhost:5173/', { waitUntil: 'domcontentloaded' });
-    await page.evaluate(url => {
-      sessionStorage.setItem('room3d.ha.enabled', '1');
-      sessionStorage.setItem('room3d.ha.auth', JSON.stringify({ hassUrl: url, clientId: location.origin, access_token: 'integration-test', refresh_token: 'integration-test', expires: Date.now() + 3600000 }));
-    }, url);
+    const state = Buffer.from(JSON.stringify({ hassUrl: url, clientId: 'http://localhost:5173/' })).toString('base64');
+    await page.goto(`http://localhost:5173/?characterCount=0&auth_callback=1&code=one-use&state=${encodeURIComponent(state)}#studio`, { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => sessionStorage.setItem('room3d.ha.enabled', '1'));
     await page.evaluate(async () => { window.haTest = await import('/tests/fixtures/home-assistant-entry.tsx'); });
     await page.waitForFunction(() => window.haTest.useHomeAssistant.getState().status === 'connected');
+    const returnedUrl = new URL(page.url());
+    for (const name of ['auth_callback', 'code', 'state']) assert.equal(returnedUrl.searchParams.has(name), false, `Consumed OAuth ${name} must be removed`);
+    assert.equal(returnedUrl.searchParams.get('characterCount'), '0');
+    assert.equal(returnedUrl.hash, '#studio');
+    await page.evaluate(() => {
+      const tokens = JSON.parse(sessionStorage.getItem('room3d.ha.auth'));
+      tokens.expires = 0;
+      sessionStorage.setItem('room3d.ha.auth', JSON.stringify(tokens));
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.evaluate(async () => { window.haTest = await import('/tests/fixtures/home-assistant-entry.tsx'); });
+    await page.waitForFunction(() => window.haTest.useHomeAssistant.getState().status === 'connected');
+    assert.equal(authorizationExchanges, 1, 'Reload must not reuse the authorization code or ask for login');
+    assert.equal(refreshExchanges, 1, 'An expired access token must refresh automatically');
+    assert.equal(await page.evaluate(() => JSON.parse(sessionStorage.getItem('room3d.ha.auth')).refresh_token), 'integration-refresh');
+    const staleCallback = new URL(page.url());
+    staleCallback.searchParams.set('auth_callback', '1');
+    staleCallback.searchParams.set('code', 'one-use');
+    staleCallback.searchParams.set('state', state);
+    await page.evaluate(url => history.replaceState(history.state, '', url), staleCallback.toString());
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.evaluate(async () => { window.haTest = await import('/tests/fixtures/home-assistant-entry.tsx'); });
+    await page.waitForFunction(() => window.haTest.useHomeAssistant.getState().status === 'connected');
+    assert.equal(authorizationExchanges, 1, 'A saved session must ignore an already-consumed callback');
+    assert.equal(refreshExchanges, 1);
+    assert.equal(new URL(page.url()).searchParams.has('auth_callback'), false);
+
     const read = key => page.evaluate(key => ({
       light: window.haTest.useHomeAssistant.getState().lights[key],
       on: window.haTest.useSceneStore.getState().furniture[key],
@@ -133,7 +171,7 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     assert.equal(calls.length, 5);
     await page.evaluate(() => window.haTest.unmount());
     assert.deepEqual(errors, []);
-    console.log('PASS: four lights, independent availability, state/color sync, user/NPC separation, graphics isolation, reconnect without replay and simulation');
+    console.log('PASS: OAuth callback cleanup, reload with token refresh, four lights, independent availability, state/color sync, user/NPC separation, graphics isolation, reconnect without replay and simulation');
   } finally {
     if (browser) await browser.close();
     for (const ws of server.clients) ws.terminate();

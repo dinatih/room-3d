@@ -45,6 +45,13 @@ let connection: Connection | undefined;
 let dispose: (() => void) | undefined;
 let generation = 0;
 
+function clearAuthCallback() {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has('auth_callback')) return;
+  for (const key of ['auth_callback', 'code', 'state']) url.searchParams.delete(key);
+  window.history.replaceState(window.history.state, '', url);
+}
+
 function receiveLight(key: LightKey, entity: HassEntity | undefined) {
   if (entity?.state !== 'on' && entity?.state !== 'off') {
     updateLight(key, { available: false, error: `${LIGHTS[key].label} : ${entity?.state ?? 'entité absente'}.` });
@@ -65,6 +72,7 @@ export async function connectHomeAssistant(url?: string) {
   useHomeAssistant.setState({ enabled: true, status: 'connecting', error: null });
   sessionStorage.setItem(ENABLED_KEY, '1');
   try {
+    if (sessionStorage.getItem(TOKEN_KEY)) clearAuthCallback();
     const auth = await getAuth({
       hassUrl: url,
       loadTokens: async () => JSON.parse(sessionStorage.getItem(TOKEN_KEY) ?? 'null') as AuthData | null,
@@ -74,6 +82,7 @@ export async function connectHomeAssistant(url?: string) {
         else sessionStorage.removeItem(TOKEN_KEY);
       },
     });
+    clearAuthCallback();
     const next = await createConnection({ auth });
     if (run !== generation) { next.close(); return; }
     connection = next;
@@ -118,6 +127,7 @@ export async function connectHomeAssistant(url?: string) {
     await ready();
   } catch (error) {
     if (run !== generation) return;
+    clearAuthCallback();
     dispose?.();
     dispose = undefined;
     connection?.close();

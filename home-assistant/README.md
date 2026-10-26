@@ -39,8 +39,12 @@ npm run dev
 La connexion utilise le parcours officiel `getAuth()`, avec des jetons OAuth
 propres au navigateur. Ils restent dans `sessionStorage`, uniquement dans cet
 onglet, pour permettre le retour d’autorisation et le rechargement de page.
-La déconnexion les efface localement. Pour révoquer également l’autorisation
-côté serveur, utiliser les sessions / jetons du profil Home Assistant.
+Les paramètres OAuth de retour (`auth_callback`, `code`, `state`) sont retirés
+de l’URL une fois traités. Un rechargement sur la même origine reprend la session
+et renouvelle le jeton expiré automatiquement, sans nouvelle connexion ni double
+authentification. La déconnexion efface les jetons localement. Pour révoquer
+également l’autorisation côté serveur, utiliser les sessions / jetons du profil
+Home Assistant.
 Aucun secret administrateur, jeton HA-MCP ou identifiant partagé n’est intégré
 au site, au dépôt ou à une variable `VITE_*`.
 
@@ -110,7 +114,9 @@ npm run build
 Le test spécifique utilise Chromium headless via
 `scripts/browser-test-options.cjs`, la bibliothèque HA réelle et un serveur
 WebSocket HA simulé. Il monte le panneau d’interactions et le store réels sans
-charger la scène complète. Il couvre les quatre associations, leur disponibilité indépendante, les réglages
+charger la scène complète. Il couvre aussi le retour OAuth, le rechargement avec
+renouvellement du jeton et une URL de retour déjà consommée avec session existante.
+Il couvre les quatre associations, leur disponibilité indépendante, les réglages
 graphiques de l’OLA, la synchronisation initiale, les clics utilisateur sans mise
 à jour anticipée, l’exclusion des ordres PNJ et les retours
 marche/arrêt/couleur/luminosité, une entité indisponible, la coupure réseau, la
