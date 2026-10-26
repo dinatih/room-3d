@@ -233,8 +233,9 @@ function SpaceBackdrop() {
         <pointsMaterial
           transparent
           color={0x7f9fff}
-          size={14}
-          sizeAttenuation
+          size={1}
+          sizeAttenuation={false}
+          toneMapped={false}
           depthTest
           depthWrite={false}
           fog={false}
@@ -244,8 +245,9 @@ function SpaceBackdrop() {
         <pointsMaterial
           transparent
           color={0xffffff}
-          size={8}
-          sizeAttenuation
+          size={2}
+          sizeAttenuation={false}
+          toneMapped={false}
           depthTest
           depthWrite={false}
           fog={false}

@@ -877,13 +877,13 @@ export function Studio() {
          * ── Placement & configuration initiale de la caméra 3D ───────────────
          * - fov: 50° (champ de vision vertical naturel)
          * - near: 5 cm (évite le clipping avec les objets proches)
-         * - far: 10 000 cm / 100 m (couvre la pièce, l'extérieur et le ciel)
+         * - far: 50 000 cm / 500 m (inclut les étoiles au-delà du dôme)
          * - position initiale calée sur le panorama Ciel de Paris pour assurer la fusion parfaite avec le fond 2D
          */
         camera={{
           fov:  50,
           near: 5,
-          far:  10000,
+          far:  50000,
           position: [SKY_START_POS.x, SKY_START_POS.y, SKY_START_POS.z],
         }}
         shadows={{ type: PCFShadowMap }}
