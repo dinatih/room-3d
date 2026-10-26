@@ -36,7 +36,7 @@ const VENT_RADIUS = 6.0; // Ø12 cm — colonne aération VMC collective
 const VENT_BRANCH_RADIUS = 5.0; // Ø10 cm — piquages vers pièces
 const DRAIN_RADIUS = 5.5; // Ø11 cm — colonne de chute eaux usées standard NF
 const DRAIN_OFFSET_Z = -22; // décalage du tube d'eaux usées à côté de l'aération
-const FLEX_RADIUS = 7.45; // Ø14.9 cm — diamètre mesuré de la buse UTDRAG
+const FLEX_RADIUS = 5; // Ø10 cm — petit cercle intérieur de la buse UTDRAG
 
 // Repères de parois en coordonnées locales (groupe parent à [14, 0, 440])
 const SDB_WALL_Z = BATH_NORTH_WALL - 440; // ≈ 23.6 cm (mur SDB-Nord)
