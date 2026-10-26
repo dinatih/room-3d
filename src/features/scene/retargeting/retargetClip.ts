@@ -66,7 +66,7 @@ function subsampleTrackTo30Fps(track: THREE.KeyframeTrack): THREE.KeyframeTrack 
   return cl;
 }
 
-export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, animScene: THREE.Object3D | undefined, rootMotionSpace?: 'world-meters' | 'rest-meters'): THREE.AnimationClip {
+export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, animScene: THREE.Object3D | undefined, rootMotionSpace?: 'world-meters' | 'rest-meters', supportBone: 'ToeBase' | 'Foot' = 'ToeBase'): THREE.AnimationClip {
   if (targetInstance.getObjectByName('H2')?.userData.h2MotionDriver) {
     return retargetH2Clip(rawClip, targetInstance, animScene, rootMotionSpace, retargetClip);
   }
@@ -754,7 +754,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
   const result = new THREE.AnimationClip(`${workingClip.name}_retargeted`, workingClip.duration, tracks);
   if (INTERX_MANIFEST.duos.some(duo => duo.tags.some(tag => ['seated-front', 'with-seated-action'].includes(tag)) && ['p1', 'p2'].some(person => rawClip.name === `${duo.id}-${person}`))) {
     const hips = targetInstance.getObjectByName(resolveTargetBoneName(targetInstance, 'Hips')!)!;
-    const toes = ['Left', 'Right'].map(side => targetInstance.getObjectByName(resolveTargetBoneName(targetInstance, `${side}ToeBase`)!)!);
+    const feet = ['Left', 'Right'].map(side => targetInstance.getObjectByName(resolveTargetBoneName(targetInstance, `${side}${supportBone}`)!)!);
     const saved: Array<{ node: THREE.Object3D; position: THREE.Vector3; quaternion: THREE.Quaternion }> = [];
     targetInstance.traverse((node: any) => {
       saved.push({ node, position: node.position.clone(), quaternion: node.quaternion.clone() });
@@ -762,7 +762,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
       if (node.restLocalQuaternion) node.quaternion.copy(node.restLocalQuaternion);
     });
     targetInstance.updateMatrixWorld(true);
-    const support = () => Math.min(...toes.map(toe => toe.getWorldPosition(new THREE.Vector3()).y));
+    const support = () => Math.min(...feet.map(foot => foot.getWorldPosition(new THREE.Vector3()).y));
     const restSupport = support();
     const mixer = new THREE.AnimationMixer(targetInstance);
     try {

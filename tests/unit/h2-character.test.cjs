@@ -142,3 +142,28 @@ it('anime le H2 avec ses 31 moteurs URDF, face au déplacement (+Z), sans dépla
   }
   t.diagnostic(`H2 : ${height.toFixed(2)} cm, rayon ${profile.radius.toFixed(2)} cm, marche ${speed.toFixed(2)} cm/s`);
 });
+
+it('retargete un duo assis InterX sur le H2 sans articulations d’orteils, après transfert au worker', async () => {
+  const { INTERX_MANIFEST, INTERX_ANIMATION_DEFINITIONS } = require('../../src/features/scene/animations/interxManifest.ts');
+  const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+  const loader = new GLTFLoader();
+  loader.setDRACOLoader({ preload() {} });
+  loader.register(() => ({ name: 'SkeletonOnly', loadMesh: () => Promise.resolve(new THREE.Group()) }));
+  const read = file => {
+    const bytes = fs.readFileSync(`public/${file}`);
+    return loader.parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
+  };
+  const { scene } = await read('items/unitree-h2/unitree-h2.glb');
+  scene.scale.setScalar(100);
+  const duo = INTERX_MANIFEST.duos.find(duo => duo.tags.includes('seated-front'));
+  for (const person of ['p1', 'p2']) {
+    const definition = INTERX_ANIMATION_DEFINITIONS.find(clip => clip.id === `${duo.id}-${person}`);
+    const source = await read(definition.path.replace(/^\//, ''));
+    source.animations[0].name = definition.id;
+    const clip = retargetClip(source.animations[0], restoreAnimationRig(structuredClone(captureAnimationRig(scene))),
+      restoreAnimationRig(structuredClone(captureAnimationRig(source.scene))), definition.rootMotionSpace);
+    assert.equal(clip.tracks.length, 33);
+    assert.equal(clip.duration, source.animations[0].duration);
+    assert(clip.tracks.every(track => [...track.values].every(Number.isFinite)));
+  }
+});
