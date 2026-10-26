@@ -1500,12 +1500,12 @@
         "recording": "G022T008A026R002",
         "group": "G022",
         "take": "R002",
-        "p1": "G022T008A026R002/P1.npz",
-        "p2": "G022T008A026R002/P2.npz",
+        "p1": "G022T008A026R002/P2.npz",
+        "p2": "G022T008A026R002/P1.npz",
         "frameCount": 760,
         "sha256": {
-          "p1": "dfa080ccec8492d4af02ea12f96fdfd763cf48a006553659b3a8836174916a9a",
-          "p2": "3ead21ab9173142d5d3c436701d9ea3064f7ef6509df5df2a378eb1bff05bdc8"
+          "p1": "3ead21ab9173142d5d3c436701d9ea3064f7ef6509df5df2a378eb1bff05bdc8",
+          "p2": "dfa080ccec8492d4af02ea12f96fdfd763cf48a006553659b3a8836174916a9a"
         }
       },
       "clips": {
@@ -1513,15 +1513,15 @@
           "path": "animations/npz/interx/g022t008a026r002-p1.glb",
           "frameCount": 190,
           "durationSeconds": 6.3,
-          "sizeBytes": 226960,
-          "sha256": "b96fb2626a02cd009b41cabcd60fa71d9c8de9a2776dcfd6178c16b4b7cb207c"
+          "sizeBytes": 226276,
+          "sha256": "502809f002ec433b2d3f69adb6f29cbbf1f93397a02860eb9edba4203b8b0c81"
         },
         "p2": {
           "path": "animations/npz/interx/g022t008a026r002-p2.glb",
           "frameCount": 190,
           "durationSeconds": 6.3,
-          "sizeBytes": 226276,
-          "sha256": "502809f002ec433b2d3f69adb6f29cbbf1f93397a02860eb9edba4203b8b0c81"
+          "sizeBytes": 226960,
+          "sha256": "b96fb2626a02cd009b41cabcd60fa71d9c8de9a2776dcfd6178c16b4b7cb207c"
         }
       },
       "rootMotion": {
@@ -1530,26 +1530,27 @@
         "upAxis": "Y"
       },
       "start_offset": [
-        0.34319671988487244,
-        -0.24073880910873413,
-        0.6320424377918243
+        -0.34319671988487244,
+        0.24073880910873413,
+        -0.6320424377918243
       ],
       "tags": [
         "inter-x",
         "duo",
         "massage-shoulder",
-        "help-relaxation"
+        "help-relaxation",
+        "with-seated-action"
       ],
       "placement": {
         "verticalOrigin": "source-support-preserve-hands",
         "sourceInitialSolesMeters": [
-          -0.0063282685830128305,
-          -0.04887482558797829
+          -0.04887482558797829,
+          -0.0063282685830128305
         ],
         "sourceReferencePlaneMeters": -0.04887482558797829,
         "initialSoleHeightMeters": [
-          0.04254655700496546,
-          0.0
+          0.0,
+          0.04254655700496546
         ]
       },
       "handMotion": "full-axis-angle"
