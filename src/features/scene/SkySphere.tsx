@@ -183,7 +183,7 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
 
 function SpaceBackdrop() {
   const starsGeometry = useMemo(() => {
-    const count = 1800;
+    const count = 600;
     const positions = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
@@ -191,7 +191,8 @@ function SpaceBackdrop() {
       const v = seededUnit(i * 3 + 2);
       const radius = SKY_RADIUS * (1.35 + seededUnit(i * 3 + 3) * 2.2);
       const theta = u * Math.PI * 2;
-      const phi = Math.acos(2 * v - 1);
+      // Tiers supérieur en hauteur : Y / rayon entre 1/3 et 1.
+      const phi = Math.acos((1 + 2 * v) / 3);
       const sinPhi = Math.sin(phi);
 
       positions[i * 3] = Math.cos(theta) * sinPhi * radius;
@@ -205,7 +206,7 @@ function SpaceBackdrop() {
   }, []);
 
   const distantStarsGeometry = useMemo(() => {
-    const count = 900;
+    const count = 300;
     const positions = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
@@ -213,7 +214,7 @@ function SpaceBackdrop() {
       const v = seededUnit(i * 5 + 12);
       const radius = SKY_RADIUS * (3.4 + seededUnit(i * 5 + 13) * 2.7);
       const theta = u * Math.PI * 2;
-      const phi = Math.acos(2 * v - 1);
+      const phi = Math.acos((1 + 2 * v) / 3);
       const sinPhi = Math.sin(phi);
 
       positions[i * 3] = Math.cos(theta) * sinPhi * radius;
