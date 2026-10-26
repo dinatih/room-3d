@@ -88,7 +88,6 @@ export function useCameraShortcuts({
     viewH: number;
     restoreFollowCamera: () => void;
   } | null>(null);
-  const savedInventoryGridPrevConfig = useRef<typeof savedGridPrevConfig.current>(null);
 
   useEffect(() => {
     const captureGridView = () => {
@@ -154,9 +153,9 @@ export function useCameraShortcuts({
       }
       useSceneStore.getState().setArrowControl(control);
     };
-    const exitGridAndRestore = (savedConfig = savedGridPrevConfig) => {
-      const prev = savedConfig.current;
-      savedConfig.current = null;
+    const exitGridAndRestore = () => {
+      const prev = savedGridPrevConfig.current;
+      savedGridPrevConfig.current = null;
 
       if (modeRef.current === 'iso' && exitOrtho) exitOrtho();
       if (modeRef.current === 'top') exitTop();
@@ -206,7 +205,7 @@ export function useCameraShortcuts({
       const wasActive = store.layers.characterGrid;
       if (!wasActive) {
         // Enregistre la configuration caméra avant d'entrer dans la grille
-        savedGridPrevConfig.current = captureGridView();
+        if (!store.layers.inventoryGrid && !store.layers.wigGrid) savedGridPrevConfig.current = captureGridView();
         store.toggleLayer('characterGrid');
         if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
         store.setCameraTarget('charactersGrid');
@@ -623,9 +622,9 @@ export function useCameraShortcuts({
         const store = useSceneStore.getState();
         if (store.layers.inventoryGrid || store.layers.wigGrid) {
           store.setActiveCameraPos(null);
-          exitGridAndRestore(savedInventoryGridPrevConfig);
+          exitGridAndRestore();
         } else {
-          savedInventoryGridPrevConfig.current = captureGridView();
+          if (!store.layers.characterGrid) savedGridPrevConfig.current = captureGridView();
           if (modeRef.current === 'follow' || modeRef.current === 'fpv') exitFollow();
           changeMode('orbit');
           store.setActiveCameraPos('front');

@@ -193,7 +193,7 @@ export function CameraViewMarkers() {
   if (!enabled || photoOpen || isOrtho) return null;
 
   const markerOffset: [number, number, number] = inventoryGridActive && inventoryGridTarget
-    ? inventoryGridTarget.map((value, index) => value - VIEWS.front.target[index]) as [number, number, number]
+    ? inventoryGridTarget.map((value, index) => value - VIEWS.north.target[index]) as [number, number, number]
     : [0, 0, 0];
 
   return (

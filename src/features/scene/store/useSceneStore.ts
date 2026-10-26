@@ -357,6 +357,7 @@ if (initialLayers.laraCount === 0) initialLayers.character = false;
 const initialTarget = parseUrlCameraTarget();
 if (initialTarget === 'charactersGrid') {
   initialLayers.characterGrid = true;
+  initialLayers.inventoryGrid = initialLayers.wigGrid = false;
 } else if (initialTarget === 'inventoryObjectGrid') {
   initialLayers.inventoryGrid = !initialLayers.wigGrid;
 }
@@ -512,10 +513,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
     updateUrlCameraTarget(target);
     const updates: Partial<SceneStore> = { cameraTarget: target };
     if (target === 'charactersGrid') {
-      updates.layers = { ...useSceneStore.getState().layers, characterGrid: true };
+      updates.layers = { ...useSceneStore.getState().layers, characterGrid: true, inventoryGrid: false, wigGrid: false };
+      updateUrlLayer('wigGrid', false);
     } else if (target === 'inventoryObjectGrid') {
       const layers = useSceneStore.getState().layers;
-      updates.layers = { ...layers, inventoryGrid: !layers.wigGrid };
+      updates.layers = { ...layers, characterGrid: false, inventoryGrid: !layers.wigGrid };
     }
     const currentMode = useSceneStore.getState().cameraMode;
     if (currentMode !== 'orbit') {
@@ -666,10 +668,12 @@ export const useSceneStore = create<SceneStore>((set) => ({
       }
       const nextLayers = { ...state.layers, [key]: isActivating };
       updateUrlLayer(key, isActivating);
-      if ((key === 'inventoryGrid' || key === 'wigGrid') && isActivating) {
-        const other = key === 'inventoryGrid' ? 'wigGrid' : 'inventoryGrid';
-        nextLayers[other] = false;
-        updateUrlLayer(other, false);
+      const gridLayers = ['characterGrid', 'inventoryGrid', 'wigGrid'] as const;
+      if (gridLayers.some(grid => grid === key) && isActivating) {
+        for (const other of gridLayers) if (other !== key) {
+          nextLayers[other] = false;
+          updateUrlLayer(other, false);
+        }
       }
       if (key === 'iceCastle' && isActivating) {
         nextLayers.wallStructure = true;

@@ -43,11 +43,13 @@ const launch = require('../../scripts/browser-test-options.cjs');
       }
       await settle();
     };
-    for (const view of ['', '&follow=1', '&target=studio&projection=ortho&cameraPos=north-east']) {
+    const switchOnly = process.argv.includes('--switch-only');
+    for (const view of switchOnly ? [''] : ['', '&follow=1', '&target=studio&projection=ortho&cameraPos=north-east']) {
       await page.goto(`${base}/?preset=low&characterCount=1&animals=0&skipIntro=1${view}`, { waitUntil: 'domcontentloaded' });
       await ready();
       await settle();
       if (!view) assert.equal(new URL(page.url()).search, '?preset=low&characterCount=1&animals=0&skipIntro=1');
+      let laraPosition;
       for (const kind of ['lara', 'wigs']) {
         const before = await snapshot();
         await toggle(kind);
@@ -68,7 +70,20 @@ const launch = require('../../scripts/browser-test-options.cjs');
         }, kind);
         assert(centered < .001, 'Camera must center the grid');
         console.log('Grid opened:', kind, grid);
-        if (kind === 'wigs') { await toggle('inventory'); await toggle('wigs'); }
+        if (kind === 'lara') laraPosition = grid.position;
+        if (kind === 'wigs') {
+          await toggle('inventory');
+          await page.keyboard.press('p');
+          await settle();
+          await toggle('lara');
+          const characters = await snapshot();
+          assert.deepEqual(characters.layers, { lara: true, wigs: false, inventory: false });
+          assert.equal(characters.target, 'charactersGrid');
+          assert.equal(characters.projection, 'persp');
+          assert(Math.hypot(...characters.position.map((value, i) => value - laraPosition[i])) < .01, 'Inventory → characters must restore the character grid framing');
+          await toggle('wigs');
+          assert.deepEqual((await snapshot()).layers, { lara: false, wigs: true, inventory: false });
+        }
         await toggle(kind);
         await settle();
         const after = await snapshot();
@@ -83,7 +98,7 @@ const launch = require('../../scripts/browser-test-options.cjs');
         console.log('Grid restored:', kind, before.mode);
       }
     }
-    for (const query of ['target=charactersGrid', 'target=inventoryObjectGrid&wigGrid=1']) {
+    for (const query of switchOnly ? [] : ['target=charactersGrid', 'target=inventoryObjectGrid&wigGrid=1']) {
       await page.goto(`${base}/?preset=low&characterCount=1&animals=0&skipIntro=1&${query}`, { waitUntil: 'domcontentloaded' });
       await ready(); await settle();
       const expected = query.includes('wigGrid') ? 'inventoryObjectGrid' : 'charactersGrid';
