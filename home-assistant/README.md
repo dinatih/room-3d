@@ -164,3 +164,9 @@ n’est nécessaire pour cette première étape avec l’API WebSocket existante
 - [Serveur HTTP et fichiers publics HA](https://www.home-assistant.io/integrations/http/)
 - [Carte Webpage / iframe](https://www.home-assistant.io/dashboards/iframe/)
 - [Vite : déploiement sous un chemin public](https://vite.dev/guide/build.html#public-base-path)
+
+## Administration de Home Assistant
+
+La préparation de HA-MCP pour organiser les pièces et appareils est décrite dans
+[`deploy/ha-mcp/README.md`](../deploy/ha-mcp/README.md). Cet accès d’administration
+est distinct de la connexion temps réel à implémenter dans Room-3D.
