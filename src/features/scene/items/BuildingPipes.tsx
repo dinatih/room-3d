@@ -22,7 +22,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { WALL_H, BATH_NORTH_WALL, KITCHEN_WEST_WALL } from '../wallData';
+import { WALL_H, BATH_NORTH_WALL, KITCHEN_WEST_WALL, ROOM_D } from '../wallData';
 
 // Constantes de hauteur (cm)
 const CEIL_THICK = 20; // épaisseur dalle plafond
@@ -36,7 +36,7 @@ const VENT_RADIUS = 6.0; // Ø12 cm — colonne aération VMC collective
 const VENT_BRANCH_RADIUS = 5.0; // Ø10 cm — piquages vers pièces
 const DRAIN_RADIUS = 5.5; // Ø11 cm — colonne de chute eaux usées standard NF
 const DRAIN_OFFSET_Z = -22; // décalage du tube d'eaux usées à côté de l'aération
-const FLEX_RADIUS = 3.8; // Ø7.6 cm (conduit flexible hotte alu compact)
+const FLEX_RADIUS = 7.45; // Ø14.9 cm — diamètre mesuré de la buse UTDRAG
 
 // Repères de parois en coordonnées locales (groupe parent à [14, 0, 440])
 const SDB_WALL_Z = BATH_NORTH_WALL - 440; // ≈ 23.6 cm (mur SDB-Nord)
@@ -45,9 +45,9 @@ const KITCHEN_EXIT_X = KITCHEN_WALL_X + 5.5; // ≈ 25.1 cm (ressort juste de la
 const KITCHEN_DOUBLE_OUTLET_LEN = 9.0; // demi-longueur des sorties perpendiculaires
 
 // Repères de la hotte aspirante UTDRAG en coordonnées locales
-// Centre exact du trou d'évacuation mesuré sur la géométrie 3D Utdrag : X = 87.5, Z = 2.17, Y = 170.7
-const HOOD_X = 87.5;
-const HOOD_COLLAR_Z = 2.17; // centre exact du trou de la buse de hotte
+// Centre de la buse mesuré après centrage du GLB et rotation Y = π dans CuisineGroup.
+const HOOD_X = KITCHEN_WEST_WALL + 70 - 14;
+const HOOD_COLLAR_Z = ROOM_D + 32 + 14.17 - 440;
 const HOOD_COLLAR_Y = 170.7;
 const FLEX_WALL_Z = 17.0; // décalé de 2 cm supplémentaires vers le Nord pour éloigner le tube du mur Cuisine-Sud (surface locale Z = 25.0)
 
@@ -140,9 +140,9 @@ export function BuildingPipes({ onSize }: SceneItemProps) {
       new THREE.Vector3(KITCHEN_EXIT_X + 2.0, Y_VENT_SPLIT, FLEX_WALL_Z),
       new THREE.Vector3(45.0, 222, FLEX_WALL_Z),
       new THREE.Vector3(70.0, 205, FLEX_WALL_Z),
-      new THREE.Vector3(HOOD_X, 186, FLEX_WALL_Z),
-      new THREE.Vector3(HOOD_X, 176, HOOD_COLLAR_Z + 5.0),
-      new THREE.Vector3(HOOD_X, HOOD_COLLAR_Y + 2.5, HOOD_COLLAR_Z),
+      new THREE.Vector3(HOOD_X, HOOD_COLLAR_Y + FLEX_RADIUS * 3, FLEX_WALL_Z),
+      new THREE.Vector3(HOOD_X, HOOD_COLLAR_Y + FLEX_RADIUS * 2, HOOD_COLLAR_Z),
+      new THREE.Vector3(HOOD_X, HOOD_COLLAR_Y + FLEX_RADIUS, HOOD_COLLAR_Z),
       new THREE.Vector3(HOOD_X, HOOD_COLLAR_Y, HOOD_COLLAR_Z),
       new THREE.Vector3(HOOD_X, HOOD_COLLAR_Y - 2.0, HOOD_COLLAR_Z),
     ];
