@@ -14,7 +14,7 @@ import { Linky } from '../items/Linky';
 import { Scooter, SCOOTER_STEERING_ANGLE } from '../items/Scooter';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { getObjectActionIds } from '../objectActions';
-import { useHomeAssistant } from '../../home-assistant/connection';
+import { useLightAppearance } from '../../home-assistant/useLightAppearance';
 
 import {
   ROOM_W,
@@ -72,9 +72,7 @@ const TOTAL_CYCLE_DURATION = CORRIDOR_LIGHT_COLORS.length * DURATION_PER_COLOR; 
 const _tempColor = new THREE.Color();
 
 function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) {
-  const remote = useHomeAssistant(state => state.enabled);
-  const lamp = useHomeAssistant(state => state.lamp);
-  const brightness = remote ? lamp?.brightness ?? 1 : 1;
+  const { remote, color, brightness } = useLightAppearance('lampCorridor', 0xfff2d6);
   const lightRef = useRef<THREE.PointLight>(null);
   const bulbGroupRef = useRef<THREE.Group>(null);
   const emissiveMatsRef = useRef<THREE.MeshStandardMaterial[]>([]);
@@ -103,8 +101,7 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
     }
 
     if (remote) {
-      if (lamp?.rgb) _tempColor.setRGB(lamp.rgb[0] / 255, lamp.rgb[1] / 255, lamp.rgb[2] / 255, THREE.SRGBColorSpace);
-      else _tempColor.setHex(0xfff2d6);
+      _tempColor.copy(color);
     } else {
       elapsedRef.current += delta;
       const t = (elapsedRef.current % TOTAL_CYCLE_DURATION + TOTAL_CYCLE_DURATION) % TOTAL_CYCLE_DURATION;

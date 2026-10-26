@@ -98,8 +98,8 @@ L’API HA-MCP a accepté un test `light.turn_on` avec `flash: short` sur l’am
 puis `light.turn_off` ; l’état final `off` a été vérifié. Ce résultat confirme
 l’appel et l’état retourné, pas l’emplacement physique ni un clignotement observé.
 L’utilisateur a ensuite confirmé avoir vu la lampe du couloir réagir : cette
-ampoule est donc identifiée. Son nom et son identifiant restent inchangés à ce
-stade ; son raccordement à Room-3D reste à réaliser.
+ampoule est donc identifiée. Son identifiant est conservé et son raccordement à Room-3D a ensuite été
+validé en fonctionnement réel par l’utilisateur.
 
 ### Accès et sauvegardes
 
@@ -135,3 +135,20 @@ Sources : [HA-MCP](https://github.com/homeassistant-ai/ha-mcp),
 
 Le détail des 52 fiches appareils et 330 entités, avec les entités désactivées,
 figure dans [l’inventaire](../../home-assistant/inventory.md).
+
+### Extension aux éclairages de salle de bain, séjour et cuisine
+
+L’utilisateur a identifié « Porte » comme la lampe OLA du séjour et « Barre »
+comme l’éclairage du coin cuisine. « Porte » a été renommée « Lumière Séjour »
+dans le registre d’appareil et le nom affiché de `light.porte` via
+HA-MCP. L’identifiant n’a pas changé. Le libellé explicite du tableau de bord
+`dashboard-maison.yaml` a également été mis à jour, avec sauvegarde dans
+`dashboard-maison.yaml.before-sejour-rename`.
+
+Room-3D associe désormais ces trois lampes et le couloir ; voir la table de
+correspondance du [guide d’intégration](../../home-assistant/README.md).
+La bonne OLA est la lampe Tuya `light.porte`, confirmée par l’utilisateur et
+observée allumée. Elle est affectée au Séjour. L’autre « Porte »,
+`light.principale_porte` (Hue), est distincte et conserve son nom d’origine.
+Les tests automatisés couvrent l’indépendance des quatre commandes, y compris
+une OLA indisponible simulée et la présence de cette autre lampe homonyme.

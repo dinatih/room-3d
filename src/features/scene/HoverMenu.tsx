@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE   from 'three';
 import { hoverState } from '@features/scene/hoverState';
-import { useSceneStore, getSceneActionValue } from '@features/scene/store/useSceneStore';
+import { useSceneStore, getSceneActionValue, resolveStoreKey } from '@features/scene/store/useSceneStore';
 import { cameraState } from '@features/scene/cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
@@ -19,7 +19,7 @@ import { OccupancyManager } from './ai/occupancyManager';
 import { isCharacterVisibleInMode } from './characterConfig';
 
 import { getActionDef, getActionLabel, type ActionDef } from './objectActionRegistry';
-import { ENTRY_LIGHT, useHomeAssistant } from '../home-assistant/connection';
+import { isLightControlDisabled, useHomeAssistant } from '../home-assistant/connection';
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
   let cur: THREE.Object3D | null = obj;
@@ -615,7 +615,7 @@ export function HoverOverlay() {
             return (
               <button
                 key={i}
-                disabled={action.id === ENTRY_LIGHT.action && ha.enabled && (!ha.available || ha.status !== 'connected' || ha.pending)}
+                disabled={isLightControlDisabled(resolveStoreKey(action.id).name, ha)}
                 className="btn btn-sm btn-outline-warning py-0 px-2 fw-semibold"
                 onClick={async () => {
                   if (action.id.startsWith('select-character-')) {

@@ -21,6 +21,7 @@ import { Ikea36590066708 } from '../items/Ikea36590066708';
 import { Kolvatten00594176 } from '../items/Kolvatten00594176';
 import { useSceneStore } from '../store/useSceneStore';
 import { getObjectActionIds } from '../objectActions';
+import { useLightAppearance } from '../../home-assistant/useLightAppearance';
 
 import {
   ROOM_D,
@@ -89,6 +90,7 @@ export function KitchenTrashBin() {
 export function KitchenFurnishings() {
   const as = useFurnitureToggles(['lamp-kitchen-toggle']);
   const lightsHD = useSceneStore(state => state.layers.lightsHD);
+  const { color, brightness } = useLightAppearance('lampKitchen', 0xfff5e6);
   const isKitchenLampOn = Boolean(as['lamp-kitchen-toggle']);
 
   return (
@@ -155,16 +157,16 @@ export function KitchenFurnishings() {
           skipMerge: true,
           animUnit: true,
           itemName: 'KÖLVATTEN éclairage LED avec capteur',
-          hoverAction: { label: 'Éclairage Cuisine (KÖLVATTEN)', actions: ['kolvatten-toggle'] },
+          hoverAction: { label: 'Barre · Cuisine', actions: getObjectActionIds('kolvatten00594176') },
         }}
       >
-        <Kolvatten00594176 item={stub('kolvatten00594176')} actionState={{ on: isKitchenLampOn }} onSize={NOOP_SIZE} />
+        <Kolvatten00594176 item={stub('kolvatten00594176')} actionState={{ on: isKitchenLampOn, lightColor: color, brightness }} onSize={NOOP_SIZE} />
         <pointLight
           position={[0, 5, 0]}
-          intensity={isKitchenLampOn ? (lightsHD ? 80 : 2.5) : 0}
+          intensity={isKitchenLampOn ? (lightsHD ? 80 : 2.5) * brightness : 0}
           distance={lightsHD ? 0 : 200}
           decay={lightsHD ? 1.0 : 2.0}
-          color={0xfff5e6}
+          color={color}
           castShadow={lightsHD}
           shadow-mapSize={[1024, 1024]}
           shadow-bias={-0.001}

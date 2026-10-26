@@ -1,6 +1,6 @@
 import { getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
-import { ENTRY_LIGHT, setEntryLight, useHomeAssistant } from '../../home-assistant/connection';
+import { isHomeAssistantLight, setHomeAssistantLight, useHomeAssistant } from '../../home-assistant/connection';
 import { cameraState } from '@features/scene/cameraState';
 import type { ArrowControl, CameraMovement, CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
 import {
@@ -610,8 +610,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   toggleFurniture: (key) => {
-    if (key === ENTRY_LIGHT.action && useHomeAssistant.getState().enabled) {
-      void setEntryLight();
+    if (isHomeAssistantLight(key) && useHomeAssistant.getState().enabled) {
+      void setHomeAssistantLight(key);
       return;
     }
     if (key === 'fridge') {
@@ -717,7 +717,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       cameraState.invalidate?.();
       return {
         layers: nextLayers, activeExtraIds: nextActiveExtraIds, graphicsQualityPreset: nextPreset,
-        furniture: key === 'lightsHD' && isActivating ? { ...state.furniture, lampOn: true } : state.furniture,
+        furniture: key === 'lightsHD' && isActivating && !useHomeAssistant.getState().enabled ? { ...state.furniture, lampOn: true } : state.furniture,
       };
     });
   },
@@ -826,8 +826,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   triggerAction: (key, targetState, source) => {
-    if (resolveStoreKey(key).name === ENTRY_LIGHT.action && useHomeAssistant.getState().enabled) {
-      if (source === 'user') void setEntryLight(targetState);
+    const lightKey = resolveStoreKey(key).name;
+    if (isHomeAssistantLight(lightKey) && useHomeAssistant.getState().enabled) {
+      if (source === 'user') void setHomeAssistantLight(lightKey, targetState);
       return;
     }
     if (key === 'fridge' || key === 'fridge-crisper-toggle') {
@@ -887,7 +888,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         cameraState.invalidate?.();
         return {
           layers: nextLayers,
-          furniture: lKey === 'lightsHD' && nextVal ? { ...state.furniture, lampOn: true } : state.furniture,
+          furniture: lKey === 'lightsHD' && nextVal && !useHomeAssistant.getState().enabled ? { ...state.furniture, lampOn: true } : state.furniture,
         };
       });
     } else if (resolved.type === 'extra') {

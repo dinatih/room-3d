@@ -2,50 +2,67 @@ import { create } from 'zustand';
 import { callService, createConnection, getAuth, getStates, ERR_INVALID_AUTH } from 'home-assistant-js-websocket';
 import type { Connection, HassEntity, AuthData, StateChangedEvent } from 'home-assistant-js-websocket';
 
-export const ENTRY_LIGHT = { action: 'lampCorridor', entity: 'light.entree_entree' } as const;
+export const LIGHTS = {
+  lampCorridor: { entity: 'light.entree_entree', label: 'Entrée' },
+  lampBath: { entity: 'light.douche_douche', label: 'Salle de bain' },
+  lampOn: { entity: 'light.porte', label: 'Lumière Séjour' },
+  lampKitchen: { entity: 'light.cuisine_barre', label: 'Barre · Cuisine' },
+} as const;
+export type LightKey = keyof typeof LIGHTS;
+export const LIGHT_KEYS = Object.keys(LIGHTS) as LightKey[];
+export const isHomeAssistantLight = (key: string): key is LightKey => Object.prototype.hasOwnProperty.call(LIGHTS, key);
 const TOKEN_KEY = 'room3d.ha.auth';
 const ENABLED_KEY = 'room3d.ha.enabled';
 
-export interface EntryLightState {
-  on: boolean;
+export interface LightState {
+  on: boolean | null;
+  available: boolean;
+  pending: boolean;
+  error: string | null;
   brightness: number;
   rgb: [number, number, number] | null;
 }
 interface HomeAssistantState {
   enabled: boolean;
   status: 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
-  available: boolean;
-  lamp: EntryLightState | null;
-  pending: boolean;
+  lights: Record<LightKey, LightState>;
   error: string | null;
 }
+const emptyLights = () => Object.fromEntries(LIGHT_KEYS.map(key => [key, {
+  on: null, brightness: 1, rgb: null, available: false, pending: false, error: null,
+}])) as Record<LightKey, LightState>;
 export const useHomeAssistant = create<HomeAssistantState>(() => ({
-  enabled: false, status: 'disconnected', available: false, lamp: null, pending: false, error: null,
+  enabled: false, status: 'disconnected', lights: emptyLights(), error: null,
 }));
+export function isLightControlDisabled(key: string, state: HomeAssistantState) {
+  return isHomeAssistantLight(key) && state.enabled &&
+    (state.status !== 'connected' || !state.lights[key].available || state.lights[key].pending);
+}
+function updateLight(key: LightKey, patch: Partial<LightState>) {
+  useHomeAssistant.setState(state => ({ lights: { ...state.lights, [key]: { ...state.lights[key], ...patch } } }));
+}
 let connection: Connection | undefined;
 let dispose: (() => void) | undefined;
 let generation = 0;
 
-export function receiveEntryLight(entity: HassEntity | undefined) {
-  const valid = entity?.state === 'on' || entity?.state === 'off';
-  if (!valid) {
-    useHomeAssistant.setState({ available: false, error: `Lampe Entrée : ${entity?.state ?? 'entité absente'}.` });
+function receiveLight(key: LightKey, entity: HassEntity | undefined) {
+  if (entity?.state !== 'on' && entity?.state !== 'off') {
+    updateLight(key, { available: false, error: `${LIGHTS[key].label} : ${entity?.state ?? 'entité absente'}.` });
     return;
   }
-  const lamp: EntryLightState = {
-    on: entity.state === 'on',
+  const previous = useHomeAssistant.getState().lights[key];
+  const light: LightState = { ...previous,
+    on: entity.state === 'on', available: true, error: null,
     brightness: entity.attributes.brightness == null ? 1 : entity.attributes.brightness / 255,
     rgb: entity.attributes.rgb_color ?? null,
   };
-  const previous = useHomeAssistant.getState();
-  if (previous.available && JSON.stringify(previous.lamp) === JSON.stringify(lamp)) return;
-  useHomeAssistant.setState({ lamp, available: true, error: null });
+  if (JSON.stringify(previous) !== JSON.stringify(light)) updateLight(key, light);
 }
 
 export async function connectHomeAssistant(url?: string) {
   if (useHomeAssistant.getState().enabled) return;
   const run = ++generation;
-  useHomeAssistant.setState({ enabled: true, status: 'connecting', available: false, error: null });
+  useHomeAssistant.setState({ enabled: true, status: 'connecting', error: null });
   sessionStorage.setItem(ENABLED_KEY, '1');
   try {
     const auth = await getAuth({
@@ -65,25 +82,24 @@ export async function connectHomeAssistant(url?: string) {
     const ready = async () => {
       const snapshot = ++synchronization;
       synchronized = false;
-      useHomeAssistant.setState({ available: false });
       try {
         const entities = await getStates(next);
         if (run !== generation || snapshot !== synchronization || !next.connected) return;
         synchronized = true;
-        useHomeAssistant.setState({ status: 'connected' });
-        receiveEntryLight(entities.find(entity => entity.entity_id === ENTRY_LIGHT.entity));
+        for (const key of LIGHT_KEYS) receiveLight(key, entities.find(entity => entity.entity_id === LIGHTS[key].entity));
+        useHomeAssistant.setState({ status: 'connected', error: null });
       } catch {
-        if (run === generation && snapshot === synchronization) useHomeAssistant.setState({ status: 'error', available: false, error: 'Lecture des états Home Assistant impossible.' });
+        if (run === generation && snapshot === synchronization) useHomeAssistant.setState({ status: 'error', error: 'Lecture des états Home Assistant impossible.' });
       }
     };
     const disconnected = () => {
       ++synchronization;
       synchronized = false;
-      useHomeAssistant.setState({ status: 'reconnecting', available: false, error: 'Connexion perdue : dernier état périmé.' });
+      useHomeAssistant.setState({ status: 'reconnecting', error: 'Connexion perdue : dernier état périmé.' });
     };
     const reconnectError = () => {
       sessionStorage.removeItem(TOKEN_KEY);
-      useHomeAssistant.setState({ status: 'error', available: false, error: 'Autorisation expirée. Déconnecte puis reconnecte Home Assistant.' });
+      useHomeAssistant.setState({ status: 'error', error: 'Autorisation expirée. Déconnecte puis reconnecte Home Assistant.' });
     };
     next.addEventListener('ready', ready);
     next.addEventListener('disconnected', disconnected);
@@ -94,9 +110,9 @@ export async function connectHomeAssistant(url?: string) {
       next.removeEventListener('reconnect-error', reconnectError);
     };
     await next.subscribeEvents<StateChangedEvent>(event => {
-      if (run === generation && synchronized && next.connected && event.data.entity_id === ENTRY_LIGHT.entity) {
-        receiveEntryLight(event.data.new_state ?? undefined);
-      }
+      if (run !== generation || !synchronized || !next.connected) return;
+      const key = LIGHT_KEYS.find(key => LIGHTS[key].entity === event.data.entity_id);
+      if (key) receiveLight(key, event.data.new_state ?? undefined);
     }, 'state_changed');
     if (run !== generation) return;
     await ready();
@@ -108,7 +124,7 @@ export async function connectHomeAssistant(url?: string) {
     connection = undefined;
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(ENABLED_KEY);
-    useHomeAssistant.setState({ status: 'error', available: false,
+    useHomeAssistant.setState({ status: 'error',
       error: error === ERR_INVALID_AUTH ? 'Autorisation Home Assistant refusée ou expirée.' : 'Connexion Home Assistant impossible. Vérifie l’adresse et son accès depuis ce navigateur.' });
   }
 }
@@ -120,7 +136,7 @@ export function stopHomeAssistant() {
   // HA cancels the socket's subscriptions when it closes.
   connection?.close();
   connection = undefined;
-  useHomeAssistant.setState({ enabled: false, status: 'disconnected', available: false, lamp: null, pending: false, error: null });
+  useHomeAssistant.setState({ enabled: false, status: 'disconnected', lights: emptyLights(), error: null });
 }
 
 export function disconnectHomeAssistant() {
@@ -133,21 +149,22 @@ export function resumeHomeAssistant() {
   if (sessionStorage.getItem(ENABLED_KEY)) void connectHomeAssistant();
 }
 
-export async function setEntryLight(on?: boolean) {
+export async function setHomeAssistantLight(key: LightKey, on?: boolean) {
   const state = useHomeAssistant.getState();
-  if (state.pending) return;
-  if (!connection?.connected || state.status !== 'connected' || !state.available || !state.lamp) {
-    useHomeAssistant.setState({ error: 'Lampe Entrée indisponible : aucune commande envoyée.' });
+  const light = state.lights[key];
+  if (light.pending) return;
+  if (!connection?.connected || state.status !== 'connected' || !light.available || light.on === null) {
+    updateLight(key, { error: `${LIGHTS[key].label} indisponible : aucune commande envoyée.` });
     return;
   }
   const run = generation;
-  useHomeAssistant.setState({ pending: true, error: null });
+  updateLight(key, { pending: true, error: null });
   try {
-    await callService(connection, 'light', (on ?? !state.lamp.on) ? 'turn_on' : 'turn_off', { entity_id: ENTRY_LIGHT.entity });
+    await callService(connection, 'light', (on ?? !light.on) ? 'turn_on' : 'turn_off', { entity_id: LIGHTS[key].entity });
   } catch {
-    if (run === generation) useHomeAssistant.setState({ error: 'La commande de la lampe Entrée a échoué.' });
+    if (run === generation) updateLight(key, { error: `La commande de ${LIGHTS[key].label} a échoué.` });
   } finally {
-    if (run === generation) useHomeAssistant.setState({ pending: false });
+    if (run === generation) updateLight(key, { pending: false });
   }
 }
 

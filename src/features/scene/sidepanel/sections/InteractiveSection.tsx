@@ -6,7 +6,7 @@ import { dispatchKey, type FurnitureState } from '../types';
 import type { PlaneModelKey } from '@features/scene/PaperPlane';
 import { getActionLabel } from '../../objectActionRegistry';
 import { HomeAssistantPanel } from '../../../home-assistant/HomeAssistant';
-import { ENTRY_LIGHT, useHomeAssistant } from '../../../home-assistant/connection';
+import { isHomeAssistantLight, isLightControlDisabled, useHomeAssistant } from '../../../home-assistant/connection';
 
 export interface InteractiveSectionProps {
   isMobile: boolean;
@@ -76,10 +76,11 @@ export function InteractiveSection({
   ) => {
     const val = furniture[key];
     const isOn = typeof val === 'boolean' ? val : !!val;
+    const unavailable = isHomeAssistantLight(key) && ha.enabled && (ha.status !== 'connected' || !ha.lights[key].available);
     return (
       <button 
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
-        disabled={key === ENTRY_LIGHT.action && ha.enabled && (!ha.available || ha.status !== 'connected' || ha.pending)}
+        disabled={isLightControlDisabled(key, ha)}
         onClick={() => toggleFurniture(key)}
         style={{ 
           opacity: isOn ? 1 : 0.55,
@@ -87,7 +88,7 @@ export function InteractiveSection({
       >
         <span>{label}</span>
         <span className={`badge ${isOn ? 'bg-danger' : 'bg-secondary'}`}>
-          {displayValue ? displayValue(val) : (isOn ? txtOn : txtOff)}
+          {unavailable ? 'INDISPONIBLE' : displayValue ? displayValue(val) : (isOn ? txtOn : txtOff)}
         </span>
       </button>
     );
@@ -204,8 +205,8 @@ export function InteractiveSection({
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">LUMIÈRES</div>
       {furnitureBtn('Lampe SDB', 'lampBath')}
       {furnitureBtn('Lampe Couloir', 'lampCorridor')}
-      {furnitureBtn('Éclairage Cuisine', 'lampKitchen')}
-      {furnitureBtn('Lampe Ola', 'lampOn')}
+      {furnitureBtn('Barre · Cuisine', 'lampKitchen')}
+      {furnitureBtn('Lumière Séjour (OLA)', 'lampOn')}
 
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">DÉMO & ASSEMBLAGE 3D</div>
       <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">

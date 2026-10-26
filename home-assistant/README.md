@@ -1,8 +1,21 @@
 # Room-3D et Home Assistant
 
-La première intégration relie la lampe 3D du couloir à l’ampoule réelle
-`light.entree_entree` (Philips Hue LCT001). Son emplacement a été confirmé
-visuellement par l’utilisateur. Le groupe `light.entree_entree_2` n’est pas utilisé.
+Quatre éclairages de la scène sont associés aux ampoules physiques HA :
+
+| Éclairage | Entité physique | Clé du store |
+| --- | --- | --- |
+| Entrée / Couloir | `light.entree_entree` | `lampCorridor` |
+| Salle de bain | `light.douche_douche` | `lampBath` |
+| Lumière Séjour — OLA | `light.porte` | `lampOn` |
+| Barre — coin cuisine | `light.cuisine_barre` | `lampKitchen` |
+
+Le couloir a été validé en fonctionnement réel par l’utilisateur. Les trois
+associations suivantes correspondent aux lampes qu’il a identifiées. Les groupes
+Hue ne sont pas utilisés comme cibles supplémentaires. La lampe Tuya anciennement nommée « Porte »
+est renommée « Lumière Séjour » dans les noms d’appareil et d’entité HA ainsi que
+dans le libellé du tableau de bord Maison ; son identifiant technique est conservé.
+La fiche Hue `light.principale_porte`, indisponible, est un autre appareil :
+elle n’est pas associée à l’OLA. Son nom « Porte » reste inchangé.
 
 ## Essayer en local
 
@@ -16,9 +29,10 @@ npm run dev
 2. Dans **Home Assistant**, conserver `http://192.168.1.68:8123`, puis cliquer
    sur **Connecter Home Assistant**.
 3. Terminer l’autorisation sur Home Assistant. Le navigateur revient à Room-3D
-   et affiche **Entrée · Allumée** ou **Entrée · Éteinte**.
-4. Utiliser **Lampe Couloir** dans les interactions, ou le menu de la lampe dans
-   la scène. Le clic commande réellement l’ampoule, y compris en développement.
+   et affiche l’état de chacun des quatre éclairages.
+4. Utiliser **Lampe Couloir**, **Lampe SDB**, **Lumière Séjour (OLA)** ou
+   **Barre · Cuisine** dans les interactions, ou leur menu dans la scène. Chaque
+   clic commande uniquement l’ampoule associée, y compris en développement.
 5. Modifier la lampe depuis HA ou son interrupteur : la scène doit suivre.
 6. Terminer avec **Déconnecter Home Assistant** pour revenir à la simulation.
 
@@ -39,16 +53,17 @@ par un onglet normal. Une iframe n’authentifie pas automatiquement l’applica
 
 - Sans connexion explicite, la scène et ses interactions restent simulées.
 - En mode connecté, HA fournit l’état marche/arrêt, la luminosité et la couleur
-  de la lampe. Le cycle de couleurs simulé est suspendu. La puissance d’éclairage
+  de chaque lampe. Le cycle de couleurs simulé du couloir est suspendu. La puissance d’éclairage
   3D reste celle du rendu existant, modulée par la luminosité HA.
 - Seuls les clics utilisateur dans les interactions ou le menu de la scène
-  envoient `light.turn_on` ou `light.turn_off` sur l’ampoule associée.
+  envoient `light.turn_on` ou `light.turn_off` sur la seule ampoule associée.
 - La réponse de service ne modifie pas l’état 3D par anticipation : le retour
   d’état HA confirme l’affichage. Les événements reçus n’envoient pas de commande.
 - Les PNJ et les capteurs de présence virtuels ne pilotent pas la lampe réelle
   et ne remplacent pas son état affiché. Les previews gardent leurs états locaux.
 - Une entité absente, `unknown` ou `unavailable` désactive les commandes et produit
-  une indication explicite. Le dernier état connu reste visible, sans être
+  une indication explicite pour la lampe concernée ; les autres éclairages
+  restent utilisables. Le dernier état connu reste visible, sans être
   interprété comme un nouvel état confirmé.
 - En cas de coupure, le panneau signale un état périmé et les commandes sont
   désactivées. La bibliothèque gère la reconnexion ; une nouvelle lecture des
@@ -58,9 +73,11 @@ par un onglet normal. Une iframe n’authentifie pas automatiquement l’applica
   et HMR ferment la connexion tout en conservant les jetons de l’onglet ; une
   déconnexion volontaire les efface.
 
-Le modèle géométrique de l’ampoule reste le GLB déjà présent dans le projet ;
-son libellé de scène est désormais « Lampe du couloir ». Les autres appareils
-ne sont pas encore associés à Home Assistant.
+Les modèles géométriques existants sont conservés. Les couleurs et luminosités
+reçues pilotent les sources lumineuses et les matériaux émissifs des lampes.
+Les previews ne lisent pas la connexion HA et gardent leurs matériaux propres.
+Le réglage graphique `lightsHD` ne remplace pas l’état de l’OLA en mode connecté.
+Les autres appareils ne sont pas encore associés à Home Assistant.
 
 ## Points d’intégration
 
@@ -73,9 +90,10 @@ ne sont pas encore associés à Home Assistant.
 | `src/features/scene/PresenceLightController.tsx` | Suspension de la présence simulée pour la lampe associée |
 | `src/features/scene/placements/CorridorPlacements.tsx` | Rendu de la luminosité et de la couleur reçues |
 
-L’action commune est `lampCorridor`, associée à l’instance
-`tradfri-bulb-couloir` dans `objectActions.ts`. Le registre des libellés reste
-`objectActionRegistry.ts`. L’identifiant d’entité HA existant est conservé.
+Les associations objet/actions résident dans `objectActions.ts` et leurs libellés
+dans `objectActionRegistry.ts`. Les actions `lampCorridor`, `lampBath`,
+`lamp-toggle` et `kolvatten-toggle` utilisent les clés du store indiquées plus haut.
+Tous les identifiants d’entités HA existants sont conservés.
 La connexion et les commandes résident hors des composants de meubles.
 
 ## Validation
@@ -92,14 +110,16 @@ npm run build
 Le test spécifique utilise Chromium headless via
 `scripts/browser-test-options.cjs`, la bibliothèque HA réelle et un serveur
 WebSocket HA simulé. Il monte le panneau d’interactions et le store réels sans
-charger la scène complète. Il couvre la synchronisation initiale, un clic
-utilisateur sans mise à jour anticipée, l’exclusion d’un ordre PNJ, les retours
+charger la scène complète. Il couvre les quatre associations, leur disponibilité indépendante, les réglages
+graphiques de l’OLA, la synchronisation initiale, les clics utilisateur sans mise
+à jour anticipée, l’exclusion des ordres PNJ et les retours
 marche/arrêt/couleur/luminosité, une entité indisponible, la coupure réseau, la
 reconnexion sans commande rejouée, la déconnexion et le retour à la simulation.
 Aucun appareil réel n’est commandé par ce test automatique.
 
-L’essai de bout en bout depuis Room-3D sur la vraie ampoule nécessite encore
-la connexion du navigateur de l’utilisateur et sa vérification visuelle.
+L’essai de bout en bout depuis Room-3D a été confirmé sur le couloir. La salle
+de bain, l’OLA et la barre de cuisine restent à vérifier visuellement depuis le
+navigateur de l’utilisateur ; aucune commande réelle n’est envoyée au chargement.
 Les appels HA-MCP antérieurs ont permis d’identifier et tester l’ampoule ; ils
 ne remplacent pas cet essai de l’interface Room-3D.
 

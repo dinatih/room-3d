@@ -1,5 +1,6 @@
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getObjectActionIds } from '../objectActions';
+import { useLightAppearance } from '../../home-assistant/useLightAppearance';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { useSceneStore } from '../store/useSceneStore';
 import { MergedStaticGroup } from '../Building';
@@ -37,6 +38,7 @@ const TOILET_FOOTPRINT = [
 ];
 
 export function BathroomEquipment() {
+  const { color, brightness } = useLightAppearance('lampBath', 0xfff5e6);
   const as = useFurnitureToggles([
     'lamp-bath-toggle',
     'sdbClosetL',
@@ -69,15 +71,15 @@ export function BathroomEquipment() {
       <group
         position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2, WALL_H - 10, (BATH_NORTH_WALL + BATH_SOUTH_WALL) / 2]}
         rotation={[Math.PI, 0, 0]}
-        userData={{ skipMerge: true, animUnit: true, itemName: 'Ampoule SDB (TRÅDFRI)', hoverAction: { label: 'Ampoule SDB (TRÅDFRI)', actions: ['lampBath'] } }}
+        userData={{ skipMerge: true, animUnit: true, itemName: 'Lumière Salle de bain', hoverAction: { label: 'Lumière Salle de bain', actions: getObjectActionIds('tradfri-bulb-sdb') } }}
       >
-        <TradfriBulb item={stub('tradfri-bulb-sdb')} actionState={{ on: !!as['lamp-bath-toggle'] }} onSize={NOOP_SIZE} />
+        <TradfriBulb item={stub('tradfri-bulb-sdb')} actionState={{ on: !!as['lamp-bath-toggle'], lightColor: color, brightness }} onSize={NOOP_SIZE} />
         <pointLight
           position={[0, 20, 0]}
-          intensity={as['lamp-bath-toggle'] ? (lightsHD ? 120 : 2.5) : 0}
+          intensity={as['lamp-bath-toggle'] ? (lightsHD ? 120 : 2.5) * brightness : 0}
           distance={lightsHD ? 0 : 280}
           decay={lightsHD ? 1.0 : 2.0}
-          color={0xfff5e6}
+          color={color}
           castShadow={lightsHD}
           shadow-mapSize={[1024, 1024]}
           shadow-bias={-0.001}

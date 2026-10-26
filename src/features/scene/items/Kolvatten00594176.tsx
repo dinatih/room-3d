@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/koelvatten-eclairage-led-avec-capteur-gris-a-pile-00594176/
  */
 export function Kolvatten00594176({ actionState, onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/items/kolvatten00594176/Kolvatten00594176.glb');
+  const { scene } = useGLTFClone('/items/kolvatten00594176/Kolvatten00594176.glb', true);
   const isOn = actionState?.on !== undefined
     ? Boolean(actionState.on)
     : Boolean(actionState?.['lamp-kitchen-toggle'] || actionState?.['kolvatten-toggle']);
@@ -39,8 +39,8 @@ export function Kolvatten00594176({ actionState, onSize, ...props }: SceneItemPr
           if ('emissive' in m) {
             const stdMat = m as THREE.MeshStandardMaterial;
             if (isOn) {
-              stdMat.emissive.set(0xfff5e6);
-              stdMat.emissiveIntensity = 2.0;
+              stdMat.emissive.set(actionState?.lightColor ?? 0xfff5e6);
+              stdMat.emissiveIntensity = 2.0 * (actionState?.brightness ?? 1);
             } else {
               stdMat.emissive.set(0x000000);
               stdMat.emissiveIntensity = 0;
@@ -49,7 +49,7 @@ export function Kolvatten00594176({ actionState, onSize, ...props }: SceneItemPr
         });
       }
     });
-  }, [scene, isOn]);
+  }, [scene, isOn, actionState?.lightColor, actionState?.brightness]);
 
   return (
     <group {...props}>

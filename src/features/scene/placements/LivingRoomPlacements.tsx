@@ -1,6 +1,7 @@
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getDiyChairParking } from '../ai/diyChairClearance';
 import { getObjectActionIds } from '../objectActions';
+import { useLightAppearance } from '../../home-assistant/useLightAppearance';
 import { useState, useEffect } from 'react';
 import * as THREE from 'three';
 
@@ -398,6 +399,7 @@ function AirPerformer_() {
 }
 
 function LampOla_() {
+  const { color, brightness } = useLightAppearance('lampOn', 0xfff2dc);
   const as = useFurnitureToggles(['lamp-toggle']);
   const lampOn = !!as['lamp-toggle'];
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
@@ -405,8 +407,8 @@ function LampOla_() {
 
   return (
     <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
-      userData={{ skipMerge: true, animUnit: true, itemName: 'Lampe OLA', hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
-      <LampOla item={NOOP_ITEM} actionState={{ on: lampOn }} onSize={NOOP_SIZE} />
+      userData={{ skipMerge: true, animUnit: true, itemName: 'Lumière Séjour (OLA)', hoverAction: { label: 'Lumière Séjour (OLA)', actions: getObjectActionIds('lamp-ola') } }}>
+      <LampOla item={NOOP_ITEM} actionState={{ on: lampOn, lightColor: color, brightness }} onSize={NOOP_SIZE} />
       <object3D ref={setTargetObj} position={[0, 250, 15]} />
       {targetObj && (
         <spotLight
@@ -415,10 +417,10 @@ function LampOla_() {
           angle={Math.PI / 3.2}
           penumbra={0.7}
           // Inverse-square attenuation uses scene centimeters: cd × (100 cm/m)².
-          intensity={lampOn && lightsHD ? 350 * 100 ** 2 : 0}
+          intensity={lampOn && lightsHD ? 350 * 100 ** 2 * brightness : 0}
           distance={0}
           decay={2}
-          color={0xfff2dc}
+          color={color}
           castShadow={lightsHD}
           shadow-mapSize={[1024, 1024]}
           shadow-bias={-0.001}
@@ -428,10 +430,10 @@ function LampOla_() {
       )}
       <pointLight
         position={[0, 96, 0]}
-        intensity={lampOn ? (lightsHD ? 35 : 3.5) * 100 ** 2 : 0}
+        intensity={lampOn ? (lightsHD ? 35 : 3.5) * 100 ** 2 * brightness : 0}
         distance={lightsHD ? 0 : 350}
         decay={2}
-        color={0xfff2dc}
+        color={color}
       />
     </group>
   );

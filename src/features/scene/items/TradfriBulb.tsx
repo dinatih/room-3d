@@ -52,8 +52,8 @@ export function TradfriBulb({ actionState, onSize }: SceneItemProps) {
           if ('emissive' in m) {
             const stdMat = m as THREE.MeshStandardMaterial;
             if (isOn) {
-              stdMat.emissive.set(0xfff2d6);
-              stdMat.emissiveIntensity = 2.0;
+              stdMat.emissive.set(actionState?.lightColor ?? 0xfff2d6);
+              stdMat.emissiveIntensity = 2.0 * (actionState?.brightness ?? 1);
             } else {
               stdMat.emissive.set(0x000000);
               stdMat.emissiveIntensity = 0;
@@ -62,7 +62,7 @@ export function TradfriBulb({ actionState, onSize }: SceneItemProps) {
         });
       }
     });
-  }, [scene, isOn]);
+  }, [scene, isOn, actionState?.lightColor, actionState?.brightness]);
 
   return <primitive object={scene} />;
 }
