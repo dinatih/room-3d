@@ -7,7 +7,6 @@ export const NPC_WALK_ANIMATIONS = [
   'miley-armature-catwalk-loop',
   'miley-armature-walk-f',
   'female-walk',
-  'happy-walk-not-in-place',
   // 'unarmed-walk-forward',
   'walking',
   // 'wheelbarrow-walk-2',
