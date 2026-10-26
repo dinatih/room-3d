@@ -86,83 +86,33 @@ export function mergeGlbByMaterial(root: THREE.Object3D): void {
  * Supprime les faces orientées vers l'arrière (+Z dans le repère local normalisé)
  * pour permettre la vue à travers (see-through) depuis le dos de l'objet (ex: miroirs).
  */
-export function removeGlbBackFaces(root: THREE.Object3D, maxZNormal = 0.3) {
+export function removeGlbBackFaces(root: THREE.Object3D) {
   root.traverse(node => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh) return;
     const geo = mesh.geometry;
-    if (!geo) return;
-
-    if (mesh.material) {
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      mats.forEach(m => { if (m) m.side = THREE.FrontSide; });
-    }
-
-    const posAttr = geo.getAttribute('position');
-    const normAttr = geo.getAttribute('normal');
-    if (!posAttr) return;
-
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    materials.forEach(material => { material.side = THREE.FrontSide; });
+    const positions = geo.getAttribute('position');
     const index = geo.getIndex();
-    if (index) {
-      const oldIndices = index.array;
-      const newIndices: number[] = [];
-      const vA = new THREE.Vector3();
-      const vB = new THREE.Vector3();
-      const vC = new THREE.Vector3();
-      const cb = new THREE.Vector3();
-      const ab = new THREE.Vector3();
+    const indices: number[] = [];
+    const a = new THREE.Vector3();
+    const b = new THREE.Vector3();
+    const c = new THREE.Vector3();
+    const normal = new THREE.Vector3();
 
-      for (let i = 0; i < oldIndices.length; i += 3) {
-        const a = oldIndices[i];
-        const b = oldIndices[i + 1];
-        const c = oldIndices[i + 2];
-
-        vA.fromBufferAttribute(posAttr, a);
-        vB.fromBufferAttribute(posAttr, b);
-        vC.fromBufferAttribute(posAttr, c);
-
-        cb.subVectors(vC, vB);
-        ab.subVectors(vA, vB);
-        cb.cross(ab).normalize();
-
-        const avgNormZ = normAttr ? (normAttr.getZ(a) + normAttr.getZ(b) + normAttr.getZ(c)) / 3 : 0;
-
-        if (cb.z > maxZNormal || avgNormZ > maxZNormal) {
-          continue;
-        }
-
-        newIndices.push(a, b, c);
-      }
-
-      geo.setIndex(newIndices);
-    } else {
-      const count = posAttr.count;
-      const newIndices: number[] = [];
-      const vA = new THREE.Vector3();
-      const vB = new THREE.Vector3();
-      const vC = new THREE.Vector3();
-      const cb = new THREE.Vector3();
-      const ab = new THREE.Vector3();
-
-      for (let i = 0; i < count; i += 3) {
-        vA.fromBufferAttribute(posAttr, i);
-        vB.fromBufferAttribute(posAttr, i + 1);
-        vC.fromBufferAttribute(posAttr, i + 2);
-
-        cb.subVectors(vC, vB);
-        ab.subVectors(vA, vB);
-        cb.cross(ab).normalize();
-
-        const avgNormZ = normAttr ? (normAttr.getZ(i) + normAttr.getZ(i + 1) + normAttr.getZ(i + 2)) / 3 : 0;
-
-        if (cb.z > maxZNormal || avgNormZ > maxZNormal) {
-          continue;
-        }
-
-        newIndices.push(i, i + 1, i + 2);
-      }
-      geo.setIndex(newIndices);
+    for (let i = 0; i < (index ? index.count : positions.count); i += 3) {
+      const vertices = [0, 1, 2].map(offset => index ? index.getX(i + offset) : i + offset);
+      a.fromBufferAttribute(positions, vertices[0]);
+      b.fromBufferAttribute(positions, vertices[1]);
+      c.fromBufferAttribute(positions, vertices[2]);
+      normal.crossVectors(b.sub(a), c.sub(a));
+      // La direction dominante du triangle distingue le dos du dessus du cadre.
+      // Les normales lissées des sommets servent à l'éclairage, pas à la découpe.
+      if (normal.z > Math.max(Math.abs(normal.x), Math.abs(normal.y))) continue;
+      indices.push(...vertices);
     }
+    geo.setIndex(indices);
   });
 }
 
