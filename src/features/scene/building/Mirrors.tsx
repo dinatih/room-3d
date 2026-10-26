@@ -62,23 +62,18 @@ function getMirrorTargetConfig(): { res: number; mask: number } {
 
 let _reflectionDepth = 0;
 
-function ReflectorMirror({ w, h, position, rotationY }: {
-  w: number; h: number;
+function MirrorSurface({ geometry, position, rotationY }: {
+  geometry: THREE.BufferGeometry;
   position: [number, number, number];
   rotationY: number;
 }) {
+  const [x, y, z] = position;
   const reflector = useMemo(() => {
+    geometry.computeBoundingBox();
     const { res } = getMirrorTargetConfig();
-    const geo = new THREE.PlaneGeometry(w, h);
-    geo.computeBoundingBox();
-    const mir = new Reflector(geo, {
-      textureWidth:  res,
-      textureHeight: res,
-      color: 0xbbbbbb,
-    } as ConstructorParameters<typeof Reflector>[1]);
-    mir.position.set(...position);
+    const mir = new Reflector(geometry, { textureWidth: res, textureHeight: res, color: 0xbbbbbb });
+    mir.position.set(x, y, z);
     mir.rotation.y = rotationY;
-
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
@@ -122,81 +117,36 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     };
 
     return mir;
-  }, []);
-
+  }, [geometry, x, y, z, rotationY]);
   useEffect(() => () => { reflector.dispose(); reflector.geometry.dispose(); }, [reflector]);
   return <primitive object={reflector} />;
 }
 
-function MergedReflector({ planes, position, rotationY }: {
+function ReflectorMirror({ w, h, ...props }: {
+  w: number; h: number;
+  position: [number, number, number];
+  rotationY: number;
+}) {
+  const geometry = useMemo(() => new THREE.PlaneGeometry(w, h), [w, h]);
+  return <MirrorSurface geometry={geometry} {...props} />;
+}
+
+function mirrorPlanesGeometry(planes: { w: number; h: number; x: number; y: number }[]) {
+  const geometries = planes.map(p => new THREE.PlaneGeometry(p.w, p.h).translate(p.x, p.y, 0));
+  const merged = mergeGeometries(geometries, false);
+  geometries.forEach(geometry => geometry.dispose());
+  if (!merged) throw new Error('Cannot merge mirror planes');
+  merged.computeBoundingBox();
+  return merged;
+}
+
+function MergedReflector({ planes, ...props }: {
   planes: { w: number; h: number; x: number; y: number }[];
   position: [number, number, number];
   rotationY: number;
 }) {
-  const reflector = useMemo(() => {
-    const geos = planes.map(p => {
-      const geo = new THREE.PlaneGeometry(p.w, p.h);
-      geo.translate(p.x, p.y, 0);
-      return geo;
-    });
-    const mergedGeo = mergeGeometries(geos, false);
-    mergedGeo.computeBoundingBox();
-
-    const { res } = getMirrorTargetConfig();
-    const mir = new Reflector(mergedGeo, {
-      textureWidth:  res,
-      textureHeight: res,
-      color: 0xbbbbbb,
-    } as ConstructorParameters<typeof Reflector>[1]);
-    mir.position.set(...position);
-    mir.rotation.y = rotationY;
-
-    const origOnBeforeRender = mir.onBeforeRender.bind(mir);
-    mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
-      if (_reflectionDepth >= 1) return;
-
-      const renderCam = (camera as any).isArrayCamera && (camera as any).cameras?.[0]
-        ? (camera as any).cameras[0]
-        : camera;
-
-      const savedProj = renderCam.projectionMatrix.clone();
-
-      _reflectionDepth++;
-
-      const { res: targetRes, mask: mirrorMask } = getMirrorTargetConfig();
-      const renderTarget = (mir as any).getRenderTarget();
-      if (renderTarget && renderTarget.width !== targetRes) {
-        renderTarget.setSize(targetRes, targetRes);
-      }
-
-      const reflectionCamera = (mir as any).getReflectionCamera(renderCam);
-      if (reflectionCamera) {
-        reflectionCamera.layers.mask = mirrorMask;
-      }
-
-      const oldMask = renderCam.layers.mask;
-      renderCam.layers.mask = mirrorMask;
-
-      const oldBackground = scene.background;
-      const worldAutoUpdate = scene.matrixWorldAutoUpdate;
-      scene.background = getLoadedSkyTexture() ?? oldBackground;
-      scene.matrixWorldAutoUpdate = false;
-      try {
-        origOnBeforeRender(renderer, scene, renderCam, geometry, material, group);
-      } finally {
-        scene.background = oldBackground;
-        scene.matrixWorldAutoUpdate = worldAutoUpdate;
-        renderCam.projectionMatrix.copy(savedProj);
-        renderCam.layers.mask = oldMask;
-        _reflectionDepth--;
-      }
-    };
-
-    return mir;
-  }, [planes]);
-
-  useEffect(() => () => { reflector.dispose(); reflector.geometry.dispose(); }, [reflector]);
-  return <primitive object={reflector} />;
+  const geometry = useMemo(() => mirrorPlanesGeometry(planes), [planes]);
+  return <MirrorSurface geometry={geometry} {...props} />;
 }
 
 const silverMirrorMat = new THREE.MeshStandardMaterial({
@@ -211,16 +161,8 @@ function MergedAmbientMirror({ planes, position, rotationY }: {
   position: [number, number, number];
   rotationY: number;
 }) {
-  const geo = useMemo(() => {
-    const geos = planes.map(p => {
-      const g = new THREE.PlaneGeometry(p.w, p.h);
-      g.translate(p.x, p.y, 0);
-      return g;
-    });
-    const merged = mergeGeometries(geos, false);
-    merged.computeBoundingBox();
-    return merged;
-  }, [planes]);
+  const geo = useMemo(() => mirrorPlanesGeometry(planes), [planes]);
+  useEffect(() => () => geo.dispose(), [geo]);
 
   return (
     <mesh geometry={geo} material={silverMirrorMat} position={position} rotation-y={rotationY} />

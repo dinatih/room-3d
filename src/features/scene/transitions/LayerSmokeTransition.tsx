@@ -28,7 +28,11 @@ interface Transition {
   group: THREE.Group;
   type: 'in' | 'out';
   startTime: number;
-  items: THREE.Object3D[];
+  items: { object: THREE.Object3D; scale: THREE.Vector3 }[];
+}
+
+function scaleItems(items: Transition['items'], factor: number) {
+  items.forEach(({ object, scale }) => object.scale.copy(scale).multiplyScalar(factor));
 }
 
 export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
@@ -37,6 +41,11 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
   const prevRef = useRef<Record<string, boolean>>({});
   const isMountRef = useRef(true);
   const activeTransitions = useRef<Transition[]>([]);
+
+  useEffect(() => () => {
+    activeTransitions.current.forEach(t => scaleItems(t.items, 1));
+    activeTransitions.current = [];
+  }, []);
 
   useEffect(() => {
     camera.layers.enable(0);
@@ -67,6 +76,12 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
       const group = categoryLayerRegistry.get(layerId);
       if (!group) return;
 
+      activeTransitions.current = activeTransitions.current.filter(t => {
+        if (t.group !== group) return true;
+        scaleItems(t.items, 1);
+        return false;
+      });
+
       // Si effet désactivé : toggle immédiat
       if (!smokeEnabled) {
         group.visible = currentVal;
@@ -75,51 +90,24 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
         return;
       }
 
-      // Nettoyer toute transition précédente pour ce groupe
-      activeTransitions.current = activeTransitions.current.filter(t => {
-        if (t.group === group) {
-          t.items.forEach(item => item.scale.set(1, 1, 1));
-          return false;
-        }
-        return true;
-      });
-
       // Prendre les enfants directs visibles du groupe
-      const items = group.children.filter(c => c.visible !== false);
+      const items = group.children.filter(c => c.visible).map(object => ({ object, scale: object.scale.clone() }));
       const box = new THREE.Box3();
       const pos = new THREE.Vector3();
 
       // Émettre la fumée sur chaque élément
-      items.forEach(item => {
-        box.setFromObject(item);
+      items.forEach(({ object }) => {
+        box.setFromObject(object);
         if (!box.isEmpty()) {
           box.getCenter(pos);
           smokeRef.current?.triggerBurst(pos);
         }
       });
 
-      if (!currentVal) {
-        // Disparition : le groupe reste visible le temps du rétrécissement
-        group.visible = true;
-        camera.layers.enable(layerId);
-        activeTransitions.current.push({
-          group,
-          type: 'out',
-          startTime: performance.now(),
-          items,
-        });
-      } else {
-        // Apparition : le groupe redevient visible, items démarrent à 0
-        group.visible = true;
-        camera.layers.enable(layerId);
-        items.forEach(c => c.scale.set(0.001, 0.001, 0.001));
-        activeTransitions.current.push({
-          group,
-          type: 'in',
-          startTime: performance.now(),
-          items,
-        });
-      }
+      group.visible = true;
+      camera.layers.enable(layerId);
+      if (currentVal) scaleItems(items, 0.001);
+      activeTransitions.current.push({ group, type: currentVal ? 'in' : 'out', startTime: performance.now(), items });
     });
 
     invalidate();
@@ -139,25 +127,25 @@ export function LayerSmokeTransition({ layers }: { layers: LayerState }) {
         // Disparition en 0.18s
         if (elapsed < 0.18) {
           const s = Math.max(0.001, 1 - elapsed / 0.18);
-          t.items.forEach(c => c.scale.set(s, s, s));
+          scaleItems(t.items, s);
           running = true;
           return true;
         }
         // Fin : cacher le groupe et restaurer l'échelle pour la prochaine fois
         t.group.visible = false;
-        t.items.forEach(c => c.scale.set(1, 1, 1));
+        scaleItems(t.items, 1);
         return false;
       } else {
         // Apparition en 0.25s avec rebond cartoon
         if (elapsed < 0.25) {
           const p = elapsed / 0.25;
           const s = Math.sin(p * Math.PI * 0.5) * (1 + 0.1 * Math.sin(p * Math.PI));
-          t.items.forEach(c => c.scale.set(s, s, s));
+          scaleItems(t.items, s);
           running = true;
           return true;
         }
         // Fin : échelle normale
-        t.items.forEach(c => c.scale.set(1, 1, 1));
+        scaleItems(t.items, 1);
         return false;
       }
     });

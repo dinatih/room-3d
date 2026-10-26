@@ -5,6 +5,7 @@ import React, { useRef, useLayoutEffect, useContext } from 'react';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { CategoryLayerContext } from '../sceneLayer';
+import { geometryLayoutKey } from '../glbUtils';
 
 export function MergedStaticGroup({ children, name = 'merged-static', userData, materialOverride }: { children: React.ReactNode; name?: string; userData?: Record<string, any>; materialOverride?: THREE.Material }) {
   const categoryLayer = useContext(CategoryLayerContext);
@@ -26,14 +27,14 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData, 
 
     const processedMeshes = new Set<THREE.Mesh>();
 
-    src.traverse(node => {
+    src.traverseVisible(node => {
       const mesh = node as THREE.Mesh;
-      if (!mesh.isMesh || mesh.type !== 'Mesh' || (mesh as any).isInstancedMesh || mesh.userData?.isMergedStatic || mesh.userData?.skipMerge) return;
+      if (!mesh.isMesh || mesh.type !== 'Mesh' || mesh.userData?.isMergedStatic || mesh.userData?.skipMerge) return;
 
       // Skip merging if any ancestor has skipMerge: true or hoverAction defined
       let parent = mesh.parent;
       let skip = false;
-      if (mesh.userData?.skipMerge || mesh.userData?.hoverAction) skip = true;
+      if (mesh.userData?.hoverAction) skip = true;
       while (!skip && parent && parent !== src) {
         if (parent.userData?.skipMerge || parent.userData?.hoverAction) {
           skip = true;
@@ -43,13 +44,6 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData, 
       }
       if (skip) return;
 
-      if (processedMeshes.has(mesh)) return;
-
-      // On cache l'original
-      mesh.visible = false;
-      mesh.userData.wasMerged = true;
-      processedMeshes.add(mesh);
-
       const geom = mesh.geometry;
       const mats = materialOverride ? [materialOverride] : Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 
@@ -58,50 +52,33 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData, 
 
       const udKey = JSON.stringify({ brickType: mesh.userData?.brickType });
 
-      if (!geom.groups || geom.groups.length === 0 || mats.length === 1) {
-        const mat = mats[0];
-        if (!mat || (mat as any).visible === false) return;
-
+      const ranges = geom.groups.length && mats.length > 1 ? geom.groups : [undefined];
+      for (const range of ranges) {
+        const mat = mats[range?.materialIndex ?? 0];
+        if (!mat) throw new Error(`Missing material on static mesh: ${mesh.name}`);
+        if (!mat.visible) continue;
         let clone = geom.clone();
+        if (range) {
+          clone.setIndex(geom.index
+            ? new THREE.BufferAttribute(geom.index.array.slice(range.start, range.start + range.count), 1)
+            : Array.from({ length: range.count }, (_, i) => range.start + i));
+          clone.clearGroups();
+        }
         clone = clone.index ? clone.toNonIndexed() : clone;
         clone.applyMatrix4(relMat);
 
         const order = mesh.renderOrder || 0;
-        const key = `${mat.uuid}|${udKey}|ro${order}`;
+        const key = `${mat.uuid}|${udKey}|ro${order}|${geometryLayoutKey(clone)}`;
         if (!groups.has(key)) groups.set(key, { geos: [], mat, userData: { brickType: mesh.userData?.brickType }, renderOrder: order });
         groups.get(key)!.geos.push(clone);
-      } else {
-        for (const group of geom.groups) {
-          const mat = mats[group.materialIndex || 0] || mats[0];
-          if (!mat || (mat as any).visible === false) continue;
-
-          let clone = geom.clone();
-          if (geom.index) {
-            const newIndex = geom.index.array.slice(group.start, group.start + group.count);
-            clone.setIndex(new THREE.BufferAttribute(newIndex, 1));
-          }
-          clone.groups = [];
-          clone = clone.index ? clone.toNonIndexed() : clone;
-          clone.applyMatrix4(relMat);
-
-          const order = mesh.renderOrder || 0;
-          const key = `${mat.uuid}|${udKey}|ro${order}`;
-          if (!groups.has(key)) groups.set(key, { geos: [], mat, userData: { brickType: mesh.userData?.brickType }, renderOrder: order });
-          groups.get(key)!.geos.push(clone);
-        }
+        processedMeshes.add(mesh);
       }
     });
 
     for (const { geos, mat, userData, renderOrder } of groups.values()) {
-      const allAttrs = new Set<string>();
-      geos.forEach(g => Object.keys(g.attributes).forEach(k => allAttrs.add(k)));
-      for (const a of allAttrs) {
-        if (!geos.every(g => g.hasAttribute(a))) geos.forEach(g => g.deleteAttribute(a));
-      }
-
       const merged = mergeGeometries(geos, false);
       geos.forEach(g => g.dispose());
-      if (!merged) continue;
+      if (!merged) throw new Error(`Cannot merge static geometry: ${name}`);
 
       merged.computeBoundingBox();
       merged.computeBoundingSphere();
@@ -135,8 +112,12 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData, 
       dst.add(m);
     }
 
+    processedMeshes.forEach(mesh => {
+      mesh.visible = false;
+      mesh.userData.wasMerged = true;
+    });
+
     return () => {
-      if ((window as any).isAnimProRunning) return;
       // Nettoyage : restaurer la visibilité des originaux
       processedMeshes.forEach(m => {
         m.visible = true;

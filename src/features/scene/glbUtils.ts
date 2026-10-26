@@ -1,6 +1,21 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
+/** Only geometries with the same attribute layout can be merged without data loss. */
+export function geometryLayoutKey(geometry: THREE.BufferGeometry): string {
+  const layout = (attribute: THREE.BufferAttribute | THREE.InterleavedBufferAttribute) => [
+    attribute.itemSize, attribute.normalized,
+    (attribute instanceof THREE.InterleavedBufferAttribute ? attribute.data.array : attribute.array).constructor.name,
+    'gpuType' in attribute ? attribute.gpuType : null,
+  ];
+  return JSON.stringify([
+    !!geometry.index, geometry.morphTargetsRelative,
+    Object.keys(geometry.attributes).sort().map(name => [name, layout(geometry.attributes[name])]),
+    Object.keys(geometry.morphAttributes).sort().map(name => [name,
+      geometry.morphAttributes[name as keyof typeof geometry.morphAttributes]!.map(layout)]),
+  ]);
+}
+
 /**
  * Convertit les matériaux transparents (avec texture) en matériaux opaque + alphaTest.
  * Indispensable pour les plantes (feuilles) afin d'éviter l'overdraw massif et les
@@ -36,7 +51,6 @@ export function mergeGlbByMaterial(root: THREE.Object3D): void {
     root.scale.set(1, 1, 1);
     return;
   }
-  root.userData.merged = true;
   // On optimise d'abord les matériaux (transparence -> alphaTest)
   optimizeMaterials(root);
 
@@ -50,7 +64,7 @@ export function mergeGlbByMaterial(root: THREE.Object3D): void {
     if (!mesh.isMesh || !mesh.visible || Array.isArray(mesh.material)) return;
     const mat = mesh.material as THREE.Material;
     const order = mesh.renderOrder || 0;
-    const key = `${mat.uuid}_ro${order}`;
+    const key = `${mat.uuid}_ro${order}|${geometryLayoutKey(mesh.geometry)}`;
     if (!groups.has(key)) groups.set(key, { geos: [], mat, renderOrder: order });
 
     const m = new THREE.Matrix4();
@@ -63,23 +77,23 @@ export function mergeGlbByMaterial(root: THREE.Object3D): void {
     groups.get(key)!.geos.push(geo);
   });
 
-  root.clear();
-  root.scale.set(1, 1, 1);
-  root.position.set(0, 0, 0);
-  root.rotation.set(0, 0, 0);
-
+  const meshes: THREE.Mesh[] = [];
   for (const { geos, mat, renderOrder } of groups.values()) {
-    ['uv1', 'uv2', 'color', 'tangent'].forEach(a => {
-      if (!geos.every(g => g.hasAttribute(a))) geos.forEach(g => g.deleteAttribute(a));
-    });
     const merged = mergeGeometries(geos, false);
-    if (!merged) continue;
+    geos.forEach(geometry => geometry.dispose());
+    if (!merged) throw new Error(`Cannot merge GLB geometry: ${root.name}`);
     const m = new THREE.Mesh(merged, mat);
     m.renderOrder = renderOrder;
     m.castShadow = true;
     m.receiveShadow = true;
-    root.add(m);
+    meshes.push(m);
   }
+  root.clear();
+  root.scale.set(1, 1, 1);
+  root.position.set(0, 0, 0);
+  root.rotation.set(0, 0, 0);
+  root.add(...meshes);
+  root.userData.merged = true;
 }
 
 /**
