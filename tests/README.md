@@ -64,4 +64,6 @@ avec quinze personnages ; il n'impose aucun seuil de temps arbitraire.
 
 ## Captures et historique visuel
 
+Avec Vite lancé, `node tests/visual/wig-grid.cjs` ouvre le menu « Outils & Actions », vérifie le chargement de tous les bustes de perruques, puis la bascule et la fermeture des grilles. La capture est enregistrée dans `/tmp/room-wig-grid.png`.
+
 `npm run test:screenshots` capture toutes les vues prédéfinies dans les deux projections. La galerie de chaque exécution, son document Markdown et le comparateur entre dates/commits se trouvent dans `test-results/visual/`. Mode d’emploi : `docs/visual-history.md`.
