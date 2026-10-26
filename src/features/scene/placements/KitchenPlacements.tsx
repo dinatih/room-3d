@@ -12,6 +12,11 @@ import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
 import { KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION } from '../items/kallaxCuisineDrona';
 import { TrashBin } from '../items/TrashBin';
 import { Tackan } from '../items/Tackan';
+import { HoodShelf, HOOD_SHELF_THICKNESS } from '../items/HoodShelf';
+import { Annons80298474 } from '../items/Annons80298474';
+import { Middagsmat60463714 } from '../items/Middagsmat60463714';
+import { Rinnig30407814 } from '../items/Rinnig30407814';
+import { Lillviken20317852 } from '../items/Lillviken20317852';
 import { Ikea36590066708 } from '../items/Ikea36590066708';
 import { Kolvatten00594176 } from '../items/Kolvatten00594176';
 import { useSceneStore } from '../store/useSceneStore';
@@ -34,6 +39,7 @@ const KALLAX_CELL_WIDTH = (w2 - 2 * KALLAX_FRAME - KALLAX_DIVIDER) / 2;
 const KALLAX_UPPER_CELL_BASE = 2 * 76.5 + KALLAX_FRAME;
 const IKEA365_COUNT = 3;
 const IKEA365_LENGTH = 17;
+const HOOD_SHELF_TOP = 170.7; // même niveau que le cercle de raccordement UTDRAG
 
 export function KitchenEquipment() {
   return (
@@ -117,6 +123,24 @@ export function KitchenFurnishings() {
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
       <group position={[KITCHEN_WEST_WALL + 5, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Cuisine' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Planche percée au niveau de la buse, casseroles vues face à la cuisine. */}
+      <group position={[KITCHEN_WEST_WALL + 70, HOOD_SHELF_TOP - HOOD_SHELF_THICKNESS, ROOM_D + 41.5]} userData={{ animUnit: true, itemName: 'Étagère percée hotte' }}>
+        <HoodShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[KITCHEN_WEST_WALL + 50, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={-Math.PI / 2} userData={{ animUnit: true, itemName: 'Casserole MIDDAGSMAT' }}>
+        <Middagsmat60463714 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[KITCHEN_WEST_WALL + 86.5, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Faitout ANNONS' }}>
+        <Annons80298474 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[KITCHEN_WEST_WALL + 14, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ animUnit: true, itemName: 'Brosse RINNIG' }}>
+        <Rinnig30407814 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* BOHOLMEN : fond de cuve et centre de bonde à [20, 78, 26] dans la cuisine. */}
+      <group position={[KITCHEN_WEST_WALL + 20, 78, ROOM_D + 26]} userData={{ animUnit: true, itemName: 'Bouchon LILLVIKEN' }}>
+        <Lillviken20317852 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* KÖLVATTEN éclairage LED avec capteur — angle bas meuble haut METOD / mur ouest */}
