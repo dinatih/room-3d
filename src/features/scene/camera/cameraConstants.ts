@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D } from '../wallData';
+import { ROOM_W, ROOM_D, WALL_H } from '../wallData';
 import { cameraState } from '../cameraState';
 
 export const CX = ROOM_W / 2; // 150 cm — centre X de la pièce
@@ -26,8 +26,8 @@ export const PERSP_POS: [number, number, number] = [
   ROOM_D / 2 - PERSPECTIVE_ISO_OFFSET,
 ];
 
-/** Cible centrale de l'orbite perspective Nord-Ouest. */
-export const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, 0, ROOM_D / 2];
+/** Cible centrale de l'orbite perspective Nord-Ouest, au tiers de la hauteur des murs. */
+export const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D / 2];
 
 /** Position et cible de la caméra en mode 2D Top (centré sur la pièce à 20m d'altitude) */
 export const TOP_POS: [number, number, number] = [CX, 2000, CZ];
