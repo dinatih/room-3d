@@ -11,7 +11,7 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const GLB = 'items/water-heater/water-heater.glb';
 
@@ -27,7 +27,7 @@ export const WH_W = 56;  // ⌀56 cm
 export const WH_D = 56;  // ⌀56 cm
 export const WH_H = 65;  // hauteur 65 cm
 
-export function WaterHeater({ onSize }: SceneItemProps) {
+export function WaterHeater({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
@@ -38,7 +38,7 @@ export function WaterHeater({ onSize }: SceneItemProps) {
     scene.scale.set(sx, sy, sz);
     mergeGlbByMaterial(scene);
     scene.position.set(-GLB_CX * sx, -GLB_CY * sy, -GLB_CZ * sz);
-    onSize(new THREE.Vector3(WH_W, WH_H, WH_D));
+    onSize?.(new THREE.Vector3(WH_W, WH_H, WH_D));
   }, [scene]);
 
   return <primitive object={scene} />;

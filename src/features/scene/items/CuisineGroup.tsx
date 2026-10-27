@@ -114,7 +114,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
       {/* Plan de travail */}
       <group userData={{ sceneItemRoot: true }}>
         <group position={[KIT_W / 2, COUNTER_H, KIT_D / 2]}>
-          <Counter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Counter />
         </group>
       </group>
 

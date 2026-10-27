@@ -8,7 +8,7 @@
  */
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const W = 4.2;   // X — largeur
 const H = 10.0;  // Y — hauteur
@@ -234,7 +234,7 @@ function drawCOffIcon(ctx: CanvasRenderingContext2D) {
   ctx.fillText('OFF', 64, 100);
 }
 
-export function LaserDistanceMaster({ onSize }: SceneItemProps) {
+export function LaserDistanceMaster({ onSize }: SceneModelProps) {
   const bodyGeo  = useMemo(makeBody, []);
   const lcdTex   = useMemo(makeLcdTexture, []);
   const logoTex  = useMemo(makeLogoTexture, []);
@@ -258,7 +258,7 @@ export function LaserDistanceMaster({ onSize }: SceneItemProps) {
   const cOffIconMat  = useMemo(() => new THREE.MeshStandardMaterial({ map: cOffTex,  transparent: true, roughness: 0.5 }), [cOffTex]);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W, H, D));
+    onSize?.(new THREE.Vector3(W, H, D));
   }, []);
 
   const frontZ = -D / 2;

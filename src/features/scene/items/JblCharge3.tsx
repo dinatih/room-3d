@@ -6,13 +6,13 @@ import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const TARGET_H = 17.5; // hauteur debout (cm)
 
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc1500, roughness: 0.35, metalness: 0.1 });
 
-export function JblCharge3({ onSize }: SceneItemProps) {
+export function JblCharge3({ onSize }: SceneModelProps) {
   const { scene: gltfScene } = useGLTF('items/jbl-charge3/jbl-charge3.glb');
   const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
 
@@ -43,7 +43,7 @@ export function JblCharge3({ onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(size);
+    onSize?.(size);
   }, [scene]);
 
   return (

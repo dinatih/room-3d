@@ -5,7 +5,7 @@
  */
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const W = 9.0;
 const D = 9.0;
@@ -42,11 +42,11 @@ function makeBody(): THREE.BufferGeometry {
   return geo;
 }
 
-export function MatterHub({ onSize }: SceneItemProps) {
+export function MatterHub({ onSize }: SceneModelProps) {
   const bodyGeo = useMemo(makeBody, []);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W, H, D));
+    onSize?.(new THREE.Vector3(W, H, D));
   }, []);
 
   // Front face plane (−Z), ports centered slightly under mid-height

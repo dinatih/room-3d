@@ -5,7 +5,7 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const woodMat       = new THREE.MeshStandardMaterial({ color: 0xc8a46e, roughness: 0.85 });
 const whitePlanMat  = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.85 });
@@ -15,12 +15,12 @@ const PL = 80, PT = 3.7, PD = 23.5;
 const plankY = 33 + PT / 2;
 const plankZ = -D / 2 + PD / 2;
 
-export function MeubleT({ onSize }: SceneItemProps) {
+export function MeubleT({ onSize }: SceneModelProps) {
   const groupRef = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
     groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
+    onSize?.(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
   }, []);
 
   return (

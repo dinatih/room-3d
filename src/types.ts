@@ -27,3 +27,6 @@ export interface SceneItemProps {
   actionState: Record<string, any>;
   onSize: (size: import('three').Vector3) => void;
 }
+
+/** Modèle sans état : seule la mesure est utile aux previews. */
+export type SceneModelProps = Partial<Pick<SceneItemProps, 'onSize'>>;

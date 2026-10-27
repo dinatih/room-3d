@@ -5,7 +5,7 @@
  */
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const W    = 102;   // KIT_W + 2
 const D    = 62;    // KIT_D + 2
@@ -20,7 +20,7 @@ const HOLE_CZ =  4;  // décalage -3 cm en Z monde
 
 const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25, metalness: 0.05 });
 
-export function Counter({ onSize }: SceneItemProps) {
+export function Counter({ onSize }: SceneModelProps) {
   const geo = useMemo(() => {
     const shape = new THREE.Shape();
     shape.moveTo(-W / 2, -D / 2);
@@ -52,7 +52,7 @@ export function Counter({ onSize }: SceneItemProps) {
   }, []);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W, SLAB, D));
+    onSize?.(new THREE.Vector3(W, SLAB, D));
   }, []);
 
   return <mesh geometry={geo} material={mat} castShadow receiveShadow />;

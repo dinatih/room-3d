@@ -5,7 +5,7 @@
  */
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { BATHTUB } from '../bathtubData';
 
 const { length: TUB_L, width: TUB_W, height: TUB_H, wallThickness: T, cornerRadius: RC } = BATHTUB;
@@ -50,7 +50,7 @@ function smoothTubWalls(geometry: THREE.ExtrudeGeometry) {
   }
 }
 
-export function Bathtub({ onSize }: SceneItemProps) {
+export function Bathtub({ onSize }: SceneModelProps) {
   const { wallGeo, botGeo, waterGeo, rimGeo } = useMemo(() => {
     const RC_IN = Math.max(RC - T, 2);
 
@@ -99,7 +99,7 @@ export function Bathtub({ onSize }: SceneItemProps) {
   }, []);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(TUB_W, TUB_H, TUB_L));
+    onSize?.(new THREE.Vector3(TUB_W, TUB_H, TUB_L));
   }, []);
 
   return (

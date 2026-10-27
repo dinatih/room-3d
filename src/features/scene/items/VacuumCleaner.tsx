@@ -6,13 +6,13 @@ import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const TARGET_H = 112;
 
 const redOpaqueMat = new THREE.MeshStandardMaterial({ color: 0xcc1500, roughness: 0.35, metalness: 0.1 });
 
-export function VacuumCleaner({ onSize }: SceneItemProps) {
+export function VacuumCleaner({ onSize }: SceneModelProps) {
   const { scene: gltfScene } = useGLTF('items/rowenta-rh2079wo/rowenta-rh2079wo.glb');
   const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
 
@@ -57,7 +57,7 @@ export function VacuumCleaner({ onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(size);
+    onSize?.(size);
   }, [scene]);
 
   return (

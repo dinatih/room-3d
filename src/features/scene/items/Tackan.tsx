@@ -3,11 +3,11 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const GLB = 'items/tackan distributeur savon blanc/TACKAN distributeur savon blanc.glb';
 
-export function Tackan({ onSize }: SceneItemProps) {
+export function Tackan({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
@@ -20,7 +20,7 @@ export function Tackan({ onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return <primitive object={scene} />;

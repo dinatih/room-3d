@@ -54,7 +54,7 @@ export function BathroomEquipment() {
     <MergedStaticGroup name="merged-bathroom-equipment">
       {/* Chauffe-eau */}
       <group position={[BATH_WEST_WALL + WH_W / 2, WALL_H - 10 - WH_H / 2, BATH_NORTH_WALL + 11 + WH_D / 2]} rotation-y={Math.PI / 2} userData={{ side: 'west', itemName: 'Chauffe-eau' }}>
-        <WaterHeater item={stub('water-heater')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <WaterHeater />
       </group>
 
       {/* Meuble Vasque SDB */}
@@ -163,12 +163,12 @@ export function BathroomFurnishings() {
 
       {/* TACKAN douche */}
       <group position={[BATH_WEST_WALL + 40, 80, BATH_SOUTH_WALL + 69]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Douche' }}>
-        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Tackan />
       </group>
 
       {/* TACKAN lavabo */}
       <group position={[BATH_EAST_WALL - 61, 83, BATH_NORTH_WALL + 5]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Lavabo' }}>
-        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Tackan />
       </group>
 
       {/* TISKEN sur miroir vasque */}

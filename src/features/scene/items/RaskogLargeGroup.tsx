@@ -9,13 +9,13 @@ import { Raskog30586783 } from './Raskog30586783';
 import { MannequinHead } from './MannequinHead';
 import { BaseballCap }   from './BaseballCap';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 // Hauteur tête (base → sommet) : 8 + 8 + 8.9 × scale 1.15
 const HEAD_HEIGHT = 45;
 const DESSERTE_TOP = 77; // RÅSKOG grande height is 77 cm
 
-export function RaskogLargeGroup({ onSize }: SceneItemProps) {
+export function RaskogLargeGroup({ onSize }: SceneModelProps) {
   const ref = useRef<THREE.Group>(null!);
   const top = DESSERTE_TOP - 8;
 
@@ -28,7 +28,7 @@ export function RaskogLargeGroup({ onSize }: SceneItemProps) {
     <group ref={ref}>
       <Raskog30586783 />
       <group position={[5, top + HEAD_HEIGHT - 9, -2]} rotation={[0.15, Math.PI / 2, 0]}>
-        <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <BaseballCap />
       </group>
       {/* Tête de mannequin — toujours visible */}
       <group position={[0, top, -2]} rotation-y={Math.PI / 2}>

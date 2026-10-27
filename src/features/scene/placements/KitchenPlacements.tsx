@@ -4,7 +4,7 @@ import { getKitchenTrashParking, KITCHEN_TRASH_POSITION } from '../ai/diyChairCl
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { MergedStaticGroup } from '../Building';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 
 import { CuisineGroup, CuisineDrona, CuisineLillhavet } from '../items/CuisineGroup';
@@ -112,7 +112,7 @@ export function KitchenFurnishings() {
             position={[-w2 / 2 + KALLAX_FRAME + (i + 0.5) * KALLAX_CELL_WIDTH / IKEA365_COUNT, KALLAX_UPPER_CELL_BASE, (KALLAX_DEPTH - IKEA365_LENGTH) / 2]}
             rotation-y={Math.PI / 2}
             userData={{ sceneItemRoot: true, itemName: 'Boîte IKEA 365+' }}>
-            <Ikea36590066708 item={stub('ikea36590066708')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+            <Ikea36590066708 />
           </group>
         ))}
       </group>
@@ -124,7 +124,7 @@ export function KitchenFurnishings() {
 
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
       <group position={[KITCHEN_WEST_WALL + 5, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Cuisine' }}>
-        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Tackan />
       </group>
 
       {/* Casseroles sur la tablette existante du meuble METOD couché. */}

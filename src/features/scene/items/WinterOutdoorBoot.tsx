@@ -13,7 +13,7 @@
  */
 import { useLayoutEffect, useRef, useMemo } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 // ── Dimensions (1 unité = 1 cm) ───────────────────────────────────────────────
 const L = 29.0;         // Longueur totale
@@ -337,12 +337,12 @@ function SingleShoe({ mirror }: { mirror: boolean }) {
 }
 
 // ── Composant exporté : Paire de bottes d'hiver ─────────────────────────────────
-export function WinterOutdoorBoot({ onSize }: SceneItemProps) {
+export function WinterOutdoorBoot({ onSize }: SceneModelProps) {
   const groupRef = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
     groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
+    onSize?.(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
   }, []);
 
   const xOff = W / 2 + GAP / 2;

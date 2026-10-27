@@ -46,7 +46,7 @@ export function GardenFurniture() {
 
       {/* Canapé Jardin Ouest */}
       <group position={[100, 0, -80]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'sofa-west', kind: 'furniture' }, itemName: 'Canapé Jardin Ouest', hoverAction: { label: 'Canapé Jardin Ouest', actions: SMART_OBJECTS['sofa-garden-west'].slots.map(slot => `smart-object:::sofa-garden-west:::${slot.slotId}`) } }}>
-        <NavigationObstacle id="sofa-garden-west"><ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="sofa-garden-west"><ArmlessSofa /></NavigationObstacle>
       </group>
 
       {/* Banc Coffre */}
@@ -56,7 +56,7 @@ export function GardenFurniture() {
 
       {/* Baignoire Balnéo */}
       <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'bathtub', kind: 'furniture' }, itemName: 'Baignoire Balnéo', hoverAction: { label: 'Baignoire Balnéo', actions: SMART_OBJECTS['bathtub-garden'].slots.map(slot => `smart-object:::bathtub-garden:::${slot.slotId}`) } }}>
-        <NavigationObstacle id="bathtub-garden"><Bathtub item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="bathtub-garden"><Bathtub /></NavigationObstacle>
         {/* Ballon de plage flottant sur l'eau de la baignoire avec physique */}
         <BeachBall item={stub('beach-ball')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -79,35 +79,35 @@ export function GardenDecor() {
       </group>
       {/* Mangeoire / nid à oiseaux sous le balcon */}
       <group position={[95, 214, -165]} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'feeder', kind: 'feeder' }, itemName: 'Mangeoire à Oiseaux' }}>
-        <BirdFeeder item={stub('bird-feeder')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <BirdFeeder />
       </group>
 
       {/* Yucca Elephantipes en pot (derrière la baignoire) */}
       <group position={[155, 0, -355]} rotation={[0, Math.PI, 0]} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'yucca', kind: 'plant' }, itemName: 'Yucca Elephantipes' }}>
-        <NavigationObstacle id="yucca"><PottedYucca item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="yucca"><PottedYucca /></NavigationObstacle>
       </group>
 
       {/* Palmier en pot */}
       <group position={[100, 0, -145]} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'palm', kind: 'plant' }, itemName: 'Palmier en Pot' }}>
-        <NavigationObstacle id="palm" solidOnly><PottedPalm item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="palm" solidOnly><PottedPalm /></NavigationObstacle>
       </group>
 
       {/* Statues anatomiques (Chera - Squelette & Muscles) déplacées à gauche du trio */}
       <group position={[270, 0, -700]} userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Anatomie Féminine (Squelette)' }}>
-        <NavigationObstacle id="statue-bones"><FemaleAnatomyBones item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="statue-bones"><FemaleAnatomyBones /></NavigationObstacle>
       </group>
       <group position={[340, 0, -700]} userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Anatomie Féminine (Muscles)' }}>
-        <NavigationObstacle id="statue-muscles"><FemaleAnatomyMuscles item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="statue-muscles"><FemaleAnatomyMuscles /></NavigationObstacle>
       </group>
 
       {/* Trio Anatomique Féminin (Corps, Squelette, Muscles) */}
       <group position={[480, 0, -700]} userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Trio Anatomique Féminin' }}>
-        <NavigationObstacle id="statue-trio"><FemaleAnatomyTrio item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="statue-trio"><FemaleAnatomyTrio /></NavigationObstacle>
       </group>
 
       {/* Squelette Humain couché */}
       <group position={[600, 0, -700]} userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Squelette Humain' }}>
-        <NavigationObstacle id="statue-skeleton"><HumanSkeleton item={{} as any} actionState={{}} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="statue-skeleton"><HumanSkeleton /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );

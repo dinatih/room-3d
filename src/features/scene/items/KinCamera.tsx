@@ -1,10 +1,10 @@
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { useGLTFClone } from '../useGLTFClone';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 
-export function KinCamera({ onSize }: SceneItemProps) {
+export function KinCamera({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('items/kin-fine-camera/kin-fine-camera.glb');
 
   useLayoutEffect(() => {

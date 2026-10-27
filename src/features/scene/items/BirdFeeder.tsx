@@ -7,11 +7,11 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const TARGET_H = 35; // Hauteur ~35 cm
 
-export function BirdFeeder({ onSize }: SceneItemProps) {
+export function BirdFeeder({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('/items/bird_feeder/bird_feeder.glb');
 
   useLayoutEffect(() => {

@@ -10,7 +10,7 @@
  */
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 // Dimensions en cm (1 unité = 1 cm)
 const PENDANT_W = 3.0;
@@ -306,10 +306,10 @@ export function getPendantResources() {
   };
 }
 
-export function DoubleVenusPendant({ onSize }: SceneItemProps) {
+export function DoubleVenusPendant({ onSize }: SceneModelProps) {
   const { body, bail, steel } = getPendantResources();
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(PENDANT_W, PENDANT_H, PENDANT_D));
+    onSize?.(new THREE.Vector3(PENDANT_W, PENDANT_H, PENDANT_D));
   }, [onSize]);
   return (
     <group dispose={null} userData={{ hoverAction: { label: 'Pendentif Double Vénus' } }}>

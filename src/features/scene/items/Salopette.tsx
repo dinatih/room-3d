@@ -8,9 +8,9 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
-export function Salopette({ onSize }: SceneItemProps) {
+export function Salopette({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('characters/clothing/salopette-noir.glb');
 
   useLayoutEffect(() => {
@@ -25,7 +25,7 @@ export function Salopette({ onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return <primitive object={scene} />;

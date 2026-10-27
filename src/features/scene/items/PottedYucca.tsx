@@ -8,11 +8,11 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const TARGET_H = 140; // Hauteur en cm (échelle 1 unité = 1 cm)
 
-export function PottedYucca({ onSize }: SceneItemProps) {
+export function PottedYucca({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('items/yucca10329308/Yucca10329308.glb');
 
   useLayoutEffect(() => {

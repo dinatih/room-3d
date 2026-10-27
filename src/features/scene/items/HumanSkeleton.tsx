@@ -8,11 +8,11 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const TARGET_H = 175; // 175 cm
 
-export function HumanSkeleton({ onSize }: SceneItemProps) {
+export function HumanSkeleton({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('models/humans/human_skeleton.glb');
 
   useLayoutEffect(() => {

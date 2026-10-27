@@ -1,11 +1,11 @@
 import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { SceneItemProps } from '@shared/types';
+import { SceneModelProps } from '@shared/types';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
-export function ElectricRacket({ onSize }: SceneItemProps) {
+export function ElectricRacket({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('/items/electric-racket/electric-racket.glb');
   const group = useRef<THREE.Group>(null);
 
@@ -62,9 +62,7 @@ export function ElectricRacket({ onSize }: SceneItemProps) {
       }
     });
 
-    if (onSize) {
-      onSize(finalSize.getSize(new THREE.Vector3()));
-    }
+    onSize?.(finalSize.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
   return (

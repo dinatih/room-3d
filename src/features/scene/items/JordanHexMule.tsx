@@ -19,7 +19,7 @@
  */
 import { useLayoutEffect, useRef } from 'react'
 import * as THREE from 'three'
-import type { SceneItemProps } from '@shared/types'
+import type { SceneModelProps } from '@shared/types'
 
 // Materials — flatShading sur l'enveloppe pour révéler les 6 facettes hex
 const matEnv  = new THREE.MeshStandardMaterial({
@@ -218,12 +218,12 @@ function ShoeMule({ xOff, mirror }: { xOff: number; mirror: boolean }) {
 }
 
 // ── Export : paire de mules ───────────────────────────────────────────────────
-export function JordanHexMule({ onSize }: SceneItemProps) {
+export function JordanHexMule({ onSize }: SceneModelProps) {
   const groupRef = useRef<THREE.Group>(null!)
 
   useLayoutEffect(() => {
     groupRef.current.updateMatrixWorld(true)
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()))
+    onSize?.(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()))
   }, [])
 
   const xOff = W / 2 + GAP / 2

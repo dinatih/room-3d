@@ -6,18 +6,18 @@
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const W = 100, D = 60, H = 100, SEAT_H = 40, BACK_T = 10, R = 6;
 
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.7 });
 
-export function ArmlessSofa({ onSize }: SceneItemProps) {
+export function ArmlessSofa({ onSize }: SceneModelProps) {
   const seatGeo = useMemo(() => new RoundedBoxGeometry(W, SEAT_H, D, 3, R), []);
   const backGeo = useMemo(() => new RoundedBoxGeometry(W, H, BACK_T, 3, R), []);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W, H, D));
+    onSize?.(new THREE.Vector3(W, H, D));
   }, []);
 
   return (

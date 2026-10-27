@@ -5,7 +5,7 @@
  */
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const W = 8.7;
 const D = 8.7;
@@ -36,11 +36,11 @@ function makeBody(): THREE.BufferGeometry {
   return geo;
 }
 
-export function MllseG2Pro({ onSize }: SceneItemProps) {
+export function MllseG2Pro({ onSize }: SceneModelProps) {
   const bodyGeo = useMemo(makeBody, []);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W, H, D));
+    onSize?.(new THREE.Vector3(W, H, D));
   }, []);
 
   const ventSlots = useMemo(() => {

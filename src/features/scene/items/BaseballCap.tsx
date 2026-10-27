@@ -7,7 +7,7 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 export function createBaseballCapMaterial(color: THREE.ColorRepresentation = 0x991111) {
   return new THREE.MeshPhysicalMaterial({
@@ -22,7 +22,7 @@ export function createBaseballCapMaterial(color: THREE.ColorRepresentation = 0x9
 
 const redMat = createBaseballCapMaterial();
 
-export function BaseballCap({ onSize }: SceneItemProps) {
+export function BaseballCap({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('characters/accessories/baseball_cap.glb');
 
   useLayoutEffect(() => {
@@ -46,7 +46,7 @@ export function BaseballCap({ onSize }: SceneItemProps) {
       -(box.min.z + box.max.z) / 2,
     );
 
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return <primitive object={scene} />;

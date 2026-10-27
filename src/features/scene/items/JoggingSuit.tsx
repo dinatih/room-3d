@@ -8,13 +8,13 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { BaseballCap } from './BaseballCap';
 
 const TARGET_H = 145;
 const red = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
 
-export function JoggingSuit({ onSize }: SceneItemProps) {
+export function JoggingSuit({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('characters/clothing/realistic_human_cloths.glb');
 
   useLayoutEffect(() => {
@@ -33,14 +33,14 @@ export function JoggingSuit({ onSize }: SceneItemProps) {
       -box.min.y + 10,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return (
     <group>
       <primitive object={scene} />
       <group position={[0, 170, 1]}>
-        <BaseballCap onSize={() => {}} actionState={{}} item={{} as any} />
+        <BaseballCap />
       </group>
     </group>
   );

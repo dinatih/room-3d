@@ -8,11 +8,11 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const TARGET_H = 150;
 
-export function PottedPalm({ onSize }: SceneItemProps) {
+export function PottedPalm({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('items/plant-monstera/potted_palm.glb');
 
   useLayoutEffect(() => {
@@ -35,7 +35,7 @@ export function PottedPalm({ onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return <primitive object={scene} />;

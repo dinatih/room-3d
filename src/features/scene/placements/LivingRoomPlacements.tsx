@@ -313,7 +313,7 @@ export function DeskDecor() {
           </group>
           <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Smartphone' }}>
             <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
-              <Phone item={{} as any} actionState={{}} onSize={() => {}} />
+              <Phone />
             </group>
           </group>
           <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Mug KEJSERLIG' }}>
@@ -365,7 +365,7 @@ export function OfficeChair() {
           ]
         }
       }}>
-        <NavigationObstacle id="chair-office" footprint={SMORKULL_FOOTPRINT}><Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="chair-office" footprint={SMORKULL_FOOTPRINT}><Smorkull /></NavigationObstacle>
       </group>
     </PositionTransition>
   );
@@ -559,7 +559,7 @@ export function LivingRoomFurnishings() {
 
       {/* Enceinte JBL Charge 3 sur Kallax NE */}
       <group position={[KALLAX_NE_POSITION[0] - 15, 118, KALLAX_NE_POSITION[2] + w2 / 2 - 11]} userData={{ sceneItemRoot: true, itemName: 'Enceinte JBL Charge 3' }}>
-        <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <JblCharge3 />
       </group>
 
       {/* TV */}
@@ -578,7 +578,7 @@ export function LivingRoomFurnishings() {
 
       {/* Mini PC */}
       <group position={[ROOM_W - 25, 40, 30]} userData={{ sceneItemRoot: true, itemName: 'Mini PC MLLSE' }}>
-        <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <MllseG2Pro />
       </group>
 
       {/* Google Nest Mini */}

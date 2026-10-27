@@ -21,7 +21,7 @@
  */
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { WALL_H, BATH_NORTH_WALL, KITCHEN_WEST_WALL, ROOM_D } from '../wallData';
 
 // Constantes de hauteur (cm)
@@ -59,14 +59,14 @@ const WC_WALL_RUN_Z = SDB_WALL_Z + DRAIN_RADIUS + 0.4; // axe du tuyau longeant 
 const WC_ELBOW_Y = 17.3; // hauteur au coude 90°
 const WC_JUNCTION_Y = 16.5; // raccordement sur la colonne générale
 
-export function BuildingPipes({ onSize }: SceneItemProps) {
+export function BuildingPipes({ onSize }: SceneModelProps) {
   useLayoutEffect(() => {
     const size = new THREE.Vector3(
       Math.max(HOOD_X, WC_X) + DRAIN_RADIUS,
       Y_FLOOR_ABOVE,
       WC_WALL_RUN_Z + DRAIN_RADIUS - (DRAIN_OFFSET_Z - DRAIN_RADIUS)
     );
-    onSize(size);
+    onSize?.(size);
   }, [onSize]);
 
   // Matériaux PBR réutilisables

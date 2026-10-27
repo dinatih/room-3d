@@ -6,7 +6,7 @@ import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const TARGET_D = 16.2; // longueur du téléphone (cm)
 
@@ -17,7 +17,7 @@ const glassMat    = new THREE.MeshPhysicalMaterial({
   roughness: 0.05, metalness: 0.1, transmission: 0.5 
 });
 
-export function Phone({ onSize }: SceneItemProps) {
+export function Phone({ onSize }: SceneModelProps) {
   const { scene: gltfScene } = useGLTF('items/xiaomi-phone/xiaomi-phone.glb');
   const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
 
@@ -56,7 +56,7 @@ export function Phone({ onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(size);
+    onSize?.(size);
   }, [scene]);
 
   return (

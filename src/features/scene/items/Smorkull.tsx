@@ -9,7 +9,7 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 // Largeur mesurée de l'assise (~52 cm), profondeur complète de la chaise (66 cm).
 export const SMORKULL_FOOTPRINT = [
@@ -19,7 +19,7 @@ export const SMORKULL_FOOTPRINT = [
 
 const GLB = 'items/smorkull60503437/Smorkull60503437.glb';
 
-export function Smorkull({ onSize }: SceneItemProps) {
+export function Smorkull({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
@@ -32,7 +32,7 @@ export function Smorkull({ onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return <primitive object={scene} />;

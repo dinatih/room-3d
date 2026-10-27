@@ -14,7 +14,7 @@
  */
 import { useLayoutEffect, useRef, useMemo } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 // ── Dimensions et Constantes (1 unité = 1 cm) ─────────────────────────────────
 const L = 29.0;         // Longueur totale (Z)
@@ -363,12 +363,12 @@ function SingleShoe({ mirror }: { mirror: boolean }) {
 }
 
 // ── Composant exporté : Paire complète de bottes d'été ──────────────────────────
-export function SummerOutdoorBoot({ onSize }: SceneItemProps) {
+export function SummerOutdoorBoot({ onSize }: SceneModelProps) {
   const groupRef = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
     groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
+    onSize?.(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
   }, []);
 
   const xOff = W / 2 + GAP / 2;

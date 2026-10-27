@@ -8,11 +8,11 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const TARGET_H = 170; // 170 cm
 
-export function FemaleAnatomyMuscles({ onSize }: SceneItemProps) {
+export function FemaleAnatomyMuscles({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('models/anatomy/female_anatomy_muscles.glb');
 
   useLayoutEffect(() => {

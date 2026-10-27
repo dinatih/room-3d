@@ -47,7 +47,7 @@ export function ShoeHatRackCaps() {
     <>
       {HOOK_XS.flatMap(x => ([Y_MID, Y_TOP] as const).map(barY => (
         <group key={`${x}-${barY}`} position={[x, barY + 1.5, TR + 5.5]} rotation={[Math.PI / 2, 0, 0]}>
-          <BaseballCap onSize={() => {}} actionState={{}} item={{} as any} />
+          <BaseballCap />
         </group>
       )))}
     </>

@@ -7,11 +7,11 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const TARGET_H = 80; // cm — ajuster si trop grand/petit
 
-export function PalmLeaf({ onSize }: SceneItemProps) {
+export function PalmLeaf({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('items/plant-monstera/plant-monstera.glb');
 
   useLayoutEffect(() => {
@@ -27,7 +27,7 @@ export function PalmLeaf({ onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return <primitive object={scene} />;

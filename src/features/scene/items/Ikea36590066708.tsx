@@ -3,11 +3,11 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const GLB = '/items/ikea36590066708/Ikea36590066708.glb';
 
-export function Ikea36590066708({ onSize }: SceneItemProps) {
+export function Ikea36590066708({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
@@ -19,7 +19,7 @@ export function Ikea36590066708({ onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
   return <primitive object={scene} />;
