@@ -137,27 +137,23 @@ export function MannequinHead({
     removeGlbLines(scene);
     scene.scale.set(1, 1, 1);
     const ownedMats: THREE.Material[] = [];
+    const cloneMaterial = (material: THREE.Material) => {
+      const clone = material.clone();
+      if ('wireframe' in clone) (clone as THREE.MeshStandardMaterial).wireframe = false;
+      ownedMats.push(clone);
+      return clone;
+    };
     scene.traverse(o => {
       const mesh = o as THREE.Mesh;
-      if (mesh.isMesh) {
-        mesh.layers.set(LAYER_DECOR);
-        if (mesh.material) {
-          if (Array.isArray(mesh.material)) {
-            mesh.material = mesh.material.map(m => {
-              const c = m.clone();
-              if ('wireframe' in c) (c as THREE.MeshStandardMaterial).wireframe = false;
-              ownedMats.push(c);
-              return c;
-            });
-          } else {
-            const c = mesh.material.clone();
-            if ('wireframe' in c) (c as THREE.MeshStandardMaterial).wireframe = false;
-            ownedMats.push(c);
-            mesh.material = c;
-          }
-        }
-      }
+      if (!mesh.isMesh) return;
+      mesh.layers.set(LAYER_DECOR);
+      mesh.material = Array.isArray(mesh.material) ? mesh.material.map(cloneMaterial) : cloneMaterial(mesh.material);
     });
+    return () => { ownedMats.forEach(material => material.dispose()); };
+  }, [scene]);
+
+  useLayoutEffect(() => {
+    scene.scale.set(1, 1, 1);
     const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
     scene.scale.setScalar(TARGET_H / raw.y);
     const box = glbLocalBBox(scene);
@@ -167,9 +163,6 @@ export function MannequinHead({
       -(box.min.z + box.max.z) / 2,
     );
     onSize?.(box.getSize(new THREE.Vector3()));
-    return () => {
-      ownedMats.forEach(m => m.dispose());
-    };
   }, [scene, onSize]);
 
   // Offset d'alignement manuel pour la tête de Mannequin (45 cm).
