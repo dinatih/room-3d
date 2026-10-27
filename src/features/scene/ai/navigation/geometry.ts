@@ -5,10 +5,11 @@ export interface Point { x: number; z: number }
 export type Polygon = Point[];
 export const GEOMETRY_EPSILON = 1e-7;
 /** Maximum error of the conservative circular clearance approximation, in cm. */
-export const CLEARANCE_ERROR = 0.1;
+export const CLEARANCE_ERROR = 1;
 /** Boolean operations require coincident CAD edges to share the same numeric coordinates. */
 export const BOOLEAN_PRECISION = 1e-5;
-const snap = (n: number) => Math.round(n / BOOLEAN_PRECISION) * BOOLEAN_PRECISION;
+// Divide by an integer scale so exact CAD coordinates (e.g. 10.75) stay exact.
+const snap = (n: number) => Math.round(n / BOOLEAN_PRECISION) / Math.round(1 / BOOLEAN_PRECISION);
 export const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.z - b.z);
 export function projectToSegment(p: Point, a: Point, b: Point): Point {
   const dx = b.x - a.x, dz = b.z - a.z;

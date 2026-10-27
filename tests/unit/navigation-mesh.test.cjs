@@ -5,6 +5,22 @@ const g = require('../../src/features/scene/ai/navigation/geometry.ts');
 const { NavigationMesh } = require('../../src/features/scene/ai/navigation/mesh.ts');
 
 describe('Réseau permanent de passages au sol', () => {
+  it('simplifie les arrondis sans réduire le rayon du corps ni fermer un passage de 30 cm', () => {
+    for (const radius of [4, 13.3, 40]) {
+      const center = { x: 0, z: 0 }, ring = g.inflate([center], radius);
+      const rounding = Math.SQRT2 * g.BOOLEAN_PRECISION;
+      for (const [i, point] of ring.entries()) {
+        assert(g.distance(center, point) <= radius + g.CLEARANCE_ERROR + rounding);
+        assert(g.distance(center, g.projectToSegment(center, point, ring[(i + 1) % ring.length])) >= radius - rounding);
+      }
+    }
+    const obstacles = g.union([-1, 1].map(side => g.inflate(g.rectangle(side * 65, 0, 100, 20), 13.3)));
+    const mesh = new NavigationMesh(obstacles, [[g.rectangle(0, 0, 400, 400)]]);
+    const start = { x: 0, z: -100 }, target = { x: 0, z: 100 };
+    assert(mesh.canReach(start, target));
+    const path = mesh.find(start, target);
+    assert(path.every((point, i) => g.segmentFree(i ? path[i - 1] : start, point, obstacles)));
+  });
   it('fusionne les cellules convexes sans modifier les surfaces ni leurs trous', () => {
     const surfaces = [[g.rectangle(0, 0, 400, 400)]];
     const empty = new NavigationMesh([], surfaces).snapshot();
