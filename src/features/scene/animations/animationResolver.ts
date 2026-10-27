@@ -476,17 +476,6 @@ export function getAnimationSegmentsOverride(keyOrId: string): Array<[number, nu
 }
 
 /**
- * Retourne les segments effectifs d'une animation (déclarés dans le registre ou surchargés en direct).
- */
-export function getAnimationEffectiveSegments(keyOrId?: string): Array<[number, number]> | undefined {
-  if (!keyOrId) return undefined;
-  const def = getAnimationDef(keyOrId);
-  const override = getAnimationSegmentsOverride(def?.id || keyOrId);
-  if (override !== undefined) return override;
-  return def?.segments;
-}
-
-/**
  * Retourne le décalage spatial (offset [x, y, z]) et l'orientation (rotY en radians)
  * natifs d'une animation tels que déclarés dans le registre d'animations ou surchargés en direct.
  */

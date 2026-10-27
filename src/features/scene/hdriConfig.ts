@@ -44,11 +44,6 @@ export const HDRI_LIST: HdriItem[] = [
 
 export const DEFAULT_HDRI_ID = 'default';
 
-export function getRandomHdriId(): string {
-  const index = Math.floor(Math.random() * HDRI_LIST.length);
-  return HDRI_LIST[index].id;
-}
-
 export function getHdriById(id: string): HdriItem {
   return HDRI_LIST.find(h => h.id === id) || HDRI_LIST[0];
 }
