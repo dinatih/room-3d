@@ -58,10 +58,10 @@ if (process.argv[2] === '--door') {
     './ai/navigation/geometry': g, './ai/navigation/doorRequests': require('../src/features/scene/ai/navigation/doorRequests.ts'),
     './wallData': require('../src/features/scene/wallData.ts'),
   });
-  const door = world.doors.find(d => d.key === 'living').config;
+  const door = world.doors.find(d => d.key === (process.argv[4] || 'living')).config;
   const contacts = world.furniture.filter(o => o.yMax >= door.yMin && o.yMin <= door.yMax)
     .map(o => ({ ...o, contact: doors.getDoorContactAngle(door, o.polygon) })).filter(o => o.contact !== null).sort((a, b) => a.contact - b.contact);
-  console.log(JSON.stringify({ door, contacts, protections: world.doorRequests.protections }, null, 2));
+  console.log(JSON.stringify({ door, contacts, glassDoor: world.glassDoor, protections: world.doorRequests.protections }, null, 2));
   return;
 }
 if (process.argv[2] === '--characters') {

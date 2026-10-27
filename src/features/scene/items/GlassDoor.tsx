@@ -11,7 +11,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
-import { computeDoorDynamics, DOOR_CONFIGS, doorCollisionState, glassShutterState } from '../doorObstacles';
+import { computeDoorDynamics, DOOR_CONFIGS, doorCollisionState, glassShutterState, glassDoorState } from '../doorObstacles';
 import { useDoorOpen } from './useDoorOpen';
 import { useDoorSpring } from './useDoorSpring';
 
@@ -150,7 +150,6 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
 
   useFrame((_, delta) => {
     const s = stateRef.current;
-    if (navigationEnabled) glassShutterState.clearHeight = SILL_H + GLASS_H * (1 - shutterPercentRef.current / 100);
     const dynRight = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassRight, rightRotRef.current) : { allowed: DOOR_CONFIGS.glassRight.maxAngle, push: 0, minimum: 0 };
     const dynLeft = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassLeft, leftRotRef.current) : { allowed: DOOR_CONFIGS.glassLeft.maxAngle, push: 0, minimum: 0 };
     const leftPush = Math.max(dynLeft.minimum, dynLeft.push, leftOpen ? dynLeft.allowed : 0, navigationEnabled && doorRequested('glassLeft') ? dynLeft.allowed : 0);
@@ -182,6 +181,13 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
     } else if (shutterPercentRef.current !== targetShutter) {
       shutterPercentRef.current = targetShutter;
       moved = true;
+    }
+
+    if (navigationEnabled) {
+      Object.assign(glassDoorState.right, dynRight, { target: rightTarget, manualOpen: rightOpen });
+      Object.assign(glassDoorState.left, dynLeft, { target: leftTarget, manualOpen: leftOpen });
+      Object.assign(glassDoorState, { rightClearsLeft, shutterPercent: shutterPercentRef.current, targetShutter });
+      glassShutterState.clearHeight = SILL_H + GLASS_H * (1 - shutterPercentRef.current / 100);
     }
 
     if (moved) {

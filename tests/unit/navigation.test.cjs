@@ -554,12 +554,16 @@ describe('Navigation et portes — géométrie isolée', () => {
         const left = doors.computeDoorAllowedAngle(doors.DOOR_CONFIGS.glassLeft), right = doors.computeDoorAllowedAngle(doors.DOOR_CONFIGS.glassRight);
         assert.equal(left, Math.PI / 2);
         assert(right > 0 && right < Math.PI / 2);
+        assert.equal(doors.getDoorLimitDiagnostics('glassRight').angle, right);
+        assert.deepEqual(doors.getDoorLimitDiagnostics('glassRight').contacts.map(contact => contact.protection), [...requests.getDoorProtections('glassRight')]);
         doors.doorCollisionState.glassLeft.angle = -left;
         doors.doorCollisionState.glassRight.angle = right;
         walk({ x: -30, z: -50 }, { x: -30, z: 100 }, ['glassLeft', 'glassRight']);
         assert.equal([...requests.getDoorProtections('glassLeft')].length, 1, 'Glass leaves share the protected footprint');
         requests.releaseAgentDoors('storage');
         console.log('Double door: one protected partial leaf leaves the other passage usable', right * 180 / Math.PI);
+        assert.equal(doors.getDoorLimitDiagnostics('glassRight').angle, Math.PI / 2);
+        assert.deepEqual(doors.getDoorLimitDiagnostics('glassRight').contacts, []);
         // Coordinate resolution protects the interaction pose and retains it while exiting.
         const coords = load('src/features/scene/ai/agent/agentInstructionCoords.ts', {
             '../aiTypes': {}, '../navigation/service': nav, '../navigation/obstacles': obstacles, '../navigation/doorRequests': requests, '../../cameraState': { cameraState },

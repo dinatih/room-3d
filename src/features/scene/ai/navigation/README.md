@@ -107,6 +107,11 @@ et le graphe aux temps de file, calcul, livraison et consommation. Les approches
 enregistrent leurs candidats, empreintes d'acteurs et résultat de sélection.
 Une époque UUID distingue aussi les numéros de graphes réinitialisés par HMR.
 
+`glassDoor` décrit les consignes des battants, leur coordination et le volet dans
+les arrêts et instantanés. `leaves` précise les segments bloqués et `limits.contacts`
+les meubles ou protections d'interaction qui limitent l'ouverture ; les demandes
+et protections nomment les PNJ concernés dans `requests`.
+
 `nav_stop` et `nav_stop_end` encadrent chaque arrêt et sa durée. Une fois par
 seconde, `nav_agent_snapshot` conserve instruction, position, animation, absence
 de progression, déploiement, trajet, attente et état du contournement. `nav_world`

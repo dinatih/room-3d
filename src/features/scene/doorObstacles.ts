@@ -9,7 +9,7 @@
 import { cameraState } from './cameraState';
 import { furnitureObstacles, getObstacleRevision, getAgentProfile, hasAgentProfile } from './ai/navigation/obstacles';
 import { inflate, pointInRing, rectangle, CLEARANCE_ERROR, type Polygon } from './ai/navigation/geometry';
-import { getDoorProtections, getDoorProtectionRevision, type DoorKey } from './ai/navigation/doorRequests';
+import { getDoorProtections, getDoorProtectionRevision, type DoorKey, type DoorProtection } from './ai/navigation/doorRequests';
 import { pX, pZ, DiagWall, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from './wallData';
 
 export const HUMAN_BODY_RADIUS = 28;
@@ -39,6 +39,12 @@ export function doorPolygon(key: DoorKey, angle: number): Polygon {
  * État partagé des battants mobiles pour synchronisation inter-systèmes (PNJ, debug).
  */
 export const glassShutterState = { clearHeight: 210 };
+/** Live animation commands, sampled with navigation stops and world snapshots. */
+export const glassDoorState = {
+  right: { allowed: Math.PI / 2, push: 0, minimum: 0, target: 0, manualOpen: false },
+  left: { allowed: Math.PI / 2, push: 0, minimum: 0, target: 0, manualOpen: false },
+  rightClearsLeft: false, shutterPercent: 0, targetShutter: 0,
+};
 
 export const doorCollisionState = {
   living: { angle: 0 },
@@ -180,13 +186,15 @@ export function computeDoorDynamics(
 /**
  * Calcule l'angle maximal autorisé pour une porte donnée compte tenu de tous les obstacles actifs.
  */
-const allowedAngles = new WeakMap<DoorConfig, { revision: number; protectionRevision: number; angle: number }>();
+const allowedAngles = new WeakMap<DoorConfig, { revision: number; protectionRevision: number; angle: number;
+  contacts: { obstacle?: string; protection?: DoorProtection; angle: number }[] }>();
 export function computeDoorAllowedAngle(door: DoorConfig): number {
   const revision = getObstacleRevision();
   const protectionRevision = getDoorProtectionRevision();
   const cached = allowedAngles.get(door);
   if (cached?.revision === revision && cached.protectionRevision === protectionRevision) return cached.angle;
   let furnitureMaxAngle = door.maxAngle;
+  const contacts: { obstacle?: string; protection?: DoorProtection; angle: number }[] = [];
   for (const obstacle of furnitureObstacles.values()) {
     if (obstacle.yMax < door.yMin || obstacle.yMin > door.yMax) continue;
     // A leaf already touching a massive object cannot swing through it.
@@ -194,10 +202,11 @@ export function computeDoorAllowedAngle(door: DoorConfig): number {
     const closedCenter = { x: door.pivot.x + c.x * door.length / 2, z: door.pivot.z + c.z * door.length / 2 };
     if (pointInRing(closedCenter, obstacle.polygon)) {
       furnitureMaxAngle = 0;
+      contacts.push({ obstacle: obstacle.owner ?? obstacle.id, angle: 0 });
       continue;
     }
     const contact = getDoorContactAngle(door, obstacle.polygon);
-    if (contact !== null) furnitureMaxAngle = Math.min(furnitureMaxAngle, contact);
+    if (contact !== null) { furnitureMaxAngle = Math.min(furnitureMaxAngle, contact); contacts.push({ obstacle: obstacle.owner ?? obstacle.id, angle: contact }); }
   }
 
   const key = doorKeysByConfig.get(door);
@@ -206,10 +215,16 @@ export function computeDoorAllowedAngle(door: DoorConfig): number {
     const polygon = inflate([{ x: body.x, z: body.z }], body.radius);
     const closedCenter = { x: door.pivot.x + door.closedDir.x * door.length / 2, z: door.pivot.z + door.closedDir.z * door.length / 2 };
     const contact = pointInRing(closedCenter, polygon) ? 0 : getDoorContactAngle(door, polygon);
-    if (contact !== null) furnitureMaxAngle = Math.min(furnitureMaxAngle, contact);
+    if (contact !== null) { furnitureMaxAngle = Math.min(furnitureMaxAngle, contact); contacts.push({ protection: body, angle: contact }); }
   }
-  allowedAngles.set(door, { revision, protectionRevision, angle: furnitureMaxAngle });
+  allowedAngles.set(door, { revision, protectionRevision, angle: furnitureMaxAngle, contacts });
   return furnitureMaxAngle;
+}
+
+export function getDoorLimitDiagnostics(key: DoorKey) {
+  const door = DOOR_CONFIGS[key];
+  computeDoorAllowedAngle(door);
+  return allowedAngles.get(door)!;
 }
 
 /**

@@ -3,7 +3,7 @@ import { movingFurniture } from '../../furniturePositions';
 import { architectureObstacles, walkableSurfaces } from './architecture';
 import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, hasAgentProfile, navigationDebug, agentProfileLifecycle, type AgentProfile } from './obstacles';
 import { inflate, rectangle, pointInRing, insideObstacle, segmentFree, distance, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
-import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState, doorPolygon } from '../../doorObstacles';
+import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState, glassDoorState, getDoorLimitDiagnostics, doorPolygon } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, getAgentDoorProtection, protectDoor, getDoorRequestDiagnostics, type DoorKey, type DoorProtection } from './doorRequests';
 import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, getActorNavigationDiagnostics, type ActorBlockers } from '../agent/agentAvoidance';
 import { NAVIGATION_COMFORT_CM } from './comfort';
@@ -205,7 +205,8 @@ export function navigationDiagnostics(route: RouteState, agentId: string, start:
     lastWorldDiagnosticAt = performance.now();
     devLog({ tag: 'navigation', category: 'nav', action: 'nav_world', data: {
       revision: getObstacleRevision(), actors: getActorNavigationDiagnostics(), furniture: [...furnitureObstacles.values()], movingFurniture: [...movingFurniture],
-      doors: doorKeys.map(key => ({ key, actualAngle: doorCollisionState[key].angle, allowedAngle: computeDoorAllowedAngle(DOOR_CONFIGS[key]), config: DOOR_CONFIGS[key] })),
+      doors: doorKeys.map(key => ({ key, actualAngle: doorCollisionState[key].angle, allowedAngle: computeDoorAllowedAngle(DOOR_CONFIGS[key]), limits: getDoorLimitDiagnostics(key), config: DOOR_CONFIGS[key] })),
+      glassDoor: glassDoorState,
       doorRequests: getDoorRequestDiagnostics(), shutter: glassShutterState,
       slots: OccupancyManager.getReservations(), rooms: LIMITED_ROOMS.map(room => ({ room, capacity: ROOM_CAPACITIES[room], occupants: [...OccupancyManager.getRoomOccupants(room)] })),
       jobs: getNavigationJobDiagnostics(),
@@ -214,6 +215,9 @@ export function navigationDiagnostics(route: RouteState, agentId: string, start:
   return { path: route.path, index: route.index, next, limited, blockers, target: route.target, destination: route.destination,
     epoch: route.graph?.epoch, graphId: route.graph?.id, owner: route.owner, approach: route.approach, exit: route.exit && { ...route.exit, graph: route.exit.graph.id },
     doors: [...route.doors], protectedDoor: route.protectedDoor, waitReason: route.waitReason, error: route.error, occupiedTarget: route.occupiedTarget,
+    glassDoor: { ...glassDoorState, leaves: (['glassRight', 'glassLeft'] as const).map(key => ({ key, actualAngle: doorCollisionState[key].angle,
+      limits: getDoorLimitDiagnostics(key), blockedNextSegment: !!next && !segmentFree(start, next, doorFootprint(getAgentProfile(agentId), key, doorCollisionState[key].angle)) })),
+      shutter: glassShutterState, requests: getDoorRequestDiagnostics() },
     failure: route.failure && { ...route.failure, graph: route.failure.graph.id },
     crowd: route.crowd && { baseId: route.crowd.base.id, graphId: route.crowd.graph?.id, planningId: route.crowd.planning?.id,
       preparationId: route.crowd.preparation?.id, preparing: route.crowd.preparing, resume: route.crowd.resume, signature: route.crowd.signature },
@@ -588,7 +592,8 @@ export function describeNavigationBlock(agentId: string, start: Point, target: P
   const next = route.path[route.index];
   if (next) details.push(`prochain point ${at(next)}`);
   const doors = new Set([...route.doors, ...(route.protectedDoor ? [route.protectedDoor] : [])]);
-  if (doors.size) details.push(`portes : ${[...doors].map(key => `${key} (${doorCollisionState[key].angle.toFixed(2)} rad)`).join(', ')}`);
+  if (doors.has('glassRight') || doors.has('glassLeft')) { doors.add('glassRight'); doors.add('glassLeft'); }
+  if (doors.size) details.push(`portes : ${[...doors].map(key => `${key} (angle ${doorCollisionState[key].angle.toFixed(2)} rad, ouverture autorisée ${computeDoorAllowedAngle(DOOR_CONFIGS[key]).toFixed(2)} rad)`).join(', ')}`);
   for (const [label, point] of [['départ', start], ['cible', target]] as const) {
     const obstacles = [...architectureObstacles, ...furnitureObstacles.values()]
       .filter(o => o.yMin < profile.height && o.yMax > 0 && pointInRing(point, inflate(o.polygon, furnitureClearance(profile))))
