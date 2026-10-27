@@ -17,6 +17,14 @@ dans le libellé du tableau de bord Maison ; son identifiant technique est conse
 La fiche Hue `light.principale_porte`, indisponible, est un autre appareil :
 elle n’est pas associée à l’OLA. Son nom « Porte » reste inchangé.
 
+Le groupe Hue `light.principale_principale` et ses trois ampoules inutilisées
+`light.principale_porte`, `light.principale_rosanna` et `light.principale_cha`
+sont désactivés dans le registre HA (`disabled_by: user`). Les trois ampoules
+étaient indisponibles alors que le pont annonçait encore le groupe allumé,
+ce qui polluait l’Overview. Aucun appareil n’a été supprimé du pont Hue.
+Pour les réutiliser, réactiver les entités dans Paramètres → Appareils et services
+→ Entités, en affichant les entités désactivées.
+
 ## Essayer en local
 
 Aucun push ou déploiement n’est nécessaire. Sur le réseau de la maison :
