@@ -107,18 +107,16 @@ export function useItemAnnotations(targetId?: string) {
 
   const setStatus = useCallback(
     (status?: AnnotationStatus) => {
-      if (!targetId) return;
       update({ status });
     },
-    [targetId, update]
+    [update]
   );
 
   const setNotes = useCallback(
     (notes: string) => {
-      if (!targetId) return;
       update({ notes });
     },
-    [targetId, update]
+    [update]
   );
 
   const addTag = useCallback(
@@ -155,14 +153,6 @@ export function useItemAnnotations(targetId?: string) {
     window.dispatchEvent(new CustomEvent(EVENT_NAME));
   }, [targetId, addTag]);
 
-  const setCustomOffsets = useCallback(
-    (offsets?: { x?: number; y?: number; z?: number; rotY?: number }) => {
-      if (!targetId) return;
-      update({ customOffsets: offsets });
-    },
-    [targetId, update]
-  );
-
   const clear = useCallback(() => {
     if (!targetId) return;
     clearAnnotation(targetId);
@@ -171,14 +161,12 @@ export function useItemAnnotations(targetId?: string) {
   return {
     allAnnotations: annotations,
     annotation: currentAnnotation,
-    update,
     setStatus,
     setNotes,
     addTag,
     addCustomTag,
     recentCustomTags,
     removeTag,
-    setCustomOffsets,
     clear,
   };
 }
