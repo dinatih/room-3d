@@ -55,15 +55,6 @@ function saveAllAnnotations(data: Record<string, ItemAnnotation>) {
   }
 }
 
-export function getAllAnnotations(): Record<string, ItemAnnotation> {
-  return loadAllAnnotations();
-}
-
-export function getAnnotation(id: string): ItemAnnotation | undefined {
-  const all = loadAllAnnotations();
-  return all[id];
-}
-
 export function updateAnnotation(id: string, partial: Partial<ItemAnnotation>): void {
   const all = loadAllAnnotations();
   const current = all[id] || { tags: [], updatedAt: Date.now() };
@@ -75,7 +66,7 @@ export function updateAnnotation(id: string, partial: Partial<ItemAnnotation>): 
   saveAllAnnotations(all);
 }
 
-export function clearAnnotation(id: string): void {
+function clearAnnotation(id: string): void {
   const all = loadAllAnnotations();
   if (all[id]) {
     delete all[id];
@@ -85,17 +76,6 @@ export function clearAnnotation(id: string): void {
 
 export function exportAnnotationsJson(): string {
   return JSON.stringify(loadAllAnnotations(), null, 2);
-}
-
-export function importAnnotationsJson(jsonStr: string): boolean {
-  try {
-    const parsed = JSON.parse(jsonStr);
-    if (typeof parsed !== 'object' || parsed === null) return false;
-    saveAllAnnotations(parsed);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export function useItemAnnotations(targetId?: string) {
