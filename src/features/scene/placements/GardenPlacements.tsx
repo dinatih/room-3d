@@ -34,7 +34,7 @@ const stub = (id: string): Item =>
 
 // Pass 1 — Furniture (Structure & gros volumes)
 export function GardenFurniture() {
-  const as = useFurnitureToggles(['sofa-arm-left', 'sofa-arm-right', ...getObjectActionIds('chest-bench')]);
+  const as = useFurnitureToggles(['sofa-arm-left', 'sofa-arm-right', ...getObjectActionIds('chest-bench'), ...getObjectActionIds('vatterso20562909')]);
 
   return (
     <MergedStaticGroup name="merged-garden-furniture">
@@ -62,8 +62,8 @@ export function GardenFurniture() {
       </group>
 
       {/* Boîte de rangement Vättersö */}
-      <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, sceneItemRoot: true, birdSupport: { id: 'storage', kind: 'lid' }, itemName: 'Boîte de Rangement Vättersö' }}>
-        <NavigationObstacle id="garden-storage"><Vatterso20562909 /></NavigationObstacle>
+      <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, sceneItemRoot: true, birdSupport: { id: 'storage', kind: 'lid' }, itemName: 'Boîte de Rangement Vättersö', hoverAction: { label: 'Boîte Vättersö', actions: getObjectActionIds('vatterso20562909') } }}>
+        <NavigationObstacle id="garden-storage"><Vatterso20562909 item={stub('vatterso20562909')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );

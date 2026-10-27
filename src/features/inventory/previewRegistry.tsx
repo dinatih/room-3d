@@ -66,6 +66,7 @@ import { ArmrestSofa }                                from '@features/scene/item
 import { ArmlessSofa }                                from '@features/scene/items/ArmlessSofa';
 import { Bathtub }                                    from '@features/scene/items/Bathtub';
 import { ChestBench }                                 from '@features/scene/items/ChestBench';
+import { Vatterso20562909 }                           from '@features/scene/items/Vatterso20562909';
 import { ShoeHatRack } from '@features/scene/items/ShoeHatRack';
 import { SHOE_HAT_RACK } from '@features/scene/shoeHatRackData';
 import { AltappenRug }                                from '@features/scene/items/AltappenRug';
@@ -210,6 +211,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'armless-sofa':           ArmlessSofa,
   'bathtub':                Bathtub,
   'chest-bench':            ChestBench,
+  'vatterso20562909':       Vatterso20562909,
   'altappen-rug':           AltappenRug,
   'jordan-hex-mule':        JordanHexMule,
   'summer-outdoor-boot':    SummerOutdoorBoot,
