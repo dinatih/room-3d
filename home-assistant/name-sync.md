@@ -56,3 +56,22 @@ Les noms HA, Smart Life et Room-3D peuvent alors converger sans changer les `ent
 Cette partie reste une conception : aucun service de synchronisation Smart Life
 n’est installé ni présenté comme opérationnel. Les autres constructeurs demandent
 chacun une API de renommage et une association vérifiées séparément.
+
+## Tableau de comparaison disponible
+
+Dans **Interactions → Home Assistant → Comparer les noms Smart Life / HA**,
+un relevé en lecture seule affiche les appareils/scènes Tuya, leur pièce, leur
+modèle et les noms Tuya et HA. Les écarts sont affichés en premier et le filtre
+**Écarts uniquement** est actif par défaut. Les noms d’entités personnalisés sont
+indiqués séparément : ils ne remplacent pas le nom canonique de l’appareil.
+
+Le nom Tuya correspond au champ `name` du registre d’appareils HA ; le nom HA
+correspond à `name_by_user` s’il est défini, sinon `name`. Il s’agit du dernier
+nom transmis par l’intégration, pas d’une lecture directe de Smart Life.
+**Actualiser les noms** relit les registres HA ; cela ne force pas un rafraîchissement
+Cloud Tuya. Après un changement Smart Life, attendre sa remontée dans l’intégration
+avant de comparer à nouveau. Les espaces sont comparés exactement.
+
+Le relevé est daté, consultable aussi avec la liaison réelle suspendue et ne fait
+aucune écriture, ni dans HA ni dans Smart Life. En cas de refus d’accès aux
+registres, l’erreur est affichée ; utiliser un compte HA autorisé à les consulter.

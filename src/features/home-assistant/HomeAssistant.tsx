@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { entityAvailable } from './appliances';
 import { ApplianceControls } from './ApplianceControls';
+import { NameComparison } from './NameComparison';
 import { cameraState } from '../scene/cameraState';
 import { useSceneStore } from '../scene/store/useSceneStore';
 import { connectHomeAssistant, disconnectHomeAssistant, setHomeAssistantLinked, resumeHomeAssistant, stopHomeAssistant, useHomeAssistant, LIGHTS, LIGHT_KEYS } from './connection';
@@ -61,6 +62,7 @@ export function HomeAssistantPanel() {
           </div>)}
           <ApplianceControls />
         </>}
+        <NameComparison />
         <button className="btn btn-sm btn-outline-secondary" onClick={disconnectHomeAssistant}>Déconnecter Home Assistant</button>
       </> : <form onSubmit={event => { event.preventDefault(); void connectHomeAssistant(url); }}>
         <label className="form-label mb-1" htmlFor={inputId}>Adresse de Home Assistant</label>

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { compareTuyaNames, type NameDevice, type NameEntity, type NameArea } from './nameComparison';
 import { APPLIANCES, APPLIANCE_ENTITIES, applianceAvailable, applianceCommand, isApplianceAction, type ApplianceAction } from './appliances';
 import { callService, createConnection, getAuth, getStates, ERR_INVALID_AUTH } from 'home-assistant-js-websocket';
 import type { Connection, HassEntity, AuthData, StateChangedEvent } from 'home-assistant-js-websocket';
@@ -224,6 +225,18 @@ export async function requestHomeAssistantAction(key: LightKey | ApplianceAction
   } catch (error) {
     if (run === generation) update(false, error instanceof Error ? error.message : `La commande de ${APPLIANCES[key].label} a échoué.`);
   }
+}
+
+export async function loadTuyaNameComparison() {
+  const current = connection;
+  if (!current?.connected || useHomeAssistant.getState().status !== 'connected') throw new Error('Connexion HA requise pour lire les noms.');
+  const [devices, entities, areas] = await Promise.all([
+    current.sendMessagePromise<NameDevice[]>({ type: 'config/device_registry/list' }),
+    current.sendMessagePromise<NameEntity[]>({ type: 'config/entity_registry/list' }),
+    current.sendMessagePromise<NameArea[]>({ type: 'config/area_registry/list' }),
+  ]);
+  if (current !== connection || !current.connected) throw new Error('Connexion HA interrompue pendant la lecture des noms.');
+  return compareTuyaNames(devices, entities, areas);
 }
 
 if (import.meta.hot) import.meta.hot.dispose(stopHomeAssistant);

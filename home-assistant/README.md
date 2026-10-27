@@ -187,3 +187,10 @@ L’[inventaire](./inventory.md) détaille les appareils et entités enregistré
 - [Fichiers publics HA](https://www.home-assistant.io/integrations/http/)
 - [Carte Webpage / iframe](https://www.home-assistant.io/dashboards/iframe/)
 - [Base publique Vite](https://vite.dev/guide/build.html#public-base-path)
+
+## Noms et Google Home
+
+Le panneau connecté contient **Comparer les noms Smart Life / HA**, disponible
+aussi lorsque la liaison des objets réels est suspendue. Le relevé Tuya est celui
+conservé par HA, avec filtre des écarts et actualisation manuelle.
+Voir [les noms](./name-sync.md) et [la préparation Google Home](./google-home.md).
