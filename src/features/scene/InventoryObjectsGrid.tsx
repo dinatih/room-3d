@@ -47,7 +47,6 @@ import { ShoeHatRack } from './items/ShoeHatRack';
 import { MeubleT } from './items/MeubleT';
 import { TV } from './items/TV';
 import { MllseG2Pro } from './items/MllseG2Pro';
-import { AirPerformer } from './items/AirPerformer';
 import { MatterHub } from './items/MatterHub';
 import { LaserDistanceMaster } from './items/LaserDistanceMaster';
 import { DoubleVenusPendant } from './items/DoubleVenusPendant';
@@ -134,7 +133,6 @@ const PROCEDURAL_GRID_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'mini-pc': MllseG2Pro,
   laptop: Laptop,
   phone: Phone,
-  'air-performer': AirPerformer,
   'matter-hub': MatterHub,
   'laser-distancemaster': LaserDistanceMaster,
   'double-venus-pendant': DoubleVenusPendant,
