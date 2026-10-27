@@ -169,9 +169,6 @@ export const DEFAULT_LARA_COUNT: LaraCountMode = 7;
 /** Nombres de Laras autorisés dans le sélecteur d'options (1, 2, 4, 7, 10, 15) */
 export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 7, 10, 15];
 
-/** Liste des 4 Laras activées pour le mode 4 joueuses */
-export const FOUR_PLAYERS_LARA_IDS = new Set(['xbot', 'native', 'rosanna', 'marissa']);
-
 /** Sélection du mode 10 : Xbot et neuf Laras. */
 export const TEN_PLAYERS_LARA_IDS = new Set([
   'xbot', 'native', 'rosanna', 'marissa', 'delphina',

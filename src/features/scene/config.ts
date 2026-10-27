@@ -4,10 +4,8 @@
 // 1 unit = 1cm
 
 // Layers Three.js (0 réservé par défaut Three.js pour caméras/helpers non catégorisés)
-export const LAYER_DEFAULT          = 0;  // Layer universel par défaut Three.js
 export const LAYER_EQUIPMENT        = 11; // WC, douche, évier, chauffe-eau…
 export const LAYER_FURNITURE        = 12; // Lit, tables, chaises, étagères…
-export const LAYER_NETWORKS         = 13; // Tuyauterie, électricité (optionnel)
 export const LAYER_NEIGHBORS        = 14; // Appartements voisins (fantôme)
 export const LAYER_LIDAR            = 15; // Scan LiDAR
 export const LAYER_WALKER_DETAIL    = 16; // Meshes walker masqués en main camera (FPS) mais visibles dans miroirs (yeux, peau visage)

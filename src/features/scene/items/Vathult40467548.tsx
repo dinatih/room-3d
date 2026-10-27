@@ -5,15 +5,12 @@ import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scen
 import { SceneItemProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
+
 /**
  * VÅTHULT Éclairage LED élément/miroir, couleur aluminium, 350 mm
  * Price: 
  * URL: https://www.ikea.com/fr/fr/p/vathult-eclairage-led-element-miroir-couleur-aluminium-40467548/
  */
-export const VATHULT_W = 35;
-export const VATHULT_D = 12;
-export const VATHULT_H = 3;
-
 export function Vathult40467548({ onSize, ...props }: SceneItemProps) {
   const { scene } = useGLTFClone('/items/vathult40467548/Vathult40467548.glb');
 
