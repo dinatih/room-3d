@@ -202,3 +202,18 @@ Le panneau connecté contient **Comparer les noms Smart Life / HA**, disponible
 aussi lorsque la liaison des objets réels est suspendue. Le relevé Tuya est celui
 conservé par HA, avec filtre des écarts et actualisation manuelle.
 Voir [les noms](./name-sync.md) et [la liaison Google Home](./google-home.md).
+
+## Routeur Freebox Pop
+
+Le routeur était déjà connecté par l’intégration officielle `freebox`, sous
+« Freebox v8 (r1) ». Son nom HA est désormais **Freebox Pop**, dans **Séjour**.
+Ses dix entités ont des libellés français : débits descendant/montant (kB/s),
+températures processeur/interne, ventilateur, appels manqués, présence réseau,
+Wi-Fi, redémarrage et marquage des appels comme lus. Les identifiants techniques
+`freebox_v8_r1` sont conservés. Les mesures et le Wi-Fi ont été relus après
+renommage ; aucune commande de redémarrage, de Wi-Fi ou de lecture des appels
+n’a été exécutée. Les boutons sans utilisation antérieure affichent `unknown`.
+Le Player Pop est exclu à la demande de l’utilisateur. Aucune entité du routeur
+n’est ajoutée à l’exposition Google ni aux commandes Room-3D.
+
+Source : [intégration officielle Freebox](https://www.home-assistant.io/integrations/freebox/).
