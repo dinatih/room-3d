@@ -149,7 +149,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
       {/* Meuble haut METOD 40×37×100 couché */}
       <group userData={{ sceneItemRoot: true }}>
         <group position={[KIT_W / 2 + 100 / 2, COUNTER_H + COUNTER_SLAB + 60 + 40 / 2, KIT_D - 37 / 2]} rotation={[0, 0, Math.PI / 2]}>
-          <Metod50205532 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Metod50205532 />
         </group>
       </group>
 

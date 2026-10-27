@@ -517,7 +517,7 @@ export function LivingRoomFurnishings() {
     <MergedStaticGroup name="merged-living-room-furnishings">
       {/* Étagère Lack */}
       <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: 'Étagère Lack' }}>
-        <Lack90282180 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Lack90282180 />
       </group>
 
       {/* Penderie Mulig (structure sans cintres) */}

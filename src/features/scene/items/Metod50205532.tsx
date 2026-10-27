@@ -2,15 +2,17 @@ import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
+
+const shelfMaterial = new THREE.MeshStandardMaterial({ color: '#f0f0f0', roughness: 0.35, metalness: 0.05 });
 
 /**
  * METOD Élément mural, blanc, 40x37x100 cm
  * Price: 30 €
  * URL: https://www.ikea.com/fr/fr/p/metod-rangement-mural-blanc-50205532/
  */
-export function Metod50205532({ onSize, ...props }: SceneItemProps) {
+export function Metod50205532({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('/items/metod50205532/Metod50205532.glb');
   const shelfRef = useRef<THREE.Mesh>(null!);
   const dividerRef = useRef<THREE.Mesh>(null!);
@@ -45,17 +47,15 @@ export function Metod50205532({ onSize, ...props }: SceneItemProps) {
   }, [scene, onSize]);
 
   return (
-    <group {...props}>
+    <group>
       <primitive object={scene} />
       {/* Étagère procédurale à 40 cm du haut */}
-      <mesh ref={shelfRef} position={[0, 60, 0.5]}>
+      <mesh ref={shelfRef} position={[0, 60, 0.5]} material={shelfMaterial}>
         <boxGeometry args={[36.4, 1.8, 35]} />
-        <meshStandardMaterial color="#f0f0f0" roughness={0.35} metalness={0.05} />
       </mesh>
       {/* Plaque / montant vertical à 13 cm du bord droit du meuble, du bas jusqu'à l'étagère */}
-      <mesh ref={dividerRef} position={[-7, 30.45, 0.5]}>
+      <mesh ref={dividerRef} position={[-7, 30.45, 0.5]} material={shelfMaterial}>
         <boxGeometry args={[1.8, 57.3, 35]} />
-        <meshStandardMaterial color="#f0f0f0" roughness={0.35} metalness={0.05} />
       </mesh>
     </group>
   );
