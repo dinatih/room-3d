@@ -41,7 +41,7 @@ exports.withBrowser = async (fixture, exercise) => {
         environment: { platform: os.platform(), release: os.release(), arch: os.arch(), cpus: os.cpus(), memoryBytes: os.totalmem(), node: process.version },
         reproduction: fixture.reproduction ?? `npm run test:${process.env.ROOM_TEST_SUITE === 'perf' ? 'perf' : 'studio'} -- --case=${fixture.configurationId ?? fixture.id}${process.argv.includes('--hardware-gpu') ? ' --hardware-gpu' : ''}` };
     const save = () => fs.writeFileSync(path.join(directory, 'result.json'), JSON.stringify(result, null, 2));
-    let browser, server, heartbeat, cacheDir, closing = false, lastHeartbeat = Date.now();
+    let browser, server, heartbeat, cacheDir, debuggerSession, closing = false, lastHeartbeat = Date.now();
     const start = performance.now();
     let rejectBrowser;
     const browserFailure = new Promise((_, reject) => { rejectBrowser = reject; });
@@ -77,6 +77,16 @@ exports.withBrowser = async (fixture, exercise) => {
         const system = await browser.target().createCDPSession();
         result.gpu = await system.send('SystemInfo.getInfo');
         const page = await browser.newPage();
+        if (fixture.captureFreezeStack) {
+            debuggerSession = await page.createCDPSession();
+            const scripts = new Map();
+            debuggerSession.on('Debugger.scriptParsed', script => scripts.set(script.scriptId, script.url));
+            debuggerSession.on('Debugger.paused', ({ callFrames }) => {
+                result.frozenStack = callFrames.map(frame => ({ function: frame.functionName, url: scripts.get(frame.location.scriptId), line: frame.location.lineNumber + 1 }));
+                save();
+            });
+            await debuggerSession.send('Debugger.enable');
+        }
         await page.setViewport(fixture.viewport);
         const fail = error => { if (closing) return; result.errors.push(error.stack ?? String(error)); save(); rejectBrowser(Error(String(error))); };
         page.on('console', message => {
@@ -170,8 +180,12 @@ exports.withBrowser = async (fixture, exercise) => {
             assert.deepEqual(result.errors, [], 'Browser errors');
         })();
         heartbeat = setInterval(() => {
-            if (Date.now() - lastHeartbeat > fixture.heartbeatTimeoutMs)
-                rejectBrowser(Error(`Page heartbeat absent for ${fixture.heartbeatTimeoutMs} ms`));
+            if (Date.now() - lastHeartbeat > fixture.heartbeatTimeoutMs) {
+                clearInterval(heartbeat);
+                exports.deadline(debuggerSession ? debuggerSession.send('Debugger.pause') : Promise.resolve(), 2000, 'Freeze stack unavailable')
+                    .catch(error => { result.freezeCaptureError = String(error); })
+                    .finally(() => rejectBrowser(Error(`Page heartbeat absent for ${fixture.heartbeatTimeoutMs} ms`)));
+            }
         }, 1000);
         await exports.deadline(Promise.race([work, browserFailure]), fixture.readinessTimeoutMs + fixture.timeoutMs, `Scenario deadline: ${fixture.id}`);
         result.status = 'passed';

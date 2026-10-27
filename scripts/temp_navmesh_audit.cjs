@@ -1,6 +1,12 @@
 const fs = require('node:fs');
+if (process.argv[2] === '--characters') {
+  require('../tests/support/load-ts.cjs');
+  const { CHARACTERS } = require('../src/features/scene/characterConfig.ts');
+  console.log(JSON.stringify({ count: CHARACTERS.length, ids: CHARACTERS.map(c => c.id) }));
+  return;
+}
 if (process.argv[2] === '--browser') {
-  const fixture = { ...require('../tests/fixtures/cases.cjs').navigation[0], id: 'navmesh-seven', count: 7, reproduction: 'node scripts/temp_navmesh_audit.cjs --browser' };
+  const fixture = { ...require('../tests/fixtures/cases.cjs').navigation[0], id: 'navmesh-seven', count: 7, captureFreezeStack: process.argv.includes('--capture-freeze'), reproduction: 'node scripts/temp_navmesh_audit.cjs --browser' };
   process.env.ROOM_TEST_RESULTS = '/tmp/room-navmesh-browser';
   fs.mkdirSync(process.env.ROOM_TEST_RESULTS, { recursive: true });
   require('../tests/support/browser.cjs').withBrowser(fixture, async (page, result) => {

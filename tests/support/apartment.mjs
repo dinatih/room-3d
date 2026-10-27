@@ -20,7 +20,7 @@ export async function autonomous(fixture) {
     const { getDefaultSceneCharacterIds } = await import('/src/features/scene/characterConfig.ts');
     const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
     const ids = getDefaultSceneCharacterIds(fixture.count, useSceneStore.getState().activeCharacterId);
-    const spawns = Object.fromEntries(['ybot', 'xbot'].map(id => {
+    const spawns = Object.fromEntries(['ybot', 'xbot'].filter(id => ids.includes(id)).map(id => {
         const position = cameraState.positions[id];
         check(position && (position.x !== 0 || position.z !== 0), `Character remained at the origin: ${id}`);
         check(profiles.hasAgentProfile(id), `Missing autonomous character profile: ${id}`);
@@ -44,7 +44,7 @@ export async function autonomous(fixture) {
         frames++;
         await new Promise(resolve => requestAnimationFrame(resolve));
     }
-    check(ids.length === 28 && moved.size > 0, 'The real 28-character simulation did not advance');
+    check(ids.length === fixture.count && moved.size > 0, 'The real character simulation did not advance');
     return { count: ids.length, spawns, moved: [...moved], frames, roomMax, navigation: structuredClone(pathfindingStats) };
 }
 const release = id => {

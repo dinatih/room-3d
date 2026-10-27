@@ -7,6 +7,13 @@ const { summary, assertArrival, assertCompatible, referenceId, aggregatePerforma
 const { deadline, closeResources } = require('../support/browser.cjs');
 const { writeReport } = require('../support/report.cjs');
 describe('Garde-fous de la suite', () => {
+    it('teste tous les personnages du catalogue sans conserver un ancien effectif', () => {
+        const { navigation } = require('../fixtures/cases.cjs');
+        const { CHARACTERS } = require('../../src/features/scene/characterConfig.ts');
+        const all = navigation.find(fixture => fixture.id === 'autonomous-all');
+        assert.equal(all.count, CHARACTERS.length);
+        for (const fixture of navigation) assert(fixture.count >= 0 && fixture.count <= CHARACTERS.length);
+    });
     it('détecte intentionnellement une destination jamais atteinte et une rotation en boucle', () => {
         assert.throws(() => assertArrival([{ id: 'impossible', arrived: false, turn: 0 }], Math.PI), /Destination not reached/);
         assert.throws(() => assertArrival([{ id: 'ancienne-rotation', arrived: true, turn: 2 * Math.PI }], Math.PI), /Rotation in a loop/);
