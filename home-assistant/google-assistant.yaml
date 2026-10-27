@@ -1,0 +1,8 @@
+# Included under google_assistant in the server's configuration.yaml.
+project_id: dinatih-home-assistant
+service_account: !include google-home-service-account.json
+report_state: true
+expose_by_default: false
+entity_config:
+  light.entree_entree:
+    expose: true

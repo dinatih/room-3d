@@ -1,77 +1,82 @@
 # HA → Google Home sans abonnement Nabu Casa
 
-La voie retenue est l’intégration manuelle officielle `google_assistant`.
-Elle expose les appareils HA à Google Home ; elle ne renomme pas les appareils
-dans Smart Life et n’importe pas le foyer Google dans HA.
+La liaison utilise l’intégration manuelle officielle `google_assistant`.
+Elle expose les appareils HA à Google Home ; les noms Smart Life restent indépendants.
 
-## Préparation et état
+## État vérifié le 27 octobre 2026
 
-- HA dispose déjà de l’URL HTTPS `https://ha.dinatih.org`.
-- `google_assistant` n’est pas encore configuré sur le serveur.
-- Google Cast est présent ; il ne remplace pas cette liaison.
-- Projet Google Home actif : `dinatih-home-assistant`, créé et vérifié dans la
-  console Google Home. L’identifiant et le nom sont explicites.
-- L’ancien projet `finovndononv` est fermé et en attente de suppression définitive
-  après le 26 novembre 2026, selon la confirmation affichée par Google Cloud.
-- Le projet préparatoire `maison-home-assistant-512902` reste inutilisé : la console
-  Google Home ne le proposait pas à l’import. Il n’a pas été supprimé.
-- HomeGraph API activée sur `dinatih-home-assistant`, état « Enabled » vérifié.
-- Formulaire Cloud-to-cloud « Maison Home Assistant » préparé avec les URL HA
-  ci-dessous, les scopes `email`/`name`, les types Light/Fan/Blinds/TV et l’icône
-  Room-3D adaptée au format demandé. Enregistrement non effectué sur ce projet.
-- Le contrôle automatique exige un accord explicite pour enregistrer la chaîne
-  de remplissage `HomeAssistantLink` dans le champ Google « Client secret », malgré
-  la documentation HA qui précise que ce champ n’est pas utilisé.
-- Aucun compte de service ni clé JSON n’a été créé sur le nouveau projet. L’accord
-  IAM demandé pour l’ancien projet ne s’applique pas au nouveau ; l’attribution du
-  rôle `Service Account Token Creator` et la création/transmission d’une clé
-  nécessitent l’accord explicite demandé par le contrôle automatique.
-- La configuration HA et l’association téléphone ne sont pas encore finalisées.
-- Aucun abonnement, compte facturation ou service payant n’est activé par cette préparation.
+- Projet actif : **`dinatih-home-assistant`**, avec HomeGraph API activée.
+- Intégration Cloud-to-cloud **Maison Home Assistant** enregistrée dans la console
+  Google Home, avec les types Light/Fan/Blinds/TV et l’icône Room-3D adaptée.
+- Compte `home-assistant@dinatih-home-assistant.iam.gserviceaccount.com` créé avec
+  le rôle **Service Account Token Creator** sur ce seul projet, après autorisation
+  explicite de l’utilisateur. Attribution vérifiée dans IAM.
+- Clé JSON transférée par SSH vers
+  `/opt/homeassistant/config/google-home-service-account.json`, permissions `0600`.
+  Le fichier local dans Téléchargements est également en `0600`. Aucune clé ni
+  aucun jeton n’est présent dans le dépôt ou affiché dans la conversation.
+- Authentification Google validée depuis le conteneur HA avec le scope HomeGraph.
+- Configuration HA validée par `check_config`, puis HA redémarré avec succès.
+- Le point d’entrée HTTPS `/api/google_assistant` répond **405** en GET : c’est
+  attendu, Google lui adresse des requêtes POST authentifiées.
+- **Seule la lampe du couloir `light.entree_entree` est exposée pour le premier essai.**
+- L’association dans l’application Google Home reste à confirmer par l’utilisateur.
+- Aucun abonnement ou service payant n’a été souscrit pour cette installation.
 
-## Paramètres à renseigner dans Google Home Developer Console
+L’ancien projet `finovndononv` est fermé et programmé pour suppression définitive
+après le 26 novembre 2026. Le projet préparatoire `maison-home-assistant-512902`
+reste inutilisé et n’a pas été supprimé.
 
-Paramètres préparés dans le formulaire Cloud-to-cloud, à enregistrer après accord :
+## Associer le téléphone
+
+Avec le compte Google utilisé pour créer le projet :
+
+1. Ouvrir Google Home → Ajouter → Fonctionne avec Google Home.
+2. Choisir **[test] Maison Home Assistant**.
+3. Se connecter à HA et terminer l’autorisation, y compris la double authentification.
+4. Vérifier l’ajout de la lampe **Entrée**, provenant de ce service, puis sa pièce.
+5. Tester une commande vocale sur cette lampe avant d’exposer les autres appareils.
+
+Les liaisons Smart Life/Hue existantes peuvent produire un doublon pendant l’essai.
+Elles n’ont pas été supprimées. Un autre compte Google doit être ajouté comme
+membre du projet et suivre les étapes d’accès test de la documentation officielle.
+
+## Configuration et entretien
+
+Le fichier versionné [google-assistant.yaml](./google-assistant.yaml), sans secret,
+est copié dans `/opt/homeassistant/config/google-assistant.yaml`. Le fichier
+principal contient :
+
+```yaml
+google_assistant: !include google-assistant.yaml
+```
+
+Sauvegarde avant installation :
+`/opt/homeassistant/config/configuration.yaml.before-google-home-20261027-080531`.
+La clé privée est un fichier séparé, chargé par `!include` depuis le conteneur HA.
+Ne jamais la placer dans Room-3D, `/config/www` ou une variable `VITE_*`.
+
+Pour exposer un autre appareil, ajouter explicitement son entité dans
+`entity_config`, valider la configuration, redémarrer HA et demander une
+synchronisation Google. Omettre `name` et `room` pour utiliser les noms et pièces HA.
+Un pseudonyme personnalisé dans Google Home peut modifier le nom affiché.
+Le mode test Google peut demander une réactivation périodique.
+
+Le switch de simulation Room-3D ne suspend que la liaison de Room-3D : les commandes
+Google Home et les automatisations HA restent indépendantes.
+
+## Paramètres Google enregistrés
 
 | Champ | Valeur |
 | --- | --- |
 | OAuth Client ID | `https://oauth-redirect.googleusercontent.com/r/dinatih-home-assistant` |
-| Client secret | Chaîne alphanumérique ; HA n’utilise pas ce champ |
+| Client secret | Texte de remplissage autorisé ; non utilisé par HA |
 | Authorization URL | `https://ha.dinatih.org/auth/authorize` |
 | Token URL | `https://ha.dinatih.org/auth/token` |
 | Cloud fulfillment URL | `https://ha.dinatih.org/api/google_assistant` |
 | Scopes | `email`, `name` |
 
-Laisser désactivé l’envoi Client ID / secret via HTTP Basic.
-Dans ce même projet (HomeGraph API déjà activée), créer le compte de service selon la
-documentation HA et télécharger sa clé JSON. La clé doit être transférée
-confidentiellement vers `/opt/homeassistant/config/google-home-service-account.json`,
-avec accès restreint, sans être collée dans la conversation ni ajoutée au dépôt.
-
-## Configuration HA à installer une fois la clé disponible
-
-Fragment à fusionner dans `configuration.yaml` :
-
-```yaml
-google_assistant:
-  project_id: dinatih-home-assistant
-  service_account: !include google-home-service-account.json
-  report_state: true
-  expose_by_default: false
-  entity_config:
-    light.entree_entree:
-      expose: true
-```
-
-Commencer par le couloir, vérifier la configuration, redémarrer HA, puis associer
-`[test]` dans Google Home → Ajouter → Fonctionne avec Google Home.
-Après validation réelle, exposer explicitement les autres appareils désirés.
-Omettre `name` et `room` dans la configuration pour que HA fournisse ses noms et pièces.
-Un pseudonyme personnalisé dans Google Home peut empêcher l’affichage attendu du nom HA.
-Ne pas supprimer les liaisons Smart Life/Hue existantes avant validation : elles
-peuvent créer des doublons pendant cette phase de test.
-
-Le mode test Google peut demander une réactivation périodique ; ce montage sans
-abonnement demande donc un peu de maintenance.
+Envoi Client ID/secret via HTTP Basic, Local fulfillment et App Flip désactivés.
+Le nom et l’identifiant de projet restent identiques et explicites.
 
 Source : [procédure officielle Home Assistant](https://www.home-assistant.io/integrations/google_assistant/).
