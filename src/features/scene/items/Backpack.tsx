@@ -1,5 +1,5 @@
 /**
- * Backpack.tsx — Sac à dos procédural rouge, grand (32×43×17) et petit (29×39×15).
+ * Backpack.tsx — Sac à dos procédural rouge, 32×43×17 cm.
  * Coordonnées locales : centré XZ, Y=0 = sol.
  */
 import { useLayoutEffect, useRef } from 'react';
@@ -76,14 +76,4 @@ export function Backpack({ onSize }: SceneItemProps) {
     onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
   }, []);
   return <BackpackGeom W={32} H={43} D={17} groupRef={groupRef} />;
-}
-
-/** Petit sac à dos — 29×39×15 cm */
-export function BackpackSmall({ onSize }: SceneItemProps) {
-  const groupRef = useRef<THREE.Group>(null!);
-  useLayoutEffect(() => {
-    groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, []);
-  return <BackpackGeom W={29} H={39} D={15} groupRef={groupRef} />;
 }
