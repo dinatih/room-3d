@@ -156,7 +156,7 @@ export function BathroomFurnishings() {
 
       {/* Boîtes Drona sur meubles hauts SDB */}
       {Object.entries(BATHROOM_STORAGE_ITEMS).filter(([, item]) => item.kind === 'box').map(([id, item]) => (
-        <group key={id} name={id} position={item.position} rotation-y={item.rotationY} userData={{ skipMerge: true, sceneItemRoot: true, itemName: item.label, hoverAction: { label: item.label, actions: SMART_OBJECTS[id].slots.map(slot => `smart-object:::${id}:::${slot.slotId}`) } }}>
+        <group key={id} name={id} position={item.position} rotation-y={item.rotationY + Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: item.label, hoverAction: { label: item.label, actions: SMART_OBJECTS[id].slots.map(slot => `smart-object:::${id}:::${slot.slotId}`) } }}>
           <DroneCell />
         </group>
       ))}
