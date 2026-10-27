@@ -136,19 +136,9 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
   const [pm25State, setPm25State] = useState(8);
 
   const pm25Ref = useRef(8);
-  const timeSinceLastAqiUpdate = useRef(0);
   const timeSinceStateSync = useRef(0);
   const timeSinceScreenUpdate = useRef(0);
   const lastScreenDrawnState = useRef<{ power: boolean; mode: string; speed: number; pm25: number } | null>(null);
-
-  // Sync state values to refs for safe closure-free use inside useFrame
-  const powerRef = useRef(false);
-  const modeRef = useRef<string>('auto');
-  const speedRef = useRef(5);
-
-  useEffect(() => { powerRef.current = power; }, [power]);
-  useEffect(() => { modeRef.current = mode; }, [mode]);
-  useEffect(() => { speedRef.current = speed; }, [speed]);
 
   const remote = useHomeAssistant(state => isHomeAssistantLinked(state) && !isPreview);
   const entities = useHomeAssistant(state => state.entities);
@@ -468,8 +458,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
       ly = pillCenterY + yTop + Math.sin(angle) * (innerW / 2);
     }
 
-    const currentSpeed = speedRef.current;
-    const speedFactor = 15 + currentSpeed * 10;
+    const speedFactor = 15 + speed * 10;
     const lvx = (Math.random() - 0.5) * 5;
     const lvy = (Math.random() - 0.5) * 5;
     const lvz = speedFactor;
@@ -486,8 +475,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
     p.vy = lvy;
     p.vz = -lvx * sin + lvz * cos;
 
-    const currentMode = modeRef.current;
-    if (currentMode === 'heat' || currentMode === 'heating') {
+    if (mode === 'heat' || mode === 'heating') {
       const rVal = Math.random();
       if (rVal < 0.5) p.color.setHex(0xff3300);
       else if (rVal < 0.85) p.color.setHex(0xff7700);
@@ -498,7 +486,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
       else if (rVal < 0.85) p.color.setHex(0x5599ff);
       else p.color.setHex(0xffffff);
 
-      if (currentMode === 'sleep') {
+      if (mode === 'sleep') {
         p.color.multiplyScalar(0.4);
       }
     }
@@ -775,7 +763,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
     }
 
     // 2. Heater Glow Pulses
-    if (power && (mode === 'heat' || mode === 'heating')) {
+    if (mode === 'heat' || mode === 'heating') {
       const pulse = 0.6 + Math.sin(time * 3) * 0.25;
       matHeater.emissiveIntensity = pulse;
       if (heaterLightRef.current) {
@@ -797,47 +785,26 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
     }
 
     // 3. Screen status ring glow and pulse
-    if (power) {
-      const pulse = Math.sin(time * 4) * 1.5;
-      if (screenGlowLightRef.current) {
-        let glowColor = 0x0055ff;
-        if (pm25Ref.current > 12 && pm25Ref.current <= 35) glowColor = 0x60a5fa;
-        if (pm25Ref.current > 35 && pm25Ref.current <= 55) glowColor = 0xc084fc;
-        if (pm25Ref.current > 55) glowColor = 0xef4444;
+    const pulse = Math.sin(time * 4) * 1.5;
+    if (screenGlowLightRef.current) {
+      let glowColor = 0x0055ff;
+      if (pm25Ref.current > 12 && pm25Ref.current <= 35) glowColor = 0x60a5fa;
+      if (pm25Ref.current > 35 && pm25Ref.current <= 55) glowColor = 0xc084fc;
+      if (pm25Ref.current > 55) glowColor = 0xef4444;
 
-        screenGlowLightRef.current.color.setHex(glowColor);
-        screenGlowLightRef.current.intensity = 4.0 + pulse * 0.8;
-      }
-    } else {
-      if (screenGlowLightRef.current) {
-        screenGlowLightRef.current.intensity = THREE.MathUtils.lerp(
-          screenGlowLightRef.current.intensity,
-          0,
-          delta * 3.0
-        );
-      }
+      screenGlowLightRef.current.color.setHex(glowColor);
+      screenGlowLightRef.current.intensity = 4.0 + pulse * 0.8;
     }
 
     // 4. Update PM2.5 levels
-    if (power) {
-      if (!remote && pm25Ref.current > 8) {
-        pm25Ref.current = Math.max(8, pm25Ref.current - delta * (speed / 3));
-      }
+    if (!remote && pm25Ref.current > 8) {
+      pm25Ref.current = Math.max(8, pm25Ref.current - delta * (speed / 3));
+    }
 
-      // Spawn clean particles
-      const emissionRate = mode === 'sleep' ? 0.08 : (speed / 10) * 0.5;
-      if (Math.random() < emissionRate) {
-        emitCleanParticle();
-      }
-    } else {
-      // Dust accumulation over time when OFF
-      timeSinceLastAqiUpdate.current += delta;
-      if (!remote && timeSinceLastAqiUpdate.current > 8.0) {
-        timeSinceLastAqiUpdate.current = 0;
-        if (pm25Ref.current < 45) {
-          pm25Ref.current += 1;
-        }
-      }
+    // Spawn clean particles
+    const emissionRate = mode === 'sleep' ? 0.08 : (speed / 10) * 0.5;
+    if (Math.random() < emissionRate) {
+      emitCleanParticle();
     }
 
     // Spawn dirty particles if PM2.5 is high
@@ -859,18 +826,11 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
       lastState.speed !== speed ||
       lastState.pm25 !== roundedPm25;
 
-    if (!power) {
-      if (stateChanged) {
-        updateScreenTexture(time);
-        lastScreenDrawnState.current = { power, mode, speed, pm25: roundedPm25 };
-      }
-    } else {
-      // When ON, update on state change or throttle pulse animation to ~10 Hz (every 100ms)
-      if (stateChanged || timeSinceScreenUpdate.current >= 0.1) {
-        timeSinceScreenUpdate.current = 0;
-        updateScreenTexture(time);
-        lastScreenDrawnState.current = { power, mode, speed, pm25: roundedPm25 };
-      }
+    // When ON, update on state change or throttle pulse animation to ~10 Hz (every 100ms)
+    if (stateChanged || timeSinceScreenUpdate.current >= 0.1) {
+      timeSinceScreenUpdate.current = 0;
+      updateScreenTexture(time);
+      lastScreenDrawnState.current = { power, mode, speed, pm25: roundedPm25 };
     }
 
     // 7. Sync PM2.5 state occasionally to update hover label text
