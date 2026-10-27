@@ -65,7 +65,7 @@ export function KallaxSEDrona({ isPreview = false, actionState = {} }: { isPrevi
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean; noCaps?: boolean; isPreview?: boolean }) {
+export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean; noCaps?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
   const px = (-h1 / 2) + 3; // -20.5 : center the pivoted Kallax at X=0
 

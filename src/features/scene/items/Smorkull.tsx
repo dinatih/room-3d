@@ -4,12 +4,7 @@
  * Le GLB officiel IKEA est en mètres → scale ×100 pour la scène (1 unité = 1 cm).
  * Coordonnées locales : centré X/Z, Y=0 = sol.
  */
-import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
-import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneModelProps } from '@shared/types';
+import { createStaticGlbItem } from './createStaticGlbItem';
 
 // Largeur mesurée de l'assise (~52 cm), profondeur complète de la chaise (66 cm).
 export const SMORKULL_FOOTPRINT = [
@@ -17,25 +12,4 @@ export const SMORKULL_FOOTPRINT = [
   { x: 25.848, z: 33 }, { x: -25.894, z: 33 },
 ];
 
-const GLB = 'items/smorkull60503437/Smorkull60503437.glb';
-
-export function Smorkull({ onSize }: SceneModelProps) {
-  const { scene } = useGLTFClone(GLB);
-
-  useLayoutEffect(() => {
-    removeGlbLines(scene);
-    scene.scale.setScalar(100);
-    mergeGlbByMaterial(scene);
-    const box = glbLocalBBox(scene);
-    scene.position.set(
-      -(box.min.x + box.max.x) / 2,
-      -box.min.y,
-      -(box.min.z + box.max.z) / 2,
-    );
-    onSize?.(box.getSize(new THREE.Vector3()));
-  }, [scene]);
-
-  return <primitive object={scene} />;
-}
-
-useGLTF.preload(GLB);
+export const Smorkull = createStaticGlbItem('items/smorkull60503437/Smorkull60503437.glb');

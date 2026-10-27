@@ -75,7 +75,7 @@ export function KallaxCuisineDrona({ isPreview = false, actionState = {} }: { is
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxCuisine({ onSize, actionState, noDrona, isPreview = false }: SceneItemProps & { noDrona?: boolean; isPreview?: boolean }) {
+export function KallaxCuisine({ onSize, actionState, noDrona, isPreview = false }: SceneItemProps & { noDrona?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {

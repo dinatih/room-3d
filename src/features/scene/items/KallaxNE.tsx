@@ -84,7 +84,7 @@ export function KallaxNEDrona({ isPreview = false, actionState = {} }: { isPrevi
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxNE({ onSize, noDrona, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean; isPreview?: boolean }) {
+export function KallaxNE({ onSize, noDrona, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {

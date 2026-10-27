@@ -93,7 +93,7 @@ export function KallaxNWMannequins() {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean; noMannequins?: boolean; isPreview?: boolean }) {
+export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean; noMannequins?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
   const px = -h1 / 2; // -20.5 : center the pivoted Kallax at X=0
 

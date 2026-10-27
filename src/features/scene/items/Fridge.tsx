@@ -17,7 +17,7 @@ export const FRIDGE_LOCAL_POSITION: [number, number, number] = [70, 0, 30];
 export const FRIDGE_DOOR_DURATION = (Math.PI / 2) / (2 * Math.atan2(0.9130040407180786, 0.40795058012008667));
 export const FRIDGE_CRISPER_DURATION = 1;
 
-export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProps & { isPreview?: boolean }) {
+export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProps) {
   const { scene, animations } = useGLTFClone(GLB, true);
   const sceneOpen = useSceneStore(s => s.furniture.fridge);
   const sceneCrisper = useSceneStore(s => s.extraStates['fridge-crisper-toggle']);

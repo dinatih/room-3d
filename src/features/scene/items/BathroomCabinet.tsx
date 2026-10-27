@@ -25,7 +25,7 @@ const DOOR_GLB   = 'items/ringhult60327137/Ringhult60327137-40x60.glb';
 const HANDLE_GLB = 'items/kallror50357002/Kallror50357002.glb';
 
 function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey, hoverLabel, hoverObjectId, isPreview = false }:
-  SceneItemProps & { mirrorHandle?: boolean; openKey: 'cbnWest' | 'cbnEast'; hoverLabel: string; hoverObjectId: string; isPreview?: boolean }) {
+  SceneItemProps & { mirrorHandle?: boolean; openKey: 'cbnWest' | 'cbnEast'; hoverLabel: string; hoverObjectId: string }) {
 
   const { scene }         = useGLTFClone(GLB);
   const { scene: door }   = useGLTFClone(DOOR_GLB);
@@ -134,10 +134,10 @@ useGLTF.preload(GLB);
 useGLTF.preload(DOOR_GLB);
 useGLTF.preload(HANDLE_GLB);
 
-export function BathroomCabinetWest(props: SceneItemProps & { isPreview?: boolean }) {
+export function BathroomCabinetWest(props: SceneItemProps) {
   return <MetodCabinet {...props} openKey="cbnWest" hoverLabel="Armoire SDB Ouest" hoverObjectId="bathroom-cabinet-west" />;
 }
 
-export function BathroomCabinetEast(props: SceneItemProps & { isPreview?: boolean }) {
+export function BathroomCabinetEast(props: SceneItemProps) {
   return <MetodCabinet {...props} mirrorHandle openKey="cbnEast" hoverLabel="Armoire SDB Est" hoverObjectId="bathroom-cabinet-east" />;
 }
