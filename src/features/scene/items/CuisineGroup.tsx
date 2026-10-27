@@ -78,17 +78,17 @@ export function CuisineLillhavet() {
   return (
     <group position={[18, 155, 34]} rotation={[0, Math.PI - Math.PI / 4 - Math.PI / 8, 0]}>
       <Lillhavet80461276 />
-      <group position={[15.5, 11, 0]}>
-        <group position={[1, 0, 2]} rotation={[Math.PI / 2 + 0.1, 0.2, 0.1]}><Snitta00287295 /></group>
-        <group position={[-1, 0, -2]} rotation={[Math.PI / 2 - 0.1, -0.3, 0.1]}><Snitta00287295 /></group>
-        <group position={[1.5, 0, -1]} rotation={[Math.PI / 2 + 0.15, 0.5, -0.1]}><Fornuft40428482 /></group>
-        <group position={[-1.5, 0, 1]} rotation={[Math.PI / 2 - 0.1, 0.4, 0.15]}><Fornuft40428482 /></group>
-        <group position={[0, 0, 2.5]} rotation={[Math.PI / 2 + 0.05, -0.2, 0.1]}><Fornuft10428488 /></group>
-        <group position={[0, 0, -2.5]} rotation={[Math.PI / 2 - 0.05, 0.2, -0.1]}><Fornuft10428488 /></group>
-        <group position={[1.5, 0, 0]} rotation={[Math.PI / 2 + 0.1, 0.3, 0.05]}><Fornuft90428489 /></group>
-        <group position={[-1.5, 0, 0]} rotation={[Math.PI / 2 - 0.1, -0.2, -0.05]}><Fornuft90428489 /></group>
-        <group position={[0.5, 0, 1]} rotation={[Math.PI / 2 + 0.12, 0.1, 0.08]}><Fornuft80428475 /></group>
-        <group position={[-0.5, 0, -1]} rotation={[Math.PI / 2 - 0.12, -0.1, -0.08]}><Fornuft80428475 /></group>
+      <group position={[15.5, 0, 0]}>
+        <group position={[0.2, 12.2, -3.5]} rotation={[Math.PI / 2 + 0.12, 0, 0.02]}><Snitta00287295 /></group>
+        <group position={[-0.2, 12.2, -2.0]} rotation={[Math.PI / 2 + 0.08, 0, -0.02]}><Snitta00287295 /></group>
+        <group position={[0.1, 11.0, -0.5]} rotation={[Math.PI / 2 + 0.03, 0, 0.01]}><Fornuft40428482 /></group>
+        <group position={[-0.1, 11.0, 0.8]} rotation={[Math.PI / 2 - 0.04, 0, -0.01]}><Fornuft40428482 /></group>
+        <group position={[0.2, 11.7, 2.2]} rotation={[Math.PI / 2 - 0.09, 0, 0.02]}><Fornuft10428488 /></group>
+        <group position={[-0.2, 11.7, 3.5]} rotation={[Math.PI / 2 - 0.13, 0, -0.02]}><Fornuft10428488 /></group>
+        <group position={[0, 10.7, -4.0]} rotation={[Math.PI / 2 + 0.10, 0, 0]}><Fornuft90428489 /></group>
+        <group position={[0, 10.7, 4.0]} rotation={[Math.PI / 2 - 0.10, 0, 0]}><Fornuft90428489 /></group>
+        <group position={[0.1, 8.5, -1.2]} rotation={[Math.PI / 2 + 0.05, 0, 0.01]}><Fornuft80428475 /></group>
+        <group position={[-0.1, 8.5, 1.5]} rotation={[Math.PI / 2 - 0.06, 0, -0.01]}><Fornuft80428475 /></group>
       </group>
     </group>
   );
