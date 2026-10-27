@@ -1,17 +1,29 @@
 import { useEffect, useId, useState } from 'react';
+import { entityAvailable } from './appliances';
+import { ApplianceControls } from './ApplianceControls';
 import { cameraState } from '../scene/cameraState';
 import { useSceneStore } from '../scene/store/useSceneStore';
 import { connectHomeAssistant, disconnectHomeAssistant, resumeHomeAssistant, stopHomeAssistant, useHomeAssistant, LIGHTS, LIGHT_KEYS } from './connection';
 
 export function HomeAssistantSync() {
   useEffect(() => {
-    const unsubscribe = useHomeAssistant.subscribe(({ enabled, lights }) => {
+    const unsubscribe = useHomeAssistant.subscribe(({ enabled, lights, entities }) => {
       if (!enabled) return;
       const furniture = { ...useSceneStore.getState().furniture };
       let changed = false;
       for (const key of LIGHT_KEYS) {
         const on = lights[key].on;
         if (on !== null && furniture[key] !== on) { furniture[key] = on; changed = true; }
+      }
+      const cover = entities['cover.volet'];
+      if (entityAvailable(cover) && typeof cover.attributes.current_position === 'number') {
+        const closed = 100 - cover.attributes.current_position;
+        if (furniture.glassDoorV2ShutterPos !== closed) { furniture.glassDoorV2ShutterPos = closed; changed = true; }
+      }
+      const tv = entities['media_player.tele'];
+      if (entityAvailable(tv)) {
+        const on = tv.state !== 'off' && tv.state !== 'standby';
+        if (furniture.tvOn !== on) { furniture.tvOn = on; changed = true; }
       }
       if (changed) {
         useSceneStore.setState({ furniture });
@@ -36,16 +48,17 @@ export function HomeAssistantPanel() {
           {status === 'connected' ? 'Connecté' : status === 'connecting' ? 'Connexion en cours…' : status === 'reconnecting' ? 'Reconnexion en cours…' : 'Connexion en erreur'}
         </div>
         {LIGHT_KEYS.map(key => <div key={key} className="mb-1">
-          {LIGHTS[key].label} · {status !== 'connected' ? 'État périmé' : !lights[key].available ? 'Indisponible' : lights[key].on ? 'Allumée' : 'Éteinte'}
+          {lights[key].name ?? LIGHTS[key].label} · {status !== 'connected' ? 'État périmé' : !lights[key].available ? 'Indisponible' : lights[key].on ? 'Allumée' : 'Éteinte'}
           {lights[key].pending && ' · Commande en cours…'}
           {lights[key].error && <div role="alert" className="text-danger">{lights[key].error}</div>}
         </div>)}
+        <ApplianceControls />
         <button className="btn btn-sm btn-outline-secondary" onClick={disconnectHomeAssistant}>Déconnecter Home Assistant</button>
       </> : <form onSubmit={event => { event.preventDefault(); void connectHomeAssistant(url); }}>
         <label className="form-label mb-1" htmlFor={inputId}>Adresse de Home Assistant</label>
         <input id={inputId} className="form-control form-control-sm mb-2" type="url" required value={url} onChange={event => setUrl(event.target.value)} />
         <button className="btn btn-sm btn-primary" type="submit">Connecter Home Assistant</button>
-        <div className="text-muted mt-1">Sans connexion : simulation. La connexion permet de commander les vrais éclairages associés.</div>
+        <div className="text-muted mt-1">Sans connexion : simulation. La connexion permet de commander les équipements réels associés.</div>
       </form>}
       {error && <div role="alert" className="text-danger mt-2">{error}</div>}
     </div>

@@ -17,6 +17,12 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     context: {}, last_changed: new Date().toISOString(), last_updated: new Date().toISOString(),
   }]));
   entities['light.principale_porte'] = { ...entities['light.porte'], entity_id: 'light.principale_porte', state: 'on' };
+  for (const [id, state, attributes] of [
+    ['fan.living_room', 'off', { supported_features: 57, percentage: 20, percentage_step: 10 }],
+    ['select.living_room_function', 'heating', { options: ['fan', 'circulation', 'heating'] }],
+    ['cover.volet', 'open', { supported_features: 7, current_position: 50 }],
+    ['media_player.tele', 'on', { supported_features: 384 }],
+  ]) entities[id] = { entity_id: id, state, attributes };
   const calls = [];
   const subscriptions = new Map();
   const server = new WebSocketServer({ host: '127.0.0.1', port: 0 });
@@ -151,16 +157,48 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     });
     assert.equal((await read('lampOn')).on, false, 'Graphics controls must not overwrite the real OLA state');
     assert.equal(calls.length, 5);
+    assert.equal(await page.evaluate(() => window.haTest.useSceneStore.getState().furniture.glassDoorV2ShutterPos), 50);
+    assert.equal(await page.evaluate(() => window.haTest.useSceneStore.getState().furniture.tvOn), true);
+    assert(await disabled('Arrêter volet'));
+    publish('light.entree_entree', 'on', { friendly_name: 'Couloir renommé' });
+    await page.waitForFunction(() => [...document.querySelectorAll('button')].some(button => button.textContent.includes('Couloir renommé')));
+    await page.select('select[aria-label="Fonction du purificateur"]', 'circulation');
+    await page.waitForFunction(() => !window.haTest.useHomeAssistant.getState().applianceCommands.airPerformerMode?.pending);
+    assert.equal(calls.at(-1).domain, 'select');
+    assert.equal(calls.at(-1).service, 'select_option');
+    assert.deepEqual(calls.at(-1).service_data, { entity_id: 'select.living_room_function', option: 'circulation' });
+    for (const [label, domain, service, data] of [
+      ['Marche / arrêt purificateur', 'fan', 'turn_on', { entity_id: 'fan.living_room' }],
+      ['Vitesse suivante', 'fan', 'set_percentage', { entity_id: 'fan.living_room', percentage: 30 }],
+      ['Fermer volet', 'cover', 'set_cover_position', { entity_id: 'cover.volet', position: 0 }],
+      ['Marche / arrêt télévision', 'media_player', 'turn_off', { entity_id: 'media_player.tele' }],
+    ]) {
+      const before = calls.length;
+      await page.evaluate(label => [...document.querySelectorAll('button')].find(button => button.textContent.includes(label)).click(), label);
+      await page.waitForFunction(() => !Object.values(window.haTest.useHomeAssistant.getState().applianceCommands).some(command => command.pending));
+      assert.equal(calls.length, before + 1);
+      assert.equal(calls.at(-1).domain, domain);
+      assert.equal(calls.at(-1).service, service);
+      assert.deepEqual(calls.at(-1).service_data, data);
+    }
+    assert.equal(await page.evaluate(() => window.haTest.useSceneStore.getState().furniture.glassDoorV2ShutterPos), 50, 'Cover waits for HA confirmation');
+    publish('cover.volet', 'open', { supported_features: 7, current_position: 25 });
+    await page.waitForFunction(() => window.haTest.useSceneStore.getState().furniture.glassDoorV2ShutterPos === 75);
+    const expectedCalls = calls.length;
+    for (const key of ['airPerformerPower', 'airPerformerMode', 'airPerformerSpeed', 'tv-toggle', 'glassDoorV2ShutterPos']) {
+      await page.evaluate(key => window.haTest.useSceneStore.getState().triggerAction(key), key);
+    }
+    assert.equal(calls.length, expectedCalls, 'NPC actions must never command real appliances');
     accepting = false;
     for (const ws of server.clients) ws.terminate();
     await page.waitForFunction(() => window.haTest.useHomeAssistant.getState().status === 'reconnecting');
     for (const light of lights) await page.evaluate(key => window.haTest.useSceneStore.getState().toggleFurniture(key), light.key);
-    assert.equal(calls.length, 5, 'Offline commands must not be queued');
-    for (const entity of Object.values(entities)) { entity.state = 'off'; entity.attributes = {}; }
+    assert.equal(calls.length, expectedCalls, 'Offline commands must not be queued');
+    for (const light of lights) { entities[light.entity].state = 'off'; entities[light.entity].attributes = {}; }
     accepting = true;
     await page.waitForFunction(() => window.haTest.useHomeAssistant.getState().status === 'connected', { timeout: 30000 });
     for (const light of lights) assert.equal((await read(light.key)).on, false, 'Reconnect must refresh every light');
-    assert.equal(calls.length, 5, 'Reconnect must not replay commands');
+    assert.equal(calls.length, expectedCalls, 'Reconnect must not replay commands');
     await page.evaluate(() => [...document.querySelectorAll('button')].find(button => button.textContent.includes('Déconnecter Home Assistant')).click());
     await page.waitForFunction(() => !window.haTest.useHomeAssistant.getState().enabled);
     assert.equal(await page.evaluate(() => sessionStorage.getItem('room3d.ha.auth')), null);
@@ -168,10 +206,10 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
       await page.evaluate(key => window.haTest.useSceneStore.getState().toggleFurniture(key), light.key);
       assert.equal((await read(light.key)).on, true, 'Simulation must work after disconnect');
     }
-    assert.equal(calls.length, 5);
+    assert.equal(calls.length, expectedCalls);
     await page.evaluate(() => window.haTest.unmount());
     assert.deepEqual(errors, []);
-    console.log('PASS: OAuth callback cleanup, reload with token refresh, four lights, independent availability, state/color sync, user/NPC separation, graphics isolation, reconnect without replay and simulation');
+    console.log('PASS: OAuth reload, four lights, HA names, purifier, shutter position, TV, user/NPC separation, reconnect without replay and simulation');
   } finally {
     if (browser) await browser.close();
     for (const ws of server.clients) ws.terminate();

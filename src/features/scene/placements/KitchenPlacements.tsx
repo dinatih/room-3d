@@ -90,7 +90,7 @@ export function KitchenTrashBin() {
 export function KitchenFurnishings() {
   const as = useFurnitureToggles(['lamp-kitchen-toggle']);
   const lightsHD = useSceneStore(state => state.layers.lightsHD);
-  const { color, brightness } = useLightAppearance('lampKitchen', 0xfff5e6);
+  const { name, color, brightness } = useLightAppearance('lampKitchen', 0xfff5e6);
   const isKitchenLampOn = Boolean(as['lamp-kitchen-toggle']);
 
   return (
@@ -157,7 +157,7 @@ export function KitchenFurnishings() {
           skipMerge: true,
           animUnit: true,
           itemName: 'KÖLVATTEN éclairage LED avec capteur',
-          hoverAction: { label: 'Barre · Cuisine', actions: getObjectActionIds('kolvatten00594176') },
+          hoverAction: { label: name ?? 'Barre · Cuisine', actions: getObjectActionIds('kolvatten00594176') },
         }}
       >
         <Kolvatten00594176 item={stub('kolvatten00594176')} actionState={{ on: isKitchenLampOn, lightColor: color, brightness }} onSize={NOOP_SIZE} />

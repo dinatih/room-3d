@@ -1,6 +1,6 @@
 import { getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
-import { isHomeAssistantLight, setHomeAssistantLight, useHomeAssistant } from '../../home-assistant/connection';
+import { isHomeAssistantAction, requestHomeAssistantAction, useHomeAssistant } from '../../home-assistant/connection';
 import { cameraState } from '@features/scene/cameraState';
 import type { ArrowControl, CameraMovement, CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
 import {
@@ -610,8 +610,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   toggleFurniture: (key) => {
-    if (isHomeAssistantLight(key) && useHomeAssistant.getState().enabled) {
-      void setHomeAssistantLight(key);
+    if (isHomeAssistantAction(key) && useHomeAssistant.getState().enabled) {
+      const value = key === 'glassDoorV2ShutterPos' ? getNextActionValue(key, useSceneStore.getState().furniture[key]) : undefined;
+      void requestHomeAssistantAction(key, value);
       return;
     }
     if (key === 'fridge') {
@@ -827,8 +828,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
 
   triggerAction: (key, targetState, source) => {
     const lightKey = resolveStoreKey(key).name;
-    if (isHomeAssistantLight(lightKey) && useHomeAssistant.getState().enabled) {
-      if (source === 'user') void setHomeAssistantLight(lightKey, targetState);
+    if (isHomeAssistantAction(lightKey) && useHomeAssistant.getState().enabled) {
+      if (source === 'user') {
+        const value = lightKey === 'glassDoorV2ShutterPos' ? getNextActionValue(lightKey, useSceneStore.getState().furniture[lightKey]) : targetState;
+        void requestHomeAssistantAction(lightKey, value);
+      }
       return;
     }
     if (key === 'fridge' || key === 'fridge-crisper-toggle') {

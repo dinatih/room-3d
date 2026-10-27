@@ -6,7 +6,7 @@ import { dispatchKey, type FurnitureState } from '../types';
 import type { PlaneModelKey } from '@features/scene/PaperPlane';
 import { getActionLabel } from '../../objectActionRegistry';
 import { HomeAssistantPanel } from '../../../home-assistant/HomeAssistant';
-import { isHomeAssistantLight, isLightControlDisabled, useHomeAssistant } from '../../../home-assistant/connection';
+import { isHomeAssistantLight, isHomeAssistantControlDisabled, useHomeAssistant } from '../../../home-assistant/connection';
 
 export interface InteractiveSectionProps {
   isMobile: boolean;
@@ -55,9 +55,8 @@ export function InteractiveSection({
     return (
       <button 
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
-        onClick={() => {
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: actionKey } }));
-        }}
+        disabled={isHomeAssistantControlDisabled(actionKey, ha)}
+        onClick={() => triggerAction(actionKey, undefined, 'user')}
       >
         <span>{label}</span>
         <span className="badge bg-secondary">
@@ -80,13 +79,13 @@ export function InteractiveSection({
     return (
       <button 
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
-        disabled={isLightControlDisabled(key, ha)}
+        disabled={isHomeAssistantControlDisabled(key, ha)}
         onClick={() => toggleFurniture(key)}
         style={{ 
           opacity: isOn ? 1 : 0.55,
         }}
       >
-        <span>{label}</span>
+        <span>{isHomeAssistantLight(key) && ha.enabled ? ha.lights[key].name ?? label : label}</span>
         <span className={`badge ${isOn ? 'bg-danger' : 'bg-secondary'}`}>
           {unavailable ? 'INDISPONIBLE' : displayValue ? displayValue(val) : (isOn ? txtOn : txtOff)}
         </span>

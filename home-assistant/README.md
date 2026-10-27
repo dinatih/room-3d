@@ -81,7 +81,29 @@ Les modèles géométriques existants sont conservés. Les couleurs et luminosit
 reçues pilotent les sources lumineuses et les matériaux émissifs des lampes.
 Les previews ne lisent pas la connexion HA et gardent leurs matériaux propres.
 Le réglage graphique `lightsHD` ne remplace pas l’état de l’OLA en mode connecté.
-Les autres appareils ne sont pas encore associés à Home Assistant.
+Le purificateur, le volet et la télévision sont aussi associés :
+
+| Objet | Entité | Commandes |
+| --- | --- | --- |
+| Philips Air Performer AMF870/15 | `fan.living_room` | Marche/arrêt, vitesse selon le pas HA |
+| Fonction Philips | `select.living_room_function` | `fan`, `circulation`, `heating` selon les options HA |
+| Volet | `cover.volet` | Ouverture/fermeture, positions du menu 3D |
+| Télé Android TV | `media_player.tele` | Marche/arrêt |
+
+La télévision a été appairée avec Android TV Remote dans HA ; `remote.tele` existe
+également, mais ses touches ne sont pas encore exposées dans Room-3D.
+Le volet HA indique un pourcentage **ouvert**, converti en pourcentage **fermé**
+pour la scène. L’arrêt est désactivé car cette intégration n’annonce pas cette capacité.
+Les valeurs et commandes du purificateur remplacent la simulation en mode connecté,
+y compris les PM2.5 et la consigne de température lorsqu’elles sont disponibles.
+Les particules et l’oscillation restent des animations, sans mesure physique associée.
+L’écran TV indique son alimentation ; son image reste locale, sans capture du téléviseur.
+Les commandes restent réservées à l’utilisateur, sans mise à jour anticipée ni rejeu.
+Les essais physiques de ces trois appareils depuis Room-3D restent à effectuer.
+
+Les noms HA des lampes suivent automatiquement les événements d’état dans le panneau
+et les interactions. Les identifiants techniques restent fixes : changer un `entity_id`
+nécessite de mettre à jour l’association. Voir [la synchronisation des noms](./name-sync.md).
 
 ## Points d’intégration
 
@@ -121,6 +143,8 @@ graphiques de l’OLA, la synchronisation initiale, les clics utilisateur sans m
 à jour anticipée, l’exclusion des ordres PNJ et les retours
 marche/arrêt/couleur/luminosité, une entité indisponible, la coupure réseau, la
 reconnexion sans commande rejouée, la déconnexion et le retour à la simulation.
+Il vérifie aussi les commandes du purificateur, du volet et de la télévision,
+la conversion de position et le renommage automatique des libellés HA.
 Aucun appareil réel n’est commandé par ce test automatique.
 
 L’essai de bout en bout depuis Room-3D a été confirmé sur le couloir. La salle

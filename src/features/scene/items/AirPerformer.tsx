@@ -1,3 +1,5 @@
+import { useHomeAssistant } from '../../home-assistant/connection';
+import { entityAvailable } from '../../home-assistant/appliances';
 import { getNextActionValue } from '../objectActionRegistry';
 import { getObjectActionIds } from '../objectActions';
 /**
@@ -128,9 +130,9 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
 
   // ── States & Refs for configuration ────────────────────────────────────────
   const [power, setPower] = useState(false);
-  const [mode, setMode] = useState<'auto' | 'cool' | 'heat' | 'sleep'>('auto');
+  const [mode, setMode] = useState<string>('auto');
   const [speed, setSpeed] = useState(5);
-  const [targetTemp] = useState(25);
+  const [targetTemp, setTargetTemp] = useState(25);
   const [pm25State, setPm25State] = useState(8);
 
   const pm25Ref = useRef(8);
@@ -141,12 +143,33 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
 
   // Sync state values to refs for safe closure-free use inside useFrame
   const powerRef = useRef(false);
-  const modeRef = useRef<'auto' | 'cool' | 'heat' | 'sleep'>('auto');
+  const modeRef = useRef<string>('auto');
   const speedRef = useRef(5);
 
   useEffect(() => { powerRef.current = power; }, [power]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
   useEffect(() => { speedRef.current = speed; }, [speed]);
+
+  const remote = useHomeAssistant(state => state.enabled && !isPreview);
+  const entities = useHomeAssistant(state => state.entities);
+  useEffect(() => {
+    if (!remote) return;
+    const fan = entities['fan.living_room'];
+    if (entityAvailable(fan)) {
+      setPower(fan.state === 'on');
+      if (typeof fan.attributes.percentage === 'number') setSpeed(fan.attributes.percentage / 10);
+    }
+    const functionEntity = entities['select.living_room_function'];
+    if (entityAvailable(functionEntity)) setMode(functionEntity.state);
+    const pm = entities['sensor.living_room_pm2_5'];
+    if (entityAvailable(pm) && Number.isFinite(Number(pm.state))) {
+      pm25Ref.current = Number(pm.state);
+      setPm25State(Number(pm.state));
+    }
+    const temperature = entities['number.living_room_temperature'];
+    if (entityAvailable(temperature) && Number.isFinite(Number(temperature.state))) setTargetTemp(Number(temperature.state));
+    invalidate();
+  }, [remote, entities, invalidate]);
 
   // Bounding box registration
   useLayoutEffect(() => {
@@ -156,7 +179,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
 
   // ── Event Listener for HoverMenu actions ───────────────────────────────────
   useEffect(() => {
-    if (isPreview) return;
+    if (isPreview || remote) return;
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent<{ key: string }>).detail;
       if (key === 'airPerformerPower') {
@@ -172,7 +195,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate, isPreview]);
+  }, [invalidate, isPreview, remote]);
 
   useEffect(() => {
     if (!isPreview) return;
@@ -345,9 +368,9 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
       // Mode text
       ctx.fillStyle = '#ffffff';
       ctx.font = '600 20px sans-serif';
-      let subText = 'Auto';
-      if (mode === 'cool') subText = `VENTIL • ${speed}`;
-      if (mode === 'heat') subText = `🔥 ${targetTemp}°C`;
+      let subText = remote ? mode.toUpperCase() : 'Auto';
+      if (mode === 'cool' || mode === 'fan') subText = `VENTIL • ${speed}`;
+      if (mode === 'heat' || mode === 'heating') subText = `🔥 ${targetTemp}°C`;
       if (mode === 'sleep') subText = '💤 SOMMEIL';
       ctx.fillText(subText, 128, 198);
 
@@ -377,6 +400,11 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
 
     screenTexture.needsUpdate = true;
   };
+
+  useEffect(() => {
+    updateScreenTexture(0);
+    invalidate();
+  }, [power, mode, speed, targetTemp, pm25State, remote, invalidate]);
 
   // ── Particle System ────────────────────────────────────────────────────────
   const maxParticles = 250;
@@ -459,7 +487,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
     p.vz = -lvx * sin + lvz * cos;
 
     const currentMode = modeRef.current;
-    if (currentMode === 'heat') {
+    if (currentMode === 'heat' || currentMode === 'heating') {
       const rVal = Math.random();
       if (rVal < 0.5) p.color.setHex(0xff3300);
       else if (rVal < 0.85) p.color.setHex(0xff7700);
@@ -747,7 +775,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
     }
 
     // 2. Heater Glow Pulses
-    if (power && mode === 'heat') {
+    if (power && (mode === 'heat' || mode === 'heating')) {
       const pulse = 0.6 + Math.sin(time * 3) * 0.25;
       matHeater.emissiveIntensity = pulse;
       if (heaterLightRef.current) {
@@ -792,7 +820,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
 
     // 4. Update PM2.5 levels
     if (power) {
-      if (pm25Ref.current > 8) {
+      if (!remote && pm25Ref.current > 8) {
         pm25Ref.current = Math.max(8, pm25Ref.current - delta * (speed / 3));
       }
 
@@ -804,7 +832,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
     } else {
       // Dust accumulation over time when OFF
       timeSinceLastAqiUpdate.current += delta;
-      if (timeSinceLastAqiUpdate.current > 8.0) {
+      if (!remote && timeSinceLastAqiUpdate.current > 8.0) {
         timeSinceLastAqiUpdate.current = 0;
         if (pm25Ref.current < 45) {
           pm25Ref.current += 1;

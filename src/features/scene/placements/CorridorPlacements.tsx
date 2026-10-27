@@ -72,7 +72,7 @@ const TOTAL_CYCLE_DURATION = CORRIDOR_LIGHT_COLORS.length * DURATION_PER_COLOR; 
 const _tempColor = new THREE.Color();
 
 function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) {
-  const { remote, color, brightness } = useLightAppearance('lampCorridor', 0xfff2d6);
+  const { remote, name, color, brightness } = useLightAppearance('lampCorridor', 0xfff2d6);
   const lightRef = useRef<THREE.PointLight>(null);
   const bulbGroupRef = useRef<THREE.Group>(null);
   const emissiveMatsRef = useRef<THREE.MeshStandardMaterial[]>([]);
@@ -133,7 +133,7 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
         skipMerge: true,
         animUnit: true,
         itemName: 'Lampe du couloir',
-        hoverAction: { label: 'Lampe du couloir', actions: getObjectActionIds('tradfri-bulb-couloir') },
+        hoverAction: { label: name ?? 'Lampe du couloir', actions: getObjectActionIds('tradfri-bulb-couloir') },
       }}
     >
       <TradfriBulb item={stub('tradfri-bulb-couloir')} actionState={{ on: isOn }} onSize={NOOP_SIZE} />

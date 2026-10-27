@@ -19,7 +19,7 @@ import { OccupancyManager } from './ai/occupancyManager';
 import { isCharacterVisibleInMode } from './characterConfig';
 
 import { getActionDef, getActionLabel, type ActionDef } from './objectActionRegistry';
-import { isLightControlDisabled, useHomeAssistant } from '../home-assistant/connection';
+import { isHomeAssistantControlDisabled, useHomeAssistant } from '../home-assistant/connection';
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
   let cur: THREE.Object3D | null = obj;
@@ -615,7 +615,7 @@ export function HoverOverlay() {
             return (
               <button
                 key={i}
-                disabled={isLightControlDisabled(resolveStoreKey(action.id).name, ha)}
+                disabled={isHomeAssistantControlDisabled(resolveStoreKey(action.id).name, ha)}
                 className="btn btn-sm btn-outline-warning py-0 px-2 fw-semibold"
                 onClick={async () => {
                   if (action.id.startsWith('select-character-')) {

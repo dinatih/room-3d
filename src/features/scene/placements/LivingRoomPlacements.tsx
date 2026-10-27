@@ -399,7 +399,7 @@ function AirPerformer_() {
 }
 
 function LampOla_() {
-  const { color, brightness } = useLightAppearance('lampOn', 0xfff2dc);
+  const { name, color, brightness } = useLightAppearance('lampOn', 0xfff2dc);
   const as = useFurnitureToggles(['lamp-toggle']);
   const lampOn = !!as['lamp-toggle'];
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
@@ -407,7 +407,7 @@ function LampOla_() {
 
   return (
     <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
-      userData={{ skipMerge: true, animUnit: true, itemName: 'Lumière Séjour (OLA)', hoverAction: { label: 'Lumière Séjour (OLA)', actions: getObjectActionIds('lamp-ola') } }}>
+      userData={{ skipMerge: true, animUnit: true, itemName: 'Lumière Séjour (OLA)', hoverAction: { label: name ?? 'Lumière Séjour (OLA)', actions: getObjectActionIds('lamp-ola') } }}>
       <LampOla item={NOOP_ITEM} actionState={{ on: lampOn, lightColor: color, brightness }} onSize={NOOP_SIZE} />
       <object3D ref={setTargetObj} position={[0, 250, 15]} />
       {targetObj && (

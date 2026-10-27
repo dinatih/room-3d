@@ -38,7 +38,7 @@ const TOILET_FOOTPRINT = [
 ];
 
 export function BathroomEquipment() {
-  const { color, brightness } = useLightAppearance('lampBath', 0xfff5e6);
+  const { name, color, brightness } = useLightAppearance('lampBath', 0xfff5e6);
   const as = useFurnitureToggles([
     'lamp-bath-toggle',
     'sdbClosetL',
@@ -71,7 +71,7 @@ export function BathroomEquipment() {
       <group
         position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2, WALL_H - 10, (BATH_NORTH_WALL + BATH_SOUTH_WALL) / 2]}
         rotation={[Math.PI, 0, 0]}
-        userData={{ skipMerge: true, animUnit: true, itemName: 'Lumière Salle de bain', hoverAction: { label: 'Lumière Salle de bain', actions: getObjectActionIds('tradfri-bulb-sdb') } }}
+        userData={{ skipMerge: true, animUnit: true, itemName: 'Lumière Salle de bain', hoverAction: { label: name ?? 'Lumière Salle de bain', actions: getObjectActionIds('tradfri-bulb-sdb') } }}
       >
         <TradfriBulb item={stub('tradfri-bulb-sdb')} actionState={{ on: !!as['lamp-bath-toggle'], lightColor: color, brightness }} onSize={NOOP_SIZE} />
         <pointLight

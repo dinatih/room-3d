@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { APPLIANCES, APPLIANCE_ENTITIES, applianceAvailable, applianceCommand, isApplianceAction, type ApplianceAction } from './appliances';
 import { callService, createConnection, getAuth, getStates, ERR_INVALID_AUTH } from 'home-assistant-js-websocket';
 import type { Connection, HassEntity, AuthData, StateChangedEvent } from 'home-assistant-js-websocket';
 
@@ -15,6 +16,7 @@ const TOKEN_KEY = 'room3d.ha.auth';
 const ENABLED_KEY = 'room3d.ha.enabled';
 
 export interface LightState {
+  name: string | null;
   on: boolean | null;
   available: boolean;
   pending: boolean;
@@ -26,17 +28,22 @@ interface HomeAssistantState {
   enabled: boolean;
   status: 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
   lights: Record<LightKey, LightState>;
+  entities: Record<string, HassEntity>;
+  applianceCommands: Partial<Record<ApplianceAction, { pending: boolean; error: string | null }>>;
   error: string | null;
 }
 const emptyLights = () => Object.fromEntries(LIGHT_KEYS.map(key => [key, {
-  on: null, brightness: 1, rgb: null, available: false, pending: false, error: null,
+  name: null, on: null, brightness: 1, rgb: null, available: false, pending: false, error: null,
 }])) as Record<LightKey, LightState>;
 export const useHomeAssistant = create<HomeAssistantState>(() => ({
-  enabled: false, status: 'disconnected', lights: emptyLights(), error: null,
+  enabled: false, status: 'disconnected', lights: emptyLights(), entities: {}, applianceCommands: {}, error: null,
 }));
-export function isLightControlDisabled(key: string, state: HomeAssistantState) {
-  return isHomeAssistantLight(key) && state.enabled &&
-    (state.status !== 'connected' || !state.lights[key].available || state.lights[key].pending);
+export const isHomeAssistantAction = (key: string): key is LightKey | ApplianceAction => isHomeAssistantLight(key) || isApplianceAction(key);
+export function isHomeAssistantControlDisabled(key: string, state: HomeAssistantState) {
+  if (!state.enabled) return false;
+  if (isHomeAssistantLight(key)) return state.status !== 'connected' || !state.lights[key].available || state.lights[key].pending;
+  if (isApplianceAction(key)) return state.status !== 'connected' || !!state.applianceCommands[key]?.pending || !applianceAvailable(key, state.entities[APPLIANCES[key].entity]);
+  return false;
 }
 function updateLight(key: LightKey, patch: Partial<LightState>) {
   useHomeAssistant.setState(state => ({ lights: { ...state.lights, [key]: { ...state.lights[key], ...patch } } }));
@@ -59,7 +66,7 @@ function receiveLight(key: LightKey, entity: HassEntity | undefined) {
   }
   const previous = useHomeAssistant.getState().lights[key];
   const light: LightState = { ...previous,
-    on: entity.state === 'on', available: true, error: null,
+    on: entity.state === 'on', name: entity.attributes.friendly_name ?? null, available: true, error: null,
     brightness: entity.attributes.brightness == null ? 1 : entity.attributes.brightness / 255,
     rgb: entity.attributes.rgb_color ?? null,
   };
@@ -96,7 +103,7 @@ export async function connectHomeAssistant(url?: string) {
         if (run !== generation || snapshot !== synchronization || !next.connected) return;
         synchronized = true;
         for (const key of LIGHT_KEYS) receiveLight(key, entities.find(entity => entity.entity_id === LIGHTS[key].entity));
-        useHomeAssistant.setState({ status: 'connected', error: null });
+        useHomeAssistant.setState({ status: 'connected', error: null, entities: Object.fromEntries(entities.filter(entity => APPLIANCE_ENTITIES.includes(entity.entity_id)).map(entity => [entity.entity_id, entity])) });
       } catch {
         if (run === generation && snapshot === synchronization) useHomeAssistant.setState({ status: 'error', error: 'Lecture des états Home Assistant impossible.' });
       }
@@ -122,6 +129,14 @@ export async function connectHomeAssistant(url?: string) {
       if (run !== generation || !synchronized || !next.connected) return;
       const key = LIGHT_KEYS.find(key => LIGHTS[key].entity === event.data.entity_id);
       if (key) receiveLight(key, event.data.new_state ?? undefined);
+      if (APPLIANCE_ENTITIES.includes(event.data.entity_id)) {
+        useHomeAssistant.setState(state => {
+          const entities = { ...state.entities };
+          if (event.data.new_state) entities[event.data.entity_id] = event.data.new_state;
+          else delete entities[event.data.entity_id];
+          return { entities };
+        });
+      }
     }, 'state_changed');
     if (run !== generation) return;
     await ready();
@@ -146,7 +161,7 @@ export function stopHomeAssistant() {
   // HA cancels the socket's subscriptions when it closes.
   connection?.close();
   connection = undefined;
-  useHomeAssistant.setState({ enabled: false, status: 'disconnected', lights: emptyLights(), error: null });
+  useHomeAssistant.setState({ enabled: false, status: 'disconnected', lights: emptyLights(), entities: {}, applianceCommands: {}, error: null });
 }
 
 export function disconnectHomeAssistant() {
@@ -175,6 +190,30 @@ export async function setHomeAssistantLight(key: LightKey, on?: boolean) {
     if (run === generation) updateLight(key, { error: `La commande de ${LIGHTS[key].label} a échoué.` });
   } finally {
     if (run === generation) updateLight(key, { pending: false });
+  }
+}
+
+export async function requestHomeAssistantAction(key: LightKey | ApplianceAction, value?: boolean | number | string) {
+  if (isHomeAssistantLight(key)) {
+    if (value !== undefined && typeof value !== 'boolean') throw new Error('Commande de lumière invalide.');
+    return setHomeAssistantLight(key, value);
+  }
+  const state = useHomeAssistant.getState();
+  const update = (pending: boolean, error: string | null) => useHomeAssistant.setState(state => ({
+    applianceCommands: { ...state.applianceCommands, [key]: { pending, error } },
+  }));
+  if (state.applianceCommands[key]?.pending) return;
+  const run = generation;
+  try {
+    if (!connection?.connected || state.status !== 'connected') throw new Error('Connexion Home Assistant indisponible : aucune commande envoyée.');
+    const entity = state.entities[APPLIANCES[key].entity];
+    if (!entity) throw new Error(`${APPLIANCES[key].label} : entité absente.`);
+    const command = applianceCommand(key, entity, value);
+    update(true, null);
+    await callService(connection, command.domain, command.service, command.data);
+    if (run === generation) update(false, null);
+  } catch (error) {
+    if (run === generation) update(false, error instanceof Error ? error.message : `La commande de ${APPLIANCES[key].label} a échoué.`);
   }
 }
 
