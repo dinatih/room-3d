@@ -494,7 +494,7 @@ export function LivingRoomFurniture() {
 
       {/* Poubelle Fniss Séjour */}
       <group position={[21, 1, 110]} userData={{ sceneItemRoot: true, itemName: 'Poubelle Fniss Séjour' }}>
-        <NavigationObstacle id="fniss-living"><Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="fniss-living"><Fniss40295439 /></NavigationObstacle>
       </group>
 
       {/* Sacs Dimpa mur Ouest (posés au sol, utilisés comme poufs) */}

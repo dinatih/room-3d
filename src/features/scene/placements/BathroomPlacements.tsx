@@ -4,7 +4,7 @@ import { useLightAppearance } from '../../home-assistant/useLightAppearance';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { useSceneStore } from '../store/useSceneStore';
 import { MergedStaticGroup } from '../Building';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 
@@ -59,7 +59,7 @@ export function BathroomEquipment() {
 
       {/* Meuble Vasque SDB */}
       <group position={[BATH_EAST_WALL - 76, 14, BATH_NORTH_WALL + HAVBACK_D / 2]} userData={{ sceneItemRoot: true, itemName: 'Meuble Vasque SDB', hoverAction: { label: 'Lavabo Salle de bain', actions: SMART_OBJECTS['vasque-sdb'].slots.map(slot => `smart-object:::vasque-sdb:::${slot.slotId}`) } }}>
-        <NavigationObstacle id="vasque-sdb"><Havback49514017 item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="vasque-sdb"><Havback49514017 /></NavigationObstacle>
       </group>
 
       {/* WC President */}
@@ -90,7 +90,7 @@ export function BathroomEquipment() {
 
       {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque */}
       <group position={[BATH_EAST_WALL - 76, 176, BATH_NORTH_WALL - 2]} userData={{ sceneItemRoot: true, itemName: 'Bandeau LED Våthult' }}>
-        <Vathult40467548 item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Vathult40467548 />
       </group>
 
       {/* Cabine de Douche */}
@@ -139,7 +139,7 @@ export function BathroomFurniture() {
 
       {/* Poubelle Fniss SDB */}
       <group position={[110, 1, BATH_NORTH_WALL + FNISS_D / 2 + 1]} userData={{ sceneItemRoot: true, itemName: 'Poubelle Fniss SDB' }}>
-        <NavigationObstacle id="fniss-bath"><Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="fniss-bath"><Fniss40295439 /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );
