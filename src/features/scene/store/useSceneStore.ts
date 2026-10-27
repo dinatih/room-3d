@@ -1,5 +1,6 @@
 import { getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
+import { GRAPHICS_PRESETS } from './graphicsPresets';
 import { isHomeAssistantLinked, isHomeAssistantAction, requestHomeAssistantAction, useHomeAssistant } from '../../home-assistant/connection';
 import { cameraState } from '@features/scene/cameraState';
 import type { ArrowControl, CameraMovement, CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
@@ -101,8 +102,6 @@ export function getRandomGrassType(): GroundType {
   return GRASS_TYPES[Math.floor(Math.random() * GRASS_TYPES.length)];
 }
 
-export type GraphicsQualityPreset = GraphicsPreset;
-
 interface SceneStore {
   wigGridHairColor: string;
   furniture: FurnitureState;
@@ -115,11 +114,12 @@ interface SceneStore {
   hdriResolution: HdriResolution;
   screenVideosEnabled: boolean;
   screenVideoQuality: ScreenVideoQuality;
-  graphicsQualityPreset: GraphicsQualityPreset;
+  graphicsQualityPreset: GraphicsPreset;
+  mirrorQuality: 'mid-low' | 'mid';
   setScreenVideosEnabled: (enabled: boolean) => void;
   setScreenVideoQuality: (quality: ScreenVideoQuality) => void;
   setHdriResolution: (resolution: HdriResolution) => void;
-  setGraphicsQualityPreset: (preset: GraphicsQualityPreset) => void;
+  setGraphicsQualityPreset: (preset: GraphicsPreset) => void;
   bnfAzimuth: number;
   bnfElevation: number;
   bnfRadius: number;
@@ -348,10 +348,6 @@ if (layerOverrides.extraCharacters) {
   initialActiveExtraIds = EXTRA_CHARACTERS.map(c => c.id);
 }
 
-if (initialLayers.mirrorsHD) {
-  cameraState.mirrorsHD = true;
-}
-
 if (initialLayers.laraCount === 0) initialLayers.character = false;
 
 const initialTarget = parseUrlCameraTarget();
@@ -365,27 +361,8 @@ if (initialTarget === 'charactersGrid') {
 const urlPreset = parseUrlPreset();
 const initialPreset: GraphicsPreset = urlPreset ?? (initialLayers.mirrorsHD ? 'high' : (initialLayers.mirrors ? 'mid' : 'low'));
 
-if (initialPreset === 'low') {
-  initialLayers.mirrors = false;
-  initialLayers.mirrorsHD = false;
-  cameraState.mirrorsHD = false;
-  cameraState.mirrorQuality = 'mid-low';
-} else if (initialPreset === 'mid-low') {
-  initialLayers.mirrors = true;
-  initialLayers.mirrorsHD = false;
-  cameraState.mirrorsHD = false;
-  cameraState.mirrorQuality = 'mid-low';
-} else if (initialPreset === 'mid') {
-  initialLayers.mirrors = true;
-  initialLayers.mirrorsHD = false;
-  cameraState.mirrorsHD = false;
-  cameraState.mirrorQuality = 'mid';
-} else if (initialPreset === 'high') {
-  initialLayers.mirrors = true;
-  initialLayers.mirrorsHD = true;
-  cameraState.mirrorsHD = true;
-  cameraState.mirrorQuality = 'high';
-}
+const initialGraphics = GRAPHICS_PRESETS[initialPreset];
+Object.assign(initialLayers, initialGraphics.layers);
 
 if (!initialLayers.character) {
   cameraState.characterHidden = true;
@@ -400,10 +377,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
   activeExtraIds: initialActiveExtraIds,
   activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
-  hdriResolution: (initialPreset === 'low' || initialPreset === 'mid-low') ? '2k' : (initialPreset === 'mid' ? '4k' : '8k'),
-  screenVideosEnabled: initialPreset !== 'low',
+  hdriResolution: initialGraphics.hdriResolution,
+  screenVideosEnabled: initialGraphics.screenVideosEnabled,
   screenVideoQuality: initialPreset === 'mid-low' ? 'ld' : (isMobileViewport() ? 'ld' : 'hd'),
   graphicsQualityPreset: initialPreset,
+  mirrorQuality: initialGraphics.mirrorQuality,
   setScreenVideosEnabled: (enabled) => {
     set({ screenVideosEnabled: enabled });
     cameraState.invalidate?.();
@@ -430,62 +408,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
       } catch {}
     }
 
-    if (preset === 'low') {
-      cameraState.mirrorsHD = false;
-      cameraState.mirrorQuality = 'mid-low';
-      set(state => ({
-        graphicsQualityPreset: 'low',
-        screenVideosEnabled: false,
-        hdriResolution: '2k',
-        layers: {
-          ...state.layers,
-          mirrors: false,
-          mirrorsHD: false,
-        },
-      }));
-    } else if (preset === 'mid-low') {
-      cameraState.mirrorsHD = false;
-      cameraState.mirrorQuality = 'mid-low';
-      set(state => ({
-        graphicsQualityPreset: 'mid-low',
-        screenVideosEnabled: true,
-        screenVideoQuality: 'ld',
-        hdriResolution: '2k',
-        layers: {
-          ...state.layers,
-          mirrors: true,
-          mirrorsHD: false,
-        },
-      }));
-    } else if (preset === 'mid') {
-      cameraState.mirrorsHD = false;
-      cameraState.mirrorQuality = 'mid';
-      set(state => ({
-        graphicsQualityPreset: 'mid',
-        screenVideosEnabled: true,
-        screenVideoQuality: 'hd',
-        hdriResolution: '4k',
-        layers: {
-          ...state.layers,
-          mirrors: true,
-          mirrorsHD: false,
-        },
-      }));
-    } else if (preset === 'high') {
-      cameraState.mirrorsHD = true;
-      cameraState.mirrorQuality = 'high';
-      set(state => ({
-        graphicsQualityPreset: 'high',
-        screenVideosEnabled: true,
-        screenVideoQuality: 'hd',
-        hdriResolution: '8k',
-        layers: {
-          ...state.layers,
-          mirrors: true,
-          mirrorsHD: true,
-        },
-      }));
-    }
+    const settings = GRAPHICS_PRESETS[preset];
+    set(state => ({ ...settings, graphicsQualityPreset: preset, layers: { ...state.layers, ...settings.layers } }));
     cameraState.invalidate?.();
   },
   bnfAzimuth: DEFAULT_BNF_COORDS.azimuth,
@@ -685,23 +609,12 @@ export const useSceneStore = create<SceneStore>((set) => ({
         updateUrlLayer('structure', true);
         updateUrlLayer('pillarsOnly', false);
       }
-      if (key === 'mirrors') {
-        cameraState.invalidate?.();
-        if (!isActivating) {
-          nextLayers.mirrorsHD = false;
-          cameraState.mirrorsHD = false;
-        }
-      }
-      if (key === 'mirrorsHD') {
-        cameraState.mirrorsHD = isActivating;
-        if (isActivating && !nextLayers.mirrors) {
-          nextLayers.mirrors = true;
-        }
-      }
-      const nextPreset: GraphicsQualityPreset = nextLayers.mirrorsHD
+      if (key === 'mirrors' && !isActivating) nextLayers.mirrorsHD = false;
+      if (key === 'mirrorsHD' && isActivating) nextLayers.mirrors = true;
+      const nextPreset: GraphicsPreset = nextLayers.mirrorsHD
         ? 'high'
         : nextLayers.mirrors
-          ? (cameraState.mirrorQuality === 'mid-low' ? 'mid-low' : 'mid')
+          ? (state.mirrorQuality === 'mid-low' ? 'mid-low' : 'mid')
           : 'low';
       if (key === 'character') {
         cameraState.characterHidden = !nextLayers.character;

@@ -255,7 +255,7 @@ export function MaillotInyeong({
     <group
       ref={groupRef}
       {...props}
-      userData={{ animUnit: true, itemName: 'Maillot Coréen - Inyeong' }}
+      userData={{ sceneItemRoot: true, itemName: 'Maillot Coréen - Inyeong' }}
     >
       {/* Panneau avant rouge */}
       <mesh

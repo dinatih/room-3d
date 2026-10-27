@@ -177,7 +177,7 @@ export function MannequinHead({
   const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 31.0, 0];
 
   return (
-    <group ref={ref} userData={{ animUnit: true, isMannequin: true, itemName: 'Tête de mannequin' }}>
+    <group ref={ref} userData={{ sceneItemRoot: true, itemName: 'Tête de mannequin' }}>
       <primitive object={scene} />
       <Wig 
         id={cleanWigId}
@@ -335,7 +335,7 @@ export function LaraWigBust({
   }, [laraScene, laraVariant]);
 
   return (
-    <group userData={{ animUnit: true, itemName: 'Buste Lara' }}>
+    <group userData={{ sceneItemRoot: true, itemName: 'Buste Lara' }}>
       <primitive object={laraScene} />
       {parts.bones.neck && laraVariant !== 'romana' && (
         <CharacterPendant

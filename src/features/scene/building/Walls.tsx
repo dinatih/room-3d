@@ -171,20 +171,20 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 return (
                   <mesh key={pp.id} position={[pp.x, WALL_H / 2, pp.z]} rotation-y={rot}
                         material={wallMat} castShadow receiveShadow
-                        userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }}>
+                        userData={{ sceneItemRoot: true, brickType: 'wall', type: 'pillar', id: pp.id }}>
                     <boxGeometry args={[pw, WALL_H, pd]} />
                   </mesh>
                 );
               }
               return (
                 <P key={pp.id} w={pw} h={WALL_H} d={pd} x={pp.x} y={WALL_H / 2} z={pp.z}
-                  userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }} />
+                  userData={{ sceneItemRoot: true, brickType: 'wall', type: 'pillar', id: pp.id }} />
               );
             })}
             <mesh geometry={diagGeos.diagPillar} material={wallMat} castShadow receiveShadow
-              userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-ne-kite' }} />
+              userData={{ sceneItemRoot: true, brickType: 'wall', type: 'pillar', id: 'diag-ne-kite' }} />
             <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
-              userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-sw-kite' }} />
+              userData={{ sceneItemRoot: true, brickType: 'wall', type: 'pillar', id: 'diag-sw-kite' }} />
           </group>
         </MergedStaticGroup>
 
@@ -195,7 +195,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
               {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
                 const mat = MAT_MAP[d.mat ?? 'default'];
                 const uData = {
-                  animUnit: true,
+                  sceneItemRoot: true,
                   brickType: 'wall',
                   side: d.mat ?? 'misc',
                   itemName: d.yBase ? 'Linteau mur' : ((d.h ?? WALL_H) < 50 ? 'Muret bas' : 'Mur'),
@@ -205,11 +205,11 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
               })}
               {/* Mur diagonal (partie pleine après la porte d'entrée) */}
-              {DIAG_WALL_DEFS.map((d, i) => <DiagBox key={i} {...d} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />)}
+              {DIAG_WALL_DEFS.map((d, i) => <DiagBox key={i} {...d} userData={{ sceneItemRoot: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />)}
 
               {/* Panneaux bois occultants jardin */}
               {GARDEN_PANEL_DEFS.map((p, i) => (
-                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ birdSupport: { id: `fence-${i}`, kind: 'fence' }, skipMerge: true, animUnit: true, brickType: 'wall', side: 'garden' }}>
+                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ birdSupport: { id: `fence-${i}`, kind: 'fence' }, skipMerge: true, sceneItemRoot: true, brickType: 'wall', side: 'garden' }}>
                   <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
                 </group>
               ))}

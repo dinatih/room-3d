@@ -46,7 +46,7 @@ export function KitchenEquipment() {
   return (
     <MergedStaticGroup name="merged-kitchen-equipment">
       {/* Meubles Cuisine (évier, structure) */}
-      <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ skipMerge: true, animUnit: true, itemName: 'Meubles Cuisine' }}>
+      <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Meubles Cuisine' }}>
         <NavigationObstacle id="cuisine-group"><CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
@@ -60,7 +60,7 @@ export function KitchenFurniture() {
   return (
     <MergedStaticGroup name="merged-kitchen-furniture">
       {/* Kallax Cuisine en séparation (structure sans Drona) */}
-      <group position={KALLAX_CUISINE_POSITION} rotation={[0, KALLAX_CUISINE_ROTATION, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax Cuisine' }}>
+      <group position={KALLAX_CUISINE_POSITION} rotation={[0, KALLAX_CUISINE_ROTATION, 0]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Kallax Cuisine' }}>
         <NavigationObstacle id="kallax-cuisine"><KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
       </group>
 
@@ -80,7 +80,7 @@ export function KitchenTrashBin() {
   }, []);
   const p = parking ?? KITCHEN_TRASH_POSITION;
   return <PositionTransition furnitureKey="trash-bin-position" x={p.x} z={p.z} ry={p.ry}>
-    <group userData={{ animUnit: true, itemName: 'Poubelle Tatay' }}>
+    <group userData={{ sceneItemRoot: true, itemName: 'Poubelle Tatay' }}>
       <NavigationObstacle id="trash-bin"><TrashBin item={stub('trash-bin')} actionState={actionState} onSize={NOOP_SIZE} /></NavigationObstacle>
     </group>
   </PositionTransition>;
@@ -96,7 +96,7 @@ export function KitchenFurnishings() {
   return (
     <MergedStaticGroup name="merged-kitchen-furnishings">
       {/* Boîtes Drona intégrées à la cuisine */}
-      <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ animUnit: true, itemName: 'Boîtes Drona Cuisine' }}>
+      <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ sceneItemRoot: true, itemName: 'Boîtes Drona Cuisine' }}>
         <CuisineDrona />
       </group>
 
@@ -111,40 +111,40 @@ export function KitchenFurnishings() {
           <group key={i}
             position={[-w2 / 2 + KALLAX_FRAME + (i + 0.5) * KALLAX_CELL_WIDTH / IKEA365_COUNT, KALLAX_UPPER_CELL_BASE, (KALLAX_DEPTH - IKEA365_LENGTH) / 2]}
             rotation-y={Math.PI / 2}
-            userData={{ animUnit: true, itemName: 'Boîte IKEA 365+' }}>
+            userData={{ sceneItemRoot: true, itemName: 'Boîte IKEA 365+' }}>
             <Ikea36590066708 item={stub('ikea36590066708')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
           </group>
         ))}
       </group>
 
       {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}
-      <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ animUnit: true, itemName: 'Égouttoir Lillhavet' }}>
+      <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ sceneItemRoot: true, itemName: 'Égouttoir Lillhavet' }}>
         <CuisineLillhavet />
       </group>
 
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
-      <group position={[KITCHEN_WEST_WALL + 5, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Cuisine' }}>
+      <group position={[KITCHEN_WEST_WALL + 5, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Cuisine' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Casseroles sur la tablette existante du meuble METOD couché. */}
-      <group position={[KITCHEN_WEST_WALL + 50, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={-Math.PI / 2} userData={{ animUnit: true, itemName: 'Casserole MIDDAGSMAT' }}>
+      <group position={[KITCHEN_WEST_WALL + 50, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Casserole MIDDAGSMAT' }}>
         <Middagsmat60463714 />
       </group>
-      <group position={[KITCHEN_WEST_WALL + 86.5, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Faitout ANNONS' }}>
+      <group position={[KITCHEN_WEST_WALL + 86.5, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Faitout ANNONS' }}>
         <Annons80298474 />
       </group>
-      <group position={[KITCHEN_WEST_WALL + 14, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ animUnit: true, itemName: 'Brosse RINNIG' }}>
+      <group position={[KITCHEN_WEST_WALL + 14, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ sceneItemRoot: true, itemName: 'Brosse RINNIG' }}>
         <Rinnig30407814 />
       </group>
       {/* BOHOLMEN : fond de cuve et centre de bonde à [20, 78, 26] dans la cuisine. */}
-      <group position={[KITCHEN_WEST_WALL + 20, 78, ROOM_D + 26]} userData={{ animUnit: true, itemName: 'Bouchon LILLVIKEN' }}>
+      <group position={[KITCHEN_WEST_WALL + 20, 78, ROOM_D + 26]} userData={{ sceneItemRoot: true, itemName: 'Bouchon LILLVIKEN' }}>
         <Lillviken20317852 />
       </group>
 
       {/* PEPPRIG : deux éponges verticales contre la paroi intérieure côté robinet. */}
       {[14, 26].map(x => (
-        <group key={x} position={[KITCHEN_WEST_WALL + x, 86, ROOM_D + 45.5]} rotation={[-Math.PI / 2 + Math.atan(0.055), 0, 0]} userData={{ animUnit: true, itemName: 'Éponge PEPPRIG rouge foncé' }}>
+        <group key={x} position={[KITCHEN_WEST_WALL + x, 86, ROOM_D + 45.5]} rotation={[-Math.PI / 2 + Math.atan(0.055), 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Éponge PEPPRIG rouge foncé' }}>
           <Pepprig70567650 />
         </group>
       ))}
@@ -155,7 +155,7 @@ export function KitchenFurnishings() {
         rotation={[Math.PI, Math.PI / 2, 0]}
         userData={{
           skipMerge: true,
-          animUnit: true,
+          sceneItemRoot: true,
           itemName: 'KÖLVATTEN éclairage LED avec capteur',
           hoverAction: { label: name ?? 'Barre · Cuisine', actions: getObjectActionIds('kolvatten00594176') },
         }}

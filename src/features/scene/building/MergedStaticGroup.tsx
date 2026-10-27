@@ -14,7 +14,6 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData, 
 
   useLayoutEffect(() => {
     if (!sourceRef.current || !mergedRef.current) return;
-    if ((window as any).isAnimProRunning) return;
 
     const src = sourceRef.current;
     const dst = mergedRef.current;
@@ -112,17 +111,11 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData, 
       dst.add(m);
     }
 
-    processedMeshes.forEach(mesh => {
-      mesh.visible = false;
-      mesh.userData.wasMerged = true;
-    });
+    processedMeshes.forEach(mesh => { mesh.visible = false; });
 
     return () => {
       // Nettoyage : restaurer la visibilité des originaux
-      processedMeshes.forEach(m => {
-        m.visible = true;
-        delete m.userData.wasMerged;
-      });
+      processedMeshes.forEach(mesh => { mesh.visible = true; });
       dst.traverse(obj => { if (obj instanceof THREE.Mesh) obj.geometry.dispose(); });
       dst.clear();
     };
@@ -130,9 +123,8 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData, 
 
   return (
     <group userData={userData}>
-      {/* isMergedSource : visit() doit toujours descendre dans ce groupe, jamais le classifier */}
-      <group ref={sourceRef} userData={{ isMergedSource: true }}>{children}</group>
-      <group ref={mergedRef} userData={{ isMergedStatic: true }} />
+      <group ref={sourceRef}>{children}</group>
+      <group ref={mergedRef} />
     </group>
   );
 }

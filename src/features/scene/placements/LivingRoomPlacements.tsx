@@ -166,13 +166,13 @@ export function Beds() {
   return (
     <>
       <PositionTransition furnitureKey="bed-west-position" x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
-        <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: westHoverActions } }}>
+        <group userData={{ sceneItemRoot: true, hoverAction: { label: hoverLabel, actions: westHoverActions } }}>
           <NavigationObstacle id="bed-west" owner={isDouble ? 'bed-double' : 'bed-west'}><UtakerFrame item={{ id: 'utaker-upper' } as any} hasTopper={!isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
         </group>
       </PositionTransition>
 
       <PositionTransition furnitureKey="bed-east-position" x={eastPos.x} z={eastPos.z} ry={Math.PI / 2}>
-        <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: eastHoverActions } }}>
+        <group userData={{ sceneItemRoot: true, hoverAction: { label: hoverLabel, actions: eastHoverActions } }}>
           <NavigationObstacle id="bed-east" owner={isDouble ? 'bed-double' : 'bed-east'}><UtakerFrame item={{ id: 'utaker-lower' } as any} hasTopper={isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
         </group>
       </PositionTransition>
@@ -181,7 +181,7 @@ export function Beds() {
         <group
           userData={{
             skipMerge: true,
-            animUnit: true,
+            sceneItemRoot: true,
             itemName: 'Surmatelas NÄSFJÄLLET',
             hoverAction: { label: hoverLabel, actions: isDouble ? eastHoverActions : westHoverActions },
           }}
@@ -237,7 +237,7 @@ export function Desks() {
     <>
       <PositionTransition furnitureKey="desk1-position" x={p1.x} z={p1.z} ry={p1.ry}>
         <group userData={{ hoverAction: { label: 'Bureau 1', actions: getObjectActionIds('desk-bollsidan-1') } }}>
-          <group userData={{ animUnit: true }}>
+          <group userData={{ sceneItemRoot: true }}>
             <NavigationObstacle id="desk-bollsidan-1"><Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} /></NavigationObstacle>
           </group>
         </group>
@@ -252,7 +252,7 @@ export function Desks() {
             ]
           }
         }}>
-          <group userData={{ animUnit: true }}>
+          <group userData={{ sceneItemRoot: true }}>
             <NavigationObstacle id="desk-bollsidan-2"><Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} /></NavigationObstacle>
           </group>
         </group>
@@ -290,7 +290,7 @@ export function DeskDecor() {
     <>
       <PositionTransition x={p1.x} z={p1.z} ry={p1.ry}>
         <group position={[0, d1H, 0]} rotation={[0, Math.PI, 0]} userData={{ skipMerge: true }}>
-          <group position={[0, 0, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Organiseur STACKSTOD Bureau 1' }}>
+          <group position={[0, 0, 0]} userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Organiseur STACKSTOD Bureau 1' }}>
             <Stackstod60620144 />
           </group>
         </group>
@@ -298,7 +298,7 @@ export function DeskDecor() {
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
         <group position={[0, d2H, -8]} rotation={[0, Math.PI, 0]} userData={{ skipMerge: true }}>
           <group userData={{
-            animUnit: true,
+            sceneItemRoot: true,
             skipMerge: true,
             itemName: 'Ordinateur Portable',
             hoverAction: {
@@ -311,12 +311,12 @@ export function DeskDecor() {
           }}>
             <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
           </group>
-          <group userData={{ animUnit: true, skipMerge: true, itemName: 'Smartphone' }}>
+          <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Smartphone' }}>
             <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
               <Phone item={{} as any} actionState={{}} onSize={() => {}} />
             </group>
           </group>
-          <group userData={{ animUnit: true, skipMerge: true, itemName: 'Mug KEJSERLIG' }}>
+          <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Mug KEJSERLIG' }}>
             <group position={[-22, 0, -7]}>
               <Kejserlig90511501 />
             </group>
@@ -355,7 +355,7 @@ export function OfficeChair() {
     <PositionTransition furnitureKey="smorkull-position" x={p.x} z={p.z} ry={p.ry}>
       <group userData={{
         skipMerge: true,
-        animUnit: true,
+        sceneItemRoot: true,
         itemName: 'Smörkull',
         hoverAction: {
           label: 'Chaise Smörkull',
@@ -391,7 +391,7 @@ function AirPerformer_() {
   const p = AIRPERFORMER_POSITIONS[posIdx];
   return (
     <PositionTransition furnitureKey="airperformer-position" x={p.x} z={p.z} ry={p.ry}>
-      <group userData={{ skipMerge: true, animUnit: true, itemName: 'Air Performer', hoverAction: { label: 'Air Performer', actions: getObjectActionIds('air-performer') } }}>
+      <group userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Air Performer', hoverAction: { label: 'Air Performer', actions: getObjectActionIds('air-performer') } }}>
         <NavigationObstacle id="air-performer"><AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
     </PositionTransition>
@@ -407,7 +407,7 @@ function LampOla_() {
 
   return (
     <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
-      userData={{ skipMerge: true, animUnit: true, itemName: 'Lumière Séjour (OLA)', hoverAction: { label: name ?? 'Lumière Séjour (OLA)', actions: getObjectActionIds('lamp-ola') } }}>
+      userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Lumière Séjour (OLA)', hoverAction: { label: name ?? 'Lumière Séjour (OLA)', actions: getObjectActionIds('lamp-ola') } }}>
       <LampOla item={NOOP_ITEM} actionState={{ on: lampOn, lightColor: color, brightness }} onSize={NOOP_SIZE} />
       <object3D ref={setTargetObj} position={[0, 250, 15]} />
       {targetObj && (
@@ -443,10 +443,10 @@ function SneakersPair() {
   const pz = ROOM_D - 16;
   return (
     <>
-      <group position={[MIRROR_CX, 0.5, pz]} userData={{ animUnit: true, itemName: 'Baskets Sneakers Rouges Bas' }}>
+      <group position={[MIRROR_CX, 0.5, pz]} userData={{ sceneItemRoot: true, itemName: 'Baskets Sneakers Rouges Bas' }}>
         <SneakersRed item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[MIRROR_CX, 18.5, pz]} userData={{ animUnit: true, itemName: 'Baskets Sneakers Rouges Haut' }}>
+      <group position={[MIRROR_CX, 18.5, pz]} userData={{ sceneItemRoot: true, itemName: 'Baskets Sneakers Rouges Haut' }}>
         <SneakersRed item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
@@ -458,15 +458,15 @@ export function LivingRoomFurniture() {
   return (
     <MergedStaticGroup name="merged-living-room-furniture">
       {/* Meubles Kallax (structure sans Drona ni Mannequins) */}
-      <group position={KALLAX_NW_POSITION} rotation={[0, KALLAX_NW_ROTATION, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax NW' }}>
+      <group position={KALLAX_NW_POSITION} rotation={[0, KALLAX_NW_ROTATION, 0]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Kallax NW' }}>
         <NavigationObstacle id="kallax-nw"><KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noMannequins /></NavigationObstacle>
       </group>
 
-      <group position={KALLAX_NE_POSITION} rotation={[0, KALLAX_NE_ROTATION, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax NE' }}>
+      <group position={KALLAX_NE_POSITION} rotation={[0, KALLAX_NE_ROTATION, 0]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Kallax NE' }}>
         <NavigationObstacle id="kallax-ne"><KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
       </group>
 
-      <group position={KALLAX_SE_TRANSFORM.position} rotation={[0, KALLAX_SE_TRANSFORM.rotationY - Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax SE' }}>
+      <group position={KALLAX_SE_TRANSFORM.position} rotation={[0, KALLAX_SE_TRANSFORM.rotationY - Math.PI / 2, 0]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Kallax SE' }}>
         <NavigationObstacle id="kallax-se" compound><KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noCaps /></NavigationObstacle>
       </group>
 
@@ -481,27 +481,27 @@ export function LivingRoomFurniture() {
       <AirPerformer_ />
 
       {/* Meuble Mackapär (structure sans Drona ni cintres) */}
-      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Meuble Mackapär' }}>
+      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Meuble Mackapär' }}>
         <NavigationObstacle id="mackapar"><MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noHangers /></NavigationObstacle>
       </group>
 
       {/* Rangement chaussures Grejig */}
       {[0, 18, 36].map(y => (
-        <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true, itemName: `Range-chaussures Grejig ${y / 18 + 1}` }}>
+        <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ sceneItemRoot: true, itemName: `Range-chaussures Grejig ${y / 18 + 1}` }}>
           <NavigationObstacle id={`grejig-${y}`} owner="grejig"><Grejig40329868 /></NavigationObstacle>
         </group>
       ))}
 
       {/* Poubelle Fniss Séjour */}
-      <group position={[21, 1, 110]} userData={{ animUnit: true, itemName: 'Poubelle Fniss Séjour' }}>
+      <group position={[21, 1, 110]} userData={{ sceneItemRoot: true, itemName: 'Poubelle Fniss Séjour' }}>
         <NavigationObstacle id="fniss-living"><Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
 
       {/* Sacs Dimpa mur Ouest (posés au sol, utilisés comme poufs) */}
-      <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Sac Dimpa Ouest 1' }}>
+      <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Sac Dimpa Ouest 1' }}>
         <NavigationObstacle id="dimpa-1"><Dimpa10056770 /></NavigationObstacle>
       </group>
-      <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Sac Dimpa Ouest 2' }}>
+      <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Sac Dimpa Ouest 2' }}>
         <NavigationObstacle id="dimpa-2"><Dimpa10056770 /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
@@ -516,12 +516,12 @@ export function LivingRoomFurnishings() {
   return (
     <MergedStaticGroup name="merged-living-room-furnishings">
       {/* Étagère Lack */}
-      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Étagère Lack' }}>
+      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: 'Étagère Lack' }}>
         <Lack90282180 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Penderie Mulig (structure sans cintres) */}
-      <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Penderie Mulig' }}>
+      <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Penderie Mulig' }}>
         <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noHangers />
       </group>
 
@@ -546,7 +546,7 @@ export function LivingRoomFurnishings() {
       </group>
 
       {/* Boîte Drona au sol mur Ouest */}
-      <group position={[22, DF / 2 + 0.2, 272]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona Sol Ouest' }}>
+      <group position={[22, DF / 2 + 0.2, 272]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: 'Boîte Drona Sol Ouest' }}>
         <DroneCell />
       </group>
 
@@ -558,14 +558,14 @@ export function LivingRoomFurnishings() {
       <DeskDecor />
 
       {/* Enceinte JBL Charge 3 sur Kallax NE */}
-      <group position={[KALLAX_NE_POSITION[0] - 15, 118, KALLAX_NE_POSITION[2] + w2 / 2 - 11]} userData={{ animUnit: true, itemName: 'Enceinte JBL Charge 3' }}>
+      <group position={[KALLAX_NE_POSITION[0] - 15, 118, KALLAX_NE_POSITION[2] + w2 / 2 - 11]} userData={{ sceneItemRoot: true, itemName: 'Enceinte JBL Charge 3' }}>
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* TV */}
       <group position={TV_POSITION} rotation-order="YXZ"
         rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{
-          animUnit: true,
+          sceneItemRoot: true,
           skipMerge: true,
           itemName: 'Téléviseur',
           hoverAction: {
@@ -577,12 +577,12 @@ export function LivingRoomFurnishings() {
       </group>
 
       {/* Mini PC */}
-      <group position={[ROOM_W - 25, 40, 30]} userData={{ animUnit: true, itemName: 'Mini PC MLLSE' }}>
+      <group position={[ROOM_W - 25, 40, 30]} userData={{ sceneItemRoot: true, itemName: 'Mini PC MLLSE' }}>
         <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Google Nest Mini */}
-      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Google Nest Mini' }}>
+      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Google Nest Mini' }}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
@@ -614,12 +614,12 @@ export function LivingRoomDecor() {
       </group>
 
       {/* Coussins Lagerpoppel mur Est */}
-      <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 - 38]} rotation={[0, -Math.PI / 2, -0.967]} userData={{ animUnit: true, itemName: 'Coussin LAGERPOPPEL 1 (Mur Est Nord)' }}>
+      <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 - 38]} rotation={[0, -Math.PI / 2, -0.967]} userData={{ sceneItemRoot: true, itemName: 'Coussin LAGERPOPPEL 1 (Mur Est Nord)' }}>
         <group position={[29, -40, 0]}>
           <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
-      <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 + 38]} rotation={[0, -Math.PI / 2, 0.967]} userData={{ animUnit: true, itemName: 'Coussin LAGERPOPPEL 2 (Mur Est Sud)' }}>
+      <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 + 38]} rotation={[0, -Math.PI / 2, 0.967]} userData={{ sceneItemRoot: true, itemName: 'Coussin LAGERPOPPEL 2 (Mur Est Sud)' }}>
         <group position={[-29, -40, 0]}>
           <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
@@ -629,7 +629,7 @@ export function LivingRoomDecor() {
       <group
         position={[ROOM_W - 1.2, 212, ROOM_D / 2]}
         rotation={[0, Math.PI / 2, 0]}
-        userData={{ animUnit: true, itemName: 'Maillot Coréen - Inyeong', skipMerge: true }}
+        userData={{ sceneItemRoot: true, itemName: 'Maillot Coréen - Inyeong', skipMerge: true }}
       >
         <mesh position={[0, 18.5, 0.8]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.4, 0.4, 1.6, 8]} />
@@ -640,7 +640,7 @@ export function LivingRoomDecor() {
       </group>
 
       {/* Sac à dos */}
-      <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Sac à Dos' }}>
+      <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: 'Sac à Dos' }}>
         <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 

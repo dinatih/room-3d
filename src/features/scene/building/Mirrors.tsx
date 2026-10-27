@@ -6,7 +6,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { cameraState } from '@features/scene/cameraState';
+import { useSceneStore } from '../store/useSceneStore';
 import { getLoadedSkyTexture } from '../SkySphere';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from '../items/NissedalMirror';
 import { MergedStaticGroup } from './MergedStaticGroup';
@@ -51,10 +51,11 @@ export const MIRROR_HD_MASK =
 const MIRROR_EXCLUDED_MASK = (1 << LAYER_AI_ZONES) | (1 << LAYER_LIDAR) | (1 << LAYER_NEIGHBORS);
 
 function getMirrorTargetConfig(): { res: number; mask: number } {
-  if (cameraState.mirrorsHD || cameraState.mirrorQuality === 'high') {
+  const { layers, mirrorQuality } = useSceneStore.getState();
+  if (layers.mirrorsHD) {
     return { res: 512, mask: MIRROR_HD_MASK & ~MIRROR_EXCLUDED_MASK };
   }
-  if (cameraState.mirrorQuality === 'mid-low') {
+  if (mirrorQuality === 'mid-low') {
     return { res: 128, mask: MIRROR_MID_LOW_MASK & ~MIRROR_EXCLUDED_MASK };
   }
   return { res: 256, mask: MIRROR_BASE_MASK & ~MIRROR_EXCLUDED_MASK };
@@ -224,7 +225,7 @@ export function MirrorsD({ showReflection, reflectorOnly = false }: { showReflec
       {!reflectorOnly && ([0, 1, 2] as const).map((i) => {
         const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
         return (
-          <group key={i} userData={{ animUnit: true }}>
+          <group key={i} userData={{ sceneItemRoot: true }}>
             <group position={[cx, cy - H_M / 2, fz]}>
               <NissedalGlbFrame glb={GLB_65x65} />
             </group>
@@ -289,7 +290,7 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
       {!reflectorOnly && ([0, 1, 2] as const).map((i) => {
         const mz = MA_START_Z + MA_W / 2 + i * MA_W;
         return (
-          <group key={i} userData={{ animUnit: true }}>
+          <group key={i} userData={{ sceneItemRoot: true }}>
             <group position={[fx, MA_BOTTOM_Y, mz]} rotation-y={-Math.PI / 2}>
               <NissedalGlbFrame glb={GLB_40x150} />
             </group>
@@ -300,7 +301,7 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
       {!reflectorOnly && (() => {
         const mz = MA_START_Z + 3 * MA_W + M4_W / 2;
         return (
-          <group userData={{ animUnit: true }}>
+          <group userData={{ sceneItemRoot: true }}>
             <group position={[fx, MA_BOTTOM_Y, mz]} rotation-y={Math.PI / 2}>
               <NissedalFrame w={M4_W} h={M4_H} ft={FT} fd={FD} />
             </group>

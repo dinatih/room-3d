@@ -46,7 +46,6 @@ import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { PresenceLightController }       from './PresenceLightController';
 import { SunLight, SunSphere } from '@features/scene/SunLight';
 import { SkySphere } from './SkySphere';
-import { BuildAnimationMatrix } from '@features/scene/BuildAnimations';
 import { AIRCRAFT_MODELS, DEFAULT_PLANE_MODEL } from './aircraftModels';
 import { PlaneControls } from './PlaneControls';
 import { HornetControls, HornetMenuButton } from './HornetControls';
@@ -264,7 +263,7 @@ function ShadowController({ enabled }: { enabled: boolean }) {
   return null;
 }
 
-function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isAnimActive }: { isIdle: boolean; showInventory: boolean; isCvModalOpen: boolean; isPhotoModeOpen: boolean; isAnimActive: boolean }) {
+function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isOrbiting }: { isIdle: boolean; showInventory: boolean; isCvModalOpen: boolean; isPhotoModeOpen: boolean; isOrbiting: boolean }) {
   const setFrameloop = useThree((state) => state.setFrameloop);
   const invalidate = useThree((state) => state.invalidate);
   const gl = useThree((state) => state.gl);
@@ -274,12 +273,12 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
     const isXRActive = cameraState.isXR || gl.xr?.isPresenting;
     const loop = (showInventory || isCvModalOpen || isPhotoModeOpen || (isIdle && !isXRActive))
       ? 'never'
-      : (isAnimActive ? 'always' : 'demand');
+      : (isOrbiting ? 'always' : 'demand');
     setFrameloop(loop);
     if (loop !== 'never') {
       invalidate();
     }
-  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isAnimActive, setFrameloop, invalidate, gl]);
+  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isOrbiting, setFrameloop, invalidate, gl]);
 
   // Frameloop continu 60fps garanti pendant l'intro transition
   useEffect(() => {
@@ -291,7 +290,7 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
       const isXRActive = cameraState.isXR || gl.xr?.isPresenting;
       const loop = (showInventory || isCvModalOpen || isPhotoModeOpen || (isIdle && !isXRActive))
         ? 'never'
-        : (isAnimActive ? 'always' : 'demand');
+        : (isOrbiting ? 'always' : 'demand');
       setFrameloop(loop);
       invalidate();
     };
@@ -301,7 +300,7 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
       document.removeEventListener('start-camera-intro', handleIntroStart);
       window.removeEventListener('camera-intro-finished', handleIntroEnd);
     };
-  }, [setFrameloop, invalidate, gl, showInventory, isCvModalOpen, isPhotoModeOpen, isIdle, isAnimActive]);
+  }, [setFrameloop, invalidate, gl, showInventory, isCvModalOpen, isPhotoModeOpen, isIdle, isOrbiting]);
 
   return null;
 }
@@ -504,10 +503,6 @@ export function Studio() {
   const showUI = useCallback(() => {
     setHideUI(false);
     updateUrlHideUI(false);
-  }, []);
-
-  useEffect(() => {
-    (window as any).isAnimProRunning = false;
   }, []);
 
   const [lidarMode, setLidarMode] = useState<LidarMode>(0);
@@ -759,32 +754,16 @@ export function Studio() {
   }, []);
 
 
-  const [buildAnimMatrix,  setBuildAnimMatrix]  = useState(false);
   const [assetsLoaded,     setAssetsLoaded]     = useState(false);
   const [showLoadingShiba, setShowLoadingShiba] = useState(true);
   const [loadingCountdownStarted, setLoadingCountdownStarted] = useState(false);
   const [loadingCountdown, setLoadingCountdown] = useState(5);
   const handleCountdownStart = useCallback(() => setLoadingCountdownStarted(true), []);
   const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
-  const [animDurations,    setAnimDurations]    = useState<Record<string, number>>({});
 
   const handleAssetsLoaded = useCallback(() => {
     setAssetsLoaded(true);
   }, []);
-
-  const stopAll = () => {
-    setBuildAnimMatrix(false);
-  };
-
-  const startMatrix = () => {
-    setBuildAnimMatrix(false);
-    setTimeout(() => {
-      setBuildAnimMatrix(true);
-    }, 50);
-  };
-
-  const setDuration = (key: string) => (ms: number) =>
-    setAnimDurations(d => ({ ...d, [key]: ms }));
 
   const isIdle = useAppIdle();
   const isCvModalOpen = useSceneStore(state => state.isCvModalOpen);
@@ -852,8 +831,6 @@ export function Studio() {
     revealScene();
   }, [revealScene]);
 
-  const isAnimActive = buildAnimMatrix || cameraMovement === 'orbit';
-
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <LoadingProgress skipIntro={parseUrlSkipIntro()} sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onCountdownStart={handleCountdownStart} onCountdownTick={setLoadingCountdown} onLaunch={handleLaunch} />
@@ -861,7 +838,7 @@ export function Studio() {
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
-        frameloop={showInventory || isCvModalOpen || isPhotoModeOpen || isIdle ? 'never' : (isAnimActive ? 'always' : 'demand')}
+        frameloop={showInventory || isCvModalOpen || isPhotoModeOpen || isIdle ? 'never' : (cameraMovement === 'orbit' ? 'always' : 'demand')}
         /*
          * ── Placement & configuration initiale de la caméra 3D ───────────────
          * - fov: 50° (champ de vision vertical naturel)
@@ -919,7 +896,7 @@ export function Studio() {
         <PerformanceMonitor />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
-        <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} isPhotoModeOpen={isPhotoModeOpen} isAnimActive={isAnimActive} />
+        <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} isPhotoModeOpen={isPhotoModeOpen} isOrbiting={cameraMovement === 'orbit'} />
         {planeMode    && <PaperPlane
                            onExit={() => setPlaneMode(false)}
                            model={planeModel}
@@ -958,8 +935,6 @@ export function Studio() {
         {cameraMode === 'top' && measurementActive && <MeasurementTool />}
         {/* Contenu 3D — masqué en mode Plan */}
         <Suspense fallback={null}>
-        {/* Animations — exécutées une fois les éléments Suspense 3D résolus */}
-        {buildAnimMatrix && <BuildAnimationMatrix onReady={handleReady} onFinish={() => setBuildAnimMatrix(false)} onDuration={setDuration('buildAnimMatrix')} />}
         <CameraController planeMode={planeMode} />
         <GpuWarmup active={assetsLoaded} onReady={handleReady} />
         <group visible={!layers.plan}>
@@ -1140,10 +1115,6 @@ export function Studio() {
                 layers={layers} onToggleLayer={toggleLayer}
                 lidarMode={lidarMode} onCycleLidar={onCycleLidar}
                 lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
-                buildAnimMatrix={buildAnimMatrix}
-                onStartBuildAnimMatrix={startMatrix}
-                onStopBuildAnim={stopAll}
-                animDurations={animDurations}
                 planeModel={planeModel}
                 onSetPlaneModel={setPlaneModel}
                 autopilotVisible={autopilotVisible}

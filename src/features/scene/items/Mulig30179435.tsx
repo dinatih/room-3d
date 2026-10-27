@@ -23,7 +23,7 @@ export function MuligHangers() {
   return (
     <SpruttigInstances
       transforms={MULIG_HANGER_TRANSFORMS}
-      userData={{ animUnit: true, itemName: 'Cintres Spruttig Mulig' }}
+      userData={{ sceneItemRoot: true, itemName: 'Cintres Spruttig Mulig' }}
     />
   );
 }

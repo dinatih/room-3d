@@ -39,10 +39,6 @@ export function ToolbarPanelsRow({
   onCycleLidar,
   lidarOpacity,
   onToggleLidarOpacity,
-  buildAnimMatrix = false,
-  onStartBuildAnimMatrix,
-  onStopBuildAnim,
-  animDurations = {},
   planeModel = 'origami',
   onSetPlaneModel,
   autopilotVisible = false,
@@ -203,10 +199,6 @@ export function ToolbarPanelsRow({
       onToggleAutopilot={onToggleAutopilot}
       showLandingStrips={showLandingStrips}
       onToggleLandingStrips={onToggleLandingStrips}
-      buildAnimMatrix={buildAnimMatrix}
-      onStartBuildAnimMatrix={onStartBuildAnimMatrix}
-      onStopBuildAnim={onStopBuildAnim}
-      animDurations={animDurations}
     />
   );
 

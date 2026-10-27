@@ -107,7 +107,7 @@ function groundObstacles(world: THREE.Scene, ground: THREE.Object3D): THREE.Obje
     const support = data.birdSupport as BirdSupport | undefined;
     if (object !== ground &&
         ((support && support.kind !== 'ground') ||
-         (data.animUnit && data.itemName && !data.noAnim && !support))) obstacles.push(object);
+         (data.sceneItemRoot && data.itemName && !data.dynamicActor && !support))) obstacles.push(object);
   });
   return obstacles;
 }

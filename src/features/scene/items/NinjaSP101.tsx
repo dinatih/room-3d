@@ -45,7 +45,7 @@ export function NinjaSP101({ actionState, onSize, isPreview = false }: SceneItem
     scene.scale.setScalar(100);
     const box = glbLocalBBox(scene);
     scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
-    scene.userData.animUnit = scene.userData.skipMerge = true;
+    scene.userData.sceneItemRoot = scene.userData.skipMerge = true;
     scene.userData.hoverAction = {
       label: 'Mini four Ninja SP101EU',
       actions: [...getObjectActionIds('ninja-sp101'), ...(!isPreview ? ['smart-object:::cuisine-group:::cook-oven'] : [])],

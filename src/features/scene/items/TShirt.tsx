@@ -173,7 +173,7 @@ export function TShirt({
       ref={groupRef}
       {...props}
       onClick={handleToggleColor}
-      userData={{ animUnit: true, itemName: 'T-shirt basique' }}
+      userData={{ sceneItemRoot: true, itemName: 'T-shirt basique' }}
     >
       {/* Panneau avant */}
       <mesh

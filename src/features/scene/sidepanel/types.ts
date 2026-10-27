@@ -181,10 +181,6 @@ export interface ToolbarPanelsProps {
   onCycleLidar:            () => void;
   lidarOpacity:            number;
   onToggleLidarOpacity:    () => void;
-  buildAnimMatrix?:        boolean;
-  onStartBuildAnimMatrix?: () => void;
-  onStopBuildAnim?:        () => void;
-  animDurations?:          Record<string, number>;
   planeModel?:             PlaneModelKey;
   onSetPlaneModel?:        (m: PlaneModelKey) => void;
   autopilotVisible?:       boolean;

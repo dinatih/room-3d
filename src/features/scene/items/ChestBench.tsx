@@ -32,7 +32,7 @@ export function ChestBench({ onSize, actionState }: SceneItemProps) {
   }, []);
 
   return (
-    <group userData={{ animUnit: true, skipMerge: true, hoverAction: { label: 'Banc coffre jardin', actions: getObjectActionIds('chest-bench') } }}>
+    <group userData={{ sceneItemRoot: true, skipMerge: true, hoverAction: { label: 'Banc coffre jardin', actions: getObjectActionIds('chest-bench') } }}>
       {/* Fond et quatre parois, ouverts au-dessus. */}
       {[
         { position: [0, WALL / 2, 0], size: [L, WALL, W] },

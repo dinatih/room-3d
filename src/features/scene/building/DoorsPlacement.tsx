@@ -33,7 +33,7 @@ export function DoorsPlacement({ framesOnly = false }: { framesOnly?: boolean })
       {!framesOnly && <group
         position={[(pEast('glass-west') + pWest('glass-east')) / 2, 105, 0]}
         userData={{
-          animUnit: true,
+          sceneItemRoot: true,
           itemName: 'Porte-fenêtre double vitrée',
           hoverAction: {
             label: 'Porte-fenêtre',
@@ -44,19 +44,19 @@ export function DoorsPlacement({ framesOnly = false }: { framesOnly?: boolean })
       </group>}
       <group
         position={[(pX('door-living-w') + pX('door-living-e')) / 2, 0, pZ('door-living-w')]}
-        userData={framesOnly ? { itemName: 'Dormant de porte' } : { animUnit: true, itemName: 'Porte séjour', hoverAction: { label: 'Porte séjour', actions: getObjectActionIds('door-living') } }}>
+        userData={framesOnly ? { itemName: 'Dormant de porte' } : { sceneItemRoot: true, itemName: 'Porte séjour', hoverAction: { label: 'Porte séjour', actions: getObjectActionIds('door-living') } }}>
         {framesOnly ? <DoorWhiteFrame /> : <DoorLiving showFrame={false} item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />}
       </group>
       <group
         position={[pX('door-bath-n'), 0, (pZ('door-bath-n') + pZ('door-bath-s')) / 2]}
         rotation-y={Math.PI / 2}
-        userData={framesOnly ? { itemName: 'Dormant de porte' } : { animUnit: true, itemName: 'Porte SDB', hoverAction: { label: 'Porte SDB', actions: getObjectActionIds('door-sdb') } }}>
+        userData={framesOnly ? { itemName: 'Dormant de porte' } : { sceneItemRoot: true, itemName: 'Porte SDB', hoverAction: { label: 'Porte SDB', actions: getObjectActionIds('door-sdb') } }}>
         {framesOnly ? <DoorWhiteFrame /> : <DoorBath showFrame={false} item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />}
       </group>
       <group
         position={[entry.wx, entry.wy, entry.wz]}
         rotation-y={entry.diagRotY}
-        userData={framesOnly ? { itemName: 'Dormant de porte' } : { animUnit: true, itemName: 'Porte entrée', hoverAction: { label: 'Porte entrée', actions: getObjectActionIds('door-entry') } }}>
+        userData={framesOnly ? { itemName: 'Dormant de porte' } : { sceneItemRoot: true, itemName: 'Porte entrée', hoverAction: { label: 'Porte entrée', actions: getObjectActionIds('door-entry') } }}>
         {framesOnly ? <DoorEntryFrame item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} /> : <DoorEntry showFrame={false} item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />}
       </group>
     </group>

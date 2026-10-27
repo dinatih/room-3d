@@ -1292,8 +1292,8 @@ export function Character({
       userData={{
         name: charLabel,
         itemName: charLabel,
-        animUnit: true,
-        noAnim: true,
+        sceneItemRoot: true,
+        dynamicActor: true,
       }}
     >
       {/* Proxy de sélection léger pour le HoverMenu sans raycasting complexe sur maillages skinned */}

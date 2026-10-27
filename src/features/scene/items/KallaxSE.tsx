@@ -54,7 +54,7 @@ export function KallaxSEDrona({ isPreview = false, actionState = {} }: { isPrevi
       {dronaTransforms.map((t, i) => {
         const target = Object.entries({ ...DRONA_SE_ITEMS, 'drona-se-care': { ...DRONA_SPECIAL_ITEMS['drona-se-care'], duration: SPECIAL_DRONA_SLIDE_DURATION } }).find(([, item]) => item.index === i);
         return (
-          <group key={i} name={`drona-se-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+          <group key={i} name={`drona-se-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ sceneItemRoot: true }}>
             {target ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={target[1].duration} isPreview={isPreview} actionState={actionState} /> : <DroneCell />}
           </group>
         );
@@ -77,24 +77,24 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
   return (
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
       {/* Congélateur CHIQ au sol sous la tour Kallax (Y = 0, pivoté de +90°) */}
-      <group position={[0, 0, 0]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
+      <group position={[0, 0, 0]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true }}>
         <Freezer item={k('freezer')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* k1 — premier 2×1 pivoté, posé sur le congélateur Y ∈ [FREEZER_H, FREEZER_H + w2] */}
-      <group position={[px, FREEZER_H + w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true }}>
+      <group position={[px, FREEZER_H + w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ sceneItemRoot: true }}>
         <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* k2 — deuxième 2×1 pivoté, posé sur k1 Y ∈ [FREEZER_H + w2, FREEZER_H + 2×w2] */}
-      <group position={[px, FREEZER_H + w2 / 2 + w2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true }}>
+      <group position={[px, FREEZER_H + w2 / 2 + w2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ sceneItemRoot: true }}>
         <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {!noDrona && <KallaxSEDrona isPreview={isPreview} actionState={actionState} />}
 
       {/* Porte-chaussures bord à bord avec le congélateur (profondeur 47,37 cm). */}
-      <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ animUnit: true }}>
+      <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ sceneItemRoot: true }}>
         <ShoeHatRack item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noCaps={noCaps} />
       </group>
     </group>

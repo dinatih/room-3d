@@ -66,7 +66,7 @@ export function CuisineDrona() {
   return (
     <>
       {DRONA_TRANSFORMS.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ sceneItemRoot: true }}>
           <DroneCell />
         </group>
       ))}
@@ -112,49 +112,49 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
   return (
     <group ref={ref}>
       {/* Plan de travail */}
-      <group userData={{ animUnit: true }}>
+      <group userData={{ sceneItemRoot: true }}>
         <group position={[KIT_W / 2, COUNTER_H, KIT_D / 2]}>
           <Counter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* Évier — bord arrière à 10.5 cm du fond de niche (Z=60) */}
-      <group userData={{ animUnit: true }}>
+      <group userData={{ sceneItemRoot: true }}>
         <group position={[CABINET_W / 2, COUNTER_H + COUNTER_SLAB - 15, 26]}>
           <Boholmen99157501 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* Plaques */}
-      <group userData={{ animUnit: true, hoverAction: { label: 'Plaques de cuisine', actions: ['smart-object:::cuisine-group:::cook-stove'] } }}>
+      <group userData={{ sceneItemRoot: true, hoverAction: { label: 'Plaques de cuisine', actions: ['smart-object:::cuisine-group:::cook-stove'] } }}>
         <group position={[CABINET_W + FRIDGE_W / 2, COUNTER_H + COUNTER_SLAB - 4.5, KIT_D / 2]} rotation={[0, -Math.PI, 0]}>
           <Valbildad20467592 />
         </group>
       </group>
 
       {/* Meuble sous évier */}
-      <group userData={{ animUnit: true }}>
+      <group userData={{ sceneItemRoot: true }}>
         <group position={[CABINET_W / 2, 10, KIT_D / 2]}>
           <KitchenCabinet item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* Réfrigérateur */}
-      <group userData={{ animUnit: true }}>
+      <group userData={{ sceneItemRoot: true }}>
         <group position={FRIDGE_LOCAL_POSITION}>
           <Fridge item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* Meuble haut METOD 40×37×100 couché */}
-      <group userData={{ animUnit: true }}>
+      <group userData={{ sceneItemRoot: true }}>
         <group position={[KIT_W / 2 + 100 / 2, COUNTER_H + COUNTER_SLAB + 60 + 40 / 2, KIT_D - 37 / 2]} rotation={[0, 0, Math.PI / 2]}>
           <Metod50205532 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* Hotte aspirante UTDRAG intégrée dans le meuble haut au-dessus des plaques */}
-      <group userData={{ animUnit: true }}>
+      <group userData={{ sceneItemRoot: true }}>
         <group position={[CABINET_W + FRIDGE_W / 2, 148.5, 32]} rotation-y={Math.PI}>
           <Utdrag10389142 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
@@ -162,7 +162,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
 
       {/* 3 boîtes Drona sur le meuble haut */}
       {!noDrona && DRONA_TRANSFORMS.map((t, i) => (
-        <group key={i} userData={{ animUnit: true }}>
+        <group key={i} userData={{ sceneItemRoot: true }}>
           <group position={t.p} quaternion={t.q} scale={t.s}>
             <DroneCell />
           </group>

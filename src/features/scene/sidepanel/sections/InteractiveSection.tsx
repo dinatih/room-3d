@@ -16,10 +16,6 @@ export interface InteractiveSectionProps {
   onToggleAutopilot?: () => void;
   showLandingStrips?: boolean;
   onToggleLandingStrips?: () => void;
-  buildAnimMatrix?: boolean;
-  onStartBuildAnimMatrix?: () => void;
-  onStopBuildAnim?: () => void;
-  animDurations?: Record<string, number>;
 }
 
 export function InteractiveSection({
@@ -30,10 +26,6 @@ export function InteractiveSection({
   onToggleAutopilot,
   showLandingStrips = false,
   onToggleLandingStrips,
-  buildAnimMatrix = false,
-  onStartBuildAnimMatrix,
-  onStopBuildAnim,
-  animDurations = {},
 }: InteractiveSectionProps) {
   const furniture = useSceneStore(state => state.furniture);
   const ha = useHomeAssistant();
@@ -206,26 +198,6 @@ export function InteractiveSection({
       {furnitureBtn('Lampe Couloir', 'lampCorridor')}
       {furnitureBtn('Barre · Cuisine', 'lampKitchen')}
       {furnitureBtn('Lumière Séjour (OLA)', 'lampOn')}
-
-      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">DÉMO & ASSEMBLAGE 3D</div>
-      <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
-        <button
-          onClick={onStartBuildAnimMatrix}
-          className={`btn btn-sm w-100 text-start rounded-2 py-1 px-2 fw-bold d-flex justify-content-between align-items-center small ${buildAnimMatrix ? 'btn-success text-white' : 'btn-outline-secondary text-dark'}`}
-          style={{ background: buildAnimMatrix ? undefined : 'rgba(255, 255, 255, 0.7)' }}
-        >
-          <span><i className="bi bi-play-fill me-1" aria-hidden="true" />Matrix</span>
-          <span className="small opacity-75">{animDurations['buildAnimMatrix'] ? `~${Math.round(animDurations['buildAnimMatrix'] / 1000)}s` : ''}</span>
-        </button>
-        {buildAnimMatrix && (
-          <button
-            onClick={onStopBuildAnim}
-            className="btn btn-danger btn-sm w-100 fw-bold py-1 border-0 shadow-sm small"
-          >
-            ■ Arrêter l'animation en cours
-          </button>
-        )}
-      </div>
     </div>
   );
 }

@@ -1,9 +1,9 @@
 /**
- * GlbReveal.tsx — cache les groupes animUnit pendant le chargement initial des GLBs,
+ * GlbReveal.tsx — cache les groupes sceneItemRoot pendant le chargement initial des GLBs,
  * puis les révèle tous en même temps quand useProgress().active passe à false.
  *
- * Les groupes animUnit sont les wrappers placés dans Placements/Building :
- *   <group userData={{ animUnit: true }}> … </group>
+ * Les groupes sceneItemRoot sont les wrappers placés dans Placements/Building :
+ *   <group userData={{ sceneItemRoot: true }}> … </group>
  * Ils sont dans la scène dès le premier rendu (avant que leurs enfants GLB chargent),
  * donc les masquer masque aussi les futurs enfants.
  */
@@ -23,14 +23,14 @@ export function GlbReveal() {
       if (active && !hiddenRef.current) {
         hiddenRef.current = true;
         scene.traverse(obj => {
-          if (obj.userData?.animUnit) obj.visible = false;
+          if (obj.userData?.sceneItemRoot) obj.visible = false;
         });
       }
       if (!active && hiddenRef.current && !revealedRef.current) {
         revealedRef.current = true;
         requestAnimationFrame(() => {
           scene.traverse(obj => {
-            if (obj.userData?.animUnit) obj.visible = true;
+            if (obj.userData?.sceneItemRoot) obj.visible = true;
           });
         });
       }

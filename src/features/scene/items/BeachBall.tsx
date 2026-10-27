@@ -157,7 +157,7 @@ export function BeachBall({ onSize, isPreview = false }: SceneItemProps) {
   });
 
   return (
-    <group name="beach-ball" ref={groupRef} userData={{ skipMerge: true, animUnit: true }}>
+    <group name="beach-ball" ref={groupRef} userData={{ skipMerge: true, sceneItemRoot: true }}>
       <primitive object={scene} />
     </group>
   );

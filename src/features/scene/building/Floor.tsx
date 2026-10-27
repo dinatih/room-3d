@@ -588,7 +588,7 @@ export function Floor() {
           <RedPVCCorridor />
         </group>
 
-        <group name="skirting-group" userData={{ animUnit: true, brickType: 'skirting', itemName: 'Plinthes' }}>
+        <group name="skirting-group" userData={{ sceneItemRoot: true, brickType: 'skirting', itemName: 'Plinthes' }}>
           <MergedStaticGroup name="merged-skirting">
             <Baseboards />
             <BathSkirting />

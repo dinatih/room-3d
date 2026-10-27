@@ -1,9 +1,10 @@
 import { useId, useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useSceneStore, type GraphicsQualityPreset } from './store/useSceneStore';
+import { useSceneStore } from './store/useSceneStore';
+import type { GraphicsPreset } from './store/layerUrlParams';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 
-const qualityPresets: { id: GraphicsQualityPreset; label: string; desc: string; badge: string }[] = [
+const qualityPresets: { id: GraphicsPreset; label: string; desc: string; badge: string }[] = [
   {
     id: 'low',
     label: 'Low (Éco / Perfs maximales)',
@@ -13,13 +14,13 @@ const qualityPresets: { id: GraphicsQualityPreset; label: string; desc: string; 
   {
     id: 'mid-low',
     label: 'Mid- (Moyenne basse)',
-    desc: 'Miroir 128px (murs/sols sans perso), Vidéo LD, Ciel 4K',
+    desc: 'Miroir 128px (murs/sols sans perso), Vidéo LD, Ciel 2K',
     badge: 'Mid-',
   },
   {
     id: 'mid',
     label: 'Mid (Moyenne / Standard)',
-    desc: 'Miroir 256px (équipements & mobilier), Vidéos HD, Ciel 8K',
+    desc: 'Miroir 256px (équipements & mobilier), Vidéos HD, Ciel 4K',
     badge: 'Mid',
   },
   {
@@ -69,13 +70,7 @@ export function PresetButton({ hideUI = false }: { hideUI?: boolean }) {
     }
   }, [hideUI]);
 
-  const badgeText = graphicsQualityPreset === 'mid-low'
-    ? 'Mid-'
-    : graphicsQualityPreset === 'mid'
-      ? 'Mid'
-      : graphicsQualityPreset === 'high'
-        ? 'High'
-        : 'Low';
+  const badgeText = qualityPresets.find(preset => preset.id === graphicsQualityPreset)!.badge;
 
   return (
     <>

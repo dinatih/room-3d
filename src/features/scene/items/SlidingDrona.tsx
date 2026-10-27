@@ -32,7 +32,7 @@ export function SlidingDrona({ objectId, label, actionId, duration, isPreview = 
     if (progress.current !== target) invalidate();
   });
   return (
-    <group ref={ref} name={objectId} userData={{ animUnit: true, skipMerge: true, hoverAction: {
+    <group ref={ref} name={objectId} userData={{ sceneItemRoot: true, skipMerge: true, hoverAction: {
       label,
       actions: [
         ...getObjectActionIds(objectId),

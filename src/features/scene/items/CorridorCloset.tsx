@@ -62,7 +62,7 @@ export function CorridorCloset({ actionState, onSize }: SceneItemProps) {
   const closetActions = [...getObjectActionIds('corridor-closet'), ...smartActions];
 
   return (
-    <group userData={{ animUnit: true, hoverAction: { label: 'Placard couloir', actions: closetActions } }}>
+    <group userData={{ sceneItemRoot: true, hoverAction: { label: 'Placard couloir', actions: closetActions } }}>
       {/* Étagères — remplissent toute la largeur et profondeur du caisson */}
       {[60, 120, 180].map((y) => (
         <mesh key={y} position={[0, y, 0]} castShadow receiveShadow material={shelfMat}>

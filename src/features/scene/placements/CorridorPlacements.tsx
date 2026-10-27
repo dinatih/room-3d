@@ -52,7 +52,7 @@ function LinkyGaine() {
       </mesh>
       {/* Linky face -X (vers le couloir). GLB front +Z → rotation-y = -π/2.
           Profondeur GLB ≈ 7.1 cm → recule Linky pour que son dos affleure la gaine. */}
-      <group position={[LINKY_GAINE_X0 - 7.1 / 2, LINKY_MOUNT_Y, LINKY_GAINE_CZ]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Compteur Linky' }}>
+      <group position={[LINKY_GAINE_X0 - 7.1 / 2, LINKY_MOUNT_Y, LINKY_GAINE_CZ]} rotation={[0, -Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: 'Compteur Linky' }}>
         <Linky item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
@@ -131,7 +131,7 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
       rotation={[Math.PI, 0, 0]}
       userData={{
         skipMerge: true,
-        animUnit: true,
+        sceneItemRoot: true,
         itemName: 'Lampe du couloir',
         hoverAction: { label: name ?? 'Lampe du couloir', actions: getObjectActionIds('tradfri-bulb-couloir') },
       }}
@@ -172,7 +172,7 @@ export function CorridorEquipment() {
 
       {/* Placard Couloir */}
       <group position={[(KITCHEN_EAST_WALL + PARTITION_THICKNESS + DOOR_START) / 2, 0, (CORRIDOR_NORTH_WALL + KITCHEN_SOUTH_WALL) / 2]} userData={{
-        animUnit: true,
+        sceneItemRoot: true,
         itemName: 'Placard Couloir',
         hoverAction: {
           label: 'Placard Couloir',
@@ -207,7 +207,7 @@ export function CorridorFurnishings() {
   return (
     <MergedStaticGroup name="merged-corridor-furnishings">
       {/* Trottinette Xiaomi */}
-      <group position={[parking.x, 0, parking.z]} rotation-y={parking.angle} userData={{ skipMerge: true, animUnit: true, itemName: 'Trottinette Xiaomi' }}>
+      <group position={[parking.x, 0, parking.z]} rotation-y={parking.angle} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Trottinette Xiaomi' }}>
         <NavigationObstacle id="scooter" hull><Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} steeringAngle={SCOOTER_STEERING_ANGLE} onWheels={parkScooter} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>

@@ -284,13 +284,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         layers: { ...state.layers, mirrorsHD: true },
         graphicsQualityPreset: 'high',
       }));
-      cameraState.mirrorsHD = true;
     } else if (m !== 'fpv' && isMirrorsHD && urlLayerOverrides.mirrorsHD !== true) {
       useSceneStore.setState(state => ({
         layers: { ...state.layers, mirrorsHD: false },
-        graphicsQualityPreset: currentPreset === 'low' ? 'low' : (state.layers.mirrors ? (cameraState.mirrorQuality === 'mid-low' ? 'mid-low' : 'mid') : 'low'),
+        graphicsQualityPreset: currentPreset === 'low' ? 'low' : (state.layers.mirrors ? (state.mirrorQuality === 'mid-low' ? 'mid-low' : 'mid') : 'low'),
       }));
-      cameraState.mirrorsHD = false;
     }
 
     // Vues Top (ortho) : Désactiver le calque Miroir dans les 2 Vues Top (pièce et suivi perso)

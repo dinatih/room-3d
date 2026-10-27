@@ -63,9 +63,9 @@ export function KallaxCuisineDrona({ isPreview = false, actionState = {} }: { is
       {dronaTransforms.map((t, i) => {
         const target = Object.entries(KITCHEN_DRONA_ITEMS).find(([, item]) => item.index === i);
         return (
-          <group key={i} name={`drona-kitchen-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+          <group key={i} name={`drona-kitchen-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ sceneItemRoot: true }}>
             {target ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState}>
-              {target[0] === 'drona-kitchen-old-it' && <group name="drona-kitchen-old-it-laser" position={[0, 6.25 - t.p.y, -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Télémètre Laserliner' }}>
+              {target[0] === 'drona-kitchen-old-it' && <group name="drona-kitchen-old-it-laser" position={[0, 6.25 - t.p.y, -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Télémètre Laserliner' }}>
                 <LaserDistanceMaster item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
               </group>}
             </SlidingDrona> : <DroneCell />}
@@ -89,22 +89,22 @@ export function KallaxCuisine({ onSize, actionState, noDrona, isPreview = false 
   return (
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
       {/* 2×2 bas — PY = h2 */}
-      <group position={[0, h2, 0]} userData={{ animUnit: true }}>
+      <group position={[0, h2, 0]} userData={{ sceneItemRoot: true }}>
         <Kallax2x2 item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* 2×2 spec (sans barre haute) — PY = 2×h2 */}
-      <group position={[0, h2 + h2, 0]} userData={{ animUnit: true }}>
+      <group position={[0, h2 + h2, 0]} userData={{ sceneItemRoot: true }}>
         <Kallax2x2Spec item={k('kallax-sw-2x2-spec')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* 2×1 haut — PY = 2×h2 + h1 */}
-      <group position={[0, h2 + h2 + h1, 0]} userData={{ animUnit: true }}>
+      <group position={[0, h2 + h2 + h1, 0]} userData={{ sceneItemRoot: true }}>
         <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       
       {!noDrona && <KallaxCuisineDrona isPreview={isPreview} actionState={actionState} />}
 
       {/* Mini four Ninja SP101EU — dans la case basse du 2×2 spec */}
-      <group position={[-8, PIZZA_Y, 0]} rotation-y={Math.PI} userData={{ animUnit: true }}>
+      <group position={[-8, PIZZA_Y, 0]} rotation-y={Math.PI} userData={{ sceneItemRoot: true }}>
         <NinjaSP101 item={NOOP_ITEM} actionState={actionState} onSize={NOOP_SIZE} isPreview={isPreview} />
       </group>
     </group>

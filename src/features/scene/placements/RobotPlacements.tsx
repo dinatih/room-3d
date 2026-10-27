@@ -205,7 +205,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   }, -0.5);
 
   return (
-    <group ref={group} position={config.position} userData={{ animUnit: true, noAnim: true, skipMerge: true,
+    <group ref={group} position={config.position} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true,
       itemName: item.name, hoverAction: { label: item.name, actions: getObjectActionIds(id) } }}>
       <Component item={item} actionState={{ ...actions, robotAutonomous: life.current.automatic, robotManualDriving: driver.current.active, onH2SoloActive }} onSize={onSize} />
     </group>

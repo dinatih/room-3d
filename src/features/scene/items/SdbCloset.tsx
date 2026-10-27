@@ -130,7 +130,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   const sdbSmartActions = SMART_OBJECTS['sdb-closet'].slots.map(s => `smart-object:::sdb-closet:::${s.slotId}`);
 
   return (
-    <group userData={{ animUnit: true, hoverAction: { label: 'Placard SDB', actions: [...getObjectActionIds('sdb-closet'), ...sdbSmartActions] } }}>
+    <group userData={{ sceneItemRoot: true, hoverAction: { label: 'Placard SDB', actions: [...getObjectActionIds('sdb-closet'), ...sdbSmartActions] } }}>
       {/* Rail haut */}
       <mesh position={[0, H - 1.5, 0]} castShadow material={railMat}>
         <boxGeometry args={[W, 3, RAIL_D]} />
@@ -166,7 +166,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
       <mesh geometry={shelfGeo} castShadow receiveShadow material={shelfMat} />
 
       {/* Étagère à chaussures GREJIG le long de la porte droite du placard (côté Ouest) */}
-      <group position={[X_CLOSED_L, 0, 20]} rotation={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Étagère chaussures Grejig SDB' }}>
+      <group position={[X_CLOSED_L, 0, 20]} rotation={[0, 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Étagère chaussures Grejig SDB' }}>
         <Grejig40329868 />
       </group>
     </group>

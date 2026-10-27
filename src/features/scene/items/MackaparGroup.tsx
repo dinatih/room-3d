@@ -44,7 +44,7 @@ export function MackaparHangers() {
       {/* 12 cintres Spruttig instanciés en un seul draw call */}
       <SpruttigInstances
         transforms={MACKAPAR_HANGER_TRANSFORMS}
-        userData={{ animUnit: true, itemName: 'Cintres Spruttig Mackapär' }}
+        userData={{ sceneItemRoot: true, itemName: 'Cintres Spruttig Mackapär' }}
       />
 
       {/* T-shirt noir suspendu sur le cintre le plus à l'ouest de la barre basse (z = -25) */}
@@ -63,7 +63,7 @@ export function MackaparDrona() {
         const p = new THREE.Vector3().setFromMatrixPosition(m);
         const q = new THREE.Quaternion().setFromRotationMatrix(m);
         return (
-          <group key={i} userData={{ animUnit: true }}>
+          <group key={i} userData={{ sceneItemRoot: true }}>
             <group position={p} quaternion={q}>
               <DroneCell />
             </group>
@@ -86,7 +86,7 @@ export function MackaparGroup({ onSize, noDrona, noHangers }: SceneItemProps & {
 
   return (
     <group ref={ref}>
-      <group userData={{ animUnit: true }}>
+      <group userData={{ sceneItemRoot: true }}>
         <Mackapar50530988 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 

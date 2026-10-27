@@ -60,7 +60,7 @@ export function KallaxNWDrona({ isPreview = false, actionState = {} }: { isPrevi
       {dronaTransforms.map((t, i) => {
         const target = Object.entries(DRONA_SPECIAL_ITEMS).find(([, item]) => item.shelf === 'nw' && item.index === i);
         return (
-          <group key={i} name={`drona-nw-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+          <group key={i} name={`drona-nw-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ sceneItemRoot: true }}>
           {target
             ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
             : <DroneCell />}
@@ -109,15 +109,15 @@ export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, act
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
       {/* Sous-groupe GLB — masqué par le toggle GLB, visible par défaut */}
       {/* nwB 2×1 pivoté, Y ∈ [0, w2] */}
-      <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true }}>
+      <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ sceneItemRoot: true }}>
         <Kallax2x1 item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* nwM 1×1 pivoté, Y ∈ [w2, w2+w1] */}
-      <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true }}>
+      <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ sceneItemRoot: true }}>
         <Kallax1x1 item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* nwT 1×1 pivoté, Y ∈ [w2+w1, w2+2×w1] */}
-      <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true }}>
+      <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ sceneItemRoot: true }}>
         <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 

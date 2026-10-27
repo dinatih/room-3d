@@ -46,7 +46,7 @@ function Starfish({ index }: { index: number }) {
 
   return (
     <group ref={body} position={[state.position.x, state.position.y, state.position.z]} rotation={[0, state.yaw, 0]}
-           userData={{ itemName: `Étoile de mer ${index + 1}`, animUnit: true, noAnim: true, skipMerge: true }}>
+           userData={{ itemName: `Étoile de mer ${index + 1}`, sceneItemRoot: true, dynamicActor: true, skipMerge: true }}>
       <group scale={model.scale}>
         <group position={[-model.center[0], -model.center[1], -model.center[2]]}>
           <primitive object={scene} />

@@ -74,7 +74,7 @@ export function KallaxNEDrona({ isPreview = false, actionState = {} }: { isPrevi
     <>
       {/* DRONA Instances individuelles pour animation */}
       {dronaTransforms.map((t, i) => (
-        <group key={i} name={`drona-ne-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+        <group key={i} name={`drona-ne-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ sceneItemRoot: true }}>
           {t.p.x === DRONA_CATCHALL_POSITION[0] && t.p.y === DRONA_CATCHALL_POSITION[1]
             ? <SlidingDrona objectId="drona-ne-catchall" label="Dröna fourre-tout — Nord-Est" actionId={DRONA_CATCHALL_ACTION} duration={DRONA_CATCHALL_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
             : i === DRONA_SPECIAL_ITEMS['drona-ne-catchall2'].index
@@ -99,12 +99,12 @@ export function KallaxNE({ onSize, noDrona, isPreview = false, actionState }: Sc
   return (
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
       {/* 2×1 bas — spans Y ∈ [0, h1] */}
-      <group position={[0, h1, 0]} userData={{ animUnit: true }}>
+      <group position={[0, h1, 0]} userData={{ sceneItemRoot: true }}>
         <Kallax2x1 item={k('kallax-ne-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       
       {/* 2×2 haut — spans Y ∈ [h1, h1+h2] */}
-      <group position={[0, h1 + h2, 0]} userData={{ animUnit: true }}>
+      <group position={[0, h1 + h2, 0]} userData={{ sceneItemRoot: true }}>
         <Kallax2x2 item={k('kallax-ne-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       
@@ -113,7 +113,7 @@ export function KallaxNE({ onSize, noDrona, isPreview = false, actionState }: Sc
       {/* VARIERA 32×28 sur sommet 2×2, coin Nord-Est (local +X=mur Nord, +Z=mur Est).
           rotY=0 : grand axe (32) le long X (= world Z, parallèle mur Est).
           Back panel (local +Z) contre mur Est. Opening face pièce (world -X). */}
-      <group position={[W2_HALF - VAR2_W / 2 - 4, h1 + h2, DEP_HALF - VAR2_D / 2 - 10]} userData={{ animUnit: true }}>
+      <group position={[W2_HALF - VAR2_W / 2 - 4, h1 + h2, DEP_HALF - VAR2_D / 2 - 10]} userData={{ sceneItemRoot: true }}>
         <Variera60136623 />
       </group>
     </group>
