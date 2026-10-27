@@ -9,6 +9,37 @@ export interface NavigationMeshSnapshot { obstacles: Polygon[][]; comfort?: Navi
 const area = (a: Point, b: Point, c: Point) => (b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x);
 const same = (a: Point, b: Point) => a.x === b.x && a.z === b.z;
 
+/** Remove internal diagonals without changing the free-space boundary. */
+function mergeConvexCells(polygons: Polygon[]): Polygon[] {
+  const owners = polygons.map((_, i) => i), edges = new Map<string, number>(), pairs: [number, number, Point, Point][] = [];
+  const owner = (i: number): number => owners[i] === i ? i : (owners[i] = owner(owners[i]));
+  polygons.forEach((points, cell) => points.forEach((a, i) => {
+    const b = points[(i + 1) % points.length], key = [`${a.x}:${a.z}`, `${b.x}:${b.z}`].sort().join('/');
+    const previous = edges.get(key);
+    if (previous === undefined) edges.set(key, cell);
+    else pairs.push([previous, cell, a, b]);
+  }));
+  // Prefer removing long diagonals; revisit neighbours after each merging pass.
+  pairs.sort((a, b) => distance(b[2], b[3]) - distance(a[2], a[3]));
+  let changed: boolean;
+  do {
+    changed = false;
+    for (const [first, second, a, b] of pairs) {
+      const from = owner(first), to = owner(second);
+      if (from === to) continue;
+      const left = polygons[from], right = polygons[to];
+      const i = left.indexOf(b), j = right.indexOf(a);
+      if (i === -1 || j === -1 || left[(i + 1) % left.length] !== a || right[(j + 1) % right.length] !== b) continue;
+      const merged = [...left.slice(i + 1), ...left.slice(0, i + 1), ...Array.from({ length: right.length - 2 }, (_, k) => right[(j + 2 + k) % right.length])];
+      if (new Set(merged).size !== merged.length) continue;
+      const turns = merged.map((p, k) => area(p, merged[(k + 1) % merged.length], merged[(k + 2) % merged.length]));
+      if (!turns.every(turn => turn >= 0) && !turns.every(turn => turn <= 0)) continue;
+      polygons[from] = merged; owners[to] = from; changed = true;
+    }
+  } while (changed);
+  return polygons.filter((_, i) => owners[i] === i);
+}
+
 /** A persistent network of convex floor cells. Searches visit only adjacent cells. */
 export class NavigationMesh {
   readonly vertices: Point[];
@@ -33,15 +64,15 @@ export class NavigationMesh {
       const rings = polygon.map(ring => ring.slice(0, -1).map(([x, z]) => ({ x, z })));
       const points = rings.flat();
       const triangles = ShapeUtils.triangulateShape(rings[0].map(p => new Vector2(p.x, p.z)), rings.slice(1).map(ring => ring.map(p => new Vector2(p.x, p.z))));
-      for (const triangle of triangles) {
-        const corners = triangle.map(index => points[index]);
-        if (Math.abs(area(...corners as [Point, Point, Point])) <= GEOMETRY_EPSILON) continue;
+      const cells = triangles.map(triangle => triangle.map(index => points[index]))
+        .filter(corners => Math.abs(area(...corners as [Point, Point, Point])) > GEOMETRY_EPSILON);
+      for (const corners of mergeConvexCells(cells)) {
         const cell = this.cells.length;
-        const center = { x: corners.reduce((sum, p) => sum + p.x, 0) / 3, z: corners.reduce((sum, p) => sum + p.z, 0) / 3 };
+        const center = { x: corners.reduce((sum, p) => sum + p.x, 0) / corners.length, z: corners.reduce((sum, p) => sum + p.z, 0) / corners.length };
         this.cells.push({ points: corners, center, minX: Math.min(...corners.map(p => p.x)), maxX: Math.max(...corners.map(p => p.x)),
           minZ: Math.min(...corners.map(p => p.z)), maxZ: Math.max(...corners.map(p => p.z)), portals: [], component: -1 });
-        for (let i = 0; i < 3; i++) {
-          const a = corners[i], b = corners[(i + 1) % 3];
+        for (let i = 0; i < corners.length; i++) {
+          const a = corners[i], b = corners[(i + 1) % corners.length];
           const keys = [`${a.x}:${a.z}`, `${b.x}:${b.z}`].sort(), key = keys.join('/');
           const previous = edges.get(key);
           if (!previous) { edges.set(key, { cell, a, b }); continue; }
@@ -70,7 +101,7 @@ export class NavigationMesh {
     if (insideObstacle(point, this.obstacles)) return -1;
     return this.cells.findIndex(cell => {
       if (point.x < cell.minX - GEOMETRY_EPSILON || point.x > cell.maxX + GEOMETRY_EPSILON || point.z < cell.minZ - GEOMETRY_EPSILON || point.z > cell.maxZ + GEOMETRY_EPSILON) return false;
-      const sides = cell.points.map((p, i) => area(p, cell.points[(i + 1) % 3], point));
+      const sides = cell.points.map((p, i) => area(p, cell.points[(i + 1) % cell.points.length], point));
       return sides.every(side => side >= -GEOMETRY_EPSILON) || sides.every(side => side <= GEOMETRY_EPSILON);
     });
   }

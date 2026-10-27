@@ -5,6 +5,29 @@ const g = require('../../src/features/scene/ai/navigation/geometry.ts');
 const { NavigationMesh } = require('../../src/features/scene/ai/navigation/mesh.ts');
 
 describe('Réseau permanent de passages au sol', () => {
+  it('fusionne les cellules convexes sans modifier les surfaces ni leurs trous', () => {
+    const surfaces = [[g.rectangle(0, 0, 400, 400)]];
+    const empty = new NavigationMesh([], surfaces).snapshot();
+    assert.equal(empty.cells.length, 1, 'An empty rectangular floor needs one cell');
+    assert.equal(empty.cells[0].points.length, 4);
+    const obstacles = g.union([g.rectangle(0, 0, 40, 30)]);
+    const mesh = NavigationMesh.restore(structuredClone(new NavigationMesh(obstacles, surfaces).snapshot()));
+    const cells = mesh.snapshot().cells;
+    assert.equal(cells.length, 4, 'Four convex cells suffice around a rectangular hole');
+    const coveredArea = cells.reduce((sum, cell) => sum + Math.abs(cell.points.reduce((value, a, i) => {
+      const b = cell.points[(i + 1) % cell.points.length];
+      return value + a.x * b.z - b.x * a.z;
+    }, 0)) / 2, 0);
+    assert.equal(coveredArea, 400 * 400 - 40 * 30);
+    assert.equal(mesh.canReach({ x: -100, z: 0 }, { x: 100, z: 0 }), true);
+    assert.equal(mesh.canReach({ x: -100, z: 0 }, { x: 0, z: 0 }), false);
+    for (const [index, cell] of cells.entries()) for (const portal of cell.portals) {
+      assert(cells[portal.to].portals.some(reverse => reverse.to === index && reverse.cost === portal.cost));
+      const middle = { x: (portal.a.x + portal.b.x) / 2, z: (portal.a.z + portal.b.z) / 2 };
+      assert(g.segmentFree(cell.center, middle, obstacles));
+      assert(g.segmentFree(middle, cells[portal.to].center, obstacles));
+    }
+  });
   it('accepte une arrivée presque tangente au mur sans accepter une traversée', () => {
     const a = { x: 210.76416853392325, z: 601.9216815870601 }, b = { x: 205.21539176697746, z: 605.125271151847 };
     const obstacles = [[[{ x: 202.7420370678465, z: 606.5532631741202 }, { x: 218.786261296332, z: 597.2901258611054 }, { x: 220, z: 620 }]]];
@@ -22,8 +45,8 @@ describe('Réseau permanent de passages au sol', () => {
       const mesh = buildNavigationGraph({ surfaces: walkableSurfaces, solids: architectureObstacles.map(obstacle => ({ polygon: obstacle.polygon, radius, comfort: true })), comfortDistance: 20 });
       for (let trip = 0; trip < 1000; trip++) {
         const point = () => {
-          const cell = mesh.cells[Math.floor(random() * mesh.cells.length)], index = Math.floor(random() * 3), t = random();
-          const a = cell.points[index], b = cell.points[(index + 1) % 3];
+          const cell = mesh.cells[Math.floor(random() * mesh.cells.length)], index = Math.floor(random() * cell.points.length), t = random();
+          const a = cell.points[index], b = cell.points[(index + 1) % cell.points.length];
           return trip % 3 === 0 ? cell.center : trip % 3 === 1 ? a : { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t };
         };
         const start = point(), target = point();
@@ -42,9 +65,9 @@ describe('Réseau permanent de passages au sol', () => {
       for (let trip = 0; trip < 100; trip++) {
         const point = () => {
           if (trip % 3 === 0) return { x: random() * 360 - 180, z: random() * 360 - 180 };
-          const cell = mesh.cells[Math.floor(random() * mesh.cells.length)], index = Math.floor(random() * 3);
+          const cell = mesh.cells[Math.floor(random() * mesh.cells.length)], index = Math.floor(random() * cell.points.length);
           if (trip % 3 === 1) return cell.points[index];
-          const a = cell.points[index], b = cell.points[(index + 1) % 3], t = random();
+          const a = cell.points[index], b = cell.points[(index + 1) % cell.points.length], t = random();
           return { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t };
         };
         const start = point(), target = point();

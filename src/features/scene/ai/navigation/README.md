@@ -3,7 +3,10 @@
 ## Réseau permanent
 
 `NavigationMesh` soustrait les obstacles au sol praticable, triangule l'espace
-libre et relie les cellules par leurs arêtes communes. Les composantes connexes
+libre, fusionne les triangles voisins dont la réunion reste convexe et relie les
+cellules par leurs arêtes communes. La fusion conserve exactement les contours,
+les trous et les passages, sans changer les marges de collision ni plafonner le
+nombre de sommets par cellule. Les composantes connexes
 sont calculées une fois. L'accessibilité consulte ces composantes ; un trajet
 cherche uniquement parmi les cellules voisines, puis le funnel réduit le
 corridor de passages en points de marche.
