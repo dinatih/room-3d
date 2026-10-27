@@ -75,8 +75,8 @@ export function MannequinHead({
     ? WIGS_ITEMS.findIndex(w => w.id === wigId || w.id.replace('hair_', '') === wigId.replace('hair_', ''))
     : initialWigIndex;
 
-  const [wigIndex, setWigIndex] = useState<number>(resolvedInitialIndex !== undefined && resolvedInitialIndex >= 0 ? resolvedInitialIndex : getUniqueRandomWig());
-  const [hairColor, setHairColor] = useState<string | undefined>(initialHairColor ?? (wigId ? undefined : getUniqueRandomColor()));
+  const [wigIndex, setWigIndex] = useState<number>(() => resolvedInitialIndex !== undefined && resolvedInitialIndex >= 0 ? resolvedInitialIndex : getUniqueRandomWig());
+  const [hairColor, setHairColor] = useState<string | undefined>(() => initialHairColor ?? (wigId ? undefined : getUniqueRandomColor()));
   const [windEnabled, setWindEnabled] = useState<boolean>(initialWindEnabled ?? false);
 
   useEffect(() => {
