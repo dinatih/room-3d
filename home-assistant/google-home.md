@@ -19,8 +19,9 @@ Elle expose les appareils HA à Google Home ; les noms Smart Life restent indép
 - Configuration HA validée par `check_config`, puis HA redémarré avec succès.
 - Le point d’entrée HTTPS `/api/google_assistant` répond **405** en GET : c’est
   attendu, Google lui adresse des requêtes POST authentifiées.
-- Sept entités sont explicitement exposées : les quatre lampes, le purificateur,
-  le volet et la télévision, selon le fichier `google-assistant.yaml`.
+- Dix entités sont explicitement exposées : les quatre lampes, le purificateur,
+  le volet, la télévision et les températures des trois capteurs Hue, selon
+  le fichier `google-assistant.yaml`.
 - Association réussie confirmée par l’utilisateur : la lampe du couloir est ajoutée
   avec **[test] Dinatih Home Assistant**, après correction Cloudflare.
 - Après extension à sept entités, configuration HA validée, redémarrage effectué
@@ -45,8 +46,8 @@ Avec le compte Google utilisé pour créer le projet :
 L’ajout de la lampe du couloir a été confirmé par l’utilisateur. Les commandes
 physiques des autres appareils depuis Google Home restent à vérifier.
 
-Les liaisons Smart Life/Hue existantes peuvent produire un doublon pendant l’essai.
-Elles n’ont pas été supprimées. Un autre compte Google doit être ajouté comme
+Les liaisons constructeur existantes peuvent produire un doublon pendant l’essai.
+Voir le nettoyage ci-dessous. Un autre compte Google doit être ajouté comme
 membre du projet et suivre les étapes d’accès test de la documentation officielle.
 
 ## Association Android : retour au début après Authenticator
@@ -139,10 +140,22 @@ fournis par une autre liaison Hue/Smart Life. Les noms et affectations personnal
 Google peuvent rester distincts de ceux de HA. L’affectation automatique des pièces
 n’est pas prise en charge lorsqu’il existe plusieurs foyers dans le compte Google.
 
-L’interface Google Home web a confirmé des doublons : un volet dans « Pièce » et
-un volet dans « Séjour », ainsi qu’une lampe Entrée dans « Entrée » et dans
-« Couloir ». La présence d’anciens appareils ne prouve donc pas que l’association
-HA a remplacé les liaisons constructeur. Leur suppression n’a pas été effectuée.
+L’interface Google Home web a confirmé des doublons constructeur/HA. L’utilisateur
+a dissocié Somfy TaHoma, qui ne fournissait que le volet. Les services restants
+confirmés sont Dinatih, Hue, Philips Air purifier et Smart Life.
+
+Pour préparer le retrait de Hue, les températures des trois capteurs Cuisine,
+Salle de bain et Couloir sont exposées explicitement via HA, en plus des lampes
+Entrée, Douche et Barre déjà exposées. Les entités de groupes Hue ne sont pas
+ajoutées : elles reproduiraient les lampes individuelles. Les quatre autres
+lampes Hue sont indisponibles dans HA et n’étaient pas visibles dans l’inventaire
+Google consulté ; elles ne sont pas supprimées de HA.
+
+La dissociation de Hue et Philips Air purifier reste à effectuer dans l’application
+Google Home, après vérification des appareils issus de Dinatih. Smart Life reste
+associé tant que ses équipements supplémentaires ne sont pas repris. Aucun
+appareil n’est supprimé des applications constructeur. Les mouvements des capteurs
+Hue ne sont pas exposés : Google Assistant HA ne prend pas en charge leur classe.
 
 Les seules pièces HA sont Séjour, Cuisine, Couloir, Salle de bain et Jardin.
 Les sept appareils exposés ont une pièce HA ; la télévision Android TV, auparavant

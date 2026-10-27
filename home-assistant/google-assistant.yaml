@@ -18,3 +18,9 @@ entity_config:
     expose: true
   media_player.tele:
     expose: true
+  sensor.capteur_cuisine_temperature:
+    expose: true
+  sensor.capteur_douche_temperature:
+    expose: true
+  sensor.entree_capteur_entree_temperature:
+    expose: true
