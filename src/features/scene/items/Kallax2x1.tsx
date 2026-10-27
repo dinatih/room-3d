@@ -4,33 +4,9 @@
  * Le GLB officiel IKEA est en mètres → scale ×100 pour la scène (1 unité = 1 cm).
  * Convention : Y=0 = sommet, Y=-H = bas (identique à Kallax1x1 et Kallax procédural).
  */
-import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
-import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import { createStaticGlbItem } from './createStaticGlbItem';
 
-const GLB = 'items/kallax90301555/Kallax90301555.glb';
-
-export function Kallax2x1({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone(GLB);
-
-  useLayoutEffect(() => {
-    removeGlbLines(scene);
-    scene.scale.setScalar(100);
-    scene.rotation.y = Math.PI; // accrochages côté mur
-    mergeGlbByMaterial(scene);
-    const box = glbLocalBBox(scene);
-    scene.position.set(
-      -(box.min.x + box.max.x) / 2,
-      -box.max.y,
-      -(box.min.z + box.max.z) / 2,
-    );
-    onSize(box.getSize(new THREE.Vector3()));
-  }, [scene]);
-
-  return <primitive object={scene} />;
-}
-
-useGLTF.preload(GLB);
+export const Kallax2x1 = createStaticGlbItem('items/kallax90301555/Kallax90301555.glb', {
+  origin: 'top',
+  rotationY: Math.PI, // accrochages côté mur
+});

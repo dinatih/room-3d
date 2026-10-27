@@ -83,12 +83,12 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
 
       {/* k1 — premier 2×1 pivoté, posé sur le congélateur Y ∈ [FREEZER_H, FREEZER_H + w2] */}
       <group position={[px, FREEZER_H + w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ sceneItemRoot: true }}>
-        <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 />
       </group>
 
       {/* k2 — deuxième 2×1 pivoté, posé sur k1 Y ∈ [FREEZER_H + w2, FREEZER_H + 2×w2] */}
       <group position={[px, FREEZER_H + w2 / 2 + w2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ sceneItemRoot: true }}>
-        <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 />
       </group>
 
       {!noDrona && <KallaxSEDrona isPreview={isPreview} actionState={actionState} />}

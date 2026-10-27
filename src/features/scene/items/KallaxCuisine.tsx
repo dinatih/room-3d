@@ -27,9 +27,6 @@ const h1   = th(1);              // 41
 const h2   = th(2);              // 76.5
 const PIZZA_Y = h2 + h2 / 2 + TI / 2;  // 115.5 — position four pizza
 
-function k(id: string) { return { id } as any; }
-
-
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export function KallaxCuisineDrona({ isPreview = false, actionState = {} }: { isPreview?: boolean; actionState?: Record<string, any> } = {}) {
@@ -90,15 +87,15 @@ export function KallaxCuisine({ onSize, actionState, noDrona, isPreview = false 
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
       {/* 2×2 bas — PY = h2 */}
       <group position={[0, h2, 0]} userData={{ sceneItemRoot: true }}>
-        <Kallax2x2 item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x2 />
       </group>
       {/* 2×2 spec (sans barre haute) — PY = 2×h2 */}
       <group position={[0, h2 + h2, 0]} userData={{ sceneItemRoot: true }}>
-        <Kallax2x2Spec item={k('kallax-sw-2x2-spec')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x2Spec />
       </group>
       {/* 2×1 haut — PY = 2×h2 + h1 */}
       <group position={[0, h2 + h2 + h1, 0]} userData={{ sceneItemRoot: true }}>
-        <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 />
       </group>
       
       {!noDrona && <KallaxCuisineDrona isPreview={isPreview} actionState={actionState} />}

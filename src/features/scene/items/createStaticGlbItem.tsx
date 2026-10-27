@@ -5,8 +5,11 @@ import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '../glbUtils';
 import { useGLTFClone } from '../useGLTFClone';
 import type { SceneItemProps } from '@shared/types';
 
-/** Official IKEA GLB exports in metres: convert to centimetres, centre horizontally and place the base at Y=0. */
-export function createStaticGlbItem(path: string) {
+/** Official IKEA GLB exports (and derived variants), converted from metres to centimetres. */
+export function createStaticGlbItem(path: string, { origin = 'bottom', rotationY }: {
+  origin?: 'bottom' | 'top';
+  rotationY?: number;
+} = {}) {
   useGLTF.preload(path);
   return function StaticGlbItem({ onSize }: { onSize?: SceneItemProps['onSize'] }) {
     const { scene } = useGLTFClone(path);
@@ -14,9 +17,11 @@ export function createStaticGlbItem(path: string) {
       scene.scale.set(1, 1, 1);
       removeGlbLines(scene);
       scene.scale.setScalar(100);
+      // The first merge bakes the rotation into the geometry.
+      if (rotationY !== undefined && !scene.userData.merged) scene.rotation.y = rotationY;
       mergeGlbByMaterial(scene);
       const box = glbLocalBBox(scene);
-      scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
+      scene.position.set(-(box.min.x + box.max.x) / 2, origin === 'top' ? -box.max.y : -box.min.y, -(box.min.z + box.max.z) / 2);
       onSize?.(box.getSize(new THREE.Vector3()));
     }, [scene, onSize]);
     return <group><primitive object={scene} /></group>;

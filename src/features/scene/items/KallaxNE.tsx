@@ -12,7 +12,6 @@ import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
 import { DroneCell, DF } from './Drona';
 import { Variera60136623 } from './Variera60136623';
-import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 import { SlidingDrona } from './SlidingDrona';
 import { DRONA_CATCHALL_POSITION, DRONA_CATCHALL_ACTION, DRONA_CATCHALL_SLIDE_DURATION } from './kallaxNeDrona';
@@ -26,9 +25,6 @@ const h2 = th(2); // 76.5
 const W2_HALF = 37.75; // 2×Kallax half-width (w2/2)
 const DEP_HALF = 19.5; // Kallax depth/2
 const VAR2_W = 32, VAR2_D = 28, VAR2_H = 16; // VARIERA 32×28×16 demi-étag
-
-function k(id: string) { return { id } as any; }
-
 
 export function KallaxNEDrona({ isPreview = false, actionState = {} }: { isPreview?: boolean; actionState?: Record<string, any> } = {}) {
   const dronaMatrices = useMemo(() => {
@@ -100,12 +96,12 @@ export function KallaxNE({ onSize, noDrona, isPreview = false, actionState }: Sc
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
       {/* 2×1 bas — spans Y ∈ [0, h1] */}
       <group position={[0, h1, 0]} userData={{ sceneItemRoot: true }}>
-        <Kallax2x1 item={k('kallax-ne-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 />
       </group>
       
       {/* 2×2 haut — spans Y ∈ [h1, h1+h2] */}
       <group position={[0, h1 + h2, 0]} userData={{ sceneItemRoot: true }}>
-        <Kallax2x2 item={k('kallax-ne-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x2 />
       </group>
       
       {!noDrona && <KallaxNEDrona isPreview={isPreview} actionState={actionState} />}

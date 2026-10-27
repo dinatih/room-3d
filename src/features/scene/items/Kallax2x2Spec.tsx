@@ -4,33 +4,9 @@
  * GLB généré depuis "KALLAX etag 77x77 blanc.glb" en supprimant les 64 triangles
  * de la cloison centrale haute (centroïde X ≈ 0, Y > 0.388m).
  */
-import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
-import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import { createStaticGlbItem } from './createStaticGlbItem';
 
-const GLB = 'items/kallax etag 77x77 open-top blanc/KALLAX etag 77x77 open-top blanc.glb';
-
-export function Kallax2x2Spec({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone(GLB);
-
-  useLayoutEffect(() => {
-    removeGlbLines(scene);
-    scene.scale.setScalar(100);
-    scene.rotation.y = Math.PI;
-    mergeGlbByMaterial(scene);
-    const box = glbLocalBBox(scene);
-    scene.position.set(
-      -(box.min.x + box.max.x) / 2,
-      -box.max.y,
-      -(box.min.z + box.max.z) / 2,
-    );
-    onSize(box.getSize(new THREE.Vector3()));
-  }, [scene]);
-
-  return <primitive object={scene} />;
-}
-
-useGLTF.preload(GLB);
+export const Kallax2x2Spec = createStaticGlbItem('items/kallax etag 77x77 open-top blanc/KALLAX etag 77x77 open-top blanc.glb', {
+  origin: 'top',
+  rotationY: Math.PI, // accrochages côté mur
+});

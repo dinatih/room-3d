@@ -107,6 +107,30 @@ it('mesure et recentre un GLB de façon stable après remontage sous un parent t
   assert.deepEqual(sizes, [[200, 400, 600], [200, 400, 600]]);
 });
 
+it('conserve le sommet et les accrochages Kallax après plusieurs mesures', async () => {
+  const scene = new THREE.Group(), effects = [], sizes = [];
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 6), new THREE.MeshBasicMaterial());
+  mesh.position.set(1, 2, 3); scene.add(mesh);
+  const { createStaticGlbItem } = load('src/features/scene/items/createStaticGlbItem.tsx', {
+    three: THREE, 'react/jsx-runtime': jsx, react: { useLayoutEffect: callback => effects.push(callback) },
+    '@react-three/drei': { useGLTF: { preload() {} } },
+    '../useGLTFClone': { useGLTFClone: () => ({ scene }) }, '../glbUtils': await glbUtils(),
+  });
+  const Item = createStaticGlbItem('/kallax.glb', { origin: 'top', rotationY: Math.PI });
+  let vertices;
+  for (let i = 0; i < 3; i++) {
+    Item({ onSize: size => sizes.push(size.toArray()) }); effects.pop()();
+    assert(Math.abs(scene.position.x - 100) < 1e-8);
+    assert.equal(scene.position.y, -400);
+    assert(Math.abs(scene.position.z - 300) < 1e-8);
+    assert.equal(scene.rotation.y, 0);
+    const positions = Array.from(scene.children[0].geometry.getAttribute('position').array);
+    if (vertices) assert.deepEqual(positions, vertices);
+    vertices = positions;
+  }
+  for (const size of sizes) size.forEach((value, axis) => assert(Math.abs(value - [200, 400, 600][axis]) < 1e-8));
+});
+
 it('restaure les échelles originales après transition, interruption et démontage', () => {
   const refs = [], cleanups = [], camera = new THREE.PerspectiveCamera();
   let cursor, update, frame;

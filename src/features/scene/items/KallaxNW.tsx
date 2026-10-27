@@ -20,7 +20,6 @@ import type { SceneItemProps } from '@shared/types';
 import { SlidingDrona } from './SlidingDrona';
 import { KALLAX_NW_DRONA_POSITIONS, DRONA_SPECIAL_ITEMS, SPECIAL_DRONA_SLIDE_DURATION } from './dronaStorage';
 
-
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
 const TF = 3.5, TI = 1.5, NH = 34, NW_K = 33.5;
 const th = (rows: number) => rows * NH + 2 * TF + (rows - 1) * TI;
@@ -35,8 +34,6 @@ const VAR_W = 32, VAR_D = 13; // VARIERA demi-étag dims (L × P)
 // nwB (2×1) cells ±17.5 → Y = w2/2 ∓ 17.5
 // nwM (1×1) centre = w2 + w1/2 = 95.75
 // nwT (1×1) centre = w2 + w1 + w1/2 = 136.25
-
-function k(id: string) { return { id } as any; }
 
 export function KallaxNWDrona({ isPreview = false, actionState = {} }: { isPreview?: boolean; actionState?: Record<string, any> } = {}) {
   const dronaMatrices = useMemo(() => {
@@ -110,15 +107,15 @@ export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, act
       {/* Sous-groupe GLB — masqué par le toggle GLB, visible par défaut */}
       {/* nwB 2×1 pivoté, Y ∈ [0, w2] */}
       <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ sceneItemRoot: true }}>
-        <Kallax2x1 item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 />
       </group>
       {/* nwM 1×1 pivoté, Y ∈ [w2, w2+w1] */}
       <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ sceneItemRoot: true }}>
-        <Kallax1x1 item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax1x1 />
       </group>
       {/* nwT 1×1 pivoté, Y ∈ [w2+w1, w2+2×w1] */}
       <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ sceneItemRoot: true }}>
-        <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax1x1 />
       </group>
 
       {!noDrona && <KallaxNWDrona isPreview={isPreview} actionState={actionState} />}
