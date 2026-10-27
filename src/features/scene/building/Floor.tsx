@@ -536,23 +536,6 @@ export function Floor() {
     return g;
   }, [slabShape]);
 
-  const SlabUnit = ({ x, z }: { x: number; z: number }) => (
-    <group position={[x, -3.5, z]}>
-      <mesh
-        geometry={slabTopGeo}
-        material={slabConcreteTop}
-        receiveShadow
-        userData={{ brickType: 'floor' }}
-      />
-      <mesh
-        geometry={slabSideGeo}
-        material={[noCapMat, slabConcreteSide]}
-        receiveShadow
-        userData={{ brickType: 'floor' }}
-      />
-    </group>
-  );
-
   return (
     <>
       <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS} visible={floorCoverings}>
@@ -579,8 +562,22 @@ export function Floor() {
       <CategoryLayerGroup layer={LAYER_STRUCTURE} visible={structure} wireframe={globalWireframe || wireframeStructure}>
         <group name="slab-group" userData={{ itemName: 'Dalle Béton' }}>
           <MergedStaticGroup name="merged-slab">
-            <SlabUnit x={0} z={0} />
-            {NEIGHBOR_OFFSETS.map(p => <SlabUnit key={p.x} x={p.x} z={p.z} />)}
+            {[{ x: 0, z: 0 }, ...NEIGHBOR_OFFSETS].map(({ x, z }) => (
+              <group key={`${x}:${z}`} position={[x, -3.5, z]}>
+                <mesh
+                  geometry={slabTopGeo}
+                  material={slabConcreteTop}
+                  receiveShadow
+                  userData={{ brickType: 'floor' }}
+                />
+                <mesh
+                  geometry={slabSideGeo}
+                  material={[noCapMat, slabConcreteSide]}
+                  receiveShadow
+                  userData={{ brickType: 'floor' }}
+                />
+              </group>
+            ))}
           </MergedStaticGroup>
         </group>
 
