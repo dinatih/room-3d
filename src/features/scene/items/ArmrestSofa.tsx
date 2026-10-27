@@ -214,7 +214,8 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
   // Frame details
   const supportBeamGeo = useMemo(() => new THREE.BoxGeometry(2, 2, 110), []);
-  const legGeo = useMemo(() => new THREE.BoxGeometry(3, 33, 3), []);
+  const legGeo = useMemo(() => new THREE.BoxGeometry(3, 35, 3), []);
+  const legStretcherGeo = useMemo(() => new THREE.BoxGeometry(45, 2, 2.5), []);
   const footGeo = useMemo(() => new THREE.CylinderGeometry(2, 2, 1, 16), []);
 
   // Animation logic in render loop
@@ -265,18 +266,36 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
       <mesh geometry={supportBeamGeo} material={metalMat} position={[-20, 32, 0]} castShadow />
       <mesh geometry={supportBeamGeo} material={metalMat} position={[20, 32, 0]} castShadow />
 
-      {/* Straight Vertical Legs */}
-      {/* Left Side (Z = -50) */}
-      <mesh geometry={legGeo} material={metalMat} position={[24, 16.5, -50]} castShadow />
-      <mesh geometry={legGeo} material={metalMat} position={[-24, 16.5, -50]} castShadow />
-      <mesh geometry={footGeo} material={feetMat} position={[24, 0.5, -50]} />
-      <mesh geometry={footGeo} material={feetMat} position={[-24, 0.5, -50]} />
-
-      {/* Right Side (Z = 50) */}
-      <mesh geometry={legGeo} material={metalMat} position={[24, 16.5, 50]} castShadow />
-      <mesh geometry={legGeo} material={metalMat} position={[-24, 16.5, 50]} castShadow />
-      <mesh geometry={footGeo} material={feetMat} position={[24, 0.5, 50]} />
-      <mesh geometry={footGeo} material={feetMat} position={[-24, 0.5, 50]} />
+      {/* Splayed Trapeze Legs with Horizontal Crossbars (Left Z < 0, Right Z > 0) */}
+      {[-1, 1].map((side) => {
+        const zPivot = side * 42;
+        const zBase = side * 54;
+        return (
+          <group key={side}>
+            {/* Front & Back splayed legs */}
+            {[-22, 22].map((x) => (
+              <group key={x}>
+                <mesh
+                  geometry={legGeo}
+                  material={metalMat}
+                  position={[x, 16.5, (zPivot + zBase) / 2]}
+                  rotation={[side * -0.36, 0, 0]}
+                  castShadow
+                />
+                <mesh geometry={footGeo} material={feetMat} position={[x, 0.5, zBase]} />
+              </group>
+            ))}
+            {/* Horizontal reinforcing stretcher bar */}
+            <mesh
+              geometry={legStretcherGeo}
+              material={metalMat}
+              position={[0, 10, (zPivot + zBase) / 2]}
+              rotation={[side * -0.36, 0, 0]}
+              castShadow
+            />
+          </group>
+        );
+      })}
 
 
       {/* ── 2. STATIC SEAT & BACKREST CUSHIONS ──────────────────────────────── */}
