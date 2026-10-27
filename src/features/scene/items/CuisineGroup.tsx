@@ -78,17 +78,17 @@ export function CuisineLillhavet() {
   return (
     <group position={[18, 155, 34]} rotation={[0, Math.PI - Math.PI / 4 - Math.PI / 8, 0]}>
       <Lillhavet80461276 />
-      <group position={[0, 4, -2]}>
-        <group position={[1, 0, 1]} rotation={[0.2, 0, 0.1]}><Snitta00287295 /></group>
-        <group position={[-1, 0, -1]} rotation={[-0.2, 0.5, 0.1]}><Snitta00287295 /></group>
-        <group position={[2, 0, -2]} rotation={[0.1, 0, 0.2]}><Fornuft40428482 /></group>
-        <group position={[-2, 0, 2]} rotation={[-0.1, -0.5, -0.2]}><Fornuft40428482 /></group>
-        <group position={[0, 0, 2]} rotation={[0.3, 0.2, 0]}><Fornuft10428488 /></group>
-        <group position={[0, 0, -2]} rotation={[-0.3, 0.1, 0.1]}><Fornuft10428488 /></group>
-        <group position={[2, 0, 0]} rotation={[0.1, -0.2, 0.3]}><Fornuft90428489 /></group>
-        <group position={[-2, 0, 0]} rotation={[0.2, 0.3, -0.1]}><Fornuft90428489 /></group>
-        <group position={[1.5, 0, 1.5]} rotation={[0.1, 0, 0.1]}><Fornuft80428475 /></group>
-        <group position={[-1.5, 0, -1.5]} rotation={[-0.1, 0.1, -0.1]}><Fornuft80428475 /></group>
+      <group position={[15.5, 1, 0]}>
+        <group position={[1, 0, 2]} rotation={[0.1, 0.2, 0.1]}><Snitta00287295 /></group>
+        <group position={[-1, 0, -2]} rotation={[-0.1, -0.3, 0.1]}><Snitta00287295 /></group>
+        <group position={[1.5, 0, -1]} rotation={[0.15, 0.5, -0.1]}><Fornuft40428482 /></group>
+        <group position={[-1.5, 0, 1]} rotation={[-0.1, 0.4, 0.15]}><Fornuft40428482 /></group>
+        <group position={[0, 0, 2.5]} rotation={[0.05, -0.2, 0.1]}><Fornuft10428488 /></group>
+        <group position={[0, 0, -2.5]} rotation={[-0.05, 0.2, -0.1]}><Fornuft10428488 /></group>
+        <group position={[1.5, 0, 0]} rotation={[0.1, 0.3, 0.05]}><Fornuft90428489 /></group>
+        <group position={[-1.5, 0, 0]} rotation={[-0.1, -0.2, -0.05]}><Fornuft90428489 /></group>
+        <group position={[0.5, 0, 1]} rotation={[0.12, 0.1, 0.08]}><Fornuft80428475 /></group>
+        <group position={[-0.5, 0, -1]} rotation={[-0.12, -0.1, -0.08]}><Fornuft80428475 /></group>
       </group>
     </group>
   );
