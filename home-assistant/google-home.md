@@ -19,9 +19,10 @@ Elle expose les appareils HA à Google Home ; les noms Smart Life restent indép
 - Configuration HA validée par `check_config`, puis HA redémarré avec succès.
 - Le point d’entrée HTTPS `/api/google_assistant` répond **405** en GET : c’est
   attendu, Google lui adresse des requêtes POST authentifiées.
-- Douze entités sont explicitement exposées : les quatre lampes, le purificateur,
+- Seize entités sont explicitement exposées : les cinq lampes, le purificateur,
   le volet, la télévision, les températures des trois capteurs Hue, le
-  chauffe-serviettes et la prise Jardin, selon `google-assistant.yaml`.
+  chauffe-serviettes, les prises Jardin et Tête, et les deux sorties de salle de
+  bain, selon `google-assistant.yaml`.
 - Association réussie confirmée par l’utilisateur : la lampe du couloir est ajoutée
   avec **[test] Dinatih Home Assistant**, après correction Cloudflare.
 - Après extension à sept entités, configuration HA validée, redémarrage effectué
@@ -164,16 +165,32 @@ affectés à Salle de bain/Jardin dans HA, sont ajoutés à la liste explicite.
 Le rétroéclairage du chauffe-serviettes, le verrou enfant et les réglages techniques
 ne sont pas exposés comme des appareils supplémentaires.
 
-Avant dissociation Smart Life, identifier la lampe `light.fenetre`, la prise
-`switch.tete_socket_1` et les deux sorties
-`switch.interrupteurs_salle_de_bain_switch_1` / `_2`. Le « Radiateur » de l’ancien
-inventaire Google n’a pas de correspondance HA établie. Les boutons Tuya remontent
+Les affectations suivantes sont confirmées par l’utilisateur et appliquées dans
+HA, sans changer les identifiants d’entité :
+
+| Entité | Nom HA | Pièce |
+| --- | --- | --- |
+| `light.fenetre` | Lumière Fenêtre | Séjour |
+| `switch.tete_socket_1` | Prise Tête | Séjour |
+| `switch.interrupteurs_salle_de_bain_switch_1` | Lumière Lavabo | Salle de bain |
+| `switch.interrupteurs_salle_de_bain_switch_2` | Alimentation Lumière Douche | Salle de bain |
+| `fan.living_room` | Purificateur Séjour | Séjour |
+
+Les quatre premières entités sont ajoutées à l’exposition Google. La deuxième
+sortie de salle de bain commande l’alimentation électrique de l’ampoule Hue
+Douche : ce sont deux commandes différentes, pas un doublon. Le purificateur est
+identifié dans le registre HA comme Philips AMF870/15, intégration
+`philips_airpurifier_coap` ; l’ancien nom « Living room » ne désignait pas une Hue.
+L’utilisateur confirme qu’aucun appareil Google ne s’appelle encore « Radiateur ».
+
+Les boutons Tuya remontent
 comme événements, les détecteurs comme mouvements : ces classes ne sont pas
 exposables directement par Google Assistant HA. Leur présence dans HA ne garantit
 pas que les appuis ont été testés ni que leurs automatisations ont été transférées.
 
-L’interrupteur rond commande Lumière Séjour et se trouve dans Séjour, selon
-l’utilisateur. Il n’a pas été remplacé par un interrupteur virtuel Google.
+L’interrupteur rond commande Lumière Séjour et a été affecté à Séjour dans HA.
+Il n’a pas été remplacé par un interrupteur virtuel Google. Sa batterie indique
+1 % dans HA lors de l’inventaire, sans test physique de la pile.
 Les anciennes pièces Google invisibles dans la gestion ont été supprimées par
 l’utilisateur après affectation temporaire du Nest Mini à chacune, puis retour
 du Mini dans Séjour avant suppression des pièces devenues accessibles.

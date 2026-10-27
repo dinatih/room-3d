@@ -28,3 +28,11 @@ entity_config:
     expose: true
   switch.jardin_socket_1:
     expose: true
+  light.fenetre:
+    expose: true
+  switch.tete_socket_1:
+    expose: true
+  switch.interrupteurs_salle_de_bain_switch_1:
+    expose: true
+  switch.interrupteurs_salle_de_bain_switch_2:
+    expose: true
