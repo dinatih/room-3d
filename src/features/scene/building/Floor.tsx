@@ -429,33 +429,21 @@ export function BathSkirting() {
   const { x: diagX, z: diagZ } = DiagWall.p(dm, SD_T / 2);
   const diagLen = dB - dC;
 
-  const SkirtX = ({ x1, x2, z, dir }: { x1: number; x2: number; z: number; dir: '+Z' | '-Z' }) => {
-    const minX = Math.min(x1, x2), maxX = Math.max(x1, x2), len = maxX - minX;
-    if (len <= 0) return null;
-    return <P w={len} h={SH_T} d={SD_T} x={(minX + maxX) / 2} y={y} z={dir === '+Z' ? z + SD_T / 2 : z - SD_T / 2} mat={tileMat} />;
-  };
-
-  const SkirtZ = ({ z1, z2, x, dir }: { z1: number; z2: number; x: number; dir: '+X' | '-X' }) => {
-    const minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2), len = maxZ - minZ;
-    if (len <= 0) return null;
-    return <P w={SD_T} h={SH_T} d={len} x={dir === '+X' ? x + SD_T / 2 : x - SD_T / 2} y={y} z={(minZ + maxZ) / 2} mat={tileMat} />;
-  };
-
   return (
     <group name="skirting-bath" userData={{ brickType: 'skirting' }}>
-      {/* Mur Nord SDB */}
-      <SkirtX x1={BATH_WEST_WALL} x2={BATH_EAST_WALL} z={BATH_NORTH_WALL} dir="+Z" />
-
-      {/* Mur Ouest SDB */}
-      <SkirtZ z1={BATH_NORTH_WALL} z2={Bz} x={BATH_WEST_WALL} dir="+X" />
-
-      {/* Cloison Est SDB (autour de la porte) */}
-      <SkirtZ z1={BATH_NORTH_WALL} z2={BATH_FRAME_NORTH} x={BATH_EAST_WALL} dir="-X" />
-      <SkirtZ z1={BATH_FRAME_SOUTH} z2={Cz} x={BATH_EAST_WALL} dir="-X" />
-
-      {/* Douche (retour Nord et paroi Est) */}
-      <SkirtX x1={pWest('shower-ne')} x2={pEast('shower-ne')} z={pNorth('shower-ne')} dir="-Z" />
-      <SkirtZ z1={pNorth('shower-ne')} z2={pNorth('shower-se')} x={pEast('shower-ne')} dir="+X" />
+      {[
+        [BATH_WEST_WALL, BATH_NORTH_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, 0, 1], // Nord
+        [BATH_WEST_WALL, BATH_NORTH_WALL, BATH_WEST_WALL, Bz, 1, 0], // Ouest
+        [BATH_EAST_WALL, BATH_NORTH_WALL, BATH_EAST_WALL, BATH_FRAME_NORTH, -1, 0], // Est, avant porte
+        [BATH_EAST_WALL, BATH_FRAME_SOUTH, BATH_EAST_WALL, Cz, -1, 0], // Est, après porte
+        [pWest('shower-ne'), pNorth('shower-ne'), pEast('shower-ne'), pNorth('shower-ne'), 0, -1], // Douche nord
+        [pEast('shower-ne'), pNorth('shower-ne'), pEast('shower-ne'), pNorth('shower-se'), 1, 0], // Douche est
+      ].map(([x1, z1, x2, z2, nx, nz], i) => {
+        const width = Math.abs(x2 - x1), depth = Math.abs(z2 - z1);
+        if (width + depth <= 0) return null;
+        return <P key={i} w={width || SD_T} h={SH_T} d={depth || SD_T}
+          x={(x1 + x2) / 2 + nx * SD_T / 2} y={y} z={(z1 + z2) / 2 + nz * SD_T / 2} mat={tileMat} />;
+      })}
 
       {/* Mur diagonal */}
       <mesh position={[diagX, y, diagZ]} rotation-y={DiagWall.rotY} material={tileMat} castShadow receiveShadow>
