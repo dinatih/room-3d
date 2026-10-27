@@ -5,6 +5,15 @@ const g = require('../../src/features/scene/ai/navigation/geometry.ts');
 const { NavigationMesh } = require('../../src/features/scene/ai/navigation/mesh.ts');
 
 describe('Réseau permanent de passages au sol', () => {
+  it('fusionne les trois obstacles responsables du crash SweepLine enregistré le 27 octobre', () => {
+    const obstacles = g.union(require('../fixtures/navigation-sweepline.json'));
+    assert.equal(obstacles.length, 1);
+    assert(g.insideObstacle({ x: 136, z: 440 }, obstacles));
+    const mesh = new NavigationMesh(obstacles, [[g.rectangle(120, 440, 400, 400)]]);
+    const start = { x: 20, z: 350 }, target = { x: 20, z: 520 }, path = mesh.find(start, target);
+    assert(path);
+    assert(path.every((point, i) => g.segmentFree(i ? path[i - 1] : start, point, obstacles)));
+  });
   it('simplifie les arrondis sans réduire le rayon du corps ni fermer un passage de 30 cm', () => {
     for (const radius of [4, 13.3, 40]) {
       const center = { x: 0, z: 0 }, ring = g.inflate([center], radius);

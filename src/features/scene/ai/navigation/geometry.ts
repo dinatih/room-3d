@@ -73,11 +73,12 @@ export function union(polygons: Polygon[]): Polygon[][] {
   return mergeObstacles(polygons.map(p => [p]));
 }
 
-/** Merge existing obstacles while preserving holes and new intersection corners. */
+/** Integer input coordinates keep coincident edges stable during the sweep-line union. */
 export function mergeObstacles(obstacles: Polygon[][]): Polygon[][] {
   if (!obstacles.length) return [];
-  const inputs = obstacles.map(rings => rings.map(r => r.map(v => [snap(v.x), snap(v.z)] as [number, number])));
-  return polygonClipping.union(inputs[0], ...inputs.slice(1)).map(p => p.map(r => r.slice(0, -1).map(([x, z]) => ({ x, z }))));
+  const scale = Math.round(1 / BOOLEAN_PRECISION);
+  const inputs = obstacles.map(rings => rings.map(r => r.map(v => [Math.round(v.x * scale), Math.round(v.z * scale)] as [number, number])));
+  return polygonClipping.union(inputs[0], ...inputs.slice(1)).map(p => p.map(r => r.slice(0, -1).map(([x, z]) => ({ x: x / scale, z: z / scale }))));
 }
 
 export function insideObstacle(p: Point, obstacles: Polygon[][]): boolean {
