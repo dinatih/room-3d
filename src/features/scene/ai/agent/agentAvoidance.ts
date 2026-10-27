@@ -1,6 +1,6 @@
 import { cameraState } from '../../cameraState';
 import { useSceneStore } from '../../store/useSceneStore';
-import { getAgentProfile, hasAgentProfile } from '../navigation/obstacles';
+import { getAgentProfile, hasAgentProfile, NAVIGATION_RADIUS_CM } from '../navigation/obstacles';
 import { inflate, CLEARANCE_ERROR, BOOLEAN_PRECISION, GEOMETRY_EPSILON, pointInRing, projectToSegment, distance, type Point, type Polygon } from '../navigation/geometry';
 import { duoSessionManager } from '../duoSessionManager';
 import { devLog } from '@/devLog';
@@ -9,7 +9,7 @@ export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
 // Fixed avoidance radius in centimetres, shared with the debug display.
-export const actorRadius = (_profile: { radius: number }): number => 1;
+export const actorRadius = (_profile: { radius: number }): number => NAVIGATION_RADIUS_CM;
 export const actorClearance = (profile: { radius: number }, body: { radius: number }): number =>
   actorRadius(profile) + actorRadius(body);
 const destinations = new Map<string, Point>();

@@ -1,5 +1,8 @@
 import { inflate, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
 
+/** Shared horizontal navigation footprint, independent of the rendered body. */
+export const NAVIGATION_RADIUS_CM = 1;
+
 export interface NavigationObstacleDef {
   id: string;
   polygon: Polygon;
@@ -58,8 +61,7 @@ export function getAgentProfile(id: string): AgentProfile {
 export function hasAgentProfile(id: string): boolean { return profiles.has(id); }
 export const navigationDebug = new Map<string, { path: Point[]; target: Point; error?: string }>();
 
-/** Requested clearance around furniture: one quarter of the agent body radius. */
-export function furnitureClearance(profile: AgentProfile): number { return profile.radius / 4; }
+export function furnitureClearance(_profile: AgentProfile): number { return NAVIGATION_RADIUS_CM; }
 
 const footprintCaches = new WeakMap<AgentProfile, { revision: number; polygons: WeakMap<NavigationObstacleDef, Polygon> }>();
 /** Reuse exact furniture footprints until registered geometry changes. */

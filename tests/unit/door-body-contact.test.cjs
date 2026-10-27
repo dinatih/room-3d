@@ -45,10 +45,10 @@ it('la porte du séjour ne se referme pas sur Native arrêté à la position des
         assert(minimum > 0);
         const target = sign * Math.max(minimum, push);
         angle = spring(angle, target, dt, sign < 0 ? -allowed : minimum, sign < 0 ? -minimum : allowed);
-        assert(g.segmentFree(point, point, [[g.inflate(doors.doorPolygon('living', angle), profile.radius + door.margin)]]), `Door entered the stationary body at ${angle}, dt=${dt}`);
+        assert(g.segmentFree(point, point, [[g.inflate(doors.doorPolygon('living', angle), obstacles.NAVIGATION_RADIUS_CM)]]), `Door entered the navigation footprint at ${angle}, dt=${dt}`);
       }
       const escape = { x: point.x - 10, z: point.z };
-      assert(g.segmentFree(point, escape, [[g.inflate(doors.doorPolygon('living', angle), profile.radius + door.margin)]]), 'The body must still be able to walk away');
+      assert(g.segmentFree(point, escape, [[g.inflate(doors.doorPolygon('living', angle), obstacles.NAVIGATION_RADIUS_CM)]]), 'The actor must still be able to walk away');
     }
     cameraState.positions[id].x += door.length * 2;
     assert.equal(doors.computeDoorDynamics(door, door.maxAngle).minimum, 0, 'Leaving releases the closing stop');

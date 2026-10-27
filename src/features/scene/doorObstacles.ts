@@ -7,7 +7,7 @@
  */
 
 import { cameraState } from './cameraState';
-import { furnitureObstacles, getObstacleRevision, getAgentProfile, hasAgentProfile } from './ai/navigation/obstacles';
+import { furnitureObstacles, getObstacleRevision, getAgentProfile, hasAgentProfile, NAVIGATION_RADIUS_CM } from './ai/navigation/obstacles';
 import { inflate, pointInRing, rectangle, CLEARANCE_ERROR, type Polygon } from './ai/navigation/geometry';
 import { getDoorProtections, getDoorProtectionRevision, type DoorKey, type DoorProtection } from './ai/navigation/doorRequests';
 import { pX, pZ, DiagWall, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from './wallData';
@@ -26,7 +26,7 @@ export interface DoorConfig {
   maxAngle: number;                      // Angle max absolu en radians
   yMin: number;
   yMax: number;
-  margin: number;                        // Marge de sécurité (cm)
+  margin: number;                        // Marge mécanique contre le mobilier (cm), pas autour des PNJ.
 }
 
 export function doorPolygon(key: DoorKey, angle: number): Polygon {
@@ -61,9 +61,9 @@ export const doorCollisionState = {
 /**
  * Résout l'angle critique de contact entre un battant et une boîte AABB.
  */
-export function getDoorContactAngle(door: DoorConfig, polygon: Polygon): number | null {
-  const corners = inflate(polygon, door.thickness / 2 + door.margin, DOOR_CONTACT_ERROR);
-  // Inflate the polygon by the leaf half-thickness and the door's own margin.
+export function getDoorContactAngle(door: DoorConfig, polygon: Polygon, margin = door.margin): number | null {
+  const corners = inflate(polygon, door.thickness / 2 + margin, DOOR_CONTACT_ERROR);
+  // Furniture keeps its mechanical margin; actor protections pass zero margin.
   let earliestContact: number | null = null;
 
   // 1. Test des 4 sommets de la boîte
@@ -145,7 +145,6 @@ export function computeDoorDynamics(
   let push = 0, minimum = 0;
   for (const id in cameraState.positions) {
     const p = cameraState.positions[id];
-    const bodyRadius = hasAgentProfile(id) ? getAgentProfile(id).radius : (id === 'robin' ? 7.5 : HUMAN_BODY_RADIUS);
     const height = hasAgentProfile(id) ? getAgentProfile(id).height : (id === 'robin' ? 15 : HUMAN_BODY_HEIGHT);
     if (p.y > door.yMax || p.y + height < door.yMin) continue;
 
@@ -153,7 +152,7 @@ export function computeDoorDynamics(
     const vz = p.z - door.pivot.z;
     const along = vx * door.closedDir.x + vz * door.closedDir.z;
     const across = vx * door.openNormal.x + vz * door.openNormal.z;
-    const clearance = bodyRadius + door.thickness / 2 + door.margin;
+    const clearance = NAVIGATION_RADIUS_CM + door.thickness / 2;
     const distance = Math.hypot(along, across);
     // A leaf already beyond a body must stop on its opening-side tangent.
     // The spring needs a hard limit: its closing momentum can overshoot a target.
@@ -212,9 +211,9 @@ export function computeDoorAllowedAngle(door: DoorConfig): number {
   const key = doorKeysByConfig.get(door);
   if (key) for (const body of getDoorProtections(key)) {
     if (body.y + body.height <= door.yMin || body.y >= door.yMax) continue;
-    const polygon = inflate([{ x: body.x, z: body.z }], body.radius);
+    const polygon = inflate([{ x: body.x, z: body.z }], NAVIGATION_RADIUS_CM);
     const closedCenter = { x: door.pivot.x + door.closedDir.x * door.length / 2, z: door.pivot.z + door.closedDir.z * door.length / 2 };
-    const contact = pointInRing(closedCenter, polygon) ? 0 : getDoorContactAngle(door, polygon);
+    const contact = pointInRing(closedCenter, polygon) ? 0 : getDoorContactAngle(door, polygon, 0);
     if (contact !== null) { furnitureMaxAngle = Math.min(furnitureMaxAngle, contact); contacts.push({ protection: body, angle: contact }); }
   }
   allowedAngles.set(door, { revision, protectionRevision, angle: furnitureMaxAngle, contacts });

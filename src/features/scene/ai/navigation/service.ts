@@ -1,7 +1,7 @@
 import { positionState } from '../../positionState';
 import { movingFurniture } from '../../furniturePositions';
 import { architectureObstacles, walkableSurfaces } from './architecture';
-import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, hasAgentProfile, navigationDebug, agentProfileLifecycle, type AgentProfile } from './obstacles';
+import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, hasAgentProfile, navigationDebug, agentProfileLifecycle, NAVIGATION_RADIUS_CM, type AgentProfile } from './obstacles';
 import { inflate, rectangle, pointInRing, insideObstacle, segmentFree, distance, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState, glassDoorState, getDoorLimitDiagnostics, doorPolygon } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, getAgentDoorProtection, protectDoor, getDoorRequestDiagnostics, type DoorKey, type DoorProtection } from './doorRequests';
@@ -27,13 +27,13 @@ function doorFootprint(profile: AgentProfile, key: DoorKey, angle = 0): Polygon[
   if (!footprints) { footprints = new Map(); doorFootprints.set(profile, footprints); }
   let footprint = footprints.get(key);
   if (!footprint) {
-    const closed = [[inflate(doorPolygon(key, 0), profile.radius + DOOR_CONFIGS[key].margin)]];
+    const closed = [[inflate(doorPolygon(key, 0), NAVIGATION_RADIUS_CM)]];
     footprint = { closed, angle: 0, actual: closed };
     footprints.set(key, footprint);
   }
   if (angle === 0) return footprint.closed;
   if (footprint.angle !== angle) {
-    footprint.actual = [[inflate(doorPolygon(key, angle), profile.radius + DOOR_CONFIGS[key].margin)]];
+    footprint.actual = [[inflate(doorPolygon(key, angle), NAVIGATION_RADIUS_CM)]];
     footprint.angle = angle;
   }
   return footprint.actual;
@@ -66,8 +66,7 @@ agentProfileLifecycle.onUsed = profile => { getNavigationPreparation(profile); }
 const inSurface = (p: Point) => walkableSurfaces.some(rings => pointInRing(p, rings[0]) && !rings.slice(1).some(h => pointInRing(p, h)));
 export function getDoorApproach(key: DoorKey, agentId?: string, preferred?: Point, start?: Point, departureOwner?: string): Point {
   const door = DOOR_CONFIGS[key];
-  const radius = agentId ? getAgentProfile(agentId).radius : 0;
-  const clearance = radius + door.thickness / 2 + door.margin;
+  const clearance = NAVIGATION_RADIUS_CM + door.thickness / 2;
   const desired = {
     x: door.pivot.x + door.closedDir.x * (door.length + clearance) + door.openNormal.x * clearance,
     z: door.pivot.z + door.closedDir.z * (door.length + clearance) + door.openNormal.z * clearance,
@@ -101,11 +100,11 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
   if (old && old.preparation !== previous) old.preparation.cancel();
   const solid = [...architectureObstacles, ...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0 && (!excludeSet || !o.owner || !excludeSet.has(getInteractionOwner(o.owner))));
   const definition: GraphDefinition = { solids: [], surfaces: walkableSurfaces, comfortDistance: excludeSet?.size ? undefined : NAVIGATION_COMFORT_CM };
-  const addObstacle = (polygon: Polygon, radius = profile.radius) => {
-    definition.solids.push({ polygon, radius, comfort: !excludeSet?.size });
+  const addObstacle = (polygon: Polygon) => {
+    definition.solids.push({ polygon, radius: NAVIGATION_RADIUS_CM, comfort: !excludeSet?.size });
   };
-  solid.forEach(o => addObstacle(o.polygon, furnitureObstacles.has(o.id) ? furnitureClearance(profile) : profile.radius));
-  doorKeys.forEach((k, i) => addObstacle(doorPolygon(k, angles[i]), profile.radius + DOOR_CONFIGS[k].margin));
+  solid.forEach(o => addObstacle(o.polygon));
+  doorKeys.forEach((k, i) => addObstacle(doorPolygon(k, angles[i])));
   if (shutterBlocked) for (const key of ['glassLeft', 'glassRight'] as const) addObstacle(doorPolygon(key, 0));
   // Surface boundaries are barriers, with the same body clearance as walls.
   for (const rings of walkableSurfaces) for (const ring of rings) for (let i = 0; i < ring.length; i++) {
@@ -204,7 +203,7 @@ export function navigationDiagnostics(route: RouteState, agentId: string, start:
   if (DEV_LOG_ENABLED && performance.now() - lastWorldDiagnosticAt >= 1000) {
     lastWorldDiagnosticAt = performance.now();
     devLog({ tag: 'navigation', category: 'nav', action: 'nav_world', data: {
-      revision: getObstacleRevision(), actors: getActorNavigationDiagnostics(), furniture: [...furnitureObstacles.values()], movingFurniture: [...movingFurniture],
+      revision: getObstacleRevision(), navigationRadius: NAVIGATION_RADIUS_CM, actors: getActorNavigationDiagnostics(), furniture: [...furnitureObstacles.values()], movingFurniture: [...movingFurniture],
       doors: doorKeys.map(key => ({ key, actualAngle: doorCollisionState[key].angle, allowedAngle: computeDoorAllowedAngle(DOOR_CONFIGS[key]), limits: getDoorLimitDiagnostics(key), config: DOOR_CONFIGS[key] })),
       glassDoor: glassDoorState,
       doorRequests: getDoorRequestDiagnostics(), shutter: glassShutterState,
@@ -212,7 +211,7 @@ export function navigationDiagnostics(route: RouteState, agentId: string, start:
       jobs: getNavigationJobDiagnostics(),
     } });
   }
-  return { path: route.path, index: route.index, next, limited, blockers, target: route.target, destination: route.destination,
+  return { navigationRadius: NAVIGATION_RADIUS_CM, path: route.path, index: route.index, next, limited, blockers, target: route.target, destination: route.destination,
     epoch: route.graph?.epoch, graphId: route.graph?.id, owner: route.owner, approach: route.approach, exit: route.exit && { ...route.exit, graph: route.exit.graph.id },
     doors: [...route.doors], protectedDoor: route.protectedDoor, waitReason: route.waitReason, error: route.error, occupiedTarget: route.occupiedTarget,
     glassDoor: { ...glassDoorState, leaves: (['glassRight', 'glassLeft'] as const).map(key => ({ key, actualAngle: doorCollisionState[key].angle,
@@ -291,7 +290,7 @@ function releaseClearedDoors(route: RouteState, agentId: string, profile: AgentP
       return points.some((p, i) => i > 0 && !segmentFree(points[i - 1], p, closed));
     });
     const clear = leaves.every(k => {
-      const d = DOOR_CONFIGS[k], clearance = profile.radius + d.thickness / 2 + d.margin;
+      const d = DOOR_CONFIGS[k], clearance = NAVIGATION_RADIUS_CM + d.thickness / 2;
       const across = (position.x - d.pivot.x) * d.openNormal.x + (position.z - d.pivot.z) * d.openNormal.z;
       return across < -clearance || distance(position, d.pivot) > d.length + clearance;
     });
@@ -587,7 +586,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
 export function describeNavigationBlock(agentId: string, start: Point, target: Point, route: RouteState, actorBlockers?: ActorBlockers): string {
   const profile = getAgentProfile(agentId);
   const at = (point: Point) => `(${point.x.toFixed(1)}, ${point.z.toFixed(1)})`;
-  const details = [`position ${at(start)} → cible ${at(target)}`, `rayon ${profile.radius.toFixed(1)} cm`];
+  const details = [`position ${at(start)} → cible ${at(target)}`, `rayon de navigation ${NAVIGATION_RADIUS_CM} cm`];
   if (route.owner) details.push(`sortie de ${route.owner}`);
   const next = route.path[route.index];
   if (next) details.push(`prochain point ${at(next)}`);

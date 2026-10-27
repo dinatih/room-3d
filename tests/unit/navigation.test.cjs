@@ -58,13 +58,23 @@ function walk(start, target, keys, steer) {
         position = nav.followRoute(route, 'walker', position, target, 3, steer);
         assert.equal(route.error, null, route.error || '');
         for (const key of keys)
-            assert(g.segmentFree(before, position, [[g.inflate(doors.doorPolygon(key, doors.doorCollisionState[key].angle), 13.3 + doors.DOOR_CONFIGS[key].margin)]]), `Crossed ${key} leaf`);
+            assert(g.segmentFree(before, position, [[g.inflate(doors.doorPolygon(key, doors.doorCollisionState[key].angle), obstacles.NAVIGATION_RADIUS_CM)]]), `Crossed ${key} leaf`);
     }
     assert(g.distance(position, target) === 0, `Stopped at ${JSON.stringify(position)}: ${route.waitReason}`);
     nav.resetRoute(route, 'walker');
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('utilise le même rayon de 1 cm pour les PNJ, murs, meubles et portes malgré un modèle plus large', () => {
+        setup({ living: { ...leaf, length: 6, thickness: 1, pivot: { x: -3, z: 0 } } }, 6);
+        const profile = obstacles.getAgentProfile('walker'), graph = nav.getNavigationGraph(profile);
+        assert(profile.radius > obstacles.NAVIGATION_RADIUS_CM);
+        assert.equal(loadAvoidance().actorRadius(profile), obstacles.NAVIGATION_RADIUS_CM);
+        assert.equal(obstacles.furnitureClearance(profile), obstacles.NAVIGATION_RADIUS_CM);
+        assert(graph.definition.solids.every(solid => solid.radius === obstacles.NAVIGATION_RADIUS_CM));
+        doors.doorCollisionState.living.angle = Math.PI / 2;
+        walk({ x: 0, z: -50 }, { x: 0, z: 100 }, ['living']);
+    });
     it('contourne une pièce de transit pleine puis reprend le chemin direct quand elle se libère', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
@@ -314,7 +324,7 @@ describe('Navigation et portes — géométrie isolée', () => {
                     assert.equal(route.error, null);
                     assert(!route.waitReason, `${speed} cm/s, side ${side}, frame ${frame}: ${route.waitReason}`);
                     assert(g.distance(before, position) > 0, 'An anticipated opening must not stop the actor');
-                    assert(g.segmentFree(before, position, [[g.inflate(doors.doorPolygon('living', doors.doorCollisionState.living.angle), 13.3 + leaf.margin)]]), 'The actor must never cross the actual leaf');
+                    assert(g.segmentFree(before, position, [[g.inflate(doors.doorPolygon('living', doors.doorCollisionState.living.angle), obstacles.NAVIGATION_RADIUS_CM)]]), 'The actor must never cross the actual leaf');
                     doors.doorCollisionState.living.angle = spring(doors.doorCollisionState.living.angle, requests.doorRequested('living') ? Math.PI / 2 : 0, dt, 0, Math.PI / 2);
                 }
                 assert.deepEqual(position, target);
@@ -416,7 +426,7 @@ describe('Navigation et portes — géométrie isolée', () => {
                 assert.equal(route.path, path);
                 assert.equal(cancelledGraphs, cancelled, 'The graph still serving existing paths must stay alive until its replacement is ready');
             }
-            const barrier = g.rectangle(position.x + 8, position.z, 4, 40);
+            const barrier = g.rectangle(position.x + 4, position.z, 4, 40);
             obstacles.registerObstacle({ id: 'live-barrier', polygon: barrier, yMin: 0, yMax: 250 });
             assert.deepEqual(nav.followRoute(route, 'walker', position, target, 3), position, 'Live geometry must stop an unsafe step before the worker replies');
             assert.match(route.waitReason, /géométrie actuelle/);
@@ -532,7 +542,7 @@ describe('Navigation et portes — géométrie isolée', () => {
         assert(limit > 0 && limit < Math.PI / 2, `Expected partial opening, got ${limit}`);
         requests.requestDoor('living', 'walker');
         assert(requests.doorRequested('living'));
-        assert(!g.pointInRing(storage, g.inflate(doors.doorPolygon('living', limit), storage.radius + leaf.margin)), 'Door entered protected body');
+        assert(!g.pointInRing(storage, g.inflate(doors.doorPolygon('living', limit), obstacles.NAVIGATION_RADIUS_CM)), 'Door entered protected navigation footprint');
         doors.doorCollisionState.living.angle = limit;
         walk({ x: 20, z: -50 }, { x: 20, z: 100 }, ['living']);
         const blockedRoute = nav.createRouteState();

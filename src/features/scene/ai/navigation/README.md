@@ -33,12 +33,15 @@ de porte restent pris en compte pendant le mouvement d'un autre meuble.
 
 Les obstacles conservent leurs trous et les passages étroits. Les dilatations
 arrondies utilisent une approximation conservative à 1 cm près : elles ne
-réduisent jamais le rayon physique, mais peuvent ajouter jusqu'à 1 cm de marge.
+réduisent jamais le rayon de navigation, mais peuvent ajouter jusqu'à 1 cm de marge.
 Cette tolérance simplifie les contours sans arrondir les positions des PNJ.
 Les contacts physiques des battants utilisent 1 mm pour préserver les petits jeux
 autour des portes fermées, indépendamment des contours de navigation.
-Les dilatations physiques utilisent le rayon du corps pour les murs et son quart pour les
-meubles, comme les empreintes représentées par le debug. Les hauteurs excluent
+Le rayon horizontal de navigation est unique : `NAVIGATION_RADIUS_CM = 1`, pour
+les autres PNJ, murs, meubles, battants, protections d'interaction et dégagements
+des portes. Les portes n'ajoutent aucune marge au gabarit des PNJ. Leurs butées
+contre les meubles conservent leur marge mécanique. Le rayon du modèle reste
+une mesure visuelle, sans imposer la largeur des passages. Les hauteurs excluent
 les volumes qui ne rencontrent pas le corps. Les limites du sol sont des
 barrières ; un trajet ne peut pas traverser un vide entre deux surfaces.
 

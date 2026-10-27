@@ -1,7 +1,7 @@
 import type { ApproachRegion } from '../navigation/queries';
 import { AgentInstruction } from '../aiTypes';
 import { getObjectApproach, getDoorApproach, getContainingObjectOwner, NavigationBlockedError } from '../navigation/service';
-import { getAgentProfile, hasAgentProfile } from '../navigation/obstacles';
+import { getAgentProfile, hasAgentProfile, NAVIGATION_RADIUS_CM } from '../navigation/obstacles';
 import { protectDoor } from '../navigation/doorRequests';
 import { cameraState } from '../../cameraState';
 import { getZoneDestination } from '../navigation/destinations';
@@ -84,7 +84,7 @@ export function resolveInstructionCoords(
     // reservation would rebuild the shared door graph on every walking frame.
     if (instr.protectedDoor && profileId && !instr.doorKey) {
       const body = getAgentProfile(profileId);
-      protectDoor(instr.protectedDoor, profileId, { ...desired, y: cameraState.positions[profileId]?.y ?? 0, radius: body.radius, height: body.height });
+      protectDoor(instr.protectedDoor, profileId, { ...desired, y: cameraState.positions[profileId]?.y ?? 0, radius: NAVIGATION_RADIUS_CM, height: body.height });
     }
     const flexible = slot?.arrival === 'approach' || Boolean(obj.approachDoor) || obj.category === 'storage' || obj.category === 'outdoor';
     const usesApproach = isMoveOnly || flexible;
