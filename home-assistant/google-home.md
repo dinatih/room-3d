@@ -6,7 +6,7 @@ Elle expose les appareils HA à Google Home ; les noms Smart Life restent indép
 ## État vérifié le 27 octobre 2026
 
 - Projet actif : **`dinatih-home-assistant`**, avec HomeGraph API activée.
-- Intégration Cloud-to-cloud **Maison Home Assistant** enregistrée dans la console
+- Intégration Cloud-to-cloud **Dinatih Home Assistant** enregistrée dans la console
   Google Home, avec les types Light/Fan/Blinds/TV et l’icône Room-3D adaptée.
 - Compte `home-assistant@dinatih-home-assistant.iam.gserviceaccount.com` créé avec
   le rôle **Service Account Token Creator** sur ce seul projet, après autorisation
@@ -32,7 +32,7 @@ reste inutilisé et n’a pas été supprimé.
 Avec le compte Google utilisé pour créer le projet :
 
 1. Ouvrir Google Home → Ajouter → Fonctionne avec Google Home.
-2. Choisir **[test] Maison Home Assistant**.
+2. Choisir **[test] Dinatih Home Assistant**.
 3. Se connecter à HA et terminer l’autorisation, y compris la double authentification.
 4. Vérifier l’ajout de la lampe **Entrée**, provenant de ce service, puis sa pièce.
 5. Tester une commande vocale sur cette lampe avant d’exposer les autres appareils.
@@ -40,6 +40,36 @@ Avec le compte Google utilisé pour créer le projet :
 Les liaisons Smart Life/Hue existantes peuvent produire un doublon pendant l’essai.
 Elles n’ont pas été supprimées. Un autre compte Google doit être ajouté comme
 membre du projet et suivre les étapes d’accès test de la documentation officielle.
+
+## Association Android : retour au début après Authenticator
+
+Le bon service est **[test] Dinatih Home Assistant**. L’intégration active a été
+renommée pour la distinguer des anciennes entrées « Maison Home Assistant ».
+Fermer puis rouvrir Google Home et actualiser la recherche si l’ancien nom reste affiché.
+La présence de deux anciens libellés ne permet pas d’identifier leur projet : ne
+pas choisir au hasard. Le projet actif reste `dinatih-home-assistant`.
+
+Pour essayer sans quitter Google Home au moment de saisir le code : ouvrir
+Authenticator d’abord, attendre un code neuf, le copier, démarrer l’association et
+le coller dans l’écran MFA avant son expiration. Si le délai est trop court, cette
+méthode ne suffit pas ; ne pas désactiver la MFA pour contourner le problème.
+
+Deux causes possibles restent à vérifier sur le téléphone, sans diagnostic confirmé :
+
+- Si les options développeur Android sont déjà activées, **Ne pas conserver les
+  activités** doit être désactivé et la limite des processus en arrière-plan sur
+  **Limite standard**. La première option détruit les activités dès qu’on les quitte.
+- La documentation HA signale qu’un raccourci web HA installé sur l’écran d’accueil
+  peut intercepter le parcours de connexion et empêcher le retour à Google Home.
+  Retirer ce raccourci web pour l’essai si ce cas s’applique.
+
+Références : [options développeur Android](https://developer.android.com/studio/debug/dev-options),
+[connexion Google Assistant HA](https://www.home-assistant.io/integrations/google_assistant/).
+
+Pour modifier l’intégration existante, utiliser **Open** depuis la page du projet :
+`https://console.home.google.com/projects/dinatih-home-assistant/cloud-to-cloud/15919453857445630974`.
+La route `/cloud-to-cloud/setup` ouvre un formulaire de création ; ne pas l’utiliser
+pour modifier l’intégration enregistrée.
 
 ## Configuration et entretien
 
