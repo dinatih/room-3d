@@ -47,14 +47,9 @@ export function boxFaceMats(
 }
 
 // Matériaux dalle béton
-export const slabConcreteTop = new THREE.MeshStandardMaterial({
+export const slabConcreteMat = new THREE.MeshStandardMaterial({
   color: COLORS.floor,
   roughness: 0.6,
-});
-export const slabConcreteSide = new THREE.MeshStandardMaterial({
-  color: COLORS.floor,
-  roughness: 0.6,
-  side: THREE.FrontSide,
 });
 
 // Matériaux murs par orientation

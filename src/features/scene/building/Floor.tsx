@@ -21,7 +21,7 @@ import {
 } from '../wallData';
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
 import {
-  COLORS, skirtingMat, noCapMat, slabConcreteTop, slabConcreteSide,
+  COLORS, skirtingMat, noCapMat, slabConcreteMat,
   boxFaceMats, qrGeo, architecturalGlassMat
 } from './buildingCommon';
 import { P } from './Walls';
@@ -554,13 +554,13 @@ export function Floor() {
               <group key={`${x}:${z}`} position={[x, -3.5, z]}>
                 <mesh
                   geometry={slabTopGeo}
-                  material={slabConcreteTop}
+                  material={slabConcreteMat}
                   receiveShadow
                   userData={{ brickType: 'floor' }}
                 />
                 <mesh
                   geometry={slabSideGeo}
-                  material={[noCapMat, slabConcreteSide]}
+                  material={[noCapMat, slabConcreteMat]}
                   receiveShadow
                   userData={{ brickType: 'floor' }}
                 />
