@@ -65,8 +65,9 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
-    it('utilise le même rayon de 1 cm pour les PNJ, murs, meubles et portes malgré un modèle plus large', () => {
-        setup({ living: { ...leaf, length: 6, thickness: 1, pivot: { x: -3, z: 0 } } }, 6);
+    it('utilise le même rayon pour les PNJ, murs, meubles et portes malgré un modèle plus large', () => {
+        const gap = 4 * obstacles.NAVIGATION_RADIUS_CM;
+        setup({ living: { ...leaf, length: gap, thickness: 1, pivot: { x: -gap / 2, z: 0 } } }, gap);
         const profile = obstacles.getAgentProfile('walker'), graph = nav.getNavigationGraph(profile);
         assert(profile.radius > obstacles.NAVIGATION_RADIUS_CM);
         assert.equal(loadAvoidance().actorRadius(profile), obstacles.NAVIGATION_RADIUS_CM);
@@ -426,7 +427,7 @@ describe('Navigation et portes — géométrie isolée', () => {
                 assert.equal(route.path, path);
                 assert.equal(cancelledGraphs, cancelled, 'The graph still serving existing paths must stay alive until its replacement is ready');
             }
-            const barrier = g.rectangle(position.x + 4, position.z, 4, 40);
+            const barrier = g.rectangle(position.x + 4 / 2 + obstacles.NAVIGATION_RADIUS_CM + g.CLEARANCE_ERROR, position.z, 4, 40);
             obstacles.registerObstacle({ id: 'live-barrier', polygon: barrier, yMin: 0, yMax: 250 });
             assert.deepEqual(nav.followRoute(route, 'walker', position, target, 3), position, 'Live geometry must stop an unsafe step before the worker replies');
             assert.match(route.waitReason, /géométrie actuelle/);

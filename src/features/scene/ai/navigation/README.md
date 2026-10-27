@@ -37,7 +37,7 @@ réduisent jamais le rayon de navigation, mais peuvent ajouter jusqu'à 1 cm de 
 Cette tolérance simplifie les contours sans arrondir les positions des PNJ.
 Les contacts physiques des battants utilisent 1 mm pour préserver les petits jeux
 autour des portes fermées, indépendamment des contours de navigation.
-Le rayon horizontal de navigation est unique : `NAVIGATION_RADIUS_CM = 1`, pour
+Le rayon horizontal de navigation est unique : `NAVIGATION_RADIUS_CM = 6`, pour
 les autres PNJ, murs, meubles, battants, protections d'interaction et dégagements
 des portes. Les portes n'ajoutent aucune marge au gabarit des PNJ. Leurs butées
 contre les meubles conservent leur marge mécanique. Le rayon du modèle reste

@@ -1,7 +1,7 @@
 import { inflate, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
 
 /** Shared horizontal navigation footprint, independent of the rendered body. */
-export const NAVIGATION_RADIUS_CM = 1;
+export const NAVIGATION_RADIUS_CM = 6;
 
 export interface NavigationObstacleDef {
   id: string;
