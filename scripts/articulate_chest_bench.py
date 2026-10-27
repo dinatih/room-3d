@@ -1,4 +1,4 @@
-"""Articulate the captured YITAHOME chest bench with hinged lid animation.
+"""Articulate the captured YITAHOME chest bench with hollow cavity and hinged lid animation.
 
 blender -b -noaudio --python scripts/articulate_chest_bench.py
 """
@@ -49,7 +49,40 @@ assert len(parts) == 34 and len(mesh.polygons) == 58564, f"Topology mismatch: {l
 lid_parts = {39419, 21502, 0, 10751}
 assert lid_parts <= parts.keys()
 
-def extract(name, identifiers):
+# Hollow cavity is island 56817 (108 faces).
+# The 18 top cap faces are removed and the 90 inner wall/floor faces are flipped inward.
+cavity_island = parts[56817]
+cavity_top_caps = {p for p in cavity_island if mesh.polygons[p].normal.z > 0.8 and sum(mesh.vertices[i].co.z for i in mesh.polygons[p].vertices) / len(mesh.polygons[p].vertices) > 0.55}
+assert len(cavity_top_caps) == 18, f"Unexpected top cap count: {len(cavity_top_caps)}"
+
+def extract_body(name, identifiers):
+    keep = {vertex for part in identifiers for face in parts[part] for vertex in mesh.polygons[face].vertices}
+    data = mesh.copy()
+    bm = bmesh.new()
+    bm.from_mesh(data)
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
+    bmesh.ops.delete(bm, geom=[vertex for vertex in bm.verts if vertex.index not in keep], context='VERTS')
+    bm.faces.ensure_lookup_table()
+
+    # Flip the 90 cavity wall/floor faces and remove the 18 top cap faces
+    cavity_bm_faces = [f for f in bm.faces if -0.57 < f.calc_center_median().x < 0.58 and -0.24 < f.calc_center_median().y < 0.25 and 0.03 < f.calc_center_median().z < 0.59]
+    top_caps = [f for f in cavity_bm_faces if f.normal.z > 0.8 and f.calc_center_median().z > 0.55]
+    for f in cavity_bm_faces:
+        if f not in top_caps:
+            f.normal_flip()
+    bmesh.ops.delete(bm, geom=top_caps, context='FACES')
+
+    bm.to_mesh(data)
+    bm.free()
+    for face in data.polygons:
+        face.use_smooth = True
+    data.transform(source.matrix_world)
+    obj = bpy.data.objects.new(name, data)
+    bpy.context.collection.objects.link(obj)
+    return obj
+
+def extract_lid(name, identifiers):
     keep = {vertex for part in identifiers for face in parts[part] for vertex in mesh.polygons[face].vertices}
     data = mesh.copy()
     bm = bmesh.new()
@@ -67,12 +100,9 @@ def extract(name, identifiers):
     bpy.context.collection.objects.link(obj)
     return obj
 
-body = extract('ChestBenchBody', parts.keys() - lid_parts)
-lid = extract('ChestBenchLidSurface', lid_parts)
-assert len(body.data.polygons) + len(lid.data.polygons) == len(mesh.polygons)
+body = extract_body('ChestBenchBody', parts.keys() - lid_parts)
+lid = extract_lid('ChestBenchLidSurface', lid_parts)
 
-# Calculate lid rear top boundary for hinge pivot
-# Rear is at Y = max(Y) ≈ 0.2779, top of body / bottom of lid is at Z ≈ 0.584
 lid_coords = [vertex.co for vertex in lid.data.vertices]
 pivot_y = max(c.y for c in lid_coords)
 pivot_z = min(c.z for c in lid_coords)
@@ -88,15 +118,10 @@ for obj in list(bpy.context.scene.objects):
     if obj not in (body, lid, pivot):
         bpy.data.objects.remove(obj, do_unlink=True)
 
-# Animation: 0 to 24 frames (0.8s at 30 fps), rotating around local X axis by ~75-80 degrees backward
 scene = bpy.context.scene
 scene.render.fps = 30
 scene.frame_start, scene.frame_end = 0, 24
 pivot.keyframe_insert('rotation_euler', frame=0)
-# Opening backward: rotation around X axis (pointing towards +X, right)
-# In Blender coordinate system: +X right, +Y back, +Z up.
-# Rotating around X: positive rotation tilts +Y towards +Z.
-# To tilt the lid back, rotating around +X: lid rotates backward.
 pivot.rotation_euler.x = -math.radians(75)
 pivot.keyframe_insert('rotation_euler', frame=24)
 pivot.animation_data.action.name = 'lid_open'
@@ -122,4 +147,4 @@ bpy.ops.export_scene.gltf(
     export_draco_mesh_compression_enable=True,
     export_copyright='2025 (c) Amazon.com, Inc. / YITAHOME'
 )
-print(f'CHEST BENCH ARTICULATED: exported to {OUTPUT}, pivot at {tuple(pivot.location)}')
+print(f'HOLLOW CHEST BENCH ARTICULATED: exported to {OUTPUT}')
